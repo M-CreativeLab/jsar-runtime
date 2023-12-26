@@ -36,7 +36,7 @@ jobs:
     - name: Set up Protoc
       uses: arduino/setup-protoc@v2
       with:
-        version: "3.21.12"
+        version: "23.x"
     - name: Build library for Android
       run: |
         protoc --version
