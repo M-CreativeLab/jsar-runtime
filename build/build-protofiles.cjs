@@ -6,8 +6,7 @@ const isWindows = os.platform() === 'win32';
 let protocCommand = path.join(
   __dirname,
   '../thirdparty/libs',
-  isWindows ? 'Windows/x86_64' : 'Darwin',
-  'bin/protoc');
+  isWindows ? 'Windows/x86_64/bin/protoc.exe' : 'Darwin/bin/protoc');
 if (process.env.USE_SYSTEM_PROTOC === 'yes') {
   protocCommand = 'protoc';
 }
