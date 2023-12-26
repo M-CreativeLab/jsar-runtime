@@ -1,4 +1,4 @@
-name: Build
+name: Build library for Windows
 
 on:
   push:
@@ -28,3 +28,6 @@ jobs:
     - name: Build JS Bundles
       run: |
         make jsbundle
+    - name: Build library for Windows
+      run: |
+        make windows

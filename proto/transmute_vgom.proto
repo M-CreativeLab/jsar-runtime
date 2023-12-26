@@ -62,22 +62,6 @@ message VirtualTexture {
   bytes pixels = 12;
 }
 
-/**
- * VirtualUITextProperties is a text properties descriptor to be used in text properties.
- */
-message VirtualUITextProperties {
-  float line_spacing = 1;
-  float character_spacing = 2;
-  float word_spacing = 3;
-  float line_height = 4;
-  float paragraph_spacing = 5;
-  float paragraph_spacing_limit = 6;
-  float text_alignment = 7;
-  float font_style = 11;
-  float font_weight = 12;
-  float font_stretch = 13;
-}
-
 message VirtualGameObjectData {
   string parent_guid = 1;
 
@@ -86,46 +70,21 @@ message VirtualGameObjectData {
   repeated int32 mesh_triangles = 3;
   repeated float mesh_normals_vertices = 4;
   repeated float mesh_tangents_vertices = 5;
-  repeated float mesh_uvs_vertices = 6;
-  repeated float mesh_uv2_vertices = 7;
-  repeated float mesh_uv3_vertices = 8;
-  repeated float mesh_uv4_vertices = 9;
+  repeated float mesh_colors_vertices = 6;
+  repeated float mesh_uvs_vertices = 7;
+  repeated float mesh_uv2_vertices = 8;
+  repeated float mesh_uv3_vertices = 9;
+  repeated float mesh_uv4_vertices = 10;
   VirtualVector3 mesh_bounds_center = 15;
   VirtualVector3 mesh_bounds_size = 16;
   VirtualVector3 mesh_bounds_min = 17;
   VirtualVector3 mesh_bounds_max = 18;
 
   /** Material related fields(20-29) */
-  int32 material_id = 20;
-  string material_name = 21;
-  string material_custom_type = 22; /** "Standard", "PBR" */
-  float material_alpha = 23;
-  int32 material_alpha_mode = 24;
-  bool material_backface_culling = 25;
-  bool material_wireframe = 26;
-
-  /** Standard(30-99) */
-  repeated float material_std_diffuse_color = 30;
-  repeated float material_std_specular_color = 31;
-  repeated float material_std_emissive_color = 32;
-  repeated float material_std_ambient_color = 33;
-  VirtualTexture material_std_diffuse_texture = 40;
-  VirtualTexture material_std_specular_texture = 41;
-  VirtualTexture material_std_emissive_texture = 42;
-  VirtualTexture material_std_ambient_texture = 43;
-
-  /** PBR(100-129) */
-  repeated float material_albedo = 100;
-  repeated float material_ambient = 101;
-  repeated float material_emissive = 102;
-  VirtualTexture material_albedo_texture = 103;
-  VirtualTexture material_ambient_texture = 104;
-  VirtualTexture material_emissive_texture = 105;
-  float material_metallic = 110;
-  float material_roughness = 111;
-  int32 material_surface_type = 112;
-  int32 material_blending_mode = 113;
-  int32 material_render_face = 114;
+  int32 material_id = 20; // Reserved
+  /**
+   * FIXME: We don't sync material in the first frame?
+   */
 
   /** Skeleton and bones(150-189) */
   bool skeleton_is_skinned_mesh = 150;
@@ -240,25 +199,29 @@ message MaterialSyncChangeOnGameObject {
  */
 message DocumentMetadata {
   /**
+   * The XSML specification version, set via <xsml version="x.y"> by developer.
+   */
+  string spec_version = 1;
+  /**
    * The document description.
    */
-  string description = 1;
+  string description = 2;
   /**
    * The document author.
    */
-  string author = 2;
+  string author = 3;
   /**
    * The document keywords.
    */
-  string keywords = 3;
+  string keywords = 4;
   /**
    * The document license.
    */
-  string license = 4;
+  string license = 5;
   /**
    * The document license url.
    */
-  string license_url = 5;
+  string license_url = 6;
   /**
    * The document viewport's initial scale, which is used to control the scale behaviour.
    */
@@ -299,10 +262,4 @@ message VirtualGameObjectModel {
    * The material changes of the game objects, this is to represent the changes of the game objects in the next frames.
    */
   repeated MaterialSyncChangeOnGameObject material_changes_on_game_object = 102;
-
-  /// Describe the audio outputs.
-  /**
-   * This bytes push the audio PCM data to the runtime, the runtime will play the audio data or do process with it.
-   */
-  bytes audio_pcm_data = 210;
 }

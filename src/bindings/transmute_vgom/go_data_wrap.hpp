@@ -2,14 +2,13 @@
 
 #include <napi.h>
 
-#include "mesh.hpp"
-#include "proto/transmute_vgom.pb.h"
+#include "math/mesh.hpp"
+#include "transmute_vgom.pb.h"
 
 using namespace transmute::protocol::gom;
 
 namespace gom
 {
-
     class VirtualGameObjectDataWrap : public Napi::ObjectWrap<VirtualGameObjectDataWrap>
     {
     public:

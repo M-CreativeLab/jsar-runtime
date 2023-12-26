@@ -20,7 +20,8 @@ namespace env
         bool IsReady();
 
         bool IsRuntimeAvailable();
-        void MarkRuntimeAvailable();
+        string GetRuntimeVersions();
+        void MarkRuntimeAvailable(string runtimeVersions);
         void WaitRuntimeAvailable();
         void Reset();
 
@@ -29,6 +30,7 @@ namespace env
         string ready_context_;
 
         bool runtime_available_ = false;
+        string runtime_versions_;
         std::mutex runtime_available_mtx_;
         std::condition_variable runtime_available_cv_;
     

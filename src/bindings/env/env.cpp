@@ -37,9 +37,15 @@ bool TransmuteEnvironment::IsRuntimeAvailable()
     return runtime_available_;
 }
 
-void TransmuteEnvironment::MarkRuntimeAvailable()
+string TransmuteEnvironment::GetRuntimeVersions()
+{
+    return runtime_versions_;
+}
+
+void TransmuteEnvironment::MarkRuntimeAvailable(string runtimeVersions)
 {
     std::unique_lock<std::mutex> lock(runtime_available_mtx_);
+    runtime_versions_ = runtimeVersions;
     runtime_available_ = true;
     runtime_available_cv_.notify_all();
 }

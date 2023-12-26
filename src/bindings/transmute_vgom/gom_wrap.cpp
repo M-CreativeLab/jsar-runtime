@@ -1,9 +1,10 @@
-#include "gom_wrap.hpp"
-#include "go_wrap.hpp"
+
 #include "buffer_writter.hpp"
-#include "gom/document_metadata_wrap.hpp"
-#include "gom/go_property_change_wrap.hpp"
-#include "gom/go_material_sync_change_wrap.hpp"
+#include "document_metadata_wrap.hpp"
+#include "go_property_change_wrap.hpp"
+#include "go_material_sync_change_wrap.hpp"
+#include "go_wrap.hpp"
+#include "gom_wrap.hpp"
 
 using namespace gom;
 

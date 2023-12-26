@@ -17,6 +17,18 @@ jsbundle:
 		--minify=$(minify) \
 		--without-pack=$(without-pack)
 
+darwin: protofiles
+	@echo "Building for darwin(JOBS=${JOBS})..."
+	make -C ./build -j${JOBS} darwin
+
+android: protofiles
+	@echo "Building for android(JOBS=${JOBS})..."
+	make -C ./build -j${JOBS} android
+
+windows: protofiles
+	@echo "Building for windows(JOBS=${JOBS})..."
+	make -C ./build -j${JOBS} windows
+
 all: jsbundle darwin android
 
 .PHONY: jsbundle darwin android all

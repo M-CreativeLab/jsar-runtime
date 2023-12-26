@@ -2,7 +2,7 @@
 
 #include "base.hpp"
 #include "logger.hpp"
-#include "gom.hpp"
+#include "bindings/transmute_vgom/gom.hpp"
 
 #include <node/node.h>
 #include <node/node_api.h>

@@ -4,15 +4,15 @@
 #include <thread>
 #include <node.h>
 
-#include "entry.hpp"
-#include "gom.hpp"
-#include "jsframework.h"
-
-#include "env/env.hpp"
-#include "env/binding.hpp"
-#include "messaging/messaging.hpp"
-#include "webaudio/audio.hpp"
 #include "debug.hpp"
+#include "entry.hpp"
+#include "jsbundle.h"
+
+#include "bindings/env/env.hpp"
+#include "bindings/env/binding.hpp"
+#include "bindings/webaudio/audio.hpp"
+#include "bindings/transmute_messaging/messaging.hpp"
+#include "bindings/transmute_vgom/gom.hpp"
 
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
 #include <sys/system_properties.h>

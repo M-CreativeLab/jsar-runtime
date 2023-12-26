@@ -1,4 +1,4 @@
-name: Build
+name: Build library for Android
 
 on:
   push:
@@ -11,15 +11,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [ubuntu-latest]
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: 1.74.0
     - uses: actions/setup-node@v4.0.0
       with:
         node-version: 18.16.0
@@ -28,3 +23,16 @@ jobs:
     - name: Build JS Bundles
       run: |
         make jsbundle
+    
+    - name: Set up Java
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'adopt'
+        java-version: '11'
+    - name: Set up Android NDK 17r
+      uses: nttld/setup-ndk@v1
+      with:
+        ndk-version: 'r17'
+    - name: Build library for Android
+      run: |
+        make android

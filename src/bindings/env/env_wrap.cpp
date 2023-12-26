@@ -1,6 +1,6 @@
 #include "env_wrap.hpp"
 #include "env.hpp"
-#include "gom/buffer_writter.hpp"
+#include "bindings/transmute_vgom/buffer_writter.hpp"
 
 using namespace std;
 using namespace env;
@@ -47,13 +47,21 @@ Napi::Value EnvironmentWrap::MarkRuntimeAvailable(const Napi::CallbackInfo &info
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
+    if (info.Length() < 1 || !info[0].IsString())
+    {
+        Napi::TypeError::New(env, "The first argument must be a string.").ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+
     TransmuteEnvironment *transmuteEnv = TransmuteEnvironment::GetInstance();
     if (transmuteEnv == nullptr)
     {
         Napi::TypeError::New(env, "The environment is invalid, `TransmuteEnvironment` not initialized.").ThrowAsJavaScriptException();
         return env.Undefined();
     }
-    transmuteEnv->MarkRuntimeAvailable();
+
+    string runtimeVersions = info[0].As<Napi::String>().Utf8Value();
+    transmuteEnv->MarkRuntimeAvailable(runtimeVersions);
     return env.Undefined();
 }
 

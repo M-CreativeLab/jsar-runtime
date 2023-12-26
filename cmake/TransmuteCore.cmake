@@ -1,46 +1,45 @@
 set(INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/transmute/_lib)
 file(GLOB TRANSMUTE_CORE_SOURCE
-    "Source/transmute/*.cpp"
-    "Source/transmute/env/*.cpp"
-    "Source/transmute/messaging/*.cpp"
-    "Source/transmute/gom/*.cpp"
-    "Source/transmute/webaudio/*.cpp"
+    "src/*.cpp"
+    "src/bindings/**/*.cpp"
+    "src/math/*.cpp"
+    "src/runtime/*.cpp"
 )
 
-file(GLOB TRANSMUTE_PROTO_SOURCE "Source/proto/*.pb.cc")
+file(GLOB TRANSMUTE_PROTO_SOURCE "proto/*.pb.cc")
 
 set(TRANSMUTE_CORE_LIBNAME TransmuteCore)
 add_library(TransmuteCore SHARED ${TRANSMUTE_CORE_SOURCE} ${TRANSMUTE_PROTO_SOURCE})
 
-target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${CMAKE_SOURCE_DIR}/Source)
-target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${CMAKE_SOURCE_DIR}/Source/transmute)
+target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${CMAKE_SOURCE_DIR}/proto)
 
 # Add Node.js headers
 set(NODEJS_VERSION 18.12.1)
-set(NODEJS_HEADERS_PATH ${CMAKE_SOURCE_DIR}/Thirdparty/Headers/node-v${NODEJS_VERSION}/include)
+set(NODEJS_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-v${NODEJS_VERSION}/include)
 target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${NODEJS_HEADERS_PATH})
 target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${NODEJS_HEADERS_PATH}/node)
 
 # Add Node Addon API headers
-set(NODE_ADDON_API_HEADERS_PATH ${CMAKE_SOURCE_DIR}/Thirdparty/Headers/node-addon-api/include)
+set(NODE_ADDON_API_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-addon-api/include)
 target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${NODE_ADDON_API_HEADERS_PATH})
 
 # Add Protobuf C++ headers
 set(PROTOBUF_VERSION 21.12)
-set(PROTOBUF_HEADERS_PATH ${CMAKE_SOURCE_DIR}/Thirdparty/Headers/protobuf-cpp-v${PROTOBUF_VERSION}/include)
+set(PROTOBUF_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/protobuf-cpp-v${PROTOBUF_VERSION}/include)
 target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${PROTOBUF_HEADERS_PATH})
 
 # Add LabSound headers
-set(LABSOUND_HEADERS_PATH ${CMAKE_SOURCE_DIR}/Thirdparty/Headers/LabSound/include)
+set(LABSOUND_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/LabSound/include)
 target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${LABSOUND_HEADERS_PATH})
 
 # Optional dependencies
 if (APPLE)
-    set(THIRDPARTY_LIBRARY_PATH ${CMAKE_SOURCE_DIR}/Thirdparty/Library/${CMAKE_SYSTEM_NAME})
+    set(THIRDPARTY_LIBRARY_PATH ${CMAKE_SOURCE_DIR}/thirdparty/libs/${CMAKE_SYSTEM_NAME})
 elseif (WIN32)
-    set(THIRDPARTY_LIBRARY_PATH ${CMAKE_SOURCE_DIR}/Thirdparty/Library/${CMAKE_SYSTEM_NAME}/x86_64)
+    set(THIRDPARTY_LIBRARY_PATH ${CMAKE_SOURCE_DIR}/thirdparty/libs/${CMAKE_SYSTEM_NAME}/x86_64)
 else()
-    set(THIRDPARTY_LIBRARY_PATH ${CMAKE_SOURCE_DIR}/Thirdparty/Library/${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR})
+    set(THIRDPARTY_LIBRARY_PATH ${CMAKE_SOURCE_DIR}/thirdparty/libs/${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR})
 endif()
 message(STATUS "Thirdparty library path: ${THIRDPARTY_LIBRARY_PATH}")
 
@@ -131,7 +130,7 @@ foreach (source IN LISTS TRANSMUTE_CORE_SOURCE)
 endforeach ()
 
 # Install the library
-set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/TransmuteUnityFramework/Assets/UPM/Plugins)
+set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/build/output/unity/Plugins)
 if (APPLE)
     install(TARGETS ${TRANSMUTE_CORE_LIBNAME} DESTINATION macOS)
 elseif (ANDROID)
@@ -157,8 +156,8 @@ endif()
 # Add Tools Function
 function(ADD_JSAR_TOOL EXECUTABLE_NAME SOURCE_FILE)
     add_executable(${EXECUTABLE_NAME} ${SOURCE_FILE})
-    target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/Source)
-    target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/Source/transmute)
+    target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/proto)
     target_include_directories(${EXECUTABLE_NAME} PRIVATE ${NODEJS_HEADERS_PATH})
     target_include_directories(${EXECUTABLE_NAME} PRIVATE ${NODEJS_HEADERS_PATH}/node)
     target_include_directories(${EXECUTABLE_NAME} PRIVATE ${NODE_ADDON_API_HEADERS_PATH})
@@ -186,8 +185,8 @@ endfunction()
 
 # Add Tools
 if (APPLE)
-    ADD_JSAR_TOOL(test-jsar "Source/tools/tester.cpp")
-    ADD_JSAR_TOOL(bench-jsar "Source/tools/bench.cpp")
+    ADD_JSAR_TOOL(test-jsar "src/tools/tester.cpp")
+    ADD_JSAR_TOOL(bench-jsar "src/tools/bench.cpp")
 
     # Install the libraries to the build directory.
     install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.108.dylib DESTINATION ${CMAKE_BINARY_DIR})

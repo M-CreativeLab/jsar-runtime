@@ -1,6 +1,6 @@
 #include <napi.h>
 
-#include "proto/transmute_vgom.pb.h"
+#include "transmute_vgom.pb.h"
 #include "go_material_sync_change_wrap.hpp"
 #include "material_wrap.hpp"
 

@@ -1,6 +1,6 @@
 #include <napi.h>
 
-#include "proto/transmute_vgom.pb.h"
+#include "transmute_vgom.pb.h"
 #include "go_property_change_wrap.hpp"
 #include "vector3_wrap.hpp"
 #include "quaternion_wrap.hpp"
