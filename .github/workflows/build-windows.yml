@@ -2,9 +2,7 @@ name: Build library for Windows
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches: [ "invalid" ]
 
 jobs:
   build:
