@@ -12,18 +12,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-node@v4.0.0
-      with:
-        node-version: 18.16.0
-    - name: Install Node.js dependencies
-      run: npm ci && npx tsc --version
-    - name: Build JS Bundles
-      run: |
-        make jsbundle
-    
     - name: Set up Java
       uses: actions/setup-java@v2
       with:
@@ -36,7 +26,15 @@ jobs:
     - name: Set up Protoc
       uses: arduino/setup-protoc@v2
       with:
-        version: "23.x"
+        version: "3.21.x"
+    - uses: actions/setup-node@v4.0.0
+      with:
+        node-version: 18.16.0
+    - name: Install Node.js dependencies
+      run: npm ci && npx tsc --version
+    - name: Build JS Bundles
+      run: |
+        make jsbundle
     - name: Build library for Android
       run: |
         protoc --version
