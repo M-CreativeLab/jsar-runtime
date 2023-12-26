@@ -33,6 +33,13 @@ jobs:
       uses: nttld/setup-ndk@v1
       with:
         ndk-version: 'r17'
+    - name: Set up Protoc
+      uses: arduino/setup-protoc@v2
+      with:
+        version: "3.21.12"
     - name: Build library for Android
       run: |
+        protoc --version
         make android
+      env:
+        USE_SYSTEM_PROTOC: "true"
