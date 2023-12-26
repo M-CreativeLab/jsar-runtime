@@ -5,13 +5,11 @@ const fs = require('node:fs');
 const { execSync } = require('node:child_process');
 
 const argv = require('./minimist.cjs')(process.argv.slice(2));
-const clean = argv.clean;
+const { clean, minify } = argv;
+const withoutPack = argv['without-pack'];
+
 const shell = (cmd, options) => execSync(cmd, { stdio: 'inherit', ...options });
 const jsDir = path.join(__dirname, '../');
-
-if (clean === 'yes' || !fs.existsSync(path.join(jsDir, 'node_modules'))) {
-  installDeps();
-}
 
 function installDeps() {
   shell('npm install', { cwd: jsDir });
@@ -23,5 +21,12 @@ function installDeps() {
   fs.writeFileSync(babylonjsTypeDefPath, babylonjsTypeDefContent + babylonjsPostTxtContent);
 }
 
-shell(`npx webpack --config webpack.config.cjs`, { cwd: jsDir });
-// shell('node ./bundle-cpp-gen.js --out ../Source/transmute/jsframework.h');
+if (clean === 'yes' || !fs.existsSync(path.join(jsDir, 'node_modules'))) {
+  installDeps();
+}
+if (!withoutPack || withoutPack !== 'yes') {
+  shell(`npx webpack --config webpack.config.cjs`, { cwd: jsDir });
+}
+
+const jsbundleHeaderPath = path.join(jsDir, 'src/runtime/jsbundle.h');
+shell(`node ${path.join(__dirname, 'jsbundle-cpp-gen.cjs')} --out ${jsbundleHeaderPath}`, { cwd: jsDir });

@@ -12,7 +12,10 @@ protofiles:
 
 jsbundle:
 	@echo "Building jsbundle..."
-	node ./build/build-jsbundle.cjs --clean=$(clean)
+	node ./build/build-jsbundle.cjs \
+		--clean=$(clean) \
+		--minify=$(minify) \
+		--without-pack=$(without-pack)
 
 all: jsbundle darwin android
 
