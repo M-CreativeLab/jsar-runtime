@@ -43,6 +43,7 @@ node_modules
 /build/targets/darwin
 /build/targets/windows
 /build/targets/proto
+/build/output
 /build/Debug
 /build/Release
 *.apk

@@ -1,5 +1,5 @@
 import * as BABYLON from 'babylonjs';
-import * as logger from '@transmutejs/binding/logger';
+import * as logger from '../../bindings/logger';
 import { getPerformanceInCurrentEnv } from './performance';
 
 const performance = getPerformanceInCurrentEnv();

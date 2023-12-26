@@ -34,9 +34,9 @@ export function createEnv(contextStr: string) {
   envInstance = new Env(contextStr);
 }
 
-export function markRuntimeAvailable() {
+export function markRuntimeAvailable(runtimeVersions: string) {
   if (nativeEnv?.markRuntimeAvailable) {
-    nativeEnv?.markRuntimeAvailable();
+    nativeEnv?.markRuntimeAvailable(runtimeVersions);
   }
 }
 

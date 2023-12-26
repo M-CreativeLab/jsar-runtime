@@ -1,5 +1,3 @@
-import type * as BABYLON from 'babylonjs';
-
 /**
  * This is the interface for the `PropertyChange` class.
  */
@@ -358,7 +356,7 @@ export declare class VirtualMaterial {
  * - `uv3`: the vertex buffer is for uv3.
  * - `uv4`: the vertex buffer is for uv4.
  */
-export type VertexType = 'position' | 'normals' | 'uv' | 'uv2' | 'uv3' | 'uv4';
+export type VertexType = 'position' | 'normals' | 'colors' | 'uv' | 'uv2' | 'uv3' | 'uv4';
 
 /**
  * The metadata of the vertex buffer. It is used to identify the vertex buffer, value can be:
@@ -528,6 +526,10 @@ export declare class DocumentMetadata {
   constructor();
 
   /**
+   * The specification version.
+   */
+  specVersion: string;
+  /**
    * The document description.
    */
   description: string;
@@ -594,14 +596,6 @@ export declare class VirtualGameObjectModel {
    * @param material the material to sync.
    */
   createMaterialSyncChange(guid: string, type: string, material: VirtualMaterial): MaterialSyncChangeOnGameObject;
-
-  /**
-   * Write the audio buffer to Transmute Protocol Buffer, the consumer of this buffer is the
-   * Unity, which will play the audio.
-   *
-   * @param buffer The audio data.
-   */
-  writeAudioBuffer(buffer: Uint8Array): boolean;
 
   /**
    * Serialize the game object model and write it to the Unity side.

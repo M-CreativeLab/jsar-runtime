@@ -1,10 +1,8 @@
-import * as BABYLON from 'babylonjs';
 import Jimp from 'jimp';
 
-import { getLinkedBinding } from '@transmutejs/binding/gom';
-import { AudioContextImpl } from '@transmutejs/webaudio-api';
-import { executeWithTimeProfiler } from '@transmutejs/utils';
-import type * as vGomInterface from './vgom/interface';
+import { getLinkedBinding } from '../../bindings/gom';
+import { executeWithTimeProfiler } from '../common/utils';
+import type * as vGomInterface from '../transmute/vgom/interface';
 import { DIRTY_SYMBOL, MIME_TYPE_SYMBOL } from './common';
 import { DocumentMetadata, GameObjectModelSerializer } from './serializer';
 import { decode as decodeWebp } from './libwebp';
@@ -38,12 +36,6 @@ type EngineOptions = Partial<{
    * @param buffer 
    */
   onBufferUpdate: (buffer: ArrayBuffer) => void;
-  /**
-   * The callback when audio buffer is updated.
-   * @param buffer 
-   * @returns 
-   */
-  onFeedAudioBuffer: (buffer: Uint8Array) => void;
 }>;
 
 type OnReadyOptions = Partial<{
@@ -105,22 +97,6 @@ class TransmuteEngine extends BABYLON.NullEngine {
   #watchingScene: BABYLON.Scene = null;
 
   /**
-   * The WritableStream to write the audio buffer.
-   */
-  #audioWriteStream: WritableStream<ArrayBuffer> = null;
-
-  /**
-   * The audio buffer to be written to the changes buffer.
-   */
-  #audioBuffer: Uint8Array = null;
-
-  /**
-   * The callback when audio buffer is updated, this is used for some environment which wants to play
-   * the audio directly instead of writing to the changes buffer.
-   */
-  #onFeedAudioBuffer: EngineOptions['onFeedAudioBuffer'] | null = null;
-
-  /**
    * The headless mode will disable the serialization, this engine only serves as a storage for scene.
    */
   readonly #headless;
@@ -133,12 +109,6 @@ class TransmuteEngine extends BABYLON.NullEngine {
     this._features.needShaderCodeInlining = true;
     this._caps.supportSRGBBuffers = false;  // disable srgb buffers
 
-    // Set the audio-related fields
-    this.#audioWriteStream = new WritableStream({
-      write: (chunk) => this.#writeAudioPcmData(chunk),
-    });
-    this._audioContext = this.#createAudioContext();
-    this._audioDestination = this._audioContext.destination;
     // TODO: Enable the audio engine later when it is ready.
     // BABYLON.Engine.audioEngine = BABYLON.Engine.AudioEngineFactory(this.getRenderingCanvas(), this.getAudioContext(), this.getAudioDestination());
 
@@ -172,21 +142,12 @@ class TransmuteEngine extends BABYLON.NullEngine {
       this.#serializer.onGomBufferUpdate = options.onBufferUpdate;
     }
 
-    // Set `onFeedAudioBuffer` option
-    if (options?.onFeedAudioBuffer && typeof options.onFeedAudioBuffer === 'function') {
-      this.#onFeedAudioBuffer = options.onFeedAudioBuffer;
-    }
-
     // Reset the state
     this.reset();
   }
 
   get isHeadless() {
     return this.#headless === true;
-  }
-
-  get audioWriteStream() {
-    return this.#audioWriteStream;
   }
 
   addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions) {
@@ -248,16 +209,6 @@ class TransmuteEngine extends BABYLON.NullEngine {
 
       // write vgom buffer only if the target is ok and non headless mode.
       if (target != null && !this.#headless) {
-        // write audio buffer
-        if (this.#audioBuffer != null) {
-          // feed the audio buffer to the native engine api.
-          if (typeof this.#onFeedAudioBuffer === 'function') {
-            this.#onFeedAudioBuffer(this.#audioBuffer);
-          }
-          if (target.writeAudioBuffer(this.#audioBuffer)) {
-            this.#audioBuffer = null;
-          }
-        }
         // write vgom buffer
         this.#serializer.serializeAndWrite(target);
       }
@@ -285,7 +236,7 @@ class TransmuteEngine extends BABYLON.NullEngine {
     this.reset();
 
     // dispose audio context
-    this._audioContext.close();
+    // this._audioContext.close();
   }
 
   /**
@@ -445,29 +396,6 @@ class TransmuteEngine extends BABYLON.NullEngine {
     _y?: number
   ): ArrayBufferView {
     throw new TypeError('Not implemented yet.');
-  }
-
-  #writeAudioPcmData(buffer: ArrayBuffer) {
-    if (this.#runnable === false) {
-      // Just skip when the engine is not ready.
-      return;
-    }
-    if (!buffer || buffer.byteLength === 0) {
-      return;
-    }
-
-    const data = new Uint8Array(buffer);
-    if (!this.#audioBuffer) {
-      this.#audioBuffer = data;
-    } else {
-      this.#audioBuffer = concatBuffers([this.#audioBuffer, data]);
-    }
-  }
-
-  #createAudioContext(): AudioContext {
-    const audioContext = new AudioContextImpl();
-    audioContext.setOutStream(this.#audioWriteStream);
-    return audioContext;
   }
 }
 

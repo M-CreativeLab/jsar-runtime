@@ -1,12 +1,12 @@
-import * as BABYLON from 'babylonjs';
-import * as logger from '@transmutejs/binding/logger';
-import { toIndicesArray, executeWithTimeProfiler } from '@transmutejs/utils';
+import * as logger from '../../bindings/logger';
+import { toIndicesArray, executeWithTimeProfiler } from '../common/utils';
 import { TransmuteInternalTexture, vGomInterface } from './engine';
 import { DIRTY_SYMBOL, VGO_GUID_SYMBOL } from './common';
 
 const nextTick = typeof setImmediate === 'function' ? setImmediate : (fn) => setTimeout(fn, 0);
 
 export type DocumentMetadata = Partial<{
+  specVersion: string;
   description: string;
   author: string;
   keywords: string;
@@ -75,6 +75,7 @@ export class GameObjectModelSerializer {
     }
     if (metadata) {
       const docMetadata = new this.#binding.DocumentMetadata();
+      docMetadata.specVersion = metadata.specVersion;
       docMetadata.description = metadata.description;
       docMetadata.author = metadata.author;
       docMetadata.keywords = metadata.keywords;
@@ -93,6 +94,7 @@ export class GameObjectModelSerializer {
    */
   async serializeScene(scene: BABYLON.Scene) {
     await executeWithTimeProfiler('prepare guids', () => this.#generateGuids(scene));
+    await executeWithTimeProfiler(`serialize ${scene.materials.length} materials`, () => this.serializeMaterials(scene));
     await executeWithTimeProfiler(`serialize ${scene.transformNodes.length} transform nodes`, () => this.serializeTransformNodes(scene));
     await executeWithTimeProfiler(`serialize ${scene.meshes.length} meshes`, () => this.serializeAllMeshes(scene));
     await executeWithTimeProfiler('serializeToBuffer', () => this.#doSerializeAndWrite());
@@ -137,11 +139,37 @@ export class GameObjectModelSerializer {
         type: 'vector3',
         value: node.scaling,
       });
+      if (node instanceof BABYLON.AbstractMesh) {
+        gom.createPropertyChange(node.__vgoGuid, {
+          name: 'materialReferenceGuid',
+          type: 'string',
+          value: `${node.material.uniqueId}`,
+        });
+      }
 
+      // update outline properties
+      if (node instanceof BABYLON.AbstractMesh) {
+        let value: string;
+        if (!node.renderOutline) {
+          value = '{"enabled":false}';
+        } else {
+          const color = node.outlineColor;
+          value = JSON.stringify({
+            enabled: true,
+            width: node.outlineWidth,
+            color: [color.r, color.g, color.b],
+          });
+        }
+        gom.createPropertyChange(node.__vgoGuid, {
+          name: 'outline',
+          type: 'string',
+          value,
+        });
+      }
+
+      // update material properties
       if (node instanceof BABYLON.AbstractMesh && node.material) {
-        const customType = node.material.getClassName();
-        const vMaterial = await this.createVirtualMaterial(node.material, true);
-        gom.createMaterialSyncChange(node.__vgoGuid, customType, vMaterial);
+        await this.serializeMaterial(node.material, gom);
       }
     }
 
@@ -154,11 +182,15 @@ export class GameObjectModelSerializer {
    * Generate the mesh unique id for the given scene, because the Babylonjs mesh id is not unique.
    * @param {BABYLON.Scene} scene 
    */
-  #generateGuids(scene) {
+  #generateGuids(scene: BABYLON.Scene) {
     for (const node of scene.getNodes()) {
-      // generate the virtual gameobject GUID if not exists.
       if (!node[VGO_GUID_SYMBOL]) {
-        node[VGO_GUID_SYMBOL] = BABYLON.Tools.RandomId();
+        // Check if "jsardom.guid" in node's metadata, if not, generate a new one.
+        if (node.metadata?.['jsardom.guid']) {
+          node[VGO_GUID_SYMBOL] = node.metadata['jsardom.guid'];
+        } else {
+          node[VGO_GUID_SYMBOL] = BABYLON.Tools.RandomId();
+        }
       }
     }
   }
@@ -177,9 +209,19 @@ export class GameObjectModelSerializer {
    * Serialize all meshes in the given scene.
    * @param {BABYLON.Scene} scene
    */
-  async serializeAllMeshes(scene) {
+  serializeAllMeshes(scene) {
+    for (const mesh of scene.meshes) {
+      this.serializeMesh(mesh);
+    }
+  }
+
+  /**
+   * Serialize all materials in the given scene.
+   * @param scene 
+   */
+  async serializeMaterials(scene: BABYLON.Scene) {
     return Promise.all(
-      scene.meshes.map(mesh => this.serializeMesh(mesh))
+      scene.materials.map(material => this.serializeMaterial(material))
     );
   }
 
@@ -207,7 +249,7 @@ export class GameObjectModelSerializer {
    * Serialize a mesh.
    * @param {BABYLON.Mesh} mesh 
    */
-  async serializeMesh(mesh: BABYLON.Mesh) {
+  serializeMesh(mesh: BABYLON.Mesh) {
     if (mesh.isEnabled(false) === false) {
       return;
     }
@@ -227,6 +269,7 @@ export class GameObjectModelSerializer {
     const triangles = mesh.getIndices();
     let positionVertexData = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
     let normalsVertexData = mesh.getVerticesData(BABYLON.VertexBuffer.NormalKind);
+    let colorsVertexData = mesh.getVerticesData(BABYLON.VertexBuffer.ColorKind);
     let uvVertexData = mesh.getVerticesData(BABYLON.VertexBuffer.UVKind);
 
     if (triangles && positionVertexData != null) {
@@ -246,6 +289,13 @@ export class GameObjectModelSerializer {
           normalsVertexData = new Float32Array(normalsVertexData);
         }
         vGo.data.setMeshVertexBuffer('normals', normalsVertexData);
+      }
+
+      if (colorsVertexData) {
+        if (Array.isArray(colorsVertexData)) {
+          colorsVertexData = new Float32Array(colorsVertexData);
+        }
+        vGo.data.setMeshVertexBuffer('colors', colorsVertexData);
       }
 
       if (uvVertexData) {
@@ -281,31 +331,28 @@ export class GameObjectModelSerializer {
       });
     }
 
-    if (mesh.material) {
-      await this.serializeMeshMaterial(mesh, vGo);
-    }
     if (mesh.skeleton) {
-      await this.serializeMeshSkeletonAndBones(mesh, vGo);
+      this.serializeMeshSkeletonAndBones(mesh, vGo);
     }
 
     // append this node to the watching list
     this.#watchingNodes.push(mesh as any);
   }
 
-  async serializeMeshMaterial(mesh: BABYLON.Mesh, vGo: vGomInterface.VirtualGameObject) {
-    const customType = mesh.material.getClassName();
-    const vMaterial = await this.createVirtualMaterial(mesh.material, false);
-
-    /**
-     * Update the material, this will add material properties into game object data.
-     */
-    vGo.data.setMaterial(customType, vMaterial);
+  async serializeMaterial(material: BABYLON.Material, targetGom?: vGomInterface.VirtualGameObjectModel) {
+    const customType = material.getClassName();
+    const vMaterial = await this.createVirtualMaterial(material);
+    if (targetGom) {
+      targetGom.createMaterialSyncChange(`${material.uniqueId}`, customType, vMaterial);
+    } else {
+      this.#gameObjectModel.createMaterialSyncChange(`${material.uniqueId}`, customType, vMaterial);
+    }
   }
 
   /**
    * Serialize the skeleton and bones into the virtual game object.
    */
-  async serializeMeshSkeletonAndBones(mesh: BABYLON.Mesh, vGo: vGomInterface.VirtualGameObject) {
+  serializeMeshSkeletonAndBones(mesh: BABYLON.Mesh, vGo: vGomInterface.VirtualGameObject) {
     const boneWeights = mesh.getVerticesData(BABYLON.VertexBuffer.MatricesWeightsKind);
     const boneIndexes = mesh.getVerticesData(BABYLON.VertexBuffer.MatricesIndicesKind);
 
@@ -436,7 +483,7 @@ export class GameObjectModelSerializer {
    * @param disableTexture
    * @returns 
    */
-  async createVirtualMaterial(material: BABYLON.Material, disableTexture = false) {
+  async createVirtualMaterial(material: BABYLON.Material) {
     const customType = material.getClassName();
     const vMaterial = new this.#binding.VirtualMaterial(material);
     vMaterial.setAlpha(material.alpha);

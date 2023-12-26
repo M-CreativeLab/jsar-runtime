@@ -1,7 +1,7 @@
 let nodejsUtilModule;
 let binding = null;
 
-export class Logger extends EventTarget {
+export class Logger extends EventTarget implements Console {
   #getMessageString(format: string, ...args: any[]): string | string[] {
     if (typeof process === 'object' && process != null && typeof process.pid === 'number') {
       // Node.js
@@ -44,6 +44,78 @@ export class Logger extends EventTarget {
   }
   error(format, ...args) {
     return this.#writeStderr(format, ...args);
+  }
+
+  assert(condition?: boolean, ...data: any[]): void;
+  assert(value: any, message?: string, ...optionalParams: any[]): void;
+  assert(value?: unknown, message?: unknown, ...optionalParams: unknown[]): void {
+    if (!value) {
+      this.error(message, ...optionalParams);
+    }
+  }
+  clear(): void {
+    // TODO: clear the console.
+  }
+  count(label?: string): void {
+    throw new TypeError('Method not implemented.');
+  }
+  countReset(label?: unknown): void {
+    throw new TypeError('Method not implemented.');
+  }
+  dir(item?: any, options?: any): void;
+  dir(obj?: unknown, options?: unknown): void {
+    throw new TypeError('Method not implemented.');
+  }
+  dirxml(...data: any[]): void;
+  dirxml(...data: any[]): void;
+  dirxml(...data: unknown[]): void {
+    throw new TypeError('Method not implemented.');
+  }
+  group(...label: any[]): void;
+  group(...label: unknown[]): void {
+    throw new TypeError('Method not implemented.');
+  }
+  groupCollapsed(...label: any[]): void;
+  groupCollapsed(...label: unknown[]): void {
+    throw new TypeError('Method not implemented.');
+  }
+  groupEnd(): void {
+    throw new TypeError('Method not implemented.');
+  }
+  table(tabularData?: any, properties?: string[]): void;
+  table(tabularData: any, properties?: readonly string[]): void;
+  table(tabularData?: unknown, properties?: unknown): void {
+    throw new TypeError('Method not implemented.');
+  }
+  time(label?: string): void;
+  time(label?: unknown): void {
+    throw new TypeError('Method not implemented.');
+  }
+  timeEnd(label?: string): void;
+  timeEnd(label?: unknown): void {
+    throw new TypeError('Method not implemented.');
+  }
+  timeLog(label?: string, ...data: any[]): void;
+  timeLog(label?: unknown, ...data: unknown[]): void {
+    throw new TypeError('Method not implemented.');
+  }
+  timeStamp(label?: string): void;
+  timeStamp(label?: unknown): void {
+    throw new TypeError('Method not implemented.');
+  }
+  trace(...data: any[]): void;
+  trace(message?: any, ...optionalParams: any[]): void;
+  trace(message?: unknown, ...optionalParams: unknown[]): void {
+    throw new TypeError('Method not implemented.');
+  }
+  get Console(): console.ConsoleConstructor {
+    throw new TypeError('Method not implemented.');
+  }
+  profile(label?: string): void {
+    throw new TypeError('Method not implemented.');
+  }
+  profileEnd(label?: string): void {
+    throw new TypeError('Method not implemented.');
   }
 }
 
