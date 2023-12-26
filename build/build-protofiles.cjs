@@ -8,6 +8,8 @@ const protocCommand = path.join(
   '../thirdparty/libs',
   isWindows ? 'Windows/x86_64' : 'Darwin',
   'bin/protoc');
+console.info(`    platform: "${os.platform()}"`);
+console.info(`      dirname: "${__dirname}"`);
 console.info(`protocCommand: "${protocCommand}"`);
 
 const protoDir = path.join(__dirname, '../proto');
