@@ -39,6 +39,12 @@ node_modules
 
 # JSAR Runtime
 .cache
+!/thirdparty/**/*.a
+!/thirdparty/**/*.so
+!/thirdparty/**/*.dylib
+!/thirdparty/**/*.dll
+!/thirdparty/**/*.lib
+!/thirdparty/**/*.exe
 /build/targets/android
 /build/targets/darwin
 /build/targets/windows

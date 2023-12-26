@@ -43,6 +43,7 @@ if (WIN32)
         # C4624: destructor was implicitly defined as deleted because a base class destructor is inaccessible or deleted
         # These warnings are not emitted on Clang (mostly within LLVM source code)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4244 /wd4267 /wd4624 /nologo /D \"_CRT_SECURE_NO_WARNINGS\" /D \"_ENABLE_EXTENDED_ALIGNED_STORAGE\"")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zm5242880")
     else()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fsized-deallocation")
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gcodeview")
