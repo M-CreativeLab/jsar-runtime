@@ -13,10 +13,10 @@ console.info(`      dirname: "${__dirname}"`);
 console.info(`protocCommand: "${protocCommand}"`);
 
 const protoDir = path.join(__dirname, '../proto');
-const protoFile = './transmute_vgom.proto';
+const protoFile = 'transmute_vgom.proto';
 
 // Generate the proto
-execSync(`${protocCommand} --cpp_out=./ --csharp_out=./ ${protoFile}`, {
+execSync(`${protocCommand} --cpp_out=. --csharp_out=. ${protoFile}`, {
   stdio: 'inherit',
   cwd: protoDir,
 });
