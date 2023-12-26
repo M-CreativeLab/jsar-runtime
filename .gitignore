@@ -33,3 +33,16 @@
 
 # Macos
 .DS_Store
+
+# NPM
+node_modules
+
+# JSAR Runtime
+.cache
+/build/targets/android
+/build/targets/darwin
+/build/targets/windows
+/build/targets/proto
+/build/Debug
+/build/Release
+*.apk

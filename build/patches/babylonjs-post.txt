@@ -1,0 +1,7 @@
+
+declare module 'babylonjs' {
+  export = BABYLON;
+}
+declare module 'babylonjs/scene' {
+  export type Scene = BABYLON.Scene;
+}

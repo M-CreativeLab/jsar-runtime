@@ -1,0 +1,19 @@
+#pragma once
+
+const char* jsframework_source =
+    R"RAW(
+        /** Polyfills for JS Framework */
+        class CustomEvent extends Event {
+            detail;
+            constructor(type, eventInitDict) {
+                super(type, eventInitDict);
+                this.detail = eventInitDict.detail;
+            }
+            initCustomEvent() {
+                throw new Error('initCustomEvent() is deprecated.');
+            }
+        }
+        globalThis.CustomEvent = CustomEvent;
+    )RAW"
+    @JSFRAMEWORK_PARTS@
+;
