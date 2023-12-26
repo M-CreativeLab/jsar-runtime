@@ -10,10 +10,10 @@ protofiles:
 	@echo "Building proto..."
 	node ./build/build-protofiles.cjs
 
-jsframework:
-	@echo "Building jsframework..."
-	node ./build/build-jsframework.cjs --clean=$(clean)
+jsbundle:
+	@echo "Building jsbundle..."
+	node ./build/build-jsbundle.cjs --clean=$(clean)
 
-all: jsframework darwin android
+all: jsbundle darwin android
 
-.PHONY: jsframework darwin android all
+.PHONY: jsbundle darwin android all
