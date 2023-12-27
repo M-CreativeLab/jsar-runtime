@@ -158,27 +158,32 @@ foreach (source IN LISTS TRANSMUTE_CORE_SOURCE)
 endforeach ()
 
 # Install the library
-set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/build/output/unity/Plugins)
+set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/build/output/release)
+set(TRANSMUTE_RELEASE_DEST unknown)
+
 if (APPLE)
-    install(TARGETS ${TRANSMUTE_CORE_LIBNAME} DESTINATION macOS)
+    set(TRANSMUTE_RELEASE_DEST universal-apple-darwin)
 elseif (ANDROID)
-    install(TARGETS ${TRANSMUTE_CORE_LIBNAME} DESTINATION Android)
+    set(TRANSMUTE_RELEASE_DEST aarch64-linux-android)
 elseif (WIN32)
-    install(TARGETS ${TRANSMUTE_CORE_LIBNAME} DESTINATION Windows)
+    set(TRANSMUTE_RELEASE_DEST x86_64-windows-msvc)
 endif()
+
+# Install project's library
+install(TARGETS ${TRANSMUTE_CORE_LIBNAME} DESTINATION ${TRANSMUTE_RELEASE_DEST})
 
 # Install the dependencies
 if (APPLE)
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.dylib DESTINATION macOS)
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.108.dylib DESTINATION macOS)
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.dylib DESTINATION macOS)
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.32.dylib DESTINATION macOS)
+    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.dylib DESTINATION ${TRANSMUTE_RELEASE_DEST})
+    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.108.dylib DESTINATION ${TRANSMUTE_RELEASE_DEST})
+    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.dylib DESTINATION ${TRANSMUTE_RELEASE_DEST})
+    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.32.dylib DESTINATION ${TRANSMUTE_RELEASE_DEST})
 elseif (ANDROID)
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.so DESTINATION Android)
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.so DESTINATION Android)
+    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.so DESTINATION ${TRANSMUTE_RELEASE_DEST})
+    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.so DESTINATION ${TRANSMUTE_RELEASE_DEST})
 elseif (WIN32)
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.dll DESTINATION Windows)
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.dll DESTINATION Windows)
+    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.dll DESTINATION ${TRANSMUTE_RELEASE_DEST})
+    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.dll DESTINATION ${TRANSMUTE_RELEASE_DEST})
 endif()
 
 # Add Tools Function
