@@ -1,0 +1,36 @@
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag Name for Release: v0.3.0'
+        required: true
+      release_body:
+        description: 'Release Body'
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: jsar-runtime-windows
+          path: release/windows
+
+      - name: Download Android artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: jsar-runtime-android
+          path: release/android
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            release/*
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ github.event.inputs.tag_name }}
+          title: Release ${{ github.event.inputs.tag_name }}
+          body: ${{ github.event.inputs.release_body }}
