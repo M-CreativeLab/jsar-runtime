@@ -1,12 +1,13 @@
 name: Release
+
 on:
+  push:
+    tags:
+      - "amidala-v*.*.*"
   workflow_dispatch:
     inputs:
       tag_name:
         description: 'Tag Name for Release: v0.3.0'
-        required: true
-      release_body:
-        description: 'Release Body'
         required: true
 
 jobs:
@@ -113,14 +114,15 @@ jobs:
         with:
           name: jsar-runtime-windows
           path: out/windows
+      - name: Create package
+        run: |
+          cp -r src/proto out/
+          tar -czvf jsar-runtime-release.tar.gz out
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             src/proto/*.proto
-            out/android/*
-            out/windows/*
+            jsar-runtime-release.tar.gz
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ github.event.inputs.tag_name }}
-          title: Release ${{ github.event.inputs.tag_name }}
-          body: ${{ github.event.inputs.release_body }}
