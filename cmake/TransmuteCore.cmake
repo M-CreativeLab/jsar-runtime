@@ -6,7 +6,7 @@ file(GLOB TRANSMUTE_CORE_SOURCE
     "src/runtime/*.cpp"
 )
 
-file(GLOB TRANSMUTE_PROTO_SOURCE "proto/*.pb.cc")
+file(GLOB TRANSMUTE_PROTO_SOURCE "src/proto/*.pb.cc")
 
 set(TRANSMUTE_CORE_LIBNAME TransmuteCore)
 add_library(TransmuteCore SHARED ${TRANSMUTE_CORE_SOURCE} ${TRANSMUTE_PROTO_SOURCE})

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <napi.h>
-#include "transmute_vgom.pb.h"
+#include "proto/transmute_vgom.pb.h"
 
 using namespace transmute::protocol::gom;
 

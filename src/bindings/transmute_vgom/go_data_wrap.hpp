@@ -3,7 +3,7 @@
 #include <napi.h>
 
 #include "math/mesh.hpp"
-#include "transmute_vgom.pb.h"
+#include "proto/transmute_vgom.pb.h"
 
 using namespace transmute::protocol::gom;
 

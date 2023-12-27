@@ -98,10 +98,10 @@ static napi_module transmute_logger_napi_mod = {
     {0},
 };
 
-NODE_API_LINKED_MODULE(env, "transmute:env", InitEnvModule);
-NODE_API_LINKED_MODULE(messaging, "transmute:messaging", InitMessagingModule);
-NODE_API_LINKED_MODULE(gom, "transmute:gom", InitGameObjectModelModule);
-NODE_API_LINKED_MODULE(webaudio, "webaudio", InitWebAudioModule);
+NODE_API_LINKED_MODULE(env,         "transmute:env", InitEnvModule);
+NODE_API_LINKED_MODULE(messaging,   "transmute:messaging", InitMessagingModule);
+NODE_API_LINKED_MODULE(gom,         "transmute:gom", InitGameObjectModelModule);
+NODE_API_LINKED_MODULE(webaudio,    "webaudio", InitWebAudioModule);
 
 /**
  * This function is called when the Node.js instance is exit, we need to dispose all the javascript runtime states and handles here.

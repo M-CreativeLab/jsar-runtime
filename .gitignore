@@ -52,6 +52,6 @@ node_modules
 /build/output
 /build/Debug
 /build/Release
-/proto/*
-!/proto/*.proto
+/src/proto/*
+!/src/proto/*.proto
 *.apk
