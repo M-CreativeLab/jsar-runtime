@@ -1,18 +1,17 @@
 #pragma once
 
-const char* jsframework_source =
-    R"RAW(
-        class CustomEvent extends Event {
-            detail;
-            constructor(type, eventInitDict) {
-                super(type, eventInitDict);
-                this.detail = eventInitDict.detail;
-            }
-            initCustomEvent() {
-                throw new Error('initCustomEvent() is deprecated.');
-            }
-        }
-        globalThis.CustomEvent = CustomEvent;
-    )RAW"
-    @JSBUNDLE_PARTS@
-;
+const char *jsframework_source =
+  R"RAW(
+    class CustomEvent extends Event {
+      detail;
+      constructor(type, eventInitDict) {
+        super(type, eventInitDict);
+        this.detail = eventInitDict.detail;
+      }
+      initCustomEvent() {
+        throw new Error('initCustomEvent() is deprecated.');
+      }
+    }
+    globalThis.CustomEvent = CustomEvent;
+  )RAW"
+  @JSBUNDLE_PARTS@;

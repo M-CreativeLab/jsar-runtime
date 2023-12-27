@@ -6,27 +6,27 @@
 
 extern "C"
 {
-    typedef DLL_PUBLIC void (*LoggerDataCallback)(int fd, const char *data);
+  typedef DLL_PUBLIC void (*LoggerDataCallback)(int fd, const char *data);
 }
 
 class TransmuteLogger
 {
 
 protected:
-    LoggerDataCallback callback_;
+  LoggerDataCallback callback_;
 
 public:
-    static TransmuteLogger *GetInstance();
-    TransmuteLogger()
-    {
-    }
+  static TransmuteLogger *GetInstance();
+  TransmuteLogger()
+  {
+  }
 
-    int setDataCallback(LoggerDataCallback callback);
-    void writeStdout(const char *data);
-    void writeStderr(const char *data);
-    void reset();
+  int setDataCallback(LoggerDataCallback callback);
+  void writeStdout(const char *data);
+  void writeStderr(const char *data);
+  void reset();
 
 private:
-    bool isCallbackSet_ = false;
-    static TransmuteLogger *instance_;
+  bool isCallbackSet_ = false;
+  static TransmuteLogger *instance_;
 };

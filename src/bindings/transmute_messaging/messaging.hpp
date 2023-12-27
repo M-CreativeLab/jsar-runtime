@@ -4,5 +4,5 @@
 
 namespace messaging
 {
-    Napi::Object InitMessagingModule(Napi::Env env, Napi::Object exports);
+  Napi::Object InitMessagingModule(Napi::Env env, Napi::Object exports);
 }

@@ -6,7 +6,7 @@
 class VertexBuffer
 {
 public:
-    float* data;
-    size_t length;
-    size_t byteLength;
+  float *data;
+  size_t length;
+  size_t byteLength;
 };

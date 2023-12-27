@@ -5,119 +5,119 @@ using namespace gom;
 Napi::FunctionReference *DocumentMetadataWrap::constructor;
 void DocumentMetadataWrap::Init(Napi::Env env, Napi::Object exports)
 {
-    Napi::Function tpl = DefineClass(env, "DocumentMetadata",
-                                     {
-                                         InstanceAccessor<&DocumentMetadataWrap::GetSpecVersion, &DocumentMetadataWrap::SetSpecVersion>("specVersion"),
-                                         InstanceAccessor<&DocumentMetadataWrap::GetDescription, &DocumentMetadataWrap::SetDescription>("description"),
-                                         InstanceAccessor<&DocumentMetadataWrap::GetAuthor, &DocumentMetadataWrap::SetAuthor>("author"),
-                                         InstanceAccessor<&DocumentMetadataWrap::GetViewportInitialScale, &DocumentMetadataWrap::SetViewportInitialScale>("viewportInitialScale"),
-                                     });
+  Napi::Function tpl = DefineClass(env, "DocumentMetadata",
+                                   {
+                                       InstanceAccessor<&DocumentMetadataWrap::GetSpecVersion, &DocumentMetadataWrap::SetSpecVersion>("specVersion"),
+                                       InstanceAccessor<&DocumentMetadataWrap::GetDescription, &DocumentMetadataWrap::SetDescription>("description"),
+                                       InstanceAccessor<&DocumentMetadataWrap::GetAuthor, &DocumentMetadataWrap::SetAuthor>("author"),
+                                       InstanceAccessor<&DocumentMetadataWrap::GetViewportInitialScale, &DocumentMetadataWrap::SetViewportInitialScale>("viewportInitialScale"),
+                                   });
 
-    constructor = new Napi::FunctionReference();
-    *constructor = Napi::Persistent(tpl);
-    env.SetInstanceData(constructor);
-    exports.Set("DocumentMetadata", tpl);
+  constructor = new Napi::FunctionReference();
+  *constructor = Napi::Persistent(tpl);
+  env.SetInstanceData(constructor);
+  exports.Set("DocumentMetadata", tpl);
 }
 
 DocumentMetadataWrap::DocumentMetadataWrap(const Napi::CallbackInfo &info) : Napi::ObjectWrap<DocumentMetadataWrap>(info)
 {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
-    this->native_handle_ = new DocumentMetadata();
+  this->native_handle_ = new DocumentMetadata();
 }
 
 Napi::Value DocumentMetadataWrap::GetSpecVersion(const Napi::CallbackInfo &info)
 {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
-    std::string specVersion = this->native_handle_->spec_version();
-    if (specVersion.empty())
-        return env.Null();
+  std::string specVersion = this->native_handle_->spec_version();
+  if (specVersion.empty())
+    return env.Null();
 
-    return Napi::String::New(env, specVersion);
+  return Napi::String::New(env, specVersion);
 }
 
 void DocumentMetadataWrap::SetSpecVersion(const Napi::CallbackInfo &info, const Napi::Value &value)
 {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
-    if (!value.IsString())
-        return;
+  if (!value.IsString())
+    return;
 
-    Napi::String specVersion = value.ToString();
-    this->native_handle_->set_spec_version(specVersion.Utf8Value());
+  Napi::String specVersion = value.ToString();
+  this->native_handle_->set_spec_version(specVersion.Utf8Value());
 }
 
 Napi::Value DocumentMetadataWrap::GetDescription(const Napi::CallbackInfo &info)
 {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
-    std::string description = this->native_handle_->description();
-    if (description.empty())
-        return env.Null();
+  std::string description = this->native_handle_->description();
+  if (description.empty())
+    return env.Null();
 
-    return Napi::String::New(env, description);
+  return Napi::String::New(env, description);
 }
 
 void DocumentMetadataWrap::SetDescription(const Napi::CallbackInfo &info, const Napi::Value &value)
 {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
-    if (!value.IsString())
-        return;
+  if (!value.IsString())
+    return;
 
-    Napi::String description = value.ToString();
-    this->native_handle_->set_description(description.Utf8Value());
+  Napi::String description = value.ToString();
+  this->native_handle_->set_description(description.Utf8Value());
 }
 
 Napi::Value DocumentMetadataWrap::GetAuthor(const Napi::CallbackInfo &info)
 {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
-    std::string author = this->native_handle_->author();
-    if (author.empty())
-        return env.Null();
+  std::string author = this->native_handle_->author();
+  if (author.empty())
+    return env.Null();
 
-    return Napi::String::New(env, author);
+  return Napi::String::New(env, author);
 }
 
 void DocumentMetadataWrap::SetAuthor(const Napi::CallbackInfo &info, const Napi::Value &value)
 {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
-    if (!value.IsString())
-        return;
+  if (!value.IsString())
+    return;
 
-    Napi::String author = value.ToString();
-    this->native_handle_->set_author(author.Utf8Value());
+  Napi::String author = value.ToString();
+  this->native_handle_->set_author(author.Utf8Value());
 }
 
 Napi::Value DocumentMetadataWrap::GetViewportInitialScale(const Napi::CallbackInfo &info)
 {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
-    return Napi::Number::New(env, this->native_handle_->viewport_initial_scale());
+  return Napi::Number::New(env, this->native_handle_->viewport_initial_scale());
 }
 
 void DocumentMetadataWrap::SetViewportInitialScale(const Napi::CallbackInfo &info, const Napi::Value &value)
 {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
-    if (!value.IsNumber())
-        return;
-    this->native_handle_->set_viewport_initial_scale(value.ToNumber().FloatValue());
+  if (!value.IsNumber())
+    return;
+  this->native_handle_->set_viewport_initial_scale(value.ToNumber().FloatValue());
 }
 
 DocumentMetadata *DocumentMetadataWrap::getNativeHandle()
 {
-    return this->native_handle_;
+  return this->native_handle_;
 }
