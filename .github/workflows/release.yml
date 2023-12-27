@@ -10,8 +10,95 @@ on:
         required: true
 
 jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: 1.74.0
+    - name: Install Rust targets
+      run: |
+        rustup target add aarch64-linux-android
+        rustup target add aarch64-apple-darwin
+        rustup target add x86_64-apple-darwin
+        rustup target add x86_64-pc-windows-msvc
+    - name: Set up Java
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'adopt'
+        java-version: '11'
+    - name: Set up Android NDK 17r
+      uses: nttld/setup-ndk@v1
+      with:
+        ndk-version: 'r17'
+    - name: Set up Protoc
+      uses: arduino/setup-protoc@v2
+      with:
+        version: "21.x"
+    - uses: actions/setup-node@v4.0.0
+      with:
+        node-version: 18.16.0
+    - name: Install Node.js dependencies
+      run: npm ci && npx tsc --version
+    - name: Build JavaScript bundle
+      run: |
+        make jsbundle
+    - name: Build library for Android
+      run: |
+        protoc --version
+        make android
+      env:
+        USE_SYSTEM_PROTOC: "true"
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: jsar-runtime-android
+        path: './build/output/release/aarch64-linux-android'
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: 1.74.0
+    - name: Install Rust targets
+      run: |
+        rustup target add aarch64-linux-android
+        rustup target add aarch64-apple-darwin
+        rustup target add x86_64-apple-darwin
+        rustup target add x86_64-pc-windows-msvc
+    - name: Set up Protoc
+      uses: arduino/setup-protoc@v2
+      with:
+        version: "21.x"
+    - uses: actions/setup-node@v4.0.0
+      with:
+        node-version: 18.16.0
+    - name: Install Node.js dependencies
+      run: npm ci && npx tsc --version
+    - name: Build JavaScript bundle
+      run: |
+        make jsbundle
+    - name: Build library for Windows
+      run: |
+        make windows
+      env:
+        USE_SYSTEM_PROTOC: "true"
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: jsar-runtime-windows
+        path: './build/output/release/x86_64-pc-windows-msvc'
+
   release:
     runs-on: ubuntu-latest
+    needs: [build-android, build-windows]
     steps:
       - name: Download Windows artifact
         uses: actions/download-artifact@v2
