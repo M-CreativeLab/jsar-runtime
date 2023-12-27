@@ -14,6 +14,11 @@ jobs:
         os: [ubuntu-latest]
     steps:
     - uses: actions/checkout@v3
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: 1.74.0
     - name: Set up Java
       uses: actions/setup-java@v2
       with:

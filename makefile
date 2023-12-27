@@ -14,6 +14,7 @@ crates:
 	cargo build \
 		--target-dir ./build/output/crates \
 		--release
+	./build/output/crates/release/test_jsbundle_loader
 
 jsbundle:
 	@echo "Building jsbundle..."
@@ -22,15 +23,15 @@ jsbundle:
 		--minify=$(minify) \
 		--without-pack=$(without-pack)
 
-darwin: protofiles
+darwin: protofiles crates
 	@echo "Building for darwin(JOBS=${JOBS})..."
 	make -C ./build -j${JOBS} darwin
 
-android: protofiles
+android: protofiles crates
 	@echo "Building for android(JOBS=${JOBS})..."
 	make -C ./build -j${JOBS} android
 
-windows: protofiles
+windows: protofiles crates
 	@echo "Building for windows(JOBS=${JOBS})..."
 	make -C ./build -j${JOBS} windows
 

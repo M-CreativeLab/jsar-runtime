@@ -2,7 +2,7 @@ name: Build library for Windows
 
 on:
   push:
-    branches: [ "invalid" ]
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -13,6 +13,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: 1.74.0
     - name: Set up Protoc
       uses: arduino/setup-protoc@v2
       with:

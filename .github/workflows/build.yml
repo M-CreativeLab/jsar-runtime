@@ -28,3 +28,4 @@ jobs:
     - name: Build JS Bundles
       run: |
         make jsbundle
+        make crates
