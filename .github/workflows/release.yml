@@ -59,6 +59,45 @@ jobs:
         name: jsar-runtime-android
         path: './build/output/release/aarch64-linux-android'
 
+  build-macOS:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: 1.74.0
+    - name: Install Rust targets
+      run: |
+        rustup target add aarch64-linux-android
+        rustup target add aarch64-apple-darwin
+        rustup target add x86_64-apple-darwin
+        rustup target add x86_64-pc-windows-msvc
+    - name: Set up Protoc
+      uses: arduino/setup-protoc@v2
+      with:
+        version: "21.x"
+    - uses: actions/setup-node@v4.0.0
+      with:
+        node-version: 18.16.0
+    - name: Install Node.js dependencies
+      run: npm ci && npx tsc --version
+    - name: Build JavaScript bundle
+      run: |
+        make jsbundle
+    - name: Build library for macOS
+      run: |
+        protoc --version
+        make darwin
+      env:
+        USE_SYSTEM_PROTOC: "true"
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: jsar-runtime-darwin
+        path: './build/output/release/universal-apple-darwin'
+
   build-windows:
     runs-on: windows-latest
     steps:
@@ -109,6 +148,11 @@ jobs:
         with:
           name: jsar-runtime-android
           path: out/android
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: jsar-runtime-darwin
+          path: out/darwin
       - name: Download Windows artifact
         uses: actions/download-artifact@v2
         with:
@@ -117,7 +161,7 @@ jobs:
       - name: Create package
         run: |
           cp -r src/proto out/
-          tar -czvf jsar-runtime-release.tar.gz out
+          tar -czvf jsar-runtime-release.tar.gz out/
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
