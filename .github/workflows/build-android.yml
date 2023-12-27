@@ -43,7 +43,7 @@ jobs:
         node-version: 18.16.0
     - name: Install Node.js dependencies
       run: npm ci && npx tsc --version
-    - name: Build JS Bundles
+    - name: Build JavaScript bundle
       run: |
         make jsbundle
     - name: Build library for Android

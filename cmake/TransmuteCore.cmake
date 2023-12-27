@@ -33,13 +33,13 @@ target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${PROTOBUF_HEADERS_
 set(LABSOUND_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/LabSound/include)
 target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${LABSOUND_HEADERS_PATH})
 
-set(STATICLIB_EXTNAME .a)
-set(DYNAMICLIB_EXTNAME .so)
+set(STATICLIB_EXTNAME a)
+set(DYNAMICLIB_EXTNAME so)
 if (APPLE)
-    set(DYNAMICLIB_EXTNAME .dylib)
+    set(DYNAMICLIB_EXTNAME dylib)
 elseif (WIN32)
-    set(STATICLIB_EXTNAME .lib)
-    set(DYNAMICLIB_EXTNAME .dll)
+    set(STATICLIB_EXTNAME lib)
+    set(DYNAMICLIB_EXTNAME dll)
 endif()
 
 # Add rust crates headers & libraries
