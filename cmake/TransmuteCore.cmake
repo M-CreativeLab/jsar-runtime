@@ -33,6 +33,15 @@ target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${PROTOBUF_HEADERS_
 set(LABSOUND_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/LabSound/include)
 target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${LABSOUND_HEADERS_PATH})
 
+set(STATICLIB_EXTNAME .a)
+set(DYNAMICLIB_EXTNAME .so)
+if (APPLE)
+    set(DYNAMICLIB_EXTNAME .dylib)
+elseif (WIN32)
+    set(STATICLIB_EXTNAME .lib)
+    set(DYNAMICLIB_EXTNAME .dll)
+endif()
+
 # Add rust crates headers & libraries
 target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${CMAKE_SOURCE_DIR}/build/output/headers)
 if (APPLE)
@@ -44,7 +53,7 @@ elseif (WIN32)
 endif()
 message(STATUS "TRANSMUTE_CRATE_TARGET: ${TRANSMUTE_CRATE_TARGET}")
 target_link_libraries(${TRANSMUTE_CORE_LIBNAME} 
-    PRIVATE ${CMAKE_SOURCE_DIR}/build/output/crates/${TRANSMUTE_CRATE_TARGET}release/libjsar_jsbundle.a)
+    PRIVATE ${CMAKE_SOURCE_DIR}/build/output/crates/${TRANSMUTE_CRATE_TARGET}release/libjsar_jsbundle.${STATICLIB_EXTNAME})
 
 # Optional dependencies
 if (APPLE)

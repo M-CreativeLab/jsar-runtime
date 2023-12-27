@@ -32,7 +32,11 @@ jobs:
         node-version: 18.16.0
     - name: Install Node.js dependencies
       run: npm ci && npx tsc --version
-    - name: Build JS Bundles
+    - name: Build JavaScript bundles
       run: |
         make jsbundle
+    - name: Build Rust crates
+      run: |
         make crates
+        ls -lh ./build/output/crates
+        ls -lh ./build/output/headers/crates

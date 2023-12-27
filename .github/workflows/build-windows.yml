@@ -18,7 +18,12 @@ jobs:
       with:
         profile: minimal
         toolchain: 1.74.0
-        target: x86_64-pc-windows-msvc
+    - name: Install Rust targets
+      run: |
+        rustup target add aarch64-linux-android
+        rustup target add aarch64-apple-darwin
+        rustup target add x86_64-apple-darwin
+        rustup target add x86_64-pc-windows-msvc
     - name: Set up Protoc
       uses: arduino/setup-protoc@v2
       with:
