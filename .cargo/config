@@ -1,0 +1,18 @@
+[build]
+target = [
+  "aarch64-apple-darwin",
+  "x86_64-apple-darwin",
+  "aarch64-linux-android",
+  "x86_64-pc-windows-msvc",
+]
+target-dir = "build/output/crates"
+
+[env]
+MACOSX_DEPLOYMENT_TARGET = "11.0"
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = "s"
+strip = true

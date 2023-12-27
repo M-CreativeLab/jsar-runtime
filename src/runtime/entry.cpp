@@ -6,7 +6,7 @@
 
 #include "debug.hpp"
 #include "entry.hpp"
-#include "jsbundle.h"
+#include "crates/jsar_jsbundle.h"
 
 #include "bindings/env/env.hpp"
 #include "bindings/env/binding.hpp"
@@ -291,11 +291,12 @@ extern "C"
     if (processInitializationResult != nullptr && platformOnProcess != nullptr)
       return 1;
 
+    const char *jsbundle_source = reinterpret_cast<const char *>(get_jsbundle());
     std::vector<std::string> args = {
         "node",
         "--experimental-vm-modules",
         "-e",
-        jsframework_source};
+        jsbundle_source};
 
 #ifdef __ANDROID__
     if (isDebug)

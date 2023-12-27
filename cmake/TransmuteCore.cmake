@@ -33,6 +33,19 @@ target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${PROTOBUF_HEADERS_
 set(LABSOUND_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/LabSound/include)
 target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${LABSOUND_HEADERS_PATH})
 
+# Add rust crates headers & libraries
+target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${CMAKE_SOURCE_DIR}/build/output/headers)
+if (APPLE)
+    set(TRANSMUTE_CRATE_TARGET universal-apple-darwin/)
+elseif (ANDROID)
+    set(TRANSMUTE_CRATE_TARGET aarch64-linux-android/)
+elseif (WIN32)
+    set(TRANSMUTE_CRATE_TARGET x86_64-pc-windows-msvc/)
+endif()
+message(STATUS "TRANSMUTE_CRATE_TARGET: ${TRANSMUTE_CRATE_TARGET}")
+target_link_libraries(${TRANSMUTE_CORE_LIBNAME} 
+    PRIVATE ${CMAKE_SOURCE_DIR}/build/output/crates/${TRANSMUTE_CRATE_TARGET}release/libjsar_jsbundle.a)
+
 # Optional dependencies
 if (APPLE)
     set(THIRDPARTY_LIBRARY_PATH ${CMAKE_SOURCE_DIR}/thirdparty/libs/${CMAKE_SYSTEM_NAME})

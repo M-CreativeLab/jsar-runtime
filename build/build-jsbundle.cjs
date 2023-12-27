@@ -27,6 +27,3 @@ if (clean === 'yes' || !fs.existsSync(path.join(jsDir, 'node_modules'))) {
 if (!withoutPack || withoutPack !== 'yes') {
   shell(`npx webpack --config webpack.config.cjs`, { cwd: jsDir });
 }
-
-const jsbundleHeaderPath = path.join(jsDir, 'src/runtime/jsbundle.h');
-shell(`node ${path.join(__dirname, 'jsbundle-cpp-gen.cjs')} --out ${jsbundleHeaderPath}`, { cwd: jsDir });
