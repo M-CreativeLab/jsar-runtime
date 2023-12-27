@@ -46,4 +46,3 @@ jobs:
       with:
         name: jsar-runtime-windows
         path: './build/output/release/x86_64-pc-windows-msvc'
-

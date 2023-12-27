@@ -166,7 +166,7 @@ if (APPLE)
 elseif (ANDROID)
     set(TRANSMUTE_RELEASE_DEST aarch64-linux-android)
 elseif (WIN32)
-    set(TRANSMUTE_RELEASE_DEST x86_64-windows-msvc)
+    set(TRANSMUTE_RELEASE_DEST x86_64-pc-windows-msvc)
 endif()
 
 # Install project's library
