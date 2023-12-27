@@ -19,6 +19,7 @@ jobs:
       with:
         profile: minimal
         toolchain: 1.74.0
+        target: aarch64-linux-android
     - name: Set up Java
       uses: actions/setup-java@v2
       with:
