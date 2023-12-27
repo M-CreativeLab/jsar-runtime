@@ -10,6 +10,11 @@ protofiles:
 	@echo "Building proto..."
 	node ./build/build-protofiles.cjs
 
+crates:
+	cargo build \
+		--target-dir ./build/output/crates \
+		--release
+
 jsbundle:
 	@echo "Building jsbundle..."
 	node ./build/build-jsbundle.cjs \
@@ -29,6 +34,6 @@ windows: protofiles
 	@echo "Building for windows(JOBS=${JOBS})..."
 	make -C ./build -j${JOBS} windows
 
-all: jsbundle darwin android
+all: jsbundle crates darwin android
 
-.PHONY: jsbundle darwin android all
+.PHONY: jsbundle crates darwin android all

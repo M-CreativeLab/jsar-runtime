@@ -1,0 +1,18 @@
+[package]
+name = "jsar_jsbundle_loader"
+version = "1.0.0"
+authors = ["The JSAR Project Developers"]
+license = "Apache-2.0"
+edition = "2021"
+publish = false
+build = "build.rs"
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3
+
+[[bin]]
+name = "test_jsbundle_loader"
+path = "test_runner.rs"
