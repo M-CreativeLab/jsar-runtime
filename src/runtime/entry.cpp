@@ -234,14 +234,14 @@ public:
     threadHandle = new std::thread([this]()
                                    {
             if (RunNodeInstance(platformOnProcess) != 0)
-                DEBUG("transmute", "nodejs script exited with error.");
+              DEBUG("transmute", "nodejs script exited with error.");
 
             started = false;
             if (dispose_v8_onexit)
             {
-                V8::Dispose();
-                V8::DisposePlatform();
-                node::TearDownOncePerProcess();
+              V8::Dispose();
+              V8::DisposePlatform();
+              node::TearDownOncePerProcess();
             } });
 
     started = true;
@@ -291,12 +291,15 @@ extern "C"
     if (processInitializationResult != nullptr && platformOnProcess != nullptr)
       return 1;
 
-    const char *jsbundle_source = reinterpret_cast<const char *>(get_jsbundle());
+    const char *jsbundle_source = reinterpret_cast<const char *>(get_jsbundle_ptr());
+    size_t jsbundle_size = get_jsbundle_size();
+
     std::vector<std::string> args = {
         "node",
         "--experimental-vm-modules",
+        "--experimental-global-customevent",
         "-e",
-        jsbundle_source};
+        std::string(jsbundle_source, jsbundle_size)};
 
 #ifdef __ANDROID__
     if (isDebug)
