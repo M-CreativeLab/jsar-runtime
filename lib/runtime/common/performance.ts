@@ -4,9 +4,9 @@
  * @returns The performance object.
  */
 export function getPerformanceInCurrentEnv(): Performance {
-    if (performance !== undefined) {
-        return performance;
-    } else {
-        return require('perf_hooks').performance;
-    }
+  if (performance !== undefined) {
+    return performance;
+  } else {
+    return require('perf_hooks').performance;
+  }
 }

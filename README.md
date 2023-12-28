@@ -13,6 +13,15 @@ TODO
 - [Node.js](https://nodejs.org/en/) v18.16.1
 - [Rust](https://www.rust-lang.org/) v1.70.0 or later
 
+And you need to add the following targets to your Rust toolchain:
+
+```sh
+$ rustup target add aarch64-linux-android
+$ rustup target add aarch64-apple-darwin
+$ rustup target add x86_64-apple-darwin
+$ rustup target add x86_64-pc-windows-msvc
+```
+
 ### Build from source
 
 Firstly, you need to install the dependencies and build the JSAR JavaScript bundle which is used in the runtime.

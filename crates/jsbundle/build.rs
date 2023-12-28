@@ -8,6 +8,8 @@ fn main() {
   let file_name = "jsar-runtime.js";
 
   let source_path = current_dir.join("../../build/output").join(file_name);
+  println!("cargo:rerun-if-changed={}", source_path.display());
+
   if !source_path.exists() {
     panic!(
       "Error: File '{}' not found in directory '{}'",
