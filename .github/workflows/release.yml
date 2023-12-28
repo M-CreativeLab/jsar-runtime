@@ -170,7 +170,9 @@ jobs:
             jsar-runtime-release.tar.gz
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ github.event.inputs.tag_name }}
-      - name: Build jsar-loader-unity
-        uses: M-CreativeLab/jsar-loader-unity/.github/workflows/release.yml@main
-        with:
-          jsar_runtime_version: ${{ github.event.inputs.tag_name }}
+
+  build-unity-loader:
+    needs: [release]
+    uses: M-CreativeLab/jsar-loader-unity/.github/workflows/release.yml@main
+    with:
+      jsar_runtime_version: ${{ github.event.inputs.tag_name }}
