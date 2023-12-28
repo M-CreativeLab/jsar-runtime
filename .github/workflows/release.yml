@@ -174,5 +174,7 @@ jobs:
   build-unity-loader:
     needs: [release]
     uses: M-CreativeLab/jsar-loader-unity/.github/workflows/release.yml@main
+    permissions:
+      contents: write
     with:
       jsar_runtime_version: ${{ github.event.inputs.tag_name }}
