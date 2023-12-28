@@ -177,12 +177,10 @@ jobs:
     steps:
       - name: Dispatch jsar-loader-unity to build
         run: |
-          REPO_OWNER="M-CreativeLab"
-          REPO_NAME="jsar-loader-unity"
           TOKEN="${{ secrets.GITHUB_TOKEN }}"
-          curl -X POST \
+          curl -X POST --verbose \
             -H "Authorization: Bearer $TOKEN" \
             -H "Accept: application/vnd.github.everest-preview+json" \
             -H "Content-Type: application/json" \
-            https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/dispatches \
+            https://api.github.com/repos/M-CreativeLab/jsar-loader-unity/dispatches \
             --data '{"jsar_runtime_version": "${{ inputs.tag_name }}"}'
