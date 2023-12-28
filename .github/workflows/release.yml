@@ -173,8 +173,13 @@ jobs:
 
   build-unity-loader:
     needs: [release]
-    uses: M-CreativeLab/jsar-loader-unity/.github/workflows/release.yml@main
-    permissions:
-      contents: write
-    with:
-      jsar_runtime_version: ${{ github.event.inputs.tag_name }}
+    run: |
+      REPO_OWNER="M-CreativeLab"
+      REPO_NAME="jsar-loader-unity"
+      TOKEN="${{ secrets.GITHUB_TOKEN }}"
+      curl -X POST \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "Accept: application/vnd.github.everest-preview+json" \
+        -H "Content-Type: application/json" \
+        https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/dispatches \
+        --data '{"jsar_runtime_version": "${{ inputs.tag_name }}"}'
