@@ -94,7 +94,6 @@ export class GameObjectModelSerializer {
    */
   async serializeScene(scene: BABYLON.Scene) {
     await executeWithTimeProfiler('prepare guids', () => this.#generateGuids(scene));
-    await executeWithTimeProfiler(`serialize ${scene.materials.length} materials`, () => this.serializeMaterials(scene));
     await executeWithTimeProfiler(`serialize ${scene.transformNodes.length} transform nodes`, () => this.serializeTransformNodes(scene));
     await executeWithTimeProfiler(`serialize ${scene.meshes.length} meshes`, () => this.serializeAllMeshes(scene));
     await executeWithTimeProfiler('serializeToBuffer', () => this.#doSerializeAndWrite());
@@ -140,11 +139,33 @@ export class GameObjectModelSerializer {
         value: node.scaling,
       });
       if (node instanceof BABYLON.AbstractMesh) {
-        gom.createPropertyChange(node.__vgoGuid, {
-          name: 'materialReferenceGuid',
-          type: 'string',
-          value: `${node.material.uniqueId}`,
-        });
+        if (node.material) {
+          gom.createPropertyChange(node.__vgoGuid, {
+            name: 'materialReferenceGuid',
+            type: 'string',
+            value: `${node.material.uniqueId}`,
+          });
+        }
+        if (node.skeleton || node.morphTargetManager) {
+          const triangles = toIndicesArray(node.getIndices());
+          let positionVertexData = node.getPositionData(true, true);
+          let normalsVertexData = node.getNormalsData(true, true);
+          if (Array.isArray(positionVertexData)) {
+            positionVertexData = new Float32Array(positionVertexData);
+          }
+          if (Array.isArray(normalsVertexData)) {
+            normalsVertexData = new Float32Array(normalsVertexData);
+          }
+          gom.createVerticesSyncChange(
+            node.__vgoGuid,
+            triangles,
+            {
+              'position': positionVertexData,
+              'normals': normalsVertexData,
+              // TODO: support other vertex data such as colors, uvs, etc.
+            }
+          );
+        }
       }
 
       // update outline properties
@@ -213,16 +234,6 @@ export class GameObjectModelSerializer {
     for (const mesh of scene.meshes) {
       this.serializeMesh(mesh);
     }
-  }
-
-  /**
-   * Serialize all materials in the given scene.
-   * @param scene 
-   */
-  async serializeMaterials(scene: BABYLON.Scene) {
-    return Promise.all(
-      scene.materials.map(material => this.serializeMaterial(material))
-    );
   }
 
   /**

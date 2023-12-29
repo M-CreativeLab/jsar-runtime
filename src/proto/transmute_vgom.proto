@@ -152,6 +152,19 @@ message PropertyChangeOnGameObject {
   string string_value = 23;
 }
 
+message VerticesSyncChangeOnGameObject {
+  string target_object_guid = 1;
+  repeated float mesh_vertices = 2;
+  repeated int32 mesh_triangles = 3;
+  repeated float mesh_normals_vertices = 4;
+  repeated float mesh_tangents_vertices = 5;
+  repeated float mesh_colors_vertices = 6;
+  repeated float mesh_uvs_vertices = 7;
+  repeated float mesh_uv2_vertices = 8;
+  repeated float mesh_uv3_vertices = 9;
+  repeated float mesh_uv4_vertices = 10;
+}
+
 message MaterialSyncChangeOnGameObject {
   string target_object_guid = 1;
   string material_name = 2;
@@ -259,7 +272,11 @@ message VirtualGameObjectModel {
    */
   repeated PropertyChangeOnGameObject property_changes_on_game_object = 101;
   /**
+   * The vertices changes of the game objects, this is to represent for vertices animation.
+   */
+  repeated VerticesSyncChangeOnGameObject vertices_changes_on_game_object = 102;
+  /**
    * The material changes of the game objects, this is to represent the changes of the game objects in the next frames.
    */
-  repeated MaterialSyncChangeOnGameObject material_changes_on_game_object = 102;
+  repeated MaterialSyncChangeOnGameObject material_changes_on_game_object = 103;
 }

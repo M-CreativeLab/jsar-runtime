@@ -21,6 +21,7 @@ namespace gom
     Napi::Value CreateGameObjectAsChild(const Napi::CallbackInfo &info);
     Napi::Value CreateAnimationGroupAsChild(const Napi::CallbackInfo &info);
     Napi::Value CreatePropertyChange(const Napi::CallbackInfo &info);
+    Napi::Value CreateVerticesSyncChange(const Napi::CallbackInfo &info);
     Napi::Value CreateMaterialSyncChange(const Napi::CallbackInfo &info);
     Napi::Value CreateAnimationGroupChange(const Napi::CallbackInfo &info);
     Napi::Value SerializeAndWrite(const Napi::CallbackInfo &info);

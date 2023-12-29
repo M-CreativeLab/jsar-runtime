@@ -341,12 +341,20 @@ class TransmuteEngine extends BABYLON.NullEngine {
      * Otherwise, decode the image data to pixels.
      */
     // Check if the _buffer is ArrayBufferView, otherwise we will skip the decoding.
-    const rawBuffer = texture._buffer;
+    let mimeType = texture[MIME_TYPE_SYMBOL];
+    let rawBuffer = texture._buffer;
+    if (!ArrayBuffer.isView(rawBuffer) && texture.url) {
+      /**
+       * TODO: not blocking the reading pixels.
+       */
+      const textureResp = await fetch(texture.url);
+      rawBuffer = new Uint8Array(await textureResp.arrayBuffer());
+      mimeType = textureResp.headers.get('Content-Type');
+    }
     if (!ArrayBuffer.isView(rawBuffer)) {
       return null;
     }
 
-    const mimeType = texture[MIME_TYPE_SYMBOL];
     const imageBuffer = new Uint8Array(rawBuffer.buffer, rawBuffer.byteOffset, rawBuffer.byteLength);
     let image: Jimp;
 

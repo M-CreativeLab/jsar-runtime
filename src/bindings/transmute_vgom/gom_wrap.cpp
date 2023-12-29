@@ -17,6 +17,7 @@ void VirtualGameObjectModelWrap::Init(Napi::Env env, Napi::Object exports)
        InstanceMethod("setMetadata", &VirtualGameObjectModelWrap::SetMetadata),
        InstanceMethod("createGameObjectAsChild", &VirtualGameObjectModelWrap::CreateGameObjectAsChild),
        InstanceMethod("createPropertyChange", &VirtualGameObjectModelWrap::CreatePropertyChange),
+       InstanceMethod("createVerticesSyncChange", &VirtualGameObjectModelWrap::CreateVerticesSyncChange),
        InstanceMethod("createMaterialSyncChange", &VirtualGameObjectModelWrap::CreateMaterialSyncChange),
        InstanceMethod("serializeAndWrite", &VirtualGameObjectModelWrap::SerializeAndWrite),
        InstanceMethod("isBufferEmpty", &VirtualGameObjectModelWrap::IsBufferEmpty),
@@ -126,6 +127,74 @@ Napi::Value VirtualGameObjectModelWrap::CreatePropertyChange(const Napi::Callbac
   auto property_change_native_handle = native_handle_->add_property_changes_on_game_object();
   auto externalObj = Napi::External<PropertyChangeOnGameObject>::New(env, property_change_native_handle);
   return GameObjectPropertyChangeWrap::constructor->New({guid, changeDescriptor, externalObj});
+}
+
+Napi::Value VirtualGameObjectModelWrap::CreateVerticesSyncChange(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  if (info.Length() < 1 || !info[0].IsString())
+  {
+    Napi::TypeError::New(env, "Guid is expected").ThrowAsJavaScriptException();
+    return env.Null();
+  }
+  Napi::String guid = info[0].ToString();
+  auto vertices_change_native_handle = native_handle_->add_vertices_changes_on_game_object();
+  vertices_change_native_handle->set_target_object_guid(guid.Utf8Value());
+
+  auto trianglesValue = info[1];
+  if (!trianglesValue.IsTypedArray())
+  {
+    Napi::TypeError::New(env, "Triangles is expected to be a TypedArray")
+        .ThrowAsJavaScriptException();
+    return env.Null();
+  }
+  else
+  {
+    auto buffer = trianglesValue.As<Napi::TypedArray>();
+    if (buffer.TypedArrayType() != napi_uint32_array)
+    {
+      Napi::TypeError::New(env, "data is expected to be Uint32Array").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    Napi::Uint32Array triangles_data = buffer.As<Napi::Uint32Array>();
+    for (size_t i = 0; i < triangles_data.ElementLength(); i++)
+      vertices_change_native_handle->add_mesh_triangles(triangles_data[i]);
+  }
+
+  auto verticesValue = info[2].As<Napi::Object>();
+  auto isPositionChanged = verticesValue.Has("position");
+  auto isNormalsChanged = verticesValue.Has("normals");
+
+  if (isPositionChanged)
+  {
+    auto bufferValue = verticesValue.Get("position");
+    if (!bufferValue.IsTypedArray() || bufferValue.As<Napi::TypedArray>().TypedArrayType() != napi_float32_array)
+    {
+      Napi::TypeError::New(env, "position is expected to be Float32Array")
+          .ThrowAsJavaScriptException();
+      return env.Null();
+    }
+    Napi::Float32Array position_data = bufferValue.As<Napi::Float32Array>();
+    for (size_t i = 0; i < position_data.ElementLength(); i++)
+      vertices_change_native_handle->add_mesh_vertices(position_data[i]);
+  }
+  if (isNormalsChanged)
+  {
+    auto bufferValue = verticesValue.Get("normals");
+    if (!bufferValue.IsTypedArray() || bufferValue.As<Napi::TypedArray>().TypedArrayType() != napi_float32_array)
+    {
+      Napi::TypeError::New(env, "normals is expected to be Float32Array")
+          .ThrowAsJavaScriptException();
+      return env.Null();
+    }
+    Napi::Float32Array normals_data = bufferValue.As<Napi::Float32Array>();
+    for (size_t i = 0; i < normals_data.ElementLength(); i++)
+      vertices_change_native_handle->add_mesh_normals_vertices(normals_data[i]);
+  }
+  return env.Null();
 }
 
 Napi::Value VirtualGameObjectModelWrap::CreateMaterialSyncChange(const Napi::CallbackInfo &info)

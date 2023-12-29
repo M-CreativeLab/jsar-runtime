@@ -591,6 +591,18 @@ export declare class VirtualGameObjectModel {
   createPropertyChange(guid: string, descriptor: PropertyChange): PropertyChangeOnGameObject;
 
   /**
+   * Create a new vertices sync change on the specific game object.
+   * @param guid 
+   * @param triangles
+   * @param vertices 
+   */
+  createVerticesSyncChange(
+    guid: string,
+    triangles: Uint32Array,
+    vertices: Partial<{ [key in VertexType]: Float32Array }>
+  );
+
+  /**
    * Create a material sync change of a game object.
    * @param guid the material's target node guid.
    * @param material the material to sync.
