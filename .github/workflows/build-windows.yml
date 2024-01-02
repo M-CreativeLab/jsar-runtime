@@ -41,8 +41,3 @@ jobs:
         make windows
       env:
         USE_SYSTEM_PROTOC: "true"
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: jsar-runtime-windows
-        path: './build/output/release/x86_64-pc-windows-msvc'
