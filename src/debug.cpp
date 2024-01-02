@@ -3,6 +3,7 @@
 #include "logger.hpp"
 
 #ifdef _WIN32
+#include <windows.h>
 #include <processthreadsapi.h>
 #elif __ANDROID__
 #include <sys/prctl.h>
