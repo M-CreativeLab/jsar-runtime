@@ -2,6 +2,10 @@
 #include "debug.hpp"
 #include "logger.hpp"
 
+#ifdef __ANDROID__
+#include <sys/prctl.h>
+#endif
+
 void DEBUG(const char *tag, const char *format, ...)
 {
   va_list args;
@@ -30,6 +34,9 @@ void SET_THREAD_NAME(const std::string &name)
 #ifdef _WIN32
   // Windows
   SetThreadDescription(GetCurrentThread(), std::wstring(name.begin(), name.end()).c_str());
+#elif __ANDROID__
+  // Android
+ prctl(PR_SET_NAME, name.c_str(), 0, 0, 0);
 #else
   // POSIX systems (Linux, macOS)
   pthread_setname_np(name.c_str());
