@@ -240,12 +240,12 @@ Napi::Value VirtualGameObjectModelWrap::SerializeAndWrite(const Napi::CallbackIn
     Napi::TypeError::New(env, "Channel ID is not registered");
     return env.Null();
   }
-  GameObjectModelBufferWritter *gom = GameObjectModelBufferWritter::keyedBufferWrittersMap[channelId.c_str()];
   size_t size = this->native_handle_->ByteSizeLong();
   std::vector<uint8_t> buffer(size);
 
   if (this->native_handle_->SerializeToArray(buffer.data(), buffer.size()))
   {
+    GameObjectModelBufferWritter *gom = GameObjectModelBufferWritter::keyedBufferWrittersMap[channelId.c_str()];
     gom->setBuffer(buffer.data(), buffer.size());
     return Napi::Number::New(env, buffer.size());
   }

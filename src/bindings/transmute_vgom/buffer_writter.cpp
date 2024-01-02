@@ -14,13 +14,14 @@ GameObjectModelBufferWritter::GameObjectModelBufferWritter()
 
 GameObjectModelBufferWritter::~GameObjectModelBufferWritter()
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   if (data_ != nullptr)
   {
     free(data_);
     data_ = nullptr;
   }
   data_size_ = 0;
-  state_ = BufferWorkingState::Idle;
+  state_ = BufferWorkingState::Disposed;
   error_code_ = -1;
 }
 

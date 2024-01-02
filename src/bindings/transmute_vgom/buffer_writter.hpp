@@ -12,6 +12,7 @@ namespace gom
     Idle = 0,
     Errored,
     Running,
+    Disposed,
   };
 
   class GameObjectModelBufferWritter
