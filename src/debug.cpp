@@ -24,3 +24,14 @@ void DEBUG(const char *tag, const char *format, ...)
   delete[] buffer;
   va_end(args);
 }
+
+void SET_THREAD_NAME(const std::string &name)
+{
+#ifdef _WIN32
+  // Windows
+  SetThreadDescription(GetCurrentThread(), std::wstring(name.begin(), name.end()).c_str());
+#else
+  // POSIX systems (Linux, macOS)
+  pthread_setname_np(name.c_str());
+#endif
+}

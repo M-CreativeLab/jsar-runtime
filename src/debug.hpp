@@ -7,3 +7,4 @@
 #endif
 
 void DEBUG(const char *tag, const char *format, ...);
+void SET_THREAD_NAME(const std::string &name);

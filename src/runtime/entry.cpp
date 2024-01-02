@@ -121,6 +121,8 @@ void NodejsOnExitHandler(Environment *env, int exit_code)
 
 int RunNodeInstance(MultiIsolatePlatform *platform)
 {
+  SET_THREAD_NAME("TransmuteNodeInstance Bootstraping");
+
   int exit_code = 0;
   const std::vector<std::string> &args = processInitializationResult->args();
   const std::vector<std::string> &exec_args = processInitializationResult->exec_args();
@@ -143,6 +145,7 @@ int RunNodeInstance(MultiIsolatePlatform *platform)
   Environment *env = setup->env();
   node::SetProcessExitHandler(env, NodejsOnExitHandler);
   DEBUG("transmute", "RunNodeInstance: setup is ready and isolate & environment are created");
+  SET_THREAD_NAME("TransmuteNodeInstance Ready");
 
   {
     Locker locker(isolate);
@@ -172,6 +175,7 @@ int RunNodeInstance(MultiIsolatePlatform *platform)
     if (loadenv_ret.IsEmpty()) // There has been a JS exception.
       return 1;
 
+    SET_THREAD_NAME("TransmuteNodeInstance Running");
     exit_code = node::SpinEventLoop(env).FromMaybe(1);
     DEBUG("transmute", "Node.js instance's event loop exited, code=%d", exit_code);
 
@@ -180,6 +184,7 @@ int RunNodeInstance(MultiIsolatePlatform *platform)
     // and will act like worker.terminate() if called from another thread.
     node::Stop(env);
     DEBUG("transmute", "Node.js instance is stopped.");
+    SET_THREAD_NAME("TransmuteNodeInstance Stopped");
 
     if (transmuteLoggerOnProcess != nullptr)
       transmuteLoggerOnProcess->reset();
