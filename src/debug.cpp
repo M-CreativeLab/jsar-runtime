@@ -2,7 +2,9 @@
 #include "debug.hpp"
 #include "logger.hpp"
 
-#ifdef __ANDROID__
+#ifdef _WIN32
+#include <processthreadsapi.h>
+#elif __ANDROID__
 #include <sys/prctl.h>
 #endif
 
@@ -37,7 +39,7 @@ void SET_THREAD_NAME(const std::string &name)
 #elif __ANDROID__
   // Android
  prctl(PR_SET_NAME, name.c_str(), 0, 0, 0);
-#else
+#elif __APPLE__
   // POSIX systems (Linux, macOS)
   pthread_setname_np(name.c_str());
 #endif
