@@ -37,6 +37,19 @@ export class TransmuteResourceLoader implements ResourceLoader {
   }
 
   private _readFile(pathname: string, returnsAs: ResourceAs): Promise<ResourceResult> {
+    /**
+     * FIXME: This is a workaround for the issue that the path of the file URL on Windows starts with a slash.
+     */
+    let isWin: boolean;
+    if (typeof navigator !== 'undefined') {
+      isWin = navigator.platform?.indexOf('Win') > -1;
+    } else {
+      isWin = process.platform === 'win32';
+    }
+    if (isWin && pathname.startsWith('/')) {
+      pathname = pathname.slice(1);
+    }
+
     if (returnsAs === 'string') {
       return this._runtime.readTextFile(pathname);
     } else if (returnsAs === 'json') {

@@ -187,6 +187,7 @@ class TransmuteEngine extends BABYLON.NullEngine {
      * We use this variable to avoid the infinite loop when the last change buffer is not consumed.
      */
     let triesToWaitBufferEmpty = 0;
+    let serializingOrWriting = false;
 
     /**
      * Watching changes means we need to use Babylonjs's render loop to update the change buffers.
@@ -203,14 +204,29 @@ class TransmuteEngine extends BABYLON.NullEngine {
       }
       triesToWaitBufferEmpty = 0; /** Reset the retries number when buffer is empty */
 
-      // create the change buffer before animate or render.
-      const target = await this.#serializer.createChangeSerializable();
-      scene.render(false, false);
+      /**
+       * If the serializing or buffer writing task is not finished, we will skip this frame.
+       */
+      if (serializingOrWriting === true) {
+        return;
+      }
 
-      // write vgom buffer only if the target is ok and non headless mode.
-      if (target != null && !this.#headless) {
-        // write vgom buffer
-        this.#serializer.serializeAndWrite(target);
+      // create the change buffer before animate or render.
+      serializingOrWriting = true;
+      try {
+        const target = await this.#serializer.createChangeSerializable();
+        scene.render(false, false);
+
+        // write vgom buffer only if the target is ok and non headless mode.
+        if (target != null && !this.#headless) {
+          // write vgom buffer
+          this.#serializer.serializeAndWrite(target);
+        }
+      } catch (_err) {
+        // eslint-disable-next-line no-console
+        // TODO: report this error?
+      } finally {
+        serializingOrWriting = false;
       }
     });
   }
