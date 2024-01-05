@@ -92,6 +92,8 @@ elseif (APPLE)
         "-framework Cocoa"
     )
     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${DARWIN_LABSOUND_DEPS})
+elseif (WIN32)
+    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE dsound.lib dxguid.lib winmm.lib)
 elseif (ANDROID)
     # TODO: These vars are for libnyquist and should be set in the find libynquist script.
     # TODO: libnyquist's loadabc calls getenv and setenv. That's undesirable.
