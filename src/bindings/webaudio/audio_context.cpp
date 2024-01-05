@@ -24,6 +24,12 @@ namespace webaudio
     return _defaultAudioContext.get();
   }
 
+  void disposeDefaultAudioContext()
+  {
+    if (_defaultAudioContext)
+      _defaultAudioContext.reset();
+  }
+
   Napi::FunctionReference *AudioContext::constructor;
   void AudioContext::Init(Napi::Env env, Napi::Object exports)
   {

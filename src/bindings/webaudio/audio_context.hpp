@@ -31,6 +31,7 @@ namespace webaudio
   WebAudioAsync *getWebAudioAsync();
   std::unique_ptr<lab::AudioContext> getNewAudioContext();
   lab::AudioContext *getDefaultAudioContext();
+  void disposeDefaultAudioContext();
 
   class AudioContext : public Napi::ObjectWrap<AudioContext>
   {

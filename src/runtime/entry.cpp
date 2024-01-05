@@ -109,12 +109,6 @@ NODE_API_LINKED_MODULE(webaudio, "webaudio", InitWebAudioModule);
 void NodejsOnExitHandler(Environment *env, int exit_code)
 {
   DEBUG("transmute", "NodejsOnExitHandler: exit_code = %d", exit_code);
-
-  // remove `GameObjectModelBufferWritter::keyedBufferWrittersMap` items
-  for (auto &pair : GameObjectModelBufferWritter::keyedBufferWrittersMap)
-    delete pair.second;
-  GameObjectModelBufferWritter::keyedBufferWrittersMap.clear();
-
   TransmuteNative_Dispose(true);
   node::Stop(env);
 }
@@ -185,6 +179,20 @@ int RunNodeInstance(MultiIsolatePlatform *platform)
     node::Stop(env);
     DEBUG("transmute", "Node.js instance is stopped.");
     SET_THREAD_NAME("TransmuteNodeInstance Stopped");
+
+    {
+      /**
+       * Removing the globals after Node.js instance is stopped.
+       */
+
+      // Dispose the default audio context
+      disposeDefaultAudioContext();
+
+      // Dispose all the GameObjectModel buffers.
+      for (auto &pair : GameObjectModelBufferWritter::keyedBufferWrittersMap)
+        delete pair.second;
+      GameObjectModelBufferWritter::keyedBufferWrittersMap.clear();
+    }
 
     if (transmuteLoggerOnProcess != nullptr)
       transmuteLoggerOnProcess->reset();
