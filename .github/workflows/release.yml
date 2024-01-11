@@ -39,6 +39,7 @@ jobs:
       uses: arduino/setup-protoc@v2
       with:
         version: "21.x"
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/setup-node@v4.0.0
       with:
         node-version: 18.16.0
@@ -78,6 +79,7 @@ jobs:
       uses: arduino/setup-protoc@v2
       with:
         version: "21.x"
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/setup-node@v4.0.0
       with:
         node-version: 18.16.0
@@ -117,6 +119,7 @@ jobs:
       uses: arduino/setup-protoc@v2
       with:
         version: "21.x"
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/setup-node@v4.0.0
       with:
         node-version: 18.16.0
