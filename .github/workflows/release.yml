@@ -59,6 +59,8 @@ jobs:
       with:
         name: jsar-runtime-android
         path: './build/output/release/aarch64-linux-android'
+        if-no-files-found: error
+        retention-days: 1
 
   build-macOS:
     runs-on: macos-latest
@@ -99,6 +101,8 @@ jobs:
       with:
         name: jsar-runtime-darwin
         path: './build/output/release/universal-apple-darwin'
+        if-no-files-found: error
+        retention-days: 1
 
   build-windows:
     runs-on: windows-latest
@@ -138,6 +142,8 @@ jobs:
       with:
         name: jsar-runtime-windows
         path: './build/output/release/x86_64-pc-windows-msvc'
+        if-no-files-found: error
+        retention-days: 1
 
   release:
     runs-on: ubuntu-latest
