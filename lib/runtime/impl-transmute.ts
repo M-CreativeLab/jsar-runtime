@@ -14,6 +14,7 @@ import { Logger } from '../bindings/logger';
 import type { TransmuteRuntime } from './index';
 import { TransmuteEngine } from './babylonjs-engine/engine';
 import { DocumentMetadata } from './babylonjs-engine/serializer';
+import { OffscreenCanvasImpl, createImageBitmapImpl } from '../polyfills/offscreencanvas';
 
 function canParseURL(url: string): boolean {
   try {
@@ -278,6 +279,33 @@ export class TransmuteNativeDocument extends EventTarget implements NativeDocume
     this.engine.stopRenderLoop();
     this.engine.dispose();
     this._scene.dispose();
+  }
+
+  createImageBitmap(image: ArrayBuffer | ArrayBufferView): Promise<ImageBitmap> {
+    return createImageBitmapImpl(new Blob([image]));
+  }
+
+  decodeImage(bitmap: ImageBitmap, size?: [number, number]) {
+    let expectedWidth = size[0];
+    let expectedHeight = size[1];
+    if (typeof expectedWidth !== 'number') {
+      expectedWidth = bitmap.width;
+    }
+    if (typeof expectedHeight !== 'number') {
+      expectedHeight = bitmap.height;
+    }
+
+    const offscreenCanvas = new OffscreenCanvasImpl(expectedWidth, expectedHeight);
+    const ctx = offscreenCanvas.getContext('2d');
+    ctx?.drawImage(
+      bitmap,
+      0, 0,
+      bitmap.width, bitmap.height,
+      0, 0,
+      offscreenCanvas.width, offscreenCanvas.height
+    );
+    const imageData = ctx?.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+    return Promise.resolve(imageData as any);
   }
 
   async ready(spatialDocument: SpatialDocumentImpl) {

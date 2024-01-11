@@ -661,6 +661,8 @@ export class OffscreenCanvasImpl extends EventTarget implements OffscreenCanvas 
     }
   }
 
+  getContext(contextId: '2d', contextAttributes?: any): OffscreenCanvasRenderingContext2D;
+  getContext(contextId: string, contextAttributes?: any): any;
   getContext(contextId: string, _contextAttributes?: any): any {
     if (contextId === '2d') {
       if (this.#context2d) {
