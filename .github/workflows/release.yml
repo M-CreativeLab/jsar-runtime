@@ -59,6 +59,10 @@ jobs:
         tar -czvf jsar-runtime-android.tar.gz ./build/output/release/aarch64-linux-android
         ls -lsh ./
         node ./tools/upload-aliyun.mjs ${{ github.event.inputs.tag_name }} ./jsar-runtime-android.tar.gz
+      env:
+        ALIYUN_ACCESS_KEY_ID: ${{ secrets.ALIYUN_ACCESS_KEY_ID }}
+        ALIYUN_ACCESS_KEY_SECRET: ${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}
+        ALIYUN_BUCKET: ${{ secrets.ALIYUN_BUCKET }}
 
   build-macOS:
     runs-on: macos-latest
