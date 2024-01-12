@@ -13,8 +13,11 @@ if (!filename) {
 }
 
 const ossFilename = `${version}/${filename}`;
-const artifactFilename = path.join(__dirname, '../', filename);
-if (fs.existsSync(filename)) {
+const artifactFilename = new URL(path.join('../', filename), import.meta.url);
+console.log(`ossFilename: ${ossFilename}`);
+console.log(`artifactFilename: ${artifactFilename}`);
+
+if (!fs.existsSync(artifactFilename)) {
   throw new Error(`file ${filename} not found`)
 }
 
