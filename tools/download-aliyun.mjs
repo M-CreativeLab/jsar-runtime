@@ -30,6 +30,6 @@ const resp = await store.get(
 );
 console.info(resp);
 if (resp.content) {
-  console.info(`saving "${resp.content}" => (${artifactFilename})`);
+  console.info(`saving ${resp.content?.byteLength}bytes => (${artifactFilename})`);
   fs.writeFileSync(artifactFilename, resp.content);
 }
