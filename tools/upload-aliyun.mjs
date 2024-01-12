@@ -12,7 +12,7 @@ if (!filename) {
   throw new Error('a valid filename must be provided')
 }
 
-const ossFilename = `${version}/${filename}`;
+const ossFilename = path.join(version, filename);
 const artifactFilename = new URL(path.join('../', filename), import.meta.url);
 console.log(`ossFilename: ${ossFilename}`);
 console.log(`artifactFilename: ${artifactFilename}`);
@@ -31,6 +31,6 @@ const store = new OSS({
 console.info(`uploading ${artifactFilename} to ${ossFilename}...`);
 const resp = await store.put(
   `web-assets/yodaos-jsar/runtime-artifacts/${ossFilename}`,
-  artifactFilename
+  fs.readFileSync(artifactFilename)
 );
 console.info(resp);
