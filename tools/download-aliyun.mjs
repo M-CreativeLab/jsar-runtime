@@ -12,7 +12,7 @@ if (!filename) {
   throw new Error('a valid filename must be provided')
 }
 
-const ossFilename = path.join(version, filename);
+const ossFilename = path.posix.join(version, filename);
 const artifactFilename = new URL(path.join('../', filename), import.meta.url);
 console.log(`ossFilename: ${ossFilename}`);
 console.log(`artifactFilename: ${artifactFilename}`);
