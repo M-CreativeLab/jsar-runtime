@@ -139,6 +139,9 @@ export class GameObjectModelSerializer {
         value: node.scaling,
       });
       if (node instanceof BABYLON.AbstractMesh) {
+        /**
+         * The material details are synced by other place, so we only need to sync the material reference guid here.
+         */
         if (node.material) {
           gom.createPropertyChange(node.__vgoGuid, {
             name: 'materialReferenceGuid',
@@ -146,7 +149,39 @@ export class GameObjectModelSerializer {
             value: `${node.material.uniqueId}`,
           });
         }
-        if (node.skeleton || node.morphTargetManager) {
+
+        /**
+         * Vertex Syncing:
+         * 
+         * - When the mesh is marked as updateable, we should mark it as dirty.
+         * - When the mesh has skeleton, we should mark it as dirty, then it will sync the vertex data to Unity side.
+         * - When the mesh has morph target, we should mark it as dirty, then it will sync the vertex data to Unity side.
+         */
+        let isMeshDirty = false;
+        if (node.geometry) {
+          /**
+           * When the mesh is marked as updateable, we should mark it as dirty.
+           */
+          const isPositionUpdatable = node.geometry.isVertexBufferUpdatable(BABYLON.VertexBuffer.PositionKind);
+          const isNormalUpdatable = node.geometry.isVertexBufferUpdatable(BABYLON.VertexBuffer.NormalKind);
+          if (isPositionUpdatable || isNormalUpdatable) {
+            isMeshDirty = true;
+          }
+        }
+        /**
+         * When the mesh has skeleton, we should mark it as dirty, then it will sync the vertex data to Unity side.
+         */
+        if (node.skeleton) {
+          isMeshDirty = true;
+        }
+        /**
+         * When the mesh has morph target, we should mark it as dirty, then it will sync the vertex data to Unity side.
+         */
+        if (node.morphTargetManager && node.morphTargetManager.numTargets > 0) {
+          isMeshDirty = true;
+        }
+
+        if (isMeshDirty === true) {
           const triangles = toIndicesArray(node.getIndices());
           let positionVertexData = node.getPositionData(true, true);
           let normalsVertexData = node.getNormalsData(true, true);
