@@ -1,5 +1,5 @@
 import path from 'path';
-import fs from 'fs/promises';
+import fs from 'fs';
 import OSS from 'ali-oss';
 
 const args = process.argv.slice(2);

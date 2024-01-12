@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Tag Name for Release: v0.3.0'
+        description: 'Tag Name for Release: amidala-v1.0.0'
         required: true
 
 jobs:
