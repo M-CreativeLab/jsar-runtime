@@ -54,10 +54,9 @@ jobs:
         make android
       env:
         USE_SYSTEM_PROTOC: "true"
-    - name: Upload to aliyun OSS
+    - name: Upload artifacts to aliyun OSS
       run: |
         tar -czvf jsar-runtime-android.tar.gz ./build/output/release/aarch64-linux-android
-        ls -lsh ./
         node ./tools/upload-aliyun.mjs ${{ github.event.inputs.tag_name }} ./jsar-runtime-android.tar.gz
       env:
         ALIYUN_ACCESS_KEY_ID: ${{ secrets.ALIYUN_ACCESS_KEY_ID }}
@@ -98,13 +97,14 @@ jobs:
         make darwin
       env:
         USE_SYSTEM_PROTOC: "true"
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: jsar-runtime-darwin
-        path: './build/output/release/universal-apple-darwin'
-        if-no-files-found: error
-        retention-days: 1
+    - name: Upload artifacts to aliyun OSS
+      run: |
+        tar -czvf jsar-runtime-darwin.tar.gz ./build/output/release/universal-apple-darwin
+        node ./tools/upload-aliyun.mjs ${{ github.event.inputs.tag_name }} ./jsar-runtime-darwin.tar.gz
+      env:
+        ALIYUN_ACCESS_KEY_ID: ${{ secrets.ALIYUN_ACCESS_KEY_ID }}
+        ALIYUN_ACCESS_KEY_SECRET: ${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}
+        ALIYUN_BUCKET: ${{ secrets.ALIYUN_BUCKET }}
 
   build-windows:
     runs-on: windows-latest
@@ -139,13 +139,14 @@ jobs:
         make windows
       env:
         USE_SYSTEM_PROTOC: "true"
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: jsar-runtime-windows
-        path: './build/output/release/x86_64-pc-windows-msvc'
-        if-no-files-found: error
-        retention-days: 1
+    - name: Upload artifacts to aliyun OSS
+      run: |
+        tar -czvf jsar-runtime-windows.tar.gz ./build/output/release/x86_64-pc-windows-msvc
+        node ./tools/upload-aliyun.mjs ${{ github.event.inputs.tag_name }} ./jsar-runtime-windows.tar.gz
+      env:
+        ALIYUN_ACCESS_KEY_ID: ${{ secrets.ALIYUN_ACCESS_KEY_ID }}
+        ALIYUN_ACCESS_KEY_SECRET: ${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}
+        ALIYUN_BUCKET: ${{ secrets.ALIYUN_BUCKET }}
 
   release:
     runs-on: ubuntu-latest
@@ -154,24 +155,18 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v3
-      - name: Download Android artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: jsar-runtime-android
-          path: out/android
-      - name: Download macOS artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: jsar-runtime-darwin
-          path: out/darwin
-      - name: Download Windows artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: jsar-runtime-windows
-          path: out/windows
+      - name: Download artifacts from aliyun OSS
+        run: |
+          node ./tools/download-aliyun.mjs ${{ github.event.inputs.tag_name }} jsar-runtime-android.tar.gz
+          node ./tools/download-aliyun.mjs ${{ github.event.inputs.tag_name }} jsar-runtime-darwin.tar.gz
+          node ./tools/download-aliyun.mjs ${{ github.event.inputs.tag_name }} jsar-runtime-windows.tar.gz
+          ls -lsh ./*.tar.gz
       - name: Create package
         run: |
-          cp -r src/proto out/
+          mkdir -p out/android && tar -xvf jsar-runtime-android.tar.gz -C out/android
+          mkdir -p out/darwin && tar -xvf jsar-runtime-darwin.tar.gz -C out/darwin
+          mkdir -p out/windows && tar -xvf jsar-runtime-windows.tar.gz -C out/windows
+          mkdir -p out && cp -r src/proto out/
           tar -czvf jsar-runtime-release.tar.gz out/
       - name: Create Release
         uses: softprops/action-gh-release@v1
