@@ -11,6 +11,9 @@ if (!version || !version.startsWith('amidala-v')) {
 if (!filename) {
   throw new Error('a valid filename must be provided')
 }
+
+const ossFilename = `${version}/${filename}`;
+const artifactFilename = path.join(__dirname, '../', filename);
 if (fs.existsSync(filename)) {
   throw new Error(`file ${filename} not found`)
 }
@@ -21,9 +24,6 @@ const store = new OSS({
   accessKeySecret: process.env.ALIYUN_ACCESS_KEY_SECRET,
   bucket: process.env.ALIYUN_BUCKET,
 });
-
-const ossFilename = `${version}/${filename}`;
-const artifactFilename = path.join(__dirname, '../', filename);
 
 console.info(`uploading ${artifactFilename} to ${ossFilename}...`);
 const resp = await store.put(
