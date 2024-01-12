@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs';
 import OSS from 'ali-oss';
 
 const args = process.argv.slice(2);
@@ -25,7 +26,10 @@ const store = new OSS({
 
 console.info(`downloading ${ossFilename}...`);
 const resp = await store.get(
-  `web-assets/yodaos-jsar/runtime-artifacts/${ossFilename}`,
-  artifactFilename.href
+  `web-assets/yodaos-jsar/runtime-artifacts/${ossFilename}`
 );
 console.info(resp);
+if (resp.content) {
+  console.info(`saving "${resp.content}" => (${artifactFilename})`);
+  fs.writeFileSync(artifactFilename, resp.content);
+}
