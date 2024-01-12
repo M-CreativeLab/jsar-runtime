@@ -166,6 +166,10 @@ jobs:
           node ./tools/download-aliyun.mjs ${{ github.event.inputs.tag_name }} jsar-runtime-darwin.tar.gz
           node ./tools/download-aliyun.mjs ${{ github.event.inputs.tag_name }} jsar-runtime-windows.tar.gz
           ls -lsh ./*.tar.gz
+        env:
+          ALIYUN_ACCESS_KEY_ID: ${{ secrets.ALIYUN_ACCESS_KEY_ID }}
+          ALIYUN_ACCESS_KEY_SECRET: ${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}
+          ALIYUN_BUCKET: ${{ secrets.ALIYUN_BUCKET }}
       - name: Create package
         run: |
           mkdir -p out/android && tar -xvf jsar-runtime-android.tar.gz -C out/android
