@@ -54,13 +54,11 @@ jobs:
         make android
       env:
         USE_SYSTEM_PROTOC: "true"
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: jsar-runtime-android
-        path: './build/output/release/aarch64-linux-android'
-        if-no-files-found: error
-        retention-days: 1
+    - name: Upload to aliyun OSS
+      run: |
+        tar -czvf jsar-runtime-android.tar.gz ./build/output/release/aarch64-linux-android
+        ls -lsh ./
+        node ./tools/upload-aliyun.mjs ${{ github.event.inputs.tag_name }} ./jsar-runtime-android.tar.gz
 
   build-macOS:
     runs-on: macos-latest
