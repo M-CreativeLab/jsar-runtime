@@ -155,6 +155,11 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v4.0.0
+        with:
+          node-version: 18.16.0
+      - name: Install Node.js dependencies
+        run: npm ci
       - name: Download artifacts from aliyun OSS
         run: |
           node ./tools/download-aliyun.mjs ${{ github.event.inputs.tag_name }} jsar-runtime-android.tar.gz
