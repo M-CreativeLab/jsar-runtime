@@ -314,7 +314,7 @@ export class TransmuteRuntime extends EventTarget {
 
       // FIXME: resolving the ready states for multiple documents.
       await dom.waitForSpaceReady();  // wait for the space ready.
-      await nativeDocument.ready(dom.document);
+      await nativeDocument.ready(dom);
 
       // Dispatch the `documentcontentloaded` event?
       this.dispatchEvent(new DocumentContentLoadedEvent(dom.document));

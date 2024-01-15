@@ -311,25 +311,19 @@ export class TransmuteNativeDocument extends EventTarget implements NativeDocume
     return Promise.resolve(imageData as any);
   }
 
-  async ready(spatialDocument: SpatialDocumentImpl) {
-    const metadata: DocumentMetadata = {
-      specVersion: spatialDocument.querySelector('xsml')?.getAttribute('version'),
-    };
-    const descriptionMeta = spatialDocument.querySelector('meta[name="description"]');
-    if (descriptionMeta) {
-      metadata.description = descriptionMeta.getAttribute('content');
-    }
-    const authorMeta = spatialDocument.querySelector('meta[name="author"]');
-    if (authorMeta) {
-      metadata.author = authorMeta.getAttribute('content');
-    }
-    const licenseMeta = spatialDocument.querySelector('meta[name="license"]');
-    if (licenseMeta) {
-      metadata.license = licenseMeta.getAttribute('content');
-    }
+  async ready(dom: JSARDOM<TransmuteNativeDocument>) {
+    const metadata = await dom.createDocumentManifest();
     await this.engine.onReady(this._scene, {
-      title: spatialDocument.title,
-      metadata,
+      title: metadata.title,
+      metadata: {
+        specVersion: metadata.specVersion,
+        description: metadata.description,
+        author: metadata.author,
+        keywords: metadata.keywords,
+        license: metadata.license,
+        licenseUrl: metadata.licenseUrl,
+        viewportInitialScale: metadata.viewport?.initialScale,
+      },
     });
   }
 }
