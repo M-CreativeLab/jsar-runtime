@@ -170,14 +170,17 @@ export class TransmuteUserAgent implements UserAgent {
   domParser: DOMParser;
   resourceLoader: ResourceLoader;
   requestManager: RequestManager;
+
   alert(message?: string): void {
-    throw new TypeError('Method not implemented.');
+    throw new TypeError('Method(alert) not implemented.');
   }
+
   confirm(message?: string): boolean {
-    throw new TypeError('Method not implemented.');
+    throw new TypeError('Method(confirm) not implemented.');
   }
+
   prompt(message?: string, defaultValue?: string): string {
-    throw new TypeError('Method not implemented.');
+    throw new TypeError('Method(prompt) not implemented.');
   }
 
   getMediaPlayerConstructor(): MediaPlayerConstructor {
