@@ -10,10 +10,11 @@ import {
   type MediaPlayerConstructor,
   type MediaPlayerBackend
 } from '@yodaos-jsar/dom';
+import * as ws from 'ws';
+
 import { Logger } from '../bindings/logger';
 import type { TransmuteRuntime } from './index';
 import { TransmuteEngine } from './babylonjs-engine/engine';
-import { DocumentMetadata } from './babylonjs-engine/serializer';
 import { OffscreenCanvasImpl, createImageBitmapImpl } from '../polyfills/offscreencanvas';
 
 function canParseURL(url: string): boolean {
@@ -171,15 +172,15 @@ export class TransmuteUserAgent implements UserAgent {
   resourceLoader: ResourceLoader;
   requestManager: RequestManager;
 
-  alert(message?: string): void {
+  alert(_message?: string): void {
     throw new TypeError('Method(alert) not implemented.');
   }
 
-  confirm(message?: string): boolean {
+  confirm(_message?: string): boolean {
     throw new TypeError('Method(confirm) not implemented.');
   }
 
-  prompt(message?: string, defaultValue?: string): string {
+  prompt(_message?: string, _defaultValue?: string): string {
     throw new TypeError('Method(prompt) not implemented.');
   }
 
@@ -190,6 +191,10 @@ export class TransmuteUserAgent implements UserAgent {
     } else {
       return (process as any)._linkedBinding('webaudio').AudioPlayer;
     }
+  }
+
+  getWebSocketConstructor(): typeof WebSocket {
+    return ws.WebSocket as unknown as typeof WebSocket;
   }
 
   constructor(init: UserAgentInit, private _runtime: TransmuteRuntime) {
