@@ -1,5 +1,6 @@
 import os from 'os';
 import { type SpatialDocumentImpl, JSARDOM, JSARInputEvent } from '@yodaos-jsar/dom';
+import * as undici from 'undici';
 
 import { TransmuteEngine } from './babylonjs-engine/engine';
 import * as logger from '../bindings/logger';
@@ -59,11 +60,32 @@ type XRPoseInit = {
 type ScriptRunOptions = {
   channelId: string;
   containerPose: XRPoseInit;
+  disableCache?: boolean;
+  httpsProxyServer?: string | undefined;
+  runScripts?: 'dangerously' | 'outside-only' | 'never';
   url?: string;
   cwd?: string;
   filename?: string;
   onError?: (err: Error) => void;
 };
+
+type LoadRequest = {
+  uri: string;
+  channelId: string;
+  containerPose: XRPoseInit;
+  disableCache?: boolean;
+  httpsProxyServer?: string | undefined;
+  runScripts?: ScriptRunOptions['runScripts'];
+};
+
+function validateRequest(request: LoadRequest) {
+  if (!request.uri) {
+    throw new TypeError('uri is required in LoadRequest');
+  }
+  if (!request.channelId) {
+    throw new TypeError('channelId is required in LoadRequest');
+  }
+}
 
 export class DocumentContentLoadedEvent extends CustomEvent<SpatialDocumentImpl> {
   constructor(document: SpatialDocumentImpl) {
@@ -93,8 +115,9 @@ export class TransmuteRuntime extends EventTarget {
     });
     messaging.addEventListener('load', (e: CustomEvent) => {
       try {
-        const data = JSON.parse(e.detail);
-        this.#onload(data.uri, data.channelId, data.containerPose);
+        const req = JSON.parse(e.detail) as LoadRequest;
+        validateRequest(req);
+        this.#onload(req);
       } catch (error) {
         this.dispatchEvent(new ErrorEvent('error', { error }));
         logger.error(`Failed to parse the load event data: ${error?.stack || error}`);
@@ -198,8 +221,12 @@ export class TransmuteRuntime extends EventTarget {
     ].join(','));
   }
 
-  load(url: string, channelId: string, containerPose: XRPoseInit) {
-    return this.#onload(url, channelId, containerPose);
+  load(uri: string, channelId: string, containerPose: XRPoseInit) {
+    return this.#onload({
+      uri,
+      channelId,
+      containerPose,
+    });
   }
 
   /**
@@ -244,16 +271,17 @@ export class TransmuteRuntime extends EventTarget {
 
     let useCache = true;
     try {
-      const resp = await fetch(`${resourceUri}.md5`);
-      if (resp.ok) {
-        const onlineMd5 = await resp.text();  // server-side in base64 encoded.
+      const resp = await undici.request(`${resourceUri}.md5`);
+      const isOk = resp.statusCode >= 200 && resp.statusCode < 300;
+      if (isOk) {
+        const onlineMd5 = await resp.body.text();  // server-side in base64 encoded.
         const localMd5 = Buffer.from(await this.readTextFile(`${cachePath}.md5`), 'hex').toString('base64');
         if (onlineMd5 !== localMd5) {
           useCache = false;
         }
       }
     } catch (err) {
-      logger.warn(`failed to fetch the md5 file for ${resourceUri}, the error is: ${err}`);
+      logger.warn(`failed to get the md5 file for ${resourceUri}, the error is: ${err}`);
     }
 
     if (useCache) {
@@ -309,10 +337,13 @@ export class TransmuteRuntime extends EventTarget {
       const nativeDocument = new TransmuteNativeDocument(options.channelId, {
         runtime: this,
         engineInit: this.#engineInit,
+        disableCache: options.disableCache || false,
+        httpsProxyServer: options.httpsProxyServer,
       });
       const dom = new JSARDOM(url, {
         id: options.channelId,
         nativeDocument,
+        runScripts: options.runScripts || 'dangerously',
       });
       this.#openedDocuments.push(dom);
       await dom.load();
@@ -358,24 +389,31 @@ export class TransmuteRuntime extends EventTarget {
 
   /**
    * Handle the loading document event, it returns the loaded document if success.
-   * @param url the document url.
-   * @param channelId the channel id, it is used for the communication between the main thread and the worker thread.
+   * @param req the document request which contains uri and related fields.
    * @returns the loaded document.
    */
-  async #onload(url: string, channelId: string, containerPose: XRPoseInit): Promise<JSARDOM<TransmuteNativeDocument>> {
+  async #onload(req: LoadRequest): Promise<JSARDOM<TransmuteNativeDocument>> {
+    const {
+      uri,
+      channelId,
+      containerPose,
+    } = req;
+
     let dom: JSARDOM<TransmuteNativeDocument>;
     let errorOccurred = false;
     let message: string;
 
     try {
-      logger.info(`start loading XSML url=${url}`);
-      dom = await this.runXsml(url, {
+      logger.info(`start loading XSML url=${uri}`);
+      dom = await this.runXsml(uri, {
         channelId,
         containerPose,
+        disableCache: req.disableCache,
+        httpsProxyServer: req.httpsProxyServer,
       });
     } catch (e) {
       message = `${e.stack || e.message || e}`.slice(0, 256);
-      logger.error(`Failed to load xsml: ${url}, the error: ${message}`);
+      logger.error(`Failed to load xsml: ${uri}, the error: ${message}`);
       errorOccurred = true;
     } finally {
       // Checking for JSAR_RUN_MODE for the later behaviour of running.
@@ -384,7 +422,7 @@ export class TransmuteRuntime extends EventTarget {
         this.stop();
 
         if (errorOccurred) {
-          throw new TypeError(`Failed to load XSML(${url}), error: ${message}.`);
+          throw new TypeError(`Failed to load XSML(${uri}), error: ${message}.`);
         }
       } else {
         // If error occured and owns a channel id, mark the gom buffer as errored to tell the channel buffer is errored.

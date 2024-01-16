@@ -13,6 +13,7 @@ import {
   type XRSessionBackendInit,
   type XRFeature
 } from '@yodaos-jsar/dom';
+import * as undici from 'undici';
 import * as ws from 'ws';
 
 import { Logger } from '../bindings/logger';
@@ -36,9 +37,30 @@ type ResourceFetchOptions = {
   cookieJar?: any;
   referrer?: string;
 };
+type ResourceLoaderInit = {
+  disableCache: boolean;
+  httpsProxyServer: string | undefined;
+};
 
 export class TransmuteResourceLoader implements ResourceLoader {
-  constructor(private _runtime: TransmuteRuntime) {
+  private _disableCache: boolean = false;
+  private _httpsProxyServer: string | undefined;
+  private _httpsProxyAgent: undici.ProxyAgent | undefined;
+
+  constructor(
+    init: ResourceLoaderInit,
+    private _runtime: TransmuteRuntime,
+    private _nativeDocument: TransmuteNativeDocument
+  ) {
+    this._disableCache = init?.disableCache || false;
+    const httpsProxyServer = this._httpsProxyServer = init?.httpsProxyServer;
+    if (httpsProxyServer &&
+      (httpsProxyServer.startsWith('http://') || httpsProxyServer.startsWith('https://'))
+    ) {
+      this._httpsProxyAgent = new undici.ProxyAgent({
+        uri: this._httpsProxyServer,
+      });
+    }
   }
 
   private _readFile(pathname: string, returnsAs: ResourceAs): Promise<ResourceResult> {
@@ -82,26 +104,52 @@ export class TransmuteResourceLoader implements ResourceLoader {
     const urlObj = new URL(url);
     if (urlObj.protocol === 'file:') {
       return this._readFile(urlObj.pathname, returnsAs);
+    } else if (this._disableCache === true) {
+      return this._request(url, options, returnsAs, false);
     } else {
       const [isCached, cachedUrl] = await this._runtime.isResourceCached(url);
       if (isCached && await this._runtime.shouldUseResourceCache(url, cachedUrl)) {
         return this._readFile(cachedUrl, returnsAs);
       } else {
-        const resp = await fetch(url, options);
-        if (returnsAs === 'string') {
-          const str = await resp.text();
-          this._runtime.cacheResource(url, str);
-          return str;
-        } else if (returnsAs === 'json') {
-          const obj = await resp.json();
-          this._runtime.cacheResource(url, obj);
-          return obj;
-        } else if (returnsAs === 'arraybuffer') {
-          const buf = await resp.arrayBuffer();
-          this._runtime.cacheResource(url, new Uint8Array(buf));
-          return buf
-        }
+        return this._request(url, options, returnsAs, true);
       }
+    }
+  }
+
+  private async _request(
+    url: string,
+    options: ResourceFetchOptions,
+    returnsAs: ResourceAs,
+    writeCache: boolean = true
+  ): Promise<ResourceResult> {
+    const reqInit: undici.RequestInit = {
+      ...options,
+    };
+    if (this._httpsProxyAgent) {
+      reqInit.dispatcher = this._httpsProxyAgent;
+    }
+    const resp = await undici.fetch(url, reqInit);
+    if (resp.status >= 400) {
+      throw new Error(`Failed to fetch(${url}), statusCode=${resp.status}, text=${resp.statusText}`);
+    }
+    if (returnsAs === 'string') {
+      const str = await resp.text();
+      if (writeCache) {
+        this._runtime.cacheResource(url, str);
+      }
+      return str;
+    } else if (returnsAs === 'json') {
+      const obj = await resp.json() as any;
+      if (writeCache) {
+        this._runtime.cacheResource(url, obj);
+      }
+      return obj;
+    } else if (returnsAs === 'arraybuffer') {
+      const buf = await resp.arrayBuffer();
+      if (writeCache) {
+        this._runtime.cacheResource(url, new Uint8Array(buf));
+      }
+      return buf
     }
   }
 }
@@ -200,13 +248,16 @@ export class TransmuteUserAgent implements UserAgent {
   requestManager: RequestManager;
 
   constructor(
-    init: UserAgentInit,
+    init: UserAgentInit & ResourceLoaderInit,
     private _runtime: TransmuteRuntime,
     private _nativeDocument: TransmuteNativeDocument
   ) {
     this.defaultStylesheet = init.defaultStylesheet;
     this.devicePixelRatio = init.devicePixelRatio;
-    this.resourceLoader = new TransmuteResourceLoader(this._runtime);
+    this.resourceLoader = new TransmuteResourceLoader({
+      disableCache: init.disableCache,
+      httpsProxyServer: init.httpsProxyServer,
+    }, this._runtime, this._nativeDocument);
   }
 
   alert(_message?: string): void {
@@ -257,6 +308,8 @@ export class TransmuteNativeDocument extends EventTarget implements NativeDocume
     private _options: {
       engineInit: ConstructorParameters<typeof TransmuteEngine>[1];
       runtime: TransmuteRuntime;
+      disableCache: boolean;
+      httpsProxyServer: string | undefined;
     }
   ) {
     super();
@@ -266,6 +319,8 @@ export class TransmuteNativeDocument extends EventTarget implements NativeDocume
       {
         defaultStylesheet: '',
         devicePixelRatio: 1,
+        disableCache: this._options.disableCache,
+        httpsProxyServer: this._options.httpsProxyServer,
       },
       _options.runtime,
       this
