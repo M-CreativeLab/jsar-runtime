@@ -8,7 +8,10 @@ import {
   type DOMParser,
   type JSARDOM,
   type MediaPlayerConstructor,
-  type MediaPlayerBackend
+  type MediaPlayerBackend,
+  type XRSessionBackend,
+  type XRSessionBackendInit,
+  type XRFeature
 } from '@yodaos-jsar/dom';
 import * as ws from 'ws';
 
@@ -160,17 +163,51 @@ class AudioPlayerOnBrowser implements MediaPlayerBackend {
   }
 }
 
+class TransmuteXRSessionBackend implements XRSessionBackend {
+  get enabledFeatures(): XRFeature[] {
+    // Enable these features by default.
+    return [
+      'local',
+      'hit-test',
+      'hand-tracking',
+    ];
+  }
+  constructor(_init: XRSessionBackendInit | undefined, private _nativeDocument: TransmuteNativeDocument) {
+  }
+  async request(): Promise<void> {
+    this._nativeDocument.observeInputEvent();
+  }
+  async requestReferenceSpace(type: XRReferenceSpaceType): Promise<XRReferenceSpace | XRBoundedReferenceSpace> {
+    return null;
+  }
+  async end(): Promise<void> {
+    // Do nothing
+  }
+}
+
 export class TransmuteUserAgent implements UserAgent {
-  versionString: string;
+  get versionString(): string {
+    return process.env.JSAR_VERSION;
+  }
   vendor: string;
   vendorSub: string;
   language: string;
   languages: readonly string[];
   defaultStylesheet: string;
-  devicePixelRatio: number;
+  devicePixelRatio: number = 1.0;
   domParser: DOMParser;
   resourceLoader: ResourceLoader;
   requestManager: RequestManager;
+
+  constructor(
+    init: UserAgentInit,
+    private _runtime: TransmuteRuntime,
+    private _nativeDocument: TransmuteNativeDocument
+  ) {
+    this.defaultStylesheet = init.defaultStylesheet;
+    this.devicePixelRatio = init.devicePixelRatio;
+    this.resourceLoader = new TransmuteResourceLoader(this._runtime);
+  }
 
   alert(_message?: string): void {
     throw new TypeError('Method(alert) not implemented.');
@@ -197,10 +234,8 @@ export class TransmuteUserAgent implements UserAgent {
     return ws.WebSocket as unknown as typeof WebSocket;
   }
 
-  constructor(init: UserAgentInit, private _runtime: TransmuteRuntime) {
-    this.defaultStylesheet = init.defaultStylesheet;
-    this.devicePixelRatio = init.devicePixelRatio;
-    this.resourceLoader = new TransmuteResourceLoader(this._runtime);
+  createXRSessionBackend(init?: XRSessionBackendInit): TransmuteXRSessionBackend {
+    return new TransmuteXRSessionBackend(init, this._nativeDocument);
   }
 }
 
@@ -227,10 +262,14 @@ export class TransmuteNativeDocument extends EventTarget implements NativeDocume
     super();
 
     this.engine = new TransmuteEngine(_channelId, _options.engineInit);
-    this.userAgent = new TransmuteUserAgent({
-      defaultStylesheet: '',
-      devicePixelRatio: 1,
-    }, _options.runtime);
+    this.userAgent = new TransmuteUserAgent(
+      {
+        defaultStylesheet: '',
+        devicePixelRatio: 1,
+      },
+      _options.runtime,
+      this
+    );
     this.console = new Logger();
     this._scene = new BABYLON.Scene(this.engine);
   }
@@ -241,6 +280,10 @@ export class TransmuteNativeDocument extends EventTarget implements NativeDocume
 
   getContainerPose(): XRPose {
     return this._containerPose;
+  }
+
+  getViewerPose(): XRPose {
+    return null;
   }
 
   /**

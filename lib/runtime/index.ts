@@ -189,7 +189,13 @@ export class TransmuteRuntime extends EventTarget {
   }
 
   start() {
-    env.markRuntimeAvailable(`version=${process.env['JSAR_VERSION']},jsardom=${JSARDOM.version},babylonjs=${BABYLON.Engine.Version}`);
+    env.markRuntimeAvailable([
+      `version=${process.env['JSAR_VERSION']}`,
+      `jsardom=${JSARDOM.version}`,
+      `babylonjs=${BABYLON.Engine.Version}`,
+      `nodejs=${process.versions.node}`,
+      `v8=${process.versions.v8}`,
+    ].join(','));
   }
 
   load(url: string, channelId: string, containerPose: XRPoseInit) {

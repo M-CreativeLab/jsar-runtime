@@ -1,5 +1,6 @@
 {
   "name": "@yodaos-jsar/runtime",
+  "version": "0.3.1",
   "private": true,
   "scripts": {
     "test": "jest",
