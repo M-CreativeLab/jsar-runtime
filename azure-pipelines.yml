@@ -1,0 +1,43 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+jobs:
+- job: build
+  steps:
+  - checkout: self
+  
+  - script: |
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      export PATH="$HOME/.cargo/bin:$PATH"
+      rustup default stable
+    displayName: 'Install Rust and Rustup'
+
+  - script: |
+      rustup target add aarch64-linux-android
+      rustup target add aarch64-apple-darwin
+      rustup target add x86_64-apple-darwin
+      rustup target add x86_64-pc-windows-msvc
+    displayName: 'Install Rust targets'
+
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '18.16.0'
+    displayName: 'Install Node.js'
+
+  - script: |
+      npm ci
+      npx tsc --version
+    displayName: 'Install Node.js dependencies'
+
+  - script: |
+      make jsbundle
+    displayName: 'Build JavaScript bundle'
+
+  - script: |
+      make crates
+      ls -lh ./build/output/crates
+      ls -lh ./build/output/headers/crates
+    displayName: 'Build Rust crates'
