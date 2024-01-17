@@ -1,0 +1,40 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: circleci/rust:1.74.0
+      - image: circleci/node:18.16.0
+
+    steps:
+      - checkout
+
+      - run:
+          name: Set up Rust
+          command: |
+            rustup toolchain install 1.74.0
+            rustup default 1.74.0
+            rustup component add rustfmt
+
+      - run:
+          name: Install Rust targets
+          command: |
+            rustup target add aarch64-linux-android
+            rustup target add aarch64-apple-darwin
+            rustup target add x86_64-apple-darwin
+            rustup target add x86_64-pc-windows-msvc
+
+      - run:
+          name: Install Node.js dependencies
+          command: npm ci && npx tsc --version
+
+      - run:
+          name: Build JavaScript bundle
+          command: make jsbundle
+
+      - run:
+          name: Build Rust crates
+          command: |
+            make crates
+            ls -lh ./build/output/crates
+            ls -lh ./build/output/headers/crates
