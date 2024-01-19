@@ -37,11 +37,15 @@ UnityEventListenerWrap::UnityEventListenerWrap(const Napi::CallbackInfo &info) :
 
   instance_ = this;
   disposed_ = false;
+  dispatch_available_ = false;
 }
 
 bool UnityEventListenerWrap::Dispatch(string type, string data)
 {
-  if (disposed_)
+  /**
+   * Skip the dispatching if the instance is disposed or the dispatching is not available.
+   */
+  if (disposed_ || !dispatch_available_)
     return true;
 
   JSEventMessage *message = new JSEventMessage();
@@ -88,6 +92,7 @@ void UnityEventListenerWrap::Finalize(Napi::Env env)
   tsfn_.Release();
   instance_ = nullptr;
   disposed_ = true;
+  dispatch_available_ = false;
 }
 
 Napi::Value UnityEventListenerWrap::SetCallback(const Napi::CallbackInfo &info)
@@ -112,7 +117,7 @@ Napi::Value UnityEventListenerWrap::SetCallback(const Napi::CallbackInfo &info)
         // TODO: remove the logs
         fprintf(stderr, "UnityEventListenerWrap::SetCallback() finalizer is called\n");
       });
-
+  dispatch_available_ = true;
   return info.This();
 }
 
@@ -125,5 +130,6 @@ Napi::Value UnityEventListenerWrap::Dispose(const Napi::CallbackInfo &info)
   tsfn_.Release();
   instance_ = nullptr;
   disposed_ = true;
+  dispatch_available_ = false;
   return info.This();
 }

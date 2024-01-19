@@ -81,6 +81,10 @@ namespace messaging
      */
     bool disposed_;
     /**
+     * A flag to mark the dispatching is available or not, if the dispatching is not available, the event message will be ignored.
+     */
+    bool dispatch_available_;
+    /**
      * A thread-safe function instance to dispatch the event message to the JavaScript runtime, this is initialized by `SetCallback()`.
      */
     Napi::ThreadSafeFunction tsfn_;
