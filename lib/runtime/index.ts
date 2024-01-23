@@ -375,13 +375,18 @@ export class TransmuteRuntime extends EventTarget {
     logger.info(`Stopping the Transmute Runtime (still ${docSize} documents).`);
 
     // Dispose the opened documents.
-    await Promise.all(
-      this.#openedDocuments.map(async dom => {
-        await dom.unload();
-      })
-    );
-    this.#openedDocuments = [];
-    logger.info('Transmute Runtime exited.');
+    try {
+      await Promise.all(
+        this.#openedDocuments.map(async dom => {
+          await dom.unload();
+        })
+      );
+    } catch (err) {
+      logger.warn(`Failed to dispose the opened documents: ${err}`);
+    } finally {
+      this.#openedDocuments = [];
+      logger.info('Transmute Runtime exited.');
+    }
 
     // Dispose the messaging system.
     messaging.dispose();
