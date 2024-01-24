@@ -112,32 +112,37 @@ export class GameObjectModelSerializer {
     return this.#lastChangeSerializable.isBufferEmpty(this.#channelId);
   }
 
+  #createPropertyChange(
+    gom: vGomInterface.VirtualGameObjectModel,
+    nodeId: string,
+    name: string,
+    property: BABYLON.Vector3 | BABYLON.Quaternion
+  ) {
+    if (property._isDirty === false) {
+      return;
+    }
+    if (property instanceof BABYLON.Quaternion) {
+      property = property.toEulerAngles();
+    }
+    gom.createPropertyChange(nodeId, {
+      name,
+      type: 'vector3',
+      value: property,
+    });
+    property._isDirty = false;
+  }
+
   async createChangeSerializable() {
     const gom = new this.#binding.VirtualGameObjectModel();
     for (const node of this.#watchingNodes) {
-      gom.createPropertyChange(node.__vgoGuid, {
-        name: 'position',
-        type: 'vector3',
-        value: node.position,
-      });
+      this.#createPropertyChange(gom, node.__vgoGuid, 'position', node.position);
       if (node.rotationQuaternion != null) {
-        gom.createPropertyChange(node.__vgoGuid, {
-          name: 'rotation',
-          type: 'vector3',
-          value: node.rotationQuaternion.toEulerAngles(),
-        });
+        this.#createPropertyChange(gom, node.__vgoGuid, 'rotation', node.rotationQuaternion);
       } else {
-        gom.createPropertyChange(node.__vgoGuid, {
-          name: 'rotation',
-          type: 'vector3',
-          value: node.rotation,
-        });
+        this.#createPropertyChange(gom, node.__vgoGuid, 'rotation', node.rotation);
       }
-      gom.createPropertyChange(node.__vgoGuid, {
-        name: 'scale',
-        type: 'vector3',
-        value: node.scaling,
-      });
+      this.#createPropertyChange(gom, node.__vgoGuid, 'scale', node.scaling);
+
       if (node instanceof BABYLON.AbstractMesh) {
         /**
          * The material details are synced by other place, so we only need to sync the material reference guid here.
