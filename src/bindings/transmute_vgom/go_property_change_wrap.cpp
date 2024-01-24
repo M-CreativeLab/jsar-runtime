@@ -23,9 +23,9 @@ GameObjectPropertyChangeWrap::GameObjectPropertyChangeWrap(const Napi::CallbackI
   Napi::Object selfObj = info.This().ToObject();
   Napi::HandleScope scope(env);
 
-  if (info.Length() < 2 || !info[0].IsString() || !info[1].IsObject())
+  if (info.Length() < 2 || !info[0].IsNumber() || !info[1].IsObject())
   {
-    Napi::TypeError::New(env, "Guid(String) and ChangeDescriptor(Object) are expected and be valid")
+    Napi::TypeError::New(env, "Guid(Number) and ChangeDescriptor(Object) are expected and be valid")
         .ThrowAsJavaScriptException();
     return;
   }
@@ -41,12 +41,41 @@ GameObjectPropertyChangeWrap::GameObjectPropertyChangeWrap(const Napi::CallbackI
     return;
   }
 
-  Napi::String guid = info[0].ToString();
+  Napi::Number guid = info[0].ToNumber();
   Napi::Object changeDescriptor = info[1].ToObject();
 
   Napi::Value name = changeDescriptor.Get("name");
   Napi::Value type = changeDescriptor.Get("type");
   Napi::Value value = changeDescriptor.Get("value");
+
+  if (!name.IsString())
+  {
+    Napi::TypeError::New(env, "name must be string")
+        .ThrowAsJavaScriptException();
+    return;
+  }
+  else
+  {
+    Napi::String nameString = name.ToString();
+    if (nameString.StrictEquals(Napi::String::New(env, "position")))
+      native_handle_->set_property_id(UpdatablePropertyId::POSTION);
+    else if (nameString.StrictEquals(Napi::String::New(env, "rotation")))
+      native_handle_->set_property_id(UpdatablePropertyId::ROTATION);
+    else if (nameString.StrictEquals(Napi::String::New(env, "rotationQuaternion")))
+      native_handle_->set_property_id(UpdatablePropertyId::ROTATION_QUATERNION);
+    else if (nameString.StrictEquals(Napi::String::New(env, "scale")))
+      native_handle_->set_property_id(UpdatablePropertyId::SCALE);
+    else if (nameString.StrictEquals(Napi::String::New(env, "outline")))
+      native_handle_->set_property_id(UpdatablePropertyId::OUTLINE);
+    else if (nameString.StrictEquals(Napi::String::New(env, "materialReferenceGuid")))
+      native_handle_->set_property_id(UpdatablePropertyId::MATERIAL_REF_GUID);
+    else
+    {
+      Napi::TypeError::New(env, "name must be one of position, rotation, rotationQuaternion, scale, outline, materialReferenceGuid")
+          .ThrowAsJavaScriptException();
+      return;
+    }
+  }
 
   if (!type.IsString())
   {
@@ -55,7 +84,7 @@ GameObjectPropertyChangeWrap::GameObjectPropertyChangeWrap(const Napi::CallbackI
     return;
   }
 
-  native_handle_->set_target_object_guid(guid.Utf8Value());
+  native_handle_->set_target_object_guid(guid.Uint32Value());
   native_handle_->set_property_name(name.ToString().Utf8Value());
 
   Napi::String typeString = type.ToString();
@@ -63,6 +92,8 @@ GameObjectPropertyChangeWrap::GameObjectPropertyChangeWrap(const Napi::CallbackI
     native_handle_->set_string_value(value.ToString().Utf8Value());
   else if (typeString.StrictEquals(Napi::String::New(env, "int32")))
     native_handle_->set_int32_value(value.ToNumber().Int32Value());
+  else if (typeString.StrictEquals(Napi::String::New(env, "uint32")))
+    native_handle_->set_uint32_value(value.ToNumber().Uint32Value());
   else if (typeString.StrictEquals(Napi::String::New(env, "float")))
     native_handle_->set_float_value(value.ToNumber().FloatValue());
   else if (typeString.StrictEquals(Napi::String::New(env, "bool")))

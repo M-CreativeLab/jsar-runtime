@@ -23,7 +23,7 @@ export declare class PropertyChangeOnGameObject {
   /**
    * The node GUID.
    */
-  guid: string;
+  guid: number;
   /**
    * The name of the property.
    */
@@ -33,7 +33,7 @@ export declare class PropertyChangeOnGameObject {
    */
   type: string;
 
-  constructor(guid: string, descriptor: PropertyChange);
+  constructor(guid: number, descriptor: PropertyChange);
 }
 
 /**
@@ -43,7 +43,7 @@ export declare class MaterialSyncChangeOnGameObject {
   /**
    * The node GUID.
    */
-  guid: string;
+  guid: number;
   /**
    * The material object to sync, which is a `VirtualMaterial` instance.
    */
@@ -173,7 +173,7 @@ export declare class VirtualTexture {
   /**
    * The texture guid.
    */
-  guid: string;
+  guid: number;
   /**
    * The texture name.
    */
@@ -443,7 +443,7 @@ export declare class VirtualGameObjectData {
    * Add a reference to the given guid transform.
    * @param guid the guid to find the bone transform.
    */
-  addBoneReference(guid: string): void;
+  addBoneReference(guid: number): void;
 
   /**
    * Set the mesh's outline
@@ -480,7 +480,7 @@ export declare class VirtualGameObject {
   /**
    * The object guid.
    */
-  guid: string;
+  guid: number;
 
   /**
    * The object name.
@@ -513,7 +513,7 @@ export declare class VirtualGameObject {
    * @param guid the node guid.
    * @param gameObject the game object.
    */
-  constructor(guid: string, gameObject: BABYLON.Node);
+  constructor(guid: number, gameObject: BABYLON.Node);
 }
 
 /**
@@ -581,14 +581,14 @@ export declare class VirtualGameObjectModel {
    * @param guid the node guide.
    * @param gameObject the game object to create from.
    */
-  createGameObjectAsChild(guid: string, gameObject: BABYLON.Node): VirtualGameObject;
+  createGameObjectAsChild(guid: number, gameObject: BABYLON.Node): VirtualGameObject;
 
   /**
    * Create a new property change on the game object.
    * @param guid the node guide.
    * @param descriptor the property change descriptor.
    */
-  createPropertyChange(guid: string, descriptor: PropertyChange): PropertyChangeOnGameObject;
+  createPropertyChange(guid: number, descriptor: PropertyChange): PropertyChangeOnGameObject;
 
   /**
    * Create a new vertices sync change on the specific game object.
@@ -597,7 +597,7 @@ export declare class VirtualGameObjectModel {
    * @param vertices 
    */
   createVerticesSyncChange(
-    guid: string,
+    guid: number,
     triangles: Uint32Array,
     vertices: Partial<{ [key in VertexType]: Float32Array }>
   );
@@ -607,7 +607,7 @@ export declare class VirtualGameObjectModel {
    * @param guid the material's target node guid.
    * @param material the material to sync.
    */
-  createMaterialSyncChange(guid: string, type: string, material: VirtualMaterial): MaterialSyncChangeOnGameObject;
+  createMaterialSyncChange(guid: number, type: string, material: VirtualMaterial): MaterialSyncChangeOnGameObject;
 
   /**
    * Serialize the game object model and write it to the Unity side.

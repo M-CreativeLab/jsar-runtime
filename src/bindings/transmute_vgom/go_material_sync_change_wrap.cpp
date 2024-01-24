@@ -21,9 +21,9 @@ GameObjectMaterialSyncChangeWrap::GameObjectMaterialSyncChangeWrap(const Napi::C
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  if (info.Length() < 3 || !info[0].IsString() || !info[1].IsString() || !info[2].IsObject())
+  if (info.Length() < 3 || !info[0].IsNumber() || !info[1].IsString() || !info[2].IsObject())
   {
-    Napi::TypeError::New(env, "Guid(String), Type(String) and Material(Object) are expected and be valid")
+    Napi::TypeError::New(env, "Guid(Number), Type(String) and Material(Object) are expected and be valid")
         .ThrowAsJavaScriptException();
     return;
   }
@@ -39,9 +39,9 @@ GameObjectMaterialSyncChangeWrap::GameObjectMaterialSyncChangeWrap(const Napi::C
     return;
   }
 
-  Napi::String guid = info[0].ToString();
+  Napi::Number guid = info[0].ToNumber();
   Napi::String type = info[1].ToString();
-  native_handle_->set_target_object_guid(guid.Utf8Value().c_str());
+  native_handle_->set_target_object_guid(guid.Uint32Value());
 
   Napi::Object materialObj = info[2].ToObject();
   if (materialObj.InstanceOf(VirtualMaterialWrap::constructor->Value()))

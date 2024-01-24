@@ -80,7 +80,7 @@ Napi::Value VirtualGameObjectModelWrap::CreateGameObjectAsChild(const Napi::Call
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  if (info.Length() < 1 || !info[0].IsString())
+  if (info.Length() < 1 || !info[0].IsNumber())
   {
     Napi::TypeError::New(env, "Guid is expected").ThrowAsJavaScriptException();
     return env.Null();
@@ -91,7 +91,7 @@ Napi::Value VirtualGameObjectModelWrap::CreateGameObjectAsChild(const Napi::Call
     return env.Null();
   }
 
-  Napi::String guid = info[0].ToString();
+  Napi::Number guid = info[0].ToNumber();
   Napi::Object gameObject = info[1].ToObject();
   // if (gameObject.Get("id").ToString().Utf8Value() == "__root__")
   // {
@@ -110,7 +110,7 @@ Napi::Value VirtualGameObjectModelWrap::CreatePropertyChange(const Napi::Callbac
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  if (info.Length() < 1 || !info[0].IsString())
+  if (info.Length() < 1 || !info[0].IsNumber())
   {
     Napi::TypeError::New(env, "Guid is expected").ThrowAsJavaScriptException();
     return env.Null();
@@ -121,7 +121,7 @@ Napi::Value VirtualGameObjectModelWrap::CreatePropertyChange(const Napi::Callbac
     return env.Null();
   }
 
-  Napi::String guid = info[0].ToString();
+  Napi::Number guid = info[0].ToNumber();
   Napi::Object changeDescriptor = info[1].ToObject();
 
   auto property_change_native_handle = native_handle_->add_property_changes_on_game_object();
@@ -134,14 +134,14 @@ Napi::Value VirtualGameObjectModelWrap::CreateVerticesSyncChange(const Napi::Cal
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  if (info.Length() < 1 || !info[0].IsString())
+  if (info.Length() < 1 || !info[0].IsNumber())
   {
     Napi::TypeError::New(env, "Guid is expected").ThrowAsJavaScriptException();
     return env.Null();
   }
-  Napi::String guid = info[0].ToString();
+  Napi::Number guid = info[0].ToNumber();
   auto vertices_change_native_handle = native_handle_->add_vertices_changes_on_game_object();
-  vertices_change_native_handle->set_target_object_guid(guid.Utf8Value());
+  vertices_change_native_handle->set_target_object_guid(guid.Uint32Value());
 
   auto trianglesValue = info[1];
   if (!trianglesValue.IsTypedArray())
@@ -202,7 +202,7 @@ Napi::Value VirtualGameObjectModelWrap::CreateMaterialSyncChange(const Napi::Cal
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  if (info.Length() < 1 || !info[0].IsString())
+  if (info.Length() < 1 || !info[0].IsNumber())
   {
     Napi::TypeError::New(env, "Guid is expected").ThrowAsJavaScriptException();
     return env.Null();
@@ -218,7 +218,7 @@ Napi::Value VirtualGameObjectModelWrap::CreateMaterialSyncChange(const Napi::Cal
     return env.Null();
   }
 
-  Napi::String guid = info[0].ToString();
+  Napi::Number guid = info[0].ToNumber();
   Napi::String type = info[1].ToString();
   Napi::Object material = info[2].ToObject();
 

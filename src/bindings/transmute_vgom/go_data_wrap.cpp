@@ -59,8 +59,8 @@ VirtualGameObjectDataWrap::VirtualGameObjectDataWrap(const Napi::CallbackInfo &i
       Napi::Object parentObject = parentValue.ToObject();
       if (parentObject.Has(TRANSMUTE_VGO_GUID_KEY))
       {
-        Napi::String parentGuid = parentObject.Get(TRANSMUTE_VGO_GUID_KEY).ToString();
-        native_handle_->set_parent_guid(parentGuid.Utf8Value());
+        Napi::Number parentGuid = parentObject.Get(TRANSMUTE_VGO_GUID_KEY).ToNumber();
+        native_handle_->set_parent_guid(parentGuid.Uint32Value());
       }
     }
   }

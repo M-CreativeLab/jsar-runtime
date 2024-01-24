@@ -46,7 +46,7 @@ message VirtualMatrix {
  * VirtualTexture is a texture descriptor to be used in material properties.
  */
 message VirtualTexture {
-  string guid = 1;
+  uint32 guid = 1;
   string name = 2;
   float width = 3;
   float height = 4;
@@ -63,7 +63,7 @@ message VirtualTexture {
 }
 
 message VirtualGameObjectData {
-  string parent_guid = 1;
+  uint32 parent_guid = 1;
 
   /** Mesh related fields(2-19) */
   repeated float mesh_vertices = 2;
@@ -113,7 +113,7 @@ message VirtualGameObjectData {
 }
 
 message VirtualGameObject {
-  string guid = 1;
+  uint32 guid = 1;
   string name = 2;
   string type = 3;
   VirtualTransform transform = 4;
@@ -126,21 +126,31 @@ message VirtualGameObject {
  * There is no update change, because a change on game objects will be converted to `PropertyChangeOnGameObject`.
  */
 message GameObjectChange {
-  string target_object_guid = 1;
+  uint32 target_object_guid = 1;
   int32 type = 2;                       /** 1: add, 2: remove */
 
   VirtualGameObject game_object = 10;   /** only used when type is 1(add), it represents the new game object */
-  string parent_guid = 11;              /** only used when type is 1(add), it represents the new game object's parent */
+  uint32 parent_guid = 11;              /** only used when type is 1(add), it represents the new game object's parent */
 
   bool remove_children = 20;            /** only used when type is 2(remove), it represents whether to remove the children of the game object */
+}
+
+enum UpdatablePropertyId {
+  POSTION = 0;
+  ROTATION = 1;
+  ROTATION_QUATERNION = 2;
+  SCALE = 3;
+  OUTLINE = 4;
+  MATERIAL_REF_GUID = 5;
 }
 
 /**
  * This is used to change the property of the game object in the next frames, such as change the position of a transform node.
  */
 message PropertyChangeOnGameObject {
-  string target_object_guid = 1;
+  uint32 target_object_guid = 1;
   string property_name = 2;
+  UpdatablePropertyId property_id = 3;
 
   /** The following fields are used to represent the changes of the game objects in the next frames. */
   VirtualVector3 vector3_value = 10;
@@ -148,12 +158,13 @@ message PropertyChangeOnGameObject {
   /** more complex value update? */
   bool bool_value = 20;
   int32 int32_value = 21;
-  float float_value = 22;
-  string string_value = 23;
+  uint32 uint32_value = 22;
+  float float_value = 23;
+  string string_value = 24;
 }
 
 message VerticesSyncChangeOnGameObject {
-  string target_object_guid = 1;
+  uint32 target_object_guid = 1;
   repeated float mesh_vertices = 2;
   repeated int32 mesh_triangles = 3;
   repeated float mesh_normals_vertices = 4;
@@ -166,7 +177,7 @@ message VerticesSyncChangeOnGameObject {
 }
 
 message MaterialSyncChangeOnGameObject {
-  string target_object_guid = 1;
+  uint32 target_object_guid = 1;
   string material_name = 2;
   int32 material_id = 3;
   string material_custom_type = 4; /** "Standard", "PBR" */

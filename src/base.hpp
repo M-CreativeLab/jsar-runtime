@@ -32,4 +32,4 @@
       {0},                                                             \
   };
 
-#define TRANSMUTE_VGO_GUID_KEY "__vgoGuid"
+#define TRANSMUTE_VGO_GUID_KEY "uniqueId"

@@ -21,9 +21,9 @@ VirtualGameObjectWrap::VirtualGameObjectWrap(const Napi::CallbackInfo &info) : N
   Napi::Object selfObj = info.This().ToObject();
   Napi::HandleScope scope(env);
 
-  if (info.Length() < 2 || !info[0].IsString() || !info[1].IsObject())
+  if (info.Length() < 2 || !info[0].IsNumber() || !info[1].IsObject())
   {
-    Napi::TypeError::New(env, "Guid(String) and GameObject(Object) are expected and be valid")
+    Napi::TypeError::New(env, "Guid(Number) and GameObject(Object) are expected and be valid")
         .ThrowAsJavaScriptException();
     return;
   }
@@ -39,7 +39,7 @@ VirtualGameObjectWrap::VirtualGameObjectWrap(const Napi::CallbackInfo &info) : N
     return;
   }
 
-  Napi::String guid = info[0].ToString();
+  Napi::Number guid = info[0].ToNumber();
   Napi::Object gameObject = info[1].ToObject();
 
   Napi::Value name = gameObject.Get("name");
@@ -51,7 +51,7 @@ VirtualGameObjectWrap::VirtualGameObjectWrap(const Napi::CallbackInfo &info) : N
   }
   Napi::String type = getClassNameFn.As<Napi::Function>().Call(gameObject, {}).ToString();
 
-  native_handle_->set_guid(guid.Utf8Value());
+  native_handle_->set_guid(guid.Uint32Value());
   native_handle_->set_type(type.Utf8Value());
   if (name.IsString())
     native_handle_->set_name(name.ToString().Utf8Value());
@@ -90,5 +90,5 @@ VirtualGameObjectWrap::VirtualGameObjectWrap(const Napi::CallbackInfo &info) : N
 
 Napi::Value VirtualGameObjectWrap::GetGuid(const Napi::CallbackInfo &info)
 {
-  return Napi::String::New(info.Env(), this->native_handle_->guid());
+  return Napi::Number::New(info.Env(), this->native_handle_->guid());
 }

@@ -23,7 +23,7 @@ export class GameObjectModelSerializer {
   #binding: vGomInterface.Binding = null;
   #gameObjectModel: vGomInterface.VirtualGameObjectModel;
   #lastChangeSerializable: vGomInterface.VirtualGameObjectModel;
-  #watchingNodes: Array<(BABYLON.TransformNode | BABYLON.Mesh) & { __vgoGuid: string }> = [];
+  #watchingNodes: Array<(BABYLON.TransformNode | BABYLON.Mesh)> = [];
   #onGomBufferUpdate: (buffer: ArrayBuffer) => void;
 
   constructor(channelId: string) {
@@ -114,44 +114,45 @@ export class GameObjectModelSerializer {
 
   #createPropertyChange(
     gom: vGomInterface.VirtualGameObjectModel,
-    nodeId: string,
+    nodeId: number,
     name: string,
     property: BABYLON.Vector3 | BABYLON.Quaternion
   ) {
-    if (property._isDirty === false) {
-      return;
-    }
     if (property instanceof BABYLON.Quaternion) {
-      property = property.toEulerAngles();
+      gom.createPropertyChange(nodeId, {
+        name,
+        type: 'quaternion',
+        value: property,
+      });
+    } else {
+      gom.createPropertyChange(nodeId, {
+        name,
+        type: 'vector3',
+        value: property,
+      });
     }
-    gom.createPropertyChange(nodeId, {
-      name,
-      type: 'vector3',
-      value: property,
-    });
-    property._isDirty = false;
   }
 
   async createChangeSerializable() {
     const gom = new this.#binding.VirtualGameObjectModel();
     for (const node of this.#watchingNodes) {
-      this.#createPropertyChange(gom, node.__vgoGuid, 'position', node.position);
+      this.#createPropertyChange(gom, node.uniqueId, 'position', node.position);
       if (node.rotationQuaternion != null) {
-        this.#createPropertyChange(gom, node.__vgoGuid, 'rotation', node.rotationQuaternion);
+        this.#createPropertyChange(gom, node.uniqueId, 'rotationQuaternion', node.rotationQuaternion);
       } else {
-        this.#createPropertyChange(gom, node.__vgoGuid, 'rotation', node.rotation);
+        this.#createPropertyChange(gom, node.uniqueId, 'rotation', node.rotation);
       }
-      this.#createPropertyChange(gom, node.__vgoGuid, 'scale', node.scaling);
+      this.#createPropertyChange(gom, node.uniqueId, 'scale', node.scaling);
 
       if (node instanceof BABYLON.AbstractMesh) {
         /**
          * The material details are synced by other place, so we only need to sync the material reference guid here.
          */
         if (node.material) {
-          gom.createPropertyChange(node.__vgoGuid, {
+          gom.createPropertyChange(node.uniqueId, {
             name: 'materialReferenceGuid',
-            type: 'string',
-            value: `${node.material.uniqueId}`,
+            type: 'uint32',
+            value: node.material.uniqueId,
           });
         }
 
@@ -163,7 +164,7 @@ export class GameObjectModelSerializer {
          * - When the mesh has morph target, we should mark it as dirty, then it will sync the vertex data to Unity side.
          */
         let isMeshDirty = false;
-        if (node.geometry) {
+        if (node instanceof BABYLON.Mesh && node.geometry) {
           /**
            * When the mesh is marked as updateable, we should mark it as dirty.
            */
@@ -197,7 +198,7 @@ export class GameObjectModelSerializer {
             normalsVertexData = new Float32Array(normalsVertexData);
           }
           gom.createVerticesSyncChange(
-            node.__vgoGuid,
+            node.uniqueId,
             triangles,
             {
               'position': positionVertexData,
@@ -212,7 +213,7 @@ export class GameObjectModelSerializer {
       if (node instanceof BABYLON.AbstractMesh) {
         let value: string;
         if (!node.renderOutline) {
-          value = '{"enabled":false}';
+          value = '';
         } else {
           const color = node.outlineColor;
           value = JSON.stringify({
@@ -221,7 +222,7 @@ export class GameObjectModelSerializer {
             color: [color.r, color.g, color.b],
           });
         }
-        gom.createPropertyChange(node.__vgoGuid, {
+        gom.createPropertyChange(node.uniqueId, {
           name: 'outline',
           type: 'string',
           value,
@@ -284,7 +285,7 @@ export class GameObjectModelSerializer {
     if (node.isEnabled(false) === false) {
       return;
     }
-    const vGo = this.#gameObjectModel.createGameObjectAsChild(node['__vgoGuid'], node);
+    const vGo = this.#gameObjectModel.createGameObjectAsChild(node.uniqueId, node);
 
     // Handle with extension parts.
     const extendNode = node as any;
@@ -305,7 +306,7 @@ export class GameObjectModelSerializer {
       return;
     }
 
-    const vGo = this.#gameObjectModel.createGameObjectAsChild((mesh as any).__vgoGuid, mesh);
+    const vGo = this.#gameObjectModel.createGameObjectAsChild(mesh.uniqueId, mesh);
     if (vGo == null) {
       return;
     }
@@ -382,9 +383,6 @@ export class GameObjectModelSerializer {
       });
     }
 
-    if (mesh.skeleton) {
-      this.serializeMeshSkeletonAndBones(mesh, vGo);
-    }
 
     // append this node to the watching list
     this.#watchingNodes.push(mesh as any);
@@ -394,9 +392,9 @@ export class GameObjectModelSerializer {
     const customType = material.getClassName();
     const vMaterial = await this.createVirtualMaterial(material);
     if (targetGom) {
-      targetGom.createMaterialSyncChange(`${material.uniqueId}`, customType, vMaterial);
+      targetGom.createMaterialSyncChange(material.uniqueId, customType, vMaterial);
     } else {
-      this.#gameObjectModel.createMaterialSyncChange(`${material.uniqueId}`, customType, vMaterial);
+      this.#gameObjectModel.createMaterialSyncChange(material.uniqueId, customType, vMaterial);
     }
   }
 
@@ -460,7 +458,7 @@ export class GameObjectModelSerializer {
    */
   async createVirtualTexture(baseTexture: BABYLON.BaseTexture) {
     const vTexture = new this.#binding.VirtualTexture(baseTexture.name);
-    vTexture.guid = `${baseTexture.uniqueId}`;
+    vTexture.guid = baseTexture.uniqueId;
 
     const textureType = baseTexture.getClassName();
     const internalTexture = baseTexture.getInternalTexture() as TransmuteInternalTexture;

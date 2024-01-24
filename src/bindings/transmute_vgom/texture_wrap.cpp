@@ -43,7 +43,7 @@ Napi::Value VirtualTextureWrap::GetGuid(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  return Napi::String::New(env, native_handle_->guid());
+  return Napi::Number::New(env, native_handle_->guid());
 }
 
 void VirtualTextureWrap::SetGuid(const Napi::CallbackInfo &info, const Napi::Value &value)
@@ -51,14 +51,14 @@ void VirtualTextureWrap::SetGuid(const Napi::CallbackInfo &info, const Napi::Val
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  if (!value.IsString())
+  if (!value.IsNumber())
   {
-    Napi::TypeError::New(env, "guid is expected and to be a string")
+    Napi::TypeError::New(env, "guid is expected and to be a number")
         .ThrowAsJavaScriptException();
     return;
   }
 
-  native_handle_->set_guid(value.ToString().Utf8Value());
+  native_handle_->set_guid(value.ToNumber().Uint32Value());
 }
 
 Napi::Value VirtualTextureWrap::GetHeight(const Napi::CallbackInfo &info)
