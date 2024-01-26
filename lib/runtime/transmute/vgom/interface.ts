@@ -232,22 +232,52 @@ export declare class VirtualMaterial {
   setWireframe(v: boolean): void;
 
   /**
-   * Set the material's alpha value.
-   * @param v the alpha value.
+   * Set the surface type, the type value can be:
+   * 
+   * | Value | Type                                | Description |
+   * | ----- | ----------------------------------- | ----------- |
+   * | 0     | OPAQUE                              |             |
+   * | 1     | ALPHATEST                           |             |
+   * | 2     | ALPHABLEND                          |             |
+   * | 3     | ALPHATESTANDBLEND                   |             |
+   * 
+   * @param v the surface type.
    */
-  setAlpha(v: number): void;
+  setSurfaceType(v: number): void;
 
   /**
-   * Set the material's alpha mode.
-   * @param v the alpha mode.
+   * Sets the value of the alpha mode.
+   *
+   * | Value | Type | Description |
+   * | --- | --- | --- |
+   * | 0  | ALPHA_DISABLE |   |
+   * | 1  | ALPHA_ADD |   |
+   * | 2  | ALPHA_COMBINE |   |
+   * | 3  | ALPHA_SUBTRACT |   |
+   * | 4  | ALPHA_MULTIPLY |   |
+   * | 5  | ALPHA_MAXIMIZED |   |
+   * | 6  | ALPHA_ONEONE |   |
+   * | 7  | ALPHA_PREMULTIPLIED |   |
+   * | 8  | ALPHA_PREMULTIPLIED_PORTERDUFF |   |
+   * | 9  | ALPHA_INTERPOLATE |   |
+   * | 10 | ALPHA_SCREENMODE |   |
    */
   setAlphaMode(v: number): void;
 
   /**
-   * Set the surface type
-   * @param v the surface type.
+   * Set the material's alpha value, this is working with the alpha mode to control the actual effection.
    */
-  setSurfaceType(v: number): void;
+  setAlpha(v: number): void;
+
+  /**
+   * Set if culling is enabled.
+   */
+  setBackFaceCulling(v: boolean): void;
+
+  /**
+   * Set if read alpha from main texture.
+   */
+  setUseAlphaFromMainTexture(v: boolean): void;
 
   /**
    * Set the material's standard diffuse color.

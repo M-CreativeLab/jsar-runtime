@@ -116,6 +116,8 @@ function addFontToCache(font: fontkit.Font, buffer: Buffer) {
   });
 }
 
+export const kDisposeCanvas = Symbol('kDisposeCanvas');
+
 export class OffscreenCanvasRenderingContext2DImpl implements OffscreenCanvasRenderingContext2D {
   #nativeCanvas: EmulatedCanvas2D;
   #nativeCanvas2DContext: EmulatedCanvas2DContext;
@@ -132,8 +134,10 @@ export class OffscreenCanvasRenderingContext2DImpl implements OffscreenCanvasRen
 
   constructor(canvas?: OffscreenCanvasImpl) {
     this.canvas = canvas;
-
     const nativeCanvas = canvas.nativeCanvas;
+    if (!nativeCanvas || nativeCanvas == null) {
+      throw new TypeError(`The underlying native canvas is null.`);
+    }
     this.#nativeCanvas = nativeCanvas;
     this.#nativeCanvas2DContext = nativeCanvas.getContext('2d');
     this.#fontToMeasure = new canvasKit.Font(null, 10);
@@ -181,7 +185,7 @@ export class OffscreenCanvasRenderingContext2DImpl implements OffscreenCanvasRen
       }
     }
   }
-  
+
   commit(): void {
     throw new Error('Method(commit) not implemented.');
   }
@@ -545,14 +549,22 @@ export class OffscreenCanvasRenderingContext2DImpl implements OffscreenCanvasRen
   drawImage(image: CanvasImageSource, dx: number, dy: number, dw: number, dh: number): void;
   drawImage(image: CanvasImageSource, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void;
   drawImage(image: any, sx: unknown, sy: unknown, sw?: unknown, sh?: unknown, dx?: unknown, dy?: unknown, dw?: unknown, dh?: unknown): void {
-    if (image instanceof ImageBitmapImpl) {
-      image = image._getSkImage() as any;
+    if (!(image instanceof ImageBitmapImpl)) {
+      throw new TypeError('Only ImageBitmap is supported.');
     }
-    const imageWidth = image.width();
-    const imageHeight = image.height();
-
+    const imageWidth = image.width;
+    const imageHeight = image.height;
+    const skImage = image._getSkImage();
+    if (skImage == null) {
+      logger.warn('Invalid ImageBitmap instance, skImage is null.');
+      return;
+    }
+    if (skImage.isDeleted() === true) {
+      logger.warn('The underlying image is deleted, skipped to draw this image.');
+      throw new Error('The underlying image is deleted, skipped to draw this image.');
+    }
     this.#nativeCanvas2DContext.drawImage.apply(this.#nativeCanvas2DContext, [
-      image,
+      skImage,
       sx,
       sy,
       sw || imageWidth,
@@ -563,7 +575,6 @@ export class OffscreenCanvasRenderingContext2DImpl implements OffscreenCanvasRen
       dh || imageHeight,
     ]);
     this.#markAsDirty();
-    image.delete();
   }
 
   /// Pixel manipulation
@@ -669,6 +680,9 @@ export class OffscreenCanvasImpl extends EventTarget implements OffscreenCanvas 
         return this.#context2d;
       } else {
         this.#nativeCanvas = canvasKit.MakeCanvas(this.width, this.height);
+        if (this.#nativeCanvas == null) {
+          throw new TypeError(`Failed to create native canvas with size: ${this.width}x${this.height}.`);
+        }
         this.#context2d = new OffscreenCanvasRenderingContext2DImpl(this);
         this.#loadDefaultFonts();
         return this.#context2d;
@@ -689,9 +703,15 @@ export class OffscreenCanvasImpl extends EventTarget implements OffscreenCanvas 
   toDataURL(mime: string) {
     return this.#nativeCanvas.toDataURL(mime);
   }
+
+  [kDisposeCanvas]() {
+    this.#nativeCanvas.dispose();
+  }
 }
 
 export class ImageBitmapImpl implements ImageBitmap {
+  private static _liveCount = 0;
+
   height: number;
   width: number;
   private skImage: CanvasKitImage;
@@ -703,9 +723,19 @@ export class ImageBitmapImpl implements ImageBitmap {
     this.skImage = image;
     this.height = image.height();
     this.width = image.width();
+    ImageBitmapImpl._liveCount += 1;
+    logger.info(`ImageBitmap(${this.width}x${this.height}) is created.`);
   }
 
   close(): void {
+    try {
+      this.skImage.delete();
+      ImageBitmapImpl._liveCount -= 1;
+    } catch (_) {
+      // ts-ignore
+    } finally {
+      logger.info(`ImageBitmap(${this.width}x${this.height}) is disposed, and ${ImageBitmapImpl._liveCount} left.`);
+    }
     return;
   }
 
@@ -715,7 +745,7 @@ export class ImageBitmapImpl implements ImageBitmap {
 }
 
 export class ImageDataImpl implements ImageData {
-  constructor(data: unknown, sw: unknown, sh?: unknown, settings?: unknown) {
+  constructor(data: any, sw: unknown, sh?: unknown, settings?: unknown) {
     if (typeof data === 'number') {
       settings = sh as ImageDataSettings;
       sh = sw as number;
@@ -723,7 +753,12 @@ export class ImageDataImpl implements ImageData {
       data = null;
     }
 
-    this.data = data as Uint8ClampedArray;
+    if (data != null) {
+      if (data.length % 4) {
+        throw new Error(`The data array to create ImageData must be a multiple of 4, but got ${data.length}.`);
+      }
+      this.data = data as Uint8ClampedArray;
+    }
     this.width = sw as number;
     this.height = sh as number || this.width;
 

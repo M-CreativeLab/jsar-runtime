@@ -176,6 +176,23 @@ message VerticesSyncChangeOnGameObject {
   repeated float mesh_uv4_vertices = 10;
 }
 
+enum MaterialSurfaceType {
+  OPAQUE = 0;
+  ALPHA_TEST = 1;
+  ALPHA_BLEND = 2;
+  ALPHA_TEST_AND_BLEND = 3;
+}
+
+enum MaterialAlphaMode {
+  ALPHA_DISABLE = 0;
+  ALPHA_ADD	= 1;
+  ALPHA_COMBINE = 2;
+  ALPHA_SUBTRACT = 3;
+  ALPHA_MULTIPLY = 4;
+  ALPHA_MAXIMIZED = 5;
+  ALPHA_ONEONE = 6;
+}
+
 message MaterialSyncChangeOnGameObject {
   uint32 target_object_guid = 1;
   string material_name = 2;
@@ -183,13 +200,14 @@ message MaterialSyncChangeOnGameObject {
   string material_custom_type = 4; /** "Standard", "PBR" */
 
   /** Common(10-29) */
-  float material_alpha = 10;
-  int32 material_alpha_mode = 11;
-  bool material_backface_culling = 12;
-  int32 material_surface_type = 13;
-  int32 material_blending_mode = 14;
-  int32 material_render_face = 15;
-  bool material_wireframe = 16;
+  MaterialSurfaceType material_surface_type = 10;
+  MaterialAlphaMode material_alpha_mode = 11;
+  float material_alpha = 12;
+  bool material_backface_culling = 13;
+  bool material_use_alpha_from_main_texture = 14;
+  int32 material_blending_mode = 15;
+  int32 material_render_face = 16;
+  bool material_wireframe = 17;
 
   /** The following fields are used to represent the material changes of the game objects in the next frames. */
   /** Standard(30-99) */

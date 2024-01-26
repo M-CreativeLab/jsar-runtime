@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@canvas/image-data": "1.0.0",
-    "@yodaos-jsar/dom": "^0.3.1-alpha.20240122.1705918165751",
+    "@yodaos-jsar/dom": "^0.3.1-alpha.20240125.1706175760704",
     "babylonjs": "^6.10.0",
     "canvaskit-wasm": "^0.39.1",
     "fontkit": "^2.0.2",

@@ -535,20 +535,17 @@ export class GameObjectModelSerializer {
   async createVirtualMaterial(material: BABYLON.Material) {
     const customType = material.getClassName();
     const vMaterial = new this.#binding.VirtualMaterial(material);
-    vMaterial.setAlpha(material.alpha);
-    vMaterial.setAlphaMode(material.alphaMode);
-    vMaterial.setWireframe(material.wireframe);
-
     /**
      * Setup for transparency mode for surface type.
      */
     if (typeof material.transparencyMode === 'number') {
-      if (material.transparencyMode === BABYLON.Material.MATERIAL_OPAQUE) {
-        vMaterial.setSurfaceType(0);
-      } else {
-        vMaterial.setSurfaceType(3);
-      }
+      vMaterial.setSurfaceType(material.transparencyMode);
+    } else {
+      vMaterial.setSurfaceType(BABYLON.Material.MATERIAL_ALPHABLEND);
     }
+    vMaterial.setAlphaMode(material.alphaMode);
+    vMaterial.setAlpha(material.alpha);
+    vMaterial.setWireframe(material.wireframe);
 
     switch (customType) {
       case 'StandardMaterial':

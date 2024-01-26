@@ -10,8 +10,11 @@ void VirtualMaterialWrap::Init(Napi::Env env, Napi::Object exports)
       env,
       "Material",
       {
-          InstanceMethod("setAlpha", &VirtualMaterialWrap::SetAlpha),
+          InstanceMethod("setSurfaceType", &VirtualMaterialWrap::SetSurfaceType),
           InstanceMethod("setAlphaMode", &VirtualMaterialWrap::SetAlphaMode),
+          InstanceMethod("setAlpha", &VirtualMaterialWrap::SetAlpha),
+          InstanceMethod("setBackfaceCulling", &VirtualMaterialWrap::SetBackfaceCulling),
+          InstanceMethod("setUseAlphaFromMainTexture", &VirtualMaterialWrap::SetUseAlphaFromMainTexture),
           InstanceMethod("setWireframe", &VirtualMaterialWrap::SetWireframe),
 
           /** Standard Setter*/
@@ -33,7 +36,6 @@ void VirtualMaterialWrap::Init(Napi::Env env, Napi::Object exports)
           InstanceMethod("setEmissiveTexture", &VirtualMaterialWrap::SetEmissiveTexture),
           InstanceMethod("setMetallic", &VirtualMaterialWrap::SetMetallic),
           InstanceMethod("setRoughness", &VirtualMaterialWrap::SetRoughness),
-          InstanceMethod("setSurfaceType", &VirtualMaterialWrap::SetSurfaceType),
       });
 
   constructor = new Napi::FunctionReference();
@@ -78,6 +80,70 @@ VirtualMaterialWrap::VirtualMaterialWrap(const Napi::CallbackInfo &info) : Napi:
   name = materialObj.Get("name").ToString().Utf8Value();
 }
 
+Napi::Value VirtualMaterialWrap::SetSurfaceType(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  if (info.Length() < 1 || !info[0].IsNumber())
+  {
+    Napi::TypeError::New(env, "value is expected and to be a number when calling setSurfaceType")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  auto value = info[0].As<Napi::Number>().Int32Value();
+  if (value == MaterialSurfaceType::OPAQUE)
+    this->surface_type_ = MaterialSurfaceType::OPAQUE;
+  else if (value == MaterialSurfaceType::ALPHA_TEST)
+    this->surface_type_ = MaterialSurfaceType::ALPHA_TEST;
+  else if (value == MaterialSurfaceType::ALPHA_BLEND)
+    this->surface_type_ = MaterialSurfaceType::ALPHA_BLEND;
+  else if (value == MaterialSurfaceType::ALPHA_TEST_AND_BLEND)
+    this->surface_type_ = MaterialSurfaceType::ALPHA_TEST_AND_BLEND;
+  else
+    this->surface_type_ = MaterialSurfaceType::OPAQUE;
+
+  info.This().As<Napi::Object>().Set(
+    "surfaceType", Napi::Number::New(env, this->surface_type_));
+  return Napi::Boolean::New(env, true);
+}
+
+Napi::Value VirtualMaterialWrap::SetAlphaMode(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  if (info.Length() < 1 || !info[0].IsNumber())
+  {
+    Napi::TypeError::New(env, "value is expected and to be a number when calling setAlphaMode")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  auto value = info[0].As<Napi::Number>().Int32Value();
+  if (value == MaterialAlphaMode::ALPHA_DISABLE)
+    this->alpha_mode_ = MaterialAlphaMode::ALPHA_DISABLE;
+  else if (value == MaterialAlphaMode::ALPHA_ADD)
+    this->alpha_mode_ = MaterialAlphaMode::ALPHA_ADD;
+  else if (value == MaterialAlphaMode::ALPHA_COMBINE)
+    this->alpha_mode_ = MaterialAlphaMode::ALPHA_COMBINE;
+  else if (value == MaterialAlphaMode::ALPHA_SUBTRACT)
+    this->alpha_mode_ = MaterialAlphaMode::ALPHA_SUBTRACT;
+  else if (value == MaterialAlphaMode::ALPHA_MULTIPLY)
+    this->alpha_mode_ = MaterialAlphaMode::ALPHA_MULTIPLY;
+  else if (value == MaterialAlphaMode::ALPHA_MAXIMIZED)
+    this->alpha_mode_ = MaterialAlphaMode::ALPHA_MAXIMIZED;
+  else if (value == MaterialAlphaMode::ALPHA_ONEONE)
+    this->alpha_mode_ = MaterialAlphaMode::ALPHA_ONEONE;
+  else
+    this->alpha_mode_ = MaterialAlphaMode::ALPHA_COMBINE;
+
+  info.This().As<Napi::Object>().Set(
+    "alphaMode", Napi::Number::New(env, this->alpha_mode_));
+  return Napi::Boolean::New(env, true);
+}
+
 Napi::Value VirtualMaterialWrap::SetAlpha(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
@@ -103,21 +169,38 @@ Napi::Value VirtualMaterialWrap::SetAlpha(const Napi::CallbackInfo &info)
   return Napi::Boolean::New(env, true);
 }
 
-Napi::Value VirtualMaterialWrap::SetAlphaMode(const Napi::CallbackInfo &info)
+Napi::Value VirtualMaterialWrap::SetBackfaceCulling(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  if (info.Length() < 1 || !info[0].IsNumber())
+  if (info.Length() < 1 || !info[0].IsBoolean())
   {
-    Napi::TypeError::New(env, "value is expected and to be a number")
+    Napi::TypeError::New(env, "value is expected and to be a boolean")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
 
-  this->alpha_mode_ = info[0].As<Napi::Number>().FloatValue();
-  info.This().As<Napi::Object>().Set("alphaMode", this->alpha_);
-  return Napi::Boolean::New(env, true);
+  bool value = info[0].As<Napi::Boolean>().Value();
+  this->backface_culling_ = value;
+  return env.Undefined();
+}
+
+Napi::Value VirtualMaterialWrap::SetUseAlphaFromMainTexture(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  if (info.Length() < 1 || !info[0].IsBoolean())
+  {
+    Napi::TypeError::New(env, "value is expected and to be a boolean")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  bool value = info[0].As<Napi::Boolean>().Value();
+  this->use_alpha_from_main_texture_ = value;
+  return env.Undefined();
 }
 
 Napi::Value VirtualMaterialWrap::SetWireframe(const Napi::CallbackInfo &info)
@@ -261,22 +344,6 @@ Napi::Value VirtualMaterialWrap::SetRoughness(const Napi::CallbackInfo &info)
 
   this->roughness_ = value;
   info.This().As<Napi::Object>().Set("roughness", this->alpha_);
-  return Napi::Boolean::New(env, true);
-}
-
-Napi::Value VirtualMaterialWrap::SetSurfaceType(const Napi::CallbackInfo &info)
-{
-  Napi::Env env = info.Env();
-  Napi::HandleScope scope(env);
-
-  if (info.Length() < 1 || !info[0].IsNumber())
-  {
-    Napi::TypeError::New(env, "value is expected and to be a number")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  this->surface_type_ = info[0].As<Napi::Number>().FloatValue();
-  info.This().As<Napi::Object>().Set("surfaceType", this->alpha_);
   return Napi::Boolean::New(env, true);
 }
 

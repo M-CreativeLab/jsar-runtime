@@ -33,10 +33,18 @@ import { TransmuteRuntime } from './runtime';
  * Becauset Node.js EventTarget will cause an uncaught exception on `process.nextTick()`, thus we
  * have no way to handle the error in better way, so we just log the error and not exiting the process.
  */
-process.on('uncaughtException', (err) => {
-  logger.warn(`uncaught exception: ${err?.stack || err}`);
+function handleGlobalExceptionOrRejection(err) {
+  logger.warn(`
+==============================
+uncaught exception or rejection
+Stack: ${err?.stack || 'null'}
+Message: ${err?.message || err || 'null'}
+==============================
+  `);
   process.exit(1);
-});
+}
+process.on('uncaughtException', handleGlobalExceptionOrRejection);
+process.on('unhandledRejection', handleGlobalExceptionOrRejection);
 
 function getHashOfUri(uri: string) {
   const hash = crypto.createHash('sha256');

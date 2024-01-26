@@ -17,8 +17,11 @@ namespace gom
     static Napi::FunctionReference *constructor;
 
   private:
-    Napi::Value SetAlpha(const Napi::CallbackInfo &info);
+    Napi::Value SetSurfaceType(const Napi::CallbackInfo &info);
     Napi::Value SetAlphaMode(const Napi::CallbackInfo &info);
+    Napi::Value SetAlpha(const Napi::CallbackInfo &info);
+    Napi::Value SetBackfaceCulling(const Napi::CallbackInfo &info);
+    Napi::Value SetUseAlphaFromMainTexture(const Napi::CallbackInfo &info);
     Napi::Value SetWireframe(const Napi::CallbackInfo &info);
 
     /** Standard */
@@ -40,14 +43,16 @@ namespace gom
     Napi::Value SetEmissiveTexture(const Napi::CallbackInfo &info);
     Napi::Value SetMetallic(const Napi::CallbackInfo &info);
     Napi::Value SetRoughness(const Napi::CallbackInfo &info);
-    Napi::Value SetSurfaceType(const Napi::CallbackInfo &info);
 
   public:
     int32_t id;
     std::string name;
 
+    MaterialSurfaceType surface_type_;
+    MaterialAlphaMode alpha_mode_;
     float alpha_;
-    int32_t alpha_mode_;
+    bool backface_culling_;
+    bool use_alpha_from_main_texture_;
     bool wireframe_;
 
     /** Standard */
@@ -69,6 +74,5 @@ namespace gom
     VirtualTexture *emissive_texture_native_handle_ = nullptr;
     float metallic_;
     float roughness_;
-    int32_t surface_type_;
   };
 } // namespace gom

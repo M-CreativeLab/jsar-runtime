@@ -19,7 +19,11 @@ import * as ws from 'ws';
 import { Logger } from '../bindings/logger';
 import type { TransmuteRuntime } from './index';
 import { TransmuteEngine } from './babylonjs-engine/engine';
-import { OffscreenCanvasImpl, createImageBitmapImpl } from '../polyfills/offscreencanvas';
+import {
+  OffscreenCanvasImpl,
+  createImageBitmapImpl,
+  kDisposeCanvas,
+} from '../polyfills/offscreencanvas';
 
 function canParseURL(url: string): boolean {
   try {
@@ -392,25 +396,31 @@ export class TransmuteNativeDocument extends EventTarget implements NativeDocume
   }
 
   decodeImage(bitmap: ImageBitmap, size?: [number, number]) {
-    let expectedWidth = size[0];
-    let expectedHeight = size[1];
-    if (typeof expectedWidth !== 'number') {
+    let expectedWidth = Math.floor(size[0]);
+    let expectedHeight = Math.floor(size[1]);
+    if (typeof expectedWidth !== 'number' || isNaN(expectedWidth) || expectedWidth <= 0) {
       expectedWidth = bitmap.width;
     }
-    if (typeof expectedHeight !== 'number') {
+    if (typeof expectedHeight !== 'number' || isNaN(expectedHeight) || expectedHeight <= 0) {
       expectedHeight = bitmap.height;
     }
 
     const offscreenCanvas = new OffscreenCanvasImpl(expectedWidth, expectedHeight);
     const ctx = offscreenCanvas.getContext('2d');
-    ctx?.drawImage(
+    if (ctx == null) {
+      throw new TypeError('Failed to get 2d context from offscreen canvas.');
+    }
+
+    ctx.drawImage(
       bitmap,
       0, 0,
       bitmap.width, bitmap.height,
       0, 0,
       offscreenCanvas.width, offscreenCanvas.height
     );
-    const imageData = ctx?.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+    const imageData = ctx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+
+    offscreenCanvas[kDisposeCanvas]();
     return Promise.resolve(imageData as any);
   }
 

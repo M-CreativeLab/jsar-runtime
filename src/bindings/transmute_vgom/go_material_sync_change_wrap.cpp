@@ -52,9 +52,13 @@ GameObjectMaterialSyncChangeWrap::GameObjectMaterialSyncChangeWrap(const Napi::C
     native_handle_->set_material_custom_type(type.Utf8Value().c_str());
 
     /** Common */
-    native_handle_->set_material_alpha(materialWrap->alpha_);
-    native_handle_->set_material_alpha_mode(materialWrap->alpha_mode_);
     native_handle_->set_material_surface_type(materialWrap->surface_type_);
+    native_handle_->set_material_alpha_mode(materialWrap->alpha_mode_);
+    native_handle_->set_material_alpha(materialWrap->alpha_);
+    native_handle_->set_material_backface_culling(
+      materialWrap->backface_culling_);
+    native_handle_->set_material_use_alpha_from_main_texture(
+      materialWrap->use_alpha_from_main_texture_);
     native_handle_->set_material_wireframe(materialWrap->wireframe_);
 
     /** Standard */
