@@ -314,12 +314,11 @@ extern "C"
         "-e",
         std::string(jsbundle_source, jsbundle_size)};
 
-#ifdef __ANDROID__
     if (isDebug)
     {
-      args.insert(args.begin() + 1, "--inspect=0.0.0.0:9229"); // Add --inspect at index 1
+      args.insert(args.begin() + 1, "--inspect=9229");
+      args.insert(args.begin() + 2, "--cpu-prof");
     }
-#endif
 
     DEBUG("transmute", "Initializing Node.js with args: %s", args[0].c_str());
     std::unique_ptr<node::InitializationResult> result =

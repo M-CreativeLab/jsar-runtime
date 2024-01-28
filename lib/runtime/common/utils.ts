@@ -35,24 +35,31 @@ export function toVertexData(buffer: BABYLON.VertexBuffer) {
  * @param {BABYLON.IndicesArray} data 
  * @returns
  */
-export function toIndicesArray(data, reversed = false) {
+export function toIndicesArray(data: BABYLON.IndicesArray, reversed = false): Uint32Array {
   if (!data) {
     return null;
   }
-  if (data instanceof Uint32Array && !reversed) {
+
+  if (data instanceof Uint32Array) {
+    if (reversed === true) {
+      data.reverse();
+    }
     return data;
   }
-  const isArrayBufferOrView = data instanceof ArrayBuffer || ArrayBuffer.isView(data);
-  let arr = null;
-  if (isArrayBufferOrView) {
-    arr = Array.from(data as any);
-  } else if (Array.isArray(data)) {
-    arr = data;
+
+  if (ArrayBuffer.isView(data)) {
+    const dataArray = Array.from(data);
+    if (reversed === true) {
+      dataArray.reverse();
+    }
+    return new Uint32Array(dataArray);
   }
-  if (arr != null) {
-    return new Uint32Array(reversed ? arr.reverse() : arr);
-  } else {
-    throw new TypeError('Unknown data type: ' + data.constructor.name);
+
+  if (Array.isArray(data)) {
+    if (reversed === true) {
+      data.reverse();
+    }
+    return new Uint32Array(data);
   }
 }
 

@@ -34,7 +34,11 @@ int main(int argc, char **argv)
   /**
    * Start initialize the runtime and execute the given xsml file.
    */
-  TransmuteNative_Initialize(true);
+  if (TransmuteNative_Initialize(true) != 0)
+  {
+    fprintf(stderr, "failed to initialize the runtime\n");
+    return -1;
+  }
   TransmuteNative_SetLoggerCallback([](int fd, const char *text)
                                     {
         if (fd == 1)

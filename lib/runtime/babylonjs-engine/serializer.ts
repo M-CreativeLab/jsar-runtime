@@ -116,33 +116,26 @@ export class GameObjectModelSerializer {
     gom: vGomInterface.VirtualGameObjectModel,
     nodeId: number,
     name: string,
-    property: BABYLON.Vector3 | BABYLON.Quaternion
+    property: BABYLON.Vector3 | BABYLON.Quaternion,
+    isQuaternion: boolean,
   ) {
-    if (property instanceof BABYLON.Quaternion) {
-      gom.createPropertyChange(nodeId, {
-        name,
-        type: 'quaternion',
-        value: property,
-      });
-    } else {
-      gom.createPropertyChange(nodeId, {
-        name,
-        type: 'vector3',
-        value: property,
-      });
-    }
+    gom.createPropertyChange(nodeId, {
+      name,
+      type: isQuaternion ? 'quaternion' : 'vector3',
+      value: property,
+    });
   }
 
   async createChangeSerializable() {
     const gom = new this.#binding.VirtualGameObjectModel();
     for (const node of this.#watchingNodes) {
-      this.#createPropertyChange(gom, node.uniqueId, 'position', node.position);
+      this.#createPropertyChange(gom, node.uniqueId, 'position', node.position, false);
       if (node.rotationQuaternion != null) {
-        this.#createPropertyChange(gom, node.uniqueId, 'rotationQuaternion', node.rotationQuaternion);
+        this.#createPropertyChange(gom, node.uniqueId, 'rotationQuaternion', node.rotationQuaternion, true);
       } else {
-        this.#createPropertyChange(gom, node.uniqueId, 'rotation', node.rotation);
+        this.#createPropertyChange(gom, node.uniqueId, 'rotation', node.rotation, false);
       }
-      this.#createPropertyChange(gom, node.uniqueId, 'scale', node.scaling);
+      this.#createPropertyChange(gom, node.uniqueId, 'scale', node.scaling, false);
 
       if (node instanceof BABYLON.AbstractMesh) {
         /**
