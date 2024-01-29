@@ -317,7 +317,6 @@ extern "C"
     if (isDebug)
     {
       args.insert(args.begin() + 1, "--inspect=9229");
-      args.insert(args.begin() + 2, "--cpu-prof");
     }
 
     DEBUG("transmute", "Initializing Node.js with args: %s", args[0].c_str());

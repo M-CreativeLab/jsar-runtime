@@ -50,26 +50,6 @@ type TransmuteInternalTexture = BABYLON.InternalTexture & {
   [DIRTY_SYMBOL]?: boolean;
 };
 
-/**
- * Concating multiple Uint8Array into one.
- * @param arrays
- * @returns 
- */
-function concatBuffers(arrays: Uint8Array[]) {
-  let totalLength = 0;
-  for (const array of arrays) {
-    totalLength += array.length;
-  }
-
-  const concatenatedUint8Array = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const array of arrays) {
-    concatenatedUint8Array.set(array, offset);
-    offset += array.length;
-  }
-  return concatenatedUint8Array;
-}
-
 class TransmuteEngine extends BABYLON.NullEngine {
   /**
    * The event target used by the engine.
