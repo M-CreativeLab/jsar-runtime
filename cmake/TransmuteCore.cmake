@@ -17,12 +17,20 @@ endfunction()
 set(INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/transmute/_lib)
 file(GLOB TRANSMUTE_CORE_SOURCE
     "src/*.cpp"
-    "src/bindings/**/*.cpp"
-    "src/math/*.cpp"
+    "src/bindings/logger/*.cpp"
+    "src/bindings/renderer/*.cpp"
+    "src/bindings/webgl/*.cpp"
+    # "src/bindings/**/*.cpp"
+    # "src/math/*.cpp"
     "src/runtime/*.cpp"
+    "src/renderer/*.cpp"
 )
+if(APPLE)
+    file(GLOB TRANSMUTE_CORE_SOURCE_MM "src/renderer/*.mm")
+    list(APPEND TRANSMUTE_CORE_SOURCE ${TRANSMUTE_CORE_SOURCE_MM})
+endif()
 
-file(GLOB TRANSMUTE_PROTO_SOURCE "src/proto/*.pb.cc")
+# file(GLOB TRANSMUTE_PROTO_SOURCE "src/proto/*.pb.cc")
 
 set(TRANSMUTE_CORE_LIBNAME TransmuteCore)
 add_library(TransmuteCore SHARED ${TRANSMUTE_CORE_SOURCE} ${TRANSMUTE_PROTO_SOURCE})
@@ -49,6 +57,10 @@ target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${PROTOBUF_HEADERS_
 set(LABSOUND_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/LabSound/include)
 target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${LABSOUND_HEADERS_PATH})
 
+# Add Unity headers
+set(UNITY_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/Unity/include)
+target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${UNITY_HEADERS_PATH})
+
 # Add rust crates headers & libraries
 target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${CMAKE_SOURCE_DIR}/build/output/headers)
 if (APPLE)
@@ -71,56 +83,71 @@ else()
 endif()
 message(STATUS "Thirdparty library path: ${THIRDPARTY_LIBRARY_PATH}")
 
-# LabSound libraries requirements
-# See https://github.com/LabSound/LabSound/blob/main/cmake/examples.cmake
-if (WIN32)
-    if(MSVC)
-        # Arch AVX is problematic for many users, so disable it until
-        # some reasonable strategy (a separate AVX target?) is determined
-        #target_compile_options(${proj} PRIVATE /arch:AVX /Zi)
-        target_compile_options(${TRANSMUTE_CORE_LIBNAME} PRIVATE /Zi)
-    endif(MSVC)
-    target_compile_definitions(${TRANSMUTE_CORE_LIBNAME} PRIVATE __WINDOWS_WASAPI__=1)
-    # TODO: These vars are for libniquist and should be set in the find libynquist script.
-    target_compile_definitions(${TRANSMUTE_CORE_LIBNAME} PRIVATE HAVE_STDINT_H=1 HAVE_SINF=1)
-elseif (APPLE)
-    set(DARWIN_LABSOUND_DEPS
-        "-framework AudioToolbox"
-        "-framework AudioUnit"
-        "-framework Accelerate"
-        "-framework CoreAudio"
-        "-framework Cocoa"
+if(APPLE)
+    set(APPLE_RENDERER_DEPS
+        "-framework Foundation"
+        "-framework CoreFoundation"
+        "-framework OpenGL"
+        "-framework Metal"
+        "-lobjc"
     )
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${DARWIN_LABSOUND_DEPS})
-elseif (WIN32)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE dsound.lib dxguid.lib winmm.lib)
-elseif (ANDROID)
-    # TODO: These vars are for libnyquist and should be set in the find libynquist script.
-    # TODO: libnyquist's loadabc calls getenv and setenv. That's undesirable.
-    target_compile_definitions(${TRANSMUTE_CORE_LIBNAME} PRIVATE HAVE_STDINT_H=1 HAVE_SETENV=1 HAVE_SINF=1)
+    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${APPLE_RENDERER_DEPS})
 endif()
 
+# LabSound libraries requirements
+# See https://github.com/LabSound/LabSound/blob/main/cmake/examples.cmake
+# if (WIN32)
+#     if(MSVC)
+#         # Arch AVX is problematic for many users, so disable it until
+#         # some reasonable strategy (a separate AVX target?) is determined
+#         #target_compile_options(${proj} PRIVATE /arch:AVX /Zi)
+#         target_compile_options(${TRANSMUTE_CORE_LIBNAME} PRIVATE /Zi)
+#     endif(MSVC)
+#     target_compile_definitions(${TRANSMUTE_CORE_LIBNAME} PRIVATE __WINDOWS_WASAPI__=1)
+#     # TODO: These vars are for libniquist and should be set in the find libynquist script.
+#     target_compile_definitions(${TRANSMUTE_CORE_LIBNAME} PRIVATE HAVE_STDINT_H=1 HAVE_SINF=1)
+# elseif (APPLE)
+#     set(DARWIN_LABSOUND_DEPS
+#         "-framework AudioToolbox"
+#         "-framework AudioUnit"
+#         "-framework Accelerate"
+#         "-framework CoreAudio"
+#         "-framework Cocoa"
+#     )
+#     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${DARWIN_LABSOUND_DEPS})
+# elseif (WIN32)
+#     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE dsound.lib dxguid.lib winmm.lib)
+# elseif (ANDROID)
+#     # TODO: These vars are for libnyquist and should be set in the find libynquist script.
+#     # TODO: libnyquist's loadabc calls getenv and setenv. That's undesirable.
+#     target_compile_definitions(${TRANSMUTE_CORE_LIBNAME} PRIVATE HAVE_STDINT_H=1 HAVE_SETENV=1 HAVE_SINF=1)
+# endif()
+
 # Link to the LabSound library
-if (WIN32)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/LabSound/LabSound.lib)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/LabSound/samplerate.lib)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/LabSound/libnyquist.lib)
-else()
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/LabSound/libLabSound.a)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/LabSound/libsamplerate.a)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/LabSound/liblibnyquist.a)
-endif()
+# if (WIN32)
+#     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/LabSound/LabSound.lib)
+#     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/LabSound/samplerate.lib)
+#     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/LabSound/libnyquist.lib)
+# else()
+#     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/LabSound/libLabSound.a)
+#     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/LabSound/libsamplerate.a)
+#     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/LabSound/liblibnyquist.a)
+# endif()
+
+# if (APPLE)
+#     target_link_options(${TRANSMUTE_CORE_LIBNAME} PRIVATE -Wl,-undefined,dynamic_lookup)
+# endif()
 
 # Link to the Node.js & protobuf libraries
 if (WIN32)
     link_directories(${THIRDPARTY_LIBRARY_PATH}/lib)
-    add_definitions(-DPROTOBUF_USE_DLLS)
+    # add_definitions(-DPROTOBUF_USE_DLLS)
     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.lib)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.lib)
+    # target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.lib)
 else()
     target_link_options(${TRANSMUTE_CORE_LIBNAME} PRIVATE -L${THIRDPARTY_LIBRARY_PATH}/lib)
     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE node)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE protobuf-lite)
+    # target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE protobuf-lite)
 endif()
 
 if (APPLE)
@@ -191,6 +218,7 @@ endif()
 # Add Tools Function
 function(ADD_JSAR_TOOL EXECUTABLE_NAME SOURCE_FILE)
     add_executable(${EXECUTABLE_NAME} ${SOURCE_FILE})
+    target_compile_definitions(${EXECUTABLE_NAME} PRIVATE TRANSMUTE_STANDALONE)
     target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
     target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/proto)
     target_include_directories(${EXECUTABLE_NAME} PRIVATE ${NODEJS_HEADERS_PATH})
@@ -220,8 +248,8 @@ endfunction()
 
 # Add Tools
 if (APPLE)
-    ADD_JSAR_TOOL(test-jsar "src/tools/tester.cpp")
-    ADD_JSAR_TOOL(bench-jsar "src/tools/bench.cpp")
+    # ADD_JSAR_TOOL(test-jsar "src/tools/tester.cpp")
+    # ADD_JSAR_TOOL(bench-jsar "src/tools/bench.cpp")
 
     # Install the libraries to the build directory.
     install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.108.dylib DESTINATION ${CMAKE_BINARY_DIR})

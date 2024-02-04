@@ -8,11 +8,16 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "types": [
-      "node"
+      "node",
+      "nodejs-patch",
     ],
+    "typeRoots": [
+      "node_modules/@types",
+      "types"
+    ]
   },
   "include": [
-    "lib/**/*.ts",
+    "lib/**/*.ts"
   ],
   "exclude": [
     "build",

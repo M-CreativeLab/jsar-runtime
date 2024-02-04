@@ -6,6 +6,7 @@ import { TransmuteEngine } from './babylonjs-engine/engine';
 import * as logger from '../bindings/logger';
 import * as env from '../bindings/env';
 import * as messaging from '../bindings/messaging';
+import { connectRenderer } from '../bindings/renderer';
 import { TransmuteNativeDocument } from './impl-transmute';
 
 // Patch to Babylon.js
@@ -109,6 +110,10 @@ export class TransmuteRuntime extends EventTarget {
     this.#engineInit = engineInitOptions;
     this.#readyContext = ReadyContext.FromString(env.getReadyContext());
 
+    // connect the renderer
+    connectRenderer();
+
+    // listener the native events
     messaging.addEventListener('dispose', () => {
       logger.info('Received dispose event, stopping the runtime instance.');
       this.stop();

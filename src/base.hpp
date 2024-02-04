@@ -31,5 +31,3 @@
       nullptr,                                                         \
       {0},                                                             \
   };
-
-#define TRANSMUTE_VGO_GUID_KEY "uniqueId"

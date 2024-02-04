@@ -1,7 +1,12 @@
 import { inspect } from 'util';
+const { log: writeLogToNative } = process._linkedBinding('transmute:logger');
 
 let nodejsUtilModule;
-let binding = null;
+enum LogLevel {
+  INFO = 0,
+  ERROR = 1,
+  WARN = 2,
+}
 
 const kSecond = 1000;
 const kMinute = 60 * kSecond;
@@ -56,21 +61,11 @@ export class Logger extends EventTarget implements Console {
     }
   }
 
-  #writeStdout(format, ...args) {
+  #write(level: LogLevel, format, ...args) {
     const message = this.#getMessageString(format, ...args);
-    if (binding != null) {
-      binding.writeStdout(message);
-    }
-    console.info(format, ...args);
-    this.dispatchEvent(new CustomEvent('log', { detail: message }));
-  }
 
-  #writeStderr(format, ...args) {
-    const message = this.#getMessageString(format, ...args);
-    if (binding != null) {
-      binding.writeStderr(message);
-    }
     console.info(format, ...args);
+    writeLogToNative(level, Array.isArray(message) ? message.join(' ') : message);
     this.dispatchEvent(new CustomEvent('log', { detail: message }));
   }
 
@@ -82,7 +77,7 @@ export class Logger extends EventTarget implements Console {
     }
     const duration = process.hrtime(time);
     const ms = duration[0] * 1000 + duration[1] / 1e6;
-  
+
     const formatted = formatTime(ms);
     if (data === undefined) {
       this.log('%s: %s', label, formatted);
@@ -93,19 +88,19 @@ export class Logger extends EventTarget implements Console {
   }
 
   log(format, ...args) {
-    this.#writeStdout(format, ...args);
+    this.#write(LogLevel.INFO, format, ...args);
   }
   info(format, ...args) {
-    this.#writeStdout(format, ...args);
+    this.#write(LogLevel.INFO, format, ...args);
   }
   debug(format, ...args) {
-    this.#writeStdout(format, ...args);
+    this.#write(LogLevel.INFO, format, ...args);
   }
   warn(format, ...args) {
-    this.#writeStderr(format, ...args);
+    this.#write(LogLevel.WARN, format, ...args);
   }
   error(format, ...args) {
-    this.#writeStderr(format, ...args);
+    this.#write(LogLevel.ERROR, format, ...args);
   }
 
   assert(condition?: boolean, ...data: any[]): void;
@@ -126,7 +121,8 @@ export class Logger extends EventTarget implements Console {
   }
   dir(item?: any, options?: any): void;
   dir(obj?: unknown, options?: any): void {
-    this.#writeStdout(
+    this.#write(
+      LogLevel.INFO,
       inspect(obj, {
         customInspect: false,
         ...options,
@@ -194,21 +190,8 @@ export class Logger extends EventTarget implements Console {
   }
 }
 
-export function getLinkedBinding() {
-  if (binding == null) {
-    binding = (process as any)._linkedBinding('transmute:logger');
-  }
-  return binding;
-}
-
-// TODO: add a linked runtime flag to instead of this try-catch block.
-try {
-  getLinkedBinding();
-} catch (err) {
-  console.warn('failed to load linked logger module, switch to console instead.');
-}
-
 const defaultLogger = new Logger();
+writeLogToNative(0, 'created default logger');
 
 export const log = defaultLogger.log.bind(defaultLogger);
 export const info = defaultLogger.info.bind(defaultLogger);

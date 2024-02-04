@@ -6,6 +6,9 @@ import type * as vGomInterface from '../transmute/vgom/interface';
 import { DIRTY_SYMBOL, MIME_TYPE_SYMBOL } from './common';
 import { DocumentMetadata, GameObjectModelSerializer } from './serializer';
 import { decode as decodeWebp } from './libwebp';
+import {
+  createWebGLContext,
+} from '../../webgl';
 
 /**
  * FIXME(Yorkie): this is to resolve the issue that Jimp is not a constructor in the browser env.
@@ -91,6 +94,7 @@ class TransmuteEngine extends BABYLON.NullEngine {
 
     // TODO: Enable the audio engine later when it is ready.
     // BABYLON.Engine.audioEngine = BABYLON.Engine.AudioEngineFactory(this.getRenderingCanvas(), this.getAudioContext(), this.getAudioDestination());
+    createWebGLContext(1, 1, null);
 
     // Shader related options
     this.disableUniformBuffers = true;

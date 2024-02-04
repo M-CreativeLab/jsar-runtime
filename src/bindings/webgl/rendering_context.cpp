@@ -1,0 +1,183 @@
+#include "rendering_context.hpp"
+
+namespace webgl
+{
+  Napi::FunctionReference *WebGLRenderingContext::constructor;
+
+  Napi::Object WebGLRenderingContext::Init(Napi::Env env, Napi::Object exports)
+  {
+    Napi::Function tpl = DefineClass(
+        env,
+        "WebGLRenderingContext",
+        {// variables
+         InstanceValue("COLOR_BUFFER_BIT", Napi::Number::New(env, COLOR_BUFFER_BIT)),
+         InstanceValue("DEPTH_BUFFER_BIT", Napi::Number::New(env, DEPTH_BUFFER_BIT)),
+         InstanceValue("STENCIL_BUFFER_BIT", Napi::Number::New(env, STENCIL_BUFFER_BIT)),
+         // instance methods
+         InstanceMethod("viewport", &WebGLRenderingContext::Viewport),
+         InstanceMethod("clearColor", &WebGLRenderingContext::ClearColor),
+         InstanceMethod("clearDepth", &WebGLRenderingContext::ClearDepth),
+         InstanceMethod("clearStencil", &WebGLRenderingContext::ClearStencil),
+         InstanceMethod("clear", &WebGLRenderingContext::Clear),
+         InstanceMethod("enable", &WebGLRenderingContext::Enable),
+         InstanceMethod("scissor", &WebGLRenderingContext::Scissor),
+         // getter & setter
+         InstanceAccessor<&WebGLRenderingContext::DrawingBufferWidthGetter, &WebGLRenderingContext::DrawingBufferWidthSetter>("drawingBufferWidth"),
+         InstanceAccessor<&WebGLRenderingContext::DrawingBufferHeightGetter, &WebGLRenderingContext::DrawingBufferHeightSetter>("drawingBufferHeight")});
+
+    constructor = new Napi::FunctionReference();
+    *constructor = Napi::Persistent(tpl);
+    env.SetInstanceData(constructor);
+
+    exports.Set("WebGLRenderingContext", tpl);
+    return exports;
+  }
+
+  WebGLRenderingContext::WebGLRenderingContext(const Napi::CallbackInfo &info) : Napi::ObjectWrap<WebGLRenderingContext>(info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    m_renderAPI = RenderAPI::Get();
+    if (m_renderAPI == nullptr)
+    {
+      Napi::TypeError::New(env, "RenderAPI is not available").ThrowAsJavaScriptException();
+      return;
+    }
+  }
+
+  Napi::Value WebGLRenderingContext::Viewport(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() != 4)
+    {
+      Napi::TypeError::New(env, "viewport() takes 4 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    int x = info[0].As<Napi::Number>().Int32Value();
+    int y = info[1].As<Napi::Number>().Int32Value();
+    int width = info[2].As<Napi::Number>().Int32Value();
+    int height = info[3].As<Napi::Number>().Int32Value();
+    m_renderAPI->SetViewport(x, y, width, height);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::ClearColor(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() >= 4)
+    {
+      float r = info[0].ToNumber().FloatValue();
+      float g = info[1].ToNumber().FloatValue();
+      float b = info[2].ToNumber().FloatValue();
+      float a = info[3].ToNumber().FloatValue();
+      m_renderAPI->ClearColor(r, g, b, a);
+    }
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::ClearDepth(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() >= 1)
+    {
+      float depth = info[0].ToNumber().FloatValue();
+      m_renderAPI->ClearDepth(depth);
+    }
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::ClearStencil(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() >= 1)
+    {
+      int stencil = info[0].ToNumber().Int32Value();
+      m_renderAPI->ClearStencil(stencil);
+    }
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Clear(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() >= 1)
+    {
+      uint32_t mask = info[0].ToNumber().Uint32Value();
+      m_renderAPI->Clear(mask);
+    }
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Enable(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() >= 1)
+    {
+      uint32_t mask = info[0].ToNumber().Uint32Value();
+      m_renderAPI->Enable(mask);
+    }
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Scissor(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() != 4)
+    {
+      Napi::TypeError::New(env, "viewport() takes 4 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    int x = info[0].As<Napi::Number>().Int32Value();
+    int y = info[1].As<Napi::Number>().Int32Value();
+    int width = info[2].As<Napi::Number>().Int32Value();
+    int height = info[3].As<Napi::Number>().Int32Value();
+    m_renderAPI->SetScissor(x, y, width, height);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::DrawingBufferWidthGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Number::New(env, m_renderAPI->GetDrawingBufferWidth());
+  }
+
+  void WebGLRenderingContext::DrawingBufferWidthSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    Napi::TypeError::New(env, "drawingBufferWidth is readonly.").ThrowAsJavaScriptException();
+  }
+
+  Napi::Value WebGLRenderingContext::DrawingBufferHeightGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Number::New(env, m_renderAPI->GetDrawingBufferHeight());
+  }
+
+  void WebGLRenderingContext::DrawingBufferHeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    Napi::TypeError::New(env, "drawingBufferHeight is readonly.").ThrowAsJavaScriptException();
+  }
+
+}
