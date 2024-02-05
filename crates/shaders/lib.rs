@@ -4,7 +4,7 @@ use naga::ShaderStage;
 
 #[no_mangle]
 pub extern "C" fn glsl_to_msl(
-  stage: u8,
+  stage: i32,
   input_ptr: *const u8,
   input_size: usize,
   output_ptr: *mut *const u8,
@@ -18,9 +18,8 @@ pub extern "C" fn glsl_to_msl(
     .parse(
       &naga::front::glsl::Options {
         stage: match stage {
-          0 => naga::ShaderStage::Vertex,
-          1 => naga::ShaderStage::Fragment,
-          2 => naga::ShaderStage::Compute,
+          0x8b30 => naga::ShaderStage::Fragment,
+          0x8b31 => naga::ShaderStage::Vertex,
           _ => panic!("Unknown stage: {}", stage),
         },
         defines: Default::default(),
@@ -33,6 +32,8 @@ pub extern "C" fn glsl_to_msl(
       }
       panic!("Failed to parse GLSL, errors has been printed above.");
     });
+
+  println!("{:?}", parsed);
 
   let info = match naga::valid::Validator::new(
     naga::valid::ValidationFlags::all(),

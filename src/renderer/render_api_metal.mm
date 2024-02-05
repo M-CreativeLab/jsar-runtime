@@ -24,8 +24,15 @@ typedef struct {
 @end
 
 @interface MTLShaderObject : NSObject
+@property(nonatomic) int type;
 @property(nonatomic, strong) id<MTLLibrary> library;
 @property(nonatomic, strong) id<MTLFunction> function;
+@end
+
+@interface MTLBufferObject : NSObject
+@property(nonatomic) int size;
+@property(nonatomic) int target;
+@property(nonatomic, strong) id<MTLBuffer> buffer;
 @end
 
 @implementation MTLProgramObject
@@ -41,11 +48,29 @@ typedef struct {
 @end
 
 @implementation MTLShaderObject
-- (instancetype)init {
+- (instancetype)initWithType:(int)type {
   self = [super init];
   if (self) {
+    self.type = type;
     self.library = nil;
     self.function = nil;
+  }
+  return self;
+}
+@end
+
+@implementation MTLBufferObject
+- (instancetype)initWithSize:(int)size metalDevice:(id<MTLDevice>)metalDevice {
+  self = [super init];
+  if (self) {
+#if UNITY_OSX
+    MTLResourceOptions options =
+        MTLResourceCPUCacheModeDefaultCache | MTLResourceStorageModeManaged;
+#else
+    MTLResourceOptions options = MTLResourceOptionCPUCacheModeDefault;
+#endif
+    self.size = size;
+    self.buffer = [metalDevice newBufferWithLength:size options:options];
   }
   return self;
 }
@@ -104,6 +129,7 @@ private:
   id<MTLRenderCommandEncoder> m_CurrentCommandEncoder = nil;
   std::vector<MTLShaderObject *> m_Shaders;
   std::vector<MTLProgramObject *> m_Programs;
+  std::vector<MTLBufferObject *> m_Buffers;
   id<MTLRenderPipelineState> m_PipelineStateInNextFrame = nil;
 
   // state
@@ -113,7 +139,9 @@ private:
   double m_ClearDepth = 0.0;
   uint32_t m_ClearStencil = 0;
 
+  // opengl buffers
   id<MTLBuffer> m_VertexBuffer;
+  id<MTLBuffer> m_IndexBuffer;
   id<MTLBuffer> m_ConstantBuffer;
   AppData m_AppData;
 
@@ -260,6 +288,11 @@ id<MTLRenderCommandEncoder> RenderAPI_Metal::CreateCommandEncoder() {
       (id<MTLCommandBuffer>)m_MetalGraphics->CurrentCommandBuffer();
   m_CurrentCommandEncoder =
       [commandBuffer renderCommandEncoderWithDescriptor:m_RunPassDescriptor];
+
+  // Set the states
+  if (m_PipelineStateInNextFrame != nil)
+    [m_CurrentCommandEncoder setRenderPipelineState:m_PipelineStateInNextFrame];
+
   return m_CurrentCommandEncoder;
 }
 
@@ -359,7 +392,7 @@ void RenderAPI_Metal::DetachShader(int program, int shader) {
 }
 
 int RenderAPI_Metal::CreateShader(int type) {
-  MTLShaderObject *shaderObject = [[MTLShaderObject alloc] init];
+  MTLShaderObject *shaderObject = [[MTLShaderObject alloc] initWithType:type];
   m_Shaders.push_back(shaderObject);
   return m_Shaders.size() - 1;
 }
@@ -382,8 +415,8 @@ void RenderAPI_Metal::ShaderSource(int shaderId, const char *source,
 
   const uint8_t *mslSource;
   size_t mslSize = 0;
-  int code =
-      glsl_to_msl(0x00, (const uint8_t *)source, length, &mslSource, &mslSize);
+  int code = glsl_to_msl(shaderObject.type, (const uint8_t *)source, length,
+                         &mslSource, &mslSize);
   if (code != 0) {
     ::fprintf(stderr, "Failed to convert GLSL to MSL\n");
     return;
@@ -396,6 +429,8 @@ void RenderAPI_Metal::ShaderSource(int shaderId, const char *source,
       [m_MetalGraphics->MetalDevice() newLibraryWithSource:srcStr
                                                    options:nil
                                                      error:&error];
+  delete[] mslSource;
+
   if (error != nil) {
     NSString *desc = [error localizedDescription];
     NSString *reason = [error localizedFailureReason];
@@ -420,10 +455,29 @@ void RenderAPI_Metal::CompileShader(int shader) {
   }
 }
 
-int RenderAPI_Metal::CreateBuffer() { return 0; }
+int RenderAPI_Metal::CreateBuffer() {
+  id<MTLDevice> metalDevice = m_MetalGraphics->MetalDevice();
+  MTLBufferObject *bufferObject =
+      [[MTLBufferObject alloc] initWithSize:2048 metalDevice:metalDevice];
+  m_Buffers.push_back(bufferObject);
+  return m_Buffers.size() - 1;
+}
 
 void RenderAPI_Metal::BindBuffer(int target, int buffer) {
-  // Do nothing
+  MTLBufferObject *bufferObject = m_Buffers[buffer];
+  if (bufferObject == nil) {
+    ::fprintf(stderr, "Invalid buffer id\n");
+    return;
+  }
+  if (bufferObject.buffer == nil) {
+    ::fprintf(stderr, "Buffer not created\n");
+    return;
+  }
+  if (target == WEBGL_ARRAY_BUFFER) {
+    m_VertexBuffer = bufferObject.buffer;
+  } else if (target == WEBGL_ELEMENT_ARRAY_BUFFER) {
+    m_IndexBuffer = bufferObject.buffer;
+  }
 }
 
 void RenderAPI_Metal::EnableVertexAttribArray(int index) {

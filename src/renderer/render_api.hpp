@@ -11,6 +11,15 @@ enum FrameExecutionCode
   kFrameExecutionNotAvailable = 2,
 };
 
+// Draw modes
+const int WEBGL_POINTS = 0;
+const int WEBGL_LINES = 1;
+const int WEBGL_LINE_LOOP = 2;
+const int WEBGL_LINE_STRIP = 3;
+const int WEBGL_TRIANGLES = 4;
+const int WEBGL_TRIANGLE_STRIP = 5;
+const int WEBGL_TRIANGLE_FAN = 6;
+
 // Clear mask
 static int COLOR_BUFFER_BIT = 16384;
 static int DEPTH_BUFFER_BIT = 256;
@@ -30,6 +39,16 @@ const int STENCIL_TEST = 2960;
 // Shader types
 const int WEBGL_VERTEX_SHADER = 35633;
 const int WEBGL_FRAGMENT_SHADER = 35632;
+
+// Buffer types
+const int WEBGL_ARRAY_BUFFER = 34962;
+const int WEBGL_ELEMENT_ARRAY_BUFFER = 34963;
+const int WEBGL2_COPY_READ_BUFFER = 36662;
+const int WEBGL2_COPY_WRITE_BUFFER = 36663;
+const int WEBGL2_PIXEL_PACK_BUFFER = 35051;
+const int WEBGL2_PIXEL_UNPACK_BUFFER = 35052;
+const int WEBGL2_TRANSFORM_FEEDBACK_BUFFER = 35982;
+const int WEBGL2_UNIFORM_BUFFER = 35345;
 
 class RenderAPI
 {

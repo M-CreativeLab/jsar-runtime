@@ -29,6 +29,10 @@ public:
       instance_ = new NodeBootstrapper();
     return instance_;
   }
+  static bool IsInstanceRunning()
+  {
+    return instance_ != nullptr && instance_->m_running;
+  }
 
 public:
   NodeBootstrapper();

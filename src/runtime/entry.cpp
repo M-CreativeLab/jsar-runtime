@@ -592,7 +592,7 @@ extern "C"
 
   static void OnUnityRenderEvent(int eventID)
   {
-    if (s_CurrentAPI == NULL)
+    if (s_CurrentAPI == NULL || !NodeBootstrapper::IsInstanceRunning())
       return;
 
     auto code = s_CurrentAPI->ExecuteFrame();

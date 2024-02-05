@@ -91,7 +91,7 @@ bool NodeBootstrapper::start()
             if (runNodeInstance() != 0)
               DEBUG("transmute", "nodejs script exited with error.");
 
-            m_started = false;
+            m_running = false;
             if (m_disposeV8OnExit)
             {
               V8::Dispose();
