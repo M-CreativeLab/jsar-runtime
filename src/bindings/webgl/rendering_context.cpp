@@ -13,6 +13,8 @@ namespace webgl
          InstanceValue("COLOR_BUFFER_BIT", Napi::Number::New(env, COLOR_BUFFER_BIT)),
          InstanceValue("DEPTH_BUFFER_BIT", Napi::Number::New(env, DEPTH_BUFFER_BIT)),
          InstanceValue("STENCIL_BUFFER_BIT", Napi::Number::New(env, STENCIL_BUFFER_BIT)),
+         InstanceValue("VERTEX_SHADER", Napi::Number::New(env, WEBGL_VERTEX_SHADER)),
+         InstanceValue("FRAGMENT_SHADER", Napi::Number::New(env, WEBGL_FRAGMENT_SHADER)),
          // instance methods
          InstanceMethod("createProgram", &WebGLRenderingContext::CreateProgram),
          InstanceMethod("linkProgram", &WebGLRenderingContext::LinkProgram),
@@ -21,6 +23,8 @@ namespace webgl
          InstanceMethod("detachShader", &WebGLRenderingContext::DetachShader),
          InstanceMethod("createShader", &WebGLRenderingContext::CreateShader),
          InstanceMethod("deleteShader", &WebGLRenderingContext::DeleteShader),
+         InstanceMethod("shaderSource", &WebGLRenderingContext::ShaderSource),
+         InstanceMethod("compileShader", &WebGLRenderingContext::CompileShader),
          InstanceMethod("createBuffer", &WebGLRenderingContext::CreateBuffer),
          InstanceMethod("bindBuffer", &WebGLRenderingContext::BindBuffer),
          InstanceMethod("enableVertexAttribArray", &WebGLRenderingContext::EnableVertexAttribArray),
@@ -172,7 +176,7 @@ namespace webgl
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
     std::string source = info[1].As<Napi::String>().Utf8Value();
-    m_renderAPI->ShaderSource(shader, source.c_str());
+    m_renderAPI->ShaderSource(shader, source.c_str(), source.length());
     return env.Undefined();
   }
 

@@ -17,6 +17,16 @@ export function connectRenderer() {
 
   loop.setFrameCallback(function () {
     try {
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      gl.shaderSource(vertexShader, `
+#version 460 core
+void main() {
+    gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+    gl_PointSize = 64.0;
+}
+      `.trim());
+      gl.compileShader(vertexShader);
+
       // gl.enable(gl.SCISSOR_TEST);
       // gl.scissor(40, 20, 60, 130);
 

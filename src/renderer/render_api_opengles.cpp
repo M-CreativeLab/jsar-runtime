@@ -48,7 +48,7 @@ public:
 	virtual void DetachShader(int program, int shader);
 	virtual int CreateShader(int type);
 	virtual void DeleteShader(int shader);
-	virtual void ShaderSource(int shader, const char *source);
+	virtual void ShaderSource(int shader, const char *source, uint32_t length);
 	virtual void CompileShader(int shader);
 	virtual int CreateBuffer();
 	virtual void BindBuffer(int target, int buffer);
@@ -261,7 +261,7 @@ void RenderAPI_OpenGLCoreES::DeleteShader(int shader)
 	glDeleteShader(shader);
 }
 
-void RenderAPI_OpenGLCoreES::ShaderSource(int shader, const char *source)
+void RenderAPI_OpenGLCoreES::ShaderSource(int shader, const char *source, uint32_t length)
 {
 	glShaderSource(shader, 1, &source, NULL);
 }

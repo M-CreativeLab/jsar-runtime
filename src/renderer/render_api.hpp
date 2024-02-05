@@ -27,6 +27,10 @@ const int SAMPLE_COVERAGE = 32928;
 const int SCISSOR_TEST = 3089;
 const int STENCIL_TEST = 2960;
 
+// Shader types
+const int WEBGL_VERTEX_SHADER = 35633;
+const int WEBGL_FRAGMENT_SHADER = 35632;
+
 class RenderAPI
 {
 private:
@@ -59,7 +63,7 @@ public:
   virtual void DetachShader(int program, int shader) = 0;
   virtual int CreateShader(int type) = 0;
   virtual void DeleteShader(int shader) = 0;
-  virtual void ShaderSource(int shader, const char *source) = 0;
+  virtual void ShaderSource(int shader, const char *source, uint32_t length) = 0;
   virtual void CompileShader(int shader) = 0;
   virtual int CreateBuffer() = 0;
   virtual void BindBuffer(int target, int buffer) = 0;

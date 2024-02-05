@@ -72,6 +72,7 @@ elseif (WIN32)
 endif()
 message(STATUS "TRANSMUTE_CRATE_TARGET: ${TRANSMUTE_CRATE_TARGET}")
 transmute_add_library(${CMAKE_SOURCE_DIR}/build/output/crates/${TRANSMUTE_CRATE_TARGET}release jsar_jsbundle)
+transmute_add_library(${CMAKE_SOURCE_DIR}/build/output/crates/${TRANSMUTE_CRATE_TARGET}release jsar_shaders)
 
 # Optional dependencies
 if (APPLE)

@@ -1,3 +1,4 @@
+#include "crates/jsar_shaders.h"
 #include "render_api.hpp"
 #include "runtime/platform_base.hpp"
 
@@ -10,6 +11,7 @@
 #include <Unity/IUnityGraphicsMetal.h>
 #include <Unity/IUnityLog.h>
 #import <simd/simd.h>
+#include <vector>
 
 typedef struct {
   matrix_float4x4 worldMatrix;
@@ -69,7 +71,7 @@ public:
   virtual void DetachShader(int program, int shader);
   virtual int CreateShader(int type);
   virtual void DeleteShader(int shader);
-  virtual void ShaderSource(int shader, const char *source);
+  virtual void ShaderSource(int shader, const char *source, uint32_t length);
   virtual void CompileShader(int shader);
   virtual int CreateBuffer();
   virtual void BindBuffer(int target, int buffer);
@@ -100,8 +102,8 @@ private:
 
   MTLRenderPassDescriptor *m_RunPassDescriptor;
   id<MTLRenderCommandEncoder> m_CurrentCommandEncoder = nil;
-  NSMutableArray<MTLShaderObject *> *m_Shaders = [NSMutableArray array];
-  NSMutableArray<MTLProgramObject *> *m_Programs = [NSMutableArray array];
+  std::vector<MTLShaderObject *> m_Shaders;
+  std::vector<MTLProgramObject *> m_Programs;
   id<MTLRenderPipelineState> m_PipelineStateInNextFrame = nil;
 
   // state
@@ -286,8 +288,8 @@ int RenderAPI_Metal::CreateProgram() {
   MTLRenderPipelineDescriptor *descriptor =
       [[MTLRenderPipelineDescriptorClass alloc] init];
   programObject.descriptor = descriptor;
-  [m_Programs addObject:programObject];
-  return (int)[m_Programs count] - 1;
+  m_Programs.push_back(programObject);
+  return m_Programs.size() - 1;
 }
 
 void RenderAPI_Metal::LinkProgram(int program) {
@@ -358,15 +360,16 @@ void RenderAPI_Metal::DetachShader(int program, int shader) {
 
 int RenderAPI_Metal::CreateShader(int type) {
   MTLShaderObject *shaderObject = [[MTLShaderObject alloc] init];
-  [m_Shaders addObject:shaderObject];
-  return (int)[m_Shaders count] - 1;
+  m_Shaders.push_back(shaderObject);
+  return m_Shaders.size() - 1;
 }
 
 void RenderAPI_Metal::DeleteShader(int shader) {
   // TODO: release shader resources
 }
 
-void RenderAPI_Metal::ShaderSource(int shaderId, const char *source) {
+void RenderAPI_Metal::ShaderSource(int shaderId, const char *source,
+                                   uint32_t length) {
   MTLShaderObject *shaderObject = m_Shaders[shaderId];
   if (shaderObject == nil) {
     ::fprintf(stderr, "Invalid shader id\n");
@@ -376,8 +379,17 @@ void RenderAPI_Metal::ShaderSource(int shaderId, const char *source) {
     ::fprintf(stderr, "Shader already has source\n");
     return;
   }
-  NSString *srcStr = [[NSString alloc] initWithBytes:source
-                                              length:strlen(source)
+
+  const uint8_t *mslSource;
+  size_t mslSize = 0;
+  int code =
+      glsl_to_msl(0x00, (const uint8_t *)source, length, &mslSource, &mslSize);
+  if (code != 0) {
+    ::fprintf(stderr, "Failed to convert GLSL to MSL\n");
+    return;
+  }
+  NSString *srcStr = [[NSString alloc] initWithBytes:mslSource
+                                              length:mslSize
                                             encoding:NSASCIIStringEncoding];
   NSError *error = nil;
   shaderObject.library =
@@ -402,7 +414,7 @@ void RenderAPI_Metal::CompileShader(int shader) {
     ::fprintf(stderr, "Shader has no source\n");
     return;
   }
-  shaderObject.function = [shaderObject.library newFunctionWithName:@"main"];
+  shaderObject.function = [shaderObject.library newFunctionWithName:@"main_"];
   if (shaderObject.function == nil) {
     ::fprintf(stderr, "Failed to compile shader\n");
   }
@@ -427,8 +439,8 @@ void RenderAPI_Metal::VertexAttribPointer(int index, int size, int type,
 void RenderAPI_Metal::DrawArrays(int mode, int first, int count) {
   CreateCommandEncoder();
   [m_CurrentCommandEncoder drawPrimitives:MTLPrimitiveTypeTriangle
-                             vertexStart:first
-                             vertexCount:count];
+                              vertexStart:first
+                              vertexCount:count];
 }
 
 void RenderAPI_Metal::DrawElements(int mode, int count, int type,

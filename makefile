@@ -19,6 +19,9 @@ ifeq ($(UNAME), Darwin)
 	lipo -create -output build/output/crates/universal-apple-darwin/release/libjsar_jsbundle.a \
 		build/output/crates/aarch64-apple-darwin/release/libjsar_jsbundle.a \
 		build/output/crates/x86_64-apple-darwin/release/libjsar_jsbundle.a
+	lipo -create -output build/output/crates/universal-apple-darwin/release/libjsar_shaders.a \
+		build/output/crates/aarch64-apple-darwin/release/libjsar_shaders.a \
+		build/output/crates/x86_64-apple-darwin/release/libjsar_shaders.a
 endif
 
 jsbundle:
