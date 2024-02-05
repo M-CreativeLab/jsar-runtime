@@ -61,6 +61,12 @@ public:
   virtual void DeleteShader(int shader) = 0;
   virtual void ShaderSource(int shader, const char *source) = 0;
   virtual void CompileShader(int shader) = 0;
+  virtual int CreateBuffer() = 0;
+  virtual void BindBuffer(int target, int buffer) = 0;
+  virtual void EnableVertexAttribArray(int index) = 0;
+  virtual void VertexAttribPointer(int index, int size, int type, bool normalized, int stride, const void *offset) = 0;
+  virtual void DrawArrays(int mode, int first, int count) = 0;
+  virtual void DrawElements(int mode, int count, int type, const void *indices) = 0;
   virtual void SetViewport(int x, int y, int width, int height) = 0;
   virtual void SetScissor(int x, int y, int width, int height) = 0;
   virtual void ClearColor(float r, float g, float b, float a) = 0;

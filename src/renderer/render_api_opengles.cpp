@@ -50,6 +50,12 @@ public:
 	virtual void DeleteShader(int shader);
 	virtual void ShaderSource(int shader, const char *source);
 	virtual void CompileShader(int shader);
+	virtual int CreateBuffer();
+	virtual void BindBuffer(int target, int buffer);
+	virtual void EnableVertexAttribArray(int index);
+	virtual void VertexAttribPointer(int index, int size, int type, bool normalized, int stride, const void *offset);
+	virtual void DrawArrays(int mode, int first, int count);
+	virtual void DrawElements(int mode, int count, int type, const void *indices);
 	virtual void SetViewport(int x, int y, int width, int height);
 	virtual void SetScissor(int x, int y, int width, int height);
 	virtual void ClearColor(float r, float g, float b, float a);
@@ -263,6 +269,38 @@ void RenderAPI_OpenGLCoreES::ShaderSource(int shader, const char *source)
 void RenderAPI_OpenGLCoreES::CompileShader(int shader)
 {
 	glCompileShader(shader);
+}
+
+int RenderAPI_OpenGLCoreES::CreateBuffer()
+{
+	GLuint buffer;
+	glGenBuffers(1, &buffer);
+	return buffer;
+}
+
+void RenderAPI_OpenGLCoreES::BindBuffer(int target, int buffer)
+{
+	glBindBuffer(target, buffer);
+}
+
+void RenderAPI_OpenGLCoreES::EnableVertexAttribArray(int index)
+{
+	glEnableVertexAttribArray(index);
+}
+
+void RenderAPI_OpenGLCoreES::VertexAttribPointer(int index, int size, int type, bool normalized, int stride, const void *offset)
+{
+	glVertexAttribPointer(index, size, type, normalized, stride, offset);
+}
+
+void RenderAPI_OpenGLCoreES::DrawArrays(int mode, int first, int count)
+{
+	glDrawArrays(mode, first, count);
+}
+
+void RenderAPI_OpenGLCoreES::DrawElements(int mode, int count, int type, const void *indices)
+{
+	glDrawElements(mode, count, type, indices);
 }
 
 void RenderAPI_OpenGLCoreES::SetViewport(int x, int y, int width, int height)

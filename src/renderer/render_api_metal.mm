@@ -71,6 +71,14 @@ public:
   virtual void DeleteShader(int shader);
   virtual void ShaderSource(int shader, const char *source);
   virtual void CompileShader(int shader);
+  virtual int CreateBuffer();
+  virtual void BindBuffer(int target, int buffer);
+  virtual void EnableVertexAttribArray(int index);
+  virtual void VertexAttribPointer(int index, int size, int type,
+                                   bool normalized, int stride,
+                                   const void *offset);
+  virtual void DrawArrays(int mode, int first, int count);
+  virtual void DrawElements(int mode, int count, int type, const void *indices);
   virtual void SetViewport(int x, int y, int w, int h);
   virtual void SetScissor(int x, int y, int w, int h);
   virtual void ClearColor(float r, float g, float b, float a);
@@ -398,6 +406,39 @@ void RenderAPI_Metal::CompileShader(int shader) {
   if (shaderObject.function == nil) {
     ::fprintf(stderr, "Failed to compile shader\n");
   }
+}
+
+int RenderAPI_Metal::CreateBuffer() { return 0; }
+
+void RenderAPI_Metal::BindBuffer(int target, int buffer) {
+  // Do nothing
+}
+
+void RenderAPI_Metal::EnableVertexAttribArray(int index) {
+  // Do nothing
+}
+
+void RenderAPI_Metal::VertexAttribPointer(int index, int size, int type,
+                                          bool normalized, int stride,
+                                          const void *offset) {
+  // Do nothing
+}
+
+void RenderAPI_Metal::DrawArrays(int mode, int first, int count) {
+  CreateCommandEncoder();
+  [m_CurrentCommandEncoder drawPrimitives:MTLPrimitiveTypeTriangle
+                             vertexStart:first
+                             vertexCount:count];
+}
+
+void RenderAPI_Metal::DrawElements(int mode, int count, int type,
+                                   const void *indices) {
+  // CreateCommandEncoder();
+  // [m_CurrentCommandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
+  //                                     indexCount:count
+  //                                      indexType:MTLIndexTypeUInt16
+  //                                    indexBuffer:m_VertexBuffer
+  //                              indexBufferOffset:0];
 }
 
 void RenderAPI_Metal::SetViewport(int x, int y, int w, int h) {

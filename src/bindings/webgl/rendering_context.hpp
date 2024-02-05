@@ -21,6 +21,12 @@ namespace webgl
     Napi::Value DeleteShader(const Napi::CallbackInfo &info);
     Napi::Value ShaderSource(const Napi::CallbackInfo &info);
     Napi::Value CompileShader(const Napi::CallbackInfo &info);
+    Napi::Value CreateBuffer(const Napi::CallbackInfo &info);
+    Napi::Value BindBuffer(const Napi::CallbackInfo &info);
+    Napi::Value EnableVertexAttribArray(const Napi::CallbackInfo &info);
+    Napi::Value VertexAttribPointer(const Napi::CallbackInfo &info);
+    Napi::Value DrawArrays(const Napi::CallbackInfo &info);
+    Napi::Value DrawElements(const Napi::CallbackInfo &info);
     Napi::Value Viewport(const Napi::CallbackInfo &info);
     Napi::Value ClearColor(const Napi::CallbackInfo &info);
     Napi::Value ClearDepth(const Napi::CallbackInfo &info);

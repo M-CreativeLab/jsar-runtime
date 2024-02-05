@@ -21,6 +21,12 @@ namespace webgl
          InstanceMethod("detachShader", &WebGLRenderingContext::DetachShader),
          InstanceMethod("createShader", &WebGLRenderingContext::CreateShader),
          InstanceMethod("deleteShader", &WebGLRenderingContext::DeleteShader),
+         InstanceMethod("createBuffer", &WebGLRenderingContext::CreateBuffer),
+         InstanceMethod("bindBuffer", &WebGLRenderingContext::BindBuffer),
+         InstanceMethod("enableVertexAttribArray", &WebGLRenderingContext::EnableVertexAttribArray),
+         InstanceMethod("vertexAttribPointer", &WebGLRenderingContext::VertexAttribPointer),
+         InstanceMethod("drawArrays", &WebGLRenderingContext::DrawArrays),
+         InstanceMethod("drawElements", &WebGLRenderingContext::DrawElements),
          InstanceMethod("viewport", &WebGLRenderingContext::Viewport),
          InstanceMethod("clearColor", &WebGLRenderingContext::ClearColor),
          InstanceMethod("clearDepth", &WebGLRenderingContext::ClearDepth),
@@ -182,6 +188,101 @@ namespace webgl
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
     m_renderAPI->CompileShader(shader);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::CreateBuffer(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    int buffer = m_renderAPI->CreateBuffer();
+    return Napi::Number::New(env, buffer);
+  }
+
+  Napi::Value WebGLRenderingContext::BindBuffer(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "bindBuffer() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int target = info[0].As<Napi::Number>().Int32Value();
+    int buffer = info[1].As<Napi::Number>().Int32Value();
+    m_renderAPI->BindBuffer(target, buffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::EnableVertexAttribArray(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "enableVertexAttribArray() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int index = info[0].As<Napi::Number>().Int32Value();
+    m_renderAPI->EnableVertexAttribArray(index);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::VertexAttribPointer(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    // if (info.Length() < 6)
+    // {
+    //   Napi::TypeError::New(env, "vertexAttribPointer() takes 6 arguments.").ThrowAsJavaScriptException();
+    //   return env.Undefined();
+    // }
+    // int index = info[0].As<Napi::Number>().Int32Value();
+    // int size = info[1].As<Napi::Number>().Int32Value();
+    // int type = info[2].As<Napi::Number>().Int32Value();
+    // bool normalized = info[3].As<Napi::Boolean>().Value();
+    // int stride = info[4].As<Napi::Number>().Int32Value();
+    // int offset = info[5].As<Napi::Number>().Int32Value();
+    // m_renderAPI->VertexAttribPointer(index, size, type, normalized, stride, (const void *)offset);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::DrawArrays(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3)
+    {
+      Napi::TypeError::New(env, "drawArrays() takes 3 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int mode = info[0].As<Napi::Number>().Int32Value();
+    int first = info[1].As<Napi::Number>().Int32Value();
+    int count = info[2].As<Napi::Number>().Int32Value();
+    m_renderAPI->DrawArrays(mode, first, count);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::DrawElements(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    // if (info.Length() < 4)
+    // {
+    //   Napi::TypeError::New(env, "drawElements() takes 4 arguments.").ThrowAsJavaScriptException();
+    //   return env.Undefined();
+    // }
+    // int mode = info[0].As<Napi::Number>().Int32Value();
+    // int count = info[1].As<Napi::Number>().Int32Value();
+    // int type = info[2].As<Napi::Number>().Int32Value();
+    // int offset = info[3].As<Napi::Number>().Int32Value();
+    // m_renderAPI->DrawElements(mode, count, type, (const void *)offset);
     return env.Undefined();
   }
 

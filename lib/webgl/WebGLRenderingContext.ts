@@ -322,13 +322,13 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   bindBuffer(target: number, buffer: WebGLBuffer): void {
-    throw new Error('Method not implemented.');
+    super.bindBuffer(target, buffer);
   }
   bindFramebuffer(target: number, framebuffer: WebGLFramebuffer): void {
-    throw new Error('Method not implemented.');
+    super.bindFramebuffer(target, framebuffer);
   }
   bindRenderbuffer(target: number, renderbuffer: WebGLRenderbuffer): void {
-    throw new Error('Method not implemented.');
+    super.bindRenderbuffer(target, renderbuffer);
   }
   bindTexture(target: number, texture: WebGLTexture): void {
     throw new Error('Method not implemented.');
@@ -376,10 +376,10 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   createBuffer(): WebGLBuffer {
-    throw new Error('Method not implemented.');
+    return super.createBuffer();
   }
   createFramebuffer(): WebGLFramebuffer {
-    throw new Error('Method not implemented.');
+    return super.createFramebuffer();
   }
   createProgram(): WebGLProgram {
     return super.createProgram();
@@ -427,28 +427,28 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     super.detachShader(program, shader);
   }
   disable(cap: number): void {
-    throw new Error('Method not implemented.');
+    super.disable(cap);
   }
   disableVertexAttribArray(index: number): void {
-    throw new Error('Method not implemented.');
+    super.disableVertexAttribArray(index);
   }
   drawArrays(mode: number, first: number, count: number): void {
-    throw new Error('Method not implemented.');
+    super.drawArrays(mode, first, count);
   }
   drawElements(mode: number, count: number, type: number, offset: number): void {
-    throw new Error('Method not implemented.');
+    super.drawElements(mode, count, type, offset);
   }
   enable(cap: number): void {
     super.enable(cap);
   }
   enableVertexAttribArray(index: number): void {
-    throw new Error('Method not implemented.');
+    super.enableVertexAttribArray(index);
   }
   finish(): void {
-    throw new Error('Method not implemented.');
+    super.finish();
   }
   flush(): void {
-    throw new Error('Method not implemented.');
+    super.flush();
   }
   framebufferRenderbuffer(target: number, attachment: number, renderbuffertarget: number, renderbuffer: WebGLRenderbuffer): void {
     throw new Error('Method not implemented.');
@@ -705,10 +705,10 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   vertexAttribPointer(index: number, size: number, type: number, normalized: boolean, stride: number, offset: number): void {
-    throw new Error('Method not implemented.');
+    super.vertexAttribPointer(index, size, type, normalized, stride, offset);
   }
   viewport(x: number, y: number, width: number, height: number): void {
-    super.viewport(x, y, width, height);    
+    super.viewport(x, y, width, height);
   }
   makeXRCompatible(): Promise<void> {
     throw new Error('Method not implemented.');
