@@ -45,7 +45,9 @@ public:
 	virtual void LinkProgram(int program);
 	virtual void UseProgram(int program);
 	virtual void AttachShader(int program, int shader);
+	virtual void DetachShader(int program, int shader);
 	virtual int CreateShader(int type);
+	virtual void DeleteShader(int shader);
 	virtual void ShaderSource(int shader, const char *source);
 	virtual void CompileShader(int shader);
 	virtual void SetViewport(int x, int y, int width, int height);
@@ -238,9 +240,19 @@ void RenderAPI_OpenGLCoreES::AttachShader(int program, int shader)
 	glAttachShader(program, shader);
 }
 
+void RenderAPI_OpenGLCoreES::DetachShader(int program, int shader)
+{
+	glDetachShader(program, shader);
+}
+
 int RenderAPI_OpenGLCoreES::CreateShader(int type)
 {
 	return glCreateShader(type);
+}
+
+void RenderAPI_OpenGLCoreES::DeleteShader(int shader)
+{
+	glDeleteShader(shader);
 }
 
 void RenderAPI_OpenGLCoreES::ShaderSource(int shader, const char *source)

@@ -409,7 +409,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   deleteShader(shader: WebGLShader): void {
-    throw new Error('Method not implemented.');
+    super.deleteShader(shader);
   }
   deleteTexture(texture: WebGLTexture): void {
     throw new Error('Method not implemented.');
@@ -424,7 +424,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   detachShader(program: WebGLProgram, shader: WebGLShader): void {
-    throw new Error('Method not implemented.');
+    super.detachShader(program, shader);
   }
   disable(cap: number): void {
     throw new Error('Method not implemented.');

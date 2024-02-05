@@ -16,7 +16,9 @@ namespace webgl
     Napi::Value LinkProgram(const Napi::CallbackInfo &info);
     Napi::Value UseProgram(const Napi::CallbackInfo &info);
     Napi::Value AttachShader(const Napi::CallbackInfo &info);
+    Napi::Value DetachShader(const Napi::CallbackInfo &info);
     Napi::Value CreateShader(const Napi::CallbackInfo &info);
+    Napi::Value DeleteShader(const Napi::CallbackInfo &info);
     Napi::Value ShaderSource(const Napi::CallbackInfo &info);
     Napi::Value CompileShader(const Napi::CallbackInfo &info);
     Napi::Value Viewport(const Napi::CallbackInfo &info);

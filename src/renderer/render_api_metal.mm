@@ -66,7 +66,9 @@ public:
   virtual void LinkProgram(int program);
   virtual void UseProgram(int program);
   virtual void AttachShader(int program, int shader);
+  virtual void DetachShader(int program, int shader);
   virtual int CreateShader(int type);
+  virtual void DeleteShader(int shader);
   virtual void ShaderSource(int shader, const char *source);
   virtual void CompileShader(int shader);
   virtual void SetViewport(int x, int y, int w, int h);
@@ -341,10 +343,19 @@ void RenderAPI_Metal::AttachShader(int program, int shader) {
   }
 }
 
+void RenderAPI_Metal::DetachShader(int program, int shader) {
+  // Nothing to do
+  // TODO: add shader functions to program and implement the state validation?
+}
+
 int RenderAPI_Metal::CreateShader(int type) {
   MTLShaderObject *shaderObject = [[MTLShaderObject alloc] init];
   [m_Shaders addObject:shaderObject];
   return (int)[m_Shaders count] - 1;
+}
+
+void RenderAPI_Metal::DeleteShader(int shader) {
+  // TODO: release shader resources
 }
 
 void RenderAPI_Metal::ShaderSource(int shaderId, const char *source) {

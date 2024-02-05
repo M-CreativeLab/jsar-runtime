@@ -56,7 +56,9 @@ public:
   virtual void LinkProgram(int program) = 0;
   virtual void UseProgram(int program) = 0;
   virtual void AttachShader(int program, int shader) = 0;
+  virtual void DetachShader(int program, int shader) = 0;
   virtual int CreateShader(int type) = 0;
+  virtual void DeleteShader(int shader) = 0;
   virtual void ShaderSource(int shader, const char *source) = 0;
   virtual void CompileShader(int shader) = 0;
   virtual void SetViewport(int x, int y, int width, int height) = 0;
