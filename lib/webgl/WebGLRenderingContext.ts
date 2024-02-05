@@ -316,7 +316,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   attachShader(program: WebGLProgram, shader: WebGLShader): void {
-    throw new Error('Method not implemented.');
+    super.attachShader(program, shader);
   }
   bindAttribLocation(program: WebGLProgram, index: number, name: string): void {
     throw new Error('Method not implemented.');
@@ -367,7 +367,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   compileShader(shader: WebGLShader): void {
-    throw new Error('Method not implemented.');
+    super.compileShader(shader);
   }
   copyTexImage2D(target: number, level: number, internalformat: number, x: number, y: number, width: number, height: number, border: number): void {
     throw new Error('Method not implemented.');
@@ -382,13 +382,13 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   createProgram(): WebGLProgram {
-    throw new Error('Method not implemented.');
+    return super.createProgram();
   }
   createRenderbuffer(): WebGLRenderbuffer {
     throw new Error('Method not implemented.');
   }
   createShader(type: number): WebGLShader {
-    throw new Error('Method not implemented.');
+    return super.createShader(type);
   }
   createTexture(): WebGLTexture {
     throw new Error('Method not implemented.');
@@ -547,7 +547,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   getShaderSource(shader: WebGLShader): string {
-    throw new Error('Method not implemented.');
+    return super.getShaderSource(shader);
   }
   getSupportedExtensions(): string[] {
     throw new Error('Method not implemented.');
@@ -598,7 +598,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   linkProgram(program: WebGLProgram): void {
-    throw new Error('Method not implemented.');
+    super.linkProgram(program);
   }
   pixelStorei(pname: number, param: number | boolean): void {
     throw new Error('Method not implemented.');
@@ -616,7 +616,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     super.scissor(x, y, width, height);
   }
   shaderSource(shader: WebGLShader, source: string): void {
-    throw new Error('Method not implemented.');
+    super.shaderSource(shader, source);
   }
   stencilFunc(func: number, ref: number, mask: number): void {
     throw new Error('Method not implemented.');
@@ -667,7 +667,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   useProgram(program: WebGLProgram): void {
-    throw new Error('Method not implemented.');
+    super.useProgram(program);
   }
   validateProgram(program: WebGLProgram): void {
     throw new Error('Method not implemented.');

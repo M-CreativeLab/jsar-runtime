@@ -15,6 +15,40 @@ typedef struct {
   matrix_float4x4 worldMatrix;
 } AppData;
 
+@interface MTLProgramObject : NSObject
+@property(nonatomic) bool linked;
+@property(nonatomic, strong) MTLRenderPipelineDescriptor *descriptor;
+@property(nonatomic, strong) id<MTLRenderPipelineState> pipeline;
+@end
+
+@interface MTLShaderObject : NSObject
+@property(nonatomic, strong) id<MTLLibrary> library;
+@property(nonatomic, strong) id<MTLFunction> function;
+@end
+
+@implementation MTLProgramObject
+- (instancetype)init {
+  self = [super init];
+  if (self) {
+    self.linked = false;
+    self.descriptor = nil;
+    self.pipeline = nil;
+  }
+  return self;
+}
+@end
+
+@implementation MTLShaderObject
+- (instancetype)init {
+  self = [super init];
+  if (self) {
+    self.library = nil;
+    self.function = nil;
+  }
+  return self;
+}
+@end
+
 class RenderAPI_Metal : public RenderAPI {
 public:
   RenderAPI_Metal();
@@ -28,6 +62,13 @@ public:
                                    const void *verticesFloat3Byte4);
   virtual int GetDrawingBufferWidth();
   virtual int GetDrawingBufferHeight();
+  virtual int CreateProgram();
+  virtual void LinkProgram(int program);
+  virtual void UseProgram(int program);
+  virtual void AttachShader(int program, int shader);
+  virtual int CreateShader(int type);
+  virtual void ShaderSource(int shader, const char *source);
+  virtual void CompileShader(int shader);
   virtual void SetViewport(int x, int y, int w, int h);
   virtual void SetScissor(int x, int y, int w, int h);
   virtual void ClearColor(float r, float g, float b, float a);
@@ -49,6 +90,9 @@ private:
 
   MTLRenderPassDescriptor *m_RunPassDescriptor;
   id<MTLRenderCommandEncoder> m_CurrentCommandEncoder = nil;
+  NSMutableArray<MTLShaderObject *> *m_Shaders = [NSMutableArray array];
+  NSMutableArray<MTLProgramObject *> *m_Programs = [NSMutableArray array];
+  id<MTLRenderPipelineState> m_PipelineStateInNextFrame = nil;
 
   // state
   int m_DrawingBufferWidth;
@@ -226,6 +270,124 @@ void RenderAPI_Metal::ProcessDeviceEvent(UnityGfxDeviceEventType type,
 int RenderAPI_Metal::GetDrawingBufferWidth() { return m_DrawingBufferWidth; }
 
 int RenderAPI_Metal::GetDrawingBufferHeight() { return m_DrawingBufferHeight; }
+
+int RenderAPI_Metal::CreateProgram() {
+  MTLProgramObject *programObject = [[MTLProgramObject alloc] init];
+  MTLRenderPipelineDescriptor *descriptor =
+      [[MTLRenderPipelineDescriptorClass alloc] init];
+  programObject.descriptor = descriptor;
+  [m_Programs addObject:programObject];
+  return (int)[m_Programs count] - 1;
+}
+
+void RenderAPI_Metal::LinkProgram(int program) {
+  MTLProgramObject *programObject = m_Programs[program];
+  if (programObject.linked) {
+    ::fprintf(stderr, "Program already linked\n");
+    return;
+  }
+  if (programObject.descriptor.vertexFunction == nil) {
+    ::fprintf(stderr, "Program has no vertex shader\n");
+    return;
+  }
+  if (programObject.descriptor.fragmentFunction == nil) {
+    ::fprintf(stderr, "Program has no fragment shader\n");
+    return;
+  }
+
+  NSError *error = nil;
+  programObject.pipeline = [m_MetalGraphics->MetalDevice()
+      newRenderPipelineStateWithDescriptor:programObject.descriptor
+                                     error:&error];
+  if (error != nil) {
+    NSString *desc = [error localizedDescription];
+    NSString *reason = [error localizedFailureReason];
+    ::fprintf(stderr, "%s\n%s\n\n", desc ? [desc UTF8String] : "<unknown>",
+              reason ? [reason UTF8String] : "");
+  }
+  programObject.linked = true;
+}
+
+void RenderAPI_Metal::UseProgram(int program) {
+  MTLProgramObject *programObject = m_Programs[program];
+  if (programObject.pipeline == nil) {
+    ::fprintf(stderr, "Program not linked\n");
+    return;
+  }
+  m_PipelineStateInNextFrame = programObject.pipeline;
+}
+
+void RenderAPI_Metal::AttachShader(int program, int shader) {
+  MTLProgramObject *programObject = m_Programs[program];
+  MTLShaderObject *shaderObject = m_Shaders[shader];
+  if (programObject == nil) {
+    ::fprintf(stderr, "Invalid program id\n");
+    return;
+  }
+  if (shaderObject == nil) {
+    ::fprintf(stderr, "Invalid shader id\n");
+    return;
+  }
+  if (shaderObject.function == nil) {
+    ::fprintf(stderr, "Shader not compiled\n");
+    return;
+  }
+  if (programObject.descriptor.vertexFunction == nil) {
+    programObject.descriptor.vertexFunction = shaderObject.function;
+  } else if (programObject.descriptor.fragmentFunction == nil) {
+    programObject.descriptor.fragmentFunction = shaderObject.function;
+  } else {
+    ::fprintf(stderr, "Program already has vertex and fragment shaders\n");
+  }
+}
+
+int RenderAPI_Metal::CreateShader(int type) {
+  MTLShaderObject *shaderObject = [[MTLShaderObject alloc] init];
+  [m_Shaders addObject:shaderObject];
+  return (int)[m_Shaders count] - 1;
+}
+
+void RenderAPI_Metal::ShaderSource(int shaderId, const char *source) {
+  MTLShaderObject *shaderObject = m_Shaders[shaderId];
+  if (shaderObject == nil) {
+    ::fprintf(stderr, "Invalid shader id\n");
+    return;
+  }
+  if (shaderObject.library != nil) {
+    ::fprintf(stderr, "Shader already has source\n");
+    return;
+  }
+  NSString *srcStr = [[NSString alloc] initWithBytes:source
+                                              length:strlen(source)
+                                            encoding:NSASCIIStringEncoding];
+  NSError *error = nil;
+  shaderObject.library =
+      [m_MetalGraphics->MetalDevice() newLibraryWithSource:srcStr
+                                                   options:nil
+                                                     error:&error];
+  if (error != nil) {
+    NSString *desc = [error localizedDescription];
+    NSString *reason = [error localizedFailureReason];
+    ::fprintf(stderr, "%s\n%s\n\n", desc ? [desc UTF8String] : "<unknown>",
+              reason ? [reason UTF8String] : "");
+  }
+}
+
+void RenderAPI_Metal::CompileShader(int shader) {
+  MTLShaderObject *shaderObject = m_Shaders[shader];
+  if (shaderObject == nil) {
+    ::fprintf(stderr, "Invalid shader id\n");
+    return;
+  }
+  if (shaderObject.library == nil) {
+    ::fprintf(stderr, "Shader has no source\n");
+    return;
+  }
+  shaderObject.function = [shaderObject.library newFunctionWithName:@"main"];
+  if (shaderObject.function == nil) {
+    ::fprintf(stderr, "Failed to compile shader\n");
+  }
+}
 
 void RenderAPI_Metal::SetViewport(int x, int y, int w, int h) {
   CreateCommandEncoder();

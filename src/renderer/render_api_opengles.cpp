@@ -41,6 +41,13 @@ public:
 	virtual void DrawSimpleTriangles(const float worldMatrix[16], int triangleCount, const void *verticesFloat3Byte4);
 	virtual int GetDrawingBufferWidth();
 	virtual int GetDrawingBufferHeight();
+	virtual int CreateProgram();
+	virtual void LinkProgram(int program);
+	virtual void UseProgram(int program);
+	virtual void AttachShader(int program, int shader);
+	virtual int CreateShader(int type);
+	virtual void ShaderSource(int shader, const char *source);
+	virtual void CompileShader(int shader);
 	virtual void SetViewport(int x, int y, int width, int height);
 	virtual void SetScissor(int x, int y, int width, int height);
 	virtual void ClearColor(float r, float g, float b, float a);
@@ -119,7 +126,7 @@ static const char *kGlesFShaderTextGLCore = FRAGMENT_SHADER_SRC("#version 150\n"
 
 #undef FRAGMENT_SHADER_SRC
 
-static GLuint CreateShader(GLenum type, const char *sourceText)
+static GLuint _CreateShader(GLenum type, const char *sourceText)
 {
 	GLuint ret = glCreateShader(type);
 	glShaderSource(ret, 1, &sourceText, NULL);
@@ -141,19 +148,19 @@ void RenderAPI_OpenGLCoreES::CreateResources()
 	// Create shaders
 	if (m_APIType == kUnityGfxRendererOpenGLES20)
 	{
-		m_VertexShader = CreateShader(GL_VERTEX_SHADER, kGlesVProgTextGLES2);
-		m_FragmentShader = CreateShader(GL_FRAGMENT_SHADER, kGlesFShaderTextGLES2);
+		m_VertexShader = _CreateShader(GL_VERTEX_SHADER, kGlesVProgTextGLES2);
+		m_FragmentShader = _CreateShader(GL_FRAGMENT_SHADER, kGlesFShaderTextGLES2);
 	}
 	else if (m_APIType == kUnityGfxRendererOpenGLES30)
 	{
-		m_VertexShader = CreateShader(GL_VERTEX_SHADER, kGlesVProgTextGLES3);
-		m_FragmentShader = CreateShader(GL_FRAGMENT_SHADER, kGlesFShaderTextGLES3);
+		m_VertexShader = _CreateShader(GL_VERTEX_SHADER, kGlesVProgTextGLES3);
+		m_FragmentShader = _CreateShader(GL_FRAGMENT_SHADER, kGlesFShaderTextGLES3);
 	}
 #if SUPPORT_OPENGL_CORE
 	else if (m_APIType == kUnityGfxRendererOpenGLCore)
 	{
-		m_VertexShader = CreateShader(GL_VERTEX_SHADER, kGlesVProgTextGLCore);
-		m_FragmentShader = CreateShader(GL_FRAGMENT_SHADER, kGlesFShaderTextGLCore);
+		m_VertexShader = _CreateShader(GL_VERTEX_SHADER, kGlesVProgTextGLCore);
+		m_FragmentShader = _CreateShader(GL_FRAGMENT_SHADER, kGlesFShaderTextGLCore);
 	}
 #endif // if SUPPORT_OPENGL_CORE
 
@@ -209,6 +216,41 @@ int RenderAPI_OpenGLCoreES::GetDrawingBufferWidth()
 int RenderAPI_OpenGLCoreES::GetDrawingBufferHeight()
 {
 	return 0;
+}
+
+int RenderAPI_OpenGLCoreES::CreateProgram()
+{
+	return glCreateProgram();
+}
+
+void RenderAPI_OpenGLCoreES::LinkProgram(int program)
+{
+	glLinkProgram(program);
+}
+
+void RenderAPI_OpenGLCoreES::UseProgram(int program)
+{
+	glUseProgram(program);
+}
+
+void RenderAPI_OpenGLCoreES::AttachShader(int program, int shader)
+{
+	glAttachShader(program, shader);
+}
+
+int RenderAPI_OpenGLCoreES::CreateShader(int type)
+{
+	return glCreateShader(type);
+}
+
+void RenderAPI_OpenGLCoreES::ShaderSource(int shader, const char *source)
+{
+	glShaderSource(shader, 1, &source, NULL);
+}
+
+void RenderAPI_OpenGLCoreES::CompileShader(int shader)
+{
+	glCompileShader(shader);
 }
 
 void RenderAPI_OpenGLCoreES::SetViewport(int x, int y, int width, int height)

@@ -14,6 +14,11 @@ namespace webgl
          InstanceValue("DEPTH_BUFFER_BIT", Napi::Number::New(env, DEPTH_BUFFER_BIT)),
          InstanceValue("STENCIL_BUFFER_BIT", Napi::Number::New(env, STENCIL_BUFFER_BIT)),
          // instance methods
+         InstanceMethod("createProgram", &WebGLRenderingContext::CreateProgram),
+         InstanceMethod("linkProgram", &WebGLRenderingContext::LinkProgram),
+         InstanceMethod("useProgram", &WebGLRenderingContext::UseProgram),
+         InstanceMethod("attachShader", &WebGLRenderingContext::AttachShader),
+         InstanceMethod("createShader", &WebGLRenderingContext::CreateShader),
          InstanceMethod("viewport", &WebGLRenderingContext::Viewport),
          InstanceMethod("clearColor", &WebGLRenderingContext::ClearColor),
          InstanceMethod("clearDepth", &WebGLRenderingContext::ClearDepth),
@@ -44,6 +49,104 @@ namespace webgl
       Napi::TypeError::New(env, "RenderAPI is not available").ThrowAsJavaScriptException();
       return;
     }
+  }
+
+  Napi::Value WebGLRenderingContext::CreateProgram(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    int program = m_renderAPI->CreateProgram();
+    return Napi::Number::New(env, program);
+  }
+  Napi::Value WebGLRenderingContext::LinkProgram(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "linkProgram() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int program = info[0].As<Napi::Number>().Int32Value();
+    m_renderAPI->LinkProgram(program);
+    return env.Undefined();
+  }
+  Napi::Value WebGLRenderingContext::UseProgram(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "useProgram() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int program = info[0].As<Napi::Number>().Int32Value();
+    m_renderAPI->UseProgram(program);
+    return env.Undefined();
+  }
+  Napi::Value WebGLRenderingContext::AttachShader(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "attachShader() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int program = info[0].As<Napi::Number>().Int32Value();
+    int shader = info[1].As<Napi::Number>().Int32Value();
+    m_renderAPI->AttachShader(program, shader);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::CreateShader(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "createShader() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int type = info[0].As<Napi::Number>().Int32Value();
+    int shader = m_renderAPI->CreateShader(type);
+    return Napi::Number::New(env, shader);
+  }
+
+  Napi::Value WebGLRenderingContext::ShaderSource(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "shaderSource() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int shader = info[0].As<Napi::Number>().Int32Value();
+    std::string source = info[1].As<Napi::String>().Utf8Value();
+    m_renderAPI->ShaderSource(shader, source.c_str());
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::CompileShader(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "compileShader() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int shader = info[0].As<Napi::Number>().Int32Value();
+    m_renderAPI->CompileShader(shader);
+    return env.Undefined();
   }
 
   Napi::Value WebGLRenderingContext::Viewport(const Napi::CallbackInfo &info)

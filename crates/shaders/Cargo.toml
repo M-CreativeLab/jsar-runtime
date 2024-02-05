@@ -1,0 +1,19 @@
+[package]
+name = "jsar_shaders"
+version = "1.0.0"
+authors = ["The JSAR Project Developers"]
+license = "Apache-2.0"
+edition = "2021"
+publish = false
+build = "build.rs"
+
+[lib]
+name = "jsar_shaders"
+crate-type = ["staticlib"]
+path = "lib.rs"
+
+[dependencies]
+naga = "^0.19.0"
+
+[build-dependencies]
+cbindgen = "^0.19.0"

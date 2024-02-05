@@ -12,6 +12,13 @@ namespace webgl
     WebGLRenderingContext(const Napi::CallbackInfo &info);
 
   private:
+    Napi::Value CreateProgram(const Napi::CallbackInfo &info);
+    Napi::Value LinkProgram(const Napi::CallbackInfo &info);
+    Napi::Value UseProgram(const Napi::CallbackInfo &info);
+    Napi::Value AttachShader(const Napi::CallbackInfo &info);
+    Napi::Value CreateShader(const Napi::CallbackInfo &info);
+    Napi::Value ShaderSource(const Napi::CallbackInfo &info);
+    Napi::Value CompileShader(const Napi::CallbackInfo &info);
     Napi::Value Viewport(const Napi::CallbackInfo &info);
     Napi::Value ClearColor(const Napi::CallbackInfo &info);
     Napi::Value ClearDepth(const Napi::CallbackInfo &info);

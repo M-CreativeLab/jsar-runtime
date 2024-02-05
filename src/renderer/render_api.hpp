@@ -52,6 +52,13 @@ public:
 
   virtual int GetDrawingBufferWidth() = 0;
   virtual int GetDrawingBufferHeight() = 0;
+  virtual int CreateProgram() = 0;
+  virtual void LinkProgram(int program) = 0;
+  virtual void UseProgram(int program) = 0;
+  virtual void AttachShader(int program, int shader) = 0;
+  virtual int CreateShader(int type) = 0;
+  virtual void ShaderSource(int shader, const char *source) = 0;
+  virtual void CompileShader(int shader) = 0;
   virtual void SetViewport(int x, int y, int width, int height) = 0;
   virtual void SetScissor(int x, int y, int width, int height) = 0;
   virtual void ClearColor(float r, float g, float b, float a) = 0;
