@@ -604,6 +604,15 @@ extern "C"
     default:
       break;
     }
+
+    // Execute command buffer
+    s_CurrentAPI->ExecuteCommandBuffer();
+  }
+
+  DLL_PUBLIC void TransmuteNative_SetViewport(int w, int h)
+  {
+    if (s_CurrentAPI != NULL)
+      s_CurrentAPI->SetViewport(w, h);
   }
 
   DLL_PUBLIC void TransmuteNative_SetTime(float t)

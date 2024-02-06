@@ -413,7 +413,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   depthFunc(func: number): void {
-    throw new Error('Method not implemented.');
+    super.depthFunc(func);
   }
   depthMask(flag: boolean): void {
     throw new Error('Method not implemented.');
@@ -470,7 +470,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   getAttribLocation(program: WebGLProgram, name: string): number {
-    throw new Error('Method not implemented.');
+    return super.getAttribLocation(program, name);
   }
   getBufferParameter(target: number, pname: number) {
     throw new Error('Method not implemented.');
@@ -557,7 +557,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   getUniformLocation(program: WebGLProgram, name: string): WebGLUniformLocation {
-    throw new Error('Method not implemented.');
+    return super.getUniformLocation(program, name);
   }
   getVertexAttrib(index: number, pname: number) {
     throw new Error('Method not implemented.');
@@ -713,8 +713,17 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   }
   bufferData(target: number, size: number, usage: number): void;
   bufferData(target: number, data: BufferSource, usage: number): void;
-  bufferData(target: unknown, data: unknown, usage: unknown): void {
-    throw new Error('Method not implemented.');
+  bufferData(target: number, data: number | BufferSource, usage: number): void {
+    if (typeof data === 'number') {
+      throw new Error('BufferData with size not implemented.');
+    } else {
+      // convert to arraybuffer if not
+      if (!(data instanceof ArrayBuffer)) {
+        super.bufferData(target, data.buffer, usage);
+      } else {
+        super.bufferData(target, data, usage);
+      }
+    }
   }
   bufferSubData(target: number, offset: number, data: BufferSource): void {
     throw new Error('Method not implemented.');
@@ -780,17 +789,17 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   }
   uniformMatrix2fv(location: WebGLUniformLocation, transpose: boolean, value: Float32List): void;
   uniformMatrix2fv(location: WebGLUniformLocation, transpose: boolean, value: Iterable<number>): void;
-  uniformMatrix2fv(location: unknown, transpose: unknown, value: unknown): void {
-    throw new Error('Method not implemented.');
+  uniformMatrix2fv(location: WebGLUniformLocation, transpose: boolean, value: Float32List | Iterable<number>): void {
+    super.uniformMatrix2fv(location, transpose, value);
   }
   uniformMatrix3fv(location: WebGLUniformLocation, transpose: boolean, value: Float32List): void;
   uniformMatrix3fv(location: WebGLUniformLocation, transpose: boolean, value: Iterable<number>): void;
-  uniformMatrix3fv(location: unknown, transpose: unknown, value: unknown): void {
-    throw new Error('Method not implemented.');
+  uniformMatrix3fv(location: WebGLUniformLocation, transpose: boolean, value: Float32List | Iterable<number>): void {
+    super.uniformMatrix3fv(location, transpose, value);
   }
   uniformMatrix4fv(location: WebGLUniformLocation, transpose: boolean, value: Float32List): void;
   uniformMatrix4fv(location: WebGLUniformLocation, transpose: boolean, value: Iterable<number>): void;
-  uniformMatrix4fv(location: unknown, transpose: unknown, value: unknown): void {
-    throw new Error('Method not implemented.');
+  uniformMatrix4fv(location: WebGLUniformLocation, transpose: boolean, value: Float32List | Iterable<number>): void {
+    super.uniformMatrix4fv(location, transpose, value);
   }
 }

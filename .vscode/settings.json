@@ -78,6 +78,7 @@
     "numeric": "cpp",
     "random": "cpp",
     "algorithm": "cpp",
-    "functional": "cpp"
+    "functional": "cpp",
+    "charconv": "cpp"
   }
 }

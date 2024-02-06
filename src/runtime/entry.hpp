@@ -82,6 +82,7 @@ extern "C"
    */
   DLL_PUBLIC void UnityPluginLoad(IUnityInterfaces *unityInterfaces);
   DLL_PUBLIC void UnityPluginUnload();
+  DLL_PUBLIC void TransmuteNative_SetViewport(int w, int h);
   DLL_PUBLIC void TransmuteNative_SetTime(float t);
   DLL_PUBLIC UnityRenderingEvent TransmuteNative_GetRenderEventFunc();
 #endif

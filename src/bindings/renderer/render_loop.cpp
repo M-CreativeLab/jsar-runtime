@@ -79,7 +79,7 @@ namespace renderer
 
     RenderAPI::Get()->EndFrame();
     m_frameCallbackFinished = true;
-    m_cv.notify_one();
+    // m_cv.notify_one();
     return info.This();
   }
 
@@ -100,7 +100,7 @@ namespace renderer
   {
     unique_lock<mutex> lk(m_mutex);
     m_frameCallbackFinished = false;
-    m_frameCallback.BlockingCall();
-    m_cv.wait(lk, [this] { return m_frameCallbackFinished; });
+    m_frameCallback.NonBlockingCall();
+    // m_cv.wait(lk, [this] { return m_frameCallbackFinished; });
   }
 }

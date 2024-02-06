@@ -26,6 +26,7 @@
     "@types/ws": "^8.5.10",
     "ali-oss": "^6.19.0",
     "compression-webpack-plugin": "^10.0.0",
+    "gl-matrix": "^3.4.3",
     "jest": "^29.7.0",
     "jest-junit": "^16.0.0",
     "terser-webpack-plugin": "^5.3.9",

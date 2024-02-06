@@ -32,7 +32,6 @@ pub extern "C" fn glsl_to_msl(
       }
       panic!("Failed to parse GLSL, errors has been printed above.");
     });
-
   println!("{:?}", parsed);
 
   let info = match naga::valid::Validator::new(

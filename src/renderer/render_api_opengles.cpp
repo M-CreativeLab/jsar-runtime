@@ -4,6 +4,9 @@
 // OpenGL Core profile (desktop) or OpenGL ES (mobile) implementation of RenderAPI.
 // Supports several flavors: Core, ES2, ES3
 
+using namespace std;
+using namespace renderer;
+
 #if SUPPORT_OPENGL_UNIFIED
 
 #include <assert.h>
@@ -52,8 +55,12 @@ public:
 	virtual void CompileShader(int shader);
 	virtual int CreateBuffer();
 	virtual void BindBuffer(int target, int buffer);
+	void BufferData(int target, int size, const void *data, int usage);
 	virtual void EnableVertexAttribArray(int index);
 	virtual void VertexAttribPointer(int index, int size, int type, bool normalized, int stride, const void *offset);
+	int GetAttribLocation(int program, const char *name);
+	int GetUniformLocation(int program, const char *name);
+	void UniformMatrix4fv(int location, int count, bool transpose, const float *value);
 	virtual void DrawArrays(int mode, int first, int count);
 	virtual void DrawElements(int mode, int count, int type, const void *indices);
 	virtual void SetViewport(int x, int y, int width, int height);
@@ -62,10 +69,13 @@ public:
 	virtual void ClearDepth(float depth);
 	virtual void ClearStencil(uint32_t stencil);
 	virtual void Clear(uint32_t mask);
+	void DepthFunc(int func);
 	virtual void Enable(uint32_t cap);
+	void Disable(uint32_t cap);
 
 	virtual void StartFrame();
 	virtual void EndFrame();
+	void ExecuteCommandBuffer();
 
 private:
 	void CreateResources();
@@ -79,10 +89,12 @@ private:
 	GLuint m_VertexBuffer;
 	int m_UniformWorldMatrix;
 	int m_UniformProjMatrix;
+	bool m_DebugEnabled = true;
 };
 
 RenderAPI *CreateRenderAPI_OpenGLCoreES(UnityGfxRenderer apiType)
 {
+	DEBUG("transmute", "Creating the render API for OpenGLCoreES");
 	return new RenderAPI_OpenGLCoreES(apiType);
 }
 
@@ -137,6 +149,7 @@ static const char *kGlesFShaderTextGLCore = FRAGMENT_SHADER_SRC("#version 150\n"
 static GLuint _CreateShader(GLenum type, const char *sourceText)
 {
 	GLuint ret = glCreateShader(type);
+	DEBUG("transmute", "OpenGL::_CreateShader(%d) = %d", type, ret);
 	glShaderSource(ret, 1, &sourceText, NULL);
 	glCompileShader(ret);
 	return ret;
@@ -208,7 +221,7 @@ void RenderAPI_OpenGLCoreES::ProcessDeviceEvent(UnityGfxDeviceEventType type, IU
 {
 	if (type == kUnityGfxDeviceEventInitialize)
 	{
-		CreateResources();
+		// CreateResources();
 	}
 	else if (type == kUnityGfxDeviceEventShutdown)
 	{
@@ -218,132 +231,532 @@ void RenderAPI_OpenGLCoreES::ProcessDeviceEvent(UnityGfxDeviceEventType type, IU
 
 int RenderAPI_OpenGLCoreES::GetDrawingBufferWidth()
 {
-	return 0;
+	return m_ViewportWidth;
 }
 
 int RenderAPI_OpenGLCoreES::GetDrawingBufferHeight()
 {
-	return 0;
+	return m_ViewportHeight;
 }
 
 int RenderAPI_OpenGLCoreES::CreateProgram()
 {
-	return glCreateProgram();
+	DEBUG("transmute", "OpenGL::CreateProgram() Start");
+	GLuint ret = glCreateProgram();
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::CreateProgram() = %d", ret);
+
+	DEBUG("transmute", "OpenGL::CreateProgram() code = %d", glGetError());
+	return ret;
 }
 
 void RenderAPI_OpenGLCoreES::LinkProgram(int program)
 {
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::LinkProgram(%d)", program);
 	glLinkProgram(program);
+	DEBUG("transmute", "OpenGL::LinkProgram() code = %d", glGetError());
+
+	GLint status = 0;
+	glGetProgramiv(program, GL_LINK_STATUS, &status);
+	assert(status == GL_TRUE);
 }
 
 void RenderAPI_OpenGLCoreES::UseProgram(int program)
 {
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::UseProgram(%d)", program);
 	glUseProgram(program);
+	DEBUG("transmute", "OpenGL::UseProgram() code = %d", glGetError());
 }
 
 void RenderAPI_OpenGLCoreES::AttachShader(int program, int shader)
 {
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::AttachShader(%d, %d)", program, shader);
 	glAttachShader(program, shader);
+	DEBUG("transmute", "OpenGL::AttachShader() code = %d", glGetError());
 }
 
 void RenderAPI_OpenGLCoreES::DetachShader(int program, int shader)
 {
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::DetachShader(%d, %d)", program, shader);
 	glDetachShader(program, shader);
+	DEBUG("transmute", "OpenGL::DetachShader() code = %d", glGetError());
 }
 
 int RenderAPI_OpenGLCoreES::CreateShader(int type)
 {
-	return glCreateShader(type);
+	GLuint ret = glCreateShader(type);
+	DEBUG("transmute", "OpenGL::CreateShader(%d) = %d", type, ret);
+	return ret;
 }
 
 void RenderAPI_OpenGLCoreES::DeleteShader(int shader)
 {
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::DeleteShader(%d)", shader);
 	glDeleteShader(shader);
+	assert(glGetError() == GL_NO_ERROR);
 }
 
 void RenderAPI_OpenGLCoreES::ShaderSource(int shader, const char *source, uint32_t length)
 {
-	glShaderSource(shader, 1, &source, NULL);
+	if (m_DebugEnabled)
+		DEBUG("transmute", "(1)OpenGL::ShaderSource(%d, %s, %d)", shader, source, length);
+
+	const GLint *lengths = (const GLint *)&length;
+	glShaderSource(shader, 1, &source, lengths);
+	DEBUG("transmute", "OpenGL::ShaderSource() code = %d", glGetError());
+
+	if (m_DebugEnabled)
+	{
+		GLint size;
+		glGetShaderiv(shader, GL_SHADER_SOURCE_LENGTH, &size);
+		char *src = new char[size];
+		glGetShaderSource(shader, size, NULL, src);
+		DEBUG("transmute", "(2)OpenGL::ShaderSource(%d, %s)", shader, src);
+		delete[] src;
+	}
 }
 
 void RenderAPI_OpenGLCoreES::CompileShader(int shader)
 {
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::CompileShader(%d)", shader);
 	glCompileShader(shader);
+
+	GLint status = 0;
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+	if (status != GL_TRUE)
+	{
+		GLint size;
+		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &size);
+		char *log = new char[size];
+		glGetShaderInfoLog(shader, size, NULL, log);
+		DEBUG("transmute", "OpenGL::CompileShader(%d) = %s", shader, log);
+		delete[] log;
+	}
+
+	GLenum err = glGetError();
+	DEBUG("transmute", "OpenGL::CompileShader(%d) = %d", shader, err);
+	// assert(glGetError() == GL_NO_ERROR);
 }
 
 int RenderAPI_OpenGLCoreES::CreateBuffer()
 {
 	GLuint buffer;
 	glGenBuffers(1, &buffer);
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::CreateBuffer() = %d", buffer);
+	DEBUG("transmute", "OpenGL::CreateBuffer() code = %d", glGetError());
 	return buffer;
 }
 
 void RenderAPI_OpenGLCoreES::BindBuffer(int target, int buffer)
 {
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::BindBuffer(%d, %d)", target, buffer);
 	glBindBuffer(target, buffer);
+	DEBUG("transmute", "OpenGL::BindBuffer() code = %d", glGetError());
+}
+
+void RenderAPI_OpenGLCoreES::BufferData(int target, int size, const void *data, int usage)
+{
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::BufferData(%d, %d, %p, %d)", target, size, data, usage);
+	glBufferData(target, size, data, usage);
 }
 
 void RenderAPI_OpenGLCoreES::EnableVertexAttribArray(int index)
 {
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::EnableVertexAttribArray(%d)", index);
 	glEnableVertexAttribArray(index);
+	DEBUG("transmute", "OpenGL::EnableVertexAttribArray() code = %d", glGetError());
 }
 
 void RenderAPI_OpenGLCoreES::VertexAttribPointer(int index, int size, int type, bool normalized, int stride, const void *offset)
 {
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::VertexAttribPointer(%d, %d, %d, %p)", index, size, type, offset);
 	glVertexAttribPointer(index, size, type, normalized, stride, offset);
+	DEBUG("transmute", "OpenGL::VertexAttribPointer() code = %d", glGetError());
+}
+
+int RenderAPI_OpenGLCoreES::GetAttribLocation(int program, const char *name)
+{
+	return glGetAttribLocation(program, name);
+}
+
+int RenderAPI_OpenGLCoreES::GetUniformLocation(int program, const char *name)
+{
+	return glGetUniformLocation(program, name);
+}
+
+void RenderAPI_OpenGLCoreES::UniformMatrix4fv(int location, int count, bool transpose, const float *value)
+{
+	DEBUG("transmute", "OpenGL::UniformMatrix4fv(%d, %d, %d)", location, count, transpose);
+	DEBUG("transmute", "(%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)",
+				value[0], value[1], value[2], value[3],
+				value[4], value[5], value[6], value[7],
+				value[8], value[9], value[10], value[11],
+				value[12], value[13], value[14], value[15]);
+	glUniformMatrix4fv(location, count, transpose, value);
+	assert(glGetError() == GL_NO_ERROR);
 }
 
 void RenderAPI_OpenGLCoreES::DrawArrays(int mode, int first, int count)
 {
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::DrawArrays(%d, %d, %d)", mode, first, count);
 	glDrawArrays(mode, first, count);
+	DEBUG("transmute", "OpenGL::DrawArrays() code = %d", glGetError());
 }
 
 void RenderAPI_OpenGLCoreES::DrawElements(int mode, int count, int type, const void *indices)
 {
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::DrawElements(%d, %d, %d)", mode, count, type);
 	glDrawElements(mode, count, type, indices);
+	assert(glGetError() == GL_NO_ERROR);
 }
 
 void RenderAPI_OpenGLCoreES::SetViewport(int x, int y, int width, int height)
 {
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::SetViewport(%d, %d, %d, %d)", x, y, width, height);
 	glViewport(x, y, width, height);
+	assert(glGetError() == GL_NO_ERROR);
 }
 
 void RenderAPI_OpenGLCoreES::SetScissor(int x, int y, int width, int height)
 {
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::SetScissor(%d, %d, %d, %d)", x, y, width, height);
 	glScissor(x, y, width, height);
+	assert(glGetError() == GL_NO_ERROR);
 }
 
 void RenderAPI_OpenGLCoreES::ClearColor(float r, float g, float b, float a)
 {
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::ClearColor(%f, %f, %f, %f)", r, g, b, a);
 	glClearColor(r, g, b, a);
+	assert(glGetError() == GL_NO_ERROR);
 }
 
 void RenderAPI_OpenGLCoreES::ClearDepth(float depth)
 {
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::ClearDepth(%f)", depth);
 	glClearDepthf(depth);
+	assert(glGetError() == GL_NO_ERROR);
 }
 
 void RenderAPI_OpenGLCoreES::ClearStencil(uint32_t stencil)
 {
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::ClearStencil(%d)", stencil);
 	glClearStencil(stencil);
+	assert(glGetError() == GL_NO_ERROR);
 }
 
 void RenderAPI_OpenGLCoreES::Clear(uint32_t mask)
 {
-	glClear(mask);
+	if (m_DebugEnabled)
+		DEBUG("transmute", "OpenGL::Clear(%d)", mask);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	assert(glGetError() == GL_NO_ERROR);
+}
+
+void RenderAPI_OpenGLCoreES::DepthFunc(int func)
+{
+	glDepthFunc(func);
 }
 
 void RenderAPI_OpenGLCoreES::Enable(uint32_t cap)
 {
 	glEnable(cap);
+	assert(glGetError() == GL_NO_ERROR);
+}
+
+void RenderAPI_OpenGLCoreES::Disable(uint32_t cap)
+{
+	glDisable(cap);
+	assert(glGetError() == GL_NO_ERROR);
 }
 
 void RenderAPI_OpenGLCoreES::StartFrame()
 {
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+	glDepthFunc(GL_LEQUAL);
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE);
+
+	// struct MyVertex
+	// {
+	// 	float x, y, z;
+	// 	unsigned int color;
+	// };
+	// MyVertex verts[3] =
+	// 		{
+	// 				{-0.5f, -0.25f, 0, 0xFFff0000},
+	// 				{0.5f, -0.25f, 0, 0xFF00ff00},
+	// 				{0, 0.5f, 0, 0xFF0000ff},
+	// 		};
+
+	// float phi = 3.14159265359f * 0.01f;
+	// float cosPhi = cosf(phi);
+	// float sinPhi = sinf(phi);
+	// float depth = 0.7f;
+	// float worldMatrix[16] = {
+	// 		cosPhi,
+	// 		-sinPhi,
+	// 		0,
+	// 		0,
+	// 		sinPhi,
+	// 		cosPhi,
+	// 		0,
+	// 		0,
+	// 		0,
+	// 		0,
+	// 		1,
+	// 		0,
+	// 		0,
+	// 		0,
+	// 		depth,
+	// 		1,
+	// };
+	// DrawSimpleTriangles(worldMatrix, 1, verts);
 }
 
 void RenderAPI_OpenGLCoreES::EndFrame()
 {
+	// glFlush();
+}
+
+void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
+{
+	std::unique_lock<std::mutex> lock(m_CommandBuffersMutex);
+	for (auto commandBuffer : m_CommandBuffers)
+	{
+		switch (commandBuffer->GetType())
+		{
+		case kCommandTypeCreateProgram:
+		{
+			auto createProgramCommandBuffer = static_cast<CreateProgramCommandBuffer *>(commandBuffer);
+			int ret = CreateProgram();
+			createProgramCommandBuffer->m_ProgramId = ret;
+			break;
+		}
+		case kCommandTypeLinkProgram:
+		{
+			auto linkProgramCommandBuffer = static_cast<LinkProgramCommandBuffer *>(commandBuffer);
+			LinkProgram(linkProgramCommandBuffer->m_ProgramId);
+			break;
+		}
+		case kCommandTypeUseProgram:
+		{
+			auto useProgramCommandBuffer = static_cast<UseProgramCommandBuffer *>(commandBuffer);
+			UseProgram(useProgramCommandBuffer->m_ProgramId);
+			break;
+		}
+		case kCommandTypeAttachShader:
+		{
+			auto attachShaderCommandBuffer = static_cast<AttachShaderCommandBuffer *>(commandBuffer);
+			AttachShader(attachShaderCommandBuffer->m_ProgramId, attachShaderCommandBuffer->m_ShaderId);
+			break;
+		}
+		case kCommandTypeDetachShader:
+		{
+			auto detachShaderCommandBuffer = static_cast<DetachShaderCommandBuffer *>(commandBuffer);
+			DetachShader(detachShaderCommandBuffer->m_ProgramId, detachShaderCommandBuffer->m_ShaderId);
+			break;
+		}
+		case kCommandTypeCreateShader:
+		{
+			auto createShaderCommandBuffer = static_cast<CreateShaderCommandBuffer *>(commandBuffer);
+			int ret = CreateShader(createShaderCommandBuffer->m_ShaderType);
+			createShaderCommandBuffer->m_ShaderId = ret;
+			break;
+		}
+		case kCommandTypeDeleteShader:
+		{
+			auto deleteShaderCommandBuffer = static_cast<DeleteShaderCommandBuffer *>(commandBuffer);
+			DeleteShader(deleteShaderCommandBuffer->m_ShaderId);
+			break;
+		}
+		case kCommandTypeShaderSource:
+		{
+			auto shaderSourceCommandBuffer = static_cast<ShaderSourceCommandBuffer *>(commandBuffer);
+			ShaderSource(
+					shaderSourceCommandBuffer->m_ShaderId,
+					shaderSourceCommandBuffer->m_Source,
+					shaderSourceCommandBuffer->m_Length);
+			break;
+		}
+		case kCommandTypeCompileShader:
+		{
+			auto compileShaderCommandBuffer = static_cast<CompileShaderCommandBuffer *>(commandBuffer);
+			CompileShader(compileShaderCommandBuffer->m_ShaderId);
+			break;
+		}
+		case kCommandTypeCreateBuffer:
+		{
+			auto createBufferCommandBuffer = static_cast<CreateBufferCommandBuffer *>(commandBuffer);
+			int ret = CreateBuffer();
+			createBufferCommandBuffer->m_BufferId = ret;
+			break;
+		}
+		case kCommandTypeBindBuffer:
+		{
+			auto bindBufferCommandBuffer = static_cast<BindBufferCommandBuffer *>(commandBuffer);
+			BindBuffer(bindBufferCommandBuffer->m_Target, bindBufferCommandBuffer->m_Buffer);
+			break;
+		}
+		case kCommandTypeBufferData:
+		{
+			auto bufferDataCommandBuffer = static_cast<BufferDataCommandBuffer *>(commandBuffer);
+			BufferData(
+					bufferDataCommandBuffer->m_Target,
+					bufferDataCommandBuffer->m_Size,
+					bufferDataCommandBuffer->m_Data,
+					bufferDataCommandBuffer->m_Usage);
+			break;
+		}
+		case kCommandTypeEnableVertexAttribArray:
+		{
+			auto enableVertexAttribArrayCommandBuffer = static_cast<EnableVertexAttribArrayCommandBuffer *>(commandBuffer);
+			EnableVertexAttribArray(enableVertexAttribArrayCommandBuffer->m_Index);
+			break;
+		}
+		case kCommandTypeVertexAttribPointer:
+		{
+			auto vertexAttribPointerCommandBuffer = static_cast<VertexAttribPointerCommandBuffer *>(commandBuffer);
+			VertexAttribPointer(
+					vertexAttribPointerCommandBuffer->m_Index,
+					vertexAttribPointerCommandBuffer->m_Size,
+					vertexAttribPointerCommandBuffer->m_Type,
+					vertexAttribPointerCommandBuffer->m_Normalized,
+					vertexAttribPointerCommandBuffer->m_Stride,
+					vertexAttribPointerCommandBuffer->m_Offset);
+			break;
+		}
+		case kCommandTypeGetAttribLocation:
+		{
+			auto getAttribLocationCommandBuffer = static_cast<GetAttribLocationCommandBuffer *>(commandBuffer);
+			int ret = GetAttribLocation(getAttribLocationCommandBuffer->m_Program, getAttribLocationCommandBuffer->m_Name);
+			getAttribLocationCommandBuffer->m_Location = ret;
+			break;
+		}
+		case kCommandTypeGetUniformLocation:
+		{
+			auto getUniformLocationCommandBuffer = static_cast<GetUniformLocationCommandBuffer *>(commandBuffer);
+			int ret = GetUniformLocation(getUniformLocationCommandBuffer->m_Program, getUniformLocationCommandBuffer->m_Name);
+			getUniformLocationCommandBuffer->m_Location = ret;
+			break;
+		}
+		case kCommandTypeUniformMatrix4fv:
+		{
+			auto uniformMatrix4fvCommandBuffer = static_cast<UniformMatrix4fvCommandBuffer *>(commandBuffer);
+			UniformMatrix4fv(
+					uniformMatrix4fvCommandBuffer->m_Location,
+					uniformMatrix4fvCommandBuffer->m_Count,
+					uniformMatrix4fvCommandBuffer->m_Transpose,
+					uniformMatrix4fvCommandBuffer->m_Value);
+			break;
+		}
+		case kCommandTypeDrawArrays:
+		{
+			auto drawArraysCommandBuffer = static_cast<DrawArraysCommandBuffer *>(commandBuffer);
+			DrawArrays(
+					drawArraysCommandBuffer->m_Mode,
+					drawArraysCommandBuffer->m_First,
+					drawArraysCommandBuffer->m_Count);
+			break;
+		}
+		case kCommandTypeDrawElements:
+		{
+			auto drawElementsCommandBuffer = static_cast<DrawElementsCommandBuffer *>(commandBuffer);
+			DrawElements(
+					drawElementsCommandBuffer->m_Mode,
+					drawElementsCommandBuffer->m_Count,
+					drawElementsCommandBuffer->m_Type,
+					drawElementsCommandBuffer->m_Indices);
+			break;
+		}
+		case kCommandTypeSetViewport:
+		{
+			auto setViewportCommandBuffer = static_cast<SetViewportCommandBuffer *>(commandBuffer);
+			SetViewport(
+					setViewportCommandBuffer->m_X,
+					setViewportCommandBuffer->m_Y,
+					setViewportCommandBuffer->m_Width,
+					setViewportCommandBuffer->m_Height);
+			break;
+		}
+		case kCommandTypeSetScissor:
+		{
+			auto setScissorCommandBuffer = static_cast<SetScissorCommandBuffer *>(commandBuffer);
+			SetScissor(
+					setScissorCommandBuffer->m_X,
+					setScissorCommandBuffer->m_Y,
+					setScissorCommandBuffer->m_Width,
+					setScissorCommandBuffer->m_Height);
+			break;
+		}
+		case kCommandTypeClear:
+		{
+			auto clearCommandBuffer = static_cast<ClearCommandBuffer *>(commandBuffer);
+			Clear(clearCommandBuffer->m_Mask);
+			break;
+		}
+		case kCommandTypeClearColor:
+		{
+			auto clearColorCommandBuffer = static_cast<ClearColorCommandBuffer *>(commandBuffer);
+			ClearColor(clearColorCommandBuffer->m_R, clearColorCommandBuffer->m_G, clearColorCommandBuffer->m_B, clearColorCommandBuffer->m_A);
+			break;
+		}
+		case kCommandTypeClearDepth:
+		{
+			auto clearDepthCommandBuffer = static_cast<ClearDepthCommandBuffer *>(commandBuffer);
+			ClearDepth(clearDepthCommandBuffer->m_Depth);
+			break;
+		}
+		case kCommandTypeClearStencil:
+		{
+			auto clearStencilCommandBuffer = static_cast<ClearStencilCommandBuffer *>(commandBuffer);
+			ClearStencil(clearStencilCommandBuffer->m_Stencil);
+			break;
+		}
+		case kCommandTypeDepthFunc:
+		{
+			auto depthFuncCommandBuffer = static_cast<DepthFuncCommandBuffer *>(commandBuffer);
+			DepthFunc(depthFuncCommandBuffer->m_Func);
+			break;
+		}
+		case kCommandTypeEnable:
+		{
+			auto enableCommandBuffer = static_cast<EnableCommandBuffer *>(commandBuffer);
+			Enable(enableCommandBuffer->m_Cap);
+			break;
+		}
+		case kCommandTypeDisable:
+		{
+			auto disableCommandBuffer = static_cast<DisableCommandBuffer *>(commandBuffer);
+			Disable(disableCommandBuffer->m_Cap);
+			break;
+		}
+		default:
+			break;
+		}
+		commandBuffer->Finish();
+		// delete commandBuffer;
+	}
+	m_CommandBuffers.clear();
 }
 
 void RenderAPI_OpenGLCoreES::DrawSimpleTriangles(const float worldMatrix[16], int triangleCount, const void *verticesFloat3Byte4)
@@ -354,6 +767,9 @@ void RenderAPI_OpenGLCoreES::DrawSimpleTriangles(const float worldMatrix[16], in
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_FALSE);
+
+	glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Tweak the projection matrix a bit to make it match what identity projection would do in D3D case.
 	float projectionMatrix[16] = {

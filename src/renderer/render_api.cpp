@@ -25,6 +25,12 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 	return kFrameExecutionSuccess;
 }
 
+void RenderAPI::AddCommandBuffer(renderer::CommandBuffer *commandBuffer)
+{
+	unique_lock<mutex> lock(m_CommandBuffersMutex);
+	m_CommandBuffers.push_back(commandBuffer);
+}
+
 RenderAPI *CreateRenderAPI(UnityGfxRenderer apiType)
 {
 #if SUPPORT_D3D11

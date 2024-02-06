@@ -93,6 +93,8 @@ if(APPLE)
         "-lobjc"
     )
     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${APPLE_RENDERER_DEPS})
+elseif (ANDROID)
+    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE GLESv3)
 endif()
 
 # LabSound libraries requirements

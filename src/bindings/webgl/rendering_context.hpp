@@ -23,8 +23,12 @@ namespace webgl
     Napi::Value CompileShader(const Napi::CallbackInfo &info);
     Napi::Value CreateBuffer(const Napi::CallbackInfo &info);
     Napi::Value BindBuffer(const Napi::CallbackInfo &info);
+    Napi::Value BufferData(const Napi::CallbackInfo &info);
     Napi::Value EnableVertexAttribArray(const Napi::CallbackInfo &info);
     Napi::Value VertexAttribPointer(const Napi::CallbackInfo &info);
+    Napi::Value GetAttribLocation(const Napi::CallbackInfo &info);
+    Napi::Value GetUniformLocation(const Napi::CallbackInfo &info);
+    Napi::Value UniformMatrix4fv(const Napi::CallbackInfo &info);
     Napi::Value DrawArrays(const Napi::CallbackInfo &info);
     Napi::Value DrawElements(const Napi::CallbackInfo &info);
     Napi::Value Viewport(const Napi::CallbackInfo &info);
@@ -32,7 +36,9 @@ namespace webgl
     Napi::Value ClearDepth(const Napi::CallbackInfo &info);
     Napi::Value ClearStencil(const Napi::CallbackInfo &info);
     Napi::Value Clear(const Napi::CallbackInfo &info);
+    Napi::Value DepthFunc(const Napi::CallbackInfo &info);
     Napi::Value Enable(const Napi::CallbackInfo &info);
+    Napi::Value Disable(const Napi::CallbackInfo &info);
     Napi::Value Scissor(const Napi::CallbackInfo &info);
 
   private:
