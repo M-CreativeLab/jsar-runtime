@@ -1,4 +1,5 @@
 import * as logger from '../bindings/logger';
+import { WebGLShaderPrecisionFormatImpl } from './WebGLShaderPrecisionFormat';
 
 const glNative = process._linkedBinding('transmute:webgl');
 
@@ -527,7 +528,8 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   getShaderPrecisionFormat(shadertype: number, precisiontype: number): WebGLShaderPrecisionFormat {
-    throw new Error('Method not implemented.');
+    const { rangeMin, rangeMax, precision } = super.getShaderPrecisionFormat(shadertype, precisiontype);
+    return new WebGLShaderPrecisionFormatImpl(rangeMin, rangeMax, precision);
   }
   getShaderSource(shader: WebGLShader): string {
     return super.getShaderSource(shader);

@@ -40,6 +40,7 @@ import {
   createImageBitmapImpl,
   InitializeOffscreenCanvas
 } from './polyfills/offscreencanvas';
+import { createNavigator } from './polyfills/navigator';
 
 // for testing
 import { TransmuteRuntime2 } from './runtime2';
@@ -51,6 +52,8 @@ globalThis.XMLHttpRequest = XMLHttpRequest;
 // globalThis.AudioContext = AudioContextImpl;
 globalThis.OffscreenCanvas = OffscreenCanvasImpl;
 globalThis.ImageData = ImageDataImpl;
+
+globalThis.navigator = createNavigator();
 globalThis.createImageBitmap = createImageBitmapImpl;
 globalThis.requestAnimationFrame = requestAnimationFrameImpl;
 

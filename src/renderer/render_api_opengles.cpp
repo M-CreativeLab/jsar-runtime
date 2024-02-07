@@ -102,7 +102,7 @@ private:
 
 RenderAPI *CreateRenderAPI_OpenGLCoreES(UnityGfxRenderer apiType)
 {
-	DEBUG("transmute", "Creating the render API for OpenGLCoreES");
+	DEBUG("Unity", "Creating the render API for OpenGLCoreES");
 	return new RenderAPI_OpenGLCoreES(apiType);
 }
 
@@ -157,7 +157,7 @@ static const char *kGlesFShaderTextGLCore = FRAGMENT_SHADER_SRC("#version 150\n"
 static GLuint _CreateShader(GLenum type, const char *sourceText)
 {
 	GLuint ret = glCreateShader(type);
-	DEBUG("transmute", "OpenGL::_CreateShader(%d) = %d", type, ret);
+	DEBUG("Unity", "OpenGL::_CreateShader(%d) = %d", type, ret);
 	glShaderSource(ret, 1, &sourceText, NULL);
 	glCompileShader(ret);
 	return ret;
@@ -249,21 +249,21 @@ int RenderAPI_OpenGLCoreES::GetDrawingBufferHeight()
 
 int RenderAPI_OpenGLCoreES::CreateProgram()
 {
-	DEBUG("transmute", "OpenGL::CreateProgram() Start");
+	DEBUG("Unity", "OpenGL::CreateProgram() Start");
 	GLuint ret = glCreateProgram();
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::CreateProgram() = %d", ret);
+		DEBUG("Unity", "OpenGL::CreateProgram() = %d", ret);
 
-	DEBUG("transmute", "OpenGL::CreateProgram() code = %d", glGetError());
+	DEBUG("Unity", "OpenGL::CreateProgram() code = %d", glGetError());
 	return ret;
 }
 
 void RenderAPI_OpenGLCoreES::LinkProgram(int program)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::LinkProgram(%d)", program);
+		DEBUG("Unity", "OpenGL::LinkProgram(%d)", program);
 	glLinkProgram(program);
-	DEBUG("transmute", "OpenGL::LinkProgram() code = %d", glGetError());
+	DEBUG("Unity", "OpenGL::LinkProgram() code = %d", glGetError());
 
 	GLint status = 0;
 	glGetProgramiv(program, GL_LINK_STATUS, &status);
@@ -273,38 +273,38 @@ void RenderAPI_OpenGLCoreES::LinkProgram(int program)
 void RenderAPI_OpenGLCoreES::UseProgram(int program)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::UseProgram(%d)", program);
+		DEBUG("Unity", "OpenGL::UseProgram(%d)", program);
 	glUseProgram(program);
-	DEBUG("transmute", "OpenGL::UseProgram() code = %d", glGetError());
+	DEBUG("Unity", "OpenGL::UseProgram() code = %d", glGetError());
 }
 
 void RenderAPI_OpenGLCoreES::AttachShader(int program, int shader)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::AttachShader(%d, %d)", program, shader);
+		DEBUG("Unity", "OpenGL::AttachShader(%d, %d)", program, shader);
 	glAttachShader(program, shader);
-	DEBUG("transmute", "OpenGL::AttachShader() code = %d", glGetError());
+	DEBUG("Unity", "OpenGL::AttachShader() code = %d", glGetError());
 }
 
 void RenderAPI_OpenGLCoreES::DetachShader(int program, int shader)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::DetachShader(%d, %d)", program, shader);
+		DEBUG("Unity", "OpenGL::DetachShader(%d, %d)", program, shader);
 	glDetachShader(program, shader);
-	DEBUG("transmute", "OpenGL::DetachShader() code = %d", glGetError());
+	DEBUG("Unity", "OpenGL::DetachShader() code = %d", glGetError());
 }
 
 int RenderAPI_OpenGLCoreES::CreateShader(int type)
 {
 	GLuint ret = glCreateShader(type);
-	DEBUG("transmute", "OpenGL::CreateShader(%d) = %d", type, ret);
+	DEBUG("Unity", "OpenGL::CreateShader(%d) = %d", type, ret);
 	return ret;
 }
 
 void RenderAPI_OpenGLCoreES::DeleteShader(int shader)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::DeleteShader(%d)", shader);
+		DEBUG("Unity", "OpenGL::DeleteShader(%d)", shader);
 	glDeleteShader(shader);
 	assert(glGetError() == GL_NO_ERROR);
 }
@@ -312,11 +312,11 @@ void RenderAPI_OpenGLCoreES::DeleteShader(int shader)
 void RenderAPI_OpenGLCoreES::ShaderSource(int shader, const char *source, uint32_t length)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "(1)OpenGL::ShaderSource(%d, %s, %d)", shader, source, length);
+		DEBUG("Unity", "(1)OpenGL::ShaderSource(%d, %s, %d)", shader, source, length);
 
 	const GLint *lengths = (const GLint *)&length;
 	glShaderSource(shader, 1, &source, lengths);
-	DEBUG("transmute", "OpenGL::ShaderSource() code = %d", glGetError());
+	DEBUG("Unity", "OpenGL::ShaderSource() code = %d", glGetError());
 
 	if (m_DebugEnabled)
 	{
@@ -324,7 +324,7 @@ void RenderAPI_OpenGLCoreES::ShaderSource(int shader, const char *source, uint32
 		glGetShaderiv(shader, GL_SHADER_SOURCE_LENGTH, &size);
 		char *src = new char[size];
 		glGetShaderSource(shader, size, NULL, src);
-		DEBUG("transmute", "(2)OpenGL::ShaderSource(%d, %s)", shader, src);
+		DEBUG("Unity", "(2)OpenGL::ShaderSource(%d, %s)", shader, src);
 		delete[] src;
 	}
 }
@@ -332,7 +332,7 @@ void RenderAPI_OpenGLCoreES::ShaderSource(int shader, const char *source, uint32
 void RenderAPI_OpenGLCoreES::CompileShader(int shader)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::CompileShader(%d)", shader);
+		DEBUG("Unity", "OpenGL::CompileShader(%d)", shader);
 	glCompileShader(shader);
 
 	GLint status = 0;
@@ -343,12 +343,12 @@ void RenderAPI_OpenGLCoreES::CompileShader(int shader)
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &size);
 		char *log = new char[size];
 		glGetShaderInfoLog(shader, size, NULL, log);
-		DEBUG("transmute", "OpenGL::CompileShader(%d) = %s", shader, log);
+		DEBUG("Unity", "OpenGL::CompileShader(%d) = %s", shader, log);
 		delete[] log;
 	}
 
 	GLenum err = glGetError();
-	DEBUG("transmute", "OpenGL::CompileShader(%d) = %d", shader, err);
+	DEBUG("Unity", "OpenGL::CompileShader(%d) = %d", shader, err);
 	// assert(glGetError() == GL_NO_ERROR);
 }
 
@@ -357,23 +357,23 @@ int RenderAPI_OpenGLCoreES::CreateBuffer()
 	GLuint buffer;
 	glGenBuffers(1, &buffer);
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::CreateBuffer() = %d", buffer);
-	DEBUG("transmute", "OpenGL::CreateBuffer() code = %d", glGetError());
+		DEBUG("Unity", "OpenGL::CreateBuffer() = %d", buffer);
+	DEBUG("Unity", "OpenGL::CreateBuffer() code = %d", glGetError());
 	return buffer;
 }
 
 void RenderAPI_OpenGLCoreES::BindBuffer(int target, int buffer)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::BindBuffer(%d, %d)", target, buffer);
+		DEBUG("Unity", "OpenGL::BindBuffer(%d, %d)", target, buffer);
 	glBindBuffer(target, buffer);
-	DEBUG("transmute", "OpenGL::BindBuffer() code = %d", glGetError());
+	DEBUG("Unity", "OpenGL::BindBuffer() code = %d", glGetError());
 }
 
 void RenderAPI_OpenGLCoreES::BufferData(int target, int size, const void *data, int usage)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::BufferData(%d, %d, %p, %d)", target, size, data, usage);
+		DEBUG("Unity", "OpenGL::BufferData(%d, %d, %p, %d)", target, size, data, usage);
 	glBufferData(target, size, data, usage);
 }
 
@@ -421,17 +421,17 @@ void RenderAPI_OpenGLCoreES::GenerateMipmap(int target)
 void RenderAPI_OpenGLCoreES::EnableVertexAttribArray(int index)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::EnableVertexAttribArray(%d)", index);
+		DEBUG("Unity", "OpenGL::EnableVertexAttribArray(%d)", index);
 	glEnableVertexAttribArray(index);
-	DEBUG("transmute", "OpenGL::EnableVertexAttribArray() code = %d", glGetError());
+	DEBUG("Unity", "OpenGL::EnableVertexAttribArray() code = %d", glGetError());
 }
 
 void RenderAPI_OpenGLCoreES::VertexAttribPointer(int index, int size, int type, bool normalized, int stride, const void *offset)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::VertexAttribPointer(%d, %d, %d, %p)", index, size, type, offset);
+		DEBUG("Unity", "OpenGL::VertexAttribPointer(%d, %d, %d, %p)", index, size, type, offset);
 	glVertexAttribPointer(index, size, type, normalized, stride, offset);
-	DEBUG("transmute", "OpenGL::VertexAttribPointer() code = %d", glGetError());
+	DEBUG("Unity", "OpenGL::VertexAttribPointer() code = %d", glGetError());
 }
 
 int RenderAPI_OpenGLCoreES::GetAttribLocation(int program, const char *name)
@@ -446,8 +446,8 @@ int RenderAPI_OpenGLCoreES::GetUniformLocation(int program, const char *name)
 
 void RenderAPI_OpenGLCoreES::UniformMatrix4fv(int location, int count, bool transpose, const float *value)
 {
-	DEBUG("transmute", "OpenGL::UniformMatrix4fv(%d, %d, %d)", location, count, transpose);
-	DEBUG("transmute", "(%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)",
+	DEBUG("Unity", "OpenGL::UniformMatrix4fv(%d, %d, %d)", location, count, transpose);
+	DEBUG("Unity", "(%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)",
 				value[0], value[1], value[2], value[3],
 				value[4], value[5], value[6], value[7],
 				value[8], value[9], value[10], value[11],
@@ -459,15 +459,15 @@ void RenderAPI_OpenGLCoreES::UniformMatrix4fv(int location, int count, bool tran
 void RenderAPI_OpenGLCoreES::DrawArrays(int mode, int first, int count)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::DrawArrays(%d, %d, %d)", mode, first, count);
+		DEBUG("Unity", "OpenGL::DrawArrays(%d, %d, %d)", mode, first, count);
 	glDrawArrays(mode, first, count);
-	DEBUG("transmute", "OpenGL::DrawArrays() code = %d", glGetError());
+	DEBUG("Unity", "OpenGL::DrawArrays() code = %d", glGetError());
 }
 
 void RenderAPI_OpenGLCoreES::DrawElements(int mode, int count, int type, const void *indices)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::DrawElements(%d, %d, %d)", mode, count, type);
+		DEBUG("Unity", "OpenGL::DrawElements(%d, %d, %d)", mode, count, type);
 	glDrawElements(mode, count, type, indices);
 	assert(glGetError() == GL_NO_ERROR);
 }
@@ -475,7 +475,7 @@ void RenderAPI_OpenGLCoreES::DrawElements(int mode, int count, int type, const v
 void RenderAPI_OpenGLCoreES::SetViewport(int x, int y, int width, int height)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::SetViewport(%d, %d, %d, %d)", x, y, width, height);
+		DEBUG("Unity", "OpenGL::SetViewport(%d, %d, %d, %d)", x, y, width, height);
 	glViewport(x, y, width, height);
 	assert(glGetError() == GL_NO_ERROR);
 }
@@ -483,7 +483,7 @@ void RenderAPI_OpenGLCoreES::SetViewport(int x, int y, int width, int height)
 void RenderAPI_OpenGLCoreES::SetScissor(int x, int y, int width, int height)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::SetScissor(%d, %d, %d, %d)", x, y, width, height);
+		DEBUG("Unity", "OpenGL::SetScissor(%d, %d, %d, %d)", x, y, width, height);
 	glScissor(x, y, width, height);
 	assert(glGetError() == GL_NO_ERROR);
 }
@@ -491,7 +491,7 @@ void RenderAPI_OpenGLCoreES::SetScissor(int x, int y, int width, int height)
 void RenderAPI_OpenGLCoreES::ClearColor(float r, float g, float b, float a)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::ClearColor(%f, %f, %f, %f)", r, g, b, a);
+		DEBUG("Unity", "OpenGL::ClearColor(%f, %f, %f, %f)", r, g, b, a);
 	glClearColor(r, g, b, a);
 	assert(glGetError() == GL_NO_ERROR);
 }
@@ -499,7 +499,7 @@ void RenderAPI_OpenGLCoreES::ClearColor(float r, float g, float b, float a)
 void RenderAPI_OpenGLCoreES::ClearDepth(float depth)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::ClearDepth(%f)", depth);
+		DEBUG("Unity", "OpenGL::ClearDepth(%f)", depth);
 	glClearDepthf(depth);
 	assert(glGetError() == GL_NO_ERROR);
 }
@@ -507,7 +507,7 @@ void RenderAPI_OpenGLCoreES::ClearDepth(float depth)
 void RenderAPI_OpenGLCoreES::ClearStencil(uint32_t stencil)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::ClearStencil(%d)", stencil);
+		DEBUG("Unity", "OpenGL::ClearStencil(%d)", stencil);
 	glClearStencil(stencil);
 	assert(glGetError() == GL_NO_ERROR);
 }
@@ -515,7 +515,7 @@ void RenderAPI_OpenGLCoreES::ClearStencil(uint32_t stencil)
 void RenderAPI_OpenGLCoreES::Clear(uint32_t mask)
 {
 	if (m_DebugEnabled)
-		DEBUG("transmute", "OpenGL::Clear(%d)", mask);
+		DEBUG("Unity", "OpenGL::Clear(%d)", mask);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	assert(glGetError() == GL_NO_ERROR);
 }
@@ -876,6 +876,21 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			auto getStringCommandBuffer = static_cast<GetStringCommandBuffer *>(commandBuffer);
 			const GLubyte *ret = glGetString(getStringCommandBuffer->m_Pname);	// returns null-terminated string
 			getStringCommandBuffer->CopyValue(ret);
+			break;
+		}
+		case kCommandTypeGetShaderPrecisionFormat:
+		{
+			auto getShaderPrecisionFormatCommandBuffer = static_cast<GetShaderPrecisionFormatCommandBuffer *>(commandBuffer);
+			GLint range[2];
+			GLint precision;
+			glGetShaderPrecisionFormat(
+					getShaderPrecisionFormatCommandBuffer->m_ShaderType,
+					getShaderPrecisionFormatCommandBuffer->m_PrecisionType,
+					range,
+					&precision);
+			getShaderPrecisionFormatCommandBuffer->m_RangeMin = range[0];
+			getShaderPrecisionFormatCommandBuffer->m_RangeMax = range[1];
+			getShaderPrecisionFormatCommandBuffer->m_Precision = precision;
 			break;
 		}
 		default:

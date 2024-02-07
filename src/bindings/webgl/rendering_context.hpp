@@ -52,6 +52,7 @@ namespace webgl
     Napi::Value Enable(const Napi::CallbackInfo &info);
     Napi::Value Disable(const Napi::CallbackInfo &info);
     Napi::Value GetParameter(const Napi::CallbackInfo &info);
+    Napi::Value GetShaderPrecisionFormat(const Napi::CallbackInfo &info);
 
   private:
     Napi::Value DrawingBufferWidthGetter(const Napi::CallbackInfo &info);

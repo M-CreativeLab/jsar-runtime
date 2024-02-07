@@ -377,6 +377,7 @@ namespace webgl
          InstanceMethod("enable", &WebGLRenderingContext::Enable),
          InstanceMethod("disable", &WebGLRenderingContext::Disable),
          InstanceMethod("getParameter", &WebGLRenderingContext::GetParameter),
+         InstanceMethod("getShaderPrecisionFormat", &WebGLRenderingContext::GetShaderPrecisionFormat),
          // getter & setter
          InstanceAccessor<&WebGLRenderingContext::DrawingBufferWidthGetter, &WebGLRenderingContext::DrawingBufferWidthSetter>("drawingBufferWidth"),
          InstanceAccessor<&WebGLRenderingContext::DrawingBufferHeightGetter, &WebGLRenderingContext::DrawingBufferHeightSetter>("drawingBufferHeight")});
@@ -563,11 +564,21 @@ namespace webgl
 
     if (info.Length() < 2)
     {
-      Napi::TypeError::New(env, "bindBuffer() takes 2 arguments.").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "bindBuffer() takes 2 arguments.")
+        .ThrowAsJavaScriptException();
       return env.Undefined();
     }
+    if (!info[0].IsNumber())
+    {
+      Napi::TypeError::New(env, "the first argument should be a number when calling bindBuffer().")
+        .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
     int target = info[0].As<Napi::Number>().Int32Value();
-    int buffer = info[1].As<Napi::Number>().Int32Value();
+    int buffer = 0;
+    if (info[1].IsNumber())
+      buffer = info[1].As<Napi::Number>().Int32Value();
     m_renderAPI->AddCommandBuffer(new renderer::BindBufferCommandBuffer(target, buffer));
     return env.Undefined();
   }
@@ -1173,6 +1184,29 @@ namespace webgl
         return env.Undefined();
       }
     }
+  }
+
+  Napi::Value WebGLRenderingContext::GetShaderPrecisionFormat(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "getShaderPrecisionFormat() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int shadertype = info[0].As<Napi::Number>().Int32Value();
+    int precisiontype = info[1].As<Napi::Number>().Int32Value();
+
+    auto commandBuffer = new renderer::GetShaderPrecisionFormatCommandBuffer(shadertype, precisiontype);
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    commandBuffer->WaitFinished();
+    Napi::Object obj = Napi::Object::New(env);
+    obj.Set("rangeMin", Napi::Number::New(env, commandBuffer->m_RangeMin));
+    obj.Set("rangeMax", Napi::Number::New(env, commandBuffer->m_RangeMax));
+    obj.Set("precision", Napi::Number::New(env, commandBuffer->m_Precision));
+    return obj;
   }
 
   Napi::Value WebGLRenderingContext::DrawingBufferWidthGetter(const Napi::CallbackInfo &info)

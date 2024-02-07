@@ -78,6 +78,7 @@ namespace renderer
     kCommandTypeGetIntegerv,
     kCommandTypeGetFloatv,
     kCommandTypeGetString,
+    kCommandTypeGetShaderPrecisionFormat,
   };
 
   class CommandBuffer
@@ -727,7 +728,8 @@ namespace renderer
   {
   public:
     GetStringCommandBuffer(uint32_t pname) : CommandBuffer(kCommandTypeGetString), m_Pname(pname) {}
-    ~GetStringCommandBuffer() {
+    ~GetStringCommandBuffer()
+    {
       delete[] m_Value;
     }
     void CopyValue(const uint8_t *value)
@@ -739,5 +741,21 @@ namespace renderer
   public:
     uint32_t m_Pname;
     const char *m_Value;
+  };
+
+  class GetShaderPrecisionFormatCommandBuffer : public CommandBuffer
+  {
+  public:
+    GetShaderPrecisionFormatCommandBuffer(uint32_t shadertype, uint32_t precisiontype) : CommandBuffer(kCommandTypeGetShaderPrecisionFormat),
+                                                                                         m_ShaderType(shadertype),
+                                                                                         m_PrecisionType(precisiontype) {}
+    ~GetShaderPrecisionFormatCommandBuffer() {}
+
+  public:
+    uint32_t m_ShaderType;
+    uint32_t m_PrecisionType;
+    int m_RangeMin;
+    int m_RangeMax;
+    int m_Precision;
   };
 }
