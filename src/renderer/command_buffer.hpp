@@ -77,6 +77,7 @@ namespace renderer
     kCommandTypeGetBooleanv,
     kCommandTypeGetIntegerv,
     kCommandTypeGetFloatv,
+    kCommandTypeGetString,
   };
 
   class CommandBuffer
@@ -720,5 +721,23 @@ namespace renderer
   public:
     uint32_t m_Pname;
     float m_Value;
+  };
+
+  class GetStringCommandBuffer : public CommandBuffer
+  {
+  public:
+    GetStringCommandBuffer(uint32_t pname) : CommandBuffer(kCommandTypeGetString), m_Pname(pname) {}
+    ~GetStringCommandBuffer() {
+      delete[] m_Value;
+    }
+    void CopyValue(const uint8_t *value)
+    {
+      m_Value = new char[strlen((const char *)value) + 1];
+      strcpy((char *)m_Value, (const char *)value);
+    }
+
+  public:
+    uint32_t m_Pname;
+    const char *m_Value;
   };
 }

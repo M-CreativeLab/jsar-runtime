@@ -1156,6 +1156,17 @@ namespace webgl
         commandBuffer->WaitFinished();
         return Napi::Number::New(env, commandBuffer->m_Value);
       }
+      // GLubyte/string
+      case WEBGL_RENDERER:
+      case WEBGL_SHADING_LANGUAGE_VERSION:
+      case WEBGL_VENDOR:
+      case WEBGL_VERSION:
+      {
+        auto commandBuffer = new renderer::GetStringCommandBuffer(pname);
+        m_renderAPI->AddCommandBuffer(commandBuffer);
+        commandBuffer->WaitFinished();
+        return Napi::String::New(env, commandBuffer->m_Value);
+      }
       default:
         Napi::TypeError::New(env, "getParameter() not implemented.")
             .ThrowAsJavaScriptException();

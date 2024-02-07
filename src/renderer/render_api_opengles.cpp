@@ -871,6 +871,13 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			getFloatvCommandBuffer->m_Value = ret;
 			break;
 		}
+		case kCommandTypeGetString:
+		{
+			auto getStringCommandBuffer = static_cast<GetStringCommandBuffer *>(commandBuffer);
+			const GLubyte *ret = glGetString(getStringCommandBuffer->m_Pname);	// returns null-terminated string
+			getStringCommandBuffer->CopyValue(ret);
+			break;
+		}
 		default:
 			break;
 		}
