@@ -43,7 +43,7 @@ import {
 
 // for testing
 import { connectRenderer } from './bindings/renderer';
-import runExample from './webgl-examples/cube';
+import runExample from './webgl-examples/textures';
 
 globalThis.ErrorEvent = ErrorEventImpl;
 globalThis.XMLHttpRequest = XMLHttpRequest;

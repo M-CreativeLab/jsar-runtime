@@ -34,9 +34,14 @@ namespace webgl
     Napi::Value VertexAttribPointer(const Napi::CallbackInfo &info);
     Napi::Value GetAttribLocation(const Napi::CallbackInfo &info);
     Napi::Value GetUniformLocation(const Napi::CallbackInfo &info);
+    Napi::Value Uniform1f(const Napi::CallbackInfo &info);
+    Napi::Value Uniform1fv(const Napi::CallbackInfo &info);
+    Napi::Value Uniform1i(const Napi::CallbackInfo &info);
+    Napi::Value Uniform1iv(const Napi::CallbackInfo &info);
     Napi::Value UniformMatrix4fv(const Napi::CallbackInfo &info);
     Napi::Value DrawArrays(const Napi::CallbackInfo &info);
     Napi::Value DrawElements(const Napi::CallbackInfo &info);
+    Napi::Value PixelStorei(const Napi::CallbackInfo &info);
     Napi::Value Viewport(const Napi::CallbackInfo &info);
     Napi::Value ClearColor(const Napi::CallbackInfo &info);
     Napi::Value ClearDepth(const Napi::CallbackInfo &info);

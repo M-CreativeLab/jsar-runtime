@@ -718,6 +718,36 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			getUniformLocationCommandBuffer->m_Location = ret;
 			break;
 		}
+		case kCommandTypeUniform1f:
+		{
+			auto uniform1fCommandBuffer = static_cast<Uniform1fCommandBuffer *>(commandBuffer);
+			glUniform1f(uniform1fCommandBuffer->m_Location, uniform1fCommandBuffer->m_V0);
+			break;
+		}
+		case kCommandTypeUniform1fv:
+		{
+			auto uniform1fvCommandBuffer = static_cast<Uniform1fvCommandBuffer *>(commandBuffer);
+			glUniform1fv(
+					uniform1fvCommandBuffer->m_Location,
+					uniform1fvCommandBuffer->m_Count,
+					uniform1fvCommandBuffer->m_Value);
+			break;
+		}
+		case kCommandTypeUniform1i:
+		{
+			auto uniform1iCommandBuffer = static_cast<Uniform1iCommandBuffer *>(commandBuffer);
+			glUniform1i(uniform1iCommandBuffer->m_Location, uniform1iCommandBuffer->m_V0);
+			break;
+		}
+		case kCommandTypeUniform1iv:
+		{
+			auto uniform1ivCommandBuffer = static_cast<Uniform1ivCommandBuffer *>(commandBuffer);
+			glUniform1iv(
+					uniform1ivCommandBuffer->m_Location,
+					uniform1ivCommandBuffer->m_Count,
+					uniform1ivCommandBuffer->m_Value);
+			break;
+		}
 		case kCommandTypeUniformMatrix4fv:
 		{
 			auto uniformMatrix4fvCommandBuffer = static_cast<UniformMatrix4fvCommandBuffer *>(commandBuffer);
@@ -745,6 +775,14 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					drawElementsCommandBuffer->m_Count,
 					drawElementsCommandBuffer->m_Type,
 					drawElementsCommandBuffer->m_Indices);
+			break;
+		}
+		case kCommandTypePixelStorei:
+		{
+			auto pixelStoreiCommandBuffer = static_cast<PixelStoreiCommandBuffer *>(commandBuffer);
+			glPixelStorei(
+					pixelStoreiCommandBuffer->m_Pname,
+					pixelStoreiCommandBuffer->m_Param);
 			break;
 		}
 		case kCommandTypeSetViewport:

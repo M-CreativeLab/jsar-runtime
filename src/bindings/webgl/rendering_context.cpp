@@ -94,7 +94,6 @@ namespace webgl
          InstanceValue("LUMINANCE", Napi::Number::New(env, WEBGL_LUMINANCE)),
          InstanceValue("LUMINANCE_ALPHA", Napi::Number::New(env, WEBGL_LUMINANCE_ALPHA)),
          // Texture data types
-         InstanceValue("UNSIGNED_BYTE", Napi::Number::New(env, WEBGL_UNSIGNED_BYTE)),
          InstanceValue("UNSIGNED_SHORT_5_6_5", Napi::Number::New(env, WEBGL_UNSIGNED_SHORT_5_6_5)),
          InstanceValue("UNSIGNED_SHORT_4_4_4_4", Napi::Number::New(env, WEBGL_UNSIGNED_SHORT_4_4_4_4)),
          InstanceValue("UNSIGNED_SHORT_5_5_5_1", Napi::Number::New(env, WEBGL_UNSIGNED_SHORT_5_5_5_1)),
@@ -119,6 +118,12 @@ namespace webgl
          InstanceValue("SHORT", Napi::Number::New(env, WEBGL_SHORT)),
          InstanceValue("UNSIGNED_SHORT", Napi::Number::New(env, WEBGL_UNSIGNED_SHORT)),
          InstanceValue("FLOAT", Napi::Number::New(env, WEBGL_FLOAT)),
+         // Pixel store parameters
+         InstanceValue("PACK_ALIGNMENT", Napi::Number::New(env, WEBGL_PACK_ALIGNMENT)),
+         InstanceValue("UNPACK_ALIGNMENT", Napi::Number::New(env, WEBGL_UNPACK_ALIGNMENT)),
+         InstanceValue("UNPACK_FLIP_Y_WEBGL", Napi::Number::New(env, WEBGL_UNPACK_FLIP_Y_WEBGL)),
+         InstanceValue("UNPACK_PREMULTIPLY_ALPHA_WEBGL", Napi::Number::New(env, WEBGL_UNPACK_PREMULTIPLY_ALPHA_WEBGL)),
+         InstanceValue("UNPACK_COLORSPACE_CONVERSION_WEBGL", Napi::Number::New(env, WEBGL_UNPACK_COLORSPACE_CONVERSION_WEBGL)),
          // Depth test functions
          InstanceValue("NEVER", Napi::Number::New(env, WEBGL_NEVER)),
          InstanceValue("LESS", Napi::Number::New(env, WEBGL_LESS)),
@@ -153,9 +158,14 @@ namespace webgl
          InstanceMethod("vertexAttribPointer", &WebGLRenderingContext::VertexAttribPointer),
          InstanceMethod("getAttribLocation", &WebGLRenderingContext::GetAttribLocation),
          InstanceMethod("getUniformLocation", &WebGLRenderingContext::GetUniformLocation),
+         InstanceMethod("uniform1f", &WebGLRenderingContext::Uniform1f),
+         InstanceMethod("uniform1fv", &WebGLRenderingContext::Uniform1fv),
+         InstanceMethod("uniform1i", &WebGLRenderingContext::Uniform1i),
+         InstanceMethod("uniform1iv", &WebGLRenderingContext::Uniform1iv),
          InstanceMethod("uniformMatrix4fv", &WebGLRenderingContext::UniformMatrix4fv),
          InstanceMethod("drawArrays", &WebGLRenderingContext::DrawArrays),
          InstanceMethod("drawElements", &WebGLRenderingContext::DrawElements),
+         InstanceMethod("pixelStorei", &WebGLRenderingContext::PixelStorei),
          InstanceMethod("viewport", &WebGLRenderingContext::Viewport),
          InstanceMethod("clearColor", &WebGLRenderingContext::ClearColor),
          InstanceMethod("clearDepth", &WebGLRenderingContext::ClearDepth),
@@ -561,6 +571,84 @@ namespace webgl
     return Napi::Number::New(env, commandBuffer->m_Location);
   }
 
+  Napi::Value WebGLRenderingContext::Uniform1f(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "uniform1f() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    float x = info[1].As<Napi::Number>().FloatValue();
+    m_renderAPI->AddCommandBuffer(new renderer::Uniform1fCommandBuffer(location, x));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Uniform1fv(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "uniform1fv() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    Napi::Float32Array array = info[1].As<Napi::Float32Array>();
+    size_t length = array.ElementLength();
+
+    std::vector<float> data(length);
+    for (size_t i = 0; i < length; i++)
+      data[i] = array.Get(i).ToNumber().FloatValue();
+
+    auto commandBuffer = new renderer::Uniform1fvCommandBuffer(location, data);
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Uniform1i(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "uniform1i() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    int x = info[1].As<Napi::Number>().Int32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::Uniform1iCommandBuffer(location, x));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Uniform1iv(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "uniform1iv() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    Napi::Int32Array array = info[1].As<Napi::Int32Array>();
+    size_t length = array.ElementLength();
+
+    std::vector<int> data(length);
+    for (size_t i = 0; i < length; i++)
+      data[i] = array.Get(i).ToNumber().Int32Value();
+
+    auto commandBuffer = new renderer::Uniform1ivCommandBuffer(location, data);
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    return env.Undefined();
+  }
+
   Napi::Value WebGLRenderingContext::UniformMatrix4fv(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -626,6 +714,22 @@ namespace webgl
     int type = info[2].As<Napi::Number>().Int32Value();
     int offset = info[3].As<Napi::Number>().Int32Value();
     m_renderAPI->AddCommandBuffer(new renderer::DrawElementsCommandBuffer(mode, count, type, (char *)NULL + offset));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::PixelStorei(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "pixelStorei() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int pname = info[0].As<Napi::Number>().Int32Value();
+    int param = info[1].ToNumber().Int32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::PixelStoreiCommandBuffer(pname, param));
     return env.Undefined();
   }
 

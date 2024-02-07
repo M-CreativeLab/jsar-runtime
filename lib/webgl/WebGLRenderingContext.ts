@@ -188,38 +188,6 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   TEXTURE_CUBE_MAP_POSITIVE_Z: 34073;
   TEXTURE_CUBE_MAP_NEGATIVE_Z: 34074;
   MAX_CUBE_MAP_TEXTURE_SIZE: 34076;
-  TEXTURE0: 33984;
-  TEXTURE1: 33985;
-  TEXTURE2: 33986;
-  TEXTURE3: 33987;
-  TEXTURE4: 33988;
-  TEXTURE5: 33989;
-  TEXTURE6: 33990;
-  TEXTURE7: 33991;
-  TEXTURE8: 33992;
-  TEXTURE9: 33993;
-  TEXTURE10: 33994;
-  TEXTURE11: 33995;
-  TEXTURE12: 33996;
-  TEXTURE13: 33997;
-  TEXTURE14: 33998;
-  TEXTURE15: 33999;
-  TEXTURE16: 34000;
-  TEXTURE17: 34001;
-  TEXTURE18: 34002;
-  TEXTURE19: 34003;
-  TEXTURE20: 34004;
-  TEXTURE21: 34005;
-  TEXTURE22: 34006;
-  TEXTURE23: 34007;
-  TEXTURE24: 34008;
-  TEXTURE25: 34009;
-  TEXTURE26: 34010;
-  TEXTURE27: 34011;
-  TEXTURE28: 34012;
-  TEXTURE29: 34013;
-  TEXTURE30: 34014;
-  TEXTURE31: 34015;
   ACTIVE_TEXTURE: 34016;
   REPEAT: 10497;
   CLAMP_TO_EDGE: 33071;
@@ -599,7 +567,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     super.linkProgram(program);
   }
   pixelStorei(pname: number, param: number | boolean): void {
-    throw new Error('Method not implemented.');
+    super.pixelStorei(pname, param);
   }
   polygonOffset(factor: number, units: number): void {
     throw new Error('Method not implemented.');
@@ -641,28 +609,28 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     super.texParameteri(target, pname, param);
   }
   uniform1f(location: WebGLUniformLocation, x: number): void {
-    throw new Error('Method not implemented.');
+    super.uniform1f(location, x);
   }
   uniform1i(location: WebGLUniformLocation, x: number): void {
-    throw new Error('Method not implemented.');
+    super.uniform1i(location, x);
   }
   uniform2f(location: WebGLUniformLocation, x: number, y: number): void {
-    throw new Error('Method not implemented.');
+    super.uniform2f(location, x, y);
   }
   uniform2i(location: WebGLUniformLocation, x: number, y: number): void {
-    throw new Error('Method not implemented.');
+    super.uniform2i(location, x, y);
   }
   uniform3f(location: WebGLUniformLocation, x: number, y: number, z: number): void {
-    throw new Error('Method not implemented.');
+    super.uniform3f(location, x, y, z);
   }
   uniform3i(location: WebGLUniformLocation, x: number, y: number, z: number): void {
-    throw new Error('Method not implemented.');
+    super.uniform3i(location, x, y, z);
   }
   uniform4f(location: WebGLUniformLocation, x: number, y: number, z: number, w: number): void {
-    throw new Error('Method not implemented.');
+    super.uniform4f(location, x, y, z, w);
   }
   uniform4i(location: WebGLUniformLocation, x: number, y: number, z: number, w: number): void {
-    throw new Error('Method not implemented.');
+    super.uniform4i(location, x, y, z, w);
   }
   useProgram(program: WebGLProgram): void {
     super.useProgram(program);
@@ -764,43 +732,43 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   }
   uniform1fv(location: WebGLUniformLocation, v: Float32List): void;
   uniform1fv(location: WebGLUniformLocation, v: Iterable<number>): void;
-  uniform1fv(location: unknown, v: unknown): void {
-    throw new Error('Method not implemented.');
+  uniform1fv(location: WebGLUniformLocation, v: Float32List | Iterable<number>): void {
+    super.uniform1fv(location, v);
   }
   uniform1iv(location: WebGLUniformLocation, v: Int32List): void;
   uniform1iv(location: WebGLUniformLocation, v: Iterable<number>): void;
-  uniform1iv(location: unknown, v: unknown): void {
-    throw new Error('Method not implemented.');
+  uniform1iv(location: WebGLUniformLocation, v: Float32List | Iterable<number>): void {
+    super.uniform1iv(location, v);
   }
   uniform2fv(location: WebGLUniformLocation, v: Float32List): void;
   uniform2fv(location: WebGLUniformLocation, v: Iterable<number>): void;
-  uniform2fv(location: unknown, v: unknown): void {
-    throw new Error('Method not implemented.');
+  uniform2fv(location: WebGLUniformLocation, v: Float32List | Iterable<number>): void {
+    super.uniform2fv(location, v);
   }
   uniform2iv(location: WebGLUniformLocation, v: Int32List): void;
   uniform2iv(location: WebGLUniformLocation, v: Iterable<number>): void;
-  uniform2iv(location: unknown, v: unknown): void {
-    throw new Error('Method not implemented.');
+  uniform2iv(location: WebGLUniformLocation, v: Float32List | Iterable<number>): void {
+    super.uniform2iv(location, v);
   }
   uniform3fv(location: WebGLUniformLocation, v: Float32List): void;
   uniform3fv(location: WebGLUniformLocation, v: Iterable<number>): void;
-  uniform3fv(location: unknown, v: unknown): void {
-    throw new Error('Method not implemented.');
+  uniform3fv(location: WebGLUniformLocation, v: Float32List | Iterable<number>): void {
+    super.uniform3fv(location, v);
   }
   uniform3iv(location: WebGLUniformLocation, v: Int32List): void;
   uniform3iv(location: WebGLUniformLocation, v: Iterable<number>): void;
-  uniform3iv(location: unknown, v: unknown): void {
-    throw new Error('Method not implemented.');
+  uniform3iv(location: WebGLUniformLocation, v: Float32List | Iterable<number>): void {
+    super.uniform3iv(location, v);
   }
   uniform4fv(location: WebGLUniformLocation, v: Float32List): void;
   uniform4fv(location: WebGLUniformLocation, v: Iterable<number>): void;
-  uniform4fv(location: unknown, v: unknown): void {
-    throw new Error('Method not implemented.');
+  uniform4fv(location: WebGLUniformLocation, v: Float32List | Iterable<number>): void {
+    super.uniform4fv(location, v);
   }
   uniform4iv(location: WebGLUniformLocation, v: Int32List): void;
   uniform4iv(location: WebGLUniformLocation, v: Iterable<number>): void;
-  uniform4iv(location: unknown, v: unknown): void {
-    throw new Error('Method not implemented.');
+  uniform4iv(location: WebGLUniformLocation, v: Float32List | Iterable<number>): void {
+    super.uniform4iv(location, v);
   }
   uniformMatrix2fv(location: WebGLUniformLocation, transpose: boolean, value: Float32List): void;
   uniformMatrix2fv(location: WebGLUniformLocation, transpose: boolean, value: Iterable<number>): void;

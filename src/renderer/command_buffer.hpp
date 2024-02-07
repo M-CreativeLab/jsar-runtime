@@ -37,10 +37,31 @@ namespace renderer
     kCommandTypeVertexAttribPointer,
     kCommandTypeGetAttribLocation,
     kCommandTypeGetUniformLocation,
+    /** Set Uniform */
+    kCommandTypeUniform1f,
+    kCommandTypeUniform1fv,
+    kCommandTypeUniform1i,
+    kCommandTypeUniform1iv,
+    kCommandTypeUniform2f,
+    kCommandTypeUniform2fv,
+    kCommandTypeUniform2i,
+    kCommandTypeUniform2iv,
+    kCommandTypeUniform3f,
+    kCommandTypeUniform3fv,
+    kCommandTypeUniform3i,
+    kCommandTypeUniform3iv,
+    kCommandTypeUniform4f,
+    kCommandTypeUniform4fv,
+    kCommandTypeUniform4i,
+    kCommandTypeUniform4iv,
+    kCommandTypeUniformMatrix2fv,
+    kCommandTypeUniformMatrix3fv,
     kCommandTypeUniformMatrix4fv,
     /** Draw */
     kCommandTypeDrawArrays,
     kCommandTypeDrawElements,
+    /** Pixels */
+    kCommandTypePixelStorei,
     /** Viewport & Scissor */
     kCommandTypeSetViewport,
     kCommandTypeSetScissor,
@@ -310,9 +331,9 @@ namespace renderer
   {
   public:
     TexParameteriCommandBuffer(int target, int pname, int param) : CommandBuffer(kCommandTypeTexParameteri),
-                                                                  m_Target(target),
-                                                                  m_Pname(pname),
-                                                                  m_Param(param) {}
+                                                                   m_Target(target),
+                                                                   m_Pname(pname),
+                                                                   m_Param(param) {}
     ~TexParameteriCommandBuffer() {}
 
   public:
@@ -415,6 +436,76 @@ namespace renderer
     int m_Location;
   };
 
+  class Uniform1fCommandBuffer : public CommandBuffer
+  {
+  public:
+    Uniform1fCommandBuffer(int location, float v0) : CommandBuffer(kCommandTypeUniform1f),
+                                                     m_Location(location),
+                                                     m_V0(v0) {}
+    ~Uniform1fCommandBuffer() {}
+
+  public:
+    int m_Location;
+    float m_V0;
+  };
+
+  class Uniform1fvCommandBuffer : public CommandBuffer
+  {
+  public:
+    Uniform1fvCommandBuffer(int location, std::vector<float> values) : CommandBuffer(kCommandTypeUniform1fv),
+                                                                       m_Location(location)
+    {
+      m_Value = new float[values.size()];
+      for (int i = 0; i < values.size(); i++)
+        m_Value[i] = values[i];
+      m_Count = values.size();
+    }
+    ~Uniform1fvCommandBuffer()
+    {
+      delete[] m_Value;
+    }
+
+  public:
+    int m_Location;
+    int m_Count;
+    float *m_Value;
+  };
+
+  class Uniform1iCommandBuffer : public CommandBuffer
+  {
+  public:
+    Uniform1iCommandBuffer(int location, int v0) : CommandBuffer(kCommandTypeUniform1i),
+                                                   m_Location(location),
+                                                   m_V0(v0) {}
+    ~Uniform1iCommandBuffer() {}
+
+  public:
+    int m_Location;
+    int m_V0;
+  };
+
+  class Uniform1ivCommandBuffer : public CommandBuffer
+  {
+  public:
+    Uniform1ivCommandBuffer(int location, std::vector<int> values) : CommandBuffer(kCommandTypeUniform1iv),
+                                                                     m_Location(location)
+    {
+      m_Value = new int[values.size()];
+      for (int i = 0; i < values.size(); i++)
+        m_Value[i] = values[i];
+      m_Count = values.size();
+    }
+    ~Uniform1ivCommandBuffer()
+    {
+      delete[] m_Value;
+    }
+
+  public:
+    int m_Location;
+    int m_Count;
+    int *m_Value;
+  };
+
   class UniformMatrix4fvCommandBuffer : public CommandBuffer
   {
   public:
@@ -469,6 +560,19 @@ namespace renderer
     int m_Count;
     int m_Type;
     const void *m_Indices;
+  };
+
+  class PixelStoreiCommandBuffer : public CommandBuffer
+  {
+  public:
+    PixelStoreiCommandBuffer(int pname, int param) : CommandBuffer(kCommandTypePixelStorei),
+                                                     m_Pname(pname),
+                                                     m_Param(param) {}
+    ~PixelStoreiCommandBuffer() {}
+
+  public:
+    int m_Pname;
+    int m_Param;
   };
 
   class SetViewportCommandBuffer : public CommandBuffer

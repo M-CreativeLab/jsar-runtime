@@ -65,7 +65,7 @@ export default function run() {
     logger.info('program info:', JSON.stringify(programInfo));
 
     const buffers = initBuffers(gl);
-    const texture = loadTexture(gl, "cubetexture.png");
+    const texture = loadTexture(gl, 'cubetexture.png');
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
     let then = 0;
