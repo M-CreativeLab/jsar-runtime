@@ -740,10 +740,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   texImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, pixels: ArrayBufferView): void;
   texImage2D(target: number, level: number, internalformat: number, format: number, type: number, source: TexImageSource): void;
   texImage2D(target: number, level: number, internalformat: number, width: unknown, height: unknown, border: unknown, format?: number, type?: number, pixels?: ArrayBufferView): void {
-    if (arguments.length === 6) {
-      // TODO: support texImage2D without w/h/b, which uses level 0.
-      throw new Error('texImage2D without width, height and border is not implemented.');
-    } else {
+    if (arguments.length === 9) {
       super.texImage2D(
         target,
         level,
@@ -754,6 +751,10 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
         format,
         type,
         pixels);
+    } else if (arguments.length === 6) {
+      throw new Error('texImage2D() with TexImageSource not implemented.');
+    } else {
+      throw new Error('Invalid number of arguments for texImage2D()');
     }
   }
   texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, width: number, height: number, format: number, type: number, pixels: ArrayBufferView): void;

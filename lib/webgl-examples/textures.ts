@@ -1,28 +1,30 @@
+import Jimp from 'jimp';
 import { mat4 } from 'gl-matrix';
 import * as logger from '../bindings/logger';
 import { requestRendererReady, requestAnimationFrame } from '../bindings/renderer';
 
 const vertexSource = `
-  attribute vec4 aVertexPosition;
-  attribute vec4 aVertexColor;
+attribute vec4 aVertexPosition;
+attribute vec2 aTextureCoord;
 
-  uniform mat4 uModelViewMatrix;
-  uniform mat4 uProjectionMatrix;
+uniform mat4 uModelViewMatrix;
+uniform mat4 uProjectionMatrix;
 
-  varying lowp vec4 vColor;
+varying highp vec2 vTextureCoord;
 
-  void main(void) {
-    gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-    vColor = aVertexColor;
-  }
+void main(void) {
+  gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+  vTextureCoord = aTextureCoord;
+}
   `;
 
 const fragmentSource = `
-  varying lowp vec4 vColor;
+varying highp vec2 vTextureCoord;
+uniform sampler2D uSampler;
 
-  void main(void) {
-    gl_FragColor = vColor;
-  }
+void main(void) {
+  gl_FragColor = texture2D(uSampler, vTextureCoord);
+}
   `;
 
 export default function run() {
@@ -49,7 +51,7 @@ export default function run() {
       program,
       attribLocations: {
         vertexPosition: gl.getAttribLocation(program, "aVertexPosition"),
-        vertexColor: gl.getAttribLocation(program, "aVertexColor"),
+        textureCoord: gl.getAttribLocation(program, "aTextureCoord"),
       },
       uniformLocations: {
         projectionMatrix: gl.getUniformLocation(
@@ -57,21 +59,25 @@ export default function run() {
           "uProjectionMatrix"
         ),
         modelViewMatrix: gl.getUniformLocation(program, "uModelViewMatrix"),
+        uSampler: gl.getUniformLocation(program, "uSampler"),
       },
     };
     logger.info('program info:', JSON.stringify(programInfo));
 
     const buffers = initBuffers(gl);
+    const texture = loadTexture(gl, "cubetexture.png");
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+    let then = 0;
     let cubeRotation = 0.0;
     let deltaTime = 0;
-    let then = 0;
 
     function render(time: number) {
       const now = time * 0.001; // convert to seconds
       deltaTime = now - then;
       then = now;
 
-      drawScene(gl, programInfo, buffers, cubeRotation);
+      drawScene(gl, programInfo, buffers, texture, cubeRotation);
       cubeRotation += deltaTime;
 
       requestAnimationFrame(render);
@@ -82,16 +88,82 @@ export default function run() {
 
 function initBuffers(gl) {
   const positionBuffer = initPositionBuffer(gl);
-  const colorBuffer = initColorBuffer(gl);
+  const textureCoordBuffer = initTextureBuffer(gl);
   const indexBuffer = initIndexBuffer(gl);
+
   return {
     position: positionBuffer,
-    color: colorBuffer,
+    textureCoord: textureCoordBuffer,
     indices: indexBuffer,
   };
 }
 
-function initPositionBuffer(gl) {
+function loadTexture(gl: WebGLRenderingContext, url: string) {
+  const texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  // Because images have to be downloaded over the internet
+  // they might take a moment until they are ready.
+  // Until then put a single pixel in the texture so we can
+  // use it immediately. When the image has finished downloading
+  // we'll update the texture with the contents of the image.
+  const level = 0;
+  const internalFormat = gl.RGBA;
+  const width = 1;
+  const height = 1;
+  const border = 0;
+  const srcFormat = gl.RGBA;
+  const srcType = gl.UNSIGNED_BYTE;
+  const pixel = new Uint8Array([0, 0, 255, 255]); // opaque blue
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    level,
+    internalFormat,
+    width,
+    height,
+    border,
+    srcFormat,
+    srcType,
+    pixel
+  );
+
+  Jimp.read('/sdcard/cubetexture.png')
+    .then(image => {
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        level,
+        internalFormat,
+        image.bitmap.width,
+        image.bitmap.height,
+        0,
+        srcFormat,
+        srcType,
+        image.bitmap.data
+      );
+
+      // WebGL1 has different requirements for power of 2 images
+      // vs non power of 2 images so check if the image is a
+      // power of 2 in both dimensions.
+      if (isPowerOf2(image.bitmap.width) && isPowerOf2(image.bitmap.height)) {
+        // Yes, it's a power of 2. Generate mips.
+        gl.generateMipmap(gl.TEXTURE_2D);
+      } else {
+        // No, it's not a power of 2. Turn off mips and set
+        // wrapping to clamp to edge
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      }
+    });
+  return texture;
+}
+
+function isPowerOf2(value) {
+  return (value & (value - 1)) === 0;
+}
+
+function initPositionBuffer(gl: WebGLRenderingContext) {
   // Create a buffer for the square's positions.
   const positionBuffer = gl.createBuffer();
 
@@ -99,11 +171,9 @@ function initPositionBuffer(gl) {
   // operations to from here out.
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-  const biasX = 0;
-  const biasZ = 0;
   const positions = [
     // Front face
-    -1.0 + biasX, -1.0, 1.0 + biasZ, 1.0 + biasX, -1.0, 1.0 + biasZ, 1.0 + biasX, 1.0, 1.0 + biasZ, -1.0 + biasX, 1.0, 1.0 + biasZ,
+    -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
 
     // Back face
     -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0,
@@ -156,7 +226,7 @@ function initColorBuffer(gl: WebGLRenderingContext) {
   return colorBuffer;
 }
 
-function initIndexBuffer(gl) {
+function initIndexBuffer(gl: WebGLRenderingContext) {
   const indexBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
@@ -164,12 +234,13 @@ function initIndexBuffer(gl) {
   // indices into the vertex array to specify each triangle's
   // position.
 
-
-
   const indices = [
-    0, 1, 2,
-    0, 2, 3,
-    // front 👆
+    0,
+    1,
+    2,
+    0,
+    2,
+    3, // front
     4,
     5,
     6,
@@ -213,7 +284,35 @@ function initIndexBuffer(gl) {
   return indexBuffer;
 }
 
-function drawScene(gl: WebGLRenderingContext, programInfo, buffers, cubeRotation) {
+function initTextureBuffer(gl: WebGLRenderingContext) {
+  const textureCoordBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
+
+  const textureCoordinates = [
+    // Front
+    0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+    // Back
+    0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+    // Top
+    0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+    // Bottom
+    0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+    // Right
+    0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+    // Left
+    0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+  ];
+
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(textureCoordinates),
+    gl.STATIC_DRAW
+  );
+
+  return textureCoordBuffer;
+}
+
+function drawScene(gl: WebGLRenderingContext, programInfo, buffers, texture, cubeRotation) {
   // gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
   // gl.clearDepth(1.0); // Clear everything
   gl.enable(gl.DEPTH_TEST); // Enable depth testing
@@ -249,7 +348,7 @@ function drawScene(gl: WebGLRenderingContext, programInfo, buffers, cubeRotation
   mat4.translate(
     modelViewMatrix, // destination matrix
     modelViewMatrix, // matrix to translate
-    [-0.0, 0.0, -8.0]
+    [-0.0, 0.0, -6.0]
   ); // amount to translate
 
   mat4.rotate(
@@ -274,7 +373,8 @@ function drawScene(gl: WebGLRenderingContext, programInfo, buffers, cubeRotation
   // Tell WebGL how to pull out the positions from the position
   // buffer into the vertexPosition attribute.
   setPositionAttribute(gl, buffers, programInfo);
-  setColorAttribute(gl, buffers, programInfo);
+
+  setTextureAttribute(gl, buffers, programInfo);
 
   // Tell WebGL which indices to use to index the vertices
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
@@ -294,6 +394,15 @@ function drawScene(gl: WebGLRenderingContext, programInfo, buffers, cubeRotation
     modelViewMatrix
   );
 
+  // Tell WebGL we want to affect texture unit 0
+  gl.activeTexture(gl.TEXTURE0);
+
+  // Bind the texture to texture unit 0
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  // Tell the shader we bound the texture to texture unit 0
+  gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
+
   {
     const vertexCount = 36;
     const type = gl.UNSIGNED_SHORT;
@@ -304,7 +413,7 @@ function drawScene(gl: WebGLRenderingContext, programInfo, buffers, cubeRotation
 
 // Tell WebGL how to pull out the positions from the position
 // buffer into the vertexPosition attribute.
-function setPositionAttribute(gl, buffers, programInfo) {
+function setPositionAttribute(gl: WebGLRenderingContext, buffers, programInfo) {
   const numComponents = 3;
   const type = gl.FLOAT; // the data in the buffer is 32bit floats
   const normalize = false; // don't normalize
@@ -325,7 +434,7 @@ function setPositionAttribute(gl, buffers, programInfo) {
 
 // Tell WebGL how to pull out the colors from the color buffer
 // into the vertexColor attribute.
-function setColorAttribute(gl, buffers, programInfo) {
+function setColorAttribute(gl: WebGLRenderingContext, buffers, programInfo) {
   const numComponents = 4;
   const type = gl.FLOAT;
   const normalize = false;
@@ -341,4 +450,23 @@ function setColorAttribute(gl, buffers, programInfo) {
     offset
   );
   gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
+}
+
+// tell webgl how to pull out the texture coordinates from buffer
+function setTextureAttribute(gl: WebGLRenderingContext, buffers, programInfo) {
+  const num = 2; // every coordinate composed of 2 values
+  const type = gl.FLOAT; // the data in the buffer is 32-bit float
+  const normalize = false; // don't normalize
+  const stride = 0; // how many bytes to get from one set to the next
+  const offset = 0; // how many bytes inside the buffer to start from
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffers.textureCoord);
+  gl.vertexAttribPointer(
+    programInfo.attribLocations.textureCoord,
+    num,
+    type,
+    normalize,
+    stride,
+    offset
+  );
+  gl.enableVertexAttribArray(programInfo.attribLocations.textureCoord);
 }
