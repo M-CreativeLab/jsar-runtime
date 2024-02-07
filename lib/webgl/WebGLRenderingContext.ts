@@ -387,7 +387,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     super.depthFunc(func);
   }
   depthMask(flag: boolean): void {
-    throw new Error('Method not implemented.');
+    super.depthMask(flag);
   }
   depthRange(zNear: number, zFar: number): void {
     throw new Error('Method not implemented.');

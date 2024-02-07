@@ -373,7 +373,9 @@ namespace webgl
          InstanceMethod("clearDepth", &WebGLRenderingContext::ClearDepth),
          InstanceMethod("clearStencil", &WebGLRenderingContext::ClearStencil),
          InstanceMethod("clear", &WebGLRenderingContext::Clear),
+         InstanceMethod("depthMask", &WebGLRenderingContext::DepthMask),
          InstanceMethod("depthFunc", &WebGLRenderingContext::DepthFunc),
+         InstanceMethod("depthRange", &WebGLRenderingContext::DepthRange),
          InstanceMethod("enable", &WebGLRenderingContext::Enable),
          InstanceMethod("disable", &WebGLRenderingContext::Disable),
          InstanceMethod("getParameter", &WebGLRenderingContext::GetParameter),
@@ -1039,6 +1041,19 @@ namespace webgl
     return env.Undefined();
   }
 
+  Napi::Value WebGLRenderingContext::DepthMask(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() >= 1)
+    {
+      bool flag = info[0].ToBoolean().Value();
+      m_renderAPI->AddCommandBuffer(new renderer::DepthMaskCommandBuffer(flag));
+    }
+    return env.Undefined();
+  }
+
   Napi::Value WebGLRenderingContext::DepthFunc(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -1048,6 +1063,20 @@ namespace webgl
     {
       uint32_t func = info[0].ToNumber().Uint32Value();
       m_renderAPI->AddCommandBuffer(new renderer::DepthFuncCommandBuffer(func));
+    }
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::DepthRange(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() >= 2)
+    {
+      float near = info[0].ToNumber().FloatValue();
+      float far = info[1].ToNumber().FloatValue();
+      m_renderAPI->AddCommandBuffer(new renderer::DepthRangeCommandBuffer(near, far));
     }
     return env.Undefined();
   }

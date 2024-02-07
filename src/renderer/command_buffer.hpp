@@ -71,7 +71,9 @@ namespace renderer
     kCommandTypeClearDepth,
     kCommandTypeClearStencil,
     /** Common */
+    kCommandTypeDepthMask,
     kCommandTypeDepthFunc,
+    kCommandTypeDepthRange,
     kCommandTypeEnable,
     kCommandTypeDisable,
     kCommandTypeGetBooleanv,
@@ -661,6 +663,16 @@ namespace renderer
     int m_Stencil;
   };
 
+  class DepthMaskCommandBuffer : public CommandBuffer
+  {
+  public:
+    DepthMaskCommandBuffer(bool flag) : CommandBuffer(kCommandTypeDepthMask), m_Flag(flag) {}
+    ~DepthMaskCommandBuffer() {}
+
+  public:
+    bool m_Flag;
+  };
+
   class DepthFuncCommandBuffer : public CommandBuffer
   {
   public:
@@ -669,6 +681,19 @@ namespace renderer
 
   public:
     int m_Func;
+  };
+
+  class DepthRangeCommandBuffer : public CommandBuffer
+  {
+  public:
+    DepthRangeCommandBuffer(float near, float far) : CommandBuffer(kCommandTypeDepthRange),
+                                                     m_Near(near),
+                                                     m_Far(far) {}
+    ~DepthRangeCommandBuffer() {}
+
+  public:
+    float m_Near;
+    float m_Far;
   };
 
   class EnableCommandBuffer : public CommandBuffer

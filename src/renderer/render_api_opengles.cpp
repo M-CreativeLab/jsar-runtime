@@ -829,10 +829,22 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			ClearStencil(clearStencilCommandBuffer->m_Stencil);
 			break;
 		}
+		case kCommandTypeDepthMask:
+		{
+			auto depthMaskCommandBuffer = static_cast<DepthMaskCommandBuffer *>(commandBuffer);
+			glDepthMask(depthMaskCommandBuffer->m_Flag);
+			break;
+		}
 		case kCommandTypeDepthFunc:
 		{
 			auto depthFuncCommandBuffer = static_cast<DepthFuncCommandBuffer *>(commandBuffer);
 			DepthFunc(depthFuncCommandBuffer->m_Func);
+			break;
+		}
+		case kCommandTypeDepthRange:
+		{
+			auto depthRangeCommandBuffer = static_cast<DepthRangeCommandBuffer *>(commandBuffer);
+			glDepthRangef(depthRangeCommandBuffer->m_Near, depthRangeCommandBuffer->m_Far);
 			break;
 		}
 		case kCommandTypeEnable:

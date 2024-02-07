@@ -48,7 +48,9 @@ namespace webgl
     Napi::Value ClearDepth(const Napi::CallbackInfo &info);
     Napi::Value ClearStencil(const Napi::CallbackInfo &info);
     Napi::Value Clear(const Napi::CallbackInfo &info);
+    Napi::Value DepthMask(const Napi::CallbackInfo &info);
     Napi::Value DepthFunc(const Napi::CallbackInfo &info);
+    Napi::Value DepthRange(const Napi::CallbackInfo &info);
     Napi::Value Enable(const Napi::CallbackInfo &info);
     Napi::Value Disable(const Napi::CallbackInfo &info);
     Napi::Value GetParameter(const Napi::CallbackInfo &info);
