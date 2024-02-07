@@ -43,6 +43,7 @@ import {
 
 // for testing
 import { connectRenderer } from './bindings/renderer';
+import runExample from './webgl-examples/cube';
 
 globalThis.ErrorEvent = ErrorEventImpl;
 globalThis.XMLHttpRequest = XMLHttpRequest;
@@ -112,6 +113,7 @@ function md5(content: string | NodeJS.ArrayBufferView) {
     logger.info('Started Transmute Runtime, it takes', performance.now() - now, 'ms');
 
     connectRenderer();
+    runExample();
   } catch (err) {
     logger.error(`failed to start the runtime, the error is: ${err?.stack || err}`);
   }
