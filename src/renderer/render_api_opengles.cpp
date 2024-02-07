@@ -614,6 +614,29 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			CompileShader(compileShaderCommandBuffer->m_ShaderId);
 			break;
 		}
+		case kCommandTypeGetShaderSource:
+		{
+			auto getShaderSourceCommandBuffer = static_cast<GetShaderSourceCommandBuffer *>(commandBuffer);
+
+			GLint sourceLength;
+			glGetShaderiv(getShaderSourceCommandBuffer->m_ShaderId, GL_SHADER_SOURCE_LENGTH, &sourceLength);
+
+			GLchar *source = new GLchar[sourceLength];
+			GLint maxLength = sourceLength;
+			GLint bytesWritten;
+
+			while (true)
+			{
+				glGetShaderSource(getShaderSourceCommandBuffer->m_ShaderId, maxLength, &bytesWritten, source);
+				if (bytesWritten < maxLength - 1)
+					break;
+				maxLength += sourceLength;
+				source = (GLchar *)realloc(source, maxLength);
+			}
+			getShaderSourceCommandBuffer->CopySource(source, maxLength);
+			delete[] source;
+			break;
+		}
 		case kCommandTypeCreateBuffer:
 		{
 			auto createBufferCommandBuffer = static_cast<CreateBufferCommandBuffer *>(commandBuffer);

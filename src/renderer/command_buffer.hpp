@@ -21,6 +21,7 @@ namespace renderer
     kCommandTypeDeleteShader,
     kCommandTypeShaderSource,
     kCommandTypeCompileShader,
+    kCommandTypeGetShaderSource,
     /** Buffer */
     kCommandTypeCreateBuffer,
     kCommandTypeBindBuffer,
@@ -225,6 +226,24 @@ namespace renderer
 
   public:
     int m_ShaderId;
+  };
+
+  class GetShaderSourceCommandBuffer : public CommandBuffer
+  {
+  public:
+    GetShaderSourceCommandBuffer(int shaderId) : CommandBuffer(kCommandTypeGetShaderSource), m_ShaderId(shaderId) {}
+    ~GetShaderSourceCommandBuffer() {
+      delete[] m_Source;
+    }
+    void CopySource(char *source, uint32_t length)
+    {
+      m_Source = new char[length];
+      memcpy((void *)m_Source, source, length);
+    }
+
+  public:
+    int m_ShaderId;
+    char *m_Source;
   };
 
   class CreateBufferCommandBuffer : public CommandBuffer

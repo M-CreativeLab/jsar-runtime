@@ -321,13 +321,13 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   clear(mask: number): void {
-    super.clear(mask);
+    // super.clear(mask);
   }
   clearColor(red: number, green: number, blue: number, alpha: number): void {
-    super.clearColor(red, green, blue, alpha);
+    // super.clearColor(red, green, blue, alpha);
   }
   clearDepth(depth: number): void {
-    super.clearDepth(depth);
+    // super.clearDepth(depth);
   }
   clearStencil(s: number): void {
     super.clearStencil(s);

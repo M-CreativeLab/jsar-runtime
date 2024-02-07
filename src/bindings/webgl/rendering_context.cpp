@@ -346,6 +346,7 @@ namespace webgl
          InstanceMethod("deleteShader", &WebGLRenderingContext::DeleteShader),
          InstanceMethod("shaderSource", &WebGLRenderingContext::ShaderSource),
          InstanceMethod("compileShader", &WebGLRenderingContext::CompileShader),
+         InstanceMethod("getShaderSource", &WebGLRenderingContext::GetShaderSource),
          InstanceMethod("createBuffer", &WebGLRenderingContext::CreateBuffer),
          InstanceMethod("bindBuffer", &WebGLRenderingContext::BindBuffer),
          InstanceMethod("bufferData", &WebGLRenderingContext::BufferData),
@@ -553,6 +554,23 @@ namespace webgl
     int shader = info[0].As<Napi::Number>().Int32Value();
     m_renderAPI->AddCommandBuffer(new renderer::CompileShaderCommandBuffer(shader));
     return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::GetShaderSource(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "getShaderSource() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int shader = info[0].As<Napi::Number>().Int32Value();
+    auto commandBuffer = new renderer::GetShaderSourceCommandBuffer(shader);
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    commandBuffer->WaitFinished();
+    return Napi::String::New(env, commandBuffer->m_Source);
   }
 
   Napi::Value WebGLRenderingContext::CreateBuffer(const Napi::CallbackInfo &info)
