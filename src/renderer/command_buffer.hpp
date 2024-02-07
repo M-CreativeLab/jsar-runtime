@@ -10,31 +10,46 @@ namespace renderer
 {
   enum CommandType
   {
+    /** Program */
     kCommandTypeCreateProgram,
     kCommandTypeLinkProgram,
     kCommandTypeUseProgram,
+    /** Shader */
     kCommandTypeAttachShader,
     kCommandTypeDetachShader,
     kCommandTypeCreateShader,
     kCommandTypeDeleteShader,
     kCommandTypeShaderSource,
     kCommandTypeCompileShader,
+    /** Buffer */
     kCommandTypeCreateBuffer,
     kCommandTypeBindBuffer,
     kCommandTypeBufferData,
+    /** Texture */
+    kCommandTypeCreateTexture,
+    kCommandTypeBindTexture,
+    kCommandTypeTexImage2D,
+    kCommandTypeTexParameteri,
+    kCommandTypeActiveTexture,
+    kCommandTypeGenerateMipmap,
+    /** Vertex Attribute */
     kCommandTypeEnableVertexAttribArray,
     kCommandTypeVertexAttribPointer,
     kCommandTypeGetAttribLocation,
     kCommandTypeGetUniformLocation,
     kCommandTypeUniformMatrix4fv,
+    /** Draw */
     kCommandTypeDrawArrays,
     kCommandTypeDrawElements,
+    /** Viewport & Scissor */
     kCommandTypeSetViewport,
     kCommandTypeSetScissor,
+    /** Clear */
     kCommandTypeClear,
     kCommandTypeClearColor,
     kCommandTypeClearDepth,
     kCommandTypeClearStencil,
+    /** Common */
     kCommandTypeDepthFunc,
     kCommandTypeEnable,
     kCommandTypeDisable,
@@ -223,6 +238,111 @@ namespace renderer
     int m_Usage;
   };
 
+  class CreateTextureCommandBuffer : public CommandBuffer
+  {
+  public:
+    CreateTextureCommandBuffer() : CommandBuffer(kCommandTypeCreateTexture) {}
+    ~CreateTextureCommandBuffer() {}
+
+  public:
+    int m_TextureId = 0;
+  };
+
+  class BindTextureCommandBuffer : public CommandBuffer
+  {
+  public:
+    BindTextureCommandBuffer(int target, int texture) : CommandBuffer(kCommandTypeBindTexture),
+                                                        m_Target(target),
+                                                        m_Texture(texture) {}
+    ~BindTextureCommandBuffer() {}
+
+  public:
+    int m_Target;
+    int m_Texture;
+  };
+
+  class TexImage2DCommandBuffer : public CommandBuffer
+  {
+  public:
+    TexImage2DCommandBuffer(
+        int target,
+        int level,
+        int internalformat,
+        int width,
+        int height,
+        int border,
+        int format,
+        int type,
+        size_t pixelsSize,
+        const void *pixels) : CommandBuffer(kCommandTypeTexImage2D),
+                              m_Target(target),
+                              m_Level(level),
+                              m_Internalformat(internalformat),
+                              m_Width(width),
+                              m_Height(height),
+                              m_Border(border),
+                              m_Format(format),
+                              m_Type(type),
+                              m_PixelsSize(pixelsSize),
+                              m_Pixels(new char[pixelsSize])
+    {
+      memcpy((void *)m_Pixels, pixels, width * height * 4);
+    }
+    ~TexImage2DCommandBuffer()
+    {
+      delete[] m_Pixels;
+    }
+
+  public:
+    int m_Target;
+    int m_Level;
+    int m_Internalformat;
+    int m_Width;
+    int m_Height;
+    int m_Border;
+    int m_Format;
+    int m_Type;
+    size_t m_PixelsSize;
+    const char *m_Pixels;
+  };
+
+  class TexParameteriCommandBuffer : public CommandBuffer
+  {
+  public:
+    TexParameteriCommandBuffer(int target, int pname, int param) : CommandBuffer(kCommandTypeTexParameteri),
+                                                                  m_Target(target),
+                                                                  m_Pname(pname),
+                                                                  m_Param(param) {}
+    ~TexParameteriCommandBuffer() {}
+
+  public:
+    int m_Target;
+    int m_Pname;
+    int m_Param;
+  };
+
+  class ActiveTextureCommandBuffer : public CommandBuffer
+  {
+  public:
+    ActiveTextureCommandBuffer(int texture) : CommandBuffer(kCommandTypeActiveTexture),
+                                              m_Texture(texture) {}
+    ~ActiveTextureCommandBuffer() {}
+
+  public:
+    int m_Texture;
+  };
+
+  class GenerateMipmapCommandBuffer : public CommandBuffer
+  {
+  public:
+    GenerateMipmapCommandBuffer(int target) : CommandBuffer(kCommandTypeGenerateMipmap),
+                                              m_Target(target) {}
+    ~GenerateMipmapCommandBuffer() {}
+
+  public:
+    int m_Target;
+  };
+
   class EnableVertexAttribArrayCommandBuffer : public CommandBuffer
   {
   public:
@@ -305,7 +425,7 @@ namespace renderer
       m_Value = new float[values.size()];
       for (int i = 0; i < values.size(); i++)
         m_Value[i] = values[i];
-      m_Count = 1;  // webgl only supports 1 matrix
+      m_Count = 1; // webgl only supports 1 matrix
     }
     ~UniformMatrix4fvCommandBuffer()
     {

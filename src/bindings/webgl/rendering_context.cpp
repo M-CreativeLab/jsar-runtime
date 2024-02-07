@@ -76,6 +76,12 @@ namespace webgl
          InstanceMethod("createBuffer", &WebGLRenderingContext::CreateBuffer),
          InstanceMethod("bindBuffer", &WebGLRenderingContext::BindBuffer),
          InstanceMethod("bufferData", &WebGLRenderingContext::BufferData),
+         InstanceMethod("createTexture", &WebGLRenderingContext::CreateTexture),
+         InstanceMethod("bindTexture", &WebGLRenderingContext::BindTexture),
+         InstanceMethod("texImage2D", &WebGLRenderingContext::TexImage2D),
+         InstanceMethod("texParameteri", &WebGLRenderingContext::TexParameteri),
+         InstanceMethod("activeTexture", &WebGLRenderingContext::ActiveTexture),
+         InstanceMethod("generateMipmap", &WebGLRenderingContext::GenerateMipmap),
          InstanceMethod("enableVertexAttribArray", &WebGLRenderingContext::EnableVertexAttribArray),
          InstanceMethod("vertexAttribPointer", &WebGLRenderingContext::VertexAttribPointer),
          InstanceMethod("getAttribLocation", &WebGLRenderingContext::GetAttribLocation),
@@ -307,6 +313,101 @@ namespace webgl
         buffer.Data(),
         usage);
     m_renderAPI->AddCommandBuffer(commandBuffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::CreateTexture(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    auto commandBuffer = new renderer::CreateTextureCommandBuffer();
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    commandBuffer->WaitFinished();
+    return Napi::Number::New(env, commandBuffer->m_TextureId);
+  }
+
+  Napi::Value WebGLRenderingContext::BindTexture(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "bindTexture() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int target = info[0].As<Napi::Number>().Int32Value();
+    int texture = info[1].As<Napi::Number>().Int32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::BindTextureCommandBuffer(target, texture));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::TexImage2D(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    int target = info[0].As<Napi::Number>().Int32Value();
+    int level = info[1].As<Napi::Number>().Int32Value();
+    int internalformat = info[2].As<Napi::Number>().Int32Value();
+    int width = info[3].As<Napi::Number>().Int32Value();
+    int height = info[4].As<Napi::Number>().Int32Value();
+    int border = info[5].As<Napi::Number>().Int32Value();
+    int format = info[6].As<Napi::Number>().Int32Value();
+    int type = info[7].As<Napi::Number>().Int32Value();
+
+    if (!info[8].IsTypedArray())
+    {
+      Napi::TypeError::New(env, "the pixels should be a TypedArray.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    Napi::TypedArray pixels = info[8].As<Napi::TypedArray>();
+    Napi::ArrayBuffer data = pixels.ArrayBuffer();
+    auto commandBuffer = new renderer::TexImage2DCommandBuffer(
+        target,
+        level,
+        internalformat,
+        width,
+        height,
+        border,
+        format,
+        type,
+        data.ByteLength(),
+        data.Data());
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::TexParameteri(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    int target = info[0].As<Napi::Number>().Int32Value();
+    int pname = info[1].As<Napi::Number>().Int32Value();
+    int param = info[2].As<Napi::Number>().Int32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::TexParameteriCommandBuffer(target, pname, param));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::ActiveTexture(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    int texture = info[0].As<Napi::Number>().Int32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::ActiveTextureCommandBuffer(texture));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::GenerateMipmap(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    int target = info[0].As<Napi::Number>().Int32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::GenerateMipmapCommandBuffer(target));
     return env.Undefined();
   }
 

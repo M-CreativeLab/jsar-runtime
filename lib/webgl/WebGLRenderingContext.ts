@@ -311,7 +311,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   }
 
   activeTexture(texture: number): void {
-    throw new Error('Method not implemented.');
+    super.activeTexture(texture);
   }
   attachShader(program: WebGLProgram, shader: WebGLShader): void {
     super.attachShader(program, shader);
@@ -329,7 +329,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     super.bindRenderbuffer(target, renderbuffer);
   }
   bindTexture(target: number, texture: WebGLTexture): void {
-    throw new Error('Method not implemented.');
+    super.bindTexture(target, texture);
   }
   blendColor(red: number, green: number, blue: number, alpha: number): void {
     throw new Error('Method not implemented.');
@@ -389,7 +389,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return super.createShader(type);
   }
   createTexture(): WebGLTexture {
-    throw new Error('Method not implemented.');
+    return super.createTexture();
   }
   cullFace(mode: number): void {
     throw new Error('Method not implemented.');
@@ -458,7 +458,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   generateMipmap(target: number): void {
-    throw new Error('Method not implemented.');
+    super.generateMipmap(target);
   }
   getActiveAttrib(program: WebGLProgram, index: number): WebGLActiveInfo {
     throw new Error('Method not implemented.');
@@ -635,10 +635,10 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   texParameterf(target: number, pname: number, param: number): void {
-    throw new Error('Method not implemented.');
+    super.texParameterf(target, pname, param);
   }
   texParameteri(target: number, pname: number, param: number): void {
-    throw new Error('Method not implemented.');
+    super.texParameteri(target, pname, param);
   }
   uniform1f(location: WebGLUniformLocation, x: number): void {
     throw new Error('Method not implemented.');
@@ -739,8 +739,22 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   }
   texImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, pixels: ArrayBufferView): void;
   texImage2D(target: number, level: number, internalformat: number, format: number, type: number, source: TexImageSource): void;
-  texImage2D(target: unknown, level: unknown, internalformat: unknown, width: unknown, height: unknown, border: unknown, format?: unknown, type?: unknown, pixels?: unknown): void {
-    throw new Error('Method not implemented.');
+  texImage2D(target: number, level: number, internalformat: number, width: unknown, height: unknown, border: unknown, format?: number, type?: number, pixels?: ArrayBufferView): void {
+    if (arguments.length === 6) {
+      // TODO: support texImage2D without w/h/b, which uses level 0.
+      throw new Error('texImage2D without width, height and border is not implemented.');
+    } else {
+      super.texImage2D(
+        target,
+        level,
+        internalformat,
+        width as number,
+        height as number,
+        border as number,
+        format,
+        type,
+        pixels);
+    }
   }
   texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, width: number, height: number, format: number, type: number, pixels: ArrayBufferView): void;
   texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, format: number, type: number, source: TexImageSource): void;

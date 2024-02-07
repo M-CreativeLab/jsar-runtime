@@ -24,6 +24,12 @@ namespace webgl
     Napi::Value CreateBuffer(const Napi::CallbackInfo &info);
     Napi::Value BindBuffer(const Napi::CallbackInfo &info);
     Napi::Value BufferData(const Napi::CallbackInfo &info);
+    Napi::Value CreateTexture(const Napi::CallbackInfo &info);
+    Napi::Value BindTexture(const Napi::CallbackInfo &info);
+    Napi::Value TexImage2D(const Napi::CallbackInfo &info);
+    Napi::Value TexParameteri(const Napi::CallbackInfo &info);
+    Napi::Value ActiveTexture(const Napi::CallbackInfo &info);
+    Napi::Value GenerateMipmap(const Napi::CallbackInfo &info);
     Napi::Value EnableVertexAttribArray(const Napi::CallbackInfo &info);
     Napi::Value VertexAttribPointer(const Napi::CallbackInfo &info);
     Napi::Value GetAttribLocation(const Napi::CallbackInfo &info);

@@ -58,6 +58,12 @@ public:
 	virtual int CreateBuffer();
 	virtual void BindBuffer(int target, int buffer);
 	void BufferData(int target, int size, const void *data, int usage);
+	int CreateTexture();
+	void BindTexture(int target, int texture);
+	void TexImage2D(int target, int level, int internalformat, int width, int height, int border, int format, int type, const void *pixels);
+	void TexParameteri(int target, int pname, int param);
+	void ActiveTexture(int texture);
+	void GenerateMipmap(int target);
 	virtual void EnableVertexAttribArray(int index);
 	virtual void VertexAttribPointer(int index, int size, int type, bool normalized, int stride, const void *offset);
 	int GetAttribLocation(int program, const char *name);
@@ -371,6 +377,47 @@ void RenderAPI_OpenGLCoreES::BufferData(int target, int size, const void *data, 
 	glBufferData(target, size, data, usage);
 }
 
+int RenderAPI_OpenGLCoreES::CreateTexture()
+{
+	GLuint texture;
+	glGenTextures(1, &texture);
+	return texture;
+}
+
+void RenderAPI_OpenGLCoreES::BindTexture(int target, int texture)
+{
+	glBindTexture(target, texture);
+}
+
+void RenderAPI_OpenGLCoreES::TexImage2D(
+		int target,
+		int level,
+		int internalformat,
+		int width,
+		int height,
+		int border,
+		int format,
+		int type,
+		const void *pixels)
+{
+	glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+}
+
+void RenderAPI_OpenGLCoreES::TexParameteri(int target, int pname, int param)
+{
+	glTexParameteri(target, pname, param);
+}
+
+void RenderAPI_OpenGLCoreES::ActiveTexture(int texture)
+{
+	glActiveTexture(texture);
+}
+
+void RenderAPI_OpenGLCoreES::GenerateMipmap(int target)
+{
+	glGenerateMipmap(target);
+}
+
 void RenderAPI_OpenGLCoreES::EnableVertexAttribArray(int index)
 {
 	if (m_DebugEnabled)
@@ -588,6 +635,55 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					bufferDataCommandBuffer->m_Size,
 					bufferDataCommandBuffer->m_Data,
 					bufferDataCommandBuffer->m_Usage);
+			break;
+		}
+		case kCommandTypeCreateTexture:
+		{
+			auto createTextureCommandBuffer = static_cast<CreateTextureCommandBuffer *>(commandBuffer);
+			int ret = CreateTexture();
+			createTextureCommandBuffer->m_TextureId = ret;
+			break;
+		}
+		case kCommandTypeBindTexture:
+		{
+			auto bindTextureCommandBuffer = static_cast<BindTextureCommandBuffer *>(commandBuffer);
+			BindTexture(bindTextureCommandBuffer->m_Target, bindTextureCommandBuffer->m_Texture);
+			break;
+		}
+		case kCommandTypeTexImage2D:
+		{
+			auto texImage2DCommandBuffer = static_cast<TexImage2DCommandBuffer *>(commandBuffer);
+			TexImage2D(
+					texImage2DCommandBuffer->m_Target,
+					texImage2DCommandBuffer->m_Level,
+					texImage2DCommandBuffer->m_Internalformat,
+					texImage2DCommandBuffer->m_Width,
+					texImage2DCommandBuffer->m_Height,
+					texImage2DCommandBuffer->m_Border,
+					texImage2DCommandBuffer->m_Format,
+					texImage2DCommandBuffer->m_Type,
+					texImage2DCommandBuffer->m_Pixels);
+			break;
+		}
+		case kCommandTypeTexParameteri:
+		{
+			auto texParameteriCommandBuffer = static_cast<TexParameteriCommandBuffer *>(commandBuffer);
+			TexParameteri(
+					texParameteriCommandBuffer->m_Target,
+					texParameteriCommandBuffer->m_Pname,
+					texParameteriCommandBuffer->m_Param);
+			break;
+		}
+		case kCommandTypeActiveTexture:
+		{
+			auto activeTextureCommandBuffer = static_cast<ActiveTextureCommandBuffer *>(commandBuffer);
+			ActiveTexture(activeTextureCommandBuffer->m_Texture);
+			break;
+		}
+		case kCommandTypeGenerateMipmap:
+		{
+			auto generateMipmapCommandBuffer = static_cast<GenerateMipmapCommandBuffer *>(commandBuffer);
+			GenerateMipmap(generateMipmapCommandBuffer->m_Target);
 			break;
 		}
 		case kCommandTypeEnableVertexAttribArray:
