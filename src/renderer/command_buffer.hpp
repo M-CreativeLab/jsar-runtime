@@ -74,6 +74,13 @@ namespace renderer
     kCommandTypeDepthMask,
     kCommandTypeDepthFunc,
     kCommandTypeDepthRange,
+    kCommandTypeStencilFunc,
+    kCommandTypeStencilFuncSeparate,
+    kCommandTypeStencilMask,
+    kCommandTypeStencilMaskSeparate,
+    kCommandTypeStencilOp,
+    kCommandTypeStencilOpSeparate,
+    kCommandTypeColorMask,
     kCommandTypeEnable,
     kCommandTypeDisable,
     kCommandTypeGetBooleanv,
@@ -694,6 +701,110 @@ namespace renderer
   public:
     float m_Near;
     float m_Far;
+  };
+
+  class StencilFuncCommandBuffer : public CommandBuffer
+  {
+  public:
+    StencilFuncCommandBuffer(int func, int ref, int mask) : CommandBuffer(kCommandTypeStencilFunc),
+                                                            m_Func(func),
+                                                            m_Ref(ref),
+                                                            m_Mask(mask) {}
+    ~StencilFuncCommandBuffer() {}
+
+  public:
+    int m_Func;
+    int m_Ref;
+    int m_Mask;
+  };
+
+  class StencilFuncSeparateCommandBuffer : public CommandBuffer
+  {
+  public:
+    StencilFuncSeparateCommandBuffer(int face, int func, int ref, int mask) : CommandBuffer(kCommandTypeStencilFuncSeparate),
+                                                                              m_Face(face),
+                                                                              m_Func(func),
+                                                                              m_Ref(ref),
+                                                                              m_Mask(mask) {}
+    ~StencilFuncSeparateCommandBuffer() {}
+
+  public:
+    int m_Face;
+    int m_Func;
+    int m_Ref;
+    int m_Mask;
+  };
+
+  class StencilMaskCommandBuffer : public CommandBuffer
+  {
+  public:
+    StencilMaskCommandBuffer(int mask) : CommandBuffer(kCommandTypeStencilMask), m_Mask(mask) {}
+    ~StencilMaskCommandBuffer() {}
+
+  public:
+    int m_Mask;
+  };
+
+  class StencilMaskSeparateCommandBuffer : public CommandBuffer
+  {
+  public:
+    StencilMaskSeparateCommandBuffer(int face, int mask) : CommandBuffer(kCommandTypeStencilMaskSeparate),
+                                                           m_Face(face),
+                                                           m_Mask(mask) {}
+    ~StencilMaskSeparateCommandBuffer() {}
+
+  public:
+    int m_Face;
+    int m_Mask;
+  };
+
+  class StencilOpCommandBuffer : public CommandBuffer
+  {
+  public:
+    StencilOpCommandBuffer(int fail, int zfail, int zpass) : CommandBuffer(kCommandTypeStencilOp),
+                                                             m_Fail(fail),
+                                                             m_Zfail(zfail),
+                                                             m_Zpass(zpass) {}
+    ~StencilOpCommandBuffer() {}
+
+  public:
+    int m_Fail;
+    int m_Zfail;
+    int m_Zpass;
+  };
+
+  class StencilOpSeparateCommandBuffer : public CommandBuffer
+  {
+  public:
+    StencilOpSeparateCommandBuffer(int face, int fail, int zfail, int zpass) : CommandBuffer(kCommandTypeStencilOpSeparate),
+                                                                               m_Face(face),
+                                                                               m_Fail(fail),
+                                                                               m_Zfail(zfail),
+                                                                               m_Zpass(zpass) {}
+    ~StencilOpSeparateCommandBuffer() {}
+
+  public:
+    int m_Face;
+    int m_Fail;
+    int m_Zfail;
+    int m_Zpass;
+  };
+
+  class ColorMaskCommandBuffer : public CommandBuffer
+  {
+  public:
+    ColorMaskCommandBuffer(bool r, bool g, bool b, bool a) : CommandBuffer(kCommandTypeColorMask),
+                                                             m_R(r),
+                                                             m_G(g),
+                                                             m_B(b),
+                                                             m_A(a) {}
+    ~ColorMaskCommandBuffer() {}
+
+  public:
+    bool m_R;
+    bool m_G;
+    bool m_B;
+    bool m_A;
   };
 
   class EnableCommandBuffer : public CommandBuffer

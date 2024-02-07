@@ -333,7 +333,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     super.clearStencil(s);
   }
   colorMask(red: boolean, green: boolean, blue: boolean, alpha: boolean): void {
-    throw new Error('Method not implemented.');
+    super.colorMask(red, green, blue, alpha);
   }
   compileShader(shader: WebGLShader): void {
     super.compileShader(shader);
@@ -390,7 +390,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     super.depthMask(flag);
   }
   depthRange(zNear: number, zFar: number): void {
-    throw new Error('Method not implemented.');
+    super.depthRange(zNear, zFar);
   }
   detachShader(program: WebGLProgram, shader: WebGLShader): void {
     super.detachShader(program, shader);
@@ -604,22 +604,22 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     super.shaderSource(shader, source);
   }
   stencilFunc(func: number, ref: number, mask: number): void {
-    throw new Error('Method not implemented.');
+    super.stencilFunc(func, ref, mask);
   }
   stencilFuncSeparate(face: number, func: number, ref: number, mask: number): void {
-    throw new Error('Method not implemented.');
+    super.stencilFuncSeparate(face, func, ref, mask);
   }
   stencilMask(mask: number): void {
-    throw new Error('Method not implemented.');
+    super.stencilMask(mask);
   }
   stencilMaskSeparate(face: number, mask: number): void {
-    throw new Error('Method not implemented.');
+    super.stencilMaskSeparate(face, mask);
   }
   stencilOp(fail: number, zfail: number, zpass: number): void {
-    throw new Error('Method not implemented.');
+    super.stencilOp(fail, zfail, zpass);
   }
   stencilOpSeparate(face: number, fail: number, zfail: number, zpass: number): void {
-    throw new Error('Method not implemented.');
+    super.stencilOpSeparate(face, fail, zfail, zpass);
   }
   texParameterf(target: number, pname: number, param: number): void {
     super.texParameterf(target, pname, param);

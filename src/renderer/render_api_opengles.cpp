@@ -847,6 +847,68 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			glDepthRangef(depthRangeCommandBuffer->m_Near, depthRangeCommandBuffer->m_Far);
 			break;
 		}
+		case kCommandTypeStencilFunc:
+		{
+			auto stencilFuncCommandBuffer = static_cast<StencilFuncCommandBuffer *>(commandBuffer);
+			glStencilFunc(
+					stencilFuncCommandBuffer->m_Func,
+					stencilFuncCommandBuffer->m_Ref,
+					stencilFuncCommandBuffer->m_Mask);
+			break;
+		}
+		case kCommandTypeStencilFuncSeparate:
+		{
+			auto stencilFuncSeparateCommandBuffer = static_cast<StencilFuncSeparateCommandBuffer *>(commandBuffer);
+			glStencilFuncSeparate(
+					stencilFuncSeparateCommandBuffer->m_Face,
+					stencilFuncSeparateCommandBuffer->m_Func,
+					stencilFuncSeparateCommandBuffer->m_Ref,
+					stencilFuncSeparateCommandBuffer->m_Mask);
+			break;
+		}
+		case kCommandTypeStencilMask:
+		{
+			auto stencilMaskCommandBuffer = static_cast<StencilMaskCommandBuffer *>(commandBuffer);
+			glStencilMask(stencilMaskCommandBuffer->m_Mask);
+			break;
+		}
+		case kCommandTypeStencilMaskSeparate:
+		{
+			auto stencilMaskSeparateCommandBuffer = static_cast<StencilMaskSeparateCommandBuffer *>(commandBuffer);
+			glStencilMaskSeparate(
+					stencilMaskSeparateCommandBuffer->m_Face,
+					stencilMaskSeparateCommandBuffer->m_Mask);
+			break;
+		}
+		case kCommandTypeStencilOp:
+		{
+			auto stencilOpCommandBuffer = static_cast<StencilOpCommandBuffer *>(commandBuffer);
+			glStencilOp(
+					stencilOpCommandBuffer->m_Fail,
+					stencilOpCommandBuffer->m_Zfail,
+					stencilOpCommandBuffer->m_Zpass);
+			break;
+		}
+		case kCommandTypeStencilOpSeparate:
+		{
+			auto stencilOpSeparateCommandBuffer = static_cast<StencilOpSeparateCommandBuffer *>(commandBuffer);
+			glStencilOpSeparate(
+					stencilOpSeparateCommandBuffer->m_Face,
+					stencilOpSeparateCommandBuffer->m_Fail,
+					stencilOpSeparateCommandBuffer->m_Zfail,
+					stencilOpSeparateCommandBuffer->m_Zpass);
+			break;
+		}
+		case kCommandTypeColorMask:
+		{
+			auto colorMaskCommandBuffer = static_cast<ColorMaskCommandBuffer *>(commandBuffer);
+			glColorMask(
+					colorMaskCommandBuffer->m_R,
+					colorMaskCommandBuffer->m_G,
+					colorMaskCommandBuffer->m_B,
+					colorMaskCommandBuffer->m_A);
+			break;
+		}
 		case kCommandTypeEnable:
 		{
 			auto enableCommandBuffer = static_cast<EnableCommandBuffer *>(commandBuffer);
@@ -886,7 +948,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 		case kCommandTypeGetString:
 		{
 			auto getStringCommandBuffer = static_cast<GetStringCommandBuffer *>(commandBuffer);
-			const GLubyte *ret = glGetString(getStringCommandBuffer->m_Pname);	// returns null-terminated string
+			const GLubyte *ret = glGetString(getStringCommandBuffer->m_Pname); // returns null-terminated string
 			getStringCommandBuffer->CopyValue(ret);
 			break;
 		}

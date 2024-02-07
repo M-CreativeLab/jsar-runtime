@@ -376,6 +376,13 @@ namespace webgl
          InstanceMethod("depthMask", &WebGLRenderingContext::DepthMask),
          InstanceMethod("depthFunc", &WebGLRenderingContext::DepthFunc),
          InstanceMethod("depthRange", &WebGLRenderingContext::DepthRange),
+         InstanceMethod("stencilFunc", &WebGLRenderingContext::StencilFunc),
+         InstanceMethod("stencilFuncSeparate", &WebGLRenderingContext::StencilFuncSeparate),
+         InstanceMethod("stencilMask", &WebGLRenderingContext::StencilMask),
+         InstanceMethod("stencilMaskSeparate", &WebGLRenderingContext::StencilMaskSeparate),
+         InstanceMethod("stencilOp", &WebGLRenderingContext::StencilOp),
+         InstanceMethod("stencilOpSeparate", &WebGLRenderingContext::StencilOpSeparate),
+         InstanceMethod("colorMask", &WebGLRenderingContext::ColorMask),
          InstanceMethod("enable", &WebGLRenderingContext::Enable),
          InstanceMethod("disable", &WebGLRenderingContext::Disable),
          InstanceMethod("getParameter", &WebGLRenderingContext::GetParameter),
@@ -567,13 +574,13 @@ namespace webgl
     if (info.Length() < 2)
     {
       Napi::TypeError::New(env, "bindBuffer() takes 2 arguments.")
-        .ThrowAsJavaScriptException();
+          .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[0].IsNumber())
     {
       Napi::TypeError::New(env, "the first argument should be a number when calling bindBuffer().")
-        .ThrowAsJavaScriptException();
+          .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1078,6 +1085,108 @@ namespace webgl
       float far = info[1].ToNumber().FloatValue();
       m_renderAPI->AddCommandBuffer(new renderer::DepthRangeCommandBuffer(near, far));
     }
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::StencilFunc(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() >= 3)
+    {
+      uint32_t func = info[0].ToNumber().Uint32Value();
+      int ref = info[1].ToNumber().Int32Value();
+      uint32_t mask = info[2].ToNumber().Uint32Value();
+      m_renderAPI->AddCommandBuffer(new renderer::StencilFuncCommandBuffer(func, ref, mask));
+    }
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::StencilFuncSeparate(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() >= 4)
+    {
+      uint32_t face = info[0].ToNumber().Uint32Value();
+      uint32_t func = info[1].ToNumber().Uint32Value();
+      int ref = info[2].ToNumber().Int32Value();
+      uint32_t mask = info[3].ToNumber().Uint32Value();
+      m_renderAPI->AddCommandBuffer(new renderer::StencilFuncSeparateCommandBuffer(face, func, ref, mask));
+    }
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::StencilMask(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() >= 1)
+    {
+      uint32_t mask = info[0].ToNumber().Uint32Value();
+      m_renderAPI->AddCommandBuffer(new renderer::StencilMaskCommandBuffer(mask));
+    }
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::StencilMaskSeparate(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() >= 2)
+    {
+      uint32_t face = info[0].ToNumber().Uint32Value();
+      uint32_t mask = info[1].ToNumber().Uint32Value();
+      m_renderAPI->AddCommandBuffer(new renderer::StencilMaskSeparateCommandBuffer(face, mask));
+    }
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::StencilOp(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() >= 3)
+    {
+      uint32_t fail = info[0].ToNumber().Uint32Value();
+      uint32_t zfail = info[1].ToNumber().Uint32Value();
+      uint32_t zpass = info[2].ToNumber().Uint32Value();
+      m_renderAPI->AddCommandBuffer(new renderer::StencilOpCommandBuffer(fail, zfail, zpass));
+    }
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::StencilOpSeparate(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() >= 4)
+    {
+      uint32_t face = info[0].ToNumber().Uint32Value();
+      uint32_t fail = info[1].ToNumber().Uint32Value();
+      uint32_t zfail = info[2].ToNumber().Uint32Value();
+      uint32_t zpass = info[3].ToNumber().Uint32Value();
+      m_renderAPI->AddCommandBuffer(new renderer::StencilOpSeparateCommandBuffer(face, fail, zfail, zpass));
+    }
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::ColorMask(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    bool r = info[0].ToBoolean().Value();
+    bool g = info[1].ToBoolean().Value();
+    bool b = info[2].ToBoolean().Value();
+    bool a = info[3].ToBoolean().Value();
+    m_renderAPI->AddCommandBuffer(new renderer::ColorMaskCommandBuffer(r, g, b, a));
     return env.Undefined();
   }
 
