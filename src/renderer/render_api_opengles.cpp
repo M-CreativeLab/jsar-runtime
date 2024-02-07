@@ -14,6 +14,8 @@ using namespace renderer;
 #include <OpenGLES/ES2/gl.h>
 #elif UNITY_ANDROID || UNITY_WEBGL
 #include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+#include <EGL/egl.h>
 #elif UNITY_OSX
 #include <OpenGL/gl3.h>
 #elif UNITY_WIN
@@ -490,47 +492,8 @@ void RenderAPI_OpenGLCoreES::Disable(uint32_t cap)
 
 void RenderAPI_OpenGLCoreES::StartFrame()
 {
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_BLEND);
-	glDepthFunc(GL_LEQUAL);
-	glEnable(GL_DEPTH_TEST);
-	glDepthMask(GL_FALSE);
-
-	// struct MyVertex
-	// {
-	// 	float x, y, z;
-	// 	unsigned int color;
-	// };
-	// MyVertex verts[3] =
-	// 		{
-	// 				{-0.5f, -0.25f, 0, 0xFFff0000},
-	// 				{0.5f, -0.25f, 0, 0xFF00ff00},
-	// 				{0, 0.5f, 0, 0xFF0000ff},
-	// 		};
-
-	// float phi = 3.14159265359f * 0.01f;
-	// float cosPhi = cosf(phi);
-	// float sinPhi = sinf(phi);
-	// float depth = 0.7f;
-	// float worldMatrix[16] = {
-	// 		cosPhi,
-	// 		-sinPhi,
-	// 		0,
-	// 		0,
-	// 		sinPhi,
-	// 		cosPhi,
-	// 		0,
-	// 		0,
-	// 		0,
-	// 		0,
-	// 		1,
-	// 		0,
-	// 		0,
-	// 		0,
-	// 		depth,
-	// 		1,
-	// };
-	// DrawSimpleTriangles(worldMatrix, 1, verts);
+	glFrontFace(GL_CW);
+	glDepthMask(GL_TRUE);
 }
 
 void RenderAPI_OpenGLCoreES::EndFrame()

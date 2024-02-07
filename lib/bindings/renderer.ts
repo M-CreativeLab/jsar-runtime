@@ -87,8 +87,6 @@ export function connectRenderer() {
       cubeRotation += deltaTime;
     } catch (err) {
       logger.warn('error in frame callback:', err);
-    } finally {
-      loop.setFrameFinished();
     }
   });
   logger.info('connected to renderer.');
@@ -113,9 +111,11 @@ function initPositionBuffer(gl) {
   // operations to from here out.
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
+  const biasX = 0;
+  const biasZ = 0;
   const positions = [
     // Front face
-    -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
+    -1.0 + biasX, -1.0, 1.0 + biasZ, 1.0 + biasX, -1.0, 1.0 + biasZ, 1.0 + biasX, 1.0, 1.0 + biasZ, -1.0 + biasX, 1.0, 1.0 + biasZ,
 
     // Back face
     -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0,
@@ -141,7 +141,7 @@ function initPositionBuffer(gl) {
   return positionBuffer;
 }
 
-function initColorBuffer(gl) {
+function initColorBuffer(gl: WebGLRenderingContext) {
   const faceColors = [
     [1.0, 1.0, 1.0, 1.0], // Front face: white
     [1.0, 0.0, 0.0, 1.0], // Back face: red
@@ -176,13 +176,12 @@ function initIndexBuffer(gl) {
   // indices into the vertex array to specify each triangle's
   // position.
 
+
+
   const indices = [
-    0,
-    1,
-    2,
-    0,
-    2,
-    3, // front
+    0, 1, 2,
+    0, 2, 3,
+    // front 👆
     4,
     5,
     6,
@@ -227,8 +226,8 @@ function initIndexBuffer(gl) {
 }
 
 function drawScene(gl: WebGLRenderingContext, programInfo, buffers, cubeRotation) {
-  gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
-  gl.clearDepth(1.0); // Clear everything
+  // gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
+  // gl.clearDepth(1.0); // Clear everything
   gl.enable(gl.DEPTH_TEST); // Enable depth testing
   gl.depthFunc(gl.LEQUAL); // Near things obscure far things
 
@@ -253,6 +252,7 @@ function drawScene(gl: WebGLRenderingContext, programInfo, buffers, cubeRotation
   // note: glmatrix.js always has the first argument
   // as the destination to receive the result.
   mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
+  logger.info('projection matrix:', projectionMatrix);
 
   // Set the drawing position to the "identity" point, which is
   // the center of the scene.
@@ -263,7 +263,7 @@ function drawScene(gl: WebGLRenderingContext, programInfo, buffers, cubeRotation
   mat4.translate(
     modelViewMatrix, // destination matrix
     modelViewMatrix, // matrix to translate
-    [-0.0, 0.0, -6.0]
+    [-0.0, 0.0, -8.0]
   ); // amount to translate
 
   mat4.rotate(
@@ -288,7 +288,6 @@ function drawScene(gl: WebGLRenderingContext, programInfo, buffers, cubeRotation
   // Tell WebGL how to pull out the positions from the position
   // buffer into the vertexPosition attribute.
   setPositionAttribute(gl, buffers, programInfo);
-
   setColorAttribute(gl, buffers, programInfo);
 
   // Tell WebGL which indices to use to index the vertices
