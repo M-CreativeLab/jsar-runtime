@@ -42,8 +42,9 @@ import {
 } from './polyfills/offscreencanvas';
 
 // for testing
-import { connectRenderer } from './bindings/renderer';
-import runExample from './webgl-examples/textures';
+import { TransmuteRuntime2 } from './runtime2';
+import { connectRenderer, requestAnimationFrame as requestAnimationFrameImpl } from './bindings/renderer';
+// import runExample from './webgl-examples/textures';
 
 globalThis.ErrorEvent = ErrorEventImpl;
 globalThis.XMLHttpRequest = XMLHttpRequest;
@@ -51,21 +52,22 @@ globalThis.XMLHttpRequest = XMLHttpRequest;
 globalThis.OffscreenCanvas = OffscreenCanvasImpl;
 globalThis.ImageData = ImageDataImpl;
 globalThis.createImageBitmap = createImageBitmapImpl;
+globalThis.requestAnimationFrame = requestAnimationFrameImpl;
 
-import fsPromises from 'node:fs/promises';
+// import fsPromises from 'node:fs/promises';
 // import { TransmuteRuntime } from './runtime';
 
-function getHashOfUri(uri: string) {
-  const hash = crypto.createHash('sha256');
-  hash.update(uri);
-  return hash.digest('hex');
-}
+// function getHashOfUri(uri: string) {
+//   const hash = crypto.createHash('sha256');
+//   hash.update(uri);
+//   return hash.digest('hex');
+// }
 
-function md5(content: string | NodeJS.ArrayBufferView) {
-  const hash = crypto.createHash('md5');
-  hash.update(content);
-  return hash.digest('hex');
-}
+// function md5(content: string | NodeJS.ArrayBufferView) {
+//   const hash = crypto.createHash('md5');
+//   hash.update(content);
+//   return hash.digest('hex');
+// }
 
 (async function main() {
   try {
@@ -75,6 +77,9 @@ function md5(content: string | NodeJS.ArrayBufferView) {
     // Initialize the OffscreenCanvas polyfill.
     await InitializeOffscreenCanvas({ loadSystemFonts: true });
     logger.info(`The Skia initialization takes ${performance.now() - now}ms`);
+
+    connectRenderer();
+    // runExample();
 
     // Create runtime.
     // const runtime = new TransmuteRuntime({
@@ -110,10 +115,8 @@ function md5(content: string | NodeJS.ArrayBufferView) {
     //   },
     // });
     // runtime.start();
+    new TransmuteRuntime2();
     logger.info('Started Transmute Runtime, it takes', performance.now() - now, 'ms');
-
-    connectRenderer();
-    runExample();
   } catch (err) {
     logger.error(`failed to start the runtime, the error is: ${err?.stack || err}`);
   }

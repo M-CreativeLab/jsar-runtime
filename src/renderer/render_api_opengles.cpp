@@ -847,6 +847,30 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			Disable(disableCommandBuffer->m_Cap);
 			break;
 		}
+		case kCommandTypeGetBooleanv:
+		{
+			auto getBooleanvCommandBuffer = static_cast<GetBooleanvCommandBuffer *>(commandBuffer);
+			GLboolean ret;
+			glGetBooleanv(getBooleanvCommandBuffer->m_Pname, &ret);
+			getBooleanvCommandBuffer->m_Value = ret;
+			break;
+		}
+		case kCommandTypeGetIntegerv:
+		{
+			auto getIntegervCommandBuffer = static_cast<GetIntegervCommandBuffer *>(commandBuffer);
+			GLint ret;
+			glGetIntegerv(getIntegervCommandBuffer->m_Pname, &ret);
+			getIntegervCommandBuffer->m_Value = ret;
+			break;
+		}
+		case kCommandTypeGetFloatv:
+		{
+			auto getFloatvCommandBuffer = static_cast<GetFloatvCommandBuffer *>(commandBuffer);
+			GLfloat ret;
+			glGetFloatv(getFloatvCommandBuffer->m_Pname, &ret);
+			getFloatvCommandBuffer->m_Value = ret;
+			break;
+		}
 		default:
 			break;
 		}

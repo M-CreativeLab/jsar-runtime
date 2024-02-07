@@ -1,5 +1,3 @@
-import { mat4 } from 'gl-matrix';
-
 import * as logger from './logger';
 import { createWebGLContext } from '../webgl';
 
@@ -23,8 +21,10 @@ export function requestRendererReady(callback: (gl: WebGLRenderingContext) => vo
   }
 }
 
-export function requestAnimationFrame(callback: (time: number) => void) {
+let globalId = 0;
+export function requestAnimationFrame(callback: FrameRequestCallback): number {
   onframeCallbacks.push(callback);
+  return globalId++;
 }
 
 export function connectRenderer() {

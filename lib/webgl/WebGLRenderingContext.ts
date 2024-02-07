@@ -1,3 +1,5 @@
+import * as logger from '../bindings/logger';
+
 const glNative = process._linkedBinding('transmute:webgl');
 
 export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingContext implements WebGLRenderingContext {
@@ -444,7 +446,17 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     throw new Error('Method not implemented.');
   }
   getContextAttributes(): WebGLContextAttributes {
-    throw new Error('Method not implemented.');
+    return {
+      alpha: true,
+      antialias: true,
+      depth: true,
+      failIfMajorPerformanceCaveat: false,
+      powerPreference: 'default',
+      premultipliedAlpha: true,
+      preserveDrawingBuffer: false,
+      stencil: false,
+      xrCompatible: false,
+    };
   }
   getError(): number {
     throw new Error('Method not implemented.');
@@ -486,13 +498,18 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   getExtension(name: string);
   getExtension(extensionName: 'OCULUS_multiview'): OCULUS_multiview;
   getExtension(extensionName: unknown): any {
-    throw new Error('Method not implemented.');
+    logger.warn(`The extension(${extensionName}) is not supported`);
+    return null;
   }
   getFramebufferAttachmentParameter(target: number, attachment: number, pname: number) {
-    throw new Error('Method not implemented.');
+    throw new Error(`Failed to get the framebuffer attachment parameter: ${target}, ${attachment}, ${pname}`);
   }
   getParameter(pname: number) {
-    throw new Error('Method not implemented.');
+    try {
+      return super.getParameter(pname);
+    } catch (e) {
+      throw new TypeError(`The parameter(${pname}) is not supported`);
+    }
   }
   getProgramInfoLog(program: WebGLProgram): string {
     throw new Error('Method not implemented.');

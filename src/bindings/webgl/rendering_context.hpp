@@ -43,6 +43,7 @@ namespace webgl
     Napi::Value DrawElements(const Napi::CallbackInfo &info);
     Napi::Value PixelStorei(const Napi::CallbackInfo &info);
     Napi::Value Viewport(const Napi::CallbackInfo &info);
+    Napi::Value Scissor(const Napi::CallbackInfo &info);
     Napi::Value ClearColor(const Napi::CallbackInfo &info);
     Napi::Value ClearDepth(const Napi::CallbackInfo &info);
     Napi::Value ClearStencil(const Napi::CallbackInfo &info);
@@ -50,7 +51,7 @@ namespace webgl
     Napi::Value DepthFunc(const Napi::CallbackInfo &info);
     Napi::Value Enable(const Napi::CallbackInfo &info);
     Napi::Value Disable(const Napi::CallbackInfo &info);
-    Napi::Value Scissor(const Napi::CallbackInfo &info);
+    Napi::Value GetParameter(const Napi::CallbackInfo &info);
 
   private:
     Napi::Value DrawingBufferWidthGetter(const Napi::CallbackInfo &info);

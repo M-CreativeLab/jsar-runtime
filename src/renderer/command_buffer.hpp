@@ -74,6 +74,9 @@ namespace renderer
     kCommandTypeDepthFunc,
     kCommandTypeEnable,
     kCommandTypeDisable,
+    kCommandTypeGetBooleanv,
+    kCommandTypeGetIntegerv,
+    kCommandTypeGetFloatv,
   };
 
   class CommandBuffer
@@ -684,5 +687,38 @@ namespace renderer
 
   public:
     uint32_t m_Cap;
+  };
+
+  class GetBooleanvCommandBuffer : public CommandBuffer
+  {
+  public:
+    GetBooleanvCommandBuffer(uint32_t pname) : CommandBuffer(kCommandTypeGetBooleanv), m_Pname(pname) {}
+    ~GetBooleanvCommandBuffer() {}
+
+  public:
+    uint32_t m_Pname;
+    bool m_Value;
+  };
+
+  class GetIntegervCommandBuffer : public CommandBuffer
+  {
+  public:
+    GetIntegervCommandBuffer(uint32_t pname) : CommandBuffer(kCommandTypeGetIntegerv), m_Pname(pname) {}
+    ~GetIntegervCommandBuffer() {}
+
+  public:
+    uint32_t m_Pname;
+    int m_Value;
+  };
+
+  class GetFloatvCommandBuffer : public CommandBuffer
+  {
+  public:
+    GetFloatvCommandBuffer(uint32_t pname) : CommandBuffer(kCommandTypeGetFloatv), m_Pname(pname) {}
+    ~GetFloatvCommandBuffer() {}
+
+  public:
+    uint32_t m_Pname;
+    float m_Value;
   };
 }
