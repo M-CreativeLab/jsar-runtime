@@ -4,269 +4,6 @@ import { WebGLShaderPrecisionFormatImpl } from './WebGLShaderPrecisionFormat';
 const glNative = process._linkedBinding('transmute:webgl');
 
 export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingContext implements WebGLRenderingContext {
-  // DEPTH_BUFFER_BIT: 256;
-  // STENCIL_BUFFER_BIT: 1024;
-  // COLOR_BUFFER_BIT: 16384;
-  POINTS: 0;
-  LINES: 1;
-  LINE_LOOP: 2;
-  LINE_STRIP: 3;
-  TRIANGLES: 4;
-  TRIANGLE_STRIP: 5;
-  TRIANGLE_FAN: 6;
-  ZERO: 0;
-  ONE: 1;
-  SRC_COLOR: 768;
-  ONE_MINUS_SRC_COLOR: 769;
-  SRC_ALPHA: 770;
-  ONE_MINUS_SRC_ALPHA: 771;
-  DST_ALPHA: 772;
-  ONE_MINUS_DST_ALPHA: 773;
-  DST_COLOR: 774;
-  ONE_MINUS_DST_COLOR: 775;
-  SRC_ALPHA_SATURATE: 776;
-  FUNC_ADD: 32774;
-  BLEND_EQUATION: 32777;
-  BLEND_EQUATION_RGB: 32777;
-  BLEND_EQUATION_ALPHA: 34877;
-  FUNC_SUBTRACT: 32778;
-  FUNC_REVERSE_SUBTRACT: 32779;
-  BLEND_DST_RGB: 32968;
-  BLEND_SRC_RGB: 32969;
-  BLEND_DST_ALPHA: 32970;
-  BLEND_SRC_ALPHA: 32971;
-  CONSTANT_COLOR: 32769;
-  ONE_MINUS_CONSTANT_COLOR: 32770;
-  CONSTANT_ALPHA: 32771;
-  ONE_MINUS_CONSTANT_ALPHA: 32772;
-  BLEND_COLOR: 32773;
-  ARRAY_BUFFER: 34962;
-  ELEMENT_ARRAY_BUFFER: 34963;
-  ARRAY_BUFFER_BINDING: 34964;
-  ELEMENT_ARRAY_BUFFER_BINDING: 34965;
-  STREAM_DRAW: 35040;
-  STATIC_DRAW: 35044;
-  DYNAMIC_DRAW: 35048;
-  BUFFER_SIZE: 34660;
-  BUFFER_USAGE: 34661;
-  CURRENT_VERTEX_ATTRIB: 34342;
-  FRONT: 1028;
-  BACK: 1029;
-  FRONT_AND_BACK: 1032;
-  CULL_FACE: 2884;
-  BLEND: 3042;
-  DITHER: 3024;
-  STENCIL_TEST: 2960;
-  DEPTH_TEST: 2929;
-  SCISSOR_TEST: 3089;
-  POLYGON_OFFSET_FILL: 32823;
-  SAMPLE_ALPHA_TO_COVERAGE: 32926;
-  SAMPLE_COVERAGE: 32928;
-  NO_ERROR: 0;
-  INVALID_ENUM: 1280;
-  INVALID_VALUE: 1281;
-  INVALID_OPERATION: 1282;
-  OUT_OF_MEMORY: 1285;
-  CW: 2304;
-  CCW: 2305;
-  LINE_WIDTH: 2849;
-  ALIASED_POINT_SIZE_RANGE: 33901;
-  ALIASED_LINE_WIDTH_RANGE: 33902;
-  CULL_FACE_MODE: 2885;
-  FRONT_FACE: 2886;
-  DEPTH_RANGE: 2928;
-  DEPTH_WRITEMASK: 2930;
-  DEPTH_CLEAR_VALUE: 2931;
-  DEPTH_FUNC: 2932;
-  STENCIL_CLEAR_VALUE: 2961;
-  STENCIL_FUNC: 2962;
-  STENCIL_FAIL: 2964;
-  STENCIL_PASS_DEPTH_FAIL: 2965;
-  STENCIL_PASS_DEPTH_PASS: 2966;
-  STENCIL_REF: 2967;
-  STENCIL_VALUE_MASK: 2963;
-  STENCIL_WRITEMASK: 2968;
-  STENCIL_BACK_FUNC: 34816;
-  STENCIL_BACK_FAIL: 34817;
-  STENCIL_BACK_PASS_DEPTH_FAIL: 34818;
-  STENCIL_BACK_PASS_DEPTH_PASS: 34819;
-  STENCIL_BACK_REF: 36003;
-  STENCIL_BACK_VALUE_MASK: 36004;
-  STENCIL_BACK_WRITEMASK: 36005;
-  VIEWPORT: 2978;
-  SCISSOR_BOX: 3088;
-  COLOR_CLEAR_VALUE: 3106;
-  COLOR_WRITEMASK: 3107;
-  UNPACK_ALIGNMENT: 3317;
-  PACK_ALIGNMENT: 3333;
-  MAX_TEXTURE_SIZE: 3379;
-  MAX_VIEWPORT_DIMS: 3386;
-  SUBPIXEL_BITS: 3408;
-  RED_BITS: 3410;
-  GREEN_BITS: 3411;
-  BLUE_BITS: 3412;
-  ALPHA_BITS: 3413;
-  DEPTH_BITS: 3414;
-  STENCIL_BITS: 3415;
-  POLYGON_OFFSET_UNITS: 10752;
-  POLYGON_OFFSET_FACTOR: 32824;
-  TEXTURE_BINDING_2D: 32873;
-  SAMPLE_BUFFERS: 32936;
-  SAMPLES: 32937;
-  SAMPLE_COVERAGE_VALUE: 32938;
-  SAMPLE_COVERAGE_INVERT: 32939;
-  COMPRESSED_TEXTURE_FORMATS: 34467;
-  DONT_CARE: 4352;
-  FASTEST: 4353;
-  NICEST: 4354;
-  GENERATE_MIPMAP_HINT: 33170;
-  BYTE: 5120;
-  UNSIGNED_BYTE: 5121;
-  SHORT: 5122;
-  UNSIGNED_SHORT: 5123;
-  INT: 5124;
-  UNSIGNED_INT: 5125;
-  FLOAT: 5126;
-  DEPTH_COMPONENT: 6402;
-  ALPHA: 6406;
-  RGB: 6407;
-  RGBA: 6408;
-  LUMINANCE: 6409;
-  LUMINANCE_ALPHA: 6410;
-  UNSIGNED_SHORT_4_4_4_4: 32819;
-  UNSIGNED_SHORT_5_5_5_1: 32820;
-  UNSIGNED_SHORT_5_6_5: 33635;
-  MAX_VERTEX_ATTRIBS: 34921;
-  MAX_VERTEX_UNIFORM_VECTORS: 36347;
-  MAX_VARYING_VECTORS: 36348;
-  MAX_COMBINED_TEXTURE_IMAGE_UNITS: 35661;
-  MAX_VERTEX_TEXTURE_IMAGE_UNITS: 35660;
-  MAX_TEXTURE_IMAGE_UNITS: 34930;
-  MAX_FRAGMENT_UNIFORM_VECTORS: 36349;
-  SHADER_TYPE: 35663;
-  DELETE_STATUS: 35712;
-  LINK_STATUS: 35714;
-  VALIDATE_STATUS: 35715;
-  ATTACHED_SHADERS: 35717;
-  ACTIVE_UNIFORMS: 35718;
-  ACTIVE_ATTRIBUTES: 35721;
-  SHADING_LANGUAGE_VERSION: 35724;
-  CURRENT_PROGRAM: 35725;
-  NEVER: 512;
-  LESS: 513;
-  EQUAL: 514;
-  LEQUAL: 515;
-  GREATER: 516;
-  NOTEQUAL: 517;
-  GEQUAL: 518;
-  ALWAYS: 519;
-  KEEP: 7680;
-  REPLACE: 7681;
-  INCR: 7682;
-  DECR: 7683;
-  INVERT: 5386;
-  INCR_WRAP: 34055;
-  DECR_WRAP: 34056;
-  VENDOR: 7936;
-  RENDERER: 7937;
-  VERSION: 7938;
-  NEAREST: 9728;
-  LINEAR: 9729;
-  NEAREST_MIPMAP_NEAREST: 9984;
-  LINEAR_MIPMAP_NEAREST: 9985;
-  NEAREST_MIPMAP_LINEAR: 9986;
-  LINEAR_MIPMAP_LINEAR: 9987;
-  TEXTURE_MAG_FILTER: 10240;
-  TEXTURE_MIN_FILTER: 10241;
-  TEXTURE_WRAP_S: 10242;
-  TEXTURE_WRAP_T: 10243;
-  TEXTURE_2D: 3553;
-  TEXTURE: 5890;
-  TEXTURE_CUBE_MAP: 34067;
-  TEXTURE_BINDING_CUBE_MAP: 34068;
-  TEXTURE_CUBE_MAP_POSITIVE_X: 34069;
-  TEXTURE_CUBE_MAP_NEGATIVE_X: 34070;
-  TEXTURE_CUBE_MAP_POSITIVE_Y: 34071;
-  TEXTURE_CUBE_MAP_NEGATIVE_Y: 34072;
-  TEXTURE_CUBE_MAP_POSITIVE_Z: 34073;
-  TEXTURE_CUBE_MAP_NEGATIVE_Z: 34074;
-  MAX_CUBE_MAP_TEXTURE_SIZE: 34076;
-  ACTIVE_TEXTURE: 34016;
-  REPEAT: 10497;
-  CLAMP_TO_EDGE: 33071;
-  MIRRORED_REPEAT: 33648;
-  FLOAT_VEC2: 35664;
-  FLOAT_VEC3: 35665;
-  FLOAT_VEC4: 35666;
-  INT_VEC2: 35667;
-  INT_VEC3: 35668;
-  INT_VEC4: 35669;
-  BOOL: 35670;
-  BOOL_VEC2: 35671;
-  BOOL_VEC3: 35672;
-  BOOL_VEC4: 35673;
-  FLOAT_MAT2: 35674;
-  FLOAT_MAT3: 35675;
-  FLOAT_MAT4: 35676;
-  SAMPLER_2D: 35678;
-  SAMPLER_CUBE: 35680;
-  VERTEX_ATTRIB_ARRAY_ENABLED: 34338;
-  VERTEX_ATTRIB_ARRAY_SIZE: 34339;
-  VERTEX_ATTRIB_ARRAY_STRIDE: 34340;
-  VERTEX_ATTRIB_ARRAY_TYPE: 34341;
-  VERTEX_ATTRIB_ARRAY_NORMALIZED: 34922;
-  VERTEX_ATTRIB_ARRAY_POINTER: 34373;
-  VERTEX_ATTRIB_ARRAY_BUFFER_BINDING: 34975;
-  IMPLEMENTATION_COLOR_READ_TYPE: 35738;
-  IMPLEMENTATION_COLOR_READ_FORMAT: 35739;
-  COMPILE_STATUS: 35713;
-  LOW_FLOAT: 36336;
-  MEDIUM_FLOAT: 36337;
-  HIGH_FLOAT: 36338;
-  LOW_INT: 36339;
-  MEDIUM_INT: 36340;
-  HIGH_INT: 36341;
-  FRAMEBUFFER: 36160;
-  RENDERBUFFER: 36161;
-  RGBA4: 32854;
-  RGB5_A1: 32855;
-  RGB565: 36194;
-  DEPTH_COMPONENT16: 33189;
-  STENCIL_INDEX8: 36168;
-  DEPTH_STENCIL: 34041;
-  RENDERBUFFER_WIDTH: 36162;
-  RENDERBUFFER_HEIGHT: 36163;
-  RENDERBUFFER_INTERNAL_FORMAT: 36164;
-  RENDERBUFFER_RED_SIZE: 36176;
-  RENDERBUFFER_GREEN_SIZE: 36177;
-  RENDERBUFFER_BLUE_SIZE: 36178;
-  RENDERBUFFER_ALPHA_SIZE: 36179;
-  RENDERBUFFER_DEPTH_SIZE: 36180;
-  RENDERBUFFER_STENCIL_SIZE: 36181;
-  FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE: 36048;
-  FRAMEBUFFER_ATTACHMENT_OBJECT_NAME: 36049;
-  FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL: 36050;
-  FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE: 36051;
-  COLOR_ATTACHMENT0: 36064;
-  DEPTH_ATTACHMENT: 36096;
-  STENCIL_ATTACHMENT: 36128;
-  DEPTH_STENCIL_ATTACHMENT: 33306;
-  NONE: 0;
-  FRAMEBUFFER_COMPLETE: 36053;
-  FRAMEBUFFER_INCOMPLETE_ATTACHMENT: 36054;
-  FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: 36055;
-  FRAMEBUFFER_INCOMPLETE_DIMENSIONS: 36057;
-  FRAMEBUFFER_UNSUPPORTED: 36061;
-  FRAMEBUFFER_BINDING: 36006;
-  RENDERBUFFER_BINDING: 36007;
-  MAX_RENDERBUFFER_SIZE: 34024;
-  INVALID_FRAMEBUFFER_OPERATION: 1286;
-  UNPACK_FLIP_Y_WEBGL: 37440;
-  UNPACK_PREMULTIPLY_ALPHA_WEBGL: 37441;
-  CONTEXT_LOST_WEBGL: 37442;
-  UNPACK_COLORSPACE_CONVERSION_WEBGL: 37443;
-  BROWSER_DEFAULT_WEBGL: 37444;
-
   canvas: HTMLCanvasElement | OffscreenCanvas;
   drawingBufferColorSpace: PredefinedColorSpace;
 
@@ -288,7 +25,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     super.attachShader(program, shader);
   }
   bindAttribLocation(program: WebGLProgram, index: number, name: string): void {
-    throw new Error('Method not implemented.');
+    super.bindAttribLocation(program, index, name);
   }
   bindBuffer(target: number, buffer: WebGLBuffer): void {
     super.bindBuffer(target, buffer);
@@ -303,22 +40,22 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     super.bindTexture(target, texture);
   }
   blendColor(red: number, green: number, blue: number, alpha: number): void {
-    throw new Error('Method not implemented.');
+    super.blendColor(red, green, blue, alpha);
   }
   blendEquation(mode: number): void {
-    throw new Error('Method not implemented.');
+    super.blendEquation(mode)
   }
   blendEquationSeparate(modeRGB: number, modeAlpha: number): void {
-    throw new Error('Method not implemented.');
+    super.blendEquationSeparate(modeRGB, modeAlpha)
   }
   blendFunc(sfactor: number, dfactor: number): void {
-    throw new Error('Method not implemented.');
+    super.blendFunc(sfactor, dfactor);
   }
   blendFuncSeparate(srcRGB: number, dstRGB: number, srcAlpha: number, dstAlpha: number): void {
-    throw new Error('Method not implemented.');
+    super.blendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha)
   }
   checkFramebufferStatus(target: number): number {
-    throw new Error('Method not implemented.');
+    return super.checkFramebufferStatus(target);
   }
   clear(mask: number): void {
     // super.clear(mask);
@@ -330,7 +67,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     // super.clearDepth(depth);
   }
   clearStencil(s: number): void {
-    super.clearStencil(s);
+    // super.clearStencil(s);
   }
   colorMask(red: boolean, green: boolean, blue: boolean, alpha: boolean): void {
     super.colorMask(red, green, blue, alpha);
@@ -338,11 +75,29 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   compileShader(shader: WebGLShader): void {
     super.compileShader(shader);
   }
-  copyTexImage2D(target: number, level: number, internalformat: number, x: number, y: number, width: number, height: number, border: number): void {
-    throw new Error('Method not implemented.');
+  copyTexImage2D(
+    target: number,
+    level: number,
+    internalformat: number,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    border: number
+  ): void {
+    super.copyTexImage2D(target, level, internalformat, x, y, width, height, border);
   }
-  copyTexSubImage2D(target: number, level: number, xoffset: number, yoffset: number, x: number, y: number, width: number, height: number): void {
-    throw new Error('Method not implemented.');
+  copyTexSubImage2D(
+    target: number,
+    level: number,
+    xoffset: number,
+    yoffset: number,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ): void {
+    super.copyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
   }
   createBuffer(): WebGLBuffer {
     return super.createBuffer();
@@ -354,7 +109,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return super.createProgram();
   }
   createRenderbuffer(): WebGLRenderbuffer {
-    throw new Error('Method not implemented.');
+    return super.createRenderbuffer();
   }
   createShader(type: number): WebGLShader {
     return super.createShader(type);
@@ -363,25 +118,25 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return super.createTexture();
   }
   cullFace(mode: number): void {
-    throw new Error('Method not implemented.');
+    super.cullFace(mode);
   }
   deleteBuffer(buffer: WebGLBuffer): void {
-    throw new Error('Method not implemented.');
+    super.deleteBuffer(buffer);
   }
   deleteFramebuffer(framebuffer: WebGLFramebuffer): void {
-    throw new Error('Method not implemented.');
+    super.deleteFramebuffer(framebuffer);
   }
   deleteProgram(program: WebGLProgram): void {
-    throw new Error('Method not implemented.');
+    super.deleteProgram(program);
   }
   deleteRenderbuffer(renderbuffer: WebGLRenderbuffer): void {
-    throw new Error('Method not implemented.');
+    super.deleteRenderbuffer(renderbuffer);
   }
   deleteShader(shader: WebGLShader): void {
     super.deleteShader(shader);
   }
   deleteTexture(texture: WebGLTexture): void {
-    throw new Error('Method not implemented.');
+    super.deleteTexture(texture);
   }
   depthFunc(func: number): void {
     super.depthFunc(func);
@@ -419,32 +174,37 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   flush(): void {
     super.flush();
   }
-  framebufferRenderbuffer(target: number, attachment: number, renderbuffertarget: number, renderbuffer: WebGLRenderbuffer): void {
-    throw new Error('Method not implemented.');
+  framebufferRenderbuffer(
+    target: number,
+    attachment: number,
+    renderbuffertarget: number,
+    renderbuffer: WebGLRenderbuffer
+  ): void {
+    super.framebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
   }
   framebufferTexture2D(target: number, attachment: number, textarget: number, texture: WebGLTexture, level: number): void {
-    throw new Error('Method not implemented.');
+    super.framebufferTexture2D(target, attachment, textarget, texture, level);
   }
   frontFace(mode: number): void {
-    throw new Error('Method not implemented.');
+    super.frontFace(mode);
   }
   generateMipmap(target: number): void {
     super.generateMipmap(target);
   }
   getActiveAttrib(program: WebGLProgram, index: number): WebGLActiveInfo {
-    throw new Error('Method not implemented.');
+    return super.getActiveAttrib(program, index);
   }
   getActiveUniform(program: WebGLProgram, index: number): WebGLActiveInfo {
-    throw new Error('Method not implemented.');
+    return super.getActiveUniform(program, index);
   }
   getAttachedShaders(program: WebGLProgram): WebGLShader[] {
-    throw new Error('Method not implemented.');
+    return super.getAttachedShaders(program);
   }
   getAttribLocation(program: WebGLProgram, name: string): number {
     return super.getAttribLocation(program, name);
   }
   getBufferParameter(target: number, pname: number) {
-    throw new Error('Method not implemented.');
+    return super.getBufferParameter(target, pname);
   }
   getContextAttributes(): WebGLContextAttributes {
     return {
@@ -460,7 +220,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     };
   }
   getError(): number {
-    throw new Error('Method not implemented.');
+    return super.getError();
   }
   getExtension(extensionName: 'ANGLE_instanced_arrays'): ANGLE_instanced_arrays;
   getExtension(extensionName: 'EXT_blend_minmax'): EXT_blend_minmax;
@@ -503,7 +263,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return null;
   }
   getFramebufferAttachmentParameter(target: number, attachment: number, pname: number) {
-    throw new Error(`Failed to get the framebuffer attachment parameter: ${target}, ${attachment}, ${pname}`);
+    return super.getFramebufferAttachmentParameter(target, attachment, pname);
   }
   getParameter(pname: number) {
     try {
@@ -513,19 +273,19 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     }
   }
   getProgramInfoLog(program: WebGLProgram): string {
-    throw new Error('Method not implemented.');
+    return super.getProgramInfoLog(program);
   }
   getProgramParameter(program: WebGLProgram, pname: number) {
-    throw new Error('Method not implemented.');
+    return super.getProgramParameter(program, pname);
   }
   getRenderbufferParameter(target: number, pname: number) {
-    throw new Error('Method not implemented.');
+    return super.getRenderbufferParameter(target, pname);
   }
   getShaderInfoLog(shader: WebGLShader): string {
-    throw new Error('Method not implemented.');
+    return super.getShaderInfoLog(shader);
   }
   getShaderParameter(shader: WebGLShader, pname: number) {
-    throw new Error('Method not implemented.');
+    return super.getShaderParameter(shader, pname);
   }
   getShaderPrecisionFormat(shadertype: number, precisiontype: number): WebGLShaderPrecisionFormat {
     const { rangeMin, rangeMax, precision } = super.getShaderPrecisionFormat(shadertype, precisiontype);
@@ -535,52 +295,52 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return super.getShaderSource(shader);
   }
   getSupportedExtensions(): string[] {
-    throw new Error('Method not implemented.');
+    return super.getSupportedExtensions();
   }
   getTexParameter(target: number, pname: number) {
-    throw new Error('Method not implemented.');
+    return super.getTexParameter(target, pname);
   }
   getUniform(program: WebGLProgram, location: WebGLUniformLocation) {
-    throw new Error('Method not implemented.');
+    return super.getUniform(program, location);
   }
   getUniformLocation(program: WebGLProgram, name: string): WebGLUniformLocation {
     return super.getUniformLocation(program, name);
   }
   getVertexAttrib(index: number, pname: number) {
-    throw new Error('Method not implemented.');
+    return super.getVertexAttrib(index, pname);
   }
   getVertexAttribOffset(index: number, pname: number): number {
-    throw new Error('Method not implemented.');
+    return super.getVertexAttribOffset(index, pname);
   }
   hint(target: number, mode: number): void {
-    throw new Error('Method not implemented.');
+    super.hint(target, mode);
   }
   isBuffer(buffer: WebGLBuffer): boolean {
-    throw new Error('Method not implemented.');
+    return super.isBuffer(buffer);
   }
   isContextLost(): boolean {
-    throw new Error('Method not implemented.');
+    return super.isContextLost();
   }
   isEnabled(cap: number): boolean {
-    throw new Error('Method not implemented.');
+    return super.isEnabled(cap);
   }
   isFramebuffer(framebuffer: WebGLFramebuffer): boolean {
-    throw new Error('Method not implemented.');
+    return super.isFramebuffer(framebuffer);
   }
   isProgram(program: WebGLProgram): boolean {
-    throw new Error('Method not implemented.');
+    return super.isProgram(program);
   }
   isRenderbuffer(renderbuffer: WebGLRenderbuffer): boolean {
-    throw new Error('Method not implemented.');
+    return super.isRenderbuffer(renderbuffer);
   }
   isShader(shader: WebGLShader): boolean {
-    throw new Error('Method not implemented.');
+    return super.isShader(shader);
   }
   isTexture(texture: WebGLTexture): boolean {
-    throw new Error('Method not implemented.');
+    return super.isTexture(texture);
   }
   lineWidth(width: number): void {
-    throw new Error('Method not implemented.');
+    super.lineWidth(width);
   }
   linkProgram(program: WebGLProgram): void {
     super.linkProgram(program);
@@ -589,13 +349,13 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     super.pixelStorei(pname, param);
   }
   polygonOffset(factor: number, units: number): void {
-    throw new Error('Method not implemented.');
+    super.polygonOffset(factor, units);
   }
   renderbufferStorage(target: number, internalformat: number, width: number, height: number): void {
-    throw new Error('Method not implemented.');
+    super.renderbufferStorage(target, internalformat, width, height);
   }
   sampleCoverage(value: number, invert: boolean): void {
-    throw new Error('Method not implemented.');
+    super.sampleCoverage(value, invert);
   }
   scissor(x: number, y: number, width: number, height: number): void {
     super.scissor(x, y, width, height);
@@ -655,39 +415,39 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     super.useProgram(program);
   }
   validateProgram(program: WebGLProgram): void {
-    throw new Error('Method not implemented.');
+    super.validateProgram(program);
   }
   vertexAttrib1f(index: number, x: number): void {
-    throw new Error('Method not implemented.');
+    super.vertexAttrib1f(index, x);
   }
   vertexAttrib1fv(index: number, values: Float32List): void;
   vertexAttrib1fv(index: number, values: Iterable<number>): void;
-  vertexAttrib1fv(index: unknown, values: unknown): void {
-    throw new Error('Method not implemented.');
+  vertexAttrib1fv(index: number, values: Float32List | Iterable<number>): void {
+    super.vertexAttrib1fv(index, values);
   }
   vertexAttrib2f(index: number, x: number, y: number): void {
-    throw new Error('Method not implemented.');
+    super.vertexAttrib2f(index, x, y);
   }
   vertexAttrib2fv(index: number, values: Float32List): void;
   vertexAttrib2fv(index: number, values: Iterable<number>): void;
-  vertexAttrib2fv(index: unknown, values: unknown): void {
-    throw new Error('Method not implemented.');
+  vertexAttrib2fv(index: number, values: Float32List | Iterable<number>): void {
+    super.vertexAttrib2fv(index, values);
   }
   vertexAttrib3f(index: number, x: number, y: number, z: number): void {
-    throw new Error('Method not implemented.');
+    super.vertexAttrib3f(index, x, y, z);
   }
   vertexAttrib3fv(index: number, values: Float32List): void;
   vertexAttrib3fv(index: number, values: Iterable<number>): void;
-  vertexAttrib3fv(index: unknown, values: unknown): void {
-    throw new Error('Method not implemented.');
+  vertexAttrib3fv(index: number, values: Float32List | Iterable<number>): void {
+    super.vertexAttrib3fv(index, values);
   }
   vertexAttrib4f(index: number, x: number, y: number, z: number, w: number): void {
-    throw new Error('Method not implemented.');
+    super.vertexAttrib4f(index, x, y, z, w);
   }
   vertexAttrib4fv(index: number, values: Float32List): void;
   vertexAttrib4fv(index: number, values: Iterable<number>): void;
-  vertexAttrib4fv(index: unknown, values: unknown): void {
-    throw new Error('Method not implemented.');
+  vertexAttrib4fv(index: number, values: Float32List | Iterable<number>): void {
+    super.vertexAttrib4fv(index, values);
   }
   vertexAttribPointer(index: number, size: number, type: number, normalized: boolean, stride: number, offset: number): void {
     super.vertexAttribPointer(index, size, type, normalized, stride, offset);
@@ -696,7 +456,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     super.viewport(x, y, width, height);
   }
   makeXRCompatible(): Promise<void> {
-    throw new Error('Method not implemented.');
+    return super.makeXRCompatible();
   }
   bufferData(target: number, size: number, usage: number): void;
   bufferData(target: number, data: BufferSource, usage: number): void;
@@ -713,20 +473,72 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     }
   }
   bufferSubData(target: number, offset: number, data: BufferSource): void {
-    throw new Error('Method not implemented.');
+    super.bufferSubData(target, offset, data);
   }
-  compressedTexImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, data: ArrayBufferView): void {
-    throw new Error('Method not implemented.');
+  compressedTexImage2D(
+    target: number,
+    level: number,
+    internalformat: number,
+    width: number,
+    height: number,
+    border: number,
+    data: ArrayBufferView
+  ): void {
+    super.compressedTexImage2D(target, level, internalformat, width, height, border, data);
   }
-  compressedTexSubImage2D(target: number, level: number, xoffset: number, yoffset: number, width: number, height: number, format: number, data: ArrayBufferView): void {
-    throw new Error('Method not implemented.');
+  compressedTexSubImage2D(
+    target: number,
+    level: number,
+    xoffset: number,
+    yoffset: number,
+    width: number,
+    height: number,
+    format: number,
+    data: ArrayBufferView
+  ): void {
+    super.compressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, data);
   }
-  readPixels(x: number, y: number, width: number, height: number, format: number, type: number, pixels: ArrayBufferView): void {
-    throw new Error('Method not implemented.');
+  readPixels(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    format: number,
+    type: number,
+    pixels: ArrayBufferView
+  ): void {
+    return super.readPixels(x, y, width, height, format, type, pixels);
   }
-  texImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, pixels: ArrayBufferView): void;
-  texImage2D(target: number, level: number, internalformat: number, format: number, type: number, source: TexImageSource): void;
-  texImage2D(target: number, level: number, internalformat: number, width: unknown, height: unknown, border: unknown, format?: number, type?: number, pixels?: ArrayBufferView): void {
+  texImage2D(
+    target: number,
+    level: number,
+    internalformat: number,
+    width: number,
+    height: number,
+    border: number,
+    format: number,
+    type: number,
+    pixels: ArrayBufferView
+  ): void;
+  texImage2D(
+    target: number,
+    level: number,
+    internalformat: number,
+    format: number,
+    type: number,
+    source: TexImageSource
+  ): void;
+  texImage2D(
+    target: number,
+    level: number,
+    internalformat: number,
+    width: unknown,
+    height: unknown,
+    border: unknown,
+    format?: number,
+    type?: number,
+    pixels?: ArrayBufferView
+  ): void {
     if (arguments.length === 9) {
       super.texImage2D(
         target,
@@ -744,9 +556,37 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
       throw new Error('Invalid number of arguments for texImage2D()');
     }
   }
-  texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, width: number, height: number, format: number, type: number, pixels: ArrayBufferView): void;
-  texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, format: number, type: number, source: TexImageSource): void;
-  texSubImage2D(target: unknown, level: unknown, xoffset: unknown, yoffset: unknown, width: unknown, height: unknown, format: unknown, type?: unknown, pixels?: unknown): void {
+  texSubImage2D(
+    target: number,
+    level: number,
+    xoffset: number,
+    yoffset: number,
+    width: number,
+    height: number,
+    format: number,
+    type: number,
+    pixels: ArrayBufferView
+  ): void;
+  texSubImage2D(
+    target: number,
+    level: number,
+    xoffset: number,
+    yoffset: number,
+    format: number,
+    type: number,
+    source: TexImageSource
+  ): void;
+  texSubImage2D(
+    target: number,
+    level: number,
+    xoffset: number,
+    yoffset: number,
+    width: unknown,
+    height: unknown,
+    format: unknown,
+    type?: unknown,
+    pixels?: unknown
+  ): void {
     throw new Error('Method not implemented.');
   }
   uniform1fv(location: WebGLUniformLocation, v: Float32List): void;
