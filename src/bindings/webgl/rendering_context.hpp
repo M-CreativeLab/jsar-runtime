@@ -15,6 +15,8 @@ namespace webgl
     Napi::Value CreateProgram(const Napi::CallbackInfo &info);
     Napi::Value LinkProgram(const Napi::CallbackInfo &info);
     Napi::Value UseProgram(const Napi::CallbackInfo &info);
+    Napi::Value GetProgramParameter(const Napi::CallbackInfo &info);
+    Napi::Value GetProgramInfoLog(const Napi::CallbackInfo &info);
     Napi::Value AttachShader(const Napi::CallbackInfo &info);
     Napi::Value DetachShader(const Napi::CallbackInfo &info);
     Napi::Value CreateShader(const Napi::CallbackInfo &info);
@@ -22,6 +24,8 @@ namespace webgl
     Napi::Value ShaderSource(const Napi::CallbackInfo &info);
     Napi::Value CompileShader(const Napi::CallbackInfo &info);
     Napi::Value GetShaderSource(const Napi::CallbackInfo &info);
+    Napi::Value GetShaderParameter(const Napi::CallbackInfo &info);
+    Napi::Value GetShaderInfoLog(const Napi::CallbackInfo &info);
     Napi::Value CreateBuffer(const Napi::CallbackInfo &info);
     Napi::Value BindBuffer(const Napi::CallbackInfo &info);
     Napi::Value BufferData(const Napi::CallbackInfo &info);
@@ -39,6 +43,20 @@ namespace webgl
     Napi::Value Uniform1fv(const Napi::CallbackInfo &info);
     Napi::Value Uniform1i(const Napi::CallbackInfo &info);
     Napi::Value Uniform1iv(const Napi::CallbackInfo &info);
+    Napi::Value Uniform2f(const Napi::CallbackInfo &info);
+    Napi::Value Uniform2fv(const Napi::CallbackInfo &info);
+    Napi::Value Uniform2i(const Napi::CallbackInfo &info);
+    Napi::Value Uniform2iv(const Napi::CallbackInfo &info);
+    Napi::Value Uniform3f(const Napi::CallbackInfo &info);
+    Napi::Value Uniform3fv(const Napi::CallbackInfo &info);
+    Napi::Value Uniform3i(const Napi::CallbackInfo &info);
+    Napi::Value Uniform3iv(const Napi::CallbackInfo &info);
+    Napi::Value Uniform4f(const Napi::CallbackInfo &info);
+    Napi::Value Uniform4fv(const Napi::CallbackInfo &info);
+    Napi::Value Uniform4i(const Napi::CallbackInfo &info);
+    Napi::Value Uniform4iv(const Napi::CallbackInfo &info);
+    Napi::Value UniformMatrix2fv(const Napi::CallbackInfo &info);
+    Napi::Value UniformMatrix3fv(const Napi::CallbackInfo &info);
     Napi::Value UniformMatrix4fv(const Napi::CallbackInfo &info);
     Napi::Value DrawArrays(const Napi::CallbackInfo &info);
     Napi::Value DrawElements(const Napi::CallbackInfo &info);
@@ -59,10 +77,13 @@ namespace webgl
     Napi::Value StencilOp(const Napi::CallbackInfo &info);
     Napi::Value StencilOpSeparate(const Napi::CallbackInfo &info);
     Napi::Value ColorMask(const Napi::CallbackInfo &info);
+    Napi::Value CullFace(const Napi::CallbackInfo &info);
+    Napi::Value FrontFace(const Napi::CallbackInfo &info);
     Napi::Value Enable(const Napi::CallbackInfo &info);
     Napi::Value Disable(const Napi::CallbackInfo &info);
     Napi::Value GetParameter(const Napi::CallbackInfo &info);
     Napi::Value GetShaderPrecisionFormat(const Napi::CallbackInfo &info);
+    Napi::Value GetError(const Napi::CallbackInfo &info);
 
   private:
     Napi::Value DrawingBufferWidthGetter(const Napi::CallbackInfo &info);

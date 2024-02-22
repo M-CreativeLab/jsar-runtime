@@ -5,7 +5,7 @@
 Napi::Object InitWebglModule(Napi::Env env, Napi::Object exports)
 {
   webgl::WebGLRenderingContext::Init(env, exports);
-  // webgl::WebGLProgram::Init(env, exports);
+  webgl::WebGLProgram::Init(env);
   // webgl::WebGLShader::Init(env, exports);
   return exports;
 }

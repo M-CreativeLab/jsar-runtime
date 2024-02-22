@@ -43,9 +43,9 @@ import {
 import { createNavigator } from './polyfills/navigator';
 
 // for testing
-import { TransmuteRuntime2 } from './runtime2';
 import { connectRenderer, requestAnimationFrame as requestAnimationFrameImpl } from './bindings/renderer';
-// import runExample from './webgl-examples/textures';
+import { TransmuteRuntime2 } from './runtime2';
+import runExample from './webgl-examples/textures';
 
 globalThis.ErrorEvent = ErrorEventImpl;
 globalThis.XMLHttpRequest = XMLHttpRequest;
@@ -83,6 +83,7 @@ globalThis.requestAnimationFrame = requestAnimationFrameImpl;
 
     connectRenderer();
     // runExample();
+    new TransmuteRuntime2();
 
     // Create runtime.
     // const runtime = new TransmuteRuntime({
@@ -118,7 +119,6 @@ globalThis.requestAnimationFrame = requestAnimationFrameImpl;
     //   },
     // });
     // runtime.start();
-    new TransmuteRuntime2();
     logger.info('Started Transmute Runtime, it takes', performance.now() - now, 'ms');
   } catch (err) {
     logger.error(`failed to start the runtime, the error is: ${err?.stack || err}`);

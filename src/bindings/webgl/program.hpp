@@ -7,9 +7,14 @@ namespace webgl
   class WebGLProgram : public Napi::ObjectWrap<WebGLProgram>
   {
   public:
-    static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    static void Init(Napi::Env env);
     WebGLProgram(const Napi::CallbackInfo &info);
+    int GetId() const { return id_; }
+
+  public:
+    static Napi::FunctionReference *constructor;
 
   private:
+    int id_;
   };
 }

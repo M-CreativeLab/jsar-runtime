@@ -6,6 +6,7 @@ const glNative = process._linkedBinding('transmute:webgl');
 export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingContext implements WebGLRenderingContext {
   canvas: HTMLCanvasElement | OffscreenCanvas;
   drawingBufferColorSpace: PredefinedColorSpace;
+  #constantNamesMap: Map<number, string> = new Map();
 
   get drawingBufferHeight(): number {
     return super.drawingBufferHeight;
@@ -16,6 +17,20 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
 
   constructor(_canvas: HTMLCanvasElement | OffscreenCanvas, options: WebGLContextAttributes) {
     super();
+    this.#setupConstantNamesMap();
+  }
+
+  /**
+   * It fetches all the constants from the native implementation and stores them in a map `#constantNamesMap`, which is used to 
+   * get the name of the constant from its value in debugging purposes.
+   */
+  #setupConstantNamesMap() {
+    const allConstantNames = Object.getOwnPropertyNames(glNative.WebGLRenderingContext.prototype)
+      .filter(name => typeof this[name] === 'number');
+    for (const name of allConstantNames) {
+      const value = this[name];
+      this.#constantNamesMap.set(value, name);
+    }
   }
 
   activeTexture(texture: number): void {
@@ -267,7 +282,10 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   }
   getParameter(pname: number) {
     try {
-      return super.getParameter(pname);
+      const r = super.getParameter(pname);
+      const pnameStr = this.#constantNamesMap.has(pname) ? `"${this.#constantNamesMap.get(pname)}(${pname})"` : `${pname}`;
+      logger.warn(`Parameter(${pnameStr}) = ${r}`);
+      return r;
     } catch (e) {
       throw new TypeError(`The parameter(${pname}) is not supported`);
     }

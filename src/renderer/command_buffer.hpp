@@ -14,6 +14,8 @@ namespace renderer
     kCommandTypeCreateProgram,
     kCommandTypeLinkProgram,
     kCommandTypeUseProgram,
+    kCommandTypeGetProgramParameter,
+    kCommandTypeGetProgramInfoLog,
     /** Shader */
     kCommandTypeAttachShader,
     kCommandTypeDetachShader,
@@ -22,6 +24,8 @@ namespace renderer
     kCommandTypeShaderSource,
     kCommandTypeCompileShader,
     kCommandTypeGetShaderSource,
+    kCommandTypeGetShaderParameter,
+    kCommandTypeGetShaderInfoLog,
     /** Buffer */
     kCommandTypeCreateBuffer,
     kCommandTypeBindBuffer,
@@ -82,6 +86,8 @@ namespace renderer
     kCommandTypeStencilOp,
     kCommandTypeStencilOpSeparate,
     kCommandTypeColorMask,
+    kCommandTypeCullFace,
+    kCommandTypeFrontFace,
     kCommandTypeEnable,
     kCommandTypeDisable,
     kCommandTypeGetBooleanv,
@@ -89,6 +95,7 @@ namespace renderer
     kCommandTypeGetFloatv,
     kCommandTypeGetString,
     kCommandTypeGetShaderPrecisionFormat,
+    kCommandTypeGetError,
   };
 
   class CommandBuffer
@@ -148,6 +155,40 @@ namespace renderer
 
   public:
     int m_ProgramId;
+  };
+
+  class GetProgramParameterCommandBuffer : public CommandBuffer
+  {
+  public:
+    GetProgramParameterCommandBuffer(int programId, int pname) : CommandBuffer(kCommandTypeGetProgramParameter),
+                                                                 m_ProgramId(programId),
+                                                                 m_Pname(pname) {}
+    ~GetProgramParameterCommandBuffer() {}
+
+  public:
+    int m_ProgramId;
+    int m_Pname;
+    int m_Value;
+  };
+
+  class GetProgramInfoLogCommandBuffer : public CommandBuffer
+  {
+  public:
+    GetProgramInfoLogCommandBuffer(int programId) : CommandBuffer(kCommandTypeGetProgramInfoLog),
+                                                    m_ProgramId(programId) {}
+    ~GetProgramInfoLogCommandBuffer()
+    {
+      delete[] m_InfoLog;
+    }
+    void CopyInfoLog(const char *infoLog, uint32_t length)
+    {
+      m_InfoLog = new char[length];
+      memcpy((void *)m_InfoLog, infoLog, length);
+    }
+
+  public:
+    int m_ProgramId;
+    char *m_InfoLog;
   };
 
   class AttachShaderCommandBuffer : public CommandBuffer
@@ -232,7 +273,8 @@ namespace renderer
   {
   public:
     GetShaderSourceCommandBuffer(int shaderId) : CommandBuffer(kCommandTypeGetShaderSource), m_ShaderId(shaderId) {}
-    ~GetShaderSourceCommandBuffer() {
+    ~GetShaderSourceCommandBuffer()
+    {
       delete[] m_Source;
     }
     void CopySource(char *source, uint32_t length)
@@ -244,6 +286,40 @@ namespace renderer
   public:
     int m_ShaderId;
     char *m_Source;
+  };
+
+  class GetShaderParameterCommandBuffer : public CommandBuffer
+  {
+  public:
+    GetShaderParameterCommandBuffer(int shaderId, int pname) : CommandBuffer(kCommandTypeGetShaderParameter),
+                                                               m_ShaderId(shaderId),
+                                                               m_Pname(pname) {}
+    ~GetShaderParameterCommandBuffer() {}
+
+  public:
+    int m_ShaderId;
+    int m_Pname;
+    int m_Value;
+  };
+
+  class GetShaderInfoLogCommandBuffer : public CommandBuffer
+  {
+  public:
+    GetShaderInfoLogCommandBuffer(int shaderId) : CommandBuffer(kCommandTypeGetShaderInfoLog),
+                                                  m_ShaderId(shaderId) {}
+    ~GetShaderInfoLogCommandBuffer()
+    {
+      delete[] m_InfoLog;
+    }
+    void CopyInfoLog(const char *infoLog, uint32_t length)
+    {
+      m_InfoLog = new char[length];
+      memcpy((void *)m_InfoLog, infoLog, length);
+    }
+
+  public:
+    int m_ShaderId;
+    char *m_InfoLog;
   };
 
   class CreateBufferCommandBuffer : public CommandBuffer
@@ -539,6 +615,288 @@ namespace renderer
     int *m_Value;
   };
 
+  class Uniform2fCommandBuffer : public CommandBuffer
+  {
+  public:
+    Uniform2fCommandBuffer(int location, float v0, float v1) : CommandBuffer(kCommandTypeUniform2f),
+                                                               m_Location(location),
+                                                               m_V0(v0),
+                                                               m_V1(v1) {}
+    ~Uniform2fCommandBuffer() {}
+
+  public:
+    int m_Location;
+    float m_V0;
+    float m_V1;
+  };
+
+  class Uniform2fvCommandBuffer : public CommandBuffer
+  {
+  public:
+    Uniform2fvCommandBuffer(int location, std::vector<float> values) : CommandBuffer(kCommandTypeUniform2fv),
+                                                                       m_Location(location)
+    {
+      m_Value = new float[values.size()];
+      for (int i = 0; i < values.size(); i++)
+        m_Value[i] = values[i];
+      m_Count = values.size() / 2;
+    }
+    ~Uniform2fvCommandBuffer()
+    {
+      delete[] m_Value;
+    }
+
+  public:
+    int m_Location;
+    int m_Count;
+    float *m_Value;
+  };
+
+  class Uniform2iCommandBuffer : public CommandBuffer
+  {
+  public:
+    Uniform2iCommandBuffer(int location, int v0, int v1) : CommandBuffer(kCommandTypeUniform2i),
+                                                           m_Location(location),
+                                                           m_V0(v0),
+                                                           m_V1(v1) {}
+    ~Uniform2iCommandBuffer() {}
+
+  public:
+    int m_Location;
+    int m_V0;
+    int m_V1;
+  };
+
+  class Uniform2ivCommandBuffer : public CommandBuffer
+  {
+  public:
+    Uniform2ivCommandBuffer(int location, std::vector<int> values) : CommandBuffer(kCommandTypeUniform2iv),
+                                                                     m_Location(location)
+    {
+      m_Value = new int[values.size()];
+      for (int i = 0; i < values.size(); i++)
+        m_Value[i] = values[i];
+      m_Count = values.size() / 2;
+    }
+    ~Uniform2ivCommandBuffer()
+    {
+      delete[] m_Value;
+    }
+
+  public:
+    int m_Location;
+    int m_Count;
+    int *m_Value;
+  };
+
+  class Uniform3fCommandBuffer : public CommandBuffer
+  {
+  public:
+    Uniform3fCommandBuffer(int location, float v0, float v1, float v2) : CommandBuffer(kCommandTypeUniform3f),
+                                                                         m_Location(location),
+                                                                         m_V0(v0),
+                                                                         m_V1(v1),
+                                                                         m_V2(v2) {}
+    ~Uniform3fCommandBuffer() {}
+
+  public:
+    int m_Location;
+    float m_V0;
+    float m_V1;
+    float m_V2;
+  };
+
+  class Uniform3fvCommandBuffer : public CommandBuffer
+  {
+  public:
+    Uniform3fvCommandBuffer(int location, std::vector<float> values) : CommandBuffer(kCommandTypeUniform3fv),
+                                                                       m_Location(location)
+    {
+      m_Value = new float[values.size()];
+      for (int i = 0; i < values.size(); i++)
+        m_Value[i] = values[i];
+      m_Count = values.size() / 3;
+    }
+    ~Uniform3fvCommandBuffer()
+    {
+      delete[] m_Value;
+    }
+
+  public:
+    int m_Location;
+    int m_Count;
+    float *m_Value;
+  };
+
+  class Uniform3iCommandBuffer : public CommandBuffer
+  {
+  public:
+    Uniform3iCommandBuffer(int location, int v0, int v1, int v2) : CommandBuffer(kCommandTypeUniform3i),
+                                                                   m_Location(location),
+                                                                   m_V0(v0),
+                                                                   m_V1(v1),
+                                                                   m_V2(v2) {}
+    ~Uniform3iCommandBuffer() {}
+
+  public:
+    int m_Location;
+    int m_V0;
+    int m_V1;
+    int m_V2;
+  };
+
+  class Uniform3ivCommandBuffer : public CommandBuffer
+  {
+  public:
+    Uniform3ivCommandBuffer(int location, std::vector<int> values) : CommandBuffer(kCommandTypeUniform3iv),
+                                                                     m_Location(location)
+    {
+      m_Value = new int[values.size()];
+      for (int i = 0; i < values.size(); i++)
+        m_Value[i] = values[i];
+      m_Count = values.size() / 3;
+    }
+    ~Uniform3ivCommandBuffer()
+    {
+      delete[] m_Value;
+    }
+
+  public:
+    int m_Location;
+    int m_Count;
+    int *m_Value;
+  };
+
+  class Uniform4fCommandBuffer : public CommandBuffer
+  {
+  public:
+    Uniform4fCommandBuffer(int location, float v0, float v1, float v2, float v3) : CommandBuffer(kCommandTypeUniform4f),
+                                                                                   m_Location(location),
+                                                                                   m_V0(v0),
+                                                                                   m_V1(v1),
+                                                                                   m_V2(v2),
+                                                                                   m_V3(v3) {}
+    ~Uniform4fCommandBuffer() {}
+
+  public:
+    int m_Location;
+    float m_V0;
+    float m_V1;
+    float m_V2;
+    float m_V3;
+  };
+
+  class Uniform4fvCommandBuffer : public CommandBuffer
+  {
+  public:
+    Uniform4fvCommandBuffer(int location, std::vector<float> values) : CommandBuffer(kCommandTypeUniform4fv),
+                                                                       m_Location(location)
+    {
+      m_Value = new float[values.size()];
+      for (int i = 0; i < values.size(); i++)
+        m_Value[i] = values[i];
+      m_Count = values.size() / 4;
+    }
+    ~Uniform4fvCommandBuffer()
+    {
+      delete[] m_Value;
+    }
+
+  public:
+    int m_Location;
+    int m_Count;
+    float *m_Value;
+  };
+
+  class Uniform4iCommandBuffer : public CommandBuffer
+  {
+  public:
+    Uniform4iCommandBuffer(int location, int v0, int v1, int v2, int v3) : CommandBuffer(kCommandTypeUniform4i),
+                                                                           m_Location(location),
+                                                                           m_V0(v0),
+                                                                           m_V1(v1),
+                                                                           m_V2(v2),
+                                                                           m_V3(v3) {}
+    ~Uniform4iCommandBuffer() {}
+
+  public:
+    int m_Location;
+    int m_V0;
+    int m_V1;
+    int m_V2;
+    int m_V3;
+  };
+
+  class Uniform4ivCommandBuffer : public CommandBuffer
+  {
+  public:
+    Uniform4ivCommandBuffer(int location, std::vector<int> values) : CommandBuffer(kCommandTypeUniform4iv),
+                                                                     m_Location(location)
+    {
+      m_Value = new int[values.size()];
+      for (int i = 0; i < values.size(); i++)
+        m_Value[i] = values[i];
+      m_Count = values.size() / 4;
+    }
+    ~Uniform4ivCommandBuffer()
+    {
+      delete[] m_Value;
+    }
+
+  public:
+    int m_Location;
+    int m_Count;
+    int *m_Value;
+  };
+
+  class UniformMatrix2fvCommandBuffer : public CommandBuffer
+  {
+  public:
+    UniformMatrix2fvCommandBuffer(int location, bool transpose, std::vector<float> values) : CommandBuffer(kCommandTypeUniformMatrix2fv),
+                                                                                             m_Location(location),
+                                                                                             m_Transpose(transpose)
+    {
+      m_Value = new float[values.size()];
+      for (int i = 0; i < values.size(); i++)
+        m_Value[i] = values[i];
+      m_Count = 1; // webgl only supports 1 matrix
+    }
+    ~UniformMatrix2fvCommandBuffer()
+    {
+      delete[] m_Value;
+    }
+
+  public:
+    int m_Location;
+    int m_Count;
+    bool m_Transpose;
+    float *m_Value;
+  };
+
+  class UniformMatrix3fvCommandBuffer : public CommandBuffer
+  {
+  public:
+    UniformMatrix3fvCommandBuffer(int location, bool transpose, std::vector<float> values) : CommandBuffer(kCommandTypeUniformMatrix3fv),
+                                                                                             m_Location(location),
+                                                                                             m_Transpose(transpose)
+    {
+      m_Value = new float[values.size()];
+      for (int i = 0; i < values.size(); i++)
+        m_Value[i] = values[i];
+      m_Count = 1; // webgl only supports 1 matrix
+    }
+    ~UniformMatrix3fvCommandBuffer()
+    {
+      delete[] m_Value;
+    }
+
+  public:
+    int m_Location;
+    int m_Count;
+    bool m_Transpose;
+    float *m_Value;
+  };
+
   class UniformMatrix4fvCommandBuffer : public CommandBuffer
   {
   public:
@@ -826,6 +1184,26 @@ namespace renderer
     bool m_A;
   };
 
+  class CullFaceCommandBuffer : public CommandBuffer
+  {
+  public:
+    CullFaceCommandBuffer(int mode) : CommandBuffer(kCommandTypeCullFace), m_Mode(mode) {}
+    ~CullFaceCommandBuffer() {}
+
+  public:
+    int m_Mode;
+  };
+
+  class FrontFaceCommandBuffer : public CommandBuffer
+  {
+  public:
+    FrontFaceCommandBuffer(int mode) : CommandBuffer(kCommandTypeFrontFace), m_Mode(mode) {}
+    ~FrontFaceCommandBuffer() {}
+
+  public:
+    int m_Mode;
+  };
+
   class EnableCommandBuffer : public CommandBuffer
   {
   public:
@@ -912,5 +1290,15 @@ namespace renderer
     int m_RangeMin;
     int m_RangeMax;
     int m_Precision;
+  };
+
+  class GetErrorCommandBuffer : public CommandBuffer
+  {
+  public:
+    GetErrorCommandBuffer() : CommandBuffer(kCommandTypeGetError) {}
+    ~GetErrorCommandBuffer() {}
+
+  public:
+    int m_Error;
   };
 }

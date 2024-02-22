@@ -2,6 +2,7 @@
 #include "renderer/command_buffer.hpp"
 #include "renderer/render_api.hpp"
 #include "renderer/constants.hpp"
+#include "program.hpp"
 
 namespace webgl
 {
@@ -340,6 +341,8 @@ namespace webgl
          InstanceMethod("createProgram", &WebGLRenderingContext::CreateProgram),
          InstanceMethod("linkProgram", &WebGLRenderingContext::LinkProgram),
          InstanceMethod("useProgram", &WebGLRenderingContext::UseProgram),
+         InstanceMethod("getProgramParameter", &WebGLRenderingContext::GetProgramParameter),
+         InstanceMethod("getProgramInfoLog", &WebGLRenderingContext::GetProgramInfoLog),
          InstanceMethod("attachShader", &WebGLRenderingContext::AttachShader),
          InstanceMethod("detachShader", &WebGLRenderingContext::DetachShader),
          InstanceMethod("createShader", &WebGLRenderingContext::CreateShader),
@@ -347,6 +350,8 @@ namespace webgl
          InstanceMethod("shaderSource", &WebGLRenderingContext::ShaderSource),
          InstanceMethod("compileShader", &WebGLRenderingContext::CompileShader),
          InstanceMethod("getShaderSource", &WebGLRenderingContext::GetShaderSource),
+         InstanceMethod("getShaderParameter", &WebGLRenderingContext::GetShaderParameter),
+         InstanceMethod("getShaderInfoLog", &WebGLRenderingContext::GetShaderInfoLog),
          InstanceMethod("createBuffer", &WebGLRenderingContext::CreateBuffer),
          InstanceMethod("bindBuffer", &WebGLRenderingContext::BindBuffer),
          InstanceMethod("bufferData", &WebGLRenderingContext::BufferData),
@@ -364,6 +369,20 @@ namespace webgl
          InstanceMethod("uniform1fv", &WebGLRenderingContext::Uniform1fv),
          InstanceMethod("uniform1i", &WebGLRenderingContext::Uniform1i),
          InstanceMethod("uniform1iv", &WebGLRenderingContext::Uniform1iv),
+         InstanceMethod("uniform2f", &WebGLRenderingContext::Uniform2f),
+         InstanceMethod("uniform2fv", &WebGLRenderingContext::Uniform2fv),
+         InstanceMethod("uniform2i", &WebGLRenderingContext::Uniform2i),
+         InstanceMethod("uniform2iv", &WebGLRenderingContext::Uniform2iv),
+         InstanceMethod("uniform3f", &WebGLRenderingContext::Uniform3f),
+         InstanceMethod("uniform3fv", &WebGLRenderingContext::Uniform3fv),
+         InstanceMethod("uniform3i", &WebGLRenderingContext::Uniform3i),
+         InstanceMethod("uniform3iv", &WebGLRenderingContext::Uniform3iv),
+         InstanceMethod("uniform4f", &WebGLRenderingContext::Uniform4f),
+         InstanceMethod("uniform4fv", &WebGLRenderingContext::Uniform4fv),
+         InstanceMethod("uniform4i", &WebGLRenderingContext::Uniform4i),
+         InstanceMethod("uniform4iv", &WebGLRenderingContext::Uniform4iv),
+         InstanceMethod("uniformMatrix2fv", &WebGLRenderingContext::UniformMatrix2fv),
+         InstanceMethod("uniformMatrix3fv", &WebGLRenderingContext::UniformMatrix3fv),
          InstanceMethod("uniformMatrix4fv", &WebGLRenderingContext::UniformMatrix4fv),
          InstanceMethod("drawArrays", &WebGLRenderingContext::DrawArrays),
          InstanceMethod("drawElements", &WebGLRenderingContext::DrawElements),
@@ -384,10 +403,13 @@ namespace webgl
          InstanceMethod("stencilOp", &WebGLRenderingContext::StencilOp),
          InstanceMethod("stencilOpSeparate", &WebGLRenderingContext::StencilOpSeparate),
          InstanceMethod("colorMask", &WebGLRenderingContext::ColorMask),
+         InstanceMethod("cullFace", &WebGLRenderingContext::CullFace),
+         InstanceMethod("frontFace", &WebGLRenderingContext::FrontFace),
          InstanceMethod("enable", &WebGLRenderingContext::Enable),
          InstanceMethod("disable", &WebGLRenderingContext::Disable),
          InstanceMethod("getParameter", &WebGLRenderingContext::GetParameter),
          InstanceMethod("getShaderPrecisionFormat", &WebGLRenderingContext::GetShaderPrecisionFormat),
+         InstanceMethod("getError", &WebGLRenderingContext::GetError),
          // getter & setter
          InstanceAccessor<&WebGLRenderingContext::DrawingBufferWidthGetter, &WebGLRenderingContext::DrawingBufferWidthSetter>("drawingBufferWidth"),
          InstanceAccessor<&WebGLRenderingContext::DrawingBufferHeightGetter, &WebGLRenderingContext::DrawingBufferHeightSetter>("drawingBufferHeight")});
@@ -421,7 +443,8 @@ namespace webgl
     auto commandBuffer = new renderer::CreateProgramCommandBuffer();
     m_renderAPI->AddCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
-    return Napi::Number::New(env, commandBuffer->m_ProgramId);
+
+    return WebGLProgram::constructor->New({Napi::Number::New(env, commandBuffer->m_ProgramId)});
   }
 
   Napi::Value WebGLRenderingContext::LinkProgram(const Napi::CallbackInfo &info)
@@ -434,8 +457,15 @@ namespace webgl
       Napi::TypeError::New(env, "linkProgram() takes 1 argument.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int program = info[0].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::LinkProgramCommandBuffer(program));
+    // check if the argument is a WebGLProgram type
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLProgram::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "linkProgram() takes a WebGLProgram as argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    WebGLProgram *program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
+    m_renderAPI->AddCommandBuffer(new renderer::LinkProgramCommandBuffer(program->GetId()));
     return env.Undefined();
   }
 
@@ -449,9 +479,65 @@ namespace webgl
       Napi::TypeError::New(env, "useProgram() takes 1 argument.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int program = info[0].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::UseProgramCommandBuffer(program));
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLProgram::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "useProgram() 1st argument must be a WebGLProgram.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    WebGLProgram *program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
+    m_renderAPI->AddCommandBuffer(new renderer::UseProgramCommandBuffer(program->GetId()));
     return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::GetProgramParameter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "getProgramParameter() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLProgram::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "getProgramParameter() 1st argument(program) must be a WebGLProgram.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
+    int pname = info[1].As<Napi::Number>().Int32Value();
+    auto commandBuffer = new renderer::GetProgramParameterCommandBuffer(program->GetId(), pname);
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    commandBuffer->WaitFinished();
+    return Napi::Number::New(env, commandBuffer->m_Value);
+  }
+
+  Napi::Value WebGLRenderingContext::GetProgramInfoLog(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "getProgramInfoLog() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLProgram::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "getProgramInfoLog() 1st argument(program) must be a WebGLProgram.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
+    auto commandBuffer = new renderer::GetProgramInfoLogCommandBuffer(program->GetId());
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    commandBuffer->WaitFinished();
+    return Napi::String::New(env, commandBuffer->m_InfoLog);
   }
 
   Napi::Value WebGLRenderingContext::AttachShader(const Napi::CallbackInfo &info)
@@ -464,9 +550,22 @@ namespace webgl
       Napi::TypeError::New(env, "attachShader() takes 2 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int program = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLProgram::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "attachShader() 1st argument(program) must be a WebGLProgram.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[1].IsNumber())
+    {
+      Napi::TypeError::New(env, "attachShader() 2nd argument(shader) must be a number.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     int shader = info[1].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::AttachShaderCommandBuffer(program, shader));
+    m_renderAPI->AddCommandBuffer(new renderer::AttachShaderCommandBuffer(program->GetId(), shader));
     return env.Undefined();
   }
 
@@ -480,9 +579,16 @@ namespace webgl
       Napi::TypeError::New(env, "detachShader() takes 2 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int program = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLProgram::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "detachShader() 1st argument(program) must be a WebGLProgram.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     int shader = info[1].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::DetachShaderCommandBuffer(program, shader));
+    m_renderAPI->AddCommandBuffer(new renderer::DetachShaderCommandBuffer(program->GetId(), shader));
     return env.Undefined();
   }
 
@@ -571,6 +677,41 @@ namespace webgl
     m_renderAPI->AddCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     return Napi::String::New(env, commandBuffer->m_Source);
+  }
+
+  Napi::Value WebGLRenderingContext::GetShaderParameter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "getShaderParameter() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int shader = info[0].As<Napi::Number>().Int32Value();
+    int pname = info[1].As<Napi::Number>().Int32Value();
+    auto commandBuffer = new renderer::GetShaderParameterCommandBuffer(shader, pname);
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    commandBuffer->WaitFinished();
+    return Napi::Number::New(env, commandBuffer->m_Value);
+  }
+
+  Napi::Value WebGLRenderingContext::GetShaderInfoLog(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "getShaderInfoLog() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int shader = info[0].As<Napi::Number>().Int32Value();
+    auto commandBuffer = new renderer::GetShaderInfoLogCommandBuffer(shader);
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    commandBuffer->WaitFinished();
+    return Napi::String::New(env, commandBuffer->m_InfoLog);
   }
 
   Napi::Value WebGLRenderingContext::CreateBuffer(const Napi::CallbackInfo &info)
@@ -781,11 +922,17 @@ namespace webgl
       Napi::TypeError::New(env, "getAttribLocation() takes 2 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLProgram::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "getAttribLocation() 1st argument(program) must be a WebGLProgram.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
 
-    int program = info[0].As<Napi::Number>().Int32Value();
+    auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     std::string name = info[1].As<Napi::String>().Utf8Value();
 
-    auto commandBuffer = new renderer::GetAttribLocationCommandBuffer(program, name.c_str());
+    auto commandBuffer = new renderer::GetAttribLocationCommandBuffer(program->GetId(), name.c_str());
     m_renderAPI->AddCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     return Napi::Number::New(env, commandBuffer->m_Location);
@@ -801,11 +948,17 @@ namespace webgl
       Napi::TypeError::New(env, "getUniformLocation() takes 2 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLProgram::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "getUniformLocation() 1st argument(program) must be a WebGLProgram.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
 
-    int program = info[0].As<Napi::Number>().Int32Value();
+    auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     std::string name = info[1].As<Napi::String>().Utf8Value();
 
-    auto commandBuffer = new renderer::GetUniformLocationCommandBuffer(program, name.c_str());
+    auto commandBuffer = new renderer::GetUniformLocationCommandBuffer(program->GetId(), name.c_str());
     m_renderAPI->AddCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     return Napi::Number::New(env, commandBuffer->m_Location);
@@ -885,6 +1038,346 @@ namespace webgl
       data[i] = array.Get(i).ToNumber().Int32Value();
 
     auto commandBuffer = new renderer::Uniform1ivCommandBuffer(location, data);
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Uniform2f(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3)
+    {
+      Napi::TypeError::New(env, "uniform2f() takes 3 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    float x = info[1].As<Napi::Number>().FloatValue();
+    float y = info[2].As<Napi::Number>().FloatValue();
+    m_renderAPI->AddCommandBuffer(new renderer::Uniform2fCommandBuffer(location, x, y));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Uniform2fv(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "uniform2fv() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    Napi::Float32Array array = info[1].As<Napi::Float32Array>();
+    size_t length = array.ElementLength();
+    if (length != 2)
+    {
+      Napi::TypeError::New(env, "uniform2fv() takes 2 float elements array.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    std::vector<float> data(length);
+    for (size_t i = 0; i < length; i++)
+      data[i] = array.Get(i).ToNumber().FloatValue();
+
+    auto commandBuffer = new renderer::Uniform2fvCommandBuffer(location, data);
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Uniform2i(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3)
+    {
+      Napi::TypeError::New(env, "uniform2i() takes 3 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    int x = info[1].As<Napi::Number>().Int32Value();
+    int y = info[2].As<Napi::Number>().Int32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::Uniform2iCommandBuffer(location, x, y));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Uniform2iv(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "uniform2iv() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    Napi::Int32Array array = info[1].As<Napi::Int32Array>();
+    size_t length = array.ElementLength();
+    if (length != 2)
+    {
+      Napi::TypeError::New(env, "uniform2iv() takes 2 int elements array.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    std::vector<int> data(length);
+    for (size_t i = 0; i < length; i++)
+      data[i] = array.Get(i).ToNumber().Int32Value();
+
+    auto commandBuffer = new renderer::Uniform2ivCommandBuffer(location, data);
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Uniform3f(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 4)
+    {
+      Napi::TypeError::New(env, "uniform3f() takes 4 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    float x = info[1].As<Napi::Number>().FloatValue();
+    float y = info[2].As<Napi::Number>().FloatValue();
+    float z = info[3].As<Napi::Number>().FloatValue();
+    m_renderAPI->AddCommandBuffer(new renderer::Uniform3fCommandBuffer(location, x, y, z));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Uniform3fv(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "uniform3fv() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    Napi::Float32Array array = info[1].As<Napi::Float32Array>();
+    size_t length = array.ElementLength();
+    if (length != 3)
+    {
+      Napi::TypeError::New(env, "uniform3fv() takes 3 float elements array.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    std::vector<float> data(length);
+    for (size_t i = 0; i < length; i++)
+      data[i] = array.Get(i).ToNumber().FloatValue();
+
+    auto commandBuffer = new renderer::Uniform3fvCommandBuffer(location, data);
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Uniform3i(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 4)
+    {
+      Napi::TypeError::New(env, "uniform3i() takes 4 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    int x = info[1].As<Napi::Number>().Int32Value();
+    int y = info[2].As<Napi::Number>().Int32Value();
+    int z = info[3].As<Napi::Number>().Int32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::Uniform3iCommandBuffer(location, x, y, z));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Uniform3iv(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "uniform3iv() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    Napi::Int32Array array = info[1].As<Napi::Int32Array>();
+    size_t length = array.ElementLength();
+    if (length != 3)
+    {
+      Napi::TypeError::New(env, "uniform3iv() takes 3 int elements array.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    std::vector<int> data(length);
+    for (size_t i = 0; i < length; i++)
+      data[i] = array.Get(i).ToNumber().Int32Value();
+
+    auto commandBuffer = new renderer::Uniform3ivCommandBuffer(location, data);
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Uniform4f(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 5)
+    {
+      Napi::TypeError::New(env, "uniform4f() takes 5 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    float x = info[1].As<Napi::Number>().FloatValue();
+    float y = info[2].As<Napi::Number>().FloatValue();
+    float z = info[3].As<Napi::Number>().FloatValue();
+    float w = info[4].As<Napi::Number>().FloatValue();
+    m_renderAPI->AddCommandBuffer(new renderer::Uniform4fCommandBuffer(location, x, y, z, w));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Uniform4fv(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "uniform4fv() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    Napi::Float32Array array = info[1].As<Napi::Float32Array>();
+    size_t length = array.ElementLength();
+    if (length != 4)
+    {
+      Napi::TypeError::New(env, "uniform4fv() takes 4 float elements array.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    std::vector<float> data(length);
+    for (size_t i = 0; i < length; i++)
+      data[i] = array.Get(i).ToNumber().FloatValue();
+
+    auto commandBuffer = new renderer::Uniform4fvCommandBuffer(location, data);
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Uniform4i(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 5)
+    {
+      Napi::TypeError::New(env, "uniform4i() takes 5 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    int x = info[1].As<Napi::Number>().Int32Value();
+    int y = info[2].As<Napi::Number>().Int32Value();
+    int z = info[3].As<Napi::Number>().Int32Value();
+    int w = info[4].As<Napi::Number>().Int32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::Uniform4iCommandBuffer(location, x, y, z, w));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::Uniform4iv(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "uniform4iv() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    Napi::Int32Array array = info[1].As<Napi::Int32Array>();
+    size_t length = array.ElementLength();
+    if (length != 4)
+    {
+      Napi::TypeError::New(env, "uniform4iv() takes 4 int elements array.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    std::vector<int> data(length);
+    for (size_t i = 0; i < length; i++)
+      data[i] = array.Get(i).ToNumber().Int32Value();
+
+    auto commandBuffer = new renderer::Uniform4ivCommandBuffer(location, data);
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::UniformMatrix2fv(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3)
+    {
+      Napi::TypeError::New(env, "uniformMatrix2fv() takes 3 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    bool transpose = info[1].As<Napi::Boolean>().Value();
+    Napi::Float32Array array = info[2].As<Napi::Float32Array>();
+    size_t length = array.ElementLength();
+    if (length != 4)
+    {
+      Napi::TypeError::New(env, "uniformMatrix2fv() takes 4 float elements array.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    std::vector<float> data(length);
+    for (size_t i = 0; i < length; i++)
+      data[i] = array.Get(i).ToNumber().FloatValue();
+
+    auto commandBuffer = new renderer::UniformMatrix2fvCommandBuffer(
+        location,
+        transpose,
+        data);
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::UniformMatrix3fv(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3)
+    {
+      Napi::TypeError::New(env, "uniformMatrix3fv() takes 3 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int location = info[0].As<Napi::Number>().Int32Value();
+    bool transpose = info[1].As<Napi::Boolean>().Value();
+    Napi::Float32Array array = info[2].As<Napi::Float32Array>();
+    size_t length = array.ElementLength();
+    if (length != 9)
+    {
+      Napi::TypeError::New(env, "uniformMatrix3fv() takes 9 float elements array.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    std::vector<float> data(length);
+    for (size_t i = 0; i < length; i++)
+      data[i] = array.Get(i).ToNumber().FloatValue();
+
+    auto commandBuffer = new renderer::UniformMatrix3fvCommandBuffer(
+        location,
+        transpose,
+        data);
     m_renderAPI->AddCommandBuffer(commandBuffer);
     return env.Undefined();
   }
@@ -1208,6 +1701,26 @@ namespace webgl
     return env.Undefined();
   }
 
+  Napi::Value WebGLRenderingContext::CullFace(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    uint32_t mode = info[0].ToNumber().Uint32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::CullFaceCommandBuffer(mode));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::FrontFace(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    uint32_t mode = info[0].ToNumber().Uint32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::FrontFaceCommandBuffer(mode));
+    return env.Undefined();
+  }
+
   Napi::Value WebGLRenderingContext::Enable(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -1363,6 +1876,16 @@ namespace webgl
     obj.Set("rangeMax", Napi::Number::New(env, commandBuffer->m_RangeMax));
     obj.Set("precision", Napi::Number::New(env, commandBuffer->m_Precision));
     return obj;
+  }
+
+  Napi::Value WebGLRenderingContext::GetError(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    auto commandBuffer = new renderer::GetErrorCommandBuffer();
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    commandBuffer->WaitFinished();
+    return Napi::Number::New(env, commandBuffer->m_Error);
   }
 
   Napi::Value WebGLRenderingContext::DrawingBufferWidthGetter(const Napi::CallbackInfo &info)

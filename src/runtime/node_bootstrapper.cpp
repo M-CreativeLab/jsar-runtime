@@ -35,6 +35,7 @@ bool NodeBootstrapper::initialize()
       "-e",
       std::string(jsbundle_source, jsbundle_size)};
 
+  args.insert(args.begin() + 1, "--inspect=9229");
   // if (isDebug)
   // {
   //   args.insert(args.begin() + 1, "--inspect=9229");
