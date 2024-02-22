@@ -39,6 +39,7 @@ namespace renderer
     kCommandTypeGenerateMipmap,
     /** Vertex Attribute */
     kCommandTypeEnableVertexAttribArray,
+    kCommandTypeDisableVertexAttribArray,
     kCommandTypeVertexAttribPointer,
     kCommandTypeGetAttribLocation,
     kCommandTypeGetUniformLocation,
@@ -479,6 +480,17 @@ namespace renderer
     EnableVertexAttribArrayCommandBuffer(int index) : CommandBuffer(kCommandTypeEnableVertexAttribArray),
                                                       m_Index(index) {}
     ~EnableVertexAttribArrayCommandBuffer() {}
+
+  public:
+    int m_Index;
+  };
+
+  class DisableVertexAttribArrayCommandBuffer : public CommandBuffer
+  {
+  public:
+    DisableVertexAttribArrayCommandBuffer(int index) : CommandBuffer(kCommandTypeDisableVertexAttribArray),
+                                                      m_Index(index) {}
+    ~DisableVertexAttribArrayCommandBuffer() {}
 
   public:
     int m_Index;

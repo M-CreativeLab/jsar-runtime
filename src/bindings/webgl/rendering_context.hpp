@@ -36,6 +36,7 @@ namespace webgl
     Napi::Value ActiveTexture(const Napi::CallbackInfo &info);
     Napi::Value GenerateMipmap(const Napi::CallbackInfo &info);
     Napi::Value EnableVertexAttribArray(const Napi::CallbackInfo &info);
+    Napi::Value DisableVertexAttribArray(const Napi::CallbackInfo &info);
     Napi::Value VertexAttribPointer(const Napi::CallbackInfo &info);
     Napi::Value GetAttribLocation(const Napi::CallbackInfo &info);
     Napi::Value GetUniformLocation(const Napi::CallbackInfo &info);

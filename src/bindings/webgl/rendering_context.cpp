@@ -362,6 +362,7 @@ namespace webgl
          InstanceMethod("activeTexture", &WebGLRenderingContext::ActiveTexture),
          InstanceMethod("generateMipmap", &WebGLRenderingContext::GenerateMipmap),
          InstanceMethod("enableVertexAttribArray", &WebGLRenderingContext::EnableVertexAttribArray),
+         InstanceMethod("disableVertexAttribArray", &WebGLRenderingContext::DisableVertexAttribArray),
          InstanceMethod("vertexAttribPointer", &WebGLRenderingContext::VertexAttribPointer),
          InstanceMethod("getAttribLocation", &WebGLRenderingContext::GetAttribLocation),
          InstanceMethod("getUniformLocation", &WebGLRenderingContext::GetUniformLocation),
@@ -881,6 +882,21 @@ namespace webgl
     }
     int index = info[0].As<Napi::Number>().Int32Value();
     m_renderAPI->AddCommandBuffer(new renderer::EnableVertexAttribArrayCommandBuffer(index));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::DisableVertexAttribArray(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "disableVertexAttribArray() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int index = info[0].As<Napi::Number>().Int32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::DisableVertexAttribArrayCommandBuffer(index));
     return env.Undefined();
   }
 

@@ -736,6 +736,13 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			EnableVertexAttribArray(enableVertexAttribArrayCommandBuffer->m_Index);
 			break;
 		}
+		case kCommandTypeDisableVertexAttribArray:
+		{
+			auto disableVertexAttribArrayCommandBuffer = static_cast<DisableVertexAttribArrayCommandBuffer *>(commandBuffer);
+			glDisableVertexAttribArray(disableVertexAttribArrayCommandBuffer->m_Index);
+			DEBUG_GL_CALL2(0, "disableVertexAttribArray", disableVertexAttribArrayCommandBuffer->m_Index);
+			break;
+		}
 		case kCommandTypeVertexAttribPointer:
 		{
 			auto vertexAttribPointerCommandBuffer = static_cast<VertexAttribPointerCommandBuffer *>(commandBuffer);
