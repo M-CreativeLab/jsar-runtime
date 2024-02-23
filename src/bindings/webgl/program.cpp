@@ -27,6 +27,21 @@ namespace webgl
     id_ = info[0].As<Napi::Number>().Int32Value();
   }
 
+  void WebGLProgram::SetUniformLocation(const std::string &name, int location)
+  {
+    uniformLocations_[name] = location;
+  }
+
+  bool WebGLProgram::HasUniformLocation(const std::string &name)
+  {
+    return uniformLocations_.find(name) != uniformLocations_.end();
+  }
+
+  int WebGLProgram::GetUniformLocation(const std::string &name)
+  {
+    return uniformLocations_[name];
+  }
+
   Napi::Value WebGLProgram::ToString(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();

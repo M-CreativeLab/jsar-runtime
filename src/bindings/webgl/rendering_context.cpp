@@ -468,7 +468,13 @@ namespace webgl
     }
 
     WebGLProgram *program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
-    m_renderAPI->AddCommandBuffer(new renderer::LinkProgramCommandBuffer(program->GetId()));
+    auto commandBuffer = new renderer::LinkProgramCommandBuffer(program->GetId());
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    commandBuffer->WaitFinished();
+
+    auto uniforms = commandBuffer->m_UniformLocations;
+    for (auto it = uniforms.begin(); it != uniforms.end(); ++it)
+      program->SetUniformLocation(it->first, it->second);
     return env.Undefined();
   }
 
@@ -976,15 +982,10 @@ namespace webgl
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     std::string name = info[1].As<Napi::String>().Utf8Value();
 
-    auto commandBuffer = new renderer::GetUniformLocationCommandBuffer(program->GetId(), name.c_str());
-    m_renderAPI->AddCommandBuffer(commandBuffer);
-    commandBuffer->WaitFinished();
-
-    int value = commandBuffer->m_Location;
-    if (value == -1)
+    if (!program->HasUniformLocation(name))
       return env.Null();
     else
-      return WebGLUniformLocation::constructor->New({Napi::Number::New(env, value)});
+      return WebGLUniformLocation::constructor->New({Napi::Number::New(env, program->GetUniformLocation(name))});
   }
 
   Napi::Value WebGLRenderingContext::Uniform1f(const Napi::CallbackInfo &info)

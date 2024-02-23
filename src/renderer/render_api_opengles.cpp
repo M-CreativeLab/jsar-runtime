@@ -375,6 +375,28 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 		{
 			auto linkProgramCommandBuffer = static_cast<LinkProgramCommandBuffer *>(commandBuffer);
 			LinkProgram(linkProgramCommandBuffer->m_ProgramId);
+
+			// Update the locations of the uniforms and attributes
+			GLuint program = linkProgramCommandBuffer->m_ProgramId;
+			GLint numUniforms = 0;
+			glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &numUniforms);
+			for (int i = 0; i < numUniforms; i++)
+			{
+				GLsizei nameLength;
+				GLint size;
+				GLenum type;
+				GLchar name[256];
+
+				glGetActiveUniform(program, i, sizeof(name) - 1, &nameLength, &size, &type, name);
+				name[nameLength] = '\0';
+
+				GLint location = glGetUniformLocation(program, name);
+				if (location == -1)
+					continue;
+				linkProgramCommandBuffer->m_UniformLocations.insert(
+						std::pair<std::string, int>(name, location));
+			}
+			// TODO: add active attributes?
 			break;
 		}
 		case kCommandTypeUseProgram:

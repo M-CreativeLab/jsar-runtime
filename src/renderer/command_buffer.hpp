@@ -3,6 +3,7 @@
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
+#include <map>
 
 using namespace std;
 
@@ -146,6 +147,7 @@ namespace renderer
 
   public:
     int m_ProgramId;
+    std::map<std::string, int> m_UniformLocations;
   };
 
   class UseProgramCommandBuffer : public CommandBuffer
