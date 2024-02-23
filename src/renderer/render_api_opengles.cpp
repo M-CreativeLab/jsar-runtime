@@ -89,7 +89,6 @@ public:
 
 private:
 	void CreateResources();
-	void __DEBUG_GL_CALL__(int r, const char *name, ...);
 
 private:
 	UnityGfxRenderer m_APIType;
@@ -240,33 +239,6 @@ void RenderAPI_OpenGLCoreES::ProcessDeviceEvent(UnityGfxDeviceEventType type, IU
 	}
 }
 
-void inline RenderAPI_OpenGLCoreES::__DEBUG_GL_CALL__(int r, const char *name, ...)
-{
-	if (!m_DebugEnabled)
-		return;
-
-	va_list args;
-	va_start(args, name);
-
-	std::string argStr;
-	const char *sep = "";
-
-	while (true)
-	{
-		int arg = va_arg(args, int);
-		if (arg == DEBUG_ARG_END)
-			break;
-		argStr += sep;
-		argStr += std::to_string(arg);
-		sep = ", ";
-	}
-
-	DEBUG("Unity", "OpenGL::%s(%s) => %d, err=%d", name, argStr.c_str(), r, glGetError());
-}
-
-#define DEBUG_GL_CALL(r, name) __DEBUG_GL_CALL__(r, name, DEBUG_ARG_END)
-#define DEBUG_GL_CALL2(r, name, ...) __DEBUG_GL_CALL__(r, name, __VA_ARGS__, DEBUG_ARG_END)
-
 int RenderAPI_OpenGLCoreES::GetDrawingBufferWidth()
 {
 	return m_ViewportWidth;
@@ -280,92 +252,78 @@ int RenderAPI_OpenGLCoreES::GetDrawingBufferHeight()
 int RenderAPI_OpenGLCoreES::CreateProgram()
 {
 	GLuint ret = glCreateProgram();
-	DEBUG_GL_CALL2(ret, "createProgram", 0);
 	return ret;
 }
 
 void RenderAPI_OpenGLCoreES::LinkProgram(int program)
 {
 	glLinkProgram(program);
-	DEBUG_GL_CALL2(program, "linkProgram", program);
 }
 
 void RenderAPI_OpenGLCoreES::UseProgram(int program)
 {
 	glUseProgram(program);
-	DEBUG_GL_CALL2(program, "useProgram", program);
 }
 
 void RenderAPI_OpenGLCoreES::AttachShader(int program, int shader)
 {
 	glAttachShader(program, shader);
-	DEBUG_GL_CALL2(program, "attachShader", program, shader);
 }
 
 void RenderAPI_OpenGLCoreES::DetachShader(int program, int shader)
 {
 	glDetachShader(program, shader);
-	DEBUG_GL_CALL2(program, "detachShader", program, shader);
 }
 
 int RenderAPI_OpenGLCoreES::CreateShader(int type)
 {
 	GLuint ret = glCreateShader(type);
-	DEBUG_GL_CALL2(ret, "createShader", type);
 	return ret;
 }
 
 void RenderAPI_OpenGLCoreES::DeleteShader(int shader)
 {
 	glDeleteShader(shader);
-	DEBUG_GL_CALL2(shader, "deleteShader", 0);
 }
 
 void RenderAPI_OpenGLCoreES::ShaderSource(int shader, const char *source, uint32_t length)
 {
 	const GLint *lengths = (const GLint *)&length;
 	glShaderSource(shader, 1, &source, lengths);
-	DEBUG_GL_CALL2(shader, "shaderSource", shader);
 }
 
 void RenderAPI_OpenGLCoreES::CompileShader(int shader)
 {
 	glCompileShader(shader);
-	DEBUG_GL_CALL2(shader, "compileShader", shader);
 }
 
 int RenderAPI_OpenGLCoreES::CreateBuffer()
 {
 	GLuint buffer;
 	glGenBuffers(1, &buffer);
-	DEBUG_GL_CALL(buffer, "createBuffer");
 	return buffer;
 }
 
 void RenderAPI_OpenGLCoreES::BindBuffer(int target, int buffer)
 {
 	glBindBuffer(target, buffer);
-	DEBUG_GL_CALL2(buffer, "bindBuffer", target, buffer);
 }
 
 void RenderAPI_OpenGLCoreES::BufferData(int target, int size, const void *data, int usage)
 {
 	glBufferData(target, size, data, usage);
-	DEBUG_GL_CALL2(0, "bufferData", target, size);
 }
 
 int RenderAPI_OpenGLCoreES::CreateTexture()
 {
 	GLuint texture;
 	glGenTextures(1, &texture);
-	DEBUG_GL_CALL2(0, "createTexture", texture);
 	return texture;
 }
 
 void RenderAPI_OpenGLCoreES::BindTexture(int target, int texture)
 {
 	glBindTexture(target, texture);
-	DEBUG_GL_CALL2(0, "bindTexture", target, texture);
 }
 
 void RenderAPI_OpenGLCoreES::TexImage2D(
@@ -380,123 +338,103 @@ void RenderAPI_OpenGLCoreES::TexImage2D(
 		const void *pixels)
 {
 	glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
-	DEBUG_GL_CALL2(0, "texImage2D", target, level, internalformat, width, height, border, format, type);
 }
 
 void RenderAPI_OpenGLCoreES::TexParameteri(int target, int pname, int param)
 {
 	glTexParameteri(target, pname, param);
-	DEBUG_GL_CALL2(0, "texParameteri", target, pname, param);
 }
 
 void RenderAPI_OpenGLCoreES::ActiveTexture(int texture)
 {
 	glActiveTexture(texture);
-	DEBUG_GL_CALL2(0, "activeTexture", texture);
 }
 
 void RenderAPI_OpenGLCoreES::GenerateMipmap(int target)
 {
 	glGenerateMipmap(target);
-	DEBUG_GL_CALL2(0, "generateMipmap", target);
 }
 
 void RenderAPI_OpenGLCoreES::EnableVertexAttribArray(int index)
 {
 	glEnableVertexAttribArray(index);
-	DEBUG_GL_CALL2(0, "enableVertexAttribArray", index);
 }
 
 void RenderAPI_OpenGLCoreES::VertexAttribPointer(int index, int size, int type, bool normalized, int stride, const void *offset)
 {
 	glVertexAttribPointer(index, size, type, normalized, stride, offset);
-	DEBUG_GL_CALL2(0, "vertexAttribPointer", index, size, type, normalized, stride);
 }
 
 int RenderAPI_OpenGLCoreES::GetAttribLocation(int program, const char *name)
 {
 	GLint ret = glGetAttribLocation(program, name);
-	DEBUG_GL_CALL2(ret, "getAttribLocation", program);
 	return ret;
 }
 
 int RenderAPI_OpenGLCoreES::GetUniformLocation(int program, const char *name)
 {
 	GLint ret = glGetUniformLocation(program, name);
-	DEBUG_GL_CALL2(ret, "getUniformLocation", program);
 	return ret;
 }
 
 void RenderAPI_OpenGLCoreES::UniformMatrix4fv(int location, int count, bool transpose, const float *value)
 {
 	glUniformMatrix4fv(location, count, transpose, value);
-	DEBUG_GL_CALL2(0, "uniformMatrix4fv", location, count, transpose);
 }
 
 void RenderAPI_OpenGLCoreES::DrawArrays(int mode, int first, int count)
 {
 	glDrawArrays(mode, first, count);
-	DEBUG_GL_CALL2(0, "drawArrays", mode, first, count);
 }
 
 void RenderAPI_OpenGLCoreES::DrawElements(int mode, int count, int type, const void *indices)
 {
 	glDrawElements(mode, count, type, indices);
-	DEBUG_GL_CALL2(0, "drawElements", mode, count, type);
 }
 
 void RenderAPI_OpenGLCoreES::SetViewport(int x, int y, int width, int height)
 {
 	glViewport(x, y, width, height);
-	DEBUG_GL_CALL2(0, "viewport", x, y, width, height, DEBUG_ARG_END);
 }
 
 void RenderAPI_OpenGLCoreES::SetScissor(int x, int y, int width, int height)
 {
 	glScissor(x, y, width, height);
-	DEBUG_GL_CALL2(0, "scissor", x, y, width, height);
 }
 
 void RenderAPI_OpenGLCoreES::ClearColor(float r, float g, float b, float a)
 {
 	glClearColor(r, g, b, a);
-	DEBUG_GL_CALL2(0, "clearColor", r, g, b, a);
 }
 
 void RenderAPI_OpenGLCoreES::ClearDepth(float depth)
 {
 	glClearDepthf(depth);
-	DEBUG_GL_CALL2(0, "clearDepth", depth);
 }
 
 void RenderAPI_OpenGLCoreES::ClearStencil(uint32_t stencil)
 {
 	glClearStencil(stencil);
-	DEBUG_GL_CALL2(0, "clearStencil", stencil);
 }
 
 void RenderAPI_OpenGLCoreES::Clear(uint32_t mask)
 {
 	glClear(mask);
-	DEBUG_GL_CALL2(0, "clear", mask);
 }
 
 void RenderAPI_OpenGLCoreES::DepthFunc(int func)
 {
 	glDepthFunc(func);
-	DEBUG_GL_CALL2(0, "depthFunc", func);
 }
 
 void RenderAPI_OpenGLCoreES::Enable(uint32_t cap)
 {
 	glEnable(cap);
-	DEBUG_GL_CALL2(0, "enable", cap);
 }
 
 void RenderAPI_OpenGLCoreES::Disable(uint32_t cap)
 {
 	glDisable(cap);
-	DEBUG_GL_CALL2(0, "disable", cap);
 }
 
 void RenderAPI_OpenGLCoreES::StartFrame()
@@ -545,9 +483,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					getProgramParameterCommandBuffer->m_Pname,
 					&ret);
 			getProgramParameterCommandBuffer->m_Value = ret;
-			DEBUG_GL_CALL2(ret, "getProgramParameter",
-										 getProgramParameterCommandBuffer->m_ProgramId,
-										 getProgramParameterCommandBuffer->m_Pname);
 			break;
 		}
 		case kCommandTypeGetProgramInfoLog:
@@ -560,8 +495,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			glGetProgramInfoLog(getProgramInfoLogCommandBuffer->m_ProgramId, infoLogLength, NULL, infoLog);
 			getProgramInfoLogCommandBuffer->CopyInfoLog(infoLog, infoLogLength);
 			delete[] infoLog;
-			DEBUG_GL_CALL2(0, "getProgramInfoLog",
-										 getProgramInfoLogCommandBuffer->m_ProgramId);
 			break;
 		}
 		case kCommandTypeAttachShader:
@@ -625,9 +558,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			}
 			getShaderSourceCommandBuffer->CopySource(source, maxLength);
 			delete[] source;
-
-			DEBUG_GL_CALL2(0, "getShaderSource",
-										 getShaderSourceCommandBuffer->m_ShaderId);
 			break;
 		}
 		case kCommandTypeGetShaderParameter:
@@ -639,9 +569,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					getShaderParameterCommandBuffer->m_Pname,
 					&ret);
 			getShaderParameterCommandBuffer->m_Value = ret;
-			DEBUG_GL_CALL2(ret, "getShaderParameter",
-										 getShaderParameterCommandBuffer->m_ShaderId,
-										 getShaderParameterCommandBuffer->m_Pname);
 			break;
 		}
 		case kCommandTypeGetShaderInfoLog:
@@ -654,8 +581,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			glGetShaderInfoLog(getShaderInfoLogCommandBuffer->m_ShaderId, infoLogLength, NULL, infoLog);
 			getShaderInfoLogCommandBuffer->CopyInfoLog(infoLog, infoLogLength);
 			delete[] infoLog;
-			DEBUG_GL_CALL2(0, "getShaderInfoLog",
-										 getShaderInfoLogCommandBuffer->m_ShaderId);
 			break;
 		}
 		case kCommandTypeCreateBuffer:
@@ -740,7 +665,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 		{
 			auto disableVertexAttribArrayCommandBuffer = static_cast<DisableVertexAttribArrayCommandBuffer *>(commandBuffer);
 			glDisableVertexAttribArray(disableVertexAttribArrayCommandBuffer->m_Index);
-			DEBUG_GL_CALL2(0, "disableVertexAttribArray", disableVertexAttribArrayCommandBuffer->m_Index);
 			break;
 		}
 		case kCommandTypeVertexAttribPointer:
@@ -773,8 +697,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 		{
 			auto uniform1fCommandBuffer = static_cast<Uniform1fCommandBuffer *>(commandBuffer);
 			glUniform1f(uniform1fCommandBuffer->m_Location, uniform1fCommandBuffer->m_V0);
-			DEBUG_GL_CALL2(0, "uniform1f",
-										 uniform1fCommandBuffer->m_Location, uniform1fCommandBuffer->m_V0);
 			break;
 		}
 		case kCommandTypeUniform1fv:
@@ -784,16 +706,12 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					uniform1fvCommandBuffer->m_Location,
 					uniform1fvCommandBuffer->m_Count,
 					uniform1fvCommandBuffer->m_Value);
-			DEBUG_GL_CALL2(0, "uniform1fv",
-										 uniform1fvCommandBuffer->m_Location, uniform1fvCommandBuffer->m_Count);
 			break;
 		}
 		case kCommandTypeUniform1i:
 		{
 			auto uniform1iCommandBuffer = static_cast<Uniform1iCommandBuffer *>(commandBuffer);
 			glUniform1i(uniform1iCommandBuffer->m_Location, uniform1iCommandBuffer->m_V0);
-			DEBUG_GL_CALL2(0, "uniform1i",
-										 uniform1iCommandBuffer->m_Location, uniform1iCommandBuffer->m_V0);
 			break;
 		}
 		case kCommandTypeUniform1iv:
@@ -803,16 +721,12 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					uniform1ivCommandBuffer->m_Location,
 					uniform1ivCommandBuffer->m_Count,
 					uniform1ivCommandBuffer->m_Value);
-			DEBUG_GL_CALL2(0, "uniform1iv",
-										 uniform1ivCommandBuffer->m_Location, uniform1ivCommandBuffer->m_Count);
 			break;
 		}
 		case kCommandTypeUniform2f:
 		{
 			auto uniform2fCommandBuffer = static_cast<Uniform2fCommandBuffer *>(commandBuffer);
 			glUniform2f(uniform2fCommandBuffer->m_Location, uniform2fCommandBuffer->m_V0, uniform2fCommandBuffer->m_V1);
-			DEBUG_GL_CALL2(0, "uniform2f",
-										 uniform2fCommandBuffer->m_Location, uniform2fCommandBuffer->m_V0, uniform2fCommandBuffer->m_V1);
 			break;
 		}
 		case kCommandTypeUniform2fv:
@@ -822,16 +736,12 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					uniform2fvCommandBuffer->m_Location,
 					uniform2fvCommandBuffer->m_Count,
 					uniform2fvCommandBuffer->m_Value);
-			DEBUG_GL_CALL2(0, "uniform2fv",
-										 uniform2fvCommandBuffer->m_Location, uniform2fvCommandBuffer->m_Count);
 			break;
 		}
 		case kCommandTypeUniform2i:
 		{
 			auto uniform2iCommandBuffer = static_cast<Uniform2iCommandBuffer *>(commandBuffer);
 			glUniform2i(uniform2iCommandBuffer->m_Location, uniform2iCommandBuffer->m_V0, uniform2iCommandBuffer->m_V1);
-			DEBUG_GL_CALL2(0, "uniform2i",
-										 uniform2iCommandBuffer->m_Location, uniform2iCommandBuffer->m_V0, uniform2iCommandBuffer->m_V1);
 			break;
 		}
 		case kCommandTypeUniform2iv:
@@ -841,16 +751,12 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					uniform2ivCommandBuffer->m_Location,
 					uniform2ivCommandBuffer->m_Count,
 					uniform2ivCommandBuffer->m_Value);
-			DEBUG_GL_CALL2(0, "uniform2iv",
-										 uniform2ivCommandBuffer->m_Location, uniform2ivCommandBuffer->m_Count);
 			break;
 		}
 		case kCommandTypeUniform3f:
 		{
 			auto uniform3fCommandBuffer = static_cast<Uniform3fCommandBuffer *>(commandBuffer);
 			glUniform3f(uniform3fCommandBuffer->m_Location, uniform3fCommandBuffer->m_V0, uniform3fCommandBuffer->m_V1, uniform3fCommandBuffer->m_V2);
-			DEBUG_GL_CALL2(0, "uniform3f",
-										 uniform3fCommandBuffer->m_Location, uniform3fCommandBuffer->m_V0, uniform3fCommandBuffer->m_V1, uniform3fCommandBuffer->m_V2);
 			break;
 		}
 		case kCommandTypeUniform3fv:
@@ -860,16 +766,12 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					uniform3fvCommandBuffer->m_Location,
 					uniform3fvCommandBuffer->m_Count,
 					uniform3fvCommandBuffer->m_Value);
-			DEBUG_GL_CALL2(0, "uniform3fv",
-										 uniform3fvCommandBuffer->m_Location, uniform3fvCommandBuffer->m_Count);
 			break;
 		}
 		case kCommandTypeUniform3i:
 		{
 			auto uniform3iCommandBuffer = static_cast<Uniform3iCommandBuffer *>(commandBuffer);
 			glUniform3i(uniform3iCommandBuffer->m_Location, uniform3iCommandBuffer->m_V0, uniform3iCommandBuffer->m_V1, uniform3iCommandBuffer->m_V2);
-			DEBUG_GL_CALL2(0, "uniform3i",
-										 uniform3iCommandBuffer->m_Location, uniform3iCommandBuffer->m_V0, uniform3iCommandBuffer->m_V1, uniform3iCommandBuffer->m_V2);
 			break;
 		}
 		case kCommandTypeUniform3iv:
@@ -879,16 +781,12 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					uniform3ivCommandBuffer->m_Location,
 					uniform3ivCommandBuffer->m_Count,
 					uniform3ivCommandBuffer->m_Value);
-			DEBUG_GL_CALL2(0, "uniform3iv",
-										 uniform3ivCommandBuffer->m_Location, uniform3ivCommandBuffer->m_Count);
 			break;
 		}
 		case kCommandTypeUniform4f:
 		{
 			auto uniform4fCommandBuffer = static_cast<Uniform4fCommandBuffer *>(commandBuffer);
 			glUniform4f(uniform4fCommandBuffer->m_Location, uniform4fCommandBuffer->m_V0, uniform4fCommandBuffer->m_V1, uniform4fCommandBuffer->m_V2, uniform4fCommandBuffer->m_V3);
-			DEBUG_GL_CALL2(0, "uniform4f",
-										 uniform4fCommandBuffer->m_Location, uniform4fCommandBuffer->m_V0, uniform4fCommandBuffer->m_V1, uniform4fCommandBuffer->m_V2, uniform4fCommandBuffer->m_V3);
 			break;
 		}
 		case kCommandTypeUniform4fv:
@@ -898,16 +796,12 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					uniform4fvCommandBuffer->m_Location,
 					uniform4fvCommandBuffer->m_Count,
 					uniform4fvCommandBuffer->m_Value);
-			DEBUG_GL_CALL2(0, "uniform4fv",
-										 uniform4fvCommandBuffer->m_Location, uniform4fvCommandBuffer->m_Count);
 			break;
 		}
 		case kCommandTypeUniform4i:
 		{
 			auto uniform4iCommandBuffer = static_cast<Uniform4iCommandBuffer *>(commandBuffer);
 			glUniform4i(uniform4iCommandBuffer->m_Location, uniform4iCommandBuffer->m_V0, uniform4iCommandBuffer->m_V1, uniform4iCommandBuffer->m_V2, uniform4iCommandBuffer->m_V3);
-			DEBUG_GL_CALL2(0, "uniform4i",
-										 uniform4iCommandBuffer->m_Location, uniform4iCommandBuffer->m_V0, uniform4iCommandBuffer->m_V1, uniform4iCommandBuffer->m_V2, uniform4iCommandBuffer->m_V3);
 			break;
 		}
 		case kCommandTypeUniform4iv:
@@ -917,8 +811,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					uniform4ivCommandBuffer->m_Location,
 					uniform4ivCommandBuffer->m_Count,
 					uniform4ivCommandBuffer->m_Value);
-			DEBUG_GL_CALL2(0, "uniform4iv",
-										 uniform4ivCommandBuffer->m_Location, uniform4ivCommandBuffer->m_Count);
 			break;
 		}
 		case kCommandTypeUniformMatrix2fv:
@@ -929,10 +821,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					uniformMatrix2fvCommandBuffer->m_Count,
 					uniformMatrix2fvCommandBuffer->m_Transpose,
 					uniformMatrix2fvCommandBuffer->m_Value);
-			DEBUG_GL_CALL2(0, "uniformMatrix2fv",
-										 uniformMatrix2fvCommandBuffer->m_Location,
-										 uniformMatrix2fvCommandBuffer->m_Count,
-										 uniformMatrix2fvCommandBuffer->m_Transpose);
 			break;
 		}
 		case kCommandTypeUniformMatrix3fv:
@@ -943,10 +831,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					uniformMatrix3fvCommandBuffer->m_Count,
 					uniformMatrix3fvCommandBuffer->m_Transpose,
 					uniformMatrix3fvCommandBuffer->m_Value);
-			DEBUG_GL_CALL2(0, "uniformMatrix3fv",
-										 uniformMatrix3fvCommandBuffer->m_Location,
-										 uniformMatrix3fvCommandBuffer->m_Count,
-										 uniformMatrix3fvCommandBuffer->m_Transpose);
 			break;
 		}
 		case kCommandTypeUniformMatrix4fv:
@@ -957,10 +841,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					uniformMatrix4fvCommandBuffer->m_Count,
 					uniformMatrix4fvCommandBuffer->m_Transpose,
 					uniformMatrix4fvCommandBuffer->m_Value);
-			DEBUG_GL_CALL2(0, "uniformMatrix4fv",
-										 uniformMatrix4fvCommandBuffer->m_Location,
-										 uniformMatrix4fvCommandBuffer->m_Count,
-										 uniformMatrix4fvCommandBuffer->m_Transpose);
 			break;
 		}
 		case kCommandTypeDrawArrays:
@@ -988,8 +868,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			glPixelStorei(
 					pixelStoreiCommandBuffer->m_Pname,
 					pixelStoreiCommandBuffer->m_Param);
-			DEBUG_GL_CALL2(0, "pixelStorei",
-										 pixelStoreiCommandBuffer->m_Pname, pixelStoreiCommandBuffer->m_Param);
 			break;
 		}
 		case kCommandTypeSetViewport:
@@ -1040,21 +918,18 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 		{
 			auto depthMaskCommandBuffer = static_cast<DepthMaskCommandBuffer *>(commandBuffer);
 			glDepthMask(depthMaskCommandBuffer->m_Flag);
-			DEBUG_GL_CALL2(0, "depthMask", depthMaskCommandBuffer->m_Flag);
 			break;
 		}
 		case kCommandTypeDepthFunc:
 		{
 			auto depthFuncCommandBuffer = static_cast<DepthFuncCommandBuffer *>(commandBuffer);
 			DepthFunc(depthFuncCommandBuffer->m_Func);
-			DEBUG_GL_CALL2(0, "depthFunc", depthFuncCommandBuffer->m_Func);
 			break;
 		}
 		case kCommandTypeDepthRange:
 		{
 			auto depthRangeCommandBuffer = static_cast<DepthRangeCommandBuffer *>(commandBuffer);
 			glDepthRangef(depthRangeCommandBuffer->m_Near, depthRangeCommandBuffer->m_Far);
-			DEBUG_GL_CALL2(0, "depthRange", depthRangeCommandBuffer->m_Near, depthRangeCommandBuffer->m_Far);
 			break;
 		}
 		case kCommandTypeStencilFunc:
@@ -1064,10 +939,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					stencilFuncCommandBuffer->m_Func,
 					stencilFuncCommandBuffer->m_Ref,
 					stencilFuncCommandBuffer->m_Mask);
-			DEBUG_GL_CALL2(0, "stencilFunc",
-										 stencilFuncCommandBuffer->m_Func,
-										 stencilFuncCommandBuffer->m_Ref,
-										 stencilFuncCommandBuffer->m_Mask);
 			break;
 		}
 		case kCommandTypeStencilFuncSeparate:
@@ -1078,18 +949,12 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					stencilFuncSeparateCommandBuffer->m_Func,
 					stencilFuncSeparateCommandBuffer->m_Ref,
 					stencilFuncSeparateCommandBuffer->m_Mask);
-			DEBUG_GL_CALL2(0, "stencilFuncSeparate",
-										 stencilFuncSeparateCommandBuffer->m_Face,
-										 stencilFuncSeparateCommandBuffer->m_Func,
-										 stencilFuncSeparateCommandBuffer->m_Ref,
-										 stencilFuncSeparateCommandBuffer->m_Mask);
 			break;
 		}
 		case kCommandTypeStencilMask:
 		{
 			auto stencilMaskCommandBuffer = static_cast<StencilMaskCommandBuffer *>(commandBuffer);
 			glStencilMask(stencilMaskCommandBuffer->m_Mask);
-			DEBUG_GL_CALL2(0, "stencilMask", stencilMaskCommandBuffer->m_Mask);
 			break;
 		}
 		case kCommandTypeStencilMaskSeparate:
@@ -1098,9 +963,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			glStencilMaskSeparate(
 					stencilMaskSeparateCommandBuffer->m_Face,
 					stencilMaskSeparateCommandBuffer->m_Mask);
-			DEBUG_GL_CALL2(0, "stencilMaskSeparate",
-										 stencilMaskSeparateCommandBuffer->m_Face,
-										 stencilMaskSeparateCommandBuffer->m_Mask);
 			break;
 		}
 		case kCommandTypeStencilOp:
@@ -1110,10 +972,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					stencilOpCommandBuffer->m_Fail,
 					stencilOpCommandBuffer->m_Zfail,
 					stencilOpCommandBuffer->m_Zpass);
-			DEBUG_GL_CALL2(0, "stencilOp",
-										 stencilOpCommandBuffer->m_Fail,
-										 stencilOpCommandBuffer->m_Zfail,
-										 stencilOpCommandBuffer->m_Zpass);
 			break;
 		}
 		case kCommandTypeStencilOpSeparate:
@@ -1124,11 +982,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					stencilOpSeparateCommandBuffer->m_Fail,
 					stencilOpSeparateCommandBuffer->m_Zfail,
 					stencilOpSeparateCommandBuffer->m_Zpass);
-			DEBUG_GL_CALL2(0, "stencilOpSeparate",
-										 stencilOpSeparateCommandBuffer->m_Face,
-										 stencilOpSeparateCommandBuffer->m_Fail,
-										 stencilOpSeparateCommandBuffer->m_Zfail,
-										 stencilOpSeparateCommandBuffer->m_Zpass);
 			break;
 		}
 		case kCommandTypeColorMask:
@@ -1139,25 +992,18 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					colorMaskCommandBuffer->m_G,
 					colorMaskCommandBuffer->m_B,
 					colorMaskCommandBuffer->m_A);
-			DEBUG_GL_CALL2(0, "colorMask",
-										 colorMaskCommandBuffer->m_R,
-										 colorMaskCommandBuffer->m_G,
-										 colorMaskCommandBuffer->m_B,
-										 colorMaskCommandBuffer->m_A);
 			break;
 		}
 		case kCommandTypeCullFace:
 		{
 			auto cullFaceCommandBuffer = static_cast<CullFaceCommandBuffer *>(commandBuffer);
 			glCullFace(cullFaceCommandBuffer->m_Mode);
-			DEBUG_GL_CALL2(0, "cullFace", cullFaceCommandBuffer->m_Mode);
 			break;
 		}
 		case kCommandTypeFrontFace:
 		{
 			auto frontFaceCommandBuffer = static_cast<FrontFaceCommandBuffer *>(commandBuffer);
 			glFrontFace(frontFaceCommandBuffer->m_Mode);
-			DEBUG_GL_CALL2(0, "frontFace", frontFaceCommandBuffer->m_Mode);
 			break;
 		}
 		case kCommandTypeEnable:
@@ -1178,7 +1024,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			GLboolean ret;
 			glGetBooleanv(getBooleanvCommandBuffer->m_Pname, &ret);
 			getBooleanvCommandBuffer->m_Value = ret;
-			DEBUG_GL_CALL2(0, "getBooleanv", getBooleanvCommandBuffer->m_Pname);
 			break;
 		}
 		case kCommandTypeGetIntegerv:
@@ -1187,7 +1032,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			GLint ret;
 			glGetIntegerv(getIntegervCommandBuffer->m_Pname, &ret);
 			getIntegervCommandBuffer->m_Value = ret;
-			DEBUG_GL_CALL2(0, "getIntegerv", getIntegervCommandBuffer->m_Pname);
 			break;
 		}
 		case kCommandTypeGetFloatv:
@@ -1196,7 +1040,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			GLfloat ret;
 			glGetFloatv(getFloatvCommandBuffer->m_Pname, &ret);
 			getFloatvCommandBuffer->m_Value = ret;
-			DEBUG_GL_CALL2(0, "getFloatv", getFloatvCommandBuffer->m_Pname);
 			break;
 		}
 		case kCommandTypeGetString:
@@ -1204,7 +1047,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			auto getStringCommandBuffer = static_cast<GetStringCommandBuffer *>(commandBuffer);
 			const GLubyte *ret = glGetString(getStringCommandBuffer->m_Pname); // returns null-terminated string
 			getStringCommandBuffer->CopyValue(ret);
-			DEBUG_GL_CALL2(0, "getString", getStringCommandBuffer->m_Pname);
 			break;
 		}
 		case kCommandTypeGetShaderPrecisionFormat:
@@ -1220,9 +1062,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			getShaderPrecisionFormatCommandBuffer->m_RangeMin = range[0];
 			getShaderPrecisionFormatCommandBuffer->m_RangeMax = range[1];
 			getShaderPrecisionFormatCommandBuffer->m_Precision = precision;
-			DEBUG_GL_CALL2(0, "getShaderPrecisionFormat",
-										 getShaderPrecisionFormatCommandBuffer->m_ShaderType,
-										 getShaderPrecisionFormatCommandBuffer->m_PrecisionType);
 			break;
 		}
 		case kCommandTypeGetError:
@@ -1230,7 +1069,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			auto getErrorCommandBuffer = static_cast<GetErrorCommandBuffer *>(commandBuffer);
 			GLenum ret = glGetError();
 			getErrorCommandBuffer->m_Error = ret;
-			DEBUG_GL_CALL(ret, "getError");
 			break;
 		}
 		default:

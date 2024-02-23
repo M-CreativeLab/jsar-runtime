@@ -5,7 +5,9 @@ namespace webgl
   Napi::FunctionReference *WebGLProgram::constructor;
   void WebGLProgram::Init(Napi::Env env)
   {
-    Napi::Function tpl = DefineClass(env, "WebGLProgram", {});
+    Napi::Function tpl = DefineClass(env, "WebGLProgram", {
+      InstanceMethod("toString", &WebGLProgram::ToString)
+    });
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
   }
@@ -23,6 +25,15 @@ namespace webgl
     }
 
     id_ = info[0].As<Napi::Number>().Int32Value();
+  }
+
+  Napi::Value WebGLProgram::ToString(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+
+    // Output "Program(id)"
+    std::string result = "Program(" + std::to_string(id_) + ")";
+    return Napi::String::New(env, result.c_str());
   }
 
 } // namespace webgl

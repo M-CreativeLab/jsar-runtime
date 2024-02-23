@@ -2,6 +2,15 @@ import * as logger from '../bindings/logger';
 import { WebGLShaderPrecisionFormatImpl } from './WebGLShaderPrecisionFormat';
 
 const glNative = process._linkedBinding('transmute:webgl');
+const isEnableDebugging = true;
+
+type ArgType = 'default' | 'ignore' | 'constant';
+type NativeCallOptions = Partial<{
+  debug: {
+    argTypes?: ArgType[];
+    argSep?: string;
+  };
+}>;
 
 export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingContext implements WebGLRenderingContext {
   canvas: HTMLCanvasElement | OffscreenCanvas;
@@ -33,44 +42,89 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     }
   }
 
+  private nativeCall(name: string, args: any[] = [], options: NativeCallOptions = {}) {
+    const r = super[name](...args);
+    if (isEnableDebugging) {
+      const { argTypes, argSep = ', ' } = options.debug || {};
+      let argsStr: string;
+      if (argTypes) {
+        argsStr = args
+          .filter((_, i) => argTypes[i] !== 'ignore')
+          .map((arg, i) => {
+            if (argTypes[i] === 'constant') {
+              return this.#constantNamesMap.has(arg) ? `${this.#constantNamesMap.get(arg)}(${arg})` : `${arg}`;
+            } else {
+              return arg;
+            }
+          })
+          .join(argSep);
+      } else {
+        argsStr = args.join(argSep);
+      }
+
+      let returnStr = '';
+      if (typeof r !== 'undefined') {
+        returnStr = `=> ${r}`;
+      }
+      logger.info(`WebGL::${name}(${argsStr}) ${returnStr}`);
+    }
+    return r;
+  }
+
   activeTexture(texture: number): void {
-    super.activeTexture(texture);
+    return this.nativeCall('activeTexture', [texture]);
   }
   attachShader(program: WebGLProgram, shader: WebGLShader): void {
-    super.attachShader(program, shader);
+    return this.nativeCall('attachShader', [program, shader]);
   }
   bindAttribLocation(program: WebGLProgram, index: number, name: string): void {
-    super.bindAttribLocation(program, index, name);
+    return this.nativeCall('bindAttribLocation', [program, index, name]);
   }
   bindBuffer(target: number, buffer: WebGLBuffer): void {
-    super.bindBuffer(target, buffer);
+    return this.nativeCall('bindBuffer', [target, buffer], {
+      debug: {
+        argTypes: ['constant',],
+      },
+    });
   }
   bindFramebuffer(target: number, framebuffer: WebGLFramebuffer): void {
-    super.bindFramebuffer(target, framebuffer);
+    return this.nativeCall('bindFramebuffer', [target, framebuffer], {
+      debug: {
+        argTypes: ['constant',],
+      },
+    });
   }
   bindRenderbuffer(target: number, renderbuffer: WebGLRenderbuffer): void {
-    super.bindRenderbuffer(target, renderbuffer);
+    return this.nativeCall('bindRenderbuffer', [target, renderbuffer], {
+      debug: {
+        argTypes: ['constant',],
+      },
+    });
   }
   bindTexture(target: number, texture: WebGLTexture): void {
-    super.bindTexture(target, texture);
+    return this.nativeCall('bindTexture', [target, texture], {
+      debug: {
+        argTypes: ['constant',],
+      },
+    });
   }
   blendColor(red: number, green: number, blue: number, alpha: number): void {
-    super.blendColor(red, green, blue, alpha);
+    return this.nativeCall('blendColor', [red, green, blue, alpha]);
   }
   blendEquation(mode: number): void {
-    super.blendEquation(mode)
+    return this.nativeCall('blendEquation', [mode]);
   }
   blendEquationSeparate(modeRGB: number, modeAlpha: number): void {
-    super.blendEquationSeparate(modeRGB, modeAlpha)
+    return this.nativeCall('blendEquationSeparate', [modeRGB, modeAlpha]);
   }
   blendFunc(sfactor: number, dfactor: number): void {
-    super.blendFunc(sfactor, dfactor);
+    return this.nativeCall('blendFunc', [sfactor, dfactor]);
   }
   blendFuncSeparate(srcRGB: number, dstRGB: number, srcAlpha: number, dstAlpha: number): void {
-    super.blendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha)
+    return this.nativeCall('blendFuncSeparate', [srcRGB, dstRGB, srcAlpha, dstAlpha]);
   }
   checkFramebufferStatus(target: number): number {
-    return super.checkFramebufferStatus(target);
+    return this.nativeCall('checkFramebufferStatus', [target]);
   }
   clear(mask: number): void {
     // super.clear(mask);
@@ -85,10 +139,10 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     // super.clearStencil(s);
   }
   colorMask(red: boolean, green: boolean, blue: boolean, alpha: boolean): void {
-    super.colorMask(red, green, blue, alpha);
+    return this.nativeCall('colorMask', [red, green, blue, alpha]);
   }
   compileShader(shader: WebGLShader): void {
-    super.compileShader(shader);
+    return this.nativeCall('compileShader', [shader]);
   }
   copyTexImage2D(
     target: number,
@@ -100,7 +154,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     height: number,
     border: number
   ): void {
-    super.copyTexImage2D(target, level, internalformat, x, y, width, height, border);
+    return this.nativeCall('copyTexImage2D', [target, level, internalformat, x, y, width, height, border]);
   }
   copyTexSubImage2D(
     target: number,
@@ -112,82 +166,102 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     width: number,
     height: number
   ): void {
-    super.copyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
+    return this.nativeCall('copyTexSubImage2D', [target, level, xoffset, yoffset, x, y, width, height]);
   }
   createBuffer(): WebGLBuffer {
-    return super.createBuffer();
+    return this.nativeCall('createBuffer');
   }
   createFramebuffer(): WebGLFramebuffer {
-    return super.createFramebuffer();
+    return this.nativeCall('createFramebuffer');
   }
   createProgram(): WebGLProgram {
-    return super.createProgram();
+    return this.nativeCall('createProgram');
   }
   createRenderbuffer(): WebGLRenderbuffer {
-    return super.createRenderbuffer();
+    return this.nativeCall('createRenderbuffer');
   }
   createShader(type: number): WebGLShader {
-    return super.createShader(type);
+    return this.nativeCall('createShader', [type], {
+      debug: {
+        argTypes: ['constant'],
+      }
+    });
   }
   createTexture(): WebGLTexture {
-    return super.createTexture();
+    return this.nativeCall('createTexture');
   }
   cullFace(mode: number): void {
-    super.cullFace(mode);
+    return this.nativeCall('cullFace', [mode], {
+      debug: {
+        argTypes: ['constant'],
+      }
+    });
   }
   deleteBuffer(buffer: WebGLBuffer): void {
-    super.deleteBuffer(buffer);
+    return this.nativeCall('deleteBuffer', [buffer]);
   }
   deleteFramebuffer(framebuffer: WebGLFramebuffer): void {
-    super.deleteFramebuffer(framebuffer);
+    return this.nativeCall('deleteFramebuffer', [framebuffer]);
   }
   deleteProgram(program: WebGLProgram): void {
-    super.deleteProgram(program);
+    return this.nativeCall('deleteProgram', [program]);
   }
   deleteRenderbuffer(renderbuffer: WebGLRenderbuffer): void {
-    super.deleteRenderbuffer(renderbuffer);
+    return this.nativeCall('deleteRenderbuffer', [renderbuffer]);
   }
   deleteShader(shader: WebGLShader): void {
-    super.deleteShader(shader);
+    return this.nativeCall('deleteShader', [shader]);
   }
   deleteTexture(texture: WebGLTexture): void {
-    super.deleteTexture(texture);
+    return this.nativeCall('deleteTexture', [texture]);
   }
   depthFunc(func: number): void {
-    super.depthFunc(func);
+    return this.nativeCall('depthFunc', [func], {
+      debug: {
+        argTypes: ['constant'],
+      }
+    });
   }
   depthMask(flag: boolean): void {
-    super.depthMask(flag);
+    return this.nativeCall('depthMask', [flag]);
   }
   depthRange(zNear: number, zFar: number): void {
-    super.depthRange(zNear, zFar);
+    return this.nativeCall('depthRange', [zNear, zFar]);
   }
   detachShader(program: WebGLProgram, shader: WebGLShader): void {
-    super.detachShader(program, shader);
+    return this.nativeCall('detachShader', [program, shader]);
   }
   disable(cap: number): void {
-    super.disable(cap);
+    return this.nativeCall('disable', [cap], {
+      debug: {
+        argTypes: ['constant'],
+      }
+    });
   }
   disableVertexAttribArray(index: number): void {
-    super.disableVertexAttribArray(index);
+    return this.nativeCall('disableVertexAttribArray', [index]);
   }
   drawArrays(mode: number, first: number, count: number): void {
-    super.drawArrays(mode, first, count);
+    return this.nativeCall('drawArrays', [mode, first, count]);
   }
   drawElements(mode: number, count: number, type: number, offset: number): void {
-    super.drawElements(mode, count, type, offset);
+    return this.nativeCall('drawElements', [mode, count, type, offset]);
   }
   enable(cap: number): void {
-    super.enable(cap);
+    return this.nativeCall('enable', [cap], {
+      debug: {
+        argTypes: ['constant'],
+      }
+    });
   }
   enableVertexAttribArray(index: number): void {
-    super.enableVertexAttribArray(index);
+    return this.nativeCall('enableVertexAttribArray', [index]);
   }
   finish(): void {
-    super.finish();
+    return this.nativeCall('finish');
   }
   flush(): void {
-    super.flush();
+    return this.nativeCall('flush');
   }
   framebufferRenderbuffer(
     target: number,
@@ -195,31 +269,35 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     renderbuffertarget: number,
     renderbuffer: WebGLRenderbuffer
   ): void {
-    super.framebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
+    return this.nativeCall('framebufferRenderbuffer', [target, attachment, renderbuffertarget, renderbuffer]);
   }
   framebufferTexture2D(target: number, attachment: number, textarget: number, texture: WebGLTexture, level: number): void {
-    super.framebufferTexture2D(target, attachment, textarget, texture, level);
+    return this.nativeCall('framebufferTexture2D', [target, attachment, textarget, texture, level]);
   }
   frontFace(mode: number): void {
-    super.frontFace(mode);
+    return this.nativeCall('frontFace', [mode], {
+      debug: {
+        argTypes: ['constant'],
+      }
+    });
   }
   generateMipmap(target: number): void {
-    super.generateMipmap(target);
+    return this.nativeCall('generateMipmap', [target]);
   }
   getActiveAttrib(program: WebGLProgram, index: number): WebGLActiveInfo {
-    return super.getActiveAttrib(program, index);
+    return this.nativeCall('getActiveAttrib', [program, index]);
   }
   getActiveUniform(program: WebGLProgram, index: number): WebGLActiveInfo {
-    return super.getActiveUniform(program, index);
+    return this.nativeCall('getActiveUniform', [program, index]);
   }
   getAttachedShaders(program: WebGLProgram): WebGLShader[] {
-    return super.getAttachedShaders(program);
+    return this.nativeCall('getAttachedShaders', [program]);
   }
   getAttribLocation(program: WebGLProgram, name: string): number {
-    return super.getAttribLocation(program, name);
+    return this.nativeCall('getAttribLocation', [program, name]);
   }
   getBufferParameter(target: number, pname: number) {
-    return super.getBufferParameter(target, pname);
+    return this.nativeCall('getBufferParameter', [target, pname]);
   }
   getContextAttributes(): WebGLContextAttributes {
     return {
@@ -235,7 +313,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     };
   }
   getError(): number {
-    return super.getError();
+    return this.nativeCall('getError');
   }
   getExtension(extensionName: 'ANGLE_instanced_arrays'): ANGLE_instanced_arrays;
   getExtension(extensionName: 'EXT_blend_minmax'): EXT_blend_minmax;
@@ -278,7 +356,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return null;
   }
   getFramebufferAttachmentParameter(target: number, attachment: number, pname: number) {
-    return super.getFramebufferAttachmentParameter(target, attachment, pname);
+    return this.nativeCall('getFramebufferAttachmentParameter', [target, attachment, pname]);
   }
   getParameter(pname: number) {
     try {
@@ -291,187 +369,195 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     }
   }
   getProgramInfoLog(program: WebGLProgram): string {
-    return super.getProgramInfoLog(program);
+    return this.nativeCall('getProgramInfoLog', [program]);
   }
   getProgramParameter(program: WebGLProgram, pname: number) {
-    return super.getProgramParameter(program, pname);
+    return this.nativeCall('getProgramParameter', [program, pname]);
   }
   getRenderbufferParameter(target: number, pname: number) {
-    return super.getRenderbufferParameter(target, pname);
+    return this.nativeCall('getRenderbufferParameter', [target, pname]);
   }
   getShaderInfoLog(shader: WebGLShader): string {
-    return super.getShaderInfoLog(shader);
+    return this.nativeCall('getShaderInfoLog', [shader]);
   }
   getShaderParameter(shader: WebGLShader, pname: number) {
-    return super.getShaderParameter(shader, pname);
+    return this.nativeCall('getShaderParameter', [shader, pname]);
   }
   getShaderPrecisionFormat(shadertype: number, precisiontype: number): WebGLShaderPrecisionFormat {
     const { rangeMin, rangeMax, precision } = super.getShaderPrecisionFormat(shadertype, precisiontype);
     return new WebGLShaderPrecisionFormatImpl(rangeMin, rangeMax, precision);
   }
   getShaderSource(shader: WebGLShader): string {
-    return super.getShaderSource(shader);
+    return this.nativeCall('getShaderSource', [shader]);
   }
   getSupportedExtensions(): string[] {
-    return super.getSupportedExtensions();
+    return this.nativeCall('getSupportedExtensions');
   }
   getTexParameter(target: number, pname: number) {
-    return super.getTexParameter(target, pname);
+    return this.nativeCall('getTexParameter', [target, pname]);
   }
   getUniform(program: WebGLProgram, location: WebGLUniformLocation) {
-    return super.getUniform(program, location);
+    return this.nativeCall('getUniform', [program, location]);
   }
   getUniformLocation(program: WebGLProgram, name: string): WebGLUniformLocation {
-    return super.getUniformLocation(program, name);
+    return this.nativeCall('getUniformLocation', [program, name]);
   }
   getVertexAttrib(index: number, pname: number) {
-    return super.getVertexAttrib(index, pname);
+    return this.nativeCall('getVertexAttrib', [index, pname]);
   }
   getVertexAttribOffset(index: number, pname: number): number {
-    return super.getVertexAttribOffset(index, pname);
+    return this.nativeCall('getVertexAttribOffset', [index, pname]);
   }
   hint(target: number, mode: number): void {
-    super.hint(target, mode);
+    return this.nativeCall('hint', [target, mode]);
   }
   isBuffer(buffer: WebGLBuffer): boolean {
-    return super.isBuffer(buffer);
+    return this.nativeCall('isBuffer', [buffer]);
   }
   isContextLost(): boolean {
     return super.isContextLost();
   }
   isEnabled(cap: number): boolean {
-    return super.isEnabled(cap);
+    return this.nativeCall('isEnabled', [cap]);
   }
   isFramebuffer(framebuffer: WebGLFramebuffer): boolean {
-    return super.isFramebuffer(framebuffer);
+    return this.nativeCall('isFramebuffer', [framebuffer]);
   }
   isProgram(program: WebGLProgram): boolean {
-    return super.isProgram(program);
+    return this.nativeCall('isProgram', [program]);
   }
   isRenderbuffer(renderbuffer: WebGLRenderbuffer): boolean {
-    return super.isRenderbuffer(renderbuffer);
+    return this.nativeCall('isRenderbuffer', [renderbuffer]);
   }
   isShader(shader: WebGLShader): boolean {
-    return super.isShader(shader);
+    return this.nativeCall('isShader', [shader]);
   }
   isTexture(texture: WebGLTexture): boolean {
-    return super.isTexture(texture);
+    return this.nativeCall('isTexture', [texture]);
   }
   lineWidth(width: number): void {
-    super.lineWidth(width);
+    return this.nativeCall('lineWidth', [width]);
   }
   linkProgram(program: WebGLProgram): void {
-    super.linkProgram(program);
+    return this.nativeCall('linkProgram', [program]);
   }
   pixelStorei(pname: number, param: number | boolean): void {
-    super.pixelStorei(pname, param);
+    return this.nativeCall('pixelStorei', [pname, param]);
   }
   polygonOffset(factor: number, units: number): void {
-    super.polygonOffset(factor, units);
+    return this.nativeCall('polygonOffset', [factor, units]);
   }
   renderbufferStorage(target: number, internalformat: number, width: number, height: number): void {
-    super.renderbufferStorage(target, internalformat, width, height);
+    return this.nativeCall('renderbufferStorage', [target, internalformat, width, height]);
   }
   sampleCoverage(value: number, invert: boolean): void {
-    super.sampleCoverage(value, invert);
+    return this.nativeCall('sampleCoverage', [value, invert]);
   }
   scissor(x: number, y: number, width: number, height: number): void {
-    super.scissor(x, y, width, height);
+    return this.nativeCall('scissor', [x, y, width, height]);
   }
   shaderSource(shader: WebGLShader, source: string): void {
-    super.shaderSource(shader, source);
+    return this.nativeCall('shaderSource', [shader, source], {
+      debug: {
+        argTypes: [, 'ignore'],
+      },
+    });
   }
   stencilFunc(func: number, ref: number, mask: number): void {
-    super.stencilFunc(func, ref, mask);
+    return this.nativeCall('stencilFunc', [func, ref, mask], {
+      debug: {
+        argTypes: ['constant'],
+      },
+    });
   }
   stencilFuncSeparate(face: number, func: number, ref: number, mask: number): void {
-    super.stencilFuncSeparate(face, func, ref, mask);
+    return this.nativeCall('stencilFuncSeparate', [face, func, ref, mask]);
   }
   stencilMask(mask: number): void {
-    super.stencilMask(mask);
+    return this.nativeCall('stencilMask', [mask]);
   }
   stencilMaskSeparate(face: number, mask: number): void {
-    super.stencilMaskSeparate(face, mask);
+    return this.nativeCall('stencilMaskSeparate', [face, mask]);
   }
   stencilOp(fail: number, zfail: number, zpass: number): void {
-    super.stencilOp(fail, zfail, zpass);
+    return this.nativeCall('stencilOp', [fail, zfail, zpass]);
   }
   stencilOpSeparate(face: number, fail: number, zfail: number, zpass: number): void {
-    super.stencilOpSeparate(face, fail, zfail, zpass);
+    return this.nativeCall('stencilOpSeparate', [face, fail, zfail, zpass]);
   }
   texParameterf(target: number, pname: number, param: number): void {
-    super.texParameterf(target, pname, param);
+    return this.nativeCall('texParameterf', [target, pname, param]);
   }
   texParameteri(target: number, pname: number, param: number): void {
-    super.texParameteri(target, pname, param);
+    return this.nativeCall('texParameteri', [target, pname, param]);
   }
   uniform1f(location: WebGLUniformLocation, x: number): void {
-    super.uniform1f(location, x);
+    return this.nativeCall('uniform1f', [location, x]);
   }
   uniform1i(location: WebGLUniformLocation, x: number): void {
-    super.uniform1i(location, x);
+    return this.nativeCall('uniform1i', [location, x]);
   }
   uniform2f(location: WebGLUniformLocation, x: number, y: number): void {
-    super.uniform2f(location, x, y);
+    return this.nativeCall('uniform2f', [location, x, y]);
   }
   uniform2i(location: WebGLUniformLocation, x: number, y: number): void {
-    super.uniform2i(location, x, y);
+    return this.nativeCall('uniform2i', [location, x, y]);
   }
   uniform3f(location: WebGLUniformLocation, x: number, y: number, z: number): void {
-    super.uniform3f(location, x, y, z);
+    return this.nativeCall('uniform3f', [location, x, y, z]);
   }
   uniform3i(location: WebGLUniformLocation, x: number, y: number, z: number): void {
-    super.uniform3i(location, x, y, z);
+    return this.nativeCall('uniform3i', [location, x, y, z]);
   }
   uniform4f(location: WebGLUniformLocation, x: number, y: number, z: number, w: number): void {
-    super.uniform4f(location, x, y, z, w);
+    return this.nativeCall('uniform4f', [location, x, y, z, w]);
   }
   uniform4i(location: WebGLUniformLocation, x: number, y: number, z: number, w: number): void {
-    super.uniform4i(location, x, y, z, w);
+    return this.nativeCall('uniform4i', [location, x, y, z, w]);
   }
   useProgram(program: WebGLProgram): void {
-    super.useProgram(program);
+    return this.nativeCall('useProgram', [program]);
   }
   validateProgram(program: WebGLProgram): void {
-    super.validateProgram(program);
+    return this.nativeCall('validateProgram', [program]);
   }
   vertexAttrib1f(index: number, x: number): void {
-    super.vertexAttrib1f(index, x);
+    return this.nativeCall('vertexAttrib1f', [index, x]);
   }
   vertexAttrib1fv(index: number, values: Float32List): void;
   vertexAttrib1fv(index: number, values: Iterable<number>): void;
   vertexAttrib1fv(index: number, values: Float32List | Iterable<number>): void {
-    super.vertexAttrib1fv(index, values);
+    return this.nativeCall('vertexAttrib1fv', [index, values]);
   }
   vertexAttrib2f(index: number, x: number, y: number): void {
-    super.vertexAttrib2f(index, x, y);
+    return this.nativeCall('vertexAttrib2f', [index, x, y]);
   }
   vertexAttrib2fv(index: number, values: Float32List): void;
   vertexAttrib2fv(index: number, values: Iterable<number>): void;
   vertexAttrib2fv(index: number, values: Float32List | Iterable<number>): void {
-    super.vertexAttrib2fv(index, values);
+    return this.nativeCall('vertexAttrib2fv', [index, values]);
   }
   vertexAttrib3f(index: number, x: number, y: number, z: number): void {
-    super.vertexAttrib3f(index, x, y, z);
+    return this.nativeCall('vertexAttrib3f', [index, x, y, z]);
   }
   vertexAttrib3fv(index: number, values: Float32List): void;
   vertexAttrib3fv(index: number, values: Iterable<number>): void;
   vertexAttrib3fv(index: number, values: Float32List | Iterable<number>): void {
-    super.vertexAttrib3fv(index, values);
+    return this.nativeCall('vertexAttrib3fv', [index, values]);
   }
   vertexAttrib4f(index: number, x: number, y: number, z: number, w: number): void {
-    super.vertexAttrib4f(index, x, y, z, w);
+    return this.nativeCall('vertexAttrib4f', [index, x, y, z, w]);
   }
   vertexAttrib4fv(index: number, values: Float32List): void;
   vertexAttrib4fv(index: number, values: Iterable<number>): void;
   vertexAttrib4fv(index: number, values: Float32List | Iterable<number>): void {
-    super.vertexAttrib4fv(index, values);
+    return this.nativeCall('vertexAttrib4fv', [index, values]);
   }
   vertexAttribPointer(index: number, size: number, type: number, normalized: boolean, stride: number, offset: number): void {
-    super.vertexAttribPointer(index, size, type, normalized, stride, offset);
+    return this.nativeCall('vertexAttribPointer', [index, size, type, normalized, stride, offset]);
   }
   viewport(x: number, y: number, width: number, height: number): void {
-    super.viewport(x, y, width, height);
+    return this.nativeCall('viewport', [x, y, width, height]);
   }
   makeXRCompatible(): Promise<void> {
     return super.makeXRCompatible();
@@ -488,10 +574,14 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
       } else {
         super.bufferData(target, data, usage);
       }
+      if (isEnableDebugging) {
+        logger.info(`WebGL::bufferData(${target}, ${data}, ${usage})`);
+      }
     }
   }
   bufferSubData(target: number, offset: number, data: BufferSource): void {
     super.bufferSubData(target, offset, data);
+    return this.nativeCall('bufferSubData', [target, offset, data]);
   }
   compressedTexImage2D(
     target: number,
@@ -502,7 +592,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     border: number,
     data: ArrayBufferView
   ): void {
-    super.compressedTexImage2D(target, level, internalformat, width, height, border, data);
+    return this.nativeCall('compressedTexImage2D', [target, level, internalformat, width, height, border, data]);
   }
   compressedTexSubImage2D(
     target: number,
@@ -514,7 +604,15 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     format: number,
     data: ArrayBufferView
   ): void {
-    super.compressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, data);
+    return this.nativeCall('compressedTexSubImage2D', [
+      target,
+      level,
+      xoffset,
+      yoffset,
+      width,
+      height,
+      format,
+      data]);
   }
   readPixels(
     x: number,
@@ -525,7 +623,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     type: number,
     pixels: ArrayBufferView
   ): void {
-    return super.readPixels(x, y, width, height, format, type, pixels);
+    return this.nativeCall('readPixels', [x, y, width, height, format, type, pixels]);
   }
   texImage2D(
     target: number,
@@ -558,7 +656,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     pixels?: ArrayBufferView
   ): void {
     if (arguments.length === 9) {
-      super.texImage2D(
+      return this.nativeCall('texImage2D', [
         target,
         level,
         internalformat,
@@ -567,7 +665,8 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
         border as number,
         format,
         type,
-        pixels);
+        pixels
+      ]);
     } else if (arguments.length === 6) {
       throw new Error('texImage2D() with TexImageSource not implemented.');
     } else {
@@ -610,56 +709,56 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   uniform1fv(location: WebGLUniformLocation, v: Float32List): void;
   uniform1fv(location: WebGLUniformLocation, v: Iterable<number>): void;
   uniform1fv(location: WebGLUniformLocation, v: Float32List | Iterable<number>): void {
-    super.uniform1fv(location, v);
+    return this.nativeCall('uniform1fv', [location, v]);
   }
   uniform1iv(location: WebGLUniformLocation, v: Int32List): void;
   uniform1iv(location: WebGLUniformLocation, v: Iterable<number>): void;
   uniform1iv(location: WebGLUniformLocation, v: Float32List | Iterable<number>): void {
-    super.uniform1iv(location, v);
+    return this.nativeCall('uniform1iv', [location, v]);
   }
   uniform2fv(location: WebGLUniformLocation, v: Float32List): void;
   uniform2fv(location: WebGLUniformLocation, v: Iterable<number>): void;
   uniform2fv(location: WebGLUniformLocation, v: Float32List | Iterable<number>): void {
-    super.uniform2fv(location, v);
+    return this.nativeCall('uniform2fv', [location, v]);
   }
   uniform2iv(location: WebGLUniformLocation, v: Int32List): void;
   uniform2iv(location: WebGLUniformLocation, v: Iterable<number>): void;
   uniform2iv(location: WebGLUniformLocation, v: Float32List | Iterable<number>): void {
-    super.uniform2iv(location, v);
+    return this.nativeCall('uniform2iv', [location, v]);
   }
   uniform3fv(location: WebGLUniformLocation, v: Float32List): void;
   uniform3fv(location: WebGLUniformLocation, v: Iterable<number>): void;
   uniform3fv(location: WebGLUniformLocation, v: Float32List | Iterable<number>): void {
-    super.uniform3fv(location, v);
+    return this.nativeCall('uniform3fv', [location, v]);
   }
   uniform3iv(location: WebGLUniformLocation, v: Int32List): void;
   uniform3iv(location: WebGLUniformLocation, v: Iterable<number>): void;
   uniform3iv(location: WebGLUniformLocation, v: Float32List | Iterable<number>): void {
-    super.uniform3iv(location, v);
+    return this.nativeCall('uniform3iv', [location, v]);
   }
   uniform4fv(location: WebGLUniformLocation, v: Float32List): void;
   uniform4fv(location: WebGLUniformLocation, v: Iterable<number>): void;
   uniform4fv(location: WebGLUniformLocation, v: Float32List | Iterable<number>): void {
-    super.uniform4fv(location, v);
+    return this.nativeCall('uniform4fv', [location, v]);
   }
   uniform4iv(location: WebGLUniformLocation, v: Int32List): void;
   uniform4iv(location: WebGLUniformLocation, v: Iterable<number>): void;
   uniform4iv(location: WebGLUniformLocation, v: Float32List | Iterable<number>): void {
-    super.uniform4iv(location, v);
+    return this.nativeCall('uniform4iv', [location, v]);
   }
   uniformMatrix2fv(location: WebGLUniformLocation, transpose: boolean, value: Float32List): void;
   uniformMatrix2fv(location: WebGLUniformLocation, transpose: boolean, value: Iterable<number>): void;
   uniformMatrix2fv(location: WebGLUniformLocation, transpose: boolean, value: Float32List | Iterable<number>): void {
-    super.uniformMatrix2fv(location, transpose, value);
+    return this.nativeCall('uniformMatrix2fv', [location, transpose, value]);
   }
   uniformMatrix3fv(location: WebGLUniformLocation, transpose: boolean, value: Float32List): void;
   uniformMatrix3fv(location: WebGLUniformLocation, transpose: boolean, value: Iterable<number>): void;
   uniformMatrix3fv(location: WebGLUniformLocation, transpose: boolean, value: Float32List | Iterable<number>): void {
-    super.uniformMatrix3fv(location, transpose, value);
+    return this.nativeCall('uniformMatrix3fv', [location, transpose, value]);
   }
   uniformMatrix4fv(location: WebGLUniformLocation, transpose: boolean, value: Float32List): void;
   uniformMatrix4fv(location: WebGLUniformLocation, transpose: boolean, value: Iterable<number>): void;
   uniformMatrix4fv(location: WebGLUniformLocation, transpose: boolean, value: Float32List | Iterable<number>): void {
-    super.uniformMatrix4fv(location, transpose, value);
+    return this.nativeCall('uniformMatrix4fv', [location, transpose, value]);
   }
 }

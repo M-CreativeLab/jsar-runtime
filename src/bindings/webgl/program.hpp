@@ -15,6 +15,9 @@ namespace webgl
     static Napi::FunctionReference *constructor;
 
   private:
+    Napi::Value ToString(const Napi::CallbackInfo &info);
+
+  private:
     int id_;
   };
 }
