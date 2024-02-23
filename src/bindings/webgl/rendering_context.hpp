@@ -29,6 +29,7 @@ namespace webgl
     Napi::Value CreateBuffer(const Napi::CallbackInfo &info);
     Napi::Value BindBuffer(const Napi::CallbackInfo &info);
     Napi::Value BufferData(const Napi::CallbackInfo &info);
+    Napi::Value BufferSubData(const Napi::CallbackInfo &info);
     Napi::Value CreateTexture(const Napi::CallbackInfo &info);
     Napi::Value BindTexture(const Napi::CallbackInfo &info);
     Napi::Value TexImage2D(const Napi::CallbackInfo &info);
@@ -77,6 +78,11 @@ namespace webgl
     Napi::Value StencilMaskSeparate(const Napi::CallbackInfo &info);
     Napi::Value StencilOp(const Napi::CallbackInfo &info);
     Napi::Value StencilOpSeparate(const Napi::CallbackInfo &info);
+    Napi::Value BlendColor(const Napi::CallbackInfo &info);
+    Napi::Value BlendEquation(const Napi::CallbackInfo &info);
+    Napi::Value BlendEquationSeparate(const Napi::CallbackInfo &info);
+    Napi::Value BlendFunc(const Napi::CallbackInfo &info);
+    Napi::Value BlendFuncSeparate(const Napi::CallbackInfo &info);
     Napi::Value ColorMask(const Napi::CallbackInfo &info);
     Napi::Value CullFace(const Napi::CallbackInfo &info);
     Napi::Value FrontFace(const Napi::CallbackInfo &info);

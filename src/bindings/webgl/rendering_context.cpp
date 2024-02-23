@@ -357,6 +357,7 @@ namespace webgl
          InstanceMethod("createBuffer", &WebGLRenderingContext::CreateBuffer),
          InstanceMethod("bindBuffer", &WebGLRenderingContext::BindBuffer),
          InstanceMethod("bufferData", &WebGLRenderingContext::BufferData),
+         InstanceMethod("bufferSubData", &WebGLRenderingContext::BufferSubData),
          InstanceMethod("createTexture", &WebGLRenderingContext::CreateTexture),
          InstanceMethod("bindTexture", &WebGLRenderingContext::BindTexture),
          InstanceMethod("texImage2D", &WebGLRenderingContext::TexImage2D),
@@ -405,6 +406,11 @@ namespace webgl
          InstanceMethod("stencilMaskSeparate", &WebGLRenderingContext::StencilMaskSeparate),
          InstanceMethod("stencilOp", &WebGLRenderingContext::StencilOp),
          InstanceMethod("stencilOpSeparate", &WebGLRenderingContext::StencilOpSeparate),
+         InstanceMethod("blendColor", &WebGLRenderingContext::BlendColor),
+         InstanceMethod("blendEquation", &WebGLRenderingContext::BlendEquation),
+         InstanceMethod("blendEquationSeparate", &WebGLRenderingContext::BlendEquationSeparate),
+         InstanceMethod("blendFunc", &WebGLRenderingContext::BlendFunc),
+         InstanceMethod("blendFuncSeparate", &WebGLRenderingContext::BlendFuncSeparate),
          InstanceMethod("colorMask", &WebGLRenderingContext::ColorMask),
          InstanceMethod("cullFace", &WebGLRenderingContext::CullFace),
          InstanceMethod("frontFace", &WebGLRenderingContext::FrontFace),
@@ -779,6 +785,29 @@ namespace webgl
         buffer.ByteLength(),
         buffer.Data(),
         usage);
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::BufferSubData(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3)
+    {
+      Napi::TypeError::New(env, "bufferSubData() takes 3 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int target = info[0].As<Napi::Number>().Int32Value();
+    int offset = info[1].As<Napi::Number>().Int32Value();
+    Napi::ArrayBuffer buffer = info[2].As<Napi::ArrayBuffer>();
+
+    auto commandBuffer = new renderer::BufferSubDataCommandBuffer(
+        target,
+        offset,
+        buffer.ByteLength(),
+        buffer.Data());
     m_renderAPI->AddCommandBuffer(commandBuffer);
     return env.Undefined();
   }
@@ -1850,6 +1879,67 @@ namespace webgl
       uint32_t zpass = info[3].ToNumber().Uint32Value();
       m_renderAPI->AddCommandBuffer(new renderer::StencilOpSeparateCommandBuffer(face, fail, zfail, zpass));
     }
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::BlendColor(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() >= 4)
+    {
+      float r = info[0].ToNumber().FloatValue();
+      float g = info[1].ToNumber().FloatValue();
+      float b = info[2].ToNumber().FloatValue();
+      float a = info[3].ToNumber().FloatValue();
+      m_renderAPI->AddCommandBuffer(new renderer::BlendColorCommandBuffer(r, g, b, a));
+    }
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::BlendEquation(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    uint32_t mode = info[0].ToNumber().Uint32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::BlendEquationCommandBuffer(mode));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::BlendEquationSeparate(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    uint32_t modeRGB = info[0].ToNumber().Uint32Value();
+    uint32_t modeAlpha = info[1].ToNumber().Uint32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::BlendEquationSeparateCommandBuffer(modeRGB, modeAlpha));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::BlendFunc(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    uint32_t sfactor = info[0].ToNumber().Uint32Value();
+    uint32_t dfactor = info[1].ToNumber().Uint32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::BlendFuncCommandBuffer(sfactor, dfactor));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::BlendFuncSeparate(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    uint32_t srcRGB = info[0].ToNumber().Uint32Value();
+    uint32_t dstRGB = info[1].ToNumber().Uint32Value();
+    uint32_t srcAlpha = info[2].ToNumber().Uint32Value();
+    uint32_t dstAlpha = info[3].ToNumber().Uint32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::BlendFuncSeparateCommandBuffer(srcRGB, dstRGB, srcAlpha, dstAlpha));
     return env.Undefined();
   }
 

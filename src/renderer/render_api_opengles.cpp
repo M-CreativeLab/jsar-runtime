@@ -97,6 +97,16 @@ private:
 	GLuint m_CurrentDepthFunc = GL_LEQUAL;
 	bool m_DepthTestEnabled = false;
 	bool m_DepthMaskEnabled = true;
+	bool m_BlendEnabled = false;
+	// Used by glBlendFunc
+	GLenum m_Blend_Sfactor = GL_ONE;
+	GLenum m_Blend_Dfactor = GL_ZERO;
+	// Used by glBlendFuncSeparate
+	GLenum m_Blend_SrcRGB = GL_ONE;
+	GLenum m_Blend_DstRGB = GL_ZERO;
+	GLenum m_Blend_SrcAlpha = GL_ONE;
+	GLenum m_Blend_DstAlpha = GL_ZERO;
+	// Used by debugging
 	bool m_DebugEnabled = true;
 };
 
@@ -324,6 +334,8 @@ void RenderAPI_OpenGLCoreES::Enable(uint32_t cap)
 
 	if (cap == GL_DEPTH_TEST)
 		m_DepthTestEnabled = true;
+	else if (cap == GL_BLEND)
+		m_BlendEnabled = true;
 }
 
 void RenderAPI_OpenGLCoreES::Disable(uint32_t cap)
@@ -332,6 +344,8 @@ void RenderAPI_OpenGLCoreES::Disable(uint32_t cap)
 
 	if (cap == GL_DEPTH_TEST)
 		m_DepthTestEnabled = false;
+	else if (cap == GL_BLEND)
+		m_BlendEnabled = false;
 }
 
 void RenderAPI_OpenGLCoreES::StartFrame()
@@ -341,12 +355,33 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	 * the last frame, to make sure the rendering in WebGL is correct.
 	 */
 
+	// using program
 	if (m_CurrentProgramId != 0)
 		glUseProgram(m_CurrentProgramId);
-	glFrontFace(m_CurrentFrontFace);
-	glEnable(m_DepthTestEnabled ? GL_DEPTH_TEST : GL_NONE);
+
+	// front face
+	if (m_CurrentFrontFace == GL_CW || m_CurrentFrontFace == GL_CCW)
+		glFrontFace(m_CurrentFrontFace);
+
+	// depth test
+	if (m_DepthTestEnabled)
+		glEnable(GL_DEPTH_TEST);
+	else
+		glDisable(GL_DEPTH_TEST);
 	glDepthFunc(m_CurrentDepthFunc);
 	glDepthMask(m_DepthMaskEnabled);
+
+	// blend
+	if (m_BlendEnabled)
+	{
+		glEnable(GL_BLEND);
+		glBlendFunc(m_Blend_Sfactor, m_Blend_Dfactor);
+		glBlendFuncSeparate(m_Blend_SrcRGB, m_Blend_DstRGB, m_Blend_SrcAlpha, m_Blend_DstAlpha);
+	}
+	else
+	{
+		glDisable(GL_BLEND);
+	}
 }
 
 void RenderAPI_OpenGLCoreES::EndFrame()
@@ -530,11 +565,21 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 		case kCommandTypeBufferData:
 		{
 			auto bufferDataCommandBuffer = static_cast<BufferDataCommandBuffer *>(commandBuffer);
-			BufferData(
+			glBufferData(
 					bufferDataCommandBuffer->m_Target,
 					bufferDataCommandBuffer->m_Size,
 					bufferDataCommandBuffer->m_Data,
 					bufferDataCommandBuffer->m_Usage);
+			break;
+		}
+		case kCommandTypeBufferSubData:
+		{
+			auto bufferSubDataCommandBuffer = static_cast<BufferSubDataCommandBuffer *>(commandBuffer);
+			glBufferSubData(
+					bufferSubDataCommandBuffer->m_Target,
+					bufferSubDataCommandBuffer->m_Offset,
+					bufferSubDataCommandBuffer->m_Size,
+					bufferSubDataCommandBuffer->m_Data);
 			break;
 		}
 		case kCommandTypeCreateTexture:
@@ -772,7 +817,6 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					uniformMatrix4fvCommandBuffer->m_Count,
 					uniformMatrix4fvCommandBuffer->m_Transpose,
 					uniformMatrix4fvCommandBuffer->m_Value);
-			DEBUG("Unity", "OpenGL::ExecuteCommandBuffer() - glUniformMatrix4fv(%d, %d, %d, %p)", uniformMatrix4fvCommandBuffer->m_Location, uniformMatrix4fvCommandBuffer->m_Count, uniformMatrix4fvCommandBuffer->m_Transpose, uniformMatrix4fvCommandBuffer->m_Value);
 			break;
 		}
 		case kCommandTypeDrawArrays:
@@ -915,6 +959,54 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					stencilOpSeparateCommandBuffer->m_Fail,
 					stencilOpSeparateCommandBuffer->m_Zfail,
 					stencilOpSeparateCommandBuffer->m_Zpass);
+			break;
+		}
+		case kCommandTypeBlendColor:
+		{
+			auto blendColorCommandBuffer = static_cast<BlendColorCommandBuffer *>(commandBuffer);
+			glBlendColor(
+					blendColorCommandBuffer->m_R,
+					blendColorCommandBuffer->m_G,
+					blendColorCommandBuffer->m_B,
+					blendColorCommandBuffer->m_A);
+			break;
+		}
+		case kCommandTypeBlendEquation:
+		{
+			auto blendEquationCommandBuffer = static_cast<BlendEquationCommandBuffer *>(commandBuffer);
+			glBlendEquation(blendEquationCommandBuffer->m_Mode);
+			break;
+		}
+		case kCommandTypeBlendEquationSeparate:
+		{
+			auto blendEquationSeparateCommandBuffer = static_cast<BlendEquationSeparateCommandBuffer *>(commandBuffer);
+			glBlendEquationSeparate(
+					blendEquationSeparateCommandBuffer->m_ModeRGB,
+					blendEquationSeparateCommandBuffer->m_ModeAlpha);
+			break;
+		}
+		case kCommandTypeBlendFunc:
+		{
+			auto blendFuncCommandBuffer = static_cast<BlendFuncCommandBuffer *>(commandBuffer);
+			glBlendFunc(
+					blendFuncCommandBuffer->m_Sfactor,
+					blendFuncCommandBuffer->m_Dfactor);
+			m_Blend_Sfactor = blendFuncCommandBuffer->m_Sfactor;
+			m_Blend_Dfactor = blendFuncCommandBuffer->m_Dfactor;
+			break;
+		}
+		case kCommandTypeBlendFuncSeparate:
+		{
+			auto blendFuncSeparateCommandBuffer = static_cast<BlendFuncSeparateCommandBuffer *>(commandBuffer);
+			glBlendFuncSeparate(
+					blendFuncSeparateCommandBuffer->m_SrcRGB,
+					blendFuncSeparateCommandBuffer->m_DstRGB,
+					blendFuncSeparateCommandBuffer->m_SrcAlpha,
+					blendFuncSeparateCommandBuffer->m_DstAlpha);
+			m_Blend_SrcRGB = blendFuncSeparateCommandBuffer->m_SrcRGB;
+			m_Blend_DstRGB = blendFuncSeparateCommandBuffer->m_DstRGB;
+			m_Blend_SrcAlpha = blendFuncSeparateCommandBuffer->m_SrcAlpha;
+			m_Blend_DstAlpha = blendFuncSeparateCommandBuffer->m_DstAlpha;
 			break;
 		}
 		case kCommandTypeColorMask:

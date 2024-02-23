@@ -43,7 +43,11 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   }
 
   private nativeCall(name: string, args: any[] = [], options: NativeCallOptions = {}) {
-    const r = super[name](...args);
+    const fn = <Function>super[name];
+    if (typeof fn !== 'function') {
+      throw new TypeError(`The method(${name}) in native WebGLRenderingContext is not supported`);
+    }
+    const r = fn.apply(this, args);
     if (isEnableDebugging) {
       const { argTypes, argSep = ', ' } = options.debug || {};
       let argsStr: string;
@@ -118,10 +122,18 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return this.nativeCall('blendEquationSeparate', [modeRGB, modeAlpha]);
   }
   blendFunc(sfactor: number, dfactor: number): void {
-    return this.nativeCall('blendFunc', [sfactor, dfactor]);
+    return this.nativeCall('blendFunc', [sfactor, dfactor], {
+      debug: {
+        argTypes: ['constant', 'constant'],
+      }
+    });
   }
   blendFuncSeparate(srcRGB: number, dstRGB: number, srcAlpha: number, dstAlpha: number): void {
-    return this.nativeCall('blendFuncSeparate', [srcRGB, dstRGB, srcAlpha, dstAlpha]);
+    return this.nativeCall('blendFuncSeparate', [srcRGB, dstRGB, srcAlpha, dstAlpha], {
+      debug: {
+        argTypes: ['constant', 'constant', 'constant', 'constant'],
+      }
+    });
   }
   checkFramebufferStatus(target: number): number {
     return this.nativeCall('checkFramebufferStatus', [target]);
@@ -582,22 +594,33 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   bufferData(target: number, data: BufferSource, usage: number): void;
   bufferData(target: number, data: number | BufferSource, usage: number): void {
     if (typeof data === 'number') {
-      throw new Error('BufferData with size not implemented.');
+      throw new Error('bufferData() with size not implemented.');
     } else {
-      // convert to arraybuffer if not
+      let dataBuffer: ArrayBuffer;
       if (!(data instanceof ArrayBuffer)) {
-        super.bufferData(target, data.buffer, usage);
+        dataBuffer = data.buffer;
       } else {
-        super.bufferData(target, data, usage);
+        dataBuffer = data;
       }
-      if (isEnableDebugging) {
-        logger.info(`WebGL::bufferData(${target}, ${data}, ${usage})`);
-      }
+      return this.nativeCall('bufferData', [target, dataBuffer, usage], {
+        debug: {
+          argTypes: ['constant', 'ignore', 'constant'],
+        }
+      });
     }
   }
   bufferSubData(target: number, offset: number, data: BufferSource): void {
-    super.bufferSubData(target, offset, data);
-    return this.nativeCall('bufferSubData', [target, offset, data]);
+    let dataBuffer: ArrayBuffer;
+    if (!(data instanceof ArrayBuffer)) {
+      dataBuffer = data.buffer;
+    } else {
+      dataBuffer = data;
+    }
+    return this.nativeCall('bufferSubData', [target, offset, dataBuffer], {
+      debug: {
+        argTypes: ['constant', 'default', 'ignore'],
+      }
+    });
   }
   compressedTexImage2D(
     target: number,

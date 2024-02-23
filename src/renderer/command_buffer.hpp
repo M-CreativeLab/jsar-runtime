@@ -31,6 +31,7 @@ namespace renderer
     kCommandTypeCreateBuffer,
     kCommandTypeBindBuffer,
     kCommandTypeBufferData,
+    kCommandTypeBufferSubData,
     /** Texture */
     kCommandTypeCreateTexture,
     kCommandTypeBindTexture,
@@ -87,6 +88,11 @@ namespace renderer
     kCommandTypeStencilMaskSeparate,
     kCommandTypeStencilOp,
     kCommandTypeStencilOpSeparate,
+    kCommandTypeBlendColor,
+    kCommandTypeBlendEquation,
+    kCommandTypeBlendEquationSeparate,
+    kCommandTypeBlendFunc,
+    kCommandTypeBlendFuncSeparate,
     kCommandTypeColorMask,
     kCommandTypeCullFace,
     kCommandTypeFrontFace,
@@ -371,6 +377,29 @@ namespace renderer
     int m_Usage;
   };
 
+  class BufferSubDataCommandBuffer : public CommandBuffer
+  {
+  public:
+    BufferSubDataCommandBuffer(int target, int offset, int size, const void *data) : CommandBuffer(kCommandTypeBufferSubData),
+                                                                                     m_Target(target),
+                                                                                     m_Offset(offset),
+                                                                                     m_Size(size),
+                                                                                     m_Data(new char[size])
+    {
+      memcpy((void *)m_Data, data, size);
+    }
+    ~BufferSubDataCommandBuffer()
+    {
+      delete[] m_Data;
+    }
+
+  public:
+    int m_Target;
+    int m_Offset;
+    int m_Size;
+    const char *m_Data;
+  };
+
   class CreateTextureCommandBuffer : public CommandBuffer
   {
   public:
@@ -491,7 +520,7 @@ namespace renderer
   {
   public:
     DisableVertexAttribArrayCommandBuffer(int index) : CommandBuffer(kCommandTypeDisableVertexAttribArray),
-                                                      m_Index(index) {}
+                                                       m_Index(index) {}
     ~DisableVertexAttribArrayCommandBuffer() {}
 
   public:
@@ -1179,6 +1208,76 @@ namespace renderer
     int m_Fail;
     int m_Zfail;
     int m_Zpass;
+  };
+
+  class BlendColorCommandBuffer : public CommandBuffer
+  {
+  public:
+    BlendColorCommandBuffer(float r, float g, float b, float a) : CommandBuffer(kCommandTypeBlendColor),
+                                                                  m_R(r),
+                                                                  m_G(g),
+                                                                  m_B(b),
+                                                                  m_A(a) {}
+    ~BlendColorCommandBuffer() {}
+
+  public:
+    float m_R;
+    float m_G;
+    float m_B;
+    float m_A;
+  };
+
+  class BlendEquationCommandBuffer : public CommandBuffer
+  {
+  public:
+    BlendEquationCommandBuffer(int mode) : CommandBuffer(kCommandTypeBlendEquation), m_Mode(mode) {}
+    ~BlendEquationCommandBuffer() {}
+
+  public:
+    int m_Mode;
+  };
+
+  class BlendEquationSeparateCommandBuffer : public CommandBuffer
+  {
+  public:
+    BlendEquationSeparateCommandBuffer(int modeRGB, int modeAlpha) : CommandBuffer(kCommandTypeBlendEquationSeparate),
+                                                                    m_ModeRGB(modeRGB),
+                                                                    m_ModeAlpha(modeAlpha) {}
+    ~BlendEquationSeparateCommandBuffer() {}
+
+  public:
+    int m_ModeRGB;
+    int m_ModeAlpha;
+  };
+
+  class BlendFuncCommandBuffer : public CommandBuffer
+  {
+  public:
+    BlendFuncCommandBuffer(int sfactor, int dfactor) : CommandBuffer(kCommandTypeBlendFunc),
+                                                      m_Sfactor(sfactor),
+                                                      m_Dfactor(dfactor) {}
+    ~BlendFuncCommandBuffer() {}
+
+  public:
+    int m_Sfactor;
+    int m_Dfactor;
+  };
+
+  class BlendFuncSeparateCommandBuffer : public CommandBuffer
+  {
+  public:
+    BlendFuncSeparateCommandBuffer(int srcRGB, int dstRGB, int srcAlpha, int dstAlpha) : CommandBuffer(kCommandTypeBlendFuncSeparate),
+                                                                                         m_SrcRGB(srcRGB),
+                                                                                         m_DstRGB(dstRGB),
+                                                                                         m_SrcAlpha(srcAlpha),
+                                                                                         m_DstAlpha(dstAlpha) {}
+    ~BlendFuncSeparateCommandBuffer() {}
+
+  public:
+    int m_SrcRGB;
+    int m_DstRGB;
+    int m_SrcAlpha;
+    int m_DstAlpha;
   };
 
   class ColorMaskCommandBuffer : public CommandBuffer
