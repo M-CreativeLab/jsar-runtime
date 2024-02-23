@@ -9,42 +9,49 @@ export class TransmuteRuntime2 {
         disableWebGL2Support: true,
         xrCompatible: false,
       });
+
+      logger.info('[Babylonjs] gl caps:', engine.getCaps());
+      logger.info('[Babylonjs] gl info:', engine.getGlInfo());
+      logger.info('[Babylonjs] shader platform name =', engine.shaderPlatformName);
+      logger.info('[Babylonjs] shader version =', engine.webGLVersion);
+      logger.info('[Babylonjs] support ubo =', engine.supportsUniformBuffers);
+
       BABYLON.Logger.OnNewCacheEntry = (entry) => {
         logger.info('[Babylonjs]', entry);
       };
 
       const scene = new BABYLON.Scene(engine);
       const camera = new BABYLON.FreeCamera('camera1', new BABYLON.Vector3(0, 0, 0.1), scene);
+      camera.fov = (60 * Math.PI) / 180;
+      camera.minZ = 0.1;
+      camera.maxZ = 100.0;
       camera.setTarget(BABYLON.Vector3.Zero());
 
       const light = new BABYLON.HemisphericLight('light', new BABYLON.Vector3(0, 1, 0), scene);
       light.intensity = 0.7;
 
-      const sphere = BABYLON.MeshBuilder.CreateSphere('sphere', {diameter: 2, segments: 32}, scene);
-      sphere.position.z = -8;
-      sphere.onBeforeRenderObservable.add((mesh) => {
-        logger.info(`render sphere at ${performance.now()}`, mesh.subMeshes.length);
-      });
-      sphere.onBeforeBindObservable.add(() => {
-        logger.info(`bind sphere at ${performance.now()}`);
-      });
-      sphere.onBeforeDrawObservable.add(() => {
-        logger.info(`draw sphere at ${performance.now()}`);
-      });
-      
-      scene._beforeRenderingMeshStage.registerStep(
-        0,
-        null,
-        () => {
-          logger.info(`before rendering mesh stage at ${performance.now()}`);
-        }
-      );
-      logger.info('rendering mesh stags', scene._beforeRenderingMeshStage);
-      
-      scene.onNewMaterialAddedObservable.add((mat) => {
-        logger.info(`new material added at ${performance.now()}`, mat.name, mat);
-      });
+      const cube = BABYLON.MeshBuilder.CreateBox('cube', { size: 2 }, scene);
+      cube.position.z = -8;
 
+      // create animation
+      const frameRate = 120;
+      const xSlide = new BABYLON.Animation(
+        'xSlide',
+        'position.x',
+        frameRate,
+        BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+        BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE
+      );
+      const keyFrames = [
+        { frame: 0, value: 2 },
+        { frame: frameRate, value: -2 },
+        { frame: 2 * frameRate, value: 2 },
+      ];
+      xSlide.setKeys(keyFrames);
+      cube.animations.push(xSlide);
+      scene.beginAnimation(cube, 0, 2 * frameRate, true);
+
+      // run render loop
       engine.runRenderLoop(() => {
         scene.render();
       });

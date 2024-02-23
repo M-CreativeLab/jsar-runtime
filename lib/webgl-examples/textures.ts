@@ -81,6 +81,7 @@ export default function run() {
       },
     };
     logger.info('program info:', JSON.stringify(programInfo));
+    // gl.useProgram(programInfo.program);
 
     const buffers = initBuffers(gl);
     const texture = loadTexture(gl, 'cubetexture.png');

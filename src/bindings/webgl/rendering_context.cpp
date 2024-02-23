@@ -2,7 +2,9 @@
 #include "renderer/command_buffer.hpp"
 #include "renderer/render_api.hpp"
 #include "renderer/constants.hpp"
+
 #include "program.hpp"
+#include "uniform_location.hpp"
 
 namespace webgl
 {
@@ -977,7 +979,12 @@ namespace webgl
     auto commandBuffer = new renderer::GetUniformLocationCommandBuffer(program->GetId(), name.c_str());
     m_renderAPI->AddCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
-    return Napi::Number::New(env, commandBuffer->m_Location);
+
+    int value = commandBuffer->m_Location;
+    if (value == -1)
+      return env.Null();
+    else
+      return WebGLUniformLocation::constructor->New({Napi::Number::New(env, value)});
   }
 
   Napi::Value WebGLRenderingContext::Uniform1f(const Napi::CallbackInfo &info)
@@ -990,9 +997,16 @@ namespace webgl
       Napi::TypeError::New(env, "uniform1f() takes 2 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniform1f() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     float x = info[1].As<Napi::Number>().FloatValue();
-    m_renderAPI->AddCommandBuffer(new renderer::Uniform1fCommandBuffer(location, x));
+    m_renderAPI->AddCommandBuffer(new renderer::Uniform1fCommandBuffer(location->GetValue(), x));
     return env.Undefined();
   }
 
@@ -1006,7 +1020,14 @@ namespace webgl
       Napi::TypeError::New(env, "uniform1fv() takes 2 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniform1fv() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     Napi::Float32Array array = info[1].As<Napi::Float32Array>();
     size_t length = array.ElementLength();
 
@@ -1014,7 +1035,7 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().FloatValue();
 
-    auto commandBuffer = new renderer::Uniform1fvCommandBuffer(location, data);
+    auto commandBuffer = new renderer::Uniform1fvCommandBuffer(location->GetValue(), data);
     m_renderAPI->AddCommandBuffer(commandBuffer);
     return env.Undefined();
   }
@@ -1029,9 +1050,16 @@ namespace webgl
       Napi::TypeError::New(env, "uniform1i() takes 2 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniform1i() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     int x = info[1].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::Uniform1iCommandBuffer(location, x));
+    m_renderAPI->AddCommandBuffer(new renderer::Uniform1iCommandBuffer(location->GetValue(), x));
     return env.Undefined();
   }
 
@@ -1045,7 +1073,14 @@ namespace webgl
       Napi::TypeError::New(env, "uniform1iv() takes 2 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniform1iv() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     Napi::Int32Array array = info[1].As<Napi::Int32Array>();
     size_t length = array.ElementLength();
 
@@ -1053,7 +1088,7 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().Int32Value();
 
-    auto commandBuffer = new renderer::Uniform1ivCommandBuffer(location, data);
+    auto commandBuffer = new renderer::Uniform1ivCommandBuffer(location->GetValue(), data);
     m_renderAPI->AddCommandBuffer(commandBuffer);
     return env.Undefined();
   }
@@ -1068,10 +1103,17 @@ namespace webgl
       Napi::TypeError::New(env, "uniform2f() takes 3 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniform2f() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     float x = info[1].As<Napi::Number>().FloatValue();
     float y = info[2].As<Napi::Number>().FloatValue();
-    m_renderAPI->AddCommandBuffer(new renderer::Uniform2fCommandBuffer(location, x, y));
+    m_renderAPI->AddCommandBuffer(new renderer::Uniform2fCommandBuffer(location->GetValue(), x, y));
     return env.Undefined();
   }
 
@@ -1085,7 +1127,14 @@ namespace webgl
       Napi::TypeError::New(env, "uniform2fv() takes 2 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniform2fv() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     Napi::Float32Array array = info[1].As<Napi::Float32Array>();
     size_t length = array.ElementLength();
     if (length != 2)
@@ -1098,7 +1147,7 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().FloatValue();
 
-    auto commandBuffer = new renderer::Uniform2fvCommandBuffer(location, data);
+    auto commandBuffer = new renderer::Uniform2fvCommandBuffer(location->GetValue(), data);
     m_renderAPI->AddCommandBuffer(commandBuffer);
     return env.Undefined();
   }
@@ -1113,10 +1162,17 @@ namespace webgl
       Napi::TypeError::New(env, "uniform2i() takes 3 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniform2i() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     int x = info[1].As<Napi::Number>().Int32Value();
     int y = info[2].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::Uniform2iCommandBuffer(location, x, y));
+    m_renderAPI->AddCommandBuffer(new renderer::Uniform2iCommandBuffer(location->GetValue(), x, y));
     return env.Undefined();
   }
 
@@ -1130,7 +1186,14 @@ namespace webgl
       Napi::TypeError::New(env, "uniform2iv() takes 2 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniform2iv() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     Napi::Int32Array array = info[1].As<Napi::Int32Array>();
     size_t length = array.ElementLength();
     if (length != 2)
@@ -1143,7 +1206,7 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().Int32Value();
 
-    auto commandBuffer = new renderer::Uniform2ivCommandBuffer(location, data);
+    auto commandBuffer = new renderer::Uniform2ivCommandBuffer(location->GetValue(), data);
     m_renderAPI->AddCommandBuffer(commandBuffer);
     return env.Undefined();
   }
@@ -1158,11 +1221,18 @@ namespace webgl
       Napi::TypeError::New(env, "uniform3f() takes 4 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniform3f() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     float x = info[1].As<Napi::Number>().FloatValue();
     float y = info[2].As<Napi::Number>().FloatValue();
     float z = info[3].As<Napi::Number>().FloatValue();
-    m_renderAPI->AddCommandBuffer(new renderer::Uniform3fCommandBuffer(location, x, y, z));
+    m_renderAPI->AddCommandBuffer(new renderer::Uniform3fCommandBuffer(location->GetValue(), x, y, z));
     return env.Undefined();
   }
 
@@ -1176,7 +1246,14 @@ namespace webgl
       Napi::TypeError::New(env, "uniform3fv() takes 2 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniform3fv() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     Napi::Float32Array array = info[1].As<Napi::Float32Array>();
     size_t length = array.ElementLength();
     if (length != 3)
@@ -1189,7 +1266,7 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().FloatValue();
 
-    auto commandBuffer = new renderer::Uniform3fvCommandBuffer(location, data);
+    auto commandBuffer = new renderer::Uniform3fvCommandBuffer(location->GetValue(), data);
     m_renderAPI->AddCommandBuffer(commandBuffer);
     return env.Undefined();
   }
@@ -1204,11 +1281,18 @@ namespace webgl
       Napi::TypeError::New(env, "uniform3i() takes 4 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniform3i() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     int x = info[1].As<Napi::Number>().Int32Value();
     int y = info[2].As<Napi::Number>().Int32Value();
     int z = info[3].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::Uniform3iCommandBuffer(location, x, y, z));
+    m_renderAPI->AddCommandBuffer(new renderer::Uniform3iCommandBuffer(location->GetValue(), x, y, z));
     return env.Undefined();
   }
 
@@ -1222,7 +1306,14 @@ namespace webgl
       Napi::TypeError::New(env, "uniform3iv() takes 2 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniform3iv() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     Napi::Int32Array array = info[1].As<Napi::Int32Array>();
     size_t length = array.ElementLength();
     if (length != 3)
@@ -1235,7 +1326,7 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().Int32Value();
 
-    auto commandBuffer = new renderer::Uniform3ivCommandBuffer(location, data);
+    auto commandBuffer = new renderer::Uniform3ivCommandBuffer(location->GetValue(), data);
     m_renderAPI->AddCommandBuffer(commandBuffer);
     return env.Undefined();
   }
@@ -1250,12 +1341,19 @@ namespace webgl
       Napi::TypeError::New(env, "uniform4f() takes 5 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniform4f() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     float x = info[1].As<Napi::Number>().FloatValue();
     float y = info[2].As<Napi::Number>().FloatValue();
     float z = info[3].As<Napi::Number>().FloatValue();
     float w = info[4].As<Napi::Number>().FloatValue();
-    m_renderAPI->AddCommandBuffer(new renderer::Uniform4fCommandBuffer(location, x, y, z, w));
+    m_renderAPI->AddCommandBuffer(new renderer::Uniform4fCommandBuffer(location->GetValue(), x, y, z, w));
     return env.Undefined();
   }
 
@@ -1269,7 +1367,14 @@ namespace webgl
       Napi::TypeError::New(env, "uniform4fv() takes 2 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniform4fv() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     Napi::Float32Array array = info[1].As<Napi::Float32Array>();
     size_t length = array.ElementLength();
     if (length != 4)
@@ -1282,7 +1387,7 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().FloatValue();
 
-    auto commandBuffer = new renderer::Uniform4fvCommandBuffer(location, data);
+    auto commandBuffer = new renderer::Uniform4fvCommandBuffer(location->GetValue(), data);
     m_renderAPI->AddCommandBuffer(commandBuffer);
     return env.Undefined();
   }
@@ -1297,12 +1402,19 @@ namespace webgl
       Napi::TypeError::New(env, "uniform4i() takes 5 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniform4i() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     int x = info[1].As<Napi::Number>().Int32Value();
     int y = info[2].As<Napi::Number>().Int32Value();
     int z = info[3].As<Napi::Number>().Int32Value();
     int w = info[4].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::Uniform4iCommandBuffer(location, x, y, z, w));
+    m_renderAPI->AddCommandBuffer(new renderer::Uniform4iCommandBuffer(location->GetValue(), x, y, z, w));
     return env.Undefined();
   }
 
@@ -1316,7 +1428,14 @@ namespace webgl
       Napi::TypeError::New(env, "uniform4iv() takes 2 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniform4iv() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     Napi::Int32Array array = info[1].As<Napi::Int32Array>();
     size_t length = array.ElementLength();
     if (length != 4)
@@ -1329,7 +1448,7 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().Int32Value();
 
-    auto commandBuffer = new renderer::Uniform4ivCommandBuffer(location, data);
+    auto commandBuffer = new renderer::Uniform4ivCommandBuffer(location->GetValue(), data);
     m_renderAPI->AddCommandBuffer(commandBuffer);
     return env.Undefined();
   }
@@ -1344,7 +1463,14 @@ namespace webgl
       Napi::TypeError::New(env, "uniformMatrix2fv() takes 3 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniformMatrix2fv() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     bool transpose = info[1].As<Napi::Boolean>().Value();
     Napi::Float32Array array = info[2].As<Napi::Float32Array>();
     size_t length = array.ElementLength();
@@ -1359,7 +1485,7 @@ namespace webgl
       data[i] = array.Get(i).ToNumber().FloatValue();
 
     auto commandBuffer = new renderer::UniformMatrix2fvCommandBuffer(
-        location,
+        location->GetValue(),
         transpose,
         data);
     m_renderAPI->AddCommandBuffer(commandBuffer);
@@ -1376,7 +1502,14 @@ namespace webgl
       Napi::TypeError::New(env, "uniformMatrix3fv() takes 3 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniformMatrix3fv() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     bool transpose = info[1].As<Napi::Boolean>().Value();
     Napi::Float32Array array = info[2].As<Napi::Float32Array>();
     size_t length = array.ElementLength();
@@ -1391,7 +1524,7 @@ namespace webgl
       data[i] = array.Get(i).ToNumber().FloatValue();
 
     auto commandBuffer = new renderer::UniformMatrix3fvCommandBuffer(
-        location,
+        location->GetValue(),
         transpose,
         data);
     m_renderAPI->AddCommandBuffer(commandBuffer);
@@ -1408,7 +1541,14 @@ namespace webgl
       Napi::TypeError::New(env, "uniformMatrix4fv() takes 3 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int location = info[0].As<Napi::Number>().Int32Value();
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "uniformMatrix4fv() 1st argument(program) must be a WebGLUniformLocation object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     bool transpose = info[1].As<Napi::Boolean>().Value();
     Napi::Float32Array array = info[2].As<Napi::Float32Array>();
     size_t length = array.ElementLength();
@@ -1423,7 +1563,7 @@ namespace webgl
       data[i] = array.Get(i).ToNumber().FloatValue();
 
     auto commandBuffer = new renderer::UniformMatrix4fvCommandBuffer(
-        location,
+        location->GetValue(),
         transpose,
         data);
     m_renderAPI->AddCommandBuffer(commandBuffer);
@@ -1478,7 +1618,15 @@ namespace webgl
     }
     int pname = info[0].As<Napi::Number>().Int32Value();
     int param = info[1].ToNumber().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::PixelStoreiCommandBuffer(pname, param));
+
+    if (pname == WEBGL_PACK_ALIGNMENT || pname == WEBGL_UNPACK_ALIGNMENT)
+    {
+      m_renderAPI->AddCommandBuffer(new renderer::PixelStoreiCommandBuffer(pname, param));
+    }
+    else
+    {
+      // TODO: other pixel store parameters
+    }
     return env.Undefined();
   }
 

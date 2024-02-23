@@ -242,10 +242,18 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return this.nativeCall('disableVertexAttribArray', [index]);
   }
   drawArrays(mode: number, first: number, count: number): void {
-    return this.nativeCall('drawArrays', [mode, first, count]);
+    return this.nativeCall('drawArrays', [mode, first, count], {
+      debug: {
+        argTypes: ['constant', 'default', 'default'],
+      }
+    });
   }
   drawElements(mode: number, count: number, type: number, offset: number): void {
-    return this.nativeCall('drawElements', [mode, count, type, offset]);
+    return this.nativeCall('drawElements', [mode, count, type, offset], {
+      debug: {
+        argTypes: ['constant', 'default', 'constant', 'default'],
+      }
+    });
   }
   enable(cap: number): void {
     return this.nativeCall('enable', [cap], {
@@ -306,7 +314,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
       depth: true,
       failIfMajorPerformanceCaveat: false,
       powerPreference: 'default',
-      premultipliedAlpha: true,
+      premultipliedAlpha: false,
       preserveDrawingBuffer: false,
       stencil: false,
       xrCompatible: false,
@@ -442,7 +450,11 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return this.nativeCall('linkProgram', [program]);
   }
   pixelStorei(pname: number, param: number | boolean): void {
-    return this.nativeCall('pixelStorei', [pname, param]);
+    return this.nativeCall('pixelStorei', [pname, param], {
+      debug: {
+        argTypes: ['constant', 'default'],
+      }
+    });
   }
   polygonOffset(factor: number, units: number): void {
     return this.nativeCall('polygonOffset', [factor, units]);
@@ -554,7 +566,11 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return this.nativeCall('vertexAttrib4fv', [index, values]);
   }
   vertexAttribPointer(index: number, size: number, type: number, normalized: boolean, stride: number, offset: number): void {
-    return this.nativeCall('vertexAttribPointer', [index, size, type, normalized, stride, offset]);
+    return this.nativeCall('vertexAttribPointer', [index, size, type, normalized, stride, offset], {
+      debug: {
+        argTypes: ['default', 'default', 'constant', 'default', 'default', 'default'],
+      }
+    });
   }
   viewport(x: number, y: number, width: number, height: number): void {
     return this.nativeCall('viewport', [x, y, width, height]);

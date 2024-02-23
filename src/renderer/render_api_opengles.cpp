@@ -92,13 +92,11 @@ private:
 
 private:
 	UnityGfxRenderer m_APIType;
-	GLuint m_VertexShader;
-	GLuint m_FragmentShader;
-	GLuint m_Program;
-	GLuint m_VertexArray;
-	GLuint m_VertexBuffer;
-	int m_UniformWorldMatrix;
-	int m_UniformProjMatrix;
+	GLuint m_CurrentProgramId = 0;
+	GLuint m_CurrentFrontFace = GL_CW;
+	GLuint m_CurrentDepthFunc = GL_LEQUAL;
+	bool m_DepthTestEnabled = false;
+	bool m_DepthMaskEnabled = true;
 	bool m_DebugEnabled = true;
 };
 
@@ -108,118 +106,9 @@ RenderAPI *CreateRenderAPI_OpenGLCoreES(UnityGfxRenderer apiType)
 	return new RenderAPI_OpenGLCoreES(apiType);
 }
 
-enum VertexInputs
-{
-	kVertexInputPosition = 0,
-	kVertexInputColor = 1
-};
-
-// Simple vertex shader source
-#define VERTEX_SHADER_SRC(ver, attr, varying)                           \
-	ver                                                                   \
-			attr " highp vec3 pos;\n" attr " lowp vec4 color;\n"              \
-					 "\n" varying " lowp vec4 ocolor;\n"                          \
-					 "\n"                                                         \
-					 "uniform highp mat4 worldMatrix;\n"                          \
-					 "uniform highp mat4 projMatrix;\n"                           \
-					 "\n"                                                         \
-					 "void main()\n"                                              \
-					 "{\n"                                                        \
-					 "	gl_Position = (projMatrix * worldMatrix) * vec4(pos,1);\n" \
-					 "	ocolor = color;\n"                                         \
-					 "}\n"
-
-static const char *kGlesVProgTextGLES2 = VERTEX_SHADER_SRC("\n", "attribute", "varying");
-static const char *kGlesVProgTextGLES3 = VERTEX_SHADER_SRC("#version 300 es\n", "in", "out");
-#if SUPPORT_OPENGL_CORE
-static const char *kGlesVProgTextGLCore = VERTEX_SHADER_SRC("#version 150\n", "in", "out");
-#endif
-
-#undef VERTEX_SHADER_SRC
-
-// Simple fragment shader source
-#define FRAGMENT_SHADER_SRC(ver, varying, outDecl, outVar) \
-	ver                                                      \
-			outDecl                                              \
-					varying " lowp vec4 ocolor;\n"                   \
-									"\n"                                     \
-									"void main()\n"                          \
-									"{\n"                                    \
-									"	" outVar " = ocolor;\n"                \
-									"}\n"
-
-static const char *kGlesFShaderTextGLES2 = FRAGMENT_SHADER_SRC("\n", "varying", "\n", "gl_FragColor");
-static const char *kGlesFShaderTextGLES3 = FRAGMENT_SHADER_SRC("#version 300 es\n", "in", "out lowp vec4 fragColor;\n", "fragColor");
-#if SUPPORT_OPENGL_CORE
-static const char *kGlesFShaderTextGLCore = FRAGMENT_SHADER_SRC("#version 150\n", "in", "out lowp vec4 fragColor;\n", "fragColor");
-#endif
-
-#undef FRAGMENT_SHADER_SRC
-
-static GLuint _CreateShader(GLenum type, const char *sourceText)
-{
-	GLuint ret = glCreateShader(type);
-	DEBUG("Unity", "OpenGL::_CreateShader(%d) = %d", type, ret);
-	glShaderSource(ret, 1, &sourceText, NULL);
-	glCompileShader(ret);
-	return ret;
-}
-
 void RenderAPI_OpenGLCoreES::CreateResources()
 {
-#if UNITY_WIN && SUPPORT_OPENGL_CORE
-	if (m_APIType == kUnityGfxRendererOpenGLCore)
-		gl3wInit();
-#endif
-	// Make sure that there are no GL error flags set before creating resources
-	while (glGetError() != GL_NO_ERROR)
-	{
-	}
-
-	// Create shaders
-	if (m_APIType == kUnityGfxRendererOpenGLES20)
-	{
-		m_VertexShader = _CreateShader(GL_VERTEX_SHADER, kGlesVProgTextGLES2);
-		m_FragmentShader = _CreateShader(GL_FRAGMENT_SHADER, kGlesFShaderTextGLES2);
-	}
-	else if (m_APIType == kUnityGfxRendererOpenGLES30)
-	{
-		m_VertexShader = _CreateShader(GL_VERTEX_SHADER, kGlesVProgTextGLES3);
-		m_FragmentShader = _CreateShader(GL_FRAGMENT_SHADER, kGlesFShaderTextGLES3);
-	}
-#if SUPPORT_OPENGL_CORE
-	else if (m_APIType == kUnityGfxRendererOpenGLCore)
-	{
-		m_VertexShader = _CreateShader(GL_VERTEX_SHADER, kGlesVProgTextGLCore);
-		m_FragmentShader = _CreateShader(GL_FRAGMENT_SHADER, kGlesFShaderTextGLCore);
-	}
-#endif // if SUPPORT_OPENGL_CORE
-
-	// Link shaders into a program and find uniform locations
-	m_Program = glCreateProgram();
-	glBindAttribLocation(m_Program, kVertexInputPosition, "pos");
-	glBindAttribLocation(m_Program, kVertexInputColor, "color");
-	glAttachShader(m_Program, m_VertexShader);
-	glAttachShader(m_Program, m_FragmentShader);
-#if SUPPORT_OPENGL_CORE
-	if (m_APIType == kUnityGfxRendererOpenGLCore)
-		glBindFragDataLocation(m_Program, 0, "fragColor");
-#endif // if SUPPORT_OPENGL_CORE
-	glLinkProgram(m_Program);
-
-	GLint status = 0;
-	glGetProgramiv(m_Program, GL_LINK_STATUS, &status);
-	assert(status == GL_TRUE);
-
-	m_UniformWorldMatrix = glGetUniformLocation(m_Program, "worldMatrix");
-	m_UniformProjMatrix = glGetUniformLocation(m_Program, "projMatrix");
-
-	// Create vertex buffer
-	glGenBuffers(1, &m_VertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, m_VertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, 1024, NULL, GL_STREAM_DRAW);
-
-	assert(glGetError() == GL_NO_ERROR);
+	// TODO
 }
 
 RenderAPI_OpenGLCoreES::RenderAPI_OpenGLCoreES(UnityGfxRenderer apiType)
@@ -263,6 +152,7 @@ void RenderAPI_OpenGLCoreES::LinkProgram(int program)
 void RenderAPI_OpenGLCoreES::UseProgram(int program)
 {
 	glUseProgram(program);
+	m_CurrentProgramId = program;
 }
 
 void RenderAPI_OpenGLCoreES::AttachShader(int program, int shader)
@@ -425,22 +315,38 @@ void RenderAPI_OpenGLCoreES::Clear(uint32_t mask)
 void RenderAPI_OpenGLCoreES::DepthFunc(int func)
 {
 	glDepthFunc(func);
+	m_CurrentDepthFunc = func;
 }
 
 void RenderAPI_OpenGLCoreES::Enable(uint32_t cap)
 {
 	glEnable(cap);
+
+	if (cap == GL_DEPTH_TEST)
+		m_DepthTestEnabled = true;
 }
 
 void RenderAPI_OpenGLCoreES::Disable(uint32_t cap)
 {
 	glDisable(cap);
+
+	if (cap == GL_DEPTH_TEST)
+		m_DepthTestEnabled = false;
 }
 
 void RenderAPI_OpenGLCoreES::StartFrame()
 {
-	glFrontFace(GL_CW);
-	glDepthMask(GL_TRUE);
+	/**
+	 * Because the Unity or other 3d engine may change the state of OpenGL, we need to update these states which is updated in
+	 * the last frame, to make sure the rendering in WebGL is correct.
+	 */
+
+	if (m_CurrentProgramId != 0)
+		glUseProgram(m_CurrentProgramId);
+	glFrontFace(m_CurrentFrontFace);
+	glEnable(m_DepthTestEnabled ? GL_DEPTH_TEST : GL_NONE);
+	glDepthFunc(m_CurrentDepthFunc);
+	glDepthMask(m_DepthMaskEnabled);
 }
 
 void RenderAPI_OpenGLCoreES::EndFrame()
@@ -451,9 +357,12 @@ void RenderAPI_OpenGLCoreES::EndFrame()
 void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 {
 	std::unique_lock<std::mutex> lock(m_CommandBuffersMutex);
+
+	// Execute all the command buffers
 	for (auto commandBuffer : m_CommandBuffers)
 	{
-		switch (commandBuffer->GetType())
+		auto commandType = commandBuffer->GetType();
+		switch (commandType)
 		{
 		case kCommandTypeCreateProgram:
 		{
@@ -841,6 +750,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					uniformMatrix4fvCommandBuffer->m_Count,
 					uniformMatrix4fvCommandBuffer->m_Transpose,
 					uniformMatrix4fvCommandBuffer->m_Value);
+			DEBUG("Unity", "OpenGL::ExecuteCommandBuffer() - glUniformMatrix4fv(%d, %d, %d, %p)", uniformMatrix4fvCommandBuffer->m_Location, uniformMatrix4fvCommandBuffer->m_Count, uniformMatrix4fvCommandBuffer->m_Transpose, uniformMatrix4fvCommandBuffer->m_Value);
 			break;
 		}
 		case kCommandTypeDrawArrays:
@@ -918,6 +828,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 		{
 			auto depthMaskCommandBuffer = static_cast<DepthMaskCommandBuffer *>(commandBuffer);
 			glDepthMask(depthMaskCommandBuffer->m_Flag);
+			m_DepthMaskEnabled = depthMaskCommandBuffer->m_Flag;
 			break;
 		}
 		case kCommandTypeDepthFunc:
@@ -1004,6 +915,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 		{
 			auto frontFaceCommandBuffer = static_cast<FrontFaceCommandBuffer *>(commandBuffer);
 			glFrontFace(frontFaceCommandBuffer->m_Mode);
+			m_CurrentFrontFace = frontFaceCommandBuffer->m_Mode;
 			break;
 		}
 		case kCommandTypeEnable:
@@ -1074,6 +986,16 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 		default:
 			break;
 		}
+
+		if (m_DebugEnabled)
+		{
+			// Check for OpenGL errors
+			GLenum error = glGetError();
+			if (error != GL_NO_ERROR)
+			{
+				DEBUG("Unity", "[type:%d] Occurs an OpenGL error: 0x%04X", commandType, error);
+			}
+		}
 		commandBuffer->Finish();
 		// delete commandBuffer;
 	}
@@ -1082,72 +1004,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 
 void RenderAPI_OpenGLCoreES::DrawSimpleTriangles(const float worldMatrix[16], int triangleCount, const void *verticesFloat3Byte4)
 {
-	// Set basic render state
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_BLEND);
-	glDepthFunc(GL_LEQUAL);
-	glEnable(GL_DEPTH_TEST);
-	glDepthMask(GL_FALSE);
-
-	glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// Tweak the projection matrix a bit to make it match what identity projection would do in D3D case.
-	float projectionMatrix[16] = {
-			1,
-			0,
-			0,
-			0,
-			0,
-			1,
-			0,
-			0,
-			0,
-			0,
-			2,
-			0,
-			0,
-			0,
-			-1,
-			1,
-	};
-
-	// Setup shader program to use, and the matrices
-	glUseProgram(m_Program);
-	glUniformMatrix4fv(m_UniformWorldMatrix, 1, GL_FALSE, worldMatrix);
-	glUniformMatrix4fv(m_UniformProjMatrix, 1, GL_FALSE, projectionMatrix);
-
-	// Core profile needs VAOs, setup one
-#if SUPPORT_OPENGL_CORE
-	if (m_APIType == kUnityGfxRendererOpenGLCore)
-	{
-		glGenVertexArrays(1, &m_VertexArray);
-		glBindVertexArray(m_VertexArray);
-	}
-#endif // if SUPPORT_OPENGL_CORE
-
-	// Bind a vertex buffer, and update data in it
-	const int kVertexSize = 12 + 4;
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, m_VertexBuffer);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, kVertexSize * triangleCount * 3, verticesFloat3Byte4);
-
-	// Setup vertex layout
-	glEnableVertexAttribArray(kVertexInputPosition);
-	glVertexAttribPointer(kVertexInputPosition, 3, GL_FLOAT, GL_FALSE, kVertexSize, (char *)NULL + 0);
-	glEnableVertexAttribArray(kVertexInputColor);
-	glVertexAttribPointer(kVertexInputColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, kVertexSize, (char *)NULL + 12);
-
-	// Draw
-	glDrawArrays(GL_TRIANGLES, 0, triangleCount * 3);
-
-	// Cleanup VAO
-#if SUPPORT_OPENGL_CORE
-	if (m_APIType == kUnityGfxRendererOpenGLCore)
-	{
-		glDeleteVertexArrays(1, &m_VertexArray);
-	}
-#endif
+	// TODO
 }
 
 #endif // #if SUPPORT_OPENGL_UNIFIED
