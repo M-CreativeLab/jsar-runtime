@@ -1,4 +1,5 @@
 import * as logger from '../bindings/logger';
+import { ImageBitmapImpl } from '../polyfills/offscreencanvas';
 import { WebGLShaderPrecisionFormatImpl } from './WebGLShaderPrecisionFormat';
 
 const glNative = process._linkedBinding('transmute:webgl');
@@ -139,16 +140,16 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return this.nativeCall('checkFramebufferStatus', [target]);
   }
   clear(mask: number): void {
-    // super.clear(mask);
+    return this.nativeCall('clear', [mask]);
   }
   clearColor(red: number, green: number, blue: number, alpha: number): void {
-    // super.clearColor(red, green, blue, alpha);
+    return this.nativeCall('clearColor', [red, green, blue, alpha]);
   }
   clearDepth(depth: number): void {
-    // super.clearDepth(depth);
+    return this.nativeCall('clearDepth', [depth]);
   }
   clearStencil(s: number): void {
-    // super.clearStencil(s);
+    return this.nativeCall('clearStencil', [s]);
   }
   colorMask(red: boolean, green: boolean, blue: boolean, alpha: boolean): void {
     return this.nativeCall('colorMask', [red, green, blue, alpha]);
@@ -695,6 +696,9 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     pixels?: ArrayBufferView
   ): void {
     if (arguments.length === 9) {
+      if (pixels instanceof ArrayBuffer) {
+        pixels = new Uint8Array(pixels);
+      }
       return this.nativeCall('texImage2D', [
         target,
         level,
@@ -707,7 +711,29 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
         pixels
       ]);
     } else if (arguments.length === 6) {
-      throw new Error('texImage2D() with TexImageSource not implemented.');
+      const format = <number>(arguments[3]);
+      const type = <number>(arguments[4]);
+      const imageSource = <TexImageSource>(arguments[5]);
+      if (imageSource instanceof ImageBitmapImpl) {
+        let pixels = imageSource._readPixels();
+        // convert pixels to TypedArray if it's an ArrayBuffer
+        if (pixels instanceof ArrayBuffer) {
+          pixels = new Uint8Array(pixels);
+        }
+        return this.nativeCall('texImage2D', [
+          target,
+          level,
+          internalformat,
+          imageSource.width,
+          imageSource.height,
+          0,
+          format,
+          type,
+          pixels,
+        ]);
+      } else {
+        throw new Error(`Unsupported image source type(${imageSource}) for texImage2D()`);
+      }
     } else {
       throw new Error('Invalid number of arguments for texImage2D()');
     }

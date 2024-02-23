@@ -1,4 +1,6 @@
 import 'babylonjs';
+import 'babylonjs-loaders';
+
 import { requestRendererReady } from '../bindings/renderer';
 import * as logger from '../bindings/logger';
 
@@ -50,58 +52,33 @@ export class TransmuteRuntime2 {
   }
 
   private appEntry(scene: BABYLON.Scene) {
-    var pl = new BABYLON.PointLight("pl", new BABYLON.Vector3(0, 0, 0), scene);
-    pl.diffuse = new BABYLON.Color3(1, 1, 1);
-    pl.specular = new BABYLON.Color3(1, 0, 0);
-    pl.intensity = 0.95;
+    // var mat0 = new BABYLON.StandardMaterial("mat0", scene);
+    // mat0.diffuseColor = new BABYLON.Color3(1, 0, 0);
+    // mat0.bumpTexture = new BABYLON.Texture("https://i.imgur.com/wGyk6os.png", scene);
 
-    var mat = new BABYLON.StandardMaterial("mat1", scene);
-    mat.alpha = 1.0;
-    mat.diffuseColor = new BABYLON.Color3(0.5, 0.5, 1.0);
-    mat.backFaceCulling = false;
-    //mat.wireframe = true;
-
-    // tube creation
-    var sideOrientation = BABYLON.Mesh.FRONTSIDE;
-    var radius = 5;
-    var path = [];
-    for (var i = -20; i < 20; i++) {
-      var x = i * 2;
-      var y = 0;
-      var z = 0;
-      path.push(new BABYLON.Vector3(x, y, z));
-    }
-    var mesh = BABYLON.Mesh.CreateTube("tube", path, 5, 16, null, 0, scene, true, sideOrientation);
-    mesh.material = mat;
-
-    var updatePath = function (path, k) {
-      for (var i = 0; i < path.length; i++) {
-        var x = path[i].x;
-        var y = 5 * Math.sin(i / 10 + k * 2);
-        var z = path[i].z;
-        path[i].x = x;
-        path[i].y = y;
-        path[i].z = z;
-      }
-    };
-
-    var updateFixedRadius = function (radius, k) {
-      return (radius + 2 * Math.sin(k));
-    };
-
-    // morphing
-    var k = 0;
-    scene.registerBeforeRender(() => {
-      //radiusFunction  
-      var radiusFunction = function (i, distance) {
-        return radius + 2 * Math.sin(i / 2 + k);
-      };
-
-      updatePath(path, k);
-      var rad = updateFixedRadius(radius, k);
-      mesh = BABYLON.Mesh.CreateTube(null, path, rad, null, radiusFunction, null, null, null, null, mesh);
-      k += 0.05;
-      pl.position = this.mainCamera.position;
+    var mat1 = new BABYLON.StandardMaterial("mat1", scene);
+    var tex = mat1.diffuseTexture = new BABYLON.Texture("https://i.imgur.com/Wk1cGEq.png", scene);
+    // mat1.bumpTexture = new BABYLON.Texture("https://i.imgur.com/wGyk6os.png", scene);
+    tex.getInternalTexture().onErrorObservable.add((err) => {
+      logger.error('bumpTexture error:', err);
     });
+
+    // var mat2 = new BABYLON.StandardMaterial("mat2", scene);
+    // mat2.diffuseTexture = new BABYLON.Texture("textures/grass.png", scene);
+    // mat2.bumpTexture = new BABYLON.Texture("https://i.imgur.com/wGyk6os.png", scene);
+
+    //colour and bump
+    // var sphere0 = BABYLON.MeshBuilder.CreateSphere("sphere0", {}, scene);
+    // sphere0.position.x = -1.5;
+    // sphere0.material = mat0;
+
+    //original image and bump
+    var sphere1 = BABYLON.MeshBuilder.CreateSphere("sphere1", {}, scene);
+    sphere1.material = mat1;
+
+    // //other image and bump
+    // var sphere2 = BABYLON.MeshBuilder.CreateSphere("sphere2", {}, scene);
+    // sphere2.material = mat2;
+    // sphere2.position.x = 1.5;
   }
 }

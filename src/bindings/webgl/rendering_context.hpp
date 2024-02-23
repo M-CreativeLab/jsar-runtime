@@ -27,6 +27,7 @@ namespace webgl
     Napi::Value GetShaderParameter(const Napi::CallbackInfo &info);
     Napi::Value GetShaderInfoLog(const Napi::CallbackInfo &info);
     Napi::Value CreateBuffer(const Napi::CallbackInfo &info);
+    Napi::Value DeleteBuffer(const Napi::CallbackInfo &info);
     Napi::Value BindBuffer(const Napi::CallbackInfo &info);
     Napi::Value BufferData(const Napi::CallbackInfo &info);
     Napi::Value BufferSubData(const Napi::CallbackInfo &info);

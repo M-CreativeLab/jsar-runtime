@@ -742,6 +742,16 @@ export class ImageBitmapImpl implements ImageBitmap {
   _getSkImage() {
     return this.skImage;
   }
+
+  _readPixels(x: number = 0, y: number = 0, width: number = this.width, height: number = this.height) {
+    return this.skImage.readPixels(x, y, {
+      width,
+      height,
+      alphaType: canvasKit.AlphaType.Opaque,
+      colorType: canvasKit.ColorType.RGBA_8888,
+      colorSpace: canvasKit.ColorSpace.SRGB,
+    });
+  }
 }
 
 export class ImageDataImpl implements ImageData {
@@ -777,9 +787,7 @@ export async function createImageBitmapImpl(source: ImageBitmapSource, _sx?: unk
   if (!(source instanceof Blob)) {
     throw new TypeError('createImageBitmap only supports Blob objects as input.');
   }
-  if (arguments.length > 1) {
-    throw new TypeError('createImageBitmap with cropping options is not supported.');
-  }
+  // TODO: support sx, sy, sw, sh, and options.
   return new ImageBitmapImpl(await source.arrayBuffer());
 }
 

@@ -29,6 +29,7 @@ namespace renderer
     kCommandTypeGetShaderInfoLog,
     /** Buffer */
     kCommandTypeCreateBuffer,
+    kCommandTypeDeleteBuffer,
     kCommandTypeBindBuffer,
     kCommandTypeBufferData,
     kCommandTypeBufferSubData,
@@ -338,7 +339,18 @@ namespace renderer
     ~CreateBufferCommandBuffer() {}
 
   public:
-    int m_BufferId = 0;
+    uint32_t m_BufferId = 0;
+  };
+
+  class DeleteBufferCommandBuffer : public CommandBuffer
+  {
+  public:
+    DeleteBufferCommandBuffer(uint32_t buffer) : CommandBuffer(kCommandTypeDeleteBuffer),
+                                                 m_BufferId(buffer) {}
+    ~DeleteBufferCommandBuffer() {}
+
+  public:
+    uint32_t m_BufferId;
   };
 
   class BindBufferCommandBuffer : public CommandBuffer
@@ -434,6 +446,23 @@ namespace renderer
         int height,
         int border,
         int format,
+        int type) : CommandBuffer(kCommandTypeTexImage2D),
+                    m_Target(target),
+                    m_Level(level),
+                    m_Internalformat(internalformat),
+                    m_Width(width),
+                    m_Height(height),
+                    m_Border(border),
+                    m_Format(format),
+                    m_Type(type) {}
+    TexImage2DCommandBuffer(
+        int target,
+        int level,
+        int internalformat,
+        int width,
+        int height,
+        int border,
+        int format,
         int type,
         size_t pixelsSize,
         const void *pixels) : CommandBuffer(kCommandTypeTexImage2D),
@@ -452,7 +481,8 @@ namespace renderer
     }
     ~TexImage2DCommandBuffer()
     {
-      delete[] m_Pixels;
+      if (m_Pixels != NULL && m_PixelsSize > 0)
+        delete[] m_Pixels;
     }
 
   public:
@@ -464,8 +494,8 @@ namespace renderer
     int m_Border;
     int m_Format;
     int m_Type;
-    size_t m_PixelsSize;
-    const char *m_Pixels;
+    size_t m_PixelsSize = 0;
+    const char *m_Pixels = NULL;
   };
 
   class TexParameteriCommandBuffer : public CommandBuffer
@@ -1241,8 +1271,8 @@ namespace renderer
   {
   public:
     BlendEquationSeparateCommandBuffer(int modeRGB, int modeAlpha) : CommandBuffer(kCommandTypeBlendEquationSeparate),
-                                                                    m_ModeRGB(modeRGB),
-                                                                    m_ModeAlpha(modeAlpha) {}
+                                                                     m_ModeRGB(modeRGB),
+                                                                     m_ModeAlpha(modeAlpha) {}
     ~BlendEquationSeparateCommandBuffer() {}
 
   public:
@@ -1254,8 +1284,8 @@ namespace renderer
   {
   public:
     BlendFuncCommandBuffer(int sfactor, int dfactor) : CommandBuffer(kCommandTypeBlendFunc),
-                                                      m_Sfactor(sfactor),
-                                                      m_Dfactor(dfactor) {}
+                                                       m_Sfactor(sfactor),
+                                                       m_Dfactor(dfactor) {}
     ~BlendFuncCommandBuffer() {}
 
   public:

@@ -106,6 +106,11 @@ private:
 	GLenum m_Blend_DstRGB = GL_ZERO;
 	GLenum m_Blend_SrcAlpha = GL_ONE;
 	GLenum m_Blend_DstAlpha = GL_ZERO;
+	// Used by glClear with color, depth and stencil
+	float m_ClearColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+	float m_ClearDepth = 1.0f;
+	uint32_t m_ClearStencil = 0;
+	int m_ClearMask = 0;
 	// Used by debugging
 	bool m_DebugEnabled = true;
 };
@@ -304,22 +309,25 @@ void RenderAPI_OpenGLCoreES::SetScissor(int x, int y, int width, int height)
 
 void RenderAPI_OpenGLCoreES::ClearColor(float r, float g, float b, float a)
 {
-	glClearColor(r, g, b, a);
+	m_ClearColor[0] = r;
+	m_ClearColor[1] = g;
+	m_ClearColor[2] = b;
+	m_ClearColor[3] = a;
 }
 
 void RenderAPI_OpenGLCoreES::ClearDepth(float depth)
 {
-	glClearDepthf(depth);
+	m_ClearDepth = depth;
 }
 
 void RenderAPI_OpenGLCoreES::ClearStencil(uint32_t stencil)
 {
-	glClearStencil(stencil);
+	m_ClearStencil = stencil;
 }
 
 void RenderAPI_OpenGLCoreES::Clear(uint32_t mask)
 {
-	glClear(mask);
+	m_ClearMask = mask;
 }
 
 void RenderAPI_OpenGLCoreES::DepthFunc(int func)
@@ -554,6 +562,12 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			auto createBufferCommandBuffer = static_cast<CreateBufferCommandBuffer *>(commandBuffer);
 			int ret = CreateBuffer();
 			createBufferCommandBuffer->m_BufferId = ret;
+			break;
+		}
+		case kCommandTypeDeleteBuffer:
+		{
+			auto deleteBufferCommandBuffer = static_cast<DeleteBufferCommandBuffer *>(commandBuffer);
+			glDeleteBuffers(1, &deleteBufferCommandBuffer->m_BufferId);
 			break;
 		}
 		case kCommandTypeBindBuffer:

@@ -355,6 +355,7 @@ namespace webgl
          InstanceMethod("getShaderParameter", &WebGLRenderingContext::GetShaderParameter),
          InstanceMethod("getShaderInfoLog", &WebGLRenderingContext::GetShaderInfoLog),
          InstanceMethod("createBuffer", &WebGLRenderingContext::CreateBuffer),
+         InstanceMethod("deleteBuffer", &WebGLRenderingContext::DeleteBuffer),
          InstanceMethod("bindBuffer", &WebGLRenderingContext::BindBuffer),
          InstanceMethod("bufferData", &WebGLRenderingContext::BufferData),
          InstanceMethod("bufferSubData", &WebGLRenderingContext::BufferSubData),
@@ -740,6 +741,21 @@ namespace webgl
     return Napi::Number::New(env, commandBuffer->m_BufferId);
   }
 
+  Napi::Value WebGLRenderingContext::DeleteBuffer(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "deleteBuffer() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int buffer = info[0].As<Napi::Number>().Int32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::DeleteBufferCommandBuffer(buffer));
+    return env.Undefined();
+  }
+
   Napi::Value WebGLRenderingContext::BindBuffer(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -833,8 +849,19 @@ namespace webgl
       Napi::TypeError::New(env, "bindTexture() takes 2 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
+    if (!info[0].IsNumber())
+    {
+      Napi::TypeError::New(env, "the target to bindTexture() is invalid.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
     int target = info[0].As<Napi::Number>().Int32Value();
-    int texture = info[1].As<Napi::Number>().Int32Value();
+    int texture = 0;
+    if (info[1].IsNumber())
+    {
+      texture = info[1].As<Napi::Number>().Int32Value();
+    }
     m_renderAPI->AddCommandBuffer(new renderer::BindTextureCommandBuffer(target, texture));
     return env.Undefined();
   }
@@ -853,7 +880,24 @@ namespace webgl
     int format = info[6].As<Napi::Number>().Int32Value();
     int type = info[7].As<Napi::Number>().Int32Value();
 
-    if (!info[8].IsTypedArray())
+    Napi::Value imageSource = info[8];
+    if (imageSource.IsNull())
+    {
+      /** When the image source is null, just create TexImage2DCommandBuffer with empty mode */
+      m_renderAPI->AddCommandBuffer(new renderer::TexImage2DCommandBuffer(
+          target,
+          level,
+          internalformat,
+          width,
+          height,
+          border,
+          format,
+          type));
+      return env.Undefined();
+    }
+
+    // Otherwise, the image source should be a TypedArray
+    if (!imageSource.IsTypedArray())
     {
       Napi::TypeError::New(env, "the pixels should be a TypedArray.").ThrowAsJavaScriptException();
       return env.Undefined();
