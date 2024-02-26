@@ -167,7 +167,11 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     height: number,
     border: number
   ): void {
-    return this.nativeCall('copyTexImage2D', [target, level, internalformat, x, y, width, height, border]);
+    return this.nativeCall('copyTexImage2D', [target, level, internalformat, x, y, width, height, border], {
+      debug: {
+        argTypes: ['constant', 'default', 'constant'],
+      }
+    });
   }
   copyTexSubImage2D(
     target: number,
@@ -179,7 +183,11 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     width: number,
     height: number
   ): void {
-    return this.nativeCall('copyTexSubImage2D', [target, level, xoffset, yoffset, x, y, width, height]);
+    return this.nativeCall('copyTexSubImage2D', [target, level, xoffset, yoffset, x, y, width, height], {
+      debug: {
+        argTypes: ['constant', 'default', 'default'],
+      }
+    });
   }
   createBuffer(): WebGLBuffer {
     return this.nativeCall('createBuffer');
@@ -290,10 +298,18 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     renderbuffertarget: number,
     renderbuffer: WebGLRenderbuffer
   ): void {
-    return this.nativeCall('framebufferRenderbuffer', [target, attachment, renderbuffertarget, renderbuffer]);
+    return this.nativeCall('framebufferRenderbuffer', [target, attachment, renderbuffertarget, renderbuffer], {
+      debug: {
+        argTypes: ['constant', 'constant', 'constant'],
+      }
+    });
   }
   framebufferTexture2D(target: number, attachment: number, textarget: number, texture: WebGLTexture, level: number): void {
-    return this.nativeCall('framebufferTexture2D', [target, attachment, textarget, texture, level]);
+    return this.nativeCall('framebufferTexture2D', [target, attachment, textarget, texture, level], {
+      debug: {
+        argTypes: ['constant', 'constant', 'constant'],
+      }
+    });
   }
   frontFace(mode: number): void {
     return this.nativeCall('frontFace', [mode], {

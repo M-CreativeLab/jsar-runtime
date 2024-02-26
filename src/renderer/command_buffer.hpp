@@ -33,10 +33,22 @@ namespace renderer
     kCommandTypeBindBuffer,
     kCommandTypeBufferData,
     kCommandTypeBufferSubData,
+    kCommandTypeCreateFramebuffer,
+    kCommandTypeDeleteFramebuffer,
+    kCommandTypeBindFramebuffer,
+    kCommandTypeFramebufferRenderbuffer,
+    kCommandTypeFramebufferTexture2D,
+    kCommandTypeCreateRenderbuffer,
+    kCommandTypeDeleteRenderbuffer,
+    kCommandTypeBindRenderbuffer,
     /** Texture */
     kCommandTypeCreateTexture,
+    kCommandTypeDeleteTexture,
     kCommandTypeBindTexture,
     kCommandTypeTexImage2D,
+    kCommandTypeTexSubImage2D,
+    kCommandTypeCopyTexImage2D,
+    kCommandTypeCopyTexSubImage2D,
     kCommandTypeTexParameteri,
     kCommandTypeActiveTexture,
     kCommandTypeGenerateMipmap,
@@ -412,6 +424,110 @@ namespace renderer
     const char *m_Data;
   };
 
+  class CreateFramebufferCommandBuffer : public CommandBuffer
+  {
+  public:
+    CreateFramebufferCommandBuffer() : CommandBuffer(kCommandTypeCreateFramebuffer) {}
+    ~CreateFramebufferCommandBuffer() {}
+
+  public:
+    uint32_t m_FramebufferId = 0;
+  };
+
+  class DeleteFramebufferCommandBuffer : public CommandBuffer
+  {
+  public:
+    DeleteFramebufferCommandBuffer(uint32_t framebuffer) : CommandBuffer(kCommandTypeDeleteFramebuffer),
+                                                           m_FramebufferId(framebuffer) {}
+    ~DeleteFramebufferCommandBuffer() {}
+
+  public:
+    uint32_t m_FramebufferId;
+  };
+
+  class BindFramebufferCommandBuffer : public CommandBuffer
+  {
+  public:
+    BindFramebufferCommandBuffer(int target, int framebuffer) : CommandBuffer(kCommandTypeBindFramebuffer),
+                                                                m_Target(target),
+                                                                m_Framebuffer(framebuffer) {}
+    ~BindFramebufferCommandBuffer() {}
+
+  public:
+    int m_Target;
+    int m_Framebuffer;
+  };
+
+  class FramebufferRenderbufferCommandBuffer : public CommandBuffer
+  {
+  public:
+    FramebufferRenderbufferCommandBuffer(int target, int attachment, int renderbuffertarget, int renderbuffer) : CommandBuffer(kCommandTypeFramebufferRenderbuffer),
+                                                                                                                 m_Target(target),
+                                                                                                                 m_Attachment(attachment),
+                                                                                                                 m_Renderbuffertarget(renderbuffertarget),
+                                                                                                                 m_Renderbuffer(renderbuffer) {}
+    ~FramebufferRenderbufferCommandBuffer() {}
+
+  public:
+    int m_Target;
+    int m_Attachment;
+    int m_Renderbuffertarget;
+    int m_Renderbuffer;
+  };
+
+  class FramebufferTexture2DCommandBuffer : public CommandBuffer
+  {
+  public:
+    FramebufferTexture2DCommandBuffer(int target, int attachment, int textarget, int texture, int level) : CommandBuffer(kCommandTypeFramebufferTexture2D),
+                                                                                                           m_Target(target),
+                                                                                                           m_Attachment(attachment),
+                                                                                                           m_Textarget(textarget),
+                                                                                                           m_Texture(texture),
+                                                                                                           m_Level(level) {}
+    ~FramebufferTexture2DCommandBuffer() {}
+
+  public:
+    int m_Target;
+    int m_Attachment;
+    int m_Textarget;
+    int m_Texture;
+    int m_Level;
+  };
+
+  class CreateRenderbufferCommandBuffer : public CommandBuffer
+  {
+  public:
+    CreateRenderbufferCommandBuffer() : CommandBuffer(kCommandTypeCreateRenderbuffer) {}
+    ~CreateRenderbufferCommandBuffer() {}
+
+  public:
+    uint32_t m_RenderbufferId = 0;
+  };
+
+  class DeleteRenderbufferCommandBuffer : public CommandBuffer
+  {
+  public:
+    DeleteRenderbufferCommandBuffer(uint32_t renderbuffer) : CommandBuffer(kCommandTypeDeleteRenderbuffer),
+                                                             m_RenderbufferId(renderbuffer) {}
+    ~DeleteRenderbufferCommandBuffer() {}
+
+  public:
+    uint32_t m_RenderbufferId;
+  };
+
+  class BindRenderbufferCommandBuffer : public CommandBuffer
+  {
+  public:
+    BindRenderbufferCommandBuffer(int target, int renderbuffer) : CommandBuffer(kCommandTypeBindRenderbuffer),
+                                                                  m_Target(target),
+                                                                  m_Renderbuffer(renderbuffer) {}
+    ~BindRenderbufferCommandBuffer() {}
+
+  public:
+    int m_Target;
+    int m_Renderbuffer;
+  };
+
   class CreateTextureCommandBuffer : public CommandBuffer
   {
   public:
@@ -419,7 +535,18 @@ namespace renderer
     ~CreateTextureCommandBuffer() {}
 
   public:
-    int m_TextureId = 0;
+    uint32_t m_TextureId = 0;
+  };
+
+  class DeleteTextureCommandBuffer : public CommandBuffer
+  {
+  public:
+    DeleteTextureCommandBuffer(uint32_t texture) : CommandBuffer(kCommandTypeDeleteTexture),
+                                                   m_TextureId(texture) {}
+    ~DeleteTextureCommandBuffer() {}
+
+  public:
+    uint32_t m_TextureId;
   };
 
   class BindTextureCommandBuffer : public CommandBuffer
@@ -496,6 +623,102 @@ namespace renderer
     int m_Type;
     size_t m_PixelsSize = 0;
     const char *m_Pixels = NULL;
+  };
+
+  class TexSubImage2DCommandBuffer : public CommandBuffer
+  {
+  public:
+    TexSubImage2DCommandBuffer(
+        int target,
+        int level,
+        int xoffset,
+        int yoffset,
+        int width,
+        int height,
+        int format,
+        int type,
+        size_t pixelsSize,
+        const void *pixels) : CommandBuffer(kCommandTypeTexSubImage2D),
+                              m_Target(target),
+                              m_Level(level),
+                              m_Xoffset(xoffset),
+                              m_Yoffset(yoffset),
+                              m_Width(width),
+                              m_Height(height),
+                              m_Format(format),
+                              m_Type(type),
+                              m_PixelsSize(pixelsSize),
+                              m_Pixels(new char[pixelsSize])
+    {
+      memcpy((void *)m_Pixels, pixels, width * height * 4);
+    }
+    ~TexSubImage2DCommandBuffer()
+    {
+      if (m_Pixels != NULL && m_PixelsSize > 0)
+        delete[] m_Pixels;
+    }
+
+  public:
+    int m_Target;
+    int m_Level;
+    int m_Xoffset;
+    int m_Yoffset;
+    int m_Width;
+    int m_Height;
+    int m_Format;
+    int m_Type;
+    size_t m_PixelsSize = 0;
+    const char *m_Pixels = NULL;
+  };
+
+  class CopyTexImage2DCommandBuffer : public CommandBuffer
+  {
+  public:
+    CopyTexImage2DCommandBuffer(int target, int level, int internalformat, int x, int y, int width, int height, int border) : CommandBuffer(kCommandTypeCopyTexImage2D),
+                                                                                                                              m_Target(target),
+                                                                                                                              m_Level(level),
+                                                                                                                              m_Internalformat(internalformat),
+                                                                                                                              m_X(x),
+                                                                                                                              m_Y(y),
+                                                                                                                              m_Width(width),
+                                                                                                                              m_Height(height),
+                                                                                                                              m_Border(border) {}
+    ~CopyTexImage2DCommandBuffer() {}
+
+  public:
+    int m_Target;
+    int m_Level;
+    int m_Internalformat;
+    int m_X;
+    int m_Y;
+    int m_Width;
+    int m_Height;
+    int m_Border;
+  };
+
+  class CopyTexSubImage2DCommandBuffer : public CommandBuffer
+  {
+  public:
+    CopyTexSubImage2DCommandBuffer(int target, int level, int xoffset, int yoffset, int x, int y, int width, int height) : CommandBuffer(kCommandTypeCopyTexSubImage2D),
+                                                                                                                           m_Target(target),
+                                                                                                                           m_Level(level),
+                                                                                                                           m_Xoffset(xoffset),
+                                                                                                                           m_Yoffset(yoffset),
+                                                                                                                           m_X(x),
+                                                                                                                           m_Y(y),
+                                                                                                                           m_Width(width),
+                                                                                                                           m_Height(height) {}
+    ~CopyTexSubImage2DCommandBuffer() {}
+
+  public:
+    int m_Target;
+    int m_Level;
+    int m_Xoffset;
+    int m_Yoffset;
+    int m_X;
+    int m_Y;
+    int m_Width;
+    int m_Height;
   };
 
   class TexParameteriCommandBuffer : public CommandBuffer

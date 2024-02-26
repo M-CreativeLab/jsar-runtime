@@ -52,33 +52,26 @@ export class TransmuteRuntime2 {
   }
 
   private appEntry(scene: BABYLON.Scene) {
-    // var mat0 = new BABYLON.StandardMaterial("mat0", scene);
-    // mat0.diffuseColor = new BABYLON.Color3(1, 0, 0);
-    // mat0.bumpTexture = new BABYLON.Texture("https://i.imgur.com/wGyk6os.png", scene);
+    var mat = new BABYLON.StandardMaterial("mat", scene);
+    var texture = new BABYLON.Texture("https://i.imgur.com/vxH5bCg.jpg", scene);
+    mat.diffuseTexture = texture;
 
-    var mat1 = new BABYLON.StandardMaterial("mat1", scene);
-    var tex = mat1.diffuseTexture = new BABYLON.Texture("https://i.imgur.com/Wk1cGEq.png", scene);
-    // mat1.bumpTexture = new BABYLON.Texture("https://i.imgur.com/wGyk6os.png", scene);
-    tex.getInternalTexture().onErrorObservable.add((err) => {
-      logger.error('bumpTexture error:', err);
-    });
+    var faceUV = new Array(6);
 
-    // var mat2 = new BABYLON.StandardMaterial("mat2", scene);
-    // mat2.diffuseTexture = new BABYLON.Texture("textures/grass.png", scene);
-    // mat2.bumpTexture = new BABYLON.Texture("https://i.imgur.com/wGyk6os.png", scene);
+    //set all faces
+    faceUV[0] = new BABYLON.Vector4(0, 0.5, 1 / 3, 1);
+    faceUV[1] = new BABYLON.Vector4(1 / 3, 0, 2 / 3, 0.5);
+    faceUV[2] = new BABYLON.Vector4(2 / 3, 0, 1, 0.5);
+    faceUV[3] = new BABYLON.Vector4(0, 0, 1 / 3, 0.5);
+    faceUV[4] = new BABYLON.Vector4(1 / 3, 0.5, 2 / 3, 1);
+    faceUV[5] = new BABYLON.Vector4(2 /3, 0.5, 1, 1);
 
-    //colour and bump
-    // var sphere0 = BABYLON.MeshBuilder.CreateSphere("sphere0", {}, scene);
-    // sphere0.position.x = -1.5;
-    // sphere0.material = mat0;
-
-    //original image and bump
-    var sphere1 = BABYLON.MeshBuilder.CreateSphere("sphere1", {}, scene);
-    sphere1.material = mat1;
-
-    // //other image and bump
-    // var sphere2 = BABYLON.MeshBuilder.CreateSphere("sphere2", {}, scene);
-    // sphere2.material = mat2;
-    // sphere2.position.x = 1.5;
+    //wrap set
+    var options = {
+        faceUV: faceUV,
+        wrap: true
+    };
+    var head = BABYLON.MeshBuilder.CreateBox('head', options, scene);
+    head.material = mat;
   }
 }

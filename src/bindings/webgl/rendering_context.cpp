@@ -4,6 +4,7 @@
 #include "renderer/constants.hpp"
 
 #include "program.hpp"
+#include "texture.hpp"
 #include "uniform_location.hpp"
 
 namespace webgl
@@ -359,9 +360,21 @@ namespace webgl
          InstanceMethod("bindBuffer", &WebGLRenderingContext::BindBuffer),
          InstanceMethod("bufferData", &WebGLRenderingContext::BufferData),
          InstanceMethod("bufferSubData", &WebGLRenderingContext::BufferSubData),
+         InstanceMethod("createFramebuffer", &WebGLRenderingContext::CreateFramebuffer),
+         InstanceMethod("deleteFramebuffer", &WebGLRenderingContext::DeleteFramebuffer),
+         InstanceMethod("bindFramebuffer", &WebGLRenderingContext::BindFramebuffer),
+         InstanceMethod("framebufferRenderbuffer", &WebGLRenderingContext::FramebufferRenderbuffer),
+         InstanceMethod("framebufferTexture2D", &WebGLRenderingContext::FramebufferTexture2D),
+         InstanceMethod("createRenderbuffer", &WebGLRenderingContext::CreateRenderbuffer),
+         InstanceMethod("deleteRenderbuffer", &WebGLRenderingContext::DeleteRenderbuffer),
+         InstanceMethod("bindRenderbuffer", &WebGLRenderingContext::BindRenderbuffer),
          InstanceMethod("createTexture", &WebGLRenderingContext::CreateTexture),
+         InstanceMethod("deleteTexture", &WebGLRenderingContext::DeleteTexture),
          InstanceMethod("bindTexture", &WebGLRenderingContext::BindTexture),
          InstanceMethod("texImage2D", &WebGLRenderingContext::TexImage2D),
+         InstanceMethod("texSubImage2D", &WebGLRenderingContext::TexSubImage2D),
+         InstanceMethod("copyTexImage2D", &WebGLRenderingContext::CopyTexImage2D),
+         InstanceMethod("copyTexSubImage2D", &WebGLRenderingContext::CopyTexSubImage2D),
          InstanceMethod("texParameteri", &WebGLRenderingContext::TexParameteri),
          InstanceMethod("activeTexture", &WebGLRenderingContext::ActiveTexture),
          InstanceMethod("generateMipmap", &WebGLRenderingContext::GenerateMipmap),
@@ -828,6 +841,164 @@ namespace webgl
     return env.Undefined();
   }
 
+  Napi::Value WebGLRenderingContext::CreateFramebuffer(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    auto commandBuffer = new renderer::CreateFramebufferCommandBuffer();
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    commandBuffer->WaitFinished();
+    return Napi::Number::New(env, commandBuffer->m_FramebufferId);
+  }
+
+  Napi::Value WebGLRenderingContext::DeleteFramebuffer(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "deleteFramebuffer() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int framebuffer = info[0].As<Napi::Number>().Int32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::DeleteFramebufferCommandBuffer(framebuffer));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::BindFramebuffer(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "bindFramebuffer() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsNumber())
+    {
+      Napi::TypeError::New(env, "the first argument should be a number when calling bindFramebuffer().")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    int target = info[0].As<Napi::Number>().Int32Value();
+    int framebuffer = 0;
+    if (info[1].IsNumber())
+      framebuffer = info[1].As<Napi::Number>().Int32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::BindFramebufferCommandBuffer(target, framebuffer));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::FramebufferRenderbuffer(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 4)
+    {
+      Napi::TypeError::New(env, "framebufferRenderbuffer() takes 4 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int target = info[0].As<Napi::Number>().Int32Value();
+    int attachment = info[1].As<Napi::Number>().Int32Value();
+    int renderbuffertarget = info[2].As<Napi::Number>().Int32Value();
+    int renderbuffer = info[3].As<Napi::Number>().Int32Value();
+
+    m_renderAPI->AddCommandBuffer(new renderer::FramebufferRenderbufferCommandBuffer(
+        target,
+        attachment,
+        renderbuffertarget,
+        renderbuffer));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::FramebufferTexture2D(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 5)
+    {
+      Napi::TypeError::New(env, "framebufferTexture2D() takes 5 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    auto jsTexture = info[3];
+    if (!jsTexture.IsObject() || !jsTexture.As<Napi::Object>().InstanceOf(WebGLTexture::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "framebufferTexture2D() 4th argument(texture) must be a WebGLTexture.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    int target = info[0].As<Napi::Number>().Int32Value();
+    int attachment = info[1].As<Napi::Number>().Int32Value();
+    int textarget = info[2].As<Napi::Number>().Int32Value();
+    auto texture = Napi::ObjectWrap<WebGLTexture>::Unwrap(jsTexture.As<Napi::Object>());
+    int level = info[4].As<Napi::Number>().Int32Value();
+
+    m_renderAPI->AddCommandBuffer(new renderer::FramebufferTexture2DCommandBuffer(
+        target,
+        attachment,
+        textarget,
+        texture->GetId(),
+        level));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::CreateRenderbuffer(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    auto commandBuffer = new renderer::CreateRenderbufferCommandBuffer();
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    commandBuffer->WaitFinished();
+    return Napi::Number::New(env, commandBuffer->m_RenderbufferId);
+  }
+
+  Napi::Value WebGLRenderingContext::DeleteRenderbuffer(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "deleteRenderbuffer() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int renderbuffer = info[0].As<Napi::Number>().Int32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::DeleteRenderbufferCommandBuffer(renderbuffer));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::BindRenderbuffer(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "bindRenderbuffer() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsNumber())
+    {
+      Napi::TypeError::New(env, "the first argument should be a number when calling bindRenderbuffer().")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    int target = info[0].As<Napi::Number>().Int32Value();
+    int renderbuffer = 0;
+    if (info[1].IsNumber())
+      renderbuffer = info[1].As<Napi::Number>().Int32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::BindRenderbufferCommandBuffer(target, renderbuffer));
+    return env.Undefined();
+  }
+
   Napi::Value WebGLRenderingContext::CreateTexture(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -836,7 +1007,28 @@ namespace webgl
     auto commandBuffer = new renderer::CreateTextureCommandBuffer();
     m_renderAPI->AddCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
-    return Napi::Number::New(env, commandBuffer->m_TextureId);
+    return WebGLProgram::constructor->New({Napi::Number::New(env, commandBuffer->m_TextureId)});
+  }
+
+  Napi::Value WebGLRenderingContext::DeleteTexture(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "deleteTexture() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLTexture::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "deleteTexture() takes a WebGLTexture as argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto texture = Napi::ObjectWrap<WebGLTexture>::Unwrap(info[0].As<Napi::Object>());
+    m_renderAPI->AddCommandBuffer(new renderer::DeleteTextureCommandBuffer(texture->GetId()));
+    return env.Undefined();
   }
 
   Napi::Value WebGLRenderingContext::BindTexture(const Napi::CallbackInfo &info)
@@ -857,11 +1049,23 @@ namespace webgl
     }
 
     int target = info[0].As<Napi::Number>().Int32Value();
-    int texture = 0;
-    if (info[1].IsNumber())
+    uint32_t texture = 0;
+    if (info[1].IsNull())
     {
-      texture = info[1].As<Napi::Number>().Int32Value();
+      texture = 0;
     }
+    else if (info[1].IsObject() && info[1].As<Napi::Object>().InstanceOf(WebGLTexture::constructor->Value()))
+    {
+      auto textureObj = Napi::ObjectWrap<WebGLTexture>::Unwrap(info[1].As<Napi::Object>());
+      texture = textureObj->GetId();
+    }
+    else
+    {
+      Napi::TypeError::New(env, "the texture to bindTexture() is invalid, must be null or a WebGLTexture object.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
     m_renderAPI->AddCommandBuffer(new renderer::BindTextureCommandBuffer(target, texture));
     return env.Undefined();
   }
@@ -919,6 +1123,101 @@ namespace webgl
     return env.Undefined();
   }
 
+  Napi::Value WebGLRenderingContext::TexSubImage2D(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    int target = info[0].As<Napi::Number>().Int32Value();
+    int level = info[1].As<Napi::Number>().Int32Value();
+    int xoffset = info[2].As<Napi::Number>().Int32Value();
+    int yoffset = info[3].As<Napi::Number>().Int32Value();
+    int width = info[4].As<Napi::Number>().Int32Value();
+    int height = info[5].As<Napi::Number>().Int32Value();
+    int format = info[6].As<Napi::Number>().Int32Value();
+    int type = info[7].As<Napi::Number>().Int32Value();
+
+    Napi::Value imageSource = info[8];
+    if (imageSource.IsNull())
+    {
+      // TODO: When the image source is null, just create TexSubImage2DCommandBuffer with empty mode
+    }
+
+    // Otherwise, the image source should be a TypedArray
+    if (!imageSource.IsTypedArray())
+    {
+      Napi::TypeError::New(env, "the pixels should be a TypedArray.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    Napi::TypedArray pixels = info[8].As<Napi::TypedArray>();
+    Napi::ArrayBuffer data = pixels.ArrayBuffer();
+    auto commandBuffer = new renderer::TexSubImage2DCommandBuffer(
+        target,
+        level,
+        xoffset,
+        yoffset,
+        width,
+        height,
+        format,
+        type,
+        data.ByteLength(),
+        data.Data());
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::CopyTexImage2D(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    int target = info[0].As<Napi::Number>().Int32Value();
+    int level = info[1].As<Napi::Number>().Int32Value();
+    int internalformat = info[2].As<Napi::Number>().Int32Value();
+    int x = info[3].As<Napi::Number>().Int32Value();
+    int y = info[4].As<Napi::Number>().Int32Value();
+    int width = info[5].As<Napi::Number>().Int32Value();
+    int height = info[6].As<Napi::Number>().Int32Value();
+    int border = info[7].As<Napi::Number>().Int32Value();
+
+    m_renderAPI->AddCommandBuffer(new renderer::CopyTexImage2DCommandBuffer(
+        target,
+        level,
+        internalformat,
+        x,
+        y,
+        width,
+        height,
+        border));
+    return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::CopyTexSubImage2D(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    int target = info[0].As<Napi::Number>().Int32Value();
+    int level = info[1].As<Napi::Number>().Int32Value();
+    int xoffset = info[2].As<Napi::Number>().Int32Value();
+    int yoffset = info[3].As<Napi::Number>().Int32Value();
+    int x = info[4].As<Napi::Number>().Int32Value();
+    int y = info[5].As<Napi::Number>().Int32Value();
+    int width = info[6].As<Napi::Number>().Int32Value();
+    int height = info[7].As<Napi::Number>().Int32Value();
+
+    m_renderAPI->AddCommandBuffer(new renderer::CopyTexSubImage2DCommandBuffer(
+        target,
+        level,
+        xoffset,
+        yoffset,
+        x,
+        y,
+        width,
+        height));
+    return env.Undefined();
+  }
+
   Napi::Value WebGLRenderingContext::TexParameteri(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -936,8 +1235,20 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    int texture = info[0].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::ActiveTextureCommandBuffer(texture));
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "activeTexture() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLTexture::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "activeTexture() 1st argument(texture) must be a WebGLTexture.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto texture = Napi::ObjectWrap<WebGLTexture>::Unwrap(info[0].As<Napi::Object>());
+    m_renderAPI->AddCommandBuffer(new renderer::ActiveTextureCommandBuffer(texture->GetId()));
     return env.Undefined();
   }
 

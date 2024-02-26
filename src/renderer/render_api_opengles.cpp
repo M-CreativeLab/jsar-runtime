@@ -596,11 +596,78 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					bufferSubDataCommandBuffer->m_Data);
 			break;
 		}
+		case kCommandTypeCreateFramebuffer:
+		{
+			auto createFramebufferCommandBuffer = static_cast<CreateFramebufferCommandBuffer *>(commandBuffer);
+			GLuint ret;
+			glGenFramebuffers(1, &ret);
+			createFramebufferCommandBuffer->m_FramebufferId = ret;
+			break;
+		}
+		case kCommandTypeDeleteFramebuffer:
+		{
+			auto deleteFramebufferCommandBuffer = static_cast<DeleteFramebufferCommandBuffer *>(commandBuffer);
+			glDeleteFramebuffers(1, &deleteFramebufferCommandBuffer->m_FramebufferId);
+			break;
+		}
+		case kCommandTypeBindFramebuffer:
+		{
+			auto bindFramebufferCommandBuffer = static_cast<BindFramebufferCommandBuffer *>(commandBuffer);
+			glBindFramebuffer(bindFramebufferCommandBuffer->m_Target, bindFramebufferCommandBuffer->m_Framebuffer);
+			break;
+		}
+		case kCommandTypeFramebufferRenderbuffer:
+		{
+			auto framebufferRenderbufferCommandBuffer = static_cast<FramebufferRenderbufferCommandBuffer *>(commandBuffer);
+			glFramebufferRenderbuffer(
+					framebufferRenderbufferCommandBuffer->m_Target,
+					framebufferRenderbufferCommandBuffer->m_Attachment,
+					framebufferRenderbufferCommandBuffer->m_Renderbuffertarget,
+					framebufferRenderbufferCommandBuffer->m_Renderbuffer);
+			break;
+		}
+		case kCommandTypeFramebufferTexture2D:
+		{
+			auto framebufferTexture2DCommandBuffer = static_cast<FramebufferTexture2DCommandBuffer *>(commandBuffer);
+			glFramebufferTexture2D(
+					framebufferTexture2DCommandBuffer->m_Target,
+					framebufferTexture2DCommandBuffer->m_Attachment,
+					framebufferTexture2DCommandBuffer->m_Textarget,
+					framebufferTexture2DCommandBuffer->m_Texture,
+					framebufferTexture2DCommandBuffer->m_Level);
+			break;
+		}
+		case kCommandTypeCreateRenderbuffer:
+		{
+			auto createRenderbufferCommandBuffer = static_cast<CreateRenderbufferCommandBuffer *>(commandBuffer);
+			GLuint ret;
+			glGenRenderbuffers(1, &ret);
+			createRenderbufferCommandBuffer->m_RenderbufferId = ret;
+			break;
+		}
+		case kCommandTypeDeleteRenderbuffer:
+		{
+			auto deleteRenderbufferCommandBuffer = static_cast<DeleteRenderbufferCommandBuffer *>(commandBuffer);
+			glDeleteRenderbuffers(1, &deleteRenderbufferCommandBuffer->m_RenderbufferId);
+			break;
+		}
+		case kCommandTypeBindRenderbuffer:
+		{
+			auto bindRenderbufferCommandBuffer = static_cast<BindRenderbufferCommandBuffer *>(commandBuffer);
+			glBindRenderbuffer(bindRenderbufferCommandBuffer->m_Target, bindRenderbufferCommandBuffer->m_Renderbuffer);
+			break;
+		}
 		case kCommandTypeCreateTexture:
 		{
 			auto createTextureCommandBuffer = static_cast<CreateTextureCommandBuffer *>(commandBuffer);
 			int ret = CreateTexture();
 			createTextureCommandBuffer->m_TextureId = ret;
+			break;
+		}
+		case kCommandTypeDeleteTexture:
+		{
+			auto deleteTextureCommandBuffer = static_cast<DeleteTextureCommandBuffer *>(commandBuffer);
+			glDeleteTextures(1, &deleteTextureCommandBuffer->m_TextureId);
 			break;
 		}
 		case kCommandTypeBindTexture:
@@ -622,6 +689,49 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					texImage2DCommandBuffer->m_Format,
 					texImage2DCommandBuffer->m_Type,
 					texImage2DCommandBuffer->m_Pixels);
+			break;
+		}
+		case kCommandTypeTexSubImage2D:
+		{
+			auto texSubImage2DCommandBuffer = static_cast<TexSubImage2DCommandBuffer *>(commandBuffer);
+			glTexSubImage2D(
+					texSubImage2DCommandBuffer->m_Target,
+					texSubImage2DCommandBuffer->m_Level,
+					texSubImage2DCommandBuffer->m_Xoffset,
+					texSubImage2DCommandBuffer->m_Yoffset,
+					texSubImage2DCommandBuffer->m_Width,
+					texSubImage2DCommandBuffer->m_Height,
+					texSubImage2DCommandBuffer->m_Format,
+					texSubImage2DCommandBuffer->m_Type,
+					texSubImage2DCommandBuffer->m_Pixels);
+			break;
+		}
+		case kCommandTypeCopyTexImage2D:
+		{
+			auto copyTexImage2DCommandBuffer = static_cast<CopyTexImage2DCommandBuffer *>(commandBuffer);
+			glCopyTexImage2D(
+					copyTexImage2DCommandBuffer->m_Target,
+					copyTexImage2DCommandBuffer->m_Level,
+					copyTexImage2DCommandBuffer->m_Internalformat,
+					copyTexImage2DCommandBuffer->m_X,
+					copyTexImage2DCommandBuffer->m_Y,
+					copyTexImage2DCommandBuffer->m_Width,
+					copyTexImage2DCommandBuffer->m_Height,
+					copyTexImage2DCommandBuffer->m_Border);
+			break;
+		}
+		case kCommandTypeCopyTexSubImage2D:
+		{
+			auto copyTexSubImage2DCommandBuffer = static_cast<CopyTexSubImage2DCommandBuffer *>(commandBuffer);
+			glCopyTexSubImage2D(
+					copyTexSubImage2DCommandBuffer->m_Target,
+					copyTexSubImage2DCommandBuffer->m_Level,
+					copyTexSubImage2DCommandBuffer->m_Xoffset,
+					copyTexSubImage2DCommandBuffer->m_Yoffset,
+					copyTexSubImage2DCommandBuffer->m_X,
+					copyTexSubImage2DCommandBuffer->m_Y,
+					copyTexSubImage2DCommandBuffer->m_Width,
+					copyTexSubImage2DCommandBuffer->m_Height);
 			break;
 		}
 		case kCommandTypeTexParameteri:
