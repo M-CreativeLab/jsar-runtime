@@ -72,6 +72,7 @@ public:
   FrameExecutionCode ExecuteFrame();
   virtual void ExecuteCommandBuffer() = 0;
   void AddCommandBuffer(renderer::CommandBuffer *commandBuffer);
+  size_t GetCommandBuffersCount();
   void SetTime(float time) { this->time = time; }
   void SetViewport(int w, int h) {
     m_ViewportWidth = w;

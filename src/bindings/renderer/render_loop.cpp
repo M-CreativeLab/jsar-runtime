@@ -13,6 +13,7 @@ namespace renderer
         "RenderLoop",
         {InstanceMethod("setFrameCallback", &RenderLoop::SetFrameCallback),
          InstanceMethod("setFrameFinished", &RenderLoop::SetFrameFinished),
+         InstanceMethod("getCommandBuffersCount", &RenderLoop::GetCommandBuffersCount),
          InstanceMethod("dispose", &RenderLoop::Dispose)});
 
     constructor = new Napi::FunctionReference();
@@ -77,10 +78,15 @@ namespace renderer
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    RenderAPI::Get()->EndFrame();
-    m_frameCallbackFinished = true;
-    // m_cv.notify_one();
+    finished_ = true;
     return info.This();
+  }
+
+  Napi::Value RenderLoop::GetCommandBuffersCount(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Number::New(env, RenderAPI::Get()->GetCommandBuffersCount());
   }
 
   Napi::Value RenderLoop::Dispose(const Napi::CallbackInfo &info)
@@ -101,6 +107,5 @@ namespace renderer
     unique_lock<mutex> lk(m_mutex);
     m_frameCallbackFinished = false;
     m_frameCallback.NonBlockingCall();
-    // m_cv.wait(lk, [this] { return m_frameCallbackFinished; });
   }
 }

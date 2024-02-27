@@ -604,9 +604,6 @@ extern "C"
     default:
       break;
     }
-
-    // Execute command buffer
-    s_CurrentAPI->ExecuteCommandBuffer();
   }
 
   DLL_PUBLIC void TransmuteNative_SetViewport(int w, int h)

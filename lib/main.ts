@@ -82,8 +82,9 @@ globalThis.requestAnimationFrame = requestAnimationFrameImpl;
     logger.info(`The Skia initialization takes ${performance.now() - now}ms`);
 
     connectRenderer();
-    // runExample();
-    new TransmuteRuntime2();
+    false ?
+      runExample() :
+      new TransmuteRuntime2();
 
     // Create runtime.
     // const runtime = new TransmuteRuntime({

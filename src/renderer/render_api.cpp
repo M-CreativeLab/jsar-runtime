@@ -21,7 +21,10 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 		return kFrameExecutionNotAvailable;
 
 	StartFrame();
+	jsRenderLoop->startFrame();
 	jsRenderLoop->blockingCallFrame();
+	ExecuteCommandBuffer();
+	EndFrame();
 	return kFrameExecutionSuccess;
 }
 
@@ -29,6 +32,12 @@ void RenderAPI::AddCommandBuffer(renderer::CommandBuffer *commandBuffer)
 {
 	unique_lock<mutex> lock(m_CommandBuffersMutex);
 	m_CommandBuffers.push_back(commandBuffer);
+}
+
+size_t RenderAPI::GetCommandBuffersCount()
+{
+	unique_lock<mutex> lock(m_CommandBuffersMutex);
+	return m_CommandBuffers.size();
 }
 
 RenderAPI *CreateRenderAPI(UnityGfxRenderer apiType)

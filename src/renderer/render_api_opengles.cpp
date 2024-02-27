@@ -93,6 +93,10 @@ private:
 private:
 	UnityGfxRenderer m_APIType;
 	GLuint m_CurrentProgramId = 0;
+	// Used by glViewport
+	GLint m_ViewportStartPoint[2] = {0, 0};
+	GLsizei m_ViewportSize[2] = {0, 0};
+	// Used by glFrontFace
 	GLuint m_CurrentFrontFace = GL_CW;
 	GLuint m_CurrentDepthFunc = GL_LEQUAL;
 	bool m_DepthTestEnabled = false;
@@ -111,6 +115,10 @@ private:
 	float m_ClearDepth = 1.0f;
 	uint32_t m_ClearStencil = 0;
 	int m_ClearMask = 0;
+	// Used by texture
+	int m_ActiveTexture = 0;
+	int m_LastBoundTexture2D = 0;
+	int m_LastBoundFramebuffer = 0;
 	// Used by debugging
 	bool m_DebugEnabled = true;
 };
@@ -229,6 +237,7 @@ int RenderAPI_OpenGLCoreES::CreateTexture()
 void RenderAPI_OpenGLCoreES::BindTexture(int target, int texture)
 {
 	glBindTexture(target, texture);
+	m_LastBoundTexture2D = texture;
 }
 
 void RenderAPI_OpenGLCoreES::TexImage2D(
@@ -250,9 +259,10 @@ void RenderAPI_OpenGLCoreES::TexParameteri(int target, int pname, int param)
 	glTexParameteri(target, pname, param);
 }
 
-void RenderAPI_OpenGLCoreES::ActiveTexture(int texture)
+void RenderAPI_OpenGLCoreES::ActiveTexture(int textureUnit)
 {
-	glActiveTexture(texture);
+	glActiveTexture(textureUnit);
+	m_ActiveTexture = textureUnit;
 }
 
 void RenderAPI_OpenGLCoreES::GenerateMipmap(int target)
@@ -300,6 +310,10 @@ void RenderAPI_OpenGLCoreES::DrawElements(int mode, int count, int type, const v
 void RenderAPI_OpenGLCoreES::SetViewport(int x, int y, int width, int height)
 {
 	glViewport(x, y, width, height);
+	m_ViewportStartPoint[0] = x;
+	m_ViewportStartPoint[1] = y;
+	m_ViewportSize[0] = width;
+	m_ViewportSize[1] = height;
 }
 
 void RenderAPI_OpenGLCoreES::SetScissor(int x, int y, int width, int height)
@@ -367,6 +381,9 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	if (m_CurrentProgramId != 0)
 		glUseProgram(m_CurrentProgramId);
 
+	// viewport
+	glViewport(m_ViewportStartPoint[0], m_ViewportStartPoint[1], m_ViewportSize[0], m_ViewportSize[1]);
+
 	// front face
 	if (m_CurrentFrontFace == GL_CW || m_CurrentFrontFace == GL_CCW)
 		glFrontFace(m_CurrentFrontFace);
@@ -390,6 +407,14 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	{
 		glDisable(GL_BLEND);
 	}
+
+	// texture
+	if (m_ActiveTexture != 0)
+		glActiveTexture(m_ActiveTexture);
+	if (m_LastBoundTexture2D != 0)
+		glBindTexture(GL_TEXTURE_2D, m_LastBoundTexture2D);
+	if (m_LastBoundFramebuffer != 0)
+		glBindFramebuffer(GL_FRAMEBUFFER, m_LastBoundFramebuffer);
 }
 
 void RenderAPI_OpenGLCoreES::EndFrame()
@@ -614,6 +639,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 		{
 			auto bindFramebufferCommandBuffer = static_cast<BindFramebufferCommandBuffer *>(commandBuffer);
 			glBindFramebuffer(bindFramebufferCommandBuffer->m_Target, bindFramebufferCommandBuffer->m_Framebuffer);
+			m_LastBoundFramebuffer = bindFramebufferCommandBuffer->m_Framebuffer;
 			break;
 		}
 		case kCommandTypeFramebufferRenderbuffer:

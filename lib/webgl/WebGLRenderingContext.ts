@@ -1,5 +1,5 @@
 import * as logger from '../bindings/logger';
-import { ImageBitmapImpl } from '../polyfills/offscreencanvas';
+import { ImageBitmapImpl, OffscreenCanvasImpl, kReadPixels } from '../polyfills/offscreencanvas';
 import { WebGLShaderPrecisionFormatImpl } from './WebGLShaderPrecisionFormat';
 
 const glNative = process._linkedBinding('transmute:webgl');
@@ -48,7 +48,15 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     if (typeof fn !== 'function') {
       throw new TypeError(`The method(${name}) in native WebGLRenderingContext is not supported`);
     }
-    const r = fn.apply(this, args);
+
+    let r: any;
+    try {
+      r = fn.apply(this, args);
+    } catch (err) {
+      logger.error(`Failed to make native call => WebGL::${name}(${args.join(', ')})`);
+      throw err;
+    }
+
     if (isEnableDebugging) {
       const { argTypes, argSep = ', ' } = options.debug || {};
       let argsStr: string;
@@ -77,7 +85,11 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   }
 
   activeTexture(texture: number): void {
-    return this.nativeCall('activeTexture', [texture]);
+    return this.nativeCall('activeTexture', [texture], {
+      debug: {
+        argTypes: ['constant'],
+      }
+    });
   }
   attachShader(program: WebGLProgram, shader: WebGLShader): void {
     return this.nativeCall('attachShader', [program, shader]);
@@ -86,20 +98,29 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return this.nativeCall('bindAttribLocation', [program, index, name]);
   }
   bindBuffer(target: number, buffer: WebGLBuffer): void {
+    if (buffer == null || buffer === undefined) {
+      buffer = 0;
+    }
     return this.nativeCall('bindBuffer', [target, buffer], {
       debug: {
-        argTypes: ['constant',],
+        argTypes: ['constant', 'default'],
       },
     });
   }
   bindFramebuffer(target: number, framebuffer: WebGLFramebuffer): void {
+    if (framebuffer == null || framebuffer === undefined) {
+      framebuffer = 0;
+    }
     return this.nativeCall('bindFramebuffer', [target, framebuffer], {
       debug: {
-        argTypes: ['constant',],
+        argTypes: ['constant', 'default'],
       },
     });
   }
   bindRenderbuffer(target: number, renderbuffer: WebGLRenderbuffer): void {
+    if (renderbuffer == null || renderbuffer === undefined) {
+      renderbuffer = 0;
+    }
     return this.nativeCall('bindRenderbuffer', [target, renderbuffer], {
       debug: {
         argTypes: ['constant',],
@@ -527,10 +548,18 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return this.nativeCall('stencilOpSeparate', [face, fail, zfail, zpass]);
   }
   texParameterf(target: number, pname: number, param: number): void {
-    return this.nativeCall('texParameterf', [target, pname, param]);
+    return this.nativeCall('texParameterf', [target, pname, param], {
+      debug: {
+        argTypes: ['constant', 'constant'],
+      }
+    });
   }
   texParameteri(target: number, pname: number, param: number): void {
-    return this.nativeCall('texParameteri', [target, pname, param]);
+    return this.nativeCall('texParameteri', [target, pname, param], {
+      debug: {
+        argTypes: ['constant', 'constant', 'constant'],
+      }
+    });
   }
   uniform1f(location: WebGLUniformLocation, x: number): void {
     return this.nativeCall('uniform1f', [location, x]);
@@ -648,7 +677,11 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     border: number,
     data: ArrayBufferView
   ): void {
-    return this.nativeCall('compressedTexImage2D', [target, level, internalformat, width, height, border, data]);
+    return this.nativeCall('compressedTexImage2D', [target, level, internalformat, width, height, border, data], {
+      debug: {
+        argTypes: ['constant', 'default', 'constant', 'default', 'default', 'default',],
+      }
+    });
   }
   compressedTexSubImage2D(
     target: number,
@@ -711,6 +744,12 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     type?: number,
     pixels?: ArrayBufferView
   ): void {
+    const callOptions = <NativeCallOptions>{
+      debug: {
+        argTypes: ['constant', , 'constant', , , , 'constant', 'constant'],
+      }
+    };
+
     if (arguments.length === 9) {
       if (pixels instanceof ArrayBuffer) {
         pixels = new Uint8Array(pixels);
@@ -725,31 +764,41 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
         format,
         type,
         pixels
-      ]);
+      ], callOptions);
     } else if (arguments.length === 6) {
       const format = <number>(arguments[3]);
       const type = <number>(arguments[4]);
       const imageSource = <TexImageSource>(arguments[5]);
-      if (imageSource instanceof ImageBitmapImpl) {
-        let pixels = imageSource._readPixels();
-        // convert pixels to TypedArray if it's an ArrayBuffer
-        if (pixels instanceof ArrayBuffer) {
-          pixels = new Uint8Array(pixels);
-        }
-        return this.nativeCall('texImage2D', [
-          target,
-          level,
-          internalformat,
-          imageSource.width,
-          imageSource.height,
-          0,
-          format,
-          type,
-          pixels,
-        ]);
+
+      let pixels: ArrayBufferView;
+      if (
+        imageSource instanceof ImageBitmapImpl ||
+        imageSource instanceof OffscreenCanvasImpl
+      ) {
+        pixels = imageSource[kReadPixels]({
+          colorType: format === this.RGB ? 'rgb8' : 'rgba8',
+        });
       } else {
-        throw new Error(`Unsupported image source type(${imageSource}) for texImage2D()`);
+        logger.error(`Unsupported image source type for texImage2D():`, imageSource);
+        throw new Error(`Unsupported image source type for texImage2D()`);
       }
+
+      // Convert ArrayBuffer to TypedArray
+      if (pixels instanceof ArrayBuffer) {
+        pixels = new Uint8Array(pixels);
+      }
+
+      return this.nativeCall('texImage2D', [
+        target,
+        level,
+        internalformat,
+        imageSource.width,
+        imageSource.height,
+        0,
+        format,
+        type,
+        pixels,
+      ], callOptions);
     } else {
       throw new Error('Invalid number of arguments for texImage2D()');
     }

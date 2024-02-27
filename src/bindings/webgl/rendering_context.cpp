@@ -1007,7 +1007,7 @@ namespace webgl
     auto commandBuffer = new renderer::CreateTextureCommandBuffer();
     m_renderAPI->AddCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
-    return WebGLProgram::constructor->New({Napi::Number::New(env, commandBuffer->m_TextureId)});
+    return WebGLTexture::constructor->New({Napi::Number::New(env, commandBuffer->m_TextureId)});
   }
 
   Napi::Value WebGLRenderingContext::DeleteTexture(const Napi::CallbackInfo &info)
@@ -1240,15 +1240,15 @@ namespace webgl
       Napi::TypeError::New(env, "activeTexture() takes 1 argument.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLTexture::constructor->Value()))
+    if (!info[0].IsNumber())
     {
-      Napi::TypeError::New(env, "activeTexture() 1st argument(texture) must be a WebGLTexture.")
+      Napi::TypeError::New(env, "activeTexture() 1st argument(texture) must be a number.")
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
-
-    auto texture = Napi::ObjectWrap<WebGLTexture>::Unwrap(info[0].As<Napi::Object>());
-    m_renderAPI->AddCommandBuffer(new renderer::ActiveTextureCommandBuffer(texture->GetId()));
+    
+    int textureUnit = info[0].As<Napi::Number>().Int32Value();
+    m_renderAPI->AddCommandBuffer(new renderer::ActiveTextureCommandBuffer(textureUnit));
     return env.Undefined();
   }
 

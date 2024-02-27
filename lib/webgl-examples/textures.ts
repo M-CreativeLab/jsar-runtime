@@ -87,6 +87,11 @@ export default function run() {
     const texture = loadTexture(gl, 'cubetexture.png');
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
+    // TODO
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
+
     let then = 0;
     let cubeRotation = 0.0;
     let deltaTime = 0;
@@ -459,13 +464,11 @@ function drawScene(gl: WebGLRenderingContext, programInfo, buffers, texture, cub
     normalMatrix
   );
 
-  // Tell WebGL we want to affect texture unit 0
+  // // Tell WebGL we want to affect texture unit 0
   gl.activeTexture(gl.TEXTURE0);
-
-  // Bind the texture to texture unit 0
+  // // Bind the texture to texture unit 0
   gl.bindTexture(gl.TEXTURE_2D, texture);
-
-  // Tell the shader we bound the texture to texture unit 0
+  // // Tell the shader we bound the texture to texture unit 0
   gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
 
   {

@@ -8,6 +8,7 @@ import CanvasKitInit, {
   Typeface as CanvasKitTypeface,
   Image as CanvasKitImage,
   type EmulatedCanvas2DContext,
+  type Surface,
 } from 'canvaskit-wasm';
 import * as fontkit from 'fontkit';
 
@@ -117,6 +118,7 @@ function addFontToCache(font: fontkit.Font, buffer: Buffer) {
 }
 
 export const kDisposeCanvas = Symbol('kDisposeCanvas');
+export const kReadPixels = Symbol('kReadNativePixels');
 
 export class OffscreenCanvasRenderingContext2DImpl implements OffscreenCanvasRenderingContext2D {
   #nativeCanvas: EmulatedCanvas2D;
@@ -643,6 +645,45 @@ export class OffscreenCanvasRenderingContext2DImpl implements OffscreenCanvasRen
   }
 }
 
+type PixelsReadOptions = {
+  colorType: 'rgb8' | 'rgba8';
+};
+function readPixelsFromSkImage(
+  handle: CanvasKitImage,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  options: PixelsReadOptions
+) {
+  const pixels = handle.readPixels(x, y, {
+    width,
+    height,
+    alphaType: canvasKit.AlphaType.Opaque,
+    colorType: canvasKit.ColorType.RGBA_8888,
+    colorSpace: handle.getColorSpace(),
+  });
+  logger.info('source', handle.getImageInfo().colorType.value);
+  logger.info('readPixelsFromSkImage', pixels.length, pixels.byteLength, width, height, x, y, pixels);
+
+  /**
+   * TODO: Support rgb8 color type in CanvasKit, this is a workaround to convert rgba to rgb.
+   */
+  if (options?.colorType === 'rgb8') {
+    const size = width * height;
+    const rgb8 = new Uint8Array(size * 3);
+    // convert rgba to rgb
+    for (let i = 0; i < size; i++) {
+      rgb8[i * 3] = pixels[i * 4];
+      rgb8[i * 3 + 1] = pixels[i * 4 + 1];
+      rgb8[i * 3 + 2] = pixels[i * 4 + 2];
+    }
+    return rgb8;
+  } else {
+    return pixels;
+  }
+}
+
 /**
  * OffscreenCanvas
  */
@@ -682,6 +723,8 @@ export class OffscreenCanvasImpl extends EventTarget implements OffscreenCanvas 
         this.#nativeCanvas = canvasKit.MakeCanvas(this.width, this.height);
         if (this.#nativeCanvas == null) {
           throw new TypeError(`Failed to create native canvas with size: ${this.width}x${this.height}.`);
+        } else {
+          logger.info(`[Skia] OffscreenCanvas(${this.width}x${this.height}) is created.`);
         }
         this.#context2d = new OffscreenCanvasRenderingContext2DImpl(this);
         this.#loadDefaultFonts();
@@ -696,8 +739,9 @@ export class OffscreenCanvasImpl extends EventTarget implements OffscreenCanvas 
     return null;
   }
 
-  convertToBlob(_options?: any): Promise<Blob> {
-    return null;
+  convertToBlob(options?: ImageEncodeOptions): Promise<Blob> {
+    const imageData = this.#context2d.getImageData(0, 0, this.width, this.height);
+    return Promise.resolve(new Blob([imageData.data], { type: options?.type || 'image/png' }));
   }
 
   toDataURL(mime: string) {
@@ -707,6 +751,19 @@ export class OffscreenCanvasImpl extends EventTarget implements OffscreenCanvas 
   [kDisposeCanvas]() {
     this.#nativeCanvas.dispose();
   }
+
+  [kReadPixels](options: PixelsReadOptions = { colorType: 'rgba8' }) {
+    /**
+     * "df" is the private field for the skSurface.
+     * 
+     * TODO: Contribute to the CanvasKit to expose the readPixels method.
+     */
+    const skSurface = <Surface>(this.#nativeCanvas['df']);
+    const skImage = skSurface.makeImageSnapshot();
+    const pixels = readPixelsFromSkImage(skImage, 0, 0, this.width, this.height, options);
+    skImage.delete();
+    return pixels;
+  }
 }
 
 export class ImageBitmapImpl implements ImageBitmap {
@@ -714,22 +771,22 @@ export class ImageBitmapImpl implements ImageBitmap {
 
   height: number;
   width: number;
-  private skImage: CanvasKitImage;
+  private _skImage: CanvasKitImage;
   constructor(buffer: ArrayBuffer) {
-    const image = canvasKit.MakeImageFromEncoded(buffer);
-    if (!image) {
+    const skImage = canvasKit.MakeImageFromEncoded(buffer);
+    if (!skImage) {
       throw new Error(`Failed to create image from buffer: ${buffer}`);
     }
-    this.skImage = image;
-    this.height = image.height();
-    this.width = image.width();
+    this._skImage = skImage;
+    this.height = skImage.height();
+    this.width = skImage.width();
     ImageBitmapImpl._liveCount += 1;
-    logger.info(`ImageBitmap(${this.width}x${this.height}) is created.`);
+    logger.info(`ImageBitmap(${this.width}x${this.height}, ${buffer.byteLength} bytes) is created.`);
   }
 
   close(): void {
     try {
-      this.skImage.delete();
+      this._skImage.delete();
       ImageBitmapImpl._liveCount -= 1;
     } catch (_) {
       // ts-ignore
@@ -740,17 +797,12 @@ export class ImageBitmapImpl implements ImageBitmap {
   }
 
   _getSkImage() {
-    return this.skImage;
+    return this._skImage;
   }
 
-  _readPixels(x: number = 0, y: number = 0, width: number = this.width, height: number = this.height) {
-    return this.skImage.readPixels(x, y, {
-      width,
-      height,
-      alphaType: canvasKit.AlphaType.Opaque,
-      colorType: canvasKit.ColorType.RGBA_8888,
-      colorSpace: canvasKit.ColorSpace.SRGB,
-    });
+  [kReadPixels](options: PixelsReadOptions = { colorType: 'rgba8' }) {
+    const { width, height } = this;
+    return readPixelsFromSkImage(this._skImage, 0, 0, width, height, options);
   }
 }
 
