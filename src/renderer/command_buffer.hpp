@@ -83,6 +83,7 @@ namespace renderer
     kCommandTypeDrawElements,
     /** Pixels */
     kCommandTypePixelStorei,
+    kCommandTypePolygonOffset,
     /** Viewport & Scissor */
     kCommandTypeSetViewport,
     kCommandTypeSetScissor,
@@ -91,6 +92,8 @@ namespace renderer
     kCommandTypeClearColor,
     kCommandTypeClearDepth,
     kCommandTypeClearStencil,
+    /** Extensions */
+    kCommandTypeGetSupportedExtensions,
     /** Common */
     kCommandTypeDepthMask,
     kCommandTypeDepthFunc,
@@ -1262,6 +1265,19 @@ namespace renderer
     int m_Param;
   };
 
+  class PolygonOffsetCommandBuffer : public CommandBuffer
+  {
+  public:
+    PolygonOffsetCommandBuffer(float factor, float units) : CommandBuffer(kCommandTypePolygonOffset),
+                                                            m_Factor(factor),
+                                                            m_Units(units) {}
+    ~PolygonOffsetCommandBuffer() {}
+
+  public:
+    float m_Factor;
+    float m_Units;
+  };
+
   class SetViewportCommandBuffer : public CommandBuffer
   {
   public:
@@ -1341,6 +1357,16 @@ namespace renderer
 
   public:
     int m_Stencil;
+  };
+
+  class GetSupportedExtensionsCommandBuffer : public CommandBuffer
+  {
+  public:
+    GetSupportedExtensionsCommandBuffer() : CommandBuffer(kCommandTypeGetSupportedExtensions) {}
+    ~GetSupportedExtensionsCommandBuffer() {}
+
+  public:
+    std::vector<std::string> m_Extensions;
   };
 
   class DepthMaskCommandBuffer : public CommandBuffer

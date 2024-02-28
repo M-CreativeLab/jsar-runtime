@@ -663,8 +663,6 @@ function readPixelsFromSkImage(
     colorType: canvasKit.ColorType.RGBA_8888,
     colorSpace: handle.getColorSpace(),
   });
-  logger.info('source', handle.getImageInfo().colorType.value);
-  logger.info('readPixelsFromSkImage', pixels.length, pixels.byteLength, width, height, x, y, pixels);
 
   /**
    * TODO: Support rgb8 color type in CanvasKit, this is a workaround to convert rgba to rgb.

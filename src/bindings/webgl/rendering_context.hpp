@@ -76,6 +76,7 @@ namespace webgl
     Napi::Value DrawArrays(const Napi::CallbackInfo &info);
     Napi::Value DrawElements(const Napi::CallbackInfo &info);
     Napi::Value PixelStorei(const Napi::CallbackInfo &info);
+    Napi::Value PolygonOffset(const Napi::CallbackInfo &info);
     Napi::Value Viewport(const Napi::CallbackInfo &info);
     Napi::Value Scissor(const Napi::CallbackInfo &info);
     Napi::Value ClearColor(const Napi::CallbackInfo &info);
@@ -104,6 +105,7 @@ namespace webgl
     Napi::Value GetParameter(const Napi::CallbackInfo &info);
     Napi::Value GetShaderPrecisionFormat(const Napi::CallbackInfo &info);
     Napi::Value GetError(const Napi::CallbackInfo &info);
+    Napi::Value GetSupportedExtensions(const Napi::CallbackInfo &info);
 
   private:
     Napi::Value DrawingBufferWidthGetter(const Napi::CallbackInfo &info);

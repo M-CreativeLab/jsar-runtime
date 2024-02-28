@@ -1,3 +1,7 @@
+#include <iostream>
+#include <sstream>
+#include <string>
+
 #include "render_api.hpp"
 #include "runtime/platform_base.hpp"
 
@@ -12,7 +16,10 @@ using namespace renderer;
 #include <assert.h>
 #if UNITY_IOS || UNITY_TVOS
 #include <OpenGLES/ES2/gl.h>
+#include <OpenGLES/ES2/glext.h>
 #elif UNITY_ANDROID || UNITY_WEBGL
+// On Android and WebGL, use GLES 3.0
+// See: https://android.googlesource.com/platform/frameworks/native/+/kitkat-release/opengl/include
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <EGL/egl.h>
@@ -103,13 +110,15 @@ private:
 	bool m_DepthMaskEnabled = true;
 	bool m_BlendEnabled = false;
 	// Used by glBlendFunc
-	GLenum m_Blend_Sfactor = GL_ONE;
-	GLenum m_Blend_Dfactor = GL_ZERO;
+	bool m_BlendFuncSet = false;
+	GLenum m_Blend_Sfactor = 0;
+	GLenum m_Blend_Dfactor = 0;
 	// Used by glBlendFuncSeparate
-	GLenum m_Blend_SrcRGB = GL_ONE;
-	GLenum m_Blend_DstRGB = GL_ZERO;
-	GLenum m_Blend_SrcAlpha = GL_ONE;
-	GLenum m_Blend_DstAlpha = GL_ZERO;
+	bool m_BlendFuncSeparateSet = false;
+	GLenum m_Blend_SrcRGB = 0;
+	GLenum m_Blend_DstRGB = 0;
+	GLenum m_Blend_SrcAlpha = 0;
+	GLenum m_Blend_DstAlpha = 0;
 	// Used by glClear with color, depth and stencil
 	float m_ClearColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 	float m_ClearDepth = 1.0f;
@@ -397,16 +406,22 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	glDepthMask(m_DepthMaskEnabled);
 
 	// blend
-	if (m_BlendEnabled)
+	if (m_BlendFuncSet == true)
 	{
 		glEnable(GL_BLEND);
 		glBlendFunc(m_Blend_Sfactor, m_Blend_Dfactor);
-		glBlendFuncSeparate(m_Blend_SrcRGB, m_Blend_DstRGB, m_Blend_SrcAlpha, m_Blend_DstAlpha);
-	}
-	else
-	{
 		glDisable(GL_BLEND);
 	}
+	if (m_BlendFuncSeparateSet == true)
+	{
+		glEnable(GL_BLEND);
+		glBlendFuncSeparate(m_Blend_SrcRGB, m_Blend_DstRGB, m_Blend_SrcAlpha, m_Blend_DstAlpha);
+		glDisable(GL_BLEND);
+	}
+	if (m_BlendEnabled)
+		glEnable(GL_BLEND);
+	else
+		glDisable(GL_BLEND);
 
 	// texture
 	if (m_ActiveTexture != 0)
@@ -996,6 +1011,14 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					pixelStoreiCommandBuffer->m_Param);
 			break;
 		}
+		case kCommandTypePolygonOffset:
+		{
+			auto polygonOffsetCommandBuffer = static_cast<PolygonOffsetCommandBuffer *>(commandBuffer);
+			glPolygonOffset(
+					polygonOffsetCommandBuffer->m_Factor,
+					polygonOffsetCommandBuffer->m_Units);
+			break;
+		}
 		case kCommandTypeSetViewport:
 		{
 			auto setViewportCommandBuffer = static_cast<SetViewportCommandBuffer *>(commandBuffer);
@@ -1038,6 +1061,27 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 		{
 			auto clearStencilCommandBuffer = static_cast<ClearStencilCommandBuffer *>(commandBuffer);
 			ClearStencil(clearStencilCommandBuffer->m_Stencil);
+			break;
+		}
+		case kCommandTypeGetSupportedExtensions:
+		{
+			auto getSupportedExtensionsCommandBuffer = static_cast<GetSupportedExtensionsCommandBuffer *>(commandBuffer);
+			const GLubyte *ret = glGetString(GL_EXTENSIONS);
+			// Split the ret by “space” and add to the vector
+			std::string extensions(reinterpret_cast<const char *>(ret));
+			std::istringstream iss(extensions);
+			std::vector<std::string> tokens{std::istream_iterator<std::string>{iss},
+											std::istream_iterator<std::string>{}};
+			getSupportedExtensionsCommandBuffer->m_Extensions = tokens;
+
+			// TODO: Support for OpenGL ES 3.0
+			// GLint numOfExtensions;
+			// glGetIntegerv(GL_NUM_EXTENSIONS, &numOfExtensions);
+			// for (int i = 0; i < numOfExtensions; i++)
+			// {
+			// 	const GLubyte *ret = glGetStringi(GL_EXTENSIONS, i);
+			// 	getSupportedExtensionsCommandBuffer->m_Extensions.push_back(reinterpret_cast<const char *>(ret));
+			// }
 			break;
 		}
 		case kCommandTypeDepthMask:
@@ -1143,6 +1187,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					blendFuncCommandBuffer->m_Dfactor);
 			m_Blend_Sfactor = blendFuncCommandBuffer->m_Sfactor;
 			m_Blend_Dfactor = blendFuncCommandBuffer->m_Dfactor;
+			m_BlendFuncSet = true;
 			break;
 		}
 		case kCommandTypeBlendFuncSeparate:
@@ -1157,6 +1202,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 			m_Blend_DstRGB = blendFuncSeparateCommandBuffer->m_DstRGB;
 			m_Blend_SrcAlpha = blendFuncSeparateCommandBuffer->m_SrcAlpha;
 			m_Blend_DstAlpha = blendFuncSeparateCommandBuffer->m_DstAlpha;
+			m_BlendFuncSeparateSet = true;
 			break;
 		}
 		case kCommandTypeColorMask:

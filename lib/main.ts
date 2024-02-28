@@ -18,14 +18,12 @@ Message: ${err?.message || err || 'null'}
 process.on('uncaughtException', handleGlobalExceptionOrRejection);
 process.on('unhandledRejection', handleGlobalExceptionOrRejection);
 
-import path from 'path';
-import crypto from 'crypto';
-
 /**
  * Browser Pollyfills for Node.js
  */
 
-import XMLHttpRequest from 'xhr2';
+// import { XMLHttpRequestImpl } fro./polyfills/xhr2xhr';
+
 /**
  * A patch to the Node.js TextDecoder.
  *
@@ -48,7 +46,7 @@ import { TransmuteRuntime2 } from './runtime2';
 import runExample from './webgl-examples/textures';
 
 globalThis.ErrorEvent = ErrorEventImpl;
-globalThis.XMLHttpRequest = XMLHttpRequest;
+// globalThis.XMLHttpRequest = XMLHttpRequestImpl;
 // globalThis.AudioContext = AudioContextImpl;
 globalThis.OffscreenCanvas = OffscreenCanvasImpl;
 globalThis.ImageData = ImageDataImpl;
@@ -76,6 +74,9 @@ globalThis.requestAnimationFrame = requestAnimationFrameImpl;
   try {
     const now = performance.now();
     logger.info('Start the TransmuteRuntime entry');
+
+    const { XMLHttpRequestImpl } = await import('./polyfills/xhr2');
+    globalThis.XMLHttpRequest = XMLHttpRequestImpl;
 
     // Initialize the OffscreenCanvas polyfill.
     await InitializeOffscreenCanvas({ loadSystemFonts: true });
@@ -122,6 +123,6 @@ globalThis.requestAnimationFrame = requestAnimationFrameImpl;
     // runtime.start();
     logger.info('Started Transmute Runtime, it takes', performance.now() - now, 'ms');
   } catch (err) {
-    logger.error(`failed to start the runtime, the error is: ${err?.stack || err}`);
+    logger.error('failed to start the runtime, occurs an error:', err);
   }
 })();

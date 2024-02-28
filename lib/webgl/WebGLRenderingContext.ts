@@ -1,6 +1,7 @@
 import * as logger from '../bindings/logger';
 import { ImageBitmapImpl, OffscreenCanvasImpl, kReadPixels } from '../polyfills/offscreencanvas';
 import { WebGLShaderPrecisionFormatImpl } from './WebGLShaderPrecisionFormat';
+import { getExtension } from './extensions';
 
 const glNative = process._linkedBinding('transmute:webgl');
 const isEnableDebugging = true;
@@ -17,6 +18,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   canvas: HTMLCanvasElement | OffscreenCanvas;
   drawingBufferColorSpace: PredefinedColorSpace;
   #constantNamesMap: Map<number, string> = new Map();
+  #supportedExtensions: string[] = null;
 
   get drawingBufferHeight(): number {
     return super.drawingBufferHeight;
@@ -76,8 +78,12 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
       }
 
       let returnStr = '';
-      if (typeof r !== 'undefined') {
+      if (Array.isArray(r)) {
+        returnStr = `=> (${r.length}) { ${r.slice(0, 3).join(', ')} }`;
+      } else if (typeof r === 'number' || typeof r === 'boolean') {
         returnStr = `=> ${r}`;
+      } else if (typeof r !== 'undefined') {
+        returnStr = `=> <${typeof r}>`;
       }
       logger.info(`WebGL::${name}(${argsStr}) ${returnStr}`);
     }
@@ -407,11 +413,17 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   getExtension(extensionName: 'WEBGL_draw_buffers'): WEBGL_draw_buffers;
   getExtension(extensionName: 'WEBGL_lose_context'): WEBGL_lose_context;
   getExtension(extensionName: 'WEBGL_multi_draw'): WEBGL_multi_draw;
-  getExtension(name: string);
   getExtension(extensionName: 'OCULUS_multiview'): OCULUS_multiview;
-  getExtension(extensionName: unknown): any {
-    logger.warn(`The extension(${extensionName}) is not supported`);
-    return null;
+  getExtension(extensionName: string): any {
+    let ext: any = null;
+    const supportedExtensions = this.getSupportedExtensions();
+    if (supportedExtensions.includes(extensionName)) {
+      ext = getExtension(this, extensionName);
+    }
+    if (ext == null) {
+      logger.warn(`The extension(${extensionName}) not found.`);
+    }
+    return ext;
   }
   getFramebufferAttachmentParameter(target: number, attachment: number, pname: number) {
     return this.nativeCall('getFramebufferAttachmentParameter', [target, attachment, pname]);
@@ -446,10 +458,14 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return new WebGLShaderPrecisionFormatImpl(rangeMin, rangeMax, precision);
   }
   getShaderSource(shader: WebGLShader): string {
-    return this.nativeCall('getShaderSource', [shader]);
+    const srcText = this.nativeCall('getShaderSource', [shader]);
+    return srcText;
   }
   getSupportedExtensions(): string[] {
-    return this.nativeCall('getSupportedExtensions');
+    if (this.#supportedExtensions == null) {
+      this.#supportedExtensions = this.nativeCall('getSupportedExtensions');
+    }
+    return this.#supportedExtensions;
   }
   getTexParameter(target: number, pname: number) {
     return this.nativeCall('getTexParameter', [target, pname]);
@@ -519,7 +535,26 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return this.nativeCall('scissor', [x, y, width, height]);
   }
   shaderSource(shader: WebGLShader, source: string): void {
-    return this.nativeCall('shaderSource', [shader, source], {
+    /**
+     * Process rules:
+     * - The #extension directive must appear before any non-preprocessor tokens in a shader.
+     */
+    const lines = source.split('\n');
+    // find all #extension directives and move them to the top of the shader
+    const extensionDecls: string[] = [];
+    let fixedShaderSrc: string = '';
+    for (const line of lines) {
+      if (line.startsWith('#extension ') && line.endsWith(': enable')) {
+        extensionDecls.push(line);
+      } else {
+        fixedShaderSrc += line + '\n';
+      }
+    }
+    if (extensionDecls.length > 0) {
+      const extensions = extensionDecls.join('\n');
+      fixedShaderSrc = extensions + '\n' + fixedShaderSrc;
+    }
+    return this.nativeCall('shaderSource', [shader, fixedShaderSrc], {
       debug: {
         argTypes: [, 'ignore'],
       },

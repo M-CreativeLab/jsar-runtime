@@ -405,6 +405,7 @@ namespace webgl
          InstanceMethod("drawArrays", &WebGLRenderingContext::DrawArrays),
          InstanceMethod("drawElements", &WebGLRenderingContext::DrawElements),
          InstanceMethod("pixelStorei", &WebGLRenderingContext::PixelStorei),
+         InstanceMethod("polygonOffset", &WebGLRenderingContext::PolygonOffset),
          InstanceMethod("viewport", &WebGLRenderingContext::Viewport),
          InstanceMethod("scissor", &WebGLRenderingContext::Scissor),
          InstanceMethod("clearColor", &WebGLRenderingContext::ClearColor),
@@ -433,6 +434,7 @@ namespace webgl
          InstanceMethod("getParameter", &WebGLRenderingContext::GetParameter),
          InstanceMethod("getShaderPrecisionFormat", &WebGLRenderingContext::GetShaderPrecisionFormat),
          InstanceMethod("getError", &WebGLRenderingContext::GetError),
+         InstanceMethod("getSupportedExtensions", &WebGLRenderingContext::GetSupportedExtensions),
          // getter & setter
          InstanceAccessor<&WebGLRenderingContext::DrawingBufferWidthGetter, &WebGLRenderingContext::DrawingBufferWidthSetter>("drawingBufferWidth"),
          InstanceAccessor<&WebGLRenderingContext::DrawingBufferHeightGetter, &WebGLRenderingContext::DrawingBufferHeightSetter>("drawingBufferHeight")});
@@ -1246,7 +1248,7 @@ namespace webgl
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    
+
     int textureUnit = info[0].As<Napi::Number>().Int32Value();
     m_renderAPI->AddCommandBuffer(new renderer::ActiveTextureCommandBuffer(textureUnit));
     return env.Undefined();
@@ -2015,6 +2017,22 @@ namespace webgl
     return env.Undefined();
   }
 
+  Napi::Value WebGLRenderingContext::PolygonOffset(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "polygonOffset() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    float factor = info[0].As<Napi::Number>().FloatValue();
+    float units = info[1].As<Napi::Number>().FloatValue();
+    m_renderAPI->AddCommandBuffer(new renderer::PolygonOffsetCommandBuffer(factor, units));
+    return env.Undefined();
+  }
+
   Napi::Value WebGLRenderingContext::Viewport(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -2496,6 +2514,30 @@ namespace webgl
     m_renderAPI->AddCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     return Napi::Number::New(env, commandBuffer->m_Error);
+  }
+
+  Napi::Value WebGLRenderingContext::GetSupportedExtensions(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    auto commandBuffer = new renderer::GetSupportedExtensionsCommandBuffer();
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    commandBuffer->WaitFinished();
+
+    Napi::Array extensionsArray = Napi::Array::New(env, commandBuffer->m_Extensions.size());
+    for (size_t i = 0; i < commandBuffer->m_Extensions.size(); i++)
+    {
+      // remove GL_ prefix
+      std::string extension = commandBuffer->m_Extensions[i];
+      Napi::String jsExtensionName;
+      if (extension.find("GL_") == 0)
+        jsExtensionName = Napi::String::New(env, extension.substr(3));
+      else
+        jsExtensionName = Napi::String::New(env, extension);
+      extensionsArray.Set(i, jsExtensionName);
+    }
+    return extensionsArray;
   }
 
   Napi::Value WebGLRenderingContext::DrawingBufferWidthGetter(const Napi::CallbackInfo &info)
