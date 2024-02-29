@@ -808,7 +808,7 @@ namespace webgl
       return env.Undefined();
     }
     int target = info[0].As<Napi::Number>().Int32Value();
-    Napi::ArrayBuffer buffer = info[1].As<Napi::ArrayBuffer>();
+    Napi::Uint8Array buffer = info[1].As<Napi::Uint8Array>();
     int usage = info[2].As<Napi::Number>().Int32Value();
 
     auto commandBuffer = new renderer::BufferDataCommandBuffer(

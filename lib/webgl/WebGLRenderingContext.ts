@@ -4,7 +4,7 @@ import { WebGLShaderPrecisionFormatImpl } from './WebGLShaderPrecisionFormat';
 import { getExtension } from './extensions';
 
 const glNative = process._linkedBinding('transmute:webgl');
-const isEnableDebugging = true;
+const isEnableDebugging = false;
 
 type ArgType = 'default' | 'ignore' | 'constant';
 type NativeCallOptions = Partial<{
@@ -13,6 +13,35 @@ type NativeCallOptions = Partial<{
     argSep?: string;
   };
 }>;
+
+type TypedArray =
+  Uint8Array |
+  Uint8ClampedArray |
+  Int8Array |
+  Uint16Array |
+  Int16Array |
+  Uint32Array |
+  Int32Array |
+  Float32Array |
+  Float64Array;
+
+function isTypedArray(data: any): data is TypedArray {
+  return data instanceof Uint8Array ||
+    data instanceof Uint8ClampedArray ||
+    data instanceof Int8Array ||
+    data instanceof Uint16Array ||
+    data instanceof Int16Array ||
+    data instanceof Uint32Array ||
+    data instanceof Int32Array ||
+    data instanceof Float32Array ||
+    data instanceof Float64Array;
+}
+
+function unpackTypedArray(array: DataView | ArrayBufferView) {
+  return (new Uint8Array(array.buffer)).subarray(
+    array.byteOffset,
+    array.byteLength + array.byteOffset);
+}
 
 export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingContext implements WebGLRenderingContext {
   canvas: HTMLCanvasElement | OffscreenCanvas;
@@ -677,15 +706,17 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     if (typeof data === 'number') {
       throw new Error('bufferData() with size not implemented.');
     } else {
-      let dataBuffer: ArrayBuffer;
-      if (!(data instanceof ArrayBuffer)) {
-        dataBuffer = data.buffer;
+      let dataBuffer: Uint8Array;
+      if (data instanceof DataView || isTypedArray(data)) {
+        dataBuffer = unpackTypedArray(data);
+      } else if (data instanceof ArrayBuffer) {
+        dataBuffer = new Uint8Array(data);
       } else {
-        dataBuffer = data;
+        throw new Error('Invalid data type for bufferData(), expected ArrayBuffer or TypedArray.');
       }
       return this.nativeCall('bufferData', [target, dataBuffer, usage], {
         debug: {
-          argTypes: ['constant', 'ignore', 'constant'],
+          argTypes: ['constant', 'default', 'constant'],
         }
       });
     }
