@@ -43,6 +43,7 @@ import { createNavigator } from './polyfills/navigator';
 
 // for testing
 import { connectRenderer, requestAnimationFrame as requestAnimationFrameImpl } from './bindings/renderer';
+import { createXRSystem } from './webxr';
 import { TransmuteRuntime2 } from './runtime2';
 // import runExample from './webgl-examples/textures';
 
@@ -70,6 +71,8 @@ globalThis.requestAnimationFrame = requestAnimationFrameImpl;
     logger.info(`The Skia initialization takes ${performance.now() - now}ms`);
 
     connectRenderer();
+    createXRSystem();
+
     const runtime = new TransmuteRuntime2();
     runtime.start();
     logger.info('Started Transmute Runtime, it takes', performance.now() - now, 'ms');

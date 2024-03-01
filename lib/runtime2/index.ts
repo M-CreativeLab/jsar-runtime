@@ -1,6 +1,7 @@
 import 'babylonjs';
 import { GLTFFileLoader } from '@babylonjs/loaders/glTF';
 
+import { getXRSystem, XRSystem } from '../webxr';
 import { requestRendererReady } from '../bindings/renderer';
 import { markRuntimeAvailable } from '../bindings/env';
 import * as logger from '../bindings/logger';
@@ -9,10 +10,16 @@ import * as logger from '../bindings/logger';
 BABYLON.SceneLoader.RegisterPlugin(new GLTFFileLoader() as any);
 
 export class TransmuteRuntime2 extends EventTarget {
+  private xrSystem: XRSystem;
   private scene: BABYLON.Scene;
   private engine: BABYLON.Engine;
   private mainCamera: BABYLON.Camera;
   private defaultLight: BABYLON.Light;
+
+  constructor() {
+    super();
+    this.xrSystem = getXRSystem();
+  }
 
   start() {
     requestRendererReady(this.onRendererReady.bind(this));
@@ -38,6 +45,15 @@ export class TransmuteRuntime2 extends EventTarget {
   private prepare(gl: WebGLRenderingContext) {
     const exts = gl.getSupportedExtensions();
     logger.info(`[WebGL] supported extensions(${exts.length}):`, exts);
+
+    this.xrSystem.requestSession('immersive-ar')
+      .then(async session => {
+        const localSpace = await session.requestReferenceSpace('local');
+        logger.info('[WebXR] local space:', localSpace);
+        session.requestAnimationFrame((time, frame) => {
+          logger.info('[WebXR] frame:', frame, time);
+        });
+      });
 
     const engine = new BABYLON.Engine(gl, true, {
       disableWebGL2Support: true,
