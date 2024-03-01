@@ -5,6 +5,13 @@
 using namespace v8;
 using namespace node;
 
+void nodejs_onexit(node::Environment *env, int exit_code)
+{
+  DEBUG("transmute", "NodejsOnExitHandler: exit_code = %d", exit_code);
+  // TransmuteNative_Dispose(true);
+  node::Stop(env);
+}
+
 NodeBootstrapper *NodeBootstrapper::instance_ = nullptr;
 
 NodeBootstrapper::NodeBootstrapper() : m_thread(nullptr)
@@ -104,11 +111,19 @@ bool NodeBootstrapper::start()
   return true;
 }
 
-void nodejs_onexit(node::Environment *env, int exit_code)
+bool NodeBootstrapper::isRunning()
 {
-  DEBUG("transmute", "NodejsOnExitHandler: exit_code = %d", exit_code);
-  // TransmuteNative_Dispose(true);
-  node::Stop(env);
+  return m_running;
+}
+
+TransmuteEnvironment *NodeBootstrapper::getEnv()
+{
+  return TransmuteEnvironment::GetInstance();
+}
+
+bool NodeBootstrapper::isRuntimeAvailable()
+{
+  return getEnv()->isRuntimeAvailable();
 }
 
 int NodeBootstrapper::runNodeInstance()
@@ -145,9 +160,7 @@ int NodeBootstrapper::runNodeInstance()
 
     // Add the transmute:core module to the Node.js instance.
     AddLinkedBinding(env, transmute_logger_napi_mod);
-    // AddLinkedBinding(env, transmute_logger_napi_mod);
-    // AddLinkedBinding(env, transmute_env_napi_mod);
-    // AddLinkedBinding(env, transmute_gom_napi_mod);
+    AddLinkedBinding(env, transmute_env_napi_mod);
     // AddLinkedBinding(env, transmute_messaging_napi_mod);
     AddLinkedBinding(env, transmute_renderer_napi_mod);
     // AddLinkedBinding(env, transmute_webaudio_napi_mod);

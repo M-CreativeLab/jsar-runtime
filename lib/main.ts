@@ -1,4 +1,6 @@
 import * as logger from './bindings/logger';
+import { createEnv, getRuntimeInit } from './bindings/env';
+
 /**
  * See https://nodejs.org/api/events.html#eventtarget-error-handling
  *
@@ -21,8 +23,7 @@ process.on('unhandledRejection', handleGlobalExceptionOrRejection);
 /**
  * Browser Pollyfills for Node.js
  */
-
-// import { XMLHttpRequestImpl } fro./polyfills/xhr2xhr';
+import { XMLHttpRequestImpl } from './polyfills/xhr2';
 
 /**
  * A patch to the Node.js TextDecoder.
@@ -43,10 +44,10 @@ import { createNavigator } from './polyfills/navigator';
 // for testing
 import { connectRenderer, requestAnimationFrame as requestAnimationFrameImpl } from './bindings/renderer';
 import { TransmuteRuntime2 } from './runtime2';
-import runExample from './webgl-examples/textures';
+// import runExample from './webgl-examples/textures';
 
 globalThis.ErrorEvent = ErrorEventImpl;
-// globalThis.XMLHttpRequest = XMLHttpRequestImpl;
+globalThis.XMLHttpRequest = XMLHttpRequestImpl;
 // globalThis.AudioContext = AudioContextImpl;
 globalThis.OffscreenCanvas = OffscreenCanvasImpl;
 globalThis.ImageData = ImageDataImpl;
@@ -55,72 +56,22 @@ globalThis.navigator = createNavigator();
 globalThis.createImageBitmap = createImageBitmapImpl;
 globalThis.requestAnimationFrame = requestAnimationFrameImpl;
 
-// import fsPromises from 'node:fs/promises';
-// import { TransmuteRuntime } from './runtime';
-
-// function getHashOfUri(uri: string) {
-//   const hash = crypto.createHash('sha256');
-//   hash.update(uri);
-//   return hash.digest('hex');
-// }
-
-// function md5(content: string | NodeJS.ArrayBufferView) {
-//   const hash = crypto.createHash('md5');
-//   hash.update(content);
-//   return hash.digest('hex');
-// }
-
 (async function main() {
   try {
     const now = performance.now();
     logger.info('Start the TransmuteRuntime entry');
 
-    const { XMLHttpRequestImpl } = await import('./polyfills/xhr2');
-    globalThis.XMLHttpRequest = XMLHttpRequestImpl;
+    createEnv();
+    const init = getRuntimeInit();
+    logger.info('The runtimeInit:', init);
 
     // Initialize the OffscreenCanvas polyfill.
     await InitializeOffscreenCanvas({ loadSystemFonts: true });
     logger.info(`The Skia initialization takes ${performance.now() - now}ms`);
 
     connectRenderer();
-    false ?
-      runExample() :
-      new TransmuteRuntime2();
-
-    // Create runtime.
-    // const runtime = new TransmuteRuntime({
-    //   /// Implements the below hooks.
-    //   onReadTextFile(pathname: string) {
-    //     return fsPromises.readFile(pathname, 'utf8');
-    //   },
-    //   onReadBinaryFile(pathname: string) {
-    //     return fsPromises.readFile(pathname);
-    //   },
-    //   async isResourceCached(runtime, uri: string): Promise<[boolean, string?]> {
-    //     const cacheDir = runtime.readyContext.applicationCacheDirectory;
-    //     const filename = getHashOfUri(uri);
-    //     const cachedPath = path.join(cacheDir, filename);
-    //     try {
-    //       await fsPromises.access(cachedPath);
-    //       return [true, cachedPath];
-    //     } catch (_err) {
-    //       return [false];
-    //     }
-    //   },
-    //   async cacheResource(runtime, uri: string, content: string | NodeJS.ArrayBufferView) {
-    //     try {
-    //       const cacheDir = runtime.readyContext.applicationCacheDirectory;
-    //       const filename = getHashOfUri(uri);
-    //       const contentPath = path.join(cacheDir, filename);
-    //       await fsPromises.writeFile(contentPath, content);
-    //       const md5filePath = path.join(cacheDir, `${filename}.md5`);
-    //       await fsPromises.writeFile(md5filePath, md5(content));
-    //     } catch (err) {
-    //       logger.error('failed to cache resource', err, uri);
-    //     }
-    //   },
-    // });
-    // runtime.start();
+    const runtime = new TransmuteRuntime2();
+    runtime.start();
     logger.info('Started Transmute Runtime, it takes', performance.now() - now, 'ms');
   } catch (err) {
     logger.error('failed to start the runtime, occurs an error:', err);

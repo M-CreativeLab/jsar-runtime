@@ -9,11 +9,13 @@
 
 #include "base.hpp"
 #include "bindings.hpp"
+#include "bindings/env/env.hpp"
 
 using namespace std;
 using namespace bindings;
 
 NODE_API_LINKED_MODULE(logger, "transmute:logger", InitLoggerModule);
+NODE_API_LINKED_MODULE(env, "transmute:env", InitEnvModule);
 NODE_API_LINKED_MODULE(renderer, "transmute:renderer", InitRendererModule);
 NODE_API_LINKED_MODULE(webgl, "transmute:webgl", InitWebglModule);
 
@@ -41,7 +43,10 @@ public:
   bool initialize();
   bool start();
   void waitForCompletion();
+  bool isRunning();
   void disposeV8();
+  TransmuteEnvironment *getEnv();
+  bool isRuntimeAvailable();
 
 private:
   int runNodeInstance();

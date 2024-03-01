@@ -2,7 +2,7 @@
 #include "debug.hpp"
 
 using namespace std;
-using namespace env;
+using namespace bindings;
 
 TransmuteEnvironment *TransmuteEnvironment::instance_;
 
@@ -16,33 +16,28 @@ TransmuteEnvironment *TransmuteEnvironment::GetInstance()
   return instance_;
 }
 
-void TransmuteEnvironment::SetReadyContext(const char *contextJson)
+void TransmuteEnvironment::setRuntimeInit(const char *argJson)
 {
-  ready_ = true;
-  ready_context_ = string(contextJson);
+  is_ready_ = true;
+  runtime_init_ = string(argJson);
 }
 
-string TransmuteEnvironment::GetReadyContext()
+string TransmuteEnvironment::getRuntimeInit()
 {
-  return ready_context_;
+  return runtime_init_;
 }
 
-bool TransmuteEnvironment::IsReady()
-{
-  return ready_;
-}
-
-bool TransmuteEnvironment::IsRuntimeAvailable()
+bool TransmuteEnvironment::isRuntimeAvailable()
 {
   return runtime_available_;
 }
 
-string TransmuteEnvironment::GetRuntimeVersions()
+string TransmuteEnvironment::getRuntimeVersions()
 {
   return runtime_versions_;
 }
 
-void TransmuteEnvironment::MarkRuntimeAvailable(string runtimeVersions)
+void TransmuteEnvironment::markRuntimeAvailable(string runtimeVersions)
 {
   std::unique_lock<std::mutex> lock(runtime_available_mtx_);
   runtime_versions_ = runtimeVersions;
@@ -50,22 +45,21 @@ void TransmuteEnvironment::MarkRuntimeAvailable(string runtimeVersions)
   runtime_available_cv_.notify_all();
 }
 
-void TransmuteEnvironment::WaitRuntimeAvailable()
+void TransmuteEnvironment::waitForRuntimeAvailable()
 {
   std::unique_lock<std::mutex> lock(runtime_available_mtx_);
   while (runtime_available_ == false)
     runtime_available_cv_.wait(lock);
 }
 
-void TransmuteEnvironment::Reset()
+void TransmuteEnvironment::reset()
 {
-  ready_ = false;
-  ready_context_ = "";
+  runtime_init_ = "";
   runtime_available_ = false;
   DEBUG("transmute", "TransmuteEnvironment instance(%p) reset.", instance_);
 }
 
 TransmuteEnvironment::TransmuteEnvironment()
 {
-  Reset();
+  reset();
 }

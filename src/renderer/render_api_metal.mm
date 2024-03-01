@@ -116,6 +116,7 @@ public:
 
   virtual void StartFrame();
   virtual void EndFrame();
+	void ExecuteCommandBuffer();
 
 private:
   id<MTLRenderCommandEncoder> CreateCommandEncoder();
@@ -162,6 +163,10 @@ static Class MTLDepthStencilDescriptorClass;
 
 RenderAPI_Metal::RenderAPI_Metal() {
   m_VertexDescriptor = [MTLVertexDescriptorClass vertexDescriptor];
+}
+
+void RenderAPI_Metal::ExecuteCommandBuffer() {
+  // TODO
 }
 
 id<MTLRenderCommandEncoder> RenderAPI_Metal::CreateCommandEncoder() {
@@ -391,15 +396,6 @@ void RenderAPI_Metal::VertexAttribPointer(int index, int size, int type,
   case WEBGL_FLOAT:
     m_VertexDescriptor.attributes[index].format = MTLVertexFormatFloat2;
     break;
-  case WEBGL2_HALF_FLOAT:
-    m_VertexDescriptor.attributes[index].format = MTLVertexFormatHalf2;
-    break;
-  case WEBGL2_INT:
-    m_VertexDescriptor.attributes[index].format = MTLVertexFormatInt2;
-    break;
-  case WEBGL2_UNSIGNED_INT:
-    m_VertexDescriptor.attributes[index].format = MTLVertexFormatUInt2;
-    break;
   default:
     break;
   }
@@ -477,32 +473,23 @@ void RenderAPI_Metal::ClearStencil(uint32_t stencil) {
 }
 
 void RenderAPI_Metal::Clear(uint32_t mask) {
-  if (mask & COLOR_BUFFER_BIT) {
+  if (mask & WEBGL_COLOR_BUFFER_BIT) {
     m_RunPassDescriptor.colorAttachments[0].clearColor = m_ClearColor;
     m_RunPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
     m_RunPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
   }
-  if (mask & DEPTH_BUFFER_BIT) {
+  if (mask & WEBGL_DEPTH_BUFFER_BIT) {
     m_RunPassDescriptor.depthAttachment.clearDepth = m_ClearDepth;
     m_RunPassDescriptor.depthAttachment.loadAction = MTLLoadActionClear;
   }
-  if (mask & STENCIL_BUFFER_BIT) {
+  if (mask & WEBGL_STENCIL_BUFFER_BIT) {
     m_RunPassDescriptor.stencilAttachment.clearStencil = m_ClearStencil;
     m_RunPassDescriptor.stencilAttachment.loadAction = MTLLoadActionClear;
   }
 }
 
 void RenderAPI_Metal::Enable(uint32_t cap) {
-  switch (cap) {
-  case BLEND:
-    // Do nothing
-    break;
-  case SCISSOR_TEST:
-    // Do nothing
-    break;
-  default:
-    break;
-  }
+  // TODO: implement
 }
 
 void RenderAPI_Metal::StartFrame() {

@@ -1,10 +1,8 @@
 #include "env_wrap.hpp"
 #include "env.hpp"
-#include "bindings/transmute_vgom/buffer_writter.hpp"
 
 using namespace std;
-using namespace env;
-using namespace gom;
+using namespace bindings;
 
 Napi::FunctionReference *EnvironmentWrap::constructor;
 
@@ -12,10 +10,9 @@ void EnvironmentWrap::Init(Napi::Env env, Napi::Object exports)
 {
   Napi::Function tpl = DefineClass(
       env,
-      "Environment",
-      {InstanceMethod("getReadyContext", &EnvironmentWrap::GetReadyContext),
-       InstanceMethod("markRuntimeAvailable", &EnvironmentWrap::MarkRuntimeAvailable),
-       InstanceMethod("markGomBufferAsErrored", &EnvironmentWrap::MarkGomBufferAsErrored)});
+      "TransmuteEnvironment",
+      {InstanceMethod("getRuntimeInit", &EnvironmentWrap::GetRuntimeInit),
+       InstanceMethod("markRuntimeAvailable", &EnvironmentWrap::MarkRuntimeAvailable),});
 
   constructor = new Napi::FunctionReference();
   *constructor = Napi::Persistent(tpl);
@@ -30,16 +27,16 @@ EnvironmentWrap::EnvironmentWrap(const Napi::CallbackInfo &info) : Napi::ObjectW
   Napi::HandleScope scope(env);
 }
 
-Napi::Value EnvironmentWrap::GetReadyContext(const Napi::CallbackInfo &info)
+Napi::Value EnvironmentWrap::GetRuntimeInit(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
   TransmuteEnvironment *transmuteEnv = TransmuteEnvironment::GetInstance();
-  if (transmuteEnv == nullptr || !transmuteEnv->IsReady())
+  if (transmuteEnv == nullptr)
     return env.Null();
 
-  return Napi::String::New(env, transmuteEnv->GetReadyContext());
+  return Napi::String::New(env, transmuteEnv->getRuntimeInit());
 }
 
 Napi::Value EnvironmentWrap::MarkRuntimeAvailable(const Napi::CallbackInfo &info)
@@ -61,26 +58,6 @@ Napi::Value EnvironmentWrap::MarkRuntimeAvailable(const Napi::CallbackInfo &info
   }
 
   string runtimeVersions = info[0].As<Napi::String>().Utf8Value();
-  transmuteEnv->MarkRuntimeAvailable(runtimeVersions);
-  return env.Undefined();
-}
-
-Napi::Value EnvironmentWrap::MarkGomBufferAsErrored(const Napi::CallbackInfo &info)
-{
-  Napi::Env env = info.Env();
-  Napi::HandleScope scope(env);
-
-  Napi::String channelIdString = info[0].As<Napi::String>();
-  Napi::Number errorCodeNumber = info[1].As<Napi::Number>();
-  std::string channelId = channelIdString.Utf8Value();
-
-  if (GameObjectModelBufferWritter::keyedBufferWrittersMap[channelId.c_str()] == nullptr)
-  {
-    Napi::TypeError::New(env, "The GOM buffer writter is not found.").ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-
-  GameObjectModelBufferWritter *writter = GameObjectModelBufferWritter::keyedBufferWrittersMap[channelId.c_str()];
-  writter->setError(errorCodeNumber.Int32Value());
+  transmuteEnv->markRuntimeAvailable(runtimeVersions);
   return env.Undefined();
 }

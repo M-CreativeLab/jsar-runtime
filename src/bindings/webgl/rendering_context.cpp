@@ -2481,6 +2481,12 @@ namespace webgl
         return env.Undefined();
       }
     }
+    else
+    {
+      Napi::TypeError::New(env, "getParameter() takes 1 argument.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
   }
 
   Napi::Value WebGLRenderingContext::GetShaderPrecisionFormat(const Napi::CallbackInfo &info)

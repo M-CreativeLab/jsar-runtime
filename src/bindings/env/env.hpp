@@ -6,7 +6,7 @@
 
 using namespace std;
 
-namespace env
+namespace bindings
 {
   class TransmuteEnvironment
   {
@@ -15,19 +15,18 @@ namespace env
     TransmuteEnvironment();
 
   public:
-    void SetReadyContext(const char *contextJson);
-    string GetReadyContext();
-    bool IsReady();
+    void setRuntimeInit(const char *argJson);
+    string getRuntimeInit();
 
-    bool IsRuntimeAvailable();
-    string GetRuntimeVersions();
-    void MarkRuntimeAvailable(string runtimeVersions);
-    void WaitRuntimeAvailable();
-    void Reset();
+    bool isRuntimeAvailable();
+    string getRuntimeVersions();
+    void markRuntimeAvailable(string runtimeVersions);
+    void waitForRuntimeAvailable();
+    void reset();
 
   private:
-    bool ready_ = false;
-    string ready_context_;
+    bool is_ready_ = false;
+    string runtime_init_;
 
     bool runtime_available_ = false;
     string runtime_versions_;
@@ -36,4 +35,4 @@ namespace env
 
     static TransmuteEnvironment *instance_;
   };
-} // namespace env
+} // namespace bindings

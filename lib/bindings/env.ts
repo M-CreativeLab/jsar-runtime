@@ -1,37 +1,46 @@
-let nativeEnv = null;
+import * as logger from './logger';
 
+let nativeEnv: Transmute.TransmuteEnvironment = null;
 try {
-  const binding = (process as any)._linkedBinding('transmute:env');
+  const binding = process._linkedBinding('transmute:env');
   nativeEnv = new binding.Environment();
 } catch (err) {
-  console.warn('failed to load linked env module.');
+  logger.error('failed to initialize "transmute:env" module.');
 }
 
 class Env {
-  #readyContextStr: string;
-  get readyContextStr() {
-    return this.#readyContextStr;
+  runtimeInit: any;
+  #runtimeInitStr: string;
+  get runtimeInitStr() {
+    return this.#runtimeInitStr;
   }
-  constructor(contextStr: string) {
-    this.#readyContextStr = contextStr;
+  constructor(argJson: string = '{}') {
+    this.#runtimeInitStr = argJson;
+    try {
+      this.runtimeInit = JSON.parse(argJson);
+    } catch (err) {
+      logger.warn('failed to parse runtimeInit JSON:', argJson, 'switch to default values.');
+      this.runtimeInit = {
+        // default values?
+      };
+    }
   }
 }
 
 let envInstance: Env;
-
-if (nativeEnv?.getReadyContext) {
-  const contextStr = nativeEnv.getReadyContext() || '{}';
-  envInstance = new Env(contextStr);
-} else {
-  envInstance = new Env('{}');
+export function createEnv() {
+  if (envInstance instanceof Env) {
+    return;
+  }
+  if (typeof nativeEnv?.getRuntimeInit === 'function') {
+    envInstance = new Env(nativeEnv.getRuntimeInit());
+  } else {
+    envInstance = new Env();
+  }
 }
 
-export function getReadyContext(): string {
-  return envInstance.readyContextStr;
-}
-
-export function createEnv(contextStr: string) {
-  envInstance = new Env(contextStr);
+export function getRuntimeInit(): any {
+  return envInstance.runtimeInit;
 }
 
 export function markRuntimeAvailable(runtimeVersions: string) {
@@ -40,8 +49,7 @@ export function markRuntimeAvailable(runtimeVersions: string) {
   }
 }
 
-export function markGomBufferAsErrored(channelId: string, errorCode: number) {
-  if (nativeEnv?.markGomBufferAsErrored) {
-    nativeEnv?.markGomBufferAsErrored(channelId, errorCode);
-  }
+// by default, it creates env instance.
+if (process.env.TRANSMUTE_AUTO_CREATE_ENV === 'yes') {
+  createEnv();
 }

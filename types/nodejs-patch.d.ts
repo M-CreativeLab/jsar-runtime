@@ -1,3 +1,11 @@
+declare namespace Transmute {
+  class TransmuteEnvironment {
+    constructor();
+    getRuntimeInit(): string;
+    markRuntimeAvailable(versions: string): void;
+  }
+}
+
 declare namespace NodeJS {
   interface Process {
     _linkedBinding(module: 'transmute:logger'): {
@@ -8,6 +16,9 @@ declare namespace NodeJS {
        * @returns nothing
        */
       log: (level: number, message: string) => void;
+    };
+    _linkedBinding(module: 'transmute:env'): {
+      Environment: typeof Transmute.TransmuteEnvironment;
     };
     _linkedBinding(module: 'transmute:webgl'): {
       WebGLRenderingContext: typeof WebGLRenderingContext;

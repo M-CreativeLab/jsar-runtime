@@ -2,26 +2,36 @@ import 'babylonjs';
 import { GLTFFileLoader } from '@babylonjs/loaders/glTF';
 
 import { requestRendererReady } from '../bindings/renderer';
+import { markRuntimeAvailable } from '../bindings/env';
 import * as logger from '../bindings/logger';
 
 // register gltf loader
 BABYLON.SceneLoader.RegisterPlugin(new GLTFFileLoader() as any);
 
-export class TransmuteRuntime2 {
+export class TransmuteRuntime2 extends EventTarget {
   private scene: BABYLON.Scene;
   private engine: BABYLON.Engine;
   private mainCamera: BABYLON.Camera;
   private defaultLight: BABYLON.Light;
 
-  constructor() {
-    requestRendererReady(gl => {
-      this.prepare(gl);
-      this.appEntry(this.scene);
+  start() {
+    requestRendererReady(this.onRendererReady.bind(this));
+    markRuntimeAvailable([
+      `version=${process.env['JSAR_VERSION']}`,
+      `babylonjs=${BABYLON.Engine.Version}`,
+      `nodejs=${process.versions.node}`,
+      `v8=${process.versions.v8}`,
+    ].join(','));
+  }
 
-      // run loop
-      this.engine.runRenderLoop(() => {
-        this.scene.render();
-      });
+  private onRendererReady(gl: WebGLRenderingContext) {
+    this.dispatchEvent(new Event('rendererReady'));
+    this.prepare(gl);
+    this.appEntry(this.scene);
+
+    // run loop
+    this.engine.runRenderLoop(() => {
+      this.scene.render();
     });
   }
 
@@ -133,7 +143,6 @@ export class TransmuteRuntime2 {
 
     // BABYLON.SceneLoader.Append(
     //   "https://playground.babylonjs.com/scenes/BoomBox/", "BoomBox.gltf", scene, function (scene) {
-
     //   });
 
     // BABYLON.SceneLoader.ImportMesh("", "https://playground.babylonjs.com/scenes/Dude/", "Dude.babylon", scene,
