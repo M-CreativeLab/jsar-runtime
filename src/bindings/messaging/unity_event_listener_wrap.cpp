@@ -2,7 +2,7 @@
 #include "debug.hpp"
 
 using namespace std;
-using namespace messaging;
+using namespace bindings::messaging;
 
 UnityEventListenerWrap *UnityEventListenerWrap::instance_;
 Napi::FunctionReference *UnityEventListenerWrap::constructor;
@@ -11,15 +11,16 @@ void UnityEventListenerWrap::Init(Napi::Env env, Napi::Object exports)
 {
   Napi::Function tpl = DefineClass(
       env,
-      "UnityEventListener",
-      {InstanceMethod("setCallback", &UnityEventListenerWrap::SetCallback),
+      "NativeEventTarget",
+      {InstanceMethod("setNativeEventListener", &UnityEventListenerWrap::SetNativeEventListener),
+       InstanceMethod("dispatchEvent", &UnityEventListenerWrap::DispatchEvent),
        InstanceMethod("dispose", &UnityEventListenerWrap::Dispose)});
 
   constructor = new Napi::FunctionReference();
   *constructor = Napi::Persistent(tpl);
   env.SetInstanceData(constructor);
 
-  exports.Set("UnityEventListener", tpl);
+  exports.Set("NativeEventTarget", tpl);
 }
 
 UnityEventListenerWrap *UnityEventListenerWrap::GetInstance()
@@ -40,7 +41,7 @@ UnityEventListenerWrap::UnityEventListenerWrap(const Napi::CallbackInfo &info) :
   dispatch_available_ = false;
 }
 
-bool UnityEventListenerWrap::Dispatch(string type, string data)
+bool UnityEventListenerWrap::DispatchNativeEvent(int id, int type, string data)
 {
   /**
    * Skip the dispatching if the instance is disposed or the dispatching is not available.
@@ -49,6 +50,7 @@ bool UnityEventListenerWrap::Dispatch(string type, string data)
     return true;
 
   JSEventMessage *message = new JSEventMessage();
+  message->id = id;
   message->type = type;
   message->data = data;
 
@@ -56,31 +58,57 @@ bool UnityEventListenerWrap::Dispatch(string type, string data)
   {
     try
     {
-      Napi::String typeParam = Napi::String::New(env, message->type);
+      Napi::Number idParam = Napi::Number::New(env, message->id);
+      Napi::Number typeParam = Napi::Number::New(env, message->type);
       Napi::String dataParam = Napi::String::New(env, message->data);
-      jsCallback.Call({typeParam, dataParam});
+      jsCallback.Call({idParam, typeParam, dataParam});
     }
     catch (const Napi::Error &e)
     {
-      DEBUG("transmute", "UnityEventListenerWrap::Dispatch() failed to call JS callback: %s", e.Message().c_str());
+      DEBUG("transmute", "NativeEventTarget::Dispatch() failed to call JS callback: %s", e.Message().c_str());
     }
     catch (...)
     {
-      DEBUG("transmute", "UnityEventListenerWrap::Dispatch() failed to call JS callback: Unkown exception.");
+      DEBUG("transmute", "NativeEventTarget::Dispatch() failed to call JS callback: Unkown exception.");
     }
     delete message;
   };
 
-  napi_status status = tsfn_.BlockingCall(message, callback);
+  napi_status status = tsfn_.NonBlockingCall(message, callback);
   if (status != napi_ok)
-    fprintf(stderr, "UnityEventListenerWrap::Dispatch() failed to call JS callback\n");
-
-  return true;
+  {
+    DEBUG("transmute", "NativeEventTarget::Dispatch() failed to call JS callback");
+    return false;
+  }
+  else
+  {
+    return true;
+  }
 }
 
-bool UnityEventListenerWrap::DispatchInputEvent(string data)
+bool UnityEventListenerWrap::GetEvent(int *id, int *type, const char *data, uint32_t *size, bool popQueue = false)
 {
-  return Dispatch("input", data);
+  std::lock_guard<std::mutex> lock(events_queue_mutex_);
+  if (events_queue_.empty())
+    return false;
+
+  auto call = events_queue_.front();
+  if (id != nullptr)
+    *id = call.id;
+  if (type != nullptr)
+    *type = call.type;
+  if (size != nullptr)
+    *size = call.data.length();
+  if (data != nullptr)
+  {
+    auto src = call.data.c_str();
+    auto len = call.data.length();
+    memcpy((void *)data, src, len);
+  }
+
+  if (popQueue)
+    events_queue_.pop();
+  return true;
 }
 
 void UnityEventListenerWrap::Finalize(Napi::Env env)
@@ -95,29 +123,80 @@ void UnityEventListenerWrap::Finalize(Napi::Env env)
   dispatch_available_ = false;
 }
 
-Napi::Value UnityEventListenerWrap::SetCallback(const Napi::CallbackInfo &info)
+Napi::Value UnityEventListenerWrap::SetNativeEventListener(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
   if (disposed_)
   {
-    Napi::TypeError::New(env, "UnityEventListener is already disposed").ThrowAsJavaScriptException();
+    Napi::TypeError::New(env, "NativeEventTarget is already disposed").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsFunction())
+  {
+    Napi::TypeError::New(env, "NativeEventTarget.setNativeEventListener() requires a function")
+      .ThrowAsJavaScriptException();
     return env.Undefined();
   }
 
   tsfn_ = Napi::ThreadSafeFunction::New(
       env,
       info[0].As<Napi::Function>(),
-      "UnityEventListener",
+      "NativeEventTarget",
       0,
       1,
       [](Napi::Env env)
       {
-        // TODO: remove the logs
-        fprintf(stderr, "UnityEventListenerWrap::SetCallback() finalizer is called\n");
+        DEBUG("transmute", "NativeEventTarget listener is finalized.");
       });
   dispatch_available_ = true;
+  DEBUG("transmute", "NativeEventTarget::SetNativeEventListener() is called.");
+  return info.This();
+}
+
+Napi::Value UnityEventListenerWrap::DispatchEvent(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  if (disposed_)
+  {
+    Napi::TypeError::New(env, "UnityEventListener is already disposed")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (info.Length() < 3)
+  {
+    Napi::TypeError::New(env, "MakeCall(id, type, data) requires 3 arguments")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsNumber())
+  {
+    Napi::TypeError::New(env, "MakeCall() requires the first argument to be a number")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[1].IsNumber())
+  {
+    Napi::TypeError::New(env, "MakeCall() requires the second argument to be a number")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[2].IsString())
+  {
+    Napi::TypeError::New(env, "MakeCall() requires the second argument to be a string")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  auto id = info[0].As<Napi::Number>().Int32Value();
+  auto type = info[1].As<Napi::Number>().Int32Value();
+  auto data = info[2].As<Napi::String>().Utf8Value();
+
+  std::lock_guard<std::mutex> lock(events_queue_mutex_);
+  events_queue_.push({id, type, data});
   return info.This();
 }
 

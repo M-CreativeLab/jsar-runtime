@@ -6,7 +6,7 @@ const {
 } = process._linkedBinding('transmute:renderer');
 
 let globalRenderLoop = null;
-let globalGlContext = null;
+let globalGlContext: WebGLRenderingContext | WebGL2RenderingContext = null;
 let isReady = false;
 
 const onreadyCallbacks: Array<(gl: WebGLRenderingContext) => void> = [];
@@ -33,7 +33,16 @@ export function connectRenderer() {
   }
 
   const loop = globalRenderLoop = new RenderLoop();
-  const gl = globalGlContext = createWebGLContext(1, 1, null);
+  try {
+    globalGlContext = createWebGLContext(1, 1, null);
+  } catch (err) {
+    logger.warn('error creating webgl context:', err);
+  }
+  if (globalGlContext == null) {
+    return;
+  }
+
+  const gl = globalGlContext;
   onreadyCallbacks.forEach(cb => cb(gl));
   onreadyCallbacks.length = 0;
   isReady = true;
@@ -54,6 +63,5 @@ export function connectRenderer() {
       loop.setFrameFinished();
     }
   });
-
   logger.info('connected to renderer.');
 }

@@ -2,4 +2,7 @@
 
 #include <napi.h>
 
-Napi::Object InitWebxrModule(Napi::Env env, Napi::Object exports);
+namespace bindings
+{
+  Napi::Object InitWebxrModule(Napi::Env env, Napi::Object exports);
+}

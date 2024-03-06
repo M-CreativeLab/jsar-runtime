@@ -71,7 +71,7 @@ globalThis.requestAnimationFrame = requestAnimationFrameImpl;
     logger.info(`The Skia initialization takes ${performance.now() - now}ms`);
 
     connectRenderer();
-    createXRSystem();
+    await createXRSystem();
 
     const runtime = new TransmuteRuntime2();
     runtime.start();

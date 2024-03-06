@@ -1,6 +1,10 @@
 #include "binding.hpp"
+#include "device_native.hpp"
 
-Napi::Object InitWebxrModule(Napi::Env env, Napi::Object exports)
+using namespace bindings;
+
+Napi::Object bindings::InitWebxrModule(Napi::Env env, Napi::Object exports)
 {
+  bindings::XRDeviceNative::Init(env, exports);
   return exports;
 }

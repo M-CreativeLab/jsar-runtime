@@ -14,10 +14,12 @@
 using namespace std;
 using namespace bindings;
 
-NODE_API_LINKED_MODULE(logger, "transmute:logger", InitLoggerModule);
 NODE_API_LINKED_MODULE(env, "transmute:env", InitEnvModule);
+NODE_API_LINKED_MODULE(logger, "transmute:logger", InitLoggerModule);
+NODE_API_LINKED_MODULE(messaging, "transmute:messaging", InitMessagingModule);
 NODE_API_LINKED_MODULE(renderer, "transmute:renderer", InitRendererModule);
 NODE_API_LINKED_MODULE(webgl, "transmute:webgl", InitWebglModule);
+NODE_API_LINKED_MODULE(webxr, "transmute:webxr", InitWebxrModule);
 
 class NodeBootstrapper
 {

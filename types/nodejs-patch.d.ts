@@ -4,6 +4,23 @@ declare namespace Transmute {
     getRuntimeInit(): string;
     markRuntimeAvailable(versions: string): void;
   }
+
+  class XRDeviceNative {
+  }
+
+  type NativeEventListener = (id: number, type: number, data: string) => void;
+  /**
+   * The native event target is a class to handle the native event from the native side:
+   * 
+   * - Sending the event to the native side such as Unity, UE4, etc.
+   * - Receiving the event from the native side.
+   */
+  class NativeEventTarget {
+    constructor();
+    setNativeEventListener(listener: NativeEventListener): void;
+    dispatchEvent(id: number, type: number, data: string): void;
+    dispose(): void;
+  }
 }
 
 declare namespace NodeJS {
@@ -20,8 +37,14 @@ declare namespace NodeJS {
     _linkedBinding(module: 'transmute:env'): {
       Environment: typeof Transmute.TransmuteEnvironment;
     };
+    _linkedBinding(module: 'transmute:messaging'): {
+      NativeEventTarget: typeof Transmute.NativeEventTarget;
+    };
     _linkedBinding(module: 'transmute:webgl'): {
       WebGLRenderingContext: typeof WebGLRenderingContext;
+    };
+    _linkedBinding(module: 'transmute:webxr'): {
+      XRDeviceNative: typeof Transmute.XRDeviceNative;
     };
     _linkedBinding(module: string): any;
   }

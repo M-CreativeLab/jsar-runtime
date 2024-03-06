@@ -31,24 +31,36 @@ export default class XRDevice extends EventTarget {
   }
 
   /**
+   * When a `XRDevice` is created, it takes some time to initialize and be ready, the caller needs to wait for this to happen.
+   */
+  waitForReady(): Promise<void> {
+    throw new Error('Not implemented');
+  }
+
+  /**
    * Called when a XRSession has a `baseLayer` property set.
    *
    * @param {number} sessionId
    * @param {XRWebGLLayer} layer
    */
-  onBaseLayerSet(sessionId, layer) { throw new Error('Not implemented'); }
+  onBaseLayerSet(_sessionId: number, _layer) {
+    throw new Error('Not implemented');
+  }
 
   /**
-   * @param {XRSessionMode} mode
-   * @return {boolean}
+   * returns if the session mode is supported.
    */
-  isSessionSupported(mode) { throw new Error('Not implemented'); }
+  isSessionSupported(_mode: XRSessionMode): boolean {
+    throw new Error('Not implemented');
+  }
 
   /**
    * @param {string} featureDescriptor
    * @return {boolean}
    */
-  isFeatureSupported(featureDescriptor) { throw new Error('Not implemented'); }
+  isFeatureSupported(_featureDescriptor: string): boolean {
+    throw new Error('Not implemented');
+  }
 
   /**
    * Returns a promise if creating a session is successful.
@@ -58,7 +70,7 @@ export default class XRDevice extends EventTarget {
    * @param {Set<string>} enabledFeatures
    * @return {Promise<number>}
    */
-  async requestSession(_mode, _enabledFeatures): Promise<number> {
+  async requestSession(_mode: XRSessionMode, _enabledFeatures: Set<string>): Promise<number> {
     throw new Error('Not implemented');
   }
 
@@ -72,24 +84,32 @@ export default class XRDevice extends EventTarget {
   /**
    * @param {number} sessionId
    */
-  onFrameStart(sessionId, renderState) { throw new Error('Not implemented'); }
+  onFrameStart(_sessionId: number, _renderState) {
+    throw new Error('Not implemented');
+  }
 
   /**
    * @param {number} sessionId
    */
-  onFrameEnd(sessionId) { throw new Error('Not implemented'); }
+  onFrameEnd(_sessionId: number) {
+    throw new Error('Not implemented');
+  }
 
   /**
    * @param {number} sessionId
    * @param {XRReferenceSpaceType} type
    * @return {boolean}
    */
-  doesSessionSupportReferenceSpace(sessionId, type) { throw new Error('Not implemented'); }
+  doesSessionSupportReferenceSpace(_sessionId: number, _type: XRReferenceSpaceType) {
+    throw new Error('Not implemented');
+  }
 
   /**
    * @return {Object?}
    */
-  requestStageBounds() { throw new Error('Not implemented'); }
+  requestStageBounds() {
+    throw new Error('Not implemented');
+  }
 
   /**
    * Returns a promise resolving to a transform if XRDevice
@@ -109,12 +129,16 @@ export default class XRDevice extends EventTarget {
   /**
    * @param {number} handle
    */
-  cancelAnimationFrame(handle) { throw new Error('Not implemented'); }
+  cancelAnimationFrame(_handle: number) {
+    throw new Error('Not implemented');
+  }
 
   /**
    * @param {number} sessionId
    */
-  endSession(sessionId) { throw new Error('Not implemented'); }
+  endSession(_sessionId: number) {
+    throw new Error('Not implemented');
+  }
 
   /**
    * Allows the XRDevice to override the XRSession's view spaces.
@@ -122,7 +146,9 @@ export default class XRDevice extends EventTarget {
    * @param {XRSessionMode} mode
    * @return {Array<XRSpace> | undefined}
    */
-  getViewSpaces(mode) { return undefined; }
+  getViewSpaces(_mode: XRSessionMode) {
+    return undefined;
+  }
 
   /**
    * Takes a XREye and a target to apply properties of
@@ -137,21 +163,27 @@ export default class XRDevice extends EventTarget {
    * @param {number} viewIndex
    * @return {boolean}
    */
-  getViewport(sessionId, eye, layer, target, viewIndex) { throw new Error('Not implemented'); }
+  getViewport(_sessionId: number, _eye, _layer, _target, _viewIndex) {
+    throw new Error('Not implemented');
+  }
 
   /**
    * @param {XREye} eye
    * @param {number} viewIndex
    * @return {Float32Array}
    */
-  getProjectionMatrix(eye, viewIndex) { throw new Error('Not implemented'); }
+  getProjectionMatrix(_eye: XREye, _viewIndex: number) {
+    throw new Error('Not implemented');
+  }
 
   /**
    * Get model matrix unaffected by frame of reference.
    *
    * @return {Float32Array}
    */
-  getBasePoseMatrix() { throw new Error('Not implemented'); }
+  getBasePoseMatrix() {
+    throw new Error('Not implemented');
+  }
 
   /**
    * Get view matrix unaffected by frame of reference.
@@ -159,14 +191,18 @@ export default class XRDevice extends EventTarget {
    * @param {XREye} eye
    * @return {Float32Array}
    */
-  getBaseViewMatrix(eye) { throw new Error('Not implemented'); }
+  getBaseViewMatrix(_eye: XREye) {
+    throw new Error('Not implemented');
+  }
 
   /**
    * Get a list of input sources.
    *
    * @return {Array<XRInputSource>}
    */
-  getInputSources() { throw new Error('Not implemented'); }
+  getInputSources() {
+    throw new Error('Not implemented');
+  }
 
   /**
    * Get the current pose of an input source.
@@ -176,7 +212,9 @@ export default class XRDevice extends EventTarget {
    * @param {String} poseType
    * @return {XRPose}
    */
-  getInputPose(inputSource, coordinateSystem, poseType) { throw new Error('Not implemented'); }
+  getInputPose(inputSource, coordinateSystem, poseType) {
+    throw new Error('Not implemented');
+  }
 
   /**
    * Called on window resize.

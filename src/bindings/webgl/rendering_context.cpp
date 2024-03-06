@@ -455,7 +455,8 @@ namespace webgl
     m_renderAPI = RenderAPI::Get();
     if (m_renderAPI == nullptr)
     {
-      Napi::TypeError::New(env, "RenderAPI is not available").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "RenderAPI is not available")
+        .ThrowAsJavaScriptException();
       return;
     }
   }

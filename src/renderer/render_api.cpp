@@ -69,8 +69,9 @@ RenderAPI *CreateRenderAPI(UnityGfxRenderer apiType)
 #if SUPPORT_METAL
 	if (apiType == kUnityGfxRendererMetal)
 	{
-		extern RenderAPI *CreateRenderAPI_Metal();
-		return CreateRenderAPI_Metal();
+		// extern RenderAPI *CreateRenderAPI_Metal();
+		// return CreateRenderAPI_Metal();
+		return nullptr;
 	}
 #endif // if SUPPORT_METAL
 

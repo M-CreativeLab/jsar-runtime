@@ -1,13 +1,13 @@
 #include <napi.h>
-#include "xr/system.hpp"
+// #include "xr/system.hpp"
 
 namespace bindings
 {
-  class XRSystem : public Napi::ObjectWrap<XRSystem>
+  class XRDeviceNative : public Napi::ObjectWrap<XRDeviceNative>
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    XRSystem(const Napi::CallbackInfo &info);
+    XRDeviceNative(const Napi::CallbackInfo &info);
 
   private:
     Napi::Value IsSessionSupported(const Napi::CallbackInfo &info);

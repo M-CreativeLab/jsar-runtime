@@ -82,6 +82,21 @@ extern "C"
     DEBUG("transmute", "Prepare for TransmuteNative");
   }
 
+  DLL_PUBLIC bool TransmuteNative_GetEventFromJavaScript(int *id, int *type, uint32_t *size)
+  {
+    auto nativeEventTarget = messaging::UnityEventListenerWrap::GetInstance();
+    if (nativeEventTarget == nullptr)
+      return false;
+    return nativeEventTarget->GetEvent(id, type, nullptr, size, false);
+  }
+
+  DLL_PUBLIC void TransmuteNative_GetEventDataFromJavaScript(const char *data)
+  {
+    auto nativeEventTarget = messaging::UnityEventListenerWrap::GetInstance();
+    if (nativeEventTarget != nullptr)
+      nativeEventTarget->GetEvent(nullptr, nullptr, data, nullptr, true);
+  }
+
   DLL_PUBLIC bool TransmuteNative_IsRuntimeUp()
   {
     auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
@@ -101,6 +116,13 @@ extern "C"
   DLL_PUBLIC void TransmuteNative_DispatchRuntimeEvent(int id)
   {
     // TODO
+  }
+
+  DLL_PUBLIC void TransmuteNative_DispatchNativeEvent(int id, int type, const char *data)
+  {
+    auto nativeEventTarget = messaging::UnityEventListenerWrap::GetInstance();
+    if (nativeEventTarget != nullptr)
+      nativeEventTarget->DispatchNativeEvent(id, type, data);
   }
 
   DLL_PUBLIC void TransmuteNative_SetRuntimeInit(const char *argJson)
