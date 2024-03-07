@@ -1,25 +1,21 @@
 import 'babylonjs';
 import { GLTFFileLoader } from '@babylonjs/loaders/glTF';
 
-import { getXRSystem, XRSystem } from '../webxr';
 import { requestRendererReady } from '../bindings/renderer';
 import { markRuntimeAvailable } from '../bindings/env';
 import * as logger from '../bindings/logger';
+import { addXsmlRequestListener, type XsmlRequestEvent } from '../bindings/messaging';
+import { createBondXRSystem, XRWebGLLayer } from '../webxr';
 
 // register gltf loader
 BABYLON.SceneLoader.RegisterPlugin(new GLTFFileLoader() as any);
 
 export class TransmuteRuntime2 extends EventTarget {
-  private xrSystem: XRSystem;
+  private gl: WebGLRenderingContext;
   private scene: BABYLON.Scene;
   private engine: BABYLON.Engine;
   private mainCamera: BABYLON.Camera;
   private defaultLight: BABYLON.Light;
-
-  constructor() {
-    super();
-    this.xrSystem = getXRSystem();
-  }
 
   start() {
     requestRendererReady(this.onRendererReady.bind(this));
@@ -29,64 +25,80 @@ export class TransmuteRuntime2 extends EventTarget {
       `nodejs=${process.versions.node}`,
       `v8=${process.versions.v8}`,
     ].join(','));
+    addXsmlRequestListener(this.onXsmlRequest.bind(this));
   }
 
   private onRendererReady(gl: WebGLRenderingContext) {
+    this.gl = gl;
     this.dispatchEvent(new Event('rendererReady'));
     this.prepare(gl);
-    this.appEntry(this.scene);
+    // this.appEntry(this.scene);
 
     // run loop
-    this.engine.runRenderLoop(() => {
-      this.scene.render();
-    });
+    // this.engine.runRenderLoop(() => {
+    //   this.scene.render();
+    // });
+  }
+
+  private onXsmlRequest(event: XsmlRequestEvent) {
+    logger.info(`xsml request:`, event.url, event.sessionId);
+
+    const xrSystem = createBondXRSystem(event.sessionId);
+    xrSystem.requestSession('immersive-ar')
+      .then(async session => {
+        session.updateRenderState({
+          baseLayer: new XRWebGLLayer(session, this.gl),
+        });
+
+        const localSpace = await session.requestReferenceSpace('local');
+        const viewerSpace = await session.requestReferenceSpace('viewer');
+        logger.info('[WebXR] local[0] & viewer[1] spaces:', localSpace, viewerSpace);
+        session.requestAnimationFrame((time, frame) => {
+          logger.info('[WebXR] frame:', time, frame);
+
+          // const pose = frame.getViewerPose(localSpace);
+          // logger.info('[WebXR] viewer pose:', pose);
+          // Draw the scene
+        });
+      });
   }
 
   private prepare(gl: WebGLRenderingContext) {
     const exts = gl.getSupportedExtensions();
     logger.info(`[WebGL] supported extensions(${exts.length}):`, exts);
 
-    this.xrSystem.requestSession('immersive-ar')
-      .then(async session => {
-        const localSpace = await session.requestReferenceSpace('local');
-        logger.info('[WebXR] local space:', localSpace);
-        session.requestAnimationFrame((time, frame) => {
-          logger.info('[WebXR] frame:', frame, time);
-        });
-      });
+    // const engine = new BABYLON.Engine(gl, true, {
+    //   disableWebGL2Support: true,
+    //   xrCompatible: true,
+    // });
+    // logger.info('[Babylonjs] gl caps:', engine.getCaps());
+    // logger.info('[Babylonjs] gl info:', engine.getGlInfo());
+    // logger.info('[Babylonjs] shader platform name =', engine.shaderPlatformName);
+    // logger.info('[Babylonjs] shader version =', engine.webGLVersion);
+    // logger.info('[Babylonjs] support ubo =', engine.supportsUniformBuffers);
 
-    const engine = new BABYLON.Engine(gl, true, {
-      disableWebGL2Support: true,
-      xrCompatible: false,
-    });
-    logger.info('[Babylonjs] gl caps:', engine.getCaps());
-    logger.info('[Babylonjs] gl info:', engine.getGlInfo());
-    logger.info('[Babylonjs] shader platform name =', engine.shaderPlatformName);
-    logger.info('[Babylonjs] shader version =', engine.webGLVersion);
-    logger.info('[Babylonjs] support ubo =', engine.supportsUniformBuffers);
+    // BABYLON.Logger.OnNewCacheEntry = (entry) => {
+    //   logger.info('[Babylonjs]', entry);
+    // };
+    // this.engine = engine;
 
-    BABYLON.Logger.OnNewCacheEntry = (entry) => {
-      logger.info('[Babylonjs]', entry);
-    };
-    this.engine = engine;
+    // const scene = this.scene = new BABYLON.Scene(engine);
+    // const camera = new BABYLON.ArcRotateCamera('Camera', 0, 0, 0, BABYLON.Vector3.Zero(), scene);
+    // camera.fov = (60 * Math.PI) / 180;
+    // camera.minZ = 0.1;
+    // camera.maxZ = 100.0;
+    // camera.setPosition(new BABYLON.Vector3(0, 0, -20));
+    // this.mainCamera = camera;
 
-    const scene = this.scene = new BABYLON.Scene(engine);
-    const camera = new BABYLON.ArcRotateCamera('Camera', 0, 0, 0, BABYLON.Vector3.Zero(), scene);
-    camera.fov = (60 * Math.PI) / 180;
-    camera.minZ = 0.1;
-    camera.maxZ = 100.0;
-    camera.setPosition(new BABYLON.Vector3(0, 0, -20));
-    this.mainCamera = camera;
-
-    const light = this.defaultLight = new BABYLON.DirectionalLight('light', new BABYLON.Vector3(0, 1, 0), scene);
-    light.intensity = 0.7;
+    // const light = this.defaultLight = new BABYLON.DirectionalLight('light', new BABYLON.Vector3(0, 1, 0), scene);
+    // light.intensity = 0.7;
   }
 
   private appEntry(scene: BABYLON.Scene) {
-    // var mat = new BABYLON.StandardMaterial("mat", scene);
-    // var texture = new BABYLON.Texture('https://i.imgur.com/Wk1cGEq.png', scene);
+    var mat = new BABYLON.StandardMaterial("mat", scene);
+    var texture = new BABYLON.Texture('https://i.imgur.com/Wk1cGEq.png', scene);
     // var texture = new BABYLON.DynamicTexture('dynamic texture', { width: 512, height: 512 }, scene);
-    // mat.diffuseTexture = texture;
+    mat.diffuseTexture = texture;
     // mat.bumpTexture = new BABYLON.Texture('https://i.imgur.com/wGyk6os.png', scene);
     // mat.diffuseColor = new BABYLON.Color3(1, 0, 0);
 
@@ -119,13 +131,13 @@ export class TransmuteRuntime2 extends EventTarget {
     //   faceUV: faceUV,
     //   wrap: true
     // };
-    // var head = BABYLON.MeshBuilder.CreateSphere('head', {
-    //   diameter: 2.01,
-    //   segments: 64,
-    // }, scene);
-    // // head.material = mat;
-    // head.showBoundingBox = true;
-    // head.renderOutline = true;
+    const head = BABYLON.MeshBuilder.CreateSphere('head', {
+      diameter: 2.01,
+      segments: 64,
+    }, scene);
+    head.material = mat;
+    head.showBoundingBox = true;
+    head.renderOutline = true;
 
     // rotate head by Babylonjs's AnimationGroup
     // var animationGroup = new BABYLON.AnimationGroup("head-rotation");
@@ -138,24 +150,24 @@ export class TransmuteRuntime2 extends EventTarget {
     // animationGroup.addTargetedAnimation(animation, head);
     // animationGroup.play(true);
 
-    const modelUrlToLoad = 'http://ar.rokidcdn.com/web-assets/pages/models/welcome.glb';
-    fetch(modelUrlToLoad).then(res => res.arrayBuffer())
-      .then(async arrayBuffer => {
-        const imported = await BABYLON.SceneLoader.ImportMeshAsync(
-          '',
-          '',
-          new Uint8Array(arrayBuffer, 0, arrayBuffer.byteLength),
-          scene,
-          null,
-          '.glb'
-        );
-        logger.info('[Babylonjs] glb loaded', imported);
+    // const modelUrlToLoad = 'http://ar.rokidcdn.com/web-assets/pages/models/welcome.glb';
+    // fetch(modelUrlToLoad).then(res => res.arrayBuffer())
+    //   .then(async arrayBuffer => {
+    //     const imported = await BABYLON.SceneLoader.ImportMeshAsync(
+    //       '',
+    //       '',
+    //       new Uint8Array(arrayBuffer, 0, arrayBuffer.byteLength),
+    //       scene,
+    //       null,
+    //       '.glb'
+    //     );
+    //     logger.info('[Babylonjs] glb loaded', imported);
 
-        const animationGroups = imported.animationGroups;
-        if (animationGroups.length > 0) {
-          animationGroups[0].play(true);
-        }
-      });
+    //     const animationGroups = imported.animationGroups;
+    //     if (animationGroups.length > 0) {
+    //       animationGroups[0].play(true);
+    //     }
+    //   });
 
     // BABYLON.SceneLoader.Append(
     //   "https://playground.babylonjs.com/scenes/BoomBox/", "BoomBox.gltf", scene, function (scene) {

@@ -13,7 +13,10 @@
  * limitations under the License.
  */
 
+import type XRSpace from '../api/XRSpace';
 // import XRReferenceSpace from '../api/XRReferenceSpace';
+import type XRWebGLLayer from '../api/XRWebGLLayer';
+import type XRRenderState from '../api/XRRenderState';
 
 export default class XRDevice extends EventTarget {
   environmentBlendMode: 'opaque' | 'additive' | 'alpha-blend';
@@ -34,7 +37,7 @@ export default class XRDevice extends EventTarget {
    * When a `XRDevice` is created, it takes some time to initialize and be ready, the caller needs to wait for this to happen.
    */
   waitForReady(): Promise<void> {
-    throw new Error('Not implemented');
+    throw new Error('Method(device.waitForReady) not implemented');
   }
 
   /**
@@ -43,15 +46,15 @@ export default class XRDevice extends EventTarget {
    * @param {number} sessionId
    * @param {XRWebGLLayer} layer
    */
-  onBaseLayerSet(_sessionId: number, _layer) {
-    throw new Error('Not implemented');
+  onBaseLayerSet(_sessionId: number, _layer: XRWebGLLayer) {
+    throw new Error('Method(device.onBaseLayerSet) not implemented');
   }
 
   /**
    * returns if the session mode is supported.
    */
   isSessionSupported(_mode: XRSessionMode): boolean {
-    throw new Error('Not implemented');
+    throw new Error('Method(device.isSessionSupported) not implemented');
   }
 
   /**
@@ -59,7 +62,7 @@ export default class XRDevice extends EventTarget {
    * @return {boolean}
    */
   isFeatureSupported(_featureDescriptor: string): boolean {
-    throw new Error('Not implemented');
+    throw new Error('Method(device.isFeatureSupported) not implemented');
   }
 
   /**
@@ -70,29 +73,29 @@ export default class XRDevice extends EventTarget {
    * @param {Set<string>} enabledFeatures
    * @return {Promise<number>}
    */
-  async requestSession(_mode: XRSessionMode, _enabledFeatures: Set<string>): Promise<number> {
-    throw new Error('Not implemented');
+  async requestSession(_mode: XRSessionMode, _enabledFeatures: Set<string>, _sessionId: number): Promise<number> {
+    throw new Error('Method(device.requestSession) not implemented');
   }
 
   /**
    * @return {Function}
    */
-  requestAnimationFrame(_callback) {
-    throw new Error('Not implemented');
+  requestAnimationFrame(_callback): number {
+    throw new Error('Method(device.requestAnimationFrame) not implemented');
   }
 
   /**
    * @param {number} sessionId
    */
-  onFrameStart(_sessionId: number, _renderState) {
-    throw new Error('Not implemented');
+  onFrameStart(_sessionId: number, _renderState: XRRenderState) {
+    throw new Error('Method(device.onFrameStart) not implemented');
   }
 
   /**
    * @param {number} sessionId
    */
   onFrameEnd(_sessionId: number) {
-    throw new Error('Not implemented');
+    throw new Error('Method(device.onFrameEnd) not implemented');
   }
 
   /**
@@ -100,15 +103,15 @@ export default class XRDevice extends EventTarget {
    * @param {XRReferenceSpaceType} type
    * @return {boolean}
    */
-  doesSessionSupportReferenceSpace(_sessionId: number, _type: XRReferenceSpaceType) {
-    throw new Error('Not implemented');
+  doesSessionSupportReferenceSpace(_sessionId: number, _type: XRReferenceSpaceType): boolean {
+    throw new Error('Method(device.doesSessionSupportReferenceSpace) not implemented');
   }
 
   /**
    * @return {Object?}
    */
-  requestStageBounds() {
-    throw new Error('Not implemented');
+  requestStageBounds(): object {
+    throw new Error('Method(device.requestStageBounds) not implemented');
   }
 
   /**
@@ -122,22 +125,22 @@ export default class XRDevice extends EventTarget {
    * @param {XRFrameOfReferenceOptions} options
    * @return {Promise<XRFrameOfReference>}
    */
-  async requestFrameOfReferenceTransform(type, options) {
-    return undefined;
+  async requestFrameOfReferenceTransform(_type: XRReferenceSpaceType, _options?): Promise<DOMMatrix> {
+    throw new Error('Method(device.requestFrameOfReferenceTransform) not implemented');
   }
 
   /**
    * @param {number} handle
    */
   cancelAnimationFrame(_handle: number) {
-    throw new Error('Not implemented');
+    throw new Error('Method(device.cancelAnimationFrame) not implemented');
   }
 
   /**
    * @param {number} sessionId
    */
   endSession(_sessionId: number) {
-    throw new Error('Not implemented');
+    throw new Error('Method(device.endSession) not implemented');
   }
 
   /**
@@ -146,8 +149,8 @@ export default class XRDevice extends EventTarget {
    * @param {XRSessionMode} mode
    * @return {Array<XRSpace> | undefined}
    */
-  getViewSpaces(_mode: XRSessionMode) {
-    return undefined;
+  getViewSpaces(_mode: XRSessionMode): Array<XRSpace> | undefined {
+    throw new Error('Method(device.getViewSpaces) not implemented');
   }
 
   /**
@@ -164,7 +167,7 @@ export default class XRDevice extends EventTarget {
    * @return {boolean}
    */
   getViewport(_sessionId: number, _eye, _layer, _target, _viewIndex) {
-    throw new Error('Not implemented');
+    throw new Error('Method(device.getViewport) not implemented');
   }
 
   /**
@@ -173,7 +176,7 @@ export default class XRDevice extends EventTarget {
    * @return {Float32Array}
    */
   getProjectionMatrix(_eye: XREye, _viewIndex: number) {
-    throw new Error('Not implemented');
+    throw new Error('Method(device.getProjectionMatrix) not implemented');
   }
 
   /**
@@ -182,7 +185,7 @@ export default class XRDevice extends EventTarget {
    * @return {Float32Array}
    */
   getBasePoseMatrix() {
-    throw new Error('Not implemented');
+    throw new Error('Method(device.getBasePoseMatrix) not implemented');
   }
 
   /**
@@ -192,7 +195,7 @@ export default class XRDevice extends EventTarget {
    * @return {Float32Array}
    */
   getBaseViewMatrix(_eye: XREye) {
-    throw new Error('Not implemented');
+    throw new Error('Method(device.getBaseViewMatrix) not implemented');
   }
 
   /**
@@ -200,8 +203,8 @@ export default class XRDevice extends EventTarget {
    *
    * @return {Array<XRInputSource>}
    */
-  getInputSources() {
-    throw new Error('Not implemented');
+  getInputSources(): Array<XRInputSource> {
+    throw new Error('Method(device.getInputSources) not implemented');
   }
 
   /**
@@ -212,8 +215,8 @@ export default class XRDevice extends EventTarget {
    * @param {String} poseType
    * @return {XRPose}
    */
-  getInputPose(inputSource, coordinateSystem, poseType) {
-    throw new Error('Not implemented');
+  getInputPose(_inputSource, _coordinateSystem, _poseType) {
+    throw new Error('Method(device.getInputPose) not implemented');
   }
 
   /**

@@ -125,7 +125,7 @@ export default class XRReferenceSpace extends XRSpace {
    * Doesn't update the bound geometry for bounded reference spaces.
    * @param {XRRigidTransform} additionalOffset
    * @return {XRReferenceSpace}
-  */
+   */
   getOffsetReferenceSpace(additionalOffset) {
     let newSpace = new XRReferenceSpace(
       this[PRIVATE].type,

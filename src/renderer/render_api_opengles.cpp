@@ -678,6 +678,13 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 					framebufferTexture2DCommandBuffer->m_Level);
 			break;
 		}
+		case kCommandTypeCheckFramebufferStatus:
+		{
+			auto checkFramebufferStatusCommandBuffer = static_cast<CheckFramebufferStatusCommandBuffer *>(commandBuffer);
+			GLenum ret = glCheckFramebufferStatus(checkFramebufferStatusCommandBuffer->m_Target);
+			checkFramebufferStatusCommandBuffer->m_Status = ret;
+			break;
+		}
 		case kCommandTypeCreateRenderbuffer:
 		{
 			auto createRenderbufferCommandBuffer = static_cast<CreateRenderbufferCommandBuffer *>(commandBuffer);

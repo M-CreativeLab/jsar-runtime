@@ -1,5 +1,6 @@
 #include "debug.hpp"
 #include "entry.hpp"
+#include "xr/device.hpp"
 
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
 #include <sys/system_properties.h>
@@ -21,10 +22,13 @@ extern "C"
 
     s_Graphics = s_UnityInterfaces->Get<IUnityGraphics>();
     s_Graphics->RegisterDeviceEventCallback(OnGraphicsDeviceEvent);
-    DEBUG("transmute", "UnityPluginLoad");
 
     // Run OnGraphicsDeviceEvent(initialize) manually on plugin load
     OnGraphicsDeviceEvent(kUnityGfxDeviceEventInitialize);
+
+    // Initialize the xr device
+    auto xrDevice = xr::Device::Create();
+    xrDevice->initialize();
 
     // Bootstrap the Node.js instance
     auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
@@ -35,6 +39,7 @@ extern "C"
   DLL_PUBLIC void UnityPluginUnload()
   {
     s_Graphics->UnregisterDeviceEventCallback(OnGraphicsDeviceEvent);
+    xr::Device::Destroy();
   }
 
   static RenderAPI *s_CurrentAPI = NULL;
@@ -137,25 +142,36 @@ extern "C"
       s_CurrentAPI->SetViewport(w, h);
   }
 
-  DLL_PUBLIC void TransmuteNative_SetCameraInit(float fov, float near, float far)
+  DLL_PUBLIC void TransmuteNative_SetFov(float fov)
   {
-    // TODO
-  }
-
-  DLL_PUBLIC void TransmuteNative_SetCameraPose(float x, float y, float z, float qx, float qy, float qz, float qw)
-  {
-    // TODO
-  }
-
-  DLL_PUBLIC void TransmuteNative_SetContainerPose(int uuid, float x, float y, float z, float qx, float qy, float qz, float qw)
-  {
-    // TODO
+    auto xrDevice = xr::Device::GetInstance();
+    if (xrDevice == NULL)
+      return;
+    xrDevice->updateFov(fov);
   }
 
   DLL_PUBLIC void TransmuteNative_SetTime(float t)
   {
-    if (s_CurrentAPI != NULL)
-      s_CurrentAPI->SetTime(t);
+    auto xrDevice = xr::Device::GetInstance();
+    if (xrDevice == NULL)
+      return;
+    xrDevice->updateTime(t);
+  }
+
+  DLL_PUBLIC void TransmuteNative_SetViewerPose(float x, float y, float z, float qx, float qy, float qz, float qw)
+  {
+    auto xrDevice = xr::Device::GetInstance();
+    if (xrDevice == NULL)
+      return;
+    xrDevice->updateViewerPose(x, y, z, qx, qy, qz, qw);
+  }
+
+  DLL_PUBLIC void TransmuteNative_SetLocalPose(int id, float x, float y, float z, float qx, float qy, float qz, float qw)
+  {
+    auto xrDevice = xr::Device::GetInstance();
+    if (xrDevice == NULL)
+      return;
+    xrDevice->updateLocalPose(id, x, y, z, qx, qy, qz, qw);
   }
 
   DLL_PUBLIC UnityRenderingEvent TransmuteNative_GetRenderEventFunc()

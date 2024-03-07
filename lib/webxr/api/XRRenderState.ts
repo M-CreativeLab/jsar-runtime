@@ -13,41 +13,45 @@
  * limitations under the License.
  */
 
+import type XRWebGLLayer from './XRWebGLLayer';
+
 export const PRIVATE = Symbol('@@webxr-polyfill/XRRenderState');
 
-export const XRRenderStateInit = Object.freeze({
-  depthNear: 0.1,
-  depthFar: 1000.0,
-  inlineVerticalFieldOfView: null,
-  baseLayer: null
-});
+export type XRRenderStateInit = Partial<{
+  depthNear: number,
+  depthFar: number,
+  inlineVerticalFieldOfView: number,
+  baseLayer: XRWebGLLayer
+}>;
 
 export default class XRRenderState {
-  /**
-   * @param {Object?} stateInit
-   */
-  constructor(stateInit = {}) {
-    const config = Object.assign({}, XRRenderStateInit, stateInit);
+  [PRIVATE]: {
+    config: XRRenderStateInit;
+  };
+
+  constructor(init?: XRRenderStateInit) {
+    const config = Object.assign({
+      depthNear: 0.1,
+      depthFar: 1000.0,
+      inlineVerticalFieldOfView: null,
+      baseLayer: null
+    }, init || {});
     this[PRIVATE] = { config };
   }
 
-  /**
-   * @return {number}
-   */
-  get depthNear() { return this[PRIVATE].config.depthNear; }
+  get depthNear() {
+    return this[PRIVATE].config.depthNear;
+  }
 
-  /**
-   * @return {number}
-   */
-  get depthFar() { return this[PRIVATE].config.depthFar; }
+  get depthFar() {
+    return this[PRIVATE].config.depthFar;
+  }
 
-  /**
-   * @return {number?}
-   */
-  get inlineVerticalFieldOfView() { return this[PRIVATE].config.inlineVerticalFieldOfView; }
+  get inlineVerticalFieldOfView() { 
+    return this[PRIVATE].config.inlineVerticalFieldOfView; 
+  }
 
-  /**
-   * @return {XRWebGLLayer}
-   */
-  get baseLayer() { return this[PRIVATE].config.baseLayer; }
+  get baseLayer() {
+    return this[PRIVATE].config.baseLayer;
+  }
 }

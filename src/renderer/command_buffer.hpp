@@ -38,6 +38,7 @@ namespace renderer
     kCommandTypeBindFramebuffer,
     kCommandTypeFramebufferRenderbuffer,
     kCommandTypeFramebufferTexture2D,
+    kCommandTypeCheckFramebufferStatus,
     kCommandTypeCreateRenderbuffer,
     kCommandTypeDeleteRenderbuffer,
     kCommandTypeBindRenderbuffer,
@@ -495,6 +496,18 @@ namespace renderer
     int m_Textarget;
     int m_Texture;
     int m_Level;
+  };
+
+  class CheckFramebufferStatusCommandBuffer : public CommandBuffer
+  {
+  public:
+    CheckFramebufferStatusCommandBuffer(int target) : CommandBuffer(kCommandTypeCheckFramebufferStatus),
+                                                      m_Target(target) {}
+    ~CheckFramebufferStatusCommandBuffer() {}
+
+  public:
+    int m_Target;
+    int m_Status;
   };
 
   class CreateRenderbufferCommandBuffer : public CommandBuffer

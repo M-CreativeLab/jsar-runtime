@@ -36,6 +36,7 @@ namespace webgl
     Napi::Value BindFramebuffer(const Napi::CallbackInfo &info);
     Napi::Value FramebufferRenderbuffer(const Napi::CallbackInfo &info);
     Napi::Value FramebufferTexture2D(const Napi::CallbackInfo &info);
+    Napi::Value CheckFramebufferStatus(const Napi::CallbackInfo &info);
     Napi::Value CreateRenderbuffer(const Napi::CallbackInfo &info);
     Napi::Value DeleteRenderbuffer(const Napi::CallbackInfo &info);
     Napi::Value BindRenderbuffer(const Napi::CallbackInfo &info);

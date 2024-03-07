@@ -13,15 +13,17 @@
  * limitations under the License.
  */
 
+import { XRDevice } from '../devices';
 import XRFrame, { PRIVATE as XRFRAME_PRIVATE } from './XRFrame';
 import XRReferenceSpace, {
   XRReferenceSpaceTypes
 } from './XRReferenceSpace';
-import XRRenderState from './XRRenderState';
+import XRRenderState, { type XRRenderStateInit } from './XRRenderState';
 // import XRInputSourceEvent from './XRInputSourceEvent';
 import XRSessionEvent from './XRSessionEvent';
 import XRSpace from './XRSpace';
 // import XRInputSourcesChangeEvent from './XRInputSourcesChangeEvent';
+import * as logger from '../../bindings/logger';
 
 export const PRIVATE = Symbol('@@webxr-polyfill/XRSession');
 
@@ -40,13 +42,54 @@ class XRViewSpace extends XRSpace {
   }
 }
 
+type XRFrameCallbackDescriptor = {
+  handle: number;
+  cancelled: boolean;
+  callback: (time: number, frame: XRFrame) => void;
+};
+
+class SessionInternalEvent extends Event {
+  sessionId: number;
+  inputSource: any;
+}
+
 export default class XRSession extends EventTarget {
+  [PRIVATE]: {
+    id: number;
+    device: XRDevice;
+    mode: XRSessionMode;
+    immersive: boolean;
+    ended: boolean;
+    suspended: boolean;
+    frameCallbacks: Array<XRFrameCallbackDescriptor>;
+    currentFrameCallbacks: null | Array<XRFrameCallbackDescriptor>;
+    frameHandle: number;
+    deviceFrameHandle: null | number;
+    activeRenderState: XRRenderState;
+    pendingRenderState: null | XRRenderStateInit;
+    viewerSpace: XRReferenceSpace;
+    viewSpaces: Array<XRSpace>;
+    currentInputSources: Array<any>;
+
+    startDeviceFrameLoop?: () => void;
+    stopDeviceFrameLoop?: () => void;
+    dispatchInputSourceEvent?: (type: string, inputSource: any) => void;
+
+    onDeviceFrame?: () => void;
+    onPresentationEnd?: (event: SessionInternalEvent) => void;
+    onPresentationStart?: (event: SessionInternalEvent) => void;
+    onSelectStart?: (event: SessionInternalEvent) => void;
+    onSelectEnd?: (event: SessionInternalEvent) => void;
+    onSqueezeStart?: (event: SessionInternalEvent) => void;
+    onSqueezeEnd?: (event: SessionInternalEvent) => void;
+  };
+
   /**
    * @param {XRDevice} device
    * @param {XRSessionMode} mode
    * @param {number} id
    */
-  constructor(device, mode, id) {
+  constructor(device: XRDevice, mode: XRSessionMode, id: number) {
     super();
 
     let immersive = mode != 'inline';
@@ -56,7 +99,7 @@ export default class XRSession extends EventTarget {
       inlineVerticalFieldOfView: immersive ? null : Math.PI * 0.5
     });
 
-    const defaultViewSpaces = immersive ?
+    const defaultViewSpaces: XRSpace[] = immersive ?
       [new XRViewSpace('left'), new XRViewSpace('right')] :
       [new XRViewSpace('none')];
     Object.freeze(defaultViewSpaces);
@@ -74,7 +117,7 @@ export default class XRSession extends EventTarget {
       id,
       activeRenderState: initialRenderState,
       pendingRenderState: null,
-      viewerSpace: new XRReferenceSpace("viewer"),
+      viewerSpace: new XRReferenceSpace('viewer'),
       get viewSpaces() { return device.getViewSpaces(mode) || defaultViewSpaces; },
       currentInputSources: []
     };
@@ -83,6 +126,7 @@ export default class XRSession extends EventTarget {
     // run on every candidate frame even if there are no callbacks queued up.
     this[PRIVATE].onDeviceFrame = () => {
       if (this[PRIVATE].ended || this[PRIVATE].suspended) {
+        logger.warn(`[XRSession] onDeviceFrame: ended or suspended`);
         return;
       }
 
@@ -105,7 +149,8 @@ export default class XRSession extends EventTarget {
       }
 
       // - If session’s renderState's baseLayer is null, abort these steps.
-      if (this[PRIVATE].activeRenderState.baseLayer === null) {
+      if (this[PRIVATE].activeRenderState?.baseLayer === null) {
+        logger.warn(`[XRSession] onDeviceFrame: baseLayer is null`);
         return;
       }
 
@@ -175,7 +220,7 @@ export default class XRSession extends EventTarget {
     // wrap up things here if we're cut off from the underlying
     // polyfilled device or explicitly ended via `session.end()` for this
     // session.
-    this[PRIVATE].onPresentationEnd = sessionId => {
+    this[PRIVATE].onPresentationEnd = ({ sessionId }) => {
       // If this session was suspended, resume it now that an immersive
       // session has ended.
       if (sessionId !== this[PRIVATE].id) {
@@ -200,7 +245,7 @@ export default class XRSession extends EventTarget {
 
     // Hook into the XRDisplay's `vr-present-start` event so we can
     // suspend if another session has begun immersive presentation.
-    this[PRIVATE].onPresentationStart = sessionId => {
+    this[PRIVATE].onPresentationStart = ({ sessionId }) => {
       // Ignore if this is the session that has begun immersive presenting
       if (sessionId === this[PRIVATE].id) {
         return;
@@ -230,7 +275,6 @@ export default class XRSession extends EventTarget {
 
       // Sadly, there's no way to make this a user gesture.
       this[PRIVATE].dispatchInputSourceEvent('select', evt.inputSource);
-
       this[PRIVATE].dispatchInputSourceEvent('selectend', evt.inputSource);
     };
     device.addEventListener('@@webxr-polyfill/input-select-end', this[PRIVATE].onSelectEnd);
@@ -280,14 +324,14 @@ export default class XRSession extends EventTarget {
     // this.onselectend = undefined;
   }
 
-  /**
-   * @return {XRRenderState}
-   */
-  get renderState() { return this[PRIVATE].activeRenderState; }
+  get ended(): boolean {
+    return this[PRIVATE].ended;
+  }
 
-  /**
-   * @return {XREnvironmentBlendMode}
-   */
+  get renderState(): XRRenderState {
+    return this[PRIVATE].activeRenderState;
+  }
+
   get environmentBlendMode() {
     return this[PRIVATE].device.environmentBlendMode || 'opaque';
   }
@@ -332,7 +376,6 @@ export default class XRSession extends EventTarget {
       if (!bounds) {
         // 'bounded-floor' spaces must have bounds geometry.
         throw new DOMException(`${type} XRReferenceSpace not supported by this device.`, 'NotSupportedError');
-
       }
       // TODO: Create an XRBoundedReferenceSpace with the correct boundaries.
       throw new DOMException(`The WebXR polyfill does not support the ${type} reference space yet.`, 'NotSupportedError');
@@ -344,8 +387,9 @@ export default class XRSession extends EventTarget {
    * @param {Function} callback
    * @return {number}
    */
-  requestAnimationFrame(callback) {
+  requestAnimationFrame(callback: (time: number, frame: XRFrame) => void) {
     if (this[PRIVATE].ended) {
+      logger.warn(`Can't call requestAnimationFrame on an XRSession that has already ended.`);
       return;
     }
 
@@ -420,10 +464,8 @@ export default class XRSession extends EventTarget {
   /**
    * Queues an update to the active render state to be applied on the next
    * frame. Unset fields of newState will not be changed.
-   * 
-   * @param {XRRenderStateInit?} newState 
    */
-  updateRenderState(newState) {
+  updateRenderState(newState: XRRenderStateInit) {
     if (this[PRIVATE].ended) {
       const message = "Can't call updateRenderState on an XRSession " +
         "that has already ended.";
@@ -475,17 +517,17 @@ export default class XRSession extends EventTarget {
     const newInputSources = this.inputSources;
     const oldInputSources = this[PRIVATE].currentInputSources;
 
-    for (const newInputSource of newInputSources) {
-      if (!oldInputSources.includes(newInputSource)) {
-        added.push(newInputSource);
-      }
-    }
+    // for (const newInputSource of newInputSources) {
+    //   if (!oldInputSources.includes(newInputSource)) {
+    //     added.push(newInputSource);
+    //   }
+    // }
 
-    for (const oldInputSource of oldInputSources) {
-      if (!newInputSources.includes(oldInputSource)) {
-        removed.push(oldInputSource);
-      }
-    }
+    // for (const oldInputSource of oldInputSources) {
+    //   if (!newInputSources.includes(oldInputSource)) {
+    //     removed.push(oldInputSource);
+    //   }
+    // }
 
     if (added.length > 0 || removed.length > 0) {
       // TODO
@@ -497,8 +539,8 @@ export default class XRSession extends EventTarget {
     }
 
     this[PRIVATE].currentInputSources.length = 0;
-    for (const newInputSource of newInputSources) {
-      this[PRIVATE].currentInputSources.push(newInputSource);
-    }
+    // for (const newInputSource of newInputSources) {
+    //   this[PRIVATE].currentInputSources.push(newInputSource);
+    // }
   }
 }

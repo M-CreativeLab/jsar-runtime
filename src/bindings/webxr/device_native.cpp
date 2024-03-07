@@ -1,4 +1,5 @@
 #include "device_native.hpp"
+#include "xr/device.hpp"
 
 namespace bindings
 {
@@ -6,10 +7,7 @@ namespace bindings
 
   Napi::Object XRDeviceNative::Init(Napi::Env env, Napi::Object exports)
   {
-    Napi::Function tpl = DefineClass(env, "XRDeviceNative", {
-      InstanceMethod("isSessionSupported", &XRDeviceNative::IsSessionSupported),
-      InstanceMethod("requestSession", &XRDeviceNative::RequestSession)
-    });
+    Napi::Function tpl = DefineClass(env, "XRDeviceNative", {InstanceMethod("isSessionSupported", &XRDeviceNative::IsSessionSupported), InstanceMethod("requestSession", &XRDeviceNative::RequestSession)});
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -37,10 +35,21 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    // XRSessionMode mode = static_cast<XRSessionMode>(info[0].As<Napi::Number>().Int32Value());
-    // xr::XRSystemNative *system = xr::XRSystemNative::GetInstance();
-    // xr::XRSessionNative *session = system->requestSession(mode);
-    // return XRSession::NewInstance(env, Napi::External<xr::XRSessionNative>::New(env, session));
-    return env.Undefined();
+    if (info.Length() < 1 || !info[0].IsNumber())
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::RequestSession: expected a number")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto id = info[0].As<Napi::Number>().Int32Value();
+    auto device = xr::Device::GetInstance();
+    if (device == nullptr)
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::RequestSession: device is not initialized")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    return Napi::Boolean::New(env, device->requestSession(id));
   }
 }

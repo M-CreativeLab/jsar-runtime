@@ -10,7 +10,10 @@ let globalGlContext: WebGLRenderingContext | WebGL2RenderingContext = null;
 let isReady = false;
 
 const onreadyCallbacks: Array<(gl: WebGLRenderingContext) => void> = [];
-const onframeCallbacks: Array<(time: number) => void> = [];
+const onframeCallbacks: Array<{
+  callback: (time: number) => void,
+  handle: number,
+}> = [];
 
 export function requestRendererReady(callback: (gl: WebGLRenderingContext) => void) {
   if (isReady) {
@@ -23,8 +26,13 @@ export function requestRendererReady(callback: (gl: WebGLRenderingContext) => vo
 
 let globalId = 0;
 export function requestAnimationFrame(callback: FrameRequestCallback): number {
-  onframeCallbacks.push(callback);
-  return globalId++;
+  const handle = globalId++;
+  onframeCallbacks.push({ callback, handle });
+  return handle;
+}
+
+export function cancelAnimationFrame(handle: number) {
+  onframeCallbacks.splice(onframeCallbacks.findIndex(cb => cb.handle === handle), 1);
 }
 
 export function connectRenderer() {
@@ -55,7 +63,7 @@ export function connectRenderer() {
 
       while (callbackThisFrame.length > 0) {
         const onframe = callbackThisFrame.shift();
-        onframe(now);
+        onframe.callback(now);
       }
     } catch (err) {
       logger.warn('error in frame callback:', err);

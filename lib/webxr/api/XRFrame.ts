@@ -18,7 +18,6 @@ import XRSession, { PRIVATE as SESSION_PRIVATE } from './XRSession';
 // import XRView from './XRView';
 
 export const PRIVATE = Symbol('@@webxr-polyfill/XRFrame');
-
 const NON_ACTIVE_MSG = 'XRFrame access outside the callback that produced it is invalid.';
 const NON_ANIMFRAME_MSG = 'getViewerPose can only be called on XRFrame objects passed to XRSession.requestAnimationFrame callbacks.';
 

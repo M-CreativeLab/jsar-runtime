@@ -1,28 +1,28 @@
 import XRSystem from './api/XRSystem';
 import XRSession from './api/XRSession';
+import XRWebGLLayer from './api/XRWebGLLayer';
 import XRFrame from './api/XRFrame';
 import { type XRDevice, XRNativeDevice } from './devices';
 
 let xrDevice: XRDevice = null;
 let xrSystem: XRSystem = null;
-export async function createXRSystem(): Promise<XRSystem> {
+export async function prepareXRSystem(): Promise<void> {
   if (xrDevice == null) {
     xrDevice = new XRNativeDevice();
   }
   await xrDevice.waitForReady();
-  xrSystem = new XRSystem(xrDevice);
-  return xrSystem;
 }
 
-export function getXRSystem(): XRSystem {
-  if (xrSystem == null) {
-    throw new Error('Failed to get XR system, please call createXRSystem() first.');
+export function createBondXRSystem(sessionId: number): XRSystem {
+  if (xrDevice == null) {
+    throw new Error('Failed to create XR system, please call prepareXRSystem() first.');
   }
-  return xrSystem;
+  return new XRSystem(xrDevice, sessionId);
 }
 
 export {
   XRSystem,
   XRSession,
+  XRWebGLLayer,
   XRFrame,
 }

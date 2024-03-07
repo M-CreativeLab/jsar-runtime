@@ -42,12 +42,14 @@ to native implementations of the API.`
 
 export default class XRSystem extends EventTarget {
   #device: XRDevice;
+  #bondSessionId: number;
   #immersiveSession: XRSession | null;
   #inlineSessions: Set<XRSession>;
 
-  constructor(device: XRDevice) {
+  constructor(device: XRDevice, sessionId: number) {
     super();
     this.#device = device;
+    this.#bondSessionId = sessionId;
     this.#immersiveSession = null;
     this.#inlineSessions = new Set();
   }
@@ -119,7 +121,7 @@ export default class XRSystem extends EventTarget {
     // Call device's requestSession, which does some initialization (1.1 
     // fallback calls `vrDisplay.requestPresent()` for example). Could throw 
     // due to missing user gesture.
-    const sessionId = await this.#device.requestSession(mode, enabledFeatures);
+    const sessionId = await this.#device.requestSession(mode, enabledFeatures, this.#bondSessionId);
     const session = new XRSession(this.#device, mode, sessionId);
 
     if (mode == 'inline') {

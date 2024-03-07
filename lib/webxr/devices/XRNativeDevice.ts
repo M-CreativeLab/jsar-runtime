@@ -1,6 +1,11 @@
-import XRDevice from './XRDevice';
+
 import * as logger from '../../bindings/logger';
 import { makeRpcCall } from '../../bindings/messaging';
+import * as renderer from '../../bindings/renderer';
+
+import XRDevice from './XRDevice';
+import XRWebGLLayer from '../api/XRWebGLLayer';
+
 const { XRDeviceNative } = process._linkedBinding('transmute:webxr');
 
 export default class XRNativeDevice extends XRDevice {
@@ -26,7 +31,53 @@ export default class XRNativeDevice extends XRDevice {
     return true;
   }
 
-  requestSession(mode: XRSessionMode, enabledFeatures: Set<string>): Promise<number> {
-    return Promise.resolve(0);
+  async requestSession(_mode: XRSessionMode, _enabledFeatures: Set<string>, sessionId: number): Promise<number> {
+    this.#handle.requestSession(sessionId);
+    return sessionId;
+  }
+
+  doesSessionSupportReferenceSpace(_sessionId: number, referenceSpaceType: XRReferenceSpaceType): boolean {
+    if (referenceSpaceType === 'local' || referenceSpaceType === 'viewer') {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  requestStageBounds(): object {
+    return null;
+  }
+
+  async requestFrameOfReferenceTransform(type: XRReferenceSpaceType, options): Promise<DOMMatrix> {
+    // const resp = await makeRpcCall('xr.requestFrameOfReferenceTransform', [type, options]);
+    return null;
+  }
+
+  requestAnimationFrame(callback: any): number {
+    return renderer.requestAnimationFrame(callback);
+  }
+
+  cancelAnimationFrame(_handle: number): void {
+    renderer.cancelAnimationFrame(_handle);
+  }
+
+  onBaseLayerSet(_sessionId: number, _layer: XRWebGLLayer): void {
+    // Nothing to do here
+  }
+
+  onFrameStart(_sessionId: number, _renderState: any): void {
+    // Nothing to do here
+  }
+
+  onFrameEnd(_sessionId: number): void {
+    // Nothing to do here
+  }
+
+  getInputSources(): XRInputSource[] {
+    return [];
+  }
+
+  getInputPose(_inputSource: any, _coordinateSystem: any, _poseType: any): void {
+    return null;
   }
 }

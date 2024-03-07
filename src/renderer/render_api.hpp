@@ -4,9 +4,11 @@
 #include <stddef.h>
 #include <napi.h>
 #include <Unity/IUnityGraphics.h>
+
 #include "debug.hpp"
 #include "command_buffer.hpp"
 #include "constants.hpp"
+#include "xr/device.hpp"
 
 enum FrameExecutionCode
 {
@@ -74,13 +76,46 @@ public:
   void AddCommandBuffer(renderer::CommandBuffer *commandBuffer);
   size_t GetCommandBuffersCount();
   void SetTime(float time) { this->time = time; }
-  void SetViewport(int w, int h) {
+  void SetViewport(int w, int h)
+  {
     m_ViewportWidth = w;
     m_ViewportHeight = h;
+  }
+  void SetFieldOfView(float fov) { this->fov = fov; }
+  void SetViewerPosition(float x, float y, float z)
+  {
+    m_ViewerPosition[0] = x;
+    m_ViewerPosition[1] = y;
+    m_ViewerPosition[2] = z;
+  }
+  void SetViewerRotation(float x, float y, float z, float w)
+  {
+    M_ViewerRotation[0] = x;
+    M_ViewerRotation[1] = y;
+    M_ViewerRotation[2] = z;
+    M_ViewerRotation[3] = w;
+  }
+  void SetLocalPosition(float x, float y, float z)
+  {
+    m_LocalPosition[0] = x;
+    m_LocalPosition[1] = y;
+    m_LocalPosition[2] = z;
+  }
+  void SetLocalRotation(float x, float y, float z, float w)
+  {
+    m_LocalRotation[0] = x;
+    m_LocalRotation[1] = y;
+    m_LocalRotation[2] = z;
+    m_LocalRotation[3] = w;
   }
 
 protected:
   float time = 0.0f;
+  float fov = 0.0f;
+  float m_ViewerPosition[3] = {0.0f, 0.0f, 0.0f};
+  float M_ViewerRotation[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+  float m_LocalPosition[3] = {0.0f, 0.0f, 0.0f};
+  float m_LocalRotation[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   atomic<int> m_ViewportWidth = 0;
   atomic<int> m_ViewportHeight = 0;
   std::vector<renderer::CommandBuffer *> m_CommandBuffers;

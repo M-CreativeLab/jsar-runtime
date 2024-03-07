@@ -365,6 +365,7 @@ namespace webgl
          InstanceMethod("bindFramebuffer", &WebGLRenderingContext::BindFramebuffer),
          InstanceMethod("framebufferRenderbuffer", &WebGLRenderingContext::FramebufferRenderbuffer),
          InstanceMethod("framebufferTexture2D", &WebGLRenderingContext::FramebufferTexture2D),
+         InstanceMethod("checkFramebufferStatus", &WebGLRenderingContext::CheckFramebufferStatus),
          InstanceMethod("createRenderbuffer", &WebGLRenderingContext::CreateRenderbuffer),
          InstanceMethod("deleteRenderbuffer", &WebGLRenderingContext::DeleteRenderbuffer),
          InstanceMethod("bindRenderbuffer", &WebGLRenderingContext::BindRenderbuffer),
@@ -949,6 +950,23 @@ namespace webgl
         texture->GetId(),
         level));
     return env.Undefined();
+  }
+
+  Napi::Value WebGLRenderingContext::CheckFramebufferStatus(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "checkFramebufferStatus() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int target = info[0].As<Napi::Number>().Int32Value();
+    auto commandBuffer = new renderer::CheckFramebufferStatusCommandBuffer(target);
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    commandBuffer->WaitFinished();
+    return Napi::Number::New(env, commandBuffer->m_Status);
   }
 
   Napi::Value WebGLRenderingContext::CreateRenderbuffer(const Napi::CallbackInfo &info)

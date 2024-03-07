@@ -27,6 +27,7 @@ file(GLOB TRANSMUTE_CORE_SOURCE
     # "src/math/*.cpp"
     "src/runtime/*.cpp"
     "src/renderer/*.cpp"
+    "src/xr/*.cpp"
 )
 if(APPLE)
     file(GLOB TRANSMUTE_CORE_SOURCE_MM "src/renderer/*.mm")
