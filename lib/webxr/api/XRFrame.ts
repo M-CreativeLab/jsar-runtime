@@ -13,9 +13,13 @@
  * limitations under the License.
  */
 
+import type XRDevice from '../devices/XRDevice';
+import type XRSpace from './XRSpace';
+import type XRReferenceSpace from './XRReferenceSpace';
 import XRSession, { PRIVATE as SESSION_PRIVATE } from './XRSession';
-// import XRViewerPose from './XRViewerPose';
-// import XRView from './XRView';
+import XRPose from './XRPose';
+import XRViewerPose from './XRViewerPose';
+import XRView from './XRView';
 
 export const PRIVATE = Symbol('@@webxr-polyfill/XRFrame');
 const NON_ACTIVE_MSG = 'XRFrame access outside the callback that produced it is invalid.';
@@ -24,12 +28,21 @@ const NON_ANIMFRAME_MSG = 'getViewerPose can only be called on XRFrame objects p
 let NEXT_FRAME_ID = 0;
 
 export default class XRFrame {
+  [PRIVATE]: {
+    id: number,
+    active: boolean,
+    animationFrame: boolean,
+    device: XRDevice,
+    session: XRSession,
+    sessionId: number
+  };
+
   /**
    * @param {XRDevice} device
    * @param {XRSession} session
    * @param {number} sessionId
    */
-  constructor(device, session: XRSession, sessionId: number) {
+  constructor(device: XRDevice, session: XRSession, sessionId: number) {
     this[PRIVATE] = {
       id: ++NEXT_FRAME_ID,
       active: false,
@@ -47,16 +60,12 @@ export default class XRFrame {
     return this[PRIVATE].session;
   }
 
-  /**
-   * @param {XRReferenceSpace} referenceSpace
-   * @return {XRViewerPose?}
-   */
-  getViewerPose(referenceSpace) {
+  getViewerPose(referenceSpace: XRReferenceSpace) {
     if (!this[PRIVATE].animationFrame) {
-      throw new DOMException(NON_ANIMFRAME_MSG, 'InvalidStateError');
+      throw new TypeError(NON_ANIMFRAME_MSG);
     }
     if (!this[PRIVATE].active) {
-      throw new DOMException(NON_ACTIVE_MSG, 'InvalidStateError');
+      throw new TypeError(NON_ACTIVE_MSG);
     }
 
     const device = this[PRIVATE].device;
@@ -65,27 +74,26 @@ export default class XRFrame {
     session[SESSION_PRIVATE].viewerSpace._ensurePoseUpdated(device, this[PRIVATE].id);
     referenceSpace._ensurePoseUpdated(device, this[PRIVATE].id);
 
-    let viewerTransform = referenceSpace._getSpaceRelativeTransform(session[SESSION_PRIVATE].viewerSpace);
-
-    const views = [];
+    const viewerTransform = referenceSpace._getSpaceRelativeTransform(session[SESSION_PRIVATE].viewerSpace);
+    const views: XRView[] = [];
     for (const viewSpace of session[SESSION_PRIVATE].viewSpaces) {
       viewSpace._ensurePoseUpdated(device, this[PRIVATE].id);
-      let viewTransform = referenceSpace._getSpaceRelativeTransform(viewSpace);
-      // let view = new XRView(device, viewTransform, viewSpace.eye, this[PRIVATE].sessionId, viewSpace.viewIndex);
-      // views.push(view);
+      const viewTransform = referenceSpace._getSpaceRelativeTransform(viewSpace);
+      const viewIndex = session[SESSION_PRIVATE].viewSpaces.indexOf(viewSpace);
+      views.push(
+        new XRView(device, viewTransform, viewSpace.eye, this[PRIVATE].sessionId, viewIndex)
+      );
     }
-    // let viewerPose = new XRViewerPose(viewerTransform, views, false /* TODO: emulatedPosition */);
-    // return viewerPose;
+    const viewerPose = new XRViewerPose(viewerTransform, views, false /* TODO: emulatedPosition */);
+    return viewerPose;
   }
 
   /**
-   * @param {XRSpace} space
-   * @param {XRSpace} baseSpace
-   * @return {XRPose?} pose
+   * returns the relative position and orientation—the pose—of one XRSpace to that of another space.
    */
-  getPose(space, baseSpace) {
+  getPose(space: XRSpace, baseSpace: XRSpace) {
     if (!this[PRIVATE].active) {
-      throw new DOMException(NON_ACTIVE_MSG, 'InvalidStateError');
+      throw new TypeError(NON_ACTIVE_MSG);
     }
 
     const device = this[PRIVATE].device;
@@ -97,9 +105,10 @@ export default class XRFrame {
       space._ensurePoseUpdated(device, this[PRIVATE].id);
       baseSpace._ensurePoseUpdated(device, this[PRIVATE].id);
       let transform = baseSpace._getSpaceRelativeTransform(space);
-      if (!transform) { return null; }
-      // return new XRPose(transform, false /* TODO: emulatedPosition */);
+      if (!transform) {
+        return null;
+      }
+      return new XRPose(transform, false /* TODO: emulatedPosition */);
     }
-    return null;
   }
 }

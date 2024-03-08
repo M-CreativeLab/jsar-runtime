@@ -15,13 +15,27 @@
 import { mat4, vec3, quat } from 'gl-matrix';
 export const PRIVATE = Symbol('@@webxr-polyfill/XRRigidTransform');
 
+type Quaternion = {
+  x: number,
+  y: number,
+  z: number,
+  w: number,
+};
+
 export default class XRRigidTransform {
+  [PRIVATE]: {
+    matrix: Float32Array,
+    position: Quaternion,
+    orientation: Quaternion,
+    inverse: XRRigidTransform,
+  };
+
   // no arguments: identity transform
   // (Float32Array): transform based on matrix
   // (DOMPointReadOnly): transform based on position without any rotation
   // (DOMPointReadOnly, DOMPointReadOnly): transform based on position and
   // orientation quaternion
-  constructor(_position?, _orientation?) {
+  constructor(_positionOrMatrix?: Quaternion | Float32Array, _orientation?: Quaternion) {
     this[PRIVATE] = {
       matrix: null,
       position: null,
@@ -30,21 +44,19 @@ export default class XRRigidTransform {
     };
 
     if (arguments.length === 0) {
-      this[PRIVATE].matrix = mat4.identity(new Float32Array(16));
+      this[PRIVATE].matrix = <Float32Array>mat4.identity(new Float32Array(16));
     } else if (arguments.length === 1) {
       if (arguments[0] instanceof Float32Array) {
         this[PRIVATE].matrix = arguments[0];
       } else {
         this[PRIVATE].position = this._getPoint(arguments[0]);
-        this[PRIVATE].orientation = DOMPointReadOnly.fromPoint({
-          x: 0, y: 0, z: 0, w: 1
-        });
+        this[PRIVATE].orientation = { x: 0, y: 0, z: 0, w: 1 };
       }
     } else if (arguments.length === 2) {
       this[PRIVATE].position = this._getPoint(arguments[0]);
       this[PRIVATE].orientation = this._getPoint(arguments[1]);
     } else {
-      throw new Error("Too many arguments!");
+      throw new TypeError('Too many arguments.');
     }
 
     if (this[PRIVATE].matrix) {
@@ -67,7 +79,7 @@ export default class XRRigidTransform {
       });
     } else {
       // Compose matrix from position and orientation.
-      this[PRIVATE].matrix = mat4.identity(new Float32Array(16));
+      this[PRIVATE].matrix = <Float32Array>mat4.identity(new Float32Array(16));
       mat4.fromRotationTranslation(
         this[PRIVATE].matrix,
         quat.fromValues(
@@ -88,12 +100,13 @@ export default class XRRigidTransform {
    * @param {*} arg
    * @return {DOMPointReadOnly}
    */
-  _getPoint(arg) {
-    if (arg instanceof DOMPointReadOnly) {
-      return arg;
-    }
-
-    return DOMPointReadOnly.fromPoint(arg);
+  _getPoint(arg: any) {
+    return {
+      x: arg?.x || 0,
+      y: arg?.y || 0,
+      z: arg?.z || 0,
+      w: arg?.w || 1,
+    };
   }
 
   /**
@@ -116,7 +129,7 @@ export default class XRRigidTransform {
    */
   get inverse() {
     if (this[PRIVATE].inverse === null) {
-      let invMatrix = mat4.identity(new Float32Array(16));
+      let invMatrix = <Float32Array>mat4.identity(new Float32Array(16));
       mat4.invert(invMatrix, this[PRIVATE].matrix);
       this[PRIVATE].inverse = new XRRigidTransform(invMatrix);
       this[PRIVATE].inverse[PRIVATE].inverse = this;

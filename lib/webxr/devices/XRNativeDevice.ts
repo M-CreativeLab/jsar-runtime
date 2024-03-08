@@ -48,9 +48,8 @@ export default class XRNativeDevice extends XRDevice {
     return null;
   }
 
-  async requestFrameOfReferenceTransform(type: XRReferenceSpaceType, options): Promise<DOMMatrix> {
-    // const resp = await makeRpcCall('xr.requestFrameOfReferenceTransform', [type, options]);
-    return null;
+  async requestFrameOfReferenceTransform(sessionId: number, type: XRReferenceSpaceType, options): Promise<Float32Array> {
+    return this.#handle.requestFrameOfReferenceTransform(sessionId, type, options);
   }
 
   requestAnimationFrame(callback: any): number {

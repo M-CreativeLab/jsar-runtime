@@ -5,7 +5,6 @@ import XRFrame from './api/XRFrame';
 import { type XRDevice, XRNativeDevice } from './devices';
 
 let xrDevice: XRDevice = null;
-let xrSystem: XRSystem = null;
 export async function prepareXRSystem(): Promise<void> {
   if (xrDevice == null) {
     xrDevice = new XRNativeDevice();

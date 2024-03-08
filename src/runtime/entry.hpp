@@ -42,6 +42,8 @@ extern "C"
   DLL_PUBLIC void TransmuteNative_SetTime(float t);
   DLL_PUBLIC void TransmuteNative_SetViewerPose(float x, float y, float z, float qx, float qy, float qz, float qw);
   DLL_PUBLIC void TransmuteNative_SetLocalPose(int id, float x, float y, float z, float qx, float qy, float qz, float qw);
+  DLL_PUBLIC bool TransmuteNative_SetViewerTransform(float *transform);
+  DLL_PUBLIC bool TransmuteNative_SetLocalTransform(int id, float *transform);
   DLL_PUBLIC UnityRenderingEvent TransmuteNative_GetRenderEventFunc();
 #endif
 }

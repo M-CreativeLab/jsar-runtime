@@ -14,6 +14,7 @@
  */
 
 import type XRSpace from '../api/XRSpace';
+import type XRPose from '../api/XRPose';
 // import XRReferenceSpace from '../api/XRReferenceSpace';
 import type XRWebGLLayer from '../api/XRWebGLLayer';
 import type XRRenderState from '../api/XRRenderState';
@@ -120,12 +121,8 @@ export default class XRDevice extends EventTarget {
    * Can resolve to `undefined` if the polyfilled API can provide
    * a default. Rejects if this XRDevice cannot
    * support the frame of reference.
-   *
-   * @param {XRFrameOfReferenceType} type
-   * @param {XRFrameOfReferenceOptions} options
-   * @return {Promise<XRFrameOfReference>}
    */
-  async requestFrameOfReferenceTransform(_type: XRReferenceSpaceType, _options?): Promise<DOMMatrix> {
+  async requestFrameOfReferenceTransform(_sessionId: number, _type: XRReferenceSpaceType, _options?): Promise<Float32Array> {
     throw new Error('Method(device.requestFrameOfReferenceTransform) not implemented');
   }
 
@@ -166,7 +163,7 @@ export default class XRDevice extends EventTarget {
    * @param {number} viewIndex
    * @return {boolean}
    */
-  getViewport(_sessionId: number, _eye, _layer, _target, _viewIndex) {
+  getViewport(_sessionId: number, _eye, _layer, _target, _viewIndex): boolean {
     throw new Error('Method(device.getViewport) not implemented');
   }
 
@@ -184,7 +181,7 @@ export default class XRDevice extends EventTarget {
    *
    * @return {Float32Array}
    */
-  getBasePoseMatrix() {
+  getBasePoseMatrix(): Float32Array {
     throw new Error('Method(device.getBasePoseMatrix) not implemented');
   }
 
@@ -215,7 +212,7 @@ export default class XRDevice extends EventTarget {
    * @param {String} poseType
    * @return {XRPose}
    */
-  getInputPose(_inputSource, _coordinateSystem, _poseType) {
+  getInputPose(_inputSource, _coordinateSystem, _poseType): XRPose {
     throw new Error('Method(device.getInputPose) not implemented');
   }
 

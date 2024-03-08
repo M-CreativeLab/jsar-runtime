@@ -32,7 +32,7 @@ export const XRReferenceSpaceTypes = [
  * @param {string} type 
  * @return {boolean}
  */
-function isFloor(type) {
+function isFloor(type: string) {
   return type === 'bounded-floor' || type === 'local-floor';
 }
 
@@ -45,7 +45,7 @@ export default class XRReferenceSpace extends XRSpace {
    * @param {XRReferenceSpaceType} type
    * @param {Float32Array?} transform
    */
-  constructor(type, transform = null) {
+  constructor(type: XRReferenceSpaceType, transform: Float32Array = null) {
     if (!XRReferenceSpaceTypes.includes(type)) {
       throw new Error(`XRReferenceSpaceType must be one of ${XRReferenceSpaceTypes}`);
     }
@@ -64,8 +64,8 @@ export default class XRReferenceSpace extends XRSpace {
     // Set emulated height from option or use the default
     if (isFloor(type) && !transform) {
       // Apply an emulated height to the `y` translation
-      // transform = mat4.identity(new Float32Array(16));
-      // transform[13] = DEFAULT_EMULATION_HEIGHT;
+      transform = <Float32Array>mat4.identity(new Float32Array(16));
+      transform[13] = DEFAULT_EMULATION_HEIGHT;
     }
 
     this._inverseBaseMatrix = transform || mat4.identity(new Float32Array(16));

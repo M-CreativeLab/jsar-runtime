@@ -8,6 +8,7 @@ declare namespace Transmute {
   class XRDeviceNative {
     isSessionSupported(mode: string): boolean;
     requestSession(sessionId: number): boolean;
+    requestFrameOfReferenceTransform(sessionId: number, type: XRReferenceSpaceType, options?): Float32Array;
   }
 
   type NativeEventListener = (id: number, type: number, data: string) => void;

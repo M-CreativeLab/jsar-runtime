@@ -29,8 +29,11 @@ export const PRIVATE = Symbol('@@webxr-polyfill/XRSession');
 
 // Nonstandard helper class. Not exposed by the API anywhere.
 class XRViewSpace extends XRSpace {
-  get eye() {
-    return this._specialType;
+  get eye(): XREye {
+    if (this._specialType !== 'left' && this._specialType !== 'right' && this._specialType !== 'none') {
+      throw new Error('XRViewSpace eye property is only available for left and right view spaces');
+    }
+    return <XREye>this._specialType;
   }
 
   /**
@@ -68,7 +71,7 @@ export default class XRSession extends EventTarget {
     activeRenderState: XRRenderState;
     pendingRenderState: null | XRRenderStateInit;
     viewerSpace: XRReferenceSpace;
-    viewSpaces: Array<XRSpace>;
+    viewSpaces: Array<XRViewSpace>;
     currentInputSources: Array<any>;
 
     startDeviceFrameLoop?: () => void;
@@ -99,7 +102,7 @@ export default class XRSession extends EventTarget {
       inlineVerticalFieldOfView: immersive ? null : Math.PI * 0.5
     });
 
-    const defaultViewSpaces: XRSpace[] = immersive ?
+    const defaultViewSpaces = immersive ?
       [new XRViewSpace('left'), new XRViewSpace('right')] :
       [new XRViewSpace('none')];
     Object.freeze(defaultViewSpaces);
@@ -118,7 +121,7 @@ export default class XRSession extends EventTarget {
       activeRenderState: initialRenderState,
       pendingRenderState: null,
       viewerSpace: new XRReferenceSpace('viewer'),
-      get viewSpaces() { return device.getViewSpaces(mode) || defaultViewSpaces; },
+      get viewSpaces() { return <XRViewSpace[]>device.getViewSpaces(mode) || defaultViewSpaces; },
       currentInputSources: []
     };
 
@@ -340,7 +343,7 @@ export default class XRSession extends EventTarget {
    * @param {string} type
    * @return {XRReferenceSpace}
    */
-  async requestReferenceSpace(type): Promise<XRReferenceSpace> {
+  async requestReferenceSpace(type: XRReferenceSpaceType): Promise<XRReferenceSpace> {
     if (this[PRIVATE].ended) {
       return;
     }
@@ -362,7 +365,8 @@ export default class XRSession extends EventTarget {
     // undefined, XRReferenceSpace will use a default transform. This call can
     // throw, rejecting the promise, indicating the device does not support that
     // frame of reference.
-    let transform = await this[PRIVATE].device.requestFrameOfReferenceTransform(type);
+    let transform = await this[PRIVATE].device.requestFrameOfReferenceTransform(this[PRIVATE].id, type);
+    logger.info(`[XRSession] requestReferenceSpace:`, type, transform);
 
     // TODO: 'bounded-floor' is only blocked because we currently don't report
     // the bounds geometry correctly.

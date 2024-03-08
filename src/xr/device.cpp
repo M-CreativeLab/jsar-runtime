@@ -58,6 +58,25 @@ namespace xr
     return true;
   }
 
+  float* Device::getViewerTransform()
+  {
+    return m_ViewerTransform;
+  }
+
+  float* Device::getLocalTransform(int id)
+  {
+    // Check for the session if it exists
+    if (m_SessionIds.size() == 0)
+      return NULL;
+
+    for (auto sessionId : m_SessionIds)
+    {
+      if (sessionId == id)
+        return m_LocalTransforms[id];
+    }
+    return NULL;
+  }
+
   bool Device::updateFov(float fov)
   {
     m_FieldOfView = fov;
@@ -99,6 +118,31 @@ namespace xr
         m_LocalRotations[id][1] = qy;
         m_LocalRotations[id][2] = qz;
         m_LocalRotations[id][3] = qw;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool Device::updateViewerTransform(float *transform)
+  {
+    for (int i = 0; i < 16; i++)
+      m_ViewerTransform[i] = transform[i];
+    return true;
+  }
+
+  bool Device::updateLocalTransform(int id, float *transform)
+  {
+    // Check for the session if it exists
+    if (m_SessionIds.size() == 0)
+      return false;
+
+    for (auto sessionId : m_SessionIds)
+    {
+      if (sessionId == id)
+      {
+        for (int i = 0; i < 16; i++)
+          m_LocalTransforms[id][i] = transform[i];
         return true;
       }
     }

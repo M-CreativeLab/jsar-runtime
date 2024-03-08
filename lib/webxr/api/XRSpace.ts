@@ -12,23 +12,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { type XRDevice } from '../devices';
 import XRRigidTransform from './XRRigidTransform';
 import { mat4 } from 'gl-matrix';
 
 export const PRIVATE = Symbol('@@webxr-polyfill/XRSpace');
 
 // Not exposed, for reference only
-export const XRSpaceSpecialTypes = [
-  'grip',
-  'target-ray'
-];
+export const XRSpaceSpecialTypes = ['grip', 'target-ray'];
 
 export default class XRSpace {
+  [PRIVATE]: {
+    specialType: string,
+    inputSource: any,
+    baseMatrix: Float32Array,
+    inverseBaseMatrix: Float32Array,
+    lastFrameId: number
+  };
+
   /**
    * @param {string?} specialType
    * @param {XRInputSource?} inputSource 
    */
-  constructor(specialType = null, inputSource = null) {
+  constructor(specialType: string = null, inputSource: any = null) {
     this[PRIVATE] = {
       specialType,
       inputSource,
@@ -56,10 +62,8 @@ export default class XRSpace {
   /**
    * NON-STANDARD
    * Trigger an update for this space's base pose if necessary
-   * @param {XRDevice} device
-   * @param {Number} frameId
    */
-  _ensurePoseUpdated(device, frameId) {
+  _ensurePoseUpdated(device: XRDevice, frameId: number) {
     if (frameId == this[PRIVATE].lastFrameId) return;
     this[PRIVATE].lastFrameId = frameId;
     this._onPoseUpdate(device);
@@ -68,27 +72,17 @@ export default class XRSpace {
   /**
    * NON-STANDARD
    * Called when this space's base pose needs to be updated
-   * @param {XRDevice} device
    */
-  _onPoseUpdate(device) {
+  _onPoseUpdate(device: XRDevice) {
     if (this[PRIVATE].specialType == 'viewer') {
       this._baseMatrix = device.getBasePoseMatrix();
     }
   }
 
-  /**
-   * NON-STANDARD
-   * @param {Float32Array(16)} matrix
-   */
-  set _baseMatrix(matrix) {
+  set _baseMatrix(matrix: Float32Array) {
     this[PRIVATE].baseMatrix = matrix;
     this[PRIVATE].inverseBaseMatrix = null;
   }
-
-  /**
-   * NON-STANDARD
-   * @return {Float32Array(16)}
-   */
   get _baseMatrix() {
     if (!this[PRIVATE].baseMatrix) {
       if (this[PRIVATE].inverseBaseMatrix) {
@@ -99,19 +93,10 @@ export default class XRSpace {
     return this[PRIVATE].baseMatrix;
   }
 
-  /**
-   * NON-STANDARD
-   * @param {Float32Array(16)} matrix
-   */
-  set _inverseBaseMatrix(matrix) {
+  set _inverseBaseMatrix(matrix: Float32Array) {
     this[PRIVATE].inverseBaseMatrix = matrix;
     this[PRIVATE].baseMatrix = null;
   }
-
-  /**
-   * NON-STANDARD
-   * @return {Float32Array(16)}
-   */
   get _inverseBaseMatrix() {
     if (!this[PRIVATE].inverseBaseMatrix) {
       if (this[PRIVATE].baseMatrix) {
@@ -125,11 +110,8 @@ export default class XRSpace {
   /**
    * NON-STANDARD
    * Gets the transform of the given space in this space
-   *
-   * @param {XRSpace} space
-   * @return {XRRigidTransform}
    */
-  _getSpaceRelativeTransform(space) {
+  _getSpaceRelativeTransform(space: XRSpace) {
     if (!this._inverseBaseMatrix || !space._baseMatrix) {
       return null;
     }

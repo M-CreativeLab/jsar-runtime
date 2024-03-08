@@ -166,12 +166,28 @@ extern "C"
     xrDevice->updateViewerPose(x, y, z, qx, qy, qz, qw);
   }
 
+  DLL_PUBLIC bool TransmuteNative_SetViewerTransform(float *transform)
+  {
+    auto xrDevice = xr::Device::GetInstance();
+    if (xrDevice == NULL)
+      return false;
+    return xrDevice->updateViewerTransform(transform);
+  }
+
   DLL_PUBLIC void TransmuteNative_SetLocalPose(int id, float x, float y, float z, float qx, float qy, float qz, float qw)
   {
     auto xrDevice = xr::Device::GetInstance();
     if (xrDevice == NULL)
       return;
     xrDevice->updateLocalPose(id, x, y, z, qx, qy, qz, qw);
+  }
+
+  DLL_PUBLIC bool TransmuteNative_SetLocalTransform(int id, float *transform)
+  {
+    auto xrDevice = xr::Device::GetInstance();
+    if (xrDevice == NULL)
+      return false;
+    return xrDevice->updateLocalTransform(id, transform);
   }
 
   DLL_PUBLIC UnityRenderingEvent TransmuteNative_GetRenderEventFunc()
