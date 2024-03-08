@@ -30,10 +30,6 @@ export default class XRSpace {
     lastFrameId: number
   };
 
-  /**
-   * @param {string?} specialType
-   * @param {XRInputSource?} inputSource 
-   */
   constructor(specialType: string = null, inputSource: any = null) {
     this[PRIVATE] = {
       specialType,

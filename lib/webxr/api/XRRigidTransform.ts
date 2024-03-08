@@ -32,8 +32,8 @@ export default class XRRigidTransform {
 
   // no arguments: identity transform
   // (Float32Array): transform based on matrix
-  // (DOMPointReadOnly): transform based on position without any rotation
-  // (DOMPointReadOnly, DOMPointReadOnly): transform based on position and
+  // (Quaternion): transform based on position without any rotation
+  // (Quaternion, Quaternion): transform based on position and
   // orientation quaternion
   constructor(_positionOrMatrix?: Quaternion | Float32Array, _orientation?: Quaternion) {
     this[PRIVATE] = {
@@ -63,20 +63,21 @@ export default class XRRigidTransform {
       // Decompose matrix into position and orientation.
       let position = vec3.create();
       mat4.getTranslation(position, this[PRIVATE].matrix);
-      this[PRIVATE].position = DOMPointReadOnly.fromPoint({
+      this[PRIVATE].position = {
         x: position[0],
         y: position[1],
-        z: position[2]
-      });
+        z: position[2],
+        w: 1,
+      };
 
       let orientation = quat.create();
       mat4.getRotation(orientation, this[PRIVATE].matrix);
-      this[PRIVATE].orientation = DOMPointReadOnly.fromPoint({
+      this[PRIVATE].orientation = {
         x: orientation[0],
         y: orientation[1],
         z: orientation[2],
         w: orientation[3]
-      });
+      };
     } else {
       // Compose matrix from position and orientation.
       this[PRIVATE].matrix = <Float32Array>mat4.identity(new Float32Array(16));
@@ -96,11 +97,9 @@ export default class XRRigidTransform {
   }
 
   /**
-   * Try to convert arg to a DOMPointReadOnly if it isn't already one.
-   * @param {*} arg
-   * @return {DOMPointReadOnly}
+   * Try to convert arg to a {x, y, z, w} if it isn't already one.
    */
-  _getPoint(arg: any) {
+  private _getPoint(arg: any) {
     return {
       x: arg?.x || 0,
       y: arg?.y || 0,
@@ -109,24 +108,18 @@ export default class XRRigidTransform {
     };
   }
 
-  /**
-   * @return {Float32Array}
-   */
-  get matrix() { return this[PRIVATE].matrix; }
+  get matrix() {
+    return this[PRIVATE].matrix;
+  }
 
-  /**
-   * @return {DOMPointReadOnly}
-   */
-  get position() { return this[PRIVATE].position; }
+  get position() {
+    return this[PRIVATE].position;
+  }
 
-  /**
-   * @return {DOMPointReadOnly}
-   */
-  get orientation() { return this[PRIVATE].orientation; }
+  get orientation() {
+    return this[PRIVATE].orientation;
+  }
 
-  /**
-   * @return {XRRigidTransform}
-   */
   get inverse() {
     if (this[PRIVATE].inverse === null) {
       let invMatrix = <Float32Array>mat4.identity(new Float32Array(16));

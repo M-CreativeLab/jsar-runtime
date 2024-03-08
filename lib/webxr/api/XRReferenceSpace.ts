@@ -37,6 +37,12 @@ function isFloor(type: string) {
 }
 
 export default class XRReferenceSpace extends XRSpace {
+  [PRIVATE]: {
+    type: XRReferenceSpaceType,
+    transform: Float32Array,
+    originOffset: Float32Array,
+  };
+
   /**
    * Optionally takes a `transform` from a device's requestFrameOfReferenceMatrix
    * so device's can provide their own transforms for stage (or if they
@@ -68,12 +74,11 @@ export default class XRReferenceSpace extends XRSpace {
       transform[13] = DEFAULT_EMULATION_HEIGHT;
     }
 
-    this._inverseBaseMatrix = transform || mat4.identity(new Float32Array(16));
-
+    this._inverseBaseMatrix = transform || <Float32Array>mat4.identity(new Float32Array(16));
     this[PRIVATE] = {
       type,
       transform,
-      originOffset: mat4.identity(new Float32Array(16)),
+      originOffset: <Float32Array>mat4.identity(new Float32Array(16)),
     };
   }
 
@@ -81,20 +86,15 @@ export default class XRReferenceSpace extends XRSpace {
    * NON-STANDARD
    * Takes a base pose model matrix and transforms it by the
    * frame of reference.
-   *
-   * @param {Float32Array} out
-   * @param {Float32Array} pose
    */
-  _transformBasePoseMatrix(out, pose) {
+  _transformBasePoseMatrix(out: Float32Array, pose: Float32Array) {
     mat4.multiply(out, this._inverseBaseMatrix, pose);
   }
 
   /**
    * NON-STANDARD
-   * 
-   * @return {Float32Array}
    */
-  _originOffsetMatrix() {
+  _originOffsetMatrix(): Float32Array {
     return this[PRIVATE].originOffset;
   }
 
@@ -102,7 +102,7 @@ export default class XRReferenceSpace extends XRSpace {
    * transformMatrix = Inv(OriginOffsetMatrix) * transformMatrix
    * @param {Float32Array} transformMatrix 
    */
-  _adjustForOriginOffset(transformMatrix) {
+  _adjustForOriginOffset(transformMatrix: Float32Array) {
     let inverseOriginOffsetMatrix = new Float32Array(16);
     mat4.invert(inverseOriginOffsetMatrix, this[PRIVATE].originOffset);
     mat4.multiply(transformMatrix, inverseOriginOffsetMatrix, transformMatrix);
@@ -114,7 +114,7 @@ export default class XRReferenceSpace extends XRSpace {
    * @param {XRSpace} space
    * @return {XRRigidTransform}
    */
-  _getSpaceRelativeTransform(space): XRRigidTransform {
+  _getSpaceRelativeTransform(space: XRSpace): XRRigidTransform {
     const transform = super._getSpaceRelativeTransform(space);
     // TODO: Optimize away double creation of XRRigidTransform
     this._adjustForOriginOffset(transform.matrix)
@@ -123,14 +123,11 @@ export default class XRReferenceSpace extends XRSpace {
 
   /**
    * Doesn't update the bound geometry for bounded reference spaces.
-   * @param {XRRigidTransform} additionalOffset
-   * @return {XRReferenceSpace}
    */
   getOffsetReferenceSpace(additionalOffset) {
-    let newSpace = new XRReferenceSpace(
+    const newSpace = new XRReferenceSpace(
       this[PRIVATE].type,
       this[PRIVATE].transform);
-
     mat4.multiply(newSpace[PRIVATE].originOffset, this[PRIVATE].originOffset, additionalOffset.matrix);
     return newSpace;
   }

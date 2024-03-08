@@ -13,6 +13,9 @@ namespace bindings
     Napi::Value IsSessionSupported(const Napi::CallbackInfo &info);
     Napi::Value RequestSession(const Napi::CallbackInfo &info);
     Napi::Value RequestFrameOfReferenceTransform(const Napi::CallbackInfo &info);
+    Napi::Value GetViewerTransform(const Napi::CallbackInfo &info);
+    Napi::Value GetViewerStereoViewMatrix(const Napi::CallbackInfo &info);
+    Napi::Value GetViewerStereoProjectionMatrix(const Napi::CallbackInfo &info);
 
   private:
     static Napi::FunctionReference *constructor;

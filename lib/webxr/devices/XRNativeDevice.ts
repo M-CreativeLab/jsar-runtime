@@ -5,6 +5,8 @@ import * as renderer from '../../bindings/renderer';
 
 import XRDevice from './XRDevice';
 import XRWebGLLayer from '../api/XRWebGLLayer';
+import XRPose from '../api/XRPose';
+import XRSpace from '../api/XRSpace';
 
 const { XRDeviceNative } = process._linkedBinding('transmute:webxr');
 
@@ -72,11 +74,36 @@ export default class XRNativeDevice extends XRDevice {
     // Nothing to do here
   }
 
+  getBasePoseMatrix(): Float32Array {
+    return this.#handle.getViewerTransform();
+  }
+
+  getBaseViewMatrix(eye: XREye): Float32Array {
+    if (eye === 'none') {
+      throw new TypeError('eye must be "left" or "right"');
+    }
+    const id = eye === 'left' ? 0 : 1;
+    return this.#handle.getViewerStereoViewMatrix(id);
+  }
+
+  getProjectionMatrix(eye: XREye, _viewIndex: number): Float32Array {
+    // TODO: use viewIndex?
+    if (eye === 'none') {
+      throw new TypeError('eye must be "left" or "right"');
+    }
+    const id = eye === 'left' ? 0 : 1;
+    return this.#handle.getViewerStereoProjectionMatrix(id);
+  }
+
+  getViewSpaces(_mode: XRSessionMode): XRSpace[] {
+    return null;
+  }
+
   getInputSources(): XRInputSource[] {
     return [];
   }
 
-  getInputPose(_inputSource: any, _coordinateSystem: any, _poseType: any): void {
+  getInputPose(_inputSource: any, _coordinateSystem: any, _poseType: any): XRPose {
     return null;
   }
 }

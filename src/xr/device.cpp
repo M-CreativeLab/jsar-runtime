@@ -33,12 +33,6 @@ namespace xr
   {
     m_FieldOfView = 0.0f;
     m_Time = 0.0f;
-    m_ViewerPosition[0] = 0.0f;
-    m_ViewerPosition[1] = 0.0f;
-    m_ViewerPosition[2] = 0.0f;
-    m_ViewerRotation[0] = 0.0f;
-    m_LocalPositions.clear();
-    m_LocalRotations.clear();
     m_SessionIds.clear();
   }
 
@@ -58,13 +52,33 @@ namespace xr
     return true;
   }
 
-  float* Device::getViewerTransform()
+  float *Device::getViewerTransform()
   {
+    std::lock_guard<std::mutex> lock(m_Mutex);
     return m_ViewerTransform;
   }
 
-  float* Device::getLocalTransform(int id)
+  float *Device::getViewerStereoViewMatrix(int eyeId)
   {
+    if (eyeId != 0 && eyeId != 1)
+      return NULL; // Invalid eye id (0 or 1)
+
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    return m_ViewerStereoViewMatrix[eyeId];
+  }
+
+  float *Device::getViewerStereoProjectionMatrix(int eyeId)
+  {
+    if (eyeId != 0 && eyeId != 1)
+      return NULL; // Invalid eye id (0 or 1)
+
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    return m_ViewerStereoProjectionMatrix[eyeId];
+  }
+
+  float *Device::getLocalTransform(int id)
+  {
+    std::lock_guard<std::mutex> lock(m_Mutex);
     // Check for the session if it exists
     if (m_SessionIds.size() == 0)
       return NULL;
@@ -89,50 +103,39 @@ namespace xr
     return true;
   }
 
-  bool Device::updateViewerPose(float x, float y, float z, float qx, float qy, float qz, float qw)
-  {
-    m_ViewerPosition[0] = x;
-    m_ViewerPosition[1] = y;
-    m_ViewerPosition[2] = z;
-    m_ViewerRotation[0] = qx;
-    m_ViewerRotation[1] = qy;
-    m_ViewerRotation[2] = qz;
-    m_ViewerRotation[3] = qw;
-    return true;
-  }
-
-  bool Device::updateLocalPose(int sessionId, float x, float y, float z, float qx, float qy, float qz, float qw)
-  {
-    // Check for the session if it exists
-    if (m_SessionIds.size() == 0)
-      return false;
-
-    for (auto id : m_SessionIds)
-    {
-      if (id == sessionId)
-      {
-        m_LocalPositions[id][0] = x;
-        m_LocalPositions[id][1] = y;
-        m_LocalPositions[id][2] = z;
-        m_LocalRotations[id][0] = qx;
-        m_LocalRotations[id][1] = qy;
-        m_LocalRotations[id][2] = qz;
-        m_LocalRotations[id][3] = qw;
-        return true;
-      }
-    }
-    return false;
-  }
-
   bool Device::updateViewerTransform(float *transform)
   {
+    std::lock_guard<std::mutex> lock(m_Mutex);
     for (int i = 0; i < 16; i++)
       m_ViewerTransform[i] = transform[i];
     return true;
   }
 
+  bool Device::updateViewerStereoViewMatrix(int eyeId, float *transform)
+  {
+    if (eyeId != 0 && eyeId != 1)
+      return false; // Invalid eye id (0 or 1)
+
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    for (int i = 0; i < 16; i++)
+      m_ViewerStereoViewMatrix[eyeId][i] = transform[i];
+    return true;
+  }
+
+  bool Device::updateViewerStereoProjectionMatrix(int eyeId, float *transform)
+  {
+    if (eyeId != 0 && eyeId != 1)
+      return false; // Invalid eye id (0 or 1)
+
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    for (int i = 0; i < 16; i++)
+      m_ViewerStereoProjectionMatrix[eyeId][i] = transform[i];
+    return true;
+  }
+
   bool Device::updateLocalTransform(int id, float *transform)
   {
+    std::lock_guard<std::mutex> lock(m_Mutex);
     // Check for the session if it exists
     if (m_SessionIds.size() == 0)
       return false;

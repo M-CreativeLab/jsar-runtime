@@ -9,6 +9,17 @@ declare namespace Transmute {
     isSessionSupported(mode: string): boolean;
     requestSession(sessionId: number): boolean;
     requestFrameOfReferenceTransform(sessionId: number, type: XRReferenceSpaceType, options?): Float32Array;
+    getViewerTransform(): Float32Array;
+    /**
+     * Get the view matrix for the specified eye.
+     * @param eyeId 0 for left eye, 1 for right eye
+     */
+    getViewerStereoViewMatrix(eyeId: number): Float32Array;
+    /**
+     * Get the projection matrix for the specified eye.
+     * @param eyeId 0 for left eye, 1 for right eye
+     */
+    getViewerStereoProjectionMatrix(eyeId: number): Float32Array;
   }
 
   type NativeEventListener = (id: number, type: number, data: string) => void;

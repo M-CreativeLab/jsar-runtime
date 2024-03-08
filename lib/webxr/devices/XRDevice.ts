@@ -172,7 +172,7 @@ export default class XRDevice extends EventTarget {
    * @param {number} viewIndex
    * @return {Float32Array}
    */
-  getProjectionMatrix(_eye: XREye, _viewIndex: number) {
+  getProjectionMatrix(_eye: XREye, _viewIndex: number): Float32Array {
     throw new Error('Method(device.getProjectionMatrix) not implemented');
   }
 
@@ -187,11 +187,8 @@ export default class XRDevice extends EventTarget {
 
   /**
    * Get view matrix unaffected by frame of reference.
-   *
-   * @param {XREye} eye
-   * @return {Float32Array}
    */
-  getBaseViewMatrix(_eye: XREye) {
+  getBaseViewMatrix(_eye: XREye): Float32Array {
     throw new Error('Method(device.getBaseViewMatrix) not implemented');
   }
 

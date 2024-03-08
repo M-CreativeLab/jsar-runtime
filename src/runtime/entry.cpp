@@ -158,14 +158,6 @@ extern "C"
     xrDevice->updateTime(t);
   }
 
-  DLL_PUBLIC void TransmuteNative_SetViewerPose(float x, float y, float z, float qx, float qy, float qz, float qw)
-  {
-    auto xrDevice = xr::Device::GetInstance();
-    if (xrDevice == NULL)
-      return;
-    xrDevice->updateViewerPose(x, y, z, qx, qy, qz, qw);
-  }
-
   DLL_PUBLIC bool TransmuteNative_SetViewerTransform(float *transform)
   {
     auto xrDevice = xr::Device::GetInstance();
@@ -174,12 +166,20 @@ extern "C"
     return xrDevice->updateViewerTransform(transform);
   }
 
-  DLL_PUBLIC void TransmuteNative_SetLocalPose(int id, float x, float y, float z, float qx, float qy, float qz, float qw)
+  DLL_PUBLIC bool TransmuteNative_SetViewerStereoViewMatrix(int eyeId, float *transform)
   {
     auto xrDevice = xr::Device::GetInstance();
     if (xrDevice == NULL)
-      return;
-    xrDevice->updateLocalPose(id, x, y, z, qx, qy, qz, qw);
+      return false;
+    return xrDevice->updateViewerStereoViewMatrix(eyeId, transform);
+  }
+
+  DLL_PUBLIC bool TransmuteNative_SetViewerStereoProjectionMatrix(int eyeId, float *transform)
+  {
+    auto xrDevice = xr::Device::GetInstance();
+    if (xrDevice == NULL)
+      return false;
+    return xrDevice->updateViewerStereoProjectionMatrix(eyeId, transform);
   }
 
   DLL_PUBLIC bool TransmuteNative_SetLocalTransform(int id, float *transform)

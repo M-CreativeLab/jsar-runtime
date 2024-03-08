@@ -10,7 +10,10 @@ namespace bindings
     Napi::Function tpl = DefineClass(env, "XRDeviceNative",
                                      {InstanceMethod("isSessionSupported", &XRDeviceNative::IsSessionSupported),
                                       InstanceMethod("requestSession", &XRDeviceNative::RequestSession),
-                                      InstanceMethod("requestFrameOfReferenceTransform", &XRDeviceNative::RequestFrameOfReferenceTransform)});
+                                      InstanceMethod("requestFrameOfReferenceTransform", &XRDeviceNative::RequestFrameOfReferenceTransform),
+                                      InstanceMethod("getViewerTransform", &XRDeviceNative::GetViewerTransform),
+                                      InstanceMethod("getViewerStereoViewMatrix", &XRDeviceNative::GetViewerStereoViewMatrix),
+                                      InstanceMethod("getViewerStereoProjectionMatrix", &XRDeviceNative::GetViewerStereoProjectionMatrix)});
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -120,5 +123,122 @@ namespace bindings
       }
     }
     return env.Null();
+  }
+
+  Napi::Value XRDeviceNative::GetViewerTransform(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    auto device = xr::Device::GetInstance();
+    if (device == nullptr)
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::RequestFrameOfReferenceTransform: device is not initialized")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto viewerTransform = device->getViewerTransform();
+    if (viewerTransform != nullptr)
+    {
+      auto array = Napi::Float32Array::New(env, 16);
+      for (int i = 0; i < 16; i++)
+        array[i] = Napi::Number::New(env, viewerTransform[i]);
+      return array;
+    }
+    else
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::RequestFrameOfReferenceTransform: viewer transform is not available")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+  }
+
+  Napi::Value XRDeviceNative::GetViewerStereoViewMatrix(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1 || !info[0].IsNumber())
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::GetViewerStereoViewMatrix: expected a number")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto eyeId = info[0].As<Napi::Number>().Int32Value();
+    if (eyeId != 0 && eyeId != 1)
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::GetViewerStereoViewMatrix: expected 0(left) or 1(right)")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto device = xr::Device::GetInstance();
+    if (device == nullptr)
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::GetViewerStereoViewMatrix: device is not initialized")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto viewMatrix = device->getViewerStereoViewMatrix(eyeId);
+    if (viewMatrix != nullptr)
+    {
+      auto array = Napi::Float32Array::New(env, 16);
+      for (int i = 0; i < 16; i++)
+        array[i] = Napi::Number::New(env, viewMatrix[i]);
+      return array;
+    }
+    else
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::GetViewerStereoViewMatrix: viewer stereo view matrix is not available")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+  }
+
+  Napi::Value XRDeviceNative::GetViewerStereoProjectionMatrix(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1 || !info[0].IsNumber())
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::GetViewerStereoProjectionMatrix: expected a number")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto eyeId = info[0].As<Napi::Number>().Int32Value();
+    if (eyeId != 0 && eyeId != 1)
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::GetViewerStereoProjectionMatrix: expected 0(left) or 1(right)")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto device = xr::Device::GetInstance();
+    if (device == nullptr)
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::GetViewerStereoProjectionMatrix: device is not initialized")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto projectionMatrix = device->getViewerStereoProjectionMatrix(eyeId);
+    if (projectionMatrix != nullptr)
+    {
+      auto array = Napi::Float32Array::New(env, 16);
+      for (int i = 0; i < 16; i++)
+        array[i] = Napi::Number::New(env, projectionMatrix[i]);
+      return array;
+    }
+    else
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::GetViewerStereoProjectionMatrix: viewer stereo projection matrix is not available")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
   }
 }

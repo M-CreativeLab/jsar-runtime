@@ -5,7 +5,7 @@ import { requestRendererReady } from '../bindings/renderer';
 import { markRuntimeAvailable } from '../bindings/env';
 import * as logger from '../bindings/logger';
 import { addXsmlRequestListener, type XsmlRequestEvent } from '../bindings/messaging';
-import { createBondXRSystem, XRWebGLLayer } from '../webxr';
+import { createBondXRSystem, XRWebGLLayer, type XRFrame } from '../webxr';
 
 // register gltf loader
 BABYLON.SceneLoader.RegisterPlugin(new GLTFFileLoader() as any);
@@ -52,13 +52,21 @@ export class TransmuteRuntime2 extends EventTarget {
 
         const localSpace = await session.requestReferenceSpace('local');
         logger.info('[WebXR] local space:', localSpace);
-        session.requestAnimationFrame((time, frame) => {
-          logger.info('[WebXR] frame:', time, frame);
 
-          const pose = frame.getViewerPose(localSpace);
-          logger.info('[WebXR] viewer pose:', pose);
-          // Draw the scene
-        });
+        function handleXrFrame(time: number, frame: XRFrame) {
+          try {
+            const pose = frame.getViewerPose(localSpace);
+            pose.views.forEach(view => {
+              logger.info('[WebXR] view:', view.eye, view.transform, view.projectionMatrix);
+            });
+
+            session.requestAnimationFrame(handleXrFrame);
+            // Draw the scene
+          } catch (err) {
+            logger.error('[WebXR] frame error:', err);
+          }
+        }
+        session.requestAnimationFrame(handleXrFrame);
       });
   }
 
