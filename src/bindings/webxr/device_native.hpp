@@ -16,6 +16,7 @@ namespace bindings
     Napi::Value GetViewerTransform(const Napi::CallbackInfo &info);
     Napi::Value GetViewerStereoViewMatrix(const Napi::CallbackInfo &info);
     Napi::Value GetViewerStereoProjectionMatrix(const Napi::CallbackInfo &info);
+    Napi::Value GetActiveEyeId(const Napi::CallbackInfo &info);
 
   private:
     static Napi::FunctionReference *constructor;

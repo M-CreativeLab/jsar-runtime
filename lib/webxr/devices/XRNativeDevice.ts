@@ -3,16 +3,21 @@ import * as logger from '../../bindings/logger';
 import { makeRpcCall } from '../../bindings/messaging';
 import * as renderer from '../../bindings/renderer';
 
-import XRDevice from './XRDevice';
+import XRDevice, { StereoRenderingMode, stereoRenderingModeToString } from './XRDevice';
 import XRWebGLLayer from '../api/XRWebGLLayer';
 import XRPose from '../api/XRPose';
 import XRSpace from '../api/XRSpace';
 
 const { XRDeviceNative } = process._linkedBinding('transmute:webxr');
 
+type DeviceInitResponse = {
+  enabled: boolean;
+  isDeviceActive: boolean;
+  stereoRenderingMode: StereoRenderingMode;
+};
+
 export default class XRNativeDevice extends XRDevice {
   #handle: Transmute.XRDeviceNative;
-  #enabled: boolean;
 
   constructor() {
     super();
@@ -21,8 +26,19 @@ export default class XRNativeDevice extends XRDevice {
   }
 
   async waitForReady(): Promise<void> {
-    const response = await makeRpcCall('xr.initializeDevice', []);
-    this.#enabled = response.enabled;
+    const response = await makeRpcCall('xr.initializeDevice', []) as DeviceInitResponse;
+    this.enabled = response.enabled;
+    this.stereoRenderingMode = response.stereoRenderingMode || StereoRenderingMode.MultiPass;
+    logger.info(`XR: Device enabled: ${this.enabled}`);
+    logger.info(`XR: Stereo rendering mode: ${stereoRenderingModeToString(this.stereoRenderingMode)}`);
+  }
+
+  getActiveEye(): XREye {
+    if (!this.isRenderingInMultiPass()) {
+      return 'none';
+    }
+    const eyeId = this.#handle.getActiveEyeId();
+    return eyeId === 0 ? 'left' : 'right';
   }
 
   isSessionSupported(mode: XRSessionMode): boolean {

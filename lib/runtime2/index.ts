@@ -53,12 +53,13 @@ export class TransmuteRuntime2 extends EventTarget {
         const localSpace = await session.requestReferenceSpace('local');
         logger.info('[WebXR] local space:', localSpace);
 
-        function handleXrFrame(time: number, frame: XRFrame) {
+        function handleXrFrame(_time: number, frame: XRFrame) {
           try {
             const pose = frame.getViewerPose(localSpace);
             pose.views.forEach(view => {
               logger.info('[WebXR] view:', view.eye, view.transform, view.projectionMatrix);
             });
+            logger.info('[WebXR] pose:', pose.transform, pose.views);
 
             session.requestAnimationFrame(handleXrFrame);
             // Draw the scene
@@ -66,7 +67,7 @@ export class TransmuteRuntime2 extends EventTarget {
             logger.error('[WebXR] frame error:', err);
           }
         }
-        session.requestAnimationFrame(handleXrFrame);
+        // session.requestAnimationFrame(handleXrFrame);
       });
   }
 

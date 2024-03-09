@@ -36,8 +36,19 @@ namespace xr
     m_SessionIds.clear();
   }
 
-  void Device::initialize()
+  void Device::initialize(bool enabled)
   {
+    m_Enabled = enabled;
+  }
+
+  void Device::setStereoRenderingMode(StereoRenderingMode mode)
+  {
+    m_StereoRenderingMode = mode;
+  }
+
+  StereoRenderingMode Device::getStereoRenderingMode()
+  {
+    return m_StereoRenderingMode;
   }
 
   bool Device::requestSession(int id)
@@ -50,6 +61,17 @@ namespace xr
     }
     m_SessionIds.push_back(id);
     return true;
+  }
+
+  bool Device::enabled()
+  {
+    return m_Enabled;
+  }
+
+  float Device::getTime()
+  {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    return m_Time;
   }
 
   float *Device::getViewerTransform()
@@ -91,6 +113,18 @@ namespace xr
     return NULL;
   }
 
+  int Device::getActiveEyeId()
+  {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    return m_ActiveEyeId;
+  }
+
+  std::vector<int> &Device::getSessionIds()
+  {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    return m_SessionIds;
+  }
+
   bool Device::updateFov(float fov)
   {
     m_FieldOfView = fov;
@@ -119,6 +153,7 @@ namespace xr
     std::lock_guard<std::mutex> lock(m_Mutex);
     for (int i = 0; i < 16; i++)
       m_ViewerStereoViewMatrix[eyeId][i] = transform[i];
+    m_ActiveEyeId = eyeId;
     return true;
   }
 
@@ -130,6 +165,7 @@ namespace xr
     std::lock_guard<std::mutex> lock(m_Mutex);
     for (int i = 0; i < 16; i++)
       m_ViewerStereoProjectionMatrix[eyeId][i] = transform[i];
+    m_ActiveEyeId = eyeId;
     return true;
   }
 

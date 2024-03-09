@@ -2,6 +2,7 @@
 #include <Unity/IUnityGraphics.h>
 #include "render_api.hpp"
 #include "runtime/platform_base.hpp"
+#include "xr/frame.hpp"
 #include "bindings/renderer/render_loop.hpp"
 
 RenderAPI *RenderAPI::s_instance = NULL;
@@ -20,9 +21,35 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 	if (!jsRenderLoop->isAvailable())
 		return kFrameExecutionNotAvailable;
 
+	auto device = xr::Device::GetInstance();
+	if (device == nullptr)
+		return kFrameExecutionNotInitialized;
+
 	StartFrame();
 	jsRenderLoop->startFrame();
-	jsRenderLoop->blockingCallFrame();
+
+	if (device->enabled() && device->getStereoRenderingMode() == xr::StereoRenderingMode::MultiPass)
+	{
+		auto eyeId = device->getActiveEyeId();
+		auto frame = new xr::MultiPassFrame(
+				eyeId,
+				device->getViewerStereoViewMatrix(eyeId),
+				device->getViewerStereoProjectionMatrix(eyeId),
+				device->getTime());
+
+		auto sessionIds = device->getSessionIds();
+		for (auto id : sessionIds)
+		{
+			auto context = frame->addSession(id);
+			context->setLocalTransform(device->getLocalTransform(id));
+		}
+		jsRenderLoop->frameCallback(frame);
+	}
+	else
+	{
+		jsRenderLoop->frameCallback();
+	}
+
 	ExecuteCommandBuffer();
 	EndFrame();
 	return kFrameExecutionSuccess;

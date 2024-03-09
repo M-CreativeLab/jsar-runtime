@@ -13,7 +13,8 @@ namespace bindings
                                       InstanceMethod("requestFrameOfReferenceTransform", &XRDeviceNative::RequestFrameOfReferenceTransform),
                                       InstanceMethod("getViewerTransform", &XRDeviceNative::GetViewerTransform),
                                       InstanceMethod("getViewerStereoViewMatrix", &XRDeviceNative::GetViewerStereoViewMatrix),
-                                      InstanceMethod("getViewerStereoProjectionMatrix", &XRDeviceNative::GetViewerStereoProjectionMatrix)});
+                                      InstanceMethod("getViewerStereoProjectionMatrix", &XRDeviceNative::GetViewerStereoProjectionMatrix),
+                                      InstanceMethod("getActiveEyeId", &XRDeviceNative::GetActiveEyeId)});
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -240,5 +241,21 @@ namespace bindings
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
+  }
+
+  Napi::Value XRDeviceNative::GetActiveEyeId(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    auto device = xr::Device::GetInstance();
+    if (device == nullptr)
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::GetActiveEyeId: device is not initialized")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    return Napi::Number::New(env, device->getActiveEyeId());
   }
 }

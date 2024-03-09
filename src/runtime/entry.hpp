@@ -30,6 +30,7 @@ extern "C"
   DLL_PUBLIC void UnityPluginUnload();
 
   DLL_PUBLIC void TransmuteNative_Prepare();
+  DLL_PUBLIC void TransmuteNative_InitializeXRDevice(bool enabled);
   DLL_PUBLIC bool TransmuteNative_GetEventFromJavaScript(int *id, int *type, uint32_t *size);
   DLL_PUBLIC void TransmuteNative_GetEventDataFromJavaScript(const char *data);
   DLL_PUBLIC bool TransmuteNative_IsRuntimeUp();
@@ -40,6 +41,7 @@ extern "C"
   DLL_PUBLIC void TransmuteNative_SetViewport(int w, int h);
   DLL_PUBLIC void TransmuteNative_SetFov(float fov);
   DLL_PUBLIC void TransmuteNative_SetTime(float t);
+  DLL_PUBLIC void TransmuteNative_SetStereoRenderingMode(int mode);
   DLL_PUBLIC void TransmuteNative_SetViewerPose(float x, float y, float z, float qx, float qy, float qz, float qw);
   DLL_PUBLIC void TransmuteNative_SetLocalPose(int id, float x, float y, float z, float qx, float qy, float qz, float qw);
   DLL_PUBLIC bool TransmuteNative_SetViewerTransform(float *transform);

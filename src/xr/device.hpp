@@ -3,11 +3,21 @@
 #include <map>
 #include <vector>
 #include <mutex>
+#include <atomic>
 
 using namespace std;
 
 namespace xr
 {
+  enum StereoRenderingMode
+  {
+    MultiPass = 0,
+    SinglePass = 1,
+    SinglePassInstanced = 2,
+    SinglePassMultiview = 3,
+    Unknown = -1
+  };
+
   class Device
   {
   public:
@@ -20,12 +30,18 @@ namespace xr
     ~Device();
 
   public:
-    void initialize();
+    void initialize(bool enabled);
+    void setStereoRenderingMode(StereoRenderingMode mode);
+    StereoRenderingMode getStereoRenderingMode();
     bool requestSession(int id);
+    bool enabled();
+    float getTime();
     float *getViewerTransform();
     float *getViewerStereoViewMatrix(int eyeId);
     float *getViewerStereoProjectionMatrix(int eyeId);
     float *getLocalTransform(int id);
+    int getActiveEyeId();
+    vector<int> &getSessionIds();
 
   public:
     bool updateFov(float fov);
@@ -36,14 +52,19 @@ namespace xr
     bool updateLocalTransform(int id, float *transform);
 
   private:
+    bool m_Enabled = false;
     /**
      * Recommanded field of view.
      */
-    float m_FieldOfView;
+    atomic<float> m_FieldOfView;
     /**
      * The timestamp in milliseconds for current frame.
      */
-    float m_Time;
+    atomic<float> m_Time;
+    /**
+     * The stereo rendering mode, it affects how to use frame callback and execute frame.
+     */
+    atomic<StereoRenderingMode> m_StereoRenderingMode = StereoRenderingMode::Unknown;
     /**
      * The viewer(camera or eyes) transform matrix, namely the viewer's model matrix, it's used to describe how to
      * transform the viewer's model to the world space.
@@ -61,6 +82,10 @@ namespace xr
      * The local(object) transform matrix.
      */
     map<int, float[16]> m_LocalTransforms;
+    /**
+     * The active eye's id, 0 for left and 1 for right. It's used in multi-pass rendering only.
+     */
+    int m_ActiveEyeId;
     /**
      * The id to indentify the session, corresponding to the session's id in the WebXR API.
      */

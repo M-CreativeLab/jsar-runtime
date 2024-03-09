@@ -59,15 +59,16 @@ namespace renderer
       return env.Undefined();
     }
 
+    auto jsCallback = info[0].As<Napi::Function>();
     m_frameCallback = Napi::ThreadSafeFunction::New(
         env,
-        info[0].As<Napi::Function>(),
+        jsCallback,
         "RenderLoop",
         0,
         1,
         [](Napi::Env env)
         {
-          fprintf(stderr, "RenderLoop::SetFrameCallback() finalizer is called\n");
+          // TODO
         });
     available_ = true;
     return info.This();
@@ -102,7 +103,68 @@ namespace renderer
     return info.This();
   }
 
-  void RenderLoop::blockingCallFrame()
+  void RenderLoop::frameCallback(xr::Frame *frame)
+  {
+    unique_lock<mutex> lk(m_mutex);
+    m_frameCallbackFinished = false;
+    m_frameCallback.NonBlockingCall(static_cast<void *>(frame), [](Napi::Env env, Napi::Function jsCallback, void *context)
+                                    {
+                                      auto device = xr::Device::GetInstance();
+                                      if (device == nullptr)
+                                      {
+                                        // Invalid callback
+                                        if (context != nullptr)
+                                          delete static_cast<xr::Frame *>(context);
+                                      }
+
+                                      auto frame = static_cast<xr::Frame *>(context);
+                                      auto time = Napi::Number::New(env, frame->getTimestamp());
+                                      auto data = Napi::Object::New(env);
+
+                                      // session-based fields `sessions`.
+                                      auto jsItemsBySessionId = Napi::Array::New(env);
+                                      int sessionIndex = 0;
+                                      frame->iterateSessions([&](int sessionId, xr::FrameContextBySessionId *context)
+                                                              {
+                                                                auto jsSessionItem = Napi::Object::New(env);
+                                                                auto localTransform = context->getLocalTransform();
+                                                                auto jsLocalTransform = Napi::Array::New(env, 16);
+                                                                for (int i = 0; i < 16; i++)
+                                                                  jsLocalTransform.Set(i, Napi::Number::New(env, localTransform[i]));
+                                                                jsSessionItem.Set("sessionId", Napi::Number::New(env, sessionId));
+                                                                jsSessionItem.Set("localTransform", jsLocalTransform);
+                                                                jsItemsBySessionId.Set(sessionIndex++, jsSessionItem);
+                                                              });
+                                      data.Set("sessions", jsItemsBySessionId);
+
+                                      // add MultiPass frame data
+                                      if (device->getStereoRenderingMode() == xr::StereoRenderingMode::MultiPass)
+                                      {
+                                        auto multipassFrame = static_cast<xr::MultiPassFrame *>(frame);
+                                        auto activeEyeId = Napi::Number::New(env, multipassFrame->getActiveEyeId());
+                                        data.Set("type", Napi::String::New(env, "MultiPassFrame"));
+                                        data.Set("activeEyeId", activeEyeId);
+                                        // viewer model matrix or transform
+                                        // viewer view matrix
+                                        auto viewMatrix = multipassFrame->getViewerViewMatrix();
+                                        auto jsViewMatrix = Napi::Array::New(env, 16);
+                                        for (int i = 0; i < 16; i++)
+                                          jsViewMatrix.Set(i, Napi::Number::New(env, viewMatrix[i]));
+                                        data.Set("viewerViewMatrix", jsViewMatrix);
+                                        // viewer projection matrix
+                                        auto projectionMatrix = multipassFrame->getViewerProjectionMatrix();
+                                        auto jsProjectionMatrix = Napi::Array::New(env, 16);
+                                        for (int i = 0; i < 16; i++)
+                                          jsProjectionMatrix.Set(i, Napi::Number::New(env, projectionMatrix[i]));
+                                        data.Set("viewerProjectionMatrix", jsProjectionMatrix);
+                                      }
+                                      // TODO: support single pass?
+
+                                      jsCallback.Call({time, data});
+                                      delete frame; });
+  }
+
+  void RenderLoop::frameCallback()
   {
     unique_lock<mutex> lk(m_mutex);
     m_frameCallbackFinished = false;

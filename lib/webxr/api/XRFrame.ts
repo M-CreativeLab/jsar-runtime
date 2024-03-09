@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import * as logger from '../../bindings/logger';
 import type XRDevice from '../devices/XRDevice';
 import type XRSpace from './XRSpace';
 import type XRReferenceSpace from './XRReferenceSpace';
@@ -74,9 +75,14 @@ export default class XRFrame {
     session[SESSION_PRIVATE].viewerSpace._ensurePoseUpdated(device, this[PRIVATE].id);
     referenceSpace._ensurePoseUpdated(device, this[PRIVATE].id);
 
+    const activeEye = device.getActiveEye();
     const viewerTransform = referenceSpace._getSpaceRelativeTransform(session[SESSION_PRIVATE].viewerSpace);
     const views: XRView[] = [];
     for (const viewSpace of session[SESSION_PRIVATE].viewSpaces) {
+      // When rendering in multi-pass mode, only the view for the active eye is used.
+      if (device.isRenderingInMultiPass() && viewSpace.eye !== activeEye) {
+        continue;
+      }
       viewSpace._ensurePoseUpdated(device, this[PRIVATE].id);
       const viewTransform = referenceSpace._getSpaceRelativeTransform(viewSpace);
       const viewIndex = session[SESSION_PRIVATE].viewSpaces.indexOf(viewSpace);

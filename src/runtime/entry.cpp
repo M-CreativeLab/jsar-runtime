@@ -26,9 +26,8 @@ extern "C"
     // Run OnGraphicsDeviceEvent(initialize) manually on plugin load
     OnGraphicsDeviceEvent(kUnityGfxDeviceEventInitialize);
 
-    // Initialize the xr device
-    auto xrDevice = xr::Device::Create();
-    xrDevice->initialize();
+    // Create the `xr::Device` instance globally.
+    xr::Device::Create();
 
     // Bootstrap the Node.js instance
     auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
@@ -85,6 +84,14 @@ extern "C"
   DLL_PUBLIC void TransmuteNative_Prepare()
   {
     DEBUG("transmute", "Prepare for TransmuteNative");
+  }
+
+  DLL_PUBLIC void TransmuteNative_InitializeXRDevice(bool enabled)
+  {
+    auto xrDevice = xr::Device::GetInstance();
+    if (xrDevice == NULL)
+      return;
+    xrDevice->initialize(enabled);
   }
 
   DLL_PUBLIC bool TransmuteNative_GetEventFromJavaScript(int *id, int *type, uint32_t *size)
@@ -156,6 +163,14 @@ extern "C"
     if (xrDevice == NULL)
       return;
     xrDevice->updateTime(t);
+  }
+
+  DLL_PUBLIC void TransmuteNative_SetStereoRenderingMode(int mode)
+  {
+    auto xrDevice = xr::Device::GetInstance();
+    if (xrDevice == NULL)
+      return;
+    xrDevice->setStereoRenderingMode((xr::StereoRenderingMode)mode);
   }
 
   DLL_PUBLIC bool TransmuteNative_SetViewerTransform(float *transform)

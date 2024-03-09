@@ -5,13 +5,13 @@ const {
   RenderLoop,
 } = process._linkedBinding('transmute:renderer');
 
-let globalRenderLoop = null;
+let globalRenderLoop: Transmute.RenderLoop = null;
 let globalGlContext: WebGLRenderingContext | WebGL2RenderingContext = null;
 let isReady = false;
 
 const onreadyCallbacks: Array<(gl: WebGLRenderingContext) => void> = [];
 const onframeCallbacks: Array<{
-  callback: (time: number) => void,
+  callback: (time: number, data: unknown) => void,
   handle: number,
 }> = [];
 
@@ -55,15 +55,14 @@ export function connectRenderer() {
   onreadyCallbacks.length = 0;
   isReady = true;
 
-  loop.setFrameCallback(function () {
+  loop.setFrameCallback(function (time, data) {
     try {
-      const now = Date.now();
       const callbackThisFrame = onframeCallbacks.slice();
       onframeCallbacks.length = 0;
 
       while (callbackThisFrame.length > 0) {
         const onframe = callbackThisFrame.shift();
-        onframe.callback(now);
+        onframe.callback(time, data);
       }
     } catch (err) {
       logger.warn('error in frame callback:', err);

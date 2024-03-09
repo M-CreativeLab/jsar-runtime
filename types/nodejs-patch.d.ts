@@ -5,6 +5,12 @@ declare namespace Transmute {
     markRuntimeAvailable(versions: string): void;
   }
 
+  class RenderLoop {
+    constructor();
+    setFrameCallback(callback: (time?: number, data?: unknown) => void): void;
+    setFrameFinished(): void;
+  }
+
   class XRDeviceNative {
     isSessionSupported(mode: string): boolean;
     requestSession(sessionId: number): boolean;
@@ -20,6 +26,7 @@ declare namespace Transmute {
      * @param eyeId 0 for left eye, 1 for right eye
      */
     getViewerStereoProjectionMatrix(eyeId: number): Float32Array;
+    getActiveEyeId(): number;
   }
 
   type NativeEventListener = (id: number, type: number, data: string) => void;
@@ -53,6 +60,9 @@ declare namespace NodeJS {
     };
     _linkedBinding(module: 'transmute:messaging'): {
       NativeEventTarget: typeof Transmute.NativeEventTarget;
+    };
+    _linkedBinding(module: 'transmute:renderer'): {
+      RenderLoop: typeof Transmute.RenderLoop;
     };
     _linkedBinding(module: 'transmute:webgl'): {
       WebGLRenderingContext: typeof WebGLRenderingContext;

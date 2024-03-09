@@ -78,7 +78,7 @@ export default class XRSession extends EventTarget {
     stopDeviceFrameLoop?: () => void;
     dispatchInputSourceEvent?: (type: string, inputSource: any) => void;
 
-    onDeviceFrame?: () => void;
+    onDeviceFrame?: (time: number, data: unknown) => void;
     onPresentationEnd?: (event: SessionInternalEvent) => void;
     onPresentationStart?: (event: SessionInternalEvent) => void;
     onSelectStart?: (event: SessionInternalEvent) => void;
@@ -127,7 +127,7 @@ export default class XRSession extends EventTarget {
 
     // Single handler for animation frames from the device. The spec says this must
     // run on every candidate frame even if there are no callbacks queued up.
-    this[PRIVATE].onDeviceFrame = () => {
+    this[PRIVATE].onDeviceFrame = (time, data) => {
       if (this[PRIVATE].ended || this[PRIVATE].suspended) {
         logger.warn(`[XRSession] onDeviceFrame: ended or suspended`);
         return;
@@ -161,6 +161,7 @@ export default class XRSession extends EventTarget {
       //   abort these steps.
       // ???
 
+      logger.info(`[XRSession] onDeviceFrame:`, time, JSON.stringify(data, null, 2));
       const frame = new XRFrame(device, this, this[PRIVATE].id);
 
       // - Let callbacks be a list of the entries in session’s list of animation frame

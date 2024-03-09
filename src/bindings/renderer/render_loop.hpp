@@ -4,6 +4,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <napi.h>
+#include "xr/frame.hpp"
 
 using namespace std;
 
@@ -19,7 +20,11 @@ namespace renderer
   public:
     bool isAvailable() { return disposed_ == false && available_ == true; }
     Napi::ThreadSafeFunction &getFrameCallback() { return m_frameCallback; }
-    void blockingCallFrame();
+    /**
+     * Call the frame callback that is set in JavaScript runtime.
+     */
+    void frameCallback(xr::Frame *frame);
+    void frameCallback();
     void startFrame() { finished_ = false; }
     bool isFrameFinished() { return finished_; }
 
