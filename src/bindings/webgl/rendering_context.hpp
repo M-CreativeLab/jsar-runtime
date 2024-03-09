@@ -12,6 +12,7 @@ namespace webgl
     WebGLRenderingContext(const Napi::CallbackInfo &info);
 
   private:
+    Napi::Value MakeXRCompatible(const Napi::CallbackInfo &info);
     Napi::Value CreateProgram(const Napi::CallbackInfo &info);
     Napi::Value LinkProgram(const Napi::CallbackInfo &info);
     Napi::Value UseProgram(const Napi::CallbackInfo &info);
@@ -116,6 +117,7 @@ namespace webgl
 
   private:
     RenderAPI *m_renderAPI;
+    bool m_XRCompatible = false;
 
   private:
     static Napi::FunctionReference *constructor;

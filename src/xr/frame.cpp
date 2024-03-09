@@ -15,29 +15,29 @@ namespace xr
     memcpy(m_LocalTransform, transform, sizeof(float) * 16);
   }
 
-  Frame::Frame() {}
-  Frame::~Frame() {}
+  DeviceFrame::DeviceFrame() {}
+  DeviceFrame::~DeviceFrame() {}
 
-  void Frame::startFrame() { m_Ended = false; }
-  void Frame::endFrame() { m_Ended = true; }
-  bool Frame::isFrameEnded() { return m_Ended; }
-  float Frame::getTimestamp() { return m_Timestamp; }
-  float *Frame::getViewerTransform() { return m_ViewerTransform; }
+  void DeviceFrame::start() { m_Ended = false; }
+  void DeviceFrame::end() { m_Ended = true; }
+  bool DeviceFrame::ended() { return m_Ended; }
+  float DeviceFrame::getTimestamp() { return m_Timestamp; }
+  float *DeviceFrame::getViewerTransform() { return m_ViewerTransform; }
 
-  FrameContextBySessionId *Frame::addSession(int sessionId)
+  FrameContextBySessionId *DeviceFrame::addSession(int sessionId)
   {
     auto context = new FrameContextBySessionId(sessionId);
     m_Sessions[sessionId] = context;
     return context;
   }
 
-  void Frame::iterateSessions(std::function<void(int, FrameContextBySessionId *)> callback)
+  void DeviceFrame::iterateSessions(std::function<void(int, FrameContextBySessionId *)> callback)
   {
     for (auto &item : m_Sessions)
       callback(item.first, item.second);
   }
 
-  size_t Frame::getCountOfSessions()
+  size_t DeviceFrame::getCountOfSessions()
   {
     return m_Sessions.size();
   }
@@ -47,7 +47,7 @@ namespace xr
       float *viewerTransform,
       float *viewerViewMatrix,
       float *viewerProjectionMatrix,
-      float timestamp) : Frame()
+      float timestamp) : DeviceFrame()
   {
     m_ActiveEyeId = eyeId;
     m_Timestamp = timestamp;

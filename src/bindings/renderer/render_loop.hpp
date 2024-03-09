@@ -23,7 +23,7 @@ namespace renderer
     /**
      * Call the frame callback that is set in JavaScript runtime.
      */
-    void frameCallback(xr::Frame *frame);
+    void frameCallback(xr::DeviceFrame *frame);
     void frameCallback();
     void startFrame() { finished_ = false; }
     bool isFrameFinished() { return finished_; }

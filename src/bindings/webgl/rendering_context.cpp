@@ -341,6 +341,7 @@ namespace webgl
          /**
           * Methods
           */
+         InstanceMethod("makeXRCompatible", &WebGLRenderingContext::MakeXRCompatible),
          InstanceMethod("createProgram", &WebGLRenderingContext::CreateProgram),
          InstanceMethod("linkProgram", &WebGLRenderingContext::LinkProgram),
          InstanceMethod("useProgram", &WebGLRenderingContext::UseProgram),
@@ -460,6 +461,15 @@ namespace webgl
         .ThrowAsJavaScriptException();
       return;
     }
+  }
+
+  Napi::Value WebGLRenderingContext::MakeXRCompatible(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    m_XRCompatible = true;
+    return env.Undefined();
   }
 
   Napi::Value WebGLRenderingContext::CreateProgram(const Napi::CallbackInfo &info)

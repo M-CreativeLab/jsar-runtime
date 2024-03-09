@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import type XRView from './XRView';
 import XRSession, { PRIVATE as SESSION_PRIVATE } from './XRSession';
 
 export const PRIVATE = Symbol('@@webxr-polyfill/XRWebGLLayer');
@@ -50,26 +51,21 @@ export default class XRWebGLLayer {
     };
   }
 
-  /**
-   * @return {WebGLRenderingContext}
-   */
-  get context() { return this[PRIVATE].context; }
+  get context() {
+    return this[PRIVATE].context;
+  }
 
-  /**
-   * @return {boolean}
-   */
-  get antialias() { return this[PRIVATE].config.antialias; }
+  get antialias() {
+    return this[PRIVATE].config.antialias;
+  }
 
   /**
    * The polyfill will always ignore depth values.
-   *
-   * @return {boolean}
    */
-  get ignoreDepthValues() { return true; }
+  get ignoreDepthValues() {
+    return true;
+  }
 
-  /**
-   * @return {WebGLFramebuffer}
-   */
   get framebuffer() {
     // Use the default framebuffer
     return null;
@@ -78,28 +74,31 @@ export default class XRWebGLLayer {
   /**
    * @return {number}
    */
-  get framebufferWidth() { return this[PRIVATE].context.drawingBufferWidth; }
+  get framebufferWidth() {
+    return this[PRIVATE].context.drawingBufferWidth;
+  }
 
   /**
    * @return {number}
    */
-  get framebufferHeight() { return this[PRIVATE].context.drawingBufferHeight; }
+  get framebufferHeight() {
+    return this[PRIVATE].context.drawingBufferHeight;
+  }
 
   /**
    * @return {XRSession}
    */
-  get _session() { return this[PRIVATE].session; }
+  get _session() {
+    return this[PRIVATE].session;
+  }
 
   /**
    * @TODO No mention in spec on not reusing the XRViewport on every frame.
    * 
    * @TODO In the future maybe all this logic should be handled here instead of
    * delegated to the XRView?
-   *
-   * @param {XRView} view
-   * @return {XRViewport?}
    */
-  getViewport(view) {
+  getViewport(view: XRView) {
     return view._getViewport(this);
   }
 
@@ -107,17 +106,15 @@ export default class XRWebGLLayer {
    * Gets the scale factor to be requested if you want to match the device
    * resolution at the center of the user's vision. The polyfill will always
    * report 1.0.
-   * 
-   * @param {XRSession} session 
-   * @return {number}
    */
-  static getNativeFramebufferScaleFactor(session) {
+  static getNativeFramebufferScaleFactor(session: XRSession) {
     if (!session) {
       throw new TypeError('getNativeFramebufferScaleFactor must be passed a session.')
     }
-
-    if (session[SESSION_PRIVATE].ended) { return 0.0; }
-
-    return 1.0;
+    if (session[SESSION_PRIVATE].ended) {
+      return 0.0;
+    } else {
+      return 1.0;
+    }
   }
 }

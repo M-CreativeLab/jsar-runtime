@@ -46,6 +46,8 @@ function unpackTypedArray(array: DataView | ArrayBufferView) {
 export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingContext implements WebGLRenderingContext {
   canvas: HTMLCanvasElement | OffscreenCanvas;
   drawingBufferColorSpace: PredefinedColorSpace;
+
+  #contextAttributes: WebGLContextAttributes;
   #constantNamesMap: Map<number, string> = new Map();
   #supportedExtensions: string[] = null;
 
@@ -56,9 +58,25 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return super.drawingBufferWidth;
   }
 
-  constructor(_canvas: HTMLCanvasElement | OffscreenCanvas, options: WebGLContextAttributes) {
+  constructor(_canvas: HTMLCanvasElement | OffscreenCanvas, options?: WebGLContextAttributes) {
     super();
+
+    this.#contextAttributes = Object.assign({
+      alpha: true,
+      antialias: true,
+      depth: true,
+      failIfMajorPerformanceCaveat: false,
+      powerPreference: 'default',
+      premultipliedAlpha: false,
+      preserveDrawingBuffer: false,
+      stencil: false,
+      xrCompatible: true,
+    }, options || {});
     this.#setupConstantNamesMap();
+
+    if (this.#contextAttributes.xrCompatible === true) {
+      this.makeXRCompatible();
+    }
   }
 
   /**
@@ -393,17 +411,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return this.nativeCall('getBufferParameter', [target, pname]);
   }
   getContextAttributes(): WebGLContextAttributes {
-    return {
-      alpha: true,
-      antialias: true,
-      depth: true,
-      failIfMajorPerformanceCaveat: false,
-      powerPreference: 'default',
-      premultipliedAlpha: false,
-      preserveDrawingBuffer: false,
-      stencil: false,
-      xrCompatible: false,
-    };
+    return this.#contextAttributes;
   }
   getError(): number {
     return this.nativeCall('getError');

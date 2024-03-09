@@ -103,7 +103,7 @@ namespace renderer
     return info.This();
   }
 
-  void RenderLoop::frameCallback(xr::Frame *frame)
+  void RenderLoop::frameCallback(xr::DeviceFrame *frame)
   {
     unique_lock<mutex> lk(m_mutex);
     m_frameCallbackFinished = false;
@@ -114,10 +114,10 @@ namespace renderer
                                       {
                                         // Invalid callback
                                         if (context != nullptr)
-                                          delete static_cast<xr::Frame *>(context);
+                                          delete static_cast<xr::DeviceFrame *>(context);
                                       }
 
-                                      auto frame = static_cast<xr::Frame *>(context);
+                                      auto frame = static_cast<xr::DeviceFrame *>(context);
                                       auto time = Napi::Number::New(env, frame->getTimestamp());
                                       auto data = Napi::Object::New(env);
 

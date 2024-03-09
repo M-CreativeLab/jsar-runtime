@@ -42,7 +42,7 @@ export function connectRenderer() {
 
   const loop = globalRenderLoop = new RenderLoop();
   try {
-    globalGlContext = createWebGLContext(1, 1, null);
+    globalGlContext = createWebGLContext(1, 1);
   } catch (err) {
     logger.warn('error creating webgl context:', err);
   }

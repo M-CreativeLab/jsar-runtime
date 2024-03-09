@@ -3,6 +3,7 @@ import * as logger from '../../bindings/logger';
 import { makeRpcCall } from '../../bindings/messaging';
 import * as renderer from '../../bindings/renderer';
 
+import type XRRenderState from '../api/XRRenderState';
 import XRDevice, { StereoRenderingMode, stereoRenderingModeToString } from './XRDevice';
 import XRWebGLLayer from '../api/XRWebGLLayer';
 import XRPose from '../api/XRPose';
@@ -82,7 +83,7 @@ export default class XRNativeDevice extends XRDevice {
     // Nothing to do here
   }
 
-  onFrameStart(_sessionId: number, _renderState: any): void {
+  onFrameStart(_sessionId: number, _renderState: XRRenderState): void {
     // Nothing to do here
   }
 

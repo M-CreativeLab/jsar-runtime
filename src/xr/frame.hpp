@@ -1,6 +1,8 @@
 #pragma once
 
 #include <map>
+#include <vector>
+#include "renderer/command_buffer.hpp"
 
 namespace xr
 {
@@ -20,16 +22,16 @@ namespace xr
     float m_LocalTransform[16];
   };
 
-  class Frame
+  class DeviceFrame
   {
   public:
-    Frame();
-    ~Frame();
+    DeviceFrame();
+    ~DeviceFrame();
 
   public:
-    void startFrame();
-    void endFrame();
-    bool isFrameEnded();
+    void start();
+    void end();
+    bool ended();
     float getTimestamp();
     float *getViewerTransform();
     FrameContextBySessionId *addSession(int sessionId);
@@ -43,7 +45,7 @@ namespace xr
     std::map<int, FrameContextBySessionId *> m_Sessions;
   };
 
-  class MultiPassFrame : public Frame
+  class MultiPassFrame : public DeviceFrame
   {
   public:
     explicit MultiPassFrame(
@@ -69,5 +71,28 @@ namespace xr
      * The viewer's projection matrix for the active eye in current pass.
      */
     float m_ViewerProjectionMatrix[16];
+  };
+
+  class StereoRenderingFrame
+  {
+  public:
+    StereoRenderingFrame(bool isMultiPass);
+    ~StereoRenderingFrame();
+
+  public:
+    void startFrame(int passIndex = 0);
+    void endFrame(int passIndex = 0);
+    void addCommandBuffer(renderer::CommandBuffer *commandBuffer, int passIndex = 0);
+    bool ended();
+    bool ended(int passIndex);
+
+  private:
+    int m_StereoId = -1;
+    bool m_IsMultiPass = true;
+    bool m_Ended[2] = {false, false};
+    bool m_Started[2] = {false, false};
+    std::vector<renderer::CommandBuffer *> m_CommandBuffersInPass;
+    std::vector<renderer::CommandBuffer *> m_CommandBuffersInPass2; // This is only used when m_IsMultiPass is true.
+    // TODO: support 3rd, 4th, ... passes?
   };
 } // namespace xr

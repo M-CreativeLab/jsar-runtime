@@ -25,6 +25,10 @@ declare namespace Transmute {
     setFrameFinished(): void;
   }
 
+  class WebGLRenderingContextOnDevice extends WebGLRenderingContext {
+    // TODO: add the native methods here?
+  }
+
   class XRDeviceNative {
     isSessionSupported(mode: string): boolean;
     requestSession(sessionId: number): boolean;
@@ -79,7 +83,7 @@ declare namespace NodeJS {
       RenderLoop: typeof Transmute.RenderLoop;
     };
     _linkedBinding(module: 'transmute:webgl'): {
-      WebGLRenderingContext: typeof WebGLRenderingContext;
+      WebGLRenderingContext: typeof Transmute.WebGLRenderingContextOnDevice;
     };
     _linkedBinding(module: 'transmute:webxr'): {
       XRDeviceNative: typeof Transmute.XRDeviceNative;
