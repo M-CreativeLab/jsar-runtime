@@ -70,7 +70,7 @@ export default class XRNativeDevice extends XRDevice {
     return this.#handle.requestFrameOfReferenceTransform(sessionId, type, options);
   }
 
-  requestAnimationFrame(callback: any): number {
+  requestAnimationFrame(callback: Transmute.FrameRequestCallback): number {
     return renderer.requestAnimationFrame(callback);
   }
 
@@ -88,27 +88,6 @@ export default class XRNativeDevice extends XRDevice {
 
   onFrameEnd(_sessionId: number): void {
     // Nothing to do here
-  }
-
-  getBasePoseMatrix(): Float32Array {
-    return this.#handle.getViewerTransform();
-  }
-
-  getBaseViewMatrix(eye: XREye): Float32Array {
-    if (eye === 'none') {
-      throw new TypeError('eye must be "left" or "right"');
-    }
-    const id = eye === 'left' ? 0 : 1;
-    return this.#handle.getViewerStereoViewMatrix(id);
-  }
-
-  getProjectionMatrix(eye: XREye, _viewIndex: number): Float32Array {
-    // TODO: use viewIndex?
-    if (eye === 'none') {
-      throw new TypeError('eye must be "left" or "right"');
-    }
-    const id = eye === 'left' ? 0 : 1;
-    return this.#handle.getViewerStereoProjectionMatrix(id);
   }
 
   getViewSpaces(_mode: XRSessionMode): XRSpace[] {

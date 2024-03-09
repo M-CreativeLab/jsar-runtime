@@ -31,6 +31,7 @@ namespace xr
     void endFrame();
     bool isFrameEnded();
     float getTimestamp();
+    float *getViewerTransform();
     FrameContextBySessionId *addSession(int sessionId);
     void iterateSessions(std::function<void(int, FrameContextBySessionId *)> callback);
     size_t getCountOfSessions();
@@ -45,7 +46,12 @@ namespace xr
   class MultiPassFrame : public Frame
   {
   public:
-    explicit MultiPassFrame(int eyeId, float *viewerViewMatrix, float *viewerProjectionMatrix, float timestamp);
+    explicit MultiPassFrame(
+        int eyeId,
+        float *viewerTransform,
+        float *viewerViewMatrix,
+        float *viewerProjectionMatrix,
+        float timestamp);
     ~MultiPassFrame();
 
   public:

@@ -12,9 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { mat4 } from 'gl-matrix';
+import * as logger from '../../bindings/logger';
+
 import { type XRDevice } from '../devices';
 import XRRigidTransform from './XRRigidTransform';
-import { mat4 } from 'gl-matrix';
+import { DeviceFrameContext } from './XRSession';
 
 export const PRIVATE = Symbol('@@webxr-polyfill/XRSpace');
 
@@ -59,20 +62,26 @@ export default class XRSpace {
    * NON-STANDARD
    * Trigger an update for this space's base pose if necessary
    */
-  _ensurePoseUpdated(device: XRDevice, frameId: number) {
-    if (frameId == this[PRIVATE].lastFrameId) return;
+  _ensurePoseUpdated(device: XRDevice, frameId: number, frameContext: DeviceFrameContext) {
+    if (frameId == this[PRIVATE].lastFrameId) {
+      return;
+    }
     this[PRIVATE].lastFrameId = frameId;
-    this._onPoseUpdate(device);
+    this._onPoseUpdate(device, frameContext);
   }
 
   /**
    * NON-STANDARD
    * Called when this space's base pose needs to be updated
    */
-  _onPoseUpdate(device: XRDevice) {
-    if (this[PRIVATE].specialType == 'viewer') {
-      this._baseMatrix = device.getBasePoseMatrix();
+  _onPoseUpdate(_device: XRDevice, frameContext: DeviceFrameContext) {
+    const { specialType } = this[PRIVATE];
+    if (specialType == 'viewer') {
+      this._baseMatrix = frameContext.viewerTransform;
+    } else if (specialType == 'local') {
+      this._baseMatrix = frameContext.localTransform;
     }
+    // TODO: support other types?
   }
 
   set _baseMatrix(matrix: Float32Array) {

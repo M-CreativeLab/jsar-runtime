@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 import { mat4, vec3, quat } from 'gl-matrix';
+import * as logger from '../../bindings/logger';
 export const PRIVATE = Symbol('@@webxr-polyfill/XRRigidTransform');
 
 type Quaternion = {

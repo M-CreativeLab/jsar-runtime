@@ -17,7 +17,7 @@ import * as logger from '../../bindings/logger';
 import type XRDevice from '../devices/XRDevice';
 import type XRSpace from './XRSpace';
 import type XRReferenceSpace from './XRReferenceSpace';
-import XRSession, { PRIVATE as SESSION_PRIVATE } from './XRSession';
+import XRSession, { PRIVATE as SESSION_PRIVATE, type DeviceFrameContext } from './XRSession';
 import XRPose from './XRPose';
 import XRViewerPose from './XRViewerPose';
 import XRView from './XRView';
@@ -35,7 +35,9 @@ export default class XRFrame {
     animationFrame: boolean,
     device: XRDevice,
     session: XRSession,
-    sessionId: number
+    sessionId: number,
+    timestamp: number,
+    frameContext: DeviceFrameContext
   };
 
   /**
@@ -43,15 +45,24 @@ export default class XRFrame {
    * @param {XRSession} session
    * @param {number} sessionId
    */
-  constructor(device: XRDevice, session: XRSession, sessionId: number) {
+  constructor(
+    device: XRDevice,
+    session: XRSession,
+    timestamp: number,
+    frameContext: DeviceFrameContext
+  ) {
     this[PRIVATE] = {
       id: ++NEXT_FRAME_ID,
       active: false,
       animationFrame: false,
       device,
       session,
-      sessionId
+      sessionId: frameContext.sessionId,
+      timestamp,
+      frameContext
     };
+    // NOTE: DEBUG
+    // logger.info('XRFrame created', this[PRIVATE].id, timestamp, frameContext.activeEyeId, frameContext);
   }
 
   /**
@@ -72,10 +83,10 @@ export default class XRFrame {
     const device = this[PRIVATE].device;
     const session = this[PRIVATE].session;
 
-    session[SESSION_PRIVATE].viewerSpace._ensurePoseUpdated(device, this[PRIVATE].id);
-    referenceSpace._ensurePoseUpdated(device, this[PRIVATE].id);
+    session[SESSION_PRIVATE].viewerSpace._ensurePoseUpdated(device, this[PRIVATE].id, this[PRIVATE].frameContext);
+    referenceSpace._ensurePoseUpdated(device, this[PRIVATE].id, this[PRIVATE].frameContext);
 
-    const activeEye = device.getActiveEye();
+    const activeEye = this.getActiveEye();
     const viewerTransform = referenceSpace._getSpaceRelativeTransform(session[SESSION_PRIVATE].viewerSpace);
     const views: XRView[] = [];
     for (const viewSpace of session[SESSION_PRIVATE].viewSpaces) {
@@ -83,11 +94,11 @@ export default class XRFrame {
       if (device.isRenderingInMultiPass() && viewSpace.eye !== activeEye) {
         continue;
       }
-      viewSpace._ensurePoseUpdated(device, this[PRIVATE].id);
+      viewSpace._ensurePoseUpdated(device, this[PRIVATE].id, this[PRIVATE].frameContext);
       const viewTransform = referenceSpace._getSpaceRelativeTransform(viewSpace);
       const viewIndex = session[SESSION_PRIVATE].viewSpaces.indexOf(viewSpace);
       views.push(
-        new XRView(device, viewTransform, viewSpace.eye, this[PRIVATE].sessionId, viewIndex)
+        new XRView(device, viewTransform, viewSpace.eye, this[PRIVATE].sessionId, viewIndex, this[PRIVATE].frameContext)
       );
     }
     const viewerPose = new XRViewerPose(viewerTransform, views, false /* TODO: emulatedPosition */);
@@ -108,13 +119,18 @@ export default class XRFrame {
       return device.getInputPose(
         space._inputSource, baseSpace, space._specialType);
     } else {
-      space._ensurePoseUpdated(device, this[PRIVATE].id);
-      baseSpace._ensurePoseUpdated(device, this[PRIVATE].id);
+      space._ensurePoseUpdated(device, this[PRIVATE].id, this[PRIVATE].frameContext);
+      baseSpace._ensurePoseUpdated(device, this[PRIVATE].id, this[PRIVATE].frameContext);
       let transform = baseSpace._getSpaceRelativeTransform(space);
       if (!transform) {
         return null;
       }
       return new XRPose(transform, false /* TODO: emulatedPosition */);
     }
+  }
+
+  private getActiveEye(): XREye {
+    const id = this[PRIVATE].frameContext.activeEyeId;
+    return id === 0 ? 'left' : 'right';
   }
 }

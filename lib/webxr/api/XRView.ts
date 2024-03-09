@@ -14,8 +14,10 @@
  */
 
 import { type XRDevice } from '../devices';
-import XRViewport from './XRViewport';
+import { type DeviceFrameContext } from './XRSession';
+import type XRRigidTransform from './XRRigidTransform';
 import type XRWebGLLayer from './XRWebGLLayer';
+import XRViewport from './XRViewport';
 
 const XREyes = ['left', 'right', 'none'];
 export const PRIVATE = Symbol('@@webxr-polyfill/XRView');
@@ -23,15 +25,23 @@ export const PRIVATE = Symbol('@@webxr-polyfill/XRView');
 export default class XRView {
   [PRIVATE]: {
     device: XRDevice,
+    transform: XRRigidTransform,
     eye: XREye,
     viewport: XRViewport,
     temp: Object,
     sessionId: number,
-    transform: XRRigidTransform,
     viewIndex: number,
+    frameContext: DeviceFrameContext
   };
 
-  constructor(device: XRDevice, transform, eye: XREye, sessionId: number, viewIndex: number) {
+  constructor(
+    device: XRDevice,
+    transform: XRRigidTransform,
+    eye: XREye,
+    sessionId: number,
+    viewIndex: number,
+    frameContext: DeviceFrameContext
+  ) {
     if (!XREyes.includes(eye)) {
       throw new Error(`XREye must be one of: ${XREyes}`);
     }
@@ -50,25 +60,30 @@ export default class XRView {
       sessionId,
       transform,
       viewIndex,
+      frameContext
     };
   }
 
   /**
    * @return {XREye}
    */
-  get eye() { return this[PRIVATE].eye; }
+  get eye() {
+    return this[PRIVATE].eye;
+  }
 
   /**
    * @return {Float32Array}
    */
   get projectionMatrix() {
-    return this[PRIVATE].device.getProjectionMatrix(this.eye, this[PRIVATE].viewIndex);
+    return this[PRIVATE].frameContext.viewerProjectionMatrix;
   }
 
   /**
    * @return {XRRigidTransform}
    */
-  get transform() { return this[PRIVATE].transform; }
+  get transform() {
+    return this[PRIVATE].transform;
+  }
 
   /**
    * NON-STANDARD

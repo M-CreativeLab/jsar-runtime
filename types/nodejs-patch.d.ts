@@ -1,4 +1,18 @@
 declare namespace Transmute {
+  type FrameRequestCallback = (time: number, data: unknown) => void;
+  type NativeSessionContextItem = {
+    sessionId: number;
+    localTransform: Float32Array;
+  };
+  type NativeFrameContext = {
+    type: string;
+    activeEyeId?: number;
+    viewerViewMatrix?: Float32Array;
+    viewerProjectionMatrix?: Float32Array;
+    viewerTransform: Float32Array;
+    sessions: NativeSessionContextItem[];
+  };
+
   class TransmuteEnvironment {
     constructor();
     getRuntimeInit(): string;
@@ -7,7 +21,7 @@ declare namespace Transmute {
 
   class RenderLoop {
     constructor();
-    setFrameCallback(callback: (time?: number, data?: unknown) => void): void;
+    setFrameCallback(callback: FrameRequestCallback): void;
     setFrameFinished(): void;
   }
 

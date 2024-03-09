@@ -38,10 +38,9 @@ class XRViewSpace extends XRSpace {
 
   /**
    * Called when this space's base pose needs to be updated
-   * @param {XRDevice} device
    */
-  _onPoseUpdate(device) {
-    this._inverseBaseMatrix = device.getBaseViewMatrix(this._specialType);
+  _onPoseUpdate(_device: XRDevice, frameContext: DeviceFrameContext): void {
+    this._inverseBaseMatrix = frameContext.viewerViewMatrix;
   }
 }
 
@@ -49,6 +48,68 @@ type XRFrameCallbackDescriptor = {
   handle: number;
   cancelled: boolean;
   callback: (time: number, frame: XRFrame) => void;
+};
+
+/**
+ * This type is to represent the context of a device frame.
+ * 
+ * _What's a device frame?_
+ * 
+ * It depends on the device and corresponding native XR implementation, such as Unity XR SDK, OpenXR, etc. For example, in
+ * Unity XR with multipass rendering, a device frame is a frame that renders a single eye's view, and the complete views are
+ * merged from 2 device frames, one for left eye and one for right.
+ * 
+ * The context of the device frame is the context information at the time of the device frame, such as the viewer and local
+ * matrices, the active eye id, etc.
+ * 
+ * _Where to use this type?_
+ * 
+ * Assume that there are 2 frames to render, when the first frame is being rendered, the context will be collected and passed
+ * to the JavaScript asynchronously, and then the JavaScript will render the next frame based on the context.
+ * 
+ * The reason to achieve the asynchronous rendering is to remove the performance bottleneck of the JavaScript thread, thus the
+ * native XR implementation can render current frame ASAP, and the JavaScript can render a frame with the context, and then dispatch
+ * the frame to the next available device frame.
+ */
+export type DeviceFrameContext = {
+  /**
+   * It stands for the Unity's StereoRenderingMode, such as SinglePass, MultiPass, etc.
+   * 
+   * The WebXR implementation should be able to handle different rendering modes, especially for the "multipass" rendering, which
+   * the implementation will create only 1 view in every frame callback.
+   */
+  type: string;
+  /**
+   * The session id is used to identify the session that the frame belongs to. Especially at the JSAR implementation, a session
+   * stands for an application, the implementation will dispatch to the corresponding session's frame callback by this id.
+   */
+  sessionId: number;
+  /**
+   * The "local" is a reference space type in WebXR, in every device frame, the JavaScript implementation could access to this
+   * matrix to get the transform of the "local" space.
+   */
+  localTransform: Float32Array;
+  /**
+   * See the "localTransform" field, the only difference is that the matrix is for the "viewer" space.
+   */
+  viewerTransform: Float32Array;
+  /**
+   * The following fields are only available for "multipass" rendering.
+   */
+  /**
+   * In the "multipass" rendering, every device frame will render a single eye's view, thus the active eye id is used to identify
+   * which eye's view is being rendered.
+   */
+  activeEyeId?: number;
+  /**
+   * The viewer's view matrix, it works with the `activeEyeId` because the view matrix is represent the left eye or right eye's
+   * view.
+   */
+  viewerViewMatrix?: Float32Array;
+  /**
+   * See the "viewerViewMatrix" field, the only difference is that the matrix is for the projection.
+   */
+  viewerProjectionMatrix?: Float32Array;
 };
 
 class SessionInternalEvent extends Event {
@@ -70,6 +131,7 @@ export default class XRSession extends EventTarget {
     deviceFrameHandle: null | number;
     activeRenderState: XRRenderState;
     pendingRenderState: null | XRRenderStateInit;
+    localSpace: XRReferenceSpace;
     viewerSpace: XRReferenceSpace;
     viewSpaces: Array<XRViewSpace>;
     currentInputSources: Array<any>;
@@ -78,7 +140,7 @@ export default class XRSession extends EventTarget {
     stopDeviceFrameLoop?: () => void;
     dispatchInputSourceEvent?: (type: string, inputSource: any) => void;
 
-    onDeviceFrame?: (time: number, data: unknown) => void;
+    onDeviceFrame?: (time: number, data: DeviceFrameContext) => void;
     onPresentationEnd?: (event: SessionInternalEvent) => void;
     onPresentationStart?: (event: SessionInternalEvent) => void;
     onSelectStart?: (event: SessionInternalEvent) => void;
@@ -120,6 +182,7 @@ export default class XRSession extends EventTarget {
       id,
       activeRenderState: initialRenderState,
       pendingRenderState: null,
+      localSpace: new XRReferenceSpace('local'),
       viewerSpace: new XRReferenceSpace('viewer'),
       get viewSpaces() { return <XRViewSpace[]>device.getViewSpaces(mode) || defaultViewSpaces; },
       currentInputSources: []
@@ -127,15 +190,12 @@ export default class XRSession extends EventTarget {
 
     // Single handler for animation frames from the device. The spec says this must
     // run on every candidate frame even if there are no callbacks queued up.
-    this[PRIVATE].onDeviceFrame = (time, data) => {
-      if (this[PRIVATE].ended || this[PRIVATE].suspended) {
-        logger.warn(`[XRSession] onDeviceFrame: ended or suspended`);
+    this[PRIVATE].onDeviceFrame = (time, context) => {
+      // Queue next frame first to ensure that the frame loop continues.
+      if (!this.queueNextFrame()) {
+        logger.warn(`[XRSession] onDeviceFrame: queueNextFrame failed because session is ended or suspended.`);
         return;
       }
-
-      // Queue next frame
-      this[PRIVATE].deviceFrameHandle = null;
-      this[PRIVATE].startDeviceFrameLoop();
 
       // - If session’s pending render state is not null, apply the pending render state.
       if (this[PRIVATE].pendingRenderState !== null) {
@@ -161,8 +221,7 @@ export default class XRSession extends EventTarget {
       //   abort these steps.
       // ???
 
-      logger.info(`[XRSession] onDeviceFrame:`, time, JSON.stringify(data, null, 2));
-      const frame = new XRFrame(device, this, this[PRIVATE].id);
+      const frame = new XRFrame(device, this, time, context);
 
       // - Let callbacks be a list of the entries in session’s list of animation frame
       //   callback, in the order in which they were added to the list.
@@ -206,9 +265,43 @@ export default class XRSession extends EventTarget {
 
     this[PRIVATE].startDeviceFrameLoop = () => {
       if (this[PRIVATE].deviceFrameHandle === null) {
-        this[PRIVATE].deviceFrameHandle = this[PRIVATE].device.requestAnimationFrame(
-          this[PRIVATE].onDeviceFrame
-        );
+        this[PRIVATE].deviceFrameHandle = this[PRIVATE].device.requestAnimationFrame((time, data) => {
+          if (!data || typeof data !== 'object') {
+            logger.warn(`[XRSession] onDeviceFrame skipped, reason is: invalid animation frame, no data found.`, {
+              time, data
+            });
+            this.queueNextFrame();
+            return;
+          }
+          const nativeFrameCtx = <Transmute.NativeFrameContext>data;
+          if (!Array.isArray(nativeFrameCtx.sessions) || nativeFrameCtx.sessions.length === 0) {
+            logger.warn(`[XRSession] onDeviceFrame skipped, reason is: invalid animation frame, no sessions found or sessions are empty.`, {
+              time, data
+            });
+            this.queueNextFrame();
+            return;
+          }
+          const session = nativeFrameCtx.sessions.find(s => s.sessionId === this[PRIVATE].id);
+          if (!session) {
+            logger.warn(`[XRSession] onDeviceFrame skipped, reason is: invalid animation frame, no session found.`, {
+              time,
+              data,
+              '[this]': this[PRIVATE],
+            });
+            this.queueNextFrame();
+            return;
+          }
+
+          this[PRIVATE].onDeviceFrame(time, {
+            type: nativeFrameCtx.type,
+            sessionId: session.sessionId,
+            localTransform: session.localTransform,
+            viewerTransform: nativeFrameCtx.viewerTransform,
+            activeEyeId: nativeFrameCtx.activeEyeId,
+            viewerViewMatrix: nativeFrameCtx.viewerViewMatrix,
+            viewerProjectionMatrix: nativeFrameCtx.viewerProjectionMatrix,
+          });
+        });
       }
     };
 
@@ -341,6 +434,20 @@ export default class XRSession extends EventTarget {
   }
 
   /**
+   * It queues the next frame to be called on the next animation frame, and returns true if it was queued, false if it was
+   * not (because the session is ended or suspended).
+   * @returns a boolean indicating whether the frame was queued
+   */
+  private queueNextFrame(): boolean {
+    if (this[PRIVATE].ended || this[PRIVATE].suspended) {
+      return false;
+    }
+    this[PRIVATE].deviceFrameHandle = null;
+    this[PRIVATE].startDeviceFrameLoop();
+    return true;
+  }
+
+  /**
    * @param {string} type
    * @return {XRReferenceSpace}
    */
@@ -360,6 +467,17 @@ export default class XRSession extends EventTarget {
     if (type === 'viewer') {
       return this[PRIVATE].viewerSpace;
     }
+    /**
+     * In JSAR's WebXR implementation, we treat the "local" space as the dynamic space just like the "viewer" space, and
+     * the "local" space is updated in every device frame, so we return a new XRReferenceSpace with the "local" type.
+     * 
+     * Note that this differs from the browser's behavior, the browser's "local" space is static. The reason why JSAR's
+     * "local" space is dynamic is that JSAR's implementation is to allow the objects is able to move from the host such
+     * as the Unity.
+     */
+    if (type === 'local') {
+      return this[PRIVATE].localSpace;
+    }
 
     // Request a transform from the device given the values. If returning a
     // transform (probably "local-floor" or "bounded-floor"), use it, and if
@@ -367,7 +485,6 @@ export default class XRSession extends EventTarget {
     // throw, rejecting the promise, indicating the device does not support that
     // frame of reference.
     let transform = await this[PRIVATE].device.requestFrameOfReferenceTransform(this[PRIVATE].id, type);
-    logger.info(`[XRSession] requestReferenceSpace:`, type, transform);
 
     // TODO: 'bounded-floor' is only blocked because we currently don't report
     // the bounds geometry correctly.

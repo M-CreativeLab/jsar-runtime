@@ -11,7 +11,7 @@ let isReady = false;
 
 const onreadyCallbacks: Array<(gl: WebGLRenderingContext) => void> = [];
 const onframeCallbacks: Array<{
-  callback: (time: number, data: unknown) => void,
+  callback: Transmute.FrameRequestCallback,
   handle: number,
 }> = [];
 
@@ -25,7 +25,7 @@ export function requestRendererReady(callback: (gl: WebGLRenderingContext) => vo
 }
 
 let globalId = 0;
-export function requestAnimationFrame(callback: FrameRequestCallback): number {
+export function requestAnimationFrame(callback: Transmute.FrameRequestCallback): number {
   const handle = globalId++;
   onframeCallbacks.push({ callback, handle });
   return handle;

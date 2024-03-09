@@ -121,6 +121,13 @@ namespace renderer
                                       auto time = Napi::Number::New(env, frame->getTimestamp());
                                       auto data = Napi::Object::New(env);
 
+                                      // viewer transform
+                                      auto viewerTransform = frame->getViewerTransform();
+                                      auto jsViewerTransform = Napi::Float32Array::New(env, 16);
+                                      for (int i = 0; i < 16; i++)
+                                        jsViewerTransform.Set(i, Napi::Number::New(env, viewerTransform[i]));
+                                      data.Set("viewerTransform", jsViewerTransform);
+
                                       // session-based fields `sessions`.
                                       auto jsItemsBySessionId = Napi::Array::New(env);
                                       int sessionIndex = 0;
@@ -128,7 +135,7 @@ namespace renderer
                                                               {
                                                                 auto jsSessionItem = Napi::Object::New(env);
                                                                 auto localTransform = context->getLocalTransform();
-                                                                auto jsLocalTransform = Napi::Array::New(env, 16);
+                                                                auto jsLocalTransform = Napi::Float32Array::New(env, 16);
                                                                 for (int i = 0; i < 16; i++)
                                                                   jsLocalTransform.Set(i, Napi::Number::New(env, localTransform[i]));
                                                                 jsSessionItem.Set("sessionId", Napi::Number::New(env, sessionId));
@@ -147,13 +154,13 @@ namespace renderer
                                         // viewer model matrix or transform
                                         // viewer view matrix
                                         auto viewMatrix = multipassFrame->getViewerViewMatrix();
-                                        auto jsViewMatrix = Napi::Array::New(env, 16);
+                                        auto jsViewMatrix = Napi::Float32Array::New(env, 16);
                                         for (int i = 0; i < 16; i++)
                                           jsViewMatrix.Set(i, Napi::Number::New(env, viewMatrix[i]));
                                         data.Set("viewerViewMatrix", jsViewMatrix);
                                         // viewer projection matrix
                                         auto projectionMatrix = multipassFrame->getViewerProjectionMatrix();
-                                        auto jsProjectionMatrix = Napi::Array::New(env, 16);
+                                        auto jsProjectionMatrix = Napi::Float32Array::New(env, 16);
                                         for (int i = 0; i < 16; i++)
                                           jsProjectionMatrix.Set(i, Napi::Number::New(env, projectionMatrix[i]));
                                         data.Set("viewerProjectionMatrix", jsProjectionMatrix);

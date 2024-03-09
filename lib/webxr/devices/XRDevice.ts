@@ -127,7 +127,7 @@ export default class XRDevice extends EventTarget {
   /**
    * @return {Function}
    */
-  requestAnimationFrame(_callback): number {
+  requestAnimationFrame(_callback: Transmute.FrameRequestCallback): number {
     throw new Error('Method(device.requestAnimationFrame) not implemented');
   }
 

@@ -22,6 +22,7 @@ namespace xr
   void Frame::endFrame() { m_Ended = true; }
   bool Frame::isFrameEnded() { return m_Ended; }
   float Frame::getTimestamp() { return m_Timestamp; }
+  float *Frame::getViewerTransform() { return m_ViewerTransform; }
 
   FrameContextBySessionId *Frame::addSession(int sessionId)
   {
@@ -41,10 +42,16 @@ namespace xr
     return m_Sessions.size();
   }
 
-  MultiPassFrame::MultiPassFrame(int eyeId, float *viewerViewMatrix, float *viewerProjectionMatrix, float timestamp)
+  MultiPassFrame::MultiPassFrame(
+      int eyeId,
+      float *viewerTransform,
+      float *viewerViewMatrix,
+      float *viewerProjectionMatrix,
+      float timestamp) : Frame()
   {
     m_ActiveEyeId = eyeId;
     m_Timestamp = timestamp;
+    memcpy(m_ViewerTransform, viewerTransform, sizeof(float) * 16);
     memcpy(m_ViewerViewMatrix, viewerViewMatrix, sizeof(float) * 16);
     memcpy(m_ViewerProjectionMatrix, viewerProjectionMatrix, sizeof(float) * 16);
   }

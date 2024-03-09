@@ -33,6 +33,7 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 		auto eyeId = device->getActiveEyeId();
 		auto frame = new xr::MultiPassFrame(
 				eyeId,
+				device->getViewerTransform(),
 				device->getViewerStereoViewMatrix(eyeId),
 				device->getViewerStereoProjectionMatrix(eyeId),
 				device->getTime());
