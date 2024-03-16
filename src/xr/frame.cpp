@@ -1,5 +1,6 @@
 #include <cstring>
 #include "frame.hpp"
+#include "debug.hpp"
 
 namespace xr
 {
@@ -42,13 +43,20 @@ namespace xr
     return m_Sessions.size();
   }
 
+  int DeviceFrame::getCurrentStereoId()
+  {
+    return m_CurrentStereoId;
+  }
+
   MultiPassFrame::MultiPassFrame(
       int eyeId,
+      int stereoId,
       float *viewerTransform,
       float *viewerViewMatrix,
       float *viewerProjectionMatrix,
       float timestamp) : DeviceFrame()
   {
+    m_CurrentStereoId = stereoId;
     m_ActiveEyeId = eyeId;
     m_Timestamp = timestamp;
     memcpy(m_ViewerTransform, viewerTransform, sizeof(float) * 16);
@@ -61,4 +69,66 @@ namespace xr
   int MultiPassFrame::getActiveEyeId() { return m_ActiveEyeId; }
   float *MultiPassFrame::getViewerViewMatrix() { return m_ViewerViewMatrix; }
   float *MultiPassFrame::getViewerProjectionMatrix() { return m_ViewerProjectionMatrix; }
+
+  static int s_NextStereoId = 1;
+
+  StereoRenderingFrame::StereoRenderingFrame(bool isMultiPass)
+  {
+    m_IsMultiPass = isMultiPass;
+    m_StereoId = s_NextStereoId++;
+  }
+  StereoRenderingFrame::~StereoRenderingFrame() {}
+
+  FrameActionResult StereoRenderingFrame::startFrame(int passIndex)
+  {
+    if (passIndex > 1)
+      return FRAME_PASS_OUT_OF_RANGE;
+
+    m_Started[passIndex] = true;
+    return FRAME_OK;
+  }
+
+  FrameActionResult StereoRenderingFrame::endFrame(int passIndex)
+  {
+    if (passIndex > 1)
+      return FRAME_PASS_OUT_OF_RANGE;
+
+    m_Ended[passIndex] = true;
+    return FRAME_OK;
+  }
+
+  void StereoRenderingFrame::addCommandBuffer(renderer::CommandBuffer *commandBuffer, int passIndex)
+  {
+    if (passIndex == 0)
+      m_CommandBuffersInPass.push_back(commandBuffer);
+    else if (passIndex == 1)
+      m_CommandBuffersInPass2.push_back(commandBuffer);
+  }
+
+  std::vector<renderer::CommandBuffer *> &StereoRenderingFrame::getCommandBuffers(int passIndex)
+  {
+    if (passIndex == 0)
+      return m_CommandBuffersInPass;
+    else if (passIndex == 1)
+      return m_CommandBuffersInPass2;
+    else
+      return m_CommandBuffersInPass;
+  }
+
+  bool StereoRenderingFrame::ended()
+  {
+    if (m_IsMultiPass)
+      return ended(0) && ended(1);
+    else
+      return ended(0);
+  }
+
+  bool StereoRenderingFrame::ended(int passIndex)
+  {
+    if (passIndex > 1)
+      return false;
+    return m_Ended[passIndex];
+  }
+
+  int StereoRenderingFrame::getId() { return m_StereoId; }
 }

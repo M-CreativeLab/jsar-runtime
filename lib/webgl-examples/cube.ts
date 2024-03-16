@@ -270,6 +270,11 @@ function drawScene(gl: WebGLRenderingContext, programInfo, buffers, cubeRotation
     cubeRotation * 0.3, // amount to rotate in radians
     [1, 0, 0]
   ); // axis to rotate around (X)
+  mat4.scale(
+    modelViewMatrix, // destination matrix
+    modelViewMatrix, // matrix to translate
+    [0.5, 0.5, 0.5]
+  ); // amount to scale
 
   // Tell WebGL how to pull out the positions from the position
   // buffer into the vertexPosition attribute.

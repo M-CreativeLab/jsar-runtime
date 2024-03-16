@@ -2,6 +2,7 @@ import XRSystem from './api/XRSystem';
 import XRSession from './api/XRSession';
 import XRWebGLLayer from './api/XRWebGLLayer';
 import XRFrame from './api/XRFrame';
+import XRView from './api/XRView';
 import { type XRDevice, XRNativeDevice } from './devices';
 
 let xrDevice: XRDevice = null;
@@ -24,4 +25,5 @@ export {
   XRSession,
   XRWebGLLayer,
   XRFrame,
+  XRView,
 }

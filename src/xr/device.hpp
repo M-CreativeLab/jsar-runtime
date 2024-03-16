@@ -1,9 +1,11 @@
 #pragma once
 
+#include <array>
 #include <map>
 #include <vector>
 #include <mutex>
 #include <atomic>
+#include "frame.hpp"
 
 using namespace std;
 
@@ -31,10 +33,21 @@ namespace xr
 
   public:
     void initialize(bool enabled);
-    void setStereoRenderingMode(StereoRenderingMode mode);
-    StereoRenderingMode getStereoRenderingMode();
     bool requestSession(int id);
     bool enabled();
+    void setStereoRenderingMode(StereoRenderingMode mode);
+    StereoRenderingMode getStereoRenderingMode();
+    StereoRenderingFrame *createStereoRenderingFrame();
+    StereoRenderingFrame *getStereoRenderingFrame(int id);
+    StereoRenderingFrame *getLastStereoRenderingFrame();
+    void iterateStereoRenderingFrames(function<void(StereoRenderingFrame *)> callback);
+    void clearStereoRenderingFrames(bool clearAll = false);
+    bool startFrame(int sessionId, int stereoRenderingId, int passId);
+    bool endFrame(int sessionId, int stereoRenderingId, int passId);
+    bool isInFrame();
+    void addCommandBufferToFrame(renderer::CommandBuffer *commandBuffer);
+
+  public:
     float getTime();
     float *getViewerTransform();
     float *getViewerStereoViewMatrix(int eyeId);
@@ -65,6 +78,12 @@ namespace xr
      * The stereo rendering mode, it affects how to use frame callback and execute frame.
      */
     atomic<StereoRenderingMode> m_StereoRenderingMode = StereoRenderingMode::Unknown;
+    /**
+     * Current stereo rendering frames.
+     */
+    atomic<int> m_CurrentStereoRenderingId = -1;
+    atomic<int> m_CurrentPassId = -1;
+    vector<StereoRenderingFrame *> m_StereoRenderingFrames;
     /**
      * The viewer(camera or eyes) transform matrix, namely the viewer's model matrix, it's used to describe how to
      * transform the viewer's model to the world space.

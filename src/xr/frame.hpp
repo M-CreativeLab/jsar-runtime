@@ -37,12 +37,14 @@ namespace xr
     FrameContextBySessionId *addSession(int sessionId);
     void iterateSessions(std::function<void(int, FrameContextBySessionId *)> callback);
     size_t getCountOfSessions();
+    int getCurrentStereoId();
 
   protected:
     bool m_Ended = false;
     float m_Timestamp = 0;
     float m_ViewerTransform[16];
     std::map<int, FrameContextBySessionId *> m_Sessions;
+    int m_CurrentStereoId = -1;
   };
 
   class MultiPassFrame : public DeviceFrame
@@ -50,6 +52,7 @@ namespace xr
   public:
     explicit MultiPassFrame(
         int eyeId,
+        int stereoId,
         float *viewerTransform,
         float *viewerViewMatrix,
         float *viewerProjectionMatrix,
@@ -73,6 +76,12 @@ namespace xr
     float m_ViewerProjectionMatrix[16];
   };
 
+  enum FrameActionResult
+  {
+    FRAME_OK = 0x00,
+    FRAME_PASS_OUT_OF_RANGE,
+  };
+
   class StereoRenderingFrame
   {
   public:
@@ -80,11 +89,13 @@ namespace xr
     ~StereoRenderingFrame();
 
   public:
-    void startFrame(int passIndex = 0);
-    void endFrame(int passIndex = 0);
+    FrameActionResult startFrame(int passIndex = 0);
+    FrameActionResult endFrame(int passIndex = 0);
     void addCommandBuffer(renderer::CommandBuffer *commandBuffer, int passIndex = 0);
+    std::vector<renderer::CommandBuffer *> &getCommandBuffers(int passIndex = 0);
     bool ended();
     bool ended(int passIndex);
+    int getId();
 
   private:
     int m_StereoId = -1;

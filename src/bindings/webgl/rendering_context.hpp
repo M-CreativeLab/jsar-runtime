@@ -1,5 +1,6 @@
 #pragma once
 
+#include <assert.h>
 #include <napi.h>
 #include "renderer/render_api.hpp"
 
@@ -114,6 +115,9 @@ namespace webgl
     void DrawingBufferWidthSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value DrawingBufferHeightGetter(const Napi::CallbackInfo &info);
     void DrawingBufferHeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+
+  private:
+    bool addCommandBuffer(renderer::CommandBuffer *commandBuffer, bool useDefaultQueue = false);
 
   private:
     RenderAPI *m_renderAPI;

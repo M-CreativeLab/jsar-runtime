@@ -18,6 +18,7 @@ import type XRPose from '../api/XRPose';
 // import XRReferenceSpace from '../api/XRReferenceSpace';
 import type XRWebGLLayer from '../api/XRWebGLLayer';
 import type XRRenderState from '../api/XRRenderState';
+import type { DeviceFrameContext } from '../api/XRSession';
 
 export enum StereoRenderingMode {
   MultiPass = 0,
@@ -134,14 +135,14 @@ export default class XRDevice extends EventTarget {
   /**
    * @param {number} sessionId
    */
-  onFrameStart(_sessionId: number, _renderState: XRRenderState) {
+  onFrameStart(_sessionId: number, _frameContext: DeviceFrameContext, _renderState: XRRenderState) {
     throw new Error('Method(device.onFrameStart) not implemented');
   }
 
   /**
    * @param {number} sessionId
    */
-  onFrameEnd(_sessionId: number) {
+  onFrameEnd(_sessionId: number, _frameContext: DeviceFrameContext) {
     throw new Error('Method(device.onFrameEnd) not implemented');
   }
 

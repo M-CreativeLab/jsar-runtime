@@ -8,6 +8,7 @@ import XRDevice, { StereoRenderingMode, stereoRenderingModeToString } from './XR
 import XRWebGLLayer from '../api/XRWebGLLayer';
 import XRPose from '../api/XRPose';
 import XRSpace from '../api/XRSpace';
+import { DeviceFrameContext } from '../api/XRSession';
 
 const { XRDeviceNative } = process._linkedBinding('transmute:webxr');
 
@@ -83,12 +84,20 @@ export default class XRNativeDevice extends XRDevice {
     // Nothing to do here
   }
 
-  onFrameStart(_sessionId: number, _renderState: XRRenderState): void {
-    // Nothing to do here
+  onFrameStart(sessionId: number, frameContext: DeviceFrameContext, _renderState: XRRenderState): void {
+    let passIndex = 0;
+    if (this.stereoRenderingMode === StereoRenderingMode.MultiPass) {
+      passIndex = frameContext.activeEyeId === 0 ? 0 : 1;
+    }
+    this.#handle.startFrame(sessionId, frameContext.stereoId, passIndex);
   }
 
-  onFrameEnd(_sessionId: number): void {
-    // Nothing to do here
+  onFrameEnd(sessionId: number, frameContext: DeviceFrameContext): void {
+    let passIndex = 0;
+    if (this.stereoRenderingMode === StereoRenderingMode.MultiPass) {
+      passIndex = frameContext.activeEyeId === 0 ? 0 : 1;
+    }
+    this.#handle.endFrame(sessionId, frameContext.stereoId, passIndex);
   }
 
   getViewSpaces(_mode: XRSessionMode): XRSpace[] {

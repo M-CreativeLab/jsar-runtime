@@ -1,5 +1,6 @@
 #pragma once
 
+#include "math/matrix.hpp"
 #include "base.hpp"
 #include "logger.hpp"
 #include "node_bootstrapper.hpp"

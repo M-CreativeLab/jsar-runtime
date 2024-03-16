@@ -30,9 +30,22 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 
 	if (device->enabled() && device->getStereoRenderingMode() == xr::StereoRenderingMode::MultiPass)
 	{
+		int stereoId = -1;
 		auto eyeId = device->getActiveEyeId();
-		auto frame = new xr::MultiPassFrame(
+		if (eyeId == 0)
+		{
+			auto frame = device->createStereoRenderingFrame();
+			stereoId = frame->getId();
+		}
+		else
+		{
+			auto frame = device->getLastStereoRenderingFrame();
+			stereoId = frame == nullptr ? -1 : frame->getId();
+		}
+
+		auto deviceFrame = new xr::MultiPassFrame(
 				eyeId,
+				stereoId,
 				device->getViewerTransform(),
 				device->getViewerStereoViewMatrix(eyeId),
 				device->getViewerStereoProjectionMatrix(eyeId),
@@ -41,10 +54,20 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 		auto sessionIds = device->getSessionIds();
 		for (auto id : sessionIds)
 		{
-			auto context = frame->addSession(id);
+			auto context = deviceFrame->addSession(id);
 			context->setLocalTransform(device->getLocalTransform(id));
 		}
-		jsRenderLoop->frameCallback(frame);
+		jsRenderLoop->frameCallback(deviceFrame);
+
+		device->iterateStereoRenderingFrames([this, eyeId](xr::StereoRenderingFrame *frame)
+																				 {
+																					 if (!frame->ended())	// skip the frame if it's not ended yet
+																						 return;
+																					 ExecuteCommandBuffer(frame->getCommandBuffers(eyeId), true); });
+
+		// when the eyeId is 1, clear the stereo rendering frames
+		if (eyeId == 1)
+			device->clearStereoRenderingFrames();
 	}
 	else
 	{

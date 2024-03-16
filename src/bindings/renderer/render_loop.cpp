@@ -144,6 +144,10 @@ namespace renderer
                                                               });
                                       data.Set("sessions", jsItemsBySessionId);
 
+                                      // set current stereo id
+                                      auto stereoId = Napi::Number::New(env, frame->getCurrentStereoId());
+                                      data.Set("stereoId", stereoId);
+
                                       // add MultiPass frame data
                                       if (device->getStereoRenderingMode() == xr::StereoRenderingMode::MultiPass)
                                       {

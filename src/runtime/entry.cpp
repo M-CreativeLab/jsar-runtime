@@ -189,6 +189,31 @@ extern "C"
     return xrDevice->updateViewerStereoViewMatrix(eyeId, transform);
   }
 
+  DLL_PUBLIC bool TransmuteNative_SetViewerStereoViewMatrixFromTRS(int eyeId, float *translation, float* rotation)
+  {
+    auto xrDevice = xr::Device::GetInstance();
+    if (xrDevice == NULL)
+      return false;
+
+    float tx = translation[0];
+    float ty = translation[1];
+    float tz = translation[2];
+    float rx = rotation[0];
+    float ry = rotation[1];
+    float rz = rotation[2];
+    float rw = rotation[3];
+
+    auto scalingMatrix = glm::scale(glm::mat4(1), glm::vec3(-1.0, 1.0, -1.0));
+    auto translationMatrix = glm::translate(glm::mat4(1), glm::vec3(tx, ty, tz));
+    auto rotationMatrix = glm::mat4_cast(glm::quat(rw, rx, ry, rz));
+    auto base = translationMatrix * rotationMatrix * scalingMatrix;
+
+    float m[16];
+    for (int i = 0; i < 16; i++)
+      m[i] = base[i / 4][i % 4];
+    return xrDevice->updateViewerStereoViewMatrix(eyeId, m);
+  }
+
   DLL_PUBLIC bool TransmuteNative_SetViewerStereoProjectionMatrix(int eyeId, float *transform)
   {
     auto xrDevice = xr::Device::GetInstance();

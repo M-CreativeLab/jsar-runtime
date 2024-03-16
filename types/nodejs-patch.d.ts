@@ -7,6 +7,7 @@ declare namespace Transmute {
   type NativeFrameContext = {
     type: string;
     activeEyeId?: number;
+    stereoId: number;
     viewerViewMatrix?: Float32Array;
     viewerProjectionMatrix?: Float32Array;
     viewerTransform: Float32Array;
@@ -45,6 +46,9 @@ declare namespace Transmute {
      */
     getViewerStereoProjectionMatrix(eyeId: number): Float32Array;
     getActiveEyeId(): number;
+
+    startFrame(sessionId: number, stereoRenderingId: number, passIndex: number): void;
+    endFrame(sessionId: number, stereoRenderingId: number, passIndex: number): void;
   }
 
   type NativeEventListener = (id: number, type: number, data: string) => void;

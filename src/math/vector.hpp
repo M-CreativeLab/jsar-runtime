@@ -19,6 +19,6 @@ public:
   float w;
 
 public:
-  Quaternion(float x, float y, float z, float w);
+  Quaternion(float x = 0, float y = 0, float z = 0, float w = 1);
   Vector3 euler() const;
 };

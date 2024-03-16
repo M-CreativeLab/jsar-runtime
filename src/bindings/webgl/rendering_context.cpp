@@ -458,7 +458,7 @@ namespace webgl
     if (m_renderAPI == nullptr)
     {
       Napi::TypeError::New(env, "RenderAPI is not available")
-        .ThrowAsJavaScriptException();
+          .ThrowAsJavaScriptException();
       return;
     }
   }
@@ -478,7 +478,7 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     auto commandBuffer = new renderer::CreateProgramCommandBuffer();
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
 
     return WebGLProgram::constructor->New({Napi::Number::New(env, commandBuffer->m_ProgramId)});
@@ -503,7 +503,7 @@ namespace webgl
 
     WebGLProgram *program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     auto commandBuffer = new renderer::LinkProgramCommandBuffer(program->GetId());
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
 
     auto uniforms = commandBuffer->m_UniformLocations;
@@ -530,7 +530,7 @@ namespace webgl
     }
 
     WebGLProgram *program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
-    m_renderAPI->AddCommandBuffer(new renderer::UseProgramCommandBuffer(program->GetId()));
+    addCommandBuffer(new renderer::UseProgramCommandBuffer(program->GetId()));
     return env.Undefined();
   }
 
@@ -554,7 +554,7 @@ namespace webgl
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     int pname = info[1].As<Napi::Number>().Int32Value();
     auto commandBuffer = new renderer::GetProgramParameterCommandBuffer(program->GetId(), pname);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     return Napi::Number::New(env, commandBuffer->m_Value);
   }
@@ -578,7 +578,7 @@ namespace webgl
 
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     auto commandBuffer = new renderer::GetProgramInfoLogCommandBuffer(program->GetId());
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     return Napi::String::New(env, commandBuffer->m_InfoLog);
   }
@@ -608,7 +608,7 @@ namespace webgl
 
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     int shader = info[1].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::AttachShaderCommandBuffer(program->GetId(), shader));
+    addCommandBuffer(new renderer::AttachShaderCommandBuffer(program->GetId(), shader));
     return env.Undefined();
   }
 
@@ -631,7 +631,7 @@ namespace webgl
 
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     int shader = info[1].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::DetachShaderCommandBuffer(program->GetId(), shader));
+    addCommandBuffer(new renderer::DetachShaderCommandBuffer(program->GetId(), shader));
     return env.Undefined();
   }
 
@@ -648,7 +648,7 @@ namespace webgl
     int type = info[0].As<Napi::Number>().Int32Value();
 
     auto commandBuffer = new renderer::CreateShaderCommandBuffer(type);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     DEBUG("transmute", "shader id: %d", commandBuffer->m_ShaderId);
     return Napi::Number::New(env, commandBuffer->m_ShaderId);
@@ -666,7 +666,7 @@ namespace webgl
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
     auto commandBuffer = new renderer::DeleteShaderCommandBuffer(shader);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     return env.Undefined();
   }
@@ -685,7 +685,7 @@ namespace webgl
     std::string source = info[1].As<Napi::String>().Utf8Value();
 
     auto commandBuffer = new renderer::ShaderSourceCommandBuffer(shader, source.c_str(), source.length());
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     DEBUG("transmute", "shader source: %s", source.c_str());
     return env.Undefined();
   }
@@ -701,7 +701,7 @@ namespace webgl
       return env.Undefined();
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::CompileShaderCommandBuffer(shader));
+    addCommandBuffer(new renderer::CompileShaderCommandBuffer(shader));
     return env.Undefined();
   }
 
@@ -717,7 +717,7 @@ namespace webgl
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
     auto commandBuffer = new renderer::GetShaderSourceCommandBuffer(shader);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     return Napi::String::New(env, commandBuffer->m_Source);
   }
@@ -735,7 +735,7 @@ namespace webgl
     int shader = info[0].As<Napi::Number>().Int32Value();
     int pname = info[1].As<Napi::Number>().Int32Value();
     auto commandBuffer = new renderer::GetShaderParameterCommandBuffer(shader, pname);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     return Napi::Number::New(env, commandBuffer->m_Value);
   }
@@ -752,7 +752,7 @@ namespace webgl
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
     auto commandBuffer = new renderer::GetShaderInfoLogCommandBuffer(shader);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     return Napi::String::New(env, commandBuffer->m_InfoLog);
   }
@@ -763,7 +763,7 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     auto commandBuffer = new renderer::CreateBufferCommandBuffer();
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     return Napi::Number::New(env, commandBuffer->m_BufferId);
   }
@@ -779,7 +779,7 @@ namespace webgl
       return env.Undefined();
     }
     int buffer = info[0].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::DeleteBufferCommandBuffer(buffer));
+    addCommandBuffer(new renderer::DeleteBufferCommandBuffer(buffer));
     return env.Undefined();
   }
 
@@ -805,7 +805,7 @@ namespace webgl
     int buffer = 0;
     if (info[1].IsNumber())
       buffer = info[1].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::BindBufferCommandBuffer(target, buffer));
+    addCommandBuffer(new renderer::BindBufferCommandBuffer(target, buffer));
     return env.Undefined();
   }
 
@@ -828,7 +828,7 @@ namespace webgl
         buffer.ByteLength(),
         buffer.Data(),
         usage);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -851,7 +851,7 @@ namespace webgl
         offset,
         buffer.ByteLength(),
         buffer.Data());
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -861,7 +861,7 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     auto commandBuffer = new renderer::CreateFramebufferCommandBuffer();
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     return Napi::Number::New(env, commandBuffer->m_FramebufferId);
   }
@@ -877,7 +877,7 @@ namespace webgl
       return env.Undefined();
     }
     int framebuffer = info[0].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::DeleteFramebufferCommandBuffer(framebuffer));
+    addCommandBuffer(new renderer::DeleteFramebufferCommandBuffer(framebuffer));
     return env.Undefined();
   }
 
@@ -902,7 +902,7 @@ namespace webgl
     int framebuffer = 0;
     if (info[1].IsNumber())
       framebuffer = info[1].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::BindFramebufferCommandBuffer(target, framebuffer));
+    addCommandBuffer(new renderer::BindFramebufferCommandBuffer(target, framebuffer));
     return env.Undefined();
   }
 
@@ -921,7 +921,7 @@ namespace webgl
     int renderbuffertarget = info[2].As<Napi::Number>().Int32Value();
     int renderbuffer = info[3].As<Napi::Number>().Int32Value();
 
-    m_renderAPI->AddCommandBuffer(new renderer::FramebufferRenderbufferCommandBuffer(
+    addCommandBuffer(new renderer::FramebufferRenderbufferCommandBuffer(
         target,
         attachment,
         renderbuffertarget,
@@ -953,7 +953,7 @@ namespace webgl
     auto texture = Napi::ObjectWrap<WebGLTexture>::Unwrap(jsTexture.As<Napi::Object>());
     int level = info[4].As<Napi::Number>().Int32Value();
 
-    m_renderAPI->AddCommandBuffer(new renderer::FramebufferTexture2DCommandBuffer(
+    addCommandBuffer(new renderer::FramebufferTexture2DCommandBuffer(
         target,
         attachment,
         textarget,
@@ -974,7 +974,7 @@ namespace webgl
     }
     int target = info[0].As<Napi::Number>().Int32Value();
     auto commandBuffer = new renderer::CheckFramebufferStatusCommandBuffer(target);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     return Napi::Number::New(env, commandBuffer->m_Status);
   }
@@ -985,7 +985,7 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     auto commandBuffer = new renderer::CreateRenderbufferCommandBuffer();
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     return Napi::Number::New(env, commandBuffer->m_RenderbufferId);
   }
@@ -1001,7 +1001,7 @@ namespace webgl
       return env.Undefined();
     }
     int renderbuffer = info[0].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::DeleteRenderbufferCommandBuffer(renderbuffer));
+    addCommandBuffer(new renderer::DeleteRenderbufferCommandBuffer(renderbuffer));
     return env.Undefined();
   }
 
@@ -1026,7 +1026,7 @@ namespace webgl
     int renderbuffer = 0;
     if (info[1].IsNumber())
       renderbuffer = info[1].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::BindRenderbufferCommandBuffer(target, renderbuffer));
+    addCommandBuffer(new renderer::BindRenderbufferCommandBuffer(target, renderbuffer));
     return env.Undefined();
   }
 
@@ -1036,7 +1036,7 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     auto commandBuffer = new renderer::CreateTextureCommandBuffer();
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     return WebGLTexture::constructor->New({Napi::Number::New(env, commandBuffer->m_TextureId)});
   }
@@ -1058,7 +1058,7 @@ namespace webgl
     }
 
     auto texture = Napi::ObjectWrap<WebGLTexture>::Unwrap(info[0].As<Napi::Object>());
-    m_renderAPI->AddCommandBuffer(new renderer::DeleteTextureCommandBuffer(texture->GetId()));
+    addCommandBuffer(new renderer::DeleteTextureCommandBuffer(texture->GetId()));
     return env.Undefined();
   }
 
@@ -1097,7 +1097,7 @@ namespace webgl
       return env.Undefined();
     }
 
-    m_renderAPI->AddCommandBuffer(new renderer::BindTextureCommandBuffer(target, texture));
+    addCommandBuffer(new renderer::BindTextureCommandBuffer(target, texture));
     return env.Undefined();
   }
 
@@ -1119,7 +1119,7 @@ namespace webgl
     if (imageSource.IsNull())
     {
       /** When the image source is null, just create TexImage2DCommandBuffer with empty mode */
-      m_renderAPI->AddCommandBuffer(new renderer::TexImage2DCommandBuffer(
+      addCommandBuffer(new renderer::TexImage2DCommandBuffer(
           target,
           level,
           internalformat,
@@ -1150,7 +1150,7 @@ namespace webgl
         type,
         data.ByteLength(),
         data.Data());
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -1193,7 +1193,7 @@ namespace webgl
         type,
         data.ByteLength(),
         data.Data());
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -1211,7 +1211,7 @@ namespace webgl
     int height = info[6].As<Napi::Number>().Int32Value();
     int border = info[7].As<Napi::Number>().Int32Value();
 
-    m_renderAPI->AddCommandBuffer(new renderer::CopyTexImage2DCommandBuffer(
+    addCommandBuffer(new renderer::CopyTexImage2DCommandBuffer(
         target,
         level,
         internalformat,
@@ -1237,7 +1237,7 @@ namespace webgl
     int width = info[6].As<Napi::Number>().Int32Value();
     int height = info[7].As<Napi::Number>().Int32Value();
 
-    m_renderAPI->AddCommandBuffer(new renderer::CopyTexSubImage2DCommandBuffer(
+    addCommandBuffer(new renderer::CopyTexSubImage2DCommandBuffer(
         target,
         level,
         xoffset,
@@ -1257,7 +1257,7 @@ namespace webgl
     int target = info[0].As<Napi::Number>().Int32Value();
     int pname = info[1].As<Napi::Number>().Int32Value();
     int param = info[2].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::TexParameteriCommandBuffer(target, pname, param));
+    addCommandBuffer(new renderer::TexParameteriCommandBuffer(target, pname, param));
     return env.Undefined();
   }
 
@@ -1279,7 +1279,7 @@ namespace webgl
     }
 
     int textureUnit = info[0].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::ActiveTextureCommandBuffer(textureUnit));
+    addCommandBuffer(new renderer::ActiveTextureCommandBuffer(textureUnit));
     return env.Undefined();
   }
 
@@ -1289,7 +1289,7 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     int target = info[0].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::GenerateMipmapCommandBuffer(target));
+    addCommandBuffer(new renderer::GenerateMipmapCommandBuffer(target));
     return env.Undefined();
   }
 
@@ -1304,7 +1304,7 @@ namespace webgl
       return env.Undefined();
     }
     int index = info[0].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::EnableVertexAttribArrayCommandBuffer(index));
+    addCommandBuffer(new renderer::EnableVertexAttribArrayCommandBuffer(index));
     return env.Undefined();
   }
 
@@ -1319,7 +1319,7 @@ namespace webgl
       return env.Undefined();
     }
     int index = info[0].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::DisableVertexAttribArrayCommandBuffer(index));
+    addCommandBuffer(new renderer::DisableVertexAttribArrayCommandBuffer(index));
     return env.Undefined();
   }
 
@@ -1347,7 +1347,7 @@ namespace webgl
         normalized,
         stride,
         (char *)NULL + offset);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -1372,7 +1372,7 @@ namespace webgl
     std::string name = info[1].As<Napi::String>().Utf8Value();
 
     auto commandBuffer = new renderer::GetAttribLocationCommandBuffer(program->GetId(), name.c_str());
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     return Napi::Number::New(env, commandBuffer->m_Location);
   }
@@ -1422,7 +1422,7 @@ namespace webgl
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     float x = info[1].As<Napi::Number>().FloatValue();
-    m_renderAPI->AddCommandBuffer(new renderer::Uniform1fCommandBuffer(location->GetValue(), x));
+    addCommandBuffer(new renderer::Uniform1fCommandBuffer(location->GetValue(), x));
     return env.Undefined();
   }
 
@@ -1452,7 +1452,7 @@ namespace webgl
       data[i] = array.Get(i).ToNumber().FloatValue();
 
     auto commandBuffer = new renderer::Uniform1fvCommandBuffer(location->GetValue(), data);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -1475,7 +1475,7 @@ namespace webgl
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     int x = info[1].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::Uniform1iCommandBuffer(location->GetValue(), x));
+    addCommandBuffer(new renderer::Uniform1iCommandBuffer(location->GetValue(), x));
     return env.Undefined();
   }
 
@@ -1505,7 +1505,7 @@ namespace webgl
       data[i] = array.Get(i).ToNumber().Int32Value();
 
     auto commandBuffer = new renderer::Uniform1ivCommandBuffer(location->GetValue(), data);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -1529,7 +1529,7 @@ namespace webgl
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     float x = info[1].As<Napi::Number>().FloatValue();
     float y = info[2].As<Napi::Number>().FloatValue();
-    m_renderAPI->AddCommandBuffer(new renderer::Uniform2fCommandBuffer(location->GetValue(), x, y));
+    addCommandBuffer(new renderer::Uniform2fCommandBuffer(location->GetValue(), x, y));
     return env.Undefined();
   }
 
@@ -1564,7 +1564,7 @@ namespace webgl
       data[i] = array.Get(i).ToNumber().FloatValue();
 
     auto commandBuffer = new renderer::Uniform2fvCommandBuffer(location->GetValue(), data);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -1588,7 +1588,7 @@ namespace webgl
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     int x = info[1].As<Napi::Number>().Int32Value();
     int y = info[2].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::Uniform2iCommandBuffer(location->GetValue(), x, y));
+    addCommandBuffer(new renderer::Uniform2iCommandBuffer(location->GetValue(), x, y));
     return env.Undefined();
   }
 
@@ -1623,7 +1623,7 @@ namespace webgl
       data[i] = array.Get(i).ToNumber().Int32Value();
 
     auto commandBuffer = new renderer::Uniform2ivCommandBuffer(location->GetValue(), data);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -1648,7 +1648,7 @@ namespace webgl
     float x = info[1].As<Napi::Number>().FloatValue();
     float y = info[2].As<Napi::Number>().FloatValue();
     float z = info[3].As<Napi::Number>().FloatValue();
-    m_renderAPI->AddCommandBuffer(new renderer::Uniform3fCommandBuffer(location->GetValue(), x, y, z));
+    addCommandBuffer(new renderer::Uniform3fCommandBuffer(location->GetValue(), x, y, z));
     return env.Undefined();
   }
 
@@ -1683,7 +1683,7 @@ namespace webgl
       data[i] = array.Get(i).ToNumber().FloatValue();
 
     auto commandBuffer = new renderer::Uniform3fvCommandBuffer(location->GetValue(), data);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -1708,7 +1708,7 @@ namespace webgl
     int x = info[1].As<Napi::Number>().Int32Value();
     int y = info[2].As<Napi::Number>().Int32Value();
     int z = info[3].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::Uniform3iCommandBuffer(location->GetValue(), x, y, z));
+    addCommandBuffer(new renderer::Uniform3iCommandBuffer(location->GetValue(), x, y, z));
     return env.Undefined();
   }
 
@@ -1743,7 +1743,7 @@ namespace webgl
       data[i] = array.Get(i).ToNumber().Int32Value();
 
     auto commandBuffer = new renderer::Uniform3ivCommandBuffer(location->GetValue(), data);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -1769,7 +1769,7 @@ namespace webgl
     float y = info[2].As<Napi::Number>().FloatValue();
     float z = info[3].As<Napi::Number>().FloatValue();
     float w = info[4].As<Napi::Number>().FloatValue();
-    m_renderAPI->AddCommandBuffer(new renderer::Uniform4fCommandBuffer(location->GetValue(), x, y, z, w));
+    addCommandBuffer(new renderer::Uniform4fCommandBuffer(location->GetValue(), x, y, z, w));
     return env.Undefined();
   }
 
@@ -1804,7 +1804,7 @@ namespace webgl
       data[i] = array.Get(i).ToNumber().FloatValue();
 
     auto commandBuffer = new renderer::Uniform4fvCommandBuffer(location->GetValue(), data);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -1830,7 +1830,7 @@ namespace webgl
     int y = info[2].As<Napi::Number>().Int32Value();
     int z = info[3].As<Napi::Number>().Int32Value();
     int w = info[4].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::Uniform4iCommandBuffer(location->GetValue(), x, y, z, w));
+    addCommandBuffer(new renderer::Uniform4iCommandBuffer(location->GetValue(), x, y, z, w));
     return env.Undefined();
   }
 
@@ -1865,7 +1865,7 @@ namespace webgl
       data[i] = array.Get(i).ToNumber().Int32Value();
 
     auto commandBuffer = new renderer::Uniform4ivCommandBuffer(location->GetValue(), data);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -1904,7 +1904,7 @@ namespace webgl
         location->GetValue(),
         transpose,
         data);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -1943,7 +1943,7 @@ namespace webgl
         location->GetValue(),
         transpose,
         data);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -1982,7 +1982,7 @@ namespace webgl
         location->GetValue(),
         transpose,
         data);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -2000,7 +2000,7 @@ namespace webgl
     int first = info[1].As<Napi::Number>().Int32Value();
     int count = info[2].As<Napi::Number>().Int32Value();
 
-    m_renderAPI->AddCommandBuffer(new renderer::DrawArraysCommandBuffer(mode, first, count));
+    addCommandBuffer(new renderer::DrawArraysCommandBuffer(mode, first, count));
     return env.Undefined();
   }
 
@@ -2018,7 +2018,7 @@ namespace webgl
     int count = info[1].As<Napi::Number>().Int32Value();
     int type = info[2].As<Napi::Number>().Int32Value();
     int offset = info[3].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::DrawElementsCommandBuffer(mode, count, type, (char *)NULL + offset));
+    addCommandBuffer(new renderer::DrawElementsCommandBuffer(mode, count, type, (char *)NULL + offset));
     return env.Undefined();
   }
 
@@ -2037,7 +2037,7 @@ namespace webgl
 
     if (pname == WEBGL_PACK_ALIGNMENT || pname == WEBGL_UNPACK_ALIGNMENT)
     {
-      m_renderAPI->AddCommandBuffer(new renderer::PixelStoreiCommandBuffer(pname, param));
+      addCommandBuffer(new renderer::PixelStoreiCommandBuffer(pname, param));
     }
     else
     {
@@ -2058,7 +2058,7 @@ namespace webgl
     }
     float factor = info[0].As<Napi::Number>().FloatValue();
     float units = info[1].As<Napi::Number>().FloatValue();
-    m_renderAPI->AddCommandBuffer(new renderer::PolygonOffsetCommandBuffer(factor, units));
+    addCommandBuffer(new renderer::PolygonOffsetCommandBuffer(factor, units));
     return env.Undefined();
   }
 
@@ -2077,7 +2077,7 @@ namespace webgl
     int y = info[1].As<Napi::Number>().Int32Value();
     int width = info[2].As<Napi::Number>().Int32Value();
     int height = info[3].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::SetViewportCommandBuffer(x, y, width, height));
+    addCommandBuffer(new renderer::SetViewportCommandBuffer(x, y, width, height));
     return env.Undefined();
   }
 
@@ -2096,7 +2096,7 @@ namespace webgl
     int y = info[1].As<Napi::Number>().Int32Value();
     int width = info[2].As<Napi::Number>().Int32Value();
     int height = info[3].As<Napi::Number>().Int32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::SetScissorCommandBuffer(x, y, width, height));
+    addCommandBuffer(new renderer::SetScissorCommandBuffer(x, y, width, height));
     return env.Undefined();
   }
 
@@ -2111,7 +2111,7 @@ namespace webgl
       float g = info[1].ToNumber().FloatValue();
       float b = info[2].ToNumber().FloatValue();
       float a = info[3].ToNumber().FloatValue();
-      m_renderAPI->AddCommandBuffer(new renderer::ClearColorCommandBuffer(r, g, b, a));
+      addCommandBuffer(new renderer::ClearColorCommandBuffer(r, g, b, a));
     }
     return env.Undefined();
   }
@@ -2124,7 +2124,7 @@ namespace webgl
     if (info.Length() >= 1)
     {
       float depth = info[0].ToNumber().FloatValue();
-      m_renderAPI->AddCommandBuffer(new renderer::ClearDepthCommandBuffer(depth));
+      addCommandBuffer(new renderer::ClearDepthCommandBuffer(depth));
     }
     return env.Undefined();
   }
@@ -2137,7 +2137,7 @@ namespace webgl
     if (info.Length() >= 1)
     {
       int stencil = info[0].ToNumber().Int32Value();
-      m_renderAPI->AddCommandBuffer(new renderer::ClearStencilCommandBuffer(stencil));
+      addCommandBuffer(new renderer::ClearStencilCommandBuffer(stencil));
     }
     return env.Undefined();
   }
@@ -2163,7 +2163,7 @@ namespace webgl
     if (info.Length() >= 1)
     {
       bool flag = info[0].ToBoolean().Value();
-      m_renderAPI->AddCommandBuffer(new renderer::DepthMaskCommandBuffer(flag));
+      addCommandBuffer(new renderer::DepthMaskCommandBuffer(flag));
     }
     return env.Undefined();
   }
@@ -2176,7 +2176,7 @@ namespace webgl
     if (info.Length() >= 1)
     {
       uint32_t func = info[0].ToNumber().Uint32Value();
-      m_renderAPI->AddCommandBuffer(new renderer::DepthFuncCommandBuffer(func));
+      addCommandBuffer(new renderer::DepthFuncCommandBuffer(func));
     }
     return env.Undefined();
   }
@@ -2190,7 +2190,7 @@ namespace webgl
     {
       float near = info[0].ToNumber().FloatValue();
       float far = info[1].ToNumber().FloatValue();
-      m_renderAPI->AddCommandBuffer(new renderer::DepthRangeCommandBuffer(near, far));
+      addCommandBuffer(new renderer::DepthRangeCommandBuffer(near, far));
     }
     return env.Undefined();
   }
@@ -2205,7 +2205,7 @@ namespace webgl
       uint32_t func = info[0].ToNumber().Uint32Value();
       int ref = info[1].ToNumber().Int32Value();
       uint32_t mask = info[2].ToNumber().Uint32Value();
-      m_renderAPI->AddCommandBuffer(new renderer::StencilFuncCommandBuffer(func, ref, mask));
+      addCommandBuffer(new renderer::StencilFuncCommandBuffer(func, ref, mask));
     }
     return env.Undefined();
   }
@@ -2221,7 +2221,7 @@ namespace webgl
       uint32_t func = info[1].ToNumber().Uint32Value();
       int ref = info[2].ToNumber().Int32Value();
       uint32_t mask = info[3].ToNumber().Uint32Value();
-      m_renderAPI->AddCommandBuffer(new renderer::StencilFuncSeparateCommandBuffer(face, func, ref, mask));
+      addCommandBuffer(new renderer::StencilFuncSeparateCommandBuffer(face, func, ref, mask));
     }
     return env.Undefined();
   }
@@ -2234,7 +2234,7 @@ namespace webgl
     if (info.Length() >= 1)
     {
       uint32_t mask = info[0].ToNumber().Uint32Value();
-      m_renderAPI->AddCommandBuffer(new renderer::StencilMaskCommandBuffer(mask));
+      addCommandBuffer(new renderer::StencilMaskCommandBuffer(mask));
     }
     return env.Undefined();
   }
@@ -2248,7 +2248,7 @@ namespace webgl
     {
       uint32_t face = info[0].ToNumber().Uint32Value();
       uint32_t mask = info[1].ToNumber().Uint32Value();
-      m_renderAPI->AddCommandBuffer(new renderer::StencilMaskSeparateCommandBuffer(face, mask));
+      addCommandBuffer(new renderer::StencilMaskSeparateCommandBuffer(face, mask));
     }
     return env.Undefined();
   }
@@ -2263,7 +2263,7 @@ namespace webgl
       uint32_t fail = info[0].ToNumber().Uint32Value();
       uint32_t zfail = info[1].ToNumber().Uint32Value();
       uint32_t zpass = info[2].ToNumber().Uint32Value();
-      m_renderAPI->AddCommandBuffer(new renderer::StencilOpCommandBuffer(fail, zfail, zpass));
+      addCommandBuffer(new renderer::StencilOpCommandBuffer(fail, zfail, zpass));
     }
     return env.Undefined();
   }
@@ -2279,7 +2279,7 @@ namespace webgl
       uint32_t fail = info[1].ToNumber().Uint32Value();
       uint32_t zfail = info[2].ToNumber().Uint32Value();
       uint32_t zpass = info[3].ToNumber().Uint32Value();
-      m_renderAPI->AddCommandBuffer(new renderer::StencilOpSeparateCommandBuffer(face, fail, zfail, zpass));
+      addCommandBuffer(new renderer::StencilOpSeparateCommandBuffer(face, fail, zfail, zpass));
     }
     return env.Undefined();
   }
@@ -2295,7 +2295,7 @@ namespace webgl
       float g = info[1].ToNumber().FloatValue();
       float b = info[2].ToNumber().FloatValue();
       float a = info[3].ToNumber().FloatValue();
-      m_renderAPI->AddCommandBuffer(new renderer::BlendColorCommandBuffer(r, g, b, a));
+      addCommandBuffer(new renderer::BlendColorCommandBuffer(r, g, b, a));
     }
     return env.Undefined();
   }
@@ -2306,7 +2306,7 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     uint32_t mode = info[0].ToNumber().Uint32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::BlendEquationCommandBuffer(mode));
+    addCommandBuffer(new renderer::BlendEquationCommandBuffer(mode));
     return env.Undefined();
   }
 
@@ -2317,7 +2317,7 @@ namespace webgl
 
     uint32_t modeRGB = info[0].ToNumber().Uint32Value();
     uint32_t modeAlpha = info[1].ToNumber().Uint32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::BlendEquationSeparateCommandBuffer(modeRGB, modeAlpha));
+    addCommandBuffer(new renderer::BlendEquationSeparateCommandBuffer(modeRGB, modeAlpha));
     return env.Undefined();
   }
 
@@ -2328,7 +2328,7 @@ namespace webgl
 
     uint32_t sfactor = info[0].ToNumber().Uint32Value();
     uint32_t dfactor = info[1].ToNumber().Uint32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::BlendFuncCommandBuffer(sfactor, dfactor));
+    addCommandBuffer(new renderer::BlendFuncCommandBuffer(sfactor, dfactor));
     return env.Undefined();
   }
 
@@ -2341,7 +2341,7 @@ namespace webgl
     uint32_t dstRGB = info[1].ToNumber().Uint32Value();
     uint32_t srcAlpha = info[2].ToNumber().Uint32Value();
     uint32_t dstAlpha = info[3].ToNumber().Uint32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::BlendFuncSeparateCommandBuffer(srcRGB, dstRGB, srcAlpha, dstAlpha));
+    addCommandBuffer(new renderer::BlendFuncSeparateCommandBuffer(srcRGB, dstRGB, srcAlpha, dstAlpha));
     return env.Undefined();
   }
 
@@ -2354,7 +2354,7 @@ namespace webgl
     bool g = info[1].ToBoolean().Value();
     bool b = info[2].ToBoolean().Value();
     bool a = info[3].ToBoolean().Value();
-    m_renderAPI->AddCommandBuffer(new renderer::ColorMaskCommandBuffer(r, g, b, a));
+    addCommandBuffer(new renderer::ColorMaskCommandBuffer(r, g, b, a));
     return env.Undefined();
   }
 
@@ -2364,7 +2364,7 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     uint32_t mode = info[0].ToNumber().Uint32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::CullFaceCommandBuffer(mode));
+    addCommandBuffer(new renderer::CullFaceCommandBuffer(mode));
     return env.Undefined();
   }
 
@@ -2374,7 +2374,7 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     uint32_t mode = info[0].ToNumber().Uint32Value();
-    m_renderAPI->AddCommandBuffer(new renderer::FrontFaceCommandBuffer(mode));
+    addCommandBuffer(new renderer::FrontFaceCommandBuffer(mode));
     return env.Undefined();
   }
 
@@ -2386,7 +2386,7 @@ namespace webgl
     if (info.Length() >= 1)
     {
       uint32_t mask = info[0].ToNumber().Uint32Value();
-      m_renderAPI->AddCommandBuffer(new renderer::EnableCommandBuffer(mask));
+      addCommandBuffer(new renderer::EnableCommandBuffer(mask));
     }
     return env.Undefined();
   }
@@ -2399,7 +2399,7 @@ namespace webgl
     if (info.Length() >= 1)
     {
       uint32_t mask = info[0].ToNumber().Uint32Value();
-      m_renderAPI->AddCommandBuffer(new renderer::DisableCommandBuffer(mask));
+      addCommandBuffer(new renderer::DisableCommandBuffer(mask));
     }
     return env.Undefined();
   }
@@ -2440,7 +2440,7 @@ namespace webgl
       case WEBGL_UNPACK_COLORSPACE_CONVERSION_WEBGL:
       {
         auto commandBuffer = new renderer::GetIntegervCommandBuffer(pname);
-        m_renderAPI->AddCommandBuffer(commandBuffer);
+        addCommandBuffer(commandBuffer);
         commandBuffer->WaitFinished();
         return Napi::Number::New(env, commandBuffer->m_Value);
       }
@@ -2458,7 +2458,7 @@ namespace webgl
       case WEBGL_UNPACK_PREMULTIPLY_ALPHA_WEBGL:
       {
         auto commandBuffer = new renderer::GetBooleanvCommandBuffer(pname);
-        m_renderAPI->AddCommandBuffer(commandBuffer);
+        addCommandBuffer(commandBuffer);
         commandBuffer->WaitFinished();
         return Napi::Boolean::New(env, commandBuffer->m_Value);
       }
@@ -2489,7 +2489,7 @@ namespace webgl
       case WEBGL_UNPACK_ALIGNMENT:
       {
         auto commandBuffer = new renderer::GetIntegervCommandBuffer(pname);
-        m_renderAPI->AddCommandBuffer(commandBuffer);
+        addCommandBuffer(commandBuffer);
         commandBuffer->WaitFinished();
         return Napi::Number::New(env, commandBuffer->m_Value);
       }
@@ -2500,7 +2500,7 @@ namespace webgl
       case WEBGL_VERSION:
       {
         auto commandBuffer = new renderer::GetStringCommandBuffer(pname);
-        m_renderAPI->AddCommandBuffer(commandBuffer);
+        addCommandBuffer(commandBuffer);
         commandBuffer->WaitFinished();
         return Napi::String::New(env, commandBuffer->m_Value);
       }
@@ -2532,7 +2532,7 @@ namespace webgl
     int precisiontype = info[1].As<Napi::Number>().Int32Value();
 
     auto commandBuffer = new renderer::GetShaderPrecisionFormatCommandBuffer(shadertype, precisiontype);
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer);
     commandBuffer->WaitFinished();
     Napi::Object obj = Napi::Object::New(env);
     obj.Set("rangeMin", Napi::Number::New(env, commandBuffer->m_RangeMin));
@@ -2546,7 +2546,7 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     auto commandBuffer = new renderer::GetErrorCommandBuffer();
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer, true);
     commandBuffer->WaitFinished();
     return Napi::Number::New(env, commandBuffer->m_Error);
   }
@@ -2557,7 +2557,7 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     auto commandBuffer = new renderer::GetSupportedExtensionsCommandBuffer();
-    m_renderAPI->AddCommandBuffer(commandBuffer);
+    addCommandBuffer(commandBuffer, true);
     commandBuffer->WaitFinished();
 
     Napi::Array extensionsArray = Napi::Array::New(env, commandBuffer->m_Extensions.size());
@@ -2601,5 +2601,25 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     Napi::TypeError::New(env, "drawingBufferHeight is readonly.").ThrowAsJavaScriptException();
+  }
+
+  bool WebGLRenderingContext::addCommandBuffer(renderer::CommandBuffer *commandBuffer, bool useDefaultQueue)
+  {
+    if (m_XRCompatible == true && useDefaultQueue == false)
+    {
+      auto device = xr::Device::GetInstance();
+      assert(device != nullptr);
+
+      if (device->isInFrame())
+      {
+        device->addCommandBufferToFrame(commandBuffer);
+        return true;
+      }
+      // If not in XR frame, add the command buffer to the default render queue.
+    }
+
+    // Otherwise, add the command buffer to the default render queue.
+    m_renderAPI->AddCommandBuffer(commandBuffer);
+    return true;
   }
 }

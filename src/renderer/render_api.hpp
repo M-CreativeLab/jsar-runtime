@@ -73,6 +73,7 @@ public:
    */
   FrameExecutionCode ExecuteFrame();
   virtual void ExecuteCommandBuffer() = 0;
+  virtual void ExecuteCommandBuffer(vector<renderer::CommandBuffer *> &commandBuffers, bool logCalls) = 0;
   void AddCommandBuffer(renderer::CommandBuffer *commandBuffer);
   size_t GetCommandBuffersCount();
   void SetTime(float time) { this->time = time; }

@@ -40,7 +40,8 @@ class XRViewSpace extends XRSpace {
    * Called when this space's base pose needs to be updated
    */
   _onPoseUpdate(_device: XRDevice, frameContext: DeviceFrameContext): void {
-    this._inverseBaseMatrix = frameContext.viewerViewMatrix;
+    // this._inverseBaseMatrix = frameContext.viewerViewMatrix;
+    this._baseMatrix = frameContext.viewerViewMatrix;
   }
 }
 
@@ -79,6 +80,11 @@ export type DeviceFrameContext = {
    * the implementation will create only 1 view in every frame callback.
    */
   type: string;
+  /**
+   * The stereo id is used to identify the stereo rendering frame, in multipass rendering, a stereo id contains 2 frames, one for
+   * left eye and one for right eye.
+   */
+  stereoId: number;
   /**
    * The session id is used to identify the session that the frame belongs to. Especially at the JSAR implementation, a session
    * stands for an application, the implementation will dispatch to the corresponding session's frame callback by this id.
@@ -236,7 +242,7 @@ export default class XRSession extends EventTarget {
       // - Set frame’s animationFrame boolean to true.
       frame[XRFRAME_PRIVATE].animationFrame = true;
 
-      this[PRIVATE].device.onFrameStart(this[PRIVATE].id, this[PRIVATE].activeRenderState);
+      this[PRIVATE].device.onFrameStart(this[PRIVATE].id, context, this[PRIVATE].activeRenderState);
       // inputSources can be populated in .onFrameStart()
       // so check the change and fire inputsourceschange event if needed
       this._checkInputSourcesChange();
@@ -259,8 +265,7 @@ export default class XRSession extends EventTarget {
 
       // - Set frame’s active boolean to false.
       frame[XRFRAME_PRIVATE].active = false;
-
-      this[PRIVATE].device.onFrameEnd(this[PRIVATE].id);
+      this[PRIVATE].device.onFrameEnd(this[PRIVATE].id, context);
     };
 
     this[PRIVATE].startDeviceFrameLoop = () => {
@@ -294,6 +299,7 @@ export default class XRSession extends EventTarget {
 
           this[PRIVATE].onDeviceFrame(time, {
             type: nativeFrameCtx.type,
+            stereoId: nativeFrameCtx.stereoId,
             sessionId: session.sessionId,
             localTransform: session.localTransform,
             viewerTransform: nativeFrameCtx.viewerTransform,

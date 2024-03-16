@@ -24,7 +24,7 @@ file(GLOB TRANSMUTE_CORE_SOURCE
     "src/bindings/webgl/*.cpp"
     "src/bindings/webxr/*.cpp"
     # "src/bindings/**/*.cpp"
-    # "src/math/*.cpp"
+    "src/math/*.cpp"
     "src/runtime/*.cpp"
     "src/renderer/*.cpp"
     "src/xr/*.cpp"
@@ -41,6 +41,7 @@ add_library(TransmuteCore SHARED ${TRANSMUTE_CORE_SOURCE} ${TRANSMUTE_PROTO_SOUR
 
 target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${CMAKE_SOURCE_DIR}/proto)
+target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/headers)
 
 # Add Node.js headers
 set(NODEJS_VERSION 18.12.1)
@@ -64,6 +65,10 @@ target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${LABSOUND_HEADERS_
 # Add Unity headers
 set(UNITY_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/Unity/include)
 target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${UNITY_HEADERS_PATH})
+
+# Add Glm headers
+include(thirdparty/headers/glm/CMakeLists.txt)
+target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE glm::glm-header-only)
 
 # Add rust crates headers & libraries
 target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${CMAKE_SOURCE_DIR}/build/output/headers)
