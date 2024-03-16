@@ -32,6 +32,7 @@ namespace xr
     void start();
     void end();
     bool ended();
+    bool isMultiPass();
     float getTimestamp();
     float *getViewerTransform();
     FrameContextBySessionId *addSession(int sessionId);
@@ -41,6 +42,7 @@ namespace xr
 
   protected:
     bool m_Ended = false;
+    bool m_IsMultiPass = false;
     float m_Timestamp = 0;
     float m_ViewerTransform[16];
     std::map<int, FrameContextBySessionId *> m_Sessions;

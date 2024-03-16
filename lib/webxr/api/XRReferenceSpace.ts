@@ -14,12 +14,11 @@
  */
 
 import { mat4 } from 'gl-matrix';
-import XRRigidTransform from './XRRigidTransform';
-import XRSpace from './XRSpace';
+import XRRigidTransform, { XRMatrixPlaceholderType, XRRigidTransformPlaceholder } from './XRRigidTransform';
+import XRSpace, { XRViewSpace } from './XRSpace';
 
 const DEFAULT_EMULATION_HEIGHT = 1.6;
 export const PRIVATE = Symbol('@@webxr-polyfill/XRReferenceSpace');
-
 export const XRReferenceSpaceTypes = [
   'viewer',
   'local',
@@ -117,7 +116,24 @@ export default class XRReferenceSpace extends XRSpace {
   _getSpaceRelativeTransform(space: XRSpace): XRRigidTransform {
     const transform = super._getSpaceRelativeTransform(space);
     // TODO: Optimize away double creation of XRRigidTransform
-    this._adjustForOriginOffset(transform.matrix)
+    this._adjustForOriginOffset(transform.matrix);
+
+    if (space instanceof XRViewSpace) {
+      const currentType = this[PRIVATE].type;
+      if (currentType === 'local') {
+        return new XRRigidTransformPlaceholder(
+          XRMatrixPlaceholderType.VIEW_MATRIX_RELATIVE_TO_LOCAL, transform.matrix);
+      }
+      if (currentType === 'local-floor') {
+        return new XRRigidTransformPlaceholder(
+          XRMatrixPlaceholderType.VIEW_MATRIX_RELATIVE_TO_LOCAL_FLOOR, transform.matrix);
+      }
+      if (currentType === 'unbounded') {
+        return new XRRigidTransformPlaceholder(
+          XRMatrixPlaceholderType.VIEW_MATRIX, transform.matrix);
+      }
+      // Supports more types?
+    }
     return new XRRigidTransform(transform.matrix);
   }
 

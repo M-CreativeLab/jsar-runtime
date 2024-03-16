@@ -123,6 +123,19 @@ namespace renderer
     kCommandTypeGetError,
   };
 
+  enum MatrixPlaceholderType
+  {
+    kMatrixPlaceholderProjection = 10,
+    kMatrixPlaceholderInverseProjection = 11,
+    kMatrixPlaceholderView = 20,
+    kMatrixPlaceholderInverseView = 21,
+    kMatrixPlaceholderViewRelativeToLocal = 30,
+    kMatrixPlaceholderInverseViewRelativeToLocal = 31,
+    kMatrixPlaceholderViewRelativeToLocalFloor = 40,
+    kMatrixPlaceholderInverseViewRelativeToLocalFloor = 41,
+    kMatrixPlaceholderNotSet = -1
+  };
+
   class CommandBuffer
   {
   public:
@@ -1214,16 +1227,27 @@ namespace renderer
   public:
     UniformMatrix4fvCommandBuffer(int location, bool transpose, std::vector<float> values) : CommandBuffer(kCommandTypeUniformMatrix4fv),
                                                                                              m_Location(location),
+                                                                                             m_Count(1),
                                                                                              m_Transpose(transpose)
     {
       m_Value = new float[values.size()];
       for (int i = 0; i < values.size(); i++)
         m_Value[i] = values[i];
-      m_Count = 1; // webgl only supports 1 matrix
     }
+
+    UniformMatrix4fvCommandBuffer(int location, bool transpose, MatrixPlaceholderType matrixPlaceholderType) : CommandBuffer(kCommandTypeUniformMatrix4fv),
+                                                                                                               m_Location(location),
+                                                                                                               m_Count(1),
+                                                                                                               m_Transpose(transpose),
+                                                                                                               m_MatrixPlaceholderType(matrixPlaceholderType) {}
     ~UniformMatrix4fvCommandBuffer()
     {
       delete[] m_Value;
+    }
+
+    bool isMatrixPlaceholderType()
+    {
+      return m_MatrixPlaceholderType != MatrixPlaceholderType::kMatrixPlaceholderNotSet;
     }
 
   public:
@@ -1231,6 +1255,7 @@ namespace renderer
     int m_Count;
     bool m_Transpose;
     float *m_Value;
+    MatrixPlaceholderType m_MatrixPlaceholderType = MatrixPlaceholderType::kMatrixPlaceholderNotSet;
   };
 
   class DrawArraysCommandBuffer : public CommandBuffer

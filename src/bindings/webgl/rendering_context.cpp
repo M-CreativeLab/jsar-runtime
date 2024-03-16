@@ -1967,22 +1967,37 @@ namespace webgl
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     bool transpose = info[1].As<Napi::Boolean>().Value();
     Napi::Float32Array array = info[2].As<Napi::Float32Array>();
-    size_t length = array.ElementLength();
-    if (length != 16)
+
+    // Check the array is a "MatrixPlaceholder", if own `_isXRMatrixPlaceholder` property and to be true
+    string xrMatrixPlaceholderField = "_isXRMatrixPlaceholder";
+    if (array.Has(xrMatrixPlaceholderField) && array.Get(xrMatrixPlaceholderField).ToBoolean().Value() == true)
     {
-      Napi::TypeError::New(env, "uniformMatrix4fv() takes 16 float elements array.").ThrowAsJavaScriptException();
-      return env.Undefined();
+      auto typeOfMatrixPlaceholder = array.Get("type").ToNumber().Int32Value();
+      auto commandBuffer = new renderer::UniformMatrix4fvCommandBuffer(
+          location->GetValue(),
+          transpose,
+          (renderer::MatrixPlaceholderType)typeOfMatrixPlaceholder);
+      addCommandBuffer(commandBuffer);
     }
+    else
+    {
+      size_t length = array.ElementLength();
+      if (length != 16)
+      {
+        Napi::TypeError::New(env, "uniformMatrix4fv() takes 16 float elements array.").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
 
-    std::vector<float> data(length);
-    for (size_t i = 0; i < length; i++)
-      data[i] = array.Get(i).ToNumber().FloatValue();
+      std::vector<float> data(length);
+      for (size_t i = 0; i < length; i++)
+        data[i] = array.Get(i).ToNumber().FloatValue();
 
-    auto commandBuffer = new renderer::UniformMatrix4fvCommandBuffer(
-        location->GetValue(),
-        transpose,
-        data);
-    addCommandBuffer(commandBuffer);
+      auto commandBuffer = new renderer::UniformMatrix4fvCommandBuffer(
+          location->GetValue(),
+          transpose,
+          data);
+      addCommandBuffer(commandBuffer);
+    }
     return env.Undefined();
   }
 

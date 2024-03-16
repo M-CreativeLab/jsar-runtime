@@ -22,6 +22,7 @@ namespace xr
   void DeviceFrame::start() { m_Ended = false; }
   void DeviceFrame::end() { m_Ended = true; }
   bool DeviceFrame::ended() { return m_Ended; }
+  bool DeviceFrame::isMultiPass() { return m_IsMultiPass; }
   float DeviceFrame::getTimestamp() { return m_Timestamp; }
   float *DeviceFrame::getViewerTransform() { return m_ViewerTransform; }
 
@@ -56,6 +57,7 @@ namespace xr
       float *viewerProjectionMatrix,
       float timestamp) : DeviceFrame()
   {
+    m_IsMultiPass = true;
     m_CurrentStereoId = stereoId;
     m_ActiveEyeId = eyeId;
     m_Timestamp = timestamp;

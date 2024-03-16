@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 import { mat4, vec3, quat } from 'gl-matrix';
-import * as logger from '../../bindings/logger';
 export const PRIVATE = Symbol('@@webxr-polyfill/XRRigidTransform');
 
 type Quaternion = {
@@ -22,6 +21,54 @@ type Quaternion = {
   z: number,
   w: number,
 };
+
+/**
+ * A XR matrix placeholder is to represent a matrix that is not used immediately in JSAR's rendering pipeline.
+ * 
+ * The projection and view matrix in headset's rendering pipeline is such important that it's related to XR experience. In JSAR
+ * WebXR implementation, we have to render Web-provided content in delayed frames without blocking the main rendering thread.
+ * Thus when a render command is submitted to the main render queue, it uses the old matrices to render with new frame, it will
+ * cause a visual glitch.
+ * 
+ * To address this issue, we introduce the `XRMatrixPlaceholder` to represent a matrix such as view matrix, when the main renderer
+ * is to get a `XRMatrixPlaceholder` matrix, it will know how to read the real-time matrix from main thread, thus it can get the
+ * correct matrix to render the frame, and the visual glitch is avoided.
+ * 
+ * More exactly, the result of rendering JSAR's WebXR frame is a real-time view/projection matrix plus the old content, even if
+ * the content is delayed, but we keep the visual consistency, right?
+ */
+export enum XRMatrixPlaceholderType {
+  PROJECTION_MATRIX = 10,
+  INVERSE_PROJECTION_MATRIX = 11,
+  VIEW_MATRIX = 20,
+  INVERSE_VIEW_MATRIX = 21,
+  VIEW_MATRIX_RELATIVE_TO_LOCAL = 30,
+  INVERSE_VIEW_MATRIX_RELATIVE_TO_LOCAL = 31,
+  VIEW_MATRIX_RELATIVE_TO_LOCAL_FLOOR = 40,
+  INVERSE_VIEW_MATRIX_RELATIVE_TO_LOCAL_FLOOR = 41,
+  /**
+   * More view matrix types can be added here.
+   * 
+   * It depends on the reference space type, by usual the view matrix in userland is returned in:
+   * 
+   * ```
+   * const baseSpace = xrSession.requestReferenceSpace('local');  // or 'local-floor' or 'bounded-floor' and others
+   * xrSession.requestAnimationFrame((time, frame) => {
+   *   const pose = frame.getViewerPose(baseSpace);
+   *   const viewMatrix = pose.views[0].transform.matrix; // this matrix is the view matrix relative to the baseSpace.
+   * });
+   * ```
+   */
+}
+
+export class XRMatrixPlaceholder extends Float32Array {
+  type: XRMatrixPlaceholderType;
+  _isXRMatrixPlaceholder = true;
+  constructor(from: Float32Array, type: XRMatrixPlaceholderType) {
+    super(from);
+    this.type = type;
+  }
+}
 
 export default class XRRigidTransform {
   [PRIVATE]: {
@@ -129,5 +176,34 @@ export default class XRRigidTransform {
       this[PRIVATE].inverse[PRIVATE].inverse = this;
     }
     return this[PRIVATE].inverse;
+  }
+}
+
+export class XRRigidTransformPlaceholder extends XRRigidTransform {
+  matrixPlaceholderType: XRMatrixPlaceholderType;
+  constructor(type: XRMatrixPlaceholderType, positionOrMatrix?: Quaternion | Float32Array, orientation?: Quaternion) {
+    super(positionOrMatrix, orientation);
+    this.matrixPlaceholderType = type;
+  }
+
+  get matrix() {
+    return new XRMatrixPlaceholder(super.matrix, this.matrixPlaceholderType);
+  }
+
+  get inverse() {
+    let type: XRMatrixPlaceholderType;
+    switch (this.matrixPlaceholderType % 10) {
+      case 0:
+        /** 10, 20, 30... means base matrix, so just +1 to mark it as the inverse matrix */
+        type = this.matrixPlaceholderType + 1;
+        break;
+      case 1:
+        /** 11, 21, 31... means inverse matrix, so just -1 to mark it as the base matrix */
+        type = this.matrixPlaceholderType - 1;
+        break;
+      default:
+        throw new TypeError('The matrix placeholder type is invalid.');
+    }
+    return new XRRigidTransformPlaceholder(type, super.inverse.matrix);
   }
 }

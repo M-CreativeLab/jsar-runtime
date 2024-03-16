@@ -21,29 +21,11 @@ import XRReferenceSpace, {
 import XRRenderState, { type XRRenderStateInit } from './XRRenderState';
 // import XRInputSourceEvent from './XRInputSourceEvent';
 import XRSessionEvent from './XRSessionEvent';
-import XRSpace from './XRSpace';
+import { XRViewSpace } from './XRSpace';
 // import XRInputSourcesChangeEvent from './XRInputSourcesChangeEvent';
 import * as logger from '../../bindings/logger';
 
 export const PRIVATE = Symbol('@@webxr-polyfill/XRSession');
-
-// Nonstandard helper class. Not exposed by the API anywhere.
-class XRViewSpace extends XRSpace {
-  get eye(): XREye {
-    if (this._specialType !== 'left' && this._specialType !== 'right' && this._specialType !== 'none') {
-      throw new Error('XRViewSpace eye property is only available for left and right view spaces');
-    }
-    return <XREye>this._specialType;
-  }
-
-  /**
-   * Called when this space's base pose needs to be updated
-   */
-  _onPoseUpdate(_device: XRDevice, frameContext: DeviceFrameContext): void {
-    // this._inverseBaseMatrix = frameContext.viewerViewMatrix;
-    this._baseMatrix = frameContext.viewerViewMatrix;
-  }
-}
 
 type XRFrameCallbackDescriptor = {
   handle: number;

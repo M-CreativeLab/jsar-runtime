@@ -59,11 +59,15 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 		}
 		jsRenderLoop->frameCallback(deviceFrame);
 
-		device->iterateStereoRenderingFrames([this, eyeId](xr::StereoRenderingFrame *frame)
+		device->iterateStereoRenderingFrames([this, deviceFrame](xr::StereoRenderingFrame *frame)
 																				 {
-																					 if (!frame->ended())	// skip the frame if it's not ended yet
+																					 if (!frame->ended()) // skip the frame if it's not ended yet
 																						 return;
-																					 ExecuteCommandBuffer(frame->getCommandBuffers(eyeId), true); });
+
+																					 int eyeId = deviceFrame->getActiveEyeId();
+																					 ExecuteCommandBuffer(frame->getCommandBuffers(eyeId), deviceFrame, true);
+																					 // end
+																				 });
 
 		// when the eyeId is 1, clear the stereo rendering frames
 		if (eyeId == 1)

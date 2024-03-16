@@ -15,8 +15,11 @@
 
 import { type XRDevice } from '../devices';
 import { type DeviceFrameContext } from './XRSession';
-import type XRRigidTransform from './XRRigidTransform';
 import type XRWebGLLayer from './XRWebGLLayer';
+import XRRigidTransform, {
+  XRMatrixPlaceholderType,
+  XRMatrixPlaceholder
+} from './XRRigidTransform';
 import XRViewport from './XRViewport';
 
 const XREyes = ['left', 'right', 'none'];
@@ -75,7 +78,11 @@ export default class XRView {
    * @return {Float32Array}
    */
   get projectionMatrix() {
-    return this[PRIVATE].frameContext.viewerProjectionMatrix;
+    const { frameContext } = this[PRIVATE];
+    return new XRMatrixPlaceholder(
+      frameContext.viewerProjectionMatrix,
+      XRMatrixPlaceholderType.PROJECTION_MATRIX
+    );
   }
 
   /**

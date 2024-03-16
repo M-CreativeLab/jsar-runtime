@@ -4,6 +4,7 @@
 
 #include "render_api.hpp"
 #include "runtime/platform_base.hpp"
+#include "xr/device.hpp"
 
 // OpenGL Core profile (desktop) or OpenGL ES (mobile) implementation of RenderAPI.
 // Supports several flavors: Core, ES2, ES3
@@ -93,7 +94,10 @@ public:
 	virtual void StartFrame();
 	virtual void EndFrame();
 	void ExecuteCommandBuffer();
-	void ExecuteCommandBuffer(vector<renderer::CommandBuffer *> &commandBuffers, bool logCalls);
+	void ExecuteCommandBuffer(
+			vector<renderer::CommandBuffer *> &commandBuffers,
+			xr::DeviceFrame *deviceFrame,
+			bool logCalls);
 
 private:
 	void CreateResources();
@@ -467,10 +471,13 @@ void RenderAPI_OpenGLCoreES::EndFrame()
 void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 {
 	std::unique_lock<std::mutex> lock(m_CommandBuffersMutex);
-	ExecuteCommandBuffer(m_CommandBuffers, false);
+	ExecuteCommandBuffer(m_CommandBuffers, nullptr, false);
 }
 
-void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(vector<renderer::CommandBuffer *> &commandBuffers, bool logCalls)
+void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
+		vector<renderer::CommandBuffer *> &commandBuffers,
+		xr::DeviceFrame *deviceFrame,
+		bool logCalls)
 {
 	// Execute all the command buffers
 	for (auto commandBuffer : commandBuffers)
@@ -1148,20 +1155,51 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(vector<renderer::CommandBuffer
 		}
 		case kCommandTypeUniformMatrix4fv:
 		{
+			float *matrixToUse = nullptr;
 			auto uniformMatrix4fvCommandBuffer = static_cast<UniformMatrix4fvCommandBuffer *>(commandBuffer);
-			glUniformMatrix4fv(
-					uniformMatrix4fvCommandBuffer->m_Location,
-					uniformMatrix4fvCommandBuffer->m_Count,
-					uniformMatrix4fvCommandBuffer->m_Transpose,
-					uniformMatrix4fvCommandBuffer->m_Value);
+			if (
+					uniformMatrix4fvCommandBuffer->isMatrixPlaceholderType() &&
+					(deviceFrame != nullptr && deviceFrame->isMultiPass()) // support for singlepass?
+			)
+			{
+				auto multiPassFrame = static_cast<xr::MultiPassFrame *>(deviceFrame);
+				auto placeholderType = uniformMatrix4fvCommandBuffer->m_MatrixPlaceholderType;
+				switch (placeholderType)
+				{
+				case MatrixPlaceholderType::kMatrixPlaceholderProjection:
+					matrixToUse = multiPassFrame->getViewerProjectionMatrix();
+					break;
+				case MatrixPlaceholderType::kMatrixPlaceholderView:
+				case MatrixPlaceholderType::kMatrixPlaceholderViewRelativeToLocal: // temp set for view matrix
+				case MatrixPlaceholderType::kMatrixPlaceholderViewRelativeToLocalFloor:
+					matrixToUse = multiPassFrame->getViewerViewMatrix();
+					break;
+				default:
+					break;
+				}
+			}
+			if (matrixToUse == nullptr)
+				matrixToUse = uniformMatrix4fvCommandBuffer->m_Value;
+
+			if (matrixToUse == nullptr)
+			{
+				DEBUG("Unity", "UniformMatrix4fv() fails to read the matrix value.");
+			}
+			else
+			{
+				glUniformMatrix4fv(
+						uniformMatrix4fvCommandBuffer->m_Location,
+						uniformMatrix4fvCommandBuffer->m_Count,
+						uniformMatrix4fvCommandBuffer->m_Transpose,
+						matrixToUse);
+			}
+
 			if (logCalls)
 			{
-				DEBUG("Unity", "UniformMatrix4fv: %d", uniformMatrix4fvCommandBuffer->m_Location);
-				DEBUG("Unity", "UniformMatrix4fv: values = \n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f",
-							uniformMatrix4fvCommandBuffer->m_Value[0], uniformMatrix4fvCommandBuffer->m_Value[1], uniformMatrix4fvCommandBuffer->m_Value[2], uniformMatrix4fvCommandBuffer->m_Value[3],
-							uniformMatrix4fvCommandBuffer->m_Value[4], uniformMatrix4fvCommandBuffer->m_Value[5], uniformMatrix4fvCommandBuffer->m_Value[6], uniformMatrix4fvCommandBuffer->m_Value[7],
-							uniformMatrix4fvCommandBuffer->m_Value[8], uniformMatrix4fvCommandBuffer->m_Value[9], uniformMatrix4fvCommandBuffer->m_Value[10], uniformMatrix4fvCommandBuffer->m_Value[11],
-							uniformMatrix4fvCommandBuffer->m_Value[12], uniformMatrix4fvCommandBuffer->m_Value[13], uniformMatrix4fvCommandBuffer->m_Value[14], uniformMatrix4fvCommandBuffer->m_Value[15]);
+				DEBUG("Unity", "UniformMatrix4fv: %d %d %d",
+							uniformMatrix4fvCommandBuffer->m_Location,
+							uniformMatrix4fvCommandBuffer->m_Count,
+							uniformMatrix4fvCommandBuffer->m_Transpose);
 			}
 			break;
 		}
