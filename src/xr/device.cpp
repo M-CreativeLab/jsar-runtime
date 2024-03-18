@@ -94,11 +94,31 @@ namespace xr
     return m_StereoRenderingFrames.back();
   }
 
-  void Device::iterateStereoRenderingFrames(std::function<void(StereoRenderingFrame *)> callback)
+  bool Device::iterateStereoRenderingFrames(std::function<void(StereoRenderingFrame *)> callback)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
+    bool called = false;
     for (auto frame : m_StereoRenderingFrames)
+    {
+      if (!frame->ended())
+        continue;
       callback(frame);
+      called = true;
+    }
+
+    /**
+     * When the `called` is false, it means the current frames are not ended, so we need to render by the last frame.
+     */
+    if (called == false)
+    {
+      for (auto frame : m_LastStereoRenderingFrames)
+      {
+        if (!frame->ended())
+          continue;
+        callback(frame);
+      }
+    }
+    return called;
   }
 
   void Device::clearStereoRenderingFrames(bool clearAll)
@@ -109,15 +129,29 @@ namespace xr
       for (auto frame : m_StereoRenderingFrames)
         delete frame;
       m_StereoRenderingFrames.clear();
+      for (auto frame : m_LastStereoRenderingFrames)
+        delete frame;
+      m_LastStereoRenderingFrames.clear();
       return;
     }
     else
     {
+      /**
+       * 1. Clear the last rendering frames
+       */
+      for (auto frame : m_LastStereoRenderingFrames)
+        delete frame;
+      m_LastStereoRenderingFrames.clear();
+
+      /**
+       * 2. Copy the ended frames to the last frames, and then erase it.
+       */
       for (auto it = m_StereoRenderingFrames.begin(); it != m_StereoRenderingFrames.end();)
       {
         if ((*it)->ended())
         {
-          delete *it;
+          auto frame = *it;
+          m_LastStereoRenderingFrames.push_back(frame);
           it = m_StereoRenderingFrames.erase(it);
         }
         else
@@ -286,14 +320,17 @@ namespace xr
     return true;
   }
 
-  bool Device::updateViewerStereoProjectionMatrix(int eyeId, float *transform)
+  bool Device::updateViewerStereoProjectionMatrix(int eyeId, float *matrix)
   {
     if (eyeId != 0 && eyeId != 1)
       return false; // Invalid eye id (0 or 1)
 
     std::lock_guard<std::mutex> lock(m_Mutex);
     for (int i = 0; i < 16; i++)
-      m_ViewerStereoProjectionMatrix[eyeId][i] = transform[i];
+    {
+      float v = matrix[i];
+      m_ViewerStereoProjectionMatrix[eyeId][i] = v;
+    }
     m_ActiveEyeId = eyeId;
     return true;
   }

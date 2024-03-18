@@ -61,9 +61,6 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 
 		device->iterateStereoRenderingFrames([this, deviceFrame](xr::StereoRenderingFrame *frame)
 																				 {
-																					 if (!frame->ended()) // skip the frame if it's not ended yet
-																						 return;
-
 																					 int eyeId = deviceFrame->getActiveEyeId();
 																					 ExecuteCommandBuffer(frame->getCommandBuffers(eyeId), deviceFrame, true);
 																					 // end
