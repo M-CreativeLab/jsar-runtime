@@ -706,7 +706,10 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return this.nativeCall('viewport', [x, y, width, height]);
   }
   makeXRCompatible(): Promise<void> {
-    return super.makeXRCompatible();
+    return new Promise<void>((resolve) => {
+      super.makeXRCompatible();
+      resolve();
+    });
   }
   bufferData(target: number, size: number, usage: number): void;
   bufferData(target: number, data: BufferSource, usage: number): void;

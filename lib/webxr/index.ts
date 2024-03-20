@@ -1,8 +1,9 @@
-import XRSystem from './api/XRSystem';
-import XRSession from './api/XRSession';
-import XRWebGLLayer from './api/XRWebGLLayer';
-import XRFrame from './api/XRFrame';
-import XRView from './api/XRView';
+import XRSystemImpl from './api/XRSystem';
+import XRSessionImpl from './api/XRSession';
+import XRRigidTransformImpl from './api/XRRigidTransform';
+import XRWebGLLayerImpl from './api/XRWebGLLayer';
+import XRFrameImpl from './api/XRFrame';
+import XRViewImpl from './api/XRView';
 import { type XRDevice, XRNativeDevice } from './devices';
 
 let xrDevice: XRDevice = null;
@@ -17,13 +18,14 @@ export function createBondXRSystem(sessionId: number): XRSystem {
   if (xrDevice == null) {
     throw new Error('Failed to create XR system, please call prepareXRSystem() first.');
   }
-  return new XRSystem(xrDevice, sessionId);
+  return new XRSystemImpl(xrDevice, sessionId);
 }
 
 export {
-  XRSystem,
-  XRSession,
-  XRWebGLLayer,
-  XRFrame,
-  XRView,
+  XRSystemImpl,
+  XRSessionImpl,
+  XRRigidTransformImpl,
+  XRWebGLLayerImpl,
+  XRFrameImpl,
+  XRViewImpl,
 }

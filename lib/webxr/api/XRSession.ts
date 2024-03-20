@@ -14,14 +14,13 @@
  */
 
 import { XRDevice } from '../devices';
-import XRFrame, { PRIVATE as XRFRAME_PRIVATE } from './XRFrame';
-import XRReferenceSpace, {
-  XRReferenceSpaceTypes
-} from './XRReferenceSpace';
-import XRRenderState, { type XRRenderStateInit } from './XRRenderState';
+import { XRViewSpace } from './XRSpace';
+import XRFrameImpl, { PRIVATE as XRFRAME_PRIVATE } from './XRFrame';
+import XRReferenceSpaceImpl, { XRReferenceSpaceTypes } from './XRReferenceSpace';
+import XRRenderStateImpl, { type XRRenderStateInit } from './XRRenderState';
+import type XRWebGLLayerImpl from './XRWebGLLayer';
 // import XRInputSourceEvent from './XRInputSourceEvent';
 import XRSessionEvent from './XRSessionEvent';
-import { XRViewSpace } from './XRSpace';
 // import XRInputSourcesChangeEvent from './XRInputSourcesChangeEvent';
 import * as logger from '../../bindings/logger';
 
@@ -105,7 +104,27 @@ class SessionInternalEvent extends Event {
   inputSource: any;
 }
 
-export default class XRSession extends EventTarget {
+export default class XRSessionImpl extends EventTarget implements XRSession {
+  visibilityState: XRVisibilityState;
+  domOverlayState?: XRDOMOverlayState;
+  frameRate?: number;
+  supportedFrameRates?: Float32Array;
+  preferredReflectionFormat?: XRReflectionFormat;
+  depthUsage: XRDepthUsage;
+  depthDataFormat: XRDepthDataFormat;
+  enabledFeatures: string[];
+
+  onend: XRSessionEventHandler;
+  oninputsourceschange: XRInputSourceChangeEventHandler;
+  onselect: XRInputSourceEventHandler;
+  onselectstart: XRInputSourceEventHandler;
+  onselectend: XRInputSourceEventHandler;
+  onsqueeze: XRInputSourceEventHandler;
+  onsqueezestart: XRInputSourceEventHandler;
+  onsqueezeend: XRInputSourceEventHandler;
+  onvisibilitychange: XRSessionEventHandler;
+  onframeratechange: XRSessionEventHandler;
+
   [PRIVATE]: {
     id: number;
     device: XRDevice;
@@ -117,10 +136,10 @@ export default class XRSession extends EventTarget {
     currentFrameCallbacks: null | Array<XRFrameCallbackDescriptor>;
     frameHandle: number;
     deviceFrameHandle: null | number;
-    activeRenderState: XRRenderState;
+    activeRenderState: XRRenderStateImpl;
     pendingRenderState: null | XRRenderStateInit;
-    localSpace: XRReferenceSpace;
-    viewerSpace: XRReferenceSpace;
+    localSpace: XRReferenceSpaceImpl;
+    viewerSpace: XRReferenceSpaceImpl;
     viewSpaces: Array<XRViewSpace>;
     currentInputSources: Array<any>;
 
@@ -148,7 +167,7 @@ export default class XRSession extends EventTarget {
     let immersive = mode != 'inline';
 
     // inlineVerticalFieldOfView must initialize to PI/2 for inline sessions.
-    let initialRenderState = new XRRenderState({
+    let initialRenderState = new XRRenderStateImpl({
       inlineVerticalFieldOfView: immersive ? null : Math.PI * 0.5
     });
 
@@ -170,8 +189,8 @@ export default class XRSession extends EventTarget {
       id,
       activeRenderState: initialRenderState,
       pendingRenderState: null,
-      localSpace: new XRReferenceSpace('local'),
-      viewerSpace: new XRReferenceSpace('viewer'),
+      localSpace: new XRReferenceSpaceImpl('local'),
+      viewerSpace: new XRReferenceSpaceImpl('viewer'),
       get viewSpaces() { return <XRViewSpace[]>device.getViewSpaces(mode) || defaultViewSpaces; },
       currentInputSources: []
     };
@@ -188,14 +207,14 @@ export default class XRSession extends EventTarget {
       // - If session’s pending render state is not null, apply the pending render state.
       if (this[PRIVATE].pendingRenderState !== null) {
         // Apply pending render state.
-        this[PRIVATE].activeRenderState = new XRRenderState(this[PRIVATE].pendingRenderState);
+        this[PRIVATE].activeRenderState = new XRRenderStateImpl(this[PRIVATE].pendingRenderState);
         this[PRIVATE].pendingRenderState = null;
 
         // Report to the device since it'll need to handle the layer for rendering.
         if (this[PRIVATE].activeRenderState.baseLayer) {
           this[PRIVATE].device.onBaseLayerSet(
             this[PRIVATE].id,
-            this[PRIVATE].activeRenderState.baseLayer);
+            <XRWebGLLayerImpl>this[PRIVATE].activeRenderState.baseLayer);
         }
       }
 
@@ -209,7 +228,7 @@ export default class XRSession extends EventTarget {
       //   abort these steps.
       // ???
 
-      const frame = new XRFrame(device, this, time, context);
+      const frame = new XRFrameImpl(device, this, time, context);
 
       // - Let callbacks be a list of the entries in session’s list of animation frame
       //   callback, in the order in which they were added to the list.
@@ -408,6 +427,35 @@ export default class XRSession extends EventTarget {
     // this.onselectstart = undefined;
     // this.onselectend = undefined;
   }
+  updateTargetFrameRate(_rate: number): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+
+  requestHitTestSource?: (options: XRHitTestOptionsInit) => Promise<XRHitTestSource>;
+  requestHitTestSourceForTransientInput?: (options: XRTransientInputHitTestOptionsInit) => Promise<XRTransientInputHitTestSource>;
+  requestHitTest?: (ray: XRRay, referenceSpace: XRReferenceSpace) => Promise<XRHitResult[]>;
+  updateWorldTrackingState?: (options: { planeDetectionState?: { enabled: boolean; }; }) => void;
+  initiateRoomCapture?(): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+  requestLightProbe(options?: XRLightProbeInit): Promise<XRLightProbe> {
+    throw new Error('Method not implemented.');
+  }
+  getTrackedImageScores?(): Promise<XRImageTrackingScore[]> {
+    throw new Error('Method not implemented.');
+  }
+  trySetFeaturePointCloudEnabled(enabled: boolean): boolean {
+    throw new Error('Method not implemented.');
+  }
+  trySetPreferredPlaneDetectorOptions(preferredOptions: XRGeometryDetectorOptions): boolean {
+    throw new Error('Method not implemented.');
+  }
+  trySetMeshDetectorEnabled(enabled: boolean): boolean {
+    throw new Error('Method not implemented.');
+  }
+  trySetPreferredMeshDetectorOptions(preferredOptions: XRGeometryDetectorOptions): boolean {
+    throw new Error('Method not implemented.');
+  }
 
   get ended(): boolean {
     return this[PRIVATE].ended;
@@ -490,7 +538,7 @@ export default class XRSession extends EventTarget {
       // TODO: Create an XRBoundedReferenceSpace with the correct boundaries.
       throw new DOMException(`The WebXR polyfill does not support the ${type} reference space yet.`, 'NotSupportedError');
     }
-    return new XRReferenceSpace(type, transform);
+    return new XRReferenceSpaceImpl(type, transform);
   }
 
   /**
@@ -575,14 +623,15 @@ export default class XRSession extends EventTarget {
    * Queues an update to the active render state to be applied on the next
    * frame. Unset fields of newState will not be changed.
    */
-  updateRenderState(newState: XRRenderStateInit) {
+  async updateRenderState(newState: XRRenderStateInit): Promise<void> {
     if (this[PRIVATE].ended) {
       const message = "Can't call updateRenderState on an XRSession " +
         "that has already ended.";
       throw new Error(message);
     }
 
-    if (newState.baseLayer && (newState.baseLayer._session !== this)) {
+    const baseLayerImpl = <XRWebGLLayerImpl>newState.baseLayer;
+    if (baseLayerImpl && (baseLayerImpl._session !== this)) {
       const message = "Called updateRenderState with a base layer that was " +
         "created by a different session.";
       throw new Error(message);

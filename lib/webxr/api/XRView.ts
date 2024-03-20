@@ -15,22 +15,24 @@
 
 import { type XRDevice } from '../devices';
 import { type DeviceFrameContext } from './XRSession';
-import type XRWebGLLayer from './XRWebGLLayer';
-import XRRigidTransform, {
+import XRRigidTransformImpl, {
   XRMatrixPlaceholderType,
   XRMatrixPlaceholder
 } from './XRRigidTransform';
-import XRViewport from './XRViewport';
+import XRViewportImpl from './XRViewport';
 
 const XREyes = ['left', 'right', 'none'];
 export const PRIVATE = Symbol('@@webxr-polyfill/XRView');
 
-export default class XRView {
+export default class XRViewImpl implements XRView {
+  recommendedViewportScale?: number;
+  camera: XRCamera;
+
   [PRIVATE]: {
     device: XRDevice,
-    transform: XRRigidTransform,
+    transform: XRRigidTransformImpl,
     eye: XREye,
-    viewport: XRViewport,
+    viewport: XRViewportImpl,
     temp: Object,
     sessionId: number,
     viewIndex: number,
@@ -53,7 +55,7 @@ export default class XRView {
     // that can update XRViewport values to adhere to API.
     // Ugly but it works.
     const temp = Object.create(null);
-    const viewport = new XRViewport(temp);
+    const viewport = new XRViewportImpl(temp);
 
     this[PRIVATE] = {
       device,
@@ -61,7 +63,7 @@ export default class XRView {
       viewport,
       temp,
       sessionId,
-      transform,
+      transform: <XRRigidTransformImpl>transform,
       viewIndex,
       frameContext
     };
@@ -90,6 +92,13 @@ export default class XRView {
    */
   get transform() {
     return this[PRIVATE].transform;
+  }
+
+  /**
+   * Request viewport scale.
+   */
+  requestViewportScale(scale: number): void {
+    throw new TypeError(`The method requestViewportScale(${scale}) not implemented.`);
   }
 
   /**

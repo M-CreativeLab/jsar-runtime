@@ -370,6 +370,7 @@ namespace webgl
          InstanceMethod("createRenderbuffer", &WebGLRenderingContext::CreateRenderbuffer),
          InstanceMethod("deleteRenderbuffer", &WebGLRenderingContext::DeleteRenderbuffer),
          InstanceMethod("bindRenderbuffer", &WebGLRenderingContext::BindRenderbuffer),
+         InstanceMethod("renderbufferStorage", &WebGLRenderingContext::RenderbufferStorage),
          InstanceMethod("createTexture", &WebGLRenderingContext::CreateTexture),
          InstanceMethod("deleteTexture", &WebGLRenderingContext::DeleteTexture),
          InstanceMethod("bindTexture", &WebGLRenderingContext::BindTexture),
@@ -478,8 +479,7 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     auto commandBuffer = new renderer::CreateProgramCommandBuffer();
-    addCommandBuffer(commandBuffer);
-    commandBuffer->WaitFinished();
+    addCommandBuffer(commandBuffer, true, true);
 
     return WebGLProgram::constructor->New({Napi::Number::New(env, commandBuffer->m_ProgramId)});
   }
@@ -503,8 +503,7 @@ namespace webgl
 
     WebGLProgram *program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     auto commandBuffer = new renderer::LinkProgramCommandBuffer(program->GetId());
-    addCommandBuffer(commandBuffer);
-    commandBuffer->WaitFinished();
+    addCommandBuffer(commandBuffer, true, true);
 
     auto uniforms = commandBuffer->m_UniformLocations;
     for (auto it = uniforms.begin(); it != uniforms.end(); ++it)
@@ -554,8 +553,7 @@ namespace webgl
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     int pname = info[1].As<Napi::Number>().Int32Value();
     auto commandBuffer = new renderer::GetProgramParameterCommandBuffer(program->GetId(), pname);
-    addCommandBuffer(commandBuffer);
-    commandBuffer->WaitFinished();
+    addCommandBuffer(commandBuffer, true, true);
     return Napi::Number::New(env, commandBuffer->m_Value);
   }
 
@@ -578,8 +576,7 @@ namespace webgl
 
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     auto commandBuffer = new renderer::GetProgramInfoLogCommandBuffer(program->GetId());
-    addCommandBuffer(commandBuffer);
-    commandBuffer->WaitFinished();
+    addCommandBuffer(commandBuffer, true, true);
     return Napi::String::New(env, commandBuffer->m_InfoLog);
   }
 
@@ -608,7 +605,10 @@ namespace webgl
 
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     int shader = info[1].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new renderer::AttachShaderCommandBuffer(program->GetId(), shader));
+    addCommandBuffer(
+        new renderer::AttachShaderCommandBuffer(program->GetId(), shader),
+        true,
+        false);
     return env.Undefined();
   }
 
@@ -631,7 +631,7 @@ namespace webgl
 
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     int shader = info[1].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new renderer::DetachShaderCommandBuffer(program->GetId(), shader));
+    addCommandBuffer(new renderer::DetachShaderCommandBuffer(program->GetId(), shader), true, false);
     return env.Undefined();
   }
 
@@ -648,9 +648,7 @@ namespace webgl
     int type = info[0].As<Napi::Number>().Int32Value();
 
     auto commandBuffer = new renderer::CreateShaderCommandBuffer(type);
-    addCommandBuffer(commandBuffer);
-    commandBuffer->WaitFinished();
-    DEBUG("transmute", "shader id: %d", commandBuffer->m_ShaderId);
+    addCommandBuffer(commandBuffer, true, true);
     return Napi::Number::New(env, commandBuffer->m_ShaderId);
   }
 
@@ -666,8 +664,7 @@ namespace webgl
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
     auto commandBuffer = new renderer::DeleteShaderCommandBuffer(shader);
-    addCommandBuffer(commandBuffer);
-    commandBuffer->WaitFinished();
+    addCommandBuffer(commandBuffer, true, true);
     return env.Undefined();
   }
 
@@ -685,8 +682,7 @@ namespace webgl
     std::string source = info[1].As<Napi::String>().Utf8Value();
 
     auto commandBuffer = new renderer::ShaderSourceCommandBuffer(shader, source.c_str(), source.length());
-    addCommandBuffer(commandBuffer);
-    DEBUG("transmute", "shader source: %s", source.c_str());
+    addCommandBuffer(commandBuffer, true, false);
     return env.Undefined();
   }
 
@@ -701,7 +697,7 @@ namespace webgl
       return env.Undefined();
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new renderer::CompileShaderCommandBuffer(shader));
+    addCommandBuffer(new renderer::CompileShaderCommandBuffer(shader), true, false);
     return env.Undefined();
   }
 
@@ -717,8 +713,7 @@ namespace webgl
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
     auto commandBuffer = new renderer::GetShaderSourceCommandBuffer(shader);
-    addCommandBuffer(commandBuffer);
-    commandBuffer->WaitFinished();
+    addCommandBuffer(commandBuffer, true, true);
     return Napi::String::New(env, commandBuffer->m_Source);
   }
 
@@ -735,8 +730,7 @@ namespace webgl
     int shader = info[0].As<Napi::Number>().Int32Value();
     int pname = info[1].As<Napi::Number>().Int32Value();
     auto commandBuffer = new renderer::GetShaderParameterCommandBuffer(shader, pname);
-    addCommandBuffer(commandBuffer);
-    commandBuffer->WaitFinished();
+    addCommandBuffer(commandBuffer, true, true);
     return Napi::Number::New(env, commandBuffer->m_Value);
   }
 
@@ -752,8 +746,7 @@ namespace webgl
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
     auto commandBuffer = new renderer::GetShaderInfoLogCommandBuffer(shader);
-    addCommandBuffer(commandBuffer);
-    commandBuffer->WaitFinished();
+    addCommandBuffer(commandBuffer, true, true);
     return Napi::String::New(env, commandBuffer->m_InfoLog);
   }
 
@@ -763,8 +756,7 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     auto commandBuffer = new renderer::CreateBufferCommandBuffer();
-    addCommandBuffer(commandBuffer);
-    commandBuffer->WaitFinished();
+    addCommandBuffer(commandBuffer, true, true);
     return Napi::Number::New(env, commandBuffer->m_BufferId);
   }
 
@@ -779,7 +771,7 @@ namespace webgl
       return env.Undefined();
     }
     int buffer = info[0].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new renderer::DeleteBufferCommandBuffer(buffer));
+    addCommandBuffer(new renderer::DeleteBufferCommandBuffer(buffer), true, false);
     return env.Undefined();
   }
 
@@ -861,8 +853,7 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     auto commandBuffer = new renderer::CreateFramebufferCommandBuffer();
-    addCommandBuffer(commandBuffer);
-    commandBuffer->WaitFinished();
+    addCommandBuffer(commandBuffer, true, true);
     return Napi::Number::New(env, commandBuffer->m_FramebufferId);
   }
 
@@ -877,7 +868,7 @@ namespace webgl
       return env.Undefined();
     }
     int framebuffer = info[0].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new renderer::DeleteFramebufferCommandBuffer(framebuffer));
+    addCommandBuffer(new renderer::DeleteFramebufferCommandBuffer(framebuffer), true, false);
     return env.Undefined();
   }
 
@@ -974,8 +965,7 @@ namespace webgl
     }
     int target = info[0].As<Napi::Number>().Int32Value();
     auto commandBuffer = new renderer::CheckFramebufferStatusCommandBuffer(target);
-    addCommandBuffer(commandBuffer);
-    commandBuffer->WaitFinished();
+    addCommandBuffer(commandBuffer, true, true);
     return Napi::Number::New(env, commandBuffer->m_Status);
   }
 
@@ -985,8 +975,7 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     auto commandBuffer = new renderer::CreateRenderbufferCommandBuffer();
-    addCommandBuffer(commandBuffer);
-    commandBuffer->WaitFinished();
+    addCommandBuffer(commandBuffer, true, true);
     return Napi::Number::New(env, commandBuffer->m_RenderbufferId);
   }
 
@@ -1030,14 +1019,36 @@ namespace webgl
     return env.Undefined();
   }
 
+  Napi::Value WebGLRenderingContext::RenderbufferStorage(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 4)
+    {
+      Napi::TypeError::New(env, "renderbufferStorage() takes 4 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int target = info[0].As<Napi::Number>().Int32Value();
+    int internalformat = info[1].As<Napi::Number>().Int32Value();
+    int width = info[2].As<Napi::Number>().Int32Value();
+    int height = info[3].As<Napi::Number>().Int32Value();
+
+    addCommandBuffer(new renderer::RenderbufferStorageCommandBuffer(
+        target,
+        internalformat,
+        width,
+        height));
+    return env.Undefined();
+  }
+
   Napi::Value WebGLRenderingContext::CreateTexture(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
     auto commandBuffer = new renderer::CreateTextureCommandBuffer();
-    addCommandBuffer(commandBuffer);
-    commandBuffer->WaitFinished();
+    addCommandBuffer(commandBuffer, true, true);
     return WebGLTexture::constructor->New({Napi::Number::New(env, commandBuffer->m_TextureId)});
   }
 
@@ -1372,8 +1383,7 @@ namespace webgl
     std::string name = info[1].As<Napi::String>().Utf8Value();
 
     auto commandBuffer = new renderer::GetAttribLocationCommandBuffer(program->GetId(), name.c_str());
-    addCommandBuffer(commandBuffer);
-    commandBuffer->WaitFinished();
+    addCommandBuffer(commandBuffer, true, true);
     return Napi::Number::New(env, commandBuffer->m_Location);
   }
 
@@ -2455,8 +2465,8 @@ namespace webgl
       case WEBGL_UNPACK_COLORSPACE_CONVERSION_WEBGL:
       {
         auto commandBuffer = new renderer::GetIntegervCommandBuffer(pname);
-        addCommandBuffer(commandBuffer);
-        commandBuffer->WaitFinished();
+        addCommandBuffer(commandBuffer, true, true);
+
         return Napi::Number::New(env, commandBuffer->m_Value);
       }
       // GLboolean
@@ -2473,8 +2483,8 @@ namespace webgl
       case WEBGL_UNPACK_PREMULTIPLY_ALPHA_WEBGL:
       {
         auto commandBuffer = new renderer::GetBooleanvCommandBuffer(pname);
-        addCommandBuffer(commandBuffer);
-        commandBuffer->WaitFinished();
+        addCommandBuffer(commandBuffer, true, true);
+
         return Napi::Boolean::New(env, commandBuffer->m_Value);
       }
       // GLint
@@ -2504,8 +2514,8 @@ namespace webgl
       case WEBGL_UNPACK_ALIGNMENT:
       {
         auto commandBuffer = new renderer::GetIntegervCommandBuffer(pname);
-        addCommandBuffer(commandBuffer);
-        commandBuffer->WaitFinished();
+        addCommandBuffer(commandBuffer, true, true);
+
         return Napi::Number::New(env, commandBuffer->m_Value);
       }
       // GLubyte/string
@@ -2515,8 +2525,8 @@ namespace webgl
       case WEBGL_VERSION:
       {
         auto commandBuffer = new renderer::GetStringCommandBuffer(pname);
-        addCommandBuffer(commandBuffer);
-        commandBuffer->WaitFinished();
+        addCommandBuffer(commandBuffer, true, true);
+
         return Napi::String::New(env, commandBuffer->m_Value);
       }
       default:
@@ -2547,8 +2557,8 @@ namespace webgl
     int precisiontype = info[1].As<Napi::Number>().Int32Value();
 
     auto commandBuffer = new renderer::GetShaderPrecisionFormatCommandBuffer(shadertype, precisiontype);
-    addCommandBuffer(commandBuffer);
-    commandBuffer->WaitFinished();
+    addCommandBuffer(commandBuffer, true, true);
+
     Napi::Object obj = Napi::Object::New(env);
     obj.Set("rangeMin", Napi::Number::New(env, commandBuffer->m_RangeMin));
     obj.Set("rangeMax", Napi::Number::New(env, commandBuffer->m_RangeMax));
@@ -2561,8 +2571,7 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     auto commandBuffer = new renderer::GetErrorCommandBuffer();
-    addCommandBuffer(commandBuffer, true);
-    commandBuffer->WaitFinished();
+    addCommandBuffer(commandBuffer, true, true);
     return Napi::Number::New(env, commandBuffer->m_Error);
   }
 
@@ -2572,8 +2581,7 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     auto commandBuffer = new renderer::GetSupportedExtensionsCommandBuffer();
-    addCommandBuffer(commandBuffer, true);
-    commandBuffer->WaitFinished();
+    addCommandBuffer(commandBuffer, true, true);
 
     Napi::Array extensionsArray = Napi::Array::New(env, commandBuffer->m_Extensions.size());
     for (size_t i = 0; i < commandBuffer->m_Extensions.size(); i++)
@@ -2618,8 +2626,19 @@ namespace webgl
     Napi::TypeError::New(env, "drawingBufferHeight is readonly.").ThrowAsJavaScriptException();
   }
 
-  bool WebGLRenderingContext::addCommandBuffer(renderer::CommandBuffer *commandBuffer, bool useDefaultQueue)
+  bool WebGLRenderingContext::addCommandBuffer(
+      renderer::CommandBuffer *commandBuffer,
+      bool useDefaultQueue,
+      bool waitForFinished)
   {
+    if (waitForFinished)
+    {
+      /**
+       * Only default queue supports waiting for the command buffer to be finished.
+       */
+      useDefaultQueue = true;
+    }
+
     if (m_XRCompatible == true && useDefaultQueue == false)
     {
       auto device = xr::Device::GetInstance();
@@ -2635,6 +2654,10 @@ namespace webgl
 
     // Otherwise, add the command buffer to the default render queue.
     m_renderAPI->AddCommandBuffer(commandBuffer);
+
+    // Wait for the command buffer to be finished if needed.
+    if (waitForFinished)
+      commandBuffer->WaitFinished();
     return true;
   }
 }

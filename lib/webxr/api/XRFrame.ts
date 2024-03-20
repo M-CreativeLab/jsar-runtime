@@ -13,14 +13,12 @@
  * limitations under the License.
  */
 
-import * as logger from '../../bindings/logger';
 import type XRDevice from '../devices/XRDevice';
-import type XRSpace from './XRSpace';
-import type XRReferenceSpace from './XRReferenceSpace';
-import XRSession, { PRIVATE as SESSION_PRIVATE, type DeviceFrameContext } from './XRSession';
-import XRPose from './XRPose';
-import XRViewerPose from './XRViewerPose';
-import XRView from './XRView';
+import XRSessionImpl, { PRIVATE as SESSION_PRIVATE, type DeviceFrameContext } from './XRSession';
+import XRPoseImpl from './XRPose';
+import XRViewerPoseImpl from './XRViewerPose';
+import XRViewImpl from './XRView';
+import XRReferenceSpaceImpl from './XRReferenceSpace';
 
 export const PRIVATE = Symbol('@@webxr-polyfill/XRFrame');
 const NON_ACTIVE_MSG = 'XRFrame access outside the callback that produced it is invalid.';
@@ -28,13 +26,20 @@ const NON_ANIMFRAME_MSG = 'getViewerPose can only be called on XRFrame objects p
 
 let NEXT_FRAME_ID = 0;
 
-export default class XRFrame {
+export default class XRFrameImpl implements XRFrame {
+  predictedDisplayTime?: number;
+  trackedAnchors?: XRAnchorSet;
+  worldInformation?: XRWorldInformation;
+  detectedPlanes?: XRPlaneSet;
+  detectedMeshes?: XRMeshSet;
+  featurePointCloud?: number[];
+
   [PRIVATE]: {
     id: number,
     active: boolean,
     animationFrame: boolean,
     device: XRDevice,
-    session: XRSession,
+    session: XRSessionImpl,
     sessionId: number,
     timestamp: number,
     frameContext: DeviceFrameContext
@@ -47,7 +52,7 @@ export default class XRFrame {
    */
   constructor(
     device: XRDevice,
-    session: XRSession,
+    session: XRSessionImpl,
     timestamp: number,
     frameContext: DeviceFrameContext
   ) {
@@ -65,10 +70,44 @@ export default class XRFrame {
     // logger.info('XRFrame created', this[PRIVATE].id, timestamp, frameContext.activeEyeId, frameContext);
   }
 
+  createAnchor?: (pose: XRRigidTransform, space: XRSpace) => Promise<XRAnchor>;
+
+  getHitTestResults(hitTestSource: XRHitTestSource): XRHitTestResult[] {
+    throw new Error('Method not implemented.');
+  }
+
+  getHitTestResultsForTransientInput(hitTestSource: XRTransientInputHitTestSource): XRTransientInputHitTestResult[] {
+    throw new Error('Method not implemented.');
+  }
+
+  fillPoses?(spaces: XRSpace[], baseSpace: XRSpace, transforms: Float32Array): boolean {
+    throw new Error('Method not implemented.');
+  }
+
+  getJointPose?(joint: XRJointSpace, baseSpace: XRSpace): XRJointPose {
+    throw new Error('Method not implemented.');
+  }
+
+  fillJointRadii?(jointSpaces: XRJointSpace[], radii: Float32Array): boolean {
+    throw new Error('Method not implemented.');
+  }
+
+  getImageTrackingResults?(): XRImageTrackingResult[] {
+    throw new Error('Method not implemented.');
+  }
+
+  getLightEstimate(xrLightProbe: XRLightProbe): XRLightEstimate {
+    throw new Error('Method not implemented.');
+  }
+
+  getDepthInformation(view: XRView): XRCPUDepthInformation {
+    throw new Error('Method not implemented.');
+  }
+
   /**
    * @return {XRSession} session
    */
-  get session() {
+  get session(): XRSession {
     return this[PRIVATE].session;
   }
 
@@ -82,26 +121,27 @@ export default class XRFrame {
 
     const device = this[PRIVATE].device;
     const session = this[PRIVATE].session;
+    const referenceSpaceImpl = <XRReferenceSpaceImpl>referenceSpace;
 
     session[SESSION_PRIVATE].viewerSpace._ensurePoseUpdated(device, this[PRIVATE].id, this[PRIVATE].frameContext);
-    referenceSpace._ensurePoseUpdated(device, this[PRIVATE].id, this[PRIVATE].frameContext);
+    referenceSpaceImpl._ensurePoseUpdated(device, this[PRIVATE].id, this[PRIVATE].frameContext);
 
     const activeEye = this.getActiveEye();
-    const viewerTransform = referenceSpace._getSpaceRelativeTransform(session[SESSION_PRIVATE].viewerSpace);
-    const views: XRView[] = [];
+    const viewerTransform = referenceSpaceImpl._getSpaceRelativeTransform(session[SESSION_PRIVATE].viewerSpace);
+    const views: XRViewImpl[] = [];
     for (const viewSpace of session[SESSION_PRIVATE].viewSpaces) {
       // When rendering in multi-pass mode, only the view for the active eye is used.
       if (device.isRenderingInMultiPass() && viewSpace.eye !== activeEye) {
         continue;
       }
       viewSpace._ensurePoseUpdated(device, this[PRIVATE].id, this[PRIVATE].frameContext);
-      const viewTransform = referenceSpace._getSpaceRelativeTransform(viewSpace);
+      const viewTransform = referenceSpaceImpl._getSpaceRelativeTransform(viewSpace);
       const viewIndex = session[SESSION_PRIVATE].viewSpaces.indexOf(viewSpace);
       views.push(
-        new XRView(device, viewTransform, viewSpace.eye, this[PRIVATE].sessionId, viewIndex, this[PRIVATE].frameContext)
+        new XRViewImpl(device, viewTransform, viewSpace.eye, this[PRIVATE].sessionId, viewIndex, this[PRIVATE].frameContext)
       );
     }
-    const viewerPose = new XRViewerPose(viewerTransform, views, false /* TODO: emulatedPosition */);
+    const viewerPose = new XRViewerPoseImpl(viewerTransform, views, false /* TODO: emulatedPosition */);
     return viewerPose;
   }
 
@@ -114,18 +154,21 @@ export default class XRFrame {
     }
 
     const device = this[PRIVATE].device;
-    if (space._specialType === 'target-ray' || space._specialType === 'grip') {
+    const spaceImpl = <XRReferenceSpaceImpl>space;
+    const baseSpaceImpl = <XRReferenceSpaceImpl>baseSpace;
+
+    if (spaceImpl._specialType === 'target-ray' || spaceImpl._specialType === 'grip') {
       // TODO: Stop special-casing input.
       return device.getInputPose(
-        space._inputSource, baseSpace, space._specialType);
+        spaceImpl._inputSource, baseSpace, spaceImpl._specialType);
     } else {
-      space._ensurePoseUpdated(device, this[PRIVATE].id, this[PRIVATE].frameContext);
-      baseSpace._ensurePoseUpdated(device, this[PRIVATE].id, this[PRIVATE].frameContext);
-      let transform = baseSpace._getSpaceRelativeTransform(space);
+      spaceImpl._ensurePoseUpdated(device, this[PRIVATE].id, this[PRIVATE].frameContext);
+      baseSpaceImpl._ensurePoseUpdated(device, this[PRIVATE].id, this[PRIVATE].frameContext);
+      let transform = baseSpaceImpl._getSpaceRelativeTransform(spaceImpl);
       if (!transform) {
         return null;
       }
-      return new XRPose(transform, false /* TODO: emulatedPosition */);
+      return new XRPoseImpl(transform, false /* TODO: emulatedPosition */);
     }
   }
 

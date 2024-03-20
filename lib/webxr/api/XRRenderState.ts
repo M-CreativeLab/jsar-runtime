@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-import type XRWebGLLayer from './XRWebGLLayer';
-
 export const PRIVATE = Symbol('@@webxr-polyfill/XRRenderState');
 
 export type XRRenderStateInit = Partial<{
@@ -24,7 +22,7 @@ export type XRRenderStateInit = Partial<{
   baseLayer: XRWebGLLayer
 }>;
 
-export default class XRRenderState {
+export default class XRRenderStateImpl implements XRRenderState {
   [PRIVATE]: {
     config: XRRenderStateInit;
   };

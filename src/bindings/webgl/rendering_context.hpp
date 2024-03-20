@@ -42,6 +42,7 @@ namespace webgl
     Napi::Value CreateRenderbuffer(const Napi::CallbackInfo &info);
     Napi::Value DeleteRenderbuffer(const Napi::CallbackInfo &info);
     Napi::Value BindRenderbuffer(const Napi::CallbackInfo &info);
+    Napi::Value RenderbufferStorage(const Napi::CallbackInfo &info);
     Napi::Value CreateTexture(const Napi::CallbackInfo &info);
     Napi::Value DeleteTexture(const Napi::CallbackInfo &info);
     Napi::Value BindTexture(const Napi::CallbackInfo &info);
@@ -117,7 +118,12 @@ namespace webgl
     void DrawingBufferHeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
 
   private:
-    bool addCommandBuffer(renderer::CommandBuffer *commandBuffer, bool useDefaultQueue = false);
+    /**
+     * @param {renderer::CommandBuffer} commandBuffer
+     * @param {boolean} useDefaultQueue - if true, the command buffer will be executed in the default queue.
+     * @param {boolean} waitForFinished - if true, the command buffer will be waited until it's finished.
+     */
+    bool addCommandBuffer(renderer::CommandBuffer *commandBuffer, bool useDefaultQueue = false, bool waitForFinished = false);
 
   private:
     RenderAPI *m_renderAPI;

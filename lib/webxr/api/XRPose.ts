@@ -12,12 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import type XRRigidTransform from './XRRigidTransform';
-
 export const PRIVATE = Symbol('@@webxr-polyfill/XRPose');
 
-export default class XRPose {
+export default class XRPoseImpl implements XRPose {
   [PRIVATE]: {
     transform: XRRigidTransform,
     emulatedPosition: boolean,

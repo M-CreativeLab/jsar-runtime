@@ -100,6 +100,12 @@ export default class XRNativeDevice extends XRDevice {
     this.#handle.endFrame(sessionId, frameContext.stereoId, passIndex);
   }
 
+  getViewport(sessionId: number, eye: XREye, _layer: XRWebGLLayer, target: object, viewIndex: number): boolean {
+    const viewport = this.#handle.getViewport(sessionId, eye, viewIndex);
+    Object.assign(target, viewport);
+    return true;
+  }
+
   getViewSpaces(_mode: XRSessionMode): XRSpace[] {
     return null;
   }

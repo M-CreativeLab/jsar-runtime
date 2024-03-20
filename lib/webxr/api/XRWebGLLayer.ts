@@ -13,19 +13,22 @@
  * limitations under the License.
  */
 
-import type XRView from './XRView';
-import XRSession, { PRIVATE as SESSION_PRIVATE } from './XRSession';
+import XRLayerImpl from './XRLayer';
+import XRSessionImpl, { PRIVATE as SESSION_PRIVATE } from './XRSession';
+import XRViewImpl from './XRView';
 
 export const PRIVATE = Symbol('@@webxr-polyfill/XRWebGLLayer');
 
-export default class XRWebGLLayer {
+export default class XRWebGLLayerImpl extends XRLayerImpl implements XRWebGLLayer {
   [PRIVATE]: {
     context: WebGLRenderingContext | WebGL2RenderingContext,
-    session: XRSession,
+    session: XRSessionImpl,
     config: XRWebGLLayerInit,
   };
 
   constructor(session: XRSession, context: WebGLRenderingContext | WebGL2RenderingContext, init?: XRWebGLLayerInit) {
+    super();
+
     const config = Object.assign({
       antialias: true,
       depth: true,
@@ -36,18 +39,19 @@ export default class XRWebGLLayer {
       framebufferScaleFactor: 1.0,
     }, init || {});
 
-    if (!(session instanceof XRSession)) {
+    const sessionImpl = <XRSessionImpl>session;
+    if (!(sessionImpl instanceof XRSessionImpl)) {
       throw new Error('session must be a XRSession');
     }
 
-    if (session.ended) {
+    if (sessionImpl.ended) {
       throw new Error(`InvalidStateError`);
     }
 
     this[PRIVATE] = {
       context,
       config,
-      session,
+      session: sessionImpl,
     };
   }
 
@@ -99,7 +103,7 @@ export default class XRWebGLLayer {
    * delegated to the XRView?
    */
   getViewport(view: XRView) {
-    return view._getViewport(this);
+    return (view as XRViewImpl)._getViewport(this);
   }
 
   /**

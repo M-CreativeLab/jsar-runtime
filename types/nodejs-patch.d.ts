@@ -34,6 +34,12 @@ declare namespace Transmute {
     isSessionSupported(mode: string): boolean;
     requestSession(sessionId: number): boolean;
     requestFrameOfReferenceTransform(sessionId: number, type: XRReferenceSpaceType, options?): Float32Array;
+    getViewport(sessionId: number, eye: XREye, viewIndex: number): {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    };
     getViewerTransform(): Float32Array;
     /**
      * Get the view matrix for the specified eye.

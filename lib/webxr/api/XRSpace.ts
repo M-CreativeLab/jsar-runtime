@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 import { mat4 } from 'gl-matrix';
-import * as logger from '../../bindings/logger';
 
 import { type XRDevice } from '../devices';
-import XRRigidTransform from './XRRigidTransform';
+import XRRigidTransformImpl from './XRRigidTransform';
 import { DeviceFrameContext } from './XRSession';
 
 export const PRIVATE = Symbol('@@webxr-polyfill/XRSpace');
@@ -24,7 +23,7 @@ export const PRIVATE = Symbol('@@webxr-polyfill/XRSpace');
 // Not exposed, for reference only
 export const XRSpaceSpecialTypes = ['grip', 'target-ray'];
 
-export default class XRSpace {
+export default class XRSpaceImpl extends EventTarget implements XRSpace {
   [PRIVATE]: {
     specialType: string,
     inputSource: any,
@@ -34,6 +33,8 @@ export default class XRSpace {
   };
 
   constructor(specialType: string = null, inputSource: any = null) {
+    super();
+
     this[PRIVATE] = {
       specialType,
       inputSource,
@@ -116,18 +117,18 @@ export default class XRSpace {
    * NON-STANDARD
    * Gets the transform of the given space in this space
    */
-  _getSpaceRelativeTransform(space: XRSpace) {
+  _getSpaceRelativeTransform(space: XRSpaceImpl): XRRigidTransformImpl {
     if (!this._inverseBaseMatrix || !space._baseMatrix) {
       return null;
     }
     let out = new Float32Array(16);
     mat4.multiply(out, this._inverseBaseMatrix, space._baseMatrix);
-    return new XRRigidTransform(out);
+    return new XRRigidTransformImpl(out);
   }
 }
 
 // Nonstandard helper class. Not exposed by the API anywhere.
-export class XRViewSpace extends XRSpace {
+export class XRViewSpace extends XRSpaceImpl {
   get eye(): XREye {
     if (this._specialType !== 'left' && this._specialType !== 'right' && this._specialType !== 'none') {
       throw new Error('XRViewSpace eye property is only available for left and right view spaces');

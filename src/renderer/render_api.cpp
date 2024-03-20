@@ -43,6 +43,21 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 			stereoId = frame == nullptr ? -1 : frame->getId();
 		}
 
+		/**
+		 * Update viewport for current eye
+		 */
+		device->updateViewport(
+			eyeId,
+			// m_Viewport is updated at `StartFrame()`.
+			m_Viewport[0],	// x
+			m_Viewport[1],	// y
+			m_Viewport[2],	// width
+			m_Viewport[3]		// height
+		);
+
+		/**
+		 * Create a new device frame that will be used by js render loop
+		 */
 		auto deviceFrame = new xr::MultiPassFrame(
 				eyeId,
 				stereoId,
@@ -52,13 +67,19 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 				device->getTime());
 
 		auto sessionIds = device->getSessionIds();
-		for (auto id : sessionIds)
+		if (sessionIds.size() > 0)
 		{
-			auto context = deviceFrame->addSession(id);
-			context->setLocalTransform(device->getLocalTransform(id));
+			for (auto id : sessionIds)
+			{
+				auto context = deviceFrame->addSession(id);
+				context->setLocalTransform(device->getLocalTransform(id));
+			}
+			jsRenderLoop->frameCallback(deviceFrame);
 		}
-		jsRenderLoop->frameCallback(deviceFrame);
 
+		DEBUG("Unity", "-------------------------------");
+		DEBUG("Unity", "Execute XR Frame: eye=%d, stereoId=%d", eyeId, stereoId);
+		DEBUG("Unity", "-------------------------------");
 		device->iterateStereoRenderingFrames([this, deviceFrame](xr::StereoRenderingFrame *frame)
 																				 {
 																					 int eyeId = deviceFrame->getActiveEyeId();
@@ -69,6 +90,9 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 		// when the eyeId is 1, clear the stereo rendering frames
 		if (eyeId == 1)
 			device->clearStereoRenderingFrames();
+
+		DEBUG("Unity", "--------- End XR Frame ---------");
+		// end
 	}
 	else
 	{

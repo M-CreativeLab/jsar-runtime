@@ -70,7 +70,7 @@ export class XRMatrixPlaceholder extends Float32Array {
   }
 }
 
-export default class XRRigidTransform {
+export default class XRRigidTransformImpl implements XRRigidTransform {
   [PRIVATE]: {
     matrix: Float32Array,
     position: Quaternion,
@@ -161,25 +161,25 @@ export default class XRRigidTransform {
   }
 
   get position() {
-    return this[PRIVATE].position;
+    return <any>this[PRIVATE].position;
   }
 
   get orientation() {
-    return this[PRIVATE].orientation;
+    return <any>this[PRIVATE].orientation;
   }
 
   get inverse() {
     if (this[PRIVATE].inverse === null) {
       let invMatrix = <Float32Array>mat4.identity(new Float32Array(16));
       mat4.invert(invMatrix, this[PRIVATE].matrix);
-      this[PRIVATE].inverse = new XRRigidTransform(invMatrix);
+      this[PRIVATE].inverse = new XRRigidTransformImpl(invMatrix);
       this[PRIVATE].inverse[PRIVATE].inverse = this;
     }
     return this[PRIVATE].inverse;
   }
 }
 
-export class XRRigidTransformPlaceholder extends XRRigidTransform {
+export class XRRigidTransformPlaceholder extends XRRigidTransformImpl {
   matrixPlaceholderType: XRMatrixPlaceholderType;
   constructor(type: XRMatrixPlaceholderType, positionOrMatrix?: Quaternion | Float32Array, orientation?: Quaternion) {
     super(positionOrMatrix, orientation);

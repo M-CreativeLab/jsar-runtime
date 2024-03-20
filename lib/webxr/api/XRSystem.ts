@@ -14,7 +14,7 @@
  */
 
 import { XRDevice } from '../devices';
-import XRSession from './XRSession';
+import XRSessionImpl from './XRSession';
 
 export const PRIVATE = Symbol('@@webxr-polyfill/XR');
 export const XRSessionModes = ['inline', 'immersive-vr', 'immersive-ar'];
@@ -40,7 +40,10 @@ or navigator.xr.requestSession('inline') prior to requesting an immersive
 session. This is a limitation specific to the WebXR Polyfill and does not apply
 to native implementations of the API.`
 
-export default class XRSystem extends EventTarget {
+export default class XRSystemImpl extends EventTarget implements XRSystem {
+  ondevicechange: XRSystemDeviceChangeEventHandler;
+  onsessiongranted: XRSystemSessionGrantedEventHandler;
+
   #device: XRDevice;
   #bondSessionId: number;
   #immersiveSession: XRSession | null;
@@ -122,7 +125,7 @@ export default class XRSystem extends EventTarget {
     // fallback calls `vrDisplay.requestPresent()` for example). Could throw 
     // due to missing user gesture.
     const sessionId = await this.#device.requestSession(mode, enabledFeatures, this.#bondSessionId);
-    const session = new XRSession(this.#device, mode, sessionId);
+    const session = new XRSessionImpl(this.#device, mode, sessionId);
 
     if (mode == 'inline') {
       this.#inlineSessions.add(session);

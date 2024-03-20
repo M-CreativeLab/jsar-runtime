@@ -13,13 +13,11 @@
  * limitations under the License.
  */
 
-import XRPose from './XRPose';
-import type XRView from './XRView';
-import type XRRigidTransform from './XRRigidTransform';
+import XRPoseImpl from './XRPose';
 
 export const PRIVATE = Symbol('@@webxr-polyfill/XRViewerPose');
 
-export default class XRViewerPose extends XRPose {
+export default class XRViewerPoseImpl extends XRPoseImpl implements XRViewerPose {
   [PRIVATE]: {
     views: XRView[],
   };

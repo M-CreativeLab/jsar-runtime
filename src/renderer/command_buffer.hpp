@@ -42,6 +42,7 @@ namespace renderer
     kCommandTypeCreateRenderbuffer,
     kCommandTypeDeleteRenderbuffer,
     kCommandTypeBindRenderbuffer,
+    kCommandTypeRenderbufferStorage,
     /** Texture */
     kCommandTypeCreateTexture,
     kCommandTypeDeleteTexture,
@@ -555,6 +556,23 @@ namespace renderer
   public:
     int m_Target;
     int m_Renderbuffer;
+  };
+
+  class RenderbufferStorageCommandBuffer : public CommandBuffer
+  {
+  public:
+    RenderbufferStorageCommandBuffer(int target, int internalformat, int width, int height) : CommandBuffer(kCommandTypeRenderbufferStorage),
+                                                                                              m_Target(target),
+                                                                                              m_Internalformat(internalformat),
+                                                                                              m_Width(width),
+                                                                                              m_Height(height) {}
+    ~RenderbufferStorageCommandBuffer() {}
+
+  public:
+    int m_Target;
+    int m_Internalformat;
+    int m_Width;
+    int m_Height;
   };
 
   class CreateTextureCommandBuffer : public CommandBuffer

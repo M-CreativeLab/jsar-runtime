@@ -20,6 +20,19 @@ namespace xr
     Unknown = -1
   };
 
+  class Viewport
+  {
+  public:
+    float x;
+    float y;
+    float width;
+    float height;
+
+  public:
+    Viewport() : x(0), y(0), width(0), height(0) {}
+    Viewport(float x, float y, float width, float height) : x(x), y(y), width(width), height(height) {}
+  };
+
   class Device
   {
   public:
@@ -53,6 +66,7 @@ namespace xr
 
   public:
     float getTime();
+    Viewport getViewport(int eyeId);
     float *getViewerTransform();
     float *getViewerStereoViewMatrix(int eyeId);
     float *getViewerStereoProjectionMatrix(int eyeId);
@@ -63,6 +77,7 @@ namespace xr
   public:
     bool updateFov(float fov);
     bool updateTime(float time);
+    bool updateViewport(int eyeId, float x, float y, float width, float height);
     bool updateViewerTransform(float *transform);
     bool updateViewerStereoViewMatrix(int eyeId, float *transform);
     bool updateViewerStereoProjectionMatrix(int eyeId, float *transform);
@@ -89,6 +104,10 @@ namespace xr
     atomic<int> m_CurrentPassId = -1;
     vector<StereoRenderingFrame *> m_StereoRenderingFrames;
     vector<StereoRenderingFrame *> m_LastStereoRenderingFrames;
+    /**
+     * The viewport for each view.
+     */
+    map<int, Viewport> m_ViewportsByEyeId;
     /**
      * The viewer(camera or eyes) transform matrix, namely the viewer's model matrix, it's used to describe how to
      * transform the viewer's model to the world space.

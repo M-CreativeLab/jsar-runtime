@@ -15,7 +15,7 @@
 
 export const PRIVATE = Symbol('@@webxr-polyfill/XRViewport');
 
-export default class XRViewport {
+export default class XRViewportImpl implements XRViewport {
   /**
    * Takes a proxy object that this viewport's XRView
    * updates and we serve here to match API.

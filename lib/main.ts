@@ -1,6 +1,8 @@
 import * as logger from './bindings/logger';
 import { createEnv, getRuntimeInit } from './bindings/env';
 
+const bootstrapStart = performance.now();
+
 /**
  * See https://nodejs.org/api/events.html#eventtarget-error-handling
  *
@@ -20,47 +22,16 @@ Message: ${err?.message || err || 'null'}
 process.on('uncaughtException', handleGlobalExceptionOrRejection);
 process.on('unhandledRejection', handleGlobalExceptionOrRejection);
 
-/**
- * Browser Pollyfills for Node.js
- */
-import { XMLHttpRequestImpl } from './polyfills/xhr2';
-
-/**
- * A patch to the Node.js TextDecoder.
- *
- * Node.js TextDecoder with samll ICU doesn't support ascii encoding, however the fontkit library depends on
- * the ASCII decoder to parse the font file headers.
- */
-import './polyfills/textdecoder';
-import { ErrorEventImpl } from './polyfills/events/error-event';
-import {
-  OffscreenCanvasImpl,
-  ImageDataImpl,
-  createImageBitmapImpl,
-  InitializeOffscreenCanvas
-} from './polyfills/offscreencanvas';
-import { createNavigator } from './polyfills/navigator';
-
-// for testing
-import { connectRenderer, requestAnimationFrame as requestAnimationFrameImpl } from './bindings/renderer';
+import { InitializeOffscreenCanvas } from './polyfills'; // load polyfills after the global error handler
+import { connectRenderer } from './bindings/renderer';
 import { prepareXRSystem } from './webxr';
 import { TransmuteRuntime2 } from './runtime2';
-// import runExample from './webgl-examples/textures';
-
-globalThis.ErrorEvent = ErrorEventImpl;
-globalThis.XMLHttpRequest = XMLHttpRequestImpl;
-// globalThis.AudioContext = AudioContextImpl;
-globalThis.OffscreenCanvas = OffscreenCanvasImpl;
-globalThis.ImageData = ImageDataImpl;
-
-globalThis.navigator = createNavigator();
-globalThis.createImageBitmap = createImageBitmapImpl;
-globalThis.requestAnimationFrame = requestAnimationFrameImpl;
 
 (async function main() {
   try {
-    const now = performance.now();
-    logger.info('Start the TransmuteRuntime entry');
+    const runtimeStart = performance.now();
+    logger.info('The Node.js runtime bootstrap takes', runtimeStart - bootstrapStart, 'ms');
+    logger.info('Starting the TransmuteRuntime entry');
 
     createEnv();
     const init = getRuntimeInit();
@@ -68,14 +39,21 @@ globalThis.requestAnimationFrame = requestAnimationFrameImpl;
 
     // Initialize the OffscreenCanvas polyfill.
     await InitializeOffscreenCanvas({ loadSystemFonts: true });
-    logger.info(`The Skia initialization takes ${performance.now() - now}ms`);
+    logger.info(`The Skia initialization takes ${performance.now() - runtimeStart}ms`);
 
     connectRenderer();
     await prepareXRSystem();
 
     const runtime = new TransmuteRuntime2();
     runtime.start();
-    logger.info('Started Transmute Runtime, it takes', performance.now() - now, 'ms');
+
+    const initializedEnd = performance.now();
+    logger.info('Finished TransmuteRuntime2() instance creation');
+    logger.info('Time summary:', {
+      bootstrap: runtimeStart - bootstrapStart,
+      initialize: initializedEnd - runtimeStart,
+      total: initializedEnd - bootstrapStart,
+    });
   } catch (err) {
     logger.error('failed to start the runtime, occurs an error:', err);
   }

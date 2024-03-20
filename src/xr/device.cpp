@@ -51,6 +51,7 @@ namespace xr
         return false;
     }
     m_SessionIds.push_back(id);
+    DEBUG("Unity", "Device::requestSession(%d) finished", id);
     return true;
   }
 
@@ -231,6 +232,12 @@ namespace xr
     return m_Time;
   }
 
+  Viewport Device::getViewport(int eyeId)
+  {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    return m_ViewportsByEyeId[eyeId];
+  }
+
   float *Device::getViewerTransform()
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -291,6 +298,13 @@ namespace xr
   bool Device::updateTime(float time)
   {
     m_Time = time;
+    return true;
+  }
+
+  bool Device::updateViewport(int eyeId, float x, float y, float width, float height)
+  {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    m_ViewportsByEyeId[eyeId] = Viewport(x, y, width, height);
     return true;
   }
 

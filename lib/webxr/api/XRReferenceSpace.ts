@@ -14,8 +14,8 @@
  */
 
 import { mat4 } from 'gl-matrix';
-import XRRigidTransform, { XRMatrixPlaceholderType, XRRigidTransformPlaceholder } from './XRRigidTransform';
-import XRSpace, { XRViewSpace } from './XRSpace';
+import XRRigidTransformImpl, { XRMatrixPlaceholderType, XRRigidTransformPlaceholder } from './XRRigidTransform';
+import XRSpaceImpl, { XRViewSpace } from './XRSpace';
 
 const DEFAULT_EMULATION_HEIGHT = 1.6;
 export const PRIVATE = Symbol('@@webxr-polyfill/XRReferenceSpace');
@@ -35,7 +35,9 @@ function isFloor(type: string) {
   return type === 'bounded-floor' || type === 'local-floor';
 }
 
-export default class XRReferenceSpace extends XRSpace {
+export default class XRReferenceSpaceImpl extends XRSpaceImpl implements XRReferenceSpace {
+  onreset: XRReferenceSpaceEventHandler;
+
   [PRIVATE]: {
     type: XRReferenceSpaceType,
     transform: Float32Array,
@@ -113,8 +115,8 @@ export default class XRReferenceSpace extends XRSpace {
    * @param {XRSpace} space
    * @return {XRRigidTransform}
    */
-  _getSpaceRelativeTransform(space: XRSpace): XRRigidTransform {
-    const transform = super._getSpaceRelativeTransform(space);
+  _getSpaceRelativeTransform(space: XRSpace): XRRigidTransformImpl {
+    const transform = super._getSpaceRelativeTransform(<XRSpaceImpl>space);
     // TODO: Optimize away double creation of XRRigidTransform
     this._adjustForOriginOffset(transform.matrix);
 
@@ -134,14 +136,14 @@ export default class XRReferenceSpace extends XRSpace {
       }
       // Supports more types?
     }
-    return new XRRigidTransform(transform.matrix);
+    return new XRRigidTransformImpl(transform.matrix);
   }
 
   /**
    * Doesn't update the bound geometry for bounded reference spaces.
    */
-  getOffsetReferenceSpace(additionalOffset) {
-    const newSpace = new XRReferenceSpace(
+  getOffsetReferenceSpace(additionalOffset): XRReferenceSpace {
+    const newSpace = new XRReferenceSpaceImpl(
       this[PRIVATE].type,
       this[PRIVATE].transform);
     mat4.multiply(newSpace[PRIVATE].originOffset, this[PRIVATE].originOffset, additionalOffset.matrix);

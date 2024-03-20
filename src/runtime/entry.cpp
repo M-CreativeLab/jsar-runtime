@@ -145,8 +145,8 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_SetViewport(int w, int h)
   {
-    if (s_CurrentAPI != NULL)
-      s_CurrentAPI->SetViewport(w, h);
+    // if (s_CurrentAPI != NULL)
+    //   s_CurrentAPI->SetViewport(w, h);
   }
 
   DLL_PUBLIC void TransmuteNative_SetFov(float fov)

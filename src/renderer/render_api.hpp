@@ -57,8 +57,6 @@ public:
   virtual void VertexAttribPointer(int index, int size, int type, bool normalized, int stride, const void *offset) = 0;
   virtual void DrawArrays(int mode, int first, int count) = 0;
   virtual void DrawElements(int mode, int count, int type, const void *indices) = 0;
-  virtual void SetViewport(int x, int y, int width, int height) = 0;
-  virtual void SetScissor(int x, int y, int width, int height) = 0;
   virtual void ClearColor(float r, float g, float b, float a) = 0;
   virtual void ClearDepth(float depth) = 0;
   virtual void ClearStencil(uint32_t stencil) = 0;
@@ -80,10 +78,12 @@ public:
   void AddCommandBuffer(renderer::CommandBuffer *commandBuffer);
   size_t GetCommandBuffersCount();
   void SetTime(float time) { this->time = time; }
-  void SetViewport(int w, int h)
+  void SetViewport(int x, int y, int width, int height)
   {
-    m_ViewportWidth = w;
-    m_ViewportHeight = h;
+    m_Viewport[0] = x;
+    m_Viewport[1] = y;
+    m_Viewport[2] = width;
+    m_Viewport[3] = height;
   }
   void SetFieldOfView(float fov) { this->fov = fov; }
   void SetViewerPosition(float x, float y, float z)
@@ -120,8 +120,7 @@ protected:
   float M_ViewerRotation[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   float m_LocalPosition[3] = {0.0f, 0.0f, 0.0f};
   float m_LocalRotation[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-  atomic<int> m_ViewportWidth = 0;
-  atomic<int> m_ViewportHeight = 0;
+  int m_Viewport[4] = {0, 0, 0, 0};
   std::vector<renderer::CommandBuffer *> m_CommandBuffers;
   std::mutex m_CommandBuffersMutex;
 };

@@ -106,8 +106,6 @@ public:
                                    const void *offset);
   virtual void DrawArrays(int mode, int first, int count);
   virtual void DrawElements(int mode, int count, int type, const void *indices);
-  virtual void SetViewport(int x, int y, int w, int h);
-  virtual void SetScissor(int x, int y, int w, int h);
   virtual void ClearColor(float r, float g, float b, float a);
   virtual void ClearDepth(float depth);
   virtual void ClearStencil(uint32_t stencil);
@@ -446,20 +444,6 @@ void RenderAPI_Metal::DrawElements(int mode, int count, int type,
   //                                      indexType:MTLIndexTypeUInt16
   //                                    indexBuffer:m_VertexBuffer
   //                              indexBufferOffset:0];
-}
-
-void RenderAPI_Metal::SetViewport(int x, int y, int w, int h) {
-  CreateCommandEncoder();
-  [m_CurrentCommandEncoder
-      setViewport:(MTLViewport){(double)x, (double)y, (double)w, (double)h, 0.0,
-                                1.0}];
-}
-
-void RenderAPI_Metal::SetScissor(int x, int y, int w, int h) {
-  MTLScissorRect scissorRect = {(NSUInteger)x, (NSUInteger)y, (NSUInteger)w,
-                                (NSUInteger)h};
-  CreateCommandEncoder();
-  [m_CurrentCommandEncoder setScissorRect:scissorRect];
 }
 
 void RenderAPI_Metal::ClearColor(float r, float g, float b, float a) {

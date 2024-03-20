@@ -12,12 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import type XRSpace from '../api/XRSpace';
-import type XRPose from '../api/XRPose';
-// import XRReferenceSpace from '../api/XRReferenceSpace';
-import type XRWebGLLayer from '../api/XRWebGLLayer';
-import type XRRenderState from '../api/XRRenderState';
 import type { DeviceFrameContext } from '../api/XRSession';
 
 export enum StereoRenderingMode {
@@ -202,15 +196,14 @@ export default class XRDevice extends EventTarget {
    * `x`, `y`, `width` and `height` on. Returns a boolean
    * indicating if it successfully was able to populate
    * target's values.
-   *
-   * @param {number} sessionId
-   * @param {XREye} eye
-   * @param {XRWebGLLayer} layer
-   * @param {Object?} target
-   * @param {number} viewIndex
-   * @return {boolean}
    */
-  getViewport(_sessionId: number, _eye, _layer, _target, _viewIndex): boolean {
+  getViewport(
+    _sessionId: number,
+    _eye: XREye,
+    _layer: XRWebGLLayer,
+    _target: object,
+    _viewIndex: number
+  ): boolean {
     throw new Error('Method(device.getViewport) not implemented');
   }
 

@@ -11,6 +11,7 @@ namespace bindings
                                      {InstanceMethod("isSessionSupported", &XRDeviceNative::IsSessionSupported),
                                       InstanceMethod("requestSession", &XRDeviceNative::RequestSession),
                                       InstanceMethod("requestFrameOfReferenceTransform", &XRDeviceNative::RequestFrameOfReferenceTransform),
+                                      InstanceMethod("getViewport", &XRDeviceNative::GetViewport),
                                       InstanceMethod("getViewerTransform", &XRDeviceNative::GetViewerTransform),
                                       InstanceMethod("getViewerStereoViewMatrix", &XRDeviceNative::GetViewerStereoViewMatrix),
                                       InstanceMethod("getViewerStereoProjectionMatrix", &XRDeviceNative::GetViewerStereoProjectionMatrix),
@@ -126,6 +127,56 @@ namespace bindings
       }
     }
     return env.Null();
+  }
+
+  Napi::Value XRDeviceNative::GetViewport(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3)
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::GetViewport: expected 3 arguments")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsNumber())
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::GetViewport: sessionId must be a number")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[1].IsString())
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::GetViewport: eye must be a string \"left\" or \"right\"")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[2].IsNumber())
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::GetViewport: viewId or passId must be a number")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    // auto sessionId = info[0].As<Napi::Number>().Int32Value(); // not used
+    auto viewOrPassId = info[2].As<Napi::Number>().Int32Value();
+
+    auto device = xr::Device::GetInstance();
+    if (device == nullptr)
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::GetViewport: device is not initialized")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto viewport = device->getViewport(viewOrPassId);
+    auto jsViewport = Napi::Object::New(env);
+    jsViewport.Set("x", Napi::Number::New(env, viewport.x));
+    jsViewport.Set("y", Napi::Number::New(env, viewport.y));
+    jsViewport.Set("width", Napi::Number::New(env, viewport.width));
+    jsViewport.Set("height", Napi::Number::New(env, viewport.height));
+    return jsViewport;
   }
 
   Napi::Value XRDeviceNative::GetViewerTransform(const Napi::CallbackInfo &info)
