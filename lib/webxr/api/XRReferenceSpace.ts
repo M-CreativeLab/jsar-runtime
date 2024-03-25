@@ -122,15 +122,13 @@ export default class XRReferenceSpaceImpl extends XRSpaceImpl implements XRRefer
 
     if (space instanceof XRViewSpace) {
       const currentType = this[PRIVATE].type;
-      if (currentType === 'local') {
+      if (false && currentType === 'local') {
         return new XRRigidTransformPlaceholder(
           XRMatrixPlaceholderType.VIEW_MATRIX_RELATIVE_TO_LOCAL, transform.matrix);
-      }
-      if (currentType === 'local-floor') {
+      } else if (currentType === 'local-floor') {
         return new XRRigidTransformPlaceholder(
           XRMatrixPlaceholderType.VIEW_MATRIX_RELATIVE_TO_LOCAL_FLOOR, transform.matrix);
-      }
-      if (currentType === 'unbounded') {
+      } else if (currentType === 'unbounded') {
         return new XRRigidTransformPlaceholder(
           XRMatrixPlaceholderType.VIEW_MATRIX, transform.matrix);
       }

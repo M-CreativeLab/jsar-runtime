@@ -28,6 +28,10 @@ BABYLON.ThinEngine.QueueNewFrame = (func: () => void, requester?: any): number =
 BABYLON.Logger.OnNewCacheEntry = (entry) => {
   logger.info('[Babylonjs]', entry);
 };
+BABYLON.Tools.GetAbsoluteUrl = (url: string) => {
+  logger.info('[Babylonjs] GetAbsoluteUrl:', url);
+  return url;
+};
 BABYLON.SceneLoader.RegisterPlugin(new GLTFFileLoader() as any);
 
 export class TransmuteRuntime2 extends EventTarget {
@@ -63,27 +67,39 @@ export class TransmuteRuntime2 extends EventTarget {
     await nativeDocument.enterXrExperience();
     logger.info(`Session#${event.sessionId} has been entered XR experience.`);
 
+    // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/floating_fox.glb';
+    // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/pirateFort.glb';
+    // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/blackhole.glb';
+    const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/x-wing.glb';
     const defaultCode = `
 <xsml>
-<head>
-  <style>
-    @keyframes rotate {
-      from {
-        rotation: 0 0 30;
+  <head>
+    <title>External Mesh Example(Glb)</title>
+    <link id="my" rel="mesh" href="${modelUrl}" />
+    <style>
+      bound {
+        position: 0 0 -1;
       }
-      to {
-        rotation: 0 360 30;
-      }
+    </style>
+  </head>
+  <space>
+    <bound>
+     <mesh ref="my" id="model" />
+    </bound>
+  </space>
+  <script>
+  spatialDocument.addEventListener('spaceReady', () => {
+    const scene = spatialDocument.scene;
+    const animations = scene.animationGroups
+      .filter(ag => ag.name.startsWith('model.'));
+  
+    console.log('all animations:', scene.animationGroups.map(ag => ag.name));
+    console.log('found animations:', animations.length);
+    if (animations.length > 0) {
+      animations[0].start(true);
     }
-    cube {
-      animation: rotate 50s linear infinite;
-      position: 0.25 0 -1;
-    }
-  </style>
-</head>
-<space>
-  <cube size="1" />
-</space>
+  });
+  </script>
 </xsml>
     `;
 
@@ -116,7 +132,7 @@ export class TransmuteRuntime2 extends EventTarget {
       await dom.waitForSpaceReady();
       logger.info('the jsar document\'s space is ready');
     }
-    this.fitSpaceWithScene(spaceNode, 2.5);
+    this.fitSpaceWithScene(spaceNode, 0.7);
   }
 
   private fitSpaceWithScene(spaceNode: BABYLON.TransformNode, ratio = 1) {

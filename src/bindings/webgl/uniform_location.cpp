@@ -5,9 +5,11 @@ namespace webgl
   Napi::FunctionReference *WebGLUniformLocation::constructor;
   void WebGLUniformLocation::Init(Napi::Env env)
   {
-    Napi::Function tpl = DefineClass(env, "WebGLUniformLocation", {
-      InstanceMethod("toString", &WebGLUniformLocation::ToString)
-    });
+    Napi::Function tpl = DefineClass(env, "WebGLUniformLocation",
+                                     {
+                                         InstanceMethod("toString", &WebGLUniformLocation::ToString),
+                                         InstanceAccessor<&WebGLUniformLocation::NameGetter, &WebGLUniformLocation::NameSetter>("name"),
+                                     });
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
   }
@@ -34,6 +36,18 @@ namespace webgl
     // Output "Program(id)"
     std::string result = "UniformLocation(" + std::to_string(value_) + ")";
     return Napi::String::New(env, result.c_str());
+  }
+
+  Napi::Value WebGLUniformLocation::NameGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    return Napi::String::New(env, name_.c_str());
+  }
+
+  void WebGLUniformLocation::NameSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    Napi::TypeError::New(info.Env(), "Cannot set name of WebGLUniformLocation")
+        .ThrowAsJavaScriptException();
   }
 
 } // namespace webgl

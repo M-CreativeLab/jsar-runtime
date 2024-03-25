@@ -10,6 +10,8 @@
 #include "constants.hpp"
 #include "xr/device.hpp"
 
+#define TR_RENDERAPI_TAG "TR_RAPI" // Transmute Render API
+
 enum FrameExecutionCode
 {
   kFrameExecutionSuccess = 0,
@@ -70,8 +72,16 @@ public:
    * Executing the frame function
    */
   FrameExecutionCode ExecuteFrame();
-  virtual void ExecuteCommandBuffer() = 0;
-  virtual void ExecuteCommandBuffer(
+  /**
+   * Executes the commands from the default command queue, and it returns a boolean value indicating if there are any commands 
+   * to execute.
+   */
+  virtual bool ExecuteCommandBuffer() = 0;
+  /**
+   * Executes the commands from the given command queue with the device frame, and it also returns a boolean value indicating if
+   * there are any commands to execute.
+   */
+  virtual bool ExecuteCommandBuffer(
       vector<renderer::CommandBuffer *> &commandBuffers,
       xr::DeviceFrame *deviceFrame,
       bool logCalls) = 0;

@@ -93,17 +93,20 @@ namespace xr
   public:
     FrameActionResult startFrame(int passIndex = 0);
     FrameActionResult endFrame(int passIndex = 0);
+    void copyCommandBuffers(std::vector<renderer::CommandBuffer *> &commandBuffers, int passIndex = 0);
     void addCommandBuffer(renderer::CommandBuffer *commandBuffer, int passIndex = 0);
     std::vector<renderer::CommandBuffer *> &getCommandBuffers(int passIndex = 0);
     bool ended();
     bool ended(int passIndex);
     int getId();
+    bool addedOnce();
 
   private:
     int m_StereoId = -1;
     bool m_IsMultiPass = true;
     bool m_Ended[2] = {false, false};
     bool m_Started[2] = {false, false};
+    bool m_IsAddedOnce = false;
     std::vector<renderer::CommandBuffer *> m_CommandBuffersInPass;
     std::vector<renderer::CommandBuffer *> m_CommandBuffersInPass2; // This is only used when m_IsMultiPass is true.
     // TODO: support 3rd, 4th, ... passes?

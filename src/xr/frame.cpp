@@ -99,12 +99,30 @@ namespace xr
     return FRAME_OK;
   }
 
+  void StereoRenderingFrame::copyCommandBuffers(std::vector<renderer::CommandBuffer *> &commandBuffers, int passIndex)
+  {
+    if (passIndex == 0)
+    {
+      m_CommandBuffersInPass.clear();
+      for (auto commandBuffer : commandBuffers)
+        m_CommandBuffersInPass.push_back(commandBuffer);
+    }
+    else if (passIndex == 1)
+    {
+      m_CommandBuffersInPass2.clear();
+      for (auto commandBuffer : commandBuffers)
+        m_CommandBuffersInPass2.push_back(commandBuffer);
+    }
+  }
+
   void StereoRenderingFrame::addCommandBuffer(renderer::CommandBuffer *commandBuffer, int passIndex)
   {
     if (passIndex == 0)
       m_CommandBuffersInPass.push_back(commandBuffer);
     else if (passIndex == 1)
       m_CommandBuffersInPass2.push_back(commandBuffer);
+
+    m_IsAddedOnce = true;
   }
 
   std::vector<renderer::CommandBuffer *> &StereoRenderingFrame::getCommandBuffers(int passIndex)
@@ -133,4 +151,5 @@ namespace xr
   }
 
   int StereoRenderingFrame::getId() { return m_StereoId; }
+  bool StereoRenderingFrame::addedOnce() { return m_IsAddedOnce; }
 }

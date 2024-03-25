@@ -408,7 +408,7 @@ namespace bindings
 
     if (device->endFrame(sessionId, stereoRenderingId, passId) == false)
     {
-      Napi::TypeError::New(env, "XRDeviceNative::StartFrame: failed to start frame")
+      Napi::TypeError::New(env, "XRDeviceNative::EndFrame: failed to end frame")
           .ThrowAsJavaScriptException();
     }
     return env.Undefined();

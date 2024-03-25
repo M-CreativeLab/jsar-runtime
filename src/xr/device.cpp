@@ -28,6 +28,7 @@ namespace xr
 
   Device::Device() : m_FieldOfView(0.0f), m_Time(0.0f)
   {
+    m_LastStereoRenderingFrame = new StereoRenderingFrame(true);
   }
 
   Device::~Device()
@@ -35,6 +36,7 @@ namespace xr
     m_FieldOfView = 0.0f;
     m_Time = 0.0f;
     m_SessionIds.clear();
+    delete m_LastStereoRenderingFrame;
   }
 
   void Device::initialize(bool enabled)
@@ -95,16 +97,23 @@ namespace xr
     return m_StereoRenderingFrames.back();
   }
 
-  bool Device::iterateStereoRenderingFrames(std::function<void(StereoRenderingFrame *)> callback)
+  bool Device::executeStereoRenderingFrames(int eyeId, std::function<bool(std::vector<renderer::CommandBuffer *> &)> exec)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
     bool called = false;
+
     for (auto frame : m_StereoRenderingFrames)
     {
       if (!frame->ended())
         continue;
-      callback(frame);
-      called = true;
+
+      auto commandBuffers = frame->getCommandBuffers(eyeId);
+      if (exec(commandBuffers))
+      {
+        m_LastStereoRenderingFrame->copyCommandBuffers(commandBuffers, eyeId);
+        if (!called)
+          called = true;
+      }
     }
 
     /**
@@ -112,13 +121,36 @@ namespace xr
      */
     if (called == false)
     {
-      for (auto frame : m_LastStereoRenderingFrames)
-      {
-        if (!frame->ended())
-          continue;
-        callback(frame);
-      }
+      auto commandBufferInLastFrame = m_LastStereoRenderingFrame->getCommandBuffers(eyeId);
+      called = exec(commandBufferInLastFrame);
     }
+    return called;
+  }
+
+  bool Device::iterateStereoRenderingFrames(std::function<bool(StereoRenderingFrame *)> callback)
+  {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    bool called = false;
+    for (auto frame : m_StereoRenderingFrames)
+    {
+      if (!frame->ended())
+        continue;
+      if (callback(frame) == true && called == false)
+        called = true;
+    }
+
+    /**
+     * When the `called` is false, it means the current frames are not ended, so we need to render by the last frame.
+     */
+    // if (called == false)
+    // {
+    //   for (auto frame : m_LastStereoRenderingFrames)
+    //   {
+    //     if (!frame->ended())
+    //       continue;
+    //     callback(frame);
+    //   }
+    // }
     return called;
   }
 
@@ -130,9 +162,6 @@ namespace xr
       for (auto frame : m_StereoRenderingFrames)
         delete frame;
       m_StereoRenderingFrames.clear();
-      for (auto frame : m_LastStereoRenderingFrames)
-        delete frame;
-      m_LastStereoRenderingFrames.clear();
       return;
     }
     else
@@ -140,9 +169,9 @@ namespace xr
       /**
        * 1. Clear the last rendering frames
        */
-      for (auto frame : m_LastStereoRenderingFrames)
-        delete frame;
-      m_LastStereoRenderingFrames.clear();
+      // for (auto frame : m_LastStereoRenderingFrames)
+      //   delete frame;
+      // m_LastStereoRenderingFrames.clear();
 
       /**
        * 2. Copy the ended frames to the last frames, and then erase it.
@@ -152,7 +181,7 @@ namespace xr
         if ((*it)->ended())
         {
           auto frame = *it;
-          m_LastStereoRenderingFrames.push_back(frame);
+          delete frame;
           it = m_StereoRenderingFrames.erase(it);
         }
         else
@@ -188,8 +217,9 @@ namespace xr
   bool Device::endFrame(int sessionId, int stereoRenderingId, int passId)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    for (auto frame : m_StereoRenderingFrames)
+    for (auto it = m_StereoRenderingFrames.begin(); it != m_StereoRenderingFrames.end();)
     {
+      auto frame = *it;
       if (frame->getId() == stereoRenderingId)
       {
         if (frame->endFrame(passId) == FRAME_OK)
@@ -203,6 +233,7 @@ namespace xr
           break;
         }
       }
+      it++;
     }
     return false;
   }
@@ -311,12 +342,6 @@ namespace xr
   bool Device::updateViewerTransform(float *transform)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    // std::array<float, 16> input = {
-    //     transform[0], transform[1], transform[2], transform[3],
-    //     transform[4], transform[5], transform[6], transform[7],
-    //     transform[8], transform[9], transform[10], transform[11],
-    //     transform[12], transform[13], transform[14], transform[15]};
-    // auto rightHanded = math::ConvertMatrixToRightHanded(input);
     for (int i = 0; i < 16; i++)
       m_ViewerTransform[i] = transform[i];
     return true;

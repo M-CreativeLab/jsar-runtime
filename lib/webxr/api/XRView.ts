@@ -81,10 +81,11 @@ export default class XRViewImpl implements XRView {
    */
   get projectionMatrix() {
     const { frameContext } = this[PRIVATE];
-    return new XRMatrixPlaceholder(
-      frameContext.viewerProjectionMatrix,
-      XRMatrixPlaceholderType.PROJECTION_MATRIX
-    );
+    // return new XRMatrixPlaceholder(
+    //   frameContext.viewerProjectionMatrix,
+    //   XRMatrixPlaceholderType.PROJECTION_MATRIX
+    // );
+    return frameContext.viewerProjectionMatrix;
   }
 
   /**

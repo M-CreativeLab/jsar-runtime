@@ -48,6 +48,7 @@ using namespace renderer;
 #include <glm/ext.hpp>
 
 #define DEBUG_ARG_END -1
+#define DEBUG_TAG TR_RENDERAPI_TAG
 
 class RenderAPI_OpenGLCoreES : public RenderAPI
 {
@@ -94,8 +95,8 @@ public:
 
 	virtual void StartFrame();
 	virtual void EndFrame();
-	void ExecuteCommandBuffer();
-	void ExecuteCommandBuffer(
+	bool ExecuteCommandBuffer();
+	bool ExecuteCommandBuffer(
 			vector<renderer::CommandBuffer *> &commandBuffers,
 			xr::DeviceFrame *deviceFrame,
 			bool logCalls);
@@ -160,7 +161,7 @@ private:
 
 RenderAPI *CreateRenderAPI_OpenGLCoreES(UnityGfxRenderer apiType)
 {
-	DEBUG("Unity", "Creating the render API for OpenGLCoreES");
+	DEBUG(DEBUG_TAG, "Creating the render API for OpenGLCoreES");
 	return new RenderAPI_OpenGLCoreES(apiType);
 }
 
@@ -394,13 +395,13 @@ void RenderAPI_OpenGLCoreES::Disable(uint32_t cap)
 
 void RenderAPI_OpenGLCoreES::StartFrame()
 {
-	DEBUG("Unity", "==================================");
-	DEBUG("Unity", "Start a native rendering frame.");
+	DEBUG(DEBUG_TAG, "==================================");
+	DEBUG(DEBUG_TAG, "Start a native rendering frame.");
 
 	GLint viewport[4];
 	glGetIntegerv(GL_VIEWPORT, viewport);
 	SetViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-	DEBUG("Unity", "Viewport: %d %d %d %d", viewport[0], viewport[1], viewport[2], viewport[3]);
+	DEBUG(DEBUG_TAG, "Viewport: %d %d %d %d", viewport[0], viewport[1], viewport[2], viewport[3]);
 
 	/**
 	 * Because the Unity or other 3d engine may change the state of OpenGL, we need to update these states which is updated in
@@ -409,21 +410,21 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 
 	// using program
 	glGetIntegerv(GL_CURRENT_PROGRAM, &m_HostProgramId);
-	DEBUG("Unity", "Host program: %d", m_HostProgramId);
+	DEBUG(DEBUG_TAG, "Host program: %d", m_HostProgramId);
 
 	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &m_HostArrayBufferId);
-	DEBUG("Unity", "Host array buffer: %d", m_HostArrayBufferId);
+	DEBUG(DEBUG_TAG, "Host array buffer: %d", m_HostArrayBufferId);
 	glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &m_HostElementArrayBufferId);
-	DEBUG("Unity", "Host element array buffer: %d", m_HostElementArrayBufferId);
+	DEBUG(DEBUG_TAG, "Host element array buffer: %d", m_HostElementArrayBufferId);
 
 	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_HostFramebufferId);
-	DEBUG("Unity", "Host framebuffer: %d", m_HostFramebufferId);
+	DEBUG(DEBUG_TAG, "Host framebuffer: %d", m_HostFramebufferId);
 	glGetIntegerv(GL_RENDERBUFFER_BINDING, &m_HostRenderbufferId);
-	DEBUG("Unity", "Host renderbuffer: %d", m_HostRenderbufferId);
+	DEBUG(DEBUG_TAG, "Host renderbuffer: %d", m_HostRenderbufferId);
 
 	glGetIntegerv(GL_ACTIVE_TEXTURE, (GLint *)&m_HostActiveTextureUnit);
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &m_HostTexture2D);
-	DEBUG("Unity", "Host texture 2D: %d", m_HostTexture2D);
+	DEBUG(DEBUG_TAG, "Host texture 2D: %d", m_HostTexture2D);
 
 	glGetIntegerv(GL_CULL_FACE_MODE, &m_HostCullFace);
 	glGetIntegerv(GL_FRONT_FACE, &m_HostFrontFace);
@@ -431,7 +432,7 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	if (m_CurrentProgramId != 0)
 	{
 		glUseProgram(m_CurrentProgramId);
-		DEBUG("Unity", "Current program: %d", m_CurrentProgramId);
+		DEBUG(DEBUG_TAG, "Current program: %d", m_CurrentProgramId);
 	}
 
 	if (m_AppArrayBufferId != -1)
@@ -442,7 +443,7 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	if (m_AppFramebufferId != -1 && m_AppFramebufferId != 0)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_AppFramebufferId);
-		DEBUG("Unity", "Restore app to bind framebuffer: %d", m_AppFramebufferId);
+		DEBUG(DEBUG_TAG, "Restore app to bind framebuffer: %d", m_AppFramebufferId);
 	}
 	if (m_AppRenderbufferId != -1 && m_AppRenderbufferId != 0)
 		glBindRenderbuffer(GL_RENDERBUFFER, m_AppRenderbufferId);
@@ -452,11 +453,13 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	if (m_AppTexture2D != -1)
 		glBindTexture(GL_TEXTURE_2D, m_AppTexture2D);
 
-	if (m_AppCullFace == GL_FRONT || m_AppCullFace == GL_BACK || m_AppCullFace == GL_FRONT_AND_BACK)
-		glCullFace(m_AppCullFace);
-	if (m_AppFrontFace == GL_CW || m_AppFrontFace == GL_CCW)
-		glFrontFace(m_AppFrontFace);
-	// glFrontFace(GL_CCW);
+	// if (m_AppCullFace == GL_FRONT || m_AppCullFace == GL_BACK || m_AppCullFace == GL_FRONT_AND_BACK)
+	// 	glCullFace(m_AppCullFace);
+	// if (m_AppFrontFace == GL_CW || m_AppFrontFace == GL_CCW)
+	// 	glFrontFace(m_AppFrontFace);
+	glDisable(GL_CULL_FACE);
+	// glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);
 
 	// depth test
 	if (m_DepthTestEnabled)
@@ -490,10 +493,10 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 		// Check for OpenGL errors
 		GLenum error = glGetError();
 		if (error != GL_NO_ERROR)
-			DEBUG("Unity", "Occurs an OpenGL error in start a new frame: 0x%04X", error);
+			DEBUG(DEBUG_TAG, "Occurs an OpenGL error in start a new frame: 0x%04X", error);
 	}
 
-	DEBUG("Unity", "==================================");
+	DEBUG(DEBUG_TAG, "==================================");
 }
 
 void RenderAPI_OpenGLCoreES::EndFrame()
@@ -519,26 +522,38 @@ void RenderAPI_OpenGLCoreES::EndFrame()
 	if (m_HostFrontFace != -1)
 		glFrontFace(m_HostFrontFace);
 
-	DEBUG("Unity", "Host states restored.");
-	DEBUG("Unity", "=========== End Frame ============");
+	DEBUG(DEBUG_TAG, "Host states restored.");
+	DEBUG(DEBUG_TAG, "=========== End Frame ============");
 }
 
-void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
+bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 {
 	std::unique_lock<std::mutex> lock(m_CommandBuffersMutex);
-	ExecuteCommandBuffer(m_CommandBuffers, nullptr, true);
-	m_CommandBuffers.clear();
+	if (ExecuteCommandBuffer(m_CommandBuffers, nullptr, false) == true)
+	{
+		m_CommandBuffers.clear();
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
-void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
+bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		vector<renderer::CommandBuffer *> &commandBuffers,
 		xr::DeviceFrame *deviceFrame,
 		bool logCalls)
 {
-	if (logCalls)
-		DEBUG("Unity", "There are %d buffers to execute.", commandBuffers.size());
+	bool isBufferEmpty = commandBuffers.empty();
+	if (isBufferEmpty)
+	{
+		DEBUG(DEBUG_TAG, "The command buffers is empty, discard this execution");
+		return false;
+	}
 
 	// Execute all the command buffers
+	DEBUG(DEBUG_TAG, "There are %d buffers to execute.", commandBuffers.size());
 	for (auto commandBuffer : commandBuffers)
 	{
 		auto commandType = commandBuffer->GetType();
@@ -550,7 +565,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			int ret = CreateProgram();
 			createProgramCommandBuffer->m_ProgramId = ret;
 			if (logCalls)
-				DEBUG("Unity", "CreateProgram: %d", ret);
+				DEBUG(DEBUG_TAG, "CreateProgram: %d", ret);
 			break;
 		}
 		case kCommandTypeLinkProgram:
@@ -572,7 +587,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 				glGetProgramiv(program, GL_INFO_LOG_LENGTH, &errorLength);
 				GLchar *errorStr = new GLchar[errorLength];
 				glGetProgramInfoLog(program, errorLength, NULL, errorStr);
-				DEBUG("Unity", "Failed to link program(%d): %s", program, errorStr);
+				DEBUG(DEBUG_TAG, "Failed to link program(%d): %s", program, errorStr);
 				delete[] errorStr;
 				break;
 			}
@@ -597,11 +612,11 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					continue;
 				linkProgramCommandBuffer->m_UniformLocations.insert(
 						std::pair<std::string, int>(name, location));
-				DEBUG("Unity", "Program(%d) Uniform(%s) => %d", program, name, location);
+				DEBUG(DEBUG_TAG, "Program(%d) Uniform(%s) => %d", program, name, location);
 			}
 			// TODO: add active attributes?
 			if (logCalls)
-				DEBUG("Unity", "LinkProgram(%d)", program);
+				DEBUG(DEBUG_TAG, "LinkProgram(%d)", program);
 			break;
 		}
 		case kCommandTypeUseProgram:
@@ -609,7 +624,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto useProgramCommandBuffer = static_cast<UseProgramCommandBuffer *>(commandBuffer);
 			UseProgram(useProgramCommandBuffer->m_ProgramId);
 			if (logCalls)
-				DEBUG("Unity", "UseProgram(%d)", useProgramCommandBuffer->m_ProgramId);
+				DEBUG(DEBUG_TAG, "UseProgram(%d)", useProgramCommandBuffer->m_ProgramId);
 			break;
 		}
 		case kCommandTypeGetProgramParameter:
@@ -622,7 +637,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					&ret);
 			getProgramParameterCommandBuffer->m_Value = ret;
 			if (logCalls)
-				DEBUG("Unity", "GetProgramParameter: %d", ret);
+				DEBUG(DEBUG_TAG, "GetProgramParameter: %d", ret);
 			break;
 		}
 		case kCommandTypeGetProgramInfoLog:
@@ -636,7 +651,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			getProgramInfoLogCommandBuffer->CopyInfoLog(infoLog, infoLogLength);
 			delete[] infoLog;
 			if (logCalls)
-				DEBUG("Unity", "GetProgramInfoLog: %s", getProgramInfoLogCommandBuffer->m_InfoLog);
+				DEBUG(DEBUG_TAG, "GetProgramInfoLog: %s", getProgramInfoLogCommandBuffer->m_InfoLog);
 			break;
 		}
 		case kCommandTypeAttachShader:
@@ -644,7 +659,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto attachShaderCommandBuffer = static_cast<AttachShaderCommandBuffer *>(commandBuffer);
 			AttachShader(attachShaderCommandBuffer->m_ProgramId, attachShaderCommandBuffer->m_ShaderId);
 			if (logCalls)
-				DEBUG("Unity", "AttachShader: program=%d, shader=%d",
+				DEBUG(DEBUG_TAG, "AttachShader: program=%d, shader=%d",
 							attachShaderCommandBuffer->m_ProgramId, attachShaderCommandBuffer->m_ShaderId);
 			break;
 		}
@@ -653,7 +668,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto detachShaderCommandBuffer = static_cast<DetachShaderCommandBuffer *>(commandBuffer);
 			DetachShader(detachShaderCommandBuffer->m_ProgramId, detachShaderCommandBuffer->m_ShaderId);
 			if (logCalls)
-				DEBUG("Unity", "DetachShader: program=%d, shader=%d",
+				DEBUG(DEBUG_TAG, "DetachShader: program=%d, shader=%d",
 							detachShaderCommandBuffer->m_ProgramId, detachShaderCommandBuffer->m_ShaderId);
 			break;
 		}
@@ -663,7 +678,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			int ret = CreateShader(createShaderCommandBuffer->m_ShaderType);
 			createShaderCommandBuffer->m_ShaderId = ret;
 			if (logCalls)
-				DEBUG("Unity", "CreateShader: %d", ret);
+				DEBUG(DEBUG_TAG, "CreateShader: %d", ret);
 			break;
 		}
 		case kCommandTypeDeleteShader:
@@ -671,7 +686,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto deleteShaderCommandBuffer = static_cast<DeleteShaderCommandBuffer *>(commandBuffer);
 			DeleteShader(deleteShaderCommandBuffer->m_ShaderId);
 			if (logCalls)
-				DEBUG("Unity", "DeleteShader: %d", deleteShaderCommandBuffer->m_ShaderId);
+				DEBUG(DEBUG_TAG, "DeleteShader: %d", deleteShaderCommandBuffer->m_ShaderId);
 			break;
 		}
 		case kCommandTypeShaderSource:
@@ -682,7 +697,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					shaderSourceCommandBuffer->m_Source,
 					shaderSourceCommandBuffer->m_Length);
 			if (logCalls)
-				DEBUG("Unity", "ShaderSource: %d", shaderSourceCommandBuffer->m_ShaderId);
+				DEBUG(DEBUG_TAG, "ShaderSource: %d", shaderSourceCommandBuffer->m_ShaderId);
 			break;
 		}
 		case kCommandTypeCompileShader:
@@ -690,7 +705,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto compileShaderCommandBuffer = static_cast<CompileShaderCommandBuffer *>(commandBuffer);
 			CompileShader(compileShaderCommandBuffer->m_ShaderId);
 			if (logCalls)
-				DEBUG("Unity", "CompileShader: %d", compileShaderCommandBuffer->m_ShaderId);
+				DEBUG(DEBUG_TAG, "CompileShader: %d", compileShaderCommandBuffer->m_ShaderId);
 			break;
 		}
 		case kCommandTypeGetShaderSource:
@@ -702,7 +717,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			if (sourceLength <= 0)
 			{
 				getShaderSourceCommandBuffer->m_Source = nullptr;
-				DEBUG("Unity", "Failed to get shader source from #%d", getShaderSourceCommandBuffer->m_ShaderId);
+				DEBUG(DEBUG_TAG, "Failed to get shader source from #%d", getShaderSourceCommandBuffer->m_ShaderId);
 				break;
 			}
 
@@ -721,7 +736,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			delete[] source;
 
 			if (logCalls)
-				DEBUG("Unity", "GetShaderSource: %s", getShaderSourceCommandBuffer->m_Source);
+				DEBUG(DEBUG_TAG, "GetShaderSource: %s", getShaderSourceCommandBuffer->m_Source);
 			break;
 		}
 		case kCommandTypeGetShaderParameter:
@@ -734,7 +749,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					&ret);
 			getShaderParameterCommandBuffer->m_Value = ret;
 			if (logCalls)
-				DEBUG("Unity", "GetShaderParameter: %d", ret);
+				DEBUG(DEBUG_TAG, "GetShaderParameter: %d", ret);
 			break;
 		}
 		case kCommandTypeGetShaderInfoLog:
@@ -749,7 +764,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			delete[] infoLog;
 
 			if (logCalls)
-				DEBUG("Unity", "GetShaderInfoLog: %s", getShaderInfoLogCommandBuffer->m_InfoLog);
+				DEBUG(DEBUG_TAG, "GetShaderInfoLog: %s", getShaderInfoLogCommandBuffer->m_InfoLog);
 			break;
 		}
 		case kCommandTypeCreateBuffer:
@@ -759,7 +774,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			createBufferCommandBuffer->m_BufferId = ret;
 
 			if (logCalls)
-				DEBUG("Unity", "CreateBuffer => buffer(%d)", ret);
+				DEBUG(DEBUG_TAG, "CreateBuffer => buffer(%d)", ret);
 			break;
 		}
 		case kCommandTypeDeleteBuffer:
@@ -768,7 +783,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glDeleteBuffers(1, &deleteBufferCommandBuffer->m_BufferId);
 
 			if (logCalls)
-				DEBUG("Unity", "DeleteBuffer: %d", deleteBufferCommandBuffer->m_BufferId);
+				DEBUG(DEBUG_TAG, "DeleteBuffer: %d", deleteBufferCommandBuffer->m_BufferId);
 			break;
 		}
 		case kCommandTypeBindBuffer:
@@ -785,7 +800,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 
 			glBindBuffer(target, buffer);
 			if (logCalls)
-				DEBUG("Unity", "BindBuffer: target=%d buffer=%d", target, buffer);
+				DEBUG(DEBUG_TAG, "BindBuffer: target=%d buffer=%d", target, buffer);
 			break;
 		}
 		case kCommandTypeBufferData:
@@ -799,9 +814,9 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glBufferData(target, size, data, usage);
 			if (logCalls)
 			{
-				DEBUG("Unity", "BufferData(%d, %d)", target, size);
+				DEBUG(DEBUG_TAG, "BufferData(%d, %d)", target, size);
 				if (size > 3)
-					DEBUG("Unity", "BufferData[data]: %d %d %d %d ...",
+					DEBUG(DEBUG_TAG, "BufferData[data]: %d %d %d %d ...",
 								data[0], data[1], data[2], data[3]);
 			}
 			break;
@@ -815,7 +830,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					bufferSubDataCommandBuffer->m_Size,
 					bufferSubDataCommandBuffer->m_Data);
 			if (logCalls)
-				DEBUG("Unity", "BufferSubData: %d", bufferSubDataCommandBuffer->m_Size);
+				DEBUG(DEBUG_TAG, "BufferSubData: %d", bufferSubDataCommandBuffer->m_Size);
 			break;
 		}
 		case kCommandTypeCreateFramebuffer:
@@ -825,7 +840,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glGenFramebuffers(1, &ret);
 			createFramebufferCommandBuffer->m_FramebufferId = ret;
 			if (logCalls)
-				DEBUG("Unity", "CreateFramebuffer: %d", ret);
+				DEBUG(DEBUG_TAG, "CreateFramebuffer: %d", ret);
 			break;
 		}
 		case kCommandTypeDeleteFramebuffer:
@@ -833,7 +848,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto deleteFramebufferCommandBuffer = static_cast<DeleteFramebufferCommandBuffer *>(commandBuffer);
 			glDeleteFramebuffers(1, &deleteFramebufferCommandBuffer->m_FramebufferId);
 			if (logCalls)
-				DEBUG("Unity", "DeleteFramebuffer: %d", deleteFramebufferCommandBuffer->m_FramebufferId);
+				DEBUG(DEBUG_TAG, "DeleteFramebuffer: %d", deleteFramebufferCommandBuffer->m_FramebufferId);
 			break;
 		}
 		case kCommandTypeBindFramebuffer:
@@ -845,7 +860,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glBindFramebuffer(target, framebuffer);
 			m_AppFramebufferId = framebuffer;
 			if (logCalls)
-				DEBUG("Unity", "BindFramebuffer(%d)", bindFramebufferCommandBuffer->m_Framebuffer);
+				DEBUG(DEBUG_TAG, "BindFramebuffer(%d)", bindFramebufferCommandBuffer->m_Framebuffer);
 			break;
 		}
 		case kCommandTypeFramebufferRenderbuffer:
@@ -857,7 +872,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					framebufferRenderbufferCommandBuffer->m_Renderbuffertarget,
 					framebufferRenderbufferCommandBuffer->m_Renderbuffer);
 			if (logCalls)
-				DEBUG("Unity", "FramebufferRenderbuffer: %d", framebufferRenderbufferCommandBuffer->m_Renderbuffer);
+				DEBUG(DEBUG_TAG, "FramebufferRenderbuffer: %d", framebufferRenderbufferCommandBuffer->m_Renderbuffer);
 			break;
 		}
 		case kCommandTypeFramebufferTexture2D:
@@ -870,7 +885,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					framebufferTexture2DCommandBuffer->m_Texture,
 					framebufferTexture2DCommandBuffer->m_Level);
 			if (logCalls)
-				DEBUG("Unity", "FramebufferTexture2D: %d", framebufferTexture2DCommandBuffer->m_Texture);
+				DEBUG(DEBUG_TAG, "FramebufferTexture2D: %d", framebufferTexture2DCommandBuffer->m_Texture);
 			break;
 		}
 		case kCommandTypeCheckFramebufferStatus:
@@ -879,7 +894,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			GLenum ret = glCheckFramebufferStatus(checkFramebufferStatusCommandBuffer->m_Target);
 			checkFramebufferStatusCommandBuffer->m_Status = ret;
 			if (logCalls)
-				DEBUG("Unity", "CheckFramebufferStatus: %d", ret);
+				DEBUG(DEBUG_TAG, "CheckFramebufferStatus: %d", ret);
 			break;
 		}
 		case kCommandTypeCreateRenderbuffer:
@@ -889,7 +904,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glGenRenderbuffers(1, &ret);
 			createRenderbufferCommandBuffer->m_RenderbufferId = ret;
 			if (logCalls)
-				DEBUG("Unity", "CreateRenderbuffer: %d", ret);
+				DEBUG(DEBUG_TAG, "CreateRenderbuffer: %d", ret);
 			break;
 		}
 		case kCommandTypeDeleteRenderbuffer:
@@ -897,7 +912,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto deleteRenderbufferCommandBuffer = static_cast<DeleteRenderbufferCommandBuffer *>(commandBuffer);
 			glDeleteRenderbuffers(1, &deleteRenderbufferCommandBuffer->m_RenderbufferId);
 			if (logCalls)
-				DEBUG("Unity", "DeleteRenderbuffer: %d", deleteRenderbufferCommandBuffer->m_RenderbufferId);
+				DEBUG(DEBUG_TAG, "DeleteRenderbuffer: %d", deleteRenderbufferCommandBuffer->m_RenderbufferId);
 			break;
 		}
 		case kCommandTypeBindRenderbuffer:
@@ -909,7 +924,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glBindRenderbuffer(target, renderbuffer);
 			m_AppRenderbufferId = renderbuffer;
 			if (logCalls)
-				DEBUG("Unity", "BindRenderbuffer: %d", bindRenderbufferCommandBuffer->m_Renderbuffer);
+				DEBUG(DEBUG_TAG, "BindRenderbuffer: %d", bindRenderbufferCommandBuffer->m_Renderbuffer);
 			break;
 		}
 		case kCommandTypeRenderbufferStorage:
@@ -921,7 +936,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					renderbufferStorageCommandBuffer->m_Width,
 					renderbufferStorageCommandBuffer->m_Height);
 			if (logCalls)
-				DEBUG("Unity", "RenderbufferStorage: %d", renderbufferStorageCommandBuffer->m_Internalformat);
+				DEBUG(DEBUG_TAG, "RenderbufferStorage: %d", renderbufferStorageCommandBuffer->m_Internalformat);
 			break;
 		}
 		case kCommandTypeCreateTexture:
@@ -930,7 +945,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			int ret = CreateTexture();
 			createTextureCommandBuffer->m_TextureId = ret;
 			if (logCalls)
-				DEBUG("Unity", "CreateTexture: %d", ret);
+				DEBUG(DEBUG_TAG, "CreateTexture: %d", ret);
 			break;
 		}
 		case kCommandTypeDeleteTexture:
@@ -938,7 +953,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto deleteTextureCommandBuffer = static_cast<DeleteTextureCommandBuffer *>(commandBuffer);
 			glDeleteTextures(1, &deleteTextureCommandBuffer->m_TextureId);
 			if (logCalls)
-				DEBUG("Unity", "DeleteTexture: %d", deleteTextureCommandBuffer->m_TextureId);
+				DEBUG(DEBUG_TAG, "DeleteTexture: %d", deleteTextureCommandBuffer->m_TextureId);
 			break;
 		}
 		case kCommandTypeBindTexture:
@@ -946,7 +961,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto bindTextureCommandBuffer = static_cast<BindTextureCommandBuffer *>(commandBuffer);
 			BindTexture(bindTextureCommandBuffer->m_Target, bindTextureCommandBuffer->m_Texture);
 			if (logCalls)
-				DEBUG("Unity", "BindTexture: %d", bindTextureCommandBuffer->m_Texture);
+				DEBUG(DEBUG_TAG, "BindTexture: %d", bindTextureCommandBuffer->m_Texture);
 			break;
 		}
 		case kCommandTypeTexImage2D:
@@ -963,7 +978,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					texImage2DCommandBuffer->m_Type,
 					texImage2DCommandBuffer->m_Pixels);
 			if (logCalls)
-				DEBUG("Unity", "TexImage2D: %d", texImage2DCommandBuffer->m_Target);
+				DEBUG(DEBUG_TAG, "TexImage2D: %d", texImage2DCommandBuffer->m_Target);
 			break;
 		}
 		case kCommandTypeTexSubImage2D:
@@ -980,7 +995,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					texSubImage2DCommandBuffer->m_Type,
 					texSubImage2DCommandBuffer->m_Pixels);
 			if (logCalls)
-				DEBUG("Unity", "TexSubImage2D: %d", texSubImage2DCommandBuffer->m_Target);
+				DEBUG(DEBUG_TAG, "TexSubImage2D: %d", texSubImage2DCommandBuffer->m_Target);
 			break;
 		}
 		case kCommandTypeCopyTexImage2D:
@@ -996,7 +1011,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					copyTexImage2DCommandBuffer->m_Height,
 					copyTexImage2DCommandBuffer->m_Border);
 			if (logCalls)
-				DEBUG("Unity", "CopyTexImage2D: %d", copyTexImage2DCommandBuffer->m_Target);
+				DEBUG(DEBUG_TAG, "CopyTexImage2D: %d", copyTexImage2DCommandBuffer->m_Target);
 			break;
 		}
 		case kCommandTypeCopyTexSubImage2D:
@@ -1012,7 +1027,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					copyTexSubImage2DCommandBuffer->m_Width,
 					copyTexSubImage2DCommandBuffer->m_Height);
 			if (logCalls)
-				DEBUG("Unity", "CopyTexSubImage2D: %d", copyTexSubImage2DCommandBuffer->m_Target);
+				DEBUG(DEBUG_TAG, "CopyTexSubImage2D: %d", copyTexSubImage2DCommandBuffer->m_Target);
 			break;
 		}
 		case kCommandTypeTexParameteri:
@@ -1023,7 +1038,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					texParameteriCommandBuffer->m_Pname,
 					texParameteriCommandBuffer->m_Param);
 			if (logCalls)
-				DEBUG("Unity", "TexParameteri: %d", texParameteriCommandBuffer->m_Target);
+				DEBUG(DEBUG_TAG, "TexParameteri: %d", texParameteriCommandBuffer->m_Target);
 			break;
 		}
 		case kCommandTypeActiveTexture:
@@ -1031,7 +1046,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto activeTextureCommandBuffer = static_cast<ActiveTextureCommandBuffer *>(commandBuffer);
 			ActiveTexture(activeTextureCommandBuffer->m_Texture);
 			if (logCalls)
-				DEBUG("Unity", "ActiveTexture: %d", activeTextureCommandBuffer->m_Texture);
+				DEBUG(DEBUG_TAG, "ActiveTexture: %d", activeTextureCommandBuffer->m_Texture);
 			break;
 		}
 		case kCommandTypeGenerateMipmap:
@@ -1039,7 +1054,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto generateMipmapCommandBuffer = static_cast<GenerateMipmapCommandBuffer *>(commandBuffer);
 			GenerateMipmap(generateMipmapCommandBuffer->m_Target);
 			if (logCalls)
-				DEBUG("Unity", "GenerateMipmap: %d", generateMipmapCommandBuffer->m_Target);
+				DEBUG(DEBUG_TAG, "GenerateMipmap: %d", generateMipmapCommandBuffer->m_Target);
 			break;
 		}
 		case kCommandTypeEnableVertexAttribArray:
@@ -1047,7 +1062,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto enableVertexAttribArrayCommandBuffer = static_cast<EnableVertexAttribArrayCommandBuffer *>(commandBuffer);
 			EnableVertexAttribArray(enableVertexAttribArrayCommandBuffer->m_Index);
 			if (logCalls)
-				DEBUG("Unity", "EnableVertexAttribArray(%d)", enableVertexAttribArrayCommandBuffer->m_Index);
+				DEBUG(DEBUG_TAG, "EnableVertexAttribArray(%d)", enableVertexAttribArrayCommandBuffer->m_Index);
 			break;
 		}
 		case kCommandTypeDisableVertexAttribArray:
@@ -1055,7 +1070,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto disableVertexAttribArrayCommandBuffer = static_cast<DisableVertexAttribArrayCommandBuffer *>(commandBuffer);
 			glDisableVertexAttribArray(disableVertexAttribArrayCommandBuffer->m_Index);
 			if (logCalls)
-				DEBUG("Unity", "DisableVertexAttribArray(%d)", disableVertexAttribArrayCommandBuffer->m_Index);
+				DEBUG(DEBUG_TAG, "DisableVertexAttribArray(%d)", disableVertexAttribArrayCommandBuffer->m_Index);
 			break;
 		}
 		case kCommandTypeVertexAttribPointer:
@@ -1070,7 +1085,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 
 			VertexAttribPointer(index, size, type, normalized, stride, offset);
 			if (logCalls)
-				DEBUG("Unity", "VertexAttribPointer(%d) size=%d type=%d normalized=%d stride=%d offset=%d",
+				DEBUG(DEBUG_TAG, "VertexAttribPointer(%d) size=%d type=%d normalized=%d stride=%d offset=%d",
 							index, size, type, normalized, stride, offset);
 			break;
 		}
@@ -1083,7 +1098,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			int ret = GetAttribLocation(program, name);
 			getAttribLocationCommandBuffer->m_Location = ret;
 			if (logCalls)
-				DEBUG("Unity", "GetAttribLocation(%d, %s) => %d",
+				DEBUG(DEBUG_TAG, "GetAttribLocation(%d, %s) => %d",
 							program, name, ret);
 			break;
 		}
@@ -1093,7 +1108,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			int ret = GetUniformLocation(getUniformLocationCommandBuffer->m_Program, getUniformLocationCommandBuffer->m_Name);
 			getUniformLocationCommandBuffer->m_Location = ret;
 			if (logCalls)
-				DEBUG("Unity", "GetUniformLocation: %d", ret);
+				DEBUG(DEBUG_TAG, "GetUniformLocation: %d", ret);
 			break;
 		}
 		case kCommandTypeUniform1f:
@@ -1101,7 +1116,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto uniform1fCommandBuffer = static_cast<Uniform1fCommandBuffer *>(commandBuffer);
 			glUniform1f(uniform1fCommandBuffer->m_Location, uniform1fCommandBuffer->m_V0);
 			if (logCalls)
-				DEBUG("Unity", "Uniform1f(%d)", uniform1fCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "Uniform1f(%d)", uniform1fCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform1fv:
@@ -1112,7 +1127,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniform1fvCommandBuffer->m_Count,
 					uniform1fvCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG("Unity", "Uniform1fv(%d)", uniform1fvCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "Uniform1fv(%d)", uniform1fvCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform1i:
@@ -1120,7 +1135,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto uniform1iCommandBuffer = static_cast<Uniform1iCommandBuffer *>(commandBuffer);
 			glUniform1i(uniform1iCommandBuffer->m_Location, uniform1iCommandBuffer->m_V0);
 			if (logCalls)
-				DEBUG("Unity", "Uniform1i(%d)", uniform1iCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "Uniform1i(%d)", uniform1iCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform1iv:
@@ -1131,7 +1146,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniform1ivCommandBuffer->m_Count,
 					uniform1ivCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG("Unity", "Uniform1iv(%d)", uniform1ivCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "Uniform1iv(%d)", uniform1ivCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform2f:
@@ -1139,7 +1154,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto uniform2fCommandBuffer = static_cast<Uniform2fCommandBuffer *>(commandBuffer);
 			glUniform2f(uniform2fCommandBuffer->m_Location, uniform2fCommandBuffer->m_V0, uniform2fCommandBuffer->m_V1);
 			if (logCalls)
-				DEBUG("Unity", "Uniform2f(%d)", uniform2fCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "Uniform2f(%d)", uniform2fCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform2fv:
@@ -1150,7 +1165,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniform2fvCommandBuffer->m_Count,
 					uniform2fvCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG("Unity", "Uniform2fv(%d)", uniform2fvCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "Uniform2fv(%d)", uniform2fvCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform2i:
@@ -1158,7 +1173,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto uniform2iCommandBuffer = static_cast<Uniform2iCommandBuffer *>(commandBuffer);
 			glUniform2i(uniform2iCommandBuffer->m_Location, uniform2iCommandBuffer->m_V0, uniform2iCommandBuffer->m_V1);
 			if (logCalls)
-				DEBUG("Unity", "Uniform2i(%d)", uniform2iCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "Uniform2i(%d)", uniform2iCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform2iv:
@@ -1169,7 +1184,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniform2ivCommandBuffer->m_Count,
 					uniform2ivCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG("Unity", "Uniform2iv(%d)", uniform2ivCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "Uniform2iv(%d)", uniform2ivCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform3f:
@@ -1181,7 +1196,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto v2 = uniform3fCommandBuffer->m_V2;
 			glUniform3f(loc, v0, v1, v2);
 			if (logCalls)
-				DEBUG("Unity", "Uniform3f(%d): (%f, %f, %f)",
+				DEBUG(DEBUG_TAG, "Uniform3f(%d): (%f, %f, %f)",
 							loc, v0, v1, v2);
 			break;
 		}
@@ -1193,7 +1208,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniform3fvCommandBuffer->m_Count,
 					uniform3fvCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG("Unity", "Uniform3fv(%d)", uniform3fvCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "Uniform3fv(%d)", uniform3fvCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform3i:
@@ -1201,7 +1216,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto uniform3iCommandBuffer = static_cast<Uniform3iCommandBuffer *>(commandBuffer);
 			glUniform3i(uniform3iCommandBuffer->m_Location, uniform3iCommandBuffer->m_V0, uniform3iCommandBuffer->m_V1, uniform3iCommandBuffer->m_V2);
 			if (logCalls)
-				DEBUG("Unity", "Uniform3i(%d)", uniform3iCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "Uniform3i(%d)", uniform3iCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform3iv:
@@ -1212,7 +1227,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniform3ivCommandBuffer->m_Count,
 					uniform3ivCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG("Unity", "Uniform3iv(%d)", uniform3ivCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "Uniform3iv(%d)", uniform3ivCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform4f:
@@ -1226,7 +1241,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 
 			glUniform4f(loc, v0, v1, v2, v3);
 			if (logCalls)
-				DEBUG("Unity", "Uniform4f(%d): (%f, %f, %f, %f)",
+				DEBUG(DEBUG_TAG, "Uniform4f(%d): (%f, %f, %f, %f)",
 							loc, v0, v1, v2, v3);
 			break;
 		}
@@ -1238,7 +1253,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniform4fvCommandBuffer->m_Count,
 					uniform4fvCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG("Unity", "Uniform4fv(%d)", uniform4fvCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "Uniform4fv(%d)", uniform4fvCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform4i:
@@ -1250,7 +1265,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 									uniform4iCommandBuffer->m_V2,
 									uniform4iCommandBuffer->m_V3);
 			if (logCalls)
-				DEBUG("Unity", "Uniform4i(%d)", uniform4iCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "Uniform4i(%d)", uniform4iCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform4iv:
@@ -1261,7 +1276,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniform4ivCommandBuffer->m_Count,
 					uniform4ivCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG("Unity", "Uniform4iv(%d)", uniform4ivCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "Uniform4iv(%d)", uniform4ivCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniformMatrix2fv:
@@ -1273,7 +1288,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniformMatrix2fvCommandBuffer->m_Transpose,
 					uniformMatrix2fvCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG("Unity", "UniformMatrix2fv(%d)", uniformMatrix2fvCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "UniformMatrix2fv(%d)", uniformMatrix2fvCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniformMatrix3fv:
@@ -1285,7 +1300,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniformMatrix3fvCommandBuffer->m_Transpose,
 					uniformMatrix3fvCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG("Unity", "UniformMatrix3fv(%d)", uniformMatrix3fvCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "UniformMatrix3fv(%d)", uniformMatrix3fvCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniformMatrix4fv:
@@ -1328,11 +1343,12 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 				{
 					matrixToUse = uniformMatrix4fvCommandBuffer->m_Value;
 				}
+				// matrixToUse = uniformMatrix4fvCommandBuffer->m_Value;
 			}
 
 			if (matrixToUse == nullptr)
 			{
-				DEBUG("Unity", "UniformMatrix4fv() fails to read the matrix value.");
+				DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the matrix value.");
 			}
 			else
 			{
@@ -1345,11 +1361,11 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 
 			if (logCalls)
 			{
-				DEBUG("Unity", "UniformMatrix4fv: loc=%d count=%d placeholderType=%d",
+				DEBUG(DEBUG_TAG, "UniformMatrix4fv: loc=%d count=%d placeholderType=%d",
 							uniformMatrix4fvCommandBuffer->m_Location,
 							uniformMatrix4fvCommandBuffer->m_Count,
 							uniformMatrix4fvCommandBuffer->m_MatrixPlaceholderType);
-				DEBUG("Unity", "UniformMatrix4fv[matrix]: (%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)",
+				DEBUG(DEBUG_TAG, "UniformMatrix4fv[matrix]: (%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)",
 							matrixToUse[0], matrixToUse[1], matrixToUse[2], matrixToUse[3],
 							matrixToUse[4], matrixToUse[5], matrixToUse[6], matrixToUse[7],
 							matrixToUse[8], matrixToUse[9], matrixToUse[10], matrixToUse[11],
@@ -1365,7 +1381,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					drawArraysCommandBuffer->m_First,
 					drawArraysCommandBuffer->m_Count);
 			if (logCalls)
-				DEBUG("Unity", "DrawArrays: %d", drawArraysCommandBuffer->m_Count);
+				DEBUG(DEBUG_TAG, "DrawArrays: %d", drawArraysCommandBuffer->m_Count);
 			break;
 		}
 		case kCommandTypeDrawElements:
@@ -1377,7 +1393,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					drawElementsCommandBuffer->m_Type,
 					drawElementsCommandBuffer->m_Indices);
 			if (logCalls)
-				DEBUG("Unity", "DrawElements: mode=%d count=%d type=%d",
+				DEBUG(DEBUG_TAG, "DrawElements: mode=%d count=%d type=%d",
 							drawElementsCommandBuffer->m_Mode,
 							drawElementsCommandBuffer->m_Count,
 							drawElementsCommandBuffer->m_Type);
@@ -1390,7 +1406,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					pixelStoreiCommandBuffer->m_Pname,
 					pixelStoreiCommandBuffer->m_Param);
 			if (logCalls)
-				DEBUG("Unity", "PixelStorei: %d", pixelStoreiCommandBuffer->m_Pname);
+				DEBUG(DEBUG_TAG, "PixelStorei: %d", pixelStoreiCommandBuffer->m_Pname);
 			break;
 		}
 		case kCommandTypePolygonOffset:
@@ -1400,7 +1416,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					polygonOffsetCommandBuffer->m_Factor,
 					polygonOffsetCommandBuffer->m_Units);
 			if (logCalls)
-				DEBUG("Unity", "PolygonOffset: %d", polygonOffsetCommandBuffer->m_Factor);
+				DEBUG(DEBUG_TAG, "PolygonOffset: %d", polygonOffsetCommandBuffer->m_Factor);
 			break;
 		}
 		case kCommandTypeSetViewport:
@@ -1417,7 +1433,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			m_ViewportSize[0] = width;
 			m_ViewportSize[1] = height;
 			if (logCalls)
-				DEBUG("Unity", "SetViewport: (%d %d %d %d)", x, y, width, height);
+				DEBUG(DEBUG_TAG, "SetViewport: (%d %d %d %d)", x, y, width, height);
 			break;
 		}
 		case kCommandTypeSetScissor:
@@ -1429,7 +1445,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto height = setScissorCommandBuffer->m_Height;
 			glScissor(x, y, width, height);
 			if (logCalls)
-				DEBUG("Unity", "SetScissor: (%d %d %d %d)", x, y, width, height);
+				DEBUG(DEBUG_TAG, "SetScissor: (%d %d %d %d)", x, y, width, height);
 			break;
 		}
 		case kCommandTypeClear:
@@ -1469,7 +1485,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glDepthMask(depthMaskCommandBuffer->m_Flag);
 			m_DepthMaskEnabled = depthMaskCommandBuffer->m_Flag;
 			if (logCalls)
-				DEBUG("Unity", "DepthMask: %d", depthMaskCommandBuffer->m_Flag);
+				DEBUG(DEBUG_TAG, "DepthMask: %d", depthMaskCommandBuffer->m_Flag);
 			break;
 		}
 		case kCommandTypeDepthFunc:
@@ -1477,7 +1493,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto depthFuncCommandBuffer = static_cast<DepthFuncCommandBuffer *>(commandBuffer);
 			DepthFunc(depthFuncCommandBuffer->m_Func);
 			if (logCalls)
-				DEBUG("Unity", "DepthFunc: %d", depthFuncCommandBuffer->m_Func);
+				DEBUG(DEBUG_TAG, "DepthFunc: %d", depthFuncCommandBuffer->m_Func);
 			break;
 		}
 		case kCommandTypeDepthRange:
@@ -1485,7 +1501,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto depthRangeCommandBuffer = static_cast<DepthRangeCommandBuffer *>(commandBuffer);
 			glDepthRangef(depthRangeCommandBuffer->m_Near, depthRangeCommandBuffer->m_Far);
 			if (logCalls)
-				DEBUG("Unity", "DepthRange: %f", depthRangeCommandBuffer->m_Near);
+				DEBUG(DEBUG_TAG, "DepthRange: %f", depthRangeCommandBuffer->m_Near);
 			break;
 		}
 		case kCommandTypeStencilFunc:
@@ -1496,7 +1512,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					stencilFuncCommandBuffer->m_Ref,
 					stencilFuncCommandBuffer->m_Mask);
 			if (logCalls)
-				DEBUG("Unity", "StencilFunc: %d", stencilFuncCommandBuffer->m_Func);
+				DEBUG(DEBUG_TAG, "StencilFunc: %d", stencilFuncCommandBuffer->m_Func);
 			break;
 		}
 		case kCommandTypeStencilFuncSeparate:
@@ -1508,7 +1524,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					stencilFuncSeparateCommandBuffer->m_Ref,
 					stencilFuncSeparateCommandBuffer->m_Mask);
 			if (logCalls)
-				DEBUG("Unity", "StencilFuncSeparate: %d", stencilFuncSeparateCommandBuffer->m_Func);
+				DEBUG(DEBUG_TAG, "StencilFuncSeparate: %d", stencilFuncSeparateCommandBuffer->m_Func);
 			break;
 		}
 		case kCommandTypeStencilMask:
@@ -1516,7 +1532,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto stencilMaskCommandBuffer = static_cast<StencilMaskCommandBuffer *>(commandBuffer);
 			glStencilMask(stencilMaskCommandBuffer->m_Mask);
 			if (logCalls)
-				DEBUG("Unity", "StencilMask: %d", stencilMaskCommandBuffer->m_Mask);
+				DEBUG(DEBUG_TAG, "StencilMask: %d", stencilMaskCommandBuffer->m_Mask);
 			break;
 		}
 		case kCommandTypeStencilMaskSeparate:
@@ -1526,7 +1542,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					stencilMaskSeparateCommandBuffer->m_Face,
 					stencilMaskSeparateCommandBuffer->m_Mask);
 			if (logCalls)
-				DEBUG("Unity", "StencilMaskSeparate: %d", stencilMaskSeparateCommandBuffer->m_Mask);
+				DEBUG(DEBUG_TAG, "StencilMaskSeparate: %d", stencilMaskSeparateCommandBuffer->m_Mask);
 			break;
 		}
 		case kCommandTypeStencilOp:
@@ -1537,7 +1553,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					stencilOpCommandBuffer->m_Zfail,
 					stencilOpCommandBuffer->m_Zpass);
 			if (logCalls)
-				DEBUG("Unity", "StencilOp: %d", stencilOpCommandBuffer->m_Fail);
+				DEBUG(DEBUG_TAG, "StencilOp: %d", stencilOpCommandBuffer->m_Fail);
 			break;
 		}
 		case kCommandTypeStencilOpSeparate:
@@ -1549,7 +1565,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					stencilOpSeparateCommandBuffer->m_Zfail,
 					stencilOpSeparateCommandBuffer->m_Zpass);
 			if (logCalls)
-				DEBUG("Unity", "StencilOpSeparate: %d", stencilOpSeparateCommandBuffer->m_Fail);
+				DEBUG(DEBUG_TAG, "StencilOpSeparate: %d", stencilOpSeparateCommandBuffer->m_Fail);
 			break;
 		}
 		case kCommandTypeBlendColor:
@@ -1561,7 +1577,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					blendColorCommandBuffer->m_B,
 					blendColorCommandBuffer->m_A);
 			if (logCalls)
-				DEBUG("Unity", "BlendColor: %d", blendColorCommandBuffer->m_R);
+				DEBUG(DEBUG_TAG, "BlendColor: %d", blendColorCommandBuffer->m_R);
 			break;
 		}
 		case kCommandTypeBlendEquation:
@@ -1569,7 +1585,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto blendEquationCommandBuffer = static_cast<BlendEquationCommandBuffer *>(commandBuffer);
 			glBlendEquation(blendEquationCommandBuffer->m_Mode);
 			if (logCalls)
-				DEBUG("Unity", "BlendEquation: %d", blendEquationCommandBuffer->m_Mode);
+				DEBUG(DEBUG_TAG, "BlendEquation: %d", blendEquationCommandBuffer->m_Mode);
 			break;
 		}
 		case kCommandTypeBlendEquationSeparate:
@@ -1579,7 +1595,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					blendEquationSeparateCommandBuffer->m_ModeRGB,
 					blendEquationSeparateCommandBuffer->m_ModeAlpha);
 			if (logCalls)
-				DEBUG("Unity", "BlendEquationSeparate: %d", blendEquationSeparateCommandBuffer->m_ModeRGB);
+				DEBUG(DEBUG_TAG, "BlendEquationSeparate: %d", blendEquationSeparateCommandBuffer->m_ModeRGB);
 			break;
 		}
 		case kCommandTypeBlendFunc:
@@ -1592,7 +1608,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			m_Blend_Dfactor = blendFuncCommandBuffer->m_Dfactor;
 			m_BlendFuncSet = true;
 			if (logCalls)
-				DEBUG("Unity", "BlendFunc: %d", blendFuncCommandBuffer->m_Sfactor);
+				DEBUG(DEBUG_TAG, "BlendFunc: %d", blendFuncCommandBuffer->m_Sfactor);
 			break;
 		}
 		case kCommandTypeBlendFuncSeparate:
@@ -1609,7 +1625,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			m_Blend_DstAlpha = blendFuncSeparateCommandBuffer->m_DstAlpha;
 			m_BlendFuncSeparateSet = true;
 			if (logCalls)
-				DEBUG("Unity", "BlendFuncSeparate: %d", blendFuncSeparateCommandBuffer->m_SrcRGB);
+				DEBUG(DEBUG_TAG, "BlendFuncSeparate: %d", blendFuncSeparateCommandBuffer->m_SrcRGB);
 			break;
 		}
 		case kCommandTypeColorMask:
@@ -1621,7 +1637,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					colorMaskCommandBuffer->m_B,
 					colorMaskCommandBuffer->m_A);
 			if (logCalls)
-				DEBUG("Unity", "ColorMask: %d", colorMaskCommandBuffer->m_R);
+				DEBUG(DEBUG_TAG, "ColorMask: %d", colorMaskCommandBuffer->m_R);
 			break;
 		}
 		case kCommandTypeCullFace:
@@ -1631,7 +1647,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glCullFace(mode);
 			m_AppCullFace = mode;
 			if (logCalls)
-				DEBUG("Unity", "CullFace: mode=%d", mode);
+				DEBUG(DEBUG_TAG, "CullFace: mode=%d", mode);
 			break;
 		}
 		case kCommandTypeFrontFace:
@@ -1641,7 +1657,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glFrontFace(mode);
 			m_AppFrontFace = mode;
 			if (logCalls)
-				DEBUG("Unity", "FrontFace: mode=%d", mode);
+				DEBUG(DEBUG_TAG, "FrontFace: mode=%d", mode);
 			break;
 		}
 		case kCommandTypeEnable:
@@ -1649,7 +1665,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto enableCommandBuffer = static_cast<EnableCommandBuffer *>(commandBuffer);
 			Enable(enableCommandBuffer->m_Cap);
 			if (logCalls)
-				DEBUG("Unity", "Enable: %d", enableCommandBuffer->m_Cap);
+				DEBUG(DEBUG_TAG, "Enable: %d", enableCommandBuffer->m_Cap);
 			break;
 		}
 		case kCommandTypeDisable:
@@ -1657,7 +1673,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto disableCommandBuffer = static_cast<DisableCommandBuffer *>(commandBuffer);
 			Disable(disableCommandBuffer->m_Cap);
 			if (logCalls)
-				DEBUG("Unity", "Disable: %d", disableCommandBuffer->m_Cap);
+				DEBUG(DEBUG_TAG, "Disable: %d", disableCommandBuffer->m_Cap);
 			break;
 		}
 		case kCommandTypeGetBooleanv:
@@ -1667,7 +1683,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glGetBooleanv(getBooleanvCommandBuffer->m_Pname, &ret);
 			getBooleanvCommandBuffer->m_Value = ret;
 			if (logCalls)
-				DEBUG("Unity", "GetBooleanv: %d", getBooleanvCommandBuffer->m_Pname);
+				DEBUG(DEBUG_TAG, "GetBooleanv: %d", getBooleanvCommandBuffer->m_Pname);
 			break;
 		}
 		case kCommandTypeGetIntegerv:
@@ -1677,7 +1693,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glGetIntegerv(getIntegervCommandBuffer->m_Pname, &ret);
 			getIntegervCommandBuffer->m_Value = ret;
 			if (logCalls)
-				DEBUG("Unity", "GetIntegerv: %d", getIntegervCommandBuffer->m_Pname);
+				DEBUG(DEBUG_TAG, "GetIntegerv: %d", getIntegervCommandBuffer->m_Pname);
 			break;
 		}
 		case kCommandTypeGetFloatv:
@@ -1687,7 +1703,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glGetFloatv(getFloatvCommandBuffer->m_Pname, &ret);
 			getFloatvCommandBuffer->m_Value = ret;
 			if (logCalls)
-				DEBUG("Unity", "GetFloatv: %d", getFloatvCommandBuffer->m_Pname);
+				DEBUG(DEBUG_TAG, "GetFloatv: %d", getFloatvCommandBuffer->m_Pname);
 			break;
 		}
 		case kCommandTypeGetString:
@@ -1696,7 +1712,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			const GLubyte *ret = glGetString(getStringCommandBuffer->m_Pname); // returns null-terminated string
 			getStringCommandBuffer->CopyValue(ret);
 			if (logCalls)
-				DEBUG("Unity", "GetString: %d", getStringCommandBuffer->m_Pname);
+				DEBUG(DEBUG_TAG, "GetString: %d", getStringCommandBuffer->m_Pname);
 			break;
 		}
 		case kCommandTypeGetShaderPrecisionFormat:
@@ -1713,7 +1729,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			getShaderPrecisionFormatCommandBuffer->m_RangeMax = range[1];
 			getShaderPrecisionFormatCommandBuffer->m_Precision = precision;
 			if (logCalls)
-				DEBUG("Unity", "GetShaderPrecisionFormat: %d", getShaderPrecisionFormatCommandBuffer->m_ShaderType);
+				DEBUG(DEBUG_TAG, "GetShaderPrecisionFormat: %d", getShaderPrecisionFormatCommandBuffer->m_ShaderType);
 			break;
 		}
 		case kCommandTypeGetError:
@@ -1736,13 +1752,13 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 				switch (error)
 				{
 				case GL_OUT_OF_MEMORY:
-					DEBUG("Unity", "[type:%d] Occurs an OpenGL error: GL_OUT_OF_MEMORY", commandType);
+					DEBUG(DEBUG_TAG, "[type:%d] Occurs an OpenGL error: GL_OUT_OF_MEMORY", commandType);
 					break;
 				case GL_INVALID_ENUM:
-					DEBUG("Unity", "[type:%d] Occurs an OpenGL error: GL_INVALID_ENUM", commandType);
+					DEBUG(DEBUG_TAG, "[type:%d] Occurs an OpenGL error: GL_INVALID_ENUM", commandType);
 					break;
 				default:
-					DEBUG("Unity", "[type:%d] Occurs an OpenGL error: 0x%04X", commandType, error);
+					DEBUG(DEBUG_TAG, "[type:%d] Occurs an OpenGL error: 0x%04X", commandType, error);
 					break;
 				}
 			}
@@ -1751,6 +1767,7 @@ void RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		// TODO: where to release the commandBuffer?
 		// delete commandBuffer;
 	}
+	return true;
 }
 
 void RenderAPI_OpenGLCoreES::DrawSimpleTriangles(const float worldMatrix[16], int triangleCount, const void *verticesFloat3Byte4)

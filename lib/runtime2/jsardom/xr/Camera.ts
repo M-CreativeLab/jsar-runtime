@@ -1,5 +1,6 @@
 import { WebXRSessionManager } from './SessionManager';
 import * as logger from '../../../bindings/logger';
+import XRReferenceSpaceImpl from '../../../webxr/api/XRReferenceSpace';
 
 /**
  * WebXR Camera which holds the views for the xrSession
@@ -12,6 +13,8 @@ export class WebXRCamera extends BABYLON.FreeCamera {
   private _referenceQuaternion: BABYLON.Quaternion = BABYLON.Quaternion.Identity();
   private _referencedPosition: BABYLON.Vector3 = new BABYLON.Vector3();
   private _trackingState: BABYLON.WebXRTrackingState = BABYLON.WebXRTrackingState.NOT_TRACKING;
+  private _xrProjectionMatrix: BABYLON.Matrix;
+  private _xrViewMatrix: BABYLON.Matrix;
 
   /**
    * This will be triggered after the first XR Frame initialized the camera,
@@ -65,9 +68,9 @@ export class WebXRCamera extends BABYLON.FreeCamera {
     // Initial camera configuration
     this.minZ = 0.1;
     this.rotationQuaternion = new BABYLON.Quaternion();
-    this.cameraRigMode = BABYLON.Camera.RIG_MODE_CUSTOM;
+    this.cameraRigMode = BABYLON.Camera.RIG_MODE_NONE;
     this.updateUpVectorFromRotation = true;
-    this._updateNumberOfRigCameras(1);
+    // this._updateNumberOfRigCameras(1);
     // freeze projection matrix, which will be copied later
     this.freezeProjectionMatrix();
     this._deferOnly = true;
@@ -91,12 +94,12 @@ export class WebXRCamera extends BABYLON.FreeCamera {
           this.onXRCameraInitializedObservable.clear();
         }
 
-        if (this._deferredUpdated) {
-          this.position.copyFrom(this._deferredPositionUpdate);
-          this.rotationQuaternion.copyFrom(this._deferredRotationQuaternionUpdate);
-        }
+        // if (this._deferredUpdated) {
+        //   this.position.copyFrom(this._deferredPositionUpdate);
+        //   this.rotationQuaternion.copyFrom(this._deferredRotationQuaternionUpdate);
+        // }
 
-        this._updateReferenceSpace();
+        // this._updateReferenceSpace();
         this._updateFromXRSession();
       },
       undefined,
@@ -134,7 +137,7 @@ export class WebXRCamera extends BABYLON.FreeCamera {
   /** @internal */
   public _updateForDualEyeDebugging(/*pupilDistance = 0.01*/) {
     // Create initial camera rigs
-    this._updateNumberOfRigCameras(2);
+    // this._updateNumberOfRigCameras(2);
     this.rigCameras[0].viewport = new BABYLON.Viewport(0, 0, 0.5, 1.0);
     // this.rigCameras[0].position.x = -pupilDistance / 2;
     this.rigCameras[0].outputRenderTarget = null;
@@ -172,6 +175,14 @@ export class WebXRCamera extends BABYLON.FreeCamera {
    */
   public getClassName(): string {
     return 'WebXRCamera';
+  }
+
+  public getViewMatrix(_force?: boolean): BABYLON.Matrix {
+    return this._xrViewMatrix;
+  }
+
+  public getProjectionMatrix(_force?: boolean): BABYLON.Matrix {
+    return this._xrProjectionMatrix;
   }
 
   /**
@@ -231,8 +242,8 @@ export class WebXRCamera extends BABYLON.FreeCamera {
       }
       const pos = pose.transform.position;
       this._referencedPosition.set(pos.x, pos.y, pos.z);
-
       this._referenceQuaternion.set(orientation.x, orientation.y, orientation.z, orientation.w);
+
       if (!this._scene.useRightHandedSystem) {
         this._referencedPosition.z *= -1;
         this._referenceQuaternion.z *= -1;
@@ -256,46 +267,53 @@ export class WebXRCamera extends BABYLON.FreeCamera {
     }
 
     // Update camera rigs
-    if (this.rigCameras.length !== pose.views.length) {
-      this._updateNumberOfRigCameras(pose.views.length);
-    }
+    // if (this.rigCameras.length !== pose.views.length) {
+    //   this._updateNumberOfRigCameras(pose.views.length);
+    // }
 
     pose.views.forEach((view: XRView, i: number) => {
-      const currentRig = <BABYLON.TargetCamera>this.rigCameras[i];
-      // update right and left, where applicable
-      if (!currentRig.isLeftCamera && !currentRig.isRightCamera) {
-        if (view.eye === 'right') {
-          currentRig._isRightCamera = true;
-        } else if (view.eye === 'left') {
-          currentRig._isLeftCamera = true;
-        }
-      }
+      const m = view.transform.matrix;
+      logger.info(`onxrframe(${view.eye === 'left' ? 0 : 1}) update`, m[12], m[13], m[14]);
+      // const currentRig = <BABYLON.TargetCamera>this.rigCameras[i];
+      // // update right and left, where applicable
+      // if (!currentRig.isLeftCamera && !currentRig.isRightCamera) {
+      //   if (view.eye === 'right') {
+      //     currentRig._isRightCamera = true;
+      //   } else if (view.eye === 'left') {
+      //     currentRig._isLeftCamera = true;
+      //   }
+      // }
       // Update view/projection matrix
-      const pos = view.transform.position;
-      const orientation = view.transform.orientation;
+      // const pos = view.transform.position;
+      // const orientation = view.transform.orientation;
 
-      currentRig.parent = this.parent;
-
-      currentRig.position.set(pos.x, pos.y, pos.z);
-      currentRig.rotationQuaternion.set(orientation.x, orientation.y, orientation.z, orientation.w);
-      if (!this._scene.useRightHandedSystem) {
-        currentRig.position.z *= -1;
-        currentRig.rotationQuaternion.z *= -1;
-        currentRig.rotationQuaternion.w *= -1;
-      } else {
-        currentRig.rotationQuaternion.multiplyInPlace(this._rotate180);
+      if (view.eye === 'left') {
+        this._xrProjectionMatrix = BABYLON.Matrix.FromArray(view.projectionMatrix);
       }
-      BABYLON.Matrix.FromFloat32ArrayToRefScaled(
-        view.projectionMatrix, 0, 1, currentRig._projectionMatrix);
+      this._xrViewMatrix = BABYLON.Matrix.FromArray(m);
 
-      if (!this._scene.useRightHandedSystem) {
-        currentRig._projectionMatrix.toggleProjectionMatrixHandInPlace();
-      }
+      // currentRig.parent = this.parent;
+      // currentRig.position.set(pos.x, pos.y, pos.z);
+      // currentRig.rotationQuaternion.set(orientation.x, orientation.y, orientation.z, orientation.w);
+
+      // if (!this._scene.useRightHandedSystem) {
+      //   currentRig.position.z *= -1;
+      //   currentRig.rotationQuaternion.z *= -1;
+      //   currentRig.rotationQuaternion.w *= -1;
+      // } else {
+      //   currentRig.rotationQuaternion.multiplyInPlace(this._rotate180);
+      // }
+
+      // BABYLON.Matrix.FromFloat32ArrayToRefScaled(
+      //   view.projectionMatrix, 0, 1, currentRig._projectionMatrix);
+      // if (!this._scene.useRightHandedSystem) {
+      //   currentRig._projectionMatrix.toggleProjectionMatrixHandInPlace();
+      // }
 
       // first camera?
-      if (i === 0) {
-        this._projectionMatrix.copyFrom(currentRig._projectionMatrix);
-      }
+      // if (i === 0) {
+      //   this._projectionMatrix.copyFrom(currentRig._projectionMatrix);
+      // }
 
       const renderTargetTexture = this._xrSessionManager.getRenderTargetTextureForView(view);
       this._renderingMultiview = renderTargetTexture?._texture?.isMultiview || false;
@@ -308,68 +326,65 @@ export class WebXRCamera extends BABYLON.FreeCamera {
         }
       } else {
         // Update viewport
-        this._xrSessionManager.trySetViewportForView(currentRig.viewport, view);
+        this._xrSessionManager.trySetViewportForView(this.viewport, view);
 
         // Set cameras to render to the session's render target
-        currentRig.outputRenderTarget = renderTargetTexture || this._xrSessionManager.getRenderTargetTextureForView(view);
+        this.outputRenderTarget = renderTargetTexture || this._xrSessionManager.getRenderTargetTextureForView(view);
       }
-
-      // Replicate parent rig camera behavior
-      currentRig.layerMask = this.layerMask;
     });
   }
 
-  private _updateNumberOfRigCameras(viewCount = 1) {
-    while (this.rigCameras.length < viewCount) {
-      const newCamera = new BABYLON.TargetCamera('XR-RigCamera: ' + this.rigCameras.length, BABYLON.Vector3.Zero(), this.getScene());
-      newCamera.minZ = 0.1;
-      newCamera.rotationQuaternion = new BABYLON.Quaternion();
-      newCamera.updateUpVectorFromRotation = true;
-      newCamera.isRigCamera = true;
-      newCamera.rigParent = this;
-      // do not compute projection matrix, provided by XR
-      newCamera.freezeProjectionMatrix();
-      this.rigCameras.push(newCamera);
-    }
-    while (this.rigCameras.length > viewCount) {
-      const removedCamera = this.rigCameras.pop();
-      if (removedCamera) {
-        removedCamera.dispose();
-      }
-    }
-  }
+  // private _updateNumberOfRigCameras(viewCount = 1) {
+  //   while (this.rigCameras.length < viewCount) {
+  //     const newCamera = new BABYLON.TargetCamera('XR-RigCamera: ' + this.rigCameras.length, BABYLON.Vector3.Zero(), this.getScene());
+  //     newCamera.minZ = 0.1;
+  //     newCamera.rotationQuaternion = new BABYLON.Quaternion();
+  //     newCamera.updateUpVectorFromRotation = true;
+  //     newCamera.isRigCamera = true;
+  //     newCamera.rigParent = this;
+  //     // do not compute projection matrix, provided by XR
+  //     newCamera.freezeProjectionMatrix();
+  //     this.rigCameras.push(newCamera);
+  //   }
+  //   while (this.rigCameras.length > viewCount) {
+  //     const removedCamera = this.rigCameras.pop();
+  //     if (removedCamera) {
+  //       removedCamera.dispose();
+  //     }
+  //   }
+  // }
 
-  private _updateReferenceSpace() {
-    // were position & rotation updated OUTSIDE of the xr update loop
-    if (!this.position.equals(this._referencedPosition) || !this.rotationQuaternion.equals(this._referenceQuaternion)) {
-      const referencedMat = BABYLON.TmpVectors.Matrix[0];
-      const poseMat = BABYLON.TmpVectors.Matrix[1];
-      const transformMat = BABYLON.TmpVectors.Matrix[2];
+  // private _updateReferenceSpace() {
+  //   // were position & rotation updated OUTSIDE of the xr update loop
+  //   if (!this.position.equals(this._referencedPosition) || !this.rotationQuaternion.equals(this._referenceQuaternion)) {
+  //     const referencedMat = BABYLON.TmpVectors.Matrix[0];
+  //     const poseMat = BABYLON.TmpVectors.Matrix[1];
+  //     const transformMat = BABYLON.TmpVectors.Matrix[2];
 
-      BABYLON.Matrix.ComposeToRef(WebXRCamera._ScaleReadOnly, this._referenceQuaternion, this._referencedPosition, referencedMat);
-      BABYLON.Matrix.ComposeToRef(WebXRCamera._ScaleReadOnly, this.rotationQuaternion, this.position, poseMat);
+  //     BABYLON.Matrix.ComposeToRef(WebXRCamera._ScaleReadOnly, this._referenceQuaternion, this._referencedPosition, referencedMat);
+  //     BABYLON.Matrix.ComposeToRef(WebXRCamera._ScaleReadOnly, this.rotationQuaternion, this.position, poseMat);
 
-      referencedMat.invert().multiplyToRef(poseMat, transformMat);
-      transformMat.invert();
+  //     referencedMat.invert().multiplyToRef(poseMat, transformMat);
+  //     transformMat.invert();
 
-      if (!this._scene.useRightHandedSystem) {
-        transformMat.toggleModelMatrixHandInPlace();
-      }
-      transformMat.decompose(undefined, this._referenceQuaternion, this._referencedPosition);
-      const transform = new XRRigidTransform(
-        {
-          x: this._referencedPosition.x,
-          y: this._referencedPosition.y,
-          z: this._referencedPosition.z,
-        },
-        {
-          x: this._referenceQuaternion.x,
-          y: this._referenceQuaternion.y,
-          z: this._referenceQuaternion.z,
-          w: this._referenceQuaternion.w,
-        }
-      );
-      this._xrSessionManager.referenceSpace = this._xrSessionManager.referenceSpace.getOffsetReferenceSpace(transform);
-    }
-  }
+  //     if (!this._scene.useRightHandedSystem) {
+  //       transformMat.toggleModelMatrixHandInPlace();
+  //     }
+  //     transformMat.decompose(undefined, this._referenceQuaternion, this._referencedPosition);
+  //     const transform = new XRRigidTransform(
+  //       {
+  //         x: this._referencedPosition.x,
+  //         y: this._referencedPosition.y,
+  //         z: this._referencedPosition.z,
+  //       },
+  //       {
+  //         x: this._referenceQuaternion.x,
+  //         y: this._referenceQuaternion.y,
+  //         z: this._referenceQuaternion.z,
+  //         w: this._referenceQuaternion.w,
+  //       }
+  //     );
+  //     this._xrSessionManager.referenceSpace = this._xrSessionManager.referenceSpace.getOffsetReferenceSpace(transform);
+  //   }
+  // }
 }

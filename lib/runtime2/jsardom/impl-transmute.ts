@@ -15,11 +15,15 @@ import {
 } from '@yodaos-jsar/dom';
 import ImageDataImpl from '@yodaos-jsar/dom/src/living/image/ImageData';
 
-import { Logger } from '../../bindings/logger';
+import * as logger from '../../bindings/logger';
 import { createBondXRSystem } from '../../webxr';
 import { WebXRDefaultExperience } from './xr/DefaultExperience';
 
 class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
+  setMatrices(uniform: WebGLUniformLocation, matrices: Float32Array): boolean {
+    logger.info('setm =>', (uniform as any)?.name || 'unknown', matrices[12], matrices[13], matrices[14]);
+    return super.setMatrices(uniform, matrices);
+  }
 }
 
 type FetchReturnAs = 'string' | 'json' | 'arraybuffer';
@@ -148,7 +152,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
   engine: JSARNativeEngine;
   userAgent: JSARUserAgent;
   baseURI: string;
-  console: Console = new Logger();
+  console: Console = new logger.Logger();
   attachedDocument: SpatialDocumentImpl<NativeDocumentOnTransmute>;
   closed: boolean = false;
   cdpTransport?: jsarCdp.ITransport;
@@ -175,6 +179,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     });
 
     const scene = this._scene = new BABYLON.Scene(this.engine);
+    scene.useRightHandedSystem = true;
     this._defaultCamera = new BABYLON.ArcRotateCamera(
       'default_camera',
       Math.PI / 2,
@@ -184,8 +189,11 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
       scene);
     this._defaultDirLight = new BABYLON.DirectionalLight(
       'default_light',
-      new BABYLON.Vector3(0, 1, 0),
+      new BABYLON.Vector3(0, 2, -5),
       scene);
+    this._defaultDirLight.intensity = 1;
+
+    new BABYLON.DirectionalLight('default_light2', new BABYLON.Vector3(0, -2, 5), scene);
 
     this._xrDefaultExperience = WebXRDefaultExperience.CreateAsync(scene, {
       xrSystem: this._xrSystem,

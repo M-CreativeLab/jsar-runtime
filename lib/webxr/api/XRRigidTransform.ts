@@ -156,7 +156,7 @@ export default class XRRigidTransformImpl implements XRRigidTransform {
     };
   }
 
-  get matrix() {
+  get matrix(): Float32Array {
     return this[PRIVATE].matrix;
   }
 

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import * as logger from '../../bindings/logger';
 import type XRDevice from '../devices/XRDevice';
 import XRSessionImpl, { PRIVATE as SESSION_PRIVATE, type DeviceFrameContext } from './XRSession';
 import XRPoseImpl from './XRPose';
@@ -123,11 +124,16 @@ export default class XRFrameImpl implements XRFrame {
     const session = this[PRIVATE].session;
     const referenceSpaceImpl = <XRReferenceSpaceImpl>referenceSpace;
 
-    session[SESSION_PRIVATE].viewerSpace._ensurePoseUpdated(device, this[PRIVATE].id, this[PRIVATE].frameContext);
+    const viewerSpaceImpl = session[SESSION_PRIVATE].viewerSpace;
+    viewerSpaceImpl._ensurePoseUpdated(device, this[PRIVATE].id, this[PRIVATE].frameContext);
     referenceSpaceImpl._ensurePoseUpdated(device, this[PRIVATE].id, this[PRIVATE].frameContext);
 
     const activeEye = this.getActiveEye();
-    const viewerTransform = referenceSpaceImpl._getSpaceRelativeTransform(session[SESSION_PRIVATE].viewerSpace);
+    const viewerTransform = referenceSpaceImpl._getSpaceRelativeTransform(viewerSpaceImpl);
+    // logger.info('viewer space matrix =>', viewerSpaceImpl._baseMatrix);
+    // logger.info('local space matrix =>', referenceSpaceImpl._baseMatrix);
+    // logger.info('viewer transform =>', viewerTransform.matrix);
+
     const views: XRViewImpl[] = [];
     for (const viewSpace of session[SESSION_PRIVATE].viewSpaces) {
       // When rendering in multi-pass mode, only the view for the active eye is used.

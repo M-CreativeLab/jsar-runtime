@@ -1,5 +1,8 @@
 #include <cassert>
+#include <chrono>
+#include <ctime>
 #include <Unity/IUnityGraphics.h>
+
 #include "render_api.hpp"
 #include "runtime/platform_base.hpp"
 #include "xr/frame.hpp"
@@ -25,9 +28,12 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 	if (device == nullptr)
 		return kFrameExecutionNotInitialized;
 
+	int xrframeBufferSize = 0;
+	auto frameStart = std::chrono::high_resolution_clock::now();
 	StartFrame();
 	jsRenderLoop->startFrame();
 
+	auto frameStarted = std::chrono::high_resolution_clock::now();
 	if (device->enabled() && device->getStereoRenderingMode() == xr::StereoRenderingMode::MultiPass)
 	{
 		int stereoId = -1;
@@ -47,12 +53,12 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 		 * Update viewport for current eye
 		 */
 		device->updateViewport(
-			eyeId,
-			// m_Viewport is updated at `StartFrame()`.
-			m_Viewport[0],	// x
-			m_Viewport[1],	// y
-			m_Viewport[2],	// width
-			m_Viewport[3]		// height
+				eyeId,
+				// m_Viewport is updated at `StartFrame()`.
+				m_Viewport[0], // x
+				m_Viewport[1], // y
+				m_Viewport[2], // width
+				m_Viewport[3]	 // height
 		);
 
 		/**
@@ -77,13 +83,12 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 			jsRenderLoop->frameCallback(deviceFrame);
 		}
 
-		DEBUG("Unity", "-------------------------------");
-		DEBUG("Unity", "Execute XR Frame: eye=%d, stereoId=%d", eyeId, stereoId);
-		DEBUG("Unity", "-------------------------------");
-		device->iterateStereoRenderingFrames([this, deviceFrame](xr::StereoRenderingFrame *frame)
+		DEBUG(TR_RENDERAPI_TAG, "-------------------------------");
+		DEBUG(TR_RENDERAPI_TAG, "Execute XR Frame: eye=%d, stereoId=%d", eyeId, stereoId);
+		DEBUG(TR_RENDERAPI_TAG, "-------------------------------");
+		device->executeStereoRenderingFrames(eyeId, [this, deviceFrame](vector<renderer::CommandBuffer *> &commandBuffers)
 																				 {
-																					 int eyeId = deviceFrame->getActiveEyeId();
-																					 ExecuteCommandBuffer(frame->getCommandBuffers(eyeId), deviceFrame, true);
+																					 return ExecuteCommandBuffer(commandBuffers, deviceFrame, false);
 																					 // end
 																				 });
 
@@ -91,16 +96,25 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 		if (eyeId == 1)
 			device->clearStereoRenderingFrames();
 
-		DEBUG("Unity", "--------- End XR Frame ---------");
+		DEBUG(TR_RENDERAPI_TAG, "--------- End XR Frame ---------");
 		// end
 	}
 	else
 	{
 		jsRenderLoop->frameCallback();
 	}
+	auto xrFrameEnd = std::chrono::high_resolution_clock::now();
 
 	ExecuteCommandBuffer();
 	EndFrame();
+
+	auto frameEnd = std::chrono::high_resolution_clock::now();
+	auto totalDuration = std::chrono::duration_cast<std::chrono::milliseconds>(frameEnd - frameStart);
+	auto startDuration = std::chrono::duration_cast<std::chrono::milliseconds>(frameStarted - frameStart);
+	auto xrFrameDuration = std::chrono::duration_cast<std::chrono::milliseconds>(xrFrameEnd - frameStarted);
+	auto endDuration = std::chrono::duration_cast<std::chrono::milliseconds>(frameEnd - xrFrameEnd);
+	DEBUG(TR_RENDERAPI_TAG, "Frame execution time takes %ld ms (start=%ldms, xrframe=%ldms, end=%ldms)",
+				totalDuration.count(), startDuration.count(), xrFrameDuration.count(), endDuration.count());
 	return kFrameExecutionSuccess;
 }
 

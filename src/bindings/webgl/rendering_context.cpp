@@ -1409,8 +1409,11 @@ namespace webgl
 
     if (!program->HasUniformLocation(name))
       return env.Null();
-    else
-      return WebGLUniformLocation::constructor->New({Napi::Number::New(env, program->GetUniformLocation(name))});
+
+    auto jsUniformLocation = WebGLUniformLocation::constructor->New({Napi::Number::New(env, program->GetUniformLocation(name))});
+    auto uniformLocation = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(jsUniformLocation);
+    uniformLocation->SetName(name);
+    return jsUniformLocation;
   }
 
   Napi::Value WebGLRenderingContext::Uniform1f(const Napi::CallbackInfo &info)
