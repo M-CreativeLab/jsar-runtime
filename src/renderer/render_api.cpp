@@ -28,7 +28,6 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 	if (device == nullptr)
 		return kFrameExecutionNotInitialized;
 
-	int xrframeBufferSize = 0;
 	auto frameStart = std::chrono::high_resolution_clock::now();
 	StartFrame();
 	jsRenderLoop->startFrame();
@@ -111,11 +110,11 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 	EndFrame();
 
 	auto frameEnd = std::chrono::high_resolution_clock::now();
-	auto totalDuration = std::chrono::duration_cast<std::chrono::milliseconds>(frameEnd - frameStart);
-	auto startDuration = std::chrono::duration_cast<std::chrono::milliseconds>(frameStarted - frameStart);
-	auto xrFrameDuration = std::chrono::duration_cast<std::chrono::milliseconds>(xrFrameEnd - frameStarted);
-	auto endDuration = std::chrono::duration_cast<std::chrono::milliseconds>(frameEnd - xrFrameEnd);
-	DEBUG(TR_RENDERAPI_TAG, "Frame execution time takes %ld ms (start=%ldms, xrframe=%ldms, end=%ldms)",
+	auto totalDuration = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - frameStart);
+	auto startDuration = std::chrono::duration_cast<std::chrono::microseconds>(frameStarted - frameStart);
+	auto xrFrameDuration = std::chrono::duration_cast<std::chrono::microseconds>(xrFrameEnd - frameStarted);
+	auto endDuration = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - xrFrameEnd);
+	DEBUG(TR_RENDERAPI_TAG, "Frame execution time takes %ld us (start=%ldus, xrframe=%ldus, end=%ldus)",
 				totalDuration.count(), startDuration.count(), xrFrameDuration.count(), endDuration.count());
 	return kFrameExecutionSuccess;
 }

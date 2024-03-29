@@ -127,33 +127,6 @@ namespace xr
     return called;
   }
 
-  bool Device::iterateStereoRenderingFrames(std::function<bool(StereoRenderingFrame *)> callback)
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    bool called = false;
-    for (auto frame : m_StereoRenderingFrames)
-    {
-      if (!frame->ended())
-        continue;
-      if (callback(frame) == true && called == false)
-        called = true;
-    }
-
-    /**
-     * When the `called` is false, it means the current frames are not ended, so we need to render by the last frame.
-     */
-    // if (called == false)
-    // {
-    //   for (auto frame : m_LastStereoRenderingFrames)
-    //   {
-    //     if (!frame->ended())
-    //       continue;
-    //     callback(frame);
-    //   }
-    // }
-    return called;
-  }
-
   void Device::clearStereoRenderingFrames(bool clearAll)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);

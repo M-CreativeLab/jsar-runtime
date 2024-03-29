@@ -54,8 +54,13 @@ class OpenGLTextureBinding
 {
 public:
 	OpenGLTextureBinding(GLenum target, GLuint texture) : m_Target(target), m_Texture(texture) {}
-	GLenum GetTarget() { return m_Target; }
-	GLint GetTexture() { return m_Texture; }
+	inline void Reset(GLenum target, GLuint texture)
+	{
+		m_Target = target;
+		m_Texture = texture;
+	}
+	inline GLenum GetTarget() { return m_Target; }
+	inline GLint GetTexture() { return m_Texture; }
 
 public:
 	GLenum m_Target;
@@ -106,7 +111,14 @@ public:
 	{
 		GLint activeUnit;
 		glGetIntegerv(GL_ACTIVE_TEXTURE, &activeUnit);
-		m_TextureBindingsWithUnit[activeUnit] = new OpenGLTextureBinding(target, texture);
+
+		auto binding = m_TextureBindingsWithUnit[activeUnit];
+		if (binding == nullptr)
+			m_TextureBindingsWithUnit[activeUnit] = new OpenGLTextureBinding(target, texture);
+		else
+		{
+			binding->Reset(target, texture);
+		}
 	}
 	void RecordCullFace(int face)
 	{
@@ -200,7 +212,6 @@ public:
 		GLenum error = glGetError();
 		if (error != GL_NO_ERROR)
 			DEBUG(DEBUG_TAG, "Occurs an OpenGL error in restoring %s context: 0x%04X", error, m_Name);
-		DEBUG(DEBUG_TAG, "%s context restored.", m_Name);
 	}
 	void Print()
 	{
@@ -239,7 +250,7 @@ public:
 	OpenGLHostContextStorage() : OpenGLContextStorage("Host") {}
 
 public:
-void Record()
+	void Record()
 	{
 		glGetIntegerv(GL_VIEWPORT, m_Viewport);
 		glGetIntegerv(GL_CURRENT_PROGRAM, &m_ProgramId);
@@ -432,9 +443,6 @@ void RenderAPI_OpenGLCoreES::Disable(uint32_t cap)
 
 void RenderAPI_OpenGLCoreES::StartFrame()
 {
-	DEBUG(DEBUG_TAG, "==================================");
-	DEBUG(DEBUG_TAG, "Start a native rendering frame.");
-
 	GLint viewport[4];
 	glGetIntegerv(GL_VIEWPORT, viewport);
 	SetViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
@@ -444,7 +452,7 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	 * the last frame, to make sure the rendering in WebGL is correct.
 	 */
 	m_HostContext.Record();
-	m_HostContext.Print();
+	// m_HostContext.Print();
 
 	glDisable(GL_CULL_FACE);
 	// glCullFace(GL_BACK);
@@ -475,14 +483,11 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 		glEnable(GL_BLEND);
 	else
 		glDisable(GL_BLEND);
-
-	DEBUG(DEBUG_TAG, "==================================");
 }
 
 void RenderAPI_OpenGLCoreES::EndFrame()
 {
 	m_HostContext.Restore();
-	DEBUG(DEBUG_TAG, "=========== End Frame ============");
 }
 
 void RenderAPI_OpenGLCoreES::StartXRFrame()
@@ -503,7 +508,10 @@ void RenderAPI_OpenGLCoreES::EndXRFrame()
 bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 {
 	std::unique_lock<std::mutex> lock(m_CommandBuffersMutex);
-	if (ExecuteCommandBuffer(m_CommandBuffers, nullptr, true) == true)
+	if (m_CommandBuffers.empty())
+		return false;
+
+	if (ExecuteCommandBuffer(m_CommandBuffers, nullptr, true))
 	{
 		// FIXME: not release the command buffer itself.
 		m_CommandBuffers.clear();

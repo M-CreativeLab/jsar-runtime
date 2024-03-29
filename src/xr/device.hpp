@@ -55,11 +55,6 @@ namespace xr
     StereoRenderingFrame *getStereoRenderingFrame(int id);
     StereoRenderingFrame *getLastStereoRenderingFrame();
     bool executeStereoRenderingFrames(int eyeId, function<bool(vector<renderer::CommandBuffer *> &)>);
-    /**
-     * Iterate ended stereo rendering frames, it means the callback will not be called for the frames that are not ended.
-     * And it returns true if the callback is called at least once, otherwise false.
-     */
-    bool iterateStereoRenderingFrames(function<bool(StereoRenderingFrame *)> callback);
     void clearStereoRenderingFrames(bool clearAll = false);
     bool startFrame(int sessionId, int stereoRenderingId, int passId);
     bool endFrame(int sessionId, int stereoRenderingId, int passId);
