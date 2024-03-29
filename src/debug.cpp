@@ -25,8 +25,11 @@ void DEBUG(const char *tag, const char *format, ...)
   va_list args;
   va_start(args, format);
 
+  char buffer[1024];
   int length = vsnprintf(nullptr, 0, format, args);
-  char *buffer = new char[length + 1];
+  // char *buffer = new char[length + 1];
+  if (length > 1024)
+    length = 1024;
 
   va_end(args);
   va_start(args, format);
@@ -42,7 +45,7 @@ void DEBUG(const char *tag, const char *format, ...)
 #endif
 #endif
 
-  delete[] buffer;
+  // delete[] buffer;
   va_end(args);
 }
 

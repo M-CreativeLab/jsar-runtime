@@ -37,28 +37,10 @@ public:
   // Process general event like initialization, shutdown, device loss/reset etc.
   virtual void ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces) = 0;
   virtual bool GetUsesReverseZ() = 0;
-  virtual void DrawSimpleTriangles(
-      const float worldMatrix[16],
-      int triangleCount,
-      const void *verticesFloat3Byte4) = 0;
+  
 
   virtual int GetDrawingBufferWidth() = 0;
   virtual int GetDrawingBufferHeight() = 0;
-  virtual int CreateProgram() = 0;
-  virtual void LinkProgram(int program) = 0;
-  virtual void UseProgram(int program) = 0;
-  virtual void AttachShader(int program, int shader) = 0;
-  virtual void DetachShader(int program, int shader) = 0;
-  virtual int CreateShader(int type) = 0;
-  virtual void DeleteShader(int shader) = 0;
-  virtual void ShaderSource(int shader, const char *source, uint32_t length) = 0;
-  virtual void CompileShader(int shader) = 0;
-  virtual int CreateBuffer() = 0;
-  virtual void BindBuffer(int target, int buffer) = 0;
-  virtual void EnableVertexAttribArray(int index) = 0;
-  virtual void VertexAttribPointer(int index, int size, int type, bool normalized, int stride, const void *offset) = 0;
-  virtual void DrawArrays(int mode, int first, int count) = 0;
-  virtual void DrawElements(int mode, int count, int type, const void *indices) = 0;
   virtual void ClearColor(float r, float g, float b, float a) = 0;
   virtual void ClearDepth(float depth) = 0;
   virtual void ClearStencil(uint32_t stencil) = 0;
@@ -67,6 +49,9 @@ public:
 
   virtual void StartFrame() = 0;
   virtual void EndFrame() = 0;
+
+  virtual void StartXRFrame() = 0;
+  virtual void EndXRFrame() = 0;
 
   /**
    * Executing the frame function
@@ -84,10 +69,14 @@ public:
   virtual bool ExecuteCommandBuffer(
       vector<renderer::CommandBuffer *> &commandBuffers,
       xr::DeviceFrame *deviceFrame,
-      bool logCalls) = 0;
+      bool isDefaultQueue) = 0;
   void AddCommandBuffer(renderer::CommandBuffer *commandBuffer);
   size_t GetCommandBuffersCount();
   void SetTime(float time) { this->time = time; }
+
+  bool HasViewportChanged(int x, int y, int width, int height) {
+    return m_Viewport[0] != x || m_Viewport[1] != y || m_Viewport[2] != width || m_Viewport[3] != height;
+  }
   void SetViewport(int x, int y, int width, int height)
   {
     m_Viewport[0] = x;
@@ -133,6 +122,7 @@ protected:
   int m_Viewport[4] = {0, 0, 0, 0};
   std::vector<renderer::CommandBuffer *> m_CommandBuffers;
   std::mutex m_CommandBuffersMutex;
+  std::mutex m_StateMutex;
 };
 
 // Create a graphics API implementation instance for the given API type.

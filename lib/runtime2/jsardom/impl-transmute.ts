@@ -21,7 +21,6 @@ import { WebXRDefaultExperience } from './xr/DefaultExperience';
 
 class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
   setMatrices(uniform: WebGLUniformLocation, matrices: Float32Array): boolean {
-    logger.info('setm =>', (uniform as any)?.name || 'unknown', matrices[12], matrices[13], matrices[14]);
     return super.setMatrices(uniform, matrices);
   }
 }
@@ -180,6 +179,17 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
 
     const scene = this._scene = new BABYLON.Scene(this.engine);
     scene.useRightHandedSystem = true;
+    scene.skipFrustumClipping = true;
+    // scene.onAfterAnimationsObservable.add(() => {
+    //   logger.info('animations updated =>', [
+    //     BABYLON.PrecisionDate.Now,
+    //     scene._animationTime,
+    //     scene._animationTimeLast,
+    //     scene._activeAnimatables.length,
+    //   ]);
+    // });
+    logger.info('_animate():', scene._animate.toString());
+
     this._defaultCamera = new BABYLON.ArcRotateCamera(
       'default_camera',
       Math.PI / 2,
@@ -187,13 +197,14 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
       5,
       BABYLON.Vector3.Zero(),
       scene);
-    this._defaultDirLight = new BABYLON.DirectionalLight(
-      'default_light',
-      new BABYLON.Vector3(0, 2, -5),
-      scene);
-    this._defaultDirLight.intensity = 1;
 
-    new BABYLON.DirectionalLight('default_light2', new BABYLON.Vector3(0, -2, 5), scene);
+    {
+      // create default light
+      const lightFront = new BABYLON.HemisphericLight('light_front', new BABYLON.Vector3(0, 2, -5), scene);
+      const lightBack = new BABYLON.HemisphericLight('light_back', new BABYLON.Vector3(0, -2, 5), scene);
+      lightFront.intensity = 1.2;
+      lightBack.intensity = 1.2;
+    }
 
     this._xrDefaultExperience = WebXRDefaultExperience.CreateAsync(scene, {
       xrSystem: this._xrSystem,

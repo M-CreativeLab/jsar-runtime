@@ -102,6 +102,9 @@ namespace xr
     bool addedOnce();
 
   private:
+    void clearCommandBuffers(std::vector<renderer::CommandBuffer *>& commandBuffers);
+
+  private:
     int m_StereoId = -1;
     bool m_IsMultiPass = true;
     bool m_Ended[2] = {false, false};

@@ -21,8 +21,8 @@ using namespace renderer;
 #elif UNITY_ANDROID || UNITY_WEBGL
 // On Android and WebGL, use GLES 3.0
 // See: https://android.googlesource.com/platform/frameworks/native/+/kitkat-release/opengl/include
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include <GLES3/gl3.h>
+#include <GLES3/gl3ext.h>
 #include <EGL/egl.h>
 #elif UNITY_OSX
 #include <OpenGL/gl3.h>
@@ -35,7 +35,7 @@ using namespace renderer;
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
 #elif UNITY_EMBEDDED_LINUX
-#include <GLES2/gl2.h>
+#include <GLES3/gl3.h>
 #if SUPPORT_OPENGL_CORE
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
@@ -50,6 +50,240 @@ using namespace renderer;
 #define DEBUG_ARG_END -1
 #define DEBUG_TAG TR_RENDERAPI_TAG
 
+class OpenGLTextureBinding
+{
+public:
+	OpenGLTextureBinding(GLenum target, GLuint texture) : m_Target(target), m_Texture(texture) {}
+	GLenum GetTarget() { return m_Target; }
+	GLint GetTexture() { return m_Texture; }
+
+public:
+	GLenum m_Target;
+	GLuint m_Texture;
+};
+
+class OpenGLContextStorage
+{
+public:
+	OpenGLContextStorage(const char *name) : m_Name(name) {}
+	~OpenGLContextStorage()
+	{
+		ClearTextureBindings();
+	}
+
+	void RecordViewport(int x, int y, int w, int h)
+	{
+		m_Viewport[0] = x;
+		m_Viewport[1] = y;
+		m_Viewport[2] = w;
+		m_Viewport[3] = h;
+	}
+	void RecordProgram(int program)
+	{
+		m_ProgramId = program;
+	}
+	void RecordArrayBuffer(int buffer)
+	{
+		m_ArrayBufferId = buffer;
+	}
+	void RecordElementArrayBuffer(int buffer)
+	{
+		m_ElementArrayBufferId = buffer;
+	}
+	void RecordFramebuffer(int buffer)
+	{
+		m_FramebufferId = buffer;
+	}
+	void RecordRenderbuffer(int buffer)
+	{
+		m_RenderbufferId = buffer;
+	}
+	void RecordActiveTextureUnit(int unit)
+	{
+		m_LastActiveTextureUnit = unit;
+	}
+	void RecordTextureBindingWithUnit(GLenum target, GLuint texture)
+	{
+		GLint activeUnit;
+		glGetIntegerv(GL_ACTIVE_TEXTURE, &activeUnit);
+		m_TextureBindingsWithUnit[activeUnit] = new OpenGLTextureBinding(target, texture);
+	}
+	void RecordCullFace(int face)
+	{
+		m_CullFace = face;
+	}
+	void RecordFrontFace(int face)
+	{
+		m_FrontFace = face;
+	}
+
+	const char *GetName() { return m_Name; }
+	GLint GetProgram() { return m_ProgramId; }
+	GLint GetArrayBuffer() { return m_ArrayBufferId; }
+	GLint GetElementArrayBuffer() { return m_ElementArrayBufferId; }
+	GLint GetFramebuffer() { return m_FramebufferId; }
+	GLint GetRenderbuffer() { return m_RenderbufferId; }
+	GLenum GetActiveTextureUnit() { return m_LastActiveTextureUnit; }
+	// GLint GetTexture2D() { return m_Texture2D; }
+	GLint GetCullFace() { return m_CullFace; }
+	GLint GetFrontFace() { return m_FrontFace; }
+
+	void Restore()
+	{
+		GLenum useProgramError;
+		GLenum bindBuffersError;
+		GLenum bindTextureError;
+
+		if (
+				m_Viewport[0] != -1 &&
+				m_Viewport[1] != -1 &&
+				m_Viewport[2] != -1 &&
+				m_Viewport[3] != -1)
+		{
+			glViewport(m_Viewport[0], m_Viewport[1], m_Viewport[2], m_Viewport[3]);
+		}
+		if (m_ProgramId >= 0)
+			glUseProgram(m_ProgramId);
+		else
+			glUseProgram(0);
+		useProgramError = glGetError();
+
+		if (m_ArrayBufferId >= 0)
+			glBindBuffer(GL_ARRAY_BUFFER, m_ArrayBufferId);
+		if (m_ElementArrayBufferId >= 0)
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ElementArrayBufferId);
+		if (m_FramebufferId >= 0)
+			glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
+		if (m_RenderbufferId >= 0)
+			glBindRenderbuffer(GL_RENDERBUFFER, m_RenderbufferId);
+		bindBuffersError = glGetError();
+
+		for (auto it = m_TextureBindingsWithUnit.begin(); it != m_TextureBindingsWithUnit.end(); it++)
+		{
+			auto unit = it->first;
+			auto binding = it->second;
+			auto target = binding->GetTarget();
+			auto texture = binding->GetTexture();
+			glActiveTexture(unit);
+			glBindTexture(target, texture);
+		}
+		if (m_LastActiveTextureUnit >= GL_TEXTURE0 && m_LastActiveTextureUnit <= GL_TEXTURE31)
+			glActiveTexture(m_LastActiveTextureUnit);
+		else
+			glActiveTexture(GL_TEXTURE0);
+		bindTextureError = glGetError();
+
+		if (m_CullFace != -1)
+			glCullFace(m_CullFace);
+		if (m_FrontFace != -1)
+			glFrontFace(m_FrontFace);
+
+#if UNITY_ANDROID || UNITY_WEBGL
+		EGLint eglError = eglGetError();
+		if (eglError == EGL_CONTEXT_LOST)
+			DEBUG(DEBUG_TAG, "EGL context lost, need to reload the context.");
+		else if (eglError != EGL_SUCCESS)
+			DEBUG(DEBUG_TAG, "Occurs an EGL error: 0x%04X", eglError);
+#endif
+
+		if (useProgramError != GL_NO_ERROR)
+			DEBUG(DEBUG_TAG, "Occurs an error in glUseProgram() when restoring %s context: 0x%04X",
+						m_Name, useProgramError);
+		if (bindBuffersError != GL_NO_ERROR)
+			DEBUG(DEBUG_TAG, "Occurs an error in buffers binding when restoring %s context: 0x%04X",
+						m_Name, bindBuffersError);
+		if (bindTextureError != GL_NO_ERROR)
+			DEBUG(DEBUG_TAG, "Occurs an error in texture bindings when restoring %s context: 0x%04X",
+						m_Name, bindTextureError);
+
+		// Check for OpenGL errors
+		GLenum error = glGetError();
+		if (error != GL_NO_ERROR)
+			DEBUG(DEBUG_TAG, "Occurs an OpenGL error in restoring %s context: 0x%04X", error, m_Name);
+		DEBUG(DEBUG_TAG, "%s context restored.", m_Name);
+	}
+	void Print()
+	{
+		DEBUG(DEBUG_TAG, "%s program: %d", m_Name, m_ProgramId);
+		DEBUG(DEBUG_TAG, "%s framebuffer: %d", m_Name, m_FramebufferId);
+		DEBUG(DEBUG_TAG, "%s renderbuffer: %d", m_Name, m_RenderbufferId);
+	}
+	void ClearTextureBindings()
+	{
+		for (auto it = m_TextureBindingsWithUnit.begin(); it != m_TextureBindingsWithUnit.end(); it++)
+			delete it->second;
+		m_TextureBindingsWithUnit.clear();
+	}
+
+protected:
+	const char *m_Name;
+	GLint m_Viewport[4] = {-1, -1, -1, -1};
+	/** Program */
+	GLint m_ProgramId = 0;
+	/** Buffers */
+	GLint m_ArrayBufferId = 0;
+	GLint m_ElementArrayBufferId = 0;
+	GLint m_FramebufferId = 0;
+	GLint m_RenderbufferId = 0;
+	/** Textures */
+	GLenum m_LastActiveTextureUnit = GL_TEXTURE0;
+	std::map<GLenum, OpenGLTextureBinding *> m_TextureBindingsWithUnit;
+	/** States */
+	GLint m_CullFace = -1;
+	GLint m_FrontFace = -1;
+};
+
+class OpenGLHostContextStorage : public OpenGLContextStorage
+{
+public:
+	OpenGLHostContextStorage() : OpenGLContextStorage("Host") {}
+
+public:
+void Record()
+	{
+		glGetIntegerv(GL_VIEWPORT, m_Viewport);
+		glGetIntegerv(GL_CURRENT_PROGRAM, &m_ProgramId);
+		glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &m_ArrayBufferId);
+		glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &m_ElementArrayBufferId);
+		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_FramebufferId);
+		glGetIntegerv(GL_RENDERBUFFER_BINDING, &m_RenderbufferId);
+		glGetIntegerv(GL_ACTIVE_TEXTURE, (GLint *)&m_LastActiveTextureUnit);
+
+		ClearTextureBindings();
+		for (int i = GL_TEXTURE0; i <= GL_TEXTURE31; i++)
+		{
+			GLint texture;
+			glActiveTexture(i);
+			// TODO: how to support other texture targets?
+			glGetIntegerv(GL_TEXTURE_BINDING_2D, &texture);
+			m_TextureBindingsWithUnit[i] = new OpenGLTextureBinding(GL_TEXTURE_2D, texture);
+		}
+		glActiveTexture(m_LastActiveTextureUnit);
+
+		glGetIntegerv(GL_CULL_FACE_MODE, &m_CullFace);
+		glGetIntegerv(GL_FRONT_FACE, &m_FrontFace);
+	}
+	void RecordTextureBindingFromHost()
+	{
+		auto binding = m_TextureBindingsWithUnit[m_LastActiveTextureUnit];
+		if (binding != nullptr)
+			return;
+
+		GLuint texture;
+		GLint beforeActiveUnit;
+		glGetIntegerv(GL_ACTIVE_TEXTURE, &beforeActiveUnit);
+
+		bool isActiveNotMatched = beforeActiveUnit != m_LastActiveTextureUnit;
+		if (isActiveNotMatched)
+			glActiveTexture(m_LastActiveTextureUnit);
+		glGetIntegerv(GL_TEXTURE_BINDING_2D, (GLint *)&texture);
+		m_TextureBindingsWithUnit[m_LastActiveTextureUnit] = new OpenGLTextureBinding(GL_TEXTURE_2D, texture);
+
+		if (isActiveNotMatched)
+			glActiveTexture(beforeActiveUnit);
+	}
+};
+
 class RenderAPI_OpenGLCoreES : public RenderAPI
 {
 public:
@@ -57,34 +291,8 @@ public:
 	virtual ~RenderAPI_OpenGLCoreES() {}
 	virtual void ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces);
 	virtual bool GetUsesReverseZ() { return false; }
-	virtual void DrawSimpleTriangles(const float worldMatrix[16], int triangleCount, const void *verticesFloat3Byte4);
 	virtual int GetDrawingBufferWidth();
 	virtual int GetDrawingBufferHeight();
-	virtual int CreateProgram();
-	virtual void LinkProgram(int program);
-	virtual void UseProgram(int program);
-	virtual void AttachShader(int program, int shader);
-	virtual void DetachShader(int program, int shader);
-	virtual int CreateShader(int type);
-	virtual void DeleteShader(int shader);
-	virtual void ShaderSource(int shader, const char *source, uint32_t length);
-	virtual void CompileShader(int shader);
-	virtual int CreateBuffer();
-	virtual void BindBuffer(int target, int buffer);
-	void BufferData(int target, int size, const void *data, int usage);
-	int CreateTexture();
-	void BindTexture(int target, int texture);
-	void TexImage2D(int target, int level, int internalformat, int width, int height, int border, int format, int type, const void *pixels);
-	void TexParameteri(int target, int pname, int param);
-	void ActiveTexture(int texture);
-	void GenerateMipmap(int target);
-	virtual void EnableVertexAttribArray(int index);
-	virtual void VertexAttribPointer(int index, int size, int type, bool normalized, int stride, const void *offset);
-	int GetAttribLocation(int program, const char *name);
-	int GetUniformLocation(int program, const char *name);
-	void UniformMatrix4fv(int location, int count, bool transpose, const float *value);
-	virtual void DrawArrays(int mode, int first, int count);
-	virtual void DrawElements(int mode, int count, int type, const void *indices);
 	virtual void ClearColor(float r, float g, float b, float a);
 	virtual void ClearDepth(float depth);
 	virtual void ClearStencil(uint32_t stencil);
@@ -93,44 +301,25 @@ public:
 	virtual void Enable(uint32_t cap);
 	void Disable(uint32_t cap);
 
-	virtual void StartFrame();
-	virtual void EndFrame();
+	void StartFrame();
+	void EndFrame();
+	void StartXRFrame();
+	void EndXRFrame();
+
 	bool ExecuteCommandBuffer();
 	bool ExecuteCommandBuffer(
 			vector<renderer::CommandBuffer *> &commandBuffers,
 			xr::DeviceFrame *deviceFrame,
-			bool logCalls);
+			bool isDefaultQueue);
 
 private:
 	void CreateResources();
 
 private:
 	UnityGfxRenderer m_APIType;
-	/**
-	 * Host states
-	 */
-	GLint m_HostProgramId = -1;
-	GLint m_HostArrayBufferId = -1;
-	GLint m_HostElementArrayBufferId = -1;
-	GLint m_HostFramebufferId = -1;
-	GLint m_HostRenderbufferId = -1;
-	GLenum m_HostActiveTextureUnit = GL_TEXTURE0;
-	GLint m_HostTexture2D = -1;
-	GLint m_HostCullFace = -1;
-	GLint m_HostFrontFace = -1;
-
-	/**
-	 * App states
-	 */
-	GLuint m_CurrentProgramId = 0;
-	GLint m_AppArrayBufferId = -1;
-	GLint m_AppElementArrayBufferId = -1;
-	GLint m_AppFramebufferId = -1;
-	GLint m_AppRenderbufferId = -1;
-	GLenum m_AppActiveTextureUnit = 0;
-	GLint m_AppTexture2D = -1;
-	GLint m_AppCullFace = -1;
-	GLint m_AppFrontFace = -1;
+	OpenGLHostContextStorage m_HostContext = OpenGLHostContextStorage();
+	OpenGLContextStorage m_AppGlobalContext = OpenGLContextStorage("App Global");
+	OpenGLContextStorage m_AppXRFrameContext = OpenGLContextStorage("App XRFrame");
 
 	// Used by glViewport
 	GLint m_ViewportStartPoint[2] = {0, 0};
@@ -165,11 +354,6 @@ RenderAPI *CreateRenderAPI_OpenGLCoreES(UnityGfxRenderer apiType)
 	return new RenderAPI_OpenGLCoreES(apiType);
 }
 
-void RenderAPI_OpenGLCoreES::CreateResources()
-{
-	// TODO
-}
-
 RenderAPI_OpenGLCoreES::RenderAPI_OpenGLCoreES(UnityGfxRenderer apiType)
 		: m_APIType(apiType)
 {
@@ -195,153 +379,6 @@ int RenderAPI_OpenGLCoreES::GetDrawingBufferWidth()
 int RenderAPI_OpenGLCoreES::GetDrawingBufferHeight()
 {
 	return m_Viewport[3];
-}
-
-int RenderAPI_OpenGLCoreES::CreateProgram()
-{
-	GLuint ret = glCreateProgram();
-	return ret;
-}
-
-void RenderAPI_OpenGLCoreES::LinkProgram(int program)
-{
-	glLinkProgram(program);
-}
-
-void RenderAPI_OpenGLCoreES::UseProgram(int program)
-{
-	glUseProgram(program);
-	m_CurrentProgramId = program;
-}
-
-void RenderAPI_OpenGLCoreES::AttachShader(int program, int shader)
-{
-	glAttachShader(program, shader);
-}
-
-void RenderAPI_OpenGLCoreES::DetachShader(int program, int shader)
-{
-	glDetachShader(program, shader);
-}
-
-int RenderAPI_OpenGLCoreES::CreateShader(int type)
-{
-	GLuint ret = glCreateShader(type);
-	return ret;
-}
-
-void RenderAPI_OpenGLCoreES::DeleteShader(int shader)
-{
-	glDeleteShader(shader);
-}
-
-void RenderAPI_OpenGLCoreES::ShaderSource(int shader, const char *source, uint32_t length)
-{
-	const GLint *lengths = (const GLint *)&length;
-	glShaderSource(shader, 1, &source, lengths);
-}
-
-void RenderAPI_OpenGLCoreES::CompileShader(int shader)
-{
-	glCompileShader(shader);
-}
-
-int RenderAPI_OpenGLCoreES::CreateBuffer()
-{
-	GLuint buffer;
-	glGenBuffers(1, &buffer);
-	return buffer;
-}
-
-void RenderAPI_OpenGLCoreES::BindBuffer(int target, int buffer)
-{
-	glBindBuffer(target, buffer);
-}
-
-void RenderAPI_OpenGLCoreES::BufferData(int target, int size, const void *data, int usage)
-{
-	glBufferData(target, size, data, usage);
-}
-
-int RenderAPI_OpenGLCoreES::CreateTexture()
-{
-	GLuint texture;
-	glGenTextures(1, &texture);
-	return texture;
-}
-
-void RenderAPI_OpenGLCoreES::BindTexture(int target, int texture)
-{
-	glBindTexture(target, texture);
-	if (target == GL_TEXTURE_2D)
-		m_AppTexture2D = texture;
-}
-
-void RenderAPI_OpenGLCoreES::TexImage2D(
-		int target,
-		int level,
-		int internalformat,
-		int width,
-		int height,
-		int border,
-		int format,
-		int type,
-		const void *pixels)
-{
-	glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
-}
-
-void RenderAPI_OpenGLCoreES::TexParameteri(int target, int pname, int param)
-{
-	glTexParameteri(target, pname, param);
-}
-
-void RenderAPI_OpenGLCoreES::ActiveTexture(int textureUnit)
-{
-	glActiveTexture(textureUnit);
-	m_AppActiveTextureUnit = textureUnit;
-}
-
-void RenderAPI_OpenGLCoreES::GenerateMipmap(int target)
-{
-	glGenerateMipmap(target);
-}
-
-void RenderAPI_OpenGLCoreES::EnableVertexAttribArray(int index)
-{
-	glEnableVertexAttribArray(index);
-}
-
-void RenderAPI_OpenGLCoreES::VertexAttribPointer(int index, int size, int type, bool normalized, int stride, const void *offset)
-{
-	glVertexAttribPointer(index, size, type, normalized, stride, offset);
-}
-
-int RenderAPI_OpenGLCoreES::GetAttribLocation(int program, const char *name)
-{
-	GLint ret = glGetAttribLocation(program, name);
-	return ret;
-}
-
-int RenderAPI_OpenGLCoreES::GetUniformLocation(int program, const char *name)
-{
-	GLint ret = glGetUniformLocation(program, name);
-	return ret;
-}
-
-void RenderAPI_OpenGLCoreES::UniformMatrix4fv(int location, int count, bool transpose, const float *value)
-{
-	glUniformMatrix4fv(location, count, transpose, value);
-}
-
-void RenderAPI_OpenGLCoreES::DrawArrays(int mode, int first, int count)
-{
-	glDrawArrays(mode, first, count);
-}
-
-void RenderAPI_OpenGLCoreES::DrawElements(int mode, int count, int type, const void *indices)
-{
-	glDrawElements(mode, count, type, indices);
 }
 
 void RenderAPI_OpenGLCoreES::ClearColor(float r, float g, float b, float a)
@@ -401,67 +438,18 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	GLint viewport[4];
 	glGetIntegerv(GL_VIEWPORT, viewport);
 	SetViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-	DEBUG(DEBUG_TAG, "Viewport: %d %d %d %d", viewport[0], viewport[1], viewport[2], viewport[3]);
 
 	/**
 	 * Because the Unity or other 3d engine may change the state of OpenGL, we need to update these states which is updated in
 	 * the last frame, to make sure the rendering in WebGL is correct.
 	 */
+	m_HostContext.Record();
+	m_HostContext.Print();
 
-	// using program
-	glGetIntegerv(GL_CURRENT_PROGRAM, &m_HostProgramId);
-	DEBUG(DEBUG_TAG, "Host program: %d", m_HostProgramId);
-
-	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &m_HostArrayBufferId);
-	DEBUG(DEBUG_TAG, "Host array buffer: %d", m_HostArrayBufferId);
-	glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &m_HostElementArrayBufferId);
-	DEBUG(DEBUG_TAG, "Host element array buffer: %d", m_HostElementArrayBufferId);
-
-	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_HostFramebufferId);
-	DEBUG(DEBUG_TAG, "Host framebuffer: %d", m_HostFramebufferId);
-	glGetIntegerv(GL_RENDERBUFFER_BINDING, &m_HostRenderbufferId);
-	DEBUG(DEBUG_TAG, "Host renderbuffer: %d", m_HostRenderbufferId);
-
-	glGetIntegerv(GL_ACTIVE_TEXTURE, (GLint *)&m_HostActiveTextureUnit);
-	glGetIntegerv(GL_TEXTURE_BINDING_2D, &m_HostTexture2D);
-	DEBUG(DEBUG_TAG, "Host texture 2D: %d", m_HostTexture2D);
-
-	glGetIntegerv(GL_CULL_FACE_MODE, &m_HostCullFace);
-	glGetIntegerv(GL_FRONT_FACE, &m_HostFrontFace);
-
-	if (m_CurrentProgramId != 0)
-	{
-		glUseProgram(m_CurrentProgramId);
-		DEBUG(DEBUG_TAG, "Current program: %d", m_CurrentProgramId);
-	}
-
-	if (m_AppArrayBufferId != -1)
-		glBindBuffer(GL_ARRAY_BUFFER, m_AppArrayBufferId);
-	if (m_AppElementArrayBufferId != -1)
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_AppElementArrayBufferId);
-
-	if (m_AppFramebufferId != -1 && m_AppFramebufferId != 0)
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, m_AppFramebufferId);
-		DEBUG(DEBUG_TAG, "Restore app to bind framebuffer: %d", m_AppFramebufferId);
-	}
-	if (m_AppRenderbufferId != -1 && m_AppRenderbufferId != 0)
-		glBindRenderbuffer(GL_RENDERBUFFER, m_AppRenderbufferId);
-
-	if (m_AppActiveTextureUnit != 0)
-		glActiveTexture(m_AppActiveTextureUnit);
-	if (m_AppTexture2D != -1)
-		glBindTexture(GL_TEXTURE_2D, m_AppTexture2D);
-
-	// if (m_AppCullFace == GL_FRONT || m_AppCullFace == GL_BACK || m_AppCullFace == GL_FRONT_AND_BACK)
-	// 	glCullFace(m_AppCullFace);
-	// if (m_AppFrontFace == GL_CW || m_AppFrontFace == GL_CCW)
-	// 	glFrontFace(m_AppFrontFace);
 	glDisable(GL_CULL_FACE);
 	// glCullFace(GL_BACK);
 	glFrontFace(GL_CCW);
 
-	// depth test
 	if (m_DepthTestEnabled)
 		glEnable(GL_DEPTH_TEST);
 	else
@@ -488,49 +476,36 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	else
 		glDisable(GL_BLEND);
 
-	if (m_DebugEnabled)
-	{
-		// Check for OpenGL errors
-		GLenum error = glGetError();
-		if (error != GL_NO_ERROR)
-			DEBUG(DEBUG_TAG, "Occurs an OpenGL error in start a new frame: 0x%04X", error);
-	}
-
 	DEBUG(DEBUG_TAG, "==================================");
 }
 
 void RenderAPI_OpenGLCoreES::EndFrame()
 {
-	if (m_HostProgramId != -1)
-		glUseProgram(m_HostProgramId);
-	if (m_HostArrayBufferId != -1)
-		glBindBuffer(GL_ARRAY_BUFFER, m_HostArrayBufferId);
-	if (m_HostElementArrayBufferId != -1)
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_HostElementArrayBufferId);
-
-	if (m_HostFramebufferId != -1)
-		glBindFramebuffer(GL_FRAMEBUFFER, m_HostFramebufferId);
-	if (m_HostRenderbufferId != -1)
-		glBindRenderbuffer(GL_RENDERBUFFER, m_HostRenderbufferId);
-
-	glActiveTexture(m_HostActiveTextureUnit);
-	if (m_HostTexture2D != -1)
-		glBindTexture(GL_TEXTURE_2D, m_HostTexture2D);
-
-	if (m_HostCullFace != -1)
-		glCullFace(m_HostCullFace);
-	if (m_HostFrontFace != -1)
-		glFrontFace(m_HostFrontFace);
-
-	DEBUG(DEBUG_TAG, "Host states restored.");
+	m_HostContext.Restore();
 	DEBUG(DEBUG_TAG, "=========== End Frame ============");
+}
+
+void RenderAPI_OpenGLCoreES::StartXRFrame()
+{
+	m_AppXRFrameContext.Restore();
+
+	// TODO: This will finished in the application layer
+	auto hostFramebuffer = m_HostContext.GetFramebuffer();
+	if (hostFramebuffer != 0 && glIsFramebuffer(hostFramebuffer))
+		glBindFramebuffer(GL_FRAMEBUFFER, hostFramebuffer);
+}
+
+void RenderAPI_OpenGLCoreES::EndXRFrame()
+{
+	m_AppGlobalContext.Restore();
 }
 
 bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 {
 	std::unique_lock<std::mutex> lock(m_CommandBuffersMutex);
-	if (ExecuteCommandBuffer(m_CommandBuffers, nullptr, false) == true)
+	if (ExecuteCommandBuffer(m_CommandBuffers, nullptr, true) == true)
 	{
+		// FIXME: not release the command buffer itself.
 		m_CommandBuffers.clear();
 		return true;
 	}
@@ -543,17 +518,22 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		vector<renderer::CommandBuffer *> &commandBuffers,
 		xr::DeviceFrame *deviceFrame,
-		bool logCalls)
+		bool isDefaultQueue)
 {
+	bool logCalls = isDefaultQueue ? false : false;
+
+	OpenGLContextStorage *context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
 	bool isBufferEmpty = commandBuffers.empty();
 	if (isBufferEmpty)
 	{
-		DEBUG(DEBUG_TAG, "The command buffers is empty, discard this execution");
+		if (!isDefaultQueue) // Just skip logging if the queue is the default queue
+			DEBUG(DEBUG_TAG, "The command buffers is empty, discard this execution");
 		return false;
 	}
 
 	// Execute all the command buffers
-	DEBUG(DEBUG_TAG, "There are %d buffers to execute.", commandBuffers.size());
+	DEBUG(DEBUG_TAG, "There are %d buffers to execute in %s.",
+				commandBuffers.size(), context->GetName());
 	for (auto commandBuffer : commandBuffers)
 	{
 		auto commandType = commandBuffer->GetType();
@@ -562,16 +542,16 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		case kCommandTypeCreateProgram:
 		{
 			auto createProgramCommandBuffer = static_cast<CreateProgramCommandBuffer *>(commandBuffer);
-			int ret = CreateProgram();
+			int ret = glCreateProgram();
 			createProgramCommandBuffer->m_ProgramId = ret;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "CreateProgram: %d", ret);
+				DEBUG(DEBUG_TAG, "[%d] GL::CreateProgram() => %d", isDefaultQueue, ret);
 			break;
 		}
 		case kCommandTypeLinkProgram:
 		{
 			auto linkProgramCommandBuffer = static_cast<LinkProgramCommandBuffer *>(commandBuffer);
-			LinkProgram(linkProgramCommandBuffer->m_ProgramId);
+			glLinkProgram(linkProgramCommandBuffer->m_ProgramId);
 
 			// Update the locations of the uniforms and attributes
 			GLuint program = linkProgramCommandBuffer->m_ProgramId;
@@ -608,23 +588,25 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 				name[nameLength] = '\0';
 
 				GLint location = glGetUniformLocation(program, name);
-				if (location == -1)
+				if (location <= -1)
 					continue;
 				linkProgramCommandBuffer->m_UniformLocations.insert(
 						std::pair<std::string, int>(name, location));
-				DEBUG(DEBUG_TAG, "Program(%d) Uniform(%s) => %d", program, name, location);
+				DEBUG(DEBUG_TAG, "GL::LinkProgram::Uniforms(%s in %d) => %d", name, program, location);
 			}
 			// TODO: add active attributes?
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "LinkProgram(%d)", program);
+				DEBUG(DEBUG_TAG, "[%d] GL::LinkProgram(%d)", isDefaultQueue, program);
 			break;
 		}
 		case kCommandTypeUseProgram:
 		{
 			auto useProgramCommandBuffer = static_cast<UseProgramCommandBuffer *>(commandBuffer);
-			UseProgram(useProgramCommandBuffer->m_ProgramId);
+			auto program = useProgramCommandBuffer->m_ProgramId;
+			glUseProgram(program);
+			context->RecordProgram(program);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "UseProgram(%d)", useProgramCommandBuffer->m_ProgramId);
+				DEBUG(DEBUG_TAG, "[%d] GL::UseProgram(%d)", isDefaultQueue, program);
 			break;
 		}
 		case kCommandTypeGetProgramParameter:
@@ -637,7 +619,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					&ret);
 			getProgramParameterCommandBuffer->m_Value = ret;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "GetProgramParameter: %d", ret);
+				DEBUG(DEBUG_TAG, "[%d] GL::GetProgramParameter() => %d", isDefaultQueue, ret);
 			break;
 		}
 		case kCommandTypeGetProgramInfoLog:
@@ -651,61 +633,62 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			getProgramInfoLogCommandBuffer->CopyInfoLog(infoLog, infoLogLength);
 			delete[] infoLog;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "GetProgramInfoLog: %s", getProgramInfoLogCommandBuffer->m_InfoLog);
+				DEBUG(DEBUG_TAG, "[%d] GL::GetProgramInfoLog: %s",
+							isDefaultQueue, getProgramInfoLogCommandBuffer->m_InfoLog);
 			break;
 		}
 		case kCommandTypeAttachShader:
 		{
 			auto attachShaderCommandBuffer = static_cast<AttachShaderCommandBuffer *>(commandBuffer);
-			AttachShader(attachShaderCommandBuffer->m_ProgramId, attachShaderCommandBuffer->m_ShaderId);
+			glAttachShader(attachShaderCommandBuffer->m_ProgramId, attachShaderCommandBuffer->m_ShaderId);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "AttachShader: program=%d, shader=%d",
-							attachShaderCommandBuffer->m_ProgramId, attachShaderCommandBuffer->m_ShaderId);
+				DEBUG(DEBUG_TAG, "[%d] GL::AttachShader: program=%d, shader=%d",
+							isDefaultQueue, attachShaderCommandBuffer->m_ProgramId, attachShaderCommandBuffer->m_ShaderId);
 			break;
 		}
 		case kCommandTypeDetachShader:
 		{
 			auto detachShaderCommandBuffer = static_cast<DetachShaderCommandBuffer *>(commandBuffer);
-			DetachShader(detachShaderCommandBuffer->m_ProgramId, detachShaderCommandBuffer->m_ShaderId);
+			glDetachShader(detachShaderCommandBuffer->m_ProgramId, detachShaderCommandBuffer->m_ShaderId);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "DetachShader: program=%d, shader=%d",
-							detachShaderCommandBuffer->m_ProgramId, detachShaderCommandBuffer->m_ShaderId);
+				DEBUG(DEBUG_TAG, "[%d] GL::DetachShader: program=%d, shader=%d",
+							isDefaultQueue, detachShaderCommandBuffer->m_ProgramId, detachShaderCommandBuffer->m_ShaderId);
 			break;
 		}
 		case kCommandTypeCreateShader:
 		{
 			auto createShaderCommandBuffer = static_cast<CreateShaderCommandBuffer *>(commandBuffer);
-			int ret = CreateShader(createShaderCommandBuffer->m_ShaderType);
+			int ret = glCreateShader(createShaderCommandBuffer->m_ShaderType);
 			createShaderCommandBuffer->m_ShaderId = ret;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "CreateShader: %d", ret);
+				DEBUG(DEBUG_TAG, "[%d] GL::CreateShader: %d", isDefaultQueue, ret);
 			break;
 		}
 		case kCommandTypeDeleteShader:
 		{
 			auto deleteShaderCommandBuffer = static_cast<DeleteShaderCommandBuffer *>(commandBuffer);
-			DeleteShader(deleteShaderCommandBuffer->m_ShaderId);
+			glDeleteShader(deleteShaderCommandBuffer->m_ShaderId);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "DeleteShader: %d", deleteShaderCommandBuffer->m_ShaderId);
+				DEBUG(DEBUG_TAG, "[%d] GL::DeleteShader: %d", isDefaultQueue, deleteShaderCommandBuffer->m_ShaderId);
 			break;
 		}
 		case kCommandTypeShaderSource:
 		{
 			auto shaderSourceCommandBuffer = static_cast<ShaderSourceCommandBuffer *>(commandBuffer);
-			ShaderSource(
-					shaderSourceCommandBuffer->m_ShaderId,
-					shaderSourceCommandBuffer->m_Source,
-					shaderSourceCommandBuffer->m_Length);
+			auto shaderId = shaderSourceCommandBuffer->m_ShaderId;
+			auto source = shaderSourceCommandBuffer->m_Source;
+			auto length = shaderSourceCommandBuffer->m_Length;
+			glShaderSource(shaderId, 1, &source, (const GLint *)&length);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "ShaderSource: %d", shaderSourceCommandBuffer->m_ShaderId);
+				DEBUG(DEBUG_TAG, "[%d] GL::ShaderSource: %d", isDefaultQueue, shaderId);
 			break;
 		}
 		case kCommandTypeCompileShader:
 		{
 			auto compileShaderCommandBuffer = static_cast<CompileShaderCommandBuffer *>(commandBuffer);
-			CompileShader(compileShaderCommandBuffer->m_ShaderId);
+			glCompileShader(compileShaderCommandBuffer->m_ShaderId);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "CompileShader: %d", compileShaderCommandBuffer->m_ShaderId);
+				DEBUG(DEBUG_TAG, "[%d] GL::CompileShader: %d", isDefaultQueue, compileShaderCommandBuffer->m_ShaderId);
 			break;
 		}
 		case kCommandTypeGetShaderSource:
@@ -736,7 +719,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			delete[] source;
 
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "GetShaderSource: %s", getShaderSourceCommandBuffer->m_Source);
+				DEBUG(DEBUG_TAG, "[%d] GL::GetShaderSource: %s", isDefaultQueue, getShaderSourceCommandBuffer->m_Source);
 			break;
 		}
 		case kCommandTypeGetShaderParameter:
@@ -749,7 +732,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					&ret);
 			getShaderParameterCommandBuffer->m_Value = ret;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "GetShaderParameter: %d", ret);
+				DEBUG(DEBUG_TAG, "[%d] GL::GetShaderParameter: %d", isDefaultQueue, ret);
 			break;
 		}
 		case kCommandTypeGetShaderInfoLog:
@@ -764,17 +747,17 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			delete[] infoLog;
 
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "GetShaderInfoLog: %s", getShaderInfoLogCommandBuffer->m_InfoLog);
+				DEBUG(DEBUG_TAG, "[%d] GL::GetShaderInfoLog: %s", isDefaultQueue, getShaderInfoLogCommandBuffer->m_InfoLog);
 			break;
 		}
 		case kCommandTypeCreateBuffer:
 		{
 			auto createBufferCommandBuffer = static_cast<CreateBufferCommandBuffer *>(commandBuffer);
-			int ret = CreateBuffer();
-			createBufferCommandBuffer->m_BufferId = ret;
-
+			GLuint buffer;
+			glGenBuffers(1, &buffer);
+			createBufferCommandBuffer->m_BufferId = buffer;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "CreateBuffer => buffer(%d)", ret);
+				DEBUG(DEBUG_TAG, "[%d] GL::CreateBuffer => buffer(%d)", isDefaultQueue, buffer);
 			break;
 		}
 		case kCommandTypeDeleteBuffer:
@@ -783,7 +766,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glDeleteBuffers(1, &deleteBufferCommandBuffer->m_BufferId);
 
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "DeleteBuffer: %d", deleteBufferCommandBuffer->m_BufferId);
+				DEBUG(DEBUG_TAG, "[%d] GL::DeleteBuffer: %d", isDefaultQueue, deleteBufferCommandBuffer->m_BufferId);
 			break;
 		}
 		case kCommandTypeBindBuffer:
@@ -794,13 +777,13 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 
 			/** Update the app states for next restore. */
 			if (target == GL_ARRAY_BUFFER)
-				m_AppArrayBufferId = buffer;
+				context->RecordArrayBuffer(buffer);
 			else if (target == GL_ELEMENT_ARRAY_BUFFER)
-				m_AppElementArrayBufferId = buffer;
+				context->RecordElementArrayBuffer(buffer);
 
 			glBindBuffer(target, buffer);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "BindBuffer: target=%d buffer=%d", target, buffer);
+				DEBUG(DEBUG_TAG, "[%d] GL::BindBuffer(target=%d buffer=%d)", isDefaultQueue, target, buffer);
 			break;
 		}
 		case kCommandTypeBufferData:
@@ -814,10 +797,10 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glBufferData(target, size, data, usage);
 			if (logCalls)
 			{
-				DEBUG(DEBUG_TAG, "BufferData(%d, %d)", target, size);
+				DEBUG(DEBUG_TAG, "GL::BufferData(%d, %d)", target, size);
 				if (size > 3)
-					DEBUG(DEBUG_TAG, "BufferData[data]: %d %d %d %d ...",
-								data[0], data[1], data[2], data[3]);
+					DEBUG(DEBUG_TAG, "[%d] GL::BufferData[data]: %d %d %d %d ...",
+								isDefaultQueue, data[0], data[1], data[2], data[3]);
 			}
 			break;
 		}
@@ -830,7 +813,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					bufferSubDataCommandBuffer->m_Size,
 					bufferSubDataCommandBuffer->m_Data);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "BufferSubData: %d", bufferSubDataCommandBuffer->m_Size);
+				DEBUG(DEBUG_TAG, "[%d] GL::BufferSubData: %d", isDefaultQueue, bufferSubDataCommandBuffer->m_Size);
 			break;
 		}
 		case kCommandTypeCreateFramebuffer:
@@ -840,7 +823,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glGenFramebuffers(1, &ret);
 			createFramebufferCommandBuffer->m_FramebufferId = ret;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "CreateFramebuffer: %d", ret);
+				DEBUG(DEBUG_TAG, "[%d] GL::CreateFramebuffer() => %d", isDefaultQueue, ret);
 			break;
 		}
 		case kCommandTypeDeleteFramebuffer:
@@ -848,7 +831,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto deleteFramebufferCommandBuffer = static_cast<DeleteFramebufferCommandBuffer *>(commandBuffer);
 			glDeleteFramebuffers(1, &deleteFramebufferCommandBuffer->m_FramebufferId);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "DeleteFramebuffer: %d", deleteFramebufferCommandBuffer->m_FramebufferId);
+				DEBUG(DEBUG_TAG, "[%d] GL::DeleteFramebuffer: %d",
+							isDefaultQueue, deleteFramebufferCommandBuffer->m_FramebufferId);
 			break;
 		}
 		case kCommandTypeBindFramebuffer:
@@ -858,9 +842,10 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto framebuffer = bindFramebufferCommandBuffer->m_Framebuffer;
 
 			glBindFramebuffer(target, framebuffer);
-			m_AppFramebufferId = framebuffer;
+			context->RecordFramebuffer(framebuffer);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "BindFramebuffer(%d)", bindFramebufferCommandBuffer->m_Framebuffer);
+				DEBUG(DEBUG_TAG, "[%d] GL::BindFramebuffer(%d)",
+							isDefaultQueue, bindFramebufferCommandBuffer->m_Framebuffer);
 			break;
 		}
 		case kCommandTypeFramebufferRenderbuffer:
@@ -872,20 +857,22 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					framebufferRenderbufferCommandBuffer->m_Renderbuffertarget,
 					framebufferRenderbufferCommandBuffer->m_Renderbuffer);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "FramebufferRenderbuffer: %d", framebufferRenderbufferCommandBuffer->m_Renderbuffer);
+				DEBUG(DEBUG_TAG, "[%d] GL::FramebufferRenderbuffer: %d",
+							isDefaultQueue, framebufferRenderbufferCommandBuffer->m_Renderbuffer);
 			break;
 		}
 		case kCommandTypeFramebufferTexture2D:
 		{
 			auto framebufferTexture2DCommandBuffer = static_cast<FramebufferTexture2DCommandBuffer *>(commandBuffer);
-			glFramebufferTexture2D(
-					framebufferTexture2DCommandBuffer->m_Target,
-					framebufferTexture2DCommandBuffer->m_Attachment,
-					framebufferTexture2DCommandBuffer->m_Textarget,
-					framebufferTexture2DCommandBuffer->m_Texture,
-					framebufferTexture2DCommandBuffer->m_Level);
+			auto target = framebufferTexture2DCommandBuffer->m_Target;
+			auto attachment = framebufferTexture2DCommandBuffer->m_Attachment;
+			auto textarget = framebufferTexture2DCommandBuffer->m_Textarget;
+			auto texture = framebufferTexture2DCommandBuffer->m_Texture;
+			auto level = framebufferTexture2DCommandBuffer->m_Level;
+			glFramebufferTexture2D(target, attachment, textarget, texture, level);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "FramebufferTexture2D: %d", framebufferTexture2DCommandBuffer->m_Texture);
+				DEBUG(DEBUG_TAG, "[%d] GL::FramebufferTexture2D(%d, %d, %d, %d, %d)",
+							isDefaultQueue, target, attachment, textarget, texture, level);
 			break;
 		}
 		case kCommandTypeCheckFramebufferStatus:
@@ -894,7 +881,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			GLenum ret = glCheckFramebufferStatus(checkFramebufferStatusCommandBuffer->m_Target);
 			checkFramebufferStatusCommandBuffer->m_Status = ret;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "CheckFramebufferStatus: %d", ret);
+				DEBUG(DEBUG_TAG, "[%d] GL::CheckFramebufferStatus: %d", isDefaultQueue, ret);
 			break;
 		}
 		case kCommandTypeCreateRenderbuffer:
@@ -904,7 +891,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glGenRenderbuffers(1, &ret);
 			createRenderbufferCommandBuffer->m_RenderbufferId = ret;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "CreateRenderbuffer: %d", ret);
+				DEBUG(DEBUG_TAG, "[%d] GL::CreateRenderbuffer: %d", isDefaultQueue, ret);
 			break;
 		}
 		case kCommandTypeDeleteRenderbuffer:
@@ -912,7 +899,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto deleteRenderbufferCommandBuffer = static_cast<DeleteRenderbufferCommandBuffer *>(commandBuffer);
 			glDeleteRenderbuffers(1, &deleteRenderbufferCommandBuffer->m_RenderbufferId);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "DeleteRenderbuffer: %d", deleteRenderbufferCommandBuffer->m_RenderbufferId);
+				DEBUG(DEBUG_TAG, "[%d] GL::DeleteRenderbuffer: %d",
+							isDefaultQueue, deleteRenderbufferCommandBuffer->m_RenderbufferId);
 			break;
 		}
 		case kCommandTypeBindRenderbuffer:
@@ -922,9 +910,10 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto renderbuffer = bindRenderbufferCommandBuffer->m_Renderbuffer;
 
 			glBindRenderbuffer(target, renderbuffer);
-			m_AppRenderbufferId = renderbuffer;
+			context->RecordRenderbuffer(renderbuffer);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "BindRenderbuffer: %d", bindRenderbufferCommandBuffer->m_Renderbuffer);
+				DEBUG(DEBUG_TAG, "[%d] GL::BindRenderbuffer: %d",
+							isDefaultQueue, bindRenderbufferCommandBuffer->m_Renderbuffer);
 			break;
 		}
 		case kCommandTypeRenderbufferStorage:
@@ -936,16 +925,18 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					renderbufferStorageCommandBuffer->m_Width,
 					renderbufferStorageCommandBuffer->m_Height);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "RenderbufferStorage: %d", renderbufferStorageCommandBuffer->m_Internalformat);
+				DEBUG(DEBUG_TAG, "[%d] GL::RenderbufferStorage: %d",
+							isDefaultQueue, renderbufferStorageCommandBuffer->m_Internalformat);
 			break;
 		}
 		case kCommandTypeCreateTexture:
 		{
 			auto createTextureCommandBuffer = static_cast<CreateTextureCommandBuffer *>(commandBuffer);
-			int ret = CreateTexture();
-			createTextureCommandBuffer->m_TextureId = ret;
+			GLuint texture;
+			glGenTextures(1, &texture);
+			createTextureCommandBuffer->m_TextureId = texture;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "CreateTexture: %d", ret);
+				DEBUG(DEBUG_TAG, "[%d] GL::CreateTexture() => texture(%d)", isDefaultQueue, texture);
 			break;
 		}
 		case kCommandTypeDeleteTexture:
@@ -953,32 +944,48 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto deleteTextureCommandBuffer = static_cast<DeleteTextureCommandBuffer *>(commandBuffer);
 			glDeleteTextures(1, &deleteTextureCommandBuffer->m_TextureId);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "DeleteTexture: %d", deleteTextureCommandBuffer->m_TextureId);
+				DEBUG(DEBUG_TAG, "[%d] GL::DeleteTexture: %d", isDefaultQueue, deleteTextureCommandBuffer->m_TextureId);
 			break;
 		}
 		case kCommandTypeBindTexture:
 		{
 			auto bindTextureCommandBuffer = static_cast<BindTextureCommandBuffer *>(commandBuffer);
-			BindTexture(bindTextureCommandBuffer->m_Target, bindTextureCommandBuffer->m_Texture);
+			auto target = bindTextureCommandBuffer->m_Target;
+			auto texture = bindTextureCommandBuffer->m_Texture;
+
+			m_HostContext.RecordTextureBindingFromHost();
+			glBindTexture(target, texture);
+			context->RecordTextureBindingWithUnit(target, texture);
+
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "BindTexture: %d", bindTextureCommandBuffer->m_Texture);
+			{
+				GLint activeUnit;
+				glGetIntegerv(GL_ACTIVE_TEXTURE, &activeUnit);
+				DEBUG(DEBUG_TAG, "[%d] GL::BindTexture(%d, %d) for active(%d) program(%d)",
+							isDefaultQueue, target, texture, activeUnit, context->GetProgram());
+			}
 			break;
 		}
 		case kCommandTypeTexImage2D:
 		{
 			auto texImage2DCommandBuffer = static_cast<TexImage2DCommandBuffer *>(commandBuffer);
-			TexImage2D(
-					texImage2DCommandBuffer->m_Target,
-					texImage2DCommandBuffer->m_Level,
-					texImage2DCommandBuffer->m_Internalformat,
-					texImage2DCommandBuffer->m_Width,
-					texImage2DCommandBuffer->m_Height,
-					texImage2DCommandBuffer->m_Border,
-					texImage2DCommandBuffer->m_Format,
-					texImage2DCommandBuffer->m_Type,
-					texImage2DCommandBuffer->m_Pixels);
+			auto target = texImage2DCommandBuffer->m_Target;
+			auto level = texImage2DCommandBuffer->m_Level;
+			auto internalformat = texImage2DCommandBuffer->m_Internalformat;
+			auto width = texImage2DCommandBuffer->m_Width;
+			auto height = texImage2DCommandBuffer->m_Height;
+			auto border = texImage2DCommandBuffer->m_Border;
+			auto format = texImage2DCommandBuffer->m_Format;
+			auto type = texImage2DCommandBuffer->m_Type;
+			glTexImage2D(target,
+									 level, internalformat,
+									 width, height,
+									 border, format, type, texImage2DCommandBuffer->m_Pixels);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "TexImage2D: %d", texImage2DCommandBuffer->m_Target);
+			{
+				DEBUG(DEBUG_TAG, "[%d] GL::TexImage2D context(internal_format=%d format=%d)",
+							isDefaultQueue, internalformat, format);
+			}
 			break;
 		}
 		case kCommandTypeTexSubImage2D:
@@ -995,7 +1002,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					texSubImage2DCommandBuffer->m_Type,
 					texSubImage2DCommandBuffer->m_Pixels);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "TexSubImage2D: %d", texSubImage2DCommandBuffer->m_Target);
+				DEBUG(DEBUG_TAG, "[%d] GL::TexSubImage2D: %d", isDefaultQueue, texSubImage2DCommandBuffer->m_Target);
 			break;
 		}
 		case kCommandTypeCopyTexImage2D:
@@ -1011,7 +1018,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					copyTexImage2DCommandBuffer->m_Height,
 					copyTexImage2DCommandBuffer->m_Border);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "CopyTexImage2D: %d", copyTexImage2DCommandBuffer->m_Target);
+				DEBUG(DEBUG_TAG, "[%d] GL::CopyTexImage2D: %d", isDefaultQueue, copyTexImage2DCommandBuffer->m_Target);
 			break;
 		}
 		case kCommandTypeCopyTexSubImage2D:
@@ -1027,42 +1034,47 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					copyTexSubImage2DCommandBuffer->m_Width,
 					copyTexSubImage2DCommandBuffer->m_Height);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "CopyTexSubImage2D: %d", copyTexSubImage2DCommandBuffer->m_Target);
+				DEBUG(DEBUG_TAG, "[%d] GL::CopyTexSubImage2D: %d", isDefaultQueue, copyTexSubImage2DCommandBuffer->m_Target);
 			break;
 		}
 		case kCommandTypeTexParameteri:
 		{
 			auto texParameteriCommandBuffer = static_cast<TexParameteriCommandBuffer *>(commandBuffer);
-			TexParameteri(
-					texParameteriCommandBuffer->m_Target,
-					texParameteriCommandBuffer->m_Pname,
-					texParameteriCommandBuffer->m_Param);
+			auto target = texParameteriCommandBuffer->m_Target;
+			auto pname = texParameteriCommandBuffer->m_Pname;
+			auto param = texParameteriCommandBuffer->m_Param;
+
+			glTexParameteri(target, pname, param);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "TexParameteri: %d", texParameteriCommandBuffer->m_Target);
+				DEBUG(DEBUG_TAG, "[%d] GL::TexParameteri(target=%d, pname=%d, param=%d)",
+							isDefaultQueue, target, pname, param);
 			break;
 		}
 		case kCommandTypeActiveTexture:
 		{
 			auto activeTextureCommandBuffer = static_cast<ActiveTextureCommandBuffer *>(commandBuffer);
-			ActiveTexture(activeTextureCommandBuffer->m_Texture);
+			auto textureUnit = activeTextureCommandBuffer->m_Texture;
+			glActiveTexture(textureUnit);
+			context->RecordActiveTextureUnit(textureUnit);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "ActiveTexture: %d", activeTextureCommandBuffer->m_Texture);
+				DEBUG(DEBUG_TAG, "[%d] GL::ActiveTexture(%d)",
+							isDefaultQueue, textureUnit);
 			break;
 		}
 		case kCommandTypeGenerateMipmap:
 		{
 			auto generateMipmapCommandBuffer = static_cast<GenerateMipmapCommandBuffer *>(commandBuffer);
-			GenerateMipmap(generateMipmapCommandBuffer->m_Target);
+			glGenerateMipmap(generateMipmapCommandBuffer->m_Target);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "GenerateMipmap: %d", generateMipmapCommandBuffer->m_Target);
+				DEBUG(DEBUG_TAG, "[%d] GL::GenerateMipmap: %d", isDefaultQueue, generateMipmapCommandBuffer->m_Target);
 			break;
 		}
 		case kCommandTypeEnableVertexAttribArray:
 		{
 			auto enableVertexAttribArrayCommandBuffer = static_cast<EnableVertexAttribArrayCommandBuffer *>(commandBuffer);
-			EnableVertexAttribArray(enableVertexAttribArrayCommandBuffer->m_Index);
+			glEnableVertexAttribArray(enableVertexAttribArrayCommandBuffer->m_Index);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "EnableVertexAttribArray(%d)", enableVertexAttribArrayCommandBuffer->m_Index);
+				DEBUG(DEBUG_TAG, "[%d] GL::EnableVertexAttribArray(%d)", isDefaultQueue, enableVertexAttribArrayCommandBuffer->m_Index);
 			break;
 		}
 		case kCommandTypeDisableVertexAttribArray:
@@ -1070,7 +1082,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto disableVertexAttribArrayCommandBuffer = static_cast<DisableVertexAttribArrayCommandBuffer *>(commandBuffer);
 			glDisableVertexAttribArray(disableVertexAttribArrayCommandBuffer->m_Index);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "DisableVertexAttribArray(%d)", disableVertexAttribArrayCommandBuffer->m_Index);
+				DEBUG(DEBUG_TAG, "[%d] GL::DisableVertexAttribArray(%d)", isDefaultQueue, disableVertexAttribArrayCommandBuffer->m_Index);
 			break;
 		}
 		case kCommandTypeVertexAttribPointer:
@@ -1083,10 +1095,10 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto stride = vertexAttribPointerCommandBuffer->m_Stride;
 			auto offset = vertexAttribPointerCommandBuffer->m_Offset;
 
-			VertexAttribPointer(index, size, type, normalized, stride, offset);
+			glVertexAttribPointer(index, size, type, normalized, stride, offset);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "VertexAttribPointer(%d) size=%d type=%d normalized=%d stride=%d offset=%d",
-							index, size, type, normalized, stride, offset);
+				DEBUG(DEBUG_TAG, "[%d] GL::VertexAttribPointer(%d) size=%d type=%d normalized=%d stride=%d offset=%d",
+							isDefaultQueue, index, size, type, normalized, stride, offset);
 			break;
 		}
 		case kCommandTypeGetAttribLocation:
@@ -1095,28 +1107,30 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto program = getAttribLocationCommandBuffer->m_Program;
 			auto name = getAttribLocationCommandBuffer->m_Name;
 
-			int ret = GetAttribLocation(program, name);
+			int ret = glGetAttribLocation(program, name);
 			getAttribLocationCommandBuffer->m_Location = ret;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "GetAttribLocation(%d, %s) => %d",
-							program, name, ret);
+				DEBUG(DEBUG_TAG, "[%d] GL::GetAttribLocation(%d, %s) => %d",
+							isDefaultQueue, program, name, ret);
 			break;
 		}
 		case kCommandTypeGetUniformLocation:
 		{
 			auto getUniformLocationCommandBuffer = static_cast<GetUniformLocationCommandBuffer *>(commandBuffer);
-			int ret = GetUniformLocation(getUniformLocationCommandBuffer->m_Program, getUniformLocationCommandBuffer->m_Name);
+			int ret = glGetUniformLocation(getUniformLocationCommandBuffer->m_Program, getUniformLocationCommandBuffer->m_Name);
 			getUniformLocationCommandBuffer->m_Location = ret;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "GetUniformLocation: %d", ret);
+				DEBUG(DEBUG_TAG, "[%d] GL::GetUniformLocation: %d", isDefaultQueue, ret);
 			break;
 		}
 		case kCommandTypeUniform1f:
 		{
 			auto uniform1fCommandBuffer = static_cast<Uniform1fCommandBuffer *>(commandBuffer);
-			glUniform1f(uniform1fCommandBuffer->m_Location, uniform1fCommandBuffer->m_V0);
+			auto loc = uniform1fCommandBuffer->m_Location;
+			auto v0 = uniform1fCommandBuffer->m_V0;
+			glUniform1f(loc, v0);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Uniform1f(%d)", uniform1fCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "[%d] GL::Uniform1f(%d, %f)", isDefaultQueue, loc, v0);
 			break;
 		}
 		case kCommandTypeUniform1fv:
@@ -1127,15 +1141,17 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniform1fvCommandBuffer->m_Count,
 					uniform1fvCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Uniform1fv(%d)", uniform1fvCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "[%d] GL::Uniform1fv(%d)", isDefaultQueue, uniform1fvCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform1i:
 		{
 			auto uniform1iCommandBuffer = static_cast<Uniform1iCommandBuffer *>(commandBuffer);
-			glUniform1i(uniform1iCommandBuffer->m_Location, uniform1iCommandBuffer->m_V0);
+			auto loc = uniform1iCommandBuffer->m_Location;
+			auto v0 = uniform1iCommandBuffer->m_V0;
+			glUniform1i(loc, v0);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Uniform1i(%d)", uniform1iCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "[%d] GL::Uniform1i(%d): %d", isDefaultQueue, loc, v0);
 			break;
 		}
 		case kCommandTypeUniform1iv:
@@ -1146,7 +1162,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniform1ivCommandBuffer->m_Count,
 					uniform1ivCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Uniform1iv(%d)", uniform1ivCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "[%d] GL::Uniform1iv(%d)", isDefaultQueue, uniform1ivCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform2f:
@@ -1154,7 +1170,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto uniform2fCommandBuffer = static_cast<Uniform2fCommandBuffer *>(commandBuffer);
 			glUniform2f(uniform2fCommandBuffer->m_Location, uniform2fCommandBuffer->m_V0, uniform2fCommandBuffer->m_V1);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Uniform2f(%d)", uniform2fCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "[%d] GL::Uniform2f(%d)", isDefaultQueue, uniform2fCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform2fv:
@@ -1165,7 +1181,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniform2fvCommandBuffer->m_Count,
 					uniform2fvCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Uniform2fv(%d)", uniform2fvCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "[%d] GL::Uniform2fv(%d)", isDefaultQueue, uniform2fvCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform2i:
@@ -1173,7 +1189,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto uniform2iCommandBuffer = static_cast<Uniform2iCommandBuffer *>(commandBuffer);
 			glUniform2i(uniform2iCommandBuffer->m_Location, uniform2iCommandBuffer->m_V0, uniform2iCommandBuffer->m_V1);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Uniform2i(%d)", uniform2iCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "[%d] GL::Uniform2i(%d)", isDefaultQueue, uniform2iCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform2iv:
@@ -1184,7 +1200,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniform2ivCommandBuffer->m_Count,
 					uniform2ivCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Uniform2iv(%d)", uniform2ivCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "[%d] GL::Uniform2iv(%d)", isDefaultQueue, uniform2ivCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform3f:
@@ -1196,8 +1212,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto v2 = uniform3fCommandBuffer->m_V2;
 			glUniform3f(loc, v0, v1, v2);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Uniform3f(%d): (%f, %f, %f)",
-							loc, v0, v1, v2);
+				DEBUG(DEBUG_TAG, "[%d] GL::Uniform3f(%d): (%f, %f, %f)",
+							isDefaultQueue, loc, v0, v1, v2);
 			break;
 		}
 		case kCommandTypeUniform3fv:
@@ -1208,7 +1224,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniform3fvCommandBuffer->m_Count,
 					uniform3fvCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Uniform3fv(%d)", uniform3fvCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "[%d] GL::Uniform3fv(%d)", isDefaultQueue, uniform3fvCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform3i:
@@ -1216,7 +1232,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto uniform3iCommandBuffer = static_cast<Uniform3iCommandBuffer *>(commandBuffer);
 			glUniform3i(uniform3iCommandBuffer->m_Location, uniform3iCommandBuffer->m_V0, uniform3iCommandBuffer->m_V1, uniform3iCommandBuffer->m_V2);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Uniform3i(%d)", uniform3iCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "[%d] GL::Uniform3i(%d)", isDefaultQueue, uniform3iCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform3iv:
@@ -1227,7 +1243,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniform3ivCommandBuffer->m_Count,
 					uniform3ivCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Uniform3iv(%d)", uniform3ivCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "[%d] GL::Uniform3iv(%d)", isDefaultQueue, uniform3ivCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform4f:
@@ -1241,8 +1257,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 
 			glUniform4f(loc, v0, v1, v2, v3);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Uniform4f(%d): (%f, %f, %f, %f)",
-							loc, v0, v1, v2, v3);
+				DEBUG(DEBUG_TAG, "[%d] GL::Uniform4f(%d): (%f, %f, %f, %f)",
+							isDefaultQueue, loc, v0, v1, v2, v3);
 			break;
 		}
 		case kCommandTypeUniform4fv:
@@ -1253,7 +1269,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniform4fvCommandBuffer->m_Count,
 					uniform4fvCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Uniform4fv(%d)", uniform4fvCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "[%d] GL::Uniform4fv(%d)", isDefaultQueue, uniform4fvCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform4i:
@@ -1265,7 +1281,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 									uniform4iCommandBuffer->m_V2,
 									uniform4iCommandBuffer->m_V3);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Uniform4i(%d)", uniform4iCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "[%d] GL::Uniform4i(%d)", isDefaultQueue, uniform4iCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniform4iv:
@@ -1276,7 +1292,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniform4ivCommandBuffer->m_Count,
 					uniform4ivCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Uniform4iv(%d)", uniform4ivCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "[%d] GL::Uniform4iv(%d)", isDefaultQueue, uniform4ivCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniformMatrix2fv:
@@ -1288,7 +1304,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniformMatrix2fvCommandBuffer->m_Transpose,
 					uniformMatrix2fvCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "UniformMatrix2fv(%d)", uniformMatrix2fvCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix2fv(%d)",
+							isDefaultQueue, uniformMatrix2fvCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniformMatrix3fv:
@@ -1300,7 +1317,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					uniformMatrix3fvCommandBuffer->m_Transpose,
 					uniformMatrix3fvCommandBuffer->m_Value);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "UniformMatrix3fv(%d)", uniformMatrix3fvCommandBuffer->m_Location);
+				DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix3fv(%d)",
+							isDefaultQueue, uniformMatrix3fvCommandBuffer->m_Location);
 			break;
 		}
 		case kCommandTypeUniformMatrix4fv:
@@ -1361,11 +1379,13 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 
 			if (logCalls)
 			{
-				DEBUG(DEBUG_TAG, "UniformMatrix4fv: loc=%d count=%d placeholderType=%d",
+				DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix4fv: loc=%d count=%d placeholderType=%d",
+							isDefaultQueue,
 							uniformMatrix4fvCommandBuffer->m_Location,
 							uniformMatrix4fvCommandBuffer->m_Count,
 							uniformMatrix4fvCommandBuffer->m_MatrixPlaceholderType);
-				DEBUG(DEBUG_TAG, "UniformMatrix4fv[matrix]: (%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)",
+				DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix4fv[matrix]: (%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)",
+							isDefaultQueue,
 							matrixToUse[0], matrixToUse[1], matrixToUse[2], matrixToUse[3],
 							matrixToUse[4], matrixToUse[5], matrixToUse[6], matrixToUse[7],
 							matrixToUse[8], matrixToUse[9], matrixToUse[10], matrixToUse[11],
@@ -1376,24 +1396,25 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		case kCommandTypeDrawArrays:
 		{
 			auto drawArraysCommandBuffer = static_cast<DrawArraysCommandBuffer *>(commandBuffer);
-			DrawArrays(
+			glDrawArrays(
 					drawArraysCommandBuffer->m_Mode,
 					drawArraysCommandBuffer->m_First,
 					drawArraysCommandBuffer->m_Count);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "DrawArrays: %d", drawArraysCommandBuffer->m_Count);
+				DEBUG(DEBUG_TAG, "[%d] GL::DrawArrays(%d)", isDefaultQueue, drawArraysCommandBuffer->m_Count);
 			break;
 		}
 		case kCommandTypeDrawElements:
 		{
 			auto drawElementsCommandBuffer = static_cast<DrawElementsCommandBuffer *>(commandBuffer);
-			DrawElements(
+			glDrawElements(
 					drawElementsCommandBuffer->m_Mode,
 					drawElementsCommandBuffer->m_Count,
 					drawElementsCommandBuffer->m_Type,
 					drawElementsCommandBuffer->m_Indices);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "DrawElements: mode=%d count=%d type=%d",
+				DEBUG(DEBUG_TAG, "[%d] GL::DrawElements: mode=%d count=%d type=%d",
+							isDefaultQueue,
 							drawElementsCommandBuffer->m_Mode,
 							drawElementsCommandBuffer->m_Count,
 							drawElementsCommandBuffer->m_Type);
@@ -1402,11 +1423,11 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		case kCommandTypePixelStorei:
 		{
 			auto pixelStoreiCommandBuffer = static_cast<PixelStoreiCommandBuffer *>(commandBuffer);
-			glPixelStorei(
-					pixelStoreiCommandBuffer->m_Pname,
-					pixelStoreiCommandBuffer->m_Param);
+			auto pname = pixelStoreiCommandBuffer->m_Pname;
+			auto param = pixelStoreiCommandBuffer->m_Param;
+			glPixelStorei(pname, param);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "PixelStorei: %d", pixelStoreiCommandBuffer->m_Pname);
+				DEBUG(DEBUG_TAG, "[%d] GL::PixelStorei(%d, %d)", isDefaultQueue, pname, param);
 			break;
 		}
 		case kCommandTypePolygonOffset:
@@ -1416,7 +1437,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					polygonOffsetCommandBuffer->m_Factor,
 					polygonOffsetCommandBuffer->m_Units);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "PolygonOffset: %d", polygonOffsetCommandBuffer->m_Factor);
+				DEBUG(DEBUG_TAG, "[%d] GL::PolygonOffset: %d", isDefaultQueue, polygonOffsetCommandBuffer->m_Factor);
 			break;
 		}
 		case kCommandTypeSetViewport:
@@ -1433,7 +1454,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			m_ViewportSize[0] = width;
 			m_ViewportSize[1] = height;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "SetViewport: (%d %d %d %d)", x, y, width, height);
+				DEBUG(DEBUG_TAG, "[%d] GL::SetViewport: (%d %d %d %d)",
+							isDefaultQueue, x, y, width, height);
 			break;
 		}
 		case kCommandTypeSetScissor:
@@ -1445,7 +1467,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto height = setScissorCommandBuffer->m_Height;
 			glScissor(x, y, width, height);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "SetScissor: (%d %d %d %d)", x, y, width, height);
+				DEBUG(DEBUG_TAG, "[%d] GL::SetScissor: (%d %d %d %d)",
+							isDefaultQueue, x, y, width, height);
 			break;
 		}
 		case kCommandTypeClear:
@@ -1456,6 +1479,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			/**
 			 * JSAR Implementation doesn't support clear commands.
 			 */
+			if (logCalls)
+				DEBUG(DEBUG_TAG, "[%d] GL::Clear(%d): Unsupported", isDefaultQueue, commandType);
 			break;
 		}
 		case kCommandTypeGetSupportedExtensions:
@@ -1477,6 +1502,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			// 	const GLubyte *ret = glGetStringi(GL_EXTENSIONS, i);
 			// 	getSupportedExtensionsCommandBuffer->m_Extensions.push_back(reinterpret_cast<const char *>(ret));
 			// }
+			if (logCalls)
+				DEBUG(DEBUG_TAG, "[%d] GL::GetSupportedExtensions: %d", isDefaultQueue, tokens.size());
 			break;
 		}
 		case kCommandTypeDepthMask:
@@ -1485,7 +1512,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glDepthMask(depthMaskCommandBuffer->m_Flag);
 			m_DepthMaskEnabled = depthMaskCommandBuffer->m_Flag;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "DepthMask: %d", depthMaskCommandBuffer->m_Flag);
+				DEBUG(DEBUG_TAG, "[%d] GL::DepthMask: %d", isDefaultQueue, depthMaskCommandBuffer->m_Flag);
 			break;
 		}
 		case kCommandTypeDepthFunc:
@@ -1493,7 +1520,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto depthFuncCommandBuffer = static_cast<DepthFuncCommandBuffer *>(commandBuffer);
 			DepthFunc(depthFuncCommandBuffer->m_Func);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "DepthFunc: %d", depthFuncCommandBuffer->m_Func);
+				DEBUG(DEBUG_TAG, "[%d] GL::DepthFunc: %d", isDefaultQueue, depthFuncCommandBuffer->m_Func);
 			break;
 		}
 		case kCommandTypeDepthRange:
@@ -1501,7 +1528,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto depthRangeCommandBuffer = static_cast<DepthRangeCommandBuffer *>(commandBuffer);
 			glDepthRangef(depthRangeCommandBuffer->m_Near, depthRangeCommandBuffer->m_Far);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "DepthRange: %f", depthRangeCommandBuffer->m_Near);
+				DEBUG(DEBUG_TAG, "[%d] GL::DepthRange: %f", isDefaultQueue, depthRangeCommandBuffer->m_Near);
 			break;
 		}
 		case kCommandTypeStencilFunc:
@@ -1512,7 +1539,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					stencilFuncCommandBuffer->m_Ref,
 					stencilFuncCommandBuffer->m_Mask);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "StencilFunc: %d", stencilFuncCommandBuffer->m_Func);
+				DEBUG(DEBUG_TAG, "[%d] GL::StencilFunc: %d", isDefaultQueue, stencilFuncCommandBuffer->m_Func);
 			break;
 		}
 		case kCommandTypeStencilFuncSeparate:
@@ -1524,7 +1551,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					stencilFuncSeparateCommandBuffer->m_Ref,
 					stencilFuncSeparateCommandBuffer->m_Mask);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "StencilFuncSeparate: %d", stencilFuncSeparateCommandBuffer->m_Func);
+				DEBUG(DEBUG_TAG, "[%d] GL::StencilFuncSeparate: %d", isDefaultQueue, stencilFuncSeparateCommandBuffer->m_Func);
 			break;
 		}
 		case kCommandTypeStencilMask:
@@ -1532,7 +1559,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto stencilMaskCommandBuffer = static_cast<StencilMaskCommandBuffer *>(commandBuffer);
 			glStencilMask(stencilMaskCommandBuffer->m_Mask);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "StencilMask: %d", stencilMaskCommandBuffer->m_Mask);
+				DEBUG(DEBUG_TAG, "[%d] GL::StencilMask: %d", isDefaultQueue, stencilMaskCommandBuffer->m_Mask);
 			break;
 		}
 		case kCommandTypeStencilMaskSeparate:
@@ -1542,7 +1569,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					stencilMaskSeparateCommandBuffer->m_Face,
 					stencilMaskSeparateCommandBuffer->m_Mask);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "StencilMaskSeparate: %d", stencilMaskSeparateCommandBuffer->m_Mask);
+				DEBUG(DEBUG_TAG, "[%d] GL::StencilMaskSeparate: %d", isDefaultQueue, stencilMaskSeparateCommandBuffer->m_Mask);
 			break;
 		}
 		case kCommandTypeStencilOp:
@@ -1553,7 +1580,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					stencilOpCommandBuffer->m_Zfail,
 					stencilOpCommandBuffer->m_Zpass);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "StencilOp: %d", stencilOpCommandBuffer->m_Fail);
+				DEBUG(DEBUG_TAG, "[%d] GL::StencilOp: %d", isDefaultQueue, stencilOpCommandBuffer->m_Fail);
 			break;
 		}
 		case kCommandTypeStencilOpSeparate:
@@ -1565,7 +1592,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					stencilOpSeparateCommandBuffer->m_Zfail,
 					stencilOpSeparateCommandBuffer->m_Zpass);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "StencilOpSeparate: %d", stencilOpSeparateCommandBuffer->m_Fail);
+				DEBUG(DEBUG_TAG, "[%d] GL::StencilOpSeparate: %d", isDefaultQueue, stencilOpSeparateCommandBuffer->m_Fail);
 			break;
 		}
 		case kCommandTypeBlendColor:
@@ -1577,7 +1604,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					blendColorCommandBuffer->m_B,
 					blendColorCommandBuffer->m_A);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "BlendColor: %d", blendColorCommandBuffer->m_R);
+				DEBUG(DEBUG_TAG, "[%d] GL::BlendColor: %d", isDefaultQueue, blendColorCommandBuffer->m_R);
 			break;
 		}
 		case kCommandTypeBlendEquation:
@@ -1585,7 +1612,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto blendEquationCommandBuffer = static_cast<BlendEquationCommandBuffer *>(commandBuffer);
 			glBlendEquation(blendEquationCommandBuffer->m_Mode);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "BlendEquation: %d", blendEquationCommandBuffer->m_Mode);
+				DEBUG(DEBUG_TAG, "[%d] GL::BlendEquation: %d", isDefaultQueue, blendEquationCommandBuffer->m_Mode);
 			break;
 		}
 		case kCommandTypeBlendEquationSeparate:
@@ -1595,7 +1622,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					blendEquationSeparateCommandBuffer->m_ModeRGB,
 					blendEquationSeparateCommandBuffer->m_ModeAlpha);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "BlendEquationSeparate: %d", blendEquationSeparateCommandBuffer->m_ModeRGB);
+				DEBUG(DEBUG_TAG, "[%d] GL::BlendEquationSeparate: %d",
+							isDefaultQueue, blendEquationSeparateCommandBuffer->m_ModeRGB);
 			break;
 		}
 		case kCommandTypeBlendFunc:
@@ -1608,7 +1636,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			m_Blend_Dfactor = blendFuncCommandBuffer->m_Dfactor;
 			m_BlendFuncSet = true;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "BlendFunc: %d", blendFuncCommandBuffer->m_Sfactor);
+				DEBUG(DEBUG_TAG, "[%d] GL::BlendFunc: %d", isDefaultQueue, blendFuncCommandBuffer->m_Sfactor);
 			break;
 		}
 		case kCommandTypeBlendFuncSeparate:
@@ -1625,7 +1653,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			m_Blend_DstAlpha = blendFuncSeparateCommandBuffer->m_DstAlpha;
 			m_BlendFuncSeparateSet = true;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "BlendFuncSeparate: %d", blendFuncSeparateCommandBuffer->m_SrcRGB);
+				DEBUG(DEBUG_TAG, "[%d] GL::BlendFuncSeparate: %d",
+							isDefaultQueue, blendFuncSeparateCommandBuffer->m_SrcRGB);
 			break;
 		}
 		case kCommandTypeColorMask:
@@ -1637,7 +1666,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					colorMaskCommandBuffer->m_B,
 					colorMaskCommandBuffer->m_A);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "ColorMask: %d", colorMaskCommandBuffer->m_R);
+				DEBUG(DEBUG_TAG, "[%d] GL::ColorMask: %d", isDefaultQueue, colorMaskCommandBuffer->m_R);
 			break;
 		}
 		case kCommandTypeCullFace:
@@ -1645,9 +1674,9 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto cullFaceCommandBuffer = static_cast<CullFaceCommandBuffer *>(commandBuffer);
 			auto mode = cullFaceCommandBuffer->m_Mode;
 			glCullFace(mode);
-			m_AppCullFace = mode;
+			context->RecordCullFace(mode);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "CullFace: mode=%d", mode);
+				DEBUG(DEBUG_TAG, "[%d] GL::CullFace: mode=%d", isDefaultQueue, mode);
 			break;
 		}
 		case kCommandTypeFrontFace:
@@ -1655,9 +1684,9 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto frontFaceCommandBuffer = static_cast<FrontFaceCommandBuffer *>(commandBuffer);
 			auto mode = frontFaceCommandBuffer->m_Mode;
 			glFrontFace(mode);
-			m_AppFrontFace = mode;
+			context->RecordFrontFace(mode);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "FrontFace: mode=%d", mode);
+				DEBUG(DEBUG_TAG, "[%d] GL::FrontFace: mode=%d", isDefaultQueue, mode);
 			break;
 		}
 		case kCommandTypeEnable:
@@ -1665,7 +1694,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto enableCommandBuffer = static_cast<EnableCommandBuffer *>(commandBuffer);
 			Enable(enableCommandBuffer->m_Cap);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Enable: %d", enableCommandBuffer->m_Cap);
+				DEBUG(DEBUG_TAG, "[%d] GL::Enable: %d", isDefaultQueue, enableCommandBuffer->m_Cap);
 			break;
 		}
 		case kCommandTypeDisable:
@@ -1673,7 +1702,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto disableCommandBuffer = static_cast<DisableCommandBuffer *>(commandBuffer);
 			Disable(disableCommandBuffer->m_Cap);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "Disable: %d", disableCommandBuffer->m_Cap);
+				DEBUG(DEBUG_TAG, "[%d] GL::Disable: %d", isDefaultQueue, disableCommandBuffer->m_Cap);
 			break;
 		}
 		case kCommandTypeGetBooleanv:
@@ -1683,7 +1712,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glGetBooleanv(getBooleanvCommandBuffer->m_Pname, &ret);
 			getBooleanvCommandBuffer->m_Value = ret;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "GetBooleanv: %d", getBooleanvCommandBuffer->m_Pname);
+				DEBUG(DEBUG_TAG, "[%d] GL::GetBooleanv: %d", isDefaultQueue, getBooleanvCommandBuffer->m_Pname);
 			break;
 		}
 		case kCommandTypeGetIntegerv:
@@ -1693,7 +1722,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glGetIntegerv(getIntegervCommandBuffer->m_Pname, &ret);
 			getIntegervCommandBuffer->m_Value = ret;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "GetIntegerv: %d", getIntegervCommandBuffer->m_Pname);
+				DEBUG(DEBUG_TAG, "[%d] GL::GetIntegerv: %d", isDefaultQueue, getIntegervCommandBuffer->m_Pname);
 			break;
 		}
 		case kCommandTypeGetFloatv:
@@ -1703,7 +1732,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			glGetFloatv(getFloatvCommandBuffer->m_Pname, &ret);
 			getFloatvCommandBuffer->m_Value = ret;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "GetFloatv: %d", getFloatvCommandBuffer->m_Pname);
+				DEBUG(DEBUG_TAG, "[%d] GL::GetFloatv: %d", isDefaultQueue, getFloatvCommandBuffer->m_Pname);
 			break;
 		}
 		case kCommandTypeGetString:
@@ -1712,7 +1741,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			const GLubyte *ret = glGetString(getStringCommandBuffer->m_Pname); // returns null-terminated string
 			getStringCommandBuffer->CopyValue(ret);
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "GetString: %d", getStringCommandBuffer->m_Pname);
+				DEBUG(DEBUG_TAG, "[%d] GL::GetString: %d", isDefaultQueue, getStringCommandBuffer->m_Pname);
 			break;
 		}
 		case kCommandTypeGetShaderPrecisionFormat:
@@ -1729,7 +1758,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			getShaderPrecisionFormatCommandBuffer->m_RangeMax = range[1];
 			getShaderPrecisionFormatCommandBuffer->m_Precision = precision;
 			if (logCalls)
-				DEBUG(DEBUG_TAG, "GetShaderPrecisionFormat: %d", getShaderPrecisionFormatCommandBuffer->m_ShaderType);
+				DEBUG(DEBUG_TAG, "[%d] GL::GetShaderPrecisionFormat: %d",
+							isDefaultQueue, getShaderPrecisionFormatCommandBuffer->m_ShaderType);
 			break;
 		}
 		case kCommandTypeGetError:
@@ -1737,9 +1767,13 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto getErrorCommandBuffer = static_cast<GetErrorCommandBuffer *>(commandBuffer);
 			GLenum ret = glGetError();
 			getErrorCommandBuffer->m_Error = ret;
+			if (logCalls)
+				DEBUG(DEBUG_TAG, "[%d] GL::GetError: %d", isDefaultQueue, ret);
 			break;
 		}
 		default:
+			if (logCalls)
+				DEBUG(DEBUG_TAG, "[%d] GL::Unknown command type: %d", isDefaultQueue, commandType);
 			break;
 		}
 
@@ -1751,11 +1785,17 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			{
 				switch (error)
 				{
-				case GL_OUT_OF_MEMORY:
-					DEBUG(DEBUG_TAG, "[type:%d] Occurs an OpenGL error: GL_OUT_OF_MEMORY", commandType);
-					break;
 				case GL_INVALID_ENUM:
 					DEBUG(DEBUG_TAG, "[type:%d] Occurs an OpenGL error: GL_INVALID_ENUM", commandType);
+					break;
+				case GL_INVALID_VALUE:
+					DEBUG(DEBUG_TAG, "[type:%d] Occurs an OpenGL error: GL_INVALID_VALUE", commandType);
+					break;
+				case GL_INVALID_OPERATION:
+					DEBUG(DEBUG_TAG, "[type:%d] Occurs an OpenGL error: GL_INVALID_OPERATION", commandType);
+					break;
+				case GL_OUT_OF_MEMORY:
+					DEBUG(DEBUG_TAG, "[type:%d] Occurs an OpenGL error: GL_OUT_OF_MEMORY", commandType);
 					break;
 				default:
 					DEBUG(DEBUG_TAG, "[type:%d] Occurs an OpenGL error: 0x%04X", commandType, error);
@@ -1764,15 +1804,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			}
 		}
 		commandBuffer->Finish();
-		// TODO: where to release the commandBuffer?
-		// delete commandBuffer;
 	}
 	return true;
-}
-
-void RenderAPI_OpenGLCoreES::DrawSimpleTriangles(const float worldMatrix[16], int triangleCount, const void *verticesFloat3Byte4)
-{
-	// TODO
 }
 
 #endif // #if SUPPORT_OPENGL_UNIFIED

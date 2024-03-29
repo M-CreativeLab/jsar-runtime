@@ -83,10 +83,10 @@ Object.defineProperties(globalThis, {
     configurable: false,
   },
 });
-// globalThis.window = createWindow();
+globalThis.window = createWindow();
 
 logger.info('Polyfills have been loaded.');
-logger.info('window =>', typeof window, typeof globalThis.window);
+logger.info(`window() =>`, typeof window, typeof globalThis.window);
 logger.info('navigator =>', typeof navigator, typeof globalThis.navigator);
 logger.info('=============================');
 

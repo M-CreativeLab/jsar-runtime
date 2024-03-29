@@ -13,8 +13,8 @@ export class WebXRCamera extends BABYLON.FreeCamera {
   private _referenceQuaternion: BABYLON.Quaternion = BABYLON.Quaternion.Identity();
   private _referencedPosition: BABYLON.Vector3 = new BABYLON.Vector3();
   private _trackingState: BABYLON.WebXRTrackingState = BABYLON.WebXRTrackingState.NOT_TRACKING;
-  private _xrProjectionMatrix: BABYLON.Matrix;
-  private _xrViewMatrix: BABYLON.Matrix;
+  private _xrProjectionMatrix: BABYLON.Matrix = BABYLON.Matrix.Identity();
+  private _xrViewMatrix: BABYLON.Matrix = BABYLON.Matrix.Identity();
 
   /**
    * This will be triggered after the first XR Frame initialized the camera,
@@ -206,8 +206,6 @@ export class WebXRCamera extends BABYLON.FreeCamera {
     this._lastXRViewerPose = undefined;
   }
 
-  private _rotate180 = new BABYLON.Quaternion(0, 1, 0, 0);
-
   private _updateFromXRSession() {
     const pose = this._xrSessionManager.currentFrame && this._xrSessionManager.currentFrame.getViewerPose(this._xrSessionManager.referenceSpace);
     this._lastXRViewerPose = pose || undefined;
@@ -273,7 +271,7 @@ export class WebXRCamera extends BABYLON.FreeCamera {
 
     pose.views.forEach((view: XRView, i: number) => {
       const m = view.transform.matrix;
-      logger.info(`onxrframe(${view.eye === 'left' ? 0 : 1}) update`, m[12], m[13], m[14]);
+      // logger.info(`onxrframe(${view.eye === 'left' ? 0 : 1}) update`, m[12], m[13], m[14]);
       // const currentRig = <BABYLON.TargetCamera>this.rigCameras[i];
       // // update right and left, where applicable
       // if (!currentRig.isLeftCamera && !currentRig.isRightCamera) {

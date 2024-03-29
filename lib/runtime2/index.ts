@@ -32,6 +32,9 @@ BABYLON.Tools.GetAbsoluteUrl = (url: string) => {
   logger.info('[Babylonjs] GetAbsoluteUrl:', url);
   return url;
 };
+Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
+  get: () => performance.now()
+});
 BABYLON.SceneLoader.RegisterPlugin(new GLTFFileLoader() as any);
 
 export class TransmuteRuntime2 extends EventTarget {
@@ -67,24 +70,34 @@ export class TransmuteRuntime2 extends EventTarget {
     await nativeDocument.enterXrExperience();
     logger.info(`Session#${event.sessionId} has been entered XR experience.`);
 
+    // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/diamante.glb'; // demo
     // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/floating_fox.glb';
     // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/pirateFort.glb';
     // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/blackhole.glb';
-    const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/x-wing.glb';
+    const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/stylized_ww1_plane.glb';
     const defaultCode = `
 <xsml>
   <head>
     <title>External Mesh Example(Glb)</title>
     <link id="my" rel="mesh" href="${modelUrl}" />
     <style>
+      @keyframes rotate {
+        from {
+          rotation: 0 0 30;
+        }
+        to {
+          rotation: 0 360 30;
+        }
+      }
       bound {
-        position: 0 0 -1;
+        animation: rotate 50s linear infinite;
+        position: 0 0 0;
       }
     </style>
   </head>
   <space>
     <bound>
-     <mesh ref="my" id="model" />
+      <mesh ref="my" id="model" />
     </bound>
   </space>
   <script>
@@ -97,7 +110,43 @@ export class TransmuteRuntime2 extends EventTarget {
     console.log('found animations:', animations.length);
     if (animations.length > 0) {
       animations[0].start(true);
+      console.log('started the first animation:', animations[0].name);
+      console.log(animations[0].targetedAnimations[0]);
     }
+
+    const mat0 = new BABYLON.PBRMaterial("mat0", scene);
+    mat0.roughness = 1;
+    mat0.emissiveColor = new BABYLON.Color3(0.1, 0, 0);
+    mat0.emissiveTexture = new BABYLON.Texture("https://ar.rokidcdn.com/web-assets/pages/textures/flare.png", scene);
+    mat0.albedoColor = new BABYLON.Color3(1, 0, 0);
+    mat0.albedoTexture = new BABYLON.Texture("https://ar.rokidcdn.com/web-assets/pages/textures/wall.jpeg", scene);
+    var sphere0 = BABYLON.MeshBuilder.CreateSphere("sphere0", {}, scene);
+	  sphere0.material = mat0;
+    sphere0.position = new BABYLON.Vector3(0, 0, 1);
+    console.log('created a sphere:', sphere0);
+  });
+  </script>
+</xsml>
+    `;
+
+    /**
+     * Use for testing the particle system.
+     */
+    const particleSystemCode = `
+<xsml>
+  <head>
+    <title>External Mesh Example(Glb)</title>
+  </head>
+  <space>
+  </space>
+  <script>
+  spatialDocument.addEventListener('spaceReady', () => {
+    const scene = spatialDocument.scene;
+    // Create a particle system
+    const particleSystem = new BABYLON.ParticleSystem("particles", 2000, scene);
+    particleSystem.particleTexture = new BABYLON.Texture("https://ar.rokidcdn.com/web-assets/pages/textures/flare.png");
+    particleSystem.emitter = new BABYLON.Vector3(0, 0, 3);
+    particleSystem.start();
   });
   </script>
 </xsml>
@@ -131,6 +180,18 @@ export class TransmuteRuntime2 extends EventTarget {
     {
       await dom.waitForSpaceReady();
       logger.info('the jsar document\'s space is ready');
+
+      const scene = dom.nativeDocument.getNativeScene();
+      const animations = scene.animationGroups
+        .filter(ag => ag.name.startsWith('model.'));
+      if (animations.length > 0) {
+        animations[0].start(true);
+        logger.info('started the first animation:', animations[0].name);
+        const firstTargetedAnim = animations[0].targetedAnimations[0];
+        logger.info(firstTargetedAnim.animation.getKeys());
+        logger.info(firstTargetedAnim.target);
+        logger.info('first targeted animation:', firstTargetedAnim.serialize());
+      }
     }
     this.fitSpaceWithScene(spaceNode, 0.7);
   }

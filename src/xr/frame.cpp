@@ -103,13 +103,13 @@ namespace xr
   {
     if (passIndex == 0)
     {
-      m_CommandBuffersInPass.clear();
+      clearCommandBuffers(m_CommandBuffersInPass);
       for (auto commandBuffer : commandBuffers)
         m_CommandBuffersInPass.push_back(commandBuffer);
     }
     else if (passIndex == 1)
     {
-      m_CommandBuffersInPass2.clear();
+      clearCommandBuffers(m_CommandBuffersInPass2);
       for (auto commandBuffer : commandBuffers)
         m_CommandBuffersInPass2.push_back(commandBuffer);
     }
@@ -152,4 +152,11 @@ namespace xr
 
   int StereoRenderingFrame::getId() { return m_StereoId; }
   bool StereoRenderingFrame::addedOnce() { return m_IsAddedOnce; }
+
+  void StereoRenderingFrame::clearCommandBuffers(std::vector<renderer::CommandBuffer *> &commandBuffers)
+  {
+    for (auto commandBuffer : commandBuffers)
+      delete commandBuffer;
+    commandBuffers.clear();
+  }
 }

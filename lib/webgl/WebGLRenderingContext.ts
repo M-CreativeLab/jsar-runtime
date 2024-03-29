@@ -591,6 +591,11 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
       const extensions = extensionDecls.join('\n');
       fixedShaderSrc = extensions + '\n' + fixedShaderSrc;
     }
+
+    logger.info(`shader(${shader})`);
+    fixedShaderSrc.split('\n').forEach((str, line) => {
+      logger.info(`SRC[${line}]`, str);
+    });
     return this.nativeCall('shaderSource', [shader, fixedShaderSrc], {
       debug: {
         argTypes: [, 'ignore'],

@@ -149,11 +149,22 @@ namespace renderer
       m_ConditionOnFinished.wait(lock, [this]
                                  { return m_Finished.load(); });
     }
-    void Finish()
+    /**
+     * There are 2 possible cases to release a command buffer:
+     * 1. When the command buffer is finished, it will be released by RenderAPI.
+     * 2. When the flag `m_PerserveWhenFinished` is set, it will not be released at that time, the caller
+     *    should release it manually once it gets the finished result.
+     */
+    void PerserveWhenFinished()
+    {
+      m_PerserveWhenFinished = true;
+    }
+    bool Finish()
     {
       unique_lock<mutex> lock(m_MutexToFinish);
       m_Finished.store(true);
       m_ConditionOnFinished.notify_all();
+      return m_PerserveWhenFinished;
     }
 
   protected:
@@ -161,6 +172,7 @@ namespace renderer
     int m_CommandId;
 
   private:
+    atomic<bool> m_PerserveWhenFinished = false;
     atomic<bool> m_Finished = false;
     mutex m_MutexToFinish;
     condition_variable m_ConditionOnFinished;

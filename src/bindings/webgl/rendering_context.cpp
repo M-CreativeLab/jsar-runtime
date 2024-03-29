@@ -2105,7 +2105,12 @@ namespace webgl
     int y = info[1].As<Napi::Number>().Int32Value();
     int width = info[2].As<Napi::Number>().Int32Value();
     int height = info[3].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new renderer::SetViewportCommandBuffer(x, y, width, height));
+
+    /**
+     * Only the viewport is changed, we need to dispatch a SetViewportCommandBuffer.
+     */
+    if (m_renderAPI->HasViewportChanged(x, y, width, height) == true)
+      addCommandBuffer(new renderer::SetViewportCommandBuffer(x, y, width, height));
     return env.Undefined();
   }
 
@@ -2133,14 +2138,14 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() >= 4)
-    {
-      float r = info[0].ToNumber().FloatValue();
-      float g = info[1].ToNumber().FloatValue();
-      float b = info[2].ToNumber().FloatValue();
-      float a = info[3].ToNumber().FloatValue();
-      addCommandBuffer(new renderer::ClearColorCommandBuffer(r, g, b, a));
-    }
+    // if (info.Length() >= 4)
+    // {
+    //   float r = info[0].ToNumber().FloatValue();
+    //   float g = info[1].ToNumber().FloatValue();
+    //   float b = info[2].ToNumber().FloatValue();
+    //   float a = info[3].ToNumber().FloatValue();
+    //   addCommandBuffer(new renderer::ClearColorCommandBuffer(r, g, b, a));
+    // }
     return env.Undefined();
   }
 
@@ -2149,11 +2154,11 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() >= 1)
-    {
-      float depth = info[0].ToNumber().FloatValue();
-      addCommandBuffer(new renderer::ClearDepthCommandBuffer(depth));
-    }
+    // if (info.Length() >= 1)
+    // {
+    //   float depth = info[0].ToNumber().FloatValue();
+    //   addCommandBuffer(new renderer::ClearDepthCommandBuffer(depth));
+    // }
     return env.Undefined();
   }
 
@@ -2162,11 +2167,11 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() >= 1)
-    {
-      int stencil = info[0].ToNumber().Int32Value();
-      addCommandBuffer(new renderer::ClearStencilCommandBuffer(stencil));
-    }
+    // if (info.Length() >= 1)
+    // {
+    //   int stencil = info[0].ToNumber().Int32Value();
+    //   addCommandBuffer(new renderer::ClearStencilCommandBuffer(stencil));
+    // }
     return env.Undefined();
   }
 
@@ -2175,11 +2180,11 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() >= 1)
-    {
-      uint32_t mask = info[0].ToNumber().Uint32Value();
-      m_renderAPI->Clear(mask);
-    }
+    // if (info.Length() >= 1)
+    // {
+    //   uint32_t mask = info[0].ToNumber().Uint32Value();
+    //   m_renderAPI->Clear(mask);
+    // }
     return env.Undefined();
   }
 
@@ -2640,6 +2645,10 @@ namespace webgl
        * Only default queue supports waiting for the command buffer to be finished.
        */
       useDefaultQueue = true;
+      /**
+       * Set the command buffer to be perserved when finished, then this instance will be responsible for deleting it.
+       */
+      commandBuffer->PerserveWhenFinished();
     }
 
     if (m_XRCompatible == true && useDefaultQueue == false)
@@ -2660,7 +2669,10 @@ namespace webgl
 
     // Wait for the command buffer to be finished if needed.
     if (waitForFinished)
+    {
       commandBuffer->WaitFinished();
+      // TODO: release the command buffer?
+    }
     return true;
   }
 }
