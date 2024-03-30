@@ -1,5 +1,4 @@
 import 'babylonjs';
-// import { GLTFFileLoader } from '@babylonjs/loaders/glTF';
 import { JSARDOM } from '@yodaos-jsar/dom';
 
 import * as logger from '../bindings/logger';
@@ -35,11 +34,11 @@ BABYLON.Tools.GetAbsoluteUrl = (url: string) => {
 Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
   get: () => performance.now()
 });
-// BABYLON.SceneLoader.RegisterPlugin(new GLTFFileLoader() as any);
 
 export class TransmuteRuntime2 extends EventTarget {
   private gl: WebGLRenderingContext;
   private scene: BABYLON.Scene;
+  private appStack: Array<JSARDOM<NativeDocumentOnTransmute>> = [];
 
   start() {
     requestRendererReady(this.onRendererReady.bind(this));
@@ -50,6 +49,13 @@ export class TransmuteRuntime2 extends EventTarget {
       `v8=${process.versions.v8}`,
     ].join(','));
     addXsmlRequestListener(this.onXsmlRequest.bind(this));
+  }
+
+  onGpuBusy() {
+    const dom = this.appStack.pop();
+    if (dom != null) {
+      dom.unload();
+    }
   }
 
   private onRendererReady(gl: WebGLRenderingContext) {
@@ -102,6 +108,8 @@ export class TransmuteRuntime2 extends EventTarget {
       url: urlBase,
       nativeDocument,
     });
+    this.appStack.push(dom);
+
     await dom.load();
     logger.info('loaded a jsar document');
 

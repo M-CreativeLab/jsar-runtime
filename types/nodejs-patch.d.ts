@@ -20,8 +20,10 @@ declare namespace Transmute {
     markRuntimeAvailable(versions: string): void;
   }
 
+  type RenderExceptionCallback = (code: number) => void;
   class RenderLoop {
     constructor();
+    setExceptionCallback(callback: RenderExceptionCallback): void;
     setFrameCallback(callback: FrameRequestCallback): void;
     setFrameFinished(): void;
   }

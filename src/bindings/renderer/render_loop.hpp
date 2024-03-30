@@ -20,15 +20,21 @@ namespace renderer
   public:
     bool isAvailable() { return disposed_ == false && available_ == true; }
     Napi::ThreadSafeFunction &getFrameCallback() { return m_frameCallback; }
+    void startFrame() { finished_ = false; }
+    bool isFrameFinished() { return finished_; }
+
+    /**
+     * Report a native exception to JavaScript side.
+     */
+    void reportException(uint32_t code);
     /**
      * Call the frame callback that is set in JavaScript runtime.
      */
     void frameCallback(xr::DeviceFrame *frame);
     void frameCallback();
-    void startFrame() { finished_ = false; }
-    bool isFrameFinished() { return finished_; }
 
   private:
+    Napi::Value SetExceptionCallback(const Napi::CallbackInfo &info);
     Napi::Value SetFrameCallback(const Napi::CallbackInfo &info);
     Napi::Value SetFrameFinished(const Napi::CallbackInfo &info);
     Napi::Value GetCommandBuffersCount(const Napi::CallbackInfo &info);
@@ -39,10 +45,11 @@ namespace renderer
     atomic<bool> available_ = false;
     atomic<bool> finished_ = false;
 
-    Napi::ThreadSafeFunction m_frameCallback;
     mutex m_mutex;
     condition_variable m_cv;
     bool m_frameCallbackFinished = true;
+    Napi::ThreadSafeFunction m_ExceptionCallback;
+    Napi::ThreadSafeFunction m_frameCallback;
 
     static RenderLoop *s_instance;
     static Napi::FunctionReference *constructor;

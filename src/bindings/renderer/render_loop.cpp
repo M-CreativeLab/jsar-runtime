@@ -11,7 +11,8 @@ namespace renderer
     Napi::Function tpl = DefineClass(
         env,
         "RenderLoop",
-        {InstanceMethod("setFrameCallback", &RenderLoop::SetFrameCallback),
+        {InstanceMethod("setExceptionCallback", &RenderLoop::SetExceptionCallback),
+         InstanceMethod("setFrameCallback", &RenderLoop::SetFrameCallback),
          InstanceMethod("setFrameFinished", &RenderLoop::SetFrameFinished),
          InstanceMethod("getCommandBuffersCount", &RenderLoop::GetCommandBuffersCount),
          InstanceMethod("dispose", &RenderLoop::Dispose)});
@@ -48,6 +49,32 @@ namespace renderer
     s_instance = this;
   }
 
+  Napi::Value RenderLoop::SetExceptionCallback(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (disposed_)
+    {
+      Napi::TypeError::New(env, "RenderLoop() instance is already disposed")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto jsCallback = info[0].As<Napi::Function>();
+    m_ExceptionCallback = Napi::ThreadSafeFunction::New(
+        env,
+        jsCallback,
+        "RenderLoop_ExceptionCallback",
+        0,
+        1,
+        [](Napi::Env env)
+        {
+          // TODO
+        });
+    return info.This();
+  }
+
   Napi::Value RenderLoop::SetFrameCallback(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -55,7 +82,8 @@ namespace renderer
 
     if (disposed_)
     {
-      Napi::TypeError::New(env, "UnityEventListener is already disposed").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "RenderLoop() instance is already disposed")
+          .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -63,7 +91,7 @@ namespace renderer
     m_frameCallback = Napi::ThreadSafeFunction::New(
         env,
         jsCallback,
-        "RenderLoop",
+        "RenderLoop_FrameCallback",
         0,
         1,
         [](Napi::Env env)
@@ -101,6 +129,12 @@ namespace renderer
     disposed_ = true;
     available_ = false;
     return info.This();
+  }
+
+  void RenderLoop::reportException(uint32_t code)
+  {
+    m_ExceptionCallback.NonBlockingCall([code](Napi::Env env, Napi::Function jsCallback)
+                                        { jsCallback.Call({Napi::Number::New(env, code)}); });
   }
 
   void RenderLoop::frameCallback(xr::DeviceFrame *frame)

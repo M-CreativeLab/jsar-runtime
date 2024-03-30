@@ -239,6 +239,8 @@ protected:
 	/** Textures */
 	GLenum m_LastActiveTextureUnit = GL_TEXTURE0;
 	std::map<GLenum, OpenGLTextureBinding *> m_TextureBindingsWithUnit;
+	/** Enables */
+	bool m_CullFaceEnabled = true;
 	/** States */
 	GLint m_CullFace = -1;
 	GLint m_FrontFace = -1;
@@ -271,6 +273,10 @@ public:
 		}
 		glActiveTexture(m_LastActiveTextureUnit);
 
+		// Enable or disable
+		m_CullFaceEnabled = glIsEnabled(GL_CULL_FACE);
+
+		// States
 		glGetIntegerv(GL_CULL_FACE_MODE, &m_CullFace);
 		glGetIntegerv(GL_FRONT_FACE, &m_FrontFace);
 	}
@@ -455,7 +461,6 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	// m_HostContext.Print();
 
 	glDisable(GL_CULL_FACE);
-	// glCullFace(GL_BACK);
 	glFrontFace(GL_CCW);
 
 	if (m_DepthTestEnabled)

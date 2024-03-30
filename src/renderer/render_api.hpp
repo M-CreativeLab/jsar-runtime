@@ -1,7 +1,9 @@
 #pragma once
 
-#include <mutex>
 #include <stddef.h>
+#include <mutex>
+#include <chrono>
+#include <ctime>
 #include <napi.h>
 #include <Unity/IUnityGraphics.h>
 
@@ -17,6 +19,7 @@ enum FrameExecutionCode
   kFrameExecutionSuccess = 0,
   kFrameExecutionNotInitialized = 1,
   kFrameExecutionNotAvailable = 2,
+  kFrameExecutionGpuBusy = 3,
 };
 
 class RenderAPI
@@ -112,6 +115,15 @@ public:
     m_LocalRotation[3] = w;
   }
 
+private:
+  /**
+   * This method is used to record the frame time and report the GPU busy status by checking the time difference between 
+   * the last frame. Once the GPU is in busy state, JSAR will be notified to pause the rendering loop.
+   * 
+   * It returns a boolean value indicating if the GPU is busy, true means the GPU is busy, otherwise false.
+   */
+  bool RecordAndReportGpuBusy();
+
 protected:
   float time = 0.0f;
   float fov = 0.0f;
@@ -123,6 +135,12 @@ protected:
   std::vector<renderer::CommandBuffer *> m_CommandBuffers;
   std::mutex m_CommandBuffersMutex;
   std::mutex m_StateMutex;
+
+private:
+  bool m_IsFirstFrame = true;
+  bool m_IsGpuBusy = false;
+  size_t m_GpuBusyHitCount = 0;
+  std::chrono::steady_clock::time_point m_LastFrameTime;
 };
 
 // Create a graphics API implementation instance for the given API type.

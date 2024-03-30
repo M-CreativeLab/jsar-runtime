@@ -35,6 +35,12 @@ export function cancelAnimationFrame(handle: number) {
   onframeCallbacks.splice(onframeCallbacks.findIndex(cb => cb.handle === handle), 1);
 }
 
+type GpuBusyCallback = () => void;
+const ongpubusyCallbacks: Array<GpuBusyCallback> = [];
+export function requestGpuBusyCallback(callback: GpuBusyCallback) {
+  ongpubusyCallbacks.push(callback);
+}
+
 export function connectRenderer() {
   if (globalRenderLoop != null) {
     throw new TypeError('renderer already connected.');
@@ -55,6 +61,13 @@ export function connectRenderer() {
   onreadyCallbacks.length = 0;
   isReady = true;
 
+  loop.setExceptionCallback(function (code) {
+    if (code === 0x03 /** kFrameExecutionGpuBusy */) {
+      ongpubusyCallbacks.forEach(cb => cb());
+    } else {
+      logger.error(`Unknown renderer exception occurred, the code is: ${code}`);
+    }
+  });
   loop.setFrameCallback(function (time, data) {
     try {
       const callbackThisFrame = onframeCallbacks.slice();

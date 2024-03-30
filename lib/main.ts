@@ -23,9 +23,18 @@ process.on('uncaughtException', handleGlobalExceptionOrRejection);
 process.on('unhandledRejection', handleGlobalExceptionOrRejection);
 
 import { InitializeOffscreenCanvas } from './polyfills'; // load polyfills after the global error handler
-import { connectRenderer } from './bindings/renderer';
+import { connectRenderer, requestGpuBusyCallback } from './bindings/renderer';
 import { prepareXRSystem } from './webxr';
 import { TransmuteRuntime2 } from './runtime2';
+
+let runtime: TransmuteRuntime2;
+requestGpuBusyCallback(() => {
+  if (runtime && typeof runtime.onGpuBusy === 'function') {
+    runtime.onGpuBusy();
+  } else {
+    process.exit(1);
+  }
+});
 
 (async function main() {
   try {
@@ -44,7 +53,7 @@ import { TransmuteRuntime2 } from './runtime2';
     connectRenderer();
     await prepareXRSystem();
 
-    const runtime = new TransmuteRuntime2();
+    runtime = new TransmuteRuntime2();
     runtime.start();
 
     const initializedEnd = performance.now();

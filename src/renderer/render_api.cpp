@@ -1,6 +1,4 @@
 #include <cassert>
-#include <chrono>
-#include <ctime>
 #include <Unity/IUnityGraphics.h>
 
 #include "render_api.hpp"
@@ -28,7 +26,17 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 	if (device == nullptr)
 		return kFrameExecutionNotInitialized;
 
-	auto frameStart = std::chrono::high_resolution_clock::now();
+	/**
+	 * When we detect the GPU is busy over 10 times, we should just stop the frame execution.
+	 */
+	if (RecordAndReportGpuBusy() && m_GpuBusyHitCount > 10)
+	{
+		jsRenderLoop->reportException(kFrameExecutionGpuBusy);
+		DEBUG(TR_RENDERAPI_TAG, "The GPU is busy over 10 times, current frame execution is stopped.");
+		return kFrameExecutionGpuBusy;
+	}
+	auto frameStart = m_LastFrameTime;
+
 	StartFrame();
 	jsRenderLoop->startFrame();
 
@@ -129,6 +137,36 @@ size_t RenderAPI::GetCommandBuffersCount()
 {
 	unique_lock<mutex> lock(m_CommandBuffersMutex);
 	return m_CommandBuffers.size();
+}
+
+#define MAX_DURATION_OF_FRAME 50 * 1000 // 50ms
+bool RenderAPI::RecordAndReportGpuBusy()
+{
+	auto currentNow = std::chrono::high_resolution_clock::now();
+	if (m_IsFirstFrame == true)
+	{
+		m_IsFirstFrame = false;
+		m_LastFrameTime = currentNow;
+		m_GpuBusyHitCount = 0;
+		m_IsGpuBusy = false;
+		return m_IsGpuBusy;
+	}
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(currentNow - m_LastFrameTime);
+	m_LastFrameTime = currentNow;
+	if (duration.count() > MAX_DURATION_OF_FRAME)
+	{
+		DEBUG(TR_RENDERAPI_TAG, "Detected the GPU is busy, frame execution time takes %ld us", duration.count());
+		m_GpuBusyHitCount += 2;
+		m_IsGpuBusy = true;
+	}
+	else
+	{
+		m_GpuBusyHitCount -= 1;
+		if (m_GpuBusyHitCount < 0)
+			m_GpuBusyHitCount = 0;
+		m_IsGpuBusy = false;
+	}
+	return m_IsGpuBusy;
 }
 
 RenderAPI *CreateRenderAPI(UnityGfxRenderer apiType)
