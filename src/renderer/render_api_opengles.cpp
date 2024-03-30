@@ -528,7 +528,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		xr::DeviceFrame *deviceFrame,
 		bool isDefaultQueue)
 {
-	bool logCalls = isDefaultQueue ? true : true;
+	bool logCalls = isDefaultQueue ? true : false;
 
 	OpenGLContextStorage *context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
 	bool isBufferEmpty = commandBuffers.empty();
@@ -1337,6 +1337,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		{
 			float *matrixToUse = nullptr;
 			auto uniformMatrix4fvCommandBuffer = static_cast<UniformMatrix4fvCommandBuffer *>(commandBuffer);
+			auto location = uniformMatrix4fvCommandBuffer->m_Location;
+
 			if (
 					uniformMatrix4fvCommandBuffer->isMatrixPlaceholderType() &&
 					(deviceFrame != nullptr && deviceFrame->isMultiPass()) // support for singlepass?
@@ -1361,7 +1363,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 
 			if (matrixToUse == nullptr)
 			{
-				if (uniformMatrix4fvCommandBuffer->m_Location == 0)
+				if (location == 0)
 				{
 					auto multiPassFrame = static_cast<xr::MultiPassFrame *>(deviceFrame);
 					auto viewMatrix = glm::make_mat4(multiPassFrame->getViewerViewMatrix());
@@ -1383,7 +1385,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			else
 			{
 				glUniformMatrix4fv(
-						uniformMatrix4fvCommandBuffer->m_Location,
+						location,
 						uniformMatrix4fvCommandBuffer->m_Count,
 						uniformMatrix4fvCommandBuffer->m_Transpose,
 						matrixToUse);
@@ -1391,13 +1393,14 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 
 			if (logCalls)
 			{
-				DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix4fv: loc=%d count=%d placeholderType=%d",
+				// DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix4fv(%d): count=%d placeholderType=%d",
+				// 			isDefaultQueue,
+				// 			location,
+				// 			uniformMatrix4fvCommandBuffer->m_Count,
+				// 			uniformMatrix4fvCommandBuffer->m_MatrixPlaceholderType);
+				DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix4fv(%d)[matrix]: (%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)",
 							isDefaultQueue,
-							uniformMatrix4fvCommandBuffer->m_Location,
-							uniformMatrix4fvCommandBuffer->m_Count,
-							uniformMatrix4fvCommandBuffer->m_MatrixPlaceholderType);
-				DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix4fv[matrix]: (%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)",
-							isDefaultQueue,
+							location,
 							matrixToUse[0], matrixToUse[1], matrixToUse[2], matrixToUse[3],
 							matrixToUse[4], matrixToUse[5], matrixToUse[6], matrixToUse[7],
 							matrixToUse[8], matrixToUse[9], matrixToUse[10], matrixToUse[11],

@@ -1,5 +1,5 @@
 import 'babylonjs';
-import { GLTFFileLoader } from '@babylonjs/loaders/glTF';
+// import { GLTFFileLoader } from '@babylonjs/loaders/glTF';
 import { JSARDOM } from '@yodaos-jsar/dom';
 
 import * as logger from '../bindings/logger';
@@ -35,7 +35,7 @@ BABYLON.Tools.GetAbsoluteUrl = (url: string) => {
 Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
   get: () => performance.now()
 });
-BABYLON.SceneLoader.RegisterPlugin(new GLTFFileLoader() as any);
+// BABYLON.SceneLoader.RegisterPlugin(new GLTFFileLoader() as any);
 
 export class TransmuteRuntime2 extends EventTarget {
   private gl: WebGLRenderingContext;
@@ -61,6 +61,7 @@ export class TransmuteRuntime2 extends EventTarget {
   private prepare(gl: WebGLRenderingContext) {
     const exts = gl.getSupportedExtensions();
     logger.info(`[WebGL] supported extensions(${exts.length}):`, exts);
+    logger.info(`[JSARDOM] version=${JSARDOM.version}`);
   }
 
   private async onXsmlRequest(event: XsmlRequestEvent) {
@@ -74,82 +75,7 @@ export class TransmuteRuntime2 extends EventTarget {
     // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/floating_fox.glb';
     // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/pirateFort.glb';
     // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/blackhole.glb';
-    const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/bird.glb';
-    const defaultCode = `
-<xsml>
-  <head>
-    <title>External Mesh Example(Glb)</title>
-    <link id="my" rel="mesh" href="${modelUrl}" />
-    <style>
-      @keyframes rotate {
-        from {
-          rotation: 0 0 30;
-        }
-        to {
-          rotation: 0 360 30;
-        }
-      }
-      bound {
-        animation: rotate 50s linear infinite;
-        position: 0 0 0;
-      }
-    </style>
-  </head>
-  <space>
-    <bound>
-      <mesh ref="my" id="model" />
-    </bound>
-  </space>
-  <script>
-  spatialDocument.addEventListener('spaceReady', () => {
-    const scene = spatialDocument.scene;
-    const animations = scene.animationGroups
-      .filter(ag => ag.name.startsWith('model.'));
-  
-    console.log('all animations:', scene.animationGroups.map(ag => ag.name));
-    console.log('found animations:', animations.length);
-    if (animations.length > 0) {
-      animations[0].start(true);
-      console.log('started the first animation:', animations[0].name);
-      console.log(animations[0].targetedAnimations[0]);
-    }
-
-    const mat0 = new BABYLON.PBRMaterial("mat0", scene);
-    mat0.roughness = 1;
-    mat0.albedoColor = new BABYLON.Color3(1, 0, 0);
-    mat0.albedoTexture = new BABYLON.Texture("https://ar.rokidcdn.com/web-assets/pages/textures/wall.jpeg", scene);
-    var sphere0 = BABYLON.MeshBuilder.CreateSphere("sphere0", {}, scene);
-	  sphere0.material = mat0;
-    sphere0.position = new BABYLON.Vector3(0, 0, 1);
-    console.log('created a sphere:', sphere0);
-  });
-  </script>
-</xsml>
-    `;
-
-    /**
-     * Use for testing the particle system.
-     */
-    const particleSystemCode = `
-<xsml>
-  <head>
-    <title>External Mesh Example(Glb)</title>
-  </head>
-  <space>
-  </space>
-  <script>
-  spatialDocument.addEventListener('spaceReady', () => {
-    const scene = spatialDocument.scene;
-    // Create a particle system
-    const particleSystem = new BABYLON.ParticleSystem("particles", 2000, scene);
-    particleSystem.particleTexture = new BABYLON.Texture("https://ar.rokidcdn.com/web-assets/pages/textures/flare.png");
-    particleSystem.emitter = new BABYLON.Vector3(0, 0, 3);
-    particleSystem.start();
-  });
-  </script>
-</xsml>
-    `;
-
+    // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/bird.glb';
     try {
       await this.load(event.url, nativeDocument);
     } catch (err) {

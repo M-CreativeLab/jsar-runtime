@@ -20,9 +20,6 @@ import { createBondXRSystem } from '../../webxr';
 import { WebXRDefaultExperience } from './xr/DefaultExperience';
 
 class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
-  setMatrices(uniform: WebGLUniformLocation, matrices: Float32Array): boolean {
-    return super.setMatrices(uniform, matrices);
-  }
 }
 
 type FetchReturnAs = 'string' | 'json' | 'arraybuffer';
@@ -178,17 +175,8 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     });
 
     const scene = this._scene = new BABYLON.Scene(this.engine);
-    scene.useRightHandedSystem = true;
+    scene.useRightHandedSystem = false;
     scene.skipFrustumClipping = true;
-    // scene.onAfterAnimationsObservable.add(() => {
-    //   logger.info('animations updated =>', [
-    //     BABYLON.PrecisionDate.Now,
-    //     scene._animationTime,
-    //     scene._animationTimeLast,
-    //     scene._activeAnimatables.length,
-    //   ]);
-    // });
-    logger.info('_animate():', scene._animate.toString());
 
     this._defaultCamera = new BABYLON.ArcRotateCamera(
       'default_camera',
