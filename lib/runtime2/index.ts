@@ -74,7 +74,7 @@ export class TransmuteRuntime2 extends EventTarget {
     // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/floating_fox.glb';
     // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/pirateFort.glb';
     // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/blackhole.glb';
-    const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/stylized_ww1_plane.glb';
+    const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/bird.glb';
     const defaultCode = `
 <xsml>
   <head>
@@ -116,8 +116,6 @@ export class TransmuteRuntime2 extends EventTarget {
 
     const mat0 = new BABYLON.PBRMaterial("mat0", scene);
     mat0.roughness = 1;
-    mat0.emissiveColor = new BABYLON.Color3(0.1, 0, 0);
-    mat0.emissiveTexture = new BABYLON.Texture("https://ar.rokidcdn.com/web-assets/pages/textures/flare.png", scene);
     mat0.albedoColor = new BABYLON.Color3(1, 0, 0);
     mat0.albedoTexture = new BABYLON.Texture("https://ar.rokidcdn.com/web-assets/pages/textures/wall.jpeg", scene);
     var sphere0 = BABYLON.MeshBuilder.CreateSphere("sphere0", {}, scene);
@@ -153,22 +151,28 @@ export class TransmuteRuntime2 extends EventTarget {
     `;
 
     try {
-      await this.load(defaultCode, nativeDocument);
+      await this.load(event.url, nativeDocument);
     } catch (err) {
       logger.error('failed to load the default document:', err);
     }
   }
 
   private async load(
-    code: string,
+    codeOrUrl: string,
     nativeDocument: NativeDocumentOnTransmute,
-    urlBase: string = 'https://example.com/'
+    urlBase?: string
   ) {
-    logger.info(`loading a JSAR document`, code);
+    logger.info(`loading a JSAR document`, codeOrUrl);
     if (!this.gl) {
       throw new TypeError('The webgl is not ready or lost context state');
     }
-    const dom = new JSARDOM(code, {
+
+    try {
+      new URL(codeOrUrl);
+    } catch (_err) {
+      urlBase = 'https://example.com/'
+    }
+    const dom = new JSARDOM(codeOrUrl, {
       url: urlBase,
       nativeDocument,
     });

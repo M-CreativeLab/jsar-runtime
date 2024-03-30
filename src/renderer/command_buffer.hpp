@@ -188,6 +188,19 @@ namespace renderer
     int m_ProgramId = 0;
   };
 
+  /**
+   * This is used in LinkProgramCommandBuffer to represent the uniform locations.
+   */
+  class UniformLocation
+  {
+  public:
+    UniformLocation() {}
+
+  public:
+    int location;
+    int size;
+  };
+
   class LinkProgramCommandBuffer : public CommandBuffer
   {
   public:
@@ -196,7 +209,7 @@ namespace renderer
 
   public:
     int m_ProgramId;
-    std::map<std::string, int> m_UniformLocations;
+    std::map<std::string, UniformLocation> m_UniformLocations;
   };
 
   class UseProgramCommandBuffer : public CommandBuffer
@@ -1188,10 +1201,11 @@ namespace renderer
     Uniform4ivCommandBuffer(int location, std::vector<int> values) : CommandBuffer(kCommandTypeUniform4iv),
                                                                      m_Location(location)
     {
-      m_Value = new int[values.size()];
-      for (int i = 0; i < values.size(); i++)
+      auto len = values.size();
+      m_Value = new int[len];
+      for (int i = 0; i < len; i++)
         m_Value[i] = values[i];
-      m_Count = values.size() / 4;
+      m_Count = len / 4;
     }
     ~Uniform4ivCommandBuffer()
     {
@@ -1211,10 +1225,11 @@ namespace renderer
                                                                                              m_Location(location),
                                                                                              m_Transpose(transpose)
     {
-      m_Value = new float[values.size()];
-      for (int i = 0; i < values.size(); i++)
+      auto len = values.size();
+      m_Value = new float[len];
+      for (int i = 0; i < len; i++)
         m_Value[i] = values[i];
-      m_Count = 1; // webgl only supports 1 matrix
+      m_Count = len / 4;
     }
     ~UniformMatrix2fvCommandBuffer()
     {
@@ -1235,10 +1250,11 @@ namespace renderer
                                                                                              m_Location(location),
                                                                                              m_Transpose(transpose)
     {
-      m_Value = new float[values.size()];
-      for (int i = 0; i < values.size(); i++)
+      auto len = values.size();
+      m_Value = new float[len];
+      for (int i = 0; i < len; i++)
         m_Value[i] = values[i];
-      m_Count = 1; // webgl only supports 1 matrix
+      m_Count = len / 9;
     }
     ~UniformMatrix3fvCommandBuffer()
     {
@@ -1257,12 +1273,13 @@ namespace renderer
   public:
     UniformMatrix4fvCommandBuffer(int location, bool transpose, std::vector<float> values) : CommandBuffer(kCommandTypeUniformMatrix4fv),
                                                                                              m_Location(location),
-                                                                                             m_Count(1),
                                                                                              m_Transpose(transpose)
     {
-      m_Value = new float[values.size()];
-      for (int i = 0; i < values.size(); i++)
+      auto len = values.size();
+      m_Value = new float[len];
+      for (int i = 0; i < len; i++)
         m_Value[i] = values[i];
+      m_Count = len / 16;
     }
 
     UniformMatrix4fvCommandBuffer(int location, bool transpose, MatrixPlaceholderType matrixPlaceholderType) : CommandBuffer(kCommandTypeUniformMatrix4fv),

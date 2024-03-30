@@ -505,9 +505,56 @@ namespace webgl
     auto commandBuffer = new renderer::LinkProgramCommandBuffer(program->GetId());
     addCommandBuffer(commandBuffer, true, true);
 
+    /**
+     * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getUniformLocation#name
+     *
+     * When uniforms declared as an array, the valid name might be like the followings:
+     *
+     * - foo
+     * - foo[0]
+     * - foo[1]
+     */
     auto uniforms = commandBuffer->m_UniformLocations;
     for (auto it = uniforms.begin(); it != uniforms.end(); ++it)
-      program->SetUniformLocation(it->first, it->second);
+    {
+      auto name = it->first;
+      auto uniform = it->second;
+
+      if (uniform.size == 1)
+      {
+        program->SetUniformLocation(name, uniform.location);
+      }
+      else if (uniform.size > 1)
+      {
+        /**
+         * FIXME: The OpenGL returns "foo[0]" from `glGetActiveUniform()`, thus we need to handle it here:
+         *
+         * 1. check if the name ends with "[0]"
+         * 2. grab the name without "[0]"
+         * 3. set the uniform location for the name without "[0]"
+         * 4. set the uniform location for the name with "[0]" and the index
+         * 5. repeat 4 for the rest of the indices
+         *
+         * After the above steps, we will have the names looks like: foo, foo[0], foo[1], foo[2], ...
+         */
+        std::string suffix = "[0]";
+        auto end = name.length() - suffix.length();
+        if (name.size() < suffix.size() || name.rfind(suffix) != end)
+        {
+          continue;
+        }
+        auto arrayName = name.substr(0, end);
+        program->SetUniformLocation(arrayName, uniform.location);
+        program->SetUniformLocation(name, uniform.location);
+        for (int i = 1; i < uniform.size; i++)
+          program->SetUniformLocation(arrayName + "[" + std::to_string(i) + "]", uniform.location + i);
+      }
+      else
+      {
+        // TODO: warning size is invalid?
+        continue;
+      }
+    }
     return env.Undefined();
   }
 
@@ -1903,9 +1950,10 @@ namespace webgl
     bool transpose = info[1].As<Napi::Boolean>().Value();
     Napi::Float32Array array = info[2].As<Napi::Float32Array>();
     size_t length = array.ElementLength();
-    if (length != 4)
+    if (length % 4 != 0)
     {
-      Napi::TypeError::New(env, "uniformMatrix2fv() takes 4 float elements array.").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "uniformMatrix2fv() takes 4x float elements array.")
+          .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1942,9 +1990,10 @@ namespace webgl
     bool transpose = info[1].As<Napi::Boolean>().Value();
     Napi::Float32Array array = info[2].As<Napi::Float32Array>();
     size_t length = array.ElementLength();
-    if (length != 9)
+    if (length % 9 != 0)
     {
-      Napi::TypeError::New(env, "uniformMatrix3fv() takes 9 float elements array.").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "uniformMatrix3fv() takes 9x float elements array.")
+          .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -1970,6 +2019,13 @@ namespace webgl
       Napi::TypeError::New(env, "uniformMatrix4fv() takes 3 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
+    else if (info.Length() > 3)
+    {
+      Napi::TypeError::New(env, "uniformMatrix4fv() don't support the parameters: `srcLength` and `srcOffset`")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
     if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
     {
       Napi::TypeError::New(env, "uniformMatrix4fv() 1st argument(program) must be a WebGLUniformLocation object.")
@@ -1995,9 +2051,11 @@ namespace webgl
     else
     {
       size_t length = array.ElementLength();
-      if (length != 16)
+      if (length % 16 != 0)
       {
-        Napi::TypeError::New(env, "uniformMatrix4fv() takes 16 float elements array.").ThrowAsJavaScriptException();
+        Napi::TypeError::New(env,
+                             "uniformMatrix4fv() must take 16x float elements array but accept " + std::to_string(length) + ".")
+            .ThrowAsJavaScriptException();
         return env.Undefined();
       }
 

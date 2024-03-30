@@ -528,7 +528,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		xr::DeviceFrame *deviceFrame,
 		bool isDefaultQueue)
 {
-	bool logCalls = isDefaultQueue ? false : false;
+	bool logCalls = isDefaultQueue ? true : true;
 
 	OpenGLContextStorage *context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
 	bool isBufferEmpty = commandBuffers.empty();
@@ -598,9 +598,13 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 				GLint location = glGetUniformLocation(program, name);
 				if (location <= -1)
 					continue;
-				linkProgramCommandBuffer->m_UniformLocations.insert(
-						std::pair<std::string, int>(name, location));
-				DEBUG(DEBUG_TAG, "GL::LinkProgram::Uniforms(%s in %d) => %d", name, program, location);
+
+				auto uniformLoc = UniformLocation();
+				uniformLoc.location = location;
+				uniformLoc.size = size;
+
+				linkProgramCommandBuffer->m_UniformLocations[name] = uniformLoc;
+				DEBUG(DEBUG_TAG, "GL::LinkProgram::Uniforms(%s in %d) => %d(size=%d, type=%d)", name, program, location, size, type);
 			}
 			// TODO: add active attributes?
 			if (logCalls)
