@@ -539,8 +539,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		xr::DeviceFrame *deviceFrame,
 		bool isDefaultQueue)
 {
-	bool logCalls = isDefaultQueue ? true : false;
-
+	bool logCalls = isDefaultQueue ? m_EnableLogOnAppGlobal : m_EnableLogOnXRFrame;
 	OpenGLContextStorage *context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
 	bool isBufferEmpty = commandBuffers.empty();
 	if (isBufferEmpty)

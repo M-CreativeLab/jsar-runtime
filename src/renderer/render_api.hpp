@@ -77,6 +77,9 @@ public:
   size_t GetCommandBuffersCount();
   void SetTime(float time) { this->time = time; }
 
+  void EnableAppGlobalLog() { m_EnableLogOnAppGlobal = true; }
+  void EnableXRFrameLog() { m_EnableLogOnXRFrame = true; }
+
   bool HasViewportChanged(int x, int y, int width, int height) {
     return m_Viewport[0] != x || m_Viewport[1] != y || m_Viewport[2] != width || m_Viewport[3] != height;
   }
@@ -132,6 +135,8 @@ protected:
   float m_LocalPosition[3] = {0.0f, 0.0f, 0.0f};
   float m_LocalRotation[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   int m_Viewport[4] = {0, 0, 0, 0};
+  bool m_EnableLogOnAppGlobal = false;
+  bool m_EnableLogOnXRFrame = false;
   std::vector<renderer::CommandBuffer *> m_CommandBuffers;
   std::mutex m_CommandBuffersMutex;
   std::mutex m_StateMutex;

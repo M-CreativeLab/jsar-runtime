@@ -56,6 +56,22 @@ extern "C"
     if (s_CurrentAPI)
       s_CurrentAPI->ProcessDeviceEvent(eventType, s_UnityInterfaces);
 
+#if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
+    char glLogKey[PROP_VALUE_MAX];
+    if (__system_property_get("jsar.switch.gl.logkey", glLogKey) >= 0)
+    {
+      if (strcmp(glLogKey, "globals") == 0)
+        s_CurrentAPI->EnableAppGlobalLog();
+      else if (strcmp(glLogKey, "xrframe") == 0)
+        s_CurrentAPI->EnableXRFrameLog();
+      else if (strcmp(glLogKey, "all") == 0)
+      {
+        s_CurrentAPI->EnableAppGlobalLog();
+        s_CurrentAPI->EnableXRFrameLog();
+      }
+    }
+#endif
+
     // Cleanup graphics API implementation upon shutdown
     if (eventType == kUnityGfxDeviceEventShutdown)
     {
