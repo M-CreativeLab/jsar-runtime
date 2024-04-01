@@ -247,6 +247,7 @@ export class WebXRCamera extends BABYLON.FreeCamera {
         this._referenceQuaternion.z *= -1;
         this._referenceQuaternion.w *= -1;
       }
+      this._globalPosition.copyFrom(this._referencedPosition);
 
       if (this._firstFrame) {
         this._firstFrame = false;

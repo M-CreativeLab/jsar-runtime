@@ -18,8 +18,43 @@ import ImageDataImpl from '@yodaos-jsar/dom/src/living/image/ImageData';
 import * as logger from '../../bindings/logger';
 import { createBondXRSystem } from '../../webxr';
 import { WebXRDefaultExperience } from './xr/DefaultExperience';
+import {
+  XRMatrixPlaceholder,
+  XRMatrixPlaceholderType
+} from '../../webxr/api/XRRigidTransform';
 
+type TransmuteEngineOptions = BABYLON.EngineOptions & {
+  xrSessionId: number;
+};
 class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
+  #xrSessionId: number;
+  constructor(
+    glContext: WebGLRenderingContext | WebGL2RenderingContext,
+    antialias: boolean,
+    options?: TransmuteEngineOptions,
+    adaptToDeviceRatio?: boolean
+  ) {
+    super(glContext, antialias, options, adaptToDeviceRatio);
+    this.#xrSessionId = options?.xrSessionId;
+  }
+
+  setMatrices(uniform: WebGLUniformLocation, matrices: Float32Array): boolean {
+    const name = (uniform as any)?.name;
+    switch (name) {
+      case 'projection':
+        matrices = new XRMatrixPlaceholder(matrices, XRMatrixPlaceholderType.PROJECTION_MATRIX);
+        break;
+      case 'view':
+        matrices = new XRMatrixPlaceholder(matrices, XRMatrixPlaceholderType.VIEW_MATRIX_RELATIVE_TO_LOCAL);
+        break;
+      case 'viewProjection':
+        matrices = new XRMatrixPlaceholder(matrices, XRMatrixPlaceholderType.VIEW_PROJECTION_MATRIX_RELATIVE_TO_LOCAL);
+        break;
+      default:
+        break;
+    }
+    return super.setMatrices(uniform, matrices);
+  }
 }
 
 type FetchReturnAs = 'string' | 'json' | 'arraybuffer';
@@ -168,7 +203,9 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     this.engine = new EngineOnTransmute(glContext, true, {
       disableWebGL2Support: false,
       xrCompatible: true,
+      xrSessionId,
     });
+
     this.userAgent = new UserAgentBackendOnTransmute({
       defaultStylesheet: '',
       devicePixelRatio: 1,

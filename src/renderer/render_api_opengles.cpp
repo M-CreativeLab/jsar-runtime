@@ -140,6 +140,12 @@ public:
 	GLint GetCullFace() { return m_CullFace; }
 	GLint GetFrontFace() { return m_FrontFace; }
 
+	void ResetProgram(int programToReset)
+	{
+		if (m_ProgramId == programToReset)
+			m_ProgramId = 0;
+	}
+
 	void Restore()
 	{
 		GLenum useProgramError;
@@ -559,6 +565,22 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			createProgramCommandBuffer->m_ProgramId = ret;
 			if (logCalls)
 				DEBUG(DEBUG_TAG, "[%d] GL::CreateProgram() => %d", isDefaultQueue, ret);
+			break;
+		}
+		case kCommandTypeDeleteProgram:
+		{
+			auto deleteProgramCommandBuffer = static_cast<DeleteProgramCommandBuffer *>(commandBuffer);
+			auto id = deleteProgramCommandBuffer->m_ProgramId;
+			glDeleteProgram(id);
+
+			/**
+			 * Reset the program in both "AppGlobal" and "XRFrame" when we receiving a delete program command to avoid the
+			 * context using the deleted program.
+			 */
+			m_AppGlobalContext.ResetProgram(id);
+			m_AppXRFrameContext.ResetProgram(id);
+			if (logCalls)
+				DEBUG(DEBUG_TAG, "[%d] GL::DeleteProgram(%d)", isDefaultQueue, id);
 			break;
 		}
 		case kCommandTypeLinkProgram:
@@ -1061,7 +1083,11 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto pname = texParameteriCommandBuffer->m_Pname;
 			auto param = texParameteriCommandBuffer->m_Param;
 
-			glTexParameteri(target, pname, param);
+			if (pname == GL_PACK_ALIGNMENT || pname == GL_UNPACK_ALIGNMENT)
+				glTexParameteri(target, pname, param);
+			else
+				DEBUG(DEBUG_TAG, "Unsupported pname: %d", pname);
+
 			if (logCalls)
 				DEBUG(DEBUG_TAG, "[%d] GL::TexParameteri(target=%d, pname=%d, param=%d)",
 							isDefaultQueue, target, pname, param);
@@ -1361,27 +1387,22 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 				case MatrixPlaceholderType::kMatrixPlaceholderViewRelativeToLocalFloor:
 					matrixToUse = multiPassFrame->getViewerViewMatrix();
 					break;
-				default:
-					break;
-				}
-			}
-
-			if (matrixToUse == nullptr)
-			{
-				if (location == 0)
+				case MatrixPlaceholderType::kMatrixPlaceholderViewProjection:
+				case MatrixPlaceholderType::kMatrixPlaceholderViewProjectionRelativeToLocal:
+				case MatrixPlaceholderType::kMatrixPlaceholderViewProjectionRelativeToLocalFloor:
 				{
-					auto multiPassFrame = static_cast<xr::MultiPassFrame *>(deviceFrame);
 					auto viewMatrix = glm::make_mat4(multiPassFrame->getViewerViewMatrix());
 					auto projectionMatrix = glm::make_mat4(multiPassFrame->getViewerProjectionMatrix());
 					auto viewProjectionMatrix = projectionMatrix * viewMatrix;
 					matrixToUse = glm::value_ptr(viewProjectionMatrix);
 				}
-				else
-				{
-					matrixToUse = uniformMatrix4fvCommandBuffer->m_Value;
+				break;
+				default:
+					break;
 				}
-				// matrixToUse = uniformMatrix4fvCommandBuffer->m_Value;
 			}
+			if (matrixToUse == nullptr)
+				matrixToUse = uniformMatrix4fvCommandBuffer->m_Value;
 
 			if (matrixToUse == nullptr)
 			{

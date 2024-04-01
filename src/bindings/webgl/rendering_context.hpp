@@ -15,6 +15,7 @@ namespace webgl
   private:
     Napi::Value MakeXRCompatible(const Napi::CallbackInfo &info);
     Napi::Value CreateProgram(const Napi::CallbackInfo &info);
+    Napi::Value DeleteProgram(const Napi::CallbackInfo &info);
     Napi::Value LinkProgram(const Napi::CallbackInfo &info);
     Napi::Value UseProgram(const Napi::CallbackInfo &info);
     Napi::Value GetProgramParameter(const Napi::CallbackInfo &info);
@@ -124,10 +125,17 @@ namespace webgl
      * @param {boolean} waitForFinished - if true, the command buffer will be waited until it's finished.
      */
     bool addCommandBuffer(renderer::CommandBuffer *commandBuffer, bool useDefaultQueue = false, bool waitForFinished = false);
+    unsigned char* unpackPixels(int type, int format, int width, int height, unsigned char* pixels);
 
   private:
     RenderAPI *m_renderAPI;
     bool m_XRCompatible = false;
+    bool m_unpackFlipY = false;
+    bool m_unpackPremultiplyAlpha = false;
+    /**
+     * Read the value from the host
+     */
+    uint32_t m_unpackAlignment = 4;
 
   private:
     static Napi::FunctionReference *constructor;

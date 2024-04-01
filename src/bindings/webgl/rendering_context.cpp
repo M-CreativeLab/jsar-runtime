@@ -343,6 +343,7 @@ namespace webgl
           */
          InstanceMethod("makeXRCompatible", &WebGLRenderingContext::MakeXRCompatible),
          InstanceMethod("createProgram", &WebGLRenderingContext::CreateProgram),
+         InstanceMethod("deleteProgram", &WebGLRenderingContext::DeleteProgram),
          InstanceMethod("linkProgram", &WebGLRenderingContext::LinkProgram),
          InstanceMethod("useProgram", &WebGLRenderingContext::UseProgram),
          InstanceMethod("getProgramParameter", &WebGLRenderingContext::GetProgramParameter),
@@ -482,6 +483,28 @@ namespace webgl
     addCommandBuffer(commandBuffer, true, true);
 
     return WebGLProgram::constructor->New({Napi::Number::New(env, commandBuffer->m_ProgramId)});
+  }
+
+  Napi::Value WebGLRenderingContext::DeleteProgram(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "deleteProgram() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLProgram::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "deleteProgram() 1st argument must be a WebGLProgram.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    WebGLProgram *program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
+    addCommandBuffer(new renderer::DeleteProgramCommandBuffer(program->GetId()));
+    return env.Undefined();
   }
 
   Napi::Value WebGLRenderingContext::LinkProgram(const Napi::CallbackInfo &info)
@@ -1197,17 +1220,39 @@ namespace webgl
     }
     Napi::TypedArray pixels = info[8].As<Napi::TypedArray>();
     Napi::ArrayBuffer data = pixels.ArrayBuffer();
-    auto commandBuffer = new renderer::TexImage2DCommandBuffer(
-        target,
-        level,
-        internalformat,
-        width,
-        height,
-        border,
-        format,
-        type,
-        data.ByteLength(),
-        data.Data());
+    renderer::TexImage2DCommandBuffer *commandBuffer;
+
+    if (m_unpackFlipY == true || m_unpackPremultiplyAlpha == true)
+    {
+      unsigned char *packedPixels = reinterpret_cast<unsigned char *>(data.Data());
+      unsigned char *pixels = unpackPixels(type, format, width, height, packedPixels);
+      commandBuffer = new renderer::TexImage2DCommandBuffer(
+          target,
+          level,
+          internalformat,
+          width,
+          height,
+          border,
+          format,
+          type,
+          data.ByteLength(),
+          pixels);
+      delete[] pixels;
+    }
+    else
+    {
+      commandBuffer = new renderer::TexImage2DCommandBuffer(
+          target,
+          level,
+          internalformat,
+          width,
+          height,
+          border,
+          format,
+          type,
+          data.ByteLength(),
+          data.Data());
+    }
     addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
@@ -1240,17 +1285,39 @@ namespace webgl
     }
     Napi::TypedArray pixels = info[8].As<Napi::TypedArray>();
     Napi::ArrayBuffer data = pixels.ArrayBuffer();
-    auto commandBuffer = new renderer::TexSubImage2DCommandBuffer(
-        target,
-        level,
-        xoffset,
-        yoffset,
-        width,
-        height,
-        format,
-        type,
-        data.ByteLength(),
-        data.Data());
+    renderer::TexSubImage2DCommandBuffer *commandBuffer;
+
+    if (m_unpackFlipY == true || m_unpackPremultiplyAlpha == true)
+    {
+      unsigned char *packedPixels = reinterpret_cast<unsigned char *>(data.Data());
+      unsigned char *pixels = unpackPixels(type, format, width, height, packedPixels);
+      commandBuffer = new renderer::TexSubImage2DCommandBuffer(
+          target,
+          level,
+          xoffset,
+          yoffset,
+          width,
+          height,
+          format,
+          type,
+          data.ByteLength(),
+          pixels);
+      delete[] pixels;
+    }
+    else
+    {
+      commandBuffer = new renderer::TexSubImage2DCommandBuffer(
+          target,
+          level,
+          xoffset,
+          yoffset,
+          width,
+          height,
+          format,
+          type,
+          data.ByteLength(),
+          data.Data());
+    }
     addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
@@ -2121,9 +2188,19 @@ namespace webgl
     int pname = info[0].As<Napi::Number>().Int32Value();
     int param = info[1].ToNumber().Int32Value();
 
-    if (pname == WEBGL_PACK_ALIGNMENT || pname == WEBGL_UNPACK_ALIGNMENT)
+    if (
+        pname == WEBGL_PACK_ALIGNMENT ||
+        pname == WEBGL_UNPACK_ALIGNMENT)
     {
       addCommandBuffer(new renderer::PixelStoreiCommandBuffer(pname, param));
+    }
+    else if (pname == WEBGL_UNPACK_FLIP_Y_WEBGL)
+    {
+      m_unpackFlipY = param;
+    }
+    else if (pname == WEBGL_UNPACK_PREMULTIPLY_ALPHA_WEBGL)
+    {
+      m_unpackPremultiplyAlpha = param;
     }
     else
     {
@@ -2732,5 +2809,105 @@ namespace webgl
       // TODO: release the command buffer?
     }
     return true;
+  }
+
+  /**
+   * Source from https://github.com/stackgl/headless-gl/blob/v8.0.2/src/native/webgl.cc#L722
+   */
+  unsigned char *WebGLRenderingContext::unpackPixels(int type, int format, int width, int height, unsigned char *pixels)
+  {
+    // Compute the pixel size
+    int pixelSize = 1;
+    if (type == WEBGL_UNSIGNED_BYTE || type == WEBGL_FLOAT)
+    {
+      if (type == WEBGL_FLOAT)
+        pixelSize = 4;
+      switch (format)
+      {
+      case WEBGL_ALPHA:
+      case WEBGL_LUMINANCE:
+        break;
+      case WEBGL_LUMINANCE_ALPHA:
+        pixelSize *= 2;
+        break;
+      case WEBGL_RGB:
+        pixelSize *= 3;
+        break;
+      case WEBGL_RGBA:
+        pixelSize *= 4;
+        break;
+      default:
+        break;
+      }
+    }
+    else
+    {
+      pixelSize = 2;
+    }
+
+    // Compute the row stride
+    int rowStride = width * pixelSize;
+    if ((rowStride % m_unpackAlignment) != 0)
+    {
+      rowStride += m_unpackAlignment - (rowStride % m_unpackAlignment);
+    }
+
+    int imageSize = rowStride * height;
+    unsigned char *unpacked = new unsigned char[imageSize];
+
+    if (m_unpackFlipY)
+    {
+      for (int i = 0, j = height - 1; j >= 0; ++i, --j)
+      {
+        memcpy(
+            reinterpret_cast<void *>(unpacked + j * rowStride),
+            reinterpret_cast<void *>(pixels + i * rowStride),
+            width * pixelSize);
+      }
+    }
+    else
+    {
+      memcpy(
+          reinterpret_cast<void *>(unpacked),
+          reinterpret_cast<void *>(pixels),
+          imageSize);
+    }
+
+    if (m_unpackPremultiplyAlpha && (format == WEBGL_LUMINANCE_ALPHA || format == WEBGL_RGBA))
+    {
+      for (int row = 0; row < height; ++row)
+      {
+        for (int col = 0; col < width; ++col)
+        {
+          unsigned char *pixel = unpacked + (row + rowStride) + (col * pixelSize);
+          if (format == WEBGL_LUMINANCE_ALPHA)
+          {
+            pixel[0] *= pixel[1] / 255.0f;
+          }
+          else if (type == WEBGL_UNSIGNED_BYTE)
+          {
+            float scale = pixel[3] / 255.0f;
+            pixel[0] *= scale;
+            pixel[1] *= scale;
+            pixel[2] *= scale;
+          }
+          else if (type == WEBGL_UNSIGNED_SHORT_4_4_4_4)
+          {
+            int r = pixel[0] & 0x0f;
+            int g = pixel[0] >> 4;
+            int b = pixel[1] & 0x0f;
+            int a = pixel[1] >> 4;
+            float scale = a / 15.0f;
+            r *= scale;
+            g *= scale;
+            b *= scale;
+
+            pixel[0] = r | (g << 4);
+            pixel[1] = b | (a << 4);
+          }
+        }
+      }
+    }
+    return unpacked;
   }
 }

@@ -29,10 +29,11 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 	/**
 	 * When we detect the GPU is busy over 10 times, we should just stop the frame execution.
 	 */
-	if (RecordAndReportGpuBusy() && m_GpuBusyHitCount > 10)
+	if (RecordAndReportGpuBusy() && m_GpuBusyHitCount > 20)
 	{
+		DEBUG(TR_RENDERAPI_TAG, "Skipped this time of frame, because the GPU busy is busy over 20 times, hit count=%d",
+					m_GpuBusyHitCount);
 		jsRenderLoop->reportException(kFrameExecutionGpuBusy);
-		DEBUG(TR_RENDERAPI_TAG, "The GPU is busy over 10 times, current frame execution is stopped.");
 		return kFrameExecutionGpuBusy;
 	}
 	auto frameStart = m_LastFrameTime;
@@ -155,15 +156,15 @@ bool RenderAPI::RecordAndReportGpuBusy()
 	m_LastFrameTime = currentNow;
 	if (duration.count() > MAX_DURATION_OF_FRAME)
 	{
-		DEBUG(TR_RENDERAPI_TAG, "Detected the GPU is busy, frame execution time takes %ld us", duration.count());
 		m_GpuBusyHitCount += 2;
 		m_IsGpuBusy = true;
+		DEBUG(TR_RENDERAPI_TAG, "Detected a GPUBusy event: duration=%ldus hitCount=%d",
+					duration.count(), m_GpuBusyHitCount);
 	}
 	else
 	{
-		m_GpuBusyHitCount -= 1;
-		if (m_GpuBusyHitCount < 0)
-			m_GpuBusyHitCount = 0;
+		if (m_GpuBusyHitCount > 0)
+			m_GpuBusyHitCount -= 1;
 		m_IsGpuBusy = false;
 	}
 	return m_IsGpuBusy;

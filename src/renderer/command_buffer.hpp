@@ -13,6 +13,7 @@ namespace renderer
   {
     /** Program */
     kCommandTypeCreateProgram,
+    kCommandTypeDeleteProgram,
     kCommandTypeLinkProgram,
     kCommandTypeUseProgram,
     kCommandTypeGetProgramParameter,
@@ -134,6 +135,9 @@ namespace renderer
     kMatrixPlaceholderInverseViewRelativeToLocal = 31,
     kMatrixPlaceholderViewRelativeToLocalFloor = 40,
     kMatrixPlaceholderInverseViewRelativeToLocalFloor = 41,
+    kMatrixPlaceholderViewProjection = 100,
+    kMatrixPlaceholderViewProjectionRelativeToLocal = 101,
+    kMatrixPlaceholderViewProjectionRelativeToLocalFloor = 102,
     kMatrixPlaceholderNotSet = -1
   };
 
@@ -186,6 +190,17 @@ namespace renderer
 
   public:
     int m_ProgramId = 0;
+  };
+
+  class DeleteProgramCommandBuffer : public CommandBuffer
+  {
+  public:
+    DeleteProgramCommandBuffer(int programId) : CommandBuffer(kCommandTypeDeleteProgram),
+                                                m_ProgramId(programId) {}
+    ~DeleteProgramCommandBuffer() {}
+
+  public:
+    int m_ProgramId;
   };
 
   /**
