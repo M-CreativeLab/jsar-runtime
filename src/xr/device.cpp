@@ -269,6 +269,11 @@ namespace xr
   float *Device::getLocalTransform(int id)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
+    return getLocalTransformUnsafe(id);
+  }
+
+  float *Device::getLocalTransformUnsafe(int id)
+  {
     // Check for the session if it exists
     if (m_SessionIds.size() == 0)
       return NULL;

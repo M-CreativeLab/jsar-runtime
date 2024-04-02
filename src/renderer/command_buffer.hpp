@@ -1317,7 +1317,9 @@ namespace renderer
     int m_Count;
     bool m_Transpose;
     float *m_Value;
+
     MatrixPlaceholderType m_MatrixPlaceholderType = MatrixPlaceholderType::kMatrixPlaceholderNotSet;
+    int m_XrSessionId = -1;
   };
 
   class DrawArraysCommandBuffer : public CommandBuffer

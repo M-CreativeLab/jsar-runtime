@@ -1,4 +1,5 @@
 #include <cstring>
+#include "device.hpp"
 #include "frame.hpp"
 #include "debug.hpp"
 
@@ -16,7 +17,7 @@ namespace xr
     memcpy(m_LocalTransform, transform, sizeof(float) * 16);
   }
 
-  DeviceFrame::DeviceFrame() {}
+  DeviceFrame::DeviceFrame(xr::Device *device) : m_XrDevice(device) {}
   DeviceFrame::~DeviceFrame() {}
 
   void DeviceFrame::start() { m_Ended = false; }
@@ -25,6 +26,10 @@ namespace xr
   bool DeviceFrame::isMultiPass() { return m_IsMultiPass; }
   float DeviceFrame::getTimestamp() { return m_Timestamp; }
   float *DeviceFrame::getViewerTransform() { return m_ViewerTransform; }
+  float *DeviceFrame::getLocalTransform(int sessionId)
+  {
+    return m_XrDevice->getLocalTransformUnsafe(sessionId);
+  }
 
   FrameContextBySessionId *DeviceFrame::addSession(int sessionId)
   {
@@ -50,20 +55,21 @@ namespace xr
   }
 
   MultiPassFrame::MultiPassFrame(
+      xr::Device *device,
       int eyeId,
-      int stereoId,
-      float *viewerTransform,
-      float *viewerViewMatrix,
-      float *viewerProjectionMatrix,
-      float timestamp) : DeviceFrame()
+      int stereoId) : DeviceFrame(device)
   {
     m_IsMultiPass = true;
     m_CurrentStereoId = stereoId;
     m_ActiveEyeId = eyeId;
-    m_Timestamp = timestamp;
+    m_Timestamp = device->getTime();
+
+    auto viewerTransform = device->getViewerTransform();
+    auto viewMatrix = device->getViewerStereoViewMatrix(eyeId);
+    auto projectionMatrix = device->getViewerStereoProjectionMatrix(eyeId);
     memcpy(m_ViewerTransform, viewerTransform, sizeof(float) * 16);
-    memcpy(m_ViewerViewMatrix, viewerViewMatrix, sizeof(float) * 16);
-    memcpy(m_ViewerProjectionMatrix, viewerProjectionMatrix, sizeof(float) * 16);
+    memcpy(m_ViewerViewMatrix, viewMatrix, sizeof(float) * 16);
+    memcpy(m_ViewerProjectionMatrix, projectionMatrix, sizeof(float) * 16);
   }
 
   MultiPassFrame::~MultiPassFrame() {}

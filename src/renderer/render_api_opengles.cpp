@@ -455,6 +455,8 @@ void RenderAPI_OpenGLCoreES::Disable(uint32_t cap)
 
 void RenderAPI_OpenGLCoreES::StartFrame()
 {
+	m_DrawCallCountPerFrame = 0;
+
 	GLint viewport[4];
 	glGetIntegerv(GL_VIEWPORT, viewport);
 	SetViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
@@ -498,6 +500,7 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 
 void RenderAPI_OpenGLCoreES::EndFrame()
 {
+	glFlush();
 	m_HostContext.Restore();
 }
 
@@ -1081,12 +1084,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto target = texParameteriCommandBuffer->m_Target;
 			auto pname = texParameteriCommandBuffer->m_Pname;
 			auto param = texParameteriCommandBuffer->m_Param;
-
-			if (pname == GL_PACK_ALIGNMENT || pname == GL_UNPACK_ALIGNMENT)
-				glTexParameteri(target, pname, param);
-			else
-				DEBUG(DEBUG_TAG, "Unsupported pname: %d", pname);
-
+			glTexParameteri(target, pname, param);
 			if (logCalls)
 				DEBUG(DEBUG_TAG, "[%d] GL::TexParameteri(target=%d, pname=%d, param=%d)",
 							isDefaultQueue, target, pname, param);
@@ -1382,10 +1380,20 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					matrixToUse = multiPassFrame->getViewerProjectionMatrix();
 					break;
 				case MatrixPlaceholderType::kMatrixPlaceholderView:
-				case MatrixPlaceholderType::kMatrixPlaceholderViewRelativeToLocal: // temp set for view matrix
-				case MatrixPlaceholderType::kMatrixPlaceholderViewRelativeToLocalFloor:
 					matrixToUse = multiPassFrame->getViewerViewMatrix();
 					break;
+				case MatrixPlaceholderType::kMatrixPlaceholderViewRelativeToLocal: // temp set for view matrix
+				case MatrixPlaceholderType::kMatrixPlaceholderViewRelativeToLocalFloor:
+				{
+					auto xrSessionId = uniformMatrix4fvCommandBuffer->m_XrSessionId;
+					if (xrSessionId == -1)
+						DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the xrSessionId in local mode.");
+					auto viewMatrix = glm::make_mat4(multiPassFrame->getViewerViewMatrix());
+					auto localTransform = glm::make_mat4(multiPassFrame->getLocalTransform(xrSessionId));
+					auto viewMatrixRelativeToLocal = viewMatrix * localTransform;
+					matrixToUse = glm::value_ptr(viewMatrixRelativeToLocal);
+					break;
+				}
 				case MatrixPlaceholderType::kMatrixPlaceholderViewProjection:
 				case MatrixPlaceholderType::kMatrixPlaceholderViewProjectionRelativeToLocal:
 				case MatrixPlaceholderType::kMatrixPlaceholderViewProjectionRelativeToLocalFloor:
@@ -1393,9 +1401,22 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					auto viewMatrix = glm::make_mat4(multiPassFrame->getViewerViewMatrix());
 					auto projectionMatrix = glm::make_mat4(multiPassFrame->getViewerProjectionMatrix());
 					auto viewProjectionMatrix = projectionMatrix * viewMatrix;
-					matrixToUse = glm::value_ptr(viewProjectionMatrix);
+
+					if (placeholderType == MatrixPlaceholderType::kMatrixPlaceholderViewProjection)
+					{
+						matrixToUse = glm::value_ptr(viewProjectionMatrix);
+					}
+					else
+					{
+						auto xrSessionId = uniformMatrix4fvCommandBuffer->m_XrSessionId;
+						if (xrSessionId == -1)
+							DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the xrSessionId in local mode.");
+						auto localTransform = glm::make_mat4(multiPassFrame->getLocalTransform(xrSessionId));
+						auto viewProjectionMatrixRelativeToLocal = viewProjectionMatrix * localTransform;
+						matrixToUse = glm::value_ptr(viewProjectionMatrixRelativeToLocal);
+					}
+					break;
 				}
-				break;
 				default:
 					break;
 				}
@@ -1440,6 +1461,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					drawArraysCommandBuffer->m_Mode,
 					drawArraysCommandBuffer->m_First,
 					drawArraysCommandBuffer->m_Count);
+			m_DrawCallCountPerFrame += 1;
 			if (logCalls)
 				DEBUG(DEBUG_TAG, "[%d] GL::DrawArrays(%d)", isDefaultQueue, drawArraysCommandBuffer->m_Count);
 			break;
@@ -1452,6 +1474,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 					drawElementsCommandBuffer->m_Count,
 					drawElementsCommandBuffer->m_Type,
 					drawElementsCommandBuffer->m_Indices);
+			m_DrawCallCountPerFrame += 1;
 			if (logCalls)
 				DEBUG(DEBUG_TAG, "[%d] GL::DrawElements: mode=%d count=%d type=%d",
 							isDefaultQueue,

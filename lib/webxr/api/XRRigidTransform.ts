@@ -66,10 +66,12 @@ export enum XRMatrixPlaceholderType {
 
 export class XRMatrixPlaceholder extends Float32Array {
   type: XRMatrixPlaceholderType;
+  xrSessionId: number;
   _isXRMatrixPlaceholder = true;
-  constructor(from: Float32Array, type: XRMatrixPlaceholderType) {
+  constructor(from: Float32Array, type: XRMatrixPlaceholderType, xrSessionId?: number) {
     super(from);
     this.type = type;
+    this.xrSessionId = xrSessionId;
   }
 }
 

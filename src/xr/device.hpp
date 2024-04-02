@@ -68,6 +68,7 @@ namespace xr
     float *getViewerStereoViewMatrix(int eyeId);
     float *getViewerStereoProjectionMatrix(int eyeId);
     float *getLocalTransform(int id);
+    float *getLocalTransformUnsafe(int id);
     int getActiveEyeId();
     vector<int> &getSessionIds();
 

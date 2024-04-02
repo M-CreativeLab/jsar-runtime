@@ -6,6 +6,8 @@
 
 namespace xr
 {
+  class Device;
+
   class FrameContextBySessionId
   {
   public:
@@ -25,7 +27,7 @@ namespace xr
   class DeviceFrame
   {
   public:
-    DeviceFrame();
+    DeviceFrame(xr::Device *device);
     ~DeviceFrame();
 
   public:
@@ -35,12 +37,14 @@ namespace xr
     bool isMultiPass();
     float getTimestamp();
     float *getViewerTransform();
+    float *getLocalTransform(int sessionId);
     FrameContextBySessionId *addSession(int sessionId);
     void iterateSessions(std::function<void(int, FrameContextBySessionId *)> callback);
     size_t getCountOfSessions();
     int getCurrentStereoId();
 
   protected:
+    Device *m_XrDevice = nullptr;
     bool m_Ended = false;
     bool m_IsMultiPass = false;
     float m_Timestamp = 0;
@@ -52,13 +56,7 @@ namespace xr
   class MultiPassFrame : public DeviceFrame
   {
   public:
-    explicit MultiPassFrame(
-        int eyeId,
-        int stereoId,
-        float *viewerTransform,
-        float *viewerViewMatrix,
-        float *viewerProjectionMatrix,
-        float timestamp);
+    explicit MultiPassFrame(Device * device, int eyeId, int stereoId);
     ~MultiPassFrame();
 
   public:
@@ -102,7 +100,7 @@ namespace xr
     bool addedOnce();
 
   private:
-    void clearCommandBuffers(std::vector<renderer::CommandBuffer *>& commandBuffers);
+    void clearCommandBuffers(std::vector<renderer::CommandBuffer *> &commandBuffers);
 
   private:
     int m_StereoId = -1;

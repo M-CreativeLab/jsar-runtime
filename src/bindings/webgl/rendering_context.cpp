@@ -2113,6 +2113,13 @@ namespace webgl
           location->GetValue(),
           transpose,
           (renderer::MatrixPlaceholderType)typeOfMatrixPlaceholder);
+
+      if (array.Has("xrSessionId"))
+      {
+        auto xrSessionValue = array.Get("xrSessionId");
+        if (xrSessionValue.IsNumber())
+          commandBuffer->m_XrSessionId = xrSessionValue.ToNumber().Int32Value();
+      }
       addCommandBuffer(commandBuffer);
     }
     else

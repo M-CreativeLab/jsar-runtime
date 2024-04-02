@@ -72,14 +72,7 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 		/**
 		 * Create a new device frame that will be used by js render loop
 		 */
-		auto deviceFrame = new xr::MultiPassFrame(
-				eyeId,
-				stereoId,
-				device->getViewerTransform(),
-				device->getViewerStereoViewMatrix(eyeId),
-				device->getViewerStereoProjectionMatrix(eyeId),
-				device->getTime());
-
+		auto deviceFrame = new xr::MultiPassFrame(device, eyeId, stereoId);
 		auto sessionIds = device->getSessionIds();
 		if (sessionIds.size() > 0)
 		{
@@ -123,8 +116,12 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 	auto startDuration = std::chrono::duration_cast<std::chrono::microseconds>(frameStarted - frameStart);
 	auto xrFrameDuration = std::chrono::duration_cast<std::chrono::microseconds>(xrFrameEnd - frameStarted);
 	auto endDuration = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - xrFrameEnd);
-	DEBUG(TR_RENDERAPI_TAG, "Frame execution time takes %ld us (start=%ldus, xrframe=%ldus, end=%ldus)",
-				totalDuration.count(), startDuration.count(), xrFrameDuration.count(), endDuration.count());
+	DEBUG(TR_RENDERAPI_TAG, "Frame execution time takes %ld us (start=%ldus, xrframe=%ldus, end=%ldus) draw calls=%d",
+				totalDuration.count(),
+				startDuration.count(),
+				xrFrameDuration.count(),
+				endDuration.count(),
+				m_DrawCallCountPerFrame);
 	return kFrameExecutionSuccess;
 }
 

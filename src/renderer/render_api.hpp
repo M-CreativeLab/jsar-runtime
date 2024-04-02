@@ -140,6 +140,7 @@ protected:
   std::vector<renderer::CommandBuffer *> m_CommandBuffers;
   std::mutex m_CommandBuffersMutex;
   std::mutex m_StateMutex;
+  size_t m_DrawCallCountPerFrame = 0;
 
 private:
   bool m_IsFirstFrame = true;

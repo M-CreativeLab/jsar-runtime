@@ -42,13 +42,13 @@ class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
     const name = (uniform as any)?.name;
     switch (name) {
       case 'projection':
-        matrices = new XRMatrixPlaceholder(matrices, XRMatrixPlaceholderType.PROJECTION_MATRIX);
+        matrices = new XRMatrixPlaceholder(matrices, XRMatrixPlaceholderType.PROJECTION_MATRIX, this.#xrSessionId);
         break;
       case 'view':
-        matrices = new XRMatrixPlaceholder(matrices, XRMatrixPlaceholderType.VIEW_MATRIX_RELATIVE_TO_LOCAL);
+        matrices = new XRMatrixPlaceholder(matrices, XRMatrixPlaceholderType.VIEW_MATRIX_RELATIVE_TO_LOCAL, this.#xrSessionId);
         break;
       case 'viewProjection':
-        matrices = new XRMatrixPlaceholder(matrices, XRMatrixPlaceholderType.VIEW_PROJECTION_MATRIX_RELATIVE_TO_LOCAL);
+        matrices = new XRMatrixPlaceholder(matrices, XRMatrixPlaceholderType.VIEW_PROJECTION_MATRIX_RELATIVE_TO_LOCAL, this.#xrSessionId);
         break;
       default:
         break;
@@ -225,10 +225,8 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
 
     {
       // create default light
-      const lightFront = new BABYLON.HemisphericLight('light_front', new BABYLON.Vector3(0, 2, -5), scene);
-      const lightBack = new BABYLON.HemisphericLight('light_back', new BABYLON.Vector3(0, -2, 5), scene);
-      lightFront.intensity = 1.2;
-      lightBack.intensity = 1.2;
+      const light = new BABYLON.HemisphericLight('light_front', new BABYLON.Vector3(0, 2, -5), scene);
+      light.intensity = 0.7;
     }
 
     this._xrDefaultExperience = WebXRDefaultExperience.CreateAsync(scene, {
