@@ -120,14 +120,6 @@ public:
 			binding->Reset(target, texture);
 		}
 	}
-	void RecordCullFace(int face)
-	{
-		m_CullFace = face;
-	}
-	void RecordFrontFace(int face)
-	{
-		m_FrontFace = face;
-	}
 
 	const char *GetName() { return m_Name; }
 	GLint GetProgram() { return m_ProgramId; }
@@ -137,8 +129,6 @@ public:
 	GLint GetRenderbuffer() { return m_RenderbufferId; }
 	GLenum GetActiveTextureUnit() { return m_LastActiveTextureUnit; }
 	// GLint GetTexture2D() { return m_Texture2D; }
-	GLint GetCullFace() { return m_CullFace; }
-	GLint GetFrontFace() { return m_FrontFace; }
 
 	void ResetProgram(int programToReset)
 	{
@@ -191,11 +181,6 @@ public:
 			glActiveTexture(GL_TEXTURE0);
 		bindTextureError = glGetError();
 
-		if (m_CullFace != -1)
-			glCullFace(m_CullFace);
-		if (m_FrontFace != -1)
-			glFrontFace(m_FrontFace);
-
 #if UNITY_ANDROID || UNITY_WEBGL
 		EGLint eglError = eglGetError();
 		if (eglError == EGL_CONTEXT_LOST)
@@ -245,11 +230,6 @@ protected:
 	/** Textures */
 	GLenum m_LastActiveTextureUnit = GL_TEXTURE0;
 	std::map<GLenum, OpenGLTextureBinding *> m_TextureBindingsWithUnit;
-	/** Enables */
-	bool m_CullFaceEnabled = true;
-	/** States */
-	GLint m_CullFace = -1;
-	GLint m_FrontFace = -1;
 };
 
 class OpenGLHostContextStorage : public OpenGLContextStorage
@@ -258,6 +238,11 @@ public:
 	OpenGLHostContextStorage() : OpenGLContextStorage("Host") {}
 
 public:
+	void Restore()
+	{
+		OpenGLContextStorage::Restore();
+		glFrontFace(m_FrontFace);
+	}
 	void Record()
 	{
 		glGetIntegerv(GL_VIEWPORT, m_Viewport);
@@ -280,11 +265,11 @@ public:
 		glActiveTexture(m_LastActiveTextureUnit);
 
 		// Enable or disable
-		m_CullFaceEnabled = glIsEnabled(GL_CULL_FACE);
+		// m_CullFaceEnabled = glIsEnabled(GL_CULL_FACE);
 
 		// States
-		glGetIntegerv(GL_CULL_FACE_MODE, &m_CullFace);
-		glGetIntegerv(GL_FRONT_FACE, &m_FrontFace);
+		// glGetIntegerv(GL_CULL_FACE_MODE, (GLint *)&m_CullFace);
+		// glGetIntegerv(GL_FRONT_FACE, (GLint *)&m_FrontFace);
 	}
 	void RecordTextureBindingFromHost()
 	{
@@ -305,6 +290,11 @@ public:
 		if (isActiveNotMatched)
 			glActiveTexture(beforeActiveUnit);
 	}
+
+private:
+	bool m_CullFaceEnabled;
+	GLenum m_CullFace;
+	GLenum m_FrontFace;
 };
 
 class RenderAPI_OpenGLCoreES : public RenderAPI
@@ -336,13 +326,13 @@ public:
 			bool isDefaultQueue);
 
 private:
-	void CreateResources();
-
-private:
 	UnityGfxRenderer m_APIType;
 	OpenGLHostContextStorage m_HostContext = OpenGLHostContextStorage();
 	OpenGLContextStorage m_AppGlobalContext = OpenGLContextStorage("App Global");
 	OpenGLContextStorage m_AppXRFrameContext = OpenGLContextStorage("App XRFrame");
+
+	GLenum m_AppFrontFace;
+	GLenum m_AppCullFace;
 
 	// Used by glViewport
 	GLint m_ViewportStartPoint[2] = {0, 0};
@@ -386,7 +376,9 @@ void RenderAPI_OpenGLCoreES::ProcessDeviceEvent(UnityGfxDeviceEventType type, IU
 {
 	if (type == kUnityGfxDeviceEventInitialize)
 	{
-		// CreateResources();
+		m_AppFrontFace = GL_CCW;
+		// glGetIntegerv(GL_FRONT_FACE, (GLint *)&m_AppFrontFace);
+		glGetIntegerv(GL_CULL_FACE, (GLint *)&m_AppCullFace);
 	}
 	else if (type == kUnityGfxDeviceEventShutdown)
 	{
@@ -469,7 +461,8 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	// m_HostContext.Print();
 
 	glDisable(GL_CULL_FACE);
-	glFrontFace(GL_CCW);
+	glFrontFace(m_AppFrontFace);
+	DEBUG(DEBUG_TAG, "StartFrame: GL::FrontFace(%d)", m_AppFrontFace);
 
 	if (m_DepthTestEnabled)
 		glEnable(GL_DEPTH_TEST);
@@ -484,13 +477,11 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	{
 		glEnable(GL_BLEND);
 		glBlendFunc(m_Blend_Sfactor, m_Blend_Dfactor);
-		glDisable(GL_BLEND);
 	}
 	if (m_BlendFuncSeparateSet == true)
 	{
 		glEnable(GL_BLEND);
 		glBlendFuncSeparate(m_Blend_SrcRGB, m_Blend_DstRGB, m_Blend_SrcAlpha, m_Blend_DstAlpha);
-		glDisable(GL_BLEND);
 	}
 	if (m_BlendEnabled)
 		glEnable(GL_BLEND);
@@ -500,7 +491,7 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 
 void RenderAPI_OpenGLCoreES::EndFrame()
 {
-	glFlush();
+	// glFlush();
 	m_HostContext.Restore();
 }
 
@@ -1737,7 +1728,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto cullFaceCommandBuffer = static_cast<CullFaceCommandBuffer *>(commandBuffer);
 			auto mode = cullFaceCommandBuffer->m_Mode;
 			glCullFace(mode);
-			context->RecordCullFace(mode);
+			m_AppCullFace = mode;
 			if (logCalls)
 				DEBUG(DEBUG_TAG, "[%d] GL::CullFace: mode=%d", isDefaultQueue, mode);
 			break;
@@ -1747,7 +1738,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto frontFaceCommandBuffer = static_cast<FrontFaceCommandBuffer *>(commandBuffer);
 			auto mode = frontFaceCommandBuffer->m_Mode;
 			glFrontFace(mode);
-			context->RecordFrontFace(mode);
+			m_AppFrontFace = mode;
 			if (logCalls)
 				DEBUG(DEBUG_TAG, "[%d] GL::FrontFace: mode=%d", isDefaultQueue, mode);
 			break;

@@ -561,10 +561,7 @@ export default class XRSessionImpl extends EventTarget implements XRSession {
     return handle;
   }
 
-  /**
-   * @param {number} handle
-   */
-  cancelAnimationFrame(handle) {
+  cancelAnimationFrame(handle: number) {
     // Remove the callback with that handle from the queue
     let callbacks = this[PRIVATE].frameCallbacks;
     let index = callbacks.findIndex(d => d && d.handle === handle);

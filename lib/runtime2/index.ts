@@ -66,7 +66,10 @@ export class TransmuteRuntime2 extends EventTarget {
 
   private prepare(gl: WebGLRenderingContext) {
     const exts = gl.getSupportedExtensions();
-    logger.info(`[WebGL] supported extensions(${exts.length}):`, exts);
+    logger.info(`[WebGL] supported extensions(${exts.length}):`);
+    for (let extName of exts) {
+      logger.info(`  - ${extName}`);
+    }
     logger.info(`[JSARDOM] version=${JSARDOM.version}`);
   }
 
