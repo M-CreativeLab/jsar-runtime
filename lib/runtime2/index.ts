@@ -121,23 +121,11 @@ export class TransmuteRuntime2 extends EventTarget {
     {
       await dom.waitForSpaceReady();
       logger.info('the jsar document\'s space is ready');
-
-      const scene = dom.nativeDocument.getNativeScene();
-      const animations = scene.animationGroups
-        .filter(ag => ag.name.startsWith('model.'));
-      if (animations.length > 0) {
-        animations[0].start(true);
-        logger.info('started the first animation:', animations[0].name);
-        const firstTargetedAnim = animations[0].targetedAnimations[0];
-        logger.info(firstTargetedAnim.animation.getKeys());
-        logger.info(firstTargetedAnim.target);
-        logger.info('first targeted animation:', firstTargetedAnim.serialize());
-      }
     }
-    this.fitSpaceWithScene(spaceNode, 0.7);
+    this.fitSpaceWithScene(spaceNode, 0.5);
   }
 
-  private fitSpaceWithScene(spaceNode: BABYLON.TransformNode, ratio = 1) {
+  private fitSpaceWithScene(spaceNode: BABYLON.TransformNode, ratio = 0.5) {
     /**
      * Scale the space to fit the scene.
      */

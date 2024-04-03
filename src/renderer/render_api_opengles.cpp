@@ -265,11 +265,11 @@ public:
 		glActiveTexture(m_LastActiveTextureUnit);
 
 		// Enable or disable
-		// m_CullFaceEnabled = glIsEnabled(GL_CULL_FACE);
+		m_CullFaceEnabled = glIsEnabled(GL_CULL_FACE);
 
 		// States
-		// glGetIntegerv(GL_CULL_FACE_MODE, (GLint *)&m_CullFace);
-		// glGetIntegerv(GL_FRONT_FACE, (GLint *)&m_FrontFace);
+		glGetIntegerv(GL_CULL_FACE_MODE, (GLint *)&m_CullFace);
+		glGetIntegerv(GL_FRONT_FACE, (GLint *)&m_FrontFace);
 	}
 	void RecordTextureBindingFromHost()
 	{
@@ -458,11 +458,9 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	 * the last frame, to make sure the rendering in WebGL is correct.
 	 */
 	m_HostContext.Record();
-	// m_HostContext.Print();
 
 	glDisable(GL_CULL_FACE);
 	glFrontFace(m_AppFrontFace);
-	DEBUG(DEBUG_TAG, "StartFrame: GL::FrontFace(%d)", m_AppFrontFace);
 
 	if (m_DepthTestEnabled)
 		glEnable(GL_DEPTH_TEST);

@@ -47,15 +47,7 @@ class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
     stencil?: BABYLON.IStencilState,
     zOffsetUnits?: number
   ): void {
-    const scene = this.scenes[0];
-    /**
-     * FIXME: Babylonjs don't tweak the frontface with the handedness, this is a workaround when the
-     * scene is left-handed, we need to reverse the side of the mesh.
-     */
-    if (!scene.useRightHandedSystem) {
-      reverseSide = !reverseSide;
-    }
-    return super.setState(culling, zOffset, force, reverseSide, cullBackFaces, stencil, zOffsetUnits);
+    return super.setState(culling, zOffset, force, !reverseSide, cullBackFaces, stencil, zOffsetUnits);
   }
 
   setMatrices(uniform: WebGLUniformLocation, matrices: Float32Array): boolean {
