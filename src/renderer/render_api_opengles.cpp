@@ -458,6 +458,7 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	 * the last frame, to make sure the rendering in WebGL is correct.
 	 */
 	m_HostContext.Record();
+	m_AppGlobalContext.Restore();
 
 	glDisable(GL_CULL_FACE);
 	glFrontFace(m_AppFrontFace);
@@ -505,7 +506,6 @@ void RenderAPI_OpenGLCoreES::StartXRFrame()
 
 void RenderAPI_OpenGLCoreES::EndXRFrame()
 {
-	m_AppGlobalContext.Restore();
 }
 
 bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
@@ -549,6 +549,25 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		auto commandType = commandBuffer->GetType();
 		switch (commandType)
 		{
+		case kCommandTypeContextInit:
+		{
+			auto contextInitCommandBuffer = static_cast<ContextInitCommandBuffer *>(commandBuffer);
+			glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &contextInitCommandBuffer->maxCombinedTextureImageUnits);
+			glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE, &contextInitCommandBuffer->maxCubeMapTextureSize);
+			glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_VECTORS, &contextInitCommandBuffer->maxFragmentUniformVectors);
+			glGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, &contextInitCommandBuffer->maxRenderbufferSize);
+			glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &contextInitCommandBuffer->maxTextureImageUnits);
+			glGetIntegerv(GL_MAX_TEXTURE_SIZE, &contextInitCommandBuffer->maxTextureSize);
+			glGetIntegerv(GL_MAX_VARYING_VECTORS, &contextInitCommandBuffer->maxVaryingVectors);
+			glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &contextInitCommandBuffer->maxVertexAttribs);
+			glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &contextInitCommandBuffer->maxVertexTextureImageUnits);
+			glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &contextInitCommandBuffer->maxVertexUniformVectors);
+
+			contextInitCommandBuffer->vendor = string((const char *)glGetString(GL_VENDOR));
+			contextInitCommandBuffer->version = string((const char *)glGetString(GL_VERSION));
+			contextInitCommandBuffer->renderer = string((const char *)glGetString(GL_RENDERER));
+			break;
+		}
 		case kCommandTypeCreateProgram:
 		{
 			auto createProgramCommandBuffer = static_cast<CreateProgramCommandBuffer *>(commandBuffer);

@@ -37,11 +37,14 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 		return kFrameExecutionGpuBusy;
 	}
 	auto frameStart = m_LastFrameTime;
-
 	StartFrame();
-	jsRenderLoop->startFrame();
-
 	auto frameStarted = std::chrono::high_resolution_clock::now();
+
+	/** Start the global frames */
+	jsRenderLoop->startFrame();
+	ExecuteCommandBuffer();
+
+	/** Start the XR frames */
 	if (device->enabled() && device->getStereoRenderingMode() == xr::StereoRenderingMode::MultiPass)
 	{
 		int stereoId = -1;
@@ -106,9 +109,9 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 	{
 		jsRenderLoop->frameCallback();
 	}
-	auto xrFrameEnd = std::chrono::high_resolution_clock::now();
 
-	ExecuteCommandBuffer();
+	/** End frames */
+	auto xrFrameEnd = std::chrono::high_resolution_clock::now();
 	EndFrame();
 
 	auto frameEnd = std::chrono::high_resolution_clock::now();

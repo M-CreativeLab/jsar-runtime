@@ -136,6 +136,22 @@ namespace webgl
      * Read the value from the host
      */
     uint32_t m_unpackAlignment = 4;
+    /**
+     * Static fields from OpenGL backend
+    */
+    int maxCombinedTextureImageUnits;
+    int maxCubeMapTextureSize;
+    int maxFragmentUniformVectors;
+    int maxRenderbufferSize;
+    int maxTextureImageUnits;
+    int maxTextureSize;
+    int maxVaryingVectors;
+    int maxVertexAttribs;
+    int maxVertexTextureImageUnits;
+    int maxVertexUniformVectors;
+    string vendor;
+    string version;
+    string renderer;
 
   private:
     static Napi::FunctionReference *constructor;

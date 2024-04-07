@@ -211,12 +211,14 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
   constructor(glContext: WebGLRenderingContext | WebGL2RenderingContext, xrSessionId: number) {
     super();
 
+    const now = performance.now();
     this._xrSystem = createBondXRSystem(xrSessionId);
     this.engine = new EngineOnTransmute(glContext, true, {
       disableWebGL2Support: false,
       xrCompatible: true,
       xrSessionId,
     });
+    logger.info('Engine created in', performance.now() - now, 'ms');
 
     this.userAgent = new UserAgentBackendOnTransmute({
       defaultStylesheet: '',

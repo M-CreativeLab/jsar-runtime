@@ -47,20 +47,6 @@ export function connectRenderer() {
   }
 
   const loop = globalRenderLoop = new RenderLoop();
-  try {
-    globalGlContext = createWebGLContext(1, 1);
-  } catch (err) {
-    logger.warn('error creating webgl context:', err);
-  }
-  if (globalGlContext == null) {
-    return;
-  }
-
-  const gl = globalGlContext;
-  onreadyCallbacks.forEach(cb => cb(gl));
-  onreadyCallbacks.length = 0;
-  isReady = true;
-
   loop.setExceptionCallback(function (code) {
     if (code === 0x03 /** kFrameExecutionGpuBusy */) {
       ongpubusyCallbacks.forEach(cb => cb());
@@ -83,5 +69,21 @@ export function connectRenderer() {
       loop.setFrameFinished();
     }
   });
+
+  /**
+   * Initialize the global WebGL context.
+   */
+  try {
+    globalGlContext = createWebGLContext(1, 1);
+  } catch (err) {
+    logger.warn('error creating webgl context:', err);
+  }
+  if (globalGlContext == null) {
+    return;
+  }
+  const gl = globalGlContext;
+  onreadyCallbacks.forEach(cb => cb(gl));
+  onreadyCallbacks.length = 0;
+  isReady = true;
   logger.info('connected to renderer.');
 }

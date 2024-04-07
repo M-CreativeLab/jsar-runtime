@@ -463,6 +463,23 @@ namespace webgl
           .ThrowAsJavaScriptException();
       return;
     }
+
+    auto initCommandBuffer = new renderer::ContextInitCommandBuffer();
+    addCommandBuffer(initCommandBuffer, true, true);
+
+    this->maxCombinedTextureImageUnits = initCommandBuffer->maxCombinedTextureImageUnits;
+    this->maxCubeMapTextureSize = initCommandBuffer->maxCubeMapTextureSize;
+    this->maxFragmentUniformVectors = initCommandBuffer->maxFragmentUniformVectors;
+    this->maxRenderbufferSize = initCommandBuffer->maxRenderbufferSize;
+    this->maxTextureImageUnits = initCommandBuffer->maxTextureImageUnits;
+    this->maxTextureSize = initCommandBuffer->maxTextureSize;
+    this->maxVaryingVectors = initCommandBuffer->maxVaryingVectors;
+    this->maxVertexAttribs = initCommandBuffer->maxVertexAttribs;
+    this->maxVertexTextureImageUnits = initCommandBuffer->maxVertexTextureImageUnits;
+    this->maxVertexUniformVectors = initCommandBuffer->maxVertexUniformVectors;
+    this->vendor = initCommandBuffer->vendor;
+    this->version = initCommandBuffer->version;
+    this->renderer = initCommandBuffer->renderer;
   }
 
   Napi::Value WebGLRenderingContext::MakeXRCompatible(const Napi::CallbackInfo &info)
@@ -2587,6 +2604,36 @@ namespace webgl
     if (info.Length() >= 1)
     {
       uint32_t pname = info[0].ToNumber().Uint32Value();
+      /**
+       * Check for the static parameters which is defined at initialization.
+       */
+      if (pname == WEBGL_MAX_COMBINED_TEXTURE_IMAGE_UNITS) {
+        return Napi::Number::New(env, maxCombinedTextureImageUnits);
+      } else if (pname == WEBGL_MAX_CUBE_MAP_TEXTURE_SIZE) {
+        return Napi::Number::New(env, maxCubeMapTextureSize);
+      } else if (pname == WEBGL_MAX_FRAGMENT_UNIFORM_VECTORS) {
+        return Napi::Number::New(env, maxFragmentUniformVectors);
+      } else if (pname == WEBGL_MAX_RENDERBUFFER_SIZE) {
+        return Napi::Number::New(env, maxRenderbufferSize);
+      } else if (pname == WEBGL_MAX_TEXTURE_IMAGE_UNITS) {
+        return Napi::Number::New(env, maxTextureImageUnits);
+      } else if (pname == WEBGL_MAX_TEXTURE_SIZE) {
+        return Napi::Number::New(env, maxTextureSize);
+      } else if (pname == WEBGL_MAX_VARYING_VECTORS) {
+        return Napi::Number::New(env, maxVaryingVectors);
+      } else if (pname == WEBGL_MAX_VERTEX_ATTRIBS) {
+        return Napi::Number::New(env, maxVertexAttribs);
+      } else if (pname == WEBGL_MAX_VERTEX_TEXTURE_IMAGE_UNITS) {
+        return Napi::Number::New(env, maxVertexTextureImageUnits);
+      } else if (pname == WEBGL_MAX_VERTEX_UNIFORM_VECTORS) {
+        return Napi::Number::New(env, maxVertexUniformVectors);
+      } else if (pname == WEBGL_VENDOR) {
+        return Napi::String::New(env, vendor);
+      } else if (pname == WEBGL_RENDERER) {
+        return Napi::String::New(env, renderer);
+      } else if (pname == WEBGL_VERSION) {
+        return Napi::String::New(env, version);
+      }
       switch (pname)
       {
       // GLenum

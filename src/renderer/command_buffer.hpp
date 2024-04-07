@@ -11,6 +11,8 @@ namespace renderer
 {
   enum CommandType
   {
+    /** Context */
+    kCommandTypeContextInit,
     /** Program */
     kCommandTypeCreateProgram,
     kCommandTypeDeleteProgram,
@@ -180,6 +182,28 @@ namespace renderer
     atomic<bool> m_Finished = false;
     mutex m_MutexToFinish;
     condition_variable m_ConditionOnFinished;
+  };
+
+  class ContextInitCommandBuffer : public CommandBuffer
+  {
+  public:
+    ContextInitCommandBuffer() : CommandBuffer(kCommandTypeContextInit) {}
+    ~ContextInitCommandBuffer() {}
+
+  public:
+    int maxCombinedTextureImageUnits;
+    int maxCubeMapTextureSize;
+    int maxFragmentUniformVectors;
+    int maxRenderbufferSize;
+    int maxTextureImageUnits;
+    int maxTextureSize;
+    int maxVaryingVectors;
+    int maxVertexAttribs;
+    int maxVertexTextureImageUnits;
+    int maxVertexUniformVectors;
+    string vendor;
+    string version;
+    string renderer;
   };
 
   class CreateProgramCommandBuffer : public CommandBuffer
