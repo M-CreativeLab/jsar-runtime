@@ -2,17 +2,9 @@ import * as logger from '../bindings/logger';
 import { ImageBitmapImpl, OffscreenCanvasImpl, kReadPixels } from '../polyfills/offscreencanvas';
 import { WebGLShaderPrecisionFormatImpl } from './WebGLShaderPrecisionFormat';
 import { getExtension } from './extensions';
+import { makeNativeCall, setupConstantNamesMap, type NativeCallOptions } from './utils';
 
 const glNative = process._linkedBinding('transmute:webgl');
-const isEnableDebugging = false;
-
-type ArgType = 'default' | 'ignore' | 'constant';
-type NativeCallOptions = Partial<{
-  debug: {
-    argTypes?: ArgType[];
-    argSep?: string;
-  };
-}>;
 
 type TypedArray =
   Uint8Array |
@@ -47,94 +39,16 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   canvas: HTMLCanvasElement | OffscreenCanvas;
   drawingBufferColorSpace: PredefinedColorSpace;
 
-  #contextAttributes: WebGLContextAttributes;
   #constantNamesMap: Map<number, string> = new Map();
   #supportedExtensions: string[] = null;
 
-  get drawingBufferHeight(): number {
-    return super.drawingBufferHeight;
-  }
-  get drawingBufferWidth(): number {
-    return super.drawingBufferWidth;
-  }
-
   constructor(_canvas: HTMLCanvasElement | OffscreenCanvas, options?: WebGLContextAttributes) {
-    super();
-
-    this.#contextAttributes = Object.assign({
-      alpha: true,
-      antialias: true,
-      depth: true,
-      failIfMajorPerformanceCaveat: false,
-      powerPreference: 'default',
-      premultipliedAlpha: false,
-      preserveDrawingBuffer: false,
-      stencil: false,
-      xrCompatible: true,
-    }, options || {});
-    this.#setupConstantNamesMap();
-
-    if (this.#contextAttributes.xrCompatible === true) {
-      this.makeXRCompatible();
-    }
-  }
-
-  /**
-   * It fetches all the constants from the native implementation and stores them in a map `#constantNamesMap`, which is used to 
-   * get the name of the constant from its value in debugging purposes.
-   */
-  #setupConstantNamesMap() {
-    const allConstantNames = Object.getOwnPropertyNames(glNative.WebGLRenderingContext.prototype)
-      .filter(name => typeof this[name] === 'number');
-    for (const name of allConstantNames) {
-      const value = this[name];
-      this.#constantNamesMap.set(value, name);
-    }
+    super(options);
+    setupConstantNamesMap(this, glNative.WebGLRenderingContext);
   }
 
   private nativeCall(name: string, args: any[] = [], options: NativeCallOptions = {}) {
-    const fn = <Function>super[name];
-    if (typeof fn !== 'function') {
-      throw new TypeError(`The method(${name}) in native WebGLRenderingContext is not supported`);
-    }
-
-    let r: any;
-    try {
-      r = fn.apply(this, args);
-    } catch (err) {
-      logger.error(`Failed to make native call => WebGL::${name}(${args.join(', ')})`);
-      throw err;
-    }
-
-    if (isEnableDebugging) {
-      const { argTypes, argSep = ', ' } = options.debug || {};
-      let argsStr: string;
-      if (argTypes) {
-        argsStr = args
-          .filter((_, i) => argTypes[i] !== 'ignore')
-          .map((arg, i) => {
-            if (argTypes[i] === 'constant') {
-              return this.#constantNamesMap.has(arg) ? `${this.#constantNamesMap.get(arg)}(${arg})` : `${arg}`;
-            } else {
-              return arg;
-            }
-          })
-          .join(argSep);
-      } else {
-        argsStr = args.join(argSep);
-      }
-
-      let returnStr = '';
-      if (Array.isArray(r)) {
-        returnStr = `=> (${r.length}) { ${r.slice(0, 3).join(', ')} }`;
-      } else if (typeof r === 'number' || typeof r === 'boolean') {
-        returnStr = `=> ${r}`;
-      } else if (typeof r !== 'undefined') {
-        returnStr = `=> <${typeof r}>`;
-      }
-      logger.info(`WebGL::${name}(${argsStr}) ${returnStr}`);
-    }
-    return r;
+    return makeNativeCall(<Function>super[name], name, args, options);
   }
 
   activeTexture(texture: number): void {
@@ -410,9 +324,6 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   getBufferParameter(target: number, pname: number) {
     return this.nativeCall('getBufferParameter', [target, pname]);
   }
-  getContextAttributes(): WebGLContextAttributes {
-    return this.#contextAttributes;
-  }
   getError(): number {
     return this.nativeCall('getError');
   }
@@ -526,7 +437,8 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return this.nativeCall('isBuffer', [buffer]);
   }
   isContextLost(): boolean {
-    return super.isContextLost();
+    /** TODO: how to implement context lost in JSAR? */
+    return false;
   }
   isEnabled(cap: number): boolean {
     return this.nativeCall('isEnabled', [cap]);
@@ -796,6 +708,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   ): void {
     return this.nativeCall('readPixels', [x, y, width, height, format, type, pixels]);
   }
+
   texImage2D(
     target: number,
     level: number,

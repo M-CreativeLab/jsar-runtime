@@ -6,14 +6,29 @@
 
 namespace webgl
 {
-  class WebGLRenderingContext : public Napi::ObjectWrap<WebGLRenderingContext>
+  class ContextAttributes
   {
   public:
-    static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    WebGLRenderingContext(const Napi::CallbackInfo &info);
+    bool alpha = true;
+    bool antialias = true;
+    bool depth = true;
+    bool stencil = false;
+    bool failIfMajorPerformanceCaveat = false;
+    bool premultipliedAlpha = false;
+    bool preserveDrawingBuffer = false;
+    bool xrCompatible = true;
+    std::string powerPreference = "default";
+  };
 
-  private:
+  template <typename T>
+  class WebGLBaseRenderingContext : public Napi::ObjectWrap<T>
+  {
+  public:
+    WebGLBaseRenderingContext(const Napi::CallbackInfo &info);
+
+  public:
     Napi::Value MakeXRCompatible(const Napi::CallbackInfo &info);
+    Napi::Value GetContextAttributes(const Napi::CallbackInfo &info);
     Napi::Value CreateProgram(const Napi::CallbackInfo &info);
     Napi::Value DeleteProgram(const Napi::CallbackInfo &info);
     Napi::Value LinkProgram(const Napi::CallbackInfo &info);
@@ -112,22 +127,22 @@ namespace webgl
     Napi::Value GetError(const Napi::CallbackInfo &info);
     Napi::Value GetSupportedExtensions(const Napi::CallbackInfo &info);
 
-  private:
+  public:
     Napi::Value DrawingBufferWidthGetter(const Napi::CallbackInfo &info);
     void DrawingBufferWidthSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value DrawingBufferHeightGetter(const Napi::CallbackInfo &info);
     void DrawingBufferHeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
 
-  private:
+  protected:
     /**
      * @param {renderer::CommandBuffer} commandBuffer
      * @param {boolean} useDefaultQueue - if true, the command buffer will be executed in the default queue.
      * @param {boolean} waitForFinished - if true, the command buffer will be waited until it's finished.
      */
     bool addCommandBuffer(renderer::CommandBuffer *commandBuffer, bool useDefaultQueue = false, bool waitForFinished = false);
-    unsigned char* unpackPixels(int type, int format, int width, int height, unsigned char* pixels);
+    unsigned char *unpackPixels(int type, int format, int width, int height, unsigned char *pixels);
 
-  private:
+  protected:
     RenderAPI *m_renderAPI;
     bool m_XRCompatible = false;
     bool m_unpackFlipY = false;
@@ -136,9 +151,10 @@ namespace webgl
      * Read the value from the host
      */
     uint32_t m_unpackAlignment = 4;
+    ContextAttributes contextAttributes;
     /**
      * Static fields from OpenGL backend
-    */
+     */
     int maxCombinedTextureImageUnits;
     int maxCubeMapTextureSize;
     int maxFragmentUniformVectors;
@@ -152,6 +168,92 @@ namespace webgl
     string vendor;
     string version;
     string renderer;
+  };
+
+  class WebGLRenderingContext : public WebGLBaseRenderingContext<WebGLRenderingContext>
+  {
+  public:
+    static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    WebGLRenderingContext(const Napi::CallbackInfo &info);
+
+  private:
+    Napi::Value DrawingBufferWidthGetter(const Napi::CallbackInfo &info)
+    {
+      return WebGLBaseRenderingContext<WebGLRenderingContext>::DrawingBufferWidthGetter(info);
+    }
+    void DrawingBufferWidthSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+    {
+      WebGLBaseRenderingContext<WebGLRenderingContext>::DrawingBufferWidthSetter(info, value);
+    }
+    Napi::Value DrawingBufferHeightGetter(const Napi::CallbackInfo &info)
+    {
+      return WebGLBaseRenderingContext<WebGLRenderingContext>::DrawingBufferHeightGetter(info);
+    }
+    void DrawingBufferHeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+    {
+      WebGLBaseRenderingContext<WebGLRenderingContext>::DrawingBufferHeightSetter(info, value);
+    }
+
+  private:
+    static Napi::FunctionReference *constructor;
+  };
+
+  class WebGL2RenderingContext : public WebGLBaseRenderingContext<WebGL2RenderingContext>
+  {
+  public:
+    static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    WebGL2RenderingContext(const Napi::CallbackInfo &info);
+
+  private:
+    Napi::Value GetParameter(const Napi::CallbackInfo &info);
+
+  private:
+    Napi::Value DrawingBufferWidthGetter(const Napi::CallbackInfo &info)
+    {
+      return WebGLBaseRenderingContext<WebGL2RenderingContext>::DrawingBufferWidthGetter(info);
+    }
+    void DrawingBufferWidthSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+    {
+      WebGLBaseRenderingContext<WebGL2RenderingContext>::DrawingBufferWidthSetter(info, value);
+    }
+    Napi::Value DrawingBufferHeightGetter(const Napi::CallbackInfo &info)
+    {
+      return WebGLBaseRenderingContext<WebGL2RenderingContext>::DrawingBufferHeightGetter(info);
+    }
+    void DrawingBufferHeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+    {
+      WebGLBaseRenderingContext<WebGL2RenderingContext>::DrawingBufferHeightSetter(info, value);
+    }
+
+  private:
+    int max3DTextureSize;
+    int maxArrayTextureLayers;
+    int maxColorAttachments;
+    int maxCombinedUniformBlocks;
+    int maxDrawBuffers;
+    int maxElementsIndices;
+    int maxElementsVertices;
+    int maxFragmentInputComponents;
+    int maxFragmentUniformBlocks;
+    int maxFragmentUniformComponents;
+    int maxProgramTexelOffset;
+    int maxSamples;
+    int maxTransformFeedbackInterleavedComponents;
+    int maxTransformFeedbackSeparateAttributes;
+    int maxTransformFeedbackSeparateComponents;
+    int maxUniformBufferBindings;
+    int maxVaryingComponents;
+    int maxVertexOutputComponents;
+    int maxVertexUniformBlocks;
+    int maxVertexUniformComponents;
+    int minProgramTexelOffset;
+    int64_t maxClientWaitTimeout;
+    int64_t maxCombinedFragmentUniformComponents;
+    int64_t maxCombinedVertexUniformComponents;
+    int64_t maxElementIndex;
+    int64_t maxServerWaitTimeout;
+    int64_t maxUniformBlockSize;
+    float maxTextureLODBias;
 
   private:
     static Napi::FunctionReference *constructor;

@@ -7,6 +7,7 @@
 Napi::Object InitWebglModule(Napi::Env env, Napi::Object exports)
 {
   webgl::WebGLRenderingContext::Init(env, exports);
+  webgl::WebGL2RenderingContext::Init(env, exports);
   webgl::WebGLProgram::Init(env);
   webgl::WebGLTexture::Init(env);
   webgl::WebGLUniformLocation::Init(env);

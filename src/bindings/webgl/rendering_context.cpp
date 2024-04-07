@@ -10,448 +10,769 @@
 namespace webgl
 {
   Napi::FunctionReference *WebGLRenderingContext::constructor;
+  Napi::FunctionReference *WebGL2RenderingContext::constructor;
 
-  Napi::Object WebGLRenderingContext::Init(Napi::Env env, Napi::Object exports)
-  {
-    Napi::Function tpl = DefineClass(
-        env,
-        "WebGLRenderingContext",
-        {/**
-          * Constants
-          */
-         // Clearing buffers
-         InstanceValue("DEPTH_BUFFER_BIT", Napi::Number::New(env, WEBGL_DEPTH_BUFFER_BIT)),
-         InstanceValue("STENCIL_BUFFER_BIT", Napi::Number::New(env, WEBGL_STENCIL_BUFFER_BIT)),
-         InstanceValue("COLOR_BUFFER_BIT", Napi::Number::New(env, WEBGL_COLOR_BUFFER_BIT)),
-         // Rendering primitives
-         InstanceValue("POINTS", Napi::Number::New(env, WEBGL_POINTS)),
-         InstanceValue("LINES", Napi::Number::New(env, WEBGL_LINES)),
-         InstanceValue("LINE_LOOP", Napi::Number::New(env, WEBGL_LINE_LOOP)),
-         InstanceValue("LINE_STRIP", Napi::Number::New(env, WEBGL_LINE_STRIP)),
-         InstanceValue("TRIANGLES", Napi::Number::New(env, WEBGL_TRIANGLES)),
-         InstanceValue("TRIANGLE_STRIP", Napi::Number::New(env, WEBGL_TRIANGLE_STRIP)),
-         InstanceValue("TRIANGLE_FAN", Napi::Number::New(env, WEBGL_TRIANGLE_FAN)),
-         // Blending modes
-         InstanceValue("ZERO", Napi::Number::New(env, WEBGL_ZERO)),
-         InstanceValue("ONE", Napi::Number::New(env, WEBGL_ONE)),
-         InstanceValue("SRC_COLOR", Napi::Number::New(env, WEBGL_SRC_COLOR)),
-         InstanceValue("ONE_MINUS_SRC_COLOR", Napi::Number::New(env, WEBGL_ONE_MINUS_SRC_COLOR)),
-         InstanceValue("SRC_ALPHA", Napi::Number::New(env, WEBGL_SRC_ALPHA)),
-         InstanceValue("ONE_MINUS_SRC_ALPHA", Napi::Number::New(env, WEBGL_ONE_MINUS_SRC_ALPHA)),
-         InstanceValue("DST_ALPHA", Napi::Number::New(env, WEBGL_DST_ALPHA)),
-         InstanceValue("ONE_MINUS_DST_ALPHA", Napi::Number::New(env, WEBGL_ONE_MINUS_DST_ALPHA)),
-         InstanceValue("DST_COLOR", Napi::Number::New(env, WEBGL_DST_COLOR)),
-         InstanceValue("ONE_MINUS_DST_COLOR", Napi::Number::New(env, WEBGL_ONE_MINUS_DST_COLOR)),
-         InstanceValue("SRC_ALPHA_SATURATE", Napi::Number::New(env, WEBGL_SRC_ALPHA_SATURATE)),
-         InstanceValue("CONSTANT_COLOR", Napi::Number::New(env, WEBGL_CONSTANT_COLOR)),
-         InstanceValue("ONE_MINUS_CONSTANT_COLOR", Napi::Number::New(env, WEBGL_ONE_MINUS_CONSTANT_COLOR)),
-         InstanceValue("CONSTANT_ALPHA", Napi::Number::New(env, WEBGL_CONSTANT_ALPHA)),
-         InstanceValue("ONE_MINUS_CONSTANT_ALPHA", Napi::Number::New(env, WEBGL_ONE_MINUS_CONSTANT_ALPHA)),
-         // Blending equations
-         InstanceValue("FUNC_ADD", Napi::Number::New(env, WEBGL_FUNC_ADD)),
-         InstanceValue("FUNC_SUBTRACT", Napi::Number::New(env, WEBGL_FUNC_SUBTRACT)),
-         InstanceValue("FUNC_REVERSE_SUBTRACT", Napi::Number::New(env, WEBGL_FUNC_REVERSE_SUBTRACT)),
-         // Getting GL parameter information
-         InstanceValue("BLEND_EQUATION", Napi::Number::New(env, WEBGL_BLEND_EQUATION)),
-         InstanceValue("BLEND_EQUATION_RGB", Napi::Number::New(env, WEBGL_BLEND_EQUATION_RGB)),
-         InstanceValue("BLEND_EQUATION_ALPHA", Napi::Number::New(env, WEBGL_BLEND_EQUATION_ALPHA)),
-         InstanceValue("BLEND_DST_RGB", Napi::Number::New(env, WEBGL_BLEND_DST_RGB)),
-         InstanceValue("BLEND_SRC_RGB", Napi::Number::New(env, WEBGL_BLEND_SRC_RGB)),
-         InstanceValue("BLEND_DST_ALPHA", Napi::Number::New(env, WEBGL_BLEND_DST_ALPHA)),
-         InstanceValue("BLEND_SRC_ALPHA", Napi::Number::New(env, WEBGL_BLEND_SRC_ALPHA)),
-         InstanceValue("BLEND_COLOR", Napi::Number::New(env, WEBGL_BLEND_COLOR)),
-         InstanceValue("ARRAY_BUFFER_BINDING", Napi::Number::New(env, WEBGL_ARRAY_BUFFER_BINDING)),
-         InstanceValue("ELEMENT_ARRAY_BUFFER_BINDING", Napi::Number::New(env, WEBGL_ELEMENT_ARRAY_BUFFER_BINDING)),
-         InstanceValue("LINE_WIDTH", Napi::Number::New(env, WEBGL_LINE_WIDTH)),
-         InstanceValue("ALIASED_POINT_SIZE_RANGE", Napi::Number::New(env, WEBGL_ALIASED_POINT_SIZE_RANGE)),
-         InstanceValue("ALIASED_LINE_WIDTH_RANGE", Napi::Number::New(env, WEBGL_ALIASED_LINE_WIDTH_RANGE)),
-         InstanceValue("CULL_FACE_MODE", Napi::Number::New(env, WEBGL_CULL_FACE_MODE)),
-         InstanceValue("FRONT_FACE", Napi::Number::New(env, WEBGL_FRONT_FACE)),
-         InstanceValue("DEPTH_RANGE", Napi::Number::New(env, WEBGL_DEPTH_RANGE)),
-         InstanceValue("DEPTH_WRITEMASK", Napi::Number::New(env, WEBGL_DEPTH_WRITEMASK)),
-         InstanceValue("DEPTH_CLEAR_VALUE", Napi::Number::New(env, WEBGL_DEPTH_CLEAR_VALUE)),
-         InstanceValue("DEPTH_FUNC", Napi::Number::New(env, WEBGL_DEPTH_FUNC)),
-         InstanceValue("STENCIL_CLEAR_VALUE", Napi::Number::New(env, WEBGL_STENCIL_CLEAR_VALUE)),
-         InstanceValue("STENCIL_FUNC", Napi::Number::New(env, WEBGL_STENCIL_FUNC)),
-         InstanceValue("STENCIL_FAIL", Napi::Number::New(env, WEBGL_STENCIL_FAIL)),
-         InstanceValue("STENCIL_PASS_DEPTH_FAIL", Napi::Number::New(env, WEBGL_STENCIL_PASS_DEPTH_FAIL)),
-         InstanceValue("STENCIL_PASS_DEPTH_PASS", Napi::Number::New(env, WEBGL_STENCIL_PASS_DEPTH_PASS)),
-         InstanceValue("STENCIL_REF", Napi::Number::New(env, WEBGL_STENCIL_REF)),
-         InstanceValue("STENCIL_VALUE_MASK", Napi::Number::New(env, WEBGL_STENCIL_VALUE_MASK)),
-         InstanceValue("STENCIL_WRITEMASK", Napi::Number::New(env, WEBGL_STENCIL_WRITEMASK)),
-         InstanceValue("STENCIL_BACK_FUNC", Napi::Number::New(env, WEBGL_STENCIL_BACK_FUNC)),
-         InstanceValue("STENCIL_BACK_FAIL", Napi::Number::New(env, WEBGL_STENCIL_BACK_FAIL)),
-         InstanceValue("STENCIL_BACK_PASS_DEPTH_FAIL", Napi::Number::New(env, WEBGL_STENCIL_BACK_PASS_DEPTH_FAIL)),
-         InstanceValue("STENCIL_BACK_PASS_DEPTH_PASS", Napi::Number::New(env, WEBGL_STENCIL_BACK_PASS_DEPTH_PASS)),
-         InstanceValue("STENCIL_BACK_REF", Napi::Number::New(env, WEBGL_STENCIL_BACK_REF)),
-         InstanceValue("STENCIL_BACK_VALUE_MASK", Napi::Number::New(env, WEBGL_STENCIL_BACK_VALUE_MASK)),
-         InstanceValue("STENCIL_BACK_WRITEMASK", Napi::Number::New(env, WEBGL_STENCIL_BACK_WRITEMASK)),
-         InstanceValue("VIEWPORT", Napi::Number::New(env, WEBGL_VIEWPORT)),
-         InstanceValue("SCISSOR_BOX", Napi::Number::New(env, WEBGL_SCISSOR_BOX)),
-         InstanceValue("COLOR_CLEAR_VALUE", Napi::Number::New(env, WEBGL_COLOR_CLEAR_VALUE)),
-         InstanceValue("COLOR_WRITEMASK", Napi::Number::New(env, WEBGL_COLOR_WRITEMASK)),
-         InstanceValue("UNPACK_ALIGNMENT", Napi::Number::New(env, WEBGL_UNPACK_ALIGNMENT)),
-         InstanceValue("PACK_ALIGNMENT", Napi::Number::New(env, WEBGL_PACK_ALIGNMENT)),
-         InstanceValue("MAX_TEXTURE_SIZE", Napi::Number::New(env, WEBGL_MAX_TEXTURE_SIZE)),
-         InstanceValue("MAX_VIEWPORT_DIMS", Napi::Number::New(env, WEBGL_MAX_VIEWPORT_DIMS)),
-         InstanceValue("SUBPIXEL_BITS", Napi::Number::New(env, WEBGL_SUBPIXEL_BITS)),
-         InstanceValue("RED_BITS", Napi::Number::New(env, WEBGL_RED_BITS)),
-         InstanceValue("GREEN_BITS", Napi::Number::New(env, WEBGL_GREEN_BITS)),
-         InstanceValue("BLUE_BITS", Napi::Number::New(env, WEBGL_BLUE_BITS)),
-         InstanceValue("ALPHA_BITS", Napi::Number::New(env, WEBGL_ALPHA_BITS)),
-         InstanceValue("DEPTH_BITS", Napi::Number::New(env, WEBGL_DEPTH_BITS)),
-         InstanceValue("STENCIL_BITS", Napi::Number::New(env, WEBGL_STENCIL_BITS)),
-         InstanceValue("POLYGON_OFFSET_UNITS", Napi::Number::New(env, WEBGL_POLYGON_OFFSET_UNITS)),
-         InstanceValue("POLYGON_OFFSET_FACTOR", Napi::Number::New(env, WEBGL_POLYGON_OFFSET_FACTOR)),
-         InstanceValue("TEXTURE_BINDING_2D", Napi::Number::New(env, WEBGL_TEXTURE_BINDING_2D)),
-         InstanceValue("SAMPLE_BUFFERS", Napi::Number::New(env, WEBGL_SAMPLE_BUFFERS)),
-         InstanceValue("SAMPLES", Napi::Number::New(env, WEBGL_SAMPLES)),
-         InstanceValue("SAMPLE_COVERAGE_VALUE", Napi::Number::New(env, WEBGL_SAMPLE_COVERAGE_VALUE)),
-         InstanceValue("SAMPLE_COVERAGE_INVERT", Napi::Number::New(env, WEBGL_SAMPLE_COVERAGE_INVERT)),
-         InstanceValue("COMPRESSED_TEXTURE_FORMATS", Napi::Number::New(env, WEBGL_COMPRESSED_TEXTURE_FORMATS)),
-         InstanceValue("VENDOR", Napi::Number::New(env, WEBGL_VENDOR)),
-         InstanceValue("RENDERER", Napi::Number::New(env, WEBGL_RENDERER)),
-         InstanceValue("VERSION", Napi::Number::New(env, WEBGL_VERSION)),
-         InstanceValue("IMPLEMENTATION_COLOR_READ_TYPE", Napi::Number::New(env, WEBGL_IMPLEMENTATION_COLOR_READ_TYPE)),
-         InstanceValue("IMPLEMENTATION_COLOR_READ_FORMAT", Napi::Number::New(env, WEBGL_IMPLEMENTATION_COLOR_READ_FORMAT)),
-         InstanceValue("BROWSER_DEFAULT_WEBGL", Napi::Number::New(env, WEBGL_BROWSER_DEFAULT_WEBGL)),
-         // Buffers
-         InstanceValue("STATIC_DRAW", Napi::Number::New(env, WEBGL_STATIC_DRAW)),
-         InstanceValue("STREAM_DRAW", Napi::Number::New(env, WEBGL_STREAM_DRAW)),
-         InstanceValue("DYNAMIC_DRAW", Napi::Number::New(env, WEBGL_DYNAMIC_DRAW)),
-         InstanceValue("ARRAY_BUFFER", Napi::Number::New(env, WEBGL_ARRAY_BUFFER)),
-         InstanceValue("ELEMENT_ARRAY_BUFFER", Napi::Number::New(env, WEBGL_ELEMENT_ARRAY_BUFFER)),
-         InstanceValue("BUFFER_SIZE", Napi::Number::New(env, WEBGL_BUFFER_SIZE)),
-         InstanceValue("BUFFER_USAGE", Napi::Number::New(env, WEBGL_BUFFER_USAGE)),
-         // Vertex attributes
-         InstanceValue("CURRENT_VERTEX_ATTRIB", Napi::Number::New(env, WEBGL_CURRENT_VERTEX_ATTRIB)),
-         InstanceValue("VERTEX_ATTRIB_ARRAY_ENABLED", Napi::Number::New(env, WEBGL_VERTEX_ATTRIB_ARRAY_ENABLED)),
-         InstanceValue("VERTEX_ATTRIB_ARRAY_SIZE", Napi::Number::New(env, WEBGL_VERTEX_ATTRIB_ARRAY_SIZE)),
-         InstanceValue("VERTEX_ATTRIB_ARRAY_STRIDE", Napi::Number::New(env, WEBGL_VERTEX_ATTRIB_ARRAY_STRIDE)),
-         InstanceValue("VERTEX_ATTRIB_ARRAY_TYPE", Napi::Number::New(env, WEBGL_VERTEX_ATTRIB_ARRAY_TYPE)),
-         InstanceValue("VERTEX_ATTRIB_ARRAY_NORMALIZED", Napi::Number::New(env, WEBGL_VERTEX_ATTRIB_ARRAY_NORMALIZED)),
-         InstanceValue("VERTEX_ATTRIB_ARRAY_POINTER", Napi::Number::New(env, WEBGL_VERTEX_ATTRIB_ARRAY_POINTER)),
-         InstanceValue("VERTEX_ATTRIB_ARRAY_BUFFER_BINDING", Napi::Number::New(env, WEBGL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING)),
-         // Culling
-         InstanceValue("CULL_FACE", Napi::Number::New(env, WEBGL_CULL_FACE)),
-         InstanceValue("FRONT", Napi::Number::New(env, WEBGL_FRONT)),
-         InstanceValue("BACK", Napi::Number::New(env, WEBGL_BACK)),
-         InstanceValue("FRONT_AND_BACK", Napi::Number::New(env, WEBGL_FRONT_AND_BACK)),
-         // Enabling and disabling
-         InstanceValue("BLEND", Napi::Number::New(env, WEBGL_BLEND)),
-         InstanceValue("DEPTH_TEST", Napi::Number::New(env, WEBGL_DEPTH_TEST)),
-         InstanceValue("DITHER", Napi::Number::New(env, WEBGL_DITHER)),
-         InstanceValue("POLYGON_OFFSET_FILL", Napi::Number::New(env, WEBGL_POLYGON_OFFSET_FILL)),
-         InstanceValue("SAMPLE_ALPHA_TO_COVERAGE", Napi::Number::New(env, WEBGL_SAMPLE_ALPHA_TO_COVERAGE)),
-         InstanceValue("SAMPLE_COVERAGE", Napi::Number::New(env, WEBGL_SAMPLE_COVERAGE)),
-         InstanceValue("SCISSOR_TEST", Napi::Number::New(env, WEBGL_SCISSOR_TEST)),
-         InstanceValue("STENCIL_TEST", Napi::Number::New(env, WEBGL_STENCIL_TEST)),
-         // Errors
-         InstanceValue("NO_ERROR", Napi::Number::New(env, WEBGL_NO_ERROR)),
-         InstanceValue("INVALID_ENUM", Napi::Number::New(env, WEBGL_INVALID_ENUM)),
-         InstanceValue("INVALID_VALUE", Napi::Number::New(env, WEBGL_INVALID_VALUE)),
-         InstanceValue("INVALID_OPERATION", Napi::Number::New(env, WEBGL_INVALID_OPERATION)),
-         InstanceValue("OUT_OF_MEMORY", Napi::Number::New(env, WEBGL_OUT_OF_MEMORY)),
-         InstanceValue("CONTEXT_LOST_WEBGL", Napi::Number::New(env, WEBGL_CONTEXT_LOST_WEBGL)),
-         // Front face directions
-         InstanceValue("CW", Napi::Number::New(env, WEBGL_CW)),
-         InstanceValue("CCW", Napi::Number::New(env, WEBGL_CCW)),
-         // Hints
-         InstanceValue("DONT_CARE", Napi::Number::New(env, WEBGL_DONT_CARE)),
-         InstanceValue("FASTEST", Napi::Number::New(env, WEBGL_FASTEST)),
-         InstanceValue("NICEST", Napi::Number::New(env, WEBGL_NICEST)),
-         // Data types
-         InstanceValue("BYTE", Napi::Number::New(env, WEBGL_BYTE)),
-         InstanceValue("UNSIGNED_BYTE", Napi::Number::New(env, WEBGL_UNSIGNED_BYTE)),
-         InstanceValue("SHORT", Napi::Number::New(env, WEBGL_SHORT)),
-         InstanceValue("UNSIGNED_SHORT", Napi::Number::New(env, WEBGL_UNSIGNED_SHORT)),
-         InstanceValue("INT", Napi::Number::New(env, WEBGL_INT)),
-         InstanceValue("UNSIGNED_INT", Napi::Number::New(env, WEBGL_UNSIGNED_INT)),
-         InstanceValue("FLOAT", Napi::Number::New(env, WEBGL_FLOAT)),
-         // Pixel formats
-         InstanceValue("DEPTH_COMPONENT", Napi::Number::New(env, WEBGL_DEPTH_COMPONENT)),
-         InstanceValue("ALPHA", Napi::Number::New(env, WEBGL_ALPHA)),
-         InstanceValue("RGB", Napi::Number::New(env, WEBGL_RGB)),
-         InstanceValue("RGBA", Napi::Number::New(env, WEBGL_RGBA)),
-         InstanceValue("LUMINANCE", Napi::Number::New(env, WEBGL_LUMINANCE)),
-         InstanceValue("LUMINANCE_ALPHA", Napi::Number::New(env, WEBGL_LUMINANCE_ALPHA)),
-         // Pixel types
-         // InstanceValue("UNSIGNED_BYTE", Napi::Number::New(env, WEBGL_UNSIGNED_BYTE)), // already defined
-         InstanceValue("UNSIGNED_SHORT_4_4_4_4", Napi::Number::New(env, WEBGL_UNSIGNED_SHORT_4_4_4_4)),
-         InstanceValue("UNSIGNED_SHORT_5_5_5_1", Napi::Number::New(env, WEBGL_UNSIGNED_SHORT_5_5_5_1)),
-         InstanceValue("UNSIGNED_SHORT_5_6_5", Napi::Number::New(env, WEBGL_UNSIGNED_SHORT_5_6_5)),
-         // Shaders
-         InstanceValue("FRAGMENT_SHADER", Napi::Number::New(env, WEBGL_FRAGMENT_SHADER)),
-         InstanceValue("VERTEX_SHADER", Napi::Number::New(env, WEBGL_VERTEX_SHADER)),
-         InstanceValue("COMPILE_STATUS", Napi::Number::New(env, WEBGL_COMPILE_STATUS)),
-         InstanceValue("DELETE_STATUS", Napi::Number::New(env, WEBGL_DELETE_STATUS)),
-         InstanceValue("LINK_STATUS", Napi::Number::New(env, WEBGL_LINK_STATUS)),
-         InstanceValue("VALIDATE_STATUS", Napi::Number::New(env, WEBGL_VALIDATE_STATUS)),
-         InstanceValue("ATTACHED_SHADERS", Napi::Number::New(env, WEBGL_ATTACHED_SHADERS)),
-         InstanceValue("ACTIVE_ATTRIBUTES", Napi::Number::New(env, WEBGL_ACTIVE_ATTRIBUTES)),
-         InstanceValue("ACTIVE_UNIFORMS", Napi::Number::New(env, WEBGL_ACTIVE_UNIFORMS)),
-         InstanceValue("MAX_VERTEX_ATTRIBS", Napi::Number::New(env, WEBGL_MAX_VERTEX_ATTRIBS)),
-         InstanceValue("MAX_VERTEX_UNIFORM_VECTORS", Napi::Number::New(env, WEBGL_MAX_VERTEX_UNIFORM_VECTORS)),
-         InstanceValue("MAX_VARYING_VECTORS", Napi::Number::New(env, WEBGL_MAX_VARYING_VECTORS)),
-         InstanceValue("MAX_COMBINED_TEXTURE_IMAGE_UNITS", Napi::Number::New(env, WEBGL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)),
-         InstanceValue("MAX_VERTEX_TEXTURE_IMAGE_UNITS", Napi::Number::New(env, WEBGL_MAX_VERTEX_TEXTURE_IMAGE_UNITS)),
-         InstanceValue("MAX_TEXTURE_IMAGE_UNITS", Napi::Number::New(env, WEBGL_MAX_TEXTURE_IMAGE_UNITS)),
-         InstanceValue("MAX_FRAGMENT_UNIFORM_VECTORS", Napi::Number::New(env, WEBGL_MAX_FRAGMENT_UNIFORM_VECTORS)),
-         InstanceValue("SHADER_TYPE", Napi::Number::New(env, WEBGL_SHADER_TYPE)),
-         InstanceValue("SHADING_LANGUAGE_VERSION", Napi::Number::New(env, WEBGL_SHADING_LANGUAGE_VERSION)),
-         InstanceValue("CURRENT_PROGRAM", Napi::Number::New(env, WEBGL_CURRENT_PROGRAM)),
-         // Depth or stencil tests
-         InstanceValue("NEVER", Napi::Number::New(env, WEBGL_NEVER)),
-         InstanceValue("LESS", Napi::Number::New(env, WEBGL_LESS)),
-         InstanceValue("EQUAL", Napi::Number::New(env, WEBGL_EQUAL)),
-         InstanceValue("LEQUAL", Napi::Number::New(env, WEBGL_LEQUAL)),
-         InstanceValue("GREATER", Napi::Number::New(env, WEBGL_GREATER)),
-         InstanceValue("NOTEQUAL", Napi::Number::New(env, WEBGL_NOTEQUAL)),
-         InstanceValue("GEQUAL", Napi::Number::New(env, WEBGL_GEQUAL)),
-         InstanceValue("ALWAYS", Napi::Number::New(env, WEBGL_ALWAYS)),
-         // Stencil actions
-         InstanceValue("KEEP", Napi::Number::New(env, WEBGL_KEEP)),
-         InstanceValue("REPLACE", Napi::Number::New(env, WEBGL_REPLACE)),
-         InstanceValue("INCR", Napi::Number::New(env, WEBGL_INCR)),
-         InstanceValue("DECR", Napi::Number::New(env, WEBGL_DECR)),
-         InstanceValue("INVERT", Napi::Number::New(env, WEBGL_INVERT)),
-         InstanceValue("INCR_WRAP", Napi::Number::New(env, WEBGL_INCR_WRAP)),
-         InstanceValue("DECR_WRAP", Napi::Number::New(env, WEBGL_DECR_WRAP)),
-         // Textures
-         InstanceValue("NEAREST", Napi::Number::New(env, WEBGL_NEAREST)),
-         InstanceValue("LINEAR", Napi::Number::New(env, WEBGL_LINEAR)),
-         InstanceValue("NEAREST_MIPMAP_NEAREST", Napi::Number::New(env, WEBGL_NEAREST_MIPMAP_NEAREST)),
-         InstanceValue("LINEAR_MIPMAP_NEAREST", Napi::Number::New(env, WEBGL_LINEAR_MIPMAP_NEAREST)),
-         InstanceValue("NEAREST_MIPMAP_LINEAR", Napi::Number::New(env, WEBGL_NEAREST_MIPMAP_LINEAR)),
-         InstanceValue("LINEAR_MIPMAP_LINEAR", Napi::Number::New(env, WEBGL_LINEAR_MIPMAP_LINEAR)),
-         InstanceValue("TEXTURE_MAG_FILTER", Napi::Number::New(env, WEBGL_TEXTURE_MAG_FILTER)),
-         InstanceValue("TEXTURE_MIN_FILTER", Napi::Number::New(env, WEBGL_TEXTURE_MIN_FILTER)),
-         InstanceValue("TEXTURE_WRAP_S", Napi::Number::New(env, WEBGL_TEXTURE_WRAP_S)),
-         InstanceValue("TEXTURE_WRAP_T", Napi::Number::New(env, WEBGL_TEXTURE_WRAP_T)),
-         InstanceValue("TEXTURE_2D", Napi::Number::New(env, WEBGL_TEXTURE_2D)),
-         InstanceValue("TEXTURE", Napi::Number::New(env, WEBGL_TEXTURE)),
-         InstanceValue("TEXTURE_CUBE_MAP", Napi::Number::New(env, WEBGL_TEXTURE_CUBE_MAP)),
-         InstanceValue("TEXTURE_BINDING_CUBE_MAP", Napi::Number::New(env, WEBGL_TEXTURE_BINDING_CUBE_MAP)),
-         InstanceValue("TEXTURE_CUBE_MAP_POSITIVE_X", Napi::Number::New(env, WEBGL_TEXTURE_CUBE_MAP_POSITIVE_X)),
-         InstanceValue("TEXTURE_CUBE_MAP_NEGATIVE_X", Napi::Number::New(env, WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_X)),
-         InstanceValue("TEXTURE_CUBE_MAP_POSITIVE_Y", Napi::Number::New(env, WEBGL_TEXTURE_CUBE_MAP_POSITIVE_Y)),
-         InstanceValue("TEXTURE_CUBE_MAP_NEGATIVE_Y", Napi::Number::New(env, WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Y)),
-         InstanceValue("TEXTURE_CUBE_MAP_POSITIVE_Z", Napi::Number::New(env, WEBGL_TEXTURE_CUBE_MAP_POSITIVE_Z)),
-         InstanceValue("TEXTURE_CUBE_MAP_NEGATIVE_Z", Napi::Number::New(env, WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Z)),
-         InstanceValue("MAX_CUBE_MAP_TEXTURE_SIZE", Napi::Number::New(env, WEBGL_MAX_CUBE_MAP_TEXTURE_SIZE)),
-         InstanceValue("TEXTURE0", Napi::Number::New(env, WEBGL_TEXTURE0)),
-         InstanceValue("TEXTURE1", Napi::Number::New(env, WEBGL_TEXTURE1)),
-         InstanceValue("TEXTURE2", Napi::Number::New(env, WEBGL_TEXTURE2)),
-         InstanceValue("TEXTURE3", Napi::Number::New(env, WEBGL_TEXTURE3)),
-         InstanceValue("TEXTURE4", Napi::Number::New(env, WEBGL_TEXTURE4)),
-         InstanceValue("TEXTURE5", Napi::Number::New(env, WEBGL_TEXTURE5)),
-         InstanceValue("TEXTURE6", Napi::Number::New(env, WEBGL_TEXTURE6)),
-         InstanceValue("TEXTURE7", Napi::Number::New(env, WEBGL_TEXTURE7)),
-         InstanceValue("TEXTURE8", Napi::Number::New(env, WEBGL_TEXTURE8)),
-         InstanceValue("TEXTURE9", Napi::Number::New(env, WEBGL_TEXTURE9)),
-         InstanceValue("TEXTURE10", Napi::Number::New(env, WEBGL_TEXTURE10)),
-         InstanceValue("TEXTURE11", Napi::Number::New(env, WEBGL_TEXTURE11)),
-         InstanceValue("TEXTURE12", Napi::Number::New(env, WEBGL_TEXTURE12)),
-         InstanceValue("TEXTURE13", Napi::Number::New(env, WEBGL_TEXTURE13)),
-         InstanceValue("TEXTURE14", Napi::Number::New(env, WEBGL_TEXTURE14)),
-         InstanceValue("TEXTURE15", Napi::Number::New(env, WEBGL_TEXTURE15)),
-         InstanceValue("TEXTURE16", Napi::Number::New(env, WEBGL_TEXTURE16)),
-         InstanceValue("TEXTURE17", Napi::Number::New(env, WEBGL_TEXTURE17)),
-         InstanceValue("TEXTURE18", Napi::Number::New(env, WEBGL_TEXTURE18)),
-         InstanceValue("TEXTURE19", Napi::Number::New(env, WEBGL_TEXTURE19)),
-         InstanceValue("TEXTURE20", Napi::Number::New(env, WEBGL_TEXTURE20)),
-         InstanceValue("TEXTURE21", Napi::Number::New(env, WEBGL_TEXTURE21)),
-         InstanceValue("TEXTURE22", Napi::Number::New(env, WEBGL_TEXTURE22)),
-         InstanceValue("TEXTURE23", Napi::Number::New(env, WEBGL_TEXTURE23)),
-         InstanceValue("TEXTURE24", Napi::Number::New(env, WEBGL_TEXTURE24)),
-         InstanceValue("TEXTURE25", Napi::Number::New(env, WEBGL_TEXTURE25)),
-         InstanceValue("TEXTURE26", Napi::Number::New(env, WEBGL_TEXTURE26)),
-         InstanceValue("TEXTURE27", Napi::Number::New(env, WEBGL_TEXTURE27)),
-         InstanceValue("TEXTURE28", Napi::Number::New(env, WEBGL_TEXTURE28)),
-         InstanceValue("TEXTURE29", Napi::Number::New(env, WEBGL_TEXTURE29)),
-         InstanceValue("TEXTURE30", Napi::Number::New(env, WEBGL_TEXTURE30)),
-         InstanceValue("TEXTURE31", Napi::Number::New(env, WEBGL_TEXTURE31)),
-         InstanceValue("ACTIVE_TEXTURE", Napi::Number::New(env, WEBGL_ACTIVE_TEXTURE)),
-         InstanceValue("REPEAT", Napi::Number::New(env, WEBGL_REPEAT)),
-         InstanceValue("CLAMP_TO_EDGE", Napi::Number::New(env, WEBGL_CLAMP_TO_EDGE)),
-         InstanceValue("MIRRORED_REPEAT", Napi::Number::New(env, WEBGL_MIRRORED_REPEAT)),
-         // Uniform types
-         InstanceValue("FLOAT_VEC2", Napi::Number::New(env, WEBGL_FLOAT_VEC2)),
-         InstanceValue("FLOAT_VEC3", Napi::Number::New(env, WEBGL_FLOAT_VEC3)),
-         InstanceValue("FLOAT_VEC4", Napi::Number::New(env, WEBGL_FLOAT_VEC4)),
-         InstanceValue("INT_VEC2", Napi::Number::New(env, WEBGL_INT_VEC2)),
-         InstanceValue("INT_VEC3", Napi::Number::New(env, WEBGL_INT_VEC3)),
-         InstanceValue("INT_VEC4", Napi::Number::New(env, WEBGL_INT_VEC4)),
-         InstanceValue("BOOL", Napi::Number::New(env, WEBGL_BOOL)),
-         InstanceValue("BOOL_VEC2", Napi::Number::New(env, WEBGL_BOOL_VEC2)),
-         InstanceValue("BOOL_VEC3", Napi::Number::New(env, WEBGL_BOOL_VEC3)),
-         InstanceValue("BOOL_VEC4", Napi::Number::New(env, WEBGL_BOOL_VEC4)),
-         InstanceValue("FLOAT_MAT2", Napi::Number::New(env, WEBGL_FLOAT_MAT2)),
-         InstanceValue("FLOAT_MAT3", Napi::Number::New(env, WEBGL_FLOAT_MAT3)),
-         InstanceValue("FLOAT_MAT4", Napi::Number::New(env, WEBGL_FLOAT_MAT4)),
-         InstanceValue("SAMPLER_2D", Napi::Number::New(env, WEBGL_SAMPLER_2D)),
-         InstanceValue("SAMPLER_CUBE", Napi::Number::New(env, WEBGL_SAMPLER_CUBE)),
-         // Shader precision-specified types
-         InstanceValue("LOW_FLOAT", Napi::Number::New(env, WEBGL_LOW_FLOAT)),
-         InstanceValue("MEDIUM_FLOAT", Napi::Number::New(env, WEBGL_MEDIUM_FLOAT)),
-         InstanceValue("HIGH_FLOAT", Napi::Number::New(env, WEBGL_HIGH_FLOAT)),
-         InstanceValue("LOW_INT", Napi::Number::New(env, WEBGL_LOW_INT)),
-         InstanceValue("MEDIUM_INT", Napi::Number::New(env, WEBGL_MEDIUM_INT)),
-         InstanceValue("HIGH_INT", Napi::Number::New(env, WEBGL_HIGH_INT)),
-         // Framebuffers and renderbuffers
-         InstanceValue("FRAMEBUFFER", Napi::Number::New(env, WEBGL_FRAMEBUFFER)),
-         InstanceValue("RENDERBUFFER", Napi::Number::New(env, WEBGL_RENDERBUFFER)),
-         InstanceValue("RGBA4", Napi::Number::New(env, WEBGL_RGBA4)),
-         InstanceValue("RGB5_A1", Napi::Number::New(env, WEBGL_RGB5_A1)),
-         InstanceValue("RGB565", Napi::Number::New(env, WEBGL_RGB565)),
-         InstanceValue("DEPTH_COMPONENT16", Napi::Number::New(env, WEBGL_DEPTH_COMPONENT16)),
-         InstanceValue("STENCIL_INDEX8", Napi::Number::New(env, WEBGL_STENCIL_INDEX8)),
-         InstanceValue("DEPTH_STENCIL", Napi::Number::New(env, WEBGL_DEPTH_STENCIL)),
-         InstanceValue("RENDERBUFFER_WIDTH", Napi::Number::New(env, WEBGL_RENDERBUFFER_WIDTH)),
-         InstanceValue("RENDERBUFFER_HEIGHT", Napi::Number::New(env, WEBGL_RENDERBUFFER_HEIGHT)),
-         InstanceValue("RENDERBUFFER_INTERNAL_FORMAT", Napi::Number::New(env, WEBGL_RENDERBUFFER_INTERNAL_FORMAT)),
-         InstanceValue("RENDERBUFFER_RED_SIZE", Napi::Number::New(env, WEBGL_RENDERBUFFER_RED_SIZE)),
-         InstanceValue("RENDERBUFFER_GREEN_SIZE", Napi::Number::New(env, WEBGL_RENDERBUFFER_GREEN_SIZE)),
-         InstanceValue("RENDERBUFFER_BLUE_SIZE", Napi::Number::New(env, WEBGL_RENDERBUFFER_BLUE_SIZE)),
-         InstanceValue("RENDERBUFFER_ALPHA_SIZE", Napi::Number::New(env, WEBGL_RENDERBUFFER_ALPHA_SIZE)),
-         InstanceValue("RENDERBUFFER_DEPTH_SIZE", Napi::Number::New(env, WEBGL_RENDERBUFFER_DEPTH_SIZE)),
-         InstanceValue("RENDERBUFFER_STENCIL_SIZE", Napi::Number::New(env, WEBGL_RENDERBUFFER_STENCIL_SIZE)),
-         InstanceValue("FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE", Napi::Number::New(env, WEBGL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE)),
-         InstanceValue("FRAMEBUFFER_ATTACHMENT_OBJECT_NAME", Napi::Number::New(env, WEBGL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)),
-         InstanceValue("FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL", Napi::Number::New(env, WEBGL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL)),
-         InstanceValue("FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE", Napi::Number::New(env, WEBGL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE)),
-         InstanceValue("COLOR_ATTACHMENT0", Napi::Number::New(env, WEBGL_COLOR_ATTACHMENT0)),
-         InstanceValue("DEPTH_ATTACHMENT", Napi::Number::New(env, WEBGL_DEPTH_ATTACHMENT)),
-         InstanceValue("STENCIL_ATTACHMENT", Napi::Number::New(env, WEBGL_STENCIL_ATTACHMENT)),
-         InstanceValue("DEPTH_STENCIL_ATTACHMENT", Napi::Number::New(env, WEBGL_DEPTH_STENCIL_ATTACHMENT)),
-         InstanceValue("NONE", Napi::Number::New(env, WEBGL_NONE)),
-         InstanceValue("FRAMEBUFFER_COMPLETE", Napi::Number::New(env, WEBGL_FRAMEBUFFER_COMPLETE)),
-         InstanceValue("FRAMEBUFFER_INCOMPLETE_ATTACHMENT", Napi::Number::New(env, WEBGL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)),
-         InstanceValue("FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT", Napi::Number::New(env, WEBGL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)),
-         InstanceValue("FRAMEBUFFER_INCOMPLETE_DIMENSIONS", Napi::Number::New(env, WEBGL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS)),
-         InstanceValue("FRAMEBUFFER_UNSUPPORTED", Napi::Number::New(env, WEBGL_FRAMEBUFFER_UNSUPPORTED)),
-         InstanceValue("FRAMEBUFFER_BINDING", Napi::Number::New(env, WEBGL_FRAMEBUFFER_BINDING)),
-         InstanceValue("RENDERBUFFER_BINDING", Napi::Number::New(env, WEBGL_RENDERBUFFER_BINDING)),
-         InstanceValue("MAX_RENDERBUFFER_SIZE", Napi::Number::New(env, WEBGL_MAX_RENDERBUFFER_SIZE)),
-         InstanceValue("INVALID_FRAMEBUFFER_OPERATION", Napi::Number::New(env, WEBGL_INVALID_FRAMEBUFFER_OPERATION)),
-         // Pixel storage modes
-         InstanceValue("UNPACK_FLIP_Y_WEBGL", Napi::Number::New(env, WEBGL_UNPACK_FLIP_Y_WEBGL)),
-         InstanceValue("UNPACK_PREMULTIPLY_ALPHA_WEBGL", Napi::Number::New(env, WEBGL_UNPACK_PREMULTIPLY_ALPHA_WEBGL)),
-         InstanceValue("UNPACK_COLORSPACE_CONVERSION_WEBGL", Napi::Number::New(env, WEBGL_UNPACK_COLORSPACE_CONVERSION_WEBGL)),
-         /**
-          * Methods
-          */
-         InstanceMethod("makeXRCompatible", &WebGLRenderingContext::MakeXRCompatible),
-         InstanceMethod("createProgram", &WebGLRenderingContext::CreateProgram),
-         InstanceMethod("deleteProgram", &WebGLRenderingContext::DeleteProgram),
-         InstanceMethod("linkProgram", &WebGLRenderingContext::LinkProgram),
-         InstanceMethod("useProgram", &WebGLRenderingContext::UseProgram),
-         InstanceMethod("getProgramParameter", &WebGLRenderingContext::GetProgramParameter),
-         InstanceMethod("getProgramInfoLog", &WebGLRenderingContext::GetProgramInfoLog),
-         InstanceMethod("attachShader", &WebGLRenderingContext::AttachShader),
-         InstanceMethod("detachShader", &WebGLRenderingContext::DetachShader),
-         InstanceMethod("createShader", &WebGLRenderingContext::CreateShader),
-         InstanceMethod("deleteShader", &WebGLRenderingContext::DeleteShader),
-         InstanceMethod("shaderSource", &WebGLRenderingContext::ShaderSource),
-         InstanceMethod("compileShader", &WebGLRenderingContext::CompileShader),
-         InstanceMethod("getShaderSource", &WebGLRenderingContext::GetShaderSource),
-         InstanceMethod("getShaderParameter", &WebGLRenderingContext::GetShaderParameter),
-         InstanceMethod("getShaderInfoLog", &WebGLRenderingContext::GetShaderInfoLog),
-         InstanceMethod("createBuffer", &WebGLRenderingContext::CreateBuffer),
-         InstanceMethod("deleteBuffer", &WebGLRenderingContext::DeleteBuffer),
-         InstanceMethod("bindBuffer", &WebGLRenderingContext::BindBuffer),
-         InstanceMethod("bufferData", &WebGLRenderingContext::BufferData),
-         InstanceMethod("bufferSubData", &WebGLRenderingContext::BufferSubData),
-         InstanceMethod("createFramebuffer", &WebGLRenderingContext::CreateFramebuffer),
-         InstanceMethod("deleteFramebuffer", &WebGLRenderingContext::DeleteFramebuffer),
-         InstanceMethod("bindFramebuffer", &WebGLRenderingContext::BindFramebuffer),
-         InstanceMethod("framebufferRenderbuffer", &WebGLRenderingContext::FramebufferRenderbuffer),
-         InstanceMethod("framebufferTexture2D", &WebGLRenderingContext::FramebufferTexture2D),
-         InstanceMethod("checkFramebufferStatus", &WebGLRenderingContext::CheckFramebufferStatus),
-         InstanceMethod("createRenderbuffer", &WebGLRenderingContext::CreateRenderbuffer),
-         InstanceMethod("deleteRenderbuffer", &WebGLRenderingContext::DeleteRenderbuffer),
-         InstanceMethod("bindRenderbuffer", &WebGLRenderingContext::BindRenderbuffer),
-         InstanceMethod("renderbufferStorage", &WebGLRenderingContext::RenderbufferStorage),
-         InstanceMethod("createTexture", &WebGLRenderingContext::CreateTexture),
-         InstanceMethod("deleteTexture", &WebGLRenderingContext::DeleteTexture),
-         InstanceMethod("bindTexture", &WebGLRenderingContext::BindTexture),
-         InstanceMethod("texImage2D", &WebGLRenderingContext::TexImage2D),
-         InstanceMethod("texSubImage2D", &WebGLRenderingContext::TexSubImage2D),
-         InstanceMethod("copyTexImage2D", &WebGLRenderingContext::CopyTexImage2D),
-         InstanceMethod("copyTexSubImage2D", &WebGLRenderingContext::CopyTexSubImage2D),
-         InstanceMethod("texParameteri", &WebGLRenderingContext::TexParameteri),
-         InstanceMethod("activeTexture", &WebGLRenderingContext::ActiveTexture),
-         InstanceMethod("generateMipmap", &WebGLRenderingContext::GenerateMipmap),
-         InstanceMethod("enableVertexAttribArray", &WebGLRenderingContext::EnableVertexAttribArray),
-         InstanceMethod("disableVertexAttribArray", &WebGLRenderingContext::DisableVertexAttribArray),
-         InstanceMethod("vertexAttribPointer", &WebGLRenderingContext::VertexAttribPointer),
-         InstanceMethod("getAttribLocation", &WebGLRenderingContext::GetAttribLocation),
-         InstanceMethod("getUniformLocation", &WebGLRenderingContext::GetUniformLocation),
-         InstanceMethod("uniform1f", &WebGLRenderingContext::Uniform1f),
-         InstanceMethod("uniform1fv", &WebGLRenderingContext::Uniform1fv),
-         InstanceMethod("uniform1i", &WebGLRenderingContext::Uniform1i),
-         InstanceMethod("uniform1iv", &WebGLRenderingContext::Uniform1iv),
-         InstanceMethod("uniform2f", &WebGLRenderingContext::Uniform2f),
-         InstanceMethod("uniform2fv", &WebGLRenderingContext::Uniform2fv),
-         InstanceMethod("uniform2i", &WebGLRenderingContext::Uniform2i),
-         InstanceMethod("uniform2iv", &WebGLRenderingContext::Uniform2iv),
-         InstanceMethod("uniform3f", &WebGLRenderingContext::Uniform3f),
-         InstanceMethod("uniform3fv", &WebGLRenderingContext::Uniform3fv),
-         InstanceMethod("uniform3i", &WebGLRenderingContext::Uniform3i),
-         InstanceMethod("uniform3iv", &WebGLRenderingContext::Uniform3iv),
-         InstanceMethod("uniform4f", &WebGLRenderingContext::Uniform4f),
-         InstanceMethod("uniform4fv", &WebGLRenderingContext::Uniform4fv),
-         InstanceMethod("uniform4i", &WebGLRenderingContext::Uniform4i),
-         InstanceMethod("uniform4iv", &WebGLRenderingContext::Uniform4iv),
-         InstanceMethod("uniformMatrix2fv", &WebGLRenderingContext::UniformMatrix2fv),
-         InstanceMethod("uniformMatrix3fv", &WebGLRenderingContext::UniformMatrix3fv),
-         InstanceMethod("uniformMatrix4fv", &WebGLRenderingContext::UniformMatrix4fv),
-         InstanceMethod("drawArrays", &WebGLRenderingContext::DrawArrays),
-         InstanceMethod("drawElements", &WebGLRenderingContext::DrawElements),
-         InstanceMethod("pixelStorei", &WebGLRenderingContext::PixelStorei),
-         InstanceMethod("polygonOffset", &WebGLRenderingContext::PolygonOffset),
-         InstanceMethod("viewport", &WebGLRenderingContext::Viewport),
-         InstanceMethod("scissor", &WebGLRenderingContext::Scissor),
-         InstanceMethod("clearColor", &WebGLRenderingContext::ClearColor),
-         InstanceMethod("clearDepth", &WebGLRenderingContext::ClearDepth),
-         InstanceMethod("clearStencil", &WebGLRenderingContext::ClearStencil),
-         InstanceMethod("clear", &WebGLRenderingContext::Clear),
-         InstanceMethod("depthMask", &WebGLRenderingContext::DepthMask),
-         InstanceMethod("depthFunc", &WebGLRenderingContext::DepthFunc),
-         InstanceMethod("depthRange", &WebGLRenderingContext::DepthRange),
-         InstanceMethod("stencilFunc", &WebGLRenderingContext::StencilFunc),
-         InstanceMethod("stencilFuncSeparate", &WebGLRenderingContext::StencilFuncSeparate),
-         InstanceMethod("stencilMask", &WebGLRenderingContext::StencilMask),
-         InstanceMethod("stencilMaskSeparate", &WebGLRenderingContext::StencilMaskSeparate),
-         InstanceMethod("stencilOp", &WebGLRenderingContext::StencilOp),
-         InstanceMethod("stencilOpSeparate", &WebGLRenderingContext::StencilOpSeparate),
-         InstanceMethod("blendColor", &WebGLRenderingContext::BlendColor),
-         InstanceMethod("blendEquation", &WebGLRenderingContext::BlendEquation),
-         InstanceMethod("blendEquationSeparate", &WebGLRenderingContext::BlendEquationSeparate),
-         InstanceMethod("blendFunc", &WebGLRenderingContext::BlendFunc),
-         InstanceMethod("blendFuncSeparate", &WebGLRenderingContext::BlendFuncSeparate),
-         InstanceMethod("colorMask", &WebGLRenderingContext::ColorMask),
-         InstanceMethod("cullFace", &WebGLRenderingContext::CullFace),
-         InstanceMethod("frontFace", &WebGLRenderingContext::FrontFace),
-         InstanceMethod("enable", &WebGLRenderingContext::Enable),
-         InstanceMethod("disable", &WebGLRenderingContext::Disable),
-         InstanceMethod("getParameter", &WebGLRenderingContext::GetParameter),
-         InstanceMethod("getShaderPrecisionFormat", &WebGLRenderingContext::GetShaderPrecisionFormat),
-         InstanceMethod("getError", &WebGLRenderingContext::GetError),
-         InstanceMethod("getSupportedExtensions", &WebGLRenderingContext::GetSupportedExtensions),
-         // getter & setter
-         InstanceAccessor<&WebGLRenderingContext::DrawingBufferWidthGetter, &WebGLRenderingContext::DrawingBufferWidthSetter>("drawingBufferWidth"),
-         InstanceAccessor<&WebGLRenderingContext::DrawingBufferHeightGetter, &WebGLRenderingContext::DrawingBufferHeightSetter>("drawingBufferHeight")});
+#define WEBGL1_CONSTANTS_CLEARING_BUFFERS                                                    \
+  InstanceValue("DEPTH_BUFFER_BIT", Napi::Number::New(env, WEBGL_DEPTH_BUFFER_BIT)),         \
+      InstanceValue("STENCIL_BUFFER_BIT", Napi::Number::New(env, WEBGL_STENCIL_BUFFER_BIT)), \
+      InstanceValue("COLOR_BUFFER_BIT", Napi::Number::New(env, WEBGL_COLOR_BUFFER_BIT))
 
-    constructor = new Napi::FunctionReference();
-    *constructor = Napi::Persistent(tpl);
-    env.SetInstanceData(constructor);
+#define WEBGL1_CONSTANTS_RENDERING_PRIMITIVES                                        \
+  InstanceValue("POINTS", Napi::Number::New(env, WEBGL_POINTS)),                     \
+      InstanceValue("LINES", Napi::Number::New(env, WEBGL_LINES)),                   \
+      InstanceValue("LINE_LOOP", Napi::Number::New(env, WEBGL_LINE_LOOP)),           \
+      InstanceValue("LINE_STRIP", Napi::Number::New(env, WEBGL_LINE_STRIP)),         \
+      InstanceValue("TRIANGLES", Napi::Number::New(env, WEBGL_TRIANGLES)),           \
+      InstanceValue("TRIANGLE_STRIP", Napi::Number::New(env, WEBGL_TRIANGLE_STRIP)), \
+      InstanceValue("TRIANGLE_FAN", Napi::Number::New(env, WEBGL_TRIANGLE_FAN))
 
-    exports.Set("WebGLRenderingContext", tpl);
-    return exports;
-  }
+#define WEBGL1_CONSTANTS_BLENDING                                                                                        \
+  InstanceValue("ZERO", Napi::Number::New(env, WEBGL_ZERO)),                                                             \
+      InstanceValue("ONE", Napi::Number::New(env, WEBGL_ONE)),                                                           \
+      InstanceValue("SRC_COLOR", Napi::Number::New(env, WEBGL_SRC_COLOR)),                                               \
+      InstanceValue("ONE_MINUS_SRC_COLOR", Napi::Number::New(env, WEBGL_ONE_MINUS_SRC_COLOR)),                           \
+      InstanceValue("SRC_ALPHA", Napi::Number::New(env, WEBGL_SRC_ALPHA)),                                               \
+      InstanceValue("ONE_MINUS_SRC_ALPHA", Napi::Number::New(env, WEBGL_ONE_MINUS_SRC_ALPHA)),                           \
+      InstanceValue("DST_ALPHA", Napi::Number::New(env, WEBGL_DST_ALPHA)),                                               \
+      InstanceValue("ONE_MINUS_DST_ALPHA", Napi::Number::New(env, WEBGL_ONE_MINUS_DST_ALPHA)),                           \
+      InstanceValue("DST_COLOR", Napi::Number::New(env, WEBGL_DST_COLOR)),                                               \
+      InstanceValue("ONE_MINUS_DST_COLOR", Napi::Number::New(env, WEBGL_ONE_MINUS_DST_COLOR)),                           \
+      InstanceValue("SRC_ALPHA_SATURATE", Napi::Number::New(env, WEBGL_SRC_ALPHA_SATURATE)),                             \
+      InstanceValue("CONSTANT_COLOR", Napi::Number::New(env, WEBGL_CONSTANT_COLOR)),                                     \
+      InstanceValue("ONE_MINUS_CONSTANT_COLOR", Napi::Number::New(env, WEBGL_ONE_MINUS_CONSTANT_COLOR)),                 \
+      InstanceValue("CONSTANT_ALPHA", Napi::Number::New(env, WEBGL_CONSTANT_ALPHA)),                                     \
+      InstanceValue("ONE_MINUS_CONSTANT_ALPHA", Napi::Number::New(env, WEBGL_ONE_MINUS_CONSTANT_ALPHA)),                 \
+      InstanceValue("FUNC_ADD", Napi::Number::New(env, WEBGL_FUNC_ADD)),                                                 \
+      InstanceValue("FUNC_SUBTRACT", Napi::Number::New(env, WEBGL_FUNC_SUBTRACT)),                                       \
+      InstanceValue("FUNC_REVERSE_SUBTRACT", Napi::Number::New(env, WEBGL_FUNC_REVERSE_SUBTRACT)),                       \
+      InstanceValue("BLEND_EQUATION", Napi::Number::New(env, WEBGL_BLEND_EQUATION)),                                     \
+      InstanceValue("BLEND_EQUATION_RGB", Napi::Number::New(env, WEBGL_BLEND_EQUATION_RGB)),                             \
+      InstanceValue("BLEND_EQUATION_ALPHA", Napi::Number::New(env, WEBGL_BLEND_EQUATION_ALPHA)),                         \
+      InstanceValue("BLEND_DST_RGB", Napi::Number::New(env, WEBGL_BLEND_DST_RGB)),                                       \
+      InstanceValue("BLEND_SRC_RGB", Napi::Number::New(env, WEBGL_BLEND_SRC_RGB)),                                       \
+      InstanceValue("BLEND_DST_ALPHA", Napi::Number::New(env, WEBGL_BLEND_DST_ALPHA)),                                   \
+      InstanceValue("BLEND_SRC_ALPHA", Napi::Number::New(env, WEBGL_BLEND_SRC_ALPHA)),                                   \
+      InstanceValue("BLEND_COLOR", Napi::Number::New(env, WEBGL_BLEND_COLOR)),                                           \
+      InstanceValue("ARRAY_BUFFER_BINDING", Napi::Number::New(env, WEBGL_ARRAY_BUFFER_BINDING)),                         \
+      InstanceValue("ELEMENT_ARRAY_BUFFER_BINDING", Napi::Number::New(env, WEBGL_ELEMENT_ARRAY_BUFFER_BINDING)),         \
+      InstanceValue("LINE_WIDTH", Napi::Number::New(env, WEBGL_LINE_WIDTH)),                                             \
+      InstanceValue("ALIASED_POINT_SIZE_RANGE", Napi::Number::New(env, WEBGL_ALIASED_POINT_SIZE_RANGE)),                 \
+      InstanceValue("ALIASED_LINE_WIDTH_RANGE", Napi::Number::New(env, WEBGL_ALIASED_LINE_WIDTH_RANGE)),                 \
+      InstanceValue("CULL_FACE_MODE", Napi::Number::New(env, WEBGL_CULL_FACE_MODE)),                                     \
+      InstanceValue("FRONT_FACE", Napi::Number::New(env, WEBGL_FRONT_FACE)),                                             \
+      InstanceValue("DEPTH_RANGE", Napi::Number::New(env, WEBGL_DEPTH_RANGE)),                                           \
+      InstanceValue("DEPTH_WRITEMASK", Napi::Number::New(env, WEBGL_DEPTH_WRITEMASK)),                                   \
+      InstanceValue("DEPTH_CLEAR_VALUE", Napi::Number::New(env, WEBGL_DEPTH_CLEAR_VALUE)),                               \
+      InstanceValue("DEPTH_FUNC", Napi::Number::New(env, WEBGL_DEPTH_FUNC)),                                             \
+      InstanceValue("STENCIL_CLEAR_VALUE", Napi::Number::New(env, WEBGL_STENCIL_CLEAR_VALUE)),                           \
+      InstanceValue("STENCIL_FUNC", Napi::Number::New(env, WEBGL_STENCIL_FUNC)),                                         \
+      InstanceValue("STENCIL_FAIL", Napi::Number::New(env, WEBGL_STENCIL_FAIL)),                                         \
+      InstanceValue("STENCIL_PASS_DEPTH_FAIL", Napi::Number::New(env, WEBGL_STENCIL_PASS_DEPTH_FAIL)),                   \
+      InstanceValue("STENCIL_PASS_DEPTH_PASS", Napi::Number::New(env, WEBGL_STENCIL_PASS_DEPTH_PASS)),                   \
+      InstanceValue("STENCIL_REF", Napi::Number::New(env, WEBGL_STENCIL_REF)),                                           \
+      InstanceValue("STENCIL_VALUE_MASK", Napi::Number::New(env, WEBGL_STENCIL_VALUE_MASK)),                             \
+      InstanceValue("STENCIL_WRITEMASK", Napi::Number::New(env, WEBGL_STENCIL_WRITEMASK)),                               \
+      InstanceValue("STENCIL_BACK_FUNC", Napi::Number::New(env, WEBGL_STENCIL_BACK_FUNC)),                               \
+      InstanceValue("STENCIL_BACK_FAIL", Napi::Number::New(env, WEBGL_STENCIL_BACK_FAIL)),                               \
+      InstanceValue("STENCIL_BACK_PASS_DEPTH_FAIL", Napi::Number::New(env, WEBGL_STENCIL_BACK_PASS_DEPTH_FAIL)),         \
+      InstanceValue("STENCIL_BACK_PASS_DEPTH_PASS", Napi::Number::New(env, WEBGL_STENCIL_BACK_PASS_DEPTH_PASS)),         \
+      InstanceValue("STENCIL_BACK_REF", Napi::Number::New(env, WEBGL_STENCIL_BACK_REF)),                                 \
+      InstanceValue("STENCIL_BACK_VALUE_MASK", Napi::Number::New(env, WEBGL_STENCIL_BACK_VALUE_MASK)),                   \
+      InstanceValue("STENCIL_BACK_WRITEMASK", Napi::Number::New(env, WEBGL_STENCIL_BACK_WRITEMASK)),                     \
+      InstanceValue("VIEWPORT", Napi::Number::New(env, WEBGL_VIEWPORT)),                                                 \
+      InstanceValue("SCISSOR_BOX", Napi::Number::New(env, WEBGL_SCISSOR_BOX)),                                           \
+      InstanceValue("COLOR_CLEAR_VALUE", Napi::Number::New(env, WEBGL_COLOR_CLEAR_VALUE)),                               \
+      InstanceValue("COLOR_WRITEMASK", Napi::Number::New(env, WEBGL_COLOR_WRITEMASK)),                                   \
+      InstanceValue("UNPACK_ALIGNMENT", Napi::Number::New(env, WEBGL_UNPACK_ALIGNMENT)),                                 \
+      InstanceValue("PACK_ALIGNMENT", Napi::Number::New(env, WEBGL_PACK_ALIGNMENT)),                                     \
+      InstanceValue("MAX_TEXTURE_SIZE", Napi::Number::New(env, WEBGL_MAX_TEXTURE_SIZE)),                                 \
+      InstanceValue("MAX_VIEWPORT_DIMS", Napi::Number::New(env, WEBGL_MAX_VIEWPORT_DIMS)),                               \
+      InstanceValue("SUBPIXEL_BITS", Napi::Number::New(env, WEBGL_SUBPIXEL_BITS)),                                       \
+      InstanceValue("RED_BITS", Napi::Number::New(env, WEBGL_RED_BITS)),                                                 \
+      InstanceValue("GREEN_BITS", Napi::Number::New(env, WEBGL_GREEN_BITS)),                                             \
+      InstanceValue("BLUE_BITS", Napi::Number::New(env, WEBGL_BLUE_BITS)),                                               \
+      InstanceValue("ALPHA_BITS", Napi::Number::New(env, WEBGL_ALPHA_BITS)),                                             \
+      InstanceValue("DEPTH_BITS", Napi::Number::New(env, WEBGL_DEPTH_BITS)),                                             \
+      InstanceValue("STENCIL_BITS", Napi::Number::New(env, WEBGL_STENCIL_BITS)),                                         \
+      InstanceValue("POLYGON_OFFSET_UNITS", Napi::Number::New(env, WEBGL_POLYGON_OFFSET_UNITS)),                         \
+      InstanceValue("POLYGON_OFFSET_FACTOR", Napi::Number::New(env, WEBGL_POLYGON_OFFSET_FACTOR)),                       \
+      InstanceValue("TEXTURE_BINDING_2D", Napi::Number::New(env, WEBGL_TEXTURE_BINDING_2D)),                             \
+      InstanceValue("SAMPLE_BUFFERS", Napi::Number::New(env, WEBGL_SAMPLE_BUFFERS)),                                     \
+      InstanceValue("SAMPLES", Napi::Number::New(env, WEBGL_SAMPLES)),                                                   \
+      InstanceValue("SAMPLE_COVERAGE_VALUE", Napi::Number::New(env, WEBGL_SAMPLE_COVERAGE_VALUE)),                       \
+      InstanceValue("SAMPLE_COVERAGE_INVERT", Napi::Number::New(env, WEBGL_SAMPLE_COVERAGE_INVERT)),                     \
+      InstanceValue("COMPRESSED_TEXTURE_FORMATS", Napi::Number::New(env, WEBGL_COMPRESSED_TEXTURE_FORMATS)),             \
+      InstanceValue("VENDOR", Napi::Number::New(env, WEBGL_VENDOR)),                                                     \
+      InstanceValue("RENDERER", Napi::Number::New(env, WEBGL_RENDERER)),                                                 \
+      InstanceValue("VERSION", Napi::Number::New(env, WEBGL_VERSION)),                                                   \
+      InstanceValue("IMPLEMENTATION_COLOR_READ_TYPE", Napi::Number::New(env, WEBGL_IMPLEMENTATION_COLOR_READ_TYPE)),     \
+      InstanceValue("IMPLEMENTATION_COLOR_READ_FORMAT", Napi::Number::New(env, WEBGL_IMPLEMENTATION_COLOR_READ_FORMAT)), \
+      InstanceValue("BROWSER_DEFAULT_WEBGL", Napi::Number::New(env, WEBGL_BROWSER_DEFAULT_WEBGL))
 
-  WebGLRenderingContext::WebGLRenderingContext(const Napi::CallbackInfo &info) : Napi::ObjectWrap<WebGLRenderingContext>(info)
+#define WEBGL1_CONSTANTS_BUFFERS_AND_VERTEXATTRS                                                                     \
+  InstanceValue("STATIC_DRAW", Napi::Number::New(env, WEBGL_STATIC_DRAW)),                                           \
+      InstanceValue("STREAM_DRAW", Napi::Number::New(env, WEBGL_STREAM_DRAW)),                                       \
+      InstanceValue("DYNAMIC_DRAW", Napi::Number::New(env, WEBGL_DYNAMIC_DRAW)),                                     \
+      InstanceValue("ARRAY_BUFFER", Napi::Number::New(env, WEBGL_ARRAY_BUFFER)),                                     \
+      InstanceValue("ELEMENT_ARRAY_BUFFER", Napi::Number::New(env, WEBGL_ELEMENT_ARRAY_BUFFER)),                     \
+      InstanceValue("BUFFER_SIZE", Napi::Number::New(env, WEBGL_BUFFER_SIZE)),                                       \
+      InstanceValue("BUFFER_USAGE", Napi::Number::New(env, WEBGL_BUFFER_USAGE)),                                     \
+      InstanceValue("CURRENT_VERTEX_ATTRIB", Napi::Number::New(env, WEBGL_CURRENT_VERTEX_ATTRIB)),                   \
+      InstanceValue("VERTEX_ATTRIB_ARRAY_ENABLED", Napi::Number::New(env, WEBGL_VERTEX_ATTRIB_ARRAY_ENABLED)),       \
+      InstanceValue("VERTEX_ATTRIB_ARRAY_SIZE", Napi::Number::New(env, WEBGL_VERTEX_ATTRIB_ARRAY_SIZE)),             \
+      InstanceValue("VERTEX_ATTRIB_ARRAY_STRIDE", Napi::Number::New(env, WEBGL_VERTEX_ATTRIB_ARRAY_STRIDE)),         \
+      InstanceValue("VERTEX_ATTRIB_ARRAY_TYPE", Napi::Number::New(env, WEBGL_VERTEX_ATTRIB_ARRAY_TYPE)),             \
+      InstanceValue("VERTEX_ATTRIB_ARRAY_NORMALIZED", Napi::Number::New(env, WEBGL_VERTEX_ATTRIB_ARRAY_NORMALIZED)), \
+      InstanceValue("VERTEX_ATTRIB_ARRAY_POINTER", Napi::Number::New(env, WEBGL_VERTEX_ATTRIB_ARRAY_POINTER)),       \
+      InstanceValue("VERTEX_ATTRIB_ARRAY_BUFFER_BINDING", Napi::Number::New(env, WEBGL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING))
+
+#define WEBGL1_CONSTANTS_CULLING                                       \
+  InstanceValue("CULL_FACE", Napi::Number::New(env, WEBGL_CULL_FACE)), \
+      InstanceValue("FRONT", Napi::Number::New(env, WEBGL_FRONT)),     \
+      InstanceValue("BACK", Napi::Number::New(env, WEBGL_BACK)),       \
+      InstanceValue("FRONT_AND_BACK", Napi::Number::New(env, WEBGL_FRONT_AND_BACK))
+
+#define WEBGL1_CONSTANTS_ENABLE_AND_DISABLE                                                              \
+  InstanceValue("BLEND", Napi::Number::New(env, WEBGL_BLEND)),                                           \
+      InstanceValue("DEPTH_TEST", Napi::Number::New(env, WEBGL_DEPTH_TEST)),                             \
+      InstanceValue("DITHER", Napi::Number::New(env, WEBGL_DITHER)),                                     \
+      InstanceValue("POLYGON_OFFSET_FILL", Napi::Number::New(env, WEBGL_POLYGON_OFFSET_FILL)),           \
+      InstanceValue("SAMPLE_ALPHA_TO_COVERAGE", Napi::Number::New(env, WEBGL_SAMPLE_ALPHA_TO_COVERAGE)), \
+      InstanceValue("SAMPLE_COVERAGE", Napi::Number::New(env, WEBGL_SAMPLE_COVERAGE)),                   \
+      InstanceValue("SCISSOR_TEST", Napi::Number::New(env, WEBGL_SCISSOR_TEST)),                         \
+      InstanceValue("STENCIL_TEST", Napi::Number::New(env, WEBGL_STENCIL_TEST))
+
+#define WEBGL1_CONSTANTS_ERRORS                                                            \
+  InstanceValue("NO_ERROR", Napi::Number::New(env, WEBGL_NO_ERROR)),                       \
+      InstanceValue("INVALID_ENUM", Napi::Number::New(env, WEBGL_INVALID_ENUM)),           \
+      InstanceValue("INVALID_VALUE", Napi::Number::New(env, WEBGL_INVALID_VALUE)),         \
+      InstanceValue("INVALID_OPERATION", Napi::Number::New(env, WEBGL_INVALID_OPERATION)), \
+      InstanceValue("OUT_OF_MEMORY", Napi::Number::New(env, WEBGL_OUT_OF_MEMORY)),         \
+      InstanceValue("CONTEXT_LOST_WEBGL", Napi::Number::New(env, WEBGL_CONTEXT_LOST_WEBGL))
+
+#define WEBGL1_CONSTANTS_FRONTFACE                       \
+  InstanceValue("CW", Napi::Number::New(env, WEBGL_CW)), \
+      InstanceValue("CCW", Napi::Number::New(env, WEBGL_CCW))
+
+#define WEBGL1_CONSTANTS_HINTS                                         \
+  InstanceValue("DONT_CARE", Napi::Number::New(env, WEBGL_DONT_CARE)), \
+      InstanceValue("FASTEST", Napi::Number::New(env, WEBGL_FASTEST)), \
+      InstanceValue("NICEST", Napi::Number::New(env, WEBGL_NICEST))
+
+#define WEBGL1_CONSTANTS_DATATYPES                                                   \
+  InstanceValue("BYTE", Napi::Number::New(env, WEBGL_BYTE)),                         \
+      InstanceValue("UNSIGNED_BYTE", Napi::Number::New(env, WEBGL_UNSIGNED_BYTE)),   \
+      InstanceValue("SHORT", Napi::Number::New(env, WEBGL_SHORT)),                   \
+      InstanceValue("UNSIGNED_SHORT", Napi::Number::New(env, WEBGL_UNSIGNED_SHORT)), \
+      InstanceValue("INT", Napi::Number::New(env, WEBGL_INT)),                       \
+      InstanceValue("UNSIGNED_INT", Napi::Number::New(env, WEBGL_UNSIGNED_INT)),     \
+      InstanceValue("FLOAT", Napi::Number::New(env, WEBGL_FLOAT))
+
+#define WEBGL1_CONSTANTS_PIXELS                                                                                      \
+  InstanceValue("DEPTH_COMPONENT", Napi::Number::New(env, WEBGL_DEPTH_COMPONENT)),                                   \
+      InstanceValue("ALPHA", Napi::Number::New(env, WEBGL_ALPHA)),                                                   \
+      InstanceValue("RGB", Napi::Number::New(env, WEBGL_RGB)),                                                       \
+      InstanceValue("RGBA", Napi::Number::New(env, WEBGL_RGBA)),                                                     \
+      InstanceValue("LUMINANCE", Napi::Number::New(env, WEBGL_LUMINANCE)),                                           \
+      InstanceValue("LUMINANCE_ALPHA", Napi::Number::New(env, WEBGL_LUMINANCE_ALPHA)),                               \
+      InstanceValue("UNSIGNED_SHORT_4_4_4_4", Napi::Number::New(env, WEBGL_UNSIGNED_SHORT_4_4_4_4)),                 \
+      InstanceValue("UNSIGNED_SHORT_5_5_5_1", Napi::Number::New(env, WEBGL_UNSIGNED_SHORT_5_5_5_1)),                 \
+      InstanceValue("UNSIGNED_SHORT_5_6_5", Napi::Number::New(env, WEBGL_UNSIGNED_SHORT_5_6_5)),                     \
+      InstanceValue("UNPACK_FLIP_Y_WEBGL", Napi::Number::New(env, WEBGL_UNPACK_FLIP_Y_WEBGL)),                       \
+      InstanceValue("UNPACK_PREMULTIPLY_ALPHA_WEBGL", Napi::Number::New(env, WEBGL_UNPACK_PREMULTIPLY_ALPHA_WEBGL)), \
+      InstanceValue("UNPACK_COLORSPACE_CONVERSION_WEBGL", Napi::Number::New(env, WEBGL_UNPACK_COLORSPACE_CONVERSION_WEBGL))
+
+#define WEBGL1_CONSTANTS_SHADERS                                                                                         \
+  InstanceValue("FRAGMENT_SHADER", Napi::Number::New(env, WEBGL_FRAGMENT_SHADER)),                                       \
+      InstanceValue("VERTEX_SHADER", Napi::Number::New(env, WEBGL_VERTEX_SHADER)),                                       \
+      InstanceValue("COMPILE_STATUS", Napi::Number::New(env, WEBGL_COMPILE_STATUS)),                                     \
+      InstanceValue("DELETE_STATUS", Napi::Number::New(env, WEBGL_DELETE_STATUS)),                                       \
+      InstanceValue("LINK_STATUS", Napi::Number::New(env, WEBGL_LINK_STATUS)),                                           \
+      InstanceValue("VALIDATE_STATUS", Napi::Number::New(env, WEBGL_VALIDATE_STATUS)),                                   \
+      InstanceValue("ATTACHED_SHADERS", Napi::Number::New(env, WEBGL_ATTACHED_SHADERS)),                                 \
+      InstanceValue("ACTIVE_ATTRIBUTES", Napi::Number::New(env, WEBGL_ACTIVE_ATTRIBUTES)),                               \
+      InstanceValue("ACTIVE_UNIFORMS", Napi::Number::New(env, WEBGL_ACTIVE_UNIFORMS)),                                   \
+      InstanceValue("MAX_VERTEX_ATTRIBS", Napi::Number::New(env, WEBGL_MAX_VERTEX_ATTRIBS)),                             \
+      InstanceValue("MAX_VERTEX_UNIFORM_VECTORS", Napi::Number::New(env, WEBGL_MAX_VERTEX_UNIFORM_VECTORS)),             \
+      InstanceValue("MAX_VARYING_VECTORS", Napi::Number::New(env, WEBGL_MAX_VARYING_VECTORS)),                           \
+      InstanceValue("MAX_COMBINED_TEXTURE_IMAGE_UNITS", Napi::Number::New(env, WEBGL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)), \
+      InstanceValue("MAX_VERTEX_TEXTURE_IMAGE_UNITS", Napi::Number::New(env, WEBGL_MAX_VERTEX_TEXTURE_IMAGE_UNITS)),     \
+      InstanceValue("MAX_TEXTURE_IMAGE_UNITS", Napi::Number::New(env, WEBGL_MAX_TEXTURE_IMAGE_UNITS)),                   \
+      InstanceValue("MAX_FRAGMENT_UNIFORM_VECTORS", Napi::Number::New(env, WEBGL_MAX_FRAGMENT_UNIFORM_VECTORS)),         \
+      InstanceValue("SHADER_TYPE", Napi::Number::New(env, WEBGL_SHADER_TYPE)),                                           \
+      InstanceValue("SHADING_LANGUAGE_VERSION", Napi::Number::New(env, WEBGL_SHADING_LANGUAGE_VERSION)),                 \
+      InstanceValue("CURRENT_PROGRAM", Napi::Number::New(env, WEBGL_CURRENT_PROGRAM)),                                   \
+      InstanceValue("LOW_FLOAT", Napi::Number::New(env, WEBGL_LOW_FLOAT)),                                               \
+      InstanceValue("MEDIUM_FLOAT", Napi::Number::New(env, WEBGL_MEDIUM_FLOAT)),                                         \
+      InstanceValue("HIGH_FLOAT", Napi::Number::New(env, WEBGL_HIGH_FLOAT)),                                             \
+      InstanceValue("LOW_INT", Napi::Number::New(env, WEBGL_LOW_INT)),                                                   \
+      InstanceValue("MEDIUM_INT", Napi::Number::New(env, WEBGL_MEDIUM_INT)),                                             \
+      InstanceValue("HIGH_INT", Napi::Number::New(env, WEBGL_HIGH_INT))
+
+#define WEBGL1_CONSTANTS_DEPTH_AND_STENCIL                                 \
+  InstanceValue("NEVER", Napi::Number::New(env, WEBGL_NEVER)),             \
+      InstanceValue("LESS", Napi::Number::New(env, WEBGL_LESS)),           \
+      InstanceValue("EQUAL", Napi::Number::New(env, WEBGL_EQUAL)),         \
+      InstanceValue("LEQUAL", Napi::Number::New(env, WEBGL_LEQUAL)),       \
+      InstanceValue("GREATER", Napi::Number::New(env, WEBGL_GREATER)),     \
+      InstanceValue("NOTEQUAL", Napi::Number::New(env, WEBGL_NOTEQUAL)),   \
+      InstanceValue("GEQUAL", Napi::Number::New(env, WEBGL_GEQUAL)),       \
+      InstanceValue("ALWAYS", Napi::Number::New(env, WEBGL_ALWAYS)),       \
+      InstanceValue("KEEP", Napi::Number::New(env, WEBGL_KEEP)),           \
+      InstanceValue("REPLACE", Napi::Number::New(env, WEBGL_REPLACE)),     \
+      InstanceValue("INCR", Napi::Number::New(env, WEBGL_INCR)),           \
+      InstanceValue("DECR", Napi::Number::New(env, WEBGL_DECR)),           \
+      InstanceValue("INVERT", Napi::Number::New(env, WEBGL_INVERT)),       \
+      InstanceValue("INCR_WRAP", Napi::Number::New(env, WEBGL_INCR_WRAP)), \
+      InstanceValue("DECR_WRAP", Napi::Number::New(env, WEBGL_DECR_WRAP))
+
+#define WEBGL1_CONSTANTS_TEXTURE                                                                               \
+  InstanceValue("NEAREST", Napi::Number::New(env, WEBGL_NEAREST)),                                             \
+      InstanceValue("LINEAR", Napi::Number::New(env, WEBGL_LINEAR)),                                           \
+      InstanceValue("NEAREST_MIPMAP_NEAREST", Napi::Number::New(env, WEBGL_NEAREST_MIPMAP_NEAREST)),           \
+      InstanceValue("LINEAR_MIPMAP_NEAREST", Napi::Number::New(env, WEBGL_LINEAR_MIPMAP_NEAREST)),             \
+      InstanceValue("NEAREST_MIPMAP_LINEAR", Napi::Number::New(env, WEBGL_NEAREST_MIPMAP_LINEAR)),             \
+      InstanceValue("LINEAR_MIPMAP_LINEAR", Napi::Number::New(env, WEBGL_LINEAR_MIPMAP_LINEAR)),               \
+      InstanceValue("TEXTURE_MAG_FILTER", Napi::Number::New(env, WEBGL_TEXTURE_MAG_FILTER)),                   \
+      InstanceValue("TEXTURE_MIN_FILTER", Napi::Number::New(env, WEBGL_TEXTURE_MIN_FILTER)),                   \
+      InstanceValue("TEXTURE_WRAP_S", Napi::Number::New(env, WEBGL_TEXTURE_WRAP_S)),                           \
+      InstanceValue("TEXTURE_WRAP_T", Napi::Number::New(env, WEBGL_TEXTURE_WRAP_T)),                           \
+      InstanceValue("TEXTURE_2D", Napi::Number::New(env, WEBGL_TEXTURE_2D)),                                   \
+      InstanceValue("TEXTURE", Napi::Number::New(env, WEBGL_TEXTURE)),                                         \
+      InstanceValue("TEXTURE_CUBE_MAP", Napi::Number::New(env, WEBGL_TEXTURE_CUBE_MAP)),                       \
+      InstanceValue("TEXTURE_BINDING_CUBE_MAP", Napi::Number::New(env, WEBGL_TEXTURE_BINDING_CUBE_MAP)),       \
+      InstanceValue("TEXTURE_CUBE_MAP_POSITIVE_X", Napi::Number::New(env, WEBGL_TEXTURE_CUBE_MAP_POSITIVE_X)), \
+      InstanceValue("TEXTURE_CUBE_MAP_NEGATIVE_X", Napi::Number::New(env, WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_X)), \
+      InstanceValue("TEXTURE_CUBE_MAP_POSITIVE_Y", Napi::Number::New(env, WEBGL_TEXTURE_CUBE_MAP_POSITIVE_Y)), \
+      InstanceValue("TEXTURE_CUBE_MAP_NEGATIVE_Y", Napi::Number::New(env, WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Y)), \
+      InstanceValue("TEXTURE_CUBE_MAP_POSITIVE_Z", Napi::Number::New(env, WEBGL_TEXTURE_CUBE_MAP_POSITIVE_Z)), \
+      InstanceValue("TEXTURE_CUBE_MAP_NEGATIVE_Z", Napi::Number::New(env, WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Z)), \
+      InstanceValue("MAX_CUBE_MAP_TEXTURE_SIZE", Napi::Number::New(env, WEBGL_MAX_CUBE_MAP_TEXTURE_SIZE)),     \
+      InstanceValue("TEXTURE0", Napi::Number::New(env, WEBGL_TEXTURE0)),                                       \
+      InstanceValue("TEXTURE1", Napi::Number::New(env, WEBGL_TEXTURE1)),                                       \
+      InstanceValue("TEXTURE2", Napi::Number::New(env, WEBGL_TEXTURE2)),                                       \
+      InstanceValue("TEXTURE3", Napi::Number::New(env, WEBGL_TEXTURE3)),                                       \
+      InstanceValue("TEXTURE4", Napi::Number::New(env, WEBGL_TEXTURE4)),                                       \
+      InstanceValue("TEXTURE5", Napi::Number::New(env, WEBGL_TEXTURE5)),                                       \
+      InstanceValue("TEXTURE6", Napi::Number::New(env, WEBGL_TEXTURE6)),                                       \
+      InstanceValue("TEXTURE7", Napi::Number::New(env, WEBGL_TEXTURE7)),                                       \
+      InstanceValue("TEXTURE8", Napi::Number::New(env, WEBGL_TEXTURE8)),                                       \
+      InstanceValue("TEXTURE9", Napi::Number::New(env, WEBGL_TEXTURE9)),                                       \
+      InstanceValue("TEXTURE10", Napi::Number::New(env, WEBGL_TEXTURE10)),                                     \
+      InstanceValue("TEXTURE11", Napi::Number::New(env, WEBGL_TEXTURE11)),                                     \
+      InstanceValue("TEXTURE12", Napi::Number::New(env, WEBGL_TEXTURE12)),                                     \
+      InstanceValue("TEXTURE13", Napi::Number::New(env, WEBGL_TEXTURE13)),                                     \
+      InstanceValue("TEXTURE14", Napi::Number::New(env, WEBGL_TEXTURE14)),                                     \
+      InstanceValue("TEXTURE15", Napi::Number::New(env, WEBGL_TEXTURE15)),                                     \
+      InstanceValue("TEXTURE16", Napi::Number::New(env, WEBGL_TEXTURE16)),                                     \
+      InstanceValue("TEXTURE17", Napi::Number::New(env, WEBGL_TEXTURE17)),                                     \
+      InstanceValue("TEXTURE18", Napi::Number::New(env, WEBGL_TEXTURE18)),                                     \
+      InstanceValue("TEXTURE19", Napi::Number::New(env, WEBGL_TEXTURE19)),                                     \
+      InstanceValue("TEXTURE20", Napi::Number::New(env, WEBGL_TEXTURE20)),                                     \
+      InstanceValue("TEXTURE21", Napi::Number::New(env, WEBGL_TEXTURE21)),                                     \
+      InstanceValue("TEXTURE22", Napi::Number::New(env, WEBGL_TEXTURE22)),                                     \
+      InstanceValue("TEXTURE23", Napi::Number::New(env, WEBGL_TEXTURE23)),                                     \
+      InstanceValue("TEXTURE24", Napi::Number::New(env, WEBGL_TEXTURE24)),                                     \
+      InstanceValue("TEXTURE25", Napi::Number::New(env, WEBGL_TEXTURE25)),                                     \
+      InstanceValue("TEXTURE26", Napi::Number::New(env, WEBGL_TEXTURE26)),                                     \
+      InstanceValue("TEXTURE27", Napi::Number::New(env, WEBGL_TEXTURE27)),                                     \
+      InstanceValue("TEXTURE28", Napi::Number::New(env, WEBGL_TEXTURE28)),                                     \
+      InstanceValue("TEXTURE29", Napi::Number::New(env, WEBGL_TEXTURE29)),                                     \
+      InstanceValue("TEXTURE30", Napi::Number::New(env, WEBGL_TEXTURE30)),                                     \
+      InstanceValue("TEXTURE31", Napi::Number::New(env, WEBGL_TEXTURE31)),                                     \
+      InstanceValue("ACTIVE_TEXTURE", Napi::Number::New(env, WEBGL_ACTIVE_TEXTURE)),                           \
+      InstanceValue("REPEAT", Napi::Number::New(env, WEBGL_REPEAT)),                                           \
+      InstanceValue("CLAMP_TO_EDGE", Napi::Number::New(env, WEBGL_CLAMP_TO_EDGE)),                             \
+      InstanceValue("MIRRORED_REPEAT", Napi::Number::New(env, WEBGL_MIRRORED_REPEAT))
+
+#define WEBGL1_CONSTANTS_UNIFORM_TYPES                                       \
+  InstanceValue("FLOAT_VEC2", Napi::Number::New(env, WEBGL_FLOAT_VEC2)),     \
+      InstanceValue("FLOAT_VEC3", Napi::Number::New(env, WEBGL_FLOAT_VEC3)), \
+      InstanceValue("FLOAT_VEC4", Napi::Number::New(env, WEBGL_FLOAT_VEC4)), \
+      InstanceValue("INT_VEC2", Napi::Number::New(env, WEBGL_INT_VEC2)),     \
+      InstanceValue("INT_VEC3", Napi::Number::New(env, WEBGL_INT_VEC3)),     \
+      InstanceValue("INT_VEC4", Napi::Number::New(env, WEBGL_INT_VEC4)),     \
+      InstanceValue("BOOL", Napi::Number::New(env, WEBGL_BOOL)),             \
+      InstanceValue("BOOL_VEC2", Napi::Number::New(env, WEBGL_BOOL_VEC2)),   \
+      InstanceValue("BOOL_VEC3", Napi::Number::New(env, WEBGL_BOOL_VEC3)),   \
+      InstanceValue("BOOL_VEC4", Napi::Number::New(env, WEBGL_BOOL_VEC4)),   \
+      InstanceValue("FLOAT_MAT2", Napi::Number::New(env, WEBGL_FLOAT_MAT2)), \
+      InstanceValue("FLOAT_MAT3", Napi::Number::New(env, WEBGL_FLOAT_MAT3)), \
+      InstanceValue("FLOAT_MAT4", Napi::Number::New(env, WEBGL_FLOAT_MAT4)), \
+      InstanceValue("SAMPLER_2D", Napi::Number::New(env, WEBGL_SAMPLER_2D)), \
+      InstanceValue("SAMPLER_CUBE", Napi::Number::New(env, WEBGL_SAMPLER_CUBE))
+
+#define WEBGL1_CONSTANTS_FRAMEBUFFER_AND_RENDERBUFFER                                                                                            \
+  InstanceValue("FRAMEBUFFER", Napi::Number::New(env, WEBGL_FRAMEBUFFER)),                                                                       \
+      InstanceValue("RENDERBUFFER", Napi::Number::New(env, WEBGL_RENDERBUFFER)),                                                                 \
+      InstanceValue("RGBA4", Napi::Number::New(env, WEBGL_RGBA4)),                                                                               \
+      InstanceValue("RGB5_A1", Napi::Number::New(env, WEBGL_RGB5_A1)),                                                                           \
+      InstanceValue("RGB565", Napi::Number::New(env, WEBGL_RGB565)),                                                                             \
+      InstanceValue("DEPTH_COMPONENT16", Napi::Number::New(env, WEBGL_DEPTH_COMPONENT16)),                                                       \
+      InstanceValue("STENCIL_INDEX8", Napi::Number::New(env, WEBGL_STENCIL_INDEX8)),                                                             \
+      InstanceValue("DEPTH_STENCIL", Napi::Number::New(env, WEBGL_DEPTH_STENCIL)),                                                               \
+      InstanceValue("RENDERBUFFER_WIDTH", Napi::Number::New(env, WEBGL_RENDERBUFFER_WIDTH)),                                                     \
+      InstanceValue("RENDERBUFFER_HEIGHT", Napi::Number::New(env, WEBGL_RENDERBUFFER_HEIGHT)),                                                   \
+      InstanceValue("RENDERBUFFER_INTERNAL_FORMAT", Napi::Number::New(env, WEBGL_RENDERBUFFER_INTERNAL_FORMAT)),                                 \
+      InstanceValue("RENDERBUFFER_RED_SIZE", Napi::Number::New(env, WEBGL_RENDERBUFFER_RED_SIZE)),                                               \
+      InstanceValue("RENDERBUFFER_GREEN_SIZE", Napi::Number::New(env, WEBGL_RENDERBUFFER_GREEN_SIZE)),                                           \
+      InstanceValue("RENDERBUFFER_BLUE_SIZE", Napi::Number::New(env, WEBGL_RENDERBUFFER_BLUE_SIZE)),                                             \
+      InstanceValue("RENDERBUFFER_ALPHA_SIZE", Napi::Number::New(env, WEBGL_RENDERBUFFER_ALPHA_SIZE)),                                           \
+      InstanceValue("RENDERBUFFER_DEPTH_SIZE", Napi::Number::New(env, WEBGL_RENDERBUFFER_DEPTH_SIZE)),                                           \
+      InstanceValue("RENDERBUFFER_STENCIL_SIZE", Napi::Number::New(env, WEBGL_RENDERBUFFER_STENCIL_SIZE)),                                       \
+      InstanceValue("FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE", Napi::Number::New(env, WEBGL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE)),                     \
+      InstanceValue("FRAMEBUFFER_ATTACHMENT_OBJECT_NAME", Napi::Number::New(env, WEBGL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)),                     \
+      InstanceValue("FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL", Napi::Number::New(env, WEBGL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL)),                 \
+      InstanceValue("FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE", Napi::Number::New(env, WEBGL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE)), \
+      InstanceValue("COLOR_ATTACHMENT0", Napi::Number::New(env, WEBGL_COLOR_ATTACHMENT0)),                                                       \
+      InstanceValue("DEPTH_ATTACHMENT", Napi::Number::New(env, WEBGL_DEPTH_ATTACHMENT)),                                                         \
+      InstanceValue("STENCIL_ATTACHMENT", Napi::Number::New(env, WEBGL_STENCIL_ATTACHMENT)),                                                     \
+      InstanceValue("DEPTH_STENCIL_ATTACHMENT", Napi::Number::New(env, WEBGL_DEPTH_STENCIL_ATTACHMENT)),                                         \
+      InstanceValue("NONE", Napi::Number::New(env, WEBGL_NONE)),                                                                                 \
+      InstanceValue("FRAMEBUFFER_COMPLETE", Napi::Number::New(env, WEBGL_FRAMEBUFFER_COMPLETE)),                                                 \
+      InstanceValue("FRAMEBUFFER_INCOMPLETE_ATTACHMENT", Napi::Number::New(env, WEBGL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)),                       \
+      InstanceValue("FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT", Napi::Number::New(env, WEBGL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)),       \
+      InstanceValue("FRAMEBUFFER_INCOMPLETE_DIMENSIONS", Napi::Number::New(env, WEBGL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS)),                       \
+      InstanceValue("FRAMEBUFFER_UNSUPPORTED", Napi::Number::New(env, WEBGL_FRAMEBUFFER_UNSUPPORTED)),                                           \
+      InstanceValue("FRAMEBUFFER_BINDING", Napi::Number::New(env, WEBGL_FRAMEBUFFER_BINDING)),                                                   \
+      InstanceValue("RENDERBUFFER_BINDING", Napi::Number::New(env, WEBGL_RENDERBUFFER_BINDING)),                                                 \
+      InstanceValue("MAX_RENDERBUFFER_SIZE", Napi::Number::New(env, WEBGL_MAX_RENDERBUFFER_SIZE)),                                               \
+      InstanceValue("INVALID_FRAMEBUFFER_OPERATION", Napi::Number::New(env, WEBGL_INVALID_FRAMEBUFFER_OPERATION))
+
+#define WEBGL1_CONSTANTS                        \
+  WEBGL1_CONSTANTS_CLEARING_BUFFERS,            \
+      WEBGL1_CONSTANTS_RENDERING_PRIMITIVES,    \
+      WEBGL1_CONSTANTS_BLENDING,                \
+      WEBGL1_CONSTANTS_BUFFERS_AND_VERTEXATTRS, \
+      WEBGL1_CONSTANTS_CULLING,                 \
+      WEBGL1_CONSTANTS_ENABLE_AND_DISABLE,      \
+      WEBGL1_CONSTANTS_ERRORS,                  \
+      WEBGL1_CONSTANTS_FRONTFACE,               \
+      WEBGL1_CONSTANTS_HINTS,                   \
+      WEBGL1_CONSTANTS_DATATYPES,               \
+      WEBGL1_CONSTANTS_PIXELS,                  \
+      WEBGL1_CONSTANTS_SHADERS,                 \
+      WEBGL1_CONSTANTS_DEPTH_AND_STENCIL,       \
+      WEBGL1_CONSTANTS_TEXTURE,                 \
+      WEBGL1_CONSTANTS_UNIFORM_TYPES,           \
+      WEBGL1_CONSTANTS_FRAMEBUFFER_AND_RENDERBUFFER
+
+#define WEBGL2_CONSTANTS_PARAMETERS                                                                                     \
+  InstanceValue("READ_BUFFER", Napi::Number::New(env, WEBGL2_READ_BUFFER)),                                             \
+      InstanceValue("UNPACK_ROW_LENGTH", Napi::Number::New(env, WEBGL2_UNPACK_ROW_LENGTH)),                             \
+      InstanceValue("UNPACK_SKIP_ROWS", Napi::Number::New(env, WEBGL2_UNPACK_SKIP_ROWS)),                               \
+      InstanceValue("UNPACK_SKIP_PIXELS", Napi::Number::New(env, WEBGL2_UNPACK_SKIP_PIXELS)),                           \
+      InstanceValue("PACK_ROW_LENGTH", Napi::Number::New(env, WEBGL2_PACK_ROW_LENGTH)),                                 \
+      InstanceValue("PACK_SKIP_ROWS", Napi::Number::New(env, WEBGL2_PACK_SKIP_ROWS)),                                   \
+      InstanceValue("PACK_SKIP_PIXELS", Napi::Number::New(env, WEBGL2_PACK_SKIP_PIXELS)),                               \
+      InstanceValue("TEXTURE_BINDING_3D", Napi::Number::New(env, WEBGL2_TEXTURE_BINDING_3D)),                           \
+      InstanceValue("UNPACK_SKIP_IMAGES", Napi::Number::New(env, WEBGL2_UNPACK_SKIP_IMAGES)),                           \
+      InstanceValue("UNPACK_IMAGE_HEIGHT", Napi::Number::New(env, WEBGL2_UNPACK_IMAGE_HEIGHT)),                         \
+      InstanceValue("MAX_3D_TEXTURE_SIZE", Napi::Number::New(env, WEBGL2_MAX_3D_TEXTURE_SIZE)),                         \
+      InstanceValue("MAX_ELEMENTS_VERTICES", Napi::Number::New(env, WEBGL2_MAX_ELEMENTS_VERTICES)),                     \
+      InstanceValue("MAX_ELEMENTS_INDICES", Napi::Number::New(env, WEBGL2_MAX_ELEMENTS_INDICES)),                       \
+      InstanceValue("MAX_TEXTURE_LOD_BIAS", Napi::Number::New(env, WEBGL2_MAX_TEXTURE_LOD_BIAS)),                       \
+      InstanceValue("MAX_FRAGMENT_UNIFORM_COMPONENTS", Napi::Number::New(env, WEBGL2_MAX_FRAGMENT_UNIFORM_COMPONENTS)), \
+      InstanceValue("MAX_VERTEX_UNIFORM_COMPONENTS", Napi::Number::New(env, WEBGL2_MAX_VERTEX_UNIFORM_COMPONENTS)),     \
+      InstanceValue("MAX_ARRAY_TEXTURE_LAYERS", Napi::Number::New(env, WEBGL2_MAX_ARRAY_TEXTURE_LAYERS)),               \
+      InstanceValue("MIN_PROGRAM_TEXEL_OFFSET", Napi::Number::New(env, WEBGL2_MIN_PROGRAM_TEXEL_OFFSET)),               \
+      InstanceValue("MAX_PROGRAM_TEXEL_OFFSET", Napi::Number::New(env, WEBGL2_MAX_PROGRAM_TEXEL_OFFSET)),               \
+      InstanceValue("MAX_VARYING_COMPONENTS", Napi::Number::New(env, WEBGL2_MAX_VARYING_COMPONENTS)),                   \
+      InstanceValue("FRAGMENT_SHADER_DERIVATIVE_HINT", Napi::Number::New(env, WEBGL2_FRAGMENT_SHADER_DERIVATIVE_HINT)), \
+      InstanceValue("RASTERIZER_DISCARD", Napi::Number::New(env, WEBGL2_RASTERIZER_DISCARD)),                           \
+      InstanceValue("VERTEX_ARRAY_BINDING", Napi::Number::New(env, WEBGL2_VERTEX_ARRAY_BINDING)),                       \
+      InstanceValue("MAX_VERTEX_OUTPUT_COMPONENTS", Napi::Number::New(env, WEBGL2_MAX_VERTEX_OUTPUT_COMPONENTS)),       \
+      InstanceValue("MAX_FRAGMENT_INPUT_COMPONENTS", Napi::Number::New(env, WEBGL2_MAX_FRAGMENT_INPUT_COMPONENTS)),     \
+      InstanceValue("MAX_SERVER_WAIT_TIMEOUT", Napi::Number::New(env, WEBGL2_MAX_SERVER_WAIT_TIMEOUT)),                 \
+      InstanceValue("MAX_ELEMENT_INDEX", Napi::Number::New(env, WEBGL2_MAX_ELEMENT_INDEX))
+
+#define WEBGL2_CONSTANTS_TEXTURES                                                                         \
+  InstanceValue("RED", Napi::Number::New(env, WEBGL2_RED)),                                               \
+      InstanceValue("RGB8", Napi::Number::New(env, WEBGL2_RGB8)),                                         \
+      InstanceValue("RGBA8", Napi::Number::New(env, WEBGL2_RGBA8)),                                       \
+      InstanceValue("RGB10_A2", Napi::Number::New(env, WEBGL2_RGB10_A2)),                                 \
+      InstanceValue("TEXTURE_3D", Napi::Number::New(env, WEBGL2_TEXTURE_3D)),                             \
+      InstanceValue("TEXTURE_WRAP_R", Napi::Number::New(env, WEBGL2_TEXTURE_WRAP_R)),                     \
+      InstanceValue("TEXTURE_MIN_LOD", Napi::Number::New(env, WEBGL2_TEXTURE_MIN_LOD)),                   \
+      InstanceValue("TEXTURE_MAX_LOD", Napi::Number::New(env, WEBGL2_TEXTURE_MAX_LOD)),                   \
+      InstanceValue("TEXTURE_BASE_LEVEL", Napi::Number::New(env, WEBGL2_TEXTURE_BASE_LEVEL)),             \
+      InstanceValue("TEXTURE_MAX_LEVEL", Napi::Number::New(env, WEBGL2_TEXTURE_MAX_LEVEL)),               \
+      InstanceValue("TEXTURE_COMPARE_MODE", Napi::Number::New(env, WEBGL2_TEXTURE_COMPARE_MODE)),         \
+      InstanceValue("TEXTURE_COMPARE_FUNC", Napi::Number::New(env, WEBGL2_TEXTURE_COMPARE_FUNC)),         \
+      InstanceValue("SRGB", Napi::Number::New(env, WEBGL2_SRGB)),                                         \
+      InstanceValue("SRGB8", Napi::Number::New(env, WEBGL2_SRGB8)),                                       \
+      InstanceValue("SRGB8_ALPHA8", Napi::Number::New(env, WEBGL2_SRGB8_ALPHA8)),                         \
+      InstanceValue("COMPARE_REF_TO_TEXTURE", Napi::Number::New(env, WEBGL2_COMPARE_REF_TO_TEXTURE)),     \
+      InstanceValue("RGBA32F", Napi::Number::New(env, WEBGL2_RGBA32F)),                                   \
+      InstanceValue("RGB32F", Napi::Number::New(env, WEBGL2_RGB32F)),                                     \
+      InstanceValue("RGBA16F", Napi::Number::New(env, WEBGL2_RGBA16F)),                                   \
+      InstanceValue("RGB16F", Napi::Number::New(env, WEBGL2_RGB16F)),                                     \
+      InstanceValue("TEXTURE_2D_ARRAY", Napi::Number::New(env, WEBGL2_TEXTURE_2D_ARRAY)),                 \
+      InstanceValue("TEXTURE_BINDING_2D_ARRAY", Napi::Number::New(env, WEBGL2_TEXTURE_BINDING_2D_ARRAY)), \
+      InstanceValue("R11F_G11F_B10F", Napi::Number::New(env, WEBGL2_R11F_G11F_B10F)),                     \
+      InstanceValue("RGB9_E5", Napi::Number::New(env, WEBGL2_RGB9_E5)),                                   \
+      InstanceValue("RGBA32UI", Napi::Number::New(env, WEBGL2_RGBA32UI)),                                 \
+      InstanceValue("RGB32UI", Napi::Number::New(env, WEBGL2_RGB32UI)),                                   \
+      InstanceValue("RGBA16UI", Napi::Number::New(env, WEBGL2_RGBA16UI)),                                 \
+      InstanceValue("RGB16UI", Napi::Number::New(env, WEBGL2_RGB16UI)),                                   \
+      InstanceValue("RGBA8UI", Napi::Number::New(env, WEBGL2_RGBA8UI)),                                   \
+      InstanceValue("RGB8UI", Napi::Number::New(env, WEBGL2_RGB8UI)),                                     \
+      InstanceValue("RGBA32I", Napi::Number::New(env, WEBGL2_RGBA32I)),                                   \
+      InstanceValue("RGB32I", Napi::Number::New(env, WEBGL2_RGB32I)),                                     \
+      InstanceValue("RGBA16I", Napi::Number::New(env, WEBGL2_RGBA16I)),                                   \
+      InstanceValue("RGB16I", Napi::Number::New(env, WEBGL2_RGB16I)),                                     \
+      InstanceValue("RGBA8I", Napi::Number::New(env, WEBGL2_RGBA8I)),                                     \
+      InstanceValue("RGB8I", Napi::Number::New(env, WEBGL2_RGB8I)),                                       \
+      InstanceValue("RED_INTEGER", Napi::Number::New(env, WEBGL2_RED_INTEGER)),                           \
+      InstanceValue("RGB_INTEGER", Napi::Number::New(env, WEBGL2_RGB_INTEGER)),                           \
+      InstanceValue("RGBA_INTEGER", Napi::Number::New(env, WEBGL2_RGBA_INTEGER)),                         \
+      InstanceValue("R8", Napi::Number::New(env, WEBGL2_R8)),                                             \
+      InstanceValue("RG8", Napi::Number::New(env, WEBGL2_RG8)),                                           \
+      InstanceValue("R16F", Napi::Number::New(env, WEBGL2_R16F)),                                         \
+      InstanceValue("RG16F", Napi::Number::New(env, WEBGL2_RG16F)),                                       \
+      InstanceValue("R32F", Napi::Number::New(env, WEBGL2_R32F)),                                         \
+      InstanceValue("RG32F", Napi::Number::New(env, WEBGL2_RG32F)),                                       \
+      InstanceValue("R8I", Napi::Number::New(env, WEBGL2_R8I)),                                           \
+      InstanceValue("R8UI", Napi::Number::New(env, WEBGL2_R8UI)),                                         \
+      InstanceValue("R16I", Napi::Number::New(env, WEBGL2_R16I)),                                         \
+      InstanceValue("R16UI", Napi::Number::New(env, WEBGL2_R16UI)),                                       \
+      InstanceValue("R32I", Napi::Number::New(env, WEBGL2_R32I)),                                         \
+      InstanceValue("R32UI", Napi::Number::New(env, WEBGL2_R32UI)),                                       \
+      InstanceValue("RG8I", Napi::Number::New(env, WEBGL2_RG8I)),                                         \
+      InstanceValue("RG8UI", Napi::Number::New(env, WEBGL2_RG8UI)),                                       \
+      InstanceValue("RG16I", Napi::Number::New(env, WEBGL2_RG16I)),                                       \
+      InstanceValue("RG16UI", Napi::Number::New(env, WEBGL2_RG16UI)),                                     \
+      InstanceValue("RG32I", Napi::Number::New(env, WEBGL2_RG32I)),                                       \
+      InstanceValue("RG32UI", Napi::Number::New(env, WEBGL2_RG32UI)),                                     \
+      InstanceValue("R8_SNORM", Napi::Number::New(env, WEBGL2_R8_SNORM)),                                 \
+      InstanceValue("RG8_SNORM", Napi::Number::New(env, WEBGL2_RG8_SNORM)),                               \
+      InstanceValue("RGB8_SNORM", Napi::Number::New(env, WEBGL2_RGB8_SNORM)),                             \
+      InstanceValue("RGBA8_SNORM", Napi::Number::New(env, WEBGL2_RGBA8_SNORM)),                           \
+      InstanceValue("RGB10_A2UI", Napi::Number::New(env, WEBGL2_RGB10_A2UI)),                             \
+      InstanceValue("TEXTURE_IMMUTABLE_FORMAT", Napi::Number::New(env, WEBGL2_TEXTURE_IMMUTABLE_FORMAT)), \
+      InstanceValue("TEXTURE_IMMUTABLE_LEVELS", Napi::Number::New(env, WEBGL2_TEXTURE_IMMUTABLE_LEVELS))
+
+#define WEBGL2_CONSTANTS_PIXELTYPES                                                                                   \
+  InstanceValue("UNSIGNED_INT_2_10_10_10_REV", Napi::Number::New(env, WEBGL2_UNSIGNED_INT_2_10_10_10_REV)),           \
+      InstanceValue("UNSIGNED_INT_10F_11F_11F_REV", Napi::Number::New(env, WEBGL2_UNSIGNED_INT_10F_11F_11F_REV)),     \
+      InstanceValue("UNSIGNED_INT_5_9_9_9_REV", Napi::Number::New(env, WEBGL2_UNSIGNED_INT_5_9_9_9_REV)),             \
+      InstanceValue("FLOAT_32_UNSIGNED_INT_24_8_REV", Napi::Number::New(env, WEBGL2_FLOAT_32_UNSIGNED_INT_24_8_REV)), \
+      InstanceValue("UNSIGNED_INT_24_8", Napi::Number::New(env, WEBGL2_UNSIGNED_INT_24_8)),                           \
+      InstanceValue("HALF_FLOAT", Napi::Number::New(env, WEBGL2_HALF_FLOAT)),                                         \
+      InstanceValue("RG", Napi::Number::New(env, WEBGL2_RG)),                                                         \
+      InstanceValue("RG_INTEGER", Napi::Number::New(env, WEBGL2_RG_INTEGER)),                                         \
+      InstanceValue("INT_2_10_10_10_REV", Napi::Number::New(env, WEBGL2_INT_2_10_10_10_REV))
+
+#define WEBGL2_CONSTANTS_QUERIES                                                                      \
+  InstanceValue("CURRENT_QUERY", Napi::Number::New(env, WEBGL2_CURRENT_QUERY)),                       \
+      InstanceValue("QUERY_RESULT", Napi::Number::New(env, WEBGL2_QUERY_RESULT)),                     \
+      InstanceValue("QUERY_RESULT_AVAILABLE", Napi::Number::New(env, WEBGL2_QUERY_RESULT_AVAILABLE)), \
+      InstanceValue("ANY_SAMPLES_PASSED", Napi::Number::New(env, WEBGL2_ANY_SAMPLES_PASSED)),         \
+      InstanceValue("ANY_SAMPLES_PASSED_CONSERVATIVE", Napi::Number::New(env, WEBGL2_ANY_SAMPLES_PASSED_CONSERVATIVE))
+
+#define WEBGL2_CONSTANTS_DRAWBUFFERS                                                                \
+  InstanceValue("MAX_DRAW_BUFFERS", Napi::Number::New(env, WEBGL2_MAX_DRAW_BUFFERS)),               \
+      InstanceValue("DRAW_BUFFER0", Napi::Number::New(env, WEBGL2_DRAW_BUFFER0)),                   \
+      InstanceValue("DRAW_BUFFER1", Napi::Number::New(env, WEBGL2_DRAW_BUFFER1)),                   \
+      InstanceValue("DRAW_BUFFER2", Napi::Number::New(env, WEBGL2_DRAW_BUFFER2)),                   \
+      InstanceValue("DRAW_BUFFER3", Napi::Number::New(env, WEBGL2_DRAW_BUFFER3)),                   \
+      InstanceValue("DRAW_BUFFER4", Napi::Number::New(env, WEBGL2_DRAW_BUFFER4)),                   \
+      InstanceValue("DRAW_BUFFER5", Napi::Number::New(env, WEBGL2_DRAW_BUFFER5)),                   \
+      InstanceValue("DRAW_BUFFER6", Napi::Number::New(env, WEBGL2_DRAW_BUFFER6)),                   \
+      InstanceValue("DRAW_BUFFER7", Napi::Number::New(env, WEBGL2_DRAW_BUFFER7)),                   \
+      InstanceValue("DRAW_BUFFER8", Napi::Number::New(env, WEBGL2_DRAW_BUFFER8)),                   \
+      InstanceValue("DRAW_BUFFER9", Napi::Number::New(env, WEBGL2_DRAW_BUFFER9)),                   \
+      InstanceValue("DRAW_BUFFER10", Napi::Number::New(env, WEBGL2_DRAW_BUFFER10)),                 \
+      InstanceValue("DRAW_BUFFER11", Napi::Number::New(env, WEBGL2_DRAW_BUFFER11)),                 \
+      InstanceValue("DRAW_BUFFER12", Napi::Number::New(env, WEBGL2_DRAW_BUFFER12)),                 \
+      InstanceValue("DRAW_BUFFER13", Napi::Number::New(env, WEBGL2_DRAW_BUFFER13)),                 \
+      InstanceValue("DRAW_BUFFER14", Napi::Number::New(env, WEBGL2_DRAW_BUFFER14)),                 \
+      InstanceValue("DRAW_BUFFER15", Napi::Number::New(env, WEBGL2_DRAW_BUFFER15)),                 \
+      InstanceValue("MAX_COLOR_ATTACHMENTS", Napi::Number::New(env, WEBGL2_MAX_COLOR_ATTACHMENTS)), \
+      InstanceValue("COLOR_ATTACHMENT1", Napi::Number::New(env, WEBGL2_COLOR_ATTACHMENT1)),         \
+      InstanceValue("COLOR_ATTACHMENT2", Napi::Number::New(env, WEBGL2_COLOR_ATTACHMENT2)),         \
+      InstanceValue("COLOR_ATTACHMENT3", Napi::Number::New(env, WEBGL2_COLOR_ATTACHMENT3)),         \
+      InstanceValue("COLOR_ATTACHMENT4", Napi::Number::New(env, WEBGL2_COLOR_ATTACHMENT4)),         \
+      InstanceValue("COLOR_ATTACHMENT5", Napi::Number::New(env, WEBGL2_COLOR_ATTACHMENT5)),         \
+      InstanceValue("COLOR_ATTACHMENT6", Napi::Number::New(env, WEBGL2_COLOR_ATTACHMENT6)),         \
+      InstanceValue("COLOR_ATTACHMENT7", Napi::Number::New(env, WEBGL2_COLOR_ATTACHMENT7)),         \
+      InstanceValue("COLOR_ATTACHMENT8", Napi::Number::New(env, WEBGL2_COLOR_ATTACHMENT8)),         \
+      InstanceValue("COLOR_ATTACHMENT9", Napi::Number::New(env, WEBGL2_COLOR_ATTACHMENT9)),         \
+      InstanceValue("COLOR_ATTACHMENT10", Napi::Number::New(env, WEBGL2_COLOR_ATTACHMENT10)),       \
+      InstanceValue("COLOR_ATTACHMENT11", Napi::Number::New(env, WEBGL2_COLOR_ATTACHMENT11)),       \
+      InstanceValue("COLOR_ATTACHMENT12", Napi::Number::New(env, WEBGL2_COLOR_ATTACHMENT12)),       \
+      InstanceValue("COLOR_ATTACHMENT13", Napi::Number::New(env, WEBGL2_COLOR_ATTACHMENT13)),       \
+      InstanceValue("COLOR_ATTACHMENT14", Napi::Number::New(env, WEBGL2_COLOR_ATTACHMENT14)),       \
+      InstanceValue("COLOR_ATTACHMENT15", Napi::Number::New(env, WEBGL2_COLOR_ATTACHMENT15))
+
+#define WEBGL2_CONSTANTS_SAMPLERS                                                                                   \
+  InstanceValue("SAMPLER_3D", Napi::Number::New(env, WEBGL2_SAMPLER_3D)),                                           \
+      InstanceValue("SAMPLER_2D_SHADOW", Napi::Number::New(env, WEBGL2_SAMPLER_2D_SHADOW)),                         \
+      InstanceValue("SAMPLER_2D_ARRAY", Napi::Number::New(env, WEBGL2_SAMPLER_2D_ARRAY)),                           \
+      InstanceValue("SAMPLER_2D_ARRAY_SHADOW", Napi::Number::New(env, WEBGL2_SAMPLER_2D_ARRAY_SHADOW)),             \
+      InstanceValue("SAMPLER_CUBE_SHADOW", Napi::Number::New(env, WEBGL2_SAMPLER_CUBE_SHADOW)),                     \
+      InstanceValue("INT_SAMPLER_2D", Napi::Number::New(env, WEBGL2_INT_SAMPLER_2D)),                               \
+      InstanceValue("INT_SAMPLER_3D", Napi::Number::New(env, WEBGL2_INT_SAMPLER_3D)),                               \
+      InstanceValue("INT_SAMPLER_CUBE", Napi::Number::New(env, WEBGL2_INT_SAMPLER_CUBE)),                           \
+      InstanceValue("INT_SAMPLER_2D_ARRAY", Napi::Number::New(env, WEBGL2_INT_SAMPLER_2D_ARRAY)),                   \
+      InstanceValue("UNSIGNED_INT_SAMPLER_2D", Napi::Number::New(env, WEBGL2_UNSIGNED_INT_SAMPLER_2D)),             \
+      InstanceValue("UNSIGNED_INT_SAMPLER_3D", Napi::Number::New(env, WEBGL2_UNSIGNED_INT_SAMPLER_3D)),             \
+      InstanceValue("UNSIGNED_INT_SAMPLER_CUBE", Napi::Number::New(env, WEBGL2_UNSIGNED_INT_SAMPLER_CUBE)),         \
+      InstanceValue("UNSIGNED_INT_SAMPLER_2D_ARRAY", Napi::Number::New(env, WEBGL2_UNSIGNED_INT_SAMPLER_2D_ARRAY)), \
+      InstanceValue("MAX_SAMPLES", Napi::Number::New(env, WEBGL2_MAX_SAMPLES)),                                     \
+      InstanceValue("SAMPLER_BINDING", Napi::Number::New(env, WEBGL2_SAMPLER_BINDING))
+
+#define WEBGL2_CONSTANTS_BUFFERS                                                                                \
+  InstanceValue("PIXEL_PACK_BUFFER", Napi::Number::New(env, WEBGL2_PIXEL_PACK_BUFFER)),                         \
+      InstanceValue("PIXEL_UNPACK_BUFFER", Napi::Number::New(env, WEBGL2_PIXEL_UNPACK_BUFFER)),                 \
+      InstanceValue("PIXEL_PACK_BUFFER_BINDING", Napi::Number::New(env, WEBGL2_PIXEL_PACK_BUFFER_BINDING)),     \
+      InstanceValue("PIXEL_UNPACK_BUFFER_BINDING", Napi::Number::New(env, WEBGL2_PIXEL_UNPACK_BUFFER_BINDING)), \
+      InstanceValue("COPY_READ_BUFFER", Napi::Number::New(env, WEBGL2_COPY_READ_BUFFER)),                       \
+      InstanceValue("COPY_WRITE_BUFFER", Napi::Number::New(env, WEBGL2_COPY_WRITE_BUFFER)),                     \
+      InstanceValue("COPY_READ_BUFFER_BINDING", Napi::Number::New(env, WEBGL2_COPY_READ_BUFFER_BINDING)),       \
+      InstanceValue("COPY_WRITE_BUFFER_BINDING", Napi::Number::New(env, WEBGL2_COPY_WRITE_BUFFER_BINDING))
+
+#define WEBGL2_CONSTANTS_DATA_TYPES                                                             \
+  InstanceValue("FLOAT_MAT2x3", Napi::Number::New(env, WEBGL2_FLOAT_MAT2x3)),                   \
+      InstanceValue("FLOAT_MAT2x4", Napi::Number::New(env, WEBGL2_FLOAT_MAT2x4)),               \
+      InstanceValue("FLOAT_MAT3x2", Napi::Number::New(env, WEBGL2_FLOAT_MAT3x2)),               \
+      InstanceValue("FLOAT_MAT3x4", Napi::Number::New(env, WEBGL2_FLOAT_MAT3x4)),               \
+      InstanceValue("FLOAT_MAT4x2", Napi::Number::New(env, WEBGL2_FLOAT_MAT4x2)),               \
+      InstanceValue("FLOAT_MAT4x3", Napi::Number::New(env, WEBGL2_FLOAT_MAT4x3)),               \
+      InstanceValue("UNSIGNED_INT_VEC2", Napi::Number::New(env, WEBGL2_UNSIGNED_INT_VEC2)),     \
+      InstanceValue("UNSIGNED_INT_VEC3", Napi::Number::New(env, WEBGL2_UNSIGNED_INT_VEC3)),     \
+      InstanceValue("UNSIGNED_INT_VEC4", Napi::Number::New(env, WEBGL2_UNSIGNED_INT_VEC4)),     \
+      InstanceValue("UNSIGNED_NORMALIZED", Napi::Number::New(env, WEBGL2_UNSIGNED_NORMALIZED)), \
+      InstanceValue("SIGNED_NORMALIZED", Napi::Number::New(env, WEBGL2_SIGNED_NORMALIZED))
+
+#define WEBGL2_CONSTANTS_VERTEX_ATTRIBS                                                                     \
+  InstanceValue("VERTEX_ATTRIB_ARRAY_INTEGER", Napi::Number::New(env, WEBGL2_VERTEX_ATTRIB_ARRAY_INTEGER)), \
+      InstanceValue("VERTEX_ATTRIB_ARRAY_DIVISOR", Napi::Number::New(env, WEBGL2_VERTEX_ATTRIB_ARRAY_DIVISOR))
+
+#define WEBGL2_CONSTANTS_TRANSFORM_FEEDBACK                                                                                                         \
+  InstanceValue("TRANSFORM_FEEDBACK_BUFFER_MODE", Napi::Number::New(env, WEBGL2_TRANSFORM_FEEDBACK_BUFFER_MODE)),                                   \
+      InstanceValue("MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS", Napi::Number::New(env, WEBGL2_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS)),       \
+      InstanceValue("TRANSFORM_FEEDBACK_VARYINGS", Napi::Number::New(env, WEBGL2_TRANSFORM_FEEDBACK_VARYINGS)),                                     \
+      InstanceValue("TRANSFORM_FEEDBACK_BUFFER_START", Napi::Number::New(env, WEBGL2_TRANSFORM_FEEDBACK_BUFFER_START)),                             \
+      InstanceValue("TRANSFORM_FEEDBACK_BUFFER_SIZE", Napi::Number::New(env, WEBGL2_TRANSFORM_FEEDBACK_BUFFER_SIZE)),                               \
+      InstanceValue("TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN", Napi::Number::New(env, WEBGL2_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN)),                 \
+      InstanceValue("MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS", Napi::Number::New(env, WEBGL2_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS)), \
+      InstanceValue("MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS", Napi::Number::New(env, WEBGL2_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS)),             \
+      InstanceValue("INTERLEAVED_ATTRIBS", Napi::Number::New(env, WEBGL2_INTERLEAVED_ATTRIBS)),                                                     \
+      InstanceValue("SEPARATE_ATTRIBS", Napi::Number::New(env, WEBGL2_SEPARATE_ATTRIBS)),                                                           \
+      InstanceValue("TRANSFORM_FEEDBACK_BUFFER", Napi::Number::New(env, WEBGL2_TRANSFORM_FEEDBACK_BUFFER)),                                         \
+      InstanceValue("TRANSFORM_FEEDBACK_BUFFER_BINDING", Napi::Number::New(env, WEBGL2_TRANSFORM_FEEDBACK_BUFFER_BINDING)),                         \
+      InstanceValue("TRANSFORM_FEEDBACK", Napi::Number::New(env, WEBGL2_TRANSFORM_FEEDBACK)),                                                       \
+      InstanceValue("TRANSFORM_FEEDBACK_PAUSED", Napi::Number::New(env, WEBGL2_TRANSFORM_FEEDBACK_PAUSED)),                                         \
+      InstanceValue("TRANSFORM_FEEDBACK_ACTIVE", Napi::Number::New(env, WEBGL2_TRANSFORM_FEEDBACK_ACTIVE)),                                         \
+      InstanceValue("TRANSFORM_FEEDBACK_BINDING", Napi::Number::New(env, WEBGL2_TRANSFORM_FEEDBACK_BINDING))
+
+#define WEBGL2_CONSTANTS_FRAMEBUFFERS_AND_RENDERBUFFERS                                                                             \
+  InstanceValue("FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING", Napi::Number::New(env, WEBGL2_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING)),     \
+      InstanceValue("FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE", Napi::Number::New(env, WEBGL2_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE)), \
+      InstanceValue("FRAMEBUFFER_ATTACHMENT_RED_SIZE", Napi::Number::New(env, WEBGL2_FRAMEBUFFER_ATTACHMENT_RED_SIZE)),             \
+      InstanceValue("FRAMEBUFFER_ATTACHMENT_GREEN_SIZE", Napi::Number::New(env, WEBGL2_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE)),         \
+      InstanceValue("FRAMEBUFFER_ATTACHMENT_BLUE_SIZE", Napi::Number::New(env, WEBGL2_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE)),           \
+      InstanceValue("FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE", Napi::Number::New(env, WEBGL2_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE)),         \
+      InstanceValue("FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE", Napi::Number::New(env, WEBGL2_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE)),         \
+      InstanceValue("FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE", Napi::Number::New(env, WEBGL2_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE)),     \
+      InstanceValue("FRAMEBUFFER_DEFAULT", Napi::Number::New(env, WEBGL2_FRAMEBUFFER_DEFAULT)),                                     \
+      InstanceValue("DEPTH_STENCIL_ATTACHMENT", Napi::Number::New(env, WEBGL2_DEPTH_STENCIL_ATTACHMENT)),                           \
+      InstanceValue("DEPTH_STENCIL", Napi::Number::New(env, WEBGL2_DEPTH_STENCIL)),                                                 \
+      InstanceValue("DEPTH24_STENCIL8", Napi::Number::New(env, WEBGL2_UNSIGNED_INT_24_8)),                                          \
+      InstanceValue("DRAW_FRAMEBUFFER_BINDING", Napi::Number::New(env, WEBGL2_DRAW_FRAMEBUFFER_BINDING)),                           \
+      InstanceValue("READ_FRAMEBUFFER", Napi::Number::New(env, WEBGL2_READ_FRAMEBUFFER)),                                           \
+      InstanceValue("DRAW_FRAMEBUFFER", Napi::Number::New(env, WEBGL2_DRAW_FRAMEBUFFER)),                                           \
+      InstanceValue("READ_FRAMEBUFFER_BINDING", Napi::Number::New(env, WEBGL2_READ_FRAMEBUFFER_BINDING)),                           \
+      InstanceValue("RENDERBUFFER_SAMPLES", Napi::Number::New(env, WEBGL2_RENDERBUFFER_SAMPLES)),                                   \
+      InstanceValue("FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER", Napi::Number::New(env, WEBGL2_FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER)),   \
+      InstanceValue("FRAMEBUFFER_INCOMPLETE_MULTISAMPLE", Napi::Number::New(env, WEBGL2_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE))
+
+#define WEBGL2_CONSTANTS_UNIFORMS                                                                                                           \
+  InstanceValue("UNIFORM_BUFFER", Napi::Number::New(env, WEBGL2_UNIFORM_BUFFER)),                                                           \
+      InstanceValue("UNIFORM_BUFFER_BINDING", Napi::Number::New(env, WEBGL2_UNIFORM_BUFFER_BINDING)),                                       \
+      InstanceValue("UNIFORM_BUFFER_START", Napi::Number::New(env, WEBGL2_UNIFORM_BUFFER_START)),                                           \
+      InstanceValue("UNIFORM_BUFFER_SIZE", Napi::Number::New(env, WEBGL2_UNIFORM_BUFFER_SIZE)),                                             \
+      InstanceValue("MAX_VERTEX_UNIFORM_BLOCKS", Napi::Number::New(env, WEBGL2_MAX_VERTEX_UNIFORM_BLOCKS)),                                 \
+      InstanceValue("MAX_FRAGMENT_UNIFORM_BLOCKS", Napi::Number::New(env, WEBGL2_MAX_FRAGMENT_UNIFORM_BLOCKS)),                             \
+      InstanceValue("MAX_COMBINED_UNIFORM_BLOCKS", Napi::Number::New(env, WEBGL2_MAX_COMBINED_UNIFORM_BLOCKS)),                             \
+      InstanceValue("MAX_UNIFORM_BUFFER_BINDINGS", Napi::Number::New(env, WEBGL2_MAX_UNIFORM_BUFFER_BINDINGS)),                             \
+      InstanceValue("MAX_UNIFORM_BLOCK_SIZE", Napi::Number::New(env, WEBGL2_MAX_UNIFORM_BLOCK_SIZE)),                                       \
+      InstanceValue("MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS", Napi::Number::New(env, WEBGL2_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS)),       \
+      InstanceValue("MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS", Napi::Number::New(env, WEBGL2_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS)),   \
+      InstanceValue("UNIFORM_BUFFER_OFFSET_ALIGNMENT", Napi::Number::New(env, WEBGL2_UNIFORM_BUFFER_OFFSET_ALIGNMENT)),                     \
+      InstanceValue("ACTIVE_UNIFORM_BLOCKS", Napi::Number::New(env, WEBGL2_ACTIVE_UNIFORM_BLOCKS)),                                         \
+      InstanceValue("UNIFORM_TYPE", Napi::Number::New(env, WEBGL2_UNIFORM_TYPE)),                                                           \
+      InstanceValue("UNIFORM_SIZE", Napi::Number::New(env, WEBGL2_UNIFORM_SIZE)),                                                           \
+      InstanceValue("UNIFORM_BLOCK_INDEX", Napi::Number::New(env, WEBGL2_UNIFORM_BLOCK_INDEX)),                                             \
+      InstanceValue("UNIFORM_OFFSET", Napi::Number::New(env, WEBGL2_UNIFORM_OFFSET)),                                                       \
+      InstanceValue("UNIFORM_ARRAY_STRIDE", Napi::Number::New(env, WEBGL2_UNIFORM_ARRAY_STRIDE)),                                           \
+      InstanceValue("UNIFORM_MATRIX_STRIDE", Napi::Number::New(env, WEBGL2_UNIFORM_MATRIX_STRIDE)),                                         \
+      InstanceValue("UNIFORM_IS_ROW_MAJOR", Napi::Number::New(env, WEBGL2_UNIFORM_IS_ROW_MAJOR)),                                           \
+      InstanceValue("UNIFORM_BLOCK_BINDING", Napi::Number::New(env, WEBGL2_UNIFORM_BLOCK_BINDING)),                                         \
+      InstanceValue("UNIFORM_BLOCK_DATA_SIZE", Napi::Number::New(env, WEBGL2_UNIFORM_BLOCK_DATA_SIZE)),                                     \
+      InstanceValue("UNIFORM_BLOCK_ACTIVE_UNIFORMS", Napi::Number::New(env, WEBGL2_UNIFORM_BLOCK_ACTIVE_UNIFORMS)),                         \
+      InstanceValue("UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES", Napi::Number::New(env, WEBGL2_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES)),           \
+      InstanceValue("UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER", Napi::Number::New(env, WEBGL2_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER)), \
+      InstanceValue("UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER", Napi::Number::New(env, WEBGL2_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER))
+
+#define WEBGL2_CONSTANTS_SYNC_OBJECTS                                                                         \
+  InstanceValue("OBJECT_TYPE", Napi::Number::New(env, WEBGL2_OBJECT_TYPE)),                                   \
+      InstanceValue("SYNC_CONDITION", Napi::Number::New(env, WEBGL2_SYNC_CONDITION)),                         \
+      InstanceValue("SYNC_STATUS", Napi::Number::New(env, WEBGL2_SYNC_STATUS)),                               \
+      InstanceValue("SYNC_FLAGS", Napi::Number::New(env, WEBGL2_SYNC_FLAGS)),                                 \
+      InstanceValue("SYNC_FENCE", Napi::Number::New(env, WEBGL2_SYNC_FENCE)),                                 \
+      InstanceValue("SYNC_GPU_COMMANDS_COMPLETE", Napi::Number::New(env, WEBGL2_SYNC_GPU_COMMANDS_COMPLETE)), \
+      InstanceValue("UNSIGNALED", Napi::Number::New(env, WEBGL2_UNSIGNALED)),                                 \
+      InstanceValue("SIGNALED", Napi::Number::New(env, WEBGL2_SIGNALED)),                                     \
+      InstanceValue("ALREADY_SIGNALED", Napi::Number::New(env, WEBGL2_ALREADY_SIGNALED)),                     \
+      InstanceValue("TIMEOUT_EXPIRED", Napi::Number::New(env, WEBGL2_TIMEOUT_EXPIRED)),                       \
+      InstanceValue("CONDITION_SATISFIED", Napi::Number::New(env, WEBGL2_CONDITION_SATISFIED)),               \
+      InstanceValue("WAIT_FAILED", Napi::Number::New(env, WEBGL2_WAIT_FAILED)),                               \
+      InstanceValue("SYNC_FLUSH_COMMANDS_BIT", Napi::Number::New(env, WEBGL2_SYNC_FLUSH_COMMANDS_BIT))
+
+#define WEBGL2_CONSTANTS_MISCELLANEOUS                                                        \
+  InstanceValue("COLOR", Napi::Number::New(env, WEBGL2_COLOR)),                               \
+      InstanceValue("DEPTH", Napi::Number::New(env, WEBGL2_DEPTH)),                           \
+      InstanceValue("STENCIL", Napi::Number::New(env, WEBGL2_STENCIL)),                       \
+      InstanceValue("MIN", Napi::Number::New(env, WEBGL2_MIN)),                               \
+      InstanceValue("MAX", Napi::Number::New(env, WEBGL2_MAX)),                               \
+      InstanceValue("DEPTH_COMPONENT24", Napi::Number::New(env, WEBGL2_DEPTH_COMPONENT24)),   \
+      InstanceValue("STREAM_READ", Napi::Number::New(env, WEBGL2_STREAM_READ)),               \
+      InstanceValue("STREAM_COPY", Napi::Number::New(env, WEBGL2_STREAM_COPY)),               \
+      InstanceValue("STATIC_READ", Napi::Number::New(env, WEBGL2_STATIC_READ)),               \
+      InstanceValue("STATIC_COPY", Napi::Number::New(env, WEBGL2_STATIC_COPY)),               \
+      InstanceValue("DYNAMIC_READ", Napi::Number::New(env, WEBGL2_DYNAMIC_READ)),             \
+      InstanceValue("DYNAMIC_COPY", Napi::Number::New(env, WEBGL2_DYNAMIC_COPY)),             \
+      InstanceValue("DEPTH_COMPONENT32F", Napi::Number::New(env, WEBGL2_DEPTH_COMPONENT32F)), \
+      InstanceValue("DEPTH32F_STENCIL8", Napi::Number::New(env, WEBGL2_DEPTH32F_STENCIL8)),   \
+      InstanceValue("INVALID_INDEX", Napi::Number::New(env, WEBGL2_INVALID_INDEX)),           \
+      InstanceValue("TIMEOUT_IGNORED", Napi::Number::New(env, WEBGL2_TIMEOUT_IGNORED)),       \
+      InstanceValue("MAX_CLIENT_WAIT_TIMEOUT_WEBGL", Napi::Number::New(env, WEBGL2_MAX_CLIENT_WAIT_TIMEOUT_WEBGL))
+
+#define WEBGL2_CONSTANTS                               \
+  WEBGL2_CONSTANTS_PARAMETERS,                         \
+      WEBGL2_CONSTANTS_TEXTURES,                       \
+      WEBGL2_CONSTANTS_PIXELTYPES,                     \
+      WEBGL2_CONSTANTS_QUERIES,                        \
+      WEBGL2_CONSTANTS_DRAWBUFFERS,                    \
+      WEBGL2_CONSTANTS_SAMPLERS,                       \
+      WEBGL2_CONSTANTS_BUFFERS,                        \
+      WEBGL2_CONSTANTS_DATA_TYPES,                     \
+      WEBGL2_CONSTANTS_VERTEX_ATTRIBS,                 \
+      WEBGL2_CONSTANTS_TRANSFORM_FEEDBACK,             \
+      WEBGL2_CONSTANTS_FRAMEBUFFERS_AND_RENDERBUFFERS, \
+      WEBGL2_CONSTANTS_UNIFORMS,                       \
+      WEBGL2_CONSTANTS_SYNC_OBJECTS,                   \
+      WEBGL2_CONSTANTS_MISCELLANEOUS
+
+#define WEBGL1_METHODS(T)                                                       \
+  InstanceMethod("makeXRCompatible", &T::MakeXRCompatible),                     \
+      InstanceMethod("getContextAttributes", &T::GetContextAttributes),         \
+      InstanceMethod("createProgram", &T::CreateProgram),                       \
+      InstanceMethod("deleteProgram", &T::DeleteProgram),                       \
+      InstanceMethod("linkProgram", &T::LinkProgram),                           \
+      InstanceMethod("useProgram", &T::UseProgram),                             \
+      InstanceMethod("getProgramParameter", &T::GetProgramParameter),           \
+      InstanceMethod("getProgramInfoLog", &T::GetProgramInfoLog),               \
+      InstanceMethod("attachShader", &T::AttachShader),                         \
+      InstanceMethod("detachShader", &T::DetachShader),                         \
+      InstanceMethod("createShader", &T::CreateShader),                         \
+      InstanceMethod("deleteShader", &T::DeleteShader),                         \
+      InstanceMethod("shaderSource", &T::ShaderSource),                         \
+      InstanceMethod("compileShader", &T::CompileShader),                       \
+      InstanceMethod("getShaderSource", &T::GetShaderSource),                   \
+      InstanceMethod("getShaderParameter", &T::GetShaderParameter),             \
+      InstanceMethod("getShaderInfoLog", &T::GetShaderInfoLog),                 \
+      InstanceMethod("createBuffer", &T::CreateBuffer),                         \
+      InstanceMethod("deleteBuffer", &T::DeleteBuffer),                         \
+      InstanceMethod("bindBuffer", &T::BindBuffer),                             \
+      InstanceMethod("bufferData", &T::BufferData),                             \
+      InstanceMethod("bufferSubData", &T::BufferSubData),                       \
+      InstanceMethod("createFramebuffer", &T::CreateFramebuffer),               \
+      InstanceMethod("deleteFramebuffer", &T::DeleteFramebuffer),               \
+      InstanceMethod("bindFramebuffer", &T::BindFramebuffer),                   \
+      InstanceMethod("framebufferRenderbuffer", &T::FramebufferRenderbuffer),   \
+      InstanceMethod("framebufferTexture2D", &T::FramebufferTexture2D),         \
+      InstanceMethod("checkFramebufferStatus", &T::CheckFramebufferStatus),     \
+      InstanceMethod("createRenderbuffer", &T::CreateRenderbuffer),             \
+      InstanceMethod("deleteRenderbuffer", &T::DeleteRenderbuffer),             \
+      InstanceMethod("bindRenderbuffer", &T::BindRenderbuffer),                 \
+      InstanceMethod("renderbufferStorage", &T::RenderbufferStorage),           \
+      InstanceMethod("createTexture", &T::CreateTexture),                       \
+      InstanceMethod("deleteTexture", &T::DeleteTexture),                       \
+      InstanceMethod("bindTexture", &T::BindTexture),                           \
+      InstanceMethod("texImage2D", &T::TexImage2D),                             \
+      InstanceMethod("texSubImage2D", &T::TexSubImage2D),                       \
+      InstanceMethod("copyTexImage2D", &T::CopyTexImage2D),                     \
+      InstanceMethod("copyTexSubImage2D", &T::CopyTexSubImage2D),               \
+      InstanceMethod("texParameteri", &T::TexParameteri),                       \
+      InstanceMethod("activeTexture", &T::ActiveTexture),                       \
+      InstanceMethod("generateMipmap", &T::GenerateMipmap),                     \
+      InstanceMethod("enableVertexAttribArray", &T::EnableVertexAttribArray),   \
+      InstanceMethod("disableVertexAttribArray", &T::DisableVertexAttribArray), \
+      InstanceMethod("vertexAttribPointer", &T::VertexAttribPointer),           \
+      InstanceMethod("getAttribLocation", &T::GetAttribLocation),               \
+      InstanceMethod("getUniformLocation", &T::GetUniformLocation),             \
+      InstanceMethod("uniform1f", &T::Uniform1f),                               \
+      InstanceMethod("uniform1fv", &T::Uniform1fv),                             \
+      InstanceMethod("uniform1i", &T::Uniform1i),                               \
+      InstanceMethod("uniform1iv", &T::Uniform1iv),                             \
+      InstanceMethod("uniform2f", &T::Uniform2f),                               \
+      InstanceMethod("uniform2fv", &T::Uniform2fv),                             \
+      InstanceMethod("uniform2i", &T::Uniform2i),                               \
+      InstanceMethod("uniform2iv", &T::Uniform2iv),                             \
+      InstanceMethod("uniform3f", &T::Uniform3f),                               \
+      InstanceMethod("uniform3fv", &T::Uniform3fv),                             \
+      InstanceMethod("uniform3i", &T::Uniform3i),                               \
+      InstanceMethod("uniform3iv", &T::Uniform3iv),                             \
+      InstanceMethod("uniform4f", &T::Uniform4f),                               \
+      InstanceMethod("uniform4fv", &T::Uniform4fv),                             \
+      InstanceMethod("uniform4i", &T::Uniform4i),                               \
+      InstanceMethod("uniform4iv", &T::Uniform4iv),                             \
+      InstanceMethod("uniformMatrix2fv", &T::UniformMatrix2fv),                 \
+      InstanceMethod("uniformMatrix3fv", &T::UniformMatrix3fv),                 \
+      InstanceMethod("uniformMatrix4fv", &T::UniformMatrix4fv),                 \
+      InstanceMethod("drawArrays", &T::DrawArrays),                             \
+      InstanceMethod("drawElements", &T::DrawElements),                         \
+      InstanceMethod("pixelStorei", &T::PixelStorei),                           \
+      InstanceMethod("polygonOffset", &T::PolygonOffset),                       \
+      InstanceMethod("viewport", &T::Viewport),                                 \
+      InstanceMethod("scissor", &T::Scissor),                                   \
+      InstanceMethod("clearColor", &T::ClearColor),                             \
+      InstanceMethod("clearDepth", &T::ClearDepth),                             \
+      InstanceMethod("clearStencil", &T::ClearStencil),                         \
+      InstanceMethod("clear", &T::Clear),                                       \
+      InstanceMethod("depthMask", &T::DepthMask),                               \
+      InstanceMethod("depthFunc", &T::DepthFunc),                               \
+      InstanceMethod("depthRange", &T::DepthRange),                             \
+      InstanceMethod("stencilFunc", &T::StencilFunc),                           \
+      InstanceMethod("stencilFuncSeparate", &T::StencilFuncSeparate),           \
+      InstanceMethod("stencilMask", &T::StencilMask),                           \
+      InstanceMethod("stencilMaskSeparate", &T::StencilMaskSeparate),           \
+      InstanceMethod("stencilOp", &T::StencilOp),                               \
+      InstanceMethod("stencilOpSeparate", &T::StencilOpSeparate),               \
+      InstanceMethod("blendColor", &T::BlendColor),                             \
+      InstanceMethod("blendEquation", &T::BlendEquation),                       \
+      InstanceMethod("blendEquationSeparate", &T::BlendEquationSeparate),       \
+      InstanceMethod("blendFunc", &T::BlendFunc),                               \
+      InstanceMethod("blendFuncSeparate", &T::BlendFuncSeparate),               \
+      InstanceMethod("colorMask", &T::ColorMask),                               \
+      InstanceMethod("cullFace", &T::CullFace),                                 \
+      InstanceMethod("frontFace", &T::FrontFace),                               \
+      InstanceMethod("enable", &T::Enable),                                     \
+      InstanceMethod("disable", &T::Disable),                                   \
+      InstanceMethod("getParameter", &T::GetParameter),                         \
+      InstanceMethod("getShaderPrecisionFormat", &T::GetShaderPrecisionFormat), \
+      InstanceMethod("getError", &T::GetError),                                 \
+      InstanceMethod("getSupportedExtensions", &T::GetSupportedExtensions)
+
+#define WEBGL1_ACCESSORS(T)                                                                           \
+  InstanceAccessor<&T::DrawingBufferWidthGetter, &T::DrawingBufferWidthSetter>("drawingBufferWidth"), \
+      InstanceAccessor<&T::DrawingBufferHeightGetter, &T::DrawingBufferHeightSetter>("drawingBufferHeight")
+
+  template <typename T>
+  WebGLBaseRenderingContext<T>::WebGLBaseRenderingContext(const Napi::CallbackInfo &info) : Napi::ObjectWrap<T>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -462,6 +783,35 @@ namespace webgl
       Napi::TypeError::New(env, "RenderAPI is not available")
           .ThrowAsJavaScriptException();
       return;
+    }
+
+    if (info.Length() >= 1 && info[0].IsObject())
+    {
+      auto jsContextAttribs = info[0].ToObject();
+      if (jsContextAttribs.Has("alpha"))
+        contextAttributes.alpha = jsContextAttribs.Get("alpha").ToBoolean();
+      if (jsContextAttribs.Has("antialias"))
+        contextAttributes.antialias = jsContextAttribs.Get("antialias").ToBoolean();
+      if (jsContextAttribs.Has("depth"))
+        contextAttributes.depth = jsContextAttribs.Get("depth").ToBoolean();
+      if (jsContextAttribs.Has("stencil"))
+        contextAttributes.stencil = jsContextAttribs.Get("stencil").ToBoolean();
+      if (jsContextAttribs.Has("failIfMajorPerformanceCaveat"))
+        contextAttributes.failIfMajorPerformanceCaveat = jsContextAttribs.Get("failIfMajorPerformanceCaveat").ToBoolean();
+      if (jsContextAttribs.Has("premultipliedAlpha"))
+        contextAttributes.premultipliedAlpha = jsContextAttribs.Get("premultipliedAlpha").ToBoolean();
+      if (jsContextAttribs.Has("preserveDrawingBuffer"))
+        contextAttributes.preserveDrawingBuffer = jsContextAttribs.Get("preserveDrawingBuffer").ToBoolean();
+      if (jsContextAttribs.Has("xrCompatible"))
+        contextAttributes.xrCompatible = jsContextAttribs.Get("xrCompatible").ToBoolean();
+      if (jsContextAttribs.Has("powerPreference"))
+      {
+        auto powerPreference = jsContextAttribs.Get("powerPreference").ToString().Utf8Value();
+        if (powerPreference == "high-performance")
+          contextAttributes.powerPreference = "high-performance";
+        else if (powerPreference == "low-power")
+          contextAttributes.powerPreference = "low-power";
+      }
     }
 
     auto initCommandBuffer = new renderer::ContextInitCommandBuffer();
@@ -482,16 +832,38 @@ namespace webgl
     this->renderer = initCommandBuffer->renderer;
   }
 
-  Napi::Value WebGLRenderingContext::MakeXRCompatible(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::MakeXRCompatible(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
     m_XRCompatible = true;
+    contextAttributes.xrCompatible = true;
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::CreateProgram(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::GetContextAttributes(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    Napi::Object attribs = Napi::Object::New(env);
+    attribs.Set("alpha", Napi::Boolean::New(env, contextAttributes.alpha));
+    attribs.Set("antialias", Napi::Boolean::New(env, contextAttributes.antialias));
+    attribs.Set("depth", Napi::Boolean::New(env, contextAttributes.depth));
+    attribs.Set("stencil", Napi::Boolean::New(env, contextAttributes.stencil));
+    attribs.Set("failIfMajorPerformanceCaveat", Napi::Boolean::New(env, contextAttributes.failIfMajorPerformanceCaveat));
+    attribs.Set("premultipliedAlpha", Napi::Boolean::New(env, contextAttributes.premultipliedAlpha));
+    attribs.Set("preserveDrawingBuffer", Napi::Boolean::New(env, contextAttributes.preserveDrawingBuffer));
+    attribs.Set("xrCompatible", Napi::Boolean::New(env, contextAttributes.xrCompatible));
+    attribs.Set("powerPreference", Napi::String::New(env, contextAttributes.powerPreference));
+    return attribs;
+  }
+
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::CreateProgram(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -502,7 +874,8 @@ namespace webgl
     return WebGLProgram::constructor->New({Napi::Number::New(env, commandBuffer->m_ProgramId)});
   }
 
-  Napi::Value WebGLRenderingContext::DeleteProgram(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::DeleteProgram(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -524,7 +897,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::LinkProgram(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::LinkProgram(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -598,7 +972,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::UseProgram(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::UseProgram(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -620,7 +995,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::GetProgramParameter(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::GetProgramParameter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -644,7 +1020,8 @@ namespace webgl
     return Napi::Number::New(env, commandBuffer->m_Value);
   }
 
-  Napi::Value WebGLRenderingContext::GetProgramInfoLog(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::GetProgramInfoLog(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -667,7 +1044,8 @@ namespace webgl
     return Napi::String::New(env, commandBuffer->m_InfoLog);
   }
 
-  Napi::Value WebGLRenderingContext::AttachShader(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::AttachShader(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -699,7 +1077,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::DetachShader(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::DetachShader(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -722,7 +1101,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::CreateShader(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::CreateShader(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -739,7 +1119,8 @@ namespace webgl
     return Napi::Number::New(env, commandBuffer->m_ShaderId);
   }
 
-  Napi::Value WebGLRenderingContext::DeleteShader(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::DeleteShader(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -755,7 +1136,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::ShaderSource(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::ShaderSource(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -773,7 +1155,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::CompileShader(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::CompileShader(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -788,7 +1171,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::GetShaderSource(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::GetShaderSource(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -804,7 +1188,8 @@ namespace webgl
     return Napi::String::New(env, commandBuffer->m_Source);
   }
 
-  Napi::Value WebGLRenderingContext::GetShaderParameter(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::GetShaderParameter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -821,7 +1206,8 @@ namespace webgl
     return Napi::Number::New(env, commandBuffer->m_Value);
   }
 
-  Napi::Value WebGLRenderingContext::GetShaderInfoLog(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::GetShaderInfoLog(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -837,7 +1223,8 @@ namespace webgl
     return Napi::String::New(env, commandBuffer->m_InfoLog);
   }
 
-  Napi::Value WebGLRenderingContext::CreateBuffer(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::CreateBuffer(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -847,7 +1234,8 @@ namespace webgl
     return Napi::Number::New(env, commandBuffer->m_BufferId);
   }
 
-  Napi::Value WebGLRenderingContext::DeleteBuffer(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::DeleteBuffer(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -862,7 +1250,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::BindBuffer(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::BindBuffer(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -888,7 +1277,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::BufferData(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::BufferData(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -911,7 +1301,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::BufferSubData(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::BufferSubData(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -934,7 +1325,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::CreateFramebuffer(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::CreateFramebuffer(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -944,7 +1336,8 @@ namespace webgl
     return Napi::Number::New(env, commandBuffer->m_FramebufferId);
   }
 
-  Napi::Value WebGLRenderingContext::DeleteFramebuffer(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::DeleteFramebuffer(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -959,7 +1352,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::BindFramebuffer(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::BindFramebuffer(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -984,7 +1378,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::FramebufferRenderbuffer(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::FramebufferRenderbuffer(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1007,7 +1402,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::FramebufferTexture2D(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::FramebufferTexture2D(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1040,7 +1436,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::CheckFramebufferStatus(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::CheckFramebufferStatus(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1056,7 +1453,8 @@ namespace webgl
     return Napi::Number::New(env, commandBuffer->m_Status);
   }
 
-  Napi::Value WebGLRenderingContext::CreateRenderbuffer(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::CreateRenderbuffer(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1066,7 +1464,8 @@ namespace webgl
     return Napi::Number::New(env, commandBuffer->m_RenderbufferId);
   }
 
-  Napi::Value WebGLRenderingContext::DeleteRenderbuffer(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::DeleteRenderbuffer(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1081,7 +1480,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::BindRenderbuffer(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::BindRenderbuffer(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1106,7 +1506,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::RenderbufferStorage(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::RenderbufferStorage(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1129,7 +1530,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::CreateTexture(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::CreateTexture(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1139,7 +1541,8 @@ namespace webgl
     return WebGLTexture::constructor->New({Napi::Number::New(env, commandBuffer->m_TextureId)});
   }
 
-  Napi::Value WebGLRenderingContext::DeleteTexture(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::DeleteTexture(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1160,7 +1563,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::BindTexture(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::BindTexture(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1199,7 +1603,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::TexImage2D(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::TexImage2D(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1274,7 +1679,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::TexSubImage2D(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::TexSubImage2D(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1339,7 +1745,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::CopyTexImage2D(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::CopyTexImage2D(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1365,7 +1772,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::CopyTexSubImage2D(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::CopyTexSubImage2D(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1391,7 +1799,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::TexParameteri(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::TexParameteri(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1403,7 +1812,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::ActiveTexture(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::ActiveTexture(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1425,7 +1835,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::GenerateMipmap(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::GenerateMipmap(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1435,7 +1846,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::EnableVertexAttribArray(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::EnableVertexAttribArray(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1450,7 +1862,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::DisableVertexAttribArray(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::DisableVertexAttribArray(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1465,7 +1878,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::VertexAttribPointer(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::VertexAttribPointer(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1493,7 +1907,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::GetAttribLocation(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::GetAttribLocation(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1518,7 +1933,8 @@ namespace webgl
     return Napi::Number::New(env, commandBuffer->m_Location);
   }
 
-  Napi::Value WebGLRenderingContext::GetUniformLocation(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::GetUniformLocation(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1547,7 +1963,8 @@ namespace webgl
     return jsUniformLocation;
   }
 
-  Napi::Value WebGLRenderingContext::Uniform1f(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Uniform1f(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1570,7 +1987,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Uniform1fv(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Uniform1fv(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1600,7 +2018,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Uniform1i(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Uniform1i(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1623,7 +2042,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Uniform1iv(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Uniform1iv(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1653,7 +2073,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Uniform2f(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Uniform2f(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1677,7 +2098,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Uniform2fv(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Uniform2fv(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1712,7 +2134,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Uniform2i(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Uniform2i(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1736,7 +2159,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Uniform2iv(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Uniform2iv(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1771,7 +2195,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Uniform3f(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Uniform3f(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1796,7 +2221,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Uniform3fv(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Uniform3fv(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1831,7 +2257,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Uniform3i(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Uniform3i(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1856,7 +2283,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Uniform3iv(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Uniform3iv(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1891,7 +2319,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Uniform4f(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Uniform4f(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1917,7 +2346,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Uniform4fv(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Uniform4fv(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1952,7 +2382,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Uniform4i(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Uniform4i(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -1978,7 +2409,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Uniform4iv(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Uniform4iv(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2013,7 +2445,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::UniformMatrix2fv(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::UniformMatrix2fv(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2053,7 +2486,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::UniformMatrix3fv(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::UniformMatrix3fv(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2093,7 +2527,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::UniformMatrix4fv(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::UniformMatrix4fv(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2163,7 +2598,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::DrawArrays(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::DrawArrays(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2181,7 +2617,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::DrawElements(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::DrawElements(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2199,7 +2636,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::PixelStorei(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::PixelStorei(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2233,7 +2671,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::PolygonOffset(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::PolygonOffset(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2249,7 +2688,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Viewport(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Viewport(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2273,7 +2713,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Scissor(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Scissor(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2292,7 +2733,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::ClearColor(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::ClearColor(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2308,7 +2750,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::ClearDepth(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::ClearDepth(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2321,7 +2764,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::ClearStencil(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::ClearStencil(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2334,7 +2778,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Clear(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Clear(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2347,7 +2792,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::DepthMask(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::DepthMask(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2360,7 +2806,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::DepthFunc(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::DepthFunc(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2373,7 +2820,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::DepthRange(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::DepthRange(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2387,7 +2835,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::StencilFunc(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::StencilFunc(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2402,7 +2851,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::StencilFuncSeparate(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::StencilFuncSeparate(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2418,7 +2868,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::StencilMask(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::StencilMask(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2431,7 +2882,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::StencilMaskSeparate(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::StencilMaskSeparate(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2445,7 +2897,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::StencilOp(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::StencilOp(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2460,7 +2913,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::StencilOpSeparate(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::StencilOpSeparate(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2476,7 +2930,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::BlendColor(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::BlendColor(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2492,7 +2947,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::BlendEquation(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::BlendEquation(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2502,7 +2958,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::BlendEquationSeparate(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::BlendEquationSeparate(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2513,7 +2970,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::BlendFunc(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::BlendFunc(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2524,7 +2982,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::BlendFuncSeparate(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::BlendFuncSeparate(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2537,7 +2996,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::ColorMask(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::ColorMask(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2550,7 +3010,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::CullFace(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::CullFace(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2560,7 +3021,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::FrontFace(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::FrontFace(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2570,7 +3032,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Enable(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Enable(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2583,7 +3046,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::Disable(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Disable(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2596,7 +3060,8 @@ namespace webgl
     return env.Undefined();
   }
 
-  Napi::Value WebGLRenderingContext::GetParameter(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::GetParameter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2607,31 +3072,56 @@ namespace webgl
       /**
        * Check for the static parameters which is defined at initialization.
        */
-      if (pname == WEBGL_MAX_COMBINED_TEXTURE_IMAGE_UNITS) {
+      if (pname == WEBGL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)
+      {
         return Napi::Number::New(env, maxCombinedTextureImageUnits);
-      } else if (pname == WEBGL_MAX_CUBE_MAP_TEXTURE_SIZE) {
+      }
+      else if (pname == WEBGL_MAX_CUBE_MAP_TEXTURE_SIZE)
+      {
         return Napi::Number::New(env, maxCubeMapTextureSize);
-      } else if (pname == WEBGL_MAX_FRAGMENT_UNIFORM_VECTORS) {
+      }
+      else if (pname == WEBGL_MAX_FRAGMENT_UNIFORM_VECTORS)
+      {
         return Napi::Number::New(env, maxFragmentUniformVectors);
-      } else if (pname == WEBGL_MAX_RENDERBUFFER_SIZE) {
+      }
+      else if (pname == WEBGL_MAX_RENDERBUFFER_SIZE)
+      {
         return Napi::Number::New(env, maxRenderbufferSize);
-      } else if (pname == WEBGL_MAX_TEXTURE_IMAGE_UNITS) {
+      }
+      else if (pname == WEBGL_MAX_TEXTURE_IMAGE_UNITS)
+      {
         return Napi::Number::New(env, maxTextureImageUnits);
-      } else if (pname == WEBGL_MAX_TEXTURE_SIZE) {
+      }
+      else if (pname == WEBGL_MAX_TEXTURE_SIZE)
+      {
         return Napi::Number::New(env, maxTextureSize);
-      } else if (pname == WEBGL_MAX_VARYING_VECTORS) {
+      }
+      else if (pname == WEBGL_MAX_VARYING_VECTORS)
+      {
         return Napi::Number::New(env, maxVaryingVectors);
-      } else if (pname == WEBGL_MAX_VERTEX_ATTRIBS) {
+      }
+      else if (pname == WEBGL_MAX_VERTEX_ATTRIBS)
+      {
         return Napi::Number::New(env, maxVertexAttribs);
-      } else if (pname == WEBGL_MAX_VERTEX_TEXTURE_IMAGE_UNITS) {
+      }
+      else if (pname == WEBGL_MAX_VERTEX_TEXTURE_IMAGE_UNITS)
+      {
         return Napi::Number::New(env, maxVertexTextureImageUnits);
-      } else if (pname == WEBGL_MAX_VERTEX_UNIFORM_VECTORS) {
+      }
+      else if (pname == WEBGL_MAX_VERTEX_UNIFORM_VECTORS)
+      {
         return Napi::Number::New(env, maxVertexUniformVectors);
-      } else if (pname == WEBGL_VENDOR) {
+      }
+      else if (pname == WEBGL_VENDOR)
+      {
         return Napi::String::New(env, vendor);
-      } else if (pname == WEBGL_RENDERER) {
+      }
+      else if (pname == WEBGL_RENDERER)
+      {
         return Napi::String::New(env, renderer);
-      } else if (pname == WEBGL_VERSION) {
+      }
+      else if (pname == WEBGL_VERSION)
+      {
         return Napi::String::New(env, version);
       }
       switch (pname)
@@ -2723,11 +3213,10 @@ namespace webgl
       {
         auto commandBuffer = new renderer::GetStringCommandBuffer(pname);
         addCommandBuffer(commandBuffer, true, true);
-
         return Napi::String::New(env, commandBuffer->m_Value);
       }
       default:
-        Napi::TypeError::New(env, "getParameter() not implemented.")
+        Napi::TypeError::New(env, "getParameter() don't support the parameter: " + std::to_string(pname))
             .ThrowAsJavaScriptException();
         return env.Undefined();
       }
@@ -2740,7 +3229,8 @@ namespace webgl
     }
   }
 
-  Napi::Value WebGLRenderingContext::GetShaderPrecisionFormat(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::GetShaderPrecisionFormat(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2763,7 +3253,8 @@ namespace webgl
     return obj;
   }
 
-  Napi::Value WebGLRenderingContext::GetError(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::GetError(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2772,7 +3263,8 @@ namespace webgl
     return Napi::Number::New(env, commandBuffer->m_Error);
   }
 
-  Napi::Value WebGLRenderingContext::GetSupportedExtensions(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::GetSupportedExtensions(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -2795,35 +3287,40 @@ namespace webgl
     return extensionsArray;
   }
 
-  Napi::Value WebGLRenderingContext::DrawingBufferWidthGetter(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::DrawingBufferWidthGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     return Napi::Number::New(env, m_renderAPI->GetDrawingBufferWidth());
   }
 
-  void WebGLRenderingContext::DrawingBufferWidthSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  template <typename T>
+  void WebGLBaseRenderingContext<T>::DrawingBufferWidthSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     Napi::TypeError::New(env, "drawingBufferWidth is readonly.").ThrowAsJavaScriptException();
   }
 
-  Napi::Value WebGLRenderingContext::DrawingBufferHeightGetter(const Napi::CallbackInfo &info)
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::DrawingBufferHeightGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     return Napi::Number::New(env, m_renderAPI->GetDrawingBufferHeight());
   }
 
-  void WebGLRenderingContext::DrawingBufferHeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  template <typename T>
+  void WebGLBaseRenderingContext<T>::DrawingBufferHeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     Napi::TypeError::New(env, "drawingBufferHeight is readonly.").ThrowAsJavaScriptException();
   }
 
-  bool WebGLRenderingContext::addCommandBuffer(
+  template <typename T>
+  bool WebGLBaseRenderingContext<T>::addCommandBuffer(
       renderer::CommandBuffer *commandBuffer,
       bool useDefaultQueue,
       bool waitForFinished)
@@ -2868,7 +3365,8 @@ namespace webgl
   /**
    * Source from https://github.com/stackgl/headless-gl/blob/v8.0.2/src/native/webgl.cc#L722
    */
-  unsigned char *WebGLRenderingContext::unpackPixels(int type, int format, int width, int height, unsigned char *pixels)
+  template <typename T>
+  unsigned char *WebGLBaseRenderingContext<T>::unpackPixels(int type, int format, int width, int height, unsigned char *pixels)
   {
     // Compute the pixel size
     int pixelSize = 1;
@@ -2963,5 +3461,145 @@ namespace webgl
       }
     }
     return unpacked;
+  }
+
+  Napi::Object WebGLRenderingContext::Init(Napi::Env env, Napi::Object exports)
+  {
+    Napi::Function tpl = DefineClass(
+        env,
+        "WebGLRenderingContext",
+        {WEBGL1_CONSTANTS,
+         WEBGL1_METHODS(WebGLRenderingContext),
+         WEBGL1_ACCESSORS(WebGLRenderingContext)});
+    constructor = new Napi::FunctionReference();
+    *constructor = Napi::Persistent(tpl);
+    env.SetInstanceData(constructor);
+    exports.Set("WebGLRenderingContext", tpl);
+    return exports;
+  }
+
+  WebGLRenderingContext::WebGLRenderingContext(const Napi::CallbackInfo &info) : WebGLBaseRenderingContext<WebGLRenderingContext>(info)
+  {
+    // TODO: add webgl1-specfic initialization here
+  }
+
+  Napi::Object WebGL2RenderingContext::Init(Napi::Env env, Napi::Object exports)
+  {
+    Napi::Function tpl = DefineClass(
+        env,
+        "WebGL2RenderingContext",
+        {WEBGL1_CONSTANTS,
+         WEBGL2_CONSTANTS,
+         WEBGL1_METHODS(WebGL2RenderingContext),
+         WEBGL1_ACCESSORS(WebGL2RenderingContext)});
+    constructor = new Napi::FunctionReference();
+    *constructor = Napi::Persistent(tpl);
+    env.SetInstanceData(constructor);
+    exports.Set("WebGL2RenderingContext", tpl);
+    return exports;
+  }
+
+  WebGL2RenderingContext::WebGL2RenderingContext(const Napi::CallbackInfo &info) : WebGLBaseRenderingContext<WebGL2RenderingContext>(info)
+  {
+    auto initCommand = new renderer::Context2InitCommandBuffer();
+    addCommandBuffer(initCommand, true, true);
+
+    this->max3DTextureSize = initCommand->max3DTextureSize;
+    this->maxArrayTextureLayers = initCommand->maxArrayTextureLayers;
+    this->maxColorAttachments = initCommand->maxColorAttachments;
+    this->maxCombinedUniformBlocks = initCommand->maxCombinedUniformBlocks;
+    this->maxDrawBuffers = initCommand->maxDrawBuffers;
+    this->maxElementsIndices = initCommand->maxElementsIndices;
+    this->maxElementsVertices = initCommand->maxElementsVertices;
+    this->maxFragmentInputComponents = initCommand->maxFragmentInputComponents;
+    this->maxFragmentUniformBlocks = initCommand->maxFragmentUniformBlocks;
+    this->maxFragmentUniformComponents = initCommand->maxFragmentUniformComponents;
+    this->maxProgramTexelOffset = initCommand->maxProgramTexelOffset;
+    this->maxSamples = initCommand->maxSamples;
+    this->maxTransformFeedbackInterleavedComponents = initCommand->maxTransformFeedbackInterleavedComponents;
+    this->maxTransformFeedbackSeparateAttributes = initCommand->maxTransformFeedbackSeparateAttributes;
+    this->maxTransformFeedbackSeparateComponents = initCommand->maxTransformFeedbackSeparateComponents;
+    this->maxUniformBufferBindings = initCommand->maxUniformBufferBindings;
+    this->maxVaryingComponents = initCommand->maxVaryingComponents;
+    this->maxVertexOutputComponents = initCommand->maxVertexOutputComponents;
+    this->maxVertexUniformBlocks = initCommand->maxVertexUniformBlocks;
+    this->maxVertexUniformComponents = initCommand->maxVertexUniformComponents;
+    this->minProgramTexelOffset = initCommand->minProgramTexelOffset;
+
+    this->maxClientWaitTimeout = initCommand->maxClientWaitTimeout;
+    this->maxCombinedFragmentUniformComponents = initCommand->maxCombinedFragmentUniformComponents;
+    this->maxCombinedVertexUniformComponents = initCommand->maxCombinedVertexUniformComponents;
+    this->maxElementIndex = initCommand->maxElementIndex;
+    this->maxServerWaitTimeout = initCommand->maxServerWaitTimeout;
+    this->maxUniformBlockSize = initCommand->maxUniformBlockSize;
+    this->maxTextureLODBias = initCommand->maxTextureLODBias;
+  }
+
+  Napi::Value WebGL2RenderingContext::GetParameter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() >= 1)
+    {
+      uint32_t pname = info[0].ToNumber().Uint32Value();
+      if (pname == WEBGL2_MAX_3D_TEXTURE_SIZE)
+        return Napi::Number::New(env, max3DTextureSize);
+      else if (pname == WEBGL2_MAX_ARRAY_TEXTURE_LAYERS)
+        return Napi::Number::New(env, maxArrayTextureLayers);
+      else if (pname == WEBGL2_MAX_COLOR_ATTACHMENTS)
+        return Napi::Number::New(env, maxColorAttachments);
+      else if (pname == WEBGL2_MAX_COMBINED_UNIFORM_BLOCKS)
+        return Napi::Number::New(env, maxCombinedUniformBlocks);
+      else if (pname == WEBGL2_MAX_DRAW_BUFFERS)
+        return Napi::Number::New(env, maxDrawBuffers);
+      else if (pname == WEBGL2_MAX_ELEMENTS_INDICES)
+        return Napi::Number::New(env, maxElementsIndices);
+      else if (pname == WEBGL2_MAX_ELEMENTS_VERTICES)
+        return Napi::Number::New(env, maxElementsVertices);
+      else if (pname == WEBGL2_MAX_FRAGMENT_INPUT_COMPONENTS)
+        return Napi::Number::New(env, maxFragmentInputComponents);
+      else if (pname == WEBGL2_MAX_FRAGMENT_UNIFORM_BLOCKS)
+        return Napi::Number::New(env, maxFragmentUniformBlocks);
+      else if (pname == WEBGL2_MAX_FRAGMENT_UNIFORM_COMPONENTS)
+        return Napi::Number::New(env, maxFragmentUniformComponents);
+      else if (pname == WEBGL2_MAX_PROGRAM_TEXEL_OFFSET)
+        return Napi::Number::New(env, maxProgramTexelOffset);
+      else if (pname == WEBGL2_MAX_SAMPLES)
+        return Napi::Number::New(env, maxSamples);
+      else if (pname == WEBGL2_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS)
+        return Napi::Number::New(env, maxTransformFeedbackInterleavedComponents);
+      else if (pname == WEBGL2_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS)
+        return Napi::Number::New(env, maxTransformFeedbackSeparateAttributes);
+      else if (pname == WEBGL2_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS)
+        return Napi::Number::New(env, maxTransformFeedbackSeparateComponents);
+      else if (pname == WEBGL2_MAX_UNIFORM_BUFFER_BINDINGS)
+        return Napi::Number::New(env, maxUniformBufferBindings);
+      else if (pname == WEBGL2_MAX_VARYING_COMPONENTS)
+        return Napi::Number::New(env, maxVaryingComponents);
+      else if (pname == WEBGL2_MAX_VERTEX_OUTPUT_COMPONENTS)
+        return Napi::Number::New(env, maxVertexOutputComponents);
+      else if (pname == WEBGL2_MAX_VERTEX_UNIFORM_BLOCKS)
+        return Napi::Number::New(env, maxVertexUniformBlocks);
+      else if (pname == WEBGL2_MAX_VERTEX_UNIFORM_COMPONENTS)
+        return Napi::Number::New(env, maxVertexUniformComponents);
+      else if (pname == WEBGL2_MIN_PROGRAM_TEXEL_OFFSET)
+        return Napi::Number::New(env, minProgramTexelOffset);
+      else if (pname == WEBGL2_MAX_CLIENT_WAIT_TIMEOUT_WEBGL)
+        return Napi::Number::New(env, maxClientWaitTimeout);
+      else if (pname == WEBGL2_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS)
+        return Napi::Number::New(env, maxCombinedFragmentUniformComponents);
+      else if (pname == WEBGL2_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS)
+        return Napi::Number::New(env, maxCombinedVertexUniformComponents);
+      else if (pname == WEBGL2_MAX_ELEMENT_INDEX)
+        return Napi::Number::New(env, maxElementIndex);
+      else if (pname == WEBGL2_MAX_SERVER_WAIT_TIMEOUT)
+        return Napi::Number::New(env, maxServerWaitTimeout);
+      else if (pname == WEBGL2_MAX_UNIFORM_BLOCK_SIZE)
+        return Napi::Number::New(env, maxUniformBlockSize);
+      else if (pname == WEBGL2_MAX_TEXTURE_LOD_BIAS)
+        return Napi::Number::New(env, maxTextureLODBias);
+    }
+    return WebGLBaseRenderingContext<WebGL2RenderingContext>::GetParameter(info);
   }
 }

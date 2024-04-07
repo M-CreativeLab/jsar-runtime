@@ -1,5 +1,5 @@
 import * as logger from './logger';
-import { createWebGLContext } from '../webgl';
+import { getContext as getWebGLRenderingContext } from '../webgl';
 
 const {
   RenderLoop,
@@ -74,7 +74,7 @@ export function connectRenderer() {
    * Initialize the global WebGL context.
    */
   try {
-    globalGlContext = createWebGLContext(1, 1);
+    globalGlContext = getWebGLRenderingContext(loop.supportsWebGL2() ? 'webgl2' : 'webgl');
   } catch (err) {
     logger.warn('error creating webgl context:', err);
   }

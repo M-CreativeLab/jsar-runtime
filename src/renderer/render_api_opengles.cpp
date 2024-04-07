@@ -16,8 +16,8 @@ using namespace renderer;
 
 #include <assert.h>
 #if UNITY_IOS || UNITY_TVOS
-#include <OpenGLES/ES2/gl.h>
-#include <OpenGLES/ES2/glext.h>
+#include <OpenGLES/ES3/gl.h>
+#include <OpenGLES/ES3/glext.h>
 #elif UNITY_ANDROID || UNITY_WEBGL
 // On Android and WebGL, use GLES 3.0
 // See: https://android.googlesource.com/platform/frameworks/native/+/kitkat-release/opengl/include
@@ -304,6 +304,7 @@ public:
 	virtual ~RenderAPI_OpenGLCoreES() {}
 	virtual void ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces);
 	virtual bool GetUsesReverseZ() { return false; }
+	bool SupportsWebGL2();
 	virtual int GetDrawingBufferWidth();
 	virtual int GetDrawingBufferHeight();
 	virtual void ClearColor(float r, float g, float b, float a);
@@ -384,6 +385,11 @@ void RenderAPI_OpenGLCoreES::ProcessDeviceEvent(UnityGfxDeviceEventType type, IU
 	{
 		//@TODO: release resources
 	}
+}
+
+bool RenderAPI_OpenGLCoreES::SupportsWebGL2()
+{
+	return m_APIType == kUnityGfxRendererOpenGLES30;
 }
 
 int RenderAPI_OpenGLCoreES::GetDrawingBufferWidth()
@@ -566,6 +572,38 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			contextInitCommandBuffer->vendor = string((const char *)glGetString(GL_VENDOR));
 			contextInitCommandBuffer->version = string((const char *)glGetString(GL_VERSION));
 			contextInitCommandBuffer->renderer = string((const char *)glGetString(GL_RENDERER));
+			break;
+		}
+		case kCommandTypeContext2Init:
+		{
+			auto context2InitCommandBuffer = static_cast<Context2InitCommandBuffer *>(commandBuffer);
+			// GLint values
+			glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, &context2InitCommandBuffer->max3DTextureSize);
+			glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &context2InitCommandBuffer->maxArrayTextureLayers);
+			glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &context2InitCommandBuffer->maxColorAttachments);
+			glGetIntegerv(GL_MAX_COMBINED_UNIFORM_BLOCKS, &context2InitCommandBuffer->maxCombinedUniformBlocks);
+			glGetIntegerv(GL_MAX_DRAW_BUFFERS, &context2InitCommandBuffer->maxDrawBuffers);
+			glGetIntegerv(GL_MAX_ELEMENTS_INDICES, &context2InitCommandBuffer->maxElementsIndices);
+			glGetIntegerv(GL_MAX_ELEMENTS_VERTICES, &context2InitCommandBuffer->maxElementsVertices);
+			glGetIntegerv(GL_MAX_FRAGMENT_INPUT_COMPONENTS, &context2InitCommandBuffer->maxFragmentInputComponents);
+			glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_BLOCKS, &context2InitCommandBuffer->maxFragmentUniformBlocks);
+			glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &context2InitCommandBuffer->maxFragmentUniformComponents);
+			glGetIntegerv(GL_MAX_PROGRAM_TEXEL_OFFSET, &context2InitCommandBuffer->maxProgramTexelOffset);
+			glGetIntegerv(GL_MAX_SAMPLES, &context2InitCommandBuffer->maxSamples);
+			glGetIntegerv(GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS, &context2InitCommandBuffer->maxTransformFeedbackInterleavedComponents);
+			glGetIntegerv(GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS, &context2InitCommandBuffer->maxTransformFeedbackSeparateAttributes);
+			glGetIntegerv(GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS, &context2InitCommandBuffer->maxTransformFeedbackSeparateComponents);
+			glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &context2InitCommandBuffer->maxUniformBufferBindings);
+			glGetIntegerv(GL_MAX_VARYING_COMPONENTS, &context2InitCommandBuffer->maxVaryingComponents);
+			glGetIntegerv(GL_MAX_VERTEX_OUTPUT_COMPONENTS, &context2InitCommandBuffer->maxVertexOutputComponents);
+			glGetIntegerv(GL_MAX_VERTEX_UNIFORM_BLOCKS, &context2InitCommandBuffer->maxVertexUniformBlocks);
+			glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &context2InitCommandBuffer->maxVertexUniformComponents);
+			// GLint64 values
+			glGetInteger64v(GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS, &context2InitCommandBuffer->maxCombinedFragmentUniformComponents);
+			glGetInteger64v(GL_MAX_SERVER_WAIT_TIMEOUT, &context2InitCommandBuffer->maxServerWaitTimeout);
+			glGetInteger64v(GL_MAX_UNIFORM_BLOCK_SIZE, &context2InitCommandBuffer->maxUniformBlockSize);
+			// GLfloat values
+			glGetFloatv(GL_MAX_TEXTURE_LOD_BIAS, &context2InitCommandBuffer->maxTextureLODBias);
 			break;
 		}
 		case kCommandTypeCreateProgram:

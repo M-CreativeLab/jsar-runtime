@@ -4,7 +4,9 @@
 #include <condition_variable>
 #include <mutex>
 #include <napi.h>
+
 #include "xr/frame.hpp"
+#include "renderer/render_api.hpp"
 
 using namespace std;
 
@@ -34,6 +36,7 @@ namespace renderer
     void frameCallback();
 
   private:
+    Napi::Value SupportsWebGL2(const Napi::CallbackInfo &info);
     Napi::Value SetExceptionCallback(const Napi::CallbackInfo &info);
     Napi::Value SetFrameCallback(const Napi::CallbackInfo &info);
     Napi::Value SetFrameFinished(const Napi::CallbackInfo &info);
@@ -44,6 +47,7 @@ namespace renderer
     atomic<bool> disposed_ = true;
     atomic<bool> available_ = false;
     atomic<bool> finished_ = false;
+    RenderAPI *renderApi = nullptr;
 
     mutex m_mutex;
     condition_variable m_cv;

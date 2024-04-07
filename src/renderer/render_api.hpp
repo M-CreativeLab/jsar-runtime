@@ -41,7 +41,7 @@ public:
   virtual void ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces) = 0;
   virtual bool GetUsesReverseZ() = 0;
   
-
+  virtual bool SupportsWebGL2() = 0;
   virtual int GetDrawingBufferWidth() = 0;
   virtual int GetDrawingBufferHeight() = 0;
   virtual void ClearColor(float r, float g, float b, float a) = 0;

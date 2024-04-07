@@ -11,7 +11,8 @@ namespace renderer
     Napi::Function tpl = DefineClass(
         env,
         "RenderLoop",
-        {InstanceMethod("setExceptionCallback", &RenderLoop::SetExceptionCallback),
+        {InstanceMethod("supportsWebGL2", &RenderLoop::SupportsWebGL2),
+         InstanceMethod("setExceptionCallback", &RenderLoop::SetExceptionCallback),
          InstanceMethod("setFrameCallback", &RenderLoop::SetFrameCallback),
          InstanceMethod("setFrameFinished", &RenderLoop::SetFrameFinished),
          InstanceMethod("getCommandBuffersCount", &RenderLoop::GetCommandBuffersCount),
@@ -44,9 +45,22 @@ namespace renderer
       return;
     }
 
+    renderApi = RenderAPI::Get();
+    if (renderApi == nullptr)
+    {
+      Napi::TypeError::New(env, "Native renderer is not ready").ThrowAsJavaScriptException();
+      return;
+    }
     disposed_ = false;
     available_ = false; // wait for the frame callback to be set.
     s_instance = this;
+  }
+
+  Napi::Value RenderLoop::SupportsWebGL2(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Boolean::New(env, RenderAPI::Get()->SupportsWebGL2());
   }
 
   Napi::Value RenderLoop::SetExceptionCallback(const Napi::CallbackInfo &info)

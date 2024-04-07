@@ -103,7 +103,7 @@ if(APPLE)
     )
     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${APPLE_RENDERER_DEPS})
 elseif (ANDROID)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE GLESv2 EGL)
+    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE GLESv3 EGL)
 endif()
 
 # LabSound libraries requirements

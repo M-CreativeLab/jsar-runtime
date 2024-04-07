@@ -23,13 +23,17 @@ declare namespace Transmute {
   type RenderExceptionCallback = (code: number) => void;
   class RenderLoop {
     constructor();
+    supportsWebGL2(): boolean;
     setExceptionCallback(callback: RenderExceptionCallback): void;
     setFrameCallback(callback: FrameRequestCallback): void;
     setFrameFinished(): void;
   }
 
   class WebGLRenderingContextOnDevice extends WebGLRenderingContext {
-    // TODO: add the native methods here?
+    constructor(contextAttribs?: WebGLContextAttributes);
+  }
+  class WebGL2RenderingContextOnDevice extends WebGL2RenderingContext {
+    constructor(contextAttribs?: WebGLContextAttributes);
   }
 
   class XRDeviceNative {
@@ -96,6 +100,7 @@ declare namespace NodeJS {
     };
     _linkedBinding(module: 'transmute:webgl'): {
       WebGLRenderingContext: typeof Transmute.WebGLRenderingContextOnDevice;
+      WebGL2RenderingContext: typeof Transmute.WebGL2RenderingContextOnDevice;
     };
     _linkedBinding(module: 'transmute:webxr'): {
       XRDeviceNative: typeof Transmute.XRDeviceNative;
