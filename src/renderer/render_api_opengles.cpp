@@ -103,6 +103,10 @@ public:
 	{
 		m_RenderbufferId = buffer;
 	}
+	void RecordVertexArrayObject(int vao)
+	{
+		m_VertexArrayObjectId = vao;
+	}
 	void RecordActiveTextureUnit(int unit)
 	{
 		m_LastActiveTextureUnit = unit;
@@ -127,6 +131,7 @@ public:
 	GLint GetElementArrayBuffer() { return m_ElementArrayBufferId; }
 	GLint GetFramebuffer() { return m_FramebufferId; }
 	GLint GetRenderbuffer() { return m_RenderbufferId; }
+	GLint GetVertexArrayObject() { return m_VertexArrayObjectId; }
 	GLenum GetActiveTextureUnit() { return m_LastActiveTextureUnit; }
 	// GLint GetTexture2D() { return m_Texture2D; }
 
@@ -165,6 +170,9 @@ public:
 		if (m_RenderbufferId >= 0)
 			glBindRenderbuffer(GL_RENDERBUFFER, m_RenderbufferId);
 		bindBuffersError = glGetError();
+
+		if (m_VertexArrayObjectId >= 0)
+			glBindVertexArray(m_VertexArrayObjectId);
 
 		for (auto it = m_TextureBindingsWithUnit.begin(); it != m_TextureBindingsWithUnit.end(); it++)
 		{
@@ -227,6 +235,8 @@ protected:
 	GLint m_ElementArrayBufferId = 0;
 	GLint m_FramebufferId = 0;
 	GLint m_RenderbufferId = 0;
+	/** Vertex Array Object */
+	GLint m_VertexArrayObjectId = 0;
 	/** Textures */
 	GLenum m_LastActiveTextureUnit = GL_TEXTURE0;
 	std::map<GLenum, OpenGLTextureBinding *> m_TextureBindingsWithUnit;
@@ -251,6 +261,7 @@ public:
 		glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &m_ElementArrayBufferId);
 		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_FramebufferId);
 		glGetIntegerv(GL_RENDERBUFFER_BINDING, &m_RenderbufferId);
+		glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &m_VertexArrayObjectId);
 		glGetIntegerv(GL_ACTIVE_TEXTURE, (GLint *)&m_LastActiveTextureUnit);
 
 		ClearTextureBindings();
@@ -1061,6 +1072,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			auto bindVertexArrayCommandBuffer = static_cast<BindVertexArrayCommandBuffer *>(commandBuffer);
 			auto vertexArray = bindVertexArrayCommandBuffer->m_VertexArray;
 			glBindVertexArray(vertexArray);
+			context->RecordVertexArrayObject(vertexArray);
 			if (logCalls)
 				DEBUG(DEBUG_TAG, "[%d] GL::BindVertexArray: %d", isDefaultQueue, vertexArray);
 			break;
