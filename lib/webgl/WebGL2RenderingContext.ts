@@ -330,7 +330,7 @@ class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext impleme
   }
 }
 
-// Mixin WebGL2RenderingContext with WebGLRenderingContextImpl
-Object.assign(WebGL2RenderingContextImpl.prototype, WebGLRenderingContextImpl.prototype);
-
+Object.assign(WebGL2RenderingContextImpl.prototype, {
+  getExtension: WebGLRenderingContextImpl.prototype.getExtension,
+});
 export default WebGL2RenderingContextImpl;

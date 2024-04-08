@@ -579,7 +579,7 @@ namespace webgl
       InstanceValue("FRAMEBUFFER_DEFAULT", Napi::Number::New(env, WEBGL2_FRAMEBUFFER_DEFAULT)),                                     \
       InstanceValue("DEPTH_STENCIL_ATTACHMENT", Napi::Number::New(env, WEBGL2_DEPTH_STENCIL_ATTACHMENT)),                           \
       InstanceValue("DEPTH_STENCIL", Napi::Number::New(env, WEBGL2_DEPTH_STENCIL)),                                                 \
-      InstanceValue("DEPTH24_STENCIL8", Napi::Number::New(env, WEBGL2_UNSIGNED_INT_24_8)),                                          \
+      InstanceValue("DEPTH24_STENCIL8", Napi::Number::New(env, WEBGL2_DEPTH24_STENCIL8)),                                          \
       InstanceValue("DRAW_FRAMEBUFFER_BINDING", Napi::Number::New(env, WEBGL2_DRAW_FRAMEBUFFER_BINDING)),                           \
       InstanceValue("READ_FRAMEBUFFER", Napi::Number::New(env, WEBGL2_READ_FRAMEBUFFER)),                                           \
       InstanceValue("DRAW_FRAMEBUFFER", Napi::Number::New(env, WEBGL2_DRAW_FRAMEBUFFER)),                                           \
@@ -3269,6 +3269,10 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
+    auto jsThis = info.This().ToObject();
+    if (jsThis.Has("_extensions") && jsThis.Get("_extensions").IsArray())
+      return jsThis.Get("_extensions");
+
     auto commandBuffer = new renderer::GetSupportedExtensionsCommandBuffer();
     addCommandBuffer(commandBuffer, true, true);
 
@@ -3284,6 +3288,9 @@ namespace webgl
         jsExtensionName = Napi::String::New(env, extension);
       extensionsArray.Set(i, jsExtensionName);
     }
+
+    // Update the extensions array to the context object.
+    jsThis.Set("_extensions", extensionsArray);
     return extensionsArray;
   }
 

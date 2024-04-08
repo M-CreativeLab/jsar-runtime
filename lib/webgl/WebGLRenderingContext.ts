@@ -39,9 +39,6 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   canvas: HTMLCanvasElement | OffscreenCanvas;
   drawingBufferColorSpace: PredefinedColorSpace;
 
-  #constantNamesMap: Map<number, string> = new Map();
-  #supportedExtensions: string[] = null;
-
   constructor(_canvas: HTMLCanvasElement | OffscreenCanvas, options?: WebGLContextAttributes) {
     super(options);
     setupConstantNamesMap(this, glNative.WebGLRenderingContext);
@@ -377,14 +374,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return this.nativeCall('getFramebufferAttachmentParameter', [target, attachment, pname]);
   }
   getParameter(pname: number) {
-    try {
-      const r = super.getParameter(pname);
-      const pnameStr = this.#constantNamesMap.has(pname) ? `"${this.#constantNamesMap.get(pname)}(${pname})"` : `${pname}`;
-      logger.warn(`Parameter(${pnameStr}) = ${r}`);
-      return r;
-    } catch (e) {
-      throw new TypeError(`The parameter(${pname}) is not supported`);
-    }
+    return this.nativeCall('getParameter', [pname]);
   }
   getProgramInfoLog(program: WebGLProgram): string {
     return this.nativeCall('getProgramInfoLog', [program]);
@@ -410,10 +400,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return srcText;
   }
   getSupportedExtensions(): string[] {
-    if (this.#supportedExtensions == null) {
-      this.#supportedExtensions = this.nativeCall('getSupportedExtensions');
-    }
-    return this.#supportedExtensions;
+    return this.nativeCall('getSupportedExtensions');
   }
   getTexParameter(target: number, pname: number) {
     return this.nativeCall('getTexParameter', [target, pname]);

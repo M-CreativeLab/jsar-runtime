@@ -10,6 +10,6 @@ export function getContext(type: 'webgl' | 'webgl2', options?: WebGLContextAttri
 export function getContext(type: 'webgl' | 'webgl2', options?: WebGLContextAttributes): RenderingContext | null {
   logger.info(`[webgl] created a new ${type} context.`);
   return type === 'webgl2' ?
-    new WebGL2RenderingContextImpl(null, options) :
+    new WebGLRenderingContextImpl(null, options) :
     new WebGLRenderingContextImpl(null, options);
 }

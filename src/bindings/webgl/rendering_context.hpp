@@ -206,6 +206,7 @@ namespace webgl
 
   private:
     Napi::Value GetParameter(const Napi::CallbackInfo &info);
+    Napi::Value BeginQuery(const Napi::CallbackInfo &info);
 
   private:
     Napi::Value DrawingBufferWidthGetter(const Napi::CallbackInfo &info)
