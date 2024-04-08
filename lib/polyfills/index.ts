@@ -26,6 +26,10 @@ import {
   cancelAnimationFrame as cancelAnimationFrameImpl,
 } from '../bindings/renderer';
 import {
+  WebGLRenderingContextImpl,
+  WebGL2RenderingContextImpl
+} from '../webgl';
+import {
   XRWebGLLayerImpl,
   XRRigidTransformImpl
 } from '../webxr';
@@ -35,6 +39,24 @@ globalThis.XMLHttpRequest = XMLHttpRequestImpl;
 // globalThis.AudioContext = AudioContextImpl;
 globalThis.OffscreenCanvas = OffscreenCanvasImpl;
 globalThis.ImageData = ImageDataImpl;
+
+/**
+ * Add WebGL interfaces
+ */
+Object.defineProperties(globalThis, {
+  'WebGLRenderingContext': {
+    value: WebGLRenderingContextImpl,
+    writable: false,
+    enumerable: true,
+    configurable: false,
+  },
+  'WebGL2RenderingContext': {
+    value: WebGL2RenderingContextImpl,
+    writable: false,
+    enumerable: true,
+    configurable: false,
+  },
+});
 
 /**
  * Add WebXR interfaces
