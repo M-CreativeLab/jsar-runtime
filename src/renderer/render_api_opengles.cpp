@@ -681,6 +681,27 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 				linkProgramCommandBuffer->m_UniformLocations[name] = uniformLoc;
 				DEBUG(DEBUG_TAG, "GL::LinkProgram::Uniforms(%s in %d) => %d(size=%d, type=%d)", name, program, location, size, type);
 			}
+
+			/**
+			 * Fetch the uniform blocks when link successfully.
+			 */
+			GLint numUniformBlocks = 0;
+			glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCKS, &numUniformBlocks);
+			for (int i = 0; i < numUniformBlocks; i++)
+			{
+				GLsizei nameLength;
+				GLchar name[256];
+
+				glGetActiveUniformBlockName(program, i, sizeof(name) - 1, &nameLength, name);
+				name[nameLength] = '\0';
+
+				GLuint index = glGetUniformBlockIndex(program, name);
+				auto uniformBlock = UniformBlock();
+				uniformBlock.index = index;
+				linkProgramCommandBuffer->m_UniformBlocks[name] = uniformBlock;
+				DEBUG(DEBUG_TAG, "GL::LinkProgram::UniformBlocks(%s in %d) => %d", name, program, index);
+			}
+
 			// TODO: add active attributes?
 			if (logCalls)
 				DEBUG(DEBUG_TAG, "[%d] GL::LinkProgram(%d)", isDefaultQueue, program);
@@ -1016,6 +1037,34 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 							isDefaultQueue, renderbufferStorageCommandBuffer->m_Internalformat);
 			break;
 		}
+		case kCommandTypeCreateVertexArray:
+		{
+			auto createVertexArrayCommandBuffer = static_cast<CreateVertexArrayCommandBuffer *>(commandBuffer);
+			GLuint ret;
+			glGenVertexArrays(1, &ret);
+			createVertexArrayCommandBuffer->m_VertexArrayId = ret;
+			if (logCalls)
+				DEBUG(DEBUG_TAG, "[%d] GL::CreateVertexArray() => %d", isDefaultQueue, ret);
+			break;
+		}
+		case kCommandTypeDeleteVertexArray:
+		{
+			auto deleteVertexArrayCommandBuffer = static_cast<DeleteVertexArrayCommandBuffer *>(commandBuffer);
+			glDeleteVertexArrays(1, &deleteVertexArrayCommandBuffer->m_VertexArrayId);
+			if (logCalls)
+				DEBUG(DEBUG_TAG, "[%d] GL::DeleteVertexArray: %d",
+							isDefaultQueue, deleteVertexArrayCommandBuffer->m_VertexArrayId);
+			break;
+		}
+		case kCommandTypeBindVertexArray:
+		{
+			auto bindVertexArrayCommandBuffer = static_cast<BindVertexArrayCommandBuffer *>(commandBuffer);
+			auto vertexArray = bindVertexArrayCommandBuffer->m_VertexArray;
+			glBindVertexArray(vertexArray);
+			if (logCalls)
+				DEBUG(DEBUG_TAG, "[%d] GL::BindVertexArray: %d", isDefaultQueue, vertexArray);
+			break;
+		}
 		case kCommandTypeCreateTexture:
 		{
 			auto createTextureCommandBuffer = static_cast<CreateTextureCommandBuffer *>(commandBuffer);
@@ -1207,6 +1256,18 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			getUniformLocationCommandBuffer->m_Location = ret;
 			if (logCalls)
 				DEBUG(DEBUG_TAG, "[%d] GL::GetUniformLocation: %d", isDefaultQueue, ret);
+			break;
+		}
+		case kCommandTypeUnoformBlockBinding:
+		{
+			auto uniformBlockBindingCommandBuffer = static_cast<UniformBlockBindingCommandBuffer *>(commandBuffer);
+			auto program = uniformBlockBindingCommandBuffer->m_Program;
+			auto uniformBlockIndex = uniformBlockBindingCommandBuffer->m_UniformBlockIndex;
+			auto uniformBlockBinding = uniformBlockBindingCommandBuffer->m_UniformBlockBinding;
+			glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
+			if (logCalls)
+				DEBUG(DEBUG_TAG, "[%d] GL::UniformBlockBinding(%d, %d, %d)",
+							isDefaultQueue, program, uniformBlockIndex, uniformBlockBinding);
 			break;
 		}
 		case kCommandTypeUniform1f:

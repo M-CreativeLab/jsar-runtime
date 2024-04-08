@@ -1,4 +1,5 @@
 import * as logger from '../bindings/logger';
+import { ImageBitmapImpl, OffscreenCanvasImpl, kReadPixels } from '../polyfills/offscreencanvas';
 
 type ArgType = 'default' | 'ignore' | 'constant';
 export type NativeCallOptions = Partial<{
@@ -8,7 +9,7 @@ export type NativeCallOptions = Partial<{
   };
 }>;
 
-let isEnableDebugging: boolean = false;
+let isEnableDebugging: boolean = true;
 const glConstantNamesMap: Map<number, string> = new Map();
 
 /**
@@ -27,7 +28,13 @@ export function setupConstantNamesMap(instance: any, nativeContextType: typeof W
   }
 }
 
-export function makeNativeCall(fn: Function, name: string, args: any[] = [], options: NativeCallOptions = {}) {
+export function makeNativeCall(
+  this: WebGLRenderingContext | WebGL2RenderingContext,
+  fn: Function,
+  name: string,
+  args: any[] = [],
+  options: NativeCallOptions = {}
+) {
   if (typeof fn !== 'function') {
     throw new TypeError(`The method(${name}) in native WebGLRenderingContext is not supported`);
   }
@@ -36,7 +43,7 @@ export function makeNativeCall(fn: Function, name: string, args: any[] = [], opt
   try {
     r = fn.apply(this, args);
   } catch (err) {
-    logger.error(`Failed to make native call => WebGL::${name}(${args.join(', ')})`);
+    logger.error(`Failed to make native call => gl.${name}(${args.join(', ')})`, err);
     throw err;
   }
 
@@ -69,4 +76,45 @@ export function makeNativeCall(fn: Function, name: string, args: any[] = [], opt
     logger.info(`WebGL::${name}(${argsStr}) ${returnStr}`);
   }
   return r;
+}
+
+export function getTextureParametersFromImageSource(
+  this: WebGLRenderingContext | WebGL2RenderingContext,
+  ...args: any[]
+): {
+  format: number;
+  type: number;
+  width: number;
+  height: number;
+  pixels: ArrayBufferView;
+} {
+  const format = <number>(args[3]);
+  const type = <number>(args[4]);
+  const imageSource = <TexImageSource>(args[5]);
+
+  let pixels: ArrayBufferView;
+  if (
+    imageSource instanceof ImageBitmapImpl ||
+    imageSource instanceof OffscreenCanvasImpl
+  ) {
+    pixels = imageSource[kReadPixels]({
+      colorType: format === this.RGB ? 'rgb8' : 'rgba8',
+    });
+  } else {
+    logger.error(`Unsupported image source type for texImage2D():`, imageSource);
+    throw new Error(`Unsupported image source type for texImage2D()`);
+  }
+
+  // Convert ArrayBuffer to TypedArray
+  if (pixels instanceof ArrayBuffer) {
+    pixels = new Uint8Array(pixels);
+  }
+
+  return {
+    format,
+    type,
+    width: imageSource.width,
+    height: imageSource.height,
+    pixels,
+  };
 }

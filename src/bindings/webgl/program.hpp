@@ -14,6 +14,9 @@ namespace webgl
     void SetUniformLocation(const std::string &name, int location);
     bool HasUniformLocation(const std::string &name);
     int GetUniformLocation(const std::string &name);
+    void SetUniformBlockIndex(const std::string &name, int index);
+    bool HasUniformBlockIndex(const std::string &name);
+    int GetUniformBlockIndex(const std::string &name);
 
   public:
     static Napi::FunctionReference *constructor;
@@ -24,5 +27,6 @@ namespace webgl
   private:
     int id_;
     std::map<std::string, int> uniformLocations_;
+    std::map<std::string, int> uniformBlockIndices_;
   };
 }

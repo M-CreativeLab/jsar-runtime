@@ -1,5 +1,5 @@
 import WebGLRenderingContextImpl from './WebGLRenderingContext';
-import { setupConstantNamesMap, makeNativeCall, type NativeCallOptions } from './utils';
+import { setupConstantNamesMap, makeNativeCall, type NativeCallOptions, getTextureParametersFromImageSource } from './utils';
 const glNative = process._linkedBinding('transmute:webgl');
 
 class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext implements WebGL2RenderingContext {
@@ -8,7 +8,7 @@ class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext impleme
     setupConstantNamesMap(this, glNative.WebGL2RenderingContext);
   }
   private nativeCall(name: string, args: any[] = [], options: NativeCallOptions = {}) {
-    return makeNativeCall(<Function>super[name], name, args, options);
+    return makeNativeCall.call(this, <Function>super[name], name, args, options);
   }
 
   beginQuery(target: number, query: WebGLQuery): void {
@@ -213,6 +213,35 @@ class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext impleme
   }
   samplerParameteri(sampler: WebGLSampler, pname: number, param: number): void {
     return this.nativeCall('samplerParameteri', [sampler, pname, param]);
+  }
+  texImage2D(
+    target: number,
+    level: number,
+    internalformat: number,
+    width: unknown,
+    height: unknown,
+    border: unknown,
+    format?: unknown,
+    type?: unknown,
+    srcData?: unknown,
+    srcOffset?: unknown
+  ): void {
+    if (arguments.length === 6) {
+      const params = getTextureParametersFromImageSource.apply(this, arguments);
+      return super.texImage2D(
+        target,
+        level,
+        internalformat,
+        params.width,
+        params.height,
+        0,
+        params.format,
+        params.type,
+        params.pixels
+      );
+    } else {
+      return super.texImage2D.apply(this, arguments);
+    }
   }
   texImage3D(target: number, level: number, internalformat: number, width: number, height: number, depth: number, border: number, format: number, type: number, pboOffset: number): void;
   texImage3D(target: number, level: number, internalformat: number, width: number, height: number, depth: number, border: number, format: number, type: number, source: TexImageSource): void;

@@ -47,6 +47,15 @@ namespace renderer
     kCommandTypeDeleteRenderbuffer,
     kCommandTypeBindRenderbuffer,
     kCommandTypeRenderbufferStorage,
+    /** Buffer(WebGL2) */
+    kCommandTypeBindBufferBase,
+    kCommandTypeBindBufferRange,
+    kCommandTypeBlitFramebuffer,
+    /** Vertex Array */
+    kCommandTypeCreateVertexArray,
+    kCommandTypeDeleteVertexArray,
+    kCommandTypeBindVertexArray,
+    kCommandTypeIsVertexArray,
     /** Texture */
     kCommandTypeCreateTexture,
     kCommandTypeDeleteTexture,
@@ -58,12 +67,32 @@ namespace renderer
     kCommandTypeTexParameteri,
     kCommandTypeActiveTexture,
     kCommandTypeGenerateMipmap,
+    /** Sampler */
+    kCommandTypeCreateSampler,
+    kCommandTypeDeleteSampler,
+    kCommandTypeBindSampler,
+    kCommandTypeSamplerParameteri,
+    kCommandTypeSamplerParameterf,
+    kCommandTypeGetSamplerParameter,
+    kCommandTypeIsSampler,
+    /** Transform Feedback */
+    kCommandTypeCreateTransformFeedback,
+    kCommandTypeDeleteTransformFeedback,
+    kCommandTypeBindTransformFeedback,
+    kCommandTypeBeginTransformFeedback,
+    kCommandTypeEndTransformFeedback,
+    kCommandTypeTransformFeedbackVaryings,
+    kCommandTypeGetTransformFeedbackVarying,
+    kCommandTypePauseTransformFeedback,
+    kCommandTypeResumeTransformFeedback,
+    kCommandTypeIsTransformFeedback,
     /** Vertex Attribute */
     kCommandTypeEnableVertexAttribArray,
     kCommandTypeDisableVertexAttribArray,
     kCommandTypeVertexAttribPointer,
     kCommandTypeGetAttribLocation,
     kCommandTypeGetUniformLocation,
+    kCommandTypeUnoformBlockBinding,
     /** Set Uniform */
     kCommandTypeUniform1f,
     kCommandTypeUniform1fv,
@@ -87,6 +116,10 @@ namespace renderer
     /** Draw */
     kCommandTypeDrawArrays,
     kCommandTypeDrawElements,
+    kCommandTypeDrawBuffers,
+    kCommandTypeDrawArraysInstanced,
+    kCommandTypeDrawElementsInstanced,
+    kCommandTypeDrawRangeElements,
     /** Pixels */
     kCommandTypePixelStorei,
     kCommandTypePolygonOffset,
@@ -278,6 +311,16 @@ namespace renderer
     int size;
   };
 
+  class UniformBlock
+  {
+  public:
+    UniformBlock() {}
+
+  public:
+    int index;
+    int size;
+  };
+
   class LinkProgramCommandBuffer : public CommandBuffer
   {
   public:
@@ -287,6 +330,7 @@ namespace renderer
   public:
     int m_ProgramId;
     std::map<std::string, UniformLocation> m_UniformLocations;
+    std::map<std::string, UniformBlock> m_UniformBlocks; // Only used in WebGL2
   };
 
   class UseProgramCommandBuffer : public CommandBuffer
@@ -677,6 +721,106 @@ namespace renderer
     int m_Height;
   };
 
+  class BindBufferBaseCommandBuffer : public CommandBuffer
+  {
+  public:
+    BindBufferBaseCommandBuffer(int target, int index, int buffer) : CommandBuffer(kCommandTypeBindBufferBase),
+                                                                     m_Target(target),
+                                                                     m_Index(index),
+                                                                     m_Buffer(buffer) {}
+    ~BindBufferBaseCommandBuffer() {}
+
+  public:
+    int m_Target;
+    int m_Index;
+    int m_Buffer;
+  };
+
+  class BindBufferRangeCommandBuffer : public CommandBuffer
+  {
+  public:
+    BindBufferRangeCommandBuffer(int target, int index, int buffer, int offset, int size) : CommandBuffer(kCommandTypeBindBufferRange),
+                                                                                            m_Target(target),
+                                                                                            m_Index(index),
+                                                                                            m_Buffer(buffer),
+                                                                                            m_Offset(offset),
+                                                                                            m_Size(size) {}
+    ~BindBufferRangeCommandBuffer() {}
+
+  public:
+    int m_Target;
+    int m_Index;
+    int m_Buffer;
+    int m_Offset;
+    int m_Size;
+  };
+
+  class BlitFramebufferCommandBuffer : public CommandBuffer
+  {
+  public:
+    BlitFramebufferCommandBuffer(
+        int srcX0, int srcY0,
+        int srcX1, int srcY1,
+        int dstX0, int dstY0,
+        int dstX1, int dstY1,
+        int mask, int filter) : CommandBuffer(kCommandTypeBlitFramebuffer),
+                                m_SrcX0(srcX0),
+                                m_SrcY0(srcY0),
+                                m_SrcX1(srcX1),
+                                m_SrcY1(srcY1),
+                                m_DstX0(dstX0),
+                                m_DstY0(dstY0),
+                                m_DstX1(dstX1),
+                                m_DstY1(dstY1),
+                                m_Mask(mask),
+                                m_Filter(filter) {}
+    ~BlitFramebufferCommandBuffer() {}
+
+  public:
+    int m_SrcX0;
+    int m_SrcY0;
+    int m_SrcX1;
+    int m_SrcY1;
+    int m_DstX0;
+    int m_DstY0;
+    int m_DstX1;
+    int m_DstY1;
+    int m_Mask;
+    int m_Filter;
+  };
+
+  class CreateVertexArrayCommandBuffer : public CommandBuffer
+  {
+  public:
+    CreateVertexArrayCommandBuffer() : CommandBuffer(kCommandTypeCreateVertexArray) {}
+    ~CreateVertexArrayCommandBuffer() {}
+
+  public:
+    uint32_t m_VertexArrayId = 0;
+  };
+
+  class DeleteVertexArrayCommandBuffer : public CommandBuffer
+  {
+  public:
+    DeleteVertexArrayCommandBuffer(uint32_t vertexArray) : CommandBuffer(kCommandTypeDeleteVertexArray),
+                                                           m_VertexArrayId(vertexArray) {}
+    ~DeleteVertexArrayCommandBuffer() {}
+
+  public:
+    uint32_t m_VertexArrayId;
+  };
+
+  class BindVertexArrayCommandBuffer : public CommandBuffer
+  {
+  public:
+    BindVertexArrayCommandBuffer(int vertexArray) : CommandBuffer(kCommandTypeBindVertexArray),
+                                                    m_VertexArray(vertexArray) {}
+    ~BindVertexArrayCommandBuffer() {}
+
+  public:
+    int m_VertexArray;
+  };
+
   class CreateTextureCommandBuffer : public CommandBuffer
   {
   public:
@@ -988,6 +1132,21 @@ namespace renderer
     int m_Program;
     const char *m_Name;
     int m_Location;
+  };
+
+  class UniformBlockBindingCommandBuffer : public CommandBuffer
+  {
+  public:
+    UniformBlockBindingCommandBuffer(int program, uint32_t uniformBlockIndex, uint32_t uniformBlockBinding) : CommandBuffer(kCommandTypeUnoformBlockBinding),
+                                                                                                              m_Program(program),
+                                                                                                              m_UniformBlockIndex(uniformBlockIndex),
+                                                                                                              m_UniformBlockBinding(uniformBlockBinding) {}
+    ~UniformBlockBindingCommandBuffer() {}
+
+  public:
+    int m_Program;
+    uint32_t m_UniformBlockIndex;
+    uint32_t m_UniformBlockBinding;
   };
 
   class Uniform1fCommandBuffer : public CommandBuffer

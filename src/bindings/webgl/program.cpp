@@ -42,6 +42,21 @@ namespace webgl
     return uniformLocations_[name];
   }
 
+  void WebGLProgram::SetUniformBlockIndex(const std::string &name, int index)
+  {
+    uniformBlockIndices_[name] = index;
+  }
+
+  bool WebGLProgram::HasUniformBlockIndex(const std::string &name)
+  {
+    return uniformBlockIndices_.find(name) != uniformBlockIndices_.end();
+  }
+
+  int WebGLProgram::GetUniformBlockIndex(const std::string &name)
+  {
+    return uniformBlockIndices_[name];
+  }
+
   Napi::Value WebGLProgram::ToString(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();

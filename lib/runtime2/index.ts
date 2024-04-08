@@ -25,7 +25,9 @@ BABYLON.ThinEngine.QueueNewFrame = (func: () => void, requester?: any): number =
   });
 };
 BABYLON.Logger.OnNewCacheEntry = (entry) => {
-  logger.info('[Babylonjs]', entry);
+  entry.split('\n').forEach((line) => {
+    logger.info('[Babylonjs]', line);
+  });
 };
 BABYLON.Tools.GetAbsoluteUrl = (url: string) => {
   logger.info('[Babylonjs] GetAbsoluteUrl:', url);

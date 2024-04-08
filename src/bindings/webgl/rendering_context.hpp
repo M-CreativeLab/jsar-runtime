@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+#include <sstream>
 #include <assert.h>
 #include <napi.h>
 #include "renderer/render_api.hpp"
@@ -144,9 +146,9 @@ namespace webgl
 
   protected:
     RenderAPI *m_renderAPI;
-    bool m_XRCompatible = false;
     bool m_unpackFlipY = false;
     bool m_unpackPremultiplyAlpha = false;
+    bool m_isWebGL2 = false;
     /**
      * Read the value from the host
      */
@@ -195,7 +197,7 @@ namespace webgl
     }
 
   private:
-    static Napi::FunctionReference *constructor;
+    static Napi::FunctionReference *webglConstructor;
   };
 
   class WebGL2RenderingContext : public WebGLBaseRenderingContext<WebGL2RenderingContext>
@@ -205,8 +207,22 @@ namespace webgl
     WebGL2RenderingContext(const Napi::CallbackInfo &info);
 
   private:
+    /**
+     * Overriding the base class methods
+     */
     Napi::Value GetParameter(const Napi::CallbackInfo &info);
-    Napi::Value BeginQuery(const Napi::CallbackInfo &info);
+
+  private:
+    /**
+     * New methods for WebGL2
+     */
+    Napi::Value BindBufferBase(const Napi::CallbackInfo &info);
+    Napi::Value BindBufferRange(const Napi::CallbackInfo &info);
+    Napi::Value CreateVertexArray(const Napi::CallbackInfo &info);
+    Napi::Value DeleteVertexArray(const Napi::CallbackInfo &info);
+    Napi::Value BindVertexArray(const Napi::CallbackInfo &info);
+    Napi::Value GetUniformBlockIndex(const Napi::CallbackInfo &info);
+    Napi::Value UniformBlockBinding(const Napi::CallbackInfo &info);
 
   private:
     Napi::Value DrawingBufferWidthGetter(const Napi::CallbackInfo &info)
@@ -257,6 +273,6 @@ namespace webgl
     float maxTextureLODBias;
 
   private:
-    static Napi::FunctionReference *constructor;
+    static Napi::FunctionReference *webgl2Constructor;
   };
 }

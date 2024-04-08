@@ -2,7 +2,7 @@ import * as logger from '../bindings/logger';
 import { ImageBitmapImpl, OffscreenCanvasImpl, kReadPixels } from '../polyfills/offscreencanvas';
 import { WebGLShaderPrecisionFormatImpl } from './WebGLShaderPrecisionFormat';
 import { getExtension } from './extensions';
-import { makeNativeCall, setupConstantNamesMap, type NativeCallOptions } from './utils';
+import { makeNativeCall, setupConstantNamesMap, type NativeCallOptions, getTextureParametersFromImageSource } from './utils';
 
 const glNative = process._linkedBinding('transmute:webgl');
 
@@ -45,7 +45,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   }
 
   private nativeCall(name: string, args: any[] = [], options: NativeCallOptions = {}) {
-    return makeNativeCall(<Function>super[name], name, args, options);
+    return makeNativeCall.call(this, <Function>super[name], name, args, options);
   }
 
   activeTexture(texture: number): void {
@@ -491,10 +491,6 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
       fixedShaderSrc = extensions + '\n' + fixedShaderSrc;
     }
 
-    // logger.info(`shader(${shader})`);
-    // fixedShaderSrc.split('\n').forEach((str, line) => {
-    //   logger.info(`SRC[${line}]`, str);
-    // });
     return this.nativeCall('shaderSource', [shader, fixedShaderSrc], {
       debug: {
         argTypes: [, 'ignore'],
@@ -609,12 +605,6 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
   viewport(x: number, y: number, width: number, height: number): void {
     return this.nativeCall('viewport', [x, y, width, height]);
   }
-  makeXRCompatible(): Promise<void> {
-    return new Promise<void>((resolve) => {
-      super.makeXRCompatible();
-      resolve();
-    });
-  }
   bufferData(target: number, size: number, usage: number): void;
   bufferData(target: number, data: BufferSource, usage: number): void;
   bufferData(target: number, data: number | BufferSource, usage: number): void {
@@ -637,6 +627,9 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     }
   }
   bufferSubData(target: number, offset: number, data: BufferSource): void {
+    /**
+     * TODO: Remove the conversion to ArrayBuffer once the native side supports TypedArray
+     */
     let dataBuffer: ArrayBuffer;
     if (!(data instanceof ArrayBuffer)) {
       dataBuffer = data.buffer;
@@ -731,7 +724,6 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
         argTypes: ['constant', , 'constant', , , , 'constant', 'constant'],
       }
     };
-
     if (arguments.length === 9) {
       if (pixels instanceof ArrayBuffer) {
         pixels = new Uint8Array(pixels);
@@ -748,38 +740,17 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
         pixels
       ], callOptions);
     } else if (arguments.length === 6) {
-      const format = <number>(arguments[3]);
-      const type = <number>(arguments[4]);
-      const imageSource = <TexImageSource>(arguments[5]);
-
-      let pixels: ArrayBufferView;
-      if (
-        imageSource instanceof ImageBitmapImpl ||
-        imageSource instanceof OffscreenCanvasImpl
-      ) {
-        pixels = imageSource[kReadPixels]({
-          colorType: format === this.RGB ? 'rgb8' : 'rgba8',
-        });
-      } else {
-        logger.error(`Unsupported image source type for texImage2D():`, imageSource);
-        throw new Error(`Unsupported image source type for texImage2D()`);
-      }
-
-      // Convert ArrayBuffer to TypedArray
-      if (pixels instanceof ArrayBuffer) {
-        pixels = new Uint8Array(pixels);
-      }
-
+      const params = getTextureParametersFromImageSource.apply(this, arguments);
       return this.nativeCall('texImage2D', [
         target,
         level,
         internalformat,
-        imageSource.width,
-        imageSource.height,
+        params.width,
+        params.height,
         0,
-        format,
-        type,
-        pixels,
+        params.format,
+        params.type,
+        params.pixels,
       ], callOptions);
     } else {
       throw new Error('Invalid number of arguments for texImage2D()');
