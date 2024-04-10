@@ -35,19 +35,8 @@ class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
     adaptToDeviceRatio?: boolean
   ) {
     super(glContext, antialias, options, adaptToDeviceRatio);
+    this.disableUniformBuffers = true;
     this.#xrSessionId = options?.xrSessionId;
-  }
-
-  setState(
-    culling: boolean,
-    zOffset?: number,
-    force?: boolean,
-    reverseSide?: boolean,
-    cullBackFaces?: boolean,
-    stencil?: BABYLON.IStencilState,
-    zOffsetUnits?: number
-  ): void {
-    return super.setState(culling, zOffset, force, !reverseSide, cullBackFaces, stencil, zOffsetUnits);
   }
 
   setMatrices(uniform: WebGLUniformLocation, matrices: Float32Array): boolean {
@@ -206,7 +195,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
   private _preloadMeshes: Map<string, Array<BABYLON.AbstractMesh | BABYLON.TransformNode>> = new Map();
   private _preloadAnimationGroups: Map<string, BABYLON.AnimationGroup[]> = new Map();
   private _defaultCamera: BABYLON.Camera;
-  private _defaultLight: BABYLON.Light;
+  private _defaultLights: BABYLON.Light[];
 
   constructor(glContext: WebGLRenderingContext | WebGL2RenderingContext, xrSessionId: number) {
     super();
@@ -226,7 +215,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     });
 
     const scene = this._scene = new BABYLON.Scene(this.engine);
-    scene.useRightHandedSystem = false;
+    scene.useRightHandedSystem = true;
     scene.skipFrustumClipping = true;
 
     this._defaultCamera = new BABYLON.ArcRotateCamera(
@@ -239,9 +228,9 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
 
     {
       // create default light
-      const light = new BABYLON.HemisphericLight('light_front', new BABYLON.Vector3(0, 2, -5), scene);
-      light.intensity = 0.7;
-      this._defaultLight = light;
+      const light = new BABYLON.HemisphericLight('light_front', new BABYLON.Vector3(0, -2, 5), scene);
+      light.intensity = 1;
+      this._defaultLights.push(light);
     }
 
     this._xrDefaultExperience = WebXRDefaultExperience.CreateAsync(scene, {

@@ -218,11 +218,21 @@ namespace webgl
      */
     Napi::Value BindBufferBase(const Napi::CallbackInfo &info);
     Napi::Value BindBufferRange(const Napi::CallbackInfo &info);
+    Napi::Value BlitFramebuffer(const Napi::CallbackInfo &info);
+    Napi::Value RenderbufferStorageMultisample(const Napi::CallbackInfo &info);
     Napi::Value CreateVertexArray(const Napi::CallbackInfo &info);
     Napi::Value DeleteVertexArray(const Napi::CallbackInfo &info);
     Napi::Value BindVertexArray(const Napi::CallbackInfo &info);
+    Napi::Value TexImage3D(const Napi::CallbackInfo &info);
+    Napi::Value TexSubImage3D(const Napi::CallbackInfo &info);
     Napi::Value GetUniformBlockIndex(const Napi::CallbackInfo &info);
     Napi::Value UniformBlockBinding(const Napi::CallbackInfo &info);
+    Napi::Value VertexAttribIPointer(const Napi::CallbackInfo &info);
+    Napi::Value VertexAttribDivisor(const Napi::CallbackInfo &info);
+    Napi::Value DrawBuffers(const Napi::CallbackInfo &info);
+    Napi::Value DrawArraysInstanced(const Napi::CallbackInfo &info);
+    Napi::Value DrawElementsInstanced(const Napi::CallbackInfo &info);
+    Napi::Value DrawRangeElements(const Napi::CallbackInfo &info);
 
   private:
     Napi::Value DrawingBufferWidthGetter(const Napi::CallbackInfo &info)

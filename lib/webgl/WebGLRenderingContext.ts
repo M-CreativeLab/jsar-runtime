@@ -1,39 +1,16 @@
 import * as logger from '../bindings/logger';
-import { ImageBitmapImpl, OffscreenCanvasImpl, kReadPixels } from '../polyfills/offscreencanvas';
 import { WebGLShaderPrecisionFormatImpl } from './WebGLShaderPrecisionFormat';
 import { getExtension } from './extensions';
-import { makeNativeCall, setupConstantNamesMap, type NativeCallOptions, getTextureParametersFromImageSource } from './utils';
+import {
+  type NativeCallOptions,
+  makeNativeCall,
+  setupConstantNamesMap,
+  getTextureParametersFromImageSource,
+  isTypedArray,
+  unpackTypedArray
+} from './utils';
 
 const glNative = process._linkedBinding('transmute:webgl');
-
-type TypedArray =
-  Uint8Array |
-  Uint8ClampedArray |
-  Int8Array |
-  Uint16Array |
-  Int16Array |
-  Uint32Array |
-  Int32Array |
-  Float32Array |
-  Float64Array;
-
-function isTypedArray(data: any): data is TypedArray {
-  return data instanceof Uint8Array ||
-    data instanceof Uint8ClampedArray ||
-    data instanceof Int8Array ||
-    data instanceof Uint16Array ||
-    data instanceof Int16Array ||
-    data instanceof Uint32Array ||
-    data instanceof Int32Array ||
-    data instanceof Float32Array ||
-    data instanceof Float64Array;
-}
-
-function unpackTypedArray(array: DataView | ArrayBufferView) {
-  return (new Uint8Array(array.buffer)).subarray(
-    array.byteOffset,
-    array.byteLength + array.byteOffset);
-}
 
 export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingContext implements WebGLRenderingContext {
   canvas: HTMLCanvasElement | OffscreenCanvas;
@@ -62,9 +39,6 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return this.nativeCall('bindAttribLocation', [program, index, name]);
   }
   bindBuffer(target: number, buffer: WebGLBuffer): void {
-    if (buffer == null || buffer === undefined) {
-      buffer = 0;
-    }
     return this.nativeCall('bindBuffer', [target, buffer], {
       debug: {
         argTypes: ['constant', 'default'],
@@ -82,9 +56,6 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     });
   }
   bindRenderbuffer(target: number, renderbuffer: WebGLRenderbuffer): void {
-    if (renderbuffer == null || renderbuffer === undefined) {
-      renderbuffer = 0;
-    }
     return this.nativeCall('bindRenderbuffer', [target, renderbuffer], {
       debug: {
         argTypes: ['constant',],
@@ -396,8 +367,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     return new WebGLShaderPrecisionFormatImpl(rangeMin, rangeMax, precision);
   }
   getShaderSource(shader: WebGLShader): string {
-    const srcText = this.nativeCall('getShaderSource', [shader]);
-    return srcText;
+    return this.nativeCall('getShaderSource', [shader]);
   }
   getSupportedExtensions(): string[] {
     return this.nativeCall('getSupportedExtensions');
@@ -627,16 +597,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     }
   }
   bufferSubData(target: number, offset: number, data: BufferSource): void {
-    /**
-     * TODO: Remove the conversion to ArrayBuffer once the native side supports TypedArray
-     */
-    let dataBuffer: ArrayBuffer;
-    if (!(data instanceof ArrayBuffer)) {
-      dataBuffer = data.buffer;
-    } else {
-      dataBuffer = data;
-    }
-    return this.nativeCall('bufferSubData', [target, offset, dataBuffer], {
+    return this.nativeCall('bufferSubData', [target, offset, data], {
       debug: {
         argTypes: ['constant', 'default', 'ignore'],
       }

@@ -771,7 +771,10 @@ export class ImageBitmapImpl implements ImageBitmap {
   width: number;
   private _skImage: CanvasKitImage;
   constructor(buffer: ArrayBuffer) {
+    const timeStarts = performance.now();
     const skImage = canvasKit.MakeImageFromEncoded(buffer);
+    const imageDecodingTime = performance.now() - timeStarts;
+
     if (!skImage) {
       throw new Error(`Failed to create image from buffer: ${buffer}`);
     }
@@ -779,7 +782,7 @@ export class ImageBitmapImpl implements ImageBitmap {
     this.height = skImage.height();
     this.width = skImage.width();
     ImageBitmapImpl._liveCount += 1;
-    logger.info(`ImageBitmap(${this.width}x${this.height}, ${buffer.byteLength} bytes) is created.`);
+    logger.info(`ImageBitmap(${this.width}x${this.height}, ${buffer.byteLength} bytes) decoding time: ${imageDecodingTime.toFixed(2)}ms.`);
   }
 
   close(): void {

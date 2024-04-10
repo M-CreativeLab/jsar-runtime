@@ -1,5 +1,6 @@
 import WebGLRenderingContextImpl from './WebGLRenderingContext';
-import { setupConstantNamesMap, makeNativeCall, type NativeCallOptions, getTextureParametersFromImageSource } from './utils';
+import { WebGLShaderPrecisionFormatImpl } from './WebGLShaderPrecisionFormat';
+import { setupConstantNamesMap, makeNativeCall, type NativeCallOptions, getTextureParametersFromImageSource, isTexImageSource, getPixelsFromTexImageSource, isTypedArray, unpackTypedArray } from './utils';
 const glNative = process._linkedBinding('transmute:webgl');
 
 class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext implements WebGL2RenderingContext {
@@ -58,7 +59,7 @@ class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext impleme
   }
   compressedTexImage3D(target: number, level: number, internalformat: number, width: number, height: number, depth: number, border: number, imageSize: number, offset: number): void;
   compressedTexImage3D(target: number, level: number, internalformat: number, width: number, height: number, depth: number, border: number, srcData: ArrayBufferView, srcOffset?: number, srcLengthOverride?: number): void;
-  compressedTexImage3D(target: unknown, level: unknown, internalformat: unknown, width: unknown, height: unknown, depth: unknown, border: unknown, srcData: unknown, srcOffset?: unknown, srcLengthOverride?: unknown): void {
+  compressedTexImage3D(target: number, level: number, internalformat: number, width: number, height: number, depth: number, border: number, srcData: unknown, srcOffset?: unknown, srcLengthOverride?: unknown): void {
     this.nativeCall('compressedTexImage3D', [target, level, internalformat, width, height, depth, border, srcData, srcOffset, srcLengthOverride]);
   }
   compressedTexSubImage3D(target: number, level: number, xoffset: number, yoffset: number, zoffset: number, width: number, height: number, depth: number, format: number, imageSize: number, offset: number): void;
@@ -223,12 +224,32 @@ class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext impleme
     border: unknown,
     format?: unknown,
     type?: unknown,
-    srcData?: unknown,
+    pixels?: unknown,
     srcOffset?: unknown
   ): void {
-    if (arguments.length === 6) {
+    const callOptions = <NativeCallOptions>{
+      debug: {
+        argTypes: ['constant', , 'constant', , , , 'constant', 'constant'],
+      }
+    };
+    if (arguments.length === 9) {
+      if (pixels instanceof ArrayBuffer) {
+        pixels = new Uint8Array(pixels);
+      }
+      return this.nativeCall('texImage2D', [
+        target,
+        level,
+        internalformat,
+        width as number,
+        height as number,
+        border as number,
+        format,
+        type,
+        pixels
+      ], callOptions);
+    } else if (arguments.length === 6) {
       const params = getTextureParametersFromImageSource.apply(this, arguments);
-      return super.texImage2D(
+      return this.nativeCall('texImage2D', [
         target,
         level,
         internalformat,
@@ -237,18 +258,35 @@ class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext impleme
         0,
         params.format,
         params.type,
-        params.pixels
-      );
+        params.pixels,
+      ], callOptions);
     } else {
-      return super.texImage2D.apply(this, arguments);
+      throw new Error('Invalid number of arguments for texImage2D()');
     }
   }
   texImage3D(target: number, level: number, internalformat: number, width: number, height: number, depth: number, border: number, format: number, type: number, pboOffset: number): void;
   texImage3D(target: number, level: number, internalformat: number, width: number, height: number, depth: number, border: number, format: number, type: number, source: TexImageSource): void;
   texImage3D(target: number, level: number, internalformat: number, width: number, height: number, depth: number, border: number, format: number, type: number, srcData: ArrayBufferView): void;
   texImage3D(target: number, level: number, internalformat: number, width: number, height: number, depth: number, border: number, format: number, type: number, srcData: ArrayBufferView, srcOffset: number): void;
-  texImage3D(target: unknown, level: unknown, internalformat: unknown, width: unknown, height: unknown, depth: unknown, border: unknown, format: unknown, type: unknown, srcData: unknown, srcOffset?: unknown): void {
-    return this.nativeCall('texImage3D', [target, level, internalformat, width, height, depth, border, format, type, srcData, srcOffset]);
+  texImage3D(target: number, level: number, internalformat: number, width: number, height: number, depth: number, border: number, format: number, type: number, srcData: unknown, srcOffset?: unknown): void {
+    if (isTexImageSource(srcData)) {
+      const pixels = getPixelsFromTexImageSource(format === this.RGB ? 'rgb8' : 'rgba8', srcData);
+      return this.nativeCall('texImage3D', [
+        target,
+        level,
+        internalformat,
+        width,
+        height,
+        depth,
+        border,
+        format,
+        type,
+        pixels.data,
+      ]);
+    } else {
+      return this.nativeCall('texImage3D', [
+        target, level, internalformat, width, height, depth, border, format, type, srcData, srcOffset]);
+    }
   }
   texStorage2D(target: number, levels: number, internalformat: number, width: number, height: number): void {
     return this.nativeCall('texStorage2D', [target, levels, internalformat, width, height]);
@@ -259,8 +297,26 @@ class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext impleme
   texSubImage3D(target: number, level: number, xoffset: number, yoffset: number, zoffset: number, width: number, height: number, depth: number, format: number, type: number, pboOffset: number): void;
   texSubImage3D(target: number, level: number, xoffset: number, yoffset: number, zoffset: number, width: number, height: number, depth: number, format: number, type: number, source: TexImageSource): void;
   texSubImage3D(target: number, level: number, xoffset: number, yoffset: number, zoffset: number, width: number, height: number, depth: number, format: number, type: number, srcData: ArrayBufferView, srcOffset?: number): void;
-  texSubImage3D(target: unknown, level: unknown, xoffset: unknown, yoffset: unknown, zoffset: unknown, width: unknown, height: unknown, depth: unknown, format: unknown, type: unknown, srcData: unknown, srcOffset?: unknown): void {
-    return this.nativeCall('texSubImage3D', [target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, srcData, srcOffset]);
+  texSubImage3D(target: number, level: number, xoffset: number, yoffset: number, zoffset: number, width: number, height: number, depth: number, format: number, type: number, srcData: unknown, srcOffset?: unknown): void {
+    if (isTexImageSource(srcData)) {
+      const pixels = getPixelsFromTexImageSource(format === this.RGB ? 'rgb8' : 'rgba8', srcData);
+      return this.nativeCall('texSubImage3D', [
+        target,
+        level,
+        xoffset,
+        yoffset,
+        zoffset,
+        width,
+        height,
+        depth,
+        format,
+        type,
+        pixels.data,
+      ]);
+    } else {
+      return this.nativeCall('texSubImage3D', [
+        target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, srcData, srcOffset]);
+    }
   }
   transformFeedbackVaryings(program: WebGLProgram, varyings: string[], bufferMode: number): void;
   transformFeedbackVaryings(program: WebGLProgram, varyings: Iterable<string>, bufferMode: number): void;
@@ -356,6 +412,57 @@ class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext impleme
   }
   waitSync(sync: WebGLSync, flags: number, timeout: number): void {
     return this.nativeCall('waitSync', [sync, flags, timeout]);
+  }
+
+  getShaderPrecisionFormat(shadertype: number, precisiontype: number): WebGLShaderPrecisionFormat {
+    const { rangeMin, rangeMax, precision } = super.getShaderPrecisionFormat(shadertype, precisiontype);
+    return new WebGLShaderPrecisionFormatImpl(rangeMin, rangeMax, precision);
+  }
+  shaderSource(shader: WebGLShader, source: string): void {
+    /**
+     * Process rules:
+     * - The #extension directive must appear before any non-preprocessor tokens in a shader.
+     */
+    const lines = source.split('\n');
+    // find all #extension directives and move them to the top of the shader
+    const extensionDecls: string[] = [];
+    let fixedShaderSrc: string = '';
+    for (const line of lines) {
+      if (line.startsWith('#extension ') && line.endsWith(': enable')) {
+        extensionDecls.push(line);
+      } else {
+        fixedShaderSrc += line + '\n';
+      }
+    }
+    if (extensionDecls.length > 0) {
+      const extensions = extensionDecls.join('\n');
+      fixedShaderSrc = extensions + '\n' + fixedShaderSrc;
+    }
+
+    return this.nativeCall('shaderSource', [shader, fixedShaderSrc], {
+      debug: {
+        argTypes: [, 'ignore'],
+      },
+    });
+  }
+  bufferData(target: number, data: number | BufferSource, usage: number, srcOffset?: number, length: number = 0): void {
+    if (typeof data === 'number') {
+      throw new Error('bufferData() with size not implemented.');
+    } else {
+      let dataBuffer: Uint8Array;
+      if (data instanceof DataView || isTypedArray(data)) {
+        dataBuffer = unpackTypedArray(data);
+      } else if (data instanceof ArrayBuffer) {
+        dataBuffer = new Uint8Array(data);
+      } else {
+        throw new Error('Invalid data type for bufferData(), expected ArrayBuffer or TypedArray.');
+      }
+      return this.nativeCall('bufferData', [target, dataBuffer, usage], {
+        debug: {
+          argTypes: ['constant', 'default', 'constant'],
+        }
+      });
+    }
   }
 }
 

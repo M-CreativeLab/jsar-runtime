@@ -51,6 +51,7 @@ namespace renderer
     kCommandTypeBindBufferBase,
     kCommandTypeBindBufferRange,
     kCommandTypeBlitFramebuffer,
+    kCommandTypeRenderbufferStorageMultisample,
     /** Vertex Array */
     kCommandTypeCreateVertexArray,
     kCommandTypeDeleteVertexArray,
@@ -67,6 +68,9 @@ namespace renderer
     kCommandTypeTexParameteri,
     kCommandTypeActiveTexture,
     kCommandTypeGenerateMipmap,
+    /** Texture(WebGL2) */
+    kCommandTypeTexImage3D,
+    kCommandTypeTexSubImage3D,
     /** Sampler */
     kCommandTypeCreateSampler,
     kCommandTypeDeleteSampler,
@@ -90,6 +94,8 @@ namespace renderer
     kCommandTypeEnableVertexAttribArray,
     kCommandTypeDisableVertexAttribArray,
     kCommandTypeVertexAttribPointer,
+    kCommandTypeVertexAttribIPointer,
+    kCommandTypeVertexAttribDivisor,
     kCommandTypeGetAttribLocation,
     kCommandTypeGetUniformLocation,
     kCommandTypeUnoformBlockBinding,
@@ -789,6 +795,25 @@ namespace renderer
     int m_Filter;
   };
 
+  class RenderbufferStorageMultisampleCommandBuffer : public CommandBuffer
+  {
+  public:
+    RenderbufferStorageMultisampleCommandBuffer(int target, int samples, int internalformat, int width, int height) : CommandBuffer(kCommandTypeRenderbufferStorageMultisample),
+                                                                                                                      m_Target(target),
+                                                                                                                      m_Samples(samples),
+                                                                                                                      m_Internalformat(internalformat),
+                                                                                                                      m_Width(width),
+                                                                                                                      m_Height(height) {}
+    ~RenderbufferStorageMultisampleCommandBuffer() {}
+
+  public:
+    int m_Target;
+    int m_Samples;
+    int m_Internalformat;
+    int m_Width;
+    int m_Height;
+  };
+
   class CreateVertexArrayCommandBuffer : public CommandBuffer
   {
   public:
@@ -897,7 +922,7 @@ namespace renderer
                               m_PixelsSize(pixelsSize),
                               m_Pixels(new char[pixelsSize])
     {
-      memcpy((void *)m_Pixels, pixels, width * height * 4);
+      memcpy((void *)m_Pixels, pixels, pixelsSize);
     }
     ~TexImage2DCommandBuffer()
     {
@@ -1051,6 +1076,113 @@ namespace renderer
     int m_Target;
   };
 
+  class TexImage3DCommandBuffer : public CommandBuffer
+  {
+  public:
+    TexImage3DCommandBuffer(
+        int target,
+        int level,
+        int internalformat,
+        int width,
+        int height,
+        int depth,
+        int border,
+        int format,
+        int type,
+        size_t pixelsSize,
+        const void *pixels) : CommandBuffer(kCommandTypeTexImage3D),
+                              m_Target(target),
+                              m_Level(level),
+                              m_Internalformat(internalformat),
+                              m_Width(width),
+                              m_Height(height),
+                              m_Depth(depth),
+                              m_Border(border),
+                              m_Format(format),
+                              m_Type(type)
+    {
+      if (pixels != NULL && pixelsSize > 0)
+      {
+        m_PixelsSize = pixelsSize;
+        m_Pixels = new char[pixelsSize];
+        memcpy((void *)m_Pixels, pixels, width * height * depth * 4);
+      }
+    }
+    ~TexImage3DCommandBuffer()
+    {
+      if (m_Pixels != NULL)
+        delete[] m_Pixels;
+    }
+
+  public:
+    int m_Target;
+    int m_Level;
+    int m_Internalformat;
+    int m_Width;
+    int m_Height;
+    int m_Depth;
+    int m_Border;
+    int m_Format;
+    int m_Type;
+    size_t m_PixelsSize = 0;
+    const char *m_Pixels = NULL;
+  };
+
+  class TexSubImage3DCommandBuffer : public CommandBuffer
+  {
+  public:
+    TexSubImage3DCommandBuffer(
+        int target,
+        int level,
+        int xoffset,
+        int yoffset,
+        int zoffset,
+        int width,
+        int height,
+        int depth,
+        int format,
+        int type,
+        size_t pixelsSize,
+        const void *pixels) : CommandBuffer(kCommandTypeTexSubImage3D),
+                              m_Target(target),
+                              m_Level(level),
+                              m_Xoffset(xoffset),
+                              m_Yoffset(yoffset),
+                              m_Zoffset(zoffset),
+                              m_Width(width),
+                              m_Height(height),
+                              m_Depth(depth),
+                              m_Format(format),
+                              m_Type(type)
+    {
+      if (pixels != NULL && pixelsSize > 0)
+      {
+        m_PixelsSize = pixelsSize;
+        m_Pixels = new char[pixelsSize];
+        memcpy((void *)m_Pixels, pixels, width * height * depth * 4);
+      }
+    }
+    ~TexSubImage3DCommandBuffer()
+    {
+      if (m_Pixels != NULL)
+        delete[] m_Pixels;
+    }
+
+  public:
+    int m_Target;
+    int m_Level;
+    int m_Xoffset;
+    int m_Yoffset;
+    int m_Zoffset;
+    int m_Width;
+    int m_Height;
+    int m_Depth;
+    int m_Format;
+    int m_Type;
+    size_t m_PixelsSize = 0;
+    const char *m_Pixels = NULL;
+  };
+
   class EnableVertexAttribArrayCommandBuffer : public CommandBuffer
   {
   public:
@@ -1092,6 +1224,38 @@ namespace renderer
     bool m_Normalized;
     int m_Stride;
     const void *m_Offset;
+  };
+
+  class VertexAttribIPointerCommandBuffer : public CommandBuffer
+  {
+  public:
+    VertexAttribIPointerCommandBuffer(int index, int size, int type, int stride, const void *offset) : CommandBuffer(kCommandTypeVertexAttribIPointer),
+                                                                                                       m_Index(index),
+                                                                                                       m_Size(size),
+                                                                                                       m_Type(type),
+                                                                                                       m_Stride(stride),
+                                                                                                       m_Offset(offset) {}
+    ~VertexAttribIPointerCommandBuffer() {}
+
+  public:
+    int m_Index;
+    int m_Size;
+    int m_Type;
+    int m_Stride;
+    const void *m_Offset;
+  };
+
+  class VertexAttribDivisorCommandBuffer : public CommandBuffer
+  {
+  public:
+    VertexAttribDivisorCommandBuffer(int index, int divisor) : CommandBuffer(kCommandTypeVertexAttribDivisor),
+                                                               m_Index(index),
+                                                               m_Divisor(divisor) {}
+    ~VertexAttribDivisorCommandBuffer() {}
+
+  public:
+    int m_Index;
+    int m_Divisor;
   };
 
   class GetAttribLocationCommandBuffer : public CommandBuffer
@@ -1570,6 +1734,83 @@ namespace renderer
 
   public:
     int m_Mode;
+    int m_Count;
+    int m_Type;
+    const void *m_Indices;
+  };
+
+  class DrawBuffersCommandBuffer : public CommandBuffer
+  {
+  public:
+    DrawBuffersCommandBuffer(int n, const uint32_t *bufs) : CommandBuffer(kCommandTypeDrawBuffers),
+                                                            m_N(n)
+    {
+      m_Bufs = new uint32_t[n];
+      for (int i = 0; i < n; i++)
+        m_Bufs[i] = bufs[i];
+    }
+    ~DrawBuffersCommandBuffer()
+    {
+      delete[] m_Bufs;
+    }
+
+  public:
+    int m_N;
+    uint32_t *m_Bufs;
+  };
+
+  class DrawArraysInstancedCommandBuffer : public CommandBuffer
+  {
+  public:
+    DrawArraysInstancedCommandBuffer(int mode, int first, int count, int primcount) : CommandBuffer(kCommandTypeDrawArraysInstanced),
+                                                                                      m_Mode(mode),
+                                                                                      m_First(first),
+                                                                                      m_Count(count),
+                                                                                      m_Primcount(primcount) {}
+    ~DrawArraysInstancedCommandBuffer() {}
+
+  public:
+    int m_Mode;
+    int m_First;
+    int m_Count;
+    int m_Primcount;
+  };
+
+  class DrawElementsInstancedCommandBuffer : public CommandBuffer
+  {
+  public:
+    DrawElementsInstancedCommandBuffer(int mode, int count, int type, const void *indices, int primcount) : CommandBuffer(kCommandTypeDrawElementsInstanced),
+                                                                                                            m_Mode(mode),
+                                                                                                            m_Count(count),
+                                                                                                            m_Type(type),
+                                                                                                            m_Indices(indices),
+                                                                                                            m_Primcount(primcount) {}
+    ~DrawElementsInstancedCommandBuffer() {}
+
+  public:
+    int m_Mode;
+    int m_Count;
+    int m_Type;
+    const void *m_Indices;
+    int m_Primcount;
+  };
+
+  class DrawRangeElementsCommandBuffer : public CommandBuffer
+  {
+  public:
+    DrawRangeElementsCommandBuffer(int mode, int start, int end, int count, int type, const void *indices) : CommandBuffer(kCommandTypeDrawRangeElements),
+                                                                                                             m_Mode(mode),
+                                                                                                             m_Start(start),
+                                                                                                             m_End(end),
+                                                                                                             m_Count(count),
+                                                                                                             m_Type(type),
+                                                                                                             m_Indices(indices) {}
+    ~DrawRangeElementsCommandBuffer() {}
+
+  public:
+    int m_Mode;
+    int m_Start;
+    int m_End;
     int m_Count;
     int m_Type;
     const void *m_Indices;

@@ -124,7 +124,7 @@ export class TransmuteRuntime2 extends EventTarget {
       await dom.waitForSpaceReady();
       logger.info('the jsar document\'s space is ready');
     }
-    this.fitSpaceWithScene(spaceNode, 0.5);
+    this.fitSpaceWithScene(spaceNode);
   }
 
   private fitSpaceWithScene(spaceNode: BABYLON.TransformNode, ratio = 0.5) {
@@ -136,5 +136,6 @@ export class TransmuteRuntime2 extends EventTarget {
     const scalingRatio = Math.min(ratio / sceneSize.x, ratio / sceneSize.y, ratio / sceneSize.z);
     spaceNode.scaling = new BABYLON.Vector3(scalingRatio, scalingRatio, scalingRatio);
     spaceNode.setEnabled(true);
+    logger.info('space has been scaled to fit the scene, and the scaling ratio is:', scalingRatio);
   }
 }

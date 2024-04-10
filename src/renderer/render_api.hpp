@@ -40,7 +40,7 @@ public:
   // Process general event like initialization, shutdown, device loss/reset etc.
   virtual void ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces) = 0;
   virtual bool GetUsesReverseZ() = 0;
-  
+
   virtual bool SupportsWebGL2() = 0;
   virtual int GetDrawingBufferWidth() = 0;
   virtual int GetDrawingBufferHeight() = 0;
@@ -61,7 +61,7 @@ public:
    */
   FrameExecutionCode ExecuteFrame();
   /**
-   * Executes the commands from the default command queue, and it returns a boolean value indicating if there are any commands 
+   * Executes the commands from the default command queue, and it returns a boolean value indicating if there are any commands
    * to execute.
    */
   virtual bool ExecuteCommandBuffer() = 0;
@@ -80,7 +80,8 @@ public:
   void EnableAppGlobalLog() { m_EnableLogOnAppGlobal = true; }
   void EnableXRFrameLog() { m_EnableLogOnXRFrame = true; }
 
-  bool HasViewportChanged(int x, int y, int width, int height) {
+  bool HasViewportChanged(int x, int y, int width, int height)
+  {
     return m_Viewport[0] != x || m_Viewport[1] != y || m_Viewport[2] != width || m_Viewport[3] != height;
   }
   void SetViewport(int x, int y, int width, int height)
@@ -120,9 +121,9 @@ public:
 
 private:
   /**
-   * This method is used to record the frame time and report the GPU busy status by checking the time difference between 
+   * This method is used to record the frame time and report the GPU busy status by checking the time difference between
    * the last frame. Once the GPU is in busy state, JSAR will be notified to pause the rendering loop.
-   * 
+   *
    * It returns a boolean value indicating if the GPU is busy, true means the GPU is busy, otherwise false.
    */
   bool RecordAndReportGpuBusy();

@@ -2,6 +2,17 @@ import * as logger from '../bindings/logger';
 import { ImageBitmapImpl, OffscreenCanvasImpl, kReadPixels } from '../polyfills/offscreencanvas';
 
 type ArgType = 'default' | 'ignore' | 'constant';
+type TypedArray =
+  Uint8Array |
+  Uint8ClampedArray |
+  Int8Array |
+  Uint16Array |
+  Int16Array |
+  Uint32Array |
+  Int32Array |
+  Float32Array |
+  Float64Array;
+
 export type NativeCallOptions = Partial<{
   debug: {
     argTypes?: ArgType[];
@@ -9,8 +20,26 @@ export type NativeCallOptions = Partial<{
   };
 }>;
 
-let isEnableDebugging: boolean = true;
+let isEnableDebugging: boolean = false;
 const glConstantNamesMap: Map<number, string> = new Map();
+
+export function isTypedArray(data: any): data is TypedArray {
+  return data instanceof Uint8Array ||
+    data instanceof Uint8ClampedArray ||
+    data instanceof Int8Array ||
+    data instanceof Uint16Array ||
+    data instanceof Int16Array ||
+    data instanceof Uint32Array ||
+    data instanceof Int32Array ||
+    data instanceof Float32Array ||
+    data instanceof Float64Array;
+}
+
+export function unpackTypedArray(array: DataView | ArrayBufferView) {
+  return (new Uint8Array(array.buffer)).subarray(
+    array.byteOffset,
+    array.byteLength + array.byteOffset);
+}
 
 /**
  * It fetches all the constants from the native implementation and stores them in a map `#constantNamesMap`, which is used to 
@@ -57,6 +86,9 @@ export function makeNativeCall(
           if (argTypes[i] === 'constant') {
             return glConstantNamesMap.has(arg) ? `${glConstantNamesMap.get(arg)}(${arg})` : `${arg}`;
           } else {
+            if (isTypedArray(arg) || arg instanceof ArrayBuffer || arg instanceof DataView) {
+              return `${arg.constructor.name}(${arg.byteLength})`;
+            }
             return arg;
           }
         })
@@ -76,6 +108,39 @@ export function makeNativeCall(
     logger.info(`WebGL::${name}(${argsStr}) ${returnStr}`);
   }
   return r;
+}
+
+export function isTexImageSource(imageSource: unknown): imageSource is TexImageSource {
+  return (
+    imageSource instanceof ImageBitmapImpl ||
+    imageSource instanceof OffscreenCanvasImpl
+  );
+}
+
+export function getPixelsFromTexImageSource(
+  colorType: 'rgb8' | 'rgba8',
+  imageSource: TexImageSource
+): {
+  width: number;
+  height: number;
+  data: ArrayBufferView;
+} {
+  let pixels: ArrayBufferView;
+  if (
+    imageSource instanceof ImageBitmapImpl ||
+    imageSource instanceof OffscreenCanvasImpl
+  ) {
+    pixels = imageSource[kReadPixels]({
+      colorType,
+    });
+  } else {
+    throw new Error(`Unsupported image source type`);
+  }
+  return {
+    width: imageSource.width,
+    height: imageSource.height,
+    data: pixels,
+  };
 }
 
 export function getTextureParametersFromImageSource(
