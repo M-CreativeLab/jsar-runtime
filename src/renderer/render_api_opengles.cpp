@@ -2,8 +2,11 @@
 #include <sstream>
 #include <string>
 
-#include "render_api.hpp"
-#include "runtime/platform_base.hpp"
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
+
+#include "gles/common.hpp"
+#include "gles/context_storage.hpp"
 #include "xr/device.hpp"
 
 // OpenGL Core profile (desktop) or OpenGL ES (mobile) implementation of RenderAPI.
@@ -13,301 +16,6 @@ using namespace std;
 using namespace renderer;
 
 #if SUPPORT_OPENGL_UNIFIED
-
-#include <assert.h>
-#if UNITY_IOS || UNITY_TVOS
-#include <OpenGLES/ES3/gl.h>
-#include <OpenGLES/ES3/glext.h>
-#elif UNITY_ANDROID || UNITY_WEBGL
-// On Android and WebGL, use GLES 3.0
-// See: https://android.googlesource.com/platform/frameworks/native/+/kitkat-release/opengl/include
-#include <GLES3/gl3.h>
-#include <GLES3/gl3ext.h>
-#include <EGL/egl.h>
-#elif UNITY_OSX
-#include <OpenGL/gl3.h>
-#elif UNITY_WIN
-// On Windows, use gl3w to initialize and load OpenGL Core functions. In principle any other
-// library (like GLEW, GLFW etc.) can be used; here we use gl3w since it's simple and
-// straightforward.
-#include "gl3w/gl3w.h"
-#elif UNITY_LINUX
-#define GL_GLEXT_PROTOTYPES
-#include <GL/gl.h>
-#elif UNITY_EMBEDDED_LINUX
-#include <GLES3/gl3.h>
-#if SUPPORT_OPENGL_CORE
-#define GL_GLEXT_PROTOTYPES
-#include <GL/gl.h>
-#endif
-#else
-#error Unknown platform
-#endif
-
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
-
-#define DEBUG_ARG_END -1
-#define DEBUG_TAG TR_RENDERAPI_TAG
-
-class OpenGLTextureBinding
-{
-public:
-	OpenGLTextureBinding(GLenum target, GLuint texture) : m_Target(target), m_Texture(texture) {}
-	inline void Reset(GLenum target, GLuint texture)
-	{
-		m_Target = target;
-		m_Texture = texture;
-	}
-	inline GLenum GetTarget() { return m_Target; }
-	inline GLint GetTexture() { return m_Texture; }
-
-public:
-	GLenum m_Target;
-	GLuint m_Texture;
-};
-
-class OpenGLContextStorage
-{
-public:
-	OpenGLContextStorage(const char *name) : m_Name(name) {}
-	~OpenGLContextStorage()
-	{
-		ClearTextureBindings();
-	}
-
-	void RecordViewport(int x, int y, int w, int h)
-	{
-		m_Viewport[0] = x;
-		m_Viewport[1] = y;
-		m_Viewport[2] = w;
-		m_Viewport[3] = h;
-	}
-	void RecordProgram(int program)
-	{
-		m_ProgramId = program;
-	}
-	void RecordArrayBuffer(int buffer)
-	{
-		m_ArrayBufferId = buffer;
-	}
-	void RecordElementArrayBuffer(int buffer)
-	{
-		m_ElementArrayBufferId = buffer;
-	}
-	void RecordFramebuffer(int buffer)
-	{
-		m_FramebufferId = buffer;
-	}
-	void RecordRenderbuffer(int buffer)
-	{
-		m_RenderbufferId = buffer;
-	}
-	void RecordVertexArrayObject(int vao)
-	{
-		m_VertexArrayObjectId = vao;
-	}
-	void RecordActiveTextureUnit(int unit)
-	{
-		m_LastActiveTextureUnit = unit;
-	}
-	void RecordTextureBindingWithUnit(GLenum target, GLuint texture)
-	{
-		GLint activeUnit;
-		glGetIntegerv(GL_ACTIVE_TEXTURE, &activeUnit);
-
-		auto binding = m_TextureBindingsWithUnit[activeUnit];
-		if (binding == nullptr)
-			m_TextureBindingsWithUnit[activeUnit] = new OpenGLTextureBinding(target, texture);
-		else
-		{
-			binding->Reset(target, texture);
-		}
-	}
-
-	const char *GetName() { return m_Name; }
-	GLint GetProgram() { return m_ProgramId; }
-	GLint GetArrayBuffer() { return m_ArrayBufferId; }
-	GLint GetElementArrayBuffer() { return m_ElementArrayBufferId; }
-	GLint GetFramebuffer() { return m_FramebufferId; }
-	GLint GetRenderbuffer() { return m_RenderbufferId; }
-	GLint GetVertexArrayObject() { return m_VertexArrayObjectId; }
-	GLenum GetActiveTextureUnit() { return m_LastActiveTextureUnit; }
-	// GLint GetTexture2D() { return m_Texture2D; }
-
-	void ResetProgram(int programToReset)
-	{
-		if (m_ProgramId == programToReset)
-			m_ProgramId = 0;
-	}
-
-	void Restore()
-	{
-		GLenum useProgramError;
-		GLenum bindBuffersError;
-		GLenum bindTextureError;
-
-		if (
-				m_Viewport[0] != -1 &&
-				m_Viewport[1] != -1 &&
-				m_Viewport[2] != -1 &&
-				m_Viewport[3] != -1)
-		{
-			glViewport(m_Viewport[0], m_Viewport[1], m_Viewport[2], m_Viewport[3]);
-		}
-		if (m_ProgramId >= 0)
-			glUseProgram(m_ProgramId);
-		else
-			glUseProgram(0);
-		useProgramError = glGetError();
-
-		if (m_ArrayBufferId >= 0)
-			glBindBuffer(GL_ARRAY_BUFFER, m_ArrayBufferId);
-		if (m_ElementArrayBufferId >= 0)
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ElementArrayBufferId);
-		if (m_FramebufferId >= 0)
-			glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
-		if (m_RenderbufferId >= 0)
-			glBindRenderbuffer(GL_RENDERBUFFER, m_RenderbufferId);
-		bindBuffersError = glGetError();
-
-		if (m_VertexArrayObjectId >= 0)
-			glBindVertexArray(m_VertexArrayObjectId);
-
-		for (auto it = m_TextureBindingsWithUnit.begin(); it != m_TextureBindingsWithUnit.end(); it++)
-		{
-			auto unit = it->first;
-			auto binding = it->second;
-			auto target = binding->GetTarget();
-			auto texture = binding->GetTexture();
-			glActiveTexture(unit);
-			glBindTexture(target, texture);
-		}
-		if (m_LastActiveTextureUnit >= GL_TEXTURE0 && m_LastActiveTextureUnit <= GL_TEXTURE31)
-			glActiveTexture(m_LastActiveTextureUnit);
-		else
-			glActiveTexture(GL_TEXTURE0);
-		bindTextureError = glGetError();
-
-#if UNITY_ANDROID || UNITY_WEBGL
-		EGLint eglError = eglGetError();
-		if (eglError == EGL_CONTEXT_LOST)
-			DEBUG(DEBUG_TAG, "EGL context lost, need to reload the context.");
-		else if (eglError != EGL_SUCCESS)
-			DEBUG(DEBUG_TAG, "Occurs an EGL error: 0x%04X", eglError);
-#endif
-
-		if (useProgramError != GL_NO_ERROR)
-			DEBUG(DEBUG_TAG, "Occurs an error in glUseProgram() when restoring %s context: 0x%04X",
-						m_Name, useProgramError);
-		if (bindBuffersError != GL_NO_ERROR)
-			DEBUG(DEBUG_TAG, "Occurs an error in buffers binding when restoring %s context: 0x%04X",
-						m_Name, bindBuffersError);
-		if (bindTextureError != GL_NO_ERROR)
-			DEBUG(DEBUG_TAG, "Occurs an error in texture bindings when restoring %s context: 0x%04X",
-						m_Name, bindTextureError);
-
-		// Check for OpenGL errors
-		GLenum error = glGetError();
-		if (error != GL_NO_ERROR)
-			DEBUG(DEBUG_TAG, "Occurs an OpenGL error in restoring %s context: 0x%04X", error, m_Name);
-	}
-	void Print()
-	{
-		DEBUG(DEBUG_TAG, "%s program: %d", m_Name, m_ProgramId);
-		DEBUG(DEBUG_TAG, "%s framebuffer: %d", m_Name, m_FramebufferId);
-		DEBUG(DEBUG_TAG, "%s renderbuffer: %d", m_Name, m_RenderbufferId);
-		DEBUG(DEBUG_TAG, "%s vertex array object: %d", m_Name, m_VertexArrayObjectId);
-	}
-	void ClearTextureBindings()
-	{
-		for (auto it = m_TextureBindingsWithUnit.begin(); it != m_TextureBindingsWithUnit.end(); it++)
-			delete it->second;
-		m_TextureBindingsWithUnit.clear();
-	}
-
-protected:
-	const char *m_Name;
-	GLint m_Viewport[4] = {-1, -1, -1, -1};
-	/** Program */
-	GLint m_ProgramId = 0;
-	/** Buffers */
-	GLint m_ArrayBufferId = 0;
-	GLint m_ElementArrayBufferId = 0;
-	GLint m_FramebufferId = 0;
-	GLint m_RenderbufferId = 0;
-	/** Vertex Array Object */
-	GLint m_VertexArrayObjectId = 0;
-	/** Textures */
-	GLenum m_LastActiveTextureUnit = GL_TEXTURE0;
-	std::map<GLenum, OpenGLTextureBinding *> m_TextureBindingsWithUnit;
-};
-
-class OpenGLHostContextStorage : public OpenGLContextStorage
-{
-public:
-	OpenGLHostContextStorage() : OpenGLContextStorage("Host") {}
-
-public:
-	void Restore()
-	{
-		OpenGLContextStorage::Restore();
-		glFrontFace(m_FrontFace);
-	}
-	void Record()
-	{
-		glGetIntegerv(GL_VIEWPORT, m_Viewport);
-		glGetIntegerv(GL_CURRENT_PROGRAM, &m_ProgramId);
-		glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &m_ArrayBufferId);
-		glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &m_ElementArrayBufferId);
-		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_FramebufferId);
-		glGetIntegerv(GL_RENDERBUFFER_BINDING, &m_RenderbufferId);
-		glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &m_VertexArrayObjectId);
-		glGetIntegerv(GL_ACTIVE_TEXTURE, (GLint *)&m_LastActiveTextureUnit);
-
-		ClearTextureBindings();
-		for (int i = GL_TEXTURE0; i <= GL_TEXTURE31; i++)
-		{
-			GLint texture;
-			glActiveTexture(i);
-			// TODO: how to support other texture targets?
-			glGetIntegerv(GL_TEXTURE_BINDING_2D, &texture);
-			m_TextureBindingsWithUnit[i] = new OpenGLTextureBinding(GL_TEXTURE_2D, texture);
-		}
-		glActiveTexture(m_LastActiveTextureUnit);
-
-		// Enable or disable
-		m_CullFaceEnabled = glIsEnabled(GL_CULL_FACE);
-
-		// States
-		glGetIntegerv(GL_CULL_FACE_MODE, (GLint *)&m_CullFace);
-		glGetIntegerv(GL_FRONT_FACE, (GLint *)&m_FrontFace);
-	}
-	void RecordTextureBindingFromHost()
-	{
-		auto binding = m_TextureBindingsWithUnit[m_LastActiveTextureUnit];
-		if (binding != nullptr)
-			return;
-
-		GLuint texture;
-		GLint beforeActiveUnit;
-		glGetIntegerv(GL_ACTIVE_TEXTURE, &beforeActiveUnit);
-
-		bool isActiveNotMatched = beforeActiveUnit != m_LastActiveTextureUnit;
-		if (isActiveNotMatched)
-			glActiveTexture(m_LastActiveTextureUnit);
-		glGetIntegerv(GL_TEXTURE_BINDING_2D, (GLint *)&texture);
-		m_TextureBindingsWithUnit[m_LastActiveTextureUnit] = new OpenGLTextureBinding(GL_TEXTURE_2D, texture);
-
-		if (isActiveNotMatched)
-			glActiveTexture(beforeActiveUnit);
-	}
-
-private:
-	bool m_CullFaceEnabled;
-	GLenum m_CullFace;
-	GLenum m_FrontFace;
-};
 
 class RenderAPI_OpenGLCoreES : public RenderAPI
 {
@@ -337,6 +45,1452 @@ public:
 			vector<renderer::CommandBuffer *> &commandBuffers,
 			xr::DeviceFrame *deviceFrame,
 			bool isDefaultQueue);
+
+private:
+	void OnContextInit(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto contextInitCommandBuffer = static_cast<ContextInitCommandBuffer *>(commandBuffer);
+		glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &contextInitCommandBuffer->maxCombinedTextureImageUnits);
+		glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE, &contextInitCommandBuffer->maxCubeMapTextureSize);
+		glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_VECTORS, &contextInitCommandBuffer->maxFragmentUniformVectors);
+		glGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, &contextInitCommandBuffer->maxRenderbufferSize);
+		glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &contextInitCommandBuffer->maxTextureImageUnits);
+		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &contextInitCommandBuffer->maxTextureSize);
+		glGetIntegerv(GL_MAX_VARYING_VECTORS, &contextInitCommandBuffer->maxVaryingVectors);
+		glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &contextInitCommandBuffer->maxVertexAttribs);
+		glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &contextInitCommandBuffer->maxVertexTextureImageUnits);
+		glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &contextInitCommandBuffer->maxVertexUniformVectors);
+
+		contextInitCommandBuffer->vendor = string((const char *)glGetString(GL_VENDOR));
+		contextInitCommandBuffer->version = string((const char *)glGetString(GL_VERSION));
+		contextInitCommandBuffer->renderer = string((const char *)glGetString(GL_RENDERER));
+	}
+	void OnContext2Init(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto context2InitCommandBuffer = static_cast<Context2InitCommandBuffer *>(commandBuffer);
+		// GLint values
+		glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, &context2InitCommandBuffer->max3DTextureSize);
+		glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &context2InitCommandBuffer->maxArrayTextureLayers);
+		glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &context2InitCommandBuffer->maxColorAttachments);
+		glGetIntegerv(GL_MAX_COMBINED_UNIFORM_BLOCKS, &context2InitCommandBuffer->maxCombinedUniformBlocks);
+		glGetIntegerv(GL_MAX_DRAW_BUFFERS, &context2InitCommandBuffer->maxDrawBuffers);
+		glGetIntegerv(GL_MAX_ELEMENTS_INDICES, &context2InitCommandBuffer->maxElementsIndices);
+		glGetIntegerv(GL_MAX_ELEMENTS_VERTICES, &context2InitCommandBuffer->maxElementsVertices);
+		glGetIntegerv(GL_MAX_FRAGMENT_INPUT_COMPONENTS, &context2InitCommandBuffer->maxFragmentInputComponents);
+		glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_BLOCKS, &context2InitCommandBuffer->maxFragmentUniformBlocks);
+		glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &context2InitCommandBuffer->maxFragmentUniformComponents);
+		glGetIntegerv(GL_MAX_PROGRAM_TEXEL_OFFSET, &context2InitCommandBuffer->maxProgramTexelOffset);
+		glGetIntegerv(GL_MAX_SAMPLES, &context2InitCommandBuffer->maxSamples);
+		glGetIntegerv(GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS, &context2InitCommandBuffer->maxTransformFeedbackInterleavedComponents);
+		glGetIntegerv(GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS, &context2InitCommandBuffer->maxTransformFeedbackSeparateAttributes);
+		glGetIntegerv(GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS, &context2InitCommandBuffer->maxTransformFeedbackSeparateComponents);
+		glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &context2InitCommandBuffer->maxUniformBufferBindings);
+		glGetIntegerv(GL_MAX_VARYING_COMPONENTS, &context2InitCommandBuffer->maxVaryingComponents);
+		glGetIntegerv(GL_MAX_VERTEX_OUTPUT_COMPONENTS, &context2InitCommandBuffer->maxVertexOutputComponents);
+		glGetIntegerv(GL_MAX_VERTEX_UNIFORM_BLOCKS, &context2InitCommandBuffer->maxVertexUniformBlocks);
+		glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &context2InitCommandBuffer->maxVertexUniformComponents);
+		// GLint64 values
+		glGetInteger64v(GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS, &context2InitCommandBuffer->maxCombinedFragmentUniformComponents);
+		glGetInteger64v(GL_MAX_SERVER_WAIT_TIMEOUT, &context2InitCommandBuffer->maxServerWaitTimeout);
+		glGetInteger64v(GL_MAX_UNIFORM_BLOCK_SIZE, &context2InitCommandBuffer->maxUniformBlockSize);
+		// GLfloat values
+		glGetFloatv(GL_MAX_TEXTURE_LOD_BIAS, &context2InitCommandBuffer->maxTextureLODBias);
+	}
+	void OnCreateProgram(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto createProgramCommandBuffer = static_cast<CreateProgramCommandBuffer *>(commandBuffer);
+		int ret = glCreateProgram();
+		createProgramCommandBuffer->m_ProgramId = ret;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::CreateProgram() => %d", isDefaultQueue, ret);
+	}
+	void OnDeleteProgram(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto deleteProgramCommandBuffer = static_cast<DeleteProgramCommandBuffer *>(commandBuffer);
+		auto id = deleteProgramCommandBuffer->m_ProgramId;
+		glDeleteProgram(id);
+
+		/**
+		 * Reset the program in both "AppGlobal" and "XRFrame" when we receiving a delete program command to avoid the
+		 * context using the deleted program.
+		 */
+		m_AppGlobalContext.ResetProgram(id);
+		m_AppXRFrameContext.ResetProgram(id);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::DeleteProgram(%d)", isDefaultQueue, id);
+	}
+	void OnLinkProgram(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto linkProgramCommandBuffer = static_cast<LinkProgramCommandBuffer *>(commandBuffer);
+		glLinkProgram(linkProgramCommandBuffer->m_ProgramId);
+
+		// Update the locations of the uniforms and attributes
+		GLuint program = linkProgramCommandBuffer->m_ProgramId;
+
+		/**
+		 * Check the link status of the program.
+		 */
+		GLenum status;
+		glGetProgramiv(program, GL_LINK_STATUS, (GLint *)&status);
+		if (status == GL_FALSE)
+		{
+			GLint errorLength;
+			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &errorLength);
+			GLchar *errorStr = new GLchar[errorLength];
+			glGetProgramInfoLog(program, errorLength, NULL, errorStr);
+			DEBUG(DEBUG_TAG, "Failed to link program(%d): %s", program, errorStr);
+			delete[] errorStr;
+			return;
+		}
+
+		/**
+		 * Fetch the locations of the uniforms and attributes when link successfully.
+		 */
+		GLint numUniforms = 0;
+		glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &numUniforms);
+		for (int i = 0; i < numUniforms; i++)
+		{
+			GLsizei nameLength;
+			GLint size;
+			GLenum type;
+			GLchar name[256];
+
+			glGetActiveUniform(program, i, sizeof(name) - 1, &nameLength, &size, &type, name);
+			name[nameLength] = '\0';
+
+			GLint location = glGetUniformLocation(program, name);
+			if (location <= -1)
+				continue;
+
+			auto uniformLoc = UniformLocation();
+			uniformLoc.location = location;
+			uniformLoc.size = size;
+
+			linkProgramCommandBuffer->m_UniformLocations[name] = uniformLoc;
+			DEBUG(DEBUG_TAG, "GL::LinkProgram::Uniforms(%s in %d) => %d(size=%d, type=%d)", name, program, location, size, type);
+		}
+
+		/**
+		 * Fetch the uniform blocks when link successfully.
+		 */
+		GLint numUniformBlocks = 0;
+		glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCKS, &numUniformBlocks);
+		for (int i = 0; i < numUniformBlocks; i++)
+		{
+			GLsizei nameLength;
+			GLchar name[256];
+
+			glGetActiveUniformBlockName(program, i, sizeof(name) - 1, &nameLength, name);
+			name[nameLength] = '\0';
+
+			GLuint index = glGetUniformBlockIndex(program, name);
+			auto uniformBlock = UniformBlock();
+			uniformBlock.index = index;
+			linkProgramCommandBuffer->m_UniformBlocks[name] = uniformBlock;
+			DEBUG(DEBUG_TAG, "GL::LinkProgram::UniformBlocks(%s in %d) => %d", name, program, index);
+		}
+
+		// TODO: add active attributes?
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::LinkProgram(%d)", isDefaultQueue, program);
+	}
+	void OnUseProgram(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
+		auto useProgramCommandBuffer = static_cast<UseProgramCommandBuffer *>(commandBuffer);
+		auto program = useProgramCommandBuffer->m_ProgramId;
+		glUseProgram(program);
+		context->RecordProgram(program);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::UseProgram(%d)", isDefaultQueue, program);
+	}
+	void OnGetProgramParameter(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto getProgramParameterCommandBuffer = static_cast<GetProgramParameterCommandBuffer *>(commandBuffer);
+		GLint ret;
+		glGetProgramiv(
+				getProgramParameterCommandBuffer->m_ProgramId,
+				getProgramParameterCommandBuffer->m_Pname,
+				&ret);
+		getProgramParameterCommandBuffer->m_Value = ret;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::GetProgramParameter() => %d", isDefaultQueue, ret);
+	}
+	void OnGetProgramInfoLog(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto getProgramInfoLogCommandBuffer = static_cast<GetProgramInfoLogCommandBuffer *>(commandBuffer);
+		GLint infoLogLength;
+		glGetProgramiv(getProgramInfoLogCommandBuffer->m_ProgramId, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+		GLchar *infoLog = new GLchar[infoLogLength];
+		glGetProgramInfoLog(getProgramInfoLogCommandBuffer->m_ProgramId, infoLogLength, NULL, infoLog);
+		getProgramInfoLogCommandBuffer->CopyInfoLog(infoLog, infoLogLength);
+		delete[] infoLog;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::GetProgramInfoLog: %s",
+						isDefaultQueue, getProgramInfoLogCommandBuffer->m_InfoLog);
+	}
+	void OnAttachShader(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto attachShaderCommandBuffer = static_cast<AttachShaderCommandBuffer *>(commandBuffer);
+		glAttachShader(attachShaderCommandBuffer->m_ProgramId, attachShaderCommandBuffer->m_ShaderId);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::AttachShader: program=%d, shader=%d",
+						isDefaultQueue, attachShaderCommandBuffer->m_ProgramId, attachShaderCommandBuffer->m_ShaderId);
+	}
+	void OnDetachShader(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto detachShaderCommandBuffer = static_cast<DetachShaderCommandBuffer *>(commandBuffer);
+		glDetachShader(detachShaderCommandBuffer->m_ProgramId, detachShaderCommandBuffer->m_ShaderId);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::DetachShader: program=%d, shader=%d",
+						isDefaultQueue, detachShaderCommandBuffer->m_ProgramId, detachShaderCommandBuffer->m_ShaderId);
+	}
+	void OnCreateShader(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto createShaderCommandBuffer = static_cast<CreateShaderCommandBuffer *>(commandBuffer);
+		int ret = glCreateShader(createShaderCommandBuffer->m_ShaderType);
+		createShaderCommandBuffer->m_ShaderId = ret;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::CreateShader: %d", isDefaultQueue, ret);
+	}
+	void OnDeleteShader(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto deleteShaderCommandBuffer = static_cast<DeleteShaderCommandBuffer *>(commandBuffer);
+		glDeleteShader(deleteShaderCommandBuffer->m_ShaderId);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::DeleteShader: %d", isDefaultQueue, deleteShaderCommandBuffer->m_ShaderId);
+	}
+	void OnShaderSource(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto shaderSourceCommandBuffer = static_cast<ShaderSourceCommandBuffer *>(commandBuffer);
+		auto shaderId = shaderSourceCommandBuffer->m_ShaderId;
+		auto source = shaderSourceCommandBuffer->m_Source;
+		auto length = shaderSourceCommandBuffer->m_Length;
+		glShaderSource(shaderId, 1, &source, (const GLint *)&length);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::ShaderSource: %d", isDefaultQueue, shaderId);
+	}
+	void OnCompileShader(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto compileShaderCommandBuffer = static_cast<CompileShaderCommandBuffer *>(commandBuffer);
+		glCompileShader(compileShaderCommandBuffer->m_ShaderId);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::CompileShader: %d", isDefaultQueue, compileShaderCommandBuffer->m_ShaderId);
+	}
+	void OnGetShaderSource(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto getShaderSourceCommandBuffer = static_cast<GetShaderSourceCommandBuffer *>(commandBuffer);
+
+		GLint sourceLength;
+		glGetShaderiv(getShaderSourceCommandBuffer->m_ShaderId, GL_SHADER_SOURCE_LENGTH, &sourceLength);
+		if (sourceLength <= 0)
+		{
+			getShaderSourceCommandBuffer->m_Source = nullptr;
+			DEBUG(DEBUG_TAG, "Failed to get shader source from #%d", getShaderSourceCommandBuffer->m_ShaderId);
+			return;
+		}
+
+		GLchar *source = new GLchar[sourceLength];
+		GLint maxLength = sourceLength;
+		GLint bytesWritten;
+		while (true)
+		{
+			glGetShaderSource(getShaderSourceCommandBuffer->m_ShaderId, maxLength, &bytesWritten, source);
+			if (bytesWritten < maxLength - 1)
+				break;
+			maxLength += sourceLength;
+			source = (GLchar *)realloc(source, maxLength);
+		}
+		getShaderSourceCommandBuffer->CopySource(source, maxLength);
+		delete[] source;
+
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::GetShaderSource: %s", isDefaultQueue, getShaderSourceCommandBuffer->m_Source);
+	}
+	void OnGetShaderParameter(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto getShaderParameterCommandBuffer = static_cast<GetShaderParameterCommandBuffer *>(commandBuffer);
+		GLint ret;
+		glGetShaderiv(
+				getShaderParameterCommandBuffer->m_ShaderId,
+				getShaderParameterCommandBuffer->m_Pname,
+				&ret);
+		getShaderParameterCommandBuffer->m_Value = ret;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::GetShaderParameter: %d", isDefaultQueue, ret);
+	}
+	void OnGetShaderInfoLog(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto getShaderInfoLogCommandBuffer = static_cast<GetShaderInfoLogCommandBuffer *>(commandBuffer);
+		GLint infoLogLength;
+		glGetShaderiv(getShaderInfoLogCommandBuffer->m_ShaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+		GLchar *infoLog = new GLchar[infoLogLength];
+		glGetShaderInfoLog(getShaderInfoLogCommandBuffer->m_ShaderId, infoLogLength, NULL, infoLog);
+		getShaderInfoLogCommandBuffer->CopyInfoLog(infoLog, infoLogLength);
+		delete[] infoLog;
+
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::GetShaderInfoLog: %s", isDefaultQueue, getShaderInfoLogCommandBuffer->m_InfoLog);
+	}
+	void OnCreateBuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto createBufferCommandBuffer = static_cast<CreateBufferCommandBuffer *>(commandBuffer);
+		GLuint buffer;
+		glGenBuffers(1, &buffer);
+		createBufferCommandBuffer->m_BufferId = buffer;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::CreateBuffer => buffer(%d)", isDefaultQueue, buffer);
+	}
+	void OnDeleteBuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto deleteBufferCommandBuffer = static_cast<DeleteBufferCommandBuffer *>(commandBuffer);
+		glDeleteBuffers(1, &deleteBufferCommandBuffer->m_BufferId);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::DeleteBuffer: %d", isDefaultQueue, deleteBufferCommandBuffer->m_BufferId);
+	}
+	void OnBindBuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
+		auto bindBufferCommandBuffer = static_cast<BindBufferCommandBuffer *>(commandBuffer);
+		auto target = bindBufferCommandBuffer->m_Target;
+		auto buffer = bindBufferCommandBuffer->m_Buffer;
+
+		/** Update the app states for next restore. */
+		if (target == GL_ARRAY_BUFFER)
+			context->RecordArrayBuffer(buffer);
+		else if (target == GL_ELEMENT_ARRAY_BUFFER)
+			context->RecordElementArrayBuffer(buffer);
+
+		glBindBuffer(target, buffer);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::BindBuffer(target=0x%x buffer=%d)",
+						isDefaultQueue, target, buffer);
+	}
+	void OnBufferData(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto bufferDataCommandBuffer = static_cast<BufferDataCommandBuffer *>(commandBuffer);
+		auto target = bufferDataCommandBuffer->m_Target;
+		auto size = bufferDataCommandBuffer->m_Size;
+		auto data = bufferDataCommandBuffer->m_Data;
+		auto usage = bufferDataCommandBuffer->m_Usage;
+
+		glBufferData(target, size, data, usage);
+		if (printsCall)
+		{
+			DEBUG(DEBUG_TAG, "[%d] GL::BufferData(target=0x%x, size=%d usage=0x%x)",
+						isDefaultQueue, target, size, usage);
+		}
+	}
+	void OnBufferSubData(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto bufferSubDataCommandBuffer = static_cast<BufferSubDataCommandBuffer *>(commandBuffer);
+		glBufferSubData(
+				bufferSubDataCommandBuffer->m_Target,
+				bufferSubDataCommandBuffer->m_Offset,
+				bufferSubDataCommandBuffer->m_Size,
+				bufferSubDataCommandBuffer->m_Data);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::BufferSubData: %d", isDefaultQueue, bufferSubDataCommandBuffer->m_Size);
+	}
+	void OnCreateFramebuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto createFramebufferCommandBuffer = static_cast<CreateFramebufferCommandBuffer *>(commandBuffer);
+		GLuint ret;
+		glGenFramebuffers(1, &ret);
+		createFramebufferCommandBuffer->m_FramebufferId = ret;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::CreateFramebuffer() => %d", isDefaultQueue, ret);
+	}
+	void OnDeleteFramebuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto deleteFramebufferCommandBuffer = static_cast<DeleteFramebufferCommandBuffer *>(commandBuffer);
+		glDeleteFramebuffers(1, &deleteFramebufferCommandBuffer->m_FramebufferId);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::DeleteFramebuffer: %d",
+						isDefaultQueue, deleteFramebufferCommandBuffer->m_FramebufferId);
+	}
+	void OnBindFramebuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
+		auto bindFramebufferCommandBuffer = static_cast<BindFramebufferCommandBuffer *>(commandBuffer);
+		auto target = bindFramebufferCommandBuffer->m_Target;
+		auto framebuffer = bindFramebufferCommandBuffer->m_Framebuffer;
+
+		glBindFramebuffer(target, framebuffer);
+		context->RecordFramebuffer(framebuffer);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::BindFramebuffer(%d)", isDefaultQueue, bindFramebufferCommandBuffer->m_Framebuffer);
+	}
+	void OnFramebufferRenderbuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto framebufferRenderbufferCommandBuffer = static_cast<FramebufferRenderbufferCommandBuffer *>(commandBuffer);
+		glFramebufferRenderbuffer(
+				framebufferRenderbufferCommandBuffer->m_Target,
+				framebufferRenderbufferCommandBuffer->m_Attachment,
+				framebufferRenderbufferCommandBuffer->m_Renderbuffertarget,
+				framebufferRenderbufferCommandBuffer->m_Renderbuffer);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::FramebufferRenderbuffer: %d",
+						isDefaultQueue, framebufferRenderbufferCommandBuffer->m_Renderbuffer);
+	}
+	void OnFramebufferTexture2D(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto framebufferTexture2DCommandBuffer = static_cast<FramebufferTexture2DCommandBuffer *>(commandBuffer);
+		auto target = framebufferTexture2DCommandBuffer->m_Target;
+		auto attachment = framebufferTexture2DCommandBuffer->m_Attachment;
+		auto textarget = framebufferTexture2DCommandBuffer->m_Textarget;
+		auto texture = framebufferTexture2DCommandBuffer->m_Texture;
+		auto level = framebufferTexture2DCommandBuffer->m_Level;
+		glFramebufferTexture2D(target, attachment, textarget, texture, level);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::FramebufferTexture2D(0x%x, %d, %d, %d, level=%d)",
+						isDefaultQueue, target, attachment, textarget, texture, level);
+	}
+	void OnCheckFramebufferStatus(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto checkFramebufferStatusCommandBuffer = static_cast<CheckFramebufferStatusCommandBuffer *>(commandBuffer);
+		GLenum ret = glCheckFramebufferStatus(checkFramebufferStatusCommandBuffer->m_Target);
+		checkFramebufferStatusCommandBuffer->m_Status = ret;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::CheckFramebufferStatus: %d", isDefaultQueue, ret);
+	}
+	void OnCreateRenderbuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto createRenderbufferCommandBuffer = static_cast<CreateRenderbufferCommandBuffer *>(commandBuffer);
+		GLuint ret;
+		glGenRenderbuffers(1, &ret);
+		createRenderbufferCommandBuffer->m_RenderbufferId = ret;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::CreateRenderbuffer: %d", isDefaultQueue, ret);
+	}
+	void OnDeleteRenderbuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto deleteRenderbufferCommandBuffer = static_cast<DeleteRenderbufferCommandBuffer *>(commandBuffer);
+		glDeleteRenderbuffers(1, &deleteRenderbufferCommandBuffer->m_RenderbufferId);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::DeleteRenderbuffer: %d",
+						isDefaultQueue, deleteRenderbufferCommandBuffer->m_RenderbufferId);
+	}
+	void OnBindRenderbuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
+		auto bindRenderbufferCommandBuffer = static_cast<BindRenderbufferCommandBuffer *>(commandBuffer);
+		auto target = bindRenderbufferCommandBuffer->m_Target;
+		auto renderbuffer = bindRenderbufferCommandBuffer->m_Renderbuffer;
+
+		glBindRenderbuffer(target, renderbuffer);
+		context->RecordRenderbuffer(renderbuffer);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::BindRenderbuffer: %d", isDefaultQueue, bindRenderbufferCommandBuffer->m_Renderbuffer);
+	}
+	void OnRenderbufferStorage(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto renderbufferStorageCommandBuffer = static_cast<RenderbufferStorageCommandBuffer *>(commandBuffer);
+		glRenderbufferStorage(
+				renderbufferStorageCommandBuffer->m_Target,
+				renderbufferStorageCommandBuffer->m_Internalformat,
+				renderbufferStorageCommandBuffer->m_Width,
+				renderbufferStorageCommandBuffer->m_Height);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::RenderbufferStorage: %d",
+						isDefaultQueue, renderbufferStorageCommandBuffer->m_Internalformat);
+	}
+	void OnBindBufferBase(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto bindBufferBaseCommandBuffer = static_cast<BindBufferBaseCommandBuffer *>(commandBuffer);
+		auto target = bindBufferBaseCommandBuffer->m_Target;
+		auto index = bindBufferBaseCommandBuffer->m_Index;
+		auto buffer = bindBufferBaseCommandBuffer->m_Buffer;
+		glBindBufferBase(target, index, buffer);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::BindBufferBase(%d, index=%d, target=%d)",
+						isDefaultQueue, buffer, index, target);
+	}
+	void OnBindBufferRange(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto bindBufferRangeCommandBuffer = static_cast<BindBufferRangeCommandBuffer *>(commandBuffer);
+		auto target = bindBufferRangeCommandBuffer->m_Target;
+		auto index = bindBufferRangeCommandBuffer->m_Index;
+		auto buffer = bindBufferRangeCommandBuffer->m_Buffer;
+		auto offset = bindBufferRangeCommandBuffer->m_Offset;
+		auto size = bindBufferRangeCommandBuffer->m_Size;
+		glBindBufferRange(target, index, buffer, offset, size);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::BindBufferRange: %d", isDefaultQueue, buffer);
+	}
+	void OnBlitFramebuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto blitFramebufferCommandBuffer = static_cast<BlitFramebufferCommandBuffer *>(commandBuffer);
+		glBlitFramebuffer(
+				blitFramebufferCommandBuffer->m_SrcX0,
+				blitFramebufferCommandBuffer->m_SrcY0,
+				blitFramebufferCommandBuffer->m_SrcX1,
+				blitFramebufferCommandBuffer->m_SrcY1,
+				blitFramebufferCommandBuffer->m_DstX0,
+				blitFramebufferCommandBuffer->m_DstY0,
+				blitFramebufferCommandBuffer->m_DstX1,
+				blitFramebufferCommandBuffer->m_DstY1,
+				blitFramebufferCommandBuffer->m_Mask,
+				blitFramebufferCommandBuffer->m_Filter);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::BlitFramebuffer: %d", isDefaultQueue, blitFramebufferCommandBuffer->m_Filter);
+	}
+	void OnRenderbufferStorageMultisample(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto renderbufferStorageMultisampleCommandBuffer = static_cast<RenderbufferStorageMultisampleCommandBuffer *>(commandBuffer);
+		auto target = renderbufferStorageMultisampleCommandBuffer->m_Target;
+		auto samples = renderbufferStorageMultisampleCommandBuffer->m_Samples;
+		auto internalformat = renderbufferStorageMultisampleCommandBuffer->m_Internalformat;
+		auto width = renderbufferStorageMultisampleCommandBuffer->m_Width;
+		auto height = renderbufferStorageMultisampleCommandBuffer->m_Height;
+		glRenderbufferStorageMultisample(target, samples, internalformat, width, height);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::RenderbufferStorageMultisample(0x%x, samples=%d, internalformat=0x%x, size=[%d,%d])",
+						isDefaultQueue, target, samples, internalformat, width, height);
+	}
+	void OnCreateVertexArray(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto createVertexArrayCommandBuffer = static_cast<CreateVertexArrayCommandBuffer *>(commandBuffer);
+		GLuint ret;
+		glGenVertexArrays(1, &ret);
+		createVertexArrayCommandBuffer->m_VertexArrayId = ret;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::CreateVertexArray() => %d", isDefaultQueue, ret);
+	}
+	void OnDeleteVertexArray(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto deleteVertexArrayCommandBuffer = static_cast<DeleteVertexArrayCommandBuffer *>(commandBuffer);
+		glDeleteVertexArrays(1, &deleteVertexArrayCommandBuffer->m_VertexArrayId);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::DeleteVertexArray: %d",
+						isDefaultQueue, deleteVertexArrayCommandBuffer->m_VertexArrayId);
+	}
+	void OnBindVertexArray(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
+		auto bindVertexArrayCommandBuffer = static_cast<BindVertexArrayCommandBuffer *>(commandBuffer);
+		auto vertexArray = bindVertexArrayCommandBuffer->m_VertexArray;
+		glBindVertexArray(vertexArray);
+		context->RecordVertexArrayObject(vertexArray);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::BindVertexArray(%d)", isDefaultQueue, vertexArray);
+	}
+	void OnCreateTexture(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto createTextureCommandBuffer = static_cast<CreateTextureCommandBuffer *>(commandBuffer);
+		GLuint texture;
+		glGenTextures(1, &texture);
+		createTextureCommandBuffer->m_TextureId = texture;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::CreateTexture() => texture(%d)", isDefaultQueue, texture);
+	}
+	void OnDeleteTexture(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto deleteTextureCommandBuffer = static_cast<DeleteTextureCommandBuffer *>(commandBuffer);
+		glDeleteTextures(1, &deleteTextureCommandBuffer->m_TextureId);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::DeleteTexture: %d", isDefaultQueue, deleteTextureCommandBuffer->m_TextureId);
+	}
+	void OnBindTexture(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
+		auto bindTextureCommandBuffer = static_cast<BindTextureCommandBuffer *>(commandBuffer);
+		auto target = bindTextureCommandBuffer->m_Target;
+		auto texture = bindTextureCommandBuffer->m_Texture;
+
+		m_HostContext.RecordTextureBindingFromHost();
+		glBindTexture(target, texture);
+		context->RecordTextureBindingWithUnit(target, texture);
+
+		if (printsCall)
+		{
+			GLint activeUnit;
+			glGetIntegerv(GL_ACTIVE_TEXTURE, &activeUnit);
+			DEBUG(DEBUG_TAG, "[%d] GL::BindTexture(%d, %d) for active(%d) program(%d)",
+						isDefaultQueue, target, texture, activeUnit, context->GetProgram());
+		}
+	}
+	void OnTexImage2D(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto texImage2DCommandBuffer = static_cast<TexImage2DCommandBuffer *>(commandBuffer);
+		auto target = texImage2DCommandBuffer->m_Target;
+		auto level = texImage2DCommandBuffer->m_Level;
+		auto internalformat = texImage2DCommandBuffer->m_Internalformat;
+		auto width = texImage2DCommandBuffer->m_Width;
+		auto height = texImage2DCommandBuffer->m_Height;
+		auto border = texImage2DCommandBuffer->m_Border;
+		auto format = texImage2DCommandBuffer->m_Format;
+		auto type = texImage2DCommandBuffer->m_Type;
+		glTexImage2D(target,
+								 level, internalformat,
+								 width, height,
+								 border, format, type, texImage2DCommandBuffer->m_Pixels);
+		if (printsCall)
+		{
+			DEBUG(DEBUG_TAG, "[%d] GL::TexImage2D(0x%x, level=%d, type=0x%x, internal_format=0x%x, format=0x%x, size=[%d,%d])",
+						isDefaultQueue, target, level, type, internalformat, format, width, height);
+		}
+	}
+	void OnTexSubImage2D(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto texSubImage2DCommandBuffer = static_cast<TexSubImage2DCommandBuffer *>(commandBuffer);
+		glTexSubImage2D(
+				texSubImage2DCommandBuffer->m_Target,
+				texSubImage2DCommandBuffer->m_Level,
+				texSubImage2DCommandBuffer->m_Xoffset,
+				texSubImage2DCommandBuffer->m_Yoffset,
+				texSubImage2DCommandBuffer->m_Width,
+				texSubImage2DCommandBuffer->m_Height,
+				texSubImage2DCommandBuffer->m_Format,
+				texSubImage2DCommandBuffer->m_Type,
+				texSubImage2DCommandBuffer->m_Pixels);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::TexSubImage2D: %d", isDefaultQueue, texSubImage2DCommandBuffer->m_Target);
+	}
+	void OnCopyTexImage2D(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto copyTexImage2DCommandBuffer = static_cast<CopyTexImage2DCommandBuffer *>(commandBuffer);
+		glCopyTexImage2D(
+				copyTexImage2DCommandBuffer->m_Target,
+				copyTexImage2DCommandBuffer->m_Level,
+				copyTexImage2DCommandBuffer->m_Internalformat,
+				copyTexImage2DCommandBuffer->m_X,
+				copyTexImage2DCommandBuffer->m_Y,
+				copyTexImage2DCommandBuffer->m_Width,
+				copyTexImage2DCommandBuffer->m_Height,
+				copyTexImage2DCommandBuffer->m_Border);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::CopyTexImage2D: %d", isDefaultQueue, copyTexImage2DCommandBuffer->m_Target);
+	}
+	void OnCopyTexSubImage2D(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto copyTexSubImage2DCommandBuffer = static_cast<CopyTexSubImage2DCommandBuffer *>(commandBuffer);
+		glCopyTexSubImage2D(
+				copyTexSubImage2DCommandBuffer->m_Target,
+				copyTexSubImage2DCommandBuffer->m_Level,
+				copyTexSubImage2DCommandBuffer->m_Xoffset,
+				copyTexSubImage2DCommandBuffer->m_Yoffset,
+				copyTexSubImage2DCommandBuffer->m_X,
+				copyTexSubImage2DCommandBuffer->m_Y,
+				copyTexSubImage2DCommandBuffer->m_Width,
+				copyTexSubImage2DCommandBuffer->m_Height);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::CopyTexSubImage2D: %d", isDefaultQueue, copyTexSubImage2DCommandBuffer->m_Target);
+	}
+	void OnTexParameteri(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto texParameteriCommandBuffer = static_cast<TexParameteriCommandBuffer *>(commandBuffer);
+		auto target = texParameteriCommandBuffer->m_Target;
+		auto pname = texParameteriCommandBuffer->m_Pname;
+		auto param = texParameteriCommandBuffer->m_Param;
+		glTexParameteri(target, pname, param);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::TexParameteri(target=%d, pname=%d, param=%d)",
+						isDefaultQueue, target, pname, param);
+	}
+	void OnActiveTexture(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
+		auto activeTextureCommandBuffer = static_cast<ActiveTextureCommandBuffer *>(commandBuffer);
+		auto textureUnit = activeTextureCommandBuffer->m_Texture;
+		glActiveTexture(textureUnit);
+		context->RecordActiveTextureUnit(textureUnit);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::ActiveTexture(%d)", isDefaultQueue, textureUnit);
+	}
+	void OnGenerateMipmap(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto generateMipmapCommandBuffer = static_cast<GenerateMipmapCommandBuffer *>(commandBuffer);
+		glGenerateMipmap(generateMipmapCommandBuffer->m_Target);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::GenerateMipmap: %d", isDefaultQueue, generateMipmapCommandBuffer->m_Target);
+	}
+	void OnTexImage3D(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto texImage3DCommandBuffer = static_cast<TexImage3DCommandBuffer *>(commandBuffer);
+		auto target = texImage3DCommandBuffer->m_Target;
+		auto level = texImage3DCommandBuffer->m_Level;
+		auto internalformat = texImage3DCommandBuffer->m_Internalformat;
+		auto width = texImage3DCommandBuffer->m_Width;
+		auto height = texImage3DCommandBuffer->m_Height;
+		auto depth = texImage3DCommandBuffer->m_Depth;
+		auto border = texImage3DCommandBuffer->m_Border;
+		auto format = texImage3DCommandBuffer->m_Format;
+		auto type = texImage3DCommandBuffer->m_Type;
+		auto pixels = texImage3DCommandBuffer->m_Pixels;
+		glTexImage3D(target, level, internalformat, width, height, depth, border, format, type, pixels);
+		if (printsCall)
+		{
+			DEBUG(DEBUG_TAG, "[%d] GL::TexImage3D(target=0x%x, level=%d, size=[%d,%d,%d], pixels=%p)",
+						isDefaultQueue, target, level,
+						width, height, depth, pixels);
+		}
+	}
+	void OnTexSubImage3D(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto texSubImage3DCommandBuffer = static_cast<TexSubImage3DCommandBuffer *>(commandBuffer);
+		auto target = texSubImage3DCommandBuffer->m_Target;
+		auto level = texSubImage3DCommandBuffer->m_Level;
+		auto xoffset = texSubImage3DCommandBuffer->m_Xoffset;
+		auto yoffset = texSubImage3DCommandBuffer->m_Yoffset;
+		auto zoffset = texSubImage3DCommandBuffer->m_Zoffset;
+		auto width = texSubImage3DCommandBuffer->m_Width;
+		auto height = texSubImage3DCommandBuffer->m_Height;
+		auto depth = texSubImage3DCommandBuffer->m_Depth;
+		auto format = texSubImage3DCommandBuffer->m_Format;
+		auto type = texSubImage3DCommandBuffer->m_Type;
+		auto pixels = texSubImage3DCommandBuffer->m_Pixels;
+		glTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels);
+		if (printsCall)
+		{
+			DEBUG(DEBUG_TAG, "[%d] GL::TexSubImage3D(target=0x%x, level=%d, offset=[%d,%d,%d], size=[%d,%d,%d], pixels=%p)",
+						isDefaultQueue, target, level,
+						xoffset, yoffset, zoffset,
+						width, height, depth, pixels);
+		}
+	}
+	void OnEnableVertexAttribArray(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto enableVertexAttribArrayCommandBuffer = static_cast<EnableVertexAttribArrayCommandBuffer *>(commandBuffer);
+		glEnableVertexAttribArray(enableVertexAttribArrayCommandBuffer->m_Index);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::EnableVertexAttribArray(%d)", isDefaultQueue, enableVertexAttribArrayCommandBuffer->m_Index);
+	}
+	void OnDisableVertexAttribArray(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto disableVertexAttribArrayCommandBuffer = static_cast<DisableVertexAttribArrayCommandBuffer *>(commandBuffer);
+		glDisableVertexAttribArray(disableVertexAttribArrayCommandBuffer->m_Index);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::DisableVertexAttribArray(%d)", isDefaultQueue, disableVertexAttribArrayCommandBuffer->m_Index);
+	}
+	void OnVertexAttribPointer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto vertexAttribPointerCommandBuffer = static_cast<VertexAttribPointerCommandBuffer *>(commandBuffer);
+		auto index = vertexAttribPointerCommandBuffer->m_Index;
+		auto size = vertexAttribPointerCommandBuffer->m_Size;
+		auto type = vertexAttribPointerCommandBuffer->m_Type;
+		auto normalized = vertexAttribPointerCommandBuffer->m_Normalized;
+		auto stride = vertexAttribPointerCommandBuffer->m_Stride;
+		auto offset = vertexAttribPointerCommandBuffer->m_Offset;
+
+		glVertexAttribPointer(index, size, type, normalized, stride, offset);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::VertexAttribPointer(%d) size=%d type=0x%x normalized=%d stride=%d offset=%d",
+						isDefaultQueue, index, size, type, normalized, stride, offset);
+	}
+	void OnVertexAttribIPointer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto vertexAttribIPointerCommandBuffer = static_cast<VertexAttribIPointerCommandBuffer *>(commandBuffer);
+		auto index = vertexAttribIPointerCommandBuffer->m_Index;
+		auto size = vertexAttribIPointerCommandBuffer->m_Size;
+		auto type = vertexAttribIPointerCommandBuffer->m_Type;
+		auto stride = vertexAttribIPointerCommandBuffer->m_Stride;
+		auto offset = vertexAttribIPointerCommandBuffer->m_Offset;
+
+		glVertexAttribIPointer(index, size, type, stride, offset);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::VertexAttribIPointer(%d) size=%d type=0x%x stride=%d offset=%d",
+						isDefaultQueue, index, size, type, stride, offset);
+	}
+	void OnVertexAttribDivisor(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto vertexAttribDivisorCommandBuffer = static_cast<VertexAttribDivisorCommandBuffer *>(commandBuffer);
+		auto index = vertexAttribDivisorCommandBuffer->m_Index;
+		auto divisor = vertexAttribDivisorCommandBuffer->m_Divisor;
+		glVertexAttribDivisor(index, divisor);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::VertexAttribDivisor(%d, %d)", isDefaultQueue, index, divisor);
+	}
+	void OnGetAttribLocation(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto getAttribLocationCommandBuffer = static_cast<GetAttribLocationCommandBuffer *>(commandBuffer);
+		auto program = getAttribLocationCommandBuffer->m_Program;
+		auto name = getAttribLocationCommandBuffer->m_Name;
+
+		int ret = glGetAttribLocation(program, name);
+		getAttribLocationCommandBuffer->m_Location = ret;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::GetAttribLocation(%d, %s) => %d",
+						isDefaultQueue, program, name, ret);
+	}
+	void OnGetUniformLocation(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto getUniformLocationCommandBuffer = static_cast<GetUniformLocationCommandBuffer *>(commandBuffer);
+		int ret = glGetUniformLocation(getUniformLocationCommandBuffer->m_Program, getUniformLocationCommandBuffer->m_Name);
+		getUniformLocationCommandBuffer->m_Location = ret;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::GetUniformLocation: %d", isDefaultQueue, ret);
+	}
+	void OnUnoformBlockBinding(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniformBlockBindingCommandBuffer = static_cast<UniformBlockBindingCommandBuffer *>(commandBuffer);
+		auto program = uniformBlockBindingCommandBuffer->m_Program;
+		auto uniformBlockIndex = uniformBlockBindingCommandBuffer->m_UniformBlockIndex;
+		auto uniformBlockBinding = uniformBlockBindingCommandBuffer->m_UniformBlockBinding;
+		glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::UniformBlockBinding(%d, %d, %d)",
+						isDefaultQueue, program, uniformBlockIndex, uniformBlockBinding);
+	}
+	void OnUniform1f(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniform1fCommandBuffer = static_cast<Uniform1fCommandBuffer *>(commandBuffer);
+		auto loc = uniform1fCommandBuffer->m_Location;
+		auto v0 = uniform1fCommandBuffer->m_V0;
+		glUniform1f(loc, v0);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::Uniform1f(%d, %f)", isDefaultQueue, loc, v0);
+	}
+	void OnUniform1fv(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniform1fvCommandBuffer = static_cast<Uniform1fvCommandBuffer *>(commandBuffer);
+		glUniform1fv(
+				uniform1fvCommandBuffer->m_Location,
+				uniform1fvCommandBuffer->m_Count,
+				uniform1fvCommandBuffer->m_Value);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::Uniform1fv(%d)", isDefaultQueue, uniform1fvCommandBuffer->m_Location);
+	}
+	void OnUniform1i(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniform1iCommandBuffer = static_cast<Uniform1iCommandBuffer *>(commandBuffer);
+		auto loc = uniform1iCommandBuffer->m_Location;
+		auto v0 = uniform1iCommandBuffer->m_V0;
+		glUniform1i(loc, v0);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::Uniform1i(%d): %d", isDefaultQueue, loc, v0);
+	}
+	void OnUniform1iv(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniform1ivCommandBuffer = static_cast<Uniform1ivCommandBuffer *>(commandBuffer);
+		glUniform1iv(
+				uniform1ivCommandBuffer->m_Location,
+				uniform1ivCommandBuffer->m_Count,
+				uniform1ivCommandBuffer->m_Value);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::Uniform1iv(%d)", isDefaultQueue, uniform1ivCommandBuffer->m_Location);
+	}
+	void OnUniform2f(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniform2fCommandBuffer = static_cast<Uniform2fCommandBuffer *>(commandBuffer);
+		glUniform2f(uniform2fCommandBuffer->m_Location, uniform2fCommandBuffer->m_V0, uniform2fCommandBuffer->m_V1);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::Uniform2f(%d)", isDefaultQueue, uniform2fCommandBuffer->m_Location);
+	}
+	void OnUniform2fv(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniform2fvCommandBuffer = static_cast<Uniform2fvCommandBuffer *>(commandBuffer);
+		glUniform2fv(
+				uniform2fvCommandBuffer->m_Location,
+				uniform2fvCommandBuffer->m_Count,
+				uniform2fvCommandBuffer->m_Value);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::Uniform2fv(%d)", isDefaultQueue, uniform2fvCommandBuffer->m_Location);
+	}
+	void OnUniform2i(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniform2iCommandBuffer = static_cast<Uniform2iCommandBuffer *>(commandBuffer);
+		glUniform2i(uniform2iCommandBuffer->m_Location, uniform2iCommandBuffer->m_V0, uniform2iCommandBuffer->m_V1);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::Uniform2i(%d)", isDefaultQueue, uniform2iCommandBuffer->m_Location);
+	}
+	void OnUniform2iv(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniform2ivCommandBuffer = static_cast<Uniform2ivCommandBuffer *>(commandBuffer);
+		glUniform2iv(
+				uniform2ivCommandBuffer->m_Location,
+				uniform2ivCommandBuffer->m_Count,
+				uniform2ivCommandBuffer->m_Value);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::Uniform2iv(%d)", isDefaultQueue, uniform2ivCommandBuffer->m_Location);
+	}
+	void OnUniform3f(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniform3fCommandBuffer = static_cast<Uniform3fCommandBuffer *>(commandBuffer);
+		auto loc = uniform3fCommandBuffer->m_Location;
+		auto v0 = uniform3fCommandBuffer->m_V0;
+		auto v1 = uniform3fCommandBuffer->m_V1;
+		auto v2 = uniform3fCommandBuffer->m_V2;
+		glUniform3f(loc, v0, v1, v2);
+		if (printsCall)
+		{
+			DEBUG(DEBUG_TAG, "[%d] GL::Uniform3f(%d): (%f, %f, %f)",
+						isDefaultQueue, loc, v0, v1, v2);
+		}
+	}
+	void OnUniform3fv(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniform3fvCommandBuffer = static_cast<Uniform3fvCommandBuffer *>(commandBuffer);
+		glUniform3fv(
+				uniform3fvCommandBuffer->m_Location,
+				uniform3fvCommandBuffer->m_Count,
+				uniform3fvCommandBuffer->m_Value);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::Uniform3fv(%d)", isDefaultQueue, uniform3fvCommandBuffer->m_Location);
+	}
+	void OnUniform3i(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniform3iCommandBuffer = static_cast<Uniform3iCommandBuffer *>(commandBuffer);
+		glUniform3i(uniform3iCommandBuffer->m_Location, uniform3iCommandBuffer->m_V0, uniform3iCommandBuffer->m_V1, uniform3iCommandBuffer->m_V2);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::Uniform3i(%d)", isDefaultQueue, uniform3iCommandBuffer->m_Location);
+	}
+	void OnUniform3iv(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniform3ivCommandBuffer = static_cast<Uniform3ivCommandBuffer *>(commandBuffer);
+		glUniform3iv(
+				uniform3ivCommandBuffer->m_Location,
+				uniform3ivCommandBuffer->m_Count,
+				uniform3ivCommandBuffer->m_Value);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::Uniform3iv(%d)", isDefaultQueue, uniform3ivCommandBuffer->m_Location);
+	}
+	void OnUniform4f(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniform4fCommandBuffer = static_cast<Uniform4fCommandBuffer *>(commandBuffer);
+		auto loc = uniform4fCommandBuffer->m_Location;
+		auto v0 = uniform4fCommandBuffer->m_V0;
+		auto v1 = uniform4fCommandBuffer->m_V1;
+		auto v2 = uniform4fCommandBuffer->m_V2;
+		auto v3 = uniform4fCommandBuffer->m_V3;
+
+		glUniform4f(loc, v0, v1, v2, v3);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::Uniform4f(%d): (%f, %f, %f, %f)",
+						isDefaultQueue, loc, v0, v1, v2, v3);
+	}
+	void OnUniform4fv(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniform4fvCommandBuffer = static_cast<Uniform4fvCommandBuffer *>(commandBuffer);
+		glUniform4fv(
+				uniform4fvCommandBuffer->m_Location,
+				uniform4fvCommandBuffer->m_Count,
+				uniform4fvCommandBuffer->m_Value);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::Uniform4fv(%d)", isDefaultQueue, uniform4fvCommandBuffer->m_Location);
+	}
+	void OnUniform4i(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniform4iCommandBuffer = static_cast<Uniform4iCommandBuffer *>(commandBuffer);
+		glUniform4i(uniform4iCommandBuffer->m_Location,
+								uniform4iCommandBuffer->m_V0,
+								uniform4iCommandBuffer->m_V1,
+								uniform4iCommandBuffer->m_V2,
+								uniform4iCommandBuffer->m_V3);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::Uniform4i(%d)", isDefaultQueue, uniform4iCommandBuffer->m_Location);
+	}
+	void OnUniform4iv(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniform4ivCommandBuffer = static_cast<Uniform4ivCommandBuffer *>(commandBuffer);
+		glUniform4iv(
+				uniform4ivCommandBuffer->m_Location,
+				uniform4ivCommandBuffer->m_Count,
+				uniform4ivCommandBuffer->m_Value);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::Uniform4iv(%d)", isDefaultQueue, uniform4ivCommandBuffer->m_Location);
+	}
+	void OnUniformMatrix2fv(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniformMatrix2fvCommandBuffer = static_cast<UniformMatrix2fvCommandBuffer *>(commandBuffer);
+		glUniformMatrix2fv(
+				uniformMatrix2fvCommandBuffer->m_Location,
+				uniformMatrix2fvCommandBuffer->m_Count,
+				uniformMatrix2fvCommandBuffer->m_Transpose,
+				uniformMatrix2fvCommandBuffer->m_Value);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix2fv(%d)",
+						isDefaultQueue, uniformMatrix2fvCommandBuffer->m_Location);
+	}
+	void OnUniformMatrix3fv(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto uniformMatrix3fvCommandBuffer = static_cast<UniformMatrix3fvCommandBuffer *>(commandBuffer);
+		glUniformMatrix3fv(
+				uniformMatrix3fvCommandBuffer->m_Location,
+				uniformMatrix3fvCommandBuffer->m_Count,
+				uniformMatrix3fvCommandBuffer->m_Transpose,
+				uniformMatrix3fvCommandBuffer->m_Value);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix3fv(%d)",
+						isDefaultQueue, uniformMatrix3fvCommandBuffer->m_Location);
+	}
+	void OnUniformMatrix4fv(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, xr::DeviceFrame *deviceFrame, bool printsCall)
+	{
+		float *matrixToUse = nullptr;
+		auto uniformMatrix4fvCommandBuffer = static_cast<UniformMatrix4fvCommandBuffer *>(commandBuffer);
+		auto location = uniformMatrix4fvCommandBuffer->m_Location;
+		auto count = uniformMatrix4fvCommandBuffer->m_Count;
+		auto transpose = uniformMatrix4fvCommandBuffer->m_Transpose;
+
+		if (
+				uniformMatrix4fvCommandBuffer->isMatrixPlaceholderType() &&
+				(deviceFrame != nullptr && deviceFrame->isMultiPass()) // support for singlepass?
+		)
+		{
+			auto multiPassFrame = static_cast<xr::MultiPassFrame *>(deviceFrame);
+			auto placeholderType = uniformMatrix4fvCommandBuffer->m_MatrixPlaceholderType;
+			switch (placeholderType)
+			{
+			case MatrixPlaceholderType::kMatrixPlaceholderProjection:
+				matrixToUse = multiPassFrame->getViewerProjectionMatrix();
+				break;
+			case MatrixPlaceholderType::kMatrixPlaceholderView:
+				matrixToUse = multiPassFrame->getViewerViewMatrix();
+				break;
+			case MatrixPlaceholderType::kMatrixPlaceholderViewRelativeToLocal: // temp set for view matrix
+			case MatrixPlaceholderType::kMatrixPlaceholderViewRelativeToLocalFloor:
+			{
+				auto xrSessionId = uniformMatrix4fvCommandBuffer->m_XrSessionId;
+				if (xrSessionId == -1)
+					DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the xrSessionId in local mode.");
+				auto viewMatrix = glm::make_mat4(multiPassFrame->getViewerViewMatrix());
+				auto localTransform = glm::make_mat4(multiPassFrame->getLocalTransform(xrSessionId));
+				auto viewMatrixRelativeToLocal = viewMatrix * localTransform;
+				matrixToUse = glm::value_ptr(viewMatrixRelativeToLocal);
+				break;
+			}
+			case MatrixPlaceholderType::kMatrixPlaceholderViewProjection:
+			case MatrixPlaceholderType::kMatrixPlaceholderViewProjectionRelativeToLocal:
+			case MatrixPlaceholderType::kMatrixPlaceholderViewProjectionRelativeToLocalFloor:
+			{
+				auto viewMatrix = glm::make_mat4(multiPassFrame->getViewerViewMatrix());
+				auto projectionMatrix = glm::make_mat4(multiPassFrame->getViewerProjectionMatrix());
+				auto viewProjectionMatrix = projectionMatrix * viewMatrix;
+
+				if (placeholderType == MatrixPlaceholderType::kMatrixPlaceholderViewProjection)
+				{
+					matrixToUse = glm::value_ptr(viewProjectionMatrix);
+				}
+				else
+				{
+					auto xrSessionId = uniformMatrix4fvCommandBuffer->m_XrSessionId;
+					if (xrSessionId == -1)
+						DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the xrSessionId in local mode.");
+					auto localTransform = glm::make_mat4(multiPassFrame->getLocalTransform(xrSessionId));
+					auto viewProjectionMatrixRelativeToLocal = viewProjectionMatrix * localTransform;
+					matrixToUse = glm::value_ptr(viewProjectionMatrixRelativeToLocal);
+				}
+				break;
+			}
+			default:
+				break;
+			}
+		}
+		if (matrixToUse == nullptr)
+			matrixToUse = uniformMatrix4fvCommandBuffer->m_Value;
+
+		if (matrixToUse == nullptr)
+		{
+			DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the matrix value.");
+		}
+		else
+		{
+			glUniformMatrix4fv(location, count, transpose, matrixToUse);
+		}
+
+		if (printsCall)
+		{
+			DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix4fv(%d, count=%d, transpose=%d): (%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)",
+						isDefaultQueue,
+						location, count, transpose,
+						matrixToUse[0], matrixToUse[1], matrixToUse[2], matrixToUse[3],
+						matrixToUse[4], matrixToUse[5], matrixToUse[6], matrixToUse[7],
+						matrixToUse[8], matrixToUse[9], matrixToUse[10], matrixToUse[11],
+						matrixToUse[12], matrixToUse[13], matrixToUse[14], matrixToUse[15]);
+		}
+	}
+	void OnDrawArrays(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto drawArraysCommandBuffer = static_cast<DrawArraysCommandBuffer *>(commandBuffer);
+		glDrawArrays(
+				drawArraysCommandBuffer->m_Mode,
+				drawArraysCommandBuffer->m_First,
+				drawArraysCommandBuffer->m_Count);
+		m_DrawCallCountPerFrame += 1;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::DrawArrays(%d)", isDefaultQueue, drawArraysCommandBuffer->m_Count);
+	}
+	void OnDrawElements(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto drawElementsCommandBuffer = static_cast<DrawElementsCommandBuffer *>(commandBuffer);
+		glDrawElements(
+				drawElementsCommandBuffer->m_Mode,
+				drawElementsCommandBuffer->m_Count,
+				drawElementsCommandBuffer->m_Type,
+				drawElementsCommandBuffer->m_Indices);
+		m_DrawCallCountPerFrame += 1;
+		if (printsCall)
+		{
+			DEBUG(DEBUG_TAG, "[%d] GL::DrawElements: mode=%d count=%d type=%d",
+						isDefaultQueue,
+						drawElementsCommandBuffer->m_Mode,
+						drawElementsCommandBuffer->m_Count,
+						drawElementsCommandBuffer->m_Type);
+		}
+	}
+	void OnDrawBuffers(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto drawBuffersCommandBuffer = static_cast<DrawBuffersCommandBuffer *>(commandBuffer);
+		auto n = drawBuffersCommandBuffer->m_N;
+		auto buffers = drawBuffersCommandBuffer->m_Bufs;
+		glDrawBuffers(n, (const GLenum *)buffers);
+		m_DrawCallCountPerFrame += 1;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::DrawBuffers(%d)", isDefaultQueue, n);
+	}
+	void OnDrawArraysInstanced(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto drawArraysInstancedCommandBuffer = static_cast<DrawArraysInstancedCommandBuffer *>(commandBuffer);
+		auto mode = drawArraysInstancedCommandBuffer->m_Mode;
+		auto first = drawArraysInstancedCommandBuffer->m_First;
+		auto count = drawArraysInstancedCommandBuffer->m_Count;
+		auto instanceCount = drawArraysInstancedCommandBuffer->m_Primcount;
+		glDrawArraysInstanced(mode, first, count, instanceCount);
+		m_DrawCallCountPerFrame += 1;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::DrawArraysInstanced(0x%x, %d, %d, %d)",
+						isDefaultQueue, mode, first, count, instanceCount);
+	}
+	void OnDrawElementsInstanced(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto drawElementsInstancedCommandBuffer = static_cast<DrawElementsInstancedCommandBuffer *>(commandBuffer);
+		auto mode = drawElementsInstancedCommandBuffer->m_Mode;
+		auto count = drawElementsInstancedCommandBuffer->m_Count;
+		auto type = drawElementsInstancedCommandBuffer->m_Type;
+		auto indices = drawElementsInstancedCommandBuffer->m_Indices;
+		auto instanceCount = drawElementsInstancedCommandBuffer->m_Primcount;
+		glDrawElementsInstanced(mode, count, type, indices, instanceCount);
+		m_DrawCallCountPerFrame += 1;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::DrawElementsInstanced(0x%x, %d, %d, %p, %d)",
+						isDefaultQueue, mode, count, type, indices, instanceCount);
+	}
+	void OnDrawRangeElements(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto drawRangeElementsCommandBuffer = static_cast<DrawRangeElementsCommandBuffer *>(commandBuffer);
+		auto mode = drawRangeElementsCommandBuffer->m_Mode;
+		auto start = drawRangeElementsCommandBuffer->m_Start;
+		auto end = drawRangeElementsCommandBuffer->m_End;
+		auto count = drawRangeElementsCommandBuffer->m_Count;
+		auto type = drawRangeElementsCommandBuffer->m_Type;
+		auto indices = drawRangeElementsCommandBuffer->m_Indices;
+		glDrawRangeElements(mode, start, end, count, type, indices);
+		m_DrawCallCountPerFrame += 1;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::DrawRangeElements(0x%x, %d, %d, %d, %d, %p)",
+						isDefaultQueue, mode, start, end, count, type, indices);
+	}
+	void OnPixelStorei(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto pixelStoreiCommandBuffer = static_cast<PixelStoreiCommandBuffer *>(commandBuffer);
+		auto pname = pixelStoreiCommandBuffer->m_Pname;
+		auto param = pixelStoreiCommandBuffer->m_Param;
+		glPixelStorei(pname, param);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::PixelStorei(%d, %d)", isDefaultQueue, pname, param);
+	}
+	void OnPolygonOffset(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto polygonOffsetCommandBuffer = static_cast<PolygonOffsetCommandBuffer *>(commandBuffer);
+		glPolygonOffset(
+				polygonOffsetCommandBuffer->m_Factor,
+				polygonOffsetCommandBuffer->m_Units);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::PolygonOffset: %d", isDefaultQueue, polygonOffsetCommandBuffer->m_Factor);
+	}
+	void OnSetViewport(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto setViewportCommandBuffer = static_cast<SetViewportCommandBuffer *>(commandBuffer);
+		auto x = setViewportCommandBuffer->m_X;
+		auto y = setViewportCommandBuffer->m_Y;
+		auto width = setViewportCommandBuffer->m_Width;
+		auto height = setViewportCommandBuffer->m_Height;
+
+		// glViewport(x, y, width, height);
+		m_ViewportStartPoint[0] = x;
+		m_ViewportStartPoint[1] = y;
+		m_ViewportSize[0] = width;
+		m_ViewportSize[1] = height;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::SetViewport: (%d %d %d %d)",
+						isDefaultQueue, x, y, width, height);
+	}
+	void OnSetScissor(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto setScissorCommandBuffer = static_cast<SetScissorCommandBuffer *>(commandBuffer);
+		auto x = setScissorCommandBuffer->m_X;
+		auto y = setScissorCommandBuffer->m_Y;
+		auto width = setScissorCommandBuffer->m_Width;
+		auto height = setScissorCommandBuffer->m_Height;
+		glScissor(x, y, width, height);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::SetScissor: (%d %d %d %d)",
+						isDefaultQueue, x, y, width, height);
+	}
+	void OnGetSupportedExtensions(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto getSupportedExtensionsCommandBuffer = static_cast<GetSupportedExtensionsCommandBuffer *>(commandBuffer);
+		const GLubyte *ret = glGetString(GL_EXTENSIONS);
+		// Split the ret by “space” and add to the vector
+		std::string extensions(reinterpret_cast<const char *>(ret));
+		std::istringstream iss(extensions);
+		std::vector<std::string> tokens{std::istream_iterator<std::string>{iss},
+																		std::istream_iterator<std::string>{}};
+		getSupportedExtensionsCommandBuffer->m_Extensions = tokens;
+
+		// TODO: Support for OpenGL ES 3.0
+		// GLint numOfExtensions;
+		// glGetIntegerv(GL_NUM_EXTENSIONS, &numOfExtensions);
+		// for (int i = 0; i < numOfExtensions; i++)
+		// {
+		// 	const GLubyte *ret = glGetStringi(GL_EXTENSIONS, i);
+		// 	getSupportedExtensionsCommandBuffer->m_Extensions.push_back(reinterpret_cast<const char *>(ret));
+		// }
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::GetSupportedExtensions: %d", isDefaultQueue, tokens.size());
+	}
+	void OnDepthMask(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto depthMaskCommandBuffer = static_cast<DepthMaskCommandBuffer *>(commandBuffer);
+		glDepthMask(depthMaskCommandBuffer->m_Flag);
+		m_DepthMaskEnabled = depthMaskCommandBuffer->m_Flag;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::DepthMask: %d", isDefaultQueue, depthMaskCommandBuffer->m_Flag);
+	}
+	void OnDepthFunc(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto depthFuncCommandBuffer = static_cast<DepthFuncCommandBuffer *>(commandBuffer);
+		DepthFunc(depthFuncCommandBuffer->m_Func);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::DepthFunc: %d", isDefaultQueue, depthFuncCommandBuffer->m_Func);
+	}
+	void OnDepthRange(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto depthRangeCommandBuffer = static_cast<DepthRangeCommandBuffer *>(commandBuffer);
+		glDepthRangef(depthRangeCommandBuffer->m_Near, depthRangeCommandBuffer->m_Far);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::DepthRange: %f", isDefaultQueue, depthRangeCommandBuffer->m_Near);
+	}
+	void OnStencilFunc(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto stencilFuncCommandBuffer = static_cast<StencilFuncCommandBuffer *>(commandBuffer);
+		glStencilFunc(
+				stencilFuncCommandBuffer->m_Func,
+				stencilFuncCommandBuffer->m_Ref,
+				stencilFuncCommandBuffer->m_Mask);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::StencilFunc: %d", isDefaultQueue, stencilFuncCommandBuffer->m_Func);
+	}
+	void OnStencilFuncSeparate(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto stencilFuncSeparateCommandBuffer = static_cast<StencilFuncSeparateCommandBuffer *>(commandBuffer);
+		glStencilFuncSeparate(
+				stencilFuncSeparateCommandBuffer->m_Face,
+				stencilFuncSeparateCommandBuffer->m_Func,
+				stencilFuncSeparateCommandBuffer->m_Ref,
+				stencilFuncSeparateCommandBuffer->m_Mask);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::StencilFuncSeparate: %d", isDefaultQueue, stencilFuncSeparateCommandBuffer->m_Func);
+	}
+	void OnStencilMask(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto stencilMaskCommandBuffer = static_cast<StencilMaskCommandBuffer *>(commandBuffer);
+		glStencilMask(stencilMaskCommandBuffer->m_Mask);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::StencilMask: %d", isDefaultQueue, stencilMaskCommandBuffer->m_Mask);
+	}
+	void OnStencilMaskSeparate(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto stencilMaskSeparateCommandBuffer = static_cast<StencilMaskSeparateCommandBuffer *>(commandBuffer);
+		glStencilMaskSeparate(
+				stencilMaskSeparateCommandBuffer->m_Face,
+				stencilMaskSeparateCommandBuffer->m_Mask);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::StencilMaskSeparate: %d", isDefaultQueue, stencilMaskSeparateCommandBuffer->m_Mask);
+	}
+	void OnStencilOp(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto stencilOpCommandBuffer = static_cast<StencilOpCommandBuffer *>(commandBuffer);
+		glStencilOp(
+				stencilOpCommandBuffer->m_Fail,
+				stencilOpCommandBuffer->m_Zfail,
+				stencilOpCommandBuffer->m_Zpass);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::StencilOp: %d", isDefaultQueue, stencilOpCommandBuffer->m_Fail);
+	}
+	void OnStencilOpSeparate(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto stencilOpSeparateCommandBuffer = static_cast<StencilOpSeparateCommandBuffer *>(commandBuffer);
+		glStencilOpSeparate(
+				stencilOpSeparateCommandBuffer->m_Face,
+				stencilOpSeparateCommandBuffer->m_Fail,
+				stencilOpSeparateCommandBuffer->m_Zfail,
+				stencilOpSeparateCommandBuffer->m_Zpass);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::StencilOpSeparate: %d", isDefaultQueue, stencilOpSeparateCommandBuffer->m_Fail);
+	}
+	void OnBlendColor(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto blendColorCommandBuffer = static_cast<BlendColorCommandBuffer *>(commandBuffer);
+		glBlendColor(
+				blendColorCommandBuffer->m_R,
+				blendColorCommandBuffer->m_G,
+				blendColorCommandBuffer->m_B,
+				blendColorCommandBuffer->m_A);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::BlendColor: %d", isDefaultQueue, blendColorCommandBuffer->m_R);
+	}
+	void OnBlendEquation(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto blendEquationCommandBuffer = static_cast<BlendEquationCommandBuffer *>(commandBuffer);
+		glBlendEquation(blendEquationCommandBuffer->m_Mode);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::BlendEquation: %d", isDefaultQueue, blendEquationCommandBuffer->m_Mode);
+	}
+	void OnBlendEquationSeparate(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto blendEquationSeparateCommandBuffer = static_cast<BlendEquationSeparateCommandBuffer *>(commandBuffer);
+		glBlendEquationSeparate(
+				blendEquationSeparateCommandBuffer->m_ModeRGB,
+				blendEquationSeparateCommandBuffer->m_ModeAlpha);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::BlendEquationSeparate: %d",
+						isDefaultQueue, blendEquationSeparateCommandBuffer->m_ModeRGB);
+	}
+	void OnBlendFunc(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto blendFuncCommandBuffer = static_cast<BlendFuncCommandBuffer *>(commandBuffer);
+		glBlendFunc(
+				blendFuncCommandBuffer->m_Sfactor,
+				blendFuncCommandBuffer->m_Dfactor);
+		m_Blend_Sfactor = blendFuncCommandBuffer->m_Sfactor;
+		m_Blend_Dfactor = blendFuncCommandBuffer->m_Dfactor;
+		m_BlendFuncSet = true;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::BlendFunc: %d", isDefaultQueue, blendFuncCommandBuffer->m_Sfactor);
+	}
+	void OnBlendFuncSeparate(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto blendFuncSeparateCommandBuffer = static_cast<BlendFuncSeparateCommandBuffer *>(commandBuffer);
+		glBlendFuncSeparate(
+				blendFuncSeparateCommandBuffer->m_SrcRGB,
+				blendFuncSeparateCommandBuffer->m_DstRGB,
+				blendFuncSeparateCommandBuffer->m_SrcAlpha,
+				blendFuncSeparateCommandBuffer->m_DstAlpha);
+		m_Blend_SrcRGB = blendFuncSeparateCommandBuffer->m_SrcRGB;
+		m_Blend_DstRGB = blendFuncSeparateCommandBuffer->m_DstRGB;
+		m_Blend_SrcAlpha = blendFuncSeparateCommandBuffer->m_SrcAlpha;
+		m_Blend_DstAlpha = blendFuncSeparateCommandBuffer->m_DstAlpha;
+		m_BlendFuncSeparateSet = true;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::BlendFuncSeparate: %d",
+						isDefaultQueue, blendFuncSeparateCommandBuffer->m_SrcRGB);
+	}
+	void OnColorMask(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto colorMaskCommandBuffer = static_cast<ColorMaskCommandBuffer *>(commandBuffer);
+		glColorMask(
+				colorMaskCommandBuffer->m_R,
+				colorMaskCommandBuffer->m_G,
+				colorMaskCommandBuffer->m_B,
+				colorMaskCommandBuffer->m_A);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::ColorMask: %d", isDefaultQueue, colorMaskCommandBuffer->m_R);
+	}
+	void OnCullFace(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto cullFaceCommandBuffer = static_cast<CullFaceCommandBuffer *>(commandBuffer);
+		auto mode = cullFaceCommandBuffer->m_Mode;
+		glCullFace(mode);
+		m_AppCullFace = mode;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::CullFace: mode=%d", isDefaultQueue, mode);
+	}
+	void OnFrontFace(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto frontFaceCommandBuffer = static_cast<FrontFaceCommandBuffer *>(commandBuffer);
+		auto mode = frontFaceCommandBuffer->m_Mode;
+		glFrontFace(mode);
+		m_AppFrontFace = mode;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::FrontFace: mode=%d", isDefaultQueue, mode);
+	}
+	void OnEnable(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto enableCommandBuffer = static_cast<EnableCommandBuffer *>(commandBuffer);
+		Enable(enableCommandBuffer->m_Cap);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::Enable: %d", isDefaultQueue, enableCommandBuffer->m_Cap);
+	}
+	void OnDisable(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto disableCommandBuffer = static_cast<DisableCommandBuffer *>(commandBuffer);
+		Disable(disableCommandBuffer->m_Cap);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::Disable: %d", isDefaultQueue, disableCommandBuffer->m_Cap);
+	}
+	void OnGetBooleanv(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto getBooleanvCommandBuffer = static_cast<GetBooleanvCommandBuffer *>(commandBuffer);
+		GLboolean ret;
+		glGetBooleanv(getBooleanvCommandBuffer->m_Pname, &ret);
+		getBooleanvCommandBuffer->m_Value = ret;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::GetBooleanv: %d", isDefaultQueue, getBooleanvCommandBuffer->m_Pname);
+	}
+	void OnGetIntegerv(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto getIntegervCommandBuffer = static_cast<GetIntegervCommandBuffer *>(commandBuffer);
+		GLint ret;
+		glGetIntegerv(getIntegervCommandBuffer->m_Pname, &ret);
+		getIntegervCommandBuffer->m_Value = ret;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::GetIntegerv: %d", isDefaultQueue, getIntegervCommandBuffer->m_Pname);
+	}
+	void OnGetFloatv(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto getFloatvCommandBuffer = static_cast<GetFloatvCommandBuffer *>(commandBuffer);
+		GLfloat ret;
+		glGetFloatv(getFloatvCommandBuffer->m_Pname, &ret);
+		getFloatvCommandBuffer->m_Value = ret;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::GetFloatv(0x%x)", isDefaultQueue, getFloatvCommandBuffer->m_Pname);
+	}
+	void OnGetString(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto getStringCommandBuffer = static_cast<GetStringCommandBuffer *>(commandBuffer);
+		const GLubyte *ret = glGetString(getStringCommandBuffer->m_Pname); // returns null-terminated string
+		getStringCommandBuffer->CopyValue(ret);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::GetString: %d", isDefaultQueue, getStringCommandBuffer->m_Pname);
+	}
+	void OnGetShaderPrecisionFormat(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto getShaderPrecisionFormatCommandBuffer = static_cast<GetShaderPrecisionFormatCommandBuffer *>(commandBuffer);
+		GLint range[2];
+		GLint precision;
+		glGetShaderPrecisionFormat(
+				getShaderPrecisionFormatCommandBuffer->m_ShaderType,
+				getShaderPrecisionFormatCommandBuffer->m_PrecisionType,
+				range,
+				&precision);
+		getShaderPrecisionFormatCommandBuffer->m_RangeMin = range[0];
+		getShaderPrecisionFormatCommandBuffer->m_RangeMax = range[1];
+		getShaderPrecisionFormatCommandBuffer->m_Precision = precision;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::GetShaderPrecisionFormat: %d",
+						isDefaultQueue, getShaderPrecisionFormatCommandBuffer->m_ShaderType);
+	}
+	void OnGetError(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto getErrorCommandBuffer = static_cast<GetErrorCommandBuffer *>(commandBuffer);
+		GLenum ret = glGetError();
+		getErrorCommandBuffer->m_Error = ret;
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::GetError: %d", isDefaultQueue, ret);
+	}
 
 private:
 	UnityGfxRenderer m_APIType;
@@ -566,1270 +1720,140 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 	for (auto commandBuffer : commandBuffers)
 	{
 		auto commandType = commandBuffer->GetType();
+
+#define ADD_COMMAND_BUFFER_HANDLER(commandType)               \
+	case kCommandType##commandType:                             \
+	{                                                           \
+		On##commandType(commandBuffer, isDefaultQueue, logCalls); \
+		break;                                                    \
+	}
+
+#define ADD_COMMAND_BUFFER_HANDLER_WITH_DEVICE_FRAME(commandType)          \
+	case kCommandType##commandType:                                          \
+	{                                                                        \
+		On##commandType(commandBuffer, isDefaultQueue, deviceFrame, logCalls); \
+		break;                                                                 \
+	}
+
 		switch (commandType)
 		{
-		case kCommandTypeContextInit:
-		{
-			auto contextInitCommandBuffer = static_cast<ContextInitCommandBuffer *>(commandBuffer);
-			glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &contextInitCommandBuffer->maxCombinedTextureImageUnits);
-			glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE, &contextInitCommandBuffer->maxCubeMapTextureSize);
-			glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_VECTORS, &contextInitCommandBuffer->maxFragmentUniformVectors);
-			glGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, &contextInitCommandBuffer->maxRenderbufferSize);
-			glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &contextInitCommandBuffer->maxTextureImageUnits);
-			glGetIntegerv(GL_MAX_TEXTURE_SIZE, &contextInitCommandBuffer->maxTextureSize);
-			glGetIntegerv(GL_MAX_VARYING_VECTORS, &contextInitCommandBuffer->maxVaryingVectors);
-			glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &contextInitCommandBuffer->maxVertexAttribs);
-			glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &contextInitCommandBuffer->maxVertexTextureImageUnits);
-			glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &contextInitCommandBuffer->maxVertexUniformVectors);
+			ADD_COMMAND_BUFFER_HANDLER(ContextInit)
+			ADD_COMMAND_BUFFER_HANDLER(Context2Init)
+			ADD_COMMAND_BUFFER_HANDLER(CreateProgram)
+			ADD_COMMAND_BUFFER_HANDLER(DeleteProgram)
+			ADD_COMMAND_BUFFER_HANDLER(LinkProgram)
+			ADD_COMMAND_BUFFER_HANDLER(UseProgram)
+			ADD_COMMAND_BUFFER_HANDLER(GetProgramParameter)
+			ADD_COMMAND_BUFFER_HANDLER(GetProgramInfoLog)
+			ADD_COMMAND_BUFFER_HANDLER(AttachShader)
+			ADD_COMMAND_BUFFER_HANDLER(DetachShader)
+			ADD_COMMAND_BUFFER_HANDLER(CreateShader)
+			ADD_COMMAND_BUFFER_HANDLER(DeleteShader)
+			ADD_COMMAND_BUFFER_HANDLER(ShaderSource)
+			ADD_COMMAND_BUFFER_HANDLER(CompileShader)
+			ADD_COMMAND_BUFFER_HANDLER(GetShaderSource)
+			ADD_COMMAND_BUFFER_HANDLER(GetShaderParameter)
+			ADD_COMMAND_BUFFER_HANDLER(GetShaderInfoLog)
+			ADD_COMMAND_BUFFER_HANDLER(CreateBuffer)
+			ADD_COMMAND_BUFFER_HANDLER(DeleteBuffer)
+			ADD_COMMAND_BUFFER_HANDLER(BindBuffer)
+			ADD_COMMAND_BUFFER_HANDLER(BufferData)
+			ADD_COMMAND_BUFFER_HANDLER(BufferSubData)
+			ADD_COMMAND_BUFFER_HANDLER(CreateFramebuffer)
+			ADD_COMMAND_BUFFER_HANDLER(DeleteFramebuffer)
+			ADD_COMMAND_BUFFER_HANDLER(BindFramebuffer)
+			ADD_COMMAND_BUFFER_HANDLER(FramebufferRenderbuffer)
+			ADD_COMMAND_BUFFER_HANDLER(FramebufferTexture2D)
+			ADD_COMMAND_BUFFER_HANDLER(CheckFramebufferStatus)
+			ADD_COMMAND_BUFFER_HANDLER(CreateRenderbuffer)
+			ADD_COMMAND_BUFFER_HANDLER(DeleteRenderbuffer)
+			ADD_COMMAND_BUFFER_HANDLER(BindRenderbuffer)
+			ADD_COMMAND_BUFFER_HANDLER(RenderbufferStorage)
+			ADD_COMMAND_BUFFER_HANDLER(BindBufferBase)
+			ADD_COMMAND_BUFFER_HANDLER(BindBufferRange)
+			ADD_COMMAND_BUFFER_HANDLER(BlitFramebuffer)
+			ADD_COMMAND_BUFFER_HANDLER(RenderbufferStorageMultisample)
+			ADD_COMMAND_BUFFER_HANDLER(CreateVertexArray)
+			ADD_COMMAND_BUFFER_HANDLER(DeleteVertexArray)
+			ADD_COMMAND_BUFFER_HANDLER(BindVertexArray)
+			ADD_COMMAND_BUFFER_HANDLER(CreateTexture)
+			ADD_COMMAND_BUFFER_HANDLER(DeleteTexture)
+			ADD_COMMAND_BUFFER_HANDLER(BindTexture)
+			ADD_COMMAND_BUFFER_HANDLER(TexImage2D)
+			ADD_COMMAND_BUFFER_HANDLER(TexSubImage2D)
+			ADD_COMMAND_BUFFER_HANDLER(CopyTexImage2D)
+			ADD_COMMAND_BUFFER_HANDLER(CopyTexSubImage2D)
+			ADD_COMMAND_BUFFER_HANDLER(TexParameteri)
+			ADD_COMMAND_BUFFER_HANDLER(ActiveTexture)
+			ADD_COMMAND_BUFFER_HANDLER(GenerateMipmap)
+			ADD_COMMAND_BUFFER_HANDLER(TexImage3D)
+			ADD_COMMAND_BUFFER_HANDLER(TexSubImage3D)
+			ADD_COMMAND_BUFFER_HANDLER(EnableVertexAttribArray)
+			ADD_COMMAND_BUFFER_HANDLER(DisableVertexAttribArray)
+			ADD_COMMAND_BUFFER_HANDLER(VertexAttribPointer)
+			ADD_COMMAND_BUFFER_HANDLER(VertexAttribIPointer)
+			ADD_COMMAND_BUFFER_HANDLER(VertexAttribDivisor)
+			ADD_COMMAND_BUFFER_HANDLER(GetAttribLocation)
+			ADD_COMMAND_BUFFER_HANDLER(GetUniformLocation)
+			ADD_COMMAND_BUFFER_HANDLER(UnoformBlockBinding)
+			ADD_COMMAND_BUFFER_HANDLER(Uniform1f)
+			ADD_COMMAND_BUFFER_HANDLER(Uniform1fv)
+			ADD_COMMAND_BUFFER_HANDLER(Uniform1i)
+			ADD_COMMAND_BUFFER_HANDLER(Uniform1iv)
+			ADD_COMMAND_BUFFER_HANDLER(Uniform2f)
+			ADD_COMMAND_BUFFER_HANDLER(Uniform2fv)
+			ADD_COMMAND_BUFFER_HANDLER(Uniform2i)
+			ADD_COMMAND_BUFFER_HANDLER(Uniform2iv)
+			ADD_COMMAND_BUFFER_HANDLER(Uniform3f)
+			ADD_COMMAND_BUFFER_HANDLER(Uniform3fv)
+			ADD_COMMAND_BUFFER_HANDLER(Uniform3i)
+			ADD_COMMAND_BUFFER_HANDLER(Uniform3iv)
+			ADD_COMMAND_BUFFER_HANDLER(Uniform4f)
+			ADD_COMMAND_BUFFER_HANDLER(Uniform4fv)
+			ADD_COMMAND_BUFFER_HANDLER(Uniform4i)
+			ADD_COMMAND_BUFFER_HANDLER(Uniform4iv)
+			ADD_COMMAND_BUFFER_HANDLER(UniformMatrix2fv)
+			ADD_COMMAND_BUFFER_HANDLER(UniformMatrix3fv)
+			ADD_COMMAND_BUFFER_HANDLER_WITH_DEVICE_FRAME(UniformMatrix4fv)
+			ADD_COMMAND_BUFFER_HANDLER(DrawArrays)
+			ADD_COMMAND_BUFFER_HANDLER(DrawElements)
+			ADD_COMMAND_BUFFER_HANDLER(DrawBuffers)
+			ADD_COMMAND_BUFFER_HANDLER(DrawArraysInstanced)
+			ADD_COMMAND_BUFFER_HANDLER(DrawElementsInstanced)
+			ADD_COMMAND_BUFFER_HANDLER(DrawRangeElements)
+			ADD_COMMAND_BUFFER_HANDLER(PixelStorei)
+			ADD_COMMAND_BUFFER_HANDLER(PolygonOffset)
+			ADD_COMMAND_BUFFER_HANDLER(SetViewport)
+			ADD_COMMAND_BUFFER_HANDLER(SetScissor)
+			ADD_COMMAND_BUFFER_HANDLER(GetSupportedExtensions)
+			ADD_COMMAND_BUFFER_HANDLER(DepthMask)
+			ADD_COMMAND_BUFFER_HANDLER(DepthFunc)
+			ADD_COMMAND_BUFFER_HANDLER(DepthRange)
+			ADD_COMMAND_BUFFER_HANDLER(StencilFunc)
+			ADD_COMMAND_BUFFER_HANDLER(StencilFuncSeparate)
+			ADD_COMMAND_BUFFER_HANDLER(StencilMask)
+			ADD_COMMAND_BUFFER_HANDLER(StencilMaskSeparate)
+			ADD_COMMAND_BUFFER_HANDLER(StencilOp)
+			ADD_COMMAND_BUFFER_HANDLER(StencilOpSeparate)
+			ADD_COMMAND_BUFFER_HANDLER(BlendColor)
+			ADD_COMMAND_BUFFER_HANDLER(BlendEquation)
+			ADD_COMMAND_BUFFER_HANDLER(BlendEquationSeparate)
+			ADD_COMMAND_BUFFER_HANDLER(BlendFunc)
+			ADD_COMMAND_BUFFER_HANDLER(BlendFuncSeparate)
+			ADD_COMMAND_BUFFER_HANDLER(ColorMask)
+			ADD_COMMAND_BUFFER_HANDLER(CullFace)
+			ADD_COMMAND_BUFFER_HANDLER(FrontFace)
+			ADD_COMMAND_BUFFER_HANDLER(Enable)
+			ADD_COMMAND_BUFFER_HANDLER(Disable)
+			ADD_COMMAND_BUFFER_HANDLER(GetBooleanv)
+			ADD_COMMAND_BUFFER_HANDLER(GetIntegerv)
+			ADD_COMMAND_BUFFER_HANDLER(GetFloatv)
+			ADD_COMMAND_BUFFER_HANDLER(GetString)
+			ADD_COMMAND_BUFFER_HANDLER(GetShaderPrecisionFormat)
+			ADD_COMMAND_BUFFER_HANDLER(GetError)
+#undef ADD_COMMAND_BUFFER_HANDLER
+#undef ADD_COMMAND_BUFFER_HANDLER_WITH_DEVICE_FRAME
 
-			contextInitCommandBuffer->vendor = string((const char *)glGetString(GL_VENDOR));
-			contextInitCommandBuffer->version = string((const char *)glGetString(GL_VERSION));
-			contextInitCommandBuffer->renderer = string((const char *)glGetString(GL_RENDERER));
-			break;
-		}
-		case kCommandTypeContext2Init:
-		{
-			auto context2InitCommandBuffer = static_cast<Context2InitCommandBuffer *>(commandBuffer);
-			// GLint values
-			glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, &context2InitCommandBuffer->max3DTextureSize);
-			glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &context2InitCommandBuffer->maxArrayTextureLayers);
-			glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &context2InitCommandBuffer->maxColorAttachments);
-			glGetIntegerv(GL_MAX_COMBINED_UNIFORM_BLOCKS, &context2InitCommandBuffer->maxCombinedUniformBlocks);
-			glGetIntegerv(GL_MAX_DRAW_BUFFERS, &context2InitCommandBuffer->maxDrawBuffers);
-			glGetIntegerv(GL_MAX_ELEMENTS_INDICES, &context2InitCommandBuffer->maxElementsIndices);
-			glGetIntegerv(GL_MAX_ELEMENTS_VERTICES, &context2InitCommandBuffer->maxElementsVertices);
-			glGetIntegerv(GL_MAX_FRAGMENT_INPUT_COMPONENTS, &context2InitCommandBuffer->maxFragmentInputComponents);
-			glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_BLOCKS, &context2InitCommandBuffer->maxFragmentUniformBlocks);
-			glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &context2InitCommandBuffer->maxFragmentUniformComponents);
-			glGetIntegerv(GL_MAX_PROGRAM_TEXEL_OFFSET, &context2InitCommandBuffer->maxProgramTexelOffset);
-			glGetIntegerv(GL_MAX_SAMPLES, &context2InitCommandBuffer->maxSamples);
-			glGetIntegerv(GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS, &context2InitCommandBuffer->maxTransformFeedbackInterleavedComponents);
-			glGetIntegerv(GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS, &context2InitCommandBuffer->maxTransformFeedbackSeparateAttributes);
-			glGetIntegerv(GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS, &context2InitCommandBuffer->maxTransformFeedbackSeparateComponents);
-			glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &context2InitCommandBuffer->maxUniformBufferBindings);
-			glGetIntegerv(GL_MAX_VARYING_COMPONENTS, &context2InitCommandBuffer->maxVaryingComponents);
-			glGetIntegerv(GL_MAX_VERTEX_OUTPUT_COMPONENTS, &context2InitCommandBuffer->maxVertexOutputComponents);
-			glGetIntegerv(GL_MAX_VERTEX_UNIFORM_BLOCKS, &context2InitCommandBuffer->maxVertexUniformBlocks);
-			glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &context2InitCommandBuffer->maxVertexUniformComponents);
-			// GLint64 values
-			glGetInteger64v(GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS, &context2InitCommandBuffer->maxCombinedFragmentUniformComponents);
-			glGetInteger64v(GL_MAX_SERVER_WAIT_TIMEOUT, &context2InitCommandBuffer->maxServerWaitTimeout);
-			glGetInteger64v(GL_MAX_UNIFORM_BLOCK_SIZE, &context2InitCommandBuffer->maxUniformBlockSize);
-			// GLfloat values
-			glGetFloatv(GL_MAX_TEXTURE_LOD_BIAS, &context2InitCommandBuffer->maxTextureLODBias);
-			break;
-		}
-		case kCommandTypeCreateProgram:
-		{
-			auto createProgramCommandBuffer = static_cast<CreateProgramCommandBuffer *>(commandBuffer);
-			int ret = glCreateProgram();
-			createProgramCommandBuffer->m_ProgramId = ret;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::CreateProgram() => %d", isDefaultQueue, ret);
-			break;
-		}
-		case kCommandTypeDeleteProgram:
-		{
-			auto deleteProgramCommandBuffer = static_cast<DeleteProgramCommandBuffer *>(commandBuffer);
-			auto id = deleteProgramCommandBuffer->m_ProgramId;
-			glDeleteProgram(id);
-
-			/**
-			 * Reset the program in both "AppGlobal" and "XRFrame" when we receiving a delete program command to avoid the
-			 * context using the deleted program.
-			 */
-			m_AppGlobalContext.ResetProgram(id);
-			m_AppXRFrameContext.ResetProgram(id);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DeleteProgram(%d)", isDefaultQueue, id);
-			break;
-		}
-		case kCommandTypeLinkProgram:
-		{
-			auto linkProgramCommandBuffer = static_cast<LinkProgramCommandBuffer *>(commandBuffer);
-			glLinkProgram(linkProgramCommandBuffer->m_ProgramId);
-
-			// Update the locations of the uniforms and attributes
-			GLuint program = linkProgramCommandBuffer->m_ProgramId;
-
-			/**
-			 * Check the link status of the program.
-			 */
-			GLenum status;
-			glGetProgramiv(program, GL_LINK_STATUS, (GLint *)&status);
-			if (status == GL_FALSE)
-			{
-				GLint errorLength;
-				glGetProgramiv(program, GL_INFO_LOG_LENGTH, &errorLength);
-				GLchar *errorStr = new GLchar[errorLength];
-				glGetProgramInfoLog(program, errorLength, NULL, errorStr);
-				DEBUG(DEBUG_TAG, "Failed to link program(%d): %s", program, errorStr);
-				delete[] errorStr;
-				break;
-			}
-
-			/**
-			 * Fetch the locations of the uniforms and attributes when link successfully.
-			 */
-			GLint numUniforms = 0;
-			glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &numUniforms);
-			for (int i = 0; i < numUniforms; i++)
-			{
-				GLsizei nameLength;
-				GLint size;
-				GLenum type;
-				GLchar name[256];
-
-				glGetActiveUniform(program, i, sizeof(name) - 1, &nameLength, &size, &type, name);
-				name[nameLength] = '\0';
-
-				GLint location = glGetUniformLocation(program, name);
-				if (location <= -1)
-					continue;
-
-				auto uniformLoc = UniformLocation();
-				uniformLoc.location = location;
-				uniformLoc.size = size;
-
-				linkProgramCommandBuffer->m_UniformLocations[name] = uniformLoc;
-				DEBUG(DEBUG_TAG, "GL::LinkProgram::Uniforms(%s in %d) => %d(size=%d, type=%d)", name, program, location, size, type);
-			}
-
-			/**
-			 * Fetch the uniform blocks when link successfully.
-			 */
-			GLint numUniformBlocks = 0;
-			glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCKS, &numUniformBlocks);
-			for (int i = 0; i < numUniformBlocks; i++)
-			{
-				GLsizei nameLength;
-				GLchar name[256];
-
-				glGetActiveUniformBlockName(program, i, sizeof(name) - 1, &nameLength, name);
-				name[nameLength] = '\0';
-
-				GLuint index = glGetUniformBlockIndex(program, name);
-				auto uniformBlock = UniformBlock();
-				uniformBlock.index = index;
-				linkProgramCommandBuffer->m_UniformBlocks[name] = uniformBlock;
-				DEBUG(DEBUG_TAG, "GL::LinkProgram::UniformBlocks(%s in %d) => %d", name, program, index);
-			}
-
-			// TODO: add active attributes?
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::LinkProgram(%d)", isDefaultQueue, program);
-			break;
-		}
-		case kCommandTypeUseProgram:
-		{
-			auto useProgramCommandBuffer = static_cast<UseProgramCommandBuffer *>(commandBuffer);
-			auto program = useProgramCommandBuffer->m_ProgramId;
-			glUseProgram(program);
-			context->RecordProgram(program);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::UseProgram(%d)", isDefaultQueue, program);
-			break;
-		}
-		case kCommandTypeGetProgramParameter:
-		{
-			auto getProgramParameterCommandBuffer = static_cast<GetProgramParameterCommandBuffer *>(commandBuffer);
-			GLint ret;
-			glGetProgramiv(
-					getProgramParameterCommandBuffer->m_ProgramId,
-					getProgramParameterCommandBuffer->m_Pname,
-					&ret);
-			getProgramParameterCommandBuffer->m_Value = ret;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::GetProgramParameter() => %d", isDefaultQueue, ret);
-			break;
-		}
-		case kCommandTypeGetProgramInfoLog:
-		{
-			auto getProgramInfoLogCommandBuffer = static_cast<GetProgramInfoLogCommandBuffer *>(commandBuffer);
-			GLint infoLogLength;
-			glGetProgramiv(getProgramInfoLogCommandBuffer->m_ProgramId, GL_INFO_LOG_LENGTH, &infoLogLength);
-
-			GLchar *infoLog = new GLchar[infoLogLength];
-			glGetProgramInfoLog(getProgramInfoLogCommandBuffer->m_ProgramId, infoLogLength, NULL, infoLog);
-			getProgramInfoLogCommandBuffer->CopyInfoLog(infoLog, infoLogLength);
-			delete[] infoLog;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::GetProgramInfoLog: %s",
-							isDefaultQueue, getProgramInfoLogCommandBuffer->m_InfoLog);
-			break;
-		}
-		case kCommandTypeAttachShader:
-		{
-			auto attachShaderCommandBuffer = static_cast<AttachShaderCommandBuffer *>(commandBuffer);
-			glAttachShader(attachShaderCommandBuffer->m_ProgramId, attachShaderCommandBuffer->m_ShaderId);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::AttachShader: program=%d, shader=%d",
-							isDefaultQueue, attachShaderCommandBuffer->m_ProgramId, attachShaderCommandBuffer->m_ShaderId);
-			break;
-		}
-		case kCommandTypeDetachShader:
-		{
-			auto detachShaderCommandBuffer = static_cast<DetachShaderCommandBuffer *>(commandBuffer);
-			glDetachShader(detachShaderCommandBuffer->m_ProgramId, detachShaderCommandBuffer->m_ShaderId);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DetachShader: program=%d, shader=%d",
-							isDefaultQueue, detachShaderCommandBuffer->m_ProgramId, detachShaderCommandBuffer->m_ShaderId);
-			break;
-		}
-		case kCommandTypeCreateShader:
-		{
-			auto createShaderCommandBuffer = static_cast<CreateShaderCommandBuffer *>(commandBuffer);
-			int ret = glCreateShader(createShaderCommandBuffer->m_ShaderType);
-			createShaderCommandBuffer->m_ShaderId = ret;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::CreateShader: %d", isDefaultQueue, ret);
-			break;
-		}
-		case kCommandTypeDeleteShader:
-		{
-			auto deleteShaderCommandBuffer = static_cast<DeleteShaderCommandBuffer *>(commandBuffer);
-			glDeleteShader(deleteShaderCommandBuffer->m_ShaderId);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DeleteShader: %d", isDefaultQueue, deleteShaderCommandBuffer->m_ShaderId);
-			break;
-		}
-		case kCommandTypeShaderSource:
-		{
-			auto shaderSourceCommandBuffer = static_cast<ShaderSourceCommandBuffer *>(commandBuffer);
-			auto shaderId = shaderSourceCommandBuffer->m_ShaderId;
-			auto source = shaderSourceCommandBuffer->m_Source;
-			auto length = shaderSourceCommandBuffer->m_Length;
-			glShaderSource(shaderId, 1, &source, (const GLint *)&length);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::ShaderSource: %d", isDefaultQueue, shaderId);
-			break;
-		}
-		case kCommandTypeCompileShader:
-		{
-			auto compileShaderCommandBuffer = static_cast<CompileShaderCommandBuffer *>(commandBuffer);
-			glCompileShader(compileShaderCommandBuffer->m_ShaderId);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::CompileShader: %d", isDefaultQueue, compileShaderCommandBuffer->m_ShaderId);
-			break;
-		}
-		case kCommandTypeGetShaderSource:
-		{
-			auto getShaderSourceCommandBuffer = static_cast<GetShaderSourceCommandBuffer *>(commandBuffer);
-
-			GLint sourceLength;
-			glGetShaderiv(getShaderSourceCommandBuffer->m_ShaderId, GL_SHADER_SOURCE_LENGTH, &sourceLength);
-			if (sourceLength <= 0)
-			{
-				getShaderSourceCommandBuffer->m_Source = nullptr;
-				DEBUG(DEBUG_TAG, "Failed to get shader source from #%d", getShaderSourceCommandBuffer->m_ShaderId);
-				break;
-			}
-
-			GLchar *source = new GLchar[sourceLength];
-			GLint maxLength = sourceLength;
-			GLint bytesWritten;
-			while (true)
-			{
-				glGetShaderSource(getShaderSourceCommandBuffer->m_ShaderId, maxLength, &bytesWritten, source);
-				if (bytesWritten < maxLength - 1)
-					break;
-				maxLength += sourceLength;
-				source = (GLchar *)realloc(source, maxLength);
-			}
-			getShaderSourceCommandBuffer->CopySource(source, maxLength);
-			delete[] source;
-
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::GetShaderSource: %s", isDefaultQueue, getShaderSourceCommandBuffer->m_Source);
-			break;
-		}
-		case kCommandTypeGetShaderParameter:
-		{
-			auto getShaderParameterCommandBuffer = static_cast<GetShaderParameterCommandBuffer *>(commandBuffer);
-			GLint ret;
-			glGetShaderiv(
-					getShaderParameterCommandBuffer->m_ShaderId,
-					getShaderParameterCommandBuffer->m_Pname,
-					&ret);
-			getShaderParameterCommandBuffer->m_Value = ret;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::GetShaderParameter: %d", isDefaultQueue, ret);
-			break;
-		}
-		case kCommandTypeGetShaderInfoLog:
-		{
-			auto getShaderInfoLogCommandBuffer = static_cast<GetShaderInfoLogCommandBuffer *>(commandBuffer);
-			GLint infoLogLength;
-			glGetShaderiv(getShaderInfoLogCommandBuffer->m_ShaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
-
-			GLchar *infoLog = new GLchar[infoLogLength];
-			glGetShaderInfoLog(getShaderInfoLogCommandBuffer->m_ShaderId, infoLogLength, NULL, infoLog);
-			getShaderInfoLogCommandBuffer->CopyInfoLog(infoLog, infoLogLength);
-			delete[] infoLog;
-
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::GetShaderInfoLog: %s", isDefaultQueue, getShaderInfoLogCommandBuffer->m_InfoLog);
-			break;
-		}
-		case kCommandTypeCreateBuffer:
-		{
-			auto createBufferCommandBuffer = static_cast<CreateBufferCommandBuffer *>(commandBuffer);
-			GLuint buffer;
-			glGenBuffers(1, &buffer);
-			createBufferCommandBuffer->m_BufferId = buffer;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::CreateBuffer => buffer(%d)", isDefaultQueue, buffer);
-			break;
-		}
-		case kCommandTypeDeleteBuffer:
-		{
-			auto deleteBufferCommandBuffer = static_cast<DeleteBufferCommandBuffer *>(commandBuffer);
-			glDeleteBuffers(1, &deleteBufferCommandBuffer->m_BufferId);
-
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DeleteBuffer: %d", isDefaultQueue, deleteBufferCommandBuffer->m_BufferId);
-			break;
-		}
-		case kCommandTypeBindBuffer:
-		{
-			auto bindBufferCommandBuffer = static_cast<BindBufferCommandBuffer *>(commandBuffer);
-			auto target = bindBufferCommandBuffer->m_Target;
-			auto buffer = bindBufferCommandBuffer->m_Buffer;
-
-			/** Update the app states for next restore. */
-			if (target == GL_ARRAY_BUFFER)
-				context->RecordArrayBuffer(buffer);
-			else if (target == GL_ELEMENT_ARRAY_BUFFER)
-				context->RecordElementArrayBuffer(buffer);
-
-			glBindBuffer(target, buffer);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::BindBuffer(target=0x%x buffer=%d)",
-							isDefaultQueue, target, buffer);
-			break;
-		}
-		case kCommandTypeBufferData:
-		{
-			auto bufferDataCommandBuffer = static_cast<BufferDataCommandBuffer *>(commandBuffer);
-			auto target = bufferDataCommandBuffer->m_Target;
-			auto size = bufferDataCommandBuffer->m_Size;
-			auto data = bufferDataCommandBuffer->m_Data;
-			auto usage = bufferDataCommandBuffer->m_Usage;
-
-			glBufferData(target, size, data, usage);
-			if (logCalls)
-			{
-				DEBUG(DEBUG_TAG, "[%d] GL::BufferData(target=0x%x, size=%d usage=0x%x)",
-							isDefaultQueue, target, size, usage);
-				if (size > 3)
-					DEBUG(DEBUG_TAG, "[%d] GL::BufferData[data]: %d %d %d %d ...",
-								isDefaultQueue, data[0], data[1], data[2], data[3]);
-			}
-			break;
-		}
-		case kCommandTypeBufferSubData:
-		{
-			auto bufferSubDataCommandBuffer = static_cast<BufferSubDataCommandBuffer *>(commandBuffer);
-			glBufferSubData(
-					bufferSubDataCommandBuffer->m_Target,
-					bufferSubDataCommandBuffer->m_Offset,
-					bufferSubDataCommandBuffer->m_Size,
-					bufferSubDataCommandBuffer->m_Data);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::BufferSubData: %d", isDefaultQueue, bufferSubDataCommandBuffer->m_Size);
-			break;
-		}
-		case kCommandTypeCreateFramebuffer:
-		{
-			auto createFramebufferCommandBuffer = static_cast<CreateFramebufferCommandBuffer *>(commandBuffer);
-			GLuint ret;
-			glGenFramebuffers(1, &ret);
-			createFramebufferCommandBuffer->m_FramebufferId = ret;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::CreateFramebuffer() => %d", isDefaultQueue, ret);
-			break;
-		}
-		case kCommandTypeDeleteFramebuffer:
-		{
-			auto deleteFramebufferCommandBuffer = static_cast<DeleteFramebufferCommandBuffer *>(commandBuffer);
-			glDeleteFramebuffers(1, &deleteFramebufferCommandBuffer->m_FramebufferId);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DeleteFramebuffer: %d",
-							isDefaultQueue, deleteFramebufferCommandBuffer->m_FramebufferId);
-			break;
-		}
-		case kCommandTypeBindFramebuffer:
-		{
-			auto bindFramebufferCommandBuffer = static_cast<BindFramebufferCommandBuffer *>(commandBuffer);
-			auto target = bindFramebufferCommandBuffer->m_Target;
-			auto framebuffer = bindFramebufferCommandBuffer->m_Framebuffer;
-
-			glBindFramebuffer(target, framebuffer);
-			context->RecordFramebuffer(framebuffer);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::BindFramebuffer(%d)",
-							isDefaultQueue, bindFramebufferCommandBuffer->m_Framebuffer);
-			break;
-		}
-		case kCommandTypeFramebufferRenderbuffer:
-		{
-			auto framebufferRenderbufferCommandBuffer = static_cast<FramebufferRenderbufferCommandBuffer *>(commandBuffer);
-			glFramebufferRenderbuffer(
-					framebufferRenderbufferCommandBuffer->m_Target,
-					framebufferRenderbufferCommandBuffer->m_Attachment,
-					framebufferRenderbufferCommandBuffer->m_Renderbuffertarget,
-					framebufferRenderbufferCommandBuffer->m_Renderbuffer);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::FramebufferRenderbuffer: %d",
-							isDefaultQueue, framebufferRenderbufferCommandBuffer->m_Renderbuffer);
-			break;
-		}
-		case kCommandTypeFramebufferTexture2D:
-		{
-			auto framebufferTexture2DCommandBuffer = static_cast<FramebufferTexture2DCommandBuffer *>(commandBuffer);
-			auto target = framebufferTexture2DCommandBuffer->m_Target;
-			auto attachment = framebufferTexture2DCommandBuffer->m_Attachment;
-			auto textarget = framebufferTexture2DCommandBuffer->m_Textarget;
-			auto texture = framebufferTexture2DCommandBuffer->m_Texture;
-			auto level = framebufferTexture2DCommandBuffer->m_Level;
-			glFramebufferTexture2D(target, attachment, textarget, texture, level);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::FramebufferTexture2D(%d, %d, %d, %d, %d)",
-							isDefaultQueue, target, attachment, textarget, texture, level);
-			break;
-		}
-		case kCommandTypeCheckFramebufferStatus:
-		{
-			auto checkFramebufferStatusCommandBuffer = static_cast<CheckFramebufferStatusCommandBuffer *>(commandBuffer);
-			GLenum ret = glCheckFramebufferStatus(checkFramebufferStatusCommandBuffer->m_Target);
-			checkFramebufferStatusCommandBuffer->m_Status = ret;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::CheckFramebufferStatus: %d", isDefaultQueue, ret);
-			break;
-		}
-		case kCommandTypeCreateRenderbuffer:
-		{
-			auto createRenderbufferCommandBuffer = static_cast<CreateRenderbufferCommandBuffer *>(commandBuffer);
-			GLuint ret;
-			glGenRenderbuffers(1, &ret);
-			createRenderbufferCommandBuffer->m_RenderbufferId = ret;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::CreateRenderbuffer: %d", isDefaultQueue, ret);
-			break;
-		}
-		case kCommandTypeDeleteRenderbuffer:
-		{
-			auto deleteRenderbufferCommandBuffer = static_cast<DeleteRenderbufferCommandBuffer *>(commandBuffer);
-			glDeleteRenderbuffers(1, &deleteRenderbufferCommandBuffer->m_RenderbufferId);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DeleteRenderbuffer: %d",
-							isDefaultQueue, deleteRenderbufferCommandBuffer->m_RenderbufferId);
-			break;
-		}
-		case kCommandTypeBindRenderbuffer:
-		{
-			auto bindRenderbufferCommandBuffer = static_cast<BindRenderbufferCommandBuffer *>(commandBuffer);
-			auto target = bindRenderbufferCommandBuffer->m_Target;
-			auto renderbuffer = bindRenderbufferCommandBuffer->m_Renderbuffer;
-
-			glBindRenderbuffer(target, renderbuffer);
-			context->RecordRenderbuffer(renderbuffer);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::BindRenderbuffer: %d",
-							isDefaultQueue, bindRenderbufferCommandBuffer->m_Renderbuffer);
-			break;
-		}
-		case kCommandTypeRenderbufferStorage:
-		{
-			auto renderbufferStorageCommandBuffer = static_cast<RenderbufferStorageCommandBuffer *>(commandBuffer);
-			glRenderbufferStorage(
-					renderbufferStorageCommandBuffer->m_Target,
-					renderbufferStorageCommandBuffer->m_Internalformat,
-					renderbufferStorageCommandBuffer->m_Width,
-					renderbufferStorageCommandBuffer->m_Height);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::RenderbufferStorage: %d",
-							isDefaultQueue, renderbufferStorageCommandBuffer->m_Internalformat);
-			break;
-		}
-		case kCommandTypeBindBufferBase:
-		{
-			auto bindBufferBaseCommandBuffer = static_cast<BindBufferBaseCommandBuffer *>(commandBuffer);
-			auto target = bindBufferBaseCommandBuffer->m_Target;
-			auto index = bindBufferBaseCommandBuffer->m_Index;
-			auto buffer = bindBufferBaseCommandBuffer->m_Buffer;
-			glBindBufferBase(target, index, buffer);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::BindBufferBase(%d, index=%d, target=%d)",
-							isDefaultQueue, buffer, index, target);
-			break;
-		}
-		case kCommandTypeBindBufferRange:
-		{
-			auto bindBufferRangeCommandBuffer = static_cast<BindBufferRangeCommandBuffer *>(commandBuffer);
-			auto target = bindBufferRangeCommandBuffer->m_Target;
-			auto index = bindBufferRangeCommandBuffer->m_Index;
-			auto buffer = bindBufferRangeCommandBuffer->m_Buffer;
-			auto offset = bindBufferRangeCommandBuffer->m_Offset;
-			auto size = bindBufferRangeCommandBuffer->m_Size;
-			glBindBufferRange(target, index, buffer, offset, size);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::BindBufferRange: %d", isDefaultQueue, buffer);
-			break;
-		}
-		case kCommandTypeBlitFramebuffer:
-		{
-			auto blitFramebufferCommandBuffer = static_cast<BlitFramebufferCommandBuffer *>(commandBuffer);
-			glBlitFramebuffer(
-					blitFramebufferCommandBuffer->m_SrcX0,
-					blitFramebufferCommandBuffer->m_SrcY0,
-					blitFramebufferCommandBuffer->m_SrcX1,
-					blitFramebufferCommandBuffer->m_SrcY1,
-					blitFramebufferCommandBuffer->m_DstX0,
-					blitFramebufferCommandBuffer->m_DstY0,
-					blitFramebufferCommandBuffer->m_DstX1,
-					blitFramebufferCommandBuffer->m_DstY1,
-					blitFramebufferCommandBuffer->m_Mask,
-					blitFramebufferCommandBuffer->m_Filter);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::BlitFramebuffer: %d", isDefaultQueue, blitFramebufferCommandBuffer->m_Filter);
-			break;
-		}
-		case kCommandTypeRenderbufferStorageMultisample:
-		{
-			auto renderbufferStorageMultisampleCommandBuffer = static_cast<RenderbufferStorageMultisampleCommandBuffer *>(commandBuffer);
-			auto target = renderbufferStorageMultisampleCommandBuffer->m_Target;
-			auto samples = renderbufferStorageMultisampleCommandBuffer->m_Samples;
-			auto internalformat = renderbufferStorageMultisampleCommandBuffer->m_Internalformat;
-			auto width = renderbufferStorageMultisampleCommandBuffer->m_Width;
-			auto height = renderbufferStorageMultisampleCommandBuffer->m_Height;
-			glRenderbufferStorageMultisample(target, samples, internalformat, width, height);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::RenderbufferStorageMultisample(0x%x, samples=%d, internalformat=0x%x, size=[%d,%d])",
-							isDefaultQueue, target, samples, internalformat, width, height);
-			break;
-		}
-		case kCommandTypeCreateVertexArray:
-		{
-			auto createVertexArrayCommandBuffer = static_cast<CreateVertexArrayCommandBuffer *>(commandBuffer);
-			GLuint ret;
-			glGenVertexArrays(1, &ret);
-			createVertexArrayCommandBuffer->m_VertexArrayId = ret;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::CreateVertexArray() => %d", isDefaultQueue, ret);
-			break;
-		}
-		case kCommandTypeDeleteVertexArray:
-		{
-			auto deleteVertexArrayCommandBuffer = static_cast<DeleteVertexArrayCommandBuffer *>(commandBuffer);
-			glDeleteVertexArrays(1, &deleteVertexArrayCommandBuffer->m_VertexArrayId);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DeleteVertexArray: %d",
-							isDefaultQueue, deleteVertexArrayCommandBuffer->m_VertexArrayId);
-			break;
-		}
-		case kCommandTypeBindVertexArray:
-		{
-			auto bindVertexArrayCommandBuffer = static_cast<BindVertexArrayCommandBuffer *>(commandBuffer);
-			auto vertexArray = bindVertexArrayCommandBuffer->m_VertexArray;
-			glBindVertexArray(vertexArray);
-			context->RecordVertexArrayObject(vertexArray);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::BindVertexArray(%d)", isDefaultQueue, vertexArray);
-			break;
-		}
-		case kCommandTypeCreateTexture:
-		{
-			auto createTextureCommandBuffer = static_cast<CreateTextureCommandBuffer *>(commandBuffer);
-			GLuint texture;
-			glGenTextures(1, &texture);
-			createTextureCommandBuffer->m_TextureId = texture;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::CreateTexture() => texture(%d)", isDefaultQueue, texture);
-			break;
-		}
-		case kCommandTypeDeleteTexture:
-		{
-			auto deleteTextureCommandBuffer = static_cast<DeleteTextureCommandBuffer *>(commandBuffer);
-			glDeleteTextures(1, &deleteTextureCommandBuffer->m_TextureId);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DeleteTexture: %d", isDefaultQueue, deleteTextureCommandBuffer->m_TextureId);
-			break;
-		}
-		case kCommandTypeBindTexture:
-		{
-			auto bindTextureCommandBuffer = static_cast<BindTextureCommandBuffer *>(commandBuffer);
-			auto target = bindTextureCommandBuffer->m_Target;
-			auto texture = bindTextureCommandBuffer->m_Texture;
-
-			m_HostContext.RecordTextureBindingFromHost();
-			glBindTexture(target, texture);
-			context->RecordTextureBindingWithUnit(target, texture);
-
-			if (logCalls)
-			{
-				GLint activeUnit;
-				glGetIntegerv(GL_ACTIVE_TEXTURE, &activeUnit);
-				DEBUG(DEBUG_TAG, "[%d] GL::BindTexture(%d, %d) for active(%d) program(%d)",
-							isDefaultQueue, target, texture, activeUnit, context->GetProgram());
-			}
-			break;
-		}
-		case kCommandTypeTexImage2D:
-		{
-			auto texImage2DCommandBuffer = static_cast<TexImage2DCommandBuffer *>(commandBuffer);
-			auto target = texImage2DCommandBuffer->m_Target;
-			auto level = texImage2DCommandBuffer->m_Level;
-			auto internalformat = texImage2DCommandBuffer->m_Internalformat;
-			auto width = texImage2DCommandBuffer->m_Width;
-			auto height = texImage2DCommandBuffer->m_Height;
-			auto border = texImage2DCommandBuffer->m_Border;
-			auto format = texImage2DCommandBuffer->m_Format;
-			auto type = texImage2DCommandBuffer->m_Type;
-			glTexImage2D(target,
-									 level, internalformat,
-									 width, height,
-									 border, format, type, texImage2DCommandBuffer->m_Pixels);
-			if (logCalls)
-			{
-				DEBUG(DEBUG_TAG, "[%d] GL::TexImage2D(0x%x, level=%d, type=0x%x, internal_format=0x%x, format=0x%x, size=[%d,%d])",
-							isDefaultQueue, target, level, type, internalformat, format, width, height);
-			}
-			break;
-		}
-		case kCommandTypeTexSubImage2D:
-		{
-			auto texSubImage2DCommandBuffer = static_cast<TexSubImage2DCommandBuffer *>(commandBuffer);
-			glTexSubImage2D(
-					texSubImage2DCommandBuffer->m_Target,
-					texSubImage2DCommandBuffer->m_Level,
-					texSubImage2DCommandBuffer->m_Xoffset,
-					texSubImage2DCommandBuffer->m_Yoffset,
-					texSubImage2DCommandBuffer->m_Width,
-					texSubImage2DCommandBuffer->m_Height,
-					texSubImage2DCommandBuffer->m_Format,
-					texSubImage2DCommandBuffer->m_Type,
-					texSubImage2DCommandBuffer->m_Pixels);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::TexSubImage2D: %d", isDefaultQueue, texSubImage2DCommandBuffer->m_Target);
-			break;
-		}
-		case kCommandTypeCopyTexImage2D:
-		{
-			auto copyTexImage2DCommandBuffer = static_cast<CopyTexImage2DCommandBuffer *>(commandBuffer);
-			glCopyTexImage2D(
-					copyTexImage2DCommandBuffer->m_Target,
-					copyTexImage2DCommandBuffer->m_Level,
-					copyTexImage2DCommandBuffer->m_Internalformat,
-					copyTexImage2DCommandBuffer->m_X,
-					copyTexImage2DCommandBuffer->m_Y,
-					copyTexImage2DCommandBuffer->m_Width,
-					copyTexImage2DCommandBuffer->m_Height,
-					copyTexImage2DCommandBuffer->m_Border);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::CopyTexImage2D: %d", isDefaultQueue, copyTexImage2DCommandBuffer->m_Target);
-			break;
-		}
-		case kCommandTypeCopyTexSubImage2D:
-		{
-			auto copyTexSubImage2DCommandBuffer = static_cast<CopyTexSubImage2DCommandBuffer *>(commandBuffer);
-			glCopyTexSubImage2D(
-					copyTexSubImage2DCommandBuffer->m_Target,
-					copyTexSubImage2DCommandBuffer->m_Level,
-					copyTexSubImage2DCommandBuffer->m_Xoffset,
-					copyTexSubImage2DCommandBuffer->m_Yoffset,
-					copyTexSubImage2DCommandBuffer->m_X,
-					copyTexSubImage2DCommandBuffer->m_Y,
-					copyTexSubImage2DCommandBuffer->m_Width,
-					copyTexSubImage2DCommandBuffer->m_Height);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::CopyTexSubImage2D: %d", isDefaultQueue, copyTexSubImage2DCommandBuffer->m_Target);
-			break;
-		}
-		case kCommandTypeTexParameteri:
-		{
-			auto texParameteriCommandBuffer = static_cast<TexParameteriCommandBuffer *>(commandBuffer);
-			auto target = texParameteriCommandBuffer->m_Target;
-			auto pname = texParameteriCommandBuffer->m_Pname;
-			auto param = texParameteriCommandBuffer->m_Param;
-			glTexParameteri(target, pname, param);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::TexParameteri(target=%d, pname=%d, param=%d)",
-							isDefaultQueue, target, pname, param);
-			break;
-		}
-		case kCommandTypeActiveTexture:
-		{
-			auto activeTextureCommandBuffer = static_cast<ActiveTextureCommandBuffer *>(commandBuffer);
-			auto textureUnit = activeTextureCommandBuffer->m_Texture;
-			glActiveTexture(textureUnit);
-			context->RecordActiveTextureUnit(textureUnit);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::ActiveTexture(%d)",
-							isDefaultQueue, textureUnit);
-			break;
-		}
-		case kCommandTypeGenerateMipmap:
-		{
-			auto generateMipmapCommandBuffer = static_cast<GenerateMipmapCommandBuffer *>(commandBuffer);
-			glGenerateMipmap(generateMipmapCommandBuffer->m_Target);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::GenerateMipmap: %d", isDefaultQueue, generateMipmapCommandBuffer->m_Target);
-			break;
-		}
-		case kCommandTypeTexImage3D:
-		{
-			auto texImage3DCommandBuffer = static_cast<TexImage3DCommandBuffer *>(commandBuffer);
-			auto target = texImage3DCommandBuffer->m_Target;
-			auto level = texImage3DCommandBuffer->m_Level;
-			auto internalformat = texImage3DCommandBuffer->m_Internalformat;
-			auto width = texImage3DCommandBuffer->m_Width;
-			auto height = texImage3DCommandBuffer->m_Height;
-			auto depth = texImage3DCommandBuffer->m_Depth;
-			auto border = texImage3DCommandBuffer->m_Border;
-			auto format = texImage3DCommandBuffer->m_Format;
-			auto type = texImage3DCommandBuffer->m_Type;
-			auto pixels = texImage3DCommandBuffer->m_Pixels;
-			glTexImage3D(target, level, internalformat, width, height, depth, border, format, type, pixels);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::TexImage3D(target=0x%x, level=%d, size=[%d,%d,%d], pixels=%p)",
-							isDefaultQueue, target, level,
-							width, height, depth, pixels);
-			break;
-		}
-		case kCommandTypeTexSubImage3D:
-		{
-			auto texSubImage3DCommandBuffer = static_cast<TexSubImage3DCommandBuffer *>(commandBuffer);
-			auto target = texSubImage3DCommandBuffer->m_Target;
-			auto level = texSubImage3DCommandBuffer->m_Level;
-			auto xoffset = texSubImage3DCommandBuffer->m_Xoffset;
-			auto yoffset = texSubImage3DCommandBuffer->m_Yoffset;
-			auto zoffset = texSubImage3DCommandBuffer->m_Zoffset;
-			auto width = texSubImage3DCommandBuffer->m_Width;
-			auto height = texSubImage3DCommandBuffer->m_Height;
-			auto depth = texSubImage3DCommandBuffer->m_Depth;
-			auto format = texSubImage3DCommandBuffer->m_Format;
-			auto type = texSubImage3DCommandBuffer->m_Type;
-			auto pixels = texSubImage3DCommandBuffer->m_Pixels;
-			glTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::TexSubImage3D(target=0x%x, level=%d, offset=[%d,%d,%d], size=[%d,%d,%d], pixels=%p)",
-							isDefaultQueue, target, level,
-							xoffset, yoffset, zoffset,
-							width, height, depth, pixels);
-			break;
-		}
-		case kCommandTypeEnableVertexAttribArray:
-		{
-			auto enableVertexAttribArrayCommandBuffer = static_cast<EnableVertexAttribArrayCommandBuffer *>(commandBuffer);
-			glEnableVertexAttribArray(enableVertexAttribArrayCommandBuffer->m_Index);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::EnableVertexAttribArray(%d)", isDefaultQueue, enableVertexAttribArrayCommandBuffer->m_Index);
-			break;
-		}
-		case kCommandTypeDisableVertexAttribArray:
-		{
-			auto disableVertexAttribArrayCommandBuffer = static_cast<DisableVertexAttribArrayCommandBuffer *>(commandBuffer);
-			glDisableVertexAttribArray(disableVertexAttribArrayCommandBuffer->m_Index);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DisableVertexAttribArray(%d)", isDefaultQueue, disableVertexAttribArrayCommandBuffer->m_Index);
-			break;
-		}
-		case kCommandTypeVertexAttribPointer:
-		{
-			auto vertexAttribPointerCommandBuffer = static_cast<VertexAttribPointerCommandBuffer *>(commandBuffer);
-			auto index = vertexAttribPointerCommandBuffer->m_Index;
-			auto size = vertexAttribPointerCommandBuffer->m_Size;
-			auto type = vertexAttribPointerCommandBuffer->m_Type;
-			auto normalized = vertexAttribPointerCommandBuffer->m_Normalized;
-			auto stride = vertexAttribPointerCommandBuffer->m_Stride;
-			auto offset = vertexAttribPointerCommandBuffer->m_Offset;
-
-			glVertexAttribPointer(index, size, type, normalized, stride, offset);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::VertexAttribPointer(%d) size=%d type=0x%x normalized=%d stride=%d offset=%d",
-							isDefaultQueue, index, size, type, normalized, stride, offset);
-			break;
-		}
-		case kCommandTypeVertexAttribIPointer:
-		{
-			auto vertexAttribIPointerCommandBuffer = static_cast<VertexAttribIPointerCommandBuffer *>(commandBuffer);
-			auto index = vertexAttribIPointerCommandBuffer->m_Index;
-			auto size = vertexAttribIPointerCommandBuffer->m_Size;
-			auto type = vertexAttribIPointerCommandBuffer->m_Type;
-			auto stride = vertexAttribIPointerCommandBuffer->m_Stride;
-			auto offset = vertexAttribIPointerCommandBuffer->m_Offset;
-
-			glVertexAttribIPointer(index, size, type, stride, offset);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::VertexAttribIPointer(%d) size=%d type=0x%x stride=%d offset=%d",
-							isDefaultQueue, index, size, type, stride, offset);
-			break;
-		}
-		case kCommandTypeVertexAttribDivisor:
-		{
-			auto vertexAttribDivisorCommandBuffer = static_cast<VertexAttribDivisorCommandBuffer *>(commandBuffer);
-			auto index = vertexAttribDivisorCommandBuffer->m_Index;
-			auto divisor = vertexAttribDivisorCommandBuffer->m_Divisor;
-			glVertexAttribDivisor(index, divisor);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::VertexAttribDivisor(%d, %d)", isDefaultQueue, index, divisor);
-			break;
-		}
-		case kCommandTypeGetAttribLocation:
-		{
-			auto getAttribLocationCommandBuffer = static_cast<GetAttribLocationCommandBuffer *>(commandBuffer);
-			auto program = getAttribLocationCommandBuffer->m_Program;
-			auto name = getAttribLocationCommandBuffer->m_Name;
-
-			int ret = glGetAttribLocation(program, name);
-			getAttribLocationCommandBuffer->m_Location = ret;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::GetAttribLocation(%d, %s) => %d",
-							isDefaultQueue, program, name, ret);
-			break;
-		}
-		case kCommandTypeGetUniformLocation:
-		{
-			auto getUniformLocationCommandBuffer = static_cast<GetUniformLocationCommandBuffer *>(commandBuffer);
-			int ret = glGetUniformLocation(getUniformLocationCommandBuffer->m_Program, getUniformLocationCommandBuffer->m_Name);
-			getUniformLocationCommandBuffer->m_Location = ret;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::GetUniformLocation: %d", isDefaultQueue, ret);
-			break;
-		}
-		case kCommandTypeUnoformBlockBinding:
-		{
-			auto uniformBlockBindingCommandBuffer = static_cast<UniformBlockBindingCommandBuffer *>(commandBuffer);
-			auto program = uniformBlockBindingCommandBuffer->m_Program;
-			auto uniformBlockIndex = uniformBlockBindingCommandBuffer->m_UniformBlockIndex;
-			auto uniformBlockBinding = uniformBlockBindingCommandBuffer->m_UniformBlockBinding;
-			glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::UniformBlockBinding(%d, %d, %d)",
-							isDefaultQueue, program, uniformBlockIndex, uniformBlockBinding);
-			break;
-		}
-		case kCommandTypeUniform1f:
-		{
-			auto uniform1fCommandBuffer = static_cast<Uniform1fCommandBuffer *>(commandBuffer);
-			auto loc = uniform1fCommandBuffer->m_Location;
-			auto v0 = uniform1fCommandBuffer->m_V0;
-			glUniform1f(loc, v0);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Uniform1f(%d, %f)", isDefaultQueue, loc, v0);
-			break;
-		}
-		case kCommandTypeUniform1fv:
-		{
-			auto uniform1fvCommandBuffer = static_cast<Uniform1fvCommandBuffer *>(commandBuffer);
-			glUniform1fv(
-					uniform1fvCommandBuffer->m_Location,
-					uniform1fvCommandBuffer->m_Count,
-					uniform1fvCommandBuffer->m_Value);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Uniform1fv(%d)", isDefaultQueue, uniform1fvCommandBuffer->m_Location);
-			break;
-		}
-		case kCommandTypeUniform1i:
-		{
-			auto uniform1iCommandBuffer = static_cast<Uniform1iCommandBuffer *>(commandBuffer);
-			auto loc = uniform1iCommandBuffer->m_Location;
-			auto v0 = uniform1iCommandBuffer->m_V0;
-			glUniform1i(loc, v0);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Uniform1i(%d): %d", isDefaultQueue, loc, v0);
-			break;
-		}
-		case kCommandTypeUniform1iv:
-		{
-			auto uniform1ivCommandBuffer = static_cast<Uniform1ivCommandBuffer *>(commandBuffer);
-			glUniform1iv(
-					uniform1ivCommandBuffer->m_Location,
-					uniform1ivCommandBuffer->m_Count,
-					uniform1ivCommandBuffer->m_Value);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Uniform1iv(%d)", isDefaultQueue, uniform1ivCommandBuffer->m_Location);
-			break;
-		}
-		case kCommandTypeUniform2f:
-		{
-			auto uniform2fCommandBuffer = static_cast<Uniform2fCommandBuffer *>(commandBuffer);
-			glUniform2f(uniform2fCommandBuffer->m_Location, uniform2fCommandBuffer->m_V0, uniform2fCommandBuffer->m_V1);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Uniform2f(%d)", isDefaultQueue, uniform2fCommandBuffer->m_Location);
-			break;
-		}
-		case kCommandTypeUniform2fv:
-		{
-			auto uniform2fvCommandBuffer = static_cast<Uniform2fvCommandBuffer *>(commandBuffer);
-			glUniform2fv(
-					uniform2fvCommandBuffer->m_Location,
-					uniform2fvCommandBuffer->m_Count,
-					uniform2fvCommandBuffer->m_Value);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Uniform2fv(%d)", isDefaultQueue, uniform2fvCommandBuffer->m_Location);
-			break;
-		}
-		case kCommandTypeUniform2i:
-		{
-			auto uniform2iCommandBuffer = static_cast<Uniform2iCommandBuffer *>(commandBuffer);
-			glUniform2i(uniform2iCommandBuffer->m_Location, uniform2iCommandBuffer->m_V0, uniform2iCommandBuffer->m_V1);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Uniform2i(%d)", isDefaultQueue, uniform2iCommandBuffer->m_Location);
-			break;
-		}
-		case kCommandTypeUniform2iv:
-		{
-			auto uniform2ivCommandBuffer = static_cast<Uniform2ivCommandBuffer *>(commandBuffer);
-			glUniform2iv(
-					uniform2ivCommandBuffer->m_Location,
-					uniform2ivCommandBuffer->m_Count,
-					uniform2ivCommandBuffer->m_Value);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Uniform2iv(%d)", isDefaultQueue, uniform2ivCommandBuffer->m_Location);
-			break;
-		}
-		case kCommandTypeUniform3f:
-		{
-			auto uniform3fCommandBuffer = static_cast<Uniform3fCommandBuffer *>(commandBuffer);
-			auto loc = uniform3fCommandBuffer->m_Location;
-			auto v0 = uniform3fCommandBuffer->m_V0;
-			auto v1 = uniform3fCommandBuffer->m_V1;
-			auto v2 = uniform3fCommandBuffer->m_V2;
-			glUniform3f(loc, v0, v1, v2);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Uniform3f(%d): (%f, %f, %f)",
-							isDefaultQueue, loc, v0, v1, v2);
-			break;
-		}
-		case kCommandTypeUniform3fv:
-		{
-			auto uniform3fvCommandBuffer = static_cast<Uniform3fvCommandBuffer *>(commandBuffer);
-			glUniform3fv(
-					uniform3fvCommandBuffer->m_Location,
-					uniform3fvCommandBuffer->m_Count,
-					uniform3fvCommandBuffer->m_Value);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Uniform3fv(%d)", isDefaultQueue, uniform3fvCommandBuffer->m_Location);
-			break;
-		}
-		case kCommandTypeUniform3i:
-		{
-			auto uniform3iCommandBuffer = static_cast<Uniform3iCommandBuffer *>(commandBuffer);
-			glUniform3i(uniform3iCommandBuffer->m_Location, uniform3iCommandBuffer->m_V0, uniform3iCommandBuffer->m_V1, uniform3iCommandBuffer->m_V2);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Uniform3i(%d)", isDefaultQueue, uniform3iCommandBuffer->m_Location);
-			break;
-		}
-		case kCommandTypeUniform3iv:
-		{
-			auto uniform3ivCommandBuffer = static_cast<Uniform3ivCommandBuffer *>(commandBuffer);
-			glUniform3iv(
-					uniform3ivCommandBuffer->m_Location,
-					uniform3ivCommandBuffer->m_Count,
-					uniform3ivCommandBuffer->m_Value);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Uniform3iv(%d)", isDefaultQueue, uniform3ivCommandBuffer->m_Location);
-			break;
-		}
-		case kCommandTypeUniform4f:
-		{
-			auto uniform4fCommandBuffer = static_cast<Uniform4fCommandBuffer *>(commandBuffer);
-			auto loc = uniform4fCommandBuffer->m_Location;
-			auto v0 = uniform4fCommandBuffer->m_V0;
-			auto v1 = uniform4fCommandBuffer->m_V1;
-			auto v2 = uniform4fCommandBuffer->m_V2;
-			auto v3 = uniform4fCommandBuffer->m_V3;
-
-			glUniform4f(loc, v0, v1, v2, v3);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Uniform4f(%d): (%f, %f, %f, %f)",
-							isDefaultQueue, loc, v0, v1, v2, v3);
-			break;
-		}
-		case kCommandTypeUniform4fv:
-		{
-			auto uniform4fvCommandBuffer = static_cast<Uniform4fvCommandBuffer *>(commandBuffer);
-			glUniform4fv(
-					uniform4fvCommandBuffer->m_Location,
-					uniform4fvCommandBuffer->m_Count,
-					uniform4fvCommandBuffer->m_Value);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Uniform4fv(%d)", isDefaultQueue, uniform4fvCommandBuffer->m_Location);
-			break;
-		}
-		case kCommandTypeUniform4i:
-		{
-			auto uniform4iCommandBuffer = static_cast<Uniform4iCommandBuffer *>(commandBuffer);
-			glUniform4i(uniform4iCommandBuffer->m_Location,
-									uniform4iCommandBuffer->m_V0,
-									uniform4iCommandBuffer->m_V1,
-									uniform4iCommandBuffer->m_V2,
-									uniform4iCommandBuffer->m_V3);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Uniform4i(%d)", isDefaultQueue, uniform4iCommandBuffer->m_Location);
-			break;
-		}
-		case kCommandTypeUniform4iv:
-		{
-			auto uniform4ivCommandBuffer = static_cast<Uniform4ivCommandBuffer *>(commandBuffer);
-			glUniform4iv(
-					uniform4ivCommandBuffer->m_Location,
-					uniform4ivCommandBuffer->m_Count,
-					uniform4ivCommandBuffer->m_Value);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Uniform4iv(%d)", isDefaultQueue, uniform4ivCommandBuffer->m_Location);
-			break;
-		}
-		case kCommandTypeUniformMatrix2fv:
-		{
-			auto uniformMatrix2fvCommandBuffer = static_cast<UniformMatrix2fvCommandBuffer *>(commandBuffer);
-			glUniformMatrix2fv(
-					uniformMatrix2fvCommandBuffer->m_Location,
-					uniformMatrix2fvCommandBuffer->m_Count,
-					uniformMatrix2fvCommandBuffer->m_Transpose,
-					uniformMatrix2fvCommandBuffer->m_Value);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix2fv(%d)",
-							isDefaultQueue, uniformMatrix2fvCommandBuffer->m_Location);
-			break;
-		}
-		case kCommandTypeUniformMatrix3fv:
-		{
-			auto uniformMatrix3fvCommandBuffer = static_cast<UniformMatrix3fvCommandBuffer *>(commandBuffer);
-			glUniformMatrix3fv(
-					uniformMatrix3fvCommandBuffer->m_Location,
-					uniformMatrix3fvCommandBuffer->m_Count,
-					uniformMatrix3fvCommandBuffer->m_Transpose,
-					uniformMatrix3fvCommandBuffer->m_Value);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix3fv(%d)",
-							isDefaultQueue, uniformMatrix3fvCommandBuffer->m_Location);
-			break;
-		}
-		case kCommandTypeUniformMatrix4fv:
-		{
-			float *matrixToUse = nullptr;
-			auto uniformMatrix4fvCommandBuffer = static_cast<UniformMatrix4fvCommandBuffer *>(commandBuffer);
-			auto location = uniformMatrix4fvCommandBuffer->m_Location;
-			auto count = uniformMatrix4fvCommandBuffer->m_Count;
-			auto transpose = uniformMatrix4fvCommandBuffer->m_Transpose;
-
-			if (
-					uniformMatrix4fvCommandBuffer->isMatrixPlaceholderType() &&
-					(deviceFrame != nullptr && deviceFrame->isMultiPass()) // support for singlepass?
-			)
-			{
-				auto multiPassFrame = static_cast<xr::MultiPassFrame *>(deviceFrame);
-				auto placeholderType = uniformMatrix4fvCommandBuffer->m_MatrixPlaceholderType;
-				switch (placeholderType)
-				{
-				case MatrixPlaceholderType::kMatrixPlaceholderProjection:
-					matrixToUse = multiPassFrame->getViewerProjectionMatrix();
-					break;
-				case MatrixPlaceholderType::kMatrixPlaceholderView:
-					matrixToUse = multiPassFrame->getViewerViewMatrix();
-					break;
-				case MatrixPlaceholderType::kMatrixPlaceholderViewRelativeToLocal: // temp set for view matrix
-				case MatrixPlaceholderType::kMatrixPlaceholderViewRelativeToLocalFloor:
-				{
-					auto xrSessionId = uniformMatrix4fvCommandBuffer->m_XrSessionId;
-					if (xrSessionId == -1)
-						DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the xrSessionId in local mode.");
-					auto viewMatrix = glm::make_mat4(multiPassFrame->getViewerViewMatrix());
-					auto localTransform = glm::make_mat4(multiPassFrame->getLocalTransform(xrSessionId));
-					auto viewMatrixRelativeToLocal = viewMatrix * localTransform;
-					matrixToUse = glm::value_ptr(viewMatrixRelativeToLocal);
-					break;
-				}
-				case MatrixPlaceholderType::kMatrixPlaceholderViewProjection:
-				case MatrixPlaceholderType::kMatrixPlaceholderViewProjectionRelativeToLocal:
-				case MatrixPlaceholderType::kMatrixPlaceholderViewProjectionRelativeToLocalFloor:
-				{
-					auto viewMatrix = glm::make_mat4(multiPassFrame->getViewerViewMatrix());
-					auto projectionMatrix = glm::make_mat4(multiPassFrame->getViewerProjectionMatrix());
-					auto viewProjectionMatrix = projectionMatrix * viewMatrix;
-
-					if (placeholderType == MatrixPlaceholderType::kMatrixPlaceholderViewProjection)
-					{
-						matrixToUse = glm::value_ptr(viewProjectionMatrix);
-					}
-					else
-					{
-						auto xrSessionId = uniformMatrix4fvCommandBuffer->m_XrSessionId;
-						if (xrSessionId == -1)
-							DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the xrSessionId in local mode.");
-						auto localTransform = glm::make_mat4(multiPassFrame->getLocalTransform(xrSessionId));
-						auto viewProjectionMatrixRelativeToLocal = viewProjectionMatrix * localTransform;
-						matrixToUse = glm::value_ptr(viewProjectionMatrixRelativeToLocal);
-					}
-					break;
-				}
-				default:
-					break;
-				}
-			}
-			if (matrixToUse == nullptr)
-				matrixToUse = uniformMatrix4fvCommandBuffer->m_Value;
-
-			if (matrixToUse == nullptr)
-			{
-				DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the matrix value.");
-			}
-			else
-			{
-				glUniformMatrix4fv(location, count, transpose, matrixToUse);
-			}
-
-			if (logCalls)
-			{
-				DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix4fv(%d, count=%d, transpose=%d): (%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)",
-							isDefaultQueue,
-							location, count, transpose,
-							matrixToUse[0], matrixToUse[1], matrixToUse[2], matrixToUse[3],
-							matrixToUse[4], matrixToUse[5], matrixToUse[6], matrixToUse[7],
-							matrixToUse[8], matrixToUse[9], matrixToUse[10], matrixToUse[11],
-							matrixToUse[12], matrixToUse[13], matrixToUse[14], matrixToUse[15]);
-			}
-			break;
-		}
-		case kCommandTypeDrawArrays:
-		{
-			auto drawArraysCommandBuffer = static_cast<DrawArraysCommandBuffer *>(commandBuffer);
-			glDrawArrays(
-					drawArraysCommandBuffer->m_Mode,
-					drawArraysCommandBuffer->m_First,
-					drawArraysCommandBuffer->m_Count);
-			m_DrawCallCountPerFrame += 1;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DrawArrays(%d)", isDefaultQueue, drawArraysCommandBuffer->m_Count);
-			break;
-		}
-		case kCommandTypeDrawElements:
-		{
-			auto drawElementsCommandBuffer = static_cast<DrawElementsCommandBuffer *>(commandBuffer);
-			glDrawElements(
-					drawElementsCommandBuffer->m_Mode,
-					drawElementsCommandBuffer->m_Count,
-					drawElementsCommandBuffer->m_Type,
-					drawElementsCommandBuffer->m_Indices);
-			m_DrawCallCountPerFrame += 1;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DrawElements: mode=%d count=%d type=%d",
-							isDefaultQueue,
-							drawElementsCommandBuffer->m_Mode,
-							drawElementsCommandBuffer->m_Count,
-							drawElementsCommandBuffer->m_Type);
-			break;
-		}
-		case kCommandTypeDrawBuffers:
-		{
-			auto drawBuffersCommandBuffer = static_cast<DrawBuffersCommandBuffer *>(commandBuffer);
-			auto n = drawBuffersCommandBuffer->m_N;
-			auto buffers = drawBuffersCommandBuffer->m_Bufs;
-			glDrawBuffers(n, (const GLenum *)buffers);
-			m_DrawCallCountPerFrame += 1;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DrawBuffers(%d)", isDefaultQueue, n);
-			break;
-		}
-		case kCommandTypeDrawArraysInstanced:
-		{
-			auto drawArraysInstancedCommandBuffer = static_cast<DrawArraysInstancedCommandBuffer *>(commandBuffer);
-			auto mode = drawArraysInstancedCommandBuffer->m_Mode;
-			auto first = drawArraysInstancedCommandBuffer->m_First;
-			auto count = drawArraysInstancedCommandBuffer->m_Count;
-			auto instanceCount = drawArraysInstancedCommandBuffer->m_Primcount;
-			glDrawArraysInstanced(mode, first, count, instanceCount);
-			m_DrawCallCountPerFrame += 1;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DrawArraysInstanced(0x%x, %d, %d, %d)",
-							isDefaultQueue, mode, first, count, instanceCount);
-			break;
-		}
-		case kCommandTypeDrawElementsInstanced:
-		{
-			auto drawElementsInstancedCommandBuffer = static_cast<DrawElementsInstancedCommandBuffer *>(commandBuffer);
-			auto mode = drawElementsInstancedCommandBuffer->m_Mode;
-			auto count = drawElementsInstancedCommandBuffer->m_Count;
-			auto type = drawElementsInstancedCommandBuffer->m_Type;
-			auto indices = drawElementsInstancedCommandBuffer->m_Indices;
-			auto instanceCount = drawElementsInstancedCommandBuffer->m_Primcount;
-			glDrawElementsInstanced(mode, count, type, indices, instanceCount);
-			m_DrawCallCountPerFrame += 1;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DrawElementsInstanced(0x%x, %d, %d, %p, %d)",
-							isDefaultQueue, mode, count, type, indices, instanceCount);
-			break;
-		}
-		case kCommandTypeDrawRangeElements:
-		{
-			auto drawRangeElementsCommandBuffer = static_cast<DrawRangeElementsCommandBuffer *>(commandBuffer);
-			auto mode = drawRangeElementsCommandBuffer->m_Mode;
-			auto start = drawRangeElementsCommandBuffer->m_Start;
-			auto end = drawRangeElementsCommandBuffer->m_End;
-			auto count = drawRangeElementsCommandBuffer->m_Count;
-			auto type = drawRangeElementsCommandBuffer->m_Type;
-			auto indices = drawRangeElementsCommandBuffer->m_Indices;
-			glDrawRangeElements(mode, start, end, count, type, indices);
-			m_DrawCallCountPerFrame += 1;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DrawRangeElements(0x%x, %d, %d, %d, %d, %p)",
-							isDefaultQueue, mode, start, end, count, type, indices);
-			break;
-		}
-		case kCommandTypePixelStorei:
-		{
-			auto pixelStoreiCommandBuffer = static_cast<PixelStoreiCommandBuffer *>(commandBuffer);
-			auto pname = pixelStoreiCommandBuffer->m_Pname;
-			auto param = pixelStoreiCommandBuffer->m_Param;
-			glPixelStorei(pname, param);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::PixelStorei(%d, %d)", isDefaultQueue, pname, param);
-			break;
-		}
-		case kCommandTypePolygonOffset:
-		{
-			auto polygonOffsetCommandBuffer = static_cast<PolygonOffsetCommandBuffer *>(commandBuffer);
-			glPolygonOffset(
-					polygonOffsetCommandBuffer->m_Factor,
-					polygonOffsetCommandBuffer->m_Units);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::PolygonOffset: %d", isDefaultQueue, polygonOffsetCommandBuffer->m_Factor);
-			break;
-		}
-		case kCommandTypeSetViewport:
-		{
-			auto setViewportCommandBuffer = static_cast<SetViewportCommandBuffer *>(commandBuffer);
-			auto x = setViewportCommandBuffer->m_X;
-			auto y = setViewportCommandBuffer->m_Y;
-			auto width = setViewportCommandBuffer->m_Width;
-			auto height = setViewportCommandBuffer->m_Height;
-
-			// glViewport(x, y, width, height);
-			m_ViewportStartPoint[0] = x;
-			m_ViewportStartPoint[1] = y;
-			m_ViewportSize[0] = width;
-			m_ViewportSize[1] = height;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::SetViewport: (%d %d %d %d)",
-							isDefaultQueue, x, y, width, height);
-			break;
-		}
-		case kCommandTypeSetScissor:
-		{
-			auto setScissorCommandBuffer = static_cast<SetScissorCommandBuffer *>(commandBuffer);
-			auto x = setScissorCommandBuffer->m_X;
-			auto y = setScissorCommandBuffer->m_Y;
-			auto width = setScissorCommandBuffer->m_Width;
-			auto height = setScissorCommandBuffer->m_Height;
-			glScissor(x, y, width, height);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::SetScissor: (%d %d %d %d)",
-							isDefaultQueue, x, y, width, height);
-			break;
-		}
 		case kCommandTypeClear:
 		case kCommandTypeClearColor:
 		case kCommandTypeClearDepth:
@@ -1840,294 +1864,6 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			 */
 			if (logCalls)
 				DEBUG(DEBUG_TAG, "[%d] GL::Clear(%d): Unsupported", isDefaultQueue, commandType);
-			break;
-		}
-		case kCommandTypeGetSupportedExtensions:
-		{
-			auto getSupportedExtensionsCommandBuffer = static_cast<GetSupportedExtensionsCommandBuffer *>(commandBuffer);
-			const GLubyte *ret = glGetString(GL_EXTENSIONS);
-			// Split the ret by “space” and add to the vector
-			std::string extensions(reinterpret_cast<const char *>(ret));
-			std::istringstream iss(extensions);
-			std::vector<std::string> tokens{std::istream_iterator<std::string>{iss},
-																			std::istream_iterator<std::string>{}};
-			getSupportedExtensionsCommandBuffer->m_Extensions = tokens;
-
-			// TODO: Support for OpenGL ES 3.0
-			// GLint numOfExtensions;
-			// glGetIntegerv(GL_NUM_EXTENSIONS, &numOfExtensions);
-			// for (int i = 0; i < numOfExtensions; i++)
-			// {
-			// 	const GLubyte *ret = glGetStringi(GL_EXTENSIONS, i);
-			// 	getSupportedExtensionsCommandBuffer->m_Extensions.push_back(reinterpret_cast<const char *>(ret));
-			// }
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::GetSupportedExtensions: %d", isDefaultQueue, tokens.size());
-			break;
-		}
-		case kCommandTypeDepthMask:
-		{
-			auto depthMaskCommandBuffer = static_cast<DepthMaskCommandBuffer *>(commandBuffer);
-			glDepthMask(depthMaskCommandBuffer->m_Flag);
-			m_DepthMaskEnabled = depthMaskCommandBuffer->m_Flag;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DepthMask: %d", isDefaultQueue, depthMaskCommandBuffer->m_Flag);
-			break;
-		}
-		case kCommandTypeDepthFunc:
-		{
-			auto depthFuncCommandBuffer = static_cast<DepthFuncCommandBuffer *>(commandBuffer);
-			DepthFunc(depthFuncCommandBuffer->m_Func);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DepthFunc: %d", isDefaultQueue, depthFuncCommandBuffer->m_Func);
-			break;
-		}
-		case kCommandTypeDepthRange:
-		{
-			auto depthRangeCommandBuffer = static_cast<DepthRangeCommandBuffer *>(commandBuffer);
-			glDepthRangef(depthRangeCommandBuffer->m_Near, depthRangeCommandBuffer->m_Far);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::DepthRange: %f", isDefaultQueue, depthRangeCommandBuffer->m_Near);
-			break;
-		}
-		case kCommandTypeStencilFunc:
-		{
-			auto stencilFuncCommandBuffer = static_cast<StencilFuncCommandBuffer *>(commandBuffer);
-			glStencilFunc(
-					stencilFuncCommandBuffer->m_Func,
-					stencilFuncCommandBuffer->m_Ref,
-					stencilFuncCommandBuffer->m_Mask);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::StencilFunc: %d", isDefaultQueue, stencilFuncCommandBuffer->m_Func);
-			break;
-		}
-		case kCommandTypeStencilFuncSeparate:
-		{
-			auto stencilFuncSeparateCommandBuffer = static_cast<StencilFuncSeparateCommandBuffer *>(commandBuffer);
-			glStencilFuncSeparate(
-					stencilFuncSeparateCommandBuffer->m_Face,
-					stencilFuncSeparateCommandBuffer->m_Func,
-					stencilFuncSeparateCommandBuffer->m_Ref,
-					stencilFuncSeparateCommandBuffer->m_Mask);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::StencilFuncSeparate: %d", isDefaultQueue, stencilFuncSeparateCommandBuffer->m_Func);
-			break;
-		}
-		case kCommandTypeStencilMask:
-		{
-			auto stencilMaskCommandBuffer = static_cast<StencilMaskCommandBuffer *>(commandBuffer);
-			glStencilMask(stencilMaskCommandBuffer->m_Mask);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::StencilMask: %d", isDefaultQueue, stencilMaskCommandBuffer->m_Mask);
-			break;
-		}
-		case kCommandTypeStencilMaskSeparate:
-		{
-			auto stencilMaskSeparateCommandBuffer = static_cast<StencilMaskSeparateCommandBuffer *>(commandBuffer);
-			glStencilMaskSeparate(
-					stencilMaskSeparateCommandBuffer->m_Face,
-					stencilMaskSeparateCommandBuffer->m_Mask);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::StencilMaskSeparate: %d", isDefaultQueue, stencilMaskSeparateCommandBuffer->m_Mask);
-			break;
-		}
-		case kCommandTypeStencilOp:
-		{
-			auto stencilOpCommandBuffer = static_cast<StencilOpCommandBuffer *>(commandBuffer);
-			glStencilOp(
-					stencilOpCommandBuffer->m_Fail,
-					stencilOpCommandBuffer->m_Zfail,
-					stencilOpCommandBuffer->m_Zpass);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::StencilOp: %d", isDefaultQueue, stencilOpCommandBuffer->m_Fail);
-			break;
-		}
-		case kCommandTypeStencilOpSeparate:
-		{
-			auto stencilOpSeparateCommandBuffer = static_cast<StencilOpSeparateCommandBuffer *>(commandBuffer);
-			glStencilOpSeparate(
-					stencilOpSeparateCommandBuffer->m_Face,
-					stencilOpSeparateCommandBuffer->m_Fail,
-					stencilOpSeparateCommandBuffer->m_Zfail,
-					stencilOpSeparateCommandBuffer->m_Zpass);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::StencilOpSeparate: %d", isDefaultQueue, stencilOpSeparateCommandBuffer->m_Fail);
-			break;
-		}
-		case kCommandTypeBlendColor:
-		{
-			auto blendColorCommandBuffer = static_cast<BlendColorCommandBuffer *>(commandBuffer);
-			glBlendColor(
-					blendColorCommandBuffer->m_R,
-					blendColorCommandBuffer->m_G,
-					blendColorCommandBuffer->m_B,
-					blendColorCommandBuffer->m_A);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::BlendColor: %d", isDefaultQueue, blendColorCommandBuffer->m_R);
-			break;
-		}
-		case kCommandTypeBlendEquation:
-		{
-			auto blendEquationCommandBuffer = static_cast<BlendEquationCommandBuffer *>(commandBuffer);
-			glBlendEquation(blendEquationCommandBuffer->m_Mode);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::BlendEquation: %d", isDefaultQueue, blendEquationCommandBuffer->m_Mode);
-			break;
-		}
-		case kCommandTypeBlendEquationSeparate:
-		{
-			auto blendEquationSeparateCommandBuffer = static_cast<BlendEquationSeparateCommandBuffer *>(commandBuffer);
-			glBlendEquationSeparate(
-					blendEquationSeparateCommandBuffer->m_ModeRGB,
-					blendEquationSeparateCommandBuffer->m_ModeAlpha);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::BlendEquationSeparate: %d",
-							isDefaultQueue, blendEquationSeparateCommandBuffer->m_ModeRGB);
-			break;
-		}
-		case kCommandTypeBlendFunc:
-		{
-			auto blendFuncCommandBuffer = static_cast<BlendFuncCommandBuffer *>(commandBuffer);
-			glBlendFunc(
-					blendFuncCommandBuffer->m_Sfactor,
-					blendFuncCommandBuffer->m_Dfactor);
-			m_Blend_Sfactor = blendFuncCommandBuffer->m_Sfactor;
-			m_Blend_Dfactor = blendFuncCommandBuffer->m_Dfactor;
-			m_BlendFuncSet = true;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::BlendFunc: %d", isDefaultQueue, blendFuncCommandBuffer->m_Sfactor);
-			break;
-		}
-		case kCommandTypeBlendFuncSeparate:
-		{
-			auto blendFuncSeparateCommandBuffer = static_cast<BlendFuncSeparateCommandBuffer *>(commandBuffer);
-			glBlendFuncSeparate(
-					blendFuncSeparateCommandBuffer->m_SrcRGB,
-					blendFuncSeparateCommandBuffer->m_DstRGB,
-					blendFuncSeparateCommandBuffer->m_SrcAlpha,
-					blendFuncSeparateCommandBuffer->m_DstAlpha);
-			m_Blend_SrcRGB = blendFuncSeparateCommandBuffer->m_SrcRGB;
-			m_Blend_DstRGB = blendFuncSeparateCommandBuffer->m_DstRGB;
-			m_Blend_SrcAlpha = blendFuncSeparateCommandBuffer->m_SrcAlpha;
-			m_Blend_DstAlpha = blendFuncSeparateCommandBuffer->m_DstAlpha;
-			m_BlendFuncSeparateSet = true;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::BlendFuncSeparate: %d",
-							isDefaultQueue, blendFuncSeparateCommandBuffer->m_SrcRGB);
-			break;
-		}
-		case kCommandTypeColorMask:
-		{
-			auto colorMaskCommandBuffer = static_cast<ColorMaskCommandBuffer *>(commandBuffer);
-			glColorMask(
-					colorMaskCommandBuffer->m_R,
-					colorMaskCommandBuffer->m_G,
-					colorMaskCommandBuffer->m_B,
-					colorMaskCommandBuffer->m_A);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::ColorMask: %d", isDefaultQueue, colorMaskCommandBuffer->m_R);
-			break;
-		}
-		case kCommandTypeCullFace:
-		{
-			auto cullFaceCommandBuffer = static_cast<CullFaceCommandBuffer *>(commandBuffer);
-			auto mode = cullFaceCommandBuffer->m_Mode;
-			glCullFace(mode);
-			m_AppCullFace = mode;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::CullFace: mode=%d", isDefaultQueue, mode);
-			break;
-		}
-		case kCommandTypeFrontFace:
-		{
-			auto frontFaceCommandBuffer = static_cast<FrontFaceCommandBuffer *>(commandBuffer);
-			auto mode = frontFaceCommandBuffer->m_Mode;
-			glFrontFace(mode);
-			m_AppFrontFace = mode;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::FrontFace: mode=%d", isDefaultQueue, mode);
-			break;
-		}
-		case kCommandTypeEnable:
-		{
-			auto enableCommandBuffer = static_cast<EnableCommandBuffer *>(commandBuffer);
-			Enable(enableCommandBuffer->m_Cap);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Enable: %d", isDefaultQueue, enableCommandBuffer->m_Cap);
-			break;
-		}
-		case kCommandTypeDisable:
-		{
-			auto disableCommandBuffer = static_cast<DisableCommandBuffer *>(commandBuffer);
-			Disable(disableCommandBuffer->m_Cap);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::Disable: %d", isDefaultQueue, disableCommandBuffer->m_Cap);
-			break;
-		}
-		case kCommandTypeGetBooleanv:
-		{
-			auto getBooleanvCommandBuffer = static_cast<GetBooleanvCommandBuffer *>(commandBuffer);
-			GLboolean ret;
-			glGetBooleanv(getBooleanvCommandBuffer->m_Pname, &ret);
-			getBooleanvCommandBuffer->m_Value = ret;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::GetBooleanv: %d", isDefaultQueue, getBooleanvCommandBuffer->m_Pname);
-			break;
-		}
-		case kCommandTypeGetIntegerv:
-		{
-			auto getIntegervCommandBuffer = static_cast<GetIntegervCommandBuffer *>(commandBuffer);
-			GLint ret;
-			glGetIntegerv(getIntegervCommandBuffer->m_Pname, &ret);
-			getIntegervCommandBuffer->m_Value = ret;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::GetIntegerv: %d", isDefaultQueue, getIntegervCommandBuffer->m_Pname);
-			break;
-		}
-		case kCommandTypeGetFloatv:
-		{
-			auto getFloatvCommandBuffer = static_cast<GetFloatvCommandBuffer *>(commandBuffer);
-			GLfloat ret;
-			glGetFloatv(getFloatvCommandBuffer->m_Pname, &ret);
-			getFloatvCommandBuffer->m_Value = ret;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::GetFloatv: %d", isDefaultQueue, getFloatvCommandBuffer->m_Pname);
-			break;
-		}
-		case kCommandTypeGetString:
-		{
-			auto getStringCommandBuffer = static_cast<GetStringCommandBuffer *>(commandBuffer);
-			const GLubyte *ret = glGetString(getStringCommandBuffer->m_Pname); // returns null-terminated string
-			getStringCommandBuffer->CopyValue(ret);
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::GetString: %d", isDefaultQueue, getStringCommandBuffer->m_Pname);
-			break;
-		}
-		case kCommandTypeGetShaderPrecisionFormat:
-		{
-			auto getShaderPrecisionFormatCommandBuffer = static_cast<GetShaderPrecisionFormatCommandBuffer *>(commandBuffer);
-			GLint range[2];
-			GLint precision;
-			glGetShaderPrecisionFormat(
-					getShaderPrecisionFormatCommandBuffer->m_ShaderType,
-					getShaderPrecisionFormatCommandBuffer->m_PrecisionType,
-					range,
-					&precision);
-			getShaderPrecisionFormatCommandBuffer->m_RangeMin = range[0];
-			getShaderPrecisionFormatCommandBuffer->m_RangeMax = range[1];
-			getShaderPrecisionFormatCommandBuffer->m_Precision = precision;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::GetShaderPrecisionFormat: %d",
-							isDefaultQueue, getShaderPrecisionFormatCommandBuffer->m_ShaderType);
-			break;
-		}
-		case kCommandTypeGetError:
-		{
-			auto getErrorCommandBuffer = static_cast<GetErrorCommandBuffer *>(commandBuffer);
-			GLenum ret = glGetError();
-			getErrorCommandBuffer->m_Error = ret;
-			if (logCalls)
-				DEBUG(DEBUG_TAG, "[%d] GL::GetError: %d", isDefaultQueue, ret);
 			break;
 		}
 		default:

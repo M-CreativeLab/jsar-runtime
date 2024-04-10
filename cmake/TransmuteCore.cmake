@@ -23,10 +23,10 @@ file(GLOB TRANSMUTE_CORE_SOURCE
     "src/bindings/renderer/*.cpp"
     "src/bindings/webgl/*.cpp"
     "src/bindings/webxr/*.cpp"
-    # "src/bindings/**/*.cpp"
     "src/math/*.cpp"
     "src/runtime/*.cpp"
     "src/renderer/*.cpp"
+    "src/renderer/gles/*.cpp"
     "src/xr/*.cpp"
 )
 if(APPLE)
