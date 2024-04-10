@@ -817,10 +817,11 @@ namespace renderer
   class CreateVertexArrayCommandBuffer : public CommandBuffer
   {
   public:
-    CreateVertexArrayCommandBuffer() : CommandBuffer(kCommandTypeCreateVertexArray) {}
+    CreateVertexArrayCommandBuffer(uint32_t clientId) : CommandBuffer(kCommandTypeCreateVertexArray), m_ClientId(clientId) {}
     ~CreateVertexArrayCommandBuffer() {}
 
   public:
+    uint32_t m_ClientId;
     uint32_t m_VertexArrayId = 0;
   };
 
@@ -849,10 +850,11 @@ namespace renderer
   class CreateTextureCommandBuffer : public CommandBuffer
   {
   public:
-    CreateTextureCommandBuffer() : CommandBuffer(kCommandTypeCreateTexture) {}
+    CreateTextureCommandBuffer(uint32_t clientId) : CommandBuffer(kCommandTypeCreateTexture), m_ClientId(clientId) {}
     ~CreateTextureCommandBuffer() {}
 
   public:
+    uint32_t m_ClientId;
     uint32_t m_TextureId = 0;
   };
 

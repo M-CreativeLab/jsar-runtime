@@ -12,6 +12,9 @@ namespace webgl
   Napi::FunctionReference *WebGLRenderingContext::webglConstructor;
   Napi::FunctionReference *WebGL2RenderingContext::webgl2Constructor;
 
+  static uint32_t vertexArrayObjectId = 1;
+  static uint32_t textureObjectId = 1;
+
 #define ADD_WEBGL_CONSTANT(name)                              \
   InstanceValue(#name, Napi::Number::New(env, WEBGL_##name)), \
       StaticValue(#name, Napi::Number::New(env, WEBGL_##name)),
@@ -1686,9 +1689,10 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    auto commandBuffer = new renderer::CreateTextureCommandBuffer();
-    addCommandBuffer(commandBuffer, true, true);
-    return WebGLTexture::constructor->New({Napi::Number::New(env, commandBuffer->m_TextureId)});
+    auto clientId = textureObjectId++;
+    auto commandBuffer = new renderer::CreateTextureCommandBuffer(clientId);
+    addCommandBuffer(commandBuffer);
+    return WebGLTexture::constructor->New({Napi::Number::New(env, commandBuffer->m_ClientId)});
   }
 
   template <typename T>
@@ -3928,9 +3932,10 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    auto commandBuffer = new renderer::CreateVertexArrayCommandBuffer();
-    addCommandBuffer(commandBuffer, true, true);
-    return Napi::Number::New(env, commandBuffer->m_VertexArrayId);
+    auto clientId = vertexArrayObjectId++;
+    auto commandBuffer = new renderer::CreateVertexArrayCommandBuffer(clientId);
+    addCommandBuffer(commandBuffer);
+    return Napi::Number::New(env, commandBuffer->m_ClientId);
   }
 
   Napi::Value WebGL2RenderingContext::DeleteVertexArray(const Napi::CallbackInfo &info)

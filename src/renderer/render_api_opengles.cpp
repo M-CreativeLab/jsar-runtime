@@ -556,13 +556,19 @@ private:
 		GLuint ret;
 		glGenVertexArrays(1, &ret);
 		createVertexArrayCommandBuffer->m_VertexArrayId = ret;
+		// add the created vao to the client map
+		m_VertexArrayObjects[createVertexArrayCommandBuffer->m_ClientId] = ret;
+
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateVertexArray() => %d", isDefaultQueue, ret);
 	}
 	void OnDeleteVertexArray(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
 		auto deleteVertexArrayCommandBuffer = static_cast<DeleteVertexArrayCommandBuffer *>(commandBuffer);
-		glDeleteVertexArrays(1, &deleteVertexArrayCommandBuffer->m_VertexArrayId);
+		auto clientId = deleteVertexArrayCommandBuffer->m_VertexArrayId;
+		auto serverId = m_VertexArrayObjects[clientId];
+		glDeleteVertexArrays(1, &serverId);
+		m_VertexArrayObjects.erase(clientId); // remove the vao from the client map
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteVertexArray: %d",
 						isDefaultQueue, deleteVertexArrayCommandBuffer->m_VertexArrayId);
@@ -571,11 +577,12 @@ private:
 	{
 		auto context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
 		auto bindVertexArrayCommandBuffer = static_cast<BindVertexArrayCommandBuffer *>(commandBuffer);
-		auto vertexArray = bindVertexArrayCommandBuffer->m_VertexArray;
-		glBindVertexArray(vertexArray);
-		context->RecordVertexArrayObject(vertexArray);
+		auto clientId = bindVertexArrayCommandBuffer->m_VertexArray;
+		auto serverId = m_VertexArrayObjects[clientId];
+		glBindVertexArray(serverId);
+		context->RecordVertexArrayObject(serverId);
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::BindVertexArray(%d)", isDefaultQueue, vertexArray);
+			DEBUG(DEBUG_TAG, "[%d] GL::BindVertexArray(%d)", isDefaultQueue, serverId);
 	}
 	void OnCreateTexture(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -583,22 +590,27 @@ private:
 		GLuint texture;
 		glGenTextures(1, &texture);
 		createTextureCommandBuffer->m_TextureId = texture;
+		m_TextureObjects[createTextureCommandBuffer->m_ClientId] = texture;
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateTexture() => texture(%d)", isDefaultQueue, texture);
 	}
 	void OnDeleteTexture(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
 		auto deleteTextureCommandBuffer = static_cast<DeleteTextureCommandBuffer *>(commandBuffer);
-		glDeleteTextures(1, &deleteTextureCommandBuffer->m_TextureId);
+		auto clientId = deleteTextureCommandBuffer->m_TextureId;
+		auto serverId = m_TextureObjects[clientId];
+		glDeleteTextures(1, &serverId);
+		m_TextureObjects.erase(clientId);	// remove the texture from the client map
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::DeleteTexture: %d", isDefaultQueue, deleteTextureCommandBuffer->m_TextureId);
+			DEBUG(DEBUG_TAG, "[%d] GL::DeleteTexture: %d", isDefaultQueue, serverId);
 	}
 	void OnBindTexture(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
 		auto context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
 		auto bindTextureCommandBuffer = static_cast<BindTextureCommandBuffer *>(commandBuffer);
 		auto target = bindTextureCommandBuffer->m_Target;
-		auto texture = bindTextureCommandBuffer->m_Texture;
+		auto clientId = bindTextureCommandBuffer->m_Texture;
+		auto texture = m_TextureObjects[clientId];
 
 		m_HostContext.RecordTextureBindingFromHost();
 		glBindTexture(target, texture);
@@ -629,8 +641,11 @@ private:
 								 border, format, type, texImage2DCommandBuffer->m_Pixels);
 		if (printsCall)
 		{
-			DEBUG(DEBUG_TAG, "[%d] GL::TexImage2D(0x%x, level=%d, type=0x%x, internal_format=0x%x, format=0x%x, size=[%d,%d])",
-						isDefaultQueue, target, level, type, internalformat, format, width, height);
+			GLint currentTexture;
+			glGetIntegerv(GL_TEXTURE_BINDING_2D, &currentTexture);
+			DEBUG(DEBUG_TAG, "[%d] GL::TexImage2D(0x%x, level=%d, type=0x%x, internal_format=0x%x, format=0x%x, size=[%d,%d]) texture(%d)",
+						isDefaultQueue, target, level, type, internalformat, format, width, height,
+						currentTexture);
 		}
 	}
 	void OnTexSubImage2D(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
@@ -687,7 +702,7 @@ private:
 		auto param = texParameteriCommandBuffer->m_Param;
 		glTexParameteri(target, pname, param);
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::TexParameteri(target=%d, pname=%d, param=%d)",
+			DEBUG(DEBUG_TAG, "[%d] GL::TexParameteri(target=0x%x, pname=0x%x, param=%d)",
 						isDefaultQueue, target, pname, param);
 	}
 	void OnActiveTexture(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
@@ -1497,6 +1512,9 @@ private:
 	OpenGLHostContextStorage m_HostContext = OpenGLHostContextStorage();
 	OpenGLContextStorage m_AppGlobalContext = OpenGLContextStorage("App Global");
 	OpenGLContextStorage m_AppXRFrameContext = OpenGLContextStorage("App XRFrame");
+
+	map<uint32_t, GLuint> m_TextureObjects;
+	map<uint32_t, GLuint> m_VertexArrayObjects;
 
 	GLenum m_AppFrontFace;
 	GLenum m_AppCullFace;
