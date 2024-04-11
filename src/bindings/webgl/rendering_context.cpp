@@ -953,6 +953,17 @@ namespace webgl
     addCommandBuffer(commandBuffer, true, true);
 
     /**
+     * Update the program's attribute locations.
+     */
+    auto attribLocations = commandBuffer->m_AttributeLocations;
+    for (auto it = attribLocations.begin(); it != attribLocations.end(); ++it)
+    {
+      auto name = it->first;
+      auto loc = it->second;
+      program->SetAttribLocation(name, loc);
+    }
+
+    /**
      * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getUniformLocation#name
      *
      * When uniforms declared as an array, the valid name might be like the followings:
@@ -2082,9 +2093,10 @@ namespace webgl
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     std::string name = info[1].As<Napi::String>().Utf8Value();
 
-    auto commandBuffer = new renderer::GetAttribLocationCommandBuffer(program->GetId(), name.c_str());
-    addCommandBuffer(commandBuffer, true, true);
-    return Napi::Number::New(env, commandBuffer->m_Location);
+    int loc = -1;
+    if (program->HasAttribLocation(name))
+      loc = program->GetAttribLocation(name);
+    return Napi::Number::New(env, loc);
   }
 
   template <typename T>

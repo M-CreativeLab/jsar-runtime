@@ -144,6 +144,29 @@ private:
 		}
 
 		/**
+		 * Fetch the locations of the attributes when link successfully.
+		 */
+		GLint numAttributes = 0;
+		glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &numAttributes);
+		for (int i = 0; i < numAttributes; i++)
+		{
+			GLsizei nameLength;
+			GLint size; /** FIXME: need size for attribs? */
+			GLenum type;
+			GLchar name[256];
+
+			glGetActiveAttrib(program, i, sizeof(name) - 1, &nameLength, &size, &type, name);
+			name[nameLength] = '\0';
+
+			GLint location = glGetAttribLocation(program, name);
+			if (location <= -1)
+				continue;
+
+			linkProgramCommandBuffer->m_AttributeLocations[name] = location;
+			DEBUG(DEBUG_TAG, "GL::LinkProgram::Attribute(%s in %d) => %d(size=%d, type=%d)", name, program, location, size, type);
+		}
+
+		/**
 		 * Fetch the locations of the uniforms and attributes when link successfully.
 		 */
 		GLint numUniforms = 0;
@@ -167,7 +190,7 @@ private:
 			uniformLoc.size = size;
 
 			linkProgramCommandBuffer->m_UniformLocations[name] = uniformLoc;
-			DEBUG(DEBUG_TAG, "GL::LinkProgram::Uniforms(%s in %d) => %d(size=%d, type=%d)", name, program, location, size, type);
+			DEBUG(DEBUG_TAG, "GL::LinkProgram::Uniform(%s in %d) => %d(size=%d, type=%d)", name, program, location, size, type);
 		}
 
 		/**
@@ -187,10 +210,9 @@ private:
 			auto uniformBlock = UniformBlock();
 			uniformBlock.index = index;
 			linkProgramCommandBuffer->m_UniformBlocks[name] = uniformBlock;
-			DEBUG(DEBUG_TAG, "GL::LinkProgram::UniformBlocks(%s in %d) => %d", name, program, index);
+			DEBUG(DEBUG_TAG, "GL::LinkProgram::UniformBlock(%s in %d) => %d", name, program, index);
 		}
 
-		// TODO: add active attributes?
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::LinkProgram(%d)", isDefaultQueue, program);
 	}

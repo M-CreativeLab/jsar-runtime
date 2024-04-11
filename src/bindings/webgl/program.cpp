@@ -5,9 +5,8 @@ namespace webgl
   Napi::FunctionReference *WebGLProgram::constructor;
   void WebGLProgram::Init(Napi::Env env)
   {
-    Napi::Function tpl = DefineClass(env, "WebGLProgram", {
-      InstanceMethod("toString", &WebGLProgram::ToString)
-    });
+    Napi::Function tpl = DefineClass(env, "WebGLProgram",
+                                     {InstanceMethod("toString", &WebGLProgram::ToString)});
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
   }
@@ -25,6 +24,21 @@ namespace webgl
     }
 
     id_ = info[0].As<Napi::Number>().Int32Value();
+  }
+
+  void WebGLProgram::SetAttribLocation(const std::string &name, int location)
+  {
+    attribLocations_[name] = location;
+  }
+
+  bool WebGLProgram::HasAttribLocation(const std::string &name)
+  {
+    return attribLocations_.find(name) != attribLocations_.end();
+  }
+
+  int WebGLProgram::GetAttribLocation(const std::string &name)
+  {
+    return attribLocations_[name];
   }
 
   void WebGLProgram::SetUniformLocation(const std::string &name, int location)

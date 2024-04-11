@@ -335,6 +335,7 @@ namespace renderer
 
   public:
     int m_ProgramId;
+    std::map<std::string, int> m_AttributeLocations;
     std::map<std::string, UniformLocation> m_UniformLocations;
     std::map<std::string, UniformBlock> m_UniformBlocks; // Only used in WebGL2
   };
