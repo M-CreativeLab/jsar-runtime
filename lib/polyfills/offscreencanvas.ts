@@ -686,8 +686,8 @@ function readPixelsFromSkImage(
  * OffscreenCanvas
  */
 export class OffscreenCanvasImpl extends EventTarget implements OffscreenCanvas {
-  width: number = 0;
-  height: number = 0;
+  #width: number = 0;
+  #height: number = 0;
   #nativeCanvas: EmulatedCanvas2D;
   #context2d: OffscreenCanvasRenderingContext2DImpl;
 
@@ -696,8 +696,22 @@ export class OffscreenCanvasImpl extends EventTarget implements OffscreenCanvas 
 
   constructor(width: number, height: number) {
     super();
-    this.width = width;
-    this.height = height;
+    this.#width = Math.floor(width);
+    this.#height = Math.floor(height);
+  }
+
+  get width() {
+    return this.#width;
+  }
+  set width(v: number) {
+    this.#width = Math.floor(v);
+  }
+
+  get height() {
+    return this.#height;
+  }
+  set height(v: number) {
+    this.#height = Math.floor(v);
   }
 
   get nativeCanvas() {

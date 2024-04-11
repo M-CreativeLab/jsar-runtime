@@ -98,6 +98,9 @@ namespace xr
     bool ended(int passIndex);
     int getId();
     bool addedOnce();
+    bool empty();
+    void finishPass(int passIndex);
+    bool finished(int passIndex);
 
   private:
     void clearCommandBuffers(std::vector<renderer::CommandBuffer *> &commandBuffers);
@@ -107,6 +110,7 @@ namespace xr
     bool m_IsMultiPass = true;
     bool m_Ended[2] = {false, false};
     bool m_Started[2] = {false, false};
+    bool m_Finished[2] = {false, false};
     bool m_IsAddedOnce = false;
     std::vector<renderer::CommandBuffer *> m_CommandBuffersInPass;
     std::vector<renderer::CommandBuffer *> m_CommandBuffersInPass2; // This is only used when m_IsMultiPass is true.

@@ -215,7 +215,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     });
 
     const scene = this._scene = new BABYLON.Scene(this.engine);
-    scene.useRightHandedSystem = true;
+    scene.useRightHandedSystem = false;
     scene.skipFrustumClipping = true;
 
     this._defaultCamera = new BABYLON.ArcRotateCamera(

@@ -1784,7 +1784,7 @@ namespace webgl
     int type = info[7].As<Napi::Number>().Int32Value();
 
     Napi::Value imageSource = info[8];
-    if (imageSource.IsNull())
+    if (imageSource.IsNull() || imageSource.IsUndefined())
     {
       /** When the image source is null, just create TexImage2DCommandBuffer with empty mode */
       addCommandBuffer(new renderer::TexImage2DCommandBuffer(

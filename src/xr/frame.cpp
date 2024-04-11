@@ -158,6 +158,25 @@ namespace xr
 
   int StereoRenderingFrame::getId() { return m_StereoId; }
   bool StereoRenderingFrame::addedOnce() { return m_IsAddedOnce; }
+  bool StereoRenderingFrame::empty()
+  {
+    if (m_IsMultiPass)
+      return m_CommandBuffersInPass.empty() && m_CommandBuffersInPass2.empty();
+    else
+      return m_CommandBuffersInPass.empty();
+  }
+  void StereoRenderingFrame::finishPass(int passIndex)
+  {
+    if (passIndex > 1 || passIndex < 0)
+      return;
+    m_Finished[passIndex] = true;
+  }
+  bool StereoRenderingFrame::finished(int passIndex)
+  {
+    if (passIndex > 1 || passIndex < 0)
+      return false;
+    return m_Finished[passIndex];
+  }
 
   void StereoRenderingFrame::clearCommandBuffers(std::vector<renderer::CommandBuffer *> &commandBuffers)
   {

@@ -115,7 +115,6 @@ private:
 		 * context using the deleted program.
 		 */
 		m_AppGlobalContext.ResetProgram(id);
-		m_AppXRFrameContext.ResetProgram(id);
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteProgram(%d)", isDefaultQueue, id);
 	}
@@ -218,11 +217,10 @@ private:
 	}
 	void OnUseProgram(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
-		auto context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
 		auto useProgramCommandBuffer = static_cast<UseProgramCommandBuffer *>(commandBuffer);
 		auto program = useProgramCommandBuffer->m_ProgramId;
 		glUseProgram(program);
-		context->RecordProgram(program);
+		m_AppGlobalContext.RecordProgram(program);
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::UseProgram(%d)", isDefaultQueue, program);
 	}
@@ -374,16 +372,15 @@ private:
 	}
 	void OnBindBuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
-		auto context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
 		auto bindBufferCommandBuffer = static_cast<BindBufferCommandBuffer *>(commandBuffer);
 		auto target = bindBufferCommandBuffer->m_Target;
 		auto buffer = bindBufferCommandBuffer->m_Buffer;
 
 		/** Update the app states for next restore. */
 		if (target == GL_ARRAY_BUFFER)
-			context->RecordArrayBuffer(buffer);
+			m_AppGlobalContext.RecordArrayBuffer(buffer);
 		else if (target == GL_ELEMENT_ARRAY_BUFFER)
-			context->RecordElementArrayBuffer(buffer);
+			m_AppGlobalContext.RecordElementArrayBuffer(buffer);
 
 		glBindBuffer(target, buffer);
 		if (printsCall)
@@ -435,13 +432,12 @@ private:
 	}
 	void OnBindFramebuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
-		auto context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
 		auto bindFramebufferCommandBuffer = static_cast<BindFramebufferCommandBuffer *>(commandBuffer);
 		auto target = bindFramebufferCommandBuffer->m_Target;
 		auto framebuffer = bindFramebufferCommandBuffer->m_Framebuffer;
 
 		glBindFramebuffer(target, framebuffer);
-		context->RecordFramebuffer(framebuffer);
+		m_AppGlobalContext.RecordFramebuffer(framebuffer);
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BindFramebuffer(%d)", isDefaultQueue, bindFramebufferCommandBuffer->m_Framebuffer);
 	}
@@ -497,13 +493,12 @@ private:
 	}
 	void OnBindRenderbuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
-		auto context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
 		auto bindRenderbufferCommandBuffer = static_cast<BindRenderbufferCommandBuffer *>(commandBuffer);
 		auto target = bindRenderbufferCommandBuffer->m_Target;
 		auto renderbuffer = bindRenderbufferCommandBuffer->m_Renderbuffer;
 
 		glBindRenderbuffer(target, renderbuffer);
-		context->RecordRenderbuffer(renderbuffer);
+		m_AppGlobalContext.RecordRenderbuffer(renderbuffer);
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BindRenderbuffer: %d", isDefaultQueue, bindRenderbufferCommandBuffer->m_Renderbuffer);
 	}
@@ -597,12 +592,11 @@ private:
 	}
 	void OnBindVertexArray(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
-		auto context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
 		auto bindVertexArrayCommandBuffer = static_cast<BindVertexArrayCommandBuffer *>(commandBuffer);
 		auto clientId = bindVertexArrayCommandBuffer->m_VertexArray;
 		auto serverId = m_VertexArrayObjects[clientId];
 		glBindVertexArray(serverId);
-		context->RecordVertexArrayObject(serverId);
+		m_AppGlobalContext.RecordVertexArrayObject(serverId);
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BindVertexArray(%d)", isDefaultQueue, serverId);
 	}
@@ -628,7 +622,6 @@ private:
 	}
 	void OnBindTexture(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
-		auto context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
 		auto bindTextureCommandBuffer = static_cast<BindTextureCommandBuffer *>(commandBuffer);
 		auto target = bindTextureCommandBuffer->m_Target;
 		auto clientId = bindTextureCommandBuffer->m_Texture;
@@ -636,14 +629,14 @@ private:
 
 		m_HostContext.RecordTextureBindingFromHost();
 		glBindTexture(target, texture);
-		context->RecordTextureBindingWithUnit(target, texture);
+		m_AppGlobalContext.RecordTextureBindingWithUnit(target, texture);
 
 		if (printsCall)
 		{
 			GLint activeUnit;
 			glGetIntegerv(GL_ACTIVE_TEXTURE, &activeUnit);
 			DEBUG(DEBUG_TAG, "[%d] GL::BindTexture(%d, %d) for active(%d) program(%d)",
-						isDefaultQueue, target, texture, activeUnit, context->GetProgram());
+						isDefaultQueue, target, texture, activeUnit, m_AppGlobalContext.GetProgram());
 		}
 	}
 	void OnTexImage2D(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
@@ -729,11 +722,10 @@ private:
 	}
 	void OnActiveTexture(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
-		auto context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
 		auto activeTextureCommandBuffer = static_cast<ActiveTextureCommandBuffer *>(commandBuffer);
 		auto textureUnit = activeTextureCommandBuffer->m_Texture;
 		glActiveTexture(textureUnit);
-		context->RecordActiveTextureUnit(textureUnit);
+		m_AppGlobalContext.RecordActiveTextureUnit(textureUnit);
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::ActiveTexture(%d)", isDefaultQueue, textureUnit);
 	}
@@ -1532,7 +1524,6 @@ private:
 	UnityGfxRenderer m_APIType;
 	OpenGLHostContextStorage m_HostContext = OpenGLHostContextStorage();
 	OpenGLContextStorage m_AppGlobalContext = OpenGLContextStorage("App Global");
-	OpenGLContextStorage m_AppXRFrameContext = OpenGLContextStorage("App XRFrame");
 
 	map<uint32_t, GLuint> m_TextureObjects;
 	map<uint32_t, GLuint> m_VertexArrayObjects;
@@ -1708,8 +1699,6 @@ void RenderAPI_OpenGLCoreES::EndFrame()
 
 void RenderAPI_OpenGLCoreES::StartXRFrame()
 {
-	m_AppXRFrameContext.Restore();
-
 	// TODO: This will finished in the application layer
 	auto hostFramebuffer = m_HostContext.GetFramebuffer();
 	if (hostFramebuffer != 0 && glIsFramebuffer(hostFramebuffer))
@@ -1744,7 +1733,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		bool isDefaultQueue)
 {
 	bool logCalls = isDefaultQueue ? m_EnableLogOnAppGlobal : m_EnableLogOnXRFrame;
-	OpenGLContextStorage *context = isDefaultQueue ? &m_AppGlobalContext : &m_AppXRFrameContext;
+	auto context = &m_AppGlobalContext;
 	bool isBufferEmpty = commandBuffers.empty();
 	if (isBufferEmpty)
 	{

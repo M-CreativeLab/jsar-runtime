@@ -54,6 +54,7 @@ namespace xr
     StereoRenderingFrame *createStereoRenderingFrame();
     StereoRenderingFrame *getStereoRenderingFrame(int id);
     StereoRenderingFrame *getLastStereoRenderingFrame();
+    size_t getStereoRenderingFramesCount();
     bool executeStereoRenderingFrames(int eyeId, function<bool(int, vector<renderer::CommandBuffer *> &)>);
     void clearStereoRenderingFrames(bool clearAll = false);
     bool startFrame(int sessionId, int stereoRenderingId, int passId);
@@ -101,8 +102,7 @@ namespace xr
     atomic<int> m_CurrentStereoRenderingId = -1;
     atomic<int> m_CurrentPassId = -1;
     vector<StereoRenderingFrame *> m_StereoRenderingFrames;
-    // vector<StereoRenderingFrame *> m_LastStereoRenderingFrames;
-    StereoRenderingFrame *m_LastStereoRenderingFrame;
+    StereoRenderingFrame *m_BackupStereoRenderingFrame;
     /**
      * The viewport for each view.
      */

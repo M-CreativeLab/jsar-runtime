@@ -28,7 +28,7 @@ namespace xr
 
   Device::Device() : m_FieldOfView(0.0f), m_Time(0.0f)
   {
-    m_LastStereoRenderingFrame = new StereoRenderingFrame(true);
+    m_BackupStereoRenderingFrame = new StereoRenderingFrame(true);
   }
 
   Device::~Device()
@@ -36,7 +36,7 @@ namespace xr
     m_FieldOfView = 0.0f;
     m_Time = 0.0f;
     m_SessionIds.clear();
-    delete m_LastStereoRenderingFrame;
+    delete m_BackupStereoRenderingFrame;
   }
 
   void Device::initialize(bool enabled)
@@ -97,47 +97,77 @@ namespace xr
     return m_StereoRenderingFrames.back();
   }
 
+  /**
+   * NOTE: The current implementation will expect the eye rendering order is left(0) -> right(1).
+   */
   bool Device::executeStereoRenderingFrames(int eyeId, std::function<bool(int, std::vector<renderer::CommandBuffer *> &)> exec)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
     bool called = false;
 
-    for (auto frame : m_StereoRenderingFrames)
+    for (auto it = m_StereoRenderingFrames.begin(); it != m_StereoRenderingFrames.end(); it++)
     {
+      auto frame = *it;
+      /** Just skip the non-ended frames. */
       if (!frame->ended())
+        continue;
+      /** If an ended frame is empty, it's needed to be removed here. */
+      if (frame->empty())
+      {
+        m_StereoRenderingFrames.erase(it);
+        delete frame;
+        continue;
+      }
+      /** 
+       * When we are going to render right(1) eye, we can't render the frame which left frame is not finished.
+       * Such as, the frame is ended before the native loop is going to render the right eye, thus the left eye
+       * in this frame will be skipped.
+       */
+      if (eyeId == 1 && !frame->finished(0))
         continue;
 
       auto id = frame->getId();
       auto commandBuffers = frame->getCommandBuffers(eyeId);
-      if (exec(id, commandBuffers))
+      exec(id, commandBuffers);
+      frame->finishPass(eyeId);
+
+      bool copyNotAllowed = false;
+      // TODO: optimize the performance here
+      // We could move this to the exec() function to avoid this loop.
+      for (auto commandBuffer : commandBuffers)
       {
-        // TODO: optimize the performance here
-        bool copyNotAllowed = false;
-        for (auto commandBuffer : commandBuffers)
+        switch (commandBuffer->GetType())
         {
-          switch (commandBuffer->GetType())
-          {
-            case renderer::kCommandTypeCreateBuffer:
-            case renderer::kCommandTypeCreateVertexArray:
-            case renderer::kCommandTypeCreateTexture:
-            case renderer::kCommandTypeCreateSampler:
-            case renderer::kCommandTypeCreateShader:
-            case renderer::kCommandTypeLinkProgram:
-              copyNotAllowed = true;
-              break;
-            default:
-              break;          
-          }
-          if (copyNotAllowed)
-            break;
-        }
-        if (!copyNotAllowed)
-          m_LastStereoRenderingFrame->copyCommandBuffers(commandBuffers, eyeId);
-        if (!called)
-        {
-          called = true;
+        case renderer::kCommandTypeCreateBuffer:
+        case renderer::kCommandTypeCreateVertexArray:
+        case renderer::kCommandTypeCreateTexture:
+        case renderer::kCommandTypeCreateSampler:
+        case renderer::kCommandTypeCreateShader:
+        case renderer::kCommandTypeLinkProgram:
+          copyNotAllowed = true;
+          break;
+        default:
           break;
         }
+        if (copyNotAllowed)
+          break;
+      }
+      if (!copyNotAllowed)
+        m_BackupStereoRenderingFrame->copyCommandBuffers(commandBuffers, eyeId);
+
+      /**
+       * After rendering the right eye, we need to remove the frame.
+       */
+      if (eyeId == 1)
+      {
+        // assert(frame->finished(0));
+        m_StereoRenderingFrames.erase(it);
+        delete frame;
+      }
+      if (!called)
+      {
+        called = true;
+        break;
       }
     }
 
@@ -146,9 +176,11 @@ namespace xr
      */
     if (called == false)
     {
-      auto id = m_LastStereoRenderingFrame->getId();
-      auto commandBufferInLastFrame = m_LastStereoRenderingFrame->getCommandBuffers(eyeId);
-      called = exec(id, commandBufferInLastFrame);
+      auto id = m_BackupStereoRenderingFrame->getId();
+      auto commandBufferInLastFrame = m_BackupStereoRenderingFrame->getCommandBuffers(eyeId);
+      if (!commandBufferInLastFrame.empty())
+        exec(id, commandBufferInLastFrame);
+      called = true;
     }
     return called;
   }
@@ -254,6 +286,8 @@ namespace xr
         return;
       }
     }
+    DEBUG("Unity", "Failed to added a command(%d) buffer to the xr queue, current stereoid=%d",
+          commandBuffer->GetType(), m_CurrentStereoRenderingId.load());
   }
 
   float Device::getTime()
