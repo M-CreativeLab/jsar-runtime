@@ -115,16 +115,29 @@ export class TransmuteRuntime2 extends EventTarget {
     });
     this.appStack.push(dom);
 
-    await dom.load();
-    logger.info('loaded a jsar document');
+    try {
+      await dom.load();
+      logger.info('loaded a jsar document');
 
-    const spaceNode = dom.document.space.asNativeType<BABYLON.TransformNode>();
-    spaceNode.setEnabled(false);
-    {
-      await dom.waitForSpaceReady();
-      logger.info('the jsar document\'s space is ready');
+      const spaceNode = dom.document.space.asNativeType<BABYLON.TransformNode>();
+      spaceNode.setEnabled(false);
+      {
+        await dom.waitForSpaceReady();
+        logger.info('the jsar document\'s space is ready');
+      }
+      this.fitSpaceWithScene(spaceNode);
+    } catch (err) {
+      // remove the dom from appStack
+      for (let i = 0; i < this.appStack.length; ++i) {
+        if (this.appStack[i].id === dom.id) {
+          this.appStack.splice(i, 1);
+          break;
+        }
+      }
+      await dom.unload();
+      logger.error(`failed to load the jsar document: ${codeOrUrl} width the error:`, err);
+      // TODO: report to the native side.
     }
-    this.fitSpaceWithScene(spaceNode);
   }
 
   private fitSpaceWithScene(spaceNode: BABYLON.TransformNode, ratio = 0.5) {

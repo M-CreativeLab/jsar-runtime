@@ -54,7 +54,7 @@ namespace xr
     StereoRenderingFrame *createStereoRenderingFrame();
     StereoRenderingFrame *getStereoRenderingFrame(int id);
     StereoRenderingFrame *getLastStereoRenderingFrame();
-    bool executeStereoRenderingFrames(int eyeId, function<bool(vector<renderer::CommandBuffer *> &)>);
+    bool executeStereoRenderingFrames(int eyeId, function<bool(int, vector<renderer::CommandBuffer *> &)>);
     void clearStereoRenderingFrames(bool clearAll = false);
     bool startFrame(int sessionId, int stereoRenderingId, int passId);
     bool endFrame(int sessionId, int stereoRenderingId, int passId);

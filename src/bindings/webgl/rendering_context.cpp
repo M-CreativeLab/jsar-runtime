@@ -1180,7 +1180,7 @@ namespace webgl
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
     auto commandBuffer = new renderer::DeleteShaderCommandBuffer(shader);
-    addCommandBuffer(commandBuffer, true, true);
+    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 

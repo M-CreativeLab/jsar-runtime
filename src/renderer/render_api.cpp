@@ -91,7 +91,7 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 		DEBUG(TR_RENDERAPI_TAG, "Execute XR Frame: eye=%d, stereoId=%d", eyeId, stereoId);
 		DEBUG(TR_RENDERAPI_TAG, "-------------------------------");
 		StartXRFrame();
-		device->executeStereoRenderingFrames(eyeId, [this, deviceFrame](vector<renderer::CommandBuffer *> &commandBuffers)
+		device->executeStereoRenderingFrames(eyeId, [this, deviceFrame](int stereoId, vector<renderer::CommandBuffer *> &commandBuffers)
 																				 {
 																					 return ExecuteCommandBuffer(commandBuffers, deviceFrame, false);
 																					 // end

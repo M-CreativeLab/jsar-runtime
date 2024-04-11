@@ -600,7 +600,7 @@ private:
 		auto clientId = deleteTextureCommandBuffer->m_TextureId;
 		auto serverId = m_TextureObjects[clientId];
 		glDeleteTextures(1, &serverId);
-		m_TextureObjects.erase(clientId);	// remove the texture from the client map
+		m_TextureObjects.erase(clientId); // remove the texture from the client map
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteTexture: %d", isDefaultQueue, serverId);
 	}
@@ -1098,13 +1098,12 @@ private:
 
 		if (matrixToUse == nullptr)
 		{
-			DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the matrix value.");
-		}
-		else
-		{
-			glUniformMatrix4fv(location, count, transpose, matrixToUse);
+			DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the matrix value, placeholderType=%d",
+						uniformMatrix4fvCommandBuffer->m_MatrixPlaceholderType);
+			return;
 		}
 
+		glUniformMatrix4fv(location, count, transpose, matrixToUse);
 		if (printsCall)
 		{
 			DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix4fv(%d, count=%d, transpose=%d): (%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)",
@@ -1735,6 +1734,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 	// Execute all the command buffers
 	DEBUG(DEBUG_TAG, "There are %d buffers to execute in %s.",
 				commandBuffers.size(), context->GetName());
+
 	for (auto commandBuffer : commandBuffers)
 	{
 		auto commandType = commandBuffer->GetType();

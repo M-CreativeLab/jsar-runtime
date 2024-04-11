@@ -97,7 +97,7 @@ namespace xr
     return m_StereoRenderingFrames.back();
   }
 
-  bool Device::executeStereoRenderingFrames(int eyeId, std::function<bool(std::vector<renderer::CommandBuffer *> &)> exec)
+  bool Device::executeStereoRenderingFrames(int eyeId, std::function<bool(int, std::vector<renderer::CommandBuffer *> &)> exec)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
     bool called = false;
@@ -107,12 +107,37 @@ namespace xr
       if (!frame->ended())
         continue;
 
+      auto id = frame->getId();
       auto commandBuffers = frame->getCommandBuffers(eyeId);
-      if (exec(commandBuffers))
+      if (exec(id, commandBuffers))
       {
-        m_LastStereoRenderingFrame->copyCommandBuffers(commandBuffers, eyeId);
+        // TODO: optimize the performance here
+        bool copyNotAllowed = false;
+        for (auto commandBuffer : commandBuffers)
+        {
+          switch (commandBuffer->GetType())
+          {
+            case renderer::kCommandTypeCreateBuffer:
+            case renderer::kCommandTypeCreateVertexArray:
+            case renderer::kCommandTypeCreateTexture:
+            case renderer::kCommandTypeCreateSampler:
+            case renderer::kCommandTypeCreateShader:
+            case renderer::kCommandTypeLinkProgram:
+              copyNotAllowed = true;
+              break;
+            default:
+              break;          
+          }
+          if (copyNotAllowed)
+            break;
+        }
+        if (!copyNotAllowed)
+          m_LastStereoRenderingFrame->copyCommandBuffers(commandBuffers, eyeId);
         if (!called)
+        {
           called = true;
+          break;
+        }
       }
     }
 
@@ -121,8 +146,9 @@ namespace xr
      */
     if (called == false)
     {
+      auto id = m_LastStereoRenderingFrame->getId();
       auto commandBufferInLastFrame = m_LastStereoRenderingFrame->getCommandBuffers(eyeId);
-      called = exec(commandBufferInLastFrame);
+      called = exec(id, commandBufferInLastFrame);
     }
     return called;
   }
