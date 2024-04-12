@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "debug.hpp"
 #include "entry.hpp"
 #include "xr/device.hpp"
@@ -69,6 +70,20 @@ extern "C"
         s_CurrentAPI->EnableAppGlobalLog();
         s_CurrentAPI->EnableXRFrameLog();
       }
+    }
+
+    char exampleHost[PROP_VALUE_MAX];
+    if (__system_property_get("jsar.example.host", exampleHost) >= 0)
+      setenv("JSAR_EXAMPLE_HOST", exampleHost, 1);
+
+    char debugEnabled[PROP_VALUE_MAX];
+    if (__system_property_get("jsar.debug.enabled", debugEnabled) >= 0)
+    {
+      setenv("JSAR_DEBUG_ENABLED", debugEnabled, 1);
+      if (strcmp(debugEnabled, "yes") == 0)
+        setenv("NODE_ENV", "dev", 1);
+      else
+        setenv("NODE_ENV", "prod", 1);
     }
 #endif
 
@@ -197,7 +212,7 @@ extern "C"
     return xrDevice->updateViewerTransform(transform);
   }
 
-  DLL_PUBLIC bool TransmuteNative_SetViewerTransformFromTRS(float* translation, float* rotation)
+  DLL_PUBLIC bool TransmuteNative_SetViewerTransformFromTRS(float *translation, float *rotation)
   {
     auto xrDevice = xr::Device::GetInstance();
     if (xrDevice == NULL)
@@ -230,7 +245,7 @@ extern "C"
     return xrDevice->updateViewerStereoViewMatrix(eyeId, transform);
   }
 
-  DLL_PUBLIC bool TransmuteNative_SetViewerStereoViewMatrixFromTRS(int eyeId, float *translation, float* rotation)
+  DLL_PUBLIC bool TransmuteNative_SetViewerStereoViewMatrixFromTRS(int eyeId, float *translation, float *rotation)
   {
     auto xrDevice = xr::Device::GetInstance();
     if (xrDevice == NULL)
@@ -271,7 +286,7 @@ extern "C"
     return xrDevice->updateLocalTransform(id, transform);
   }
 
-  DLL_PUBLIC bool TransmuteNative_SetLocalTransformFromTRS(int id, float* translation, float* rotation)
+  DLL_PUBLIC bool TransmuteNative_SetLocalTransformFromTRS(int id, float *translation, float *rotation)
   {
     auto xrDevice = xr::Device::GetInstance();
     if (xrDevice == NULL)

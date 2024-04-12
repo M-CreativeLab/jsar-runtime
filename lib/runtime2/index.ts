@@ -99,16 +99,21 @@ export class TransmuteRuntime2 extends EventTarget {
     nativeDocument: NativeDocumentOnTransmute,
     urlBase?: string
   ) {
-    logger.info(`loading a JSAR document`, codeOrUrl);
     if (!this.gl) {
       throw new TypeError('The webgl is not ready or lost context state');
     }
 
     try {
-      new URL(codeOrUrl);
+      const urlObject = new URL(codeOrUrl);
+      if (process.env.JSAR_DEBUG_ENABLED === 'yes' && process.env.JSAR_EXAMPLE_HOST) {
+        urlObject.host = process.env.JSAR_EXAMPLE_HOST;
+        codeOrUrl = urlObject.href;
+      }
     } catch (_err) {
       urlBase = 'https://example.com/'
     }
+
+    logger.info(`loading a JSAR document`, codeOrUrl);
     const dom = new JSARDOM(codeOrUrl, {
       url: urlBase,
       nativeDocument,

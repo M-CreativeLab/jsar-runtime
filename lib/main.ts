@@ -40,7 +40,10 @@ requestGpuBusyCallback(() => {
   try {
     const runtimeStart = performance.now();
     logger.info('The Node.js runtime bootstrap takes', runtimeStart - bootstrapStart, 'ms');
-    logger.info('Starting the TransmuteRuntime entry');
+    logger.info('Starting the TransmuteRuntime entry with the environment:');
+    for (const [key, value] of Object.entries(process.env)) {
+      logger.info(`  ${key}: ${value}`);
+    }
 
     createEnv();
     const init = getRuntimeInit();

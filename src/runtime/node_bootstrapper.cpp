@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "node_bootstrapper.hpp"
 #include "debug.hpp"
 #include "crates/jsar_jsbundle.h"
