@@ -196,6 +196,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
   closed: boolean = false;
   cdpTransport?: jsarCdp.ITransport;
 
+  private _id: number;
   private _xrSystem: XRSystem;
   private _xrDefaultExperience: Promise<WebXRDefaultExperience>;
   private _scene: BABYLON.Scene;
@@ -208,6 +209,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     super();
 
     const now = performance.now();
+    this._id = xrSessionId;
     this._xrSystem = createBondXRSystem(xrSessionId);
     this.engine = new EngineOnTransmute(glContext, true, {
       disableWebGL2Support: false,
@@ -261,6 +263,10 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     this.engine.runRenderLoop(() => {
       scene.render();
     });
+  }
+
+  get id(): number {
+    return this._id;
   }
 
   async enterXrExperience(): Promise<XRSession> {

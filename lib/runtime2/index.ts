@@ -5,7 +5,7 @@ import { extname } from 'path';
 import * as logger from '../bindings/logger';
 import { requestRendererReady } from '../bindings/renderer';
 import { markRuntimeAvailable } from '../bindings/env';
-import { addXsmlRequestListener, type XsmlRequestEvent } from '../bindings/messaging';
+import { addXsmlRequestListener, dispatchXsmlEvent, type XsmlRequestEvent } from '../bindings/messaging';
 import { NativeDocumentOnTransmute } from './jsardom/impl-transmute';
 
 // viewers
@@ -87,11 +87,6 @@ export class TransmuteRuntime2 extends EventTarget {
     await nativeDocument.enterXrExperience();
     logger.info(`Session#${event.sessionId} has been entered XR experience.`);
 
-    // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/diamante.glb'; // demo
-    // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/floating_fox.glb';
-    // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/pirateFort.glb';
-    // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/blackhole.glb';
-    // const modelUrl = 'https://ar.rokidcdn.com/web-assets/pages/models/bird.glb';
     try {
       await this.load(event.url, nativeDocument);
     } catch (err) {
@@ -168,6 +163,7 @@ export class TransmuteRuntime2 extends EventTarget {
 
     try {
       await dom.load();
+      dispatchXsmlEvent(nativeDocument.id, 'loaded');
       logger.info('loaded a jsar document');
 
       const spaceNode = dom.document.space.asNativeType<BABYLON.TransformNode>();

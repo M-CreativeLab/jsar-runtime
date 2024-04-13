@@ -13,6 +13,7 @@ enum EventType {
   error = 0x210,
   close = 0x220,
   xsmlRequest = 0x300,
+  xsmlEvent = 0x301,
 }
 
 function getEventType(type: string): EventType {
@@ -30,6 +31,8 @@ function getEventType(type: string): EventType {
       return EventType.close;
     case 'xsmlRequest':
       return EventType.xsmlRequest;
+    case 'xsmlEvent':
+      return EventType.xsmlEvent;
     default:
       throw new TypeError(`unknown event type: ${type}`);
   }
@@ -130,6 +133,17 @@ export const dispatchEvent = function dispatchEventToNative(event: CustomEvent) 
   const message = JSON.stringify(event.detail);
   nativeEventTarget.dispatchEvent(id, type, message);
   return id;
+};
+
+export const dispatchXsmlEvent = function (id: number, eventType: 'loaded') {
+  return dispatchEvent(
+    new CustomEvent('xsmlEvent', {
+      detail: {
+        id,
+        eventType,
+      },
+    })
+  );
 };
 
 export const makeRpcCall = function makeRpcCallToNative(method: string, args: any[]) {
