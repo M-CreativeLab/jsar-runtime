@@ -1,11 +1,16 @@
 import 'babylonjs';
 import { JSARDOM } from '@yodaos-jsar/dom';
+import { extname } from 'path';
 
 import * as logger from '../bindings/logger';
 import { requestRendererReady } from '../bindings/renderer';
 import { markRuntimeAvailable } from '../bindings/env';
 import { addXsmlRequestListener, type XsmlRequestEvent } from '../bindings/messaging';
 import { NativeDocumentOnTransmute } from './jsardom/impl-transmute';
+
+// viewers
+import createModel3dViewer from './viewers/model3d';  // glb, gltf ...
+import createImage2dViewer from './viewers/image2d';  // png, jpg, etc ...
 
 /**
  * Rewrite the `BABYLON.ThinEngine.QueueNewFrame` to use the requester's `requestAnimationFrame` function.
@@ -107,25 +112,54 @@ export class TransmuteRuntime2 extends EventTarget {
     if (process.env.JSAR_DEBUG_ENABLED === 'yes' && process.env.JSAR_EXAMPLE_URL) {
       codeOrUrl = process.env.JSAR_EXAMPLE_URL;
     }
+
     try {
-      new URL(codeOrUrl);
+      const urlObj = new URL(codeOrUrl);
+      /**
+       * Supports the formats to open directly:
+       * 
+       * - [x] `xsml` for mixed reality content.
+       * - [ ] `html` for web page preview.
+       * - [x] `glb`, `gltf`, `usdz`, etc, for 3D model preview.
+       * - [x] `png`, `jpg`, etc, for image preview.
+       * - [ ] `mp3`, `mp4`, `webm`, etc, for media preview.
+       * - [ ] `pdf`, `epub`, etc, for document preview.
+       *
+       * BTW, the users could open the above formats in a html or xsml document in a new volume.
+       */
+      const urlExt = extname(urlObj.pathname);
+      /**
+       * TODO: implement this via mime type instead of the file extension?
+       */
+      switch (urlExt) {
+        case '.glb':
+        case '.gltf':
+          codeOrUrl = createModel3dViewer(codeOrUrl, { playAnimation: true });
+          urlBase = urlObj.href;
+          logger.info(`switched to the 3d model viewer.`);
+          break;
+        case '.png':
+        case '.jpg':
+        case '.jpeg':
+          codeOrUrl = createImage2dViewer(codeOrUrl);
+          urlBase = urlObj.href;
+          logger.info(`switched to the 2d image viewer.`);
+          break;
+        case '.html':
+        case '.mp3':
+        case '.mp4':
+        case '.webm':
+        case '.pdf':
+        case '.epub':
+          throw new Error(`the format is not supported yet: ${urlExt}`);
+        default:
+          break;
+      }
     } catch (_err) {
       urlBase = 'https://example.com/'
     }
 
     logger.info(`loading a JSAR document`, codeOrUrl);
-    /**
-     * TODO(Yorkie): Supports the formats to open directly:
-     * 
-     * - [ ] `html` for web page preview.
-     * - [x] `xsml` for mixed reality content.
-     * - [ ] `glb`, `gltf`, `usdz`, etc, for 3D model preview.
-     * - [ ] `png`, `jpg`, etc, for image preview.
-     * - [ ] `mp3`, `mp4`, `webm`, etc, for media preview.
-     * - [ ] `pdf`, `epub`, etc, for document preview.
-     *
-     * BTW, the users could open the above formats in a html or xsml document in a new volume.
-     */
     const dom = new JSARDOM(codeOrUrl, {
       url: urlBase,
       nativeDocument,
