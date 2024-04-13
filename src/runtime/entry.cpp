@@ -58,6 +58,15 @@ extern "C"
       s_CurrentAPI->ProcessDeviceEvent(eventType, s_UnityInterfaces);
 
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
+    char deviceVendor[PROP_VALUE_MAX];
+    if (
+      __system_property_get("ro.product.vendor.brand", deviceVendor) >= 0 ||
+      __system_property_get("ro.product.product.brand", deviceVendor) >= 0
+    )
+    {
+      setenv("JSAR_DEVICE_VENDOR", deviceVendor, 1);
+    }
+
     char glLogKey[PROP_VALUE_MAX];
     if (__system_property_get("jsar.switch.gl.logkey", glLogKey) >= 0)
     {
@@ -300,7 +309,7 @@ extern "C"
     float rz = rotation[2];
     float rw = rotation[3];
 
-    auto scalingMatrix = glm::scale(glm::mat4(1), glm::vec3(1.0, 1.0, -1.0));
+    auto scalingMatrix = glm::scale(glm::mat4(1), glm::vec3(1, 1, -1));
     auto translationMatrix = glm::translate(glm::mat4(1), glm::vec3(tx, ty, tz));
     auto rotationMatrix = glm::mat4_cast(glm::quat(rw, rx, ry, rz));
     auto base = translationMatrix * rotationMatrix * scalingMatrix;

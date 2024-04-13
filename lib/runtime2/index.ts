@@ -114,6 +114,18 @@ export class TransmuteRuntime2 extends EventTarget {
     }
 
     logger.info(`loading a JSAR document`, codeOrUrl);
+    /**
+     * TODO(Yorkie): Supports the formats to open directly:
+     * 
+     * - [ ] `html` for web page preview.
+     * - [x] `xsml` for mixed reality content.
+     * - [ ] `glb`, `gltf`, `usdz`, etc, for 3D model preview.
+     * - [ ] `png`, `jpg`, etc, for image preview.
+     * - [ ] `mp3`, `mp4`, `webm`, etc, for media preview.
+     * - [ ] `pdf`, `epub`, etc, for document preview.
+     *
+     * BTW, the users could open the above formats in a html or xsml document in a new volume.
+     */
     const dom = new JSARDOM(codeOrUrl, {
       url: urlBase,
       nativeDocument,

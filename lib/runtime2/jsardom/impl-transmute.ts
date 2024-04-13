@@ -14,6 +14,8 @@ import {
   cdp as jsarCdp,
 } from '@yodaos-jsar/dom';
 import ImageDataImpl from '@yodaos-jsar/dom/src/living/image/ImageData';
+import * as ws from 'ws';
+import * as undici from 'undici';
 
 import * as logger from '../../bindings/logger';
 import { createBondXRSystem } from '../../webxr';
@@ -22,6 +24,11 @@ import {
   XRMatrixPlaceholder,
   XRMatrixPlaceholderType
 } from '../../webxr/api/XRRigidTransform';
+import {
+  OffscreenCanvasImpl,
+  createImageBitmapImpl,
+  kDisposeCanvas
+} from '../../polyfills/offscreencanvas';
 
 type TransmuteEngineOptions = BABYLON.EngineOptions & {
   xrSessionId: number;
@@ -71,7 +78,7 @@ class ResourceLoaderOnTransmute implements JSARResourceLoader {
   fetch(url: string, options: FetchOptions, returnsAs: 'json'): Promise<object>;
   fetch(url: string, options: FetchOptions, returnsAs: 'arraybuffer'): Promise<ArrayBuffer>;
   fetch<T = FetchReturnTypes>(url: string, options: FetchOptions, returnsAs?: FetchReturnAs): Promise<T>;
-  fetch(
+  async fetch(
     url: string,
     options: FetchOptions,
     returnsAs?: FetchReturnAs
@@ -79,20 +86,22 @@ class ResourceLoaderOnTransmute implements JSARResourceLoader {
     const urlObj = new URL(url);
     if (urlObj.protocol === 'file:') {
       throw new TypeError('file: protocol is not supported');
+    }
+    const reqInit: undici.RequestInit = {
+      ...(options == null ? {} : options),
+    };
+    const resp = await undici.request(url, <any>reqInit);
+    if (resp.statusCode >= 400) {
+      throw new Error(`Failed to fetch(${url}), statusCode=${resp.statusCode}`);
+    }
+    if (returnsAs === 'string') {
+      return resp.body.text();
+    } else if (returnsAs === 'json') {
+      return <object>resp.body.json();
+    } else if (returnsAs === 'arraybuffer') {
+      return resp.body.arrayBuffer();
     } else {
-      return fetch(url, options)
-        .then((resp) => {
-          if (!resp.ok) {
-            throw new Error(`The request to ${url} failed with status ${resp.status}`);
-          }
-          if (returnsAs === 'string') {
-            return resp.text();
-          } else if (returnsAs === 'json') {
-            return resp.json();
-          } else if (returnsAs === 'arraybuffer') {
-            return resp.arrayBuffer();
-          }
-        });
+      throw new TypeError('Invalid return type, must be string, json or arraybuffer');
     }
   }
 }
@@ -127,7 +136,7 @@ class MediaPlayerBackendOnTransmute implements MediaPlayerBackend {
 
 class UserAgentBackendOnTransmute implements JSARUserAgent {
   versionString: string = '1.0';
-  vendor: string = '';
+  vendor: string = process.env.JSAR_DEVICE_VENDOR || '';
   vendorSub: string = '';
   language: string = 'zh-CN';
   languages: readonly string[] = [
@@ -139,15 +148,13 @@ class UserAgentBackendOnTransmute implements JSARUserAgent {
   deviceMemory?: number;
   resourceLoader: JSARResourceLoader;
   requestManager: JSARRequestManager;
+  domParser: DOMParser;
 
   constructor(init: JSARUserAgentInit) {
     this.defaultStylesheet = init.defaultStylesheet;
     this.devicePixelRatio = init.devicePixelRatio;
     this.resourceLoader = new ResourceLoaderOnTransmute();
-    // this.requestManager =
-    // this.deviceMemory =
   }
-  domParser: DOMParser;
 
   alert(_message?: string) {
     throw new TypeError('Method not implemented.');
@@ -162,7 +169,7 @@ class UserAgentBackendOnTransmute implements JSARUserAgent {
     throw new TypeError('Method not implemented.');
   }
   getWebSocketConstructor() {
-    return null;
+    return ws.WebSocket as unknown as typeof WebSocket;
   }
   getMediaPlayerConstructor(): MediaPlayerConstructor {
     return MediaPlayerBackendOnTransmute;
@@ -283,10 +290,35 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     throw new TypeError('Method not implemented.');
   }
   createImageBitmap(image: ArrayBuffer | ArrayBufferView): Promise<ImageBitmap> {
-    throw new TypeError('Method not implemented.');
+    const blob = new Blob([image]);
+    return createImageBitmapImpl(blob);
   }
-  decodeImage(bitmap: ImageBitmap, size?: [number, number]): Promise<ImageDataImpl> {
-    throw new TypeError('Method not implemented.');
+  async decodeImage(bitmap: ImageBitmap, size?: [number, number]): Promise<ImageDataImpl> {
+    let expectedWidth = Math.floor(size[0]);
+    let expectedHeight = Math.floor(size[1]);
+    if (typeof expectedWidth !== 'number' || isNaN(expectedWidth) || expectedWidth <= 0) {
+      expectedWidth = bitmap.width;
+    }
+    if (typeof expectedHeight !== 'number' || isNaN(expectedHeight) || expectedHeight <= 0) {
+      expectedHeight = bitmap.height;
+    }
+
+    const offscreenCanvas = new OffscreenCanvasImpl(expectedWidth, expectedHeight);
+    const ctx = offscreenCanvas.getContext('2d');
+    if (ctx == null) {
+      throw new TypeError('Failed to get 2d context from offscreen canvas.');
+    }
+
+    ctx.drawImage(
+      bitmap,
+      0, 0,
+      bitmap.width, bitmap.height,
+      0, 0,
+      offscreenCanvas.width, offscreenCanvas.height
+    );
+    const imageData = ctx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+    offscreenCanvas[kDisposeCanvas]();
+    return Promise.resolve(imageData as any);
   }
   stop(): void {
     // TODO
