@@ -15,8 +15,8 @@
 import { mat4 } from 'gl-matrix';
 
 import { type XRDevice } from '../devices';
+import type { DeviceFrameContext } from './XRSession';
 import XRRigidTransformImpl from './XRRigidTransform';
-import { DeviceFrameContext } from './XRSession';
 
 export const PRIVATE = Symbol('@@webxr-polyfill/XRSpace');
 
