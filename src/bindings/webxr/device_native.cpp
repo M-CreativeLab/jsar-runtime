@@ -16,6 +16,10 @@ namespace bindings
                                       InstanceMethod("getViewerStereoViewMatrix", &XRDeviceNative::GetViewerStereoViewMatrix),
                                       InstanceMethod("getViewerStereoProjectionMatrix", &XRDeviceNative::GetViewerStereoProjectionMatrix),
                                       InstanceMethod("getActiveEyeId", &XRDeviceNative::GetActiveEyeId),
+                                      InstanceMethod("getGazeInputSource", &XRDeviceNative::GetGazeInputSource),
+                                      InstanceMethod("getHandInputSource", &XRDeviceNative::GetHandInputSource),
+                                      InstanceMethod("getGamepadInputSources", &XRDeviceNative::GetGamepadInputSources),
+                                      InstanceMethod("getScreenInputSources", &XRDeviceNative::GetScreenInputSources),
                                       InstanceMethod("startFrame", &XRDeviceNative::StartFrame),
                                       InstanceMethod("endFrame", &XRDeviceNative::EndFrame)});
 
@@ -310,6 +314,48 @@ namespace bindings
     }
 
     return Napi::Number::New(env, device->getActiveEyeId());
+  }
+
+  Napi::Value XRDeviceNative::GetGazeInputSource(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    auto device = xr::Device::GetInstance();
+    if (device == nullptr)
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::GetGazeInputSource: device is not initialized")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto gazeInputSource = device->getGazeInputSource();
+    auto jsInputSource = Napi::Object::New(env);
+    jsInputSource.Set("id", Napi::Number::New(env, gazeInputSource.id));
+    jsInputSource.Set("targetRayMode", Napi::Number::New(env, gazeInputSource.targetRayMode));
+    jsInputSource.Set("handedness", Napi::Number::New(env, gazeInputSource.handness));
+    return jsInputSource;
+  }
+
+  Napi::Value XRDeviceNative::GetHandInputSource(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return env.Undefined();;
+  }
+
+  Napi::Value XRDeviceNative::GetGamepadInputSources(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return env.Undefined();;
+  }
+
+  Napi::Value XRDeviceNative::GetScreenInputSources(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return env.Undefined();;
   }
 
   Napi::Value XRDeviceNative::StartFrame(const Napi::CallbackInfo &info)

@@ -234,8 +234,6 @@ export default class XRDevice extends EventTarget {
 
   /**
    * Get a list of input sources.
-   *
-   * @return {Array<XRInputSource>}
    */
   getInputSources(): Array<XRInputSource> {
     throw new Error('Method(device.getInputSources) not implemented');

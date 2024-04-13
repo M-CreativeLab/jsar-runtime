@@ -7,6 +7,7 @@
 #include <atomic>
 
 #include "frame.hpp"
+#include "input_source.hpp"
 
 using namespace std;
 
@@ -82,6 +83,19 @@ namespace xr
     bool updateViewerStereoProjectionMatrix(int eyeId, float *transform);
     bool updateLocalTransform(int id, float *transform);
 
+    /**
+     * Input sources
+     */
+  public:
+    InputSource &getGazeInputSource();
+    InputSource &getHandInputSource(Handness handness);
+    bool addGamepadInputSource(int id, InputSource &gamepadInputSource);
+    InputSource &getGamepadInputSource(int id);
+    bool removeGamepadInputSource(int id);
+    bool addScreenInputSource(int id, InputSource &screenInputSource);
+    InputSource &getScreenInputSource(int id);
+    bool removeScreenInputSource(int id);
+
   private:
     bool m_Enabled = false;
     /**
@@ -136,6 +150,14 @@ namespace xr
      * A mutex to ensure the above data is thread-safe.
      */
     mutex m_Mutex;
+    /**
+     * Input sources
+     */
+    InputSource m_GazeInputSource;
+    InputSource m_HandInputSources[2];
+    std::map<int, InputSource> m_ScreenInputSources;
+    std::map<int, InputSource> m_GamepadInputSources;
+    mutex m_InputSourceMutex; // mutex for input sources
 
   private:
     static Device *s_instance;

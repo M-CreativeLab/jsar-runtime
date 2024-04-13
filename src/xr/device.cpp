@@ -29,6 +29,16 @@ namespace xr
   Device::Device() : m_FieldOfView(0.0f), m_Time(0.0f)
   {
     m_BackupStereoRenderingFrame = new StereoRenderingFrame(true);
+
+    // Initialize the input sources
+    {
+      m_GazeInputSource.handness = Handness::None;
+      m_GazeInputSource.targetRayMode = TargetRayMode::Gaze;
+      m_HandInputSources[0].handness = Handness::Left;
+      m_HandInputSources[0].targetRayMode = TargetRayMode::TrackedPointer;
+      m_HandInputSources[1].handness = Handness::Right;
+      m_HandInputSources[1].targetRayMode = TargetRayMode::TrackedPointer;
+    }
   }
 
   Device::~Device()
@@ -118,7 +128,7 @@ namespace xr
         delete frame;
         continue;
       }
-      /** 
+      /**
        * When we are going to render right(1) eye, we can't render the frame which left frame is not finished.
        * Such as, the frame is ended before the native loop is going to render the right eye, thus the left eye
        * in this frame will be skipped.
@@ -435,5 +445,61 @@ namespace xr
       }
     }
     return false;
+  }
+
+  // InputSource
+
+  InputSource &Device::getGazeInputSource()
+  {
+    return m_GazeInputSource;
+  }
+
+  InputSource &Device::getHandInputSource(Handness handness)
+  {
+    if (handness == Handness::Left)
+      return m_HandInputSources[0];
+    else if (handness == Handness::Right)
+      return m_HandInputSources[1];
+    return m_HandInputSources[0];
+  }
+
+  bool Device::addGamepadInputSource(int id, InputSource &inputSource)
+  {
+    std::lock_guard<std::mutex> lock(m_InputSourceMutex);
+    m_GamepadInputSources[id] = inputSource;
+    return true;
+  }
+
+  bool Device::removeGamepadInputSource(int id)
+  {
+    std::lock_guard<std::mutex> lock(m_InputSourceMutex);
+    m_GamepadInputSources.erase(id);
+    return true;
+  }
+
+  InputSource &Device::getGamepadInputSource(int id)
+  {
+    std::lock_guard<std::mutex> lock(m_InputSourceMutex);
+    return m_GamepadInputSources[id];
+  }
+
+  bool Device::addScreenInputSource(int id, InputSource &inputSource)
+  {
+    std::lock_guard<std::mutex> lock(m_InputSourceMutex);
+    m_ScreenInputSources[id] = inputSource;
+    return true;
+  }
+
+  bool Device::removeScreenInputSource(int id)
+  {
+    std::lock_guard<std::mutex> lock(m_InputSourceMutex);
+    m_ScreenInputSources.erase(id);
+    return true;
+  }
+
+  InputSource &Device::getScreenInputSource(int id)
+  {
+    std::lock_guard<std::mutex> lock(m_InputSourceMutex);
+    return m_ScreenInputSources[id];
   }
 }

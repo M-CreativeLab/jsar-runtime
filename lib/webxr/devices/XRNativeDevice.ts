@@ -111,6 +111,8 @@ export default class XRNativeDevice extends XRDevice {
   }
 
   getInputSources(): XRInputSource[] {
+    const r = this.#handle.getGazeInputSource();
+    logger.info('gaze input sources =>', r);
     return [];
   }
 

@@ -36,6 +36,11 @@ declare namespace Transmute {
     constructor(contextAttribs?: WebGLContextAttributes);
   }
 
+  type XRNativeInputSource = {
+    id: number;
+    handness: string;
+    targetRayMode: string;
+  };
   class XRDeviceNative {
     isSessionSupported(mode: string): boolean;
     requestSession(sessionId: number): boolean;
@@ -58,7 +63,14 @@ declare namespace Transmute {
      */
     getViewerStereoProjectionMatrix(eyeId: number): Float32Array;
     getActiveEyeId(): number;
+    
+    // Input source
+    getGazeInputSource(): XRNativeInputSource;
+    getHandInputSource(handness: string): XRNativeInputSource;
+    getGamepadInputSource(): XRNativeInputSource;
+    getScreenInputSource(): XRNativeInputSource;
 
+    // frame
     startFrame(sessionId: number, stereoRenderingId: number, passIndex: number): void;
     endFrame(sessionId: number, stereoRenderingId: number, passIndex: number): void;
   }
