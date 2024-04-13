@@ -3,7 +3,7 @@ target = [
   "aarch64-linux-android",
   "aarch64-apple-darwin",
   "x86_64-apple-darwin",
-  "x86_64-pc-windows-msvc",
+  # "x86_64-pc-windows-msvc",
 ]
 target-dir = "build/output/crates"
 

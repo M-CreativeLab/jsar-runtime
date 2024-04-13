@@ -1,0 +1,23 @@
+[package]
+name = "jsar_jsbindings"
+version = "1.0.0"
+authors = ["The JSAR Project Developers"]
+license = "Apache-2.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "jsar_jsbindings"
+crate-type = ["staticlib"]
+path = "lib.rs"
+
+[features]
+experimental = []
+
+[dependencies]
+jsar_jsbinding_macro = { path = "../jsbinding_macro" }
+napi = { version = "2", features = ["compat-mode", "noop"] }
+napi-derive = { version = "2", features = ["compat-mode", "noop"] }
+
+[build-dependencies]
+napi-build = "2"

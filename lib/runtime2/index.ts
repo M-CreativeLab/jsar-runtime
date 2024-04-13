@@ -103,12 +103,12 @@ export class TransmuteRuntime2 extends EventTarget {
       throw new TypeError('The webgl is not ready or lost context state');
     }
 
+    // Override the `codeOrUrl` with the example url if the debug mode is enabled.
+    if (process.env.JSAR_DEBUG_ENABLED === 'yes' && process.env.JSAR_EXAMPLE_URL) {
+      codeOrUrl = process.env.JSAR_EXAMPLE_URL;
+    }
     try {
-      const urlObject = new URL(codeOrUrl);
-      if (process.env.JSAR_DEBUG_ENABLED === 'yes' && process.env.JSAR_EXAMPLE_HOST) {
-        urlObject.host = process.env.JSAR_EXAMPLE_HOST;
-        codeOrUrl = urlObject.href;
-      }
+      new URL(codeOrUrl);
     } catch (_err) {
       urlBase = 'https://example.com/'
     }

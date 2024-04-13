@@ -1,0 +1,22 @@
+[package]
+name = "jsar_jsbinding_macro"
+version = "1.0.0"
+authors = ["The JSAR Project Developers"]
+license = "Apache-2.0"
+edition = "2021"
+publish = false
+
+[package.metadata.workspaces]
+independent = true
+
+[features]
+compat-mode = []
+default = ["compat-mode"]
+
+[dependencies]
+quote = "1"
+syn = { version = "2", features = ["full", "extra-traits"] }
+
+[lib]
+proc-macro = true
+path = "lib.rs"

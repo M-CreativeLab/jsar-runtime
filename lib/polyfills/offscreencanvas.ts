@@ -656,6 +656,7 @@ function readPixelsFromSkImage(
   height: number,
   options: PixelsReadOptions
 ) {
+  const starts = performance.now();
   const pixels = handle.readPixels(x, y, {
     width,
     height,
@@ -663,6 +664,8 @@ function readPixelsFromSkImage(
     colorType: canvasKit.ColorType.RGBA_8888,
     colorSpace: handle.getColorSpace(),
   });
+  const readPixelsTime = performance.now() - starts;
+  logger.info(`readPixels(${width}x${height}) takes ${readPixelsTime.toFixed(2)}ms`);
 
   /**
    * TODO: Support rgb8 color type in CanvasKit, this is a workaround to convert rgba to rgb.

@@ -2,6 +2,7 @@
 #include "node_bootstrapper.hpp"
 #include "debug.hpp"
 #include "crates/jsar_jsbundle.h"
+#include "crates/jsar_jsbindings.h"
 
 using namespace v8;
 using namespace node;
@@ -167,6 +168,8 @@ int NodeBootstrapper::runNodeInstance()
     // AddLinkedBinding(env, transmute_webaudio_napi_mod);
     AddLinkedBinding(env, transmute_webgl_napi_mod);
     AddLinkedBinding(env, transmute_webxr_napi_mod);
+    // The followings are created by Rust
+    AddLinkedBinding(env, transmute_canvas_napi_mod);
 
     MaybeLocal<Value> loadenv_ret = node::LoadEnvironment(env, node::StartExecutionCallback{});
     if (loadenv_ret.IsEmpty()) // There has been a JS exception.

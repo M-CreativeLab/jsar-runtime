@@ -72,9 +72,9 @@ extern "C"
       }
     }
 
-    char exampleHost[PROP_VALUE_MAX];
-    if (__system_property_get("jsar.example.host", exampleHost) >= 0)
-      setenv("JSAR_EXAMPLE_HOST", exampleHost, 1);
+    char exampleUrl[PROP_VALUE_MAX];
+    if (__system_property_get("jsar.example.url", exampleUrl) >= 0)
+      setenv("JSAR_EXAMPLE_URL", exampleUrl, 1);
 
     char debugEnabled[PROP_VALUE_MAX];
     if (__system_property_get("jsar.debug.enabled", debugEnabled) >= 0)
