@@ -6,23 +6,20 @@ else  # Linux
 endif
 JOBS := $(shell expr $(CORES) / 2)
 
-protofiles:
-	@echo "Building proto..."
-	node ./build/build-protofiles.cjs
-
 crates:
 	cargo build --release
 
-ifeq ($(UNAME), Darwin)
-	@echo "Creating universal-apple-darwin..."
-	mkdir -p build/output/crates/universal-apple-darwin/release
-	lipo -create -output build/output/crates/universal-apple-darwin/release/libjsar_jsbundle.a \
-		build/output/crates/aarch64-apple-darwin/release/libjsar_jsbundle.a \
-		build/output/crates/x86_64-apple-darwin/release/libjsar_jsbundle.a
-	lipo -create -output build/output/crates/universal-apple-darwin/release/libjsar_shaders.a \
-		build/output/crates/aarch64-apple-darwin/release/libjsar_shaders.a \
-		build/output/crates/x86_64-apple-darwin/release/libjsar_shaders.a
-endif
+# FIXME: disable universal-apple-darwin for now
+# ifeq ($(UNAME), Darwin)
+# 	@echo "Creating universal-apple-darwin..."
+# 	mkdir -p build/output/crates/universal-apple-darwin/release
+# 	lipo -create -output build/output/crates/universal-apple-darwin/release/libjsar_jsbundle.a \
+# 		build/output/crates/aarch64-apple-darwin/release/libjsar_jsbundle.a \
+# 		build/output/crates/x86_64-apple-darwin/release/libjsar_jsbundle.a
+# 	lipo -create -output build/output/crates/universal-apple-darwin/release/libjsar_shaders.a \
+# 		build/output/crates/aarch64-apple-darwin/release/libjsar_shaders.a \
+# 		build/output/crates/x86_64-apple-darwin/release/libjsar_shaders.a
+# endif
 
 jsbundle:
 	@echo "Building jsbundle..."
@@ -31,15 +28,15 @@ jsbundle:
 		--minify=$(minify) \
 		--without-pack=$(without-pack)
 
-darwin: protofiles crates
+darwin: crates
 	@echo "Building for darwin(JOBS=${JOBS})..."
 	make -C ./build -j${JOBS} darwin
 
-android: protofiles crates
+android: crates
 	@echo "Building for android(JOBS=${JOBS})..."
 	make -C ./build -j${JOBS} android
 
-windows: protofiles crates
+windows: crates
 	@echo "Building for windows(JOBS=${JOBS})..."
 	make -C ./build -j${JOBS} windows
 

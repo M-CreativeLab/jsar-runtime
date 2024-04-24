@@ -17,7 +17,9 @@ fn main() {
     panic!("Error: File '{}' not found.", file_name);
   }
 
-  let destination_path = current_dir.join("../../build/output/headers/crates/").join(file_name);
+  let destination_path = current_dir
+    .join("../../build/output/headers/crates/")
+    .join(file_name);
   match copy_file(&source_path, &destination_path) {
     Ok(_) => println!(
       "File '{}' copied to '{}'",

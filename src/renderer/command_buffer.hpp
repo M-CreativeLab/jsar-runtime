@@ -48,6 +48,7 @@ namespace renderer
     kCommandTypeBindRenderbuffer,
     kCommandTypeRenderbufferStorage,
     /** Buffer(WebGL2) */
+    kCommandTypeReadBuffer,
     kCommandTypeBindBufferBase,
     kCommandTypeBindBufferRange,
     kCommandTypeBlitFramebuffer,
@@ -726,6 +727,17 @@ namespace renderer
     int m_Internalformat;
     int m_Width;
     int m_Height;
+  };
+
+  class ReadBufferCommandBuffer : public CommandBuffer
+  {
+  public:
+    ReadBufferCommandBuffer(int src) : CommandBuffer(kCommandTypeReadBuffer),
+                                       m_Src(src) {}
+    ~ReadBufferCommandBuffer() {}
+
+  public:
+    int m_Src;
   };
 
   class BindBufferBaseCommandBuffer : public CommandBuffer

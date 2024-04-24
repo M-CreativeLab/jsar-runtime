@@ -15,9 +15,19 @@ path = "lib.rs"
 experimental = []
 
 [dependencies]
+ctor = "0.1"
+euclid = "*"
+lazy_static = "1.4.0"
+log = "0.4.21"
+surfman = "0.9.2"
+gl = { version = "0.14.0" }
 jsar_jsbinding_macro = { path = "../jsbinding_macro" }
+jsar_jsbundle = { path = "../jsbundle" }
 napi = { version = "2", features = ["compat-mode", "noop"] }
 napi-derive = { version = "2", features = ["compat-mode", "noop"] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+android_logger = "0.13.3"
 
 [build-dependencies]
 napi-build = "2"

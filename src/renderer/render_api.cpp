@@ -169,6 +169,9 @@ bool RenderAPI::RecordAndReportGpuBusy()
 
 RenderAPI *CreateRenderAPI(UnityGfxRenderer apiType)
 {
+	// Initialize the canvas thread
+	jsar_load_gl();
+
 #if SUPPORT_D3D11
 	if (apiType == kUnityGfxRendererD3D11)
 	{

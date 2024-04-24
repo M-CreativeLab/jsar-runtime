@@ -216,6 +216,7 @@ namespace webgl
     /**
      * New methods for WebGL2
      */
+    Napi::Value ReadBuffer(const Napi::CallbackInfo &info);
     Napi::Value BindBufferBase(const Napi::CallbackInfo &info);
     Napi::Value BindBufferRange(const Napi::CallbackInfo &info);
     Napi::Value BlitFramebuffer(const Napi::CallbackInfo &info);

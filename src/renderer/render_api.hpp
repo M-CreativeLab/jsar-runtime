@@ -11,6 +11,7 @@
 #include "command_buffer.hpp"
 #include "constants.hpp"
 #include "xr/device.hpp"
+#include "crates/jsar_jsbindings.h"
 
 #define TR_RENDERAPI_TAG "TR_RAPI" // Transmute Render API
 

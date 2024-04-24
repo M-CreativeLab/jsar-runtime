@@ -17,6 +17,7 @@ namespace webgl
 
   private:
     Napi::Value ToString(const Napi::CallbackInfo &info);
+    Napi::Value GetValue(const Napi::CallbackInfo &info);
 
   private:
     uint32_t id_;

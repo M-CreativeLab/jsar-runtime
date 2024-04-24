@@ -6,7 +6,8 @@ namespace webgl
   void WebGLTexture::Init(Napi::Env env)
   {
     Napi::Function tpl = DefineClass(env, "WebGLTexture", {
-      InstanceMethod("toString", &WebGLTexture::ToString)
+      InstanceMethod("toString", &WebGLTexture::ToString),
+      InstanceMethod("get", &WebGLTexture::GetValue),
     });
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -34,6 +35,12 @@ namespace webgl
     // Output "Texture(id)"
     std::string result = "Texture(" + std::to_string(id_) + ")";
     return Napi::String::New(env, result.c_str());
+  }
+
+  Napi::Value WebGLTexture::GetValue(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    return Napi::Number::New(env, id_);
   }
 
 } // namespace webgl

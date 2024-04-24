@@ -8,6 +8,7 @@
 #include "gles/common.hpp"
 #include "gles/context_storage.hpp"
 #include "xr/device.hpp"
+#include "crates/jsar_jsbindings.h"
 
 // OpenGL Core profile (desktop) or OpenGL ES (mobile) implementation of RenderAPI.
 // Supports several flavors: Core, ES2, ES3
@@ -21,12 +22,12 @@ class RenderAPI_OpenGLCoreES : public RenderAPI
 {
 public:
 	RenderAPI_OpenGLCoreES(UnityGfxRenderer apiType);
-	virtual ~RenderAPI_OpenGLCoreES() {}
+	~RenderAPI_OpenGLCoreES() {}
 	virtual void ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces);
 	virtual bool GetUsesReverseZ() { return false; }
 	bool SupportsWebGL2();
-	virtual int GetDrawingBufferWidth();
-	virtual int GetDrawingBufferHeight();
+	int GetDrawingBufferWidth();
+	int GetDrawingBufferHeight();
 	virtual void ClearColor(float r, float g, float b, float a);
 	virtual void ClearDepth(float depth);
 	virtual void ClearStencil(uint32_t stencil);
@@ -513,6 +514,14 @@ private:
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::RenderbufferStorage: %d",
 						isDefaultQueue, renderbufferStorageCommandBuffer->m_Internalformat);
+	}
+	void OnReadBuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
+	{
+		auto readBufferCommandBuffer = static_cast<ReadBufferCommandBuffer *>(commandBuffer);
+		auto source = readBufferCommandBuffer->m_Src;
+		glReadBuffer(source);
+		if (printsCall)
+			DEBUG(DEBUG_TAG, "[%d] GL::ReadBuffer(%d)", isDefaultQueue, source);
 	}
 	void OnBindBufferBase(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -1798,6 +1807,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			ADD_COMMAND_BUFFER_HANDLER(DeleteRenderbuffer)
 			ADD_COMMAND_BUFFER_HANDLER(BindRenderbuffer)
 			ADD_COMMAND_BUFFER_HANDLER(RenderbufferStorage)
+			ADD_COMMAND_BUFFER_HANDLER(ReadBuffer)
 			ADD_COMMAND_BUFFER_HANDLER(BindBufferBase)
 			ADD_COMMAND_BUFFER_HANDLER(BindBufferRange)
 			ADD_COMMAND_BUFFER_HANDLER(BlitFramebuffer)

@@ -53,11 +53,6 @@ target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${NODEJS_HEADERS_PA
 set(NODE_ADDON_API_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-addon-api/include)
 target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${NODE_ADDON_API_HEADERS_PATH})
 
-# Add Protobuf C++ headers
-set(PROTOBUF_VERSION 21.12)
-set(PROTOBUF_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/protobuf-cpp-v${PROTOBUF_VERSION}/include)
-target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${PROTOBUF_HEADERS_PATH})
-
 # Add LabSound headers
 set(LABSOUND_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/LabSound/include)
 target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${LABSOUND_HEADERS_PATH})
@@ -80,9 +75,7 @@ elseif (WIN32)
     set(TRANSMUTE_CRATE_TARGET x86_64-pc-windows-msvc/)
 endif()
 message(STATUS "TRANSMUTE_CRATE_TARGET: ${TRANSMUTE_CRATE_TARGET}")
-transmute_add_library(${CMAKE_SOURCE_DIR}/build/output/crates/${TRANSMUTE_CRATE_TARGET}release jsar_jsbundle)
 transmute_add_library(${CMAKE_SOURCE_DIR}/build/output/crates/${TRANSMUTE_CRATE_TARGET}release jsar_jsbindings)
-transmute_add_library(${CMAKE_SOURCE_DIR}/build/output/crates/${TRANSMUTE_CRATE_TARGET}release jsar_shaders)
 
 # Optional dependencies
 if (APPLE)
@@ -151,16 +144,13 @@ endif()
 #     target_link_options(${TRANSMUTE_CORE_LIBNAME} PRIVATE -Wl,-undefined,dynamic_lookup)
 # endif()
 
-# Link to the Node.js & protobuf libraries
+# Link to the Node.js library
 if (WIN32)
     link_directories(${THIRDPARTY_LIBRARY_PATH}/lib)
-    # add_definitions(-DPROTOBUF_USE_DLLS)
     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.lib)
-    # target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.lib)
 else()
     target_link_options(${TRANSMUTE_CORE_LIBNAME} PRIVATE -L${THIRDPARTY_LIBRARY_PATH}/lib)
     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE node)
-    # target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE protobuf-lite)
 endif()
 
 if (APPLE)
@@ -218,14 +208,10 @@ install(TARGETS ${TRANSMUTE_CORE_LIBNAME} DESTINATION ${TRANSMUTE_RELEASE_DEST})
 if (APPLE)
     install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.dylib DESTINATION ${TRANSMUTE_RELEASE_DEST})
     install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.108.dylib DESTINATION ${TRANSMUTE_RELEASE_DEST})
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.dylib DESTINATION ${TRANSMUTE_RELEASE_DEST})
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.32.dylib DESTINATION ${TRANSMUTE_RELEASE_DEST})
 elseif (ANDROID)
     install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.so DESTINATION ${TRANSMUTE_RELEASE_DEST})
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.so DESTINATION ${TRANSMUTE_RELEASE_DEST})
 elseif (WIN32)
     install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.dll DESTINATION ${TRANSMUTE_RELEASE_DEST})
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.dll DESTINATION ${TRANSMUTE_RELEASE_DEST})
 endif()
 
 # Add Tools Function
@@ -233,11 +219,9 @@ function(ADD_JSAR_TOOL EXECUTABLE_NAME SOURCE_FILE)
     add_executable(${EXECUTABLE_NAME} ${SOURCE_FILE})
     target_compile_definitions(${EXECUTABLE_NAME} PRIVATE TRANSMUTE_STANDALONE)
     target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/proto)
     target_include_directories(${EXECUTABLE_NAME} PRIVATE ${NODEJS_HEADERS_PATH})
     target_include_directories(${EXECUTABLE_NAME} PRIVATE ${NODEJS_HEADERS_PATH}/node)
     target_include_directories(${EXECUTABLE_NAME} PRIVATE ${NODE_ADDON_API_HEADERS_PATH})
-    target_include_directories(${EXECUTABLE_NAME} PRIVATE ${PROTOBUF_HEADERS_PATH})
     target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${TRANSMUTE_CORE_LIBNAME})
 
     if (APPLE)
@@ -253,9 +237,7 @@ function(ADD_JSAR_TOOL EXECUTABLE_NAME SOURCE_FILE)
     endif()
 
     if (WIN32)
-        add_definitions(-DPROTOBUF_USE_DLLS)
         target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.lib)
-        target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.lib)
     endif()
 endfunction()
 
@@ -263,16 +245,11 @@ endfunction()
 if (APPLE)
     # ADD_JSAR_TOOL(test-jsar "src/tools/tester.cpp")
     # ADD_JSAR_TOOL(bench-jsar "src/tools/bench.cpp")
-
     # Install the libraries to the build directory.
     install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.108.dylib DESTINATION ${CMAKE_BINARY_DIR})
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.32.dylib DESTINATION ${CMAKE_BINARY_DIR})
 elseif (WIN32)
     # ADD_JSAR_TOOL(test-jsar "Source/tools/tester.cpp")
-
     # Install the libraries to the build directory.
     install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.lib DESTINATION ${CMAKE_BINARY_DIR}/Release)
     install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.dll DESTINATION ${CMAKE_BINARY_DIR}/Release)
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.lib DESTINATION ${CMAKE_BINARY_DIR}/Release)
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libprotobuf-lite.dll DESTINATION ${CMAKE_BINARY_DIR}/Release)
 endif()

@@ -785,7 +785,8 @@ namespace webgl
       InstanceMethod("getSupportedExtensions", &T::GetSupportedExtensions)
 
 #define WEBGL2_METHODS(T)                                                                   \
-  InstanceMethod("bindBufferBase", &T::BindBufferBase),                                     \
+  InstanceMethod("readBuffer", &T::ReadBuffer),                                             \
+      InstanceMethod("bindBufferBase", &T::BindBufferBase),                                 \
       InstanceMethod("bindBufferRange", &T::BindBufferRange),                               \
       InstanceMethod("blitFramebuffer", &T::BlitFramebuffer),                               \
       InstanceMethod("renderbufferStorageMultisample", &T::RenderbufferStorageMultisample), \
@@ -3790,6 +3791,30 @@ namespace webgl
         return Napi::Number::New(env, maxTextureLODBias);
     }
     return WebGLBaseRenderingContext<WebGL2RenderingContext>::GetParameter(info);
+  }
+
+  Napi::Value WebGL2RenderingContext::ReadBuffer(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "readBuffer() takes 1 argument.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsNumber())
+    {
+      Napi::TypeError::New(env, "readBuffer() 1st argument(src) must be a number.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    uint32_t src = info[0].As<Napi::Number>().Uint32Value();
+    auto commandBuffer = new renderer::ReadBufferCommandBuffer(src);
+    addCommandBuffer(commandBuffer);
+    return env.Undefined();
   }
 
   Napi::Value WebGL2RenderingContext::BindBufferBase(const Napi::CallbackInfo &info)
