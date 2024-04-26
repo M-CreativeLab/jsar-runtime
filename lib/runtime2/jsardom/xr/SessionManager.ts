@@ -172,7 +172,7 @@ export class WebXRSessionManager implements BABYLON.IDisposable, BABYLON.IWebXRR
     }
     return xr.requestSession(xrSessionMode, xrSessionInit)
       .then((session: XRSession) => {
-        console.info(`a session request(mode=${xrSessionMode} was successful`, session);
+        logger.info(`a session request(mode=${xrSessionMode} was successful`, session);
         this.session = session;
         this._sessionMode = xrSessionMode;
         this.onXRSessionInit.notifyObservers(session);
@@ -276,6 +276,7 @@ export class WebXRSessionManager implements BABYLON.IDisposable, BABYLON.IWebXRR
     this._engine.customAnimationFrameRequester = {
       requestAnimationFrame: (callback: FrameRequestCallback) => this.session.requestAnimationFrame(callback),
       renderFunction: (timestamp: number, xrFrame: BABYLON.Nullable<XRFrame>) => {
+        logger.info('[babylonjs] XR render loop', timestamp, xrFrame);
         if (!this.inXRSession || !this._engine) {
           return;
         }

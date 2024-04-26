@@ -39,7 +39,9 @@ namespace xr
     float *getViewerTransform();
     float *getLocalTransform(int sessionId);
     FrameContextBySessionId *addSession(int sessionId);
+    FrameContextBySessionId *getSession(int sessionId);
     void iterateSessions(std::function<void(int, FrameContextBySessionId *)> callback);
+
     size_t getCountOfSessions();
     int getCurrentStereoId();
 
@@ -56,7 +58,7 @@ namespace xr
   class MultiPassFrame : public DeviceFrame
   {
   public:
-    explicit MultiPassFrame(Device * device, int eyeId, int stereoId);
+    explicit MultiPassFrame(Device *device, int eyeId, int stereoId);
     ~MultiPassFrame();
 
   public:

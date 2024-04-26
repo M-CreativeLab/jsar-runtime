@@ -31,11 +31,12 @@ namespace xr
   {
   public:
     InputSource();
-  
+
   public:
     int id;
     Handness handness;
     JointPose hand[25];
     TargetRayMode targetRayMode;
+    float targetRayTransform[16];
   };
 }

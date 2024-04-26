@@ -8,6 +8,7 @@
 
 #include "frame.hpp"
 #include "input_source.hpp"
+#include "bindings/webxr/device_native.hpp"
 
 using namespace std;
 
@@ -62,6 +63,10 @@ namespace xr
     bool endFrame(int sessionId, int stereoRenderingId, int passId);
     bool isInFrame();
     void addCommandBufferToFrame(renderer::CommandBuffer *commandBuffer);
+    /**
+     * Call the frame callback registered by the JavaScript side with the given `DeviceFrame`.
+     */
+    void onFrameCallback(DeviceFrame* frame);
 
   public:
     float getTime();
@@ -83,10 +88,10 @@ namespace xr
     bool updateViewerStereoProjectionMatrix(int eyeId, float *transform);
     bool updateLocalTransform(int id, float *transform);
 
+  public:
     /**
      * Input sources
      */
-  public:
     InputSource &getGazeInputSource();
     InputSource &getHandInputSource(Handness handness);
     bool addGamepadInputSource(int id, InputSource &gamepadInputSource);
@@ -157,7 +162,6 @@ namespace xr
     InputSource m_HandInputSources[2];
     std::map<int, InputSource> m_ScreenInputSources;
     std::map<int, InputSource> m_GamepadInputSources;
-    mutex m_InputSourceMutex; // mutex for input sources
 
   private:
     static Device *s_instance;

@@ -116,6 +116,10 @@ declare namespace NodeJS {
     };
     _linkedBinding(module: 'transmute:webxr'): {
       XRDeviceNative: typeof Transmute.XRDeviceNative;
+      XRSession: any;
+      XRFrame: typeof XRFrame;
+      XRWebGLLayer: typeof XRWebGLLayer;
+      XRRigidTransform: typeof XRRigidTransform;
     };
     _linkedBinding(module: string): any;
   }

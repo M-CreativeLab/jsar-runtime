@@ -27,6 +27,10 @@ export default class XRNativeDevice extends XRDevice {
     this.#handle = new XRDeviceNative();
   }
 
+  get handle(): Transmute.XRDeviceNative {
+    return this.#handle;
+  }
+
   async waitForReady(): Promise<void> {
     const response = await makeRpcCall('xr.initializeDevice', []) as DeviceInitResponse;
     this.enabled = response.enabled;

@@ -9,6 +9,7 @@ namespace bindings {
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    static Napi::Object NewInstance(Napi::Env env, const glm::mat4 &matrix);
     XRRigidTransform(const Napi::CallbackInfo &info);
 
   private:
@@ -17,7 +18,7 @@ namespace bindings {
     Napi::Value MatrixGetter(const Napi::CallbackInfo &info);
     Napi::Value InverseGetter(const Napi::CallbackInfo &info);
 
-  private:
+  public:
     glm::vec3 position;
     glm::quat orientation;
     glm::mat4 matrix;

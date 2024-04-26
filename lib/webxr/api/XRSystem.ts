@@ -13,11 +13,13 @@
  * limitations under the License.
  */
 
-import { XRDevice } from '../devices';
-import XRSessionImpl from './XRSession';
+import { XRDevice, XRNativeDevice } from '../devices';
+// import XRSessionImpl from './XRSession';
 
 export const PRIVATE = Symbol('@@webxr-polyfill/XR');
 export const XRSessionModes = ['inline', 'immersive-vr', 'immersive-ar'];
+
+const { XRSession: XRSessionBinding } = process._linkedBinding('transmute:webxr');
 
 const DEFAULT_SESSION_OPTIONS = {
   'inline': {
@@ -40,14 +42,35 @@ or navigator.xr.requestSession('inline') prior to requesting an immersive
 session. This is a limitation specific to the WebXR Polyfill and does not apply
 to native implementations of the API.`
 
+class XRSessionWrapper extends XRSessionBinding {
+  #eventTarget: EventTarget;
+
+  constructor(device: XRDevice, mode: XRSessionMode, sessionId: number) {
+    super((<XRNativeDevice>device).handle, mode, sessionId);
+    this.#eventTarget = new EventTarget();
+  }
+
+  addEventListener(type: string, listener: EventListener | EventListenerObject | null, options?: boolean | AddEventListenerOptions): void {
+    this.#eventTarget.addEventListener(type, listener, options);
+  }
+
+  removeEventListener(type: string, listener: EventListener | EventListenerObject | null, options?: boolean | EventListenerOptions): void {
+    this.#eventTarget.removeEventListener(type, listener, options);
+  }
+
+  dispatchEvent(event: Event): boolean {
+    return this.#eventTarget.dispatchEvent(event);
+  }
+}
+
 export default class XRSystemImpl extends EventTarget implements XRSystem {
   ondevicechange: XRSystemDeviceChangeEventHandler;
   onsessiongranted: XRSystemSessionGrantedEventHandler;
 
   #device: XRDevice;
   #bondSessionId: number;
-  #immersiveSession: XRSession | null;
-  #inlineSessions: Set<XRSession>;
+  #immersiveSession: XRSessionWrapper | null;
+  #inlineSessions: Set<XRSessionWrapper>;
 
   constructor(device: XRDevice, sessionId: number) {
     super();
@@ -125,7 +148,7 @@ export default class XRSystemImpl extends EventTarget implements XRSystem {
     // fallback calls `vrDisplay.requestPresent()` for example). Could throw 
     // due to missing user gesture.
     const sessionId = await this.#device.requestSession(mode, enabledFeatures, this.#bondSessionId);
-    const session = new XRSessionImpl(this.#device, mode, sessionId);
+    const session = new XRSessionWrapper(this.#device, mode, sessionId);
 
     if (mode == 'inline') {
       this.#inlineSessions.add(session);
@@ -142,6 +165,6 @@ export default class XRSystemImpl extends EventTarget implements XRSystem {
       session.removeEventListener('end', onSessionEnd);
     };
     session.addEventListener('end', onSessionEnd);
-    return session;
+    return session as any as XRSession;
   }
 }

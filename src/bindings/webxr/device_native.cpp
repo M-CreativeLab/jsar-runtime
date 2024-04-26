@@ -1,9 +1,17 @@
 #include "device_native.hpp"
+#include "common.hpp"
 #include "xr/device.hpp"
 
 namespace bindings
 {
   Napi::FunctionReference *XRDeviceNative::constructor;
+  XRDeviceNative *XRDeviceNative::instance;
+
+  struct FrameData
+  {
+    XRDeviceNative *device;
+    xr::DeviceFrame *frameData;
+  };
 
   Napi::Object XRDeviceNative::Init(Napi::Env env, Napi::Object exports)
   {
@@ -31,10 +39,27 @@ namespace bindings
     return exports;
   }
 
+  XRDeviceNative *XRDeviceNative::GetInstance()
+  {
+    return instance;
+  }
+
   XRDeviceNative::XRDeviceNative(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRDeviceNative>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
+
+    if (instance != nullptr)
+    {
+      Napi::TypeError::New(env, "XRDeviceNative: instance already exists")
+          .ThrowAsJavaScriptException();
+      return;
+    }
+    instance = this;
+
+    frameHandler = new Napi::FunctionReference();
+    *frameHandler = Napi::Persistent(Napi::Function::New(env, NativeFrameHandler));
+    tsfnWithFrameHandler = Napi::ThreadSafeFunction::New(env, frameHandler->Value(), "XRDeviceNative::FrameHandler", 0, 1);
   }
 
   Napi::Value XRDeviceNative::IsSessionSupported(const Napi::CallbackInfo &info)
@@ -341,21 +366,24 @@ namespace bindings
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return env.Undefined();;
+    return env.Undefined();
+    ;
   }
 
   Napi::Value XRDeviceNative::GetGamepadInputSources(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return env.Undefined();;
+    return env.Undefined();
+    ;
   }
 
   Napi::Value XRDeviceNative::GetScreenInputSources(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return env.Undefined();;
+    return env.Undefined();
+    ;
   }
 
   Napi::Value XRDeviceNative::StartFrame(const Napi::CallbackInfo &info)
@@ -458,5 +486,86 @@ namespace bindings
           .ThrowAsJavaScriptException();
     }
     return env.Undefined();
+  }
+
+  Napi::Value XRDeviceNative::NativeFrameHandler(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1 || !info[0].IsExternal())
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::NativeFrameHandler: expected an external")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto data = info[0].As<Napi::External<FrameData>>().Data();
+    auto device = data->device;
+    auto frame = data->frameData;
+
+    auto contextifiedFrameCallbacks = device->contextifiedFrameCallbacks;
+    device->contextifiedFrameCallbacks.clear();
+    for (auto &callbackWithContext : contextifiedFrameCallbacks)
+    {
+      callbackWithContext.callback(env, frame, callbackWithContext.context);
+    }
+    return env.Undefined();
+  }
+
+  bool XRDeviceNative::supportsSessionMode(XRSessionMode mode)
+  {
+    if (mode == XRSessionMode::IMMERSIVE_AR)
+    {
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  bool XRDeviceNative::supportsReferenceSpaceType(XRReferenceSpaceType type)
+  {
+    if (type == XRReferenceSpaceType::LOCAL || type == XRReferenceSpaceType::VIEWER)
+    {
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  void XRDeviceNative::onFrame(xr::DeviceFrame *frame)
+  {
+    auto data = new FrameData{this, frame};
+    tsfnWithFrameHandler.NonBlockingCall(data, [](Napi::Env env, Napi::Function jsCallback, FrameData *data)
+                                         { jsCallback.Call({Napi::External<FrameData>::New(env, data)}); });
+  }
+
+  void XRDeviceNative::requestFrame(FrameCallback callback, void *context)
+  {
+    contextifiedFrameCallbacks.push_back(ContextifiedFrameCallback(callback, context));
+  }
+
+  bool XRDeviceNative::startFrame(uint32_t sessionId, uint32_t stereoRenderingId, uint32_t passIndex)
+  {
+    auto device = xr::Device::GetInstance();
+    if (device == nullptr)
+    {
+      return false;
+    }
+    return device->startFrame(sessionId, stereoRenderingId, passIndex);
+  }
+
+  bool XRDeviceNative::endFrame(uint32_t sessionId, uint32_t stereoRenderingId, uint32_t passIndex)
+  {
+    auto device = xr::Device::GetInstance();
+    if (device == nullptr)
+    {
+      return false;
+    }
+    return device->endFrame(sessionId, stereoRenderingId, passIndex);
   }
 }

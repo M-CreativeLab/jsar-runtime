@@ -300,6 +300,14 @@ namespace xr
           commandBuffer->GetType(), m_CurrentStereoRenderingId.load());
   }
 
+  void Device::onFrameCallback(DeviceFrame *frame)
+  {
+    auto jsDeviceNative = bindings::XRDeviceNative::GetInstance();
+    if (jsDeviceNative == NULL)
+      return;
+    jsDeviceNative->onFrame(frame);
+  }
+
   float Device::getTime()
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -391,7 +399,10 @@ namespace xr
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
     for (int i = 0; i < 16; i++)
+    {
       m_ViewerTransform[i] = transform[i];
+      m_GazeInputSource.targetRayTransform[i] = transform[i];
+    }
     return true;
   }
 
@@ -465,41 +476,41 @@ namespace xr
 
   bool Device::addGamepadInputSource(int id, InputSource &inputSource)
   {
-    std::lock_guard<std::mutex> lock(m_InputSourceMutex);
+    std::lock_guard<std::mutex> lock(m_Mutex);
     m_GamepadInputSources[id] = inputSource;
     return true;
   }
 
   bool Device::removeGamepadInputSource(int id)
   {
-    std::lock_guard<std::mutex> lock(m_InputSourceMutex);
+    std::lock_guard<std::mutex> lock(m_Mutex);
     m_GamepadInputSources.erase(id);
     return true;
   }
 
   InputSource &Device::getGamepadInputSource(int id)
   {
-    std::lock_guard<std::mutex> lock(m_InputSourceMutex);
+    std::lock_guard<std::mutex> lock(m_Mutex);
     return m_GamepadInputSources[id];
   }
 
   bool Device::addScreenInputSource(int id, InputSource &inputSource)
   {
-    std::lock_guard<std::mutex> lock(m_InputSourceMutex);
+    std::lock_guard<std::mutex> lock(m_Mutex);
     m_ScreenInputSources[id] = inputSource;
     return true;
   }
 
   bool Device::removeScreenInputSource(int id)
   {
-    std::lock_guard<std::mutex> lock(m_InputSourceMutex);
+    std::lock_guard<std::mutex> lock(m_Mutex);
     m_ScreenInputSources.erase(id);
     return true;
   }
 
   InputSource &Device::getScreenInputSource(int id)
   {
-    std::lock_guard<std::mutex> lock(m_InputSourceMutex);
+    std::lock_guard<std::mutex> lock(m_Mutex);
     return m_ScreenInputSources[id];
   }
 }

@@ -19,6 +19,21 @@ namespace bindings
     return exports;
   }
 
+  Napi::Object XRRigidTransform::NewInstance(Napi::Env env, const glm::mat4 &matrix)
+  {
+    Napi::EscapableHandleScope scope(env);
+    auto float32arrayValue = Napi::Float32Array::New(env, 16);
+    for (int i = 0; i < 4; i++)
+    {
+      for (int j = 0; j < 4; j++)
+      {
+        float32arrayValue.Set(static_cast<uint32_t>(i * 4 + j), Napi::Number::New(env, matrix[i][j]));
+      }
+    }
+    Napi::Object obj = constructor->New({float32arrayValue});
+    return scope.Escape(obj).ToObject();
+  }
+
   XRRigidTransform::XRRigidTransform(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRRigidTransform>(info),
                                                                        position(glm::vec3(0.0f)),
                                                                        orientation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f)),

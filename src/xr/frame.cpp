@@ -38,6 +38,14 @@ namespace xr
     return context;
   }
 
+  FrameContextBySessionId *DeviceFrame::getSession(int sessionId)
+  {
+    auto it = m_Sessions.find(sessionId);
+    if (it != m_Sessions.end())
+      return it->second;
+    return nullptr;
+  }
+
   void DeviceFrame::iterateSessions(std::function<void(int, FrameContextBySessionId *)> callback)
   {
     for (auto &item : m_Sessions)

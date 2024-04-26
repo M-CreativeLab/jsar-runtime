@@ -4,12 +4,6 @@
 #include "base.hpp"
 #include "logger.hpp"
 #include "node_bootstrapper.hpp"
-// #include "bindings/transmute_vgom/gom.hpp"
-// #include "bindings/messaging/unity_event_listener_wrap.hpp"
-
-// #include <node/node.h>
-// #include <node/node_api.h>
-// #include <napi.h>
 
 #ifndef TRANSMUTE_STANDALONE
 /**
@@ -29,6 +23,7 @@ extern "C"
    */
   DLL_PUBLIC void UnityPluginLoad(IUnityInterfaces *unityInterfaces);
   DLL_PUBLIC void UnityPluginUnload();
+  DLL_PUBLIC UnityRenderingEvent TransmuteNative_GetRenderEventFunc();
 
   DLL_PUBLIC void TransmuteNative_Prepare();
   DLL_PUBLIC void TransmuteNative_InitializeXRDevice(bool enabled);
@@ -49,6 +44,11 @@ extern "C"
   DLL_PUBLIC bool TransmuteNative_SetViewerStereoViewMatrix(int eyeId, float *transform);
   DLL_PUBLIC bool TransmuteNative_SetViewerStereoProjectionMatrix(int eyeId, float *transform);
   DLL_PUBLIC bool TransmuteNative_SetLocalTransform(int id, float *transform);
-  DLL_PUBLIC UnityRenderingEvent TransmuteNative_GetRenderEventFunc();
+
+  /**
+   * Input source updates
+   */
+  DLL_PUBLIC bool TransmuteNative_SetHandInputPose(int handness, int joint, float *position, float *orientation, float radius);
+  DLL_PUBLIC bool TransmuteNative_SetHandInputRaySpace(int handness, float *translation, float *rotation);
 #endif
 }

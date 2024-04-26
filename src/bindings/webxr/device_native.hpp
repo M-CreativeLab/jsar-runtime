@@ -1,12 +1,30 @@
+#pragma once
+
+#include <mutex>
 #include <napi.h>
-// #include "xr/system.hpp"
+#include <node/uv.h>
+#include "common.hpp"
+#include "xr/device.hpp"
 
 namespace bindings
 {
+  typedef std::function<void(Napi::Env env, xr::DeviceFrame *, void *context)> FrameCallback;
+  class ContextifiedFrameCallback
+  {
+  public:
+    ContextifiedFrameCallback(FrameCallback callback, void *context) : callback(callback), context(context) {}
+
+  public:
+    FrameCallback callback;
+    void *context;
+  };
+
   class XRDeviceNative : public Napi::ObjectWrap<XRDeviceNative>
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    static XRDeviceNative *GetInstance();
+    static Napi::Value NativeFrameHandler(const Napi::CallbackInfo &info);
     XRDeviceNative(const Napi::CallbackInfo &info);
 
   private:
@@ -25,7 +43,21 @@ namespace bindings
     Napi::Value StartFrame(const Napi::CallbackInfo &info);
     Napi::Value EndFrame(const Napi::CallbackInfo &info);
 
+  public:
+    bool supportsSessionMode(XRSessionMode sessionMode);
+    bool supportsReferenceSpaceType(XRReferenceSpaceType referenceSpaceType);
+    void onFrame(xr::DeviceFrame *frame);
+    void requestFrame(FrameCallback callback, void* context);
+    bool startFrame(uint32_t sessionId, uint32_t stereoRenderingId, uint32_t passIndex);
+    bool endFrame(uint32_t sessionId, uint32_t stereoRenderingId, uint32_t passIndex);
+
+  private:
+    Napi::FunctionReference *frameHandler;
+    Napi::ThreadSafeFunction tsfnWithFrameHandler;
+    std::vector<ContextifiedFrameCallback> contextifiedFrameCallbacks;
+
   private:
     static Napi::FunctionReference *constructor;
+    static XRDeviceNative *instance;
   };
 }

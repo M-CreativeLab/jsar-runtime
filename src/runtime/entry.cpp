@@ -121,6 +121,11 @@ extern "C"
     }
   }
 
+  DLL_PUBLIC UnityRenderingEvent TransmuteNative_GetRenderEventFunc()
+  {
+    return OnUnityRenderEvent;
+  }
+
   DLL_PUBLIC void TransmuteNative_Prepare()
   {
     DEBUG("transmute", "Prepare for TransmuteNative");
@@ -318,11 +323,6 @@ extern "C"
     for (int i = 0; i < 16; i++)
       m[i] = base[i / 4][i % 4];
     return xrDevice->updateLocalTransform(id, m);
-  }
-
-  DLL_PUBLIC UnityRenderingEvent TransmuteNative_GetRenderEventFunc()
-  {
-    return OnUnityRenderEvent;
   }
 #endif
 }

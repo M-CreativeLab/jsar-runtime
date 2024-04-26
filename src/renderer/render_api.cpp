@@ -5,6 +5,7 @@
 #include "runtime/platform_base.hpp"
 #include "xr/frame.hpp"
 #include "bindings/renderer/render_loop.hpp"
+#include "bindings/webxr/device_native.hpp"
 
 RenderAPI *RenderAPI::s_instance = NULL;
 RenderAPI *RenderAPI::Create(UnityGfxRenderer apiType)
@@ -36,12 +37,14 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 		jsRenderLoop->reportException(kFrameExecutionGpuBusy);
 		return kFrameExecutionGpuBusy;
 	}
+
 	auto frameStart = m_LastFrameTime;
 	StartFrame();
 	auto frameStarted = std::chrono::high_resolution_clock::now();
 
 	/** Start the global frames */
 	jsRenderLoop->startFrame();
+	jsRenderLoop->frameCallback();
 	ExecuteCommandBuffer();
 
 	/** Start the XR frames */
@@ -84,7 +87,8 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 				auto context = deviceFrame->addSession(id);
 				context->setLocalTransform(device->getLocalTransform(id));
 			}
-			jsRenderLoop->frameCallback(deviceFrame);
+			device->onFrameCallback(deviceFrame);
+			// jsRenderLoop->frameCallback(deviceFrame);
 		}
 
 		DEBUG(TR_RENDERAPI_TAG, "-------------------------------");
@@ -101,10 +105,6 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 
 		DEBUG(TR_RENDERAPI_TAG, "--------- End XR Frame ---------");
 		// end
-	}
-	else
-	{
-		jsRenderLoop->frameCallback();
 	}
 
 	/** End frames */
