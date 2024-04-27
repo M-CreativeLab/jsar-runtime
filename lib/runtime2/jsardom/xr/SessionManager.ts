@@ -276,7 +276,6 @@ export class WebXRSessionManager implements BABYLON.IDisposable, BABYLON.IWebXRR
     this._engine.customAnimationFrameRequester = {
       requestAnimationFrame: (callback: FrameRequestCallback) => this.session.requestAnimationFrame(callback),
       renderFunction: (timestamp: number, xrFrame: BABYLON.Nullable<XRFrame>) => {
-        logger.info('[babylonjs] XR render loop', timestamp, xrFrame);
         if (!this.inXRSession || !this._engine) {
           return;
         }

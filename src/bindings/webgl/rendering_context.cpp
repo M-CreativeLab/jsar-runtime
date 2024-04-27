@@ -3476,18 +3476,6 @@ namespace webgl
   }
 
   template <typename T>
-  int WebGLBaseRenderingContext<T>::getDrawingBufferWidth()
-  {
-    return m_renderAPI->GetDrawingBufferWidth();
-  }
-
-  template <typename T>
-  int WebGLBaseRenderingContext<T>::getDrawingBufferHeight()
-  {
-    return m_renderAPI->GetDrawingBufferHeight();
-  }
-
-  template <typename T>
   Napi::Value WebGLBaseRenderingContext<T>::DrawingBufferWidthGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -3663,6 +3651,25 @@ namespace webgl
       }
     }
     return unpacked;
+  }
+
+
+  template <typename T>
+  int WebGLBaseRenderingContext<T>::getDrawingBufferWidth()
+  {
+    return m_renderAPI->GetDrawingBufferWidth();
+  }
+
+  template <typename T>
+  int WebGLBaseRenderingContext<T>::getDrawingBufferHeight()
+  {
+    return m_renderAPI->GetDrawingBufferHeight();
+  }
+
+  template <typename T>
+  bool WebGLBaseRenderingContext<T>::isWebGL2Context()
+  {
+    return isWebGL2;
   }
 
   Napi::Object WebGLRenderingContext::Init(Napi::Env env, Napi::Object exports)

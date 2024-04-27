@@ -147,6 +147,7 @@ namespace webgl
   public:
     int getDrawingBufferWidth();
     int getDrawingBufferHeight();
+    bool isWebGL2Context();
 
   protected:
     RenderAPI *m_renderAPI;
@@ -174,6 +175,7 @@ namespace webgl
     string vendor;
     string version;
     string renderer;
+    bool isWebGL2 = false;
   };
 
   class WebGLRenderingContext : public WebGLBaseRenderingContext<WebGLRenderingContext>

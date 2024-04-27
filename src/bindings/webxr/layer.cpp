@@ -112,6 +112,11 @@ namespace bindings
       if (optionsObject.Has("framebufferScaleFactor"))
         config.framebufferScaleFactor = optionsObject.Get("framebufferScaleFactor").ToNumber().FloatValue();
     }
+
+    // Update framebuffer & size from rendering context.
+    auto renderingContext = getWebGLRenderingContext();
+    config.framebufferWidth = renderingContext->getDrawingBufferWidth();
+    config.framebufferHeight = renderingContext->getDrawingBufferHeight();
   }
 
   XRWebGLLayer::~XRWebGLLayer()
@@ -131,7 +136,9 @@ namespace bindings
 
   Napi::Value XRWebGLLayer::FramebufferGetter(const Napi::CallbackInfo &info)
   {
-    return Napi::Number::New(info.Env(), config.framebuffer);
+    // TODO: return the framebuffer object.
+    Napi::Env env = info.Env();
+    return env.Null();
   }
 
   Napi::Value XRWebGLLayer::FramebufferWidthGetter(const Napi::CallbackInfo &info)
@@ -168,5 +175,18 @@ namespace bindings
     auto xrView = XRView::Unwrap(info[0].ToObject());
     auto viewport = xrView->getViewport();
     return XRViewport::NewInstance(env, viewport);
+  }
+
+  webgl::WebGLRenderingContext *XRWebGLLayer::getWebGLRenderingContext()
+  {
+    return webgl::WebGLRenderingContext::Unwrap(glContext.Value());
+  }
+
+  webgl::WebGL2RenderingContext *XRWebGLLayer::getWebGL2RenderingContext()
+  {
+    auto context = webgl::WebGL2RenderingContext::Unwrap(glContext.Value());
+    if (!context->isWebGL2Context())
+      return nullptr;
+    return context;
   }
 }

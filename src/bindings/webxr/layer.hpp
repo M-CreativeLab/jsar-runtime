@@ -45,6 +45,10 @@ namespace bindings
     Napi::Value GetViewport(const Napi::CallbackInfo &info);
 
   public:
+    webgl::WebGLRenderingContext *getWebGLRenderingContext();
+    webgl::WebGL2RenderingContext *getWebGL2RenderingContext();
+
+  public:
     xr::WebGLLayer config;
     XRSession *session;
     Napi::ObjectReference glContext;
