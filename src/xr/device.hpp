@@ -7,6 +7,7 @@
 #include <atomic>
 
 #include "frame.hpp"
+#include "viewport.hpp"
 #include "input_source.hpp"
 #include "bindings/webxr/device_native.hpp"
 
@@ -21,19 +22,6 @@ namespace xr
     SinglePassInstanced = 2,
     SinglePassMultiview = 3,
     Unknown = -1
-  };
-
-  class Viewport
-  {
-  public:
-    float x;
-    float y;
-    float width;
-    float height;
-
-  public:
-    Viewport() : x(0), y(0), width(0), height(0) {}
-    Viewport(float x, float y, float width, float height) : x(x), y(y), width(width), height(height) {}
   };
 
   class Device

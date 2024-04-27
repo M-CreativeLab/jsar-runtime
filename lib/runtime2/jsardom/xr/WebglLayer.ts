@@ -1,3 +1,4 @@
+import * as logger from '../../../bindings/logger';
 import { WebXRLayerWrapper } from './LayerWrapper';
 import { WebXRLayerRenderTargetTextureProvider } from './RenderTargetTextureProvider';
 

@@ -72,6 +72,12 @@ namespace bindings
   {
   }
 
+  XRViewerPose::~XRViewerPose()
+  {
+    for (size_t i = 0; i < views.size(); i++)
+      views[i].Unref();
+  }
+
   Napi::Value XRViewerPose::ViewsGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();

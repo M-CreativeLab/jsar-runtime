@@ -568,4 +568,12 @@ namespace bindings
     }
     return device->endFrame(sessionId, stereoRenderingId, passIndex);
   }
+
+  xr::Viewport XRDeviceNative::getViewport(uint32_t viewIndex)
+  {
+    auto device = xr::Device::GetInstance();
+    if (device == nullptr)
+      return xr::Viewport();
+    return device->getViewport(viewIndex);
+  }
 }

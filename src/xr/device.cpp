@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <algorithm>
 #include "device.hpp"
 #include "math/matrix.hpp"
 
@@ -47,6 +48,7 @@ namespace xr
     m_Time = 0.0f;
     m_SessionIds.clear();
     delete m_BackupStereoRenderingFrame;
+    m_BackupStereoRenderingFrame = nullptr;
   }
 
   void Device::initialize(bool enabled)
@@ -115,16 +117,22 @@ namespace xr
     std::lock_guard<std::mutex> lock(m_Mutex);
     bool called = false;
 
-    for (auto it = m_StereoRenderingFrames.begin(); it != m_StereoRenderingFrames.end(); it++)
+    for (auto it = m_StereoRenderingFrames.begin(); it != m_StereoRenderingFrames.end();)
     {
       auto frame = *it;
       /** Just skip the non-ended frames. */
       if (!frame->ended())
+      {
+        it++;
         continue;
+      }
       /** If an ended frame is empty, it's needed to be removed here. */
       if (frame->empty())
       {
-        m_StereoRenderingFrames.erase(it);
+        /**
+         * Note: in C++ STL, the `erase` function will return the next iterator that we need to use instead of `it++`.
+         */
+        it = m_StereoRenderingFrames.erase(it);
         delete frame;
         continue;
       }
@@ -134,7 +142,10 @@ namespace xr
        * in this frame will be skipped.
        */
       if (eyeId == 1 && !frame->finished(0))
+      {
+        it++;
         continue;
+      }
 
       auto id = frame->getId();
       auto commandBuffers = frame->getCommandBuffers(eyeId);
@@ -170,15 +181,20 @@ namespace xr
        */
       if (eyeId == 1)
       {
-        // assert(frame->finished(0));
-        m_StereoRenderingFrames.erase(it);
+        assert(frame->finished(0));
+        it = m_StereoRenderingFrames.erase(it);
         delete frame;
       }
-      if (!called)
+      else
       {
-        called = true;
-        break;
+        it++;
       }
+
+      /**
+       * We only need to render the frame one by one, this avoids the rendering order is not correct.
+       */
+      called = true;
+      break;
     }
 
     /**
@@ -445,7 +461,7 @@ namespace xr
         transform[4], transform[5], transform[6], transform[7],
         transform[8], transform[9], transform[10], transform[11],
         transform[12], transform[13], transform[14], transform[15]};
-    auto rightHanded = math::ConvertMatrixToRightHanded(input);
+    // auto rightHanded = math::ConvertMatrixToRightHanded(input);
     for (auto sessionId : m_SessionIds)
     {
       if (sessionId == id)

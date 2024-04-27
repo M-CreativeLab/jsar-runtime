@@ -1,4 +1,6 @@
 #include "layer.hpp"
+#include "view.hpp"
+#include "viewport.hpp"
 
 namespace bindings
 {
@@ -75,10 +77,20 @@ namespace bindings
     auto sessionValue = info[0];
     if (!sessionValue.IsObject())
     {
-      Napi::TypeError::New(env, "XRWebGLLayer constructor requires a XRSession object as the first argument").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "XRWebGLLayer constructor requires a XRSession object as the first argument")
+          .ThrowAsJavaScriptException();
       return;
     }
     session = Napi::ObjectWrap<XRSession>::Unwrap(sessionValue.As<Napi::Object>());
+
+    auto contextValue = info[1];
+    if (!contextValue.IsObject())
+    {
+      Napi::TypeError::New(env, "XRWebGLLayer constructor requires a WebGLRenderingContext or WebGLRenderingContext2 object as the second argument")
+          .ThrowAsJavaScriptException();
+      return;
+    }
+    glContext = Napi::Persistent(contextValue.ToObject());
 
     // Update properties from options
     auto optionsValue = info[2];
@@ -100,6 +112,11 @@ namespace bindings
       if (optionsObject.Has("framebufferScaleFactor"))
         config.framebufferScaleFactor = optionsObject.Get("framebufferScaleFactor").ToNumber().FloatValue();
     }
+  }
+
+  XRWebGLLayer::~XRWebGLLayer()
+  {
+    glContext.Reset();
   }
 
   Napi::Value XRWebGLLayer::AntialiasGetter(const Napi::CallbackInfo &info)
@@ -140,11 +157,16 @@ namespace bindings
   Napi::Value XRWebGLLayer::GetViewport(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
-    Napi::Object viewport = Napi::Object::New(env);
-    viewport.Set("x", Napi::Number::New(env, 0));
-    viewport.Set("y", Napi::Number::New(env, 0));
-    viewport.Set("width", Napi::Number::New(env, config.framebufferWidth));
-    viewport.Set("height", Napi::Number::New(env, config.framebufferHeight));
-    return viewport;
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1 || !info[0].IsObject())
+    {
+      Napi::TypeError::New(env, "getViewport() requires a view index as the first argument").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto xrView = XRView::Unwrap(info[0].ToObject());
+    auto viewport = xrView->getViewport();
+    return XRViewport::NewInstance(env, viewport);
   }
 }

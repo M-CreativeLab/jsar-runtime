@@ -144,6 +144,10 @@ namespace webgl
     bool addCommandBuffer(renderer::CommandBuffer *commandBuffer, bool useDefaultQueue = false, bool waitForFinished = false);
     unsigned char *unpackPixels(int type, int format, int width, int height, unsigned char *pixels);
 
+  public:
+    int getDrawingBufferWidth();
+    int getDrawingBufferHeight();
+
   protected:
     RenderAPI *m_renderAPI;
     bool m_unpackFlipY = false;
@@ -177,24 +181,6 @@ namespace webgl
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
     WebGLRenderingContext(const Napi::CallbackInfo &info);
-
-  private:
-    Napi::Value DrawingBufferWidthGetter(const Napi::CallbackInfo &info)
-    {
-      return WebGLBaseRenderingContext<WebGLRenderingContext>::DrawingBufferWidthGetter(info);
-    }
-    void DrawingBufferWidthSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
-    {
-      WebGLBaseRenderingContext<WebGLRenderingContext>::DrawingBufferWidthSetter(info, value);
-    }
-    Napi::Value DrawingBufferHeightGetter(const Napi::CallbackInfo &info)
-    {
-      return WebGLBaseRenderingContext<WebGLRenderingContext>::DrawingBufferHeightGetter(info);
-    }
-    void DrawingBufferHeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
-    {
-      WebGLBaseRenderingContext<WebGLRenderingContext>::DrawingBufferHeightSetter(info, value);
-    }
 
   private:
     static Napi::FunctionReference *webglConstructor;
@@ -234,24 +220,6 @@ namespace webgl
     Napi::Value DrawArraysInstanced(const Napi::CallbackInfo &info);
     Napi::Value DrawElementsInstanced(const Napi::CallbackInfo &info);
     Napi::Value DrawRangeElements(const Napi::CallbackInfo &info);
-
-  private:
-    Napi::Value DrawingBufferWidthGetter(const Napi::CallbackInfo &info)
-    {
-      return WebGLBaseRenderingContext<WebGL2RenderingContext>::DrawingBufferWidthGetter(info);
-    }
-    void DrawingBufferWidthSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
-    {
-      WebGLBaseRenderingContext<WebGL2RenderingContext>::DrawingBufferWidthSetter(info, value);
-    }
-    Napi::Value DrawingBufferHeightGetter(const Napi::CallbackInfo &info)
-    {
-      return WebGLBaseRenderingContext<WebGL2RenderingContext>::DrawingBufferHeightGetter(info);
-    }
-    void DrawingBufferHeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
-    {
-      WebGLBaseRenderingContext<WebGL2RenderingContext>::DrawingBufferHeightSetter(info, value);
-    }
 
   private:
     int max3DTextureSize;

@@ -39,6 +39,7 @@ namespace bindings
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
     static Napi::Object NewInstance(Napi::Env env, mat4& transform);
     XRViewerPose(const Napi::CallbackInfo &info);
+    ~XRViewerPose();
 
   private:
     Napi::Value ViewsGetter(const Napi::CallbackInfo &info);

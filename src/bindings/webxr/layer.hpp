@@ -1,7 +1,9 @@
 #pragma once
 
 #include <napi.h>
+#include "common.hpp"
 #include "session.hpp"
+#include "bindings/webgl/rendering_context.hpp"
 #include "xr/layer.hpp"
 
 namespace bindings
@@ -30,6 +32,7 @@ namespace bindings
     static Napi::Value NewInstance(Napi::Env env, xr::WebGLLayer layer);
     static Napi::Value GetNativeFramebufferScaleFactor(const Napi::CallbackInfo &info);
     XRWebGLLayer(const Napi::CallbackInfo &info);
+    ~XRWebGLLayer();
 
   public:
     Napi::Value AntialiasGetter(const Napi::CallbackInfo &info);
@@ -44,6 +47,7 @@ namespace bindings
   public:
     xr::WebGLLayer config;
     XRSession *session;
+    Napi::ObjectReference glContext;
 
   private:
     static Napi::FunctionReference *constructor;

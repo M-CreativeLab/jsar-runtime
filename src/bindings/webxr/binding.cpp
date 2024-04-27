@@ -6,6 +6,8 @@
 #include "pose.hpp"
 #include "rigid_transform.hpp"
 #include "space.hpp"
+#include "view.hpp"
+#include "viewport.hpp"
 
 using namespace bindings;
 
@@ -38,5 +40,8 @@ Napi::Object bindings::InitWebxrModule(Napi::Env env, Napi::Object exports)
 
   // View
   XRView::Init(env, exports);
+
+  // Viewport
+  XRViewport::Init(env, exports);
   return exports;
 }

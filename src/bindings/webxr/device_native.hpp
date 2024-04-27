@@ -5,6 +5,7 @@
 #include <node/uv.h>
 #include "common.hpp"
 #include "xr/device.hpp"
+#include "xr/viewport.hpp"
 
 namespace bindings
 {
@@ -50,6 +51,7 @@ namespace bindings
     void requestFrame(FrameCallback callback, void* context);
     bool startFrame(uint32_t sessionId, uint32_t stereoRenderingId, uint32_t passIndex);
     bool endFrame(uint32_t sessionId, uint32_t stereoRenderingId, uint32_t passIndex);
+    xr::Viewport getViewport(uint32_t viewIndex);
 
   private:
     Napi::FunctionReference *frameHandler;

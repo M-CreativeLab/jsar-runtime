@@ -2,7 +2,9 @@
 
 #include <napi.h>
 #include "common.hpp"
+#include "device_native.hpp"
 #include "rigid_transform.hpp"
+#include "xr/viewport.hpp"
 
 namespace bindings
 {
@@ -20,12 +22,17 @@ namespace bindings
     Napi::Value RecommendedViewportScaleGetter(const Napi::CallbackInfo &info);
     Napi::Value RequestViewportScale(const Napi::CallbackInfo &info);
 
+  public:
+    xr::Viewport getViewport();
+
   private:
+    XRDeviceNative* device;
     uint32_t index;
     uint32_t eyeId;
     uint32_t sessionId;
     mat4 transformMatrix;
     mat4 projectionMatrix;
+    xr::Viewport viewport;
 
   private:
     static Napi::FunctionReference *constructor;

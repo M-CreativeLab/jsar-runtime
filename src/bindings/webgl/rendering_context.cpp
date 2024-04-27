@@ -15,6 +15,8 @@ namespace webgl
   static uint32_t vertexArrayObjectId = 1;
   static uint32_t textureObjectId = 1;
 
+#define TBASE(T) WebGLBaseRenderingContext<T>
+
 #define ADD_WEBGL_CONSTANT(name)                              \
   InstanceValue(#name, Napi::Number::New(env, WEBGL_##name)), \
       StaticValue(#name, Napi::Number::New(env, WEBGL_##name)),
@@ -679,9 +681,9 @@ namespace webgl
   WEBGL2_CONSTANTS_MISCELLANEOUS                  \
   InstanceValue("__webgl2_constants__", Napi::Boolean::New(env, true))
 
-#define WEBGL1_ACCESSORS(T)                                                                           \
-  InstanceAccessor<&T::DrawingBufferWidthGetter, &T::DrawingBufferWidthSetter>("drawingBufferWidth"), \
-      InstanceAccessor<&T::DrawingBufferHeightGetter, &T::DrawingBufferHeightSetter>("drawingBufferHeight")
+#define WEBGL1_ACCESSORS(T)                                                                                         \
+  InstanceAccessor("drawingBufferWidth", &TBASE(T)::DrawingBufferWidthGetter, &TBASE(T)::DrawingBufferWidthSetter), \
+      InstanceAccessor("drawingBufferHeight", &TBASE(T)::DrawingBufferHeightGetter, &TBASE(T)::DrawingBufferHeightSetter)
 
 #define WEBGL1_METHODS(T)                                                       \
   InstanceMethod("makeXRCompatible", &T::MakeXRCompatible),                     \
@@ -3474,11 +3476,23 @@ namespace webgl
   }
 
   template <typename T>
+  int WebGLBaseRenderingContext<T>::getDrawingBufferWidth()
+  {
+    return m_renderAPI->GetDrawingBufferWidth();
+  }
+
+  template <typename T>
+  int WebGLBaseRenderingContext<T>::getDrawingBufferHeight()
+  {
+    return m_renderAPI->GetDrawingBufferHeight();
+  }
+
+  template <typename T>
   Napi::Value WebGLBaseRenderingContext<T>::DrawingBufferWidthGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return Napi::Number::New(env, m_renderAPI->GetDrawingBufferWidth());
+    return Napi::Number::New(env, getDrawingBufferWidth());
   }
 
   template <typename T>
@@ -3486,7 +3500,8 @@ namespace webgl
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    Napi::TypeError::New(env, "drawingBufferWidth is readonly.").ThrowAsJavaScriptException();
+    Napi::TypeError::New(env, "drawingBufferWidth is readonly.")
+        .ThrowAsJavaScriptException();
   }
 
   template <typename T>
@@ -3494,7 +3509,7 @@ namespace webgl
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return Napi::Number::New(env, m_renderAPI->GetDrawingBufferHeight());
+    return Napi::Number::New(env, getDrawingBufferHeight());
   }
 
   template <typename T>
@@ -3502,7 +3517,8 @@ namespace webgl
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    Napi::TypeError::New(env, "drawingBufferHeight is readonly.").ThrowAsJavaScriptException();
+    Napi::TypeError::New(env, "drawingBufferHeight is readonly.")
+        .ThrowAsJavaScriptException();
   }
 
   template <typename T>
@@ -3654,9 +3670,11 @@ namespace webgl
     Napi::Function tpl = DefineClass(
         env,
         "WebGLRenderingContext",
-        {WEBGL1_CONSTANTS,
-         WEBGL1_METHODS(WebGLRenderingContext),
-         WEBGL1_ACCESSORS(WebGLRenderingContext)});
+        {
+            WEBGL1_CONSTANTS,
+            WEBGL1_METHODS(WebGLRenderingContext),
+            WEBGL1_ACCESSORS(WebGLRenderingContext),
+        });
     webglConstructor = new Napi::FunctionReference();
     *webglConstructor = Napi::Persistent(tpl);
     env.SetInstanceData(webglConstructor);
@@ -3674,11 +3692,13 @@ namespace webgl
     Napi::Function tpl = DefineClass(
         env,
         "WebGL2RenderingContext",
-        {WEBGL1_CONSTANTS,
-         WEBGL2_CONSTANTS,
-         WEBGL1_METHODS(WebGL2RenderingContext),
-         WEBGL2_METHODS(WebGL2RenderingContext),
-         WEBGL1_ACCESSORS(WebGL2RenderingContext)});
+        {
+            WEBGL1_CONSTANTS,
+            WEBGL2_CONSTANTS,
+            WEBGL1_METHODS(WebGL2RenderingContext),
+            WEBGL2_METHODS(WebGL2RenderingContext),
+            WEBGL1_ACCESSORS(WebGL2RenderingContext),
+        });
     webgl2Constructor = new Napi::FunctionReference();
     *webgl2Constructor = Napi::Persistent(tpl);
     env.SetInstanceData(webgl2Constructor);
@@ -4490,4 +4510,7 @@ namespace webgl
     addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
+
+  template class WebGLBaseRenderingContext<WebGLRenderingContext>;
+  template class WebGLBaseRenderingContext<WebGL2RenderingContext>;
 }

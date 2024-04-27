@@ -99,24 +99,39 @@ namespace bindings
 
   XRSession::~XRSession()
   {
+    DEBUG(LOG_TAG, "XRSession(%d) is being deleted", id);
+
     if (activeRenderState != nullptr)
+    {
       delete activeRenderState;
+      activeRenderState = nullptr;
+    }
     if (pendingRenderState != nullptr)
+    {
       delete pendingRenderState;
+      pendingRenderState = nullptr;
+    }
     for (auto &it : pendingFrameCallbacks)
       delete it;
+    pendingFrameCallbacks.clear();
+
     for (auto &it : currentFrameCallbacks)
       delete it;
+    currentFrameCallbacks.clear();
+
     // if (device != nullptr)
     //   device->removeSession(id);
 
     localSpace.Unref();
     viewerSpace.Unref();
+
+    // Clear the view spaces
     for (auto &it : viewSpaces)
     {
       it->Unref();
       delete it;
     }
+    viewSpaces.clear();
   }
 
   Napi::Value XRSession::RenderStateGetter(const Napi::CallbackInfo &info)
@@ -460,10 +475,11 @@ namespace bindings
     if (pendingRenderState != nullptr)
     {
       // Apply pending render state.
-      if (activeRenderState != nullptr)
-        delete activeRenderState;
-      activeRenderState = new xr::RenderState(pendingRenderState);
+      activeRenderState->update(pendingRenderState);
+
+      // Clear the pending render state.
       delete pendingRenderState;
+      pendingRenderState = nullptr;
 
       // Report to the device since it'll need to handle the layer for rendering.
       if (activeRenderState->baseLayer != nullptr)

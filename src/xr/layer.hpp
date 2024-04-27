@@ -21,6 +21,21 @@ namespace xr
     }
 
   public:
+    void update(WebGLLayer *layer)
+    {
+      antialias = layer->antialias;
+      depth = layer->depth;
+      stencil = layer->stencil;
+      alpha = layer->alpha;
+      multiview = layer->multiview;
+      ignoreDepthValues = layer->ignoreDepthValues;
+      framebufferScaleFactor = layer->framebufferScaleFactor;
+      framebuffer = layer->framebuffer;
+      framebufferWidth = layer->framebufferWidth;
+      framebufferHeight = layer->framebufferHeight;
+    }
+
+  public:
     bool antialias;
     bool depth;
     bool stencil;

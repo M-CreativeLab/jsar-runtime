@@ -13,24 +13,39 @@ namespace xr
                     inlineVerticalFieldOfView(0)
     {
     }
-    RenderState(RenderState *state) : baseLayer(state->baseLayer),
-                                      depthFar(state->depthFar),
+    RenderState(RenderState *state) : depthFar(state->depthFar),
                                       depthNear(state->depthNear),
                                       inlineVerticalFieldOfView(state->inlineVerticalFieldOfView)
     {
+      if (state->baseLayer != nullptr)
+      {
+        baseLayer = new WebGLLayer();
+        baseLayer->update(state->baseLayer);
+      }
     }
     ~RenderState()
     {
       if (baseLayer != nullptr)
+      {
         delete baseLayer;
+        baseLayer = nullptr;
+      }
     }
 
   public:
+    void update(RenderState *state)
+    {
+      depthFar = state->depthFar;
+      depthNear = state->depthNear;
+      inlineVerticalFieldOfView = state->inlineVerticalFieldOfView;
+      if (state->baseLayer != nullptr)
+        updateBaseLayer(state->baseLayer);
+    }
     void updateBaseLayer(WebGLLayer *layer)
     {
-      if (baseLayer != nullptr)
-        delete baseLayer;
-      baseLayer = new WebGLLayer(*layer);
+      if (baseLayer == nullptr)
+        baseLayer = new WebGLLayer();
+      baseLayer->update(layer);
     }
 
   public:

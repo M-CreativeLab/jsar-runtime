@@ -47,6 +47,7 @@ namespace bindings
     Napi::Object sessionObj = info[0].As<Napi::Object>();
     auto session = XRSession::Unwrap(sessionObj);
     sessionId = session->id;
+    device = session->device;
 
     Napi::Object transformObj = info[1].As<Napi::Object>();
     auto transform = XRRigidTransform::Unwrap(transformObj);
@@ -54,6 +55,7 @@ namespace bindings
 
     index = info[2].As<Napi::Number>().Uint32Value();
     eyeId = info[3].As<Napi::Number>().Uint32Value();
+    viewport = device->getViewport(index);
   }
 
   Napi::Value XRView::EyeGetter(const Napi::CallbackInfo &info)
@@ -93,5 +95,11 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     return env.Undefined();
+  }
+
+  xr::Viewport XRView::getViewport()
+  {
+    viewport = device->getViewport(index);
+    return viewport;
   }
 }
