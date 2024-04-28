@@ -52,6 +52,7 @@ namespace bindings
     Napi::Value UpdateRenderState(const Napi::CallbackInfo &info);
     Napi::Value UpdateTargetFrameRate(const Napi::CallbackInfo &info);
     Napi::Value End(const Napi::CallbackInfo &info);
+    Napi::Value InputSourcesGetter(const Napi::CallbackInfo &info);
 
   private:
     void start();
@@ -86,6 +87,7 @@ namespace bindings
     Napi::ObjectReference localSpace;
     Napi::ObjectReference viewerSpace;
     std::vector<Napi::ObjectReference*> viewSpaces;
+    // Napi::ObjectReference inputSources;
 
   private:
     bool active;

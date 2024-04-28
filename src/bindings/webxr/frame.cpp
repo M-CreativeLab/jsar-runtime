@@ -121,6 +121,7 @@ namespace bindings
 
     auto activeEye = getActiveEye();
     auto viewerTransform = referenceSpace->getRelativeTransform(viewerSpace);
+
     auto viewerPoseObject = XRViewerPose::NewInstance(env, viewerTransform);
     auto viewerPoseUnwrapped = XRViewerPose::Unwrap(viewerPoseObject);
 

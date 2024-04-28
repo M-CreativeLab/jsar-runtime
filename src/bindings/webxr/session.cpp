@@ -4,6 +4,7 @@
 #include "render_state.hpp"
 #include "frame.hpp"
 #include "space.hpp"
+#include "input_source.hpp"
 
 namespace bindings
 {
@@ -89,6 +90,9 @@ namespace bindings
     // Create ReferenceSpace instances.
     localSpace = Napi::Persistent(XRReferenceSpace::NewInstance(env, XRReferenceSpaceType::LOCAL));
     viewerSpace = Napi::Persistent(XRReferenceSpace::NewInstance(env, XRReferenceSpaceType::VIEWER));
+
+    // Create the `XRInputSourceArray` object
+    // inputSources = Napi::Persistent(XRInputSourceArray::NewInstance(env));
 
     // Start the session
     start();
@@ -405,6 +409,14 @@ namespace bindings
 
     stop();
     Unref();
+    return env.Undefined();
+  }
+
+  Napi::Value XRSession::InputSourcesGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    // return inputSources.Value();
     return env.Undefined();
   }
 

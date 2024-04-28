@@ -130,11 +130,12 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    Napi::Float32Array postionDataArray = Napi::Float32Array::New(env, 3);
-    postionDataArray.Set(static_cast<uint32_t>(0), Napi::Number::New(env, position.x));
-    postionDataArray.Set(static_cast<uint32_t>(1), Napi::Number::New(env, position.y));
-    postionDataArray.Set(static_cast<uint32_t>(2), Napi::Number::New(env, position.z));
-    return postionDataArray;
+    auto domPointObject = Napi::Object::New(env);
+    domPointObject.Set("x", Napi::Number::New(env, position.x));
+    domPointObject.Set("y", Napi::Number::New(env, position.y));
+    domPointObject.Set("z", Napi::Number::New(env, position.z));
+    domPointObject.Set("w", Napi::Number::New(env, 1.0f));
+    return domPointObject;
   }
 
   Napi::Value XRRigidTransform::OrientationGetter(const Napi::CallbackInfo &info)
@@ -142,12 +143,12 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    Napi::Float32Array orientationDataArray = Napi::Float32Array::New(env, 4);
-    orientationDataArray.Set(static_cast<uint32_t>(0), Napi::Number::New(env, orientation.x));
-    orientationDataArray.Set(static_cast<uint32_t>(1), Napi::Number::New(env, orientation.y));
-    orientationDataArray.Set(static_cast<uint32_t>(2), Napi::Number::New(env, orientation.z));
-    orientationDataArray.Set(static_cast<uint32_t>(3), Napi::Number::New(env, orientation.w));
-    return orientationDataArray;
+    auto domPointObject = Napi::Object::New(env);
+    domPointObject.Set("x", Napi::Number::New(env, orientation.x));
+    domPointObject.Set("y", Napi::Number::New(env, orientation.y));
+    domPointObject.Set("z", Napi::Number::New(env, orientation.z));
+    domPointObject.Set("w", Napi::Number::New(env, orientation.w));
+    return domPointObject;
   }
 
   Napi::Value XRRigidTransform::MatrixGetter(const Napi::CallbackInfo &info)

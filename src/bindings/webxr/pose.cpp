@@ -17,9 +17,7 @@ namespace bindings
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-
-    // return transform->Value();
-    return env.Undefined();
+    return XRRigidTransform::NewInstance(env, transform);
   }
 
   template <typename T>
@@ -50,7 +48,9 @@ namespace bindings
   Napi::Object XRViewerPose::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function tpl = DefineClass(env, "XRViewerPose",
-                                     {InstanceAccessor("views", &XRViewerPose::ViewsGetter, nullptr)});
+                                     {InstanceAccessor("transform", &XRViewerPose::TransformGetter, nullptr),
+                                      InstanceAccessor("emulatedPosition", &XRViewerPose::EmulatedPositionGetter, nullptr),
+                                      InstanceAccessor("views", &XRViewerPose::ViewsGetter, nullptr)});
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -59,7 +59,7 @@ namespace bindings
     return exports;
   }
 
-  Napi::Object XRViewerPose::NewInstance(Napi::Env env, mat4& transform)
+  Napi::Object XRViewerPose::NewInstance(Napi::Env env, mat4 &transform)
   {
     Napi::EscapableHandleScope scope(env);
     Napi::Object obj = constructor->New({});
