@@ -92,6 +92,7 @@ namespace xr
   {
     m_IsMultiPass = isMultiPass;
     m_StereoId = s_NextStereoId++;
+    m_CreatedTime = std::chrono::high_resolution_clock::now();
   }
   StereoRenderingFrame::~StereoRenderingFrame() {}
 
@@ -136,6 +137,57 @@ namespace xr
     else if (passIndex == 1)
       m_CommandBuffersInPass2.push_back(commandBuffer);
 
+    /**
+     * When the client is to add the following command buffers, this frame could be able to be dropped if necessary.
+     */
+    switch (commandBuffer->GetType())
+    {
+    // The command buffers which are initializing and creating resources would not be dropped.
+    case renderer::kCommandTypeContextInit:
+    case renderer::kCommandTypeContext2Init:
+    case renderer::kCommandTypeCreateProgram:
+    case renderer::kCommandTypeCreateBuffer:
+    case renderer::kCommandTypeCreateFramebuffer:
+    case renderer::kCommandTypeCreateRenderbuffer:
+    case renderer::kCommandTypeCreateVertexArray:
+    case renderer::kCommandTypeCreateTexture:
+    case renderer::kCommandTypeCreateSampler:
+    case renderer::kCommandTypeCreateShader:
+    case renderer::kCommandTypeCreateTransformFeedback:
+    case renderer::kCommandTypeLinkProgram:
+    case renderer::kCommandTypeAttachShader:
+    case renderer::kCommandTypeDetachShader:
+    // The command buffers which are getting values would not be dropped.
+    case renderer::kCommandTypeGetAttribLocation:
+    case renderer::kCommandTypeGetBooleanv:
+    case renderer::kCommandTypeGetError:
+    case renderer::kCommandTypeGetFloatv:
+    case renderer::kCommandTypeGetIntegerv:
+    case renderer::kCommandTypeGetProgramInfoLog:
+    case renderer::kCommandTypeGetProgramParameter:
+    case renderer::kCommandTypeGetSamplerParameter:
+    case renderer::kCommandTypeGetShaderInfoLog:
+    case renderer::kCommandTypeGetShaderParameter:
+    case renderer::kCommandTypeGetShaderPrecisionFormat:
+    case renderer::kCommandTypeGetShaderSource:
+    case renderer::kCommandTypeGetString:
+    case renderer::kCommandTypeGetSupportedExtensions:
+    case renderer::kCommandTypeGetTransformFeedbackVarying:
+    case renderer::kCommandTypeGetUniformLocation:
+    // The command buffers which are setting texels would not be dropped.
+    case renderer::kCommandTypeTexImage2D:
+    case renderer::kCommandTypeTexSubImage2D:
+    case renderer::kCommandTypeTexImage3D:
+    case renderer::kCommandTypeTexSubImage3D:
+      /**
+       * TODO: actually the binding command buffers could not be dropped in some ways, for those command buffers, we
+       * need to check the state changes between the frame, if state changes, we should not drop the frame.
+       */
+      m_IsDropable = false;
+      break;
+    default:
+      break;
+    }
     m_IsAddedOnce = true;
   }
 
@@ -172,6 +224,16 @@ namespace xr
       return m_CommandBuffersInPass.empty() && m_CommandBuffersInPass2.empty();
     else
       return m_CommandBuffersInPass.empty();
+  }
+  bool StereoRenderingFrame::droppable()
+  {
+    return m_IsDropable;
+  }
+  bool StereoRenderingFrame::expired(int timeout)
+  {
+    auto now = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_CreatedTime);
+    return duration.count() > timeout;
   }
   void StereoRenderingFrame::finishPass(int passIndex)
   {

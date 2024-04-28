@@ -2,7 +2,10 @@
 
 #include <map>
 #include <vector>
+#include <chrono>
 #include "renderer/command_buffer.hpp"
+
+using namespace std;
 
 namespace xr
 {
@@ -84,6 +87,10 @@ namespace xr
     FRAME_PASS_OUT_OF_RANGE,
   };
 
+  /**
+   * This class represents a stereo rendering frame, which stores the command buffers at JS thread, and execute them at 
+   * rendering thread.
+   */
   class StereoRenderingFrame
   {
   public:
@@ -101,6 +108,8 @@ namespace xr
     int getId();
     bool addedOnce();
     bool empty();
+    bool droppable();
+    bool expired(int timeout);  // returns if this frame is expired after `timeout` milliseconds.
     void finishPass(int passIndex);
     bool finished(int passIndex);
 
@@ -114,6 +123,20 @@ namespace xr
     bool m_Started[2] = {false, false};
     bool m_Finished[2] = {false, false};
     bool m_IsAddedOnce = false;
+    /**
+     * Frame dropping is a method to avoid lagging when the rendering thread is slow.
+     * 
+     * A dropable frame is a frame which command buffers not containing non-idempotent commands, such as `glCreateTexture`,
+     * `glCreateFramebuffer`, etc.
+     */
+    bool m_IsDropable = true;
+
+    /**
+     * Record the following time points for frame drops and performance analysis.
+     */
+    chrono::time_point<chrono::high_resolution_clock> m_CreatedTime;
+    chrono::time_point<chrono::high_resolution_clock> m_EndedTime;
+
     std::vector<renderer::CommandBuffer *> m_CommandBuffersInPass;
     std::vector<renderer::CommandBuffer *> m_CommandBuffersInPass2; // This is only used when m_IsMultiPass is true.
     // TODO: support 3rd, 4th, ... passes?

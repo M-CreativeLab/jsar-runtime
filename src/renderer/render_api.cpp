@@ -88,16 +88,15 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 				context->setLocalTransform(device->getLocalTransform(id));
 			}
 			device->onFrameCallback(deviceFrame);
-			// jsRenderLoop->frameCallback(deviceFrame);
 		}
 
 		DEBUG(TR_RENDERAPI_TAG, "-------------------------------");
 		DEBUG(TR_RENDERAPI_TAG, "Execute XR Frame: eye=%d, stereoId=%d", eyeId, stereoId);
 		DEBUG(TR_RENDERAPI_TAG, "-------------------------------");
 		StartXRFrame();
-		device->executeStereoRenderingFrames(eyeId, [this, deviceFrame](int stereoId, vector<renderer::CommandBuffer *> &commandBuffers)
+		device->executeStereoRenderingFrames(eyeId, [this, deviceFrame](int stereoIdOfFrame, vector<renderer::CommandBuffer *> &commandBuffers)
 																				 {
-																					 DEBUG(TR_RENDERAPI_TAG, "Start executing Stereo Rendering Frame(id=%d)", stereoId);
+																					 DEBUG(TR_RENDERAPI_TAG, "Start executing Stereo Rendering Frame(id=%d)", stereoIdOfFrame);
 																					 return ExecuteCommandBuffer(commandBuffers, deviceFrame, false);
 																					 // end
 																				 });
@@ -165,6 +164,11 @@ bool RenderAPI::RecordAndReportGpuBusy()
 		m_IsGpuBusy = false;
 	}
 	return m_IsGpuBusy;
+}
+
+void RenderAPI::OnCreated()
+{
+	m_Analytics = new analytics::Analytics();
 }
 
 RenderAPI *CreateRenderAPI(UnityGfxRenderer apiType)

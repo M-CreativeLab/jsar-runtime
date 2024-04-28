@@ -16,6 +16,8 @@ export class WebXRCamera extends BABYLON.FreeCamera {
   private _xrProjectionMatrix: BABYLON.Matrix = BABYLON.Matrix.Identity();
   private _xrViewMatrix: BABYLON.Matrix = BABYLON.Matrix.Identity();
 
+  private _debugGazeRay: BABYLON.Mesh = undefined;
+
   /**
    * This will be triggered after the first XR Frame initialized the camera,
    * including the right number of views and their rendering parameters
@@ -239,6 +241,7 @@ export class WebXRCamera extends BABYLON.FreeCamera {
         return;
       }
       const pos = pose.transform.position;
+
       this._referencedPosition.set(pos.x, pos.y, pos.z);
       this._referenceQuaternion.set(orientation.x, orientation.y, orientation.z, orientation.w);
 
@@ -262,6 +265,14 @@ export class WebXRCamera extends BABYLON.FreeCamera {
         // update position and rotation as reference
         this.rotationQuaternion.copyFrom(this._referenceQuaternion);
         this.position.copyFrom(this._referencedPosition);
+      }
+
+      {
+        if (this._debugGazeRay === undefined) {
+          this._debugGazeRay = BABYLON.MeshBuilder.CreateBox('gazeRay', { size: 0.1 }, this.getScene());
+        }
+        // put the gaze ray in front of the camera
+        this._debugGazeRay.position = this.getFrontPosition(2);
       }
     }
 

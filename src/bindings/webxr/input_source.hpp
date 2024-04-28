@@ -11,6 +11,7 @@ namespace bindings
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
     static Napi::Object NewInstance(Napi::Env env);
     XRInputSource(const Napi::CallbackInfo &info);
+    ~XRInputSource();
 
   private:
     Napi::Value GamepadGetter(const Napi::CallbackInfo &info);
@@ -33,6 +34,7 @@ namespace bindings
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
     static Napi::Object NewInstance(Napi::Env env);
     XRInputSourceArray(const Napi::CallbackInfo &info);
+    ~XRInputSourceArray();
 
   private:
     Napi::Value LengthGetter(const Napi::CallbackInfo &info);

@@ -79,6 +79,8 @@
     "random": "cpp",
     "algorithm": "cpp",
     "functional": "cpp",
-    "charconv": "cpp"
+    "charconv": "cpp",
+    "filesystem": "cpp",
+    "iterator": "cpp"
   }
 }

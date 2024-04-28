@@ -87,8 +87,8 @@ namespace xr
   StereoRenderingFrame *Device::createStereoRenderingFrame()
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    auto isMultiPass = m_StereoRenderingMode == StereoRenderingMode::MultiPass;
-    m_StereoRenderingFrames.push_back(new StereoRenderingFrame(isMultiPass));
+    auto frame = new StereoRenderingFrame(m_StereoRenderingMode == StereoRenderingMode::MultiPass);
+    m_StereoRenderingFrames.push_back(frame);
     return m_StereoRenderingFrames.back();
   }
 
@@ -127,7 +127,23 @@ namespace xr
         continue;
       }
       /** If an ended frame is empty, it's needed to be removed here. */
-      if (frame->empty())
+      if (frame->empty() ||
+          /**
+           * Frame dropping.
+           *
+           * When a frame is expired over a timeout such as 100ms, and also the frame is droppable, the frame dropping
+           * system will remove the frame to avoid the frame lagging.
+           *
+           * Dropping a frame causes the frame lost, thus we can't drop too much frames in a short time. There is a trade-off
+           * between the frame lagging and the frame lost, when the expired time is too short, the frame lost will be increased,
+           * otherwise, the frame lagging will be increased, so it's better to find a value that keeps the queue size is stable
+           * and acceptable for the rendering system.
+           *
+           * TODO: Currently, we now use a configurable and fixed value to control the frame dropping, it may be better to use a
+           * dynamic value that is calculated by the frame duration, it always searches for the best performance between the frame
+           * lagging and the frame lost.
+           */
+          (frame->expired(100) && frame->droppable()))
       {
         /**
          * Note: in C++ STL, the `erase` function will return the next iterator that we need to use instead of `it++`.
@@ -136,6 +152,7 @@ namespace xr
         delete frame;
         continue;
       }
+
       /**
        * When we are going to render right(1) eye, we can't render the frame which left frame is not finished.
        * Such as, the frame is ended before the native loop is going to render the right eye, thus the left eye

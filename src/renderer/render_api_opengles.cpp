@@ -1576,6 +1576,7 @@ RenderAPI *CreateRenderAPI_OpenGLCoreES(UnityGfxRenderer apiType)
 RenderAPI_OpenGLCoreES::RenderAPI_OpenGLCoreES(UnityGfxRenderer apiType)
 		: m_APIType(apiType)
 {
+	OnCreated();
 }
 
 void RenderAPI_OpenGLCoreES::ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces)

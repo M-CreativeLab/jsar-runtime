@@ -79,19 +79,15 @@ namespace bindings
     bool started;
     bool ended;
     bool suspended;
-    xr::RenderState *activeRenderState;
-    xr::RenderState *pendingRenderState;
+    xr::RenderState *activeRenderState = nullptr;
+    xr::RenderState *pendingRenderState = nullptr;
     XREnvironmentBlendMode environmentBlendMode;
     std::vector<XRFrameCallbackDescriptor *> pendingFrameCallbacks;
     std::vector<XRFrameCallbackDescriptor *> currentFrameCallbacks;
     Napi::ObjectReference localSpace;
     Napi::ObjectReference viewerSpace;
-    std::vector<Napi::ObjectReference*> viewSpaces;
-    // Napi::ObjectReference inputSources;
-
-  private:
-    bool active;
-    bool animationFrame;
+    std::vector<Napi::ObjectReference *> viewSpaces;
+    Napi::ObjectReference inputSources;
 
   private:
     static Napi::FunctionReference *constructor;

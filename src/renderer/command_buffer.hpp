@@ -187,8 +187,12 @@ namespace renderer
   class CommandBuffer
   {
   public:
-    CommandBuffer(CommandType type) : m_Type(type) {}
+    CommandBuffer(CommandType type) : m_Type(type)
+    {
+    }
     ~CommandBuffer() {}
+
+  public:
     CommandType GetType() { return m_Type; }
     void WaitFinished()
     {

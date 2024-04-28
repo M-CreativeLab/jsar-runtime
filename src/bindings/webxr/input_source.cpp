@@ -23,13 +23,19 @@ namespace bindings
 
   Napi::Object XRInputSource::NewInstance(Napi::Env env)
   {
-    return (*constructor).New({});
+    Napi::EscapableHandleScope scope(env);
+    Napi::Object obj = constructor->New({});
+    return scope.Escape(obj).ToObject();
   }
 
   XRInputSource::XRInputSource(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRInputSource>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
+  }
+
+  XRInputSource::~XRInputSource()
+  {
   }
 
   Napi::Value XRInputSource::GamepadGetter(const Napi::CallbackInfo &info)
@@ -86,13 +92,22 @@ namespace bindings
 
   Napi::Object XRInputSourceArray::NewInstance(Napi::Env env)
   {
-    return (*constructor).New({});
+    Napi::EscapableHandleScope scope(env);
+    Napi::Object obj = constructor->New({});
+    return scope.Escape(obj).ToObject();
   }
 
   XRInputSourceArray::XRInputSourceArray(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRInputSourceArray>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
+
+    inputSources = Napi::Persistent(Napi::Array::New(env));
+  }
+
+  XRInputSourceArray::~XRInputSourceArray()
+  {
+    inputSources.Unref();
   }
 
   Napi::Value XRInputSourceArray::LengthGetter(const Napi::CallbackInfo &info)

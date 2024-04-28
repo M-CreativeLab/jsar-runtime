@@ -86,13 +86,14 @@ namespace bindings
 
     // Create the initial `XRRenderState` object
     activeRenderState = new xr::RenderState();
+    pendingRenderState = nullptr;
 
     // Create ReferenceSpace instances.
     localSpace = Napi::Persistent(XRReferenceSpace::NewInstance(env, XRReferenceSpaceType::LOCAL));
     viewerSpace = Napi::Persistent(XRReferenceSpace::NewInstance(env, XRReferenceSpaceType::VIEWER));
 
     // Create the `XRInputSourceArray` object
-    // inputSources = Napi::Persistent(XRInputSourceArray::NewInstance(env));
+    inputSources = Napi::Persistent(XRInputSourceArray::NewInstance(env));
 
     // Start the session
     start();
@@ -416,8 +417,7 @@ namespace bindings
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    // return inputSources.Value();
-    return env.Undefined();
+    return inputSources.Value();
   }
 
   void XRSession::start()

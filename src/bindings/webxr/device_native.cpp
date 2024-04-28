@@ -510,6 +510,10 @@ namespace bindings
     {
       callbackWithContext.callback(env, frame, callbackWithContext.context);
     }
+
+    // Clear the `FrameData` struct
+    delete frame;
+    delete data;
     return env.Undefined();
   }
 

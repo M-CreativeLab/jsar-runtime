@@ -8,6 +8,7 @@
 #include <Unity/IUnityGraphics.h>
 
 #include "debug.hpp"
+#include "analytics/analytics.hpp"
 #include "command_buffer.hpp"
 #include "constants.hpp"
 #include "xr/device.hpp"
@@ -120,6 +121,9 @@ public:
     m_LocalRotation[3] = w;
   }
 
+  // Lifecycles
+  void OnCreated();
+
 private:
   /**
    * This method is used to record the frame time and report the GPU busy status by checking the time difference between
@@ -143,6 +147,7 @@ protected:
   std::mutex m_CommandBuffersMutex;
   std::mutex m_StateMutex;
   size_t m_DrawCallCountPerFrame = 0;
+  analytics::Analytics *m_Analytics;
 
 private:
   bool m_IsFirstFrame = true;
