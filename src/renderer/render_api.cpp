@@ -27,10 +27,12 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 	if (device == nullptr)
 		return kFrameExecutionNotInitialized;
 
+	OnFrameStarted();
+
 	/**
 	 * When we detect the GPU is busy over 10 times, we should just stop the frame execution.
 	 */
-	if (RecordAndReportGpuBusy() && m_GpuBusyHitCount > 20)
+	if (CheckGpuBusyStatus() && m_GpuBusyHitCount > 20)
 	{
 		DEBUG(TR_RENDERAPI_TAG, "Skipped this time of frame, because the GPU busy is busy over 20 times, hit count=%d",
 					m_GpuBusyHitCount);
@@ -40,11 +42,19 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 
 	auto frameStart = m_LastFrameTime;
 	StartFrame();
-	auto frameStarted = std::chrono::high_resolution_clock::now();
+	device->startHostFrame();
 
-	/** Start the global frames */
-	jsRenderLoop->startFrame();
-	jsRenderLoop->frameCallback();
+	auto frameStartedAt = std::chrono::high_resolution_clock::now();
+	auto skipFrameOnScript = device->skipHostFrameOnScript();
+
+	/**
+	 * Dispatch the frame callbacks to the JavaScript side.
+	 */
+	if (!skipFrameOnScript)
+	{
+		jsRenderLoop->onAnimationFrame(frameStartedAt);
+	}
+	// Executing the command buffers in the default queue.
 	ExecuteCommandBuffer();
 
 	/** Start the XR frames */
@@ -52,16 +62,9 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 	{
 		int stereoId = -1;
 		auto eyeId = device->getActiveEyeId();
-		if (eyeId == 0)
-		{
-			auto frame = device->createStereoRenderingFrame();
-			stereoId = frame->getId();
-		}
-		else
-		{
-			auto frame = device->getLastStereoRenderingFrame();
-			stereoId = frame == nullptr ? -1 : frame->getId();
-		}
+		auto stereoRenderingFrame = device->createOrGetStereoRenderingFrame();
+		if (stereoRenderingFrame != nullptr)
+			stereoId = stereoRenderingFrame->getId();
 
 		/**
 		 * Update viewport for current eye
@@ -87,7 +90,11 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 				auto context = deviceFrame->addSession(id);
 				context->setLocalTransform(device->getLocalTransform(id));
 			}
-			device->onFrameCallback(deviceFrame);
+			if (!skipFrameOnScript && stereoRenderingFrame != nullptr)
+			{
+				stereoRenderingFrame->available(true);
+				device->onXRFrame(deviceFrame);
+			}
 		}
 
 		DEBUG(TR_RENDERAPI_TAG, "-------------------------------");
@@ -101,6 +108,7 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 																					 // end
 																				 });
 		EndXRFrame();
+		device->endHostFrame();
 
 		DEBUG(TR_RENDERAPI_TAG, "--------- End XR Frame ---------");
 		// end
@@ -112,8 +120,8 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 
 	auto frameEnd = std::chrono::high_resolution_clock::now();
 	auto totalDuration = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - frameStart);
-	auto startDuration = std::chrono::duration_cast<std::chrono::microseconds>(frameStarted - frameStart);
-	auto xrFrameDuration = std::chrono::duration_cast<std::chrono::microseconds>(xrFrameEnd - frameStarted);
+	auto startDuration = std::chrono::duration_cast<std::chrono::microseconds>(frameStartedAt - frameStart);
+	auto xrFrameDuration = std::chrono::duration_cast<std::chrono::microseconds>(xrFrameEnd - frameStartedAt);
 	auto endDuration = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - xrFrameEnd);
 	DEBUG(TR_RENDERAPI_TAG, "Frame execution time takes %ld us (start=%ldus, xrframe=%ldus, end=%ldus) draw calls=%d",
 				totalDuration.count(),
@@ -136,26 +144,42 @@ size_t RenderAPI::GetCommandBuffersCount()
 	return m_CommandBuffers.size();
 }
 
-#define MAX_DURATION_OF_FRAME 50 * 1000 // 50ms
-bool RenderAPI::RecordAndReportGpuBusy()
+void RenderAPI::OnCreated()
 {
-	auto currentNow = std::chrono::high_resolution_clock::now();
-	if (m_IsFirstFrame == true)
+	m_Analytics = new analytics::Analytics();
+}
+
+bool RenderAPI::OnFrameStarted()
+{
+	auto now = std::chrono::high_resolution_clock::now();
+	if (m_IsFirstFrame)
 	{
 		m_IsFirstFrame = false;
-		m_LastFrameTime = currentNow;
+		m_LastFrameTime = now;
 		m_GpuBusyHitCount = 0;
 		m_IsGpuBusy = false;
-		return m_IsGpuBusy;
+		return true;
 	}
-	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(currentNow - m_LastFrameTime);
-	m_LastFrameTime = currentNow;
-	if (duration.count() > MAX_DURATION_OF_FRAME)
+	else
+	{
+		m_DeltaTimeDuration = std::chrono::duration_cast<std::chrono::microseconds>(now - m_LastFrameTime);
+		if (m_DeltaTimeDuration.count() < 1000 / 90 * 1000)
+			return false;
+		m_LastFrameTime = now;
+		return true;
+	}
+}
+
+#define MAX_DURATION_OF_FRAME 50 * 1000 // 50ms
+bool RenderAPI::CheckGpuBusyStatus()
+{
+	auto duration = m_DeltaTimeDuration.count();
+	if (duration > MAX_DURATION_OF_FRAME)
 	{
 		m_GpuBusyHitCount += 2;
 		m_IsGpuBusy = true;
 		DEBUG(TR_RENDERAPI_TAG, "Detected a GPUBusy event: duration=%ldus hitCount=%d",
-					duration.count(), m_GpuBusyHitCount);
+					duration, m_GpuBusyHitCount);
 	}
 	else
 	{
@@ -164,11 +188,6 @@ bool RenderAPI::RecordAndReportGpuBusy()
 		m_IsGpuBusy = false;
 	}
 	return m_IsGpuBusy;
-}
-
-void RenderAPI::OnCreated()
-{
-	m_Analytics = new analytics::Analytics();
 }
 
 RenderAPI *CreateRenderAPI(UnityGfxRenderer apiType)

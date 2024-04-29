@@ -62,6 +62,11 @@ namespace xr
     return m_CurrentStereoId;
   }
 
+  void DeviceFrame::setStereoId(int id)
+  {
+    m_CurrentStereoId = id;
+  }
+
   MultiPassFrame::MultiPassFrame(
       xr::Device *device,
       int eyeId,
@@ -154,9 +159,12 @@ namespace xr
     case renderer::kCommandTypeCreateSampler:
     case renderer::kCommandTypeCreateShader:
     case renderer::kCommandTypeCreateTransformFeedback:
-    case renderer::kCommandTypeLinkProgram:
+    case renderer::kCommandTypeCheckFramebufferStatus:
     case renderer::kCommandTypeAttachShader:
     case renderer::kCommandTypeDetachShader:
+    case renderer::kCommandTypeShaderSource:
+    case renderer::kCommandTypeCompileShader:
+    case renderer::kCommandTypeLinkProgram:
     // The command buffers which are getting values would not be dropped.
     case renderer::kCommandTypeGetAttribLocation:
     case renderer::kCommandTypeGetBooleanv:
@@ -174,11 +182,6 @@ namespace xr
     case renderer::kCommandTypeGetSupportedExtensions:
     case renderer::kCommandTypeGetTransformFeedbackVarying:
     case renderer::kCommandTypeGetUniformLocation:
-    // The command buffers which are setting texels would not be dropped.
-    case renderer::kCommandTypeTexImage2D:
-    case renderer::kCommandTypeTexSubImage2D:
-    case renderer::kCommandTypeTexImage3D:
-    case renderer::kCommandTypeTexSubImage3D:
       /**
        * TODO: actually the binding command buffers could not be dropped in some ways, for those command buffers, we
        * need to check the state changes between the frame, if state changes, we should not drop the frame.
@@ -224,6 +227,14 @@ namespace xr
       return m_CommandBuffersInPass.empty() && m_CommandBuffersInPass2.empty();
     else
       return m_CommandBuffersInPass.empty();
+  }
+  bool StereoRenderingFrame::available()
+  {
+    return m_Available;
+  }
+  void StereoRenderingFrame::available(bool v)
+  {
+    m_Available = v;
   }
   bool StereoRenderingFrame::droppable()
   {

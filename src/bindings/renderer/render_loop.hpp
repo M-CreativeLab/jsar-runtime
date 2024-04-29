@@ -22,8 +22,6 @@ namespace renderer
   public:
     bool isAvailable() { return disposed_ == false && available_ == true; }
     Napi::ThreadSafeFunction &getFrameCallback() { return m_frameCallback; }
-    void startFrame() { finished_ = false; }
-    bool isFrameFinished() { return finished_; }
 
     /**
      * Report a native exception to JavaScript side.
@@ -32,8 +30,7 @@ namespace renderer
     /**
      * Call the frame callback that is set in JavaScript runtime.
      */
-    void frameCallback(xr::DeviceFrame *frame);
-    void frameCallback();
+    void onAnimationFrame(chrono::time_point<chrono::high_resolution_clock> now);
 
   private:
     Napi::Value SupportsWebGL2(const Napi::CallbackInfo &info);
@@ -46,15 +43,15 @@ namespace renderer
   private:
     atomic<bool> disposed_ = true;
     atomic<bool> available_ = false;
-    atomic<bool> finished_ = false;
     RenderAPI *renderApi = nullptr;
 
+    // thread safe controls
     mutex m_mutex;
     condition_variable m_cv;
-    bool m_frameCallbackFinished = true;
     Napi::ThreadSafeFunction m_ExceptionCallback;
     Napi::ThreadSafeFunction m_frameCallback;
 
+  private:
     static RenderLoop *s_instance;
     static Napi::FunctionReference *constructor;
   };

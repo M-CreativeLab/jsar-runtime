@@ -1,9 +1,12 @@
 #pragma once
 
+#include <chrono>
 #include <napi.h>
 #include "xr/frame.hpp"
 #include "device_native.hpp"
 #include "session.hpp"
+
+using namespace std;
 
 namespace bindings
 {
@@ -44,6 +47,8 @@ namespace bindings
     XRSession *session;
     xr::DeviceFrame *internal;
     XRDeviceNative *device;
+    chrono::time_point<chrono::high_resolution_clock> startTime;
+    chrono::time_point<chrono::high_resolution_clock> endTime;
 
   private:
     static Napi::FunctionReference *constructor;

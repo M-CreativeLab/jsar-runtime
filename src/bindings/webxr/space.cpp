@@ -116,7 +116,6 @@ namespace bindings
       auto transform = frame->getViewerTransform();
       baseMatrix = createMat4FromArray(transform);
       XRSpaceBase<XRReferenceSpace>::onPoseUpdate(session, frame);
-      DEBUG("Unity", "updated viewer matrix %f %f %f", baseMatrix[3].x, baseMatrix[3].y, baseMatrix[3].z);
     }
     else if (referenceSpaceType == XRReferenceSpaceType::LOCAL)
     {

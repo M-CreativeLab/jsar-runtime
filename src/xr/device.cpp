@@ -74,6 +74,60 @@ namespace xr
     return m_Enabled;
   }
 
+  bool Device::skipHostFrameOnScript()
+  {
+    if (m_Enabled == false)
+      return false; // if XR device is disabled, we can't skip the frame execution.
+
+    if (m_ActiveEyeId == 0)
+    {
+      if (m_IsLastHostFrameTimeSet == false)
+      {
+        m_LastHostFrameTime = m_HostFrameTime;
+        m_IsLastHostFrameTimeSet = true;
+        m_SkipHostFrameOnScript = false;
+      }
+      else
+      {
+        /**
+         * We need to skip a frame based on the script frame rate to avoid the unnecessary CPU usage.
+         */
+        uint32_t targetFrameRate = 60;
+        auto duration = chrono::duration_cast<chrono::milliseconds>(m_HostFrameTime - m_LastHostFrameTime);
+        if (duration.count() < 1000 / targetFrameRate)
+        {
+          m_SkipHostFrameOnScript = true;
+        }
+        else
+        {
+          auto framesCount = getPendingStereoRenderingFramesCount();
+          /**
+           * When the frame count is greater than a fixed value, we can skip the frame for the script-side, namely in JavaScript, the
+           * frame of this time will be dropped when the last frame is not finished.
+           * 
+           * By using this method, we can avoid the frame is not rendered in time, but it will cause the frame rate in script is not
+           * consistent with the host frame rate.
+           */
+          if (framesCount > 5)
+            m_SkipHostFrameOnScript = true;
+          else
+            m_SkipHostFrameOnScript = false;
+          m_LastHostFrameTime = m_HostFrameTime;
+        }
+      }
+    }
+    return m_SkipHostFrameOnScript;
+  }
+
+  void Device::startHostFrame()
+  {
+    m_HostFrameTime = chrono::high_resolution_clock::now();
+  }
+
+  void Device::endHostFrame()
+  {
+  }
+
   void Device::setStereoRenderingMode(StereoRenderingMode mode)
   {
     m_StereoRenderingMode = mode;
@@ -86,7 +140,6 @@ namespace xr
 
   StereoRenderingFrame *Device::createStereoRenderingFrame()
   {
-    std::lock_guard<std::mutex> lock(m_Mutex);
     auto frame = new StereoRenderingFrame(m_StereoRenderingMode == StereoRenderingMode::MultiPass);
     m_StereoRenderingFrames.push_back(frame);
     return m_StereoRenderingFrames.back();
@@ -109,6 +162,30 @@ namespace xr
     return m_StereoRenderingFrames.back();
   }
 
+  StereoRenderingFrame *Device::createOrGetStereoRenderingFrame()
+  {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    if (m_ActiveEyeId == 0)
+      createStereoRenderingFrame();
+    return m_StereoRenderingFrames.back();
+  }
+
+  size_t Device::getStereoRenderingFramesCount()
+  {
+    return m_StereoRenderingFrames.size();
+  }
+
+  size_t Device::getPendingStereoRenderingFramesCount()
+  {
+    size_t count = 0;
+    for (auto frame : m_StereoRenderingFrames)
+    {
+      if (!frame->ended())
+        count++;
+    }
+    return count;
+  }
+
   /**
    * NOTE: The current implementation will expect the eye rendering order is left(0) -> right(1).
    */
@@ -120,6 +197,12 @@ namespace xr
     for (auto it = m_StereoRenderingFrames.begin(); it != m_StereoRenderingFrames.end();)
     {
       auto frame = *it;
+      if (!frame->available())
+      {
+        it = m_StereoRenderingFrames.erase(it);
+        delete frame;
+        continue;
+      }
       /** Just skip the non-ended frames. */
       if (!frame->ended())
       {
@@ -127,23 +210,7 @@ namespace xr
         continue;
       }
       /** If an ended frame is empty, it's needed to be removed here. */
-      if (frame->empty() ||
-          /**
-           * Frame dropping.
-           *
-           * When a frame is expired over a timeout such as 100ms, and also the frame is droppable, the frame dropping
-           * system will remove the frame to avoid the frame lagging.
-           *
-           * Dropping a frame causes the frame lost, thus we can't drop too much frames in a short time. There is a trade-off
-           * between the frame lagging and the frame lost, when the expired time is too short, the frame lost will be increased,
-           * otherwise, the frame lagging will be increased, so it's better to find a value that keeps the queue size is stable
-           * and acceptable for the rendering system.
-           *
-           * TODO: Currently, we now use a configurable and fixed value to control the frame dropping, it may be better to use a
-           * dynamic value that is calculated by the frame duration, it always searches for the best performance between the frame
-           * lagging and the frame lost.
-           */
-          (frame->expired(100) && frame->droppable()))
+      if (frame->empty())
       {
         /**
          * Note: in C++ STL, the `erase` function will return the next iterator that we need to use instead of `it++`.
@@ -223,7 +290,6 @@ namespace xr
       auto commandBufferInLastFrame = m_BackupStereoRenderingFrame->getCommandBuffers(eyeId);
       if (!commandBufferInLastFrame.empty())
         exec(id, commandBufferInLastFrame);
-      called = true;
     }
     return called;
   }
@@ -333,7 +399,7 @@ namespace xr
           commandBuffer->GetType(), m_CurrentStereoRenderingId.load());
   }
 
-  void Device::onFrameCallback(DeviceFrame *frame)
+  void Device::onXRFrame(DeviceFrame *frame)
   {
     auto jsDeviceNative = bindings::XRDeviceNative::GetInstance();
     if (jsDeviceNative == NULL)

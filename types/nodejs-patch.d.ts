@@ -21,12 +21,14 @@ declare namespace Transmute {
   }
 
   type RenderExceptionCallback = (code: number) => void;
+  /**
+   * The render loop is the backend implementation for `requestAnimationFrame` and `cancelAnimationFrame`.
+   */
   class RenderLoop {
     constructor();
     supportsWebGL2(): boolean;
     setExceptionCallback(callback: RenderExceptionCallback): void;
     setFrameCallback(callback: FrameRequestCallback): void;
-    setFrameFinished(): void;
   }
 
   class WebGLRenderingContextOnDevice extends WebGLRenderingContext {

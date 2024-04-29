@@ -196,6 +196,7 @@ namespace bindings
     active = true;
     animationFrame = true;
     device->startFrame(sessionId, getStereoRenderingId(), getViewIndex());
+    startTime = chrono::high_resolution_clock::now();
   }
 
   void XRFrame::end()
@@ -203,5 +204,9 @@ namespace bindings
     active = false;
     // animationFrame = false;
     device->endFrame(sessionId, getStereoRenderingId(), getViewIndex());
+    endTime = chrono::high_resolution_clock::now();
+
+    auto duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
+    DEBUG(LOG_TAG, "xrframe exection in JavaScript takes %dms", duration.count());
   }
 }

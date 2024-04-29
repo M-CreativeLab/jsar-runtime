@@ -47,6 +47,7 @@ namespace xr
 
     size_t getCountOfSessions();
     int getCurrentStereoId();
+    void setStereoId(int id);
 
   protected:
     Device *m_XrDevice = nullptr;
@@ -88,7 +89,7 @@ namespace xr
   };
 
   /**
-   * This class represents a stereo rendering frame, which stores the command buffers at JS thread, and execute them at 
+   * This class represents a stereo rendering frame, which stores the command buffers at JS thread, and execute them at
    * rendering thread.
    */
   class StereoRenderingFrame
@@ -108,8 +109,10 @@ namespace xr
     int getId();
     bool addedOnce();
     bool empty();
+    bool available();
+    void available(bool v);
     bool droppable();
-    bool expired(int timeout);  // returns if this frame is expired after `timeout` milliseconds.
+    bool expired(int timeout); // returns if this frame is expired after `timeout` milliseconds.
     void finishPass(int passIndex);
     bool finished(int passIndex);
 
@@ -119,13 +122,14 @@ namespace xr
   private:
     int m_StereoId = -1;
     bool m_IsMultiPass = true;
+    bool m_Available = false;
     bool m_Ended[2] = {false, false};
     bool m_Started[2] = {false, false};
     bool m_Finished[2] = {false, false};
     bool m_IsAddedOnce = false;
     /**
      * Frame dropping is a method to avoid lagging when the rendering thread is slow.
-     * 
+     *
      * A dropable frame is a frame which command buffers not containing non-idempotent commands, such as `glCreateTexture`,
      * `glCreateFramebuffer`, etc.
      */
@@ -140,5 +144,7 @@ namespace xr
     std::vector<renderer::CommandBuffer *> m_CommandBuffersInPass;
     std::vector<renderer::CommandBuffer *> m_CommandBuffersInPass2; // This is only used when m_IsMultiPass is true.
     // TODO: support 3rd, 4th, ... passes?
+
+    friend class Device;
   };
 } // namespace xr

@@ -5,6 +5,7 @@
 #include <vector>
 #include <mutex>
 #include <atomic>
+#include <chrono>
 
 #include "frame.hpp"
 #include "viewport.hpp"
@@ -39,12 +40,20 @@ namespace xr
     void initialize(bool enabled);
     bool requestSession(int id);
     bool enabled();
+    bool skipHostFrameOnScript();
+    void startHostFrame();
+    void endHostFrame();
+
     void setStereoRenderingMode(StereoRenderingMode mode);
     StereoRenderingMode getStereoRenderingMode();
+
     StereoRenderingFrame *createStereoRenderingFrame();
     StereoRenderingFrame *getStereoRenderingFrame(int id);
     StereoRenderingFrame *getLastStereoRenderingFrame();
+    StereoRenderingFrame *createOrGetStereoRenderingFrame();
+
     size_t getStereoRenderingFramesCount();
+    size_t getPendingStereoRenderingFramesCount();
     bool executeStereoRenderingFrames(int eyeId, function<bool(int, vector<renderer::CommandBuffer *> &)>);
     void clearStereoRenderingFrames(bool clearAll = false);
     bool startFrame(int sessionId, int stereoRenderingId, int passId);
@@ -54,7 +63,7 @@ namespace xr
     /**
      * Call the frame callback registered by the JavaScript side with the given `DeviceFrame`.
      */
-    void onFrameCallback(DeviceFrame* frame);
+    void onXRFrame(DeviceFrame *frame);
 
   public:
     float getTime();
@@ -91,6 +100,11 @@ namespace xr
 
   private:
     bool m_Enabled = false;
+    bool m_SkipHostFrameOnScript = false;
+    bool m_IsLastHostFrameTimeSet = false;
+    chrono::time_point<chrono::high_resolution_clock> m_HostFrameTime;
+    chrono::time_point<chrono::high_resolution_clock> m_LastHostFrameTime;
+
     /**
      * Recommanded field of view.
      */

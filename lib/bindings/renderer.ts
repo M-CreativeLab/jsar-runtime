@@ -65,8 +65,6 @@ export function connectRenderer() {
       }
     } catch (err) {
       logger.warn('error in frame callback:', err);
-    } finally {
-      loop.setFrameFinished();
     }
   });
 

@@ -22,6 +22,7 @@ enum FrameExecutionCode
   kFrameExecutionNotInitialized = 1,
   kFrameExecutionNotAvailable = 2,
   kFrameExecutionGpuBusy = 3,
+  kFrameExecutionSkipped = 4,
 };
 
 class RenderAPI
@@ -123,6 +124,7 @@ public:
 
   // Lifecycles
   void OnCreated();
+  bool OnFrameStarted();
 
 private:
   /**
@@ -131,7 +133,7 @@ private:
    *
    * It returns a boolean value indicating if the GPU is busy, true means the GPU is busy, otherwise false.
    */
-  bool RecordAndReportGpuBusy();
+  bool CheckGpuBusyStatus();
 
 protected:
   float time = 0.0f;
@@ -153,7 +155,8 @@ private:
   bool m_IsFirstFrame = true;
   bool m_IsGpuBusy = false;
   size_t m_GpuBusyHitCount = 0;
-  std::chrono::steady_clock::time_point m_LastFrameTime;
+  chrono::steady_clock::time_point m_LastFrameTime;
+  chrono::microseconds m_DeltaTimeDuration;
 };
 
 // Create a graphics API implementation instance for the given API type.
