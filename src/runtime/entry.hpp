@@ -25,25 +25,117 @@ extern "C"
   DLL_PUBLIC void UnityPluginUnload();
   DLL_PUBLIC UnityRenderingEvent TransmuteNative_GetRenderEventFunc();
 
+  /**
+   * Prepare the transmute native runtime.
+   */
   DLL_PUBLIC void TransmuteNative_Prepare();
+
+  /**
+   * Initialize the XR device, this is required to execute the JSAR in XR device.
+   */
   DLL_PUBLIC void TransmuteNative_InitializeXRDevice(bool enabled);
+
+  /**
+   * Fetch the event from the JavaScript side.
+   */
   DLL_PUBLIC bool TransmuteNative_GetEventFromJavaScript(int *id, int *type, uint32_t *size);
+
+  /**
+   * Fetch the event data from the JavaScript side.
+   */
   DLL_PUBLIC void TransmuteNative_GetEventDataFromJavaScript(const char *data);
+
+  /**
+   * Check if the JavaScript runtime is up.
+   */
   DLL_PUBLIC bool TransmuteNative_IsRuntimeUp();
+
+  /**
+   * Check if the JavaScript runtime is available.
+   */
   DLL_PUBLIC bool TransmuteNative_IsRuntimeAvailable();
+
+  /**
+   * Dispatch the runtime event.
+   */
   DLL_PUBLIC void TransmuteNative_DispatchRuntimeEvent(int id);
+
+  /**
+   * Dispatch the native event.
+   */
   DLL_PUBLIC void TransmuteNative_DispatchNativeEvent(int id, int type, const char *data);
+
+  /**
+   * Set the runtime initialization arguments.
+   * 
+   * @param argJson The JSON string of the runtime initialization arguments.
+   */
   DLL_PUBLIC void TransmuteNative_SetRuntimeInit(const char *argJson);
+
+  /**
+   * Set the viewport size for current rendering.
+   * 
+   * @param w The width of the viewport.
+   * @param h The height of the viewport.
+   */
   DLL_PUBLIC void TransmuteNative_SetViewport(int w, int h);
+
+  /**
+   * Set the field of view for the current rendering.
+   * 
+   * @param fov The field of view to be set.
+   */
   DLL_PUBLIC void TransmuteNative_SetFov(float fov);
-  DLL_PUBLIC void TransmuteNative_SetTime(float t);
+
+  /**
+   * Set the time for the current rendering.
+   * 
+   * @param time The time to be set.
+   */
+  DLL_PUBLIC void TransmuteNative_SetTime(float time);
+
+  /**
+   * Set the stereo rendering mode such as single-pass, multi-pass, etc.
+   * 
+   * @param mode The stereo rendering mode to be set, the valid value is: MultiPass(0), SinglePass(1), SinglePassInstanced(2), 
+   *             SinglePassMultiview(3) and -1 for unknown.
+   */
   DLL_PUBLIC void TransmuteNative_SetStereoRenderingMode(int mode);
-  DLL_PUBLIC void TransmuteNative_SetViewerPose(float x, float y, float z, float qx, float qy, float qz, float qw);
-  DLL_PUBLIC void TransmuteNative_SetLocalPose(int id, float x, float y, float z, float qx, float qy, float qz, float qw);
-  DLL_PUBLIC bool TransmuteNative_SetViewerTransform(float *transform);
-  DLL_PUBLIC bool TransmuteNative_SetViewerStereoViewMatrix(int eyeId, float *transform);
+
+  /**
+   * Update the projection matrix for a specific eye.
+   * 
+   * @param eyeId The eye id, 0 for left and 1 for right.
+   * @param transform The projection matrix to be set, a valid transform is a 16-element float array that represents a 4x4 matrix,
+   *                  and it's in column-major order.
+   */
   DLL_PUBLIC bool TransmuteNative_SetViewerStereoProjectionMatrix(int eyeId, float *transform);
-  DLL_PUBLIC bool TransmuteNative_SetLocalTransform(int id, float *transform);
+
+  /**
+   * Update the viewer's transform matrix, namely the matrix that describes how to transform the viewer's model to the world space.
+   * It will be used to calculate the viewer's view matrix.
+   * 
+   * @param translation The translation part of the transform, a 3-element float array.
+   * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
+   */
+  DLL_PUBLIC bool TransmuteNative_SetViewerTransformFromTRS(float *translation, float *rotation);
+
+  /**
+   * Update the viewer's stereo view matrix for a specific eye.
+   * 
+   * @param eyeId The eye id, 0 for left and 1 for right.
+   * @param translation The translation part of the transform, a 3-element float array.
+   */
+  DLL_PUBLIC bool TransmuteNative_SetViewerStereoViewMatrixFromTRS(int eyeId, float *translation, float *rotation);
+
+  /**
+   * Update the local transform matrix for a specific applet.
+   * 
+   * @param id The applet id, namely the XR session id.
+   * @param translation The translation part of the transform, a 3-element float array.
+   * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
+   */
+  DLL_PUBLIC bool TransmuteNative_SetLocalTransformFromTRS(int id, float *translation, float *rotation);
 
   /**
    * Input source updates
