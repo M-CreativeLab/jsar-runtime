@@ -480,7 +480,9 @@ namespace bindings
 
   void XRSession::updateInputSourcesIfChanged()
   {
-    inputSources.Value().updateInputSourcesIfChanged();
+    inputSources.Value().updateInputSources([this](vector<XRInputSource *> added, vector<XRInputSource *> removed)
+                                            { onEventCallback.Call({Napi::String::New(Env(), "inputsourceschange"),
+                                                                    createInputSourcesChangeEvent(Env(), added, removed)}); });
   }
 
   void XRSession::onFrame(Napi::Env env, xr::DeviceFrame *frame)
@@ -559,6 +561,30 @@ namespace bindings
     auto xrViewSpaceRef = new Napi::ObjectReference();
     *xrViewSpaceRef = Napi::Persistent(XRViewSpace::NewInstance(env, type));
     viewSpaces.push_back(xrViewSpaceRef);
+  }
+
+  Napi::Value XRSession::createInputSourcesChangeEvent(Napi::Env env,
+                                                       std::vector<XRInputSource *> &added,
+                                                       std::vector<XRInputSource *> &removed)
+  {
+    auto eventObject = Napi::Object::New(env);
+    auto addedArray = Napi::Array::New(env, added.size());
+    auto removedArray = Napi::Array::New(env, removed.size());
+
+    for (size_t i = 0; i < added.size(); i++)
+    {
+      auto inputSource = added[i];
+      addedArray[i] = inputSource->Value();
+    }
+    for (size_t i = 0; i < removed.size(); i++)
+    {
+      auto inputSource = removed[i];
+      removedArray[i] = inputSource->Value();
+    }
+
+    eventObject.Set("added", addedArray);
+    eventObject.Set("removed", removedArray);
+    return eventObject;
   }
 
   XRReferenceSpace *XRSession::getLocalSpace()

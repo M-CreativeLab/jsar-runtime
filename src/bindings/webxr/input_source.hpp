@@ -6,11 +6,13 @@
 
 namespace bindings
 {
+  using InputSourcesChangedCallback = function<void(vector<XRInputSource *> added, vector<XRInputSource *> removed)>;
+
   class XRInputSource : public Napi::ObjectWrap<XRInputSource>
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, xr::InputSource &inputSource);
+    static Napi::Object NewInstance(Napi::Env env, xr::InputSource *inputSource);
     XRInputSource(const Napi::CallbackInfo &info);
     ~XRInputSource();
 
@@ -37,7 +39,7 @@ namespace bindings
     ~XRInputSourceArray();
 
   public:
-    void updateInputSourcesIfChanged();
+    void updateInputSources(InputSourcesChangedCallback onChangedCallback);
 
   private:
     xr::Device *device = nullptr;

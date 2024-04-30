@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 namespace xr
 {
   enum Handness
@@ -37,6 +39,7 @@ namespace xr
     Handness handness;
     JointPose hand[25];
     TargetRayMode targetRayMode;
-    float targetRayTransform[16];
+    glm::mat4 targetRayBaseMatrix;
+    glm::mat4 gripBaseMatrix;
   };
 }

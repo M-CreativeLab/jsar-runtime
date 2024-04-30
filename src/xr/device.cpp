@@ -35,12 +35,19 @@ namespace xr
 
     // Initialize the input sources
     {
-      m_GazeInputSource.handness = Handness::None;
-      m_GazeInputSource.targetRayMode = TargetRayMode::Gaze;
-      m_HandInputSources[0].handness = Handness::Left;
-      m_HandInputSources[0].targetRayMode = TargetRayMode::TrackedPointer;
-      m_HandInputSources[1].handness = Handness::Right;
-      m_HandInputSources[1].targetRayMode = TargetRayMode::TrackedPointer;
+      m_GazeInputSource = new InputSource();
+      m_GazeInputSource->handness = Handness::None;
+      m_GazeInputSource->targetRayMode = TargetRayMode::Gaze;
+
+      auto leftHandInputSource = new InputSource();
+      leftHandInputSource->handness = Handness::Left;
+      leftHandInputSource->targetRayMode = TargetRayMode::TrackedPointer;
+      m_HandInputSources.push_back(leftHandInputSource);
+
+      auto rightHandInputSource = new InputSource();
+      rightHandInputSource->handness = Handness::Right;
+      rightHandInputSource->targetRayMode = TargetRayMode::TrackedPointer;
+      m_HandInputSources.push_back(rightHandInputSource);
     }
   }
 
@@ -51,6 +58,15 @@ namespace xr
     m_SessionIds.clear();
     delete m_BackupStereoRenderingFrame;
     m_BackupStereoRenderingFrame = nullptr;
+
+    // Clear the input sources
+    {
+      delete m_GazeInputSource;
+      m_GazeInputSource = nullptr;
+      for (auto inputSource : m_HandInputSources)
+        delete inputSource;
+      m_HandInputSources.clear();
+    }
   }
 
   void Device::initialize(bool enabled)
@@ -111,7 +127,7 @@ namespace xr
           /**
            * When the frame count is greater than a fixed value, we can skip the frame for the script-side, namely in JavaScript, the
            * frame of this time will be dropped when the last frame is not finished.
-           * 
+           *
            * By using this method, we can avoid the frame is not rendered in time, but it will cause the frame rate in script is not
            * consistent with the host frame rate.
            */
@@ -505,14 +521,16 @@ namespace xr
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
     for (int i = 0; i < 16; i++)
-    {
       m_ViewerTransform[i] = transform[i];
-      /**
-       * If there is no eye tracking, the target ray transform will be the same as the viewer transform.
-       * 
-       * TODO: support the eye tracking?
-       */
-      m_GazeInputSource.targetRayTransform[i] = transform[i];
+
+    /**
+     * If there is no eye tracking, the target ray transform will be the same as the viewer transform.
+     *
+     * TODO: support the eye tracking?
+     */
+    if (m_GazeInputSource != nullptr)
+    {
+      m_GazeInputSource->targetRayBaseMatrix = math::createMat4FromArray(transform);
     }
     return true;
   }
@@ -571,12 +589,12 @@ namespace xr
 
   // InputSource
 
-  InputSource &Device::getGazeInputSource()
+  InputSource *Device::getGazeInputSource()
   {
     return m_GazeInputSource;
   }
 
-  InputSource &Device::getHandInputSource(Handness handness)
+  InputSource *Device::getHandInputSource(Handness handness)
   {
     if (handness == Handness::Left)
       return m_HandInputSources[0];
@@ -588,7 +606,7 @@ namespace xr
   bool Device::addGamepadInputSource(int id, InputSource &inputSource)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    m_GamepadInputSources[id] = inputSource;
+    m_GamepadInputSources[id] = new InputSource(inputSource);
     return true;
   }
 
@@ -599,7 +617,7 @@ namespace xr
     return true;
   }
 
-  InputSource &Device::getGamepadInputSource(int id)
+  InputSource *Device::getGamepadInputSource(int id)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
     return m_GamepadInputSources[id];
@@ -608,7 +626,7 @@ namespace xr
   bool Device::addScreenInputSource(int id, InputSource &inputSource)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    m_ScreenInputSources[id] = inputSource;
+    m_ScreenInputSources[id] = new InputSource(inputSource);
     return true;
   }
 
@@ -619,7 +637,7 @@ namespace xr
     return true;
   }
 
-  InputSource &Device::getScreenInputSource(int id)
+  InputSource *Device::getScreenInputSource(int id)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
     return m_ScreenInputSources[id];

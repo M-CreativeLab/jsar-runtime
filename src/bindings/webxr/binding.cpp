@@ -41,6 +41,7 @@ Napi::Object bindings::InitWebxrModule(Napi::Env env, Napi::Object exports)
   XRSpace::Init(env, exports);
   XRReferenceSpace::Init(env, exports);
   XRViewSpace::Init(env, exports);
+  XRTargetRayOrGripSpace::Init(env, exports);
 
   // View
   XRView::Init(env, exports);

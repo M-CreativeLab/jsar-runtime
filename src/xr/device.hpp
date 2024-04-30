@@ -90,13 +90,13 @@ namespace xr
     /**
      * Input sources
      */
-    InputSource &getGazeInputSource();
-    InputSource &getHandInputSource(Handness handness);
+    InputSource *getGazeInputSource();
+    InputSource *getHandInputSource(Handness handness);
     bool addGamepadInputSource(int id, InputSource &gamepadInputSource);
-    InputSource &getGamepadInputSource(int id);
+    InputSource *getGamepadInputSource(int id);
     bool removeGamepadInputSource(int id);
     bool addScreenInputSource(int id, InputSource &screenInputSource);
-    InputSource &getScreenInputSource(int id);
+    InputSource *getScreenInputSource(int id);
     bool removeScreenInputSource(int id);
 
   private:
@@ -182,11 +182,11 @@ namespace xr
      * Input sources fields
      */
     // input source for gaze
-    InputSource m_GazeInputSource;
+    InputSource *m_GazeInputSource;
     // input sources(2) for hands
-    InputSource m_HandInputSources[2];
-    std::map<int, InputSource> m_ScreenInputSources;
-    std::map<int, InputSource> m_GamepadInputSources;
+    std::vector<InputSource *> m_HandInputSources;
+    std::map<int, InputSource *> m_ScreenInputSources;
+    std::map<int, InputSource *> m_GamepadInputSources;
 
   private:
     static Device *s_instance;

@@ -10,11 +10,13 @@ using namespace glm;
 
 namespace bindings
 {
+  #define XRSPACE_RELATIVE_TRANSFORM(space, baseSpace) space->baseMatrix * baseSpace->getInverseBaseMatrix()
+
   template <typename T>
   class XRSpaceBase : public Napi::ObjectWrap<T>
   {
   public:
-    XRSpaceBase(const Napi::CallbackInfo &info, XRSpaceSubType subType);
+    XRSpaceBase(const Napi::CallbackInfo &info, XRSpaceSubType subType, bool isReferenceSpace = false);
 
   public:
     void onPoseUpdate(XRSession *session, xr::DeviceFrame *frame);
@@ -25,6 +27,7 @@ namespace bindings
     XRSpaceSubType subType;
     int32_t lastFrameId;
     mat4 baseMatrix;
+    bool isReferenceSpace;
 
   private:
     mat4 mInverseMatrixCache;
@@ -35,6 +38,7 @@ namespace bindings
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    static Napi::Object NewInstance(Napi::Env env, XRSpaceSubType subType, mat4 baseMatrix);
     XRSpace(const Napi::CallbackInfo &info);
 
   private:
@@ -53,11 +57,6 @@ namespace bindings
 
   public:
     void onPoseUpdate(XRSession *session, xr::DeviceFrame *frame);
-    template <typename Ts>
-    mat4 getRelativeTransform(XRSpaceBase<Ts> *baseSpace);
-    mat4 getRelativeTransform(XRSpaceBase<XRSpace> *);
-    mat4 getRelativeTransform(XRSpaceBase<XRReferenceSpace> *);
-    mat4 getRelativeTransform(XRSpaceBase<XRViewSpace> *);
 
   private:
     XRReferenceSpaceType referenceSpaceType;
@@ -83,6 +82,23 @@ namespace bindings
 
   private:
     XRViewSpaceType viewSpaceType;
+
+  private:
+    static Napi::FunctionReference *constructor;
+  };
+
+  class XRTargetRayOrGripSpace : public XRSpaceBase<XRTargetRayOrGripSpace>
+  {
+  public:
+    static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    static Napi::Object NewInstance(Napi::Env env, xr::InputSource* inputSource, bool isGrip);
+    XRTargetRayOrGripSpace(const Napi::CallbackInfo &info);
+
+  public:
+    void onPoseUpdate(XRSession *session, xr::DeviceFrame *frame);
+
+  private:
+    xr::InputSource* inputSource;
 
   private:
     static Napi::FunctionReference *constructor;

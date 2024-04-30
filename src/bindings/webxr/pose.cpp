@@ -41,6 +41,15 @@ namespace bindings
     return exports;
   }
 
+  Napi::Object XRPose::NewInstance(Napi::Env env, mat4 &transform)
+  {
+    Napi::EscapableHandleScope scope(env);
+    Napi::Object obj = constructor->New({});
+    XRPose *instance = XRPose::Unwrap(obj);
+    instance->transform = transform;
+    return scope.Escape(obj).ToObject();
+  }
+
   XRPose::XRPose(const Napi::CallbackInfo &info) : XRPoseBase(info)
   {
   }

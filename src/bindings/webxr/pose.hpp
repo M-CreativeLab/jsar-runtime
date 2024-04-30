@@ -27,6 +27,7 @@ namespace bindings
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    static Napi::Object NewInstance(Napi::Env env, mat4& transform);
     XRPose(const Napi::CallbackInfo &info);
 
   private:

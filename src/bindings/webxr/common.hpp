@@ -29,6 +29,7 @@ namespace bindings
   {
     GRIP = 0,
     TARGET_RAY = 1,
+    UNSET = -1,
   };
 
   enum XRReferenceSpaceType
@@ -53,6 +54,7 @@ namespace bindings
   class XRSpace;
   class XRReferenceSpace;
   class XRViewSpace;
+  class XRTargetRayOrGripSpace;
   class XRPose;
   class XRViewerPose;
   class XRInputSource;

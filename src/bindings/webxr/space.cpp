@@ -6,14 +6,18 @@ namespace bindings
   Napi::FunctionReference *XRSpace::constructor;
   Napi::FunctionReference *XRReferenceSpace::constructor;
   Napi::FunctionReference *XRViewSpace::constructor;
+  Napi::FunctionReference *XRTargetRayOrGripSpace::constructor;
 
   template <typename T>
-  XRSpaceBase<T>::XRSpaceBase(const Napi::CallbackInfo &info, XRSpaceSubType subType) : Napi::ObjectWrap<T>(info),
-                                                                                        subType(subType),
-                                                                                        baseMatrix(mat4(1.0f)),
-                                                                                        lastFrameId(-1),
-                                                                                        mInverseMatrixCache(mat4(1.0f)),
-                                                                                        mIsInverseMatrixDirty(true)
+  XRSpaceBase<T>::XRSpaceBase(const Napi::CallbackInfo &info,
+                              XRSpaceSubType subType,
+                              bool isReferenceSpace) : Napi::ObjectWrap<T>(info),
+                                                       subType(subType),
+                                                       isReferenceSpace(isReferenceSpace),
+                                                       baseMatrix(mat4(1.0f)),
+                                                       lastFrameId(-1),
+                                                       mInverseMatrixCache(mat4(1.0f)),
+                                                       mIsInverseMatrixDirty(true)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -32,7 +36,7 @@ namespace bindings
     if (lastFrameId == frameId)
       return;
     lastFrameId = frameId;
-    static_cast<T*>(this)->onPoseUpdate(session, frame);
+    static_cast<T *>(this)->onPoseUpdate(session, frame);
   }
 
   template <typename T>
@@ -56,7 +60,17 @@ namespace bindings
     return exports;
   }
 
-  XRSpace::XRSpace(const Napi::CallbackInfo &info) : XRSpaceBase(info, XRSpaceSubType::TARGET_RAY)
+  Napi::Object XRSpace::NewInstance(Napi::Env env, XRSpaceSubType subType, mat4 baseMatrix)
+  {
+    Napi::EscapableHandleScope scope(env);
+    Napi::Object obj = constructor->New({});
+    XRSpace *space = Napi::ObjectWrap<XRSpace>::Unwrap(obj);
+    space->subType = subType;
+    space->baseMatrix = baseMatrix;
+    return scope.Escape(obj).ToObject();
+  }
+
+  XRSpace::XRSpace(const Napi::CallbackInfo &info) : XRSpaceBase(info, XRSpaceSubType::UNSET)
   {
   }
 
@@ -79,7 +93,7 @@ namespace bindings
     return scope.Escape(obj).ToObject();
   }
 
-  XRReferenceSpace::XRReferenceSpace(const Napi::CallbackInfo &info) : XRSpaceBase(info, XRSpaceSubType::TARGET_RAY),
+  XRReferenceSpace::XRReferenceSpace(const Napi::CallbackInfo &info) : XRSpaceBase(info, XRSpaceSubType::UNSET, true),
                                                                        offsetMatrix(mat4(1.0f))
   {
     Napi::Env env = info.Env();
@@ -124,27 +138,6 @@ namespace bindings
       XRSpaceBase<XRReferenceSpace>::onPoseUpdate(session, frame);
     }
     // TODO: other reference space types to update?
-  }
-
-  template <typename Ts>
-  mat4 XRReferenceSpace::getRelativeTransform(XRSpaceBase<Ts> *baseSpace)
-  {
-    return baseMatrix * baseSpace->getInverseBaseMatrix();
-  }
-
-  mat4 XRReferenceSpace::getRelativeTransform(XRSpaceBase<XRSpace> *baseSpace)
-  {
-    return getRelativeTransform<XRSpace>(baseSpace);
-  }
-
-  mat4 XRReferenceSpace::getRelativeTransform(XRSpaceBase<XRReferenceSpace> *baseSpace)
-  {
-    return getRelativeTransform<XRReferenceSpace>(baseSpace);
-  }
-
-  mat4 XRReferenceSpace::getRelativeTransform(XRSpaceBase<XRViewSpace> *baseSpace)
-  {
-    return getRelativeTransform<XRViewSpace>(baseSpace);
   }
 
   Napi::Object XRViewSpace::Init(Napi::Env env, Napi::Object exports)
@@ -231,7 +224,61 @@ namespace bindings
     return viewSpaceType;
   }
 
+  Napi::Object XRTargetRayOrGripSpace::Init(Napi::Env env, Napi::Object exports)
+  {
+    Napi::HandleScope scope(env);
+    Napi::Function func = DefineClass(env, "XRSpace" /** use the same name as XRSpace */, {});
+    constructor = new Napi::FunctionReference();
+    *constructor = Napi::Persistent(func);
+    return exports;
+  }
+
+  Napi::Object XRTargetRayOrGripSpace::NewInstance(Napi::Env env, xr::InputSource *inputSource, bool isGrip)
+  {
+    Napi::EscapableHandleScope scope(env);
+    auto instance = Napi::External<xr::InputSource>::New(env, inputSource);
+    Napi::Object obj = constructor->New({Napi::Boolean::New(env, isGrip), instance});
+    return scope.Escape(obj).ToObject();
+  }
+
+  XRTargetRayOrGripSpace::XRTargetRayOrGripSpace(const Napi::CallbackInfo &info) : XRSpaceBase(info, XRSpaceSubType::TARGET_RAY)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() != 2)
+    {
+      Napi::TypeError::New(env, "XRTargetRayOrGripSpace constructor expects 2 arguments").ThrowAsJavaScriptException();
+      return;
+    }
+    if (!info[0].IsBoolean())
+    {
+      Napi::TypeError::New(env, "XRTargetRayOrGripSpace constructor expects a boolean as the first argument").ThrowAsJavaScriptException();
+      return;
+    }
+    if (!info[1].IsExternal())
+    {
+      Napi::TypeError::New(env, "XRTargetRayOrGripSpace constructor could not be called").ThrowAsJavaScriptException();
+      return;
+    }
+
+    auto isGrip = info[0].As<Napi::Boolean>().Value();
+    auto external = info[1].As<Napi::External<xr::InputSource>>();
+    inputSource = external.Data();
+    subType = isGrip ? XRSpaceSubType::GRIP : XRSpaceSubType::TARGET_RAY;
+  }
+
+  void XRTargetRayOrGripSpace::onPoseUpdate(XRSession *session, xr::DeviceFrame *frame)
+  {
+    if (subType == XRSpaceSubType::GRIP)
+      baseMatrix = inputSource->gripBaseMatrix;
+    else if (subType == XRSpaceSubType::TARGET_RAY)
+      baseMatrix = inputSource->targetRayBaseMatrix;
+    XRSpaceBase<XRTargetRayOrGripSpace>::onPoseUpdate(session, frame);
+  }
+
   template class XRSpaceBase<XRSpace>;
   template class XRSpaceBase<XRReferenceSpace>;
   template class XRSpaceBase<XRViewSpace>;
+  template class XRSpaceBase<XRTargetRayOrGripSpace>;
 }

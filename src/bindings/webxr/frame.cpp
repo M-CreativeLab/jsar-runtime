@@ -120,7 +120,7 @@ namespace bindings
     viewerSpace->ensurePoseUpdated(id, session, internal);
 
     auto activeEye = getActiveEye();
-    auto viewerTransform = referenceSpace->getRelativeTransform(viewerSpace);
+    auto viewerTransform = XRSPACE_RELATIVE_TRANSFORM(referenceSpace, viewerSpace);
 
     auto viewerPoseObject = XRViewerPose::NewInstance(env, viewerTransform);
     auto viewerPoseUnwrapped = XRViewerPose::Unwrap(viewerPoseObject);
@@ -131,7 +131,7 @@ namespace bindings
                                    return;
                                  viewSpace->ensurePoseUpdated(id, session, internal);
 
-                                 auto viewTransform = referenceSpace->getRelativeTransform(viewSpace);
+                                 auto viewTransform = XRSPACE_RELATIVE_TRANSFORM(referenceSpace, viewSpace);
                                  auto xrView = XRView::NewInstance(env, session, viewTransform, viewIndex, activeEye);
                                  viewerPoseUnwrapped->addView(xrView);
                                  // End
@@ -158,7 +158,15 @@ namespace bindings
 
     auto space = XRSpace::Unwrap(info[0].As<Napi::Object>());
     auto baseSpace = XRSpace::Unwrap(info[1].As<Napi::Object>());
+    baseSpace->ensurePoseUpdated(id, session, internal);
 
+    if (!space->isReferenceSpace && space->subType != XRSpaceSubType::UNSET)
+    {
+      auto inputSpace = XRTargetRayOrGripSpace::Unwrap(info[0].As<Napi::Object>());
+      inputSpace->ensurePoseUpdated(id, session, internal);
+      auto transform = XRSPACE_RELATIVE_TRANSFORM(inputSpace, baseSpace);
+      return XRPose::NewInstance(env, transform);
+    }
     // TODO
     return env.Undefined();
   }
@@ -206,7 +214,8 @@ namespace bindings
     device->endFrame(sessionId, getStereoRenderingId(), getViewIndex());
     endTime = chrono::high_resolution_clock::now();
 
-    auto duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
-    DEBUG(LOG_TAG, "xrframe exection in JavaScript takes %dms", duration.count());
+    auto duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
+    if (duration > 1000 / 60)
+      DEBUG(LOG_TAG, "Detected a long frame(%d) takes %dms in session(%d)", id, duration, sessionId);
   }
 }

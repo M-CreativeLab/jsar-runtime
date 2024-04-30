@@ -356,9 +356,9 @@ namespace bindings
 
     auto gazeInputSource = device->getGazeInputSource();
     auto jsInputSource = Napi::Object::New(env);
-    jsInputSource.Set("id", Napi::Number::New(env, gazeInputSource.id));
-    jsInputSource.Set("targetRayMode", Napi::Number::New(env, gazeInputSource.targetRayMode));
-    jsInputSource.Set("handedness", Napi::Number::New(env, gazeInputSource.handness));
+    jsInputSource.Set("id", Napi::Number::New(env, gazeInputSource->id));
+    jsInputSource.Set("targetRayMode", Napi::Number::New(env, gazeInputSource->targetRayMode));
+    jsInputSource.Set("handedness", Napi::Number::New(env, gazeInputSource->handness));
     return jsInputSource;
   }
 

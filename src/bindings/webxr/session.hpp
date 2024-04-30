@@ -65,6 +65,9 @@ namespace bindings
     void onSelectionEnd(uint32_t sessionId);
     bool queueNextFrame();
     void addViewSpace(Napi::Env env, XRViewSpaceType type);
+    Napi::Value createInputSourcesChangeEvent(Napi::Env env,
+                                              std::vector<XRInputSource *> &added,
+                                              std::vector<XRInputSource *> &removed);
 
   public:
     XRReferenceSpace *getLocalSpace();
