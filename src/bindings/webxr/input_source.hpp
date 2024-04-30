@@ -2,6 +2,7 @@
 
 #include <napi.h>
 #include "common.hpp"
+#include "xr/device.hpp"
 
 namespace bindings
 {
@@ -9,7 +10,7 @@ namespace bindings
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env);
+    static Napi::Object NewInstance(Napi::Env env, xr::InputSource &inputSource);
     XRInputSource(const Napi::CallbackInfo &info);
     ~XRInputSource();
 
@@ -22,30 +23,24 @@ namespace bindings
     Napi::Value TargetRaySpaceGetter(const Napi::CallbackInfo &info);
 
   public:
-    /** Fields */
+    xr::InputSource *internal = nullptr;
 
   private:
     static Napi::FunctionReference *constructor;
   };
 
-  class XRInputSourceArray : public Napi::ObjectWrap<XRInputSourceArray>
+  class XRInputSourceArray : public Napi::Array
   {
   public:
-    static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env);
-    XRInputSourceArray(const Napi::CallbackInfo &info);
+    static XRInputSourceArray New(Napi::Env env);
+    XRInputSourceArray(napi_env env, napi_value value);
     ~XRInputSourceArray();
 
-  private:
-    Napi::Value LengthGetter(const Napi::CallbackInfo &info);
-    Napi::Value IndexGetter(const Napi::CallbackInfo &info);
-    Napi::Value Entries(const Napi::CallbackInfo &info);
-    Napi::Value ForEach(const Napi::CallbackInfo &info);
-    Napi::Value Keys(const Napi::CallbackInfo &info);
-    Napi::Value Values(const Napi::CallbackInfo &info);
-
   public:
-    Napi::Reference<Napi::Array> inputSources;
+    void updateInputSourcesIfChanged();
+
+  private:
+    xr::Device *device = nullptr;
 
   private:
     static Napi::FunctionReference *constructor;

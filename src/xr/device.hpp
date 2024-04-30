@@ -100,9 +100,22 @@ namespace xr
     bool removeScreenInputSource(int id);
 
   private:
+    /**
+     * A flag to indicate if the XR is enabled.
+     */
     bool m_Enabled = false;
+    /**
+     * If the host frame should be skipped for the script.
+     *
+     * In multi-pass rendering, this could be set by the left eye's frame callback, and used by both eyes, so that the
+     * right eye's frame callback will not be called.
+     */
     bool m_SkipHostFrameOnScript = false;
     bool m_IsLastHostFrameTimeSet = false;
+    /**
+     * A host frame is the frame called by the host environment, such as the Unity engine, the host frame is the Unity's
+     * Update() method, and then the time of host frame is the time point when the host frame is called.
+     */
     chrono::time_point<chrono::high_resolution_clock> m_HostFrameTime;
     chrono::time_point<chrono::high_resolution_clock> m_LastHostFrameTime;
 
@@ -163,10 +176,14 @@ namespace xr
      * A mutex to ensure the above data is thread-safe.
      */
     mutex m_Mutex;
+
+  private:
     /**
-     * Input sources
+     * Input sources fields
      */
+    // input source for gaze
     InputSource m_GazeInputSource;
+    // input sources(2) for hands
     InputSource m_HandInputSources[2];
     std::map<int, InputSource> m_ScreenInputSources;
     std::map<int, InputSource> m_GamepadInputSources;

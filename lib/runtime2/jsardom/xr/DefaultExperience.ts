@@ -130,6 +130,7 @@ export class WebXRDefaultExperience {
     // Add controller support
     result.input = new WebXRInput(xrHelper.sessionManager, xrHelper.camera, {
       controllerOptions: {
+        doNotLoadControllerMesh: true,
         renderingGroupId: options.renderingGroupId,
       },
       ...(options.inputOptions || {}),

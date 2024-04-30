@@ -21,10 +21,11 @@ namespace bindings
     return exports;
   }
 
-  Napi::Object XRInputSource::NewInstance(Napi::Env env)
+  Napi::Object XRInputSource::NewInstance(Napi::Env env, xr::InputSource &inputSource)
   {
     Napi::EscapableHandleScope scope(env);
-    Napi::Object obj = constructor->New({});
+    auto instance = Napi::External<xr::InputSource>::New(env, &inputSource);
+    Napi::Object obj = constructor->New({instance});
     return scope.Escape(obj).ToObject();
   }
 
@@ -32,6 +33,20 @@ namespace bindings
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
+
+    if (info.Length() != 1)
+    {
+      Napi::TypeError::New(env, "XRInputSource constructor expects 1 argument").ThrowAsJavaScriptException();
+      return;
+    }
+    if (!info[0].IsExternal())
+    {
+      Napi::TypeError::New(env, "XRInputSource constructor could not be called").ThrowAsJavaScriptException();
+      return;
+    }
+
+    auto external = info[0].As<Napi::External<xr::InputSource>>();
+    internal = external.Data();
   }
 
   XRInputSource::~XRInputSource()
@@ -74,75 +89,39 @@ namespace bindings
     return Napi::Value();
   }
 
-  Napi::Object XRInputSourceArray::Init(Napi::Env env, Napi::Object exports)
+  XRInputSourceArray XRInputSourceArray::New(Napi::Env env)
   {
-    Napi::Function func = DefineClass(env, "XRInputSourceArray", {
-                                                                     InstanceAccessor("length", &XRInputSourceArray::LengthGetter, nullptr),
-                                                                     InstanceAccessor("index", &XRInputSourceArray::IndexGetter, nullptr),
-                                                                     InstanceMethod("entries", &XRInputSourceArray::Entries),
-                                                                     InstanceMethod("forEach", &XRInputSourceArray::ForEach),
-                                                                     InstanceMethod("keys", &XRInputSourceArray::Keys),
-                                                                     InstanceMethod("values", &XRInputSourceArray::Values),
-                                                                 });
-    constructor = new Napi::FunctionReference();
-    *constructor = Napi::Persistent(func);
-    exports.Set("XRInputSourceArray", func);
-    return exports;
+    napi_value value;
+    napi_status status = napi_create_array(env, &value);
+    NAPI_THROW_IF_FAILED(env, status, XRInputSourceArray());
+    auto inputSourceArray = XRInputSourceArray(env, value);
+    inputSourceArray.updateInputSourcesIfChanged();
+    return inputSourceArray;
   }
 
-  Napi::Object XRInputSourceArray::NewInstance(Napi::Env env)
+  XRInputSourceArray::XRInputSourceArray(napi_env env, napi_value value) : Napi::Array(env, value)
   {
-    Napi::EscapableHandleScope scope(env);
-    Napi::Object obj = constructor->New({});
-    return scope.Escape(obj).ToObject();
-  }
-
-  XRInputSourceArray::XRInputSourceArray(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRInputSourceArray>(info)
-  {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
-
-    inputSources = Napi::Persistent(Napi::Array::New(env));
+    device = xr::Device::GetInstance();
+    if (device == nullptr)
+    {
+      Napi::Error::New(env, "XRInputSourceArray: Device is not initialized").ThrowAsJavaScriptException();
+      return;
+    }
   }
 
   XRInputSourceArray::~XRInputSourceArray()
   {
-    inputSources.Unref();
   }
 
-  Napi::Value XRInputSourceArray::LengthGetter(const Napi::CallbackInfo &info)
+  void XRInputSourceArray::updateInputSourcesIfChanged()
   {
-    Napi::Env env = info.Env();
-    return Napi::Value();
-  }
+    if (device == nullptr || !device->enabled())
+      return;
 
-  Napi::Value XRInputSourceArray::IndexGetter(const Napi::CallbackInfo &info)
-  {
-    Napi::Env env = info.Env();
-    return Napi::Value();
-  }
-
-  Napi::Value XRInputSourceArray::Entries(const Napi::CallbackInfo &info)
-  {
-    Napi::Env env = info.Env();
-    return Napi::Value();
-  }
-
-  Napi::Value XRInputSourceArray::ForEach(const Napi::CallbackInfo &info)
-  {
-    Napi::Env env = info.Env();
-    return Napi::Value();
-  }
-
-  Napi::Value XRInputSourceArray::Keys(const Napi::CallbackInfo &info)
-  {
-    Napi::Env env = info.Env();
-    return Napi::Value();
-  }
-
-  Napi::Value XRInputSourceArray::Values(const Napi::CallbackInfo &info)
-  {
-    Napi::Env env = info.Env();
-    return Napi::Value();
+    Napi::Env env = Env();
+    Set(uint32_t(0), XRInputSource::NewInstance(env, device->getGazeInputSource()));
+    Set(uint32_t(1), XRInputSource::NewInstance(env, device->getHandInputSource(xr::Handness::Left)));
+    Set(uint32_t(2), XRInputSource::NewInstance(env, device->getHandInputSource(xr::Handness::Right)));
+    Set("length", Napi::Value::From(env, 3));
   }
 }

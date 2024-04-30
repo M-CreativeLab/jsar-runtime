@@ -42,9 +42,14 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() < 3)
+    if (info.Length() < 4)
     {
       Napi::TypeError::New(env, "Three arguments are required").ThrowAsJavaScriptException();
+      return;
+    }
+    if (!info[3].IsFunction())
+    {
+      Napi::TypeError::New(env, "The 4th argument must be a function").ThrowAsJavaScriptException();
       return;
     }
 
@@ -93,7 +98,10 @@ namespace bindings
     viewerSpace = Napi::Persistent(XRReferenceSpace::NewInstance(env, XRReferenceSpaceType::VIEWER));
 
     // Create the `XRInputSourceArray` object
-    inputSources = Napi::Persistent(XRInputSourceArray::NewInstance(env));
+    inputSources = Napi::Persistent(XRInputSourceArray::New(env));
+
+    // Set the event callback
+    onEventCallback = Napi::Persistent(info[3].As<Napi::Function>());
 
     // Start the session
     start();
@@ -472,7 +480,7 @@ namespace bindings
 
   void XRSession::updateInputSourcesIfChanged()
   {
-    // TODO
+    inputSources.Value().updateInputSourcesIfChanged();
   }
 
   void XRSession::onFrame(Napi::Env env, xr::DeviceFrame *frame)

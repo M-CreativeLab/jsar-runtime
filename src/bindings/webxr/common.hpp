@@ -55,6 +55,8 @@ namespace bindings
   class XRViewSpace;
   class XRPose;
   class XRViewerPose;
+  class XRInputSource;
+  class XRInputSourceArray;
 
   glm::mat4 createMat4FromArray(float *src);
 }

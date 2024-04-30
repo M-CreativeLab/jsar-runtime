@@ -45,8 +45,26 @@ to native implementations of the API.`
 class XRSessionWrapper extends XRSessionBinding {
   #eventTarget: EventTarget;
 
+  onend: XRSessionEventHandler = null;
+  oninputsourceschange: XRInputSourceChangeEventHandler = null;
+  onselect: XRInputSourceEventHandler = null;
+  onselectstart: XRInputSourceEventHandler = null;
+  onselectend: XRInputSourceEventHandler = null;
+  onsqueeze: XRInputSourceEventHandler = null;
+  onsqueezestart: XRInputSourceEventHandler = null;
+  onsqueezeend: XRInputSourceEventHandler = null;
+  onvisibilitychange: XRSessionEventHandler = null;
+  onframeratechange: XRSessionEventHandler = null;
+
   constructor(device: XRDevice, mode: XRSessionMode, sessionId: number) {
-    super((<XRNativeDevice>device).handle, mode, sessionId);
+    super((<XRNativeDevice>device).handle, mode, sessionId, (event: Event) => {
+      this.#eventTarget.dispatchEvent(event);
+      // call the event handler such as `onend`, `onselect`, etc.
+      const handler = this[`on${event.type}`];
+      if (typeof handler === 'function') {
+        handler(event);
+      }
+    });
     this.#eventTarget = new EventTarget();
   }
 

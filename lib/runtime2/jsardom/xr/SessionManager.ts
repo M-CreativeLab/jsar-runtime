@@ -65,6 +65,31 @@ export class WebXRSessionManager implements BABYLON.IDisposable, BABYLON.IWebXRR
    */
   public inXRSession: boolean = false;
 
+  private _worldScalingFactor: number = 1;
+  /**
+   * Observable raised when the world scale has changed
+   */
+  public onWorldScaleFactorChangedObservable: BABYLON.Observable<{
+    previousScaleFactor: number;
+    newScaleFactor: number;
+  }> = new BABYLON.Observable(undefined, true);
+
+  /**
+     * Scale factor to apply to all XR-related elements (camera, controllers)
+     */
+  public get worldScalingFactor(): number {
+    return this._worldScalingFactor;
+  }
+
+  public set worldScalingFactor(value: number) {
+    const oldValue = this._worldScalingFactor;
+    this._worldScalingFactor = value;
+    this.onWorldScaleFactorChangedObservable.notifyObservers({
+      previousScaleFactor: oldValue,
+      newScaleFactor: value,
+    });
+  }
+
   /**
    * Returns a promise that resolves with a boolean indicating if the provided session mode is supported by this browser
    * @param sessionMode defines the session to test

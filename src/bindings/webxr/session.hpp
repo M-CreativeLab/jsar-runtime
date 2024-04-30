@@ -87,7 +87,8 @@ namespace bindings
     Napi::ObjectReference localSpace;
     Napi::ObjectReference viewerSpace;
     std::vector<Napi::ObjectReference *> viewSpaces;
-    Napi::ObjectReference inputSources;
+    Napi::Reference<XRInputSourceArray> inputSources;
+    Napi::FunctionReference onEventCallback;
 
   private:
     static Napi::FunctionReference *constructor;

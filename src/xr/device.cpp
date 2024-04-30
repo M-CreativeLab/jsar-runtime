@@ -507,6 +507,11 @@ namespace xr
     for (int i = 0; i < 16; i++)
     {
       m_ViewerTransform[i] = transform[i];
+      /**
+       * If there is no eye tracking, the target ray transform will be the same as the viewer transform.
+       * 
+       * TODO: support the eye tracking?
+       */
       m_GazeInputSource.targetRayTransform[i] = transform[i];
     }
     return true;

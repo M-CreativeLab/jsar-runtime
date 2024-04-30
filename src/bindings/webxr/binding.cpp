@@ -22,7 +22,6 @@ Napi::Object bindings::InitWebxrModule(Napi::Env env, Napi::Object exports)
 
   // Input Source
   XRInputSource::Init(env, exports);
-  XRInputSourceArray::Init(env, exports);
 
   // Layers
   XRLayer::Init(env, exports);
