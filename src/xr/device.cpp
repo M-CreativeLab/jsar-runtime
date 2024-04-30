@@ -5,6 +5,8 @@
 
 namespace xr
 {
+  static uint32_t MIN_FRAME_RATE = 60;
+  static uint32_t MAX_FRAME_RATE = 90;
   Device *Device::s_instance = NULL;
 
   Device *Device::GetInstance()
@@ -74,6 +76,12 @@ namespace xr
     return m_Enabled;
   }
 
+  void Device::setFrameRate(uint32_t frameRate)
+  {
+    if (frameRate >= MIN_FRAME_RATE || frameRate <= MAX_FRAME_RATE)
+      frameRate = MIN_FRAME_RATE;
+  }
+
   bool Device::skipHostFrameOnScript()
   {
     if (m_Enabled == false)
@@ -92,9 +100,8 @@ namespace xr
         /**
          * We need to skip a frame based on the script frame rate to avoid the unnecessary CPU usage.
          */
-        uint32_t targetFrameRate = 60;
         auto duration = chrono::duration_cast<chrono::milliseconds>(m_HostFrameTime - m_LastHostFrameTime);
-        if (duration.count() < 1000 / targetFrameRate)
+        if (duration.count() < 1000 / m_FrameRate)
         {
           m_SkipHostFrameOnScript = true;
         }

@@ -40,6 +40,7 @@ namespace xr
     void initialize(bool enabled);
     bool requestSession(int id);
     bool enabled();
+    void setFrameRate(uint32_t frameRate);
     bool skipHostFrameOnScript();
     void startHostFrame();
     void endHostFrame();
@@ -104,6 +105,11 @@ namespace xr
     bool m_IsLastHostFrameTimeSet = false;
     chrono::time_point<chrono::high_resolution_clock> m_HostFrameTime;
     chrono::time_point<chrono::high_resolution_clock> m_LastHostFrameTime;
+
+    /**
+     * The frame rate for the XR sessions.
+     */
+    uint32_t m_FrameRate = 60;
 
     /**
      * Recommanded field of view.

@@ -15,6 +15,7 @@ extern "C"
   static IUnityInterfaces *s_UnityInterfaces = NULL;
   static IUnityGraphics *s_Graphics = NULL;
   static void OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType);
+  static void OnPlatformSetup();
 
   DLL_PUBLIC void UnityPluginLoad(IUnityInterfaces *unityInterfaces)
   {
@@ -29,6 +30,9 @@ extern "C"
 
     // Create the `xr::Device` instance globally.
     xr::Device::Create();
+
+    // Setup the the specific platform: android, windows or others
+    OnPlatformSetup();
 
     // Bootstrap the Node.js instance
     auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
@@ -57,12 +61,29 @@ extern "C"
     if (s_CurrentAPI)
       s_CurrentAPI->ProcessDeviceEvent(eventType, s_UnityInterfaces);
 
+    // Cleanup graphics API implementation upon shutdown
+    if (eventType == kUnityGfxDeviceEventShutdown)
+    {
+      delete s_CurrentAPI;
+      s_CurrentAPI = NULL;
+      s_DeviceType = kUnityGfxRendererNull;
+    }
+  }
+
+  static void OnPlatformSetup()
+  {
+    if (s_CurrentAPI == nullptr)
+      return;
+
+    auto xrDevice = xr::Device::GetInstance();
+    if (xrDevice == nullptr)
+      return;
+
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
     char deviceVendor[PROP_VALUE_MAX];
     if (
-      __system_property_get("ro.product.vendor.brand", deviceVendor) >= 0 ||
-      __system_property_get("ro.product.product.brand", deviceVendor) >= 0
-    )
+        __system_property_get("ro.product.vendor.brand", deviceVendor) >= 0 ||
+        __system_property_get("ro.product.product.brand", deviceVendor) >= 0)
     {
       setenv("JSAR_DEVICE_VENDOR", deviceVendor, 1);
     }
@@ -94,15 +115,14 @@ extern "C"
       else
         setenv("NODE_ENV", "prod", 1);
     }
-#endif
 
-    // Cleanup graphics API implementation upon shutdown
-    if (eventType == kUnityGfxDeviceEventShutdown)
+    char xrFrameRate[PROP_VALUE_MAX];
+    if (__system_property_get("jsar.xr.framerate", xrFrameRate) >= 0)
     {
-      delete s_CurrentAPI;
-      s_CurrentAPI = NULL;
-      s_DeviceType = kUnityGfxRendererNull;
+      int frameRate = atoi(xrFrameRate);
+      xrDevice->setFrameRate(frameRate);
     }
+#endif
   }
 
   static void OnUnityRenderEvent(int eventID)
