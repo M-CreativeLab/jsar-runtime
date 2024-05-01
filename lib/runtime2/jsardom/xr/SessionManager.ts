@@ -350,6 +350,19 @@ export class WebXRSessionManager implements BABYLON.IDisposable, BABYLON.IWebXRR
     return Promise.resolve(this.session.updateRenderState(state));
   }
 
+  /**
+     * Run a callback in the xr render loop
+     * @param callback the callback to call when in XR Frame
+     * @param ignoreIfNotInSession if no session is currently running, run it first thing on the next session
+     */
+  public runInXRFrame(callback: () => void, ignoreIfNotInSession = true): void {
+    if (this.inXRFrameLoop) {
+      callback();
+    } else if (this.inXRSession || !ignoreIfNotInSession) {
+      this.onXRFrameObservable.addOnce(callback);
+    }
+  }
+
   dispose(): void {
     // disposing without leaving XR? Exit XR first
     if (this.inXRSession) {

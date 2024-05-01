@@ -46,13 +46,13 @@ namespace bindings
   private:
     Napi::Value RenderStateGetter(const Napi::CallbackInfo &info);
     Napi::Value EnvironmentBlendModeGetter(const Napi::CallbackInfo &info);
+    Napi::Value EnabledFeaturesGetter(const Napi::CallbackInfo &info);
     Napi::Value RequestAnimationFrame(const Napi::CallbackInfo &info);
     Napi::Value CancelAnimationFrame(const Napi::CallbackInfo &info);
     Napi::Value RequestReferenceSpace(const Napi::CallbackInfo &info);
     Napi::Value UpdateRenderState(const Napi::CallbackInfo &info);
     Napi::Value UpdateTargetFrameRate(const Napi::CallbackInfo &info);
     Napi::Value End(const Napi::CallbackInfo &info);
-    Napi::Value InputSourcesGetter(const Napi::CallbackInfo &info);
 
   private:
     void start();
@@ -65,6 +65,7 @@ namespace bindings
     void onSelectionEnd(uint32_t sessionId);
     bool queueNextFrame();
     void addViewSpace(Napi::Env env, XRViewSpaceType type);
+    Napi::Array createEnabledFeatures(Napi::Env env);
     Napi::Value createInputSourcesChangeEvent(Napi::Env env,
                                               std::vector<XRInputSource *> &added,
                                               std::vector<XRInputSource *> &removed);
@@ -87,6 +88,7 @@ namespace bindings
     XREnvironmentBlendMode environmentBlendMode;
     std::vector<XRFrameCallbackDescriptor *> pendingFrameCallbacks;
     std::vector<XRFrameCallbackDescriptor *> currentFrameCallbacks;
+    Napi::Reference<Napi::Array> enabledFeatures;
     Napi::ObjectReference localSpace;
     Napi::ObjectReference viewerSpace;
     std::vector<Napi::ObjectReference *> viewSpaces;

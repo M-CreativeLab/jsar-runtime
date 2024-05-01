@@ -92,6 +92,7 @@ namespace bindings
     // Create the initial `XRRenderState` object
     activeRenderState = new xr::RenderState();
     pendingRenderState = nullptr;
+    enabledFeatures = Napi::Persistent(createEnabledFeatures(env));
 
     // Create ReferenceSpace instances.
     localSpace = Napi::Persistent(XRReferenceSpace::NewInstance(env, XRReferenceSpaceType::LOCAL));
@@ -102,6 +103,11 @@ namespace bindings
 
     // Set the event callback
     onEventCallback = Napi::Persistent(info[3].As<Napi::Function>());
+
+    // Define JS properties
+    auto thisObject = info.This().ToObject();
+    thisObject.DefineProperty(Napi::PropertyDescriptor::Value("inputSources", inputSources.Value(), napi_enumerable));
+    thisObject.DefineProperty(Napi::PropertyDescriptor::Value("enabledFeatures", enabledFeatures.Value(), napi_enumerable));
 
     // Start the session
     start();
@@ -421,13 +427,6 @@ namespace bindings
     return env.Undefined();
   }
 
-  Napi::Value XRSession::InputSourcesGetter(const Napi::CallbackInfo &info)
-  {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
-    return inputSources.Value();
-  }
-
   void XRSession::start()
   {
     if (started == true)
@@ -561,6 +560,14 @@ namespace bindings
     auto xrViewSpaceRef = new Napi::ObjectReference();
     *xrViewSpaceRef = Napi::Persistent(XRViewSpace::NewInstance(env, type));
     viewSpaces.push_back(xrViewSpaceRef);
+  }
+
+  Napi::Array XRSession::createEnabledFeatures(Napi::Env env)
+  {
+    auto enabledFeaturesArray = Napi::Array::New(env);
+    enabledFeaturesArray.Set(uint32_t(0), Napi::String::New(env, "viewer"));
+    enabledFeaturesArray.Set(uint32_t(1), Napi::String::New(env, "local"));
+    return enabledFeaturesArray;
   }
 
   Napi::Value XRSession::createInputSourcesChangeEvent(Napi::Env env,

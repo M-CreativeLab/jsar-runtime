@@ -2,6 +2,7 @@ import './features/index';
 import { WebXRExperienceHelper } from './ExperienceHelper';
 import { WebXRInput } from './Input';
 import { WebXRManagedOutputCanvasOptions } from './OutputCanvas';
+import { IWebXRControllerPointerSelectionOptions, WebXRControllerPointerSelection } from './features/WebXRControllerPointerSelection';
 
 /**
  * Options for the default xr helper
@@ -42,23 +43,23 @@ export class WebXRDefaultExperienceOptions {
   /**
    * optional configuration for pointer selection
    */
-  public pointerSelectionOptions?: Partial<BABYLON.IWebXRControllerPointerSelectionOptions>;
+  public pointerSelectionOptions?: Partial<IWebXRControllerPointerSelectionOptions>;
   /**
    * optional configuration for near interaction
    */
-  public nearInteractionOptions?: Partial<BABYLON.IWebXRNearInteractionOptions>;
+  // public nearInteractionOptions?: Partial<BABYLON.IWebXRNearInteractionOptions>;
   /**
    * optional configuration for teleportation
    */
-  public teleportationOptions?: Partial<BABYLON.IWebXRTeleportationOptions>;
+  // public teleportationOptions?: Partial<BABYLON.IWebXRTeleportationOptions>;
   /**
    * optional configuration for the output canvas
    */
-  // public outputCanvasOptions?: WebXRManagedOutputCanvasOptions;
+  public outputCanvasOptions?: WebXRManagedOutputCanvasOptions;
   /**
    * optional UI options. This can be used among other to change session mode and reference space type
    */
-  public uiOptions?: Partial<BABYLON.WebXREnterExitUIOptions>;
+  // public uiOptions?: Partial<BABYLON.WebXREnterExitUIOptions>;
   /**
    * When loading teleportation and pointer select, use stable versions instead of latest.
    */
@@ -92,7 +93,7 @@ export class WebXRDefaultExperience {
   /**
    * Enables laser pointer and selection
    */
-  // public pointerSelection: WebXRControllerPointerSelection;
+  public pointerSelection: WebXRControllerPointerSelection;
   /**
    * Default target xr should render to
    */
@@ -108,13 +109,7 @@ export class WebXRDefaultExperience {
 
   public static async CreateAsync(
     scene: BABYLON.Scene,
-    options: {
-      xrSystem: XRSystem;
-      ignoreNativeCameraTransformation?: boolean;
-      renderingGroupId?: number;
-      inputOptions?: any;
-      outputCanvasOptions: WebXRManagedOutputCanvasOptions;
-    }
+    options: WebXRDefaultExperienceOptions & { xrSystem: XRSystem }
   ): Promise<WebXRDefaultExperience> {
     const result = new WebXRDefaultExperience();
     scene.onDisposeObservable.addOnce(() => {
@@ -135,6 +130,39 @@ export class WebXRDefaultExperience {
       },
       ...(options.inputOptions || {}),
     });
+
+    if (!options.disablePointerSelection) {
+      // Add default pointer selection
+      const pointerSelectionOptions = {
+        ...options.pointerSelectionOptions,
+        xrInput: result.input,
+        renderingGroupId: options.renderingGroupId,
+      };
+
+      result.pointerSelection = <WebXRControllerPointerSelection>(
+        result.baseExperience.featuresManager.enableFeature(
+          WebXRControllerPointerSelection.Name,
+          options.useStablePlugins ? 'stable' : 'latest',
+          <IWebXRControllerPointerSelectionOptions>pointerSelectionOptions
+        )
+      );
+
+      // if (!options.disableTeleportation) {
+      //   // Add default teleportation, including rotation
+      //   result.teleportation = <WebXRMotionControllerTeleportation>result.baseExperience.featuresManager.enableFeature(
+      //     WebXRMotionControllerTeleportation.Name,
+      //     options.useStablePlugins ? "stable" : "latest",
+      //     <IWebXRTeleportationOptions>{
+      //       floorMeshes: options.floorMeshes,
+      //       xrInput: result.input,
+      //       renderingGroupId: options.renderingGroupId,
+      //       ...options.teleportationOptions,
+      //     }
+      //   );
+      //   result.teleportation.setSelectionFeature(result.pointerSelection);
+      // }
+    }
+
     // Create the WebXR output target
     result.renderTarget = result.baseExperience.sessionManager.getWebXRRenderTarget(options.outputCanvasOptions);
     return result;

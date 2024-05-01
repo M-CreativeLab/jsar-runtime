@@ -1,6 +1,7 @@
 import { WebXRCamera } from './Camera';
 import { WebXRSessionManager } from './SessionManager';
 import { WebXRInputSource } from './InputSource';
+import { WebXRMotionControllerManager } from './motionController/webXRMotionControllerManager';
 
 /**
  * The schema for initialization options of the XR Input class
@@ -98,20 +99,20 @@ export class WebXRInput implements BABYLON.IDisposable {
       });
     });
 
-    // if (this._options.customControllersRepositoryURL) {
-    //   WebXRMotionControllerManager.BaseRepositoryUrl = this._options.customControllersRepositoryURL;
-    // }
-    // WebXRMotionControllerManager.UseOnlineRepository = !this._options.disableOnlineControllerRepository;
-    // if (WebXRMotionControllerManager.UseOnlineRepository) {
-    //   // pre-load the profiles list to load the controllers quicker afterwards
-    //   try {
-    //     WebXRMotionControllerManager.UpdateProfilesList().catch(() => {
-    //       WebXRMotionControllerManager.UseOnlineRepository = false;
-    //     });
-    //   } catch (e) {
-    //     WebXRMotionControllerManager.UseOnlineRepository = false;
-    //   }
-    // }
+    if (this._options.customControllersRepositoryURL) {
+      WebXRMotionControllerManager.BaseRepositoryUrl = this._options.customControllersRepositoryURL;
+    }
+    WebXRMotionControllerManager.UseOnlineRepository = !this._options.disableOnlineControllerRepository;
+    if (WebXRMotionControllerManager.UseOnlineRepository) {
+      // pre-load the profiles list to load the controllers quicker afterwards
+      try {
+        WebXRMotionControllerManager.UpdateProfilesList().catch(() => {
+          WebXRMotionControllerManager.UseOnlineRepository = false;
+        });
+      } catch (e) {
+        WebXRMotionControllerManager.UseOnlineRepository = false;
+      }
+    }
   }
 
   private _onInputSourcesChange = (event: XRInputSourceChangeEvent) => {
@@ -167,6 +168,6 @@ export class WebXRInput implements BABYLON.IDisposable {
     this.onControllerRemovedObservable.clear();
 
     // clear the controller cache
-    // WebXRMotionControllerManager.ClearControllerCache();
+    WebXRMotionControllerManager.ClearControllerCache();
   }
 }

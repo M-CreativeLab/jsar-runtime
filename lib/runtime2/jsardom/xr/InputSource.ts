@@ -1,4 +1,6 @@
 import { WebXRCamera } from './Camera';
+import { WebXRAbstractMotionController } from './motionController';
+import { WebXRMotionControllerManager } from './motionController/webXRMotionControllerManager';
 
 let idCount = 0;
 
@@ -44,7 +46,7 @@ export class WebXRInputSource {
    * Using this object it is possible to get click events and trackpad changes of the
    * webxr controller that is currently being used.
    */
-  // public motionController?: WebXRAbstractMotionController;
+  public motionController?: WebXRAbstractMotionController;
   /**
    * Event that fires when the controller is removed/disposed.
    * The object provided as event data is this controller, after associated assets were disposed.
@@ -60,7 +62,7 @@ export class WebXRInputSource {
   /**
    * Observers registered here will trigger when a motion controller profile was assigned to this xr controller
    */
-  // public onMotionControllerInitObservable = new BABYLON.Observable<WebXRAbstractMotionController>();
+  public onMotionControllerInitObservable = new BABYLON.Observable<WebXRAbstractMotionController>();
   /**
    * Pointer which can be used to select objects or attach a visible laser to
    */
@@ -99,7 +101,34 @@ export class WebXRInputSource {
 
     // for now only load motion controllers if gamepad object available
     if (this.inputSource.gamepad && this.inputSource.targetRayMode === 'tracked-pointer') {
-      // TODO
+      WebXRMotionControllerManager.GetMotionControllerWithXRInput(inputSource, _scene, this._options.forceControllerProfile).then(
+        (motionController) => {
+          this.motionController = motionController;
+          this.onMotionControllerInitObservable.notifyObservers(motionController);
+          // should the model be loaded?
+          if (!this._options.doNotLoadControllerMesh && !this.motionController._doNotLoadControllerMesh) {
+            this.motionController.loadModel().then((success) => {
+              if (success && this.motionController && this.motionController.rootMesh) {
+                if (this._options.renderingGroupId) {
+                  // anything other than 0?
+                  this.motionController.rootMesh.renderingGroupId = this._options.renderingGroupId;
+                  this.motionController.rootMesh.getChildMeshes(false).forEach((mesh) => (mesh.renderingGroupId = this._options.renderingGroupId!));
+                }
+                this.onMeshLoadedObservable.notifyObservers(this.motionController.rootMesh);
+                this.motionController.rootMesh.parent = this.grip || this.pointer;
+                this.motionController.disableAnimation = !!this._options.disableMotionControllerAnimation;
+              }
+              // make sure to dispose is the controller is already disposed
+              if (this._disposed) {
+                this.motionController?.dispose();
+              }
+            });
+          }
+        },
+        () => {
+          BABYLON.Tools.Warn(`Could not find a matching motion controller for the registered input source`);
+        }
+      );
     }
   }
 
@@ -117,11 +146,11 @@ export class WebXRInputSource {
     if (this.grip) {
       this.grip.dispose(true);
     }
-    // if (this.motionController) {
-    //   this.motionController.dispose();
-    // }
+    if (this.motionController) {
+      this.motionController.dispose();
+    }
     this.pointer.dispose(true);
-    // this.onMotionControllerInitObservable.clear();
+    this.onMotionControllerInitObservable.clear();
     this.onMeshLoadedObservable.clear();
     this.onDisposeObservable.notifyObservers(this);
     this.onDisposeObservable.clear();
@@ -181,9 +210,9 @@ export class WebXRInputSource {
       }
       this.grip.parent = xrCamera.parent;
     }
-    // if (this.motionController) {
-    //   // either update buttons only or also position, if in gamepad mode
-    //   this.motionController.updateFromXRFrame(xrFrame);
-    // }
+    if (this.motionController) {
+      // either update buttons only or also position, if in gamepad mode
+      this.motionController.updateFromXRFrame(xrFrame);
+    }
   }
 }
