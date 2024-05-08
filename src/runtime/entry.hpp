@@ -156,7 +156,7 @@ extern "C"
    * @param orientation The orientation of the joint, a 4-element float array that represents a quaternion.
    * @param radius The radius of the joint, a float value.
    */
-  DLL_PUBLIC bool TransmuteNative_SetHandInputPose(int handness, int joint, float *position, float *orientation, float radius);
+  DLL_PUBLIC void TransmuteNative_SetHandInputPose(int handness, int joint, float *position, float *orientation, float radius);
 
   /**
    * Update the target ray pose for the hand input source.
@@ -165,7 +165,7 @@ extern "C"
    * @param translation The translation part of the transform, a 3-element float array.
    * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
    */
-  DLL_PUBLIC bool TransmuteNative_SetHandInputRayPose(int handness, float *translation, float *rotation);
+  DLL_PUBLIC void TransmuteNative_SetHandInputRayPose(int handness, float *translation, float *rotation);
 
   /**
    * Update the grip pose for the hand input source.
@@ -174,6 +174,6 @@ extern "C"
    * @param translation The translation part of the transform, a 3-element float array.
    * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
    */
-  DLL_PUBLIC bool TransmuteNative_SetHandInputGripPose(int handness, float *translation, float *rotation);
+  DLL_PUBLIC void TransmuteNative_SetHandInputGripPose(int handness, float *translation, float *rotation);
 #endif
 }

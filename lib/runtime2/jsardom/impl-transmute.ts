@@ -290,6 +290,10 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
           framebufferScaleFactor: 1,
         },
       },
+      pointerSelectionOptions: {
+        preferredHandedness: 'right',
+        enablePointerSelectionOnAllControllers: true,
+      },
     });
 
     this.engine.runRenderLoop(() => {

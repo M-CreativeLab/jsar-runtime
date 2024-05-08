@@ -328,5 +328,36 @@ extern "C"
       m[i] = base[i / 4][i % 4];
     return xrDevice->updateLocalTransform(id, m);
   }
+
+  DLL_PUBLIC void TransmuteNative_SetHandInputPose(int handness, int joint, float *position, float *orientation, float radius)
+  {
+    // TODO
+  }
+
+  DLL_PUBLIC void TransmuteNative_SetHandInputRayPose(int handness, float *translation, float *rotation)
+  {
+    auto xrDevice = xr::Device::GetInstance();
+    if (xrDevice == NULL)
+      return;
+
+    xr::Handness id = handness == 0 ? xr::Handness::Left : xr::Handness::Right;
+    auto hand = xrDevice->getHandInputSource(id);
+    if (hand == nullptr)
+      return;
+    hand->targetRayBaseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1});
+  }
+
+  DLL_PUBLIC void TransmuteNative_SetHandInputGripPose(int handness, float *translation, float *rotation)
+  {
+    auto xrDevice = xr::Device::GetInstance();
+    if (xrDevice == NULL)
+      return;
+
+    xr::Handness id = handness == 0 ? xr::Handness::Left : xr::Handness::Right;
+    auto hand = xrDevice->getHandInputSource(id);
+    if (hand == nullptr)
+      return;
+    hand->gripBaseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1});
+  }
 #endif
 }

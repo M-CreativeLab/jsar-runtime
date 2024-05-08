@@ -192,6 +192,25 @@ namespace math
         src[12], src[13], src[14], src[15]);
   }
 
+  glm::mat4 makeMatrixFromTRS(float *translation, float *rotation, float *scale)
+  {
+    float tx = translation[0];
+    float ty = translation[1];
+    float tz = translation[2];
+    float rx = rotation[0];
+    float ry = rotation[1];
+    float rz = rotation[2];
+    float rw = rotation[3];
+    float sx = scale[0];
+    float sy = scale[1];
+    float sz = scale[2];
+
+    auto scalingMatrix = glm::scale(glm::mat4(1), glm::vec3(sx, sy, sz));
+    auto translationMatrix = glm::translate(glm::mat4(1), glm::vec3(tx, ty, tz));
+    auto rotationMatrix = glm::mat4_cast(glm::quat(rw, rx, ry, rz));
+    return translationMatrix * rotationMatrix * scalingMatrix;
+  }
+
   glm::mat4 getOriginMatrix()
   {
     return glm::identity<glm::mat4>();
