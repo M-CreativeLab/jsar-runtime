@@ -57,12 +57,8 @@ namespace bindings
   private:
     void start();
     void stop();
-    void updateInputSourcesIfChanged(xr::DeviceFrame *frame);
+    void updateInputSourcesIfChanged(XRFrame *frame);
     void onFrame(Napi::Env env, xr::DeviceFrame *frame);
-    void onPresentationStart(uint32_t sessionId);
-    void onPresentationEnd(uint32_t sessionId);
-    void onSelectionStart(uint32_t sessionId);
-    void onSelectionEnd(uint32_t sessionId);
     bool queueNextFrame();
     void addViewSpace(Napi::Env env, XRViewSpaceType type);
     Napi::Array createEnabledFeatures(Napi::Env env);
@@ -71,6 +67,10 @@ namespace bindings
                                               std::vector<XRInputSource *> &removed);
 
   public:
+    void onPrimaryActionStart(XRInputSource *inputSource, XRFrame *frame);
+    void onPrimaryActionEnd(XRInputSource *inputSource, XRFrame *frame);
+    void onSqueezeActionStart(XRInputSource *inputSource, XRFrame *frame);
+    void onSqueezeActionEnd(XRInputSource *inputSource, XRFrame *frame);
     XRReferenceSpace *getLocalSpace();
     XRReferenceSpace *getViewerSpace();
     void iterateViewSpaces(std::function<void(XRViewSpace *, uint32_t, XRSession *)> callback);

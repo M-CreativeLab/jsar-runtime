@@ -28,7 +28,9 @@ namespace xr
                                                 handness(from->handness),
                                                 targetRayMode(from->targetRayMode),
                                                 targetRayBaseMatrix(from->targetRayBaseMatrix),
-                                                gripBaseMatrix(from->gripBaseMatrix)
+                                                gripBaseMatrix(from->gripBaseMatrix),
+                                                primaryActionPressed(from->primaryActionPressed),
+                                                squeezeActionPressed(from->squeezeActionPressed)
   {
     for (int i = 0; i < 25; i++)
     {
@@ -42,6 +44,8 @@ namespace xr
     targetRayMode = from->targetRayMode;
     targetRayBaseMatrix = from->targetRayBaseMatrix;
     gripBaseMatrix = from->gripBaseMatrix;
+    primaryActionPressed = from->primaryActionPressed;
+    squeezeActionPressed = from->squeezeActionPressed;
 
     for (int i = 0; i < 25; i++)
       hand[i] = from->hand[i];

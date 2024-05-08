@@ -57,20 +57,22 @@ class XRSessionWrapper extends XRSessionBinding {
   onframeratechange: XRSessionEventHandler = null;
 
   constructor(device: XRDevice, mode: XRSessionMode, sessionId: number) {
-    super((<XRNativeDevice>device).handle, mode, sessionId, (type: string, eventProps: any) => {
-      const event = new Event(type);
-      if (eventProps) {
-        Object.assign(event, eventProps);
-      }
-      this.#eventTarget.dispatchEvent(event);
-
-      // call the event handler such as `onend`, `onselect`, etc.
-      const handler = this[`on${event.type}`];
-      if (typeof handler === 'function') {
-        handler(event);
-      }
-    });
+    super((<XRNativeDevice>device).handle, mode, sessionId, (...args) => this.#dispatchEvent.apply(this, args));
     this.#eventTarget = new EventTarget();
+  }
+
+  #dispatchEvent(type: string, eventProps: any) {
+    const event = new Event(type);
+    if (eventProps) {
+      Object.assign(event, eventProps);
+    }
+    this.#eventTarget.dispatchEvent(event);
+
+    // call the event handler such as `onend`, `onselect`, etc.
+    const handler = this[`on${event.type}`];
+    if (typeof handler === 'function') {
+      handler(event);
+    }
   }
 
   addEventListener(type: string, listener: EventListener | EventListenerObject | null, options?: boolean | AddEventListenerOptions): void {

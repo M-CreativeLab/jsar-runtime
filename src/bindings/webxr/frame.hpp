@@ -53,5 +53,8 @@ namespace bindings
   private:
     static Napi::FunctionReference *constructor;
     static uint32_t NEXT_FRAME_ID;
+
+  friend class XRSession;
+  friend class XRInputSource;
   };
 }

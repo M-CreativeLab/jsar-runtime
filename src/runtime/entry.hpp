@@ -175,5 +175,18 @@ extern "C"
    * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
    */
   DLL_PUBLIC void TransmuteNative_SetHandInputGripPose(int handness, float *translation, float *rotation);
+
+  /**
+   * An action is a special type of event that's triggered by the input source, such as the controller button press, etc. Calling
+   * this function will not trigger an event to the client side, it just updates the action state such as pressed, released, etc.
+   * Then the client side will fetch the action state in a frame and dispatch the events accordingly.
+   * 
+   * See https://developer.mozilla.org/en-US/docs/Web/API/WebXR_Device_API/Inputs#actions for more details.
+   * 
+   * @param handness The handness of the hand, 0 for left and 1 for right.
+   * @param action The action type: primary(0), squeeze(1).
+   * @param state The action state: pressed(0), released(1).
+   */
+  DLL_PUBLIC void TransmuteNative_SetHandInputActionState(int handness, int actionType, int state);
 #endif
 }

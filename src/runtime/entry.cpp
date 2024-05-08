@@ -359,5 +359,22 @@ extern "C"
       return;
     hand->gripBaseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1});
   }
+
+  DLL_PUBLIC void TransmuteNative_SetHandInputActionState(int handness, int actionType, int state)
+  {
+    auto xrDevice = xr::Device::GetInstance();
+    if (xrDevice == NULL)
+      return;
+
+    xr::Handness id = handness == 0 ? xr::Handness::Left : xr::Handness::Right;
+    auto hand = xrDevice->getHandInputSource(id);
+    if (hand == nullptr)
+      return;
+
+    if (actionType == xr::InputSourceActionType::XRPrimaryAction)
+      hand->primaryActionPressed = state == 0; /** check if pressed */
+    else if (actionType == xr::InputSourceActionType::XRSqueezeAction)
+      hand->squeezeActionPressed = state == 0; /** check if pressed */
+  }
 #endif
 }

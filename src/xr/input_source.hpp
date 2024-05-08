@@ -29,6 +29,12 @@ namespace xr
     float radius;
   };
 
+  enum InputSourceActionType
+  {
+    XRPrimaryAction = 0,
+    XRSqueezeAction = 1,
+  };
+
   class InputSource
   {
   public:
@@ -45,5 +51,8 @@ namespace xr
     TargetRayMode targetRayMode;
     glm::mat4 targetRayBaseMatrix;
     glm::mat4 gripBaseMatrix;
+    /** action states */
+    bool primaryActionPressed = false;
+    bool squeezeActionPressed = false;
   };
 }

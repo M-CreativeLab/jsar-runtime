@@ -482,18 +482,19 @@ namespace bindings
     ended = true;
   }
 
-  void XRSession::updateInputSourcesIfChanged(xr::DeviceFrame *frame)
+  void XRSession::updateInputSourcesIfChanged(XRFrame *frame)
   {
-    if (frame->isMultiPass())
+    auto deviceFrame = frame->internal;
+    if (deviceFrame->isMultiPass())
     {
-      auto multiPassFrame = static_cast<xr::MultiPassFrame *>(frame);
+      auto multiPassFrame = static_cast<xr::MultiPassFrame *>(deviceFrame);
       if (multiPassFrame->getActiveEyeId() > 0)
       {
         // Skip the frame to update input sources if it's not for the left eye in multi-pass mode.
         return;
       }
     } // TODO: support single pass mode.
-    inputSources.Value().updateInputSources(frame, [this](vector<XRInputSource *> added, vector<XRInputSource *> removed)
+    inputSources.Value().updateInputSources(frame, this, [this](vector<XRInputSource *> added, vector<XRInputSource *> removed)
                                             { onEventCallback.Call({Napi::String::New(Env(), "inputsourceschange"),
                                                                     createInputSourcesChangeEvent(Env(), added, removed)}); });
   }
@@ -545,7 +546,7 @@ namespace bindings
 
     xrFrameUnwrapped->start();
     // Update the input sources
-    updateInputSourcesIfChanged(frame);
+    updateInputSourcesIfChanged(xrFrameUnwrapped);
 
     // Call all the frame callbacks
     auto now = std::chrono::system_clock::now();
@@ -606,6 +607,52 @@ namespace bindings
     eventObject.Set("added", addedArray);
     eventObject.Set("removed", removedArray);
     return eventObject;
+  }
+
+  void XRSession::onPrimaryActionStart(XRInputSource *inputSource, XRFrame *frame)
+  {
+    Napi::Env env = Env();
+    Napi::HandleScope scope(env);
+
+    auto eventProps = Napi::Object::New(env);
+    eventProps.Set("frame", frame->Value());
+    eventProps.Set("inputSource", inputSource->Value());
+    onEventCallback.Call({Napi::String::New(env, "selectstart"), eventProps});
+  }
+
+  void XRSession::onPrimaryActionEnd(XRInputSource *inputSource, XRFrame *frame)
+  {
+    Napi::Env env = Env();
+    Napi::HandleScope scope(env);
+
+    auto eventProps = Napi::Object::New(env);
+    eventProps.Set("frame", frame->Value());
+    eventProps.Set("inputSource", inputSource->Value());
+    onEventCallback.Call({Napi::String::New(env, "select"), eventProps});
+    onEventCallback.Call({Napi::String::New(env, "selectend"), eventProps});
+  }
+
+  void XRSession::onSqueezeActionStart(XRInputSource *inputSource, XRFrame *frame)
+  {
+    Napi::Env env = Env();
+    Napi::HandleScope scope(env);
+
+    auto eventProps = Napi::Object::New(env);
+    eventProps.Set("frame", frame->Value());
+    eventProps.Set("inputSource", inputSource->Value());
+    onEventCallback.Call({Napi::String::New(env, "squeezestart"), eventProps});
+  }
+
+  void XRSession::onSqueezeActionEnd(XRInputSource *inputSource, XRFrame *frame)
+  {
+    Napi::Env env = Env();
+    Napi::HandleScope scope(env);
+
+    auto eventProps = Napi::Object::New(env);
+    eventProps.Set("frame", frame->Value());
+    eventProps.Set("inputSource", inputSource->Value());
+    onEventCallback.Call({Napi::String::New(env, "squeeze"), eventProps});
+    onEventCallback.Call({Napi::String::New(env, "squeezeend"), eventProps});
   }
 
   XRReferenceSpace *XRSession::getLocalSpace()
