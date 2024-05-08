@@ -1068,17 +1068,19 @@ private:
 		auto count = uniformMatrix4fvCommandBuffer->m_Count;
 		auto transpose = uniformMatrix4fvCommandBuffer->m_Transpose;
 		auto xrSessionId = uniformMatrix4fvCommandBuffer->m_XrSessionId;
-		if (xrSessionId == -1)
-		{
-			DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the xrSessionId in local mode.");
-			return;
-		}
-
 		if (
 				uniformMatrix4fvCommandBuffer->isMatrixPlaceholderType() &&
 				(deviceFrame != nullptr && deviceFrame->isMultiPass()) // support for singlepass?
 		)
 		{
+			/**
+			 * In XR mode, the session id is expected to be set.
+			 */
+			if (xrSessionId == -1)
+			{
+				DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the xrSessionId in local mode.");
+				return;
+			}
 			auto multiPassFrame = static_cast<xr::MultiPassFrame *>(deviceFrame);
 			auto placeholderType = uniformMatrix4fvCommandBuffer->m_MatrixPlaceholderType;
 			auto convertToLHRequired = uniformMatrix4fvCommandBuffer->m_IsRightHanded == false; /** convert to left-handed is needed? */

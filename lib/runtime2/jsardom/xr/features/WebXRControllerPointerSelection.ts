@@ -127,14 +127,10 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
   private static _IdCounter = 200;
 
   private _attachController = (xrController: WebXRInputSource) => {
-    if (xrController.inputSource.targetRayMode !== 'gaze') {
-      return; // filter by gaze only
-    }
     if (this._controllers[xrController.uniqueId]) {
       // already attached
       return;
     }
-
     const { laserPointer, selectionMesh } = this._generateNewMeshPair(xrController.pointer);
 
     // get two new meshes
@@ -164,12 +160,12 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
     }
 
     switch (xrController.inputSource.targetRayMode) {
-      // case 'tracked-pointer':
-      //   return this._attachTrackedPointerRayMode(xrController);
+      case 'tracked-pointer':
+        return this._attachTrackedPointerRayMode(xrController);
       case 'gaze':
         return this._attachGazeMode(xrController);
-      // case 'screen':
-      //   return this._attachScreenRayMode(xrController);
+      case 'screen':
+        return this._attachScreenRayMode(xrController);
     }
   };
 
