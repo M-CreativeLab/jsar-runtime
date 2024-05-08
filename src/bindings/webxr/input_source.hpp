@@ -6,13 +6,15 @@
 
 namespace bindings
 {
+  using InputSourceInternalResetCallback = function<xr::InputSource *(xr::DeviceFrame *)>;
   using InputSourcesChangedCallback = function<void(vector<XRInputSource *> added, vector<XRInputSource *> removed)>;
 
   class XRInputSource : public Napi::ObjectWrap<XRInputSource>
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, xr::InputSource *inputSource);
+    static Napi::Object NewInstance(Napi::Env env, xr::DeviceFrame *frame,
+                                    InputSourceInternalResetCallback resetInternal);
     XRInputSource(const Napi::CallbackInfo &info);
     ~XRInputSource();
 
@@ -20,12 +22,17 @@ namespace bindings
     Napi::Value GamepadGetter(const Napi::CallbackInfo &info);
     Napi::Value GripSpaceGetter(const Napi::CallbackInfo &info);
     Napi::Value HandGetter(const Napi::CallbackInfo &info);
-    Napi::Value HandnessGetter(const Napi::CallbackInfo &info);
+    Napi::Value HandednessGetter(const Napi::CallbackInfo &info);
     Napi::Value TargetRayModeGetter(const Napi::CallbackInfo &info);
     Napi::Value TargetRaySpaceGetter(const Napi::CallbackInfo &info);
 
   public:
+    bool updateInternal(xr::DeviceFrame *frame);
+
+  public:
     xr::InputSource *internal = nullptr;
+    xr::DeviceFrame *frame = nullptr;
+    InputSourceInternalResetCallback onResetInternal;
 
   private:
     static Napi::FunctionReference *constructor;
@@ -39,10 +46,7 @@ namespace bindings
     ~XRInputSourceArray();
 
   public:
-    void updateInputSources(InputSourcesChangedCallback onChangedCallback);
-
-  private:
-    xr::Device *device = nullptr;
+    void updateInputSources(xr::DeviceFrame *frame, InputSourcesChangedCallback onChangedCallback);
 
   private:
     static Napi::FunctionReference *constructor;

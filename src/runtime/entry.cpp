@@ -89,7 +89,7 @@ extern "C"
     }
 
     char glLogKey[PROP_VALUE_MAX];
-    if (__system_property_get("jsar.switch.gl.logkey", glLogKey) >= 0)
+    if (__system_property_get("jsar.graphics.logkey", glLogKey) >= 0)
     {
       if (strcmp(glLogKey, "globals") == 0)
         s_CurrentAPI->EnableAppGlobalLog();
@@ -100,6 +100,13 @@ extern "C"
         s_CurrentAPI->EnableAppGlobalLog();
         s_CurrentAPI->EnableXRFrameLog();
       }
+    }
+
+    char enableWebglPlaceholder[PROP_VALUE_MAX];
+    if (__system_property_get("jsar.webgl.placeholder", enableWebglPlaceholder) >= 0)
+    {
+      if (strcmp(enableWebglPlaceholder, "yes") == 0)
+        setenv("JSAR_WEBGL_PLACEHOLDER", "yes", 1);
     }
 
     char exampleUrl[PROP_VALUE_MAX];
@@ -122,6 +129,7 @@ extern "C"
       int frameRate = atoi(xrFrameRate);
       xrDevice->setFrameRate(frameRate);
     }
+
 #endif
   }
 
@@ -260,7 +268,7 @@ extern "C"
     float rz = rotation[2];
     float rw = rotation[3];
 
-    auto scalingMatrix = glm::scale(glm::mat4(1), glm::vec3(-1.0, 1.0, -1.0));
+    auto scalingMatrix = glm::scale(glm::mat4(1), glm::vec3(1.0, 1.0, 1.0));
     auto translationMatrix = glm::translate(glm::mat4(1), glm::vec3(tx, ty, tz));
     auto rotationMatrix = glm::mat4_cast(glm::quat(rw, rx, ry, rz));
     auto base = translationMatrix * rotationMatrix * scalingMatrix;
@@ -310,7 +318,7 @@ extern "C"
     float rz = rotation[2];
     float rw = rotation[3];
 
-    auto scalingMatrix = glm::scale(glm::mat4(1), glm::vec3(1, 1, -1));
+    auto scalingMatrix = glm::scale(glm::mat4(1), glm::vec3(1, 1, 1));
     auto translationMatrix = glm::translate(glm::mat4(1), glm::vec3(tx, ty, tz));
     auto rotationMatrix = glm::mat4_cast(glm::quat(rw, rx, ry, rz));
     auto base = translationMatrix * rotationMatrix * scalingMatrix;

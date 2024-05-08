@@ -13,6 +13,7 @@ import { XMLHttpRequestImpl } from './xhr2';
  */
 import './textdecoder';
 import { ErrorEventImpl } from './events/error-event';
+import { PointerEventImpl } from './events/pointer-event';
 import {
   OffscreenCanvasImpl,
   ImageDataImpl,
@@ -34,11 +35,16 @@ import {
   XRRigidTransformImpl
 } from '../webxr';
 
-globalThis.ErrorEvent = ErrorEventImpl;
 globalThis.XMLHttpRequest = XMLHttpRequestImpl;
 // globalThis.AudioContext = AudioContextImpl;
 globalThis.OffscreenCanvas = OffscreenCanvasImpl;
 globalThis.ImageData = ImageDataImpl;
+
+/**
+ * Events
+ */
+globalThis.ErrorEvent = ErrorEventImpl;
+globalThis.PointerEvent = PointerEventImpl;
 
 /**
  * Add WebGL interfaces

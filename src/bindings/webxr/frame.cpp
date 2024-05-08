@@ -120,7 +120,7 @@ namespace bindings
     viewerSpace->ensurePoseUpdated(id, session, internal);
 
     auto activeEye = getActiveEye();
-    auto viewerTransform = XRSPACE_RELATIVE_TRANSFORM(referenceSpace, viewerSpace);
+    auto viewerTransform /** viewer to refspace(local) */ = XRSPACE_RELATIVE_TRANSFORM(viewerSpace, referenceSpace);
 
     auto viewerPoseObject = XRViewerPose::NewInstance(env, viewerTransform);
     auto viewerPoseUnwrapped = XRViewerPose::Unwrap(viewerPoseObject);
@@ -131,8 +131,9 @@ namespace bindings
                                    return;
                                  viewSpace->ensurePoseUpdated(id, session, internal);
 
-                                 auto viewTransform = XRSPACE_RELATIVE_TRANSFORM(referenceSpace, viewSpace);
-                                 auto xrView = XRView::NewInstance(env, session, viewTransform, viewIndex, activeEye);
+                                 auto viewTransform = XRSPACE_RELATIVE_TRANSFORM(viewSpace, referenceSpace);
+                                 auto projectionMatrix = viewSpace->getProjectionMatrix();
+                                 auto xrView = XRView::NewInstance(env, session, viewTransform, projectionMatrix, viewIndex, activeEye);
                                  viewerPoseUnwrapped->addView(xrView);
                                  // End
                                });
@@ -164,7 +165,7 @@ namespace bindings
     {
       auto inputSpace = XRTargetRayOrGripSpace::Unwrap(info[0].As<Napi::Object>());
       inputSpace->ensurePoseUpdated(id, session, internal);
-      auto transform = XRSPACE_RELATIVE_TRANSFORM(inputSpace, baseSpace);
+      auto transform /** input source space to base(local/unbound) */ = XRSPACE_RELATIVE_TRANSFORM(inputSpace, baseSpace);
       return XRPose::NewInstance(env, transform);
     }
     // TODO

@@ -33,6 +33,10 @@ namespace xr
   {
   public:
     InputSource();
+    InputSource(InputSource *from);
+
+  public:
+    void update(InputSource *from);
 
   public:
     int id;

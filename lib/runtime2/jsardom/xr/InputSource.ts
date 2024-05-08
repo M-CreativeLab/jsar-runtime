@@ -191,7 +191,6 @@ export class WebXRInputSource {
         this.pointer.rotationQuaternion!.z *= -1;
         this.pointer.rotationQuaternion!.w *= -1;
       }
-      this.pointer.parent = xrCamera.parent;
     }
 
     // Update the grip mesh if it exists

@@ -97,6 +97,7 @@ namespace bindings
     // Create ReferenceSpace instances.
     localSpace = Napi::Persistent(XRReferenceSpace::NewInstance(env, XRReferenceSpaceType::LOCAL));
     viewerSpace = Napi::Persistent(XRReferenceSpace::NewInstance(env, XRReferenceSpaceType::VIEWER));
+    unboundedSpace = Napi::Persistent(XRReferenceSpace::NewInstance(env, XRReferenceSpaceType::UNBOUNDED));
 
     // Create the `XRInputSourceArray` object
     inputSources = Napi::Persistent(XRInputSourceArray::New(env));
@@ -313,6 +314,10 @@ namespace bindings
     {
       deferred.Resolve(localSpace.Value());
     }
+    else if (type == UNBOUNDED)
+    {
+      deferred.Resolve(unboundedSpace.Value());
+    }
     else
     {
       deferred.Reject(Napi::String::New(env, "Not implemented yet"));
@@ -477,9 +482,18 @@ namespace bindings
     ended = true;
   }
 
-  void XRSession::updateInputSourcesIfChanged()
+  void XRSession::updateInputSourcesIfChanged(xr::DeviceFrame *frame)
   {
-    inputSources.Value().updateInputSources([this](vector<XRInputSource *> added, vector<XRInputSource *> removed)
+    if (frame->isMultiPass())
+    {
+      auto multiPassFrame = static_cast<xr::MultiPassFrame *>(frame);
+      if (multiPassFrame->getActiveEyeId() > 0)
+      {
+        // Skip the frame to update input sources if it's not for the left eye in multi-pass mode.
+        return;
+      }
+    } // TODO: support single pass mode.
+    inputSources.Value().updateInputSources(frame, [this](vector<XRInputSource *> added, vector<XRInputSource *> removed)
                                             { onEventCallback.Call({Napi::String::New(Env(), "inputsourceschange"),
                                                                     createInputSourcesChangeEvent(Env(), added, removed)}); });
   }
@@ -531,7 +545,7 @@ namespace bindings
 
     xrFrameUnwrapped->start();
     // Update the input sources
-    updateInputSourcesIfChanged();
+    updateInputSourcesIfChanged(frame);
 
     // Call all the frame callbacks
     auto now = std::chrono::system_clock::now();

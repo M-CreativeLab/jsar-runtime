@@ -46,20 +46,47 @@ class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
     this.#xrSessionId = options?.xrSessionId;
   }
 
+  get useRightHandedSystem(): boolean {
+    if (this.scenes.length <= 0) {
+      throw new Error('No scene available');
+    }
+    return this.scenes[0].useRightHandedSystem;
+  }
+
   setMatrices(uniform: WebGLUniformLocation, matrices: Float32Array): boolean {
-    const name = (uniform as any)?.name;
-    switch (name) {
-      case 'projection':
-        matrices = new XRMatrixPlaceholder(matrices, XRMatrixPlaceholderType.PROJECTION_MATRIX, this.#xrSessionId);
-        break;
-      case 'view':
-        matrices = new XRMatrixPlaceholder(matrices, XRMatrixPlaceholderType.VIEW_MATRIX_RELATIVE_TO_LOCAL, this.#xrSessionId);
-        break;
-      case 'viewProjection':
-        matrices = new XRMatrixPlaceholder(matrices, XRMatrixPlaceholderType.VIEW_PROJECTION_MATRIX_RELATIVE_TO_LOCAL, this.#xrSessionId);
-        break;
-      default:
-        break;
+    /**
+     * When JSAR_WEBGL_PLACEHOLDER is enabled, we will replace the projection, view and viewProjection matrices with
+     * placeholders. The placeholders will be computed at the native rendering loop.
+     */
+    if (process.env['JSAR_WEBGL_PLACEHOLDER'] === 'yes') {
+      const name = (uniform as any)?.name;
+      // const currentEffect = this._currentEffect;
+      // const isUnbound = BABYLON.Tags.MatchesQuery(currentEffect, 'UNBOUND');
+      switch (name) {
+        case 'projection':
+          matrices = new XRMatrixPlaceholder(
+            matrices,
+            XRMatrixPlaceholderType.PROJECTION_MATRIX,
+            this.#xrSessionId,
+            this.useRightHandedSystem);
+          break;
+        case 'view':
+          matrices = new XRMatrixPlaceholder(
+            matrices,
+            XRMatrixPlaceholderType.VIEW_MATRIX,
+            this.#xrSessionId,
+            this.useRightHandedSystem);
+          break;
+        case 'viewProjection':
+          matrices = new XRMatrixPlaceholder(
+            matrices,
+            XRMatrixPlaceholderType.VIEW_PROJECTION_MATRIX,
+            this.#xrSessionId,
+            this.useRightHandedSystem);
+          break;
+        default:
+          break;
+      }
     }
     return super.setMatrices(uniform, matrices);
   }
@@ -224,7 +251,12 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     });
 
     const scene = this._scene = new BABYLON.Scene(this.engine);
-    scene.useRightHandedSystem = false;
+    /**
+     * Forcily use left-handed system to match the coordinate system of WebXR and WebGL. In JSAR environment, because the view matrix
+     * and projection matrix are provided by the runtime which handness is keep consistent with the WebGL convention, thus we don't
+     * support tweaking the handness of the coordinate system by the 3d engines.
+     */
+    scene.useRightHandedSystem = true;
     scene.skipFrustumClipping = true;
 
     this._defaultCamera = new BABYLON.ArcRotateCamera(
@@ -271,7 +303,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
 
   async enterXrExperience(): Promise<XRSession> {
     const { baseExperience, renderTarget } = await this._xrDefaultExperience;
-    await baseExperience.enterXRAsync('immersive-ar', 'local', {
+    await baseExperience.enterXRAsync('immersive-ar', 'unbounded', {
       optionalFeatures: [],
     }, renderTarget);
     return baseExperience.sessionManager?.session;

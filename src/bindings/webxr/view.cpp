@@ -23,11 +23,17 @@ namespace bindings
     return exports;
   }
 
-  Napi::Object XRView::NewInstance(Napi::Env env, XRSession *session, mat4 &transform, uint32_t index, XREye eye)
+  Napi::Object XRView::NewInstance(Napi::Env env,
+                                   XRSession *session,
+                                   mat4 &viewMatrix,
+                                   mat4 &projectionMatrix,
+                                   uint32_t index,
+                                   XREye eye)
   {
     Napi::EscapableHandleScope scope(env);
     Napi::Object obj = constructor->New({session->Value(),
-                                         XRRigidTransform::NewInstance(env, transform),
+                                         XRRigidTransform::NewInstance(env, viewMatrix),
+                                         XRRigidTransform::NewInstance(env, projectionMatrix),
                                          Napi::Number::New(env, index),
                                          Napi::Number::New(env, static_cast<uint32_t>(eye))});
     return scope.Escape(obj).ToObject();
@@ -38,9 +44,10 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() < 4)
+    if (info.Length() < 5)
     {
-      Napi::TypeError::New(env, "XRView constructor requires a session object, transform, index, and eye").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "XRView constructor requires a session object, view matrix, projection matrix, index, and eye")
+          .ThrowAsJavaScriptException();
       return;
     }
 
@@ -53,8 +60,12 @@ namespace bindings
     auto transform = XRRigidTransform::Unwrap(transformObj);
     this->transformMatrix = transform->matrix;
 
-    index = info[2].As<Napi::Number>().Uint32Value();
-    eyeId = info[3].As<Napi::Number>().Uint32Value();
+    Napi::Object projectionObj = info[2].As<Napi::Object>();
+    auto projection = XRRigidTransform::Unwrap(projectionObj);
+    this->projectionMatrix = projection->matrix;
+
+    index = info[3].As<Napi::Number>().Uint32Value();
+    eyeId = info[4].As<Napi::Number>().Uint32Value();
     viewport = device->getViewport(index);
   }
 
@@ -63,7 +74,12 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    return Napi::Number::New(env, eyeId);
+    if (eyeId == 0)
+      return Napi::String::New(env, "left");
+    else if (eyeId == 1)
+      return Napi::String::New(env, "right");
+    else
+      return Napi::String::New(env, "none");
   }
 
   Napi::Value XRView::ProjectionMatrixGetter(const Napi::CallbackInfo &info)
@@ -72,7 +88,13 @@ namespace bindings
     Napi::HandleScope scope(env);
 
     auto float32arrayValue = Napi::Float32Array::New(env, 16);
-    // TODO
+    for (int i = 0; i < 4; i++)
+    {
+      for (int j = 0; j < 4; j++)
+      {
+        float32arrayValue.Set(static_cast<uint32_t>(i * 4 + j), Napi::Number::New(env, projectionMatrix[i][j]));
+      }
+    }
     return float32arrayValue;
   }
 

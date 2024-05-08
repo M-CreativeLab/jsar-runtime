@@ -57,9 +57,9 @@ export class WebXRExperienceHelper implements BABYLON.IDisposable {
   }
 
   /**
-     * Creates a WebXRExperienceHelper
-     * @param _scene The scene the helper should be created in
-     */
+   * Creates a WebXRExperienceHelper
+   * @param _scene The scene the helper should be created in
+   */
   private constructor(private _scene: BABYLON.Scene) {
     this.sessionManager = new WebXRSessionManager(_scene);
     this.camera = new WebXRCamera('xrcamera', _scene, this.sessionManager);
@@ -71,7 +71,7 @@ export class WebXRExperienceHelper implements BABYLON.IDisposable {
   }
 
   private _nonXRToXRCamera() {
-    this.camera.setTransformationFromNonVRCamera(this._nonVRCamera!);
+    // this.camera.setTransformationFromNonVRCamera(this._nonVRCamera!);
     this.onInitialXRPoseSetObservable.notifyObservers(this.camera);
   }
 

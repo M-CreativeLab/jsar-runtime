@@ -192,4 +192,42 @@ namespace math
         src[12], src[13], src[14], src[15]);
   }
 
+  glm::mat4 getOriginMatrix()
+  {
+    return glm::identity<glm::mat4>();
+  }
+
+  glm::mat4 getProjectionMatrixInLH(glm::mat4 &src)
+  {
+    src[0][2] *= -1;
+    src[1][2] *= -1;
+    src[2][2] *= -1;
+    src[3][2] *= -1;
+    return src;
+  }
+
+  glm::mat4 getViewMatrixInLH(glm::mat4 &worldToViewMatrix)
+  {
+    auto viewBaseMatrix = glm::inverse(worldToViewMatrix); // in right-handed coordinate system
+    // decompose the src matrix
+    auto scale = glm::vec3(glm::length(viewBaseMatrix[0]), glm::length(viewBaseMatrix[1]), glm::length(viewBaseMatrix[2]));
+    auto rotation = glm::quat_cast(viewBaseMatrix);
+    auto translation = glm::vec3(viewBaseMatrix[3]);
+
+    // convert to left-handed coordinate system
+    translation.z *= -1;
+    rotation.z *= -1;
+    rotation.w *= -1;
+
+    // create a new matrix
+    auto viewBaseMatrixInLH = glm::translate(glm::mat4_cast(rotation), translation) * glm::scale(glm::mat4(1), scale);
+    return glm::inverse(viewBaseMatrixInLH);
+  }
+
+  glm::mat4 getViewMatrixWithTransform(glm::mat4 &worldToView, glm::mat4 &transform)
+  {
+    auto viewBaseMatrix = glm::inverse(worldToView);
+    auto worldToLocalMatrix = glm::inverse(transform);
+    return glm::inverse(worldToLocalMatrix * viewBaseMatrix);
+  }
 }

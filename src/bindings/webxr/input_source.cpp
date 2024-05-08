@@ -15,11 +15,13 @@ namespace bindings
     return exports;
   }
 
-  Napi::Object XRInputSource::NewInstance(Napi::Env env, xr::InputSource *inputSource)
+  Napi::Object XRInputSource::NewInstance(Napi::Env env, xr::DeviceFrame *frame,
+                                          InputSourceInternalResetCallback resetInternal)
   {
     Napi::EscapableHandleScope scope(env);
-    auto instance = Napi::External<xr::InputSource>::New(env, inputSource);
-    Napi::Object obj = constructor->New({instance});
+    auto frameExternal = Napi::External<xr::DeviceFrame>::New(env, frame);
+    auto resetInternalExternal = Napi::External<InputSourceInternalResetCallback>::New(env, &resetInternal);
+    Napi::Object obj = constructor->New({frameExternal, resetInternalExternal});
     return scope.Escape(obj).ToObject();
   }
 
@@ -28,37 +30,43 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() != 1)
+    if (info.Length() != 2)
     {
       Napi::TypeError::New(env, "XRInputSource constructor expects 1 argument").ThrowAsJavaScriptException();
       return;
     }
-    if (!info[0].IsExternal())
+    if (!info[0].IsExternal() || !info[1].IsExternal())
     {
       Napi::TypeError::New(env, "XRInputSource constructor could not be called").ThrowAsJavaScriptException();
       return;
     }
 
-    auto external = info[0].As<Napi::External<xr::InputSource>>();
-    internal = external.Data();
+    auto frameExternal = info[0].As<Napi::External<xr::DeviceFrame>>();
+    frame = frameExternal.Data();
+
+    auto resetInternalExternal = info[1].As<Napi::External<InputSourceInternalResetCallback>>();
+    onResetInternal = *resetInternalExternal.Data();
+    updateInternal(frame); // Update internal once when the input source is created
 
     auto thisObject = info.This().ToObject();
     thisObject.DefineProperty(Napi::PropertyDescriptor::Value("gamepad", GamepadGetter(info), napi_enumerable));
     thisObject.DefineProperty(Napi::PropertyDescriptor::Value("gripSpace", GripSpaceGetter(info), napi_enumerable));
     thisObject.DefineProperty(Napi::PropertyDescriptor::Value("hand", HandGetter(info), napi_enumerable));
-    thisObject.DefineProperty(Napi::PropertyDescriptor::Value("handness", HandnessGetter(info), napi_enumerable));
+    thisObject.DefineProperty(Napi::PropertyDescriptor::Value("handedness", HandednessGetter(info), napi_enumerable));
     thisObject.DefineProperty(Napi::PropertyDescriptor::Value("targetRayMode", TargetRayModeGetter(info), napi_enumerable));
     thisObject.DefineProperty(Napi::PropertyDescriptor::Value("targetRaySpace", TargetRaySpaceGetter(info), napi_enumerable));
   }
 
   XRInputSource::~XRInputSource()
   {
+    delete internal;
+    internal = nullptr;
   }
 
   Napi::Value XRInputSource::GamepadGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
-    return Napi::Value();
+    return env.Undefined();
   }
 
   Napi::Value XRInputSource::GripSpaceGetter(const Napi::CallbackInfo &info)
@@ -72,7 +80,7 @@ namespace bindings
     return Napi::Value();
   }
 
-  Napi::Value XRInputSource::HandnessGetter(const Napi::CallbackInfo &info)
+  Napi::Value XRInputSource::HandednessGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     auto handness = internal->handness;
@@ -103,6 +111,22 @@ namespace bindings
     return XRTargetRayOrGripSpace::NewInstance(info.Env(), internal, false);
   }
 
+  bool XRInputSource::updateInternal(xr::DeviceFrame *frame)
+  {
+    if (!onResetInternal)
+      return false;
+
+    auto newInternal = onResetInternal(frame);
+    if (newInternal == nullptr)
+      return false;
+
+    if (internal == nullptr)
+      internal = new xr::InputSource(newInternal);
+    else
+      internal->update(newInternal);
+    return true;
+  }
+
   XRInputSourceArray XRInputSourceArray::New(Napi::Env env)
   {
     napi_value value;
@@ -113,33 +137,27 @@ namespace bindings
 
   XRInputSourceArray::XRInputSourceArray(napi_env env, napi_value value) : Napi::Array(env, value)
   {
-    device = xr::Device::GetInstance();
-    if (device == nullptr)
-    {
-      Napi::Error::New(env, "XRInputSourceArray: Device is not initialized").ThrowAsJavaScriptException();
-      return;
-    }
   }
 
   XRInputSourceArray::~XRInputSourceArray()
   {
   }
 
-  void XRInputSourceArray::updateInputSources(InputSourcesChangedCallback onChangedCallback)
+  void XRInputSourceArray::updateInputSources(xr::DeviceFrame *frame, InputSourcesChangedCallback onChangedCallback)
   {
-    if (device == nullptr || !device->enabled())
-      return;
-
     Napi::Env env = Env();
     if (Length() == 0)
     {
       vector<XRInputSource *> added;
       auto gazeInputSource = XRInputSource::Unwrap(
-          XRInputSource::NewInstance(env, device->getGazeInputSource()));
+          XRInputSource::NewInstance(env, frame, [](xr::DeviceFrame *frame) -> xr::InputSource *
+                                     { return &frame->getGazeInputSource(); }));
       auto leftHandInputSource = XRInputSource::Unwrap(
-          XRInputSource::NewInstance(env, device->getHandInputSource(xr::Handness::Left)));
+          XRInputSource::NewInstance(env, frame, [](xr::DeviceFrame *frame) -> xr::InputSource *
+                                     { return &frame->getHandInputSource(xr::Handness::Left); }));
       auto rightHandInputSource = XRInputSource::Unwrap(
-          XRInputSource::NewInstance(env, device->getHandInputSource(xr::Handness::Right)));
+          XRInputSource::NewInstance(env, frame, [](xr::DeviceFrame *frame) -> xr::InputSource *
+                                     { return &frame->getHandInputSource(xr::Handness::Right); }));
 
       added.push_back(gazeInputSource);
       added.push_back(leftHandInputSource);
@@ -152,7 +170,12 @@ namespace bindings
     }
     else
     {
-      // TODO
+      // When the length is not zero, we need to update the internal input sources
+      for (uint32_t i = 0; i < Length(); i++)
+      {
+        auto inputSource = XRInputSource::Unwrap(Get(i).ToObject());
+        inputSource->updateInternal(frame);
+      }
     }
   }
 }

@@ -146,6 +146,7 @@ export class WebXRDefaultExperience {
           <IWebXRControllerPointerSelectionOptions>pointerSelectionOptions
         )
       );
+      result.pointerSelection.displayLaserPointer = false;
 
       // if (!options.disableTeleportation) {
       //   // Add default teleportation, including rotation

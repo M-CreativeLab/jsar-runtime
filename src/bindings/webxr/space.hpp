@@ -10,7 +10,7 @@ using namespace glm;
 
 namespace bindings
 {
-  #define XRSPACE_RELATIVE_TRANSFORM(space, baseSpace) space->baseMatrix * baseSpace->getInverseBaseMatrix()
+  #define XRSPACE_RELATIVE_TRANSFORM(space, baseSpace) baseSpace->getInverseBaseMatrix() * space->baseMatrix
 
   template <typename T>
   class XRSpaceBase : public Napi::ObjectWrap<T>
@@ -58,7 +58,7 @@ namespace bindings
   public:
     void onPoseUpdate(XRSession *session, xr::DeviceFrame *frame);
 
-  private:
+  public:
     XRReferenceSpaceType referenceSpaceType;
     mat4 offsetMatrix;
 
@@ -79,9 +79,11 @@ namespace bindings
   public:
     void onPoseUpdate(XRSession *session, xr::DeviceFrame *frame);
     XREye getEye();
+    glm::mat4& getProjectionMatrix();
 
   private:
     XRViewSpaceType viewSpaceType;
+    glm::mat4 projectionMatrix;
 
   private:
     static Napi::FunctionReference *constructor;

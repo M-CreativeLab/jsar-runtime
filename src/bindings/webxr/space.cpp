@@ -1,5 +1,6 @@
 #include "space.hpp"
 #include "session.hpp"
+#include "math/matrix.hpp"
 
 namespace bindings
 {
@@ -137,6 +138,12 @@ namespace bindings
       baseMatrix = createMat4FromArray(transform);
       XRSpaceBase<XRReferenceSpace>::onPoseUpdate(session, frame);
     }
+    else if (referenceSpaceType == XRReferenceSpaceType::UNBOUNDED)
+    {
+      auto localOffset = createMat4FromArray(frame->getLocalTransform(session->id));
+      baseMatrix =  localOffset * math::getOriginMatrix();
+      XRSpaceBase<XRReferenceSpace>::onPoseUpdate(session, frame);
+    }
     // TODO: other reference space types to update?
   }
 
@@ -189,6 +196,8 @@ namespace bindings
     {
       Napi::TypeError::New(env, "Invalid view space type").ThrowAsJavaScriptException();
     }
+
+    projectionMatrix = mat4(1.0f);
   }
 
   Napi::Value XRViewSpace::EyeGetter(const Napi::CallbackInfo &info)
@@ -214,14 +223,29 @@ namespace bindings
 
   void XRViewSpace::onPoseUpdate(XRSession *session, xr::DeviceFrame *frame)
   {
-    auto transform = frame->getViewerTransform();
-    baseMatrix = createMat4FromArray(transform);
+    if (!frame->isMultiPass())
+    {
+      // TODO: handle single pass
+    }
+    else
+    {
+      auto multiPassFrame = static_cast<xr::MultiPassFrame *>(frame);
+      auto worldToViewMatrix = multiPassFrame->getViewerViewMatrix();
+      auto projectionMatrix = multiPassFrame->getViewerProjectionMatrix();
+      this->baseMatrix = glm::inverse(createMat4FromArray(worldToViewMatrix));
+      this->projectionMatrix = createMat4FromArray(projectionMatrix);
+    }
     XRSpaceBase<XRViewSpace>::onPoseUpdate(session, frame);
   }
 
   XREye XRViewSpace::getEye()
   {
     return viewSpaceType;
+  }
+
+  glm::mat4 &XRViewSpace::getProjectionMatrix()
+  {
+    return projectionMatrix;
   }
 
   Napi::Object XRTargetRayOrGripSpace::Init(Napi::Env env, Napi::Object exports)

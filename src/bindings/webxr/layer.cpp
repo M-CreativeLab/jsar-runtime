@@ -136,9 +136,9 @@ namespace bindings
 
   Napi::Value XRWebGLLayer::FramebufferGetter(const Napi::CallbackInfo &info)
   {
-    // TODO: return the framebuffer object.
     Napi::Env env = info.Env();
-    return env.Null();
+    // FIXME: -1 means the host framebuffer, maybe we should use Framebuffer object instead.
+    return Napi::Number::New(env, -1);
   }
 
   Napi::Value XRWebGLLayer::FramebufferWidthGetter(const Napi::CallbackInfo &info)

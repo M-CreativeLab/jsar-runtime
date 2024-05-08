@@ -531,7 +531,10 @@ namespace bindings
 
   bool XRDeviceNative::supportsReferenceSpaceType(XRReferenceSpaceType type)
   {
-    if (type == XRReferenceSpaceType::LOCAL || type == XRReferenceSpaceType::VIEWER)
+    if (
+        type == XRReferenceSpaceType::LOCAL ||
+        type == XRReferenceSpaceType::VIEWER ||
+        type == XRReferenceSpaceType::UNBOUNDED)
     {
       return true;
     }

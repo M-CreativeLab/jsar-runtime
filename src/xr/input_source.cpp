@@ -23,4 +23,27 @@ namespace xr
                                targetRayMode(TargetRayMode::TrackedPointer)
   {
   }
+
+  InputSource::InputSource(InputSource *from) : id(from->id),
+                                                handness(from->handness),
+                                                targetRayMode(from->targetRayMode),
+                                                targetRayBaseMatrix(from->targetRayBaseMatrix),
+                                                gripBaseMatrix(from->gripBaseMatrix)
+  {
+    for (int i = 0; i < 25; i++)
+    {
+      hand[i] = from->hand[i];
+    }
+  }
+
+  void InputSource::update(InputSource *from)
+  {
+    handness = from->handness;
+    targetRayMode = from->targetRayMode;
+    targetRayBaseMatrix = from->targetRayBaseMatrix;
+    gripBaseMatrix = from->gripBaseMatrix;
+
+    for (int i = 0; i < 25; i++)
+      hand[i] = from->hand[i];
+  }
 }

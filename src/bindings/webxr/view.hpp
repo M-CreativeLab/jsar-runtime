@@ -12,7 +12,12 @@ namespace bindings
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, XRSession *session, mat4 &transform, uint32_t index, XREye eye);
+    static Napi::Object NewInstance(Napi::Env env,
+                                    XRSession *session,
+                                    mat4 &viewMatrix,
+                                    mat4 &projectionMatrix,
+                                    uint32_t index,
+                                    XREye eye);
     XRView(const Napi::CallbackInfo &info);
 
   private:
@@ -26,7 +31,7 @@ namespace bindings
     xr::Viewport getViewport();
 
   private:
-    XRDeviceNative* device;
+    XRDeviceNative *device;
     uint32_t index;
     uint32_t eyeId;
     uint32_t sessionId;

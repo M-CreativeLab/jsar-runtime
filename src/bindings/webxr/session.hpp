@@ -57,7 +57,7 @@ namespace bindings
   private:
     void start();
     void stop();
-    void updateInputSourcesIfChanged();
+    void updateInputSourcesIfChanged(xr::DeviceFrame *frame);
     void onFrame(Napi::Env env, xr::DeviceFrame *frame);
     void onPresentationStart(uint32_t sessionId);
     void onPresentationEnd(uint32_t sessionId);
@@ -91,6 +91,7 @@ namespace bindings
     Napi::Reference<Napi::Array> enabledFeatures;
     Napi::ObjectReference localSpace;
     Napi::ObjectReference viewerSpace;
+    Napi::ObjectReference unboundedSpace;
     std::vector<Napi::ObjectReference *> viewSpaces;
     Napi::Reference<XRInputSourceArray> inputSources;
     Napi::FunctionReference onEventCallback;

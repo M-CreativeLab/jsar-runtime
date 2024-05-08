@@ -65,13 +65,28 @@ export enum XRMatrixPlaceholderType {
 }
 
 export class XRMatrixPlaceholder extends Float32Array {
-  type: XRMatrixPlaceholderType;
-  xrSessionId: number;
   _isXRMatrixPlaceholder = true;
-  constructor(from: Float32Array, type: XRMatrixPlaceholderType, xrSessionId?: number) {
+  /**
+   * The XR session ID that the matrix placeholder belongs to.
+   */
+  xrSessionId: number;
+  /**
+   * The XR session ID that the matrix placeholder belongs to.
+   */
+  isRightHanded: boolean = true;
+
+  /**
+   * A XRMatrixPlaceholder is to represent a deferred matrix that is not used immediately in JSAR's rendering pipeline.
+   * 
+   * @param from a given matrix for backup data.
+   * @param type placeholder type, which could identify the final matrix value.
+   * @param xrSessionId the XR session id that the matrix placeholder belongs to.
+   * @param isLeftHanded if the matrix should be right-handed.
+   */
+  constructor(from: Float32Array, public type: XRMatrixPlaceholderType, xrSessionId?: number, isRightHanded?: boolean) {
     super(from);
-    this.type = type;
-    this.xrSessionId = xrSessionId;
+    this.xrSessionId = xrSessionId || -1;
+    this.isRightHanded = isRightHanded || true;
   }
 }
 

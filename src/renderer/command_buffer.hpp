@@ -632,6 +632,7 @@ namespace renderer
   public:
     int m_Target;
     int m_Framebuffer;
+    bool m_UsingHostFramebuffer = false;
   };
 
   class FramebufferRenderbufferCommandBuffer : public CommandBuffer
@@ -1723,6 +1724,7 @@ namespace renderer
     float *m_Value;
 
     MatrixPlaceholderType m_MatrixPlaceholderType = MatrixPlaceholderType::kMatrixPlaceholderNotSet;
+    bool m_IsRightHanded = true;
     int m_XrSessionId = -1;
   };
 

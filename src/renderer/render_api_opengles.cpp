@@ -7,6 +7,7 @@
 
 #include "gles/common.hpp"
 #include "gles/context_storage.hpp"
+#include "math/matrix.hpp"
 #include "xr/device.hpp"
 #include "crates/jsar_jsbindings.h"
 
@@ -436,11 +437,16 @@ private:
 		auto bindFramebufferCommandBuffer = static_cast<BindFramebufferCommandBuffer *>(commandBuffer);
 		auto target = bindFramebufferCommandBuffer->m_Target;
 		auto framebuffer = bindFramebufferCommandBuffer->m_Framebuffer;
+		/**
+		 * FIXME: When framebuffer is -1, assume to bind the host framebuffer.
+		 */
+		if (framebuffer == -1)
+			framebuffer = m_HostContext.GetFramebuffer();
 
 		glBindFramebuffer(target, framebuffer);
 		m_AppGlobalContext.RecordFramebuffer(framebuffer);
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::BindFramebuffer(%d)", isDefaultQueue, bindFramebufferCommandBuffer->m_Framebuffer);
+			DEBUG(DEBUG_TAG, "[%d] GL::BindFramebuffer(%d)", isDefaultQueue, framebuffer);
 	}
 	void OnFramebufferRenderbuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -1061,6 +1067,12 @@ private:
 		auto location = uniformMatrix4fvCommandBuffer->m_Location;
 		auto count = uniformMatrix4fvCommandBuffer->m_Count;
 		auto transpose = uniformMatrix4fvCommandBuffer->m_Transpose;
+		auto xrSessionId = uniformMatrix4fvCommandBuffer->m_XrSessionId;
+		if (xrSessionId == -1)
+		{
+			DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the xrSessionId in local mode.");
+			return;
+		}
 
 		if (
 				uniformMatrix4fvCommandBuffer->isMatrixPlaceholderType() &&
@@ -1069,47 +1081,33 @@ private:
 		{
 			auto multiPassFrame = static_cast<xr::MultiPassFrame *>(deviceFrame);
 			auto placeholderType = uniformMatrix4fvCommandBuffer->m_MatrixPlaceholderType;
+			auto convertToLHRequired = uniformMatrix4fvCommandBuffer->m_IsRightHanded == false; /** convert to left-handed is needed? */
 			switch (placeholderType)
 			{
 			case MatrixPlaceholderType::kMatrixPlaceholderProjection:
 				matrixToUse = multiPassFrame->getViewerProjectionMatrix();
 				break;
 			case MatrixPlaceholderType::kMatrixPlaceholderView:
-				matrixToUse = multiPassFrame->getViewerViewMatrix();
-				break;
-			case MatrixPlaceholderType::kMatrixPlaceholderViewRelativeToLocal: // temp set for view matrix
-			case MatrixPlaceholderType::kMatrixPlaceholderViewRelativeToLocalFloor:
+			case MatrixPlaceholderType::kMatrixPlaceholderViewRelativeToLocal:			// TODO
+			case MatrixPlaceholderType::kMatrixPlaceholderViewRelativeToLocalFloor: // TODO
 			{
-				auto xrSessionId = uniformMatrix4fvCommandBuffer->m_XrSessionId;
-				if (xrSessionId == -1)
-					DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the xrSessionId in local mode.");
 				auto viewMatrix = glm::make_mat4(multiPassFrame->getViewerViewMatrix());
-				auto localTransform = glm::make_mat4(multiPassFrame->getLocalTransform(xrSessionId));
-				auto viewMatrixRelativeToLocal = viewMatrix * localTransform;
-				matrixToUse = glm::value_ptr(viewMatrixRelativeToLocal);
+				auto originTransform = glm::make_mat4(multiPassFrame->getLocalTransform(xrSessionId)) * math::getOriginMatrix();
+				auto viewMatrixRelativeToOrigin = math::getViewMatrixWithTransform(viewMatrix, originTransform);
+				matrixToUse = glm::value_ptr(viewMatrixRelativeToOrigin);
 				break;
 			}
 			case MatrixPlaceholderType::kMatrixPlaceholderViewProjection:
-			case MatrixPlaceholderType::kMatrixPlaceholderViewProjectionRelativeToLocal:
-			case MatrixPlaceholderType::kMatrixPlaceholderViewProjectionRelativeToLocalFloor:
+			case MatrixPlaceholderType::kMatrixPlaceholderViewProjectionRelativeToLocal:			// TODO
+			case MatrixPlaceholderType::kMatrixPlaceholderViewProjectionRelativeToLocalFloor: // TODO
 			{
 				auto viewMatrix = glm::make_mat4(multiPassFrame->getViewerViewMatrix());
 				auto projectionMatrix = glm::make_mat4(multiPassFrame->getViewerProjectionMatrix());
-				auto viewProjectionMatrix = projectionMatrix * viewMatrix;
+				// TODO: support left-handed?
 
-				if (placeholderType == MatrixPlaceholderType::kMatrixPlaceholderViewProjection)
-				{
-					matrixToUse = glm::value_ptr(viewProjectionMatrix);
-				}
-				else
-				{
-					auto xrSessionId = uniformMatrix4fvCommandBuffer->m_XrSessionId;
-					if (xrSessionId == -1)
-						DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the xrSessionId in local mode.");
-					auto localTransform = glm::make_mat4(multiPassFrame->getLocalTransform(xrSessionId));
-					auto viewProjectionMatrixRelativeToLocal = viewProjectionMatrix * localTransform;
-					matrixToUse = glm::value_ptr(viewProjectionMatrixRelativeToLocal);
-				}
+				auto originTransform = glm::make_mat4(multiPassFrame->getLocalTransform(xrSessionId)) * math::getOriginMatrix();
+				auto viewProjectionMatrixRelativeToOrigin = projectionMatrix * math::getViewMatrixWithTransform(viewMatrix, originTransform);
+				matrixToUse = glm::value_ptr(viewProjectionMatrixRelativeToOrigin);
 				break;
 			}
 			default:

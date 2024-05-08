@@ -2741,6 +2741,12 @@ namespace webgl
         if (xrSessionValue.IsNumber())
           commandBuffer->m_XrSessionId = xrSessionValue.ToNumber().Int32Value();
       }
+      if (array.Has("isRightHanded"))
+      {
+        auto isRightHandedValue = array.Get("isRightHanded");
+        if (isRightHandedValue.IsBoolean())
+          commandBuffer->m_IsRightHanded = isRightHandedValue.ToBoolean().Value();
+      }
       addCommandBuffer(commandBuffer);
     }
     else

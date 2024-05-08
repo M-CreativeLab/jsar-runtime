@@ -67,14 +67,14 @@ extern "C"
 
   /**
    * Set the runtime initialization arguments.
-   * 
+   *
    * @param argJson The JSON string of the runtime initialization arguments.
    */
   DLL_PUBLIC void TransmuteNative_SetRuntimeInit(const char *argJson);
 
   /**
    * Set the viewport size for current rendering.
-   * 
+   *
    * @param w The width of the viewport.
    * @param h The height of the viewport.
    */
@@ -82,29 +82,29 @@ extern "C"
 
   /**
    * Set the field of view for the current rendering.
-   * 
+   *
    * @param fov The field of view to be set.
    */
   DLL_PUBLIC void TransmuteNative_SetFov(float fov);
 
   /**
    * Set the time for the current rendering.
-   * 
+   *
    * @param time The time to be set.
    */
   DLL_PUBLIC void TransmuteNative_SetTime(float time);
 
   /**
    * Set the stereo rendering mode such as single-pass, multi-pass, etc.
-   * 
-   * @param mode The stereo rendering mode to be set, the valid value is: MultiPass(0), SinglePass(1), SinglePassInstanced(2), 
+   *
+   * @param mode The stereo rendering mode to be set, the valid value is: MultiPass(0), SinglePass(1), SinglePassInstanced(2),
    *             SinglePassMultiview(3) and -1 for unknown.
    */
   DLL_PUBLIC void TransmuteNative_SetStereoRenderingMode(int mode);
 
   /**
    * Update the projection matrix for a specific eye.
-   * 
+   *
    * @param eyeId The eye id, 0 for left and 1 for right.
    * @param transform The projection matrix to be set, a valid transform is a 16-element float array that represents a 4x4 matrix,
    *                  and it's in column-major order.
@@ -114,7 +114,7 @@ extern "C"
   /**
    * Update the viewer's transform matrix, namely the matrix that describes how to transform the viewer's model to the world space.
    * It will be used to calculate the viewer's view matrix.
-   * 
+   *
    * @param translation The translation part of the transform, a 3-element float array.
    * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
    */
@@ -122,7 +122,7 @@ extern "C"
 
   /**
    * Update the viewer's stereo view matrix for a specific eye.
-   * 
+   *
    * @param eyeId The eye id, 0 for left and 1 for right.
    * @param translation The translation part of the transform, a 3-element float array.
    */
@@ -130,7 +130,7 @@ extern "C"
 
   /**
    * Update the local transform matrix for a specific applet.
-   * 
+   *
    * @param id The applet id, namely the XR session id.
    * @param translation The translation part of the transform, a 3-element float array.
    * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
@@ -138,9 +138,42 @@ extern "C"
   DLL_PUBLIC bool TransmuteNative_SetLocalTransformFromTRS(int id, float *translation, float *rotation);
 
   /**
-   * Input source updates
+   * __Input Source Updates__
+   *
+   * Input source represents the input device, such as the controller, hand, etc, in WebXR and OpenXR, it's called input source.
+   * Every input source has a unique id, target ray space, grip space basically, and especially for the hand input source, it has
+   * the handness, joint pose, etc.
+   *
+   * Note: as for the hand input source, we use its handness as its id.
+   */
+
+  /**
+   * Update the hand input source's pose.
+   *
+   * @param handness The handness of the hand, 0 for left and 1 for right.
+   * @param joint The joint index of the hand, 0 for wrist, 1 for thumb, 2 for index, 3 for middle, 4 for ring, 5 for pinky.
+   * @param position The position of the joint, a 3-element float array.
+   * @param orientation The orientation of the joint, a 4-element float array that represents a quaternion.
+   * @param radius The radius of the joint, a float value.
    */
   DLL_PUBLIC bool TransmuteNative_SetHandInputPose(int handness, int joint, float *position, float *orientation, float radius);
-  DLL_PUBLIC bool TransmuteNative_SetHandInputRaySpace(int handness, float *translation, float *rotation);
+
+  /**
+   * Update the target ray pose for the hand input source.
+   *
+   * @param handness The handness of the hand, 0 for left and 1 for right.
+   * @param translation The translation part of the transform, a 3-element float array.
+   * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
+   */
+  DLL_PUBLIC bool TransmuteNative_SetHandInputRayPose(int handness, float *translation, float *rotation);
+
+  /**
+   * Update the grip pose for the hand input source.
+   * 
+   * @param handness The handness of the hand, 0 for left and 1 for right.
+   * @param translation The translation part of the transform, a 3-element float array.
+   * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
+   */
+  DLL_PUBLIC bool TransmuteNative_SetHandInputGripPose(int handness, float *translation, float *rotation);
 #endif
 }

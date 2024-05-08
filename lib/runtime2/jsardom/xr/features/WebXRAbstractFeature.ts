@@ -89,9 +89,8 @@ export abstract class WebXRAbstractFeature implements IWebXRFeature {
       }
     }
 
-    // if this is a native WebXR feature, check if it is enabled on the session
-    // For now only check if not using babylon native
-    if (this._xrSessionManager.session.enabledFeatures.indexOf(this.xrNativeFeatureName) === -1) {
+    // check if the feature is compatible with this environment
+    if (this.xrNativeFeatureName && this._xrSessionManager.session.enabledFeatures.indexOf(this.xrNativeFeatureName) === -1) {
       return false;
     }
 

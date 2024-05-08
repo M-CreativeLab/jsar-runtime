@@ -513,7 +513,7 @@ namespace xr
   bool Device::updateViewport(int eyeId, float x, float y, float width, float height)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    m_ViewportsByEyeId[eyeId] = Viewport(x, y, width, height);
+    m_ViewportsByEyeId[eyeId] = Viewport(width, height, x, y);
     return true;
   }
 

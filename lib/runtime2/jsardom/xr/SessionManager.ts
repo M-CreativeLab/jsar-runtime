@@ -290,8 +290,8 @@ export class WebXRSessionManager implements BABYLON.IDisposable, BABYLON.IWebXRR
   }
 
   /**
-     * Starts rendering to the xr layer
-     */
+   * Starts rendering to the xr layer
+   */
   public runXRRenderLoop() {
     if (!this.inXRSession || !this._engine) {
       return;
@@ -360,6 +360,23 @@ export class WebXRSessionManager implements BABYLON.IDisposable, BABYLON.IWebXRR
       callback();
     } else if (this.inXRSession || !ignoreIfNotInSession) {
       this.onXRFrameObservable.addOnce(callback);
+    }
+  }
+
+  /**
+   * This method is used to run a callback once in multi-pass frame.
+   * 
+   * @param frame 
+   * @param callback 
+   */
+  public runWithXRFrameOnce(frame: XRFrame, callback: () => void): void {
+    const viewerPose = frame.getViewerPose(this.referenceSpace);
+    const isMultiPass = viewerPose?.views.length === 1; // FIXME: a better way to detect multi-pass?
+    if (!isMultiPass) {
+      callback();
+    } else if (viewerPose.views[0].eye === 'left') {
+      // Only run the callback once (actually in left eye frame) in multi-pass mode
+      callback();
     }
   }
 

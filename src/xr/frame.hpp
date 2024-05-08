@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include <chrono>
+#include "input_source.hpp"
 #include "renderer/command_buffer.hpp"
 
 using namespace std;
@@ -49,6 +50,9 @@ namespace xr
     int getCurrentStereoId();
     void setStereoId(int id);
 
+    InputSource& getGazeInputSource();
+    InputSource& getHandInputSource(Handness handness);
+
   protected:
     Device *m_XrDevice = nullptr;
     bool m_Ended = false;
@@ -57,6 +61,9 @@ namespace xr
     float m_ViewerTransform[16];
     std::map<int, FrameContextBySessionId *> m_Sessions;
     int m_CurrentStereoId = -1;
+    // Copy of the input source for this frame.
+    InputSource m_GazeInputSource;
+    std::vector<InputSource> m_HandInputSources;
   };
 
   class MultiPassFrame : public DeviceFrame

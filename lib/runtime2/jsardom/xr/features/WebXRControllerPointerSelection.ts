@@ -127,6 +127,9 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
   private static _IdCounter = 200;
 
   private _attachController = (xrController: WebXRInputSource) => {
+    if (xrController.inputSource.targetRayMode !== 'gaze') {
+      return; // filter by gaze only
+    }
     if (this._controllers[xrController.uniqueId]) {
       // already attached
       return;
@@ -161,12 +164,12 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
     }
 
     switch (xrController.inputSource.targetRayMode) {
-      case "tracked-pointer":
-        return this._attachTrackedPointerRayMode(xrController);
-      case "gaze":
+      // case 'tracked-pointer':
+      //   return this._attachTrackedPointerRayMode(xrController);
+      case 'gaze':
         return this._attachGazeMode(xrController);
-      case "screen":
-        return this._attachScreenRayMode(xrController);
+      // case 'screen':
+      //   return this._attachScreenRayMode(xrController);
     }
   };
 
@@ -267,7 +270,8 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
       return false;
     }
 
-    this._options.xrInput.controllers.forEach(this._attachController);
+    this._options.xrInput.controllers
+      .forEach(this._attachController);
     this._addNewAttachObserver(this._options.xrInput.onControllerAddedObservable, this._attachController);
     this._addNewAttachObserver(this._options.xrInput.onControllerRemovedObservable, (controller) => {
       // REMOVE the controller
@@ -281,7 +285,7 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
 
       const { laserPointer, selectionMesh } = this._generateNewMeshPair(webXRCamera);
 
-      this._controllers["camera"] = {
+      this._controllers['camera'] = {
         webXRCamera,
         laserPointer,
         selectionMesh,
@@ -379,113 +383,116 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
   private _viewportRef = new Viewport(0, 0, 0, 0);
 
   protected _onXRFrame(_xrFrame: XRFrame) {
-    Object.keys(this._controllers).forEach((id) => {
-      // only do this for the selected pointer
-      const controllerData = this._controllers[id];
-      if ((!this._options.enablePointerSelectionOnAllControllers && id !== this._attachedController) || controllerData.disabledByNearInteraction) {
-        controllerData.selectionMesh.isVisible = false;
-        controllerData.laserPointer.isVisible = false;
-        controllerData.pick = null;
-        return;
-      }
+    this._xrSessionManager.runWithXRFrameOnce(_xrFrame, () => {
+      Object.keys(this._controllers).forEach((id) => {
+        // only do this for the selected pointer
+        const controllerData = this._controllers[id];
+        if ((!this._options.enablePointerSelectionOnAllControllers && id !== this._attachedController) || controllerData.disabledByNearInteraction) {
+          controllerData.selectionMesh.isVisible = false;
+          controllerData.laserPointer.isVisible = false;
+          controllerData.pick = null;
+          return;
+        }
 
-      controllerData.laserPointer.isVisible = this.displayLaserPointer;
+        controllerData.laserPointer.isVisible = this.displayLaserPointer;
+        let controllerGlobalPosition: Vector3;
 
-      let controllerGlobalPosition: Vector3;
+        // Every frame check collisions/input
+        if (controllerData.xrController) {
+          controllerGlobalPosition = controllerData.xrController.pointer.position;
+          controllerData.xrController.getWorldPointerRayToRef(controllerData.tmpRay);
+        } else if (controllerData.webXRCamera) {
+          controllerGlobalPosition = controllerData.webXRCamera.position;
+          controllerData.webXRCamera.getForwardRayToRef(controllerData.tmpRay);
+        } else {
+          return;
+        }                          
 
-      // Every frame check collisions/input
-      if (controllerData.xrController) {
-        controllerGlobalPosition = controllerData.xrController.pointer.position;
-        controllerData.xrController.getWorldPointerRayToRef(controllerData.tmpRay);
-      } else if (controllerData.webXRCamera) {
-        controllerGlobalPosition = controllerData.webXRCamera.position;
-        controllerData.webXRCamera.getForwardRayToRef(controllerData.tmpRay);
-      } else {
-        return;
-      }
+        if (this._options.maxPointerDistance) {
+          controllerData.tmpRay.length = this._options.maxPointerDistance;
+        }
+        // update pointerX and pointerY of the scene. Only if the flag is set to true!
+        if (!this._options.disableScenePointerVectorUpdate && controllerGlobalPosition) {
+          const scene = this._xrSessionManager.scene;
+          const camera = this._options.xrInput.xrCamera;
+          if (camera) {
+            camera.viewport.toGlobalToRef(scene.getEngine().getRenderWidth(), scene.getEngine().getRenderHeight(), this._viewportRef);
+            Vector3.ProjectToRef(controllerGlobalPosition, this._identityMatrix, scene.getTransformMatrix(), this._viewportRef, this._screenCoordinatesRef);
 
-      if (this._options.maxPointerDistance) {
-        controllerData.tmpRay.length = this._options.maxPointerDistance;
-      }
-      // update pointerX and pointerY of the scene. Only if the flag is set to true!
-      if (!this._options.disableScenePointerVectorUpdate && controllerGlobalPosition) {
-        const scene = this._xrSessionManager.scene;
-        const camera = this._options.xrInput.xrCamera;
-        if (camera) {
-          camera.viewport.toGlobalToRef(scene.getEngine().getRenderWidth(), scene.getEngine().getRenderHeight(), this._viewportRef);
-          Vector3.ProjectToRef(controllerGlobalPosition, this._identityMatrix, scene.getTransformMatrix(), this._viewportRef, this._screenCoordinatesRef);
-          // stay safe
-          if (
-            typeof this._screenCoordinatesRef.x === "number" &&
-            typeof this._screenCoordinatesRef.y === "number" &&
-            !isNaN(this._screenCoordinatesRef.x) &&
-            !isNaN(this._screenCoordinatesRef.y)
-          ) {
-            scene.pointerX = this._screenCoordinatesRef.x;
-            scene.pointerY = this._screenCoordinatesRef.y;
+            // stay safe
+            if (
+              typeof this._screenCoordinatesRef.x === 'number' &&
+              typeof this._screenCoordinatesRef.y === 'number' &&
+              !isNaN(this._screenCoordinatesRef.x) &&
+              !isNaN(this._screenCoordinatesRef.y)
+            ) {
+              scene.pointerX = this._screenCoordinatesRef.x;
+              scene.pointerY = this._screenCoordinatesRef.y;
 
-            controllerData.screenCoordinates = {
-              x: this._screenCoordinatesRef.x,
-              y: this._screenCoordinatesRef.y,
-            };
+              controllerData.screenCoordinates = {
+                x: this._screenCoordinatesRef.x,
+                y: this._screenCoordinatesRef.y,
+              };
+            }
           }
         }
-      }
 
-      let utilityScenePick = null;
-      if (this._utilityLayerScene) {
-        utilityScenePick = this._utilityLayerScene.pickWithRay(controllerData.tmpRay, this._utilityLayerScene.pointerMovePredicate || this.raySelectionPredicate);
-      }
-
-      const originalScenePick = this._scene.pickWithRay(controllerData.tmpRay, this._scene.pointerMovePredicate || this.raySelectionPredicate);
-      if (!utilityScenePick || !utilityScenePick.hit) {
-        // No hit in utility scene
-        controllerData.pick = originalScenePick;
-      } else if (!originalScenePick || !originalScenePick.hit) {
-        // No hit in original scene
-        controllerData.pick = utilityScenePick;
-      } else if (utilityScenePick.distance < originalScenePick.distance) {
-        // Hit is closer in utility scene
-        controllerData.pick = utilityScenePick;
-      } else {
-        // Hit is closer in original scene
-        controllerData.pick = originalScenePick;
-      }
-
-      if (controllerData.pick && controllerData.xrController) {
-        controllerData.pick.aimTransform = controllerData.xrController.pointer;
-        controllerData.pick.gripTransform = controllerData.xrController.grip || null;
-      }
-
-      const pick = controllerData.pick;
-
-      if (pick && pick.pickedPoint && pick.hit) {
-        // Update laser state
-        this._updatePointerDistance(controllerData.laserPointer, pick.distance);
-
-        // Update cursor state
-        controllerData.selectionMesh.position.copyFrom(pick.pickedPoint);
-        controllerData.selectionMesh.scaling.x = Math.sqrt(pick.distance);
-        controllerData.selectionMesh.scaling.y = Math.sqrt(pick.distance);
-        controllerData.selectionMesh.scaling.z = Math.sqrt(pick.distance);
-
-        // To avoid z-fighting
-        const pickNormal = this._convertNormalToDirectionOfRay(pick.getNormal(true), controllerData.tmpRay);
-        const deltaFighting = 0.001;
-        controllerData.selectionMesh.position.copyFrom(pick.pickedPoint);
-        if (pickNormal) {
-          const axis1 = Vector3.Cross(Axis.Y, pickNormal);
-          const axis2 = Vector3.Cross(pickNormal, axis1);
-          Vector3.RotationFromAxisToRef(axis2, pickNormal, axis1, controllerData.selectionMesh.rotation);
-          controllerData.selectionMesh.position.addInPlace(pickNormal.scale(deltaFighting));
+        let utilityScenePick = null;
+        if (this._utilityLayerScene) {
+          utilityScenePick = this._utilityLayerScene.pickWithRay(controllerData.tmpRay, this._utilityLayerScene.pointerMovePredicate || this.raySelectionPredicate);
         }
-        controllerData.selectionMesh.isVisible = true && this.displaySelectionMesh;
-        controllerData.meshUnderPointer = pick.pickedMesh;
-      } else {
-        controllerData.selectionMesh.isVisible = false;
-        this._updatePointerDistance(controllerData.laserPointer, 1);
-        controllerData.meshUnderPointer = null;
-      }
+
+        const originalScenePick = this._scene.pickWithRay(controllerData.tmpRay, this._scene.pointerMovePredicate || this.raySelectionPredicate);
+        if (!utilityScenePick || !utilityScenePick.hit) {
+          // No hit in utility scene
+          controllerData.pick = originalScenePick;
+        } else if (!originalScenePick || !originalScenePick.hit) {
+          // No hit in original scene
+          controllerData.pick = utilityScenePick;
+        } else if (utilityScenePick.distance < originalScenePick.distance) {
+          // Hit is closer in utility scene
+          controllerData.pick = utilityScenePick;
+        } else {
+          // Hit is closer in original scene
+          controllerData.pick = originalScenePick;
+        }
+
+        if (controllerData.pick && controllerData.xrController) {
+          controllerData.pick.aimTransform = controllerData.xrController.pointer;
+          controllerData.pick.gripTransform = controllerData.xrController.grip || null;
+        }
+
+        const pick = controllerData.pick;
+        if (pick && pick.pickedPoint && pick.hit) {
+          // Update laser state
+          this._updatePointerDistance(controllerData.laserPointer, pick.distance);
+
+          // Update cursor state
+          controllerData.selectionMesh.position.copyFrom(pick.pickedPoint);
+          controllerData.selectionMesh.scaling.x = Math.sqrt(pick.distance);
+          controllerData.selectionMesh.scaling.y = Math.sqrt(pick.distance);
+          controllerData.selectionMesh.scaling.z = Math.sqrt(pick.distance);
+
+          // To avoid z-fighting
+          const pickNormal = this._convertNormalToDirectionOfRay(pick.getNormal(true), controllerData.tmpRay);
+          const deltaFighting = 0.001;
+          controllerData.selectionMesh.position.copyFrom(pick.pickedPoint);
+          if (pickNormal) {
+            const axis1 = Vector3.Cross(Axis.Y, pickNormal);
+            const axis2 = Vector3.Cross(pickNormal, axis1);
+            Vector3.RotationFromAxisToRef(axis2, pickNormal, axis1, controllerData.selectionMesh.rotation);
+            controllerData.selectionMesh.position.addInPlace(pickNormal.scale(deltaFighting));
+          }
+          controllerData.selectionMesh.isVisible = true && this.displaySelectionMesh;
+          controllerData.meshUnderPointer = pick.pickedMesh;
+        } else {
+          controllerData.selectionMesh.isVisible = false;
+          this._updatePointerDistance(controllerData.laserPointer, 1);
+          if (controllerData.meshUnderPointer) {
+            controllerData.meshUnderPointer = null;
+          }
+        }
+      });
     });
   }
 
@@ -494,13 +501,13 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
   }
 
   private _attachGazeMode(xrController?: WebXRInputSource) {
-    const controllerData = this._controllers[(xrController && xrController.uniqueId) || "camera"];
+    const controllerData = this._controllers[(xrController && xrController.uniqueId) || 'camera'];
     // attached when touched, detaches when raised
     const timeToSelect = this._options.timeToSelect || 3000;
     const sceneToRenderTo = this._options.useUtilityLayer ? this._utilityLayerScene : this._scene;
     let oldPick = new PickingInfo();
     const discMesh = CreateTorus(
-      "selection",
+      'selection',
       {
         diameter: 0.0035 * 15,
         thickness: 0.0025 * 6,
@@ -515,52 +522,54 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
     let downTriggered = false;
     const pointerEventInit: PointerEventInit = {
       pointerId: controllerData.id,
-      pointerType: "xr",
+      pointerType: 'xr',
     };
-    controllerData.onFrameObserver = this._xrSessionManager.onXRFrameObservable.add(() => {
-      if (!controllerData.pick) {
-        return;
-      }
-      this._augmentPointerInit(pointerEventInit, controllerData.id, controllerData.screenCoordinates);
-      controllerData.laserPointer.material!.alpha = 0;
-      discMesh.isVisible = false;
-      if (controllerData.pick.hit) {
-        if (!this._pickingMoved(oldPick, controllerData.pick)) {
-          if (timer > timeToSelect / 10) {
-            discMesh.isVisible = true;
-          }
-
-          timer += this._scene.getEngine().getDeltaTime();
-          if (timer >= timeToSelect) {
-            this._scene.simulatePointerDown(controllerData.pick, pointerEventInit);
-            // this pointerdown event is not setting the controllerData.pointerDownTriggered to avoid a pointerUp event when this feature is detached
-            downTriggered = true;
-            // pointer up right after down, if disable on touch out
-            if (this._options.disablePointerUpOnTouchOut) {
-              this._scene.simulatePointerUp(controllerData.pick, pointerEventInit);
+    controllerData.onFrameObserver = this._xrSessionManager.onXRFrameObservable.add((frame) => {
+      this._xrSessionManager.runWithXRFrameOnce(frame, () => {
+        if (!controllerData.pick) {
+          return;
+        }
+        this._augmentPointerInit(pointerEventInit, controllerData.id, controllerData.screenCoordinates);
+        controllerData.laserPointer.material!.alpha = 0;
+        discMesh.isVisible = false;
+        if (controllerData.pick.hit) {
+          if (!this._pickingMoved(oldPick, controllerData.pick)) {
+            if (timer > timeToSelect / 10) {
+              discMesh.isVisible = true;
             }
-            discMesh.isVisible = false;
+
+            timer += this._scene.getEngine().getDeltaTime();
+            if (timer >= timeToSelect) {
+              this._scene.simulatePointerDown(controllerData.pick, pointerEventInit);
+              // this pointerdown event is not setting the controllerData.pointerDownTriggered to avoid a pointerUp event when this feature is detached
+              downTriggered = true;
+              // pointer up right after down, if disable on touch out
+              if (this._options.disablePointerUpOnTouchOut) {
+                this._scene.simulatePointerUp(controllerData.pick, pointerEventInit);
+              }
+              discMesh.isVisible = false;
+            } else {
+              const scaleFactor = 1 - timer / timeToSelect;
+              discMesh.scaling.set(scaleFactor, scaleFactor, scaleFactor);
+            }
           } else {
-            const scaleFactor = 1 - timer / timeToSelect;
-            discMesh.scaling.set(scaleFactor, scaleFactor, scaleFactor);
+            if (downTriggered) {
+              if (!this._options.disablePointerUpOnTouchOut) {
+                this._scene.simulatePointerUp(controllerData.pick, pointerEventInit);
+              }
+            }
+            downTriggered = false;
+            timer = 0;
           }
         } else {
-          if (downTriggered) {
-            if (!this._options.disablePointerUpOnTouchOut) {
-              this._scene.simulatePointerUp(controllerData.pick, pointerEventInit);
-            }
-          }
           downTriggered = false;
           timer = 0;
         }
-      } else {
-        downTriggered = false;
-        timer = 0;
-      }
 
-      this._scene.simulatePointerMove(controllerData.pick, pointerEventInit);
+        this._scene.simulatePointerMove(controllerData.pick, pointerEventInit);
 
-      oldPick = controllerData.pick;
+        oldPick = controllerData.pick;
+      });
     });
 
     if (this._options.renderingGroupId !== undefined) {
@@ -582,7 +591,7 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
     let downTriggered = false;
     const pointerEventInit: PointerEventInit = {
       pointerId: controllerData.id,
-      pointerType: "xr",
+      pointerType: 'xr',
     };
     controllerData.onFrameObserver = this._xrSessionManager.onXRFrameObservable.add(() => {
       this._augmentPointerInit(pointerEventInit, controllerData.id, controllerData.screenCoordinates);
@@ -618,7 +627,7 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
     }
     const pointerEventInit: PointerEventInit = {
       pointerId: controllerData.id,
-      pointerType: "xr",
+      pointerType: 'xr',
     };
     controllerData.onFrameObserver = this._xrSessionManager.onXRFrameObservable.add(() => {
       (<BABYLON.StandardMaterial>controllerData.laserPointer.material).disableLighting = this.disablePointerLighting;
@@ -694,8 +703,8 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
         selectstart: selectStartListener,
       };
 
-      this._xrSessionManager.session.addEventListener("selectstart", selectStartListener);
-      this._xrSessionManager.session.addEventListener("selectend", selectEndListener);
+      this._xrSessionManager.session.addEventListener('selectstart', selectStartListener);
+      this._xrSessionManager.session.addEventListener('selectend', selectEndListener);
     }
   }
 
@@ -736,7 +745,7 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
       // Stay safe and fire a pointerup, in case it wasn't already triggered
       const pointerEventInit: PointerEventInit = {
         pointerId: controllerData.id,
-        pointerType: "xr",
+        pointerType: 'xr',
       };
       this._xrSessionManager.runInXRFrame(() => {
         this._augmentPointerInit(pointerEventInit, controllerData.id, controllerData.screenCoordinates);
@@ -756,11 +765,11 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
           if (keys.length) {
             this._attachedController = keys[0];
           } else {
-            this._attachedController = "";
+            this._attachedController = '';
           }
         }
       } catch (e) {
-        Tools.Warn("controller already detached.");
+        Tools.Warn('controller already detached.');
       }
     });
   }
@@ -770,7 +779,7 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
     const laserPointer = this._options.customLasterPointerMeshGenerator
       ? this._options.customLasterPointerMeshGenerator()
       : CreateCylinder(
-        "laserPointer",
+        'laserPointer',
         {
           height: 1,
           diameterTop: 0.0002,
@@ -781,7 +790,7 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
         sceneToRenderTo
       );
     laserPointer.parent = meshParent;
-    const laserPointerMaterial = new StandardMaterial("laserPointerMat", sceneToRenderTo);
+    const laserPointerMaterial = new StandardMaterial('laserPointerMat', sceneToRenderTo);
     laserPointerMaterial.emissiveColor = this.laserPointerDefaultColor;
     laserPointerMaterial.alpha = 0.7;
     laserPointer.material = laserPointerMaterial;
@@ -790,11 +799,11 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
     laserPointer.isPickable = false;
     laserPointer.isVisible = false;
 
-    // Create a gaze tracker for the  XR controller
+    // Create a gaze tracker for the XR controller
     const selectionMesh = this._options.customSelectionMeshGenerator
       ? this._options.customSelectionMeshGenerator()
       : CreateTorus(
-        "gazeTracker",
+        'gazeTracker',
         {
           diameter: 0.0035 * 3,
           thickness: 0.0025 * 3,
@@ -805,7 +814,7 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
     selectionMesh.bakeCurrentTransformIntoVertices();
     selectionMesh.isPickable = false;
     selectionMesh.isVisible = false;
-    const targetMat = new StandardMaterial("targetMat", sceneToRenderTo);
+    const targetMat = new StandardMaterial('targetMat', sceneToRenderTo);
     targetMat.specularColor = Color3.Black();
     targetMat.emissiveColor = this.selectionMeshDefaultColor;
     targetMat.backFaceCulling = false;
@@ -853,7 +862,7 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
 
   private _augmentPointerInit(pointerEventInit: PointerEventInit, id: number, screenCoordinates?: { x: number; y: number }): void {
     pointerEventInit.pointerId = id;
-    pointerEventInit.pointerType = "xr";
+    pointerEventInit.pointerType = 'xr';
     if (screenCoordinates) {
       pointerEventInit.screenX = screenCoordinates.x;
       pointerEventInit.screenY = screenCoordinates.y;
