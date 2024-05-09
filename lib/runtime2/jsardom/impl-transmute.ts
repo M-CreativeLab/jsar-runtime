@@ -269,7 +269,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
 
     {
       // create default light
-      const dir = new BABYLON.Vector3(0, 2, -5);
+      const dir = new BABYLON.Vector3(0, -2, 5);
       const light = new BABYLON.HemisphericLight(
         'light_front',
         dir,
