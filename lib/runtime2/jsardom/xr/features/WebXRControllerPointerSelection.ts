@@ -830,6 +830,9 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
   }
 
   private _updatePointerDistance(_laserPointer: AbstractMesh, distance: number = 100) {
+    if (!_laserPointer.isVisible) {
+      return;
+    }
     _laserPointer.scaling.y = distance;
     // a bit of distance from the controller
     if (this._scene.useRightHandedSystem) {

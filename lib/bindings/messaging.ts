@@ -135,7 +135,7 @@ export const dispatchEvent = function dispatchEventToNative(event: CustomEvent) 
   return id;
 };
 
-export const dispatchXsmlEvent = function (id: number, eventType: 'loaded') {
+export const dispatchXsmlEvent = function (id: number, eventType: 'loaded' | 'fcp' | 'error') {
   return dispatchEvent(
     new CustomEvent('xsmlEvent', {
       detail: {

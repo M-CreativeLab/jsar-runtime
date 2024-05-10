@@ -260,8 +260,9 @@ namespace xr
       frame->finishPass(eyeId);
 
       bool copyNotAllowed = false;
+      bool hasDrawCalls = false;
       // TODO: optimize the performance here
-      // We could move this to the exec() function to avoid this loop.
+      // We could move this to the exec() function and implement a snapshot mechanism to avoid the performance issue.
       for (auto commandBuffer : commandBuffers)
       {
         switch (commandBuffer->GetType())
@@ -274,13 +275,21 @@ namespace xr
         case renderer::kCommandTypeLinkProgram:
           copyNotAllowed = true;
           break;
+        case renderer::kCommandTypeDrawArrays:
+        case renderer::kCommandTypeDrawElements:
+        case renderer::kCommandTypeDrawBuffers:
+        case renderer::kCommandTypeDrawArraysInstanced:
+        case renderer::kCommandTypeDrawElementsInstanced:
+        case renderer::kCommandTypeDrawRangeElements:
+          hasDrawCalls = true;
+          break;
         default:
           break;
         }
         if (copyNotAllowed)
           break;
       }
-      if (!copyNotAllowed)
+      if (!copyNotAllowed && hasDrawCalls)
         m_BackupStereoRenderingFrame->copyCommandBuffers(commandBuffers, eyeId);
 
       /**

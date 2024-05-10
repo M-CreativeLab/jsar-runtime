@@ -293,6 +293,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
       pointerSelectionOptions: {
         preferredHandedness: 'right',
         enablePointerSelectionOnAllControllers: false,
+        disableScenePointerVectorUpdate: true,
       },
       teleportationOptions: {
         forceHandedness: 'right',

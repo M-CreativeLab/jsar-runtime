@@ -90,6 +90,7 @@ export class TransmuteRuntime2 extends EventTarget {
     try {
       await this.load(event.url, nativeDocument);
     } catch (err) {
+      dispatchXsmlEvent(nativeDocument.id, 'error');
       logger.error('failed to load the default document:', err);
     }
   }
@@ -164,15 +165,15 @@ export class TransmuteRuntime2 extends EventTarget {
     try {
       await dom.load();
       dispatchXsmlEvent(nativeDocument.id, 'loaded');
-      logger.info('loaded a jsar document');
 
       const spaceNode = dom.document.space.asNativeType<BABYLON.TransformNode>();
       spaceNode.setEnabled(false);
       {
         await dom.waitForSpaceReady();
-        logger.info('the jsar document\'s space is ready');
+        dispatchXsmlEvent(nativeDocument.id, 'fcp');
       }
       this.fitSpaceWithScene(spaceNode);
+
     } catch (err) {
       // remove the dom from appStack
       for (let i = 0; i < this.appStack.length; ++i) {
