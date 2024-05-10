@@ -9,17 +9,16 @@ JOBS := $(shell expr $(CORES) / 2)
 crates:
 	cargo build --release
 
-# FIXME: disable universal-apple-darwin for now
-# ifeq ($(UNAME), Darwin)
-# 	@echo "Creating universal-apple-darwin..."
-# 	mkdir -p build/output/crates/universal-apple-darwin/release
-# 	lipo -create -output build/output/crates/universal-apple-darwin/release/libjsar_jsbundle.a \
-# 		build/output/crates/aarch64-apple-darwin/release/libjsar_jsbundle.a \
-# 		build/output/crates/x86_64-apple-darwin/release/libjsar_jsbundle.a
-# 	lipo -create -output build/output/crates/universal-apple-darwin/release/libjsar_shaders.a \
-# 		build/output/crates/aarch64-apple-darwin/release/libjsar_shaders.a \
-# 		build/output/crates/x86_64-apple-darwin/release/libjsar_shaders.a
-# endif
+ifeq ($(UNAME), Darwin)
+	@echo "Creating universal-apple-darwin..."
+	mkdir -p build/output/crates/universal-apple-darwin/release
+	lipo -create -output build/output/crates/universal-apple-darwin/release/libjsar_jsbindings.a \
+		build/output/crates/aarch64-apple-darwin/release/libjsar_jsbindings.a \
+		build/output/crates/x86_64-apple-darwin/release/libjsar_jsbindings.a
+	lipo -create -output build/output/crates/universal-apple-darwin/release/libjsar_jsbindings.a \
+		build/output/crates/aarch64-apple-darwin/release/libjsar_jsbindings.a \
+		build/output/crates/x86_64-apple-darwin/release/libjsar_jsbindings.a
+endif
 
 jsbundle:
 	@echo "Building jsbundle..."

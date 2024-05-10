@@ -98,7 +98,7 @@ endif()
 
 if (APPLE)
     # Build Universal Binary for Apple Silicon that works for intel and silicon.
-    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
+    # set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
     message("CMAKE_OSX_ARCHITECTURES: ${CMAKE_OSX_ARCHITECTURES}")
 endif()
 

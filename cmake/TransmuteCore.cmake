@@ -40,15 +40,17 @@ endif()
 set(TRANSMUTE_CORE_LIBNAME TransmuteCore)
 add_library(TransmuteCore SHARED ${TRANSMUTE_CORE_SOURCE} ${TRANSMUTE_PROTO_SOURCE})
 
-target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
-target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${CMAKE_SOURCE_DIR}/proto)
-target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/headers)
+# Set the common include directories
+include_directories(
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/proto
+    ${CMAKE_SOURCE_DIR}/thirdparty/headers
+)
 
 # Add Node.js headers
 set(NODEJS_VERSION 18.12.1)
 set(NODEJS_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-v${NODEJS_VERSION}/include)
-target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${NODEJS_HEADERS_PATH})
-target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${NODEJS_HEADERS_PATH}/node)
+include_directories(${NODEJS_HEADERS_PATH} ${NODEJS_HEADERS_PATH}/node)
 
 # Add Node Addon API headers
 set(NODE_ADDON_API_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-addon-api/include)
@@ -94,6 +96,9 @@ if(APPLE)
         "-framework CoreFoundation"
         "-framework OpenGL"
         "-framework Metal"
+        # The followings are required by surfman(rust).
+        "-framework QuartzCore"
+        "-framework IOSurface"
         "-lobjc"
     )
     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${APPLE_RENDERER_DEPS})
@@ -219,13 +224,14 @@ endif()
 function(ADD_JSAR_TOOL EXECUTABLE_NAME SOURCE_FILE)
     add_executable(${EXECUTABLE_NAME} ${SOURCE_FILE})
     target_compile_definitions(${EXECUTABLE_NAME} PRIVATE TRANSMUTE_STANDALONE)
-    target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_include_directories(${EXECUTABLE_NAME} PRIVATE ${NODEJS_HEADERS_PATH})
-    target_include_directories(${EXECUTABLE_NAME} PRIVATE ${NODEJS_HEADERS_PATH}/node)
     target_include_directories(${EXECUTABLE_NAME} PRIVATE ${NODE_ADDON_API_HEADERS_PATH})
-    target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${TRANSMUTE_CORE_LIBNAME})
+    target_include_directories(${EXECUTABLE_NAME} PRIVATE /opt/homebrew/Cellar/glfw/3.4/include)
+
+    target_link_options(${EXECUTABLE_NAME} PRIVATE -L/opt/homebrew/Cellar/glfw/3.4/lib)
+    target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${TRANSMUTE_CORE_LIBNAME} glfw)
 
     if (APPLE)
+        target_link_libraries(${EXECUTABLE_NAME} PRIVATE "-framework OpenGL")
         set_target_properties(${EXECUTABLE_NAME} PROPERTIES
             INSTALL_RPATH "@loader_path"
             BUILD_WITH_INSTALL_RPATH ON

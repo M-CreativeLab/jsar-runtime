@@ -88,7 +88,8 @@ namespace bindings
   Napi::Value XRInputSource::HandGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
-    return XRHand::NewInstance(info.Env(), internal);
+    Napi::HandleScope scope(env);
+    return XRHand::NewInstance(env, internal);
   }
 
   Napi::Value XRInputSource::HandednessGetter(const Napi::CallbackInfo &info)

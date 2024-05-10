@@ -30,7 +30,6 @@ namespace analytics
   void PerformanceMeasure::write()
   {
     auto duration = duration_cast<microseconds>(end - start);
-    auto durationMsCount = duration.count();
     if (fd != -1)
       analytics->writeToPipe(fd, to_string(duration.count()));
   }

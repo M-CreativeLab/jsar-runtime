@@ -18,6 +18,7 @@ pub mod htmlrender;
 use std::os::raw::{c_char, c_void};
 
 extern "C" {
+  #[cfg(target_os = "android")]
   fn eglGetProcAddress(procname: *const c_char) -> *const c_void;
 }
 
@@ -34,6 +35,7 @@ fn init_platform_env() {
 #[no_mangle]
 pub extern "C" fn jsar_load_gl() {
   // Load the OpenGL function pointers for the rust environment in native thread.
+  #[cfg(target_os = "android")]
   gl::load_with(|symbol| unsafe {
     let symbol_cstr = std::ffi::CString::new(symbol).expect("Failed to convert string to C string");
     eglGetProcAddress(symbol_cstr.as_ptr()) as *const _

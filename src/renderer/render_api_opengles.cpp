@@ -1083,7 +1083,7 @@ private:
 			}
 			auto multiPassFrame = static_cast<xr::MultiPassFrame *>(deviceFrame);
 			auto placeholderType = uniformMatrix4fvCommandBuffer->m_MatrixPlaceholderType;
-			auto convertToLHRequired = uniformMatrix4fvCommandBuffer->m_IsRightHanded == false; /** convert to left-handed is needed? */
+			// auto convertToLHRequired = uniformMatrix4fvCommandBuffer->m_IsRightHanded == false;
 			switch (placeholderType)
 			{
 			case MatrixPlaceholderType::kMatrixPlaceholderProjection:
