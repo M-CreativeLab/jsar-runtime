@@ -19,6 +19,9 @@ module.exports = {
     fallback: {
       canvas: false,
     },
+    alias: {
+      '@transmute': path.resolve(__dirname, 'lib/bindings'),
+    },
   },
   module: {
     rules: [

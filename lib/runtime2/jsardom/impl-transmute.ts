@@ -16,8 +16,8 @@ import {
 import ImageDataImpl from '@yodaos-jsar/dom/src/living/image/ImageData';
 import * as ws from 'ws';
 import * as undici from 'undici';
+import * as logger from '@transmute/logger';
 
-import * as logger from '../../bindings/logger';
 import { createBondXRSystem } from '../../webxr';
 import { WebXRDefaultExperience } from './xr/DefaultExperience';
 import {

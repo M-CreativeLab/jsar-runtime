@@ -14,7 +14,10 @@
     "typeRoots": [
       "node_modules/@types",
       "types"
-    ]
+    ],
+    "paths": {
+      "@transmute/*": ["./lib/bindings/*"],
+    },
   },
   "include": [
     "lib/**/*.ts"
@@ -22,5 +25,5 @@
   "exclude": [
     "build",
     "node_modules",
-  ]
+  ],
 }
