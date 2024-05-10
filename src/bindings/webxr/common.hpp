@@ -57,6 +57,7 @@ namespace bindings
   class XRTargetRayOrGripSpace;
   class XRPose;
   class XRViewerPose;
+  class XRHand;
   class XRInputSource;
   class XRInputSourceArray;
 

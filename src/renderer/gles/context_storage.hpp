@@ -24,7 +24,9 @@ public:
 class OpenGLContextStorage
 {
 public:
-	OpenGLContextStorage(const char *name) : m_Name(name) {}
+	OpenGLContextStorage(std::string name) : m_Name(name)
+  {
+  }
   ~OpenGLContextStorage()
 	{
 		ClearTextureBindings();
@@ -40,7 +42,7 @@ public:
   void RecordActiveTextureUnit(int unit);
   void RecordTextureBindingWithUnit(GLenum target, GLuint texture);
 
-  const char *GetName() { return m_Name; }
+  const char *GetName() { return m_Name.c_str(); }
   GLint GetProgram() { return m_ProgramId; }
   GLint GetArrayBuffer() { return m_ArrayBufferId; }
   GLint GetElementArrayBuffer() { return m_ElementArrayBufferId; }
@@ -56,7 +58,7 @@ void Restore();
   void ClearTextureBindings();
 
 protected:
-  const char *m_Name;
+  std::string m_Name;
   GLint m_Viewport[4] = {-1, -1, -1, -1};
   /** Program */
   GLint m_ProgramId = 0;

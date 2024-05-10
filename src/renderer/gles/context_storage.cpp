@@ -121,26 +121,23 @@ void OpenGLContextStorage::Restore()
 
   if (useProgramError != GL_NO_ERROR)
     DEBUG(DEBUG_TAG, "Occurs an error in glUseProgram() when restoring %s context: 0x%04X",
-          m_Name, useProgramError);
+          GetName(), useProgramError);
   if (bindBuffersError != GL_NO_ERROR)
     DEBUG(DEBUG_TAG, "Occurs an error in buffers binding when restoring %s context: 0x%04X",
-          m_Name, bindBuffersError);
+          GetName(), bindBuffersError);
   if (bindTextureError != GL_NO_ERROR)
     DEBUG(DEBUG_TAG, "Occurs an error in texture bindings when restoring %s context: 0x%04X",
-          m_Name, bindTextureError);
+          GetName(), bindTextureError);
 
   // Check for OpenGL errors
   GLenum error = glGetError();
   if (error != GL_NO_ERROR)
-    DEBUG(DEBUG_TAG, "Occurs an OpenGL error in restoring %s context: 0x%04X", error, m_Name);
+    DEBUG(DEBUG_TAG, "Occurs an OpenGL error in restoring %s context: 0x%04X", error, GetName());
 }
 
 void OpenGLContextStorage::Print()
 {
-  DEBUG(DEBUG_TAG, "%s program: %d", m_Name, m_ProgramId);
-  DEBUG(DEBUG_TAG, "%s framebuffer: %d", m_Name, m_FramebufferId);
-  DEBUG(DEBUG_TAG, "%s renderbuffer: %d", m_Name, m_RenderbufferId);
-  DEBUG(DEBUG_TAG, "%s vertex array object: %d", m_Name, m_VertexArrayObjectId);
+  DEBUG(DEBUG_TAG, "%s program(%d), framebuffer(%d)", GetName(), m_ProgramId, m_FramebufferId);
 }
 
 void OpenGLContextStorage::ClearTextureBindings()

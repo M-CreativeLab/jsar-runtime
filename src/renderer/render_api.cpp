@@ -40,7 +40,7 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 		return kFrameExecutionGpuBusy;
 	}
 
-	auto frameStart = m_LastFrameTime;
+	auto frameStart = std::chrono::high_resolution_clock::now();
 	StartFrame();
 	device->startHostFrame();
 
@@ -123,7 +123,7 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 	auto startDuration = std::chrono::duration_cast<std::chrono::microseconds>(frameStartedAt - frameStart);
 	auto xrFrameDuration = std::chrono::duration_cast<std::chrono::microseconds>(xrFrameEnd - frameStartedAt);
 	auto endDuration = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - xrFrameEnd);
-	DEBUG(TR_RENDERAPI_TAG, "Frame execution time takes %ld us (start=%ldus, xrframe=%ldus, end=%ldus) draw calls=%d",
+	DEBUG(TR_RENDERAPI_TAG, "Frame execution time: total=%ldus, start_frame=%ldus, xrframe=%ldus, end_frame=%ldus, draw_calls=%d",
 				totalDuration.count(),
 				startDuration.count(),
 				xrFrameDuration.count(),

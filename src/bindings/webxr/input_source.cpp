@@ -2,6 +2,7 @@
 #include "space.hpp"
 #include "session.hpp"
 #include "frame.hpp"
+#include "hand.hpp"
 
 namespace bindings
 {
@@ -10,7 +11,11 @@ namespace bindings
 
   Napi::Object XRInputSource::Init(Napi::Env env, Napi::Object exports)
   {
-    Napi::Function func = DefineClass(env, "XRInputSource", {});
+    Napi::Function func = DefineClass(env, "XRInputSource",
+                                      {
+                                          InstanceAccessor("hand", &XRInputSource::HandGetter, nullptr),
+                                          InstanceAccessor("gamepad", &XRInputSource::GamepadGetter, nullptr),
+                                      });
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
     exports.Set("XRInputSource", func);
@@ -56,9 +61,7 @@ namespace bindings
     updateInternal(XRFrame::Unwrap(frameValue)); // Update internal once when the input source is created
 
     auto thisObject = info.This().ToObject();
-    thisObject.DefineProperty(Napi::PropertyDescriptor::Value("gamepad", GamepadGetter(info), napi_enumerable));
     thisObject.DefineProperty(Napi::PropertyDescriptor::Value("gripSpace", GripSpaceGetter(info), napi_enumerable));
-    thisObject.DefineProperty(Napi::PropertyDescriptor::Value("hand", HandGetter(info), napi_enumerable));
     thisObject.DefineProperty(Napi::PropertyDescriptor::Value("handedness", HandednessGetter(info), napi_enumerable));
     thisObject.DefineProperty(Napi::PropertyDescriptor::Value("targetRayMode", TargetRayModeGetter(info), napi_enumerable));
     thisObject.DefineProperty(Napi::PropertyDescriptor::Value("targetRaySpace", TargetRaySpaceGetter(info), napi_enumerable));
@@ -85,7 +88,7 @@ namespace bindings
   Napi::Value XRInputSource::HandGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
-    return Napi::Value();
+    return XRHand::NewInstance(info.Env(), internal);
   }
 
   Napi::Value XRInputSource::HandednessGetter(const Napi::CallbackInfo &info)

@@ -86,7 +86,6 @@ namespace bindings
   NOT_IMPLEMENTED_YET(GetImageTrackingResults)
   NOT_IMPLEMENTED_YET(GetLightEstimate)
   NOT_IMPLEMENTED_YET(GetDepthInformation)
-  NOT_IMPLEMENTED_YET(GetJointPose)
 #undef NOT_IMPLEMENTED_YET
 
 #define NON_ANIMFRAME_MSG "getViewerPose can only be called on XRFrame objects passed to XRSession.requestAnimationFrame callbacks."
@@ -138,6 +137,42 @@ namespace bindings
                                  // End
                                });
     return viewerPoseObject;
+  }
+
+  Napi::Value XRFrame::GetJointPose(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (active == false)
+    {
+      Napi::TypeError::New(env, NON_ACTIVE_MSG).ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "getJointPose requires a joint space and an XRSpace object").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto jointSpace = XRJointSpace::Unwrap(info[0].As<Napi::Object>());
+    auto baseSpace = XRSpace::Unwrap(info[1].As<Napi::Object>());
+    jointSpace->ensurePoseUpdated(id, session, internal);
+
+    if (baseSpace->isReferenceSpace == true)
+    {
+      auto baseReferenceSpace = XRReferenceSpace::Unwrap(info[1].As<Napi::Object>());
+      baseReferenceSpace->ensurePoseUpdated(id, session, internal);
+      auto jointTransform /** joint to space(local) */ = XRSPACE_RELATIVE_TRANSFORM(jointSpace, baseReferenceSpace);
+      return XRPose::NewInstance(env, jointTransform);
+    }
+    else
+    {
+      Napi::TypeError::New(env, "getJointPose not support a non ReferenceSpace as `baseSpace`")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
   }
 
   Napi::Value XRFrame::GetPose(const Napi::CallbackInfo &info)

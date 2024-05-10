@@ -1,6 +1,7 @@
 #include "binding.hpp"
 #include "device_native.hpp"
 #include "frame.hpp"
+#include "hand.hpp"
 #include "input_source.hpp"
 #include "layer.hpp"
 #include "session.hpp"
@@ -21,6 +22,7 @@ Napi::Object bindings::InitWebxrModule(Napi::Env env, Napi::Object exports)
   XRFrame::Init(env, exports);
 
   // Input Source
+  XRHand::Init(env, exports);
   XRInputSource::Init(env, exports);
 
   // Layers
@@ -41,6 +43,7 @@ Napi::Object bindings::InitWebxrModule(Napi::Env env, Napi::Object exports)
   XRSpace::Init(env, exports);
   XRReferenceSpace::Init(env, exports);
   XRViewSpace::Init(env, exports);
+  XRJointSpace::Init(env, exports);
   XRTargetRayOrGripSpace::Init(env, exports);
 
   // View

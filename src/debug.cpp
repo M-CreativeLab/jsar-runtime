@@ -25,27 +25,23 @@ void DEBUG(const char *tag, const char *format, ...)
   va_list args;
   va_start(args, format);
 
-  char buffer[1024];
-  int length = vsnprintf(nullptr, 0, format, args);
-  // char *buffer = new char[length + 1];
-  if (length > 1024)
-    length = 1024;
-
-  va_end(args);
-  va_start(args, format);
-  vsnprintf(buffer, length + 1, format, args);
-
 #ifdef __ANDROID__
-  __android_log_print(ANDROID_LOG_DEBUG, tag, "%s", buffer);
+  __android_log_vprint(ANDROID_LOG_DEBUG, tag, format, args);
 #else
-  fprintf(stdout, "[%s]: %s\n", tag, buffer);
-#ifndef TRANSMUTE_STANDALONE
-  if (s_UnityLog != nullptr)
+  if (s_UnityLog == nullptr)
+  {
+    fprintf(stdout, format, args);
+  }
+  else
+  {
+    char buffer[1024];
+    int length = vsnprintf(nullptr, 0, format, args);
+    if (length > 1024)
+      length = 1024;
+    vsnprintf(buffer, length + 1, format, args);
     UNITY_LOG(s_UnityLog, buffer);
+  }
 #endif
-#endif
-
-  // delete[] buffer;
   va_end(args);
 }
 

@@ -7,6 +7,7 @@ namespace bindings
   Napi::FunctionReference *XRSpace::constructor;
   Napi::FunctionReference *XRReferenceSpace::constructor;
   Napi::FunctionReference *XRViewSpace::constructor;
+  Napi::FunctionReference *XRJointSpace::constructor;
   Napi::FunctionReference *XRTargetRayOrGripSpace::constructor;
 
   template <typename T>
@@ -248,6 +249,145 @@ namespace bindings
     return projectionMatrix;
   }
 
+  Napi::Object XRJointSpace::Init(Napi::Env env, Napi::Object exports)
+  {
+    Napi::HandleScope scope(env);
+    Napi::Function func = DefineClass(env, "XRJointSpace", {});
+    constructor = new Napi::FunctionReference();
+    *constructor = Napi::Persistent(func);
+    return exports;
+  }
+
+  Napi::Object XRJointSpace::NewInstance(Napi::Env env, xr::InputSource *inputSource, xr::JointIndex index)
+  {
+    Napi::EscapableHandleScope scope(env);
+    auto inputSourceExternal = Napi::External<xr::InputSource>::New(env, inputSource);
+    Napi::String jointName;
+    switch (index)
+    {
+    case xr::JointIndex::JointWrist:
+      jointName = Napi::String::New(env, "wrist");
+      break;
+    case xr::JointIndex::JointThumbMetacarpal:
+      jointName = Napi::String::New(env, "thumb-metacarpal");
+      break;
+    case xr::JointIndex::JointThumbPhalanxProximal:
+      jointName = Napi::String::New(env, "thumb-phalanx-proximal");
+      break;
+    case xr::JointIndex::JointThumbPhalanxDistal:
+      jointName = Napi::String::New(env, "thumb-phalanx-distal");
+      break;
+    case xr::JointIndex::JointThumbTip:
+      jointName = Napi::String::New(env, "thumb-tip");
+      break;
+    case xr::JointIndex::JointIndexFingerMetacarpal:
+      jointName = Napi::String::New(env, "index-finger-metacarpal");
+      break;
+    case xr::JointIndex::JointIndexFingerPhalanxProximal:
+      jointName = Napi::String::New(env, "index-finger-phalanx-proximal");
+      break;
+    case xr::JointIndex::JointIndexFingerPhalanxIntermediate:
+      jointName = Napi::String::New(env, "index-finger-phalanx-intermediate");
+      break;
+    case xr::JointIndex::JointIndexFingerPhalanxDistal:
+      jointName = Napi::String::New(env, "index-finger-phalanx-distal");
+      break;
+    case xr::JointIndex::JointIndexFingerTip:
+      jointName = Napi::String::New(env, "index-finger-tip");
+      break;
+    case xr::JointIndex::JointMiddleFingerMetacarpal:
+      jointName = Napi::String::New(env, "middle-finger-metacarpal");
+      break;
+    case xr::JointIndex::JointMiddleFingerPhalanxProximal:
+      jointName = Napi::String::New(env, "middle-finger-phalanx-proximal");
+      break;
+    case xr::JointIndex::JointMiddleFingerPhalanxIntermediate:
+      jointName = Napi::String::New(env, "middle-finger-phalanx-intermediate");
+      break;
+    case xr::JointIndex::JointMiddleFingerPhalanxDistal:
+      jointName = Napi::String::New(env, "middle-finger-phalanx-distal");
+      break;
+    case xr::JointIndex::JointMiddleFingerTip:
+      jointName = Napi::String::New(env, "middle-finger-tip");
+      break;
+    case xr::JointIndex::JointRingFingerMetacarpal:
+      jointName = Napi::String::New(env, "ring-finger-metacarpal");
+      break;
+    case xr::JointIndex::JointRingFingerPhalanxProximal:
+      jointName = Napi::String::New(env, "ring-finger-phalanx-proximal");
+      break;
+    case xr::JointIndex::JointRingFingerPhalanxIntermediate:
+      jointName = Napi::String::New(env, "ring-finger-phalanx-intermediate");
+      break;
+    case xr::JointIndex::JointRingFingerPhalanxDistal:
+      jointName = Napi::String::New(env, "ring-finger-phalanx-distal");
+      break;
+    case xr::JointIndex::JointRingFingerTip:
+      jointName = Napi::String::New(env, "ring-finger-tip");
+      break;
+    case xr::JointIndex::JointPinkyFingerMetacarpal:
+      jointName = Napi::String::New(env, "pinky-finger-metacarpal");
+      break;
+    case xr::JointIndex::JointPinkyFingerPhalanxProximal:
+      jointName = Napi::String::New(env, "pinky-finger-phalanx-proximal");
+      break;
+    case xr::JointIndex::JointPinkyFingerPhalanxIntermediate:
+      jointName = Napi::String::New(env, "pinky-finger-phalanx-intermediate");
+      break;
+    case xr::JointIndex::JointPinkyFingerPhalanxDistal:
+      jointName = Napi::String::New(env, "pinky-finger-phalanx-distal");
+      break;
+    case xr::JointIndex::JointPinkyFingerTip:
+      jointName = Napi::String::New(env, "pinky-finger-tip");
+      break;
+    default:
+      jointName = Napi::String::New(env, "unknown");
+      break;
+    }
+    Napi::Object obj = constructor->New({inputSourceExternal, jointName, Napi::Number::New(env, index)});
+    return scope.Escape(obj).ToObject();
+  }
+
+  XRJointSpace::XRJointSpace(const Napi::CallbackInfo &info) : XRSpaceBase(info, XRSpaceSubType::UNSET)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3)
+    {
+      Napi::TypeError::New(env, "XRJointSpace constructor expects 3 arguments").ThrowAsJavaScriptException();
+      return;
+    }
+    if (!info[0].IsExternal())
+    {
+      Napi::TypeError::New(env, "XRJointSpace constructor expects an external as the first argument").ThrowAsJavaScriptException();
+      return;
+    }
+    if (!info[1].IsString())
+    {
+      Napi::TypeError::New(env, "XRJointSpace constructor expects a string as the second argument").ThrowAsJavaScriptException();
+      return;
+    }
+    if (!info[2].IsNumber())
+    {
+      Napi::TypeError::New(env, "XRJointSpace constructor expects a number as the third argument").ThrowAsJavaScriptException();
+      return;
+    }
+
+    auto external = info[0].As<Napi::External<xr::InputSource>>();
+    inputSource = external.Data();
+    auto jointName = info[1].As<Napi::String>().Utf8Value();
+    auto index = info[2].As<Napi::Number>().Int32Value();
+    this->index = static_cast<xr::JointIndex>(index);
+    info.This().ToObject().Set("jointName", Napi::String::New(env, jointName));
+  }
+
+  void XRJointSpace::onPoseUpdate(XRSession *session, xr::DeviceFrame *frame)
+  {
+    baseMatrix = inputSource->joints[index].baseMatrix;
+    XRSpaceBase<XRJointSpace>::onPoseUpdate(session, frame);
+  }
+
   Napi::Object XRTargetRayOrGripSpace::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::HandleScope scope(env);
@@ -304,5 +444,6 @@ namespace bindings
   template class XRSpaceBase<XRSpace>;
   template class XRSpaceBase<XRReferenceSpace>;
   template class XRSpaceBase<XRViewSpace>;
+  template class XRSpaceBase<XRJointSpace>;
   template class XRSpaceBase<XRTargetRayOrGripSpace>;
 }

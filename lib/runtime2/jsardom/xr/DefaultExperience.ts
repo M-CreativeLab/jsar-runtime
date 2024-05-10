@@ -1,8 +1,14 @@
-import './features/index';
 import { WebXRExperienceHelper } from './ExperienceHelper';
 import { WebXRInput } from './Input';
 import { WebXRManagedOutputCanvasOptions } from './OutputCanvas';
-import { IWebXRControllerPointerSelectionOptions, WebXRControllerPointerSelection } from './features/WebXRControllerPointerSelection';
+import {
+  IWebXRControllerPointerSelectionOptions,
+  IWebXRTeleportationOptions,
+  IWebXRNearInteractionOptions,
+  WebXRControllerPointerSelection,
+  WebXRMotionControllerTeleportation,
+  WebXRNearInteraction,
+} from './features';
 
 /**
  * Options for the default xr helper
@@ -47,11 +53,11 @@ export class WebXRDefaultExperienceOptions {
   /**
    * optional configuration for near interaction
    */
-  // public nearInteractionOptions?: Partial<BABYLON.IWebXRNearInteractionOptions>;
+  public nearInteractionOptions?: Partial<IWebXRNearInteractionOptions>;
   /**
    * optional configuration for teleportation
    */
-  // public teleportationOptions?: Partial<BABYLON.IWebXRTeleportationOptions>;
+  public teleportationOptions?: Partial<IWebXRTeleportationOptions>;
   /**
    * optional configuration for the output canvas
    */
@@ -101,11 +107,11 @@ export class WebXRDefaultExperience {
   /**
    * Enables teleportation
    */
-  // public teleportation: WebXRMotionControllerTeleportation;
+  public teleportation: WebXRMotionControllerTeleportation;
   /**
    * Enables near interaction for hands/controllers
    */
-  // public nearInteraction: WebXRNearInteraction;
+  public nearInteraction: WebXRNearInteraction;
 
   public static async CreateAsync(
     scene: BABYLON.Scene,
@@ -148,20 +154,36 @@ export class WebXRDefaultExperience {
       );
       result.pointerSelection.displayLaserPointer = false;
 
-      // if (!options.disableTeleportation) {
-      //   // Add default teleportation, including rotation
-      //   result.teleportation = <WebXRMotionControllerTeleportation>result.baseExperience.featuresManager.enableFeature(
-      //     WebXRMotionControllerTeleportation.Name,
-      //     options.useStablePlugins ? "stable" : "latest",
-      //     <IWebXRTeleportationOptions>{
-      //       floorMeshes: options.floorMeshes,
-      //       xrInput: result.input,
-      //       renderingGroupId: options.renderingGroupId,
-      //       ...options.teleportationOptions,
-      //     }
-      //   );
-      //   result.teleportation.setSelectionFeature(result.pointerSelection);
-      // }
+      if (!options.disableTeleportation) {
+        // Add default teleportation, including rotation
+        result.teleportation = <WebXRMotionControllerTeleportation>result.baseExperience.featuresManager.enableFeature(
+          WebXRMotionControllerTeleportation.Name,
+          options.useStablePlugins ? 'stable' : 'latest',
+          <IWebXRTeleportationOptions>{
+            floorMeshes: options.floorMeshes,
+            xrInput: result.input,
+            renderingGroupId: options.renderingGroupId,
+            ...options.teleportationOptions,
+          }
+        );
+        result.teleportation.setSelectionFeature(result.pointerSelection);
+      }
+    }
+
+    if (!options.disableNearInteraction) {
+      // Add default pointer selection
+      result.nearInteraction = <WebXRNearInteraction>result.baseExperience.featuresManager.enableFeature(
+        WebXRNearInteraction.Name,
+        options.useStablePlugins ? 'stable' : 'latest',
+        <IWebXRNearInteractionOptions>{
+          xrInput: result.input,
+          farInteractionFeature: result.pointerSelection,
+          renderingGroupId: options.renderingGroupId,
+          useUtilityLayer: true,
+          enableNearInteractionOnAllControllers: true,
+          ...options.nearInteractionOptions,
+        }
+      );
     }
 
     // Create the WebXR output target

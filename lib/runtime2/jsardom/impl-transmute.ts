@@ -257,7 +257,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
      * support tweaking the handness of the coordinate system by the 3d engines.
      */
     scene.useRightHandedSystem = true;
-    scene.skipFrustumClipping = true;
+    scene.skipFrustumClipping = false;
 
     this._defaultCamera = new BABYLON.ArcRotateCamera(
       'default_camera',
@@ -292,8 +292,20 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
       },
       pointerSelectionOptions: {
         preferredHandedness: 'right',
-        enablePointerSelectionOnAllControllers: true,
+        enablePointerSelectionOnAllControllers: false,
       },
+      teleportationOptions: {
+        forceHandedness: 'right',
+        defaultTargetMeshOptions: {
+          disableLighting: true,
+        },
+      },
+      nearInteractionOptions: {
+        preferredHandedness: 'right',
+        enableNearInteractionOnAllControllers: false,
+      },
+      disableTeleportation: true,
+      disableNearInteraction: true,
     });
 
     this.engine.runRenderLoop(() => {

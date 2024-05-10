@@ -75,8 +75,8 @@ export class WebXRSessionManager implements BABYLON.IDisposable, BABYLON.IWebXRR
   }> = new BABYLON.Observable(undefined, true);
 
   /**
-     * Scale factor to apply to all XR-related elements (camera, controllers)
-     */
+   * Scale factor to apply to all XR-related elements (camera, controllers)
+   */
   public get worldScalingFactor(): number {
     return this._worldScalingFactor;
   }

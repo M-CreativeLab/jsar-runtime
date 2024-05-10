@@ -10,7 +10,7 @@ using namespace glm;
 
 namespace bindings
 {
-  #define XRSPACE_RELATIVE_TRANSFORM(space, baseSpace) baseSpace->getInverseBaseMatrix() * space->baseMatrix
+#define XRSPACE_RELATIVE_TRANSFORM(space, baseSpace) baseSpace->getInverseBaseMatrix() * space->baseMatrix
 
   template <typename T>
   class XRSpaceBase : public Napi::ObjectWrap<T>
@@ -79,7 +79,7 @@ namespace bindings
   public:
     void onPoseUpdate(XRSession *session, xr::DeviceFrame *frame);
     XREye getEye();
-    glm::mat4& getProjectionMatrix();
+    glm::mat4 &getProjectionMatrix();
 
   private:
     XRViewSpaceType viewSpaceType;
@@ -89,18 +89,36 @@ namespace bindings
     static Napi::FunctionReference *constructor;
   };
 
+  class XRJointSpace : public XRSpaceBase<XRJointSpace>
+  {
+  public:
+    static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    static Napi::Object NewInstance(Napi::Env env, xr::InputSource *inputSource, xr::JointIndex index);
+    XRJointSpace(const Napi::CallbackInfo &info);
+
+  public:
+    void onPoseUpdate(XRSession *session, xr::DeviceFrame *frame);
+
+  private:
+    xr::JointIndex index;
+    xr::InputSource *inputSource;
+
+  private:
+    static Napi::FunctionReference *constructor;
+  };
+
   class XRTargetRayOrGripSpace : public XRSpaceBase<XRTargetRayOrGripSpace>
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, xr::InputSource* inputSource, bool isGrip);
+    static Napi::Object NewInstance(Napi::Env env, xr::InputSource *inputSource, bool isGrip);
     XRTargetRayOrGripSpace(const Napi::CallbackInfo &info);
 
   public:
     void onPoseUpdate(XRSession *session, xr::DeviceFrame *frame);
 
   private:
-    xr::InputSource* inputSource;
+    xr::InputSource *inputSource;
 
   private:
     static Napi::FunctionReference *constructor;

@@ -329,9 +329,21 @@ extern "C"
     return xrDevice->updateLocalTransform(id, m);
   }
 
-  DLL_PUBLIC void TransmuteNative_SetHandInputPose(int handness, int joint, float *position, float *orientation, float radius)
+  DLL_PUBLIC void TransmuteNative_SetHandInputPose(int handness, int joint, float *translation, float *rotation, float radius)
   {
-    // TODO
+    auto xrDevice = xr::Device::GetInstance();
+    if (xrDevice == NULL)
+      return;
+
+    xr::Handness id = handness == 0 ? xr::Handness::Left : xr::Handness::Right;
+    auto hand = xrDevice->getHandInputSource(id);
+    if (hand == nullptr)
+      return;
+    if (joint < 0 || joint >= 25)
+      return; // out of range
+
+    float defaultScale[3] = {1, 1, 1};
+    hand->joints[joint].baseMatrix = math::makeMatrixFromTRS(translation, rotation, defaultScale);
   }
 
   DLL_PUBLIC void TransmuteNative_SetHandInputRayPose(int handness, float *translation, float *rotation)

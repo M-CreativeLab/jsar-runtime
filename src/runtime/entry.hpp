@@ -152,11 +152,11 @@ extern "C"
    *
    * @param handness The handness of the hand, 0 for left and 1 for right.
    * @param joint The joint index of the hand, 0 for wrist, 1 for thumb, 2 for index, 3 for middle, 4 for ring, 5 for pinky.
-   * @param position The position of the joint, a 3-element float array.
-   * @param orientation The orientation of the joint, a 4-element float array that represents a quaternion.
+   * @param translation The position of the joint, a 3-element float array.
+   * @param rotation The rotation of the joint, a 4-element float array that represents a quaternion.
    * @param radius The radius of the joint, a float value.
    */
-  DLL_PUBLIC void TransmuteNative_SetHandInputPose(int handness, int joint, float *position, float *orientation, float radius);
+  DLL_PUBLIC void TransmuteNative_SetHandInputPose(int handness, int joint, float *translation, float *rotation, float radius);
 
   /**
    * Update the target ray pose for the hand input source.

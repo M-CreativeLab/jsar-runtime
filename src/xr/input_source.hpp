@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <glm/glm.hpp>
 
 namespace xr
@@ -18,15 +19,45 @@ namespace xr
     TrackedPointer = 2,
   };
 
+  enum JointIndex
+  {
+    Unset = -1,
+    JointWrist = 0,
+    JointThumbMetacarpal = 1,
+    JointThumbPhalanxProximal = 2,
+    JointThumbPhalanxDistal = 3,
+    JointThumbTip = 4,
+    JointIndexFingerMetacarpal = 5,
+    JointIndexFingerPhalanxProximal = 6,
+    JointIndexFingerPhalanxIntermediate = 7,
+    JointIndexFingerPhalanxDistal = 8,
+    JointIndexFingerTip = 9,
+    JointMiddleFingerMetacarpal = 10,
+    JointMiddleFingerPhalanxProximal = 11,
+    JointMiddleFingerPhalanxIntermediate = 12,
+    JointMiddleFingerPhalanxDistal = 13,
+    JointMiddleFingerTip = 14,
+    JointRingFingerMetacarpal = 15,
+    JointRingFingerPhalanxProximal = 16,
+    JointRingFingerPhalanxIntermediate = 17,
+    JointRingFingerPhalanxDistal = 18,
+    JointRingFingerTip = 19,
+    JointPinkyFingerMetacarpal = 20,
+    JointPinkyFingerPhalanxProximal = 21,
+    JointPinkyFingerPhalanxIntermediate = 22,
+    JointPinkyFingerPhalanxDistal = 23,
+    JointPinkyFingerTip = 24,
+  };
+
   class JointPose
   {
   public:
     JointPose();
+    JointPose(JointIndex index);
 
   public:
-    float position[3];
-    float orientation[4];
-    float radius;
+    JointIndex index;
+    glm::mat4 baseMatrix;
   };
 
   enum InputSourceActionType
@@ -47,7 +78,7 @@ namespace xr
   public:
     int id;
     Handness handness;
-    JointPose hand[25];
+    std::vector<JointPose> joints;
     TargetRayMode targetRayMode;
     glm::mat4 targetRayBaseMatrix;
     glm::mat4 gripBaseMatrix;
