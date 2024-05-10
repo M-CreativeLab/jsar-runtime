@@ -45,7 +45,10 @@ Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
 export class TransmuteRuntime2 extends EventTarget {
   private gl: WebGLRenderingContext;
   private scene: BABYLON.Scene;
-  private appStack: Array<JSARDOM<NativeDocumentOnTransmute>> = [];
+  private appStack: Array<{
+    id: number;
+    dom: JSARDOM<NativeDocumentOnTransmute>;
+  }> = [];
 
   start() {
     requestRendererReady(this.onRendererReady.bind(this));
@@ -59,7 +62,7 @@ export class TransmuteRuntime2 extends EventTarget {
   }
 
   onGpuBusy() {
-    const dom = this.appStack.pop();
+    const { dom } = this.appStack.pop();
     if (dom != null) {
       dom.unload();
     }
@@ -81,6 +84,12 @@ export class TransmuteRuntime2 extends EventTarget {
   }
 
   private async onXsmlRequest(event: XsmlRequestEvent) {
+    /**
+     * Unload all the documents before loading a new one.
+     */
+    if (this.appStack.length > 0) {
+      await this.unloadAll();
+    }
     logger.info(`xsml request:`, event.url, event.sessionId);
 
     const nativeDocument = new NativeDocumentOnTransmute(this.gl, event.sessionId);
@@ -160,7 +169,7 @@ export class TransmuteRuntime2 extends EventTarget {
       url: urlBase,
       nativeDocument,
     });
-    this.appStack.push(dom);
+    this.appStack.push({ id: nativeDocument.id, dom });
 
     try {
       await dom.load();
@@ -177,15 +186,31 @@ export class TransmuteRuntime2 extends EventTarget {
     } catch (err) {
       // remove the dom from appStack
       for (let i = 0; i < this.appStack.length; ++i) {
-        if (this.appStack[i].id === dom.id) {
+        if (this.appStack[i].dom.id === dom.id) {
           this.appStack.splice(i, 1);
           break;
         }
       }
       await dom.unload();
+      dom.nativeDocument.close();
       logger.error(`failed to load the jsar document: ${codeOrUrl} width the error:`, err);
       // TODO: report to the native side.
     }
+  }
+
+  private async unloadTop() {
+    const { dom } = this.appStack.pop();
+    if (dom != null) {
+      await dom.unload();
+      dom.nativeDocument.close();
+    }
+  }
+
+  private async unloadAll() {
+    await Promise.all(this.appStack.map(({ dom }) => {
+      return dom.unload().then(() => dom.nativeDocument.close());
+    }));
+    logger.info('all the documents have been unloaded.');
   }
 
   private fitSpaceWithScene(spaceNode: BABYLON.TransformNode, ratio = 0.5) {

@@ -382,5 +382,10 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     this.engine.stopRenderLoop();
     this.engine.dispose();
     this._scene.dispose();
+    this._xrDefaultExperience
+      .then(async ({ baseExperience }) => {
+        await baseExperience.exitXRAsync();
+        baseExperience.dispose();
+      });
   }
 }
