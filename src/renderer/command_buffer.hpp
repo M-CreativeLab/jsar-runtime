@@ -564,6 +564,15 @@ namespace renderer
                                                                                  m_Usage(usage)
     {
       memcpy((void *)m_Data, data, size);
+      /**
+       * FIXME: the buffer size is limited to 65535, as for the size larger than 65535, we need to check the extension
+       * OES_element_index_uint, but it's not working now, so we just print a warning message.
+       */
+      if (size > 65535)
+      {
+        DEBUG(LOG_TAG_RENDERER,
+              "Warning: OES_element_index_uint extension is working, buffer size (>65535) may cause rendering issue.");
+      }
     }
     ~BufferDataCommandBuffer()
     {
