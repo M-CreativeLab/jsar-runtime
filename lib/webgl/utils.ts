@@ -35,7 +35,7 @@ export function isTypedArray(data: any): data is TypedArray {
     data instanceof Float64Array;
 }
 
-export function unpackTypedArray(array: DataView | ArrayBufferView) {
+export function unpackTypedArray(array: DataView | ArrayBufferView): Uint8Array {
   return (new Uint8Array(array.buffer)).subarray(
     array.byteOffset,
     array.byteLength + array.byteOffset);

@@ -281,7 +281,7 @@ private:
 		auto deleteShaderCommandBuffer = static_cast<DeleteShaderCommandBuffer *>(commandBuffer);
 		glDeleteShader(deleteShaderCommandBuffer->m_ShaderId);
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::DeleteShader: %d", isDefaultQueue, deleteShaderCommandBuffer->m_ShaderId);
+			DEBUG(DEBUG_TAG, "[%d] GL::DeleteShader(%d)", isDefaultQueue, deleteShaderCommandBuffer->m_ShaderId);
 	}
 	void OnShaderSource(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -451,14 +451,15 @@ private:
 	void OnFramebufferRenderbuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
 		auto framebufferRenderbufferCommandBuffer = static_cast<FramebufferRenderbufferCommandBuffer *>(commandBuffer);
-		glFramebufferRenderbuffer(
-				framebufferRenderbufferCommandBuffer->m_Target,
-				framebufferRenderbufferCommandBuffer->m_Attachment,
-				framebufferRenderbufferCommandBuffer->m_Renderbuffertarget,
-				framebufferRenderbufferCommandBuffer->m_Renderbuffer);
+		auto target = framebufferRenderbufferCommandBuffer->m_Target;
+		auto attachment = framebufferRenderbufferCommandBuffer->m_Attachment;
+		auto renderbuffertarget = framebufferRenderbufferCommandBuffer->m_Renderbuffertarget;
+		auto renderbuffer = framebufferRenderbufferCommandBuffer->m_Renderbuffer;
+
+		glFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::FramebufferRenderbuffer: %d",
-						isDefaultQueue, framebufferRenderbufferCommandBuffer->m_Renderbuffer);
+			DEBUG(DEBUG_TAG, "[%d] GL::FramebufferRenderbuffer(%d, attachment=%d, renderbuffertarget=%d, renderbuffer=%d)",
+						isDefaultQueue, target, attachment, renderbuffertarget, renderbuffer);
 	}
 	void OnFramebufferTexture2D(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -507,19 +508,20 @@ private:
 		glBindRenderbuffer(target, renderbuffer);
 		m_AppGlobalContext.RecordRenderbuffer(renderbuffer);
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::BindRenderbuffer: %d", isDefaultQueue, bindRenderbufferCommandBuffer->m_Renderbuffer);
+			DEBUG(DEBUG_TAG, "[%d] GL::BindRenderbuffer(%d)", isDefaultQueue, bindRenderbufferCommandBuffer->m_Renderbuffer);
 	}
 	void OnRenderbufferStorage(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
 		auto renderbufferStorageCommandBuffer = static_cast<RenderbufferStorageCommandBuffer *>(commandBuffer);
-		glRenderbufferStorage(
-				renderbufferStorageCommandBuffer->m_Target,
-				renderbufferStorageCommandBuffer->m_Internalformat,
-				renderbufferStorageCommandBuffer->m_Width,
-				renderbufferStorageCommandBuffer->m_Height);
+		auto target = renderbufferStorageCommandBuffer->m_Target;
+		auto internalformat = renderbufferStorageCommandBuffer->m_Internalformat;
+		auto width = renderbufferStorageCommandBuffer->m_Width;
+		auto height = renderbufferStorageCommandBuffer->m_Height;
+
+		glRenderbufferStorage(target, internalformat, width, height);
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::RenderbufferStorage: %d",
-						isDefaultQueue, renderbufferStorageCommandBuffer->m_Internalformat);
+			DEBUG(DEBUG_TAG, "[%d] GL::RenderbufferStorage(%d, internal_format=%d, width=%d, height=%d)",
+						isDefaultQueue, target, internalformat, width, height);
 	}
 	void OnReadBuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -1152,19 +1154,17 @@ private:
 	void OnDrawElements(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
 		auto drawElementsCommandBuffer = static_cast<DrawElementsCommandBuffer *>(commandBuffer);
-		glDrawElements(
-				drawElementsCommandBuffer->m_Mode,
-				drawElementsCommandBuffer->m_Count,
-				drawElementsCommandBuffer->m_Type,
-				drawElementsCommandBuffer->m_Indices);
+		auto mode = drawElementsCommandBuffer->m_Mode;
+		auto count = drawElementsCommandBuffer->m_Count;
+		auto type = drawElementsCommandBuffer->m_Type;
+		auto indices = drawElementsCommandBuffer->m_Indices;
+
+		glDrawElements(mode, count, type, indices);
 		m_DrawCallCountPerFrame += 1;
 		if (printsCall)
 		{
-			DEBUG(DEBUG_TAG, "[%d] GL::DrawElements: mode=%d count=%d type=%d",
-						isDefaultQueue,
-						drawElementsCommandBuffer->m_Mode,
-						drawElementsCommandBuffer->m_Count,
-						drawElementsCommandBuffer->m_Type);
+			DEBUG(DEBUG_TAG, "[%d] GL::DrawElements(mode=%d, count=%d, type=%d, indices=%p)",
+						isDefaultQueue, mode, count, type, indices);
 		}
 	}
 	void OnDrawBuffers(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
