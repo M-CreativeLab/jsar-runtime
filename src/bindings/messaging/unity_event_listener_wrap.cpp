@@ -66,10 +66,12 @@ bool UnityEventListenerWrap::DispatchNativeEvent(int id, int type, string data)
     catch (const Napi::Error &e)
     {
       DEBUG("transmute", "NativeEventTarget::Dispatch() failed to call JS callback: %s", e.Message().c_str());
+      DEBUG("transmute", "Event id: %d, type: %d, data: %s", message->id, message->type, message->data.c_str());
     }
     catch (...)
     {
       DEBUG("transmute", "NativeEventTarget::Dispatch() failed to call JS callback: Unkown exception.");
+      DEBUG("transmute", "Event id: %d, type: %d, data: %s", message->id, message->type, message->data.c_str());
     }
     delete message;
   };

@@ -54,22 +54,18 @@ include_directories(${NODEJS_HEADERS_PATH} ${NODEJS_HEADERS_PATH}/node)
 
 # Add Node Addon API headers
 set(NODE_ADDON_API_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-addon-api/include)
-target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${NODE_ADDON_API_HEADERS_PATH})
+include_directories(${NODE_ADDON_API_HEADERS_PATH})
 
 # Add LabSound headers
 set(LABSOUND_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/LabSound/include)
-target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${LABSOUND_HEADERS_PATH})
+include_directories(${LABSOUND_HEADERS_PATH})
 
 # Add Unity headers
 set(UNITY_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/Unity/include)
-target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${UNITY_HEADERS_PATH})
-
-# Add Glm headers
-include(thirdparty/headers/glm/CMakeLists.txt)
-target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE glm::glm-header-only)
+include_directories(${UNITY_HEADERS_PATH})
 
 # Add rust crates headers & libraries
-target_include_directories(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${CMAKE_SOURCE_DIR}/build/output/headers)
+include_directories(${CMAKE_SOURCE_DIR}/build/output/headers)
 if (APPLE)
     set(TRANSMUTE_CRATE_TARGET universal-apple-darwin/)
 elseif (ANDROID)
@@ -250,8 +246,7 @@ endfunction()
 
 # Add Tools
 if (APPLE)
-    # ADD_JSAR_TOOL(test-jsar "src/tools/tester.cpp")
-    # ADD_JSAR_TOOL(bench-jsar "src/tools/bench.cpp")
+    ADD_JSAR_TOOL(glapp "src/tools/gl-desktop.cpp")
     # Install the libraries to the build directory.
     install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.108.dylib DESTINATION ${CMAKE_BINARY_DIR})
 elseif (WIN32)

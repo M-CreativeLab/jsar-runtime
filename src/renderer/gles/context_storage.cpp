@@ -120,8 +120,8 @@ void OpenGLContextStorage::Restore()
 #endif
 
   if (useProgramError != GL_NO_ERROR)
-    DEBUG(DEBUG_TAG, "Occurs an error in glUseProgram() when restoring %s context: 0x%04X",
-          GetName(), useProgramError);
+    DEBUG(DEBUG_TAG, "Occurs an error in glUseProgram(%d) when restoring %s context: 0x%04X",
+          m_ProgramId, GetName(), useProgramError);
   if (bindBuffersError != GL_NO_ERROR)
     DEBUG(DEBUG_TAG, "Occurs an error in buffers binding when restoring %s context: 0x%04X",
           GetName(), bindBuffersError);
@@ -181,6 +181,11 @@ void OpenGLHostContextStorage::Record()
   // States
   glGetIntegerv(GL_CULL_FACE_MODE, (GLint *)&m_CullFace);
   glGetIntegerv(GL_FRONT_FACE, (GLint *)&m_FrontFace);
+
+  // Check for errors
+  GLenum error = glGetError();
+  if (error != GL_NO_ERROR)
+    DEBUG(DEBUG_TAG, "Occurs an OpenGL error in recording %s context: 0x%04X", error, GetName());
 }
 
 void OpenGLHostContextStorage::RecordTextureBindingFromHost()

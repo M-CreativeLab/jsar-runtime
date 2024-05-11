@@ -5,12 +5,13 @@
 #include "logger.hpp"
 #include "node_bootstrapper.hpp"
 
+#include "platform_base.hpp"
+#include "renderer/render_api.hpp"
+
 #ifndef TRANSMUTE_STANDALONE
 /**
  * @brief It includes the unity-related headers
  */
-#include "platform_base.hpp"
-#include "renderer/render_api.hpp"
 #include <Unity/IUnityGraphics.h>
 #include <Unity/IUnityLog.h>
 #endif
@@ -24,6 +25,9 @@ extern "C"
   DLL_PUBLIC void UnityPluginLoad(IUnityInterfaces *unityInterfaces);
   DLL_PUBLIC void UnityPluginUnload();
   DLL_PUBLIC UnityRenderingEvent TransmuteNative_GetRenderEventFunc();
+#endif
+
+  DLL_PUBLIC void TransmuteNative_Start();
 
   /**
    * Prepare the transmute native runtime.
@@ -54,6 +58,11 @@ extern "C"
    * Check if the JavaScript runtime is available.
    */
   DLL_PUBLIC bool TransmuteNative_IsRuntimeAvailable();
+
+  /**
+   * Execute the frame function.
+   */
+  DLL_PUBLIC void TransmuteNative_OnRenderFrame();
 
   /**
    * Dispatch the runtime event.
@@ -188,5 +197,4 @@ extern "C"
    * @param state The action state: pressed(0), released(1).
    */
   DLL_PUBLIC void TransmuteNative_SetHandInputActionState(int handness, int actionType, int state);
-#endif
 }

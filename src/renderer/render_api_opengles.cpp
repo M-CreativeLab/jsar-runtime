@@ -1269,24 +1269,15 @@ private:
 	void OnGetSupportedExtensions(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
 		auto getSupportedExtensionsCommandBuffer = static_cast<GetSupportedExtensionsCommandBuffer *>(commandBuffer);
-		const GLubyte *ret = glGetString(GL_EXTENSIONS);
-		// Split the ret by “space” and add to the vector
-		std::string extensions(reinterpret_cast<const char *>(ret));
-		std::istringstream iss(extensions);
-		std::vector<std::string> tokens{std::istream_iterator<std::string>{iss},
-																		std::istream_iterator<std::string>{}};
-		getSupportedExtensionsCommandBuffer->m_Extensions = tokens;
-
-		// TODO: Support for OpenGL ES 3.0
-		// GLint numOfExtensions;
-		// glGetIntegerv(GL_NUM_EXTENSIONS, &numOfExtensions);
-		// for (int i = 0; i < numOfExtensions; i++)
-		// {
-		// 	const GLubyte *ret = glGetStringi(GL_EXTENSIONS, i);
-		// 	getSupportedExtensionsCommandBuffer->m_Extensions.push_back(reinterpret_cast<const char *>(ret));
-		// }
+		GLint numOfExtensions;
+		glGetIntegerv(GL_NUM_EXTENSIONS, &numOfExtensions);
+		for (int i = 0; i < numOfExtensions; i++)
+		{
+			const GLubyte *ret = glGetStringi(GL_EXTENSIONS, i);
+			getSupportedExtensionsCommandBuffer->m_Extensions.push_back(reinterpret_cast<const char *>(ret));
+		}
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::GetSupportedExtensions: %d", isDefaultQueue, tokens.size());
+			DEBUG(DEBUG_TAG, "[%d] GL::GetSupportedExtensions: %d", isDefaultQueue, numOfExtensions);
 	}
 	void OnDepthMask(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{

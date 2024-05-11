@@ -28,19 +28,22 @@ void DEBUG(const char *tag, const char *format, ...)
 #ifdef __ANDROID__
   __android_log_vprint(ANDROID_LOG_DEBUG, tag, format, args);
 #else
+  if (strcmp(tag, "TR_RAPI") == 0)
+  {
+    va_end(args);
+    return;
+  }
+
+  char buffer[1024];
+  int length = vsnprintf(nullptr, 0, format, args);
+  if (length > 1024)
+    length = 1024;
+  vsnprintf(buffer, length + 1, format, args);
+
   if (s_UnityLog == nullptr)
-  {
-    fprintf(stdout, format, args);
-  }
+    fprintf(stdout, "[%s] %s\n", tag, buffer);
   else
-  {
-    char buffer[1024];
-    int length = vsnprintf(nullptr, 0, format, args);
-    if (length > 1024)
-      length = 1024;
-    vsnprintf(buffer, length + 1, format, args);
     UNITY_LOG(s_UnityLog, buffer);
-  }
 #endif
   va_end(args);
 }

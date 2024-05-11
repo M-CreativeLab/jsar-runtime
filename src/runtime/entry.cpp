@@ -11,6 +11,8 @@ using namespace std;
 
 extern "C"
 {
+  static RenderAPI *s_CurrentAPI = NULL;
+
 #ifndef TRANSMUTE_STANDALONE
   static IUnityInterfaces *s_UnityInterfaces = NULL;
   static IUnityGraphics *s_Graphics = NULL;
@@ -46,7 +48,6 @@ extern "C"
     xr::Device::Destroy();
   }
 
-  static RenderAPI *s_CurrentAPI = NULL;
   static UnityGfxRenderer s_DeviceType = kUnityGfxRendererNull;
   static void OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType)
   {
@@ -135,23 +136,25 @@ extern "C"
 
   static void OnUnityRenderEvent(int eventID)
   {
-    if (s_CurrentAPI == NULL || !NodeBootstrapper::IsInstanceRunning())
-      return;
-
-    auto code = s_CurrentAPI->ExecuteFrame();
-    switch (code)
-    {
-    case kFrameExecutionNotAvailable:
-      DEBUG("transmute", "RenderLoop(JS) is not available");
-      break;
-    default:
-      break;
-    }
+    TransmuteNative_OnRenderFrame();
   }
 
   DLL_PUBLIC UnityRenderingEvent TransmuteNative_GetRenderEventFunc()
   {
     return OnUnityRenderEvent;
+  }
+
+#endif
+
+  DLL_PUBLIC void TransmuteNative_Start()
+  {
+    s_CurrentAPI = RenderAPI::Create(kUnityGfxRendererOpenGLCore);
+    xr::Device::Create();
+    OnPlatformSetup();
+
+    auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
+    nodejsBootstrapper->initialize();
+    nodejsBootstrapper->start();
   }
 
   DLL_PUBLIC void TransmuteNative_Prepare()
@@ -196,6 +199,22 @@ extern "C"
   {
     auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
     return nodejsBootstrapper->isRuntimeAvailable();
+  }
+
+  DLL_PUBLIC void TransmuteNative_OnRenderFrame()
+  {
+    if (s_CurrentAPI == NULL || !NodeBootstrapper::IsInstanceRunning())
+      return;
+
+    auto code = s_CurrentAPI->ExecuteFrame();
+    switch (code)
+    {
+    case kFrameExecutionNotAvailable:
+      DEBUG("transmute", "RenderLoop(JS) is not available");
+      break;
+    default:
+      break;
+    }
   }
 
   DLL_PUBLIC void TransmuteNative_DispatchRuntimeEvent(int id)
@@ -388,5 +407,4 @@ extern "C"
     else if (actionType == xr::InputSourceActionType::XRSqueezeAction)
       hand->squeezeActionPressed = state == 0; /** check if pressed */
   }
-#endif
 }

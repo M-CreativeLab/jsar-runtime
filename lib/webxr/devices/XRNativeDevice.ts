@@ -32,9 +32,14 @@ export default class XRNativeDevice extends XRDevice {
   }
 
   async waitForReady(): Promise<void> {
-    const response = await makeRpcCall('xr.initializeDevice', []) as DeviceInitResponse;
-    this.enabled = response.enabled;
-    this.stereoRenderingMode = response.stereoRenderingMode || StereoRenderingMode.MultiPass;
+    try {
+      const response = await makeRpcCall('xr.initializeDevice', []) as DeviceInitResponse;
+      this.enabled = response.enabled;
+      this.stereoRenderingMode = response.stereoRenderingMode || StereoRenderingMode.MultiPass;
+    } catch (err) {
+      this.enabled = false;
+      logger.error(`XR: Failed to initialize device: ${err}`);
+    }
     logger.info(`XR: Device enabled: ${this.enabled}`);
     logger.info(`XR: Stereo rendering mode: ${stereoRenderingModeToString(this.stereoRenderingMode)}`);
   }

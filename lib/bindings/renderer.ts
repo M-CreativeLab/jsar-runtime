@@ -77,8 +77,9 @@ export function connectRenderer() {
     logger.warn('error creating webgl context:', err);
   }
   if (globalGlContext == null) {
-    return;
+    throw new Error('failed to create webgl context.');
   }
+
   const gl = globalGlContext;
   onreadyCallbacks.forEach(cb => cb(gl));
   onreadyCallbacks.length = 0;

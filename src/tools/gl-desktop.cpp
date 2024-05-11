@@ -35,6 +35,40 @@ void processInput(GLFWwindow *window)
   }
 }
 
+void receiveIncomingEvents()
+{
+  while (true)
+  {
+    int eventId;
+    int eventType;
+    uint32_t size;
+    bool hasEvent = TransmuteNative_GetEventFromJavaScript(&eventId, &eventType, &size);
+    if (hasEvent)
+    {
+      char *data = (char *)malloc(size);
+      TransmuteNative_GetEventDataFromJavaScript(data);
+
+      switch (eventType)
+      {
+      case 0x100: /** JSEventType.RpcRequest */
+        // FIXME: because the current implementation only has one event type, we can safely ignore the event type
+        TransmuteNative_InitializeXRDevice(false);
+        TransmuteNative_DispatchNativeEvent(eventId, 0x101 /** JSEventType.RpcResponse */,
+                                            "{\"success\":false,\"message\":\"not a xr device\"}");
+        break;
+      default:
+        std::cout << "[Unknown] Received event: " << eventId << " " << eventType << " " << data << std::endl;
+        break;
+      }
+      free(data);
+    }
+    else
+    {
+      break;
+    }
+  }
+}
+
 int main()
 {
   if (!glfwInit())
@@ -50,6 +84,16 @@ int main()
     glfwTerminate();
     return -1;
   }
+
+  TransmuteNative_Start();
+  TransmuteNative_Prepare();
+  TransmuteNative_SetViewport(800, 600);
+
+  while (!TransmuteNative_IsRuntimeUp())
+  {
+    TransmuteNative_SetRuntimeInit("{\"isXRSupported\":true}");
+  }
+
   glfwMakeContextCurrent(window);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
@@ -112,6 +156,7 @@ int main()
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 
+  bool initialized = false;
   while (!glfwWindowShouldClose(window))
   {
     processInput(window);
@@ -122,6 +167,23 @@ int main()
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    if (TransmuteNative_IsRuntimeUp())
+    {
+      if (TransmuteNative_IsRuntimeAvailable())
+      {
+        if (!initialized)
+        {
+          TransmuteNative_DispatchNativeEvent(-1, 0x300,
+                                              "{\"url\":\"http://localhost:3000/spatial-lion.xsml\",\"sessionId\":1}");
+          initialized = true;
+        }
+      }
+      receiveIncomingEvents();
+
+      // Trigger the render frame.
+      TransmuteNative_OnRenderFrame();
+    }
 
     glfwSwapBuffers(window);
     glfwPollEvents();
