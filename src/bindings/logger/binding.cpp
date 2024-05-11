@@ -12,11 +12,6 @@ namespace bindings
 
   namespace logger
   {
-
-#ifdef __ANDROID__
-#define TRANSMUTE_LOG_TAG "Unity"
-#endif
-
     Napi::Value Log(const Napi::CallbackInfo &info)
     {
       Napi::HandleScope scope(info.Env());
@@ -30,7 +25,7 @@ namespace bindings
         if (level == 1)
         {
 #ifdef __ANDROID__
-          __android_log_print(ANDROID_LOG_ERROR, TRANSMUTE_LOG_TAG, "%s", message.c_str());
+          __android_log_print(ANDROID_LOG_ERROR, LOG_TAG_SCRIPT, "%s", message.c_str());
 #else
           UNITY_LOG_ERROR(log, message.c_str());
 #endif
@@ -38,7 +33,7 @@ namespace bindings
         else if (level == 2)
         {
 #ifdef __ANDROID__
-          __android_log_print(ANDROID_LOG_WARN, TRANSMUTE_LOG_TAG, "%s", message.c_str());
+          __android_log_print(ANDROID_LOG_WARN, LOG_TAG_SCRIPT, "%s", message.c_str());
 #else
           UNITY_LOG_WARNING(log, message.c_str());
 #endif
@@ -46,7 +41,7 @@ namespace bindings
         else
         {
 #ifdef __ANDROID__
-          __android_log_print(ANDROID_LOG_INFO, TRANSMUTE_LOG_TAG, "%s", message.c_str());
+          __android_log_print(ANDROID_LOG_INFO, LOG_TAG_SCRIPT, "%s", message.c_str());
 #else
           UNITY_LOG(log, message.c_str());
 #endif
