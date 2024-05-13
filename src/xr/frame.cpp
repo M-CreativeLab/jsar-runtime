@@ -143,6 +143,12 @@ namespace xr
     return FRAME_OK;
   }
 
+  void StereoRenderingFrame::copyCommandBuffers(StereoRenderingFrame *frame)
+  {
+    copyCommandBuffers(frame->m_CommandBuffersInPass, 0);
+    copyCommandBuffers(frame->m_CommandBuffersInPass2, 1);
+  }
+
   void StereoRenderingFrame::copyCommandBuffers(std::vector<renderer::CommandBuffer *> &commandBuffers, int passIndex)
   {
     if (passIndex == 0)
@@ -175,14 +181,7 @@ namespace xr
     case renderer::kCommandTypeContextInit:
     case renderer::kCommandTypeContext2Init:
     case renderer::kCommandTypeCreateProgram:
-    case renderer::kCommandTypeCreateBuffer:
-    case renderer::kCommandTypeCreateFramebuffer:
-    case renderer::kCommandTypeCreateRenderbuffer:
-    case renderer::kCommandTypeCreateVertexArray:
-    case renderer::kCommandTypeCreateTexture:
-    case renderer::kCommandTypeCreateSampler:
     case renderer::kCommandTypeCreateShader:
-    case renderer::kCommandTypeCreateTransformFeedback:
     case renderer::kCommandTypeCheckFramebufferStatus:
     case renderer::kCommandTypeAttachShader:
     case renderer::kCommandTypeDetachShader:
@@ -206,11 +205,7 @@ namespace xr
     case renderer::kCommandTypeGetSupportedExtensions:
     case renderer::kCommandTypeGetTransformFeedbackVarying:
     case renderer::kCommandTypeGetUniformLocation:
-      /**
-       * TODO: actually the binding command buffers could not be dropped in some ways, for those command buffers, we
-       * need to check the state changes between the frame, if state changes, we should not drop the frame.
-       */
-      m_IsDropable = false;
+      m_Idempotentable = false;
       break;
     default:
       break;
@@ -260,15 +255,23 @@ namespace xr
   {
     m_Available = v;
   }
-  bool StereoRenderingFrame::droppable()
-  {
-    return m_IsDropable;
-  }
   bool StereoRenderingFrame::expired(int timeout)
   {
     auto now = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_CreatedTime);
     return duration.count() > timeout;
+  }
+  bool StereoRenderingFrame::idempotent()
+  {
+    if (m_Idempotentable == false)
+      return false;
+    return m_Idempotent[0] && m_Idempotent[1];
+  }
+  void StereoRenderingFrame::idempotent(int passIndex, bool value)
+  {
+    if (passIndex > 1 || passIndex < 0)
+      return;
+    m_Idempotent[passIndex] = value;
   }
   void StereoRenderingFrame::finishPass(int passIndex)
   {
@@ -281,6 +284,12 @@ namespace xr
     if (passIndex > 1 || passIndex < 0)
       return false;
     return m_Finished[passIndex];
+  }
+
+  void StereoRenderingFrame::clearCommandBuffers()
+  {
+    clearCommandBuffers(m_CommandBuffersInPass);
+    clearCommandBuffers(m_CommandBuffersInPass2);
   }
 
   void StereoRenderingFrame::clearCommandBuffers(std::vector<renderer::CommandBuffer *> &commandBuffers)

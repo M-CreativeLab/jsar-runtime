@@ -108,6 +108,7 @@ namespace xr
   public:
     FrameActionResult startFrame(int passIndex = 0);
     FrameActionResult endFrame(int passIndex = 0);
+    void copyCommandBuffers(StereoRenderingFrame *frame);
     void copyCommandBuffers(std::vector<renderer::CommandBuffer *> &commandBuffers, int passIndex = 0);
     void addCommandBuffer(renderer::CommandBuffer *commandBuffer, int passIndex = 0);
     std::vector<renderer::CommandBuffer *> &getCommandBuffers(int passIndex = 0);
@@ -118,12 +119,14 @@ namespace xr
     bool empty();
     bool available();
     void available(bool v);
-    bool droppable();
     bool expired(int timeout); // returns if this frame is expired after `timeout` milliseconds.
+    bool idempotent();
+    void idempotent(int passIndex, bool value);
     void finishPass(int passIndex);
     bool finished(int passIndex);
 
   private:
+    void clearCommandBuffers();
     void clearCommandBuffers(std::vector<renderer::CommandBuffer *> &commandBuffers);
 
   private:
@@ -132,15 +135,17 @@ namespace xr
     bool m_Available = false;
     bool m_Ended[2] = {false, false};
     bool m_Started[2] = {false, false};
+    /** 
+     * An idempotent frame is free to replay.
+     */
+    bool m_Idempotent[2] = {false, false};
+    /**
+     * The *Idempotentable* flag is a hint to the renderer that the frame is able to be idempotent. Such as the frame that contains
+     * a `linkProgram()`, `createProgram()` or other specific command buffers, it could not be idempotent.
+     */
+    bool m_Idempotentable = true;
     bool m_Finished[2] = {false, false};
     bool m_IsAddedOnce = false;
-    /**
-     * Frame dropping is a method to avoid lagging when the rendering thread is slow.
-     *
-     * A dropable frame is a frame which command buffers not containing non-idempotent commands, such as `glCreateTexture`,
-     * `glCreateFramebuffer`, etc.
-     */
-    bool m_IsDropable = true;
 
     /**
      * Record the following time points for frame drops and performance analysis.

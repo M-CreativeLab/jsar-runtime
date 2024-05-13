@@ -229,26 +229,9 @@ class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext impleme
     srcOffset?: unknown
   ): void {
     const callOptions = <NativeCallOptions>{
-      debug: {
-        argTypes: ['constant', , 'constant', , , , 'constant', 'constant'],
-      }
+      debug: { argTypes: ['constant', , 'constant', , , , 'constant', 'constant'] }
     };
-    if (arguments.length === 9) {
-      if (pixels instanceof ArrayBuffer) {
-        pixels = new Uint8Array(pixels);
-      }
-      return this.nativeCall('texImage2D', [
-        target,
-        level,
-        internalformat,
-        width as number,
-        height as number,
-        border as number,
-        format,
-        type,
-        pixels
-      ], callOptions);
-    } else if (arguments.length === 6) {
+    if (arguments.length === 6) {
       const params = getTextureParametersFromImageSource.apply(this, arguments);
       return this.nativeCall('texImage2D', [
         target,
@@ -261,15 +244,83 @@ class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext impleme
         params.type,
         params.pixels,
       ], callOptions);
+    } else if (arguments.length === 9) {
+      return this.nativeCall('texImage2D', [
+        target,
+        level,
+        internalformat,
+        width as number,
+        height as number,
+        border as number,
+        format,
+        type,
+        pixels
+      ], callOptions);
     } else {
       throw new Error('Invalid number of arguments for texImage2D()');
     }
   }
-  texImage3D(target: number, level: number, internalformat: number, width: number, height: number, depth: number, border: number, format: number, type: number, pboOffset: number): void;
-  texImage3D(target: number, level: number, internalformat: number, width: number, height: number, depth: number, border: number, format: number, type: number, source: TexImageSource): void;
-  texImage3D(target: number, level: number, internalformat: number, width: number, height: number, depth: number, border: number, format: number, type: number, srcData: ArrayBufferView): void;
-  texImage3D(target: number, level: number, internalformat: number, width: number, height: number, depth: number, border: number, format: number, type: number, srcData: ArrayBufferView, srcOffset: number): void;
-  texImage3D(target: number, level: number, internalformat: number, width: number, height: number, depth: number, border: number, format: number, type: number, srcData: unknown, srcOffset?: unknown): void {
+  texImage3D(
+    target: number,
+    level: number,
+    internalformat: number,
+    width: number,
+    height: number,
+    depth: number,
+    border: number,
+    format: number,
+    type: number,
+    pboOffset: number): void;
+  texImage3D(
+    target: number,
+    level: number,
+    internalformat: number,
+    width: number,
+    height: number,
+    depth: number,
+    border: number,
+    format: number,
+    type: number,
+    source: TexImageSource): void;
+  texImage3D(
+    target: number,
+    level: number,
+    internalformat: number,
+    width: number,
+    height: number,
+    depth: number,
+    border: number,
+    format: number,
+    type: number,
+    srcData: ArrayBufferView): void;
+  texImage3D(
+    target: number,
+    level: number,
+    internalformat: number,
+    width: number,
+    height: number,
+    depth: number,
+    border: number,
+    format: number,
+    type: number,
+    srcData: ArrayBufferView,
+    srcOffset: number): void;
+  texImage3D(
+    target: number,
+    level: number,
+    internalformat: number,
+    width: number,
+    height: number,
+    depth: number,
+    border: number,
+    format: number,
+    type: number,
+    srcData: unknown,
+    srcOffset?: unknown
+  ): void {
+    const callOptions = <NativeCallOptions>{
+      debug: { argTypes: ['constant', , 'constant', , , , , 'constant', 'constant'] }
+    };
     if (isTexImageSource(srcData)) {
       const pixels = getPixelsFromTexImageSource(format === this.RGB ? 'rgb8' : 'rgba8', srcData);
       return this.nativeCall('texImage3D', [
@@ -283,10 +334,11 @@ class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext impleme
         format,
         type,
         pixels.data,
-      ]);
+      ], callOptions);
     } else {
       return this.nativeCall('texImage3D', [
-        target, level, internalformat, width, height, depth, border, format, type, srcData, srcOffset]);
+        target, level, internalformat, width, height, depth, border, format, type, srcData, srcOffset
+      ], callOptions);
     }
   }
   texStorage2D(target: number, levels: number, internalformat: number, width: number, height: number): void {

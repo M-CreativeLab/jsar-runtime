@@ -102,6 +102,7 @@ private:
 	{
 		auto createProgramCommandBuffer = static_cast<CreateProgramCommandBuffer *>(commandBuffer);
 		int ret = glCreateProgram();
+		m_AppGlobalContext.RecordProgramOnCreated(ret);
 		createProgramCommandBuffer->m_ProgramId = ret;
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateProgram() => %d", isDefaultQueue, ret);
@@ -117,6 +118,7 @@ private:
 		 * context using the deleted program.
 		 */
 		m_AppGlobalContext.ResetProgram(id);
+		m_AppGlobalContext.RecordProgramOnDeleted(id);
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteProgram(%d)", isDefaultQueue, id);
 	}
@@ -124,6 +126,7 @@ private:
 	{
 		auto linkProgramCommandBuffer = static_cast<LinkProgramCommandBuffer *>(commandBuffer);
 		glLinkProgram(linkProgramCommandBuffer->m_ProgramId);
+		m_AppGlobalContext.MarkAsDirty();
 
 		// Update the locations of the uniforms and attributes
 		GLuint program = linkProgramCommandBuffer->m_ProgramId;
@@ -191,7 +194,7 @@ private:
 			uniformLoc.size = size;
 
 			linkProgramCommandBuffer->m_UniformLocations[name] = uniformLoc;
-			DEBUG(DEBUG_TAG, "GL::LinkProgram::Uniform(%s in %d) => %d(size=%d, type=%d)", name, program, location, size, type);
+			DEBUG(DEBUG_TAG, "GL::LinkProgram::Uniform(%s in %d) => %d(size=%d, type=%x)", name, program, location, size, type);
 		}
 
 		/**
@@ -256,6 +259,8 @@ private:
 	{
 		auto attachShaderCommandBuffer = static_cast<AttachShaderCommandBuffer *>(commandBuffer);
 		glAttachShader(attachShaderCommandBuffer->m_ProgramId, attachShaderCommandBuffer->m_ShaderId);
+		m_AppGlobalContext.MarkAsDirty();
+
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::AttachShader: program=%d, shader=%d",
 						isDefaultQueue, attachShaderCommandBuffer->m_ProgramId, attachShaderCommandBuffer->m_ShaderId);
@@ -264,6 +269,8 @@ private:
 	{
 		auto detachShaderCommandBuffer = static_cast<DetachShaderCommandBuffer *>(commandBuffer);
 		glDetachShader(detachShaderCommandBuffer->m_ProgramId, detachShaderCommandBuffer->m_ShaderId);
+		m_AppGlobalContext.MarkAsDirty();
+
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DetachShader: program=%d, shader=%d",
 						isDefaultQueue, detachShaderCommandBuffer->m_ProgramId, detachShaderCommandBuffer->m_ShaderId);
@@ -272,6 +279,8 @@ private:
 	{
 		auto createShaderCommandBuffer = static_cast<CreateShaderCommandBuffer *>(commandBuffer);
 		int ret = glCreateShader(createShaderCommandBuffer->m_ShaderType);
+		m_AppGlobalContext.RecordShaderOnCreated(ret);
+
 		createShaderCommandBuffer->m_ShaderId = ret;
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateShader: %d", isDefaultQueue, ret);
@@ -279,9 +288,12 @@ private:
 	void OnDeleteShader(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
 		auto deleteShaderCommandBuffer = static_cast<DeleteShaderCommandBuffer *>(commandBuffer);
-		glDeleteShader(deleteShaderCommandBuffer->m_ShaderId);
+		auto shader = deleteShaderCommandBuffer->m_ShaderId;
+		glDeleteShader(shader);
+		m_AppGlobalContext.RecordShaderOnDeleted(shader);
+
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::DeleteShader(%d)", isDefaultQueue, deleteShaderCommandBuffer->m_ShaderId);
+			DEBUG(DEBUG_TAG, "[%d] GL::DeleteShader(%d)", isDefaultQueue, shader);
 	}
 	void OnShaderSource(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -290,6 +302,8 @@ private:
 		auto source = shaderSourceCommandBuffer->m_Source;
 		auto length = shaderSourceCommandBuffer->m_Length;
 		glShaderSource(shaderId, 1, &source, (const GLint *)&length);
+		m_AppGlobalContext.MarkAsDirty();
+
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::ShaderSource: %d", isDefaultQueue, shaderId);
 	}
@@ -297,6 +311,8 @@ private:
 	{
 		auto compileShaderCommandBuffer = static_cast<CompileShaderCommandBuffer *>(commandBuffer);
 		glCompileShader(compileShaderCommandBuffer->m_ShaderId);
+		m_AppGlobalContext.MarkAsDirty();
+
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CompileShader: %d", isDefaultQueue, compileShaderCommandBuffer->m_ShaderId);
 	}
@@ -361,6 +377,8 @@ private:
 		auto createBufferCommandBuffer = static_cast<CreateBufferCommandBuffer *>(commandBuffer);
 		GLuint buffer;
 		glGenBuffers(1, &buffer);
+		m_AppGlobalContext.RecordBufferOnCreated(buffer);
+
 		createBufferCommandBuffer->m_BufferId = buffer;
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateBuffer => buffer(%d)", isDefaultQueue, buffer);
@@ -369,6 +387,8 @@ private:
 	{
 		auto deleteBufferCommandBuffer = static_cast<DeleteBufferCommandBuffer *>(commandBuffer);
 		glDeleteBuffers(1, &deleteBufferCommandBuffer->m_BufferId);
+		m_AppGlobalContext.RecordBufferOnDeleted(deleteBufferCommandBuffer->m_BufferId);
+
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteBuffer: %d", isDefaultQueue, deleteBufferCommandBuffer->m_BufferId);
 	}
@@ -383,6 +403,7 @@ private:
 			m_AppGlobalContext.RecordArrayBuffer(buffer);
 		else if (target == GL_ELEMENT_ARRAY_BUFFER)
 			m_AppGlobalContext.RecordElementArrayBuffer(buffer);
+		// TODO: support other targets?
 
 		glBindBuffer(target, buffer);
 		if (printsCall)
@@ -420,6 +441,8 @@ private:
 		auto createFramebufferCommandBuffer = static_cast<CreateFramebufferCommandBuffer *>(commandBuffer);
 		GLuint ret;
 		glGenFramebuffers(1, &ret);
+		m_AppGlobalContext.RecordFramebufferOnCreated(ret);
+
 		createFramebufferCommandBuffer->m_FramebufferId = ret;
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateFramebuffer() => %d", isDefaultQueue, ret);
@@ -428,6 +451,8 @@ private:
 	{
 		auto deleteFramebufferCommandBuffer = static_cast<DeleteFramebufferCommandBuffer *>(commandBuffer);
 		glDeleteFramebuffers(1, &deleteFramebufferCommandBuffer->m_FramebufferId);
+		m_AppGlobalContext.RecordFramebufferOnDeleted(deleteFramebufferCommandBuffer->m_FramebufferId);
+
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteFramebuffer: %d",
 						isDefaultQueue, deleteFramebufferCommandBuffer->m_FramebufferId);
@@ -487,6 +512,8 @@ private:
 		auto createRenderbufferCommandBuffer = static_cast<CreateRenderbufferCommandBuffer *>(commandBuffer);
 		GLuint ret;
 		glGenRenderbuffers(1, &ret);
+		m_AppGlobalContext.RecordRenderbufferOnCreated(ret);
+
 		createRenderbufferCommandBuffer->m_RenderbufferId = ret;
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateRenderbuffer: %d", isDefaultQueue, ret);
@@ -495,6 +522,8 @@ private:
 	{
 		auto deleteRenderbufferCommandBuffer = static_cast<DeleteRenderbufferCommandBuffer *>(commandBuffer);
 		glDeleteRenderbuffers(1, &deleteRenderbufferCommandBuffer->m_RenderbufferId);
+		m_AppGlobalContext.RecordRenderbufferOnDeleted(deleteRenderbufferCommandBuffer->m_RenderbufferId);
+
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteRenderbuffer: %d",
 						isDefaultQueue, deleteRenderbufferCommandBuffer->m_RenderbufferId);
@@ -589,6 +618,8 @@ private:
 		auto createVertexArrayCommandBuffer = static_cast<CreateVertexArrayCommandBuffer *>(commandBuffer);
 		GLuint ret;
 		glGenVertexArrays(1, &ret);
+		m_AppGlobalContext.RecordVertexArrayObjectOnCreated(ret);
+
 		createVertexArrayCommandBuffer->m_VertexArrayId = ret;
 		// add the created vao to the client map
 		m_VertexArrayObjects[createVertexArrayCommandBuffer->m_ClientId] = ret;
@@ -602,6 +633,8 @@ private:
 		auto clientId = deleteVertexArrayCommandBuffer->m_VertexArrayId;
 		auto serverId = m_VertexArrayObjects[clientId];
 		glDeleteVertexArrays(1, &serverId);
+		m_AppGlobalContext.RecordVertexArrayObjectOnDeleted(serverId);
+
 		m_VertexArrayObjects.erase(clientId); // remove the vao from the client map
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteVertexArray: %d",
@@ -622,6 +655,8 @@ private:
 		auto createTextureCommandBuffer = static_cast<CreateTextureCommandBuffer *>(commandBuffer);
 		GLuint texture;
 		glGenTextures(1, &texture);
+		m_AppGlobalContext.RecordTextureOnCreated(texture);
+
 		createTextureCommandBuffer->m_TextureId = texture;
 		m_TextureObjects[createTextureCommandBuffer->m_ClientId] = texture;
 		if (printsCall)
@@ -633,6 +668,8 @@ private:
 		auto clientId = deleteTextureCommandBuffer->m_TextureId;
 		auto serverId = m_TextureObjects[clientId];
 		glDeleteTextures(1, &serverId);
+		m_AppGlobalContext.RecordTextureOnDeleted(serverId);
+
 		m_TextureObjects.erase(clientId); // remove the texture from the client map
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteTexture: %d", isDefaultQueue, serverId);
@@ -652,7 +689,7 @@ private:
 		{
 			GLint activeUnit;
 			glGetIntegerv(GL_ACTIVE_TEXTURE, &activeUnit);
-			DEBUG(DEBUG_TAG, "[%d] GL::BindTexture(%d, %d) for active(%d) program(%d)",
+			DEBUG(DEBUG_TAG, "[%d] GL::BindTexture(0x%x, %d) for active(%d) program(%d)",
 						isDefaultQueue, target, texture, activeUnit, m_AppGlobalContext.GetProgram());
 		}
 	}
@@ -744,7 +781,7 @@ private:
 		glActiveTexture(textureUnit);
 		m_AppGlobalContext.RecordActiveTextureUnit(textureUnit);
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::ActiveTexture(%d)", isDefaultQueue, textureUnit);
+			DEBUG(DEBUG_TAG, "[%d] GL::ActiveTexture(%d)", isDefaultQueue, textureUnit - GL_TEXTURE0);
 	}
 	void OnGenerateMipmap(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -892,12 +929,22 @@ private:
 	void OnUniform1fv(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
 		auto uniform1fvCommandBuffer = static_cast<Uniform1fvCommandBuffer *>(commandBuffer);
-		glUniform1fv(
-				uniform1fvCommandBuffer->m_Location,
-				uniform1fvCommandBuffer->m_Count,
-				uniform1fvCommandBuffer->m_Value);
+		auto location = uniform1fvCommandBuffer->m_Location;
+		auto count = uniform1fvCommandBuffer->m_Count;
+		auto value = uniform1fvCommandBuffer->m_Value;
+
+		glUniform1fv(location, count, value);
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::Uniform1fv(%d)", isDefaultQueue, uniform1fvCommandBuffer->m_Location);
+		{
+			std::string valuesStr = "";
+			for (int i = 0; i < count; i++)
+			{
+				valuesStr += std::to_string(value[i]);
+				if (i < count - 1)
+					valuesStr += ",";
+			}
+			DEBUG(DEBUG_TAG, "[%d] GL::Uniform1fv(%d, count=%d, values=[%s])", isDefaultQueue, location, count, valuesStr.c_str());
+		}
 	}
 	void OnUniform1i(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -1226,7 +1273,7 @@ private:
 		auto param = pixelStoreiCommandBuffer->m_Param;
 		glPixelStorei(pname, param);
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::PixelStorei(%d, %d)", isDefaultQueue, pname, param);
+			DEBUG(DEBUG_TAG, "[%d] GL::PixelStorei(0x%x, %d)", isDefaultQueue, pname, param);
 	}
 	void OnPolygonOffset(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -1523,7 +1570,7 @@ private:
 private:
 	UnityGfxRenderer m_APIType;
 	OpenGLHostContextStorage m_HostContext = OpenGLHostContextStorage();
-	OpenGLContextStorage m_AppGlobalContext = OpenGLContextStorage("App Global");
+	OpenGLAppContextStorage m_AppGlobalContext = OpenGLAppContextStorage("App Global");
 
 	map<uint32_t, GLuint> m_TextureObjects;
 	map<uint32_t, GLuint> m_VertexArrayObjects;
@@ -1663,6 +1710,7 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	m_HostContext.Record();
 	m_HostContext.Print();
 	m_AppGlobalContext.Restore();
+	m_AppGlobalContext.Print();
 
 	glDisable(GL_CULL_FACE);
 	glFrontFace(m_AppFrontFace);
@@ -1716,16 +1764,10 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
 	if (m_CommandBuffers.empty())
 		return false;
 
-	if (ExecuteCommandBuffer(m_CommandBuffers, nullptr, true))
-	{
-		// FIXME: not release the command buffer itself.
-		m_CommandBuffers.clear();
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+	auto r = ExecuteCommandBuffer(m_CommandBuffers, nullptr, true);
+	// FIXME: not release the command buffer itself.
+	m_CommandBuffers.clear();
+	return r;
 }
 
 bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
@@ -1734,7 +1776,6 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		bool isDefaultQueue)
 {
 	bool logCalls = isDefaultQueue ? m_EnableLogOnAppGlobal : m_EnableLogOnXRFrame;
-	auto context = &m_AppGlobalContext;
 	bool isBufferEmpty = commandBuffers.empty();
 	if (isBufferEmpty)
 	{
@@ -1745,7 +1786,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 
 	// Execute all the command buffers
 	DEBUG(DEBUG_TAG, "There are %d buffers to execute in %s.",
-				commandBuffers.size(), context->GetName());
+				commandBuffers.size(), m_AppGlobalContext.GetName());
+	auto contextBaseState = OpenGLAppContextStorage("tmp", &m_AppGlobalContext);
 
 	for (auto commandBuffer : commandBuffers)
 	{
@@ -1931,7 +1973,9 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		}
 		commandBuffer->Finish();
 	}
-	return true;
+	if (m_AppGlobalContext.IsDirty())
+		return false;
+	return m_AppGlobalContext.IsChanged(&contextBaseState);
 }
 
 #endif // #if SUPPORT_OPENGL_UNIFIED

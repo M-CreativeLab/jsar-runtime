@@ -1802,20 +1802,25 @@ namespace webgl
       return env.Undefined();
     }
 
-    // Otherwise, the image source should be a TypedArray
-    if (!imageSource.IsTypedArray())
+    char *data = nullptr;
+    size_t len = 0;
+    if (imageSource.IsArrayBuffer())
     {
-      Napi::TypeError::New(env, "the pixels should be a TypedArray.").ThrowAsJavaScriptException();
-      return env.Undefined();
+      auto arraybuffer = imageSource.As<Napi::ArrayBuffer>();
+      data = static_cast<char *>(arraybuffer.Data());
+      len = arraybuffer.ByteLength();
     }
-    Napi::TypedArray pixels = info[8].As<Napi::TypedArray>();
-    Napi::ArrayBuffer data = pixels.ArrayBuffer();
-    renderer::TexImage2DCommandBuffer *commandBuffer;
+    else if (imageSource.IsTypedArray())
+    {
+      auto typedarray = imageSource.As<Napi::TypedArray>();
+      data = static_cast<char *>(typedarray.ArrayBuffer().Data()) + typedarray.ByteOffset();
+      len = typedarray.ByteLength();
+    }
 
+    renderer::TexImage2DCommandBuffer *commandBuffer;
     if (m_unpackFlipY == true || m_unpackPremultiplyAlpha == true)
     {
-      unsigned char *packedPixels = reinterpret_cast<unsigned char *>(data.Data());
-      unsigned char *pixels = unpackPixels(type, format, width, height, packedPixels);
+      unsigned char *pixels = unpackPixels(type, format, width, height, reinterpret_cast<unsigned char *>(data));
       commandBuffer = new renderer::TexImage2DCommandBuffer(
           target,
           level,
@@ -1825,23 +1830,14 @@ namespace webgl
           border,
           format,
           type,
-          data.ByteLength(),
+          len,
           pixels);
       delete[] pixels;
     }
     else
     {
       commandBuffer = new renderer::TexImage2DCommandBuffer(
-          target,
-          level,
-          internalformat,
-          width,
-          height,
-          border,
-          format,
-          type,
-          data.ByteLength(),
-          data.Data());
+          target, level, internalformat, width, height, border, format, type, len, data);
     }
     addCommandBuffer(commandBuffer);
     return env.Undefined();
@@ -2837,13 +2833,7 @@ namespace webgl
     int pname = info[0].As<Napi::Number>().Int32Value();
     int param = info[1].ToNumber().Int32Value();
 
-    if (
-        pname == WEBGL_PACK_ALIGNMENT ||
-        pname == WEBGL_UNPACK_ALIGNMENT)
-    {
-      addCommandBuffer(new renderer::PixelStoreiCommandBuffer(pname, param));
-    }
-    else if (pname == WEBGL_UNPACK_FLIP_Y_WEBGL)
+    if (pname == WEBGL_UNPACK_FLIP_Y_WEBGL)
     {
       m_unpackFlipY = param;
     }
@@ -2851,9 +2841,13 @@ namespace webgl
     {
       m_unpackPremultiplyAlpha = param;
     }
+    else if (pname == WEBGL_UNPACK_COLORSPACE_CONVERSION_WEBGL)
+    {
+      // TODO: Implement this
+    }
     else
     {
-      // TODO: other pixel store parameters
+      addCommandBuffer(new renderer::PixelStoreiCommandBuffer(pname, param));
     }
     return env.Undefined();
   }
@@ -3659,7 +3653,6 @@ namespace webgl
     return unpacked;
   }
 
-
   template <typename T>
   int WebGLBaseRenderingContext<T>::getDrawingBufferWidth()
   {
@@ -4078,8 +4071,8 @@ namespace webgl
       return env.Undefined();
     }
 
-    char *pixels = nullptr;
-    size_t lenOfPixels = 0;
+    char *data = nullptr;
+    size_t len = 0;
     if (jsSourceData.IsNull() || jsSourceData.IsUndefined())
     {
       // Do nothing
@@ -4087,14 +4080,14 @@ namespace webgl
     else if (jsSourceData.IsArrayBuffer())
     {
       auto arrayBuffer = jsSourceData.As<Napi::ArrayBuffer>();
-      pixels = reinterpret_cast<char *>(arrayBuffer.Data());
-      lenOfPixels = arrayBuffer.ByteLength();
+      data = static_cast<char *>(arrayBuffer.Data());
+      len = arrayBuffer.ByteLength();
     }
     else if (jsSourceData.IsTypedArray())
     {
       auto typedArray = jsSourceData.As<Napi::TypedArray>();
-      pixels = reinterpret_cast<char *>(typedArray.ArrayBuffer().Data());
-      lenOfPixels = typedArray.ArrayBuffer().ByteLength();
+      data = static_cast<char *>(typedArray.ArrayBuffer().Data()) + typedArray.ByteOffset();
+      len = typedArray.ByteLength();
     }
     else
     {
@@ -4104,7 +4097,7 @@ namespace webgl
     }
 
     auto commandBuffer = new renderer::TexImage3DCommandBuffer(
-        target, level, internalformat, width, height, depth, border, format, type, lenOfPixels, pixels);
+        target, level, internalformat, width, height, depth, border, format, type, len, data);
     addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
@@ -4156,8 +4149,8 @@ namespace webgl
     else if (jsSourceData.IsTypedArray())
     {
       auto typedArray = jsSourceData.As<Napi::TypedArray>();
-      pixels = reinterpret_cast<char *>(typedArray.ArrayBuffer().Data());
-      lenOfPixels = typedArray.ArrayBuffer().ByteLength();
+      pixels = reinterpret_cast<char *>(typedArray.ArrayBuffer().Data()) + typedArray.ByteOffset();
+      lenOfPixels = typedArray.ByteLength();
     }
     else
     {

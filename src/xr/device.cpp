@@ -211,6 +211,9 @@ namespace xr
 
   /**
    * NOTE: The current implementation will expect the eye rendering order is left(0) -> right(1).
+   *
+   * @param eyeId The eye id, 0 for left eye, 1 for right eye.
+   * @param exec The function that will be executed for the given command buffers and returns if the frame state is changed.
    */
   bool Device::executeStereoRenderingFrames(int eyeId, std::function<bool(int, std::vector<renderer::CommandBuffer *> &)> exec)
   {
@@ -256,41 +259,17 @@ namespace xr
 
       auto id = frame->getId();
       auto commandBuffers = frame->getCommandBuffers(eyeId);
-      exec(id, commandBuffers);
+      auto isStateChanged = exec(id, commandBuffers);
+      frame->idempotent(eyeId, !isStateChanged);
       frame->finishPass(eyeId);
 
-      bool copyNotAllowed = false;
-      bool hasDrawCalls = false;
-      // TODO: optimize the performance here
-      // We could move this to the exec() function and implement a snapshot mechanism to avoid the performance issue.
-      for (auto commandBuffer : commandBuffers)
+      if (eyeId == 1)
       {
-        switch (commandBuffer->GetType())
-        {
-        case renderer::kCommandTypeCreateBuffer:
-        case renderer::kCommandTypeCreateVertexArray:
-        case renderer::kCommandTypeCreateTexture:
-        case renderer::kCommandTypeCreateSampler:
-        case renderer::kCommandTypeCreateShader:
-        case renderer::kCommandTypeLinkProgram:
-          copyNotAllowed = true;
-          break;
-        case renderer::kCommandTypeDrawArrays:
-        case renderer::kCommandTypeDrawElements:
-        case renderer::kCommandTypeDrawBuffers:
-        case renderer::kCommandTypeDrawArraysInstanced:
-        case renderer::kCommandTypeDrawElementsInstanced:
-        case renderer::kCommandTypeDrawRangeElements:
-          hasDrawCalls = true;
-          break;
-        default:
-          break;
-        }
-        if (copyNotAllowed)
-          break;
+        if (frame->idempotent())
+          m_BackupStereoRenderingFrame->copyCommandBuffers(frame);
+        else
+          m_BackupStereoRenderingFrame->clearCommandBuffers();
       }
-      if (!copyNotAllowed && hasDrawCalls)
-        m_BackupStereoRenderingFrame->copyCommandBuffers(commandBuffers, eyeId);
 
       /**
        * After rendering the right eye, we need to remove the frame.

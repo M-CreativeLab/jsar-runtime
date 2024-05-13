@@ -52,9 +52,7 @@ void OpenGLContextStorage::RecordTextureBindingWithUnit(GLenum target, GLuint te
   if (binding == nullptr)
     m_TextureBindingsWithUnit[activeUnit] = new OpenGLTextureBinding(target, texture);
   else
-  {
     binding->Reset(target, texture);
-  }
 }
 
 void OpenGLContextStorage::ResetProgram(int programToReset)
@@ -137,7 +135,8 @@ void OpenGLContextStorage::Restore()
 
 void OpenGLContextStorage::Print()
 {
-  DEBUG(DEBUG_TAG, "%s program(%d), framebuffer(%d)", GetName(), m_ProgramId, m_FramebufferId);
+  DEBUG(DEBUG_TAG, "%s program(%d), framebuffer(%d), activeTexture(%d)", GetName(),
+        m_ProgramId, m_FramebufferId, m_LastActiveTextureUnit - GL_TEXTURE0);
 }
 
 void OpenGLContextStorage::ClearTextureBindings()
@@ -167,8 +166,9 @@ void OpenGLHostContextStorage::Record()
   ClearTextureBindings();
   for (int i = GL_TEXTURE0; i <= GL_TEXTURE31; i++)
   {
-    GLint texture;
+    GLint texture = 0;
     glActiveTexture(i);
+
     // TODO: how to support other texture targets?
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &texture);
     m_TextureBindingsWithUnit[i] = new OpenGLTextureBinding(GL_TEXTURE_2D, texture);
@@ -201,9 +201,204 @@ void OpenGLHostContextStorage::RecordTextureBindingFromHost()
   bool isActiveNotMatched = beforeActiveUnit != m_LastActiveTextureUnit;
   if (isActiveNotMatched)
     glActiveTexture(m_LastActiveTextureUnit);
+
   glGetIntegerv(GL_TEXTURE_BINDING_2D, (GLint *)&texture);
   m_TextureBindingsWithUnit[m_LastActiveTextureUnit] = new OpenGLTextureBinding(GL_TEXTURE_2D, texture);
 
   if (isActiveNotMatched)
     glActiveTexture(beforeActiveUnit);
+}
+
+void OpenGLAppContextStorage::RecordProgramOnCreated(GLuint program)
+{
+  if (program == 0)
+    return;
+  if (m_Programs.find(program) != m_Programs.end())
+    return; // Already recorded
+  m_Programs.insert(std::pair<GLuint, bool>(program, true));
+}
+
+void OpenGLAppContextStorage::RecordProgramOnDeleted(GLuint program)
+{
+  if (program == 0)
+    return;
+  if (m_Programs.find(program) == m_Programs.end())
+    return; // Not recorded
+  m_Programs.erase(program);
+  // FIXME: Reset the current program if it is deleted?
+}
+
+void OpenGLAppContextStorage::RecordShaderOnCreated(GLuint shader)
+{
+  if (shader == 0)
+    return;
+  if (m_Shaders.find(shader) != m_Shaders.end())
+    return; // Already recorded
+  m_Shaders.insert(std::pair<GLuint, bool>(shader, true));
+}
+
+void OpenGLAppContextStorage::RecordShaderOnDeleted(GLuint shader)
+{
+  if (shader == 0)
+    return;
+  if (m_Shaders.find(shader) == m_Shaders.end())
+    return; // Not recorded
+  m_Shaders.erase(shader);
+}
+
+void OpenGLAppContextStorage::RecordBufferOnCreated(GLuint buffer)
+{
+  if (buffer == 0)
+    return;
+  if (m_Buffers.find(buffer) != m_Buffers.end())
+    return; // Already recorded
+  m_Buffers.insert(std::pair<GLuint, bool>(buffer, true));
+}
+
+void OpenGLAppContextStorage::RecordBufferOnDeleted(GLuint buffer)
+{
+  if (buffer == 0)
+    return;
+  if (m_Buffers.find(buffer) == m_Buffers.end())
+    return; // Not recorded
+  m_Buffers.erase(buffer);
+}
+
+void OpenGLAppContextStorage::RecordFramebufferOnCreated(GLuint buffer)
+{
+  if (buffer == 0)
+    return;
+  if (m_Framebuffers.find(buffer) != m_Framebuffers.end())
+    return; // Already recorded
+  m_Framebuffers.insert(std::pair<GLuint, bool>(buffer, true));
+}
+
+void OpenGLAppContextStorage::RecordFramebufferOnDeleted(GLuint buffer)
+{
+  if (buffer == 0)
+    return;
+  if (m_Framebuffers.find(buffer) == m_Framebuffers.end())
+    return; // Not recorded
+  m_Framebuffers.erase(buffer);
+}
+
+void OpenGLAppContextStorage::RecordRenderbufferOnCreated(GLuint buffer)
+{
+  if (buffer == 0)
+    return;
+  if (m_Renderbuffers.find(buffer) != m_Renderbuffers.end())
+    return; // Already recorded
+  m_Renderbuffers.insert(std::pair<GLuint, bool>(buffer, true));
+}
+
+void OpenGLAppContextStorage::RecordRenderbufferOnDeleted(GLuint buffer)
+{
+  if (buffer == 0)
+    return;
+  if (m_Renderbuffers.find(buffer) == m_Renderbuffers.end())
+    return; // Not recorded
+  m_Renderbuffers.erase(buffer);
+}
+
+void OpenGLAppContextStorage::RecordVertexArrayObjectOnCreated(GLuint vao)
+{
+  if (vao == 0)
+    return;
+  if (m_VertexArrayObjects.find(vao) != m_VertexArrayObjects.end())
+    return; // Already recorded
+  m_VertexArrayObjects.insert(std::pair<GLuint, bool>(vao, true));
+}
+
+void OpenGLAppContextStorage::RecordVertexArrayObjectOnDeleted(GLuint vao)
+{
+  if (vao == 0)
+    return;
+  if (m_VertexArrayObjects.find(vao) == m_VertexArrayObjects.end())
+    return; // Not recorded
+  m_VertexArrayObjects.erase(vao);
+}
+
+void OpenGLAppContextStorage::RecordTextureOnCreated(GLuint texture)
+{
+  if (texture == 0)
+    return;
+  if (m_Textures.find(texture) != m_Textures.end())
+    return; // Already recorded
+  m_Textures.insert(std::pair<GLuint, bool>(texture, true));
+}
+
+void OpenGLAppContextStorage::RecordTextureOnDeleted(GLuint texture)
+{
+  if (texture == 0)
+    return;
+  if (m_Textures.find(texture) == m_Textures.end())
+    return; // Not recorded
+  m_Textures.erase(texture);
+}
+
+void OpenGLAppContextStorage::RecordSamplerOnCreated(GLuint sampler)
+{
+  if (sampler == 0)
+    return;
+  if (m_Samplers.find(sampler) != m_Samplers.end())
+    return; // Already recorded
+  m_Samplers.insert(std::pair<GLuint, bool>(sampler, true));
+}
+
+void OpenGLAppContextStorage::RecordSamplerOnDeleted(GLuint sampler)
+{
+  if (sampler == 0)
+    return;
+  if (m_Samplers.find(sampler) == m_Samplers.end())
+    return; // Not recorded
+  m_Samplers.erase(sampler);
+}
+
+void OpenGLAppContextStorage::MarkAsDirty()
+{
+  m_Dirty = true;
+}
+
+bool OpenGLAppContextStorage::IsDirty()
+{
+  auto dirty = m_Dirty;
+  m_Dirty = false;
+  return dirty;
+}
+
+bool OpenGLAppContextStorage::IsChanged(OpenGLAppContextStorage *other)
+{
+  if (m_ProgramId != other->m_ProgramId)
+    return true;
+  if (m_ArrayBufferId != other->m_ArrayBufferId)
+    return true;
+  if (m_ElementArrayBufferId != other->m_ElementArrayBufferId)
+    return true;
+  if (m_FramebufferId != other->m_FramebufferId)
+    return true;
+  if (m_RenderbufferId != other->m_RenderbufferId)
+    return true;
+  if (m_VertexArrayObjectId != other->m_VertexArrayObjectId)
+    return true;
+  if (m_LastActiveTextureUnit != other->m_LastActiveTextureUnit)
+    return true;
+
+  if (m_Programs.IsChanged(&other->m_Programs))
+    return true;
+  if (m_Shaders.IsChanged(&other->m_Shaders))
+    return true;
+  if (m_Buffers.IsChanged(&other->m_Buffers))
+    return true;
+  if (m_Framebuffers.IsChanged(&other->m_Framebuffers))
+    return true;
+  if (m_Renderbuffers.IsChanged(&other->m_Renderbuffers))
+    return true;
+  if (m_VertexArrayObjects.IsChanged(&other->m_VertexArrayObjects))
+    return true;
+  if (m_Textures.IsChanged(&other->m_Textures))
+    return true;
+  if (m_Samplers.IsChanged(&other->m_Samplers))
+    return true;
+
+  return false;
 }

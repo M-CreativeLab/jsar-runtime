@@ -86,8 +86,13 @@ export function makeNativeCall(
           if (argTypes[i] === 'constant') {
             return glConstantNamesMap.has(arg) ? `${glConstantNamesMap.get(arg)}(${arg})` : `${arg}`;
           } else {
-            if (isTypedArray(arg) || arg instanceof ArrayBuffer || arg instanceof DataView) {
-              return `${arg.constructor.name}(${arg.byteLength})`;
+            if (arg instanceof ArrayBuffer) {
+              return `ArrayBuffer(${arg.byteLength})`;
+            } else if (arg instanceof DataView) {
+              return `DataView(${arg.byteLength})`;
+            } else if (isTypedArray(arg)) {
+              const { byteLength, byteOffset } = arg;
+              return `${arg.constructor.name}(${byteLength}, offset=${byteOffset})`;
             }
             return arg;
           }

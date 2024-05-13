@@ -4,6 +4,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <map>
+#include "debug.hpp"
 
 using namespace std;
 
@@ -928,7 +929,9 @@ namespace renderer
                     m_Height(height),
                     m_Border(border),
                     m_Format(format),
-                    m_Type(type) {}
+                    m_Type(type)
+    {
+    }
     TexImage2DCommandBuffer(
         int target,
         int level,
@@ -1134,7 +1137,7 @@ namespace renderer
       {
         m_PixelsSize = pixelsSize;
         m_Pixels = new char[pixelsSize];
-        memcpy((void *)m_Pixels, pixels, width * height * depth * 4);
+        memcpy((void *)m_Pixels, pixels, pixelsSize);
       }
     }
     ~TexImage3DCommandBuffer()
