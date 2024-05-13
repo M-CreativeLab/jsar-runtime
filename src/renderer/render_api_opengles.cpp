@@ -1495,16 +1495,20 @@ private:
 	void OnEnable(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
 		auto enableCommandBuffer = static_cast<EnableCommandBuffer *>(commandBuffer);
-		Enable(enableCommandBuffer->m_Cap);
+		auto cap = enableCommandBuffer->m_Cap;
+		Enable(cap);
+		m_AppGlobalContext.RecordCapability(cap, true);
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::Enable: %d", isDefaultQueue, enableCommandBuffer->m_Cap);
+			DEBUG(DEBUG_TAG, "[%d] GL::Enable(0x%x)", isDefaultQueue, cap);
 	}
 	void OnDisable(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
 		auto disableCommandBuffer = static_cast<DisableCommandBuffer *>(commandBuffer);
-		Disable(disableCommandBuffer->m_Cap);
+		auto cap = disableCommandBuffer->m_Cap;
+		Disable(cap);
+		m_AppGlobalContext.RecordCapability(cap, false);
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::Disable: %d", isDefaultQueue, disableCommandBuffer->m_Cap);
+			DEBUG(DEBUG_TAG, "[%d] GL::Disable(0x%x)", isDefaultQueue, cap);
 	}
 	void OnGetBooleanv(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -1712,9 +1716,7 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	m_AppGlobalContext.Restore();
 	m_AppGlobalContext.Print();
 
-	glDisable(GL_CULL_FACE);
 	glFrontFace(m_AppFrontFace);
-
 	if (m_DepthTestEnabled)
 		glEnable(GL_DEPTH_TEST);
 	else

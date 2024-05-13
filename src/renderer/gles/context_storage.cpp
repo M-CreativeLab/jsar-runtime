@@ -8,6 +8,14 @@ void OpenGLContextStorage::RecordViewport(int x, int y, int w, int h)
   m_Viewport[3] = h;
 }
 
+void OpenGLContextStorage::RecordCapability(GLenum cap, bool enabled)
+{
+  if (cap == GL_CULL_FACE)
+    m_CullFaceEnabled = enabled;
+  else if (cap == GL_DEPTH_TEST)
+    m_DepthTestEnabled = enabled;
+}
+
 void OpenGLContextStorage::RecordProgram(int program)
 {
   m_ProgramId = program;
@@ -75,6 +83,12 @@ void OpenGLContextStorage::Restore()
   {
     glViewport(m_Viewport[0], m_Viewport[1], m_Viewport[2], m_Viewport[3]);
   }
+
+  // Restore the capabilities
+  m_CullFaceEnabled ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
+  m_DepthTestEnabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
+
+  // Restore the program, buffers, framebuffer, renderbuffer, vertex array object, and active texture unit
   if (m_ProgramId >= 0)
     glUseProgram(m_ProgramId);
   else

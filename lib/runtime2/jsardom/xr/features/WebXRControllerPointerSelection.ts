@@ -809,26 +809,6 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
     };
   }
 
-  private _pickingMoved(oldPick: PickingInfo, newPick: PickingInfo) {
-    if (!oldPick.hit || !newPick.hit) {
-      return true;
-    }
-    if (!oldPick.pickedMesh || !oldPick.pickedPoint || !newPick.pickedMesh || !newPick.pickedPoint) {
-      return true;
-    }
-    if (oldPick.pickedMesh !== newPick.pickedMesh) {
-      return true;
-    }
-    oldPick.pickedPoint?.subtractToRef(newPick.pickedPoint, this._tmpVectorForPickCompare);
-    this._tmpVectorForPickCompare.set(Math.abs(this._tmpVectorForPickCompare.x), Math.abs(this._tmpVectorForPickCompare.y), Math.abs(this._tmpVectorForPickCompare.z));
-    const delta = (this._options.gazeModePointerMovedFactor || 1) * 0.01 * newPick.distance;
-    const length = this._tmpVectorForPickCompare.length();
-    if (length > delta) {
-      return true;
-    }
-    return false;
-  }
-
   private _updatePointerDistance(_laserPointer: AbstractMesh, distance: number = 100) {
     if (!_laserPointer.isVisible) {
       return;

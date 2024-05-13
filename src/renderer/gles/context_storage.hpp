@@ -27,6 +27,8 @@ class OpenGLContextStorage
 public:
   OpenGLContextStorage(std::string name) : m_Name(name)
   {
+    glGetBooleanv(GL_CULL_FACE, &m_CullFaceEnabled);
+    glGetBooleanv(GL_DEPTH_TEST, &m_DepthTestEnabled);
   }
   OpenGLContextStorage(std::string name, OpenGLContextStorage *from) : m_Name(name)
   {
@@ -34,6 +36,8 @@ public:
     m_Viewport[1] = from->m_Viewport[1];
     m_Viewport[2] = from->m_Viewport[2];
     m_Viewport[3] = from->m_Viewport[3];
+    m_CullFaceEnabled = from->m_CullFaceEnabled;
+    m_DepthTestEnabled = from->m_DepthTestEnabled;
     m_ProgramId = from->m_ProgramId;
     m_ArrayBufferId = from->m_ArrayBufferId;
     m_ElementArrayBufferId = from->m_ElementArrayBufferId;
@@ -50,6 +54,7 @@ public:
   }
 
   void RecordViewport(int x, int y, int w, int h);
+  void RecordCapability(GLenum cap, bool enabled);
   void RecordProgram(int program);
   void RecordArrayBuffer(int buffer);
   void RecordElementArrayBuffer(int buffer);
@@ -76,6 +81,11 @@ public:
 protected:
   std::string m_Name;
   GLint m_Viewport[4] = {-1, -1, -1, -1};
+  /** States */
+  GLboolean m_CullFaceEnabled;
+  GLboolean m_DepthTestEnabled;
+  GLenum m_CullFace;
+  GLenum m_FrontFace;
   /** Program */
   GLint m_ProgramId = 0;
   /** Buffers */
@@ -100,11 +110,6 @@ public:
   void Restore();
   void Record();
   void RecordTextureBindingFromHost();
-
-private:
-  bool m_CullFaceEnabled;
-  GLenum m_CullFace;
-  GLenum m_FrontFace;
 };
 
 class OpenGLNamesStorage : public std::map<GLuint, bool>
