@@ -1707,11 +1707,8 @@ namespace renderer
                                                                                              m_Location(location),
                                                                                              m_Transpose(transpose)
     {
-      auto len = values.size();
-      m_Value = new float[len];
-      for (int i = 0; i < len; i++)
-        m_Value[i] = values[i];
-      m_Count = len / 16;
+      m_Count = values.size() / 16;
+      m_Values = values;
     }
 
     UniformMatrix4fvCommandBuffer(int location, bool transpose, MatrixPlaceholderType matrixPlaceholderType) : CommandBuffer(kCommandTypeUniformMatrix4fv),
@@ -1721,7 +1718,6 @@ namespace renderer
                                                                                                                m_MatrixPlaceholderType(matrixPlaceholderType) {}
     ~UniformMatrix4fvCommandBuffer()
     {
-      delete[] m_Value;
     }
 
     bool isMatrixPlaceholderType()
@@ -1732,8 +1728,8 @@ namespace renderer
   public:
     int m_Location;
     int m_Count;
+    std::vector<float> m_Values;
     bool m_Transpose;
-    float *m_Value;
 
     MatrixPlaceholderType m_MatrixPlaceholderType = MatrixPlaceholderType::kMatrixPlaceholderNotSet;
     bool m_IsRightHanded = true;

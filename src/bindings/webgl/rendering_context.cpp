@@ -3197,7 +3197,7 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    uint32_t mode = info[0].ToNumber().Uint32Value();
+    int32_t mode = info[0].ToNumber().Int32Value();
     addCommandBuffer(new renderer::CullFaceCommandBuffer(mode));
     return env.Undefined();
   }
@@ -3208,7 +3208,7 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    uint32_t mode = info[0].ToNumber().Uint32Value();
+    int32_t mode = info[0].ToNumber().Int32Value();
     addCommandBuffer(new renderer::FrontFaceCommandBuffer(mode));
     return env.Undefined();
   }

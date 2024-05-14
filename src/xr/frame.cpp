@@ -112,8 +112,50 @@ namespace xr
   MultiPassFrame::~MultiPassFrame() {}
 
   int MultiPassFrame::getActiveEyeId() { return m_ActiveEyeId; }
-  float *MultiPassFrame::getViewerViewMatrix() { return m_ViewerViewMatrix; }
-  float *MultiPassFrame::getViewerProjectionMatrix() { return m_ViewerProjectionMatrix; }
+
+  glm::mat4 MultiPassFrame::getViewMatrix(bool rightHanded)
+  {
+    if (rightHanded)
+      return glm::make_mat4(m_ViewerViewMatrix);
+
+    /**
+     * When the matrix is expected to be left-handed, we get the base matrix for `viewMatrix` and convert it to left-handed.
+     *
+     * FIXME: Do we have more efficient way to convert the matrix to left-handed?
+     */
+    auto viewBaseMatrix = glm::inverse(glm::make_mat4(m_ViewerViewMatrix));
+    return glm::inverse(math::convertBaseMatrixToLH(viewBaseMatrix));
+  }
+
+  glm::mat4 MultiPassFrame::getViewMatrixWithOffset(glm::mat4 &offsetTransform, bool rightHanded)
+  {
+    auto viewBaseMatrix = glm::inverse(glm::make_mat4(m_ViewerViewMatrix));
+    glm::mat4 worldToLocal;
+    if (rightHanded)
+    {
+      worldToLocal = glm::inverse(offsetTransform);
+    }
+    else
+    {
+      worldToLocal = glm::inverse(math::convertBaseMatrixToLH(offsetTransform));
+      viewBaseMatrix = math::convertBaseMatrixToLH(viewBaseMatrix);
+    }
+    return glm::inverse(worldToLocal * viewBaseMatrix);
+  }
+
+  glm::mat4 MultiPassFrame::getProjectionMatrix(bool rightHanded)
+  {
+    auto projection = glm::make_mat4(m_ViewerProjectionMatrix);
+    if (rightHanded)
+      return projection;
+
+    float *m = glm::value_ptr(projection);
+    m[8] *= -1;
+    m[9] *= -1;
+    m[10] *= -1;
+    m[11] *= -1;
+    return projection;
+  }
 
   static int s_NextStereoId = 1;
 

@@ -192,11 +192,11 @@ namespace math
         src[12], src[13], src[14], src[15]);
   }
 
-  glm::mat4 makeMatrixFromTRS(float *translation, float *rotation, float *scale)
+  glm::mat4 makeMatrixFromTRS(float *translation, float *rotation, float *scale, float worldScalingFactor)
   {
-    float tx = translation[0];
-    float ty = translation[1];
-    float tz = translation[2];
+    float tx = translation[0] * worldScalingFactor;
+    float ty = translation[1] * worldScalingFactor;
+    float tz = translation[2] * worldScalingFactor;
     float rx = rotation[0];
     float ry = rotation[1];
     float rz = rotation[2];
@@ -218,35 +218,38 @@ namespace math
 
   glm::mat4 getProjectionMatrixInLH(glm::mat4 &src)
   {
-    src[0][2] *= -1;
-    src[1][2] *= -1;
-    src[2][2] *= -1;
-    src[3][2] *= -1;
-    return src;
+    float *m = glm::value_ptr(src);
+    m[8] *= -1;
+    m[9] *= -1;
+    m[10] *= -1;
+    m[11] *= -1;
+    return glm::make_mat4(m);
   }
 
-  glm::mat4 getViewMatrixInLH(glm::mat4 &worldToViewMatrix)
+  glm::mat4 convertBaseMatrixToLH(glm::mat4 &baseMatrix)
   {
-    auto viewBaseMatrix = glm::inverse(worldToViewMatrix); // in right-handed coordinate system
     // decompose the src matrix
-    auto scale = glm::vec3(glm::length(viewBaseMatrix[0]), glm::length(viewBaseMatrix[1]), glm::length(viewBaseMatrix[2]));
-    auto rotation = glm::quat_cast(viewBaseMatrix);
-    auto translation = glm::vec3(viewBaseMatrix[3]);
+    auto scale = glm::vec3(glm::length(baseMatrix[0]), glm::length(baseMatrix[1]), glm::length(baseMatrix[2]));
+    auto rotation = glm::quat_cast(baseMatrix);
+    auto translation = glm::vec3(baseMatrix[3]);
 
     // convert to left-handed coordinate system
     translation.z *= -1;
-    rotation.z *= -1;
-    rotation.w *= -1;
+    rotation.x *= -1;
+    rotation.y *= -1;
 
     // create a new matrix
-    auto viewBaseMatrixInLH = glm::translate(glm::mat4_cast(rotation), translation) * glm::scale(glm::mat4(1), scale);
-    return glm::inverse(viewBaseMatrixInLH);
+    auto T = glm::translate(glm::mat4(1), translation);
+    auto R = glm::mat4_cast(rotation);
+    auto S = glm::scale(glm::mat4(1), scale);
+    return T * R * S;
   }
 
   glm::mat4 getViewMatrixWithTransform(glm::mat4 &worldToView, glm::mat4 &transform)
   {
     auto viewBaseMatrix = glm::inverse(worldToView);
-    auto worldToLocalMatrix = glm::inverse(transform);
-    return glm::inverse(worldToLocalMatrix * viewBaseMatrix);
+    auto worldToLocalMatrix = glm::inverse(convertBaseMatrixToLH(transform));
+    auto viewBaseMatrixInLH = convertBaseMatrixToLH(viewBaseMatrix);
+    return glm::inverse(worldToLocalMatrix * viewBaseMatrixInLH);
   }
 }

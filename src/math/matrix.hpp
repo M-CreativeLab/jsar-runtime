@@ -20,9 +20,9 @@ namespace math
    * Create a 4x4 matrix from an array of 16 floats.
    */
   glm::mat4 createMat4FromArray(float *src);
-  glm::mat4 makeMatrixFromTRS(float *translation, float *rotation, float *scale);
+  glm::mat4 makeMatrixFromTRS(float *translation, float *rotation, float *scale, float worldScalingFactor = 1.0f);
   glm::mat4 getOriginMatrix();
   glm::mat4 getProjectionMatrixInLH(glm::mat4 &src);
-  glm::mat4 getViewMatrixInLH(glm::mat4 &src);
   glm::mat4 getViewMatrixWithTransform(glm::mat4 &worldToView, glm::mat4 &transform);
+  glm::mat4 convertBaseMatrixToLH(glm::mat4 &baseMatrix);
 }

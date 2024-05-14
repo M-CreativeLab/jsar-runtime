@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include <chrono>
+#include "math/matrix.hpp"
 #include "input_source.hpp"
 #include "renderer/command_buffer.hpp"
 
@@ -74,8 +75,25 @@ namespace xr
 
   public:
     int getActiveEyeId();
-    float *getViewerViewMatrix();
-    float *getViewerProjectionMatrix();
+    /**
+     * It returns the view matrix for the active eye.
+     * 
+     * @param rightHanded If true, the view matrix is right-handed, otherwise left-handed.
+     */
+    glm::mat4 getViewMatrix(bool rightHanded = true);
+    /**
+     * It returns the view matrix relative to the offset transform.
+     * 
+     * @param offsetTransform The offset transform matrix.
+     * @param rightHanded If true, the view matrix is right-handed, otherwise left-handed.
+     */
+    glm::mat4 getViewMatrixWithOffset(glm::mat4 &offsetTransform, bool rightHanded = true);
+    /**
+     * It returns the projection matrix for the active eye.
+     * 
+     * @param rightHanded If true, the projection matrix is right-handed, otherwise left-handed.
+     */
+    glm::mat4 getProjectionMatrix(bool rightHanded = true);
 
   private:
     int m_ActiveEyeId = -1;

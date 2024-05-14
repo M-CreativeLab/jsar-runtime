@@ -213,7 +213,7 @@ export class TransmuteRuntime2 extends EventTarget {
     logger.info('all the documents have been unloaded.');
   }
 
-  private fitSpaceWithScene(spaceNode: BABYLON.TransformNode, ratio = 0.5) {
+  private fitSpaceWithScene(spaceNode: BABYLON.TransformNode, ratio = 1.0) {
     /**
      * Scale the space to fit the scene.
      */

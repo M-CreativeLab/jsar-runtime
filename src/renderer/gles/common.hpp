@@ -39,3 +39,11 @@
 
 #define DEBUG_ARG_END -1
 #define DEBUG_TAG TR_RENDERAPI_TAG
+
+namespace gles
+{
+  /**
+   * @brief Converts a GLenum to a string for debugging purposes.
+   */
+  std::string glEnumToString(GLenum e);
+}

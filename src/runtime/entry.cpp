@@ -12,6 +12,7 @@ using namespace std;
 extern "C"
 {
   static RenderAPI *s_CurrentAPI = NULL;
+  static float s_WorldScalingFactor = 1.0;
 
 #ifndef TRANSMUTE_STANDALONE
   static IUnityInterfaces *s_UnityInterfaces = NULL;
@@ -279,9 +280,9 @@ extern "C"
     if (xrDevice == NULL)
       return false;
 
-    float tx = translation[0];
-    float ty = translation[1];
-    float tz = translation[2];
+    float tx = translation[0] * s_WorldScalingFactor;
+    float ty = translation[1] * s_WorldScalingFactor;
+    float tz = translation[2] * s_WorldScalingFactor;
     float rx = rotation[0];
     float ry = rotation[1];
     float rz = rotation[2];
@@ -304,18 +305,18 @@ extern "C"
     if (xrDevice == NULL)
       return false;
 
-    float tx = translation[0];
-    float ty = translation[1];
-    float tz = translation[2];
+    float tx = translation[0] * s_WorldScalingFactor;
+    float ty = translation[1] * s_WorldScalingFactor;
+    float tz = translation[2] * s_WorldScalingFactor;
     float rx = rotation[0];
     float ry = rotation[1];
     float rz = rotation[2];
     float rw = rotation[3];
 
-    auto scalingMatrix = glm::scale(glm::mat4(1), glm::vec3(-1.0, 1.0, -1.0));
-    auto translationMatrix = glm::translate(glm::mat4(1), glm::vec3(tx, ty, tz));
-    auto rotationMatrix = glm::mat4_cast(glm::quat(rw, rx, ry, rz));
-    auto base = translationMatrix * rotationMatrix * scalingMatrix;
+    auto S = glm::scale(glm::mat4(1), glm::vec3(-1, 1, -1));
+    auto T = glm::translate(glm::mat4(1), glm::vec3(tx, ty, tz));
+    auto R = glm::mat4_cast(glm::quat(rw, rx, ry, rz));
+    auto base = T * R * S;
 
     float m[16];
     for (int i = 0; i < 16; i++)
@@ -329,18 +330,18 @@ extern "C"
     if (xrDevice == NULL)
       return false;
 
-    float tx = translation[0];
-    float ty = translation[1];
-    float tz = translation[2];
+    float tx = translation[0] * s_WorldScalingFactor;
+    float ty = translation[1] * s_WorldScalingFactor;
+    float tz = translation[2] * s_WorldScalingFactor;
     float rx = rotation[0];
     float ry = rotation[1];
     float rz = rotation[2];
     float rw = rotation[3];
 
-    auto scalingMatrix = glm::scale(glm::mat4(1), glm::vec3(1, 1, 1));
-    auto translationMatrix = glm::translate(glm::mat4(1), glm::vec3(tx, ty, tz));
-    auto rotationMatrix = glm::mat4_cast(glm::quat(rw, rx, ry, rz));
-    auto base = translationMatrix * rotationMatrix * scalingMatrix;
+    auto S = glm::scale(glm::mat4(1), glm::vec3(1, 1, 1));
+    auto T = glm::translate(glm::mat4(1), glm::vec3(tx, ty, tz));
+    auto R = glm::mat4_cast(glm::quat(rw, rx, ry, rz));
+    auto base = T * R * S;
 
     float m[16];
     for (int i = 0; i < 16; i++)
@@ -362,7 +363,7 @@ extern "C"
       return; // out of range
 
     float defaultScale[3] = {1, 1, 1};
-    hand->joints[joint].baseMatrix = math::makeMatrixFromTRS(translation, rotation, defaultScale);
+    hand->joints[joint].baseMatrix = math::makeMatrixFromTRS(translation, rotation, defaultScale, s_WorldScalingFactor);
   }
 
   DLL_PUBLIC void TransmuteNative_SetHandInputRayPose(int handness, float *translation, float *rotation)
@@ -375,7 +376,7 @@ extern "C"
     auto hand = xrDevice->getHandInputSource(id);
     if (hand == nullptr)
       return;
-    hand->targetRayBaseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1});
+    hand->targetRayBaseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
   }
 
   DLL_PUBLIC void TransmuteNative_SetHandInputGripPose(int handness, float *translation, float *rotation)
@@ -388,7 +389,7 @@ extern "C"
     auto hand = xrDevice->getHandInputSource(id);
     if (hand == nullptr)
       return;
-    hand->gripBaseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1});
+    hand->gripBaseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
   }
 
   DLL_PUBLIC void TransmuteNative_SetHandInputActionState(int handness, int actionType, int state)

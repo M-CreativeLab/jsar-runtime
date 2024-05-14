@@ -81,12 +81,12 @@ export class XRMatrixPlaceholder extends Float32Array {
    * @param from a given matrix for backup data.
    * @param type placeholder type, which could identify the final matrix value.
    * @param xrSessionId the XR session id that the matrix placeholder belongs to.
-   * @param isLeftHanded if the matrix should be right-handed.
+   * @param useRightHanded if the matrix should be right-handed.
    */
-  constructor(from: Float32Array, public type: XRMatrixPlaceholderType, xrSessionId?: number, isRightHanded?: boolean) {
+  constructor(from: Float32Array, public type: XRMatrixPlaceholderType, xrSessionId?: number, useRightHanded?: boolean) {
     super(from);
     this.xrSessionId = xrSessionId || -1;
-    this.isRightHanded = isRightHanded || true;
+    this.isRightHanded = typeof useRightHanded === 'boolean' ? useRightHanded : true;
   }
 }
 

@@ -239,7 +239,6 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     this._id = xrSessionId;
     this._xrSystem = createBondXRSystem(xrSessionId);
     this.engine = new EngineOnTransmute(glContext, true, {
-      disableWebGL2Support: false,
       xrCompatible: true,
       xrSessionId,
     });
@@ -251,12 +250,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     });
 
     const scene = this._scene = new BABYLON.Scene(this.engine);
-    /**
-     * Forcily use left-handed system to match the coordinate system of WebXR and WebGL. In JSAR environment, because the view matrix
-     * and projection matrix are provided by the runtime which handness is keep consistent with the WebGL convention, thus we don't
-     * support tweaking the handness of the coordinate system by the 3d engines.
-     */
-    scene.useRightHandedSystem = true;
+    scene.useRightHandedSystem = false; /** use left-handed system */
     scene.skipFrustumClipping = false;
 
     this._defaultCamera = new BABYLON.ArcRotateCamera(
@@ -269,7 +263,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
 
     {
       // create default light
-      const dir = new BABYLON.Vector3(0, -2, 5);
+      const dir = new BABYLON.Vector3(0, 2, -5);
       const light = new BABYLON.HemisphericLight(
         'light_front',
         dir,
@@ -308,10 +302,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
       disableTeleportation: true,
       disableNearInteraction: true,
     });
-
-    this.engine.runRenderLoop(() => {
-      scene.render();
-    });
+    this.engine.runRenderLoop(() => scene.render());
   }
 
   get id(): number {

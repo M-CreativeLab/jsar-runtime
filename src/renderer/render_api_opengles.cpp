@@ -251,6 +251,7 @@ private:
 		glGetProgramInfoLog(getProgramInfoLogCommandBuffer->m_ProgramId, infoLogLength, NULL, infoLog);
 		getProgramInfoLogCommandBuffer->CopyInfoLog(infoLog, infoLogLength);
 		delete[] infoLog;
+
 		if (printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::GetProgramInfoLog: %s",
 						isDefaultQueue, getProgramInfoLogCommandBuffer->m_InfoLog);
@@ -390,7 +391,7 @@ private:
 		m_AppGlobalContext.RecordBufferOnDeleted(deleteBufferCommandBuffer->m_BufferId);
 
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::DeleteBuffer: %d", isDefaultQueue, deleteBufferCommandBuffer->m_BufferId);
+			DEBUG(DEBUG_TAG, "[%d] GL::DeleteBuffer(%d)", isDefaultQueue, deleteBufferCommandBuffer->m_BufferId);
 	}
 	void OnBindBuffer(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -407,8 +408,18 @@ private:
 
 		glBindBuffer(target, buffer);
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::BindBuffer(target=0x%x buffer=%d)",
-						isDefaultQueue, target, buffer);
+		{
+			auto targetStr = gles::glEnumToString(target);
+			if (!targetStr.empty() || targetStr != "")
+			{
+				DEBUG(DEBUG_TAG, "[%d] GL::BindBuffer(%s, buffer=%d)",
+							isDefaultQueue, gles::glEnumToString(target).c_str(), buffer);
+			}
+			else
+			{
+				DEBUG(DEBUG_TAG, "[%d] GL::BindBuffer(0x%x, buffer=%d)", isDefaultQueue, target, buffer);
+			}
+		}
 	}
 	void OnBufferData(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -421,8 +432,17 @@ private:
 		glBufferData(target, size, data, usage);
 		if (printsCall)
 		{
-			DEBUG(DEBUG_TAG, "[%d] GL::BufferData(target=0x%x, size=%d usage=0x%x)",
-						isDefaultQueue, target, size, usage);
+			auto targetStr = gles::glEnumToString(target);
+			if (!targetStr.empty() || targetStr != "")
+			{
+				DEBUG(DEBUG_TAG, "[%d] GL::BufferData(%s, size=%d usage=0x%x)",
+							isDefaultQueue, targetStr.c_str(), size, usage);
+			}
+			else
+			{
+				DEBUG(DEBUG_TAG, "[%d] GL::BufferData(0x%x, size=%d usage=0x%x)",
+							isDefaultQueue, target, size, usage);
+			}
 		}
 	}
 	void OnBufferSubData(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
@@ -1132,33 +1152,32 @@ private:
 			}
 			auto multiPassFrame = static_cast<xr::MultiPassFrame *>(deviceFrame);
 			auto placeholderType = uniformMatrix4fvCommandBuffer->m_MatrixPlaceholderType;
-			// auto convertToLHRequired = uniformMatrix4fvCommandBuffer->m_IsRightHanded == false;
+			auto rightHanded = uniformMatrix4fvCommandBuffer->m_IsRightHanded;
 			switch (placeholderType)
 			{
 			case MatrixPlaceholderType::kMatrixPlaceholderProjection:
-				matrixToUse = multiPassFrame->getViewerProjectionMatrix();
+			{
+				auto projection = multiPassFrame->getProjectionMatrix(rightHanded);
+				matrixToUse = glm::value_ptr(projection);
 				break;
+			}
 			case MatrixPlaceholderType::kMatrixPlaceholderView:
 			case MatrixPlaceholderType::kMatrixPlaceholderViewRelativeToLocal:			// TODO
 			case MatrixPlaceholderType::kMatrixPlaceholderViewRelativeToLocalFloor: // TODO
 			{
-				auto viewMatrix = glm::make_mat4(multiPassFrame->getViewerViewMatrix());
 				auto originTransform = glm::make_mat4(multiPassFrame->getLocalTransform(xrSessionId)) * math::getOriginMatrix();
-				auto viewMatrixRelativeToOrigin = math::getViewMatrixWithTransform(viewMatrix, originTransform);
-				matrixToUse = glm::value_ptr(viewMatrixRelativeToOrigin);
+				auto view = multiPassFrame->getViewMatrixWithOffset(originTransform, rightHanded);
+				matrixToUse = glm::value_ptr(view);
 				break;
 			}
 			case MatrixPlaceholderType::kMatrixPlaceholderViewProjection:
 			case MatrixPlaceholderType::kMatrixPlaceholderViewProjectionRelativeToLocal:			// TODO
 			case MatrixPlaceholderType::kMatrixPlaceholderViewProjectionRelativeToLocalFloor: // TODO
 			{
-				auto viewMatrix = glm::make_mat4(multiPassFrame->getViewerViewMatrix());
-				auto projectionMatrix = glm::make_mat4(multiPassFrame->getViewerProjectionMatrix());
-				// TODO: support left-handed?
-
-				auto originTransform = glm::make_mat4(multiPassFrame->getLocalTransform(xrSessionId)) * math::getOriginMatrix();
-				auto viewProjectionMatrixRelativeToOrigin = projectionMatrix * math::getViewMatrixWithTransform(viewMatrix, originTransform);
-				matrixToUse = glm::value_ptr(viewProjectionMatrixRelativeToOrigin);
+				auto offsetTransform = glm::make_mat4(multiPassFrame->getLocalTransform(xrSessionId)) * math::getOriginMatrix();
+				auto view = multiPassFrame->getViewMatrixWithOffset(offsetTransform, rightHanded);
+				auto viewProjection = multiPassFrame->getProjectionMatrix(rightHanded) * view;
+				matrixToUse = glm::value_ptr(viewProjection);
 				break;
 			}
 			default:
@@ -1166,7 +1185,7 @@ private:
 			}
 		}
 		if (matrixToUse == nullptr)
-			matrixToUse = uniformMatrix4fvCommandBuffer->m_Value;
+			matrixToUse = uniformMatrix4fvCommandBuffer->m_Values.data();
 
 		if (matrixToUse == nullptr)
 		{
@@ -1210,8 +1229,12 @@ private:
 		m_DrawCallCountPerFrame += 1;
 		if (printsCall)
 		{
-			DEBUG(DEBUG_TAG, "[%d] GL::DrawElements(mode=%d, count=%d, type=%d, indices=%p)",
-						isDefaultQueue, mode, count, type, indices);
+			GLint frontFace;
+			glGetIntegerv(GL_FRONT_FACE, &frontFace);
+			DEBUG(DEBUG_TAG, "[%d] GL::DrawElements(mode=%s, count=%d, type=%d, indices=%p) frontFace=%s",
+						isDefaultQueue,
+						gles::glEnumToString(mode).c_str(), count, type, indices,
+						gles::glEnumToString(frontFace).c_str());
 		}
 	}
 	void OnDrawBuffers(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
@@ -1332,7 +1355,7 @@ private:
 		glDepthMask(depthMaskCommandBuffer->m_Flag);
 		m_DepthMaskEnabled = depthMaskCommandBuffer->m_Flag;
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::DepthMask: %d", isDefaultQueue, depthMaskCommandBuffer->m_Flag);
+			DEBUG(DEBUG_TAG, "[%d] GL::DepthMask(%d)", isDefaultQueue, depthMaskCommandBuffer->m_Flag);
 	}
 	void OnDepthFunc(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -1466,13 +1489,13 @@ private:
 	void OnColorMask(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
 		auto colorMaskCommandBuffer = static_cast<ColorMaskCommandBuffer *>(commandBuffer);
-		glColorMask(
-				colorMaskCommandBuffer->m_R,
-				colorMaskCommandBuffer->m_G,
-				colorMaskCommandBuffer->m_B,
-				colorMaskCommandBuffer->m_A);
+		auto r = colorMaskCommandBuffer->m_R;
+		auto g = colorMaskCommandBuffer->m_G;
+		auto b = colorMaskCommandBuffer->m_B;
+		auto a = colorMaskCommandBuffer->m_A;
+		glColorMask(r, g, b, a);
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::ColorMask: %d", isDefaultQueue, colorMaskCommandBuffer->m_R);
+			DEBUG(DEBUG_TAG, "[%d] GL::ColorMask(%d, %d, %d, %d)", isDefaultQueue, r, g, b, a);
 	}
 	void OnCullFace(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -1481,7 +1504,12 @@ private:
 		glCullFace(mode);
 		m_AppCullFace = mode;
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::CullFace: mode=%d", isDefaultQueue, mode);
+		{
+			if (mode == GL_FRONT || mode == GL_BACK || mode == GL_FRONT_AND_BACK)
+				DEBUG(DEBUG_TAG, "[%d] GL::CullFace(mode=%s)", isDefaultQueue, gles::glEnumToString(mode).c_str());
+			else
+				DEBUG(DEBUG_TAG, "[%d] GL::CullFace(mode=0x%x)", isDefaultQueue, mode);
+		}
 	}
 	void OnFrontFace(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -1490,7 +1518,12 @@ private:
 		glFrontFace(mode);
 		m_AppFrontFace = mode;
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::FrontFace: mode=%d", isDefaultQueue, mode);
+		{
+			if (mode == GL_CW || mode == GL_CCW)
+				DEBUG(DEBUG_TAG, "[%d] GL::FrontFace(mode=%s)", isDefaultQueue, gles::glEnumToString(mode).c_str());
+			else
+				DEBUG(DEBUG_TAG, "[%d] GL::FrontFace(mode=0x%x)", isDefaultQueue, mode);
+		}
 	}
 	void OnEnable(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -1499,7 +1532,21 @@ private:
 		Enable(cap);
 		m_AppGlobalContext.RecordCapability(cap, true);
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::Enable(0x%x)", isDefaultQueue, cap);
+		{
+			if (cap == GL_BLEND ||
+					cap == GL_CULL_FACE ||
+					cap == GL_DEPTH_TEST ||
+					cap == GL_DITHER ||
+					cap == GL_POLYGON_OFFSET_FILL ||
+					cap == GL_RASTERIZER_DISCARD ||
+					cap == GL_SAMPLE_ALPHA_TO_COVERAGE ||
+					cap == GL_SAMPLE_COVERAGE ||
+					cap == GL_SCISSOR_TEST ||
+					cap == GL_STENCIL_TEST)
+				DEBUG(DEBUG_TAG, "[%d] GL::Enable(%s)", isDefaultQueue, gles::glEnumToString(cap).c_str());
+			else
+				DEBUG(DEBUG_TAG, "[%d] GL::Enable(0x%x)", isDefaultQueue, cap);
+		}
 	}
 	void OnDisable(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -1508,7 +1555,21 @@ private:
 		Disable(cap);
 		m_AppGlobalContext.RecordCapability(cap, false);
 		if (printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::Disable(0x%x)", isDefaultQueue, cap);
+		{
+			if (cap == GL_BLEND ||
+					cap == GL_CULL_FACE ||
+					cap == GL_DEPTH_TEST ||
+					cap == GL_DITHER ||
+					cap == GL_POLYGON_OFFSET_FILL ||
+					cap == GL_RASTERIZER_DISCARD ||
+					cap == GL_SAMPLE_ALPHA_TO_COVERAGE ||
+					cap == GL_SAMPLE_COVERAGE ||
+					cap == GL_SCISSOR_TEST ||
+					cap == GL_STENCIL_TEST)
+				DEBUG(DEBUG_TAG, "[%d] GL::Disable(%s)", isDefaultQueue, gles::glEnumToString(cap).c_str());
+			else
+				DEBUG(DEBUG_TAG, "[%d] GL::Disable(0x%x)", isDefaultQueue, cap);
+		}
 	}
 	void OnGetBooleanv(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
@@ -1626,7 +1687,6 @@ void RenderAPI_OpenGLCoreES::ProcessDeviceEvent(UnityGfxDeviceEventType type, IU
 	if (type == kUnityGfxDeviceEventInitialize)
 	{
 		m_AppFrontFace = GL_CCW;
-		// glGetIntegerv(GL_FRONT_FACE, (GLint *)&m_AppFrontFace);
 		glGetIntegerv(GL_CULL_FACE, (GLint *)&m_AppCullFace);
 	}
 	else if (type == kUnityGfxDeviceEventShutdown)

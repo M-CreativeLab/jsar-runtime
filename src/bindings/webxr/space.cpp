@@ -231,10 +231,8 @@ namespace bindings
     else
     {
       auto multiPassFrame = static_cast<xr::MultiPassFrame *>(frame);
-      auto worldToViewMatrix = multiPassFrame->getViewerViewMatrix();
-      auto projectionMatrix = multiPassFrame->getViewerProjectionMatrix();
-      this->baseMatrix = glm::inverse(createMat4FromArray(worldToViewMatrix));
-      this->projectionMatrix = createMat4FromArray(projectionMatrix);
+      this->baseMatrix = glm::inverse(multiPassFrame->getViewMatrix(true)); // WebGL using right-handed coordinate system
+      this->projectionMatrix = multiPassFrame->getProjectionMatrix(true);
     }
     XRSpaceBase<XRViewSpace>::onPoseUpdate(session, frame);
   }
