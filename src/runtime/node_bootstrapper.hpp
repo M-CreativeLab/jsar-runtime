@@ -14,6 +14,7 @@
 using namespace std;
 using namespace bindings;
 
+NODE_API_LINKED_MODULE(canvas, "transmute:canvas", InitCanvasModule);
 NODE_API_LINKED_MODULE(env, "transmute:env", InitEnvModule);
 NODE_API_LINKED_MODULE(logger, "transmute:logger", InitLoggerModule);
 NODE_API_LINKED_MODULE(messaging, "transmute:messaging", InitMessagingModule);

@@ -164,6 +164,7 @@ int NodeBootstrapper::runNodeInstance()
     AddLinkedBinding(env, transmute_messaging_napi_mod);
     AddLinkedBinding(env, transmute_renderer_napi_mod);
     // AddLinkedBinding(env, transmute_webaudio_napi_mod);
+    AddLinkedBinding(env, transmute_canvas_napi_mod);
     AddLinkedBinding(env, transmute_webgl_napi_mod);
     AddLinkedBinding(env, transmute_webxr_napi_mod);
     // The followings are created by Rust

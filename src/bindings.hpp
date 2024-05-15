@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bindings/canvas/binding.hpp"
 #include "bindings/env/binding.hpp"
 #include "bindings/logger/binding.hpp"
 #include "bindings/messaging/binding.hpp"

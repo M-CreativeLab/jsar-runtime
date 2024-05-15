@@ -18,6 +18,7 @@ set(INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/transmute/_lib)
 file(GLOB TRANSMUTE_CORE_SOURCE
     "src/*.cpp"
     "src/analytics/*.cpp"
+    "src/bindings/canvas/*.cpp"
     "src/bindings/env/*.cpp"
     "src/bindings/logger/*.cpp"
     "src/bindings/messaging/*.cpp"

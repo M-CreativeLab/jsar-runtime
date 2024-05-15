@@ -112,6 +112,9 @@ declare namespace NodeJS {
     _linkedBinding(module: 'transmute:renderer'): {
       RenderLoop: typeof Transmute.RenderLoop;
     };
+    _linkedBinding(module: 'transmute:canvas'): {
+      OffscreenCanvas: typeof OffscreenCanvas;
+    };
     _linkedBinding(module: 'transmute:webgl'): {
       WebGLRenderingContext: typeof Transmute.WebGLRenderingContextOnDevice;
       WebGL2RenderingContext: typeof Transmute.WebGL2RenderingContextOnDevice;

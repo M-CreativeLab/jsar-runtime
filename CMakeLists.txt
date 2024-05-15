@@ -102,6 +102,9 @@ if (APPLE)
     message("CMAKE_OSX_ARCHITECTURES: ${CMAKE_OSX_ARCHITECTURES}")
 endif()
 
+# Enable LTO
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+
 include(cmake/TransmuteCXXFlags.cmake)
 include(cmake/TransmuteCore.cmake)
 
