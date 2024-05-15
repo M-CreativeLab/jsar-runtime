@@ -105,10 +105,19 @@ extern "C"
     }
 
     char enableWebglPlaceholder[PROP_VALUE_MAX];
-    if (__system_property_get("jsar.webgl.placeholder", enableWebglPlaceholder) >= 0)
+    if (
+        /**
+         * When the property is set and the value is not "yes", we will disable the placeholder feature.
+         */
+        __system_property_get("jsar.webgl.placeholder", enableWebglPlaceholder) >= 0 &&
+        strcmp(enableWebglPlaceholder, "yes") != 0)
     {
-      if (strcmp(enableWebglPlaceholder, "yes") == 0)
-        setenv("JSAR_WEBGL_PLACEHOLDER", "yes", 1);
+      setenv("JSAR_WEBGL_PLACEHOLDER", "no", 1);
+    }
+    else
+    {
+      // Enable the placeholder feature by default
+      setenv("JSAR_WEBGL_PLACEHOLDER", "yes", 1);
     }
 
     char exampleUrl[PROP_VALUE_MAX];

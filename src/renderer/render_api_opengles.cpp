@@ -125,11 +125,9 @@ private:
 	void OnLinkProgram(renderer::CommandBuffer *commandBuffer, bool isDefaultQueue, bool printsCall)
 	{
 		auto linkProgramCommandBuffer = static_cast<LinkProgramCommandBuffer *>(commandBuffer);
-		glLinkProgram(linkProgramCommandBuffer->m_ProgramId);
-		m_AppGlobalContext.MarkAsDirty();
-
-		// Update the locations of the uniforms and attributes
 		GLuint program = linkProgramCommandBuffer->m_ProgramId;
+		glLinkProgram(program);
+		m_AppGlobalContext.MarkAsDirty();
 
 		/**
 		 * Check the link status of the program.
