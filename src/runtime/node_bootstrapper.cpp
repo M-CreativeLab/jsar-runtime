@@ -94,7 +94,6 @@ bool NodeBootstrapper::start()
     m_thread = nullptr;
   }
 
-  DEBUG("transmute", "created a new thread to run the nodejs script.");
   m_thread = new std::thread([this]()
                              {
             if (runNodeInstance() != 0)

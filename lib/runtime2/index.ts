@@ -1,8 +1,8 @@
 import 'babylonjs';
 import { JSARDOM } from '@yodaos-jsar/dom';
-import { extname } from 'path';
+import { extname } from 'node:path';
 
-import * as logger from '../bindings/logger';
+import * as logger from '@transmute/logger';
 import { requestRendererReady } from '../bindings/renderer';
 import { markRuntimeAvailable } from '../bindings/env';
 import { addXsmlRequestListener, dispatchXsmlEvent, type XsmlRequestEvent } from '../bindings/messaging';

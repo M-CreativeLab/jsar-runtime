@@ -1,4 +1,3 @@
-import * as logger from '@transmute/logger';
 import WebGLRenderingContextImpl from './WebGLRenderingContext';
 import { WebGLShaderPrecisionFormatImpl } from './WebGLShaderPrecisionFormat';
 import { setupConstantNamesMap, makeNativeCall, type NativeCallOptions, getTextureParametersFromImageSource, isTexImageSource, getPixelsFromTexImageSource, isTypedArray, unpackTypedArray } from './utils';
