@@ -109,7 +109,7 @@ extern "C"
         /**
          * When the property is set and the value is not "yes", we will disable the placeholder feature.
          */
-        __system_property_get("jsar.webgl.placeholder", enableWebglPlaceholder) >= 0 &&
+        __system_property_get("jsar.webgl.placeholder", enableWebglPlaceholder) > 0 &&
         strcmp(enableWebglPlaceholder, "yes") != 0)
     {
       setenv("JSAR_WEBGL_PLACEHOLDER", "no", 1);

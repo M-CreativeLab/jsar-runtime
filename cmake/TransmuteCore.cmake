@@ -56,6 +56,13 @@ include_directories(${NODEJS_HEADERS_PATH} ${NODEJS_HEADERS_PATH}/node)
 set(NODE_ADDON_API_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-addon-api/include)
 include_directories(${NODE_ADDON_API_HEADERS_PATH})
 
+# Add Skia headers
+set(SKIA_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/skia)
+include_directories(
+    ${SKIA_HEADERS_PATH}
+    ${SKIA_HEADERS_PATH}/include
+)
+
 # Add LabSound headers
 set(LABSOUND_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/LabSound/include)
 include_directories(${LABSOUND_HEADERS_PATH})
@@ -152,7 +159,7 @@ if (WIN32)
     target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.lib)
 else()
     target_link_options(${TRANSMUTE_CORE_LIBNAME} PRIVATE -L${THIRDPARTY_LIBRARY_PATH}/lib)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE node)
+    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE node skia)
 endif()
 
 if (APPLE)
