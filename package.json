@@ -15,6 +15,7 @@
     "fontkit": "^2.0.2",
     "jimp": "0.22.10",
     "metaviewport-parser": "^0.3.0",
+    "minimist": "^1.2.8",
     "undici": "^6.3.0",
     "webgl-to-opengl": "^0.0.17",
     "windows-1252": "^3.0.4",
@@ -24,6 +25,7 @@
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "@types/fontkit": "^2.0.5",
+    "@types/minimist": "^1.2.5",
     "@types/node": "^20.3.3",
     "@types/ws": "^8.5.10",
     "ali-oss": "^6.19.0",

@@ -1,11 +1,13 @@
 import * as logger from './logger';
 
 let nativeEnv: Transmute.TransmuteEnvironment = null;
+let nativeContext: Transmute.TrClientContext = null;
 try {
   const binding = process._linkedBinding('transmute:env');
   nativeEnv = new binding.Environment();
+  nativeContext = new binding.ClientContext();
 } catch (err) {
-  logger.error('failed to initialize "transmute:env" module.');
+  logger.error('failed to initialize "transmute:env" module.', err);
 }
 
 class Env {
@@ -47,6 +49,10 @@ export function markRuntimeAvailable(runtimeVersions: string) {
   if (nativeEnv?.markRuntimeAvailable) {
     nativeEnv?.markRuntimeAvailable(runtimeVersions);
   }
+}
+
+export function getClientContext(): Transmute.TrClientContext {
+  return nativeContext;
 }
 
 // by default, it creates env instance.

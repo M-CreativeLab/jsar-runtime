@@ -1,7 +1,20 @@
-import * as logger from './bindings/logger';
-import { createEnv, getRuntimeInit } from './bindings/env';
+import minimist from 'minimist';
+import * as logger from '@transmute/logger';
+import { getClientContext } from '@transmute/env';
+
+const args = minimist(process.argv.slice(1));
+const clientContext = getClientContext();
+
+logger.info('The command line arguments:', args);
 
 const bootstrapStart = performance.now();
+const id = args.id || 'unknown';
+logger.info('Starting the JavaScript runtime => ' + id, process.argv);
+process.title = `TrScript ${id}`;
+
+setInterval(() => {
+  logger.info(`${id} is running...`)
+}, 2000);
 
 /**
  * See https://nodejs.org/api/events.html#eventtarget-error-handling
@@ -22,19 +35,19 @@ Message: ${err?.message || err || 'null'}
 process.on('uncaughtException', handleGlobalExceptionOrRejection);
 process.on('unhandledRejection', handleGlobalExceptionOrRejection);
 
-import { InitializeOffscreenCanvas } from './polyfills'; // load polyfills after the global error handler
-import { connectRenderer, requestGpuBusyCallback } from './bindings/renderer';
-import { prepareXRSystem } from './webxr';
-import { TransmuteRuntime2 } from './runtime2';
+// import { InitializeOffscreenCanvas } from './polyfills'; // load polyfills after the global error handler
+// import { connectRenderer, requestGpuBusyCallback } from './bindings/renderer';
+// import { prepareXRSystem } from './webxr';
+// import { TransmuteRuntime2 } from './runtime2';
 
-let runtime: TransmuteRuntime2;
-requestGpuBusyCallback(() => {
-  if (runtime && typeof runtime.onGpuBusy === 'function') {
-    runtime.onGpuBusy();
-  } else {
-    process.exit(1);
-  }
-});
+// let runtime: TransmuteRuntime2;
+// requestGpuBusyCallback(() => {
+//   if (runtime && typeof runtime.onGpuBusy === 'function') {
+//     runtime.onGpuBusy();
+//   } else {
+//     process.exit(1);
+//   }
+// });
 
 (async function main() {
   try {
@@ -45,19 +58,19 @@ requestGpuBusyCallback(() => {
       logger.info(`  ${key}: ${value}`);
     }
 
-    createEnv();
-    const init = getRuntimeInit();
-    logger.info('The runtimeInit:', init);
+    // createEnv();
+    // const init = getRuntimeInit();
+    logger.info('The context init is:', clientContext);
 
     // Initialize the OffscreenCanvas polyfill.
-    await InitializeOffscreenCanvas({ loadSystemFonts: true });
-    logger.info(`The Skia initialization takes ${performance.now() - runtimeStart}ms`);
+    // await InitializeOffscreenCanvas({ loadSystemFonts: true });
+    // logger.info(`The Skia initialization takes ${performance.now() - runtimeStart}ms`);
 
-    connectRenderer();
-    await prepareXRSystem();
+    // connectRenderer();
+    // await prepareXRSystem();
 
-    runtime = new TransmuteRuntime2();
-    runtime.start();
+    // runtime = new TransmuteRuntime2();
+    // runtime.start();
 
     const initializedEnd = performance.now();
     logger.info('Finished TransmuteRuntime2() instance creation');

@@ -20,6 +20,10 @@ declare namespace Transmute {
     markRuntimeAvailable(versions: string): void;
   }
 
+  class TrClientContext {
+    getContext(): object;
+  }
+
   type RenderExceptionCallback = (code: number) => void;
   /**
    * The render loop is the backend implementation for `requestAnimationFrame` and `cancelAnimationFrame`.
@@ -105,6 +109,7 @@ declare namespace NodeJS {
     };
     _linkedBinding(module: 'transmute:env'): {
       Environment: typeof Transmute.TransmuteEnvironment;
+      ClientContext: typeof Transmute.TrClientContext;
     };
     _linkedBinding(module: 'transmute:messaging'): {
       NativeEventTarget: typeof Transmute.NativeEventTarget;

@@ -3,9 +3,10 @@
 #include "math/matrix.hpp"
 #include "base.hpp"
 #include "logger.hpp"
-#include "node_bootstrapper.hpp"
 
 #include "platform_base.hpp"
+#include "content.hpp"
+#include "constellation.hpp"
 #include "renderer/render_api.hpp"
 
 #ifndef TRANSMUTE_STANDALONE

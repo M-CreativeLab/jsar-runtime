@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "debug.hpp"
 #include "entry.hpp"
+#include "native_event.hpp"
 #include "xr/device.hpp"
 
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
@@ -38,9 +39,12 @@ extern "C"
     OnPlatformSetup();
 
     // Bootstrap the Node.js instance
-    auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
-    nodejsBootstrapper->initialize();
-    nodejsBootstrapper->start();
+    // auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
+    // nodejsBootstrapper->initialize();
+    // nodejsBootstrapper->start();
+
+    // Bootstrap the new Content Manager
+    TrConstellation::Create();
   }
 
   DLL_PUBLIC void UnityPluginUnload()
@@ -162,9 +166,9 @@ extern "C"
     xr::Device::Create();
     OnPlatformSetup();
 
-    auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
-    nodejsBootstrapper->initialize();
-    nodejsBootstrapper->start();
+    // auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
+    // nodejsBootstrapper->initialize();
+    // nodejsBootstrapper->start();
   }
 
   DLL_PUBLIC void TransmuteNative_Prepare()
@@ -182,24 +186,25 @@ extern "C"
 
   DLL_PUBLIC bool TransmuteNative_GetEventFromJavaScript(int *id, int *type, uint32_t *size)
   {
-    auto nativeEventTarget = messaging::UnityEventListenerWrap::GetInstance();
-    if (nativeEventTarget == nullptr)
-      return false;
-    return nativeEventTarget->GetEvent(id, type, nullptr, size, false);
+    // auto nativeEventTarget = messaging::UnityEventListenerWrap::GetInstance();
+    // if (nativeEventTarget == nullptr)
+    //   return false;
+    // return nativeEventTarget->GetEvent(id, type, nullptr, size, false);
+    return false;
   }
 
   DLL_PUBLIC void TransmuteNative_GetEventDataFromJavaScript(const char *data)
   {
-    auto nativeEventTarget = messaging::UnityEventListenerWrap::GetInstance();
-    if (nativeEventTarget != nullptr)
-      nativeEventTarget->GetEvent(nullptr, nullptr, data, nullptr, true);
+    // auto nativeEventTarget = messaging::UnityEventListenerWrap::GetInstance();
+    // if (nativeEventTarget != nullptr)
+    //   nativeEventTarget->GetEvent(nullptr, nullptr, data, nullptr, true);
   }
 
   DLL_PUBLIC bool TransmuteNative_IsRuntimeUp()
   {
-    auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
-    if (!nodejsBootstrapper->isRunning())
-      return false;
+    // auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
+    // if (!nodejsBootstrapper->isRunning())
+    //   return false;
 
     // TODO: Check if the runtime is up
     return true;
@@ -207,13 +212,14 @@ extern "C"
 
   DLL_PUBLIC bool TransmuteNative_IsRuntimeAvailable()
   {
-    auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
-    return nodejsBootstrapper->isRuntimeAvailable();
+    // auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
+    // return nodejsBootstrapper->isRuntimeAvailable();
+    return true;
   }
 
   DLL_PUBLIC void TransmuteNative_OnRenderFrame()
   {
-    if (s_CurrentAPI == NULL || !NodeBootstrapper::IsInstanceRunning())
+    if (s_CurrentAPI == NULL || !TrConstellation::Get()->isInitialized())
       return;
 
     auto code = s_CurrentAPI->ExecuteFrame();
@@ -234,15 +240,23 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_DispatchNativeEvent(int id, int type, const char *data)
   {
-    auto nativeEventTarget = messaging::UnityEventListenerWrap::GetInstance();
-    if (nativeEventTarget != nullptr)
-      nativeEventTarget->DispatchNativeEvent(id, type, data);
+    // auto nativeEventTarget = messaging::UnityEventListenerWrap::GetInstance();
+    // if (nativeEventTarget != nullptr)
+    //   nativeEventTarget->DispatchNativeEvent(id, type, data);
+    native_event::TrNativeEventTarget::GetOrCreateInstance()->dispatchEvent(id, (native_event::TrEventType)type, data);
   }
 
   DLL_PUBLIC void TransmuteNative_SetRuntimeInit(const char *argJson)
   {
-    auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
-    nodejsBootstrapper->getEnv()->setRuntimeInit(argJson);
+    // auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
+    // nodejsBootstrapper->getEnv()->setRuntimeInit(argJson);
+    auto constellation = TrConstellation::Get();
+    if (constellation == nullptr)
+    {
+      DEBUG(LOG_TAG_UNITY, "Constellation instance is not available");
+      return;
+    }
+    constellation->initialize(argJson);
   }
 
   DLL_PUBLIC void TransmuteNative_SetViewport(int w, int h)
