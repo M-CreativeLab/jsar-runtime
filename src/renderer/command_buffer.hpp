@@ -4,6 +4,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <map>
+#include <vector>
 #include "debug.hpp"
 
 using namespace std;

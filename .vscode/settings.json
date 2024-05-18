@@ -81,6 +81,7 @@
     "functional": "cpp",
     "charconv": "cpp",
     "filesystem": "cpp",
-    "iterator": "cpp"
+    "iterator": "cpp",
+    "regex": "cpp"
   }
 }

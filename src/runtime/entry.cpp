@@ -166,9 +166,7 @@ extern "C"
     xr::Device::Create();
     OnPlatformSetup();
 
-    // auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
-    // nodejsBootstrapper->initialize();
-    // nodejsBootstrapper->start();
+    // TODO: Bootstrap?
   }
 
   DLL_PUBLIC void TransmuteNative_Prepare()
@@ -219,8 +217,12 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_OnRenderFrame()
   {
-    if (s_CurrentAPI == NULL || !TrConstellation::Get()->isInitialized())
+    if (s_CurrentAPI == NULL)
       return;
+    auto constellation = TrConstellation::Get();
+    if (constellation == nullptr || !constellation->isInitialized())
+      return;
+    constellation->tick();
 
     auto code = s_CurrentAPI->ExecuteFrame();
     switch (code)

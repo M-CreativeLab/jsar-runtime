@@ -6,30 +6,32 @@ TrConstellationInit::TrConstellationInit()
 {
 }
 
-TrConstellation* TrConstellation::s_Instance = nullptr;
-TrConstellation* TrConstellation::Create()
+TrConstellation *TrConstellation::s_Instance = nullptr;
+TrConstellation *TrConstellation::Create()
 {
   if (s_Instance == nullptr)
     s_Instance = new TrConstellation();
   return s_Instance;
 }
 
-TrConstellation* TrConstellation::Get()
+TrConstellation *TrConstellation::Get()
 {
   return s_Instance;
 }
 
 TrConstellation::TrConstellation()
 {
+  srand(static_cast<unsigned int>(time(nullptr)));
 }
 
 TrConstellation::~TrConstellation()
 {
   if (contentManager != nullptr)
     delete contentManager;
+  initialized = false;
 }
 
-void TrConstellation::initialize(const char* initJson)
+void TrConstellation::initialize(const char *initJson)
 {
   rapidjson::Document initDoc;
   initDoc.Parse(initJson);
@@ -46,12 +48,25 @@ void TrConstellation::initialize(const char* initJson)
   if (initDoc.HasMember("isXRSupported") && initDoc["isXRSupported"].IsBool())
     options.isXRSupported = initDoc["isXRSupported"].GetBool();
 
+  Dl_info dlinfo;
+  if (dladdr((void *)TrConstellation::Create, &dlinfo))
+    options.runtimeDirectory = path(dlinfo.dli_fname).parent_path().c_str();
+  else
+    DEBUG(LOG_TAG_CONSTELLATION, "Failed to get the runtime path from current host");
+
   contentManager = new TrContentManager(this);
   contentManager->initialize();
   initialized = true;
 }
 
-TrContentManager* TrConstellation::getContentManager()
+void TrConstellation::tick()
+{
+  if (initialized == false)
+    return;
+  // TODO: Implement this
+}
+
+TrContentManager *TrConstellation::getContentManager()
 {
   if (initialized == false)
   {
@@ -61,7 +76,7 @@ TrContentManager* TrConstellation::getContentManager()
   return contentManager;
 }
 
-TrConstellationInit& TrConstellation::getOptions()
+TrConstellationInit &TrConstellation::getOptions()
 {
   return options;
 }

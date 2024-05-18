@@ -1,30 +1,5 @@
-set(STATICLIB_EXTNAME a)
-set(DYNAMICLIB_EXTNAME so)
-set(LIBRARY_PREFIX lib)
-if (APPLE)
-    set(DYNAMICLIB_EXTNAME dylib)
-elseif (WIN32)
-    set(STATICLIB_EXTNAME lib)
-    set(DYNAMICLIB_EXTNAME dll)
-    set(LIBRARY_PREFIX "")
-endif()
-
-function(transmute_add_library LIBRARY_DIRECTORY LIBRARY_NAME)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME}
-        PRIVATE ${LIBRARY_DIRECTORY}/${LIBRARY_PREFIX}${LIBRARY_NAME}.${STATICLIB_EXTNAME})
-endfunction()
-
-set(INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/transmute/_lib)
-file(GLOB TRANSMUTE_CORE_SOURCE
-    "src/*.cpp"
+file(GLOB TR_CORE_SOURCE
     "src/analytics/*.cpp"
-    "src/bindings/canvas/*.cpp"
-    "src/bindings/env/*.cpp"
-    "src/bindings/logger/*.cpp"
-    "src/bindings/messaging/*.cpp"
-    "src/bindings/renderer/*.cpp"
-    "src/bindings/webgl/*.cpp"
-    "src/bindings/webxr/*.cpp"
     "src/math/*.cpp"
     "src/runtime/*.cpp"
     "src/renderer/*.cpp"
@@ -32,67 +7,15 @@ file(GLOB TRANSMUTE_CORE_SOURCE
     "src/xr/*.cpp"
 )
 if(APPLE)
-    file(GLOB TRANSMUTE_CORE_SOURCE_MM "src/renderer/*.mm")
-    list(APPEND TRANSMUTE_CORE_SOURCE ${TRANSMUTE_CORE_SOURCE_MM})
+    file(GLOB TR_CORE_SOURCE_MM "src/renderer/*.mm")
+    list(APPEND TR_CORE_SOURCE ${TR_CORE_SOURCE_MM})
 endif()
-
-# file(GLOB TRANSMUTE_PROTO_SOURCE "src/proto/*.pb.cc")
 
 set(TRANSMUTE_CORE_LIBNAME TransmuteCore)
-add_library(TransmuteCore SHARED ${TRANSMUTE_CORE_SOURCE} ${TRANSMUTE_PROTO_SOURCE})
-
-# Set the common include directories
-include_directories(
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/proto
-    ${CMAKE_SOURCE_DIR}/thirdparty/headers
+add_library(TransmuteCore SHARED 
+    ${TR_COMMON_SOURCE}
+    ${TR_CORE_SOURCE}
 )
-
-# Add Node.js headers
-set(NODEJS_VERSION 18.12.1)
-set(NODEJS_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-v${NODEJS_VERSION}/include)
-include_directories(${NODEJS_HEADERS_PATH} ${NODEJS_HEADERS_PATH}/node)
-
-# Add Node Addon API headers
-set(NODE_ADDON_API_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-addon-api/include)
-include_directories(${NODE_ADDON_API_HEADERS_PATH})
-
-# Add Skia headers
-set(SKIA_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/skia)
-include_directories(
-    ${SKIA_HEADERS_PATH}
-    ${SKIA_HEADERS_PATH}/include
-)
-
-# Add LabSound headers
-set(LABSOUND_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/LabSound/include)
-include_directories(${LABSOUND_HEADERS_PATH})
-
-# Add Unity headers
-set(UNITY_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/Unity/include)
-include_directories(${UNITY_HEADERS_PATH})
-
-# Add rust crates headers & libraries
-include_directories(${CMAKE_SOURCE_DIR}/build/output/headers)
-if (APPLE)
-    set(TRANSMUTE_CRATE_TARGET universal-apple-darwin/)
-elseif (ANDROID)
-    set(TRANSMUTE_CRATE_TARGET aarch64-linux-android/)
-elseif (WIN32)
-    set(TRANSMUTE_CRATE_TARGET x86_64-pc-windows-msvc/)
-endif()
-message(STATUS "TRANSMUTE_CRATE_TARGET: ${TRANSMUTE_CRATE_TARGET}")
-transmute_add_library(${CMAKE_SOURCE_DIR}/build/output/crates/${TRANSMUTE_CRATE_TARGET}release jsar_jsbindings)
-
-# Optional dependencies
-if (APPLE)
-    set(THIRDPARTY_LIBRARY_PATH ${CMAKE_SOURCE_DIR}/thirdparty/libs/${CMAKE_SYSTEM_NAME})
-elseif (WIN32)
-    set(THIRDPARTY_LIBRARY_PATH ${CMAKE_SOURCE_DIR}/thirdparty/libs/${CMAKE_SYSTEM_NAME}/x86_64)
-else()
-    set(THIRDPARTY_LIBRARY_PATH ${CMAKE_SOURCE_DIR}/thirdparty/libs/${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR})
-endif()
-message(STATUS "Thirdparty library path: ${THIRDPARTY_LIBRARY_PATH}")
 
 if(APPLE)
     set(APPLE_RENDERER_DEPS
@@ -154,85 +77,27 @@ endif()
 #     target_link_options(${TRANSMUTE_CORE_LIBNAME} PRIVATE -Wl,-undefined,dynamic_lookup)
 # endif()
 
-# Link to the Node.js library
 if (WIN32)
-    link_directories(${THIRDPARTY_LIBRARY_PATH}/lib)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.lib)
-else()
-    target_link_options(${TRANSMUTE_CORE_LIBNAME} PRIVATE -L${THIRDPARTY_LIBRARY_PATH}/lib)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE node skia)
+    foreach (source IN LISTS TRANSMUTE_CORE_SOURCE)
+        file(RELATIVE_PATH source_rel ${CMAKE_CURRENT_LIST_DIR} ${source})
+        get_filename_component(source_path "${source_rel}" PATH)
+        string(REPLACE "/" "\\" source_path_msvc "${source_path}")
+        source_group("${source_path_msvc}" FILES "${source}")
+    endforeach ()
 endif()
 
-if (APPLE)
-    set_target_properties(${TRANSMUTE_CORE_LIBNAME} PROPERTIES
-        INSTALL_RPATH "@loader_path"
-        BUILD_WITH_INSTALL_RPATH TRUE
-        SUFFIX ".dylib"
-    )
-elseif (ANDROID)
-    target_link_options(${TRANSMUTE_CORE_LIBNAME} PRIVATE -Wl,-rpath,'$ORIGIN')
-    set_target_properties(${TRANSMUTE_CORE_LIBNAME} PROPERTIES
-        SUFFIX ".so"
-        INSTALL_RPATH "$ORIGIN"
-        BUILD_WITH_INSTALL_RPATH TRUE
-    )
-elseif (WIN32)
-    set_target_properties(${TRANSMUTE_CORE_LIBNAME} PROPERTIES
-        SUFFIX ".dll"
-    )
-endif ()
+tr_target_set_properties(TransmuteCore)
+tr_target_install(TransmuteCore)
 
-if (ANDROID)
-    # Android has a custom toolchain so pthread is not available and should
-    # link against other libraries as well for logcat and internal features.
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE android log)
-elseif (LINUX)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE X11 pthread)
-elseif (WIN32)
-    target_link_libraries(${TRANSMUTE_CORE_LIBNAME} PRIVATE Winmm)
-endif()
-
-foreach (source IN LISTS TRANSMUTE_CORE_SOURCE)
-    file(RELATIVE_PATH source_rel ${CMAKE_CURRENT_LIST_DIR} ${source})
-    get_filename_component(source_path "${source_rel}" PATH)
-    string(REPLACE "/" "\\" source_path_msvc "${source_path}")
-    source_group("${source_path_msvc}" FILES "${source}")
-endforeach ()
-
-# Install the library
-set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/build/output/release)
-set(TRANSMUTE_RELEASE_DEST unknown)
-
-if (APPLE)
-    set(TRANSMUTE_RELEASE_DEST universal-apple-darwin)
-elseif (ANDROID)
-    set(TRANSMUTE_RELEASE_DEST aarch64-linux-android)
-elseif (WIN32)
-    set(TRANSMUTE_RELEASE_DEST x86_64-pc-windows-msvc)
-endif()
-
-# Install project's library
-install(TARGETS ${TRANSMUTE_CORE_LIBNAME} DESTINATION ${TRANSMUTE_RELEASE_DEST})
-
-# Install the dependencies
-if (APPLE)
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.dylib DESTINATION ${TRANSMUTE_RELEASE_DEST})
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.108.dylib DESTINATION ${TRANSMUTE_RELEASE_DEST})
-elseif (ANDROID)
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.so DESTINATION ${TRANSMUTE_RELEASE_DEST})
-elseif (WIN32)
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.dll DESTINATION ${TRANSMUTE_RELEASE_DEST})
-endif()
-
-# Add Tools Function
-function(ADD_JSAR_TOOL EXECUTABLE_NAME SOURCE_FILE)
+# Add examples
+# TODO: move to a separate TransmuteExample.cmake?
+function(tr_add_example EXECUTABLE_NAME SOURCE_FILE)
     add_executable(${EXECUTABLE_NAME} ${SOURCE_FILE})
     target_compile_definitions(${EXECUTABLE_NAME} PRIVATE TRANSMUTE_STANDALONE)
-    target_include_directories(${EXECUTABLE_NAME} PRIVATE ${NODE_ADDON_API_HEADERS_PATH})
     target_include_directories(${EXECUTABLE_NAME} PRIVATE /opt/homebrew/Cellar/glfw/3.4/include)
 
     target_link_options(${EXECUTABLE_NAME} PRIVATE -L/opt/homebrew/Cellar/glfw/3.4/lib)
-    target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${TRANSMUTE_CORE_LIBNAME} glfw)
+    target_link_libraries(${EXECUTABLE_NAME} PRIVATE TransmuteCore glfw)
 
     if (APPLE)
         target_link_libraries(${EXECUTABLE_NAME} PRIVATE "-framework OpenGL")
@@ -246,20 +111,11 @@ function(ADD_JSAR_TOOL EXECUTABLE_NAME SOURCE_FILE)
             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
         )
     endif()
-
     if (WIN32)
         target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.lib)
     endif()
 endfunction()
 
-# Add Tools
 if (APPLE)
-    ADD_JSAR_TOOL(glapp "src/tools/gl-desktop.cpp")
-    # Install the libraries to the build directory.
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.108.dylib DESTINATION ${CMAKE_BINARY_DIR})
-elseif (WIN32)
-    # ADD_JSAR_TOOL(test-jsar "Source/tools/tester.cpp")
-    # Install the libraries to the build directory.
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.lib DESTINATION ${CMAKE_BINARY_DIR}/Release)
-    install(FILES ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.dll DESTINATION ${CMAKE_BINARY_DIR}/Release)
+    tr_add_example(glapp "src/tools/gl-desktop.cpp")
 endif()

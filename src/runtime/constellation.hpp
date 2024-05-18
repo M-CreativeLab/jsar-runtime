@@ -2,9 +2,15 @@
 
 #include <string>
 #include <vector>
+#include <cstdlib>
+#include <ctime>
+#include <filesystem>
+
+#include <dlfcn.h>
 #include "debug.hpp"
 
 using namespace std;
+using namespace std::filesystem;
 
 class TrContentRuntime;
 class TrContentManager;
@@ -15,6 +21,7 @@ public:
   TrConstellationInit();
 
 public:
+  string runtimeDirectory;
   string applicationCacheDirectory;
   string httpsProxyServer;
   bool isXRSupported;
@@ -32,8 +39,9 @@ private:
 
 public:
   void initialize(const char *initJson);
+  void tick();
   TrContentManager *getContentManager();
-  TrConstellationInit& getOptions();
+  TrConstellationInit &getOptions();
   bool isInitialized();
 
 private:

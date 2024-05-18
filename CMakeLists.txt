@@ -106,7 +106,9 @@ endif()
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 
 include(cmake/TransmuteCXXFlags.cmake)
+include(cmake/TransmuteCommon.cmake)
 include(cmake/TransmuteCore.cmake)
+include(cmake/TransmuteClient.cmake)
 
 message("C++ Flags: ${CMAKE_CXX_FLAGS}")
 message("Build type: ${CMAKE_BUILD_TYPE}")

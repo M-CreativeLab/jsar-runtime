@@ -4,8 +4,6 @@
 #include "render_api.hpp"
 #include "runtime/platform_base.hpp"
 #include "xr/frame.hpp"
-#include "bindings/renderer/render_loop.hpp"
-#include "bindings/webxr/device_native.hpp"
 
 RenderAPI *RenderAPI::s_instance = NULL;
 RenderAPI *RenderAPI::Create(UnityGfxRenderer apiType)
@@ -17,11 +15,11 @@ RenderAPI *RenderAPI::Create(UnityGfxRenderer apiType)
 
 FrameExecutionCode RenderAPI::ExecuteFrame()
 {
-	auto jsRenderLoop = renderer::RenderLoop::GetInstance();
-	if (jsRenderLoop == nullptr)
-		return kFrameExecutionNotInitialized;
-	if (!jsRenderLoop->isAvailable())
-		return kFrameExecutionNotAvailable;
+	// auto jsRenderLoop = renderer::RenderLoop::GetInstance();
+	// if (jsRenderLoop == nullptr)
+	// 	return kFrameExecutionNotInitialized;
+	// if (!jsRenderLoop->isAvailable())
+	// 	return kFrameExecutionNotAvailable;
 
 	auto device = xr::Device::GetInstance();
 	if (device == nullptr)
@@ -36,7 +34,7 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 	{
 		DEBUG(TR_RENDERAPI_TAG, "Skipped this time of frame, because the GPU busy is busy over 20 times, hit count=%d",
 					m_GpuBusyHitCount);
-		jsRenderLoop->reportException(kFrameExecutionGpuBusy);
+		// jsRenderLoop->reportException(kFrameExecutionGpuBusy);
 		return kFrameExecutionGpuBusy;
 	}
 
@@ -52,7 +50,7 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 	 */
 	if (!skipFrameOnScript)
 	{
-		jsRenderLoop->onAnimationFrame(frameStartedAt);
+		// jsRenderLoop->onAnimationFrame(frameStartedAt);
 	}
 	// Executing the command buffers in the default queue.
 	ExecuteCommandBuffer();
@@ -192,9 +190,6 @@ bool RenderAPI::CheckGpuBusyStatus()
 
 RenderAPI *CreateRenderAPI(UnityGfxRenderer apiType)
 {
-	// Initialize the canvas thread
-	jsar_load_gl();
-
 #if SUPPORT_D3D11
 	if (apiType == kUnityGfxRendererD3D11)
 	{

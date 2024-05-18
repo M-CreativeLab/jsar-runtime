@@ -1,7 +1,7 @@
 #pragma once
 
 #include <napi.h>
-#include "runtime/per_process.hpp"
+#include "client/per_process.hpp"
 
 using namespace std;
 

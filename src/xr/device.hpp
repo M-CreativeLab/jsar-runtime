@@ -10,7 +10,6 @@
 #include "frame.hpp"
 #include "viewport.hpp"
 #include "input_source.hpp"
-#include "bindings/webxr/device_native.hpp"
 
 using namespace std;
 

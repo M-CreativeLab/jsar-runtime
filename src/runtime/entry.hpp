@@ -2,7 +2,6 @@
 
 #include "math/matrix.hpp"
 #include "base.hpp"
-#include "logger.hpp"
 
 #include "platform_base.hpp"
 #include "content.hpp"

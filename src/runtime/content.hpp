@@ -1,11 +1,14 @@
 #pragma once
 
 #include <atomic>
+#include <filesystem>
+
 #include "native_event.hpp"
 #include "constellation.hpp"
-#include "per_process.hpp"
+#include "ipc.hpp"
 
 using namespace std;
+using namespace ipc;
 
 class TrContentManager;
 class TrContentRuntime
@@ -26,16 +29,10 @@ private:
 
 private:
   pid_t pid;
-  bool isClient;
+  int channelServerPort;
   native_event::TrXSMLRequestInit requestInit;
   TrConstellationInit constellationOptions;
   TrContentManager *contentManager;
-
-  /**
-   * The followings are per-process instances, which should be created for child processes.
-   */
-  TrClientContextPerProcess *clientContext;
-  TrScriptRuntimePerProcess *scriptRuntime;
   // Layout?
   // XR?
 };
@@ -60,6 +57,8 @@ private:
 
 private:
   TrConstellation *constellation;
+  TrOneShotServer<CustomEvent> *eventChanServer;
+  thread *eventChanWorker;
   vector<TrContentRuntime *> contentRuntimes;
 
   friend class TrContentRuntime;

@@ -17,17 +17,3 @@
 #endif
 #endif
 
-#define NODE_API_LINKED_MODULE(varname, modname, regfunc)              \
-  static napi_value __napi_##regfunc(napi_env env, napi_value exports) \
-  {                                                                    \
-    return Napi::RegisterModule(env, exports, regfunc);                \
-  }                                                                    \
-  static napi_module transmute_##varname##_napi_mod = {                \
-      NAPI_MODULE_VERSION,                                             \
-      node::ModuleFlags::kLinked,                                      \
-      nullptr,                                                         \
-      __napi_##regfunc,                                                \
-      modname,                                                         \
-      nullptr,                                                         \
-      {0},                                                             \
-  };

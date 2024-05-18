@@ -412,10 +412,10 @@ namespace xr
 
   void Device::onXRFrame(DeviceFrame *frame)
   {
-    auto jsDeviceNative = bindings::XRDeviceNative::GetInstance();
-    if (jsDeviceNative == NULL)
-      return;
-    jsDeviceNative->onFrame(frame);
+    // auto jsDeviceNative = bindings::XRDeviceNative::GetInstance();
+    // if (jsDeviceNative == NULL)
+    //   return;
+    // jsDeviceNative->onFrame(frame);
   }
 
   float Device::getTime()
