@@ -36,18 +36,18 @@ process.on('uncaughtException', handleGlobalExceptionOrRejection);
 process.on('unhandledRejection', handleGlobalExceptionOrRejection);
 
 // import { InitializeOffscreenCanvas } from './polyfills'; // load polyfills after the global error handler
-// import { connectRenderer, requestGpuBusyCallback } from './bindings/renderer';
+import { connectRenderer, requestGpuBusyCallback } from './bindings/renderer';
 // import { prepareXRSystem } from './webxr';
 // import { TransmuteRuntime2 } from './runtime2';
 
 // let runtime: TransmuteRuntime2;
-// requestGpuBusyCallback(() => {
-//   if (runtime && typeof runtime.onGpuBusy === 'function') {
-//     runtime.onGpuBusy();
-//   } else {
-//     process.exit(1);
-//   }
-// });
+requestGpuBusyCallback(() => {
+  // if (runtime && typeof runtime.onGpuBusy === 'function') {
+  //   runtime.onGpuBusy();
+  // } else {
+  //   process.exit(1);
+  // }
+});
 
 (async function main() {
   try {
@@ -66,7 +66,7 @@ process.on('unhandledRejection', handleGlobalExceptionOrRejection);
     // await InitializeOffscreenCanvas({ loadSystemFonts: true });
     // logger.info(`The Skia initialization takes ${performance.now() - runtimeStart}ms`);
 
-    // connectRenderer();
+    connectRenderer();
     // await prepareXRSystem();
 
     // runtime = new TransmuteRuntime2();

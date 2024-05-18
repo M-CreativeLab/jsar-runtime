@@ -52,6 +52,7 @@ node_modules
 /build/output
 /build/Debug
 /build/Release
+/build/TransmuteClient
 /src/proto/*
 !/src/proto/*.proto
 *.apk

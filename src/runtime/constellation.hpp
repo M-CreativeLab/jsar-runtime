@@ -8,6 +8,7 @@
 
 #include <dlfcn.h>
 #include "debug.hpp"
+#include "renderer/renderer.hpp"
 
 using namespace std;
 using namespace std::filesystem;
@@ -40,13 +41,15 @@ private:
 public:
   void initialize(const char *initJson);
   void tick();
-  TrContentManager *getContentManager();
   TrConstellationInit &getOptions();
   bool isInitialized();
+  TrContentManager *getContentManager();
+  renderer::TrRenderer *getRenderer();
 
 private:
   TrConstellationInit options;
   TrContentManager *contentManager = nullptr;
+  renderer::TrRenderer *renderer = nullptr;
   bool initialized = false;
 
 private:

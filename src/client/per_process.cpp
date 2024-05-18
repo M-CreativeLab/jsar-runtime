@@ -228,12 +228,12 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
 
 void TrClientContextPerProcess::start()
 {
-  channelSender = new ipc::TrChannelSender<ipc::CustomEvent>(channelServerPort);
-  channelSender->connect();
-  DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) connected to the channel server", id);
+  channelSender = new ipc::TrChannelSender<CustomEvent>(channelServerPort);
+  if (channelSender->connect())
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) connected to the channel server", id);
 
   // Just for test
-  channelSender->send(ipc::CustomEvent(123));
+  channelSender->send(CustomEvent(123));
 }
 
 void TrClientContextPerProcess::print()

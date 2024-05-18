@@ -14,6 +14,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/socket.h>
+#include <sys/poll.h>
 #include <sys/un.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -22,19 +23,12 @@
 #include <sys/epoll.h>
 #endif
 #include "debug.hpp"
+#include "messages.hpp"
 
 using namespace std;
 
 namespace ipc
 {
-  class CustomEvent
-  {
-  public:
-    CustomEvent() : foobar(0) {}
-    CustomEvent(int v) : foobar(v) {}
-    int foobar;
-  };
-
   enum TrChannelType
   {
     TR_CHANNEL_TYPE_SHM,
@@ -43,10 +37,17 @@ namespace ipc
   };
 
   template <typename T>
+  class TrOneShotClient;
+
+  template <typename T>
+  class TrOneShotServer;
+
+  template <typename T>
   class TrChannelSender
   {
   public:
     TrChannelSender(int port);
+    TrChannelSender(TrOneShotClient<T> *client);
     ~TrChannelSender();
 
     bool connect();
@@ -55,6 +56,7 @@ namespace ipc
   private:
     int port;
     int fd;
+    bool blocking;
   };
 
   template <typename T>
@@ -62,13 +64,32 @@ namespace ipc
   {
   public:
     TrChannelReceiver(int fd);
+    TrChannelReceiver(TrOneShotClient<T> *client);
     ~TrChannelReceiver();
 
   public:
-    T *tryRecv();
+    T *tryRecv(int timeout = 0);
+    int getFd() { return fd; }
 
   private:
     int fd;
+    bool blocking;
+  };
+
+  template <typename T>
+  class TrOneShotClient
+  {
+  private:
+    TrOneShotClient(int fd, bool blocking) : fd(fd), blocking(blocking)
+    {
+      DEBUG(LOG_TAG_IPC, "a new client is created(%d, blocking=%d)", fd, blocking);
+    }
+    int fd;
+    bool blocking;
+
+    friend class TrOneShotServer<T>;
+    friend class TrChannelSender<T>;
+    friend class TrChannelReceiver<T>;
   };
 
   template <typename T>
@@ -79,8 +100,9 @@ namespace ipc
     ~TrOneShotServer();
 
     int getPort();
-    TrChannelReceiver<T> *accept();
-    vector<TrChannelReceiver<T>*> &getReceivers();
+    TrOneShotClient<T> *accept();
+    TrOneShotClient<T> *tryAccept(int timeout = 0);
+    vector<TrOneShotClient<T> *> &getClients();
 
   private:
     bool setNonBlocking();
@@ -89,6 +111,8 @@ namespace ipc
     int fd;
     int port;
     bool started = false;
-    vector<TrChannelReceiver<T>*> receivers;
+    bool blocking = true;
+    struct pollfd fds[1];
+    vector<TrOneShotClient<T> *> clients;
   };
 };

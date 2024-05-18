@@ -55,7 +55,10 @@ void TrConstellation::initialize(const char *initJson)
     DEBUG(LOG_TAG_CONSTELLATION, "Failed to get the runtime path from current host");
 
   contentManager = new TrContentManager(this);
+  renderer = new renderer::TrRenderer();
+
   contentManager->initialize();
+  renderer->initialize();
   initialized = true;
 }
 
@@ -63,7 +66,8 @@ void TrConstellation::tick()
 {
   if (initialized == false)
     return;
-  // TODO: Implement this
+  if (contentManager != nullptr)
+    contentManager->tickOnFrame();
 }
 
 TrContentManager *TrConstellation::getContentManager()

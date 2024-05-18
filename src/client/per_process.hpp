@@ -73,7 +73,7 @@ public:
   uint32_t channelServerPort;
 
 private:
-  ipc::TrChannelSender<ipc::CustomEvent> *channelSender;
+  ipc::TrChannelSender<CustomEvent> *channelSender;
 
 private:
   static TrClientContextPerProcess *s_Instance;

@@ -49,8 +49,30 @@ namespace ipc
     return false;
   }
 
+  bool setNonBlockingOnSocket(int fd)
+  {
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags == -1)
+    {
+      DEBUG(LOG_TAG_IPC, "Failed to get the fd(%d) flags: %s", fd, strerror(errno));
+      return false;
+    }
+    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
+    {
+      DEBUG(LOG_TAG_IPC, "Failed to set the fd(%d) to non-blocking mode: %s", fd, strerror(errno));
+      return false;
+    }
+    DEBUG(LOG_TAG_IPC, "The fd(%d) is switched to non-blocking mode.", fd);
+    return true;
+  }
+
   template <typename T>
   TrChannelSender<T>::TrChannelSender(int port) : port(port), fd(-1)
+  {
+  }
+
+  template <typename T>
+  TrChannelSender<T>::TrChannelSender(TrOneShotClient<T> *client) : fd(client->fd), blocking(client->blocking)
   {
   }
 
@@ -101,13 +123,18 @@ namespace ipc
       DEBUG(LOG_TAG_IPC, "Failed to send data: %s", strerror(errno));
       return false;
     }
+    DEBUG(LOG_TAG_IPC, "Sent data bytes: %d", sizeof(data));
     return true;
   }
 
   template <typename T>
   TrChannelReceiver<T>::TrChannelReceiver(int fd) : fd(fd)
   {
-    DEBUG(LOG_TAG_IPC, "The receiver is created with fd=%d", fd);
+  }
+
+  template <typename T>
+  TrChannelReceiver<T>::TrChannelReceiver(TrOneShotClient<T> *client) : fd(client->fd), blocking(client->blocking)
+  {
   }
 
   template <typename T>
@@ -118,23 +145,41 @@ namespace ipc
   }
 
   template <typename T>
-  T *TrChannelReceiver<T>::tryRecv()
+  T *TrChannelReceiver<T>::tryRecv(int timeout)
   {
-    if (fd == -1)
-      return nullptr;
-
-    T *data = new T();
-    ssize_t bytesReceived = ::recv(fd, data, sizeof(T), 0);
-    if (bytesReceived <= -1)
+    if (blocking)
     {
-      delete data;
-      if (errno == EAGAIN || errno == EWOULDBLOCK)
-        return nullptr;
-
-      DEBUG(LOG_TAG_IPC, "Failed to receive data: %s", strerror(errno));
+      DEBUG(LOG_TAG_IPC, "The receiver is in blocking mode, thus tryRecv() is not available.");
       return nullptr;
     }
-    return data;
+
+    struct pollfd fds[1];
+    fds[0].fd = fd;
+    fds[0].events = POLLIN;
+
+    int events = poll(fds, 1, timeout);
+    if (events <= -1)
+    {
+      DEBUG(LOG_TAG_IPC, "Failed to poll the receiver: %s", strerror(errno));
+      return nullptr;
+    }
+
+    if (fds[0].revents & POLLIN)
+    {
+      T *data = new T();
+      ssize_t bytesReceived = ::recv(fd, data, sizeof(T), 0);
+      if (bytesReceived <= -1)
+      {
+        DEBUG(LOG_TAG_IPC, "Failed to read data from socket(%d): %s", fd, strerror(errno));
+        delete data;
+        return nullptr;
+      }
+      return data;
+    }
+    else
+    {
+      return nullptr;
+    }
   }
 
   template <typename T>
@@ -145,6 +190,16 @@ namespace ipc
     {
       DEBUG(LOG_TAG_IPC, "Failed to create a socket.");
       return;
+    }
+
+    if (setNonBlocking() == false)
+    {
+      DEBUG(LOG_TAG_IPC, "Failed to set the socket to non-blocking mode, switching to blocking mode.");
+      blocking = true;
+    }
+    else
+    {
+      blocking = false;
     }
 
     struct sockaddr_in addr;
@@ -161,6 +216,13 @@ namespace ipc
       return;
     }
     port = ntohs(addr.sin_port);
+
+    // If the server is in non-blocking mode, we need to set the file descriptor to the readFds.
+    if (blocking == false)
+    {
+      fds[0].fd = fd;
+      fds[0].events = POLLIN;
+    }
     DEBUG(LOG_TAG_IPC, "The server is listening on 127.0.0.1:%d", port);
   }
 
@@ -171,9 +233,9 @@ namespace ipc
       close(fd);
     port = -1;
 
-    for (auto receiver : receivers)
-      delete receiver;
-    receivers.clear();
+    for (auto client : clients)
+      delete client;
+    clients.clear();
   }
 
   template <typename T>
@@ -183,16 +245,13 @@ namespace ipc
   }
 
   template <typename T>
-  TrChannelReceiver<T> *TrOneShotServer<T>::accept()
+  TrOneShotClient<T> *TrOneShotServer<T>::accept()
   {
     struct sockaddr_in clientAddr;
     socklen_t addrLen = sizeof(clientAddr);
     int clientFd = ::accept(fd, reinterpret_cast<struct sockaddr *>(&clientAddr), &addrLen);
     if (clientFd <= -1)
     {
-      if (errno == EAGAIN || errno == EWOULDBLOCK)
-        return nullptr;
-
       DEBUG(LOG_TAG_IPC, "Failed to accept a client: %s", strerror(errno));
       return nullptr;
     }
@@ -203,32 +262,58 @@ namespace ipc
     if (setsockopt(clientFd, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger)) <= -1)
       DEBUG(LOG_TAG_IPC, "Failed to set SO_LINGER: %s", strerror(errno));
 
-    receivers.push_back(new TrChannelReceiver<T>(clientFd));
-    return receivers.back();
+    // Update the client fd to be non-blocking if the server is in non-blocking mode.
+    if (!blocking)
+    {
+      if (!setNonBlockingOnSocket(clientFd))
+        DEBUG(LOG_TAG_IPC, "Failed to set the client socket(%d) to non-blocking mode.", clientFd);
+    }
+
+    clients.push_back(new TrOneShotClient<T>(clientFd, blocking));
+    return clients.back();
   }
 
   template <typename T>
-  vector<TrChannelReceiver<T> *> &TrOneShotServer<T>::getReceivers()
+  TrOneShotClient<T> *TrOneShotServer<T>::tryAccept(int timeout)
   {
-    return receivers;
+    if (blocking)
+    {
+      DEBUG(LOG_TAG_IPC, "The server is in blocking mode, thus tryAccept() is not available.");
+      return nullptr;
+    }
+
+    int events = poll(fds, 1, timeout);
+    if (events <= -1)
+    {
+      DEBUG(LOG_TAG_IPC, "Failed to poll the server: %s", strerror(errno));
+      return nullptr;
+    }
+
+    if (fds[0].revents & POLLIN)
+      return accept();
+    else
+      return nullptr;
+  }
+
+  template <typename T>
+  vector<TrOneShotClient<T> *> &TrOneShotServer<T>::getClients()
+  {
+    return clients;
   }
 
   template <typename T>
   bool TrOneShotServer<T>::setNonBlocking()
   {
-    int flags = fcntl(fd, F_GETFL, 0);
-    if (flags < 0)
-      return false;
-    else if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0)
-      return false;
-    return true;
+    return setNonBlockingOnSocket(fd);
   }
 
 #define SPECIALIZE_TEMPLATE(T)         \
   template class TrChannelSender<T>;   \
   template class TrChannelReceiver<T>; \
+  template class TrOneShotClient<T>;   \
   template class TrOneShotServer<T>;
 
   SPECIALIZE_TEMPLATE(CustomEvent)
+  SPECIALIZE_TEMPLATE(AnimationFrameRequest)
 #undef SPECIALIZE_TEMPLATE
 }

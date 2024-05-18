@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <mutex>
 #include <filesystem>
 
 #include "native_event.hpp"
@@ -49,6 +50,7 @@ private:
 
 public:
   bool initialize();
+  bool tickOnFrame();
   TrContentRuntime *makeContent();
   void disposeContent(TrContentRuntime *content);
 
@@ -56,10 +58,13 @@ private:
   void onRequestEvent(native_event::TrNativeEvent &event);
 
 private:
-  TrConstellation *constellation;
-  TrOneShotServer<CustomEvent> *eventChanServer;
-  thread *eventChanWorker;
+  TrConstellation *constellation = nullptr;
+  TrOneShotServer<CustomEvent> *eventChanServer = nullptr;
+  thread *eventChanWatcher = nullptr;
+  mutex eventChanMutex;
+  vector<TrChannelReceiver<CustomEvent> *> eventChanReceivers;
   vector<TrContentRuntime *> contentRuntimes;
+  atomic<bool> watcherRunning = false;
 
   friend class TrContentRuntime;
   friend class TrConstellation;

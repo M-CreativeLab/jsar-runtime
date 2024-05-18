@@ -66,6 +66,10 @@ void TrContentRuntime::dispose()
 void TrContentRuntime::onClientProcess()
 {
   path basePath = path(constellationOptions.runtimeDirectory);
+  /**
+   * NOTE: Even though the `libTransmuteClient.so` is a shared library name, the file is actually an executable, and the reason
+   * to do this trick is to make Unity copy this file to the apk.
+   */
   path clientPath = basePath / "libTransmuteClient.so";
   DEBUG(LOG_TAG_CONTENT, "Start a new client with: %s", clientPath.c_str());
 
@@ -109,6 +113,13 @@ TrContentManager::TrContentManager(TrConstellation *constellation) : constellati
 
 TrContentManager::~TrContentManager()
 {
+  if (eventChanWatcher != nullptr)
+  {
+    watcherRunning = false;
+    eventChanWatcher->join();
+    delete eventChanWatcher;
+    eventChanWatcher = nullptr;
+  }
   if (eventChanServer != nullptr)
   {
     delete eventChanServer;
@@ -125,21 +136,34 @@ bool TrContentManager::initialize()
   nativeEventTarget->addEventListener(native_event::TrEventType::TrXSMLRequest, [this](native_event::TrEventType type, native_event::TrNativeEvent &event)
                                       { this->onRequestEvent(event); });
 
-  eventChanWorker = new thread([this]()
-                               {
-    while (true)
+  watcherRunning = true;
+  eventChanWatcher = new thread([this]()
+                                {
+    SET_THREAD_NAME("TrEventChanWatcher");
+    while (watcherRunning)
     {
-      eventChanServer->accept();
-      for (auto receiver : eventChanServer->getReceivers())
+      auto newClient = eventChanServer->tryAccept(-1);
+      if (newClient != nullptr)
       {
-        auto data = receiver->tryRecv();
-        if (data != nullptr)
-        {
-          DEBUG(LOG_TAG_SCRIPT, "Received event: %d", data->foobar);
-          delete data;
-        }
+        lock_guard<mutex> lock(eventChanMutex);
+        eventChanReceivers.push_back(new TrChannelReceiver<CustomEvent>(newClient));
       }
     } });
+  return true;
+}
+
+bool TrContentManager::tickOnFrame()
+{
+  lock_guard<mutex> lock(eventChanMutex);
+  for (auto receiver : eventChanReceivers)
+  {
+    auto data = receiver->tryRecv();
+    if (data != nullptr)
+    {
+      DEBUG(LOG_TAG_SCRIPT, "Received event: %d", data->foobar);
+      delete data;
+    }
+  }
   return true;
 }
 
