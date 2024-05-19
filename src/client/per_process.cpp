@@ -228,12 +228,16 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
 
 void TrClientContextPerProcess::start()
 {
-  channelSender = new ipc::TrChannelSender<CustomEvent>(channelServerPort);
-  if (channelSender->connect())
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) connected to the channel server", id);
+  eventChanSender = new ipc::TrChannelSender<CustomEvent>(eventChanPort);
+  frameChanReceiver = new ipc::TrChannelReceiver<AnimationFrameRequest>(frameChanPort);
+
+  if (eventChanSender->connect())
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) connected to the event channel", id);
+  if (frameChanReceiver->connect())
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) connected to the frame channel", id);
 
   // Just for test
-  channelSender->send(CustomEvent(123));
+  eventChanSender->send(CustomEvent(10));
 }
 
 void TrClientContextPerProcess::print()
@@ -241,5 +245,6 @@ void TrClientContextPerProcess::print()
   DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) url=%s", id, url.c_str());
   DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) applicationCacheDirectory=%s", id, applicationCacheDirectory.c_str());
   DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) httpsProxyServer=%s", id, httpsProxyServer.c_str());
-  DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) channelServerPort=%d", id, channelServerPort);
+  DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) eventChanPort=%d", id, eventChanPort);
+  DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) frameChanPort=%d", id, frameChanPort);
 }

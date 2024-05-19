@@ -63,15 +63,17 @@ namespace ipc
   class TrChannelReceiver
   {
   public:
-    TrChannelReceiver(int fd);
+    TrChannelReceiver(int port);
     TrChannelReceiver(TrOneShotClient<T> *client);
     ~TrChannelReceiver();
 
   public:
+    bool connect();
     T *tryRecv(int timeout = 0);
     int getFd() { return fd; }
 
   private:
+    int port;
     int fd;
     bool blocking;
   };

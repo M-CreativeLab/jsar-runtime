@@ -68,16 +68,20 @@ void TrConstellation::tick()
     return;
   if (contentManager != nullptr)
     contentManager->tickOnFrame();
+  if (renderer != nullptr)
+    renderer->tickOnAnimationFrame();
 }
 
 TrContentManager *TrConstellation::getContentManager()
 {
-  if (initialized == false)
-  {
-    DEBUG(LOG_TAG_CONSTELLATION, "Please initialize constellation first");
-    return nullptr;
-  }
+  assert(initialized == true);
   return contentManager;
+}
+
+renderer::TrRenderer *TrConstellation::getRenderer()
+{
+  assert(initialized == true);
+  return renderer;
 }
 
 TrConstellationInit &TrConstellation::getOptions()

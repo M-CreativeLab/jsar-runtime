@@ -1,9 +1,14 @@
 #pragma once
 
 #include <vector>
+#include <thread>
+#include <mutex>
+#include <atomic>
 
 #include "render_api.hpp"
 #include "common/ipc.hpp"
+
+using namespace std;
 
 namespace renderer
 {
@@ -20,7 +25,11 @@ namespace renderer
 
   private:
     RenderAPI *api = nullptr;
-    ipc::TrOneShotServer<AnimationFrameRequest> *animationFrameChanServer;
+    ipc::TrOneShotServer<AnimationFrameRequest> *animationFrameChanServer = nullptr;
     vector<ipc::TrChannelSender<AnimationFrameRequest> *> animationFrameChanSenders;
+
+    thread *chanSendersWatcher = nullptr;
+    mutex chanSendersMutex;
+    atomic<bool> watcherRunning = false;
   };
 }

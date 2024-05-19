@@ -32,9 +32,14 @@ int main(int argc, char **argv)
     DEBUG(LOG_TAG_CLIENT_ENTRY, "Exited, reason: failed to parse the context json \"%s\"", argv[1]);
     return 1;
   }
-  if (!contextDocument.HasMember("channelServerPort") || !contextDocument["channelServerPort"].IsUint())
+  if (!contextDocument.HasMember("eventChanPort") || !contextDocument["eventChanPort"].IsUint())
   {
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "Exited, reason: channelServerPort is missing or not a number from context json.");
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "Exited, reason: eventChanPort is missing or not a number from context json.");
+    return 1;
+  }
+  if (!contextDocument.HasMember("frameChanPort") || !contextDocument["frameChanPort"].IsUint())
+  {
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "Exited, reason: frameChanPort is missing or not a number from context json.");
     return 1;
   }
 
@@ -46,7 +51,8 @@ int main(int argc, char **argv)
   }
   clientContext->id = contextDocument["id"].GetInt();
   clientContext->url = url;
-  clientContext->channelServerPort = contextDocument["channelServerPort"].GetUint();
+  clientContext->eventChanPort = contextDocument["eventChanPort"].GetUint();
+  clientContext->frameChanPort = contextDocument["frameChanPort"].GetUint();
 
   if (contextDocument.HasMember("applicationCacheDirectory"))
     clientContext->applicationCacheDirectory = contextDocument["applicationCacheDirectory"].GetString();

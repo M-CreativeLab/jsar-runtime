@@ -49,6 +49,33 @@ namespace ipc
     return false;
   }
 
+  bool connectToSocket(int &fd, int port)
+  {
+    if (fd != -1)
+      return false;
+
+    fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd == -1)
+    {
+      DEBUG(LOG_TAG_IPC, "Failed to create a socket.");
+      return false;
+    }
+
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+
+    if (::connect(fd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
+    {
+      close(fd);
+      fd = -1;
+      DEBUG(LOG_TAG_IPC, "Failed to connect to the server: %s", strerror(errno));
+      return false;
+    }
+    return true;
+  }
+
   bool setNonBlockingOnSocket(int fd)
   {
     int flags = fcntl(fd, F_GETFL, 0);
@@ -86,29 +113,7 @@ namespace ipc
   template <typename T>
   bool TrChannelSender<T>::connect()
   {
-    if (fd != -1)
-      return false;
-
-    fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (fd == -1)
-    {
-      DEBUG(LOG_TAG_IPC, "Failed to create a socket.");
-      return false;
-    }
-
-    struct sockaddr_in addr;
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-
-    if (::connect(fd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
-    {
-      close(fd);
-      fd = -1;
-      DEBUG(LOG_TAG_IPC, "Failed to connect to the server: %s", strerror(errno));
-      return false;
-    }
-    return true;
+    return connectToSocket(fd, port);
   }
 
   template <typename T>
@@ -128,7 +133,7 @@ namespace ipc
   }
 
   template <typename T>
-  TrChannelReceiver<T>::TrChannelReceiver(int fd) : fd(fd)
+  TrChannelReceiver<T>::TrChannelReceiver(int port) : port(port)
   {
   }
 
@@ -142,6 +147,12 @@ namespace ipc
   {
     if (fd != -1)
       close(fd);
+  }
+
+  template <typename T>
+  bool TrChannelReceiver<T>::connect()
+  {
+    return connectToSocket(fd, port);
   }
 
   template <typename T>

@@ -29,7 +29,8 @@ void TrContentRuntime::start(native_event::TrXSMLRequestInit init)
 {
   requestInit = init;
   constellationOptions = contentManager->constellation->getOptions();
-  channelServerPort = contentManager->eventChanServer->getPort();
+  eventChanPort = contentManager->eventChanServer->getPort();
+  frameChanPort = contentManager->constellation->getRenderer()->getAnimationFrameChanPort();
   DEBUG(LOG_TAG_CONTENT, "Start a new client process for %s", init.url.c_str());
 
   // start a new process for client.
@@ -81,7 +82,8 @@ void TrContentRuntime::onClientProcess()
   scriptContext.AddMember("disableCache", requestInit.disableCache, allocator);
   scriptContext.AddMember("isPreview", requestInit.isPreview, allocator);
   scriptContext.AddMember("runScripts", rapidjson::Value(requestInit.runScripts.c_str(), allocator), allocator);
-  scriptContext.AddMember("channelServerPort", channelServerPort, allocator);
+  scriptContext.AddMember("eventChanPort", eventChanPort, allocator);
+  scriptContext.AddMember("frameChanPort", frameChanPort, allocator);
 
   rapidjson::StringBuffer scriptContextBuffer;
   rapidjson::Writer<rapidjson::StringBuffer> scriptContextWriter(scriptContextBuffer);
@@ -160,7 +162,7 @@ bool TrContentManager::tickOnFrame()
     auto data = receiver->tryRecv();
     if (data != nullptr)
     {
-      DEBUG(LOG_TAG_SCRIPT, "Received event: %d", data->foobar);
+      DEBUG(LOG_TAG_SCRIPT, "Received event: %d", data->type);
       delete data;
     }
   }

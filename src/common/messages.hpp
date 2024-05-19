@@ -7,9 +7,11 @@ using namespace std;
 class CustomEvent
 {
 public:
-  CustomEvent() : foobar(0) {}
-  CustomEvent(int v) : foobar(v) {}
-  int foobar;
+  CustomEvent() : type(0) {}
+  CustomEvent(int type) : type(type) {}
+
+  int type;
+  char* data;
 };
 
 class AnimationFrameRequest

@@ -30,7 +30,8 @@ private:
 
 private:
   pid_t pid;
-  int channelServerPort;
+  int eventChanPort;
+  int frameChanPort;
   native_event::TrXSMLRequestInit requestInit;
   TrConstellationInit constellationOptions;
   TrContentManager *contentManager;

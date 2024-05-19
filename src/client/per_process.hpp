@@ -70,10 +70,12 @@ public:
   string url;
   string applicationCacheDirectory;
   string httpsProxyServer;
-  uint32_t channelServerPort;
+  uint32_t eventChanPort;
+  uint32_t frameChanPort;
 
 private:
-  ipc::TrChannelSender<CustomEvent> *channelSender;
+  ipc::TrChannelSender<CustomEvent> *eventChanSender = nullptr;
+  ipc::TrChannelReceiver<AnimationFrameRequest> *frameChanReceiver = nullptr;
 
 private:
   static TrClientContextPerProcess *s_Instance;
