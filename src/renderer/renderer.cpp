@@ -49,8 +49,38 @@ namespace renderer
       sender->send(request);
   }
 
+  void TrRenderer::shutdown()
+  {
+    // TODO
+  }
+
+  void TrRenderer::setLogFilter(string filterExpr)
+  {
+    // TODO
+  }
+
   uint32_t TrRenderer::getAnimationFrameChanPort()
   {
     return animationFrameChanServer->getPort();
+  }
+
+  RenderAPI *TrRenderer::getApi()
+  {
+    return api;
+  }
+
+  void TrRenderer::setViewport(TrViewport &viewport)
+  {
+    api->SetViewport(viewport.width, viewport.height, viewport.x, viewport.y);
+  }
+
+  void TrRenderer::setRecommendedFov(float fov)
+  {
+    api->SetFieldOfView(fov);
+  }
+
+  void TrRenderer::setTime(float time)
+  {
+    api->SetTime(time);
   }
 }

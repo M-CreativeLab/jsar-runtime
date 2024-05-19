@@ -2,21 +2,57 @@
 
 #include <string>
 #include "constellation.hpp"
+#include "native_event.hpp"
 
 using namespace std;
+using namespace renderer;
+using namespace native_event;
 
+/**
+ * The main class for the embedder who want's to embed or integrate the Transmute runtime into their application or environment.
+ */
 class TrEmbedder
 {
-public:
+protected:  // You should create your own embedder class and decide how to create `TrEmbedder` instace.
   TrEmbedder();
   ~TrEmbedder();
 
-public:
-  bool initialize(string argJson);
-  bool start();
-  bool frame();
-  bool dispatchNativeEvent();
+public: // API for configuration and operations
+  /**
+   * Initialize the Transmute runtime, internally this method will initialize the renderer, constellation, native event target and other components.
+   */
+  bool initialize();
+  /**
+   * Configure the XR device, if you want to use Transmute in XR device, you should call this method with true.
+   *
+   * @param enabled true if the XR device should be enabled, false otherwise.
+   */
+  bool configureXrDevice(bool enabled);
+  /**
+   * Shutdown the Transmute runtime.
+   */
+  void shutdown();
+
+public: // API for lifecycle
+  /**
+   * The lifecycle `onStart` should be called when you are ready to start the Transmute runtime, this method will require the initialization and XR
+   * device configuration to be done.
+   * 
+   * @param argJson The JSON string of the runtime initialization arguments.
+   */
+  bool onStart(string argJson);
+  /**
+   * The lifecycle `onFrame` should be called when your application is to render a frame.
+   */
+  bool onFrame();
+
+public: // API for getting sub components
+  TrConstellation *getConstellation();
+  TrNativeEventTarget *getNativeEventTarget();
+  TrRenderer *getRenderer();
+  xr::Device *getXrDevice();
 
 protected:
-  TrConstellation* constellation;
+  TrConstellation *constellation = nullptr;
+  TrNativeEventTarget *nativeEventTarget = nullptr;
 };

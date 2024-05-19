@@ -1,6 +1,7 @@
 #include <stdlib.h>
-#include "debug.hpp"
 #include "entry.hpp"
+#include "debug.hpp"
+#include "embedder.hpp"
 #include "native_event.hpp"
 #include "xr/device.hpp"
 
@@ -10,80 +11,87 @@
 
 using namespace std;
 
-extern "C"
+/**
+ * The embedder class for Unity, it depends on the Unity native interfaces to embed the Transmute runtime into Unity.
+ */
+class UnityEmbedder : public TrEmbedder
 {
-  static RenderAPI *s_CurrentAPI = NULL;
-  static float s_WorldScalingFactor = 1.0;
+public:
+  static UnityEmbedder *Create(IUnityInterfaces *unityInterfaces);
+  static UnityEmbedder *EnsureAndGet();
 
-#ifndef TRANSMUTE_STANDALONE
-  static IUnityInterfaces *s_UnityInterfaces = NULL;
-  static IUnityGraphics *s_Graphics = NULL;
-  static void OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType);
-  static void OnPlatformSetup();
-
-  DLL_PUBLIC void UnityPluginLoad(IUnityInterfaces *unityInterfaces)
-  {
-    s_UnityInterfaces = unityInterfaces;
-    SET_UNITY_LOG_HANDLE(s_UnityInterfaces->Get<IUnityLog>());
-
-    s_Graphics = s_UnityInterfaces->Get<IUnityGraphics>();
-    s_Graphics->RegisterDeviceEventCallback(OnGraphicsDeviceEvent);
-
-    // Run OnGraphicsDeviceEvent(initialize) manually on plugin load
-    OnGraphicsDeviceEvent(kUnityGfxDeviceEventInitialize);
-
-    // Create the `xr::Device` instance globally.
-    xr::Device::Create();
-
-    // Setup the the specific platform: android, windows or others
-    OnPlatformSetup();
-
-    // Bootstrap the Node.js instance
-    // auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
-    // nodejsBootstrapper->initialize();
-    // nodejsBootstrapper->start();
-
-    // Bootstrap the new Content Manager
-    TrConstellation::Create();
-  }
-
-  DLL_PUBLIC void UnityPluginUnload()
-  {
-    s_Graphics->UnregisterDeviceEventCallback(OnGraphicsDeviceEvent);
-    xr::Device::Destroy();
-  }
-
-  static UnityGfxRenderer s_DeviceType = kUnityGfxRendererNull;
+private:
   static void OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType)
   {
-    // Create graphics API implementation upon initialization
+    auto embedder = UnityEmbedder::EnsureAndGet();
     if (eventType == kUnityGfxDeviceEventInitialize)
-    {
-      s_DeviceType = s_Graphics->GetRenderer();
-      s_CurrentAPI = RenderAPI::Create(s_DeviceType);
-    }
-
-    // Let the implementation process the device related events
-    if (s_CurrentAPI)
-      s_CurrentAPI->ProcessDeviceEvent(eventType, s_UnityInterfaces);
-
-    // Cleanup graphics API implementation upon shutdown
-    if (eventType == kUnityGfxDeviceEventShutdown)
-    {
-      delete s_CurrentAPI;
-      s_CurrentAPI = NULL;
-      s_DeviceType = kUnityGfxRendererNull;
-    }
+      embedder->initialize();
+    else if (eventType == kUnityGfxDeviceEventShutdown)
+      embedder->shutdown();
   }
 
+private:
+  UnityEmbedder(IUnityInterfaces *unityInterfaces) : TrEmbedder(),
+                                                     interfaces(unityInterfaces)
+  {
+    graphics = unityInterfaces->Get<IUnityGraphics>();
+    log = unityInterfaces->Get<IUnityLog>();
+
+    graphics->RegisterDeviceEventCallback(UnityEmbedder::OnGraphicsDeviceEvent);
+    UnityEmbedder::OnGraphicsDeviceEvent(kUnityGfxDeviceEventInitialize);
+  }
+
+public:
+  void initialize()
+  {
+    deviceType = graphics->GetRenderer();
+    TrEmbedder::initialize();
+  }
+
+  void unload()
+  {
+    graphics->UnregisterDeviceEventCallback(UnityEmbedder::OnGraphicsDeviceEvent);
+    // TODO: stop xr device and renderer?
+  }
+
+  void shutdown()
+  {
+    TrEmbedder::shutdown();
+    deviceType = kUnityGfxRendererNull;
+    interfaces = nullptr;
+    graphics = nullptr;
+    log = nullptr;
+  }
+
+private:
+  UnityGfxRenderer deviceType = kUnityGfxRendererNull;
+  IUnityInterfaces *interfaces = nullptr;
+  IUnityGraphics *graphics = nullptr;
+  IUnityLog *log = nullptr;
+
+private:
+  static UnityEmbedder *s_EmbedderInstance;
+};
+
+UnityEmbedder *UnityEmbedder::s_EmbedderInstance = nullptr;
+UnityEmbedder *UnityEmbedder::Create(IUnityInterfaces *unityInterfaces)
+{
+  if (s_EmbedderInstance == nullptr)
+    s_EmbedderInstance = new UnityEmbedder(unityInterfaces);
+  return s_EmbedderInstance;
+}
+UnityEmbedder *UnityEmbedder::EnsureAndGet()
+{
+  assert(s_EmbedderInstance != nullptr);
+  return s_EmbedderInstance;
+}
+
+extern "C"
+{
+  static float s_WorldScalingFactor = 1.0;
   static void OnPlatformSetup()
   {
-    if (s_CurrentAPI == nullptr)
-      return;
-
-    auto xrDevice = xr::Device::GetInstance();
-    if (xrDevice == nullptr)
-      return;
+    auto embedder = UnityEmbedder::EnsureAndGet();
 
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
     char deviceVendor[PROP_VALUE_MAX];
@@ -94,19 +102,9 @@ extern "C"
       setenv("JSAR_DEVICE_VENDOR", deviceVendor, 1);
     }
 
-    char glLogKey[PROP_VALUE_MAX];
-    if (__system_property_get("jsar.graphics.logkey", glLogKey) >= 0)
-    {
-      if (strcmp(glLogKey, "globals") == 0)
-        s_CurrentAPI->EnableAppGlobalLog();
-      else if (strcmp(glLogKey, "xrframe") == 0)
-        s_CurrentAPI->EnableXRFrameLog();
-      else if (strcmp(glLogKey, "all") == 0)
-      {
-        s_CurrentAPI->EnableAppGlobalLog();
-        s_CurrentAPI->EnableXRFrameLog();
-      }
-    }
+    char logfilter[PROP_VALUE_MAX];
+    if (__system_property_get("jsar.renderer.logfilter", logfilter) >= 0)
+      embedder->getRenderer()->setLogFilter(logfilter);
 
     char enableWebglPlaceholder[PROP_VALUE_MAX];
     if (
@@ -142,10 +140,28 @@ extern "C"
     if (__system_property_get("jsar.xr.framerate", xrFrameRate) >= 0)
     {
       int frameRate = atoi(xrFrameRate);
-      xrDevice->setFrameRate(frameRate);
+      embedder->getXrDevice()->setFrameRate(frameRate);
+    }
+#endif
+  }
+
+#ifndef TRANSMUTE_STANDALONE
+  DLL_PUBLIC void UnityPluginLoad(IUnityInterfaces *unityInterfaces)
+  {
+    auto embedder = UnityEmbedder::Create(unityInterfaces);
+    if (embedder == nullptr)
+    {
+      DEBUG(LOG_TAG_UNITY, "Failed to create UnityEmbedder instance");
+      return;
     }
 
-#endif
+    OnPlatformSetup();
+    embedder->initialize();
+  }
+
+  DLL_PUBLIC void UnityPluginUnload()
+  {
+    UnityEmbedder::EnsureAndGet()->unload();
   }
 
   static void OnUnityRenderEvent(int eventID)
@@ -162,10 +178,6 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_Start()
   {
-    s_CurrentAPI = RenderAPI::Create(kUnityGfxRendererOpenGLCore);
-    xr::Device::Create();
-    OnPlatformSetup();
-
     // TODO: Bootstrap?
   }
 
@@ -176,10 +188,7 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_InitializeXRDevice(bool enabled)
   {
-    auto xrDevice = xr::Device::GetInstance();
-    if (xrDevice == NULL)
-      return;
-    xrDevice->initialize(enabled);
+    UnityEmbedder::EnsureAndGet()->configureXrDevice(enabled);
   }
 
   DLL_PUBLIC bool TransmuteNative_GetEventFromJavaScript(int *id, int *type, uint32_t *size)
@@ -217,22 +226,23 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_OnRenderFrame()
   {
-    if (s_CurrentAPI == NULL)
-      return;
-    auto constellation = TrConstellation::Get();
-    if (constellation == nullptr || !constellation->isInitialized())
-      return;
-    constellation->tick();
+    UnityEmbedder::EnsureAndGet()->onFrame();
+    // if (s_CurrentAPI == NULL)
+    //   return;
+    // auto constellation = TrConstellation::Get();
+    // if (constellation == nullptr || !constellation->isInitialized())
+    //   return;
+    // constellation->tick();
 
-    auto code = s_CurrentAPI->ExecuteFrame();
-    switch (code)
-    {
-    case kFrameExecutionNotAvailable:
-      DEBUG("transmute", "RenderLoop(JS) is not available");
-      break;
-    default:
-      break;
-    }
+    // auto code = s_CurrentAPI->ExecuteFrame();
+    // switch (code)
+    // {
+    // case kFrameExecutionNotAvailable:
+    //   DEBUG("transmute", "RenderLoop(JS) is not available");
+    //   break;
+    // default:
+    //   break;
+    // }
   }
 
   DLL_PUBLIC void TransmuteNative_DispatchRuntimeEvent(int id)
@@ -245,42 +255,31 @@ extern "C"
     // auto nativeEventTarget = messaging::UnityEventListenerWrap::GetInstance();
     // if (nativeEventTarget != nullptr)
     //   nativeEventTarget->DispatchNativeEvent(id, type, data);
-    native_event::TrNativeEventTarget::GetOrCreateInstance()->dispatchEvent(id, (native_event::TrEventType)type, data);
+    auto eventTarget = UnityEmbedder::EnsureAndGet()->getNativeEventTarget();
+    eventTarget->dispatchEvent(id, (native_event::TrEventType)type, data);
   }
 
   DLL_PUBLIC void TransmuteNative_SetRuntimeInit(const char *argJson)
   {
     // auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
     // nodejsBootstrapper->getEnv()->setRuntimeInit(argJson);
-    auto constellation = TrConstellation::Get();
-    if (constellation == nullptr)
-    {
-      DEBUG(LOG_TAG_UNITY, "Constellation instance is not available");
-      return;
-    }
-    constellation->initialize(argJson);
+    UnityEmbedder::EnsureAndGet()->onStart(string(argJson));
   }
 
   DLL_PUBLIC void TransmuteNative_SetViewport(int w, int h)
   {
-    // if (s_CurrentAPI != NULL)
-    //   s_CurrentAPI->SetViewport(w, h);
+    TrViewport viewport(w, h);
+    UnityEmbedder::EnsureAndGet()->getRenderer()->setViewport(viewport);
   }
 
   DLL_PUBLIC void TransmuteNative_SetFov(float fov)
   {
-    auto xrDevice = xr::Device::GetInstance();
-    if (xrDevice == NULL)
-      return;
-    xrDevice->updateFov(fov);
+    UnityEmbedder::EnsureAndGet()->getRenderer()->setRecommendedFov(fov);
   }
 
   DLL_PUBLIC void TransmuteNative_SetTime(float t)
   {
-    auto xrDevice = xr::Device::GetInstance();
-    if (xrDevice == NULL)
-      return;
-    xrDevice->updateTime(t);
+    UnityEmbedder::EnsureAndGet()->getRenderer()->setTime(t);
   }
 
   DLL_PUBLIC void TransmuteNative_SetStereoRenderingMode(int mode)

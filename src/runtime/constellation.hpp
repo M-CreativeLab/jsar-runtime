@@ -45,11 +45,13 @@ public:
   bool isInitialized();
   TrContentManager *getContentManager();
   renderer::TrRenderer *getRenderer();
+  xr::Device *getXrDevice();
 
 private:
   TrConstellationInit options;
   TrContentManager *contentManager = nullptr;
   renderer::TrRenderer *renderer = nullptr;
+  xr::Device *xrDevice = nullptr;
   bool initialized = false;
 
 private:
