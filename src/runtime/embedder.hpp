@@ -19,10 +19,6 @@ protected:  // You should create your own embedder class and decide how to creat
 
 public: // API for configuration and operations
   /**
-   * Initialize the Transmute runtime, internally this method will initialize the renderer, constellation, native event target and other components.
-   */
-  bool initialize();
-  /**
    * Configure the XR device, if you want to use Transmute in XR device, you should call this method with true.
    *
    * @param enabled true if the XR device should be enabled, false otherwise.
@@ -54,5 +50,4 @@ public: // API for getting sub components
 
 protected:
   TrConstellation *constellation = nullptr;
-  TrNativeEventTarget *nativeEventTarget = nullptr;
 };

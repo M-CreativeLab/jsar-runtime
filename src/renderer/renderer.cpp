@@ -5,6 +5,7 @@ namespace renderer
   TrRenderer::TrRenderer()
   {
     animationFrameChanServer = new ipc::TrOneShotServer<AnimationFrameRequest>();
+    api = nullptr;
   }
 
   TrRenderer::~TrRenderer()
@@ -64,9 +65,9 @@ namespace renderer
     return animationFrameChanServer->getPort();
   }
 
-  RenderAPI *TrRenderer::getApi()
+  void TrRenderer::setApi(RenderAPI* api)
   {
-    return api;
+    this->api = api;
   }
 
   void TrRenderer::setViewport(TrViewport &viewport)

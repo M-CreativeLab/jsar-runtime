@@ -2,52 +2,56 @@
 
 TrEmbedder::TrEmbedder()
 {
+  constellation = new TrConstellation();
 }
 
 TrEmbedder::~TrEmbedder()
 {
-}
-
-bool TrEmbedder::initialize()
-{
-  return true;
+  shutdown();
 }
 
 bool TrEmbedder::configureXrDevice(bool enabled)
 {
+  constellation->getXrDevice()->initialize(enabled);
   return true;
 }
 
 void TrEmbedder::shutdown()
 {
+  if (constellation != nullptr)
+  {
+    delete constellation;
+    constellation = nullptr;
+  }
 }
 
 bool TrEmbedder::onStart(string argJson)
 {
-  return true;
+  return constellation->initialize(argJson);
 }
 
 bool TrEmbedder::onFrame()
 {
+  constellation->tick();
   return true;
 }
 
 TrConstellation *TrEmbedder::getConstellation()
 {
-  return nullptr;
+  return constellation;
 }
 
 TrNativeEventTarget *TrEmbedder::getNativeEventTarget()
 {
-  return nullptr;
+  return constellation->getNativeEventTarget();
 }
 
 TrRenderer *TrEmbedder::getRenderer()
 {
-  return nullptr;
+  return constellation->getRenderer();
 }
 
 xr::Device *TrEmbedder::getXrDevice()
 {
-  return nullptr;
+  return constellation->getXrDevice();
 }

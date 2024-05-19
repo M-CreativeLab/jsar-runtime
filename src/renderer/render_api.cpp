@@ -3,13 +3,17 @@
 
 #include "render_api.hpp"
 #include "runtime/platform_base.hpp"
+#include "runtime/constellation.hpp"
 #include "xr/frame.hpp"
 
 RenderAPI *RenderAPI::s_instance = NULL;
-RenderAPI *RenderAPI::Create(UnityGfxRenderer apiType)
+RenderAPI *RenderAPI::Create(UnityGfxRenderer apiType, TrConstellation* constellation)
 {
 	assert(s_instance == NULL);
+	assert(constellation != NULL);
+
 	s_instance = CreateRenderAPI(apiType);
+	s_instance->constellation = constellation;
 	return s_instance;
 }
 
@@ -21,7 +25,7 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 	// if (!jsRenderLoop->isAvailable())
 	// 	return kFrameExecutionNotAvailable;
 
-	auto device = xr::Device::GetInstance();
+	auto device = constellation->getXrDevice();
 	if (device == nullptr)
 		return kFrameExecutionNotInitialized;
 

@@ -2,43 +2,55 @@
 #include "constellation.hpp"
 #include "content.hpp"
 
+void __tr_empty()
+{
+  /**
+   * Nothing to do here, this function is used to get the library path.
+   */
+}
+
 TrConstellationInit::TrConstellationInit()
 {
-}
-
-TrConstellation *TrConstellation::s_Instance = nullptr;
-TrConstellation *TrConstellation::Create()
-{
-  if (s_Instance == nullptr)
-    s_Instance = new TrConstellation();
-  return s_Instance;
-}
-
-TrConstellation *TrConstellation::Get()
-{
-  return s_Instance;
 }
 
 TrConstellation::TrConstellation()
 {
   srand(static_cast<unsigned int>(time(nullptr)));
+
+  nativeEventTarget = new TrNativeEventTarget();
+  contentManager = new TrContentManager(this);
+  renderer = new TrRenderer();
+  xrDevice = new xr::Device();
 }
 
 TrConstellation::~TrConstellation()
 {
+  if (nativeEventTarget != nullptr)
+  {
+    delete nativeEventTarget;
+    nativeEventTarget = nullptr;
+  }
   if (contentManager != nullptr)
+  {
     delete contentManager;
+    contentManager = nullptr;
+  }
+  if (renderer != nullptr)
+  {
+    delete renderer;
+    renderer = nullptr;
+  }
   initialized = false;
 }
 
-void TrConstellation::initialize(const char *initJson)
+bool TrConstellation::initialize(string initJson)
 {
   rapidjson::Document initDoc;
-  initDoc.Parse(initJson);
+  initDoc.Parse(initJson.c_str());
   if (initDoc.HasParseError())
   {
-    DEBUG(LOG_TAG_CONSTELLATION, "Failed to parse init json: %s", initJson);
-    return;
+    DEBUG(LOG_TAG_CONSTELLATION, "Failed to parse init json: %s", initJson.c_str());
+    return false;
   }
 
   if (initDoc.HasMember("applicationCacheDirectory"))
@@ -49,17 +61,15 @@ void TrConstellation::initialize(const char *initJson)
     options.isXRSupported = initDoc["isXRSupported"].GetBool();
 
   Dl_info dlinfo;
-  if (dladdr((void *)TrConstellation::Create, &dlinfo))
+  if (dladdr((void *)__tr_empty, &dlinfo))
     options.runtimeDirectory = path(dlinfo.dli_fname).parent_path().c_str();
   else
     DEBUG(LOG_TAG_CONSTELLATION, "Failed to get the runtime path from current host");
 
-  contentManager = new TrContentManager(this);
-  renderer = new renderer::TrRenderer();
-
   contentManager->initialize();
   renderer->initialize();
   initialized = true;
+  return true;
 }
 
 void TrConstellation::tick()
@@ -72,6 +82,12 @@ void TrConstellation::tick()
     renderer->tickOnAnimationFrame();
 }
 
+TrNativeEventTarget *TrConstellation::getNativeEventTarget()
+{
+  assert(initialized == true);
+  return nativeEventTarget;
+}
+
 TrContentManager *TrConstellation::getContentManager()
 {
   assert(initialized == true);
@@ -82,6 +98,12 @@ renderer::TrRenderer *TrConstellation::getRenderer()
 {
   assert(initialized == true);
   return renderer;
+}
+
+xr::Device *TrConstellation::getXrDevice()
+{
+  assert(initialized == true);
+  return xrDevice;
 }
 
 TrConstellationInit &TrConstellation::getOptions()

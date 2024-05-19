@@ -134,7 +134,7 @@ TrContentManager::~TrContentManager()
 
 bool TrContentManager::initialize()
 {
-  auto nativeEventTarget = native_event::TrNativeEventTarget::GetOrCreateInstance();
+  auto nativeEventTarget = constellation->getNativeEventTarget();
   nativeEventTarget->addEventListener(native_event::TrEventType::TrXSMLRequest, [this](native_event::TrEventType type, native_event::TrNativeEvent &event)
                                       { this->onRequestEvent(event); });
 

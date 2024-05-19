@@ -81,13 +81,7 @@ namespace native_event
 
   class TrNativeEventTarget
   {
-  private:
-    static TrNativeEventTarget *s_Instance;
-
   public:
-    static TrNativeEventTarget *GetOrCreateInstance();
-
-  private:
     TrNativeEventTarget();
     ~TrNativeEventTarget();
 

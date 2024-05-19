@@ -7,26 +7,10 @@ namespace xr
 {
   static uint32_t MIN_FRAME_RATE = 60;
   static uint32_t MAX_FRAME_RATE = 90;
-  Device *Device::s_instance = NULL;
 
-  Device *Device::GetInstance()
+  Device* Device::GetInstance()
   {
-    return s_instance;
-  }
-
-  Device *Device::Create()
-  {
-    assert(s_instance == NULL);
-    s_instance = new Device();
-    return s_instance;
-  }
-
-  void Device::Destroy()
-  {
-    if (s_instance == NULL)
-      return;
-    delete s_instance;
-    s_instance = NULL;
+    return nullptr;
   }
 
   Device::Device() : m_FieldOfView(0.0f), m_Time(0.0f)

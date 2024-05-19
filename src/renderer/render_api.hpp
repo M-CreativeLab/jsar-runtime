@@ -6,7 +6,8 @@
 #include <ctime>
 #include <Unity/IUnityGraphics.h>
 
-#include "debug.hpp"
+#include "common/debug.hpp"
+#include "common/classes.hpp"
 #include "analytics/analytics.hpp"
 #include "command_buffer.hpp"
 #include "constants.hpp"
@@ -30,7 +31,7 @@ private:
 
 public:
   static RenderAPI *Get() { return s_instance; }
-  static RenderAPI *Create(UnityGfxRenderer apiType);
+  static RenderAPI *Create(UnityGfxRenderer apiType, TrConstellation* constellation);
 
 public:
   virtual ~RenderAPI()
@@ -155,6 +156,7 @@ private:
   size_t m_GpuBusyHitCount = 0;
   chrono::steady_clock::time_point m_LastFrameTime;
   chrono::microseconds m_DeltaTimeDuration;
+  TrConstellation* constellation = nullptr;
 };
 
 // Create a graphics API implementation instance for the given API type.

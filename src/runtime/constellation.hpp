@@ -8,10 +8,13 @@
 
 #include <dlfcn.h>
 #include "debug.hpp"
+#include "native_event.hpp"
 #include "renderer/renderer.hpp"
 
 using namespace std;
 using namespace std::filesystem;
+using namespace native_event;
+using namespace renderer;
 
 class TrContentRuntime;
 class TrContentManager;
@@ -31,26 +34,24 @@ public:
 class TrConstellation
 {
 public:
-  static TrConstellation *Create();
-  static TrConstellation *Get();
-
-private:
   TrConstellation();
   ~TrConstellation();
 
 public:
-  void initialize(const char *initJson);
+  bool initialize(string initJson);
   void tick();
   TrConstellationInit &getOptions();
   bool isInitialized();
+  TrNativeEventTarget *getNativeEventTarget();
   TrContentManager *getContentManager();
-  renderer::TrRenderer *getRenderer();
+  TrRenderer *getRenderer();
   xr::Device *getXrDevice();
 
 private:
   TrConstellationInit options;
+  TrNativeEventTarget *nativeEventTarget = nullptr;
   TrContentManager *contentManager = nullptr;
-  renderer::TrRenderer *renderer = nullptr;
+  TrRenderer *renderer = nullptr;
   xr::Device *xrDevice = nullptr;
   bool initialized = false;
 

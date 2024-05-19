@@ -42,7 +42,7 @@ namespace renderer
     void shutdown();
     void setLogFilter(string filterExpr);
     uint32_t getAnimationFrameChanPort();
-    RenderAPI *getApi();
+    void setApi(RenderAPI* api);
 
   public: // API for host update
     void setViewport(TrViewport &viewport);

@@ -53,13 +53,6 @@ namespace native_event
     onEvent(type, event);
   }
 
-  TrNativeEventTarget *TrNativeEventTarget::s_Instance = nullptr;
-  TrNativeEventTarget *TrNativeEventTarget::GetOrCreateInstance()
-  {
-    if (s_Instance == nullptr)
-      s_Instance = new TrNativeEventTarget();
-    return s_Instance;
-  }
 
   TrNativeEventTarget::TrNativeEventTarget()
   {

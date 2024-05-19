@@ -45,7 +45,8 @@ public:
   void initialize()
   {
     deviceType = graphics->GetRenderer();
-    TrEmbedder::initialize();
+    // set the backend api to the renderer.
+    constellation->getRenderer()->setApi(RenderAPI::Create(deviceType, constellation));
   }
 
   void unload()
@@ -154,9 +155,7 @@ extern "C"
       DEBUG(LOG_TAG_UNITY, "Failed to create UnityEmbedder instance");
       return;
     }
-
     OnPlatformSetup();
-    embedder->initialize();
   }
 
   DLL_PUBLIC void UnityPluginUnload()
@@ -252,17 +251,12 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_DispatchNativeEvent(int id, int type, const char *data)
   {
-    // auto nativeEventTarget = messaging::UnityEventListenerWrap::GetInstance();
-    // if (nativeEventTarget != nullptr)
-    //   nativeEventTarget->DispatchNativeEvent(id, type, data);
     auto eventTarget = UnityEmbedder::EnsureAndGet()->getNativeEventTarget();
     eventTarget->dispatchEvent(id, (native_event::TrEventType)type, data);
   }
 
   DLL_PUBLIC void TransmuteNative_SetRuntimeInit(const char *argJson)
   {
-    // auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
-    // nodejsBootstrapper->getEnv()->setRuntimeInit(argJson);
     UnityEmbedder::EnsureAndGet()->onStart(string(argJson));
   }
 
@@ -284,7 +278,7 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_SetStereoRenderingMode(int mode)
   {
-    auto xrDevice = xr::Device::GetInstance();
+    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
     if (xrDevice == NULL)
       return;
     xrDevice->setStereoRenderingMode((xr::StereoRenderingMode)mode);
@@ -292,7 +286,7 @@ extern "C"
 
   DLL_PUBLIC bool TransmuteNative_SetViewerStereoProjectionMatrix(int eyeId, float *transform)
   {
-    auto xrDevice = xr::Device::GetInstance();
+    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
     if (xrDevice == NULL)
       return false;
     return xrDevice->updateViewerStereoProjectionMatrix(eyeId, transform);
@@ -300,7 +294,7 @@ extern "C"
 
   DLL_PUBLIC bool TransmuteNative_SetViewerTransformFromTRS(float *translation, float *rotation)
   {
-    auto xrDevice = xr::Device::GetInstance();
+    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
     if (xrDevice == NULL)
       return false;
 
@@ -325,7 +319,7 @@ extern "C"
 
   DLL_PUBLIC bool TransmuteNative_SetViewerStereoViewMatrixFromTRS(int eyeId, float *translation, float *rotation)
   {
-    auto xrDevice = xr::Device::GetInstance();
+    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
     if (xrDevice == NULL)
       return false;
 
@@ -350,7 +344,7 @@ extern "C"
 
   DLL_PUBLIC bool TransmuteNative_SetLocalTransformFromTRS(int id, float *translation, float *rotation)
   {
-    auto xrDevice = xr::Device::GetInstance();
+    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
     if (xrDevice == NULL)
       return false;
 
@@ -375,7 +369,7 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_SetHandInputPose(int handness, int joint, float *translation, float *rotation, float radius)
   {
-    auto xrDevice = xr::Device::GetInstance();
+    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
     if (xrDevice == NULL)
       return;
 
@@ -392,7 +386,7 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_SetHandInputRayPose(int handness, float *translation, float *rotation)
   {
-    auto xrDevice = xr::Device::GetInstance();
+    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
     if (xrDevice == NULL)
       return;
 
@@ -405,7 +399,7 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_SetHandInputGripPose(int handness, float *translation, float *rotation)
   {
-    auto xrDevice = xr::Device::GetInstance();
+    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
     if (xrDevice == NULL)
       return;
 
@@ -418,7 +412,7 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_SetHandInputActionState(int handness, int actionType, int state)
   {
-    auto xrDevice = xr::Device::GetInstance();
+    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
     if (xrDevice == NULL)
       return;
 

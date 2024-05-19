@@ -27,9 +27,7 @@ namespace xr
   class Device
   {
   public:
-    static Device *GetInstance();
-    static Device *Create();
-    static void Destroy();
+    static Device* GetInstance();
 
   public:
     Device();
