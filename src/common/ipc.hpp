@@ -92,6 +92,9 @@ namespace ipc
     friend class TrChannelReceiver<T>;
   };
 
+  /**
+   * @brief A server that accepts only clients.
+   */
   template <typename T>
   class TrOneShotServer
   {
@@ -99,9 +102,21 @@ namespace ipc
     TrOneShotServer();
     ~TrOneShotServer();
 
+    /**
+     * Get the port number of this server.
+     */
     int getPort();
+    /**
+     * Accepts a client in blocking mode.
+     */
     TrOneShotClient<T> *accept();
+    /**
+     * Accepts a client in non-blocking mode.
+     */
     TrOneShotClient<T> *tryAccept(int timeout = 0);
+    /**
+     * It returns the client list.
+     */
     vector<TrOneShotClient<T> *> &getClients();
 
   private:
