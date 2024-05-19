@@ -4,7 +4,7 @@ namespace renderer
 {
   TrRenderer::TrRenderer()
   {
-    animationFrameChanServer = new ipc::TrOneShotServer<AnimationFrameRequest>();
+    animationFrameChanServer = new ipc::TrOneShotServer<AnimationFrameRequest>("animationFrameChan");
     api = nullptr;
   }
 

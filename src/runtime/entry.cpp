@@ -38,7 +38,6 @@ private:
     log = unityInterfaces->Get<IUnityLog>();
 
     graphics->RegisterDeviceEventCallback(UnityEmbedder::OnGraphicsDeviceEvent);
-    UnityEmbedder::OnGraphicsDeviceEvent(kUnityGfxDeviceEventInitialize);
   }
 
 public:
@@ -78,7 +77,10 @@ UnityEmbedder *UnityEmbedder::s_EmbedderInstance = nullptr;
 UnityEmbedder *UnityEmbedder::Create(IUnityInterfaces *unityInterfaces)
 {
   if (s_EmbedderInstance == nullptr)
+  {
     s_EmbedderInstance = new UnityEmbedder(unityInterfaces);
+    UnityEmbedder::OnGraphicsDeviceEvent(kUnityGfxDeviceEventInitialize);
+  }
   return s_EmbedderInstance;
 }
 UnityEmbedder *UnityEmbedder::EnsureAndGet()

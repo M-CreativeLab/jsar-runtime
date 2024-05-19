@@ -40,6 +40,11 @@ TrConstellation::~TrConstellation()
     delete renderer;
     renderer = nullptr;
   }
+  if (xrDevice != nullptr)
+  {
+    delete xrDevice;
+    xrDevice = nullptr;
+  }
   initialized = false;
 }
 
@@ -84,25 +89,21 @@ void TrConstellation::tick()
 
 TrNativeEventTarget *TrConstellation::getNativeEventTarget()
 {
-  assert(initialized == true);
   return nativeEventTarget;
 }
 
 TrContentManager *TrConstellation::getContentManager()
 {
-  assert(initialized == true);
   return contentManager;
 }
 
 renderer::TrRenderer *TrConstellation::getRenderer()
 {
-  assert(initialized == true);
   return renderer;
 }
 
 xr::Device *TrConstellation::getXrDevice()
 {
-  assert(initialized == true);
   return xrDevice;
 }
 

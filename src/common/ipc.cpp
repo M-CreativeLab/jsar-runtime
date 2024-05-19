@@ -5,6 +5,7 @@ namespace ipc
   constexpr int MIN_INET_PORT = 1024;
   constexpr int MAX_INET_PORT = 65535;
   constexpr int MAX_ATTEMPTS = 30;
+  constexpr int8_t HANDSHAKE_MAGIC[2] = {0x03, 0x07};
 
   bool createUnixSocketAddr(struct sockaddr_un *addr, string path)
   {
@@ -89,7 +90,6 @@ namespace ipc
       DEBUG(LOG_TAG_IPC, "Failed to set the fd(%d) to non-blocking mode: %s", fd, strerror(errno));
       return false;
     }
-    DEBUG(LOG_TAG_IPC, "The fd(%d) is switched to non-blocking mode.", fd);
     return true;
   }
 
@@ -110,16 +110,17 @@ namespace ipc
   template <typename T>
   bool TrChannelSender<T>::send(T data)
   {
-    if (fd == -1)
+    if (fd == -1 || client->invalid())
       return false;
 
     ssize_t sent = ::send(fd, &data, sizeof(data), 0);
     if (sent == -1)
     {
+      if (errno == ECONNRESET || errno == EPIPE)
+        client->invalid(true);
       DEBUG(LOG_TAG_IPC, "Failed to send data: %s", strerror(errno));
       return false;
     }
-    DEBUG(LOG_TAG_IPC, "Sent data bytes: %d", sizeof(data));
     return true;
   }
 
@@ -161,9 +162,13 @@ namespace ipc
     {
       T *data = new T();
       ssize_t bytesReceived = ::recv(fd, data, sizeof(T), 0);
-      if (bytesReceived <= -1)
+      if (bytesReceived <= 0 /** actuall 0 or -1 */)
       {
-        DEBUG(LOG_TAG_IPC, "Failed to read data from socket(%d): %s", fd, strerror(errno));
+        // TODO: handle the case of 0.
+        if (bytesReceived == 0)
+          DEBUG(LOG_TAG_IPC, "Failed to read data from socket(%d): The connection is closed by the peer.", fd);
+        else
+          DEBUG(LOG_TAG_IPC, "Failed to read data from socket(%d): %s", fd, strerror(errno));
         delete data;
         return nullptr;
       }
@@ -179,12 +184,18 @@ namespace ipc
   TrOneShotClient<T> *TrOneShotClient<T>::MakeAndConnect(int port, bool blocking)
   {
     TrOneShotClient<T> *client = new TrOneShotClient<T>();
-    if (!client->connect(port, blocking))
+    if (
+        client->connect(port, blocking) &&
+        client->sendHandshake()) // If the client is connected and the handshake is successful.
+    {
+      client->handshaked = true;
+      return client;
+    }
+    else
     {
       delete client;
       return nullptr;
     }
-    return client;
   }
 
   template <typename T>
@@ -195,6 +206,10 @@ namespace ipc
   template <typename T>
   TrOneShotClient<T>::TrOneShotClient(int fd, bool blocking) : fd(fd), blocking(blocking), connected(true)
   {
+    if (recvHandshake())
+      handshaked = true;
+    else
+      disconnect();
   }
 
   template <typename T>
@@ -202,7 +217,7 @@ namespace ipc
   {
     if (fd != -1)
     {
-      close(fd);
+      ::close(fd);
       fd = -1;
     }
     connected = false;
@@ -236,13 +251,118 @@ namespace ipc
   }
 
   template <typename T>
+  void TrOneShotClient<T>::disconnect()
+  {
+    if (fd != -1)
+    {
+      ::close(fd);
+      fd = -1;
+    }
+    connected = false;
+  }
+
+  template <typename T>
+  bool TrOneShotClient<T>::sendHandshake()
+  {
+    if (fd == -1 || connected == false)
+      return false;
+
+    /**
+     * Create the handshake message [0x0f, 0x07, pid(4 bytes)]
+     */
+    char head[6];
+    head[0] = HANDSHAKE_MAGIC[0]; /* magic number */
+    head[1] = HANDSHAKE_MAGIC[1]; /* magic number */
+    pid_t pid = getpid();
+    memcpy(&head[2], &pid, sizeof(pid));
+
+    /**
+     * Send the handshake message.
+     */
+    ssize_t sent = ::send(fd, head, sizeof(head), 0);
+    if (sent == -1 || sent != sizeof(head))
+    {
+      disconnect();
+      return false;
+    }
+    else
+    {
+      pid = head[1];
+      return true;
+    }
+  }
+
+  template <typename T>
+  bool TrOneShotClient<T>::recvHandshake()
+  {
+    if (fd == -1 || connected == false)
+      return false;
+
+    struct pollfd fds[1];
+    fds[0].fd = fd;
+    fds[0].events = POLLIN;
+
+    int events = poll(fds, 1, 1000); // wait handshake for 1 second.
+    if (events <= -1)
+    {
+      DEBUG(LOG_TAG_IPC, "Failed to poll the client at recv() handshake: %s", strerror(errno));
+      disconnect();
+      return false;
+    }
+    else if (!(fds[0].revents & POLLIN))
+    {
+      DEBUG(LOG_TAG_IPC, "Failed to poll the client at recv() handshake: The client is not ready or timeout(1s).");
+      disconnect();
+      return false;
+    }
+
+    char head[6];
+    ssize_t received = ::recv(fd, head, sizeof(head), 0);
+    if (received == -1 || received != sizeof(head))
+    {
+      disconnect();
+      return false;
+    }
+    else
+    {
+      if (head[0] != HANDSHAKE_MAGIC[0] || head[1] != HANDSHAKE_MAGIC[1])
+      {
+        DEBUG(LOG_TAG_IPC, "The handshake is failed.");
+        disconnect();
+        return false;
+      }
+      // convert head[2] ~ head[5] to pid.
+      memcpy(&pid, &head[2], sizeof(pid));
+      return true;
+    }
+  }
+
+  template <typename T>
+  void TrOneShotClient<T>::invalid(bool flag)
+  {
+    invalidFlag = flag;
+  }
+
+  template <typename T>
+  bool TrOneShotClient<T>::invalid()
+  {
+    return invalidFlag;
+  }
+
+  template <typename T>
+  pid_t TrOneShotClient<T>::getPid()
+  {
+    return pid;
+  }
+
+  template <typename T>
   bool TrOneShotClient<T>::isConnected()
   {
     return connected;
   }
 
   template <typename T>
-  TrOneShotServer<T>::TrOneShotServer() : fd(-1)
+  TrOneShotServer<T>::TrOneShotServer(string name) : fd(-1)
   {
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1)
@@ -282,7 +402,7 @@ namespace ipc
       fds[0].fd = fd;
       fds[0].events = POLLIN;
     }
-    DEBUG(LOG_TAG_IPC, "The server is listening on 127.0.0.1:%d", port);
+    DEBUG(LOG_TAG_IPC, "The server(%s) is listening on 127.0.0.1:%d", name.c_str(), port);
   }
 
   template <typename T>

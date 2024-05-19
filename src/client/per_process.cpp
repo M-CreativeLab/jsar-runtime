@@ -1,3 +1,4 @@
+#include <thread>
 #include "per_process.hpp"
 #include "crates/jsar_jsbindings.h"
 #include "bindings.hpp"
@@ -258,6 +259,16 @@ void TrClientContextPerProcess::start()
 
   // Just for test
   eventChanSender->send(CustomEvent(10));
+  thread scriptThread([this]() {
+    while (true)
+    {
+      auto req = frameChanReceiver->tryRecv(-1);
+      if (req != nullptr)
+      {
+        DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received frame request", req->time);
+      }
+    }
+  });
 }
 
 void TrClientContextPerProcess::print()

@@ -27,9 +27,10 @@ public:
 
 private:
   void onClientProcess();
+  bool testClientProcessExitOnFrame();  // true if the client process has exited
 
 private:
-  pid_t pid;
+  pid_t pid = -1;
   int eventChanPort;
   int frameChanPort;
   native_event::TrXSMLRequestInit requestInit;
@@ -37,6 +38,8 @@ private:
   TrContentManager *contentManager;
   // Layout?
   // XR?
+
+  friend class TrContentManager;
 };
 
 /**
@@ -63,9 +66,10 @@ private:
   TrOneShotServer<CustomEvent> *eventChanServer = nullptr;
   thread *eventChanWatcher = nullptr;
   mutex eventChanMutex;
+  mutex contentsMutex;
   vector<TrChannelReceiver<CustomEvent> *> eventChanReceivers;
   vector<TrChannelSender<CustomEvent> *> eventChanSenders;
-  vector<TrContentRuntime *> contentRuntimes;
+  vector<TrContentRuntime *> contents;
   atomic<bool> watcherRunning = false;
 
   friend class TrContentRuntime;

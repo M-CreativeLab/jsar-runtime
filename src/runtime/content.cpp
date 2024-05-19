@@ -1,6 +1,8 @@
+#include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
-#include <iostream>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
@@ -21,8 +23,7 @@ TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManage
 
 TrContentRuntime::~TrContentRuntime()
 {
-  // scriptRuntime.terminate();
-  contentManager->disposeContent(this);
+  dispose();
 }
 
 void TrContentRuntime::start(native_event::TrXSMLRequestInit init)
@@ -37,31 +38,34 @@ void TrContentRuntime::start(native_event::TrXSMLRequestInit init)
   pid = fork();
   if (pid == -1)
   {
-    DEBUG(LOG_TAG_SCRIPT, "Failed to fork a new process.");
+    DEBUG(LOG_TAG_CONTENT, "Failed to fork a new process.");
     return;
   }
   else if (pid == 0)
-  {
     onClientProcess();
-  }
+  else
+    DEBUG(LOG_TAG_CONTENT, "The client process(%d) is started.", pid);
 }
 
 void TrContentRuntime::pause()
 {
+  // TODO
 }
 
 void TrContentRuntime::resume()
 {
+  // TODO
 }
 
 void TrContentRuntime::terminate()
 {
-  // scriptRuntime.terminate();
+  kill(pid, SIGKILL);
 }
 
 void TrContentRuntime::dispose()
 {
-  delete this;
+  pid = -1;
+  contentManager = nullptr;
 }
 
 void TrContentRuntime::onClientProcess()
@@ -108,9 +112,37 @@ void TrContentRuntime::onClientProcess()
   exit(0);
 }
 
+bool TrContentRuntime::testClientProcessExitOnFrame()
+{
+  int status;
+  pid_t child = waitpid(pid, &status, WNOHANG);
+  if (child == -1)
+  {
+    DEBUG(LOG_TAG_CONTENT, "Failed to wait for the client process(%d): %s", pid, strerror(errno));
+    return false;
+  }
+  else if (child > 0)
+  {
+    if (WIFEXITED(status) || WIFSTOPPED(status))
+    {
+      DEBUG(LOG_TAG_CONTENT, "The client process(%d) is terminated or stopped.", pid);
+      pid = -1;
+      return true;
+    }
+    else if (WIFSIGNALED(status))
+    {
+      DEBUG(LOG_TAG_CONTENT, "The client process(%d) is terminated by a signal: %d, and core dumped: %d",
+            pid, WTERMSIG(status), WCOREDUMP(status));
+      pid = -1;
+      return true;
+    }
+  }
+  return false;
+}
+
 TrContentManager::TrContentManager(TrConstellation *constellation) : constellation(constellation)
 {
-  eventChanServer = new TrOneShotServer<CustomEvent>();
+  eventChanServer = new TrOneShotServer<CustomEvent>("eventChan");
 }
 
 TrContentManager::~TrContentManager()
@@ -127,9 +159,9 @@ TrContentManager::~TrContentManager()
     delete eventChanServer;
     eventChanServer = nullptr;
   }
-  for (auto it = contentRuntimes.begin(); it != contentRuntimes.end(); ++it)
+  for (auto it = contents.begin(); it != contents.end(); ++it)
     delete *it;
-  contentRuntimes.clear();
+  contents.clear();
 }
 
 bool TrContentManager::initialize()
@@ -150,6 +182,7 @@ bool TrContentManager::initialize()
         lock_guard<mutex> lock(eventChanMutex);
         eventChanReceivers.push_back(new TrChannelReceiver<CustomEvent>(newClient));
         eventChanSenders.push_back(new TrChannelSender<CustomEvent>(newClient));
+        DEBUG(LOG_TAG_CONTENT, "New client connected to the event channel: %d", newClient->getPid());
       }
     } });
   return true;
@@ -157,14 +190,34 @@ bool TrContentManager::initialize()
 
 bool TrContentManager::tickOnFrame()
 {
-  lock_guard<mutex> lock(eventChanMutex);
-  for (auto receiver : eventChanReceivers)
+  // Check the status of each content runtime.
   {
-    auto data = receiver->tryRecv();
-    if (data != nullptr)
+    lock_guard<mutex> lock(contentsMutex);
+    for (auto it = contents.begin(); it != contents.end();)
     {
-      DEBUG(LOG_TAG_SCRIPT, "Received event: %d", data->type);
-      delete data;
+      auto content = *it;
+      if (content->pid > 0 && content->testClientProcessExitOnFrame())
+      {
+        delete content;
+        it = contents.erase(it);
+      }
+      else
+      {
+        ++it;
+      }
+    }
+  }
+  // Check the event channel.
+  {
+    lock_guard<mutex> lock(eventChanMutex);
+    for (auto receiver : eventChanReceivers)
+    {
+      auto data = receiver->tryRecv();
+      if (data != nullptr)
+      {
+        DEBUG(LOG_TAG_CONTENT, "Received event: %d", data->type);
+        delete data;
+      }
     }
   }
   return true;
@@ -173,16 +226,20 @@ bool TrContentManager::tickOnFrame()
 TrContentRuntime *TrContentManager::makeContent()
 {
   TrContentRuntime *content = new TrContentRuntime(this);
-  contentRuntimes.push_back(content);
+  {
+    lock_guard<mutex> lock(contentsMutex);
+    contents.push_back(content);
+  }
   return content;
 }
 
 void TrContentManager::disposeContent(TrContentRuntime *content)
 {
-  auto it = std::find(contentRuntimes.begin(), contentRuntimes.end(), content);
-  if (it != contentRuntimes.end())
+  lock_guard<mutex> lock(contentsMutex);
+  auto it = std::find(contents.begin(), contents.end(), content);
+  if (it != contents.end())
   {
-    contentRuntimes.erase(it);
+    contents.erase(it);
     delete content;
   }
 }

@@ -49,6 +49,7 @@ namespace ipc
     TrChannelSender(TrOneShotClient<T> *client);
     ~TrChannelSender();
 
+  public:
     bool send(T data);
 
   private:
@@ -90,15 +91,24 @@ namespace ipc
 
   private:
     bool connect(int port, bool blocking);
+    void disconnect();
+    bool sendHandshake();
+    bool recvHandshake();
+    void invalid(bool flag);
+    bool invalid();
 
   public:
+    pid_t getPid();
     bool isConnected();
 
   private:
     int fd = -1;
     int port = -1;
+    pid_t pid = -1;
     bool blocking = true;
     bool connected = false;
+    bool handshaked = false;
+    bool invalidFlag = false;
 
     friend class TrOneShotServer<T>;
     friend class TrChannelSender<T>;
@@ -112,7 +122,7 @@ namespace ipc
   class TrOneShotServer
   {
   public:
-    TrOneShotServer();
+    TrOneShotServer(string name);
     ~TrOneShotServer();
 
     /**
