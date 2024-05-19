@@ -94,26 +94,17 @@ namespace ipc
   }
 
   template <typename T>
-  TrChannelSender<T>::TrChannelSender(int port) : port(port), fd(-1)
-  {
-  }
-
-  template <typename T>
-  TrChannelSender<T>::TrChannelSender(TrOneShotClient<T> *client) : fd(client->fd), blocking(client->blocking)
+  TrChannelSender<T>::TrChannelSender(TrOneShotClient<T> *client) : client(client),
+                                                                    fd(client->fd),
+                                                                    blocking(client->blocking)
   {
   }
 
   template <typename T>
   TrChannelSender<T>::~TrChannelSender()
   {
-    if (fd != -1)
-      close(fd);
-  }
-
-  template <typename T>
-  bool TrChannelSender<T>::connect()
-  {
-    return connectToSocket(fd, port);
+    fd = -1;
+    client = nullptr;
   }
 
   template <typename T>
@@ -133,26 +124,17 @@ namespace ipc
   }
 
   template <typename T>
-  TrChannelReceiver<T>::TrChannelReceiver(int port) : port(port)
-  {
-  }
-
-  template <typename T>
-  TrChannelReceiver<T>::TrChannelReceiver(TrOneShotClient<T> *client) : fd(client->fd), blocking(client->blocking)
+  TrChannelReceiver<T>::TrChannelReceiver(TrOneShotClient<T> *client) : client(client),
+                                                                        fd(client->fd),
+                                                                        blocking(client->blocking)
   {
   }
 
   template <typename T>
   TrChannelReceiver<T>::~TrChannelReceiver()
   {
-    if (fd != -1)
-      close(fd);
-  }
-
-  template <typename T>
-  bool TrChannelReceiver<T>::connect()
-  {
-    return connectToSocket(fd, port);
+    fd = -1;
+    client = nullptr;
   }
 
   template <typename T>
@@ -191,6 +173,72 @@ namespace ipc
     {
       return nullptr;
     }
+  }
+
+  template <typename T>
+  TrOneShotClient<T> *TrOneShotClient<T>::MakeAndConnect(int port, bool blocking)
+  {
+    TrOneShotClient<T> *client = new TrOneShotClient<T>();
+    if (!client->connect(port, blocking))
+    {
+      delete client;
+      return nullptr;
+    }
+    return client;
+  }
+
+  template <typename T>
+  TrOneShotClient<T>::TrOneShotClient() : connected(false)
+  {
+  }
+
+  template <typename T>
+  TrOneShotClient<T>::TrOneShotClient(int fd, bool blocking) : fd(fd), blocking(blocking), connected(true)
+  {
+  }
+
+  template <typename T>
+  TrOneShotClient<T>::~TrOneShotClient()
+  {
+    if (fd != -1)
+    {
+      close(fd);
+      fd = -1;
+    }
+    connected = false;
+  }
+
+  template <typename T>
+  bool TrOneShotClient<T>::connect(int port, bool blocking)
+  {
+    if (connected == true)
+      return true;
+
+    if (!connectToSocket(fd, port))
+    {
+      DEBUG(LOG_TAG_IPC, "Failed to connect to the server.");
+      return false;
+    }
+    connected = true;
+
+    if (blocking == false)
+    {
+      if (!setNonBlockingOnSocket(fd))
+      {
+        DEBUG(LOG_TAG_IPC, "Failed to set the socket to non-blocking mode, switching to blocking mode.");
+        blocking = true;
+      }
+    }
+    // Update the port and blocking mode.
+    this->port = port;
+    this->blocking = blocking;
+    return true;
+  }
+
+  template <typename T>
+  bool TrOneShotClient<T>::isConnected()
+  {
+    return connected;
   }
 
   template <typename T>

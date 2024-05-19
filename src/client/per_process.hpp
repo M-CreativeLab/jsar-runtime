@@ -74,7 +74,9 @@ public:
   uint32_t frameChanPort;
 
 private:
+  ipc::TrOneShotClient<CustomEvent> *eventChanClient = nullptr;
   ipc::TrChannelSender<CustomEvent> *eventChanSender = nullptr;
+  ipc::TrOneShotClient<AnimationFrameRequest> *frameChanClient = nullptr;
   ipc::TrChannelReceiver<AnimationFrameRequest> *frameChanReceiver = nullptr;
 
 private:

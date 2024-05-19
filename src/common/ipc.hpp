@@ -46,48 +46,59 @@ namespace ipc
   class TrChannelSender
   {
   public:
-    TrChannelSender(int port);
     TrChannelSender(TrOneShotClient<T> *client);
     ~TrChannelSender();
 
-    bool connect();
     bool send(T data);
 
   private:
-    int port;
     int fd;
     bool blocking;
+    TrOneShotClient<T> *client;
   };
 
   template <typename T>
   class TrChannelReceiver
   {
   public:
-    TrChannelReceiver(int port);
     TrChannelReceiver(TrOneShotClient<T> *client);
     ~TrChannelReceiver();
 
   public:
-    bool connect();
     T *tryRecv(int timeout = 0);
     int getFd() { return fd; }
 
   private:
-    int port;
     int fd;
     bool blocking;
+    TrOneShotClient<T> *client;
   };
 
+  /**
+   * @brief A client that connects to a server.
+   */
   template <typename T>
   class TrOneShotClient
   {
+  public:
+    static TrOneShotClient<T> *MakeAndConnect(int port, bool blocking);
+
   private:
-    TrOneShotClient(int fd, bool blocking) : fd(fd), blocking(blocking)
-    {
-      DEBUG(LOG_TAG_IPC, "a new client is created(%d, blocking=%d)", fd, blocking);
-    }
-    int fd;
-    bool blocking;
+    TrOneShotClient();
+    TrOneShotClient(int fd, bool blocking);
+    ~TrOneShotClient();
+
+  private:
+    bool connect(int port, bool blocking);
+
+  public:
+    bool isConnected();
+
+  private:
+    int fd = -1;
+    int port = -1;
+    bool blocking = true;
+    bool connected = false;
 
     friend class TrOneShotServer<T>;
     friend class TrChannelSender<T>;

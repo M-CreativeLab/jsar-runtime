@@ -42,7 +42,7 @@ ScriptEnvironment::ScriptEnvironment()
       scriptSource};
 
   // TODO: Check if we are in debug mode
-  args.insert(args.begin() + 1, "--inspect=9229");
+  args.insert(args.begin() + 1, "--inspect");
   scriptArgs = args;
 }
 
@@ -228,13 +228,17 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
 
 void TrClientContextPerProcess::start()
 {
-  eventChanSender = new ipc::TrChannelSender<CustomEvent>(eventChanPort);
-  frameChanReceiver = new ipc::TrChannelReceiver<AnimationFrameRequest>(frameChanPort);
+  eventChanClient = ipc::TrOneShotClient<CustomEvent>::MakeAndConnect(eventChanPort, false);
+  frameChanClient = ipc::TrOneShotClient<AnimationFrameRequest>::MakeAndConnect(frameChanPort, false);
 
-  if (eventChanSender->connect())
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) connected to the event channel", id);
-  if (frameChanReceiver->connect())
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) connected to the frame channel", id);
+  if (!eventChanClient->isConnected() || !frameChanClient->isConnected())
+  {
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to connect to the channels", id);
+    return;
+  }
+
+  eventChanSender = new ipc::TrChannelSender<CustomEvent>(eventChanClient);
+  frameChanReceiver = new ipc::TrChannelReceiver<AnimationFrameRequest>(frameChanClient);
 
   // Just for test
   eventChanSender->send(CustomEvent(10));
