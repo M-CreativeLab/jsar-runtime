@@ -224,6 +224,21 @@ TrClientContextPerProcess::TrClientContextPerProcess()
 
 TrClientContextPerProcess::~TrClientContextPerProcess()
 {
+  if (eventChanSender != nullptr)
+  {
+    delete eventChanSender;
+    eventChanSender = nullptr;
+  }
+  if (eventChanReceiver != nullptr)
+  {
+    delete eventChanReceiver;
+    eventChanReceiver = nullptr;
+  }
+  if (frameChanReceiver != nullptr)
+  {
+    delete frameChanReceiver;
+    frameChanReceiver = nullptr;
+  }
 }
 
 void TrClientContextPerProcess::start()
@@ -238,6 +253,7 @@ void TrClientContextPerProcess::start()
   }
 
   eventChanSender = new ipc::TrChannelSender<CustomEvent>(eventChanClient);
+  eventChanReceiver = new ipc::TrChannelReceiver<CustomEvent>(eventChanClient);
   frameChanReceiver = new ipc::TrChannelReceiver<AnimationFrameRequest>(frameChanClient);
 
   // Just for test

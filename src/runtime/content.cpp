@@ -149,6 +149,7 @@ bool TrContentManager::initialize()
       {
         lock_guard<mutex> lock(eventChanMutex);
         eventChanReceivers.push_back(new TrChannelReceiver<CustomEvent>(newClient));
+        eventChanSenders.push_back(new TrChannelSender<CustomEvent>(newClient));
       }
     } });
   return true;

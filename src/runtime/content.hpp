@@ -64,6 +64,7 @@ private:
   thread *eventChanWatcher = nullptr;
   mutex eventChanMutex;
   vector<TrChannelReceiver<CustomEvent> *> eventChanReceivers;
+  vector<TrChannelSender<CustomEvent> *> eventChanSenders;
   vector<TrContentRuntime *> contentRuntimes;
   atomic<bool> watcherRunning = false;
 
