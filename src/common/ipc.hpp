@@ -141,6 +141,10 @@ namespace ipc
      * It returns the client list.
      */
     vector<TrOneShotClient<T> *> &getClients();
+    /**
+     * It removes the client from the client list.
+     */
+    void removeClient(TrOneShotClient<T> *client);
 
   private:
     bool setNonBlocking();

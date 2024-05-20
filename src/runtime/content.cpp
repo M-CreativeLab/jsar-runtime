@@ -140,6 +140,20 @@ bool TrContentRuntime::testClientProcessExitOnFrame()
   return false;
 }
 
+bool TrContentRuntime::tickOnFrame()
+{
+  if (eventChanReceiver == nullptr)
+    return false;
+
+  auto data = eventChanReceiver->tryRecv(0);
+  if (data != nullptr)
+  {
+    DEBUG(LOG_TAG_CONTENT, "Received an event: %d", data->type);
+    delete data;
+  }
+  return true;
+}
+
 TrContentManager::TrContentManager(TrConstellation *constellation) : constellation(constellation)
 {
   eventChanServer = new TrOneShotServer<CustomEvent>("eventChan");
@@ -179,10 +193,25 @@ bool TrContentManager::initialize()
       auto newClient = eventChanServer->tryAccept(-1);
       if (newClient != nullptr)
       {
-        lock_guard<mutex> lock(eventChanMutex);
-        eventChanReceivers.push_back(new TrChannelReceiver<CustomEvent>(newClient));
-        eventChanSenders.push_back(new TrChannelSender<CustomEvent>(newClient));
-        DEBUG(LOG_TAG_CONTENT, "New client connected to the event channel: %d", newClient->getPid());
+        lock_guard<mutex> lock(contentsMutex);
+
+        bool foundNewClient = false;
+        for (auto it = contents.begin(); it != contents.end(); ++it)
+        {
+          auto content = *it;
+          if (content->pid == newClient->getPid())
+          {
+            foundNewClient = true;
+            content->eventChanReceiver = new TrChannelReceiver<CustomEvent>(newClient);
+            content->eventChanSender = new TrChannelSender<CustomEvent>(newClient);
+            break;
+          }
+        }
+
+        if (foundNewClient)
+          DEBUG(LOG_TAG_CONTENT, "New client connected to the event channel: %d", newClient->getPid());
+        else
+          eventChanServer->removeClient(newClient); // remove the client if it is not found by pid.
       }
     } });
   return true;
@@ -191,33 +220,19 @@ bool TrContentManager::initialize()
 bool TrContentManager::tickOnFrame()
 {
   // Check the status of each content runtime.
+  lock_guard<mutex> lock(contentsMutex);
+  for (auto it = contents.begin(); it != contents.end();)
   {
-    lock_guard<mutex> lock(contentsMutex);
-    for (auto it = contents.begin(); it != contents.end();)
+    auto content = *it;
+    if (content->pid > 0 && content->testClientProcessExitOnFrame())
     {
-      auto content = *it;
-      if (content->pid > 0 && content->testClientProcessExitOnFrame())
-      {
-        delete content;
-        it = contents.erase(it);
-      }
-      else
-      {
-        ++it;
-      }
+      delete content;
+      it = contents.erase(it);
     }
-  }
-  // Check the event channel.
-  {
-    lock_guard<mutex> lock(eventChanMutex);
-    for (auto receiver : eventChanReceivers)
+    else
     {
-      auto data = receiver->tryRecv();
-      if (data != nullptr)
-      {
-        DEBUG(LOG_TAG_CONTENT, "Received event: %d", data->type);
-        delete data;
-      }
+      content->tickOnFrame();
+      ++it;
     }
   }
   return true;

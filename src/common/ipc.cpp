@@ -481,6 +481,20 @@ namespace ipc
   }
 
   template <typename T>
+  void TrOneShotServer<T>::removeClient(TrOneShotClient<T> *client)
+  {
+    for (auto it = clients.begin(); it != clients.end(); it++)
+    {
+      if (*it == client)
+      {
+        delete *it;
+        clients.erase(it);
+        break;
+      }
+    }
+  }
+
+  template <typename T>
   bool TrOneShotServer<T>::setNonBlocking()
   {
     return setNonBlockingOnSocket(fd);

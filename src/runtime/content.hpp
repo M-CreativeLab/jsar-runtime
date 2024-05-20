@@ -28,6 +28,7 @@ public:
 private:
   void onClientProcess();
   bool testClientProcessExitOnFrame();  // true if the client process has exited
+  bool tickOnFrame();
 
 private:
   pid_t pid = -1;
@@ -36,6 +37,8 @@ private:
   native_event::TrXSMLRequestInit requestInit;
   TrConstellationInit constellationOptions;
   TrContentManager *contentManager;
+  TrChannelReceiver<CustomEvent> *eventChanReceiver = nullptr;
+  TrChannelSender<CustomEvent> *eventChanSender = nullptr;
   // Layout?
   // XR?
 
@@ -65,10 +68,7 @@ private:
   TrConstellation *constellation = nullptr;
   TrOneShotServer<CustomEvent> *eventChanServer = nullptr;
   thread *eventChanWatcher = nullptr;
-  mutex eventChanMutex;
   mutex contentsMutex;
-  vector<TrChannelReceiver<CustomEvent> *> eventChanReceivers;
-  vector<TrChannelSender<CustomEvent> *> eventChanSenders;
   vector<TrContentRuntime *> contents;
   atomic<bool> watcherRunning = false;
 
