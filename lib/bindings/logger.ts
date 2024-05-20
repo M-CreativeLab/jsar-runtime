@@ -191,7 +191,30 @@ export class Logger extends EventTarget implements Console {
 }
 
 const defaultLogger = new Logger();
-writeLogToNative(0, 'created default logger');
+/**
+ * See https://nodejs.org/api/events.html#eventtarget-error-handling
+ *
+ * Becauset Node.js EventTarget will cause an uncaught exception on `process.nextTick()`, thus we
+ * have no way to handle the error in better way, so we just log the error and not exiting the process.
+ */
+function handleGlobalExceptionOrRejection(err) {
+  defaultLogger.warn(`
+==============================
+uncaught exception or rejection
+Message: ${err?.message || err || 'null'}
+Stack: ${err?.stack || 'null'}
+==============================
+  `);
+  process.exit(1);
+}
+process.on('uncaughtException', handleGlobalExceptionOrRejection);
+process.on('unhandledRejection', handleGlobalExceptionOrRejection);
+
+// Just log the environment variables.
+writeLogToNative(0, `created default logger successfully, and the following are environment variables:`);
+for (const [key, value] of Object.entries(process.env)) {
+  writeLogToNative(0, `  ${key}: ${value}`);
+}
 
 export const log = defaultLogger.log.bind(defaultLogger);
 export const info = defaultLogger.info.bind(defaultLogger);

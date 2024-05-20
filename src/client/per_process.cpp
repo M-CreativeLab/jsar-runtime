@@ -24,8 +24,8 @@ NODE_API_LINKED_MODULE(canvas, "transmute:canvas", InitCanvasModule);
 NODE_API_LINKED_MODULE(env, "transmute:env", InitEnvModule);
 NODE_API_LINKED_MODULE(logger, "transmute:logger", InitLoggerModule);
 NODE_API_LINKED_MODULE(messaging, "transmute:messaging", InitMessagingModule);
-// NODE_API_LINKED_MODULE(renderer, "transmute:renderer", InitRendererModule);
-// NODE_API_LINKED_MODULE(webgl, "transmute:webgl", InitWebglModule);
+NODE_API_LINKED_MODULE(renderer, "transmute:renderer", InitRendererModule);
+NODE_API_LINKED_MODULE(webgl, "transmute:webgl", InitWebglModule);
 // NODE_API_LINKED_MODULE(webxr, "transmute:webxr", InitWebxrModule);
 #undef NODE_API_LINKED_MODULE
 
@@ -174,10 +174,10 @@ int TrScriptRuntimePerProcess::executeMainScript(ScriptEnvironment &env, vector<
     AddLinkedBinding(nodeEnv, transmute_env_napi_mod);
     AddLinkedBinding(nodeEnv, transmute_logger_napi_mod);
     AddLinkedBinding(nodeEnv, transmute_messaging_napi_mod);
-    // AddLinkedBinding(nodeEnv, transmute_renderer_napi_mod);
+    AddLinkedBinding(nodeEnv, transmute_renderer_napi_mod);
     // AddLinkedBinding(env, transmute_webaudio_napi_mod);
     AddLinkedBinding(nodeEnv, transmute_canvas_napi_mod);
-    // AddLinkedBinding(nodeEnv, transmute_webgl_napi_mod);
+    AddLinkedBinding(nodeEnv, transmute_webgl_napi_mod);
     // AddLinkedBinding(nodeEnv, transmute_webxr_napi_mod);
     // The followings are created by Rust
     // AddLinkedBinding(nodeEnv, transmute_htmlrender_napi_mod);
@@ -208,6 +208,8 @@ void TrScriptRuntimePerProcess::onScriptExit(node::Environment *env, int exit_co
 }
 
 TrClientContextPerProcess *TrClientContextPerProcess::s_Instance = nullptr;
+TrIdGenerator *TrClientContextPerProcess::s_IdGenerator = new TrIdGenerator(1);
+
 TrClientContextPerProcess *TrClientContextPerProcess::Create()
 {
   if (s_Instance == nullptr)
@@ -240,6 +242,15 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
     delete frameChanReceiver;
     frameChanReceiver = nullptr;
   }
+  // Clear for frame request callbacks
+  frameRequestCallbacksMap.clear();
+  framesListenerRunning = false;
+  if (framesListener != nullptr)
+  {
+    framesListener->join();
+    delete framesListener;
+    framesListener = nullptr;
+  }
 }
 
 void TrClientContextPerProcess::start()
@@ -257,18 +268,12 @@ void TrClientContextPerProcess::start()
   eventChanReceiver = new ipc::TrChannelReceiver<CustomEvent>(eventChanClient);
   frameChanReceiver = new ipc::TrChannelReceiver<AnimationFrameRequest>(frameChanClient);
 
-  // Just for test
-  eventChanSender->send(CustomEvent(10));
-  thread scriptThread([this]() {
-    while (true)
-    {
-      auto req = frameChanReceiver->tryRecv(-1);
-      if (req != nullptr)
-      {
-        DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received frame request", req->time);
-      }
-    }
-  });
+  // Start the frames listener
+  framesListenerRunning = true;
+  framesListener = new thread([this]()
+                              { 
+                                SET_THREAD_NAME("TrFramesListener");
+                                this->onListenFrames(); });
 }
 
 void TrClientContextPerProcess::print()
@@ -278,4 +283,47 @@ void TrClientContextPerProcess::print()
   DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) httpsProxyServer=%s", id, httpsProxyServer.c_str());
   DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) eventChanPort=%d", id, eventChanPort);
   DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) frameChanPort=%d", id, frameChanPort);
+}
+
+FrameRequestId TrClientContextPerProcess::requestFrame(FrameRequestCallback callback)
+{
+  lock_guard<mutex> lock(frameRequestMutex);
+  FrameRequestId resId;
+  while (true)
+  {
+    FrameRequestId id = static_cast<FrameRequestId>(s_IdGenerator->get());
+    if (frameRequestCallbacksMap.find(id) != frameRequestCallbacksMap.end())
+      continue;
+
+    frameRequestCallbacksMap.insert(pair<FrameRequestId, FrameRequestCallback>(id, callback));
+    resId = id;
+    break;
+  }
+  return resId;
+}
+
+void TrClientContextPerProcess::cancelFrame(FrameRequestId id)
+{
+  lock_guard<mutex> lock(frameRequestMutex);
+  frameRequestCallbacksMap.erase(id);
+}
+
+void TrClientContextPerProcess::onListenFrames()
+{
+  while (framesListenerRunning)
+  {
+    auto frameRequest = frameChanReceiver->tryRecv(-1);
+    if (frameRequest == nullptr)
+      continue;
+
+    {
+      // Notify the frame request callbacks
+      lock_guard<mutex> lock(frameRequestMutex);
+      for (auto &pair : frameRequestCallbacksMap)
+      {
+        auto callback = pair.second;
+        callback(*frameRequest);
+      }
+    }
+  }
 }

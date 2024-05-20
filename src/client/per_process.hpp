@@ -2,17 +2,24 @@
 
 #include <string>
 #include <vector>
+#include <map>
+#include <thread>
+#include <mutex>
 #include <node/node.h>
 #include <node/node_api.h>
 #include <napi.h>
 
 #include "base.hpp"
+#include "idgen.hpp"
 #include "debug.hpp"
 #include "ipc.hpp"
 
 using namespace std;
 using namespace node;
 using namespace v8;
+
+typedef uint32_t FrameRequestId;
+typedef function<void(AnimationFrameRequest&)> FrameRequestCallback;
 
 class ScriptEnvironment
 {
@@ -65,6 +72,13 @@ public:
   void start();
   void print();
 
+public: // frame request methods
+  FrameRequestId requestFrame(FrameRequestCallback callback);
+  void cancelFrame(FrameRequestId id);
+
+private:
+  void onListenFrames();
+
 public:
   uint32_t id;
   string url;
@@ -80,6 +94,13 @@ private:
   ipc::TrOneShotClient<AnimationFrameRequest> *frameChanClient = nullptr;
   ipc::TrChannelReceiver<AnimationFrameRequest> *frameChanReceiver = nullptr;
 
+private:  // frame request fields
+  map<FrameRequestId, FrameRequestCallback> frameRequestCallbacksMap;
+  thread *framesListener = nullptr; // a thread to listen for frame requests
+  mutex frameRequestMutex;
+  atomic<bool> framesListenerRunning = false;
+
 private:
   static TrClientContextPerProcess *s_Instance;
+  static TrIdGenerator* s_IdGenerator;
 };

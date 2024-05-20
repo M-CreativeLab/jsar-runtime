@@ -4,14 +4,6 @@ import * as logger from '../bindings/logger';
  * Browser Pollyfills for Node.js
  */
 import { XMLHttpRequestImpl } from './xhr2';
-
-/**
- * A patch to the Node.js TextDecoder.
- *
- * Node.js TextDecoder with samll ICU doesn't support ascii encoding, however the fontkit library depends on
- * the ASCII decoder to parse the font file headers.
- */
-import './textdecoder';
 import { ErrorEventImpl } from './events/error-event';
 import { PointerEventImpl } from './events/pointer-event';
 import {

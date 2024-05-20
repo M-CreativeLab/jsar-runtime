@@ -34,6 +34,11 @@ declare namespace Transmute {
     setExceptionCallback(callback: RenderExceptionCallback): void;
     setFrameCallback(callback: FrameRequestCallback): void;
   }
+  class AnimationFrameListener {
+    constructor();
+    connect(callback: FrameRequestCallback): number;
+    isConnected(): boolean;
+  }
 
   class WebGLRenderingContextOnDevice extends WebGLRenderingContext {
     constructor(contextAttribs?: WebGLContextAttributes);
@@ -116,6 +121,7 @@ declare namespace NodeJS {
     };
     _linkedBinding(module: 'transmute:renderer'): {
       RenderLoop: typeof Transmute.RenderLoop;
+      AnimationFrameListener: typeof Transmute.AnimationFrameListener;
     };
     _linkedBinding(module: 'transmute:canvas'): {
       OffscreenCanvas: typeof OffscreenCanvas;

@@ -1,10 +1,16 @@
+/**
+ * A patch to the Node.js TextDecoder.
+ *
+ * Node.js TextDecoder with samll ICU doesn't support ascii encoding, however the fontkit library depends on
+ * the ASCII decoder to parse the font file headers.
+ */
+import './polyfills/textdecoder';
 import minimist from 'minimist';
 import * as logger from '@transmute/logger';
 import { getClientContext } from '@transmute/env';
 
 const args = minimist(process.argv.slice(1));
 const clientContext = getClientContext();
-
 logger.info('The command line arguments:', args);
 
 const bootstrapStart = performance.now();
@@ -16,27 +22,8 @@ setInterval(() => {
   logger.info(`${id} is running...`)
 }, 2000);
 
-/**
- * See https://nodejs.org/api/events.html#eventtarget-error-handling
- *
- * Becauset Node.js EventTarget will cause an uncaught exception on `process.nextTick()`, thus we
- * have no way to handle the error in better way, so we just log the error and not exiting the process.
- */
-function handleGlobalExceptionOrRejection(err) {
-  logger.warn(`
-==============================
-uncaught exception or rejection
-Stack: ${err?.stack || 'null'}
-Message: ${err?.message || err || 'null'}
-==============================
-  `);
-  process.exit(1);
-}
-process.on('uncaughtException', handleGlobalExceptionOrRejection);
-process.on('unhandledRejection', handleGlobalExceptionOrRejection);
-
 // import { InitializeOffscreenCanvas } from './polyfills'; // load polyfills after the global error handler
-import { connectRenderer, requestGpuBusyCallback } from './bindings/renderer';
+import { connectRenderer, requestGpuBusyCallback, requestAnimationFrame } from './bindings/renderer';
 // import { prepareXRSystem } from './webxr';
 // import { TransmuteRuntime2 } from './runtime2';
 
@@ -47,6 +34,10 @@ requestGpuBusyCallback(() => {
   // } else {
   //   process.exit(1);
   // }
+});
+
+requestAnimationFrame((time) => {
+  logger.info('The animation frame callback is called at', time);
 });
 
 (async function main() {

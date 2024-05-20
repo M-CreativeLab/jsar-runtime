@@ -31,7 +31,7 @@ private:
 
 public:
   static RenderAPI *Get() { return s_instance; }
-  static RenderAPI *Create(UnityGfxRenderer apiType, TrConstellation* constellation);
+  static RenderAPI *Create(UnityGfxRenderer apiType, TrConstellation *constellation);
 
 public:
   virtual ~RenderAPI()
@@ -156,7 +156,7 @@ private:
   size_t m_GpuBusyHitCount = 0;
   chrono::steady_clock::time_point m_LastFrameTime;
   chrono::microseconds m_DeltaTimeDuration;
-  TrConstellation* constellation = nullptr;
+  TrConstellation *constellation = nullptr;
 };
 
 // Create a graphics API implementation instance for the given API type.

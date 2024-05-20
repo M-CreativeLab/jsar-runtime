@@ -37,7 +37,6 @@ namespace renderer
     Napi::Value SetExceptionCallback(const Napi::CallbackInfo &info);
     Napi::Value SetFrameCallback(const Napi::CallbackInfo &info);
     Napi::Value SetFrameFinished(const Napi::CallbackInfo &info);
-    Napi::Value GetCommandBuffersCount(const Napi::CallbackInfo &info);
     Napi::Value Dispose(const Napi::CallbackInfo &info);
 
   private:

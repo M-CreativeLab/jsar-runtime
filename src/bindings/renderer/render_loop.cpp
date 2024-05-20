@@ -14,7 +14,6 @@ namespace renderer
         {InstanceMethod("supportsWebGL2", &RenderLoop::SupportsWebGL2),
          InstanceMethod("setExceptionCallback", &RenderLoop::SetExceptionCallback),
          InstanceMethod("setFrameCallback", &RenderLoop::SetFrameCallback),
-         InstanceMethod("getCommandBuffersCount", &RenderLoop::GetCommandBuffersCount),
          InstanceMethod("dispose", &RenderLoop::Dispose)});
 
     constructor = new Napi::FunctionReference();
@@ -113,13 +112,6 @@ namespace renderer
         });
     available_ = true;
     return info.This();
-  }
-
-  Napi::Value RenderLoop::GetCommandBuffersCount(const Napi::CallbackInfo &info)
-  {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
-    return Napi::Number::New(env, RenderAPI::Get()->GetCommandBuffersCount());
   }
 
   Napi::Value RenderLoop::Dispose(const Napi::CallbackInfo &info)

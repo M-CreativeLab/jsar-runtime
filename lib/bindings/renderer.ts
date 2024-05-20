@@ -3,9 +3,11 @@ import { getContext as getWebGLRenderingContext } from '../webgl';
 
 const {
   RenderLoop,
+  AnimationFrameListener,
 } = process._linkedBinding('transmute:renderer');
 
 let globalRenderLoop: Transmute.RenderLoop = null;
+let globalAnimationFrameListener: Transmute.AnimationFrameListener = null;
 let globalGlContext: WebGLRenderingContext | WebGL2RenderingContext = null;
 let isReady = false;
 
@@ -41,48 +43,56 @@ export function requestGpuBusyCallback(callback: GpuBusyCallback) {
   ongpubusyCallbacks.push(callback);
 }
 
+function onAnimationFrame(time: number, data: any) {
+  try {
+    const callbackThisFrame = onframeCallbacks.slice();
+    onframeCallbacks.length = 0;
+
+    while (callbackThisFrame.length > 0) {
+      const onframe = callbackThisFrame.shift();
+      onframe.callback(time, data);
+    }
+  } catch (err) {
+    logger.warn('error in frame callback:', err);
+  }
+}
+
 export function connectRenderer() {
-  if (globalRenderLoop != null) {
-    throw new TypeError('renderer already connected.');
+  if (isReady) {
+    throw new TypeError('renderer is already connected.');
   }
 
-  const loop = globalRenderLoop = new RenderLoop();
-  loop.setExceptionCallback(function (code) {
-    if (code === 0x03 /** kFrameExecutionGpuBusy */) {
-      ongpubusyCallbacks.forEach(cb => cb());
-    } else {
-      logger.error(`Unknown renderer exception occurred, the code is: ${code}`);
-    }
-  });
-  loop.setFrameCallback(function (time, data) {
-    try {
-      const callbackThisFrame = onframeCallbacks.slice();
-      onframeCallbacks.length = 0;
+  // const loop = globalRenderLoop = new RenderLoop();
+  // loop.setExceptionCallback(function (code) {
+  //   if (code === 0x03 /** kFrameExecutionGpuBusy */) {
+  //     ongpubusyCallbacks.forEach(cb => cb());
+  //   } else {
+  //     logger.error(`Unknown renderer exception occurred, the code is: ${code}`);
+  //   }
+  // });
+  // loop.setFrameCallback(onAnimationFrame);
 
-      while (callbackThisFrame.length > 0) {
-        const onframe = callbackThisFrame.shift();
-        onframe.callback(time, data);
-      }
-    } catch (err) {
-      logger.warn('error in frame callback:', err);
-    }
-  });
+  /**
+   * Setup for animation frame listener.
+   */
+  globalAnimationFrameListener = new AnimationFrameListener();
+  globalAnimationFrameListener.connect(onAnimationFrame);
 
   /**
    * Initialize the global WebGL context.
    */
-  try {
-    globalGlContext = getWebGLRenderingContext(loop.supportsWebGL2() ? 'webgl2' : 'webgl');
-  } catch (err) {
-    logger.warn('error creating webgl context:', err);
-  }
-  if (globalGlContext == null) {
-    throw new Error('failed to create webgl context.');
-  }
+  // try {
+  //   globalGlContext = getWebGLRenderingContext('webgl2');
+  // } catch (err) {
+  //   logger.warn('error creating webgl context:', err);
+  // }
+  // if (globalGlContext == null) {
+  //   throw new Error('failed to create webgl context.');
+  // }
 
-  const gl = globalGlContext;
-  onreadyCallbacks.forEach(cb => cb(gl));
-  onreadyCallbacks.length = 0;
+  // const gl = globalGlContext;
+  // onreadyCallbacks.forEach(cb => cb(gl));
+  // onreadyCallbacks.length = 0;
   isReady = true;
   logger.info('connected to renderer.');
 }
