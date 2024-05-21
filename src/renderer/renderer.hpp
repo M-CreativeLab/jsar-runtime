@@ -9,10 +9,11 @@
 #include "common/classes.hpp"
 #include "common/ipc.hpp"
 #include "common/messages.hpp"
-#include "common/command_buffers.hpp"
+#include "common/command_buffers/command_buffers.hpp"
 #include "xr/device.hpp"
 
 using namespace std;
+using namespace commandbuffers;
 
 namespace renderer
 {

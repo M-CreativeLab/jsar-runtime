@@ -13,11 +13,16 @@
 #include "idgen.hpp"
 #include "debug.hpp"
 #include "ipc.hpp"
-#include "command_buffers.hpp"
+#include "common/messages.hpp"
+#include "common/command_buffers/command_buffers.hpp"
+#include "common/command_buffers/message.hpp"
+#include "common/command_buffers/receiver.hpp"
+#include "common/command_buffers/sender.hpp"
 
 using namespace std;
 using namespace node;
 using namespace v8;
+using namespace commandbuffers;
 
 typedef uint32_t FrameRequestId;
 typedef function<void(AnimationFrameRequest&)> FrameRequestCallback;

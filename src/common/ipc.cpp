@@ -1,6 +1,6 @@
 #include "ipc.hpp"
 #include "messages.hpp"
-#include "command_buffers.hpp"
+#include "common/command_buffers/message.hpp"
 
 namespace ipc
 {
@@ -539,6 +539,6 @@ namespace ipc
 
   SPECIALIZE_TEMPLATE(CustomEvent)
   SPECIALIZE_TEMPLATE(AnimationFrameRequest)
-  SPECIALIZE_TEMPLATE(TrCommandBufferMessage)
+  SPECIALIZE_TEMPLATE(commandbuffers::TrCommandBufferMessage)
 #undef SPECIALIZE_TEMPLATE
 }

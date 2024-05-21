@@ -1,7 +1,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string>
-#include "common/command_buffers.hpp"
+
+#include "common/command_buffers/message.hpp"
+#include "common/command_buffers/shared.hpp"
+
+using namespace commandbuffers;
 
 class FooCommand
 {
@@ -17,7 +21,7 @@ public:
 int main()
 {
   FooCommand foo(10);
-  TrCommandBufferMessage message(COMMAND_BUFFER_WEBGL_CONTEXT_INIT, sizeof(FooCommand), &foo);
+  TrCommandBufferMessage message(CommandBufferType::COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ, sizeof(FooCommand), &foo);
 
   std::string str = "foobar";
   message.addStringSegment(str);

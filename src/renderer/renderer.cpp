@@ -81,8 +81,8 @@ namespace renderer
     {
       auto req = dynamic_cast<WebGL1ContextInitCommandBufferRequest *>(request);
       WebGL1ContextInitCommandBufferResponse response(req);
-      response.url = "foobar";
-      response.foo = 1999;
+      response.maxCombinedTextureImageUnits = 8;
+      response.vendor = "Rokid Inc.";
       content->commandBufferChanSender->sendCommandBufferResponse(response);
     }
   }

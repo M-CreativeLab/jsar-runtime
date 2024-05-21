@@ -284,8 +284,8 @@ void TrClientContextPerProcess::start()
                                 this->onListenFrames(); });
 
   // Test
-  auto cb = WebGL1ContextInitCommandBufferRequest(800, 600, "hello!");
-  if (!commandBufferChanSender->sendCommandBufferRequest(cb))
+  auto req = WebGL1ContextInitCommandBufferRequest();
+  if (!commandBufferChanSender->sendCommandBufferRequest(req))
   {
     DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to send command buffer", id);
   }
@@ -294,7 +294,7 @@ void TrClientContextPerProcess::start()
   {
     auto commandBufferResp = dynamic_cast<WebGL1ContextInitCommandBufferResponse *>(resp);
     DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received command buffer response: foo=%d url(r)=%s",
-          id, commandBufferResp->foo, commandBufferResp->url.c_str());
+          id, commandBufferResp->maxCombinedTextureImageUnits, commandBufferResp->vendor.c_str());
   }
 }
 
