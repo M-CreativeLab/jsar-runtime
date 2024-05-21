@@ -1,5 +1,4 @@
 file(GLOB TR_CLIENT_SOURCE
-    "src/bindings/canvas/*.cpp"
     "src/bindings/env/*.cpp"
     "src/bindings/logger/*.cpp"
     "src/bindings/messaging/*.cpp"
@@ -11,6 +10,11 @@ file(GLOB TR_CLIENT_SOURCE
     "src/renderer/*.cpp"
     "src/xr/*.cpp"
 )
+if (ANDROID)
+    file(GLOB TR_CLIENT_CANVAS_SOURCE "src/bindings/canvas/*.cpp")
+    list(APPEND TR_CLIENT_SOURCE ${TR_CLIENT_CANVAS_SOURCE})
+endif()
+
 add_executable(TransmuteClient
     ${TR_COMMON_SOURCE}
     ${TR_CLIENT_SOURCE}

@@ -13,6 +13,7 @@
 #include "idgen.hpp"
 #include "debug.hpp"
 #include "ipc.hpp"
+#include "command_buffers.hpp"
 
 using namespace std;
 using namespace node;
@@ -84,8 +85,10 @@ public:
   string url;
   string applicationCacheDirectory;
   string httpsProxyServer;
+  uint32_t webglVersion = 2;  // webgl2 by default
   uint32_t eventChanPort;
   uint32_t frameChanPort;
+  uint32_t commandBufferChanPort;
 
 private:
   ipc::TrOneShotClient<CustomEvent> *eventChanClient = nullptr;
@@ -93,6 +96,8 @@ private:
   ipc::TrChannelReceiver<CustomEvent> *eventChanReceiver = nullptr;
   ipc::TrOneShotClient<AnimationFrameRequest> *frameChanClient = nullptr;
   ipc::TrChannelReceiver<AnimationFrameRequest> *frameChanReceiver = nullptr;
+  ipc::TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
+  TrCommandBufferSender *commandBufferChanSender = nullptr;
 
 private:  // frame request fields
   map<FrameRequestId, FrameRequestCallback> frameRequestCallbacksMap;

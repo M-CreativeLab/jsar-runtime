@@ -1,21 +1,21 @@
 #include "renderer.hpp"
+#include "runtime/constellation.hpp"
+#include "runtime/content.hpp"
 
 namespace renderer
 {
-  TrRenderer::TrRenderer()
+  TrRenderer::TrRenderer(TrConstellation *constellation) : constellation(constellation), api(nullptr)
   {
     animationFrameChanServer = new ipc::TrOneShotServer<AnimationFrameRequest>("animationFrameChan");
-    api = nullptr;
+    commandBufferChanServer = new ipc::TrOneShotServer<TrCommandBufferMessage>("commandBufferChan");
   }
 
   TrRenderer::~TrRenderer()
   {
-    watcherRunning = false;
-    if (chanSendersWatcher != nullptr)
-    {
-      chanSendersWatcher->join();
-      delete chanSendersWatcher;
-    }
+    stopWatchers();
+
+    api = nullptr;
+    constellation = nullptr;
     delete animationFrameChanServer;
     for (auto sender : animationFrameChanSenders)
       delete sender;
@@ -26,28 +26,23 @@ namespace renderer
   {
     assert(watcherRunning == false);
     assert(chanSendersWatcher == nullptr);
-
-    watcherRunning = true;
-    chanSendersWatcher = new thread([this]()
-                                    {
-      SET_THREAD_NAME("TrAnimationFrameWatcher");
-      while (watcherRunning)
-      {
-        auto newClient = animationFrameChanServer->tryAccept(-1);
-        if (newClient != nullptr)
-        {
-          lock_guard<mutex> lock(chanSendersMutex);
-          animationFrameChanSenders.push_back(new ipc::TrChannelSender<AnimationFrameRequest>(newClient));
-        }
-      } });
+    startWatchers();
   }
 
   void TrRenderer::tickOnAnimationFrame()
   {
-    lock_guard<mutex> lock(chanSendersMutex);
-    AnimationFrameRequest request;
-    for (auto sender : animationFrameChanSenders)
-      sender->send(request);
+    {
+      lock_guard<mutex> lock(chanSendersMutex);
+      AnimationFrameRequest request;
+      for (auto sender : animationFrameChanSenders)
+        sender->send(request);
+    }
+
+    // Check command buffers
+    // for (auto content : constellation->getContentManager()->contents)
+    // {
+    //   content->
+    // }
   }
 
   void TrRenderer::shutdown()
@@ -65,7 +60,12 @@ namespace renderer
     return animationFrameChanServer->getPort();
   }
 
-  void TrRenderer::setApi(RenderAPI* api)
+  uint32_t TrRenderer::getCommandBufferChanPort()
+  {
+    return commandBufferChanServer->getPort();
+  }
+
+  void TrRenderer::setApi(RenderAPI *api)
   {
     this->api = api;
   }
@@ -83,5 +83,54 @@ namespace renderer
   void TrRenderer::setTime(float time)
   {
     api->SetTime(time);
+  }
+
+  void TrRenderer::startWatchers()
+  {
+    watcherRunning = true;
+    chanSendersWatcher = new thread([this]()
+                                    {
+      SET_THREAD_NAME("TrAnimationFrameWatcher");
+      while (watcherRunning)
+      {
+        auto newClient = animationFrameChanServer->tryAccept(-1);
+        if (newClient != nullptr)
+        {
+          lock_guard<mutex> lock(chanSendersMutex);
+          animationFrameChanSenders.push_back(new ipc::TrChannelSender<AnimationFrameRequest>(newClient));
+        }
+      } });
+    commandBufferClientWatcher = new thread([this]()
+                                            {
+      SET_THREAD_NAME("TrCommandBufferWatcher");
+      while (watcherRunning)
+      {
+        auto newClient = commandBufferChanServer->tryAccept(-1);
+        if (newClient != nullptr)
+        {
+          auto content = constellation->getContentManager()->findContent(newClient->getPid());
+          if (content == nullptr)
+            commandBufferChanServer->removeClient(newClient);
+          else
+            content->createCommandBufferChanReceiver(newClient);
+        }
+      } });
+  }
+
+  void TrRenderer::stopWatchers()
+  {
+    watcherRunning = false;
+    if (chanSendersWatcher != nullptr)
+    {
+      chanSendersWatcher->join();
+      delete chanSendersWatcher;
+      chanSendersWatcher = nullptr;
+    }
+    if (commandBufferClientWatcher != nullptr)
+    {
+      commandBufferClientWatcher->join();
+      delete commandBufferClientWatcher;
+      commandBufferClientWatcher = nullptr;
+    }
   }
 }

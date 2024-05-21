@@ -20,7 +20,10 @@ using namespace bindings;
       {0},                                                             \
   };
 
+#ifdef __ANDROID__  /** Only support canvas at Android for now */
 NODE_API_LINKED_MODULE(canvas, "transmute:canvas", InitCanvasModule);
+#endif
+
 NODE_API_LINKED_MODULE(env, "transmute:env", InitEnvModule);
 NODE_API_LINKED_MODULE(logger, "transmute:logger", InitLoggerModule);
 NODE_API_LINKED_MODULE(messaging, "transmute:messaging", InitMessagingModule);
@@ -176,7 +179,9 @@ int TrScriptRuntimePerProcess::executeMainScript(ScriptEnvironment &env, vector<
     AddLinkedBinding(nodeEnv, transmute_messaging_napi_mod);
     AddLinkedBinding(nodeEnv, transmute_renderer_napi_mod);
     // AddLinkedBinding(env, transmute_webaudio_napi_mod);
+#ifdef __ANDROID__  /** Only support canvas at Android for now */
     AddLinkedBinding(nodeEnv, transmute_canvas_napi_mod);
+#endif
     AddLinkedBinding(nodeEnv, transmute_webgl_napi_mod);
     // AddLinkedBinding(nodeEnv, transmute_webxr_napi_mod);
     // The followings are created by Rust
@@ -257,6 +262,7 @@ void TrClientContextPerProcess::start()
 {
   eventChanClient = ipc::TrOneShotClient<CustomEvent>::MakeAndConnect(eventChanPort, false);
   frameChanClient = ipc::TrOneShotClient<AnimationFrameRequest>::MakeAndConnect(frameChanPort, false);
+  commandBufferChanClient = ipc::TrOneShotClient<TrCommandBufferMessage>::MakeAndConnect(commandBufferChanPort, false);
 
   if (!eventChanClient->isConnected() || !frameChanClient->isConnected())
   {
@@ -267,6 +273,14 @@ void TrClientContextPerProcess::start()
   eventChanSender = new ipc::TrChannelSender<CustomEvent>(eventChanClient);
   eventChanReceiver = new ipc::TrChannelReceiver<CustomEvent>(eventChanClient);
   frameChanReceiver = new ipc::TrChannelReceiver<AnimationFrameRequest>(frameChanClient);
+  commandBufferChanSender = new TrCommandBufferSender(commandBufferChanClient);
+
+  // Test
+  auto cb = WebGL1ContextInitCommandBuffer(800, 600, "hello!");
+  if (!commandBufferChanSender->sendCommandBuffer(cb))
+  {
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to send command buffer", id);
+  }
 
   // Start the frames listener
   framesListenerRunning = true;
@@ -283,6 +297,7 @@ void TrClientContextPerProcess::print()
   DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) httpsProxyServer=%s", id, httpsProxyServer.c_str());
   DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) eventChanPort=%d", id, eventChanPort);
   DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) frameChanPort=%d", id, frameChanPort);
+  DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) commandBufferChanPort=%d", id, commandBufferChanPort);
 }
 
 FrameRequestId TrClientContextPerProcess::requestFrame(FrameRequestCallback callback)

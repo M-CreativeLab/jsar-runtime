@@ -31,5 +31,6 @@ namespace bindings
     thisObject.Set("applicationCacheDirectory",
                    Napi::String::New(env, clientContext->applicationCacheDirectory));
     thisObject.Set("httpsProxyServer", Napi::String::New(env, clientContext->httpsProxyServer));
+    thisObject.Set("webglVersion", Napi::Number::New(env, clientContext->webglVersion));
   }
 }

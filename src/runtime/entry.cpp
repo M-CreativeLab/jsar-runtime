@@ -94,9 +94,8 @@ extern "C"
   static float s_WorldScalingFactor = 1.0;
   static void OnPlatformSetup()
   {
-    auto embedder = UnityEmbedder::EnsureAndGet();
-
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
+    auto embedder = UnityEmbedder::EnsureAndGet();
     char deviceVendor[PROP_VALUE_MAX];
     if (
         __system_property_get("ro.product.vendor.brand", deviceVendor) >= 0 ||

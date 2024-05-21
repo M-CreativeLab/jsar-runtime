@@ -136,3 +136,14 @@ function(tr_target_set_properties TARGET)
         )
     endif ()
 endfunction()
+
+### Tests
+
+# check for TR_BUILD_TESTS
+if (TR_BUILD_TESTS)
+    message(STATUS "Building tests")
+    add_executable(TransmuteCommonTest
+        src/tests/common.cpp
+        ${TR_COMMON_SOURCE}
+    )
+endif()

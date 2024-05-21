@@ -3,10 +3,10 @@
 #include <atomic>
 #include <mutex>
 #include <filesystem>
-
 #include "native_event.hpp"
 #include "constellation.hpp"
-#include "ipc.hpp"
+#include "common/ipc.hpp"
+#include "common/command_buffers.hpp"
 
 using namespace std;
 using namespace ipc;
@@ -25,20 +25,26 @@ public:
   void terminate();
   void dispose();
 
+public: // command buffer methods
+  TrCommandBufferReceiver *createCommandBufferChanReceiver(TrOneShotClient<TrCommandBufferMessage> *client);
+
 private:
   void onClientProcess();
-  bool testClientProcessExitOnFrame();  // true if the client process has exited
+  bool testClientProcessExitOnFrame(); // true if the client process has exited
+  void recvCommandBuffers(uint32_t timeout);
   bool tickOnFrame();
 
 private:
   pid_t pid = -1;
   int eventChanPort;
   int frameChanPort;
+  int commandBufferChanPort;
   native_event::TrXSMLRequestInit requestInit;
   TrConstellationInit constellationOptions;
   TrContentManager *contentManager;
   TrChannelReceiver<CustomEvent> *eventChanReceiver = nullptr;
   TrChannelSender<CustomEvent> *eventChanSender = nullptr;
+  TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
   // Layout?
   // XR?
 
@@ -59,6 +65,7 @@ public:
   bool initialize();
   bool tickOnFrame();
   TrContentRuntime *makeContent();
+  TrContentRuntime *findContent(pid_t pid);
   void disposeContent(TrContentRuntime *content);
 
 private:
@@ -66,12 +73,20 @@ private:
 
 private:
   TrConstellation *constellation = nullptr;
-  TrOneShotServer<CustomEvent> *eventChanServer = nullptr;
-  thread *eventChanWatcher = nullptr;
   mutex contentsMutex;
   vector<TrContentRuntime *> contents;
+
+private: // event channel
   atomic<bool> watcherRunning = false;
+  TrOneShotServer<CustomEvent> *eventChanServer = nullptr;
+  thread *eventChanWatcher = nullptr;
+
+private: // command buffer channel
+  atomic<bool> commandBuffersWorkerRunning = false;
+  thread *commandBuffersRecvWorker = nullptr;
+  mutex commandBuffersMutex;
 
   friend class TrContentRuntime;
   friend class TrConstellation;
+  friend class TrRenderer;
 };

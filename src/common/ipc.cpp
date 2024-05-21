@@ -1,4 +1,6 @@
 #include "ipc.hpp"
+#include "messages.hpp"
+#include "command_buffers.hpp"
 
 namespace ipc
 {
@@ -110,10 +112,16 @@ namespace ipc
   template <typename T>
   bool TrChannelSender<T>::send(T data)
   {
+    return sendRaw(&data, sizeof(data));
+  }
+
+  template <typename T>
+  bool TrChannelSender<T>::sendRaw(const void *data, size_t size)
+  {
     if (fd == -1 || client->invalid())
       return false;
 
-    ssize_t sent = ::send(fd, &data, sizeof(data), 0);
+    ssize_t sent = ::send(fd, data, size, 0);
     if (sent == -1)
     {
       if (errno == ECONNRESET || errno == EPIPE)
@@ -141,10 +149,29 @@ namespace ipc
   template <typename T>
   T *TrChannelReceiver<T>::tryRecv(int timeout)
   {
+    T data;
+    if (tryRecvRaw(&data, sizeof(T), timeout))
+    {
+      T *newData = new T();
+      memcpy(newData, &data, sizeof(T));
+      return newData;
+    }
+    else
+    {
+      return nullptr;
+    }
+  }
+
+  template <typename T>
+  bool TrChannelReceiver<T>::tryRecvRaw(void *outData, size_t outSize, int timeout)
+  {
+    if (client->invalid())
+      return false;
+
     if (blocking)
     {
       DEBUG(LOG_TAG_IPC, "The receiver is in blocking mode, thus tryRecv() is not available.");
-      return nullptr;
+      return false;
     }
 
     struct pollfd fds[1];
@@ -155,28 +182,32 @@ namespace ipc
     if (events <= -1)
     {
       DEBUG(LOG_TAG_IPC, "Failed to poll the receiver: %s", strerror(errno));
-      return nullptr;
+      return false;
     }
 
     if (fds[0].revents & POLLIN)
     {
-      T *data = new T();
-      ssize_t bytesReceived = ::recv(fd, data, sizeof(T), 0);
+      ssize_t bytesReceived = ::recv(fd, outData, outSize, 0);
       if (bytesReceived <= 0 /** actuall 0 or -1 */)
       {
-        // TODO: handle the case of 0.
+        string msg;
         if (bytesReceived == 0)
-          DEBUG(LOG_TAG_IPC, "Failed to read data from socket(%d): The connection is closed by the peer.", fd);
+        {
+          msg = "The connection is closed by the peer.";
+          client->invalid(true);
+        }
         else
-          DEBUG(LOG_TAG_IPC, "Failed to read data from socket(%d): %s", fd, strerror(errno));
-        delete data;
-        return nullptr;
+        {
+          msg = strerror(errno);
+        }
+        DEBUG(LOG_TAG_IPC, "Failed to read data from socket(%d): %s", fd, msg.c_str());
+        return false;
       }
-      return data;
+      return true;
     }
     else
     {
-      return nullptr;
+      return false;
     }
   }
 
@@ -508,5 +539,6 @@ namespace ipc
 
   SPECIALIZE_TEMPLATE(CustomEvent)
   SPECIALIZE_TEMPLATE(AnimationFrameRequest)
+  SPECIALIZE_TEMPLATE(TrCommandBufferMessage)
 #undef SPECIALIZE_TEMPLATE
 }

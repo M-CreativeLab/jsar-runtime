@@ -27,12 +27,23 @@ export function requestRendererReady(callback: (gl: WebGLRenderingContext) => vo
 }
 
 let globalId = 0;
+/**
+ * It requests the runtime to call the specified function to update the animation before the next repaint.
+ * 
+ * @param callback the callback function to be invoked before the next repaint.
+ * @returns a handle that can be used to cancel the callback.
+ */
 export function requestAnimationFrame(callback: Transmute.FrameRequestCallback): number {
   const handle = globalId++;
   onframeCallbacks.push({ callback, handle });
   return handle;
 }
 
+/**
+ * Cancels a callback previously scheduled by `requestAnimationFrame()`.
+ * 
+ * @param handle the handle returned by requestAnimationFrame.
+ */
 export function cancelAnimationFrame(handle: number) {
   onframeCallbacks.splice(onframeCallbacks.findIndex(cb => cb.handle === handle), 1);
 }

@@ -19,7 +19,7 @@ TrConstellation::TrConstellation()
 
   nativeEventTarget = new TrNativeEventTarget();
   contentManager = new TrContentManager(this);
-  renderer = new TrRenderer();
+  renderer = new TrRenderer(this);
   xrDevice = new xr::Device();
 }
 

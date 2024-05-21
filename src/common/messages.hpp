@@ -11,13 +11,14 @@ public:
   CustomEvent(int type) : type(type) {}
 
   int type;
-  char* data;
+  char *data;
 };
 
 class AnimationFrameRequest
 {
 public:
-  AnimationFrameRequest() {
+  AnimationFrameRequest()
+  {
     auto now = chrono::system_clock::now();
     time = chrono::duration_cast<chrono::microseconds>(now.time_since_epoch()).count();
   }

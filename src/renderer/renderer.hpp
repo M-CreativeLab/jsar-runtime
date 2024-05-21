@@ -6,7 +6,10 @@
 #include <atomic>
 
 #include "render_api.hpp"
+#include "common/classes.hpp"
 #include "common/ipc.hpp"
+#include "common/messages.hpp"
+#include "common/command_buffers.hpp"
 #include "xr/device.hpp"
 
 using namespace std;
@@ -33,7 +36,7 @@ namespace renderer
   class TrRenderer
   {
   public:
-    TrRenderer();
+    TrRenderer(TrConstellation *constellation);
     ~TrRenderer();
 
   public:
@@ -42,7 +45,8 @@ namespace renderer
     void shutdown();
     void setLogFilter(string filterExpr);
     uint32_t getAnimationFrameChanPort();
-    void setApi(RenderAPI* api);
+    uint32_t getCommandBufferChanPort();
+    void setApi(RenderAPI *api);
 
   public: // API for host update
     void setViewport(TrViewport &viewport);
@@ -50,16 +54,26 @@ namespace renderer
     void setTime(float time); // might be deprecated
 
   private:
+    void startWatchers();
+    void stopWatchers();
+
+  private:
     RenderAPI *api = nullptr;
+    TrConstellation *constellation = nullptr;
     xr::Device *xrDevice = nullptr;
 
   private:
     ipc::TrOneShotServer<AnimationFrameRequest> *animationFrameChanServer = nullptr;
     vector<ipc::TrChannelSender<AnimationFrameRequest> *> animationFrameChanSenders;
+    atomic<bool> watcherRunning = false; // This is shared by all the watchers.
 
   private: // fields for senders management
     thread *chanSendersWatcher = nullptr;
     mutex chanSendersMutex;
-    atomic<bool> watcherRunning = false;
+
+  private: // fields for command buffer
+    ipc::TrOneShotServer<TrCommandBufferMessage> *commandBufferChanServer = nullptr;
+    map<pid_t, TrCommandBufferReceiver *> commandBufferChanReceivers;
+    thread *commandBufferClientWatcher = nullptr;
   };
 }

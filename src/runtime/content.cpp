@@ -32,6 +32,7 @@ void TrContentRuntime::start(native_event::TrXSMLRequestInit init)
   constellationOptions = contentManager->constellation->getOptions();
   eventChanPort = contentManager->eventChanServer->getPort();
   frameChanPort = contentManager->constellation->getRenderer()->getAnimationFrameChanPort();
+  commandBufferChanPort = contentManager->constellation->getRenderer()->getCommandBufferChanPort();
   DEBUG(LOG_TAG_CONTENT, "Start a new client process for %s", init.url.c_str());
 
   // start a new process for client.
@@ -68,6 +69,12 @@ void TrContentRuntime::dispose()
   contentManager = nullptr;
 }
 
+TrCommandBufferReceiver *TrContentRuntime::createCommandBufferChanReceiver(TrOneShotClient<TrCommandBufferMessage> *client)
+{
+  commandBufferChanReceiver = new TrCommandBufferReceiver(client);
+  return commandBufferChanReceiver;
+}
+
 void TrContentRuntime::onClientProcess()
 {
   path basePath = path(constellationOptions.runtimeDirectory);
@@ -88,6 +95,7 @@ void TrContentRuntime::onClientProcess()
   scriptContext.AddMember("runScripts", rapidjson::Value(requestInit.runScripts.c_str(), allocator), allocator);
   scriptContext.AddMember("eventChanPort", eventChanPort, allocator);
   scriptContext.AddMember("frameChanPort", frameChanPort, allocator);
+  scriptContext.AddMember("commandBufferChanPort", commandBufferChanPort, allocator);
 
   rapidjson::StringBuffer scriptContextBuffer;
   rapidjson::Writer<rapidjson::StringBuffer> scriptContextWriter(scriptContextBuffer);
@@ -140,6 +148,17 @@ bool TrContentRuntime::testClientProcessExitOnFrame()
   return false;
 }
 
+void TrContentRuntime::recvCommandBuffers(uint32_t timeout)
+{
+  if (commandBufferChanReceiver == nullptr)
+    return; // Skip if the command buffer channel is not ready.
+
+  while (true)
+  {
+    commandBufferChanReceiver->recvCommandBuffer(timeout);
+  }
+}
+
 bool TrContentRuntime::tickOnFrame()
 {
   if (eventChanReceiver == nullptr)
@@ -161,6 +180,15 @@ TrContentManager::TrContentManager(TrConstellation *constellation) : constellati
 
 TrContentManager::~TrContentManager()
 {
+  // Stop command buffers worker
+  if (commandBuffersRecvWorker != nullptr)
+  {
+    commandBuffersWorkerRunning = false;
+    commandBuffersRecvWorker->join();
+    delete commandBuffersRecvWorker;
+    commandBuffersRecvWorker = nullptr;
+  }
+  // Stop event channel watcher
   if (eventChanWatcher != nullptr)
   {
     watcherRunning = false;
@@ -173,6 +201,7 @@ TrContentManager::~TrContentManager()
     delete eventChanServer;
     eventChanServer = nullptr;
   }
+  // Dispose all contents
   for (auto it = contents.begin(); it != contents.end(); ++it)
     delete *it;
   contents.clear();
@@ -214,6 +243,29 @@ bool TrContentManager::initialize()
           eventChanServer->removeClient(newClient); // remove the client if it is not found by pid.
       }
     } });
+
+  commandBuffersWorkerRunning = true;
+  commandBuffersRecvWorker = new thread([this]()
+                                        {
+    SET_THREAD_NAME("TrCommandBuffersWorker");
+
+    uint32_t timeout = 100;
+    while (commandBuffersWorkerRunning)
+    {
+      /**
+       * TODO: If there is no content, we should not start the worker.
+       */
+      if (contents.empty())
+      {
+        this_thread::sleep_for(chrono::milliseconds(timeout));
+        continue;
+      }
+      else
+      {
+        for (auto it = contents.begin(); it != contents.end(); ++it)
+          (*it)->recvCommandBuffers(timeout);
+      }
+    } });
   return true;
 }
 
@@ -246,6 +298,18 @@ TrContentRuntime *TrContentManager::makeContent()
     contents.push_back(content);
   }
   return content;
+}
+
+TrContentRuntime *TrContentManager::findContent(pid_t pid)
+{
+  lock_guard<mutex> lock(contentsMutex);
+  for (auto it = contents.begin(); it != contents.end(); ++it)
+  {
+    auto content = *it;
+    if (content->pid == pid)
+      return content;
+  }
+  return nullptr;
 }
 
 void TrContentManager::disposeContent(TrContentRuntime *content)

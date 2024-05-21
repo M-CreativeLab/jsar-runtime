@@ -82,6 +82,8 @@
     "charconv": "cpp",
     "filesystem": "cpp",
     "iterator": "cpp",
-    "regex": "cpp"
+    "regex": "cpp",
+    "csignal": "cpp",
+    "typeindex": "cpp"
   }
 }

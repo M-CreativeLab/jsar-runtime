@@ -102,8 +102,12 @@ if (APPLE)
     message("CMAKE_OSX_ARCHITECTURES: ${CMAKE_OSX_ARCHITECTURES}")
 endif()
 
-# Enable LTO
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+if (APPLE)
+    set(TR_BUILD_TESTS ON)
+elseif (ANDROID)
+    set(TR_BUILD_TESTS OFF)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)  # Enable LTO for android
+endif()
 
 include(cmake/TransmuteCXXFlags.cmake)
 include(cmake/TransmuteCommon.cmake)
