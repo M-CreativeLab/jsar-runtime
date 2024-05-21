@@ -20,7 +20,7 @@ using namespace bindings;
       {0},                                                             \
   };
 
-#ifdef __ANDROID__  /** Only support canvas at Android for now */
+#ifdef __ANDROID__ /** Only support canvas at Android for now */
 NODE_API_LINKED_MODULE(canvas, "transmute:canvas", InitCanvasModule);
 #endif
 
@@ -179,7 +179,7 @@ int TrScriptRuntimePerProcess::executeMainScript(ScriptEnvironment &env, vector<
     AddLinkedBinding(nodeEnv, transmute_messaging_napi_mod);
     AddLinkedBinding(nodeEnv, transmute_renderer_napi_mod);
     // AddLinkedBinding(env, transmute_webaudio_napi_mod);
-#ifdef __ANDROID__  /** Only support canvas at Android for now */
+#ifdef __ANDROID__ /** Only support canvas at Android for now */
     AddLinkedBinding(nodeEnv, transmute_canvas_napi_mod);
 #endif
     AddLinkedBinding(nodeEnv, transmute_webgl_napi_mod);
@@ -274,13 +274,7 @@ void TrClientContextPerProcess::start()
   eventChanReceiver = new ipc::TrChannelReceiver<CustomEvent>(eventChanClient);
   frameChanReceiver = new ipc::TrChannelReceiver<AnimationFrameRequest>(frameChanClient);
   commandBufferChanSender = new TrCommandBufferSender(commandBufferChanClient);
-
-  // Test
-  auto cb = WebGL1ContextInitCommandBuffer(800, 600, "hello!");
-  if (!commandBufferChanSender->sendCommandBuffer(cb))
-  {
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to send command buffer", id);
-  }
+  commandBufferChanReceiver = new TrCommandBufferReceiver(commandBufferChanClient);
 
   // Start the frames listener
   framesListenerRunning = true;
@@ -288,6 +282,20 @@ void TrClientContextPerProcess::start()
                               { 
                                 SET_THREAD_NAME("TrFramesListener");
                                 this->onListenFrames(); });
+
+  // Test
+  auto cb = WebGL1ContextInitCommandBufferRequest(800, 600, "hello!");
+  if (!commandBufferChanSender->sendCommandBufferRequest(cb))
+  {
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to send command buffer", id);
+  }
+  auto resp = commandBufferChanReceiver->recvCommandBufferResponse(1000);
+  if (resp->type == CommandBufferType::COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES)
+  {
+    auto commandBufferResp = dynamic_cast<WebGL1ContextInitCommandBufferResponse *>(resp);
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received command buffer response: foo=%d url(r)=%s",
+          id, commandBufferResp->foo, commandBufferResp->url.c_str());
+  }
 }
 
 void TrClientContextPerProcess::print()

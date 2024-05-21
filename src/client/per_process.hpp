@@ -98,6 +98,7 @@ private:
   ipc::TrChannelReceiver<AnimationFrameRequest> *frameChanReceiver = nullptr;
   ipc::TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
+  TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
 
 private:  // frame request fields
   map<FrameRequestId, FrameRequestCallback> frameRequestCallbacksMap;

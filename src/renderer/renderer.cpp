@@ -70,6 +70,23 @@ namespace renderer
     this->api = api;
   }
 
+  void TrRenderer::addCommandBufferRequest(TrContentRuntime *content, TrCommandBufferBase *request)
+  {
+    auto it = commandBufferRequestsMap.find(content->pid);
+    if (it == commandBufferRequestsMap.end())
+      commandBufferRequestsMap[content->pid] = vector<TrCommandBufferBase *>();
+    // commandBufferRequestsMap[pid].push_back(request);
+
+    if (request->type == CommandBufferType::COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ)
+    {
+      auto req = dynamic_cast<WebGL1ContextInitCommandBufferRequest *>(request);
+      WebGL1ContextInitCommandBufferResponse response(req);
+      response.url = "foobar";
+      response.foo = 1999;
+      content->commandBufferChanSender->sendCommandBufferResponse(response);
+    }
+  }
+
   void TrRenderer::setViewport(TrViewport &viewport)
   {
     api->SetViewport(viewport.width, viewport.height, viewport.x, viewport.y);
@@ -112,7 +129,7 @@ namespace renderer
           if (content == nullptr)
             commandBufferChanServer->removeClient(newClient);
           else
-            content->createCommandBufferChanReceiver(newClient);
+            content->setupWithCommandBufferClient(newClient);
         }
       } });
   }

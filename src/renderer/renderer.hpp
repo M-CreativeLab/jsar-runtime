@@ -47,6 +47,7 @@ namespace renderer
     uint32_t getAnimationFrameChanPort();
     uint32_t getCommandBufferChanPort();
     void setApi(RenderAPI *api);
+    void addCommandBufferRequest(TrContentRuntime* content, TrCommandBufferBase *request);
 
   public: // API for host update
     void setViewport(TrViewport &viewport);
@@ -73,7 +74,7 @@ namespace renderer
 
   private: // fields for command buffer
     ipc::TrOneShotServer<TrCommandBufferMessage> *commandBufferChanServer = nullptr;
-    map<pid_t, TrCommandBufferReceiver *> commandBufferChanReceivers;
+    map<pid_t, vector<TrCommandBufferBase *>> commandBufferRequestsMap;
     thread *commandBufferClientWatcher = nullptr;
   };
 }

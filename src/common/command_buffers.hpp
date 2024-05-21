@@ -16,8 +16,10 @@ class TrCommandBufferSubMessage;
 enum CommandBufferType
 {
   COMMAND_BUFFER_UNKNOWN = 0,
-  COMMAND_BUFFER_WEBGL_CONTEXT_INIT,
-  COMMAND_BUFFER_WEBGL2_CONTEXT_INIT,
+  COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ,
+  COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES,
+  COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_REQ,
+  COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_RES,
 };
 
 static TrIdGenerator commandBufferIdGen(1);
@@ -110,8 +112,8 @@ public:
 
   bool serialize(void **outData, size_t *outSize);
   bool deserialize(TrCommandBufferReceiver *receiver, int recvTimeout);
-  bool deserialize(char* buffer, size_t size);
-  bool deserializeContent(char* contentBuffer, size_t contentSize);
+  bool deserialize(char *buffer, size_t size);
+  bool deserializeContent(char *contentBuffer, size_t contentSize);
 
   template <typename T>
   T *createInstanceFromBase()
@@ -133,7 +135,7 @@ private:
   }
 
   template <typename T>
-  size_t writeTo(char* dest, size_t offset, const T* src)
+  size_t writeTo(char *dest, size_t offset, const T *src)
   {
     return writeTo(dest, offset, src, sizeof(T));
   }
@@ -151,12 +153,12 @@ private:
   void *base;
   vector<TrCommandBufferSegment> segments;
 
+  friend class TrCommandBufferBase;
   friend class TrCommandBufferSender;
   friend class TrCommandBufferReceiver;
-  friend class ClientCommandBuffer;
 };
 
-class ClientCommandBuffer
+class TrCommandBufferBase
 {
 public:
   template <typename T>
@@ -168,8 +170,8 @@ public:
   }
 
 public:
-  ClientCommandBuffer() {}
-  ClientCommandBuffer(CommandBufferType type) : type(type) {}
+  TrCommandBufferBase() {}
+  TrCommandBufferBase(CommandBufferType type) : type(type) {}
 
 public:
   virtual TrCommandBufferMessage *serialize() = 0;
@@ -177,22 +179,31 @@ public:
 
 public:
   CommandBufferType type = COMMAND_BUFFER_UNKNOWN;
+  uint32_t id = commandBufferIdGen.get();
   size_t size = 0;
 };
 
-class WebGL1ContextInitCommandBuffer : public ClientCommandBuffer
+class TrCommandBufferResponse : public TrCommandBufferBase
 {
 public:
-  WebGL1ContextInitCommandBuffer() : ClientCommandBuffer(COMMAND_BUFFER_WEBGL_CONTEXT_INIT)
+  TrCommandBufferResponse(CommandBufferType type, TrCommandBufferBase *req) : TrCommandBufferBase(type),
+                                                                              requestId(req->id)
   {
-    size = sizeof(WebGL1ContextInitCommandBuffer);
   }
-  WebGL1ContextInitCommandBuffer(int width, int height, string url) : ClientCommandBuffer(COMMAND_BUFFER_WEBGL_CONTEXT_INIT),
-                                                                      width(width),
-                                                                      height(height),
-                                                                      url(url)
+
+public:
+  int requestId;
+};
+
+class WebGL1ContextInitCommandBufferRequest : public TrCommandBufferBase
+{
+public:
+  WebGL1ContextInitCommandBufferRequest(int width, int height, string url) : TrCommandBufferBase(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ),
+                                                                             width(width),
+                                                                             height(height),
+                                                                             url(url)
   {
-    size = sizeof(WebGL1ContextInitCommandBuffer);
+    size = sizeof(WebGL1ContextInitCommandBufferRequest);
   }
 
 public:
@@ -215,6 +226,35 @@ public:
   std::string url;
 };
 
+class WebGL1ContextInitCommandBufferResponse : public TrCommandBufferResponse
+{
+public:
+  WebGL1ContextInitCommandBufferResponse(WebGL1ContextInitCommandBufferRequest *req)
+      : TrCommandBufferResponse(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES, req),
+        foo(0)
+  {
+    size = sizeof(WebGL1ContextInitCommandBufferResponse);
+  }
+
+public:
+  TrCommandBufferMessage *serialize() override
+  {
+    auto message = new TrCommandBufferMessage(type, size, this);
+    message->addStringSegment(url);
+    return message;
+  }
+  void deserialize(TrCommandBufferMessage &message) override
+  {
+    auto urlSegment = message.getSegment(0);
+    if (urlSegment != nullptr)
+      url = urlSegment->toString();
+  }
+
+public:
+  int foo;
+  std::string url;
+};
+
 class TrCommandBufferSender : public ipc::TrChannelSender<TrCommandBufferMessage>
 {
 public:
@@ -222,7 +262,8 @@ public:
   ~TrCommandBufferSender() {}
 
 public:
-  bool sendCommandBuffer(ClientCommandBuffer &commandBuffer);
+  bool sendCommandBufferRequest(TrCommandBufferBase &req);
+  bool sendCommandBufferResponse(TrCommandBufferResponse &res);
 };
 
 class TrCommandBufferReceiver : public ipc::TrChannelReceiver<TrCommandBufferMessage>
@@ -232,7 +273,8 @@ public:
   ~TrCommandBufferReceiver() {}
 
 public:
-  void recvCommandBuffer(int timeout = 0);
+  TrCommandBufferBase *recvCommandBufferRequest(int timeout = 0);
+  TrCommandBufferResponse *recvCommandBufferResponse(int timeout = 0);
 
   friend class TrCommandBufferMessage;
 };

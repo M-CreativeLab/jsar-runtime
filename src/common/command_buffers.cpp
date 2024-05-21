@@ -121,19 +121,18 @@ bool TrCommandBufferMessage::deserializeContent(char *contentBuffer, size_t cont
   base = malloc(baseSize);
   offset = readFrom(contentBuffer, offset, base, baseSize);
 
-  DEBUG(LOG_TAG_CONTENT, "Assertion: offset(%d) = contentSize(%d)", offset, contentSize);
   assert(offset == contentSize);
   return true;
 }
 
-bool TrCommandBufferSender::sendCommandBuffer(ClientCommandBuffer &commandBuffer)
+bool TrCommandBufferSender::sendCommandBufferRequest(TrCommandBufferBase &req)
 {
   TrCommandBufferMessage *message = nullptr;
-  switch (commandBuffer.type)
+  switch (req.type)
   {
-  case COMMAND_BUFFER_WEBGL_CONTEXT_INIT:
+  case COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ:
   {
-    WebGL1ContextInitCommandBuffer *data = dynamic_cast<WebGL1ContextInitCommandBuffer *>(&commandBuffer);
+    WebGL1ContextInitCommandBufferRequest *data = dynamic_cast<WebGL1ContextInitCommandBufferRequest *>(&req);
     message = data->serialize();
     break;
   }
@@ -143,7 +142,7 @@ bool TrCommandBufferSender::sendCommandBuffer(ClientCommandBuffer &commandBuffer
 
   if (message == nullptr)
   {
-    DEBUG(LOG_TAG_CONTENT, "Failed to serialize command buffer: %d", commandBuffer.type);
+    DEBUG(LOG_TAG_CONTENT, "Failed to serialize command buffer: %d", req.type);
     return false;
   }
 
@@ -152,23 +151,68 @@ bool TrCommandBufferSender::sendCommandBuffer(ClientCommandBuffer &commandBuffer
   if (!message->serialize(&data, &size))
     return false;
 
-  return sendRaw(data, size); // Write data
+  return sendRaw(data, size);
 }
 
-void TrCommandBufferReceiver::recvCommandBuffer(int timeout)
+bool TrCommandBufferSender::sendCommandBufferResponse(TrCommandBufferResponse &res)
+{
+  TrCommandBufferMessage *message = nullptr;
+  switch (res.type)
+  {
+  case COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES:
+  {
+    auto data = dynamic_cast<WebGL1ContextInitCommandBufferResponse *>(&res);
+    message = data->serialize();
+    break;
+  }
+  default:
+    break;
+  };
+
+  if (message == nullptr)
+  {
+    DEBUG(LOG_TAG_CONTENT, "Failed to serialize command buffer: %d", res.type);
+    return false;
+  }
+
+  void *data = nullptr;
+  size_t size = 0;
+  if (!message->serialize(&data, &size))
+    return false;
+
+  return sendRaw(data, size);
+}
+
+TrCommandBufferBase *TrCommandBufferReceiver::recvCommandBufferRequest(int timeout)
 {
   TrCommandBufferMessage message;
   if (!message.deserialize(this, timeout))
-    return;
+    return nullptr;
 
-  if (message.type == COMMAND_BUFFER_WEBGL_CONTEXT_INIT)
+  if (message.type == COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ)
   {
-    auto commandBuffer = ClientCommandBuffer::CreateFromMessage<WebGL1ContextInitCommandBuffer>(message);
-    DEBUG(LOG_TAG_CONTENT, "Received an init context command buffer: %d (%d, %d) url=%s",
-          message.type, commandBuffer->width, commandBuffer->height, commandBuffer->url.c_str());
+    return TrCommandBufferBase::CreateFromMessage<WebGL1ContextInitCommandBufferRequest>(message);
   }
   else
   {
     DEBUG(LOG_TAG_CONTENT, "Received an unknown command buffer: %d", message.type);
+    return nullptr;
+  }
+}
+
+TrCommandBufferResponse *TrCommandBufferReceiver::recvCommandBufferResponse(int timeout)
+{
+  TrCommandBufferMessage message;
+  if (!message.deserialize(this, timeout))
+    return nullptr;
+
+  if (message.type == COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES)
+  {
+    return TrCommandBufferBase::CreateFromMessage<WebGL1ContextInitCommandBufferResponse>(message);
+  }
+  else
+  {
+    DEBUG(LOG_TAG_CONTENT, "Received an unknown command buffer: %d", message.type);
+    return nullptr;
   }
 }

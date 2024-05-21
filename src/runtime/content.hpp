@@ -3,10 +3,12 @@
 #include <atomic>
 #include <mutex>
 #include <filesystem>
-#include "native_event.hpp"
-#include "constellation.hpp"
+
+#include "common/classes.hpp"
 #include "common/ipc.hpp"
 #include "common/command_buffers.hpp"
+#include "native_event.hpp"
+#include "constellation.hpp"
 
 using namespace std;
 using namespace ipc;
@@ -26,7 +28,7 @@ public:
   void dispose();
 
 public: // command buffer methods
-  TrCommandBufferReceiver *createCommandBufferChanReceiver(TrOneShotClient<TrCommandBufferMessage> *client);
+  void setupWithCommandBufferClient(TrOneShotClient<TrCommandBufferMessage> *client);
 
 private:
   void onClientProcess();
@@ -45,10 +47,12 @@ private:
   TrChannelReceiver<CustomEvent> *eventChanReceiver = nullptr;
   TrChannelSender<CustomEvent> *eventChanSender = nullptr;
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
+  TrCommandBufferSender *commandBufferChanSender = nullptr;
   // Layout?
   // XR?
 
   friend class TrContentManager;
+  friend class renderer::TrRenderer;
 };
 
 /**
