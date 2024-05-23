@@ -56,13 +56,13 @@ namespace renderer
     void setTime(float time); // might be deprecated
 
   private:
+    void sendAnimationFrameRequest();
     void startWatchers();
     void stopWatchers();
 
   private:
     RenderAPI *api = nullptr;
     TrConstellation *constellation = nullptr;
-    xr::Device *xrDevice = nullptr;
 
   private:
     ipc::TrOneShotServer<AnimationFrameRequest> *animationFrameChanServer = nullptr;

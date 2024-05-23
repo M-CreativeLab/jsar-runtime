@@ -41,4 +41,30 @@ namespace commandbuffers
   public:
     int requestId;
   };
+
+  template <typename T>
+  class TrCommandBufferSimpleRequest : public TrCommandBufferBase
+  {
+  public:
+    TrCommandBufferSimpleRequest(CommandBufferType type) : TrCommandBufferBase(type)
+    {
+      size = sizeof(T);
+    }
+
+  public:
+    TrCommandBufferMessage *serialize() override
+    {
+      auto message = new TrCommandBufferMessage(type, size, this);
+      return message;
+    }
+    void deserialize(TrCommandBufferMessage &message) override
+    {
+    }
+
+  public:
+    inline void print()
+    {
+      DEBUG(LOG_TAG_RENDERER, "GL::%s()", commandTypeToStr(type).c_str());
+    }
+  };
 }

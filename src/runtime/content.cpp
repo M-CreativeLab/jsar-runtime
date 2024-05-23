@@ -75,6 +75,14 @@ void TrContentRuntime::setupWithCommandBufferClient(TrOneShotClient<TrCommandBuf
   commandBufferChanSender = new TrCommandBufferSender(client);
 }
 
+bool TrContentRuntime::sendCommandBufferResponse(TrCommandBufferResponse &res)
+{
+  if (commandBufferChanSender != nullptr)
+    return commandBufferChanSender->sendCommandBufferResponse(res);
+  else
+    return false;
+}
+
 void TrContentRuntime::onClientProcess()
 {
   path basePath = path(constellationOptions.runtimeDirectory);

@@ -10,6 +10,7 @@
 #include "debug.hpp"
 #include "native_event.hpp"
 #include "renderer/renderer.hpp"
+#include "xr/device.hpp"
 
 using namespace std;
 using namespace std::filesystem;

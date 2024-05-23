@@ -31,18 +31,50 @@ namespace renderer
 
   void TrRenderer::tickOnAnimationFrame()
   {
+    auto xrDevice = constellation->getXrDevice();
+    if (xrDevice == nullptr)
+      return;
+
+    auto beforeStarting = std::chrono::high_resolution_clock::now();
+    api->StartFrame();
+
+    auto startedAt = std::chrono::high_resolution_clock::now();
+    auto skipFrameOnScript = xrDevice->skipHostFrameOnScript();
+
+    if (!skipFrameOnScript)
+      sendAnimationFrameRequest();
+    api->ExecuteCommandBuffer();
+
+    if (xrDevice->enabled())
     {
-      lock_guard<mutex> lock(chanSendersMutex);
-      AnimationFrameRequest request;
-      for (auto sender : animationFrameChanSenders)
-        sender->send(request);
+      xrDevice->startHostFrame(); // Start XR frame
+      if (xrDevice->getStereoRenderingMode() == xr::StereoRenderingMode::MultiPass)
+      {
+        int stereoId = -1;
+        auto eyeId = xrDevice->getActiveEyeId();
+        auto stereoRenderingFrame = xrDevice->createOrGetStereoRenderingFrame();
+        if (stereoRenderingFrame != nullptr)
+          stereoId = stereoRenderingFrame->getId();
+
+        auto viewport = api->GetViewport();
+        xrDevice->updateViewport(eyeId, viewport[0], viewport[1], viewport[2], viewport[3]);
+
+        /**
+         * Create a new device frame that will be used by js render loop
+         */
+        auto deviceFrame = new xr::MultiPassFrame(xrDevice, eyeId, stereoId);
+        auto sessionIds = xrDevice->getSessionIds();
+        // TODO
+      }
+      else
+      {
+        // TODO: Support singlepass?
+      }
+      xrDevice->endHostFrame(); // End XR frame
     }
 
-    // Check command buffers
-    // for (auto content : constellation->getContentManager()->contents)
-    // {
-    //   content->
-    // }
+    auto xrFrameEndedAt = std::chrono::high_resolution_clock::now();
+    api->EndFrame();
   }
 
   void TrRenderer::shutdown()
@@ -75,16 +107,7 @@ namespace renderer
     auto it = commandBufferRequestsMap.find(content->pid);
     if (it == commandBufferRequestsMap.end())
       commandBufferRequestsMap[content->pid] = vector<TrCommandBufferBase *>();
-    // commandBufferRequestsMap[pid].push_back(request);
-
-    if (request->type == CommandBufferType::COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ)
-    {
-      auto req = dynamic_cast<WebGL1ContextInitCommandBufferRequest *>(request);
-      WebGL1ContextInitCommandBufferResponse response(req);
-      response.maxCombinedTextureImageUnits = 8;
-      response.vendor = "Rokid Inc.";
-      content->commandBufferChanSender->sendCommandBufferResponse(response);
-    }
+    commandBufferRequestsMap[content->pid].push_back(request);
   }
 
   void TrRenderer::setViewport(TrViewport &viewport)
@@ -100,6 +123,14 @@ namespace renderer
   void TrRenderer::setTime(float time)
   {
     api->SetTime(time);
+  }
+
+  void TrRenderer::sendAnimationFrameRequest()
+  {
+    lock_guard<mutex> lock(chanSendersMutex);
+    AnimationFrameRequest request;
+    for (auto sender : animationFrameChanSenders)
+      sender->send(request);
   }
 
   void TrRenderer::startWatchers()

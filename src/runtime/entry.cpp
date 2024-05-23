@@ -227,22 +227,6 @@ extern "C"
   DLL_PUBLIC void TransmuteNative_OnRenderFrame()
   {
     UnityEmbedder::EnsureAndGet()->onFrame();
-    // if (s_CurrentAPI == NULL)
-    //   return;
-    // auto constellation = TrConstellation::Get();
-    // if (constellation == nullptr || !constellation->isInitialized())
-    //   return;
-    // constellation->tick();
-
-    // auto code = s_CurrentAPI->ExecuteFrame();
-    // switch (code)
-    // {
-    // case kFrameExecutionNotAvailable:
-    //   DEBUG("transmute", "RenderLoop(JS) is not available");
-    //   break;
-    // default:
-    //   break;
-    // }
   }
 
   DLL_PUBLIC void TransmuteNative_DispatchRuntimeEvent(int id)

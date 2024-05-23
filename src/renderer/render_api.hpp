@@ -6,11 +6,13 @@
 #include <ctime>
 #include <Unity/IUnityGraphics.h>
 
+#include "analytics/analytics.hpp"
 #include "common/debug.hpp"
 #include "common/classes.hpp"
-#include "analytics/analytics.hpp"
-#include "command_buffer.hpp"
-#include "constants.hpp"
+#include "common/command_buffers/base.hpp"
+#include "common/command_buffers/command_buffers.hpp"
+#include "common/command_buffers/webgl_constants.hpp"
+#include "runtime/content.hpp"
 #include "xr/device.hpp"
 
 #define TR_RENDERAPI_TAG "TR_RAPI" // Transmute Render API
@@ -22,6 +24,13 @@ enum FrameExecutionCode
   kFrameExecutionNotAvailable = 2,
   kFrameExecutionGpuBusy = 3,
   kFrameExecutionSkipped = 4,
+};
+
+class ApiCallOptions
+{
+public:
+  bool isDefaultQueue;
+  bool printsCall;
 };
 
 class RenderAPI
@@ -72,10 +81,11 @@ public:
    * there are any commands to execute.
    */
   virtual bool ExecuteCommandBuffer(
-      vector<renderer::CommandBuffer *> &commandBuffers,
+      vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
       xr::DeviceFrame *deviceFrame,
       bool isDefaultQueue) = 0;
-  void AddCommandBuffer(renderer::CommandBuffer *commandBuffer);
+
+  void AddCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer);
   size_t GetCommandBuffersCount();
   void SetTime(float time) { this->time = time; }
 
@@ -93,6 +103,7 @@ public:
     m_Viewport[2] = width;
     m_Viewport[3] = height;
   }
+  int *GetViewport() { return m_Viewport; }
   void SetFieldOfView(float fov) { this->fov = fov; }
   void SetViewerPosition(float x, float y, float z)
   {
@@ -144,7 +155,7 @@ protected:
   int m_Viewport[4] = {0, 0, 0, 0};
   bool m_EnableLogOnAppGlobal = false;
   bool m_EnableLogOnXRFrame = false;
-  std::vector<renderer::CommandBuffer *> m_CommandBuffers;
+  std::vector<commandbuffers::TrCommandBufferBase *> m_CommandBuffers;
   std::mutex m_CommandBuffersMutex;
   std::mutex m_StateMutex;
   size_t m_DrawCallCountPerFrame = 0;

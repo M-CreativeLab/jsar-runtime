@@ -12,7 +12,27 @@ namespace commandbuffers
     {
     }
 
+    /**
+     * It creates a segment from a vector<T> object.
+     */
+    template <typename T>
+    TrCommandBufferSegment(vector<T> &vec)
+    {
+      size = vec.size() * sizeof(T);
+      data = malloc(size);
+      memcpy(data, vec.data(), size);
+    }
+
   public:
+    size_t getSize()
+    {
+      return size;
+    }
+    void *getData()
+    {
+      return data;
+    }
+
     string toString()
     {
       return string((char *)data, size);
@@ -20,6 +40,18 @@ namespace commandbuffers
     const char *c_str()
     {
       return (const char *)data;
+    }
+
+    /**
+     * It reads the segment data as a vector<T> object.
+     */
+    template <typename T>
+    vector<T> toVec()
+    {
+      vector<T> vec;
+      vec.resize(size / sizeof(T));
+      memcpy(vec.data(), data, size);
+      return vec;
     }
 
   private:
@@ -88,6 +120,10 @@ namespace commandbuffers
         return nullptr;
       else
         return &segments[index];
+    }
+    size_t getSegmentCount()
+    {
+      return segments.size();
     }
 
     bool serialize(void **outData, size_t *outSize);

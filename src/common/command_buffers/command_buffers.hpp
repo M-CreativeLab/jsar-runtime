@@ -1,4 +1,17 @@
 #pragma once
 
 #include "./details/webgl_context_init.hpp"
+#include "./details/webgl2_context_init.hpp"
 #include "./details/get_extensions.hpp"
+#include "./details/program.hpp"
+#include "./details/shader.hpp"
+#include "./details/buffer.hpp"
+#include "./details/vertex_array.hpp"
+#include "./details/vertex_attrib.hpp"
+#include "./details/texture.hpp"
+#include "./details/sampler.hpp"
+#include "./details/uniforms.hpp"
+#include "./details/draw_calls.hpp"
+#include "./details/clear.hpp"
+#include "./details/states.hpp"
+#include "./details/properties.hpp"

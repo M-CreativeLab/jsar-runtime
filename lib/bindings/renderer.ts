@@ -92,18 +92,18 @@ export function connectRenderer() {
   /**
    * Initialize the global WebGL context.
    */
-  // try {
-  //   globalGlContext = getWebGLRenderingContext('webgl2');
-  // } catch (err) {
-  //   logger.warn('error creating webgl context:', err);
-  // }
-  // if (globalGlContext == null) {
-  //   throw new Error('failed to create webgl context.');
-  // }
+  try {
+    globalGlContext = getWebGLRenderingContext('webgl2');
+  } catch (err) {
+    logger.warn('error creating webgl context:', err);
+  }
+  if (globalGlContext == null) {
+    throw new Error('failed to create webgl context.');
+  }
 
-  // const gl = globalGlContext;
-  // onreadyCallbacks.forEach(cb => cb(gl));
-  // onreadyCallbacks.length = 0;
+  const gl = globalGlContext;
+  onreadyCallbacks.forEach(cb => cb(gl));
+  onreadyCallbacks.length = 0;
   isReady = true;
   logger.info('connected to renderer.');
 }

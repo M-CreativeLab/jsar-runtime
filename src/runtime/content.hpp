@@ -31,8 +31,13 @@ public:
   void terminate();
   void dispose();
 
+public: // reference methods
+  TrConstellation* getConstellation() { return contentManager->constellation; }
+  xr::Device* getXrDevice() { return contentManager->constellation->getXrDevice(); }
+
 public: // command buffer methods
   void setupWithCommandBufferClient(TrOneShotClient<TrCommandBufferMessage> *client);
+  bool sendCommandBufferResponse(TrCommandBufferResponse &res);
 
 private:
   void onClientProcess();
@@ -40,8 +45,10 @@ private:
   void recvCommandBuffers(uint32_t timeout);
   bool tickOnFrame();
 
-private:
+public:
   pid_t pid = -1;
+
+private:
   int eventChanPort;
   int frameChanPort;
   int commandBufferChanPort;

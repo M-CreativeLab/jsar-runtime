@@ -27,15 +27,21 @@ namespace commandbuffers
     TrCommandBufferMessage *serialize() override
     {
       auto message = new TrCommandBufferMessage(type, size, this);
-      message->addStringSegment(extensions);
+      if (extensions.size() > 0)
+      {
+        for (auto exten : extensions)
+          message->addStringSegment(exten);
+      }
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
     {
-      extensions = message.getSegment(0)->toString();
+      auto count = message.getSegmentCount();
+      for (int i = 0; i < count; i++)
+        extensions.push_back(message.getSegment(i)->toString());
     }
 
   public:
-    string extensions;
+    vector<string> extensions;
   };
 }
