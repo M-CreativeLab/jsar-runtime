@@ -13,6 +13,13 @@ namespace commandbuffers
     {
       size = sizeof(GetExtensionsCommandBufferRequest);
     }
+
+  public:
+    TrCommandBufferMessage *serialize() override
+    {
+      return new TrCommandBufferMessage(type, size, this);
+    }
+    void deserialize(TrCommandBufferMessage &message) override {}
   };
 
   class GetExtensionsCommandBufferResponse : public TrCommandBufferResponse

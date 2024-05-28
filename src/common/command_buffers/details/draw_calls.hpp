@@ -85,19 +85,17 @@ namespace commandbuffers
   class DrawBuffersCommandBufferRequest : public TrCommandBufferSimpleRequest<DrawBuffersCommandBufferRequest>
   {
   public:
-    DrawBuffersCommandBufferRequest(int n, const int *bufs)
+    DrawBuffersCommandBufferRequest(size_t n, const uint32_t *bufs)
         : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DRAW_BUFFERS_REQ),
           n(n)
     {
-      for (int i = 0; i < n; i++)
-      {
+      for (size_t i = 0; i < n; i++)
         this->bufs[i] = bufs[i];
-      }
     }
 
   public:
-    int n;
-    int bufs[16];
+    size_t n;
+    uint32_t bufs[16];
   };
 
   class DrawRangeElementsCommandBufferRequest : public TrCommandBufferSimpleRequest<DrawRangeElementsCommandBufferRequest>

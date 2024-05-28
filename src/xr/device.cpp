@@ -8,7 +8,7 @@ namespace xr
   static uint32_t MIN_FRAME_RATE = 60;
   static uint32_t MAX_FRAME_RATE = 90;
 
-  Device* Device::GetInstance()
+  Device *Device::GetInstance()
   {
     return nullptr;
   }
@@ -199,7 +199,7 @@ namespace xr
    * @param eyeId The eye id, 0 for left eye, 1 for right eye.
    * @param exec The function that will be executed for the given command buffers and returns if the frame state is changed.
    */
-  bool Device::executeStereoRenderingFrames(int eyeId, std::function<bool(int, std::vector<renderer::CommandBuffer *> &)> exec)
+  bool Device::executeStereoRenderingFrames(int eyeId, std::function<bool(int, std::vector<commandbuffers::TrCommandBufferBase *> &)> exec)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
     bool called = false;
@@ -379,7 +379,7 @@ namespace xr
     return m_CurrentStereoRenderingId != -1 && m_CurrentPassId != -1;
   }
 
-  void Device::addCommandBufferToFrame(renderer::CommandBuffer *commandBuffer)
+  void Device::addCommandBufferToFrame(commandbuffers::TrCommandBufferBase *commandBuffer)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
     for (auto frame : m_StereoRenderingFrames)
@@ -391,7 +391,7 @@ namespace xr
       }
     }
     DEBUG("Unity", "Failed to added a command(%d) buffer to the xr queue, current stereoid=%d",
-          commandBuffer->GetType(), m_CurrentStereoRenderingId.load());
+          commandBuffer->type, m_CurrentStereoRenderingId.load());
   }
 
   void Device::onXRFrame(DeviceFrame *frame)

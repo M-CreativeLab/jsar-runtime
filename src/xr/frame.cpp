@@ -191,7 +191,7 @@ namespace xr
     copyCommandBuffers(frame->m_CommandBuffersInPass2, 1);
   }
 
-  void StereoRenderingFrame::copyCommandBuffers(std::vector<renderer::CommandBuffer *> &commandBuffers, int passIndex)
+  void StereoRenderingFrame::copyCommandBuffers(std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, int passIndex)
   {
     if (passIndex == 0)
     {
@@ -207,7 +207,7 @@ namespace xr
     }
   }
 
-  void StereoRenderingFrame::addCommandBuffer(renderer::CommandBuffer *commandBuffer, int passIndex)
+  void StereoRenderingFrame::addCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer, int passIndex)
   {
     if (passIndex == 0)
       m_CommandBuffersInPass.push_back(commandBuffer);
@@ -217,36 +217,34 @@ namespace xr
     /**
      * When the client is to add the following command buffers, this frame could be able to be dropped if necessary.
      */
-    switch (commandBuffer->GetType())
+    switch (commandBuffer->type)
     {
     // The command buffers which are initializing and creating resources would not be dropped.
-    case renderer::kCommandTypeContextInit:
-    case renderer::kCommandTypeContext2Init:
-    case renderer::kCommandTypeCreateProgram:
-    case renderer::kCommandTypeCreateShader:
-    case renderer::kCommandTypeCheckFramebufferStatus:
-    case renderer::kCommandTypeAttachShader:
-    case renderer::kCommandTypeDetachShader:
-    case renderer::kCommandTypeShaderSource:
-    case renderer::kCommandTypeCompileShader:
-    case renderer::kCommandTypeLinkProgram:
+    case commandbuffers::COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ:
+    case commandbuffers::COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_REQ:
+    case commandbuffers::COMMAND_BUFFER_CREATE_PROGRAM_REQ:
+    case commandbuffers::COMMAND_BUFFER_CREATE_SHADER_REQ:
+    case commandbuffers::COMMAND_BUFFER_CHECK_FRAMEBUFFER_STATUS_REQ:
+    case commandbuffers::COMMAND_BUFFER_ATTACH_SHADER_REQ:
+    case commandbuffers::COMMAND_BUFFER_DETACH_SHADER_REQ:
+    case commandbuffers::COMMAND_BUFFER_SHADER_SOURCE_REQ:
+    case commandbuffers::COMMAND_BUFFER_COMPILE_SHADER_REQ:
+    case commandbuffers::COMMAND_BUFFER_LINK_PROGRAM_REQ:
     // The command buffers which are getting values would not be dropped.
-    case renderer::kCommandTypeGetAttribLocation:
-    case renderer::kCommandTypeGetBooleanv:
-    case renderer::kCommandTypeGetError:
-    case renderer::kCommandTypeGetFloatv:
-    case renderer::kCommandTypeGetIntegerv:
-    case renderer::kCommandTypeGetProgramInfoLog:
-    case renderer::kCommandTypeGetProgramParameter:
-    case renderer::kCommandTypeGetSamplerParameter:
-    case renderer::kCommandTypeGetShaderInfoLog:
-    case renderer::kCommandTypeGetShaderParameter:
-    case renderer::kCommandTypeGetShaderPrecisionFormat:
-    case renderer::kCommandTypeGetShaderSource:
-    case renderer::kCommandTypeGetString:
-    case renderer::kCommandTypeGetSupportedExtensions:
-    case renderer::kCommandTypeGetTransformFeedbackVarying:
-    case renderer::kCommandTypeGetUniformLocation:
+    case commandbuffers::COMMAND_BUFFER_GET_ERROR_REQ:
+    case commandbuffers::COMMAND_BUFFER_GET_BOOLEANV_REQ:
+    case commandbuffers::COMMAND_BUFFER_GET_FLOATV_REQ:
+    case commandbuffers::COMMAND_BUFFER_GET_INTEGERV_REQ:
+    case commandbuffers::COMMAND_BUFFER_GET_STRING_REQ:
+    case commandbuffers::COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_REQ:
+    case commandbuffers::COMMAND_BUFFER_GET_PROGRAM_PARAM_REQ:
+    case commandbuffers::COMMAND_BUFFER_GET_SAMPLER_PARAMETER_REQ:
+    case commandbuffers::COMMAND_BUFFER_GET_SHADER_INFO_LOG_REQ:
+    case commandbuffers::COMMAND_BUFFER_GET_SHADER_PARAM_REQ:
+    case commandbuffers::COMMAND_BUFFER_GET_SHADER_PRECISION_FORMAT_REQ:
+    case commandbuffers::COMMAND_BUFFER_GET_SHADER_SOURCE_REQ:
+    case commandbuffers::COMMAND_BUFFER_GET_EXTENSIONS_REQ:
+    case commandbuffers::COMMAND_BUFFER_GET_TRANSFORM_FEEDBACK_VARYING_REQ:
       m_Idempotentable = false;
       break;
     default:
@@ -255,7 +253,7 @@ namespace xr
     m_IsAddedOnce = true;
   }
 
-  std::vector<renderer::CommandBuffer *> &StereoRenderingFrame::getCommandBuffers(int passIndex)
+  std::vector<commandbuffers::TrCommandBufferBase *> &StereoRenderingFrame::getCommandBuffers(int passIndex)
   {
     if (passIndex == 0)
       return m_CommandBuffersInPass;
@@ -334,7 +332,7 @@ namespace xr
     clearCommandBuffers(m_CommandBuffersInPass2);
   }
 
-  void StereoRenderingFrame::clearCommandBuffers(std::vector<renderer::CommandBuffer *> &commandBuffers)
+  void StereoRenderingFrame::clearCommandBuffers(std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers)
   {
     for (auto commandBuffer : commandBuffers)
       delete commandBuffer;

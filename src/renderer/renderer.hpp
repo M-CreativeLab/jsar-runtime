@@ -5,7 +5,6 @@
 #include <mutex>
 #include <atomic>
 
-#include "render_api.hpp"
 #include "common/classes.hpp"
 #include "common/ipc.hpp"
 #include "common/messages.hpp"
@@ -14,6 +13,8 @@
 
 using namespace std;
 using namespace commandbuffers;
+
+class RenderAPI;
 
 namespace renderer
 {
@@ -48,7 +49,6 @@ namespace renderer
     uint32_t getAnimationFrameChanPort();
     uint32_t getCommandBufferChanPort();
     void setApi(RenderAPI *api);
-    void addCommandBufferRequest(TrContentRuntime* content, TrCommandBufferBase *request);
 
   public: // API for host update
     void setViewport(TrViewport &viewport);
@@ -59,6 +59,7 @@ namespace renderer
     void sendAnimationFrameRequest();
     void startWatchers();
     void stopWatchers();
+    void executeCommandBuffers();
 
   private:
     RenderAPI *api = nullptr;
@@ -75,7 +76,6 @@ namespace renderer
 
   private: // fields for command buffer
     ipc::TrOneShotServer<TrCommandBufferMessage> *commandBufferChanServer = nullptr;
-    map<pid_t, vector<TrCommandBufferBase *>> commandBufferRequestsMap;
     thread *commandBufferClientWatcher = nullptr;
   };
 }

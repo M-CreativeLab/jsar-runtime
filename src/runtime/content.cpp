@@ -69,6 +69,16 @@ void TrContentRuntime::dispose()
   contentManager = nullptr;
 }
 
+TrConstellation *TrContentRuntime::getConstellation()
+{
+  return contentManager->constellation;
+}
+
+xr::Device *TrContentRuntime::getXrDevice()
+{
+  return contentManager->constellation->getXrDevice();
+}
+
 void TrContentRuntime::setupWithCommandBufferClient(TrOneShotClient<TrCommandBufferMessage> *client)
 {
   commandBufferChanReceiver = new TrCommandBufferReceiver(client);
@@ -161,12 +171,11 @@ void TrContentRuntime::recvCommandBuffers(uint32_t timeout)
   if (commandBufferChanReceiver == nullptr)
     return; // Skip if the command buffer channel is not ready.
 
-  auto renderer = contentManager->constellation->getRenderer();
   while (true)
   {
     auto commandBuffer = commandBufferChanReceiver->recvCommandBufferRequest(timeout);
     if (commandBuffer != nullptr)
-      renderer->addCommandBufferRequest(this, commandBuffer);
+      commandBufferRequests.push_back(commandBuffer);
   }
 }
 

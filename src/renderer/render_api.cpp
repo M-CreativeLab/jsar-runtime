@@ -57,7 +57,7 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 		// jsRenderLoop->onAnimationFrame(frameStartedAt);
 	}
 	// Executing the command buffers in the default queue.
-	ExecuteCommandBuffer();
+	// ExecuteCommandBuffer();
 
 	/** Start the XR frames */
 	if (device->enabled() && device->getStereoRenderingMode() == xr::StereoRenderingMode::MultiPass)
@@ -103,12 +103,12 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 		DEBUG(TR_RENDERAPI_TAG, "Execute XR Frame: eye=%d, stereoId=%d", eyeId, stereoId);
 		DEBUG(TR_RENDERAPI_TAG, "-------------------------------");
 		StartXRFrame();
-		device->executeStereoRenderingFrames(eyeId, [this, deviceFrame](int stereoIdOfFrame, vector<renderer::CommandBuffer *> &commandBuffers)
-																				 {
-																					 DEBUG(TR_RENDERAPI_TAG, "Start executing Stereo Rendering Frame(id=%d)", stereoIdOfFrame);
-																					 return ExecuteCommandBuffer(commandBuffers, deviceFrame, false);
-																					 // end
-																				 });
+		// device->executeStereoRenderingFrames(eyeId, [this, deviceFrame](int stereoIdOfFrame, vector<commandbuffers::TrCommandBufferBase *> &commandBuffers)
+		// 																		 {
+		// 																			 DEBUG(TR_RENDERAPI_TAG, "Start executing Stereo Rendering Frame(id=%d)", stereoIdOfFrame);
+		// 																			 return ExecuteCommandBuffer(commandBuffers, deviceFrame, false);
+		// 																			 // end
+		// 																		 });
 		EndXRFrame();
 		device->endHostFrame();
 
@@ -134,7 +134,7 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 	return kFrameExecutionSuccess;
 }
 
-void RenderAPI::AddCommandBuffer(renderer::CommandBuffer *commandBuffer)
+void RenderAPI::AddCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer)
 {
 	unique_lock<mutex> lock(m_CommandBuffersMutex);
 	m_CommandBuffers.push_back(commandBuffer);

@@ -5,6 +5,8 @@
 #include <assert.h>
 #include <napi.h>
 #include "renderer/render_api.hpp"
+#include "common/command_buffers/webgl_constants.hpp"
+#include "common/command_buffers/command_buffers.hpp"
 
 namespace webgl
 {
@@ -137,11 +139,16 @@ namespace webgl
 
   protected:
     /**
-     * @param {renderer::CommandBuffer} commandBuffer
-     * @param {boolean} useDefaultQueue - if true, the command buffer will be executed in the default queue.
-     * @param {boolean} waitForFinished - if true, the command buffer will be waited until it's finished.
+     * @param commandBuffer
+     * @param useDefaultQueue - if true, the command buffer will be executed in the default queue.
+     * @param waitForFinished - if true, the command buffer will be waited until it's finished.
      */
-    bool addCommandBuffer(renderer::CommandBuffer *commandBuffer, bool useDefaultQueue = false, bool waitForFinished = false);
+    bool addCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer, bool useDefaultQueue = false, bool waitForFinished = false);
+    template <typename R>
+    R *recvCommandBufferResponse(commandbuffers::TrCommandBufferBase *commandBuffer, int timeout = 1000)
+    {
+      return nullptr;
+    }
     unsigned char *unpackPixels(int type, int format, int width, int height, unsigned char *pixels);
 
   public:

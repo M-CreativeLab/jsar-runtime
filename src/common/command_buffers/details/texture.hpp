@@ -89,7 +89,7 @@ namespace commandbuffers
         uint32_t border,
         uint32_t format,
         uint32_t type,
-        void *pixels)
+        void *pixels = nullptr)
         : TrCommandBufferBase(COMMAND_BUFFER_TEXTURE_IMAGE_2D_REQ)
     {
       size = sizeof(TextureImage2DCommandBufferRequest);

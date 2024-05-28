@@ -10,6 +10,7 @@
 #include "frame.hpp"
 #include "viewport.hpp"
 #include "input_source.hpp"
+#include "common/command_buffers/command_buffers.hpp"
 
 using namespace std;
 
@@ -52,12 +53,12 @@ namespace xr
 
     size_t getStereoRenderingFramesCount();
     size_t getPendingStereoRenderingFramesCount();
-    bool executeStereoRenderingFrames(int eyeId, function<bool(int, vector<renderer::CommandBuffer *> &)>);
+    bool executeStereoRenderingFrames(int eyeId, function<bool(int, vector<commandbuffers::TrCommandBufferBase *> &)>);
     void clearStereoRenderingFrames(bool clearAll = false);
     bool startFrame(int sessionId, int stereoRenderingId, int passId);
     bool endFrame(int sessionId, int stereoRenderingId, int passId);
     bool isInFrame();
-    void addCommandBufferToFrame(renderer::CommandBuffer *commandBuffer);
+    void addCommandBufferToFrame(commandbuffers::TrCommandBufferBase *commandBuffer);
     /**
      * Call the frame callback registered by the JavaScript side with the given `DeviceFrame`.
      */

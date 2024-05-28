@@ -47,16 +47,14 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<Uniform1fCommandBufferRequest>
   {
   public:
-    Uniform1fCommandBufferRequest(uint32_t program, uint32_t location, float v0)
+    Uniform1fCommandBufferRequest(uint32_t location, float v0)
         : TrCommandBufferSimpleRequest(COMMAND_BUFFER_UNIFORM1F_REQ),
-          program(program),
           location(location),
           v0(v0)
     {
     }
 
   public:
-    uint32_t program;
     uint32_t location;
     float v0;
   };
@@ -65,9 +63,8 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<Uniform1fvCommandBufferRequest>
   {
   public:
-    Uniform1fvCommandBufferRequest(uint32_t program, uint32_t location, const std::vector<float> &values)
+    Uniform1fvCommandBufferRequest(uint32_t location, const std::vector<float> &values)
         : TrCommandBufferSimpleRequest(COMMAND_BUFFER_UNIFORM1FV_REQ),
-          program(program),
           location(location),
           values(values)
     {
@@ -89,7 +86,6 @@ namespace commandbuffers
     }
 
   public:
-    uint32_t program;
     uint32_t location;
     std::vector<float> values;
   };
@@ -98,16 +94,14 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<Uniform1iCommandBufferRequest>
   {
   public:
-    Uniform1iCommandBufferRequest(uint32_t program, uint32_t location, int v0)
+    Uniform1iCommandBufferRequest(uint32_t location, int v0)
         : TrCommandBufferSimpleRequest(COMMAND_BUFFER_UNIFORM1I_REQ),
-          program(program),
           location(location),
           v0(v0)
     {
     }
 
   public:
-    uint32_t program;
     uint32_t location;
     int v0;
   };
@@ -116,9 +110,8 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<Uniform1ivCommandBufferRequest>
   {
   public:
-    Uniform1ivCommandBufferRequest(uint32_t program, uint32_t location, const std::vector<int> &values)
+    Uniform1ivCommandBufferRequest(uint32_t location, const std::vector<int> &values)
         : TrCommandBufferSimpleRequest(COMMAND_BUFFER_UNIFORM1IV_REQ),
-          program(program),
           location(location),
           values(values)
     {
@@ -140,7 +133,6 @@ namespace commandbuffers
     }
 
   public:
-    uint32_t program;
     uint32_t location;
     std::vector<int> values;
   };
@@ -149,9 +141,8 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<Uniform2fCommandBufferRequest>
   {
   public:
-    Uniform2fCommandBufferRequest(uint32_t program, uint32_t location, float v0, float v1)
+    Uniform2fCommandBufferRequest(uint32_t location, float v0, float v1)
         : TrCommandBufferSimpleRequest(COMMAND_BUFFER_UNIFORM2F_REQ),
-          program(program),
           location(location),
           v0(v0),
           v1(v1)
@@ -159,7 +150,6 @@ namespace commandbuffers
     }
 
   public:
-    uint32_t program;
     uint32_t location;
     float v0;
     float v1;
@@ -169,9 +159,8 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<Uniform2fvCommandBufferRequest>
   {
   public:
-    Uniform2fvCommandBufferRequest(uint32_t program, uint32_t location, const std::vector<float> &values)
+    Uniform2fvCommandBufferRequest(uint32_t location, const std::vector<float> &values)
         : TrCommandBufferSimpleRequest(COMMAND_BUFFER_UNIFORM2FV_REQ),
-          program(program),
           location(location),
           values(values)
     {
@@ -193,7 +182,6 @@ namespace commandbuffers
     }
 
   public:
-    uint32_t program;
     uint32_t location;
     std::vector<float> values;
   };
@@ -202,9 +190,8 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<Uniform2iCommandBufferRequest>
   {
   public:
-    Uniform2iCommandBufferRequest(uint32_t program, uint32_t location, int v0, int v1)
+    Uniform2iCommandBufferRequest(uint32_t location, int v0, int v1)
         : TrCommandBufferSimpleRequest(COMMAND_BUFFER_UNIFORM2I_REQ),
-          program(program),
           location(location),
           v0(v0),
           v1(v1)
@@ -212,7 +199,6 @@ namespace commandbuffers
     }
 
   public:
-    uint32_t program;
     uint32_t location;
     int v0;
     int v1;
@@ -222,9 +208,8 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<Uniform2ivCommandBufferRequest>
   {
   public:
-    Uniform2ivCommandBufferRequest(uint32_t program, uint32_t location, const std::vector<int> &values)
+    Uniform2ivCommandBufferRequest(uint32_t location, const std::vector<int> &values)
         : TrCommandBufferSimpleRequest(COMMAND_BUFFER_UNIFORM2IV_REQ),
-          program(program),
           location(location),
           values(values)
     {
@@ -246,7 +231,6 @@ namespace commandbuffers
     }
 
   public:
-    uint32_t program;
     uint32_t location;
     std::vector<int> values;
   };
@@ -255,9 +239,8 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<Uniform3fCommandBufferRequest>
   {
   public:
-    Uniform3fCommandBufferRequest(uint32_t program, uint32_t location, float v0, float v1, float v2)
+    Uniform3fCommandBufferRequest(uint32_t location, float v0, float v1, float v2)
         : TrCommandBufferSimpleRequest(COMMAND_BUFFER_UNIFORM3F_REQ),
-          program(program),
           location(location),
           v0(v0),
           v1(v1),
@@ -266,7 +249,6 @@ namespace commandbuffers
     }
 
   public:
-    uint32_t program;
     uint32_t location;
     float v0;
     float v1;
@@ -277,9 +259,8 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<Uniform3fvCommandBufferRequest>
   {
   public:
-    Uniform3fvCommandBufferRequest(uint32_t program, uint32_t location, const std::vector<float> &values)
+    Uniform3fvCommandBufferRequest(uint32_t location, const std::vector<float> &values)
         : TrCommandBufferSimpleRequest(COMMAND_BUFFER_UNIFORM3FV_REQ),
-          program(program),
           location(location),
           values(values)
     {
@@ -301,7 +282,6 @@ namespace commandbuffers
     }
 
   public:
-    uint32_t program;
     uint32_t location;
     std::vector<float> values;
   };
@@ -310,9 +290,8 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<Uniform3iCommandBufferRequest>
   {
   public:
-    Uniform3iCommandBufferRequest(uint32_t program, uint32_t location, int v0, int v1, int v2)
+    Uniform3iCommandBufferRequest(uint32_t location, int v0, int v1, int v2)
         : TrCommandBufferSimpleRequest(COMMAND_BUFFER_UNIFORM3I_REQ),
-          program(program),
           location(location),
           v0(v0),
           v1(v1),
@@ -321,7 +300,6 @@ namespace commandbuffers
     }
 
   public:
-    uint32_t program;
     uint32_t location;
     int v0;
     int v1;
@@ -332,9 +310,8 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<Uniform3ivCommandBufferRequest>
   {
   public:
-    Uniform3ivCommandBufferRequest(uint32_t program, uint32_t location, const std::vector<int> &values)
+    Uniform3ivCommandBufferRequest(uint32_t location, const std::vector<int> &values)
         : TrCommandBufferSimpleRequest(COMMAND_BUFFER_UNIFORM3IV_REQ),
-          program(program),
           location(location),
           values(values)
     {
@@ -356,28 +333,36 @@ namespace commandbuffers
     }
 
   public:
-    uint32_t program;
     uint32_t location;
     std::vector<int> values;
   };
 
   template <typename Tb, typename Tv>
-  class Uniform4xCommandBufferRequest : public TrCommandBufferSimpleRequest<Tb>
+  class Uniform4xCommandBufferRequest : public TrCommandBufferBase
   {
   public:
-    Uniform4xCommandBufferRequest(CommandBufferType type, uint32_t program, uint32_t location, Tv v0, Tv v1, Tv v2, Tv v3)
-        : TrCommandBufferSimpleRequest(type),
-          program(program),
+    Uniform4xCommandBufferRequest(CommandBufferType type, uint32_t location, Tv v0, Tv v1, Tv v2, Tv v3)
+        : TrCommandBufferBase(type),
           location(location),
           v0(v0),
           v1(v1),
           v2(v2),
           v3(v3)
     {
+      size = sizeof(Tb);
     }
 
   public:
-    uint32_t program;
+    TrCommandBufferMessage *serialize() override
+    {
+      auto message = new TrCommandBufferMessage(type, size, this);
+      return message;
+    }
+    void deserialize(TrCommandBufferMessage &message) override
+    {
+    }
+
+  public:
     uint32_t location;
     Tv v0;
     Tv v1;
@@ -386,16 +371,15 @@ namespace commandbuffers
   };
 
   template <typename Tb, typename Tv>
-  class Uniform4xvCommandBufferRequest
-      : public TrCommandBufferSimpleRequest<Tb>
+  class Uniform4xvCommandBufferRequest : public TrCommandBufferBase
   {
   public:
-    Uniform4xvCommandBufferRequest(CommandBufferType type, uint32_t program, uint32_t location, const std::vector<Tv> &values)
-        : TrCommandBufferSimpleRequest(type),
-          program(program),
+    Uniform4xvCommandBufferRequest(CommandBufferType type, uint32_t location, const std::vector<Tv> &values)
+        : TrCommandBufferBase(type),
           location(location),
           values(values)
     {
+      size = sizeof(Tb);
     }
 
   public:
@@ -410,11 +394,10 @@ namespace commandbuffers
     {
       auto valuesSegment = message.getSegment(0);
       if (valuesSegment != nullptr)
-        values = valuesSegment->toVec<T>();
+        values = valuesSegment->toVec<Tv>();
     }
 
   public:
-    uint32_t program;
     uint32_t location;
     std::vector<Tv> values;
   };
@@ -423,8 +406,8 @@ namespace commandbuffers
       : public Uniform4xCommandBufferRequest<Uniform4fCommandBufferRequest, float>
   {
   public:
-    Uniform4fCommandBufferRequest(uint32_t program, uint32_t location, float v0, float v1, float v2, float v3)
-        : Uniform4xCommandBufferRequest(COMMAND_BUFFER_UNIFORM4F_REQ, program, location, v0, v1, v2, v3)
+    Uniform4fCommandBufferRequest(uint32_t location, float v0, float v1, float v2, float v3)
+        : Uniform4xCommandBufferRequest(COMMAND_BUFFER_UNIFORM4F_REQ, location, v0, v1, v2, v3)
     {
     }
   };
@@ -433,8 +416,8 @@ namespace commandbuffers
       : public Uniform4xvCommandBufferRequest<Uniform4fvCommandBufferRequest, float>
   {
   public:
-    Uniform4fvCommandBufferRequest(uint32_t program, uint32_t location, const std::vector<float> &values)
-        : Uniform4xvCommandBufferRequest(COMMAND_BUFFER_UNIFORM4FV_REQ, program, location, values)
+    Uniform4fvCommandBufferRequest(uint32_t location, const std::vector<float> &values)
+        : Uniform4xvCommandBufferRequest(COMMAND_BUFFER_UNIFORM4FV_REQ, location, values)
     {
     }
   };
@@ -443,8 +426,8 @@ namespace commandbuffers
       : public Uniform4xCommandBufferRequest<Uniform4iCommandBufferRequest, int>
   {
   public:
-    Uniform4iCommandBufferRequest(uint32_t program, uint32_t location, int v0, int v1, int v2, int v3)
-        : Uniform4xCommandBufferRequest(COMMAND_BUFFER_UNIFORM4I_REQ, program, location, v0, v1, v2, v3)
+    Uniform4iCommandBufferRequest(uint32_t location, int v0, int v1, int v2, int v3)
+        : Uniform4xCommandBufferRequest(COMMAND_BUFFER_UNIFORM4I_REQ, location, v0, v1, v2, v3)
     {
     }
   };
@@ -452,25 +435,27 @@ namespace commandbuffers
   class Uniform4ivCommandBufferRequest : public Uniform4xvCommandBufferRequest<Uniform4ivCommandBufferRequest, int>
   {
   public:
-    Uniform4ivCommandBufferRequest(uint32_t program, uint32_t location, const std::vector<int> &values)
-        : Uniform4xvCommandBufferRequest(COMMAND_BUFFER_UNIFORM4IV_REQ, program, location, values)
+    Uniform4ivCommandBufferRequest(uint32_t location, const std::vector<int> &values)
+        : Uniform4xvCommandBufferRequest(COMMAND_BUFFER_UNIFORM4IV_REQ, location, values)
     {
     }
   };
 
   template <typename T>
-  class UniformMatrixNfvCommandBufferRequest : public TrCommandBufferSimpleRequest<T>
+  class UniformMatrixNfvCommandBufferRequest : public TrCommandBufferBase
   {
   public:
     UniformMatrixNfvCommandBufferRequest(CommandBufferType type, uint32_t matrixSize)
-        : TrCommandBufferSimpleRequest(type), matrixSize(matrixSize)
+        : TrCommandBufferBase(type), matrixSize(matrixSize)
     {
+      size = sizeof(T);
     }
 
   public:
     size_t count() const { return values.size() / matrixSize; }
     bool isPlaceholder() const { return false; }
-    MatrixHandedness hanededness() const { return MatrixHandedness::MATRIX_LEFT_HANDED; }
+    MatrixHandedness handedness() const { return MatrixHandedness::MATRIX_LEFT_HANDED; }
+    void handedness(MatrixHandedness handedness) {}
 
   public:
     TrCommandBufferMessage *serialize() override
@@ -490,7 +475,6 @@ namespace commandbuffers
   public:
     uint32_t matrixSize;
     PlaceholderType placeholderType;
-    uint32_t program;
     uint32_t location;
     bool transpose;
     std::vector<float> values;
@@ -500,10 +484,9 @@ namespace commandbuffers
       : public UniformMatrixNfvCommandBufferRequest<UniformMatrix2fvCommandBufferRequest>
   {
   public:
-    UniformMatrix2fvCommandBufferRequest(uint32_t program, uint32_t location, bool transpose, const std::vector<float> &values)
+    UniformMatrix2fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
         : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX2FV_REQ, 2 * 2)
     {
-      this->program = program;
       this->location = location;
       this->transpose = transpose;
       this->values = values;
@@ -514,10 +497,9 @@ namespace commandbuffers
       : public UniformMatrixNfvCommandBufferRequest<UniformMatrix3fvCommandBufferRequest>
   {
   public:
-    UniformMatrix3fvCommandBufferRequest(uint32_t program, uint32_t location, bool transpose, const std::vector<float> &values)
+    UniformMatrix3fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
         : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX3FV_REQ, 3 * 3)
     {
-      this->program = program;
       this->location = location;
       this->transpose = transpose;
       this->values = values;
@@ -528,13 +510,19 @@ namespace commandbuffers
       : public UniformMatrixNfvCommandBufferRequest<UniformMatrix4fvCommandBufferRequest>
   {
   public:
-    UniformMatrix4fvCommandBufferRequest(uint32_t program, uint32_t location, bool transpose, const std::vector<float> &values)
+    UniformMatrix4fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
         : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, 4 * 4)
     {
-      this->program = program;
       this->location = location;
       this->transpose = transpose;
       this->values = values;
+    }
+    UniformMatrix4fvCommandBufferRequest(uint32_t location, bool transpose, PlaceholderType placeholderType)
+        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, 4 * 4)
+    {
+      this->location = location;
+      this->transpose = transpose;
+      this->placeholderType = placeholderType;
     }
   };
 }

@@ -9,9 +9,8 @@ namespace commandbuffers
   class CreateBufferCommandBufferRequest : public TrCommandBufferBase
   {
   public:
-    CreateBufferCommandBufferRequest(uint32_t clientId, uint32_t type) : TrCommandBufferBase(COMMAND_BUFFER_CREATE_BUFFER_REQ),
-                                                                         clientId(clientId),
-                                                                         bufferType(type)
+    CreateBufferCommandBufferRequest(uint32_t clientId) : TrCommandBufferBase(COMMAND_BUFFER_CREATE_BUFFER_REQ),
+                                                          clientId(clientId)
     {
       size = sizeof(CreateBufferCommandBufferRequest);
     }
@@ -27,7 +26,6 @@ namespace commandbuffers
 
   public:
     uint32_t clientId;
-    uint32_t bufferType;
   };
 
   class DeleteBufferCommandBufferRequest : public TrCommandBufferBase

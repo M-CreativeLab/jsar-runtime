@@ -1,4 +1,5 @@
 #include "renderer.hpp"
+#include "render_api.hpp"
 #include "runtime/constellation.hpp"
 #include "runtime/content.hpp"
 
@@ -43,7 +44,7 @@ namespace renderer
 
     if (!skipFrameOnScript)
       sendAnimationFrameRequest();
-    api->ExecuteCommandBuffer();
+    executeCommandBuffers();
 
     if (xrDevice->enabled())
     {
@@ -100,14 +101,6 @@ namespace renderer
   void TrRenderer::setApi(RenderAPI *api)
   {
     this->api = api;
-  }
-
-  void TrRenderer::addCommandBufferRequest(TrContentRuntime *content, TrCommandBufferBase *request)
-  {
-    auto it = commandBufferRequestsMap.find(content->pid);
-    if (it == commandBufferRequestsMap.end())
-      commandBufferRequestsMap[content->pid] = vector<TrCommandBufferBase *>();
-    commandBufferRequestsMap[content->pid].push_back(request);
   }
 
   void TrRenderer::setViewport(TrViewport &viewport)
@@ -180,5 +173,12 @@ namespace renderer
       delete commandBufferClientWatcher;
       commandBufferClientWatcher = nullptr;
     }
+  }
+
+  void TrRenderer::executeCommandBuffers()
+  {
+    auto contentManager = constellation->getContentManager();
+    for (auto content : contentManager->contents)
+      api->ExecuteCommandBuffer(content->commandBufferRequests, content, nullptr, true);
   }
 }

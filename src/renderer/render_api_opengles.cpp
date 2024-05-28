@@ -43,6 +43,7 @@ public:
 	bool ExecuteCommandBuffer();
 	bool ExecuteCommandBuffer(
 			vector<TrCommandBufferBase *> &commandBuffers,
+			TrContentRuntime *content,
 			xr::DeviceFrame *deviceFrame,
 			bool isDefaultQueue);
 
@@ -813,7 +814,7 @@ private:
 		auto stride = req->stride;
 		auto offset = req->offset;
 
-		glVertexAttribPointer(index, size, type, normalized, stride, (const void *)NULL + offset);
+		glVertexAttribPointer(index, size, type, normalized, stride, (const char *)NULL + offset);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::VertexAttribPointer(%d) size=%d type=0x%x normalized=%d stride=%d offset=%d",
 						options.isDefaultQueue, index, size, type, normalized, stride, offset);
@@ -828,7 +829,7 @@ private:
 		auto stride = req->stride;
 		auto offset = req->offset;
 
-		glVertexAttribIPointer(index, size, type, stride, (const void *)NULL + offset);
+		glVertexAttribIPointer(index, size, type, stride, (const char *)NULL + offset);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::VertexAttribIPointer(%d) size=%d type=0x%x stride=%d offset=%d",
 						options.isDefaultQueue, index, size, type, stride, offset);
@@ -1009,8 +1010,8 @@ private:
 	}
 	void OnUniformMatrix2fv(UniformMatrix2fvCommandBufferRequest *req,
 													TrContentRuntime *reqContent,
-													xr::DeviceFrame *deviceFrame,
-													ApiCallOptions &options)
+													ApiCallOptions &options,
+													xr::DeviceFrame *deviceFrame)
 	{
 		auto loc = req->location;
 		auto count = req->count();
@@ -1022,8 +1023,8 @@ private:
 	}
 	void OnUniformMatrix3fv(UniformMatrix3fvCommandBufferRequest *req,
 													TrContentRuntime *reqContent,
-													xr::DeviceFrame *deviceFrame,
-													ApiCallOptions &options)
+													ApiCallOptions &options,
+													xr::DeviceFrame *deviceFrame)
 	{
 		auto loc = req->location;
 		auto count = req->count();
@@ -1035,8 +1036,8 @@ private:
 	}
 	void OnUniformMatrix4fv(UniformMatrix4fvCommandBufferRequest *req,
 													TrContentRuntime *reqContent,
-													xr::DeviceFrame *deviceFrame,
-													ApiCallOptions &options)
+													ApiCallOptions &options,
+													xr::DeviceFrame *deviceFrame)
 	{
 		float *matrixToUse = nullptr;
 		auto location = req->location;
@@ -1056,7 +1057,7 @@ private:
 			}
 			auto multiPassFrame = static_cast<xr::MultiPassFrame *>(deviceFrame);
 			auto placeholderType = req->placeholderType;
-			auto rightHanded = req->hanededness() == MatrixHandedness::MATRIX_RIGHT_HANDED;
+			auto rightHanded = req->handedness() == MatrixHandedness::MATRIX_RIGHT_HANDED;
 
 			switch (placeholderType)
 			{
@@ -1123,7 +1124,7 @@ private:
 		auto mode = req->mode;
 		auto count = req->count;
 		auto type = req->indicesType;
-		auto indices = (char *)(NULL + req->indicesOffset);
+		auto indices = reinterpret_cast<GLvoid*>(req->indicesOffset);
 
 		glDrawElements(mode, count, type, indices);
 		m_DrawCallCountPerFrame += 1;
@@ -1167,7 +1168,7 @@ private:
 		auto mode = req->mode;
 		auto count = req->count;
 		auto type = req->indicesType;
-		auto indices = (char *)(NULL + req->indicesOffset);
+		auto indices = reinterpret_cast<GLvoid*>(req->indicesOffset);
 		auto instanceCount = req->instanceCount;
 		glDrawElementsInstanced(mode, count, type, indices, instanceCount);
 		m_DrawCallCountPerFrame += 1;
@@ -1184,7 +1185,7 @@ private:
 		auto end = req->end;
 		auto count = req->count;
 		auto type = req->indicesType;
-		auto indices = (char *)(NULL + req->indicesOffset);
+		auto indices = reinterpret_cast<GLvoid*>(req->indicesOffset);
 		glDrawRangeElements(mode, start, end, count, type, indices);
 		m_DrawCallCountPerFrame += 1;
 		if (options.printsCall)
@@ -1472,7 +1473,7 @@ private:
 		string value = reinterpret_cast<const char *>(ret);
 		GetStringCommandBufferResponse res(req, value);
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::GetString(0x%x) => %s", options.isDefaultQueue, req->pname, res.value);
+			DEBUG(DEBUG_TAG, "[%d] GL::GetString(0x%x) => %s", options.isDefaultQueue, req->pname, res.value.c_str());
 		reqContent->sendCommandBufferResponse(res);
 	}
 	void OnGetShaderPrecisionFormat(GetShaderPrecisionFormatCommandBufferRequest *req,
@@ -1691,18 +1692,6 @@ void RenderAPI_OpenGLCoreES::EndXRFrame()
 {
 }
 
-bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer()
-{
-	std::unique_lock<std::mutex> lock(m_CommandBuffersMutex);
-	if (m_CommandBuffers.empty())
-		return false;
-
-	auto r = ExecuteCommandBuffer(m_CommandBuffers, nullptr, true);
-	// FIXME: not release the command buffer itself.
-	m_CommandBuffers.clear();
-	return r;
-}
-
 bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
 		TrContentRuntime *content,
@@ -1773,98 +1762,100 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			ADD_COMMAND_BUFFER_HANDLER(BUFFER_DATA, BufferDataCommandBufferRequest, BufferData)
 			ADD_COMMAND_BUFFER_HANDLER(BUFFER_SUB_DATA, BufferSubDataCommandBufferRequest, BufferSubData)
 			ADD_COMMAND_BUFFER_HANDLER(CREATE_FRAMEBUFFER, CreateFramebufferCommandBufferRequest, CreateFramebuffer)
-			ADD_COMMAND_BUFFER_HANDLER(DeleteFramebuffer)
-			ADD_COMMAND_BUFFER_HANDLER(BindFramebuffer)
-			ADD_COMMAND_BUFFER_HANDLER(FramebufferRenderbuffer)
-			ADD_COMMAND_BUFFER_HANDLER(FramebufferTexture2D)
-			ADD_COMMAND_BUFFER_HANDLER(CheckFramebufferStatus)
-			ADD_COMMAND_BUFFER_HANDLER(CreateRenderbuffer)
-			ADD_COMMAND_BUFFER_HANDLER(DeleteRenderbuffer)
-			ADD_COMMAND_BUFFER_HANDLER(BindRenderbuffer)
-			ADD_COMMAND_BUFFER_HANDLER(RenderbufferStorage)
-			ADD_COMMAND_BUFFER_HANDLER(ReadBuffer)
-			ADD_COMMAND_BUFFER_HANDLER(BindBufferBase)
-			ADD_COMMAND_BUFFER_HANDLER(BindBufferRange)
-			ADD_COMMAND_BUFFER_HANDLER(BlitFramebuffer)
-			ADD_COMMAND_BUFFER_HANDLER(RenderbufferStorageMultisample)
-			ADD_COMMAND_BUFFER_HANDLER(CreateVertexArray)
-			ADD_COMMAND_BUFFER_HANDLER(DeleteVertexArray)
-			ADD_COMMAND_BUFFER_HANDLER(BindVertexArray)
-			ADD_COMMAND_BUFFER_HANDLER(CreateTexture)
-			ADD_COMMAND_BUFFER_HANDLER(DeleteTexture)
-			ADD_COMMAND_BUFFER_HANDLER(BindTexture)
-			ADD_COMMAND_BUFFER_HANDLER(TexImage2D)
-			ADD_COMMAND_BUFFER_HANDLER(TexSubImage2D)
-			ADD_COMMAND_BUFFER_HANDLER(CopyTexImage2D)
-			ADD_COMMAND_BUFFER_HANDLER(CopyTexSubImage2D)
-			ADD_COMMAND_BUFFER_HANDLER(TexParameteri)
-			ADD_COMMAND_BUFFER_HANDLER(ActiveTexture)
-			ADD_COMMAND_BUFFER_HANDLER(GenerateMipmap)
-			ADD_COMMAND_BUFFER_HANDLER(TexImage3D)
-			ADD_COMMAND_BUFFER_HANDLER(TexSubImage3D)
-			ADD_COMMAND_BUFFER_HANDLER(EnableVertexAttribArray)
-			ADD_COMMAND_BUFFER_HANDLER(DisableVertexAttribArray)
-			ADD_COMMAND_BUFFER_HANDLER(VertexAttribPointer)
-			ADD_COMMAND_BUFFER_HANDLER(VertexAttribIPointer)
-			ADD_COMMAND_BUFFER_HANDLER(VertexAttribDivisor)
-			ADD_COMMAND_BUFFER_HANDLER(GetAttribLocation)
-			ADD_COMMAND_BUFFER_HANDLER(GetUniformLocation)
-			ADD_COMMAND_BUFFER_HANDLER(UnoformBlockBinding)
-			ADD_COMMAND_BUFFER_HANDLER(Uniform1f)
-			ADD_COMMAND_BUFFER_HANDLER(Uniform1fv)
-			ADD_COMMAND_BUFFER_HANDLER(Uniform1i)
-			ADD_COMMAND_BUFFER_HANDLER(Uniform1iv)
-			ADD_COMMAND_BUFFER_HANDLER(Uniform2f)
-			ADD_COMMAND_BUFFER_HANDLER(Uniform2fv)
-			ADD_COMMAND_BUFFER_HANDLER(Uniform2i)
-			ADD_COMMAND_BUFFER_HANDLER(Uniform2iv)
-			ADD_COMMAND_BUFFER_HANDLER(Uniform3f)
-			ADD_COMMAND_BUFFER_HANDLER(Uniform3fv)
-			ADD_COMMAND_BUFFER_HANDLER(Uniform3i)
-			ADD_COMMAND_BUFFER_HANDLER(Uniform3iv)
-			ADD_COMMAND_BUFFER_HANDLER(Uniform4f)
-			ADD_COMMAND_BUFFER_HANDLER(Uniform4fv)
-			ADD_COMMAND_BUFFER_HANDLER(Uniform4i)
-			ADD_COMMAND_BUFFER_HANDLER(Uniform4iv)
-			ADD_COMMAND_BUFFER_HANDLER(UniformMatrix2fv)
-			ADD_COMMAND_BUFFER_HANDLER(UniformMatrix3fv)
-			ADD_COMMAND_BUFFER_HANDLER(UniformMatrix4fv)
-			ADD_COMMAND_BUFFER_HANDLER(DrawArrays)
-			ADD_COMMAND_BUFFER_HANDLER(DrawElements)
-			ADD_COMMAND_BUFFER_HANDLER(DrawBuffers)
-			ADD_COMMAND_BUFFER_HANDLER(DrawArraysInstanced)
-			ADD_COMMAND_BUFFER_HANDLER(DrawElementsInstanced)
-			ADD_COMMAND_BUFFER_HANDLER(DrawRangeElements)
-			ADD_COMMAND_BUFFER_HANDLER(PixelStorei)
-			ADD_COMMAND_BUFFER_HANDLER(PolygonOffset)
-			ADD_COMMAND_BUFFER_HANDLER(SetViewport)
-			ADD_COMMAND_BUFFER_HANDLER(SetScissor)
-			ADD_COMMAND_BUFFER_HANDLER(GetSupportedExtensions)
-			ADD_COMMAND_BUFFER_HANDLER(DepthMask)
-			ADD_COMMAND_BUFFER_HANDLER(DepthFunc)
-			ADD_COMMAND_BUFFER_HANDLER(DepthRange)
-			ADD_COMMAND_BUFFER_HANDLER(StencilFunc)
-			ADD_COMMAND_BUFFER_HANDLER(StencilFuncSeparate)
-			ADD_COMMAND_BUFFER_HANDLER(StencilMask)
-			ADD_COMMAND_BUFFER_HANDLER(StencilMaskSeparate)
-			ADD_COMMAND_BUFFER_HANDLER(StencilOp)
-			ADD_COMMAND_BUFFER_HANDLER(StencilOpSeparate)
-			ADD_COMMAND_BUFFER_HANDLER(BlendColor)
-			ADD_COMMAND_BUFFER_HANDLER(BlendEquation)
-			ADD_COMMAND_BUFFER_HANDLER(BlendEquationSeparate)
-			ADD_COMMAND_BUFFER_HANDLER(BlendFunc)
-			ADD_COMMAND_BUFFER_HANDLER(BlendFuncSeparate)
-			ADD_COMMAND_BUFFER_HANDLER(ColorMask)
-			ADD_COMMAND_BUFFER_HANDLER(CullFace)
-			ADD_COMMAND_BUFFER_HANDLER(FrontFace)
-			ADD_COMMAND_BUFFER_HANDLER(Enable)
-			ADD_COMMAND_BUFFER_HANDLER(Disable)
-			ADD_COMMAND_BUFFER_HANDLER(GetBooleanv)
-			ADD_COMMAND_BUFFER_HANDLER(GetIntegerv)
-			ADD_COMMAND_BUFFER_HANDLER(GetFloatv)
-			ADD_COMMAND_BUFFER_HANDLER(GetString)
-			ADD_COMMAND_BUFFER_HANDLER(GetShaderPrecisionFormat)
-			ADD_COMMAND_BUFFER_HANDLER(GetError)
+			ADD_COMMAND_BUFFER_HANDLER(DELETE_FRAMEBUFFER, DeleteFramebufferCommandBufferRequest, DeleteFramebuffer)
+			ADD_COMMAND_BUFFER_HANDLER(BIND_FRAMEBUFFER, BindFramebufferCommandBufferRequest, BindFramebuffer)
+			ADD_COMMAND_BUFFER_HANDLER(FRAMEBUFFER_RENDERBUFFER, FramebufferRenderbufferCommandBufferRequest, FramebufferRenderbuffer)
+			ADD_COMMAND_BUFFER_HANDLER(FRAMEBUFFER_TEXTURE2D, FramebufferTexture2DCommandBufferRequest, FramebufferTexture2D)
+			ADD_COMMAND_BUFFER_HANDLER(CHECK_FRAMEBUFFER_STATUS, CheckFramebufferStatusCommandBufferRequest, CheckFramebufferStatus)
+			ADD_COMMAND_BUFFER_HANDLER(CREATE_RENDERBUFFER, CreateRenderbufferCommandBufferRequest, CreateRenderbuffer)
+			ADD_COMMAND_BUFFER_HANDLER(DELETE_RENDERBUFFER, DeleteRenderbufferCommandBufferRequest, DeleteRenderbuffer)
+			ADD_COMMAND_BUFFER_HANDLER(BIND_RENDERBUFFER, BindRenderbufferCommandBufferRequest, BindRenderbuffer)
+			ADD_COMMAND_BUFFER_HANDLER(RENDERBUFFER_STORAGE, RenderbufferStorageCommandBufferRequest, RenderbufferStorage)
+			ADD_COMMAND_BUFFER_HANDLER(READ_BUFFER, ReadBufferCommandBufferRequest, ReadBuffer)
+			ADD_COMMAND_BUFFER_HANDLER(BIND_BUFFER_BASE, BindBufferBaseCommandBufferRequest, BindBufferBase)
+			ADD_COMMAND_BUFFER_HANDLER(BIND_BUFFER_RANGE, BindBufferRangeCommandBufferRequest, BindBufferRange)
+			ADD_COMMAND_BUFFER_HANDLER(BLIT_FRAMEBUFFER, BlitFramebufferCommandBufferRequest, BlitFramebuffer)
+			ADD_COMMAND_BUFFER_HANDLER(RENDERBUFFER_STORAGE_MULTISAMPLE, RenderbufferStorageMultisampleCommandBufferRequest, RenderbufferStorageMultisample)
+			ADD_COMMAND_BUFFER_HANDLER(CREATE_VERTEX_ARRAY, CreateVertexArrayCommandBufferRequest, CreateVertexArray)
+			ADD_COMMAND_BUFFER_HANDLER(DELETE_VERTEX_ARRAY, DeleteVertexArrayCommandBufferRequest, DeleteVertexArray)
+			ADD_COMMAND_BUFFER_HANDLER(BIND_VERTEX_ARRAY, BindVertexArrayCommandBufferRequest, BindVertexArray)
+			ADD_COMMAND_BUFFER_HANDLER(CREATE_TEXTURE, CreateTextureCommandBufferRequest, CreateTexture)
+			ADD_COMMAND_BUFFER_HANDLER(DELETE_TEXTURE, DeleteTextureCommandBufferRequest, DeleteTexture)
+			ADD_COMMAND_BUFFER_HANDLER(BIND_TEXTURE, BindTextureCommandBufferRequest, BindTexture)
+			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_IMAGE_2D, TextureImage2DCommandBufferRequest, TexImage2D)
+			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_SUB_IMAGE_2D, TextureSubImage2DCommandBufferRequest, TexSubImage2D)
+			ADD_COMMAND_BUFFER_HANDLER(COPY_TEXTURE_IMAGE_2D, CopyTextureImage2DCommandBufferRequest, CopyTexImage2D)
+			ADD_COMMAND_BUFFER_HANDLER(COPY_TEXTURE_SUB_IMAGE_2D, CopyTextureSubImage2DCommandBufferRequest, CopyTexSubImage2D)
+			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_PARAMETERI, TextureParameteriCommandBufferRequest, TexParameteri)
+			ADD_COMMAND_BUFFER_HANDLER(ACTIVE_TEXTURE, ActiveTextureCommandBufferRequest, ActiveTexture)
+			ADD_COMMAND_BUFFER_HANDLER(GENERATE_MIPMAP, GenerateMipmapCommandBufferRequest, GenerateMipmap)
+			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_IMAGE_3D, TextureImage3DCommandBufferRequest, TexImage3D)
+			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_SUB_IMAGE_3D, TextureSubImage3DCommandBufferRequest, TexSubImage3D)
+			ADD_COMMAND_BUFFER_HANDLER(ENABLE_VERTEX_ATTRIB_ARRAY, EnableVertexAttribArrayCommandBufferRequest, EnableVertexAttribArray)
+			ADD_COMMAND_BUFFER_HANDLER(DISABLE_VERTEX_ATTRIB_ARRAY, DisableVertexAttribArrayCommandBufferRequest, DisableVertexAttribArray)
+			ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_POINTER, VertexAttribPointerCommandBufferRequest, VertexAttribPointer)
+			ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_IPOINTER, VertexAttribIPointerCommandBufferRequest, VertexAttribIPointer)
+			ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_DIVISOR, VertexAttribDivisorCommandBufferRequest, VertexAttribDivisor)
+			ADD_COMMAND_BUFFER_HANDLER(UNIFORM_BLOCK_BINDING, UniformBlockBindingCommandBufferRequest, UniformBlockBinding)
+			ADD_COMMAND_BUFFER_HANDLER(UNIFORM1F, Uniform1fCommandBufferRequest, Uniform1f)
+			ADD_COMMAND_BUFFER_HANDLER(UNIFORM1FV, Uniform1fvCommandBufferRequest, Uniform1fv)
+			ADD_COMMAND_BUFFER_HANDLER(UNIFORM1I, Uniform1iCommandBufferRequest, Uniform1i)
+			ADD_COMMAND_BUFFER_HANDLER(UNIFORM1IV, Uniform1ivCommandBufferRequest, Uniform1iv)
+			ADD_COMMAND_BUFFER_HANDLER(UNIFORM2F, Uniform2fCommandBufferRequest, Uniform2f)
+			ADD_COMMAND_BUFFER_HANDLER(UNIFORM2FV, Uniform2fvCommandBufferRequest, Uniform2fv)
+			ADD_COMMAND_BUFFER_HANDLER(UNIFORM2I, Uniform2iCommandBufferRequest, Uniform2i)
+			ADD_COMMAND_BUFFER_HANDLER(UNIFORM2IV, Uniform2ivCommandBufferRequest, Uniform2iv)
+			ADD_COMMAND_BUFFER_HANDLER(UNIFORM3F, Uniform3fCommandBufferRequest, Uniform3f)
+			ADD_COMMAND_BUFFER_HANDLER(UNIFORM3FV, Uniform3fvCommandBufferRequest, Uniform3fv)
+			ADD_COMMAND_BUFFER_HANDLER(UNIFORM3I, Uniform3iCommandBufferRequest, Uniform3i)
+			ADD_COMMAND_BUFFER_HANDLER(UNIFORM3IV, Uniform3ivCommandBufferRequest, Uniform3iv)
+			ADD_COMMAND_BUFFER_HANDLER(UNIFORM4F, Uniform4fCommandBufferRequest, Uniform4f)
+			ADD_COMMAND_BUFFER_HANDLER(UNIFORM4FV, Uniform4fvCommandBufferRequest, Uniform4fv)
+			ADD_COMMAND_BUFFER_HANDLER(UNIFORM4I, Uniform4iCommandBufferRequest, Uniform4i)
+			ADD_COMMAND_BUFFER_HANDLER(UNIFORM4IV, Uniform4ivCommandBufferRequest, Uniform4iv)
+			ADD_COMMAND_BUFFER_HANDLER_WITH_DEVICE_FRAME(
+					UNIFORM_MATRIX2FV, UniformMatrix2fvCommandBufferRequest, UniformMatrix2fv)
+			ADD_COMMAND_BUFFER_HANDLER_WITH_DEVICE_FRAME(
+					UNIFORM_MATRIX3FV, UniformMatrix3fvCommandBufferRequest, UniformMatrix3fv)
+			ADD_COMMAND_BUFFER_HANDLER_WITH_DEVICE_FRAME(
+					UNIFORM_MATRIX4FV, UniformMatrix4fvCommandBufferRequest, UniformMatrix4fv)
+			ADD_COMMAND_BUFFER_HANDLER(DRAW_ARRAYS, DrawArraysCommandBufferRequest, DrawArrays)
+			ADD_COMMAND_BUFFER_HANDLER(DRAW_ELEMENTS, DrawElementsCommandBufferRequest, DrawElements)
+			ADD_COMMAND_BUFFER_HANDLER(DRAW_ARRAYS_INSTANCED, DrawArraysInstancedCommandBufferRequest, DrawArraysInstanced)
+			ADD_COMMAND_BUFFER_HANDLER(DRAW_ELEMENTS_INSTANCED, DrawElementsInstancedCommandBufferRequest, DrawElementsInstanced)
+			ADD_COMMAND_BUFFER_HANDLER(DRAW_RANGE_ELEMENTS, DrawRangeElementsCommandBufferRequest, DrawRangeElements)
+			ADD_COMMAND_BUFFER_HANDLER(DRAW_BUFFERS, DrawBuffersCommandBufferRequest, DrawBuffers)
+			ADD_COMMAND_BUFFER_HANDLER(PIXEL_STOREI, PixelStoreiCommandBufferRequest, PixelStorei)
+			ADD_COMMAND_BUFFER_HANDLER(POLYGON_OFFSET, PolygonOffsetCommandBufferRequest, PolygonOffset)
+			ADD_COMMAND_BUFFER_HANDLER(SET_VIEWPORT, SetViewportCommandBufferRequest, SetViewport)
+			ADD_COMMAND_BUFFER_HANDLER(SET_SCISSOR, SetScissorCommandBufferRequest, SetScissor)
+			ADD_COMMAND_BUFFER_HANDLER(GET_EXTENSIONS, GetExtensionsCommandBufferRequest, GetSupportedExtensions)
+			ADD_COMMAND_BUFFER_HANDLER(DEPTH_MASK, DepthMaskCommandBufferRequest, DepthMask)
+			ADD_COMMAND_BUFFER_HANDLER(DEPTH_FUNC, DepthFuncCommandBufferRequest, DepthFunc)
+			ADD_COMMAND_BUFFER_HANDLER(DEPTH_RANGE, DepthRangeCommandBufferRequest, DepthRange)
+			ADD_COMMAND_BUFFER_HANDLER(STENCIL_FUNC, StencilFuncCommandBufferRequest, StencilFunc)
+			ADD_COMMAND_BUFFER_HANDLER(STENCIL_FUNC_SEPARATE, StencilFuncSeparateCommandBufferRequest, StencilFuncSeparate)
+			ADD_COMMAND_BUFFER_HANDLER(STENCIL_MASK, StencilMaskCommandBufferRequest, StencilMask)
+			ADD_COMMAND_BUFFER_HANDLER(STENCIL_MASK_SEPARATE, StencilMaskSeparateCommandBufferRequest, StencilMaskSeparate)
+			ADD_COMMAND_BUFFER_HANDLER(STENCIL_OP, StencilOpCommandBufferRequest, StencilOp)
+			ADD_COMMAND_BUFFER_HANDLER(STENCIL_OP_SEPARATE, StencilOpSeparateCommandBufferRequest, StencilOpSeparate)
+			ADD_COMMAND_BUFFER_HANDLER(BLEND_COLOR, BlendColorCommandBufferRequest, BlendColor)
+			ADD_COMMAND_BUFFER_HANDLER(BLEND_EQUATION, BlendEquationCommandBufferRequest, BlendEquation)
+			ADD_COMMAND_BUFFER_HANDLER(BLEND_EQUATION_SEPARATE, BlendEquationSeparateCommandBufferRequest, BlendEquationSeparate)
+			ADD_COMMAND_BUFFER_HANDLER(BLEND_FUNC, BlendFuncCommandBufferRequest, BlendFunc)
+			ADD_COMMAND_BUFFER_HANDLER(BLEND_FUNC_SEPARATE, BlendFuncSeparateCommandBufferRequest, BlendFuncSeparate)
+			ADD_COMMAND_BUFFER_HANDLER(COLOR_MASK, ColorMaskCommandBufferRequest, ColorMask)
+			ADD_COMMAND_BUFFER_HANDLER(CULL_FACE, CullFaceCommandBufferRequest, CullFace)
+			ADD_COMMAND_BUFFER_HANDLER(FRONT_FACE, FrontFaceCommandBufferRequest, FrontFace)
+			ADD_COMMAND_BUFFER_HANDLER(ENABLE, EnableCommandBufferRequest, Enable)
+			ADD_COMMAND_BUFFER_HANDLER(DISABLE, DisableCommandBufferRequest, Disable)
+			ADD_COMMAND_BUFFER_HANDLER(GET_BOOLEANV, GetBooleanvCommandBufferRequest, GetBooleanv)
+			ADD_COMMAND_BUFFER_HANDLER(GET_INTEGERV, GetIntegervCommandBufferRequest, GetIntegerv)
+			ADD_COMMAND_BUFFER_HANDLER(GET_FLOATV, GetFloatvCommandBufferRequest, GetFloatv)
+			ADD_COMMAND_BUFFER_HANDLER(GET_STRING, GetStringCommandBufferRequest, GetString)
+			ADD_COMMAND_BUFFER_HANDLER(GET_SHADER_PRECISION_FORMAT,
+																 GetShaderPrecisionFormatCommandBufferRequest, GetShaderPrecisionFormat)
+			ADD_COMMAND_BUFFER_HANDLER(GET_ERROR, GetErrorCommandBufferRequest, GetError)
 #undef ADD_COMMAND_BUFFER_HANDLER
 #undef ADD_COMMAND_BUFFER_HANDLER_WITH_DEVICE_FRAME
 
@@ -1912,7 +1903,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 				}
 			}
 		}
-		commandBuffer->Finish();
+		// delete commandBuffer;
 	}
 	if (m_AppGlobalContext.IsDirty())
 		return false;

@@ -71,17 +71,14 @@ public:
    * Executing the frame function
    */
   FrameExecutionCode ExecuteFrame();
-  /**
-   * Executes the commands from the default command queue, and it returns a boolean value indicating if there are any commands
-   * to execute.
-   */
-  virtual bool ExecuteCommandBuffer() = 0;
+
   /**
    * Executes the commands from the given command queue with the device frame, and it also returns a boolean value indicating if
    * there are any commands to execute.
    */
   virtual bool ExecuteCommandBuffer(
       vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
+      TrContentRuntime *content,
       xr::DeviceFrame *deviceFrame,
       bool isDefaultQueue) = 0;
 

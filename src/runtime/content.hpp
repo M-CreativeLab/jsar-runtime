@@ -32,8 +32,8 @@ public:
   void dispose();
 
 public: // reference methods
-  TrConstellation* getConstellation() { return contentManager->constellation; }
-  xr::Device* getXrDevice() { return contentManager->constellation->getXrDevice(); }
+  TrConstellation *getConstellation();
+  xr::Device *getXrDevice();
 
 public: // command buffer methods
   void setupWithCommandBufferClient(TrOneShotClient<TrCommandBufferMessage> *client);
@@ -59,6 +59,7 @@ private:
   TrChannelSender<CustomEvent> *eventChanSender = nullptr;
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
+  vector<TrCommandBufferBase *> commandBufferRequests;
   // Layout?
   // XR?
 

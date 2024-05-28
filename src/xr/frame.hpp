@@ -128,9 +128,9 @@ namespace xr
     FrameActionResult startFrame(int passIndex = 0);
     FrameActionResult endFrame(int passIndex = 0);
     void copyCommandBuffers(StereoRenderingFrame *frame);
-    void copyCommandBuffers(std::vector<renderer::CommandBuffer *> &commandBuffers, int passIndex = 0);
-    void addCommandBuffer(renderer::CommandBuffer *commandBuffer, int passIndex = 0);
-    std::vector<renderer::CommandBuffer *> &getCommandBuffers(int passIndex = 0);
+    void copyCommandBuffers(std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, int passIndex = 0);
+    void addCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer, int passIndex = 0);
+    std::vector<commandbuffers::TrCommandBufferBase *> &getCommandBuffers(int passIndex = 0);
     bool ended();
     bool ended(int passIndex);
     int getId();
@@ -146,7 +146,7 @@ namespace xr
 
   private:
     void clearCommandBuffers();
-    void clearCommandBuffers(std::vector<renderer::CommandBuffer *> &commandBuffers);
+    void clearCommandBuffers(std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers);
 
   private:
     int m_StereoId = -1;
@@ -172,8 +172,8 @@ namespace xr
     chrono::time_point<chrono::high_resolution_clock> m_CreatedTime;
     chrono::time_point<chrono::high_resolution_clock> m_EndedTime;
 
-    std::vector<renderer::CommandBuffer *> m_CommandBuffersInPass;
-    std::vector<renderer::CommandBuffer *> m_CommandBuffersInPass2; // This is only used when m_IsMultiPass is true.
+    std::vector<commandbuffers::TrCommandBufferBase *> m_CommandBuffersInPass;
+    std::vector<commandbuffers::TrCommandBufferBase *> m_CommandBuffersInPass2; // This is only used when m_IsMultiPass is true.
     // TODO: support 3rd, 4th, ... passes?
 
     friend class Device;
