@@ -331,6 +331,16 @@ void TrClientContextPerProcess::cancelFrame(FrameRequestId id)
   frameRequestCallbacksMap.erase(id);
 }
 
+bool TrClientContextPerProcess::sendCommandBufferRequest(TrCommandBufferBase &commandBuffer)
+{
+  return commandBufferChanSender->sendCommandBufferRequest(commandBuffer);
+}
+
+TrCommandBufferResponse *TrClientContextPerProcess::recvCommandBufferResponse(int timeout)
+{
+  return commandBufferChanReceiver->recvCommandBufferResponse(timeout);
+}
+
 void TrClientContextPerProcess::onListenFrames()
 {
   while (framesListenerRunning)

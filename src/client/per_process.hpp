@@ -82,6 +82,10 @@ public: // frame request methods
   FrameRequestId requestFrame(FrameRequestCallback callback);
   void cancelFrame(FrameRequestId id);
 
+public: // command buffer methods
+  bool sendCommandBufferRequest(TrCommandBufferBase &commandBuffer);
+  TrCommandBufferResponse* recvCommandBufferResponse(int timeout);
+
 private:
   void onListenFrames();
 

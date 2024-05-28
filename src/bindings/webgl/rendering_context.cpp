@@ -1,14 +1,28 @@
 #include "rendering_context.hpp"
 #include "renderer/render_api.hpp"
 
+#include "idgen.hpp"
 #include "program.hpp"
 #include "texture.hpp"
 #include "uniform_location.hpp"
+
+using namespace std;
+using namespace node;
+using namespace commandbuffers;
 
 namespace webgl
 {
   Napi::FunctionReference *WebGLRenderingContext::webglConstructor;
   Napi::FunctionReference *WebGL2RenderingContext::webgl2Constructor;
+
+  /**
+   * The id generators for the client-side.
+   */
+  static TrIdGenerator programIdGen(1);
+  static TrIdGenerator shaderIdGen(1);
+  static TrIdGenerator bufferIdGen(1);
+  static TrIdGenerator framebufferIdGen(1);
+  static TrIdGenerator renderbufferIdGen(1);
 
   static uint32_t vertexArrayObjectId = 1;
   static uint32_t textureObjectId = 1;
@@ -810,10 +824,10 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    m_renderAPI = RenderAPI::Get();
-    if (m_renderAPI == nullptr)
+    m_clientContext = TrClientContextPerProcess::Get();
+    if (m_clientContext == nullptr)
     {
-      Napi::TypeError::New(env, "RenderAPI is not available")
+      Napi::TypeError::New(env, "ClientContext is not available")
           .ThrowAsJavaScriptException();
       return;
     }
@@ -847,22 +861,30 @@ namespace webgl
       }
     }
 
-    auto initCommandBuffer = new commandbuffers::WebGL1ContextInitCommandBufferRequest();
-    addCommandBuffer(initCommandBuffer, true, true);
+    auto initCommandBuffer = WebGL1ContextInitCommandBufferRequest();
+    sendCommandBufferRequest(initCommandBuffer, true);
 
-    // this->maxCombinedTextureImageUnits = initCommandBuffer->maxCombinedTextureImageUnits;
-    // this->maxCubeMapTextureSize = initCommandBuffer->maxCubeMapTextureSize;
-    // this->maxFragmentUniformVectors = initCommandBuffer->maxFragmentUniformVectors;
-    // this->maxRenderbufferSize = initCommandBuffer->maxRenderbufferSize;
-    // this->maxTextureImageUnits = initCommandBuffer->maxTextureImageUnits;
-    // this->maxTextureSize = initCommandBuffer->maxTextureSize;
-    // this->maxVaryingVectors = initCommandBuffer->maxVaryingVectors;
-    // this->maxVertexAttribs = initCommandBuffer->maxVertexAttribs;
-    // this->maxVertexTextureImageUnits = initCommandBuffer->maxVertexTextureImageUnits;
-    // this->maxVertexUniformVectors = initCommandBuffer->maxVertexUniformVectors;
-    // this->vendor = initCommandBuffer->vendor;
-    // this->version = initCommandBuffer->version;
-    // this->renderer = initCommandBuffer->renderer;
+    auto resp = recvCommandBufferResponse<WebGL1ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES);
+    if (resp == nullptr)
+    {
+      Napi::TypeError::New(env, "Failed to initialize WebGL context")
+          .ThrowAsJavaScriptException();
+      return;
+    }
+
+    this->maxCombinedTextureImageUnits = resp->maxCombinedTextureImageUnits;
+    this->maxCubeMapTextureSize = resp->maxCubeMapTextureSize;
+    this->maxFragmentUniformVectors = resp->maxFragmentUniformVectors;
+    this->maxRenderbufferSize = resp->maxRenderbufferSize;
+    this->maxTextureImageUnits = resp->maxTextureImageUnits;
+    this->maxTextureSize = resp->maxTextureSize;
+    this->maxVaryingVectors = resp->maxVaryingVectors;
+    this->maxVertexAttribs = resp->maxVertexAttribs;
+    this->maxVertexTextureImageUnits = resp->maxVertexTextureImageUnits;
+    this->maxVertexUniformVectors = resp->maxVertexUniformVectors;
+    this->vendor = resp->vendor;
+    this->version = resp->version;
+    this->renderer = resp->renderer;
   }
 
   template <typename T>
@@ -902,9 +924,10 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    auto commandBuffer = new commandbuffers::CreateProgramCommandBufferRequest(0);
-    addCommandBuffer(commandBuffer, true, true);
-    return WebGLProgram::constructor->New({Napi::Number::New(env, 0)});
+    auto id = programIdGen.get();
+    auto commandBuffer = CreateProgramCommandBufferRequest(0);
+    sendCommandBufferRequest(commandBuffer, true);
+    return WebGLProgram::constructor->New({Napi::Number::New(env, id)});
   }
 
   template <typename T>
@@ -926,7 +949,8 @@ namespace webgl
     }
 
     WebGLProgram *program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
-    addCommandBuffer(new commandbuffers::DeleteProgramCommandBufferRequest(program->GetId()));
+    auto req = DeleteProgramCommandBufferRequest(program->GetId());
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -949,8 +973,8 @@ namespace webgl
     }
 
     WebGLProgram *program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
-    auto commandBuffer = new commandbuffers::LinkProgramCommandBufferRequest(program->GetId());
-    addCommandBuffer(commandBuffer, true, true);
+    auto req = LinkProgramCommandBufferRequest(program->GetId());
+    sendCommandBufferRequest(req, true);
 
     // /**
     //  * Update the program's attribute locations.
@@ -1050,7 +1074,8 @@ namespace webgl
     }
 
     WebGLProgram *program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
-    addCommandBuffer(new commandbuffers::UseProgramCommandBufferRequest(program->GetId()));
+    auto req = UseProgramCommandBufferRequest(program->GetId());
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1074,11 +1099,11 @@ namespace webgl
 
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     int pname = info[1].As<Napi::Number>().Int32Value();
-    auto commandBuffer = new commandbuffers::GetProgramParamCommandBufferRequest(program->GetId(), pname);
-    addCommandBuffer(commandBuffer, true, true);
+    auto req = GetProgramParamCommandBufferRequest(program->GetId(), pname);
+    sendCommandBufferRequest(req, true);
 
-    auto res = recvCommandBufferResponse<commandbuffers::GetProgramParamCommandBufferResponse>(commandBuffer);
-    return Napi::Number::New(env, res->value);
+    auto resp = recvCommandBufferResponse<GetProgramParamCommandBufferResponse>(COMMAND_BUFFER_GET_PROGRAM_PARAM_RES);
+    return Napi::Number::New(env, resp->value);
   }
 
   template <typename T>
@@ -1100,11 +1125,11 @@ namespace webgl
     }
 
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
-    auto commandBuffer = new commandbuffers::GetProgramInfoLogCommandBufferRequest(program->GetId());
-    addCommandBuffer(commandBuffer, true, true);
+    auto req = GetProgramInfoLogCommandBufferRequest(program->GetId());
+    sendCommandBufferRequest(req, true);
 
-    auto res = recvCommandBufferResponse<commandbuffers::GetProgramInfoLogCommandBufferResponse>(commandBuffer);
-    return Napi::String::New(env, res->infoLog);
+    auto resp = recvCommandBufferResponse<GetProgramInfoLogCommandBufferResponse>(COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_RES);
+    return Napi::String::New(env, resp->infoLog);
   }
 
   template <typename T>
@@ -1132,11 +1157,9 @@ namespace webgl
     }
 
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
-    int shader = info[1].As<Napi::Number>().Int32Value();
-    addCommandBuffer(
-        new commandbuffers::AttachShaderCommandBufferRequest(program->GetId(), shader),
-        true,
-        false);
+    auto shader = info[1].As<Napi::Number>().Int32Value();
+    auto req = AttachShaderCommandBufferRequest(program->GetId(), shader);
+    sendCommandBufferRequest(req, true);
     return env.Undefined();
   }
 
@@ -1159,8 +1182,9 @@ namespace webgl
     }
 
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
-    int shader = info[1].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::DetachShaderCommandBufferRequest(program->GetId(), shader), true, false);
+    auto shader = info[1].As<Napi::Number>().Int32Value();
+    auto req = DetachShaderCommandBufferRequest(program->GetId(), shader);
+    sendCommandBufferRequest(req, true);
     return env.Undefined();
   }
 
@@ -1177,9 +1201,10 @@ namespace webgl
     }
     int type = info[0].As<Napi::Number>().Int32Value();
 
-    auto commandBuffer = new commandbuffers::CreateShaderCommandBufferRequest(0, type);
-    addCommandBuffer(commandBuffer, true, true);
-    return Napi::Number::New(env, 0);
+    auto id = shaderIdGen.get();
+    auto req = CreateShaderCommandBufferRequest(id, type);
+    sendCommandBufferRequest(req, true);
+    return Napi::Number::New(env, id);
   }
 
   template <typename T>
@@ -1194,8 +1219,8 @@ namespace webgl
       return env.Undefined();
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
-    auto commandBuffer = new commandbuffers::DeleteShaderCommandBufferRequest(shader);
-    addCommandBuffer(commandBuffer);
+    auto commandBuffer = DeleteShaderCommandBufferRequest(shader);
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 
@@ -1222,8 +1247,8 @@ namespace webgl
     //   DEBUG("Unity", "[src]: %s", line.c_str());
     // }
 
-    auto commandBuffer = new commandbuffers::ShaderSourceCommandBufferRequest(shader, source);
-    addCommandBuffer(commandBuffer, true, false);
+    auto commandBuffer = ShaderSourceCommandBufferRequest(shader, source);
+    sendCommandBufferRequest(commandBuffer, true);
     return env.Undefined();
   }
 
@@ -1239,7 +1264,8 @@ namespace webgl
       return env.Undefined();
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::CompileShaderCommandBufferRequest(shader), true, false);
+    auto req = CompileShaderCommandBufferRequest(shader);
+    sendCommandBufferRequest(req, true);
     return env.Undefined();
   }
 
@@ -1255,10 +1281,11 @@ namespace webgl
       return env.Undefined();
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
-    auto commandBuffer = new commandbuffers::GetShaderSourceCommandBufferRequest(shader);
-    addCommandBuffer(commandBuffer, true, true);
-    // return Napi::String::New(env, commandBuffer->m_Source);
-    return env.Undefined();
+    auto req = GetShaderSourceCommandBufferRequest(shader);
+    sendCommandBufferRequest(req, true);
+
+    auto resp = recvCommandBufferResponse<GetShaderSourceCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_SOURCE_RES);
+    return Napi::String::New(env, resp->source);
   }
 
   template <typename T>
@@ -1274,10 +1301,11 @@ namespace webgl
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
     int pname = info[1].As<Napi::Number>().Int32Value();
-    auto commandBuffer = new commandbuffers::GetShaderParamCommandBufferRequest(shader, pname);
-    addCommandBuffer(commandBuffer, true, true);
-    // return Napi::Number::New(env, commandBuffer->m_Value);
-    return env.Undefined();
+    auto req = GetShaderParamCommandBufferRequest(shader, pname);
+    sendCommandBufferRequest(req, true);
+
+    auto resp = recvCommandBufferResponse<GetShaderParamCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_PARAM_RES);
+    return Napi::Number::New(env, resp->value);
   }
 
   template <typename T>
@@ -1292,10 +1320,11 @@ namespace webgl
       return env.Undefined();
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
-    auto commandBuffer = new commandbuffers::GetShaderInfoLogCommandBufferRequest(shader);
-    addCommandBuffer(commandBuffer, true, true);
-    // return Napi::String::New(env, commandBuffer->m_InfoLog);
-    return env.Undefined();
+    auto req = GetShaderInfoLogCommandBufferRequest(shader);
+    sendCommandBufferRequest(req, true);
+
+    auto resp = recvCommandBufferResponse<GetShaderInfoLogCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_INFO_LOG_RES);
+    return Napi::String::New(env, resp->infoLog);
   }
 
   template <typename T>
@@ -1304,9 +1333,10 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    auto commandBuffer = new commandbuffers::CreateBufferCommandBufferRequest(0);
-    addCommandBuffer(commandBuffer, true, true);
-    return Napi::Number::New(env, 0);
+    auto id = bufferIdGen.get();
+    auto req = CreateBufferCommandBufferRequest(id);
+    sendCommandBufferRequest(req, true);
+    return Napi::Number::New(env, id);
   }
 
   template <typename T>
@@ -1321,7 +1351,8 @@ namespace webgl
       return env.Undefined();
     }
     int buffer = info[0].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::DeleteBufferCommandBufferRequest(buffer), true, false);
+    auto req = DeleteBufferCommandBufferRequest(buffer);
+    sendCommandBufferRequest(req, true);
     return env.Undefined();
   }
 
@@ -1348,7 +1379,9 @@ namespace webgl
     int buffer = 0;
     if (info[1].IsNumber())
       buffer = info[1].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::BindBufferCommandBufferRequest(target, buffer));
+
+    auto req = BindBufferCommandBufferRequest(target, buffer);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1419,12 +1452,8 @@ namespace webgl
     bufferData = buffer.Data();
     bufferSize = buffer.ByteLength();
 
-    auto commandBuffer = new commandbuffers::BufferDataCommandBufferRequest(
-        target,
-        bufferSize,
-        bufferData,
-        usage);
-    addCommandBuffer(commandBuffer);
+    auto req = BufferDataCommandBufferRequest(target, bufferSize, bufferData, usage);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1487,12 +1516,8 @@ namespace webgl
       return env.Undefined();
     }
 
-    auto commandBuffer = new commandbuffers::BufferSubDataCommandBufferRequest(
-        target,
-        offset,
-        bufferSize,
-        bufferData);
-    addCommandBuffer(commandBuffer);
+    auto req = BufferSubDataCommandBufferRequest(target, offset, bufferSize, bufferData);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1502,9 +1527,10 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    auto commandBuffer = new commandbuffers::CreateFramebufferCommandBufferRequest(0);
-    addCommandBuffer(commandBuffer, true, true);
-    return Napi::Number::New(env, 0);
+    auto id = framebufferIdGen.get();
+    auto req = CreateFramebufferCommandBufferRequest(id);
+    sendCommandBufferRequest(req, true);
+    return Napi::Number::New(env, id);
   }
 
   template <typename T>
@@ -1519,7 +1545,8 @@ namespace webgl
       return env.Undefined();
     }
     int framebuffer = info[0].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::DeleteFramebufferCommandBufferRequest(framebuffer), true, false);
+    auto req = DeleteFramebufferCommandBufferRequest(framebuffer);
+    sendCommandBufferRequest(req, true);
     return env.Undefined();
   }
 
@@ -1545,7 +1572,9 @@ namespace webgl
     int framebuffer = 0;
     if (info[1].IsNumber())
       framebuffer = info[1].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::BindFramebufferCommandBufferRequest(target, framebuffer));
+
+    auto req = BindFramebufferCommandBufferRequest(target, framebuffer);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1565,11 +1594,8 @@ namespace webgl
     int renderbuffertarget = info[2].As<Napi::Number>().Int32Value();
     int renderbuffer = info[3].As<Napi::Number>().Int32Value();
 
-    addCommandBuffer(new commandbuffers::FramebufferRenderbufferCommandBufferRequest(
-        target,
-        attachment,
-        renderbuffertarget,
-        renderbuffer));
+    auto req = FramebufferRenderbufferCommandBufferRequest(target, attachment, renderbuffertarget, renderbuffer);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1598,12 +1624,8 @@ namespace webgl
     auto texture = Napi::ObjectWrap<WebGLTexture>::Unwrap(jsTexture.As<Napi::Object>());
     int level = info[4].As<Napi::Number>().Int32Value();
 
-    addCommandBuffer(new commandbuffers::FramebufferTexture2DCommandBufferRequest(
-        target,
-        attachment,
-        textarget,
-        texture->GetId(),
-        level));
+    auto req = FramebufferTexture2DCommandBufferRequest(target, attachment, textarget, texture->GetId(), level);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1619,9 +1641,11 @@ namespace webgl
       return env.Undefined();
     }
     int target = info[0].As<Napi::Number>().Int32Value();
-    auto commandBuffer = new commandbuffers::CheckFramebufferStatusCommandBufferRequest(target);
-    addCommandBuffer(commandBuffer, true, true);
-    return Napi::Number::New(env, 0);
+    auto req = CheckFramebufferStatusCommandBufferRequest(target);
+    sendCommandBufferRequest(req, true);
+
+    auto resp = recvCommandBufferResponse<CheckFramebufferStatusCommandBufferResponse>(COMMAND_BUFFER_CHECK_FRAMEBUFFER_STATUS_RES);
+    return Napi::Number::New(env, resp->status);
   }
 
   template <typename T>
@@ -1630,9 +1654,10 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    auto commandBuffer = new commandbuffers::CreateRenderbufferCommandBufferRequest(0);
-    addCommandBuffer(commandBuffer, true, true);
-    return Napi::Number::New(env, 0);
+    auto id = renderbufferIdGen.get();
+    auto req = CreateRenderbufferCommandBufferRequest(id);
+    sendCommandBufferRequest(req, true);
+    return Napi::Number::New(env, id);
   }
 
   template <typename T>
@@ -1647,7 +1672,8 @@ namespace webgl
       return env.Undefined();
     }
     int renderbuffer = info[0].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::DeleteRenderbufferCommandBufferRequest(renderbuffer));
+    auto req = DeleteRenderbufferCommandBufferRequest(renderbuffer);
+    sendCommandBufferRequest(req, true);
     return env.Undefined();
   }
 
@@ -1673,7 +1699,9 @@ namespace webgl
     int renderbuffer = 0;
     if (info[1].IsNumber())
       renderbuffer = info[1].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::BindRenderbufferCommandBufferRequest(target, renderbuffer));
+
+    auto req = BindRenderbufferCommandBufferRequest(target, renderbuffer);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1693,11 +1721,8 @@ namespace webgl
     int width = info[2].As<Napi::Number>().Int32Value();
     int height = info[3].As<Napi::Number>().Int32Value();
 
-    addCommandBuffer(new commandbuffers::RenderbufferStorageCommandBufferRequest(
-        target,
-        internalformat,
-        width,
-        height));
+    auto req = RenderbufferStorageCommandBufferRequest(target, internalformat, width, height);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1707,10 +1732,10 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    auto clientId = textureObjectId++;
-    auto commandBuffer = new commandbuffers::CreateTextureCommandBufferRequest(clientId);
-    addCommandBuffer(commandBuffer);
-    return WebGLTexture::constructor->New({Napi::Number::New(env, clientId)});
+    auto id = textureObjectId++;
+    auto req = CreateTextureCommandBufferRequest(id);
+    sendCommandBufferRequest(req);
+    return WebGLTexture::constructor->New({Napi::Number::New(env, id)});
   }
 
   template <typename T>
@@ -1731,7 +1756,8 @@ namespace webgl
     }
 
     auto texture = Napi::ObjectWrap<WebGLTexture>::Unwrap(info[0].As<Napi::Object>());
-    addCommandBuffer(new commandbuffers::DeleteTextureCommandBufferRequest(texture->GetId()));
+    auto req = DeleteTextureCommandBufferRequest(texture->GetId());
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1771,7 +1797,8 @@ namespace webgl
       return env.Undefined();
     }
 
-    addCommandBuffer(new commandbuffers::BindTextureCommandBufferRequest(target, texture));
+    auto req = BindTextureCommandBufferRequest(target, texture);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1794,15 +1821,8 @@ namespace webgl
     if (imageSource.IsNull() || imageSource.IsUndefined())
     {
       /** When the image source is null, just create TexImage2DCommandBuffer with empty mode */
-      addCommandBuffer(new commandbuffers::TextureImage2DCommandBufferRequest(
-          target,
-          level,
-          internalformat,
-          width,
-          height,
-          border,
-          format,
-          type));
+      auto req = TextureImage2DCommandBufferRequest(target, level, internalformat, width, height, border, format, type);
+      sendCommandBufferRequest(req);
       return env.Undefined();
     }
 
@@ -1821,28 +1841,20 @@ namespace webgl
       len = typedarray.ByteLength();
     }
 
-    commandbuffers::TextureImage2DCommandBufferRequest *commandBuffer;
     if (m_unpackFlipY == true || m_unpackPremultiplyAlpha == true)
     {
       unsigned char *pixels = unpackPixels(type, format, width, height, reinterpret_cast<unsigned char *>(data));
-      commandBuffer = new commandbuffers::TextureImage2DCommandBufferRequest(
-          target,
-          level,
-          internalformat,
-          width,
-          height,
-          border,
-          format,
-          type,
-          pixels);
+      auto req = TextureImage2DCommandBufferRequest(target, level, internalformat, width, height, border, format, type,
+                                                    pixels);
+      sendCommandBufferRequest(req);
       delete[] pixels;
     }
     else
     {
-      commandBuffer = new commandbuffers::TextureImage2DCommandBufferRequest(
-          target, level, internalformat, width, height, border, format, type, data);
+      auto req = TextureImage2DCommandBufferRequest(target, level, internalformat, width, height, border, format, type,
+                                                    data);
+      sendCommandBufferRequest(req);
     }
-    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -1875,38 +1887,22 @@ namespace webgl
     }
     Napi::TypedArray pixels = info[8].As<Napi::TypedArray>();
     Napi::ArrayBuffer data = pixels.ArrayBuffer();
-    commandbuffers::TextureSubImage2DCommandBufferRequest *commandBuffer;
 
     if (m_unpackFlipY == true || m_unpackPremultiplyAlpha == true)
     {
       unsigned char *packedPixels = reinterpret_cast<unsigned char *>(data.Data());
       unsigned char *pixels = unpackPixels(type, format, width, height, packedPixels);
-      commandBuffer = new commandbuffers::TextureSubImage2DCommandBufferRequest(
-          target,
-          level,
-          xoffset,
-          yoffset,
-          width,
-          height,
-          format,
-          type,
-          pixels);
+      auto req = TextureSubImage2DCommandBufferRequest(target, level, xoffset, yoffset, width, height, format, type,
+                                                       pixels);
+      sendCommandBufferRequest(req);
       delete[] pixels;
     }
     else
     {
-      commandBuffer = new commandbuffers::TextureSubImage2DCommandBufferRequest(
-          target,
-          level,
-          xoffset,
-          yoffset,
-          width,
-          height,
-          format,
-          type,
-          data.Data());
+      auto req = TextureSubImage2DCommandBufferRequest(target, level, xoffset, yoffset, width, height, format, type,
+                                                       reinterpret_cast<unsigned char *>(data.Data()));
+      sendCommandBufferRequest(req);
     }
-    addCommandBuffer(commandBuffer);
     return env.Undefined();
   }
 
@@ -1925,15 +1921,8 @@ namespace webgl
     int height = info[6].As<Napi::Number>().Int32Value();
     int border = info[7].As<Napi::Number>().Int32Value();
 
-    addCommandBuffer(new commandbuffers::CopyTextureImage2DCommandBufferRequest(
-        target,
-        level,
-        internalformat,
-        x,
-        y,
-        width,
-        height,
-        border));
+    auto req = CopyTextureImage2DCommandBufferRequest(target, level, internalformat, x, y, width, height, border);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1952,15 +1941,8 @@ namespace webgl
     int width = info[6].As<Napi::Number>().Int32Value();
     int height = info[7].As<Napi::Number>().Int32Value();
 
-    addCommandBuffer(new commandbuffers::CopyTextureSubImage2DCommandBufferRequest(
-        target,
-        level,
-        xoffset,
-        yoffset,
-        x,
-        y,
-        width,
-        height));
+    auto req = CopyTextureSubImage2DCommandBufferRequest(target, level, xoffset, yoffset, x, y, width, height);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1973,7 +1955,9 @@ namespace webgl
     int target = info[0].As<Napi::Number>().Int32Value();
     int pname = info[1].As<Napi::Number>().Int32Value();
     int param = info[2].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::TextureParameteriCommandBufferRequest(target, pname, param));
+
+    auto req = TextureParameteriCommandBufferRequest(target, pname, param);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1996,7 +1980,8 @@ namespace webgl
     }
 
     int textureUnit = info[0].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::ActiveTextureCommandBufferRequest(textureUnit));
+    auto req = ActiveTextureCommandBufferRequest(textureUnit);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2007,7 +1992,8 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     int target = info[0].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::GenerateMipmapCommandBufferRequest(target));
+    auto req = GenerateMipmapCommandBufferRequest(target);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2023,7 +2009,8 @@ namespace webgl
       return env.Undefined();
     }
     int index = info[0].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::EnableVertexAttribArrayCommandBufferRequest(index));
+    auto req = EnableVertexAttribArrayCommandBufferRequest(index);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2039,7 +2026,8 @@ namespace webgl
       return env.Undefined();
     }
     int index = info[0].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::DisableVertexAttribArrayCommandBufferRequest(index));
+    auto req = DisableVertexAttribArrayCommandBufferRequest(index);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2061,14 +2049,8 @@ namespace webgl
     int stride = info[4].As<Napi::Number>().Int32Value();
     int offset = info[5].As<Napi::Number>().Int32Value();
 
-    auto commandBuffer = new commandbuffers::VertexAttribPointerCommandBufferRequest(
-        index,
-        size,
-        type,
-        normalized,
-        stride,
-        offset);
-    addCommandBuffer(commandBuffer);
+    auto req = VertexAttribPointerCommandBufferRequest(index, size, type, normalized, stride, offset);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2148,8 +2130,9 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    float x = info[1].As<Napi::Number>().FloatValue();
-    addCommandBuffer(new commandbuffers::Uniform1fCommandBufferRequest(location->GetValue(), x));
+    auto x = info[1].As<Napi::Number>().FloatValue();
+    auto req = Uniform1fCommandBufferRequest(location->GetValue(), x);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2179,8 +2162,8 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().FloatValue();
 
-    auto commandBuffer = new commandbuffers::Uniform1fvCommandBufferRequest(location->GetValue(), data);
-    addCommandBuffer(commandBuffer);
+    auto req = Uniform1fvCommandBufferRequest(location->GetValue(), data);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2204,7 +2187,9 @@ namespace webgl
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     int x = info[1].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::Uniform1iCommandBufferRequest(location->GetValue(), x));
+
+    auto req = Uniform1iCommandBufferRequest(location->GetValue(), x);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2234,8 +2219,8 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().Int32Value();
 
-    auto commandBuffer = new commandbuffers::Uniform1ivCommandBufferRequest(location->GetValue(), data);
-    addCommandBuffer(commandBuffer);
+    auto req = Uniform1ivCommandBufferRequest(location->GetValue(), data);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2260,7 +2245,9 @@ namespace webgl
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     float x = info[1].As<Napi::Number>().FloatValue();
     float y = info[2].As<Napi::Number>().FloatValue();
-    addCommandBuffer(new commandbuffers::Uniform2fCommandBufferRequest(location->GetValue(), x, y));
+
+    auto req = Uniform2fCommandBufferRequest(location->GetValue(), x, y);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2295,8 +2282,8 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().FloatValue();
 
-    auto commandBuffer = new commandbuffers::Uniform2fvCommandBufferRequest(location->GetValue(), data);
-    addCommandBuffer(commandBuffer);
+    auto req = Uniform2fvCommandBufferRequest(location->GetValue(), data);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2321,7 +2308,9 @@ namespace webgl
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     int x = info[1].As<Napi::Number>().Int32Value();
     int y = info[2].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::Uniform2iCommandBufferRequest(location->GetValue(), x, y));
+
+    auto req = Uniform2iCommandBufferRequest(location->GetValue(), x, y);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2356,8 +2345,8 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().Int32Value();
 
-    auto commandBuffer = new commandbuffers::Uniform2ivCommandBufferRequest(location->GetValue(), data);
-    addCommandBuffer(commandBuffer);
+    auto req = Uniform2ivCommandBufferRequest(location->GetValue(), data);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2383,7 +2372,9 @@ namespace webgl
     float x = info[1].As<Napi::Number>().FloatValue();
     float y = info[2].As<Napi::Number>().FloatValue();
     float z = info[3].As<Napi::Number>().FloatValue();
-    addCommandBuffer(new commandbuffers::Uniform3fCommandBufferRequest(location->GetValue(), x, y, z));
+
+    auto req = Uniform3fCommandBufferRequest(location->GetValue(), x, y, z);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2418,8 +2409,8 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().FloatValue();
 
-    auto commandBuffer = new commandbuffers::Uniform3fvCommandBufferRequest(location->GetValue(), data);
-    addCommandBuffer(commandBuffer);
+    auto req = Uniform3fvCommandBufferRequest(location->GetValue(), data);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2445,7 +2436,9 @@ namespace webgl
     int x = info[1].As<Napi::Number>().Int32Value();
     int y = info[2].As<Napi::Number>().Int32Value();
     int z = info[3].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::Uniform3iCommandBufferRequest(location->GetValue(), x, y, z));
+
+    auto req = Uniform3iCommandBufferRequest(location->GetValue(), x, y, z);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2480,8 +2473,8 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().Int32Value();
 
-    auto commandBuffer = new commandbuffers::Uniform3ivCommandBufferRequest(location->GetValue(), data);
-    addCommandBuffer(commandBuffer);
+    auto req = Uniform3ivCommandBufferRequest(location->GetValue(), data);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2508,7 +2501,9 @@ namespace webgl
     float y = info[2].As<Napi::Number>().FloatValue();
     float z = info[3].As<Napi::Number>().FloatValue();
     float w = info[4].As<Napi::Number>().FloatValue();
-    addCommandBuffer(new commandbuffers::Uniform4fCommandBufferRequest(location->GetValue(), x, y, z, w));
+
+    auto req = Uniform4fCommandBufferRequest(location->GetValue(), x, y, z, w);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2543,8 +2538,8 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().FloatValue();
 
-    auto commandBuffer = new commandbuffers::Uniform4fvCommandBufferRequest(location->GetValue(), data);
-    addCommandBuffer(commandBuffer);
+    auto req = Uniform4fvCommandBufferRequest(location->GetValue(), data);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2571,7 +2566,9 @@ namespace webgl
     int y = info[2].As<Napi::Number>().Int32Value();
     int z = info[3].As<Napi::Number>().Int32Value();
     int w = info[4].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::Uniform4iCommandBufferRequest(location->GetValue(), x, y, z, w));
+
+    auto req = Uniform4iCommandBufferRequest(location->GetValue(), x, y, z, w);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2606,8 +2603,8 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().Int32Value();
 
-    auto commandBuffer = new commandbuffers::Uniform4ivCommandBufferRequest(location->GetValue(), data);
-    addCommandBuffer(commandBuffer);
+    auto req = Uniform4ivCommandBufferRequest(location->GetValue(), data);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2644,11 +2641,8 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().FloatValue();
 
-    auto commandBuffer = new commandbuffers::UniformMatrix2fvCommandBufferRequest(
-        location->GetValue(),
-        transpose,
-        data);
-    addCommandBuffer(commandBuffer);
+    auto req = UniformMatrix2fvCommandBufferRequest(location->GetValue(), transpose, data);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2685,11 +2679,8 @@ namespace webgl
     for (size_t i = 0; i < length; i++)
       data[i] = array.Get(i).ToNumber().FloatValue();
 
-    auto commandBuffer = new commandbuffers::UniformMatrix3fvCommandBufferRequest(
-        location->GetValue(),
-        transpose,
-        data);
-    addCommandBuffer(commandBuffer);
+    auto req = UniformMatrix3fvCommandBufferRequest(location->GetValue(), transpose, data);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2727,10 +2718,8 @@ namespace webgl
     if (array.Has(xrMatrixPlaceholderField) && array.Get(xrMatrixPlaceholderField).ToBoolean().Value() == true)
     {
       auto typeOfMatrixPlaceholder = array.Get("type").ToNumber().Int32Value();
-      auto commandBuffer = new commandbuffers::UniformMatrix4fvCommandBufferRequest(
-          location->GetValue(),
-          transpose,
-          (commandbuffers::PlaceholderType)typeOfMatrixPlaceholder);
+      auto req = UniformMatrix4fvCommandBufferRequest(location->GetValue(), transpose,
+                                                      (commandbuffers::PlaceholderType)typeOfMatrixPlaceholder);
 
       // if (array.Has("xrSessionId"))
       // {
@@ -2742,11 +2731,11 @@ namespace webgl
       {
         auto isRightHandedValue = array.Get("isRightHanded");
         if (isRightHandedValue.IsBoolean())
-          commandBuffer->handedness(commandbuffers::MATRIX_RIGHT_HANDED);
+          req.handedness(commandbuffers::MATRIX_RIGHT_HANDED);
         else
-          commandBuffer->handedness(commandbuffers::MATRIX_LEFT_HANDED);
+          req.handedness(commandbuffers::MATRIX_LEFT_HANDED);
       }
-      addCommandBuffer(commandBuffer);
+      sendCommandBufferRequest(req);
     }
     else
     {
@@ -2763,11 +2752,8 @@ namespace webgl
       for (size_t i = 0; i < length; i++)
         data[i] = array.Get(i).ToNumber().FloatValue();
 
-      auto commandBuffer = new commandbuffers::UniformMatrix4fvCommandBufferRequest(
-          location->GetValue(),
-          transpose,
-          data);
-      addCommandBuffer(commandBuffer);
+      auto req = UniformMatrix4fvCommandBufferRequest(location->GetValue(), transpose, data);
+      sendCommandBufferRequest(req);
     }
     return env.Undefined();
   }
@@ -2787,7 +2773,8 @@ namespace webgl
     int first = info[1].As<Napi::Number>().Int32Value();
     int count = info[2].As<Napi::Number>().Int32Value();
 
-    addCommandBuffer(new commandbuffers::DrawArraysCommandBufferRequest(mode, first, count));
+    auto req = DrawArraysCommandBufferRequest(mode, first, count);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2806,7 +2793,9 @@ namespace webgl
     int count = info[1].As<Napi::Number>().Int32Value();
     int type = info[2].As<Napi::Number>().Int32Value();
     int offset = info[3].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::DrawElementsCommandBufferRequest(mode, count, type, offset));
+
+    auto req = DrawElementsCommandBufferRequest(mode, count, type, offset);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2850,7 +2839,8 @@ namespace webgl
     }
     else
     {
-      addCommandBuffer(new commandbuffers::PixelStoreiCommandBufferRequest(pname, param));
+      auto req = PixelStoreiCommandBufferRequest(pname, param);
+      sendCommandBufferRequest(req);
     }
     return env.Undefined();
   }
@@ -2868,7 +2858,9 @@ namespace webgl
     }
     float factor = info[0].As<Napi::Number>().FloatValue();
     float units = info[1].As<Napi::Number>().FloatValue();
-    addCommandBuffer(new commandbuffers::PolygonOffsetCommandBufferRequest(factor, units));
+
+    auto req = PolygonOffsetCommandBufferRequest(factor, units);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2889,11 +2881,8 @@ namespace webgl
     int width = info[2].As<Napi::Number>().Int32Value();
     int height = info[3].As<Napi::Number>().Int32Value();
 
-    /**
-     * Only the viewport is changed, we need to dispatch a SetViewportCommandBuffer.
-     */
-    if (m_renderAPI->HasViewportChanged(x, y, width, height) == true)
-      addCommandBuffer(new commandbuffers::SetViewportCommandBufferRequest(x, y, width, height));
+    auto req = SetViewportCommandBufferRequest(x, y, width, height);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2913,7 +2902,9 @@ namespace webgl
     int y = info[1].As<Napi::Number>().Int32Value();
     int width = info[2].As<Napi::Number>().Int32Value();
     int height = info[3].As<Napi::Number>().Int32Value();
-    addCommandBuffer(new commandbuffers::SetScissorCommandBufferRequest(x, y, width, height));
+
+    auto req = SetScissorCommandBufferRequest(x, y, width, height);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2985,7 +2976,8 @@ namespace webgl
     if (info.Length() >= 1)
     {
       bool flag = info[0].ToBoolean().Value();
-      addCommandBuffer(new commandbuffers::DepthMaskCommandBufferRequest(flag));
+      auto req = DepthMaskCommandBufferRequest(flag);
+      sendCommandBufferRequest(req);
     }
     return env.Undefined();
   }
@@ -2999,7 +2991,8 @@ namespace webgl
     if (info.Length() >= 1)
     {
       uint32_t func = info[0].ToNumber().Uint32Value();
-      addCommandBuffer(new commandbuffers::DepthFuncCommandBufferRequest(func));
+      auto req = DepthFuncCommandBufferRequest(func);
+      sendCommandBufferRequest(req);
     }
     return env.Undefined();
   }
@@ -3014,7 +3007,8 @@ namespace webgl
     {
       float near = info[0].ToNumber().FloatValue();
       float far = info[1].ToNumber().FloatValue();
-      addCommandBuffer(new commandbuffers::DepthRangeCommandBufferRequest(near, far));
+      auto req = DepthRangeCommandBufferRequest(near, far);
+      sendCommandBufferRequest(req);
     }
     return env.Undefined();
   }
@@ -3030,7 +3024,8 @@ namespace webgl
       uint32_t func = info[0].ToNumber().Uint32Value();
       int ref = info[1].ToNumber().Int32Value();
       uint32_t mask = info[2].ToNumber().Uint32Value();
-      addCommandBuffer(new commandbuffers::StencilFuncCommandBufferRequest(func, ref, mask));
+      auto req = StencilFuncCommandBufferRequest(func, ref, mask);
+      sendCommandBufferRequest(req);
     }
     return env.Undefined();
   }
@@ -3047,7 +3042,8 @@ namespace webgl
       uint32_t func = info[1].ToNumber().Uint32Value();
       int ref = info[2].ToNumber().Int32Value();
       uint32_t mask = info[3].ToNumber().Uint32Value();
-      addCommandBuffer(new commandbuffers::StencilFuncSeparateCommandBufferRequest(face, func, ref, mask));
+      auto req = StencilFuncSeparateCommandBufferRequest(face, func, ref, mask);
+      sendCommandBufferRequest(req);
     }
     return env.Undefined();
   }
@@ -3061,7 +3057,8 @@ namespace webgl
     if (info.Length() >= 1)
     {
       uint32_t mask = info[0].ToNumber().Uint32Value();
-      addCommandBuffer(new commandbuffers::StencilMaskCommandBufferRequest(mask));
+      auto req = StencilMaskCommandBufferRequest(mask);
+      sendCommandBufferRequest(req);
     }
     return env.Undefined();
   }
@@ -3076,7 +3073,8 @@ namespace webgl
     {
       uint32_t face = info[0].ToNumber().Uint32Value();
       uint32_t mask = info[1].ToNumber().Uint32Value();
-      addCommandBuffer(new commandbuffers::StencilMaskSeparateCommandBufferRequest(face, mask));
+      auto req = StencilMaskSeparateCommandBufferRequest(face, mask);
+      sendCommandBufferRequest(req);
     }
     return env.Undefined();
   }
@@ -3092,7 +3090,8 @@ namespace webgl
       uint32_t fail = info[0].ToNumber().Uint32Value();
       uint32_t zfail = info[1].ToNumber().Uint32Value();
       uint32_t zpass = info[2].ToNumber().Uint32Value();
-      addCommandBuffer(new commandbuffers::StencilOpCommandBufferRequest(fail, zfail, zpass));
+      auto req = StencilOpCommandBufferRequest(fail, zfail, zpass);
+      sendCommandBufferRequest(req);
     }
     return env.Undefined();
   }
@@ -3109,7 +3108,8 @@ namespace webgl
       uint32_t fail = info[1].ToNumber().Uint32Value();
       uint32_t zfail = info[2].ToNumber().Uint32Value();
       uint32_t zpass = info[3].ToNumber().Uint32Value();
-      addCommandBuffer(new commandbuffers::StencilOpSeparateCommandBufferRequest(face, fail, zfail, zpass));
+      auto req = StencilOpSeparateCommandBufferRequest(face, fail, zfail, zpass);
+      sendCommandBufferRequest(req);
     }
     return env.Undefined();
   }
@@ -3126,7 +3126,8 @@ namespace webgl
       float g = info[1].ToNumber().FloatValue();
       float b = info[2].ToNumber().FloatValue();
       float a = info[3].ToNumber().FloatValue();
-      addCommandBuffer(new commandbuffers::BlendColorCommandBufferRequest(r, g, b, a));
+      auto req = BlendColorCommandBufferRequest(r, g, b, a);
+      sendCommandBufferRequest(req);
     }
     return env.Undefined();
   }
@@ -3138,7 +3139,8 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     uint32_t mode = info[0].ToNumber().Uint32Value();
-    addCommandBuffer(new commandbuffers::BlendEquationCommandBufferRequest(mode));
+    auto req = BlendEquationCommandBufferRequest(mode);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -3150,7 +3152,8 @@ namespace webgl
 
     uint32_t modeRGB = info[0].ToNumber().Uint32Value();
     uint32_t modeAlpha = info[1].ToNumber().Uint32Value();
-    addCommandBuffer(new commandbuffers::BlendEquationSeparateCommandBufferRequest(modeRGB, modeAlpha));
+    auto req = BlendEquationSeparateCommandBufferRequest(modeRGB, modeAlpha);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -3162,7 +3165,8 @@ namespace webgl
 
     uint32_t sfactor = info[0].ToNumber().Uint32Value();
     uint32_t dfactor = info[1].ToNumber().Uint32Value();
-    addCommandBuffer(new commandbuffers::BlendFuncCommandBufferRequest(sfactor, dfactor));
+    auto req = BlendFuncCommandBufferRequest(sfactor, dfactor);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -3176,7 +3180,8 @@ namespace webgl
     uint32_t dstRGB = info[1].ToNumber().Uint32Value();
     uint32_t srcAlpha = info[2].ToNumber().Uint32Value();
     uint32_t dstAlpha = info[3].ToNumber().Uint32Value();
-    addCommandBuffer(new commandbuffers::BlendFuncSeparateCommandBufferRequest(srcRGB, dstRGB, srcAlpha, dstAlpha));
+    auto req = BlendFuncSeparateCommandBufferRequest(srcRGB, dstRGB, srcAlpha, dstAlpha);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -3190,7 +3195,8 @@ namespace webgl
     bool g = info[1].ToBoolean().Value();
     bool b = info[2].ToBoolean().Value();
     bool a = info[3].ToBoolean().Value();
-    addCommandBuffer(new commandbuffers::ColorMaskCommandBufferRequest(r, g, b, a));
+    auto req = ColorMaskCommandBufferRequest(r, g, b, a);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -3201,7 +3207,8 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     int32_t mode = info[0].ToNumber().Int32Value();
-    addCommandBuffer(new commandbuffers::CullFaceCommandBufferRequest(mode));
+    auto req = CullFaceCommandBufferRequest(mode);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -3212,7 +3219,8 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     int32_t mode = info[0].ToNumber().Int32Value();
-    addCommandBuffer(new commandbuffers::FrontFaceCommandBufferRequest(mode));
+    auto req = FrontFaceCommandBufferRequest(mode);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -3225,7 +3233,8 @@ namespace webgl
     if (info.Length() >= 1)
     {
       uint32_t mask = info[0].ToNumber().Uint32Value();
-      addCommandBuffer(new commandbuffers::EnableCommandBufferRequest(mask));
+      auto req = EnableCommandBufferRequest(mask);
+      sendCommandBufferRequest(req);
     }
     return env.Undefined();
   }
@@ -3239,7 +3248,8 @@ namespace webgl
     if (info.Length() >= 1)
     {
       uint32_t mask = info[0].ToNumber().Uint32Value();
-      addCommandBuffer(new commandbuffers::DisableCommandBufferRequest(mask));
+      auto req = DisableCommandBufferRequest(mask);
+      sendCommandBufferRequest(req);
     }
     return env.Undefined();
   }
@@ -3335,9 +3345,16 @@ namespace webgl
       case WEBGL_STENCIL_PASS_DEPTH_PASS:
       case WEBGL_UNPACK_COLORSPACE_CONVERSION_WEBGL:
       {
-        auto commandBuffer = new commandbuffers::GetIntegervCommandBufferRequest(pname);
-        addCommandBuffer(commandBuffer, true, true);
-        return Napi::Number::New(env, 0);
+        auto req = GetIntegervCommandBufferRequest(pname);
+        sendCommandBufferRequest(req, true);
+        auto resp = recvCommandBufferResponse<GetIntegervCommandBufferResponse>(COMMAND_BUFFER_GET_INTEGERV_RES);
+        if (resp == nullptr)
+        {
+          Napi::TypeError::New(env, "getParameter() failed to get the parameter: " + std::to_string(pname))
+              .ThrowAsJavaScriptException();
+          return env.Undefined();
+        }
+        return Napi::Number::New(env, resp->value);
       }
       // GLboolean
       case WEBGL_BLEND:
@@ -3352,9 +3369,16 @@ namespace webgl
       case WEBGL_UNPACK_FLIP_Y_WEBGL:
       case WEBGL_UNPACK_PREMULTIPLY_ALPHA_WEBGL:
       {
-        auto commandBuffer = new commandbuffers::GetBooleanvCommandBufferRequest(pname);
-        addCommandBuffer(commandBuffer, true, true);
-        return Napi::Boolean::New(env, false);
+        auto req = GetBooleanvCommandBufferRequest(pname);
+        sendCommandBufferRequest(req, true);
+        auto resp = recvCommandBufferResponse<GetBooleanvCommandBufferResponse>(COMMAND_BUFFER_GET_BOOLEANV_RES);
+        if (resp == nullptr)
+        {
+          Napi::TypeError::New(env, "getParameter() failed to get the parameter: " + std::to_string(pname))
+              .ThrowAsJavaScriptException();
+          return env.Undefined();
+        }
+        return Napi::Boolean::New(env, resp->value);
       }
       // GLint
       case WEBGL_ALPHA_BITS:
@@ -3382,9 +3406,16 @@ namespace webgl
       case WEBGL_SUBPIXEL_BITS:
       case WEBGL_UNPACK_ALIGNMENT:
       {
-        auto commandBuffer = new commandbuffers::GetIntegervCommandBufferRequest(pname);
-        addCommandBuffer(commandBuffer, true, true);
-        return Napi::Number::New(env, 0);
+        auto req = GetIntegervCommandBufferRequest(pname);
+        sendCommandBufferRequest(req, true);
+        auto resp = recvCommandBufferResponse<GetIntegervCommandBufferResponse>(COMMAND_BUFFER_GET_INTEGERV_RES);
+        if (resp == nullptr)
+        {
+          Napi::TypeError::New(env, "getParameter() failed to get the parameter: " + std::to_string(pname))
+              .ThrowAsJavaScriptException();
+          return env.Undefined();
+        }
+        return Napi::Number::New(env, resp->value);
       }
       // GLubyte/string
       case WEBGL_RENDERER:
@@ -3392,9 +3423,16 @@ namespace webgl
       case WEBGL_VENDOR:
       case WEBGL_VERSION:
       {
-        auto commandBuffer = new commandbuffers::GetStringCommandBufferRequest(pname);
-        addCommandBuffer(commandBuffer, true, true);
-        return Napi::String::New(env, "");
+        auto req = GetStringCommandBufferRequest(pname);
+        sendCommandBufferRequest(req, true);
+        auto resp = recvCommandBufferResponse<GetStringCommandBufferResponse>(COMMAND_BUFFER_GET_STRING_RES);
+        if (resp == nullptr)
+        {
+          Napi::TypeError::New(env, "getParameter() failed to get the parameter: " + std::to_string(pname))
+              .ThrowAsJavaScriptException();
+          return env.Undefined();
+        }
+        return Napi::String::New(env, resp->value);
       }
       default:
         Napi::TypeError::New(env, "getParameter() don't support the parameter: " + std::to_string(pname))
@@ -3424,13 +3462,20 @@ namespace webgl
     int shadertype = info[0].As<Napi::Number>().Int32Value();
     int precisiontype = info[1].As<Napi::Number>().Int32Value();
 
-    auto commandBuffer = new commandbuffers::GetShaderPrecisionFormatCommandBufferRequest(shadertype, precisiontype);
-    addCommandBuffer(commandBuffer, true, true);
+    auto req = GetShaderPrecisionFormatCommandBufferRequest(shadertype, precisiontype);
+    sendCommandBufferRequest(req, true);
 
+    auto resp = recvCommandBufferResponse<GetShaderPrecisionFormatCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_PRECISION_FORMAT_RES);
+    if (resp == nullptr)
+    {
+      Napi::TypeError::New(env, "getShaderPrecisionFormat() failed to get the precision format.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
     Napi::Object obj = Napi::Object::New(env);
-    // obj.Set("rangeMin", Napi::Number::New(env, commandBuffer->m_RangeMin));
-    // obj.Set("rangeMax", Napi::Number::New(env, commandBuffer->m_RangeMax));
-    // obj.Set("precision", Napi::Number::New(env, commandBuffer->m_Precision));
+    obj.Set("rangeMin", Napi::Number::New(env, resp->rangeMin));
+    obj.Set("rangeMax", Napi::Number::New(env, resp->rangeMax));
+    obj.Set("precision", Napi::Number::New(env, resp->precision));
     return obj;
   }
 
@@ -3439,9 +3484,18 @@ namespace webgl
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    auto commandBuffer = new commandbuffers::GetErrorCommandBufferRequest();
-    addCommandBuffer(commandBuffer, true, true);
-    return Napi::Number::New(env, 0);
+
+    auto req = GetErrorCommandBufferRequest();
+    sendCommandBufferRequest(req, true);
+
+    auto resp = recvCommandBufferResponse<GetErrorCommandBufferResponse>(COMMAND_BUFFER_GET_ERROR_RES);
+    if (resp == nullptr)
+    {
+      Napi::TypeError::New(env, "getError() failed to get the error code.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    return Napi::Number::New(env, resp->error);
   }
 
   template <typename T>
@@ -3454,9 +3508,16 @@ namespace webgl
     if (jsThis.Has("_extensions") && jsThis.Get("_extensions").IsArray())
       return jsThis.Get("_extensions");
 
-    auto commandBuffer = new commandbuffers::GetExtensionsCommandBufferRequest();
-    addCommandBuffer(commandBuffer, true, true);
+    auto req = GetExtensionsCommandBufferRequest();
+    sendCommandBufferRequest(req, true);
 
+    auto resp = recvCommandBufferResponse<GetExtensionsCommandBufferResponse>(COMMAND_BUFFER_GET_EXTENSIONS_RES);
+    if (resp == nullptr)
+    {
+      Napi::TypeError::New(env, "getSupportedExtensions() failed to get the extensions.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
     Napi::Array extensionsArray = Napi::Array::New(env);
     // for (size_t i = 0; i < commandBuffer->m_Extensions.size(); i++)
     // {
@@ -3507,45 +3568,6 @@ namespace webgl
     Napi::HandleScope scope(env);
     Napi::TypeError::New(env, "drawingBufferHeight is readonly.")
         .ThrowAsJavaScriptException();
-  }
-
-  template <typename T>
-  bool WebGLBaseRenderingContext<T>::addCommandBuffer(
-      commandbuffers::TrCommandBufferBase *commandBuffer,
-      bool useDefaultQueue,
-      bool waitForFinished)
-  {
-    if (waitForFinished)
-    {
-      /**
-       * Only default queue supports waiting for the command buffer to be finished.
-       */
-      useDefaultQueue = true;
-    }
-
-    if (contextAttributes.xrCompatible == true && useDefaultQueue == false)
-    {
-      // auto device = xr::Device::GetInstance();
-      // assert(device != nullptr);
-
-      // if (device->isInFrame())
-      // {
-      //   device->addCommandBufferToFrame(commandBuffer);
-      //   return true;
-      // }
-      // If not in XR frame, add the command buffer to the default render queue.
-    }
-
-    // Otherwise, add the command buffer to the default render queue.
-    // m_renderAPI->AddCommandBuffer(commandBuffer);
-
-    // Wait for the command buffer to be finished if needed.
-    if (waitForFinished)
-    {
-      // commandBuffer->WaitFinished();
-      // TODO: release the command buffer?
-    }
-    return true;
   }
 
   /**
@@ -3652,13 +3674,15 @@ namespace webgl
   template <typename T>
   int WebGLBaseRenderingContext<T>::getDrawingBufferWidth()
   {
-    return m_renderAPI->GetDrawingBufferWidth();
+    // return m_renderAPI->GetDrawingBufferWidth();
+    return 1024;
   }
 
   template <typename T>
   int WebGLBaseRenderingContext<T>::getDrawingBufferHeight()
   {
-    return m_renderAPI->GetDrawingBufferHeight();
+    // return m_renderAPI->GetDrawingBufferHeight();
+    return 1024;
   }
 
   template <typename T>
@@ -3713,38 +3737,47 @@ namespace webgl
     // mark the webgl version to "webgl2"
     m_isWebGL2 = true;
 
-    auto initCommand = new commandbuffers::WebGL2ContextInitCommandBufferRequest();
-    addCommandBuffer(initCommand, true, true);
+    auto initCommand = WebGL2ContextInitCommandBufferRequest();
+    sendCommandBufferRequest(initCommand, true);
 
-    // this->max3DTextureSize = initCommand->max3DTextureSize;
-    // this->maxArrayTextureLayers = initCommand->maxArrayTextureLayers;
-    // this->maxColorAttachments = initCommand->maxColorAttachments;
-    // this->maxCombinedUniformBlocks = initCommand->maxCombinedUniformBlocks;
-    // this->maxDrawBuffers = initCommand->maxDrawBuffers;
-    // this->maxElementsIndices = initCommand->maxElementsIndices;
-    // this->maxElementsVertices = initCommand->maxElementsVertices;
-    // this->maxFragmentInputComponents = initCommand->maxFragmentInputComponents;
-    // this->maxFragmentUniformBlocks = initCommand->maxFragmentUniformBlocks;
-    // this->maxFragmentUniformComponents = initCommand->maxFragmentUniformComponents;
-    // this->maxProgramTexelOffset = initCommand->maxProgramTexelOffset;
-    // this->maxSamples = initCommand->maxSamples;
-    // this->maxTransformFeedbackInterleavedComponents = initCommand->maxTransformFeedbackInterleavedComponents;
-    // this->maxTransformFeedbackSeparateAttributes = initCommand->maxTransformFeedbackSeparateAttributes;
-    // this->maxTransformFeedbackSeparateComponents = initCommand->maxTransformFeedbackSeparateComponents;
-    // this->maxUniformBufferBindings = initCommand->maxUniformBufferBindings;
-    // this->maxVaryingComponents = initCommand->maxVaryingComponents;
-    // this->maxVertexOutputComponents = initCommand->maxVertexOutputComponents;
-    // this->maxVertexUniformBlocks = initCommand->maxVertexUniformBlocks;
-    // this->maxVertexUniformComponents = initCommand->maxVertexUniformComponents;
-    // this->minProgramTexelOffset = initCommand->minProgramTexelOffset;
+    // Wait for the context init response
+    auto resp = recvCommandBufferResponse<WebGL2ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_RES);
+    if (resp == nullptr)
+    {
+      Napi::TypeError::New(info.Env(), "Failed to initialize WebGL2RenderingContext.")
+          .ThrowAsJavaScriptException();
+      return;
+    }
 
-    // this->maxClientWaitTimeout = initCommand->maxClientWaitTimeout;
-    // this->maxCombinedFragmentUniformComponents = initCommand->maxCombinedFragmentUniformComponents;
-    // this->maxCombinedVertexUniformComponents = initCommand->maxCombinedVertexUniformComponents;
-    // this->maxElementIndex = initCommand->maxElementIndex;
-    // this->maxServerWaitTimeout = initCommand->maxServerWaitTimeout;
-    // this->maxUniformBlockSize = initCommand->maxUniformBlockSize;
-    // this->maxTextureLODBias = initCommand->maxTextureLODBias;
+    this->max3DTextureSize = resp->max3DTextureSize;
+    this->maxArrayTextureLayers = resp->maxArrayTextureLayers;
+    this->maxColorAttachments = resp->maxColorAttachments;
+    this->maxCombinedUniformBlocks = resp->maxCombinedUniformBlocks;
+    this->maxDrawBuffers = resp->maxDrawBuffers;
+    this->maxElementsIndices = resp->maxElementsIndices;
+    this->maxElementsVertices = resp->maxElementsVertices;
+    this->maxFragmentInputComponents = resp->maxFragmentInputComponents;
+    this->maxFragmentUniformBlocks = resp->maxFragmentUniformBlocks;
+    this->maxFragmentUniformComponents = resp->maxFragmentUniformComponents;
+    this->maxProgramTexelOffset = resp->maxProgramTexelOffset;
+    this->maxSamples = resp->maxSamples;
+    this->maxTransformFeedbackInterleavedComponents = resp->maxTransformFeedbackInterleavedComponents;
+    this->maxTransformFeedbackSeparateAttributes = resp->maxTransformFeedbackSeparateAttributes;
+    this->maxTransformFeedbackSeparateComponents = resp->maxTransformFeedbackSeparateComponents;
+    this->maxUniformBufferBindings = resp->maxUniformBufferBindings;
+    this->maxVaryingComponents = resp->maxVaryingComponents;
+    this->maxVertexOutputComponents = resp->maxVertexOutputComponents;
+    this->maxVertexUniformBlocks = resp->maxVertexUniformBlocks;
+    this->maxVertexUniformComponents = resp->maxVertexUniformComponents;
+    this->minProgramTexelOffset = resp->minProgramTexelOffset;
+
+    this->maxClientWaitTimeout = resp->maxClientWaitTimeout;
+    this->maxCombinedFragmentUniformComponents = resp->maxCombinedFragmentUniformComponents;
+    this->maxCombinedVertexUniformComponents = resp->maxCombinedVertexUniformComponents;
+    this->maxElementIndex = resp->maxElementIndex;
+    this->maxServerWaitTimeout = resp->maxServerWaitTimeout;
+    this->maxUniformBlockSize = resp->maxUniformBlockSize;
+    this->maxTextureLODBias = resp->maxTextureLODBias;
   }
 
   Napi::Value WebGL2RenderingContext::GetParameter(const Napi::CallbackInfo &info)
@@ -3834,8 +3867,8 @@ namespace webgl
     }
 
     uint32_t src = info[0].As<Napi::Number>().Uint32Value();
-    auto commandBuffer = new commandbuffers::ReadBufferCommandBufferRequest(src);
-    addCommandBuffer(commandBuffer);
+    auto commandBuffer = ReadBufferCommandBufferRequest(src);
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 
@@ -3875,8 +3908,8 @@ namespace webgl
     if (info[2].IsNumber())
       buffer = info[2].As<Napi::Number>().Uint32Value();
 
-    auto commandBuffer = new commandbuffers::BindBufferBaseCommandBufferRequest(target, index, buffer);
-    addCommandBuffer(commandBuffer);
+    auto commandBuffer = BindBufferBaseCommandBufferRequest(target, index, buffer);
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 
@@ -3928,8 +3961,8 @@ namespace webgl
     uint32_t offset = info[3].As<Napi::Number>().Uint32Value();
     uint32_t size = info[4].As<Napi::Number>().Uint32Value();
 
-    auto commandBuffer = new commandbuffers::BindBufferRangeCommandBufferRequest(target, index, buffer, offset, size);
-    addCommandBuffer(commandBuffer);
+    auto commandBuffer = BindBufferRangeCommandBufferRequest(target, index, buffer, offset, size);
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 
@@ -3956,9 +3989,9 @@ namespace webgl
     uint32_t mask = info[8].ToNumber().Uint32Value();
     uint32_t filter = info[9].ToNumber().Uint32Value();
 
-    auto commandBuffer = new commandbuffers::BlitFramebufferCommandBufferRequest(
+    auto commandBuffer = commandbuffers::BlitFramebufferCommandBufferRequest(
         srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
-    addCommandBuffer(commandBuffer);
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 
@@ -3980,9 +4013,9 @@ namespace webgl
     uint32_t width = info[3].ToNumber().Uint32Value();
     uint32_t height = info[4].ToNumber().Uint32Value();
 
-    auto commandBuffer = new commandbuffers::RenderbufferStorageMultisampleCommandBufferRequest(
+    auto commandBuffer = RenderbufferStorageMultisampleCommandBufferRequest(
         target, samples, internalformat, width, height);
-    addCommandBuffer(commandBuffer);
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 
@@ -3992,8 +4025,8 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     auto clientId = vertexArrayObjectId++;
-    auto commandBuffer = new commandbuffers::CreateVertexArrayCommandBufferRequest(clientId);
-    addCommandBuffer(commandBuffer);
+    auto commandBuffer = CreateVertexArrayCommandBufferRequest(clientId);
+    sendCommandBufferRequest(commandBuffer);
     return Napi::Number::New(env, clientId);
   }
 
@@ -4009,9 +4042,9 @@ namespace webgl
       return env.Undefined();
     }
 
-    uint32_t vertexArray = info[0].As<Napi::Number>().Uint32Value();
-    auto commandBuffer = new commandbuffers::DeleteVertexArrayCommandBufferRequest(vertexArray);
-    addCommandBuffer(commandBuffer);
+    uint32_t vao = info[0].As<Napi::Number>().Uint32Value();
+    auto commandBuffer = DeleteVertexArrayCommandBufferRequest(vao);
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 
@@ -4027,13 +4060,11 @@ namespace webgl
       return env.Undefined();
     }
 
-    uint32_t vertexArray = 0;
+    uint32_t vao = 0;
     if (info[0].IsNumber())
-    {
-      vertexArray = info[0].As<Napi::Number>().Uint32Value();
-    }
-    auto commandBuffer = new commandbuffers::BindVertexArrayCommandBufferRequest(vertexArray);
-    addCommandBuffer(commandBuffer);
+      vao = info[0].As<Napi::Number>().Uint32Value();
+    auto commandBuffer = BindVertexArrayCommandBufferRequest(vao);
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 
@@ -4092,9 +4123,9 @@ namespace webgl
       return env.Undefined();
     }
 
-    auto commandBuffer = new commandbuffers::TextureImage3DCommandBufferRequest(
+    auto commandBuffer = commandbuffers::TextureImage3DCommandBufferRequest(
         target, level, internalformat, width, height, depth, border, format, type, data);
-    addCommandBuffer(commandBuffer);
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 
@@ -4155,9 +4186,9 @@ namespace webgl
       return env.Undefined();
     }
 
-    auto commandBuffer = new commandbuffers::TextureSubImage3DCommandBufferRequest(
+    auto commandBuffer = commandbuffers::TextureSubImage3DCommandBufferRequest(
         target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels);
-    addCommandBuffer(commandBuffer);
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 
@@ -4228,9 +4259,9 @@ namespace webgl
     uint32_t uniformBlockIndex = info[1].As<Napi::Number>().Uint32Value();
     uint32_t uniformBlockBinding = info[2].As<Napi::Number>().Uint32Value();
 
-    auto commandBuffer = new commandbuffers::UniformBlockBindingCommandBufferRequest(
+    auto commandBuffer = commandbuffers::UniformBlockBindingCommandBufferRequest(
         program->GetId(), uniformBlockIndex, uniformBlockBinding);
-    addCommandBuffer(commandBuffer);
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 
@@ -4282,8 +4313,8 @@ namespace webgl
     uint32_t stride = info[3].As<Napi::Number>().Uint32Value();
     uint32_t offset = info[4].As<Napi::Number>().Uint32Value();
 
-    auto commandBuffer = new commandbuffers::VertexAttribIPointerCommandBufferRequest(index, size, type, stride, offset);
-    addCommandBuffer(commandBuffer);
+    auto commandBuffer = VertexAttribIPointerCommandBufferRequest(index, size, type, stride, offset);
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 
@@ -4314,8 +4345,8 @@ namespace webgl
     uint32_t index = info[0].As<Napi::Number>().Uint32Value();
     uint32_t divisor = info[1].As<Napi::Number>().Uint32Value();
 
-    auto commandBuffer = new commandbuffers::VertexAttribDivisorCommandBufferRequest(index, divisor);
-    addCommandBuffer(commandBuffer);
+    auto commandBuffer = VertexAttribDivisorCommandBufferRequest(index, divisor);
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 
@@ -4349,8 +4380,8 @@ namespace webgl
       }
       buffers.push_back(jsBuffers.Get(i).As<Napi::Number>().Uint32Value());
     }
-    auto commandBuffer = new commandbuffers::DrawBuffersCommandBufferRequest(buffers.size(), buffers.data());
-    addCommandBuffer(commandBuffer);
+    auto commandBuffer = DrawBuffersCommandBufferRequest(buffers.size(), buffers.data());
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 
@@ -4395,8 +4426,8 @@ namespace webgl
     uint32_t count = info[2].As<Napi::Number>().Uint32Value();
     uint32_t instanceCount = info[3].As<Napi::Number>().Uint32Value();
 
-    auto commandBuffer = new commandbuffers::DrawArraysInstancedCommandBufferRequest(mode, first, count, instanceCount);
-    addCommandBuffer(commandBuffer);
+    auto commandBuffer = DrawArraysInstancedCommandBufferRequest(mode, first, count, instanceCount);
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 
@@ -4448,9 +4479,8 @@ namespace webgl
     uint32_t offset = info[3].As<Napi::Number>().Uint32Value();
     uint32_t instanceCount = info[4].As<Napi::Number>().Uint32Value();
 
-    auto commandBuffer = new commandbuffers::DrawElementsInstancedCommandBufferRequest(mode, count, type, offset,
-                                                                                       instanceCount);
-    addCommandBuffer(commandBuffer);
+    auto commandBuffer = DrawElementsInstancedCommandBufferRequest(mode, count, type, offset, instanceCount);
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 
@@ -4509,8 +4539,8 @@ namespace webgl
     uint32_t type = info[4].As<Napi::Number>().Uint32Value();
     uint32_t offset = info[5].As<Napi::Number>().Uint32Value();
 
-    auto commandBuffer = new commandbuffers::DrawRangeElementsCommandBufferRequest(mode, start, end, count, type, offset);
-    addCommandBuffer(commandBuffer);
+    auto commandBuffer = DrawRangeElementsCommandBufferRequest(mode, start, end, count, type, offset);
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 

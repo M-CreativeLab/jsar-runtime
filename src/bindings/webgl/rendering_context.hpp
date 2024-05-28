@@ -4,6 +4,8 @@
 #include <sstream>
 #include <assert.h>
 #include <napi.h>
+
+#include "client/per_process.hpp"
 #include "renderer/render_api.hpp"
 #include "common/command_buffers/webgl_constants.hpp"
 #include "common/command_buffers/command_buffers.hpp"
@@ -139,16 +141,32 @@ namespace webgl
 
   protected:
     /**
+     * It sends a command buffer request to the server.
+     * 
      * @param commandBuffer
      * @param useDefaultQueue - if true, the command buffer will be executed in the default queue.
-     * @param waitForFinished - if true, the command buffer will be waited until it's finished.
      */
-    bool addCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer, bool useDefaultQueue = false, bool waitForFinished = false);
-    template <typename R>
-    R *recvCommandBufferResponse(commandbuffers::TrCommandBufferBase *commandBuffer, int timeout = 1000)
+    bool sendCommandBufferRequest(commandbuffers::TrCommandBufferBase &commandBuffer, bool useDefaultQueue = false)
     {
-      return nullptr;
+      return m_clientContext->sendCommandBufferRequest(commandBuffer);
     }
+
+    /**
+     * It receives a command buffer response from the client context.
+     */
+    template <typename R>
+    R *recvCommandBufferResponse(commandbuffers::CommandBufferType responseType, int timeout = 1000)
+    {
+      auto response = m_clientContext->recvCommandBufferResponse(timeout);
+      if (response != nullptr && response->type == responseType)
+        return dynamic_cast<R *>(response);
+      else
+        return nullptr;
+    }
+
+    /**
+     * It unpacks the pixels.
+     */
     unsigned char *unpackPixels(int type, int format, int width, int height, unsigned char *pixels);
 
   public:
@@ -157,7 +175,7 @@ namespace webgl
     bool isWebGL2Context();
 
   protected:
-    RenderAPI *m_renderAPI;
+    TrClientContextPerProcess *m_clientContext;
     bool m_unpackFlipY = false;
     bool m_unpackPremultiplyAlpha = false;
     bool m_isWebGL2 = false;
