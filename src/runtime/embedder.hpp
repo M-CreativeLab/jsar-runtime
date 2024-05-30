@@ -2,18 +2,18 @@
 
 #include <string>
 #include "constellation.hpp"
-#include "native_event.hpp"
+#include "common/events/event_target.hpp"
 
 using namespace std;
 using namespace renderer;
-using namespace native_event;
+using namespace events;
 
 /**
  * The main class for the embedder who want's to embed or integrate the Transmute runtime into their application or environment.
  */
 class TrEmbedder
 {
-protected:  // You should create your own embedder class and decide how to create `TrEmbedder` instace.
+protected: // You should create your own embedder class and decide how to create `TrEmbedder` instace.
   TrEmbedder();
   ~TrEmbedder();
 
@@ -33,7 +33,7 @@ public: // API for lifecycle
   /**
    * The lifecycle `onStart` should be called when you are ready to start the Transmute runtime, this method will require the initialization and XR
    * device configuration to be done.
-   * 
+   *
    * @param argJson The JSON string of the runtime initialization arguments.
    */
   bool onStart(string argJson);
@@ -41,10 +41,14 @@ public: // API for lifecycle
    * The lifecycle `onFrame` should be called when your application is to render a frame.
    */
   bool onFrame();
+  /**
+   * The lifecycle `onEvent` should be called once an event is received from a specfic (content) source.
+   */
+  bool onEvent(TrEvent *event, TrContentRuntime *content);
 
 public: // API for getting sub components
   TrConstellation *getConstellation();
-  TrNativeEventTarget *getNativeEventTarget();
+  TrEventTarget *getNativeEventTarget();
   TrRenderer *getRenderer();
   xr::Device *getXrDevice();
 

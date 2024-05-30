@@ -11,11 +11,13 @@
 #include "common/command_buffers/receiver.hpp"
 #include "common/command_buffers/command_buffers.hpp"
 
-#include "native_event.hpp"
+#include "common/events/event_type.hpp"
+#include "common/events/event_target.hpp"
 #include "constellation.hpp"
 
 using namespace std;
 using namespace ipc;
+using namespace events;
 
 class TrContentManager;
 class TrContentRuntime
@@ -25,7 +27,7 @@ public:
   ~TrContentRuntime();
 
 public:
-  void start(native_event::TrXSMLRequestInit init);
+  void start(TrXSMLRequestInit init);
   void pause();
   void resume();
   void terminate();
@@ -58,7 +60,7 @@ private:
   int eventChanPort;
   int frameChanPort;
   int commandBufferChanPort;
-  native_event::TrXSMLRequestInit requestInit;
+  TrXSMLRequestInit requestInit;
   TrConstellationInit constellationOptions;
   TrContentManager *contentManager;
   TrEventReceiver *eventChanReceiver = nullptr;
@@ -91,7 +93,7 @@ public:
   void disposeContent(TrContentRuntime *content);
 
 private:
-  void onRequestEvent(native_event::TrNativeEvent &event);
+  void onRequestEvent(TrEvent &event);
 
 private:
   TrConstellation *constellation = nullptr;

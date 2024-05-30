@@ -8,13 +8,13 @@
 
 #include <dlfcn.h>
 #include "debug.hpp"
-#include "native_event.hpp"
+#include "common/events/event_target.hpp"
 #include "renderer/renderer.hpp"
 #include "xr/device.hpp"
 
 using namespace std;
 using namespace std::filesystem;
-using namespace native_event;
+using namespace events;
 using namespace renderer;
 
 class TrContentRuntime;
@@ -43,14 +43,14 @@ public:
   void tick();
   TrConstellationInit &getOptions();
   bool isInitialized();
-  TrNativeEventTarget *getNativeEventTarget();
+  TrEventTarget *getNativeEventTarget();
   TrContentManager *getContentManager();
   TrRenderer *getRenderer();
   xr::Device *getXrDevice();
 
 private:
   TrConstellationInit options;
-  TrNativeEventTarget *nativeEventTarget = nullptr;
+  TrEventTarget *nativeEventTarget = nullptr;
   TrContentManager *contentManager = nullptr;
   TrRenderer *renderer = nullptr;
   xr::Device *xrDevice = nullptr;

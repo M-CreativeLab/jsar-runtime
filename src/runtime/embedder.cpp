@@ -36,12 +36,17 @@ bool TrEmbedder::onFrame()
   return true;
 }
 
+bool TrEmbedder::onEvent(TrEvent *event, TrContentRuntime *content)
+{
+  return false;
+}
+
 TrConstellation *TrEmbedder::getConstellation()
 {
   return constellation;
 }
 
-TrNativeEventTarget *TrEmbedder::getNativeEventTarget()
+TrEventTarget *TrEmbedder::getNativeEventTarget()
 {
   return constellation->getNativeEventTarget();
 }

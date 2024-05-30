@@ -17,7 +17,7 @@ TrConstellation::TrConstellation()
 {
   srand(static_cast<unsigned int>(time(nullptr)));
 
-  nativeEventTarget = new TrNativeEventTarget();
+  nativeEventTarget = new TrEventTarget();
   contentManager = new TrContentManager(this);
   renderer = new TrRenderer(this);
   xrDevice = new xr::Device();
@@ -87,7 +87,7 @@ void TrConstellation::tick()
     renderer->tickOnAnimationFrame();
 }
 
-TrNativeEventTarget *TrConstellation::getNativeEventTarget()
+TrEventTarget *TrConstellation::getNativeEventTarget()
 {
   return nativeEventTarget;
 }

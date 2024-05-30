@@ -17,7 +17,7 @@ using namespace v8;
 using namespace node;
 
 TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManager(contentMgr),
-                                                                   requestInit(native_event::TrXSMLRequestInit("", 0))
+                                                                   requestInit(TrXSMLRequestInit("", 0))
 {
 }
 
@@ -26,7 +26,7 @@ TrContentRuntime::~TrContentRuntime()
   dispose();
 }
 
-void TrContentRuntime::start(native_event::TrXSMLRequestInit init)
+void TrContentRuntime::start(TrXSMLRequestInit init)
 {
   requestInit = init;
   constellationOptions = contentManager->constellation->getOptions();
@@ -239,7 +239,7 @@ TrContentManager::~TrContentManager()
 bool TrContentManager::initialize()
 {
   auto nativeEventTarget = constellation->getNativeEventTarget();
-  nativeEventTarget->addEventListener(native_event::TrEventType::TrXSMLRequest, [this](native_event::TrEventType type, native_event::TrNativeEvent &event)
+  nativeEventTarget->addEventListener(TrEventType::TR_EVENT_XSML_REQUEST, [this](TrEventType type, TrEvent &event)
                                       { this->onRequestEvent(event); });
 
   watcherRunning = true;
@@ -352,12 +352,12 @@ void TrContentManager::disposeContent(TrContentRuntime *content)
   }
 }
 
-void TrContentManager::onRequestEvent(native_event::TrNativeEvent &event)
+void TrContentManager::onRequestEvent(TrEvent &event)
 {
-  if (event.type != native_event::TrEventType::TrXSMLRequest)
+  if (event.type != TrEventType::TR_EVENT_XSML_REQUEST)
     return;
 
-  auto init = event.detail.get<native_event::TrXSMLRequestInit>();
+  auto init = event.detail.get();
   auto content = makeContent();
   if (content != nullptr)
     content->start(init);

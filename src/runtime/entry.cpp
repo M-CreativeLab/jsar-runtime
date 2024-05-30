@@ -2,7 +2,7 @@
 #include "entry.hpp"
 #include "debug.hpp"
 #include "embedder.hpp"
-#include "native_event.hpp"
+#include "common/events/event_type.hpp"
 #include "xr/device.hpp"
 
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
@@ -243,7 +243,7 @@ extern "C"
   DLL_PUBLIC void TransmuteNative_DispatchNativeEvent(int id, int type, const char *data)
   {
     auto eventTarget = UnityEmbedder::EnsureAndGet()->getNativeEventTarget();
-    eventTarget->dispatchEvent(id, (native_event::TrEventType)type, data);
+    eventTarget->dispatchEvent(id, static_cast<TrEventType>(type), data);
   }
 
   DLL_PUBLIC void TransmuteNative_SetRuntimeInit(const char *argJson)

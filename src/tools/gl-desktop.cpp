@@ -30,10 +30,18 @@ const char *fragmentShaderSource = R"(
 class DesktopEmbedder : public TrEmbedder
 {
 public:
-  DesktopEmbedder() : TrEmbedder() {
+  DesktopEmbedder() : TrEmbedder()
+  {
     auto renderer = constellation->getRenderer();
     auto api = RenderAPI::Create(kUnityGfxRendererOpenGLCore, constellation);
     renderer->setApi(api);
+  }
+
+public:
+  bool onEvent(TrEvent *event, TrContentRuntime *content)
+  {
+    fprintf(stderr, "DesktopEmbedder::onEvent\n");
+    return false;
   }
 };
 static DesktopEmbedder *embedder = nullptr;
@@ -128,7 +136,7 @@ int main()
     rapidjson::StringBuffer requestBuffer;
     rapidjson::Writer<rapidjson::StringBuffer> requestWriter(requestBuffer);
     requestDoc.Accept(requestWriter);
-    eventTarget->dispatchEvent(-1, native_event::TrEventType::TrXSMLRequest,
+    eventTarget->dispatchEvent(-1, TrEventType::TR_EVENT_XSML_REQUEST,
                                requestBuffer.GetString());
   }
 
@@ -211,7 +219,7 @@ int main()
       // receiveIncomingEvents();
       embedder->onFrame();
     }
-  
+
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
