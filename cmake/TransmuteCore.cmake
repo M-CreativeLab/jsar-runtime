@@ -94,12 +94,15 @@ tr_target_install(TransmuteCore)
 function(tr_add_example EXECUTABLE_NAME SOURCE_FILE)
     add_executable(${EXECUTABLE_NAME} ${SOURCE_FILE})
     target_compile_definitions(${EXECUTABLE_NAME} PRIVATE TRANSMUTE_STANDALONE)
-    target_include_directories(${EXECUTABLE_NAME} PRIVATE /opt/homebrew/Cellar/glfw/3.4/include)
-
-    target_link_options(${EXECUTABLE_NAME} PRIVATE -L/opt/homebrew/Cellar/glfw/3.4/lib)
-    target_link_libraries(${EXECUTABLE_NAME} PRIVATE TransmuteCore glfw)
+    target_link_libraries(${EXECUTABLE_NAME} PRIVATE TransmuteCore)
+    tr_target_link_thirdparty_library(${EXECUTABLE_NAME} glfw3)
 
     if (APPLE)
+        target_link_libraries(${EXECUTABLE_NAME} PRIVATE "-framework Cocoa")
+        target_link_libraries(${EXECUTABLE_NAME} PRIVATE "-framework CoreFoundation")
+        target_link_libraries(${EXECUTABLE_NAME} PRIVATE "-framework CoreGraphics")
+        target_link_libraries(${EXECUTABLE_NAME} PRIVATE "-framework IOKit")
+        target_link_libraries(${EXECUTABLE_NAME} PRIVATE "-framework AppKit")
         target_link_libraries(${EXECUTABLE_NAME} PRIVATE "-framework OpenGL")
         set_target_properties(${EXECUTABLE_NAME} PROPERTIES
             INSTALL_RPATH "@loader_path"

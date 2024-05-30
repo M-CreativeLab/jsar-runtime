@@ -334,8 +334,8 @@ namespace xr
 
   void StereoRenderingFrame::clearCommandBuffers(std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers)
   {
-    for (auto commandBuffer : commandBuffers)
-      delete commandBuffer;
+    // for (auto commandBuffer : commandBuffers)
+    //   delete commandBuffer;
     commandBuffers.clear();
   }
 }

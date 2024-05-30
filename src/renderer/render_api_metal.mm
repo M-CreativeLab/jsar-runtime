@@ -101,8 +101,10 @@ public:
   void EndXRFrame() {}
 
   bool ExecuteCommandBuffer() { return true; }
-  bool ExecuteCommandBuffer(vector<renderer::CommandBuffer *> &commandBuffers,
-                            xr::DeviceFrame *deviceFrame, bool isDefaultQueue) {
+  bool ExecuteCommandBuffer(
+      vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
+      TrContentRuntime *content, xr::DeviceFrame *deviceFrame,
+      bool isDefaultQueue) {
     return true;
   }
 

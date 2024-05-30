@@ -65,13 +65,20 @@ if(LINUX OR APPLE)
     endif()
 endif()
 
-if (USE_LLD)
+# Disable unused variable warnings
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU")
+    add_compile_options(-Wno-unused-variable)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    add_compile_options(/Wd4101)
+endif()
+
+if(USE_LLD)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=lld")
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=lld")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld")
 
-    if (WIN32)
-        if (CMAKE_BUILD_TYPE EQUAL "RelWithDebInfo")
+    if(WIN32)
+        if(CMAKE_BUILD_TYPE EQUAL "RelWithDebInfo")
             # -debug for LLD generates PDB files
             set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-debug")
             set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,-debug")
@@ -80,13 +87,13 @@ if (USE_LLD)
     endif()
 endif()
 
-if (USE_MOLD)
+if(USE_MOLD)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=mold")
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=mold")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=mold")
 endif()
 
-if (WIN32)
+if(WIN32)
   # For `Debug` configs MSVC links to a debuggable runtime by default which has
   # symbol conflicts with the prebuilt LLVM in `Release`. We should be providing
   # prebuilt LLVMs for both `Debug` and `Release` but LLVM 10 cannot be built by
@@ -96,15 +103,15 @@ if (WIN32)
   message("CMAKE_MSVC_RUNTIME_LIBRARY: ${CMAKE_MSVC_RUNTIME_LIBRARY}")
 endif()
 
-if (APPLE)
+if(APPLE)
     # Build Universal Binary for Apple Silicon that works for intel and silicon.
     # set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
     message("CMAKE_OSX_ARCHITECTURES: ${CMAKE_OSX_ARCHITECTURES}")
 endif()
 
-if (APPLE)
+if(APPLE)
     set(TR_BUILD_TESTS ON)
-elseif (ANDROID)
+elseif(ANDROID)
     set(TR_BUILD_TESTS OFF)
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)  # Enable LTO for android
 endif()
