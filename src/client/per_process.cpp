@@ -260,7 +260,7 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
 
 void TrClientContextPerProcess::start()
 {
-  eventChanClient = ipc::TrOneShotClient<CustomEvent>::MakeAndConnect(eventChanPort, false);
+  eventChanClient = ipc::TrOneShotClient<TrEventMessage>::MakeAndConnect(eventChanPort, false);
   frameChanClient = ipc::TrOneShotClient<AnimationFrameRequest>::MakeAndConnect(frameChanPort, false);
   commandBufferChanClient = ipc::TrOneShotClient<TrCommandBufferMessage>::MakeAndConnect(commandBufferChanPort, false);
 
@@ -317,12 +317,12 @@ void TrClientContextPerProcess::cancelFrame(FrameRequestId id)
   frameRequestCallbacksMap.erase(id);
 }
 
-bool TrClientContextPerProcess::sendEvent(CustomEvent &event)
+bool TrClientContextPerProcess::sendEventMessage(TrEventMessage &event)
 {
   return eventChanSender->sendEvent(event);
 }
 
-CustomEvent *TrClientContextPerProcess::recvEvent(int timeout)
+TrEventMessage *TrClientContextPerProcess::recvEventMessage(int timeout)
 {
   return eventChanReceiver->recvEvent(timeout);
 }

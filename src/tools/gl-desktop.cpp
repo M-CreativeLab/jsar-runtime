@@ -136,8 +136,7 @@ int main()
     rapidjson::StringBuffer requestBuffer;
     rapidjson::Writer<rapidjson::StringBuffer> requestWriter(requestBuffer);
     requestDoc.Accept(requestWriter);
-    eventTarget->dispatchEvent(-1, TrEventType::TR_EVENT_XSML_REQUEST,
-                               requestBuffer.GetString());
+    eventTarget->dispatchEvent(TrEventType::TR_EVENT_XSML_REQUEST, requestBuffer.GetString());
   }
 
   glfwMakeContextCurrent(window);

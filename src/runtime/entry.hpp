@@ -72,7 +72,7 @@ extern "C"
   /**
    * Dispatch the native event.
    */
-  DLL_PUBLIC void TransmuteNative_DispatchNativeEvent(int id, int type, const char *data);
+  DLL_PUBLIC void TransmuteNative_DispatchNativeEvent(int type, const char *data);
 
   /**
    * Set the runtime initialization arguments.

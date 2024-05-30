@@ -1,5 +1,7 @@
 #include "event_target.hpp"
-#include "common/messages.hpp"
+#include "common/events/event_type.hpp"
+#include "common/events/event.hpp"
+#include "common/events/message.hpp"
 
 namespace bindings
 {
@@ -71,10 +73,12 @@ namespace bindings
         return env.Undefined();
       }
 
-      auto type = static_cast<CustomEventType>(jsType.As<Napi::Number>().Int32Value());
+      auto type = static_cast<TrEventType>(jsType.As<Napi::Number>().Int32Value());
       auto detail = jsDetail.As<Napi::String>().Utf8Value();
-      CustomEvent event(type, detail);
-      clientContext->sendEvent(event);
+
+      TrEvent event(type, detail);
+      TrEventMessage msg(event);
+      clientContext->sendEventMessage(msg);
       return Napi::Number::New(env, event.id);
     }
   }

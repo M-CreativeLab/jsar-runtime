@@ -204,7 +204,7 @@ bool TrContentRuntime::tickOnFrame()
 
 TrContentManager::TrContentManager(TrConstellation *constellation) : constellation(constellation)
 {
-  eventChanServer = new TrOneShotServer<CustomEvent>("eventChan");
+  eventChanServer = new TrOneShotServer<TrEventMessage>("eventChan");
 }
 
 TrContentManager::~TrContentManager()
@@ -357,8 +357,7 @@ void TrContentManager::onRequestEvent(TrEvent &event)
   if (event.type != TrEventType::TR_EVENT_XSML_REQUEST)
     return;
 
-  auto init = event.detail.get();
   auto content = makeContent();
   if (content != nullptr)
-    content->start(init);
+    content->start(event.detail.asXSMLRequestInit());
 }

@@ -240,10 +240,10 @@ extern "C"
     // TODO
   }
 
-  DLL_PUBLIC void TransmuteNative_DispatchNativeEvent(int id, int type, const char *data)
+  DLL_PUBLIC void TransmuteNative_DispatchNativeEvent(int type, const char *data)
   {
     auto eventTarget = UnityEmbedder::EnsureAndGet()->getNativeEventTarget();
-    eventTarget->dispatchEvent(id, static_cast<TrEventType>(type), data);
+    eventTarget->dispatchEvent(static_cast<TrEventType>(type), data);
   }
 
   DLL_PUBLIC void TransmuteNative_SetRuntimeInit(const char *argJson)

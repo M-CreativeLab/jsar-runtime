@@ -1,6 +1,7 @@
 #include "ipc.hpp"
 #include "messages.hpp"
 #include "common/command_buffers/message.hpp"
+#include "common/events/message.hpp"
 
 namespace ipc
 {
@@ -541,8 +542,8 @@ namespace ipc
   template class TrOneShotClient<T>;   \
   template class TrOneShotServer<T>;
 
-  SPECIALIZE_TEMPLATE(CustomEvent)
   SPECIALIZE_TEMPLATE(AnimationFrameRequest)
   SPECIALIZE_TEMPLATE(commandbuffers::TrCommandBufferMessage)
+  SPECIALIZE_TEMPLATE(events::TrEventMessage)
 #undef SPECIALIZE_TEMPLATE
 }

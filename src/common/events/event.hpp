@@ -3,8 +3,9 @@
 #include <string>
 #include <rapidjson/document.h>
 
-#include "./event_type.hpp"
+#include "idgen.hpp"
 #include "./classes.hpp"
+#include "./event_type.hpp"
 
 using namespace std;
 
@@ -44,7 +45,11 @@ namespace events
     }
 
   public:
-    TrXSMLRequestInit get()
+    string &getString()
+    {
+      return jsonSource;
+    }
+    TrXSMLRequestInit asXSMLRequestInit()
     {
       rapidjson::Document jsonDoc;
       jsonDoc.Parse(jsonSource.c_str());
@@ -57,10 +62,12 @@ namespace events
     string jsonSource;
   };
 
+  static TrIdGenerator eventIdGenerator(1);
   class TrEvent
   {
   public:
-    TrEvent(int id, TrEventType type, string detailData) : id(id), type(type), detail(TrEventDetail(detailData))
+    TrEvent(TrEventType type, string detailData)
+        : id(eventIdGenerator.get()), type(type), detail(TrEventDetail(detailData))
     {
     }
 

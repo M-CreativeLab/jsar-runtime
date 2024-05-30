@@ -13,6 +13,9 @@
 
 #include "common/events/event_type.hpp"
 #include "common/events/event_target.hpp"
+#include "common/events/message.hpp"
+#include "common/events/sender.hpp"
+#include "common/events/receiver.hpp"
 #include "constellation.hpp"
 
 using namespace std;
@@ -102,7 +105,7 @@ private:
 
 private: // event channel
   atomic<bool> watcherRunning = false;
-  TrOneShotServer<CustomEvent> *eventChanServer = nullptr;
+  TrOneShotServer<TrEventMessage> *eventChanServer = nullptr;
   thread *eventChanWatcher = nullptr;
 
 private: // command buffer channel

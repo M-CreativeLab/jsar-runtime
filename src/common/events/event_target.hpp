@@ -23,9 +23,9 @@ namespace events
     }
 
   public:
-    bool dispatchEvent(int id, TrEventType type, const char *data)
+    bool dispatchEvent(TrEventType type, const char *data)
     {
-      TrEvent event(id, type, data);
+      TrEvent event(type, data);
       auto it = listeners.find(type);
       if (it != listeners.end())
       {

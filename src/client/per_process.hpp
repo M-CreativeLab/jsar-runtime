@@ -18,11 +18,15 @@
 #include "common/command_buffers/message.hpp"
 #include "common/command_buffers/receiver.hpp"
 #include "common/command_buffers/sender.hpp"
+#include "common/events/message.hpp"
+#include "common/events/receiver.hpp"
+#include "common/events/sender.hpp"
 
 using namespace std;
 using namespace node;
 using namespace v8;
 using namespace commandbuffers;
+using namespace events;
 
 typedef uint32_t FrameRequestId;
 typedef function<void(AnimationFrameRequest&)> FrameRequestCallback;
@@ -83,8 +87,8 @@ public: // frame request methods
   void cancelFrame(FrameRequestId id);
 
 public: // event methods
-  bool sendEvent(CustomEvent &event);
-  CustomEvent* recvEvent(int timeout);
+  bool sendEventMessage(TrEventMessage &event);
+  TrEventMessage* recvEventMessage(int timeout);
 
 public: // command buffer methods
   bool sendCommandBufferRequest(TrCommandBufferBase &commandBuffer);
@@ -104,7 +108,7 @@ public:
   uint32_t commandBufferChanPort;
 
 private:
-  ipc::TrOneShotClient<CustomEvent> *eventChanClient = nullptr;
+  ipc::TrOneShotClient<TrEventMessage> *eventChanClient = nullptr;
   TrEventSender *eventChanSender = nullptr;
   TrEventReceiver *eventChanReceiver = nullptr;
   ipc::TrOneShotClient<AnimationFrameRequest> *frameChanClient = nullptr;
