@@ -193,11 +193,11 @@ bool TrContentRuntime::tickOnFrame()
   if (eventChanReceiver == nullptr)
     return false;
 
-  auto data = eventChanReceiver->tryRecv(0);
-  if (data != nullptr)
+  auto event = eventChanReceiver->recvEvent(0);
+  if (event != nullptr)
   {
-    DEBUG(LOG_TAG_CONTENT, "Received an event: %d", data->type);
-    delete data;
+    DEBUG(LOG_TAG_CONTENT, "Received an event: %d, detail: %s", event->type, event->data);
+    delete event;
   }
   return true;
 }
@@ -260,8 +260,8 @@ bool TrContentManager::initialize()
           if (content->pid == newClient->getPid())
           {
             foundNewClient = true;
-            content->eventChanReceiver = new TrChannelReceiver<CustomEvent>(newClient);
-            content->eventChanSender = new TrChannelSender<CustomEvent>(newClient);
+            content->eventChanReceiver = new TrEventReceiver(newClient);
+            content->eventChanSender = new TrEventSender(newClient);
             break;
           }
         }

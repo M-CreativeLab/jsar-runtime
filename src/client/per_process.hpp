@@ -82,6 +82,10 @@ public: // frame request methods
   FrameRequestId requestFrame(FrameRequestCallback callback);
   void cancelFrame(FrameRequestId id);
 
+public: // event methods
+  bool sendEvent(CustomEvent &event);
+  CustomEvent* recvEvent(int timeout);
+
 public: // command buffer methods
   bool sendCommandBufferRequest(TrCommandBufferBase &commandBuffer);
   TrCommandBufferResponse* recvCommandBufferResponse(int timeout);
@@ -101,8 +105,8 @@ public:
 
 private:
   ipc::TrOneShotClient<CustomEvent> *eventChanClient = nullptr;
-  ipc::TrChannelSender<CustomEvent> *eventChanSender = nullptr;
-  ipc::TrChannelReceiver<CustomEvent> *eventChanReceiver = nullptr;
+  TrEventSender *eventChanSender = nullptr;
+  TrEventReceiver *eventChanReceiver = nullptr;
   ipc::TrOneShotClient<AnimationFrameRequest> *frameChanClient = nullptr;
   ipc::TrChannelReceiver<AnimationFrameRequest> *frameChanReceiver = nullptr;
   ipc::TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;

@@ -374,6 +374,8 @@ namespace ipc
   void TrOneShotClient<T>::invalid(bool flag)
   {
     invalidFlag = flag;
+    if (flag == true)
+      DEBUG(LOG_TAG_IPC, "The client is marked as invalid.");
   }
 
   template <typename T>

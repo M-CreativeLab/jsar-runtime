@@ -5,5 +5,6 @@ using namespace bindings;
 Napi::Object bindings::InitMessagingModule(Napi::Env env, Napi::Object exports)
 {
   messaging::UnityEventListenerWrap::Init(env, exports);
+  messaging::NativeEventTarget::Init(env, exports);
   return exports;
 }

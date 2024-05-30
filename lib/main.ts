@@ -23,11 +23,16 @@ setInterval(() => {
 }, 2000);
 
 // import { InitializeOffscreenCanvas } from './polyfills'; // load polyfills after the global error handler
-import { connectRenderer, requestGpuBusyCallback, requestAnimationFrame } from './bindings/renderer';
-// import { prepareXRSystem } from './webxr';
-// import { TransmuteRuntime2 } from './runtime2';
+import {
+  connectRenderer,
+  getWebGLRenderingContext,
+  requestGpuBusyCallback,
+  requestAnimationFrame
+} from './bindings/renderer';
+import { prepareXRSystem } from './webxr';
+import { TransmuteRuntime2 } from './runtime2';
 
-// let runtime: TransmuteRuntime2;
+let runtime: TransmuteRuntime2;
 requestGpuBusyCallback(() => {
   // if (runtime && typeof runtime.onGpuBusy === 'function') {
   //   runtime.onGpuBusy();
@@ -57,11 +62,13 @@ requestAnimationFrame((time) => {
     // await InitializeOffscreenCanvas({ loadSystemFonts: true });
     // logger.info(`The Skia initialization takes ${performance.now() - runtimeStart}ms`);
 
-    connectRenderer();
-    // await prepareXRSystem();
+    if (!connectRenderer(clientContext)) {
+      throw new Error('failed to connect to the renderer.');
+    }
+    await prepareXRSystem();
 
-    // runtime = new TransmuteRuntime2();
-    // runtime.start();
+    runtime = new TransmuteRuntime2(getWebGLRenderingContext());
+    runtime.start(clientContext.url, clientContext.id);
 
     const initializedEnd = performance.now();
     logger.info('Finished TransmuteRuntime2() instance creation');

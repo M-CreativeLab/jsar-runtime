@@ -84,6 +84,7 @@
     "iterator": "cpp",
     "regex": "cpp",
     "csignal": "cpp",
-    "typeindex": "cpp"
+    "typeindex": "cpp",
+    "utility": "cpp"
   }
 }

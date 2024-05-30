@@ -61,8 +61,8 @@ private:
   native_event::TrXSMLRequestInit requestInit;
   TrConstellationInit constellationOptions;
   TrContentManager *contentManager;
-  TrChannelReceiver<CustomEvent> *eventChanReceiver = nullptr;
-  TrChannelSender<CustomEvent> *eventChanSender = nullptr;
+  TrEventReceiver *eventChanReceiver = nullptr;
+  TrEventSender *eventChanSender = nullptr;
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
   vector<TrCommandBufferBase *> commandBufferRequests;

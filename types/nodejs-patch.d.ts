@@ -21,7 +21,11 @@ declare namespace Transmute {
   }
 
   class TrClientContext {
-    getContext(): object;
+    id: number;
+    url: string;
+    applicationCacheDirectory: string;
+    httpsProxyServer: string;
+    webglVersion: number;
   }
 
   type RenderExceptionCallback = (code: number) => void;
@@ -74,7 +78,7 @@ declare namespace Transmute {
      */
     getViewerStereoProjectionMatrix(eyeId: number): Float32Array;
     getActiveEyeId(): number;
-    
+
     // Input source
     getGazeInputSource(): XRNativeInputSource;
     getHandInputSource(handness: string): XRNativeInputSource;
@@ -94,9 +98,8 @@ declare namespace Transmute {
    * - Receiving the event from the native side.
    */
   class NativeEventTarget {
-    constructor();
-    setNativeEventListener(listener: NativeEventListener): void;
-    dispatchEvent(id: number, type: number, data: string): void;
+    constructor(listener: NativeEventListener);
+    dispatchEvent(eventInit: { type: number, detail?: string }): number;
     dispose(): void;
   }
 }

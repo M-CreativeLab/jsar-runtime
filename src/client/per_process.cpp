@@ -29,7 +29,7 @@ NODE_API_LINKED_MODULE(logger, "transmute:logger", InitLoggerModule);
 NODE_API_LINKED_MODULE(messaging, "transmute:messaging", InitMessagingModule);
 NODE_API_LINKED_MODULE(renderer, "transmute:renderer", InitRendererModule);
 NODE_API_LINKED_MODULE(webgl, "transmute:webgl", InitWebglModule);
-// NODE_API_LINKED_MODULE(webxr, "transmute:webxr", InitWebxrModule);
+NODE_API_LINKED_MODULE(webxr, "transmute:webxr", InitWebxrModule);
 #undef NODE_API_LINKED_MODULE
 
 ScriptEnvironment::ScriptEnvironment()
@@ -183,7 +183,7 @@ int TrScriptRuntimePerProcess::executeMainScript(ScriptEnvironment &env, vector<
     AddLinkedBinding(nodeEnv, transmute_canvas_napi_mod);
 #endif
     AddLinkedBinding(nodeEnv, transmute_webgl_napi_mod);
-    // AddLinkedBinding(nodeEnv, transmute_webxr_napi_mod);
+    AddLinkedBinding(nodeEnv, transmute_webxr_napi_mod);
     // The followings are created by Rust
     // AddLinkedBinding(nodeEnv, transmute_htmlrender_napi_mod);
 
@@ -270,8 +270,8 @@ void TrClientContextPerProcess::start()
     return;
   }
 
-  eventChanSender = new ipc::TrChannelSender<CustomEvent>(eventChanClient);
-  eventChanReceiver = new ipc::TrChannelReceiver<CustomEvent>(eventChanClient);
+  eventChanSender = new TrEventSender(eventChanClient);
+  eventChanReceiver = new TrEventReceiver(eventChanClient);
   frameChanReceiver = new ipc::TrChannelReceiver<AnimationFrameRequest>(frameChanClient);
   commandBufferChanSender = new TrCommandBufferSender(commandBufferChanClient);
   commandBufferChanReceiver = new TrCommandBufferReceiver(commandBufferChanClient);
@@ -282,20 +282,6 @@ void TrClientContextPerProcess::start()
                               { 
                                 SET_THREAD_NAME("TrFramesListener");
                                 this->onListenFrames(); });
-
-  // Test
-  auto req = WebGL1ContextInitCommandBufferRequest();
-  if (!commandBufferChanSender->sendCommandBufferRequest(req))
-  {
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to send command buffer", id);
-  }
-  auto resp = commandBufferChanReceiver->recvCommandBufferResponse(1000);
-  if (resp->type == CommandBufferType::COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES)
-  {
-    auto commandBufferResp = dynamic_cast<WebGL1ContextInitCommandBufferResponse *>(resp);
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received command buffer response: foo=%d url(r)=%s",
-          id, commandBufferResp->maxCombinedTextureImageUnits, commandBufferResp->vendor.c_str());
-  }
 }
 
 void TrClientContextPerProcess::print()
@@ -329,6 +315,16 @@ void TrClientContextPerProcess::cancelFrame(FrameRequestId id)
 {
   lock_guard<mutex> lock(frameRequestMutex);
   frameRequestCallbacksMap.erase(id);
+}
+
+bool TrClientContextPerProcess::sendEvent(CustomEvent &event)
+{
+  return eventChanSender->sendEvent(event);
+}
+
+CustomEvent *TrClientContextPerProcess::recvEvent(int timeout)
+{
+  return eventChanReceiver->recvEvent(timeout);
 }
 
 bool TrClientContextPerProcess::sendCommandBufferRequest(TrCommandBufferBase &commandBuffer)

@@ -1,7 +1,7 @@
 import * as logger from './logger';
 
 const binding = process._linkedBinding('transmute:messaging');
-const nativeEventTarget = new binding.NativeEventTarget();
+const nativeEventTarget = new binding.NativeEventTarget(onNativeEventListener);
 const eventTarget = new EventTarget();
 const RpcRequestWaitlist = new Map<number, (responseText: string) => void>();
 let eventId = 0;
@@ -76,7 +76,6 @@ export class XsmlRequestEvent extends Event {
   }
 }
 
-nativeEventTarget.setNativeEventListener(onNativeEventListener);
 function onNativeEventListener(id: number, type: number, message: string) {
   if (type === EventType.rpcResponse) {
     const callback = RpcRequestWaitlist.get(id);
@@ -127,12 +126,11 @@ export const removeEventListener = eventTarget.removeEventListener.bind(eventTar
 //   return eventTarget.dispatchEvent(new CustomEvent(type, { detail: message }));
 // };
 
-export const dispatchEvent = function dispatchEventToNative(event: CustomEvent) {
-  const id = eventId++;
-  const type = getEventType(event.type);
-  const message = JSON.stringify(event.detail);
-  nativeEventTarget.dispatchEvent(id, type, message);
-  return id;
+export const dispatchEvent = function dispatchEventToNative(event: CustomEvent): number {
+  return nativeEventTarget.dispatchEvent({
+    type: getEventType(event.type),
+    detail: JSON.stringify(event.detail),
+  });
 };
 
 export const dispatchXsmlEvent = function (id: number, eventType: 'loaded' | 'fcp' | 'error') {

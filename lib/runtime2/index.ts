@@ -3,9 +3,7 @@ import { JSARDOM } from '@yodaos-jsar/dom';
 import { extname } from 'node:path';
 
 import * as logger from '@transmute/logger';
-import { requestRendererReady } from '../bindings/renderer';
-import { markRuntimeAvailable } from '../bindings/env';
-import { addXsmlRequestListener, dispatchXsmlEvent, type XsmlRequestEvent } from '../bindings/messaging';
+import { dispatchXsmlEvent } from '../bindings/messaging';
 import { NativeDocumentOnTransmute } from './jsardom/impl-transmute';
 
 // viewers
@@ -43,22 +41,21 @@ Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
 });
 
 export class TransmuteRuntime2 extends EventTarget {
-  private gl: WebGLRenderingContext;
   private scene: BABYLON.Scene;
   private appStack: Array<{
     id: number;
     dom: JSARDOM<NativeDocumentOnTransmute>;
   }> = [];
 
-  start() {
-    requestRendererReady(this.onRendererReady.bind(this));
-    markRuntimeAvailable([
-      `version=${process.env['JSAR_VERSION']}`,
-      `babylonjs=${BABYLON.Engine.Version}`,
-      `nodejs=${process.versions.node}`,
-      `v8=${process.versions.v8}`,
-    ].join(','));
-    addXsmlRequestListener(this.onXsmlRequest.bind(this));
+  constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext) {
+    super();
+
+    this.dispatchEvent(new Event('rendererReady'));
+    this.prepare();
+  }
+
+  start(url: string, id: number) {
+    this.onXsmlRequest(url, id);
   }
 
   onGpuBusy() {
@@ -68,14 +65,8 @@ export class TransmuteRuntime2 extends EventTarget {
     }
   }
 
-  private onRendererReady(gl: WebGLRenderingContext) {
-    this.gl = gl;
-    this.dispatchEvent(new Event('rendererReady'));
-    this.prepare(gl);
-  }
-
-  private prepare(gl: WebGLRenderingContext) {
-    const exts = gl.getSupportedExtensions();
+  private prepare() {
+    const exts = this.gl.getSupportedExtensions();
     logger.info(`[WebGL] supported extensions(${exts.length}):`);
     for (let extName of exts) {
       logger.info(`  - ${extName}`);
@@ -83,21 +74,21 @@ export class TransmuteRuntime2 extends EventTarget {
     logger.info(`[JSARDOM] version=${JSARDOM.version}`);
   }
 
-  private async onXsmlRequest(event: XsmlRequestEvent) {
+  private async onXsmlRequest(url: string, id: number) {
     /**
      * Unload all the documents before loading a new one.
      */
     if (this.appStack.length > 0) {
       await this.unloadAll();
     }
-    logger.info(`xsml request:`, event.url, event.sessionId);
+    logger.info(`xsml request:`, url, id);
 
-    const nativeDocument = new NativeDocumentOnTransmute(this.gl, event.sessionId);
-    await nativeDocument.enterXrExperience();
-    logger.info(`Session#${event.sessionId} has been entered XR experience.`);
+    const nativeDocument = new NativeDocumentOnTransmute(this.gl, id);
+    // await nativeDocument.enterXrExperience();
+    // logger.info(`Session#${id} has been entered XR experience.`);
 
     try {
-      await this.load(event.url, nativeDocument);
+      await this.load(url, nativeDocument);
     } catch (err) {
       dispatchXsmlEvent(nativeDocument.id, 'error');
       logger.error('failed to load the default document:', err);

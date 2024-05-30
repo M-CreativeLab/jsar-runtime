@@ -1,5 +1,5 @@
 import * as logger from './logger';
-import { getContext as getWebGLRenderingContext } from '../webgl';
+import { getContext as createWebGLRenderingContext } from '../webgl';
 
 const {
   RenderLoop,
@@ -68,7 +68,15 @@ function onAnimationFrame(time: number, data: any) {
   }
 }
 
-export function connectRenderer() {
+/**
+ * Connects the runtime to the renderer backend.
+ * 
+ * It initializes the global WebGL context and starts the animation frame listener.
+ * 
+ * @param clientContext the context object, this method use this object to initialize the renderer.
+ * @returns a boolean value indicates whether the renderer is connected successfully.
+ */
+export function connectRenderer(clientContext: Transmute.TrClientContext): boolean {
   if (isReady) {
     throw new TypeError('renderer is already connected.');
   }
@@ -93,7 +101,7 @@ export function connectRenderer() {
    * Initialize the global WebGL context.
    */
   try {
-    globalGlContext = getWebGLRenderingContext('webgl2');
+    globalGlContext = createWebGLRenderingContext(clientContext.webglVersion === 1 ? 'webgl' : 'webgl2');
   } catch (err) {
     logger.warn('failed to create webgl context:', err);
   }
@@ -105,5 +113,12 @@ export function connectRenderer() {
   onreadyCallbacks.forEach(cb => cb(gl));
   onreadyCallbacks.length = 0;
   isReady = true;
-  logger.info('connected to renderer.');
+  return isReady;
+}
+
+export function getWebGLRenderingContext(): WebGLRenderingContext | WebGL2RenderingContext {
+  if (!isReady) {
+    throw new Error('renderer is not ready, call connectRenderer() first.');
+  }
+  return globalGlContext;
 }

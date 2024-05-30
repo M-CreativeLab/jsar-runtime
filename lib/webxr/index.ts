@@ -1,7 +1,5 @@
 import XRSystemImpl from './api/XRSystem';
 import XRSessionImpl from './api/XRSession';
-// import XRRigidTransformImpl from './api/XRRigidTransform';
-// import XRWebGLLayerImpl from './api/XRWebGLLayer';
 import XRFrameImpl from './api/XRFrame';
 import XRViewImpl from './api/XRView';
 import { type XRDevice, XRNativeDevice } from './devices';
