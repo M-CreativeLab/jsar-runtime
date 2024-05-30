@@ -1124,7 +1124,7 @@ private:
 		auto mode = req->mode;
 		auto count = req->count;
 		auto type = req->indicesType;
-		auto indices = reinterpret_cast<GLvoid*>(req->indicesOffset);
+		auto indices = reinterpret_cast<GLvoid *>(req->indicesOffset);
 
 		glDrawElements(mode, count, type, indices);
 		m_DrawCallCountPerFrame += 1;
@@ -1168,7 +1168,7 @@ private:
 		auto mode = req->mode;
 		auto count = req->count;
 		auto type = req->indicesType;
-		auto indices = reinterpret_cast<GLvoid*>(req->indicesOffset);
+		auto indices = reinterpret_cast<GLvoid *>(req->indicesOffset);
 		auto instanceCount = req->instanceCount;
 		glDrawElementsInstanced(mode, count, type, indices, instanceCount);
 		m_DrawCallCountPerFrame += 1;
@@ -1185,7 +1185,7 @@ private:
 		auto end = req->end;
 		auto count = req->count;
 		auto type = req->indicesType;
-		auto indices = reinterpret_cast<GLvoid*>(req->indicesOffset);
+		auto indices = reinterpret_cast<GLvoid *>(req->indicesOffset);
 		glDrawRangeElements(mode, start, end, count, type, indices);
 		m_DrawCallCountPerFrame += 1;
 		if (options.printsCall)
@@ -1905,6 +1905,10 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		}
 		// delete commandBuffer;
 	}
+
+	// Fire the content's `onCommandBuffersExecuted` event
+	content->onCommandBuffersExecuted();
+
 	if (m_AppGlobalContext.IsDirty())
 		return false;
 	return m_AppGlobalContext.IsChanged(&contextBaseState);

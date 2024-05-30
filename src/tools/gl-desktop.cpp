@@ -4,7 +4,12 @@
 
 #include <OpenGL/gl3.h>
 #include <GLFW/glfw3.h>
-#include "../runtime/entry.hpp"
+#include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
+
+#include "../runtime/embedder.hpp"
+#include "../renderer/render_api.hpp"
 
 const char *vertexShaderSource = R"(
   #version 330 core
@@ -22,6 +27,17 @@ const char *fragmentShaderSource = R"(
   }
 )";
 
+class DesktopEmbedder : public TrEmbedder
+{
+public:
+  DesktopEmbedder() : TrEmbedder() {
+    auto renderer = constellation->getRenderer();
+    auto api = RenderAPI::Create(kUnityGfxRendererOpenGLCore, constellation);
+    renderer->setApi(api);
+  }
+};
+static DesktopEmbedder *embedder = nullptr;
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
   glViewport(0, 0, width, height);
@@ -30,44 +46,42 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 void processInput(GLFWwindow *window)
 {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-  {
     glfwSetWindowShouldClose(window, true);
-  }
 }
 
-void receiveIncomingEvents()
-{
-  while (true)
-  {
-    int eventId;
-    int eventType;
-    uint32_t size;
-    bool hasEvent = TransmuteNative_GetEventFromJavaScript(&eventId, &eventType, &size);
-    if (hasEvent)
-    {
-      char *data = (char *)malloc(size);
-      TransmuteNative_GetEventDataFromJavaScript(data);
+// void receiveIncomingEvents()
+// {
+//   while (true)
+//   {
+//     int eventId;
+//     int eventType;
+//     uint32_t size;
+//     bool hasEvent = TransmuteNative_GetEventFromJavaScript(&eventId, &eventType, &size);
+//     if (hasEvent)
+//     {
+//       char *data = (char *)malloc(size);
+//       TransmuteNative_GetEventDataFromJavaScript(data);
 
-      switch (eventType)
-      {
-      case 0x100: /** JSEventType.RpcRequest */
-        // FIXME: because the current implementation only has one event type, we can safely ignore the event type
-        TransmuteNative_InitializeXRDevice(false);
-        TransmuteNative_DispatchNativeEvent(eventId, 0x101 /** JSEventType.RpcResponse */,
-                                            "{\"success\":false,\"message\":\"not a xr device\"}");
-        break;
-      default:
-        std::cout << "[Unknown] Received event: " << eventId << " " << eventType << " " << data << std::endl;
-        break;
-      }
-      free(data);
-    }
-    else
-    {
-      break;
-    }
-  }
-}
+//       switch (eventType)
+//       {
+//       case 0x100: /** JSEventType.RpcRequest */
+//         // FIXME: because the current implementation only has one event type, we can safely ignore the event type
+//         TransmuteNative_InitializeXRDevice(false);
+//         TransmuteNative_DispatchNativeEvent(eventId, 0x101 /** JSEventType.RpcResponse */,
+//                                             "{\"success\":false,\"message\":\"not a xr device\"}");
+//         break;
+//       default:
+//         std::cout << "[Unknown] Received event: " << eventId << " " << eventType << " " << data << std::endl;
+//         break;
+//       }
+//       free(data);
+//     }
+//     else
+//     {
+//       break;
+//     }
+//   }
+// }
 
 int main()
 {
@@ -85,13 +99,37 @@ int main()
     return -1;
   }
 
-  TransmuteNative_Start();
-  TransmuteNative_Prepare();
-  TransmuteNative_SetViewport(800, 600);
+  embedder = new DesktopEmbedder();
+  assert(embedder != nullptr);
 
-  while (!TransmuteNative_IsRuntimeUp())
+  TrViewport viewport(800, 600);
+  embedder->getRenderer()->setViewport(viewport);
+
   {
-    TransmuteNative_SetRuntimeInit("{\"isXRSupported\":true}");
+    // Start
+    rapidjson::Document doc;
+    doc.SetObject();
+    doc.AddMember("isXRSupported", true, doc.GetAllocator());
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    doc.Accept(writer);
+    embedder->onStart(buffer.GetString());
+  }
+
+  {
+    // Dispatch request event
+    auto eventTarget = embedder->getNativeEventTarget();
+    assert(eventTarget != nullptr);
+
+    rapidjson::Document requestDoc;
+    requestDoc.SetObject();
+    requestDoc.AddMember("url", "http://localhost:3000/spatial-lion.xsml", requestDoc.GetAllocator());
+    requestDoc.AddMember("sessionId", 1, requestDoc.GetAllocator());
+    rapidjson::StringBuffer requestBuffer;
+    rapidjson::Writer<rapidjson::StringBuffer> requestWriter(requestBuffer);
+    requestDoc.Accept(requestWriter);
+    eventTarget->dispatchEvent(-1, native_event::TrEventType::TrXSMLRequest,
+                               requestBuffer.GetString());
   }
 
   glfwMakeContextCurrent(window);
@@ -168,23 +206,12 @@ int main()
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
-    if (TransmuteNative_IsRuntimeUp())
+    if (embedder != nullptr)
     {
-      if (TransmuteNative_IsRuntimeAvailable())
-      {
-        if (!initialized)
-        {
-          TransmuteNative_DispatchNativeEvent(-1, 0x300,
-                                              "{\"url\":\"http://localhost:3000/spatial-lion.xsml\",\"sessionId\":1}");
-          initialized = true;
-        }
-      }
-      receiveIncomingEvents();
-
-      // Trigger the render frame.
-      TransmuteNative_OnRenderFrame();
+      // receiveIncomingEvents();
+      embedder->onFrame();
     }
-
+  
     glfwSwapBuffers(window);
     glfwPollEvents();
   }

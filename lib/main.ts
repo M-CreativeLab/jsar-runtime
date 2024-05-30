@@ -15,7 +15,7 @@ logger.info('The command line arguments:', args);
 
 const bootstrapStart = performance.now();
 const id = args.id || 'unknown';
-logger.info('Starting the JavaScript runtime => ' + id, process.argv);
+logger.info(`Starting the JavaScript runtime(${process.pid}) => ${id}`, process.argv);
 process.title = `TrScript ${id}`;
 
 setInterval(() => {

@@ -31,6 +31,12 @@ public:
   void terminate();
   void dispose();
 
+public: // lifecycle which is called by other classes
+  /**
+   * When the content's command buffers are executed. Internally this method will clear the command buffer requests.
+   */
+  void onCommandBuffersExecuted();
+
 public: // reference methods
   TrConstellation *getConstellation();
   xr::Device *getXrDevice();

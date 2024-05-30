@@ -124,6 +124,8 @@ namespace ipc
     ssize_t sent = ::send(fd, data, size, 0);
     if (sent == -1)
     {
+      if (errno == EAGAIN || errno == EWOULDBLOCK)
+        return false;
       if (errno == ECONNRESET || errno == EPIPE)
         client->invalid(true);
       DEBUG(LOG_TAG_IPC, "Failed to send data: %s", strerror(errno));

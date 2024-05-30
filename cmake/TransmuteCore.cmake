@@ -117,6 +117,7 @@ function(tr_add_example EXECUTABLE_NAME SOURCE_FILE)
     if (WIN32)
         target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${THIRDPARTY_LIBRARY_PATH}/lib/libnode.lib)
     endif()
+    tr_target_install(${EXECUTABLE_NAME})
 endfunction()
 
 if (APPLE)

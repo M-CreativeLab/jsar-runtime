@@ -94,11 +94,11 @@ namespace commandbuffers
     int vertexArray;
   };
 
-  class IsVertexArrayCommandBufferResponse : public TrCommandBufferBase
+  class IsVertexArrayCommandBufferResponse : public TrCommandBufferResponse
   {
   public:
-    IsVertexArrayCommandBufferResponse(bool value)
-        : TrCommandBufferBase(COMMAND_BUFFER_IS_VERTEX_ARRAY_RES),
+    IsVertexArrayCommandBufferResponse(IsVertexArrayCommandBufferRequest *req, bool value)
+        : TrCommandBufferResponse(COMMAND_BUFFER_IS_VERTEX_ARRAY_RES, req),
           value(value)
     {
     }

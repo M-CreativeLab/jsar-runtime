@@ -178,7 +178,13 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_Start()
   {
-    // TODO: Bootstrap?
+    auto embedder = UnityEmbedder::Create(nullptr);
+    if (embedder == nullptr)
+    {
+      DEBUG(LOG_TAG_UNITY, "Failed to create UnityEmbedder instance");
+      return;
+    }
+    OnPlatformSetup();
   }
 
   DLL_PUBLIC void TransmuteNative_Prepare()

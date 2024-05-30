@@ -40,10 +40,8 @@ if (ANDROID)
     tr_target_link_thirdparty_library(TransmuteClient skia) # TODO: support skia for other platforms?
 endif()
 
-# Set the rpath
-if (ANDROID)
-    target_link_options(TransmuteClient PRIVATE -Wl,-rpath,$ORIGIN)
-endif()
+# Set properties
+tr_target_set_properties(TransmuteClient USE_EXECUTABLE_PATH True)
 
 # Install client
 tr_target_install(TransmuteClient)

@@ -69,6 +69,11 @@ void TrContentRuntime::dispose()
   contentManager = nullptr;
 }
 
+void TrContentRuntime::onCommandBuffersExecuted()
+{
+  commandBufferRequests.clear();
+}
+
 TrConstellation *TrContentRuntime::getConstellation()
 {
   return contentManager->constellation;
@@ -96,11 +101,15 @@ bool TrContentRuntime::sendCommandBufferResponse(TrCommandBufferResponse &res)
 void TrContentRuntime::onClientProcess()
 {
   path basePath = path(constellationOptions.runtimeDirectory);
+#if defined(__ANDROID__)
   /**
    * NOTE: Even though the `libTransmuteClient.so` is a shared library name, the file is actually an executable, and the reason
    * to do this trick is to make Unity copy this file to the apk.
    */
   path clientPath = basePath / "libTransmuteClient.so";
+#else
+  path clientPath = basePath / "TransmuteClient";
+#endif
   DEBUG(LOG_TAG_CONTENT, "Start a new client with: %s", clientPath.c_str());
 
   rapidjson::Document scriptContext;

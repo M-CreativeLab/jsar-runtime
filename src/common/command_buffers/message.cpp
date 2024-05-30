@@ -53,9 +53,6 @@ namespace commandbuffers
     // Write base
     offset = writeTo(buffer, offset, &baseSize, sizeof(baseSize));
     offset = writeTo(buffer, offset, base, baseSize);
-
-    DEBUG(LOG_TAG_CONTENT, "Assertion: offset(%d) = bufferSize(%d)",
-          offset, bufferSize);
     assert(offset == bufferSize);
 
     *outData = buffer;

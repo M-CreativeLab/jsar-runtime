@@ -95,7 +95,7 @@ export function connectRenderer() {
   try {
     globalGlContext = getWebGLRenderingContext('webgl2');
   } catch (err) {
-    logger.warn('error creating webgl context:', err);
+    logger.warn('failed to create webgl context:', err);
   }
   if (globalGlContext == null) {
     throw new Error('failed to create webgl context.');

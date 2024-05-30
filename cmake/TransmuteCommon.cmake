@@ -119,10 +119,18 @@ endfunction()
 # Function to set properties
 function(tr_target_set_properties TARGET)
     if (APPLE)
+        cmake_parse_arguments(APPLE_ARG "USE_EXECUTABLE_PATH" "" "" ${ARGN})
+        if (APPLE_ARG_USE_EXECUTABLE_PATH)
+            set(APPLE_TARGET_SUFFIX "")
+            set(APPLE_TARGET_INSTALL_RPATH "@executable_path")
+        else()
+            set(APPLE_TARGET_SUFFIX ".dylib")
+            set(APPLE_TARGET_INSTALL_RPATH "@loader_path")
+        endif()
         set_target_properties(${TARGET} PROPERTIES
-            INSTALL_RPATH "@loader_path"
+            SUFFIX "${APPLE_TARGET_SUFFIX}"
+            INSTALL_RPATH "${APPLE_TARGET_INSTALL_RPATH}"
             BUILD_WITH_INSTALL_RPATH TRUE
-            SUFFIX ".dylib"
         )
     elseif (ANDROID)
         target_link_options(${TARGET} PRIVATE -Wl,-rpath,$ORIGIN)
