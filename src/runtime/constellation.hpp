@@ -17,6 +17,7 @@ using namespace std::filesystem;
 using namespace events;
 using namespace renderer;
 
+class TrEmbedder;
 class TrContentRuntime;
 class TrContentManager;
 
@@ -35,7 +36,7 @@ public:
 class TrConstellation
 {
 public:
-  TrConstellation();
+  TrConstellation(TrEmbedder *embedder);
   ~TrConstellation();
 
 public:
@@ -48,11 +49,15 @@ public:
   TrRenderer *getRenderer();
   xr::Device *getXrDevice();
 
+public:
+  bool onEvent(TrEvent &event, TrContentRuntime *content);
+
 private:
   TrConstellationInit options;
   TrEventTarget *nativeEventTarget = nullptr;
   TrContentManager *contentManager = nullptr;
   TrRenderer *renderer = nullptr;
+  TrEmbedder *embedder = nullptr;
   xr::Device *xrDevice = nullptr;
   bool initialized = false;
 

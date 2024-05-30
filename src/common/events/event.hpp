@@ -70,6 +70,10 @@ namespace events
         : id(eventIdGenerator.get()), type(type), detail(TrEventDetail(detailData))
     {
     }
+    TrEvent(int id, TrEventType type, string detailData)
+        : id(id), type(type), detail(TrEventDetail(detailData))
+    {
+    }
 
   public:
     int id;

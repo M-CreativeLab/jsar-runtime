@@ -38,9 +38,10 @@ public:
   }
 
 public:
-  bool onEvent(TrEvent *event, TrContentRuntime *content)
+  bool onEvent(TrEvent &event, TrContentRuntime *content) override
   {
-    fprintf(stderr, "DesktopEmbedder::onEvent\n");
+    fprintf(stdout, "DesktopEmbedder::onEvent %d (%s) %d\n",
+            event.type, event.detail.getString().c_str(), content->pid);
     return false;
   }
 };

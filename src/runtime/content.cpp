@@ -19,6 +19,11 @@ using namespace node;
 TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManager(contentMgr),
                                                                    requestInit(TrXSMLRequestInit("", 0))
 {
+  auto eventTarget = contentManager->constellation->getNativeEventTarget();
+  assert(eventTarget != nullptr);
+
+  eventTarget->addEventListener(TrEventType::TR_EVENT_RPC_REQUEST, [this](TrEventType type, TrEvent &event)
+                                { this->getConstellation()->onEvent(event, this); });
 }
 
 TrContentRuntime::~TrContentRuntime()
@@ -193,11 +198,13 @@ bool TrContentRuntime::tickOnFrame()
   if (eventChanReceiver == nullptr)
     return false;
 
-  auto event = eventChanReceiver->recvEvent(0);
-  if (event != nullptr)
+  auto eventMessage = eventChanReceiver->recvEvent(0);
+  if (eventMessage != nullptr)
   {
-    DEBUG(LOG_TAG_CONTENT, "Received an event: %d, detail: %s", event->type, event->data);
-    delete event;
+    auto eventTarget = contentManager->constellation->getNativeEventTarget();
+    if (eventTarget != nullptr)
+      eventTarget->dispatchEvent(eventMessage->type, eventMessage->detail());
+    delete eventMessage;
   }
   return true;
 }
@@ -238,9 +245,9 @@ TrContentManager::~TrContentManager()
 
 bool TrContentManager::initialize()
 {
-  auto nativeEventTarget = constellation->getNativeEventTarget();
-  nativeEventTarget->addEventListener(TrEventType::TR_EVENT_XSML_REQUEST, [this](TrEventType type, TrEvent &event)
-                                      { this->onRequestEvent(event); });
+  auto eventTarget = constellation->getNativeEventTarget();
+  eventTarget->addEventListener(TrEventType::TR_EVENT_XSML_REQUEST, [this](TrEventType type, TrEvent &event)
+                                { this->onRequestEvent(event); });
 
   watcherRunning = true;
   eventChanWatcher = new thread([this]()

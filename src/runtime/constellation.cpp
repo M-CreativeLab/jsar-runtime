@@ -1,6 +1,7 @@
 #include <rapidjson/document.h>
 #include "constellation.hpp"
 #include "content.hpp"
+#include "embedder.hpp"
 
 void __tr_empty()
 {
@@ -13,7 +14,7 @@ TrConstellationInit::TrConstellationInit()
 {
 }
 
-TrConstellation::TrConstellation()
+TrConstellation::TrConstellation(TrEmbedder *embedder) : embedder(embedder)
 {
   srand(static_cast<unsigned int>(time(nullptr)));
 
@@ -105,6 +106,11 @@ renderer::TrRenderer *TrConstellation::getRenderer()
 xr::Device *TrConstellation::getXrDevice()
 {
   return xrDevice;
+}
+
+bool TrConstellation::onEvent(TrEvent &event, TrContentRuntime *content)
+{
+  return embedder->onEvent(event, content);
 }
 
 TrConstellationInit &TrConstellation::getOptions()

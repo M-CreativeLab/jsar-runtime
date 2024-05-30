@@ -44,7 +44,7 @@ public: // API for lifecycle
   /**
    * The lifecycle `onEvent` should be called once an event is received from a specfic (content) source.
    */
-  bool onEvent(TrEvent *event, TrContentRuntime *content);
+  virtual bool onEvent(TrEvent &event, TrContentRuntime *content) = 0;
 
 public: // API for getting sub components
   TrConstellation *getConstellation();

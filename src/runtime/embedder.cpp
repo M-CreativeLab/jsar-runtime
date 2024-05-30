@@ -2,7 +2,7 @@
 
 TrEmbedder::TrEmbedder()
 {
-  constellation = new TrConstellation();
+  constellation = new TrConstellation(this);
 }
 
 TrEmbedder::~TrEmbedder()
@@ -34,11 +34,6 @@ bool TrEmbedder::onFrame()
 {
   constellation->tick();
   return true;
-}
-
-bool TrEmbedder::onEvent(TrEvent *event, TrContentRuntime *content)
-{
-  return false;
 }
 
 TrConstellation *TrEmbedder::getConstellation()

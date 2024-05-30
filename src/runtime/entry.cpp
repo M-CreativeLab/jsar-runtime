@@ -63,6 +63,11 @@ public:
     log = nullptr;
   }
 
+  bool onEvent(TrEvent &event, TrContentRuntime *content) override
+  {
+    return true;
+  }
+
 private:
   UnityGfxRenderer deviceType = kUnityGfxRendererNull;
   IUnityInterfaces *interfaces = nullptr;
