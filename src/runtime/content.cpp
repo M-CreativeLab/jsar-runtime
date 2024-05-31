@@ -28,7 +28,34 @@ TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManage
 
 TrContentRuntime::~TrContentRuntime()
 {
-  dispose();
+  /**
+   * Destroy the content runtime will wait for the command buffer is executed, also when a content is disposing, it should
+   * avoid the command buffer receiver to receive any new command buffer requests.
+   */
+  lock_guard<mutex> lock(recvCommandBuffersMutex);
+  if (eventChanReceiver != nullptr)
+  {
+    delete eventChanReceiver;
+    eventChanReceiver = nullptr;
+  }
+  if (eventChanSender != nullptr)
+  {
+    delete eventChanSender;
+    eventChanSender = nullptr;
+  }
+  if (commandBufferChanReceiver != nullptr)
+  {
+    delete commandBufferChanReceiver;
+    commandBufferChanReceiver = nullptr;
+  }
+  if (commandBufferChanSender != nullptr)
+  {
+    delete commandBufferChanSender;
+    commandBufferChanSender = nullptr;
+  }
+
+  auto renderer = contentManager->constellation->getRenderer();
+  renderer->removeCommandBufferChanClient(commandBufferChanClient);
 }
 
 void TrContentRuntime::start(TrXSMLRequestInit init)
@@ -70,8 +97,7 @@ void TrContentRuntime::terminate()
 
 void TrContentRuntime::dispose()
 {
-  pid = -1;
-  contentManager = nullptr;
+  delete this;
 }
 
 void TrContentRuntime::onCommandBuffersExecuted()
@@ -93,6 +119,7 @@ void TrContentRuntime::setupWithCommandBufferClient(TrOneShotClient<TrCommandBuf
 {
   commandBufferChanReceiver = new TrCommandBufferReceiver(client);
   commandBufferChanSender = new TrCommandBufferSender(client);
+  commandBufferChanClient = client;
 }
 
 bool TrContentRuntime::sendCommandBufferResponse(TrCommandBufferResponse &res)
@@ -190,6 +217,7 @@ bool TrContentRuntime::testClientProcessExitOnFrame()
 
 void TrContentRuntime::recvCommandBuffers(uint32_t timeout)
 {
+  lock_guard<mutex> lock(recvCommandBuffersMutex);
   if (commandBufferChanReceiver == nullptr)
     return; // Skip if the command buffer channel is not ready.
 

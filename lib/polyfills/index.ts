@@ -1,4 +1,4 @@
-import * as logger from '../bindings/logger';
+import * as logger from '@transmute/logger';
 
 /**
  * Browser Pollyfills for Node.js
@@ -6,12 +6,12 @@ import * as logger from '../bindings/logger';
 import { XMLHttpRequestImpl } from './xhr2';
 import { ErrorEventImpl } from './events/error-event';
 import { PointerEventImpl } from './events/pointer-event';
-import {
-  OffscreenCanvasImpl,
-  ImageDataImpl,
-  createImageBitmapImpl,
-  InitializeOffscreenCanvas
-} from './offscreencanvas';
+// import {
+//   OffscreenCanvasImpl,
+//   ImageDataImpl,
+//   createImageBitmapImpl,
+//   InitializeOffscreenCanvas
+// } from './offscreencanvas';
 import { createNavigator } from './navigator';
 import { createWindow } from './window';
 import {
@@ -29,14 +29,26 @@ import {
 
 globalThis.XMLHttpRequest = XMLHttpRequestImpl;
 // globalThis.AudioContext = AudioContextImpl;
-globalThis.OffscreenCanvas = OffscreenCanvasImpl;
-globalThis.ImageData = ImageDataImpl;
+// globalThis.OffscreenCanvas = OffscreenCanvasImpl;
+// globalThis.ImageData = ImageDataImpl;
 
 /**
  * Events
  */
-globalThis.ErrorEvent = ErrorEventImpl;
-globalThis.PointerEvent = PointerEventImpl;
+Object.defineProperties(globalThis, {
+  'ErrorEvent': {
+    value: ErrorEventImpl,
+    writable: false,
+    enumerable: true,
+    configurable: false,
+  },
+  'PointerEvent': {
+    value: PointerEventImpl,
+    writable: false,
+    enumerable: true,
+    configurable: false,
+  },
+});
 
 /**
  * Add WebGL interfaces
@@ -84,12 +96,12 @@ Object.defineProperties(globalThis, {
     enumerable: true,
     configurable: false,
   },
-  'createImageBitmap': {
-    value: createImageBitmapImpl,
-    writable: false,
-    enumerable: true,
-    configurable: false,
-  },
+  // 'createImageBitmap': {
+  //   value: createImageBitmapImpl,
+  //   writable: false,
+  //   enumerable: true,
+  //   configurable: false,
+  // },
   'requestAnimationFrame': {
     value: requestAnimationFrameImpl,
     writable: false,
@@ -107,9 +119,4 @@ globalThis.window = createWindow();
 
 logger.info('Polyfills have been loaded.');
 logger.info(`window() =>`, typeof window, typeof globalThis.window);
-logger.info('navigator =>', typeof navigator, typeof globalThis.navigator);
 logger.info('=============================');
-
-export {
-  InitializeOffscreenCanvas,
-}

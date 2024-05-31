@@ -71,11 +71,15 @@ private:
   TrContentManager *contentManager;
   TrEventReceiver *eventChanReceiver = nullptr;
   TrEventSender *eventChanSender = nullptr;
+  TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
   vector<TrCommandBufferBase *> commandBufferRequests;
   // Layout?
   // XR?
+
+private:
+  mutex recvCommandBuffersMutex;
 
   friend class TrContentManager;
   friend class renderer::TrRenderer;

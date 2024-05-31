@@ -75,8 +75,13 @@ namespace commandbuffers
       return false;
 
     auto buffer = (char *)malloc(contentSize);
+    if (buffer == nullptr)
+      return false; // out of memory
     if (!receiver->tryRecvRaw(buffer, contentSize, recvTimeout))
+    {
+      free(buffer); // free the allocated buffer if failed to receive.
       return false;
+    }
 
     int res = deserializeContent(buffer, contentSize);
     free(buffer);

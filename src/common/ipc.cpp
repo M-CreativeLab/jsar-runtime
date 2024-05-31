@@ -519,6 +519,8 @@ namespace ipc
   template <typename T>
   void TrOneShotServer<T>::removeClient(TrOneShotClient<T> *client)
   {
+    if (client == nullptr)
+      return;
     for (auto it = clients.begin(); it != clients.end(); it++)
     {
       if (*it == client)

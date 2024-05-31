@@ -48,6 +48,7 @@ namespace renderer
     void setLogFilter(string filterExpr);
     uint32_t getAnimationFrameChanPort();
     uint32_t getCommandBufferChanPort();
+    void removeCommandBufferChanClient(ipc::TrOneShotClient<TrCommandBufferMessage> *client);
     void setApi(RenderAPI *api);
 
   public: // API for host update

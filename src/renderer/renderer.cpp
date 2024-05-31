@@ -98,6 +98,11 @@ namespace renderer
     return commandBufferChanServer->getPort();
   }
 
+  void TrRenderer::removeCommandBufferChanClient(TrOneShotClient<TrCommandBufferMessage> *client)
+  {
+    commandBufferChanServer->removeClient(client);
+  }
+
   void TrRenderer::setApi(RenderAPI *api)
   {
     this->api = api;
