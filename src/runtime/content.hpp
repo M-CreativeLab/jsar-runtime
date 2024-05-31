@@ -50,6 +50,9 @@ public: // command buffer methods
   void setupWithCommandBufferClient(TrOneShotClient<TrCommandBufferMessage> *client);
   bool sendCommandBufferResponse(TrCommandBufferResponse &res);
 
+public: // event methods
+  bool sendEventResponse(TrEvent &event);
+
 private:
   void onClientProcess();
   bool testClientProcessExitOnFrame(); // true if the client process has exited

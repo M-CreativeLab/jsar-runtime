@@ -1,5 +1,6 @@
 #pragma once
 
+#include <thread>
 #include <napi.h>
 #include "client/per_process.hpp"
 
@@ -22,6 +23,8 @@ namespace bindings
     private:
       TrClientContextPerProcess *clientContext;
       Napi::ThreadSafeFunction eventListener;
+      thread eventRecvThread;
+      bool recvingEvents = false;
 
     public:
       static Napi::FunctionReference *constructor;

@@ -103,6 +103,14 @@ bool TrContentRuntime::sendCommandBufferResponse(TrCommandBufferResponse &res)
     return false;
 }
 
+bool TrContentRuntime::sendEventResponse(TrEvent &event)
+{
+  if (eventChanSender == nullptr)
+    return false;
+  TrEventMessage eventMessage(event);
+  return eventChanSender->sendEvent(eventMessage);
+}
+
 void TrContentRuntime::onClientProcess()
 {
   path basePath = path(constellationOptions.runtimeDirectory);
@@ -366,5 +374,5 @@ void TrContentManager::onRequestEvent(TrEvent &event)
 
   auto content = makeContent();
   if (content != nullptr)
-    content->start(event.detail.asXSMLRequestInit());
+    content->start(event.detail.get<TrXSMLRequestInit>());
 }

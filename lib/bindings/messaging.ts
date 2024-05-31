@@ -145,7 +145,7 @@ export const dispatchXsmlEvent = function (id: number, eventType: 'loaded' | 'fc
 };
 
 export const makeRpcCall = function makeRpcCallToNative(method: string, args: any[]) {
-  const detail = { method, args: JSON.stringify(args) };
+  const detail = { method, args };
   const id = dispatchEvent(new CustomEvent('rpcRequest', { detail }));
   return new Promise<any>((resolve, reject) => {
     RpcRequestWaitlist.set(id, (responseText: string) => {

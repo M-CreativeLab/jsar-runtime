@@ -10,12 +10,13 @@
 
 #include "../runtime/embedder.hpp"
 #include "../renderer/render_api.hpp"
+#include "../common/xr/types.hpp"
 
 const char *vertexShaderSource = R"(
   #version 330 core
   layout (location = 0) in vec3 aPos;
   void main() {
-      gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
   }
 )";
 
@@ -23,7 +24,7 @@ const char *fragmentShaderSource = R"(
   #version 330 core
   out vec4 FragColor;
   void main() {
-      FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
   }
 )";
 
@@ -40,9 +41,27 @@ public:
 public:
   bool onEvent(TrEvent &event, TrContentRuntime *content) override
   {
-    fprintf(stdout, "DesktopEmbedder::onEvent %d (%s) %d\n",
-            event.type, event.detail.getString().c_str(), content->pid);
-    return false;
+    if (event.type == TrEventType::TR_EVENT_RPC_REQUEST)
+    {
+      TrEvent eventResp;
+      auto rpcRequest = event.detail.get<TrRpcRequest>();
+      if (rpcRequest.method == "xr.initializeDevice")
+      {
+        auto resp = xr::TrDeviceInitResponse();
+        resp.enabled = true;
+        resp.isDeviceActive = true;
+        resp.stereoRenderingMode = xr::TrStereoRenderingMode::TR_MULTI_PASS;
+        resp.makeSuccess();
+        eventResp = TrEvent::MakeRpcResponseEvent(event, resp);
+      }
+      else
+      {
+        auto resp = TrRpcResponse::MakeErrorResponse("Method not implemented");
+        eventResp = TrEvent::MakeRpcResponseEvent(event, resp);
+      }
+      content->sendEventResponse(eventResp);
+    }
+    return true;
   }
 };
 static DesktopEmbedder *embedder = nullptr;

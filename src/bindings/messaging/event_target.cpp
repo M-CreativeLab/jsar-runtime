@@ -46,10 +46,30 @@ namespace bindings
           "NativeEventTarget",
           0,
           1);
+
+      recvingEvents = true;
+      eventRecvThread = thread([this]()
+                               {
+        while (recvingEvents)
+        {
+          auto eventMessage = clientContext->recvEventMessage(-1);
+          if (eventMessage == nullptr)
+            continue;
+
+          eventListener.BlockingCall(eventMessage, [](Napi::Env env, Napi::Function jsCallback, TrEventMessage *msg) {
+            auto jsId = Napi::Number::New(env, msg->id);
+            auto jsType = Napi::Number::New(env, static_cast<int>(msg->type));
+            auto jsDetail = Napi::String::New(env, msg->detail());
+            jsCallback.Call({jsId, jsType, jsDetail});
+            delete msg;
+          });
+        } });
     }
 
     NativeEventTarget::~NativeEventTarget()
     {
+      recvingEvents = false;
+      eventRecvThread.join();
       eventListener.Release();
     }
 

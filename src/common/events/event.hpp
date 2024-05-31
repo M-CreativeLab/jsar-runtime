@@ -2,6 +2,8 @@
 
 #include <string>
 #include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
 
 #include "idgen.hpp"
 #include "./classes.hpp"
@@ -11,11 +13,97 @@ using namespace std;
 
 namespace events
 {
+  class TrRpcRequest
+  {
+  public:
+    TrRpcRequest(rapidjson::Document &sourceDoc)
+    {
+      method = sourceDoc["method"].GetString();
+      if (sourceDoc.HasMember("args") && sourceDoc["args"].IsArray())
+      {
+        auto &argsArray = sourceDoc["args"];
+        for (auto &arg : argsArray.GetArray())
+        {
+          if (arg.IsString())
+            args.push_back(arg.GetString());
+          else
+            args.push_back("");
+        }
+      }
+    }
+
+  public:
+    string method;
+    vector<string> args;
+  };
+
+  class TrRpcResponse
+  {
+  public:
+    static TrRpcResponse MakeErrorResponse(string errorMessage)
+    {
+      TrRpcResponse res;
+      res.success = false;
+      res.errorMessage = errorMessage;
+      return res;
+    }
+
+  public:
+    TrRpcResponse()
+    {
+      doc.SetObject();
+    }
+
+  public:
+    void makeSuccess()
+    {
+      success = true;
+    }
+    void makeError(string errorMessage)
+    {
+      success = false;
+      this->errorMessage = errorMessage;
+    }
+    string serialize()
+    {
+      auto &allocator = doc.GetAllocator();
+      doc.AddMember("success", success, allocator);
+      if (!success)
+      {
+        auto errorMessageValue = rapidjson::Value(errorMessage.c_str(), allocator);
+        doc.AddMember("errorMessage", errorMessageValue, allocator);
+      }
+
+      rapidjson::StringBuffer buffer;
+      rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+      doc.Accept(writer);
+      return buffer.GetString();
+    }
+
+  protected:
+    rapidjson::Document doc;
+
+  public:
+    bool success;
+    string errorMessage;
+  };
+
   class TrXSMLRequestInit
   {
   public:
     TrXSMLRequestInit(string url, uint32_t id) : url(url), id(id)
     {
+    }
+    TrXSMLRequestInit(rapidjson::Document &sourceDoc)
+    {
+      url = sourceDoc["url"].GetString();
+      id = sourceDoc["sessionId"].GetUint();
+      if (sourceDoc.HasMember("disableCache"))
+        disableCache = sourceDoc["disableCache"].GetBool();
+      if (sourceDoc.HasMember("isPreview"))
+        isPreview = sourceDoc["isPreview"].GetBool();
+      if (sourceDoc.HasMember("runScripts"))
+        runScripts = sourceDoc["runScripts"].GetString();
     }
     TrXSMLRequestInit(const TrXSMLRequestInit &that)
         : url(that.url),
@@ -37,6 +125,9 @@ namespace events
   class TrEventDetail
   {
   public:
+    TrEventDetail()
+    {
+    }
     TrEventDetail(string jsonSource) : jsonSource(jsonSource)
     {
     }
@@ -49,13 +140,13 @@ namespace events
     {
       return jsonSource;
     }
-    TrXSMLRequestInit asXSMLRequestInit()
+
+    template <typename T>
+    T get()
     {
       rapidjson::Document jsonDoc;
       jsonDoc.Parse(jsonSource.c_str());
-      auto url = jsonDoc["url"].GetString();
-      auto id = jsonDoc["sessionId"].GetUint();
-      return TrXSMLRequestInit(url, id);
+      return T(jsonDoc);
     }
 
   private:
@@ -66,6 +157,19 @@ namespace events
   class TrEvent
   {
   public:
+    template <typename T>
+    static TrEvent MakeRpcResponseEvent(TrEvent &requestEvent, T &res)
+    {
+      auto id = requestEvent.id;
+      auto type = TrEventType::TR_EVENT_RPC_RESPONSE;
+      auto detailData = res.serialize();
+      return TrEvent(id, type, detailData);
+    }
+
+  public:
+    TrEvent()
+    {
+    }
     TrEvent(TrEventType type, string detailData)
         : id(eventIdGenerator.get()), type(type), detail(TrEventDetail(detailData))
     {
