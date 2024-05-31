@@ -73,6 +73,8 @@ namespace events
         auto errorMessageValue = rapidjson::Value(errorMessage.c_str(), allocator);
         doc.AddMember("errorMessage", errorMessageValue, allocator);
       }
+      if (dataValue.IsObject())
+        doc.AddMember("data", dataValue, allocator);
 
       rapidjson::StringBuffer buffer;
       rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -82,6 +84,7 @@ namespace events
 
   protected:
     rapidjson::Document doc;
+    rapidjson::Value dataValue;
 
   public:
     bool success;

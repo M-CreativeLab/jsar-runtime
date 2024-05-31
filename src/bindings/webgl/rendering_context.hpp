@@ -142,7 +142,7 @@ namespace webgl
   protected:
     /**
      * It sends a command buffer request to the server.
-     * 
+     *
      * @param commandBuffer
      * @param useDefaultQueue - if true, the command buffer will be executed in the default queue.
      */
@@ -158,10 +158,10 @@ namespace webgl
     R *recvCommandBufferResponse(commandbuffers::CommandBufferType responseType, int timeout = 1000)
     {
       auto response = m_clientContext->recvCommandBufferResponse(timeout);
-      if (response != nullptr && response->type == responseType)
-        return dynamic_cast<R *>(response);
-      else
+      if (response == nullptr)
         return nullptr;
+      assert(response->type == responseType);
+      return dynamic_cast<R *>(response);
     }
 
     /**

@@ -3519,17 +3519,17 @@ namespace webgl
       return env.Undefined();
     }
     Napi::Array extensionsArray = Napi::Array::New(env);
-    // for (size_t i = 0; i < commandBuffer->m_Extensions.size(); i++)
-    // {
-    //   // remove GL_ prefix
-    //   std::string extension = commandBuffer->m_Extensions[i];
-    //   Napi::String jsExtensionName;
-    //   if (extension.find("GL_") == 0)
-    //     jsExtensionName = Napi::String::New(env, extension.substr(3));
-    //   else
-    //     jsExtensionName = Napi::String::New(env, extension);
-    //   extensionsArray.Set(i, jsExtensionName);
-    // }
+    for (size_t i = 0; i < resp->extensions.size(); i++)
+    {
+      // remove GL_ prefix
+      std::string extension = resp->extensions[i];
+      Napi::String jsExtensionName;
+      if (extension.find("GL_") == 0)
+        jsExtensionName = Napi::String::New(env, extension.substr(3));
+      else
+        jsExtensionName = Napi::String::New(env, extension);
+      extensionsArray.Set(i, jsExtensionName);
+    }
 
     // Update the extensions array to the context object.
     jsThis.Set("_extensions", extensionsArray);

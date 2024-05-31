@@ -13,6 +13,7 @@ namespace commandbuffers
     {
       size = sizeof(WebGL1ContextInitCommandBufferRequest);
     }
+    ~WebGL1ContextInitCommandBufferRequest() {}
 
   public:
     TrCommandBufferMessage *serialize() override
@@ -31,6 +32,9 @@ namespace commandbuffers
         : TrCommandBufferResponse(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES, req)
     {
       size = sizeof(WebGL1ContextInitCommandBufferResponse);
+    }
+    ~WebGL1ContextInitCommandBufferResponse()
+    {
     }
 
   public:

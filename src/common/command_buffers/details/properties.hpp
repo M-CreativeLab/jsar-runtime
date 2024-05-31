@@ -176,6 +176,7 @@ namespace commandbuffers
           rangeMax(rangeMax),
           precision(precision)
     {
+      size = sizeof(GetShaderPrecisionFormatCommandBufferResponse);
     }
 
   public:

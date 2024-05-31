@@ -44,8 +44,14 @@ namespace commandbuffers
     void deserialize(TrCommandBufferMessage &message) override
     {
       auto count = message.getSegmentCount();
-      for (int i = 0; i < count; i++)
-        extensions.push_back(message.getSegment(i)->toString());
+      for (int i = 0; i < extensions.size(); i++)
+      {
+        auto segment = message.getSegment(i);
+        if (segment == nullptr)
+          extensions[i] = "";
+        else
+          extensions[i] = segment->toString();
+      }
     }
 
   public:

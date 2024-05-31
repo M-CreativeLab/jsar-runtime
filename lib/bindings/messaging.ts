@@ -155,24 +155,23 @@ export const makeRpcCall = function makeRpcCallToNative(method: string, args: an
       } catch (err) {
         json = {
           success: false,
-          message: 'Failed to parse response from rpc call.',
+          message: `Failed to parse response(${typeof responseText} '${responseText}') from rpc call: ${err}.`,
         };
       }
       if (json.success === true) {
-        let data: any;
-        let isDataParsed = false;
-        let dataParsingError: Error;
-        try {
-          data = JSON.parse(json.data);
-          isDataParsed = true;
-        } catch (err) {
-          dataParsingError = err;
+        let data = json.data;
+        if (typeof data === 'string') {
+          let dataParsingError: Error;
+          try {
+            data = JSON.parse(json.data);
+          } catch (err) {
+            dataParsingError = err;
+          }
+          if (dataParsingError) {
+            return reject(dataParsingError);
+          }
         }
-        if (!isDataParsed) {
-          reject(dataParsingError);
-        } else {
-          resolve(data);
-        }
+        resolve(data);
       } else {
         reject(new Error(json.message || 'Unknown error when receiving rpc response.'));
       }

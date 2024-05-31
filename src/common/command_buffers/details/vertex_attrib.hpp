@@ -71,6 +71,7 @@ namespace commandbuffers
           offset(offset)
     {
     }
+    ~VertexAttribIPointerCommandBufferRequest() {}
 
   public:
     uint32_t index;
@@ -90,6 +91,7 @@ namespace commandbuffers
           divisor(divisor)
     {
     }
+    ~VertexAttribDivisorCommandBufferRequest() {}
 
   public:
     uint32_t index;

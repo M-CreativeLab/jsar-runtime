@@ -26,9 +26,11 @@ namespace xr
   public:
     string serialize()
     {
-      doc.AddMember("enabled", enabled, doc.GetAllocator());
-      doc.AddMember("isDeviceActive", isDeviceActive, doc.GetAllocator());
-      doc.AddMember("stereoRenderingMode", stereoRenderingMode, doc.GetAllocator());
+      auto &allocator = doc.GetAllocator();
+      dataValue.SetObject();
+      dataValue.AddMember("enabled", enabled, allocator);
+      dataValue.AddMember("isDeviceActive", isDeviceActive, allocator);
+      dataValue.AddMember("stereoRenderingMode", stereoRenderingMode, allocator);
       return events::TrRpcResponse::serialize();
     }
 

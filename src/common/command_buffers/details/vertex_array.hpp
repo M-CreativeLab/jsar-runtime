@@ -14,6 +14,7 @@ namespace commandbuffers
           clientId(clientId)
     {
     }
+    ~CreateVertexArrayCommandBufferRequest() {}
 
   public:
     TrCommandBufferMessage *serialize() override
@@ -36,6 +37,7 @@ namespace commandbuffers
           vertexArray(vertexArray)
     {
     }
+    ~DeleteVertexArrayCommandBufferRequest() {}
 
   public:
     TrCommandBufferMessage *serialize() override
@@ -58,6 +60,7 @@ namespace commandbuffers
           vertexArray(vertexArray)
     {
     }
+    ~BindVertexArrayCommandBufferRequest() {}
 
   public:
     TrCommandBufferMessage *serialize() override
@@ -80,6 +83,7 @@ namespace commandbuffers
           vertexArray(vertexArray)
     {
     }
+    ~IsVertexArrayCommandBufferRequest() {}
 
   public:
     TrCommandBufferMessage *serialize() override
@@ -102,6 +106,7 @@ namespace commandbuffers
           value(value)
     {
     }
+    ~IsVertexArrayCommandBufferResponse() {}
 
   public:
     TrCommandBufferMessage *serialize() override

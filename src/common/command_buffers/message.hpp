@@ -7,9 +7,10 @@ namespace commandbuffers
   class TrCommandBufferSegment
   {
   public:
-    TrCommandBufferSegment(size_t size, void *data) : size(size),
-                                                      data(data)
+    TrCommandBufferSegment(size_t size, void *data) : size(size)
     {
+      this->data = malloc(size);
+      memcpy(this->data, data, size);
     }
 
     /**
@@ -111,7 +112,7 @@ namespace commandbuffers
     }
     void addStringSegment(string &str)
     {
-      TrCommandBufferSegment segment(str.size() + 1, (void *)str.c_str());
+      TrCommandBufferSegment segment(str.size(), (void *)str.c_str());
       addSegment(segment);
     }
     TrCommandBufferSegment *getSegment(size_t index)

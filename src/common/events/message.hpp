@@ -61,7 +61,7 @@ namespace events
     TrEventMessage(TrEvent &event) : type(event.type), id(event.id)
     {
       auto detailString = event.detail.getString();
-      size = detailString.size() + 1;
+      size = detailString.size();
       data = (char *)malloc(size);
       memcpy(data, detailString.c_str(), size);
     }
