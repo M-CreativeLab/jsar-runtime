@@ -100,9 +100,14 @@ void TrContentRuntime::dispose()
   delete this;
 }
 
+void TrContentRuntime::onCommandBuffersExecuting()
+{
+  isCommandBufferRequestsExecuting = true;
+}
+
 void TrContentRuntime::onCommandBuffersExecuted()
 {
-  commandBufferRequests.clear();
+  isCommandBufferRequestsExecuting = false;
 }
 
 TrConstellation *TrContentRuntime::getConstellation()
@@ -220,12 +225,17 @@ void TrContentRuntime::recvCommandBuffers(uint32_t timeout)
   lock_guard<mutex> lock(recvCommandBuffersMutex);
   if (commandBufferChanReceiver == nullptr)
     return; // Skip if the command buffer channel is not ready.
+  if (isCommandBufferRequestsExecuting == true)
+    return; // Skip if the command buffer requests are executing.
 
   while (true)
   {
     auto commandBuffer = commandBufferChanReceiver->recvCommandBufferRequest(timeout);
     if (commandBuffer != nullptr)
+    {
+      lock_guard<mutex> lock(commandBufferRequestsMutex);
       commandBufferRequests.push_back(commandBuffer);
+    }
   }
 }
 

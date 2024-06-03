@@ -186,6 +186,14 @@ namespace renderer
   {
     auto contentManager = constellation->getContentManager();
     for (auto content : contentManager->contents)
-      api->ExecuteCommandBuffer(content->commandBufferRequests, content, nullptr, true);
+    {
+      vector<commandbuffers::TrCommandBufferBase *> commandBufferRequests;
+      {
+        lock_guard<mutex> lock(content->commandBufferRequestsMutex);
+        commandBufferRequests = content->commandBufferRequests;
+        content->commandBufferRequests.clear();
+      }
+      api->ExecuteCommandBuffer(commandBufferRequests, content, nullptr, true);
+    }
   }
 }

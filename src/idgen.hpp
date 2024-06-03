@@ -6,18 +6,19 @@
 class TrIdGenerator
 {
 public:
-  TrIdGenerator(uint32_t initialId = 0) : counter(initialId) {}
+  TrIdGenerator(uint32_t initialId = 0) : counter(initialId), initialId(initialId) {}
   ~TrIdGenerator() {}
 
 public:
   uint32_t get()
   {
     if (counter >= maxId)
-      counter = 0;
+      counter = initialId;
     return counter++;
   }
 
 private:
   uint32_t counter;
+  uint32_t initialId = 0;
   uint32_t maxId = UINT32_MAX;
 };

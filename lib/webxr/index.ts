@@ -10,11 +10,11 @@ const {
 } = process._linkedBinding('transmute:webxr');
 
 let xrDevice: XRDevice = null;
-export async function prepareXRSystem(): Promise<void> {
+export async function prepareXRSystem(): Promise<boolean> {
   if (xrDevice == null) {
     xrDevice = new XRNativeDevice();
   }
-  await xrDevice.waitForReady();
+  return await xrDevice.waitForReady();
 }
 
 export function createBondXRSystem(sessionId: number): XRSystem {

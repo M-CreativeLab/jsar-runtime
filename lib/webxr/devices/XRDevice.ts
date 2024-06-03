@@ -58,7 +58,7 @@ export default class XRDevice extends EventTarget {
   /**
    * When a `XRDevice` is created, it takes some time to initialize and be ready, the caller needs to wait for this to happen.
    */
-  waitForReady(): Promise<void> {
+  waitForReady(): Promise<boolean> {
     throw new Error('Method(device.waitForReady) not implemented');
   }
 

@@ -27,7 +27,7 @@ namespace commandbuffers
     }
 
   public:
-    int clientId;
+    uint32_t clientId;
   };
 
   class DeleteVertexArrayCommandBufferRequest : public TrCommandBufferBase
@@ -51,7 +51,7 @@ namespace commandbuffers
     }
 
   public:
-    int vertexArray;
+    uint32_t vertexArray;
   };
 
   class BindVertexArrayCommandBufferRequest : public TrCommandBufferBase
@@ -75,7 +75,7 @@ namespace commandbuffers
     }
 
   public:
-    int vertexArray;
+    uint32_t vertexArray;
   };
 
   class IsVertexArrayCommandBufferRequest : public TrCommandBufferBase
@@ -99,7 +99,7 @@ namespace commandbuffers
     }
 
   public:
-    int vertexArray;
+    uint32_t vertexArray;
   };
 
   class IsVertexArrayCommandBufferResponse : public TrCommandBufferResponse

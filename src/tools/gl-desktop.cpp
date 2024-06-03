@@ -77,40 +77,6 @@ void processInput(GLFWwindow *window)
     glfwSetWindowShouldClose(window, true);
 }
 
-// void receiveIncomingEvents()
-// {
-//   while (true)
-//   {
-//     int eventId;
-//     int eventType;
-//     uint32_t size;
-//     bool hasEvent = TransmuteNative_GetEventFromJavaScript(&eventId, &eventType, &size);
-//     if (hasEvent)
-//     {
-//       char *data = (char *)malloc(size);
-//       TransmuteNative_GetEventDataFromJavaScript(data);
-
-//       switch (eventType)
-//       {
-//       case 0x100: /** JSEventType.RpcRequest */
-//         // FIXME: because the current implementation only has one event type, we can safely ignore the event type
-//         TransmuteNative_InitializeXRDevice(false);
-//         TransmuteNative_DispatchNativeEvent(eventId, 0x101 /** JSEventType.RpcResponse */,
-//                                             "{\"success\":false,\"message\":\"not a xr device\"}");
-//         break;
-//       default:
-//         std::cout << "[Unknown] Received event: " << eventId << " " << eventType << " " << data << std::endl;
-//         break;
-//       }
-//       free(data);
-//     }
-//     else
-//     {
-//       break;
-//     }
-//   }
-// }
-
 int main()
 {
   if (!glfwInit())
@@ -235,10 +201,7 @@ int main()
     glGetError(); // Clear the error
 
     if (embedder != nullptr)
-    {
-      // receiveIncomingEvents();
       embedder->onFrame();
-    }
 
     glfwSwapBuffers(window);
     glfwPollEvents();

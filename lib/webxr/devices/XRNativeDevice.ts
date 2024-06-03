@@ -31,7 +31,7 @@ export default class XRNativeDevice extends XRDevice {
     return this.#handle;
   }
 
-  async waitForReady(): Promise<void> {
+  async waitForReady(): Promise<boolean> {
     try {
       const response = await makeRpcCall('xr.initializeDevice', []) as DeviceInitResponse;
       this.enabled = response.enabled;
@@ -42,6 +42,7 @@ export default class XRNativeDevice extends XRDevice {
     }
     logger.info(`XR: Device enabled: ${this.enabled}`);
     logger.info(`XR: Stereo rendering mode: ${stereoRenderingModeToString(this.stereoRenderingMode)}`);
+    return this.enabled;
   }
 
   getActiveEye(): XREye {

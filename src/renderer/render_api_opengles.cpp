@@ -451,6 +451,11 @@ private:
 	{
 		auto target = req->target;
 		auto buffer = m_GLObjectManager.FindBuffer(req->buffer);
+		if (req->buffer != 0 && buffer == 0)
+		{
+			DEBUG(DEBUG_TAG, "Could not find buffer(cid=%d) to bind", req->buffer);
+			return;
+		}
 
 		/** Update the app states for next restore. */
 		if (target == GL_ARRAY_BUFFER)
@@ -462,16 +467,8 @@ private:
 		glBindBuffer(target, buffer);
 		if (options.printsCall)
 		{
-			auto targetStr = gles::glEnumToString(target);
-			if (!targetStr.empty() || targetStr != "")
-			{
-				DEBUG(DEBUG_TAG, "[%d] GL::BindBuffer(%s, buffer=%d)",
-							options.isDefaultQueue, gles::glEnumToString(target).c_str(), buffer);
-			}
-			else
-			{
-				DEBUG(DEBUG_TAG, "[%d] GL::BindBuffer(0x%x, buffer=%d)", options.isDefaultQueue, target, buffer);
-			}
+			DEBUG(DEBUG_TAG, "[%d] GL::BindBuffer(%s, buffer=%d)",
+						options.isDefaultQueue, gles::glEnumToString(target).c_str(), buffer);
 		}
 	}
 	void OnBufferData(BufferDataCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
@@ -681,6 +678,11 @@ private:
 	void OnBindVertexArray(BindVertexArrayCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
 		auto vao = m_GLObjectManager.FindBuffer(req->vertexArray);
+		if (req->vertexArray != 0 && vao == 0)
+		{
+			DEBUG(DEBUG_TAG, "Could not find vertex array object(cid=%d) to bind", req->vertexArray);
+			return;
+		}
 		glBindVertexArray(vao);
 		m_AppGlobalContext.RecordVertexArrayObject(vao);
 		if (options.printsCall)
@@ -1778,6 +1780,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 	// Execute all the command buffers
 	DEBUG(DEBUG_TAG, "There are %d buffers to execute in %s.",
 				commandBuffers.size(), m_AppGlobalContext.GetName());
+	content->onCommandBuffersExecuting();
 	auto contextBaseState = OpenGLAppContextStorage("tmp", &m_AppGlobalContext);
 
 	for (auto commandBuffer : commandBuffers)

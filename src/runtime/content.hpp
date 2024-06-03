@@ -38,6 +38,10 @@ public:
 
 public: // lifecycle which is called by other classes
   /**
+   * When the content's command buffers is about to be executed.
+   */
+  void onCommandBuffersExecuting();
+  /**
    * When the content's command buffers are executed. Internally this method will clear the command buffer requests.
    */
   void onCommandBuffersExecuted();
@@ -80,6 +84,8 @@ private:
 
 private:
   mutex recvCommandBuffersMutex;
+  mutex commandBufferRequestsMutex;
+  atomic<bool> isCommandBufferRequestsExecuting = false;
 
   friend class TrContentManager;
   friend class renderer::TrRenderer;

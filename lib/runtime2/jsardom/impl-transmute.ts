@@ -272,36 +272,36 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
       this._defaultLights.push(light);
     }
 
-    this._xrDefaultExperience = WebXRDefaultExperience.CreateAsync(scene, {
-      xrSystem: this._xrSystem,
-      outputCanvasOptions: {
-        renderingContext: glContext,
-        canvasOptions: {
-          antialias: true,
-          depth: true,
-          stencil: true,
-          alpha: true,
-          framebufferScaleFactor: 1,
-        },
-      },
-      pointerSelectionOptions: {
-        preferredHandedness: 'right',
-        enablePointerSelectionOnAllControllers: false,
-        disableScenePointerVectorUpdate: true,
-      },
-      teleportationOptions: {
-        forceHandedness: 'right',
-        defaultTargetMeshOptions: {
-          disableLighting: true,
-        },
-      },
-      nearInteractionOptions: {
-        preferredHandedness: 'right',
-        enableNearInteractionOnAllControllers: false,
-      },
-      disableTeleportation: true,
-      disableNearInteraction: true,
-    });
+    // this._xrDefaultExperience = WebXRDefaultExperience.CreateAsync(scene, {
+    //   xrSystem: this._xrSystem,
+    //   outputCanvasOptions: {
+    //     renderingContext: glContext,
+    //     canvasOptions: {
+    //       antialias: true,
+    //       depth: true,
+    //       stencil: true,
+    //       alpha: true,
+    //       framebufferScaleFactor: 1,
+    //     },
+    //   },
+    //   pointerSelectionOptions: {
+    //     preferredHandedness: 'right',
+    //     enablePointerSelectionOnAllControllers: false,
+    //     disableScenePointerVectorUpdate: true,
+    //   },
+    //   teleportationOptions: {
+    //     forceHandedness: 'right',
+    //     defaultTargetMeshOptions: {
+    //       disableLighting: true,
+    //     },
+    //   },
+    //   nearInteractionOptions: {
+    //     preferredHandedness: 'right',
+    //     enableNearInteractionOnAllControllers: false,
+    //   },
+    //   disableTeleportation: true,
+    //   disableNearInteraction: true,
+    // });
     this.engine.runRenderLoop(() => scene.render());
   }
 
