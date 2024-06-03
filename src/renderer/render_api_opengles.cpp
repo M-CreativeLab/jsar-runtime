@@ -481,10 +481,11 @@ private:
 		glBufferData(target, size, data, usage);
 		if (options.printsCall)
 		{
-			DEBUG(DEBUG_TAG, "[%d] GL::BufferData(%s, size=%d usage=%s)",
+			DEBUG(DEBUG_TAG, "[%d] GL::BufferData(%s, size=%d, data=%p, usage=%s)",
 						options.isDefaultQueue,
 						gles::glEnumToString(target).c_str(),
 						size,
+						data,
 						gles::glEnumToString(usage).c_str());
 		}
 	}
@@ -1196,15 +1197,12 @@ private:
 		m_DrawCallCountPerFrame += 1;
 		if (options.printsCall)
 		{
-			GLint frontFace;
-			glGetIntegerv(GL_FRONT_FACE, &frontFace);
-			DEBUG(DEBUG_TAG, "[%d] GL::DrawElements(mode=%s, count=%d, type=%d, indices=%p) frontFace=%s",
+			DEBUG(DEBUG_TAG, "[%d] GL::DrawElements(mode=%s, count=%d, type=%s, indices=%p)",
 						options.isDefaultQueue,
 						gles::glEnumToString(mode).c_str(),
 						count,
 						gles::glEnumToString(type).c_str(),
-						indices,
-						gles::glEnumToString(frontFace).c_str());
+						indices);
 		}
 	}
 	void OnDrawBuffers(DrawBuffersCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)

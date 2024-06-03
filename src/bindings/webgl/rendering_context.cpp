@@ -3679,14 +3679,14 @@ namespace webgl
   int WebGLBaseRenderingContext<T>::getDrawingBufferWidth()
   {
     // return m_renderAPI->GetDrawingBufferWidth();
-    return 1024;
+    return 1600;
   }
 
   template <typename T>
   int WebGLBaseRenderingContext<T>::getDrawingBufferHeight()
   {
     // return m_renderAPI->GetDrawingBufferHeight();
-    return 1024;
+    return 1200;
   }
 
   template <typename T>

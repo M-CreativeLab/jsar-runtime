@@ -97,18 +97,24 @@ void OpenGLContextStorage::Restore()
     glUseProgram(0);
   useProgramError = glGetError();
 
-  if (m_ArrayBufferId >= 0)
-    glBindBuffer(GL_ARRAY_BUFFER, m_ArrayBufferId);
-  if (m_ElementArrayBufferId >= 0)
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ElementArrayBufferId);
+  if (m_VertexArrayObjectId >= 0)
+    glBindVertexArray(m_VertexArrayObjectId);
+
+  /**
+   * Only if the vao is not bound, we need to restore the array buffer and element array buffer bindings.
+   */
+  if (m_VertexArrayObjectId <= 0)
+  {
+    if (m_ArrayBufferId >= 0)
+      glBindBuffer(GL_ARRAY_BUFFER, m_ArrayBufferId);
+    if (m_ElementArrayBufferId >= 0)
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ElementArrayBufferId);
+  }
   if (m_FramebufferId >= 0)
     glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
   if (m_RenderbufferId >= 0)
     glBindRenderbuffer(GL_RENDERBUFFER, m_RenderbufferId);
   bindBuffersError = glGetError();
-
-  if (m_VertexArrayObjectId >= 0)
-    glBindVertexArray(m_VertexArrayObjectId);
 
   for (auto it = m_TextureBindingsWithUnit.begin(); it != m_TextureBindingsWithUnit.end(); it++)
   {
@@ -154,8 +160,10 @@ void OpenGLContextStorage::Restore()
 
 void OpenGLContextStorage::Print()
 {
-  DEBUG(DEBUG_TAG, "%s program(%d), framebuffer(%d), activeTexture(%d)", GetName(),
-        m_ProgramId, m_FramebufferId, m_LastActiveTextureUnit - GL_TEXTURE0);
+  DEBUG(DEBUG_TAG, "%s program(%d), viewport(%d, %d, %d, %d)", GetName(),
+        m_ProgramId, m_Viewport[0], m_Viewport[1], m_Viewport[2], m_Viewport[3]);
+  DEBUG(DEBUG_TAG, "%s ebo(%d), vao(%d), framebuffer(%d), activeTexture(%d)", GetName(),
+        m_ElementArrayBufferId, m_VertexArrayObjectId, m_FramebufferId, m_LastActiveTextureUnit - GL_TEXTURE0);
 }
 
 void OpenGLContextStorage::ClearTextureBindings()

@@ -77,7 +77,7 @@ void processInput(GLFWwindow *window)
     glfwSetWindowShouldClose(window, true);
 }
 
-int main()
+int main(int argc, char **argv)
 {
   if (!glfwInit())
     return -1;
@@ -86,17 +86,24 @@ int main()
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  GLFWwindow *window = glfwCreateWindow(800, 600, "OpenGL Example", NULL, NULL);
+  string requestUrl = "http://localhost:3000/spatial-element.xsml";
+  if (argc > 1)
+    requestUrl = string(argv[1]);
+
+  int width = 800;
+  int height = 600;
+  GLFWwindow *window = glfwCreateWindow(width, height, "JSAR Example", NULL, NULL);
   if (!window)
   {
     glfwTerminate();
     return -1;
   }
+  glViewport(0, 0, width, height);
 
   embedder = new DesktopEmbedder();
   assert(embedder != nullptr);
 
-  TrViewport viewport(800, 600);
+  TrViewport viewport(width, height);
   embedder->getRenderer()->setViewport(viewport);
 
   {
@@ -116,8 +123,10 @@ int main()
     assert(eventTarget != nullptr);
 
     rapidjson::Document requestDoc;
+    rapidjson::Value requestUrlValue(requestUrl.c_str(), requestDoc.GetAllocator());
+
     requestDoc.SetObject();
-    requestDoc.AddMember("url", "http://localhost:3000/spatial-lion.xsml", requestDoc.GetAllocator());
+    requestDoc.AddMember("url", requestUrlValue, requestDoc.GetAllocator());
     requestDoc.AddMember("sessionId", 1, requestDoc.GetAllocator());
     rapidjson::StringBuffer requestBuffer;
     rapidjson::Writer<rapidjson::StringBuffer> requestWriter(requestBuffer);
@@ -193,11 +202,11 @@ int main()
     processInput(window);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glUseProgram(shaderProgram);
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    // glUseProgram(shaderProgram);
+    // glBindVertexArray(VAO);
+    // glDrawArrays(GL_TRIANGLES, 0, 3);
     glGetError(); // Clear the error
 
     if (embedder != nullptr)
