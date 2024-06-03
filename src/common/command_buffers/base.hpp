@@ -33,6 +33,10 @@ namespace commandbuffers
   class TrCommandBufferResponse : public TrCommandBufferBase
   {
   public:
+    TrCommandBufferResponse(CommandBufferType type, TrCommandBufferResponse& that) : TrCommandBufferBase(type)
+    {
+      requestId = that.requestId;
+    }
     TrCommandBufferResponse(CommandBufferType type, TrCommandBufferBase *req) : TrCommandBufferBase(type),
                                                                                 requestId(req->id)
     {

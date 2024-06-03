@@ -25,6 +25,10 @@ namespace commandbuffers
   class GetExtensionsCommandBufferResponse : public TrCommandBufferResponse
   {
   public:
+    GetExtensionsCommandBufferResponse(GetExtensionsCommandBufferResponse& that) : TrCommandBufferResponse(COMMAND_BUFFER_GET_EXTENSIONS_RES, that)
+    {
+      size = that.size;
+    }
     GetExtensionsCommandBufferResponse(GetExtensionsCommandBufferRequest *req) : TrCommandBufferResponse(COMMAND_BUFFER_GET_EXTENSIONS_RES, req)
     {
       size = sizeof(GetExtensionsCommandBufferResponse);
@@ -44,13 +48,11 @@ namespace commandbuffers
     void deserialize(TrCommandBufferMessage &message) override
     {
       auto count = message.getSegmentCount();
-      for (int i = 0; i < extensions.size(); i++)
+      for (int i = 0; i < count; i++)
       {
         auto segment = message.getSegment(i);
-        if (segment == nullptr)
-          extensions[i] = "";
-        else
-          extensions[i] = segment->toString();
+        if (segment != nullptr)
+          extensions.push_back(segment->toString());
       }
     }
 

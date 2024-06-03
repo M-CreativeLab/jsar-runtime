@@ -232,6 +232,7 @@ int main()
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
+    glGetError(); // Clear the error
 
     if (embedder != nullptr)
     {

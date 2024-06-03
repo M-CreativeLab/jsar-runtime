@@ -78,14 +78,16 @@ namespace commandbuffers
   class BufferDataCommandBufferRequest : public TrCommandBufferBase
   {
   public:
-    BufferDataCommandBufferRequest(uint32_t target, uint32_t size, void *data, uint32_t usage)
+    BufferDataCommandBufferRequest(uint32_t target, uint32_t srcSize, void *srcData, uint32_t usage)
         : TrCommandBufferBase(COMMAND_BUFFER_BUFFER_DATA_REQ),
           target(target),
-          dataSize(size)
+          dataSize(srcSize),
+          usage(usage)
     {
-      this->size = sizeof(BufferDataCommandBufferRequest);
-      data = malloc(dataSize);
-      memcpy(this->data, data, dataSize);
+      size = sizeof(BufferDataCommandBufferRequest);
+      data = malloc(srcSize);
+      if (data != nullptr)
+        memcpy(data, srcData, srcSize);
     }
     ~BufferDataCommandBufferRequest()
     {
@@ -121,15 +123,16 @@ namespace commandbuffers
   class BufferSubDataCommandBufferRequest : public TrCommandBufferBase
   {
   public:
-    BufferSubDataCommandBufferRequest(uint32_t target, uint32_t offset, uint32_t size, void *data)
+    BufferSubDataCommandBufferRequest(uint32_t target, uint32_t offset, uint32_t srcSize, void *srcData)
         : TrCommandBufferBase(COMMAND_BUFFER_BUFFER_SUB_DATA_REQ),
           target(target),
           offset(offset),
-          dataSize(size)
+          dataSize(srcSize)
     {
-      this->size = sizeof(BufferSubDataCommandBufferRequest);
-      data = malloc(dataSize);
-      memcpy(this->data, data, dataSize);
+      size = sizeof(BufferSubDataCommandBufferRequest);
+      data = malloc(srcSize);
+      if (data != nullptr)
+        memcpy(data, srcData, srcSize);
     }
     ~BufferSubDataCommandBufferRequest()
     {

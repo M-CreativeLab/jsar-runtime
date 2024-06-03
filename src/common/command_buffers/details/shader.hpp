@@ -59,6 +59,7 @@ namespace commandbuffers
   public:
     CreateShaderCommandBufferRequest(uint32_t clientId, uint32_t type)
         : TrCommandBufferBase(COMMAND_BUFFER_CREATE_SHADER_REQ),
+          clientId(clientId),
           shaderType(type)
     {
       size = sizeof(CreateShaderCommandBufferRequest);
@@ -126,27 +127,47 @@ namespace commandbuffers
   {
   public:
     ShaderSourceCommandBufferRequest(uint32_t shader, const string &source) : TrCommandBufferBase(COMMAND_BUFFER_SHADER_SOURCE_REQ),
-                                                                              shader(shader),
-                                                                              source(source)
+                                                                              shader(shader)
     {
       size = sizeof(ShaderSourceCommandBufferRequest);
+      sourceSize = source.size();
+      sourceStr = reinterpret_cast<char *>(malloc(sourceSize));
+      memcpy(sourceStr, source.c_str(), sourceSize);
+    }
+    ~ShaderSourceCommandBufferRequest()
+    {
+      if (sourceStr != nullptr)
+      {
+        free(sourceStr);
+        sourceStr = nullptr;
+      }
+    }
+
+  public:
+    string source()
+    {
+      return string(sourceStr, sourceSize);
     }
 
   public:
     TrCommandBufferMessage *serialize() override
     {
       auto message = new TrCommandBufferMessage(type, size, this);
-      message->addStringSegment(source);
+      message->addStringSegment(sourceStr, sourceSize);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
     {
-      source = message.getSegment(0)->toString();
+      auto source = message.getSegment(0)->toString();
+      sourceSize = source.size();
+      sourceStr = reinterpret_cast<char *>(malloc(sourceSize));
+      memcpy(sourceStr, source.c_str(), sourceSize);
     }
 
   public:
     uint32_t shader;
-    string source;
+    char *sourceStr;
+    size_t sourceSize;
   };
 
   class GetShaderSourceCommandBufferRequest : public TrCommandBufferBase
@@ -246,7 +267,7 @@ namespace commandbuffers
   {
   public:
     GetShaderInfoLogCommandBufferRequest(uint32_t shader) : TrCommandBufferBase(COMMAND_BUFFER_GET_SHADER_INFO_LOG_REQ),
-                                                              shader(shader)
+                                                            shader(shader)
     {
       size = sizeof(GetShaderInfoLogCommandBufferRequest);
     }

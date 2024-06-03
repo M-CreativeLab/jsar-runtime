@@ -1,12 +1,15 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <cstdlib>
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
 #include "gles/common.hpp"
 #include "gles/context_storage.hpp"
+#include "gles/object_manager.hpp"
+
 #include "math/matrix.hpp"
 #include "xr/device.hpp"
 #include "crates/jsar_jsbindings.h"
@@ -16,6 +19,27 @@ using namespace renderer;
 using namespace commandbuffers;
 
 #if SUPPORT_OPENGL_UNIFIED
+
+void getline(const string &input, string &line, size_t &pos, char delim = '\n')
+{
+	if (pos >= input.size())
+	{
+		line.clear();
+		return;
+	}
+
+	size_t startPos = pos;
+	while (pos < input.size() && input[pos] != delim)
+	{
+		++pos;
+	}
+
+	line = input.substr(startPos, pos - startPos);
+	if (pos < input.size())
+	{
+		++pos; // Move past the delimiter
+	}
+}
 
 class RenderAPI_OpenGLCoreES : public RenderAPI
 {
@@ -35,11 +59,13 @@ public:
 	virtual void Enable(uint32_t cap);
 	void Disable(uint32_t cap);
 
+public: // Method to handle frame
 	void StartFrame();
 	void EndFrame();
 	void StartXRFrame();
 	void EndXRFrame();
 
+public: // Execute command buffer
 	bool ExecuteCommandBuffer();
 	bool ExecuteCommandBuffer(
 			vector<TrCommandBufferBase *> &commandBuffers,
@@ -101,29 +127,28 @@ private:
 	}
 	void OnCreateProgram(CreateProgramCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		int program = glCreateProgram();
+		GLuint program = m_GLObjectManager.CreateProgram(req->clientId);
 		m_AppGlobalContext.RecordProgramOnCreated(program);
-		// createProgramCommandBuffer->m_ProgramId = ret;
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::CreateProgram() => %d", options.isDefaultQueue, program);
+			DEBUG(DEBUG_TAG, "[%d] GL::CreateProgram(%d) => %d", options.isDefaultQueue, req->clientId, program);
 	}
 	void OnDeleteProgram(DeleteProgramCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		auto id = req->clientId;
-		glDeleteProgram(id);
+		auto program = m_GLObjectManager.FindProgram(req->clientId);
+		m_GLObjectManager.DeleteProgram(req->clientId);
 
 		/**
 		 * Reset the program in both "AppGlobal" and "XRFrame" when we receiving a delete program command to avoid the
 		 * context using the deleted program.
 		 */
-		m_AppGlobalContext.ResetProgram(id);
-		m_AppGlobalContext.RecordProgramOnDeleted(id);
+		m_AppGlobalContext.ResetProgram(program);
+		m_AppGlobalContext.RecordProgramOnDeleted(program);
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::DeleteProgram(%d)", options.isDefaultQueue, id);
+			DEBUG(DEBUG_TAG, "[%d] GL::DeleteProgram(%d)", options.isDefaultQueue, program);
 	}
 	void OnLinkProgram(LinkProgramCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		GLuint program = req->clientId;
+		auto program = m_GLObjectManager.FindProgram(req->clientId);
 		glLinkProgram(program);
 		m_AppGlobalContext.MarkAsDirty();
 
@@ -165,7 +190,8 @@ private:
 				continue;
 
 			res.attribLocations.push_back(AttribLocation(name, location));
-			DEBUG(DEBUG_TAG, "GL::LinkProgram::Attribute(%s in %d) => %d(size=%d, type=%d)", name, program, location, size, type);
+			DEBUG(DEBUG_TAG, "GL::LinkProgram::Attribute(%s in %d) => %d(size=%d, type=%s)",
+						name, program, location, size, gles::glEnumToString(type).c_str());
 		}
 
 		/**
@@ -215,7 +241,7 @@ private:
 	}
 	void OnUseProgram(UseProgramCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		auto program = req->clientId;
+		auto program = m_GLObjectManager.FindProgram(req->clientId);
 		glUseProgram(program);
 		m_AppGlobalContext.RecordProgram(program);
 		if (options.printsCall)
@@ -223,8 +249,9 @@ private:
 	}
 	void OnGetProgramParameter(GetProgramParamCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
+		auto program = m_GLObjectManager.FindProgram(req->clientId);
 		GLint value;
-		glGetProgramiv(req->clientId, req->pname, &value);
+		glGetProgramiv(program, req->pname, &value);
 		GetProgramParamCommandBufferResponse res(req, value);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::GetProgramParameter() => %d", options.isDefaultQueue, res.value);
@@ -232,8 +259,7 @@ private:
 	}
 	void OnGetProgramInfoLog(GetProgramInfoLogCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		auto program = req->clientId;
-
+		auto program = m_GLObjectManager.FindProgram(req->clientId);
 		GLint retSize;
 		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &retSize);
 		GLchar *infoLog = new GLchar[retSize];
@@ -248,34 +274,39 @@ private:
 	}
 	void OnAttachShader(AttachShaderCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		glAttachShader(req->program, req->shader);
+		GLuint program = m_GLObjectManager.FindProgram(req->program);
+		GLuint shader = m_GLObjectManager.FindShader(req->shader);
+		glAttachShader(program, shader);
 		m_AppGlobalContext.MarkAsDirty();
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::AttachShader: program=%d, shader=%d",
-						options.isDefaultQueue, req->program, req->shader);
+			DEBUG(DEBUG_TAG, "[%d] GL::AttachShader(program=%d, shader=%d)",
+						options.isDefaultQueue, program, shader);
 	}
 	void OnDetachShader(DetachShaderCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		glDetachShader(req->program, req->shader);
+		GLuint program = m_GLObjectManager.FindProgram(req->program);
+		GLuint shader = m_GLObjectManager.FindShader(req->shader);
+		glDetachShader(program, shader);
 		m_AppGlobalContext.MarkAsDirty();
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::DetachShader: program=%d, shader=%d",
-						options.isDefaultQueue, req->program, req->shader);
+			DEBUG(DEBUG_TAG, "[%d] GL::DetachShader(program=%d, shader=%d)",
+						options.isDefaultQueue, program, shader);
 	}
 	void OnCreateShader(CreateShaderCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		int ret = glCreateShader(req->shaderType);
-		m_AppGlobalContext.RecordShaderOnCreated(ret);
-
-		// TODO
-		// createShaderCommandBuffer->m_ShaderId = ret;
+		GLuint shader = m_GLObjectManager.CreateShader(req->clientId, req->shaderType);
+		m_AppGlobalContext.RecordShaderOnCreated(shader);
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::CreateShader(%d)", options.isDefaultQueue, ret);
+			DEBUG(DEBUG_TAG, "[%d] GL::CreateShader(%d, type=%s) => %d",
+						options.isDefaultQueue,
+						req->clientId,
+						gles::glEnumToString(req->shaderType).c_str(),
+						shader);
 	}
 	void OnDeleteShader(DeleteShaderCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		auto shader = req->shader;
-		glDeleteShader(shader);
+		auto shader = m_GLObjectManager.FindShader(req->shader);
+		m_GLObjectManager.DeleteShader(req->shader);
 		m_AppGlobalContext.RecordShaderOnDeleted(shader);
 
 		if (options.printsCall)
@@ -283,11 +314,36 @@ private:
 	}
 	void OnShaderSource(ShaderSourceCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		auto shader = req->shader;
-		auto source = req->source;
+		auto shader = m_GLObjectManager.FindShader(req->shader);
+		auto source = req->source();
 
-		const char *sourceStr = source.c_str();
-		size_t sourceSize = source.size();
+		string fixedSource;
+		{
+			string line;
+			size_t pos = 0;
+
+			if (options.printsCall)
+				DEBUG(DEBUG_TAG, "Shader source(%d):", shader);
+			while (pos < source.size())
+			{
+				getline(source, line, pos);
+				string newLine = line;
+#ifdef __APPLE__
+				/**
+				 * FIXME(Yorkie): This is a workaround for the shader source on macOS, we need to replace the version to 410 core
+				 * directly, a better solution is to use the shader preprocessor like google/angle to handle this.
+				 */
+				if (line.find("#version") != string::npos)
+					newLine = "#version 410 core";
+#endif
+				fixedSource += newLine + "\n";
+				if (options.printsCall)
+					DEBUG(DEBUG_TAG, " %s", newLine.c_str());
+			}
+		}
+
+		const char *sourceStr = fixedSource.c_str();
+		size_t sourceSize = fixedSource.size();
 		glShaderSource(shader, 1, &sourceStr, (const GLint *)&sourceSize);
 		m_AppGlobalContext.MarkAsDirty();
 
@@ -296,20 +352,37 @@ private:
 	}
 	void OnCompileShader(CompileShaderCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		glCompileShader(req->shader);
+		auto shader = m_GLObjectManager.FindShader(req->shader);
+		glCompileShader(shader);
 		m_AppGlobalContext.MarkAsDirty();
 
+		GLint compileStatus;
+		glGetShaderiv(shader, GL_COMPILE_STATUS, &compileStatus);
+		if (compileStatus != GL_TRUE)
+		{
+			DEBUG(DEBUG_TAG, "Failed to compile shader(%d)", shader);
+			GLint logLength;
+			glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
+			if (logLength > 0)
+			{
+				std::vector<GLchar> log(logLength);
+				glGetShaderInfoLog(shader, logLength, nullptr, log.data());
+				DEBUG(DEBUG_TAG, "Shader compile log: %s", log.data());
+			}
+		}
+
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::CompileShader(%d)", options.isDefaultQueue, req->shader);
+			DEBUG(DEBUG_TAG, "[%d] GL::CompileShader(%d)", options.isDefaultQueue, shader);
 	}
 	void OnGetShaderSource(GetShaderSourceCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
 		GetShaderSourceCommandBufferResponse res(req);
 		GLint sourceSize;
-		glGetShaderiv(req->shader, GL_SHADER_SOURCE_LENGTH, &sourceSize);
+		GLuint shader = m_GLObjectManager.FindShader(req->shader);
+		glGetShaderiv(shader, GL_SHADER_SOURCE_LENGTH, &sourceSize);
 		if (sourceSize <= 0)
 		{
-			DEBUG(DEBUG_TAG, "Failed to get shader source from #%d", req->shader);
+			DEBUG(DEBUG_TAG, "Failed to get shader source from #%d", shader);
 			reqContent->sendCommandBufferResponse(res);
 			return;
 		}
@@ -319,7 +392,7 @@ private:
 		GLint bytesWritten;
 		while (true)
 		{
-			glGetShaderSource(req->shader, maxLength, &bytesWritten, source);
+			glGetShaderSource(shader, maxLength, &bytesWritten, source);
 			if (bytesWritten < maxLength - 1)
 				break;
 			maxLength += sourceSize;
@@ -334,8 +407,9 @@ private:
 	}
 	void OnGetShaderParameter(GetShaderParamCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
+		GLuint shader = m_GLObjectManager.FindShader(req->shader);
 		GLint value;
-		glGetShaderiv(req->shader, req->pname, &value);
+		glGetShaderiv(shader, req->pname, &value);
 
 		GetShaderParamCommandBufferResponse res(req, value);
 		if (options.printsCall)
@@ -344,10 +418,11 @@ private:
 	}
 	void OnGetShaderInfoLog(GetShaderInfoLogCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
+		GLuint shader = m_GLObjectManager.FindShader(req->shader);
 		GLint logSize;
-		glGetShaderiv(req->shader, GL_INFO_LOG_LENGTH, &logSize);
+		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logSize);
 		GLchar *log = new GLchar[logSize];
-		glGetShaderInfoLog(req->shader, logSize, NULL, log);
+		glGetShaderInfoLog(shader, logSize, NULL, log);
 
 		GetShaderInfoLogCommandBufferResponse res(req, string(log));
 		delete[] log;
@@ -358,25 +433,24 @@ private:
 	}
 	void OnCreateBuffer(CreateBufferCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		GLuint buffer;
-		glGenBuffers(1, &buffer);
+		GLuint buffer = m_GLObjectManager.CreateBuffer(req->clientId);
 		m_AppGlobalContext.RecordBufferOnCreated(buffer);
-
-		// createBufferCommandBuffer->m_BufferId = buffer;
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::CreateBuffer => buffer(%d)", options.isDefaultQueue, buffer);
+			DEBUG(DEBUG_TAG, "[%d] GL::CreateBuffer(%d) => buffer(%d)",
+						options.isDefaultQueue, req->clientId, buffer);
 	}
 	void OnDeleteBuffer(DeleteBufferCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		glDeleteBuffers(1, &req->buffer);
-		m_AppGlobalContext.RecordBufferOnDeleted(req->buffer);
+		auto buffer = m_GLObjectManager.FindBuffer(req->buffer);
+		m_GLObjectManager.DeleteBuffer(req->buffer);
+		m_AppGlobalContext.RecordBufferOnDeleted(buffer);
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::DeleteBuffer(%d)", options.isDefaultQueue, req->buffer);
+			DEBUG(DEBUG_TAG, "[%d] GL::DeleteBuffer(%d)", options.isDefaultQueue, buffer);
 	}
 	void OnBindBuffer(BindBufferCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
 		auto target = req->target;
-		auto buffer = req->buffer;
+		auto buffer = m_GLObjectManager.FindBuffer(req->buffer);
 
 		/** Update the app states for next restore. */
 		if (target == GL_ARRAY_BUFFER)
@@ -410,17 +484,11 @@ private:
 		glBufferData(target, size, data, usage);
 		if (options.printsCall)
 		{
-			auto targetStr = gles::glEnumToString(target);
-			if (!targetStr.empty() || targetStr != "")
-			{
-				DEBUG(DEBUG_TAG, "[%d] GL::BufferData(%s, size=%d usage=0x%x)",
-							options.isDefaultQueue, targetStr.c_str(), size, usage);
-			}
-			else
-			{
-				DEBUG(DEBUG_TAG, "[%d] GL::BufferData(0x%x, size=%d usage=0x%x)",
-							options.isDefaultQueue, target, size, usage);
-			}
+			DEBUG(DEBUG_TAG, "[%d] GL::BufferData(%s, size=%d usage=%s)",
+						options.isDefaultQueue,
+						gles::glEnumToString(target).c_str(),
+						size,
+						gles::glEnumToString(usage).c_str());
 		}
 	}
 	void OnBufferSubData(BufferSubDataCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
@@ -597,26 +665,22 @@ private:
 	}
 	void OnCreateVertexArray(CreateVertexArrayCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		GLuint vao;
-		glGenVertexArrays(1, &vao);
+		GLuint vao = m_GLObjectManager.CreateVertexArray(req->clientId);
 		m_AppGlobalContext.RecordVertexArrayObjectOnCreated(vao);
-		m_VertexArrayObjects[req->clientId] = vao;
-
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::CreateVertexArray() => %d", options.isDefaultQueue, vao);
+			DEBUG(DEBUG_TAG, "[%d] GL::CreateVertexArray(%d) => %d", options.isDefaultQueue, req->clientId, vao);
 	}
 	void OnDeleteVertexArray(DeleteVertexArrayCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		auto vao = m_VertexArrayObjects[req->vertexArray];
-		glDeleteVertexArrays(1, &vao);
+		GLuint vao = m_GLObjectManager.FindVertexArray(req->vertexArray);
+		m_GLObjectManager.DeleteVertexArray(req->vertexArray);
 		m_AppGlobalContext.RecordVertexArrayObjectOnDeleted(vao);
-		m_VertexArrayObjects.erase(req->vertexArray); // remove the vao from the client map
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::DeleteVertexArray: %d", options.isDefaultQueue, req->vertexArray);
+			DEBUG(DEBUG_TAG, "[%d] GL::DeleteVertexArray(%d)", options.isDefaultQueue, vao);
 	}
 	void OnBindVertexArray(BindVertexArrayCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		auto vao = m_VertexArrayObjects[req->vertexArray];
+		auto vao = m_GLObjectManager.FindBuffer(req->vertexArray);
 		glBindVertexArray(vao);
 		m_AppGlobalContext.RecordVertexArrayObject(vao);
 		if (options.printsCall)
@@ -1134,7 +1198,10 @@ private:
 			glGetIntegerv(GL_FRONT_FACE, &frontFace);
 			DEBUG(DEBUG_TAG, "[%d] GL::DrawElements(mode=%s, count=%d, type=%d, indices=%p) frontFace=%s",
 						options.isDefaultQueue,
-						gles::glEnumToString(mode).c_str(), count, type, indices,
+						gles::glEnumToString(mode).c_str(),
+						count,
+						gles::glEnumToString(type).c_str(),
+						indices,
 						gles::glEnumToString(frontFace).c_str());
 		}
 	}
@@ -1509,6 +1576,7 @@ private:
 	OpenGLHostContextStorage m_HostContext = OpenGLHostContextStorage();
 	OpenGLAppContextStorage m_AppGlobalContext = OpenGLAppContextStorage("App Global");
 
+	gles::GLObjectManager m_GLObjectManager = gles::GLObjectManager();
 	map<uint32_t, GLuint> m_TextureObjects;
 	map<uint32_t, GLuint> m_VertexArrayObjects;
 
@@ -1648,35 +1716,32 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	m_AppGlobalContext.Restore();
 	m_AppGlobalContext.Print();
 
-	glFrontFace(m_AppFrontFace);
-	if (m_DepthTestEnabled)
-		glEnable(GL_DEPTH_TEST);
-	else
-		glDisable(GL_DEPTH_TEST);
+	// Update front face for app context
+	if (m_AppFrontFace == GL_CCW || m_AppFrontFace == GL_CW)
+		glFrontFace(m_AppFrontFace);
+
+	// Update depth test
+	m_DepthTestEnabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
 	glDepthFunc(m_CurrentDepthFunc);
 	// glDepthMask(m_DepthMaskEnabled);
 	glDepthMask(GL_TRUE);
 
 	// blend
-	if (m_BlendFuncSet == true)
-	{
-		glEnable(GL_BLEND);
-		glBlendFunc(m_Blend_Sfactor, m_Blend_Dfactor);
-	}
-	if (m_BlendFuncSeparateSet == true)
-	{
-		glEnable(GL_BLEND);
-		glBlendFuncSeparate(m_Blend_SrcRGB, m_Blend_DstRGB, m_Blend_SrcAlpha, m_Blend_DstAlpha);
-	}
-	if (m_BlendEnabled)
-		glEnable(GL_BLEND);
-	else
-		glDisable(GL_BLEND);
+	// if (m_BlendFuncSet == true)
+	// {
+	// 	glEnable(GL_BLEND);
+	// 	glBlendFunc(m_Blend_Sfactor, m_Blend_Dfactor);
+	// }
+	// if (m_BlendFuncSeparateSet == true)
+	// {
+	// 	glEnable(GL_BLEND);
+	// 	glBlendFuncSeparate(m_Blend_SrcRGB, m_Blend_DstRGB, m_Blend_SrcAlpha, m_Blend_DstAlpha);
+	// }
+	m_BlendEnabled ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
 }
 
 void RenderAPI_OpenGLCoreES::EndFrame()
 {
-	// glFlush();
 	m_HostContext.Restore();
 }
 

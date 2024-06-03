@@ -115,6 +115,11 @@ namespace commandbuffers
       TrCommandBufferSegment segment(str.size(), (void *)str.c_str());
       addSegment(segment);
     }
+    void addStringSegment(const char *str, size_t size)
+    {
+      TrCommandBufferSegment segment(size, (void *)str);
+      addSegment(segment);
+    }
     TrCommandBufferSegment *getSegment(size_t index)
     {
       if (index >= segments.size())
@@ -136,7 +141,7 @@ namespace commandbuffers
     T *createInstanceFromBase()
     {
       assert(base != nullptr);
-      return new T(*(T *)base);
+      return new T(*reinterpret_cast<T *>(base));
     }
 
   private:

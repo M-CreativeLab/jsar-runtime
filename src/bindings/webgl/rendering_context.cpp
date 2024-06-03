@@ -23,6 +23,7 @@ namespace webgl
   static TrIdGenerator bufferIdGen(1);
   static TrIdGenerator framebufferIdGen(1);
   static TrIdGenerator renderbufferIdGen(1);
+  static TrIdGenerator vaoIdGen(1);
 
   static uint32_t vertexArrayObjectId = 1;
   static uint32_t textureObjectId = 1;
@@ -925,7 +926,7 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     auto id = programIdGen.get();
-    auto commandBuffer = CreateProgramCommandBufferRequest(0);
+    auto commandBuffer = CreateProgramCommandBufferRequest(id);
     sendCommandBufferRequest(commandBuffer, true);
     return WebGLProgram::constructor->New({Napi::Number::New(env, id)});
   }
@@ -976,82 +977,85 @@ namespace webgl
     auto req = LinkProgramCommandBufferRequest(program->GetId());
     sendCommandBufferRequest(req, true);
 
-    // /**
-    //  * Update the program's attribute locations.
-    //  */
-    // auto attribLocations = commandBuffer->m_AttributeLocations;
-    // for (auto it = attribLocations.begin(); it != attribLocations.end(); ++it)
-    // {
-    //   auto name = it->first;
-    //   auto loc = it->second;
-    //   program->SetAttribLocation(name, loc);
-    // }
+    auto resp = recvCommandBufferResponse<LinkProgramCommandBufferResponse>(COMMAND_BUFFER_LINK_PROGRAM_RES);
+    if (resp == nullptr)
+    {
+      Napi::TypeError::New(env, "Failed to link program: response is empty.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!resp->success)
+    {
+      Napi::TypeError::New(env, "Failed to link program: not successful.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
 
-    // /**
-    //  * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getUniformLocation#name
-    //  *
-    //  * When uniforms declared as an array, the valid name might be like the followings:
-    //  *
-    //  * - foo
-    //  * - foo[0]
-    //  * - foo[1]
-    //  */
-    // auto uniforms = commandBuffer->m_UniformLocations;
-    // for (auto it = uniforms.begin(); it != uniforms.end(); ++it)
-    // {
-    //   auto name = it->first;
-    //   auto uniform = it->second;
+    /**
+     * Update the program's attribute locations.
+     */
+    for (auto &attribLocation : resp->attribLocations)
+      program->SetAttribLocation(attribLocation.name, attribLocation.location);
 
-    //   if (uniform.size == 1)
-    //   {
-    //     program->SetUniformLocation(name, uniform.location);
-    //   }
-    //   else if (uniform.size > 1)
-    //   {
-    //     /**
-    //      * FIXME: The OpenGL returns "foo[0]" from `glGetActiveUniform()`, thus we need to handle it here:
-    //      *
-    //      * 1. check if the name ends with "[0]"
-    //      * 2. grab the name without "[0]"
-    //      * 3. set the uniform location for the name without "[0]"
-    //      * 4. set the uniform location for the name with "[0]" and the index
-    //      * 5. repeat 4 for the rest of the indices
-    //      *
-    //      * After the above steps, we will have the names looks like: foo, foo[0], foo[1], foo[2], ...
-    //      */
-    //     std::string suffix = "[0]";
-    //     auto end = name.length() - suffix.length();
-    //     if (name.size() < suffix.size() || name.rfind(suffix) != end)
-    //     {
-    //       continue;
-    //     }
-    //     auto arrayName = name.substr(0, end);
-    //     program->SetUniformLocation(arrayName, uniform.location);
-    //     program->SetUniformLocation(name, uniform.location);
-    //     for (int i = 1; i < uniform.size; i++)
-    //       program->SetUniformLocation(arrayName + "[" + std::to_string(i) + "]", uniform.location + i);
-    //   }
-    //   else
-    //   {
-    //     // TODO: warning size is invalid?
-    //     continue;
-    //   }
-    // }
+    /**
+     * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getUniformLocation#name
+     *
+     * When uniforms declared as an array, the valid name might be like the followings:
+     *
+     * - foo
+     * - foo[0]
+     * - foo[1]
+     */
+    for (auto &uniformLocation : resp->uniformLocations)
+    {
+      auto name = uniformLocation.name;
+      auto location = uniformLocation.location;
+      auto size = uniformLocation.size;
 
-    // if (m_isWebGL2 == true)
-    // {
-    //   /**
-    //    * Save the uniform block indices to the program object
-    //    */
-    //   auto uniformBlocks = commandBuffer->m_UniformBlocks;
-    //   for (auto it = uniformBlocks.begin(); it != uniformBlocks.end(); ++it)
-    //   {
-    //     auto name = it->first;
-    //     auto uniformBlock = it->second;
-    //     program->SetUniformBlockIndex(name, uniformBlock.index);
-    //     DEBUG("Unity", "Uniform block: %s, index: %d", name.c_str(), uniformBlock.index);
-    //   }
-    // }
+      if (size == 1)
+      {
+        program->SetUniformLocation(name, location);
+      }
+      else if (size > 1)
+      {
+        /**
+         * FIXME: The OpenGL returns "foo[0]" from `glGetActiveUniform()`, thus we need to handle it here:
+         *
+         * 1. check if the name ends with "[0]"
+         * 2. grab the name without "[0]"
+         * 3. set the uniform location for the name without "[0]"
+         * 4. set the uniform location for the name with "[0]" and the index
+         * 5. repeat 4 for the rest of the indices
+         *
+         * After the above steps, we will have the names looks like: foo, foo[0], foo[1], foo[2], ...
+         */
+        std::string suffix = "[0]";
+        auto end = name.length() - suffix.length();
+        if (name.size() < suffix.size() || name.rfind(suffix) != end)
+        {
+          continue;
+        }
+        auto arrayName = name.substr(0, end);
+        program->SetUniformLocation(arrayName, location);
+        program->SetUniformLocation(name, location);
+        for (int i = 1; i < size; i++)
+          program->SetUniformLocation(arrayName + "[" + std::to_string(i) + "]", location + i);
+      }
+      else
+      {
+        // TODO: warning size is invalid?
+        continue;
+      }
+    }
+
+    if (m_isWebGL2 == true)
+    {
+      /**
+       * Save the uniform block indices to the program object
+       */
+      for (auto &uniformBlock : resp->uniformBlocks)
+        program->SetUniformBlockIndex(uniformBlock.name, uniformBlock.index);
+    }
     return env.Undefined();
   }
 
@@ -4024,7 +4028,7 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    auto clientId = vertexArrayObjectId++;
+    auto clientId = vaoIdGen.get();
     auto commandBuffer = CreateVertexArrayCommandBufferRequest(clientId);
     sendCommandBufferRequest(commandBuffer);
     return Napi::Number::New(env, clientId);

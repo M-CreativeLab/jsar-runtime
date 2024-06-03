@@ -1,4 +1,8 @@
 #include <stdio.h>
+#include <execinfo.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <vector>
 #include <rapidjson/document.h>
 
@@ -7,8 +11,31 @@
 
 using namespace std;
 
+void printsStacktraceOnSignal(int signal)
+{
+  const int maxFrames = 20;
+  void *stackTrace[maxFrames];
+  int numFrames = backtrace(stackTrace, maxFrames);
+  char **symbols = backtrace_symbols(stackTrace, numFrames);
+  if (symbols == nullptr)
+  {
+    std::cerr << "Failed to obtain backtrace symbols" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  std::cerr << "Received signal " << signal << ", printing stack trace:" << std::endl;
+  for (int i = 0; i < numFrames; ++i)
+    std::cerr << symbols[i] << std::endl;
+  free(symbols);
+  _exit(EXIT_FAILURE);
+}
+
 int main(int argc, char **argv)
 {
+  signal(SIGSEGV, printsStacktraceOnSignal);
+  signal(SIGABRT, printsStacktraceOnSignal);
+  signal(SIGFPE, printsStacktraceOnSignal);
+  signal(SIGBUS, printsStacktraceOnSignal);
+
   for (uint32_t i = 0; i < argc; i++)
     DEBUG(LOG_TAG_CLIENT_ENTRY, "argv[%d] = %s", i, argv[i]);
 

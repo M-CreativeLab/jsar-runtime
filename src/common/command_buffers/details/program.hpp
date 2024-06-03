@@ -111,9 +111,22 @@ namespace commandbuffers
     int index;
   };
 
+  enum LinkProgramCommandBufferResponseSegmentType
+  {
+    SEGMENT_ATTRIB_LOCATION,
+    SEGMENT_UNIFORM_LOCATION,
+    SEGMENT_UNIFORM_BLOCK
+  };
+
   class LinkProgramCommandBufferResponse : public TrCommandBufferResponse
   {
   public:
+    LinkProgramCommandBufferResponse(LinkProgramCommandBufferResponse &that)
+        : TrCommandBufferResponse(COMMAND_BUFFER_LINK_PROGRAM_RES, that)
+    {
+      success = that.success;
+      size = that.size;
+    }
     LinkProgramCommandBufferResponse(LinkProgramCommandBufferRequest *req, bool success)
         : TrCommandBufferResponse(COMMAND_BUFFER_LINK_PROGRAM_RES, req),
           success(success)
@@ -125,10 +138,115 @@ namespace commandbuffers
     TrCommandBufferMessage *serialize() override
     {
       auto message = new TrCommandBufferMessage(type, size, this);
+      for (auto &attribLocation : attribLocations)
+        addAttribLocationSegment(attribLocation, message);
+      for (auto &uniformLocation : uniformLocations)
+        addUniformLocationSegment(uniformLocation, message);
+      for (auto &uniformBlock : uniformBlocks)
+        addUniformBlockSegment(uniformBlock, message);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
     {
+      for (size_t i = 0; i < message.getSegmentCount(); i++)
+      {
+        auto segment = message.getSegment(i);
+        if (segment == nullptr)
+          continue;
+
+        auto segmentChars = segment->toVec<char>();
+        char *pSourceData = segmentChars.data();
+
+        LinkProgramCommandBufferResponseSegmentType segmentType;
+        memcpy(&segmentType, pSourceData, sizeof(LinkProgramCommandBufferResponseSegmentType));
+        pSourceData += sizeof(LinkProgramCommandBufferResponseSegmentType);
+
+        size_t nameSize;
+        memcpy(&nameSize, pSourceData, sizeof(size_t));
+        pSourceData += sizeof(size_t);
+
+        string name(pSourceData, nameSize);
+        pSourceData += nameSize;
+
+        switch (segmentType)
+        {
+        case SEGMENT_ATTRIB_LOCATION:
+        {
+          int location;
+          memcpy(&location, pSourceData, sizeof(int));
+          pSourceData += sizeof(int);
+          attribLocations.push_back(AttribLocation(name, location));
+          break;
+        };
+        case SEGMENT_UNIFORM_LOCATION:
+        {
+          int location;
+          memcpy(&location, pSourceData, sizeof(int));
+          pSourceData += sizeof(int);
+          int size;
+          memcpy(&size, pSourceData, sizeof(int));
+          pSourceData += sizeof(int);
+          uniformLocations.push_back(UniformLocation(name, location, size));
+          break;
+        };
+        case SEGMENT_UNIFORM_BLOCK:
+        {
+          int index;
+          memcpy(&index, pSourceData, sizeof(int));
+          pSourceData += sizeof(int);
+          uniformBlocks.push_back(UniformBlock(name, index));
+          break;
+        };
+        default:
+          break;
+        }
+      }
+    }
+
+  private:
+    vector<char> getSegmentBase(LinkProgramCommandBufferResponseSegmentType type,
+                                string &name)
+    {
+      vector<char> base;
+      base.insert(base.end(),
+                  reinterpret_cast<char *>(&type),
+                  reinterpret_cast<char *>(&type) + sizeof(LinkProgramCommandBufferResponseSegmentType));
+      size_t nameSize = name.size();
+      base.insert(base.end(),
+                  reinterpret_cast<char *>(&nameSize),
+                  reinterpret_cast<char *>(&nameSize) + sizeof(size_t));
+      base.insert(base.end(), name.begin(), name.end());
+      return base;
+    }
+
+    void addAttribLocationSegment(AttribLocation &attribLocation, TrCommandBufferMessage *message)
+    {
+      auto base = getSegmentBase(SEGMENT_ATTRIB_LOCATION, attribLocation.name);
+      base.insert(base.end(),
+                  reinterpret_cast<char *>(&attribLocation.location),
+                  reinterpret_cast<char *>(&attribLocation.location) + sizeof(attribLocation.location));
+      message->addSegment(TrCommandBufferSegment(base));
+    }
+
+    void addUniformLocationSegment(UniformLocation &uniformLocation, TrCommandBufferMessage *message)
+    {
+      auto base = getSegmentBase(SEGMENT_UNIFORM_LOCATION, uniformLocation.name);
+      base.insert(base.end(),
+                  reinterpret_cast<char *>(&uniformLocation.location),
+                  reinterpret_cast<char *>(&uniformLocation.location) + sizeof(uniformLocation.location));
+      base.insert(base.end(),
+                  reinterpret_cast<char *>(&uniformLocation.size),
+                  reinterpret_cast<char *>(&uniformLocation.size) + sizeof(uniformLocation.size));
+      message->addSegment(TrCommandBufferSegment(base));
+    }
+
+    void addUniformBlockSegment(UniformBlock &uniformBlock, TrCommandBufferMessage *message)
+    {
+      auto base = getSegmentBase(SEGMENT_UNIFORM_BLOCK, uniformBlock.name);
+      base.insert(base.end(),
+                  reinterpret_cast<char *>(&uniformBlock.index),
+                  reinterpret_cast<char *>(&uniformBlock.index) + sizeof(uniformBlock.index));
+      message->addSegment(TrCommandBufferSegment(base));
     }
 
   public:

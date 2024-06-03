@@ -71,6 +71,7 @@ void OpenGLContextStorage::ResetProgram(int programToReset)
 
 void OpenGLContextStorage::Restore()
 {
+  GLenum setViewportError;
   GLenum useProgramError;
   GLenum bindBuffersError;
   GLenum bindTextureError;
@@ -83,6 +84,7 @@ void OpenGLContextStorage::Restore()
   {
     glViewport(m_Viewport[0], m_Viewport[1], m_Viewport[2], m_Viewport[3]);
   }
+  setViewportError = glGetError();
 
   // Restore the capabilities
   m_CullFaceEnabled ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
@@ -131,6 +133,9 @@ void OpenGLContextStorage::Restore()
     DEBUG(DEBUG_TAG, "Occurs an EGL error: 0x%04X", eglError);
 #endif
 
+  if (setViewportError != GL_NO_ERROR)
+    DEBUG(DEBUG_TAG, "Occurs an error in glViewport(%d, %d, %d, %d) when restoring %s context: 0x%04X",
+          m_Viewport[0], m_Viewport[1], m_Viewport[2], m_Viewport[3], GetName(), setViewportError);
   if (useProgramError != GL_NO_ERROR)
     DEBUG(DEBUG_TAG, "Occurs an error in glUseProgram(%d) when restoring %s context: 0x%04X",
           m_ProgramId, GetName(), useProgramError);

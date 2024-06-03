@@ -46,7 +46,15 @@ requestAnimationFrame((time) => {
   logger.info('The animation frame callback is called at', time);
 });
 
-(async function main() {
+function bootwait(fn: () => void) {
+  let seconds = parseInt(process.env.JSAR_BOOTWAIT, 10);
+  if (isNaN(seconds)) {
+    seconds = 0;
+  }
+  return setTimeout(fn, seconds * 1000);
+}
+
+bootwait(async function main() {
   try {
     const runtimeStart = performance.now();
     logger.info('The Node.js runtime bootstrap takes', runtimeStart - bootstrapStart, 'ms');
@@ -81,4 +89,4 @@ requestAnimationFrame((time) => {
   } catch (err) {
     logger.error('failed to start the runtime, occurs an error:', err);
   }
-})();
+});

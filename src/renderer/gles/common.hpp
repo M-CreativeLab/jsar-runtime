@@ -38,7 +38,7 @@
 #endif
 
 #define DEBUG_ARG_END -1
-#define DEBUG_TAG TR_RENDERAPI_TAG
+#define DEBUG_TAG "TR_GLES"
 
 namespace gles
 {

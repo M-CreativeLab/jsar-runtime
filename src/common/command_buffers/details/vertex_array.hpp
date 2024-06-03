@@ -13,6 +13,7 @@ namespace commandbuffers
         : TrCommandBufferBase(COMMAND_BUFFER_CREATE_VERTEX_ARRAY_REQ),
           clientId(clientId)
     {
+      size = sizeof(CreateVertexArrayCommandBufferRequest);
     }
     ~CreateVertexArrayCommandBufferRequest() {}
 
@@ -36,6 +37,7 @@ namespace commandbuffers
         : TrCommandBufferBase(COMMAND_BUFFER_DELETE_VERTEX_ARRAY_REQ),
           vertexArray(vertexArray)
     {
+      size = sizeof(DeleteVertexArrayCommandBufferRequest);
     }
     ~DeleteVertexArrayCommandBufferRequest() {}
 
@@ -59,6 +61,7 @@ namespace commandbuffers
         : TrCommandBufferBase(COMMAND_BUFFER_BIND_VERTEX_ARRAY_REQ),
           vertexArray(vertexArray)
     {
+      size = sizeof(BindVertexArrayCommandBufferRequest);
     }
     ~BindVertexArrayCommandBufferRequest() {}
 
@@ -82,6 +85,7 @@ namespace commandbuffers
         : TrCommandBufferBase(COMMAND_BUFFER_IS_VERTEX_ARRAY_REQ),
           vertexArray(vertexArray)
     {
+      size = sizeof(IsVertexArrayCommandBufferRequest);
     }
     ~IsVertexArrayCommandBufferRequest() {}
 
@@ -105,6 +109,7 @@ namespace commandbuffers
         : TrCommandBufferResponse(COMMAND_BUFFER_IS_VERTEX_ARRAY_RES, req),
           value(value)
     {
+      size = sizeof(IsVertexArrayCommandBufferResponse);
     }
     ~IsVertexArrayCommandBufferResponse() {}
 

@@ -106,6 +106,8 @@ namespace renderer
   void TrRenderer::setApi(RenderAPI *api)
   {
     this->api = api;
+    this->api->EnableAppGlobalLog();
+    this->api->EnableXRFrameLog();
   }
 
   void TrRenderer::setViewport(TrViewport &viewport)
