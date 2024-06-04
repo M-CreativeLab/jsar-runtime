@@ -1,5 +1,4 @@
-#include <skia/include/codec/SkCodec.h>
-
+// #include <skia/include/codec/SkCodec.h>
 #include "image_bitmap.hpp"
 #include "image_data.hpp"
 
@@ -12,8 +11,6 @@ namespace bindings
     {
       Napi::Function func = DefineClass(env, "ImageBitmap",
                                         {
-                                            InstanceAccessor("width", &ImageBitmap::WidthGetter, nullptr),
-                                            InstanceAccessor("height", &ImageBitmap::HeightGetter, nullptr),
                                             InstanceMethod("close", &ImageBitmap::Close),
                                         });
 
@@ -43,6 +40,10 @@ namespace bindings
       skBitmap = static_cast<SkBitmap *>(info[0].As<Napi::External<SkBitmap>>().Data());
       width = skBitmap->width();
       height = skBitmap->height();
+
+      auto jsThis = info.This().As<Napi::Object>();
+      jsThis.Set("width", Napi::Number::New(env, width));
+      jsThis.Set("height", Napi::Number::New(env, height));
     }
 
     ImageBitmap::~ImageBitmap()
@@ -105,22 +106,29 @@ namespace bindings
               Napi::HandleScope scope(env);
               Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
 
+              if (info.Length() < 1 || !info[0].IsArrayBuffer())
+              {
+                deferred.Reject(Napi::TypeError::New(env, "Blob.arraybuffer() not resolved an ArrayBuffer.").Value());
+                return deferred.Promise();
+              }
               auto arrayBuffer = info[0].As<Napi::ArrayBuffer>();
               auto bitmap = new SkBitmap();
-              auto data = reinterpret_cast<uint8_t *>(arrayBuffer.Data());
-              auto length = arrayBuffer.ByteLength();
-              auto codec = SkCodec::MakeFromData(SkData::MakeWithoutCopy(data, length));
-              if (codec)
-              {
-                SkImageInfo info = codec->getInfo().makeColorType(kN32_SkColorType);
-                bitmap->allocPixels(info);
-                codec->getPixels(info, bitmap->getPixels(), bitmap->rowBytes());
-                deferred.Resolve(constructor->New({Napi::External<SkBitmap>::New(env, bitmap)}));
-              }
-              else
-              {
-                deferred.Reject(Napi::TypeError::New(env, "Failed to create ImageBitmap instance from Blob").Value());
-              }
+              // auto data = reinterpret_cast<uint8_t *>(arrayBuffer.Data());
+              // auto length = arrayBuffer.ByteLength();
+              deferred.Resolve(constructor->New({Napi::External<SkBitmap>::New(env, bitmap)}));
+
+              // auto codec = SkCodec::MakeFromData(SkData::MakeWithoutCopy(data, length));
+              // if (codec)
+              // {
+              //   SkImageInfo info = codec->getInfo().makeColorType(kN32_SkColorType);
+              //   bitmap->allocPixels(info);
+              //   codec->getPixels(info, bitmap->getPixels(), bitmap->rowBytes());
+              //   deferred.Resolve(constructor->New({Napi::External<SkBitmap>::New(env, bitmap)}));
+              // }
+              // else
+              // {
+              //   deferred.Reject(Napi::TypeError::New(env, "Failed to create ImageBitmap instance from Blob").Value());
+              // }
               return deferred.Promise(); }),
                                              Napi::Function::New(env, [](const Napi::CallbackInfo &info)
                                                                  {
@@ -138,16 +146,6 @@ namespace bindings
         deferred.Reject(Napi::TypeError::New(env, "Unknown image type to create ImageBitmap instance").Value());
       }
       return deferred.Promise();
-    }
-
-    Napi::Value ImageBitmap::WidthGetter(const Napi::CallbackInfo &info)
-    {
-      return Napi::Number::New(info.Env(), width);
-    }
-
-    Napi::Value ImageBitmap::HeightGetter(const Napi::CallbackInfo &info)
-    {
-      return Napi::Number::New(info.Env(), height);
     }
 
     Napi::Value ImageBitmap::Close(const Napi::CallbackInfo &info)

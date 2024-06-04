@@ -17,8 +17,6 @@ namespace bindings
 
     private:
       static Napi::Value CreateImageBitmap(const Napi::CallbackInfo &info);
-      Napi::Value WidthGetter(const Napi::CallbackInfo &info);
-      Napi::Value HeightGetter(const Napi::CallbackInfo &info);
       Napi::Value Close(const Napi::CallbackInfo &info);
 
     private:
