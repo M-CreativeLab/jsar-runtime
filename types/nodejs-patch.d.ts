@@ -127,6 +127,9 @@ declare namespace NodeJS {
       AnimationFrameListener: typeof Transmute.AnimationFrameListener;
     };
     _linkedBinding(module: 'transmute:canvas'): {
+      ImageData: typeof ImageData;
+      ImageBitmap: typeof ImageBitmap;
+      createImageBitmap: (image: ImageData | ImageBitmap) => Promise<ImageBitmap>;
       OffscreenCanvas: typeof OffscreenCanvas;
     };
     _linkedBinding(module: 'transmute:webgl'): {

@@ -1,4 +1,6 @@
 #include "binding.hpp"
+#include "image_data.hpp"
+#include "image_bitmap.hpp"
 #include "canvas.hpp"
 #include "rendering_context2d.hpp"
 
@@ -10,6 +12,8 @@ namespace bindings
 
     Napi::Object InitModule(Napi::Env env, Napi::Object exports)
     {
+      ImageData::Init(env, exports);
+      ImageBitmap::Init(env, exports);
       OffscreenCanvas::Init(env, exports);
       CanvasRenderingContext2D::Init(env, exports);
       return exports;

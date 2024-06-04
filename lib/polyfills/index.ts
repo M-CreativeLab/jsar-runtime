@@ -12,6 +12,11 @@ import { PointerEventImpl } from './events/pointer-event';
 //   createImageBitmapImpl,
 //   InitializeOffscreenCanvas
 // } from './offscreencanvas';
+import {
+  ImageData,
+  ImageBitmap,
+  createImageBitmap,
+} from './canvas2d';
 import { createNavigator } from './navigator';
 import { createWindow } from './window';
 import {
@@ -29,8 +34,6 @@ import {
 
 globalThis.XMLHttpRequest = XMLHttpRequestImpl;
 // globalThis.AudioContext = AudioContextImpl;
-// globalThis.OffscreenCanvas = OffscreenCanvasImpl;
-// globalThis.ImageData = ImageDataImpl;
 
 /**
  * Events
@@ -87,6 +90,24 @@ Object.defineProperties(globalThis, {
 });
 
 /**
+ * Canvas2D classes
+ */
+Object.defineProperties(globalThis, {
+  'ImageData': {
+    value: ImageData,
+    writable: false,
+    enumerable: true,
+    configurable: false,
+  },
+  'ImageBitmap': {
+    value: ImageBitmap,
+    writable: false,
+    enumerable: true,
+    configurable: false,
+  },
+});
+
+/**
  * Global functions
  */
 Object.defineProperties(globalThis, {
@@ -96,12 +117,12 @@ Object.defineProperties(globalThis, {
     enumerable: true,
     configurable: false,
   },
-  // 'createImageBitmap': {
-  //   value: createImageBitmapImpl,
-  //   writable: false,
-  //   enumerable: true,
-  //   configurable: false,
-  // },
+  'createImageBitmap': {
+    value: createImageBitmap,
+    writable: false,
+    enumerable: true,
+    configurable: false,
+  },
   'requestAnimationFrame': {
     value: requestAnimationFrameImpl,
     writable: false,

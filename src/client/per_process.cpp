@@ -29,7 +29,7 @@ using namespace bindings;
       node::ModuleFlags::kLinked,                                             \
       nullptr,                                                                \
       __napi_reg_##varname,                                                   \
-      "transmute:" #varname,                                                   \
+      "transmute:" #varname,                                                  \
       nullptr,                                                                \
       {0},                                                                    \
   };
