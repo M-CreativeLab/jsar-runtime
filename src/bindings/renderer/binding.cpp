@@ -2,9 +2,15 @@
 #include "render_loop.hpp"
 #include "animation_frame_listener.hpp"
 
-Napi::Object InitRendererModule(Napi::Env env, Napi::Object exports)
+namespace bindings
 {
-  renderer::RenderLoop::Init(env, exports);
-  bindings::AnimationFrameListener::Init(env, exports);
-  return exports;
+  namespace renderer
+  {
+    Napi::Object InitModule(Napi::Env env, Napi::Object exports)
+    {
+      RenderLoop::Init(env, exports);
+      AnimationFrameListener::Init(env, exports);
+      return exports;
+    }
+  }
 }

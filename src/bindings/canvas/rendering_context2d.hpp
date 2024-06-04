@@ -9,7 +9,7 @@
 #include <glm/glm.hpp>
 #include "canvas.hpp"
 
-namespace canvas
+namespace canvasbinding
 {
   class CanvasRenderingContext2D : public Napi::ObjectWrap<CanvasRenderingContext2D>
   {

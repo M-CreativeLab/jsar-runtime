@@ -2,9 +2,15 @@
 
 using namespace bindings;
 
-Napi::Object bindings::InitMessagingModule(Napi::Env env, Napi::Object exports)
+namespace bindings
 {
-  messaging::UnityEventListenerWrap::Init(env, exports);
-  messaging::NativeEventTarget::Init(env, exports);
-  return exports;
-}
+  namespace messaging
+  {
+    Napi::Object InitModule(Napi::Env env, Napi::Object exports)
+    {
+      UnityEventListenerWrap::Init(env, exports);
+      NativeEventTarget::Init(env, exports);
+      return exports;
+    }
+  } // namespace messaging
+} // namespace bindings

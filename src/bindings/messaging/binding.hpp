@@ -6,5 +6,8 @@
 
 namespace bindings
 {
-  Napi::Object InitMessagingModule(Napi::Env env, Napi::Object exports);
+  namespace messaging
+  {
+    Napi::Object InitModule(Napi::Env env, Napi::Object exports);
+  }
 }

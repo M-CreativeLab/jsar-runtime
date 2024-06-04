@@ -5,5 +5,8 @@
 
 namespace bindings
 {
-  Napi::Object InitEnvModule(Napi::Env env, Napi::Object exports);
+  namespace env
+  {
+    Napi::Object InitModule(Napi::Env env, Napi::Object exports);
+  }
 }

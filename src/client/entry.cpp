@@ -13,6 +13,7 @@ using namespace std;
 
 void printsStacktraceOnSignal(int signal)
 {
+#ifdef __APPLE__
   const int maxFrames = 20;
   void *stackTrace[maxFrames];
   int numFrames = backtrace(stackTrace, maxFrames);
@@ -26,6 +27,7 @@ void printsStacktraceOnSignal(int signal)
   for (int i = 0; i < numFrames; ++i)
     std::cerr << symbols[i] << std::endl;
   free(symbols);
+#endif
   _exit(EXIT_FAILURE);
 }
 

@@ -2,9 +2,17 @@
 #include "canvas.hpp"
 #include "rendering_context2d.hpp"
 
-Napi::Object InitCanvasModule(Napi::Env env, Napi::Object exports)
+namespace bindings
 {
-  canvas::OffscreenCanvas::Init(env, exports);
-  canvas::CanvasRenderingContext2D::Init(env, exports);
-  return exports;
-}
+  namespace canvas
+  {
+    using namespace canvasbinding;
+
+    Napi::Object InitModule(Napi::Env env, Napi::Object exports)
+    {
+      OffscreenCanvas::Init(env, exports);
+      CanvasRenderingContext2D::Init(env, exports);
+      return exports;
+    }
+  } // namespace canvas
+} // namespace bindings

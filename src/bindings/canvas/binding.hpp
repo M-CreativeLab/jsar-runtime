@@ -2,4 +2,10 @@
 
 #include <napi.h>
 
-Napi::Object InitCanvasModule(Napi::Env env, Napi::Object exports);
+namespace bindings
+{
+  namespace canvas
+  {
+    Napi::Object InitModule(Napi::Env env, Napi::Object exports);
+  }
+}

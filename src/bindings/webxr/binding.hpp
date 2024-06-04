@@ -4,5 +4,8 @@
 
 namespace bindings
 {
-  Napi::Object InitWebxrModule(Napi::Env env, Napi::Object exports);
+  namespace webxr
+  {
+    Napi::Object InitModule(Napi::Env env, Napi::Object exports);
+  }
 }

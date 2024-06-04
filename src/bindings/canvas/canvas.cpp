@@ -1,7 +1,7 @@
 #include "canvas.hpp"
 #include "rendering_context2d.hpp"
 
-namespace canvas
+namespace canvasbinding
 {
   Napi::FunctionReference *OffscreenCanvas::constructor;
 

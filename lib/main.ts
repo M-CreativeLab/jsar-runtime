@@ -23,7 +23,6 @@ setInterval(() => {
 }, 2000);
 
 import './polyfills';
-// import { InitializeOffscreenCanvas } from './polyfills'; // load polyfills after the global error handler
 import {
   connectRenderer,
   getWebGLRenderingContext,

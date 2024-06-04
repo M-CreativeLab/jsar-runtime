@@ -2,4 +2,10 @@
 
 #include <napi.h>
 
-Napi::Object InitRendererModule(Napi::Env env, Napi::Object exports);
+namespace bindings
+{
+  namespace renderer
+  {
+    Napi::Object InitModule(Napi::Env env, Napi::Object exports);
+  }
+}

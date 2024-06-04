@@ -13,43 +13,49 @@
 
 using namespace bindings;
 
-Napi::Object bindings::InitWebxrModule(Napi::Env env, Napi::Object exports)
+namespace bindings
 {
-  // Device
-  XRDeviceNative::Init(env, exports);
+  namespace webxr
+  {
+    Napi::Object InitModule(Napi::Env env, Napi::Object exports)
+    {
+      // Device
+      XRDeviceNative::Init(env, exports);
 
-  // Frame
-  XRFrame::Init(env, exports);
+      // Frame
+      XRFrame::Init(env, exports);
 
-  // Input Source
-  XRHand::Init(env, exports);
-  XRInputSource::Init(env, exports);
+      // Input Source
+      XRHand::Init(env, exports);
+      XRInputSource::Init(env, exports);
 
-  // Layers
-  XRLayer::Init(env, exports);
-  XRWebGLLayer::Init(env, exports);
+      // Layers
+      XRLayer::Init(env, exports);
+      XRWebGLLayer::Init(env, exports);
 
-  // Poses
-  XRPose::Init(env, exports);
-  XRViewerPose::Init(env, exports);
+      // Poses
+      XRPose::Init(env, exports);
+      XRViewerPose::Init(env, exports);
 
-  // Session
-  XRSession::Init(env, exports);
+      // Session
+      XRSession::Init(env, exports);
 
-  // RigidTransform
-  XRRigidTransform::Init(env, exports);
+      // RigidTransform
+      XRRigidTransform::Init(env, exports);
 
-  // Spaces
-  XRSpace::Init(env, exports);
-  XRReferenceSpace::Init(env, exports);
-  XRViewSpace::Init(env, exports);
-  XRJointSpace::Init(env, exports);
-  XRTargetRayOrGripSpace::Init(env, exports);
+      // Spaces
+      XRSpace::Init(env, exports);
+      XRReferenceSpace::Init(env, exports);
+      XRViewSpace::Init(env, exports);
+      XRJointSpace::Init(env, exports);
+      XRTargetRayOrGripSpace::Init(env, exports);
 
-  // View
-  XRView::Init(env, exports);
+      // View
+      XRView::Init(env, exports);
 
-  // Viewport
-  XRViewport::Init(env, exports);
-  return exports;
+      // Viewport
+      XRViewport::Init(env, exports);
+      return exports;
+    }
+  }
 }

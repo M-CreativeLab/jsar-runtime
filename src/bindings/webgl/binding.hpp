@@ -2,4 +2,10 @@
 
 #include <napi.h>
 
-Napi::Object InitWebglModule(Napi::Env env, Napi::Object exports);
+namespace bindings
+{
+  namespace webgl
+  {
+    Napi::Object InitModule(Napi::Env env, Napi::Object exports);
+  }
+}

@@ -5,7 +5,7 @@ use std::path::Path;
 
 fn main() {
   let current_dir = env::current_dir().unwrap();
-  let file_name = "jsar-runtime.js";
+  let file_name = "jsar-runtime.js.gz";
 
   let source_path = current_dir.join("../../build/output").join(file_name);
   println!("cargo:rerun-if-changed={}", source_path.display());
@@ -18,7 +18,7 @@ fn main() {
     );
   }
 
-  let destination_path = current_dir.join("jsbundle.js");
+  let destination_path = current_dir.join("jsbundle.js.gz");
   match copy_file(&source_path, &destination_path) {
     Ok(_) => println!(
       "File '{}' copied to '{}'",
@@ -30,7 +30,7 @@ fn main() {
 }
 
 fn copy_file(source: &Path, destination: &Path) -> Result<(), Error> {
-  let content = fs::read_to_string(source)?;
+  let content = fs::read(source)?;
   fs::write(destination, content)?;
   Ok(())
 }

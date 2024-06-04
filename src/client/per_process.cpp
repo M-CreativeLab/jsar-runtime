@@ -1,36 +1,40 @@
+#include <iostream>
+#include <cctype>
+#include <vector>
 #include <thread>
+
 #include "per_process.hpp"
 #include "crates/jsar_jsbindings.h"
 #include "bindings.hpp"
 
+using namespace std;
 using namespace bindings;
 
-#define NODE_API_LINKED_MODULE(varname, modname, regfunc)              \
-  static napi_value __napi_##regfunc(napi_env env, napi_value exports) \
-  {                                                                    \
-    return Napi::RegisterModule(env, exports, regfunc);                \
-  }                                                                    \
-  static napi_module transmute_##varname##_napi_mod = {                \
-      NAPI_MODULE_VERSION,                                             \
-      node::ModuleFlags::kLinked,                                      \
-      nullptr,                                                         \
-      __napi_##regfunc,                                                \
-      modname,                                                         \
-      nullptr,                                                         \
-      {0},                                                             \
+#define TR_NAPI_MODULE_MAP(XX) \
+  XX(canvas)                   \
+  XX(env)                      \
+  XX(logger)                   \
+  XX(messaging)                \
+  XX(renderer)                 \
+  XX(webgl)                    \
+  XX(webxr)
+
+#define XX(varname)                                                           \
+  static napi_value __napi_reg_##varname(napi_env env, napi_value exports)    \
+  {                                                                           \
+    return Napi::RegisterModule(env, exports, bindings::varname::InitModule); \
+  }                                                                           \
+  static napi_module transmute_##varname##_napi_mod = {                       \
+      NAPI_MODULE_VERSION,                                                    \
+      node::ModuleFlags::kLinked,                                             \
+      nullptr,                                                                \
+      __napi_reg_##varname,                                                   \
+      "transmute:" #varname,                                                   \
+      nullptr,                                                                \
+      {0},                                                                    \
   };
-
-#ifdef __ANDROID__ /** Only support canvas at Android for now */
-NODE_API_LINKED_MODULE(canvas, "transmute:canvas", InitCanvasModule);
-#endif
-
-NODE_API_LINKED_MODULE(env, "transmute:env", InitEnvModule);
-NODE_API_LINKED_MODULE(logger, "transmute:logger", InitLoggerModule);
-NODE_API_LINKED_MODULE(messaging, "transmute:messaging", InitMessagingModule);
-NODE_API_LINKED_MODULE(renderer, "transmute:renderer", InitRendererModule);
-NODE_API_LINKED_MODULE(webgl, "transmute:webgl", InitWebglModule);
-NODE_API_LINKED_MODULE(webxr, "transmute:webxr", InitWebxrModule);
-#undef NODE_API_LINKED_MODULE
+TR_NAPI_MODULE_MAP(XX)
+#undef XX
 
 ScriptEnvironment::ScriptEnvironment()
 {
@@ -173,17 +177,9 @@ int TrScriptRuntimePerProcess::executeMainScript(ScriptEnvironment &env, vector<
     HandleScope handleScope(isolate);
     Context::Scope contextScope(setup->context());
 
-    // Add the transmute:core module to the Node.js instance.
-    AddLinkedBinding(nodeEnv, transmute_env_napi_mod);
-    AddLinkedBinding(nodeEnv, transmute_logger_napi_mod);
-    AddLinkedBinding(nodeEnv, transmute_messaging_napi_mod);
-    AddLinkedBinding(nodeEnv, transmute_renderer_napi_mod);
-    // AddLinkedBinding(env, transmute_webaudio_napi_mod);
-#ifdef __ANDROID__ /** Only support canvas at Android for now */
-    AddLinkedBinding(nodeEnv, transmute_canvas_napi_mod);
-#endif
-    AddLinkedBinding(nodeEnv, transmute_webgl_napi_mod);
-    AddLinkedBinding(nodeEnv, transmute_webxr_napi_mod);
+#define XX(name) AddLinkedBinding(nodeEnv, transmute_##name##_napi_mod);
+    TR_NAPI_MODULE_MAP(XX)
+#undef XX
     // The followings are created by Rust
     // AddLinkedBinding(nodeEnv, transmute_htmlrender_napi_mod);
 

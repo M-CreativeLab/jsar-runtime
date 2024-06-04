@@ -4,12 +4,18 @@
 #include "texture.hpp"
 #include "uniform_location.hpp"
 
-Napi::Object InitWebglModule(Napi::Env env, Napi::Object exports)
+namespace bindings
 {
-  webgl::WebGLProgram::Init(env);
-  webgl::WebGLTexture::Init(env);
-  webgl::WebGLUniformLocation::Init(env);
-  webgl::WebGLRenderingContext::Init(env, exports);
-  webgl::WebGL2RenderingContext::Init(env, exports);
-  return exports;
-}
+  namespace webgl
+  {
+    Napi::Object InitModule(Napi::Env env, Napi::Object exports)
+    {
+      ::webgl::WebGLProgram::Init(env);
+      ::webgl::WebGLTexture::Init(env);
+      ::webgl::WebGLUniformLocation::Init(env);
+      ::webgl::WebGLRenderingContext::Init(env, exports);
+      ::webgl::WebGL2RenderingContext::Init(env, exports);
+      return exports;
+    }
+  } // namespace webgl
+} // namespace bindings

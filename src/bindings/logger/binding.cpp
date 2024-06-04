@@ -3,15 +3,14 @@
 
 namespace bindings
 {
-  Napi::Object InitLoggerModule(Napi::Env env, Napi::Object exports)
-  {
-    Napi::HandleScope scope(env);
-    exports.Set(Napi::String::New(env, "log"), Napi::Function::New(env, logger::Log));
-    return exports;
-  }
-
   namespace logger
   {
+    Napi::Object InitModule(Napi::Env env, Napi::Object exports)
+    {
+      Napi::HandleScope scope(env);
+      exports.Set(Napi::String::New(env, "log"), Napi::Function::New(env, Log));
+      return exports;
+    }
     Napi::Value Log(const Napi::CallbackInfo &info)
     {
       Napi::HandleScope scope(info.Env());

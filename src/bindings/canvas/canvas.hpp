@@ -6,7 +6,7 @@
 #include <skia/include/core/SkSurface.h>
 #include <skia/include/core/SkCanvas.h>
 
-namespace canvas
+namespace canvasbinding
 {
   class OffscreenCanvas : public Napi::ObjectWrap<OffscreenCanvas>
   {
