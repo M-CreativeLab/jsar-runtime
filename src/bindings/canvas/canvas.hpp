@@ -5,6 +5,7 @@
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkSurface.h>
 #include <skia/include/core/SkCanvas.h>
+#include <skia/include/core/SkBitmap.h>
 
 namespace canvasbinding
 {
@@ -13,6 +14,7 @@ namespace canvasbinding
   public:
     static void Init(Napi::Env env, Napi::Object exports);
     OffscreenCanvas(const Napi::CallbackInfo &info);
+    ~OffscreenCanvas();
 
   private:
     Napi::Value WidthGetter(const Napi::CallbackInfo &info);
@@ -20,11 +22,18 @@ namespace canvasbinding
     Napi::Value GetContext(const Napi::CallbackInfo &info);
     Napi::Value ConvertToBlob(const Napi::CallbackInfo &info);
 
+  public:
+    uint32_t getWidth();
+    uint32_t getHeight();
+    SkBitmap* getSkBitmap();
+    sk_sp<SkSurface> &getSkSurface();
+
   private:
     Napi::ObjectReference currentContext;
     uint32_t width;
     uint32_t height;
     sk_sp<SkSurface> skSurface;
+    SkBitmap* skBitmap;
 
   public:
     static Napi::FunctionReference *constructor;

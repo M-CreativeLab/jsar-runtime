@@ -90,7 +90,7 @@ namespace bindings
       }
       else if (imageObjectValue.InstanceOf(blobConstructorValue))
       {
-        // auto blobTypeString = imageObjectValue.Get("type").ToString();
+        auto blobType = imageObjectValue.Get("type").ToString().Utf8Value();
         auto blobArrayBuffer = imageObjectValue.Get("arrayBuffer").As<Napi::Function>().Call(imageObjectValue, {});
         if (!blobArrayBuffer.IsPromise())
         {
@@ -100,7 +100,7 @@ namespace bindings
         {
           auto jsPromiseObject = blobArrayBuffer.ToObject();
           auto then = jsPromiseObject.Get("then").As<Napi::Function>();
-          return then.Call(jsPromiseObject, {Napi::Function::New(env, [](const Napi::CallbackInfo &info)
+          return then.Call(jsPromiseObject, {Napi::Function::New(env, [blobType](const Napi::CallbackInfo &info)
                                                                  {
               Napi::Env env = info.Env();
               Napi::HandleScope scope(env);
@@ -126,7 +126,8 @@ namespace bindings
               }
               else
               {
-                deferred.Reject(Napi::TypeError::New(env, "Failed to create ImageBitmap instance from Blob").Value());
+                std::string msg = "Failed to decode image from the blob, its type: " + blobType;
+                deferred.Reject(Napi::TypeError::New(env, msg).Value());
               }
               return deferred.Promise(); }),
                                              Napi::Function::New(env, [](const Napi::CallbackInfo &info)

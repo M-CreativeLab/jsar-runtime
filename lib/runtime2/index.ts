@@ -91,7 +91,7 @@ export class TransmuteRuntime2 extends EventTarget {
       await this.load(url, nativeDocument);
     } catch (err) {
       dispatchXsmlEvent(nativeDocument.id, 'error');
-      logger.error('failed to load the default document:', err);
+      logger.error(`failed to load document(${url}):`, err);
     }
   }
 
@@ -173,8 +173,9 @@ export class TransmuteRuntime2 extends EventTarget {
         dispatchXsmlEvent(nativeDocument.id, 'fcp');
       }
       this.fitSpaceWithScene(spaceNode);
-
     } catch (err) {
+      logger.error(`occurs an error when loading document:`, err);
+      // TODO: report to the native side.
       // remove the dom from appStack
       for (let i = 0; i < this.appStack.length; ++i) {
         if (this.appStack[i].dom.id === dom.id) {
@@ -184,8 +185,6 @@ export class TransmuteRuntime2 extends EventTarget {
       }
       await dom.unload();
       dom.nativeDocument.close();
-      logger.error(`failed to load the jsar document: ${codeOrUrl} width the error:`, err);
-      // TODO: report to the native side.
     }
   }
 

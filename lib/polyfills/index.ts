@@ -16,6 +16,7 @@ import {
   ImageData,
   ImageBitmap,
   createImageBitmap,
+  OffscreenCanvas,
 } from './canvas2d';
 import { createNavigator } from './navigator';
 import { createWindow } from './window';
@@ -101,6 +102,12 @@ Object.defineProperties(globalThis, {
   },
   'ImageBitmap': {
     value: ImageBitmap,
+    writable: false,
+    enumerable: true,
+    configurable: false,
+  },
+  'OffscreenCanvas': {
+    value: OffscreenCanvas,
     writable: false,
     enumerable: true,
     configurable: false,

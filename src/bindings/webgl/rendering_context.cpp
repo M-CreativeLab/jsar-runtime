@@ -2,6 +2,7 @@
 #include "renderer/render_api.hpp"
 #include "../canvas/image_bitmap.hpp"
 #include "../canvas/image_data.hpp"
+#include "../canvas/canvas.hpp"
 
 #include "idgen.hpp"
 #include "program.hpp"
@@ -12,6 +13,7 @@ using namespace std;
 using namespace node;
 using namespace commandbuffers;
 using namespace bindings::canvas;
+using namespace canvasbinding;
 
 namespace webgl
 {
@@ -1850,9 +1852,19 @@ namespace webgl
         req.height = bitmap->height();
         pixelsData = reinterpret_cast<char *>(bitmap->getPixels());
       }
+      else if (imageSourceObject.InstanceOf(OffscreenCanvas::constructor->Value()))
+      {
+        auto offscreenCanvas = OffscreenCanvas::Unwrap(imageSourceObject);
+        SkBitmap *bitmap = offscreenCanvas->getSkBitmap();
+        req.width = bitmap->width();
+        req.height = bitmap->height();
+        pixelsData = reinterpret_cast<char *>(bitmap->getPixels());
+      }
       else
       {
-        Napi::TypeError::New(env, "Unsupported `imageSource` type").ThrowAsJavaScriptException();
+        env.Global().Get("console").As<Napi::Object>().Get("log").As<Napi::Function>()({imageSourceObject});
+        Napi::TypeError::New(env, "Unsupported `imageSource` type")
+            .ThrowAsJavaScriptException();
         return env.Undefined();
       }
     }

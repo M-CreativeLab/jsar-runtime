@@ -8,7 +8,7 @@ namespace canvasbinding
   void OffscreenCanvas::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function tpl = DefineClass(env, "OffscreenCanvas",
-                                     {InstanceMethod("toString", &OffscreenCanvas::GetContext)});
+                                     {InstanceMethod("getContext", &OffscreenCanvas::GetContext)});
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
 
@@ -31,6 +31,17 @@ namespace canvasbinding
 
     auto imageInfo = SkImageInfo::MakeN32Premul(width, height);
     skSurface = SkSurfaces::Raster(imageInfo);
+    skBitmap = new SkBitmap();
+    skBitmap->allocN32Pixels(width, height);
+  }
+
+  OffscreenCanvas::~OffscreenCanvas()
+  {
+    if (skBitmap != nullptr)
+    {
+      delete skBitmap;
+      skBitmap = nullptr;
+    }
   }
 
   Napi::Value OffscreenCanvas::GetContext(const Napi::CallbackInfo &info)
@@ -46,10 +57,34 @@ namespace canvasbinding
     }
     else
     {
-      Napi::TypeError::New(env, "Invalid context type").ThrowAsJavaScriptException();
+      // TODO: support other context types like webgl
+      Napi::TypeError::New(env, "Only 2d context is supported").ThrowAsJavaScriptException();
       return env.Undefined();
     }
     return currentContext.Value();
+  }
+
+  uint32_t OffscreenCanvas::getWidth()
+  {
+    return width;
+  }
+
+  uint32_t OffscreenCanvas::getHeight()
+  {
+    return height;
+  }
+
+  SkBitmap *OffscreenCanvas::getSkBitmap()
+  {
+    if (skSurface->getCanvas()->readPixels(*skBitmap, 0, 0))
+      return skBitmap;
+    else
+      return nullptr;
+  }
+
+  sk_sp<SkSurface> &OffscreenCanvas::getSkSurface()
+  {
+    return skSurface;
   }
 
 } // namespace webgl

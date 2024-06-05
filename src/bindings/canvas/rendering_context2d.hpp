@@ -6,6 +6,8 @@
 #include <skia/include/core/SkSurface.h>
 #include <skia/include/core/SkCanvas.h>
 #include <skia/include/core/SkFont.h>
+#include <skia/include/core/SkPath.h>
+#include <skia/include/core/SkPathEffect.h>
 #include <glm/glm.hpp>
 #include "canvas.hpp"
 
@@ -17,6 +19,7 @@ namespace canvasbinding
     static void Init(Napi::Env env, Napi::Object exports);
     static Napi::Object NewInstance(Napi::Env env, OffscreenCanvas *canvas);
     CanvasRenderingContext2D(const Napi::CallbackInfo &info);
+    ~CanvasRenderingContext2D();
 
   private:
     Napi::Value Fill(const Napi::CallbackInfo &info);
@@ -25,12 +28,68 @@ namespace canvasbinding
     Napi::Value Stroke(const Napi::CallbackInfo &info);
     Napi::Value StrokeRect(const Napi::CallbackInfo &info);
     Napi::Value StrokeText(const Napi::CallbackInfo &info);
+    Napi::Value ClearRect(const Napi::CallbackInfo &info);
+    Napi::Value SetLineDash(const Napi::CallbackInfo &info);
+
+  private: // Path methods
+    Napi::Value BeginPath(const Napi::CallbackInfo &info);
+    Napi::Value ClosePath(const Napi::CallbackInfo &info);
+    Napi::Value MoveTo(const Napi::CallbackInfo &info);
+    Napi::Value LineTo(const Napi::CallbackInfo &info);
+    Napi::Value BezierCurveTo(const Napi::CallbackInfo &info);
+    Napi::Value QuadraticCurveTo(const Napi::CallbackInfo &info);
+    Napi::Value Arc(const Napi::CallbackInfo &info);
+    Napi::Value ArcTo(const Napi::CallbackInfo &info);
+    Napi::Value Ellipse(const Napi::CallbackInfo &info);
+    Napi::Value Rect(const Napi::CallbackInfo &info);
+
+  private: // Text methods
+    Napi::Value MeasureText(const Napi::CallbackInfo &info);
+
+  private:
+    Napi::Value CurrentTransformGetter(const Napi::CallbackInfo &info);
+    void CurrentTransformSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value FillStyleGetter(const Napi::CallbackInfo &info);
+    void FillStyleSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value FontGetter(const Napi::CallbackInfo &info);
+    void FontSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value GlobalAlphaGetter(const Napi::CallbackInfo &info);
+    void GlobalAlphaSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value GlobalCompositeOperationGetter(const Napi::CallbackInfo &info);
+    void GlobalCompositeOperationSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+
+  private:
+    SkPaint getFillPaint();
+    SkPaint getStrokePaint();
+    SkPaint *getShadowPaint(SkPaint &basePaint);
+    void closeSkPath(SkPath *path);
+    bool ellipseToSkPath(SkPath *path, float x, float y, float radiusX, float radiusY, float rotation,
+                         float startAngle, float endAngle, bool anticlockwise);
 
   private:
     Napi::ObjectReference *jsCanvas;
     SkCanvas *skCanvas;
     SkPaint *skPaint;
     SkFont *skFont;
+
+  private: // font
+    std::string fontStr = "10px monospace";
+
+  private: // style
+    SkColor fillStyle = SK_ColorBLACK;
+    SkColor strokeStyle = SK_ColorBLACK;
+
+  private:
+    float shadowBlur = 0.0f;
+    SkColor shadowColor = SK_ColorTRANSPARENT;
+    glm::vec2 shadowOffset = glm::vec2(0.0f);
+    float globalAlpha = 1.0f;
+    float strokeWidth = 1.0f;
+    SkBlendMode globalCompositeOperation = SkBlendMode::kSrcOver;
+    std::vector<float> lineDash;
+
+  private:
+    SkPath *currentPath = nullptr;
     glm::mat2x3 currentTransform = glm::mat2x3(1.0f);
 
   public:
