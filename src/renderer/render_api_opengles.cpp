@@ -735,6 +735,9 @@ private:
 		auto border = req->border;
 		auto format = req->format;
 		auto type = req->pixelType;
+		DEBUG(DEBUG_TAG, "TexImage2D: %d %d %d %d %d %d %d %d %p",
+					target, level, internalformat, width, height, border, format, type, req->pixels);
+
 		glTexImage2D(target,
 								 level, internalformat,
 								 width, height,
@@ -1287,7 +1290,7 @@ private:
 		m_ViewportSize[1] = height;
 
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::SetViewport: (%d %d %d %d)",
+			DEBUG(DEBUG_TAG, "[%d] GL::SetViewport(%d, %d, %d, %d)",
 						options.isDefaultQueue, width, height, x, y);
 	}
 	void OnSetScissor(SetScissorCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
@@ -1712,9 +1715,11 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	 * the last frame, to make sure the rendering in WebGL is correct.
 	 */
 	m_HostContext.Record();
-	m_HostContext.Print();
+	if (m_PrintsContext)
+		m_HostContext.Print();
 	m_AppGlobalContext.Restore();
-	m_AppGlobalContext.Print();
+	if (m_PrintsContext)
+		m_AppGlobalContext.Print();
 
 	// Update front face for app context
 	if (m_AppFrontFace == GL_CCW || m_AppFrontFace == GL_CW)
@@ -1776,8 +1781,6 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 	}
 
 	// Execute all the command buffers
-	DEBUG(DEBUG_TAG, "There are %d buffers to execute in %s.",
-				commandBuffers.size(), m_AppGlobalContext.GetName());
 	content->onCommandBuffersExecuting();
 	auto contextBaseState = OpenGLAppContextStorage("tmp", &m_AppGlobalContext);
 

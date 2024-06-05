@@ -76,7 +76,7 @@ namespace commandbuffers
 
     auto buffer = (char *)malloc(contentSize);
     if (buffer == nullptr)
-      return false; // out of memory
+      return false;
     if (!receiver->tryRecvRaw(buffer, contentSize, recvTimeout))
     {
       free(buffer); // free the allocated buffer if failed to receive.
@@ -104,6 +104,7 @@ namespace commandbuffers
 
   bool TrCommandBufferMessage::deserializeContent(char *contentBuffer, size_t contentSize)
   {
+
     size_t offset = 0;
     offset = readFrom(contentBuffer, offset, &type);
     offset = readFrom(contentBuffer, offset, &id);
@@ -124,7 +125,7 @@ namespace commandbuffers
     base = malloc(baseSize);
     offset = readFrom(contentBuffer, offset, base, baseSize);
 
-    assert(offset == contentSize);
+    assert(offset == contentSize); // check if all content is read
     return true;
   }
 }

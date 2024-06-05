@@ -85,9 +85,17 @@ namespace commandbuffers
           usage(usage)
     {
       size = sizeof(BufferDataCommandBufferRequest);
-      data = malloc(srcSize);
-      if (data != nullptr)
-        memcpy(data, srcData, srcSize);
+
+      if (srcData == nullptr)
+      {
+        dataSize = 0;
+      }
+      else if (srcSize > 0)
+      {
+        data = malloc(srcSize);
+        if (data != nullptr)
+          memcpy(data, srcData, srcSize);
+      }
     }
     ~BufferDataCommandBufferRequest()
     {
@@ -116,7 +124,7 @@ namespace commandbuffers
   public:
     uint32_t target;
     uint32_t dataSize;
-    void *data;
+    void *data = nullptr;
     uint32_t usage;
   };
 

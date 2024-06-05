@@ -85,6 +85,7 @@
     "regex": "cpp",
     "csignal": "cpp",
     "typeindex": "cpp",
-    "utility": "cpp"
+    "utility": "cpp",
+    "future": "cpp"
   }
 }

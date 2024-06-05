@@ -27,9 +27,7 @@ namespace webgl
   static TrIdGenerator framebufferIdGen(1);
   static TrIdGenerator renderbufferIdGen(1);
   static TrIdGenerator vaoIdGen(1);
-
-  static uint32_t vertexArrayObjectId = 1;
-  static uint32_t textureObjectId = 1;
+  static TrIdGenerator textureIdGen(1);
 
 #define TBASE(T) WebGLBaseRenderingContext<T>
 
@@ -1739,7 +1737,7 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    auto id = textureObjectId++;
+    auto id = textureIdGen.get();
     auto req = CreateTextureCommandBufferRequest(id);
     sendCommandBufferRequest(req);
     return WebGLTexture::constructor->New({Napi::Number::New(env, id)});
@@ -1845,9 +1843,12 @@ namespace webgl
       auto imageSourceObject = info[5].ToObject();
       if (imageSourceObject.InstanceOf(ImageBitmap::constructor->Value()))
       {
+        env.Global().Get("console").As<Napi::Object>().Get("log").As<Napi::Function>()({imageSourceObject});
         auto imageBitmap = ImageBitmap::Unwrap(imageSourceObject);
         SkBitmap *bitmap = imageBitmap->getSkBitmap();
-        pixelsData = reinterpret_cast<char*>(bitmap->getPixels());
+        req.width = bitmap->width();
+        req.height = bitmap->height();
+        pixelsData = reinterpret_cast<char *>(bitmap->getPixels());
       }
       else
       {

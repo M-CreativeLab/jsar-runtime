@@ -169,7 +169,7 @@ namespace commandbuffers
     int internalFormat;
     int width;
     int height;
-    int border;
+    int border = 0;
     int format;
     int pixelType;
     void *pixels = nullptr;

@@ -122,16 +122,26 @@ namespace ipc
     if (fd == -1 || client->invalid())
       return false;
 
-    ssize_t sent = ::send(fd, data, size, 0);
-    if (sent == -1)
+    int bytesSent = 0;
+    while (bytesSent < size)
     {
-      if (errno == EAGAIN || errno == EWOULDBLOCK)
+      size_t remaining = size - bytesSent;
+      ssize_t sent = ::send(fd, (char *)data + bytesSent, remaining, 0);
+      if (sent == -1)
+      {
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+          continue;
+        if (errno == ECONNRESET || errno == EPIPE)
+          client->invalid(true);
+        DEBUG(LOG_TAG_IPC, "Failed to send data: %s", strerror(errno));
         return false;
-      if (errno == ECONNRESET || errno == EPIPE)
-        client->invalid(true);
-      DEBUG(LOG_TAG_IPC, "Failed to send data: %s", strerror(errno));
-      return false;
+      }
+      else
+      {
+        bytesSent += sent;
+      }
     }
+    assert(bytesSent == size); // The bytes to be sent is expected to be the specific `size`.
     return true;
   }
 
@@ -190,22 +200,38 @@ namespace ipc
 
     if (fds[0].revents & POLLIN)
     {
-      ssize_t bytesReceived = ::recv(fd, outData, outSize, 0);
-      if (bytesReceived <= 0 /** actuall 0 or -1 */)
+      int bytesReceived = 0;
+      while (bytesReceived < outSize)
       {
-        string msg;
-        if (bytesReceived == 0)
+        size_t remaining = outSize - bytesReceived;
+        char* buf = (char*)malloc(remaining);
+        auto received = ::recv(fd, buf, remaining, 0);
+        if (received <= 0 /** actuall 0 or -1 */)
         {
-          msg = "The connection is closed by the peer.";
-          client->invalid(true);
+          string msg;
+          if (received == 0)
+          {
+            msg = "The connection is closed by the peer.";
+            client->invalid(true);
+          }
+          else if (errno == EAGAIN || errno == EWOULDBLOCK)
+          {
+            continue;
+          }
+          else
+          {
+            msg = strerror(errno);
+          }
+          DEBUG(LOG_TAG_IPC, "Failed to read data from socket(%d): %s", fd, msg.c_str());
+          return false;
         }
         else
         {
-          msg = strerror(errno);
+          memcpy((char *)outData + bytesReceived, buf, received);
+          bytesReceived += received;
         }
-        DEBUG(LOG_TAG_IPC, "Failed to read data from socket(%d): %s", fd, msg.c_str());
-        return false;
       }
+      assert(bytesReceived == outSize); // The bytes to be received is expected to be the specific `outSize`.
       return true;
     }
     else

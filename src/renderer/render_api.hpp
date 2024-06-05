@@ -88,6 +88,7 @@ public:
 
   void EnableAppGlobalLog() { m_EnableLogOnAppGlobal = true; }
   void EnableXRFrameLog() { m_EnableLogOnXRFrame = true; }
+  void EnableContextLog() { m_PrintsContext = true; }
 
   bool HasViewportChanged(int x, int y, int width, int height)
   {
@@ -152,6 +153,7 @@ protected:
   int m_Viewport[4] = {0, 0, 0, 0};
   bool m_EnableLogOnAppGlobal = false;
   bool m_EnableLogOnXRFrame = false;
+  bool m_PrintsContext = false;
   std::vector<commandbuffers::TrCommandBufferBase *> m_CommandBuffers;
   std::mutex m_CommandBuffersMutex;
   std::mutex m_StateMutex;

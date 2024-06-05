@@ -17,6 +17,9 @@ namespace bindings
 
     public:
       SkBitmap *getSkBitmap() { return skBitmap; }
+      size_t getByteLength() {
+        return skBitmap->computeByteSize();
+      }
 
     private:
       static Napi::Value CreateImageBitmap(const Napi::CallbackInfo &info);

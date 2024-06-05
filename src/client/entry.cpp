@@ -34,6 +34,7 @@ void printsStacktraceOnSignal(int signal)
 int main(int argc, char **argv)
 {
   signal(SIGSEGV, printsStacktraceOnSignal);
+  signal(SIGPIPE, printsStacktraceOnSignal);
   signal(SIGABRT, printsStacktraceOnSignal);
   signal(SIGFPE, printsStacktraceOnSignal);
   signal(SIGBUS, printsStacktraceOnSignal);
