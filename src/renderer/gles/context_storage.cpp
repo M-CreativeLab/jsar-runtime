@@ -250,8 +250,8 @@ void OpenGLHostContextStorage::Record()
   // Blend funcs
   {
     GLenum sfactor, dfactor;
-    glGetIntegerv(GL_BLEND_SRC, (GLint *)&sfactor);
-    glGetIntegerv(GL_BLEND_DST, (GLint *)&dfactor);
+    glGetIntegerv(GL_BLEND_SRC_RGB, (GLint *)&sfactor);
+    glGetIntegerv(GL_BLEND_DST_RGB, (GLint *)&dfactor);
     m_BlendFunc.Reset(sfactor, dfactor);
   }
 

@@ -8,6 +8,7 @@
 #include <skia/include/core/SkFont.h>
 #include <skia/include/core/SkPath.h>
 #include <skia/include/core/SkPathEffect.h>
+#include <skia/include/core/SkTextBlob.h>
 #include <glm/glm.hpp>
 #include "canvas.hpp"
 

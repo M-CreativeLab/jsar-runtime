@@ -127,7 +127,17 @@ namespace canvasbinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    // TODO
+
+    auto textStr = info[0].ToString().Utf8Value();
+    uint32_t x = 0;
+    uint32_t y = 0;
+
+    auto fillPaint = getFillPaint();
+    auto blob = SkTextBlob::MakeFromString(textStr.c_str(), *skFont);
+    // TODO: shadow
+
+    skCanvas->drawTextBlob(blob, x, y, fillPaint);
+    blob.reset();
     return env.Null();
   }
 
