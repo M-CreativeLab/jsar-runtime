@@ -725,7 +725,7 @@ private:
 	{
 		auto target = req->target;
 		auto level = req->level;
-		auto internalformat = req->internalFormat;
+		auto internalformat = req->internalformat;
 		auto width = req->width;
 		auto height = req->height;
 		auto border = req->border;
@@ -814,7 +814,7 @@ private:
 	{
 		auto target = req->target;
 		auto level = req->level;
-		auto internalformat = req->internalFormat;
+		auto internalformat = req->internalformat;
 		auto width = req->width;
 		auto height = req->height;
 		auto depth = req->depth;

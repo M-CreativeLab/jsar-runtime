@@ -4135,52 +4135,48 @@ namespace webgl
       return env.Undefined();
     }
 
-    auto target = info[0].ToNumber().Uint32Value();
-    auto level = info[1].ToNumber().Int32Value();
-    auto internalformat = info[2].ToNumber().Int32Value();
-    auto width = info[3].ToNumber().Int32Value();
-    auto height = info[4].ToNumber().Int32Value();
-    auto depth = info[5].ToNumber().Int32Value();
-    auto border = info[6].ToNumber().Int32Value();
-    auto format = info[7].ToNumber().Int32Value();
-    auto type = info[8].ToNumber().Int32Value();
+    TextureImage3DCommandBufferRequest req;
+    req.target = info[0].ToNumber().Uint32Value();
+    req.level = info[1].ToNumber().Uint32Value();
+    req.internalformat = info[2].ToNumber().Uint32Value();
+    req.width = info[3].ToNumber().Uint32Value();
+    req.height = info[4].ToNumber().Uint32Value();
+    req.depth = info[5].ToNumber().Uint32Value();
+    req.border = info[6].ToNumber().Uint32Value();
+    req.format = info[7].ToNumber().Uint32Value();
+    req.pixelType = info[8].ToNumber().Uint32Value();
 
-    auto jsSourceData = info[9];
-    if (jsSourceData.IsNumber())
+    if (info[9].IsNumber())
     {
-      Napi::TypeError::New(env, "texImage3D() 10th argument(offset) is not supported.")
+      Napi::TypeError::New(env, "texImage3D() with `offset` is not supported.")
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
-    char *data = nullptr;
-    size_t len = 0;
-    if (jsSourceData.IsNull() || jsSourceData.IsUndefined())
+    auto jsSourceOrData = info[9];
+    if (jsSourceOrData.IsNull() || jsSourceOrData.IsUndefined())
     {
-      // Do nothing
+      req.setPixels(nullptr);
     }
-    else if (jsSourceData.IsArrayBuffer())
+    else if (jsSourceOrData.IsTypedArray())
     {
-      auto arrayBuffer = jsSourceData.As<Napi::ArrayBuffer>();
-      data = static_cast<char *>(arrayBuffer.Data());
-      len = arrayBuffer.ByteLength();
+      auto typedArray = jsSourceOrData.As<Napi::TypedArray>();
+      auto pixels = static_cast<char *>(typedArray.ArrayBuffer().Data()) + typedArray.ByteOffset();
+      req.setPixels(pixels);
     }
-    else if (jsSourceData.IsTypedArray())
+    else if (jsSourceOrData.IsDataView())
     {
-      auto typedArray = jsSourceData.As<Napi::TypedArray>();
-      data = static_cast<char *>(typedArray.ArrayBuffer().Data()) + typedArray.ByteOffset();
-      len = typedArray.ByteLength();
+      auto dataView = jsSourceOrData.As<Napi::DataView>();
+      auto pixels = static_cast<char *>(dataView.ArrayBuffer().Data()) + dataView.ByteOffset();
+      req.setPixels(pixels);
     }
     else
     {
-      Napi::TypeError::New(env, "texImage3D() 10th argument(pixels) must be an ArrayBuffer or TypedArray.")
+      Napi::TypeError::New(env, "texImage3D() with source is not supported.")
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
-
-    auto commandBuffer = commandbuffers::TextureImage3DCommandBufferRequest(
-        target, level, internalformat, width, height, depth, border, format, type, data);
-    sendCommandBufferRequest(commandBuffer);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 

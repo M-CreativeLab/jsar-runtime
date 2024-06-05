@@ -77,47 +77,43 @@ namespace commandbuffers
     int texture;
   };
 
-  class TextureImage2DCommandBufferRequest : public TrCommandBufferBase
+  template <typename T>
+  class TextureImageNDCommandBufferRequest : public TrCommandBufferBase
   {
   public:
-    TextureImage2DCommandBufferRequest(uint32_t target, uint32_t level, uint32_t internalFormat)
-        : TrCommandBufferBase(COMMAND_BUFFER_TEXTURE_IMAGE_2D_REQ),
-          target(target),
-          level(level),
-          internalFormat(internalFormat)
+    TextureImageNDCommandBufferRequest(CommandBufferType type) : TrCommandBufferBase(type)
     {
-      size = sizeof(TextureImage2DCommandBufferRequest);
+      size = sizeof(T);
     }
-    ~TextureImage2DCommandBufferRequest()
+    ~TextureImageNDCommandBufferRequest()
     {
-      if (pixels != nullptr)
-      {
-        free(pixels);
-        pixels = nullptr;
-      }
+      resetPixels();
     }
+
+  public:
+    virtual size_t computePixelsByteLength() = 0;
 
   public:
     size_t getPixelSize()
     {
-      int pixelSize = 1;
+      int sizePerPixel = 1;
       if (pixelType == WEBGL_UNSIGNED_BYTE || pixelType == WEBGL_FLOAT)
       {
         if (pixelType == WEBGL_FLOAT)
-          pixelSize = 4;
+          sizePerPixel = 4;
         switch (format)
         {
         case WEBGL_ALPHA:
         case WEBGL_LUMINANCE:
           break;
         case WEBGL_LUMINANCE_ALPHA:
-          pixelSize *= 2;
+          sizePerPixel *= 2;
           break;
         case WEBGL_RGB:
-          pixelSize *= 3;
+          sizePerPixel *= 3;
           break;
         case WEBGL_RGBA:
-          pixelSize *= 4;
+          sizePerPixel *= 4;
           break;
         default:
           break;
@@ -125,22 +121,30 @@ namespace commandbuffers
       }
       else
       {
-        pixelSize = 2;
+        sizePerPixel = 2;
       }
-      return pixelSize;
+      return sizePerPixel;
     }
+
     void setPixels(void *srcPixels)
     {
       if (srcPixels == nullptr)
       {
-        pixels = nullptr;
-        pixelsBufferSize = 0;
+        resetPixels();
       }
       else
       {
-        pixelsBufferSize = width * height * getPixelSize();
-        pixels = malloc(pixelsBufferSize);  // TODO: check OOM
-        memcpy(pixels, srcPixels, pixelsBufferSize);
+        pixelsByteLength = computePixelsByteLength();
+        if (pixelsByteLength > 0)
+        {
+          pixels = malloc(pixelsByteLength); // TODO: check OOM
+          if (pixels != nullptr)
+          {
+            memcpy(pixels, srcPixels, pixelsByteLength);
+            return;
+          }
+        }
+        resetPixels();
       }
     }
 
@@ -148,8 +152,8 @@ namespace commandbuffers
     TrCommandBufferMessage *serialize() override
     {
       auto message = new TrCommandBufferMessage(type, size, this);
-      if (pixels != nullptr && pixelsBufferSize > 0)
-        message->addSegment(TrCommandBufferSegment(pixelsBufferSize, pixels));
+      if (pixels != nullptr && pixelsByteLength > 0)
+        message->addSegment(TrCommandBufferSegment(pixelsByteLength, pixels));
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
@@ -157,23 +161,60 @@ namespace commandbuffers
       auto pixelsSegment = message.getSegment(0);
       if (pixelsSegment != nullptr)
       {
-        pixelsBufferSize = pixelsSegment->getSize();
-        pixels = malloc(pixelsBufferSize);
-        memcpy(pixels, pixelsSegment->getData(), pixelsBufferSize);
+        pixelsByteLength = pixelsSegment->getSize();
+        pixels = malloc(pixelsByteLength);
+        if (pixels != nullptr)
+          memcpy(pixels, pixelsSegment->getData(), pixelsByteLength);
       }
+    }
+
+  protected:
+    void resetPixels()
+    {
+      if (pixels != nullptr)
+        free(pixels);
+      pixels = nullptr;
+      pixelsByteLength = 0;
     }
 
   public:
     int target;
     int level;
-    int internalFormat;
-    int width;
-    int height;
-    int border = 0;
     int format;
     int pixelType;
     void *pixels = nullptr;
-    size_t pixelsBufferSize = 0;
+    size_t pixelsByteLength = 0;
+  };
+
+  class TextureImage2DCommandBufferRequest : public TextureImageNDCommandBufferRequest<TextureImage2DCommandBufferRequest>
+  {
+  public:
+    TextureImage2DCommandBufferRequest(uint32_t target, uint32_t level, uint32_t internalformat)
+        : TextureImageNDCommandBufferRequest(COMMAND_BUFFER_TEXTURE_IMAGE_2D_REQ),
+          internalformat(internalformat)
+    {
+      this->target = target;
+      this->level = level;
+    }
+
+  public:
+    size_t computePixelsByteLength() override
+    {
+      return width * height * getPixelSize();
+    }
+
+  public:
+    void setSize(int width, int height)
+    {
+      this->width = width;
+      this->height = height;
+    }
+
+  public:
+    int internalformat;
+    int width;
+    int height;
+    int border = 0;
   };
 
   class TextureSubImage2DCommandBufferRequest : public TrCommandBufferBase
@@ -405,60 +446,26 @@ namespace commandbuffers
     int target;
   };
 
-  class TextureImage3DCommandBufferRequest : public TrCommandBufferBase
+  class TextureImage3DCommandBufferRequest : public TextureImageNDCommandBufferRequest<TextureImage3DCommandBufferRequest>
   {
   public:
-    TextureImage3DCommandBufferRequest(
-        uint32_t target,
-        uint32_t level,
-        uint32_t internalFormat,
-        uint32_t width,
-        uint32_t height,
-        uint32_t depth,
-        uint32_t border,
-        uint32_t format,
-        uint32_t type,
-        void *pixels)
-        : TrCommandBufferBase(COMMAND_BUFFER_TEXTURE_IMAGE_3D_REQ)
-    {
-      size = sizeof(TextureImage3DCommandBufferRequest);
-      this->target = target;
-      this->level = level;
-      this->internalFormat = internalFormat;
-      this->width = width;
-      this->height = height;
-      this->depth = depth;
-      this->border = border;
-      this->format = format;
-      this->pixelType = type;
-
-      if (pixels != nullptr)
-      {
-        // TODO
-      }
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
+    TextureImage3DCommandBufferRequest()
+        : TextureImageNDCommandBufferRequest(COMMAND_BUFFER_TEXTURE_IMAGE_3D_REQ)
     {
     }
 
   public:
-    int target;
-    int level;
-    int internalFormat;
+    size_t computePixelsByteLength() override
+    {
+      return width * height * depth * getPixelSize();
+    }
+
+  public:
+    int internalformat;
     int width;
     int height;
     int depth;
-    int border;
-    int format;
-    int pixelType;
-    void *pixels = nullptr;
-    size_t pixelsBufferSize = 0;
+    int border = 0;
   };
 
   class TextureSubImage3DCommandBufferRequest : public TrCommandBufferBase
