@@ -18,7 +18,9 @@ namespace canvasbinding
 
   private:
     Napi::Value WidthGetter(const Napi::CallbackInfo &info);
+    void WidthSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value HeightGetter(const Napi::CallbackInfo &info);
+    void HeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value GetContext(const Napi::CallbackInfo &info);
     Napi::Value ConvertToBlob(const Napi::CallbackInfo &info);
 
@@ -29,7 +31,7 @@ namespace canvasbinding
     sk_sp<SkSurface> &getSkSurface();
 
   private:
-    Napi::ObjectReference currentContext;
+    Napi::ObjectReference currentContext2d;
     uint32_t width;
     uint32_t height;
     sk_sp<SkSurface> skSurface;

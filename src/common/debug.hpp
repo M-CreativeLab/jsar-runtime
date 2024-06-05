@@ -24,6 +24,7 @@ IUnityLog *GET_UNITY_LOG_HANDLE();
 #define LOG_TAG_CONTENT "jsar"
 #define LOG_TAG_SCRIPT "jsar"
 #define LOG_TAG_CLIENT_ENTRY "jsar"
+#define LOG_TAG_CLIENT_CANVAS "jsar"
 #else
 // Normal tag
 #define LOG_TAG_IPC "jsar.ipc"
@@ -31,6 +32,7 @@ IUnityLog *GET_UNITY_LOG_HANDLE();
 #define LOG_TAG_CONTENT "jsar.content"
 #define LOG_TAG_SCRIPT "jsar.script"
 #define LOG_TAG_CLIENT_ENTRY "jsar.client_entry"
+#define LOG_TAG_CLIENT_CANVAS "jsar.client.canvas"
 #endif
 
 void DEBUG(const char *tag, const char *format, ...);

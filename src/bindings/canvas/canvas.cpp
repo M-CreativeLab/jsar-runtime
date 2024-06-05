@@ -1,5 +1,6 @@
 #include "canvas.hpp"
 #include "rendering_context2d.hpp"
+#include "debug.hpp"
 
 namespace canvasbinding
 {
@@ -8,10 +9,11 @@ namespace canvasbinding
   void OffscreenCanvas::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function tpl = DefineClass(env, "OffscreenCanvas",
-                                     {InstanceMethod("getContext", &OffscreenCanvas::GetContext)});
+                                     {InstanceMethod("getContext", &OffscreenCanvas::GetContext),
+                                      InstanceAccessor("width", &OffscreenCanvas::WidthGetter, &OffscreenCanvas::WidthSetter),
+                                      InstanceAccessor("height", &OffscreenCanvas::HeightGetter, &OffscreenCanvas::HeightSetter)});
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
-
     exports.Set("OffscreenCanvas", tpl);
   }
 
@@ -28,11 +30,6 @@ namespace canvasbinding
 
     width = info[0].ToNumber().Uint32Value();
     height = info[1].ToNumber().Uint32Value();
-
-    auto imageInfo = SkImageInfo::MakeN32Premul(width, height);
-    skSurface = SkSurfaces::Raster(imageInfo);
-    skBitmap = new SkBitmap();
-    skBitmap->allocN32Pixels(width, height);
   }
 
   OffscreenCanvas::~OffscreenCanvas()
@@ -44,6 +41,39 @@ namespace canvasbinding
     }
   }
 
+  Napi::Value OffscreenCanvas::WidthGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Number::New(env, width);
+  }
+
+  void OffscreenCanvas::WidthSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (!currentContext2d.IsEmpty())
+      DEBUG(LOG_TAG_CLIENT_CANVAS, "Trying to change width of canvas with active 2d context.");
+    width = value.ToNumber().Uint32Value();
+  }
+
+  Napi::Value OffscreenCanvas::HeightGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Number::New(env, height);
+  }
+
+  void OffscreenCanvas::HeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    if (!currentContext2d.IsEmpty())
+      DEBUG(LOG_TAG_CLIENT_CANVAS, "Trying to change height of canvas with active 2d context.");
+    height = value.ToNumber().Uint32Value();
+  }
+
   Napi::Value OffscreenCanvas::GetContext(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -52,8 +82,19 @@ namespace canvasbinding
     auto type = info[0].ToString().Utf8Value();
     if (type == "2d")
     {
+      if (!currentContext2d.IsEmpty())
+        return currentContext2d.Value();
+
+      // Initialize skSurface and skBitmap
+      auto imageInfo = SkImageInfo::MakeN32Premul(width, height);
+      skSurface = SkSurfaces::Raster(imageInfo);
+      skBitmap = new SkBitmap();
+      skBitmap->allocN32Pixels(width, height);
+
+      // Create new CanvasRenderingContext2D instance
       auto context = CanvasRenderingContext2D::NewInstance(env, this);
-      currentContext = Napi::Persistent(context);
+      currentContext2d = Napi::Persistent(context);
+      return context;
     }
     else
     {
@@ -61,7 +102,6 @@ namespace canvasbinding
       Napi::TypeError::New(env, "Only 2d context is supported").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    return currentContext.Value();
   }
 
   uint32_t OffscreenCanvas::getWidth()
