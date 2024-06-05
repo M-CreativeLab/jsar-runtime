@@ -1406,6 +1406,7 @@ private:
 		auto srcAlpha = req->srcAlpha;
 		auto dstAlpha = req->dstAlpha;
 		glBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
+		m_AppGlobalContext.RecordBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
 
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BlendFuncSeparate(%s, %s, %s, %s)", options.isDefaultQueue,
