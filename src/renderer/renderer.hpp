@@ -6,6 +6,7 @@
 #include <atomic>
 
 #include "common/classes.hpp"
+#include "common/viewport.hpp"
 #include "common/ipc.hpp"
 #include "common/messages.hpp"
 #include "common/command_buffers/command_buffers.hpp"
@@ -18,23 +19,6 @@ class RenderAPI;
 
 namespace renderer
 {
-  class TrViewport
-  {
-  public:
-    TrViewport() : width(0), height(0), x(0), y(0)
-    {
-    }
-    TrViewport(uint32_t width, uint32_t height, uint32_t x = 0, uint32_t y = 0) : width(width), height(height), x(x), y(y)
-    {
-    }
-
-  public:
-    uint32_t width;
-    uint32_t height;
-    uint32_t x;
-    uint32_t y;
-  };
-
   class TrRenderer
   {
   public:

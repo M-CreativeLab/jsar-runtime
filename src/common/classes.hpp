@@ -1,5 +1,6 @@
 #pragma once
 
+class TrViewport;
 class TrConstellation;
 class TrContentManager;
 class TrContentRuntime;

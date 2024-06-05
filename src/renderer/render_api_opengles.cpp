@@ -77,6 +77,7 @@ private:
 	void OnContextInit(WebGL1ContextInitCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
 		WebGL1ContextInitCommandBufferResponse res(req);
+		res.viewport = m_HostContext.GetViewport();
 		glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &res.maxCombinedTextureImageUnits);
 		glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE, &res.maxCubeMapTextureSize);
 		glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_VECTORS, &res.maxFragmentUniformVectors);
@@ -1282,12 +1283,7 @@ private:
 		auto height = req->height;
 		auto x = req->x;
 		auto y = req->y;
-
 		// glViewport(x, y, width, height);
-		m_ViewportStartPoint[0] = x;
-		m_ViewportStartPoint[1] = y;
-		m_ViewportSize[0] = width;
-		m_ViewportSize[1] = height;
 
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::SetViewport(%d, %d, %d, %d)",
@@ -1645,12 +1641,12 @@ bool RenderAPI_OpenGLCoreES::SupportsWebGL2()
 
 int RenderAPI_OpenGLCoreES::GetDrawingBufferWidth()
 {
-	return m_Viewport[2];
+	return m_HostContext.GetViewport().width;
 }
 
 int RenderAPI_OpenGLCoreES::GetDrawingBufferHeight()
 {
-	return m_Viewport[3];
+	return m_HostContext.GetViewport().height;
 }
 
 void RenderAPI_OpenGLCoreES::ClearColor(float r, float g, float b, float a)

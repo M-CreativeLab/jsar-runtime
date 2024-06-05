@@ -65,6 +65,7 @@ public:
   void RecordTextureBindingWithUnit(GLenum target, GLuint texture);
 
   const char *GetName() { return m_Name.c_str(); }
+  TrViewport GetViewport() { return TrViewport(m_Viewport[2], m_Viewport[3], m_Viewport[0], m_Viewport[1]); }
   GLint GetProgram() { return m_ProgramId; }
   GLint GetArrayBuffer() { return m_ArrayBufferId; }
   GLint GetElementArrayBuffer() { return m_ElementArrayBufferId; }
@@ -104,7 +105,9 @@ protected:
 class OpenGLHostContextStorage : public OpenGLContextStorage
 {
 public:
-  OpenGLHostContextStorage() : OpenGLContextStorage("Host") {}
+  OpenGLHostContextStorage() : OpenGLContextStorage("Host") {
+    Record();
+  }
 
 public:
   void Restore();
@@ -116,7 +119,8 @@ class OpenGLNamesStorage : public std::map<GLuint, bool>
 {
 public:
   OpenGLNamesStorage() : std::map<GLuint, bool>() {}
-  OpenGLNamesStorage(OpenGLNamesStorage *from) {
+  OpenGLNamesStorage(OpenGLNamesStorage *from)
+  {
     for (auto it = from->begin(); it != from->end(); it++)
       insert(std::pair<GLuint, bool>(it->first, it->second));
   }

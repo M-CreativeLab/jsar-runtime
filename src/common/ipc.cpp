@@ -204,8 +204,7 @@ namespace ipc
       while (bytesReceived < outSize)
       {
         size_t remaining = outSize - bytesReceived;
-        char* buf = (char*)malloc(remaining);
-        auto received = ::recv(fd, buf, remaining, 0);
+        auto received = ::recv(fd, (char *)outData + bytesReceived, remaining, 0);
         if (received <= 0 /** actuall 0 or -1 */)
         {
           string msg;
@@ -227,7 +226,6 @@ namespace ipc
         }
         else
         {
-          memcpy((char *)outData + bytesReceived, buf, received);
           bytesReceived += received;
         }
       }

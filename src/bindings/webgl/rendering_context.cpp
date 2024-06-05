@@ -874,6 +874,7 @@ namespace webgl
       return;
     }
 
+    this->viewport = resp->viewport;
     this->maxCombinedTextureImageUnits = resp->maxCombinedTextureImageUnits;
     this->maxCubeMapTextureSize = resp->maxCubeMapTextureSize;
     this->maxFragmentUniformVectors = resp->maxFragmentUniformVectors;
@@ -2929,8 +2930,17 @@ namespace webgl
     int width = info[2].As<Napi::Number>().Int32Value();
     int height = info[3].As<Napi::Number>().Int32Value();
 
-    auto req = SetViewportCommandBufferRequest(x, y, width, height);
-    sendCommandBufferRequest(req);
+    if (x < 0 || y < 0 || width < 0 || height < 0)
+    {
+      Napi::TypeError::New(env, "viewport() arguments must be positive.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!viewport.isEqual(width, height, x, y))
+    {
+      /** Send the command to server if only the viewport is changed */
+      auto req = SetViewportCommandBufferRequest(x, y, width, height);
+      sendCommandBufferRequest(req);
+    }
     return env.Undefined();
   }
 
@@ -3722,15 +3732,13 @@ namespace webgl
   template <typename T>
   int WebGLBaseRenderingContext<T>::getDrawingBufferWidth()
   {
-    // return m_renderAPI->GetDrawingBufferWidth();
-    return 1600;
+    return viewport.width;
   }
 
   template <typename T>
   int WebGLBaseRenderingContext<T>::getDrawingBufferHeight()
   {
-    // return m_renderAPI->GetDrawingBufferHeight();
-    return 1200;
+    return viewport.height;
   }
 
   template <typename T>

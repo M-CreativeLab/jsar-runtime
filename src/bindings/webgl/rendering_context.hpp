@@ -187,6 +187,7 @@ namespace webgl
     /**
      * Static fields from OpenGL backend
      */
+    TrViewport viewport;
     int maxCombinedTextureImageUnits;
     int maxCubeMapTextureSize;
     int maxFragmentUniformVectors;
