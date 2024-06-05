@@ -22,6 +22,49 @@ public:
   GLuint m_Texture;
 };
 
+class OpenGLBlendingFunc
+{
+public:
+  OpenGLBlendingFunc() : m_Src(GL_ONE), m_Dst(GL_ZERO), m_IsSeparate(false) {}
+  OpenGLBlendingFunc(OpenGLBlendingFunc *from)
+      : m_Src(from->m_Src),
+        m_Dst(from->m_Dst),
+        m_SrcAlpha(from->m_SrcAlpha),
+        m_DstAlpha(from->m_DstAlpha)
+  {
+  }
+
+public:
+  inline bool IsSeparate() { return m_IsSeparate; }
+  inline GLenum GetSrc() { return m_Src; }
+  inline GLenum GetDst() { return m_Dst; }
+  inline GLenum GetSrcRgb() { return m_Src; }
+  inline GLenum GetDstRgb() { return m_Dst; }
+  inline GLenum GetSrcAlpha() { return m_SrcAlpha; }
+  inline GLenum GetDstAlpha() { return m_DstAlpha; }
+  inline void Reset(GLenum src, GLenum dst)
+  {
+    m_Src = src;
+    m_Dst = dst;
+    m_IsSeparate = false;
+  }
+  inline void Reset(GLenum srcRgb, GLenum dstRgb, GLenum srcAlpha, GLenum dstAlpha)
+  {
+    m_Src = srcRgb;
+    m_Dst = dstRgb;
+    m_SrcAlpha = srcAlpha;
+    m_DstAlpha = dstAlpha;
+    m_IsSeparate = true;
+  }
+
+private:
+  bool m_IsSeparate = false;
+  GLenum m_Src;
+  GLenum m_Dst;
+  GLenum m_SrcAlpha;
+  GLenum m_DstAlpha;
+};
+
 class OpenGLContextStorage
 {
 public:
@@ -38,6 +81,7 @@ public:
     m_Viewport[3] = from->m_Viewport[3];
     m_CullFaceEnabled = from->m_CullFaceEnabled;
     m_DepthTestEnabled = from->m_DepthTestEnabled;
+    m_DepthMask = from->m_DepthMask;
     m_ProgramId = from->m_ProgramId;
     m_ArrayBufferId = from->m_ArrayBufferId;
     m_ElementArrayBufferId = from->m_ElementArrayBufferId;
@@ -55,6 +99,9 @@ public:
 
   void RecordViewport(int x, int y, int w, int h);
   void RecordCapability(GLenum cap, bool enabled);
+  void RecordDepthMask(bool enabled);
+  void RecordBlendFunc(GLenum sfactor, GLenum dfactor);
+  void RecordBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha);
   void RecordProgram(int program);
   void RecordArrayBuffer(int buffer);
   void RecordElementArrayBuffer(int buffer);
@@ -83,10 +130,17 @@ protected:
   std::string m_Name;
   GLint m_Viewport[4] = {-1, -1, -1, -1};
   /** States */
+  // Culling & face
   GLboolean m_CullFaceEnabled;
-  GLboolean m_DepthTestEnabled;
   GLenum m_CullFace;
   GLenum m_FrontFace;
+  // Depth
+  GLboolean m_DepthTestEnabled;
+  GLboolean m_DepthMask; // If depth buffer writing is enabled
+  GLenum m_DepthFunc = GL_LEQUAL;
+  // Blending
+  GLboolean m_BlendEnabled;
+  OpenGLBlendingFunc m_BlendFunc;
   /** Program */
   GLint m_ProgramId = 0;
   /** Buffers */
@@ -105,7 +159,8 @@ protected:
 class OpenGLHostContextStorage : public OpenGLContextStorage
 {
 public:
-  OpenGLHostContextStorage() : OpenGLContextStorage("Host") {
+  OpenGLHostContextStorage() : OpenGLContextStorage("Host")
+  {
     Record();
   }
 

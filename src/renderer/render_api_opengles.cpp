@@ -692,28 +692,23 @@ private:
 	}
 	void OnCreateTexture(CreateTextureCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		GLuint texture;
-		glGenTextures(1, &texture);
+		GLuint texture = m_GLObjectManager.CreateTexture(req->clientId);
 		m_AppGlobalContext.RecordTextureOnCreated(texture);
-		m_TextureObjects[req->clientId] = texture;
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::CreateTexture() => texture(%d)", options.isDefaultQueue, texture);
+			DEBUG(DEBUG_TAG, "[%d] GL::CreateTexture(c%d) => texture(%d)", options.isDefaultQueue, req->clientId, texture);
 	}
 	void OnDeleteTexture(DeleteTextureCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
-		auto texture = m_TextureObjects[req->texture];
-		glDeleteTextures(1, &texture);
+		GLuint texture = m_GLObjectManager.FindTexture(req->texture);
+		m_GLObjectManager.DeleteTexture(req->texture);
 		m_AppGlobalContext.RecordTextureOnDeleted(texture);
-
-		m_TextureObjects.erase(req->texture); // remove the texture from the client map
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::DeleteTexture: %d", options.isDefaultQueue, texture);
+			DEBUG(DEBUG_TAG, "[%d] GL::DeleteTexture(%d)", options.isDefaultQueue, texture);
 	}
 	void OnBindTexture(BindTextureCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
 		auto target = req->target;
-		auto texture = m_TextureObjects[req->texture];
-
+		auto texture = m_GLObjectManager.FindTexture(req->texture);
 		m_HostContext.RecordTextureBindingFromHost();
 		glBindTexture(target, texture);
 		m_AppGlobalContext.RecordTextureBindingWithUnit(target, texture);
@@ -736,9 +731,6 @@ private:
 		auto border = req->border;
 		auto format = req->format;
 		auto type = req->pixelType;
-		DEBUG(DEBUG_TAG, "TexImage2D: %d %d %d %d %d %d %d %d %p",
-					target, level, internalformat, width, height, border, format, type, req->pixels);
-
 		glTexImage2D(target,
 								 level, internalformat,
 								 width, height,
@@ -1318,7 +1310,7 @@ private:
 	void OnDepthMask(DepthMaskCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
 		glDepthMask(req->flag);
-		m_DepthMaskEnabled = req->flag;
+		m_AppGlobalContext.RecordDepthMask(req->flag);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DepthMask(%d)", options.isDefaultQueue, req->flag);
 	}
@@ -1326,7 +1318,7 @@ private:
 	{
 		DepthFunc(req->func);
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::DepthFunc(%d)", options.isDefaultQueue, req->func);
+			DEBUG(DEBUG_TAG, "[%d] GL::DepthFunc(%s)", options.isDefaultQueue, gles::glDepthFuncToString(req->func).c_str());
 	}
 	void OnDepthRange(DepthRangeCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
@@ -1401,10 +1393,7 @@ private:
 	void OnBlendFunc(BlendFuncCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
 		glBlendFunc(req->sfactor, req->dfactor);
-		m_Blend_Sfactor = req->sfactor;
-		m_Blend_Dfactor = req->dfactor;
-		m_BlendFuncSet = true;
-
+		m_AppGlobalContext.RecordBlendFunc(req->sfactor, req->dfactor);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BlendFunc(%d)", options.isDefaultQueue, req->sfactor);
 	}
@@ -1417,14 +1406,13 @@ private:
 		auto srcAlpha = req->srcAlpha;
 		auto dstAlpha = req->dstAlpha;
 		glBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
-		m_Blend_SrcRGB = srcRGB;
-		m_Blend_DstRGB = dstRGB;
-		m_Blend_SrcAlpha = srcAlpha;
-		m_Blend_DstAlpha = dstAlpha;
-		m_BlendFuncSeparateSet = true;
 
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::BlendFuncSeparate()", options.isDefaultQueue);
+			DEBUG(DEBUG_TAG, "[%d] GL::BlendFuncSeparate(%s, %s, %s, %s)", options.isDefaultQueue,
+						gles::glBlendFuncToString(srcRGB).c_str(),
+						gles::glBlendFuncToString(dstRGB).c_str(),
+						gles::glBlendFuncToString(srcAlpha).c_str(),
+						gles::glBlendFuncToString(dstAlpha).c_str());
 	}
 	void OnColorMask(ColorMaskCommandBufferRequest *req, TrContentRuntime *reqContent, ApiCallOptions &options)
 	{
@@ -1574,32 +1562,15 @@ private:
 	UnityGfxRenderer m_APIType;
 	OpenGLHostContextStorage m_HostContext = OpenGLHostContextStorage();
 	OpenGLAppContextStorage m_AppGlobalContext = OpenGLAppContextStorage("App Global");
-
 	gles::GLObjectManager m_GLObjectManager = gles::GLObjectManager();
-	map<uint32_t, GLuint> m_TextureObjects;
-	map<uint32_t, GLuint> m_VertexArrayObjects;
 
 	GLenum m_AppFrontFace;
 	GLenum m_AppCullFace;
 
-	// Used by glViewport
-	GLint m_ViewportStartPoint[2] = {0, 0};
-	GLsizei m_ViewportSize[2] = {0, 0};
 	// Used by glFrontFace
 	GLuint m_CurrentDepthFunc = GL_LEQUAL;
 	bool m_DepthTestEnabled = false;
-	bool m_DepthMaskEnabled = true;
 	bool m_BlendEnabled = false;
-	// Used by glBlendFunc
-	bool m_BlendFuncSet = false;
-	GLenum m_Blend_Sfactor = 0;
-	GLenum m_Blend_Dfactor = 0;
-	// Used by glBlendFuncSeparate
-	bool m_BlendFuncSeparateSet = false;
-	GLenum m_Blend_SrcRGB = 0;
-	GLenum m_Blend_DstRGB = 0;
-	GLenum m_Blend_SrcAlpha = 0;
-	GLenum m_Blend_DstAlpha = 0;
 	// Used by glClear with color, depth and stencil
 	float m_ClearColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 	float m_ClearDepth = 1.0f;
@@ -1716,29 +1687,6 @@ void RenderAPI_OpenGLCoreES::StartFrame()
 	m_AppGlobalContext.Restore();
 	if (m_PrintsContext)
 		m_AppGlobalContext.Print();
-
-	// Update front face for app context
-	if (m_AppFrontFace == GL_CCW || m_AppFrontFace == GL_CW)
-		glFrontFace(m_AppFrontFace);
-
-	// Update depth test
-	m_DepthTestEnabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
-	glDepthFunc(m_CurrentDepthFunc);
-	// glDepthMask(m_DepthMaskEnabled);
-	glDepthMask(GL_TRUE);
-
-	// blend
-	// if (m_BlendFuncSet == true)
-	// {
-	// 	glEnable(GL_BLEND);
-	// 	glBlendFunc(m_Blend_Sfactor, m_Blend_Dfactor);
-	// }
-	// if (m_BlendFuncSeparateSet == true)
-	// {
-	// 	glEnable(GL_BLEND);
-	// 	glBlendFuncSeparate(m_Blend_SrcRGB, m_Blend_DstRGB, m_Blend_SrcAlpha, m_Blend_DstAlpha);
-	// }
-	m_BlendEnabled ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
 }
 
 void RenderAPI_OpenGLCoreES::EndFrame()

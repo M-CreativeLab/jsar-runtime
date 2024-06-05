@@ -46,4 +46,12 @@ namespace gles
    * @brief Converts a GLenum to a string for debugging purposes.
    */
   std::string glEnumToString(GLenum e);
+  /**
+   * @brief Converts a depth function `GLenum` to a string.
+  */
+  std::string glDepthFuncToString(GLenum func);
+  /**
+   * @brief Converts a blending function `GLenum` to a string.
+   */
+  std::string glBlendFuncToString(GLenum func);
 }

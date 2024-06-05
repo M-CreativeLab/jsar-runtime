@@ -1844,7 +1844,6 @@ namespace webgl
       auto imageSourceObject = info[5].ToObject();
       if (imageSourceObject.InstanceOf(ImageBitmap::constructor->Value()))
       {
-        env.Global().Get("console").As<Napi::Object>().Get("log").As<Napi::Function>()({imageSourceObject});
         auto imageBitmap = ImageBitmap::Unwrap(imageSourceObject);
         SkBitmap *bitmap = imageBitmap->getSkBitmap();
         req.width = bitmap->width();

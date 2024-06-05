@@ -14,6 +14,23 @@ void OpenGLContextStorage::RecordCapability(GLenum cap, bool enabled)
     m_CullFaceEnabled = enabled;
   else if (cap == GL_DEPTH_TEST)
     m_DepthTestEnabled = enabled;
+  else if (cap == GL_BLEND)
+    m_BlendEnabled = enabled;
+}
+
+void OpenGLContextStorage::RecordDepthMask(bool enabled)
+{
+  m_DepthMask = enabled;
+}
+
+void OpenGLContextStorage::RecordBlendFunc(GLenum sfactor, GLenum dfactor)
+{
+  m_BlendFunc.Reset(sfactor, dfactor);
+}
+
+void OpenGLContextStorage::RecordBlendFuncSeparate(GLenum srcRgb, GLenum dstRgb, GLenum srcAlpha, GLenum dstAlpha)
+{
+  m_BlendFunc.Reset(srcRgb, dstRgb, srcAlpha, dstAlpha);
 }
 
 void OpenGLContextStorage::RecordProgram(int program)
@@ -89,6 +106,20 @@ void OpenGLContextStorage::Restore()
   // Restore the capabilities
   m_CullFaceEnabled ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
   m_DepthTestEnabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
+  m_BlendEnabled ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
+
+  glDepthMask(m_DepthMask);
+  if (m_DepthTestEnabled)
+    glDepthFunc(m_DepthFunc); // TODO: valid depth func enum?
+
+  if (m_BlendEnabled)
+  {
+    if (!m_BlendFunc.IsSeparate())
+      glBlendFunc(m_BlendFunc.GetSrc(), m_BlendFunc.GetDst());
+    else
+      glBlendFuncSeparate(m_BlendFunc.GetSrcRgb(), m_BlendFunc.GetDstRgb(),
+                          m_BlendFunc.GetSrcAlpha(), m_BlendFunc.GetDstAlpha());
+  }
 
   // Restore the program, buffers, framebuffer, renderbuffer, vertex array object, and active texture unit
   if (m_ProgramId >= 0)
@@ -176,12 +207,15 @@ void OpenGLContextStorage::ClearTextureBindings()
 void OpenGLHostContextStorage::Restore()
 {
   OpenGLContextStorage::Restore();
-  glFrontFace(m_FrontFace);
+  if (m_FrontFace == GL_CCW || m_FrontFace == GL_CW)
+    glFrontFace(m_FrontFace);
 }
 
 void OpenGLHostContextStorage::Record()
 {
   glGetIntegerv(GL_VIEWPORT, m_Viewport);
+
+  // Record objects
   glGetIntegerv(GL_CURRENT_PROGRAM, &m_ProgramId);
   glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &m_ArrayBufferId);
   glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &m_ElementArrayBufferId);
@@ -204,10 +238,22 @@ void OpenGLHostContextStorage::Record()
 
   // Enable or disable
   m_CullFaceEnabled = glIsEnabled(GL_CULL_FACE);
+  m_DepthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
+  m_BlendEnabled = glIsEnabled(GL_BLEND);
 
   // States
   glGetIntegerv(GL_CULL_FACE_MODE, (GLint *)&m_CullFace);
   glGetIntegerv(GL_FRONT_FACE, (GLint *)&m_FrontFace);
+  glGetIntegerv(GL_DEPTH_FUNC, (GLint *)&m_DepthFunc);
+  glGetBooleanv(GL_DEPTH_WRITEMASK, &m_DepthMask);
+
+  // Blend funcs
+  {
+    GLenum sfactor, dfactor;
+    glGetIntegerv(GL_BLEND_SRC, (GLint *)&sfactor);
+    glGetIntegerv(GL_BLEND_DST, (GLint *)&dfactor);
+    m_BlendFunc.Reset(sfactor, dfactor);
+  }
 
   // Check for errors
   GLenum error = glGetError();

@@ -72,4 +72,63 @@ namespace gles
     }
 #undef CASE
   }
+
+  std::string glDepthFuncToString(GLenum func)
+  {
+#define CASE(x) \
+  case x:       \
+  {             \
+    return #x;  \
+  }
+    switch (func)
+    {
+      // Depth Functions
+      CASE(GL_NEVER);
+      CASE(GL_LESS);
+      CASE(GL_EQUAL);
+      CASE(GL_LEQUAL);
+      CASE(GL_GREATER);
+      CASE(GL_NOTEQUAL);
+      CASE(GL_GEQUAL);
+      CASE(GL_ALWAYS);
+    default:
+      std::stringstream ss;
+      ss << "0x" << std::hex << func;
+      return ss.str();
+    }
+#undef CASE
+  }
+
+  std::string glBlendFuncToString(GLenum func)
+  {
+#define CASE(x) \
+  case x:       \
+  {             \
+    return #x;  \
+  }
+    switch (func)
+    {
+      // Blend Functions
+      CASE(GL_ZERO);
+      CASE(GL_ONE);
+      CASE(GL_SRC_COLOR);
+      CASE(GL_ONE_MINUS_SRC_COLOR);
+      CASE(GL_DST_COLOR);
+      CASE(GL_ONE_MINUS_DST_COLOR);
+      CASE(GL_SRC_ALPHA);
+      CASE(GL_ONE_MINUS_SRC_ALPHA);
+      CASE(GL_DST_ALPHA);
+      CASE(GL_ONE_MINUS_DST_ALPHA);
+      CASE(GL_CONSTANT_COLOR);
+      CASE(GL_ONE_MINUS_CONSTANT_COLOR);
+      CASE(GL_CONSTANT_ALPHA);
+      CASE(GL_ONE_MINUS_CONSTANT_ALPHA);
+    default:
+      std::stringstream ss;
+      ss << "0x" << std::hex << func;
+      return ss.str();
+    }
+#undef CASE
+  }
+
 }
