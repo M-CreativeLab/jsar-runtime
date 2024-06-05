@@ -80,35 +80,13 @@ namespace commandbuffers
   class TextureImage2DCommandBufferRequest : public TrCommandBufferBase
   {
   public:
-    TextureImage2DCommandBufferRequest(
-        uint32_t target,
-        uint32_t level,
-        uint32_t internalFormat,
-        uint32_t width,
-        uint32_t height,
-        uint32_t border,
-        uint32_t format,
-        uint32_t type,
-        void *pixels = nullptr)
-        : TrCommandBufferBase(COMMAND_BUFFER_TEXTURE_IMAGE_2D_REQ)
+    TextureImage2DCommandBufferRequest(uint32_t target, uint32_t level, uint32_t internalFormat)
+        : TrCommandBufferBase(COMMAND_BUFFER_TEXTURE_IMAGE_2D_REQ),
+          target(target),
+          level(level),
+          internalFormat(internalFormat)
     {
       size = sizeof(TextureImage2DCommandBufferRequest);
-      this->target = target;
-      this->level = level;
-      this->internalFormat = internalFormat;
-      this->width = width;
-      this->height = height;
-      this->border = border;
-      this->format = format;
-      this->pixelType = type;
-
-      if (pixels != nullptr)
-      {
-        // TODO: compute size of pixels
-        pixelsBufferSize = width * height * 4;
-        pixels = malloc(pixelsBufferSize);
-        memcpy(this->pixels, pixels, pixelsBufferSize);
-      }
     }
     ~TextureImage2DCommandBufferRequest()
     {
@@ -116,6 +94,53 @@ namespace commandbuffers
       {
         free(pixels);
         pixels = nullptr;
+      }
+    }
+
+  public:
+    size_t getPixelSize()
+    {
+      int pixelSize = 1;
+      if (pixelType == WEBGL_UNSIGNED_BYTE || pixelType == WEBGL_FLOAT)
+      {
+        if (pixelType == WEBGL_FLOAT)
+          pixelSize = 4;
+        switch (format)
+        {
+        case WEBGL_ALPHA:
+        case WEBGL_LUMINANCE:
+          break;
+        case WEBGL_LUMINANCE_ALPHA:
+          pixelSize *= 2;
+          break;
+        case WEBGL_RGB:
+          pixelSize *= 3;
+          break;
+        case WEBGL_RGBA:
+          pixelSize *= 4;
+          break;
+        default:
+          break;
+        }
+      }
+      else
+      {
+        pixelSize = 2;
+      }
+      return pixelSize;
+    }
+    void setPixels(void *srcPixels)
+    {
+      if (srcPixels == nullptr)
+      {
+        pixels = nullptr;
+        pixelsBufferSize = 0;
+      }
+      else
+      {
+        pixelsBufferSize = width * height * getPixelSize();
+        pixels = malloc(pixelsBufferSize);  // TODO: check OOM
+        memcpy(pixels, srcPixels, pixelsBufferSize);
       }
     }
 

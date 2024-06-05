@@ -1,4 +1,4 @@
-// #include <skia/include/codec/SkCodec.h>
+#include <skia/include/codec/SkCodec.h>
 #include "image_bitmap.hpp"
 #include "image_data.hpp"
 
@@ -113,22 +113,21 @@ namespace bindings
               }
               auto arrayBuffer = info[0].As<Napi::ArrayBuffer>();
               auto bitmap = new SkBitmap();
-              // auto data = reinterpret_cast<uint8_t *>(arrayBuffer.Data());
-              // auto length = arrayBuffer.ByteLength();
-              deferred.Resolve(constructor->New({Napi::External<SkBitmap>::New(env, bitmap)}));
+              auto data = reinterpret_cast<uint8_t *>(arrayBuffer.Data());
+              auto length = arrayBuffer.ByteLength();
 
-              // auto codec = SkCodec::MakeFromData(SkData::MakeWithoutCopy(data, length));
-              // if (codec)
-              // {
-              //   SkImageInfo info = codec->getInfo().makeColorType(kN32_SkColorType);
-              //   bitmap->allocPixels(info);
-              //   codec->getPixels(info, bitmap->getPixels(), bitmap->rowBytes());
-              //   deferred.Resolve(constructor->New({Napi::External<SkBitmap>::New(env, bitmap)}));
-              // }
-              // else
-              // {
-              //   deferred.Reject(Napi::TypeError::New(env, "Failed to create ImageBitmap instance from Blob").Value());
-              // }
+              auto codec = SkCodec::MakeFromData(SkData::MakeWithoutCopy(data, length));
+              if (codec)
+              {
+                SkImageInfo info = codec->getInfo().makeColorType(kN32_SkColorType);
+                bitmap->allocPixels(info);
+                codec->getPixels(info, bitmap->getPixels(), bitmap->rowBytes());
+                deferred.Resolve(constructor->New({Napi::External<SkBitmap>::New(env, bitmap)}));
+              }
+              else
+              {
+                deferred.Reject(Napi::TypeError::New(env, "Failed to create ImageBitmap instance from Blob").Value());
+              }
               return deferred.Promise(); }),
                                              Napi::Function::New(env, [](const Napi::CallbackInfo &info)
                                                                  {

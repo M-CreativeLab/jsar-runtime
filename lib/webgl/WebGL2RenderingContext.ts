@@ -215,50 +215,6 @@ class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext impleme
   samplerParameteri(sampler: WebGLSampler, pname: number, param: number): void {
     return this.nativeCall('samplerParameteri', [sampler, pname, param]);
   }
-  texImage2D(
-    target: number,
-    level: number,
-    internalformat: number,
-    width: unknown,
-    height: unknown,
-    border: unknown,
-    format?: unknown,
-    type?: unknown,
-    pixels?: unknown,
-    srcOffset?: unknown
-  ): void {
-    const callOptions = <NativeCallOptions>{
-      debug: { argTypes: ['constant', , 'constant', , , , 'constant', 'constant'] }
-    };
-    if (arguments.length === 6) {
-      const params = getTextureParametersFromImageSource.apply(this, arguments);
-      return this.nativeCall('texImage2D', [
-        target,
-        level,
-        internalformat,
-        params.width,
-        params.height,
-        0,
-        params.format,
-        params.type,
-        params.pixels,
-      ], callOptions);
-    } else if (arguments.length === 9) {
-      return this.nativeCall('texImage2D', [
-        target,
-        level,
-        internalformat,
-        width as number,
-        height as number,
-        border as number,
-        format,
-        type,
-        pixels
-      ], callOptions);
-    } else {
-      throw new Error('Invalid number of arguments for texImage2D()');
-    }
-  }
   texImage3D(
     target: number,
     level: number,

@@ -1,5 +1,7 @@
 #include "rendering_context.hpp"
 #include "renderer/render_api.hpp"
+#include "../canvas/image_bitmap.hpp"
+#include "../canvas/image_data.hpp"
 
 #include "idgen.hpp"
 #include "program.hpp"
@@ -9,6 +11,7 @@
 using namespace std;
 using namespace node;
 using namespace commandbuffers;
+using namespace bindings::canvas;
 
 namespace webgl
 {
@@ -1812,53 +1815,93 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    int target = info[0].As<Napi::Number>().Int32Value();
-    int level = info[1].As<Napi::Number>().Int32Value();
-    int internalformat = info[2].As<Napi::Number>().Int32Value();
-    int width = info[3].As<Napi::Number>().Int32Value();
-    int height = info[4].As<Napi::Number>().Int32Value();
-    int border = info[5].As<Napi::Number>().Int32Value();
-    int format = info[6].As<Napi::Number>().Int32Value();
-    int type = info[7].As<Napi::Number>().Int32Value();
-
-    Napi::Value imageSource = info[8];
-    if (imageSource.IsNull() || imageSource.IsUndefined())
+    if (info.Length() < 6)
     {
-      /** When the image source is null, just create TexImage2DCommandBuffer with empty mode */
-      auto req = TextureImage2DCommandBufferRequest(target, level, internalformat, width, height, border, format, type);
-      sendCommandBufferRequest(req);
+      Napi::TypeError::New(env, "texImage2D() takes at least 6 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
-    char *data = nullptr;
-    size_t len = 0;
-    if (imageSource.IsArrayBuffer())
+    auto target = info[0].As<Napi::Number>().Uint32Value();
+    auto level = info[1].As<Napi::Number>().Uint32Value();
+    auto internalformat = info[2].As<Napi::Number>().Uint32Value();
+
+    if (target != WEBGL_TEXTURE_2D)
     {
-      auto arraybuffer = imageSource.As<Napi::ArrayBuffer>();
-      data = static_cast<char *>(arraybuffer.Data());
-      len = arraybuffer.ByteLength();
+      Napi::TypeError::New(env, "texImage2D() only supports target TEXTURE_2D.").ThrowAsJavaScriptException();
+      return env.Undefined();
     }
-    else if (imageSource.IsTypedArray())
+
+    auto req = TextureImage2DCommandBufferRequest(target, level, internalformat);
+    char *pixelsData = nullptr;
+    if (info.Length() == 6)
     {
-      auto typedarray = imageSource.As<Napi::TypedArray>();
-      data = static_cast<char *>(typedarray.ArrayBuffer().Data()) + typedarray.ByteOffset();
-      len = typedarray.ByteLength();
+      req.format = info[3].As<Napi::Number>().Uint32Value();
+      req.pixelType = info[4].As<Napi::Number>().Uint32Value();
+      if (!info[5].IsObject())
+      {
+        Napi::TypeError::New(env, "the image source should be an object.").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+      auto imageSourceObject = info[5].ToObject();
+      if (imageSourceObject.InstanceOf(ImageBitmap::constructor->Value()))
+      {
+        auto imageBitmap = ImageBitmap::Unwrap(imageSourceObject);
+        SkBitmap *bitmap = imageBitmap->getSkBitmap();
+        pixelsData = reinterpret_cast<char*>(bitmap->getPixels());
+      }
+      else
+      {
+        Napi::TypeError::New(env, "Unsupported `imageSource` type").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+    }
+    else if (info.Length() == 9)
+    {
+      req.width = info[3].As<Napi::Number>().Uint32Value();
+      req.height = info[4].As<Napi::Number>().Uint32Value();
+      req.border = info[5].As<Napi::Number>().Uint32Value();
+      req.format = info[6].As<Napi::Number>().Uint32Value();
+      req.pixelType = info[7].As<Napi::Number>().Uint32Value();
+
+      Napi::Value pixelsValue = info[8];
+      if (pixelsValue.IsNull() || pixelsValue.IsUndefined())
+      {
+        pixelsData = nullptr;
+      }
+      else if (pixelsValue.IsTypedArray() || pixelsValue.IsArrayBuffer())
+      {
+        if (pixelsValue.IsArrayBuffer())
+        {
+          auto arraybuffer = pixelsValue.As<Napi::ArrayBuffer>();
+          pixelsData = static_cast<char *>(arraybuffer.Data());
+        }
+        else if (pixelsValue.IsTypedArray())
+        {
+          auto typedarray = pixelsValue.As<Napi::TypedArray>();
+          pixelsData = static_cast<char *>(typedarray.ArrayBuffer().Data()) + typedarray.ByteOffset();
+        }
+      }
+      else
+      {
+        Napi::TypeError::New(env, "the pixels should be a TypedArray or ArrayBuffer.").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
     }
 
     if (m_unpackFlipY == true || m_unpackPremultiplyAlpha == true)
     {
-      unsigned char *pixels = unpackPixels(type, format, width, height, reinterpret_cast<unsigned char *>(data));
-      auto req = TextureImage2DCommandBufferRequest(target, level, internalformat, width, height, border, format, type,
-                                                    pixels);
-      sendCommandBufferRequest(req);
-      delete[] pixels;
+      unsigned char *unpacked = unpackPixels(req.type,
+                                             req.format,
+                                             req.width,
+                                             req.height,
+                                             reinterpret_cast<unsigned char *>(pixelsData));
+      req.setPixels(unpacked);
     }
     else
     {
-      auto req = TextureImage2DCommandBufferRequest(target, level, internalformat, width, height, border, format, type,
-                                                    data);
-      sendCommandBufferRequest(req);
+      req.setPixels(pixelsData);
     }
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 

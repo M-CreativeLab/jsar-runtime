@@ -15,6 +15,9 @@ namespace bindings
       ImageBitmap(const Napi::CallbackInfo &info);
       ~ImageBitmap();
 
+    public:
+      SkBitmap *getSkBitmap() { return skBitmap; }
+
     private:
       static Napi::Value CreateImageBitmap(const Napi::CallbackInfo &info);
       Napi::Value Close(const Napi::CallbackInfo &info);
@@ -22,7 +25,7 @@ namespace bindings
     private:
       uint32_t width;
       uint32_t height;
-      SkBitmap* skBitmap;
+      SkBitmap *skBitmap;
 
     public:
       static Napi::FunctionReference *constructor;
