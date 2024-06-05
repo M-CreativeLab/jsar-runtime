@@ -16,6 +16,7 @@ experimental = []
 
 [dependencies]
 ctor = "0.1"
+cssparser = { workspace = true }
 euclid = "*"
 lazy_static = "1.4.0"
 log = "0.4.21"
@@ -25,6 +26,9 @@ jsar_jsbinding_macro = { path = "../jsbinding_macro" }
 jsar_jsbundle = { path = "../jsbundle" }
 napi = { version = "2", features = ["compat-mode", "noop"] }
 napi-derive = { version = "2", features = ["compat-mode", "noop"] }
+style = { workspace = true }
+style_traits = { workspace = true }
+url = { workspace = true }
 
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = "0.13.3"

@@ -5,10 +5,21 @@
 
 extern "C"
 {
+
     // C++ exports
     void jsar_load_gl();
     const uint8_t *get_jsbundle_ptr();
     uintptr_t get_jsbundle_size();
+
+    // CSS parsing functions
+    typedef struct
+    {
+        uint32_t r;
+        uint32_t g;
+        uint32_t b;
+        uint32_t a;
+    } RGBAColor;
+    extern RGBAColor parse_csscolor(const char *color_str);
 
     // JS exports
     napi_value jsbinding_htmlrender(napi_env env, napi_value exports);

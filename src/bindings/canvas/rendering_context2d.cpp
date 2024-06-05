@@ -1,5 +1,6 @@
 #include <skia/include/effects/SkDashPathEffect.h>
 #include "rendering_context2d.hpp"
+#include "crates/jsar_jsbindings.h"
 
 namespace canvasbinding
 {
@@ -88,7 +89,18 @@ namespace canvasbinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    // TODO
+
+    auto fillPaint = getFillPaint();
+    auto shadowPaint = getShadowPaint(fillPaint);
+    if (shadowPaint != nullptr)
+    {
+      skCanvas->save();
+      // TODO
+      skCanvas->drawPath(*currentPath, *shadowPaint);
+      skCanvas->restore();
+      delete shadowPaint;
+    }
+    skCanvas->drawPath(*currentPath, fillPaint);
     return env.Null();
   }
 
@@ -412,7 +424,19 @@ namespace canvasbinding
 
   void CanvasRenderingContext2D::FillStyleSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
   {
-    // TODO
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (value.IsString())
+    {
+      auto colorStr = value.ToString().Utf8Value();
+      auto color = parse_csscolor(colorStr.c_str());
+      fillStyle = SkColorSetARGB(color.a, color.r, color.g, color.b);
+    }
+    else
+    {
+      // TODO: pattern, gradient
+    }
   }
 
   Napi::Value CanvasRenderingContext2D::FontGetter(const Napi::CallbackInfo &info)
@@ -514,7 +538,8 @@ namespace canvasbinding
   {
     SkPaint paint = *skPaint;
     paint.setStyle(SkPaint::kFill_Style);
-    // TODO
+    paint.setColor(fillStyle);
+    // TODO: pattern, gradient
     return paint;
   }
 
