@@ -6,11 +6,15 @@
 #include <skia/include/core/SkSurface.h>
 #include <skia/include/core/SkCanvas.h>
 #include <skia/include/core/SkFont.h>
+#include <skia/include/core/SkFontMgr.h>
 #include <skia/include/core/SkPath.h>
 #include <skia/include/core/SkPathEffect.h>
 #include <skia/include/core/SkTextBlob.h>
+#include <skia/include/core/SkTypeface.h>
 #include <glm/glm.hpp>
+
 #include "canvas.hpp"
+#include "client/per_process.hpp"
 
 namespace canvasbinding
 {
@@ -68,7 +72,8 @@ namespace canvasbinding
                          float startAngle, float endAngle, bool anticlockwise);
 
   private:
-    Napi::ObjectReference *jsCanvas;
+    Napi::ObjectReference *jsCanvas = nullptr;
+    TrClientContextPerProcess *clientContext = nullptr;
     SkCanvas *skCanvas;
     SkPaint *skPaint;
     SkFont *skFont;

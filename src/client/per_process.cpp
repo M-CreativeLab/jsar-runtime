@@ -333,6 +333,11 @@ TrCommandBufferResponse *TrClientContextPerProcess::recvCommandBufferResponse(in
   return commandBufferChanReceiver->recvCommandBufferResponse(timeout);
 }
 
+font::FontCacheManager &TrClientContextPerProcess::getFontCacheManager()
+{
+  return fontCacheManager;
+}
+
 void TrClientContextPerProcess::onListenFrames()
 {
   while (framesListenerRunning)

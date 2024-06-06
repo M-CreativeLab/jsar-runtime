@@ -1,6 +1,7 @@
 #include <skia/include/effects/SkDashPathEffect.h>
 #include "rendering_context2d.hpp"
 #include "crates/jsar_jsbindings.h"
+#include "common/font/parser.hpp"
 
 namespace canvasbinding
 {
@@ -67,6 +68,8 @@ namespace canvasbinding
 
     OffscreenCanvas *canvas = Napi::ObjectWrap<OffscreenCanvas>::Unwrap(info[0].ToObject());
     jsCanvas = new Napi::ObjectReference(Napi::Persistent(canvas->Value()));
+    clientContext = TrClientContextPerProcess::Get();
+    assert(clientContext != nullptr);
 
     skCanvas = canvas->skSurface->getCanvas();
     skPaint = new SkPaint();
@@ -453,13 +456,30 @@ namespace canvasbinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    // TODO
-    return env.Null();
+    return Napi::String::New(env, fontStr);
   }
 
   void CanvasRenderingContext2D::FontSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
   {
-    // TODO
+    if (!value.IsString())
+    {
+      Napi::TypeError::New(info.Env(), "String expected to set font").ThrowAsJavaScriptException();
+      return;
+    }
+    auto inputStr = value.ToString().Utf8Value();
+    font::FontShorthandParser descriptor(inputStr);
+
+    if (descriptor.success)
+    {
+      auto fontCacheMgr = clientContext->getFontCacheManager();
+      auto typeface = fontCacheMgr.getTypeface(descriptor);
+      if (typeface)
+      {
+        skFont->setSize(descriptor.sizeInPx);
+        skFont->setTypeface(typeface);
+        fontStr = inputStr;
+      }
+    }
   }
 
   Napi::Value CanvasRenderingContext2D::GlobalAlphaGetter(const Napi::CallbackInfo &info)

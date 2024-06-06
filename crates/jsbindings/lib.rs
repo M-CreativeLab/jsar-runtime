@@ -19,7 +19,12 @@ pub mod htmlrender;
 use cssparser::{Parser, ParserInput};
 use std::os::raw::{c_char, c_void};
 use style::context::QuirksMode;
-use style::parser::ParserContext;
+use style::font_face::Source;
+use style::parser::{Parse, ParserContext};
+use style::properties::{
+  parse_one_declaration_into, PropertyDeclarationBlock, PropertyId, ShorthandId,
+  SourcePropertyDeclaration,
+};
 use style::stylesheets::{CssRuleType, Origin};
 use style::values::specified::color::Color;
 use style_traits::ParsingMode;

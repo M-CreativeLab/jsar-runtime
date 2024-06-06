@@ -21,6 +21,7 @@
 #include "common/events/message.hpp"
 #include "common/events/receiver.hpp"
 #include "common/events/sender.hpp"
+#include "common/font/cache.hpp"
 
 using namespace std;
 using namespace node;
@@ -94,6 +95,9 @@ public: // command buffer methods
   bool sendCommandBufferRequest(TrCommandBufferBase &commandBuffer);
   TrCommandBufferResponse* recvCommandBufferResponse(int timeout);
 
+public: // font cache methods
+  font::FontCacheManager& getFontCacheManager();
+
 private:
   void onListenFrames();
 
@@ -116,6 +120,7 @@ private:
   ipc::TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
+  font::FontCacheManager fontCacheManager;
 
 private:  // frame request fields
   map<FrameRequestId, FrameRequestCallback> frameRequestCallbacksMap;
