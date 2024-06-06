@@ -72,18 +72,33 @@ namespace canvasbinding
     assert(clientContext != nullptr);
 
     skCanvas = canvas->skSurface->getCanvas();
+    skCanvas->drawColor(SK_ColorWHITE);
     skPaint = new SkPaint();
     skPaint->setAntiAlias(true);
     skPaint->setStrokeMiter(10);
+    skPaint->setBlendMode(globalCompositeOperation);
+    skPaint->setColor(fillStyle);
 
-    auto typeface = SkTypeface::MakeEmpty();
-    skFont = new SkFont(typeface);
+    auto fontMgr = clientContext->getFontCacheManager();
+    skFont = new SkFont(fontMgr.getTypeface(), 50);
     skFont->setSubpixel(true);
+
+    SkPaint paint;
+    paint.setStyle(SkPaint::kFill_Style);
+    paint.setAntiAlias(true);
+    paint.setStrokeWidth(4);
+    paint.setColor(0xff4285F4);
+    SkRect rect = SkRect::MakeXYWH(10, 10, 100, 160);
+    skCanvas->drawRect(rect, paint);
+
+    auto textBlob = SkTextBlob::MakeFromString("Hello, World!", *skFont);
+    auto textPaint = SkPaint(*skPaint);
+    textPaint.setColor(SK_ColorRED);
+    skCanvas->drawTextBlob(textBlob, 0, 20, textPaint);
   }
 
   CanvasRenderingContext2D::~CanvasRenderingContext2D()
   {
-    delete jsCanvas;
     delete skPaint;
     delete skFont;
   }
@@ -132,16 +147,16 @@ namespace canvasbinding
     Napi::HandleScope scope(env);
 
     auto textStr = info[0].ToString().Utf8Value();
-    uint32_t x = 0;
-    uint32_t y = 0;
+    auto x = info[1].ToNumber().Int32Value();
+    auto y = info[2].ToNumber().Int32Value();
 
     auto fillPaint = getFillPaint();
-    auto blob = SkTextBlob::MakeFromString(textStr.c_str(), *skFont);
-    // TODO: shadow
+    fillPaint.setColor(SK_ColorRED);
 
-    skCanvas->drawTextBlob(blob, x, y, fillPaint);
-    blob.reset();
-    return env.Null();
+    skFont->setSize(50);
+    auto textBlob = SkTextBlob::MakeFromString("Hello", *skFont);
+    skCanvas->drawTextBlob(textBlob, x, y, fillPaint);
+    return env.Undefined();
   }
 
   Napi::Value CanvasRenderingContext2D::Stroke(const Napi::CallbackInfo &info)
@@ -476,7 +491,7 @@ namespace canvasbinding
       if (typeface)
       {
         skFont->setSize(descriptor.sizeInPx);
-        skFont->setTypeface(typeface);
+        // skFont->setTypeface(typeface);
         fontStr = inputStr;
       }
     }
@@ -566,7 +581,7 @@ namespace canvasbinding
 
   SkPaint CanvasRenderingContext2D::getFillPaint()
   {
-    SkPaint paint = *skPaint;
+    SkPaint paint(*skPaint);
     paint.setStyle(SkPaint::kFill_Style);
     paint.setColor(fillStyle);
     // TODO: pattern, gradient

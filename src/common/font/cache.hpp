@@ -20,13 +20,18 @@ namespace font
   public:
     FontCacheManager()
     {
+      fontMgr = SkFontMgr_New_Custom_Directory("/System/Library/Fonts");
+      fprintf(stderr, "FontCacheManager initialized %d fonts\n", fontMgr->countFamilies());
     }
 
   public:
+    sk_sp<SkTypeface> getTypeface()
+    {
+      return fontMgr->matchFamilyStyle("Courier", SkFontStyle::Normal());
+    }
     sk_sp<SkTypeface> getTypeface(FontShorthandParser &descriptor)
     {
-      SkFontStyle fontStyle;
-      auto typeface = fontMgr->matchFamilyStyle(descriptor.family.c_str(), fontStyle);
+      auto typeface = fontMgr->matchFamilyStyle("Courier", SkFontStyle::Normal());
       // TODO: default
       return typeface;
     }

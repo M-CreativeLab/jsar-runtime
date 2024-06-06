@@ -1,3 +1,7 @@
+#include <skia/include/core/SkStream.h>
+#include <skia/include/encode/SkEncoder.h>
+#include <skia/include/encode/SkPngEncoder.h>
+
 #include "canvas.hpp"
 #include "rendering_context2d.hpp"
 #include "debug.hpp"
@@ -116,15 +120,16 @@ namespace canvasbinding
 
   SkBitmap *OffscreenCanvas::getSkBitmap()
   {
-    if (skSurface->getCanvas()->readPixels(*skBitmap, 0, 0))
-      return skBitmap;
-    else
+    auto skCanvas = skSurface->getCanvas();
+    if (skCanvas == nullptr)
       return nullptr;
+    if (!skCanvas->readPixels(*skBitmap, 0, 0))
+      return nullptr;
+    return skBitmap;
   }
 
   sk_sp<SkSurface> &OffscreenCanvas::getSkSurface()
   {
     return skSurface;
   }
-
 } // namespace webgl

@@ -1833,7 +1833,7 @@ namespace webgl
     }
 
     auto req = TextureImage2DCommandBufferRequest(target, level, internalformat);
-    char *pixelsData = nullptr;
+    unsigned char *pixelsData = nullptr;
     if (info.Length() == 6)
     {
       req.format = info[3].As<Napi::Number>().Uint32Value();
@@ -1850,15 +1850,15 @@ namespace webgl
         SkBitmap *bitmap = imageBitmap->getSkBitmap();
         req.width = bitmap->width();
         req.height = bitmap->height();
-        pixelsData = reinterpret_cast<char *>(bitmap->getPixels());
+        pixelsData = reinterpret_cast<unsigned char *>(bitmap->getPixels());
       }
       else if (imageSourceObject.InstanceOf(OffscreenCanvas::constructor->Value()))
       {
-        auto offscreenCanvas = OffscreenCanvas::Unwrap(imageSourceObject);
-        SkBitmap *bitmap = offscreenCanvas->getSkBitmap();
+        auto canvas = OffscreenCanvas::Unwrap(imageSourceObject);
+        SkBitmap *bitmap = canvas->getSkBitmap();
         req.width = bitmap->width();
         req.height = bitmap->height();
-        pixelsData = reinterpret_cast<char *>(bitmap->getPixels());
+        pixelsData = reinterpret_cast<unsigned char *>(bitmap->getPixels());
       }
       else
       {
@@ -1886,12 +1886,12 @@ namespace webgl
         if (pixelsValue.IsArrayBuffer())
         {
           auto arraybuffer = pixelsValue.As<Napi::ArrayBuffer>();
-          pixelsData = static_cast<char *>(arraybuffer.Data());
+          pixelsData = static_cast<unsigned char *>(arraybuffer.Data());
         }
         else if (pixelsValue.IsTypedArray())
         {
           auto typedarray = pixelsValue.As<Napi::TypedArray>();
-          pixelsData = static_cast<char *>(typedarray.ArrayBuffer().Data()) + typedarray.ByteOffset();
+          pixelsData = static_cast<unsigned char *>(typedarray.ArrayBuffer().Data()) + typedarray.ByteOffset();
         }
       }
       else
@@ -1903,11 +1903,11 @@ namespace webgl
 
     if (m_unpackFlipY == true || m_unpackPremultiplyAlpha == true)
     {
-      unsigned char *unpacked = unpackPixels(req.type,
+      unsigned char *unpacked = unpackPixels(req.pixelType,
                                              req.format,
                                              req.width,
                                              req.height,
-                                             reinterpret_cast<unsigned char *>(pixelsData));
+                                             pixelsData);
       req.setPixels(unpacked);
     }
     else

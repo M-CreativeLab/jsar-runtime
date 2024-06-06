@@ -731,6 +731,7 @@ private:
 		auto border = req->border;
 		auto format = req->format;
 		auto type = req->pixelType;
+
 		glTexImage2D(target,
 								 level, internalformat,
 								 width, height,
@@ -740,7 +741,13 @@ private:
 			GLint currentTexture;
 			glGetIntegerv(GL_TEXTURE_BINDING_2D, &currentTexture);
 			DEBUG(DEBUG_TAG, "[%d] GL::TexImage2D(0x%x, level=%d, type=0x%x, internal_format=0x%x, format=0x%x, size=[%d,%d]) texture(%d)",
-						options.isDefaultQueue, target, level, type, internalformat, format, width, height,
+						options.isDefaultQueue, 
+						target, 
+						level, 
+						type,
+						internalformat,
+						format,
+						width, height,
 						currentTexture);
 		}
 	}
