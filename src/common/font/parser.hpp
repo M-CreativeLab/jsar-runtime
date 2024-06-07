@@ -14,6 +14,13 @@ namespace font
                                        "(px|pt|pc|in|cm|mm|%|em|ex|ch|rem|q)"      // unit
                                        "(.+)";                                     // family
 
+  inline string ltrim(string s)
+  {
+    s.erase(s.begin(), find_if(s.begin(), s.end(), [](unsigned char ch)
+                               { return !isspace(ch); }));
+    return s;
+  }
+
   class FontShorthandParser
   {
   public:
@@ -31,12 +38,19 @@ namespace font
       if (!regex_search(input, matches, rFontShorthand))
         return;
 
-      style = matches[1];
+      string styleStr = matches[1];
       variant = matches[2];
       weight = matches[3];
       auto sizeNumber = stod(matches[4]);
       auto sizeUnit = matches[5];
-      family = matches[6];
+      family = ltrim(matches[6]);
+
+      if (styleStr == "normal")
+        style = SkFontStyle::Normal();
+      else if (styleStr == "italic")
+        style = SkFontStyle::Italic();
+      else
+        style = SkFontStyle::Normal();
 
       if (sizeUnit == "em" || sizeUnit == "rem")
         sizeInPx = sizeNumber * defaultHeight;
@@ -55,11 +69,14 @@ namespace font
       else if (sizeUnit == "q")
         sizeInPx = sizeNumber * (96 / 25.4 / 4);
       success = true;
+
+      fprintf(stderr, "Parsed font shorthand: (%s) [%s] [%s] (%s) %fpx\n",
+              styleStr.c_str(), variant.c_str(), weight.c_str(), family.c_str(), sizeInPx);
     }
 
   public:
     string family;
-    string style;
+    SkFontStyle style;
     string variant;
     string weight;
     double sizeInPx = 0.0;

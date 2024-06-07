@@ -776,7 +776,7 @@ namespace canvasbinding
       if (typeface)
       {
         skFont->setSize(descriptor.sizeInPx);
-        // skFont->setTypeface(typeface);
+        skFont->setTypeface(typeface);
         fontStr = inputStr;
       }
     }

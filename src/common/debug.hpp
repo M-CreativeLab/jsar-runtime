@@ -16,6 +16,7 @@ IUnityLog *GET_UNITY_LOG_HANDLE();
 #define LOG_TAG_UNITY "Unity"
 #define LOG_TAG_RENDERER "renderer"
 #define LOG_TAG_XR "jsar.xr"
+#define LOG_TAG_FONT "jsar.font"
 
 #ifdef TR_LOGGING_SIMPLE_TAG
 // Simple tag
