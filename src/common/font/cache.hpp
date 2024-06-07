@@ -128,8 +128,7 @@ namespace font
       addFontsByDir("/Library/Fonts");
       addFontsByDir("/System/Library/Fonts");
 #elif __ANDROID__
-      fontMgr = SkFontMgr_New_Custom_Directory("/system/fonts");
-      else fontMgr = SkFontMgr::RefEmpty();
+      addFontsByDir("/system/fonts");
 #endif
       lookupGenericFamilies();
       printSummary();
