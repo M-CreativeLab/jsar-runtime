@@ -44,6 +44,12 @@ namespace canvasbinding
                                          InstanceAccessor("globalCompositeOperation",
                                                           &CanvasRenderingContext2D::GlobalCompositeOperationGetter,
                                                           &CanvasRenderingContext2D::GlobalCompositeOperationSetter),
+                                         InstanceAccessor("textAlign",
+                                                          &CanvasRenderingContext2D::TextAlignGetter,
+                                                          &CanvasRenderingContext2D::TextAlignSetter),
+                                         InstanceAccessor("textBaseline",
+                                                          &CanvasRenderingContext2D::TextBaselineGetter,
+                                                          &CanvasRenderingContext2D::TextBaselineSetter),
                                      });
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -601,6 +607,95 @@ namespace canvasbinding
 #undef XX
 
     Napi::TypeError::New(info.Env(), "Invalid value for globalCompositeOperation")
+        .ThrowAsJavaScriptException();
+  }
+
+#define TEXT_ALIGN_MAP(XX)      \
+  XX(TextAlign::Start, "start") \
+  XX(TextAlign::End, "end")     \
+  XX(TextAlign::Left, "left")   \
+  XX(TextAlign::Right, "right") \
+  XX(TextAlign::Center, "center")
+
+  Napi::Value CanvasRenderingContext2D::TextAlignGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    switch (textAlign)
+    {
+#define XX(id, name) \
+  case id:           \
+    return Napi::String::New(env, name);
+      TEXT_ALIGN_MAP(XX)
+#undef XX
+    default:
+      return env.Null();
+    }
+  }
+
+  void CanvasRenderingContext2D::TextAlignSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    if (!value.IsString())
+    {
+      Napi::TypeError::New(info.Env(), "String expected to set textAlign").ThrowAsJavaScriptException();
+      return;
+    }
+    std::string textAlignStr = value.ToString().Utf8Value();
+#define XX(id, name)        \
+  if (textAlignStr == name) \
+  {                         \
+    textAlign = id;         \
+    return;                 \
+  }
+    TEXT_ALIGN_MAP(XX)
+#undef XX
+    Napi::TypeError::New(info.Env(), "Invalid value for textAlign")
+        .ThrowAsJavaScriptException();
+  }
+
+#define TEXT_BASELINE_MAP(XX)                  \
+  XX(TextBaseline::Top, "top")                 \
+  XX(TextBaseline::Hanging, "hanging")         \
+  XX(TextBaseline::Middle, "middle")           \
+  XX(TextBaseline::Alphabetic, "alphabetic")   \
+  XX(TextBaseline::Ideographic, "ideographic") \
+  XX(TextBaseline::Bottom, "bottom")
+
+  Napi::Value CanvasRenderingContext2D::TextBaselineGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    switch (textBaseline)
+    {
+#define XX(id, name) \
+  case id:           \
+    return Napi::String::New(env, name);
+      TEXT_BASELINE_MAP(XX)
+#undef XX
+    default:
+      return env.Null();
+    }
+  }
+
+  void CanvasRenderingContext2D::TextBaselineSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    if (!value.IsString())
+    {
+      Napi::TypeError::New(info.Env(), "String expected to set textBaseline").ThrowAsJavaScriptException();
+      return;
+    }
+    std::string textBaselineStr = value.ToString().Utf8Value();
+#define XX(id, name)           \
+  if (textBaselineStr == name) \
+  {                            \
+    textBaseline = id;         \
+    return;                    \
+  }
+    TEXT_BASELINE_MAP(XX)
+#undef XX
+    Napi::TypeError::New(info.Env(), "Invalid value for textBaseline")
         .ThrowAsJavaScriptException();
   }
 

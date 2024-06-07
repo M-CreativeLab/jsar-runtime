@@ -103,6 +103,10 @@ namespace canvasbinding
     void GlobalAlphaSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value GlobalCompositeOperationGetter(const Napi::CallbackInfo &info);
     void GlobalCompositeOperationSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value TextAlignGetter(const Napi::CallbackInfo &info);
+    void TextAlignSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value TextBaselineGetter(const Napi::CallbackInfo &info);
+    void TextBaselineSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
 
   private:
     SkPaint getFillPaint();
