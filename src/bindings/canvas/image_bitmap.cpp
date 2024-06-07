@@ -84,7 +84,7 @@ namespace bindings
         auto imageData = ImageData::Unwrap(imageObjectValue);
         auto bitmap = new SkBitmap();
         bitmap->allocN32Pixels(imageData->width, imageData->height);
-        bitmap->setPixels(imageData->data.data());
+        bitmap->setPixels(imageData->dataAddr());
         external = Napi::External<SkBitmap>::New(env, bitmap);
         deferred.Resolve(constructor->New({external}));
       }

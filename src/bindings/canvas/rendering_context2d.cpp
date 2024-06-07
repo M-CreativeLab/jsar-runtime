@@ -1,4 +1,5 @@
 #include <skia/include/core/SkFontMetrics.h>
+#include <skia/include/core/SkColorSpace.h>
 #include <skia/include/effects/SkDashPathEffect.h>
 
 #include "rendering_context2d.hpp"
@@ -30,6 +31,7 @@ namespace canvasbinding
                                          InstanceMethod("quadraticCurveTo", &CanvasRenderingContext2D::QuadraticCurveTo),
                                          // Image mthods
                                          InstanceMethod("drawImage", &CanvasRenderingContext2D::DrawImage),
+                                         InstanceMethod("createImageData", &CanvasRenderingContext2D::CreateImageData),
                                          InstanceMethod("getImageData", &CanvasRenderingContext2D::GetImageData),
                                          InstanceMethod("putImageData", &CanvasRenderingContext2D::PutImageData),
                                          // Text methods
@@ -563,6 +565,71 @@ namespace canvasbinding
     skCanvas->drawImageRect(imageToDraw, srcRect, dstRect,
                             SkSamplingOptions(), &imagePaint, SkCanvas::kFast_SrcRectConstraint);
     return env.Undefined();
+  }
+
+  inline bool isColorSpaceEqual(skcms_Matrix3x3 x, skcms_Matrix3x3 y)
+  {
+    for (int i = 0; i < 3; i++)
+    {
+      for (int j = 0; j < 3; j++)
+      {
+        if (x.vals[i][j] != y.vals[i][j])
+        {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  Napi::Value CanvasRenderingContext2D::CreateImageData(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() == 0)
+    {
+      Napi::TypeError::New(env, "At least 1 argument expected").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    if (info.Length() == 1)
+    {
+      if (!info[0].IsObject() || !info[0].ToObject().InstanceOf(bindings::canvas::ImageData::constructor->Value()))
+      {
+        Napi::TypeError::New(env, "ImageData should be an `ImageData` object").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+      auto sourceImageData = bindings::canvas::ImageData::Unwrap(info[0].ToObject());
+      auto sourceBitmap = sourceImageData->getBitmap();
+      auto colorSpace = sourceBitmap.colorSpace();
+
+      auto settingsObject = Napi::Object::New(env);
+      settingsObject.Set("colorSpace", Napi::String::New(env, "srgb")); // TODO: copy from ctx `colorSpace`.
+
+      skcms_Matrix3x3 gamut;
+      if (colorSpace->toXYZD50(&gamut))
+      {
+        if (isColorSpaceEqual(gamut, SkNamedGamut::kDisplayP3))
+          settingsObject.Set("colorSpace", Napi::String::New(env, "display-p3"));
+        // TODO: support other color spaces? (e.g. AdobeRGB, ProPhotoRGB, etc.)
+      }
+      return bindings::canvas::ImageData::constructor->New({Napi::Number::New(env, sourceBitmap.width()),
+                                                            Napi::Number::New(env, sourceBitmap.height()),
+                                                            settingsObject});
+    }
+
+    if (!info[0].IsNumber() || !info[1].IsNumber())
+    {
+      Napi::TypeError::New(env, "Width and height should be numbers").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto width = info[0].ToNumber().Uint32Value();
+    auto height = info[1].ToNumber().Uint32Value();
+    return bindings::canvas::ImageData::constructor->New({Napi::Number::New(env, width),
+                                                          Napi::Number::New(env, height),
+                                                          info[2]});
   }
 
   Napi::Value CanvasRenderingContext2D::GetImageData(const Napi::CallbackInfo &info)

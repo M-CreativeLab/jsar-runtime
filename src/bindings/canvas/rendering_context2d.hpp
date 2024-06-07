@@ -92,6 +92,7 @@ namespace canvasbinding
 
   private: // Image methods
     Napi::Value DrawImage(const Napi::CallbackInfo &info);
+    Napi::Value CreateImageData(const Napi::CallbackInfo &info);
     Napi::Value GetImageData(const Napi::CallbackInfo &info);
     Napi::Value PutImageData(const Napi::CallbackInfo &info);
 
@@ -139,7 +140,7 @@ namespace canvasbinding
     SkFont *skFont;
 
   private: // text & font
-    std::string fontStr = "10px monospace";
+    std::string fontStr = "14px monospace";
     TextAlign textAlign = TextAlign::Start;
     TextBaseline textBaseline = TextBaseline::Alphabetic;
 
