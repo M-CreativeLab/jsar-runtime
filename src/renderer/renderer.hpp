@@ -61,6 +61,7 @@ namespace renderer
     chrono::steady_clock::time_point lastFrameTimepoint = chrono::steady_clock::now();
     int frameCount = 0;
     uint32_t fps = 0;
+    bool enableFpsCalc = false;
 
   private: // fields for senders management
     thread *chanSendersWatcher = nullptr;

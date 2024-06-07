@@ -279,7 +279,19 @@ class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext impleme
     srcData: unknown,
     srcOffset?: unknown
   ): void {
-    return this.nativeCall('texImage3D', [].concat(arguments));
+    return this.nativeCall('texImage3D', [
+      target,
+      level,
+      internalformat,
+      width,
+      height,
+      depth,
+      border,
+      format,
+      type,
+      srcData,
+      srcOffset,
+    ]);
   }
   texStorage2D(target: number, levels: number, internalformat: number, width: number, height: number): void {
     return this.nativeCall('texStorage2D', [target, levels, internalformat, width, height]);
@@ -291,7 +303,20 @@ class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext impleme
   texSubImage3D(target: number, level: number, xoffset: number, yoffset: number, zoffset: number, width: number, height: number, depth: number, format: number, type: number, source: TexImageSource): void;
   texSubImage3D(target: number, level: number, xoffset: number, yoffset: number, zoffset: number, width: number, height: number, depth: number, format: number, type: number, srcData: ArrayBufferView, srcOffset?: number): void;
   texSubImage3D(target: number, level: number, xoffset: number, yoffset: number, zoffset: number, width: number, height: number, depth: number, format: number, type: number, srcData: unknown, srcOffset?: unknown): void {
-    return this.nativeCall('texSubImage3D', [].concat(arguments));
+    return this.nativeCall('texSubImage3D', [
+      target,
+      level,
+      xoffset,
+      yoffset,
+      zoffset,
+      width,
+      height,
+      depth,
+      format,
+      type,
+      srcData,
+      srcOffset,
+    ]);
   }
   transformFeedbackVaryings(program: WebGLProgram, varyings: string[], bufferMode: number): void;
   transformFeedbackVaryings(program: WebGLProgram, varyings: Iterable<string>, bufferMode: number): void;

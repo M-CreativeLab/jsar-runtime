@@ -4142,7 +4142,8 @@ namespace webgl
 
     if (info.Length() < 10)
     {
-      Napi::TypeError::New(env, "texImage3D() takes 10 or 11 arguments.")
+      string msg = "texImage3D() takes 10 arguments, but got " + to_string(info.Length()) + ".";
+      Napi::TypeError::New(env, msg)
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }

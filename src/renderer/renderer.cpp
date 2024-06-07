@@ -91,6 +91,9 @@ namespace renderer
 
   uint32_t TrRenderer::getFps()
   {
+    // When someone wants to get fps, it means that fps calculation is enabled.
+    if (!enableFpsCalc)
+      enableFpsCalc = true;
     return fps;
   }
 
@@ -205,6 +208,9 @@ namespace renderer
 
   void TrRenderer::calcFps(chrono::steady_clock::time_point now)
   {
+    if (!enableFpsCalc) // Skip fps calculation if it is disabled.
+      return;
+
     auto delta = chrono::duration_cast<chrono::milliseconds>(now - lastFrameTimepoint).count();
     frameCount += 1;
     if (delta >= 1000)

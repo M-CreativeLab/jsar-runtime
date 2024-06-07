@@ -679,7 +679,17 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     type?: number,
     pixels?: ArrayBufferView
   ): void {
-    return this.nativeCall('texImage2D', [].concat(arguments));
+    return this.nativeCall('texImage2D', [
+      target,
+      level,
+      internalformat,
+      width,
+      height,
+      border,
+      format,
+      type,
+      pixels
+    ]);
   }
   texSubImage2D(
     target: number,
@@ -712,7 +722,17 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     type?: unknown,
     pixels?: unknown
   ): void {
-    return this.nativeCall('texSubImage2D', [].concat(arguments));
+    return this.nativeCall('texSubImage2D', [
+      target,
+      level,
+      xoffset,
+      yoffset,
+      width,
+      height,
+      format,
+      type,
+      pixels
+    ]);
   }
   uniform1fv(location: WebGLUniformLocation, v: Float32List): void;
   uniform1fv(location: WebGLUniformLocation, v: Iterable<number>): void;
