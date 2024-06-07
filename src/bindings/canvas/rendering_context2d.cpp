@@ -1,4 +1,6 @@
+#include <skia/include/core/SkFontMetrics.h>
 #include <skia/include/effects/SkDashPathEffect.h>
+
 #include "rendering_context2d.hpp"
 #include "crates/jsar_jsbindings.h"
 #include "common/font/parser.hpp"
@@ -82,19 +84,6 @@ namespace canvasbinding
     auto fontMgr = clientContext->getFontCacheManager();
     skFont = new SkFont(fontMgr.getTypeface(), 50);
     skFont->setSubpixel(true);
-
-    SkPaint paint;
-    paint.setStyle(SkPaint::kFill_Style);
-    paint.setAntiAlias(true);
-    paint.setStrokeWidth(4);
-    paint.setColor(0xff4285F4);
-    SkRect rect = SkRect::MakeXYWH(10, 10, 100, 160);
-    skCanvas->drawRect(rect, paint);
-
-    auto textBlob = SkTextBlob::MakeFromString("Hello, World!", *skFont);
-    auto textPaint = SkPaint(*skPaint);
-    textPaint.setColor(SK_ColorRED);
-    skCanvas->drawTextBlob(textBlob, 0, 20, textPaint);
   }
 
   CanvasRenderingContext2D::~CanvasRenderingContext2D()
@@ -151,10 +140,7 @@ namespace canvasbinding
     auto y = info[2].ToNumber().Int32Value();
 
     auto fillPaint = getFillPaint();
-    fillPaint.setColor(SK_ColorRED);
-
-    skFont->setSize(50);
-    auto textBlob = SkTextBlob::MakeFromString("Hello", *skFont);
+    auto textBlob = SkTextBlob::MakeFromString(textStr.c_str(), *skFont);
     skCanvas->drawTextBlob(textBlob, x, y, fillPaint);
     return env.Undefined();
   }
@@ -413,6 +399,7 @@ namespace canvasbinding
       return env.Null();
     }
     auto text = info[0].ToString().Utf8Value();
+    auto jsTextMetrics = Napi::Object::New(env);
 
     SkGlyphID ids[256];
     int glyphsCount = skFont->textToGlyphs(text.c_str(), text.size(), SkTextEncoding::kUTF8, ids, 256);
@@ -423,10 +410,27 @@ namespace canvasbinding
     SkScalar totalWidth = 0;
     for (int i = 0; i < glyphsCount; i++)
       totalWidth += widths[i];
+    jsTextMetrics.Set("width", Napi::Number::New(env, totalWidth));
 
-    auto result = Napi::Object::New(env);
-    result.Set("width", Napi::Number::New(env, totalWidth));
-    return result;
+    SkFontMetrics metrics;
+    skFont->getMetrics(&metrics);
+    jsTextMetrics.Set("fontBoundingBoxAscent", Napi::Number::New(env, metrics.fAscent));
+    jsTextMetrics.Set("fontBoundingBoxDescent", Napi::Number::New(env, metrics.fDescent));
+
+    SkRect bounds;
+    skFont->measureText(text.c_str(), text.size(), SkTextEncoding::kUTF8, &bounds);
+    jsTextMetrics.Set("actualBoundingBoxLeft", Napi::Number::New(env, bounds.left()));
+    jsTextMetrics.Set("actualBoundingBoxRight", Napi::Number::New(env, bounds.right()));
+    jsTextMetrics.Set("actualBoundingBoxAscent", Napi::Number::New(env, -bounds.top()));
+    jsTextMetrics.Set("actualBoundingBoxDescent", Napi::Number::New(env, bounds.bottom()));
+
+    // Others
+    jsTextMetrics.Set("emHeightAscent", Napi::Number::New(env, metrics.fCapHeight));
+    jsTextMetrics.Set("emHeightDescent", Napi::Number::New(env, metrics.fXHeight));
+    jsTextMetrics.Set("alphabeticBaseline", Napi::Number::New(env, metrics.fAscent));
+    jsTextMetrics.Set("hangingBaseline", Napi::Number::New(env, metrics.fAscent - metrics.fCapHeight));
+    jsTextMetrics.Set("ideographicBaseline", Napi::Number::New(env, metrics.fAscent - metrics.fXHeight));
+    return jsTextMetrics;
   }
 
   Napi::Value CanvasRenderingContext2D::CurrentTransformGetter(const Napi::CallbackInfo &info)
