@@ -133,6 +133,8 @@ namespace canvasbinding
     auto height = info[3].ToNumber().FloatValue();
 
     auto fillPaint = getFillPaint();
+    // TODO: shadow painting
+    skCanvas->drawRect(SkRect::MakeXYWH(x, y, width, height), fillPaint);
     return env.Null();
   }
 
@@ -696,6 +698,108 @@ namespace canvasbinding
     TEXT_BASELINE_MAP(XX)
 #undef XX
     Napi::TypeError::New(info.Env(), "Invalid value for textBaseline")
+        .ThrowAsJavaScriptException();
+  }
+
+  Napi::Value CanvasRenderingContext2D::LineWidthGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Number::New(env, skPaint->getStrokeWidth());
+  }
+
+  void CanvasRenderingContext2D::LineWidthSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    if (!value.IsNumber())
+    {
+      Napi::TypeError::New(info.Env(), "Number expected to set lineWidth").ThrowAsJavaScriptException();
+      return;
+    }
+    strokeWidth = value.ToNumber().FloatValue();
+    skPaint->setStrokeWidth(strokeWidth);
+  }
+
+#define LINE_CAP_MAP(XX)           \
+  XX(SkPaint::kButt_Cap, "butt")   \
+  XX(SkPaint::kRound_Cap, "round") \
+  XX(SkPaint::kSquare_Cap, "square")
+
+  Napi::Value CanvasRenderingContext2D::LineCapGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    switch (skPaint->getStrokeCap())
+    {
+#define XX(id, name) \
+  case id:           \
+    return Napi::String::New(env, name);
+      LINE_CAP_MAP(XX)
+#undef XX
+    default:
+      return env.Null();
+    }
+  }
+
+  void CanvasRenderingContext2D::LineCapSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    if (!value.IsString())
+    {
+      Napi::TypeError::New(info.Env(), "String expected to set lineCap").ThrowAsJavaScriptException();
+      return;
+    }
+    std::string lineCapStr = value.ToString().Utf8Value();
+#define XX(id, name)           \
+  if (lineCapStr == name)      \
+  {                            \
+    skPaint->setStrokeCap(id); \
+    return;                    \
+  }
+    LINE_CAP_MAP(XX)
+#undef XX
+    Napi::TypeError::New(info.Env(), "Invalid value for `lineCap`")
+        .ThrowAsJavaScriptException();
+  }
+
+#define LINE_JOIN_MAP(XX)           \
+  XX(SkPaint::kMiter_Join, "miter") \
+  XX(SkPaint::kRound_Join, "round") \
+  XX(SkPaint::kBevel_Join, "bevel")
+
+  Napi::Value CanvasRenderingContext2D::LineJoinGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    switch (skPaint->getStrokeJoin())
+    {
+#define XX(id, name) \
+  case id:           \
+    return Napi::String::New(env, name);
+      LINE_JOIN_MAP(XX)
+#undef XX
+    default:
+      return env.Null();
+    }
+  }
+
+  void CanvasRenderingContext2D::LineJoinSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    if (!value.IsString())
+    {
+      Napi::TypeError::New(info.Env(), "String expected to set lineJoin").ThrowAsJavaScriptException();
+      return;
+    }
+    std::string lineJoinStr = value.ToString().Utf8Value();
+#define XX(id, name)            \
+  if (lineJoinStr == name)      \
+  {                             \
+    skPaint->setStrokeJoin(id); \
+    return;                     \
+  }
+    LINE_JOIN_MAP(XX)
+#undef XX
+    Napi::TypeError::New(info.Env(), "Invalid value for `lineJoin`")
         .ThrowAsJavaScriptException();
   }
 

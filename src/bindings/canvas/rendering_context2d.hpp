@@ -107,6 +107,12 @@ namespace canvasbinding
     void TextAlignSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value TextBaselineGetter(const Napi::CallbackInfo &info);
     void TextBaselineSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value LineWidthGetter(const Napi::CallbackInfo &info);
+    void LineWidthSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value LineCapGetter(const Napi::CallbackInfo &info);
+    void LineCapSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value LineJoinGetter(const Napi::CallbackInfo &info);
+    void LineJoinSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
 
   private:
     SkPaint getFillPaint();
