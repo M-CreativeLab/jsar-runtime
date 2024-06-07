@@ -31,6 +31,7 @@ namespace canvasbinding
                                          // Image mthods
                                          InstanceMethod("drawImage", &CanvasRenderingContext2D::DrawImage),
                                          InstanceMethod("getImageData", &CanvasRenderingContext2D::GetImageData),
+                                         InstanceMethod("putImageData", &CanvasRenderingContext2D::PutImageData),
                                          // Text methods
                                          InstanceMethod("measureText", &CanvasRenderingContext2D::MeasureText),
                                          // States
@@ -40,6 +41,9 @@ namespace canvasbinding
                                          InstanceAccessor("fillStyle",
                                                           &CanvasRenderingContext2D::FillStyleGetter,
                                                           &CanvasRenderingContext2D::FillStyleSetter),
+                                         InstanceAccessor("strokeStyle",
+                                                          &CanvasRenderingContext2D::StrokeStyleGetter,
+                                                          &CanvasRenderingContext2D::StrokeStyleSetter),
                                          InstanceAccessor("font",
                                                           &CanvasRenderingContext2D::FontGetter,
                                                           &CanvasRenderingContext2D::FontSetter),
@@ -55,6 +59,15 @@ namespace canvasbinding
                                          InstanceAccessor("textBaseline",
                                                           &CanvasRenderingContext2D::TextBaselineGetter,
                                                           &CanvasRenderingContext2D::TextBaselineSetter),
+                                         InstanceAccessor("lineWidth",
+                                                          &CanvasRenderingContext2D::LineWidthGetter,
+                                                          &CanvasRenderingContext2D::LineWidthSetter),
+                                         InstanceAccessor("lineCap",
+                                                          &CanvasRenderingContext2D::LineCapGetter,
+                                                          &CanvasRenderingContext2D::LineCapSetter),
+                                         InstanceAccessor("lineJoin",
+                                                          &CanvasRenderingContext2D::LineJoinGetter,
+                                                          &CanvasRenderingContext2D::LineJoinSetter),
                                      });
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -547,9 +560,8 @@ namespace canvasbinding
     }
 
     auto imagePaint = getFillPaint();
-    SkSamplingOptions samplingOpts;
     skCanvas->drawImageRect(imageToDraw, srcRect, dstRect,
-                            samplingOpts, &imagePaint, SkCanvas::kFast_SrcRectConstraint);
+                            SkSamplingOptions(), &imagePaint, SkCanvas::kFast_SrcRectConstraint);
     return env.Undefined();
   }
 
@@ -589,6 +601,94 @@ namespace canvasbinding
                                                           Napi::Number::New(env, h)});
   }
 
+  Napi::Value CanvasRenderingContext2D::PutImageData(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3)
+    {
+      Napi::TypeError::New(env, "At least 3 arguments expected").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsObject() || !info[0].ToObject().InstanceOf(bindings::canvas::ImageData::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "ImageData should be an ImageData object").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto imageData = bindings::canvas::ImageData::Unwrap(info[0].ToObject());
+    auto dx = info[1].ToNumber().FloatValue();
+    auto dy = info[2].ToNumber().FloatValue();
+    if (info.Length() == 3)
+    {
+      SkBitmap bitmapToWrite = imageData->getBitmap();
+      skCanvas->writePixels(bitmapToWrite, dx, dy);
+    }
+    else if (info.Length() == 7)
+    {
+      sk_sp<SkImage> image = imageData->getImage();
+      float dirtyX = 0;
+      float dirtyY = 0;
+      float dirtyWidth = image->width();
+      float dirtyHeight = image->height();
+
+      if (info[3].IsNumber())
+        dirtyX = info[3].ToNumber().FloatValue();
+      if (info[4].IsNumber())
+        dirtyY = info[4].ToNumber().FloatValue();
+      if (info[5].IsNumber())
+        dirtyWidth = info[5].ToNumber().FloatValue();
+      if (info[6].IsNumber())
+        dirtyHeight = info[6].ToNumber().FloatValue();
+
+      if (dirtyWidth < 0)
+      {
+        dirtyX += dirtyWidth;
+        dirtyWidth = abs(dirtyWidth);
+      }
+      if (dirtyHeight < 0)
+      {
+        dirtyY += dirtyHeight;
+        dirtyHeight = abs(dirtyHeight);
+      }
+      if (dirtyX < 0)
+      {
+        dirtyWidth += dirtyX;
+        dirtyX = 0;
+      }
+      if (dirtyY < 0)
+      {
+        dirtyHeight += dirtyY;
+        dirtyY = 0;
+      }
+      if (dirtyWidth <= 0 || dirtyHeight <= 0)
+        return env.Undefined();
+
+      SkRect srcRect = SkRect::MakeXYWH(dirtyX, dirtyY, dirtyWidth, dirtyHeight);
+      SkRect dstRect = SkRect::MakeXYWH(dx + dirtyX, dy + dirtyY, dirtyWidth, dirtyHeight);
+
+      SkMatrix invertedCtm;
+      if (currentTransform.invert(&invertedCtm))
+      {
+        skCanvas->save();
+        skCanvas->concat(invertedCtm);
+        skCanvas->drawImageRect(image, srcRect, dstRect,
+                                SkSamplingOptions(), nullptr, SkCanvas::kFast_SrcRectConstraint);
+        skCanvas->restore();
+      }
+      else
+      {
+        Napi::TypeError::New(env, "Failed to invert current transform matrix").ThrowAsJavaScriptException();
+      }
+    }
+    else
+    {
+      Napi::TypeError::New(env, "Invalid number of arguments to call putImageData()").ThrowAsJavaScriptException();
+    }
+    return env.Undefined();
+  }
+
   Napi::Value CanvasRenderingContext2D::CurrentTransformGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -620,6 +720,31 @@ namespace canvasbinding
       auto colorStr = value.ToString().Utf8Value();
       auto color = parse_csscolor(colorStr.c_str());
       fillStyle = SkColorSetARGB(color.a, color.r, color.g, color.b);
+    }
+    else
+    {
+      // TODO: pattern, gradient
+    }
+  }
+
+  Napi::Value CanvasRenderingContext2D::StrokeStyleGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    // TODO
+    return env.Null();
+  }
+
+  void CanvasRenderingContext2D::StrokeStyleSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (value.IsString())
+    {
+      auto colorStr = value.ToString().Utf8Value();
+      auto color = parse_csscolor(colorStr.c_str());
+      strokeStyle = SkColorSetARGB(color.a, color.r, color.g, color.b);
     }
     else
     {
@@ -943,8 +1068,10 @@ namespace canvasbinding
   {
     SkPaint paint = *skPaint;
     paint.setStyle(SkPaint::kStroke_Style);
+    paint.setColor(strokeStyle);
     // TODO
     paint.setStrokeWidth(strokeWidth);
+    fprintf(stderr, "lineCap: %f %f\n", paint.getStrokeWidth(), strokeWidth);
 
     if (lineDash.size())
     {

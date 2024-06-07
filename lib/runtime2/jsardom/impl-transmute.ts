@@ -24,11 +24,6 @@ import {
   XRMatrixPlaceholder,
   XRMatrixPlaceholderType
 } from '../../webxr/api/XRRigidTransform';
-import {
-  OffscreenCanvasImpl,
-  createImageBitmapImpl,
-  kDisposeCanvas
-} from '../../polyfills/offscreencanvas';
 
 type TransmuteEngineOptions = BABYLON.EngineOptions & {
   xrSessionId: number;
@@ -336,8 +331,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     throw new TypeError('Method not implemented.');
   }
   createImageBitmap(image: ArrayBuffer | ArrayBufferView): Promise<ImageBitmap> {
-    const blob = new Blob([image]);
-    return createImageBitmapImpl(blob);
+    return createImageBitmap(new Blob([image]));
   }
   async decodeImage(bitmap: ImageBitmap, size?: [number, number]): Promise<ImageDataImpl> {
     let expectedWidth = Math.floor(size[0]);
@@ -349,7 +343,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
       expectedHeight = bitmap.height;
     }
 
-    const offscreenCanvas = new OffscreenCanvasImpl(expectedWidth, expectedHeight);
+    const offscreenCanvas = new OffscreenCanvas(expectedWidth, expectedHeight);
     const ctx = offscreenCanvas.getContext('2d');
     if (ctx == null) {
       throw new TypeError('Failed to get 2d context from offscreen canvas.');
@@ -363,8 +357,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
       offscreenCanvas.width, offscreenCanvas.height
     );
     const imageData = ctx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
-    offscreenCanvas[kDisposeCanvas]();
-    return Promise.resolve(imageData as any);
+    return imageData as ImageDataImpl;
   }
   stop(): void {
     // TODO

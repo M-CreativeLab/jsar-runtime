@@ -2,6 +2,7 @@
 
 #include <napi.h>
 #include <skia/include/core/SkImage.h>
+#include <skia/include/core/SkBitmap.h>
 
 namespace bindings
 {
@@ -19,6 +20,10 @@ namespace bindings
       Napi::Value HeightGetter(const Napi::CallbackInfo &info);
       Napi::Value ColorSpaceGetter(const Napi::CallbackInfo &info);
       Napi::Value DataGetter(const Napi::CallbackInfo &info);
+
+    public:
+      sk_sp<SkImage> getImage() const;
+      SkBitmap getBitmap() const;
 
     private:
       uint32_t width;

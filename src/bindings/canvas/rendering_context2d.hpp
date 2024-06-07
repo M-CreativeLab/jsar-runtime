@@ -2,6 +2,7 @@
 
 #include <napi.h>
 #include <skia/include/core/SkData.h>
+#include <skia/include/core/SkMatrix.h>
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkSurface.h>
 #include <skia/include/core/SkCanvas.h>
@@ -92,6 +93,7 @@ namespace canvasbinding
   private: // Image methods
     Napi::Value DrawImage(const Napi::CallbackInfo &info);
     Napi::Value GetImageData(const Napi::CallbackInfo &info);
+    Napi::Value PutImageData(const Napi::CallbackInfo &info);
 
   private: // Text methods
     Napi::Value MeasureText(const Napi::CallbackInfo &info);
@@ -101,6 +103,8 @@ namespace canvasbinding
     void CurrentTransformSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value FillStyleGetter(const Napi::CallbackInfo &info);
     void FillStyleSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value StrokeStyleGetter(const Napi::CallbackInfo &info);
+    void StrokeStyleSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value FontGetter(const Napi::CallbackInfo &info);
     void FontSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value GlobalAlphaGetter(const Napi::CallbackInfo &info);
@@ -154,7 +158,7 @@ namespace canvasbinding
 
   private:
     SkPath *currentPath = nullptr;
-    glm::mat2x3 currentTransform = glm::mat2x3(1.0f);
+    SkMatrix currentTransform = SkMatrix::I();
 
   public:
     static Napi::FunctionReference *constructor;

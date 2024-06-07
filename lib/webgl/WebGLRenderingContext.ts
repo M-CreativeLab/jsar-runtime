@@ -5,7 +5,6 @@ import {
   type NativeCallOptions,
   makeNativeCall,
   setupConstantNamesMap,
-  getTextureParametersFromImageSource,
   isTypedArray,
   unpackTypedArray
 } from './utils';
@@ -680,42 +679,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     type?: number,
     pixels?: ArrayBufferView
   ): void {
-    const callOptions = <NativeCallOptions>{
-      debug: {
-        argTypes: ['constant', , 'constant', , , , 'constant', 'constant'],
-      }
-    };
-    if (arguments.length === 9) {
-      if (pixels instanceof ArrayBuffer) {
-        pixels = new Uint8Array(pixels);
-      }
-      return this.nativeCall('texImage2D', [
-        target,
-        level,
-        internalformat,
-        width as number,
-        height as number,
-        border as number,
-        format,
-        type,
-        pixels
-      ], callOptions);
-    } else if (arguments.length === 6) {
-      const params = getTextureParametersFromImageSource.apply(this, arguments);
-      return this.nativeCall('texImage2D', [
-        target,
-        level,
-        internalformat,
-        params.width,
-        params.height,
-        0,
-        params.format,
-        params.type,
-        params.pixels,
-      ], callOptions);
-    } else {
-      throw new Error('Invalid number of arguments for texImage2D()');
-    }
+    return this.nativeCall('texImage2D', [].concat(arguments));
   }
   texSubImage2D(
     target: number,
@@ -748,7 +712,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
     type?: unknown,
     pixels?: unknown
   ): void {
-    throw new Error('Method not implemented.');
+    return this.nativeCall('texSubImage2D', [].concat(arguments));
   }
   uniform1fv(location: WebGLUniformLocation, v: Float32List): void;
   uniform1fv(location: WebGLUniformLocation, v: Iterable<number>): void;

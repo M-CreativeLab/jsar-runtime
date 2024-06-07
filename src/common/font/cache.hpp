@@ -15,23 +15,28 @@ using namespace std;
 
 namespace font
 {
+#ifdef __APPLE__
+  constexpr const char *DEFAULT_FONT_FAMILY = "PingFang SC";
+#else
+  constexpr const char *DEFAULT_FONT_FAMILY = "Arial";
+#endif
+
   class FontCacheManager
   {
   public:
     FontCacheManager()
     {
       fontMgr = SkFontMgr_New_Custom_Directory("/System/Library/Fonts");
-      fprintf(stderr, "FontCacheManager initialized %d fonts\n", fontMgr->countFamilies());
     }
 
   public:
     sk_sp<SkTypeface> getTypeface()
     {
-      return fontMgr->matchFamilyStyle("Courier", SkFontStyle::Normal());
+      return fontMgr->matchFamilyStyle(DEFAULT_FONT_FAMILY, SkFontStyle::Normal());
     }
     sk_sp<SkTypeface> getTypeface(FontShorthandParser &descriptor)
     {
-      auto typeface = fontMgr->matchFamilyStyle("Courier", SkFontStyle::Normal());
+      auto typeface = fontMgr->matchFamilyStyle(DEFAULT_FONT_FAMILY, SkFontStyle::Normal());
       // TODO: default
       return typeface;
     }

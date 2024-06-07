@@ -1,5 +1,4 @@
-import * as logger from '../bindings/logger';
-import { ImageBitmapImpl, OffscreenCanvasImpl, kReadPixels } from '../polyfills/offscreencanvas';
+import * as logger from '@transmute/logger';
 
 type ArgType = 'default' | 'ignore' | 'constant';
 type TypedArray =
@@ -113,78 +112,4 @@ export function makeNativeCall(
     logger.info(`WebGL::${name}(${argsStr}) ${returnStr}`);
   }
   return r;
-}
-
-export function isTexImageSource(imageSource: unknown): imageSource is TexImageSource {
-  return (
-    imageSource instanceof ImageBitmapImpl ||
-    imageSource instanceof OffscreenCanvasImpl
-  );
-}
-
-export function getPixelsFromTexImageSource(
-  colorType: 'rgb8' | 'rgba8',
-  imageSource: TexImageSource
-): {
-  width: number;
-  height: number;
-  data: ArrayBufferView;
-} {
-  let pixels: ArrayBufferView;
-  if (
-    imageSource instanceof ImageBitmapImpl ||
-    imageSource instanceof OffscreenCanvasImpl
-  ) {
-    pixels = imageSource[kReadPixels]({
-      colorType,
-    });
-  } else {
-    throw new Error(`Unsupported image source type`);
-  }
-  return {
-    width: imageSource.width,
-    height: imageSource.height,
-    data: pixels,
-  };
-}
-
-export function getTextureParametersFromImageSource(
-  this: WebGLRenderingContext | WebGL2RenderingContext,
-  ...args: any[]
-): {
-  format: number;
-  type: number;
-  width: number;
-  height: number;
-  pixels: ArrayBufferView;
-} {
-  const format = <number>(args[3]);
-  const type = <number>(args[4]);
-  const imageSource = <TexImageSource>(args[5]);
-
-  let pixels: ArrayBufferView;
-  if (
-    imageSource instanceof ImageBitmapImpl ||
-    imageSource instanceof OffscreenCanvasImpl
-  ) {
-    pixels = imageSource[kReadPixels]({
-      colorType: format === this.RGB ? 'rgb8' : 'rgba8',
-    });
-  } else {
-    logger.error(`Unsupported image source type for texImage2D():`, imageSource);
-    throw new Error(`Unsupported image source type for texImage2D()`);
-  }
-
-  // Convert ArrayBuffer to TypedArray
-  if (pixels instanceof ArrayBuffer) {
-    pixels = new Uint8Array(pixels);
-  }
-
-  return {
-    format,
-    type,
-    width: imageSource.width,
-    height: imageSource.height,
-    pixels,
-  };
 }

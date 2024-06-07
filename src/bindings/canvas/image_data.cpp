@@ -1,4 +1,6 @@
 #include <skia/include/core/SkImageInfo.h>
+#include <skia/include/core/SkPixmap.h>
+#include <skia/include/core/SkData.h>
 #include "image_data.hpp"
 
 namespace bindings
@@ -126,6 +128,23 @@ namespace bindings
       auto dataArray = Napi::Uint8Array::New(env, data.size(), napi_uint8_clamped_array);
       std::copy(data.begin(), data.end(), dataArray.Data());
       return dataArray;
+    }
+
+    sk_sp<SkImage> ImageData::getImage() const
+    {
+      SkImageInfo imageInfo = SkImageInfo::Make(width, height, colorSpace, kPremul_SkAlphaType);
+      auto pixels = SkData::MakeWithoutCopy(data.data(), data.size());
+      auto image = SkImages::RasterFromData(imageInfo, pixels, imageInfo.minRowBytes());
+      return image;
+    }
+
+    SkBitmap ImageData::getBitmap() const
+    {
+      void* pixelsData = (void*)data.data();
+      SkImageInfo imageInfo = SkImageInfo::Make(width, height, colorSpace, kPremul_SkAlphaType);
+      SkBitmap bitmap;
+      bitmap.installPixels(imageInfo, pixelsData, imageInfo.minRowBytes());
+      return bitmap;
     }
   } // namespace canvas
 }
