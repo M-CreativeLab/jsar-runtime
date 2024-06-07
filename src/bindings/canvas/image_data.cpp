@@ -28,7 +28,7 @@ namespace bindings
       Napi::Env env = info.Env();
       Napi::HandleScope scope(env);
 
-      if (info.Length() >= 2)
+      if (info.Length() < 2)
       {
         Napi::TypeError::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
         return;
@@ -123,7 +123,7 @@ namespace bindings
       Napi::Env env = info.Env();
       Napi::HandleScope scope(env);
       
-      auto dataArray = Napi::Uint8Array::New(env, data.size());
+      auto dataArray = Napi::Uint8Array::New(env, data.size(), napi_uint8_clamped_array);
       std::copy(data.begin(), data.end(), dataArray.Data());
       return dataArray;
     }

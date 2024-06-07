@@ -2,6 +2,8 @@
 #include <skia/include/effects/SkDashPathEffect.h>
 
 #include "rendering_context2d.hpp"
+#include "image_bitmap.hpp"
+#include "image_data.hpp"
 #include "crates/jsar_jsbindings.h"
 #include "common/font/parser.hpp"
 
@@ -26,6 +28,9 @@ namespace canvasbinding
                                          InstanceMethod("lineTo", &CanvasRenderingContext2D::LineTo),
                                          InstanceMethod("bezierCurveTo", &CanvasRenderingContext2D::BezierCurveTo),
                                          InstanceMethod("quadraticCurveTo", &CanvasRenderingContext2D::QuadraticCurveTo),
+                                         // Image mthods
+                                         InstanceMethod("drawImage", &CanvasRenderingContext2D::DrawImage),
+                                         InstanceMethod("getImageData", &CanvasRenderingContext2D::GetImageData),
                                          // Text methods
                                          InstanceMethod("measureText", &CanvasRenderingContext2D::MeasureText),
                                          // States
@@ -460,6 +465,128 @@ namespace canvasbinding
     jsTextMetrics.Set("alphabeticBaseline", Napi::Number::New(env, textMetrics.alphabeticBaseline));
     jsTextMetrics.Set("ideographicBaseline", Napi::Number::New(env, textMetrics.ideographicBaseline));
     return jsTextMetrics;
+  }
+
+  Napi::Value CanvasRenderingContext2D::DrawImage(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3)
+    {
+      Napi::TypeError::New(env, "At least 1 arguments expected").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsObject())
+    {
+      Napi::TypeError::New(env, "Image should be an object").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto imageObjectToDraw = info[0].ToObject();
+    sk_sp<SkImage> imageToDraw;
+    if (imageObjectToDraw.InstanceOf(bindings::canvas::ImageBitmap::constructor->Value()))
+    {
+      auto sourceBitmap = bindings::canvas::ImageBitmap::Unwrap(imageObjectToDraw);
+      auto skBitmap = sourceBitmap->getSkBitmap();
+      imageToDraw = skBitmap->asImage();
+    }
+    else
+    {
+      /**
+       * TODO: support more image source types as follows:
+       * - HTMLImageElement
+       * - SVGImageElement
+       * - HTMLVideoElement
+       * - HTMLCanvasElement
+       * - OffscreenCanvas
+       * - VideoFrame
+       */
+      Napi::TypeError::New(env, "Image should be an ImageBitmap").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    SkRect srcRect;
+    SkRect dstRect;
+    if (info.Length() == 3)
+    {
+      // drawImage(image, dx, dy)
+      auto dx = info[1].ToNumber().FloatValue();
+      auto dy = info[2].ToNumber().FloatValue();
+      dstRect = SkRect::MakeXYWH(dx, dy, imageToDraw->width(), imageToDraw->height());
+      srcRect = SkRect::MakeXYWH(0, 0, imageToDraw->width(), imageToDraw->height());
+    }
+    else if (info.Length() == 5)
+    {
+      // drawImage(image, dx, dy, dWidth, dHeight)
+      auto dx = info[1].ToNumber().FloatValue();
+      auto dy = info[2].ToNumber().FloatValue();
+      auto dWidth = info[3].ToNumber().FloatValue();
+      auto dHeight = info[4].ToNumber().FloatValue();
+      dstRect = SkRect::MakeXYWH(dx, dy, dWidth, dHeight);
+      srcRect = SkRect::MakeXYWH(0, 0, imageToDraw->width(), imageToDraw->height());
+    }
+    else if (info.Length() == 9)
+    {
+      // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+      auto sx = info[1].ToNumber().FloatValue();
+      auto sy = info[2].ToNumber().FloatValue();
+      auto sWidth = info[3].ToNumber().FloatValue();
+      auto sHeight = info[4].ToNumber().FloatValue();
+      auto dx = info[5].ToNumber().FloatValue();
+      auto dy = info[6].ToNumber().FloatValue();
+      auto dWidth = info[7].ToNumber().FloatValue();
+      auto dHeight = info[8].ToNumber().FloatValue();
+      dstRect = SkRect::MakeXYWH(dx, dy, dWidth, dHeight);
+      srcRect = SkRect::MakeXYWH(sx, sy, sWidth, sHeight);
+    }
+    else
+    {
+      Napi::TypeError::New(env, "Invalid number of arguments to call drawImage()").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto imagePaint = getFillPaint();
+    SkSamplingOptions samplingOpts;
+    skCanvas->drawImageRect(imageToDraw, srcRect, dstRect,
+                            samplingOpts, &imagePaint, SkCanvas::kFast_SrcRectConstraint);
+    return env.Undefined();
+  }
+
+  Napi::Value CanvasRenderingContext2D::GetImageData(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() != 4)
+    {
+      Napi::TypeError::New(env, "4 arguments expected").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto x = info[0].ToNumber().Uint32Value();
+    auto y = info[1].ToNumber().Uint32Value();
+    auto w = info[2].ToNumber().Uint32Value();
+    auto h = info[3].ToNumber().Uint32Value();
+
+    if (w == 0 || h == 0)
+    {
+      Napi::TypeError::New(env, "Invalid width or height").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    // TODO: support SecurityError reporting.
+
+    SkImageInfo dstImageInfo = SkImageInfo::Make(w, h, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+    uint8_t *dstPixels = new uint8_t[dstImageInfo.computeMinByteSize()];
+    skCanvas->readPixels(dstImageInfo, dstPixels, dstImageInfo.minRowBytes(), x, y);
+
+    Napi::Uint8Array jsPixelsBuffer = Napi::Uint8Array::New(env, dstImageInfo.computeMinByteSize(), napi_uint8_clamped_array);
+    memcpy(jsPixelsBuffer.Data(), dstPixels, dstImageInfo.computeMinByteSize());
+    delete[] dstPixels;
+
+    return bindings::canvas::ImageData::constructor->New({jsPixelsBuffer,
+                                                          Napi::Number::New(env, w),
+                                                          Napi::Number::New(env, h)});
   }
 
   Napi::Value CanvasRenderingContext2D::CurrentTransformGetter(const Napi::CallbackInfo &info)

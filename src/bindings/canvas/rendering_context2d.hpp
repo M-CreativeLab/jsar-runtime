@@ -89,6 +89,10 @@ namespace canvasbinding
     Napi::Value Ellipse(const Napi::CallbackInfo &info);
     Napi::Value Rect(const Napi::CallbackInfo &info);
 
+  private: // Image methods
+    Napi::Value DrawImage(const Napi::CallbackInfo &info);
+    Napi::Value GetImageData(const Napi::CallbackInfo &info);
+
   private: // Text methods
     Napi::Value MeasureText(const Napi::CallbackInfo &info);
 
