@@ -18,6 +18,47 @@
 
 namespace canvasbinding
 {
+  enum class TextAlign
+  {
+    Start,
+    End,
+    Left,
+    Right,
+    Center
+  };
+
+  enum class TextBaseline
+  {
+    Top,
+    Hanging,
+    Middle,
+    Alphabetic,
+    Ideographic,
+    Bottom
+  };
+
+  class TextMetrics
+  {
+  public:
+    TextMetrics()
+    {
+    }
+
+  public:
+    float width;
+    float actualBoundingBoxLeft;
+    float actualBoundingBoxRight;
+    float fontBoundingBoxAscent;
+    float fontBoundingBoxDescent;
+    float actualBoundingBoxAscent;
+    float actualBoundingBoxDescent;
+    float emHeightAscent;
+    float emHeightDescent;
+    float hangingBaseline;
+    float alphabeticBaseline;
+    float ideographicBaseline;
+  };
+
   class CanvasRenderingContext2D : public Napi::ObjectWrap<CanvasRenderingContext2D>
   {
   public:
@@ -67,6 +108,7 @@ namespace canvasbinding
     SkPaint getFillPaint();
     SkPaint getStrokePaint();
     SkPaint *getShadowPaint(SkPaint &basePaint);
+    TextMetrics measureText(const std::string &text);
     void closeSkPath(SkPath *path);
     bool ellipseToSkPath(SkPath *path, float x, float y, float radiusX, float radiusY, float rotation,
                          float startAngle, float endAngle, bool anticlockwise);
@@ -78,8 +120,10 @@ namespace canvasbinding
     SkPaint *skPaint;
     SkFont *skFont;
 
-  private: // font
+  private: // text & font
     std::string fontStr = "10px monospace";
+    TextAlign textAlign = TextAlign::Start;
+    TextBaseline textBaseline = TextBaseline::Alphabetic;
 
   private: // style
     SkColor fillStyle = SK_ColorBLACK;

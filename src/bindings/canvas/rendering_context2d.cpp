@@ -141,6 +141,43 @@ namespace canvasbinding
 
     auto fillPaint = getFillPaint();
     auto textBlob = SkTextBlob::MakeFromString(textStr.c_str(), *skFont);
+
+    /**
+     * Adjust text's position based on `textAlign` and `textBaseline`.
+     */
+    auto textMetrics = measureText(textStr);
+    switch (textAlign)
+    {
+    case TextAlign::Center:
+      x -= textMetrics.width / 2;
+      break;
+    case TextAlign::Right:
+      x -= textMetrics.width;
+      break;
+    case TextAlign::Start:
+    case TextAlign::End:
+    case TextAlign::Left:
+    default:
+      break;
+    }
+
+    switch (textBaseline)
+    {
+    case TextBaseline::Top:
+      y -= textMetrics.actualBoundingBoxAscent;
+      break;
+    case TextBaseline::Middle:
+      y -= (textMetrics.actualBoundingBoxAscent - textMetrics.actualBoundingBoxDescent) / 2;
+      break;
+    case TextBaseline::Bottom:
+      y -= textMetrics.actualBoundingBoxDescent;
+      break;
+    case TextBaseline::Hanging:
+    case TextBaseline::Alphabetic:
+    case TextBaseline::Ideographic:
+    default:
+      break;
+    }
     skCanvas->drawTextBlob(textBlob, x, y, fillPaint);
     return env.Undefined();
   }
@@ -401,35 +438,19 @@ namespace canvasbinding
     auto text = info[0].ToString().Utf8Value();
     auto jsTextMetrics = Napi::Object::New(env);
 
-    SkGlyphID ids[256];
-    int glyphsCount = skFont->textToGlyphs(text.c_str(), text.size(), SkTextEncoding::kUTF8, ids, 256);
-
-    SkScalar widths[glyphsCount];
-    skFont->getWidths(ids, glyphsCount, widths);
-
-    SkScalar totalWidth = 0;
-    for (int i = 0; i < glyphsCount; i++)
-      totalWidth += widths[i];
-    jsTextMetrics.Set("width", Napi::Number::New(env, totalWidth));
-
-    SkFontMetrics metrics;
-    skFont->getMetrics(&metrics);
-    jsTextMetrics.Set("fontBoundingBoxAscent", Napi::Number::New(env, metrics.fAscent));
-    jsTextMetrics.Set("fontBoundingBoxDescent", Napi::Number::New(env, metrics.fDescent));
-
-    SkRect bounds;
-    skFont->measureText(text.c_str(), text.size(), SkTextEncoding::kUTF8, &bounds);
-    jsTextMetrics.Set("actualBoundingBoxLeft", Napi::Number::New(env, bounds.left()));
-    jsTextMetrics.Set("actualBoundingBoxRight", Napi::Number::New(env, bounds.right()));
-    jsTextMetrics.Set("actualBoundingBoxAscent", Napi::Number::New(env, -bounds.top()));
-    jsTextMetrics.Set("actualBoundingBoxDescent", Napi::Number::New(env, bounds.bottom()));
-
-    // Others
-    jsTextMetrics.Set("emHeightAscent", Napi::Number::New(env, metrics.fCapHeight));
-    jsTextMetrics.Set("emHeightDescent", Napi::Number::New(env, metrics.fXHeight));
-    jsTextMetrics.Set("alphabeticBaseline", Napi::Number::New(env, metrics.fAscent));
-    jsTextMetrics.Set("hangingBaseline", Napi::Number::New(env, metrics.fAscent - metrics.fCapHeight));
-    jsTextMetrics.Set("ideographicBaseline", Napi::Number::New(env, metrics.fAscent - metrics.fXHeight));
+    auto textMetrics = measureText(text);
+    jsTextMetrics.Set("width", Napi::Number::New(env, textMetrics.width));
+    jsTextMetrics.Set("fontBoundingBoxAscent", Napi::Number::New(env, textMetrics.fontBoundingBoxAscent));
+    jsTextMetrics.Set("fontBoundingBoxDescent", Napi::Number::New(env, textMetrics.fontBoundingBoxDescent));
+    jsTextMetrics.Set("actualBoundingBoxLeft", Napi::Number::New(env, textMetrics.actualBoundingBoxLeft));
+    jsTextMetrics.Set("actualBoundingBoxRight", Napi::Number::New(env, textMetrics.actualBoundingBoxRight));
+    jsTextMetrics.Set("actualBoundingBoxAscent", Napi::Number::New(env, textMetrics.actualBoundingBoxAscent));
+    jsTextMetrics.Set("actualBoundingBoxDescent", Napi::Number::New(env, textMetrics.actualBoundingBoxDescent));
+    jsTextMetrics.Set("emHeightAscent", Napi::Number::New(env, textMetrics.emHeightAscent));
+    jsTextMetrics.Set("emHeightDescent", Napi::Number::New(env, textMetrics.emHeightDescent));
+    jsTextMetrics.Set("hangingBaseline", Napi::Number::New(env, textMetrics.hangingBaseline));
+    jsTextMetrics.Set("alphabeticBaseline", Napi::Number::New(env, textMetrics.alphabeticBaseline));
+    jsTextMetrics.Set("ideographicBaseline", Napi::Number::New(env, textMetrics.ideographicBaseline));
     return jsTextMetrics;
   }
 
@@ -610,6 +631,42 @@ namespace canvasbinding
   SkPaint *CanvasRenderingContext2D::getShadowPaint(SkPaint &basePaint)
   {
     return nullptr;
+  }
+
+  TextMetrics CanvasRenderingContext2D::measureText(const std::string &text)
+  {
+    TextMetrics textMetrics;
+
+    SkGlyphID ids[256];
+    int glyphsCount = skFont->textToGlyphs(text.c_str(), text.size(), SkTextEncoding::kUTF8, ids, 256);
+
+    SkScalar widths[glyphsCount];
+    skFont->getWidths(ids, glyphsCount, widths);
+
+    SkScalar totalWidth = 0;
+    for (int i = 0; i < glyphsCount; i++)
+      totalWidth += widths[i];
+    textMetrics.width = totalWidth;
+
+    SkFontMetrics metrics;
+    skFont->getMetrics(&metrics);
+    textMetrics.fontBoundingBoxAscent = metrics.fAscent;
+    textMetrics.fontBoundingBoxDescent = metrics.fDescent;
+
+    SkRect bounds;
+    skFont->measureText(text.c_str(), text.size(), SkTextEncoding::kUTF8, &bounds);
+    textMetrics.actualBoundingBoxLeft = bounds.left();
+    textMetrics.actualBoundingBoxRight = bounds.right();
+    textMetrics.actualBoundingBoxAscent = -bounds.top();
+    textMetrics.actualBoundingBoxDescent = bounds.bottom();
+
+    // Others
+    textMetrics.emHeightAscent = metrics.fCapHeight;
+    textMetrics.emHeightDescent = metrics.fXHeight;
+    textMetrics.alphabeticBaseline = metrics.fAscent;
+    textMetrics.hangingBaseline = metrics.fAscent - metrics.fCapHeight;
+    textMetrics.ideographicBaseline = metrics.fAscent - metrics.fXHeight;
+    return textMetrics;
   }
 
   void CanvasRenderingContext2D::closeSkPath(SkPath *path)
