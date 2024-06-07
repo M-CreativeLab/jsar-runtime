@@ -25,6 +25,11 @@ void TrEmbedder::shutdown()
   }
 }
 
+uint32_t TrEmbedder::getFps()
+{
+  return constellation->getRenderer()->getFps();
+}
+
 bool TrEmbedder::onStart(string argJson)
 {
   return constellation->initialize(argJson);

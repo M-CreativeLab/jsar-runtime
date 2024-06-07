@@ -30,6 +30,7 @@ namespace renderer
     void tickOnAnimationFrame();
     void shutdown();
     void setLogFilter(string filterExpr);
+    uint32_t getFps();
     uint32_t getAnimationFrameChanPort();
     uint32_t getCommandBufferChanPort();
     void removeCommandBufferChanClient(ipc::TrOneShotClient<TrCommandBufferMessage> *client);
@@ -45,6 +46,7 @@ namespace renderer
     void startWatchers();
     void stopWatchers();
     void executeCommandBuffers();
+    void calcFps(chrono::steady_clock::time_point now);
 
   private:
     RenderAPI *api = nullptr;
@@ -54,6 +56,11 @@ namespace renderer
     ipc::TrOneShotServer<AnimationFrameRequest> *animationFrameChanServer = nullptr;
     vector<ipc::TrChannelSender<AnimationFrameRequest> *> animationFrameChanSenders;
     atomic<bool> watcherRunning = false; // This is shared by all the watchers.
+
+  private: // fields for frame rate calculation
+    chrono::steady_clock::time_point lastFrameTimepoint = chrono::steady_clock::now();
+    int frameCount = 0;
+    uint32_t fps = 0;
 
   private: // fields for senders management
     thread *chanSendersWatcher = nullptr;

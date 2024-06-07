@@ -37,6 +37,7 @@ namespace renderer
       return;
 
     auto beforeStarting = std::chrono::high_resolution_clock::now();
+    calcFps(beforeStarting);
     api->StartFrame();
 
     auto startedAt = std::chrono::high_resolution_clock::now();
@@ -86,6 +87,11 @@ namespace renderer
   void TrRenderer::setLogFilter(string filterExpr)
   {
     // TODO
+  }
+
+  uint32_t TrRenderer::getFps()
+  {
+    return fps;
   }
 
   uint32_t TrRenderer::getAnimationFrameChanPort()
@@ -194,6 +200,18 @@ namespace renderer
         content->commandBufferRequests.clear();
       }
       api->ExecuteCommandBuffer(commandBufferRequests, content, nullptr, true);
+    }
+  }
+
+  void TrRenderer::calcFps(chrono::steady_clock::time_point now)
+  {
+    auto delta = chrono::duration_cast<chrono::milliseconds>(now - lastFrameTimepoint).count();
+    frameCount += 1;
+    if (delta >= 1000)
+    {
+      fps = frameCount / (delta / 1000);
+      frameCount = 0;
+      lastFrameTimepoint = now;
     }
   }
 }

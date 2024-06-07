@@ -89,13 +89,17 @@ endif()
 tr_target_set_properties(TransmuteCore)
 tr_target_install(TransmuteCore)
 
+
 # Add examples
 # TODO: move to a separate TransmuteExample.cmake?
 function(tr_add_example EXECUTABLE_NAME SOURCE_FILE)
+    find_package(ZLIB REQUIRED) # Search for ZLIB
     add_executable(${EXECUTABLE_NAME} ${SOURCE_FILE})
     target_compile_definitions(${EXECUTABLE_NAME} PRIVATE TRANSMUTE_STANDALONE)
+    target_link_libraries(${EXECUTABLE_NAME} PRIVATE ZLIB::ZLIB)
     target_link_libraries(${EXECUTABLE_NAME} PRIVATE TransmuteCore)
     tr_target_link_thirdparty_library(${EXECUTABLE_NAME} glfw3)
+    tr_target_link_thirdparty_library(${EXECUTABLE_NAME} skia)
 
     if (APPLE)
         target_link_libraries(${EXECUTABLE_NAME} PRIVATE "-framework Cocoa")

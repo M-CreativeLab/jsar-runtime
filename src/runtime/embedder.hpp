@@ -28,6 +28,10 @@ public: // API for configuration and operations
    * Shutdown the Transmute runtime.
    */
   void shutdown();
+  /**
+   * Get the current FPS of the runtime.
+  */
+  uint32_t getFps();
 
 public: // API for lifecycle
   /**

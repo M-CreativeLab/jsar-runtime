@@ -258,7 +258,7 @@ void OpenGLHostContextStorage::Record()
   // Check for errors
   GLenum error = glGetError();
   if (error != GL_NO_ERROR)
-    DEBUG(DEBUG_TAG, "Occurs an OpenGL error in recording %s context: 0x%04X", error, GetName());
+    DEBUG(DEBUG_TAG, "Occurs an OpenGL error in recording %s context: 0x%04X", GetName(), error);
 }
 
 void OpenGLHostContextStorage::RecordTextureBindingFromHost()

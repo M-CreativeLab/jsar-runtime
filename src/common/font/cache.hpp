@@ -142,22 +142,26 @@ namespace font
       assert(fontFamily != nullptr);
       return fontFamily->matchStyle(SkFontStyle::Normal());
     }
-    sk_sp<SkTypeface> getTypeface(FontShorthandParser &descriptor)
+    sk_sp<SkTypeface> getTypeface(string familyName, const SkFontStyle fontStyle = SkFontStyle::Normal())
     {
-      auto genericId = generics::genericNameToId(descriptor.family);
+      auto genericId = generics::genericNameToId(familyName);
       if (genericId != generics::GenericFontFamily::None)
       {
         auto fontFamily = findFontFamily(genericFontFamilies[genericId]);
         if (fontFamily != nullptr)
-          return fontFamily->matchStyle(descriptor.style);
+          return fontFamily->matchStyle(fontStyle);
       }
       else
       {
-        auto fontFamily = findFontFamily(descriptor.family);
+        auto fontFamily = findFontFamily(familyName);
         if (fontFamily != nullptr)
-          return fontFamily->matchStyle(descriptor.style);
+          return fontFamily->matchStyle(fontStyle);
       }
       return getTypeface();
+    }
+    sk_sp<SkTypeface> getTypeface(FontShorthandParser &descriptor)
+    {
+      return getTypeface(descriptor.family, descriptor.style);
     }
 
   private:
