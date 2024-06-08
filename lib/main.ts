@@ -41,10 +41,6 @@ requestGpuBusyCallback(() => {
   // }
 });
 
-requestAnimationFrame((time) => {
-  logger.info('The animation frame callback is called at', time);
-});
-
 function bootwait(fn: () => void) {
   let seconds = parseInt(process.env.JSAR_BOOTWAIT, 10);
   if (isNaN(seconds)) {
@@ -62,14 +58,7 @@ bootwait(async function main() {
       logger.info(`  ${key}: ${value}`);
     }
 
-    // createEnv();
-    // const init = getRuntimeInit();
     logger.info('The context init is:', clientContext);
-
-    // Initialize the OffscreenCanvas polyfill.
-    // await InitializeOffscreenCanvas({ loadSystemFonts: true });
-    // logger.info(`The Skia initialization takes ${performance.now() - runtimeStart}ms`);
-
     if (!connectRenderer(clientContext)) {
       throw new Error('failed to connect to the renderer.');
     }
