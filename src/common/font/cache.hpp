@@ -129,6 +129,8 @@ namespace font
       addFontsByDir("/System/Library/Fonts");
 #elif __ANDROID__
       addFontsByDir("/system/fonts");
+      addFontsByDir("/usr/share/fonts");
+      addFontsByDir("/usr/local/share/fonts");
 #endif
       lookupGenericFamilies();
       printSummary();
