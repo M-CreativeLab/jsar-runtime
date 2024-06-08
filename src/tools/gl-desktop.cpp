@@ -73,7 +73,10 @@ public:
 };
 static DesktopEmbedder *embedder = nullptr;
 
-class ScreenUI
+/**
+ * The panel for rendering scene stats.
+ */
+class StatPanel
 {
   const char *panelVertSource = "#version 410 core\n"
                                 "layout (location = 0) in vec2 position;\n"
@@ -95,7 +98,7 @@ class ScreenUI
                                 "}\n";
 
 public:
-  ScreenUI(int width, int height) : width(width), height(height)
+  StatPanel(int width, int height) : width(width), height(height)
   {
     initGLProgram();
     initCanvas();
@@ -104,7 +107,7 @@ public:
       printf("OpenGL error on init\n");
   };
 
-  ~ScreenUI()
+  ~StatPanel()
   {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
@@ -375,7 +378,7 @@ int main(int argc, char **argv)
   glBindVertexArray(0);
 
   // Create panel
-  auto panel = ScreenUI(width, height);
+  auto panel = StatPanel(width, height);
 
   bool initialized = false;
   while (!glfwWindowShouldClose(window))
