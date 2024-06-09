@@ -21,16 +21,16 @@ IUnityLog *GET_UNITY_LOG_HANDLE()
 
 void DEBUG(const char *tag, const char *format, ...)
 {
+  if (
+      strcmp(tag, "TR_GLES") == 0 ||
+      strcmp(tag, "TR_RAPI") == 0)
+    return;
+
   va_list args;
   va_start(args, format);
 #ifdef __ANDROID__
   __android_log_vprint(ANDROID_LOG_DEBUG, tag, format, args);
 #else
-  if (strcmp(tag, "TR_RAPI") == 0)
-  {
-    va_end(args);
-    return;
-  }
 
   char buffer[1024];
   int length = vsnprintf(nullptr, 0, format, args);

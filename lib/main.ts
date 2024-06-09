@@ -18,16 +18,11 @@ const id = args.id || 'unknown';
 logger.info(`Starting the JavaScript runtime(${process.pid}) => ${id}`, process.argv);
 process.title = `TrScript ${id}`;
 
-setInterval(() => {
-  logger.info(`${id} is running...`)
-}, 2000);
-
 import './polyfills';
 import {
   connectRenderer,
   getWebGLRenderingContext,
   requestGpuBusyCallback,
-  requestAnimationFrame
 } from './bindings/renderer';
 import { prepareXRSystem } from './webxr';
 import { TransmuteRuntime2 } from './runtime2';

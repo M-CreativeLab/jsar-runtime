@@ -263,27 +263,56 @@ void processInput(GLFWwindow *window)
     glfwSetWindowShouldClose(window, true);
 }
 
+void help()
+{
+  printf("Usage: gl-desktop [-w width] [-h height] [url]\n");
+}
+
 int main(int argc, char **argv)
 {
   if (!glfwInit())
-    return -1;
+    return 1;
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_SAMPLES, 4);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  string requestUrl = "http://localhost:3000/spatial-element.xsml";
-  if (argc > 1)
-    requestUrl = string(argv[1]);
-
   int width = 800;
   int height = 600;
+  string requestUrl = "http://localhost:3000/spatial-element.xsml";
+
+  int opt;
+  while ((opt = getopt(argc, argv, "w:h:")) != -1)
+  {
+    switch (opt)
+    {
+    case 'w':
+      width = atoi(optarg);
+      break;
+    case 'h':
+      height = atoi(optarg);
+      break;
+    default:
+      help();
+      break;
+    }
+  }
+
+  if (width == -1 || height == -1)
+  {
+    help();
+    return 1;
+  }
+
+  if (optind < argc)
+    requestUrl = string(argv[optind]);
+
   GLFWwindow *window = glfwCreateWindow(width, height, "JSAR Example", NULL, NULL);
   if (!window)
   {
     glfwTerminate();
-    return -1;
+    return 1;
   }
 
   embedder = new DesktopEmbedder();
