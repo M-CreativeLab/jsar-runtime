@@ -484,6 +484,12 @@ namespace commandbuffers
       : public UniformMatrixNfvCommandBufferRequest<UniformMatrix2fvCommandBufferRequest>
   {
   public:
+    UniformMatrix2fvCommandBufferRequest(UniformMatrix2fvCommandBufferRequest &that)
+        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX2FV_REQ, 2 * 2)
+    {
+      this->location = that.location;
+      this->transpose = that.transpose;
+    }
     UniformMatrix2fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
         : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX2FV_REQ, 2 * 2)
     {
@@ -497,6 +503,12 @@ namespace commandbuffers
       : public UniformMatrixNfvCommandBufferRequest<UniformMatrix3fvCommandBufferRequest>
   {
   public:
+    UniformMatrix3fvCommandBufferRequest(UniformMatrix3fvCommandBufferRequest &that)
+        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX3FV_REQ, 3 * 3)
+    {
+      this->location = that.location;
+      this->transpose = that.transpose;
+    }
     UniformMatrix3fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
         : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX3FV_REQ, 3 * 3)
     {
@@ -510,6 +522,12 @@ namespace commandbuffers
       : public UniformMatrixNfvCommandBufferRequest<UniformMatrix4fvCommandBufferRequest>
   {
   public:
+    UniformMatrix4fvCommandBufferRequest(UniformMatrix4fvCommandBufferRequest &that)
+        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, 4 * 4)
+    {
+      this->location = that.location;
+      this->transpose = that.transpose;
+    }
     UniformMatrix4fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
         : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, 4 * 4)
     {

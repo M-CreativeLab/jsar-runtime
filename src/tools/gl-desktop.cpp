@@ -279,7 +279,6 @@ int main(int argc, char **argv)
     glfwTerminate();
     return -1;
   }
-  glViewport(0, 0, width, height);
 
   embedder = new DesktopEmbedder();
   assert(embedder != nullptr);
@@ -318,6 +317,7 @@ int main(int argc, char **argv)
   glfwMakeContextCurrent(window);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+  glViewport(0, 0, width, height);
   unsigned int vertexShader;
   vertexShader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -412,7 +412,9 @@ int main(int argc, char **argv)
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
   glDeleteProgram(shaderProgram);
-
   glfwTerminate();
+
+  if (embedder != nullptr)
+    embedder->shutdown();
   return 0;
 }

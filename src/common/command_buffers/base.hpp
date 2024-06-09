@@ -19,6 +19,7 @@ namespace commandbuffers
   public:
     TrCommandBufferBase() {}
     TrCommandBufferBase(CommandBufferType type) : type(type) {}
+    virtual ~TrCommandBufferBase() {}
 
   public:
     virtual TrCommandBufferMessage *serialize() = 0;

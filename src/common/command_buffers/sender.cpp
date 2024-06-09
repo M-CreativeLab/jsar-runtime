@@ -145,7 +145,10 @@ namespace commandbuffers
     if (!message->serialize(&data, &size))
       return false;
 
-    return sendRaw(data, size);
+    assert(data != nullptr && size > 0);
+    auto r = sendRaw(data, size);
+    free(data);
+    return r;
   }
 
   bool TrCommandBufferSender::sendCommandBufferResponse(TrCommandBufferResponse &res)
@@ -194,6 +197,9 @@ namespace commandbuffers
     if (!message->serialize(&data, &size))
       return false;
 
-    return sendRaw(data, size);
+    assert(data != nullptr && size > 0);
+    auto r = sendRaw(data, size);
+    free(data);
+    return r;
   }
 }

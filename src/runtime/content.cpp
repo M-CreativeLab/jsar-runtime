@@ -270,6 +270,8 @@ TrContentManager::~TrContentManager()
     delete commandBuffersRecvWorker;
     commandBuffersRecvWorker = nullptr;
   }
+  DEBUG(LOG_TAG_CONTENT, "All command buffers worker is stopped.");
+
   // Stop event channel watcher
   if (eventChanWatcher != nullptr)
   {
@@ -283,10 +285,13 @@ TrContentManager::~TrContentManager()
     delete eventChanServer;
     eventChanServer = nullptr;
   }
+  DEBUG(LOG_TAG_CONTENT, "All event channel watcher is stopped.");
+
   // Dispose all contents
   for (auto it = contents.begin(); it != contents.end(); ++it)
     delete *it;
   contents.clear();
+  DEBUG(LOG_TAG_CONTENT, "All contents are disposed.");
 }
 
 bool TrContentManager::initialize()

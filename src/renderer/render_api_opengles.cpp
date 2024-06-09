@@ -741,9 +741,9 @@ private:
 			GLint currentTexture;
 			glGetIntegerv(GL_TEXTURE_BINDING_2D, &currentTexture);
 			DEBUG(DEBUG_TAG, "[%d] GL::TexImage2D(0x%x, level=%d, type=0x%x, internal_format=0x%x, format=0x%x, size=[%d,%d]) texture(%d)",
-						options.isDefaultQueue, 
-						target, 
-						level, 
+						options.isDefaultQueue,
+						target,
+						level,
 						type,
 						internalformat,
 						format,
@@ -1754,7 +1754,10 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 	{                                                                                         \
 		auto cbRequest = dynamic_cast<requestType *>(commandBuffer);                            \
 		if (cbRequest != nullptr)                                                               \
+		{                                                                                       \
 			On##handlerName(cbRequest, content, callOptions, deviceFrame);                        \
+			delete cbRequest;                                                                     \
+		}                                                                                       \
 		break;                                                                                  \
 	}
 
@@ -1924,7 +1927,6 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 				}
 			}
 		}
-		// delete commandBuffer;
 	}
 
 	// Fire the content's `onCommandBuffersExecuted` event
