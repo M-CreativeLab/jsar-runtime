@@ -97,6 +97,12 @@ namespace renderer
     return fps;
   }
 
+  uint32_t TrRenderer::getUptime()
+  {
+    auto now = chrono::steady_clock::now();
+    return chrono::duration_cast<chrono::seconds>(now - startTimepoint).count();
+  }
+
   uint32_t TrRenderer::getAnimationFrameChanPort()
   {
     return animationFrameChanServer->getPort();

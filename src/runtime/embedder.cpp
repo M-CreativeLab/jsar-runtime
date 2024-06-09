@@ -30,6 +30,11 @@ uint32_t TrEmbedder::getFps()
   return constellation->getRenderer()->getFps();
 }
 
+uint32_t TrEmbedder::getUptime()
+{
+  return constellation->getRenderer()->getUptime();
+}
+
 bool TrEmbedder::onStart(string argJson)
 {
   return constellation->initialize(argJson);

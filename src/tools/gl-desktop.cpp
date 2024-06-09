@@ -177,7 +177,7 @@ public:
 
     auto typeface = fontMgr.getTypeface("monospace");
     textFont.setTypeface(typeface);
-    textFont.setSize(16);
+    textFont.setSize(14);
     textFont.setEdging(SkFont::Edging::kAntiAlias);
     textFont.setSubpixel(true);
   }
@@ -206,9 +206,14 @@ public:
 
     // draw fps
     auto skCanvas = surface->getCanvas();
-    string stats = "FPS: " + to_string(fps);
-    auto textBlob = SkTextBlob::MakeFromString(stats.c_str(), textFont);
-    skCanvas->drawTextBlob(textBlob, 30, 30, textPaint);
+    string fpsStr = "   Fps: " + to_string(fps);
+    auto textBlob = SkTextBlob::MakeFromString(fpsStr.c_str(), textFont);
+    skCanvas->drawTextBlob(textBlob, 30, 35, textPaint);
+
+    // draw uptime
+    string uptimeStr = "Uptime: " + to_string(uptime) + "s";
+    auto uptimeBlob = SkTextBlob::MakeFromString(uptimeStr.c_str(), textFont);
+    skCanvas->drawTextBlob(uptimeBlob, 30, 55, textPaint);
 
     // read pixels from Skia surface to texImage2D
     SkImageInfo imageInfo = SkImageInfo::Make(width, height, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
@@ -236,6 +241,7 @@ private:
 
 public:
   uint32_t fps = 0;
+  uint32_t uptime = 0;
 
 private:
   int width;
@@ -402,7 +408,8 @@ int main(int argc, char **argv)
     {
       glGetError(); // Clear the error
       embedder->onFrame();
-      panel.fps = embedder->getFps(); // update fps to panel
+      panel.fps = embedder->getFps();       // update fps to panel
+      panel.uptime = embedder->getUptime(); // update uptime to panel
     }
 
     glfwSwapBuffers(window);

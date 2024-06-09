@@ -31,6 +31,7 @@ namespace renderer
     void shutdown();
     void setLogFilter(string filterExpr);
     uint32_t getFps();
+    uint32_t getUptime();
     uint32_t getAnimationFrameChanPort();
     uint32_t getCommandBufferChanPort();
     void removeCommandBufferChanClient(ipc::TrOneShotClient<TrCommandBufferMessage> *client);
@@ -58,6 +59,7 @@ namespace renderer
     atomic<bool> watcherRunning = false; // This is shared by all the watchers.
 
   private: // fields for frame rate calculation
+    chrono::steady_clock::time_point startTimepoint = chrono::steady_clock::now();
     chrono::steady_clock::time_point lastFrameTimepoint = chrono::steady_clock::now();
     int frameCount = 0;
     uint32_t fps = 0;

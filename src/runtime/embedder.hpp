@@ -30,8 +30,12 @@ public: // API for configuration and operations
   void shutdown();
   /**
    * Get the current FPS of the runtime.
-  */
+   */
   uint32_t getFps();
+  /**
+   * Get the current uptime of the runtime.
+   */
+  uint32_t getUptime();
 
 public: // API for lifecycle
   /**
