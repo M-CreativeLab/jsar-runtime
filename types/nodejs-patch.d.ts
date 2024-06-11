@@ -26,6 +26,11 @@ declare namespace Transmute {
     applicationCacheDirectory: string;
     httpsProxyServer: string;
     webglVersion: number;
+    xrDevice: {
+      enabled: boolean;
+      active: boolean;
+      stereoRenderingMode: 'multipass' | 'singlepass' | 'singlepass-instanced' | 'singlepass-multiview' | 'unknown';
+    };
   }
 
   type RenderExceptionCallback = (code: number) => void;

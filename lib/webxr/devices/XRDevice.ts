@@ -15,33 +15,17 @@
 import type { DeviceFrameContext } from '../api/XRSession';
 
 export enum StereoRenderingMode {
-  MultiPass = 0,
-  SinglePass = 1,
-  SinglePassInstanced = 2,
-  SinglePassMultiview = 3,
-  Unkown = -1,
-}
-
-export function stereoRenderingModeToString(mode: StereoRenderingMode): string {
-  switch (mode) {
-    case StereoRenderingMode.MultiPass:
-      return 'multi-pass';
-    case StereoRenderingMode.SinglePass:
-      return 'single-pass';
-    case StereoRenderingMode.SinglePassInstanced:
-      return 'single-pass-instanced';
-    case StereoRenderingMode.SinglePassMultiview:
-      return 'single-pass-multiview';
-    case StereoRenderingMode.Unkown:
-    default:
-      return 'unknown';
-  }
+  MultiPass = 'multipass',
+  SinglePass = 'singlepass',
+  SinglePassInstanced = 'singlepassinstanced',
+  SinglePassMultiview = 'singlepassmultiview',
+  Unknown = 'unknown',
 }
 
 export default class XRDevice extends EventTarget {
   environmentBlendMode: 'opaque' | 'additive' | 'alpha-blend';
   protected enabled: boolean;
-  protected stereoRenderingMode: StereoRenderingMode = -1;
+  protected stereoRenderingMode: StereoRenderingMode = StereoRenderingMode.Unknown;
 
   /**
    * Takes a VRDisplay object from the WebVR 1.1 spec.
@@ -72,7 +56,7 @@ export default class XRDevice extends EventTarget {
    * and the frame callback will be called once.
    */
   isRenderingInMultiPass(): boolean {
-    if (this.stereoRenderingMode === StereoRenderingMode.Unkown) {
+    if (this.stereoRenderingMode === StereoRenderingMode.Unknown) {
       throw new Error('XRDevice.stereoRenderingMode is unknown or not set. Please call XRDevice.waitForReady() first.');
     }
     return this.stereoRenderingMode === StereoRenderingMode.MultiPass;

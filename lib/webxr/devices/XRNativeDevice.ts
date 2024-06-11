@@ -1,22 +1,13 @@
 
-import * as logger from '../../bindings/logger';
-import { makeRpcCall } from '../../bindings/messaging';
-import * as renderer from '../../bindings/renderer';
+import * as logger from '@transmute/logger';
+import { getClientContext } from '@transmute/env';
+import * as renderer from '@transmute/renderer';
 
 import type XRRenderState from '../api/XRRenderState';
-import XRDevice, { StereoRenderingMode, stereoRenderingModeToString } from './XRDevice';
-import XRWebGLLayer from '../api/XRWebGLLayer';
-import XRPose from '../api/XRPose';
-import XRSpace from '../api/XRSpace';
+import XRDevice, { StereoRenderingMode } from './XRDevice';
 import { DeviceFrameContext } from '../api/XRSession';
 
 const { XRDeviceNative } = process._linkedBinding('transmute:webxr');
-
-type DeviceInitResponse = {
-  enabled: boolean;
-  isDeviceActive: boolean;
-  stereoRenderingMode: StereoRenderingMode;
-};
 
 export default class XRNativeDevice extends XRDevice {
   #handle: Transmute.XRDeviceNative;
@@ -32,16 +23,16 @@ export default class XRNativeDevice extends XRDevice {
   }
 
   async waitForReady(): Promise<boolean> {
-    try {
-      const response = await makeRpcCall('xr.initializeDevice', []) as DeviceInitResponse;
-      this.enabled = response.enabled;
-      this.stereoRenderingMode = response.stereoRenderingMode || StereoRenderingMode.MultiPass;
-    } catch (err) {
+    const clientCtx = getClientContext();
+    if (clientCtx.xrDevice?.enabled) {
+      this.enabled = true;
+      this.stereoRenderingMode = <StereoRenderingMode>clientCtx.xrDevice.stereoRenderingMode;
+    } else {
       this.enabled = false;
-      logger.error(`XR: Failed to initialize device: ${err}`);
     }
-    logger.info(`XR: Device enabled: ${this.enabled}`);
-    logger.info(`XR: Stereo rendering mode: ${stereoRenderingModeToString(this.stereoRenderingMode)}`);
+    logger.info(`[XRDevice] enabled: ${this.enabled ? 'YES' : 'NO'}`);
+    logger.info(`[XRDevice] active: ${clientCtx.xrDevice?.active ? 'YES' : 'NO'}`);
+    logger.info(`[XRDevice] Stereo Rendering Mode: ${this.stereoRenderingMode}`);
     return this.enabled;
   }
 
