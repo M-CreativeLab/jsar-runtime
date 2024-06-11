@@ -288,6 +288,13 @@ void TrClientContextPerProcess::print()
   DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) eventChanPort=%d", id, eventChanPort);
   DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) frameChanPort=%d", id, frameChanPort);
   DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) commandBufferChanPort=%d", id, commandBufferChanPort);
+
+  if (xrDeviceInit.enabled == true)
+  {
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) xrDeviceInit.isActive=%d", id, xrDeviceInit.active);
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) xrDeviceInit.stereoRenderingMode=%d", id,
+          static_cast<int>(xrDeviceInit.stereoRenderingMode));
+  }
 }
 
 FrameRequestId TrClientContextPerProcess::requestFrame(FrameRequestCallback callback)

@@ -16,7 +16,7 @@ using namespace std;
 
 namespace xr
 {
-  enum StereoRenderingMode
+  enum class StereoRenderingMode
   {
     MultiPass = 0,
     SinglePass = 1,
@@ -25,17 +25,24 @@ namespace xr
     Unknown = -1
   };
 
+  class DeviceInit
+  {
+  public:
+    bool isActive;
+    StereoRenderingMode stereoRenderingMode;
+  };
+
   class Device
   {
   public:
-    static Device* GetInstance();
+    static Device *GetInstance();
 
   public:
     Device();
     ~Device();
 
   public:
-    void initialize(bool enabled);
+    void initialize(bool enabled, DeviceInit &init);
     bool requestSession(int id);
     bool enabled();
     void setFrameRate(uint32_t frameRate);

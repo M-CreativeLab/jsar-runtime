@@ -37,7 +37,7 @@ extern "C"
   /**
    * Initialize the XR device, this is required to execute the JSAR in XR device.
    */
-  DLL_PUBLIC void TransmuteNative_InitializeXRDevice(bool enabled);
+  DLL_PUBLIC void TransmuteNative_InitializeXRDevice(bool enabled, bool isDeviceActive, int stereoRenderingMode);
 
   /**
    * Fetch the event from the JavaScript side.

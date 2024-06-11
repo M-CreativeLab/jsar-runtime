@@ -1,4 +1,5 @@
 #include "client_context.hpp"
+#include "common/xr/types.hpp"
 
 namespace bindings
 {
@@ -32,5 +33,24 @@ namespace bindings
                    Napi::String::New(env, clientContext->applicationCacheDirectory));
     thisObject.Set("httpsProxyServer", Napi::String::New(env, clientContext->httpsProxyServer));
     thisObject.Set("webglVersion", Napi::Number::New(env, clientContext->webglVersion));
+
+    if (clientContext->xrDeviceInit.enabled == true)
+    {
+      auto xrDeviceObject = Napi::Object::New(env);
+      xrDeviceObject.Set("enabled", Napi::Boolean::New(env, clientContext->xrDeviceInit.enabled));
+      xrDeviceObject.Set("active", Napi::Boolean::New(env, clientContext->xrDeviceInit.active));
+      auto mode = clientContext->xrDeviceInit.stereoRenderingMode;
+      if (mode == xr::TrStereoRenderingMode::TR_MULTI_PASS)
+        xrDeviceObject.Set("stereoRenderingMode", Napi::String::New(env, "multipass"));
+      else if (mode == xr::TrStereoRenderingMode::TR_SINGLE_PASS)
+        xrDeviceObject.Set("stereoRenderingMode", Napi::String::New(env, "singlepass"));
+      else if (mode == xr::TrStereoRenderingMode::TR_SINGLE_PASS_INSTANCED)
+        xrDeviceObject.Set("stereoRenderingMode", Napi::String::New(env, "singlepassinstanced"));
+      else if (mode == xr::TrStereoRenderingMode::TR_SINGLE_PASS_MULTIVIEW)
+        xrDeviceObject.Set("stereoRenderingMode", Napi::String::New(env, "singlepassmultiview"));
+      else
+        xrDeviceObject.Set("stereoRenderingMode", Napi::String::New(env, "unknown"));
+      thisObject.Set("xrDevice", xrDeviceObject);
+    }
   }
 }

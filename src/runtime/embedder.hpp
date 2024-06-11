@@ -21,9 +21,10 @@ public: // API for configuration and operations
   /**
    * Configure the XR device, if you want to use Transmute in XR device, you should call this method with true.
    *
-   * @param enabled true if the XR device should be enabled, false otherwise.
+   * @param xrEnabled true if the XR device should be enabled, false otherwise.
+   * @param init The XR device initialization configuration.
    */
-  bool configureXrDevice(bool enabled);
+  bool configureXrDevice(bool xrEnabled, xr::DeviceInit& init);
   /**
    * Shutdown the Transmute runtime.
    */

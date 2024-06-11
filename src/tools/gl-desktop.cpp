@@ -280,10 +280,11 @@ int main(int argc, char **argv)
 
   int width = 800;
   int height = 600;
+  bool xrEnabled = false;
   string requestUrl = "http://localhost:3000/spatial-element.xsml";
 
   int opt;
-  while ((opt = getopt(argc, argv, "w:h:")) != -1)
+  while ((opt = getopt(argc, argv, "w:h:x:")) != -1)
   {
     switch (opt)
     {
@@ -292,6 +293,9 @@ int main(int argc, char **argv)
       break;
     case 'h':
       height = atoi(optarg);
+      break;
+    case 'x':
+      xrEnabled = true;
       break;
     default:
       help();
@@ -308,7 +312,7 @@ int main(int argc, char **argv)
   if (optind < argc)
     requestUrl = string(argv[optind]);
 
-  GLFWwindow *window = glfwCreateWindow(width, height, "JSAR Example", NULL, NULL);
+  GLFWwindow *window = glfwCreateWindow(width, height, "JSAR Browser", NULL, NULL);
   if (!window)
   {
     glfwTerminate();
@@ -318,7 +322,15 @@ int main(int argc, char **argv)
   embedder = new DesktopEmbedder();
   assert(embedder != nullptr);
 
-  TrViewport viewport(width, height);
+  if (xrEnabled == true)
+  {
+    xr::DeviceInit init;
+    init.isActive = true;
+    init.stereoRenderingMode = xr::StereoRenderingMode::MultiPass;
+    embedder->configureXrDevice(xrEnabled, init);
+  }
+
+  TrViewport viewport(width / 2, height);
   embedder->getRenderer()->setViewport(viewport);
 
   {
@@ -352,7 +364,6 @@ int main(int argc, char **argv)
   glfwMakeContextCurrent(window);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-  glViewport(0, 0, width, height);
   unsigned int vertexShader;
   vertexShader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -412,7 +423,7 @@ int main(int argc, char **argv)
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 
-  // Create panel
+  // Create panel(screen-space)
   auto panel = StatPanel(width, height);
 
   bool initialized = false;
@@ -420,26 +431,40 @@ int main(int argc, char **argv)
   {
     processInput(window);
 
+    if (embedder != nullptr)
+    {
+      panel.fps = embedder->getFps();       // update fps to panel
+      panel.uptime = embedder->getUptime(); // update uptime to panel
+    }
+
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClearDepth(1.0f);
     glClearStencil(0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    // glUseProgram(shaderProgram);
-    // glBindVertexArray(VAO);
-    // glDrawArrays(GL_TRIANGLES, 0, 3);
+    int viewsCount = xrEnabled ? 2 : 1;
+    for (int i = 0; i < viewsCount; i++)
+    {
+      TrViewport eyeViewport(
+          width / viewsCount,     // width
+          height,                 // height
+          i * width / viewsCount, // x
+          0                       // y
+      );
+      glViewport(eyeViewport.x, eyeViewport.y, eyeViewport.width, eyeViewport.height);
+
+      // render JSAR content
+      if (embedder != nullptr)
+      {
+        glGetError(); // Clear the error
+        embedder->getRenderer()->setViewport(eyeViewport);
+        embedder->onFrame();
+      }
+    }
 
     // render screen-space panel
+    glViewport(0, 0, width, height);
     panel.render();
-
-    // render JSAR content
-    if (embedder != nullptr)
-    {
-      glGetError(); // Clear the error
-      embedder->onFrame();
-      panel.fps = embedder->getFps();       // update fps to panel
-      panel.uptime = embedder->getUptime(); // update uptime to panel
-    }
 
     glfwSwapBuffers(window);
     glfwPollEvents();

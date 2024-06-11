@@ -169,6 +169,16 @@ void TrContentRuntime::onClientProcess()
   scriptContext.AddMember("frameChanPort", frameChanPort, allocator);
   scriptContext.AddMember("commandBufferChanPort", commandBufferChanPort, allocator);
 
+  auto xrDevice = getConstellation()->getXrDevice();
+  if (xrDevice != nullptr)
+  {
+    rapidjson::Value xrDeviceObject(rapidjson::kObjectType);
+    xrDeviceObject.AddMember("enabled", xrDevice->enabled(), allocator);
+    xrDeviceObject.AddMember("active", true, allocator);
+    xrDeviceObject.AddMember("stereoRenderingMode", static_cast<int>(xrDevice->getStereoRenderingMode()), allocator);
+    scriptContext.AddMember("xrDevice", xrDeviceObject, allocator);
+  }
+
   rapidjson::StringBuffer scriptContextBuffer;
   rapidjson::Writer<rapidjson::StringBuffer> scriptContextWriter(scriptContextBuffer);
   scriptContext.Accept(scriptContextWriter);

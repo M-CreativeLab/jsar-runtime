@@ -53,9 +53,10 @@ namespace xr
     }
   }
 
-  void Device::initialize(bool enabled)
+  void Device::initialize(bool enabled, DeviceInit &init)
   {
     m_Enabled = enabled;
+    m_StereoRenderingMode = init.stereoRenderingMode;
   }
 
   bool Device::requestSession(int id)

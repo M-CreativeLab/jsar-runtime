@@ -197,9 +197,12 @@ extern "C"
     DEBUG("transmute", "Prepare for TransmuteNative");
   }
 
-  DLL_PUBLIC void TransmuteNative_InitializeXRDevice(bool enabled)
+  DLL_PUBLIC void TransmuteNative_InitializeXRDevice(bool enabled, bool isDeviceActive, int stereoRenderingMode)
   {
-    UnityEmbedder::EnsureAndGet()->configureXrDevice(enabled);
+    xr::DeviceInit init;
+    init.isActive = isDeviceActive;
+    init.stereoRenderingMode = (xr::StereoRenderingMode)stereoRenderingMode;
+    UnityEmbedder::EnsureAndGet()->configureXrDevice(enabled, init);
   }
 
   DLL_PUBLIC bool TransmuteNative_GetEventFromJavaScript(int *id, int *type, uint32_t *size)

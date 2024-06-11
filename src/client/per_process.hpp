@@ -22,6 +22,7 @@
 #include "common/events/receiver.hpp"
 #include "common/events/sender.hpp"
 #include "common/font/cache.hpp"
+#include "common/xr/types.hpp"
 
 using namespace std;
 using namespace node;
@@ -110,6 +111,7 @@ public:
   uint32_t eventChanPort;
   uint32_t frameChanPort;
   uint32_t commandBufferChanPort;
+  xr::TrDeviceInit xrDeviceInit;
 
 private:
   ipc::TrOneShotClient<TrEventMessage> *eventChanClient = nullptr;

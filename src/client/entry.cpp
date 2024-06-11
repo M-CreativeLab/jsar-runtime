@@ -8,6 +8,7 @@
 
 #include "debug.hpp"
 #include "per_process.hpp"
+#include "common/xr/types.hpp"
 
 using namespace std;
 
@@ -94,6 +95,16 @@ int main(int argc, char **argv)
     clientContext->applicationCacheDirectory = contextDocument["applicationCacheDirectory"].GetString();
   if (contextDocument.HasMember("httpsProxyServer"))
     clientContext->httpsProxyServer = contextDocument["httpsProxyServer"].GetString();
+  if (contextDocument.HasMember("xrDevice") && contextDocument["xrDevice"].IsObject())
+  {
+    auto &xrDevice = contextDocument["xrDevice"];
+    if (xrDevice.HasMember("enabled") && xrDevice["enabled"].IsBool())
+      clientContext->xrDeviceInit.enabled = xrDevice["enabled"].GetBool();
+    if (xrDevice.HasMember("active") && xrDevice["active"].IsBool())
+      clientContext->xrDeviceInit.active = xrDevice["active"].GetBool();
+    if (xrDevice.HasMember("stereoRenderingMode") && xrDevice["stereoRenderingMode"].IsNumber())
+      clientContext->xrDeviceInit.stereoRenderingMode = (xr::TrStereoRenderingMode)xrDevice["stereoRenderingMode"].GetInt();
+  }
   clientContext->print(); // prints the client context before the script starts.
   clientContext->start(); // starts the client context.
 
