@@ -122,6 +122,7 @@ xr::Device *TrContentRuntime::getXrDevice()
 
 void TrContentRuntime::setupWithCommandBufferClient(TrOneShotClient<TrCommandBufferMessage> *client)
 {
+  assert(client != nullptr);
   commandBufferChanReceiver = new TrCommandBufferReceiver(client);
   commandBufferChanSender = new TrCommandBufferSender(client);
   commandBufferChanClient = client;
@@ -141,6 +142,14 @@ bool TrContentRuntime::sendEventResponse(TrEvent &event)
     return false;
   TrEventMessage eventMessage(event);
   return eventChanSender->sendEvent(eventMessage);
+}
+
+void TrContentRuntime::setupWithXRCommandBufferClient(TrOneShotClient<xr::TrXRCommandMessage> *client)
+{
+  assert(client != nullptr);
+  xrCommandChanReceiver = new xr::TrXRCommandReceiver(client);
+  xrCommandChanSender = new xr::TrXRCommandSender(client);
+  xrCommandChanClient = client;
 }
 
 void TrContentRuntime::onClientProcess()
@@ -283,6 +292,15 @@ TrContentManager::~TrContentManager()
   }
   DEBUG(LOG_TAG_CONTENT, "All command buffers worker is stopped.");
 
+  // Stop XR commands worker
+  if (xrCommandsRecvWorker != nullptr)
+  {
+    xrCommandsWorkerRunning = false;
+    xrCommandsRecvWorker->join();
+    delete xrCommandsRecvWorker;
+    xrCommandsRecvWorker = nullptr;
+  }
+
   // Stop event channel watcher
   if (eventChanWatcher != nullptr)
   {
@@ -362,6 +380,37 @@ bool TrContentManager::initialize()
       {
         for (auto it = contents.begin(); it != contents.end(); ++it)
           (*it)->recvCommandBuffers(timeout);
+      }
+    } });
+
+  xrCommandsWorkerRunning = true;
+  xrCommandsRecvWorker = new thread([this]()
+                                    {
+    SET_THREAD_NAME("TrXRCommandsWorker");
+
+    uint32_t timeout = 100;
+    while (xrCommandsWorkerRunning)
+    {
+      if (contents.empty() || constellation->getXrDevice() == nullptr)
+      {
+        this_thread::sleep_for(chrono::milliseconds(timeout));
+        continue;
+      }
+      else
+      {
+        auto xrDevice = constellation->getXrDevice();
+        for (auto it = contents.begin(); it != contents.end(); ++it)
+        {
+          auto content = *it;
+          if (content->xrCommandChanReceiver == nullptr)
+            continue;
+          auto xrCommandMessage = content->xrCommandChanReceiver->recvCommandMessage(timeout);
+          if (xrCommandMessage != nullptr)
+          {
+            xrDevice->handleCommandMessage(*xrCommandMessage, content);
+            delete xrCommandMessage;
+          }
+        }
       }
     } });
   return true;

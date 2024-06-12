@@ -172,7 +172,7 @@ export default class XRSystemImpl extends EventTarget implements XRSystem {
     // Call device's requestSession, which does some initialization (1.1 
     // fallback calls `vrDisplay.requestPresent()` for example). Could throw 
     // due to missing user gesture.
-    const sessionId = await this.#device.requestSession(mode, enabledFeatures, this.#bondSessionId);
+    const sessionId = await this.#device.requestSession(mode, enabledFeatures);
     const session = new XRSessionWrapper(this.#device, mode, sessionId);
 
     if (mode == 'inline') {

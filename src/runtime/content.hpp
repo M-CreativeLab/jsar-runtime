@@ -16,6 +16,9 @@
 #include "common/events/message.hpp"
 #include "common/events/sender.hpp"
 #include "common/events/receiver.hpp"
+#include "common/xr/message.hpp"
+#include "common/xr/sender.hpp"
+#include "common/xr/receiver.hpp"
 #include "constellation.hpp"
 
 using namespace std;
@@ -57,6 +60,26 @@ public: // command buffer methods
 public: // event methods
   bool sendEventResponse(TrEvent &event);
 
+public: // XR-related methods
+  /**
+   * Setup and add the ipc client for XR command messages.
+   * 
+   * @param client The client pointer to receive or send XR command messages.
+   */
+  void setupWithXRCommandBufferClient(TrOneShotClient<xr::TrXRCommandMessage> *client);
+  /**
+   * Send a XR command response to the content's client.
+   * 
+   * @param resp The XR command response to send.
+   */
+  template <typename CommandType>
+  bool sendXRCommandResponse(xr::TrXRCommandBase<CommandType> &resp)
+  {
+    if (xrCommandChanSender != nullptr)
+      return xrCommandChanSender->sendCommand(resp);
+    return false;
+  }
+
 private:
   void onClientProcess();
   bool testClientProcessExitOnFrame(); // true if the client process has exited
@@ -79,6 +102,9 @@ private:
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
   vector<TrCommandBufferBase *> commandBufferRequests;
+  TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
+  xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
+  xr::TrXRCommandSender *xrCommandChanSender = nullptr;
   // Layout?
   // XR?
 
@@ -124,7 +150,10 @@ private: // event channel
 private: // command buffer channel
   atomic<bool> commandBuffersWorkerRunning = false;
   thread *commandBuffersRecvWorker = nullptr;
-  mutex commandBuffersMutex;
+
+private: // XR command channel
+  atomic<bool> xrCommandsWorkerRunning = false;
+  thread *xrCommandsRecvWorker = nullptr;
 
   friend class TrContentRuntime;
   friend class TrConstellation;

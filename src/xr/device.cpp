@@ -1,19 +1,25 @@
 #include <assert.h>
 #include <algorithm>
-#include "device.hpp"
+
+#include "runtime/constellation.hpp"
+#include "runtime/content.hpp"
 #include "math/matrix.hpp"
+#include "idgen.hpp"
+#include "./device.hpp"
 
 namespace xr
 {
   static uint32_t MIN_FRAME_RATE = 60;
   static uint32_t MAX_FRAME_RATE = 90;
+  static TrIdGenerator sessionIdGen(1);
 
   Device *Device::GetInstance()
   {
     return nullptr;
   }
 
-  Device::Device() : m_FieldOfView(0.0f), m_Time(0.0f)
+  Device::Device(TrConstellation *constellation)
+      : m_Constellation(constellation), m_FieldOfView(0.0f), m_Time(0.0f)
   {
     m_BackupStereoRenderingFrame = new StereoRenderingFrame(true);
 
@@ -54,25 +60,70 @@ namespace xr
         delete inputSource;
       m_HandInputSources.clear();
     }
+
+    // Clear the command chan server
+    m_CommandClientWatcherRunning = false;
+    if (m_CommandClientWatcher != nullptr)
+    {
+      m_CommandClientWatcher->join();
+      delete m_CommandClientWatcher;
+      m_CommandClientWatcher = nullptr;
+    }
+    if (m_CommandChanServer != nullptr)
+    {
+      delete m_CommandChanServer;
+      m_CommandChanServer = nullptr;
+    }
   }
 
   void Device::initialize(bool enabled, TrDeviceInit &init)
   {
     m_Enabled = enabled;
     m_StereoRenderingMode = init.stereoRenderingMode;
+    startCommandClientWatcher();
   }
 
-  bool Device::requestSession(int id)
+  bool Device::isSessionSupported(xr::TrSessionMode mode)
   {
-    // Search for the session id, if the session id has been added, return false
-    for (auto sessionId : m_SessionIds)
+    return mode == xr::TrSessionMode::ImmersiveAR;
+  }
+
+  int Device::requestSession(xr::TrSessionMode mode)
+  {
+    if (isSessionSupported(mode) == false)
+      return 0;
+
+    int id;
+    int tries = 0;
+    while (tries <= 10)
     {
-      if (sessionId == id)
-        return false;
+      bool idExists = false;
+      id = sessionIdGen.get();
+      // Search for the session id, if the session id has been added, return false
+      for (auto sessionId : m_SessionIds)
+      {
+        if (sessionId == id)
+        {
+          idExists = true;
+          break; // When the new id is already in the list, we need to generate a new id.
+        }
+      }
+      if (idExists == false)
+        break;
+      else
+        tries++;
     }
-    m_SessionIds.push_back(id);
-    DEBUG("Unity", "Device::requestSession(%d) finished", id);
-    return true;
+
+    if (id > 0)
+    {
+      m_SessionIds.push_back(id);
+      return id;
+    }
+    else
+    {
+      DEBUG(LOG_TAG_XR, "Failed to generate a new session id, tries=%d", tries);
+      return 0;
+    }
   }
 
   bool Device::enabled()
@@ -616,6 +667,65 @@ namespace xr
   int Device::getCommandChanPort()
   {
     return m_CommandChanServer->getPort();
+  }
+
+  void Device::startCommandClientWatcher()
+  {
+    m_CommandClientWatcherRunning = true;
+    m_CommandClientWatcher = new thread([this]()
+                                        {
+      while (m_CommandClientWatcherRunning)
+      {
+        auto newClient = m_CommandChanServer->tryAccept(m_AcceptTimeout);
+        if (newClient != nullptr)
+        {
+           auto content = m_Constellation->getContentManager()->findContent(newClient->getPid());
+          if (content == nullptr)
+            m_CommandChanServer->removeClient(newClient);
+          else
+            content->setupWithXRCommandBufferClient(newClient);
+        }
+      } });
+  }
+
+#define TR_XRCOMMAND_METHODS_MAP(XX) \
+  XX(IsSessionSupportedRequest)      \
+  XX(SessionRequest)
+
+  void Device::handleCommandMessage(TrXRCommandMessage &message, TrContentRuntime *content)
+  {
+    auto type = message.type;
+    switch (type)
+    {
+#define XX(hander)                                   \
+  case xr::TrXRCmdType::hander:                      \
+  {                                                  \
+    auto req = message.createInstance<xr::hander>(); \
+    auto res = on##hander(*req, content);            \
+    content->sendXRCommandResponse(res);             \
+    delete req;                                      \
+    break;                                           \
+  }
+      TR_XRCOMMAND_METHODS_MAP(XX)
+#undef XX
+    default:
+      DEBUG(LOG_TAG_XR, "Unknown command type: %d", (int)type);
+      break;
+    }
+  }
+
+  xr::IsSessionSupportedResponse Device::onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request, TrContentRuntime *content)
+  {
+    xr::IsSessionSupportedResponse resp;
+    resp.supported = isSessionSupported(request.sessionMode);
+    return resp;
+  }
+
+  xr::SessionResponse Device::onSessionRequest(xr::SessionRequest &request, TrContentRuntime *content)
+  {
+    auto sessionId = requestSession(request.sessionMode);
+    xr::SessionResponse resp(sessionId);
+    return resp;
   }
 
   InputSource *Device::getScreenInputSource(int id)

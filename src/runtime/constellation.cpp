@@ -21,7 +21,7 @@ TrConstellation::TrConstellation(TrEmbedder *embedder) : embedder(embedder)
   nativeEventTarget = new TrEventTarget();
   contentManager = new TrContentManager(this);
   renderer = new TrRenderer(this);
-  xrDevice = new xr::Device();
+  xrDevice = new xr::Device(this);
 }
 
 TrConstellation::~TrConstellation()

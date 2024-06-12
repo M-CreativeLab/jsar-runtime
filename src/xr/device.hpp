@@ -7,6 +7,7 @@
 #include <atomic>
 #include <chrono>
 
+#include "common/classes.hpp"
 #include "common/ipc.hpp"
 #include "common/xr/types.hpp"
 #include "common/xr/message.hpp"
@@ -26,12 +27,13 @@ namespace xr
     static Device *GetInstance();
 
   public:
-    Device();
+    Device(TrConstellation *constellation);
     ~Device();
 
   public:
     void initialize(bool enabled, TrDeviceInit &init);
-    bool requestSession(int id);
+    bool isSessionSupported(xr::TrSessionMode mode);
+    int requestSession(xr::TrSessionMode mode);
     bool enabled();
     void setFrameRate(uint32_t frameRate);
     bool skipHostFrameOnScript();
@@ -94,8 +96,18 @@ namespace xr
 
   public:
     int getCommandChanPort();
+    void startCommandClientWatcher();
+    void handleCommandMessage(TrXRCommandMessage &message, TrContentRuntime *content);
+
+  private: // XR command channel handlers
+    xr::IsSessionSupportedResponse onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request, TrContentRuntime *content);
+    xr::SessionResponse onSessionRequest(xr::SessionRequest &request, TrContentRuntime *content);
 
   private:
+    /**
+     * The constellation object.
+     */
+    TrConstellation *m_Constellation = nullptr;
     /**
      * A flag to indicate if the XR is enabled.
      */
@@ -184,7 +196,10 @@ namespace xr
     std::map<int, InputSource *> m_ScreenInputSources;
     std::map<int, InputSource *> m_GamepadInputSources;
 
-  private:
+  private: // command channel
     ipc::TrOneShotServer<TrXRCommandMessage> *m_CommandChanServer = nullptr;
+    thread *m_CommandClientWatcher = nullptr;
+    atomic<bool> m_CommandClientWatcherRunning = false;
+    int m_AcceptTimeout = 1000;
   };
 } // namespace xr

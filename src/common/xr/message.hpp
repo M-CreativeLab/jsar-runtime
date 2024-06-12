@@ -6,7 +6,9 @@
 
 namespace xr
 {
+  static const int16_t TR_XRCOMMAND_MAGIC = 0x5A5A;
   static TrIdGenerator xrCmdIdGen(1);
+
   enum class TrXRCmdType
   {
     IsSessionSupportedRequest,
@@ -39,7 +41,10 @@ namespace xr
   class IsSessionSupportedRequest : public TrXRCommandBase<IsSessionSupportedRequest>
   {
   public:
-    IsSessionSupportedRequest() : TrXRCommandBase(TrXRCmdType::IsSessionSupportedRequest) {}
+    IsSessionSupportedRequest(TrSessionMode mode) : TrXRCommandBase(TrXRCmdType::IsSessionSupportedRequest),
+                                                    sessionMode(mode)
+    {
+    }
 
   public:
     TrSessionMode sessionMode;
@@ -57,7 +62,14 @@ namespace xr
   class SessionRequest : public TrXRCommandBase<SessionRequest>
   {
   public:
-    SessionRequest() : TrXRCommandBase(TrXRCmdType::SessionRequest) {}
+    SessionRequest() : TrXRCommandBase(TrXRCmdType::SessionRequest),
+                       sessionMode(TrSessionMode::ImmersiveAR)
+    {
+    }
+    SessionRequest(TrSessionMode mode) : TrXRCommandBase(TrXRCmdType::SessionRequest),
+                                         sessionMode(mode)
+    {
+    }
 
   public:
     TrSessionMode sessionMode;
@@ -126,10 +138,26 @@ namespace xr
   class TrXRCommandMessage
   {
   public:
+    /**
+     * It creates a new `TrXRCommandMessage` instance from the given `XRCommandBase` instance, the caller should
+     * free the instance after use.
+     */
     template <typename XRCommandType>
     static TrXRCommandMessage *Make(TrXRCommandBase<XRCommandType> &xrCommand)
     {
       return new TrXRCommandMessage(xrCommand.type, &xrCommand, xrCommand.baseSize);
+    }
+    /**
+     * It creates a new `TrXRCommandMessage` instance from the given raw data, the caller should free the instance
+     * after use.
+     */
+    static TrXRCommandMessage *MakeFromRaw(void *data, size_t size)
+    {
+      if (size < sizeof(TrXRCmdType))
+        return nullptr;
+
+      TrXRCmdType type = *(TrXRCmdType *)data;
+      return new TrXRCommandMessage(type, (char *)data + sizeof(TrXRCmdType), size - sizeof(TrXRCmdType));
     }
 
   public:
@@ -144,8 +172,6 @@ namespace xr
       this->base = malloc(baseSize);
       memcpy(this->base, base, baseSize);
     }
-
-  public:
     ~TrXRCommandMessage()
     {
       if (base != nullptr)
@@ -153,6 +179,19 @@ namespace xr
         free(base);
         base = nullptr;
       }
+    }
+
+  public:
+    /**
+     * It creates a new `XRCommandBase` instance from the current message, the caller should free the instance after use.
+     */
+    template <typename T>
+    T *createInstance()
+    {
+      if (base == nullptr)
+        return nullptr;
+      assert(baseSize == sizeof(T));
+      return new T(*reinterpret_cast<T *>(base));
     }
 
   public:

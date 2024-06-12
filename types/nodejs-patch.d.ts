@@ -62,8 +62,8 @@ declare namespace Transmute {
     targetRayMode: string;
   };
   class XRDeviceNative {
-    isSessionSupported(mode: string): boolean;
-    requestSession(sessionId: number): boolean;
+    isSessionSupported(mode: string): Promise<boolean>;
+    requestSession(mode: string): Promise<number>;
     requestFrameOfReferenceTransform(sessionId: number, type: XRReferenceSpaceType, options?): Float32Array;
     getViewport(sessionId: number, eye: XREye, viewIndex: number): {
       x: number;

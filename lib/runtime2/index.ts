@@ -3,7 +3,8 @@ import { JSARDOM } from '@yodaos-jsar/dom';
 import { extname } from 'node:path';
 
 import * as logger from '@transmute/logger';
-import { dispatchXsmlEvent } from '../bindings/messaging';
+import { isWebXRSupported } from '@transmute/env';
+import { dispatchXsmlEvent } from '@transmute/messaging';
 import { NativeDocumentOnTransmute } from './jsardom/impl-transmute';
 
 // viewers
@@ -84,8 +85,12 @@ export class TransmuteRuntime2 extends EventTarget {
     logger.info(`xsml request:`, url, id);
 
     const nativeDocument = new NativeDocumentOnTransmute(this.gl, id);
-    await nativeDocument.enterDefaultXrExperience();
-    logger.info(`Session#${id} has been entered XR experience.`);
+    if (isWebXRSupported()) {
+      await nativeDocument.enterDefaultXrExperience();
+      logger.info(`Session#${id} has been entered XR experience.`);
+    } else {
+      logger.info(`Skip enabling WebXR experience, reason: WebXR is not enabled.`);
+    }
 
     try {
       await this.load(url, nativeDocument);

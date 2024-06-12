@@ -5,7 +5,6 @@
 namespace bindings
 {
   Napi::FunctionReference *XRDeviceNative::constructor;
-  XRDeviceNative *XRDeviceNative::instance;
 
   struct FrameData
   {
@@ -41,21 +40,16 @@ namespace bindings
 
   XRDeviceNative *XRDeviceNative::GetInstance()
   {
-    return instance;
+    return nullptr;
   }
 
   XRDeviceNative::XRDeviceNative(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRDeviceNative>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-
-    if (instance != nullptr)
-    {
-      Napi::TypeError::New(env, "XRDeviceNative: instance already exists")
-          .ThrowAsJavaScriptException();
-      return;
-    }
-    instance = this;
+    
+    clientContext = TrClientContextPerProcess::Get();
+    assert(clientContext != nullptr);
 
     frameHandler = new Napi::FunctionReference();
     *frameHandler = Napi::Persistent(Napi::Function::New(env, NativeFrameHandler));
@@ -66,7 +60,54 @@ namespace bindings
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return env.Undefined();
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::RequestSession: expected 1 argument")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsString())
+    {
+      Napi::TypeError::New(env, "mode should be a string")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    xr::TrSessionMode mode;
+    auto modeString = info[0].As<Napi::String>().Utf8Value();
+    if (modeString == "immersive-ar") {
+      mode = xr::TrSessionMode::ImmersiveAR;
+    } else if (modeString == "immersive-vr") {
+      mode = xr::TrSessionMode::ImmersiveVR;
+    } else if (modeString == "inline") {
+      mode = xr::TrSessionMode::Inline;
+    } else {
+      Napi::TypeError::New(env, "mode should be 'immersive-ar', 'immersive-vr' or 'inline'.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
+    xr::IsSessionSupportedRequest request(mode);
+    if (!clientContext->sendXrCommand(request))
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::IsSessionSupported: failed to send command")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto resp = clientContext->recvXrCommand<xr::SessionResponse>(xr::TrXRCmdType::SessionResponse, 1000);
+    if (resp == nullptr)
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::IsSessionSupported: failed to receive response")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    auto isSupportedValue = Napi::Boolean::New(env, resp->success);
+    delete resp;
+    deferred.Resolve(isSupportedValue);
+    return deferred.Promise();
   }
 
   Napi::Value XRDeviceNative::RequestSession(const Napi::CallbackInfo &info)
@@ -74,22 +115,53 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() < 1 || !info[0].IsNumber())
+    if (info.Length() < 1)
     {
-      Napi::TypeError::New(env, "XRDeviceNative::RequestSession: expected a number")
+      Napi::TypeError::New(env, "XRDeviceNative::RequestSession: expected 1 argument")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsString())
+    {
+      Napi::TypeError::New(env, "mode should be a string")
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
-    auto id = info[0].As<Napi::Number>().Int32Value();
-    auto device = xr::Device::GetInstance();
-    if (device == nullptr)
-    {
-      Napi::TypeError::New(env, "XRDeviceNative::RequestSession: device is not initialized")
+    xr::TrSessionMode mode;
+    auto modeString = info[0].As<Napi::String>().Utf8Value();
+    if (modeString == "immersive-ar") {
+      mode = xr::TrSessionMode::ImmersiveAR;
+    } else if (modeString == "immersive-vr") {
+      mode = xr::TrSessionMode::ImmersiveVR;
+    } else if (modeString == "inline") {
+      mode = xr::TrSessionMode::Inline;
+    } else {
+      Napi::TypeError::New(env, "mode should be 'immersive-ar', 'immersive-vr' or 'inline'.")
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    return Napi::Boolean::New(env, device->requestSession(id));
+
+    Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
+    xr::SessionRequest request(mode);
+    if (!clientContext->sendXrCommand(request))
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::RequestSession: failed to send command")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto resp = clientContext->recvXrCommand<xr::SessionResponse>(xr::TrXRCmdType::SessionResponse, 1000);
+    if (resp == nullptr)
+    {
+      Napi::TypeError::New(env, "XRDeviceNative::RequestSession: failed to receive response")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    auto sessionIdValue = Napi::Number::New(env, resp->sessionId);
+    delete resp;
+    deferred.Resolve(sessionIdValue);
+    return deferred.Promise();
   }
 
   Napi::Value XRDeviceNative::RequestFrameOfReferenceTransform(const Napi::CallbackInfo &info)

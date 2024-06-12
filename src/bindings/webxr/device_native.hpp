@@ -3,9 +3,11 @@
 #include <mutex>
 #include <napi.h>
 #include <node/uv.h>
-#include "common.hpp"
+
 #include "xr/device.hpp"
 #include "xr/viewport.hpp"
+#include "client/per_process.hpp"
+#include "./common.hpp"
 
 namespace bindings
 {
@@ -54,12 +56,12 @@ namespace bindings
     xr::Viewport getViewport(uint32_t viewIndex);
 
   private:
-    Napi::FunctionReference *frameHandler;
+    TrClientContextPerProcess* clientContext = nullptr;
+    Napi::FunctionReference *frameHandler = nullptr;
     Napi::ThreadSafeFunction tsfnWithFrameHandler;
     std::vector<ContextifiedFrameCallback> contextifiedFrameCallbacks;
 
   private:
     static Napi::FunctionReference *constructor;
-    static XRDeviceNative *instance;
   };
 }

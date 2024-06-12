@@ -55,6 +55,15 @@ export function getClientContext(): Transmute.TrClientContext {
   return nativeContext;
 }
 
+/**
+ * Check if WebXR is supported in the current environment.
+ * 
+ * @returns true if WebXR is supported in the current environment.
+ */
+export function isWebXRSupported(): boolean {
+  return nativeContext.xrDevice?.enabled === true;
+}
+
 // by default, it creates env instance.
 if (process.env.TRANSMUTE_AUTO_CREATE_ENV === 'yes') {
   createEnv();

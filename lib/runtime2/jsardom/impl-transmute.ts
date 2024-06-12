@@ -17,6 +17,7 @@ import ImageDataImpl from '@yodaos-jsar/dom/src/living/image/ImageData';
 import * as ws from 'ws';
 import * as undici from 'undici';
 import * as logger from '@transmute/logger';
+import { isWebXRSupported } from '@transmute/env';
 
 import { createBondXRSystem } from '../../webxr';
 import { WebXRDefaultExperience } from './xr/DefaultExperience';
@@ -220,7 +221,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
 
   private _id: number;
   private _xrSystem: XRSystem;
-  private _xrDefaultExperience: Promise<WebXRDefaultExperience>;
+  private _xrDefaultExperience: Promise<WebXRDefaultExperience> = null;
   private _scene: BABYLON.Scene;
   private _preloadMeshes: Map<string, Array<BABYLON.AbstractMesh | BABYLON.TransformNode>> = new Map();
   private _preloadAnimationGroups: Map<string, BABYLON.AnimationGroup[]> = new Map();
@@ -267,7 +268,18 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
       this._defaultLights.push(light);
     }
 
-    this._xrDefaultExperience = WebXRDefaultExperience.CreateAsync(scene, {
+    if (isWebXRSupported()) {
+      this.configureDefaultXrExperience(glContext);
+    }
+    this.engine.runRenderLoop(() => scene.render());
+  }
+
+  get id(): number {
+    return this._id;
+  }
+
+  configureDefaultXrExperience(glContext: WebGLRenderingContext | WebGL2RenderingContext) {
+    this._xrDefaultExperience = WebXRDefaultExperience.CreateAsync(this._scene, {
       xrSystem: this._xrSystem,
       outputCanvasOptions: {
         renderingContext: glContext,
@@ -297,11 +309,6 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
       disableTeleportation: true,
       disableNearInteraction: true,
     });
-    this.engine.runRenderLoop(() => scene.render());
-  }
-
-  get id(): number {
-    return this._id;
   }
 
   async enterDefaultXrExperience(): Promise<XRSession> {
@@ -366,10 +373,14 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     this.engine.stopRenderLoop();
     this.engine.dispose();
     this._scene.dispose();
-    this._xrDefaultExperience
-      .then(async ({ baseExperience }) => {
-        await baseExperience.exitXRAsync();
-        baseExperience.dispose();
-      });
+
+    // Check if the default XR experience is created and to be a Promise object
+    if (this._xrDefaultExperience instanceof Promise) {
+      this._xrDefaultExperience
+        .then(async ({ baseExperience }) => {
+          await baseExperience.exitXRAsync();
+          baseExperience.dispose();
+        });
+    }
   }
 }

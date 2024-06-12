@@ -79,7 +79,7 @@ export default class XRDevice extends EventTarget {
   /**
    * returns if the session mode is supported.
    */
-  isSessionSupported(_mode: XRSessionMode): boolean {
+  isSessionSupported(_mode: XRSessionMode): Promise<boolean> {
     throw new Error('Method(device.isSessionSupported) not implemented');
   }
 
@@ -99,7 +99,7 @@ export default class XRDevice extends EventTarget {
    * @param {Set<string>} enabledFeatures
    * @return {Promise<number>}
    */
-  async requestSession(_mode: XRSessionMode, _enabledFeatures: Set<string>, _sessionId: number): Promise<number> {
+  async requestSession(_mode: XRSessionMode, _enabledFeatures: Set<string>): Promise<number> {
     throw new Error('Method(device.requestSession) not implemented');
   }
 

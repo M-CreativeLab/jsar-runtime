@@ -197,7 +197,7 @@ export class WebXRSessionManager implements BABYLON.IDisposable, BABYLON.IWebXRR
     }
     return xr.requestSession(xrSessionMode, xrSessionInit)
       .then((session: XRSession) => {
-        logger.info(`a session request(mode=${xrSessionMode} was successful`, session);
+        logger.info(`a session request(mode=${xrSessionMode}) is created:`, session);
         this.session = session;
         this._sessionMode = xrSessionMode;
         this.onXRSessionInit.notifyObservers(session);

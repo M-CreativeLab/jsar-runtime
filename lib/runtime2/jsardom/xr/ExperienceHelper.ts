@@ -97,8 +97,6 @@ export class WebXRExperienceHelper implements BABYLON.IDisposable {
     sessionCreationOptions: XRSessionInit = {},
     renderTarget: BABYLON.WebXRRenderTarget = this.sessionManager.getWebXRRenderTarget(),
   ): Promise<WebXRSessionManager> {
-    console.info(`enterXRAsync: sessionMode=${sessionMode}, referenceSpaceType=${referenceSpaceType}, sessionCreationOptions=${sessionCreationOptions}, renderTarget=${renderTarget}`);
-
     if (!this._supported) {
       throw new Error('WebXR not supported in this browser or environment');
     }

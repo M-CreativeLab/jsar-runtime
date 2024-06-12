@@ -255,7 +255,6 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
     delete xrCommandChanReceiver;
     xrCommandChanReceiver = nullptr;
   }
-  // TODO: delete xrCommandChanClient?
 
   // Clear for frame request callbacks
   frameRequestCallbacksMap.clear();
@@ -290,8 +289,8 @@ void TrClientContextPerProcess::start()
   if (xrDeviceInit.enabled && xrDeviceInit.commandChanPort > 0)
   {
     xrCommandChanClient = ipc::TrOneShotClient<xr::TrXRCommandMessage>::MakeAndConnect(xrDeviceInit.commandChanPort, false);
-    xrCommandChanSender = new ipc::TrChannelSender<xr::TrXRCommandMessage>(xrCommandChanClient);
-    xrCommandChanReceiver = new ipc::TrChannelReceiver<xr::TrXRCommandMessage>(xrCommandChanClient);
+    xrCommandChanSender = new xr::TrXRCommandSender(xrCommandChanClient);
+    xrCommandChanReceiver = new xr::TrXRCommandReceiver(xrCommandChanClient);
   }
 
   // Start the frames listener

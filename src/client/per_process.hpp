@@ -24,6 +24,8 @@
 #include "common/font/cache.hpp"
 #include "common/xr/types.hpp"
 #include "common/xr/message.hpp"
+#include "common/xr/sender.hpp"
+#include "common/xr/receiver.hpp"
 
 using namespace std;
 using namespace node;
@@ -32,7 +34,7 @@ using namespace commandbuffers;
 using namespace events;
 
 typedef uint32_t FrameRequestId;
-typedef function<void(AnimationFrameRequest&)> FrameRequestCallback;
+typedef function<void(AnimationFrameRequest &)> FrameRequestCallback;
 
 class ScriptEnvironment
 {
@@ -74,8 +76,8 @@ private:
 class TrClientContextPerProcess
 {
 public:
-  static TrClientContextPerProcess* Create();
-  static TrClientContextPerProcess* Get();
+  static TrClientContextPerProcess *Create();
+  static TrClientContextPerProcess *Get();
 
 public:
   TrClientContextPerProcess();
@@ -91,14 +93,41 @@ public: // frame request methods
 
 public: // event methods
   bool sendEventMessage(TrEventMessage &event);
-  TrEventMessage* recvEventMessage(int timeout);
+  TrEventMessage *recvEventMessage(int timeout);
 
 public: // command buffer methods
   bool sendCommandBufferRequest(TrCommandBufferBase &commandBuffer);
-  TrCommandBufferResponse* recvCommandBufferResponse(int timeout);
+  TrCommandBufferResponse *recvCommandBufferResponse(int timeout);
+
+public: // xr command methods
+  template <typename CommandType>
+  bool sendXrCommand(xr::TrXRCommandBase<CommandType> &xrCommand)
+  {
+    if (!xrCommandChanSender)
+      return false;
+    return xrCommandChanSender->sendCommand(xrCommand);
+  }
+
+  template <typename CommandType>
+  CommandType *recvXrCommand(xr::TrXRCmdType type, int timeout)
+  {
+    if (!xrCommandChanReceiver)
+      return nullptr;
+    auto message = xrCommandChanReceiver->recvCommandMessage(timeout);
+    if (message == nullptr)
+      return nullptr;
+    if (message->type != type)  // When the message is not the expected type, discard it.
+    {
+      delete message;
+      return nullptr;
+    }
+    auto xrCommand = message->createInstance<CommandType>();
+    delete message;
+    return xrCommand;
+  }
 
 public: // font cache methods
-  font::FontCacheManager& getFontCacheManager();
+  font::FontCacheManager &getFontCacheManager();
 
 private:
   void onListenFrames();
@@ -108,7 +137,7 @@ public:
   string url;
   string applicationCacheDirectory;
   string httpsProxyServer;
-  uint32_t webglVersion = 2;  // webgl2 by default
+  uint32_t webglVersion = 2; // webgl2 by default
   uint32_t eventChanPort;
   uint32_t frameChanPort;
   uint32_t commandBufferChanPort;
@@ -125,18 +154,18 @@ private:
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
   font::FontCacheManager fontCacheManager;
 
-private:  // frame request fields
+private: // xr fields
+  ipc::TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
+  xr::TrXRCommandSender *xrCommandChanSender = nullptr;
+  xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
+
+private: // frame request fields
   map<FrameRequestId, FrameRequestCallback> frameRequestCallbacksMap;
   thread *framesListener = nullptr; // a thread to listen for frame requests
   mutex frameRequestMutex;
   atomic<bool> framesListenerRunning = false;
 
-private:  // xr fields
-  ipc::TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
-  ipc::TrChannelSender<xr::TrXRCommandMessage> *xrCommandChanSender = nullptr;
-  ipc::TrChannelReceiver<xr::TrXRCommandMessage> *xrCommandChanReceiver = nullptr;
-
 private:
   static TrClientContextPerProcess *s_Instance;
-  static TrIdGenerator* s_IdGenerator;
+  static TrIdGenerator *s_IdGenerator;
 };

@@ -44,16 +44,19 @@ export default class XRNativeDevice extends XRDevice {
     return eyeId === 0 ? 'left' : 'right';
   }
 
-  isSessionSupported(mode: XRSessionMode): boolean {
-    return mode === 'immersive-ar';
+  isSessionSupported(mode: XRSessionMode): Promise<boolean> {
+    return this.#handle.isSessionSupported(mode);
   }
 
   isFeatureSupported(_featureDescriptor: string): boolean {
     return true;
   }
 
-  async requestSession(_mode: XRSessionMode, _enabledFeatures: Set<string>, sessionId: number): Promise<number> {
-    this.#handle.requestSession(sessionId);
+  async requestSession(mode: XRSessionMode, _enabledFeatures: Set<string>): Promise<number> {
+    const sessionId = await this.#handle.requestSession(mode);
+    if (sessionId <= 0) {
+      throw new Error('Failed to request session');
+    }
     return sessionId;
   }
 
