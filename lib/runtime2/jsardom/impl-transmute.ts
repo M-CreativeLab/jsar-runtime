@@ -17,20 +17,19 @@ import ImageDataImpl from '@yodaos-jsar/dom/src/living/image/ImageData';
 import * as ws from 'ws';
 import * as undici from 'undici';
 import * as logger from '@transmute/logger';
-import { isWebXRSupported } from '@transmute/env';
+import { getClientContext, isWebXRSupported } from '@transmute/env';
 
 import { createBondXRSystem } from '../../webxr';
 import { WebXRDefaultExperience } from './xr/DefaultExperience';
-import {
-  XRMatrixPlaceholder,
-  XRMatrixPlaceholderType
-} from '../../webxr/api/XRRigidTransform';
+// import {
+//   XRMatrixPlaceholder,
+//   XRMatrixPlaceholderType
+// } from '../../webxr/api/XRRigidTransform';
 
 type TransmuteEngineOptions = BABYLON.EngineOptions & {
-  xrSessionId: number;
+  // TODO
 };
 class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
-  #xrSessionId: number;
   constructor(
     glContext: WebGLRenderingContext | WebGL2RenderingContext,
     antialias: boolean,
@@ -39,7 +38,6 @@ class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
   ) {
     super(glContext, antialias, options, adaptToDeviceRatio);
     this.disableUniformBuffers = true;
-    this.#xrSessionId = options?.xrSessionId;
   }
 
   get useRightHandedSystem(): boolean {
@@ -54,36 +52,36 @@ class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
      * When JSAR_WEBGL_PLACEHOLDER is enabled, we will replace the projection, view and viewProjection matrices with
      * placeholders. The placeholders will be computed at the native rendering loop.
      */
-    if (process.env['JSAR_WEBGL_PLACEHOLDER'] === 'yes') {
-      const name = (uniform as any)?.name;
-      // const currentEffect = this._currentEffect;
-      // const isUnbound = BABYLON.Tags.MatchesQuery(currentEffect, 'UNBOUND');
-      switch (name) {
-        case 'projection':
-          matrices = new XRMatrixPlaceholder(
-            matrices,
-            XRMatrixPlaceholderType.PROJECTION_MATRIX,
-            this.#xrSessionId,
-            this.useRightHandedSystem);
-          break;
-        case 'view':
-          matrices = new XRMatrixPlaceholder(
-            matrices,
-            XRMatrixPlaceholderType.VIEW_MATRIX,
-            this.#xrSessionId,
-            this.useRightHandedSystem);
-          break;
-        case 'viewProjection':
-          matrices = new XRMatrixPlaceholder(
-            matrices,
-            XRMatrixPlaceholderType.VIEW_PROJECTION_MATRIX,
-            this.#xrSessionId,
-            this.useRightHandedSystem);
-          break;
-        default:
-          break;
-      }
-    }
+    // if (process.env['JSAR_WEBGL_PLACEHOLDER'] === 'yes') {
+    //   const name = (uniform as any)?.name;
+    //   // const currentEffect = this._currentEffect;
+    //   // const isUnbound = BABYLON.Tags.MatchesQuery(currentEffect, 'UNBOUND');
+    //   switch (name) {
+    //     case 'projection':
+    //       matrices = new XRMatrixPlaceholder(
+    //         matrices,
+    //         XRMatrixPlaceholderType.PROJECTION_MATRIX,
+    //         this.#xrSessionId,
+    //         this.useRightHandedSystem);
+    //       break;
+    //     case 'view':
+    //       matrices = new XRMatrixPlaceholder(
+    //         matrices,
+    //         XRMatrixPlaceholderType.VIEW_MATRIX,
+    //         this.#xrSessionId,
+    //         this.useRightHandedSystem);
+    //       break;
+    //     case 'viewProjection':
+    //       matrices = new XRMatrixPlaceholder(
+    //         matrices,
+    //         XRMatrixPlaceholderType.VIEW_PROJECTION_MATRIX,
+    //         this.#xrSessionId,
+    //         this.useRightHandedSystem);
+    //       break;
+    //     default:
+    //       break;
+    //   }
+    // }
     return super.setMatrices(uniform, matrices);
   }
 }
@@ -228,15 +226,14 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
   private _defaultCamera: BABYLON.Camera;
   private _defaultLights: BABYLON.Light[] = [];
 
-  constructor(glContext: WebGLRenderingContext | WebGL2RenderingContext, xrSessionId: number) {
+  constructor(glContext: WebGLRenderingContext | WebGL2RenderingContext) {
     super();
 
     const now = performance.now();
-    this._id = xrSessionId;
-    this._xrSystem = createBondXRSystem(xrSessionId);
+    this._id = getClientContext().id;
+    this._xrSystem = createBondXRSystem();
     this.engine = new EngineOnTransmute(glContext, true, {
       xrCompatible: true,
-      xrSessionId,
     });
     logger.info('Engine created in', performance.now() - now, 'ms');
 

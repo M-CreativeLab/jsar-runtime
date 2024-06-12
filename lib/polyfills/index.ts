@@ -6,12 +6,6 @@ import * as logger from '@transmute/logger';
 import { XMLHttpRequestImpl } from './xhr2';
 import { ErrorEventImpl } from './events/error-event';
 import { PointerEventImpl } from './events/pointer-event';
-// import {
-//   OffscreenCanvasImpl,
-//   ImageDataImpl,
-//   createImageBitmapImpl,
-//   InitializeOffscreenCanvas
-// } from './offscreencanvas';
 import {
   ImageData,
   ImageBitmap,

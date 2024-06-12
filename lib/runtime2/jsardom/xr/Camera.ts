@@ -1,6 +1,4 @@
 import { WebXRSessionManager } from './SessionManager';
-import * as logger from '../../../bindings/logger';
-import XRReferenceSpaceImpl from '../../../webxr/api/XRReferenceSpace';
 
 /**
  * WebXR Camera which holds the views for the xrSession

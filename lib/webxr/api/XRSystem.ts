@@ -13,10 +13,7 @@
  * limitations under the License.
  */
 
-import { XRDevice, XRNativeDevice } from '../devices';
-// import XRSessionImpl from './XRSession';
-
-export const PRIVATE = Symbol('@@webxr-polyfill/XR');
+import { XRDevice } from '../device';
 export const XRSessionModes = ['inline', 'immersive-vr', 'immersive-ar'];
 
 const { XRSession: XRSessionBinding } = process._linkedBinding('transmute:webxr');
@@ -57,7 +54,7 @@ class XRSessionWrapper extends XRSessionBinding {
   onframeratechange: XRSessionEventHandler = null;
 
   constructor(device: XRDevice, mode: XRSessionMode, sessionId: number) {
-    super((<XRNativeDevice>device).handle, mode, sessionId, (...args) => this.#dispatchEvent.apply(this, args));
+    super(device.handle, mode, sessionId, (...args) => this.#dispatchEvent.apply(this, args));
     this.#eventTarget = new EventTarget();
   }
 
@@ -93,14 +90,12 @@ export default class XRSystemImpl extends EventTarget implements XRSystem {
   onsessiongranted: XRSystemSessionGrantedEventHandler;
 
   #device: XRDevice;
-  #bondSessionId: number;
   #immersiveSession: XRSessionWrapper | null;
   #inlineSessions: Set<XRSessionWrapper>;
 
-  constructor(device: XRDevice, sessionId: number) {
+  constructor(device: XRDevice) {
     super();
     this.#device = device;
-    this.#bondSessionId = sessionId;
     this.#immersiveSession = null;
     this.#inlineSessions = new Set();
   }
@@ -110,11 +105,7 @@ export default class XRSystemImpl extends EventTarget implements XRSystem {
    * @return {Promise<boolean>}
    */
   async isSessionSupported(mode: XRSessionMode): Promise<boolean> {
-    // 'inline' is always guaranteed to be supported.
-    if (mode !== 'inline') {
-      return Promise.resolve(this.#device.isSessionSupported(mode));
-    }
-    return Promise.resolve(true);
+    return this.#device.isSessionSupported(mode);
   }
 
   /**

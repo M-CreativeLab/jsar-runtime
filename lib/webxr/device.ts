@@ -3,18 +3,28 @@ import * as logger from '@transmute/logger';
 import { getClientContext } from '@transmute/env';
 import * as renderer from '@transmute/renderer';
 
-import type XRRenderState from '../api/XRRenderState';
-import XRDevice, { StereoRenderingMode } from './XRDevice';
-import { DeviceFrameContext } from '../api/XRSession';
+const {
+  XRDeviceNative,
+} = process._linkedBinding('transmute:webxr');
 
-const { XRDeviceNative } = process._linkedBinding('transmute:webxr');
+export enum StereoRenderingMode {
+  MultiPass = 'multipass',
+  SinglePass = 'singlepass',
+  SinglePassInstanced = 'singlepassinstanced',
+  SinglePassMultiview = 'singlepassmultiview',
+  Unknown = 'unknown',
+}
 
-export default class XRNativeDevice extends XRDevice {
+export class XRDevice {
+  enabled: boolean;
+  stereoRenderingMode: StereoRenderingMode = StereoRenderingMode.Unknown;
+  // Value is used for `XRSession.prototype.environmentBlendMode`
+  // and should be one of XREnvironmentBlendMode types: 'opaque', 'additive',
+  // or 'alpha-blend'.
+  environmentBlendMode: 'opaque' | 'additive' | 'alpha-blend' = 'additive';
   #handle: Transmute.XRDeviceNative;
 
   constructor() {
-    super();
-    this.environmentBlendMode = 'additive';
     this.#handle = new XRDeviceNative();
   }
 
@@ -22,6 +32,9 @@ export default class XRNativeDevice extends XRDevice {
     return this.#handle;
   }
 
+  /**
+   * When a `XRDevice` is created, it takes some time to initialize and be ready, the caller needs to wait for this to happen.
+   */
   async waitForReady(): Promise<boolean> {
     const clientCtx = getClientContext();
     if (clientCtx.xrDevice?.enabled) {
@@ -44,14 +57,29 @@ export default class XRNativeDevice extends XRDevice {
     return eyeId === 0 ? 'left' : 'right';
   }
 
+  /**
+   * returns if the session mode is supported.
+   */
   isSessionSupported(mode: XRSessionMode): Promise<boolean> {
     return this.#handle.isSessionSupported(mode);
   }
 
+  /**
+   * @param {string} featureDescriptor
+   * @return {boolean}
+   */
   isFeatureSupported(_featureDescriptor: string): boolean {
     return true;
   }
 
+  /**
+   * Returns a promise if creating a session is successful.
+   * Usually used to set up presentation in the device.
+   *
+   * @param {XRSessionMode} mode
+   * @param {Set<string>} enabledFeatures
+   * @return {Promise<number>}
+   */
   async requestSession(mode: XRSessionMode, _enabledFeatures: Set<string>): Promise<number> {
     const sessionId = await this.#handle.requestSession(mode);
     if (sessionId <= 0) {
@@ -84,24 +112,14 @@ export default class XRNativeDevice extends XRDevice {
     renderer.cancelAnimationFrame(_handle);
   }
 
+  /**
+   * Called when a XRSession has a `baseLayer` property set.
+   *
+   * @param {number} sessionId
+   * @param {XRWebGLLayer} layer
+   */
   onBaseLayerSet(_sessionId: number, _layer: XRWebGLLayer): void {
     // Nothing to do here
-  }
-
-  onFrameStart(sessionId: number, frameContext: DeviceFrameContext, _renderState: XRRenderState): void {
-    let passIndex = 0;
-    if (this.stereoRenderingMode === StereoRenderingMode.MultiPass) {
-      passIndex = frameContext.activeEyeId === 0 ? 0 : 1;
-    }
-    this.#handle.startFrame(sessionId, frameContext.stereoId, passIndex);
-  }
-
-  onFrameEnd(sessionId: number, frameContext: DeviceFrameContext): void {
-    let passIndex = 0;
-    if (this.stereoRenderingMode === StereoRenderingMode.MultiPass) {
-      passIndex = frameContext.activeEyeId === 0 ? 0 : 1;
-    }
-    this.#handle.endFrame(sessionId, frameContext.stereoId, passIndex);
   }
 
   getViewport(sessionId: number, eye: XREye, _layer: XRWebGLLayer, target: object, viewIndex: number): boolean {
@@ -122,5 +140,21 @@ export default class XRNativeDevice extends XRDevice {
 
   getInputPose(_inputSource: any, _coordinateSystem: any, _poseType: any): XRPose {
     return null;
+  }
+
+  /**
+   * Returns if the device is rendering in multi-pass mode.
+   * 
+   * In multi-pass, there are 2 framebuffers for left and right eyes, it means the pose.views only have 1 element, but
+   * the frame callback will be called twice, once for each eye.
+   * 
+   * Otherwise, the device is rendering in single-pass mode, and the pose.views will have 2 elements, one for each eye,
+   * and the frame callback will be called once.
+   */
+  isRenderingInMultiPass(): boolean {
+    if (this.stereoRenderingMode === StereoRenderingMode.Unknown) {
+      throw new Error('XRDevice.stereoRenderingMode is unknown or not set. Please call XRDevice.waitForReady() first.');
+    }
+    return this.stereoRenderingMode === StereoRenderingMode.MultiPass;
   }
 }

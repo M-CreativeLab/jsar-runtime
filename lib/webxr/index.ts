@@ -1,34 +1,25 @@
 import XRSystemImpl from './api/XRSystem';
-import XRSessionImpl from './api/XRSession';
-import XRFrameImpl from './api/XRFrame';
-import XRViewImpl from './api/XRView';
-import { type XRDevice, XRNativeDevice } from './devices';
+import { XRDevice } from './device';
 
 const {
   XRRigidTransform: XRRigidTransformImpl,
   XRWebGLLayer: XRWebGLLayerImpl,
 } = process._linkedBinding('transmute:webxr');
 
-let xrDevice: XRDevice = null;
+let xrDevice: XRDevice = new XRDevice();
 export async function prepareXRSystem(): Promise<boolean> {
-  if (xrDevice == null) {
-    xrDevice = new XRNativeDevice();
-  }
   return await xrDevice.waitForReady();
 }
 
-export function createBondXRSystem(sessionId: number): XRSystem {
+export function createBondXRSystem(): XRSystem {
   if (xrDevice == null) {
     throw new Error('Failed to create XR system, please call prepareXRSystem() first.');
   }
-  return new XRSystemImpl(xrDevice, sessionId);
+  return new XRSystemImpl(xrDevice);
 }
 
 export {
   XRSystemImpl,
-  XRSessionImpl,
   XRRigidTransformImpl,
   XRWebGLLayerImpl,
-  XRFrameImpl,
-  XRViewImpl,
 }
