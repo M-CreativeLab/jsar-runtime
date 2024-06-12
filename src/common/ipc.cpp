@@ -2,6 +2,7 @@
 #include "messages.hpp"
 #include "common/command_buffers/message.hpp"
 #include "common/events/message.hpp"
+#include "common/xr/message.hpp"
 
 namespace ipc
 {
@@ -571,5 +572,6 @@ namespace ipc
   SPECIALIZE_TEMPLATE(AnimationFrameRequest)
   SPECIALIZE_TEMPLATE(commandbuffers::TrCommandBufferMessage)
   SPECIALIZE_TEMPLATE(events::TrEventMessage)
+  SPECIALIZE_TEMPLATE(xr::TrXRCommandMessage)
 #undef SPECIALIZE_TEMPLATE
 }

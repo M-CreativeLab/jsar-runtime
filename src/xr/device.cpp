@@ -33,6 +33,9 @@ namespace xr
       rightHandInputSource->targetRayMode = TargetRayMode::TrackedPointer;
       m_HandInputSources.push_back(rightHandInputSource);
     }
+
+    // Initialize the command chan server
+    m_CommandChanServer = new ipc::TrOneShotServer<TrXRCommandMessage>("xrCommandChan");
   }
 
   Device::~Device()
@@ -53,7 +56,7 @@ namespace xr
     }
   }
 
-  void Device::initialize(bool enabled, DeviceInit &init)
+  void Device::initialize(bool enabled, TrDeviceInit &init)
   {
     m_Enabled = enabled;
     m_StereoRenderingMode = init.stereoRenderingMode;
@@ -136,19 +139,19 @@ namespace xr
   {
   }
 
-  void Device::setStereoRenderingMode(StereoRenderingMode mode)
+  void Device::setStereoRenderingMode(TrStereoRenderingMode mode)
   {
     m_StereoRenderingMode = mode;
   }
 
-  StereoRenderingMode Device::getStereoRenderingMode()
+  TrStereoRenderingMode Device::getStereoRenderingMode()
   {
     return m_StereoRenderingMode;
   }
 
   StereoRenderingFrame *Device::createStereoRenderingFrame()
   {
-    auto frame = new StereoRenderingFrame(m_StereoRenderingMode == StereoRenderingMode::MultiPass);
+    auto frame = new StereoRenderingFrame(m_StereoRenderingMode == TrStereoRenderingMode::MultiPass);
     m_StereoRenderingFrames.push_back(frame);
     return m_StereoRenderingFrames.back();
   }
@@ -608,6 +611,11 @@ namespace xr
     std::lock_guard<std::mutex> lock(m_Mutex);
     m_ScreenInputSources.erase(id);
     return true;
+  }
+
+  int Device::getCommandChanPort()
+  {
+    return m_CommandChanServer->getPort();
   }
 
   InputSource *Device::getScreenInputSource(int id)

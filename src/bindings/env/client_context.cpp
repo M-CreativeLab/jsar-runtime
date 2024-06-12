@@ -40,13 +40,13 @@ namespace bindings
       xrDeviceObject.Set("enabled", Napi::Boolean::New(env, clientContext->xrDeviceInit.enabled));
       xrDeviceObject.Set("active", Napi::Boolean::New(env, clientContext->xrDeviceInit.active));
       auto mode = clientContext->xrDeviceInit.stereoRenderingMode;
-      if (mode == xr::TrStereoRenderingMode::TR_MULTI_PASS)
+      if (mode == xr::TrStereoRenderingMode::MultiPass)
         xrDeviceObject.Set("stereoRenderingMode", Napi::String::New(env, "multipass"));
-      else if (mode == xr::TrStereoRenderingMode::TR_SINGLE_PASS)
+      else if (mode == xr::TrStereoRenderingMode::SinglePass)
         xrDeviceObject.Set("stereoRenderingMode", Napi::String::New(env, "singlepass"));
-      else if (mode == xr::TrStereoRenderingMode::TR_SINGLE_PASS_INSTANCED)
+      else if (mode == xr::TrStereoRenderingMode::SinglePassInstanced)
         xrDeviceObject.Set("stereoRenderingMode", Napi::String::New(env, "singlepassinstanced"));
-      else if (mode == xr::TrStereoRenderingMode::TR_SINGLE_PASS_MULTIVIEW)
+      else if (mode == xr::TrStereoRenderingMode::SinglePassMultiview)
         xrDeviceObject.Set("stereoRenderingMode", Napi::String::New(env, "singlepassmultiview"));
       else
         xrDeviceObject.Set("stereoRenderingMode", Napi::String::New(env, "unknown"));

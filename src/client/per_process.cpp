@@ -243,6 +243,20 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
     delete frameChanReceiver;
     frameChanReceiver = nullptr;
   }
+
+  // Clear for XR
+  if (xrCommandChanSender != nullptr)
+  {
+    delete xrCommandChanSender;
+    xrCommandChanSender = nullptr;
+  }
+  if (xrCommandChanReceiver != nullptr)
+  {
+    delete xrCommandChanReceiver;
+    xrCommandChanReceiver = nullptr;
+  }
+  // TODO: delete xrCommandChanClient?
+
   // Clear for frame request callbacks
   frameRequestCallbacksMap.clear();
   framesListenerRunning = false;
@@ -272,6 +286,14 @@ void TrClientContextPerProcess::start()
   commandBufferChanSender = new TrCommandBufferSender(commandBufferChanClient);
   commandBufferChanReceiver = new TrCommandBufferReceiver(commandBufferChanClient);
 
+  // XR device initialization
+  if (xrDeviceInit.enabled && xrDeviceInit.commandChanPort > 0)
+  {
+    xrCommandChanClient = ipc::TrOneShotClient<xr::TrXRCommandMessage>::MakeAndConnect(xrDeviceInit.commandChanPort, false);
+    xrCommandChanSender = new ipc::TrChannelSender<xr::TrXRCommandMessage>(xrCommandChanClient);
+    xrCommandChanReceiver = new ipc::TrChannelReceiver<xr::TrXRCommandMessage>(xrCommandChanClient);
+  }
+
   // Start the frames listener
   framesListenerRunning = true;
   framesListener = new thread([this]()
@@ -291,9 +313,10 @@ void TrClientContextPerProcess::print()
 
   if (xrDeviceInit.enabled == true)
   {
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) xrDeviceInit.isActive=%d", id, xrDeviceInit.active);
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) xrDeviceInit.active=%s", id, xrDeviceInit.active ? "YES" : "NO");
     DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) xrDeviceInit.stereoRenderingMode=%d", id,
           static_cast<int>(xrDeviceInit.stereoRenderingMode));
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) xrDeviceInit.commandChanPort=%d", id, xrDeviceInit.commandChanPort);
   }
 }
 

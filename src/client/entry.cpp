@@ -104,6 +104,8 @@ int main(int argc, char **argv)
       clientContext->xrDeviceInit.active = xrDevice["active"].GetBool();
     if (xrDevice.HasMember("stereoRenderingMode") && xrDevice["stereoRenderingMode"].IsNumber())
       clientContext->xrDeviceInit.stereoRenderingMode = (xr::TrStereoRenderingMode)xrDevice["stereoRenderingMode"].GetInt();
+    if (xrDevice.HasMember("commandChanPort") && xrDevice["commandChanPort"].IsInt())
+      clientContext->xrDeviceInit.commandChanPort = xrDevice["commandChanPort"].GetInt();
   }
   clientContext->print(); // prints the client context before the script starts.
   clientContext->start(); // starts the client context.

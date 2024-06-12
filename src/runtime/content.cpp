@@ -176,6 +176,7 @@ void TrContentRuntime::onClientProcess()
     xrDeviceObject.AddMember("enabled", xrDevice->enabled(), allocator);
     xrDeviceObject.AddMember("active", true, allocator);
     xrDeviceObject.AddMember("stereoRenderingMode", static_cast<int>(xrDevice->getStereoRenderingMode()), allocator);
+    xrDeviceObject.AddMember("commandChanPort", xrDevice->getCommandChanPort(), allocator);
     scriptContext.AddMember("xrDevice", xrDeviceObject, allocator);
   }
 

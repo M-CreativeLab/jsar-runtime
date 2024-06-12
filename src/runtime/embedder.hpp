@@ -24,7 +24,7 @@ public: // API for configuration and operations
    * @param xrEnabled true if the XR device should be enabled, false otherwise.
    * @param init The XR device initialization configuration.
    */
-  bool configureXrDevice(bool xrEnabled, xr::DeviceInit& init);
+  bool configureXrDevice(bool xrEnabled, xr::TrDeviceInit& init);
   /**
    * Shutdown the Transmute runtime.
    */

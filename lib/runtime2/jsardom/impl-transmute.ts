@@ -267,36 +267,36 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
       this._defaultLights.push(light);
     }
 
-    // this._xrDefaultExperience = WebXRDefaultExperience.CreateAsync(scene, {
-    //   xrSystem: this._xrSystem,
-    //   outputCanvasOptions: {
-    //     renderingContext: glContext,
-    //     canvasOptions: {
-    //       antialias: true,
-    //       depth: true,
-    //       stencil: true,
-    //       alpha: true,
-    //       framebufferScaleFactor: 1,
-    //     },
-    //   },
-    //   pointerSelectionOptions: {
-    //     preferredHandedness: 'right',
-    //     enablePointerSelectionOnAllControllers: false,
-    //     disableScenePointerVectorUpdate: true,
-    //   },
-    //   teleportationOptions: {
-    //     forceHandedness: 'right',
-    //     defaultTargetMeshOptions: {
-    //       disableLighting: true,
-    //     },
-    //   },
-    //   nearInteractionOptions: {
-    //     preferredHandedness: 'right',
-    //     enableNearInteractionOnAllControllers: false,
-    //   },
-    //   disableTeleportation: true,
-    //   disableNearInteraction: true,
-    // });
+    this._xrDefaultExperience = WebXRDefaultExperience.CreateAsync(scene, {
+      xrSystem: this._xrSystem,
+      outputCanvasOptions: {
+        renderingContext: glContext,
+        canvasOptions: {
+          antialias: true,
+          depth: true,
+          stencil: true,
+          alpha: true,
+          framebufferScaleFactor: 1,
+        },
+      },
+      pointerSelectionOptions: {
+        preferredHandedness: 'right',
+        enablePointerSelectionOnAllControllers: false,
+        disableScenePointerVectorUpdate: true,
+      },
+      teleportationOptions: {
+        forceHandedness: 'right',
+        defaultTargetMeshOptions: {
+          disableLighting: true,
+        },
+      },
+      nearInteractionOptions: {
+        preferredHandedness: 'right',
+        enableNearInteractionOnAllControllers: false,
+      },
+      disableTeleportation: true,
+      disableNearInteraction: true,
+    });
     this.engine.runRenderLoop(() => scene.render());
   }
 
@@ -304,7 +304,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     return this._id;
   }
 
-  async enterXrExperience(): Promise<XRSession> {
+  async enterDefaultXrExperience(): Promise<XRSession> {
     const { baseExperience, renderTarget } = await this._xrDefaultExperience;
     await baseExperience.enterXRAsync('immersive-ar', 'unbounded', {
       optionalFeatures: [],
@@ -366,10 +366,10 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     this.engine.stopRenderLoop();
     this.engine.dispose();
     this._scene.dispose();
-    // this._xrDefaultExperience
-    //   .then(async ({ baseExperience }) => {
-    //     await baseExperience.exitXRAsync();
-    //     baseExperience.dispose();
-    //   });
+    this._xrDefaultExperience
+      .then(async ({ baseExperience }) => {
+        await baseExperience.exitXRAsync();
+        baseExperience.dispose();
+      });
   }
 }

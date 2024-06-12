@@ -63,7 +63,6 @@ bootwait(async function main() {
     runtime.start(clientContext.url, clientContext.id);
 
     const initializedEnd = performance.now();
-    logger.info('Finished TransmuteRuntime2() instance creation');
     logger.info('Time summary:', {
       bootstrap: runtimeStart - bootstrapStart,
       initialize: initializedEnd - runtimeStart,

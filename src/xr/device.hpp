@@ -7,31 +7,19 @@
 #include <atomic>
 #include <chrono>
 
-#include "frame.hpp"
-#include "viewport.hpp"
-#include "input_source.hpp"
+#include "common/ipc.hpp"
+#include "common/xr/types.hpp"
+#include "common/xr/message.hpp"
 #include "common/command_buffers/command_buffers.hpp"
+
+#include "./frame.hpp"
+#include "./viewport.hpp"
+#include "./input_source.hpp"
 
 using namespace std;
 
 namespace xr
 {
-  enum class StereoRenderingMode
-  {
-    MultiPass = 0,
-    SinglePass = 1,
-    SinglePassInstanced = 2,
-    SinglePassMultiview = 3,
-    Unknown = -1
-  };
-
-  class DeviceInit
-  {
-  public:
-    bool isActive;
-    StereoRenderingMode stereoRenderingMode;
-  };
-
   class Device
   {
   public:
@@ -42,7 +30,7 @@ namespace xr
     ~Device();
 
   public:
-    void initialize(bool enabled, DeviceInit &init);
+    void initialize(bool enabled, TrDeviceInit &init);
     bool requestSession(int id);
     bool enabled();
     void setFrameRate(uint32_t frameRate);
@@ -50,8 +38,8 @@ namespace xr
     void startHostFrame();
     void endHostFrame();
 
-    void setStereoRenderingMode(StereoRenderingMode mode);
-    StereoRenderingMode getStereoRenderingMode();
+    void setStereoRenderingMode(TrStereoRenderingMode mode);
+    TrStereoRenderingMode getStereoRenderingMode();
 
     StereoRenderingFrame *createStereoRenderingFrame();
     StereoRenderingFrame *getStereoRenderingFrame(int id);
@@ -104,6 +92,9 @@ namespace xr
     InputSource *getScreenInputSource(int id);
     bool removeScreenInputSource(int id);
 
+  public:
+    int getCommandChanPort();
+
   private:
     /**
      * A flag to indicate if the XR is enabled.
@@ -140,7 +131,7 @@ namespace xr
     /**
      * The stereo rendering mode, it affects how to use frame callback and execute frame.
      */
-    atomic<StereoRenderingMode> m_StereoRenderingMode = StereoRenderingMode::Unknown;
+    atomic<TrStereoRenderingMode> m_StereoRenderingMode = TrStereoRenderingMode::Unknown;
     /**
      * Current stereo rendering frames.
      */
@@ -194,6 +185,6 @@ namespace xr
     std::map<int, InputSource *> m_GamepadInputSources;
 
   private:
-    static Device *s_instance;
+    ipc::TrOneShotServer<TrXRCommandMessage> *m_CommandChanServer = nullptr;
   };
 } // namespace xr

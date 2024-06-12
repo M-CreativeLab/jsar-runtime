@@ -60,7 +60,7 @@ FrameExecutionCode RenderAPI::ExecuteFrame()
 	// ExecuteCommandBuffer();
 
 	/** Start the XR frames */
-	if (device->enabled() && device->getStereoRenderingMode() == xr::StereoRenderingMode::MultiPass)
+	if (device->enabled() && device->getStereoRenderingMode() == xr::TrStereoRenderingMode::MultiPass)
 	{
 		int stereoId = -1;
 		auto eyeId = device->getActiveEyeId();

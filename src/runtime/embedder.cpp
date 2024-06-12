@@ -10,7 +10,7 @@ TrEmbedder::~TrEmbedder()
   shutdown();
 }
 
-bool TrEmbedder::configureXrDevice(bool xrEnabled, xr::DeviceInit& init)
+bool TrEmbedder::configureXrDevice(bool xrEnabled, xr::TrDeviceInit& init)
 {
   constellation->getXrDevice()->initialize(xrEnabled, init);
   return true;

@@ -223,7 +223,7 @@ namespace bindings
   XREye XRFrame::getActiveEye()
   {
     auto device = xr::Device::GetInstance();
-    if (device->getStereoRenderingMode() == xr::StereoRenderingMode::MultiPass)
+    if (device->getStereoRenderingMode() == xr::TrStereoRenderingMode::MultiPass)
     {
       auto multipassFrame = static_cast<xr::MultiPassFrame *>(internal);
       auto activeEye = multipassFrame->getActiveEyeId();

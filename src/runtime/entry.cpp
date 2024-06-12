@@ -199,9 +199,9 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_InitializeXRDevice(bool enabled, bool isDeviceActive, int stereoRenderingMode)
   {
-    xr::DeviceInit init;
-    init.isActive = isDeviceActive;
-    init.stereoRenderingMode = (xr::StereoRenderingMode)stereoRenderingMode;
+    xr::TrDeviceInit init;
+    init.active = isDeviceActive;
+    init.stereoRenderingMode = (xr::TrStereoRenderingMode)stereoRenderingMode;
     UnityEmbedder::EnsureAndGet()->configureXrDevice(enabled, init);
   }
 
@@ -280,7 +280,7 @@ extern "C"
     auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
     if (xrDevice == NULL)
       return;
-    xrDevice->setStereoRenderingMode((xr::StereoRenderingMode)mode);
+    xrDevice->setStereoRenderingMode((xr::TrStereoRenderingMode)mode);
   }
 
   DLL_PUBLIC bool TransmuteNative_SetViewerStereoProjectionMatrix(int eyeId, float *transform)

@@ -50,7 +50,7 @@ namespace renderer
     if (xrDevice->enabled())
     {
       xrDevice->startHostFrame(); // Start XR frame
-      if (xrDevice->getStereoRenderingMode() == xr::StereoRenderingMode::MultiPass)
+      if (xrDevice->getStereoRenderingMode() == xr::TrStereoRenderingMode::MultiPass)
       {
         int stereoId = -1;
         auto eyeId = xrDevice->getActiveEyeId();

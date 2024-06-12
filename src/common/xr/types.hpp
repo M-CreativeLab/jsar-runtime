@@ -6,11 +6,18 @@ namespace xr
 {
   enum class TrStereoRenderingMode
   {
-    TR_MULTI_PASS = 0,
-    TR_SINGLE_PASS = 1,
-    TR_SINGLE_PASS_INSTANCED = 2,
-    TR_SINGLE_PASS_MULTIVIEW = 3,
-    TR_UNKNOWN = -1,
+    MultiPass = 0,
+    SinglePass = 1,
+    SinglePassInstanced = 2,
+    SinglePassMultiview = 3,
+    Unknown = -1,
+  };
+
+  enum class TrSessionMode
+  {
+    ImmersiveAR = 0,
+    ImmersiveVR = 1,
+    Inline = 2,
   };
 
   class TrDeviceInit
@@ -18,7 +25,9 @@ namespace xr
   public:
     bool enabled = false;
     bool active = false;
-    TrStereoRenderingMode stereoRenderingMode = TrStereoRenderingMode::TR_UNKNOWN;
+    TrStereoRenderingMode stereoRenderingMode = TrStereoRenderingMode::Unknown;
+    /** No need to set */
+    int commandChanPort = 0;
   };
 
   class TrDeviceInitResponse : public events::TrRpcResponse
@@ -28,7 +37,7 @@ namespace xr
     {
       enabled = false;
       isDeviceActive = false;
-      stereoRenderingMode = TrStereoRenderingMode::TR_UNKNOWN;
+      stereoRenderingMode = TrStereoRenderingMode::Unknown;
     }
 
   public:

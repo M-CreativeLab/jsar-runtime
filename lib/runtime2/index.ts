@@ -84,8 +84,8 @@ export class TransmuteRuntime2 extends EventTarget {
     logger.info(`xsml request:`, url, id);
 
     const nativeDocument = new NativeDocumentOnTransmute(this.gl, id);
-    // await nativeDocument.enterXrExperience();
-    // logger.info(`Session#${id} has been entered XR experience.`);
+    await nativeDocument.enterDefaultXrExperience();
+    logger.info(`Session#${id} has been entered XR experience.`);
 
     try {
       await this.load(url, nativeDocument);

@@ -57,7 +57,7 @@ public:
         auto resp = xr::TrDeviceInitResponse();
         resp.enabled = true;
         resp.isDeviceActive = true;
-        resp.stereoRenderingMode = xr::TrStereoRenderingMode::TR_MULTI_PASS;
+        resp.stereoRenderingMode = xr::TrStereoRenderingMode::MultiPass;
         resp.makeSuccess();
         eventResp = TrEvent::MakeRpcResponseEvent(event, resp);
       }
@@ -324,9 +324,9 @@ int main(int argc, char **argv)
 
   if (xrEnabled == true)
   {
-    xr::DeviceInit init;
-    init.isActive = true;
-    init.stereoRenderingMode = xr::StereoRenderingMode::MultiPass;
+    xr::TrDeviceInit init;
+    init.active = true;
+    init.stereoRenderingMode = xr::TrStereoRenderingMode::MultiPass;
     embedder->configureXrDevice(xrEnabled, init);
   }
 

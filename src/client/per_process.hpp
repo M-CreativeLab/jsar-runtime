@@ -23,6 +23,7 @@
 #include "common/events/sender.hpp"
 #include "common/font/cache.hpp"
 #include "common/xr/types.hpp"
+#include "common/xr/message.hpp"
 
 using namespace std;
 using namespace node;
@@ -129,6 +130,11 @@ private:  // frame request fields
   thread *framesListener = nullptr; // a thread to listen for frame requests
   mutex frameRequestMutex;
   atomic<bool> framesListenerRunning = false;
+
+private:  // xr fields
+  ipc::TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
+  ipc::TrChannelSender<xr::TrXRCommandMessage> *xrCommandChanSender = nullptr;
+  ipc::TrChannelReceiver<xr::TrXRCommandMessage> *xrCommandChanReceiver = nullptr;
 
 private:
   static TrClientContextPerProcess *s_Instance;
