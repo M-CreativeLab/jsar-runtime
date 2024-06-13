@@ -252,6 +252,11 @@ namespace ipc
       return true;
     }
 
+    /**
+     * It creates an instance of T from the base data.
+     * 
+     * @return a new instance of T.
+     */
     template <typename T>
     T *createInstanceFromBase()
     {

@@ -270,7 +270,7 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
 void TrClientContextPerProcess::start()
 {
   eventChanClient = ipc::TrOneShotClient<TrEventMessage>::MakeAndConnect(eventChanPort, false);
-  frameChanClient = ipc::TrOneShotClient<AnimationFrameRequest>::MakeAndConnect(frameChanPort, false);
+  frameChanClient = ipc::TrOneShotClient<TrFrameRequestMessage>::MakeAndConnect(frameChanPort, false);
   commandBufferChanClient = ipc::TrOneShotClient<TrCommandBufferMessage>::MakeAndConnect(commandBufferChanPort, false);
 
   if (!eventChanClient->isConnected() || !frameChanClient->isConnected())
@@ -281,7 +281,7 @@ void TrClientContextPerProcess::start()
 
   eventChanSender = new TrEventSender(eventChanClient);
   eventChanReceiver = new TrEventReceiver(eventChanClient);
-  frameChanReceiver = new ipc::TrChannelReceiver<AnimationFrameRequest>(frameChanClient);
+  frameChanReceiver = new ipc::TrChannelReceiver<TrFrameRequestMessage>(frameChanClient);
   commandBufferChanSender = new TrCommandBufferSender(commandBufferChanClient);
   commandBufferChanReceiver = new TrCommandBufferReceiver(commandBufferChanClient);
 
@@ -319,7 +319,7 @@ void TrClientContextPerProcess::print()
   }
 }
 
-FrameRequestId TrClientContextPerProcess::requestFrame(FrameRequestCallback callback)
+FrameRequestId TrClientContextPerProcess::requestFrame(AnimationFrameRequestCallback callback)
 {
   lock_guard<mutex> lock(frameRequestMutex);
   FrameRequestId resId;
@@ -329,7 +329,7 @@ FrameRequestId TrClientContextPerProcess::requestFrame(FrameRequestCallback call
     if (frameRequestCallbacksMap.find(id) != frameRequestCallbacksMap.end())
       continue;
 
-    frameRequestCallbacksMap.insert(pair<FrameRequestId, FrameRequestCallback>(id, callback));
+    frameRequestCallbacksMap.insert(pair<FrameRequestId, AnimationFrameRequestCallback>(id, callback));
     resId = id;
     break;
   }
@@ -371,7 +371,18 @@ void TrClientContextPerProcess::onListenFrames()
 {
   while (framesListenerRunning)
   {
-    auto frameRequest = frameChanReceiver->tryRecv(-1);
+    auto frameRequestMsg = frameChanReceiver->tryRecv(-1);
+    if (frameRequestMsg == nullptr)
+      continue;
+
+    if (frameRequestMsg->getType() != TrFrameRequestType::AnimationFrame)
+    {
+      delete frameRequestMsg;
+      continue;
+    }
+
+    auto frameRequest = TrFrameRequestBase::MakeFromMessage<TrAnimationFrameRequest>(*frameRequestMsg);
+    delete frameRequestMsg; // Deleting the message object after making the frame request object.
     if (frameRequest == nullptr)
       continue;
 

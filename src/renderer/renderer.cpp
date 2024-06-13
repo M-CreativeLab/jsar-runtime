@@ -7,7 +7,7 @@ namespace renderer
 {
   TrRenderer::TrRenderer(TrConstellation *constellation) : constellation(constellation), api(nullptr)
   {
-    animationFrameChanServer = new ipc::TrOneShotServer<AnimationFrameRequest>("animationFrameChan");
+    frameRequestChanServer = new ipc::TrOneShotServer<TrFrameRequestMessage>("frameRequestChan");
     commandBufferChanServer = new ipc::TrOneShotServer<TrCommandBufferMessage>("commandBufferChan");
   }
 
@@ -17,7 +17,7 @@ namespace renderer
 
     api = nullptr;
     constellation = nullptr;
-    delete animationFrameChanServer;
+    delete frameRequestChanServer;
     for (auto sender : animationFrameChanSenders)
       delete sender;
     animationFrameChanSenders.clear();
@@ -105,7 +105,7 @@ namespace renderer
 
   uint32_t TrRenderer::getAnimationFrameChanPort()
   {
-    return animationFrameChanServer->getPort();
+    return frameRequestChanServer->getPort();
   }
 
   uint32_t TrRenderer::getCommandBufferChanPort()
@@ -143,9 +143,11 @@ namespace renderer
   void TrRenderer::sendAnimationFrameRequest()
   {
     lock_guard<mutex> lock(chanSendersMutex);
-    AnimationFrameRequest request;
+    TrAnimationFrameRequest animationFrameRequest;
+    auto msg = animationFrameRequest.serialize();
     for (auto sender : animationFrameChanSenders)
-      sender->send(request);
+      sender->send(*msg);
+    delete msg;
   }
 
   void TrRenderer::startWatchers()
@@ -156,11 +158,11 @@ namespace renderer
       SET_THREAD_NAME("TrAnimationFrameWatcher");
       while (watcherRunning)
       {
-        auto newClient = animationFrameChanServer->tryAccept(-1);
+        auto newClient = frameRequestChanServer->tryAccept(-1);
         if (newClient != nullptr)
         {
           lock_guard<mutex> lock(chanSendersMutex);
-          animationFrameChanSenders.push_back(new ipc::TrChannelSender<AnimationFrameRequest>(newClient));
+          animationFrameChanSenders.push_back(new ipc::TrChannelSender<TrFrameRequestMessage>(newClient));
         }
       } });
     commandBufferClientWatcher = new thread([this]()

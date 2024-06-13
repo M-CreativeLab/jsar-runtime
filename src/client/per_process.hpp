@@ -13,11 +13,11 @@
 #include "idgen.hpp"
 #include "debug.hpp"
 #include "ipc.hpp"
-#include "common/messages.hpp"
 #include "common/command_buffers/shared.hpp"
 #include "common/command_buffers/command_buffers.hpp"
 #include "common/command_buffers/receiver.hpp"
 #include "common/command_buffers/sender.hpp"
+#include "common/frame_request/types.hpp"
 #include "common/events/message.hpp"
 #include "common/events/receiver.hpp"
 #include "common/events/sender.hpp"
@@ -31,10 +31,11 @@ using namespace std;
 using namespace node;
 using namespace v8;
 using namespace commandbuffers;
+using namespace frame_request;
 using namespace events;
 
 typedef uint32_t FrameRequestId;
-typedef function<void(AnimationFrameRequest &)> FrameRequestCallback;
+typedef function<void(TrAnimationFrameRequest &)> AnimationFrameRequestCallback;
 
 class ScriptEnvironment
 {
@@ -88,7 +89,7 @@ public:
   void print();
 
 public: // frame request methods
-  FrameRequestId requestFrame(FrameRequestCallback callback);
+  FrameRequestId requestFrame(AnimationFrameRequestCallback callback);
   void cancelFrame(FrameRequestId id);
 
 public: // event methods
@@ -147,8 +148,8 @@ private:
   ipc::TrOneShotClient<TrEventMessage> *eventChanClient = nullptr;
   TrEventSender *eventChanSender = nullptr;
   TrEventReceiver *eventChanReceiver = nullptr;
-  ipc::TrOneShotClient<AnimationFrameRequest> *frameChanClient = nullptr;
-  ipc::TrChannelReceiver<AnimationFrameRequest> *frameChanReceiver = nullptr;
+  ipc::TrOneShotClient<TrFrameRequestMessage> *frameChanClient = nullptr;
+  ipc::TrChannelReceiver<TrFrameRequestMessage> *frameChanReceiver = nullptr;
   ipc::TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
@@ -160,7 +161,7 @@ private: // xr fields
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
 
 private: // frame request fields
-  map<FrameRequestId, FrameRequestCallback> frameRequestCallbacksMap;
+  map<FrameRequestId, AnimationFrameRequestCallback> frameRequestCallbacksMap;
   thread *framesListener = nullptr; // a thread to listen for frame requests
   mutex frameRequestMutex;
   atomic<bool> framesListenerRunning = false;

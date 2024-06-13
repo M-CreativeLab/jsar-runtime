@@ -4,9 +4,12 @@
 #include <condition_variable>
 #include <mutex>
 #include <napi.h>
+
 #include "client/per_process.hpp"
+#include "common/frame_request/types.hpp"
 
 using namespace std;
+using namespace frame_request;
 
 namespace bindings
 {
@@ -22,7 +25,7 @@ namespace bindings
     Napi::Value IsConnected(const Napi::CallbackInfo &info);
 
   private:
-    void onFrameRequest(AnimationFrameRequest &request);
+    void onFrameRequest(TrAnimationFrameRequest &request);
 
   private:
     atomic<bool> connected = false;

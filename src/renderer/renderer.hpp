@@ -8,12 +8,13 @@
 #include "common/classes.hpp"
 #include "common/viewport.hpp"
 #include "common/ipc.hpp"
-#include "common/messages.hpp"
 #include "common/command_buffers/command_buffers.hpp"
+#include "common/frame_request/types.hpp"
 #include "xr/device.hpp"
 
 using namespace std;
 using namespace commandbuffers;
+using namespace frame_request;
 
 class RenderAPI;
 
@@ -54,8 +55,8 @@ namespace renderer
     TrConstellation *constellation = nullptr;
 
   private:
-    ipc::TrOneShotServer<AnimationFrameRequest> *animationFrameChanServer = nullptr;
-    vector<ipc::TrChannelSender<AnimationFrameRequest> *> animationFrameChanSenders;
+    ipc::TrOneShotServer<TrFrameRequestMessage> *frameRequestChanServer = nullptr;
+    vector<ipc::TrChannelSender<TrFrameRequestMessage> *> animationFrameChanSenders;
     atomic<bool> watcherRunning = false; // This is shared by all the watchers.
 
   private: // fields for frame rate calculation

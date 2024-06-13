@@ -61,7 +61,7 @@ namespace bindings
     Napi::Function callback = info[0].As<Napi::Function>();
     onframeTsfn = Napi::ThreadSafeFunction::New(env, callback, "onframe", 0, 1);
     connected = true; // mark the `connected` to be true before `requestFrame()`.
-    internalRequestId = clientContext->requestFrame([this](AnimationFrameRequest &request)
+    internalRequestId = clientContext->requestFrame([this](TrAnimationFrameRequest &request)
                                                     { onFrameRequest(request); });
     return env.Undefined();
   }
@@ -73,11 +73,11 @@ namespace bindings
     return Napi::Boolean::New(env, connected);
   }
 
-  void AnimationFrameListener::onFrameRequest(AnimationFrameRequest &request)
+  void AnimationFrameListener::onFrameRequest(TrAnimationFrameRequest &request)
   {
     if (!connected)
       return;
-    onframeTsfn.BlockingCall(&request, [](Napi::Env env, Napi::Function jsCallback, AnimationFrameRequest *request)
+    onframeTsfn.BlockingCall(&request, [](Napi::Env env, Napi::Function jsCallback, TrAnimationFrameRequest *request)
                              {
       auto timeValue = Napi::Number::New(env, request->time);
       jsCallback.Call({timeValue}); });
