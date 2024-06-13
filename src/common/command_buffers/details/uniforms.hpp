@@ -337,18 +337,17 @@ namespace commandbuffers
   };
 
   template <typename Tb, typename Tv>
-  class Uniform4xCommandBufferRequest : public TrCommandBufferBase
+  class Uniform4xCommandBufferRequest : public TrCommandBufferRequest
   {
   public:
     Uniform4xCommandBufferRequest(CommandBufferType type, uint32_t location, Tv v0, Tv v1, Tv v2, Tv v3)
-        : TrCommandBufferBase(type),
+        : TrCommandBufferRequest(type, sizeof(Tb)),
           location(location),
           v0(v0),
           v1(v1),
           v2(v2),
           v3(v3)
     {
-      size = sizeof(Tb);
     }
 
   public:
@@ -370,15 +369,14 @@ namespace commandbuffers
   };
 
   template <typename Tb, typename Tv>
-  class Uniform4xvCommandBufferRequest : public TrCommandBufferBase
+  class Uniform4xvCommandBufferRequest : public TrCommandBufferRequest
   {
   public:
     Uniform4xvCommandBufferRequest(CommandBufferType type, uint32_t location, const std::vector<Tv> &values)
-        : TrCommandBufferBase(type),
+        : TrCommandBufferRequest(type, sizeof(Tb)),
           location(location),
           values(values)
     {
-      size = sizeof(Tb);
     }
 
   public:
@@ -441,13 +439,12 @@ namespace commandbuffers
   };
 
   template <typename T>
-  class UniformMatrixNfvCommandBufferRequest : public TrCommandBufferBase
+  class UniformMatrixNfvCommandBufferRequest : public TrCommandBufferRequest
   {
   public:
     UniformMatrixNfvCommandBufferRequest(CommandBufferType type, uint32_t matrixSize)
-        : TrCommandBufferBase(type), matrixSize(matrixSize)
+        : TrCommandBufferRequest(type, sizeof(T)), matrixSize(matrixSize)
     {
-      size = sizeof(T);
     }
 
   public:

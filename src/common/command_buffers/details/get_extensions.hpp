@@ -5,32 +5,21 @@
 
 namespace commandbuffers
 {
-  class GetExtensionsCommandBufferRequest : public TrCommandBufferBase
+  class GetExtensionsCommandBufferRequest : public TrCommandBufferSimpleRequest<GetExtensionsCommandBufferRequest>
   {
   public:
-    GetExtensionsCommandBufferRequest() : TrCommandBufferBase(COMMAND_BUFFER_GET_EXTENSIONS_REQ)
+    GetExtensionsCommandBufferRequest() : TrCommandBufferSimpleRequest(COMMAND_BUFFER_GET_EXTENSIONS_REQ)
     {
-      size = sizeof(GetExtensionsCommandBufferRequest);
     }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override {}
   };
 
-  class GetExtensionsCommandBufferResponse : public TrCommandBufferResponse
+  class GetExtensionsCommandBufferResponse : public TrCommandBufferSimpleResponse<GetExtensionsCommandBufferResponse>
   {
   public:
-    GetExtensionsCommandBufferResponse(GetExtensionsCommandBufferResponse& that) : TrCommandBufferResponse(COMMAND_BUFFER_GET_EXTENSIONS_RES, that)
+    GetExtensionsCommandBufferResponse(GetExtensionsCommandBufferResponse &that) : TrCommandBufferSimpleResponse(that) {}
+    GetExtensionsCommandBufferResponse(GetExtensionsCommandBufferRequest *req)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_EXTENSIONS_RES, req)
     {
-      size = that.size;
-    }
-    GetExtensionsCommandBufferResponse(GetExtensionsCommandBufferRequest *req) : TrCommandBufferResponse(COMMAND_BUFFER_GET_EXTENSIONS_RES, req)
-    {
-      size = sizeof(GetExtensionsCommandBufferResponse);
     }
 
   public:

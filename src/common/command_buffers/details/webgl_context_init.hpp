@@ -6,32 +6,19 @@
 
 namespace commandbuffers
 {
-  class WebGL1ContextInitCommandBufferRequest : public TrCommandBufferBase
+  class WebGL1ContextInitCommandBufferRequest : public TrCommandBufferSimpleRequest<WebGL1ContextInitCommandBufferRequest>
   {
   public:
-    WebGL1ContextInitCommandBufferRequest() : TrCommandBufferBase(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ)
-    {
-      size = sizeof(WebGL1ContextInitCommandBufferRequest);
-    }
+    WebGL1ContextInitCommandBufferRequest() : TrCommandBufferSimpleRequest(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ) {}
     ~WebGL1ContextInitCommandBufferRequest() {}
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
-    {
-    }
   };
 
-  class WebGL1ContextInitCommandBufferResponse : public TrCommandBufferResponse
+  class WebGL1ContextInitCommandBufferResponse : public TrCommandBufferSimpleResponse<WebGL1ContextInitCommandBufferResponse>
   {
   public:
     WebGL1ContextInitCommandBufferResponse(WebGL1ContextInitCommandBufferRequest *req)
-        : TrCommandBufferResponse(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES, req)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES, req)
     {
-      size = sizeof(WebGL1ContextInitCommandBufferResponse);
     }
     ~WebGL1ContextInitCommandBufferResponse()
     {

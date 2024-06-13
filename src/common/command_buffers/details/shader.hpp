@@ -5,22 +5,12 @@
 
 namespace commandbuffers
 {
-  class AttachShaderCommandBufferRequest : public TrCommandBufferBase
+  class AttachShaderCommandBufferRequest : public TrCommandBufferSimpleRequest<AttachShaderCommandBufferRequest>
   {
   public:
-    AttachShaderCommandBufferRequest(uint32_t program, uint32_t shader) : TrCommandBufferBase(COMMAND_BUFFER_ATTACH_SHADER_REQ),
+    AttachShaderCommandBufferRequest(uint32_t program, uint32_t shader) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_ATTACH_SHADER_REQ),
                                                                           program(program),
                                                                           shader(shader)
-    {
-      size = sizeof(AttachShaderCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -29,22 +19,12 @@ namespace commandbuffers
     uint32_t shader;
   };
 
-  class DetachShaderCommandBufferRequest : public TrCommandBufferBase
+  class DetachShaderCommandBufferRequest : public TrCommandBufferSimpleRequest<DetachShaderCommandBufferRequest>
   {
   public:
-    DetachShaderCommandBufferRequest(uint32_t program, uint32_t shader) : TrCommandBufferBase(COMMAND_BUFFER_DETACH_SHADER_REQ),
+    DetachShaderCommandBufferRequest(uint32_t program, uint32_t shader) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DETACH_SHADER_REQ),
                                                                           program(program),
                                                                           shader(shader)
-    {
-      size = sizeof(DetachShaderCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -53,23 +33,13 @@ namespace commandbuffers
     uint32_t shader;
   };
 
-  class CreateShaderCommandBufferRequest : public TrCommandBufferBase
+  class CreateShaderCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateShaderCommandBufferRequest>
   {
   public:
     CreateShaderCommandBufferRequest(uint32_t clientId, uint32_t type)
-        : TrCommandBufferBase(COMMAND_BUFFER_CREATE_SHADER_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CREATE_SHADER_REQ),
           clientId(clientId),
           shaderType(type)
-    {
-      size = sizeof(CreateShaderCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -78,57 +48,36 @@ namespace commandbuffers
     uint32_t shaderType;
   };
 
-  class DeleteShaderCommandBufferRequest : public TrCommandBufferBase
+  class DeleteShaderCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteShaderCommandBufferRequest>
   {
   public:
-    DeleteShaderCommandBufferRequest(uint32_t shader) : TrCommandBufferBase(COMMAND_BUFFER_DELETE_SHADER_REQ),
+    DeleteShaderCommandBufferRequest(uint32_t shader) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DELETE_SHADER_REQ),
                                                         shader(shader)
     {
-      size = sizeof(DeleteShaderCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
-    {
     }
 
   public:
     uint32_t shader;
   };
 
-  class CompileShaderCommandBufferRequest : public TrCommandBufferBase
+  class CompileShaderCommandBufferRequest : public TrCommandBufferSimpleRequest<CompileShaderCommandBufferRequest>
   {
   public:
-    CompileShaderCommandBufferRequest(uint32_t shader) : TrCommandBufferBase(COMMAND_BUFFER_COMPILE_SHADER_REQ),
+    CompileShaderCommandBufferRequest(uint32_t shader) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_COMPILE_SHADER_REQ),
                                                          shader(shader)
     {
-      size = sizeof(CompileShaderCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
-    {
     }
 
   public:
     uint32_t shader;
   };
 
-  class ShaderSourceCommandBufferRequest : public TrCommandBufferBase
+  class ShaderSourceCommandBufferRequest : public TrCommandBufferSimpleRequest<ShaderSourceCommandBufferRequest>
   {
   public:
-    ShaderSourceCommandBufferRequest(uint32_t shader, const string &source) : TrCommandBufferBase(COMMAND_BUFFER_SHADER_SOURCE_REQ),
+    ShaderSourceCommandBufferRequest(uint32_t shader, const string &source) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_SHADER_SOURCE_REQ),
                                                                               shader(shader)
     {
-      size = sizeof(ShaderSourceCommandBufferRequest);
       sourceSize = source.size();
       sourceStr = reinterpret_cast<char *>(malloc(sourceSize));
       memcpy(sourceStr, source.c_str(), sourceSize);
@@ -143,7 +92,7 @@ namespace commandbuffers
     }
 
   public:
-    string source()
+    inline string source()
     {
       return string(sourceStr, sourceSize);
     }
@@ -169,21 +118,11 @@ namespace commandbuffers
     size_t sourceSize;
   };
 
-  class GetShaderSourceCommandBufferRequest : public TrCommandBufferBase
+  class GetShaderSourceCommandBufferRequest : public TrCommandBufferSimpleRequest<GetShaderSourceCommandBufferRequest>
   {
   public:
-    GetShaderSourceCommandBufferRequest(uint32_t shader) : TrCommandBufferBase(COMMAND_BUFFER_GET_SHADER_SOURCE_REQ),
+    GetShaderSourceCommandBufferRequest(uint32_t shader) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_GET_SHADER_SOURCE_REQ),
                                                            shader(shader)
-    {
-      size = sizeof(GetShaderSourceCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -191,13 +130,12 @@ namespace commandbuffers
     uint32_t shader;
   };
 
-  class GetShaderSourceCommandBufferResponse : public TrCommandBufferResponse
+  class GetShaderSourceCommandBufferResponse : public TrCommandBufferSimpleResponse<GetShaderSourceCommandBufferResponse>
   {
   public:
     GetShaderSourceCommandBufferResponse(GetShaderSourceCommandBufferRequest *req)
-        : TrCommandBufferResponse(COMMAND_BUFFER_GET_SHADER_SOURCE_RES, req)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SHADER_SOURCE_RES, req)
     {
-      size = sizeof(GetShaderSourceCommandBufferResponse);
     }
 
   public:
@@ -216,22 +154,12 @@ namespace commandbuffers
     string source;
   };
 
-  class GetShaderParamCommandBufferRequest : public TrCommandBufferBase
+  class GetShaderParamCommandBufferRequest : public TrCommandBufferSimpleRequest<GetShaderParamCommandBufferRequest>
   {
   public:
-    GetShaderParamCommandBufferRequest(uint32_t shader, uint32_t pname) : TrCommandBufferBase(COMMAND_BUFFER_GET_SHADER_PARAM_REQ),
+    GetShaderParamCommandBufferRequest(uint32_t shader, uint32_t pname) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_GET_SHADER_PARAM_REQ),
                                                                           shader(shader),
                                                                           pname(pname)
-    {
-      size = sizeof(GetShaderParamCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -240,21 +168,11 @@ namespace commandbuffers
     uint32_t pname;
   };
 
-  class GetShaderParamCommandBufferResponse : public TrCommandBufferResponse
+  class GetShaderParamCommandBufferResponse : public TrCommandBufferSimpleResponse<GetShaderParamCommandBufferResponse>
   {
   public:
     GetShaderParamCommandBufferResponse(GetShaderParamCommandBufferRequest *req, int32_t value)
-        : TrCommandBufferResponse(COMMAND_BUFFER_GET_SHADER_PARAM_RES, req), value(value)
-    {
-      size = sizeof(GetShaderParamCommandBufferResponse);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SHADER_PARAM_RES, req), value(value)
     {
     }
 
@@ -262,21 +180,11 @@ namespace commandbuffers
     int32_t value;
   };
 
-  class GetShaderInfoLogCommandBufferRequest : public TrCommandBufferBase
+  class GetShaderInfoLogCommandBufferRequest : public TrCommandBufferSimpleRequest<GetShaderInfoLogCommandBufferRequest>
   {
   public:
-    GetShaderInfoLogCommandBufferRequest(uint32_t shader) : TrCommandBufferBase(COMMAND_BUFFER_GET_SHADER_INFO_LOG_REQ),
+    GetShaderInfoLogCommandBufferRequest(uint32_t shader) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_GET_SHADER_INFO_LOG_REQ),
                                                             shader(shader)
-    {
-      size = sizeof(GetShaderInfoLogCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -284,13 +192,12 @@ namespace commandbuffers
     uint32_t shader;
   };
 
-  class GetShaderInfoLogCommandBufferResponse : public TrCommandBufferResponse
+  class GetShaderInfoLogCommandBufferResponse : public TrCommandBufferSimpleResponse<GetShaderInfoLogCommandBufferResponse>
   {
   public:
     GetShaderInfoLogCommandBufferResponse(GetShaderInfoLogCommandBufferRequest *req, const string &log)
-        : TrCommandBufferResponse(COMMAND_BUFFER_GET_SHADER_INFO_LOG_RES, req), infoLog(log)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SHADER_INFO_LOG_RES, req), infoLog(log)
     {
-      size = sizeof(GetShaderInfoLogCommandBufferResponse);
     }
 
   public:

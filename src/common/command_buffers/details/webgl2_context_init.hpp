@@ -5,44 +5,23 @@
 
 namespace commandbuffers
 {
-  class WebGL2ContextInitCommandBufferRequest : public TrCommandBufferBase
+  class WebGL2ContextInitCommandBufferRequest : public TrCommandBufferSimpleRequest<WebGL2ContextInitCommandBufferRequest>
   {
   public:
-    WebGL2ContextInitCommandBufferRequest() : TrCommandBufferBase(COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_REQ)
+    WebGL2ContextInitCommandBufferRequest() : TrCommandBufferSimpleRequest(COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_REQ)
     {
-      size = sizeof(WebGL2ContextInitCommandBufferRequest);
     }
     ~WebGL2ContextInitCommandBufferRequest() {}
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
-    {
-    }
   };
 
-  class WebGL2ContextInitCommandBufferResponse : public TrCommandBufferResponse
+  class WebGL2ContextInitCommandBufferResponse : public TrCommandBufferSimpleResponse<WebGL2ContextInitCommandBufferResponse>
   {
   public:
     WebGL2ContextInitCommandBufferResponse(WebGL2ContextInitCommandBufferRequest *req)
-        : TrCommandBufferResponse(COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_RES, req)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_RES, req)
     {
-      size = sizeof(WebGL2ContextInitCommandBufferResponse);
     }
     ~WebGL2ContextInitCommandBufferResponse() {}
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
-    {
-    }
 
   public:
     int max3DTextureSize;

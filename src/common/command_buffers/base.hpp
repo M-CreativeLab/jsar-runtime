@@ -17,7 +17,7 @@ namespace commandbuffers
 
   public:
     TrCommandBufferBase() : TrIpcSerializableBase() {}
-    TrCommandBufferBase(CommandBufferType type, size_t size = 0) : TrIpcSerializableBase(type, size) {}
+    TrCommandBufferBase(CommandBufferType type, size_t size) : TrIpcSerializableBase(type, size) {}
 
   public:
     uint32_t id = commandBufferIdGen.get();
@@ -27,13 +27,13 @@ namespace commandbuffers
   class TrCommandBufferResponse : public TrCommandBufferBase
   {
   public:
-    TrCommandBufferResponse(CommandBufferType type, TrCommandBufferResponse &that)
-        : TrCommandBufferBase(type, that.size),
+    TrCommandBufferResponse(TrCommandBufferResponse &that)
+        : TrCommandBufferBase(that.type, that.size),
           requestId(that.requestId)
     {
     }
-    TrCommandBufferResponse(CommandBufferType type, TrCommandBufferRequest *req)
-        : TrCommandBufferBase(type),
+    TrCommandBufferResponse(CommandBufferType type, size_t size, TrCommandBufferRequest *req)
+        : TrCommandBufferBase(type, size),
           requestId(req->id)
     {
     }
@@ -46,7 +46,8 @@ namespace commandbuffers
   class TrCommandBufferSimpleRequest : public TrCommandBufferRequest
   {
   public:
-    TrCommandBufferSimpleRequest(CommandBufferType type) : TrCommandBufferRequest(type, sizeof(T))
+    TrCommandBufferSimpleRequest(CommandBufferType type)
+        : TrCommandBufferRequest(type, sizeof(T))
     {
     }
 
@@ -55,21 +56,15 @@ namespace commandbuffers
     {
       DEBUG(LOG_TAG_RENDERER, "GL::%s()", commandTypeToStr(type).c_str());
     }
-
-  public:
-    size_t size = sizeof(T);
   };
 
   template <typename T>
   class TrCommandBufferSimpleResponse : public TrCommandBufferResponse
   {
   public:
-    TrCommandBufferSimpleResponse(CommandBufferType type, TrCommandBufferResponse &that)
-        : TrCommandBufferResponse(type, that)
-    {
-    }
+    TrCommandBufferSimpleResponse(TrCommandBufferSimpleResponse &that) : TrCommandBufferResponse(that) {}
     TrCommandBufferSimpleResponse(CommandBufferType type, TrCommandBufferRequest *req)
-        : TrCommandBufferResponse(type, req)
+        : TrCommandBufferResponse(type, sizeof(T), req)
     {
     }
   };

@@ -21,10 +21,19 @@ namespace ipc
     }
 
   public:
+    /**
+     * Serialize the object to an ipc message.
+     *
+     * @return a new ipc message.
+     */
     virtual MessageType *serialize()
     {
-      return new MessageType(type, size, (void*)this);
+      return new MessageType(type, size, (void *)this);
     }
+
+    /**
+     * Deserialize the object from an ipc message.
+     */
     virtual void deserialize(MessageType &message)
     {
     }

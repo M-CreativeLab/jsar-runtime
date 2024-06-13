@@ -18,22 +18,12 @@ namespace commandbuffers
     int pname;
   };
 
-  class GetBooleanvCommandBufferResponse : public TrCommandBufferResponse
+  class GetBooleanvCommandBufferResponse : public TrCommandBufferSimpleResponse<GetBooleanvCommandBufferResponse>
   {
   public:
     GetBooleanvCommandBufferResponse(GetBooleanvCommandBufferRequest *req, bool value)
-        : TrCommandBufferResponse(COMMAND_BUFFER_GET_BOOLEANV_RES, req),
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_BOOLEANV_RES, req),
           value(value)
-    {
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -54,22 +44,12 @@ namespace commandbuffers
     int pname;
   };
 
-  class GetIntegervCommandBufferResponse : public TrCommandBufferResponse
+  class GetIntegervCommandBufferResponse : public TrCommandBufferSimpleResponse<GetIntegervCommandBufferResponse>
   {
   public:
     GetIntegervCommandBufferResponse(GetIntegervCommandBufferRequest *req, int value)
-        : TrCommandBufferResponse(COMMAND_BUFFER_GET_INTEGERV_RES, req),
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_INTEGERV_RES, req),
           value(value)
-    {
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -90,22 +70,12 @@ namespace commandbuffers
     int pname;
   };
 
-  class GetFloatvCommandBufferResponse : public TrCommandBufferResponse
+  class GetFloatvCommandBufferResponse : public TrCommandBufferSimpleResponse<GetFloatvCommandBufferResponse>
   {
   public:
     GetFloatvCommandBufferResponse(GetFloatvCommandBufferRequest *req, float value)
-        : TrCommandBufferResponse(COMMAND_BUFFER_GET_FLOATV_RES, req),
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_FLOATV_RES, req),
           value(value)
-    {
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -126,11 +96,11 @@ namespace commandbuffers
     int pname;
   };
 
-  class GetStringCommandBufferResponse : public TrCommandBufferResponse
+  class GetStringCommandBufferResponse : public TrCommandBufferSimpleResponse<GetStringCommandBufferResponse>
   {
   public:
     GetStringCommandBufferResponse(GetStringCommandBufferRequest *req, std::string &value)
-        : TrCommandBufferResponse(COMMAND_BUFFER_GET_STRING_RES, req),
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_STRING_RES, req),
           value(value)
     {
     }
@@ -166,25 +136,14 @@ namespace commandbuffers
     int precisiontype;
   };
 
-  class GetShaderPrecisionFormatCommandBufferResponse : public TrCommandBufferResponse
+  class GetShaderPrecisionFormatCommandBufferResponse : public TrCommandBufferSimpleResponse<GetShaderPrecisionFormatCommandBufferResponse>
   {
   public:
     GetShaderPrecisionFormatCommandBufferResponse(GetShaderPrecisionFormatCommandBufferRequest *req, int rangeMin, int rangeMax, int precision)
-        : TrCommandBufferResponse(COMMAND_BUFFER_GET_SHADER_PRECISION_FORMAT_RES, req),
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SHADER_PRECISION_FORMAT_RES, req),
           rangeMin(rangeMin),
           rangeMax(rangeMax),
           precision(precision)
-    {
-      size = sizeof(GetShaderPrecisionFormatCommandBufferResponse);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -203,22 +162,12 @@ namespace commandbuffers
     }
   };
 
-  class GetErrorCommandBufferResponse : public TrCommandBufferResponse
+  class GetErrorCommandBufferResponse : public TrCommandBufferSimpleResponse<GetErrorCommandBufferResponse>
   {
   public:
     GetErrorCommandBufferResponse(GetErrorCommandBufferRequest *req, int error)
-        : TrCommandBufferResponse(COMMAND_BUFFER_GET_ERROR_RES, req),
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_ERROR_RES, req),
           error(error)
-    {
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 

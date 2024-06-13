@@ -5,65 +5,35 @@
 
 namespace commandbuffers
 {
-  class CreateProgramCommandBufferRequest : public TrCommandBufferBase
+  class CreateProgramCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateProgramCommandBufferRequest>
   {
   public:
-    CreateProgramCommandBufferRequest(int clientId) : TrCommandBufferBase(COMMAND_BUFFER_CREATE_PROGRAM_REQ),
+    CreateProgramCommandBufferRequest(int clientId) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CREATE_PROGRAM_REQ),
                                                       clientId(clientId)
     {
-      size = sizeof(CreateProgramCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
-    {
     }
 
   public:
     uint32_t clientId;
   };
 
-  class DeleteProgramCommandBufferRequest : public TrCommandBufferBase
+  class DeleteProgramCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteProgramCommandBufferRequest>
   {
   public:
-    DeleteProgramCommandBufferRequest(uint32_t clientId) : TrCommandBufferBase(COMMAND_BUFFER_DELETE_PROGRAM_REQ),
+    DeleteProgramCommandBufferRequest(uint32_t clientId) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DELETE_PROGRAM_REQ),
                                                            clientId(clientId)
     {
-      size = sizeof(DeleteProgramCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
-    {
     }
 
   public:
     uint32_t clientId;
   };
 
-  class LinkProgramCommandBufferRequest : public TrCommandBufferBase
+  class LinkProgramCommandBufferRequest : public TrCommandBufferSimpleRequest<LinkProgramCommandBufferRequest>
   {
   public:
-    LinkProgramCommandBufferRequest(uint32_t clientId) : TrCommandBufferBase(COMMAND_BUFFER_LINK_PROGRAM_REQ),
+    LinkProgramCommandBufferRequest(uint32_t clientId) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_LINK_PROGRAM_REQ),
                                                          clientId(clientId)
-    {
-      size = sizeof(LinkProgramCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -117,20 +87,14 @@ namespace commandbuffers
     SEGMENT_UNIFORM_BLOCK
   };
 
-  class LinkProgramCommandBufferResponse : public TrCommandBufferResponse
+  class LinkProgramCommandBufferResponse : public TrCommandBufferSimpleResponse<LinkProgramCommandBufferResponse>
   {
   public:
-    LinkProgramCommandBufferResponse(LinkProgramCommandBufferResponse &that)
-        : TrCommandBufferResponse(COMMAND_BUFFER_LINK_PROGRAM_RES, that)
-    {
-      success = that.success;
-      size = that.size;
-    }
+    LinkProgramCommandBufferResponse(LinkProgramCommandBufferResponse &that) : TrCommandBufferSimpleResponse(that), success(that.success) {}
     LinkProgramCommandBufferResponse(LinkProgramCommandBufferRequest *req, bool success)
-        : TrCommandBufferResponse(COMMAND_BUFFER_LINK_PROGRAM_RES, req),
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_LINK_PROGRAM_RES, req),
           success(success)
     {
-      size = sizeof(LinkProgramCommandBufferResponse);
     }
 
   public:
@@ -255,21 +219,11 @@ namespace commandbuffers
     vector<UniformBlock> uniformBlocks;
   };
 
-  class UseProgramCommandBufferRequest : public TrCommandBufferBase
+  class UseProgramCommandBufferRequest : public TrCommandBufferSimpleRequest<UseProgramCommandBufferRequest>
   {
   public:
-    UseProgramCommandBufferRequest(uint32_t clientId) : TrCommandBufferBase(COMMAND_BUFFER_USE_PROGRAM_REQ),
+    UseProgramCommandBufferRequest(uint32_t clientId) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_USE_PROGRAM_REQ),
                                                         clientId(clientId)
-    {
-      size = sizeof(UseProgramCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -277,22 +231,12 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
-  class GetProgramParamCommandBufferRequest : public TrCommandBufferBase
+  class GetProgramParamCommandBufferRequest : public TrCommandBufferSimpleRequest<GetProgramParamCommandBufferRequest>
   {
   public:
-    GetProgramParamCommandBufferRequest(uint32_t clientId, uint32_t pname) : TrCommandBufferBase(COMMAND_BUFFER_GET_PROGRAM_PARAM_REQ),
+    GetProgramParamCommandBufferRequest(uint32_t clientId, uint32_t pname) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_GET_PROGRAM_PARAM_REQ),
                                                                              clientId(clientId),
                                                                              pname(pname)
-    {
-      size = sizeof(GetProgramParamCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -301,23 +245,15 @@ namespace commandbuffers
     uint32_t pname;
   };
 
-  class GetProgramParamCommandBufferResponse : public TrCommandBufferResponse
+  class GetProgramParamCommandBufferResponse : public TrCommandBufferSimpleResponse<GetProgramParamCommandBufferResponse>
   {
   public:
+    GetProgramParamCommandBufferResponse(GetProgramParamCommandBufferResponse &that) : TrCommandBufferSimpleResponse(that), value(that.value)
+    {
+    }
     GetProgramParamCommandBufferResponse(GetProgramParamCommandBufferRequest *req, int value)
-        : TrCommandBufferResponse(COMMAND_BUFFER_GET_PROGRAM_PARAM_RES, req),
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_PROGRAM_PARAM_RES, req),
           value(value)
-    {
-      size = sizeof(GetProgramParamCommandBufferResponse);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -325,21 +261,11 @@ namespace commandbuffers
     int value;
   };
 
-  class GetProgramInfoLogCommandBufferRequest : public TrCommandBufferBase
+  class GetProgramInfoLogCommandBufferRequest : public TrCommandBufferSimpleRequest<GetProgramInfoLogCommandBufferRequest>
   {
   public:
-    GetProgramInfoLogCommandBufferRequest(uint32_t clientId) : TrCommandBufferBase(COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_REQ),
+    GetProgramInfoLogCommandBufferRequest(uint32_t clientId) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_REQ),
                                                                clientId(clientId)
-    {
-      size = sizeof(GetProgramInfoLogCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -347,14 +273,13 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
-  class GetProgramInfoLogCommandBufferResponse : public TrCommandBufferResponse
+  class GetProgramInfoLogCommandBufferResponse : public TrCommandBufferSimpleResponse<GetProgramInfoLogCommandBufferResponse>
   {
   public:
     GetProgramInfoLogCommandBufferResponse(GetProgramInfoLogCommandBufferRequest *req, const string &infoLog)
-        : TrCommandBufferResponse(COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_RES, req),
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_RES, req),
           infoLog(infoLog)
     {
-      size = sizeof(GetProgramInfoLogCommandBufferResponse);
     }
 
   public:

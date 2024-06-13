@@ -5,22 +5,11 @@
 
 namespace commandbuffers
 {
-  class CreateSamplerCommandBufferRequest : public TrCommandBufferBase
+  class CreateSamplerCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateSamplerCommandBufferRequest>
   {
   public:
-    CreateSamplerCommandBufferRequest(uint32_t clientId) : TrCommandBufferBase(COMMAND_BUFFER_CREATE_SAMPLER_REQ),
+    CreateSamplerCommandBufferRequest(uint32_t clientId) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CREATE_SAMPLER_REQ),
                                                            clientId(clientId)
-    {
-      size = sizeof(CreateSamplerCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -28,22 +17,11 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
-  class DeleteSamplerCommandBufferRequest : public TrCommandBufferBase
+  class DeleteSamplerCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteSamplerCommandBufferRequest>
   {
   public:
-    DeleteSamplerCommandBufferRequest(uint32_t sampler) : TrCommandBufferBase(COMMAND_BUFFER_DELETE_SAMPLER_REQ),
+    DeleteSamplerCommandBufferRequest(uint32_t sampler) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DELETE_SAMPLER_REQ),
                                                           sampler(sampler)
-    {
-      size = sizeof(DeleteSamplerCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -51,24 +29,13 @@ namespace commandbuffers
     uint32_t sampler;
   };
 
-  class BindSamplerCommandBufferRequest : public TrCommandBufferBase
+  class BindSamplerCommandBufferRequest : public TrCommandBufferSimpleRequest<BindSamplerCommandBufferRequest>
   {
   public:
     BindSamplerCommandBufferRequest(uint32_t unit, uint32_t sampler)
-        : TrCommandBufferBase(COMMAND_BUFFER_BIND_SAMPLER_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BIND_SAMPLER_REQ),
           unit(unit),
           sampler(sampler)
-    {
-      size = sizeof(BindSamplerCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -77,25 +44,14 @@ namespace commandbuffers
     uint32_t sampler;
   };
 
-  class SamplerParameteriCommandBufferRequest : public TrCommandBufferBase
+  class SamplerParameteriCommandBufferRequest : public TrCommandBufferSimpleRequest<SamplerParameteriCommandBufferRequest>
   {
   public:
     SamplerParameteriCommandBufferRequest(uint32_t sampler, uint32_t pname, int32_t param)
-        : TrCommandBufferBase(COMMAND_BUFFER_SAMPLER_PARAMETERI_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_SAMPLER_PARAMETERI_REQ),
           sampler(sampler),
           pname(pname),
           param(param)
-    {
-      size = sizeof(SamplerParameteriCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -105,25 +61,14 @@ namespace commandbuffers
     int32_t param;
   };
 
-  class SamplerParameterfCommandBufferRequest : public TrCommandBufferBase
+  class SamplerParameterfCommandBufferRequest : public TrCommandBufferSimpleRequest<SamplerParameterfCommandBufferRequest>
   {
   public:
     SamplerParameterfCommandBufferRequest(uint32_t sampler, uint32_t pname, float param)
-        : TrCommandBufferBase(COMMAND_BUFFER_SAMPLER_PARAMETERF_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_SAMPLER_PARAMETERF_REQ),
           sampler(sampler),
           pname(pname),
           param(param)
-    {
-      size = sizeof(SamplerParameterfCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -133,24 +78,13 @@ namespace commandbuffers
     float param;
   };
 
-  class GetSamplerParameterCommandBufferRequest : public TrCommandBufferBase
+  class GetSamplerParameterCommandBufferRequest : public TrCommandBufferSimpleRequest<GetSamplerParameterCommandBufferRequest>
   {
   public:
     GetSamplerParameterCommandBufferRequest(uint32_t sampler, uint32_t pname)
-        : TrCommandBufferBase(COMMAND_BUFFER_GET_SAMPLER_PARAMETER_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_GET_SAMPLER_PARAMETER_REQ),
           sampler(sampler),
           pname(pname)
-    {
-      size = sizeof(GetSamplerParameterCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -159,23 +93,12 @@ namespace commandbuffers
     uint32_t pname;
   };
 
-  class GetSamplerParameterCommandBufferResponse : public TrCommandBufferResponse
+  class GetSamplerParameterCommandBufferResponse : public TrCommandBufferSimpleResponse<GetSamplerParameterCommandBufferResponse>
   {
   public:
     GetSamplerParameterCommandBufferResponse(GetSamplerParameterCommandBufferRequest *req, int value)
-        : TrCommandBufferResponse(COMMAND_BUFFER_GET_SAMPLER_PARAMETER_RES, req),
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SAMPLER_PARAMETER_RES, req),
           value(value)
-    {
-      size = sizeof(GetSamplerParameterCommandBufferResponse);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -183,23 +106,12 @@ namespace commandbuffers
     int32_t value;
   };
 
-  class IsSamplerCommandBufferRequest : public TrCommandBufferBase
+  class IsSamplerCommandBufferRequest : public TrCommandBufferSimpleRequest<IsSamplerCommandBufferRequest>
   {
   public:
     IsSamplerCommandBufferRequest(uint32_t sampler)
-        : TrCommandBufferBase(COMMAND_BUFFER_IS_SAMPLER_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_IS_SAMPLER_REQ),
           sampler(sampler)
-    {
-      size = sizeof(IsSamplerCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -207,23 +119,12 @@ namespace commandbuffers
     uint32_t sampler;
   };
 
-  class IsSamplerCommandBufferResponse : public TrCommandBufferResponse
+  class IsSamplerCommandBufferResponse : public TrCommandBufferSimpleResponse<IsSamplerCommandBufferResponse>
   {
   public:
     IsSamplerCommandBufferResponse(IsSamplerCommandBufferRequest *req, bool value)
-        : TrCommandBufferResponse(COMMAND_BUFFER_IS_SAMPLER_RES, req),
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_IS_SAMPLER_RES, req),
           value(value)
-    {
-      size = sizeof(IsSamplerCommandBufferResponse);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
