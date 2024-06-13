@@ -5,6 +5,7 @@
 #include "idgen.hpp"
 #include "common/ipc.hpp"
 #include "common/ipc_message.hpp"
+#include "common/ipc_serializable.hpp"
 #include "./webgl_constants.hpp"
 
 namespace commandbuffers

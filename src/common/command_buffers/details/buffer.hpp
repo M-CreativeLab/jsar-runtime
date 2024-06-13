@@ -5,21 +5,11 @@
 
 namespace commandbuffers
 {
-  class CreateBufferCommandBufferRequest : public TrCommandBufferBase
+  class CreateBufferCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateBufferCommandBufferRequest>
   {
   public:
-    CreateBufferCommandBufferRequest(uint32_t clientId) : TrCommandBufferBase(COMMAND_BUFFER_CREATE_BUFFER_REQ),
+    CreateBufferCommandBufferRequest(uint32_t clientId) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CREATE_BUFFER_REQ),
                                                           clientId(clientId)
-    {
-      size = sizeof(CreateBufferCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -27,21 +17,11 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
-  class DeleteBufferCommandBufferRequest : public TrCommandBufferBase
+  class DeleteBufferCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteBufferCommandBufferRequest>
   {
   public:
-    DeleteBufferCommandBufferRequest(uint32_t buffer) : TrCommandBufferBase(COMMAND_BUFFER_DELETE_BUFFER_REQ),
+    DeleteBufferCommandBufferRequest(uint32_t buffer) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DELETE_BUFFER_REQ),
                                                         buffer(buffer)
-    {
-      size = sizeof(DeleteBufferCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -49,23 +29,13 @@ namespace commandbuffers
     uint32_t buffer;
   };
 
-  class BindBufferCommandBufferRequest : public TrCommandBufferBase
+  class BindBufferCommandBufferRequest : public TrCommandBufferSimpleRequest<BindBufferCommandBufferRequest>
   {
   public:
     BindBufferCommandBufferRequest(uint32_t target, uint32_t buffer)
-        : TrCommandBufferBase(COMMAND_BUFFER_BIND_BUFFER_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BIND_BUFFER_REQ),
           target(target),
           buffer(buffer)
-    {
-      size = sizeof(BindBufferCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -74,17 +44,15 @@ namespace commandbuffers
     uint32_t buffer;
   };
 
-  class BufferDataCommandBufferRequest : public TrCommandBufferBase
+  class BufferDataCommandBufferRequest : public TrCommandBufferSimpleRequest<BufferDataCommandBufferRequest>
   {
   public:
     BufferDataCommandBufferRequest(uint32_t target, uint32_t srcSize, void *srcData, uint32_t usage)
-        : TrCommandBufferBase(COMMAND_BUFFER_BUFFER_DATA_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BUFFER_DATA_REQ),
           target(target),
           dataSize(srcSize),
           usage(usage)
     {
-      size = sizeof(BufferDataCommandBufferRequest);
-
       if (srcData == nullptr)
       {
         dataSize = 0;
@@ -127,16 +95,15 @@ namespace commandbuffers
     uint32_t usage;
   };
 
-  class BufferSubDataCommandBufferRequest : public TrCommandBufferBase
+  class BufferSubDataCommandBufferRequest : public TrCommandBufferSimpleRequest<BufferSubDataCommandBufferRequest>
   {
   public:
     BufferSubDataCommandBufferRequest(uint32_t target, uint32_t offset, uint32_t srcSize, void *srcData)
-        : TrCommandBufferBase(COMMAND_BUFFER_BUFFER_SUB_DATA_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BUFFER_SUB_DATA_REQ),
           target(target),
           offset(offset),
           dataSize(srcSize)
     {
-      size = sizeof(BufferSubDataCommandBufferRequest);
       data = malloc(srcSize);
       if (data != nullptr)
         memcpy(data, srcData, srcSize);
@@ -172,22 +139,12 @@ namespace commandbuffers
     void *data;
   };
 
-  class CreateFramebufferCommandBufferRequest : public TrCommandBufferBase
+  class CreateFramebufferCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateFramebufferCommandBufferRequest>
   {
   public:
     CreateFramebufferCommandBufferRequest(uint32_t clientId)
-        : TrCommandBufferBase(COMMAND_BUFFER_CREATE_FRAMEBUFFER_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CREATE_FRAMEBUFFER_REQ),
           clientId(clientId)
-    {
-      size = sizeof(CreateFramebufferCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -195,22 +152,12 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
-  class DeleteFramebufferCommandBufferRequest : public TrCommandBufferBase
+  class DeleteFramebufferCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteFramebufferCommandBufferRequest>
   {
   public:
     DeleteFramebufferCommandBufferRequest(uint32_t framebuffer)
-        : TrCommandBufferBase(COMMAND_BUFFER_DELETE_FRAMEBUFFER_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DELETE_FRAMEBUFFER_REQ),
           framebuffer(framebuffer)
-    {
-      size = sizeof(DeleteFramebufferCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -218,23 +165,13 @@ namespace commandbuffers
     uint32_t framebuffer;
   };
 
-  class BindFramebufferCommandBufferRequest : public TrCommandBufferBase
+  class BindFramebufferCommandBufferRequest : public TrCommandBufferSimpleRequest<BindFramebufferCommandBufferRequest>
   {
   public:
     BindFramebufferCommandBufferRequest(uint32_t target, uint32_t framebuffer)
-        : TrCommandBufferBase(COMMAND_BUFFER_BIND_FRAMEBUFFER_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BIND_FRAMEBUFFER_REQ),
           target(target),
           framebuffer(framebuffer)
-    {
-      size = sizeof(BindFramebufferCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -243,25 +180,15 @@ namespace commandbuffers
     uint32_t framebuffer;
   };
 
-  class FramebufferRenderbufferCommandBufferRequest : public TrCommandBufferBase
+  class FramebufferRenderbufferCommandBufferRequest : public TrCommandBufferSimpleRequest<FramebufferRenderbufferCommandBufferRequest>
   {
   public:
     FramebufferRenderbufferCommandBufferRequest(uint32_t target, uint32_t attachment, uint32_t renderbufferTarget, uint32_t renderbuffer)
-        : TrCommandBufferBase(COMMAND_BUFFER_FRAMEBUFFER_RENDERBUFFER_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_FRAMEBUFFER_RENDERBUFFER_REQ),
           target(target),
           attachment(attachment),
           renderbufferTarget(renderbufferTarget),
           renderbuffer(renderbuffer)
-    {
-      size = sizeof(FramebufferRenderbufferCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -272,26 +199,16 @@ namespace commandbuffers
     uint32_t renderbufferTarget;
   };
 
-  class FramebufferTexture2DCommandBufferRequest : public TrCommandBufferBase
+  class FramebufferTexture2DCommandBufferRequest : public TrCommandBufferSimpleRequest<FramebufferTexture2DCommandBufferRequest>
   {
   public:
     FramebufferTexture2DCommandBufferRequest(uint32_t target, uint32_t attachment, uint32_t textarget, uint32_t texture, uint32_t level)
-        : TrCommandBufferBase(COMMAND_BUFFER_FRAMEBUFFER_TEXTURE2D_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_FRAMEBUFFER_TEXTURE2D_REQ),
           target(target),
           attachment(attachment),
           textarget(textarget),
           texture(texture),
           level(level)
-    {
-      size = sizeof(FramebufferTexture2DCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -303,22 +220,12 @@ namespace commandbuffers
     uint32_t level;
   };
 
-  class CheckFramebufferStatusCommandBufferRequest : public TrCommandBufferBase
+  class CheckFramebufferStatusCommandBufferRequest : public TrCommandBufferSimpleRequest<CheckFramebufferStatusCommandBufferRequest>
   {
   public:
     CheckFramebufferStatusCommandBufferRequest(uint32_t target)
-        : TrCommandBufferBase(COMMAND_BUFFER_CHECK_FRAMEBUFFER_STATUS_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CHECK_FRAMEBUFFER_STATUS_REQ),
           target(target)
-    {
-      size = sizeof(CheckFramebufferStatusCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -326,22 +233,12 @@ namespace commandbuffers
     uint32_t target;
   };
 
-  class CheckFramebufferStatusCommandBufferResponse : public TrCommandBufferResponse
+  class CheckFramebufferStatusCommandBufferResponse : public TrCommandBufferSimpleResponse<CheckFramebufferStatusCommandBufferResponse>
   {
   public:
     CheckFramebufferStatusCommandBufferResponse(CheckFramebufferStatusCommandBufferRequest *req, uint32_t status)
-        : TrCommandBufferResponse(COMMAND_BUFFER_CHECK_FRAMEBUFFER_STATUS_RES, req),
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_CHECK_FRAMEBUFFER_STATUS_RES, req),
           status(status)
-    {
-      size = sizeof(CheckFramebufferStatusCommandBufferResponse);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -349,22 +246,12 @@ namespace commandbuffers
     uint32_t status;
   };
 
-  class CreateRenderbufferCommandBufferRequest : public TrCommandBufferBase
+  class CreateRenderbufferCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateRenderbufferCommandBufferRequest>
   {
   public:
     CreateRenderbufferCommandBufferRequest(uint32_t clientId)
-        : TrCommandBufferBase(COMMAND_BUFFER_CREATE_RENDERBUFFER_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CREATE_RENDERBUFFER_REQ),
           clientId(clientId)
-    {
-      size = sizeof(CreateRenderbufferCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -372,22 +259,12 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
-  class DeleteRenderbufferCommandBufferRequest : public TrCommandBufferBase
+  class DeleteRenderbufferCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteRenderbufferCommandBufferRequest>
   {
   public:
     DeleteRenderbufferCommandBufferRequest(uint32_t renderbuffer)
-        : TrCommandBufferBase(COMMAND_BUFFER_DELETE_RENDERBUFFER_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DELETE_RENDERBUFFER_REQ),
           renderbuffer(renderbuffer)
-    {
-      size = sizeof(DeleteRenderbufferCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -395,23 +272,13 @@ namespace commandbuffers
     uint32_t renderbuffer;
   };
 
-  class BindRenderbufferCommandBufferRequest : public TrCommandBufferBase
+  class BindRenderbufferCommandBufferRequest : public TrCommandBufferSimpleRequest<BindRenderbufferCommandBufferRequest>
   {
   public:
     BindRenderbufferCommandBufferRequest(uint32_t target, uint32_t renderbuffer)
-        : TrCommandBufferBase(COMMAND_BUFFER_BIND_RENDERBUFFER_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BIND_RENDERBUFFER_REQ),
           target(target),
           renderbuffer(renderbuffer)
-    {
-      size = sizeof(BindRenderbufferCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -420,25 +287,15 @@ namespace commandbuffers
     uint32_t renderbuffer;
   };
 
-  class RenderbufferStorageCommandBufferRequest : public TrCommandBufferBase
+  class RenderbufferStorageCommandBufferRequest : public TrCommandBufferSimpleRequest<RenderbufferStorageCommandBufferRequest>
   {
   public:
     RenderbufferStorageCommandBufferRequest(uint32_t target, uint32_t internalformat, uint32_t width, uint32_t height)
-        : TrCommandBufferBase(COMMAND_BUFFER_RENDERBUFFER_STORAGE_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_RENDERBUFFER_STORAGE_REQ),
           target(target),
           internalformat(internalformat),
           width(width),
           height(height)
-    {
-      size = sizeof(RenderbufferStorageCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -449,22 +306,12 @@ namespace commandbuffers
     uint32_t height;
   };
 
-  class ReadBufferCommandBufferRequest : public TrCommandBufferBase
+  class ReadBufferCommandBufferRequest : public TrCommandBufferSimpleRequest<ReadBufferCommandBufferRequest>
   {
   public:
     ReadBufferCommandBufferRequest(uint32_t mode)
-        : TrCommandBufferBase(COMMAND_BUFFER_READ_BUFFER_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_READ_BUFFER_REQ),
           mode(mode)
-    {
-      size = sizeof(ReadBufferCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -472,24 +319,14 @@ namespace commandbuffers
     uint32_t mode;
   };
 
-  class BindBufferBaseCommandBufferRequest : public TrCommandBufferBase
+  class BindBufferBaseCommandBufferRequest : public TrCommandBufferSimpleRequest<BindBufferBaseCommandBufferRequest>
   {
   public:
     BindBufferBaseCommandBufferRequest(uint32_t target, uint32_t index, uint32_t buffer)
-        : TrCommandBufferBase(COMMAND_BUFFER_BIND_BUFFER_BASE_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BIND_BUFFER_BASE_REQ),
           target(target),
           index(index),
           buffer(buffer)
-    {
-      size = sizeof(BindBufferBaseCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -499,26 +336,16 @@ namespace commandbuffers
     uint32_t buffer;
   };
 
-  class BindBufferRangeCommandBufferRequest : public TrCommandBufferBase
+  class BindBufferRangeCommandBufferRequest : public TrCommandBufferSimpleRequest<BindBufferRangeCommandBufferRequest>
   {
   public:
     BindBufferRangeCommandBufferRequest(uint32_t target, uint32_t index, uint32_t buffer, uint32_t offset, uint32_t size)
-        : TrCommandBufferBase(COMMAND_BUFFER_BIND_BUFFER_RANGE_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BIND_BUFFER_RANGE_REQ),
           target(target),
           index(index),
           buffer(buffer),
           offset(offset),
           bufferSize(size)
-    {
-      size = sizeof(BindBufferRangeCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -530,11 +357,11 @@ namespace commandbuffers
     uint32_t bufferSize;
   };
 
-  class BlitFramebufferCommandBufferRequest : public TrCommandBufferBase
+  class BlitFramebufferCommandBufferRequest : public TrCommandBufferSimpleRequest<BlitFramebufferCommandBufferRequest>
   {
   public:
     BlitFramebufferCommandBufferRequest(uint32_t srcX0, uint32_t srcY0, uint32_t srcX1, uint32_t srcY1, uint32_t dstX0, uint32_t dstY0, uint32_t dstX1, uint32_t dstY1, uint32_t mask, uint32_t filter)
-        : TrCommandBufferBase(COMMAND_BUFFER_BLIT_FRAMEBUFFER_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BLIT_FRAMEBUFFER_REQ),
           srcX0(srcX0),
           srcY0(srcY0),
           srcX1(srcX1),
@@ -545,17 +372,6 @@ namespace commandbuffers
           dstY1(dstY1),
           mask(mask),
           filter(filter)
-    {
-      size = sizeof(BlitFramebufferCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 
@@ -572,27 +388,16 @@ namespace commandbuffers
     uint32_t filter;
   };
 
-  class RenderbufferStorageMultisampleCommandBufferRequest : public TrCommandBufferBase
+  class RenderbufferStorageMultisampleCommandBufferRequest : public TrCommandBufferSimpleRequest<RenderbufferStorageMultisampleCommandBufferRequest>
   {
   public:
     RenderbufferStorageMultisampleCommandBufferRequest(uint32_t target, uint32_t samples, uint32_t internalformat, uint32_t width, uint32_t height)
-        : TrCommandBufferBase(COMMAND_BUFFER_RENDERBUFFER_STORAGE_MULTISAMPLE_REQ),
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_RENDERBUFFER_STORAGE_MULTISAMPLE_REQ),
           target(target),
           samples(samples),
           internalformat(internalformat),
           width(width),
           height(height)
-    {
-      size = sizeof(RenderbufferStorageMultisampleCommandBufferRequest);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-
-    void deserialize(TrCommandBufferMessage &message) override
     {
     }
 

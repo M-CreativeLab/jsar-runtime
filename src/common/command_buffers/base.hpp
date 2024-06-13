@@ -4,7 +4,7 @@
 
 namespace commandbuffers
 {
-  class TrCommandBufferBase
+  class TrCommandBufferBase : public ipc::TrIpcSerializableBase<TrCommandBufferMessage, CommandBufferType>
   {
   public:
     template <typename T>
@@ -16,29 +16,25 @@ namespace commandbuffers
     }
 
   public:
-    TrCommandBufferBase() {}
-    TrCommandBufferBase(CommandBufferType type) : type(type) {}
-    virtual ~TrCommandBufferBase() {}
+    TrCommandBufferBase() : TrIpcSerializableBase() {}
+    TrCommandBufferBase(CommandBufferType type, size_t size = 0) : TrIpcSerializableBase(type, size) {}
 
   public:
-    virtual TrCommandBufferMessage *serialize() = 0;
-    virtual void deserialize(TrCommandBufferMessage &message) = 0;
-
-  public:
-    CommandBufferType type = COMMAND_BUFFER_UNKNOWN;
     uint32_t id = commandBufferIdGen.get();
-    size_t size = 0;
   };
 
+  using TrCommandBufferRequest = TrCommandBufferBase;
   class TrCommandBufferResponse : public TrCommandBufferBase
   {
   public:
-    TrCommandBufferResponse(CommandBufferType type, TrCommandBufferResponse& that) : TrCommandBufferBase(type)
+    TrCommandBufferResponse(CommandBufferType type, TrCommandBufferResponse &that)
+        : TrCommandBufferBase(type, that.size),
+          requestId(that.requestId)
     {
-      requestId = that.requestId;
     }
-    TrCommandBufferResponse(CommandBufferType type, TrCommandBufferBase *req) : TrCommandBufferBase(type),
-                                                                                requestId(req->id)
+    TrCommandBufferResponse(CommandBufferType type, TrCommandBufferRequest *req)
+        : TrCommandBufferBase(type),
+          requestId(req->id)
     {
     }
 
@@ -47,21 +43,10 @@ namespace commandbuffers
   };
 
   template <typename T>
-  class TrCommandBufferSimpleRequest : public TrCommandBufferBase
+  class TrCommandBufferSimpleRequest : public TrCommandBufferRequest
   {
   public:
-    TrCommandBufferSimpleRequest(CommandBufferType type) : TrCommandBufferBase(type)
-    {
-      size = sizeof(T);
-    }
-
-  public:
-    TrCommandBufferMessage *serialize() override
-    {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
+    TrCommandBufferSimpleRequest(CommandBufferType type) : TrCommandBufferRequest(type, sizeof(T))
     {
     }
 
@@ -69,6 +54,23 @@ namespace commandbuffers
     inline void print()
     {
       DEBUG(LOG_TAG_RENDERER, "GL::%s()", commandTypeToStr(type).c_str());
+    }
+
+  public:
+    size_t size = sizeof(T);
+  };
+
+  template <typename T>
+  class TrCommandBufferSimpleResponse : public TrCommandBufferResponse
+  {
+  public:
+    TrCommandBufferSimpleResponse(CommandBufferType type, TrCommandBufferResponse &that)
+        : TrCommandBufferResponse(type, that)
+    {
+    }
+    TrCommandBufferSimpleResponse(CommandBufferType type, TrCommandBufferRequest *req)
+        : TrCommandBufferResponse(type, req)
+    {
     }
   };
 }
