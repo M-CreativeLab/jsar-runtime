@@ -4,6 +4,7 @@
 
 #include "idgen.hpp"
 #include "common/ipc.hpp"
+#include "common/ipc_message.hpp"
 #include "./webgl_constants.hpp"
 
 namespace commandbuffers
@@ -11,7 +12,6 @@ namespace commandbuffers
   class TrCommandBufferSender;
   class TrCommandBufferReceiver;
   class TrCommandBufferMessage;
-  class TrCommandBufferSegment;
   class TrCommandBufferBase;
   class TrCommandBufferResponse;
 

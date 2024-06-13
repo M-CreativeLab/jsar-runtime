@@ -110,7 +110,7 @@ namespace commandbuffers
     TrCommandBufferMessage *serialize() override
     {
       auto message = new TrCommandBufferMessage(type, size, this);
-      message->addSegment(TrCommandBufferSegment(dataSize, data));
+      message->addSegment(TrIpcMessageSegment(dataSize, data));
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
@@ -155,7 +155,7 @@ namespace commandbuffers
     TrCommandBufferMessage *serialize() override
     {
       auto message = new TrCommandBufferMessage(type, size, this);
-      message->addSegment(TrCommandBufferSegment(dataSize, data));
+      message->addSegment(TrIpcMessageSegment(dataSize, data));
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override

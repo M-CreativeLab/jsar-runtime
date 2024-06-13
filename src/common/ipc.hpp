@@ -50,8 +50,6 @@ namespace ipc
 
   public:
     bool send(T data);
-
-  protected:
     bool sendRaw(const void *data, size_t size);
 
   private:
@@ -70,8 +68,6 @@ namespace ipc
   public:
     T *tryRecv(int timeout = 0);
     int getFd() { return fd; }
-
-  protected:
     bool tryRecvRaw(void *outData, size_t outSize, int timeout);
 
   private:

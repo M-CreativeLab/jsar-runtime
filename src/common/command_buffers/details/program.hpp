@@ -225,7 +225,7 @@ namespace commandbuffers
       base.insert(base.end(),
                   reinterpret_cast<char *>(&attribLocation.location),
                   reinterpret_cast<char *>(&attribLocation.location) + sizeof(attribLocation.location));
-      message->addSegment(TrCommandBufferSegment(base));
+      message->addSegment(ipc::TrIpcMessageSegment(base));
     }
 
     void addUniformLocationSegment(UniformLocation &uniformLocation, TrCommandBufferMessage *message)
@@ -237,7 +237,7 @@ namespace commandbuffers
       base.insert(base.end(),
                   reinterpret_cast<char *>(&uniformLocation.size),
                   reinterpret_cast<char *>(&uniformLocation.size) + sizeof(uniformLocation.size));
-      message->addSegment(TrCommandBufferSegment(base));
+      message->addSegment(ipc::TrIpcMessageSegment(base));
     }
 
     void addUniformBlockSegment(UniformBlock &uniformBlock, TrCommandBufferMessage *message)
@@ -246,7 +246,7 @@ namespace commandbuffers
       base.insert(base.end(),
                   reinterpret_cast<char *>(&uniformBlock.index),
                   reinterpret_cast<char *>(&uniformBlock.index) + sizeof(uniformBlock.index));
-      message->addSegment(TrCommandBufferSegment(base));
+      message->addSegment(ipc::TrIpcMessageSegment(base));
     }
 
   public:

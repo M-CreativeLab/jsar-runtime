@@ -62,11 +62,11 @@ namespace renderer
         xrDevice->updateViewport(eyeId, viewport[0], viewport[1], viewport[2], viewport[3]);
 
         /**
-         * Create a new device frame that will be used by js render loop
+         * Create a new device frame that will be used by JavaScript render loop
          */
         auto deviceFrame = new xr::MultiPassFrame(xrDevice, eyeId, stereoId);
         auto sessionIds = xrDevice->getSessionIds();
-        // TODO
+        // TODO: execute frames
       }
       else
       {

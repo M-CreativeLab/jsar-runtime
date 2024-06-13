@@ -81,10 +81,7 @@ namespace xr
     bool updateViewerStereoProjectionMatrix(int eyeId, float *transform);
     bool updateLocalTransform(int id, float *transform);
 
-  public:
-    /**
-     * Input sources
-     */
+  public: // Input sources
     InputSource *getGazeInputSource();
     InputSource *getHandInputSource(Handness handness);
     bool addGamepadInputSource(int id, InputSource &gamepadInputSource);
@@ -94,7 +91,7 @@ namespace xr
     InputSource *getScreenInputSource(int id);
     bool removeScreenInputSource(int id);
 
-  public:
+  public: // Command channel
     int getCommandChanPort();
     void startCommandClientWatcher();
     void handleCommandMessage(TrXRCommandMessage &message, TrContentRuntime *content);
