@@ -1,6 +1,10 @@
 #pragma once
 
+#include "common/viewport.hpp"
 #include "common/events/event.hpp"
+#include "common/frame_request/types.hpp"
+
+using namespace frame_request;
 
 namespace xr
 {
@@ -55,5 +59,31 @@ namespace xr
     bool enabled;
     bool isDeviceActive;
     TrStereoRenderingMode stereoRenderingMode;
+  };
+
+  class TrXRView
+  {
+  public:
+    TrXRView()
+    {
+    }
+
+  public:
+    TrViewport viewport;
+    uint32_t viewIndex;
+    uint32_t viewFramebuffer;
+    float projectionMatrix[16];
+    float viewMatrix[16];
+  };
+
+  class TrXRFrameRequest : public TrFrameRequestSimple<TrXRFrameRequest>
+  {
+  public:
+    TrXRFrameRequest() : TrFrameRequestSimple(TrFrameRequestType::XRFrame) {}
+
+  public:
+    uint32_t sessionId;
+    float localViewMatrix[16];
+    TrXRView views[2];
   };
 }

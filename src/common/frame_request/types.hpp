@@ -41,7 +41,7 @@ namespace frame_request
   public:
     /**
      * Make a new FrameRequest object from a message.
-     * 
+     *
      * @return A new FrameRequest object.
      */
     template <typename T>
@@ -67,7 +67,12 @@ namespace frame_request
     TrFrameRequestSimple(TrFrameRequestType type)
         : TrFrameRequestBase(type, sizeof(T))
     {
+      auto now = chrono::system_clock::now();
+      time = chrono::duration_cast<chrono::microseconds>(now.time_since_epoch()).count();
     }
+
+  public:
+    uint32_t time;
   };
 
   class TrAnimationFrameRequest : public TrFrameRequestSimple<TrAnimationFrameRequest>
@@ -76,11 +81,6 @@ namespace frame_request
     TrAnimationFrameRequest()
         : TrFrameRequestSimple(TrFrameRequestType::AnimationFrame)
     {
-      auto now = chrono::system_clock::now();
-      time = chrono::duration_cast<chrono::microseconds>(now.time_since_epoch()).count();
     }
-
-  public:
-    uint32_t time;
   };
 }
