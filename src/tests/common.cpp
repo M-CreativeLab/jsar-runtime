@@ -1,8 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string>
-
-#include "common/command_buffers/message.hpp"
 #include "common/command_buffers/shared.hpp"
 
 using namespace commandbuffers;

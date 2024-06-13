@@ -1,6 +1,6 @@
 #include "ipc.hpp"
 #include "messages.hpp"
-#include "common/command_buffers/message.hpp"
+#include "common/command_buffers/shared.hpp"
 #include "common/events/message.hpp"
 #include "common/xr/message.hpp"
 

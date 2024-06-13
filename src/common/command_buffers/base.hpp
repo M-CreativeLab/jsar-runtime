@@ -1,7 +1,6 @@
 #pragma once
 
 #include "./shared.hpp"
-#include "./message.hpp"
 
 namespace commandbuffers
 {

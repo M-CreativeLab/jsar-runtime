@@ -3,7 +3,6 @@
 #include "common/viewport.hpp"
 #include "../shared.hpp"
 #include "../base.hpp"
-#include "../message.hpp"
 
 namespace commandbuffers
 {

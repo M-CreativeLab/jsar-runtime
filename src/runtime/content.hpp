@@ -6,7 +6,7 @@
 
 #include "common/classes.hpp"
 #include "common/ipc.hpp"
-#include "common/command_buffers/message.hpp"
+#include "common/command_buffers/shared.hpp"
 #include "common/command_buffers/sender.hpp"
 #include "common/command_buffers/receiver.hpp"
 #include "common/command_buffers/command_buffers.hpp"
