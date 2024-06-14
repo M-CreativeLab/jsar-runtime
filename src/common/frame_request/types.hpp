@@ -1,6 +1,8 @@
 #pragma once
 
 #include <chrono>
+#include <functional>
+
 #include "idgen.hpp"
 #include "common/ipc.hpp"
 #include "common/ipc_message.hpp"
@@ -34,6 +36,23 @@ namespace frame_request
 
   public:
     TrFrameRequestType getType() { return type; }
+  };
+
+  typedef function<void(TrFrameRequestMessage &)> TrFrameRequestFn;
+  class TrFrameRequestCallback
+  {
+  public:
+    TrFrameRequestCallback(TrFrameRequestType type, TrFrameRequestFn fn)
+        : type(type), fn(fn)
+    {
+    }
+
+  public:
+    void operator()(TrFrameRequestMessage &message) { return fn(message); }
+
+  public:
+    TrFrameRequestType type;
+    TrFrameRequestFn fn;
   };
 
   class TrFrameRequestBase : public ipc::TrIpcSerializableBase<TrFrameRequestMessage, TrFrameRequestType>

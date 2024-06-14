@@ -222,7 +222,7 @@ TrClientContextPerProcess *TrClientContextPerProcess::Get()
   return s_Instance;
 }
 
-TrClientContextPerProcess::TrClientContextPerProcess(): fontCacheManager(new font::FontCacheManager())
+TrClientContextPerProcess::TrClientContextPerProcess() : fontCacheManager(new font::FontCacheManager())
 {
 }
 
@@ -337,7 +337,19 @@ void TrClientContextPerProcess::print()
   }
 }
 
-FrameRequestId TrClientContextPerProcess::requestFrame(AnimationFrameRequestCallback callback)
+FrameRequestId TrClientContextPerProcess::requestAnimationFrame(AnimationFrameRequestCallback callback)
+{
+  return requestFrame(TrFrameRequestType::AnimationFrame, [callback](frame_request::TrFrameRequestMessage &message)
+                      {
+                        auto animationFrameRequest = TrFrameRequestBase::MakeFromMessage<TrAnimationFrameRequest>(message);
+                        if (animationFrameRequest == nullptr)
+                          return;
+                        callback(*animationFrameRequest);
+                        delete animationFrameRequest; // End
+                      });
+}
+
+FrameRequestId TrClientContextPerProcess::requestFrame(TrFrameRequestType type, TrFrameRequestFn fn)
 {
   lock_guard<mutex> lock(frameRequestMutex);
   FrameRequestId resId;
@@ -347,7 +359,8 @@ FrameRequestId TrClientContextPerProcess::requestFrame(AnimationFrameRequestCall
     if (frameRequestCallbacksMap.find(id) != frameRequestCallbacksMap.end())
       continue;
 
-    frameRequestCallbacksMap.insert(pair<FrameRequestId, AnimationFrameRequestCallback>(id, callback));
+    TrFrameRequestCallback callback(type, fn);
+    frameRequestCallbacksMap.insert(pair<FrameRequestId, TrFrameRequestCallback>(id, callback));
     resId = id;
     break;
   }
@@ -393,23 +406,20 @@ void TrClientContextPerProcess::onListenFrames()
     if (!frameRequestMsg.deserialize(frameChanReceiver, -1))
       continue;
 
-    if (frameRequestMsg.getType() != TrFrameRequestType::AnimationFrame)
+    auto msgType = frameRequestMsg.getType();
+    if (msgType == TrFrameRequestType::Unknown)
     {
-      DEBUG(LOG_TAG_CLIENT_ENTRY, "Received an invalid frame request message, type=%d.", frameRequestMsg.getType());
+      DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received an unknown frame request message", id);
       continue;
     }
-
-    auto frameRequest = TrFrameRequestBase::MakeFromMessage<TrAnimationFrameRequest>(frameRequestMsg);
-    if (frameRequest == nullptr)
-      continue;
-
     {
       // Notify the frame request callbacks
       lock_guard<mutex> lock(frameRequestMutex);
       for (auto &pair : frameRequestCallbacksMap)
       {
         auto callback = pair.second;
-        callback(*frameRequest);
+        if (callback.type == msgType)
+          callback(frameRequestMsg);
       }
     }
   }

@@ -61,8 +61,8 @@ namespace bindings
     Napi::Function callback = info[0].As<Napi::Function>();
     onframeTsfn = Napi::ThreadSafeFunction::New(env, callback, "onframe", 0, 1);
     connected = true; // mark the `connected` to be true before `requestFrame()`.
-    internalRequestId = clientContext->requestFrame([this](TrAnimationFrameRequest &request)
-                                                    { onFrameRequest(request); });
+    internalRequestId = clientContext->requestAnimationFrame([this](TrAnimationFrameRequest &request)
+                                                             { onFrameRequest(request); });
     return env.Undefined();
   }
 

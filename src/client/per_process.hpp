@@ -89,7 +89,8 @@ public:
   void print();
 
 public: // frame request methods
-  FrameRequestId requestFrame(AnimationFrameRequestCallback callback);
+  FrameRequestId requestFrame(TrFrameRequestType type, TrFrameRequestFn callback);
+  FrameRequestId requestAnimationFrame(AnimationFrameRequestCallback callback);
   void cancelFrame(FrameRequestId id);
 
 public: // event methods
@@ -161,7 +162,7 @@ private: // xr fields
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
 
 private: // frame request fields
-  map<FrameRequestId, AnimationFrameRequestCallback> frameRequestCallbacksMap;
+  map<FrameRequestId, TrFrameRequestCallback> frameRequestCallbacksMap;
   thread *framesListener = nullptr; // a thread to listen for frame requests
   mutex frameRequestMutex;
   atomic<bool> framesListenerRunning = false;
