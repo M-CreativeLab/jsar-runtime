@@ -39,7 +39,7 @@ void DEBUG(const char *tag, const char *format, ...)
   vsnprintf(buffer, length + 1, format, args);
 
   if (s_UnityLog == nullptr)
-    fprintf(stdout, "[%s] %s\n", tag, buffer);
+    fprintf(stdout, "[#%d](%s) %s\n", getpid(), tag, buffer);
   else
     UNITY_LOG(s_UnityLog, buffer);
 #endif
@@ -58,4 +58,41 @@ void SET_THREAD_NAME(const std::string &name)
   // POSIX systems (Linux, macOS)
   pthread_setname_np(name.c_str());
 #endif
+}
+
+void printsStacktraceOnSignal(int signal)
+{
+#ifdef __APPLE__
+  const int maxFrames = 20;
+  void *stackTrace[maxFrames];
+  int numFrames = backtrace(stackTrace, maxFrames);
+  char **symbols = backtrace_symbols(stackTrace, numFrames);
+  if (symbols == nullptr)
+  {
+    std::cerr << "Failed to obtain backtrace symbols" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  std::cerr << "Received signal " << signal << ", printing stack trace:" << std::endl;
+  for (int i = 0; i < numFrames; ++i)
+    std::cerr << symbols[i] << std::endl;
+  free(symbols);
+#endif
+  _exit(EXIT_FAILURE);
+}
+
+constexpr int SIGNALS[] = {
+    SIGHUP,
+    SIGQUIT,
+    SIGABRT,
+    SIGFPE,
+    SIGBUS,
+    SIGSEGV,
+    SIGSYS,
+    SIGPIPE,
+};
+
+void ENABLE_BACKTRACE()
+{
+  for (int id : SIGNALS)
+    signal(id, printsStacktraceOnSignal);
 }

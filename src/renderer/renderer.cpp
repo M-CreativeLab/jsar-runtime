@@ -9,6 +9,7 @@ namespace renderer
 {
   TrRenderer::TrRenderer(TrConstellation *constellation) : constellation(constellation), api(nullptr)
   {
+    glHostContext = new OpenGLHostContextStorage();
     frameRequestChanServer = new ipc::TrOneShotServer<TrFrameRequestMessage>("frameRequestChan");
     commandBufferChanServer = new ipc::TrOneShotServer<TrCommandBufferMessage>("commandBufferChan");
   }
@@ -19,6 +20,7 @@ namespace renderer
 
     api = nullptr;
     constellation = nullptr;
+    delete glHostContext;
     delete frameRequestChanServer;
     delete commandBufferChanServer;
   }
@@ -34,13 +36,14 @@ namespace renderer
   {
     calcFps(std::chrono::high_resolution_clock::now());
 
-    glHostContext.Record();
+    glHostContext->Record();
+    glHostContext->Print();
     {
-      lock_guard<recursive_mutex> lock(contentRendererMutex);
+      lock_guard<mutex> lock(contentRendererMutex);
       for (auto contentRenderer : contentRenderers)
         contentRenderer.onHostFrame();
     }
-    glHostContext.Restore();
+    glHostContext->Restore();
 
     // api->StartFrame();
     // auto startedAt = std::chrono::high_resolution_clock::now();
@@ -133,14 +136,14 @@ namespace renderer
     return api;
   }
 
-  OpenGLHostContextStorage &TrRenderer::getOpenGLContext()
+  OpenGLHostContextStorage *TrRenderer::getOpenGLContext()
   {
     return glHostContext;
   }
 
   void TrRenderer::addContentRenderer(TrContentRuntime *content)
   {
-    lock_guard<recursive_mutex> lock(contentRendererMutex);
+    lock_guard<mutex> lock(contentRendererMutex);
     if (content == nullptr || findContentRenderer(content->pid) != nullptr)
       return;
     removeContentRenderer(content->pid); // Remove the old content renderer if it exists.
@@ -149,7 +152,6 @@ namespace renderer
 
   TrContentRenderer *TrRenderer::findContentRenderer(pid_t contentPid)
   {
-    lock_guard<recursive_mutex> lock(contentRendererMutex);
     for (auto &contentRenderer : contentRenderers)
     {
       if (contentRenderer.content->pid == contentPid)
@@ -160,7 +162,6 @@ namespace renderer
 
   void TrRenderer::removeContentRenderer(TrContentRuntime *content)
   {
-    lock_guard<recursive_mutex> lock(contentRendererMutex);
     if (content == nullptr || contentRenderers.size() == 0)
       return;
     for (auto it = contentRenderers.begin(); it != contentRenderers.end(); it++)
@@ -213,10 +214,10 @@ namespace renderer
         auto newClient = frameRequestChanServer->tryAccept(-1);
         if (newClient != nullptr)
         {
-          lock_guard<recursive_mutex> lock(contentRendererMutex);
+          lock_guard<mutex> lock(contentRendererMutex);
           auto contentRenderer = findContentRenderer(newClient->getPid());
           assert(contentRenderer != nullptr);
-          contentRenderer->resetFrameRequestChanSender(new ipc::TrChannelSender<TrFrameRequestMessage>(newClient));
+          contentRenderer->resetFrameRequestChanSenderWith(newClient);
         }
       } });
     commandBufferClientWatcher = new thread([this]()

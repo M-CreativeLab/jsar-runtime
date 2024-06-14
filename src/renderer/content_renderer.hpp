@@ -5,6 +5,7 @@
 #include "common/ipc.hpp"
 #include "common/command_buffers/shared.hpp"
 #include "common/frame_request/types.hpp"
+#include "common/frame_request/sender.hpp"
 #include "xr/device.hpp"
 #include "./gles/context_storage.hpp"
 
@@ -18,6 +19,7 @@ namespace renderer
   {
   public:
     TrContentRenderer(TrContentRuntime *content, TrConstellation *constellation);
+    ~TrContentRenderer();
 
   public: // public lifecycle
     void onCommandBuffersExecuting();
@@ -25,8 +27,8 @@ namespace renderer
 
   public:
     bool sendCommandBufferResponse(TrCommandBufferResponse &res);
-    OpenGLAppContextStorage& getOpenGLContext();
-    TrContentRuntime* getContent();
+    OpenGLAppContextStorage *getOpenGLContext();
+    TrContentRuntime *getContent();
 
   private: // private lifecycle
     void onHostFrame();
@@ -35,28 +37,25 @@ namespace renderer
 
   private:
     template <typename T>
-    void dispatchFrameRequest(TrFrameRequestSimple<T> req)
+    void dispatchFrameRequest(TrFrameRequestSimple<T> &req)
     {
-      if (frameRequestChanSender == nullptr)
-        return;
-      auto reqMessage = req.serialize();
-      frameRequestChanSender->send(*reqMessage);
-      delete reqMessage;
+      if (frameRequestChanSender != nullptr)
+        frameRequestChanSender->sendFrameRequest(req);
     }
     void dispatchAnimationFrameRequest();
     void executeCommandBuffers();
 
   private:
-    void resetFrameRequestChanSender(ipc::TrChannelSender<TrFrameRequestMessage> *sender);
+    void resetFrameRequestChanSenderWith(ipc::TrOneShotClient<TrFrameRequestMessage> *client);
 
   private:
     TrContentRuntime *content = nullptr;
     TrConstellation *constellation = nullptr;
     xr::Device *xrDevice = nullptr;
-    OpenGLAppContextStorage glContext;
+    OpenGLAppContextStorage *glContext = nullptr;
 
   private:
-    ipc::TrChannelSender<TrFrameRequestMessage> *frameRequestChanSender = nullptr;
+    frame_request::TrFrameRequestSender *frameRequestChanSender = nullptr;
 
     friend class TrRenderer;
   };

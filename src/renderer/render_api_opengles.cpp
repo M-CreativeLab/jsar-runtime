@@ -75,8 +75,8 @@ private:
 	void OnContextInit(WebGL1ContextInitCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		WebGL1ContextInitCommandBufferResponse res(req);
-		auto &hostContext = renderer->getOpenGLContext();
-		res.viewport = hostContext.GetViewport();
+		auto hostContext = renderer->getOpenGLContext();
+		res.viewport = hostContext->GetViewport();
 		glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &res.maxCombinedTextureImageUnits);
 		glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE, &res.maxCubeMapTextureSize);
 		glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_VECTORS, &res.maxFragmentUniformVectors);
@@ -128,7 +128,7 @@ private:
 	void OnCreateProgram(CreateProgramCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint program = m_GLObjectManager.CreateProgram(req->clientId);
-		reqContentRenderer->getOpenGLContext().RecordProgramOnCreated(program);
+		reqContentRenderer->getOpenGLContext()->RecordProgramOnCreated(program);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateProgram(%d) => %d", options.isDefaultQueue, req->clientId, program);
 	}
@@ -141,9 +141,9 @@ private:
 		 * Reset the program in both "AppGlobal" and "XRFrame" when we receiving a delete program command to avoid the
 		 * context using the deleted program.
 		 */
-		auto &appGlContext = reqContentRenderer->getOpenGLContext();
-		appGlContext.ResetProgram(program);
-		appGlContext.RecordProgramOnDeleted(program);
+		auto appGlContext = reqContentRenderer->getOpenGLContext();
+		appGlContext->ResetProgram(program);
+		appGlContext->RecordProgramOnDeleted(program);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteProgram(%d)", options.isDefaultQueue, program);
 	}
@@ -151,7 +151,7 @@ private:
 	{
 		auto program = m_GLObjectManager.FindProgram(req->clientId);
 		glLinkProgram(program);
-		reqContentRenderer->getOpenGLContext().MarkAsDirty();
+		reqContentRenderer->getOpenGLContext()->MarkAsDirty();
 
 		/**
 		 * Check the link status of the program.
@@ -244,7 +244,7 @@ private:
 	{
 		auto program = m_GLObjectManager.FindProgram(req->clientId);
 		glUseProgram(program);
-		reqContentRenderer->getOpenGLContext().RecordProgram(program);
+		reqContentRenderer->getOpenGLContext()->RecordProgram(program);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::UseProgram(%d)", options.isDefaultQueue, program);
 	}
@@ -278,7 +278,7 @@ private:
 		GLuint program = m_GLObjectManager.FindProgram(req->program);
 		GLuint shader = m_GLObjectManager.FindShader(req->shader);
 		glAttachShader(program, shader);
-		reqContentRenderer->getOpenGLContext().MarkAsDirty();
+		reqContentRenderer->getOpenGLContext()->MarkAsDirty();
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::AttachShader(program=%d, shader=%d)",
 						options.isDefaultQueue, program, shader);
@@ -288,7 +288,7 @@ private:
 		GLuint program = m_GLObjectManager.FindProgram(req->program);
 		GLuint shader = m_GLObjectManager.FindShader(req->shader);
 		glDetachShader(program, shader);
-		reqContentRenderer->getOpenGLContext().MarkAsDirty();
+		reqContentRenderer->getOpenGLContext()->MarkAsDirty();
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DetachShader(program=%d, shader=%d)",
 						options.isDefaultQueue, program, shader);
@@ -296,7 +296,7 @@ private:
 	void OnCreateShader(CreateShaderCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint shader = m_GLObjectManager.CreateShader(req->clientId, req->shaderType);
-		reqContentRenderer->getOpenGLContext().RecordShaderOnCreated(shader);
+		reqContentRenderer->getOpenGLContext()->RecordShaderOnCreated(shader);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateShader(%d, type=%s) => %d",
 						options.isDefaultQueue,
@@ -308,7 +308,7 @@ private:
 	{
 		auto shader = m_GLObjectManager.FindShader(req->shader);
 		m_GLObjectManager.DeleteShader(req->shader);
-		reqContentRenderer->getOpenGLContext().RecordShaderOnDeleted(shader);
+		reqContentRenderer->getOpenGLContext()->RecordShaderOnDeleted(shader);
 
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteShader(%d)", options.isDefaultQueue, shader);
@@ -346,7 +346,7 @@ private:
 		const char *sourceStr = fixedSource.c_str();
 		size_t sourceSize = fixedSource.size();
 		glShaderSource(shader, 1, &sourceStr, (const GLint *)&sourceSize);
-		reqContentRenderer->getOpenGLContext().MarkAsDirty();
+		reqContentRenderer->getOpenGLContext()->MarkAsDirty();
 
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::ShaderSource(%d)", options.isDefaultQueue, shader);
@@ -355,7 +355,7 @@ private:
 	{
 		auto shader = m_GLObjectManager.FindShader(req->shader);
 		glCompileShader(shader);
-		reqContentRenderer->getOpenGLContext().MarkAsDirty();
+		reqContentRenderer->getOpenGLContext()->MarkAsDirty();
 
 		GLint compileStatus;
 		glGetShaderiv(shader, GL_COMPILE_STATUS, &compileStatus);
@@ -435,7 +435,7 @@ private:
 	void OnCreateBuffer(CreateBufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint buffer = m_GLObjectManager.CreateBuffer(req->clientId);
-		reqContentRenderer->getOpenGLContext().RecordBufferOnCreated(buffer);
+		reqContentRenderer->getOpenGLContext()->RecordBufferOnCreated(buffer);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateBuffer(%d) => buffer(%d)",
 						options.isDefaultQueue, req->clientId, buffer);
@@ -444,7 +444,7 @@ private:
 	{
 		auto buffer = m_GLObjectManager.FindBuffer(req->buffer);
 		m_GLObjectManager.DeleteBuffer(req->buffer);
-		reqContentRenderer->getOpenGLContext().RecordBufferOnDeleted(buffer);
+		reqContentRenderer->getOpenGLContext()->RecordBufferOnDeleted(buffer);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteBuffer(%d)", options.isDefaultQueue, buffer);
 	}
@@ -460,9 +460,9 @@ private:
 
 		/** Update the app states for next restore. */
 		if (target == GL_ARRAY_BUFFER)
-			reqContentRenderer->getOpenGLContext().RecordArrayBuffer(buffer);
+			reqContentRenderer->getOpenGLContext()->RecordArrayBuffer(buffer);
 		else if (target == GL_ELEMENT_ARRAY_BUFFER)
-			reqContentRenderer->getOpenGLContext().RecordElementArrayBuffer(buffer);
+			reqContentRenderer->getOpenGLContext()->RecordElementArrayBuffer(buffer);
 		// TODO: support other targets?
 
 		glBindBuffer(target, buffer);
@@ -500,7 +500,7 @@ private:
 	{
 		GLuint ret;
 		glGenFramebuffers(1, &ret);
-		reqContentRenderer->getOpenGLContext().RecordFramebufferOnCreated(ret);
+		reqContentRenderer->getOpenGLContext()->RecordFramebufferOnCreated(ret);
 
 		// createFramebufferCommandBuffer->m_FramebufferId = ret;
 		if (options.printsCall)
@@ -509,7 +509,7 @@ private:
 	void OnDeleteFramebuffer(DeleteFramebufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glDeleteFramebuffers(1, &req->framebuffer);
-		reqContentRenderer->getOpenGLContext().RecordFramebufferOnDeleted(req->framebuffer);
+		reqContentRenderer->getOpenGLContext()->RecordFramebufferOnDeleted(req->framebuffer);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteFramebuffer: %d", options.isDefaultQueue, req->framebuffer);
 	}
@@ -521,10 +521,10 @@ private:
 		 * FIXME: When framebuffer is -1, assume to bind the host framebuffer.
 		 */
 		if (framebuffer == -1)
-			framebuffer = renderer->getOpenGLContext().GetFramebuffer();
+			framebuffer = renderer->getOpenGLContext()->GetFramebuffer();
 
 		glBindFramebuffer(target, framebuffer);
-		reqContentRenderer->getOpenGLContext().RecordFramebuffer(framebuffer);
+		reqContentRenderer->getOpenGLContext()->RecordFramebuffer(framebuffer);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BindFramebuffer(%d)", options.isDefaultQueue, framebuffer);
 	}
@@ -569,7 +569,7 @@ private:
 	{
 		GLuint ret;
 		glGenRenderbuffers(1, &ret);
-		reqContentRenderer->getOpenGLContext().RecordRenderbufferOnCreated(ret);
+		reqContentRenderer->getOpenGLContext()->RecordRenderbufferOnCreated(ret);
 
 		// createRenderbufferCommandBuffer->m_RenderbufferId = ret;
 		if (options.printsCall)
@@ -578,7 +578,7 @@ private:
 	void OnDeleteRenderbuffer(DeleteRenderbufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glDeleteRenderbuffers(1, &req->renderbuffer);
-		reqContentRenderer->getOpenGLContext().RecordRenderbufferOnDeleted(req->renderbuffer);
+		reqContentRenderer->getOpenGLContext()->RecordRenderbufferOnDeleted(req->renderbuffer);
 
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteRenderbuffer: %d", options.isDefaultQueue, req->renderbuffer);
@@ -588,7 +588,7 @@ private:
 		auto target = req->target;
 		auto renderbuffer = req->renderbuffer;
 		glBindRenderbuffer(target, renderbuffer);
-		reqContentRenderer->getOpenGLContext().RecordRenderbuffer(renderbuffer);
+		reqContentRenderer->getOpenGLContext()->RecordRenderbuffer(renderbuffer);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BindRenderbuffer(%d)", options.isDefaultQueue, req->renderbuffer);
 	}
@@ -665,7 +665,7 @@ private:
 	void OnCreateVertexArray(CreateVertexArrayCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint vao = m_GLObjectManager.CreateVertexArray(req->clientId);
-		reqContentRenderer->getOpenGLContext().RecordVertexArrayObjectOnCreated(vao);
+		reqContentRenderer->getOpenGLContext()->RecordVertexArrayObjectOnCreated(vao);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateVertexArray(%d) => %d", options.isDefaultQueue, req->clientId, vao);
 	}
@@ -673,7 +673,7 @@ private:
 	{
 		GLuint vao = m_GLObjectManager.FindVertexArray(req->vertexArray);
 		m_GLObjectManager.DeleteVertexArray(req->vertexArray);
-		reqContentRenderer->getOpenGLContext().RecordVertexArrayObjectOnDeleted(vao);
+		reqContentRenderer->getOpenGLContext()->RecordVertexArrayObjectOnDeleted(vao);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteVertexArray(%d)", options.isDefaultQueue, vao);
 	}
@@ -686,14 +686,14 @@ private:
 			return;
 		}
 		glBindVertexArray(vao);
-		reqContentRenderer->getOpenGLContext().RecordVertexArrayObject(vao);
+		reqContentRenderer->getOpenGLContext()->RecordVertexArrayObject(vao);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BindVertexArray(%d)", options.isDefaultQueue, vao);
 	}
 	void OnCreateTexture(CreateTextureCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint texture = m_GLObjectManager.CreateTexture(req->clientId);
-		reqContentRenderer->getOpenGLContext().RecordTextureOnCreated(texture);
+		reqContentRenderer->getOpenGLContext()->RecordTextureOnCreated(texture);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateTexture(c%d) => texture(%d)", options.isDefaultQueue, req->clientId, texture);
 	}
@@ -701,7 +701,7 @@ private:
 	{
 		GLuint texture = m_GLObjectManager.FindTexture(req->texture);
 		m_GLObjectManager.DeleteTexture(req->texture);
-		reqContentRenderer->getOpenGLContext().RecordTextureOnDeleted(texture);
+		reqContentRenderer->getOpenGLContext()->RecordTextureOnDeleted(texture);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteTexture(%d)", options.isDefaultQueue, texture);
 	}
@@ -709,17 +709,17 @@ private:
 	{
 		auto target = req->target;
 		auto texture = m_GLObjectManager.FindTexture(req->texture);
-		renderer->getOpenGLContext().RecordTextureBindingFromHost();
+		renderer->getOpenGLContext()->RecordTextureBindingFromHost();
 		glBindTexture(target, texture);
 
-		auto &appGlContext = reqContentRenderer->getOpenGLContext();
-		appGlContext.RecordTextureBindingWithUnit(target, texture);
+		auto contentGlContext = reqContentRenderer->getOpenGLContext();
+		contentGlContext->RecordTextureBindingWithUnit(target, texture);
 		if (options.printsCall)
 		{
 			GLint activeUnit;
 			glGetIntegerv(GL_ACTIVE_TEXTURE, &activeUnit);
 			DEBUG(DEBUG_TAG, "[%d] GL::BindTexture(0x%x, %d) for active(%d) program(%d)",
-						options.isDefaultQueue, target, texture, activeUnit, appGlContext.GetProgram());
+						options.isDefaultQueue, target, texture, activeUnit, contentGlContext->GetProgram());
 		}
 	}
 	void OnTexImage2D(TextureImage2DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
@@ -808,7 +808,7 @@ private:
 	{
 		auto textureUnit = req->activeUnit;
 		glActiveTexture(textureUnit);
-		reqContentRenderer->getOpenGLContext().RecordActiveTextureUnit(textureUnit);
+		reqContentRenderer->getOpenGLContext()->RecordActiveTextureUnit(textureUnit);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::ActiveTexture(%d)", options.isDefaultQueue, textureUnit - GL_TEXTURE0);
 	}
@@ -1318,7 +1318,7 @@ private:
 	void OnDepthMask(DepthMaskCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glDepthMask(req->flag);
-		reqContentRenderer->getOpenGLContext().RecordDepthMask(req->flag);
+		reqContentRenderer->getOpenGLContext()->RecordDepthMask(req->flag);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DepthMask(%d)", options.isDefaultQueue, req->flag);
 	}
@@ -1401,7 +1401,7 @@ private:
 	void OnBlendFunc(BlendFuncCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glBlendFunc(req->sfactor, req->dfactor);
-		reqContentRenderer->getOpenGLContext().RecordBlendFunc(req->sfactor, req->dfactor);
+		reqContentRenderer->getOpenGLContext()->RecordBlendFunc(req->sfactor, req->dfactor);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BlendFunc(%d)", options.isDefaultQueue, req->sfactor);
 	}
@@ -1414,7 +1414,7 @@ private:
 		auto srcAlpha = req->srcAlpha;
 		auto dstAlpha = req->dstAlpha;
 		glBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
-		reqContentRenderer->getOpenGLContext().RecordBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
+		reqContentRenderer->getOpenGLContext()->RecordBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
 
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BlendFuncSeparate(%s, %s, %s, %s)", options.isDefaultQueue,
@@ -1463,7 +1463,7 @@ private:
 	{
 		auto cap = req->cap;
 		Enable(cap);
-		reqContentRenderer->getOpenGLContext().RecordCapability(cap, true);
+		reqContentRenderer->getOpenGLContext()->RecordCapability(cap, true);
 		if (options.printsCall)
 		{
 			if (cap == GL_BLEND ||
@@ -1485,7 +1485,7 @@ private:
 	{
 		auto cap = req->cap;
 		Disable(cap);
-		reqContentRenderer->getOpenGLContext().RecordCapability(cap, false);
+		reqContentRenderer->getOpenGLContext()->RecordCapability(cap, false);
 		if (options.printsCall)
 		{
 			if (cap == GL_BLEND ||
@@ -1619,12 +1619,12 @@ bool RenderAPI_OpenGLCoreES::SupportsWebGL2()
 
 int RenderAPI_OpenGLCoreES::GetDrawingBufferWidth()
 {
-	return renderer->getOpenGLContext().GetViewport().width;
+	return renderer->getOpenGLContext()->GetViewport().width;
 }
 
 int RenderAPI_OpenGLCoreES::GetDrawingBufferHeight()
 {
-	return renderer->getOpenGLContext().GetViewport().height;
+	return renderer->getOpenGLContext()->GetViewport().height;
 }
 
 void RenderAPI_OpenGLCoreES::ClearColor(float r, float g, float b, float a)
@@ -1696,8 +1696,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 
 	// Execute all the command buffers
 	contentRenderer->onCommandBuffersExecuting();
-	auto& contentGlContext = contentRenderer->getOpenGLContext();
-	auto contextBaseState = OpenGLAppContextStorage("tmp", &contentGlContext);
+	auto contentGlContext = contentRenderer->getOpenGLContext();
+	auto contextBaseState = OpenGLAppContextStorage("tmp", contentGlContext);
 
 	for (auto commandBuffer : commandBuffers)
 	{
@@ -1895,9 +1895,9 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 	// Fire the content's `onCommandBuffersExecuted` event
 	contentRenderer->onCommandBuffersExecuted();
 
-	if (contentGlContext.IsDirty())
+	if (contentGlContext->IsDirty())
 		return false;
-	return contentGlContext.IsChanged(&contextBaseState);
+	return contentGlContext->IsChanged(&contextBaseState);
 }
 
 #endif // #if SUPPORT_OPENGL_UNIFIED

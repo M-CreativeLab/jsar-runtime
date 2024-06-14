@@ -79,6 +79,7 @@ namespace xr
   class TrXRFrameRequest : public TrFrameRequestSimple<TrXRFrameRequest>
   {
   public:
+    TrXRFrameRequest(TrXRFrameRequest &that) : TrFrameRequestSimple(that) {}
     TrXRFrameRequest() : TrFrameRequestSimple(TrFrameRequestType::XRFrame) {}
 
   public:

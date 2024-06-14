@@ -360,7 +360,7 @@ bool TrContentManager::initialize()
         }
 
         if (foundNewClient)
-          DEBUG(LOG_TAG_CONTENT, "New client connected to the event channel: %d", newClient->getPid());
+          DEBUG(LOG_TAG_CONTENT, "New client(#%d) connected to the event channel.", newClient->getPid());
         else
           eventChanServer->removeClient(newClient); // remove the client if it is not found by pid.
       }
@@ -431,6 +431,8 @@ bool TrContentManager::tickOnFrame()
     auto content = *it;
     if (content->pid > 0 && content->testClientProcessExitOnFrame())
     {
+      auto renderer = constellation->getRenderer();
+      renderer->removeContentRenderer(content);
       delete content;
       it = contents.erase(it);
     }

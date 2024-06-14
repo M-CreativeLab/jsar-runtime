@@ -166,8 +166,7 @@ namespace ipc
     T data;
     if (tryRecvRaw(&data, sizeof(T), timeout))
     {
-      T *newData = new T();
-      memcpy(newData, &data, sizeof(T));
+      T *newData = new T(data);
       return newData;
     }
     else
@@ -401,7 +400,7 @@ namespace ipc
   {
     invalidFlag = flag;
     if (flag == true)
-      DEBUG(LOG_TAG_IPC, "The client is marked as invalid.");
+      DEBUG(LOG_TAG_IPC, "The client(#%d, port=%d) is marked as invalid.", pid, port);
   }
 
   template <typename T>

@@ -870,6 +870,7 @@ name = "jsar_jsbundle"
 version = "1.0.0"
 dependencies = [
  "flate2",
+ "lazy_static",
 ]
 
 [[package]]

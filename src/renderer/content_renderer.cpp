@@ -8,10 +8,21 @@ namespace renderer
   TrContentRenderer::TrContentRenderer(TrContentRuntime *content, TrConstellation *constellation)
       : content(content),
         constellation(constellation),
-        xrDevice(constellation->getXrDevice()),
-        glContext(OpenGLAppContextStorage("content_renderer"))
+        xrDevice(constellation->getXrDevice())
   {
     assert(xrDevice != nullptr);
+    glContext = new OpenGLAppContextStorage("content_renderer");
+  }
+
+  TrContentRenderer::~TrContentRenderer()
+  {
+    content = nullptr;
+    xrDevice = nullptr;
+    if (glContext == nullptr)
+    {
+      delete glContext;
+      glContext = nullptr;
+    }
   }
 
   void TrContentRenderer::onCommandBuffersExecuting()
@@ -29,7 +40,7 @@ namespace renderer
     return content->sendCommandBufferResponse(res);
   }
 
-  OpenGLAppContextStorage &TrContentRenderer::getOpenGLContext()
+  OpenGLAppContextStorage *TrContentRenderer::getOpenGLContext()
   {
     return glContext;
   }
@@ -58,7 +69,8 @@ namespace renderer
       if (shouldDispatchXRFrame)
       {
         // TODO: create a new frame request message from `xrDevice`.
-        dispatchFrameRequest(TrXRFrameRequest());
+        TrXRFrameRequest req;
+        dispatchFrameRequest(req);
       }
     }
 
@@ -76,7 +88,8 @@ namespace renderer
 
   void TrContentRenderer::onStartFrame()
   {
-    glContext.Restore();
+    glContext->Restore();
+    glContext->Print();
   }
 
   void TrContentRenderer::onEndFrame()
@@ -85,11 +98,14 @@ namespace renderer
 
   inline void TrContentRenderer::dispatchAnimationFrameRequest()
   {
-    dispatchFrameRequest(TrAnimationFrameRequest());
+    TrAnimationFrameRequest req;
+    dispatchFrameRequest(req);
   }
 
   void TrContentRenderer::executeCommandBuffers()
   {
+    if (content == nullptr) // FIXME: just skip executing command buffers if content is null, when content process is crashed.
+      return;
     vector<commandbuffers::TrCommandBufferBase *> commandBufferRequests;
     {
       lock_guard<mutex> lock(content->commandBufferRequestsMutex);
@@ -99,10 +115,12 @@ namespace renderer
     constellation->getRenderer()->executeCommandBuffers(commandBufferRequests, this);
   }
 
-  void TrContentRenderer::resetFrameRequestChanSender(ipc::TrChannelSender<frame_request::TrFrameRequestMessage> *sender)
+  void TrContentRenderer::resetFrameRequestChanSenderWith(ipc::TrOneShotClient<TrFrameRequestMessage> *client)
   {
+    if (client == nullptr)
+      return;
     if (frameRequestChanSender != nullptr)
       delete frameRequestChanSender;
-    frameRequestChanSender = sender;
+    frameRequestChanSender = new frame_request::TrFrameRequestSender(client);
   }
 }

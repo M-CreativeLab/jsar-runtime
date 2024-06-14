@@ -47,9 +47,9 @@ namespace frame_request
     template <typename T>
     static T *MakeFromMessage(TrFrameRequestMessage &message)
     {
-      T *commandBuffer = message.createInstanceFromBase<T>();
-      commandBuffer->deserialize(message);
-      return commandBuffer;
+      T *frameRequest = message.createInstanceFromBase<T>();
+      frameRequest->deserialize(message);
+      return frameRequest;
     }
 
   public:
@@ -64,6 +64,10 @@ namespace frame_request
   class TrFrameRequestSimple : public TrFrameRequestBase
   {
   public:
+    TrFrameRequestSimple(TrFrameRequestSimple &that)
+        : TrFrameRequestBase(that.type, that.size), time(that.time)
+    {
+    }
     TrFrameRequestSimple(TrFrameRequestType type)
         : TrFrameRequestBase(type, sizeof(T))
     {
@@ -78,6 +82,7 @@ namespace frame_request
   class TrAnimationFrameRequest : public TrFrameRequestSimple<TrAnimationFrameRequest>
   {
   public:
+    TrAnimationFrameRequest(TrAnimationFrameRequest &that) : TrFrameRequestSimple(that) {}
     TrAnimationFrameRequest()
         : TrFrameRequestSimple(TrFrameRequestType::AnimationFrame)
     {

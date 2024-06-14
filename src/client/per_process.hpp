@@ -117,7 +117,7 @@ public: // xr command methods
     auto message = xrCommandChanReceiver->recvCommandMessage(timeout);
     if (message == nullptr)
       return nullptr;
-    if (message->type != type)  // When the message is not the expected type, discard it.
+    if (message->type != type) // When the message is not the expected type, discard it.
     {
       delete message;
       return nullptr;
@@ -153,7 +153,7 @@ private:
   ipc::TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
-  font::FontCacheManager fontCacheManager;
+  font::FontCacheManager *fontCacheManager = nullptr;
 
 private: // xr fields
   ipc::TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
@@ -165,6 +165,9 @@ private: // frame request fields
   thread *framesListener = nullptr; // a thread to listen for frame requests
   mutex frameRequestMutex;
   atomic<bool> framesListenerRunning = false;
+
+private: // service alive checking fields
+  thread *serviceAliveListener = nullptr;
 
 private:
   static TrClientContextPerProcess *s_Instance;

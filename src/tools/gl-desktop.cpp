@@ -14,6 +14,7 @@
 #include <skia/include/core/SkFont.h>
 #include <skia/include/core/SkPaint.h>
 
+#include "debug.hpp"
 #include "../runtime/embedder.hpp"
 #include "../runtime/content.hpp"
 #include "../renderer/render_api.hpp"
@@ -271,6 +272,7 @@ void help()
 
 int main(int argc, char **argv)
 {
+  ENABLE_BACKTRACE();
   if (!glfwInit())
     return 1;
 

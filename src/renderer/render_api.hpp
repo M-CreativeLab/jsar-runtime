@@ -61,11 +61,6 @@ public:
   virtual void Enable(uint32_t cap) = 0;
 
   /**
-   * Executing the frame function
-   */
-  FrameExecutionCode ExecuteFrame();
-
-  /**
    * Executes the commands from the given command queue with the device frame, and it also returns a boolean value indicating if
    * there are any commands to execute.
    */

@@ -1,6 +1,13 @@
 #pragma once
 
 #include <string>
+#include <iostream>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <execinfo.h>
+#include <signal.h>
+#include <unistd.h>
 
 #ifdef __ANDROID__
 #include <android/log.h>
@@ -36,5 +43,17 @@ IUnityLog *GET_UNITY_LOG_HANDLE();
 #define LOG_TAG_CLIENT_CANVAS "jsar.client.canvas"
 #endif
 
+/**
+ * Print a debug message to the console.
+ */
 void DEBUG(const char *tag, const char *format, ...);
+
+/**
+ * Set the name of the current thread.
+ */
 void SET_THREAD_NAME(const std::string &name);
+
+/**
+ * Enable backtrace logging on current process.
+ */
+void ENABLE_BACKTRACE();

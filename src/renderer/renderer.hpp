@@ -41,7 +41,7 @@ namespace renderer
     void removeCommandBufferChanClient(ipc::TrOneShotClient<TrCommandBufferMessage> *client);
     void setApi(RenderAPI *api);
     RenderAPI *getApi();
-    OpenGLHostContextStorage& getOpenGLContext();
+    OpenGLHostContextStorage* getOpenGLContext();
 
   public: // API for content renderer
     /**
@@ -84,8 +84,8 @@ namespace renderer
   private:
     RenderAPI *api = nullptr;
     TrConstellation *constellation = nullptr;
+    OpenGLHostContextStorage* glHostContext = nullptr;
     vector<TrContentRenderer> contentRenderers;
-    OpenGLHostContextStorage glHostContext;
 
   private: // fields for frame request
     ipc::TrOneShotServer<TrFrameRequestMessage> *frameRequestChanServer = nullptr;
@@ -100,7 +100,7 @@ namespace renderer
 
   private: // fields for senders management
     thread *chanSendersWatcher = nullptr;
-    recursive_mutex contentRendererMutex;
+    mutex contentRendererMutex;
 
   private: // fields for command buffer
     ipc::TrOneShotServer<TrCommandBufferMessage> *commandBufferChanServer = nullptr;

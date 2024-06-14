@@ -222,7 +222,7 @@ TrClientContextPerProcess *TrClientContextPerProcess::Get()
   return s_Instance;
 }
 
-TrClientContextPerProcess::TrClientContextPerProcess()
+TrClientContextPerProcess::TrClientContextPerProcess(): fontCacheManager(new font::FontCacheManager())
 {
 }
 
@@ -242,6 +242,13 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
   {
     delete frameChanReceiver;
     frameChanReceiver = nullptr;
+  }
+
+  // Clear for font cache
+  if (fontCacheManager != nullptr)
+  {
+    delete fontCacheManager;
+    fontCacheManager = nullptr;
   }
 
   // Clear for XR
@@ -299,6 +306,17 @@ void TrClientContextPerProcess::start()
                               { 
                                 SET_THREAD_NAME("TrFramesListener");
                                 this->onListenFrames(); });
+
+  // Start the service alive listener
+  serviceAliveListener = new thread([]()
+                                    {
+                                      SET_THREAD_NAME("TrServiceAliveListener");
+                                      while (true)
+                                      {
+                                        this_thread::sleep_for(chrono::seconds(1));
+                                        if (getppid() == 1)
+                                          exit(0);  // FIXME: more graceful exit?
+                                      } });
 }
 
 void TrClientContextPerProcess::print()
@@ -364,25 +382,24 @@ TrCommandBufferResponse *TrClientContextPerProcess::recvCommandBufferResponse(in
 
 font::FontCacheManager &TrClientContextPerProcess::getFontCacheManager()
 {
-  return fontCacheManager;
+  return *fontCacheManager;
 }
 
 void TrClientContextPerProcess::onListenFrames()
 {
   while (framesListenerRunning)
   {
-    auto frameRequestMsg = frameChanReceiver->tryRecv(-1);
-    if (frameRequestMsg == nullptr)
+    TrFrameRequestMessage frameRequestMsg;
+    if (!frameRequestMsg.deserialize(frameChanReceiver, -1))
       continue;
 
-    if (frameRequestMsg->getType() != TrFrameRequestType::AnimationFrame)
+    if (frameRequestMsg.getType() != TrFrameRequestType::AnimationFrame)
     {
-      delete frameRequestMsg;
+      DEBUG(LOG_TAG_CLIENT_ENTRY, "Received an invalid frame request message.");
       continue;
     }
 
-    auto frameRequest = TrFrameRequestBase::MakeFromMessage<TrAnimationFrameRequest>(*frameRequestMsg);
-    delete frameRequestMsg; // Deleting the message object after making the frame request object.
+    auto frameRequest = TrFrameRequestBase::MakeFromMessage<TrAnimationFrameRequest>(frameRequestMsg);
     if (frameRequest == nullptr)
       continue;
 
