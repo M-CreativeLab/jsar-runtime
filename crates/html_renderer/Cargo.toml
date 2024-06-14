@@ -1,0 +1,25 @@
+[package]
+name = "html_renderer"
+version = "1.0.0"
+authors = ["The JSAR Project Developers"]
+license = "Apache-2.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "html_renderer"
+path = "lib.rs"
+
+[dependencies]
+app_units = "0.7.5"
+atomic_refcell = { version = "0.1.13", features = ["serde"] }
+cssparser = { workspace = true }
+euclid = { workspace = true }
+html5ever = { workspace = true }
+selectors = { workspace = true }
+slab = { workspace = true }
+style = { workspace = true }
+style_config = { workspace = true }
+style_traits = { workspace = true }
+taffy = { workspace = true }
+url = { workspace = true }

@@ -21,6 +21,9 @@ extern "C"
     } RGBAColor;
     extern RGBAColor parse_csscolor(const char *color_str);
 
+    // HTML rendering functions
+    extern void render_html(const char *html_str);
+
     // JS exports
     napi_value jsbinding_htmlrender(napi_env env, napi_value exports);
 } // extern "C"

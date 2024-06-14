@@ -18,8 +18,10 @@ pub mod htmlrender;
 
 use cssparser::{Parser, ParserInput};
 use std::os::raw::{c_char, c_void};
+use html_renderer::DocumentHtmlParser;
 use style::context::QuirksMode;
 use style::font_face::Source;
+use style::media_queries::{Device, MediaType};
 use style::parser::{Parse, ParserContext};
 use style::properties::{
   parse_one_declaration_into, PropertyDeclarationBlock, PropertyId, ShorthandId,
@@ -112,4 +114,12 @@ extern "C" fn parse_csscolor(color_str: *const c_char) -> RGBAColor {
     }
     None => RGBAColor::new(0, 0, 0, 1),
   }
+}
+
+#[no_mangle]
+extern "C" fn render_html(html_str: *const c_char) {
+  let src: &str = unsafe { std::ffi::CStr::from_ptr(html_str) }
+    .to_str()
+    .expect("Failed to convert C string to Rust string");
+  html_renderer::render_html(src);
 }

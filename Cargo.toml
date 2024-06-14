@@ -24,6 +24,7 @@ fnv = "1.0"
 getopts = "0.2.11"
 gleam = "0.15"
 headers = "0.3"
+html5ever = "0.26.0"
 http = "0.2"
 hyper = "0.14"
 hyper-rustls = { version = "0.24", default-features = false, features = [
@@ -70,6 +71,7 @@ serde_json = "1.0"
 servo_arc = { git = "https://github.com/servo/stylo", branch = "2024-03-01" }
 servo_atoms = { git = "https://github.com/servo/stylo", branch = "2024-03-01" }
 size_of_test = { git = "https://github.com/servo/stylo", branch = "2024-03-01" }
+slab = "0.4.9"
 smallvec = "1.13"
 sparkle = "0.1.26"
 style = { git = "https://github.com/servo/stylo", branch = "2024-03-01", features = [
@@ -79,12 +81,14 @@ style_config = { git = "https://github.com/servo/stylo", branch = "2024-03-01" }
 style_traits = { git = "https://github.com/servo/stylo", branch = "2024-03-01", features = [
   "servo",
 ] }
+selectors = { git = "https://github.com/servo/stylo", branch = "2024-03-01" }
 surfman = "0.9.2"
 syn = { version = "2", default-features = false, features = [
   "clone-impls",
   "derive",
   "parsing",
 ] }
+taffy = { version = "0.5.1" }
 time = "0.1.41"
 to_shmem = { git = "https://github.com/servo/stylo", branch = "2024-03-01" }
 tokio = "1"
