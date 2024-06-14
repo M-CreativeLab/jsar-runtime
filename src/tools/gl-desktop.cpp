@@ -446,13 +446,13 @@ int main(int argc, char **argv)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     int viewsCount = xrEnabled ? 2 : 1;
-    for (int i = 0; i < viewsCount; i++)
+    for (int viewIndex = 0; viewIndex < viewsCount; viewIndex++)
     {
       TrViewport eyeViewport(
-          width / viewsCount,     // width
-          height,                 // height
-          i * width / viewsCount, // x
-          0                       // y
+          width / viewsCount,             // width
+          height,                         // height
+          viewIndex * width / viewsCount, // x
+          0                               // y
       );
       glViewport(eyeViewport.x, eyeViewport.y, eyeViewport.width, eyeViewport.height);
 
@@ -461,6 +461,18 @@ int main(int argc, char **argv)
       {
         glGetError(); // Clear the error
         embedder->getRenderer()->setViewport(eyeViewport);
+
+        /**
+         * Configure XR frame data.
+         */
+        if (xrEnabled)
+        {
+          float viewMatrix[16] = {0};
+          float projectionMatrix[16] = {0};
+          auto xrDevice = embedder->getXrDevice();
+          xrDevice->updateViewerStereoViewMatrix(viewIndex, viewMatrix);
+          xrDevice->updateViewerStereoProjectionMatrix(viewIndex, projectionMatrix);
+        }
         embedder->onFrame();
       }
     }

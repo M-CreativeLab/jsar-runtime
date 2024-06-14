@@ -395,7 +395,7 @@ void TrClientContextPerProcess::onListenFrames()
 
     if (frameRequestMsg.getType() != TrFrameRequestType::AnimationFrame)
     {
-      DEBUG(LOG_TAG_CLIENT_ENTRY, "Received an invalid frame request message.");
+      DEBUG(LOG_TAG_CLIENT_ENTRY, "Received an invalid frame request message, type=%d.", frameRequestMsg.getType());
       continue;
     }
 
