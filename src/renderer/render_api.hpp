@@ -12,7 +12,6 @@
 #include "common/command_buffers/base.hpp"
 #include "common/command_buffers/command_buffers.hpp"
 #include "common/command_buffers/webgl_constants.hpp"
-#include "runtime/content.hpp"
 #include "xr/device.hpp"
 
 #define TR_RENDERAPI_TAG "TR_RAPI" // Transmute Render API
@@ -61,12 +60,6 @@ public:
   virtual void Clear(uint32_t mask) = 0;
   virtual void Enable(uint32_t cap) = 0;
 
-  virtual void StartFrame() = 0;
-  virtual void EndFrame() = 0;
-
-  virtual void StartXRFrame() = 0;
-  virtual void EndXRFrame() = 0;
-
   /**
    * Executing the frame function
    */
@@ -78,7 +71,7 @@ public:
    */
   virtual bool ExecuteCommandBuffer(
       vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
-      TrContentRuntime *content,
+      renderer::TrContentRenderer *content,
       xr::DeviceFrame *deviceFrame,
       bool isDefaultQueue) = 0;
 
@@ -166,7 +159,10 @@ private:
   size_t m_GpuBusyHitCount = 0;
   chrono::steady_clock::time_point m_LastFrameTime;
   chrono::microseconds m_DeltaTimeDuration;
+
+protected:
   TrConstellation *constellation = nullptr;
+  renderer::TrRenderer *renderer = nullptr;
 };
 
 // Create a graphics API implementation instance for the given API type.

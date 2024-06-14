@@ -8,4 +8,5 @@ class TrContentRuntime;
 namespace renderer
 {
   class TrRenderer;
+  class TrContentRenderer;
 }

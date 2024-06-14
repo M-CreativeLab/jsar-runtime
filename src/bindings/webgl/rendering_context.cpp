@@ -1,5 +1,4 @@
 #include "rendering_context.hpp"
-#include "renderer/render_api.hpp"
 #include "../canvas/image_bitmap.hpp"
 #include "../canvas/image_data.hpp"
 #include "../canvas/canvas.hpp"
@@ -2943,7 +2942,9 @@ namespace webgl
 
     if (x < 0 || y < 0 || width < 0 || height < 0)
     {
-      Napi::TypeError::New(env, "viewport() arguments must be positive.").ThrowAsJavaScriptException();
+      string msg = "viewport() arguments must be positive. x: " + std::to_string(x) + ", y: " + std::to_string(y) +
+                   ", width: " + std::to_string(width) + ", height: " + std::to_string(height);
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!viewport.isEqual(width, height, x, y))

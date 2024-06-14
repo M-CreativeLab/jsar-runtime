@@ -2,14 +2,12 @@
 
 #include <assert.h>
 #include "runtime/platform_base.hpp"
-#include "renderer/render_api.hpp"
 #include "debug.hpp"
 
 #if SUPPORT_OPENGL_UNIFIED
-
 #if UNITY_IOS || UNITY_TVOS
-#include <OpenGLES/ES3/gl.h>
-#include <OpenGLES/ES3/glext.h>
+// #include <OpenGLES/ES3/gl3.h>
+// #include <OpenGLES/ES3/gl3ext.h>
 #elif UNITY_ANDROID || UNITY_WEBGL
 // On Android and WebGL, use GLES 3.0
 // See: https://android.googlesource.com/platform/frameworks/native/+/kitkat-release/opengl/include
@@ -18,6 +16,7 @@
 #include <EGL/egl.h>
 #elif UNITY_OSX
 #include <OpenGL/gl3.h>
+#include <OpenGL/gl3ext.h>
 #elif UNITY_WIN
 // On Windows, use gl3w to initialize and load OpenGL Core functions. In principle any other
 // library (like GLEW, GLFW etc.) can be used; here we use gl3w since it's simple and

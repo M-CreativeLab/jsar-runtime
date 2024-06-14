@@ -94,16 +94,10 @@ public:
   void Clear(uint32_t mask) {}
   void Enable(uint32_t cap) {}
 
-  void StartFrame() {}
-  void EndFrame() {}
-
-  void StartXRFrame() {}
-  void EndXRFrame() {}
-
   bool ExecuteCommandBuffer() { return true; }
   bool ExecuteCommandBuffer(
       vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
-      TrContentRuntime *content, xr::DeviceFrame *deviceFrame,
+      renderer::TrContentRenderer *contentRenderer, xr::DeviceFrame *deviceFrame,
       bool isDefaultQueue) {
     return true;
   }

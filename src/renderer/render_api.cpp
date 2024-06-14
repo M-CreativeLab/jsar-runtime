@@ -4,6 +4,7 @@
 #include "render_api.hpp"
 #include "runtime/platform_base.hpp"
 #include "runtime/constellation.hpp"
+#include "runtime/content.hpp"
 #include "xr/frame.hpp"
 
 RenderAPI *RenderAPI::s_instance = NULL;
@@ -14,123 +15,125 @@ RenderAPI *RenderAPI::Create(UnityGfxRenderer apiType, TrConstellation* constell
 
 	s_instance = CreateRenderAPI(apiType);
 	s_instance->constellation = constellation;
+	s_instance->renderer = constellation->getRenderer();
 	return s_instance;
 }
 
 FrameExecutionCode RenderAPI::ExecuteFrame()
 {
-	// auto jsRenderLoop = renderer::RenderLoop::GetInstance();
-	// if (jsRenderLoop == nullptr)
+	// // auto jsRenderLoop = renderer::RenderLoop::GetInstance();
+	// // if (jsRenderLoop == nullptr)
+	// // 	return kFrameExecutionNotInitialized;
+	// // if (!jsRenderLoop->isAvailable())
+	// // 	return kFrameExecutionNotAvailable;
+
+	// auto device = constellation->getXrDevice();
+	// if (device == nullptr)
 	// 	return kFrameExecutionNotInitialized;
-	// if (!jsRenderLoop->isAvailable())
-	// 	return kFrameExecutionNotAvailable;
 
-	auto device = constellation->getXrDevice();
-	if (device == nullptr)
-		return kFrameExecutionNotInitialized;
+	// OnFrameStarted();
 
-	OnFrameStarted();
+	// /**
+	//  * When we detect the GPU is busy over 10 times, we should just stop the frame execution.
+	//  */
+	// if (CheckGpuBusyStatus() && m_GpuBusyHitCount > 20)
+	// {
+	// 	DEBUG(TR_RENDERAPI_TAG, "Skipped this time of frame, because the GPU busy is busy over 20 times, hit count=%d",
+	// 				m_GpuBusyHitCount);
+	// 	// jsRenderLoop->reportException(kFrameExecutionGpuBusy);
+	// 	return kFrameExecutionGpuBusy;
+	// }
 
-	/**
-	 * When we detect the GPU is busy over 10 times, we should just stop the frame execution.
-	 */
-	if (CheckGpuBusyStatus() && m_GpuBusyHitCount > 20)
-	{
-		DEBUG(TR_RENDERAPI_TAG, "Skipped this time of frame, because the GPU busy is busy over 20 times, hit count=%d",
-					m_GpuBusyHitCount);
-		// jsRenderLoop->reportException(kFrameExecutionGpuBusy);
-		return kFrameExecutionGpuBusy;
-	}
+	// auto frameStart = std::chrono::high_resolution_clock::now();
+	// // StartFrame();
+	// device->startHostFrame();
 
-	auto frameStart = std::chrono::high_resolution_clock::now();
-	StartFrame();
-	device->startHostFrame();
+	// auto frameStartedAt = std::chrono::high_resolution_clock::now();
+	// auto skipFrameOnScript = device->skipHostFrameOnScript();
 
-	auto frameStartedAt = std::chrono::high_resolution_clock::now();
-	auto skipFrameOnScript = device->skipHostFrameOnScript();
+	// /**
+	//  * Dispatch the frame callbacks to the JavaScript side.
+	//  */
+	// if (!skipFrameOnScript)
+	// {
+	// 	// jsRenderLoop->onAnimationFrame(frameStartedAt);
+	// }
+	// // Executing the command buffers in the default queue.
+	// // ExecuteCommandBuffer();
 
-	/**
-	 * Dispatch the frame callbacks to the JavaScript side.
-	 */
-	if (!skipFrameOnScript)
-	{
-		// jsRenderLoop->onAnimationFrame(frameStartedAt);
-	}
-	// Executing the command buffers in the default queue.
-	// ExecuteCommandBuffer();
+	// /** Start the XR frames */
+	// if (device->enabled() && device->getStereoRenderingMode() == xr::TrStereoRenderingMode::MultiPass)
+	// {
+	// 	int stereoId = -1;
+	// 	auto eyeId = device->getActiveEyeId();
+	// 	auto stereoRenderingFrame = device->createOrGetStereoRenderingFrame();
+	// 	if (stereoRenderingFrame != nullptr)
+	// 		stereoId = stereoRenderingFrame->getId();
 
-	/** Start the XR frames */
-	if (device->enabled() && device->getStereoRenderingMode() == xr::TrStereoRenderingMode::MultiPass)
-	{
-		int stereoId = -1;
-		auto eyeId = device->getActiveEyeId();
-		auto stereoRenderingFrame = device->createOrGetStereoRenderingFrame();
-		if (stereoRenderingFrame != nullptr)
-			stereoId = stereoRenderingFrame->getId();
+	// 	/**
+	// 	 * Update viewport for current eye
+	// 	 */
+	// 	device->updateViewport(
+	// 			eyeId,
+	// 			// m_Viewport is updated at `StartFrame()`.
+	// 			m_Viewport[0], // x
+	// 			m_Viewport[1], // y
+	// 			m_Viewport[2], // width
+	// 			m_Viewport[3]	 // height
+	// 	);
 
-		/**
-		 * Update viewport for current eye
-		 */
-		device->updateViewport(
-				eyeId,
-				// m_Viewport is updated at `StartFrame()`.
-				m_Viewport[0], // x
-				m_Viewport[1], // y
-				m_Viewport[2], // width
-				m_Viewport[3]	 // height
-		);
+	// 	/**
+	// 	 * Create a new device frame that will be used by js render loop
+	// 	 */
+	// 	auto deviceFrame = new xr::MultiPassFrame(device, eyeId, stereoId);
+	// 	auto sessionIds = device->getSessionIds();
+	// 	if (sessionIds.size() > 0)
+	// 	{
+	// 		for (auto id : sessionIds)
+	// 		{
+	// 			auto context = deviceFrame->addSession(id);
+	// 			context->setLocalTransform(device->getLocalTransform(id));
+	// 		}
+	// 		if (!skipFrameOnScript && stereoRenderingFrame != nullptr)
+	// 		{
+	// 			stereoRenderingFrame->available(true);
+	// 			device->onXRFrame(deviceFrame);
+	// 		}
+	// 	}
 
-		/**
-		 * Create a new device frame that will be used by js render loop
-		 */
-		auto deviceFrame = new xr::MultiPassFrame(device, eyeId, stereoId);
-		auto sessionIds = device->getSessionIds();
-		if (sessionIds.size() > 0)
-		{
-			for (auto id : sessionIds)
-			{
-				auto context = deviceFrame->addSession(id);
-				context->setLocalTransform(device->getLocalTransform(id));
-			}
-			if (!skipFrameOnScript && stereoRenderingFrame != nullptr)
-			{
-				stereoRenderingFrame->available(true);
-				device->onXRFrame(deviceFrame);
-			}
-		}
+	// 	DEBUG(TR_RENDERAPI_TAG, "-------------------------------");
+	// 	DEBUG(TR_RENDERAPI_TAG, "Execute XR Frame: eye=%d, stereoId=%d", eyeId, stereoId);
+	// 	DEBUG(TR_RENDERAPI_TAG, "-------------------------------");
+	// 	StartXRFrame();
+	// 	// device->executeStereoRenderingFrames(eyeId, [this, deviceFrame](int stereoIdOfFrame, vector<commandbuffers::TrCommandBufferBase *> &commandBuffers)
+	// 	// 																		 {
+	// 	// 																			 DEBUG(TR_RENDERAPI_TAG, "Start executing Stereo Rendering Frame(id=%d)", stereoIdOfFrame);
+	// 	// 																			 return ExecuteCommandBuffer(commandBuffers, deviceFrame, false);
+	// 	// 																			 // end
+	// 	// 																		 });
+	// 	EndXRFrame();
+	// 	device->endHostFrame();
 
-		DEBUG(TR_RENDERAPI_TAG, "-------------------------------");
-		DEBUG(TR_RENDERAPI_TAG, "Execute XR Frame: eye=%d, stereoId=%d", eyeId, stereoId);
-		DEBUG(TR_RENDERAPI_TAG, "-------------------------------");
-		StartXRFrame();
-		// device->executeStereoRenderingFrames(eyeId, [this, deviceFrame](int stereoIdOfFrame, vector<commandbuffers::TrCommandBufferBase *> &commandBuffers)
-		// 																		 {
-		// 																			 DEBUG(TR_RENDERAPI_TAG, "Start executing Stereo Rendering Frame(id=%d)", stereoIdOfFrame);
-		// 																			 return ExecuteCommandBuffer(commandBuffers, deviceFrame, false);
-		// 																			 // end
-		// 																		 });
-		EndXRFrame();
-		device->endHostFrame();
+	// 	DEBUG(TR_RENDERAPI_TAG, "--------- End XR Frame ---------");
+	// 	// end
+	// }
 
-		DEBUG(TR_RENDERAPI_TAG, "--------- End XR Frame ---------");
-		// end
-	}
+	// /** End frames */
+	// auto xrFrameEnd = std::chrono::high_resolution_clock::now();
+	// EndFrame();
 
-	/** End frames */
-	auto xrFrameEnd = std::chrono::high_resolution_clock::now();
-	EndFrame();
-
-	auto frameEnd = std::chrono::high_resolution_clock::now();
-	auto totalDuration = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - frameStart);
-	auto startDuration = std::chrono::duration_cast<std::chrono::microseconds>(frameStartedAt - frameStart);
-	auto xrFrameDuration = std::chrono::duration_cast<std::chrono::microseconds>(xrFrameEnd - frameStartedAt);
-	auto endDuration = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - xrFrameEnd);
-	DEBUG(TR_RENDERAPI_TAG, "Frame execution time: total=%ldus, start_frame=%ldus, xrframe=%ldus, end_frame=%ldus, draw_calls=%d",
-				totalDuration.count(),
-				startDuration.count(),
-				xrFrameDuration.count(),
-				endDuration.count(),
-				m_DrawCallCountPerFrame);
+	// auto frameEnd = std::chrono::high_resolution_clock::now();
+	// auto totalDuration = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - frameStart);
+	// auto startDuration = std::chrono::duration_cast<std::chrono::microseconds>(frameStartedAt - frameStart);
+	// auto xrFrameDuration = std::chrono::duration_cast<std::chrono::microseconds>(xrFrameEnd - frameStartedAt);
+	// auto endDuration = std::chrono::duration_cast<std::chrono::microseconds>(frameEnd - xrFrameEnd);
+	// DEBUG(TR_RENDERAPI_TAG, "Frame execution time: total=%ldus, start_frame=%ldus, xrframe=%ldus, end_frame=%ldus, draw_calls=%d",
+	// 			totalDuration.count(),
+	// 			startDuration.count(),
+	// 			xrFrameDuration.count(),
+	// 			endDuration.count(),
+	// 			m_DrawCallCountPerFrame);
+	// return kFrameExecutionSuccess;
 	return kFrameExecutionSuccess;
 }
 

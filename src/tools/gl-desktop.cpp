@@ -15,6 +15,7 @@
 #include <skia/include/core/SkPaint.h>
 
 #include "../runtime/embedder.hpp"
+#include "../runtime/content.hpp"
 #include "../renderer/render_api.hpp"
 #include "../common/xr/types.hpp"
 #include "../common/font/cache.hpp"

@@ -75,9 +75,15 @@ void TrContentRuntime::start(TrXSMLRequestInit init)
     return;
   }
   else if (pid == 0)
+  {
     onClientProcess();
+  }
   else
+  {
+    auto renderer = contentManager->constellation->getRenderer();
+    renderer->addContentRenderer(this);
     DEBUG(LOG_TAG_CONTENT, "The client process(%d) is started.", pid);
+  }
 }
 
 void TrContentRuntime::pause()

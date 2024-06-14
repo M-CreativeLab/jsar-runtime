@@ -89,7 +89,6 @@ endif()
 tr_target_set_properties(TransmuteCore)
 tr_target_install(TransmuteCore)
 
-
 # Add examples
 # TODO: move to a separate TransmuteExample.cmake?
 function(tr_add_example EXECUTABLE_NAME SOURCE_FILE)

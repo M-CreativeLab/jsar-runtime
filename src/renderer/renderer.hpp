@@ -12,6 +12,9 @@
 #include "common/frame_request/types.hpp"
 #include "xr/device.hpp"
 
+#include "./gles/context_storage.hpp"
+#include "./content_renderer.hpp"
+
 using namespace std;
 using namespace commandbuffers;
 using namespace frame_request;
@@ -28,7 +31,7 @@ namespace renderer
 
   public:
     void initialize();
-    void tickOnAnimationFrame();
+    void tick();
     void shutdown();
     void setLogFilter(string filterExpr);
     uint32_t getFps();
@@ -37,6 +40,35 @@ namespace renderer
     uint32_t getCommandBufferChanPort();
     void removeCommandBufferChanClient(ipc::TrOneShotClient<TrCommandBufferMessage> *client);
     void setApi(RenderAPI *api);
+    RenderAPI *getApi();
+    OpenGLHostContextStorage& getOpenGLContext();
+
+  public: // API for content renderer
+    /**
+     * Create a new content renderer and add it to the renderer, if the content has been added, it will be replaced.
+     *
+     * @param content The content to be rendered.
+     */
+    void addContentRenderer(TrContentRuntime *content);
+    /**
+     * Find the content renderer by the content pid.
+     *
+     * @param contentPid The pid of the content.
+     * @returns The content renderer if found, otherwise nullptr.
+     */
+    TrContentRenderer *findContentRenderer(pid_t contentPid);
+    /**
+     * Remove the content renderer by the content pointer.
+     *
+     * @param content The content to be removed.
+     */
+    void removeContentRenderer(TrContentRuntime *content);
+    /**
+     * Remove the content renderer by the content pid.
+     *
+     * @param contentPid The pid of the content.
+     */
+    void removeContentRenderer(pid_t contentPid);
 
   public: // API for host update
     void setViewport(TrViewport &viewport);
@@ -44,19 +76,19 @@ namespace renderer
     void setTime(float time); // might be deprecated
 
   private:
-    void sendAnimationFrameRequest();
     void startWatchers();
     void stopWatchers();
-    void executeCommandBuffers();
+    void executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *>& commandBuffers, TrContentRenderer *contentRenderer);
     void calcFps(chrono::steady_clock::time_point now);
 
   private:
     RenderAPI *api = nullptr;
     TrConstellation *constellation = nullptr;
+    vector<TrContentRenderer> contentRenderers;
+    OpenGLHostContextStorage glHostContext;
 
-  private:
+  private: // fields for frame request
     ipc::TrOneShotServer<TrFrameRequestMessage> *frameRequestChanServer = nullptr;
-    vector<ipc::TrChannelSender<TrFrameRequestMessage> *> animationFrameChanSenders;
     atomic<bool> watcherRunning = false; // This is shared by all the watchers.
 
   private: // fields for frame rate calculation
@@ -68,10 +100,12 @@ namespace renderer
 
   private: // fields for senders management
     thread *chanSendersWatcher = nullptr;
-    mutex chanSendersMutex;
+    recursive_mutex contentRendererMutex;
 
   private: // fields for command buffer
     ipc::TrOneShotServer<TrCommandBufferMessage> *commandBufferChanServer = nullptr;
     thread *commandBufferClientWatcher = nullptr;
+
+    friend class TrContentRenderer;
   };
 }

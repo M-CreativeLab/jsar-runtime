@@ -1,7 +1,9 @@
+#include <assert.h>
 #include "renderer.hpp"
 #include "render_api.hpp"
 #include "runtime/constellation.hpp"
 #include "runtime/content.hpp"
+#include "./content_renderer.hpp"
 
 namespace renderer
 {
@@ -18,9 +20,7 @@ namespace renderer
     api = nullptr;
     constellation = nullptr;
     delete frameRequestChanServer;
-    for (auto sender : animationFrameChanSenders)
-      delete sender;
-    animationFrameChanSenders.clear();
+    delete commandBufferChanServer;
   }
 
   void TrRenderer::initialize()
@@ -30,53 +30,56 @@ namespace renderer
     startWatchers();
   }
 
-  void TrRenderer::tickOnAnimationFrame()
+  void TrRenderer::tick()
   {
-    auto xrDevice = constellation->getXrDevice();
-    if (xrDevice == nullptr)
-      return;
+    calcFps(std::chrono::high_resolution_clock::now());
 
-    auto beforeStarting = std::chrono::high_resolution_clock::now();
-    calcFps(beforeStarting);
-    api->StartFrame();
-
-    auto startedAt = std::chrono::high_resolution_clock::now();
-    auto skipFrameOnScript = xrDevice->skipHostFrameOnScript();
-
-    if (!skipFrameOnScript)
-      sendAnimationFrameRequest();
-    executeCommandBuffers();
-
-    if (xrDevice->enabled())
+    glHostContext.Record();
     {
-      xrDevice->startHostFrame(); // Start XR frame
-      if (xrDevice->getStereoRenderingMode() == xr::TrStereoRenderingMode::MultiPass)
-      {
-        int stereoId = -1;
-        auto eyeId = xrDevice->getActiveEyeId();
-        auto stereoRenderingFrame = xrDevice->createOrGetStereoRenderingFrame();
-        if (stereoRenderingFrame != nullptr)
-          stereoId = stereoRenderingFrame->getId();
-
-        auto viewport = api->GetViewport();
-        xrDevice->updateViewport(eyeId, viewport[0], viewport[1], viewport[2], viewport[3]);
-
-        /**
-         * Create a new device frame that will be used by JavaScript render loop
-         */
-        auto deviceFrame = new xr::MultiPassFrame(xrDevice, eyeId, stereoId);
-        auto sessionIds = xrDevice->getSessionIds();
-        // TODO: execute frames
-      }
-      else
-      {
-        // TODO: Support singlepass?
-      }
-      xrDevice->endHostFrame(); // End XR frame
+      lock_guard<recursive_mutex> lock(contentRendererMutex);
+      for (auto contentRenderer : contentRenderers)
+        contentRenderer.onHostFrame();
     }
+    glHostContext.Restore();
 
-    auto xrFrameEndedAt = std::chrono::high_resolution_clock::now();
-    api->EndFrame();
+    // api->StartFrame();
+    // auto startedAt = std::chrono::high_resolution_clock::now();
+    // auto skipFrameOnScript = xrDevice->skipHostFrameOnScript();
+
+    // if (!skipFrameOnScript)
+    //   sendAnimationFrameRequest();
+    // executeCommandBuffers();
+
+    // if (xrDevice->enabled())
+    // {
+    //   xrDevice->startHostFrame(); // Start XR frame
+    //   if (xrDevice->getStereoRenderingMode() == xr::TrStereoRenderingMode::MultiPass)
+    //   {
+    //     int stereoId = -1;
+    //     auto eyeId = xrDevice->getActiveEyeId();
+    //     auto stereoRenderingFrame = xrDevice->createOrGetStereoRenderingFrame();
+    //     if (stereoRenderingFrame != nullptr)
+    //       stereoId = stereoRenderingFrame->getId();
+
+    //     auto viewport = api->GetViewport();
+    //     xrDevice->updateViewport(eyeId, viewport[0], viewport[1], viewport[2], viewport[3]);
+
+    //     /**
+    //      * Create a new device frame that will be used by JavaScript render loop
+    //      */
+    //     auto deviceFrame = new xr::MultiPassFrame(xrDevice, eyeId, stereoId);
+    //     auto sessionIds = xrDevice->getSessionIds();
+    //     // TODO: execute frames
+    //   }
+    //   else
+    //   {
+    //     // TODO: Support singlepass?
+    //   }
+    //   xrDevice->endHostFrame(); // End XR frame
+    // }
+
+    // auto xrFrameEndedAt = std::chrono::high_resolution_clock::now();
+    // api->EndFrame();
   }
 
   void TrRenderer::shutdown()
@@ -125,6 +128,65 @@ namespace renderer
     this->api->EnableXRFrameLog();
   }
 
+  RenderAPI *TrRenderer::getApi()
+  {
+    return api;
+  }
+
+  OpenGLHostContextStorage &TrRenderer::getOpenGLContext()
+  {
+    return glHostContext;
+  }
+
+  void TrRenderer::addContentRenderer(TrContentRuntime *content)
+  {
+    lock_guard<recursive_mutex> lock(contentRendererMutex);
+    if (content == nullptr || findContentRenderer(content->pid) != nullptr)
+      return;
+    removeContentRenderer(content->pid); // Remove the old content renderer if it exists.
+    contentRenderers.push_back(TrContentRenderer(content, constellation));
+  }
+
+  TrContentRenderer *TrRenderer::findContentRenderer(pid_t contentPid)
+  {
+    lock_guard<recursive_mutex> lock(contentRendererMutex);
+    for (auto &contentRenderer : contentRenderers)
+    {
+      if (contentRenderer.content->pid == contentPid)
+        return &contentRenderer;
+    }
+    return nullptr;
+  }
+
+  void TrRenderer::removeContentRenderer(TrContentRuntime *content)
+  {
+    lock_guard<recursive_mutex> lock(contentRendererMutex);
+    if (content == nullptr || contentRenderers.size() == 0)
+      return;
+    for (auto it = contentRenderers.begin(); it != contentRenderers.end(); it++)
+    {
+      if (it->content == content)
+      {
+        contentRenderers.erase(it);
+        break;
+      }
+    }
+  }
+
+  void TrRenderer::removeContentRenderer(pid_t contentPid)
+  {
+    if (contentRenderers.size() == 0)
+      return;
+    for (auto it = contentRenderers.begin(); it != contentRenderers.end(); it++)
+    {
+      if (it->content->pid == contentPid)
+      {
+        contentRenderers.erase(it);
+        break;
+      }
+    }
+  }
+
   void TrRenderer::setViewport(TrViewport &viewport)
   {
     api->SetViewport(viewport.width, viewport.height, viewport.x, viewport.y);
@@ -140,29 +202,21 @@ namespace renderer
     api->SetTime(time);
   }
 
-  void TrRenderer::sendAnimationFrameRequest()
-  {
-    lock_guard<mutex> lock(chanSendersMutex);
-    TrAnimationFrameRequest animationFrameRequest;
-    auto msg = animationFrameRequest.serialize();
-    for (auto sender : animationFrameChanSenders)
-      sender->send(*msg);
-    delete msg;
-  }
-
   void TrRenderer::startWatchers()
   {
     watcherRunning = true;
     chanSendersWatcher = new thread([this]()
                                     {
-      SET_THREAD_NAME("TrAnimationFrameWatcher");
+      SET_THREAD_NAME("TrFrameRequestWatcher");
       while (watcherRunning)
       {
         auto newClient = frameRequestChanServer->tryAccept(-1);
         if (newClient != nullptr)
         {
-          lock_guard<mutex> lock(chanSendersMutex);
-          animationFrameChanSenders.push_back(new ipc::TrChannelSender<TrFrameRequestMessage>(newClient));
+          lock_guard<recursive_mutex> lock(contentRendererMutex);
+          auto contentRenderer = findContentRenderer(newClient->getPid());
+          assert(contentRenderer != nullptr);
+          contentRenderer->resetFrameRequestChanSender(new ipc::TrChannelSender<TrFrameRequestMessage>(newClient));
         }
       } });
     commandBufferClientWatcher = new thread([this]()
@@ -199,19 +253,10 @@ namespace renderer
     }
   }
 
-  void TrRenderer::executeCommandBuffers()
+  void TrRenderer::executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
+                                         TrContentRenderer *contentRenderer)
   {
-    auto contentManager = constellation->getContentManager();
-    for (auto content : contentManager->contents)
-    {
-      vector<commandbuffers::TrCommandBufferBase *> commandBufferRequests;
-      {
-        lock_guard<mutex> lock(content->commandBufferRequestsMutex);
-        commandBufferRequests = content->commandBufferRequests;
-        content->commandBufferRequests.clear();
-      }
-      api->ExecuteCommandBuffer(commandBufferRequests, content, nullptr, true);
-    }
+    api->ExecuteCommandBuffer(commandBuffers, contentRenderer, nullptr, true);
   }
 
   void TrRenderer::calcFps(chrono::steady_clock::time_point now)

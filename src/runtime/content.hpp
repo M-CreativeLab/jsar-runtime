@@ -115,6 +115,7 @@ private:
 
   friend class TrContentManager;
   friend class renderer::TrRenderer;
+  friend class renderer::TrContentRenderer;
 };
 
 /**

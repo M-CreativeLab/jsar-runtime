@@ -85,7 +85,7 @@ void TrConstellation::tick()
   if (contentManager != nullptr)
     contentManager->tickOnFrame();
   if (renderer != nullptr)
-    renderer->tickOnAnimationFrame();
+    renderer->tick();
 }
 
 TrEventTarget *TrConstellation::getNativeEventTarget()

@@ -2,7 +2,9 @@
 
 #include <string>
 #include <map>
-#include "common.hpp"
+
+#include "common/viewport.hpp"
+#include "./common.hpp"
 
 class OpenGLTextureBinding
 {
