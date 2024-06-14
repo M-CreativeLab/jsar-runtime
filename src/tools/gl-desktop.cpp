@@ -103,7 +103,7 @@ public:
   StatPanel(int width, int height) : width(width), height(height)
   {
     initGLProgram();
-    initCanvas();
+    resetCanvas();
 
     if (glGetError() != GL_NO_ERROR)
       printf("OpenGL error on init\n");
@@ -117,8 +117,16 @@ public:
     glDeleteTextures(1, &texture);
   }
 
+  void resize(int width, int height)
+  {
+    this->width = width;
+    this->height = height;
+    resetCanvas();
+  }
+
   void initGLProgram()
   {
+    glViewport(0, 0, width, height);
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
@@ -166,7 +174,7 @@ public:
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
-  void initCanvas()
+  void resetCanvas()
   {
     auto imageInfo = SkImageInfo::MakeN32Premul(width, height);
     surface = SkSurfaces::Raster(imageInfo);
@@ -187,6 +195,7 @@ public:
 public:
   void render()
   {
+    glViewport(0, 0, width, height);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -203,11 +212,10 @@ public:
   }
   void uploadCanvas()
   {
-    // clear canvas
-    surface->getCanvas()->clear(SK_ColorTRANSPARENT);
+    auto skCanvas = surface->getCanvas();
+    skCanvas->clear(SK_ColorTRANSPARENT);
 
     // draw fps
-    auto skCanvas = surface->getCanvas();
     string fpsStr = "   Fps: " + to_string(fps);
     auto textBlob = SkTextBlob::MakeFromString(fpsStr.c_str(), textFont);
     skCanvas->drawTextBlob(textBlob, 30, 35, textPaint);
@@ -315,12 +323,19 @@ int main(int argc, char **argv)
   if (optind < argc)
     requestUrl = string(argv[optind]);
 
+  /**
+   * The canvas size does not fit with the physical size, so we need to save the logical size as canvas.
+   */
+  int canvasWidth = width;
+  int canvasHeight = height;
+
   GLFWwindow *window = glfwCreateWindow(width, height, "JSAR Browser", NULL, NULL);
   if (!window)
   {
     glfwTerminate();
     return 1;
   }
+  glfwGetFramebufferSize(window, &width, &height); // update width and height to pyhsical size
 
   embedder = new DesktopEmbedder();
   assert(embedder != nullptr);
@@ -365,7 +380,6 @@ int main(int argc, char **argv)
   }
 
   glfwMakeContextCurrent(window);
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
   unsigned int vertexShader;
   vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -427,7 +441,16 @@ int main(int argc, char **argv)
   glBindVertexArray(0);
 
   // Create panel(screen-space)
-  auto panel = StatPanel(width, height);
+  auto panel = StatPanel(canvasWidth, canvasHeight);
+
+  // Set resize callback
+  glfwSetWindowUserPointer(window, &panel); // Set glfw window's user pointer to the panel, which will be used in the resize callback
+  glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
+    StatPanel* panel = reinterpret_cast<StatPanel*>(glfwGetWindowUserPointer(window));
+    panel->resize(width, height);
+    glfwGetFramebufferSize(window, &width, &height);
+    glViewport(0, 0, width, height);  // TODO: update app's viewport.
+  });
 
   bool initialized = false;
   while (!glfwWindowShouldClose(window))
@@ -460,7 +483,6 @@ int main(int argc, char **argv)
       if (embedder != nullptr)
       {
         glGetError(); // Clear the error
-        embedder->getRenderer()->setViewport(eyeViewport);
 
         /**
          * Configure XR frame data.
@@ -472,13 +494,13 @@ int main(int argc, char **argv)
           auto xrDevice = embedder->getXrDevice();
           xrDevice->updateViewerStereoViewMatrix(viewIndex, viewMatrix);
           xrDevice->updateViewerStereoProjectionMatrix(viewIndex, projectionMatrix);
+          embedder->getRenderer()->setViewport(eyeViewport);
         }
         embedder->onFrame();
       }
     }
 
     // render screen-space panel
-    glViewport(0, 0, width, height);
     panel.render();
 
     glfwSwapBuffers(window);
