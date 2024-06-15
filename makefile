@@ -29,15 +29,15 @@ jsbundle:
 
 darwin: crates
 	@echo "Building for darwin(JOBS=${JOBS})..."
-	make -C ./build -j${JOBS} darwin
+	make -C ./build darwin JOBS=${JOBS}
 
 android: crates
 	@echo "Building for android(JOBS=${JOBS})..."
-	make -C ./build -j${JOBS} android
+	make -C ./build android JOBS=${JOBS}
 
 windows: crates
 	@echo "Building for windows(JOBS=${JOBS})..."
-	make -C ./build -j${JOBS} windows
+	make -C ./build windows JOBS=${JOBS}
 
 all: jsbundle crates darwin android
 

@@ -38,6 +38,12 @@ $ make android # for Android aarch64 library
 $ make windows # for Windows x86_64 library
 ```
 
+If you want to do a clean build, you can run:
+
+```sh
+$ make darwin clean=yes
+```
+
 ## Loaders
 
 - [jsar-loader-unity](https://github.com/M-CreativeLab/jsar-loader-unity)

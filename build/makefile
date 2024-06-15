@@ -1,12 +1,25 @@
+JOBS ?= 1
+
+define CLEAN_AND_RECONFIGURE
+	rm -rf targets/$1
+	sh ./configure-$1.sh
+endef
+
+define BUILD_INSTALL
+	make -C targets/$1 -j${JOBS} install
+endef
+
 darwin:
-	rm -rf targets/darwin
-	sh ./configure-darwin.sh
-	make -C targets/darwin -j${JOBS} install
+ifdef clean
+	$(call CLEAN_AND_RECONFIGURE,darwin)
+endif
+	$(call BUILD_INSTALL,darwin)
 
 android:
-	rm -rf targets/android
-	sh ./configure-android.sh
-	make -C targets/android -j${JOBS} install
+ifdef clean
+	$(call CLEAN_AND_RECONFIGURE,android)
+endif
+	$(call BUILD_INSTALL,android)
 
 windows:
 	cmake -DCMAKE_BUILD_TYPE=Release -B targets/windows ..

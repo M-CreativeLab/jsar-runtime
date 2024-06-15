@@ -75,6 +75,55 @@ public:
 };
 static DesktopEmbedder *embedder = nullptr;
 
+class StatPanel;
+void onFramebufferSizeChanged(GLFWwindow *window, int width, int height);
+
+/**
+ * The window context for rendering.
+ */
+class WindowContext
+{
+public:
+  WindowContext(int width, int height) : width(width), height(height)
+  {
+    window = glfwCreateWindow(width, height, title().c_str(), NULL, NULL);
+    if (!window)
+    {
+      glfwTerminate();
+      terminated = true;
+    }
+    else
+    {
+      glfwGetWindowContentScale(window, &contentScaling[0], &contentScaling[1]);
+      glfwSetWindowUserPointer(window, this);
+      glfwSetFramebufferSizeCallback(window, onFramebufferSizeChanged);
+    }
+  }
+
+public:
+  bool isTerminated() { return terminated; }
+  TrViewport drawingViewport()
+  {
+    return TrViewport(width * contentScaling[0], height * contentScaling[1]);
+  }
+  string title()
+  {
+    string baseTitle = "JSAR Browser";
+    return baseTitle + " (" + to_string(width) + "x" + to_string(height) + ")";
+  }
+  StatPanel *createStatPanel();
+
+public:
+  int width;
+  int height;
+  float contentScaling[2];
+  GLFWwindow *window;
+  StatPanel *statPanel;
+
+private:
+  bool terminated = false;
+};
+
 /**
  * The panel for rendering scene stats.
  */
@@ -100,7 +149,7 @@ class StatPanel
                                 "}\n";
 
 public:
-  StatPanel(int width, int height) : width(width), height(height)
+  StatPanel(WindowContext *windowCtx) : windowCtx(windowCtx)
   {
     initGLProgram();
     resetCanvas();
@@ -117,16 +166,10 @@ public:
     glDeleteTextures(1, &texture);
   }
 
-  void resize(int width, int height)
-  {
-    this->width = width;
-    this->height = height;
-    resetCanvas();
-  }
-
   void initGLProgram()
   {
-    glViewport(0, 0, width, height);
+    auto drawingViewport = windowCtx->drawingViewport();
+    glViewport(0, 0, drawingViewport.width, drawingViewport.height);
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
@@ -171,12 +214,13 @@ public:
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, windowCtx->width, windowCtx->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
+
   void resetCanvas()
   {
-    auto imageInfo = SkImageInfo::MakeN32Premul(width, height);
+    auto imageInfo = SkImageInfo::MakeN32Premul(windowCtx->width, windowCtx->height);
     surface = SkSurfaces::Raster(imageInfo);
     auto canvas = surface->getCanvas();
 
@@ -195,7 +239,8 @@ public:
 public:
   void render()
   {
-    glViewport(0, 0, width, height);
+    auto drawingViewport = windowCtx->drawingViewport();
+    glViewport(0, 0, drawingViewport.width, drawingViewport.height);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -226,12 +271,14 @@ public:
     skCanvas->drawTextBlob(uptimeBlob, 30, 55, textPaint);
 
     // read pixels from Skia surface to texImage2D
-    SkImageInfo imageInfo = SkImageInfo::Make(width, height, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+    int w = windowCtx->width;
+    int h = windowCtx->height;
+    SkImageInfo imageInfo = SkImageInfo::Make(w, h, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
     uint8_t *dstPixels = new uint8_t[imageInfo.computeMinByteSize()];
     surface->readPixels(imageInfo, dstPixels, imageInfo.minRowBytes(), 0, 0);
 
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dstPixels);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, dstPixels);
     glGenerateMipmap(GL_TEXTURE_2D);
     delete[] dstPixels;
   }
@@ -254,17 +301,28 @@ public:
   uint32_t uptime = 0;
 
 private:
-  int width;
-  int height;
+  WindowContext *windowCtx;
   sk_sp<SkSurface> surface;
   SkPaint textPaint;
   SkFont textFont;
   font::FontCacheManager fontMgr;
 };
 
-void framebuffer_size_callback(GLFWwindow *window, int width, int height)
+StatPanel *WindowContext::createStatPanel()
 {
-  glViewport(0, 0, width, height);
+  statPanel = new StatPanel(this);
+  return statPanel;
+}
+
+void onFramebufferSizeChanged(GLFWwindow *window, int width, int height)
+{
+  WindowContext *ctx = reinterpret_cast<WindowContext *>(glfwGetWindowUserPointer(window));
+  glfwGetWindowContentScale(window, &ctx->contentScaling[0], &ctx->contentScaling[1]);
+  ctx->width = width / ctx->contentScaling[0];
+  ctx->height = height / ctx->contentScaling[1];
+  if (ctx->statPanel != nullptr)
+    ctx->statPanel->resetCanvas();
+  glfwSetWindowTitle(window, ctx->title().c_str());
 }
 
 void processInput(GLFWwindow *window)
@@ -326,16 +384,9 @@ int main(int argc, char **argv)
   /**
    * The canvas size does not fit with the physical size, so we need to save the logical size as canvas.
    */
-  int canvasWidth = width;
-  int canvasHeight = height;
-
-  GLFWwindow *window = glfwCreateWindow(width, height, "JSAR Browser", NULL, NULL);
-  if (!window)
-  {
-    glfwTerminate();
+  WindowContext windowCtx(width, height);
+  if (windowCtx.isTerminated())
     return 1;
-  }
-  glfwGetFramebufferSize(window, &width, &height); // update width and height to pyhsical size
 
   embedder = new DesktopEmbedder();
   assert(embedder != nullptr);
@@ -348,8 +399,8 @@ int main(int argc, char **argv)
     embedder->configureXrDevice(xrEnabled, init);
   }
 
-  TrViewport viewport(width / 2, height);
-  embedder->getRenderer()->setViewport(viewport);
+  auto drawingViewport = windowCtx.drawingViewport();
+  embedder->getRenderer()->setViewport(drawingViewport);
 
   {
     // Start
@@ -379,7 +430,7 @@ int main(int argc, char **argv)
     eventTarget->dispatchEvent(TrEventType::TR_EVENT_XSML_REQUEST, requestBuffer.GetString());
   }
 
-  glfwMakeContextCurrent(window);
+  glfwMakeContextCurrent(windowCtx.window);
 
   unsigned int vertexShader;
   vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -441,26 +492,16 @@ int main(int argc, char **argv)
   glBindVertexArray(0);
 
   // Create panel(screen-space)
-  auto panel = StatPanel(canvasWidth, canvasHeight);
-
-  // Set resize callback
-  glfwSetWindowUserPointer(window, &panel); // Set glfw window's user pointer to the panel, which will be used in the resize callback
-  glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
-    StatPanel* panel = reinterpret_cast<StatPanel*>(glfwGetWindowUserPointer(window));
-    panel->resize(width, height);
-    glfwGetFramebufferSize(window, &width, &height);
-    glViewport(0, 0, width, height);  // TODO: update app's viewport.
-  });
-
+  auto panel = windowCtx.createStatPanel();
   bool initialized = false;
-  while (!glfwWindowShouldClose(window))
+  while (!glfwWindowShouldClose(windowCtx.window))
   {
-    processInput(window);
+    processInput(windowCtx.window);
 
     if (embedder != nullptr)
     {
-      panel.fps = embedder->getFps();       // update fps to panel
-      panel.uptime = embedder->getUptime(); // update uptime to panel
+      panel->fps = embedder->getFps();       // update fps to panel
+      panel->uptime = embedder->getUptime(); // update uptime to panel
     }
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -469,13 +510,14 @@ int main(int argc, char **argv)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     int viewsCount = xrEnabled ? 2 : 1;
+    auto drawingViewport = windowCtx.drawingViewport();
     for (int viewIndex = 0; viewIndex < viewsCount; viewIndex++)
     {
       TrViewport eyeViewport(
-          width / viewsCount,             // width
-          height,                         // height
-          viewIndex * width / viewsCount, // x
-          0                               // y
+          drawingViewport.width / viewsCount,             // width
+          drawingViewport.height,                         // height
+          viewIndex * drawingViewport.width / viewsCount, // x
+          0                                               // y
       );
       glViewport(eyeViewport.x, eyeViewport.y, eyeViewport.width, eyeViewport.height);
 
@@ -501,9 +543,9 @@ int main(int argc, char **argv)
     }
 
     // render screen-space panel
-    panel.render();
+    panel->render();
 
-    glfwSwapBuffers(window);
+    glfwSwapBuffers(windowCtx.window);
     glfwPollEvents();
   }
 
