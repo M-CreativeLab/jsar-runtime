@@ -56,6 +56,13 @@ declare namespace Transmute {
     constructor(contextAttribs?: WebGLContextAttributes);
   }
 
+  class HTMLRenderingContext {
+    setHTML(html: string): void;
+    dispatchEvent(type: 'mousemove', event: MouseEvent): void;
+    dispatchEvent(type: 'mousedown', event: MouseEvent): void;
+    dispatchEvent(type: 'mouseup', event: MouseEvent): void;
+  }
+
   type XRNativeInputSource = {
     id: number;
     handness: string;
@@ -134,8 +141,8 @@ declare namespace NodeJS {
     _linkedBinding(module: 'transmute:canvas'): {
       ImageData: typeof ImageData;
       ImageBitmap: typeof ImageBitmap;
-      createImageBitmap: (image: ImageData | ImageBitmap) => Promise<ImageBitmap>;
       OffscreenCanvas: typeof OffscreenCanvas;
+      createImageBitmap: (image: ImageData | ImageBitmap) => Promise<ImageBitmap>;
     };
     _linkedBinding(module: 'transmute:webgl'): {
       WebGLRenderingContext: typeof Transmute.WebGLRenderingContextOnDevice;
@@ -150,4 +157,11 @@ declare namespace NodeJS {
     };
     _linkedBinding(module: string): any;
   }
+}
+
+/**
+ * Add patch for the OffscreenCanvas to support the HTMLRenderingContext.
+ */
+interface OffscreenCanvas {
+  getContext(contextId: 'jsar:htmlrenderer'): Transmute.HTMLRenderingContext;
 }

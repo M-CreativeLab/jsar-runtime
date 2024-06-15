@@ -1,4 +1,5 @@
 use crate::node::{Node, NodeData, TextNodeData};
+use crate::util::walk_tree;
 use slab::Slab;
 use selectors::Element;
 use style::media_queries::Device;
@@ -92,7 +93,7 @@ impl Document {
   }
 
   pub fn print_tree(&self) {
-    println!("Printing tree");
+    walk_tree(0, self.root_node());
   }
 }
 

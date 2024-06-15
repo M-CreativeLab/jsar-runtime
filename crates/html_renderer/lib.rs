@@ -2,6 +2,7 @@ pub mod document;
 pub mod htmlsink;
 pub mod node;
 pub mod stylo;
+pub mod util;
 
 use std::fmt::Debug;
 

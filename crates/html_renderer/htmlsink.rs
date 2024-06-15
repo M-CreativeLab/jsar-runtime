@@ -7,6 +7,15 @@ use html5ever::{
 };
 use std::borrow::Cow;
 
+/// Convert an html5ever Attribute which uses tendril for its value to a blitz Attribute
+/// which uses String.
+fn html5ever_to_blitz_attr(attr: html5ever::Attribute) -> Attribute {
+  Attribute {
+    name: attr.name,
+    value: attr.value.to_string(),
+  }
+}
+
 pub struct DocumentHtmlParser<'a> {
   document: &'a mut Document,
   style_nodes: Vec<u32>,
@@ -51,6 +60,25 @@ impl<'a> DocumentHtmlParser<'a> {
   fn node_mut(&mut self, id: usize) -> &mut Node {
     &mut self.document.nodes[id]
   }
+
+  fn last_child(&mut self, parent_id: usize) -> Option<usize> {
+    self.node(parent_id).children.last().copied()
+  }
+
+  fn try_append_text_to_text_node(&mut self, node_id: Option<usize>, text: &str) -> bool {
+    let Some(node_id) = node_id else {
+      return false;
+    };
+    let node = self.node_mut(node_id);
+
+    match node.text_data_mut() {
+      Some(data) => {
+        data.content += text;
+        true
+      }
+      None => false,
+    }
+  }
 }
 
 impl<'b> TreeSink for DocumentHtmlParser<'b> {
@@ -90,13 +118,15 @@ impl<'b> TreeSink for DocumentHtmlParser<'b> {
     attrs: Vec<html5ever::Attribute>,
     flags: ElementFlags,
   ) -> Self::Handle {
-    println!("Creating element: {:?}", name);
-    0
+    let attrs = attrs.into_iter().map(html5ever_to_blitz_attr).collect();
+    let mut data = ElementNodeData::new(name.clone(), attrs);
+    let id = self.create_node(NodeData::Element(data));
+    // let node = self.node(id);
+    id
   }
 
   fn create_comment(&mut self, text: StrTendril) -> Self::Handle {
-    println!("Creating comment: {:?}", text);
-    0
+    self.create_node(NodeData::Comment)
   }
 
   fn create_pi(&mut self, target: StrTendril, data: StrTendril) -> Self::Handle {
@@ -104,7 +134,20 @@ impl<'b> TreeSink for DocumentHtmlParser<'b> {
   }
 
   fn append(&mut self, parent: &Self::Handle, child: NodeOrText<Self::Handle>) {
-    println!("Appending child.");
+    match child {
+      NodeOrText::AppendNode(child_id) => {
+        self.node_mut(*parent).children.push(child_id);
+        self.node_mut(child_id).parent = Some(*parent);
+      }
+      NodeOrText::AppendText(text) => {
+        let last_child_id = self.last_child(*parent);
+        let has_appended = self.try_append_text_to_text_node(last_child_id, &text);
+        if !has_appended {
+          let id = self.create_text_node(&text);
+          self.append(parent, NodeOrText::AppendNode(id));
+        }
+      }
+    }
   }
 
   fn append_before_sibling(&mut self, sibling: &Self::Handle, new_node: NodeOrText<Self::Handle>) {

@@ -8,7 +8,6 @@ file(GLOB TR_CLIENT_SOURCE
     "src/bindings/webxr/*.cpp"
     "src/client/*.cpp"
     # just for debugging
-    "src/renderer/*.cpp"
     "src/xr/*.cpp"
 )
 

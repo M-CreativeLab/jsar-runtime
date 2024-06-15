@@ -4,6 +4,7 @@
 
 #include "canvas.hpp"
 #include "rendering_context2d.hpp"
+#include "html_rendering_context.hpp"
 #include "debug.hpp"
 
 namespace canvasbinding
@@ -89,21 +90,26 @@ namespace canvasbinding
       if (!currentContext2d.IsEmpty())
         return currentContext2d.Value();
 
-      // Initialize skSurface and skBitmap
-      auto imageInfo = SkImageInfo::MakeN32Premul(width, height);
-      skSurface = SkSurfaces::Raster(imageInfo);
-      skBitmap = new SkBitmap();
-      skBitmap->allocN32Pixels(width, height);
-
-      // Create new CanvasRenderingContext2D instance
+      resetSkSurface();
       auto context = CanvasRenderingContext2D::NewInstance(env, this);
       currentContext2d = Napi::Persistent(context);
+      return context;
+    }
+    else if (type == "jsar:htmlrenderer")
+    {
+      if (!htmlRenderingContext.IsEmpty())
+        return htmlRenderingContext.Value();
+
+      resetSkSurface();
+      auto context = HTMLRenderingContext::NewInstance(env, this);
+      htmlRenderingContext = Napi::Persistent(context);
       return context;
     }
     else
     {
       // TODO: support other context types like webgl
-      Napi::TypeError::New(env, "Only 2d context is supported").ThrowAsJavaScriptException();
+      string msg = "Unsupported context type: (" + type + ")";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
   }
@@ -132,4 +138,23 @@ namespace canvasbinding
   {
     return skSurface;
   }
+
+  void OffscreenCanvas::resetSkSurface()
+  {
+    auto imageInfo = SkImageInfo::MakeN32Premul(width, height);
+    {
+      // Reset SkSurface
+      if (skSurface != nullptr)
+        skSurface.reset();
+      skSurface = SkSurfaces::Raster(imageInfo);
+    }
+    {
+      // Reset SkBitmap
+      if (skBitmap != nullptr)
+        delete skBitmap;
+      skBitmap = new SkBitmap();
+      skBitmap->allocN32Pixels(width, height);
+    }
+  }
+
 } // namespace webgl

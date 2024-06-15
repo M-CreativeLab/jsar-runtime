@@ -68,6 +68,25 @@ bootwait(async function main() {
       initialize: initializedEnd - runtimeStart,
       total: initializedEnd - bootstrapStart,
     });
+
+    // Test for HTMLRenderingContext
+    if (process.env.JSAR_TEST_HTML_RENDERING) {
+      const htmlCanvas = new OffscreenCanvas(800, 600);
+      const htmlRenderingCtx = htmlCanvas.getContext('jsar:htmlrenderer');
+      htmlRenderingCtx.setHTML(
+        `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML Rendering Test</title>
+</head>
+<body>
+  <h1>Hello, World!</h1>
+  <p>This is a test for the HTML rendering context.</p>
+</body>
+        `
+      );
+    }
   } catch (err) {
     logger.error('failed to start the runtime, occurs an error:', err);
   }

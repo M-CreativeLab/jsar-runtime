@@ -31,7 +31,11 @@ namespace canvasbinding
     sk_sp<SkSurface> &getSkSurface();
 
   private:
+    void resetSkSurface();
+
+  private:
     Napi::ObjectReference currentContext2d;
+    Napi::ObjectReference htmlRenderingContext;
     uint32_t width;
     uint32_t height;
     sk_sp<SkSurface> skSurface;
@@ -41,5 +45,6 @@ namespace canvasbinding
     static Napi::FunctionReference *constructor;
 
     friend class CanvasRenderingContext2D;
+    friend class HTMLRenderingContext;
   };
 }

@@ -119,6 +119,7 @@ pub enum NodeKind {
   AnonymousBlock,
   Text,
   Comment,
+  ProcessingInstruction,
 }
 
 #[derive(Debug, Clone)]
@@ -137,6 +138,9 @@ pub enum NodeData {
 
   /// A comment.
   Comment,
+
+  /// A processing instruction.
+  ProcessingInstruction { target: String, contents: String },
 }
 
 impl NodeData {
@@ -178,6 +182,7 @@ impl NodeData {
       NodeData::AnonymousBlock(_) => NodeKind::AnonymousBlock,
       NodeData::Text(_) => NodeKind::Text,
       NodeData::Comment => NodeKind::Comment,
+      NodeData::ProcessingInstruction { .. } => NodeKind::ProcessingInstruction,
     }
   }
 }
@@ -203,6 +208,19 @@ pub struct ElementNodeData {
 }
 
 impl ElementNodeData {
+  pub fn new(name: QualName, attrs: Vec<Attribute>) -> Self {
+    let id_attr_atom = attrs
+      .iter()
+      .find(|attr| &attr.name.local == "id")
+      .map(|attr| attr.value.as_ref())
+      .map(|value: &str| Atom::from(value));
+    ElementNodeData {
+      name,
+      id: id_attr_atom,
+      attrs,
+    }
+  }
+
   pub fn attrs(&self) -> &[Attribute] {
     &self.attrs
   }
