@@ -124,5 +124,5 @@ function(tr_add_example EXECUTABLE_NAME SOURCE_FILE)
 endfunction()
 
 if (APPLE)
-    tr_add_example(glapp "src/tools/gl-desktop.cpp")
+    tr_add_example(jsar_desktop_opengl "src/examples/desktop_opengl.cpp")
 endif()
