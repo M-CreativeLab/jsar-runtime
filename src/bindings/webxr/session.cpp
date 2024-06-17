@@ -32,7 +32,7 @@ namespace bindings
 
   XRSession::XRSession(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRSession>(info),
                                                          id(-1),
-                                                         mode(IMMERSIVE_AR),
+                                                         mode(xr::TrXRSessionMode::Unknown),
                                                          immersive(true),
                                                          started(false),
                                                          ended(false),
@@ -57,29 +57,18 @@ namespace bindings
     device = XRDeviceNative::Unwrap(deviceObject);
 
     auto modeString = info[1].As<Napi::String>().Utf8Value();
-    if (modeString == "immersive-vr")
-    {
-      mode = IMMERSIVE_VR;
-    }
-    else if (modeString == "immersive-ar")
-    {
-      mode = IMMERSIVE_AR;
-    }
-    else if (modeString == "inline")
-    {
-      mode = INLINE;
-    }
-    else
+    mode = xr::MakeSessionMode(modeString);
+    if (mode == xr::TrXRSessionMode::Unknown)
     {
       Napi::TypeError::New(env, "Invalid session mode").ThrowAsJavaScriptException();
       return;
     }
 
     id = info[2].As<Napi::Number>().Int32Value();
-    immersive = mode == IMMERSIVE_AR || mode == IMMERSIVE_VR;
+    immersive = xr::IsImmersive(mode);
 
     // Create the view spaces
-    if (immersive == true)
+    if (immersive)
     {
       addViewSpace(env, XRViewSpaceType::LEFT);
       addViewSpace(env, XRViewSpaceType::RIGHT);
@@ -537,7 +526,7 @@ namespace bindings
 
     xrFrameUnwrapped->start();
     // Update the input sources
-    updateInputSourcesIfChanged(xrFrameUnwrapped);
+    // updateInputSourcesIfChanged(xrFrameUnwrapped); // TODO: disable for now
 
     // Call all the frame callbacks
     auto now = std::chrono::system_clock::now();

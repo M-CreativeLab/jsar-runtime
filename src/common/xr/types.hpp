@@ -20,12 +20,29 @@ namespace xr
     Unknown = -1,
   };
 
-  enum class TrSessionMode
+  enum class TrXRSessionMode
   {
     ImmersiveAR = 0,
     ImmersiveVR = 1,
     Inline = 2,
+    Unknown = -1,
   };
+
+  inline TrXRSessionMode MakeSessionMode(const string &mode)
+  {
+    if (mode == "immersive-ar")
+      return TrXRSessionMode::ImmersiveAR;
+    if (mode == "immersive-vr")
+      return TrXRSessionMode::ImmersiveVR;
+    if (mode == "inline")
+      return TrXRSessionMode::Inline;
+    return TrXRSessionMode::Unknown;
+  }
+
+  inline bool IsImmersive(TrXRSessionMode mode)
+  {
+    return mode == TrXRSessionMode::ImmersiveAR || mode == TrXRSessionMode::ImmersiveVR;
+  }
 
   /**
    * The WebXR features that the session could request.

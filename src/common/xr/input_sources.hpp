@@ -42,31 +42,64 @@ namespace xr
     JointPinkyFingerTip = 24,
   };
 
-  class TrXRJointPose
-  {
-  public:
-    TrXRJointPose();
-    TrXRJointPose(TrXRJointIndex index);
-
-  public:
-    TrXRJointIndex index;
-    glm::mat4 baseMatrix;
-  };
-
   enum class TrXRInputSourceActionType
   {
     XRPrimaryAction = 0,
     XRSqueezeAction,
   };
 
+  class TrXRJointPose
+  {
+  public:
+    TrXRJointPose() : baseMatrix(glm::mat4(1.0f)), index(TrXRJointIndex::Unset)
+    {
+    }
+    TrXRJointPose(TrXRJointIndex index) : baseMatrix(glm::mat4(1.0f)), index(index)
+    {
+    }
+
+  public:
+    TrXRJointIndex index;
+    glm::mat4 baseMatrix;
+  };
+
   class TrXRInputSource
   {
   public:
-    TrXRInputSource();
-    TrXRInputSource(TrXRInputSource *from);
+    static const int JointsCount = 25;
 
   public:
-    void update(TrXRInputSource *from);
+    TrXRInputSource()
+        : id(1),
+          handness(TrHandness::None),
+          targetRayMode(TrXRTargetRayMode::TrackedPointer)
+    {
+      for (int i = 0; i < JointsCount; i++)
+        joints.push_back(TrXRJointPose(static_cast<TrXRJointIndex>(i)));
+    }
+    TrXRInputSource(TrXRInputSource *from)
+        : id(from->id),
+          handness(from->handness),
+          joints(from->joints),
+          targetRayMode(from->targetRayMode),
+          targetRayBaseMatrix(from->targetRayBaseMatrix),
+          gripBaseMatrix(from->gripBaseMatrix),
+          primaryActionPressed(from->primaryActionPressed),
+          squeezeActionPressed(from->squeezeActionPressed)
+    {
+    }
+
+  public:
+    void update(TrXRInputSource *from)
+    {
+      handness = from->handness;
+      joints = from->joints;
+      targetRayMode = from->targetRayMode;
+      targetRayBaseMatrix = from->targetRayBaseMatrix;
+      gripBaseMatrix = from->gripBaseMatrix;
+      primaryActionPressed = from->primaryActionPressed;
+      squeezeActionPressed = from->squeezeActionPressed;
+    }
 
   public:
     int id;

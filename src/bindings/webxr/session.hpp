@@ -7,6 +7,7 @@
 #include "xr/render_state.hpp"
 
 #include "common/frame_request/types.hpp"
+#include "common/xr/types.hpp"
 #include "client/per_process.hpp"
 
 namespace bindings
@@ -81,7 +82,8 @@ namespace bindings
   public:
     XRDeviceNative *device;
     int32_t id;
-    XRSessionMode mode;
+    xr::TrXRSessionMode mode = xr::TrXRSessionMode::ImmersiveAR;
+    xr::TrXRSessionInit config;
     bool immersive;
     bool started;
     bool ended;

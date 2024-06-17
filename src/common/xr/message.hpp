@@ -41,13 +41,13 @@ namespace xr
   class IsSessionSupportedRequest : public TrXRCommandBase<IsSessionSupportedRequest>
   {
   public:
-    IsSessionSupportedRequest(TrSessionMode mode) : TrXRCommandBase(TrXRCmdType::IsSessionSupportedRequest),
+    IsSessionSupportedRequest(TrXRSessionMode mode) : TrXRCommandBase(TrXRCmdType::IsSessionSupportedRequest),
                                                     sessionMode(mode)
     {
     }
 
   public:
-    TrSessionMode sessionMode;
+    TrXRSessionMode sessionMode;
   };
 
   class IsSessionSupportedResponse : public TrXRCommandBase<IsSessionSupportedResponse>
@@ -63,16 +63,16 @@ namespace xr
   {
   public:
     SessionRequest() : TrXRCommandBase(TrXRCmdType::SessionRequest),
-                       sessionMode(TrSessionMode::ImmersiveAR)
+                       sessionMode(TrXRSessionMode::ImmersiveAR)
     {
     }
-    SessionRequest(TrSessionMode mode) : TrXRCommandBase(TrXRCmdType::SessionRequest),
+    SessionRequest(TrXRSessionMode mode) : TrXRCommandBase(TrXRCmdType::SessionRequest),
                                          sessionMode(mode)
     {
     }
 
   public:
-    TrSessionMode sessionMode;
+    TrXRSessionMode sessionMode;
   };
 
   class SessionResponse : public TrXRCommandBase<SessionResponse>

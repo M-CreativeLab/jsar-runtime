@@ -84,21 +84,9 @@ namespace bindings
       return env.Undefined();
     }
 
-    xr::TrSessionMode mode;
     auto modeString = info[0].As<Napi::String>().Utf8Value();
-    if (modeString == "immersive-ar")
-    {
-      mode = xr::TrSessionMode::ImmersiveAR;
-    }
-    else if (modeString == "immersive-vr")
-    {
-      mode = xr::TrSessionMode::ImmersiveVR;
-    }
-    else if (modeString == "inline")
-    {
-      mode = xr::TrSessionMode::Inline;
-    }
-    else
+    xr::TrXRSessionMode mode = xr::MakeSessionMode(modeString);
+    if (mode == xr::TrXRSessionMode::Unknown)
     {
       Napi::TypeError::New(env, "mode should be 'immersive-ar', 'immersive-vr' or 'inline'.")
           .ThrowAsJavaScriptException();
@@ -145,21 +133,10 @@ namespace bindings
       return env.Undefined();
     }
 
-    xr::TrSessionMode mode;
+    xr::TrXRSessionMode mode;
     auto modeString = info[0].As<Napi::String>().Utf8Value();
-    if (modeString == "immersive-ar")
-    {
-      mode = xr::TrSessionMode::ImmersiveAR;
-    }
-    else if (modeString == "immersive-vr")
-    {
-      mode = xr::TrSessionMode::ImmersiveVR;
-    }
-    else if (modeString == "inline")
-    {
-      mode = xr::TrSessionMode::Inline;
-    }
-    else
+    mode = xr::MakeSessionMode(modeString);
+    if (mode == xr::TrXRSessionMode::Unknown)
     {
       Napi::TypeError::New(env, "mode should be 'immersive-ar', 'immersive-vr' or 'inline'.")
           .ThrowAsJavaScriptException();

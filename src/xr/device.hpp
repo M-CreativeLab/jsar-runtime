@@ -33,8 +33,8 @@ namespace xr
 
   public:
     void initialize(bool enabled, TrDeviceInit &init);
-    bool isSessionSupported(xr::TrSessionMode mode);
-    int requestSession(xr::TrSessionMode mode, TrContentRenderer* contentRenderer);
+    bool isSessionSupported(xr::TrXRSessionMode mode);
+    int requestSession(xr::TrXRSessionMode mode, TrContentRenderer* contentRenderer);
     bool enabled();
     void setFrameRate(uint32_t frameRate);
     bool skipHostFrameOnScript();

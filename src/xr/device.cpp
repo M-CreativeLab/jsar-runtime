@@ -90,12 +90,12 @@ namespace xr
     startCommandClientWatcher();
   }
 
-  bool Device::isSessionSupported(xr::TrSessionMode mode)
+  bool Device::isSessionSupported(xr::TrXRSessionMode mode)
   {
-    return mode == xr::TrSessionMode::ImmersiveAR;
+    return mode == xr::TrXRSessionMode::ImmersiveAR;
   }
 
-  int Device::requestSession(xr::TrSessionMode mode, TrContentRenderer *contentRenderer)
+  int Device::requestSession(xr::TrXRSessionMode mode, TrContentRenderer *contentRenderer)
   {
     if (isSessionSupported(mode) == false)
       return 0;
