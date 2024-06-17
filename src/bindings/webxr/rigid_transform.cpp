@@ -7,10 +7,7 @@ namespace bindings
   Napi::Object XRRigidTransform::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function tpl = DefineClass(env, "XRRigidTransform",
-                                     {InstanceAccessor("position", &XRRigidTransform::PositionGetter, nullptr),
-                                      InstanceAccessor("orientation", &XRRigidTransform::OrientationGetter, nullptr),
-                                      InstanceAccessor("matrix", &XRRigidTransform::MatrixGetter, nullptr),
-                                      InstanceAccessor("inverse", &XRRigidTransform::InverseGetter, nullptr)});
+                                     {InstanceAccessor("inverse", &XRRigidTransform::InverseGetter, nullptr)});
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -123,48 +120,11 @@ namespace bindings
     {
       matrix = glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(orientation);
     }
-  }
 
-  Napi::Value XRRigidTransform::PositionGetter(const Napi::CallbackInfo &info)
-  {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
-
-    auto domPointObject = Napi::Object::New(env);
-    domPointObject.Set("x", Napi::Number::New(env, position.x));
-    domPointObject.Set("y", Napi::Number::New(env, position.y));
-    domPointObject.Set("z", Napi::Number::New(env, position.z));
-    domPointObject.Set("w", Napi::Number::New(env, 1.0f));
-    return domPointObject;
-  }
-
-  Napi::Value XRRigidTransform::OrientationGetter(const Napi::CallbackInfo &info)
-  {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
-
-    auto domPointObject = Napi::Object::New(env);
-    domPointObject.Set("x", Napi::Number::New(env, orientation.x));
-    domPointObject.Set("y", Napi::Number::New(env, orientation.y));
-    domPointObject.Set("z", Napi::Number::New(env, orientation.z));
-    domPointObject.Set("w", Napi::Number::New(env, orientation.w));
-    return domPointObject;
-  }
-
-  Napi::Value XRRigidTransform::MatrixGetter(const Napi::CallbackInfo &info)
-  {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
-
-    Napi::Float32Array matrixDataArray = Napi::Float32Array::New(env, 16);
-    for (int i = 0; i < 4; i++)
-    {
-      for (int j = 0; j < 4; j++)
-      {
-        matrixDataArray.Set(static_cast<uint32_t>(i * 4 + j), Napi::Number::New(env, matrix[i][j]));
-      }
-    }
-    return matrixDataArray;
+    auto jsThis = info.This().As<Napi::Object>();
+    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("position", CreatePositionValue(env), napi_enumerable));
+    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("orientation", CreateOrientationValue(env), napi_enumerable));
+    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("matrix", CreateMatrixValue(env), napi_enumerable));
   }
 
   Napi::Value XRRigidTransform::InverseGetter(const Napi::CallbackInfo &info)
@@ -183,5 +143,41 @@ namespace bindings
       }
     }
     return constructor->New({inverseMatrixDataArray});
+  }
+
+  Napi::Value XRRigidTransform::CreatePositionValue(Napi::Env env)
+  {
+    Napi::EscapableHandleScope scope(env);
+    auto domPointObject = Napi::Object::New(env);
+    domPointObject.Set("x", Napi::Number::New(env, position.x));
+    domPointObject.Set("y", Napi::Number::New(env, position.y));
+    domPointObject.Set("z", Napi::Number::New(env, position.z));
+    domPointObject.Set("w", Napi::Number::New(env, 1.0f));
+    return scope.Escape(domPointObject);
+  }
+
+  Napi::Value XRRigidTransform::CreateOrientationValue(Napi::Env env)
+  {
+    Napi::EscapableHandleScope scope(env);
+    auto domPointObject = Napi::Object::New(env);
+    domPointObject.Set("x", Napi::Number::New(env, orientation.x));
+    domPointObject.Set("y", Napi::Number::New(env, orientation.y));
+    domPointObject.Set("z", Napi::Number::New(env, orientation.z));
+    domPointObject.Set("w", Napi::Number::New(env, orientation.w));
+    return scope.Escape(domPointObject);
+  }
+
+  Napi::Value XRRigidTransform::CreateMatrixValue(Napi::Env env)
+  {
+    Napi::EscapableHandleScope scope(env);
+    Napi::Float32Array matrixDataArray = Napi::Float32Array::New(env, 16);
+    for (int i = 0; i < 4; i++)
+    {
+      for (int j = 0; j < 4; j++)
+      {
+        matrixDataArray.Set(static_cast<uint32_t>(i * 4 + j), Napi::Number::New(env, matrix[i][j]));
+      }
+    }
+    return scope.Escape(matrixDataArray);
   }
 }

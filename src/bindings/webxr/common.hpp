@@ -2,7 +2,9 @@
 
 #include <string>
 #include <glm/glm.hpp>
+
 #include "debug.hpp"
+#include "common/xr/types.hpp"
 
 namespace bindings
 {

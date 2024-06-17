@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <algorithm>
+#include <glm/glm.hpp>
 
 #include "runtime/constellation.hpp"
 #include "runtime/content.hpp"
@@ -48,9 +49,15 @@ namespace xr
   {
     m_FieldOfView = 0.0f;
     m_Time = 0.0f;
-    m_SessionIds.clear();
     delete m_BackupStereoRenderingFrame;
     m_BackupStereoRenderingFrame = nullptr;
+
+    // Clear the sessions
+    {
+      for (auto session : m_Sessions)
+        delete session;
+      m_Sessions.clear();
+    }
 
     // Clear the input sources
     {
@@ -88,7 +95,7 @@ namespace xr
     return mode == xr::TrSessionMode::ImmersiveAR;
   }
 
-  int Device::requestSession(xr::TrSessionMode mode)
+  int Device::requestSession(xr::TrSessionMode mode, TrContentRenderer *contentRenderer)
   {
     if (isSessionSupported(mode) == false)
       return 0;
@@ -100,9 +107,9 @@ namespace xr
       bool idExists = false;
       id = sessionIdGen.get();
       // Search for the session id, if the session id has been added, return false
-      for (auto sessionId : m_SessionIds)
+      for (auto session : m_Sessions)
       {
-        if (sessionId == id)
+        if (session->id == id)
         {
           idExists = true;
           break; // When the new id is already in the list, we need to generate a new id.
@@ -116,7 +123,8 @@ namespace xr
 
     if (id > 0)
     {
-      m_SessionIds.push_back(id);
+      TrXRSessionInit init;
+      m_Sessions.push_back(new TrXRSession(id, contentRenderer, init));
       return id;
     }
     else
@@ -449,14 +457,6 @@ namespace xr
           commandBuffer->type, m_CurrentStereoRenderingId.load());
   }
 
-  void Device::onXRFrame(DeviceFrame *frame)
-  {
-    // auto jsDeviceNative = bindings::XRDeviceNative::GetInstance();
-    // if (jsDeviceNative == NULL)
-    //   return;
-    // jsDeviceNative->onFrame(frame);
-  }
-
   float Device::getTime()
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -502,13 +502,13 @@ namespace xr
   float *Device::getLocalTransformUnsafe(int id)
   {
     // Check for the session if it exists
-    if (m_SessionIds.size() == 0)
+    if (m_Sessions.size() == 0)
       return NULL;
 
-    for (auto sessionId : m_SessionIds)
+    for (auto session : m_Sessions)
     {
-      if (sessionId == id)
-        return m_LocalTransforms[id];
+      if (session->id == id)
+        return const_cast<float *>(glm::value_ptr(session->getLocalBaseMatrix()));
     }
     return NULL;
   }
@@ -519,10 +519,23 @@ namespace xr
     return m_ActiveEyeId;
   }
 
-  std::vector<int> &Device::getSessionIds()
+  std::vector<int> Device::getSessionIds()
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    return m_SessionIds;
+    vector<int> ids;
+    for (auto session : m_Sessions)
+      ids.push_back(session->id);
+    return ids;
+  }
+
+  void Device::iterateSessionsByContentPid(pid_t contentPid, std::function<void(TrXRSession *)> callback)
+  {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    for (auto session : m_Sessions)
+    {
+      if (session->belongsTo(contentPid))
+        callback(session);
+    }
   }
 
   bool Device::updateFov(float fov)
@@ -593,7 +606,7 @@ namespace xr
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
     // Check for the session if it exists
-    if (m_SessionIds.size() == 0)
+    if (m_Sessions.size() == 0)
       return false;
 
     std::array<float, 16> input = {
@@ -602,12 +615,12 @@ namespace xr
         transform[8], transform[9], transform[10], transform[11],
         transform[12], transform[13], transform[14], transform[15]};
     // auto rightHanded = math::ConvertMatrixToRightHanded(input);
-    for (auto sessionId : m_SessionIds)
+    for (auto session : m_Sessions)
     {
-      if (sessionId == id)
+      if (session->id == id)
       {
-        for (int i = 0; i < 16; i++)
-          m_LocalTransforms[id][i] = input[i];
+        glm::mat4 localBaseMatrix = glm::make_mat4(input.data());
+        session->setLocalBaseMatrix(localBaseMatrix);
         return true;
       }
     }
@@ -694,6 +707,10 @@ namespace xr
 
   void Device::handleCommandMessage(TrXRCommandMessage &message, TrContentRuntime *content)
   {
+    TrContentRenderer *contentRenderer = m_Constellation->getRenderer()->findContentRenderer(content);
+    if (contentRenderer == nullptr)
+      return; // Just ignore the XR command message if the content renderer is not found.
+
     auto type = message.type;
     switch (type)
     {
@@ -701,7 +718,7 @@ namespace xr
   case xr::TrXRCmdType::hander:                      \
   {                                                  \
     auto req = message.createInstance<xr::hander>(); \
-    auto res = on##hander(*req, content);            \
+    auto res = on##hander(*req, contentRenderer);    \
     content->sendXRCommandResponse(res);             \
     delete req;                                      \
     break;                                           \
@@ -714,23 +731,24 @@ namespace xr
     }
   }
 
-  xr::IsSessionSupportedResponse Device::onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request, TrContentRuntime *content)
+  InputSource *Device::getScreenInputSource(int id)
+  {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    return m_ScreenInputSources[id];
+  }
+
+  xr::IsSessionSupportedResponse Device::onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request, TrContentRenderer *contentRenderer)
   {
     xr::IsSessionSupportedResponse resp;
     resp.supported = isSessionSupported(request.sessionMode);
     return resp;
   }
 
-  xr::SessionResponse Device::onSessionRequest(xr::SessionRequest &request, TrContentRuntime *content)
+  xr::SessionResponse Device::onSessionRequest(xr::SessionRequest &request, TrContentRenderer *contentRenderer)
   {
-    auto sessionId = requestSession(request.sessionMode);
+    auto sessionId = requestSession(request.sessionMode, contentRenderer);
     xr::SessionResponse resp(sessionId);
     return resp;
   }
 
-  InputSource *Device::getScreenInputSource(int id)
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    return m_ScreenInputSources[id];
-  }
 }

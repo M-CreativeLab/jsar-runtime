@@ -4,6 +4,9 @@
 
 #include <OpenGL/gl3.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
+
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
@@ -36,6 +39,45 @@ const char *fragmentShaderSource = R"(
     FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
   }
 )";
+
+class XRStereoscopicRenderer
+{
+public:
+  XRStereoscopicRenderer() {}
+  ~XRStereoscopicRenderer()
+  {
+  }
+
+public:
+  glm::mat4 getViewerBaseMatrix()
+  {
+    return glm::translate(glm::mat4(1.0f), viewerPosition) * glm::mat4_cast(viewerOrientation);
+  }
+  glm::mat4 getViewMatrixForEye(int eyeIndex)
+  {
+    assert(eyeIndex < 2);
+    return glm::translate(glm::mat4(1.0f), eyePosition[eyeIndex]) * glm::mat4_cast(eyeOrientation[eyeIndex]);
+  }
+  glm::mat4 getProjectionMatrix()
+  {
+    return glm::perspective(glm::radians(fov), 1.0f, near, far);
+  }
+
+private:
+  glm::vec3 viewerPosition = glm::vec3(0.0f, 0.0f, 0.0f);
+  glm::quat viewerOrientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+  glm::vec3 eyePosition[2] = {
+      glm::vec3(0.0f, -0.5f, 0.0f),
+      glm::vec3(0.0f, +0.5f, 0.0f)};
+  glm::quat eyeOrientation[2] = {
+      glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
+      glm::quat(1.0f, 0.0f, 0.0f, 0.0f)};
+
+private: // projection
+  float near = 0.1f;
+  float far = 100.0f;
+  float fov = 60.0f;
+};
 
 class DesktopEmbedder : public TrEmbedder
 {
@@ -112,6 +154,11 @@ public:
     return baseTitle + " (" + to_string(width) + "x" + to_string(height) + ")";
   }
   StatPanel *createStatPanel();
+  XRStereoscopicRenderer *createXrRenderer()
+  {
+    xrRenderer = new XRStereoscopicRenderer();
+    return xrRenderer;
+  }
 
 public:
   int width;
@@ -119,6 +166,7 @@ public:
   float contentScaling[2];
   GLFWwindow *window;
   StatPanel *statPanel;
+  XRStereoscopicRenderer *xrRenderer = nullptr;
 
 private:
   bool terminated = false;
@@ -397,6 +445,7 @@ int main(int argc, char **argv)
     init.active = true;
     init.stereoRenderingMode = xr::TrStereoRenderingMode::MultiPass;
     embedder->configureXrDevice(xrEnabled, init);
+    windowCtx.createXrRenderer();
   }
 
   auto drawingViewport = windowCtx.drawingViewport();
@@ -531,9 +580,13 @@ int main(int argc, char **argv)
          */
         if (xrEnabled)
         {
-          float viewMatrix[16] = {0};
-          float projectionMatrix[16] = {0};
+          auto xrRenderer = windowCtx.xrRenderer;
+          assert(xrRenderer != nullptr);
           auto xrDevice = embedder->getXrDevice();
+          assert(xrDevice != nullptr);
+
+          auto viewMatrix = const_cast<float*>(glm::value_ptr(xrRenderer->getViewMatrixForEye(viewIndex)));
+          auto projectionMatrix = const_cast<float*>(glm::value_ptr(xrRenderer->getProjectionMatrix()));
           xrDevice->updateViewerStereoViewMatrix(viewIndex, viewMatrix);
           xrDevice->updateViewerStereoProjectionMatrix(viewIndex, projectionMatrix);
           embedder->getRenderer()->setViewport(eyeViewport);

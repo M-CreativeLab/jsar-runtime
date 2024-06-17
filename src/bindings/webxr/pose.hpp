@@ -1,8 +1,10 @@
 #pragma once
 
 #include <napi.h>
-#include "rigid_transform.hpp"
-#include "view.hpp"
+#include "common/xr/types.hpp"
+#include "./common.hpp"
+#include "./rigid_transform.hpp"
+#include "./view.hpp"
 
 using namespace glm;
 
@@ -21,13 +23,14 @@ namespace bindings
   protected:
     mat4 transform;
     bool emulatedPosition;
+    xr::TrXRFrameRequest* frameRequest = nullptr;
   };
 
   class XRPose : public XRPoseBase<XRPose>
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, mat4& transform);
+    static Napi::Object NewInstance(Napi::Env env, mat4& transform, xr::TrXRFrameRequest *frameRequest);
     XRPose(const Napi::CallbackInfo &info);
 
   private:
@@ -38,16 +41,12 @@ namespace bindings
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, mat4& transform);
+    static Napi::Object NewInstance(Napi::Env env, mat4& transform, xr::TrXRFrameRequest* frameRequest, XRSession* session);
     XRViewerPose(const Napi::CallbackInfo &info);
     ~XRViewerPose();
 
   private:
     Napi::Value ViewsGetter(const Napi::CallbackInfo &info);
-
-  public:
-    void addView(XRView *view);
-    void addView(Napi::Object view);
 
   private:
     std::vector<Napi::ObjectReference> views;

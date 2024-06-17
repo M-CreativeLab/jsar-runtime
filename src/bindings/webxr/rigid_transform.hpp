@@ -13,10 +13,12 @@ namespace bindings {
     XRRigidTransform(const Napi::CallbackInfo &info);
 
   private:
-    Napi::Value PositionGetter(const Napi::CallbackInfo &info);
-    Napi::Value OrientationGetter(const Napi::CallbackInfo &info);
-    Napi::Value MatrixGetter(const Napi::CallbackInfo &info);
     Napi::Value InverseGetter(const Napi::CallbackInfo &info);
+
+  private:
+    Napi::Value CreatePositionValue(Napi::Env env);
+    Napi::Value CreateOrientationValue(Napi::Env env);
+    Napi::Value CreateMatrixValue(Napi::Env env);
 
   public:
     glm::vec3 position;

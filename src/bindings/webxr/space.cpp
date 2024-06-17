@@ -27,18 +27,18 @@ namespace bindings
   }
 
   template <typename T>
-  void XRSpaceBase<T>::onPoseUpdate(XRSession *session, xr::DeviceFrame *frame)
+  void XRSpaceBase<T>::onPoseUpdate(XRSession *session, xr::TrXRFrameRequest *frameRequest)
   {
     mIsInverseMatrixDirty = true;
   }
 
   template <typename T>
-  void XRSpaceBase<T>::ensurePoseUpdated(uint32_t frameId, XRSession *session, xr::DeviceFrame *frame)
+  void XRSpaceBase<T>::ensurePoseUpdated(uint32_t frameId, XRSession *session, xr::TrXRFrameRequest *frameRequest)
   {
     if (lastFrameId == frameId)
       return;
     lastFrameId = frameId;
-    static_cast<T *>(this)->onPoseUpdate(session, frame);
+    static_cast<T *>(this)->onPoseUpdate(session, frameRequest);
   }
 
   template <typename T>
@@ -125,25 +125,23 @@ namespace bindings
     return Napi::Value();
   }
 
-  void XRReferenceSpace::onPoseUpdate(XRSession *session, xr::DeviceFrame *frame)
+  void XRReferenceSpace::onPoseUpdate(XRSession *session, xr::TrXRFrameRequest *frameRequest)
   {
     if (referenceSpaceType == XRReferenceSpaceType::VIEWER)
     {
-      auto transform = frame->getViewerTransform();
-      baseMatrix = createMat4FromArray(transform);
-      XRSpaceBase<XRReferenceSpace>::onPoseUpdate(session, frame);
+      baseMatrix = createMat4FromArray(frameRequest->viewerBaseMatrix);
+      XRSpaceBase<XRReferenceSpace>::onPoseUpdate(session, frameRequest);
     }
     else if (referenceSpaceType == XRReferenceSpaceType::LOCAL)
     {
-      auto transform = frame->getLocalTransform(session->id);
-      baseMatrix = createMat4FromArray(transform);
-      XRSpaceBase<XRReferenceSpace>::onPoseUpdate(session, frame);
+      baseMatrix = createMat4FromArray(frameRequest->localBaseMatrix);
+      XRSpaceBase<XRReferenceSpace>::onPoseUpdate(session, frameRequest);
     }
     else if (referenceSpaceType == XRReferenceSpaceType::UNBOUNDED)
     {
-      auto localOffset = createMat4FromArray(frame->getLocalTransform(session->id));
+      auto localOffset = createMat4FromArray(frameRequest->localBaseMatrix);
       baseMatrix =  localOffset * math::getOriginMatrix();
-      XRSpaceBase<XRReferenceSpace>::onPoseUpdate(session, frame);
+      XRSpaceBase<XRReferenceSpace>::onPoseUpdate(session, frameRequest);
     }
     // TODO: other reference space types to update?
   }
@@ -222,19 +220,19 @@ namespace bindings
     return Napi::String::New(env, eye);
   }
 
-  void XRViewSpace::onPoseUpdate(XRSession *session, xr::DeviceFrame *frame)
+  void XRViewSpace::onPoseUpdate(XRSession *session, xr::TrXRFrameRequest *frameRequest)
   {
-    if (!frame->isMultiPass())
-    {
-      // TODO: handle single pass
-    }
-    else
-    {
-      auto multiPassFrame = static_cast<xr::MultiPassFrame *>(frame);
-      this->baseMatrix = glm::inverse(multiPassFrame->getViewMatrix(true)); // WebGL using right-handed coordinate system
-      this->projectionMatrix = multiPassFrame->getProjectionMatrix(true);
-    }
-    XRSpaceBase<XRViewSpace>::onPoseUpdate(session, frame);
+    // if (!frameRequest->isMultiPass())
+    // {
+    //   // TODO: handle single pass
+    // }
+    // else
+    // {
+    //   auto multiPassFrame = static_cast<xr::MultiPassFrame *>(frame);
+    //   this->baseMatrix = glm::inverse(multiPassFrame->getViewMatrix(true)); // WebGL using right-handed coordinate system
+    //   this->projectionMatrix = multiPassFrame->getProjectionMatrix(true);
+    // }
+    XRSpaceBase<XRViewSpace>::onPoseUpdate(session, frameRequest);
   }
 
   XREye XRViewSpace::getEye()
@@ -256,93 +254,93 @@ namespace bindings
     return exports;
   }
 
-  Napi::Object XRJointSpace::NewInstance(Napi::Env env, xr::InputSource *inputSource, xr::JointIndex index)
+  Napi::Object XRJointSpace::NewInstance(Napi::Env env, xr::TrXRInputSource *inputSource, xr::TrXRJointIndex index)
   {
     Napi::EscapableHandleScope scope(env);
-    auto inputSourceExternal = Napi::External<xr::InputSource>::New(env, inputSource);
+    auto inputSourceExternal = Napi::External<xr::TrXRInputSource>::New(env, inputSource);
     Napi::String jointName;
     switch (index)
     {
-    case xr::JointIndex::JointWrist:
+    case xr::TrXRJointIndex::JointWrist:
       jointName = Napi::String::New(env, "wrist");
       break;
-    case xr::JointIndex::JointThumbMetacarpal:
+    case xr::TrXRJointIndex::JointThumbMetacarpal:
       jointName = Napi::String::New(env, "thumb-metacarpal");
       break;
-    case xr::JointIndex::JointThumbPhalanxProximal:
+    case xr::TrXRJointIndex::JointThumbPhalanxProximal:
       jointName = Napi::String::New(env, "thumb-phalanx-proximal");
       break;
-    case xr::JointIndex::JointThumbPhalanxDistal:
+    case xr::TrXRJointIndex::JointThumbPhalanxDistal:
       jointName = Napi::String::New(env, "thumb-phalanx-distal");
       break;
-    case xr::JointIndex::JointThumbTip:
+    case xr::TrXRJointIndex::JointThumbTip:
       jointName = Napi::String::New(env, "thumb-tip");
       break;
-    case xr::JointIndex::JointIndexFingerMetacarpal:
+    case xr::TrXRJointIndex::JointIndexFingerMetacarpal:
       jointName = Napi::String::New(env, "index-finger-metacarpal");
       break;
-    case xr::JointIndex::JointIndexFingerPhalanxProximal:
+    case xr::TrXRJointIndex::JointIndexFingerPhalanxProximal:
       jointName = Napi::String::New(env, "index-finger-phalanx-proximal");
       break;
-    case xr::JointIndex::JointIndexFingerPhalanxIntermediate:
+    case xr::TrXRJointIndex::JointIndexFingerPhalanxIntermediate:
       jointName = Napi::String::New(env, "index-finger-phalanx-intermediate");
       break;
-    case xr::JointIndex::JointIndexFingerPhalanxDistal:
+    case xr::TrXRJointIndex::JointIndexFingerPhalanxDistal:
       jointName = Napi::String::New(env, "index-finger-phalanx-distal");
       break;
-    case xr::JointIndex::JointIndexFingerTip:
+    case xr::TrXRJointIndex::JointIndexFingerTip:
       jointName = Napi::String::New(env, "index-finger-tip");
       break;
-    case xr::JointIndex::JointMiddleFingerMetacarpal:
+    case xr::TrXRJointIndex::JointMiddleFingerMetacarpal:
       jointName = Napi::String::New(env, "middle-finger-metacarpal");
       break;
-    case xr::JointIndex::JointMiddleFingerPhalanxProximal:
+    case xr::TrXRJointIndex::JointMiddleFingerPhalanxProximal:
       jointName = Napi::String::New(env, "middle-finger-phalanx-proximal");
       break;
-    case xr::JointIndex::JointMiddleFingerPhalanxIntermediate:
+    case xr::TrXRJointIndex::JointMiddleFingerPhalanxIntermediate:
       jointName = Napi::String::New(env, "middle-finger-phalanx-intermediate");
       break;
-    case xr::JointIndex::JointMiddleFingerPhalanxDistal:
+    case xr::TrXRJointIndex::JointMiddleFingerPhalanxDistal:
       jointName = Napi::String::New(env, "middle-finger-phalanx-distal");
       break;
-    case xr::JointIndex::JointMiddleFingerTip:
+    case xr::TrXRJointIndex::JointMiddleFingerTip:
       jointName = Napi::String::New(env, "middle-finger-tip");
       break;
-    case xr::JointIndex::JointRingFingerMetacarpal:
+    case xr::TrXRJointIndex::JointRingFingerMetacarpal:
       jointName = Napi::String::New(env, "ring-finger-metacarpal");
       break;
-    case xr::JointIndex::JointRingFingerPhalanxProximal:
+    case xr::TrXRJointIndex::JointRingFingerPhalanxProximal:
       jointName = Napi::String::New(env, "ring-finger-phalanx-proximal");
       break;
-    case xr::JointIndex::JointRingFingerPhalanxIntermediate:
+    case xr::TrXRJointIndex::JointRingFingerPhalanxIntermediate:
       jointName = Napi::String::New(env, "ring-finger-phalanx-intermediate");
       break;
-    case xr::JointIndex::JointRingFingerPhalanxDistal:
+    case xr::TrXRJointIndex::JointRingFingerPhalanxDistal:
       jointName = Napi::String::New(env, "ring-finger-phalanx-distal");
       break;
-    case xr::JointIndex::JointRingFingerTip:
+    case xr::TrXRJointIndex::JointRingFingerTip:
       jointName = Napi::String::New(env, "ring-finger-tip");
       break;
-    case xr::JointIndex::JointPinkyFingerMetacarpal:
+    case xr::TrXRJointIndex::JointPinkyFingerMetacarpal:
       jointName = Napi::String::New(env, "pinky-finger-metacarpal");
       break;
-    case xr::JointIndex::JointPinkyFingerPhalanxProximal:
+    case xr::TrXRJointIndex::JointPinkyFingerPhalanxProximal:
       jointName = Napi::String::New(env, "pinky-finger-phalanx-proximal");
       break;
-    case xr::JointIndex::JointPinkyFingerPhalanxIntermediate:
+    case xr::TrXRJointIndex::JointPinkyFingerPhalanxIntermediate:
       jointName = Napi::String::New(env, "pinky-finger-phalanx-intermediate");
       break;
-    case xr::JointIndex::JointPinkyFingerPhalanxDistal:
+    case xr::TrXRJointIndex::JointPinkyFingerPhalanxDistal:
       jointName = Napi::String::New(env, "pinky-finger-phalanx-distal");
       break;
-    case xr::JointIndex::JointPinkyFingerTip:
+    case xr::TrXRJointIndex::JointPinkyFingerTip:
       jointName = Napi::String::New(env, "pinky-finger-tip");
       break;
     default:
       jointName = Napi::String::New(env, "unknown");
       break;
     }
-    Napi::Object obj = constructor->New({inputSourceExternal, jointName, Napi::Number::New(env, index)});
+    Napi::Object obj = constructor->New({inputSourceExternal, jointName, Napi::Number::New(env, static_cast<int>(index))});
     return scope.Escape(obj).ToObject();
   }
 
@@ -372,18 +370,18 @@ namespace bindings
       return;
     }
 
-    auto external = info[0].As<Napi::External<xr::InputSource>>();
+    auto external = info[0].As<Napi::External<xr::TrXRInputSource>>();
     inputSource = external.Data();
     auto jointName = info[1].As<Napi::String>().Utf8Value();
     auto index = info[2].As<Napi::Number>().Int32Value();
-    this->index = static_cast<xr::JointIndex>(index);
+    this->index = static_cast<xr::TrXRJointIndex>(index);
     info.This().ToObject().Set("jointName", Napi::String::New(env, jointName));
   }
 
-  void XRJointSpace::onPoseUpdate(XRSession *session, xr::DeviceFrame *frame)
+  void XRJointSpace::onPoseUpdate(XRSession *session, xr::TrXRFrameRequest *frameRequest)
   {
-    baseMatrix = inputSource->joints[index].baseMatrix;
-    XRSpaceBase<XRJointSpace>::onPoseUpdate(session, frame);
+    baseMatrix = inputSource->joints[static_cast<int>(index)].baseMatrix;
+    XRSpaceBase<XRJointSpace>::onPoseUpdate(session, frameRequest);
   }
 
   Napi::Object XRTargetRayOrGripSpace::Init(Napi::Env env, Napi::Object exports)
@@ -395,10 +393,10 @@ namespace bindings
     return exports;
   }
 
-  Napi::Object XRTargetRayOrGripSpace::NewInstance(Napi::Env env, xr::InputSource *inputSource, bool isGrip)
+  Napi::Object XRTargetRayOrGripSpace::NewInstance(Napi::Env env, xr::TrXRInputSource *inputSource, bool isGrip)
   {
     Napi::EscapableHandleScope scope(env);
-    auto instance = Napi::External<xr::InputSource>::New(env, inputSource);
+    auto instance = Napi::External<xr::TrXRInputSource>::New(env, inputSource);
     Napi::Object obj = constructor->New({Napi::Boolean::New(env, isGrip), instance});
     return scope.Escape(obj).ToObject();
   }
@@ -425,18 +423,18 @@ namespace bindings
     }
 
     auto isGrip = info[0].As<Napi::Boolean>().Value();
-    auto external = info[1].As<Napi::External<xr::InputSource>>();
+    auto external = info[1].As<Napi::External<xr::TrXRInputSource>>();
     inputSource = external.Data();
     subType = isGrip ? XRSpaceSubType::GRIP : XRSpaceSubType::TARGET_RAY;
   }
 
-  void XRTargetRayOrGripSpace::onPoseUpdate(XRSession *session, xr::DeviceFrame *frame)
+  void XRTargetRayOrGripSpace::onPoseUpdate(XRSession *session, xr::TrXRFrameRequest *frameRequest)
   {
     if (subType == XRSpaceSubType::GRIP)
       baseMatrix = inputSource->gripBaseMatrix;
     else if (subType == XRSpaceSubType::TARGET_RAY)
       baseMatrix = inputSource->targetRayBaseMatrix;
-    XRSpaceBase<XRTargetRayOrGripSpace>::onPoseUpdate(session, frame);
+    XRSpaceBase<XRTargetRayOrGripSpace>::onPoseUpdate(session, frameRequest);
   }
 
   template class XRSpaceBase<XRSpace>;

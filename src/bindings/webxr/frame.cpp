@@ -11,7 +11,6 @@ namespace bindings
   {
     Napi::Function tpl = DefineClass(env, "XRFrame",
                                      {
-                                         InstanceAccessor("session", &XRFrame::SessionGetter, nullptr),
                                          InstanceMethod("createAnchor", &XRFrame::CreateAnchor),
                                          InstanceMethod("getHitTestResults", &XRFrame::GetHitTestResults),
                                          InstanceMethod("getHitTestResultsForTransientInput", &XRFrame::GetHitTestResultsForTransientInput),
@@ -32,26 +31,33 @@ namespace bindings
     return exports;
   }
 
-  Napi::Object XRFrame::NewInstance(Napi::Env env, xr::DeviceFrame *frame, XRSession *session)
+  Napi::Object XRFrame::NewInstance(Napi::Env env, xr::TrXRFrameRequest *frameRequest, XRSession *session)
   {
     Napi::EscapableHandleScope scope(env);
-    Napi::Object obj = constructor->New({session->Value()});
-    XRFrame *instance = XRFrame::Unwrap(obj);
-    instance->internal = frame;
-    return scope.Escape(obj).ToObject();
+    Napi::Object obj = XRFrame::constructor->New({session->Value(), Napi::External<xr::TrXRFrameRequest>::New(env, frameRequest)});
+    return scope.Escape(napi_value(obj)).ToObject();
   }
 
   XRFrame::XRFrame(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRFrame>(info),
-                                                     id(NEXT_FRAME_ID++),
                                                      active(false),
                                                      animationFrame(false)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() < 1)
+    if (info.Length() < 2)
     {
-      Napi::TypeError::New(env, "XRFrame constructor requires a session object").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "Invalid arguments number to create XRFrame(session, [[native frame]]).").ThrowAsJavaScriptException();
+      return;
+    }
+    if (!info[0].IsObject() || !info[0].ToObject().InstanceOf(XRSession::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "XRFrame constructor requires a `XRSession` object.").ThrowAsJavaScriptException();
+      return;
+    }
+    if (!info[1].IsExternal())
+    {
+      Napi::TypeError::New(env, "Create a XRFrame object from JavaScript is not allowed.").ThrowAsJavaScriptException();
       return;
     }
 
@@ -59,14 +65,17 @@ namespace bindings
     session = XRSession::Unwrap(sessionObj);
     sessionId = session->id;
     device = session->device;
-  }
 
-  Napi::Value XRFrame::SessionGetter(const Napi::CallbackInfo &info)
-  {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+    Napi::External<xr::TrXRFrameRequest> external = info[1].As<Napi::External<xr::TrXRFrameRequest>>();
+    internal = external.Data();
+    id = internal->id;
 
-    return env.Undefined();
+    auto jsThis = info.This().ToObject();
+    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("session", sessionObj, napi_enumerable));
+    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("trackedAnchor", env.Null(), napi_enumerable)); // TODO: support trackedAnchor
+    // Properties added by JSAR
+    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("_id", Napi::Number::New(env, id), napi_enumerable));
+    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("_stereoId", Napi::Number::New(env, internal->stereoId), napi_enumerable));
   }
 
 #define NOT_IMPLEMENTED_YET(method)                                                                    \
@@ -118,24 +127,22 @@ namespace bindings
     referenceSpace->ensurePoseUpdated(id, session, internal);
     viewerSpace->ensurePoseUpdated(id, session, internal);
 
-    auto activeEye = getActiveEye();
+    // auto activeEye = getActiveEye();
     auto viewerTransform /** viewer to refspace(local) */ = XRSPACE_RELATIVE_TRANSFORM(viewerSpace, referenceSpace);
+    auto viewerPoseObject = XRViewerPose::NewInstance(env, viewerTransform, internal, session);
+    // auto viewerPoseUnwrapped = XRViewerPose::Unwrap(viewerPoseObject);
+    // session->iterateViewSpaces([this, env, viewerPoseUnwrapped, activeEye, referenceSpace](XRViewSpace *viewSpace, uint32_t viewIndex, XRSession *session)
+    //                            {
+    //                              if (activeEye != XREye::NONE && viewSpace->getEye() != activeEye)
+    //                                return;
+    //                              viewSpace->ensurePoseUpdated(id, session, internal);
 
-    auto viewerPoseObject = XRViewerPose::NewInstance(env, viewerTransform);
-    auto viewerPoseUnwrapped = XRViewerPose::Unwrap(viewerPoseObject);
-
-    session->iterateViewSpaces([this, env, viewerPoseUnwrapped, activeEye, referenceSpace](XRViewSpace *viewSpace, uint32_t viewIndex, XRSession *session)
-                               {
-                                 if (activeEye != XREye::NONE && viewSpace->getEye() != activeEye)
-                                   return;
-                                 viewSpace->ensurePoseUpdated(id, session, internal);
-
-                                 auto viewTransform = XRSPACE_RELATIVE_TRANSFORM(viewSpace, referenceSpace);
-                                 auto projectionMatrix = viewSpace->getProjectionMatrix();
-                                 auto xrView = XRView::NewInstance(env, session, viewTransform, projectionMatrix, viewIndex, activeEye);
-                                 viewerPoseUnwrapped->addView(xrView);
-                                 // End
-                               });
+    //                              auto viewTransform = XRSPACE_RELATIVE_TRANSFORM(viewSpace, referenceSpace);
+    //                              auto projectionMatrix = viewSpace->getProjectionMatrix();
+    //                              auto xrView = XRView::NewInstance(env, session, viewTransform, projectionMatrix, viewIndex, activeEye);
+    //                              viewerPoseUnwrapped->addView(xrView);
+    //                              // End
+    //                            });
     return viewerPoseObject;
   }
 
@@ -165,7 +172,7 @@ namespace bindings
       auto baseReferenceSpace = XRReferenceSpace::Unwrap(info[1].As<Napi::Object>());
       baseReferenceSpace->ensurePoseUpdated(id, session, internal);
       auto jointTransform /** joint to space(local) */ = XRSPACE_RELATIVE_TRANSFORM(jointSpace, baseReferenceSpace);
-      return XRPose::NewInstance(env, jointTransform);
+      return XRPose::NewInstance(env, jointTransform, internal);
     }
     else
     {
@@ -201,7 +208,7 @@ namespace bindings
       auto inputSpace = XRTargetRayOrGripSpace::Unwrap(info[0].As<Napi::Object>());
       inputSpace->ensurePoseUpdated(id, session, internal);
       auto transform /** input source space to base(local/unbound) */ = XRSPACE_RELATIVE_TRANSFORM(inputSpace, baseSpace);
-      return XRPose::NewInstance(env, transform);
+      return XRPose::NewInstance(env, transform, internal);
     }
     // TODO
     return env.Undefined();
@@ -209,37 +216,14 @@ namespace bindings
 
   uint32_t XRFrame::getStereoRenderingId()
   {
-    return internal->getCurrentStereoId();
-  }
-
-  uint32_t XRFrame::getViewIndex()
-  {
-    if (getActiveEye() == XREye::RIGHT)
-      return 1;
-    else
-      return 0;
-  }
-
-  XREye XRFrame::getActiveEye()
-  {
-    auto device = xr::Device::GetInstance();
-    if (device->getStereoRenderingMode() == xr::TrStereoRenderingMode::MultiPass)
-    {
-      auto multipassFrame = static_cast<xr::MultiPassFrame *>(internal);
-      auto activeEye = multipassFrame->getActiveEyeId();
-      return activeEye == 0 ? XREye::LEFT : XREye::RIGHT;
-    }
-    else
-    {
-      return XREye::NONE;
-    }
+    return internal->stereoId;
   }
 
   void XRFrame::start()
   {
     active = true;
     animationFrame = true;
-    device->startFrame(sessionId, getStereoRenderingId(), getViewIndex());
+    device->startFrame(sessionId, getStereoRenderingId(), 0);
     startTime = chrono::high_resolution_clock::now();
   }
 
@@ -247,7 +231,7 @@ namespace bindings
   {
     active = false;
     // animationFrame = false;
-    device->endFrame(sessionId, getStereoRenderingId(), getViewIndex());
+    device->endFrame(sessionId, getStereoRenderingId(), 0);
     endTime = chrono::high_resolution_clock::now();
 
     auto duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();

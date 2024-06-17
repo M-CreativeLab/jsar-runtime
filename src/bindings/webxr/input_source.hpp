@@ -2,11 +2,10 @@
 
 #include <napi.h>
 #include "common.hpp"
-#include "xr/device.hpp"
 
 namespace bindings
 {
-  using InputSourceInternalResetCallback = function<xr::InputSource *(xr::DeviceFrame *)>;
+  using InputSourceInternalResetCallback = function<xr::TrXRInputSource *(xr::TrXRFrameRequest *)>;
   using InputSourcesChangedCallback = function<void(vector<XRInputSource *> added, vector<XRInputSource *> removed)>;
 
   class XRInputSource : public Napi::ObjectWrap<XRInputSource>
@@ -31,7 +30,7 @@ namespace bindings
     bool dispatchSelectOrSqueezeEvents();
 
   public:
-    xr::InputSource *internal = nullptr;
+    xr::TrXRInputSource *internal = nullptr;
     InputSourceInternalResetCallback onResetInternal;
     Napi::ObjectReference xrFrame;
     Napi::ObjectReference xrSession;

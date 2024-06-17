@@ -2,8 +2,8 @@
 
 #include <map>
 #include <napi.h>
-#include "common.hpp"
-#include "xr/device.hpp"
+#include "common/xr/types.hpp"
+#include "./common.hpp"
 
 namespace bindings
 {
@@ -11,7 +11,7 @@ namespace bindings
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, xr::InputSource *inputSourceInternal);
+    static Napi::Object NewInstance(Napi::Env env, xr::TrXRInputSource *inputSourceInternal);
     XRHand(Napi::CallbackInfo const &info);
     ~XRHand();
 
@@ -23,7 +23,7 @@ namespace bindings
     Napi::Value Values(Napi::CallbackInfo const &info);
 
   private:
-    xr::InputSource *internal = nullptr;
+    xr::TrXRInputSource *internal = nullptr;
     std::map<std::string, Napi::ObjectReference*> entries;
 
   private:

@@ -2,6 +2,8 @@
 
 #include <napi.h>
 #include "common.hpp"
+#include "common/viewport.hpp"
+#include "common/xr/types.hpp"
 #include "device_native.hpp"
 #include "rigid_transform.hpp"
 #include "xr/viewport.hpp"
@@ -12,32 +14,25 @@ namespace bindings
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env,
-                                    XRSession *session,
-                                    mat4 &viewMatrix,
-                                    mat4 &projectionMatrix,
-                                    uint32_t index,
-                                    XREye eye);
+    static Napi::Object NewInstance(Napi::Env env, XRSession *session, xr::TrXRView &view);
     XRView(const Napi::CallbackInfo &info);
 
   private:
-    Napi::Value EyeGetter(const Napi::CallbackInfo &info);
-    Napi::Value ProjectionMatrixGetter(const Napi::CallbackInfo &info);
-    Napi::Value TransformGetter(const Napi::CallbackInfo &info);
-    Napi::Value RecommendedViewportScaleGetter(const Napi::CallbackInfo &info);
+    Napi::Value InitEye(Napi::Env env);
+    Napi::Value InitProjectionMatrix(Napi::Env env);
     Napi::Value RequestViewportScale(const Napi::CallbackInfo &info);
 
   public:
-    xr::Viewport getViewport();
+    TrViewport getViewport();
 
   private:
     XRDeviceNative *device;
     uint32_t index;
-    uint32_t eyeId;
     uint32_t sessionId;
-    mat4 transformMatrix;
+    mat4 transformMatrix; // TODO: change to `viewMatrix`
     mat4 projectionMatrix;
-    xr::Viewport viewport;
+    TrViewport viewport;
+    float viewportScale = 1.0f;
 
   private:
     static Napi::FunctionReference *constructor;

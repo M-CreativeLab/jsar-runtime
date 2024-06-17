@@ -6,10 +6,10 @@ namespace bindings
 {
   Napi::FunctionReference *XRDeviceNative::constructor;
 
-  struct FrameData
+  struct XRFrameRequestContext
   {
     XRDeviceNative *device;
-    xr::DeviceFrame *frameData;
+    xr::TrXRFrameRequest *frameRequest;
   };
 
   Napi::Object XRDeviceNative::Init(Napi::Env env, Napi::Object exports)
@@ -47,13 +47,23 @@ namespace bindings
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    
+
     clientContext = TrClientContextPerProcess::Get();
     assert(clientContext != nullptr);
 
     frameHandler = new Napi::FunctionReference();
     *frameHandler = Napi::Persistent(Napi::Function::New(env, NativeFrameHandler));
     tsfnWithFrameHandler = Napi::ThreadSafeFunction::New(env, frameHandler->Value(), "XRDeviceNative::FrameHandler", 0, 1);
+
+    // Register frame request handler
+    // FIXME: should we move this to startSession?
+    clientContext->requestFrame(frame_request::TrFrameRequestType::XRFrame, [this](frame_request::TrFrameRequestMessage &msg)
+                                {
+                                  auto xrFrameReq = xr::TrXRFrameRequest::MakeFromMessage<xr::TrXRFrameRequest>(msg);
+                                  if (xrFrameReq != nullptr)
+                                  {
+                                    this->handleFrameRequest(xrFrameReq);
+                                  } });
   }
 
   Napi::Value XRDeviceNative::IsSessionSupported(const Napi::CallbackInfo &info)
@@ -76,13 +86,20 @@ namespace bindings
 
     xr::TrSessionMode mode;
     auto modeString = info[0].As<Napi::String>().Utf8Value();
-    if (modeString == "immersive-ar") {
+    if (modeString == "immersive-ar")
+    {
       mode = xr::TrSessionMode::ImmersiveAR;
-    } else if (modeString == "immersive-vr") {
+    }
+    else if (modeString == "immersive-vr")
+    {
       mode = xr::TrSessionMode::ImmersiveVR;
-    } else if (modeString == "inline") {
+    }
+    else if (modeString == "inline")
+    {
       mode = xr::TrSessionMode::Inline;
-    } else {
+    }
+    else
+    {
       Napi::TypeError::New(env, "mode should be 'immersive-ar', 'immersive-vr' or 'inline'.")
           .ThrowAsJavaScriptException();
       return env.Undefined();
@@ -130,13 +147,20 @@ namespace bindings
 
     xr::TrSessionMode mode;
     auto modeString = info[0].As<Napi::String>().Utf8Value();
-    if (modeString == "immersive-ar") {
+    if (modeString == "immersive-ar")
+    {
       mode = xr::TrSessionMode::ImmersiveAR;
-    } else if (modeString == "immersive-vr") {
+    }
+    else if (modeString == "immersive-vr")
+    {
       mode = xr::TrSessionMode::ImmersiveVR;
-    } else if (modeString == "inline") {
+    }
+    else if (modeString == "inline")
+    {
       mode = xr::TrSessionMode::Inline;
-    } else {
+    }
+    else
+    {
       Napi::TypeError::New(env, "mode should be 'immersive-ar', 'immersive-vr' or 'inline'.")
           .ThrowAsJavaScriptException();
       return env.Undefined();
@@ -567,24 +591,30 @@ namespace bindings
 
     if (info.Length() < 1 || !info[0].IsExternal())
     {
-      Napi::TypeError::New(env, "XRDeviceNative::NativeFrameHandler: expected an external")
+      Napi::TypeError::New(env, "expected an external.")
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
-    auto data = info[0].As<Napi::External<FrameData>>().Data();
-    auto device = data->device;
-    auto frame = data->frameData;
-
-    auto contextifiedFrameCallbacks = device->contextifiedFrameCallbacks;
-    device->contextifiedFrameCallbacks.clear();
-    for (auto &callbackWithContext : contextifiedFrameCallbacks)
+    auto data = info[0].As<Napi::External<XRFrameRequestContext>>().Data();
+    if (data == nullptr)
     {
-      callbackWithContext.callback(env, frame, callbackWithContext.context);
+      Napi::TypeError::New(env, "invalid external data.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
     }
 
-    // Clear the `FrameData` struct
-    delete frame;
+    auto instance = data->device;
+    auto frameRequest = data->frameRequest;
+
+    auto contextifiedFrameCallbacks = instance->contextifiedFrameCallbacks;
+    instance->contextifiedFrameCallbacks.clear(); // Clear the contextifiedFrameCallbacks
+
+    for (auto &callbackWithContext : contextifiedFrameCallbacks)
+      callbackWithContext.callback(env, frameRequest, callbackWithContext.context);
+
+    // Clear the `XRFrameRequestContext` struct
+    delete frameRequest;
     delete data;
     return env.Undefined();
   }
@@ -616,16 +646,9 @@ namespace bindings
     }
   }
 
-  void XRDeviceNative::onFrame(xr::DeviceFrame *frame)
+  void XRDeviceNative::requestFrame(XRFrameCallback callback, void *context)
   {
-    auto data = new FrameData{this, frame};
-    tsfnWithFrameHandler.NonBlockingCall(data, [](Napi::Env env, Napi::Function jsCallback, FrameData *data)
-                                         { jsCallback.Call({Napi::External<FrameData>::New(env, data)}); });
-  }
-
-  void XRDeviceNative::requestFrame(FrameCallback callback, void *context)
-  {
-    contextifiedFrameCallbacks.push_back(ContextifiedFrameCallback(callback, context));
+    contextifiedFrameCallbacks.push_back(ContextifiedXRFrameCallback(callback, context));
   }
 
   bool XRDeviceNative::startFrame(uint32_t sessionId, uint32_t stereoRenderingId, uint32_t passIndex)
@@ -648,11 +671,16 @@ namespace bindings
     return device->endFrame(sessionId, stereoRenderingId, passIndex);
   }
 
-  xr::Viewport XRDeviceNative::getViewport(uint32_t viewIndex)
+  TrViewport XRDeviceNative::getViewport(uint32_t viewIndex)
   {
-    auto device = xr::Device::GetInstance();
-    if (device == nullptr)
-      return xr::Viewport();
-    return device->getViewport(viewIndex);
+    // TODO
+    return TrViewport();
+  }
+
+  void XRDeviceNative::handleFrameRequest(xr::TrXRFrameRequest *frameRequest)
+  {
+    auto data = new XRFrameRequestContext{this, frameRequest};
+    tsfnWithFrameHandler.NonBlockingCall(data, [](Napi::Env env, Napi::Function jsCallback, XRFrameRequestContext *context)
+                                         { jsCallback.Call({Napi::External<XRFrameRequestContext>::New(env, context)}); });
   }
 }

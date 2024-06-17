@@ -2,9 +2,10 @@
 
 #include <chrono>
 #include <napi.h>
-#include "xr/frame.hpp"
-#include "device_native.hpp"
-#include "session.hpp"
+
+#include "common/xr/types.hpp"
+#include "./device_native.hpp"
+#include "./session.hpp"
 
 using namespace std;
 
@@ -14,11 +15,10 @@ namespace bindings
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, xr::DeviceFrame *frame, XRSession *session);
+    static Napi::Object NewInstance(Napi::Env env, xr::TrXRFrameRequest *frameRequest, XRSession *session);
     XRFrame(const Napi::CallbackInfo &info);
 
   private:
-    Napi::Value SessionGetter(const Napi::CallbackInfo &info);
     Napi::Value CreateAnchor(const Napi::CallbackInfo &info);
     Napi::Value GetHitTestResults(const Napi::CallbackInfo &info);
     Napi::Value GetHitTestResultsForTransientInput(const Napi::CallbackInfo &info);
@@ -33,19 +33,18 @@ namespace bindings
 
   public:
     uint32_t getStereoRenderingId();
-    uint32_t getViewIndex();
-    XREye getActiveEye();
     void start();
     void end();
 
   private:
     uint32_t id;
+    uint32_t stereoId;
     bool active;
     bool animationFrame;
     uint32_t sessionId;
     uint32_t timestamp;
     XRSession *session;
-    xr::DeviceFrame *internal;
+    xr::TrXRFrameRequest *internal;
     XRDeviceNative *device;
     chrono::time_point<chrono::high_resolution_clock> startTime;
     chrono::time_point<chrono::high_resolution_clock> endTime;

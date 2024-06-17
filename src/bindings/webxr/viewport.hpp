@@ -2,7 +2,7 @@
 
 #include <napi.h>
 #include "common.hpp"
-#include "xr/viewport.hpp"
+#include "common/viewport.hpp"
 
 namespace bindings
 {
@@ -10,7 +10,7 @@ namespace bindings
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, xr::Viewport viewport);
+    static Napi::Object NewInstance(Napi::Env env, TrViewport viewport);
     XRViewport(const Napi::CallbackInfo &info);
 
   private:
@@ -20,7 +20,7 @@ namespace bindings
     Napi::Value YAxisGetter(const Napi::CallbackInfo &info);
 
   public:
-    xr::Viewport config;
+    TrViewport config;
 
   private:
     static Napi::FunctionReference *constructor;

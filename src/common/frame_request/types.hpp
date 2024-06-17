@@ -76,6 +76,12 @@ namespace frame_request
     TrFrameRequestBase(TrFrameRequestType type, size_t size) : TrIpcSerializableBase(type, size) {}
 
   public:
+    /**
+     * Renew the id of the frame request, it's used to make this frame request as a new one.
+     */
+    void renewId() { id = frameRequestIdGen.get(); }
+
+  public:
     uint32_t id = frameRequestIdGen.get();
   };
 

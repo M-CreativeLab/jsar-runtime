@@ -32,6 +32,9 @@ public:
   bool printsCall;
 };
 
+/**
+ * Rendering Hardware Interface for JSAR runtime.
+ */
 class RenderAPI
 {
 private:

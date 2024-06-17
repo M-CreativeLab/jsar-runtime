@@ -6,10 +6,10 @@
 #include "common/command_buffers/shared.hpp"
 #include "common/frame_request/types.hpp"
 #include "common/frame_request/sender.hpp"
+#include "common/xr/types.hpp"
 #include "xr/device.hpp"
 #include "./gles/context_storage.hpp"
 
-using namespace xr;
 using namespace commandbuffers;
 using namespace frame_request;
 
@@ -29,6 +29,7 @@ namespace renderer
     bool sendCommandBufferResponse(TrCommandBufferResponse &res);
     OpenGLAppContextStorage *getOpenGLContext();
     TrContentRuntime *getContent();
+    pid_t getContentPid();
 
   private: // private lifecycle
     void onHostFrame();
@@ -43,6 +44,7 @@ namespace renderer
         frameRequestChanSender->sendFrameRequest(req);
     }
     void dispatchAnimationFrameRequest();
+    void dispatchXRFrameRequest(xr::TrXRSession *session);
     void executeCommandBuffers();
 
   private:
@@ -51,8 +53,9 @@ namespace renderer
   private:
     TrContentRuntime *content = nullptr;
     TrConstellation *constellation = nullptr;
-    xr::Device *xrDevice = nullptr;
     OpenGLAppContextStorage *glContext = nullptr;
+    xr::Device *xrDevice = nullptr;
+    xr::TrXRFrameRequest* currentBaseXRFrameReq = nullptr;
 
   private:
     frame_request::TrFrameRequestSender *frameRequestChanSender = nullptr;

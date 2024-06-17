@@ -160,6 +160,16 @@ namespace renderer
     return nullptr;
   }
 
+  TrContentRenderer *TrRenderer::findContentRenderer(TrContentRuntime *content)
+  {
+    for (auto &contentRenderer : contentRenderers)
+    {
+      if (contentRenderer.content == content)
+        return &contentRenderer;
+    }
+    return nullptr;
+  }
+
   void TrRenderer::removeContentRenderer(TrContentRuntime *content)
   {
     if (content == nullptr || contentRenderers.size() == 0)

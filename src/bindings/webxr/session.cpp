@@ -437,37 +437,38 @@ namespace bindings
     if (started == true)
       return; // Already started
 
-    device->requestFrame([](Napi::Env env, xr::DeviceFrame *frame, void *context)
+    device->requestFrame([](Napi::Env env, xr::TrXRFrameRequest *frameRequest, void *context)
                          {
                            auto xrSession = static_cast<XRSession *>(context);
                            if (xrSession->ended)
                            {
-                             DEBUG(LOG_TAG, "skipped device frame, reason is: session is ended");
+                             DEBUG(LOG_TAG, "skipped XRFrameRequest(), reason is: session is ended");
                              return;
                            }
 
-                           if (frame == nullptr)
+                           if (frameRequest == nullptr)
                            {
-                             DEBUG(LOG_TAG, "skipped device frame, reason is: no data found");
+                             DEBUG(LOG_TAG, "skipped XRFrameRequest(), reason is: no data found");
                              xrSession->queueNextFrame();
                              return;
                            }
-                           if (frame->getCountOfSessions() == 0)
+
+                           if (frameRequest->sessionId == 0)
                            {
-                             DEBUG(LOG_TAG, "skipped device frame, reason is: no session found");
+                             DEBUG(LOG_TAG, "skipped XRFrameRequest(), reason is: session is invalid");
                              xrSession->queueNextFrame();
                              return;
                            }
 
                            // Find the target session
-                           auto session = frame->getSession(xrSession->id);
-                           if (session == nullptr)
+                           if (frameRequest->sessionId != xrSession->id)
                            {
-                             DEBUG(LOG_TAG, "skipped device frame, reason is: session(%d) not found", xrSession->id);
+                             DEBUG(LOG_TAG, "skipped XRFrameRequest(), reason is: frame(session#%d) is not belongs to session(#%d)",
+                                   frameRequest->sessionId, xrSession->id);
                              xrSession->queueNextFrame();
                              return;
                            }
-                           xrSession->onFrame(env, frame);
+                           xrSession->onFrame(env, frameRequest);
                            // End
                          },
                          this);
@@ -484,22 +485,12 @@ namespace bindings
 
   void XRSession::updateInputSourcesIfChanged(XRFrame *frame)
   {
-    auto deviceFrame = frame->internal;
-    if (deviceFrame->isMultiPass())
-    {
-      auto multiPassFrame = static_cast<xr::MultiPassFrame *>(deviceFrame);
-      if (multiPassFrame->getActiveEyeId() > 0)
-      {
-        // Skip the frame to update input sources if it's not for the left eye in multi-pass mode.
-        return;
-      }
-    } // TODO: support single pass mode.
     inputSources.Value().updateInputSources(frame, this, [this](vector<XRInputSource *> added, vector<XRInputSource *> removed)
                                             { onEventCallback.Call({Napi::String::New(Env(), "inputsourceschange"),
                                                                     createInputSourcesChangeEvent(Env(), added, removed)}); });
   }
 
-  void XRSession::onFrame(Napi::Env env, xr::DeviceFrame *frame)
+  void XRSession::onFrame(Napi::Env env, xr::TrXRFrameRequest *frameRequest)
   {
     if (queueNextFrame() == false)
     {
@@ -535,7 +526,7 @@ namespace bindings
     //   abort these steps.
     // ???
 
-    auto xrFrameObject = XRFrame::NewInstance(env, frame, this);
+    auto xrFrameObject = XRFrame::NewInstance(env, frameRequest, this);
     auto xrFrameUnwrapped = XRFrame::Unwrap(xrFrameObject);
 
     // Move the pending frame callbacks to current map

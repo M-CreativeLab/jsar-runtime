@@ -2,8 +2,8 @@
 
 #include <napi.h>
 #include <glm/glm.hpp>
-#include "common.hpp"
-#include "xr/device.hpp"
+#include "common/xr/types.hpp"
+#include "./common.hpp"
 
 using namespace std;
 using namespace glm;
@@ -19,8 +19,8 @@ namespace bindings
     XRSpaceBase(const Napi::CallbackInfo &info, XRSpaceSubType subType, bool isReferenceSpace = false);
 
   public:
-    void onPoseUpdate(XRSession *session, xr::DeviceFrame *frame);
-    void ensurePoseUpdated(uint32_t frameId, XRSession *session, xr::DeviceFrame *frame);
+    void onPoseUpdate(XRSession *session, xr::TrXRFrameRequest *frameRequest);
+    void ensurePoseUpdated(uint32_t frameId, XRSession *session, xr::TrXRFrameRequest *frameRequest);
     mat4 &getInverseBaseMatrix();
 
   public:
@@ -56,7 +56,7 @@ namespace bindings
     Napi::Value GetOffsetReferenceSpace(const Napi::CallbackInfo &info);
 
   public:
-    void onPoseUpdate(XRSession *session, xr::DeviceFrame *frame);
+    void onPoseUpdate(XRSession *session, xr::TrXRFrameRequest *frameRequest);
 
   public:
     XRReferenceSpaceType referenceSpaceType;
@@ -77,7 +77,7 @@ namespace bindings
     Napi::Value EyeGetter(const Napi::CallbackInfo &info);
 
   public:
-    void onPoseUpdate(XRSession *session, xr::DeviceFrame *frame);
+    void onPoseUpdate(XRSession *session, xr::TrXRFrameRequest *frameRequest);
     XREye getEye();
     glm::mat4 &getProjectionMatrix();
 
@@ -93,15 +93,15 @@ namespace bindings
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, xr::InputSource *inputSource, xr::JointIndex index);
+    static Napi::Object NewInstance(Napi::Env env, xr::TrXRInputSource *inputSource, xr::TrXRJointIndex index);
     XRJointSpace(const Napi::CallbackInfo &info);
 
   public:
-    void onPoseUpdate(XRSession *session, xr::DeviceFrame *frame);
+    void onPoseUpdate(XRSession *session, xr::TrXRFrameRequest *frameRequest);
 
   private:
-    xr::JointIndex index;
-    xr::InputSource *inputSource;
+    xr::TrXRJointIndex index;
+    xr::TrXRInputSource *inputSource;
 
   private:
     static Napi::FunctionReference *constructor;
@@ -111,14 +111,14 @@ namespace bindings
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, xr::InputSource *inputSource, bool isGrip);
+    static Napi::Object NewInstance(Napi::Env env, xr::TrXRInputSource *inputSource, bool isGrip);
     XRTargetRayOrGripSpace(const Napi::CallbackInfo &info);
 
   public:
-    void onPoseUpdate(XRSession *session, xr::DeviceFrame *frame);
+    void onPoseUpdate(XRSession *session, xr::TrXRFrameRequest *frameRequest);
 
   private:
-    xr::InputSource *inputSource;
+    xr::TrXRInputSource *inputSource;
 
   private:
     static Napi::FunctionReference *constructor;

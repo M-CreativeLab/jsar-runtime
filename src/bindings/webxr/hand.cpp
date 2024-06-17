@@ -22,10 +22,10 @@ namespace bindings
     return exports;
   }
 
-  Napi::Object XRHand::NewInstance(Napi::Env env, xr::InputSource *inputSourceInternal)
+  Napi::Object XRHand::NewInstance(Napi::Env env, xr::TrXRInputSource *inputSourceInternal)
   {
     Napi::EscapableHandleScope scope(env);
-    auto inputSourceExternal = Napi::External<xr::InputSource>::New(env, inputSourceInternal);
+    auto inputSourceExternal = Napi::External<xr::TrXRInputSource>::New(env, inputSourceInternal);
     Napi::Object obj = constructor->New({inputSourceExternal});
     return scope.Escape(obj).ToObject();
   }
@@ -46,7 +46,7 @@ namespace bindings
       return;
     }
 
-    auto inputSourceExternal = info[0].As<Napi::External<xr::InputSource>>();
+    auto inputSourceExternal = info[0].As<Napi::External<xr::TrXRInputSource>>();
     internal = inputSourceExternal.Data();
 
     for (auto joint : internal->joints)

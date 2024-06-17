@@ -6,6 +6,9 @@
 #include "space.hpp"
 #include "xr/render_state.hpp"
 
+#include "common/frame_request/types.hpp"
+#include "client/per_process.hpp"
+
 namespace bindings
 {
   class XRFrameCallbackDescriptor
@@ -58,7 +61,7 @@ namespace bindings
     void start();
     void stop();
     void updateInputSourcesIfChanged(XRFrame *frame);
-    void onFrame(Napi::Env env, xr::DeviceFrame *frame);
+    void onFrame(Napi::Env env, xr::TrXRFrameRequest *frameRequest);
     bool queueNextFrame();
     void addViewSpace(Napi::Env env, XRViewSpaceType type);
     Napi::Array createEnabledFeatures(Napi::Env env);
@@ -96,7 +99,7 @@ namespace bindings
     Napi::Reference<XRInputSourceArray> inputSources;
     Napi::FunctionReference onEventCallback;
 
-  private:
+  public:
     static Napi::FunctionReference *constructor;
   };
 }

@@ -1,4 +1,5 @@
 #include "pose.hpp"
+#include "./session.hpp"
 
 namespace bindings
 {
@@ -10,6 +11,20 @@ namespace bindings
                                                               transform(mat4(1.0f)),
                                                               emulatedPosition(false)
   {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2 || !info[0].IsExternal() || !info[1].IsExternal())
+    {
+      Napi::TypeError::New(env, "XRPose constructor requires 2 arguments: XRPose([[native transform]], [[native frame]])").ThrowAsJavaScriptException();
+      return;
+    }
+
+    auto transformExternal = info[0].As<Napi::External<mat4>>();
+    transform = *transformExternal.Data();
+
+    auto frameExternal = info[1].As<Napi::External<xr::TrXRFrameRequest>>();
+    frameRequest = frameExternal.Data();
   }
 
   template <typename T>
@@ -41,12 +56,12 @@ namespace bindings
     return exports;
   }
 
-  Napi::Object XRPose::NewInstance(Napi::Env env, mat4 &transform)
+  Napi::Object XRPose::NewInstance(Napi::Env env, mat4 &transform, xr::TrXRFrameRequest *frameRequest)
   {
     Napi::EscapableHandleScope scope(env);
-    Napi::Object obj = constructor->New({});
-    XRPose *instance = XRPose::Unwrap(obj);
-    instance->transform = transform;
+    auto transformExternal = Napi::External<mat4>::New(env, &transform);
+    auto frameRequestExternal = Napi::External<xr::TrXRFrameRequest>::New(env, frameRequest);
+    Napi::Object obj = constructor->New({transformExternal, frameRequestExternal});
     return scope.Escape(obj).ToObject();
   }
 
@@ -68,17 +83,33 @@ namespace bindings
     return exports;
   }
 
-  Napi::Object XRViewerPose::NewInstance(Napi::Env env, mat4 &transform)
+  Napi::Object XRViewerPose::NewInstance(Napi::Env env, mat4 &transform, xr::TrXRFrameRequest *frameRequest, XRSession *xrSession)
   {
     Napi::EscapableHandleScope scope(env);
-    Napi::Object obj = constructor->New({});
-    XRViewerPose *instance = XRViewerPose::Unwrap(obj);
-    instance->transform = transform;
+    auto transformExternal = Napi::External<mat4>::New(env, &transform);
+    auto frameRequestExternal = Napi::External<xr::TrXRFrameRequest>::New(env, frameRequest);
+    Napi::Object obj = constructor->New({transformExternal, frameRequestExternal, xrSession->Value()});
     return scope.Escape(obj).ToObject();
   }
 
   XRViewerPose::XRViewerPose(const Napi::CallbackInfo &info) : XRPoseBase(info)
   {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3 || !info[2].IsObject() || info[2].ToObject().InstanceOf(XRSession::constructor->Value()) == false)
+    {
+      Napi::TypeError::New(env, "XRViewerPose() requires a `XRSession` object.").ThrowAsJavaScriptException();
+      return;
+    }
+    auto xrSession = XRSession::Unwrap(info[2].ToObject());
+
+    for (size_t viewIndex = 0; viewIndex < xr::TrXRFrameRequest::ViewsCount; viewIndex++)
+    {
+      xr::TrXRView &view = frameRequest->views[viewIndex];
+      auto jsView = XRView::NewInstance(env, xrSession, view);
+      views.push_back(Napi::Persistent(jsView));
+    }
   }
 
   XRViewerPose::~XRViewerPose()
@@ -96,16 +127,6 @@ namespace bindings
     for (size_t i = 0; i < views.size(); i++)
       viewsArray[i] = views[i].Value();
     return viewsArray;
-  }
-
-  void XRViewerPose::addView(XRView *view)
-  {
-    addView(view->Value());
-  }
-
-  inline void XRViewerPose::addView(Napi::Object view)
-  {
-    views.push_back(Napi::Persistent(view));
   }
 
   template class XRPoseBase<XRPose>;

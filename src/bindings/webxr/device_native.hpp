@@ -4,21 +4,21 @@
 #include <napi.h>
 #include <node/uv.h>
 
-#include "xr/device.hpp"
-#include "xr/viewport.hpp"
+#include "common/viewport.hpp"
+#include "common/xr/types.hpp"
 #include "client/per_process.hpp"
 #include "./common.hpp"
 
 namespace bindings
 {
-  typedef std::function<void(Napi::Env env, xr::DeviceFrame *, void *context)> FrameCallback;
-  class ContextifiedFrameCallback
+  typedef std::function<void(Napi::Env env, xr::TrXRFrameRequest *, void *context)> XRFrameCallback;
+  class ContextifiedXRFrameCallback
   {
   public:
-    ContextifiedFrameCallback(FrameCallback callback, void *context) : callback(callback), context(context) {}
+    ContextifiedXRFrameCallback(XRFrameCallback callback, void *context) : callback(callback), context(context) {}
 
   public:
-    FrameCallback callback;
+    XRFrameCallback callback;
     void *context;
   };
 
@@ -49,17 +49,19 @@ namespace bindings
   public:
     bool supportsSessionMode(XRSessionMode sessionMode);
     bool supportsReferenceSpaceType(XRReferenceSpaceType referenceSpaceType);
-    void onFrame(xr::DeviceFrame *frame);
-    void requestFrame(FrameCallback callback, void* context);
+    void requestFrame(XRFrameCallback callback, void* context);
     bool startFrame(uint32_t sessionId, uint32_t stereoRenderingId, uint32_t passIndex);
     bool endFrame(uint32_t sessionId, uint32_t stereoRenderingId, uint32_t passIndex);
-    xr::Viewport getViewport(uint32_t viewIndex);
+    TrViewport getViewport(uint32_t viewIndex);
+
+  private:
+    void handleFrameRequest(xr::TrXRFrameRequest *frameRequest);
 
   private:
     TrClientContextPerProcess* clientContext = nullptr;
     Napi::FunctionReference *frameHandler = nullptr;
     Napi::ThreadSafeFunction tsfnWithFrameHandler;
-    std::vector<ContextifiedFrameCallback> contextifiedFrameCallbacks;
+    std::vector<ContextifiedXRFrameCallback> contextifiedFrameCallbacks;
 
   private:
     static Napi::FunctionReference *constructor;

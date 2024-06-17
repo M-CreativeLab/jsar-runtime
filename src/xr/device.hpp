@@ -13,6 +13,7 @@
 #include "common/xr/message.hpp"
 #include "common/command_buffers/command_buffers.hpp"
 
+#include "./session.hpp"
 #include "./frame.hpp"
 #include "./viewport.hpp"
 #include "./input_source.hpp"
@@ -33,7 +34,7 @@ namespace xr
   public:
     void initialize(bool enabled, TrDeviceInit &init);
     bool isSessionSupported(xr::TrSessionMode mode);
-    int requestSession(xr::TrSessionMode mode);
+    int requestSession(xr::TrSessionMode mode, TrContentRenderer* contentRenderer);
     bool enabled();
     void setFrameRate(uint32_t frameRate);
     bool skipHostFrameOnScript();
@@ -56,10 +57,6 @@ namespace xr
     bool endFrame(int sessionId, int stereoRenderingId, int passId);
     bool isInFrame();
     void addCommandBufferToFrame(commandbuffers::TrCommandBufferBase *commandBuffer);
-    /**
-     * Call the frame callback registered by the JavaScript side with the given `DeviceFrame`.
-     */
-    void onXRFrame(DeviceFrame *frame);
 
   public:
     float getTime();
@@ -70,7 +67,10 @@ namespace xr
     float *getLocalTransform(int id);
     float *getLocalTransformUnsafe(int id);
     int getActiveEyeId();
-    vector<int> &getSessionIds();
+
+  public: // Sessions
+    vector<int> getSessionIds();
+    void iterateSessionsByContentPid(pid_t contentPid, function<void(TrXRSession *)> callback);
 
   public:
     bool updateFov(float fov);
@@ -97,8 +97,8 @@ namespace xr
     void handleCommandMessage(TrXRCommandMessage &message, TrContentRuntime *content);
 
   private: // XR command channel handlers
-    xr::IsSessionSupportedResponse onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request, TrContentRuntime *content);
-    xr::SessionResponse onSessionRequest(xr::SessionRequest &request, TrContentRuntime *content);
+    xr::IsSessionSupportedResponse onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request, TrContentRenderer *contentRenderer);
+    xr::SessionResponse onSessionRequest(xr::SessionRequest &request, TrContentRenderer *contentRenderer);
 
   private:
     /**
@@ -176,7 +176,7 @@ namespace xr
     /**
      * The id to indentify the session, corresponding to the session's id in the WebXR API.
      */
-    vector<int> m_SessionIds;
+    vector<TrXRSession *> m_Sessions;
     /**
      * A mutex to ensure the above data is thread-safe.
      */

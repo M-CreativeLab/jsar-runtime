@@ -96,9 +96,9 @@ namespace bindings
   {
     Napi::Env env = info.Env();
     auto handness = internal->handness;
-    if (handness == xr::Handness::Left)
+    if (handness == xr::TrHandness::Left)
       return Napi::String::New(env, "left");
-    else if (handness == xr::Handness::Right)
+    else if (handness == xr::TrHandness::Right)
       return Napi::String::New(env, "right");
     else
       return Napi::String::New(env, "none");
@@ -108,11 +108,11 @@ namespace bindings
   {
     Napi::Env env = info.Env();
     auto targetRayMode = internal->targetRayMode;
-    if (targetRayMode == xr::TargetRayMode::Gaze)
+    if (targetRayMode == xr::TrXRTargetRayMode::Gaze)
       return Napi::String::New(env, "gaze");
-    else if (targetRayMode == xr::TargetRayMode::TrackedPointer)
+    else if (targetRayMode == xr::TrXRTargetRayMode::TrackedPointer)
       return Napi::String::New(env, "tracked-pointer");
-    else if (targetRayMode == xr::TargetRayMode::Screen)
+    else if (targetRayMode == xr::TrXRTargetRayMode::Screen)
       return Napi::String::New(env, "screen");
     else
       return Napi::String::New(env, "tracked-pointer");
@@ -133,7 +133,7 @@ namespace bindings
       return false;
 
     if (internal == nullptr)
-      internal = new xr::InputSource(newInternal);
+      internal = new xr::TrXRInputSource(newInternal);
     else
       internal->update(newInternal);
 
@@ -216,18 +216,19 @@ namespace bindings
     {
       vector<XRInputSource *> added;
       auto gazeInputSource = XRInputSource::Unwrap(
-          XRInputSource::NewInstance(env, frame, session, [](xr::DeviceFrame *frame) -> xr::InputSource *
-                                     { return &frame->getGazeInputSource(); }));
+          XRInputSource::NewInstance(env, frame, session, [](xr::TrXRFrameRequest *frameRequest) -> xr::TrXRInputSource *
+                                     { return frameRequest->getGazeInputSource(); }));
       auto leftHandInputSource = XRInputSource::Unwrap(
-          XRInputSource::NewInstance(env, frame, session, [](xr::DeviceFrame *frame) -> xr::InputSource *
-                                     { return &frame->getHandInputSource(xr::Handness::Left); }));
+          XRInputSource::NewInstance(env, frame, session, [](xr::TrXRFrameRequest *frameRequest) -> xr::TrXRInputSource *
+                                     { return frameRequest->getHandInputSource(xr::TrHandness::Left); }));
       auto rightHandInputSource = XRInputSource::Unwrap(
-          XRInputSource::NewInstance(env, frame, session, [](xr::DeviceFrame *frame) -> xr::InputSource *
-                                     { return &frame->getHandInputSource(xr::Handness::Right); }));
+          XRInputSource::NewInstance(env, frame, session, [](xr::TrXRFrameRequest *frameRequest) -> xr::TrXRInputSource *
+                                     { return frameRequest->getHandInputSource(xr::TrHandness::Right); }));
 
       added.push_back(gazeInputSource);
       added.push_back(leftHandInputSource);
       added.push_back(rightHandInputSource);
+      // TODO: Add gamepad input sources
       onChangedCallback(added, {});
 
       for (uint32_t i = 0; i < added.size(); i++)
