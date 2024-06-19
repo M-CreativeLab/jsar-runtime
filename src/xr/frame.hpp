@@ -6,6 +6,8 @@
 #include "math/matrix.hpp"
 #include "input_source.hpp"
 // #include "renderer/command_buffer.hpp"
+#include "common/command_buffers/shared.hpp"
+#include "common/command_buffers/macros.hpp"
 #include "common/command_buffers/command_buffers.hpp"
 
 using namespace std;
@@ -128,10 +130,11 @@ namespace xr
     FrameActionResult startFrame(int passIndex = 0);
     FrameActionResult flushFrame(int passIndex = 0);
     FrameActionResult endFrame(int passIndex = 0);
+    commandbuffers::TrCommandBufferBase *cloneCommandBuffer(commandbuffers::TrCommandBufferBase *src);
     void copyCommandBuffers(StereoRenderingFrame *frame);
-    void copyCommandBuffers(std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, int passIndex = 0);
+    void copyCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, int passIndex = 0);
     void addCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer, int passIndex = 0);
-    std::vector<commandbuffers::TrCommandBufferBase *> &getCommandBuffers(int passIndex = 0);
+    vector<commandbuffers::TrCommandBufferBase *> &getCommandBuffers(int passIndex = 0);
     bool ended();
     bool ended(int passIndex);
     bool needFlush();
@@ -150,7 +153,6 @@ namespace xr
   private:
     void clearCommandBuffers();
     void clearCommandBuffers(int passIndex);
-    void clearCommandBuffers(std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers);
 
   private:
     int m_StereoId = -1;
@@ -177,8 +179,8 @@ namespace xr
     chrono::time_point<chrono::high_resolution_clock> m_CreatedTime;
     chrono::time_point<chrono::high_resolution_clock> m_EndedTime;
 
-    std::vector<commandbuffers::TrCommandBufferBase *> m_CommandBuffersInPass;
-    std::vector<commandbuffers::TrCommandBufferBase *> m_CommandBuffersInPass2; // This is only used when m_IsMultiPass is true.
+    vector<commandbuffers::TrCommandBufferBase *> m_CommandBuffersInPass;
+    vector<commandbuffers::TrCommandBufferBase *> m_CommandBuffersInPass2; // This is only used when m_IsMultiPass is true.
     // TODO: support 3rd, 4th, ... passes?
 
     friend class Device;

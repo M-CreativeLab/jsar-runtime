@@ -197,23 +197,39 @@ namespace xr
 
   void StereoRenderingFrame::copyCommandBuffers(StereoRenderingFrame *frame)
   {
-    copyCommandBuffers(frame->m_CommandBuffersInPass, 0);
-    copyCommandBuffers(frame->m_CommandBuffersInPass2, 1);
+    copyCommandBuffers(frame->getCommandBuffers(0), 0);
+    copyCommandBuffers(frame->getCommandBuffers(1), 1);
+  }
+
+  commandbuffers::TrCommandBufferBase *StereoRenderingFrame::cloneCommandBuffer(commandbuffers::TrCommandBufferBase *srcReq)
+  {
+    commandbuffers::TrCommandBufferBase *newReq = nullptr;
+    switch (srcReq->type)
+    {
+#define XX(commandType, requestType)                              \
+  case commandbuffers::COMMAND_BUFFER_##commandType##_REQ:        \
+  {                                                               \
+    newReq = dynamic_cast<commandbuffers::requestType *>(srcReq); \
+    break;                                                        \
+  }
+      TR_COMMAND_BUFFER_REQUESTS_MAP(XX)
+#undef XX
+    default:
+      DEBUG(LOG_TAG_ERROR, "Failed to clone an invalid command buffer(type=%d)", srcReq->type);
+      break;
+    }
+    return newReq;
   }
 
   void StereoRenderingFrame::copyCommandBuffers(std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, int passIndex)
   {
-    if (passIndex == 0)
+    vector<commandbuffers::TrCommandBufferBase *> &targetList = passIndex == 0 ? m_CommandBuffersInPass : m_CommandBuffersInPass2;
+    targetList.clear();
+    for (auto srcCommandBuffer : commandBuffers)
     {
-      clearCommandBuffers(m_CommandBuffersInPass);
-      for (auto commandBuffer : commandBuffers)
-        m_CommandBuffersInPass.push_back(new commandbuffers::TrCommandBufferBase(*commandBuffer));
-    }
-    else if (passIndex == 1)
-    {
-      clearCommandBuffers(m_CommandBuffersInPass2);
-      for (auto commandBuffer : commandBuffers)
-        m_CommandBuffersInPass2.push_back(new commandbuffers::TrCommandBufferBase(*commandBuffer));
+      auto newReq = cloneCommandBuffer(srcCommandBuffer);
+      if (newReq != nullptr)
+        targetList.push_back(newReq);
     }
   }
 
@@ -353,19 +369,15 @@ namespace xr
 
   void StereoRenderingFrame::clearCommandBuffers()
   {
-    clearCommandBuffers(m_CommandBuffersInPass);
-    clearCommandBuffers(m_CommandBuffersInPass2);
+    m_CommandBuffersInPass.clear();
+    m_CommandBuffersInPass2.clear();
   }
 
   void StereoRenderingFrame::clearCommandBuffers(int passIndex)
   {
-    clearCommandBuffers(passIndex == 0 ? m_CommandBuffersInPass : m_CommandBuffersInPass2);
-  }
-
-  void StereoRenderingFrame::clearCommandBuffers(std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers)
-  {
-    // for (auto commandBuffer : commandBuffers)
-    //   delete commandBuffer;
-    commandBuffers.clear();
+    if (passIndex == 0)
+      m_CommandBuffersInPass.clear();
+    else
+      m_CommandBuffersInPass2.clear();
   }
 }

@@ -21,6 +21,7 @@ IUnityLog *GET_UNITY_LOG_HANDLE();
 #endif
 
 #define LOG_TAG_UNITY "Unity"
+#define LOG_TAG_ERROR "jsar.error"
 #define LOG_TAG_RENDERER "renderer"
 #define LOG_TAG_XR "jsar.xr"
 #define LOG_TAG_FONT "jsar.font"

@@ -33,7 +33,7 @@ namespace renderer
 
   private: // private lifecycle
     void onCommandBufferRequestReceived(TrCommandBufferBase *req);
-    void onHostFrame();
+    void onHostFrame(chrono::time_point<chrono::high_resolution_clock> time);
     void onStartFrame();
     void onEndFrame();
 
@@ -47,6 +47,10 @@ namespace renderer
     void dispatchAnimationFrameRequest();
     void dispatchXRFrameRequest(xr::TrXRSession *session);
     /**
+     * The frame rate control method.
+     */
+    bool shouldSkipDispatchingFrame(chrono::time_point<chrono::high_resolution_clock> time);
+    /**
      * Execute command buffers from content's list.
      *
      * @param asXRFrame If the frame execution intent is for XR rendering, yes means only the command buffers in XR frame
@@ -55,7 +59,8 @@ namespace renderer
      */
     void executeCommandBuffers(bool asXRFrame, int viewIndex = 0);
     bool executeStereoFrame(int viewIndex, std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec);
-    xr::StereoRenderingFrame* getOrCreateStereoFrame(xr::Device* xrDevice);
+    xr::StereoRenderingFrame *getOrCreateStereoFrame(xr::Device *xrDevice);
+    size_t getPendingStereoFramesCount();
 
   private:
     void resetFrameRequestChanSenderWith(ipc::TrOneShotClient<TrFrameRequestMessage> *client);
@@ -72,6 +77,18 @@ namespace renderer
     vector<TrCommandBufferBase *> defaultCommandBufferRequests;
     vector<xr::StereoRenderingFrame *> stereoFramesList;
     xr::StereoRenderingFrame *stereoFrameForBackup = nullptr;
+
+  private: // frame rate control
+    uint32_t targetFrameRate = 60;
+    /**
+     * If the host frame should be skipped for the script.
+     *
+     * In multi-pass rendering, this could be set by the left eye's frame callback, and used by both eyes, so that the
+     * right eye's frame callback will not be called.
+     */
+    bool skipDispatchingFrameState = false;
+    bool isLastFrameTimepointSet = false;
+    chrono::time_point<chrono::high_resolution_clock> lastFrameTimepoint;
 
   private:
     frame_request::TrFrameRequestSender *frameRequestChanSender = nullptr;

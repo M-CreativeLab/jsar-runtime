@@ -1122,7 +1122,7 @@ private:
 		{
 			if (contentId == -1)
 			{
-				DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the xrSessionId in local mode.");
+				DEBUG(LOG_TAG_ERROR, "UniformMatrix4fv() fails to read the xrSessionId in local mode.");
 				return;
 			}
 			auto multiPassFrame = static_cast<xr::MultiPassFrame *>(deviceFrame);
@@ -1165,7 +1165,7 @@ private:
 
 		if (matrixToUse == nullptr)
 		{
-			DEBUG(DEBUG_TAG, "UniformMatrix4fv() fails to read the matrix value, placeholderType=%d",
+			DEBUG(LOG_TAG_ERROR, "UniformMatrix4fv() fails to read the matrix value, placeholderType=%d",
 						req->placeholderType);
 			return;
 		}
@@ -1717,7 +1717,6 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		if (cbRequest != nullptr)                                                               \
 		{                                                                                       \
 			On##handlerName(cbRequest, contentRenderer, callOptions, deviceFrame);                \
-			delete cbRequest;                                                                     \
 		}                                                                                       \
 		break;                                                                                  \
 	}
@@ -1857,8 +1856,8 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			break;
 		}
 		default:
-			if (callOptions.printsCall)
-				DEBUG(LOG_TAG_RENDERER, "[%d] GL::Unknown command type: %d", isDefaultQueue, commandType);
+			DEBUG(LOG_TAG_ERROR, "[%d] GL::Unknown command type: %s(%d)",
+						isDefaultQueue, commandTypeToStr(commandType).c_str(), commandType);
 			break;
 		}
 
@@ -1871,19 +1870,24 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 				switch (error)
 				{
 				case GL_INVALID_ENUM:
-					DEBUG(DEBUG_TAG, "[type:%d] Occurs an OpenGL error: GL_INVALID_ENUM", commandType);
+					DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_INVALID_ENUM",
+								commandTypeToStr(commandType).c_str(), commandType);
 					break;
 				case GL_INVALID_VALUE:
-					DEBUG(DEBUG_TAG, "[type:%d] Occurs an OpenGL error: GL_INVALID_VALUE", commandType);
+					DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_INVALID_VALUE",
+								commandTypeToStr(commandType).c_str(), commandType);
 					break;
 				case GL_INVALID_OPERATION:
-					DEBUG(DEBUG_TAG, "[type:%d] Occurs an OpenGL error: GL_INVALID_OPERATION", commandType);
+					DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_INVALID_OPERATION",
+								commandTypeToStr(commandType).c_str(), commandType);
 					break;
 				case GL_OUT_OF_MEMORY:
-					DEBUG(DEBUG_TAG, "[type:%d] Occurs an OpenGL error: GL_OUT_OF_MEMORY", commandType);
+					DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_OUT_OF_MEMORY",
+								commandTypeToStr(commandType).c_str(), commandType);
 					break;
 				default:
-					DEBUG(DEBUG_TAG, "[type:%d] Occurs an OpenGL error: 0x%04X", commandType, error);
+					DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: 0x%04x",
+								commandTypeToStr(commandType).c_str(), commandType, error);
 					break;
 				}
 			}

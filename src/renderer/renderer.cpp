@@ -39,6 +39,7 @@ namespace renderer
 
   void TrRenderer::tick()
   {
+    tickingTimepoint = std::chrono::high_resolution_clock::now();
     calcFps();
 
     glHostContext->Record();
@@ -46,7 +47,7 @@ namespace renderer
     {
       lock_guard<mutex> lock(contentRendererMutex);
       for (auto contentRenderer : contentRenderers)
-        contentRenderer->onHostFrame();
+        contentRenderer->onHostFrame(tickingTimepoint);
     }
     glHostContext->Restore();
 
@@ -288,14 +289,13 @@ namespace renderer
         xrDevice->getActiveEyeId() == 1)
       return; // Skip calc host fps when multipass XR rendering for right eye.
 
-    auto now = std::chrono::high_resolution_clock::now();
-    auto delta = chrono::duration_cast<chrono::milliseconds>(now - lastFrameTimepoint).count();
+    auto delta = chrono::duration_cast<chrono::milliseconds>(tickingTimepoint - lastFrameTimepoint).count();
     frameCount += 1;
     if (delta >= 1000)
     {
       fps = frameCount / (delta / 1000);
       frameCount = 0;
-      lastFrameTimepoint = now;
+      lastFrameTimepoint = tickingTimepoint;
     }
   }
 }
