@@ -207,13 +207,13 @@ namespace xr
     {
       clearCommandBuffers(m_CommandBuffersInPass);
       for (auto commandBuffer : commandBuffers)
-        m_CommandBuffersInPass.push_back(commandBuffer);
+        m_CommandBuffersInPass.push_back(new commandbuffers::TrCommandBufferBase(*commandBuffer));
     }
     else if (passIndex == 1)
     {
       clearCommandBuffers(m_CommandBuffersInPass2);
       for (auto commandBuffer : commandBuffers)
-        m_CommandBuffersInPass2.push_back(commandBuffer);
+        m_CommandBuffersInPass2.push_back(new commandbuffers::TrCommandBufferBase(*commandBuffer));
     }
   }
 

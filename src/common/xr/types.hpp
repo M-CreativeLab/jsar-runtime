@@ -213,6 +213,8 @@ namespace xr
   {
   public:
     TrXRFrameRenderingInfo() : sessionId(0), stereoId(0), viewIndex(-1) {}
+    TrXRFrameRenderingInfo(TrXRFrameRenderingInfo &that)
+        : sessionId(that.sessionId), stereoId(that.stereoId), viewIndex(that.viewIndex) {}
     TrXRFrameRenderingInfo(uint32_t sessionId, int stereoId, int viewIndex)
         : sessionId(sessionId), stereoId(stereoId), viewIndex(viewIndex)
     {
@@ -220,6 +222,12 @@ namespace xr
 
   public:
     inline bool isValid() { return sessionId > 0 && viewIndex >= 0; }
+    inline string toString()
+    {
+      return "Info(session=" + to_string(sessionId) + "," +
+             "stereoId=" + to_string(stereoId) + "," +
+             "viewIndex=" + to_string(viewIndex) + ")";
+    }
 
   public:
     uint32_t sessionId;

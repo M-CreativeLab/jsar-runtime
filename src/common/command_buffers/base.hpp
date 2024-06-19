@@ -25,7 +25,20 @@ namespace commandbuffers
     xr::TrXRFrameRenderingInfo renderingInfo;
   };
 
-  using TrCommandBufferRequest = TrCommandBufferBase;
+  class TrCommandBufferRequest : public TrCommandBufferBase
+  {
+  public:
+    TrCommandBufferRequest(TrCommandBufferRequest &that)
+        : TrCommandBufferBase(that.type, that.size)
+    {
+      renderingInfo = that.renderingInfo;
+    }
+    TrCommandBufferRequest(CommandBufferType type, size_t size)
+        : TrCommandBufferBase(type, size)
+    {
+    }
+  };
+
   class TrCommandBufferResponse : public TrCommandBufferBase
   {
   public:
@@ -48,6 +61,7 @@ namespace commandbuffers
   class TrCommandBufferSimpleRequest : public TrCommandBufferRequest
   {
   public:
+    TrCommandBufferSimpleRequest(TrCommandBufferSimpleRequest &that) : TrCommandBufferRequest(that) {}
     TrCommandBufferSimpleRequest(CommandBufferType type)
         : TrCommandBufferRequest(type, sizeof(T))
     {

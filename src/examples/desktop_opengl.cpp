@@ -42,13 +42,24 @@ const char *fragmentShaderSource = R"(
   }
 )";
 
+#define XR_EYE_SPAN 0.5f  /** The length between 2 eyes */
+
 class XRStereoscopicRenderer
 {
 public:
-  static constexpr float CameraZ = 3.0f;
-
-public:
-  XRStereoscopicRenderer() {}
+  XRStereoscopicRenderer()
+  {
+    float eyeOffset = XR_EYE_SPAN / 2;
+    viewerPosition = glm::vec3(0.0f, 0.0f, 1.0f);
+    {
+      glm::vec3 viewerForward(0.0f, 0.0f, -1.0f);
+      viewerOrientation = glm::quatLookAt(glm::normalize(viewerForward), glm::vec3(0, 1, 0));
+    }
+    eyePosition[0] = glm::vec3(viewerPosition.x - eyeOffset, viewerPosition.y, viewerPosition.z);
+    eyePosition[1] = glm::vec3(viewerPosition.x + eyeOffset, viewerPosition.y, viewerPosition.z);
+    eyeOrientation[0] = viewerOrientation;
+    eyeOrientation[1] = viewerOrientation;
+  }
   ~XRStereoscopicRenderer()
   {
   }
@@ -63,20 +74,13 @@ public:
     assert(eyeIndex < 2);
     return glm::translate(glm::mat4(1.0f), eyePosition[eyeIndex]) * glm::mat4_cast(eyeOrientation[eyeIndex]);
   }
-  glm::mat4 getProjectionMatrix()
-  {
-    return glm::perspective(glm::radians(fov), 1.0f, near, far);
-  }
+  glm::mat4 getProjectionMatrix() { return glm::perspective(glm::radians(fov), 1.0f, near, far); }
 
 private:
-  glm::vec3 viewerPosition = glm::vec3(0.0f, 0.0f, CameraZ);
-  glm::quat viewerOrientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-  glm::vec3 eyePosition[2] = {
-      glm::vec3(0.0f, -0.5f, CameraZ),
-      glm::vec3(0.0f, +0.5f, CameraZ)};
-  glm::quat eyeOrientation[2] = {
-      glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
-      glm::quat(1.0f, 0.0f, 0.0f, 0.0f)};
+  glm::vec3 viewerPosition;
+  glm::quat viewerOrientation;
+  glm::vec3 eyePosition[2];
+  glm::quat eyeOrientation[2];
 
 private: // projection
   float near = 0.1f;
@@ -597,6 +601,9 @@ int main(int argc, char **argv)
           auto projectionMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getProjectionMatrix()));
           xrDevice->updateViewerStereoViewMatrix(viewIndex, viewMatrix);
           xrDevice->updateViewerStereoProjectionMatrix(viewIndex, projectionMatrix);
+
+          auto viewerBaseMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewerBaseMatrix()));
+          xrDevice->updateViewerTransform(viewerBaseMatrix);
         }
         embedder->onFrame();
       }
