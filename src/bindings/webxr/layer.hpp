@@ -3,6 +3,7 @@
 #include <napi.h>
 #include "common.hpp"
 #include "session.hpp"
+#include "client/per_process.hpp"
 #include "bindings/webgl/rendering_context.hpp"
 #include "xr/layer.hpp"
 
@@ -13,6 +14,9 @@ namespace bindings
   {
   public:
     XRLayerBase(const Napi::CallbackInfo &info);
+
+  protected:
+    TrClientContextPerProcess* clientContext = nullptr;
   };
 
   class XRLayer : public XRLayerBase<XRLayer>

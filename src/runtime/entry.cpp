@@ -262,7 +262,7 @@ extern "C"
   DLL_PUBLIC void TransmuteNative_SetViewport(int w, int h)
   {
     TrViewport viewport(w, h);
-    UnityEmbedder::EnsureAndGet()->getRenderer()->setViewport(viewport);
+    UnityEmbedder::EnsureAndGet()->getRenderer()->setDrawingViewport(viewport);
   }
 
   DLL_PUBLIC void TransmuteNative_SetFov(float fov)

@@ -41,7 +41,7 @@ namespace commandbuffers
     }
 
   public:
-    TrViewport viewport;
+    TrViewport drawingViewport;
     int maxCombinedTextureImageUnits;
     int maxCubeMapTextureSize;
     int maxFragmentUniformVectors;

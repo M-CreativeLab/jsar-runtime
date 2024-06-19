@@ -238,7 +238,10 @@ namespace xr
           sessionId(that.sessionId),
           stereoId(that.stereoId),
           viewIndex(that.viewIndex),
-          views{that.views[0], that.views[1]}
+          views{that.views[0], that.views[1]},
+          framebufferId(that.framebufferId),
+          framebufferWidth(that.framebufferWidth),
+          framebufferHeight(that.framebufferHeight)
     {
       setLocalBaseMatrix(that.localBaseMatrix);
       setViewerBaseMatrix(that.viewerBaseMatrix);
@@ -264,6 +267,10 @@ namespace xr
       views[1] = TrXRView();
       setLocalBaseMatrix(glm::mat4(1.0f));
       setViewerBaseMatrix(glm::mat4(1.0f));
+
+      framebufferId = -1;
+      framebufferWidth = 0;
+      framebufferHeight = 0;
     }
     void setLocalBaseMatrix(float *matrixFloats)
     {
@@ -291,5 +298,8 @@ namespace xr
     float localBaseMatrix[16];
     float viewerBaseMatrix[16];
     TrXRView views[ViewsCount];
+    int framebufferId = -1;
+    int framebufferWidth;
+    int framebufferHeight;
   };
 }

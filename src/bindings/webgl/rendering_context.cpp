@@ -875,7 +875,7 @@ namespace webgl
       return;
     }
 
-    this->viewport = resp->viewport;
+    this->viewport = resp->drawingViewport;
     this->maxCombinedTextureImageUnits = resp->maxCombinedTextureImageUnits;
     this->maxCubeMapTextureSize = resp->maxCubeMapTextureSize;
     this->maxFragmentUniformVectors = resp->maxFragmentUniformVectors;
@@ -1869,6 +1869,17 @@ namespace webgl
     }
     else if (info.Length() == 9)
     {
+      if (!info[3].IsNumber() || !info[4].IsNumber())
+      {
+        Napi::Object debugObject = Napi::Object::New(env);
+        debugObject.Set("width", info[3]);
+        debugObject.Set("height", info[4]);
+        env.Global().Get("console").As<Napi::Object>().Get("log").As<Napi::Function>()({debugObject});
+        Napi::TypeError::New(env, "width or height is not a number.")
+            .ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+
       req.width = info[3].As<Napi::Number>().Uint32Value();
       req.height = info[4].As<Napi::Number>().Uint32Value();
       req.border = info[5].As<Napi::Number>().Uint32Value();

@@ -107,6 +107,11 @@ public: // WebXR methods
   bool finishXrFrame(xr::TrXRFrameRequest* frameRequest);
   bool isInXrFrame();
 
+  int getFramebufferWidth();
+  int getFramebufferHeight();
+  void setFramebufferWidth(int w);
+  void setFramebufferHeight(int h);
+
   template <typename CommandType>
   bool sendXrCommand(xr::TrXRCommandBase<CommandType> &xrCommand)
   {
@@ -166,6 +171,8 @@ private: // xr fields
   xr::TrXRCommandSender *xrCommandChanSender = nullptr;
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
   xr::TrXRFrameRequest *currentXrFrameRequest = nullptr;
+  int framebufferWidth = 0;
+  int framebufferHeight = 0;
 
 private: // frame request fields
   map<FrameRequestId, TrFrameRequestCallback> frameRequestCallbacksMap;

@@ -83,16 +83,13 @@ public:
 
   bool HasViewportChanged(int x, int y, int width, int height)
   {
-    return m_Viewport[0] != x || m_Viewport[1] != y || m_Viewport[2] != width || m_Viewport[3] != height;
+    return m_DrawingViewport.isEqual(width, height, x, y);
   }
-  void SetViewport(int x, int y, int width, int height)
+  void SetDrawingViewport(TrViewport& viewport)
   {
-    m_Viewport[0] = x;
-    m_Viewport[1] = y;
-    m_Viewport[2] = width;
-    m_Viewport[3] = height;
+    m_DrawingViewport = viewport;
   }
-  int *GetViewport() { return m_Viewport; }
+  TrViewport GetDrawingViewport() { return m_DrawingViewport; }
   void SetFieldOfView(float fov) { this->fov = fov; }
   void SetViewerPosition(float x, float y, float z)
   {
@@ -141,7 +138,7 @@ protected:
   float M_ViewerRotation[4] = {0.0f, 0.0f, 0.0f, 1.0f};
   float m_LocalPosition[3] = {0.0f, 0.0f, 0.0f};
   float m_LocalRotation[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-  int m_Viewport[4] = {0, 0, 0, 0};
+  TrViewport m_DrawingViewport;
   bool m_EnableLogOnAppGlobal = false;
   bool m_EnableLogOnXRFrame = false;
   bool m_PrintsContext = false;

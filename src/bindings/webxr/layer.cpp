@@ -10,6 +10,8 @@ namespace bindings
   template <typename T>
   XRLayerBase<T>::XRLayerBase(const Napi::CallbackInfo &info) : Napi::ObjectWrap<T>(info)
   {
+    clientContext = TrClientContextPerProcess::Get();
+    assert(clientContext != nullptr);
   }
 
   Napi::Object XRLayer::Init(Napi::Env env, Napi::Object exports)
@@ -112,11 +114,6 @@ namespace bindings
       if (optionsObject.Has("framebufferScaleFactor"))
         config.framebufferScaleFactor = optionsObject.Get("framebufferScaleFactor").ToNumber().FloatValue();
     }
-
-    // Update framebuffer & size from rendering context.
-    auto renderingContext = getWebGLRenderingContext();
-    config.framebufferWidth = renderingContext->getDrawingBufferWidth();
-    config.framebufferHeight = renderingContext->getDrawingBufferHeight();
   }
 
   XRWebGLLayer::~XRWebGLLayer()
@@ -143,12 +140,12 @@ namespace bindings
 
   Napi::Value XRWebGLLayer::FramebufferWidthGetter(const Napi::CallbackInfo &info)
   {
-    return Napi::Number::New(info.Env(), config.framebufferWidth);
+    return Napi::Number::New(info.Env(), clientContext->getFramebufferWidth());
   }
 
   Napi::Value XRWebGLLayer::FramebufferHeightGetter(const Napi::CallbackInfo &info)
   {
-    return Napi::Number::New(info.Env(), config.framebufferHeight);
+    return Napi::Number::New(info.Env(), clientContext->getFramebufferHeight());
   }
 
   Napi::Value XRWebGLLayer::FixedFoveationGetter(const Napi::CallbackInfo &info)

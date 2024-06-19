@@ -205,9 +205,9 @@ namespace renderer
     }
   }
 
-  void TrRenderer::setViewport(TrViewport &viewport)
+  void TrRenderer::setDrawingViewport(TrViewport viewport)
   {
-    api->SetViewport(viewport.width, viewport.height, viewport.x, viewport.y);
+    api->SetDrawingViewport(viewport);
   }
 
   void TrRenderer::setRecommendedFov(float fov)

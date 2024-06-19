@@ -457,7 +457,7 @@ int main(int argc, char **argv)
   }
 
   auto drawingViewport = windowCtx.drawingViewport();
-  embedder->getRenderer()->setViewport(drawingViewport);
+  embedder->getRenderer()->setDrawingViewport(drawingViewport);
 
   {
     // Start
@@ -597,7 +597,6 @@ int main(int argc, char **argv)
           auto projectionMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getProjectionMatrix()));
           xrDevice->updateViewerStereoViewMatrix(viewIndex, viewMatrix);
           xrDevice->updateViewerStereoProjectionMatrix(viewIndex, projectionMatrix);
-          embedder->getRenderer()->setViewport(eyeViewport);
         }
         embedder->onFrame();
       }

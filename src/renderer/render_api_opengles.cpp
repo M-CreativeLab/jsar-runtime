@@ -75,8 +75,7 @@ private:
 	void OnContextInit(WebGL1ContextInitCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		WebGL1ContextInitCommandBufferResponse res(req);
-		auto hostContext = renderer->getOpenGLContext();
-		res.viewport = hostContext->GetViewport();
+		res.drawingViewport = GetDrawingViewport();
 		glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &res.maxCombinedTextureImageUnits);
 		glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE, &res.maxCubeMapTextureSize);
 		glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_VECTORS, &res.maxFragmentUniformVectors);

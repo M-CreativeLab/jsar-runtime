@@ -393,7 +393,7 @@ bool TrClientContextPerProcess::sendCommandBufferRequest(TrCommandBufferBase &co
     commandBuffer.renderingInfo = currentXrFrameRequest->createRenderingInfo(viewIndex);
   }
   bool success = commandBufferChanSender->sendCommandBufferRequest(commandBuffer);
-  if (!isInXrFrame() || !followsFlush)  // Directly returns success if not a XRFrame or not follow flush command buffer
+  if (!isInXrFrame() || !followsFlush) // Directly returns success if not a XRFrame or not follow flush command buffer
     return success;
   else
     return success ? flushXrFrame() : false;
@@ -437,6 +437,11 @@ bool TrClientContextPerProcess::isInXrFrame()
 {
   return currentXrFrameRequest != nullptr;
 }
+
+int TrClientContextPerProcess::getFramebufferWidth() { return framebufferWidth; }
+int TrClientContextPerProcess::getFramebufferHeight() { return framebufferHeight; }
+void TrClientContextPerProcess::setFramebufferWidth(int w) { framebufferWidth = w; }
+void TrClientContextPerProcess::setFramebufferHeight(int h) { framebufferHeight = h; }
 
 font::FontCacheManager &TrClientContextPerProcess::getFontCacheManager()
 {

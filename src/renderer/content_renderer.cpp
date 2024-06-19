@@ -211,6 +211,12 @@ namespace renderer
     auto req = currentBaseXRFrameReq->clone();
     req.sessionId = session->id;
     req.setLocalBaseMatrix(session->getLocalBaseMatrix());
+
+    auto hostContext = constellation->getRenderer()->glHostContext;
+    auto hostViewport = hostContext->GetViewport();
+    req.framebufferId = hostContext->GetFramebuffer();
+    req.framebufferWidth = hostViewport.width;
+    req.framebufferHeight = hostViewport.height;
     dispatchFrameRequest(req);
   }
 

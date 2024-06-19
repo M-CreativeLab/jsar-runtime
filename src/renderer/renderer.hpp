@@ -78,7 +78,7 @@ namespace renderer
     void removeContentRenderer(pid_t contentPid);
 
   public: // API for host update
-    void setViewport(TrViewport &viewport);
+    void setDrawingViewport(TrViewport viewport);
     void setRecommendedFov(float fov);
     void setTime(float time); // might be deprecated
 
