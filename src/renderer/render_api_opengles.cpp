@@ -497,13 +497,10 @@ private:
 	}
 	void OnCreateFramebuffer(CreateFramebufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		GLuint ret;
-		glGenFramebuffers(1, &ret);
-		reqContentRenderer->getOpenGLContext()->RecordFramebufferOnCreated(ret);
-
-		// createFramebufferCommandBuffer->m_FramebufferId = ret;
+		GLuint framebuffer = m_GLObjectManager.CreateFramebuffer(req->clientId);
+		reqContentRenderer->getOpenGLContext()->RecordFramebufferOnCreated(framebuffer);
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::CreateFramebuffer() => %d", options.isDefaultQueue, ret);
+			DEBUG(DEBUG_TAG, "[%d] GL::CreateFramebuffer() => %d", options.isDefaultQueue, framebuffer);
 	}
 	void OnDeleteFramebuffer(DeleteFramebufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
@@ -515,12 +512,14 @@ private:
 	void OnBindFramebuffer(BindFramebufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto target = req->target;
-		auto framebuffer = req->framebuffer;
+		GLuint framebuffer;
 		/**
 		 * FIXME: When framebuffer is -1, assume to bind the host framebuffer.
 		 */
-		if (framebuffer == -1)
+		if (req->framebuffer == -1)
 			framebuffer = renderer->getOpenGLContext()->GetFramebuffer();
+		else
+			framebuffer = m_GLObjectManager.FindFramebuffer(req->framebuffer);
 
 		glBindFramebuffer(target, framebuffer);
 		reqContentRenderer->getOpenGLContext()->RecordFramebuffer(framebuffer);
@@ -645,7 +644,8 @@ private:
 				req->mask,
 				req->filter);
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::BlitFramebuffer: %d", options.isDefaultQueue, req->filter);
+			DEBUG(DEBUG_TAG, "[%d] GL::BlitFramebuffer(%d, %d, filter=%d)", options.isDefaultQueue,
+						req->srcX0, req->srcY0, req->filter);
 	}
 	void OnRenderbufferStorageMultisample(RenderbufferStorageMultisampleCommandBufferRequest *req,
 																				renderer::TrContentRenderer *reqContentRenderer,
@@ -678,10 +678,10 @@ private:
 	}
 	void OnBindVertexArray(BindVertexArrayCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		auto vao = m_GLObjectManager.FindBuffer(req->vertexArray);
+		auto vao = m_GLObjectManager.FindVertexArray(req->vertexArray);
 		if (req->vertexArray != 0 && vao == 0)
 		{
-			DEBUG(DEBUG_TAG, "Could not find vertex array object(cid=%d) to bind", req->vertexArray);
+			DEBUG(LOG_TAG_ERROR, "Could not find vertex array object(cid=%d) to bind", req->vertexArray);
 			return;
 		}
 		glBindVertexArray(vao);
