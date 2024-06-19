@@ -139,6 +139,11 @@ namespace xr
     return m_Enabled;
   }
 
+  bool Device::isRenderedAsMultipass()
+  {
+    return m_StereoRenderingMode == TrStereoRenderingMode::MultiPass;
+  }
+
   void Device::setFrameRate(uint32_t frameRate)
   {
     if (frameRate >= MIN_FRAME_RATE || frameRate <= MAX_FRAME_RATE)

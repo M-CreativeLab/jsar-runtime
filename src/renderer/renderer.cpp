@@ -39,7 +39,7 @@ namespace renderer
 
   void TrRenderer::tick()
   {
-    calcFps(std::chrono::high_resolution_clock::now());
+    calcFps();
 
     glHostContext->Record();
     glHostContext->Print();
@@ -277,11 +277,18 @@ namespace renderer
     return api->ExecuteCommandBuffer(commandBuffers, contentRenderer, nullptr, true);
   }
 
-  void TrRenderer::calcFps(chrono::steady_clock::time_point now)
+  void TrRenderer::calcFps()
   {
     if (!enableFpsCalc) // Skip fps calculation if it is disabled.
       return;
+    auto xrDevice = constellation->getXrDevice();
+    if (xrDevice != nullptr &&
+        xrDevice->enabled() &&
+        xrDevice->isRenderedAsMultipass() &&
+        xrDevice->getActiveEyeId() == 1)
+      return; // Skip calc host fps when multipass XR rendering for right eye.
 
+    auto now = std::chrono::high_resolution_clock::now();
     auto delta = chrono::duration_cast<chrono::milliseconds>(now - lastFrameTimepoint).count();
     frameCount += 1;
     if (delta >= 1000)

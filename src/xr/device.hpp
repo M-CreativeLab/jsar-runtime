@@ -36,6 +36,7 @@ namespace xr
     bool isSessionSupported(xr::TrXRSessionMode mode);
     int requestSession(xr::TrXRSessionMode mode, TrContentRenderer* contentRenderer);
     bool enabled();
+    bool isRenderedAsMultipass();
     void setFrameRate(uint32_t frameRate);
     bool skipHostFrameOnScript();
     void startHostFrame();

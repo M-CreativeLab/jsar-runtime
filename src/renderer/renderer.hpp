@@ -86,7 +86,7 @@ namespace renderer
     void startWatchers();
     void stopWatchers();
     bool executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, TrContentRenderer *contentRenderer);
-    void calcFps(chrono::steady_clock::time_point now);
+    void calcFps();
 
   private:
     RenderAPI *api = nullptr;
