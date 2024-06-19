@@ -43,16 +43,15 @@ namespace bindings
     Napi::Value GetHandInputSource(const Napi::CallbackInfo &info);
     Napi::Value GetGamepadInputSources(const Napi::CallbackInfo &info);
     Napi::Value GetScreenInputSources(const Napi::CallbackInfo &info);
-    Napi::Value StartFrame(const Napi::CallbackInfo &info);
-    Napi::Value EndFrame(const Napi::CallbackInfo &info);
 
   public:
     bool supportsSessionMode(XRSessionMode sessionMode);
     bool supportsReferenceSpaceType(XRReferenceSpaceType referenceSpaceType);
     void requestFrame(XRFrameCallback callback, void* context);
-    bool startFrame(uint32_t sessionId, uint32_t stereoRenderingId, uint32_t passIndex);
-    bool endFrame(uint32_t sessionId, uint32_t stereoRenderingId, uint32_t passIndex);
+    bool startFrame(xr::TrXRFrameRequest *frameRequest);
+    bool endFrame(xr::TrXRFrameRequest *frameRequest);
     TrViewport getViewport(uint32_t viewIndex);
+    xr::TrDeviceInit& getDeviceInit();
 
   private:
     void handleFrameRequest(xr::TrXRFrameRequest *frameRequest);

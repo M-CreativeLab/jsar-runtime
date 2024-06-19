@@ -59,7 +59,7 @@ namespace renderer
     TrContentRenderer *findContentRenderer(pid_t contentPid);
     /**
      * Find the content renderer by the content pointer.
-     * 
+     *
      * @param content The content to be found.
      * @returns The content renderer if found, otherwise nullptr.
      */
@@ -85,14 +85,14 @@ namespace renderer
   private:
     void startWatchers();
     void stopWatchers();
-    void executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, TrContentRenderer *contentRenderer);
+    bool executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, TrContentRenderer *contentRenderer);
     void calcFps(chrono::steady_clock::time_point now);
 
   private:
     RenderAPI *api = nullptr;
     TrConstellation *constellation = nullptr;
     OpenGLHostContextStorage *glHostContext = nullptr;
-    vector<TrContentRenderer> contentRenderers;
+    vector<TrContentRenderer *> contentRenderers;
 
   private: // fields for frame request
     ipc::TrOneShotServer<TrFrameRequestMessage> *frameRequestChanServer = nullptr;

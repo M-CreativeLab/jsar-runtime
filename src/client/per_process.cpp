@@ -383,14 +383,59 @@ TrEventMessage *TrClientContextPerProcess::recvEventMessage(int timeout)
   return eventChanReceiver->recvEvent(timeout);
 }
 
-bool TrClientContextPerProcess::sendCommandBufferRequest(TrCommandBufferBase &commandBuffer)
+bool TrClientContextPerProcess::sendCommandBufferRequest(TrCommandBufferBase &commandBuffer, bool followsFlush)
 {
-  return commandBufferChanSender->sendCommandBufferRequest(commandBuffer);
+  if (isInXrFrame())
+  {
+    int viewIndex = 0;
+    if (xrDeviceInit.renderedAsMultipass()) // If the device is rendered as multipass, the viewIndex should read from the frame request.
+      viewIndex = currentXrFrameRequest->viewIndex;
+    commandBuffer.renderingInfo = currentXrFrameRequest->createRenderingInfo(viewIndex);
+  }
+  bool success = commandBufferChanSender->sendCommandBufferRequest(commandBuffer);
+  if (!isInXrFrame() || !followsFlush)  // Directly returns success if not a XRFrame or not follow flush command buffer
+    return success;
+  else
+    return success ? flushXrFrame() : false;
 }
 
 TrCommandBufferResponse *TrClientContextPerProcess::recvCommandBufferResponse(int timeout)
 {
   return commandBufferChanReceiver->recvCommandBufferResponse(timeout);
+}
+
+bool TrClientContextPerProcess::startXrFrame(xr::TrXRFrameRequest *frameRequest)
+{
+  currentXrFrameRequest = frameRequest;
+  XRFrameStartCommandBufferRequest req(frameRequest->stereoId, frameRequest->viewIndex);
+  return sendCommandBufferRequest(req);
+}
+
+bool TrClientContextPerProcess::flushXrFrame()
+{
+  if (currentXrFrameRequest != nullptr)
+  {
+    auto stereoId = currentXrFrameRequest->stereoId;
+    auto viewIndex = currentXrFrameRequest->viewIndex;
+    XRFrameFlushCommandBufferRequest req(stereoId, viewIndex);
+    return sendCommandBufferRequest(req);
+  }
+  else
+  {
+    return false;
+  }
+}
+
+bool TrClientContextPerProcess::finishXrFrame(xr::TrXRFrameRequest *frameRequest)
+{
+  currentXrFrameRequest = nullptr;
+  XRFrameEndCommandBufferRequest req(frameRequest->stereoId, frameRequest->viewIndex);
+  return sendCommandBufferRequest(req);
+}
+
+bool TrClientContextPerProcess::isInXrFrame()
+{
+  return currentXrFrameRequest != nullptr;
 }
 
 font::FontCacheManager &TrClientContextPerProcess::getFontCacheManager()

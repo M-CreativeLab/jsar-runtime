@@ -983,13 +983,13 @@ namespace webgl
     auto resp = recvCommandBufferResponse<LinkProgramCommandBufferResponse>(COMMAND_BUFFER_LINK_PROGRAM_RES);
     if (resp == nullptr)
     {
-      Napi::TypeError::New(env, "Failed to link program: response is empty.")
+      Napi::TypeError::New(env, "Failed to linkProgram(id): timeout.")
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!resp->success)
     {
-      Napi::TypeError::New(env, "Failed to link program: not successful.")
+      Napi::TypeError::New(env, "Failed to linkProgram(id): not successful.")
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -1166,7 +1166,7 @@ namespace webgl
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     auto shader = info[1].As<Napi::Number>().Int32Value();
     auto req = AttachShaderCommandBufferRequest(program->GetId(), shader);
-    sendCommandBufferRequest(req, true);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1191,7 +1191,7 @@ namespace webgl
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     auto shader = info[1].As<Napi::Number>().Int32Value();
     auto req = DetachShaderCommandBufferRequest(program->GetId(), shader);
-    sendCommandBufferRequest(req, true);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1210,7 +1210,7 @@ namespace webgl
 
     auto id = shaderIdGen.get();
     auto req = CreateShaderCommandBufferRequest(id, type);
-    sendCommandBufferRequest(req, true);
+    sendCommandBufferRequest(req);
     return Napi::Number::New(env, id);
   }
 
@@ -1255,7 +1255,7 @@ namespace webgl
     // }
 
     auto commandBuffer = ShaderSourceCommandBufferRequest(shader, source);
-    sendCommandBufferRequest(commandBuffer, true);
+    sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
 
@@ -1272,7 +1272,7 @@ namespace webgl
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
     auto req = CompileShaderCommandBufferRequest(shader);
-    sendCommandBufferRequest(req, true);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1342,7 +1342,7 @@ namespace webgl
 
     auto id = bufferIdGen.get();
     auto req = CreateBufferCommandBufferRequest(id);
-    sendCommandBufferRequest(req, true);
+    sendCommandBufferRequest(req);
     return Napi::Number::New(env, id);
   }
 
@@ -1359,7 +1359,7 @@ namespace webgl
     }
     int buffer = info[0].As<Napi::Number>().Int32Value();
     auto req = DeleteBufferCommandBufferRequest(buffer);
-    sendCommandBufferRequest(req, true);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1536,7 +1536,7 @@ namespace webgl
 
     auto id = framebufferIdGen.get();
     auto req = CreateFramebufferCommandBufferRequest(id);
-    sendCommandBufferRequest(req, true);
+    sendCommandBufferRequest(req);
     return Napi::Number::New(env, id);
   }
 
@@ -1553,7 +1553,7 @@ namespace webgl
     }
     int framebuffer = info[0].As<Napi::Number>().Int32Value();
     auto req = DeleteFramebufferCommandBufferRequest(framebuffer);
-    sendCommandBufferRequest(req, true);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -1663,7 +1663,7 @@ namespace webgl
 
     auto id = renderbufferIdGen.get();
     auto req = CreateRenderbufferCommandBufferRequest(id);
-    sendCommandBufferRequest(req, true);
+    sendCommandBufferRequest(req);
     return Napi::Number::New(env, id);
   }
 
@@ -1680,7 +1680,7 @@ namespace webgl
     }
     int renderbuffer = info[0].As<Napi::Number>().Int32Value();
     auto req = DeleteRenderbufferCommandBufferRequest(renderbuffer);
-    sendCommandBufferRequest(req, true);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 

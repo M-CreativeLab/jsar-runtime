@@ -23,6 +23,11 @@ namespace renderer
     delete glHostContext;
     delete frameRequestChanServer;
     delete commandBufferChanServer;
+
+    // clear ContentRenderer list.
+    for (auto contentRenderer : contentRenderers)
+      delete contentRenderer;
+    contentRenderers.clear();
   }
 
   void TrRenderer::initialize()
@@ -41,7 +46,7 @@ namespace renderer
     {
       lock_guard<mutex> lock(contentRendererMutex);
       for (auto contentRenderer : contentRenderers)
-        contentRenderer.onHostFrame();
+        contentRenderer->onHostFrame();
     }
     glHostContext->Restore();
 
@@ -147,25 +152,25 @@ namespace renderer
     if (content == nullptr || findContentRenderer(content->pid) != nullptr)
       return;
     removeContentRenderer(content->pid); // Remove the old content renderer if it exists.
-    contentRenderers.push_back(TrContentRenderer(content, constellation));
+    contentRenderers.push_back(new TrContentRenderer(content, constellation));
   }
 
   TrContentRenderer *TrRenderer::findContentRenderer(pid_t contentPid)
   {
-    for (auto &contentRenderer : contentRenderers)
+    for (auto contentRenderer : contentRenderers)
     {
-      if (contentRenderer.content->pid == contentPid)
-        return &contentRenderer;
+      if (contentRenderer->content->pid == contentPid)
+        return contentRenderer;
     }
     return nullptr;
   }
 
   TrContentRenderer *TrRenderer::findContentRenderer(TrContentRuntime *content)
   {
-    for (auto &contentRenderer : contentRenderers)
+    for (auto contentRenderer : contentRenderers)
     {
-      if (contentRenderer.content == content)
-        return &contentRenderer;
+      if (contentRenderer->content == content)
+        return contentRenderer;
     }
     return nullptr;
   }
@@ -176,7 +181,8 @@ namespace renderer
       return;
     for (auto it = contentRenderers.begin(); it != contentRenderers.end(); it++)
     {
-      if (it->content == content)
+      auto contentRenderer = *it;
+      if (contentRenderer->content == content)
       {
         contentRenderers.erase(it);
         break;
@@ -190,7 +196,8 @@ namespace renderer
       return;
     for (auto it = contentRenderers.begin(); it != contentRenderers.end(); it++)
     {
-      if (it->content->pid == contentPid)
+      auto contentRenderer = *it;
+      if (contentRenderer->content->pid == contentPid)
       {
         contentRenderers.erase(it);
         break;
@@ -264,10 +271,10 @@ namespace renderer
     }
   }
 
-  void TrRenderer::executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
+  bool TrRenderer::executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
                                          TrContentRenderer *contentRenderer)
   {
-    api->ExecuteCommandBuffer(commandBuffers, contentRenderer, nullptr, true);
+    return api->ExecuteCommandBuffer(commandBuffers, contentRenderer, nullptr, true);
   }
 
   void TrRenderer::calcFps(chrono::steady_clock::time_point now)

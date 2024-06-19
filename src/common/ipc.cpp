@@ -134,7 +134,7 @@ namespace ipc
           continue;
         if (errno == ECONNRESET || errno == EPIPE)
           client->invalid(true);
-        DEBUG(LOG_TAG_IPC, "Failed to send data: %s", strerror(errno));
+        DEBUG(LOG_TAG_IPC, "Failed to send data(bytes=%d): %s", remaining, strerror(errno));
         return false;
       }
       else

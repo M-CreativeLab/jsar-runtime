@@ -54,6 +54,8 @@ public: // reference methods
   xr::Device *getXrDevice();
 
 public: // command buffer methods
+  void setCommandBufferRequestHandler(function<void(TrCommandBufferBase *)> handler);
+  void resetCommandBufferRequestHandler();
   void setupWithCommandBufferClient(TrOneShotClient<TrCommandBufferMessage> *client);
   bool sendCommandBufferResponse(TrCommandBufferResponse &res);
 
@@ -63,13 +65,13 @@ public: // event methods
 public: // XR-related methods
   /**
    * Setup and add the ipc client for XR command messages.
-   * 
+   *
    * @param client The client pointer to receive or send XR command messages.
    */
   void setupWithXRCommandBufferClient(TrOneShotClient<xr::TrXRCommandMessage> *client);
   /**
    * Send a XR command response to the content's client.
-   * 
+   *
    * @param resp The XR command response to send.
    */
   template <typename CommandType>
@@ -101,7 +103,8 @@ private:
   TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
-  vector<TrCommandBufferBase *> commandBufferRequests;
+  function<void(TrCommandBufferBase *)> onCommandBufferRequestReceived;
+  // vector<TrCommandBufferBase *> commandBufferRequests;
   TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
   xr::TrXRCommandSender *xrCommandChanSender = nullptr;

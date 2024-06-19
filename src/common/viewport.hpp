@@ -1,6 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <iostream>
+
+using namespace std;
 
 class TrViewport
 {
@@ -19,6 +22,22 @@ public:
            this->height == height &&
            this->x == x &&
            this->y == y;
+  }
+
+public:
+  string toString() const
+  {
+    return "Viewport(" +
+           to_string(width) + ", " +
+           to_string(height) + ", " +
+           to_string(x) + "," +
+           to_string(y) +
+           ")";
+  }
+  friend ostream &operator<<(ostream &os, const TrViewport& viewport)
+  {
+    os << viewport.toString();
+    return os;
   }
 
 public:

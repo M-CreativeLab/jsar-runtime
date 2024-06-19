@@ -23,6 +23,7 @@ namespace bindings
   protected:
     mat4 transform;
     bool emulatedPosition;
+    XRDeviceNative* device = nullptr;
     xr::TrXRFrameRequest* frameRequest = nullptr;
   };
 
@@ -30,7 +31,7 @@ namespace bindings
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, mat4& transform, xr::TrXRFrameRequest *frameRequest);
+    static Napi::Object NewInstance(Napi::Env env, XRDeviceNative* device, mat4& transform, xr::TrXRFrameRequest *frameRequest);
     XRPose(const Napi::CallbackInfo &info);
 
   private:
@@ -41,7 +42,7 @@ namespace bindings
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, mat4& transform, xr::TrXRFrameRequest* frameRequest, XRSession* session);
+    static Napi::Object NewInstance(Napi::Env env, XRDeviceNative* device, mat4& transform, xr::TrXRFrameRequest* frameRequest, XRSession* session);
     XRViewerPose(const Napi::CallbackInfo &info);
     ~XRViewerPose();
 

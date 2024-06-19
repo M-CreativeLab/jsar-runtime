@@ -209,9 +209,24 @@ namespace commandbuffers
     COMMAND_BUFFER_GET_SHADER_PRECISION_FORMAT_RES,
     COMMAND_BUFFER_GET_ERROR_REQ,
     COMMAND_BUFFER_GET_ERROR_RES,
+
+    /** XRFrame controls */
+    COMMAND_BUFFER_XRFRAME_START_REQ,
+    COMMAND_BUFFER_XRFRAME_FLUSH_REQ,
+    COMMAND_BUFFER_XRFRAME_END_REQ,
   };
 
   std::string commandTypeToStr(CommandBufferType type);
+
+  /**
+   * Check this command type is a XRFrame control.
+   */
+  inline bool isXRFrameControlCommandType(CommandBufferType type)
+  {
+    return type == COMMAND_BUFFER_XRFRAME_START_REQ ||
+           type == COMMAND_BUFFER_XRFRAME_FLUSH_REQ ||
+           type == COMMAND_BUFFER_XRFRAME_END_REQ;
+  }
 
   using namespace ipc;
   class TrCommandBufferMessage : public TrIpcMessage<TrCommandBufferMessage, CommandBufferType>
@@ -225,7 +240,7 @@ namespace commandbuffers
         : TrIpcMessage(type, size, base)
     {
     }
-  
+
     friend class TrCommandBufferBase;
     friend class TrCommandBufferSender;
     friend class TrCommandBufferReceiver;

@@ -96,10 +96,6 @@ declare namespace Transmute {
     getHandInputSource(handness: string): XRNativeInputSource;
     getGamepadInputSource(): XRNativeInputSource;
     getScreenInputSource(): XRNativeInputSource;
-
-    // frame
-    startFrame(sessionId: number, stereoRenderingId: number, passIndex: number): void;
-    endFrame(sessionId: number, stereoRenderingId: number, passIndex: number): void;
   }
 
   type NativeEventListener = (id: number, type: number, data: string) => void;

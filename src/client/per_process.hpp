@@ -98,10 +98,15 @@ public: // event methods
   TrEventMessage *recvEventMessage(int timeout);
 
 public: // command buffer methods
-  bool sendCommandBufferRequest(TrCommandBufferBase &commandBuffer);
+  bool sendCommandBufferRequest(TrCommandBufferBase &commandBuffer, bool forceDefaultQueue = false);
   TrCommandBufferResponse *recvCommandBufferResponse(int timeout);
 
-public: // xr command methods
+public: // WebXR methods
+  bool startXrFrame(xr::TrXRFrameRequest* frameRequest);
+  bool flushXrFrame();
+  bool finishXrFrame(xr::TrXRFrameRequest* frameRequest);
+  bool isInXrFrame();
+
   template <typename CommandType>
   bool sendXrCommand(xr::TrXRCommandBase<CommandType> &xrCommand)
   {
@@ -160,6 +165,7 @@ private: // xr fields
   ipc::TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
   xr::TrXRCommandSender *xrCommandChanSender = nullptr;
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
+  xr::TrXRFrameRequest *currentXrFrameRequest = nullptr;
 
 private: // frame request fields
   map<FrameRequestId, TrFrameRequestCallback> frameRequestCallbacksMap;

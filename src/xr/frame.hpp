@@ -126,6 +126,7 @@ namespace xr
 
   public:
     FrameActionResult startFrame(int passIndex = 0);
+    FrameActionResult flushFrame(int passIndex = 0);
     FrameActionResult endFrame(int passIndex = 0);
     void copyCommandBuffers(StereoRenderingFrame *frame);
     void copyCommandBuffers(std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, int passIndex = 0);
@@ -133,6 +134,8 @@ namespace xr
     std::vector<commandbuffers::TrCommandBufferBase *> &getCommandBuffers(int passIndex = 0);
     bool ended();
     bool ended(int passIndex);
+    bool needFlush();
+    bool needFlush(int passIndex);
     int getId();
     bool addedOnce();
     bool empty();
@@ -146,6 +149,7 @@ namespace xr
 
   private:
     void clearCommandBuffers();
+    void clearCommandBuffers(int passIndex);
     void clearCommandBuffers(std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers);
 
   private:
@@ -154,6 +158,7 @@ namespace xr
     bool m_Available = false;
     bool m_Ended[2] = {false, false};
     bool m_Started[2] = {false, false};
+    bool m_ToFlush[2] = {false, false};
     /** 
      * An idempotent frame is free to replay.
      */
@@ -177,5 +182,6 @@ namespace xr
     // TODO: support 3rd, 4th, ... passes?
 
     friend class Device;
+    friend class renderer::TrContentRenderer;
   };
 } // namespace xr

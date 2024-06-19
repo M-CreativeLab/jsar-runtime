@@ -129,7 +129,7 @@ namespace bindings
 
     // auto activeEye = getActiveEye();
     auto viewerTransform /** viewer to refspace(local) */ = XRSPACE_RELATIVE_TRANSFORM(viewerSpace, referenceSpace);
-    auto viewerPoseObject = XRViewerPose::NewInstance(env, viewerTransform, internal, session);
+    auto viewerPoseObject = XRViewerPose::NewInstance(env, device, viewerTransform, internal, session);
     // auto viewerPoseUnwrapped = XRViewerPose::Unwrap(viewerPoseObject);
     // session->iterateViewSpaces([this, env, viewerPoseUnwrapped, activeEye, referenceSpace](XRViewSpace *viewSpace, uint32_t viewIndex, XRSession *session)
     //                            {
@@ -172,7 +172,7 @@ namespace bindings
       auto baseReferenceSpace = XRReferenceSpace::Unwrap(info[1].As<Napi::Object>());
       baseReferenceSpace->ensurePoseUpdated(id, session, internal);
       auto jointTransform /** joint to space(local) */ = XRSPACE_RELATIVE_TRANSFORM(jointSpace, baseReferenceSpace);
-      return XRPose::NewInstance(env, jointTransform, internal);
+      return XRPose::NewInstance(env, device, jointTransform, internal);
     }
     else
     {
@@ -208,7 +208,7 @@ namespace bindings
       auto inputSpace = XRTargetRayOrGripSpace::Unwrap(info[0].As<Napi::Object>());
       inputSpace->ensurePoseUpdated(id, session, internal);
       auto transform /** input source space to base(local/unbound) */ = XRSPACE_RELATIVE_TRANSFORM(inputSpace, baseSpace);
-      return XRPose::NewInstance(env, transform, internal);
+      return XRPose::NewInstance(env, device, transform, internal);
     }
     // TODO
     return env.Undefined();
@@ -223,7 +223,7 @@ namespace bindings
   {
     active = true;
     animationFrame = true;
-    device->startFrame(sessionId, getStereoRenderingId(), 0);
+    device->startFrame(internal);
     startTime = chrono::high_resolution_clock::now();
   }
 
@@ -231,7 +231,7 @@ namespace bindings
   {
     active = false;
     // animationFrame = false;
-    device->endFrame(sessionId, getStereoRenderingId(), 0);
+    device->endFrame(internal);
     endTime = chrono::high_resolution_clock::now();
 
     auto duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();

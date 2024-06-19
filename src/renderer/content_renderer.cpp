@@ -15,10 +15,16 @@ namespace renderer
   {
     assert(xrDevice != nullptr);
     glContext = new OpenGLAppContextStorage("content_renderer#" + std::to_string(content->pid));
+    stereoFrameForBackup = new xr::StereoRenderingFrame(true);
+
+    // Register the command buffer request handler when creating the content renderer.
+    content->setCommandBufferRequestHandler([this](TrCommandBufferBase *req)
+                                            { this->onCommandBufferRequestReceived(req); });
   }
 
   TrContentRenderer::~TrContentRenderer()
   {
+    content->resetCommandBufferRequestHandler();
     content = nullptr;
     xrDevice = nullptr;
     if (glContext == nullptr)
@@ -58,6 +64,59 @@ namespace renderer
     return content->pid;
   }
 
+  void TrContentRenderer::onCommandBufferRequestReceived(TrCommandBufferBase *req)
+  {
+    lock_guard<mutex> lock(commandBufferRequestsMutex);
+    if (!req->renderingInfo.isValid() && !commandbuffers::isXRFrameControlCommandType(req->type))
+    {
+      defaultCommandBufferRequests.push_back(req);
+    }
+    else
+    {
+      int stereoId;
+      int viewIndex;
+      if (req->type == COMMAND_BUFFER_XRFRAME_START_REQ)
+      {
+        auto xrFrameStartReq = dynamic_cast<XRFrameStartCommandBufferRequest *>(req);
+        stereoId = xrFrameStartReq->stereoId;
+        viewIndex = xrFrameStartReq->viewIndex;
+      }
+      else if (req->type == COMMAND_BUFFER_XRFRAME_FLUSH_REQ)
+      {
+        auto xrFrameFlushReq = dynamic_cast<XRFrameFlushCommandBufferRequest *>(req);
+        stereoId = xrFrameFlushReq->stereoId;
+        viewIndex = xrFrameFlushReq->viewIndex;
+      }
+      else if (req->type == COMMAND_BUFFER_XRFRAME_END_REQ)
+      {
+        auto xrFrameEndReq = dynamic_cast<XRFrameEndCommandBufferRequest *>(req);
+        stereoId = xrFrameEndReq->stereoId;
+        viewIndex = xrFrameEndReq->viewIndex;
+      }
+      else
+      {
+        stereoId = req->renderingInfo.stereoId;
+        viewIndex = req->renderingInfo.viewIndex;
+      }
+
+      for (auto frame : stereoFramesList)
+      {
+        if (frame->getId() == stereoId)
+        {
+          if (req->type == COMMAND_BUFFER_XRFRAME_START_REQ)
+            frame->startFrame(viewIndex);
+          else if (req->type == COMMAND_BUFFER_XRFRAME_FLUSH_REQ)
+            frame->flushFrame(viewIndex);
+          else if (req->type == COMMAND_BUFFER_XRFRAME_END_REQ)
+            frame->endFrame(viewIndex);
+          else
+            frame->addCommandBuffer(req, viewIndex);
+          break;
+        }
+      }
+    }
+  }
+
   void TrContentRenderer::onHostFrame()
   {
     // TODO: implement frame rate control
@@ -72,9 +131,11 @@ namespace renderer
       if (xrDevice->getStereoRenderingMode() == xr::TrStereoRenderingMode::MultiPass)
       {
         auto viewIndex = xrDevice->getActiveEyeId();
-        stereoRenderingFrame = xrDevice->createOrGetStereoRenderingFrame();
+        stereoRenderingFrame = getOrCreateStereoFrame(xrDevice);
         if (stereoRenderingFrame != nullptr)
         {
+          stereoRenderingFrame->available(true); // mark the StereoRenderingFrame is available
+
           xr::TrXRView view(viewIndex);
           auto viewport = xrDevice->getViewport(viewIndex);
           view.setViewport(viewport.width, viewport.height, viewport.x, viewport.y);
@@ -88,14 +149,18 @@ namespace renderer
             currentBaseXRFrameReq->stereoId = stereoRenderingFrame->getId();
             currentBaseXRFrameReq->setViewerBaseMatrix(xrDevice->getViewerTransform());
           }
+          currentBaseXRFrameReq->viewIndex = viewIndex;
           currentBaseXRFrameReq->views[viewIndex] = view;
-          if (viewIndex == 1) // Dispatch XR frame request when viewIndex is 1(right)
-            shouldDispatchXRFrame = true;
+          shouldDispatchXRFrame = true;
         }
         else
         {
           // TODO: OOM handling?
         }
+      }
+      else if (xrDevice->getStereoRenderingMode() == xr::TrStereoRenderingMode::SinglePass)
+      {
+        // TODO: support SinglePass stereo rendering mode
       }
       else
       {
@@ -111,11 +176,15 @@ namespace renderer
 
     onStartFrame();
     {
-      executeCommandBuffers();
+      executeCommandBuffers(false);
       if (xrDevice->enabled())
       {
         // set framebuffer?
-        // TODO: execute XR frame command buffers
+        if (xrDevice->getStereoRenderingMode() == xr::TrStereoRenderingMode::MultiPass)
+        {
+          auto viewIndex = xrDevice->getActiveEyeId();
+          executeCommandBuffers(true, viewIndex);
+        }
       }
     }
     onEndFrame();
@@ -145,17 +214,137 @@ namespace renderer
     dispatchFrameRequest(req);
   }
 
-  void TrContentRenderer::executeCommandBuffers()
+  void TrContentRenderer::executeCommandBuffers(bool asXRFrame, int viewIndex)
   {
     if (content == nullptr) // FIXME: just skip executing command buffers if content is null, when content process is crashed.
       return;
+    auto renderer = constellation->getRenderer();
+
     vector<commandbuffers::TrCommandBufferBase *> commandBufferRequests;
     {
-      lock_guard<mutex> lock(content->commandBufferRequestsMutex);
-      commandBufferRequests = content->commandBufferRequests;
-      content->commandBufferRequests.clear();
+      if (!asXRFrame)
+      {
+        lock_guard<mutex> lock(commandBufferRequestsMutex);
+        commandBufferRequests = defaultCommandBufferRequests;
+        defaultCommandBufferRequests.clear();
+        renderer->executeCommandBuffers(commandBufferRequests, this);
+      }
+      else
+      {
+        lock_guard<mutex> lock(commandBufferRequestsMutex);
+        executeStereoFrame(viewIndex, [this](int stereoIdOfFrame, vector<TrCommandBufferBase *> &commandBufferRequests)
+                           { return this->constellation->getRenderer()->executeCommandBuffers(commandBufferRequests, this); });
+      }
     }
-    constellation->getRenderer()->executeCommandBuffers(commandBufferRequests, this);
+  }
+
+  bool TrContentRenderer::executeStereoFrame(int viewIndex, std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec)
+  {
+    bool called = false;
+
+    // fprintf(stdout, "frames count=%zu\n", stereoFramesList.size());
+    for (auto it = stereoFramesList.begin(); it != stereoFramesList.end();)
+    {
+      auto frame = *it;
+      if (!frame->available())
+      {
+        it = stereoFramesList.erase(it);
+        delete frame;
+        continue;
+      }
+      /** Just skip the non-ended frames. */
+      if (!frame->ended())
+      {
+        /** Check there is a flush command buffers */
+        if (frame->needFlush(viewIndex))
+        {
+          if (
+              viewIndex == 0 ||
+              (viewIndex == 1 && frame->ended(0)))
+          {
+            auto commandBuffers = frame->getCommandBuffers(viewIndex);
+            exec(frame->getId(), commandBuffers);
+            frame->clearCommandBuffers(viewIndex);
+          }
+        }
+        it++;
+        continue;
+      }
+      /** If an ended frame is empty, it's needed to be removed here. */
+      if (frame->empty())
+      {
+        /**
+         * Note: in C++ STL, the `erase` function will return the next iterator that we need to use instead of `it++`.
+         */
+        it = stereoFramesList.erase(it);
+        delete frame;
+        continue;
+      }
+
+      /**
+       * When we are going to render right(1) eye, we can't render the frame which left frame is not finished.
+       * Such as, the frame is ended before the native loop is going to render the right eye, thus the left eye
+       * in this frame will be skipped.
+       */
+      if (viewIndex == 1 && !frame->finished(0))
+      {
+        it++;
+        continue;
+      }
+
+      auto id = frame->getId();
+      auto commandBuffers = frame->getCommandBuffers(viewIndex);
+      auto isStateChanged = exec(id, commandBuffers);
+      frame->idempotent(viewIndex, !isStateChanged);
+      frame->finishPass(viewIndex);
+
+      if (viewIndex == 1)
+      {
+        if (frame->idempotent())
+          stereoFrameForBackup->copyCommandBuffers(frame);
+        else
+          stereoFrameForBackup->clearCommandBuffers();
+      }
+
+      /**
+       * After rendering the right eye, we need to remove the frame.
+       */
+      if (viewIndex == 1)
+      {
+        assert(frame->finished(0));
+        it = stereoFramesList.erase(it);
+        delete frame;
+      }
+      else
+      {
+        it++;
+      }
+
+      /**
+       * We only need to render the frame one by one, this avoids the rendering order is not correct.
+       */
+      called = true;
+      break;
+    }
+
+    /**
+     * When the `called` is false, it means the current frames are not ended, so we need to render by the last frame.
+     */
+    if (called == false)
+    {
+      auto id = stereoFrameForBackup->getId();
+      auto commandBufferInLastFrame = stereoFrameForBackup->getCommandBuffers(viewIndex);
+      if (!commandBufferInLastFrame.empty())
+        exec(id, commandBufferInLastFrame);
+    }
+    return called;
+  }
+
+  xr::StereoRenderingFrame *TrContentRenderer::getOrCreateStereoFrame(xr::Device *xrDevice)
+  {
+    if (xrDevice->getActiveEyeId() == 0)
+      stereoFramesList.push_back(xrDevice->createStereoRenderingFrame());
+    return stereoFramesList.back();
   }
 
   void TrContentRenderer::resetFrameRequestChanSenderWith(ipc::TrOneShotClient<TrFrameRequestMessage> *client)

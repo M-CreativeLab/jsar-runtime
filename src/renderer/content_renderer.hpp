@@ -32,6 +32,7 @@ namespace renderer
     pid_t getContentPid();
 
   private: // private lifecycle
+    void onCommandBufferRequestReceived(TrCommandBufferBase *req);
     void onHostFrame();
     void onStartFrame();
     void onEndFrame();
@@ -45,7 +46,16 @@ namespace renderer
     }
     void dispatchAnimationFrameRequest();
     void dispatchXRFrameRequest(xr::TrXRSession *session);
-    void executeCommandBuffers();
+    /**
+     * Execute command buffers from content's list.
+     *
+     * @param asXRFrame If the frame execution intent is for XR rendering, yes means only the command buffers in XR frame
+     *                  could be executed.
+     * @param viewIndex Used when `asXRFrame` is true, it specific the `viewIndex`.
+     */
+    void executeCommandBuffers(bool asXRFrame, int viewIndex = 0);
+    bool executeStereoFrame(int viewIndex, std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec);
+    xr::StereoRenderingFrame* getOrCreateStereoFrame(xr::Device* xrDevice);
 
   private:
     void resetFrameRequestChanSenderWith(ipc::TrOneShotClient<TrFrameRequestMessage> *client);
@@ -55,7 +65,13 @@ namespace renderer
     TrConstellation *constellation = nullptr;
     OpenGLAppContextStorage *glContext = nullptr;
     xr::Device *xrDevice = nullptr;
-    xr::TrXRFrameRequest* currentBaseXRFrameReq = nullptr;
+    xr::TrXRFrameRequest *currentBaseXRFrameReq = nullptr;
+
+  private: // command buffers & rendering frames
+    mutex commandBufferRequestsMutex;
+    vector<TrCommandBufferBase *> defaultCommandBufferRequests;
+    vector<xr::StereoRenderingFrame *> stereoFramesList;
+    xr::StereoRenderingFrame *stereoFrameForBackup = nullptr;
 
   private:
     frame_request::TrFrameRequestSender *frameRequestChanSender = nullptr;

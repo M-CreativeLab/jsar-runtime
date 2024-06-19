@@ -51,6 +51,7 @@ namespace bindings
   };
   using XRViewSpaceType = XREye;
 
+  class XRDeviceNative;
   class XRSession;
   class XRFrame;
   class XRSpace;

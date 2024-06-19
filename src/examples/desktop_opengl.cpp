@@ -24,6 +24,8 @@
 #include "../common/xr/types.hpp"
 #include "../common/font/cache.hpp"
 
+using namespace std;
+
 const char *vertexShaderSource = R"(
   #version 330 core
   layout (location = 0) in vec3 aPos;
@@ -42,6 +44,9 @@ const char *fragmentShaderSource = R"(
 
 class XRStereoscopicRenderer
 {
+public:
+  static constexpr float CameraZ = 3.0f;
+
 public:
   XRStereoscopicRenderer() {}
   ~XRStereoscopicRenderer()
@@ -64,11 +69,11 @@ public:
   }
 
 private:
-  glm::vec3 viewerPosition = glm::vec3(0.0f, 0.0f, 0.0f);
+  glm::vec3 viewerPosition = glm::vec3(0.0f, 0.0f, CameraZ);
   glm::quat viewerOrientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
   glm::vec3 eyePosition[2] = {
-      glm::vec3(0.0f, -0.5f, 0.0f),
-      glm::vec3(0.0f, +0.5f, 0.0f)};
+      glm::vec3(0.0f, -0.5f, CameraZ),
+      glm::vec3(0.0f, +0.5f, CameraZ)};
   glm::quat eyeOrientation[2] = {
       glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
       glm::quat(1.0f, 0.0f, 0.0f, 0.0f)};
@@ -426,6 +431,9 @@ int main(int argc, char **argv)
     return 1;
   }
 
+  if (xrEnabled)
+    width *= 2;
+
   if (optind < argc)
     requestUrl = string(argv[optind]);
 
@@ -585,8 +593,8 @@ int main(int argc, char **argv)
           auto xrDevice = embedder->getXrDevice();
           assert(xrDevice != nullptr);
 
-          auto viewMatrix = const_cast<float*>(glm::value_ptr(xrRenderer->getViewMatrixForEye(viewIndex)));
-          auto projectionMatrix = const_cast<float*>(glm::value_ptr(xrRenderer->getProjectionMatrix()));
+          auto viewMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewMatrixForEye(viewIndex)));
+          auto projectionMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getProjectionMatrix()));
           xrDevice->updateViewerStereoViewMatrix(viewIndex, viewMatrix);
           xrDevice->updateViewerStereoProjectionMatrix(viewIndex, projectionMatrix);
           embedder->getRenderer()->setViewport(eyeViewport);

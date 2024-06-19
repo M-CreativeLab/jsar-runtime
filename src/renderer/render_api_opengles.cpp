@@ -1682,10 +1682,6 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		xr::DeviceFrame *deviceFrame,
 		bool isDefaultQueue)
 {
-	ApiCallOptions callOptions;
-	callOptions.isDefaultQueue = isDefaultQueue;
-	callOptions.printsCall = isDefaultQueue ? m_EnableLogOnAppGlobal : m_EnableLogOnXRFrame;
-
 	bool isBufferEmpty = commandBuffers.empty();
 	if (isBufferEmpty)
 	{
@@ -1702,6 +1698,9 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 	for (auto commandBuffer : commandBuffers)
 	{
 		auto commandType = commandBuffer->type;
+		ApiCallOptions callOptions;
+		callOptions.isDefaultQueue = commandBuffer->renderingInfo.isValid() == false;
+		callOptions.printsCall = true;
 
 #define ADD_COMMAND_BUFFER_HANDLER(commandType, requestType, handlerName) \
 	case COMMAND_BUFFER_##commandType##_REQ:                                \
@@ -1860,7 +1859,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		}
 		default:
 			if (callOptions.printsCall)
-				DEBUG(DEBUG_TAG, "[%d] GL::Unknown command type: %d", isDefaultQueue, commandType);
+				DEBUG(LOG_TAG_RENDERER, "[%d] GL::Unknown command type: %d", isDefaultQueue, commandType);
 			break;
 		}
 

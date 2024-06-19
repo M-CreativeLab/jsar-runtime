@@ -145,9 +145,9 @@ namespace webgl
      * @param commandBuffer
      * @param useDefaultQueue - if true, the command buffer will be executed in the default queue.
      */
-    bool sendCommandBufferRequest(commandbuffers::TrCommandBufferBase &commandBuffer, bool useDefaultQueue = false)
+    bool sendCommandBufferRequest(commandbuffers::TrCommandBufferBase &commandBuffer, bool forceDefaultQueue = false)
     {
-      return m_clientContext->sendCommandBufferRequest(commandBuffer);
+      return m_clientContext->sendCommandBufferRequest(commandBuffer, forceDefaultQueue);
     }
 
     /**

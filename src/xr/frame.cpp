@@ -176,6 +176,16 @@ namespace xr
     return FRAME_OK;
   }
 
+  FrameActionResult StereoRenderingFrame::flushFrame(int passIndex)
+  {
+    if (passIndex > 1)
+      return FRAME_PASS_OUT_OF_RANGE;
+
+    m_ToFlush[passIndex] = true;
+    m_Idempotentable = false; // NOTE: if a frame has flush command, it could not be idempotentable.
+    return FRAME_OK;
+  }
+
   FrameActionResult StereoRenderingFrame::endFrame(int passIndex)
   {
     if (passIndex > 1)
@@ -278,6 +288,21 @@ namespace xr
     return m_Ended[passIndex];
   }
 
+  bool StereoRenderingFrame::needFlush()
+  {
+    if (m_IsMultiPass)
+      return needFlush(0) && needFlush(1);
+    else
+      return needFlush(0);
+  }
+
+  bool StereoRenderingFrame::needFlush(int passIndex)
+  {
+    if (passIndex > 1)
+      return false;
+    return m_ToFlush[passIndex];
+  }
+
   int StereoRenderingFrame::getId() { return m_StereoId; }
   bool StereoRenderingFrame::addedOnce() { return m_IsAddedOnce; }
   bool StereoRenderingFrame::empty()
@@ -330,6 +355,11 @@ namespace xr
   {
     clearCommandBuffers(m_CommandBuffersInPass);
     clearCommandBuffers(m_CommandBuffersInPass2);
+  }
+
+  void StereoRenderingFrame::clearCommandBuffers(int passIndex)
+  {
+    clearCommandBuffers(passIndex == 0 ? m_CommandBuffersInPass : m_CommandBuffersInPass2);
   }
 
   void StereoRenderingFrame::clearCommandBuffers(std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./shared.hpp"
+#include "../xr/types.hpp"
 
 namespace commandbuffers
 {
@@ -21,6 +22,7 @@ namespace commandbuffers
 
   public:
     uint32_t id = commandBufferIdGen.get();
+    xr::TrXRFrameRenderingInfo renderingInfo;
   };
 
   using TrCommandBufferRequest = TrCommandBufferBase;

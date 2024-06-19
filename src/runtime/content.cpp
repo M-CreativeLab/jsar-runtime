@@ -126,6 +126,16 @@ xr::Device *TrContentRuntime::getXrDevice()
   return contentManager->constellation->getXrDevice();
 }
 
+void TrContentRuntime::setCommandBufferRequestHandler(function<void(TrCommandBufferBase *)> handler)
+{
+  onCommandBufferRequestReceived = handler;
+}
+
+void TrContentRuntime::resetCommandBufferRequestHandler()
+{
+  onCommandBufferRequestReceived = nullptr;
+}
+
 void TrContentRuntime::setupWithCommandBufferClient(TrOneShotClient<TrCommandBufferMessage> *client)
 {
   assert(client != nullptr);
@@ -260,7 +270,9 @@ void TrContentRuntime::recvCommandBuffers(uint32_t timeout)
     if (commandBuffer != nullptr)
     {
       lock_guard<mutex> lock(commandBufferRequestsMutex);
-      commandBufferRequests.push_back(commandBuffer);
+      if (onCommandBufferRequestReceived)
+        onCommandBufferRequestReceived(commandBuffer);
+      // delete commandBuffer;
     }
   }
 }

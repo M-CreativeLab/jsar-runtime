@@ -132,6 +132,9 @@ namespace commandbuffers
       CASE_COMMAND_BUFFER_REQUEST(GET_SHADER_PRECISION_FORMAT,
                                   GetShaderPrecisionFormatCommandBufferRequest)
       CASE_COMMAND_BUFFER_REQUEST(GET_ERROR, GetErrorCommandBufferRequest)
+      CASE_COMMAND_BUFFER_REQUEST(XRFRAME_START, XRFrameStartCommandBufferRequest)
+      CASE_COMMAND_BUFFER_REQUEST(XRFRAME_FLUSH, XRFrameFlushCommandBufferRequest)
+      CASE_COMMAND_BUFFER_REQUEST(XRFRAME_END, XRFrameEndCommandBufferRequest)
 #undef CASE_COMMAND_BUFFER_REQUEST
     default:
       DEBUG(LOG_TAG_CONTENT, "Received an unknown command buffer: %d", message.type);

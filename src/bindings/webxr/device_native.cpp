@@ -26,9 +26,7 @@ namespace bindings
                                       InstanceMethod("getGazeInputSource", &XRDeviceNative::GetGazeInputSource),
                                       InstanceMethod("getHandInputSource", &XRDeviceNative::GetHandInputSource),
                                       InstanceMethod("getGamepadInputSources", &XRDeviceNative::GetGamepadInputSources),
-                                      InstanceMethod("getScreenInputSources", &XRDeviceNative::GetScreenInputSources),
-                                      InstanceMethod("startFrame", &XRDeviceNative::StartFrame),
-                                      InstanceMethod("endFrame", &XRDeviceNative::EndFrame)});
+                                      InstanceMethod("getScreenInputSources", &XRDeviceNative::GetScreenInputSources)});
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
@@ -459,108 +457,6 @@ namespace bindings
     ;
   }
 
-  Napi::Value XRDeviceNative::StartFrame(const Napi::CallbackInfo &info)
-  {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
-
-    auto device = xr::Device::GetInstance();
-    if (device == nullptr)
-    {
-      Napi::TypeError::New(env, "XRDeviceNative::StartFrame: device is not initialized")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
-    if (info.Length() < 3)
-    {
-      Napi::TypeError::New(env, "XRDeviceNative::StartFrame: expected 3 arguments")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-    if (!info[0].IsNumber())
-    {
-      Napi::TypeError::New(env, "XRDeviceNative::StartFrame: sessionId must be a number")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-    if (!info[1].IsNumber())
-    {
-      Napi::TypeError::New(env, "XRDeviceNative::StartFrame: stereoRenderingId must be a number")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-    if (!info[2].IsNumber())
-    {
-      Napi::TypeError::New(env, "XRDeviceNative::StartFrame: passId must be a number")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
-    // TODO: support stereoRenderingFrames by sessions.
-    auto sessionId = info[0].As<Napi::Number>().Int32Value();
-    auto stereoRenderingId = info[1].As<Napi::Number>().Int32Value();
-    auto passId = info[2].As<Napi::Number>().Int32Value();
-
-    if (device->startFrame(sessionId, stereoRenderingId, passId) == false)
-    {
-      Napi::TypeError::New(env, "XRDeviceNative::StartFrame: failed to start frame")
-          .ThrowAsJavaScriptException();
-    }
-    return env.Undefined();
-  }
-
-  Napi::Value XRDeviceNative::EndFrame(const Napi::CallbackInfo &info)
-  {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
-
-    auto device = xr::Device::GetInstance();
-    if (device == nullptr)
-    {
-      Napi::TypeError::New(env, "XRDeviceNative::EndFrame: device is not initialized")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
-    if (info.Length() < 3)
-    {
-      Napi::TypeError::New(env, "XRDeviceNative::EndFrame: expected 3 arguments")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-    if (!info[0].IsNumber())
-    {
-      Napi::TypeError::New(env, "XRDeviceNative::EndFrame: sessionId must be a number")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-    if (!info[1].IsNumber())
-    {
-      Napi::TypeError::New(env, "XRDeviceNative::EndFrame: stereoRenderingId must be a number")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-    if (!info[2].IsNumber())
-    {
-      Napi::TypeError::New(env, "XRDeviceNative::EndFrame: passId must be a number")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
-    // TODO: support stereoRenderingFrames by sessions.
-    auto sessionId = info[0].As<Napi::Number>().Int32Value();
-    auto stereoRenderingId = info[1].As<Napi::Number>().Int32Value();
-    auto passId = info[2].As<Napi::Number>().Int32Value();
-
-    if (device->endFrame(sessionId, stereoRenderingId, passId) == false)
-    {
-      Napi::TypeError::New(env, "XRDeviceNative::EndFrame: failed to end frame")
-          .ThrowAsJavaScriptException();
-    }
-    return env.Undefined();
-  }
-
   Napi::Value XRDeviceNative::NativeFrameHandler(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -628,30 +524,25 @@ namespace bindings
     contextifiedFrameCallbacks.push_back(ContextifiedXRFrameCallback(callback, context));
   }
 
-  bool XRDeviceNative::startFrame(uint32_t sessionId, uint32_t stereoRenderingId, uint32_t passIndex)
+  bool XRDeviceNative::startFrame(xr::TrXRFrameRequest *frameRequest)
   {
-    auto device = xr::Device::GetInstance();
-    if (device == nullptr)
-    {
-      return false;
-    }
-    return device->startFrame(sessionId, stereoRenderingId, passIndex);
+    return clientContext->startXrFrame(frameRequest);
   }
 
-  bool XRDeviceNative::endFrame(uint32_t sessionId, uint32_t stereoRenderingId, uint32_t passIndex)
+  bool XRDeviceNative::endFrame(xr::TrXRFrameRequest *frameRequest)
   {
-    auto device = xr::Device::GetInstance();
-    if (device == nullptr)
-    {
-      return false;
-    }
-    return device->endFrame(sessionId, stereoRenderingId, passIndex);
+    return clientContext->finishXrFrame(frameRequest);
   }
 
   TrViewport XRDeviceNative::getViewport(uint32_t viewIndex)
   {
     // TODO
     return TrViewport();
+  }
+
+  xr::TrDeviceInit &XRDeviceNative::getDeviceInit()
+  {
+    return clientContext->xrDeviceInit;
   }
 
   void XRDeviceNative::handleFrameRequest(xr::TrXRFrameRequest *frameRequest)

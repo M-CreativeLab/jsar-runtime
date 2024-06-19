@@ -136,6 +136,9 @@ namespace xr
     TrStereoRenderingMode stereoRenderingMode = TrStereoRenderingMode::Unknown;
     /** No need to set */
     int commandChanPort = 0;
+
+  public:
+    bool renderedAsMultipass() { return stereoRenderingMode == TrStereoRenderingMode::MultiPass; }
   };
 
   class TrDeviceInitResponse : public events::TrRpcResponse
@@ -206,6 +209,24 @@ namespace xr
     float viewMatrix[16];
   };
 
+  class TrXRFrameRenderingInfo
+  {
+  public:
+    TrXRFrameRenderingInfo() : sessionId(0), stereoId(0), viewIndex(-1) {}
+    TrXRFrameRenderingInfo(uint32_t sessionId, int stereoId, int viewIndex)
+        : sessionId(sessionId), stereoId(stereoId), viewIndex(viewIndex)
+    {
+    }
+
+  public:
+    inline bool isValid() { return sessionId > 0 && viewIndex >= 0; }
+
+  public:
+    uint32_t sessionId;
+    int stereoId;
+    int viewIndex;
+  };
+
   class TrXRFrameRequest : public TrFrameRequestSimple<TrXRFrameRequest>
   {
   public:
@@ -216,6 +237,7 @@ namespace xr
         : TrFrameRequestSimple(that),
           sessionId(that.sessionId),
           stereoId(that.stereoId),
+          viewIndex(that.viewIndex),
           views{that.views[0], that.views[1]}
     {
       setLocalBaseMatrix(that.localBaseMatrix);
@@ -237,6 +259,7 @@ namespace xr
     {
       sessionId = 0;
       stereoId = 0;
+      viewIndex = -1;
       views[0] = TrXRView();
       views[1] = TrXRView();
       setLocalBaseMatrix(glm::mat4(1.0f));
@@ -259,10 +282,12 @@ namespace xr
     TrXRInputSource *getGazeInputSource() { return nullptr; }
     TrXRInputSource *getHandInputSource(TrHandness handness) { return nullptr; }
     TrXRInputSource *getGamepadInputSource(int id) { return nullptr; }
+    TrXRFrameRenderingInfo createRenderingInfo(int viewIndex) { return TrXRFrameRenderingInfo(sessionId, stereoId, viewIndex); }
 
   public:
     uint32_t sessionId;
     int stereoId;
+    int viewIndex;
     float localBaseMatrix[16];
     float viewerBaseMatrix[16];
     TrXRView views[ViewsCount];

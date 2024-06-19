@@ -15,3 +15,4 @@
 #include "./details/clear.hpp"
 #include "./details/states.hpp"
 #include "./details/properties.hpp"
+#include "./details/xr.hpp"
