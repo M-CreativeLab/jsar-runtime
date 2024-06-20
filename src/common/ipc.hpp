@@ -66,6 +66,12 @@ namespace ipc
     ~TrChannelReceiver();
 
   public:
+    /**
+     * Try to receive a new instance T with a timeout.
+     * 
+     * @param timeout
+     * @return a new instance.
+     */
     T *tryRecv(int timeout = 0);
     int getFd() { return fd; }
     bool tryRecvRaw(void *outData, size_t outSize, int timeout);

@@ -53,7 +53,15 @@ namespace commandbuffers
     TextureImageNDCommandBufferRequest(CommandBufferType type) : TrCommandBufferRequest(type, sizeof(T))
     {
     }
-    ~TextureImageNDCommandBufferRequest()
+    TextureImageNDCommandBufferRequest(TextureImageNDCommandBufferRequest &that)
+        : TrCommandBufferRequest(that),
+          target(that.target),
+          level(that.level),
+          format(that.format),
+          pixelType(that.pixelType)
+    {
+    }
+    virtual ~TextureImageNDCommandBufferRequest()
     {
       resetPixels();
     }
@@ -126,6 +134,7 @@ namespace commandbuffers
     }
     void deserialize(TrCommandBufferMessage &message) override
     {
+      assert(pixels == nullptr);
       auto pixelsSegment = message.getSegment(0);
       if (pixelsSegment != nullptr)
       {

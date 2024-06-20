@@ -192,6 +192,7 @@ namespace ipc
     bool deserialize(TrChannelReceiver<MessageType> *receiver, int recvTimeout)
     {
       usage = USAGE_DESERIALIZE; // mark as deserialized
+      assert(base == nullptr);
 
       int16_t magic;
       if (!receiver->tryRecvRaw(&magic, sizeof(magic), recvTimeout))
@@ -247,7 +248,11 @@ namespace ipc
         offset = readFrom(contentBuffer, offset, &cSize);
         void *cData = malloc(cSize);
         offset = readFrom(contentBuffer, offset, cData, cSize);
-        segments.push_back(new TrIpcMessageSegment(cSize, cData));
+        if (cData != nullptr)
+        {
+          segments.push_back(new TrIpcMessageSegment(cSize, cData));
+          free(cData);
+        }
       }
       offset = readFrom(contentBuffer, offset, &baseSize);
       base = malloc(baseSize);
@@ -277,7 +282,8 @@ namespace ipc
     }
     size_t readFrom(char *src, size_t offset, void *dest, size_t size)
     {
-      memcpy(dest, src + offset, size);
+      if (dest != nullptr)
+        memcpy(dest, src + offset, size);
       return offset + size;
     }
 

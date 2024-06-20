@@ -286,21 +286,22 @@ namespace renderer
     if (content == nullptr) // FIXME: just skip executing command buffers if content is null, when content process is crashed.
       return;
     auto renderer = constellation->getRenderer();
-
+    if (!asXRFrame)
     {
-      if (!asXRFrame)
-      {
-        lock_guard<mutex> lock(commandBufferRequestsMutex);
-        auto commandBufferRequests = defaultCommandBufferRequests;
-        defaultCommandBufferRequests.clear();
-        renderer->executeCommandBuffers(commandBufferRequests, this);
-      }
-      else
-      {
-        lock_guard<mutex> lock(commandBufferRequestsMutex);
-        executeStereoFrame(viewIndex, [this](int stereoIdOfFrame, vector<TrCommandBufferBase *> &commandBufferRequests)
-                           { return this->constellation->getRenderer()->executeCommandBuffers(commandBufferRequests, this); });
-      }
+      lock_guard<mutex> lock(commandBufferRequestsMutex);
+      auto commandBufferRequests = defaultCommandBufferRequests;
+      renderer->executeCommandBuffers(commandBufferRequests, this);
+
+      // clear the default commandbuffers queue.
+      for (auto commandBufferReq : defaultCommandBufferRequests)
+        delete commandBufferReq;
+      defaultCommandBufferRequests.clear();
+    }
+    else
+    {
+      lock_guard<mutex> lock(commandBufferRequestsMutex);
+      executeStereoFrame(viewIndex, [this](int stereoIdOfFrame, vector<TrCommandBufferBase *> &commandBufferRequests)
+                         { return this->constellation->getRenderer()->executeCommandBuffers(commandBufferRequests, this); });
     }
   }
 

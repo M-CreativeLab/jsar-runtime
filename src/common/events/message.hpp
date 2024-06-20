@@ -68,7 +68,10 @@ namespace events
     ~TrEventMessage()
     {
       if (data != nullptr)
+      {
         free(data);
+        data = nullptr;
+      }
     }
 
   public:

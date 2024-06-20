@@ -14,14 +14,13 @@ namespace frame_request
     template <typename T>
     bool sendFrameRequest(TrFrameRequestSimple<T> &frameReq)
     {
-      TrFrameRequestMessage* message = frameReq.serialize();
+      TrFrameRequestMessage *message = frameReq.serialize();
       if (message == nullptr)
         return false;
 
       void *data = nullptr;
       size_t size = 0;
-      bool success;
-      success = message->serialize(&data, &size);
+      bool success = message->serialize(&data, &size);
       delete message; // free message no matter what the result is.
       if (!success)
         return false;
