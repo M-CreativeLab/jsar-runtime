@@ -1963,7 +1963,7 @@ namespace webgl
       }
       else
       {
-        Napi::TypeError::New(env, "the pixels should be a TypedArray or ArrayBuffer.").ThrowAsJavaScriptException();
+        Napi::TypeError::New(env, "The pixels should be a TypedArray or ArrayBuffer.").ThrowAsJavaScriptException();
         return env.Undefined();
       }
     }
@@ -1975,6 +1975,11 @@ namespace webgl
                                              req.width,
                                              req.height,
                                              pixelsData);
+      if (unpacked == nullptr)
+      {
+        Napi::TypeError::New(env, "Failed to unpack pixels, the source data is null.").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
       req.setPixels(unpacked);
       delete[] unpacked;
     }
@@ -2020,6 +2025,11 @@ namespace webgl
     {
       unsigned char *packedPixels = reinterpret_cast<unsigned char *>(data.Data());
       unsigned char *pixels = unpackPixels(type, format, width, height, packedPixels);
+      if (pixels == nullptr)
+      {
+        Napi::TypeError::New(env, "Failed to unpack pixels, the source data is null.").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
       auto req = TextureSubImage2DCommandBufferRequest(target, level, xoffset, yoffset, width, height, format, type,
                                                        pixels);
       sendCommandBufferRequest(req);
@@ -3727,6 +3737,9 @@ namespace webgl
   template <typename T>
   unsigned char *WebGLBaseRenderingContext<T>::unpackPixels(int type, int format, int width, int height, unsigned char *pixels)
   {
+    if (pixels == nullptr) // return null if the input is null.
+      return nullptr;
+
     // Compute the pixel size
     int pixelSize = 1;
     if (type == WEBGL_UNSIGNED_BYTE || type == WEBGL_FLOAT)
