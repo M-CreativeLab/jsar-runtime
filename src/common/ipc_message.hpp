@@ -17,28 +17,26 @@ namespace ipc
   class TrIpcMessageSegment
   {
   public:
-    TrIpcMessageSegment(size_t size, void *data) : size(size)
+    TrIpcMessageSegment(size_t size, void *data) : size(size), data(new char[size])
     {
-      this->data = malloc(size);
-      memcpy(this->data, data, size);
+      memcpy(this->data.get(), data, size);
     }
+    ~TrIpcMessageSegment() = default;
 
     /**
      * It creates a segment from a vector<T> object.
      */
     template <typename T>
-    TrIpcMessageSegment(vector<T> &vec)
+    TrIpcMessageSegment(vector<T> &vec) : size(vec.size() * sizeof(T)), data(new char[size])
     {
-      size = vec.size() * sizeof(T);
-      data = malloc(size);
-      memcpy(data, vec.data(), size);
+      memcpy(this->data.get(), vec.data(), size);
     }
 
   public:
     inline size_t getSize() { return size; }
-    inline void *getData() { return data; }
-    inline string toString() { return string((char *)data, size); }
-    inline const char *c_str() { return (const char *)data; }
+    inline void *getData() { return data.get(); }
+    inline string toString() { return string(data.get(), size); }
+    inline const char *c_str() { return data.get(); }
 
     /**
      * It reads the segment data as a vector<T> object.
@@ -48,24 +46,13 @@ namespace ipc
     {
       vector<T> vec;
       vec.resize(size / sizeof(T));
-      memcpy(vec.data(), data, size);
+      memcpy(vec.data(), data.get(), size);
       return vec;
     }
 
   public:
-    void dispose()
-    {
-      if (data != nullptr)
-      {
-        free(data);
-        data = nullptr;
-      }
-      size = 0;
-    }
-
-  public:
     size_t size;
-    void *data;
+    std::unique_ptr<char[]> data;
   };
 
   template <typename MessageType, typename MessageEnum>
@@ -97,32 +84,43 @@ namespace ipc
           free(base);
           base = nullptr;
         }
-        for (auto segment : segments)
-          segment.dispose();
       }
+
+      for (auto segment : segments)
+        delete segment;
+      segments.clear();
     }
 
   public:
-    void addSegment(TrIpcMessageSegment segment)
+    void addSegment(TrIpcMessageSegment *segment)
     {
+      if (segment == nullptr)
+        return;
       segments.push_back(segment);
+    }
+    void addRawSegment(size_t size, void *data)
+    {
+      addSegment(new TrIpcMessageSegment(size, data));
     }
     void addStringSegment(string &str)
     {
-      TrIpcMessageSegment segment(str.size(), (void *)str.c_str());
-      addSegment(segment);
+      addSegment(new TrIpcMessageSegment(str.size(), (void *)str.c_str()));
     }
     void addStringSegment(const char *str, size_t size)
     {
-      TrIpcMessageSegment segment(size, (void *)str);
-      addSegment(segment);
+      addSegment(new TrIpcMessageSegment(size, (void *)str));
+    }
+    template <typename T>
+    void addVecSegment(vector<T> &values)
+    {
+      addSegment(new TrIpcMessageSegment(values));
     }
     TrIpcMessageSegment *getSegment(size_t index)
     {
       if (index >= segments.size())
         return nullptr;
       else
-        return &segments[index];
+        return segments[index];
     }
     size_t getSegmentCount()
     {
@@ -131,7 +129,7 @@ namespace ipc
 
     /**
      * It serializes this message, then allocates and copies the serialized buffer and its size into `outData` and `outSize`.
-     * 
+     *
      * @param outData a pointer to store the serialized buffer.
      * @param outSize the size of the `outData` when the serialization is finished.
      * @returns a boolean value if this operation is finished, false if allocation for the buffer failed.
@@ -142,7 +140,7 @@ namespace ipc
 
       size_t segmentsLength = 0;
       for (auto &segment : segments)
-        segmentsLength += (sizeof(segment.size) + segment.size); // size + data
+        segmentsLength += (sizeof(segment->size) + segment->size); // size + data
       size_t contentSize =
           sizeof(type) +     // type
           sizeof(uint32_t) + // id
@@ -177,8 +175,8 @@ namespace ipc
       offset = writeTo(buffer, offset, &segmentsCount, sizeof(size_t));
       for (auto &segment : segments)
       {
-        offset = writeTo(buffer, offset, &segment.size, sizeof(segment.size));
-        offset = writeTo(buffer, offset, segment.data, segment.size);
+        offset = writeTo(buffer, offset, &segment->size, sizeof(segment->size));
+        offset = writeTo(buffer, offset, segment->data.get(), segment->size);
       }
 
       // Write base
@@ -249,7 +247,7 @@ namespace ipc
         offset = readFrom(contentBuffer, offset, &cSize);
         void *cData = malloc(cSize);
         offset = readFrom(contentBuffer, offset, cData, cSize);
-        segments.push_back(TrIpcMessageSegment(cSize, cData));
+        segments.push_back(new TrIpcMessageSegment(cSize, cData));
       }
       offset = readFrom(contentBuffer, offset, &baseSize);
       base = malloc(baseSize);
@@ -297,7 +295,7 @@ namespace ipc
   protected:
     MessageEnum type;
     uint32_t id;
-    vector<TrIpcMessageSegment> segments;
+    vector<TrIpcMessageSegment *> segments;
 
   private:
     Usage usage = USAGE_NOTSET;

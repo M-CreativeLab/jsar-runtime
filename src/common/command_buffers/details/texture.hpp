@@ -121,7 +121,7 @@ namespace commandbuffers
     {
       auto message = new TrCommandBufferMessage(type, size, this);
       if (pixels != nullptr && pixelsByteLength > 0)
-        message->addSegment(TrIpcMessageSegment(pixelsByteLength, pixels));
+        message->addRawSegment(pixelsByteLength, pixels);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
@@ -223,7 +223,7 @@ namespace commandbuffers
     {
       auto message = new TrCommandBufferMessage(type, size, this);
       if (pixels != nullptr && pixelsBufferSize > 0)
-        message->addSegment(TrIpcMessageSegment(pixelsBufferSize, pixels));
+        message->addRawSegment(pixelsBufferSize, pixels);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override

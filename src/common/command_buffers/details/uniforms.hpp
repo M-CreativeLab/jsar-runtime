@@ -74,7 +74,7 @@ namespace commandbuffers
     {
       auto message = new TrCommandBufferMessage(type, size, this);
       if (values.size() > 0)
-        message->addSegment(TrIpcMessageSegment(values));
+        message->addVecSegment(values);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
@@ -121,7 +121,7 @@ namespace commandbuffers
     {
       auto message = new TrCommandBufferMessage(type, size, this);
       if (values.size() > 0)
-        message->addSegment(TrIpcMessageSegment(values));
+        message->addVecSegment(values);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
@@ -170,7 +170,7 @@ namespace commandbuffers
     {
       auto message = new TrCommandBufferMessage(type, size, this);
       if (values.size() > 1 && values.size() % 2 == 0) // Check the value size is 2x
-        message->addSegment(TrIpcMessageSegment(values));
+        message->addVecSegment(values);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
@@ -219,7 +219,7 @@ namespace commandbuffers
     {
       auto message = new TrCommandBufferMessage(type, size, this);
       if (values.size() > 1 && values.size() % 2 == 0) // Check the value size is 2x
-        message->addSegment(TrIpcMessageSegment(values));
+        message->addVecSegment(values);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
@@ -270,7 +270,7 @@ namespace commandbuffers
     {
       auto message = new TrCommandBufferMessage(type, size, this);
       if (values.size() > 2 && values.size() % 3 == 0) // Check the value size is 3x
-        message->addSegment(TrIpcMessageSegment(values));
+        message->addVecSegment(values);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
@@ -321,7 +321,7 @@ namespace commandbuffers
     {
       auto message = new TrCommandBufferMessage(type, size, this);
       if (values.size() > 2 && values.size() % 3 == 0) // Check the value size is 3x
-        message->addSegment(TrIpcMessageSegment(values));
+        message->addVecSegment(values);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
@@ -384,7 +384,7 @@ namespace commandbuffers
     {
       auto message = new TrCommandBufferMessage(type, size, this);
       if (values.size() > 3 && values.size() % 4 == 0) // Check the value size is 4x
-        message->addSegment(TrIpcMessageSegment(values));
+        message->addVecSegment(values);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
@@ -466,7 +466,7 @@ namespace commandbuffers
     {
       auto message = new TrCommandBufferMessage(type, size, this);
       if (values.size() > matrixSize - 1 && values.size() % matrixSize == 0) // Check the value size is Nx
-        message->addSegment(TrIpcMessageSegment(values));
+        message->addVecSegment(values);
       return message;
     }
     void deserialize(TrCommandBufferMessage &message) override
