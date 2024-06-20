@@ -42,15 +42,15 @@ const char *fragmentShaderSource = R"(
   }
 )";
 
-#define XR_EYE_SPAN 0.5f  /** The length between 2 eyes */
+#define XR_EYE_SPAN 0.2f /** The length between 2 eyes */
 
 class XRStereoscopicRenderer
 {
 public:
-  XRStereoscopicRenderer()
+  XRStereoscopicRenderer(float aspect) : aspect(aspect)
   {
     float eyeOffset = XR_EYE_SPAN / 2;
-    viewerPosition = glm::vec3(0.0f, 0.0f, 1.0f);
+    viewerPosition = glm::vec3(0.0f, 0.3f, 1.0f);
     {
       glm::vec3 viewerForward(0.0f, 0.0f, -1.0f);
       viewerOrientation = glm::quatLookAt(glm::normalize(viewerForward), glm::vec3(0, 1, 0));
@@ -74,7 +74,7 @@ public:
     assert(eyeIndex < 2);
     return glm::translate(glm::mat4(1.0f), eyePosition[eyeIndex]) * glm::mat4_cast(eyeOrientation[eyeIndex]);
   }
-  glm::mat4 getProjectionMatrix() { return glm::perspective(glm::radians(fov), 1.0f, near, far); }
+  glm::mat4 getProjectionMatrix() { return glm::perspective(glm::radians(fov), aspect, near, far); }
 
 private:
   glm::vec3 viewerPosition;
@@ -83,6 +83,7 @@ private:
   glm::quat eyeOrientation[2];
 
 private: // projection
+  float aspect = 1.0f;
   float near = 0.1f;
   float far = 100.0f;
   float fov = 60.0f;
@@ -135,7 +136,7 @@ void onFramebufferSizeChanged(GLFWwindow *window, int width, int height);
 class WindowContext
 {
 public:
-  WindowContext(int width, int height) : width(width), height(height)
+  WindowContext(int width, int height, float aspect) : width(width), height(height), aspect(aspect)
   {
     window = glfwCreateWindow(width, height, title().c_str(), NULL, NULL);
     if (!window)
@@ -165,13 +166,14 @@ public:
   StatPanel *createStatPanel();
   XRStereoscopicRenderer *createXrRenderer()
   {
-    xrRenderer = new XRStereoscopicRenderer();
+    xrRenderer = new XRStereoscopicRenderer(aspect);
     return xrRenderer;
   }
 
 public:
   int width;
   int height;
+  float aspect = 1.0f;
   float contentScaling[2];
   GLFWwindow *window;
   StatPanel *statPanel;
@@ -435,6 +437,7 @@ int main(int argc, char **argv)
     return 1;
   }
 
+  float aspect = width / height;
   if (xrEnabled)
     width *= 2;
 
@@ -444,7 +447,7 @@ int main(int argc, char **argv)
   /**
    * The canvas size does not fit with the physical size, so we need to save the logical size as canvas.
    */
-  WindowContext windowCtx(width, height);
+  WindowContext windowCtx(width, height, aspect);
   if (windowCtx.isTerminated())
     return 1;
 

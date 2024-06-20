@@ -250,9 +250,10 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
       'default_camera',
       Math.PI / 2,
       Math.PI / 2,
-      5,
+      -1.5,
       BABYLON.Vector3.Zero(),
       scene);
+    this._defaultCamera.position.y += 1.0;
 
     {
       // create default light

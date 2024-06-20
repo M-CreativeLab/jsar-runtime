@@ -43,11 +43,6 @@ Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
 
 export class TransmuteRuntime2 extends EventTarget {
   private scene: BABYLON.Scene;
-  private appStack: Array<{
-    id: number;
-    dom: JSARDOM<NativeDocumentOnTransmute>;
-  }> = [];
-
   constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext) {
     super();
 
@@ -60,10 +55,7 @@ export class TransmuteRuntime2 extends EventTarget {
   }
 
   onGpuBusy() {
-    const { dom } = this.appStack.pop();
-    if (dom != null) {
-      dom.unload();
-    }
+    // TODO
   }
 
   private prepare() {
@@ -76,12 +68,6 @@ export class TransmuteRuntime2 extends EventTarget {
   }
 
   private async onXsmlRequest(url: string, id: number) {
-    /**
-     * Unload all the documents before loading a new one.
-     */
-    if (this.appStack.length > 0) {
-      await this.unloadAll();
-    }
     logger.info(`xsml request:`, url, id);
 
     const nativeDocument = new NativeDocumentOnTransmute(this.gl);
@@ -165,7 +151,6 @@ export class TransmuteRuntime2 extends EventTarget {
       url: urlBase,
       nativeDocument,
     });
-    this.appStack.push({ id: nativeDocument.id, dom });
 
     try {
       await dom.load();
@@ -182,30 +167,9 @@ export class TransmuteRuntime2 extends EventTarget {
       logger.error(`occurs an error when loading document:`, err);
       // TODO: report to the native side.
       // remove the dom from appStack
-      for (let i = 0; i < this.appStack.length; ++i) {
-        if (this.appStack[i].dom.id === dom.id) {
-          this.appStack.splice(i, 1);
-          break;
-        }
-      }
       await dom.unload();
       dom.nativeDocument.close();
     }
-  }
-
-  private async unloadTop() {
-    const { dom } = this.appStack.pop();
-    if (dom != null) {
-      await dom.unload();
-      dom.nativeDocument.close();
-    }
-  }
-
-  private async unloadAll() {
-    await Promise.all(this.appStack.map(({ dom }) => {
-      return dom.unload().then(() => dom.nativeDocument.close());
-    }));
-    logger.info('all the documents have been unloaded.');
   }
 
   private fitSpaceWithScene(spaceNode: BABYLON.TransformNode, ratio = 1.0) {
