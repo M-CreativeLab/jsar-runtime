@@ -104,11 +104,11 @@ namespace renderer
         if (frame->getId() == stereoId)
         {
           if (req->type == COMMAND_BUFFER_XRFRAME_START_REQ)
-            frame->startFrame(viewIndex);
+            frame->startFrame(viewIndex), delete req;
           else if (req->type == COMMAND_BUFFER_XRFRAME_FLUSH_REQ)
-            frame->flushFrame(viewIndex);
+            frame->flushFrame(viewIndex), delete req;
           else if (req->type == COMMAND_BUFFER_XRFRAME_END_REQ)
-            frame->endFrame(viewIndex);
+            frame->endFrame(viewIndex), delete req;
           else
             frame->addCommandBuffer(req, viewIndex);
           break;
