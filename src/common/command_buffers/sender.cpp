@@ -30,8 +30,13 @@ namespace commandbuffers
 
     void *data = nullptr;
     size_t size = 0;
-    if (!message->serialize(&data, &size))
+    auto success = message->serialize(&data, &size);
+    delete message;
+    if (!success)
+    {
+      assert(data == nullptr);  // !success means allocation failure.
       return false;
+    }
 
     assert(data != nullptr && size > 0);
     auto r = sendRaw(data, size);
@@ -82,8 +87,13 @@ namespace commandbuffers
 
     void *data = nullptr;
     size_t size = 0;
-    if (!message->serialize(&data, &size))
+    bool success = message->serialize(&data, &size);
+    delete message;
+    if (!success)
+    {
+      assert(data == nullptr);
       return false;
+    }
 
     assert(data != nullptr && size > 0);
     auto r = sendRaw(data, size);

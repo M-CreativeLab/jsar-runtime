@@ -35,8 +35,14 @@ namespace xr
         return nullptr;
 
       auto data = (char *)malloc(dataSize);
-      if (!tryRecvRaw(data, dataSize, recvTimeout))
+      if (data == nullptr)
         return nullptr;
+
+      if (!tryRecvRaw(data, dataSize, recvTimeout))
+      {
+        free(data);
+        return nullptr;
+      }
 
       TrXRCommandMessage *xrCommandMessage = new TrXRCommandMessage(type, data, dataSize);
       free(data);

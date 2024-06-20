@@ -28,8 +28,14 @@ namespace events
         return nullptr;
 
       auto data = (char *)malloc(dataSize);
-      if (!tryRecvRaw(data, dataSize, recvTimeout))
+      if (data == nullptr)
         return nullptr;
+
+      if (!tryRecvRaw(data, dataSize, recvTimeout))
+      {
+        free(data);
+        return nullptr;
+      }
 
       TrEventMessage *event = TrEventMessage::Deserialize(data, dataSize);
       free(data);

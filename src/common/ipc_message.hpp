@@ -129,6 +129,13 @@ namespace ipc
       return segments.size();
     }
 
+    /**
+     * It serializes this message, then allocates and copies the serialized buffer and its size into `outData` and `outSize`.
+     * 
+     * @param outData a pointer to store the serialized buffer.
+     * @param outSize the size of the `outData` when the serialization is finished.
+     * @returns a boolean value if this operation is finished, false if allocation for the buffer failed.
+     */
     bool serialize(void **outData, size_t *outSize)
     {
       usage = USAGE_SERIALIZE;
@@ -254,7 +261,7 @@ namespace ipc
 
     /**
      * It creates an instance of T from the base data.
-     * 
+     *
      * @return a new instance of T.
      */
     template <typename T>

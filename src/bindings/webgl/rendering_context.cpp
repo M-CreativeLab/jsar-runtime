@@ -889,6 +889,7 @@ namespace webgl
     this->vendor = resp->vendor;
     this->version = resp->version;
     this->renderer = resp->renderer;
+    delete resp;
   }
 
   template <typename T>
@@ -989,6 +990,7 @@ namespace webgl
     }
     if (!resp->success)
     {
+      delete resp;
       Napi::TypeError::New(env, "Failed to linkProgram(id): not successful.")
           .ThrowAsJavaScriptException();
       return env.Undefined();
@@ -1059,6 +1061,7 @@ namespace webgl
       for (auto &uniformBlock : resp->uniformBlocks)
         program->SetUniformBlockIndex(uniformBlock.name, uniformBlock.index);
     }
+    delete resp;
     return env.Undefined();
   }
 
@@ -1110,7 +1113,16 @@ namespace webgl
     sendCommandBufferRequest(req, true);
 
     auto resp = recvCommandBufferResponse<GetProgramParamCommandBufferResponse>(COMMAND_BUFFER_GET_PROGRAM_PARAM_RES);
-    return Napi::Number::New(env, resp->value);
+    if (resp != nullptr)
+    {
+      auto r = Napi::Number::New(env, resp->value);
+      delete resp;
+      return r;
+    }
+    else
+    {
+      return env.Undefined();
+    }
   }
 
   template <typename T>
@@ -1136,7 +1148,16 @@ namespace webgl
     sendCommandBufferRequest(req, true);
 
     auto resp = recvCommandBufferResponse<GetProgramInfoLogCommandBufferResponse>(COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_RES);
-    return Napi::String::New(env, resp->infoLog);
+    if (resp != nullptr)
+    {
+      auto r = Napi::String::New(env, resp->infoLog);
+      delete resp;
+      return r;
+    }
+    else
+    {
+      return env.Undefined();
+    }
   }
 
   template <typename T>
@@ -1292,7 +1313,16 @@ namespace webgl
     sendCommandBufferRequest(req, true);
 
     auto resp = recvCommandBufferResponse<GetShaderSourceCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_SOURCE_RES);
-    return Napi::String::New(env, resp->source);
+    if (resp != nullptr)
+    {
+      auto shaderSource = Napi::String::New(env, resp->source);
+      delete resp;
+      return shaderSource;
+    }
+    else
+    {
+      return env.Undefined();
+    }
   }
 
   template <typename T>
@@ -1312,7 +1342,16 @@ namespace webgl
     sendCommandBufferRequest(req, true);
 
     auto resp = recvCommandBufferResponse<GetShaderParamCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_PARAM_RES);
-    return Napi::Number::New(env, resp->value);
+    if (resp != nullptr)
+    {
+      auto r = Napi::Number::New(env, resp->value);
+      delete resp;
+      return r;
+    }
+    else
+    {
+      return env.Undefined();
+    }
   }
 
   template <typename T>
@@ -1331,7 +1370,16 @@ namespace webgl
     sendCommandBufferRequest(req, true);
 
     auto resp = recvCommandBufferResponse<GetShaderInfoLogCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_INFO_LOG_RES);
-    return Napi::String::New(env, resp->infoLog);
+    if (resp != nullptr)
+    {
+      auto infoLogString = Napi::String::New(env, resp->infoLog);
+      delete resp;
+      return infoLogString;
+    }
+    else
+    {
+      return env.Undefined();
+    }
   }
 
   template <typename T>
@@ -1652,7 +1700,16 @@ namespace webgl
     sendCommandBufferRequest(req, true);
 
     auto resp = recvCommandBufferResponse<CheckFramebufferStatusCommandBufferResponse>(COMMAND_BUFFER_CHECK_FRAMEBUFFER_STATUS_RES);
-    return Napi::Number::New(env, resp->status);
+    if (resp != nullptr)
+    {
+      auto r = Napi::Number::New(env, resp->status);
+      delete resp;
+      return r;
+    }
+    else
+    {
+      return env.Undefined();
+    }
   }
 
   template <typename T>
@@ -1919,6 +1976,7 @@ namespace webgl
                                              req.height,
                                              pixelsData);
       req.setPixels(unpacked);
+      delete[] unpacked;
     }
     else
     {
@@ -3435,7 +3493,9 @@ namespace webgl
               .ThrowAsJavaScriptException();
           return env.Undefined();
         }
-        return Napi::Number::New(env, resp->value);
+        auto value = Napi::Number::New(env, resp->value);
+        delete resp;
+        return value;
       }
       // GLboolean
       case WEBGL_BLEND:
@@ -3459,7 +3519,9 @@ namespace webgl
               .ThrowAsJavaScriptException();
           return env.Undefined();
         }
-        return Napi::Boolean::New(env, resp->value);
+        auto value = Napi::Boolean::New(env, resp->value);
+        delete resp;
+        return value;
       }
       // GLint
       case WEBGL_ALPHA_BITS:
@@ -3496,7 +3558,9 @@ namespace webgl
               .ThrowAsJavaScriptException();
           return env.Undefined();
         }
-        return Napi::Number::New(env, resp->value);
+        auto value = Napi::Number::New(env, resp->value);
+        delete resp;
+        return value;
       }
       // GLubyte/string
       case WEBGL_RENDERER:
@@ -3513,7 +3577,9 @@ namespace webgl
               .ThrowAsJavaScriptException();
           return env.Undefined();
         }
-        return Napi::String::New(env, resp->value);
+        auto value = Napi::String::New(env, resp->value);
+        delete resp;
+        return value;
       }
       default:
         Napi::TypeError::New(env, "getParameter() don't support the parameter: " + std::to_string(pname))
@@ -3557,6 +3623,7 @@ namespace webgl
     obj.Set("rangeMin", Napi::Number::New(env, resp->rangeMin));
     obj.Set("rangeMax", Napi::Number::New(env, resp->rangeMax));
     obj.Set("precision", Napi::Number::New(env, resp->precision));
+    delete resp;
     return obj;
   }
 
@@ -3576,7 +3643,9 @@ namespace webgl
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    return Napi::Number::New(env, resp->error);
+    auto r = Napi::Number::New(env, resp->error);
+    delete resp;
+    return r;
   }
 
   template <typename T>
@@ -3611,6 +3680,7 @@ namespace webgl
         jsExtensionName = Napi::String::New(env, extension);
       extensionsArray.Set(i, jsExtensionName);
     }
+    delete resp;
 
     // Update the extensions array to the context object.
     jsThis.Set("_extensions", extensionsArray);
@@ -3857,6 +3927,7 @@ namespace webgl
     this->maxServerWaitTimeout = resp->maxServerWaitTimeout;
     this->maxUniformBlockSize = resp->maxUniformBlockSize;
     this->maxTextureLODBias = resp->maxTextureLODBias;
+    delete resp;
   }
 
   Napi::Value WebGL2RenderingContext::GetParameter(const Napi::CallbackInfo &info)
