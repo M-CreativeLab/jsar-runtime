@@ -165,7 +165,9 @@ namespace xr
     m_StereoId = s_NextStereoId++;
     m_CreatedTime = std::chrono::high_resolution_clock::now();
   }
-  StereoRenderingFrame::~StereoRenderingFrame() {}
+  StereoRenderingFrame::~StereoRenderingFrame() {
+    clearCommandBuffers();
+  }
 
   FrameActionResult StereoRenderingFrame::startFrame(int passIndex)
   {
@@ -223,8 +225,9 @@ namespace xr
 
   void StereoRenderingFrame::copyCommandBuffers(std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, int passIndex)
   {
+    clearCommandBuffers(passIndex);
     vector<commandbuffers::TrCommandBufferBase *> &targetList = passIndex == 0 ? m_CommandBuffersInPass : m_CommandBuffersInPass2;
-    targetList.clear();
+
     for (auto srcCommandBuffer : commandBuffers)
     {
       auto newReq = cloneCommandBuffer(srcCommandBuffer);
@@ -375,9 +378,9 @@ namespace xr
 
   void StereoRenderingFrame::clearCommandBuffers(int passIndex)
   {
-    if (passIndex == 0)
-      m_CommandBuffersInPass.clear();
-    else
-      m_CommandBuffersInPass2.clear();
+    auto& targetList = passIndex == 0 ? m_CommandBuffersInPass : m_CommandBuffersInPass2;
+    for (auto commandBuffer : targetList)
+      delete commandBuffer;
+    targetList.clear();
   }
 }
