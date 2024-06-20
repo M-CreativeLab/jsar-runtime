@@ -165,7 +165,8 @@ namespace xr
     m_StereoId = s_NextStereoId++;
     m_CreatedTime = std::chrono::high_resolution_clock::now();
   }
-  StereoRenderingFrame::~StereoRenderingFrame() {
+  StereoRenderingFrame::~StereoRenderingFrame()
+  {
     clearCommandBuffers();
   }
 
@@ -378,7 +379,7 @@ namespace xr
 
   void StereoRenderingFrame::clearCommandBuffers(int passIndex)
   {
-    auto& targetList = passIndex == 0 ? m_CommandBuffersInPass : m_CommandBuffersInPass2;
+    auto &targetList = passIndex == 0 ? m_CommandBuffersInPass : m_CommandBuffersInPass2;
     for (auto commandBuffer : targetList)
       delete commandBuffer;
     targetList.clear();
