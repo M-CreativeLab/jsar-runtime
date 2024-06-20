@@ -50,45 +50,6 @@ namespace renderer
         contentRenderer->onHostFrame(tickingTimepoint);
     }
     glHostContext->Restore();
-
-    // api->StartFrame();
-    // auto startedAt = std::chrono::high_resolution_clock::now();
-    // auto skipFrameOnScript = xrDevice->skipHostFrameOnScript();
-
-    // if (!skipFrameOnScript)
-    //   sendAnimationFrameRequest();
-    // executeCommandBuffers();
-
-    // if (xrDevice->enabled())
-    // {
-    //   xrDevice->startHostFrame(); // Start XR frame
-    //   if (xrDevice->getStereoRenderingMode() == xr::TrStereoRenderingMode::MultiPass)
-    //   {
-    //     int stereoId = -1;
-    //     auto eyeId = xrDevice->getActiveEyeId();
-    //     auto stereoRenderingFrame = xrDevice->createOrGetStereoRenderingFrame();
-    //     if (stereoRenderingFrame != nullptr)
-    //       stereoId = stereoRenderingFrame->getId();
-
-    //     auto viewport = api->GetViewport();
-    //     xrDevice->updateViewport(eyeId, viewport[0], viewport[1], viewport[2], viewport[3]);
-
-    //     /**
-    //      * Create a new device frame that will be used by JavaScript render loop
-    //      */
-    //     auto deviceFrame = new xr::MultiPassFrame(xrDevice, eyeId, stereoId);
-    //     auto sessionIds = xrDevice->getSessionIds();
-    //     // TODO: execute frames
-    //   }
-    //   else
-    //   {
-    //     // TODO: Support singlepass?
-    //   }
-    //   xrDevice->endHostFrame(); // End XR frame
-    // }
-
-    // auto xrFrameEndedAt = std::chrono::high_resolution_clock::now();
-    // api->EndFrame();
   }
 
   void TrRenderer::shutdown()
