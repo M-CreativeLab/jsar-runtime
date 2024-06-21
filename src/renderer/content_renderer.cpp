@@ -311,7 +311,15 @@ namespace renderer
     for (auto it = stereoFramesList.begin(); it != stereoFramesList.end();)
     {
       auto frame = *it;
-      if (!frame->available())
+      if (
+          !frame->available() /** Remove this frame when frame is still inavialble when executing */
+          /**
+           * We need to remove a frame when the frame is not started with a expiration check, and the expiration timeout is
+           * configurable, its default value is 2000ms.
+           *
+           * TODO: make the expiration timeout to be configurable.
+           */
+          || (!frame->started() && frame->expired(2000)))
       {
         it = stereoFramesList.erase(it);
         delete frame;

@@ -226,6 +226,8 @@ namespace xr
 
   void StereoRenderingFrame::copyCommandBuffers(std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, int passIndex)
   {
+    assert(passIndex == 0 || passIndex == 1);
+
     clearCommandBuffers(passIndex);
     vector<commandbuffers::TrCommandBufferBase *> &targetList = passIndex == 0 ? m_CommandBuffersInPass : m_CommandBuffersInPass2;
 
@@ -233,16 +235,20 @@ namespace xr
     {
       auto newReq = cloneCommandBuffer(srcCommandBuffer);
       if (newReq != nullptr)
+      {
         targetList.push_back(newReq);
+        m_CommandBuffersByteLength[passIndex] += newReq->size;
+      }
     }
   }
 
   void StereoRenderingFrame::addCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer, int passIndex)
   {
-    if (passIndex == 0)
-      m_CommandBuffersInPass.push_back(commandBuffer);
-    else if (passIndex == 1)
-      m_CommandBuffersInPass2.push_back(commandBuffer);
+    assert(passIndex == 0 || passIndex == 1);
+
+    auto &targetList = passIndex == 0 ? m_CommandBuffersInPass : m_CommandBuffersInPass2;
+    targetList.push_back(commandBuffer);
+    m_CommandBuffersByteLength[passIndex] += commandBuffer->size;
 
     /**
      * When the client is to add the following command buffers, this frame could be able to be dropped if necessary.
@@ -291,6 +297,20 @@ namespace xr
       return m_CommandBuffersInPass2;
     else
       return m_CommandBuffersInPass;
+  }
+
+  bool StereoRenderingFrame::started()
+  {
+    if (m_IsMultiPass)
+      return started(0) && started(1);
+    else
+      return started(0);
+  }
+
+  bool StereoRenderingFrame::started(int passIndex)
+  {
+    assert(passIndex == 0 || passIndex == 1);
+    return m_Started[passIndex];
   }
 
   bool StereoRenderingFrame::ended()
@@ -370,6 +390,27 @@ namespace xr
       return false;
     return m_Finished[passIndex];
   }
+  size_t StereoRenderingFrame::byteLength()
+  {
+    size_t len = byteLength(0);
+    if (m_IsMultiPass)
+      len += byteLength(1);
+    return len;
+  }
+  size_t StereoRenderingFrame::byteLength(int passIndex)
+  {
+    return m_CommandBuffersByteLength[passIndex];
+  }
+  string StereoRenderingFrame::toString()
+  {
+    string frameDescription = "StereoFrame(" + std::to_string(m_StereoId) + "):";
+    string isAvailableStr = m_Available ? "Yes" : "No";
+    frameDescription += (" available(" + isAvailableStr + ")");
+    frameDescription += (" started(" + std::to_string(m_Started[0]) + "," + std::to_string(m_Started[1]) + ")");
+    frameDescription += (" ended(" + std::to_string(m_Ended[0]) + "," + std::to_string(m_Ended[1]) + ")");
+    frameDescription += (" commands(" + std::to_string(m_CommandBuffersInPass.size()) + "," + std::to_string(m_CommandBuffersInPass2.size()) + ")");
+    return frameDescription;
+  }
 
   void StereoRenderingFrame::clearCommandBuffers()
   {
@@ -379,9 +420,11 @@ namespace xr
 
   void StereoRenderingFrame::clearCommandBuffers(int passIndex)
   {
+    assert(passIndex == 0 || passIndex == 1);
     auto &targetList = passIndex == 0 ? m_CommandBuffersInPass : m_CommandBuffersInPass2;
     for (auto commandBuffer : targetList)
       delete commandBuffer;
     targetList.clear();
+    m_CommandBuffersByteLength[passIndex] = 0;
   }
 }

@@ -54,8 +54,8 @@ namespace xr
     int getCurrentStereoId();
     void setStereoId(int id);
 
-    InputSource& getGazeInputSource();
-    InputSource& getHandInputSource(Handness handness);
+    InputSource &getGazeInputSource();
+    InputSource &getHandInputSource(Handness handness);
 
   protected:
     Device *m_XrDevice = nullptr;
@@ -80,20 +80,20 @@ namespace xr
     int getActiveEyeId();
     /**
      * It returns the view matrix for the active eye.
-     * 
+     *
      * @param rightHanded If true, the view matrix is right-handed, otherwise left-handed.
      */
     glm::mat4 getViewMatrix(bool rightHanded = true);
     /**
      * It returns the view matrix relative to the offset transform.
-     * 
+     *
      * @param offsetTransform The offset transform matrix.
      * @param rightHanded If true, the view matrix is right-handed, otherwise left-handed.
      */
     glm::mat4 getViewMatrixWithOffset(glm::mat4 &offsetTransform, bool rightHanded = true);
     /**
      * It returns the projection matrix for the active eye.
-     * 
+     *
      * @param rightHanded If true, the projection matrix is right-handed, otherwise left-handed.
      */
     glm::mat4 getProjectionMatrix(bool rightHanded = true);
@@ -135,6 +135,8 @@ namespace xr
     void copyCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, int passIndex = 0);
     void addCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer, int passIndex = 0);
     vector<commandbuffers::TrCommandBufferBase *> &getCommandBuffers(int passIndex = 0);
+    bool started();
+    bool started(int passIndex);
     bool ended();
     bool ended(int passIndex);
     bool needFlush();
@@ -149,6 +151,9 @@ namespace xr
     void idempotent(int passIndex, bool value);
     void finishPass(int passIndex);
     bool finished(int passIndex);
+    size_t byteLength();
+    size_t byteLength(int passIndex);
+    string toString();
 
   private:
     void clearCommandBuffers();
@@ -161,7 +166,7 @@ namespace xr
     bool m_Ended[2] = {false, false};
     bool m_Started[2] = {false, false};
     bool m_ToFlush[2] = {false, false};
-    /** 
+    /**
      * An idempotent frame is free to replay.
      */
     bool m_Idempotent[2] = {false, false};
@@ -179,6 +184,7 @@ namespace xr
     chrono::time_point<chrono::high_resolution_clock> m_CreatedTime;
     chrono::time_point<chrono::high_resolution_clock> m_EndedTime;
 
+    size_t m_CommandBuffersByteLength[2] = {0, 0};
     vector<commandbuffers::TrCommandBufferBase *> m_CommandBuffersInPass;
     vector<commandbuffers::TrCommandBufferBase *> m_CommandBuffersInPass2; // This is only used when m_IsMultiPass is true.
     // TODO: support 3rd, 4th, ... passes?
