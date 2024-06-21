@@ -28,11 +28,6 @@ TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManage
 
 TrContentRuntime::~TrContentRuntime()
 {
-  /**
-   * Destroy the content runtime will wait for the command buffer is executed, also when a content is disposing, it should
-   * avoid the command buffer receiver to receive any new command buffer requests.
-   */
-  lock_guard<mutex> lock(recvCommandBuffersMutex);
   if (eventChanReceiver != nullptr)
   {
     delete eventChanReceiver;
@@ -53,9 +48,6 @@ TrContentRuntime::~TrContentRuntime()
     delete commandBufferChanSender;
     commandBufferChanSender = nullptr;
   }
-
-  auto renderer = contentManager->constellation->getRenderer();
-  renderer->removeCommandBufferChanClient(commandBufferChanClient);
 }
 
 void TrContentRuntime::start(TrXSMLRequestInit init)
@@ -98,12 +90,27 @@ void TrContentRuntime::resume()
 
 void TrContentRuntime::terminate()
 {
+  /**
+   * Disposing the content runtime will wait for the command buffer is executed, also when a content is disposing, it should
+   * avoid the command buffer receiver to receive any new command buffer requests.
+   */
+  lock_guard<mutex> lock(recvCommandBuffersMutex);
+  auto renderer = contentManager->constellation->getRenderer();
+  assert(renderer != nullptr);
+  renderer->removeCommandBufferChanClient(commandBufferChanClient);
+  DEBUG(LOG_TAG_CONTENT, "Terminating the client(%d).", pid);
+
   kill(pid, SIGKILL);
 }
 
 void TrContentRuntime::dispose()
 {
-  delete this;
+  terminate();
+  while (true)
+  {
+    if (testClientProcessExitOnFrame()) // Return util the child is exit.
+      break;
+  }
 }
 
 void TrContentRuntime::onCommandBuffersExecuting()
@@ -202,6 +209,9 @@ void TrContentRuntime::onClientProcess()
     xrDeviceObject.AddMember("active", true, allocator);
     xrDeviceObject.AddMember("stereoRenderingMode", static_cast<int>(xrDevice->getStereoRenderingMode()), allocator);
     xrDeviceObject.AddMember("commandChanPort", xrDevice->getCommandChanPort(), allocator);
+    xrDeviceObject.AddMember("inputSourcesZonePath",
+                             rapidjson::Value(xrDevice->getInputSourcesZonePath().c_str(), allocator),
+                             allocator);
     scriptContext.AddMember("xrDevice", xrDeviceObject, allocator);
   }
 
@@ -272,7 +282,10 @@ void TrContentRuntime::recvCommandBuffers(uint32_t timeout)
       lock_guard<mutex> lock(commandBufferRequestsMutex);
       if (onCommandBufferRequestReceived)
         onCommandBufferRequestReceived(commandBuffer);
-      // delete commandBuffer;
+    }
+    else
+    {
+      break;
     }
   }
 }
@@ -300,45 +313,14 @@ TrContentManager::TrContentManager(TrConstellation *constellation) : constellati
 
 TrContentManager::~TrContentManager()
 {
-  // Stop command buffers worker
-  if (commandBuffersRecvWorker != nullptr)
-  {
-    commandBuffersWorkerRunning = false;
-    commandBuffersRecvWorker->join();
-    delete commandBuffersRecvWorker;
-    commandBuffersRecvWorker = nullptr;
-  }
-  DEBUG(LOG_TAG_CONTENT, "All command buffers worker is stopped.");
-
-  // Stop XR commands worker
-  if (xrCommandsRecvWorker != nullptr)
-  {
-    xrCommandsWorkerRunning = false;
-    xrCommandsRecvWorker->join();
-    delete xrCommandsRecvWorker;
-    xrCommandsRecvWorker = nullptr;
-  }
-
-  // Stop event channel watcher
-  if (eventChanWatcher != nullptr)
-  {
-    watcherRunning = false;
-    eventChanWatcher->join();
-    delete eventChanWatcher;
-    eventChanWatcher = nullptr;
-  }
   if (eventChanServer != nullptr)
   {
     delete eventChanServer;
     eventChanServer = nullptr;
   }
-  DEBUG(LOG_TAG_CONTENT, "All event channel watcher is stopped.");
-
-  // Dispose all contents
-  for (auto it = contents.begin(); it != contents.end(); ++it)
-    delete *it;
+  for (auto content : contents)
+    delete content;
   contents.clear();
-  DEBUG(LOG_TAG_CONTENT, "All contents are disposed.");
 }
 
 bool TrContentManager::initialize()
@@ -348,12 +330,12 @@ bool TrContentManager::initialize()
                                 { this->onRequestEvent(event); });
 
   watcherRunning = true;
-  eventChanWatcher = new thread([this]()
-                                {
+  eventChanWatcher = std::make_unique<thread>([this]()
+                                              {
     SET_THREAD_NAME("TrEventChanWatcher");
     while (watcherRunning)
     {
-      auto newClient = eventChanServer->tryAccept(-1);
+      auto newClient = eventChanServer->tryAccept(1000);
       if (newClient != nullptr)
       {
         lock_guard<mutex> lock(contentsMutex);
@@ -379,8 +361,8 @@ bool TrContentManager::initialize()
     } });
 
   commandBuffersWorkerRunning = true;
-  commandBuffersRecvWorker = new thread([this]()
-                                        {
+  commandBuffersRecvWorker = std::make_unique<thread>([this]()
+                                                      {
     SET_THREAD_NAME("TrCommandBuffersWorker");
 
     uint32_t timeout = 100;
@@ -396,14 +378,14 @@ bool TrContentManager::initialize()
       }
       else
       {
-        for (auto it = contents.begin(); it != contents.end(); ++it)
-          (*it)->recvCommandBuffers(timeout);
+        for (auto content : contents)
+          content->recvCommandBuffers(timeout);
       }
     } });
 
   xrCommandsWorkerRunning = true;
-  xrCommandsRecvWorker = new thread([this]()
-                                    {
+  xrCommandsRecvWorker = std::make_unique<thread>([this]()
+                                                  {
     SET_THREAD_NAME("TrXRCommandsWorker");
 
     uint32_t timeout = 100;
@@ -431,6 +413,33 @@ bool TrContentManager::initialize()
         }
       }
     } });
+  return true;
+}
+
+bool TrContentManager::shutdown()
+{
+  if (commandBuffersRecvWorker != nullptr)
+  {
+    commandBuffersWorkerRunning = false;
+    commandBuffersRecvWorker->join();
+    DEBUG(LOG_TAG_CONTENT, "CommandBuffers Receiver is stopped.");
+  }
+  for (auto content : contents)
+    content->dispose();
+  DEBUG(LOG_TAG_CONTENT, "All contents(%zu) has been disposed", contents.size());
+
+  if (eventChanWatcher != nullptr)
+  {
+    watcherRunning = false;
+    eventChanWatcher->join();
+    DEBUG(LOG_TAG_CONTENT, "Native Events Watcher is stopped.");
+  }
+  if (xrCommandsRecvWorker != nullptr)
+  {
+    xrCommandsWorkerRunning = false;
+    xrCommandsRecvWorker->join();
+    DEBUG(LOG_TAG_CONTENT, "XR Commands Receiver is stopped.");
+  }
   return true;
 }
 

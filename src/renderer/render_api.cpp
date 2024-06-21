@@ -7,16 +7,22 @@
 #include "runtime/content.hpp"
 #include "xr/frame.hpp"
 
-RenderAPI *RenderAPI::s_instance = NULL;
-RenderAPI *RenderAPI::Create(UnityGfxRenderer apiType, TrConstellation* constellation)
+RenderAPI *RenderAPI::s_instance = nullptr;
+RenderAPI *RenderAPI::Create(UnityGfxRenderer apiType, TrConstellation *constellation)
 {
-	assert(s_instance == NULL);
-	assert(constellation != NULL);
-
+	assert(s_instance == nullptr);
 	s_instance = CreateRenderAPI(apiType);
-	s_instance->constellation = constellation;
-	s_instance->renderer = constellation->getRenderer();
-	return s_instance;
+	if (s_instance != nullptr)
+	{
+		s_instance->constellation = constellation;
+		s_instance->renderer = constellation->getRenderer();
+		return s_instance;
+	}
+	else
+	{
+		DEBUG(LOG_TAG_ERROR, "Failed to create renderer for %04x", apiType);
+		return nullptr;
+	}
 }
 
 void RenderAPI::AddCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer)
@@ -98,8 +104,13 @@ RenderAPI *CreateRenderAPI(UnityGfxRenderer apiType)
 #if SUPPORT_OPENGL_UNIFIED
 	if (apiType == kUnityGfxRendererOpenGLCore || apiType == kUnityGfxRendererOpenGLES20 || apiType == kUnityGfxRendererOpenGLES30)
 	{
-		extern RenderAPI *CreateRenderAPI_OpenGLCoreES(UnityGfxRenderer apiType);
-		return CreateRenderAPI_OpenGLCoreES(apiType);
+		extern RenderAPI *CreateRenderAPI_OpenGLCoreES(RHIBackendType type);
+		if (apiType == kUnityGfxRendererOpenGLCore)
+			return CreateRenderAPI_OpenGLCoreES(RHIBackendType::OpenGLCore);
+		else if (apiType == kUnityGfxRendererOpenGLES20)
+			return CreateRenderAPI_OpenGLCoreES(RHIBackendType::OpenGLESv2);
+		else
+			return CreateRenderAPI_OpenGLCoreES(RHIBackendType::OpenGLESv3);
 	}
 #endif // if SUPPORT_OPENGL_UNIFIED
 

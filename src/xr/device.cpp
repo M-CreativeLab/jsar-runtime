@@ -87,6 +87,13 @@ namespace xr
   {
     m_Enabled = enabled;
     m_StereoRenderingMode = init.stereoRenderingMode;
+
+    // Initialize the input sources related fields.
+    auto &constellationOptions = m_Constellation->getOptions();
+    m_InputSourcesZone = std::make_unique<TrZone>(constellationOptions.getZoneFilename("inputsources"), TrZoneType::Server);
+    m_InputSourcesZone->write();
+
+    // Start command client watcher.
     startCommandClientWatcher();
   }
 
@@ -633,6 +640,14 @@ namespace xr
   }
 
   // InputSource
+
+  string Device::getInputSourcesZonePath()
+  {
+    if (!m_Enabled)
+      return "";
+    else
+      return m_InputSourcesZone->getFilename();
+  }
 
   InputSource *Device::getGazeInputSource()
   {

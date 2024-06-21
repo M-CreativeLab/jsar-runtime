@@ -1,13 +1,7 @@
 #include "embedder.hpp"
 
-TrEmbedder::TrEmbedder()
+TrEmbedder::TrEmbedder() : constellation(std::make_unique<TrConstellation>(this))
 {
-  constellation = new TrConstellation(this);
-}
-
-TrEmbedder::~TrEmbedder()
-{
-  shutdown();
 }
 
 bool TrEmbedder::configureXrDevice(bool xrEnabled, xr::TrDeviceInit &init)
@@ -18,11 +12,7 @@ bool TrEmbedder::configureXrDevice(bool xrEnabled, xr::TrDeviceInit &init)
 
 void TrEmbedder::shutdown()
 {
-  if (constellation != nullptr)
-  {
-    delete constellation;
-    constellation = nullptr;
-  }
+  constellation->shutdown();
 }
 
 uint32_t TrEmbedder::getFps()
@@ -48,7 +38,7 @@ bool TrEmbedder::onFrame()
 
 TrConstellation *TrEmbedder::getConstellation()
 {
-  return constellation;
+  return constellation.get();
 }
 
 TrEventTarget *TrEmbedder::getNativeEventTarget()

@@ -32,6 +32,16 @@ public:
   bool printsCall;
 };
 
+enum class RHIBackendType
+{
+  OpenGLCore,
+  OpenGLESv2,
+  OpenGLESv3,
+  Metal,
+  D3D11,
+  D3D12,
+};
+
 /**
  * Rendering Hardware Interface for JSAR runtime.
  */
@@ -52,16 +62,9 @@ public:
 
   // Process general event like initialization, shutdown, device loss/reset etc.
   virtual void ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces) = 0;
-  virtual bool GetUsesReverseZ() = 0;
-
   virtual bool SupportsWebGL2() = 0;
   virtual int GetDrawingBufferWidth() = 0;
   virtual int GetDrawingBufferHeight() = 0;
-  virtual void ClearColor(float r, float g, float b, float a) = 0;
-  virtual void ClearDepth(float depth) = 0;
-  virtual void ClearStencil(uint32_t stencil) = 0;
-  virtual void Clear(uint32_t mask) = 0;
-  virtual void Enable(uint32_t cap) = 0;
 
   /**
    * Executes the commands from the given command queue with the device frame, and it also returns a boolean value indicating if
@@ -77,6 +80,10 @@ public:
   size_t GetCommandBuffersCount();
   void SetTime(float time) { this->time = time; }
 
+  /**
+   * It returns the backend type of the current RHI.
+   */
+  RHIBackendType GetBackendType() { return backendType; }
   void EnableAppGlobalLog() { m_EnableLogOnAppGlobal = true; }
   void EnableXRFrameLog() { m_EnableLogOnXRFrame = true; }
   void EnableContextLog() { m_PrintsContext = true; }
@@ -85,7 +92,7 @@ public:
   {
     return m_DrawingViewport.isEqual(width, height, x, y);
   }
-  void SetDrawingViewport(TrViewport& viewport)
+  void SetDrawingViewport(TrViewport &viewport)
   {
     m_DrawingViewport = viewport;
   }
@@ -132,6 +139,7 @@ private:
   bool CheckGpuBusyStatus();
 
 protected:
+  RHIBackendType backendType;
   float time = 0.0f;
   float fov = 0.0f;
   float m_ViewerPosition[3] = {0.0f, 0.0f, 0.0f};

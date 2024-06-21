@@ -298,6 +298,8 @@ void TrClientContextPerProcess::start()
     xrCommandChanClient = ipc::TrOneShotClient<xr::TrXRCommandMessage>::MakeAndConnect(xrDeviceInit.commandChanPort, false);
     xrCommandChanSender = new xr::TrXRCommandSender(xrCommandChanClient);
     xrCommandChanReceiver = new xr::TrXRCommandReceiver(xrCommandChanClient);
+    xrInputSourcesZoneClient = std::make_unique<TrZone>(xrDeviceInit.inputSourcesZonePath, TrZoneType::Client);
+    xrInputSourcesZoneClient->read();
   }
 
   // Start the frames listener

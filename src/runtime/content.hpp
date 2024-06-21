@@ -127,12 +127,13 @@ private:
  */
 class TrContentManager
 {
-private:
+public:
   TrContentManager(TrConstellation *constellation);
   ~TrContentManager();
 
 public:
   bool initialize();
+  bool shutdown();
   bool tickOnFrame();
   TrContentRuntime *makeContent();
   TrContentRuntime *findContent(pid_t pid);
@@ -147,17 +148,17 @@ private:
   vector<TrContentRuntime *> contents;
 
 private: // event channel
-  atomic<bool> watcherRunning = false;
   TrOneShotServer<TrEventMessage> *eventChanServer = nullptr;
-  thread *eventChanWatcher = nullptr;
+  atomic<bool> watcherRunning = false;
+  std::unique_ptr<thread> eventChanWatcher;
 
 private: // command buffer channel
   atomic<bool> commandBuffersWorkerRunning = false;
-  thread *commandBuffersRecvWorker = nullptr;
+  std::unique_ptr<thread> commandBuffersRecvWorker;
 
 private: // XR command channel
   atomic<bool> xrCommandsWorkerRunning = false;
-  thread *xrCommandsRecvWorker = nullptr;
+  std::unique_ptr<thread> xrCommandsRecvWorker;
 
   friend class TrContentRuntime;
   friend class TrConstellation;

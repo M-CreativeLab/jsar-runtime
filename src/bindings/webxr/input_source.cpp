@@ -218,16 +218,16 @@ namespace bindings
       auto gazeInputSource = XRInputSource::Unwrap(
           XRInputSource::NewInstance(env, frame, session, [](xr::TrXRFrameRequest *frameRequest) -> xr::TrXRInputSource *
                                      { return frameRequest->getGazeInputSource(); }));
-      auto leftHandInputSource = XRInputSource::Unwrap(
-          XRInputSource::NewInstance(env, frame, session, [](xr::TrXRFrameRequest *frameRequest) -> xr::TrXRInputSource *
-                                     { return frameRequest->getHandInputSource(xr::TrHandness::Left); }));
-      auto rightHandInputSource = XRInputSource::Unwrap(
-          XRInputSource::NewInstance(env, frame, session, [](xr::TrXRFrameRequest *frameRequest) -> xr::TrXRInputSource *
-                                     { return frameRequest->getHandInputSource(xr::TrHandness::Right); }));
+      // auto leftHandInputSource = XRInputSource::Unwrap(
+      //     XRInputSource::NewInstance(env, frame, session, [](xr::TrXRFrameRequest *frameRequest) -> xr::TrXRInputSource *
+      //                                { return frameRequest->getHandInputSource(xr::TrHandness::Left); }));
+      // auto rightHandInputSource = XRInputSource::Unwrap(
+      //     XRInputSource::NewInstance(env, frame, session, [](xr::TrXRFrameRequest *frameRequest) -> xr::TrXRInputSource *
+      //                                { return frameRequest->getHandInputSource(xr::TrHandness::Right); }));
 
       added.push_back(gazeInputSource);
-      added.push_back(leftHandInputSource);
-      added.push_back(rightHandInputSource);
+      // added.push_back(leftHandInputSource);
+      // added.push_back(rightHandInputSource);
       // TODO: Add gamepad input sources
       onChangedCallback(added, {});
 

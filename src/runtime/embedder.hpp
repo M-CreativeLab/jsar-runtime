@@ -15,7 +15,7 @@ class TrEmbedder
 {
 protected: // You should create your own embedder class and decide how to create `TrEmbedder` instace.
   TrEmbedder();
-  ~TrEmbedder();
+  virtual ~TrEmbedder() = default;
 
 public: // API for configuration and operations
   /**
@@ -24,7 +24,7 @@ public: // API for configuration and operations
    * @param xrEnabled true if the XR device should be enabled, false otherwise.
    * @param init The XR device initialization configuration.
    */
-  bool configureXrDevice(bool xrEnabled, xr::TrDeviceInit& init);
+  bool configureXrDevice(bool xrEnabled, xr::TrDeviceInit &init);
   /**
    * Shutdown the Transmute runtime.
    */
@@ -62,5 +62,5 @@ public: // API for getting sub components
   xr::Device *getXrDevice();
 
 protected:
-  TrConstellation *constellation = nullptr;
+  std::unique_ptr<TrConstellation> constellation;
 };

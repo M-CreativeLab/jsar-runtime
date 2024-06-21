@@ -31,7 +31,6 @@ void DEBUG(const char *tag, const char *format, ...)
 #ifdef __ANDROID__
   __android_log_vprint(ANDROID_LOG_DEBUG, tag, format, args);
 #else
-
   char buffer[1024];
   int length = vsnprintf(nullptr, 0, format, args);
   if (length > 1024)

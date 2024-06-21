@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <filesystem>
 
 #include <OpenGL/gl3.h>
 #include <GLFW/glfw3.h>
@@ -95,7 +96,7 @@ public:
   DesktopEmbedder() : TrEmbedder()
   {
     auto renderer = constellation->getRenderer();
-    auto api = RenderAPI::Create(kUnityGfxRendererOpenGLCore, constellation);
+    auto api = RenderAPI::Create(kUnityGfxRendererOpenGLCore, getConstellation());
     renderer->setApi(api);
   }
 
@@ -454,6 +455,27 @@ int main(int argc, char **argv)
   embedder = new DesktopEmbedder();
   assert(embedder != nullptr);
 
+  auto drawingViewport = windowCtx.drawingViewport();
+  embedder->getRenderer()->setDrawingViewport(drawingViewport);
+
+  {
+    // Start
+    namespace fs = std::filesystem;
+    string dirname = fs::current_path().string();
+
+    rapidjson::Document doc;
+    auto& allocator = doc.GetAllocator();
+    doc.SetObject();
+
+    rapidjson::Value dirnameValue(dirname.c_str(), allocator);
+    doc.AddMember("applicationCacheDirectory", dirnameValue, allocator);
+    doc.AddMember("isXRSupported", true, allocator);
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    doc.Accept(writer);
+    embedder->onStart(buffer.GetString());
+  }
+
   if (xrEnabled == true)
   {
     xr::TrDeviceInit init;
@@ -461,20 +483,6 @@ int main(int argc, char **argv)
     init.stereoRenderingMode = xr::TrStereoRenderingMode::MultiPass;
     embedder->configureXrDevice(xrEnabled, init);
     windowCtx.createXrRenderer();
-  }
-
-  auto drawingViewport = windowCtx.drawingViewport();
-  embedder->getRenderer()->setDrawingViewport(drawingViewport);
-
-  {
-    // Start
-    rapidjson::Document doc;
-    doc.SetObject();
-    doc.AddMember("isXRSupported", true, doc.GetAllocator());
-    rapidjson::StringBuffer buffer;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    doc.Accept(writer);
-    embedder->onStart(buffer.GetString());
   }
 
   {
@@ -625,6 +633,10 @@ int main(int argc, char **argv)
   glfwTerminate();
 
   if (embedder != nullptr)
+  {
     embedder->shutdown();
+    delete embedder;
+  }
+  fprintf(stdout, "The program has been exit.\n");
   return 0;
 }

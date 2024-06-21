@@ -47,21 +47,31 @@ void getline(const string &input, string &line, size_t &pos, char delim = '\n')
 
 class RenderAPI_OpenGLCoreES : public RenderAPI
 {
+private:
+	gles::GLObjectManager m_GLObjectManager = gles::GLObjectManager();
+
+	GLenum m_AppFrontFace;
+	GLenum m_AppCullFace;
+
+	// Used by glFrontFace
+	GLuint m_CurrentDepthFunc = GL_LEQUAL;
+	bool m_DepthTestEnabled = false;
+	bool m_BlendEnabled = false;
+	// Used by glClear with color, depth and stencil
+	float m_ClearColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+	float m_ClearDepth = 1.0f;
+	uint32_t m_ClearStencil = 0;
+	int m_ClearMask = 0;
+	// Used by debugging
+	bool m_DebugEnabled = true;
+
 public:
-	RenderAPI_OpenGLCoreES(UnityGfxRenderer apiType);
+	RenderAPI_OpenGLCoreES(RHIBackendType backendType);
 	~RenderAPI_OpenGLCoreES() {}
 	virtual void ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces);
-	virtual bool GetUsesReverseZ() { return false; }
 	bool SupportsWebGL2();
 	int GetDrawingBufferWidth();
 	int GetDrawingBufferHeight();
-	virtual void ClearColor(float r, float g, float b, float a);
-	virtual void ClearDepth(float depth);
-	virtual void ClearStencil(uint32_t stencil);
-	virtual void Clear(uint32_t mask);
-	void DepthFunc(int func);
-	virtual void Enable(uint32_t cap);
-	void Disable(uint32_t cap);
 
 public: // Execute command buffer
 	bool ExecuteCommandBuffer();
@@ -1323,7 +1333,7 @@ private:
 	}
 	void OnDepthFunc(DepthFuncCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		DepthFunc(req->func);
+		glDepthFunc(req->func);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DepthFunc(%s)", options.isDefaultQueue, gles::glDepthFuncToString(req->func).c_str());
 	}
@@ -1461,7 +1471,7 @@ private:
 	void OnEnable(EnableCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto cap = req->cap;
-		Enable(cap);
+		glEnable(cap);
 		reqContentRenderer->getOpenGLContext()->RecordCapability(cap, true);
 		if (options.printsCall)
 		{
@@ -1483,7 +1493,7 @@ private:
 	void OnDisable(DisableCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto cap = req->cap;
-		Disable(cap);
+		glDisable(cap);
 		reqContentRenderer->getOpenGLContext()->RecordCapability(cap, false);
 		if (options.printsCall)
 		{
@@ -1565,36 +1575,16 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::GetError() => %d", options.isDefaultQueue, res.error);
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
-
-private:
-	UnityGfxRenderer m_APIType;
-	gles::GLObjectManager m_GLObjectManager = gles::GLObjectManager();
-
-	GLenum m_AppFrontFace;
-	GLenum m_AppCullFace;
-
-	// Used by glFrontFace
-	GLuint m_CurrentDepthFunc = GL_LEQUAL;
-	bool m_DepthTestEnabled = false;
-	bool m_BlendEnabled = false;
-	// Used by glClear with color, depth and stencil
-	float m_ClearColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-	float m_ClearDepth = 1.0f;
-	uint32_t m_ClearStencil = 0;
-	int m_ClearMask = 0;
-	// Used by debugging
-	bool m_DebugEnabled = true;
 };
 
-RenderAPI *CreateRenderAPI_OpenGLCoreES(UnityGfxRenderer apiType)
+RenderAPI *CreateRenderAPI_OpenGLCoreES(RHIBackendType apiType)
 {
-	DEBUG(DEBUG_TAG, "Creating the render API for OpenGLCoreES");
 	return new RenderAPI_OpenGLCoreES(apiType);
 }
 
-RenderAPI_OpenGLCoreES::RenderAPI_OpenGLCoreES(UnityGfxRenderer apiType)
-		: m_APIType(apiType)
+RenderAPI_OpenGLCoreES::RenderAPI_OpenGLCoreES(RHIBackendType type)
 {
+	backendType = type;
 	OnCreated();
 }
 
@@ -1613,7 +1603,7 @@ void RenderAPI_OpenGLCoreES::ProcessDeviceEvent(UnityGfxDeviceEventType type, IU
 
 bool RenderAPI_OpenGLCoreES::SupportsWebGL2()
 {
-	return m_APIType == kUnityGfxRendererOpenGLES30;
+	return backendType == RHIBackendType::OpenGLESv3;
 }
 
 int RenderAPI_OpenGLCoreES::GetDrawingBufferWidth()
@@ -1624,55 +1614,6 @@ int RenderAPI_OpenGLCoreES::GetDrawingBufferWidth()
 int RenderAPI_OpenGLCoreES::GetDrawingBufferHeight()
 {
 	return renderer->getOpenGLContext()->GetViewport().height;
-}
-
-void RenderAPI_OpenGLCoreES::ClearColor(float r, float g, float b, float a)
-{
-	m_ClearColor[0] = r;
-	m_ClearColor[1] = g;
-	m_ClearColor[2] = b;
-	m_ClearColor[3] = a;
-}
-
-void RenderAPI_OpenGLCoreES::ClearDepth(float depth)
-{
-	m_ClearDepth = depth;
-}
-
-void RenderAPI_OpenGLCoreES::ClearStencil(uint32_t stencil)
-{
-	m_ClearStencil = stencil;
-}
-
-void RenderAPI_OpenGLCoreES::Clear(uint32_t mask)
-{
-	m_ClearMask = mask;
-}
-
-void RenderAPI_OpenGLCoreES::DepthFunc(int func)
-{
-	glDepthFunc(func);
-	m_CurrentDepthFunc = func;
-}
-
-void RenderAPI_OpenGLCoreES::Enable(uint32_t cap)
-{
-	glEnable(cap);
-
-	if (cap == GL_DEPTH_TEST)
-		m_DepthTestEnabled = true;
-	else if (cap == GL_BLEND)
-		m_BlendEnabled = true;
-}
-
-void RenderAPI_OpenGLCoreES::Disable(uint32_t cap)
-{
-	glDisable(cap);
-
-	if (cap == GL_DEPTH_TEST)
-		m_DepthTestEnabled = false;
-	else if (cap == GL_BLEND)
-		m_BlendEnabled = false;
 }
 
 bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(

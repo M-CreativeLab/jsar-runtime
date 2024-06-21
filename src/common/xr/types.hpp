@@ -136,6 +136,7 @@ namespace xr
     TrStereoRenderingMode stereoRenderingMode = TrStereoRenderingMode::Unknown;
     /** No need to set */
     int commandChanPort = 0;
+    string inputSourcesZonePath;
 
   public:
     bool renderedAsMultipass() { return stereoRenderingMode == TrStereoRenderingMode::MultiPass; }

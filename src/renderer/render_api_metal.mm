@@ -83,16 +83,10 @@ public:
 
   void ProcessDeviceEvent(UnityGfxDeviceEventType type,
                           IUnityInterfaces *interfaces);
-  bool GetUsesReverseZ() { return false; }
 
   bool SupportsWebGL2() { return false; }
   int GetDrawingBufferWidth() { return m_DrawingBufferWidth; }
   int GetDrawingBufferHeight() { return m_DrawingBufferHeight; }
-  void ClearColor(float r, float g, float b, float a) {}
-  void ClearDepth(float depth) {}
-  void ClearStencil(uint32_t stencil) {}
-  void Clear(uint32_t mask) {}
-  void Enable(uint32_t cap) {}
 
   bool ExecuteCommandBuffer() { return true; }
   bool ExecuteCommandBuffer(

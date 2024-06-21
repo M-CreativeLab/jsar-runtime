@@ -31,6 +31,19 @@ public:
   string applicationCacheDirectory;
   string httpsProxyServer;
   bool isXRSupported;
+
+public:
+  string getZoneDirname()
+  {
+    string zoneDirname = applicationCacheDirectory + "/.zones";
+    if (!filesystem::exists(zoneDirname))
+      filesystem::create_directory(zoneDirname);
+    return zoneDirname;
+  }
+  string getZoneFilename(string zoneName)
+  {
+    return getZoneDirname() + "/" + zoneName;
+  }
 };
 
 class TrConstellation
@@ -41,6 +54,7 @@ public:
 
 public:
   bool initialize(string initJson);
+  void shutdown();
   void tick();
   TrConstellationInit &getOptions();
   bool isInitialized();
@@ -54,11 +68,13 @@ public:
 
 private:
   TrConstellationInit options;
-  TrEventTarget *nativeEventTarget = nullptr;
-  TrContentManager *contentManager = nullptr;
-  TrRenderer *renderer = nullptr;
+  std::unique_ptr<TrEventTarget> nativeEventTarget;
+  std::unique_ptr<TrContentManager> contentManager;
+  std::unique_ptr<TrRenderer> renderer;
+  std::unique_ptr<xr::Device> xrDevice;
+
+private:
   TrEmbedder *embedder = nullptr;
-  xr::Device *xrDevice = nullptr;
   bool initialized = false;
 
 private:

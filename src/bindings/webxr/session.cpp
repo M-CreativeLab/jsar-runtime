@@ -526,7 +526,7 @@ namespace bindings
 
     xrFrameUnwrapped->start();
     // Update the input sources
-    // updateInputSourcesIfChanged(xrFrameUnwrapped); // TODO: disable for now
+    // updateInputSourcesIfChanged(xrFrameUnwrapped);
 
     // Call all the frame callbacks
     auto now = std::chrono::system_clock::now();

@@ -9,18 +9,16 @@ namespace renderer
 {
   TrRenderer::TrRenderer(TrConstellation *constellation) : constellation(constellation), api(nullptr)
   {
-    glHostContext = new OpenGLHostContextStorage();
     frameRequestChanServer = new ipc::TrOneShotServer<TrFrameRequestMessage>("frameRequestChan");
     commandBufferChanServer = new ipc::TrOneShotServer<TrCommandBufferMessage>("commandBufferChan");
   }
 
   TrRenderer::~TrRenderer()
   {
-    stopWatchers();
-
     api = nullptr;
     constellation = nullptr;
-    delete glHostContext;
+    if (glHostContext != nullptr)
+      delete glHostContext;
     delete frameRequestChanServer;
     delete commandBufferChanServer;
 
@@ -32,6 +30,10 @@ namespace renderer
 
   void TrRenderer::initialize()
   {
+    if (api == nullptr)
+      return;
+    glHostContext = new OpenGLHostContextStorage();
+
     assert(watcherRunning == false);
     assert(chanSendersWatcher == nullptr);
     startWatchers();
@@ -39,6 +41,9 @@ namespace renderer
 
   void TrRenderer::tick()
   {
+    if (api == nullptr)
+      return; // Skip if api is not ready.
+
     tickingTimepoint = std::chrono::high_resolution_clock::now();
     calcFps();
 
@@ -54,7 +59,7 @@ namespace renderer
 
   void TrRenderer::shutdown()
   {
-    // TODO
+    stopWatchers();
   }
 
   void TrRenderer::setLogFilter(string filterExpr)
@@ -93,9 +98,12 @@ namespace renderer
 
   void TrRenderer::setApi(RenderAPI *api)
   {
-    this->api = api;
-    this->api->EnableAppGlobalLog();
-    this->api->EnableXRFrameLog();
+    if (api != nullptr)
+    {
+      api->EnableAppGlobalLog();
+      api->EnableXRFrameLog();
+      this->api = api;
+    }
   }
 
   RenderAPI *TrRenderer::getApi()
@@ -182,29 +190,34 @@ namespace renderer
     api->SetTime(time);
   }
 
+  /**
+   * The timeout value for renderer's client recv server.
+   */
+  static const int ClientsRecvTimeout = 1000;
+
   void TrRenderer::startWatchers()
   {
     watcherRunning = true;
-    chanSendersWatcher = new thread([this]()
-                                    {
+    chanSendersWatcher = std::make_unique<thread>([this]()
+                                                  {
       SET_THREAD_NAME("TrFrameRequestWatcher");
       while (watcherRunning)
       {
-        auto newClient = frameRequestChanServer->tryAccept(-1);
+        auto newClient = frameRequestChanServer->tryAccept(ClientsRecvTimeout);
         if (newClient != nullptr)
         {
           lock_guard<mutex> lock(contentRendererMutex);
           auto contentRenderer = findContentRenderer(newClient->getPid());
-          assert(contentRenderer != nullptr);
-          contentRenderer->resetFrameRequestChanSenderWith(newClient);
+          if (contentRenderer != nullptr)
+            contentRenderer->resetFrameRequestChanSenderWith(newClient);
         }
       } });
-    commandBufferClientWatcher = new thread([this]()
-                                            {
+    commandBufferClientWatcher = std::make_unique<thread>([this]()
+                                                          {
       SET_THREAD_NAME("TrCommandBufferWatcher");
       while (watcherRunning)
       {
-        auto newClient = commandBufferChanServer->tryAccept(-1);
+        auto newClient = commandBufferChanServer->tryAccept(ClientsRecvTimeout);
         if (newClient != nullptr)
         {
           auto content = constellation->getContentManager()->findContent(newClient->getPid());
@@ -220,17 +233,10 @@ namespace renderer
   {
     watcherRunning = false;
     if (chanSendersWatcher != nullptr)
-    {
       chanSendersWatcher->join();
-      delete chanSendersWatcher;
-      chanSendersWatcher = nullptr;
-    }
     if (commandBufferClientWatcher != nullptr)
-    {
       commandBufferClientWatcher->join();
-      delete commandBufferClientWatcher;
-      commandBufferClientWatcher = nullptr;
-    }
+    DEBUG(LOG_TAG_RENDERER, "Renderer watchers has been stopped.");
   }
 
   bool TrRenderer::executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,

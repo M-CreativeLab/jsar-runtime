@@ -107,12 +107,12 @@ namespace renderer
     bool enableFpsCalc = false;
 
   private: // fields for senders management
-    thread *chanSendersWatcher = nullptr;
+    std::unique_ptr<thread> chanSendersWatcher = nullptr;
     mutex contentRendererMutex;
 
   private: // fields for command buffer
+    std::unique_ptr<thread> commandBufferClientWatcher = nullptr;
     ipc::TrOneShotServer<TrCommandBufferMessage> *commandBufferChanServer = nullptr;
-    thread *commandBufferClientWatcher = nullptr;
 
     friend class TrContentRenderer;
   };

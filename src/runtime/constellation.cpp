@@ -18,35 +18,14 @@ TrConstellation::TrConstellation(TrEmbedder *embedder) : embedder(embedder)
 {
   srand(static_cast<unsigned int>(time(nullptr)));
 
-  nativeEventTarget = new TrEventTarget();
-  contentManager = new TrContentManager(this);
-  renderer = new TrRenderer(this);
-  xrDevice = new xr::Device(this);
+  nativeEventTarget = std::make_unique<TrEventTarget>();
+  contentManager = std::make_unique<TrContentManager>(this);
+  renderer = std::make_unique<TrRenderer>(this);
+  xrDevice = std::make_unique<xr::Device>(this);
 }
 
 TrConstellation::~TrConstellation()
-{
-  if (nativeEventTarget != nullptr)
-  {
-    delete nativeEventTarget;
-    nativeEventTarget = nullptr;
-  }
-  if (contentManager != nullptr)
-  {
-    delete contentManager;
-    contentManager = nullptr;
-  }
-  if (renderer != nullptr)
-  {
-    delete renderer;
-    renderer = nullptr;
-  }
-  if (xrDevice != nullptr)
-  {
-    delete xrDevice;
-    xrDevice = nullptr;
-  }
-  initialized = false;
+{ 
 }
 
 bool TrConstellation::initialize(string initJson)
@@ -78,6 +57,13 @@ bool TrConstellation::initialize(string initJson)
   return true;
 }
 
+void TrConstellation::shutdown()
+{
+  contentManager->shutdown();
+  renderer->shutdown();
+  initialized = false;
+}
+
 void TrConstellation::tick()
 {
   if (initialized == false)
@@ -90,22 +76,22 @@ void TrConstellation::tick()
 
 TrEventTarget *TrConstellation::getNativeEventTarget()
 {
-  return nativeEventTarget;
+  return nativeEventTarget.get();
 }
 
 TrContentManager *TrConstellation::getContentManager()
 {
-  return contentManager;
+  return contentManager.get();
 }
 
 renderer::TrRenderer *TrConstellation::getRenderer()
 {
-  return renderer;
+  return renderer.get();
 }
 
 xr::Device *TrConstellation::getXrDevice()
 {
-  return xrDevice;
+  return xrDevice.get();
 }
 
 bool TrConstellation::onEvent(TrEvent &event, TrContentRuntime *content)

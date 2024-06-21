@@ -9,6 +9,7 @@
 
 #include "common/classes.hpp"
 #include "common/ipc.hpp"
+#include "common/zone.hpp"
 #include "common/xr/types.hpp"
 #include "common/xr/message.hpp"
 #include "common/command_buffers/command_buffers.hpp"
@@ -34,7 +35,7 @@ namespace xr
   public:
     void initialize(bool enabled, TrDeviceInit &init);
     bool isSessionSupported(xr::TrXRSessionMode mode);
-    int requestSession(xr::TrXRSessionMode mode, TrContentRenderer* contentRenderer);
+    int requestSession(xr::TrXRSessionMode mode, TrContentRenderer *contentRenderer);
     bool enabled();
     bool isRenderedAsMultipass();
     void setFrameRate(uint32_t frameRate);
@@ -83,6 +84,7 @@ namespace xr
     bool updateLocalTransform(int id, float *transform);
 
   public: // Input sources
+    string getInputSourcesZonePath();
     InputSource *getGazeInputSource();
     InputSource *getHandInputSource(Handness handness);
     bool addGamepadInputSource(int id, InputSource &gamepadInputSource);
@@ -187,6 +189,7 @@ namespace xr
     /**
      * Input sources fields
      */
+    std::unique_ptr<TrZone> m_InputSourcesZone;
     // input source for gaze
     InputSource *m_GazeInputSource;
     // input sources(2) for hands

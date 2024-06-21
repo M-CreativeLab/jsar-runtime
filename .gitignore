@@ -56,3 +56,6 @@ node_modules
 /src/proto/*
 !/src/proto/*.proto
 *.apk
+
+# JSAR
+.zones

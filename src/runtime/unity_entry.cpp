@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "entry.hpp"
+#include "unity_entry.hpp"
 #include "debug.hpp"
 #include "embedder.hpp"
 #include "common/events/event_type.hpp"
@@ -36,6 +36,7 @@ private:
   {
     graphics = unityInterfaces->Get<IUnityGraphics>();
     log = unityInterfaces->Get<IUnityLog>();
+    SET_UNITY_LOG_HANDLE(log);
 
     graphics->RegisterDeviceEventCallback(UnityEmbedder::OnGraphicsDeviceEvent);
   }
@@ -43,9 +44,11 @@ private:
 public:
   void initialize()
   {
+    assert(constellation != nullptr);
+
     deviceType = graphics->GetRenderer();
     // set the backend api to the renderer.
-    constellation->getRenderer()->setApi(RenderAPI::Create(deviceType, constellation));
+    constellation->getRenderer()->setApi(RenderAPI::Create(deviceType, getConstellation()));
   }
 
   void unload()
@@ -97,10 +100,9 @@ UnityEmbedder *UnityEmbedder::EnsureAndGet()
 extern "C"
 {
   static float s_WorldScalingFactor = 1.0;
-  static void OnPlatformSetup()
+  static void OnPlatformSetup(UnityEmbedder* embedder)
   {
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
-    auto embedder = UnityEmbedder::EnsureAndGet();
     char deviceVendor[PROP_VALUE_MAX];
     if (
         __system_property_get("ro.product.vendor.brand", deviceVendor) >= 0 ||
@@ -161,7 +163,7 @@ extern "C"
       DEBUG(LOG_TAG_UNITY, "Failed to create UnityEmbedder instance");
       return;
     }
-    OnPlatformSetup();
+    OnPlatformSetup(embedder);
   }
 
   DLL_PUBLIC void UnityPluginUnload()
@@ -189,7 +191,7 @@ extern "C"
       DEBUG(LOG_TAG_UNITY, "Failed to create UnityEmbedder instance");
       return;
     }
-    OnPlatformSetup();
+    OnPlatformSetup(embedder);
   }
 
   DLL_PUBLIC void TransmuteNative_Prepare()

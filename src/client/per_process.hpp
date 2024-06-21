@@ -13,6 +13,7 @@
 #include "idgen.hpp"
 #include "debug.hpp"
 #include "ipc.hpp"
+#include "common/zone.hpp"
 #include "common/command_buffers/shared.hpp"
 #include "common/command_buffers/command_buffers.hpp"
 #include "common/command_buffers/receiver.hpp"
@@ -171,6 +172,7 @@ private: // xr fields
   xr::TrXRCommandSender *xrCommandChanSender = nullptr;
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
   xr::TrXRFrameRequest *currentXrFrameRequest = nullptr;
+  std::unique_ptr<TrZone> xrInputSourcesZoneClient;
   int framebufferWidth = 0;
   int framebufferHeight = 0;
 
