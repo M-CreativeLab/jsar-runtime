@@ -179,16 +179,20 @@ void TrContentRuntime::setupWithXRCommandBufferClient(TrOneShotClient<xr::TrXRCo
 void TrContentRuntime::onClientProcess()
 {
   path basePath = path(constellationOptions.runtimeDirectory);
-  path clientPath;
+  path clientPath = basePath / "TransmuteClient";
   auto embedder = getConstellation()->getEmbedder();
   /**
-   * NOTE: Even though the `libTransmuteClient.so` is a shared library name, the file is actually an executable, and the reason
+   * NOTE: Even though the `libTransmuteClient.{so|dylib}` is a shared library name, the file is actually an executable, and the reason
    * to do this trick is to make Unity copy this file to the apk.
    */
   if (embedder->isEmbeddingWith(TrHostEngine::Unity))
+  {
+#ifdef __ANDROID__
     clientPath = basePath / "libTransmuteClient.so";
-  else
-    clientPath = basePath / "TransmuteClient";
+#elif __APPLE__
+    clientPath = basePath / "libTransmuteClient.dylib";
+#endif
+  }
   DEBUG(LOG_TAG_CONTENT, "Start a new client with: %s", clientPath.c_str());
 
   rapidjson::Document scriptContext;

@@ -32,12 +32,12 @@ extern "C"
    *
    * @param argJson The JSON string of the runtime initialization arguments.
    */
-  DLL_PUBLIC void TransmuteNative_Start(const char *argJson);
+  DLL_PUBLIC bool TransmuteNative_Start(const char *argJson);
 
   /**
-   * Initialize the XR device, this is required to execute the JSAR in XR device.
+   * Configure the XR device, this is required to execute the JSAR in XR device.
    */
-  DLL_PUBLIC void TransmuteNative_InitializeXRDevice(bool enabled, bool isDeviceActive, int stereoRenderingMode);
+  DLL_PUBLIC bool TransmuteNative_ConfigureXRDevice(bool enabled, bool isDeviceActive, int stereoRenderingMode);
 
   /**
    * Fetch the event from the JavaScript side.

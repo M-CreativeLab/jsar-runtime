@@ -183,17 +183,17 @@ extern "C"
 
 #endif
 
-  DLL_PUBLIC void TransmuteNative_Start(const char *argJson)
+  DLL_PUBLIC bool TransmuteNative_Start(const char *argJson)
   {
-    UnityEmbedder::EnsureAndGet()->onStart(string(argJson));
+    return UnityEmbedder::EnsureAndGet()->onStart(string(argJson));
   }
 
-  DLL_PUBLIC void TransmuteNative_InitializeXRDevice(bool enabled, bool isDeviceActive, int stereoRenderingMode)
+  DLL_PUBLIC bool TransmuteNative_ConfigureXRDevice(bool enabled, bool isDeviceActive, int stereoRenderingMode)
   {
     xr::TrDeviceInit init;
     init.active = isDeviceActive;
     init.stereoRenderingMode = (xr::TrStereoRenderingMode)stereoRenderingMode;
-    UnityEmbedder::EnsureAndGet()->configureXrDevice(enabled, init);
+    return UnityEmbedder::EnsureAndGet()->configureXrDevice(enabled, init);
   }
 
   DLL_PUBLIC bool TransmuteNative_GetEventFromJavaScript(int *id, int *type, uint32_t *size)

@@ -95,6 +95,7 @@ namespace xr
 
     // Start command client watcher.
     startCommandClientWatcher();
+    DEBUG(LOG_TAG_XR, "The XR Device has been configured successfully: enabled=%s.", enabled ? "YES" : "NO");
   }
 
   bool Device::isSessionSupported(xr::TrXRSessionMode mode)
