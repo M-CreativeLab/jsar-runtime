@@ -113,7 +113,7 @@ namespace commandbuffers
         pixelsByteLength = computePixelsByteLength();
         if (pixelsByteLength > 0)
         {
-          pixels = malloc(pixelsByteLength); // TODO: check OOM
+          pixels = malloc(pixelsByteLength);
           if (pixels != nullptr)
           {
             memcpy(pixels, srcPixels, pixelsByteLength);

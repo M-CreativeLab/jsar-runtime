@@ -118,6 +118,8 @@ namespace renderer
 
   void TrRenderer::addContentRenderer(TrContentRuntime *content)
   {
+    if (api == nullptr)
+      return;
     lock_guard<mutex> lock(contentRendererMutex);
     if (content == nullptr || findContentRenderer(content->pid) != nullptr)
       return;

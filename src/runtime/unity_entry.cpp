@@ -183,20 +183,9 @@ extern "C"
 
 #endif
 
-  DLL_PUBLIC void TransmuteNative_Start()
+  DLL_PUBLIC void TransmuteNative_Start(const char *argJson)
   {
-    auto embedder = UnityEmbedder::Create(nullptr);
-    if (embedder == nullptr)
-    {
-      DEBUG(LOG_TAG_UNITY, "Failed to create UnityEmbedder instance");
-      return;
-    }
-    OnPlatformSetup(embedder);
-  }
-
-  DLL_PUBLIC void TransmuteNative_Prepare()
-  {
-    DEBUG("transmute", "Prepare for TransmuteNative");
+    UnityEmbedder::EnsureAndGet()->onStart(string(argJson));
   }
 
   DLL_PUBLIC void TransmuteNative_InitializeXRDevice(bool enabled, bool isDeviceActive, int stereoRenderingMode)
@@ -223,23 +212,6 @@ extern "C"
     //   nativeEventTarget->GetEvent(nullptr, nullptr, data, nullptr, true);
   }
 
-  DLL_PUBLIC bool TransmuteNative_IsRuntimeUp()
-  {
-    // auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
-    // if (!nodejsBootstrapper->isRunning())
-    //   return false;
-
-    // TODO: Check if the runtime is up
-    return true;
-  }
-
-  DLL_PUBLIC bool TransmuteNative_IsRuntimeAvailable()
-  {
-    // auto nodejsBootstrapper = NodeBootstrapper::GetOrCreateInstance();
-    // return nodejsBootstrapper->isRuntimeAvailable();
-    return true;
-  }
-
   DLL_PUBLIC void TransmuteNative_OnRenderFrame()
   {
     UnityEmbedder::EnsureAndGet()->onFrame();
@@ -254,11 +226,6 @@ extern "C"
   {
     auto eventTarget = UnityEmbedder::EnsureAndGet()->getNativeEventTarget();
     eventTarget->dispatchEvent(static_cast<TrEventType>(type), data);
-  }
-
-  DLL_PUBLIC void TransmuteNative_SetRuntimeInit(const char *argJson)
-  {
-    UnityEmbedder::EnsureAndGet()->onStart(string(argJson));
   }
 
   DLL_PUBLIC void TransmuteNative_SetViewport(int w, int h)

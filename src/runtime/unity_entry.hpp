@@ -27,12 +27,12 @@ extern "C"
   DLL_PUBLIC UnityRenderingEvent TransmuteNative_GetRenderEventFunc();
 #endif
 
-  DLL_PUBLIC void TransmuteNative_Start();
-
   /**
-   * Prepare the transmute native runtime.
+   * Start running the runtime service.
+   *
+   * @param argJson The JSON string of the runtime initialization arguments.
    */
-  DLL_PUBLIC void TransmuteNative_Prepare();
+  DLL_PUBLIC void TransmuteNative_Start(const char *argJson);
 
   /**
    * Initialize the XR device, this is required to execute the JSAR in XR device.
@@ -50,16 +50,6 @@ extern "C"
   DLL_PUBLIC void TransmuteNative_GetEventDataFromJavaScript(const char *data);
 
   /**
-   * Check if the JavaScript runtime is up.
-   */
-  DLL_PUBLIC bool TransmuteNative_IsRuntimeUp();
-
-  /**
-   * Check if the JavaScript runtime is available.
-   */
-  DLL_PUBLIC bool TransmuteNative_IsRuntimeAvailable();
-
-  /**
    * Execute the frame function.
    */
   DLL_PUBLIC void TransmuteNative_OnRenderFrame();
@@ -73,13 +63,6 @@ extern "C"
    * Dispatch the native event.
    */
   DLL_PUBLIC void TransmuteNative_DispatchNativeEvent(int type, const char *data);
-
-  /**
-   * Set the runtime initialization arguments.
-   *
-   * @param argJson The JSON string of the runtime initialization arguments.
-   */
-  DLL_PUBLIC void TransmuteNative_SetRuntimeInit(const char *argJson);
 
   /**
    * Set the viewport size for current rendering.
@@ -178,7 +161,7 @@ extern "C"
 
   /**
    * Update the grip pose for the hand input source.
-   * 
+   *
    * @param handness The handness of the hand, 0 for left and 1 for right.
    * @param translation The translation part of the transform, a 3-element float array.
    * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
@@ -189,9 +172,9 @@ extern "C"
    * An action is a special type of event that's triggered by the input source, such as the controller button press, etc. Calling
    * this function will not trigger an event to the client side, it just updates the action state such as pressed, released, etc.
    * Then the client side will fetch the action state in a frame and dispatch the events accordingly.
-   * 
+   *
    * See https://developer.mozilla.org/en-US/docs/Web/API/WebXR_Device_API/Inputs#actions for more details.
-   * 
+   *
    * @param handness The handness of the hand, 0 for left and 1 for right.
    * @param action The action type: primary(0), squeeze(1).
    * @param state The action state: pressed(0), released(1).
