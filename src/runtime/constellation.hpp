@@ -62,6 +62,7 @@ public:
   TrContentManager *getContentManager();
   TrRenderer *getRenderer();
   xr::Device *getXrDevice();
+  TrEmbedder *getEmbedder();
 
 public:
   bool onEvent(TrEvent &event, TrContentRuntime *content);

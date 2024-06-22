@@ -1,6 +1,8 @@
 #include "embedder.hpp"
 
-TrEmbedder::TrEmbedder() : constellation(std::make_unique<TrConstellation>(this))
+TrEmbedder::TrEmbedder(TrHostEngine hostEngine)
+    : constellation(std::make_unique<TrConstellation>(this)),
+      hostEngine(hostEngine)
 {
 }
 
@@ -54,4 +56,9 @@ TrRenderer *TrEmbedder::getRenderer()
 xr::Device *TrEmbedder::getXrDevice()
 {
   return constellation->getXrDevice();
+}
+
+bool TrEmbedder::isEmbeddingWith(TrHostEngine engine)
+{
+  return hostEngine == engine;
 }

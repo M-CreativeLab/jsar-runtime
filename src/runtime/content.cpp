@@ -10,6 +10,7 @@
 #include <rapidjson/stringbuffer.h>
 
 #include "debug.hpp"
+#include "embedder.hpp"
 #include "content.hpp"
 #include "crates/jsar_jsbindings.h"
 
@@ -178,15 +179,16 @@ void TrContentRuntime::setupWithXRCommandBufferClient(TrOneShotClient<xr::TrXRCo
 void TrContentRuntime::onClientProcess()
 {
   path basePath = path(constellationOptions.runtimeDirectory);
-#if defined(__ANDROID__)
+  path clientPath;
+  auto embedder = getConstellation()->getEmbedder();
   /**
    * NOTE: Even though the `libTransmuteClient.so` is a shared library name, the file is actually an executable, and the reason
    * to do this trick is to make Unity copy this file to the apk.
    */
-  path clientPath = basePath / "libTransmuteClient.so";
-#else
-  path clientPath = basePath / "TransmuteClient";
-#endif
+  if (embedder->isEmbeddingWith(TrHostEngine::Unity))
+    clientPath = basePath / "libTransmuteClient.so";
+  else
+    clientPath = basePath / "TransmuteClient";
   DEBUG(LOG_TAG_CONTENT, "Start a new client with: %s", clientPath.c_str());
 
   rapidjson::Document scriptContext;

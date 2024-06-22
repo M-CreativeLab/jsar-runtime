@@ -31,7 +31,7 @@ private:
   }
 
 private:
-  UnityEmbedder(IUnityInterfaces *unityInterfaces) : TrEmbedder(),
+  UnityEmbedder(IUnityInterfaces *unityInterfaces) : TrEmbedder(TrHostEngine::Unity),
                                                      interfaces(unityInterfaces)
   {
     graphics = unityInterfaces->Get<IUnityGraphics>();

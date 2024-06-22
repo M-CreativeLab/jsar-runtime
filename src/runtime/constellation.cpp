@@ -25,7 +25,7 @@ TrConstellation::TrConstellation(TrEmbedder *embedder) : embedder(embedder)
 }
 
 TrConstellation::~TrConstellation()
-{ 
+{
 }
 
 bool TrConstellation::initialize(string initJson)
@@ -92,6 +92,11 @@ renderer::TrRenderer *TrConstellation::getRenderer()
 xr::Device *TrConstellation::getXrDevice()
 {
   return xrDevice.get();
+}
+
+TrEmbedder *TrConstellation::getEmbedder()
+{
+  return embedder;
 }
 
 bool TrConstellation::onEvent(TrEvent &event, TrContentRuntime *content)

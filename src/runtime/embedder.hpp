@@ -8,13 +8,21 @@ using namespace std;
 using namespace renderer;
 using namespace events;
 
+enum class TrHostEngine
+{
+  None,
+  Unity,
+  Unreal,
+  Cocos,
+};
+
 /**
  * The main class for the embedder who want's to embed or integrate the Transmute runtime into their application or environment.
  */
 class TrEmbedder
 {
 protected: // You should create your own embedder class and decide how to create `TrEmbedder` instace.
-  TrEmbedder();
+  TrEmbedder(TrHostEngine hostEngine = TrHostEngine::None);
   virtual ~TrEmbedder() = default;
 
 public: // API for configuration and operations
@@ -61,6 +69,10 @@ public: // API for getting sub components
   TrRenderer *getRenderer();
   xr::Device *getXrDevice();
 
+public:
+  bool isEmbeddingWith(TrHostEngine engine);
+
 protected:
   std::unique_ptr<TrConstellation> constellation;
+  TrHostEngine hostEngine = TrHostEngine::None;
 };
