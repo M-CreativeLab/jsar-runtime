@@ -277,8 +277,11 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
 void TrClientContextPerProcess::start()
 {
   eventChanClient = ipc::TrOneShotClient<TrEventMessage>::MakeAndConnect(eventChanPort, false);
+  assert(eventChanClient != nullptr);
   frameChanClient = ipc::TrOneShotClient<TrFrameRequestMessage>::MakeAndConnect(frameChanPort, false);
+  assert(frameChanClient != nullptr);
   commandBufferChanClient = ipc::TrOneShotClient<TrCommandBufferMessage>::MakeAndConnect(commandBufferChanPort, false);
+  assert(commandBufferChanClient != nullptr);
 
   if (!eventChanClient->isConnected() || !frameChanClient->isConnected())
   {
@@ -305,7 +308,7 @@ void TrClientContextPerProcess::start()
   // Start the frames listener
   framesListenerRunning = true;
   framesListener = new thread([this]()
-                              { 
+                              {
                                 SET_THREAD_NAME("TrFramesListener");
                                 this->onListenFrames(); });
 
@@ -319,6 +322,9 @@ void TrClientContextPerProcess::start()
                                         if (getppid() == 1)
                                           exit(0);  // FIXME: more graceful exit?
                                       } });
+
+  // Finish the client start.
+  DEBUG(LOG_TAG_CLIENT_ENTRY, "The client(%d) is started.", id);
 }
 
 void TrClientContextPerProcess::print()
@@ -336,6 +342,10 @@ void TrClientContextPerProcess::print()
     DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) xrDeviceInit.stereoRenderingMode=%d", id,
           static_cast<int>(xrDeviceInit.stereoRenderingMode));
     DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) xrDeviceInit.commandChanPort=%d", id, xrDeviceInit.commandChanPort);
+  }
+  else
+  {
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) xrDeviceInit.enabled=NO");
   }
 }
 

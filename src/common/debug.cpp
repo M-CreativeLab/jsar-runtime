@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <dlfcn.h>
 #include "debug.hpp"
 
 #ifdef _WIN32
@@ -6,6 +7,8 @@
 #include <processthreadsapi.h>
 #elif __ANDROID__
 #include <sys/prctl.h>
+#include <cxxabi.h>
+#include <unwind.h>
 #endif
 
 #ifndef TRANSMUTE_STANDALONE
@@ -59,8 +62,30 @@ void SET_THREAD_NAME(const std::string &name)
 #endif
 }
 
+#ifdef __ANDROID__
+struct android_backtrace_state
+{
+  void **current;
+  void **end;
+};
+_Unwind_Reason_Code android_unwind_callback(struct _Unwind_Context *ctx, void *arg)
+{
+  android_backtrace_state *state = (android_backtrace_state *)arg;
+  uintptr_t pc = _Unwind_GetIP(ctx);
+  if (pc)
+  {
+    if (state->current == state->end)
+      return _URC_END_OF_STACK;
+    else
+      *state->current++ = reinterpret_cast<void *>(pc);
+  }
+  return _URC_NO_REASON;
+}
+#endif
+
 void printsStacktraceOnSignal(int signal)
 {
+  DEBUG(LOG_TAG_ERROR, "Received SIGNAL (%d), printing backtrace:", signal);
 #ifdef __APPLE__
   const int maxFrames = 20;
   void *stackTrace[maxFrames];
@@ -68,13 +93,49 @@ void printsStacktraceOnSignal(int signal)
   char **symbols = backtrace_symbols(stackTrace, numFrames);
   if (symbols == nullptr)
   {
-    std::cerr << "Failed to obtain backtrace symbols" << std::endl;
-    exit(EXIT_FAILURE);
+    DEBUG(LOG_TAG_ERROR, "Failed to obtain backtrace symbols");
   }
-  std::cerr << "Received signal " << signal << ", printing stack trace:" << std::endl;
-  for (int i = 0; i < numFrames; ++i)
-    std::cerr << symbols[i] << std::endl;
-  free(symbols);
+  else
+  {
+    for (int i = 0; i < numFrames; ++i)
+      DEBUG(LOG_TAG_ERROR, "%s", symbols[i]);
+    free(symbols);
+  }
+#elif __ANDROID__
+  const int max = 512;
+  void *buffer[max];
+  android_backtrace_state state;
+  state.current = buffer;
+  state.end = buffer + max;
+
+  _Unwind_Backtrace(android_unwind_callback, &state);
+  int backtraceCount = (int)(state.current - buffer);
+  if (backtraceCount == 0)
+  {
+    DEBUG(LOG_TAG_ERROR, "Failed to obtain backtrace symbols");
+  }
+  else
+  {
+    for (int n = 0; n < backtraceCount; n++)
+    {
+      const void *addr = buffer[n];
+      const char *symbol = "";
+
+      Dl_info info;
+      if (dladdr(addr, &info) && info.dli_sname)
+      {
+        symbol = info.dli_sname;
+        int status = 0;
+        char *demangled = __cxxabiv1::__cxa_demangle(symbol, 0, 0, &status);
+        DEBUG(LOG_TAG_ERROR, "  #%d pc %p %s",
+              n, addr,
+              status == 0 && demangled != nullptr ? demangled : symbol);
+
+        if (demangled != nullptr)
+          free(demangled);
+      }
+    }
+  }
 #endif
   _exit(EXIT_FAILURE);
 }

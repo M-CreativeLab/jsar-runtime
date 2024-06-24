@@ -108,8 +108,6 @@ private:
   TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
   xr::TrXRCommandSender *xrCommandChanSender = nullptr;
-  // Layout?
-  // XR?
 
 private:
   mutex recvCommandBuffersMutex;

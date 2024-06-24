@@ -82,6 +82,10 @@ int main(int argc, char **argv)
     if (xrDevice.HasMember("inputSourcesZonePath") && xrDevice["inputSourcesZonePath"].IsString())
       clientContext->xrDeviceInit.inputSourcesZonePath = xrDevice["inputSourcesZonePath"].GetString();
   }
+  else
+  {
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "There is no \"xrDevice\" field from the init JSON.");
+  }
   clientContext->print(); // prints the client context before the script starts.
   clientContext->start(); // starts the client context.
 

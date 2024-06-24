@@ -207,6 +207,12 @@ void TrContentRuntime::onClientProcess()
   scriptContext.AddMember("frameChanPort", frameChanPort, allocator);
   scriptContext.AddMember("commandBufferChanPort", commandBufferChanPort, allocator);
 
+  // Add constellation options
+  scriptContext.AddMember("applicationCacheDirectory",
+                          rapidjson::Value(constellationOptions.applicationCacheDirectory.c_str(), allocator), allocator);
+  scriptContext.AddMember("httpsProxyServer",
+                          rapidjson::Value(constellationOptions.httpsProxyServer.c_str(), allocator), allocator);
+
   auto xrDevice = getConstellation()->getXrDevice();
   if (xrDevice != nullptr)
   {
@@ -257,12 +263,16 @@ bool TrContentRuntime::testClientProcessExitOnFrame()
   {
     if (WIFEXITED(status) || WIFSTOPPED(status))
     {
-      DEBUG(LOG_TAG_CONTENT, "The client process(%d) is terminated or stopped.", pid);
+      if (WIFEXITED(status)) // Exit
+        DEBUG(LOG_TAG_CONTENT, "The client process(%d) exits, and code: %d, core dump: %s", pid, WEXITSTATUS(status));
+      else // Stopped
+        DEBUG(LOG_TAG_CONTENT, "The client process(%d) is stopped with a signal: %d", pid, WSTOPSIG(status));
       pid = -1;
       return true;
     }
     else if (WIFSIGNALED(status))
     {
+      // Process is terminated
       DEBUG(LOG_TAG_CONTENT, "The client process(%d) is terminated by a signal: %d, and core dumped: %d",
             pid, WTERMSIG(status), WCOREDUMP(status));
       pid = -1;

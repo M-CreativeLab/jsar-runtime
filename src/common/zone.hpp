@@ -59,7 +59,7 @@ public:
   void read()
   {
     char *message = reinterpret_cast<char *>(memoryAddr);
-    fprintf(stdout, "read zone: %s\n", message);
+    DEBUG(LOG_TAG_ERROR, "Reading zone(%s): %s at %p", filename.c_str(), message, memoryAddr);
   }
 
 private:

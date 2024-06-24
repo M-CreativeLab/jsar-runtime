@@ -16,6 +16,21 @@ namespace commandbuffers
   class WebGL1ContextInitCommandBufferResponse : public TrCommandBufferSimpleResponse<WebGL1ContextInitCommandBufferResponse>
   {
   public:
+    WebGL1ContextInitCommandBufferResponse(WebGL1ContextInitCommandBufferResponse &that)
+        : TrCommandBufferSimpleResponse(that),
+          drawingViewport(that.drawingViewport),
+          maxCombinedTextureImageUnits(that.maxCombinedTextureImageUnits),
+          maxCubeMapTextureSize(that.maxCubeMapTextureSize),
+          maxFragmentUniformVectors(that.maxFragmentUniformVectors),
+          maxRenderbufferSize(that.maxRenderbufferSize),
+          maxTextureImageUnits(that.maxTextureImageUnits),
+          maxTextureSize(that.maxTextureSize),
+          maxVaryingVectors(that.maxVaryingVectors),
+          maxVertexAttribs(that.maxVertexAttribs),
+          maxVertexTextureImageUnits(that.maxVertexTextureImageUnits),
+          maxVertexUniformVectors(that.maxVertexUniformVectors)
+    {
+    }
     WebGL1ContextInitCommandBufferResponse(WebGL1ContextInitCommandBufferRequest *req)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES, req)
     {

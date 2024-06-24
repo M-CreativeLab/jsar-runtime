@@ -76,7 +76,7 @@ namespace ipc
     int getFd() { return fd; }
     bool tryRecvRaw(void *outData, size_t outSize, int timeout);
 
-  private:
+  protected:
     int fd;
     bool blocking;
     TrOneShotClient<T> *client;

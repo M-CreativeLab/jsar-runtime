@@ -131,6 +131,10 @@ namespace xr
   class TrDeviceInit
   {
   public:
+    TrDeviceInit() {}
+    ~TrDeviceInit() = default;
+
+  public:
     bool enabled = false;
     bool active = false;
     TrStereoRenderingMode stereoRenderingMode = TrStereoRenderingMode::Unknown;

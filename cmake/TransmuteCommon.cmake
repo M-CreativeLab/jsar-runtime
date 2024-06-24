@@ -133,11 +133,15 @@ function(tr_target_set_properties TARGET)
             BUILD_WITH_INSTALL_RPATH TRUE
         )
     elseif (ANDROID)
+        cmake_parse_arguments(ANDROID_ARG "USE_EXECUTABLE_PATH" "" "" ${ARGN})
+        if (ANDROID_ARG_USE_EXECUTABLE_PATH)
+            set(ANDROID_TARGET_SUFFIX "")
+        else()
+            set(ANDROID_TARGET_SUFFIX ".so")
+        endif()
         target_link_options(${TARGET} PRIVATE -Wl,-rpath,$ORIGIN)
         set_target_properties(${TARGET} PROPERTIES
-            SUFFIX ".so"
-            INSTALL_RPATH "$ORIGIN"
-            BUILD_WITH_INSTALL_RPATH TRUE
+            SUFFIX "${ANDROID_TARGET_SUFFIX}"
         )
     elseif (WIN32)
         set_target_properties(${TARGET} PROPERTIES

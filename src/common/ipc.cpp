@@ -120,7 +120,7 @@ namespace ipc
   template <typename T>
   bool TrChannelSender<T>::sendRaw(const void *data, size_t size)
   {
-    if (fd == -1 || client->invalid())
+    if (fd == -1 || client == nullptr || client->invalid())
       return false;
 
     int bytesSent = 0;
@@ -178,7 +178,7 @@ namespace ipc
   template <typename T>
   bool TrChannelReceiver<T>::tryRecvRaw(void *outData, size_t outSize, int timeout)
   {
-    if (client->invalid())
+    if (client == nullptr || client->invalid())
       return false;
 
     if (blocking)

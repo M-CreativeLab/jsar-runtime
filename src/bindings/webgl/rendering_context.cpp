@@ -828,12 +828,7 @@ namespace webgl
     Napi::HandleScope scope(env);
 
     m_clientContext = TrClientContextPerProcess::Get();
-    if (m_clientContext == nullptr)
-    {
-      Napi::TypeError::New(env, "ClientContext is not available")
-          .ThrowAsJavaScriptException();
-      return;
-    }
+    assert(m_clientContext != nullptr);
 
     if (info.Length() >= 1 && info[0].IsObject())
     {

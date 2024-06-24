@@ -271,7 +271,8 @@ namespace ipc
     T *createInstanceFromBase()
     {
       assert(base != nullptr);
-      return new T(*reinterpret_cast<T *>(base));
+      T *baseRef = reinterpret_cast<T *>(base);
+      return new T(*baseRef);
     }
 
   private:
