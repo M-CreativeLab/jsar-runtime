@@ -53,6 +53,20 @@ TrContentRuntime::~TrContentRuntime()
 
 void TrContentRuntime::start(TrXSMLRequestInit init)
 {
+  if (pipe(childPipes) == -1)
+  {
+    DEBUG(LOG_TAG_ERROR, "Failed to create child pipes for content runtime.");
+  }
+  else
+  {
+    int flags = fcntl(childPipes[0], F_GETFL, 0);
+    if (flags != -1)
+    {
+      flags |= O_NONBLOCK;
+      fcntl(childPipes[0], F_SETFL, flags);
+    }
+  }
+
   requestInit = init;
   constellationOptions = contentManager->constellation->getOptions();
   eventChanPort = contentManager->eventChanServer->getPort();
@@ -69,10 +83,21 @@ void TrContentRuntime::start(TrXSMLRequestInit init)
   }
   else if (pid == 0)
   {
+    /**
+     * Configure pipes for child process.
+     */
+    close(childPipes[0]); // close read pipe in child
+    dup2(childPipes[1], STDOUT_FILENO);
+    dup2(childPipes[1], STDERR_FILENO); // TODO: split stderr into another channel?
+    close(childPipes[1]);
+
     onClientProcess();
   }
   else
   {
+    /** Configure pipes for parent process  */
+    close(childPipes[1]);
+
     auto renderer = contentManager->constellation->getRenderer();
     renderer->addContentRenderer(this);
     DEBUG(LOG_TAG_CONTENT, "The client process(%d) is started.", pid);
@@ -306,10 +331,10 @@ void TrContentRuntime::recvCommandBuffers(uint32_t timeout)
   }
 }
 
-bool TrContentRuntime::tickOnFrame()
+void TrContentRuntime::recvEvent()
 {
   if (eventChanReceiver == nullptr)
-    return false;
+    return;
 
   auto eventMessage = eventChanReceiver->recvEvent(0);
   if (eventMessage != nullptr)
@@ -319,6 +344,51 @@ bool TrContentRuntime::tickOnFrame()
       eventTarget->dispatchEvent(eventMessage->type, eventMessage->detail());
     delete eventMessage;
   }
+}
+
+void TrContentRuntime::recvClientOutput()
+{
+  struct pollfd fds[1];
+  fds[0].fd = childPipes[0];
+  fds[0].events = POLLIN;
+
+  int events = poll(fds, 1, 0);
+  if (events <= -1)
+    return;
+
+  char buf[2048];
+  if (fds[0].revents & POLLIN)
+  {
+    ssize_t bytesRead = 0;
+    do
+    {
+      bytesRead = read(childPipes[0], buf, sizeof(buf));
+      if (bytesRead == -1)
+      {
+        if (errno != EAGAIN && errno != EWOULDBLOCK)
+          DEBUG(LOG_TAG_ERROR, "Failed to read pipe from client(%d): %s", pid, strerror(errno));
+        break;
+      }
+      for (int pos = 0; pos < bytesRead; pos++)
+      {
+        if (buf[pos] == '\n')
+        {
+          DEBUG(LOG_TAG_CLIENT_ENTRY, "client(%d): %s", pid, lastClientOutput.c_str());
+          lastClientOutput.clear();
+        }
+        else
+        {
+          lastClientOutput += buf[pos];
+        }
+      }
+    } while (bytesRead > 0);
+  }
+}
+
+bool TrContentRuntime::tickOnFrame()
+{
+  recvEvent();
+  recvClientOutput();
   return true;
 }
 

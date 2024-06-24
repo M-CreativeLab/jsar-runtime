@@ -1,5 +1,4 @@
 import { inspect } from 'util';
-const { log: writeLogToNative } = process._linkedBinding('transmute:logger');
 
 let nodejsUtilModule;
 enum LogLevel {
@@ -65,7 +64,6 @@ export class Logger extends EventTarget implements Console {
     const message = this.#getMessageString(format, ...args);
 
     console.info(format, ...args);
-    writeLogToNative(level, Array.isArray(message) ? message.join(' ') : message);
     this.dispatchEvent(new CustomEvent('log', { detail: message }));
   }
 
@@ -211,9 +209,9 @@ process.on('uncaughtException', handleGlobalExceptionOrRejection);
 process.on('unhandledRejection', handleGlobalExceptionOrRejection);
 
 // Just log the environment variables.
-writeLogToNative(0, `created default logger successfully, and the following are environment variables:`);
+console.info(0, `created default logger successfully, and the following are environment variables:`);
 for (const [key, value] of Object.entries(process.env)) {
-  writeLogToNative(0, `  ${key}: ${value}`);
+  console.info(0, `  ${key}: ${value}`);
 }
 
 export const log = defaultLogger.log.bind(defaultLogger);

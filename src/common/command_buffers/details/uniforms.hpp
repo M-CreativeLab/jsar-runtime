@@ -62,6 +62,9 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<Uniform1fvCommandBufferRequest>
   {
   public:
+    Uniform1fvCommandBufferRequest(Uniform1fvCommandBufferRequest &that) : TrCommandBufferSimpleRequest(that), location(that.location)
+    {
+    }
     Uniform1fvCommandBufferRequest(uint32_t location, const std::vector<float> &values)
         : TrCommandBufferSimpleRequest(COMMAND_BUFFER_UNIFORM1FV_REQ),
           location(location),
@@ -109,6 +112,7 @@ namespace commandbuffers
       : public TrCommandBufferSimpleRequest<Uniform1ivCommandBufferRequest>
   {
   public:
+    Uniform1ivCommandBufferRequest(Uniform1ivCommandBufferRequest &that) : TrCommandBufferSimpleRequest(that), location(that.location) {}
     Uniform1ivCommandBufferRequest(uint32_t location, const std::vector<int> &values)
         : TrCommandBufferSimpleRequest(COMMAND_BUFFER_UNIFORM1IV_REQ),
           location(location),

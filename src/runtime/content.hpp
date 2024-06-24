@@ -86,6 +86,8 @@ private:
   void onClientProcess();
   bool testClientProcessExitOnFrame(); // true if the client process has exited
   void recvCommandBuffers(uint32_t timeout);
+  void recvEvent();
+  void recvClientOutput();
   bool tickOnFrame();
 
 public:
@@ -104,10 +106,13 @@ private:
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
   function<void(TrCommandBufferBase *)> onCommandBufferRequestReceived;
-  // vector<TrCommandBufferBase *> commandBufferRequests;
   TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
   xr::TrXRCommandSender *xrCommandChanSender = nullptr;
+
+private:
+  int childPipes[2];
+  string lastClientOutput;
 
 private:
   mutex recvCommandBuffersMutex;
