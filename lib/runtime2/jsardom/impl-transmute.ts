@@ -19,13 +19,9 @@ import * as undici from 'undici';
 import * as logger from '@transmute/logger';
 import { getClientContext, isWebXRSupported } from '@transmute/env';
 
+import { WebGLMatrix } from '../../webgl/WebGLMatrix';
 import { createBondXRSystem } from '../../webxr';
 import { WebXRDefaultExperience } from './xr/DefaultExperience';
-import { WebGLMatrix } from '../../webgl/WebGLMatrix';
-// import {
-//   XRMatrixPlaceholder,
-//   XRMatrixPlaceholderType
-// } from '../../webxr/api/XRRigidTransform';
 
 type TransmuteEngineOptions = BABYLON.EngineOptions & {
   // TODO
