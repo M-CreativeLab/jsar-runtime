@@ -2,26 +2,31 @@
 
 #include "../shared.hpp"
 #include "../base.hpp"
+#include "../webgl_placeholders.hpp"
 
 namespace commandbuffers
 {
-  enum MatrixHandedness
+  enum class MatrixHandedness
   {
     MATRIX_LEFT_HANDED = 0,
     MATRIX_RIGHT_HANDED = 1,
   };
 
-  enum PlaceholderType
+  class MatrixComputationGraph
   {
-    PLACEHOLDER_PROJECTION_MATRIX = 10,
-    PLACEHOLDER_INVERSE_PROJECTION_MATRIX,
-    PLACEHOLDER_VIEW_MATRIX,
-    PLACEHOLDER_VIEW_MATRIX_RELATIVE_TO_LOCAL,
-    PLACEHOLDER_VIEW_MATRIX_RELATIVE_TO_LOCAL_FLOOR,
-    PLACEHOLDER_VIEW_PROJECTION_MATRIX,
-    PLACEHOLDER_VIEW_PROJECTION_MATRIX_RELATIVE_TO_LOCAL,
-    PLACEHOLDER_VIEW_PROJECTION_MATRIX_RELATIVE_TO_LOCAL_FLOOR,
-    PLACEHOLDER_UNSET = -1,
+  public:
+    MatrixComputationGraph() : handedness(MatrixHandedness::MATRIX_LEFT_HANDED), placeholderId(WebGLMatrixPlaceholderId::NotSet), inverseMatrix(false)
+    {
+    }
+    MatrixComputationGraph(WebGLMatrixPlaceholderId placeholder, MatrixHandedness handedness = MatrixHandedness::MATRIX_LEFT_HANDED)
+        : placeholderId(placeholder), handedness(handedness)
+    {
+    }
+
+  public:
+    MatrixHandedness handedness;
+    WebGLMatrixPlaceholderId placeholderId;
+    bool inverseMatrix;
   };
 
   class UniformBlockBindingCommandBufferRequest
@@ -449,21 +454,25 @@ namespace commandbuffers
     UniformMatrixNfvCommandBufferRequest(UniformMatrixNfvCommandBufferRequest &that)
         : TrCommandBufferRequest(that),
           matrixSize(that.matrixSize),
-          placeholderType(that.placeholderType),
           location(that.location),
-          transpose(that.transpose)
+          transpose(that.transpose),
+          computationGraph4values(that.computationGraph4values)
     {
     }
-    UniformMatrixNfvCommandBufferRequest(CommandBufferType type, uint32_t matrixSize)
-        : TrCommandBufferRequest(type, sizeof(T)), matrixSize(matrixSize)
+    UniformMatrixNfvCommandBufferRequest(CommandBufferType type, uint32_t matrixSize, uint32_t location, bool transpose)
+        : TrCommandBufferRequest(type, sizeof(T)),
+          matrixSize(matrixSize),
+          location(location),
+          transpose(transpose)
     {
     }
 
   public:
     size_t count() const { return values.size() / matrixSize; }
-    bool isPlaceholder() const { return false; }
-    MatrixHandedness handedness() const { return MatrixHandedness::MATRIX_LEFT_HANDED; }
-    void handedness(MatrixHandedness handedness) {}
+    bool isComputationGraph() const
+    {
+      return computationGraph4values.placeholderId != WebGLMatrixPlaceholderId::NotSet;
+    }
 
   public:
     TrCommandBufferMessage *serialize() override
@@ -482,10 +491,10 @@ namespace commandbuffers
 
   public:
     uint32_t matrixSize;
-    PlaceholderType placeholderType;
     uint32_t location;
     bool transpose;
     std::vector<float> values;
+    MatrixComputationGraph computationGraph4values;
   };
 
   class UniformMatrix2fvCommandBufferRequest
@@ -497,10 +506,8 @@ namespace commandbuffers
     {
     }
     UniformMatrix2fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
-        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX2FV_REQ, 2 * 2)
+        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX2FV_REQ, 2 * 2, location, transpose)
     {
-      this->location = location;
-      this->transpose = transpose;
       this->values = values;
     }
   };
@@ -514,10 +521,8 @@ namespace commandbuffers
     {
     }
     UniformMatrix3fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
-        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX3FV_REQ, 3 * 3)
+        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX3FV_REQ, 3 * 3, location, transpose)
     {
-      this->location = location;
-      this->transpose = transpose;
       this->values = values;
     }
   };
@@ -530,19 +535,19 @@ namespace commandbuffers
         : UniformMatrixNfvCommandBufferRequest(that)
     {
     }
-    UniformMatrix4fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
-        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, 4 * 4)
+    UniformMatrix4fvCommandBufferRequest(uint32_t location, bool transpose)
+        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, 4 * 4, location, transpose)
     {
-      this->location = location;
-      this->transpose = transpose;
+    }
+    UniformMatrix4fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
+        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, 4 * 4, location, transpose)
+    {
       this->values = values;
     }
-    UniformMatrix4fvCommandBufferRequest(uint32_t location, bool transpose, PlaceholderType placeholderType)
-        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, 4 * 4)
+    UniformMatrix4fvCommandBufferRequest(uint32_t location, bool transpose, MatrixComputationGraph computationGraph4values)
+        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, 4 * 4, location, transpose)
     {
-      this->location = location;
-      this->transpose = transpose;
-      this->placeholderType = placeholderType;
+      this->computationGraph4values = computationGraph4values;
     }
   };
 }

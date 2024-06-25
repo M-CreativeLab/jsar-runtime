@@ -21,6 +21,7 @@ import { getClientContext, isWebXRSupported } from '@transmute/env';
 
 import { createBondXRSystem } from '../../webxr';
 import { WebXRDefaultExperience } from './xr/DefaultExperience';
+import { WebGLMatrix } from '../../webgl/WebGLMatrix';
 // import {
 //   XRMatrixPlaceholder,
 //   XRMatrixPlaceholderType
@@ -52,36 +53,22 @@ class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
      * When JSAR_WEBGL_PLACEHOLDER is enabled, we will replace the projection, view and viewProjection matrices with
      * placeholders. The placeholders will be computed at the native rendering loop.
      */
-    // if (process.env['JSAR_WEBGL_PLACEHOLDER'] === 'yes') {
-    //   const name = (uniform as any)?.name;
-    //   // const currentEffect = this._currentEffect;
-    //   // const isUnbound = BABYLON.Tags.MatchesQuery(currentEffect, 'UNBOUND');
-    //   switch (name) {
-    //     case 'projection':
-    //       matrices = new XRMatrixPlaceholder(
-    //         matrices,
-    //         XRMatrixPlaceholderType.PROJECTION_MATRIX,
-    //         this.#xrSessionId,
-    //         this.useRightHandedSystem);
-    //       break;
-    //     case 'view':
-    //       matrices = new XRMatrixPlaceholder(
-    //         matrices,
-    //         XRMatrixPlaceholderType.VIEW_MATRIX,
-    //         this.#xrSessionId,
-    //         this.useRightHandedSystem);
-    //       break;
-    //     case 'viewProjection':
-    //       matrices = new XRMatrixPlaceholder(
-    //         matrices,
-    //         XRMatrixPlaceholderType.VIEW_PROJECTION_MATRIX,
-    //         this.#xrSessionId,
-    //         this.useRightHandedSystem);
-    //       break;
-    //     default:
-    //       break;
-    //   }
-    // }
+    if (process.env['JSAR_WEBGL_PLACEHOLDERS'] === 'yes') {
+      const name = (uniform as any)?.name;
+      switch (name) {
+        case 'projection':
+          matrices = WebGLMatrix.CreateProjectionMatrix(matrices, this.useRightHandedSystem);
+          break;
+        case 'view':
+          matrices = WebGLMatrix.CreateViewMatrix(matrices, this.useRightHandedSystem);
+          break;
+        case 'viewProjection':
+          matrices = WebGLMatrix.CreateViewProjectionMatrix(matrices, this.useRightHandedSystem);
+          break;
+        default:
+          break;
+      }
+    }
     return super.setMatrices(uniform, matrices);
   }
 }

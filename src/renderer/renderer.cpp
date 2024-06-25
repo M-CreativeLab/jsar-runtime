@@ -244,7 +244,17 @@ namespace renderer
   bool TrRenderer::executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
                                          TrContentRenderer *contentRenderer)
   {
-    return api->ExecuteCommandBuffer(commandBuffers, contentRenderer, nullptr, true);
+    auto xrDevice = constellation->getXrDevice();
+    assert(xrDevice != nullptr);
+    if (xrDevice->enabled() && xrDevice->isRenderedAsMultipass()) // TODO: support singlepass?
+    {
+      xr::MultiPassFrame deviceFrame(xrDevice, 0);
+      return api->ExecuteCommandBuffer(commandBuffers, contentRenderer, &deviceFrame, true);
+    }
+    else
+    {
+      return api->ExecuteCommandBuffer(commandBuffers, contentRenderer, nullptr, true);
+    }
   }
 
   void TrRenderer::calcFps()

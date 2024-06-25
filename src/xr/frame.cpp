@@ -37,10 +37,7 @@ namespace xr
   bool DeviceFrame::isMultiPass() { return m_IsMultiPass; }
   float DeviceFrame::getTimestamp() { return m_Timestamp; }
   float *DeviceFrame::getViewerTransform() { return m_ViewerTransform; }
-  float *DeviceFrame::getLocalTransform(int sessionId)
-  {
-    return m_XrDevice->getLocalTransformUnsafe(sessionId);
-  }
+  glm::mat4 DeviceFrame::getLocalTransform(int id) { return m_XrDevice->getLocalTransformUnsafe(id); }
 
   FrameContextBySessionId *DeviceFrame::addSession(int sessionId)
   {
@@ -93,17 +90,16 @@ namespace xr
 
   MultiPassFrame::MultiPassFrame(
       xr::Device *device,
-      int eyeId,
       int stereoId) : DeviceFrame(device)
   {
     m_IsMultiPass = true;
     m_CurrentStereoId = stereoId;
-    m_ActiveEyeId = eyeId;
+    m_ActiveEyeId = device->getActiveEyeId();
     m_Timestamp = device->getTime();
 
     auto viewerTransform = device->getViewerTransform();
-    auto viewMatrix = device->getViewerStereoViewMatrix(eyeId);
-    auto projectionMatrix = device->getViewerStereoProjectionMatrix(eyeId);
+    auto viewMatrix = device->getViewerStereoViewMatrix(m_ActiveEyeId);
+    auto projectionMatrix = device->getViewerStereoProjectionMatrix(m_ActiveEyeId);
     memcpy(m_ViewerTransform, viewerTransform, sizeof(float) * 16);
     memcpy(m_ViewerViewMatrix, viewMatrix, sizeof(float) * 16);
     memcpy(m_ViewerProjectionMatrix, projectionMatrix, sizeof(float) * 16);
@@ -157,8 +153,40 @@ namespace xr
     return projection;
   }
 
-  static int s_NextStereoId = 1;
+  glm::mat4 MultiPassFrame::computeMatrixByGraph(int contentId, commandbuffers::MatrixComputationGraph &computationGraph)
+  {
+    auto placeholder = computationGraph.placeholderId;
+    auto isRightHandedSystem = computationGraph.handedness == commandbuffers::MatrixHandedness::MATRIX_RIGHT_HANDED;
 
+    glm::mat4 matrix;
+    /**
+     * TODO: support real computation graph.
+     */
+    if (placeholder == WebGLMatrixPlaceholderId::ProjectionMatrix)
+    {
+      matrix = getProjectionMatrix(isRightHandedSystem);
+    }
+    else if (placeholder == WebGLMatrixPlaceholderId::ViewMatrix)
+    {
+      auto contentLocal = getLocalTransform(contentId);
+      auto originTransform = contentLocal * math::getOriginMatrix();
+      matrix = getViewMatrixWithOffset(originTransform, isRightHandedSystem);
+    }
+    else if (placeholder == WebGLMatrixPlaceholderId::ViewProjectionMatrix)
+    {
+      auto contentLocal = getLocalTransform(contentId);
+      auto offsetTransform = contentLocal * math::getOriginMatrix();
+      auto viewMatrix = getViewMatrixWithOffset(offsetTransform, isRightHandedSystem);
+      matrix = getProjectionMatrix(isRightHandedSystem) * viewMatrix;
+    }
+
+    // Check if `inverseMatrix` is true.
+    if (computationGraph.inverseMatrix)
+      matrix = glm::inverse(matrix);
+    return matrix;
+  }
+
+  static int s_NextStereoId = 1;
   StereoRenderingFrame::StereoRenderingFrame(bool isMultiPass)
   {
     m_IsMultiPass = isMultiPass;

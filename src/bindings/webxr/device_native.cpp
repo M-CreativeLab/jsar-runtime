@@ -206,7 +206,7 @@ namespace bindings
 
     if (typeStr == "local")
     {
-      auto transform = device->getLocalTransform(id);
+      auto transform = glm::value_ptr(device->getLocalTransform(id));
       if (transform != nullptr)
       {
         auto array = Napi::Float32Array::New(env, 16);

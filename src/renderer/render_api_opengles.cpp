@@ -1105,64 +1105,33 @@ private:
 													ApiCallOptions &options,
 													xr::DeviceFrame *deviceFrame)
 	{
-		float *matrixToUse = nullptr;
 		auto location = req->location;
 		auto count = req->count();
 		auto transpose = req->transpose;
-		auto contentId = reqContentRenderer->getContent()->pid;
+		auto contentId = reqContentRenderer->getContent()->id;
 
-		if (
-				req->isPlaceholder() &&
-				(deviceFrame != nullptr && deviceFrame->isMultiPass()) // support for singlepass?
-		)
+		if (contentId == -1)
 		{
-			if (contentId == -1)
-			{
-				DEBUG(LOG_TAG_ERROR, "UniformMatrix4fv() fails to read the xrSessionId in local mode.");
-				return;
-			}
-			auto multiPassFrame = static_cast<xr::MultiPassFrame *>(deviceFrame);
-			auto placeholderType = req->placeholderType;
-			auto rightHanded = req->handedness() == MatrixHandedness::MATRIX_RIGHT_HANDED;
-
-			switch (placeholderType)
-			{
-			case PlaceholderType::PLACEHOLDER_PROJECTION_MATRIX:
-			{
-				auto projection = multiPassFrame->getProjectionMatrix(rightHanded);
-				matrixToUse = glm::value_ptr(projection);
-				break;
-			}
-			case PlaceholderType::PLACEHOLDER_VIEW_MATRIX:
-			case PlaceholderType::PLACEHOLDER_VIEW_MATRIX_RELATIVE_TO_LOCAL:			 // TODO
-			case PlaceholderType::PLACEHOLDER_VIEW_MATRIX_RELATIVE_TO_LOCAL_FLOOR: // TODO
-			{
-				auto originTransform = glm::make_mat4(multiPassFrame->getLocalTransform(contentId)) * math::getOriginMatrix();
-				auto view = multiPassFrame->getViewMatrixWithOffset(originTransform, rightHanded);
-				matrixToUse = glm::value_ptr(view);
-				break;
-			}
-			case PlaceholderType::PLACEHOLDER_VIEW_PROJECTION_MATRIX:
-			case PlaceholderType::PLACEHOLDER_VIEW_PROJECTION_MATRIX_RELATIVE_TO_LOCAL:				// TODO
-			case PlaceholderType::PLACEHOLDER_VIEW_PROJECTION_MATRIX_RELATIVE_TO_LOCAL_FLOOR: // TODO
-			{
-				auto offsetTransform = glm::make_mat4(multiPassFrame->getLocalTransform(contentId)) * math::getOriginMatrix();
-				auto view = multiPassFrame->getViewMatrixWithOffset(offsetTransform, rightHanded);
-				auto viewProjection = multiPassFrame->getProjectionMatrix(rightHanded) * view;
-				matrixToUse = glm::value_ptr(viewProjection);
-				break;
-			}
-			default:
-				break;
-			}
+			DEBUG(LOG_TAG_ERROR, "Occurs an invalid uniformmatrix(), content must not be -1.");
+			return;
 		}
+
+		float *matrixToUse = nullptr;
+		if (req->isComputationGraph() && (deviceFrame != nullptr && deviceFrame->isMultiPass()))
+		{
+			auto multipassFrame = static_cast<xr::MultiPassFrame *>(deviceFrame);
+			auto matrix = multipassFrame->computeMatrixByGraph(contentId, req->computationGraph4values);
+			matrixToUse = glm::value_ptr(matrix);
+			assert(matrixToUse != nullptr);
+		}
+
 		if (matrixToUse == nullptr)
 			matrixToUse = req->values.data();
 
 		if (matrixToUse == nullptr)
 		{
-			DEBUG(LOG_TAG_ERROR, "UniformMatrix4fv() fails to read the matrix value, placeholderType=%d",
-						req->placeholderType);
+			DEBUG(LOG_TAG_ERROR, "UniformMatrix4fv() fails to read the matrix value, placeholderType=%d, deviceFrame=%p",
+						req->computationGraph4values.placeholderId, deviceFrame);
 			return;
 		}
 

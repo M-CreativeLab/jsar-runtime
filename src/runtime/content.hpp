@@ -92,6 +92,7 @@ private:
 
 public:
   pid_t pid = -1;
+  int id = -1;
 
 private:
   int eventChanPort;

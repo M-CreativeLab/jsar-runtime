@@ -100,7 +100,7 @@ UnityEmbedder *UnityEmbedder::EnsureAndGet()
 extern "C"
 {
   static float s_WorldScalingFactor = 1.0;
-  static void OnPlatformSetup(UnityEmbedder* embedder)
+  static void OnPlatformSetup(UnityEmbedder *embedder)
   {
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
     char deviceVendor[PROP_VALUE_MAX];
@@ -115,20 +115,20 @@ extern "C"
     if (__system_property_get("jsar.renderer.logfilter", logfilter) >= 0)
       embedder->getRenderer()->setLogFilter(logfilter);
 
-    char enableWebglPlaceholder[PROP_VALUE_MAX];
+    char enableWebglPlaceholders[PROP_VALUE_MAX];
     if (
         /**
          * When the property is set and the value is not "yes", we will disable the placeholder feature.
          */
-        __system_property_get("jsar.webgl.placeholder", enableWebglPlaceholder) > 0 &&
-        strcmp(enableWebglPlaceholder, "yes") != 0)
+        __system_property_get("jsar.webgl.placeholders", enableWebglPlaceholders) > 0 &&
+        strcmp(enableWebglPlaceholders, "yes") != 0)
     {
-      setenv("JSAR_WEBGL_PLACEHOLDER", "no", 1);
+      setenv("JSAR_WEBGL_PLACEHOLDERS", "no", 1);
     }
     else
     {
       // Enable the placeholder feature by default
-      setenv("JSAR_WEBGL_PLACEHOLDER", "yes", 1);
+      setenv("JSAR_WEBGL_PLACEHOLDERS", "yes", 1);
     }
 
     char exampleUrl[PROP_VALUE_MAX];

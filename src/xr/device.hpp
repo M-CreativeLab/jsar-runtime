@@ -66,8 +66,8 @@ namespace xr
     float *getViewerTransform();
     float *getViewerStereoViewMatrix(int eyeId);
     float *getViewerStereoProjectionMatrix(int eyeId);
-    float *getLocalTransform(int id);
-    float *getLocalTransformUnsafe(int id);
+    glm::mat4 getLocalTransform(int id);
+    glm::mat4 getLocalTransformUnsafe(int id);
     int getActiveEyeId();
 
   public: // Sessions

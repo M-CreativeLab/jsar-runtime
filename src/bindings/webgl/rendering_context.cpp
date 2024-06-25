@@ -4,6 +4,7 @@
 #include "../canvas/canvas.hpp"
 
 #include "idgen.hpp"
+#include "placeholders.hpp"
 #include "program.hpp"
 #include "texture.hpp"
 #include "uniform_location.hpp"
@@ -2844,35 +2845,22 @@ namespace webgl
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
     bool transpose = info[1].As<Napi::Boolean>().Value();
-    Napi::Float32Array array = info[2].As<Napi::Float32Array>();
+    Napi::Float32Array matricesArray = info[2].As<Napi::Float32Array>();
+    UniformMatrix4fvCommandBufferRequest req(location->GetValue(), transpose);
 
-    // Check the array is a "MatrixPlaceholder", if own `_isXRMatrixPlaceholder` property and to be true
-    string xrMatrixPlaceholderField = "_isXRMatrixPlaceholder";
-    if (array.Has(xrMatrixPlaceholderField) && array.Get(xrMatrixPlaceholderField).ToBoolean().Value() == true)
+    if (matricesArray.Has(WEBGL_PLACEHOLDERS_PLACEHOLDER_ID_KEY) && matricesArray.Get(WEBGL_PLACEHOLDERS_PLACEHOLDER_ID_KEY).IsNumber())
     {
-      auto typeOfMatrixPlaceholder = array.Get("type").ToNumber().Int32Value();
-      auto req = UniformMatrix4fvCommandBufferRequest(location->GetValue(), transpose,
-                                                      (commandbuffers::PlaceholderType)typeOfMatrixPlaceholder);
+      auto placeholderId = (WebGLMatrixPlaceholderId)matricesArray.Get(WEBGL_PLACEHOLDERS_PLACEHOLDER_ID_KEY).ToNumber().Uint32Value();
+      auto handedness = matricesArray.Get(WEBGL_PLACEHOLDERS_USE_RIGHTHANDED_KEY).ToBoolean() ? MatrixHandedness::MATRIX_RIGHT_HANDED : MatrixHandedness::MATRIX_LEFT_HANDED;
+      MatrixComputationGraph computationGraph(placeholderId, handedness);
 
-      // if (array.Has("xrSessionId"))
-      // {
-      //   auto xrSessionValue = array.Get("xrSessionId");
-      //   if (xrSessionValue.IsNumber())
-      //     commandBuffer->m_XrSessionId = xrSessionValue.ToNumber().Int32Value();
-      // }
-      if (array.Has("isRightHanded"))
-      {
-        auto isRightHandedValue = array.Get("isRightHanded");
-        if (isRightHandedValue.IsBoolean())
-          req.handedness(commandbuffers::MATRIX_RIGHT_HANDED);
-        else
-          req.handedness(commandbuffers::MATRIX_LEFT_HANDED);
-      }
-      sendCommandBufferRequest(req);
+      if (matricesArray.Has(WEBGL_PLACEHOLDERS_INVERSE_MATRIX_KEY) && matricesArray.Get(WEBGL_PLACEHOLDERS_INVERSE_MATRIX_KEY).IsBoolean())
+        computationGraph.inverseMatrix = matricesArray.Get(WEBGL_PLACEHOLDERS_INVERSE_MATRIX_KEY).ToBoolean().Value();
+      req.computationGraph4values = computationGraph;
     }
     else
     {
-      size_t length = array.ElementLength();
+      size_t length = matricesArray.ElementLength();
       if (length % 16 != 0)
       {
         Napi::TypeError::New(env,
@@ -2880,14 +2868,12 @@ namespace webgl
             .ThrowAsJavaScriptException();
         return env.Undefined();
       }
-
-      std::vector<float> data(length);
+      req.values.resize(length);
       for (size_t i = 0; i < length; i++)
-        data[i] = array.Get(i).ToNumber().FloatValue();
-
-      auto req = UniformMatrix4fvCommandBufferRequest(location->GetValue(), transpose, data);
-      sendCommandBufferRequest(req);
+        req.values[i] = matricesArray.Get(i).ToNumber().FloatValue();
     }
+
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 

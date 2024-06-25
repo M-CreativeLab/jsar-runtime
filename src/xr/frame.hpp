@@ -45,7 +45,7 @@ namespace xr
     bool isMultiPass();
     float getTimestamp();
     float *getViewerTransform();
-    float *getLocalTransform(int sessionId);
+    glm::mat4 getLocalTransform(int sessionId);
     FrameContextBySessionId *addSession(int sessionId);
     FrameContextBySessionId *getSession(int sessionId);
     void iterateSessions(std::function<void(int, FrameContextBySessionId *)> callback);
@@ -73,7 +73,7 @@ namespace xr
   class MultiPassFrame : public DeviceFrame
   {
   public:
-    explicit MultiPassFrame(Device *device, int eyeId, int stereoId);
+    explicit MultiPassFrame(Device *device, int stereoId);
     ~MultiPassFrame();
 
   public:
@@ -97,6 +97,12 @@ namespace xr
      * @param rightHanded If true, the projection matrix is right-handed, otherwise left-handed.
      */
     glm::mat4 getProjectionMatrix(bool rightHanded = true);
+    /**
+     * It does operate the computation graph based on current frame, and returns glm::mat4.
+     *
+     * @param computationGraph the computation graph to be operated.
+     */
+    glm::mat4 computeMatrixByGraph(int contentId, commandbuffers::MatrixComputationGraph &computationGraph);
 
   private:
     int m_ActiveEyeId = -1;

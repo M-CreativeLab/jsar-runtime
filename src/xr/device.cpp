@@ -506,24 +506,24 @@ namespace xr
     return m_ViewerStereoProjectionMatrix[eyeId];
   }
 
-  float *Device::getLocalTransform(int id)
+  glm::mat4 Device::getLocalTransform(int id)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
     return getLocalTransformUnsafe(id);
   }
 
-  float *Device::getLocalTransformUnsafe(int id)
+  glm::mat4 Device::getLocalTransformUnsafe(int id)
   {
     // Check for the session if it exists
     if (m_Sessions.size() == 0)
-      return NULL;
+      return glm::mat4(1.0f);
 
     for (auto session : m_Sessions)
     {
       if (session->id == id)
-        return const_cast<float *>(glm::value_ptr(session->getLocalBaseMatrix()));
+        return session->getLocalBaseMatrix();
     }
-    return NULL;
+    return glm::mat4(1.0f);
   }
 
   int Device::getActiveEyeId()

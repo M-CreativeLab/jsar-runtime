@@ -69,9 +69,6 @@ namespace font
       else if (sizeUnit == "q")
         sizeInPx = sizeNumber * (96 / 25.4 / 4);
       success = true;
-
-      fprintf(stderr, "Parsed font shorthand: (%s) [%s] [%s] (%s) %fpx\n",
-              styleStr.c_str(), variant.c_str(), weight.c_str(), family.c_str(), sizeInPx);
     }
 
   public:

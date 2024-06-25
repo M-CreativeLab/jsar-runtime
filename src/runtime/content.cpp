@@ -67,6 +67,7 @@ void TrContentRuntime::start(TrXSMLRequestInit init)
     }
   }
 
+  id = init.id;
   requestInit = init;
   constellationOptions = contentManager->constellation->getOptions();
   eventChanPort = contentManager->eventChanServer->getPort();

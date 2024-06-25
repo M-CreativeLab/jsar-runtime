@@ -55,6 +55,18 @@ declare namespace Transmute {
   class WebGL2RenderingContextOnDevice extends WebGL2RenderingContext {
     constructor(contextAttribs?: WebGLContextAttributes);
   }
+  type WebGLPlaceholderId = number;
+  type WebGLNativePlaceholders = {
+    useRightHandedKey: string;
+    inverseMatrixKey: string;
+    placeholderIdKey: string;
+    placeholderIds: {
+      ProjectionMatrix: WebGLPlaceholderId;
+      ViewMatrix: WebGLPlaceholderId;
+      ViewProjectionMatrix: WebGLPlaceholderId;
+      [key: string]: WebGLPlaceholderId;
+    };
+  };
 
   class HTMLRenderingContext {
     setHTML(html: string): void;
@@ -143,6 +155,7 @@ declare namespace NodeJS {
     _linkedBinding(module: 'transmute:webgl'): {
       WebGLRenderingContext: typeof Transmute.WebGLRenderingContextOnDevice;
       WebGL2RenderingContext: typeof Transmute.WebGL2RenderingContextOnDevice;
+      placeholders: Transmute.WebGLNativePlaceholders;
     };
     _linkedBinding(module: 'transmute:webxr'): {
       XRDeviceNative: typeof Transmute.XRDeviceNative;

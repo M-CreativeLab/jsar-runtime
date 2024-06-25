@@ -112,4 +112,14 @@ namespace math
     auto viewBaseMatrixInLH = convertBaseMatrixToLH(viewBaseMatrix);
     return glm::inverse(worldToLocalMatrix * viewBaseMatrixInLH);
   }
+
+  inline std::string matrixToString(float* matrixValues)
+  {
+    std::string output = "(";
+    output += std::to_string(matrixValues[0]);
+    for (int i = 1; i < 16; i++)
+      output += ("," + std::to_string(matrixValues[i]));
+    output += ")";
+    return output;
+  }
 }
