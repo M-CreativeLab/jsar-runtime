@@ -127,9 +127,8 @@ namespace bindings
     referenceSpace->ensurePoseUpdated(id, session, internal);
     viewerSpace->ensurePoseUpdated(id, session, internal);
 
-    // auto activeEye = getActiveEye();
     auto viewerTransform /** viewer to refspace(local) */ = XRSPACE_RELATIVE_TRANSFORM(viewerSpace, referenceSpace);
-    auto viewerPoseObject = XRViewerPose::NewInstance(env, device, viewerTransform, internal, session);
+    auto viewerPoseObject = XRViewerPose::NewInstance(env, device, viewerTransform, internal, referenceSpace, session);
     return viewerPoseObject;
   }
 

@@ -62,7 +62,7 @@ namespace bindings
     XRReferenceSpaceType referenceSpaceType;
     mat4 offsetMatrix;
 
-  private:
+  public:
     static Napi::FunctionReference *constructor;
   };
 

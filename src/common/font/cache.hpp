@@ -35,15 +35,26 @@ namespace font
 
     static const unordered_map<string, int> SERIF_FONTS_LIST = {
         {"Arial", 1},
+#ifdef __ANDROID__
+        {"Noto Serif", 1},
+        {"Noto Serif CJK SC", 1},
+#endif
     };
     static const unordered_map<string, int> SANS_SERIF_FONTS_LIST = {
         {"PingFang SC", 1},
-        {"NotoSans SC", 2},
+        {"Alibaba PuHuiTi 3.0", 1},
+#ifdef __ANDROID__
+        {"Noto Sans CJK SC", 2},
         {"DroidSans", 3},
+#endif
     };
     static const unordered_map<string, int> MONOSPACE_FONTS_LIST = {
         {"Consolas", 1},
         {"Monaco", 1},
+#ifdef __ANDROID__
+        {"Noto Sans Mono CJK SC", 2},
+        {"Droid Sans Mono", 3},
+#endif
     };
     // TODO: add more generic font families
 
@@ -260,7 +271,12 @@ namespace font
     void printSummary()
     {
       if (genericFontFamilies.size() == 0)
-        DEBUG(LOG_TAG_FONT, "No generic font families found");
+      {
+        DEBUG(LOG_TAG_FONT, "No generic font families found in %zu fonts, see the following list to get possible fonts:",
+              fontFamilies.size());
+        for (auto family : fontFamilies)
+          DEBUG(LOG_TAG_FONT, "FontFamily: (%s)", family->familyName.c_str());
+      }
       else
       {
         DEBUG(LOG_TAG_FONT, "Generic font families:");
