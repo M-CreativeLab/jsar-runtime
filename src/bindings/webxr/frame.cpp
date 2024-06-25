@@ -130,19 +130,6 @@ namespace bindings
     // auto activeEye = getActiveEye();
     auto viewerTransform /** viewer to refspace(local) */ = XRSPACE_RELATIVE_TRANSFORM(viewerSpace, referenceSpace);
     auto viewerPoseObject = XRViewerPose::NewInstance(env, device, viewerTransform, internal, session);
-    // auto viewerPoseUnwrapped = XRViewerPose::Unwrap(viewerPoseObject);
-    // session->iterateViewSpaces([this, env, viewerPoseUnwrapped, activeEye, referenceSpace](XRViewSpace *viewSpace, uint32_t viewIndex, XRSession *session)
-    //                            {
-    //                              if (activeEye != XREye::NONE && viewSpace->getEye() != activeEye)
-    //                                return;
-    //                              viewSpace->ensurePoseUpdated(id, session, internal);
-
-    //                              auto viewTransform = XRSPACE_RELATIVE_TRANSFORM(viewSpace, referenceSpace);
-    //                              auto projectionMatrix = viewSpace->getProjectionMatrix();
-    //                              auto xrView = XRView::NewInstance(env, session, viewTransform, projectionMatrix, viewIndex, activeEye);
-    //                              viewerPoseUnwrapped->addView(xrView);
-    //                              // End
-    //                            });
     return viewerPoseObject;
   }
 

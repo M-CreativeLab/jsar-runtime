@@ -93,12 +93,12 @@ void printsStacktraceOnSignal(int signal)
   char **symbols = backtrace_symbols(stackTrace, numFrames);
   if (symbols == nullptr)
   {
-    DEBUG(LOG_TAG_ERROR, "Failed to obtain backtrace symbols");
+    fprintf(stderr, "Failed to obtain backtrace symbols");
   }
   else
   {
     for (int i = 0; i < numFrames; ++i)
-      DEBUG(LOG_TAG_ERROR, "%s", symbols[i]);
+      fprintf(stderr, "%s", symbols[i]);
     free(symbols);
   }
 #elif __ANDROID__
@@ -112,7 +112,7 @@ void printsStacktraceOnSignal(int signal)
   int backtraceCount = (int)(state.current - buffer);
   if (backtraceCount == 0)
   {
-    DEBUG(LOG_TAG_ERROR, "Failed to obtain backtrace symbols");
+    std::cout << "Failed to obtain backtrace symbols" << std::endl;
   }
   else
   {
@@ -127,9 +127,9 @@ void printsStacktraceOnSignal(int signal)
         symbol = info.dli_sname;
         int status = 0;
         char *demangled = __cxxabiv1::__cxa_demangle(symbol, 0, 0, &status);
-        DEBUG(LOG_TAG_ERROR, "  #%d pc %p %s",
-              n, addr,
-              status == 0 && demangled != nullptr ? demangled : symbol);
+        fprintf(stdout, "  #%d pc %p %s",
+                n, addr,
+                status == 0 && demangled != nullptr ? demangled : symbol);
 
         if (demangled != nullptr)
           free(demangled);

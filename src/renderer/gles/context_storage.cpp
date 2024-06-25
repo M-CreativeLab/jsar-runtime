@@ -18,6 +18,16 @@ void OpenGLContextStorage::RecordCapability(GLenum cap, bool enabled)
     m_BlendEnabled = enabled;
 }
 
+void OpenGLContextStorage::RecordCullFace(GLenum mode)
+{
+  m_CullFace = mode;
+}
+
+void OpenGLContextStorage::RecordFrontFace(GLenum mode)
+{
+  m_FrontFace = mode;
+}
+
 void OpenGLContextStorage::RecordDepthMask(bool enabled)
 {
   m_DepthMask = enabled;
@@ -107,6 +117,15 @@ void OpenGLContextStorage::Restore()
   m_CullFaceEnabled ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
   m_DepthTestEnabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
   m_BlendEnabled ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
+
+  /**
+   * FIXME: When the cull face is enabled, restore the cullface and frontface states.
+   */
+  if (m_CullFaceEnabled)
+  {
+    glCullFace(m_CullFace);
+    glFrontFace(m_FrontFace);
+  }
 
   glDepthMask(m_DepthMask);
   if (m_DepthTestEnabled)

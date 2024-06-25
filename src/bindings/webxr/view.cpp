@@ -22,7 +22,7 @@ namespace bindings
   Napi::Object XRView::NewInstance(Napi::Env env, XRSession *session, xr::TrXRView &view)
   {
     Napi::EscapableHandleScope scope(env);
-    auto viewMatrixTransform = XRRigidTransform::NewInstance(env, view.getViewMatrix());
+    auto viewMatrixTransform = XRRigidTransform::NewInstance(env, glm::inverse(view.getViewMatrix()));
     auto projectionMatrixTransform = XRRigidTransform::NewInstance(env, view.getProjectionMatrix());
     auto viewIndex = Napi::Number::New(env, view.viewIndex);
     auto viewportExternal = Napi::External<TrViewport>::New(env, &view.viewport);

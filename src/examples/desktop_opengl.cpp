@@ -73,7 +73,8 @@ public:
   glm::mat4 getViewMatrixForEye(int eyeIndex)
   {
     assert(eyeIndex < 2);
-    return glm::translate(glm::mat4(1.0f), eyePosition[eyeIndex]) * glm::mat4_cast(eyeOrientation[eyeIndex]);
+    auto viewBaseMatrix = glm::translate(glm::mat4(1.0f), eyePosition[eyeIndex]) * glm::mat4_cast(eyeOrientation[eyeIndex]);
+    return glm::inverse(viewBaseMatrix);
   }
   glm::mat4 getProjectionMatrix() { return glm::perspective(glm::radians(fov), aspect, near, far); }
 

@@ -49,20 +49,6 @@ class RenderAPI_OpenGLCoreES : public RenderAPI
 {
 private:
 	gles::GLObjectManager m_GLObjectManager = gles::GLObjectManager();
-
-	GLenum m_AppFrontFace;
-	GLenum m_AppCullFace;
-
-	// Used by glFrontFace
-	GLuint m_CurrentDepthFunc = GL_LEQUAL;
-	bool m_DepthTestEnabled = false;
-	bool m_BlendEnabled = false;
-	// Used by glClear with color, depth and stencil
-	float m_ClearColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-	float m_ClearDepth = 1.0f;
-	uint32_t m_ClearStencil = 0;
-	int m_ClearMask = 0;
-	// Used by debugging
 	bool m_DebugEnabled = true;
 
 public:
@@ -1446,7 +1432,7 @@ private:
 	{
 		auto mode = req->mode;
 		glCullFace(mode);
-		m_AppCullFace = mode;
+		reqContentRenderer->getOpenGLContext()->RecordCullFace(mode);
 		if (options.printsCall)
 		{
 			if (mode == GL_FRONT || mode == GL_BACK || mode == GL_FRONT_AND_BACK)
@@ -1459,7 +1445,7 @@ private:
 	{
 		auto mode = req->mode;
 		glFrontFace(mode);
-		m_AppFrontFace = mode;
+		reqContentRenderer->getOpenGLContext()->RecordFrontFace(mode);
 		if (options.printsCall)
 		{
 			if (mode == GL_CW || mode == GL_CCW)
@@ -1592,12 +1578,9 @@ void RenderAPI_OpenGLCoreES::ProcessDeviceEvent(UnityGfxDeviceEventType type, IU
 {
 	if (type == kUnityGfxDeviceEventInitialize)
 	{
-		m_AppFrontFace = GL_CCW;
-		glGetIntegerv(GL_CULL_FACE, (GLint *)&m_AppCullFace);
 	}
 	else if (type == kUnityGfxDeviceEventShutdown)
 	{
-		//@TODO: release resources
 	}
 }
 

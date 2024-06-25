@@ -222,16 +222,17 @@ namespace bindings
 
   void XRViewSpace::onPoseUpdate(XRSession *session, xr::TrXRFrameRequest *frameRequest)
   {
-    // if (!frameRequest->isMultiPass())
-    // {
-    //   // TODO: handle single pass
-    // }
-    // else
-    // {
-    //   auto multiPassFrame = static_cast<xr::MultiPassFrame *>(frame);
-    //   this->baseMatrix = glm::inverse(multiPassFrame->getViewMatrix(true)); // WebGL using right-handed coordinate system
-    //   this->projectionMatrix = multiPassFrame->getProjectionMatrix(true);
-    // }
+    if (viewSpaceType == XRViewSpaceType::NONE)
+      return; // No need to update pose if the type is none.
+    if (viewSpaceType != frameRequest->viewIndex)
+    {
+      std::cerr << "Failed to update pose for XRViewSpace()" << std::endl;
+      return;
+    }
+    // TODO: check if a device
+    auto& view = frameRequest->views[frameRequest->viewIndex];
+    baseMatrix = glm::inverse(view.getViewMatrix());
+    projectionMatrix = view.getProjectionMatrix();
     XRSpaceBase<XRViewSpace>::onPoseUpdate(session, frameRequest);
   }
 

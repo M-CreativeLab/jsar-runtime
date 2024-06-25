@@ -101,6 +101,8 @@ public:
 
   void RecordViewport(int x, int y, int w, int h);
   void RecordCapability(GLenum cap, bool enabled);
+  void RecordCullFace(GLenum mode);
+  void RecordFrontFace(GLenum mode);
   void RecordDepthMask(bool enabled);
   void RecordBlendFunc(GLenum sfactor, GLenum dfactor);
   void RecordBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha);
@@ -199,7 +201,15 @@ public:
 class OpenGLAppContextStorage : public OpenGLContextStorage
 {
 public:
-  OpenGLAppContextStorage(std::string name) : OpenGLContextStorage(name) {}
+  OpenGLAppContextStorage(std::string name) : OpenGLContextStorage(name)
+  {
+    /**
+     * Initial values for WebGL or OpenGLES.
+     */
+    m_CullFaceEnabled = true;
+    m_CullFace = GL_BACK;
+    m_FrontFace = GL_CCW;
+  }
   OpenGLAppContextStorage(std::string name, OpenGLAppContextStorage *from) : OpenGLContextStorage(name, from)
   {
     m_Programs = OpenGLNamesStorage(&from->m_Programs);
