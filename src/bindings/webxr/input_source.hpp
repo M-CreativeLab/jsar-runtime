@@ -14,8 +14,7 @@ namespace bindings
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, XRFrame *frame, XRSession *session,
-                                    InputSourceInternalResetCallback resetInternal);
+    static Napi::Object NewInstance(Napi::Env env, XRSession *session, xr::TrXRInputSource* internal);
     XRInputSource(const Napi::CallbackInfo &info);
     ~XRInputSource();
 
@@ -28,14 +27,11 @@ namespace bindings
     Napi::Value TargetRaySpaceGetter(const Napi::CallbackInfo &info);
 
   public:
-    bool updateInternal(XRFrame *frame);
-    bool dispatchSelectOrSqueezeEvents();
+    bool dispatchSelectOrSqueezeEvents(XRFrame *frame);
 
   public:
     xr::TrXRInputSource *internal = nullptr;
-    InputSourceInternalResetCallback onResetInternal;
-    Napi::ObjectReference xrFrame;
-    Napi::ObjectReference xrSession;
+    Napi::ObjectReference xrSessionRef;
 
   private:
     bool primaryActionPressed = false;

@@ -22,15 +22,12 @@ namespace bindings
     return exports;
   }
 
-  Napi::Object XRInputSource::NewInstance(Napi::Env env, XRFrame *frame, XRSession *session,
-                                          InputSourceInternalResetCallback resetInternal)
+  Napi::Object XRInputSource::NewInstance(Napi::Env env, XRSession *session, xr::TrXRInputSource *internal)
   {
     Napi::EscapableHandleScope scope(env);
-    // auto frameExternal = Napi::External<xr::DeviceFrame>::New(env, frame);
-    auto xrFrameValue = frame->Value();
     auto xrSessionValue = session->Value();
-    auto resetInternalExternal = Napi::External<InputSourceInternalResetCallback>::New(env, &resetInternal);
-    Napi::Object obj = constructor->New({xrFrameValue, xrSessionValue, resetInternalExternal});
+    auto internalExternal = Napi::External<xr::TrXRInputSource>::New(env, internal);
+    Napi::Object obj = constructor->New({xrSessionValue, internalExternal});
     return scope.Escape(obj).ToObject();
   }
 
@@ -39,26 +36,22 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() != 3)
+    if (info.Length() != 2)
     {
-      Napi::TypeError::New(env, "XRInputSource constructor expects 3 argument").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "XRInputSource constructor expects 2 argument").ThrowAsJavaScriptException();
       return;
     }
-    if (!info[2].IsExternal())
+    if (!info[1].IsExternal())
     {
       Napi::TypeError::New(env, "XRInputSource constructor could not be called").ThrowAsJavaScriptException();
       return;
     }
 
-    auto frameValue = info[0].As<Napi::Object>();
-    xrFrame = Napi::Persistent(frameValue);
+    auto sessionValue = info[0].As<Napi::Object>();
+    xrSessionRef = Napi::Persistent(sessionValue);
 
-    auto sessionValue = info[1].As<Napi::Object>();
-    xrSession = Napi::Persistent(sessionValue);
-
-    auto resetInternalExternal = info[2].As<Napi::External<InputSourceInternalResetCallback>>();
-    onResetInternal = *resetInternalExternal.Data();
-    updateInternal(XRFrame::Unwrap(frameValue)); // Update internal once when the input source is created
+    auto internalExternal = info[1].As<Napi::External<xr::TrXRInputSource>>();
+    internal = internalExternal.Data();
 
     auto thisObject = info.This().ToObject();
     thisObject.DefineProperty(Napi::PropertyDescriptor::Value("gripSpace", GripSpaceGetter(info), napi_enumerable));
@@ -69,9 +62,8 @@ namespace bindings
 
   XRInputSource::~XRInputSource()
   {
-    delete internal;
     internal = nullptr;
-    xrSession.Unref();
+    xrSessionRef.Unref();
   }
 
   Napi::Value XRInputSource::GamepadGetter(const Napi::CallbackInfo &info)
@@ -123,27 +115,9 @@ namespace bindings
     return XRTargetRayOrGripSpace::NewInstance(info.Env(), internal, false);
   }
 
-  bool XRInputSource::updateInternal(XRFrame *frame)
+  bool XRInputSource::dispatchSelectOrSqueezeEvents(XRFrame *frame)
   {
-    if (!onResetInternal || frame == nullptr)
-      return false;
-
-    auto newInternal = onResetInternal(frame->internal);
-    if (newInternal == nullptr)
-      return false;
-
-    if (internal == nullptr)
-      internal = new xr::TrXRInputSource(newInternal);
-    else
-      internal->update(newInternal);
-
-    dispatchSelectOrSqueezeEvents();
-    return true;
-  }
-
-  bool XRInputSource::dispatchSelectOrSqueezeEvents()
-  {
-    auto session = XRSession::Unwrap(xrSession.Value());
+    auto session = XRSession::Unwrap(xrSessionRef.Value());
     if (session == nullptr)
       return false;
 
@@ -154,7 +128,7 @@ namespace bindings
       {
         // When the primary action is pressed for the first time.
         primaryActionPressed = true;
-        session->onPrimaryActionStart(this, XRFrame::Unwrap(xrFrame.Value()));
+        session->onPrimaryActionStart(this, frame);
       }
     }
     else
@@ -164,7 +138,7 @@ namespace bindings
       {
         // When the primary action is released.
         primaryActionPressed = false;
-        session->onPrimaryActionEnd(this, XRFrame::Unwrap(xrFrame.Value()));
+        session->onPrimaryActionEnd(this, frame);
       }
     }
 
@@ -175,7 +149,7 @@ namespace bindings
       {
         // When the squeeze action is pressed for the first time.
         squeezeActionPressed = true;
-        session->onSqueezeActionStart(this, XRFrame::Unwrap(xrFrame.Value()));
+        session->onSqueezeActionStart(this, frame);
       }
     }
     else
@@ -185,7 +159,7 @@ namespace bindings
       {
         // When the squeeze action is released.
         squeezeActionPressed = false;
-        session->onSqueezeActionEnd(this, XRFrame::Unwrap(xrFrame.Value()));
+        session->onSqueezeActionEnd(this, frame);
       }
     }
     return true;
@@ -214,30 +188,17 @@ namespace bindings
                                               InputSourcesChangedCallback onChangedCallback)
   {
     Napi::Env env = Env();
-    auto inputSourcesZone = clientContext->getXRInputSourcesZone();
-    auto gazeInputSource = inputSourcesZone->getGazeInputSource();
-    fprintf(stdout, "hand: %d\n", gazeInputSource->handness);
-    fprintf(stdout, "targetRayMode: %d\n", gazeInputSource->targetRayMode);
-
-    auto m = gazeInputSource->targetRayBaseMatrix;
-    fprintf(stdout, "targetRayTransform: (%f %f %f %f)\n", m[0], m[1], m[2], m[3]);
-
     if (Length() == 0)
     {
+      auto inputSourcesZone = clientContext->getXRInputSourcesZone();
       vector<XRInputSource *> added;
-      // auto gazeInputSource = XRInputSource::Unwrap(
-      //     XRInputSource::NewInstance(env, frame, session, [](xr::TrXRFrameRequest *frameRequest) -> xr::TrXRInputSource *
-      //                                { return frameRequest->getGazeInputSource(); }));
-      // auto leftHandInputSource = XRInputSource::Unwrap(
-      //     XRInputSource::NewInstance(env, frame, session, [](xr::TrXRFrameRequest *frameRequest) -> xr::TrXRInputSource *
-      //                                { return frameRequest->getHandInputSource(xr::TrHandness::Left); }));
-      // auto rightHandInputSource = XRInputSource::Unwrap(
-      //     XRInputSource::NewInstance(env, frame, session, [](xr::TrXRFrameRequest *frameRequest) -> xr::TrXRInputSource *
-      //                                { return frameRequest->getHandInputSource(xr::TrHandness::Right); }));
+      auto gazeInputSourceValue = XRInputSource::NewInstance(env, session, inputSourcesZone->getGazeInputSource());
+      auto leftHandInputSourceValue = XRInputSource::NewInstance(env, session, inputSourcesZone->getHandInputSource(xr::TrHandness::Left));
+      auto rightHandInputSourceValue = XRInputSource::NewInstance(env, session, inputSourcesZone->getHandInputSource(xr::TrHandness::Right));
 
-      // added.push_back(gazeInputSource);
-      // added.push_back(leftHandInputSource);
-      // added.push_back(rightHandInputSource);
+      added.push_back(XRInputSource::Unwrap(gazeInputSourceValue));
+      added.push_back(XRInputSource::Unwrap(leftHandInputSourceValue));
+      added.push_back(XRInputSource::Unwrap(rightHandInputSourceValue));
       // TODO: Add gamepad input sources
       onChangedCallback(added, {});
 
@@ -251,7 +212,7 @@ namespace bindings
       for (uint32_t i = 0; i < Length(); i++)
       {
         auto inputSource = XRInputSource::Unwrap(Get(i).ToObject());
-        inputSource->updateInternal(frame);
+        inputSource->dispatchSelectOrSqueezeEvents(frame);
       }
     }
   }
