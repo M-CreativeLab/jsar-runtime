@@ -272,7 +272,7 @@ namespace renderer
          * By using this method, we can avoid the frame is not rendered in time, but it will cause the frame rate in script is not
          * consistent with the host frame rate.
          */
-        if (pendingFramesCount > 5)
+        if (pendingFramesCount > 1)
           skipDispatchingFrameState = true;
         else
           skipDispatchingFrameState = false;

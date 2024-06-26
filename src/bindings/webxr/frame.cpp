@@ -216,12 +216,11 @@ namespace bindings
   void XRFrame::end()
   {
     active = false;
-    // animationFrame = false;
     device->endFrame(internal);
     endTime = chrono::high_resolution_clock::now();
 
     auto duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
     if (duration > 1000 / 60)
-      DEBUG(LOG_TAG, "Detected a long frame(%d) takes %dms in session(%d)", id, duration, sessionId);
+      fprintf(stderr, "Detected a long frame(#%d) takes %llums in session(%d)\n", id, duration, sessionId);
   }
 }

@@ -79,7 +79,7 @@ namespace renderer
     xr::StereoRenderingFrame *stereoFrameForBackup = nullptr;
 
   private: // frame rate control
-    uint32_t targetFrameRate = 60;
+    uint32_t targetFrameRate;
     /**
      * If the host frame should be skipped for the script.
      *

@@ -366,9 +366,7 @@ namespace xr
   }
   bool StereoRenderingFrame::expired(int timeout)
   {
-    auto now = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_CreatedTime);
-    return duration.count() > timeout;
+    return duration<chrono::milliseconds>().count() > timeout;
   }
   bool StereoRenderingFrame::idempotent()
   {

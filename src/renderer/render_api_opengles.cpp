@@ -1592,7 +1592,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 		auto commandType = commandBuffer->type;
 		ApiCallOptions callOptions;
 		callOptions.isDefaultQueue = commandBuffer->renderingInfo.isValid() == false;
-		callOptions.printsCall = true;
+		callOptions.printsCall = false;
 
 #define ADD_COMMAND_BUFFER_HANDLER(commandType, requestType, handlerName) \
 	case COMMAND_BUFFER_##commandType##_REQ:                                \

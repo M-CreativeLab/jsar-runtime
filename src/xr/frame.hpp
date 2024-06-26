@@ -156,6 +156,14 @@ namespace xr
     size_t byteLength(int passIndex);
     string toString();
 
+  public:
+    template <typename T>
+    inline T duration()
+    {
+      auto now = std::chrono::high_resolution_clock::now();
+      return std::chrono::duration_cast<T>(now - m_CreatedTime);
+    }
+
   private:
     void clearCommandBuffers();
     void clearCommandBuffers(int passIndex);

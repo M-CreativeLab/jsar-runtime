@@ -72,7 +72,7 @@ namespace renderer
 
   void TrRenderer::configureClientFrameRate(uint32_t value)
   {
-    if (value >= MIN_FRAME_RATE || value <= MAX_FRAME_RATE)
+    if (value >= MIN_FRAME_RATE && value <= MAX_FRAME_RATE)
       clientDefaultFrameRate = value;
   }
 
