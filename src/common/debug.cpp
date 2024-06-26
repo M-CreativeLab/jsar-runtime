@@ -1,14 +1,16 @@
 #include <stdarg.h>
-#include <dlfcn.h>
 #include "debug.hpp"
 
 #ifdef _WIN32
 #include <windows.h>
 #include <processthreadsapi.h>
-#elif __ANDROID__
+#else
+#include <dlfcn.h>
+#ifdef __ANDROID__
 #include <sys/prctl.h>
 #include <cxxabi.h>
 #include <unwind.h>
+#endif
 #endif
 
 #ifndef TRANSMUTE_STANDALONE
@@ -141,14 +143,16 @@ void printsStacktraceOnSignal(int signal)
 }
 
 constexpr int SIGNALS[] = {
-    SIGHUP,
-    SIGQUIT,
     SIGABRT,
     SIGFPE,
-    SIGBUS,
     SIGSEGV,
+#ifndef _WIN32
+    SIGHUP,
+    SIGQUIT,
+    SIGBUS,
     SIGSYS,
     SIGPIPE,
+#endif
 };
 
 void ENABLE_BACKTRACE()

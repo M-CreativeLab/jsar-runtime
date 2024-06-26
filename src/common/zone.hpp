@@ -1,13 +1,18 @@
 #pragma once
 
-#include <sys/mman.h>
 #include <sys/stat.h>
-#include <semaphore.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include <cstring>
 #include <iostream>
 #include <string>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/mman.h>
+#include <semaphore.h>
+#include <unistd.h>
+#endif
 
 using namespace std;
 

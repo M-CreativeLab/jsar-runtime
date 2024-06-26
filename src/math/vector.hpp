@@ -2,6 +2,13 @@
 
 #include <cmath>
 
+/**
+ * M_PI is not defined in Windows(MSVC), so we define it here.
+ */
+#ifndef M_PI
+#define M_PI std::acos(-1)
+#endif
+
 typedef double scalar;
 
 class Vector3
@@ -31,7 +38,7 @@ public:
   {
     Vector3 angle;
     const float zAxisY = y * z - x * w;
-    const float limit = 0.4999999;
+    const float limit = 0.4999999f;
 
     if (zAxisY < -limit)
     {

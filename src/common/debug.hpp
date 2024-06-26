@@ -5,9 +5,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <execinfo.h>
 #include <signal.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#include <DbgHelp.h>
+#else
+#include <execinfo.h>
 #include <unistd.h>
+#endif
 
 #ifdef __ANDROID__
 #include <android/log.h>
