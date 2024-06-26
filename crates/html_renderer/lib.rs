@@ -47,6 +47,11 @@ pub fn render_html(html_source_str: &str) {
   );
 
   let mut document = Document::new(device);
-  let mut document = DocumentHtmlParser::parse_into_document(&mut document, html_source_str);
+  let document = DocumentHtmlParser::parse_into_document(&mut document, html_source_str);
   document.print_tree();
+}
+
+#[test]
+fn test_render_html() {
+  render_html("<h1>Hello, World!</h1>");
 }
