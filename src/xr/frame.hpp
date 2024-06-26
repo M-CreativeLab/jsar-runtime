@@ -43,7 +43,6 @@ namespace xr
     void end();
     bool ended();
     bool isMultiPass();
-    float getTimestamp();
     float *getViewerTransform();
     glm::mat4 getLocalTransform(int sessionId);
     FrameContextBySessionId *addSession(int sessionId);
@@ -61,7 +60,6 @@ namespace xr
     Device *m_XrDevice = nullptr;
     bool m_Ended = false;
     bool m_IsMultiPass = false;
-    float m_Timestamp = 0;
     float m_ViewerTransform[16];
     std::map<int, FrameContextBySessionId *> m_Sessions;
     int m_CurrentStereoId = -1;

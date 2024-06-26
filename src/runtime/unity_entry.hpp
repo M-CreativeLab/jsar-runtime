@@ -87,14 +87,6 @@ extern "C"
   DLL_PUBLIC void TransmuteNative_SetTime(float time);
 
   /**
-   * Set the stereo rendering mode such as single-pass, multi-pass, etc.
-   *
-   * @param mode The stereo rendering mode to be set, the valid value is: MultiPass(0), SinglePass(1), SinglePassInstanced(2),
-   *             SinglePassMultiview(3) and -1 for unknown.
-   */
-  DLL_PUBLIC void TransmuteNative_SetStereoRenderingMode(int mode);
-
-  /**
    * Update the projection matrix for a specific eye.
    *
    * @param eyeId The eye id, 0 for left and 1 for right.

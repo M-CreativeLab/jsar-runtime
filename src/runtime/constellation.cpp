@@ -61,6 +61,7 @@ void TrConstellation::shutdown()
 {
   contentManager->shutdown();
   renderer->shutdown();
+  xrDevice->shutdown();
   initialized = false;
 }
 

@@ -128,6 +128,9 @@ namespace xr
     vector<TrXRFeature> optionalFeatures;
   };
 
+  /**
+   * The configuration to initialize a XR device.
+   */
   class TrDeviceInit
   {
   public:
@@ -135,11 +138,31 @@ namespace xr
     ~TrDeviceInit() = default;
 
   public:
+    /**
+     * If this device is enabled.
+     */
     bool enabled = false;
+    /**
+     * If this device is active.
+     */
     bool active = false;
+    /**
+     * The XR device's stereo rendering mode.
+     */
     TrStereoRenderingMode stereoRenderingMode = TrStereoRenderingMode::Unknown;
-    /** No need to set */
+    /**
+     * Recommended fov value for client.
+     */
+    float recommendedFov = 0;
+
+  public: // No need to setup, the following fields are set by server.
+    /**
+     * XR Command channel port.
+     */
     int commandChanPort = 0;
+    /**
+     * XR input sources zone path.
+     */
     string inputSourcesZonePath;
 
   public:

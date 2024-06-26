@@ -7,6 +7,9 @@
 
 namespace renderer
 {
+  static uint32_t MIN_FRAME_RATE = 60;
+  static uint32_t MAX_FRAME_RATE = 90;
+
   TrRenderer::TrRenderer(TrConstellation *constellation) : constellation(constellation), api(nullptr)
   {
     frameRequestChanServer = new ipc::TrOneShotServer<TrFrameRequestMessage>("frameRequestChan");
@@ -65,6 +68,12 @@ namespace renderer
   void TrRenderer::setLogFilter(string filterExpr)
   {
     // TODO
+  }
+
+  void TrRenderer::configureClientFrameRate(uint32_t value)
+  {
+    if (value >= MIN_FRAME_RATE || value <= MAX_FRAME_RATE)
+      clientDefaultFrameRate = value;
   }
 
   uint32_t TrRenderer::getFps()

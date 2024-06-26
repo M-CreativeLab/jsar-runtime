@@ -11,6 +11,7 @@ namespace renderer
       : content(content),
         constellation(constellation),
         xrDevice(constellation->getXrDevice()),
+        targetFrameRate(constellation->getRenderer()->clientDefaultFrameRate),
         currentBaseXRFrameReq(new xr::TrXRFrameRequest())
   {
     assert(xrDevice != nullptr);
@@ -140,15 +141,15 @@ namespace renderer
             xr::TrXRView view(viewIndex);
             auto viewport = xrDevice->getViewport(viewIndex);
             view.setViewport(viewport.width, viewport.height, viewport.x, viewport.y);
-            view.setViewMatrix(xrDevice->getViewerStereoViewMatrix(viewIndex));
-            view.setProjectionMatrix(xrDevice->getViewerStereoProjectionMatrix(viewIndex));
+            view.setViewMatrix(xrDevice->getViewMatrixForEye(viewIndex));
+            view.setProjectionMatrix(xrDevice->getProjectionMatrixForEye(viewIndex));
 
             if (viewIndex == 0) // Reset the `currentBaseXRFrameReq` when viewIndex is 0(left)
             {
               currentBaseXRFrameReq->reset();
               // Set `currentBaseXRFrameReq` with the related data.
               currentBaseXRFrameReq->stereoId = stereoRenderingFrame->getId();
-              currentBaseXRFrameReq->setViewerBaseMatrix(xrDevice->getViewerTransform());
+              currentBaseXRFrameReq->setViewerBaseMatrix(xrDevice->getViewerBaseMatrix());
             }
             currentBaseXRFrameReq->viewIndex = viewIndex;
             currentBaseXRFrameReq->views[viewIndex] = view;

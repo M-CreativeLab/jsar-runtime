@@ -35,7 +35,6 @@ namespace xr
   void DeviceFrame::end() { m_Ended = true; }
   bool DeviceFrame::ended() { return m_Ended; }
   bool DeviceFrame::isMultiPass() { return m_IsMultiPass; }
-  float DeviceFrame::getTimestamp() { return m_Timestamp; }
   float *DeviceFrame::getViewerTransform() { return m_ViewerTransform; }
   glm::mat4 DeviceFrame::getLocalTransform(int id) { return m_XrDevice->getLocalTransformUnsafe(id); }
 
@@ -95,12 +94,11 @@ namespace xr
     m_IsMultiPass = true;
     m_CurrentStereoId = stereoId;
     m_ActiveEyeId = device->getActiveEyeId();
-    m_Timestamp = device->getTime();
 
-    auto viewerTransform = device->getViewerTransform();
-    auto viewMatrix = device->getViewerStereoViewMatrix(m_ActiveEyeId);
-    auto projectionMatrix = device->getViewerStereoProjectionMatrix(m_ActiveEyeId);
-    memcpy(m_ViewerTransform, viewerTransform, sizeof(float) * 16);
+    auto viewerBaseMatrix = device->getViewerBaseMatrix();
+    auto viewMatrix = device->getViewMatrixForEye(m_ActiveEyeId);
+    auto projectionMatrix = device->getProjectionMatrixForEye(m_ActiveEyeId);
+    memcpy(m_ViewerTransform, viewerBaseMatrix, sizeof(float) * 16);
     memcpy(m_ViewerViewMatrix, viewMatrix, sizeof(float) * 16);
     memcpy(m_ViewerProjectionMatrix, projectionMatrix, sizeof(float) * 16);
   }

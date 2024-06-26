@@ -34,6 +34,7 @@ namespace renderer
     void tick();
     void shutdown();
     void setLogFilter(string filterExpr);
+    void configureClientFrameRate(uint32_t value);
     uint32_t getFps();
     uint32_t getUptime();
     uint32_t getAnimationFrameChanPort();
@@ -93,6 +94,7 @@ namespace renderer
     TrConstellation *constellation = nullptr;
     OpenGLHostContextStorage *glHostContext = nullptr;
     vector<TrContentRenderer *> contentRenderers;
+    uint32_t clientDefaultFrameRate = 60;
 
   private: // fields for frame request
     ipc::TrOneShotServer<TrFrameRequestMessage> *frameRequestChanServer = nullptr;

@@ -23,6 +23,9 @@ using namespace std;
 
 namespace xr
 {
+  /**
+   * The XR Device is used to manage XR sessions, input sources and other XR resources.
+   */
   class Device
   {
   public:
@@ -33,54 +36,95 @@ namespace xr
     ~Device();
 
   public:
+    /**
+     * Initialize the XR device.
+     * 
+     * @param enabled if this XR device is enabled.
+     * @param init the configration init to initialize the device.
+     */
     void initialize(bool enabled, TrDeviceInit &init);
+    /**
+     * Shutdown the XR device.
+     */
+    void shutdown();
+    /**
+     * It returns if this session mode (immersive-ar, immersive-vr or inline) is supported by the XR device.
+     */
     bool isSessionSupported(xr::TrXRSessionMode mode);
+    /**
+     * It requests a XR session with its mode and content source.
+     */
     int requestSession(xr::TrXRSessionMode mode, TrContentRenderer *contentRenderer);
+    /**
+     * If this device is enabled.
+     */
     bool enabled();
+    /**
+     * If this device is rendering as multipass.
+     */
     bool isRenderedAsMultipass();
-    void setFrameRate(uint32_t frameRate);
-    bool skipHostFrameOnScript();
-    void startHostFrame();
-    void endHostFrame();
-
-    void setStereoRenderingMode(TrStereoRenderingMode mode);
+    /**
+     * It returns the stereo rendering mode.
+     */
     TrStereoRenderingMode getStereoRenderingMode();
-
+    /**
+     * It creates a new stereo rendering frame.
+     * 
+     * @returns a new instance of StereoRenderingFrame.
+     */
     StereoRenderingFrame *createStereoRenderingFrame();
-    StereoRenderingFrame *getStereoRenderingFrame(int id);
-    StereoRenderingFrame *getLastStereoRenderingFrame();
-    StereoRenderingFrame *createOrGetStereoRenderingFrame();
-
-    size_t getStereoRenderingFramesCount();
-    size_t getPendingStereoRenderingFramesCount();
-    bool executeStereoRenderingFrames(int eyeId, function<bool(int, vector<commandbuffers::TrCommandBufferBase *> &)>);
-    void clearStereoRenderingFrames(bool clearAll = false);
-    bool startFrame(int sessionId, int stereoRenderingId, int passId);
-    bool endFrame(int sessionId, int stereoRenderingId, int passId);
-    bool isInFrame();
-    void addCommandBufferToFrame(commandbuffers::TrCommandBufferBase *commandBuffer);
 
   public:
-    float getTime();
-    Viewport getViewport(int eyeId);
-    float *getViewerTransform();
-    float *getViewerStereoViewMatrix(int eyeId);
-    float *getViewerStereoProjectionMatrix(int eyeId);
+    /**
+     * It returns the viewport for the specific view index.
+     */
+    Viewport getViewport(int viewIndex);
+    /**
+     * It returns the XR viewer/camera's base matrix.
+     */
+    float *getViewerBaseMatrix();
+    /**
+     * It returns the view matrix for eye.
+     */
+    float *getViewMatrixForEye(int eye);
+    /**
+     * It returns the projection matrix for eye.
+     */
+    float *getProjectionMatrixForEye(int eye);
     glm::mat4 getLocalTransform(int id);
     glm::mat4 getLocalTransformUnsafe(int id);
+    /**
+     * It returns the current rendering eye or view index.
+     */
     int getActiveEyeId();
 
   public: // Sessions
-    vector<int> getSessionIds();
     void iterateSessionsByContentPid(pid_t contentPid, function<void(TrXRSession *)> callback);
 
   public:
     bool updateFov(float fov);
-    bool updateTime(float time);
+    /**
+     * Update current framebuffer's viewport.
+     */
     bool updateViewport(int eyeId, float x, float y, float width, float height);
-    bool updateViewerTransform(float *transform);
-    bool updateViewerStereoViewMatrix(int eyeId, float *transform);
-    bool updateViewerStereoProjectionMatrix(int eyeId, float *transform);
+    /**
+     * Update the viewer's base matrix.
+     */
+    bool updateViewerBaseMatrix(float *baseMatrixValues);
+    /**
+     * Update the view matrix for a view/eye.
+     * 
+     * @param viewIndex the view index to update data.
+     * @param viewMatrixValues the float array to be updated.
+     */
+    bool updateViewMatrix(int viewIndex, float *viewMatrixValues);
+    /**
+     * Update the projection matrix for a view/eye.
+     * 
+     * @param viewIndex the view index to update data.
+     * @param projectionMatrixValues the float array to be updated.
+     */
+    bool updateProjectionMatrix(int viewIndex, float *projectionMatrixValues);
     bool updateLocalTransform(int id, float *transform);
 
   public: // Input sources
@@ -113,53 +157,21 @@ namespace xr
      */
     bool m_Enabled = false;
     /**
-     * If the host frame should be skipped for the script.
-     *
-     * In multi-pass rendering, this could be set by the left eye's frame callback, and used by both eyes, so that the
-     * right eye's frame callback will not be called.
-     */
-    bool m_SkipHostFrameOnScript = false;
-    bool m_IsLastHostFrameTimeSet = false;
-    /**
-     * A host frame is the frame called by the host environment, such as the Unity engine, the host frame is the Unity's
-     * Update() method, and then the time of host frame is the time point when the host frame is called.
-     */
-    chrono::time_point<chrono::high_resolution_clock> m_HostFrameTime;
-    chrono::time_point<chrono::high_resolution_clock> m_LastHostFrameTime;
-
-    /**
-     * The frame rate for the XR sessions.
-     */
-    uint32_t m_FrameRate = 60;
-
-    /**
      * Recommanded field of view.
      */
     atomic<float> m_FieldOfView;
-    /**
-     * The timestamp in milliseconds for current frame.
-     */
-    atomic<float> m_Time;
     /**
      * The stereo rendering mode, it affects how to use frame callback and execute frame.
      */
     atomic<TrStereoRenderingMode> m_StereoRenderingMode = TrStereoRenderingMode::Unknown;
     /**
-     * Current stereo rendering frames.
-     */
-    atomic<int> m_CurrentStereoRenderingId = -1;
-    atomic<int> m_CurrentPassId = -1;
-    vector<StereoRenderingFrame *> m_StereoRenderingFrames;
-    StereoRenderingFrame *m_BackupStereoRenderingFrame;
-    /**
      * The viewport for each view.
      */
     map<int, Viewport> m_ViewportsByEyeId;
     /**
-     * The viewer(camera or eyes) transform matrix, namely the viewer's model matrix, it's used to describe how to
-     * transform the viewer's model to the world space.
+     * The viewer(camera) base matrix.
      */
-    float m_ViewerTransform[16];
+    float m_ViewerBaseMatrix[16];
     /**
      * The viewer(camera or eyes) view matrix.
      */
@@ -198,8 +210,8 @@ namespace xr
     std::map<int, InputSource *> m_GamepadInputSources;
 
   private: // command channel
-    ipc::TrOneShotServer<TrXRCommandMessage> *m_CommandChanServer = nullptr;
-    thread *m_CommandClientWatcher = nullptr;
+    std::unique_ptr<ipc::TrOneShotServer<TrXRCommandMessage>> m_CommandChanServer = nullptr;
+    std::unique_ptr<thread> m_CommandClientWatcher = nullptr;
     atomic<bool> m_CommandClientWatcherRunning = false;
     int m_AcceptTimeout = 1000;
   };

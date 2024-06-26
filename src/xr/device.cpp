@@ -20,10 +20,8 @@ namespace xr
   }
 
   Device::Device(TrConstellation *constellation)
-      : m_Constellation(constellation), m_FieldOfView(0.0f), m_Time(0.0f)
+      : m_Constellation(constellation), m_FieldOfView(0.0f)
   {
-    m_BackupStereoRenderingFrame = new StereoRenderingFrame(true);
-
     // Initialize the input sources
     {
       m_GazeInputSource = new InputSource();
@@ -42,16 +40,11 @@ namespace xr
     }
 
     // Initialize the command chan server
-    m_CommandChanServer = new ipc::TrOneShotServer<TrXRCommandMessage>("xrCommandChan");
+    m_CommandChanServer = std::make_unique<ipc::TrOneShotServer<TrXRCommandMessage>>("xrCommandChan");
   }
 
   Device::~Device()
   {
-    m_FieldOfView = 0.0f;
-    m_Time = 0.0f;
-    delete m_BackupStereoRenderingFrame;
-    m_BackupStereoRenderingFrame = nullptr;
-
     // Clear the sessions
     {
       for (auto session : m_Sessions)
@@ -66,20 +59,6 @@ namespace xr
       for (auto inputSource : m_HandInputSources)
         delete inputSource;
       m_HandInputSources.clear();
-    }
-
-    // Clear the command chan server
-    m_CommandClientWatcherRunning = false;
-    if (m_CommandClientWatcher != nullptr)
-    {
-      m_CommandClientWatcher->join();
-      delete m_CommandClientWatcher;
-      m_CommandClientWatcher = nullptr;
-    }
-    if (m_CommandChanServer != nullptr)
-    {
-      delete m_CommandChanServer;
-      m_CommandChanServer = nullptr;
     }
   }
 
@@ -96,6 +75,13 @@ namespace xr
     // Start command client watcher.
     startCommandClientWatcher();
     DEBUG(LOG_TAG_XR, "The XR Device has been configured successfully: enabled=%s.", enabled ? "YES" : "NO");
+  }
+
+  void Device::shutdown()
+  {
+    m_CommandClientWatcherRunning = false;
+    if (m_CommandClientWatcher != nullptr)
+      m_CommandClientWatcher->join();
   }
 
   bool Device::isSessionSupported(xr::TrXRSessionMode mode)
@@ -152,70 +138,6 @@ namespace xr
     return m_StereoRenderingMode == TrStereoRenderingMode::MultiPass;
   }
 
-  void Device::setFrameRate(uint32_t frameRate)
-  {
-    if (frameRate >= MIN_FRAME_RATE || frameRate <= MAX_FRAME_RATE)
-      frameRate = MIN_FRAME_RATE;
-  }
-
-  bool Device::skipHostFrameOnScript()
-  {
-    if (m_Enabled == false)
-      return false; // if XR device is disabled, we can't skip the frame execution.
-
-    if (m_ActiveEyeId == 0)
-    {
-      if (m_IsLastHostFrameTimeSet == false)
-      {
-        m_LastHostFrameTime = m_HostFrameTime;
-        m_IsLastHostFrameTimeSet = true;
-        m_SkipHostFrameOnScript = false;
-      }
-      else
-      {
-        /**
-         * We need to skip a frame based on the script frame rate to avoid the unnecessary CPU usage.
-         */
-        auto duration = chrono::duration_cast<chrono::milliseconds>(m_HostFrameTime - m_LastHostFrameTime);
-        if (duration.count() < 1000 / m_FrameRate)
-        {
-          m_SkipHostFrameOnScript = true;
-        }
-        else
-        {
-          auto framesCount = getPendingStereoRenderingFramesCount();
-          /**
-           * When the frame count is greater than a fixed value, we can skip the frame for the script-side, namely in JavaScript, the
-           * frame of this time will be dropped when the last frame is not finished.
-           *
-           * By using this method, we can avoid the frame is not rendered in time, but it will cause the frame rate in script is not
-           * consistent with the host frame rate.
-           */
-          if (framesCount > 5)
-            m_SkipHostFrameOnScript = true;
-          else
-            m_SkipHostFrameOnScript = false;
-          m_LastHostFrameTime = m_HostFrameTime;
-        }
-      }
-    }
-    return m_SkipHostFrameOnScript;
-  }
-
-  void Device::startHostFrame()
-  {
-    m_HostFrameTime = chrono::high_resolution_clock::now();
-  }
-
-  void Device::endHostFrame()
-  {
-  }
-
-  void Device::setStereoRenderingMode(TrStereoRenderingMode mode)
-  {
-    m_StereoRenderingMode = mode;
-  }
-
   TrStereoRenderingMode Device::getStereoRenderingMode()
   {
     return m_StereoRenderingMode;
@@ -223,257 +145,7 @@ namespace xr
 
   StereoRenderingFrame *Device::createStereoRenderingFrame()
   {
-    auto frame = new StereoRenderingFrame(m_StereoRenderingMode == TrStereoRenderingMode::MultiPass);
-    m_StereoRenderingFrames.push_back(frame);
-    return m_StereoRenderingFrames.back();
-  }
-
-  StereoRenderingFrame *Device::getStereoRenderingFrame(int id)
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    for (auto frame : m_StereoRenderingFrames)
-    {
-      if (frame->getId() == id)
-        return frame;
-    }
-    return NULL;
-  }
-
-  StereoRenderingFrame *Device::getLastStereoRenderingFrame()
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    return m_StereoRenderingFrames.back();
-  }
-
-  StereoRenderingFrame *Device::createOrGetStereoRenderingFrame()
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    if (m_ActiveEyeId == 0)
-      createStereoRenderingFrame();
-    return m_StereoRenderingFrames.back();
-  }
-
-  size_t Device::getStereoRenderingFramesCount()
-  {
-    return m_StereoRenderingFrames.size();
-  }
-
-  size_t Device::getPendingStereoRenderingFramesCount()
-  {
-    size_t count = 0;
-    for (auto frame : m_StereoRenderingFrames)
-    {
-      if (!frame->ended())
-        count++;
-    }
-    return count;
-  }
-
-  /**
-   * NOTE: The current implementation will expect the eye rendering order is left(0) -> right(1).
-   *
-   * @param eyeId The eye id, 0 for left eye, 1 for right eye.
-   * @param exec The function that will be executed for the given command buffers and returns if the frame state is changed.
-   */
-  bool Device::executeStereoRenderingFrames(int eyeId, std::function<bool(int, std::vector<commandbuffers::TrCommandBufferBase *> &)> exec)
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    bool called = false;
-
-    for (auto it = m_StereoRenderingFrames.begin(); it != m_StereoRenderingFrames.end();)
-    {
-      auto frame = *it;
-      if (!frame->available())
-      {
-        it = m_StereoRenderingFrames.erase(it);
-        delete frame;
-        continue;
-      }
-      /** Just skip the non-ended frames. */
-      if (!frame->ended())
-      {
-        it++;
-        continue;
-      }
-      /** If an ended frame is empty, it's needed to be removed here. */
-      if (frame->empty())
-      {
-        /**
-         * Note: in C++ STL, the `erase` function will return the next iterator that we need to use instead of `it++`.
-         */
-        it = m_StereoRenderingFrames.erase(it);
-        delete frame;
-        continue;
-      }
-
-      /**
-       * When we are going to render right(1) eye, we can't render the frame which left frame is not finished.
-       * Such as, the frame is ended before the native loop is going to render the right eye, thus the left eye
-       * in this frame will be skipped.
-       */
-      if (eyeId == 1 && !frame->finished(0))
-      {
-        it++;
-        continue;
-      }
-
-      auto id = frame->getId();
-      auto commandBuffers = frame->getCommandBuffers(eyeId);
-      auto isStateChanged = exec(id, commandBuffers);
-      frame->idempotent(eyeId, !isStateChanged);
-      frame->finishPass(eyeId);
-
-      if (eyeId == 1)
-      {
-        if (frame->idempotent())
-          m_BackupStereoRenderingFrame->copyCommandBuffers(frame);
-        else
-          m_BackupStereoRenderingFrame->clearCommandBuffers();
-      }
-
-      /**
-       * After rendering the right eye, we need to remove the frame.
-       */
-      if (eyeId == 1)
-      {
-        assert(frame->finished(0));
-        it = m_StereoRenderingFrames.erase(it);
-        delete frame;
-      }
-      else
-      {
-        it++;
-      }
-
-      /**
-       * We only need to render the frame one by one, this avoids the rendering order is not correct.
-       */
-      called = true;
-      break;
-    }
-
-    /**
-     * When the `called` is false, it means the current frames are not ended, so we need to render by the last frame.
-     */
-    if (called == false)
-    {
-      auto id = m_BackupStereoRenderingFrame->getId();
-      auto commandBufferInLastFrame = m_BackupStereoRenderingFrame->getCommandBuffers(eyeId);
-      if (!commandBufferInLastFrame.empty())
-        exec(id, commandBufferInLastFrame);
-    }
-    return called;
-  }
-
-  void Device::clearStereoRenderingFrames(bool clearAll)
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    if (clearAll)
-    {
-      for (auto frame : m_StereoRenderingFrames)
-        delete frame;
-      m_StereoRenderingFrames.clear();
-      return;
-    }
-    else
-    {
-      /**
-       * 1. Clear the last rendering frames
-       */
-      // for (auto frame : m_LastStereoRenderingFrames)
-      //   delete frame;
-      // m_LastStereoRenderingFrames.clear();
-
-      /**
-       * 2. Copy the ended frames to the last frames, and then erase it.
-       */
-      for (auto it = m_StereoRenderingFrames.begin(); it != m_StereoRenderingFrames.end();)
-      {
-        if ((*it)->ended())
-        {
-          auto frame = *it;
-          delete frame;
-          it = m_StereoRenderingFrames.erase(it);
-        }
-        else
-        {
-          it++;
-        }
-      }
-    }
-  }
-
-  bool Device::startFrame(int sessionId, int stereoRenderingId, int passId)
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    for (auto frame : m_StereoRenderingFrames)
-    {
-      if (frame->getId() == stereoRenderingId)
-      {
-        if (frame->startFrame(passId) == FRAME_OK)
-        {
-          m_CurrentStereoRenderingId = stereoRenderingId;
-          m_CurrentPassId = passId;
-          return true;
-        }
-        else
-        {
-          break;
-        }
-      }
-    }
-    return false;
-  }
-
-  bool Device::endFrame(int sessionId, int stereoRenderingId, int passId)
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    for (auto it = m_StereoRenderingFrames.begin(); it != m_StereoRenderingFrames.end();)
-    {
-      auto frame = *it;
-      if (frame->getId() == stereoRenderingId)
-      {
-        if (frame->endFrame(passId) == FRAME_OK)
-        {
-          m_CurrentStereoRenderingId = -1;
-          m_CurrentPassId = -1;
-          return true;
-        }
-        else
-        {
-          break;
-        }
-      }
-      it++;
-    }
-    return false;
-  }
-
-  bool Device::isInFrame()
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    return m_CurrentStereoRenderingId != -1 && m_CurrentPassId != -1;
-  }
-
-  void Device::addCommandBufferToFrame(commandbuffers::TrCommandBufferBase *commandBuffer)
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    for (auto frame : m_StereoRenderingFrames)
-    {
-      if (frame->getId() == m_CurrentStereoRenderingId)
-      {
-        frame->addCommandBuffer(commandBuffer, m_CurrentPassId);
-        return;
-      }
-    }
-    DEBUG("Unity", "Failed to added a command(%d) buffer to the xr queue, current stereoid=%d",
-          commandBuffer->type, m_CurrentStereoRenderingId.load());
-  }
-
-  float Device::getTime()
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    return m_Time;
+    return new StereoRenderingFrame(m_StereoRenderingMode == TrStereoRenderingMode::MultiPass);
   }
 
   Viewport Device::getViewport(int eyeId)
@@ -482,28 +154,28 @@ namespace xr
     return m_ViewportsByEyeId[eyeId];
   }
 
-  float *Device::getViewerTransform()
+  float *Device::getViewerBaseMatrix()
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    return m_ViewerTransform;
+    return m_ViewerBaseMatrix;
   }
 
-  float *Device::getViewerStereoViewMatrix(int eyeId)
+  float *Device::getViewMatrixForEye(int eye)
   {
-    if (eyeId != 0 && eyeId != 1)
+    if (eye != 0 && eye != 1)
       return NULL; // Invalid eye id (0 or 1)
 
     std::lock_guard<std::mutex> lock(m_Mutex);
-    return m_ViewerStereoViewMatrix[eyeId];
+    return m_ViewerStereoViewMatrix[eye];
   }
 
-  float *Device::getViewerStereoProjectionMatrix(int eyeId)
+  float *Device::getProjectionMatrixForEye(int eye)
   {
-    if (eyeId != 0 && eyeId != 1)
+    if (eye != 0 && eye != 1)
       return NULL; // Invalid eye id (0 or 1)
 
     std::lock_guard<std::mutex> lock(m_Mutex);
-    return m_ViewerStereoProjectionMatrix[eyeId];
+    return m_ViewerStereoProjectionMatrix[eye];
   }
 
   glm::mat4 Device::getLocalTransform(int id)
@@ -532,15 +204,6 @@ namespace xr
     return m_ActiveEyeId;
   }
 
-  std::vector<int> Device::getSessionIds()
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    vector<int> ids;
-    for (auto session : m_Sessions)
-      ids.push_back(session->id);
-    return ids;
-  }
-
   void Device::iterateSessionsByContentPid(pid_t contentPid, std::function<void(TrXRSession *)> callback)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -557,12 +220,6 @@ namespace xr
     return true;
   }
 
-  bool Device::updateTime(float time)
-  {
-    m_Time = time;
-    return true;
-  }
-
   bool Device::updateViewport(int eyeId, float x, float y, float width, float height)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -570,11 +227,11 @@ namespace xr
     return true;
   }
 
-  bool Device::updateViewerTransform(float *transform)
+  bool Device::updateViewerBaseMatrix(float *baseMatrixValues)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
     for (int i = 0; i < 16; i++)
-      m_ViewerTransform[i] = transform[i];
+      m_ViewerBaseMatrix[i] = baseMatrixValues[i];
 
     /**
      * If there is no eye tracking, the target ray transform will be the same as the viewer transform.
@@ -582,36 +239,35 @@ namespace xr
      * TODO: support the eye tracking?
      */
     if (m_GazeInputSource != nullptr)
-    {
-      m_GazeInputSource->targetRayBaseMatrix = math::createMat4FromArray(transform);
-    }
+      m_GazeInputSource->targetRayBaseMatrix = math::createMat4FromArray(baseMatrixValues);
     return true;
   }
 
-  bool Device::updateViewerStereoViewMatrix(int eyeId, float *transform)
+  bool Device::updateViewMatrix(int viewIndex, float *viewMatrixValues)
   {
-    if (eyeId != 0 && eyeId != 1)
+    if (viewIndex != 0 && viewIndex != 1)
       return false; // Invalid eye id (0 or 1)
 
     std::lock_guard<std::mutex> lock(m_Mutex);
+    auto &targetViewMatrix = m_ViewerStereoViewMatrix[viewIndex];
+
     for (int i = 0; i < 16; i++)
-      m_ViewerStereoViewMatrix[eyeId][i] = transform[i];
-    m_ActiveEyeId = eyeId;
+      targetViewMatrix[i] = viewMatrixValues[i];
+    m_ActiveEyeId = viewIndex;
     return true;
   }
 
-  bool Device::updateViewerStereoProjectionMatrix(int eyeId, float *matrix)
+  bool Device::updateProjectionMatrix(int viewIndex, float *projectionMatrixValues)
   {
-    if (eyeId != 0 && eyeId != 1)
+    if (viewIndex != 0 && viewIndex != 1)
       return false; // Invalid eye id (0 or 1)
 
     std::lock_guard<std::mutex> lock(m_Mutex);
+    auto &targetProjectionMatrix = m_ViewerStereoProjectionMatrix[viewIndex];
+
     for (int i = 0; i < 16; i++)
-    {
-      float v = matrix[i];
-      m_ViewerStereoProjectionMatrix[eyeId][i] = v;
-    }
-    m_ActiveEyeId = eyeId;
+      targetProjectionMatrix[i] = projectionMatrixValues[i];
+    m_ActiveEyeId = viewIndex;
     return true;
   }
 
@@ -706,8 +362,8 @@ namespace xr
   void Device::startCommandClientWatcher()
   {
     m_CommandClientWatcherRunning = true;
-    m_CommandClientWatcher = new thread([this]()
-                                        {
+    m_CommandClientWatcher = std::make_unique<thread>([this]()
+                                                      {
       while (m_CommandClientWatcherRunning)
       {
         auto newClient = m_CommandChanServer->tryAccept(m_AcceptTimeout);

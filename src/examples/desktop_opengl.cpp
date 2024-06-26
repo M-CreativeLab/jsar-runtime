@@ -611,11 +611,11 @@ int main(int argc, char **argv)
 
           auto viewMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewMatrixForEye(viewIndex)));
           auto projectionMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getProjectionMatrix()));
-          xrDevice->updateViewerStereoViewMatrix(viewIndex, viewMatrix);
-          xrDevice->updateViewerStereoProjectionMatrix(viewIndex, projectionMatrix);
+          xrDevice->updateViewMatrix(viewIndex, viewMatrix);
+          xrDevice->updateProjectionMatrix(viewIndex, projectionMatrix);
 
           auto viewerBaseMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewerBaseMatrix()));
-          xrDevice->updateViewerTransform(viewerBaseMatrix);
+          xrDevice->updateViewerBaseMatrix(viewerBaseMatrix);
         }
         embedder->onFrame();
       }

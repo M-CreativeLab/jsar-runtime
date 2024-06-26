@@ -149,7 +149,7 @@ extern "C"
     if (__system_property_get("jsar.xr.framerate", xrFrameRate) >= 0)
     {
       int frameRate = atoi(xrFrameRate);
-      embedder->getXrDevice()->setFrameRate(frameRate);
+      embedder->getRenderer()->configureClientFrameRate(frameRate);
     }
 #endif
   }
@@ -244,20 +244,12 @@ extern "C"
     UnityEmbedder::EnsureAndGet()->getRenderer()->setTime(t);
   }
 
-  DLL_PUBLIC void TransmuteNative_SetStereoRenderingMode(int mode)
-  {
-    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
-    if (xrDevice == NULL)
-      return;
-    xrDevice->setStereoRenderingMode((xr::TrStereoRenderingMode)mode);
-  }
-
   DLL_PUBLIC bool TransmuteNative_SetViewerStereoProjectionMatrix(int eyeId, float *transform)
   {
     auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
     if (xrDevice == NULL)
       return false;
-    return xrDevice->updateViewerStereoProjectionMatrix(eyeId, transform);
+    return xrDevice->updateProjectionMatrix(eyeId, transform);
   }
 
   DLL_PUBLIC bool TransmuteNative_SetViewerTransformFromTRS(float *translation, float *rotation)
@@ -282,7 +274,7 @@ extern "C"
     float m[16];
     for (int i = 0; i < 16; i++)
       m[i] = base[i / 4][i % 4];
-    return xrDevice->updateViewerTransform(m);
+    return xrDevice->updateViewerBaseMatrix(m);
   }
 
   DLL_PUBLIC bool TransmuteNative_SetViewerStereoViewMatrixFromTRS(int eyeId, float *translation, float *rotation)
@@ -307,7 +299,7 @@ extern "C"
     float m[16];
     for (int i = 0; i < 16; i++)
       m[i] = base[i / 4][i % 4];
-    return xrDevice->updateViewerStereoViewMatrix(eyeId, m);
+    return xrDevice->updateViewMatrix(eyeId, m);
   }
 
   DLL_PUBLIC bool TransmuteNative_SetLocalTransformFromTRS(int id, float *translation, float *rotation)

@@ -217,7 +217,7 @@ namespace bindings
     }
     else if (typeStr == "viewer")
     {
-      auto transform = device->getViewerTransform();
+      auto transform = device->getViewerBaseMatrix();
       if (transform != nullptr)
       {
         auto array = Napi::Float32Array::New(env, 16);
@@ -292,7 +292,7 @@ namespace bindings
       return env.Undefined();
     }
 
-    auto viewerTransform = device->getViewerTransform();
+    auto viewerTransform = device->getViewerBaseMatrix();
     if (viewerTransform != nullptr)
     {
       auto array = Napi::Float32Array::New(env, 16);
@@ -336,7 +336,7 @@ namespace bindings
       return env.Undefined();
     }
 
-    auto viewMatrix = device->getViewerStereoViewMatrix(eyeId);
+    auto viewMatrix = device->getViewMatrixForEye(eyeId);
     if (viewMatrix != nullptr)
     {
       auto array = Napi::Float32Array::New(env, 16);
@@ -380,7 +380,7 @@ namespace bindings
       return env.Undefined();
     }
 
-    auto projectionMatrix = device->getViewerStereoProjectionMatrix(eyeId);
+    auto projectionMatrix = device->getProjectionMatrixForEye(eyeId);
     if (projectionMatrix != nullptr)
     {
       auto array = Napi::Float32Array::New(env, 16);
