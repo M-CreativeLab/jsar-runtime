@@ -1,6 +1,8 @@
 # JSAR Runtime
 
-The JSAR runtime is a SDK for embedding WebXR and Web 2D applications into Unity, UnrealEngine, RealityKit and standalone.
+The JSAR is a runtime SDK for embedding WebXR, WebGL and Web 2D applications into [Unity][], [UnrealEngine][], RealityKit and standalone.
+
+> Standalone means you could also use JSAR to pack your WebXR application as a standalone application.
 
 It's a 3D-first web rendering engine, that is easily to embed and use, and it supports:
 
@@ -18,6 +20,10 @@ It's a 3D-first web rendering engine, that is easily to embed and use, and it su
   - [x] RenderingContext2D
   - [ ] PDFRenderingContext
   - [ ] HTMLRenderingContext
+- [ ] 2D Application Rendering
+  - [ ] HTML5
+  - [ ] CSS3
+  - [ ] Web Component
 
 ## Getting Started
 
@@ -71,3 +77,8 @@ $ make darwin clean=yes
 ## License
 
 [Apache License 2.0](LICENSE)
+
+[WebXR]: https://immersiveweb.dev/
+[WebGL]: https://get.webgl.org/
+[Unity]: https://unity.com/
+[UnrealEngine]: https://www.unrealengine.com/
