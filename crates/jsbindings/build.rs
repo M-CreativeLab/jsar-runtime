@@ -2,6 +2,7 @@ use std::env;
 use std::fs;
 use std::io::Error;
 use std::path::Path;
+use std::path::PathBuf;
 
 extern crate napi_build;
 
@@ -17,9 +18,12 @@ fn main() {
     panic!("Error: File '{}' not found.", file_name);
   }
 
-  let destination_path = current_dir
-    .join("../../build/output/headers/crates/")
-    .join(file_name);
+  let destination_dir = PathBuf::from(&current_dir).join("../../build/output/headers/crates/");
+  if !destination_dir.exists() {
+    std::fs::create_dir_all(&destination_dir).expect("Failed to create the destination directory.");
+  }
+
+  let destination_path = destination_dir.join(file_name);
   match copy_file(&source_path, &destination_path) {
     Ok(_) => println!(
       "File '{}' copied to '{}'",
