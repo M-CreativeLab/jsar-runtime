@@ -63,9 +63,6 @@ namespace xr
     float m_ViewerTransform[16];
     std::map<int, FrameContextBySessionId *> m_Sessions;
     int m_CurrentStereoId = -1;
-    // Copy of the input source for this frame.
-    InputSource m_GazeInputSource;
-    std::vector<InputSource> m_HandInputSources;
   };
 
   class MultiPassFrame : public DeviceFrame

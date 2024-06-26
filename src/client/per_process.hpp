@@ -24,6 +24,7 @@
 #include "common/events/sender.hpp"
 #include "common/font/cache.hpp"
 #include "common/xr/types.hpp"
+#include "common/xr/input_sources.hpp"
 #include "common/xr/message.hpp"
 #include "common/xr/sender.hpp"
 #include "common/xr/receiver.hpp"
@@ -107,6 +108,7 @@ public: // WebXR methods
   bool flushXrFrame();
   bool finishXrFrame(xr::TrXRFrameRequest* frameRequest);
   bool isInXrFrame();
+  xr::TrXRInputSourcesZone* getXRInputSourcesZone();
 
   int getFramebufferWidth();
   int getFramebufferHeight();
@@ -172,7 +174,7 @@ private: // xr fields
   xr::TrXRCommandSender *xrCommandChanSender = nullptr;
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
   xr::TrXRFrameRequest *currentXrFrameRequest = nullptr;
-  std::unique_ptr<TrZone> xrInputSourcesZoneClient;
+  std::unique_ptr<xr::TrXRInputSourcesZone> xrInputSourcesZoneClient;
   int framebufferWidth = 0;
   int framebufferHeight = 0;
 

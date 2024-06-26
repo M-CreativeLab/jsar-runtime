@@ -201,6 +201,8 @@ namespace bindings
 
   XRInputSourceArray::XRInputSourceArray(napi_env env, napi_value value) : Napi::Array(env, value)
   {
+    clientContext = TrClientContextPerProcess::Get();
+    assert(clientContext != nullptr);
   }
 
   XRInputSourceArray::~XRInputSourceArray()
@@ -212,12 +214,20 @@ namespace bindings
                                               InputSourcesChangedCallback onChangedCallback)
   {
     Napi::Env env = Env();
+    auto inputSourcesZone = clientContext->getXRInputSourcesZone();
+    auto gazeInputSource = inputSourcesZone->getGazeInputSource();
+    fprintf(stdout, "hand: %d\n", gazeInputSource->handness);
+    fprintf(stdout, "targetRayMode: %d\n", gazeInputSource->targetRayMode);
+
+    auto m = gazeInputSource->targetRayBaseMatrix;
+    fprintf(stdout, "targetRayTransform: (%f %f %f %f)\n", m[0], m[1], m[2], m[3]);
+
     if (Length() == 0)
     {
       vector<XRInputSource *> added;
-      auto gazeInputSource = XRInputSource::Unwrap(
-          XRInputSource::NewInstance(env, frame, session, [](xr::TrXRFrameRequest *frameRequest) -> xr::TrXRInputSource *
-                                     { return frameRequest->getGazeInputSource(); }));
+      // auto gazeInputSource = XRInputSource::Unwrap(
+      //     XRInputSource::NewInstance(env, frame, session, [](xr::TrXRFrameRequest *frameRequest) -> xr::TrXRInputSource *
+      //                                { return frameRequest->getGazeInputSource(); }));
       // auto leftHandInputSource = XRInputSource::Unwrap(
       //     XRInputSource::NewInstance(env, frame, session, [](xr::TrXRFrameRequest *frameRequest) -> xr::TrXRInputSource *
       //                                { return frameRequest->getHandInputSource(xr::TrHandness::Left); }));
@@ -225,7 +235,7 @@ namespace bindings
       //     XRInputSource::NewInstance(env, frame, session, [](xr::TrXRFrameRequest *frameRequest) -> xr::TrXRInputSource *
       //                                { return frameRequest->getHandInputSource(xr::TrHandness::Right); }));
 
-      added.push_back(gazeInputSource);
+      // added.push_back(gazeInputSource);
       // added.push_back(leftHandInputSource);
       // added.push_back(rightHandInputSource);
       // TODO: Add gamepad input sources

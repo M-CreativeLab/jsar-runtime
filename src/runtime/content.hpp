@@ -158,6 +158,7 @@ private: // event channel
 
 private: // command buffer channel
   atomic<bool> commandBuffersWorkerRunning = false;
+  atomic<bool> pauseCommandBuffersReceiving = false;
   std::unique_ptr<thread> commandBuffersRecvWorker;
 
 private: // XR command channel

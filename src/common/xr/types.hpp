@@ -322,9 +322,6 @@ namespace xr
     void setViewerBaseMatrix(glm::mat4 matrix) { setViewerBaseMatrix(glm::value_ptr(matrix)); }
 
   public: // Methods for client-side only: read matrices
-    TrXRInputSource *getGazeInputSource() { return nullptr; }
-    TrXRInputSource *getHandInputSource(TrHandness handness) { return nullptr; }
-    TrXRInputSource *getGamepadInputSource(int id) { return nullptr; }
     TrXRFrameRenderingInfo createRenderingInfo(int viewIndex) { return TrXRFrameRenderingInfo(sessionId, stereoId, viewIndex); }
 
   public:

@@ -129,14 +129,16 @@ namespace xr
 
   public: // Input sources
     string getInputSourcesZonePath();
-    InputSource *getGazeInputSource();
-    InputSource *getHandInputSource(Handness handness);
-    bool addGamepadInputSource(int id, InputSource &gamepadInputSource);
-    InputSource *getGamepadInputSource(int id);
-    bool removeGamepadInputSource(int id);
-    bool addScreenInputSource(int id, InputSource &screenInputSource);
-    InputSource *getScreenInputSource(int id);
-    bool removeScreenInputSource(int id);
+    void syncInputSourcesToZone();
+    TrXRInputSource *getGazeInputSource();
+    TrXRInputSource *getHandInputSource(int id);
+    TrXRInputSource *getHandInputSource(TrHandness handness);
+    TrXRInputSource *getGamepadInputSource(int id);
+    TrXRInputSource *getScreenInputSource(int id);
+    void addGamepadInputSource(TrXRInputSource &newInputSource);
+    void removeGamepadInputSource(int id);
+    void addScreenInputSource(TrXRInputSource &newInputSource);
+    void removeScreenInputSource(int id);
 
   public: // Command channel
     int getCommandChanPort();
@@ -193,21 +195,13 @@ namespace xr
      */
     vector<TrXRSession *> m_Sessions;
     /**
+     * Input sources fields
+     */
+    std::unique_ptr<TrXRInputSourcesZone> m_InputSourcesZone;
+    /**
      * A mutex to ensure the above data is thread-safe.
      */
     mutex m_Mutex;
-
-  private:
-    /**
-     * Input sources fields
-     */
-    std::unique_ptr<TrZone> m_InputSourcesZone;
-    // input source for gaze
-    InputSource *m_GazeInputSource;
-    // input sources(2) for hands
-    std::vector<InputSource *> m_HandInputSources;
-    std::map<int, InputSource *> m_ScreenInputSources;
-    std::map<int, InputSource *> m_GamepadInputSources;
 
   private: // command channel
     std::unique_ptr<ipc::TrOneShotServer<TrXRCommandMessage>> m_CommandChanServer = nullptr;

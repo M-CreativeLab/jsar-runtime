@@ -1,6 +1,8 @@
 #pragma once
 
 #include <napi.h>
+#include "client/per_process.hpp"
+#include "common/xr/input_sources.hpp"
 #include "common.hpp"
 
 namespace bindings
@@ -52,6 +54,9 @@ namespace bindings
 
   public:
     void updateInputSources(XRFrame *frame, XRSession *session, InputSourcesChangedCallback onChangedCallback);
+
+  private:
+    TrClientContextPerProcess* clientContext = nullptr;
 
   private:
     static Napi::FunctionReference *constructor;

@@ -41,7 +41,7 @@ void DEBUG(const char *tag, const char *format, ...)
   vsnprintf(buffer, length + 1, format, args);
 
   if (s_UnityLog == nullptr)
-    fprintf(stdout, "[#%d](%s) %s\n", getpid(), tag, buffer);
+    fprintf(stdout, "[%s] %s\n", tag, buffer);
   else
     UNITY_LOG(s_UnityLog, buffer);
 #endif

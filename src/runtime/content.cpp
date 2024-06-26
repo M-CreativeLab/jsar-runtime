@@ -456,9 +456,11 @@ bool TrContentManager::initialize()
     while (commandBuffersWorkerRunning)
     {
       /**
-       * TODO: If there is no content, we should not start the worker.
+       * No contents or command buffers receving is paused, just sleep for timeout.
+       * 
+       * TODO: If no contents, not starting the TrCommandBuffersWorker thread?
        */
-      if (contents.empty())
+      if (contents.empty() || pauseCommandBuffersReceiving == true)
       {
         this_thread::sleep_for(chrono::milliseconds(timeout));
         continue;
@@ -534,22 +536,30 @@ bool TrContentManager::tickOnFrame()
 {
   // Check the status of each content runtime.
   lock_guard<mutex> lock(contentsMutex);
-  for (auto it = contents.begin(); it != contents.end();)
+
+  /**
+   * Pausing the command buffers receiving when in host frame.
+   */
+  pauseCommandBuffersReceiving = true;
   {
-    auto content = *it;
-    if (content->pid > 0 && content->testClientProcessExitOnFrame())
+    for (auto it = contents.begin(); it != contents.end();)
     {
-      auto renderer = constellation->getRenderer();
-      renderer->removeContentRenderer(content);
-      delete content;
-      it = contents.erase(it);
-    }
-    else
-    {
-      content->tickOnFrame();
-      ++it;
+      auto content = *it;
+      if (content->pid > 0 && content->testClientProcessExitOnFrame())
+      {
+        auto renderer = constellation->getRenderer();
+        renderer->removeContentRenderer(content);
+        delete content;
+        it = contents.erase(it);
+      }
+      else
+      {
+        content->tickOnFrame();
+        ++it;
+      }
     }
   }
+  pauseCommandBuffersReceiving = false;
   return true;
 }
 

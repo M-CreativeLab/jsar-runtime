@@ -416,20 +416,14 @@ namespace bindings
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
+    assert(clientContext != nullptr);
 
-    auto device = xr::Device::GetInstance();
-    if (device == nullptr)
-    {
-      Napi::TypeError::New(env, "XRDeviceNative::GetGazeInputSource: device is not initialized")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
-    auto gazeInputSource = device->getGazeInputSource();
+    auto inputSourcesZone = clientContext->getXRInputSourcesZone();
+    auto gazeInputSource = inputSourcesZone->getGazeInputSource();
     auto jsInputSource = Napi::Object::New(env);
     jsInputSource.Set("id", Napi::Number::New(env, gazeInputSource->id));
-    jsInputSource.Set("targetRayMode", Napi::Number::New(env, gazeInputSource->targetRayMode));
-    jsInputSource.Set("handedness", Napi::Number::New(env, gazeInputSource->handness));
+    // jsInputSource.Set("targetRayMode", Napi::Number::New(env, gazeInputSource->targetRayMode));
+    // jsInputSource.Set("handedness", Napi::Number::New(env, gazeInputSource->handness));
     return jsInputSource;
   }
 

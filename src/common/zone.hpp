@@ -2,6 +2,7 @@
 
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <semaphore.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstring>
@@ -16,23 +17,49 @@ enum class TrZoneType
   Client,
 };
 
+/**
+ * Zone is a mmap-based method to share the C/C++ struct/class in processes.
+ */
+template <typename DataType>
 class TrZone
 {
 public:
   TrZone(string filename, TrZoneType type) : type(type), filename(filename)
   {
-    handleFd = open(filename.c_str(), O_CREAT | O_RDWR, 0666);
-    if (type == TrZoneType::Server)
-      ftruncate(handleFd, size);
-
-    int mode = type == TrZoneType::Server ? PROT_READ | PROT_WRITE : PROT_READ;
-    void *addr = mmap(NULL, size, mode, MAP_SHARED, handleFd, 0);
-    if (addr == MAP_FAILED)
-      fprintf(stdout, "failed to create shared map.\n");
-    else
-      memoryAddr = addr;
+    initHandle();
+    resize();
+    remap();
   }
-  ~TrZone()
+  TrZone(TrZone &that) : type(that.type), filename(that.filename)
+  {
+  }
+  virtual ~TrZone()
+  {
+    deinitHandle();
+    unmap();
+  }
+
+protected:
+  virtual size_t getDataSize() { return sizeof(DataType); }
+
+public:
+  string getFilename()
+  {
+    return filename;
+  }
+  void syncData()
+  {
+    if (memoryAddr != nullptr && data != nullptr)
+      memcpy(memoryAddr, reinterpret_cast<void *>(data.get()), memorySize);
+  }
+  DataType *getData() { return reinterpret_cast<DataType *>(memoryAddr); }
+
+private:
+  void initHandle()
+  {
+    handleFd = open(filename.c_str(), O_CREAT | O_RDWR, 0666);
+  }
+  void deinitHandle()
   {
     if (handleFd > 0)
     {
@@ -40,32 +67,44 @@ public:
       if (type == TrZoneType::Server)
         unlink(filename.c_str());
     }
-    if (memoryAddr != nullptr)
+  }
+  void resize()
+  {
+    memorySize = getDataSize();
+    if (type == TrZoneType::Server)
+      ftruncate(handleFd, memorySize);
+  }
+  void remap()
+  {
+    unmap(); // unmap first if needed.
+
+    int mode = type == TrZoneType::Server ? PROT_READ | PROT_WRITE : PROT_READ;
+    void *addr = mmap(NULL, memorySize, mode, MAP_SHARED, handleFd, 0);
+    if (addr == MAP_FAILED || addr == nullptr)
     {
-      munmap(memoryAddr, size);
+      DEBUG(LOG_TAG_ERROR, "Failed to create map for %s", filename.c_str());
+      return;
     }
+    memoryAddr = addr;
+  }
+  void unmap()
+  {
+    if (memoryAddr == nullptr)
+      return;
+    munmap(memoryAddr, memorySize);
+    memoryAddr = nullptr;
   }
 
-public:
-  string getFilename()
-  {
-    return filename;
-  }
-  void write()
-  {
-    std::string message = "Hello from parent process!";
-    memcpy(memoryAddr, message.c_str(), message.size());
-  }
-  void read()
-  {
-    char *message = reinterpret_cast<char *>(memoryAddr);
-    DEBUG(LOG_TAG_ERROR, "Reading zone(%s): %s at %p", filename.c_str(), message, memoryAddr);
-  }
+protected:
+  std::unique_ptr<DataType> data = nullptr;
 
 private:
   TrZoneType type;
   string filename;
   int handleFd;
-  size_t size = 4096;
+  sem_t *semaphore = nullptr;
+
+private:
   void *memoryAddr = nullptr;
+  size_t memorySize = 1024;
 };

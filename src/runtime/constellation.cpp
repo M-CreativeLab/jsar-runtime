@@ -69,10 +69,11 @@ void TrConstellation::tick()
 {
   if (initialized == false)
     return;
-  if (contentManager != nullptr)
-    contentManager->tickOnFrame();
-  if (renderer != nullptr)
-    renderer->tick();
+  contentManager->tickOnFrame();
+  renderer->tick();
+
+  if (xrDevice->enabled())
+    xrDevice->syncInputSourcesToZone();
 }
 
 TrEventTarget *TrConstellation::getNativeEventTarget()

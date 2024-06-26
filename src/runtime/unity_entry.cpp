@@ -333,15 +333,15 @@ extern "C"
     if (xrDevice == NULL)
       return;
 
-    xr::Handness id = handness == 0 ? xr::Handness::Left : xr::Handness::Right;
-    auto hand = xrDevice->getHandInputSource(id);
+    auto hand = xrDevice->getHandInputSource(handness);
     if (hand == nullptr)
       return;
     if (joint < 0 || joint >= 25)
       return; // out of range
 
     float defaultScale[3] = {1, 1, 1};
-    hand->joints[joint].baseMatrix = math::makeMatrixFromTRS(translation, rotation, defaultScale, s_WorldScalingFactor);
+    auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, defaultScale, s_WorldScalingFactor);
+    hand->joints[joint].setBaseMatrix(baseMatrix);
   }
 
   DLL_PUBLIC void TransmuteNative_SetHandInputRayPose(int handness, float *translation, float *rotation)
@@ -350,11 +350,11 @@ extern "C"
     if (xrDevice == NULL)
       return;
 
-    xr::Handness id = handness == 0 ? xr::Handness::Left : xr::Handness::Right;
-    auto hand = xrDevice->getHandInputSource(id);
+    auto hand = xrDevice->getHandInputSource(handness);
     if (hand == nullptr)
       return;
-    hand->targetRayBaseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
+    auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
+    hand->setTargetRayBaseMatrix(baseMatrix);
   }
 
   DLL_PUBLIC void TransmuteNative_SetHandInputGripPose(int handness, float *translation, float *rotation)
@@ -363,11 +363,11 @@ extern "C"
     if (xrDevice == NULL)
       return;
 
-    xr::Handness id = handness == 0 ? xr::Handness::Left : xr::Handness::Right;
-    auto hand = xrDevice->getHandInputSource(id);
+    auto hand = xrDevice->getHandInputSource(handness);
     if (hand == nullptr)
       return;
-    hand->gripBaseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
+    auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
+    hand->setGripBaseMatrix(baseMatrix);
   }
 
   DLL_PUBLIC void TransmuteNative_SetHandInputActionState(int handness, int actionType, int state)
@@ -376,8 +376,7 @@ extern "C"
     if (xrDevice == NULL)
       return;
 
-    xr::Handness id = handness == 0 ? xr::Handness::Left : xr::Handness::Right;
-    auto hand = xrDevice->getHandInputSource(id);
+    auto hand = xrDevice->getHandInputSource(handness);
     if (hand == nullptr)
       return;
 

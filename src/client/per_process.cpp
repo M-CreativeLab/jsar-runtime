@@ -301,8 +301,7 @@ void TrClientContextPerProcess::start()
     xrCommandChanClient = ipc::TrOneShotClient<xr::TrXRCommandMessage>::MakeAndConnect(xrDeviceInit.commandChanPort, false);
     xrCommandChanSender = new xr::TrXRCommandSender(xrCommandChanClient);
     xrCommandChanReceiver = new xr::TrXRCommandReceiver(xrCommandChanClient);
-    xrInputSourcesZoneClient = std::make_unique<TrZone>(xrDeviceInit.inputSourcesZonePath, TrZoneType::Client);
-    xrInputSourcesZoneClient->read();
+    xrInputSourcesZoneClient = std::make_unique<xr::TrXRInputSourcesZone>(xrDeviceInit.inputSourcesZonePath, TrZoneType::Client);
   }
 
   // Start the frames listener
@@ -448,6 +447,11 @@ bool TrClientContextPerProcess::finishXrFrame(xr::TrXRFrameRequest *frameRequest
 bool TrClientContextPerProcess::isInXrFrame()
 {
   return currentXrFrameRequest != nullptr;
+}
+
+xr::TrXRInputSourcesZone* TrClientContextPerProcess::getXRInputSourcesZone()
+{
+  return xrInputSourcesZoneClient.get();
 }
 
 int TrClientContextPerProcess::getFramebufferWidth() { return framebufferWidth; }

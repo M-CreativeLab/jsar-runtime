@@ -19,15 +19,6 @@ namespace xr
 
   DeviceFrame::DeviceFrame(xr::Device *device) : m_XrDevice(device)
   {
-    // Copy the input sources for this frame from the device.
-    auto gazeInputSource = device->getGazeInputSource();
-    m_GazeInputSource = gazeInputSource != nullptr ? InputSource(gazeInputSource) : InputSource();
-
-    auto leftHandInputSource = device->getHandInputSource(Handness::Left);
-    m_HandInputSources.push_back(leftHandInputSource != nullptr ? InputSource(leftHandInputSource) : InputSource());
-
-    auto rightHandInputSource = device->getHandInputSource(Handness::Right);
-    m_HandInputSources.push_back(rightHandInputSource != nullptr ? InputSource(rightHandInputSource) : InputSource());
   }
   DeviceFrame::~DeviceFrame() {}
 
@@ -72,19 +63,6 @@ namespace xr
   void DeviceFrame::setStereoId(int id)
   {
     m_CurrentStereoId = id;
-  }
-
-  InputSource &DeviceFrame::getGazeInputSource()
-  {
-    return m_GazeInputSource;
-  }
-
-  InputSource &DeviceFrame::getHandInputSource(Handness handness)
-  {
-    if (handness == Handness::Left)
-      return m_HandInputSources[0];
-    else
-      return m_HandInputSources[1];
   }
 
   MultiPassFrame::MultiPassFrame(

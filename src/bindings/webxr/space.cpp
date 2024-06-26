@@ -381,7 +381,7 @@ namespace bindings
 
   void XRJointSpace::onPoseUpdate(XRSession *session, xr::TrXRFrameRequest *frameRequest)
   {
-    baseMatrix = inputSource->joints[static_cast<int>(index)].baseMatrix;
+    baseMatrix = glm::make_mat4(inputSource->joints[static_cast<int>(index)].baseMatrix);
     XRSpaceBase<XRJointSpace>::onPoseUpdate(session, frameRequest);
   }
 
@@ -432,9 +432,9 @@ namespace bindings
   void XRTargetRayOrGripSpace::onPoseUpdate(XRSession *session, xr::TrXRFrameRequest *frameRequest)
   {
     if (subType == XRSpaceSubType::GRIP)
-      baseMatrix = inputSource->gripBaseMatrix;
+      baseMatrix = glm::make_mat4(inputSource->gripBaseMatrix);
     else if (subType == XRSpaceSubType::TARGET_RAY)
-      baseMatrix = inputSource->targetRayBaseMatrix;
+      baseMatrix = glm::make_mat4(inputSource->targetRayBaseMatrix);
     XRSpaceBase<XRTargetRayOrGripSpace>::onPoseUpdate(session, frameRequest);
   }
 

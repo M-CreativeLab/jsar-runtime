@@ -22,23 +22,6 @@ namespace xr
   Device::Device(TrConstellation *constellation)
       : m_Constellation(constellation), m_FieldOfView(0.0f)
   {
-    // Initialize the input sources
-    {
-      m_GazeInputSource = new InputSource();
-      m_GazeInputSource->handness = Handness::None;
-      m_GazeInputSource->targetRayMode = TargetRayMode::Gaze;
-
-      auto leftHandInputSource = new InputSource();
-      leftHandInputSource->handness = Handness::Left;
-      leftHandInputSource->targetRayMode = TargetRayMode::TrackedPointer;
-      m_HandInputSources.push_back(leftHandInputSource);
-
-      auto rightHandInputSource = new InputSource();
-      rightHandInputSource->handness = Handness::Right;
-      rightHandInputSource->targetRayMode = TargetRayMode::TrackedPointer;
-      m_HandInputSources.push_back(rightHandInputSource);
-    }
-
     // Initialize the command chan server
     m_CommandChanServer = std::make_unique<ipc::TrOneShotServer<TrXRCommandMessage>>("xrCommandChan");
   }
@@ -51,15 +34,6 @@ namespace xr
         delete session;
       m_Sessions.clear();
     }
-
-    // Clear the input sources
-    {
-      delete m_GazeInputSource;
-      m_GazeInputSource = nullptr;
-      for (auto inputSource : m_HandInputSources)
-        delete inputSource;
-      m_HandInputSources.clear();
-    }
   }
 
   void Device::initialize(bool enabled, TrDeviceInit &init)
@@ -69,8 +43,7 @@ namespace xr
 
     // Initialize the input sources related fields.
     auto &constellationOptions = m_Constellation->getOptions();
-    m_InputSourcesZone = std::make_unique<TrZone>(constellationOptions.getZoneFilename("inputsources"), TrZoneType::Server);
-    m_InputSourcesZone->write();
+    m_InputSourcesZone = std::make_unique<TrXRInputSourcesZone>(constellationOptions.getZoneFilename("inputsources"), TrZoneType::Server);
 
     // Start command client watcher.
     startCommandClientWatcher();
@@ -238,8 +211,11 @@ namespace xr
      *
      * TODO: support the eye tracking?
      */
-    if (m_GazeInputSource != nullptr)
-      m_GazeInputSource->targetRayBaseMatrix = math::createMat4FromArray(baseMatrixValues);
+    if (m_InputSourcesZone != nullptr)
+    {
+      auto gazeInputSource = m_InputSourcesZone->getGazeInputSource();
+      gazeInputSource->setTargetRayBaseMatrix(baseMatrixValues);
+    }
     return true;
   }
 
@@ -306,59 +282,18 @@ namespace xr
       return m_InputSourcesZone->getFilename();
   }
 
-  InputSource *Device::getGazeInputSource()
-  {
-    return m_GazeInputSource;
-  }
+  void Device::syncInputSourcesToZone() { return m_InputSourcesZone->syncData(); }
+  TrXRInputSource *Device::getGazeInputSource() { return m_InputSourcesZone->getGazeInputSource(); }
+  TrXRInputSource *Device::getHandInputSource(int id) { return m_InputSourcesZone->getHandInputSource(id); }
+  TrXRInputSource *Device::getHandInputSource(TrHandness handness) { return m_InputSourcesZone->getHandInputSource(handness); }
+  TrXRInputSource *Device::getGamepadInputSource(int id) { return m_InputSourcesZone->getGamepadInputSource(id); }
+  TrXRInputSource *Device::getScreenInputSource(int id) { return m_InputSourcesZone->getScreenInputSource(id); }
+  void Device::addGamepadInputSource(TrXRInputSource &newInputSource) { return m_InputSourcesZone->addGamepadInputSource(newInputSource); }
+  void Device::removeGamepadInputSource(int id) { m_InputSourcesZone->removeGamepadInputSource(id); }
+  void Device::addScreenInputSource(TrXRInputSource &newInputSource) { m_InputSourcesZone->addScreenInputSource(newInputSource); }
+  void Device::removeScreenInputSource(int id) { m_InputSourcesZone->removeScreenInputSource(id); }
 
-  InputSource *Device::getHandInputSource(Handness handness)
-  {
-    if (handness == Handness::Left)
-      return m_HandInputSources[0];
-    else if (handness == Handness::Right)
-      return m_HandInputSources[1];
-    return m_HandInputSources[0];
-  }
-
-  bool Device::addGamepadInputSource(int id, InputSource &inputSource)
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    m_GamepadInputSources[id] = new InputSource(inputSource);
-    return true;
-  }
-
-  bool Device::removeGamepadInputSource(int id)
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    m_GamepadInputSources.erase(id);
-    return true;
-  }
-
-  InputSource *Device::getGamepadInputSource(int id)
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    return m_GamepadInputSources[id];
-  }
-
-  bool Device::addScreenInputSource(int id, InputSource &inputSource)
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    m_ScreenInputSources[id] = new InputSource(inputSource);
-    return true;
-  }
-
-  bool Device::removeScreenInputSource(int id)
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    m_ScreenInputSources.erase(id);
-    return true;
-  }
-
-  int Device::getCommandChanPort()
-  {
-    return m_CommandChanServer->getPort();
-  }
-
+  int Device::getCommandChanPort() { return m_CommandChanServer->getPort(); }
   void Device::startCommandClientWatcher()
   {
     m_CommandClientWatcherRunning = true;
@@ -406,12 +341,6 @@ namespace xr
       DEBUG(LOG_TAG_XR, "Unknown command type: %d", (int)type);
       break;
     }
-  }
-
-  InputSource *Device::getScreenInputSource(int id)
-  {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    return m_ScreenInputSources[id];
   }
 
   xr::IsSessionSupportedResponse Device::onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request, TrContentRenderer *contentRenderer)
