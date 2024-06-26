@@ -6,9 +6,12 @@ const {
   XRWebGLLayer: XRWebGLLayerImpl,
 } = process._linkedBinding('transmute:webxr');
 
-let xrDevice: XRDevice = new XRDevice();
-export async function prepareXRSystem(): Promise<boolean> {
-  return await xrDevice.waitForReady();
+let xrDevice: XRDevice = null;
+export async function prepareXRSystem(): Promise<void> {
+  if (xrDevice != null) {
+    throw new TypeError('Only 1 XRDevice in a process.');
+  }
+  xrDevice = new XRDevice();
 }
 
 export function createBondXRSystem(): XRSystem {

@@ -1,6 +1,5 @@
 #include "hand.hpp"
 #include "space.hpp"
-#include "xr/input_source.hpp"
 
 namespace bindings
 {

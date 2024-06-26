@@ -1,7 +1,5 @@
 
-import * as logger from '@transmute/logger';
 import { getClientContext } from '@transmute/env';
-import * as renderer from '@transmute/renderer';
 
 const {
   XRDeviceNative,
@@ -26,16 +24,6 @@ export class XRDevice {
 
   constructor() {
     this.#handle = new XRDeviceNative();
-  }
-
-  get handle(): Transmute.XRDeviceNative {
-    return this.#handle;
-  }
-
-  /**
-   * When a `XRDevice` is created, it takes some time to initialize and be ready, the caller needs to wait for this to happen.
-   */
-  async waitForReady(): Promise<boolean> {
     const clientCtx = getClientContext();
     if (clientCtx.xrDevice?.enabled) {
       this.enabled = true;
@@ -43,18 +31,13 @@ export class XRDevice {
     } else {
       this.enabled = false;
     }
-    logger.info(`[XRDevice] enabled: ${this.enabled ? 'YES' : 'NO'}`);
-    logger.info(`[XRDevice] active: ${clientCtx.xrDevice?.active ? 'YES' : 'NO'}`);
-    logger.info(`[XRDevice] Stereo Rendering Mode: ${this.stereoRenderingMode}`);
-    return this.enabled;
+    console.info(`[XRDevice] enabled: ${this.enabled ? 'YES' : 'NO'}`);
+    console.info(`[XRDevice] active: ${clientCtx.xrDevice?.active ? 'YES' : 'NO'}`);
+    console.info(`[XRDevice] Stereo Rendering Mode: ${this.stereoRenderingMode}`);
   }
 
-  getActiveEye(): XREye {
-    if (!this.isRenderingInMultiPass()) {
-      return 'none';
-    }
-    const eyeId = this.#handle.getActiveEyeId();
-    return eyeId === 0 ? 'left' : 'right';
+  get handle(): Transmute.XRDeviceNative {
+    return this.#handle;
   }
 
   /**
@@ -86,60 +69,6 @@ export class XRDevice {
       throw new Error('Failed to request session');
     }
     return sessionId;
-  }
-
-  doesSessionSupportReferenceSpace(_sessionId: number, referenceSpaceType: XRReferenceSpaceType): boolean {
-    if (referenceSpaceType === 'local' || referenceSpaceType === 'viewer') {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  requestStageBounds(): object {
-    return null;
-  }
-
-  async requestFrameOfReferenceTransform(sessionId: number, type: XRReferenceSpaceType, options): Promise<Float32Array> {
-    return this.#handle.requestFrameOfReferenceTransform(sessionId, type, options);
-  }
-
-  requestAnimationFrame(callback: Transmute.FrameRequestCallback): number {
-    return renderer.requestAnimationFrame(callback);
-  }
-
-  cancelAnimationFrame(_handle: number): void {
-    renderer.cancelAnimationFrame(_handle);
-  }
-
-  /**
-   * Called when a XRSession has a `baseLayer` property set.
-   *
-   * @param {number} sessionId
-   * @param {XRWebGLLayer} layer
-   */
-  onBaseLayerSet(_sessionId: number, _layer: XRWebGLLayer): void {
-    // Nothing to do here
-  }
-
-  getViewport(sessionId: number, eye: XREye, _layer: XRWebGLLayer, target: object, viewIndex: number): boolean {
-    const viewport = this.#handle.getViewport(sessionId, eye, viewIndex);
-    Object.assign(target, viewport);
-    return true;
-  }
-
-  getViewSpaces(_mode: XRSessionMode): XRSpace[] {
-    return null;
-  }
-
-  getInputSources(): XRInputSource[] {
-    const r = this.#handle.getGazeInputSource();
-    // logger.info('gaze input sources =>', r);
-    return [];
-  }
-
-  getInputPose(_inputSource: any, _coordinateSystem: any, _poseType: any): XRPose {
-    return null;
   }
 
   /**
