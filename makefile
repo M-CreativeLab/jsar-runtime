@@ -6,10 +6,11 @@ else  # Linux
 endif
 JOBS := $(shell expr $(CORES) / 2)
 
-crates:
-	cargo build --release
+define build_crates
+	cargo build --release --target=$(1)
+endef
 
-ifeq ($(UNAME), Darwin)
+define create_universal_apple_binary
 	@echo "Creating universal-apple-darwin..."
 	mkdir -p build/output/crates/universal-apple-darwin/release
 	lipo -create -output build/output/crates/universal-apple-darwin/release/libjsar_jsbindings.a \
@@ -18,7 +19,7 @@ ifeq ($(UNAME), Darwin)
 	lipo -create -output build/output/crates/universal-apple-darwin/release/libjsar_jsbindings.a \
 		build/output/crates/aarch64-apple-darwin/release/libjsar_jsbindings.a \
 		build/output/crates/x86_64-apple-darwin/release/libjsar_jsbindings.a
-endif
+endef
 
 jsbundle:
 	@echo "Building jsbundle..."
@@ -27,18 +28,21 @@ jsbundle:
 		--minify=$(minify) \
 		--without-pack=$(without-pack)
 
-darwin: crates
+darwin:
 	@echo "Building for darwin(JOBS=${JOBS})..."
+	@$(call build_crates,aarch64-apple-darwin)
+	@$(call build_crates,x86_64-apple-darwin)
+	@$(call create_universal_apple_binary)
 	make -C ./build darwin JOBS=${JOBS}
 
-android: crates
+android:
 	@echo "Building for android(JOBS=${JOBS})..."
+	@$(call build_crates,aarch64-linux-android)
 	make -C ./build android JOBS=${JOBS}
 
-windows: crates
+windows:
 	@echo "Building for windows(JOBS=${JOBS})..."
+	@$(call build_crates,x86_64-pc-windows-msvc)
 	make -C ./build windows JOBS=${JOBS}
 
-all: jsbundle crates darwin android
-
-.PHONY: jsbundle crates darwin android all
+.PHONY: jsbundle darwin android all
