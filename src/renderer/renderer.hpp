@@ -34,6 +34,8 @@ namespace renderer
     void tick();
     void shutdown();
     void setLogFilter(string filterExpr);
+    void enableHostContextSummary();
+    void enableAppContextSummary();
     void configureClientFrameRate(uint32_t value);
     uint32_t getFps();
     uint32_t getUptime();
@@ -94,6 +96,8 @@ namespace renderer
     TrConstellation *constellation = nullptr;
     OpenGLHostContextStorage *glHostContext = nullptr;
     vector<TrContentRenderer *> contentRenderers;
+    bool isHostContextSummaryEnabled = false;
+    bool isAppContextSummaryEnabled = false;
     uint32_t clientDefaultFrameRate = 60;
 
   private: // fields for frame request

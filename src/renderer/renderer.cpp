@@ -51,7 +51,8 @@ namespace renderer
     calcFps();
 
     glHostContext->Record();
-    glHostContext->Print();
+    if (isHostContextSummaryEnabled)
+      glHostContext->Print();
     {
       lock_guard<mutex> lock(contentRendererMutex);
       for (auto contentRenderer : contentRenderers)
@@ -69,6 +70,9 @@ namespace renderer
   {
     // TODO
   }
+
+  void TrRenderer::enableHostContextSummary() { isHostContextSummaryEnabled = true; }
+  void TrRenderer::enableAppContextSummary() { isAppContextSummaryEnabled = true; }
 
   void TrRenderer::configureClientFrameRate(uint32_t value)
   {

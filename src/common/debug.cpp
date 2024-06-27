@@ -26,11 +26,6 @@ IUnityLog *GET_UNITY_LOG_HANDLE()
 
 void DEBUG(const char *tag, const char *format, ...)
 {
-  if (
-      strcmp(tag, "TR_GLES") == 0 ||
-      strcmp(tag, "TR_RAPI") == 0)
-    return;
-
   va_list args;
   va_start(args, format);
 #ifdef __ANDROID__

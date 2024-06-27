@@ -529,7 +529,7 @@ private:
 		auto target = req->target;
 		auto attachment = req->attachment;
 		auto renderbuffertarget = req->renderbufferTarget;
-		auto renderbuffer = req->renderbuffer;
+		auto renderbuffer = m_GLObjectManager.FindRenderbuffer(req->renderbuffer);
 
 		glFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
 		if (options.printsCall)
@@ -543,12 +543,14 @@ private:
 		auto target = req->target;
 		auto attachment = req->attachment;
 		auto textarget = req->textarget;
-		auto texture = req->texture;
+		auto texture = m_GLObjectManager.FindTexture(req->texture);
 		auto level = req->level;
 		glFramebufferTexture2D(target, attachment, textarget, texture, level);
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::FramebufferTexture2D(0x%x, %d, %d, %d, level=%d)",
+		{
+			DEBUG(DEBUG_TAG, "[%d] GL::FramebufferTexture2D(0x%x, 0x%x, 0x%x, %d, level=%d)",
 						options.isDefaultQueue, target, attachment, textarget, texture, level);
+		}
 	}
 	void OnCheckFramebufferStatus(CheckFramebufferStatusCommandBufferRequest *req,
 																renderer::TrContentRenderer *reqContentRenderer,
@@ -561,26 +563,23 @@ private:
 	}
 	void OnCreateRenderbuffer(CreateRenderbufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		GLuint ret;
-		glGenRenderbuffers(1, &ret);
-		reqContentRenderer->getOpenGLContext()->RecordRenderbufferOnCreated(ret);
-
-		// createRenderbufferCommandBuffer->m_RenderbufferId = ret;
+		GLuint renderbuffer = m_GLObjectManager.CreateRenderbuffer(req->clientId);
+		reqContentRenderer->getOpenGLContext()->RecordRenderbufferOnCreated(renderbuffer);
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::CreateRenderbuffer: %d", options.isDefaultQueue, ret);
+			DEBUG(DEBUG_TAG, "[%d] GL::CreateRenderbuffer() => %d", options.isDefaultQueue, renderbuffer);
 	}
 	void OnDeleteRenderbuffer(DeleteRenderbufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		glDeleteRenderbuffers(1, &req->renderbuffer);
-		reqContentRenderer->getOpenGLContext()->RecordRenderbufferOnDeleted(req->renderbuffer);
-
+		GLuint renderbuffer = m_GLObjectManager.FindRenderbuffer(req->renderbuffer);
+		m_GLObjectManager.DeleteRenderbuffer(req->renderbuffer);
+		reqContentRenderer->getOpenGLContext()->RecordRenderbufferOnDeleted(renderbuffer);
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::DeleteRenderbuffer: %d", options.isDefaultQueue, req->renderbuffer);
+			DEBUG(DEBUG_TAG, "[%d] GL::DeleteRenderbuffer(%d)", options.isDefaultQueue, renderbuffer);
 	}
 	void OnBindRenderbuffer(BindRenderbufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto target = req->target;
-		auto renderbuffer = req->renderbuffer;
+		auto renderbuffer = m_GLObjectManager.CreateRenderbuffer(req->renderbuffer);
 		glBindRenderbuffer(target, renderbuffer);
 		reqContentRenderer->getOpenGLContext()->RecordRenderbuffer(renderbuffer);
 		if (options.printsCall)

@@ -196,7 +196,8 @@ namespace renderer
   void TrContentRenderer::onStartFrame()
   {
     glContext->Restore();
-    glContext->Print();
+    if (constellation->getRenderer()->isAppContextSummaryEnabled)
+      glContext->Print();
   }
 
   void TrContentRenderer::onEndFrame()
