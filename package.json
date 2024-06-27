@@ -12,7 +12,6 @@
     "babylonjs": "^6.10.0",
     "minimist": "^1.2.8",
     "undici": "^6.3.0",
-    "webgl-to-opengl": "^0.0.17",
     "windows-1252": "^3.0.4",
     "ws": "^8.16.0",
     "xhr2": "^0.2.1"
