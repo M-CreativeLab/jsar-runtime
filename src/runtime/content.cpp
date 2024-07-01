@@ -219,7 +219,7 @@ void TrContentRuntime::onClientProcess()
     clientPath = basePath / "libTransmuteClient.dylib";
 #endif
   }
-  DEBUG(LOG_TAG_CONTENT, "Start a new client with: %s", clientPath.c_str());
+  fprintf(stdout, "Start a new client with: %s\n", clientPath.c_str());
 
   rapidjson::Document scriptContext;
   scriptContext.SetObject();
@@ -264,10 +264,11 @@ void TrContentRuntime::onClientProcess()
       const_cast<char *>(scriptContextBuffer.GetString()),
       nullptr};
 
+  fprintf(stdout, "execvp(%s)\n", clientPath.c_str());
   if (execvp(clientPath.c_str(), scriptArgs) == -1)
   {
-    DEBUG(LOG_TAG_CONTENT, "Failed to execute the client process on %s, and the error: %s",
-          clientPath.c_str(), strerror(errno));
+    fprintf(stderr, "Failed to execute the client process on %s, and the error: %s\n",
+            clientPath.c_str(), strerror(errno));
   }
 
   /**

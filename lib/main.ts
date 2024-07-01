@@ -48,11 +48,6 @@ bootwait(async function main() {
   try {
     const runtimeStart = performance.now();
     logger.info('The Node.js runtime bootstrap takes', runtimeStart - bootstrapStart, 'ms');
-    logger.info('Starting the TransmuteRuntime entry with the environment:');
-    for (const [key, value] of Object.entries(process.env)) {
-      logger.info(`  ${key}: ${value}`);
-    }
-
     logger.info('The context init is:', clientContext);
     if (!connectRenderer(clientContext)) {
       throw new Error('failed to connect to the renderer.');

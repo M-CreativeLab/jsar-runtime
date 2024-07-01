@@ -11,7 +11,6 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-  ENABLE_BACKTRACE();
 
   for (uint32_t i = 0; i < argc; i++)
     DEBUG(LOG_TAG_CLIENT_ENTRY, "argv[%d] = %s", i, argv[i]);
@@ -23,6 +22,7 @@ int main(int argc, char **argv)
   }
   else
   {
+    ENABLE_BACKTRACE();
     DEBUG(LOG_TAG_CLIENT_ENTRY, "Copy the following command to restart the client:");
     DEBUG(LOG_TAG_CLIENT_ENTRY, "  %s '%s' '%s'", argv[0], argv[1], argv[2]);
   }

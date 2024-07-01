@@ -209,9 +209,9 @@ process.on('uncaughtException', handleGlobalExceptionOrRejection);
 process.on('unhandledRejection', handleGlobalExceptionOrRejection);
 
 // Just log the environment variables.
-console.info(0, `created default logger successfully, and the following are environment variables:`);
+console.info(`Created default logger and the following are environment variables:`);
 for (const [key, value] of Object.entries(process.env)) {
-  console.info(0, `  ${key}: ${value}`);
+  console.info(`  ${key}=${value}`);
 }
 
 export const log = defaultLogger.log.bind(defaultLogger);

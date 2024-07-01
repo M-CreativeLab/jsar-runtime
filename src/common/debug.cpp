@@ -1,4 +1,7 @@
 #include <stdarg.h>
+#include <ctime>
+#include <chrono>
+#include <string>
 #include "debug.hpp"
 
 #ifdef _WIN32
@@ -24,6 +27,30 @@ IUnityLog *GET_UNITY_LOG_HANDLE()
 }
 #endif
 
+using system_clock = std::chrono::system_clock;
+using milliseconds = std::chrono::milliseconds;
+
+static std::chrono::time_point<system_clock> lastLogTime = system_clock::now();
+
+inline std::string
+fetchTimestamp()
+{
+
+  auto now = system_clock::now();
+  auto now_c = system_clock::to_time_t(now);
+  auto ms = std::chrono::duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
+
+  struct tm tm_info;
+  localtime_r(&now_c, &tm_info);
+  char timestamp[32];
+  strftime(timestamp, sizeof(timestamp), "%m-%d %H:%M:%S", &tm_info);
+  snprintf(timestamp + 12, sizeof(timestamp) - 12, ".%03d", static_cast<int>(ms.count()));
+
+  auto durationInMs = std::chrono::duration_cast<milliseconds>(now - lastLogTime).count();
+  lastLogTime = now;
+  return std::string(timestamp) + "(+" + std::to_string(durationInMs) + "ms)";
+}
+
 void DEBUG(const char *tag, const char *format, ...)
 {
   va_list args;
@@ -38,7 +65,7 @@ void DEBUG(const char *tag, const char *format, ...)
   vsnprintf(buffer, length + 1, format, args);
 
   if (s_UnityLog == nullptr)
-    fprintf(stdout, "[%s] %s\n", tag, buffer);
+    std::cout << fetchTimestamp() << " " << tag << ": " << buffer << std::endl;
   else
     UNITY_LOG(s_UnityLog, buffer);
 #endif
