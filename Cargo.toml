@@ -4,9 +4,6 @@ members = ["crates/jsbindings"]
 
 [workspace.dependencies]
 app_units = "0.7"
-async-tungstenite = { version = "0.23", features = [
-  "tokio-rustls-webpki-roots",
-] }
 backtrace = "0.3"
 base64 = "0.21.7"
 bitflags = "2.5"
@@ -15,16 +12,14 @@ cfg-if = "1.0.0"
 content-security-policy = { version = "0.5", features = ["serde"] }
 cookie = "0.12"
 crossbeam-channel = "0.5"
-cssparser = { version = "0.33", features = [
-  "serde",
-], git = "https://github.com/servo/rust-cssparser/", rev = "aaa966d9d6ae70c4b8a62bb5e3a14c068bb7dff0" }
-data-url = "0.1.0"
+cssparser = { version = "0.34", features = ["serde"] }
+data-url = "0.3.1"
 euclid = "0.22"
 fnv = "1.0"
 getopts = "0.2.11"
 gleam = "0.15"
 headers = "0.3"
-html5ever = "0.26.0"
+html5ever = "0.27"
 http = "0.2"
 hyper = "0.14"
 hyper-rustls = { version = "0.24", default-features = false, features = [
@@ -35,7 +30,6 @@ hyper-rustls = { version = "0.24", default-features = false, features = [
   "tls12",
   "webpki-tokio",
 ] }
-image = "0.24"
 imsz = "0.2"
 ipc-channel = "0.18"
 itertools = "0.12"
@@ -68,20 +62,21 @@ script_traits = { path = "crates/servo_shared/script" }
 serde = "1.0.198"
 serde_bytes = "0.11"
 serde_json = "1.0"
-servo_arc = { git = "https://github.com/servo/stylo", branch = "2024-03-01" }
-servo_atoms = { git = "https://github.com/servo/stylo", branch = "2024-03-01" }
-size_of_test = { git = "https://github.com/servo/stylo", branch = "2024-03-01" }
+servo_arc = { git = "https://github.com/servo/stylo", rev = "10767f4" }
+servo_atoms = { git = "https://github.com/servo/stylo", rev = "10767f4" }
+size_of_test = { git = "https://github.com/servo/stylo", rev = "10767f4" }
 slab = "0.4.9"
 smallvec = "1.13"
 sparkle = "0.1.26"
-style = { git = "https://github.com/servo/stylo", branch = "2024-03-01", features = [
+string_cache = "0.8.7"
+style = { git = "https://github.com/servo/stylo", rev = "10767f4", features = [
   "servo",
 ] }
-style_config = { git = "https://github.com/servo/stylo", branch = "2024-03-01" }
-style_traits = { git = "https://github.com/servo/stylo", branch = "2024-03-01", features = [
+style_config = { git = "https://github.com/servo/stylo", rev = "10767f4" }
+style_traits = { git = "https://github.com/servo/stylo", rev = "10767f4", features = [
   "servo",
 ] }
-selectors = { git = "https://github.com/servo/stylo", branch = "2024-03-01" }
+selectors = { git = "https://github.com/servo/stylo", rev = "10767f4" }
 surfman = "0.9.2"
 syn = { version = "2", default-features = false, features = [
   "clone-impls",
@@ -90,7 +85,7 @@ syn = { version = "2", default-features = false, features = [
 ] }
 taffy = { version = "0.5.1" }
 time = "0.1.41"
-to_shmem = { git = "https://github.com/servo/stylo", branch = "2024-03-01" }
+to_shmem = { git = "https://github.com/servo/stylo", rev = "10767f4" }
 tokio = "1"
 tokio-rustls = "0.24"
 tungstenite = "0.20"

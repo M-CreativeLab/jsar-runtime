@@ -280,6 +280,7 @@ impl<'a> selectors::Element for BlitzNode<'a> {
       NonTSPseudoClass::Hover => self.is_hovered,
       NonTSPseudoClass::Indeterminate => false,
       NonTSPseudoClass::Lang(_) => false,
+      NonTSPseudoClass::CustomState(_) => false,
       NonTSPseudoClass::Link => false,
       NonTSPseudoClass::PlaceholderShown => false,
       NonTSPseudoClass::ReadWrite => false,
@@ -364,6 +365,10 @@ impl<'a> selectors::Element for BlitzNode<'a> {
 
   fn is_root(&self) -> bool {
     self.parent_node().is_none()
+  }
+
+  fn has_custom_state(&self, _name: &<Self::Impl as selectors::SelectorImpl>::Identifier) -> bool {
+    false
   }
 }
 
@@ -623,11 +628,18 @@ impl<'a> TElement for BlitzNode<'a> {
     Default::default()
   }
 
+  fn each_custom_state<F>(&self, _callback: F)
+  where
+    F: FnMut(&AtomIdent),
+  {
+    todo!()
+  }
+
   fn has_selector_flags(&self, flags: ElementSelectorFlags) -> bool {
     false
   }
 
-  fn relative_selector_search_direction(&self) -> Option<ElementSelectorFlags> {
-    None
+  fn relative_selector_search_direction(&self) -> ElementSelectorFlags {
+    ElementSelectorFlags::HAS_EMPTY_SELECTOR
   }
 }

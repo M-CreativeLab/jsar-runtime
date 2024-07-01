@@ -99,7 +99,7 @@ UnityEmbedder *UnityEmbedder::EnsureAndGet()
 
 extern "C"
 {
-  static float s_WorldScalingFactor = 1.0;
+  static float s_WorldScalingFactor = 2.0;
   static void OnPlatformSetup(UnityEmbedder *embedder)
   {
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)

@@ -20,7 +20,7 @@ BABYLON.ThinEngine.QueueNewFrame = (func: () => void, requester?: any): number =
   if (typeof requestAnimationFrame !== 'function') {
     throw new TypeError('requestAnimationFrame is not a function, and the requester is: ' + requester);
   }
-  return requestAnimationFrame(function () {
+  return requestAnimationFrame(function animationframeCallback() {
     try {
       func.apply(requester, arguments);
     } catch (err) {

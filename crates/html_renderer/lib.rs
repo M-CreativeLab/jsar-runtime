@@ -1,4 +1,5 @@
 pub mod document;
+pub mod events;
 pub mod htmlsink;
 pub mod node;
 pub mod stylo;
@@ -7,14 +8,20 @@ pub mod util;
 use std::fmt::Debug;
 
 pub use document::Document;
+pub use html5ever::{
+  local_name, namespace_prefix, namespace_url, ns, Namespace, NamespaceStaticSet, Prefix,
+  PrefixStaticSet, QualName,
+};
 pub use htmlsink::DocumentHtmlParser;
+pub use node::{ElementNodeData, Node, NodeData, TextNodeData};
+pub use string_cache::Atom;
 
 use euclid::{Scale, Size2D};
+use style::properties::style_structs::Font;
 use style::{
   media_queries::{Device, MediaType},
   servo::media_queries::FontMetricsProvider,
 };
-use style::properties::style_structs::Font;
 
 struct HtmlFontMetricsProvider {}
 impl FontMetricsProvider for HtmlFontMetricsProvider {

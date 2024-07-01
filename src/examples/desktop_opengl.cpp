@@ -3,8 +3,11 @@
 #include <iostream>
 #include <filesystem>
 
+#define GLFW_EXPOSE_NATIVE_COCOA
+
 #include <OpenGL/gl3.h>
 #include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
@@ -138,20 +141,25 @@ void onFramebufferSizeChanged(GLFWwindow *window, int width, int height);
 class WindowContext
 {
 public:
+  WindowContext(GLFWmonitor *monitor, float aspect) : aspect(aspect)
+  {
+    if (monitor == nullptr)
+    {
+      terminate();
+      return;
+    }
+    const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+    width = mode->width;
+    height = mode->height;
+    initWindow(monitor);
+
+    /** glfw will ignore x/y/w/h when monitor is not null. */
+    glfwSetWindowMonitor(window, monitor, 0, 0, width, height, mode->refreshRate);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+  }
   WindowContext(int width, int height, float aspect) : width(width), height(height), aspect(aspect)
   {
-    window = glfwCreateWindow(width, height, title().c_str(), NULL, NULL);
-    if (!window)
-    {
-      glfwTerminate();
-      terminated = true;
-    }
-    else
-    {
-      glfwGetWindowContentScale(window, &contentScaling[0], &contentScaling[1]);
-      glfwSetWindowUserPointer(window, this);
-      glfwSetFramebufferSizeCallback(window, onFramebufferSizeChanged);
-    }
+    initWindow(nullptr);
   }
 
 public:
@@ -170,6 +178,27 @@ public:
   {
     xrRenderer = new XRStereoscopicRenderer(aspect);
     return xrRenderer;
+  }
+
+private:
+  void terminate()
+  {
+    glfwTerminate();
+    terminated = true;
+  }
+  void initWindow(GLFWmonitor *monitor = nullptr)
+  {
+    window = glfwCreateWindow(width, height, title().c_str(), monitor, NULL);
+    if (!window)
+    {
+      terminate();
+    }
+    else
+    {
+      glfwGetWindowContentScale(window, &contentScaling[0], &contentScaling[1]);
+      glfwSetWindowUserPointer(window, this);
+      glfwSetFramebufferSizeCallback(window, onFramebufferSizeChanged);
+    }
   }
 
 public:
@@ -446,10 +475,24 @@ int main(int argc, char **argv)
   if (optind < argc)
     requestUrl = string(argv[optind]);
 
+  int count;
+  GLFWmonitor *glassMonitor = nullptr;
+  GLFWmonitor **monitors = glfwGetMonitors(&count);
+  for (int i = 0; i < count; i++)
+  {
+    GLFWmonitor *monitor = monitors[i];
+    const char *name = glfwGetMonitorName(monitor);
+    if (strcmp(name, "Rokid Max") == 0)
+    {
+      glassMonitor = monitor;
+      fprintf(stdout, "Using Rokid Glass Enter Immersive Mode.\n");
+    }
+  }
+
   /**
    * The canvas size does not fit with the physical size, so we need to save the logical size as canvas.
    */
-  WindowContext windowCtx(width, height, aspect);
+  WindowContext windowCtx = glassMonitor == nullptr ? WindowContext(width, height, aspect) : WindowContext(glassMonitor, aspect);
   if (windowCtx.isTerminated())
     return 1;
 
@@ -465,7 +508,7 @@ int main(int argc, char **argv)
     string dirname = fs::current_path().string();
 
     rapidjson::Document doc;
-    auto& allocator = doc.GetAllocator();
+    auto &allocator = doc.GetAllocator();
     doc.SetObject();
 
     rapidjson::Value dirnameValue(dirname.c_str(), allocator);
@@ -577,7 +620,7 @@ int main(int argc, char **argv)
       panel->uptime = embedder->getUptime(); // update uptime to panel
     }
 
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClearDepth(1.0f);
     glClearStencil(0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
