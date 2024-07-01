@@ -238,6 +238,7 @@ void TrContentRuntime::onClientProcess()
                           rapidjson::Value(constellationOptions.applicationCacheDirectory.c_str(), allocator), allocator);
   scriptContext.AddMember("httpsProxyServer",
                           rapidjson::Value(constellationOptions.httpsProxyServer.c_str(), allocator), allocator);
+  scriptContext.AddMember("enableV8Profiling", constellationOptions.enableV8Profiling, allocator);
 
   auto xrDevice = getConstellation()->getXrDevice();
   if (xrDevice != nullptr)

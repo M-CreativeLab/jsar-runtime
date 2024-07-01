@@ -60,12 +60,19 @@ ScriptEnvironment::~ScriptEnvironment()
 
 bool ScriptEnvironment::initialize()
 {
-  DEBUG(LOG_TAG_SCRIPT, "initializing script with Node.js");
+  string scriptArgsStr = "";
+  for (auto &arg : scriptArgs)
+  {
+    if (arg.size() > 1024)
+      scriptArgsStr += "<...>";
+    else
+      scriptArgsStr += arg + " ";
+  }
+  DEBUG(LOG_TAG_SCRIPT, "Executing Node.js script: %s", scriptArgsStr.c_str());
   std::unique_ptr<node::InitializationResult> result =
       node::InitializeOncePerProcess(scriptArgs, {node::ProcessInitializationFlags::kNoInitializeV8,
                                                   node::ProcessInitializationFlags::kNoInitializeNodeV8Platform,
-                                                  node::ProcessInitializationFlags::kNoPrintHelpOrVersionOutput,
-                                                  node::ProcessInitializationFlags::kNoDefaultSignalHandling});
+                                                  node::ProcessInitializationFlags::kNoPrintHelpOrVersionOutput});
 
   auto errors = result->errors();
   if (errors.size() > 0)
@@ -127,6 +134,16 @@ void TrScriptRuntimePerProcess::start(vector<string> &scriptArgs)
   }
 
   auto scriptEnv = ScriptEnvironment();
+  auto clientContext = TrClientContextPerProcess::Get();
+  assert(clientContext != nullptr);
+  if (clientContext->enableV8Profiling)
+  {
+    string logfile = clientContext->applicationCacheDirectory + "/v8.log"; // TODO: support multiple apps
+    auto &envScriptArgs = scriptEnv.scriptArgs;
+    envScriptArgs.insert(envScriptArgs.begin() + 1, "--prof");
+    envScriptArgs.insert(envScriptArgs.begin() + 1, "--logfile=" + logfile);
+    envScriptArgs.insert(envScriptArgs.begin() + 1, "--no_logfile_per_isolate");
+  }
   scriptEnv.initialize();
 
   executeMainScript(scriptEnv, scriptArgs);
@@ -444,12 +461,7 @@ bool TrClientContextPerProcess::finishXrFrame(xr::TrXRFrameRequest *frameRequest
   return sendCommandBufferRequest(req);
 }
 
-bool TrClientContextPerProcess::isInXrFrame()
-{
-  return currentXrFrameRequest != nullptr;
-}
-
-xr::TrXRInputSourcesZone* TrClientContextPerProcess::getXRInputSourcesZone()
+xr::TrXRInputSourcesZone *TrClientContextPerProcess::getXRInputSourcesZone()
 {
   return xrInputSourcesZoneClient.get();
 }

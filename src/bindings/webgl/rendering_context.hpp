@@ -6,6 +6,7 @@
 #include <napi.h>
 
 #include "client/per_process.hpp"
+#include "common/utility.hpp"
 #include "common/command_buffers/webgl_constants.hpp"
 #include "common/command_buffers/command_buffers.hpp"
 
@@ -145,7 +146,7 @@ namespace webgl
      * @param commandBuffer
      * @param useDefaultQueue - if true, the command buffer will be executed in the default queue.
      */
-    bool sendCommandBufferRequest(commandbuffers::TrCommandBufferBase &commandBuffer, bool forceDefaultQueue = false)
+    inline bool sendCommandBufferRequest(commandbuffers::TrCommandBufferBase &commandBuffer, bool forceDefaultQueue = false)
     {
       return m_clientContext->sendCommandBufferRequest(commandBuffer, forceDefaultQueue);
     }

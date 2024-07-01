@@ -58,16 +58,22 @@ int main(int argc, char **argv)
     DEBUG(LOG_TAG_CLIENT_ENTRY, "Exited, reason: id is missing from context json.");
     return 1;
   }
+  // Application settings
   clientContext->id = contextDocument["id"].GetInt();
   clientContext->url = url;
   clientContext->eventChanPort = contextDocument["eventChanPort"].GetUint();
   clientContext->frameChanPort = contextDocument["frameChanPort"].GetUint();
   clientContext->commandBufferChanPort = contextDocument["commandBufferChanPort"].GetUint();
 
+  // Global settings
   if (contextDocument.HasMember("applicationCacheDirectory"))
     clientContext->applicationCacheDirectory = contextDocument["applicationCacheDirectory"].GetString();
   if (contextDocument.HasMember("httpsProxyServer"))
     clientContext->httpsProxyServer = contextDocument["httpsProxyServer"].GetString();
+  if (contextDocument.HasMember("enableV8Profiling") && contextDocument["enableV8Profiling"].IsBool())
+    clientContext->enableV8Profiling = contextDocument["enableV8Profiling"].GetBool();
+
+  // XR Device settings
   if (contextDocument.HasMember("xrDevice") && contextDocument["xrDevice"].IsObject())
   {
     auto &xrDevice = contextDocument["xrDevice"];

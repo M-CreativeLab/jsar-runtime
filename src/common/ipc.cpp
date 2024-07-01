@@ -194,6 +194,9 @@ namespace ipc
     int events = poll(fds, 1, timeout);
     if (events <= -1)
     {
+      if (errno == EINTR)
+        return this->tryRecvRaw(outData, outSize, timeout);
+
       DEBUG(LOG_TAG_IPC, "Failed to poll the receiver: %s", strerror(errno));
       return false;
     }

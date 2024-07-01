@@ -95,7 +95,7 @@ void printsStacktraceOnSignal(int signal)
   else
   {
     for (int i = 0; i < numFrames; ++i)
-      fprintf(stderr, "%s", symbols[i]);
+      fprintf(stderr, "%s\n", symbols[i]);
     free(symbols);
   }
 #elif __ANDROID__

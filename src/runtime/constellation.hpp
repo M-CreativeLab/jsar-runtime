@@ -30,7 +30,8 @@ public:
   string runtimeDirectory;
   string applicationCacheDirectory;
   string httpsProxyServer;
-  bool isXRSupported;
+  bool enableV8Profiling = false;
+  bool isXRSupported = false;
 
 public:
   string getZoneDirname()

@@ -513,6 +513,17 @@ int main(int argc, char **argv)
 
     rapidjson::Value dirnameValue(dirname.c_str(), allocator);
     doc.AddMember("applicationCacheDirectory", dirnameValue, allocator);
+    {
+      const char* httpsProxyServer = getenv("https_proxy");
+      if (httpsProxyServer != nullptr)
+      {
+        rapidjson::Value httpsProxyServerValue(httpsProxyServer, allocator);
+        doc.AddMember("httpsProxyServer", httpsProxyServerValue, allocator);
+      }
+      const char* enableV8Profiling = getenv("ENABLE_V8_PROFILING");
+      if (enableV8Profiling != nullptr)
+        doc.AddMember("enableV8Profiling", true, allocator);
+    }
     doc.AddMember("isXRSupported", true, allocator);
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);

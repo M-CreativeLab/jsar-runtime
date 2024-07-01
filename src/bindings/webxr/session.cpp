@@ -529,8 +529,7 @@ namespace bindings
     updateInputSourcesIfChanged(xrFrameUnwrapped);
 
     // Call all the frame callbacks
-    auto now = std::chrono::system_clock::now();
-    auto time = Napi::Number::New(env, std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count());
+    auto time = Napi::Number::New(env, frameRequest->time);
     for (auto &it : currentFrameCallbacks)
     {
       auto descriptor = *it;

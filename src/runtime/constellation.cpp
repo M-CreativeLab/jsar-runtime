@@ -42,6 +42,8 @@ bool TrConstellation::initialize(string initJson)
     options.applicationCacheDirectory = initDoc["applicationCacheDirectory"].GetString();
   if (initDoc.HasMember("httpsProxyServer"))
     options.httpsProxyServer = initDoc["httpsProxyServer"].GetString();
+  if (initDoc.HasMember("enableV8Profiling") && initDoc["enableV8Profiling"].IsBool())
+    options.enableV8Profiling = initDoc["enableV8Profiling"].GetBool();
   if (initDoc.HasMember("isXRSupported") && initDoc["isXRSupported"].IsBool())
     options.isXRSupported = initDoc["isXRSupported"].GetBool();
 

@@ -104,11 +104,11 @@ public: // command buffer methods
   TrCommandBufferResponse *recvCommandBufferResponse(int timeout);
 
 public: // WebXR methods
-  bool startXrFrame(xr::TrXRFrameRequest* frameRequest);
+  bool startXrFrame(xr::TrXRFrameRequest *frameRequest);
   bool flushXrFrame();
-  bool finishXrFrame(xr::TrXRFrameRequest* frameRequest);
-  bool isInXrFrame();
-  xr::TrXRInputSourcesZone* getXRInputSourcesZone();
+  bool finishXrFrame(xr::TrXRFrameRequest *frameRequest);
+  inline bool isInXrFrame() { return currentXrFrameRequest != nullptr; }
+  xr::TrXRInputSourcesZone *getXRInputSourcesZone();
 
   int getFramebufferWidth();
   int getFramebufferHeight();
@@ -150,8 +150,18 @@ private:
 public:
   uint32_t id;
   string url;
+  /**
+   * The directory where the application can store files that are persistent.
+   */
   string applicationCacheDirectory;
+  /**
+   * The https proxy server to use for network requests if proxy is enabled.
+   */
   string httpsProxyServer;
+  /**
+   * Enable v8 profiling.
+   */
+  bool enableV8Profiling = false;
   uint32_t webglVersion = 2; // webgl2 by default
   uint32_t eventChanPort;
   uint32_t frameChanPort;

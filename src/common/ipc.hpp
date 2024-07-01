@@ -22,7 +22,8 @@
 #ifdef __ANDROID__
 #include <sys/epoll.h>
 #endif
-#include "debug.hpp"
+#include "./utility.hpp"
+#include "./debug.hpp"
 
 using namespace std;
 
