@@ -35,7 +35,6 @@ static std::chrono::time_point<system_clock> lastLogTime = system_clock::now();
 inline std::string
 fetchTimestamp()
 {
-
   auto now = system_clock::now();
   auto now_c = system_clock::to_time_t(now);
   auto ms = std::chrono::duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
