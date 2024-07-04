@@ -14,6 +14,9 @@ namespace bindings
     ClientContext(const Napi::CallbackInfo &info);
 
   private:
+    Napi::Value KeepAlive(const Napi::CallbackInfo &info);
+
+  private:
     TrClientContextPerProcess *clientContext = nullptr;
 
   private:

@@ -31,6 +31,10 @@ declare namespace Transmute {
       active: boolean;
       stereoRenderingMode: 'multipass' | 'singlepass' | 'singlepass-instanced' | 'singlepass-multiview' | 'unknown';
     };
+    /**
+     * Send a keep alive message.
+     */
+    keepAlive(): void;
   }
 
   type RenderExceptionCallback = (code: number) => void;

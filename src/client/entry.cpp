@@ -11,7 +11,6 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-
   for (uint32_t i = 0; i < argc; i++)
     DEBUG(LOG_TAG_CLIENT_ENTRY, "argv[%d] = %s", i, argv[i]);
 

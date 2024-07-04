@@ -2824,21 +2824,21 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() < 3)
+    if (TR_UNLIKELY(info.Length() < 3))
     {
       Napi::TypeError::New(env, "uniformMatrix4fv() takes 3 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    else if (info.Length() > 3)
+    else if (TR_UNLIKELY(info.Length() > 3))
     {
       Napi::TypeError::New(env, "uniformMatrix4fv() don't support the parameters: `srcLength` and `srcOffset`")
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
-    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLUniformLocation::constructor->Value()))
+    if (TR_UNLIKELY(!info[0].IsObject()))
     {
-      Napi::TypeError::New(env, "uniformMatrix4fv() 1st argument(program) must be a WebGLUniformLocation object.")
+      Napi::TypeError::New(env, "uniformMatrix4fv() 1st argument(program) must be an object.")
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -2848,20 +2848,28 @@ namespace webgl
     Napi::Float32Array matricesArray = info[2].As<Napi::Float32Array>();
     UniformMatrix4fvCommandBufferRequest req(location->GetValue(), transpose);
 
-    if (matricesArray.Has(WEBGL_PLACEHOLDERS_PLACEHOLDER_ID_KEY) && matricesArray.Get(WEBGL_PLACEHOLDERS_PLACEHOLDER_ID_KEY).IsNumber())
+    if (matricesArray.Has(WEBGL_PLACEHOLDERS_PLACEHOLDER_ID_KEY))
     {
-      auto placeholderId = (WebGLMatrixPlaceholderId)matricesArray.Get(WEBGL_PLACEHOLDERS_PLACEHOLDER_ID_KEY).ToNumber().Uint32Value();
-      auto handedness = matricesArray.Get(WEBGL_PLACEHOLDERS_USE_RIGHTHANDED_KEY).ToBoolean() ? MatrixHandedness::MATRIX_RIGHT_HANDED : MatrixHandedness::MATRIX_LEFT_HANDED;
+      auto placeholderIdValue = matricesArray.Get(WEBGL_PLACEHOLDERS_PLACEHOLDER_ID_KEY);
+      if (!placeholderIdValue.IsNumber())
+      {
+        Napi::TypeError::New(env, "uniformMatrix4fv() placeholderId must be a number.").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+      auto placeholderId = (WebGLMatrixPlaceholderId)placeholderIdValue.ToNumber().Uint32Value();
+      auto handedness = matricesArray.Get(WEBGL_PLACEHOLDERS_USE_RIGHTHANDED_KEY).ToBoolean()
+                            ? MatrixHandedness::MATRIX_RIGHT_HANDED
+                            : MatrixHandedness::MATRIX_LEFT_HANDED;
       MatrixComputationGraph computationGraph(placeholderId, handedness);
 
-      if (matricesArray.Has(WEBGL_PLACEHOLDERS_INVERSE_MATRIX_KEY) && matricesArray.Get(WEBGL_PLACEHOLDERS_INVERSE_MATRIX_KEY).IsBoolean())
+      if (matricesArray.Has(WEBGL_PLACEHOLDERS_INVERSE_MATRIX_KEY))
         computationGraph.inverseMatrix = matricesArray.Get(WEBGL_PLACEHOLDERS_INVERSE_MATRIX_KEY).ToBoolean().Value();
       req.computationGraph4values = computationGraph;
     }
     else
     {
       size_t length = matricesArray.ElementLength();
-      if (length % 16 != 0)
+      if (TR_UNLIKELY(length % 16 != 0))
       {
         Napi::TypeError::New(env,
                              "uniformMatrix4fv() must take 16x float elements array but accept " + std::to_string(length) + ".")
@@ -4171,7 +4179,7 @@ namespace webgl
     auto clientId = vaoIdGen.get();
     auto commandBuffer = CreateVertexArrayCommandBufferRequest(clientId);
     sendCommandBufferRequest(commandBuffer);
-    return Napi::Number::New(env, clientId);
+    return Napi::Number::New(env, commandBuffer.clientId);
   }
 
   Napi::Value WebGL2RenderingContext::DeleteVertexArray(const Napi::CallbackInfo &info)
@@ -4197,7 +4205,7 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() < 1)
+    if (TR_UNLIKELY(info.Length() <= 0))
     {
       Napi::TypeError::New(env, "bindVertexArray() takes 1 argument.")
           .ThrowAsJavaScriptException();

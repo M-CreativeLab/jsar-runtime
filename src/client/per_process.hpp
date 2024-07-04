@@ -90,6 +90,16 @@ public:
   void start();
   void print();
 
+public: // SNR(Script Not Responsible) methods
+  /**
+   * Update the Script Alive Time to mark the script is responsible.
+   */
+  void updateScriptTime();
+  /**
+   * Check if the script is not responding.
+   */
+  inline bool isScriptNotResponding(int timeoutDuration = 2000);
+
 public: // frame request methods
   FrameRequestId requestFrame(TrFrameRequestType type, TrFrameRequestFn callback);
   FrameRequestId requestAnimationFrame(AnimationFrameRequestCallback callback);
@@ -194,8 +204,9 @@ private: // frame request fields
   mutex frameRequestMutex;
   atomic<bool> framesListenerRunning = false;
 
-private: // service alive checking fields
+private: // service & script alive checking fields
   thread *serviceAliveListener = nullptr;
+  atomic<long> scriptAliveTime = 0;
 
 private:
   static TrClientContextPerProcess *s_Instance;

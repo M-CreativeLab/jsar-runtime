@@ -24,5 +24,4 @@ string_cache = { workspace = true }
 style = { workspace = true }
 style_config = { workspace = true }
 style_traits = { workspace = true }
-taffy = { workspace = true }
 url = { workspace = true }

@@ -12,12 +12,7 @@ namespace bindings
     void ImageData::Init(Napi::Env env, Napi::Object exports)
     {
       Napi::Function func = DefineClass(env, "ImageData",
-                                        {
-                                            InstanceAccessor("width", &ImageData::WidthGetter, nullptr),
-                                            InstanceAccessor("height", &ImageData::HeightGetter, nullptr),
-                                            InstanceAccessor("colorSpace", &ImageData::ColorSpaceGetter, nullptr),
-                                            InstanceAccessor("data", &ImageData::DataGetter, nullptr),
-                                        });
+                                        {});
 
       constructor = new Napi::FunctionReference();
       *constructor = Napi::Persistent(func);
@@ -103,6 +98,12 @@ namespace bindings
           }
         }
       }
+
+      auto jsThis = info.This().ToObject();
+      jsThis.Set("data", dataArrayRef.Value());
+      jsThis.Set("width", Napi::Number::New(env, width));
+      jsThis.Set("height", Napi::Number::New(env, height));
+      jsThis.Set("colorSpace", Napi::String::New(env, colorSpaceName));
     }
 
     ImageData::~ImageData()
@@ -151,7 +152,7 @@ namespace bindings
       }
     }
 
-    uint8_t* ImageData::dataAddr()
+    uint8_t *ImageData::dataAddr()
     {
       auto dataArray = dataArrayRef.Value().As<Napi::Uint8Array>();
       return dataArray.Data() + dataArray.ByteOffset();

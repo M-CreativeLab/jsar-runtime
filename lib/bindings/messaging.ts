@@ -4,7 +4,6 @@ const binding = process._linkedBinding('transmute:messaging');
 const nativeEventTarget = new binding.NativeEventTarget(onNativeEventListener);
 const eventTarget = new EventTarget();
 const RpcRequestWaitlist = new Map<number, (responseText: string) => void>();
-let eventId = 0;
 
 enum EventType {
   rpcRequest = 0x100,
@@ -14,6 +13,7 @@ enum EventType {
   close = 0x220,
   xsmlRequest = 0x300,
   xsmlEvent = 0x301,
+  alive = 0x400,
 }
 
 function getEventType(type: string): EventType {
@@ -118,19 +118,20 @@ export function addXsmlRequestListener(listener: (event: XsmlRequestEvent) => vo
 }
 
 export const removeEventListener = eventTarget.removeEventListener.bind(eventTarget);
-// export const dispatchEvent = eventTarget.dispatchEvent.bind(eventTarget);
-// export const emit = function emitMessagingEvent(type: string, message?: string) {
-//   if (typeof type !== 'string') {
-//     throw new TypeError('event type must be a string');
-//   }
-//   return eventTarget.dispatchEvent(new CustomEvent(type, { detail: message }));
-// };
 
 export const dispatchEvent = function dispatchEventToNative(event: CustomEvent): number {
   return nativeEventTarget.dispatchEvent({
     type: getEventType(event.type),
     detail: JSON.stringify(event.detail),
   });
+};
+
+export const dispatchAliveEvent = function () {
+  return dispatchEvent(new CustomEvent('alive', {
+    detail: {
+      time: Date.now(),
+    }
+  }));
 };
 
 export const dispatchXsmlEvent = function (id: number, eventType: 'loaded' | 'fcp' | 'error') {

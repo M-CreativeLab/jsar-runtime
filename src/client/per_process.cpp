@@ -3,6 +3,9 @@
 #include <vector>
 #include <thread>
 
+#include <unistd.h>
+#include <sys/resource.h>
+
 #include "per_process.hpp"
 #include "crates/jsar_jsbindings.h"
 #include "bindings.hpp"
@@ -365,6 +368,19 @@ void TrClientContextPerProcess::print()
   }
 }
 
+void TrClientContextPerProcess::updateScriptTime()
+{
+  using namespace chrono;
+  scriptAliveTime = duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
+}
+
+bool TrClientContextPerProcess::isScriptNotResponding(int timeoutDuration)
+{
+  using namespace chrono;
+  auto now = duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
+  return now - scriptAliveTime > timeoutDuration;
+}
+
 FrameRequestId TrClientContextPerProcess::requestAnimationFrame(AnimationFrameRequestCallback callback)
 {
   return requestFrame(TrFrameRequestType::AnimationFrame, [callback](frame_request::TrFrameRequestMessage &message)
@@ -420,7 +436,7 @@ bool TrClientContextPerProcess::sendCommandBufferRequest(TrCommandBufferBase &co
       viewIndex = currentXrFrameRequest->viewIndex;
     commandBuffer.renderingInfo = currentXrFrameRequest->createRenderingInfo(viewIndex);
   }
-  bool success = commandBufferChanSender->sendCommandBufferRequest(commandBuffer);
+  bool success = commandBufferChanSender->sendCommandBufferRequest(commandBuffer, followsFlush);
   if (!isInXrFrame() || !followsFlush) // Directly returns success if not a XRFrame or not follow flush command buffer
     return success;
   else
@@ -446,7 +462,7 @@ bool TrClientContextPerProcess::flushXrFrame()
     auto stereoId = currentXrFrameRequest->stereoId;
     auto viewIndex = currentXrFrameRequest->viewIndex;
     XRFrameFlushCommandBufferRequest req(stereoId, viewIndex);
-    return sendCommandBufferRequest(req);
+    return commandBufferChanSender->sendCommandBufferRequest(req, true);
   }
   else
   {
@@ -458,7 +474,7 @@ bool TrClientContextPerProcess::finishXrFrame(xr::TrXRFrameRequest *frameRequest
 {
   currentXrFrameRequest = nullptr;
   XRFrameEndCommandBufferRequest req(frameRequest->stereoId, frameRequest->viewIndex);
-  return sendCommandBufferRequest(req);
+  return commandBufferChanSender->sendCommandBufferRequest(req, true);
 }
 
 xr::TrXRInputSourcesZone *TrClientContextPerProcess::getXRInputSourcesZone()
@@ -490,6 +506,9 @@ void TrClientContextPerProcess::onListenFrames()
       DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received an unknown frame request message", id);
       continue;
     }
+
+    // Check if the script is responsible.
+    if (!isScriptNotResponding())
     {
       // Notify the frame request callbacks
       lock_guard<mutex> lock(frameRequestMutex);

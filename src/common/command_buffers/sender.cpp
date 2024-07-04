@@ -4,8 +4,7 @@
 
 namespace commandbuffers
 {
-
-  bool TrCommandBufferSender::sendCommandBufferRequest(TrCommandBufferBase &req)
+  bool TrCommandBufferSender::sendCommandBufferRequest(TrCommandBufferBase &req, bool forceFlush)
   {
     TrCommandBufferMessage *message = nullptr;
     switch (req.type)
@@ -22,7 +21,7 @@ namespace commandbuffers
       break;
     };
 
-    if (message == nullptr)
+    if (TR_UNLIKELY(message == nullptr))
     {
       DEBUG(LOG_TAG_CONTENT, "Failed to serialize command buffer: %d", req.type);
       return false;
@@ -34,13 +33,14 @@ namespace commandbuffers
     delete message;
     if (!success)
     {
-      assert(data == nullptr);  // !success means allocation failure.
+      assert(data == nullptr); // !success means allocation failure.
       return false;
     }
 
     assert(data != nullptr && size > 0);
-    auto r = sendRaw(data, size);
-    free(data);
+    auto r = enqueue(data, size);
+    if (forceFlush || needFlush())
+      flush();
     return r;
   }
 

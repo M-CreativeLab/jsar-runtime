@@ -219,8 +219,12 @@ namespace bindings
     device->endFrame(internal);
     endTime = chrono::high_resolution_clock::now();
 
-    auto duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
-    if (duration > 1000 / 60)
-      fprintf(stderr, "Detected a long frame(#%d) takes %llums in session(%d)\n", id, duration, sessionId);
+    auto isMultipass = device->getDeviceInit().renderedAsMultipass();
+    if (!isMultipass || internal->viewIndex == 0)
+    {
+      auto duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
+      if (duration > 1000 / 60)
+        fprintf(stderr, "Detected a long frame(#%d) takes %llums in session(%d)\n", id, duration, sessionId);
+    }
   }
 }

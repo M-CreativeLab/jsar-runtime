@@ -7,7 +7,10 @@ namespace bindings
 
   void ClientContext::Init(Napi::Env env, Napi::Object exports)
   {
-    Napi::Function func = DefineClass(env, "ClientContext", {});
+    Napi::Function func = DefineClass(env, "ClientContext",
+                                      {
+                                          InstanceMethod("keepAlive", &ClientContext::KeepAlive),
+                                      });
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
@@ -52,5 +55,14 @@ namespace bindings
         xrDeviceObject.Set("stereoRenderingMode", Napi::String::New(env, "unknown"));
       thisObject.Set("xrDevice", xrDeviceObject);
     }
+  }
+
+  Napi::Value ClientContext::KeepAlive(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    clientContext->updateScriptTime();
+    return env.Undefined();
   }
 }

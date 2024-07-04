@@ -46,6 +46,11 @@ namespace gles
    */
   std::string glEnumToString(GLenum e);
   /**
+   * @brief Converts a GLenum that represents a uniform type to a string.
+   * @see https://docs.gl/es3/glGetActiveUniform
+   */
+  std::string glUniformTypesToString(GLenum type);
+  /**
    * @brief Converts a depth function `GLenum` to a string.
   */
   std::string glDepthFuncToString(GLenum func);

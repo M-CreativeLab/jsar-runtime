@@ -459,7 +459,7 @@ namespace commandbuffers
           computationGraph4values(that.computationGraph4values)
     {
     }
-    UniformMatrixNfvCommandBufferRequest(CommandBufferType type, uint32_t matrixSize, uint32_t location, bool transpose)
+    UniformMatrixNfvCommandBufferRequest(CommandBufferType type, uint8_t matrixSize, uint32_t location, bool transpose)
         : TrCommandBufferRequest(type, sizeof(T)),
           matrixSize(matrixSize),
           location(location),
@@ -490,7 +490,7 @@ namespace commandbuffers
     }
 
   public:
-    uint32_t matrixSize;
+    uint8_t matrixSize;
     uint32_t location;
     bool transpose;
     std::vector<float> values;

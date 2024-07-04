@@ -64,7 +64,7 @@ function onAnimationFrame(time: number, data: any) {
       onframe.callback(time, data);
     }
   } catch (err) {
-    logger.warn('error in frame callback:', err);
+    console.warn('error in frame callback:', err);
   }
 }
 

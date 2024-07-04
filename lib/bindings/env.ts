@@ -10,6 +10,11 @@ try {
   logger.error('failed to initialize "transmute:env" module.', err);
 }
 
+/**
+ * Create an interval timer with 500ms to send keep alive update. It will be hangup when Script is busy.
+ */
+setInterval(() => nativeContext.keepAlive(), 500);
+
 class Env {
   runtimeInit: any;
   #runtimeInitStr: string;

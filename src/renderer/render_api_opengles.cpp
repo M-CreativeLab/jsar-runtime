@@ -186,8 +186,11 @@ private:
 				continue;
 
 			res.attribLocations.push_back(AttribLocation(name, location));
-			DEBUG(DEBUG_TAG, "GL::LinkProgram::Attribute(%s in %d) => %d(size=%d, type=%s)",
-						name, program, location, size, gles::glEnumToString(type).c_str());
+			DEBUG(DEBUG_TAG, "    GL::LinkProgram(%d)::Attribute[%d](%s) => (size=%d, type=%s)",
+						program,
+						location, name,
+						size,
+						gles::glUniformTypesToString(type).c_str());
 		}
 
 		/**
@@ -210,7 +213,11 @@ private:
 				continue;
 
 			res.uniformLocations.push_back(UniformLocation(name, location, size));
-			DEBUG(DEBUG_TAG, "GL::LinkProgram::Uniform(%s in %d) => %d(size=%d, type=%x)", name, program, location, size, type);
+			DEBUG(DEBUG_TAG, "    GL::LinkProgram(%d)::Uniform[%d](%s) => (size=%d, type=%s)",
+						program,
+						location, name,
+						size,
+						gles::glUniformTypesToString(type).c_str());
 		}
 
 		/**
@@ -228,7 +235,7 @@ private:
 
 			GLuint index = glGetUniformBlockIndex(program, name);
 			res.uniformBlocks.push_back(UniformBlock(name, index));
-			DEBUG(DEBUG_TAG, "GL::LinkProgram::UniformBlock(%s in %d) => %d", name, program, index);
+			DEBUG(DEBUG_TAG, "    GL::LinkProgram::UniformBlock(%s in %d) => %d", name, program, index);
 		}
 
 		if (options.printsCall)
@@ -520,7 +527,7 @@ private:
 		glBindFramebuffer(target, framebuffer);
 		reqContentRenderer->getOpenGLContext()->RecordFramebuffer(framebuffer);
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::BindFramebuffer(%d)", options.isDefaultQueue, framebuffer);
+			DEBUG(DEBUG_TAG, "[%d] GL::BindFramebuffer(%d)", options.isDefaultQueue, req->framebuffer);
 	}
 	void OnFramebufferRenderbuffer(FramebufferRenderbufferCommandBufferRequest *req,
 																 renderer::TrContentRenderer *reqContentRenderer,
@@ -1160,6 +1167,7 @@ private:
 		auto type = req->indicesType;
 		auto indices = reinterpret_cast<GLvoid *>(req->indicesOffset);
 
+		assert(indices == nullptr);
 		glDrawElements(mode, count, type, indices);
 		m_DrawCallCountPerFrame += 1;
 		if (options.printsCall)

@@ -240,11 +240,19 @@ namespace xr
   class TrXRFrameRenderingInfo
   {
   public:
-    TrXRFrameRenderingInfo() : sessionId(0), stereoId(0), viewIndex(-1) {}
-    TrXRFrameRenderingInfo(TrXRFrameRenderingInfo &that)
-        : sessionId(that.sessionId), stereoId(that.stereoId), viewIndex(that.viewIndex) {}
-    TrXRFrameRenderingInfo(uint32_t sessionId, int stereoId, int viewIndex)
-        : sessionId(sessionId), stereoId(stereoId), viewIndex(viewIndex)
+    TrXRFrameRenderingInfo() : sessionId(0),
+                               stereoId(0),
+                               viewIndex(-1)
+    {
+    }
+    TrXRFrameRenderingInfo(TrXRFrameRenderingInfo &that) : sessionId(that.sessionId),
+                                                           stereoId(that.stereoId),
+                                                           viewIndex(that.viewIndex)
+    {
+    }
+    TrXRFrameRenderingInfo(uint32_t sessionId, int stereoId, int viewIndex) : sessionId(sessionId),
+                                                                              stereoId(stereoId),
+                                                                              viewIndex(viewIndex)
     {
     }
 
@@ -259,8 +267,8 @@ namespace xr
 
   public:
     uint32_t sessionId;
-    int stereoId;
-    int viewIndex;
+    uint32_t stereoId;
+    uint8_t viewIndex;
   };
 
   class TrXRFrameRequest : public TrFrameRequestSimple<TrXRFrameRequest>

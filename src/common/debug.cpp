@@ -30,24 +30,22 @@ IUnityLog *GET_UNITY_LOG_HANDLE()
 using system_clock = std::chrono::system_clock;
 using milliseconds = std::chrono::milliseconds;
 
-static std::chrono::time_point<system_clock> lastLogTime = system_clock::now();
-
 inline std::string
 fetchTimestamp()
 {
+  using namespace std::chrono;
+
   auto now = system_clock::now();
   auto now_c = system_clock::to_time_t(now);
   auto ms = std::chrono::duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
 
   struct tm tm_info;
   localtime_r(&now_c, &tm_info);
+
   char timestamp[32];
   strftime(timestamp, sizeof(timestamp), "%m-%d %H:%M:%S", &tm_info);
-  snprintf(timestamp + 12, sizeof(timestamp) - 12, ".%03d", static_cast<int>(ms.count()));
-
-  auto durationInMs = std::chrono::duration_cast<milliseconds>(now - lastLogTime).count();
-  lastLogTime = now;
-  return std::string(timestamp) + "(+" + std::to_string(durationInMs) + "ms)";
+  snprintf(timestamp + 14, sizeof(timestamp) - 14, ".%03d", static_cast<int>(ms.count()));
+  return std::string(timestamp);
 }
 
 void DEBUG(const char *tag, const char *format, ...)

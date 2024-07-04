@@ -198,7 +198,7 @@ namespace bindings
     auto callback = info[0].As<Napi::Function>();
     auto frameCallbackDescriptor = new XRFrameCallbackDescriptor(callback);
     pendingFrameCallbacks.push_back(frameCallbackDescriptor);
-    return env.Undefined();
+    return Napi::Number::New(env, frameCallbackDescriptor->handle);
   }
 
   Napi::Value XRSession::CancelAnimationFrame(const Napi::CallbackInfo &info)

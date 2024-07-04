@@ -264,7 +264,6 @@ void TrContentRuntime::onClientProcess()
       const_cast<char *>(scriptContextBuffer.GetString()),
       nullptr};
 
-  fprintf(stdout, "execvp(%s)\n", clientPath.c_str());
   if (execvp(clientPath.c_str(), scriptArgs) == -1)
   {
     fprintf(stderr, "Failed to execute the client process on %s, and the error: %s\n",

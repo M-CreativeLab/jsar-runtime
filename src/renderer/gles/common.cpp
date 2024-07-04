@@ -73,6 +73,76 @@ namespace gles
 #undef CASE
   }
 
+  std::string glUniformTypesToString(GLenum type)
+  {
+#define CASE(x) \
+  case x:       \
+  {             \
+    return #x;  \
+  }
+    switch (type)
+    {
+      // Uniform Types
+      CASE(GL_FLOAT);
+      CASE(GL_FLOAT_VEC2);
+      CASE(GL_FLOAT_VEC3);
+      CASE(GL_FLOAT_VEC4);
+      CASE(GL_INT);
+      CASE(GL_INT_VEC2);
+      CASE(GL_INT_VEC3);
+      CASE(GL_INT_VEC4);
+      CASE(GL_UNSIGNED_INT);
+      CASE(GL_UNSIGNED_INT_VEC2);
+      CASE(GL_UNSIGNED_INT_VEC3);
+      CASE(GL_UNSIGNED_INT_VEC4);
+      CASE(GL_BOOL);
+      CASE(GL_BOOL_VEC2);
+      CASE(GL_BOOL_VEC3);
+      CASE(GL_BOOL_VEC4);
+      CASE(GL_FLOAT_MAT2);
+      CASE(GL_FLOAT_MAT3);
+      CASE(GL_FLOAT_MAT4);
+      CASE(GL_FLOAT_MAT2x3);
+      CASE(GL_FLOAT_MAT2x4);
+      CASE(GL_FLOAT_MAT3x2);
+      CASE(GL_FLOAT_MAT3x4);
+      CASE(GL_FLOAT_MAT4x2);
+      CASE(GL_FLOAT_MAT4x3);
+      CASE(GL_SAMPLER_2D);
+      CASE(GL_SAMPLER_3D);
+      CASE(GL_SAMPLER_CUBE);
+      CASE(GL_SAMPLER_2D_SHADOW);
+      CASE(GL_SAMPLER_2D_ARRAY);
+      CASE(GL_SAMPLER_2D_ARRAY_SHADOW);
+      CASE(GL_SAMPLER_CUBE_SHADOW);
+      CASE(GL_SAMPLER_2D_MULTISAMPLE);
+      CASE(GL_SAMPLER_2D_MULTISAMPLE_ARRAY);
+      CASE(GL_SAMPLER_CUBE_MAP_ARRAY);
+      CASE(GL_SAMPLER_CUBE_MAP_ARRAY_SHADOW);
+      CASE(GL_SAMPLER_BUFFER);
+      CASE(GL_SAMPLER_2D_RECT);
+      CASE(GL_SAMPLER_2D_RECT_SHADOW);
+      CASE(GL_INT_SAMPLER_2D);
+      CASE(GL_INT_SAMPLER_3D);
+      CASE(GL_INT_SAMPLER_CUBE);
+      CASE(GL_INT_SAMPLER_2D_ARRAY);
+      CASE(GL_INT_SAMPLER_CUBE_MAP_ARRAY);
+      CASE(GL_INT_SAMPLER_BUFFER);
+      CASE(GL_INT_SAMPLER_2D_RECT);
+      CASE(GL_UNSIGNED_INT_SAMPLER_2D);
+      CASE(GL_UNSIGNED_INT_SAMPLER_3D);
+      CASE(GL_UNSIGNED_INT_SAMPLER_CUBE);
+      CASE(GL_UNSIGNED_INT_SAMPLER_2D_ARRAY);
+      CASE(GL_UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY);
+      CASE(GL_UNSIGNED_INT_SAMPLER_BUFFER);
+      CASE(GL_UNSIGNED_INT_SAMPLER_2D_RECT);
+    default:
+      std::stringstream ss;
+      ss << "0x" << std::hex << type;
+      return ss.str();
+    }
+  }
+
   std::string glDepthFuncToString(GLenum func)
   {
 #define CASE(x) \
