@@ -27,6 +27,8 @@ type TransmuteEngineOptions = BABYLON.EngineOptions & {
   // TODO
 };
 class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
+  private webglPlaceholdersEnabled: boolean = process.env['JSAR_WEBGL_PLACEHOLDERS'] === 'yes';
+
   constructor(
     glContext: WebGLRenderingContext | WebGL2RenderingContext,
     antialias: boolean,
@@ -49,7 +51,7 @@ class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
      * When JSAR_WEBGL_PLACEHOLDER is enabled, we will replace the projection, view and viewProjection matrices with
      * placeholders. The placeholders will be computed at the native rendering loop.
      */
-    if (process.env['JSAR_WEBGL_PLACEHOLDERS'] === 'yes') {
+    if (this.webglPlaceholdersEnabled) {
       const name = (uniform as any)?.name;
       switch (name) {
         case 'projection':
@@ -229,6 +231,12 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     scene.useRightHandedSystem = false; /** use left-handed system */
     scene.skipFrustumClipping = false;
 
+    // Performance optimization
+    scene.autoClear = false;
+    scene.autoClearDepthAndStencil = false;
+    scene.blockMaterialDirtyMechanism = true;
+    scene.performancePriority = BABYLON.ScenePerformancePriority.Intermediate;
+
     this._defaultCamera = new BABYLON.ArcRotateCamera(
       'default_camera',
       Math.PI / 2,
@@ -252,7 +260,9 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     if (isWebXRSupported()) {
       this.configureDefaultXrExperience(glContext);
     }
-    this.engine.runRenderLoop(() => scene.render());
+    this.engine.runRenderLoop(() => {
+      scene.render();
+    });
   }
 
   get id(): number {

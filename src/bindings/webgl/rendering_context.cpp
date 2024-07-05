@@ -2877,10 +2877,9 @@ namespace webgl
         return env.Undefined();
       }
       req.values.resize(length);
-      for (size_t i = 0; i < length; i++)
-        req.values[i] = matricesArray.Get(i).ToNumber().FloatValue();
+      auto valuesSrc = matricesArray.Data();
+      std::copy(valuesSrc, valuesSrc + length, req.values.begin());
     }
-
     sendCommandBufferRequest(req);
     return env.Undefined();
   }
@@ -4215,8 +4214,9 @@ namespace webgl
     uint32_t vao = 0;
     if (info[0].IsNumber())
       vao = info[0].As<Napi::Number>().Uint32Value();
-    auto commandBuffer = BindVertexArrayCommandBufferRequest(vao);
-    sendCommandBufferRequest(commandBuffer);
+
+    BindVertexArrayCommandBufferRequest req(vao);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -4407,10 +4407,17 @@ namespace webgl
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     uint32_t uniformBlockIndex = info[1].As<Napi::Number>().Uint32Value();
     uint32_t uniformBlockBinding = info[2].As<Napi::Number>().Uint32Value();
-
-    auto commandBuffer = commandbuffers::UniformBlockBindingCommandBufferRequest(
-        program->GetId(), uniformBlockIndex, uniformBlockBinding);
-    sendCommandBufferRequest(commandBuffer);
+    if (uniformBlockIndex < UINT32_MAX)
+    {
+      auto commandBuffer = commandbuffers::UniformBlockBindingCommandBufferRequest(
+          program->GetId(), uniformBlockIndex, uniformBlockBinding);
+      sendCommandBufferRequest(commandBuffer);
+    }
+    else
+    {
+      // Out of range.
+      // TODO: make a warning
+    }
     return env.Undefined();
   }
 

@@ -48,10 +48,7 @@ protected:
   virtual size_t getDataSize() { return sizeof(DataType); }
 
 public:
-  string getFilename()
-  {
-    return filename;
-  }
+  string getFilename() { return filename; }
   void syncData()
   {
     if (memoryAddr != nullptr && data != nullptr)

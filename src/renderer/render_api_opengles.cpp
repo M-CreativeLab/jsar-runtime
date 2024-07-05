@@ -235,7 +235,7 @@ private:
 
 			GLuint index = glGetUniformBlockIndex(program, name);
 			res.uniformBlocks.push_back(UniformBlock(name, index));
-			DEBUG(DEBUG_TAG, "    GL::LinkProgram::UniformBlock(%s in %d) => %d", name, program, index);
+			DEBUG(DEBUG_TAG, "    GL::LinkProgram(%d)::UniformBlock[%s] => %d", program, name, index);
 		}
 
 		if (options.printsCall)
@@ -615,7 +615,7 @@ private:
 	{
 		auto target = req->target;
 		auto index = req->index;
-		auto buffer = req->buffer;
+		auto buffer = m_GLObjectManager.FindBuffer(req->buffer);
 		glBindBufferBase(target, index, buffer);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BindBufferBase(%d, index=%d, target=%d)",
@@ -918,12 +918,12 @@ private:
 	}
 	void OnUniformBlockBinding(UniformBlockBindingCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		auto program = req->program;
+		auto program = m_GLObjectManager.FindProgram(req->program);
 		auto uniformBlockIndex = req->uniformBlockIndex;
 		auto uniformBlockBinding = req->uniformBlockBinding;
 		glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::UniformBlockBinding(%d, %d, %d)",
+			DEBUG(DEBUG_TAG, "[%d] GL::UniformBlockBinding(program=%d, %d, %d)",
 						options.isDefaultQueue, program, uniformBlockIndex, uniformBlockBinding);
 	}
 	void OnUniform1f(Uniform1fCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)

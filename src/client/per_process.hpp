@@ -110,7 +110,7 @@ public: // event methods
   TrEventMessage *recvEventMessage(int timeout);
 
 public: // command buffer methods
-  bool sendCommandBufferRequest(TrCommandBufferBase &commandBuffer, bool forceDefaultQueue = false);
+  bool sendCommandBufferRequest(TrCommandBufferBase &commandBuffer, bool followsFlush = false);
   TrCommandBufferResponse *recvCommandBufferResponse(int timeout);
 
 public: // WebXR methods

@@ -447,21 +447,19 @@ namespace commandbuffers
     }
   };
 
-  template <typename T>
+  template <typename T, size_t matrixSize>
   class UniformMatrixNfvCommandBufferRequest : public TrCommandBufferRequest
   {
   public:
     UniformMatrixNfvCommandBufferRequest(UniformMatrixNfvCommandBufferRequest &that)
         : TrCommandBufferRequest(that),
-          matrixSize(that.matrixSize),
           location(that.location),
           transpose(that.transpose),
           computationGraph4values(that.computationGraph4values)
     {
     }
-    UniformMatrixNfvCommandBufferRequest(CommandBufferType type, uint8_t matrixSize, uint32_t location, bool transpose)
+    UniformMatrixNfvCommandBufferRequest(CommandBufferType type, uint32_t location, bool transpose)
         : TrCommandBufferRequest(type, sizeof(T)),
-          matrixSize(matrixSize),
           location(location),
           transpose(transpose)
     {
@@ -490,7 +488,6 @@ namespace commandbuffers
     }
 
   public:
-    uint8_t matrixSize;
     uint32_t location;
     bool transpose;
     std::vector<float> values;
@@ -498,7 +495,7 @@ namespace commandbuffers
   };
 
   class UniformMatrix2fvCommandBufferRequest
-      : public UniformMatrixNfvCommandBufferRequest<UniformMatrix2fvCommandBufferRequest>
+      : public UniformMatrixNfvCommandBufferRequest<UniformMatrix2fvCommandBufferRequest, 2 * 2>
   {
   public:
     UniformMatrix2fvCommandBufferRequest(UniformMatrix2fvCommandBufferRequest &that)
@@ -506,14 +503,14 @@ namespace commandbuffers
     {
     }
     UniformMatrix2fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
-        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX2FV_REQ, 2 * 2, location, transpose)
+        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX2FV_REQ, location, transpose)
     {
       this->values = values;
     }
   };
 
   class UniformMatrix3fvCommandBufferRequest
-      : public UniformMatrixNfvCommandBufferRequest<UniformMatrix3fvCommandBufferRequest>
+      : public UniformMatrixNfvCommandBufferRequest<UniformMatrix3fvCommandBufferRequest, 3 * 3>
   {
   public:
     UniformMatrix3fvCommandBufferRequest(UniformMatrix3fvCommandBufferRequest &that)
@@ -521,14 +518,14 @@ namespace commandbuffers
     {
     }
     UniformMatrix3fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
-        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX3FV_REQ, 3 * 3, location, transpose)
+        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX3FV_REQ, location, transpose)
     {
       this->values = values;
     }
   };
 
   class UniformMatrix4fvCommandBufferRequest
-      : public UniformMatrixNfvCommandBufferRequest<UniformMatrix4fvCommandBufferRequest>
+      : public UniformMatrixNfvCommandBufferRequest<UniformMatrix4fvCommandBufferRequest, 4 * 4>
   {
   public:
     UniformMatrix4fvCommandBufferRequest(UniformMatrix4fvCommandBufferRequest &that)
@@ -536,16 +533,16 @@ namespace commandbuffers
     {
     }
     UniformMatrix4fvCommandBufferRequest(uint32_t location, bool transpose)
-        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, 4 * 4, location, transpose)
+        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, location, transpose)
     {
     }
     UniformMatrix4fvCommandBufferRequest(uint32_t location, bool transpose, const std::vector<float> &values)
-        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, 4 * 4, location, transpose)
+        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, location, transpose)
     {
       this->values = values;
     }
     UniformMatrix4fvCommandBufferRequest(uint32_t location, bool transpose, MatrixComputationGraph computationGraph4values)
-        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, 4 * 4, location, transpose)
+        : UniformMatrixNfvCommandBufferRequest(COMMAND_BUFFER_UNIFORM_MATRIX4FV_REQ, location, transpose)
     {
       this->computationGraph4values = computationGraph4values;
     }

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <sstream>
+#include <algorithm>
 #include <assert.h>
 #include <napi.h>
 

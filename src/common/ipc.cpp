@@ -62,7 +62,7 @@ namespace ipc
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1)
     {
-      DEBUG(LOG_TAG_IPC, "Failed to create a socket.");
+      DEBUG(LOG_TAG_IPC, "Failed to create a socket: %s", strerror(errno));
       return false;
     }
 
@@ -430,7 +430,7 @@ namespace ipc
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1)
     {
-      DEBUG(LOG_TAG_IPC, "Failed to create a socket.");
+      DEBUG(LOG_TAG_IPC, "Failed to create a socket: %s", strerror(errno));
       return;
     }
 
