@@ -80,11 +80,18 @@ public:
     return glm::inverse(viewBaseMatrix);
   }
   glm::mat4 getProjectionMatrix() { return glm::perspective(glm::radians(fov), aspect, near, far); }
-  void moveForward(float zOffset)
+  void moveViewerForward(float zOffset)
   {
     viewerPosition.z += zOffset;
     eyePosition[0].z = viewerPosition.z;
     eyePosition[1].z = viewerPosition.z;
+  }
+  void rotateViewerByAxisY(float angle)
+  {
+    auto rotation = glm::angleAxis(angle, glm::vec3(0, 1, 0));
+    viewerOrientation = rotation * viewerOrientation;
+    eyeOrientation[0] = rotation * eyeOrientation[0];
+    eyeOrientation[1] = rotation * eyeOrientation[1];
   }
 
 private:
@@ -188,9 +195,16 @@ public:
                           {
                             auto ctx = reinterpret_cast<WindowContext *>(glfwGetWindowUserPointer(window));
                             assert(ctx != nullptr);
-                            assert(ctx->xrRenderer != nullptr);
-                            ctx->xrRenderer->moveForward(yoffset * 0.1); });
+                            ctx->handleScroll(xoffset, yoffset); });
     return xrRenderer;
+  }
+  void handleScroll(double xoffset, double yoffset)
+  {
+    assert(xrRenderer != nullptr);
+    if (yoffset != 0)
+      xrRenderer->moveViewerForward(yoffset * 0.1);
+    if (xoffset != 0)
+      xrRenderer->rotateViewerByAxisY(xoffset * 0.1);
   }
 
 private:
