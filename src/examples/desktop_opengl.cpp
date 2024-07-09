@@ -80,6 +80,12 @@ public:
     return glm::inverse(viewBaseMatrix);
   }
   glm::mat4 getProjectionMatrix() { return glm::perspective(glm::radians(fov), aspect, near, far); }
+  void moveForward(float zOffset)
+  {
+    viewerPosition.z += zOffset;
+    eyePosition[0].z = viewerPosition.z;
+    eyePosition[1].z = viewerPosition.z;
+  }
 
 private:
   glm::vec3 viewerPosition;
@@ -176,7 +182,14 @@ public:
   StatPanel *createStatPanel();
   XRStereoscopicRenderer *createXrRenderer()
   {
+    assert(window != nullptr);
     xrRenderer = new XRStereoscopicRenderer(aspect);
+    glfwSetScrollCallback(window, [](GLFWwindow *window, double xoffset, double yoffset)
+                          {
+                            auto ctx = reinterpret_cast<WindowContext *>(glfwGetWindowUserPointer(window));
+                            assert(ctx != nullptr);
+                            assert(ctx->xrRenderer != nullptr);
+                            ctx->xrRenderer->moveForward(yoffset * 0.1); });
     return xrRenderer;
   }
 
