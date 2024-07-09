@@ -342,8 +342,10 @@ void TrClientContextPerProcess::start()
                                           exit(0);  // FIXME: more graceful exit?
                                       } });
 
+  startedAt = uv_hrtime();
+
   // Finish the client start.
-  fprintf(stdout, "The client(%d) is started.\n", id);
+  fprintf(stdout, "The client(%d) is started at %" PRIu64 ".\n", id, startedAt);
 }
 
 void TrClientContextPerProcess::print()
@@ -370,15 +372,13 @@ void TrClientContextPerProcess::print()
 
 void TrClientContextPerProcess::updateScriptTime()
 {
-  using namespace chrono;
-  scriptAliveTime = duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
+  scriptAliveTime = uv_hrtime();
 }
 
 bool TrClientContextPerProcess::isScriptNotResponding(int timeoutDuration)
 {
-  using namespace chrono;
-  auto now = duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
-  return now - scriptAliveTime > timeoutDuration;
+  auto actualDuration = static_cast<int>(uv_hrtime() - scriptAliveTime) / 1e6;
+  return actualDuration > timeoutDuration;
 }
 
 FrameRequestId TrClientContextPerProcess::requestAnimationFrame(AnimationFrameRequestCallback callback)
@@ -395,7 +395,7 @@ FrameRequestId TrClientContextPerProcess::requestAnimationFrame(AnimationFrameRe
 
 FrameRequestId TrClientContextPerProcess::requestFrame(TrFrameRequestType type, TrFrameRequestFn fn)
 {
-  lock_guard<mutex> lock(frameRequestMutex);
+  unique_lock<shared_mutex> lock(frameRequestMutex);
   FrameRequestId resId;
   while (true)
   {
@@ -413,7 +413,7 @@ FrameRequestId TrClientContextPerProcess::requestFrame(TrFrameRequestType type, 
 
 void TrClientContextPerProcess::cancelFrame(FrameRequestId id)
 {
-  lock_guard<mutex> lock(frameRequestMutex);
+  unique_lock<shared_mutex> lock(frameRequestMutex);
   frameRequestCallbacksMap.erase(id);
 }
 
@@ -501,7 +501,7 @@ void TrClientContextPerProcess::onListenFrames()
       continue;
 
     auto msgType = frameRequestMsg.getType();
-    if (msgType == TrFrameRequestType::Unknown)
+    if (TR_UNLIKELY(msgType == TrFrameRequestType::Unknown))
     {
       DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received an unknown frame request message", id);
       continue;
@@ -511,7 +511,7 @@ void TrClientContextPerProcess::onListenFrames()
     if (!isScriptNotResponding())
     {
       // Notify the frame request callbacks
-      lock_guard<mutex> lock(frameRequestMutex);
+      shared_lock<shared_mutex> lock(frameRequestMutex);
       for (auto &pair : frameRequestCallbacksMap)
       {
         auto callback = pair.second;

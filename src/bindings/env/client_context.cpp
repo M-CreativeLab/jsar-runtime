@@ -10,6 +10,7 @@ namespace bindings
     Napi::Function func = DefineClass(env, "ClientContext",
                                       {
                                           InstanceMethod("keepAlive", &ClientContext::KeepAlive),
+                                          InstanceMethod("fastPerformanceNow", &ClientContext::FastPerformanceNow),
                                       });
 
     constructor = new Napi::FunctionReference();
@@ -64,5 +65,12 @@ namespace bindings
 
     clientContext->updateScriptTime();
     return env.Undefined();
+  }
+
+  Napi::Value ClientContext::FastPerformanceNow(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Number::New(env, clientContext->performanceNow());
   }
 }

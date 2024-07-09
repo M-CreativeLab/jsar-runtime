@@ -96,12 +96,17 @@ namespace frame_request
     TrFrameRequestSimple(TrFrameRequestType type)
         : TrFrameRequestBase(type, sizeof(T))
     {
+    }
+
+  public:
+    void resetTime()
+    {
       auto now = chrono::system_clock::now();
       time = chrono::duration_cast<chrono::microseconds>(now.time_since_epoch()).count();
     }
 
   public:
-    uint32_t time;
+    uint32_t time = 0;
   };
 
   class TrAnimationFrameRequest : public TrFrameRequestSimple<TrAnimationFrameRequest>

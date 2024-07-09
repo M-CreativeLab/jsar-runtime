@@ -15,6 +15,7 @@ namespace bindings
 
   private:
     Napi::Value KeepAlive(const Napi::CallbackInfo &info);
+    Napi::Value FastPerformanceNow(const Napi::CallbackInfo &info);
 
   private:
     TrClientContextPerProcess *clientContext = nullptr;

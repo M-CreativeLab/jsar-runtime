@@ -29,6 +29,10 @@ declare namespace Transmute {
      * Send a keep alive message.
      */
     keepAlive(): void;
+    /**
+     * Returns the current time in milliseconds in fast mode.
+     */
+    fastPerformanceNow(): number;
   }
 
   type RenderExceptionCallback = (code: number) => void;

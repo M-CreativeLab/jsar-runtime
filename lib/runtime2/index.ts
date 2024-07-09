@@ -2,7 +2,7 @@ import 'babylonjs';
 import { JSARDOM } from '@yodaos-jsar/dom';
 import { extname } from 'node:path';
 
-import { isWebXRSupported } from '@transmute/env';
+import { getPerformanceNow, isWebXRSupported } from '@transmute/env';
 import { dispatchXsmlEvent } from '@transmute/messaging';
 import { NativeDocumentOnTransmute } from './jsardom/impl-transmute';
 
@@ -47,7 +47,7 @@ BABYLON.Tools.GetAbsoluteUrl = (url: string) => {
   return url;
 };
 Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
-  get: () => performance.now()
+  get: () => getPerformanceNow(),
 });
 
 export class TransmuteRuntime2 extends EventTarget {

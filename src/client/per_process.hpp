@@ -5,8 +5,10 @@
 #include <map>
 #include <thread>
 #include <mutex>
+#include <shared_mutex>
 #include <node/node.h>
 #include <node/node_api.h>
+#include <node/uv.h>
 #include <napi.h>
 
 #include "base.hpp"
@@ -89,6 +91,11 @@ public:
 public:
   void start();
   void print();
+
+  /**
+   * Get the current performance time in milliseconds.
+   */
+  inline double performanceNow() { return static_cast<double>(uv_hrtime() - startedAt) / 1e6; }
 
 public: // SNR(Script Not Responsible) methods
   /**
@@ -177,6 +184,7 @@ public:
   uint32_t frameChanPort;
   uint32_t commandBufferChanPort;
   xr::TrDeviceInit xrDeviceInit;
+  uint64_t startedAt;
 
 private:
   ipc::TrOneShotClient<TrEventMessage> *eventChanClient = nullptr;
@@ -201,12 +209,12 @@ private: // xr fields
 private: // frame request fields
   map<FrameRequestId, TrFrameRequestCallback> frameRequestCallbacksMap;
   thread *framesListener = nullptr; // a thread to listen for frame requests
-  mutex frameRequestMutex;
+  shared_mutex frameRequestMutex;
   atomic<bool> framesListenerRunning = false;
 
 private: // service & script alive checking fields
   thread *serviceAliveListener = nullptr;
-  atomic<long> scriptAliveTime = 0;
+  atomic<uint64_t> scriptAliveTime = 0;
 
 private:
   static TrClientContextPerProcess *s_Instance;

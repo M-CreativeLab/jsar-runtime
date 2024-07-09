@@ -42,7 +42,10 @@ namespace renderer
     void dispatchFrameRequest(TrFrameRequestSimple<T> &req)
     {
       if (frameRequestChanSender != nullptr)
+      {
+        req.resetTime();
         frameRequestChanSender->sendFrameRequest(req);
+      }
     }
     void dispatchAnimationFrameRequest();
     void dispatchXRFrameRequest(xr::TrXRSession *session);

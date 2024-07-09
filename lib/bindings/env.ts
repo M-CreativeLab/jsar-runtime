@@ -10,6 +10,10 @@ export function getClientContext(): Transmute.TrClientContext {
   return nativeContext;
 }
 
+export function getPerformanceNow(): number {
+  return nativeContext.fastPerformanceNow();
+}
+
 /**
  * Check if WebXR is supported in the current environment.
  * 

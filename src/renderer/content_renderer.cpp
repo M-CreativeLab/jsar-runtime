@@ -122,15 +122,28 @@ namespace renderer
   {
     if (!shouldSkipDispatchingFrame(time))
     {
-      dispatchAnimationFrameRequest();
-      if (xrDevice->enabled())
+      bool isXRDeviceEnabled = xrDevice->enabled();
+      if (isXRDeviceEnabled && xrDevice->isRenderedAsMultipass())
+      {
+        /**
+         * As for normal animation frame request in multipass xr mode, we only need to dispatch it at left eye.
+         */
+        if (xrDevice->getActiveEyeId() == 0)
+          dispatchAnimationFrameRequest();
+      }
+      else
+      {
+        dispatchAnimationFrameRequest();
+      }
+
+      if (isXRDeviceEnabled)
       {
         bool shouldDispatchXRFrame = false;
         xr::StereoRenderingFrame *stereoRenderingFrame = nullptr;
         // auto renderer = constellation->getRenderer();
         // auto rhi = renderer->getApi();
 
-        if (xrDevice->getStereoRenderingMode() == xr::TrStereoRenderingMode::MultiPass)
+        if (xrDevice->isRenderedAsMultipass())
         {
           auto viewIndex = xrDevice->getActiveEyeId();
           stereoRenderingFrame = getOrCreateStereoFrame(xrDevice);

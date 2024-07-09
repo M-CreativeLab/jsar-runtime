@@ -189,6 +189,8 @@ namespace ipc
       return true;
     }
 
+#define STATIC_BUFFER_SIZE 1024 // 1KB
+
     bool deserialize(TrChannelReceiver<MessageType> *receiver, int recvTimeout)
     {
       usage = USAGE_DESERIALIZE; // mark as deserialized
@@ -204,17 +206,35 @@ namespace ipc
       if (!receiver->tryRecvRaw(&contentSize, sizeof(contentSize), recvTimeout))
         return false;
 
-      auto buffer = (char *)malloc(contentSize);
-      if (buffer == nullptr)
-        return false;
+      /**
+       * NOTE: Static buffer is an optimization to reduce the heap allocation, it avoids the heap allocation when the
+       * content size is less than `STATIC_BUFFER_SIZE`, in most cases, the content size is less than 1024 bytes, thus
+       * it could use the stack memory instead.
+       */
+      char staticBuffer[STATIC_BUFFER_SIZE];
+      bool usingStaticBuffer = false;
+      char *buffer = nullptr;
+      if (contentSize > STATIC_BUFFER_SIZE)
+      {
+        buffer = (char *)malloc(contentSize);
+        usingStaticBuffer = false;
+      }
+      else
+      {
+        buffer = staticBuffer;
+        usingStaticBuffer = true;
+      }
+
       if (!receiver->tryRecvRaw(buffer, contentSize, recvTimeout))
       {
-        free(buffer); // free the allocated buffer if failed to receive.
+        if (usingStaticBuffer == false && buffer != nullptr)
+          free(buffer); // free the allocated buffer if failed to receive.
         return false;
       }
 
       int res = deserializeContent(buffer, contentSize);
-      free(buffer);
+      if (usingStaticBuffer == false && buffer != nullptr)
+        free(buffer);
       return res;
     }
 
