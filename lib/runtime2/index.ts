@@ -165,12 +165,11 @@ export class TransmuteRuntime2 extends EventTarget {
       dispatchXsmlEvent(nativeDocument.id, 'loaded');
 
       const spaceNode = dom.document.space.asNativeType<BABYLON.TransformNode>();
-      spaceNode.setEnabled(false);
       {
         await dom.waitForSpaceReady();
         dispatchXsmlEvent(nativeDocument.id, 'fcp');
       }
-      this.fitSpaceWithScene(spaceNode);
+      spaceNode.setEnabled(true);
     } catch (err) {
       console.error(`occurs an error when loading document:`, err);
       // TODO: report to the native side.
@@ -178,17 +177,5 @@ export class TransmuteRuntime2 extends EventTarget {
       await dom.unload();
       dom.nativeDocument.close();
     }
-  }
-
-  private fitSpaceWithScene(spaceNode: BABYLON.TransformNode, ratio = 1.0) {
-    /**
-     * Scale the space to fit the scene.
-     */
-    const boundingVectors = spaceNode.getHierarchyBoundingVectors(true);
-    const sceneSize = boundingVectors.max.subtract(boundingVectors.min);
-    const scalingRatio = Math.min(ratio / sceneSize.x, ratio / sceneSize.y, ratio / sceneSize.z);
-    spaceNode.scaling = new BABYLON.Vector3(scalingRatio, scalingRatio, scalingRatio);
-    spaceNode.setEnabled(true);
-    console.info('space has been scaled to fit the scene, and the scaling ratio is:', scalingRatio);
   }
 }

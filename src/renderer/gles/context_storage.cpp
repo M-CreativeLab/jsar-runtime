@@ -122,10 +122,9 @@ void OpenGLContextStorage::Restore()
    * FIXME: When the cull face is enabled, restore the cullface and frontface states.
    */
   if (m_CullFaceEnabled)
-  {
     glCullFace(m_CullFace);
+  if (m_FrontFace == GL_CW || m_FrontFace == GL_CCW)
     glFrontFace(m_FrontFace);
-  }
 
   glDepthMask(m_DepthMask);
   if (m_DepthTestEnabled)
@@ -221,13 +220,6 @@ void OpenGLContextStorage::ClearTextureBindings()
   for (auto it = m_TextureBindingsWithUnit.begin(); it != m_TextureBindingsWithUnit.end(); it++)
     delete it->second;
   m_TextureBindingsWithUnit.clear();
-}
-
-void OpenGLHostContextStorage::Restore()
-{
-  OpenGLContextStorage::Restore();
-  if (m_FrontFace == GL_CCW || m_FrontFace == GL_CW)
-    glFrontFace(m_FrontFace);
 }
 
 void OpenGLHostContextStorage::Record()

@@ -169,7 +169,6 @@ public:
   }
 
 public:
-  void Restore();
   void Record();
   void RecordTextureBindingFromHost();
 };

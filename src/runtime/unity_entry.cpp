@@ -99,7 +99,7 @@ UnityEmbedder *UnityEmbedder::EnsureAndGet()
 
 extern "C"
 {
-  static float s_WorldScalingFactor = 2.0;
+  static float s_WorldScalingFactor = 1.0;
   static void OnPlatformSetup(UnityEmbedder *embedder)
   {
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
@@ -252,9 +252,9 @@ extern "C"
     if (xrDevice == NULL)
       return false;
 
-    float tx = translation[0] * s_WorldScalingFactor;
-    float ty = translation[1] * s_WorldScalingFactor;
-    float tz = translation[2] * s_WorldScalingFactor;
+    float tx = translation[0];
+    float ty = translation[1];
+    float tz = translation[2];
     float rx = rotation[0];
     float ry = rotation[1];
     float rz = rotation[2];

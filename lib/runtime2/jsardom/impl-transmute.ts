@@ -234,9 +234,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     scene.autoClear = false;
     scene.autoClearDepthAndStencil = false;
     scene.blockMaterialDirtyMechanism = true;
-    scene.performancePriority = BABYLON.ScenePerformancePriority.Aggressive;
-    scene.freezeActiveMeshes();
-    scene.freezeMaterials();
+    scene.performancePriority = BABYLON.ScenePerformancePriority.Intermediate;
 
     this._defaultCamera = new BABYLON.ArcRotateCamera(
       'default_camera',
