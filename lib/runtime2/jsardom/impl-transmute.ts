@@ -16,7 +16,6 @@ import {
 import ImageDataImpl from '@yodaos-jsar/dom/src/living/image/ImageData';
 import * as ws from 'ws';
 import * as undici from 'undici';
-import * as logger from '@transmute/logger';
 import { getClientContext, isWebXRSupported } from '@transmute/env';
 
 import { WebGLMatrix } from '../../webgl/WebGLMatrix';
@@ -197,7 +196,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
   engine: JSARNativeEngine;
   userAgent: JSARUserAgent;
   baseURI: string;
-  console: Console = new logger.Logger();
+  console: Console = console;
   attachedDocument: SpatialDocumentImpl<NativeDocumentOnTransmute>;
   closed: boolean = false;
   cdpTransport?: jsarCdp.ITransport;
@@ -220,7 +219,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     this.engine = new EngineOnTransmute(glContext, true, {
       xrCompatible: true,
     });
-    logger.info('Engine created in', performance.now() - now, 'ms');
+    console.info('Engine created in', performance.now() - now, 'ms');
 
     this.userAgent = new UserAgentBackendOnTransmute({
       defaultStylesheet: '',
@@ -235,7 +234,9 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     scene.autoClear = false;
     scene.autoClearDepthAndStencil = false;
     scene.blockMaterialDirtyMechanism = true;
-    scene.performancePriority = BABYLON.ScenePerformancePriority.Intermediate;
+    scene.performancePriority = BABYLON.ScenePerformancePriority.Aggressive;
+    scene.freezeActiveMeshes();
+    scene.freezeMaterials();
 
     this._defaultCamera = new BABYLON.ArcRotateCamera(
       'default_camera',

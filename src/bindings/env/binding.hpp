@@ -1,6 +1,5 @@
 #pragma once
 
-#include "env_wrap.hpp"
 #include "client_context.hpp"
 
 namespace bindings

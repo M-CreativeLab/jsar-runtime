@@ -301,15 +301,13 @@ namespace xr
                                                       {
       while (m_CommandClientWatcherRunning)
       {
-        auto newClient = m_CommandChanServer->tryAccept(m_AcceptTimeout);
-        if (newClient != nullptr)
-        {
-           auto content = m_Constellation->getContentManager()->findContent(newClient->getPid());
+        m_CommandChanServer->tryAccept([this](ipc::TrOneShotClient<TrXRCommandMessage>& newClient){
+          auto content = m_Constellation->getContentManager()->findContent(newClient.getPid());
           if (content == nullptr)
-            m_CommandChanServer->removeClient(newClient);
+            m_CommandChanServer->removeClient(&newClient);
           else
-            content->setupWithXRCommandBufferClient(newClient);
-        }
+            content->setupWithXRCommandBufferClient(&newClient);
+        }, m_AcceptTimeout);
       } });
   }
 

@@ -52,21 +52,6 @@ namespace commandbuffers
       if (TR_UNLIKELY(bufferToSend == nullptr))
         return false;
 
-      static time_t lastTime = 0;
-      static int count = 0;
-      static int bytes = 0;
-      time_t currentTime = time(NULL);
-      count++;
-      bytes += bufferSize;
-
-      if (currentTime > lastTime)
-      {
-        printf("Calls per second: %d times %dKB\n", count, bytes / 1024);
-        count = 0; // 重置计数
-        bytes = 0;
-        lastTime = currentTime;
-      }
-
       auto r = sendRaw(bufferToSend, bufferSize);
       free(bufferToSend);
       bufferToSend = nullptr;

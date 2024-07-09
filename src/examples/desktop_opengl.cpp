@@ -514,13 +514,13 @@ int main(int argc, char **argv)
     rapidjson::Value dirnameValue(dirname.c_str(), allocator);
     doc.AddMember("applicationCacheDirectory", dirnameValue, allocator);
     {
-      const char* httpsProxyServer = getenv("https_proxy");
+      const char *httpsProxyServer = getenv("https_proxy");
       if (httpsProxyServer != nullptr)
       {
         rapidjson::Value httpsProxyServerValue(httpsProxyServer, allocator);
         doc.AddMember("httpsProxyServer", httpsProxyServerValue, allocator);
       }
-      const char* enableV8Profiling = getenv("ENABLE_V8_PROFILING");
+      const char *enableV8Profiling = getenv("ENABLE_V8_PROFILING");
       if (enableV8Profiling != nullptr)
         doc.AddMember("enableV8Profiling", true, allocator);
     }
@@ -545,16 +545,19 @@ int main(int argc, char **argv)
     auto eventTarget = embedder->getNativeEventTarget();
     assert(eventTarget != nullptr);
 
-    rapidjson::Document requestDoc;
-    rapidjson::Value requestUrlValue(requestUrl.c_str(), requestDoc.GetAllocator());
+    for (int i = 0; i < 1; i++)
+    {
+      rapidjson::Document requestDoc;
+      rapidjson::Value requestUrlValue(requestUrl.c_str(), requestDoc.GetAllocator());
 
-    requestDoc.SetObject();
-    requestDoc.AddMember("url", requestUrlValue, requestDoc.GetAllocator());
-    requestDoc.AddMember("sessionId", 1, requestDoc.GetAllocator());
-    rapidjson::StringBuffer requestBuffer;
-    rapidjson::Writer<rapidjson::StringBuffer> requestWriter(requestBuffer);
-    requestDoc.Accept(requestWriter);
-    eventTarget->dispatchEvent(TrEventType::TR_EVENT_XSML_REQUEST, requestBuffer.GetString());
+      requestDoc.SetObject();
+      requestDoc.AddMember("url", requestUrlValue, requestDoc.GetAllocator());
+      requestDoc.AddMember("sessionId", i + 1, requestDoc.GetAllocator());
+      rapidjson::StringBuffer requestBuffer;
+      rapidjson::Writer<rapidjson::StringBuffer> requestWriter(requestBuffer);
+      requestDoc.Accept(requestWriter);
+      eventTarget->dispatchEvent(TrEventType::TR_EVENT_XSML_REQUEST, requestBuffer.GetString());
+    }
   }
 
   glfwMakeContextCurrent(windowCtx.window);

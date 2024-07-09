@@ -1,5 +1,3 @@
-import * as logger from '@transmute/logger';
-
 type ArgType = 'default' | 'ignore' | 'constant';
 type TypedArray =
   Uint8Array |
@@ -71,7 +69,7 @@ export function makeNativeCall(
   try {
     r = fn.apply(this, args);
   } catch (err) {
-    logger.error(`Failed to make native call => gl.${name}(${args.join(', ')})`, err);
+    console.error(`Failed to make native call => gl.${name}(${args.join(', ')})`, err);
     throw err;
   }
 
@@ -109,7 +107,7 @@ export function makeNativeCall(
     } else if (typeof r !== 'undefined') {
       returnStr = `=> <${typeof r}>`;
     }
-    logger.info(`WebGL::${name}(${argsStr}) ${returnStr}`);
+    console.info(`WebGL::${name}(${argsStr}) ${returnStr}`);
   }
   return r;
 }

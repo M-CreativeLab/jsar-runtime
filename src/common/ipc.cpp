@@ -451,7 +451,7 @@ namespace ipc
       DEBUG(LOG_TAG_IPC, "Failed to create a socket address and bind, there is no available port.");
       return;
     }
-    if (::listen(fd, 1) == -1)
+    if (::listen(fd, 16) == -1)
     {
       close(fd);
       DEBUG(LOG_TAG_IPC, "Failed to listen a socket: %s", strerror(errno));
@@ -492,11 +492,8 @@ namespace ipc
     struct sockaddr_in clientAddr;
     socklen_t addrLen = sizeof(clientAddr);
     int clientFd = ::accept(fd, reinterpret_cast<struct sockaddr *>(&clientAddr), &addrLen);
-    if (clientFd <= -1)
-    {
-      DEBUG(LOG_TAG_IPC, "Failed to accept a client: %s", strerror(errno));
+    if (clientFd == -1)
       return nullptr;
-    }
 
     struct linger linger;
     linger.l_onoff = 1;
@@ -516,25 +513,35 @@ namespace ipc
   }
 
   template <typename T>
-  TrOneShotClient<T> *TrOneShotServer<T>::tryAccept(int timeout)
+  bool TrOneShotServer<T>::tryAccept(std::function<void(TrOneShotClient<T> &)> connCb, int timeout)
   {
     if (blocking)
     {
       DEBUG(LOG_TAG_IPC, "The server is in blocking mode, thus tryAccept() is not available.");
-      return nullptr;
+      return false;
     }
 
     int events = poll(fds, 1, timeout);
     if (events <= -1)
     {
       DEBUG(LOG_TAG_IPC, "Failed to poll the server: %s", strerror(errno));
-      return nullptr;
+      return false;
     }
-
     if (fds[0].revents & POLLIN)
-      return accept();
-    else
-      return nullptr;
+    {
+      fds[0].revents = 0;
+      auto newClient = accept();
+      if (newClient != nullptr)
+      {
+        connCb(*newClient);
+        return true;
+      }
+      else
+      {
+        DEBUG(LOG_TAG_IPC, "Failed to accept a new client: %s", strerror(errno));
+      }
+    }
+    return false;
   }
 
   template <typename T>

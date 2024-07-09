@@ -6,16 +6,15 @@
  */
 import './polyfills/textdecoder';
 import minimist from 'minimist';
-import * as logger from '@transmute/logger';
 import { getClientContext } from '@transmute/env';
 
 const args = minimist(process.argv.slice(1));
 const clientContext = getClientContext();
-logger.info('The command line arguments:', args);
+console.info('The command line arguments:', args);
 
 const bootstrapStart = performance.now();
 const id = args.id || 'unknown';
-logger.info(`Starting the JavaScript runtime(${process.pid}) => ${id}`, process.argv);
+console.info(`Starting the JavaScript runtime(${process.pid}) => ${id}`, process.argv);
 process.title = `TrScript ${id}`;
 
 import './polyfills';
@@ -47,8 +46,8 @@ function bootwait(fn: () => void) {
 bootwait(async function main() {
   try {
     const runtimeStart = performance.now();
-    logger.info('The Node.js runtime bootstrap takes', runtimeStart - bootstrapStart, 'ms');
-    logger.info('The context init is:', clientContext);
+    console.info('The Node.js runtime bootstrap takes', runtimeStart - bootstrapStart, 'ms');
+    console.info('The context init is:', clientContext);
     if (!connectRenderer(clientContext)) {
       throw new Error('failed to connect to the renderer.');
     }
@@ -58,7 +57,7 @@ bootwait(async function main() {
     runtime.start(clientContext.url, clientContext.id);
 
     const initializedEnd = performance.now();
-    logger.info('Time summary:', {
+    console.info('Time summary:', {
       bootstrap: runtimeStart - bootstrapStart,
       initialize: initializedEnd - runtimeStart,
       total: initializedEnd - bootstrapStart,
@@ -83,6 +82,6 @@ bootwait(async function main() {
       );
     }
   } catch (err) {
-    logger.error('failed to start the runtime, occurs an error:', err);
+    console.error('failed to start the runtime, occurs an error:', err);
   }
 });

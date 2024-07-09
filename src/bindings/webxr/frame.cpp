@@ -105,17 +105,16 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (animationFrame == false)
+    if (TR_UNLIKELY(animationFrame == false))
     {
       Napi::TypeError::New(env, NON_ANIMFRAME_MSG).ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    if (active == false)
+    if (TR_UNLIKELY(active == false))
     {
       Napi::TypeError::New(env, NON_ACTIVE_MSG).ThrowAsJavaScriptException();
       return env.Undefined();
     }
-
     if (info.Length() < 1)
     {
       Napi::TypeError::New(env, "getViewerPose requires a reference space object").ThrowAsJavaScriptException();

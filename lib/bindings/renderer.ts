@@ -1,4 +1,3 @@
-import * as logger from './logger';
 import { getContext as createWebGLRenderingContext } from '../webgl';
 
 const {
@@ -103,7 +102,7 @@ export function connectRenderer(clientContext: Transmute.TrClientContext): boole
   try {
     globalGlContext = createWebGLRenderingContext(clientContext.webglVersion === 1 ? 'webgl' : 'webgl2');
   } catch (err) {
-    logger.warn('failed to create webgl context:', err);
+    console.warn('failed to create webgl context:', err);
   }
   if (globalGlContext == null) {
     throw new Error('failed to create webgl context.');

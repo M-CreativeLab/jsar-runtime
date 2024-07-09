@@ -1,5 +1,3 @@
-import * as logger from './logger';
-
 const binding = process._linkedBinding('transmute:messaging');
 const nativeEventTarget = new binding.NativeEventTarget(onNativeEventListener);
 const eventTarget = new EventTarget();
@@ -87,11 +85,11 @@ function onNativeEventListener(id: number, type: number, message: string) {
   } else if (type === EventType.xsmlRequest) {
     const req = <XsmlRequestInit>JSON.parse(message);
     if (!req.url) {
-      logger.warn('invalid xsml request, `url` is required.');
+      console.warn('invalid xsml request, `url` is required.');
       return;
     }
     if (!req.sessionId) {
-      logger.warn('invalid xsml request, `sessionId` is required.');
+      console.warn('invalid xsml request, `sessionId` is required.');
       return;
     }
     const requestEvent = new XsmlRequestEvent(req);
@@ -101,7 +99,7 @@ function onNativeEventListener(id: number, type: number, message: string) {
     const newEvent = new CustomEvent(eventData.subType, { detail: eventData.message });
     eventTarget.dispatchEvent(newEvent);
   } else {
-    logger.warn(`unknown event type: ${type}`);
+    console.warn(`unknown event type: ${type}`);
   }
 }
 

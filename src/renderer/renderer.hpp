@@ -98,7 +98,7 @@ namespace renderer
     vector<TrContentRenderer *> contentRenderers;
     bool isHostContextSummaryEnabled = false;
     bool isAppContextSummaryEnabled = false;
-    uint32_t clientDefaultFrameRate = 60;
+    uint32_t clientDefaultFrameRate = 30;
 
   private: // fields for frame request
     ipc::TrOneShotServer<TrFrameRequestMessage> *frameRequestChanServer = nullptr;

@@ -69,7 +69,6 @@ namespace ipc
   public:
     /**
      * Try to receive a new instance T with a timeout.
-     * 
      * @param timeout
      * @return a new instance.
      */
@@ -144,7 +143,7 @@ namespace ipc
     /**
      * Accepts a client in non-blocking mode.
      */
-    TrOneShotClient<T> *tryAccept(int timeout = 0);
+    bool tryAccept(std::function<void(TrOneShotClient<T> &)> connCb, int timeout = 0);
     /**
      * It returns the client list.
      */

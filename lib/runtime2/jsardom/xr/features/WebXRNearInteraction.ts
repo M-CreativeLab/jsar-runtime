@@ -1,4 +1,3 @@
-import * as logger from '../../../../bindings/logger';
 import { WebXRFeatureName, WebXRFeaturesManager } from '../FeatureManager';
 import type { WebXRSessionManager } from '../SessionManager';
 import { WebXRAbstractFeature } from './WebXRAbstractFeature';

@@ -16,7 +16,6 @@ using namespace bindings;
 #define TR_NAPI_MODULE_MAP(XX) \
   XX(canvas)                   \
   XX(env)                      \
-  XX(logger)                   \
   XX(messaging)                \
   XX(renderer)                 \
   XX(webgl)                    \
@@ -53,7 +52,8 @@ ScriptEnvironment::ScriptEnvironment()
       scriptSource};
 
   // TODO: Check if we are in debug mode
-  args.insert(args.begin() + 1, "--inspect");
+  static int debugPort = 9229;
+  args.insert(args.begin() + 1, "--inspect=0.0.0.0:" + to_string(debugPort++));
   scriptArgs = args;
 }
 
@@ -96,7 +96,7 @@ bool ScriptEnvironment::initialize()
   }
 
   // Initialize the v8/nodejs platform.
-  std::unique_ptr<node::MultiIsolatePlatform> platform = node::MultiIsolatePlatform::Create(4);
+  std::unique_ptr<node::MultiIsolatePlatform> platform = node::MultiIsolatePlatform::Create(1);
   v8::V8::InitializePlatform(platform.get());
   v8::V8::Initialize();
   nodePlatform = platform.release();
@@ -343,28 +343,28 @@ void TrClientContextPerProcess::start()
                                       } });
 
   // Finish the client start.
-  DEBUG(LOG_TAG_CLIENT_ENTRY, "The client(%d) is started.", id);
+  fprintf(stdout, "The client(%d) is started.\n", id);
 }
 
 void TrClientContextPerProcess::print()
 {
-  DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) url=%s", id, url.c_str());
-  DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) applicationCacheDirectory=%s", id, applicationCacheDirectory.c_str());
-  DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) httpsProxyServer=%s", id, httpsProxyServer.c_str());
-  DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) eventChanPort=%d", id, eventChanPort);
-  DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) frameChanPort=%d", id, frameChanPort);
-  DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) commandBufferChanPort=%d", id, commandBufferChanPort);
+  fprintf(stdout, "ClientContext(%d) url=%s\n", id, url.c_str());
+  fprintf(stdout, "ClientContext(%d) applicationCacheDirectory=%s\n", id, applicationCacheDirectory.c_str());
+  fprintf(stdout, "ClientContext(%d) httpsProxyServer=%s\n", id, httpsProxyServer.c_str());
+  fprintf(stdout, "ClientContext(%d) eventChanPort=%d\n", id, eventChanPort);
+  fprintf(stdout, "ClientContext(%d) frameChanPort=%d\n", id, frameChanPort);
+  fprintf(stdout, "ClientContext(%d) commandBufferChanPort=%d\n", id, commandBufferChanPort);
 
   if (xrDeviceInit.enabled == true)
   {
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) xrDeviceInit.active=%s", id, xrDeviceInit.active ? "YES" : "NO");
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) xrDeviceInit.stereoRenderingMode=%d", id,
-          static_cast<int>(xrDeviceInit.stereoRenderingMode));
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) xrDeviceInit.commandChanPort=%d", id, xrDeviceInit.commandChanPort);
+    fprintf(stdout, "ClientContext(%d) xrDeviceInit.active=%s\n", id, xrDeviceInit.active ? "YES" : "NO");
+    fprintf(stdout, "ClientContext(%d) xrDeviceInit.stereoRenderingMode=%d\n", id,
+            static_cast<int>(xrDeviceInit.stereoRenderingMode));
+    fprintf(stdout, "ClientContext(%d) xrDeviceInit.commandChanPort=%d\n", id, xrDeviceInit.commandChanPort);
   }
   else
   {
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) xrDeviceInit.enabled=NO");
+    fprintf(stdout, "ClientContext(%d) xrDeviceInit.enabled=NO\n", id);
   }
 }
 

@@ -4,8 +4,6 @@ import * as os from 'node:os';
 import * as url from 'node:url';
 import { resolveObjectURL } from 'node:buffer';
 
-import * as logger from '../bindings/logger';
-
 class SecurityError extends Error { }
 class InvalidStateError extends Error { }
 class NetworkError extends Error { }
@@ -343,7 +341,7 @@ export class XMLHttpRequestImpl extends XMLHttpRequestEventTargetImpl implements
     this._url = xhrUrl;
     if (this._url.protocol === 'blob:') {
       this._blobFromUrl = resolveObjectURL(urlStr);
-      logger.info(`created a blob from url:`, this._blobFromUrl, this._url, urlStr);
+      console.info(`created a blob from url:`, this._blobFromUrl, this._url, urlStr);
     }
     this._sync = !async;
     this._headers = {};

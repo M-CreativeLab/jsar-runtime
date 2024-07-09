@@ -176,6 +176,7 @@ void TrContentRuntime::setupWithCommandBufferClient(TrOneShotClient<TrCommandBuf
   commandBufferChanReceiver = new TrCommandBufferReceiver(client);
   commandBufferChanSender = new TrCommandBufferSender(client);
   commandBufferChanClient = client;
+  DEBUG(LOG_TAG_CONTENT, "Setup the command buffer channel with client(%d, %d)", client->getPid(), id);
 }
 
 bool TrContentRuntime::sendCommandBufferResponse(TrCommandBufferResponse &res)
@@ -423,29 +424,32 @@ bool TrContentManager::initialize()
     SET_THREAD_NAME("TrEventChanWatcher");
     while (watcherRunning)
     {
-      auto newClient = eventChanServer->tryAccept(1000);
-      if (newClient != nullptr)
-      {
-        lock_guard<mutex> lock(contentsMutex);
+      eventChanServer->tryAccept([this](TrOneShotClient<TrEventMessage> &newClient)
+                                 {
+        shared_lock<shared_mutex> lock(contentsMutex);
 
         bool foundNewClient = false;
         for (auto it = contents.begin(); it != contents.end(); ++it)
         {
           auto content = *it;
-          if (content->pid == newClient->getPid())
+          if (content->pid == newClient.getPid())
           {
             foundNewClient = true;
-            content->eventChanReceiver = new TrEventReceiver(newClient);
-            content->eventChanSender = new TrEventSender(newClient);
+            content->eventChanReceiver = new TrEventReceiver(&newClient);
+            content->eventChanSender = new TrEventSender(&newClient);
             break;
           }
         }
 
         if (foundNewClient)
-          DEBUG(LOG_TAG_CONTENT, "New client(#%d) connected to the event channel.", newClient->getPid());
+          DEBUG(LOG_TAG_CONTENT, "New client(#%d) connected to the event channel.", newClient.getPid());
         else
-          eventChanServer->removeClient(newClient); // remove the client if it is not found by pid.
-      }
+        {
+          DEBUG(LOG_TAG_CONTENT, "Failed to accept a new client(#%d) on the event channel: pid is not found",
+                newClient.getPid());
+          eventChanServer->removeClient(&newClient); // remove the client if it is not found by pid.
+        }
+      }, 1000);
     } });
 
   commandBuffersWorkerRunning = true;
@@ -456,6 +460,7 @@ bool TrContentManager::initialize()
     uint32_t timeout = 100;
     while (commandBuffersWorkerRunning)
     {
+      shared_lock<shared_mutex> lock(contentsMutex);
       /**
        * No contents or command buffers receving is paused, just sleep for timeout.
        * 
@@ -477,32 +482,8 @@ bool TrContentManager::initialize()
   xrCommandsRecvWorker = std::make_unique<thread>([this]()
                                                   {
     SET_THREAD_NAME("TrXRCommandsWorker");
-
-    uint32_t timeout = 100;
     while (xrCommandsWorkerRunning)
-    {
-      if (contents.empty() || constellation->getXrDevice() == nullptr)
-      {
-        this_thread::sleep_for(chrono::milliseconds(timeout));
-        continue;
-      }
-      else
-      {
-        auto xrDevice = constellation->getXrDevice();
-        for (auto it = contents.begin(); it != contents.end(); ++it)
-        {
-          auto content = *it;
-          if (content->xrCommandChanReceiver == nullptr)
-            continue;
-          auto xrCommandMessage = content->xrCommandChanReceiver->recvCommandMessage(timeout);
-          if (xrCommandMessage != nullptr)
-          {
-            xrDevice->handleCommandMessage(*xrCommandMessage, content);
-            delete xrCommandMessage;
-          }
-        }
-      }
-    } });
+      this->onRecvXrCommands(); });
   return true;
 }
 
@@ -536,7 +517,7 @@ bool TrContentManager::shutdown()
 bool TrContentManager::tickOnFrame()
 {
   // Check the status of each content runtime.
-  lock_guard<mutex> lock(contentsMutex);
+  shared_lock<shared_mutex> lock(contentsMutex);
 
   /**
    * Pausing the command buffers receiving when in host frame.
@@ -568,7 +549,7 @@ TrContentRuntime *TrContentManager::makeContent()
 {
   TrContentRuntime *content = new TrContentRuntime(this);
   {
-    lock_guard<mutex> lock(contentsMutex);
+    unique_lock<shared_mutex> lock(contentsMutex);
     contents.push_back(content);
   }
   return content;
@@ -576,7 +557,7 @@ TrContentRuntime *TrContentManager::makeContent()
 
 TrContentRuntime *TrContentManager::findContent(pid_t pid)
 {
-  lock_guard<mutex> lock(contentsMutex);
+  shared_lock<shared_mutex> lock(contentsMutex);
   for (auto it = contents.begin(); it != contents.end(); ++it)
   {
     auto content = *it;
@@ -588,7 +569,7 @@ TrContentRuntime *TrContentManager::findContent(pid_t pid)
 
 void TrContentManager::disposeContent(TrContentRuntime *content)
 {
-  lock_guard<mutex> lock(contentsMutex);
+  unique_lock<shared_mutex> lock(contentsMutex);
   auto it = std::find(contents.begin(), contents.end(), content);
   if (it != contents.end())
   {
@@ -605,4 +586,29 @@ void TrContentManager::onRequestEvent(TrEvent &event)
   auto content = makeContent();
   if (content != nullptr)
     content->start(event.detail.get<TrXSMLRequestInit>());
+}
+
+void TrContentManager::onRecvXrCommands(int timeout)
+{
+  if (contents.empty() || constellation->getXrDevice() == nullptr)
+  {
+    this_thread::sleep_for(chrono::milliseconds(timeout));
+  }
+  else
+  {
+    shared_lock<shared_mutex> lock(contentsMutex);
+    auto xrDevice = constellation->getXrDevice();
+    for (auto it = contents.begin(); it != contents.end(); ++it)
+    {
+      auto content = *it;
+      if (content->xrCommandChanReceiver == nullptr)
+        continue;
+      auto xrCommandMessage = content->xrCommandChanReceiver->recvCommandMessage(timeout);
+      if (xrCommandMessage != nullptr)
+      {
+        xrDevice->handleCommandMessage(*xrCommandMessage, content);
+        delete xrCommandMessage;
+      }
+    }
+  }
 }

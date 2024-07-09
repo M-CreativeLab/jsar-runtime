@@ -184,28 +184,28 @@ void OpenGLContextStorage::Restore()
 #if UNITY_ANDROID || UNITY_WEBGL
   EGLint eglError = eglGetError();
   if (eglError == EGL_CONTEXT_LOST)
-    DEBUG(DEBUG_TAG, "EGL context lost, need to reload the context.");
+    DEBUG(LOG_TAG_ERROR, "EGL context lost, need to reload the context.");
   else if (eglError != EGL_SUCCESS)
-    DEBUG(DEBUG_TAG, "Occurs an EGL error: 0x%04X", eglError);
+    DEBUG(LOG_TAG_ERROR, "Occurs an EGL error: 0x%04X", eglError);
 #endif
 
   if (setViewportError != GL_NO_ERROR)
-    DEBUG(DEBUG_TAG, "Occurs an error in glViewport(%d, %d, %d, %d) when restoring %s context: 0x%04X",
+    DEBUG(LOG_TAG_ERROR, "Occurs an error in glViewport(%d, %d, %d, %d) when restoring %s context: 0x%04X",
           m_Viewport[0], m_Viewport[1], m_Viewport[2], m_Viewport[3], GetName(), setViewportError);
   if (useProgramError != GL_NO_ERROR)
-    DEBUG(DEBUG_TAG, "Occurs an error in glUseProgram(%d) when restoring %s context: 0x%04X",
+    DEBUG(LOG_TAG_ERROR, "Occurs an error in glUseProgram(%d) when restoring %s context: 0x%04X",
           m_ProgramId, GetName(), useProgramError);
   if (bindBuffersError != GL_NO_ERROR)
-    DEBUG(DEBUG_TAG, "Occurs an error in buffers binding when restoring %s context: 0x%04X",
+    DEBUG(LOG_TAG_ERROR, "Occurs an error in buffers binding when restoring %s context: 0x%04X",
           GetName(), bindBuffersError);
   if (bindTextureError != GL_NO_ERROR)
-    DEBUG(DEBUG_TAG, "Occurs an error in texture bindings when restoring %s context: 0x%04X",
+    DEBUG(LOG_TAG_ERROR, "Occurs an error in texture bindings when restoring %s context: 0x%04X",
           GetName(), bindTextureError);
 
   // Check for OpenGL errors
   GLenum error = glGetError();
   if (error != GL_NO_ERROR)
-    DEBUG(DEBUG_TAG, "Occurs an OpenGL error in restoring %s context: 0x%04X", error, GetName());
+    DEBUG(LOG_TAG_ERROR, "Occurs an OpenGL error in restoring %s context: 0x%04X", error, GetName());
 }
 
 void OpenGLContextStorage::Print()
@@ -277,7 +277,7 @@ void OpenGLHostContextStorage::Record()
   // Check for errors
   GLenum error = glGetError();
   if (error != GL_NO_ERROR)
-    DEBUG(DEBUG_TAG, "Occurs an OpenGL error in recording %s context: 0x%04X", GetName(), error);
+    DEBUG(LOG_TAG_ERROR, "Occurs an OpenGL error in recording %s context: 0x%04X", GetName(), error);
 }
 
 void OpenGLHostContextStorage::RecordTextureBindingFromHost()

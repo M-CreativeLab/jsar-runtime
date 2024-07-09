@@ -1,5 +1,3 @@
-import * as logger from '@transmute/logger';
-
 /**
  * Browser Pollyfills for Node.js
  */
@@ -139,6 +137,6 @@ Object.defineProperties(globalThis, {
 });
 globalThis.window = createWindow();
 
-logger.info('Polyfills have been loaded.');
-logger.info(`window() =>`, typeof window, typeof globalThis.window);
-logger.info('=============================');
+console.info('Polyfills have been loaded.');
+console.info(`window() =>`, typeof window, typeof globalThis.window);
+console.info('=============================');

@@ -198,18 +198,12 @@ extern "C"
 
   DLL_PUBLIC bool TransmuteNative_GetEventFromJavaScript(int *id, int *type, uint32_t *size)
   {
-    // auto nativeEventTarget = messaging::UnityEventListenerWrap::GetInstance();
-    // if (nativeEventTarget == nullptr)
-    //   return false;
-    // return nativeEventTarget->GetEvent(id, type, nullptr, size, false);
     return false;
   }
 
   DLL_PUBLIC void TransmuteNative_GetEventDataFromJavaScript(const char *data)
   {
-    // auto nativeEventTarget = messaging::UnityEventListenerWrap::GetInstance();
-    // if (nativeEventTarget != nullptr)
-    //   nativeEventTarget->GetEvent(nullptr, nullptr, data, nullptr, true);
+    // TODO
   }
 
   DLL_PUBLIC void TransmuteNative_OnRenderFrame()

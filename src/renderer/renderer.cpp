@@ -218,29 +218,26 @@ namespace renderer
       SET_THREAD_NAME("TrFrameRequestWatcher");
       while (watcherRunning)
       {
-        auto newClient = frameRequestChanServer->tryAccept(ClientsRecvTimeout);
-        if (newClient != nullptr)
-        {
+        frameRequestChanServer->tryAccept([this](TrOneShotClient<TrFrameRequestMessage> &newClient) {
           lock_guard<mutex> lock(contentRendererMutex);
-          auto contentRenderer = findContentRenderer(newClient->getPid());
+          auto contentRenderer = findContentRenderer(newClient.getPid());
           if (contentRenderer != nullptr)
-            contentRenderer->resetFrameRequestChanSenderWith(newClient);
-        }
+            contentRenderer->resetFrameRequestChanSenderWith(&newClient);
+        }, 100);
       } });
     commandBufferClientWatcher = std::make_unique<thread>([this]()
                                                           {
       SET_THREAD_NAME("TrCommandBufferWatcher");
       while (watcherRunning)
       {
-        auto newClient = commandBufferChanServer->tryAccept(ClientsRecvTimeout);
-        if (newClient != nullptr)
-        {
-          auto content = constellation->getContentManager()->findContent(newClient->getPid());
+        commandBufferChanServer->tryAccept([this](TrOneShotClient<TrCommandBufferMessage> &newClient) {
+          auto content = constellation->getContentManager()->findContent(newClient.getPid());
+          DEBUG(LOG_TAG_RENDERER, "New command buffer client: %d", newClient.getPid());
           if (content == nullptr)
-            commandBufferChanServer->removeClient(newClient);
+            commandBufferChanServer->removeClient(&newClient);
           else
-            content->setupWithCommandBufferClient(newClient);
-        }
+            content->setupWithCommandBufferClient(&newClient);
+        }, 100);
       } });
   }
 

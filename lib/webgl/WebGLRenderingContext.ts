@@ -1,4 +1,3 @@
-import * as logger from '../bindings/logger';
 import { WebGLShaderPrecisionFormatImpl } from './WebGLShaderPrecisionFormat';
 import { getExtension } from './extensions';
 import {
@@ -336,7 +335,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
       ext = getExtension(this, extensionName);
     }
     if (ext == null) {
-      logger.warn(`The extension(${extensionName}) not found.`);
+      console.warn(`The extension(${extensionName}) not found.`);
     }
     return ext;
   }

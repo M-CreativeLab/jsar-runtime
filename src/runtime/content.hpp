@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <shared_mutex>
 #include <filesystem>
 
 #include "common/classes.hpp"
@@ -145,10 +146,11 @@ public:
 
 private:
   void onRequestEvent(TrEvent &event);
+  void onRecvXrCommands(int timeout = 100);
 
 private:
   TrConstellation *constellation = nullptr;
-  mutex contentsMutex;
+  shared_mutex contentsMutex;
   vector<TrContentRuntime *> contents;
 
 private: // event channel

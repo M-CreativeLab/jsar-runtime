@@ -1,4 +1,3 @@
-import * as logger from '../../../bindings/logger';
 import { WebXRLayerWrapper } from './LayerWrapper';
 import { WebXRWebglLayerWrapper } from './WebglLayer';
 import { WebXRLayerRenderTargetTextureProvider } from './RenderTargetTextureProvider';
@@ -197,7 +196,6 @@ export class WebXRSessionManager implements BABYLON.IDisposable, BABYLON.IWebXRR
     }
     return xr.requestSession(xrSessionMode, xrSessionInit)
       .then((session: XRSession) => {
-        logger.info(`a session request(mode=${xrSessionMode}) is created:`, session);
         this.session = session;
         this._sessionMode = xrSessionMode;
         this.onXRSessionInit.notifyObservers(session);
@@ -370,7 +368,13 @@ export class WebXRSessionManager implements BABYLON.IDisposable, BABYLON.IWebXRR
    * @param callback 
    */
   public runWithXRFrameOnce(frame: XRFrame, callback: () => void): void {
-    const viewerPose = frame.getViewerPose(this.referenceSpace);
+    let viewerPose: XRViewerPose | undefined;
+    if (frame['_lastViewerPose']) {
+      viewerPose = frame['_lastViewerPose'];
+    } else {
+      viewerPose = frame.getViewerPose(this.referenceSpace);
+      frame['_lastViewerPose'] = viewerPose;
+    }
     const isMultiPass = viewerPose?.views.length === 1; // FIXME: a better way to detect multi-pass?
     if (!isMultiPass) {
       callback();

@@ -2,7 +2,6 @@ import 'babylonjs';
 import { JSARDOM } from '@yodaos-jsar/dom';
 import { extname } from 'node:path';
 
-import * as logger from '@transmute/logger';
 import { isWebXRSupported } from '@transmute/env';
 import { dispatchXsmlEvent } from '@transmute/messaging';
 import { NativeDocumentOnTransmute } from './jsardom/impl-transmute';
@@ -10,6 +9,8 @@ import { NativeDocumentOnTransmute } from './jsardom/impl-transmute';
 // viewers
 import createModel3dViewer from './viewers/model3d';  // glb, gltf ...
 import createImage2dViewer from './viewers/image2d';  // png, jpg, etc ...
+
+const isDebugMode = process.env.JSAR_DEBUG_ENABLED === 'yes';
 
 /**
  * Rewrite the `BABYLON.ThinEngine.QueueNewFrame` to use the requester's `requestAnimationFrame` function.
@@ -20,21 +21,29 @@ BABYLON.ThinEngine.QueueNewFrame = (func: () => void, requester?: any): number =
   if (typeof requestAnimationFrame !== 'function') {
     throw new TypeError('requestAnimationFrame is not a function, and the requester is: ' + requester);
   }
-  return requestAnimationFrame(function animationframeCallback() {
-    try {
-      func.apply(requester, arguments);
-    } catch (err) {
-      logger.error(`failed to execute the queued frame:`, err);
-    }
-  });
+
+  let animationframeCallback;
+  if (isDebugMode) {
+    animationframeCallback = function animationframeCallback() {
+      try {
+        func.apply(requester, arguments);
+      } catch (err) {
+        console.error(`failed to execute the queued frame:`, err);
+      }
+    };
+  } else {
+    animationframeCallback = func.bind(requester);
+  }
+  return requestAnimationFrame(animationframeCallback);
 };
+
 BABYLON.Logger.OnNewCacheEntry = (entry) => {
   entry.split('\n').forEach((line) => {
-    logger.info('[Babylonjs]', line);
+    console.info('[Babylonjs]', line);
   });
 };
 BABYLON.Tools.GetAbsoluteUrl = (url: string) => {
-  logger.info('[Babylonjs] GetAbsoluteUrl:', url);
+  console.info('[Babylonjs] GetAbsoluteUrl:', url);
   return url;
 };
 Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
@@ -42,7 +51,6 @@ Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
 });
 
 export class TransmuteRuntime2 extends EventTarget {
-  private scene: BABYLON.Scene;
   constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext) {
     super();
 
@@ -60,29 +68,29 @@ export class TransmuteRuntime2 extends EventTarget {
 
   private prepare() {
     const exts = this.gl.getSupportedExtensions();
-    logger.info(`[WebGL] supported extensions(${exts.length}):`);
+    console.info(`[WebGL] supported extensions(${exts.length}):`);
     for (let extName of exts) {
-      logger.info(`  - ${extName}`);
+      console.info(`  - ${extName}`);
     }
-    logger.info(`[JSARDOM] version=${JSARDOM.version}`);
+    console.info(`[JSARDOM] version=${JSARDOM.version}`);
   }
 
   private async onXsmlRequest(url: string, id: number) {
-    logger.info(`xsml request:`, url, id);
+    console.info(`xsml request:`, url, id);
 
     const nativeDocument = new NativeDocumentOnTransmute(this.gl);
     if (isWebXRSupported()) {
       await nativeDocument.enterDefaultXrExperience();
-      logger.info(`Session#${id} has been entered XR experience.`);
+      console.info(`Session#${id} has been entered XR experience.`);
     } else {
-      logger.info(`Skip enabling WebXR experience, reason: WebXR is not enabled.`);
+      console.info(`Skip enabling WebXR experience, reason: WebXR is not enabled.`);
     }
 
     try {
       await this.load(url, nativeDocument);
     } catch (err) {
       dispatchXsmlEvent(nativeDocument.id, 'error');
-      logger.error(`failed to load document(${url}):`, err);
+      console.error(`failed to load document(${url}):`, err);
     }
   }
 
@@ -123,14 +131,14 @@ export class TransmuteRuntime2 extends EventTarget {
         case '.gltf':
           codeOrUrl = createModel3dViewer(codeOrUrl, { playAnimation: true });
           urlBase = urlObj.href;
-          logger.info(`switched to the 3d model viewer.`);
+          console.info(`switched to the 3d model viewer.`);
           break;
         case '.png':
         case '.jpg':
         case '.jpeg':
           codeOrUrl = createImage2dViewer(codeOrUrl);
           urlBase = urlObj.href;
-          logger.info(`switched to the 2d image viewer.`);
+          console.info(`switched to the 2d image viewer.`);
           break;
         case '.html':
         case '.mp3':
@@ -146,7 +154,7 @@ export class TransmuteRuntime2 extends EventTarget {
       urlBase = 'https://example.com/'
     }
 
-    logger.info(`loading a JSAR document`, codeOrUrl);
+    console.info(`loading a JSAR document`, codeOrUrl);
     const dom = new JSARDOM(codeOrUrl, {
       url: urlBase,
       nativeDocument,
@@ -164,7 +172,7 @@ export class TransmuteRuntime2 extends EventTarget {
       }
       this.fitSpaceWithScene(spaceNode);
     } catch (err) {
-      logger.error(`occurs an error when loading document:`, err);
+      console.error(`occurs an error when loading document:`, err);
       // TODO: report to the native side.
       // remove the dom from appStack
       await dom.unload();
@@ -181,6 +189,6 @@ export class TransmuteRuntime2 extends EventTarget {
     const scalingRatio = Math.min(ratio / sceneSize.x, ratio / sceneSize.y, ratio / sceneSize.z);
     spaceNode.scaling = new BABYLON.Vector3(scalingRatio, scalingRatio, scalingRatio);
     spaceNode.setEnabled(true);
-    logger.info('space has been scaled to fit the scene, and the scaling ratio is:', scalingRatio);
+    console.info('space has been scaled to fit the scene, and the scaling ratio is:', scalingRatio);
   }
 }

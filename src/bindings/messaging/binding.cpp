@@ -8,7 +8,6 @@ namespace bindings
   {
     Napi::Object InitModule(Napi::Env env, Napi::Object exports)
     {
-      UnityEventListenerWrap::Init(env, exports);
       NativeEventTarget::Init(env, exports);
       return exports;
     }
