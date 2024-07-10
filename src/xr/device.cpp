@@ -91,7 +91,7 @@ namespace xr
     if (id > 0)
     {
       TrXRSessionInit init;
-      m_Sessions.push_back(new TrXRSession(id, contentRenderer, init));
+      m_Sessions.push_back(new TrXRSession(id, this, contentRenderer, init));
       return id;
     }
     else
@@ -207,15 +207,12 @@ namespace xr
       m_ViewerBaseMatrix[i] = baseMatrixValues[i];
 
     /**
-     * If there is no eye tracking, the target ray transform will be the same as the viewer transform.
+     * Currently we use the viewer's base matrix to update the gaze data when the eye tracking is not supported
+     * yet.
      *
      * TODO: support the eye tracking?
      */
-    if (m_InputSourcesZone != nullptr)
-    {
-      auto gazeInputSource = m_InputSourcesZone->getGazeInputSource();
-      gazeInputSource->setTargetRayBaseMatrix(baseMatrixValues);
-    }
+    updateGazeFromBaseMatrix(m_ViewerBaseMatrix);
     return true;
   }
 

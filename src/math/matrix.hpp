@@ -7,8 +7,6 @@
 #include <glm/ext.hpp>
 
 #include "debug.hpp"
-#include "mesh.hpp"
-#include "vector.hpp"
 
 namespace math
 {

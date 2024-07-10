@@ -134,6 +134,9 @@ declare namespace NodeJS {
     _linkedBinding(module: 'transmute:messaging'): {
       NativeEventTarget: typeof Transmute.NativeEventTarget;
     };
+    _linkedBinding(module: 'transmute:math3d'): {
+      matrixMultiplyToArray: (a: number[], b: number[], out: number[], offset: number) => void;
+    };
     _linkedBinding(module: 'transmute:renderer'): {
       RenderLoop: typeof Transmute.RenderLoop;
       AnimationFrameListener: typeof Transmute.AnimationFrameListener;

@@ -10,6 +10,7 @@
 #include "common/ipc.hpp"
 #include "common/command_buffers/command_buffers.hpp"
 #include "common/frame_request/types.hpp"
+#include "common/collision/ray.hpp"
 #include "xr/device.hpp"
 
 #include "./gles/context_storage.hpp"
@@ -18,6 +19,7 @@
 using namespace std;
 using namespace commandbuffers;
 using namespace frame_request;
+using namespace collision;
 
 class RenderAPI;
 

@@ -12,6 +12,9 @@
 #include "common/zone.hpp"
 #include "common/xr/types.hpp"
 #include "common/xr/message.hpp"
+#include "common/collision/ray.hpp"
+#include "common/math3d/plane.hpp"
+#include "common/math3d/frustum.hpp"
 #include "common/command_buffers/command_buffers.hpp"
 
 #include "./session.hpp"
@@ -38,7 +41,7 @@ namespace xr
   public:
     /**
      * Initialize the XR device.
-     * 
+     *
      * @param enabled if this XR device is enabled.
      * @param init the configration init to initialize the device.
      */
@@ -69,7 +72,7 @@ namespace xr
     TrStereoRenderingMode getStereoRenderingMode();
     /**
      * It creates a new stereo rendering frame.
-     * 
+     *
      * @returns a new instance of StereoRenderingFrame.
      */
     StereoRenderingFrame *createStereoRenderingFrame();
@@ -113,19 +116,44 @@ namespace xr
     bool updateViewerBaseMatrix(float *baseMatrixValues);
     /**
      * Update the view matrix for a view/eye.
-     * 
+     *
      * @param viewIndex the view index to update data.
      * @param viewMatrixValues the float array to be updated.
      */
     bool updateViewMatrix(int viewIndex, float *viewMatrixValues);
     /**
      * Update the projection matrix for a view/eye.
-     * 
+     *
      * @param viewIndex the view index to update data.
      * @param projectionMatrixValues the float array to be updated.
      */
     bool updateProjectionMatrix(int viewIndex, float *projectionMatrixValues);
     bool updateLocalTransform(int id, float *transform);
+    /**
+     * Update the gaze-related data from the eyeball or camera's base matrix.
+     */
+    void updateGazeFromBaseMatrix(float *baseMatrixValues)
+    {
+      // Update the input source for gaze.
+      if (m_InputSourcesZone != nullptr)
+      {
+        auto gazeInputSource = m_InputSourcesZone->getGazeInputSource();
+        gazeInputSource->setTargetRayBaseMatrix(baseMatrixValues);
+      }
+
+      // Update the target ray for gaze.
+      auto baseMatrix = glm::make_mat4(baseMatrixValues);
+      auto origin = glm::vec3(glm::column(baseMatrix, 3));
+      auto forward = glm::normalize(glm::vec3(-glm::column(baseMatrix, 2)));
+      m_GazeRay.update(origin, forward);
+
+      // Update the frustum planes for gaze.
+      auto frustumMatrix = glm::make_mat4(m_ViewerStereoProjectionMatrix[0]) * glm::inverse(baseMatrix);
+      if (m_ViewerFrustumPlanes.empty())
+        m_ViewerFrustumPlanes = math3d::TrFrustum::GetPlanes(frustumMatrix);
+      else
+        math3d::TrFrustum::GetPlanesToRef(frustumMatrix, m_ViewerFrustumPlanes);
+    }
 
   public: // Input sources
     string getInputSourcesZonePath();
@@ -199,6 +227,11 @@ namespace xr
      */
     std::unique_ptr<TrXRInputSourcesZone> m_InputSourcesZone;
     /**
+     * The native ray for gaze, it's used to detect which session's content is gazed or loss focus.
+     */
+    collision::TrRay m_GazeRay;
+    std::array<math3d::TrPlane, 6> m_ViewerFrustumPlanes;
+    /**
      * A mutex to ensure the above data is thread-safe.
      */
     mutex m_Mutex;
@@ -208,5 +241,7 @@ namespace xr
     std::unique_ptr<thread> m_CommandClientWatcher = nullptr;
     atomic<bool> m_CommandClientWatcherRunning = false;
     int m_AcceptTimeout = 1000;
+
+    friend class TrXRSession;
   };
 } // namespace xr

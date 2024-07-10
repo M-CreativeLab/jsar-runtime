@@ -56,7 +56,7 @@ public:
     float eyeOffset = XR_EYE_SPAN / 2;
     viewerPosition = glm::vec3(0.0f, 0.3f, 1.0f);
     {
-      glm::vec3 viewerForward(0.0f, 0.0f, -1.0f);
+      glm::vec3 viewerForward(0.1f, 0.1f, -1.0f);
       viewerOrientation = glm::quatLookAt(glm::normalize(viewerForward), glm::vec3(0, 1, 0));
     }
     eyePosition[0] = glm::vec3(viewerPosition.x - eyeOffset, viewerPosition.y, viewerPosition.z);
@@ -101,8 +101,8 @@ private:
   glm::quat eyeOrientation[2];
 
 private: // projection
-  float aspect = 1.0f;
-  float near = 0.1f;
+  float aspect = 800 / 600;
+  float near = 0.01f;
   float far = 100.0f;
   float fov = 60.0f;
 };

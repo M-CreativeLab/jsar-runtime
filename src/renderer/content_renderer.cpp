@@ -225,11 +225,15 @@ namespace renderer
 
   inline void TrContentRenderer::dispatchXRFrameRequest(xr::TrXRSession *session)
   {
+    if (!session->isInFrustum())
+      return;
+
     auto req = currentBaseXRFrameReq->clone();
     req.sessionId = session->id;
     req.setLocalBaseMatrix(session->getLocalBaseMatrix());
 
-    auto hostContext = constellation->getRenderer()->glHostContext;
+    auto renderer = constellation->getRenderer();
+    auto hostContext = renderer->glHostContext;
     auto hostViewport = hostContext->GetViewport();
     req.framebufferId = hostContext->GetFramebuffer();
     req.framebufferWidth = hostViewport.width;

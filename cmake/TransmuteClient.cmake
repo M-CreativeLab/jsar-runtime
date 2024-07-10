@@ -2,13 +2,12 @@ file(GLOB TR_CLIENT_SOURCE
     "src/bindings/canvas/*.cpp"
     "src/bindings/env/*.cpp"
     "src/bindings/logger/*.cpp"
+    "src/bindings/math3d/*.cpp"
     "src/bindings/messaging/*.cpp"
     "src/bindings/renderer/*.cpp"
     "src/bindings/webgl/*.cpp"
     "src/bindings/webxr/*.cpp"
     "src/client/*.cpp"
-    # just for debugging
-    "src/xr/*.cpp"
 )
 
 add_executable(TransmuteClient

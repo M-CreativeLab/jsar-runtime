@@ -5,16 +5,12 @@ import { WebXRSessionManager } from './SessionManager';
  * @see https://doc.babylonjs.com/features/featuresDeepDive/webXR/webXRCamera
  */
 export class WebXRCamera extends BABYLON.FreeCamera {
-  private static _ScaleReadOnly = BABYLON.Vector3.One();
-
   private _firstFrame = false;
   private _referenceQuaternion: BABYLON.Quaternion = BABYLON.Quaternion.Identity();
   private _referencedPosition: BABYLON.Vector3 = new BABYLON.Vector3();
   private _trackingState: BABYLON.WebXRTrackingState = BABYLON.WebXRTrackingState.NOT_TRACKING;
   private _xrProjectionMatrix: BABYLON.Matrix = BABYLON.Matrix.Identity();
   private _xrComputedViewMatrix: BABYLON.Matrix = BABYLON.Matrix.Identity();
-
-  private _debugGazeRay: BABYLON.Mesh = undefined;
 
   /**
    * This will be triggered after the first XR Frame initialized the camera,
@@ -51,7 +47,6 @@ export class WebXRCamera extends BABYLON.FreeCamera {
    * @internal
    */
   public _lastXRViewerPose?: XRViewerPose;
-  private _rotate180 = new BABYLON.Quaternion(0, 1, 0, 0);
 
   /**
    * Creates a new webXRCamera, this should only be set at the camera after it has been updated by the xrSessionManager
@@ -242,7 +237,6 @@ export class WebXRCamera extends BABYLON.FreeCamera {
         const fov = Math.atan2(1, view.projectionMatrix[5]) * 2;
         this.fov = fov;
       }
-
       const renderTargetTexture = this._xrSessionManager.getRenderTargetTextureForView(view);
       this._renderingMultiview = renderTargetTexture?._texture?.isMultiview || false;
       if (this._renderingMultiview) {

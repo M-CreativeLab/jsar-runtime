@@ -17,6 +17,7 @@ using namespace bindings;
   XX(canvas)                   \
   XX(env)                      \
   XX(messaging)                \
+  XX(math3d)                   \
   XX(renderer)                 \
   XX(webgl)                    \
   XX(webxr)
