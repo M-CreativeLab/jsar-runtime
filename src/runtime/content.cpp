@@ -35,7 +35,6 @@ TrContentRuntime::~TrContentRuntime()
     if (!recvClientOutput())
       break;
   }
-  fprintf(stdout, "The client process(%d) is terminated.\n", pid);
 
   if (eventChanReceiver != nullptr)
   {
@@ -511,18 +510,43 @@ bool TrContentManager::initialize()
     {
       this_thread::sleep_for(chrono::milliseconds(1000));
       {
-        unique_lock<shared_mutex> lock(contentsMutex);
-        for (auto it = contents.begin(); it != contents.end();)
+        bool needDestroy = false;
         {
-          auto content = *it;
-          if (content->shouldDestroy)
+          /**
+           * Use a shared lock to check if there is a content that should be destroyed, this avoids the lock contention
+           * at frame tick.
+           * 
+           * TODO: Use a lock-free queue to simplify?
+           */
+          shared_lock<shared_mutex> lock(contentsMutex);
+          for (auto content : contents)
           {
-            delete content;
-            it = contents.erase(it);
+            if (content->shouldDestroy)
+            {
+              needDestroy = true;
+              break;
+            }
           }
-          else
+        }
+
+        if (needDestroy)
+        {
+          /**
+           * Only if there is a content that should be destroyed, then we need to use a unique lock to destroy it.
+           */
+          unique_lock<shared_mutex> lock(contentsMutex);
+          for (auto it = contents.begin(); it != contents.end();)
           {
-            ++it;
+            auto content = *it;
+            if (content->shouldDestroy)
+            {
+              delete content;
+              it = contents.erase(it);
+            }
+            else
+            {
+              ++it;
+            }
           }
         }
       }

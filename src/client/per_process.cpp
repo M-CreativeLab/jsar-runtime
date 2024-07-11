@@ -227,6 +227,7 @@ int TrScriptRuntimePerProcess::executeMainScript(ScriptEnvironment &env, vector<
 void TrScriptRuntimePerProcess::onScriptExit(node::Environment *env, int exit_code)
 {
   DEBUG(LOG_TAG_SCRIPT, "Script exited with code %d", exit_code);
+  exit(exit_code);
 }
 
 TrClientContextPerProcess *TrClientContextPerProcess::s_Instance = nullptr;
