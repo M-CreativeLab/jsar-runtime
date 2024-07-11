@@ -25,6 +25,8 @@ TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManage
 
   eventTarget->addEventListener(TrEventType::TR_EVENT_RPC_REQUEST, [this](TrEventType type, TrEvent &event)
                                 { this->getConstellation()->onEvent(event, this); });
+  eventTarget->addEventListener(TrEventType::TR_EVENT_XSML_EVENT, [this](TrEventType type, TrEvent &event)
+                                { this->getConstellation()->onEvent(event, this); });
 }
 
 TrContentRuntime::~TrContentRuntime()

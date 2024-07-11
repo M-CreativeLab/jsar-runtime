@@ -34,7 +34,11 @@ bool TrEmbedder::onStart(string argJson)
 
 bool TrEmbedder::onFrame()
 {
+  auto now = chrono::steady_clock::now();
   constellation->tick();
+  auto duration = chrono::duration_cast<chrono::microseconds>(chrono::steady_clock::now() - now).count();
+  if (duration > 2000)
+    DEBUG(LOG_TAG_ERROR, "Detected a long tick(%dus) in host frame", duration);
   return true;
 }
 

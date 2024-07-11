@@ -126,6 +126,50 @@ namespace events
     string runScripts;
   };
 
+  enum class TrXSMLEventType
+  {
+    Loaded,
+    FCP,
+    Error,
+    Unknown
+  };
+
+  class TrXSMLEvent
+  {
+  public:
+    TrXSMLEvent(rapidjson::Document &sourceDoc)
+    {
+      id = sourceDoc["id"].GetUint();
+      auto typeStr = sourceDoc["eventType"].GetString();
+      if (strcmp(typeStr, "loaded") == 0)
+        type = TrXSMLEventType::Loaded;
+      else if (strcmp(typeStr, "fcp") == 0)
+        type = TrXSMLEventType::FCP;
+      else if (strcmp(typeStr, "error") == 0)
+        type = TrXSMLEventType::Error;
+    }
+
+  public:
+    string toString()
+    {
+      switch (type)
+      {
+      case TrXSMLEventType::Loaded:
+        return "XSMLEvent(Loaded)";
+      case TrXSMLEventType::FCP:
+        return "XSMLEvent(FCP)";
+      case TrXSMLEventType::Error:
+        return "XSMLEvent(Error)";
+      default:
+        return "XSMLEvent(Unknown)";
+      }
+    }
+
+  public:
+    int id;
+    TrXSMLEventType type = TrXSMLEventType::Unknown;
+  };
+
   class TrEventDetail
   {
   public:
@@ -140,10 +184,8 @@ namespace events
     }
 
   public:
-    string &getString()
-    {
-      return jsonSource;
-    }
+    string &getString() { return jsonSource; }
+    size_t size() { return jsonSource.size(); }
 
     template <typename T>
     T get()

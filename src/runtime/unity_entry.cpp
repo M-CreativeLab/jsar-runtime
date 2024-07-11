@@ -68,7 +68,30 @@ public:
 
   bool onEvent(TrEvent &event, TrContentRuntime *content) override
   {
+    pendingEvents.push_back(event);
     return true;
+  }
+
+  bool getEventHeader(int *id, int *type, uint32_t *size)
+  {
+    if (pendingEvents.empty())
+      return false;
+    auto &event = pendingEvents.front();
+    *id = event.id;
+    *type = static_cast<int>(event.type);
+    *size = event.detail.size();
+    return true;
+  }
+
+  void getEventData(const char *outData)
+  {
+    auto first = pendingEvents.begin();
+    auto &event = *first;
+    auto &eventData = event.detail.getString();
+    memcpy((void *)outData, eventData.c_str(), eventData.size());
+
+    // remove the event from the pending list
+    pendingEvents.erase(first);
   }
 
 private:
@@ -76,6 +99,7 @@ private:
   IUnityInterfaces *interfaces = nullptr;
   IUnityGraphics *graphics = nullptr;
   IUnityLog *log = nullptr;
+  vector<TrEvent> pendingEvents;
 
 private:
   static UnityEmbedder *s_EmbedderInstance;
@@ -198,12 +222,12 @@ extern "C"
 
   DLL_PUBLIC bool TransmuteNative_GetEventFromJavaScript(int *id, int *type, uint32_t *size)
   {
-    return false;
+    return UnityEmbedder::EnsureAndGet()->getEventHeader(id, type, size);
   }
 
   DLL_PUBLIC void TransmuteNative_GetEventDataFromJavaScript(const char *data)
   {
-    // TODO
+    return UnityEmbedder::EnsureAndGet()->getEventData(data);
   }
 
   DLL_PUBLIC void TransmuteNative_OnRenderFrame()
