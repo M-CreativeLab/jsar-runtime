@@ -99,15 +99,20 @@ private:
   int eventChanPort;
   int frameChanPort;
   int commandBufferChanPort;
-  atomic<bool> shouldDestroy = false;
   TrXSMLRequestInit requestInit;
   TrConstellationInit constellationOptions;
   TrContentManager *contentManager;
+  atomic<bool> shouldDestroy = false;
+
+private:
   TrEventReceiver *eventChanReceiver = nullptr;
   TrEventSender *eventChanSender = nullptr;
   TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
+  std::unique_ptr<thread> commandBuffersRecvWorker;
+  atomic<bool> commandBuffersWorkerRunning = false;
+
   function<void(TrCommandBufferBase *)> onCommandBufferRequestReceived;
   TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
@@ -160,11 +165,6 @@ private: // event channel
   TrOneShotServer<TrEventMessage> *eventChanServer = nullptr;
   atomic<bool> watcherRunning = false;
   std::unique_ptr<thread> eventChanWatcher;
-
-private: // command buffer channel
-  atomic<bool> commandBuffersWorkerRunning = false;
-  atomic<bool> pauseCommandBuffersReceiving = false;
-  std::unique_ptr<thread> commandBuffersRecvWorker;
 
 private: // XR command channel
   atomic<bool> xrCommandsWorkerRunning = false;

@@ -467,10 +467,11 @@ int main(int argc, char **argv)
   int width = 800;
   int height = 600;
   bool xrEnabled = false;
+  int n = 1;
   string requestUrl = "http://localhost:3000/spatial-element.xsml";
 
   int opt;
-  while ((opt = getopt(argc, argv, "w:h:x:")) != -1)
+  while ((opt = getopt(argc, argv, "w:h:x:n:")) != -1)
   {
     switch (opt)
     {
@@ -482,6 +483,11 @@ int main(int argc, char **argv)
       break;
     case 'x':
       xrEnabled = true;
+      break;
+    case 'n':
+      n = atoi(optarg);
+      if (n <= 0)
+        n = 1;
       break;
     default:
       help();
@@ -572,7 +578,7 @@ int main(int argc, char **argv)
     auto eventTarget = embedder->getNativeEventTarget();
     assert(eventTarget != nullptr);
 
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i < n; i++)
     {
       rapidjson::Document requestDoc;
       rapidjson::Value requestUrlValue(requestUrl.c_str(), requestDoc.GetAllocator());

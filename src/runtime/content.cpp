@@ -36,6 +36,11 @@ TrContentRuntime::~TrContentRuntime()
       break;
   }
 
+  if (commandBuffersRecvWorker != nullptr)
+  {
+    commandBuffersWorkerRunning = false;
+    commandBuffersRecvWorker->join();
+  }
   if (eventChanReceiver != nullptr)
   {
     delete eventChanReceiver;
@@ -106,6 +111,21 @@ void TrContentRuntime::start(TrXSMLRequestInit init)
     /** Configure pipes for parent process  */
     close(childPipes[1]);
 
+    commandBuffersWorkerRunning = true;
+    commandBuffersRecvWorker = std::make_unique<thread>([this]()
+                                                        {
+      while (commandBuffersWorkerRunning)
+      {
+        if (shouldDestroy)
+        {
+          DEBUG(LOG_TAG_ERROR, "The content#%d is disposing, skip to receive command buffers.", pid);
+          commandBuffersWorkerRunning = false;
+        }
+        else
+        {
+          recvCommandBuffers(-1);
+        }
+      } });
     auto renderer = contentManager->constellation->getRenderer();
     renderer->addContentRenderer(this);
     DEBUG(LOG_TAG_CONTENT, "The client process(%d) is started.", pid);
@@ -319,9 +339,6 @@ bool TrContentRuntime::testClientProcessExitOnFrame()
 
 void TrContentRuntime::recvCommandBuffers(uint32_t timeout)
 {
-  if (shouldDestroy)
-    return;
-
   lock_guard<mutex> lock(recvCommandBuffersMutex);
   if (commandBufferChanReceiver == nullptr)
     return; // Skip if the command buffer channel is not ready.
@@ -336,6 +353,8 @@ void TrContentRuntime::recvCommandBuffers(uint32_t timeout)
       lock_guard<mutex> lock(commandBufferRequestsMutex);
       if (onCommandBufferRequestReceived)
         onCommandBufferRequestReceived(commandBuffer);
+      else
+        DEBUG(LOG_TAG_CONTENT, "No command buffer request handler for the content(%d)", id);
     }
     else
     {
@@ -469,32 +488,6 @@ bool TrContentManager::initialize()
       }, 1000);
     } });
 
-  commandBuffersWorkerRunning = true;
-  commandBuffersRecvWorker = std::make_unique<thread>([this]()
-                                                      {
-    SET_THREAD_NAME("TrCommandBuffersWorker");
-
-    uint32_t timeout = 100;
-    while (commandBuffersWorkerRunning)
-    {
-      shared_lock<shared_mutex> lock(contentsMutex);
-      /**
-       * No contents or command buffers receving is paused, just sleep for timeout.
-       * 
-       * TODO: If no contents, not starting the TrCommandBuffersWorker thread?
-       */
-      if (contents.empty() || pauseCommandBuffersReceiving == true)
-      {
-        this_thread::sleep_for(chrono::milliseconds(timeout));
-        continue;
-      }
-      else
-      {
-        for (auto content : contents)
-          content->recvCommandBuffers(timeout);
-      }
-    } });
-
   xrCommandsWorkerRunning = true;
   xrCommandsRecvWorker = std::make_unique<thread>([this]()
                                                   {
@@ -556,12 +549,6 @@ bool TrContentManager::initialize()
 
 bool TrContentManager::shutdown()
 {
-  if (commandBuffersRecvWorker != nullptr)
-  {
-    commandBuffersWorkerRunning = false;
-    commandBuffersRecvWorker->join();
-    DEBUG(LOG_TAG_CONTENT, "CommandBuffers Receiver is stopped.");
-  }
   if (contentsDestroyingWorker != nullptr)
   {
     contentsDestroyingWorkerRunning = false;
@@ -590,27 +577,19 @@ bool TrContentManager::tickOnFrame()
 {
   // Check the status of each content runtime.
   shared_lock<shared_mutex> lock(contentsMutex);
-
-  /**
-   * Pausing the command buffers receiving when in host frame.
-   */
-  pauseCommandBuffersReceiving = true;
+  for (auto content : contents)
   {
-    for (auto content : contents)
+    if (content->pid > 0 && content->testClientProcessExitOnFrame())
     {
-      if (content->pid > 0 && content->testClientProcessExitOnFrame())
-      {
-        auto renderer = constellation->getRenderer();
-        renderer->removeContentRenderer(content);
-        content->shouldDestroy = true;
-      }
-      else
-      {
-        content->tickOnFrame();
-      }
+      auto renderer = constellation->getRenderer();
+      renderer->removeContentRenderer(content);
+      content->shouldDestroy = true;
+    }
+    else
+    {
+      content->tickOnFrame();
     }
   }
-  pauseCommandBuffersReceiving = false;
   return true;
 }
 
