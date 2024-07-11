@@ -88,7 +88,7 @@ private:
   bool testClientProcessExitOnFrame(); // true if the client process has exited
   void recvCommandBuffers(uint32_t timeout);
   void recvEvent();
-  void recvClientOutput();
+  bool recvClientOutput();
   bool tickOnFrame();
 
 public:
@@ -99,6 +99,7 @@ private:
   int eventChanPort;
   int frameChanPort;
   int commandBufferChanPort;
+  atomic<bool> shouldDestroy = false;
   TrXSMLRequestInit requestInit;
   TrConstellationInit constellationOptions;
   TrContentManager *contentManager;
@@ -152,6 +153,8 @@ private:
   TrConstellation *constellation = nullptr;
   shared_mutex contentsMutex;
   vector<TrContentRuntime *> contents;
+  std::unique_ptr<thread> contentsDestroyingWorker;
+  atomic<bool> contentsDestroyingWorkerRunning = false;
 
 private: // event channel
   TrOneShotServer<TrEventMessage> *eventChanServer = nullptr;

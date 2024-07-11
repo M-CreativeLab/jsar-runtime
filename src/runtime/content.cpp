@@ -29,6 +29,14 @@ TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManage
 
 TrContentRuntime::~TrContentRuntime()
 {
+  // Flush the client's output.
+  while (true)
+  {
+    if (!recvClientOutput())
+      break;
+  }
+  fprintf(stdout, "The client process(%d) is terminated.\n", pid);
+
   if (eventChanReceiver != nullptr)
   {
     delete eventChanReceiver;
@@ -181,7 +189,7 @@ void TrContentRuntime::setupWithCommandBufferClient(TrOneShotClient<TrCommandBuf
 
 bool TrContentRuntime::sendCommandBufferResponse(TrCommandBufferResponse &res)
 {
-  if (commandBufferChanSender != nullptr)
+  if (!shouldDestroy && commandBufferChanSender != nullptr)
     return commandBufferChanSender->sendCommandBufferResponse(res);
   else
     return false;
@@ -189,7 +197,7 @@ bool TrContentRuntime::sendCommandBufferResponse(TrCommandBufferResponse &res)
 
 bool TrContentRuntime::sendEventResponse(TrEvent &event)
 {
-  if (eventChanSender == nullptr)
+  if (shouldDestroy || eventChanSender == nullptr)
     return false;
   TrEventMessage eventMessage(event);
   return eventChanSender->sendEvent(eventMessage);
@@ -312,6 +320,9 @@ bool TrContentRuntime::testClientProcessExitOnFrame()
 
 void TrContentRuntime::recvCommandBuffers(uint32_t timeout)
 {
+  if (shouldDestroy)
+    return;
+
   lock_guard<mutex> lock(recvCommandBuffersMutex);
   if (commandBufferChanReceiver == nullptr)
     return; // Skip if the command buffer channel is not ready.
@@ -336,7 +347,7 @@ void TrContentRuntime::recvCommandBuffers(uint32_t timeout)
 
 void TrContentRuntime::recvEvent()
 {
-  if (eventChanReceiver == nullptr)
+  if (shouldDestroy || eventChanReceiver == nullptr)
     return;
 
   auto eventMessage = eventChanReceiver->recvEvent(0);
@@ -349,26 +360,28 @@ void TrContentRuntime::recvEvent()
   }
 }
 
-void TrContentRuntime::recvClientOutput()
+bool TrContentRuntime::recvClientOutput()
 {
   struct pollfd fds[1];
   fds[0].fd = childPipes[0];
   fds[0].events = POLLIN;
 
   int events = poll(fds, 1, 0);
-  if (events <= -1)
-    return;
+  if (events <= 0)
+    return false;
 
   char buf[2048];
   if (fds[0].revents & POLLIN)
   {
+    bool r = true;
     ssize_t bytesRead = 0;
     do
     {
       bytesRead = read(childPipes[0], buf, sizeof(buf));
-      if (bytesRead == -1)
+      if (bytesRead <= 0)
       {
-        if (errno != EAGAIN && errno != EWOULDBLOCK)
+        r = false;
+        if (bytesRead == -1 && (errno != EAGAIN && errno != EWOULDBLOCK))
           DEBUG(LOG_TAG_ERROR, "Failed to read pipe from client(%d): %s", pid, strerror(errno));
         break;
       }
@@ -385,6 +398,11 @@ void TrContentRuntime::recvClientOutput()
         }
       }
     } while (bytesRead > 0);
+    return r;
+  }
+  else
+  {
+    return false;
   }
 }
 
@@ -484,6 +502,31 @@ bool TrContentManager::initialize()
     SET_THREAD_NAME("TrXRCommandsWorker");
     while (xrCommandsWorkerRunning)
       this->onRecvXrCommands(); });
+
+  contentsDestroyingWorkerRunning = true;
+  contentsDestroyingWorker = std::make_unique<thread>([this]()
+                                                      {
+    SET_THREAD_NAME("TrContentsMgrWorker");
+    while (contentsDestroyingWorkerRunning)
+    {
+      this_thread::sleep_for(chrono::milliseconds(1000));
+      {
+        unique_lock<shared_mutex> lock(contentsMutex);
+        for (auto it = contents.begin(); it != contents.end();)
+        {
+          auto content = *it;
+          if (content->shouldDestroy)
+          {
+            delete content;
+            it = contents.erase(it);
+          }
+          else
+          {
+            ++it;
+          }
+        }
+      }
+    } });
   return true;
 }
 
@@ -494,6 +537,11 @@ bool TrContentManager::shutdown()
     commandBuffersWorkerRunning = false;
     commandBuffersRecvWorker->join();
     DEBUG(LOG_TAG_CONTENT, "CommandBuffers Receiver is stopped.");
+  }
+  if (contentsDestroyingWorker != nullptr)
+  {
+    contentsDestroyingWorkerRunning = false;
+    contentsDestroyingWorker->join();
   }
   for (auto content : contents)
     content->dispose();
@@ -524,20 +572,17 @@ bool TrContentManager::tickOnFrame()
    */
   pauseCommandBuffersReceiving = true;
   {
-    for (auto it = contents.begin(); it != contents.end();)
+    for (auto content : contents)
     {
-      auto content = *it;
       if (content->pid > 0 && content->testClientProcessExitOnFrame())
       {
         auto renderer = constellation->getRenderer();
         renderer->removeContentRenderer(content);
-        delete content;
-        it = contents.erase(it);
+        content->shouldDestroy = true;
       }
       else
       {
         content->tickOnFrame();
-        ++it;
       }
     }
   }
