@@ -26,6 +26,19 @@ namespace math3d
     }
 
     /**
+     * Gets the planes representing the frustum for stereoscopic rendering
+     */
+    static std::array<TrPlane, 6> GetStereoscopicPlanes(const glm::mat4 &transformL, const glm::mat4 &transformR)
+    {
+      std::array<TrPlane, 6> frustumPlanes{
+          {TrPlane(0.f, 0.f, 0.f, 0.f), TrPlane(0.f, 0.f, 0.f, 0.f),
+           TrPlane(0.f, 0.f, 0.f, 0.f), TrPlane(0.f, 0.f, 0.f, 0.f),
+           TrPlane(0.f, 0.f, 0.f, 0.f), TrPlane(0.f, 0.f, 0.f, 0.f)}};
+      TrFrustum::GetStereoscopicPlanesToRef(transformL, transformR, frustumPlanes);
+      return frustumPlanes;
+    }
+
+    /**
      * @brief Gets the near frustum plane transformed by the transform matrix
      * @param transform transformation matrix to be applied to the resulting frustum plane
      * @param frustumPlane the resuling frustum plane
@@ -140,6 +153,34 @@ namespace math3d
 
       // Bottom
       TrFrustum::GetBottomPlaneToRef(transform, frustumPlanes[5]);
+    }
+
+    /**
+     * @brief Sets the given array "frustumPlanes" with the 6 Frustum planes computed by the given
+     * transformation matrix for stereoscopic rendering, it will use the right transformation to compute the right frustum plane.
+     * @param transformL transformation matrix of the left view to be applied to the resulting frustum planes
+     * @param transformR transformation matrix of the right view to be applied to the resulting frustum planes
+     * @param frustumPlanes the resuling frustum planes
+     */
+    static void GetStereoscopicPlanesToRef(const glm::mat4 &transformL, const glm::mat4 &transformR, std::array<TrPlane, 6> &frustumPlanes)
+    {
+      // Near
+      TrFrustum::GetNearPlaneToRef(transformL, frustumPlanes[0]);
+
+      // Far
+      TrFrustum::GetFarPlaneToRef(transformL, frustumPlanes[1]);
+
+      // Left
+      TrFrustum::GetLeftPlaneToRef(transformL, frustumPlanes[2]);
+
+      // Right
+      TrFrustum::GetRightPlaneToRef(transformR, frustumPlanes[3]);
+
+      // Top
+      TrFrustum::GetTopPlaneToRef(transformL, frustumPlanes[4]);
+
+      // Bottom
+      TrFrustum::GetBottomPlaneToRef(transformL, frustumPlanes[5]);
     }
   };
 }

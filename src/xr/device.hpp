@@ -146,13 +146,6 @@ namespace xr
       auto origin = glm::vec3(glm::column(baseMatrix, 3));
       auto forward = glm::normalize(glm::vec3(-glm::column(baseMatrix, 2)));
       m_GazeRay.update(origin, forward);
-
-      // Update the frustum planes for gaze.
-      auto frustumMatrix = glm::make_mat4(m_ViewerStereoProjectionMatrix[0]) * glm::inverse(baseMatrix);
-      if (m_ViewerFrustumPlanes.empty())
-        m_ViewerFrustumPlanes = math3d::TrFrustum::GetPlanes(frustumMatrix);
-      else
-        math3d::TrFrustum::GetPlanesToRef(frustumMatrix, m_ViewerFrustumPlanes);
     }
 
   public: // Input sources

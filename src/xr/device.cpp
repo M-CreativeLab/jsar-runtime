@@ -227,6 +227,17 @@ namespace xr
     for (int i = 0; i < 16; i++)
       targetViewMatrix[i] = viewMatrixValues[i];
     m_ActiveEyeId = viewIndex;
+
+    // Update the merged frustum by the view matrix
+    if (viewIndex == 1)
+    {
+      auto frustumMatrixL = glm::make_mat4(m_ViewerStereoProjectionMatrix[0]) * glm::make_mat4(m_ViewerStereoViewMatrix[0]);
+      auto frustumMatrixR = glm::make_mat4(m_ViewerStereoProjectionMatrix[1]) * glm::make_mat4(m_ViewerStereoViewMatrix[1]);
+      if (m_ViewerFrustumPlanes.empty())
+        m_ViewerFrustumPlanes = math3d::TrFrustum::GetStereoscopicPlanes(frustumMatrixL, frustumMatrixR);
+      else
+        math3d::TrFrustum::GetStereoscopicPlanesToRef(frustumMatrixL, frustumMatrixR, m_ViewerFrustumPlanes);
+    }
     return true;
   }
 

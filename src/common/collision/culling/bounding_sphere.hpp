@@ -3,6 +3,7 @@
 #include <array>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include "common/math3d/utils.hpp"
 #include "common/math3d/plane.hpp"
 #include "./icullable.hpp"
 
@@ -62,7 +63,18 @@ namespace collision
 
       void _update(const glm::mat4 &worldMatrix)
       {
-        // TODO
+        if (!math3d::matrix::is_identity(worldMatrix))
+        {
+          math3d::TrVector3::TransformCoordinatesToRef(center, worldMatrix, centerWorld);
+          glm::vec3 tmpVec;
+          math3d::TrVector3::TransformCoordinatesFromFloatsToRef(1.f, 1.f, 1.f, worldMatrix, tmpVec);
+          radiusWorld = std::max(std::max(std::abs(tmpVec.x), std::abs(tmpVec.y)), std::abs(tmpVec.z)) * radius;
+        }
+        else
+        {
+          centerWorld = center;
+          radiusWorld = radius;
+        }
       }
 
     public:
@@ -97,9 +109,7 @@ namespace collision
         for (unsigned i = 0u; i < 6; ++i)
         {
           if (frustumPlanes[i].dotCoordinate(iCenter) < 0.f)
-          {
             return false;
-          }
         }
         return true;
       }

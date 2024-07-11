@@ -88,12 +88,6 @@ namespace collision
         auto &maxWorld = maximumWorld;
 
         auto &_worldBaseMatrix = worldMatrix;
-        fprintf(stdout, "worldbase matrix: (%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f)",
-                _worldBaseMatrix[0][0], _worldBaseMatrix[0][1], _worldBaseMatrix[0][2], _worldBaseMatrix[0][3],
-                _worldBaseMatrix[1][0], _worldBaseMatrix[1][1], _worldBaseMatrix[1][2], _worldBaseMatrix[1][3],
-                _worldBaseMatrix[2][0], _worldBaseMatrix[2][1], _worldBaseMatrix[2][2], _worldBaseMatrix[2][3],
-                _worldBaseMatrix[3][0], _worldBaseMatrix[3][1], _worldBaseMatrix[3][2], _worldBaseMatrix[3][3]);
-
         if (!math3d::matrix::is_identity(_worldBaseMatrix))
         {
           math3d::fill_vec3(minWorld, std::numeric_limits<float>::max());
