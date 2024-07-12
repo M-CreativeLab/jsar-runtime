@@ -43,19 +43,17 @@ ScriptEnvironment::ScriptEnvironment()
 {
   const char *sourceData = reinterpret_cast<const char *>(get_jsbundle_ptr());
   size_t sourceSize = get_jsbundle_size();
-  scriptSource = string(sourceData, sourceSize);
 
-  vector<string> args = {
-      "node",
-      "--experimental-vm-modules",
-      "--experimental-global-customevent",
-      "-e",
-      scriptSource};
+  auto& args = scriptArgs;
+  args.push_back("node");
+  args.push_back("--experimental-vm-modules");
+  args.push_back("--experimental-global-customevent");
+  args.push_back("-e");
+  args.push_back(string(sourceData, sourceSize));
 
   // TODO: Check if we are in debug mode
   static int debugPort = 9229;
   args.insert(args.begin() + 1, "--inspect=0.0.0.0:" + to_string(debugPort++));
-  scriptArgs = args;
 }
 
 ScriptEnvironment::~ScriptEnvironment()

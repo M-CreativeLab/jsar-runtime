@@ -32,6 +32,10 @@ namespace renderer
     TrContentRuntime *getContent();
     pid_t getContentPid();
 
+  public:
+    void increaseFrameErrorsCount() { lastFrameErrorsCount++; }
+    void markOccurOutOfMemoryError() { lastFrameHasOutOfMemoryError = true; }
+
   private: // private lifecycle
     void onCommandBufferRequestReceived(TrCommandBufferBase *req);
     void onHostFrame(chrono::time_point<chrono::high_resolution_clock> time);
@@ -81,6 +85,8 @@ namespace renderer
     vector<TrCommandBufferBase *> defaultCommandBufferRequests;
     vector<xr::StereoRenderingFrame *> stereoFramesList;
     xr::StereoRenderingFrame *stereoFrameForBackup = nullptr;
+    bool lastFrameHasOutOfMemoryError = false;
+    size_t lastFrameErrorsCount = 0;
 
   private: // frame rate control
     uint32_t targetFrameRate;

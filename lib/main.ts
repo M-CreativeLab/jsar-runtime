@@ -8,15 +8,6 @@ import './polyfills/textdecoder';
 import minimist from 'minimist';
 import { getClientContext } from '@transmute/env';
 
-const args = minimist(process.argv.slice(1));
-const clientContext = getClientContext();
-console.info('The command line arguments:', args);
-
-const bootstrapStart = performance.now();
-const id = args.id || 'unknown';
-console.info(`Starting the JavaScript runtime(${process.pid}) => ${id}`, process.argv);
-process.title = `TrScript ${id}`;
-
 import './polyfills';
 import {
   connectRenderer,
@@ -25,6 +16,14 @@ import {
 } from './bindings/renderer';
 import { prepareXRSystem } from './webxr';
 import { TransmuteRuntime2 } from './runtime2';
+import { dispatchXsmlEvent } from '@transmute/messaging';
+
+const bootstrapStart = performance.now();
+const args = minimist(process.argv.slice(1));
+const clientContext = getClientContext();
+const id = args.id || 'unknown';
+console.info(`Starting the JavaScript runtime(${process.pid}) => ${id}`, process.argv);
+process.title = `TrScript ${id}`;
 
 let runtime: TransmuteRuntime2;
 requestGpuBusyCallback(() => {
@@ -40,13 +39,16 @@ function bootwait(fn: () => void) {
   if (isNaN(seconds)) {
     seconds = 0;
   }
-  return setTimeout(fn, seconds * 1000);
+  if (seconds == 0) {
+    fn();
+  } else {
+    setTimeout(fn, seconds * 1000);
+  }
 }
 
 bootwait(async function main() {
   try {
     const runtimeStart = performance.now();
-    console.info('The Node.js runtime bootstrap takes', runtimeStart - bootstrapStart, 'ms');
     console.info('The context init is:', clientContext);
     if (!connectRenderer(clientContext)) {
       throw new Error('failed to connect to the renderer.');
@@ -62,26 +64,8 @@ bootwait(async function main() {
       initialize: initializedEnd - runtimeStart,
       total: initializedEnd - bootstrapStart,
     });
-
-    // Test for HTMLRenderingContext
-    if (process.env.JSAR_TEST_HTML_RENDERING) {
-      const htmlCanvas = new OffscreenCanvas(800, 600);
-      const htmlRenderingCtx = htmlCanvas.getContext('jsar:htmlrenderer');
-      htmlRenderingCtx.setHTML(
-        `
-<!DOCTYPE html>
-<html>
-<head>
-  <title>HTML Rendering Test</title>
-</head>
-<body>
-  <h1>Hello, World!</h1>
-  <p>This is a test for the HTML rendering context.</p>
-</body>
-        `
-      );
-    }
   } catch (err) {
     console.error('failed to start the runtime, occurs an error:', err);
+    dispatchXsmlEvent(id, 'error');
   }
 });

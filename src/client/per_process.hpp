@@ -53,7 +53,6 @@ public:
   void dispose();
 
 public:
-  string scriptSource;
   vector<string> scriptArgs;
   node::InitializationResult *nodeInitResult = nullptr;
   node::MultiIsolatePlatform *nodePlatform = nullptr;

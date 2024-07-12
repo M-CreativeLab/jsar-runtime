@@ -4,8 +4,6 @@
 
 #[macro_use]
 extern crate log;
-#[cfg(target_os = "android")]
-extern crate android_logger;
 extern crate ctor;
 
 #[macro_use]
@@ -40,11 +38,7 @@ extern "C" {
 #[ctor::ctor]
 #[cfg(target_os = "android")]
 fn init_platform_env() {
-  android_logger::init_once(
-    android_logger::Config::default()
-      .with_max_level(log::LevelFilter::Trace)
-      .with_tag("jsar"),
-  );
+  println!("Initialization for Android platform has been finished.");
 }
 
 #[no_mangle]

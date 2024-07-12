@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <rapidjson/document.h>
+#include <node/uv.h>
 
 #include "debug.hpp"
 #include "per_process.hpp"
@@ -11,19 +12,20 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
+  uv_os_setpriority(0, -15);
   for (uint32_t i = 0; i < argc; i++)
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "argv[%d] = %s", i, argv[i]);
+    fprintf(stdout, "argv[%d] = %s\n", i, argv[i]);
 
   if (argc <= 2)
   {
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "Exited, reason: invalid arguments to JSAR client.");
+    fprintf(stderr, "Exited, reason: invalid arguments to JSAR client.\n");
     return 1;
   }
   else
   {
     ENABLE_BACKTRACE();
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "Copy the following command to restart the client:");
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "  %s '%s' '%s'", argv[0], argv[1], argv[2]);
+    fprintf(stdout, "Copy the following command to restart the client:\n");
+    fprintf(stdout, "  %s '%s' '%s'\n", argv[0], argv[1], argv[2]);
   }
 
   string url = string(argv[1]);

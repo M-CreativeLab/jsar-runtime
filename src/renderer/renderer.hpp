@@ -3,6 +3,7 @@
 #include <vector>
 #include <thread>
 #include <mutex>
+#include <shared_mutex>
 #include <atomic>
 
 #include "common/classes.hpp"
@@ -117,7 +118,7 @@ namespace renderer
 
   private: // fields for senders management
     std::unique_ptr<thread> chanSendersWatcher = nullptr;
-    mutex contentRendererMutex;
+    shared_mutex contentRendererMutex;
 
   private: // fields for command buffer
     std::unique_ptr<thread> commandBufferClientWatcher = nullptr;

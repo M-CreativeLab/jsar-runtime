@@ -133,6 +133,9 @@ export const dispatchAliveEvent = function () {
 };
 
 export const dispatchXsmlEvent = function (id: number, eventType: 'loaded' | 'fcp' | 'error') {
+  if (eventType == 'loaded' || eventType == 'fcp') {
+    console.info(`dispatching XSML(${id}) event(${eventType})`);
+  }
   return dispatchEvent(
     new CustomEvent('xsmlEvent', {
       detail: {

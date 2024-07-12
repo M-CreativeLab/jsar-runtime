@@ -56,7 +56,7 @@ namespace renderer
     perfCounter.record("  renderer.finishedHostContextRecord");
 
     {
-      lock_guard<mutex> lock(contentRendererMutex);
+      shared_lock<shared_mutex> lock(contentRendererMutex);
       for (auto contentRenderer : contentRenderers)
         contentRenderer->onHostFrame(tickingTimepoint);
       perfCounter.record("  renderer.finishedContentRendererFrame");
@@ -137,15 +137,18 @@ namespace renderer
   {
     if (api == nullptr)
       return;
-    lock_guard<mutex> lock(contentRendererMutex);
     if (content == nullptr || findContentRenderer(content->pid) != nullptr)
       return;
     removeContentRenderer(content->pid); // Remove the old content renderer if it exists.
-    contentRenderers.push_back(new TrContentRenderer(content, constellation));
+    {
+      unique_lock<shared_mutex> lock(contentRendererMutex);
+      contentRenderers.push_back(new TrContentRenderer(content, constellation));
+    }
   }
 
   TrContentRenderer *TrRenderer::findContentRenderer(pid_t contentPid)
   {
+    shared_lock<shared_mutex> lock(contentRendererMutex);
     for (auto contentRenderer : contentRenderers)
     {
       if (contentRenderer->content->pid == contentPid)
@@ -181,6 +184,7 @@ namespace renderer
 
   void TrRenderer::removeContentRenderer(pid_t contentPid)
   {
+    unique_lock<shared_mutex> lock(contentRendererMutex);
     if (contentRenderers.size() == 0)
       return;
     for (auto it = contentRenderers.begin(); it != contentRenderers.end(); it++)
@@ -223,7 +227,6 @@ namespace renderer
       while (watcherRunning)
       {
         frameRequestChanServer->tryAccept([this](TrOneShotClient<TrFrameRequestMessage> &newClient) {
-          lock_guard<mutex> lock(contentRendererMutex);
           auto contentRenderer = findContentRenderer(newClient.getPid());
           if (contentRenderer != nullptr)
             contentRenderer->resetFrameRequestChanSenderWith(&newClient);

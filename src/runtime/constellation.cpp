@@ -110,6 +110,7 @@ TrEmbedder *TrConstellation::getEmbedder()
 
 bool TrConstellation::onEvent(TrEvent &event, TrContentRuntime *content)
 {
+  assert(embedder != nullptr);
   return embedder->onEvent(event, content);
 }
 

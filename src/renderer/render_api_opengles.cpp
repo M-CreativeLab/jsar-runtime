@@ -1157,7 +1157,17 @@ private:
 	}
 	TR_OPENGL_FUNC void OnDrawArrays(DrawArraysCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		glDrawArrays(req->mode, req->first, req->count);
+		auto mode = req->mode;
+		auto first = req->first;
+		auto count = req->count;
+
+		if (TR_UNLIKELY(count >= 100 * 1000))
+		{
+			DEBUG(LOG_TAG_ERROR, "Skip this drawArrays(): the draw count(%d) is over 100k.", count);
+			return;
+		}
+
+		glDrawArrays(mode, first, count);
 		m_DrawCallCountPerFrame += 1;
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DrawArrays(%d)", options.isDefaultQueue, req->count);
@@ -1169,7 +1179,17 @@ private:
 		auto type = req->indicesType;
 		auto indices = reinterpret_cast<GLvoid *>(req->indicesOffset);
 
-		assert(indices == nullptr);
+		if (TR_UNLIKELY(indices != nullptr))
+		{
+			DEBUG(LOG_TAG_ERROR, "Skip this drawElements(): the indices(%d) are not supported.", req->indicesOffset);
+			return;
+		}
+		if (TR_UNLIKELY(count >= 100 * 1000))
+		{
+			DEBUG(LOG_TAG_ERROR, "Skip this drawElements(): the draw count(%d) is over 100k.", count);
+			return;
+		}
+
 		glDrawElements(mode, count, type, indices);
 		m_DrawCallCountPerFrame += 1;
 		if (options.printsCall)
@@ -1763,35 +1783,34 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			break;
 		}
 
-		if (m_DebugEnabled)
+		// Check for OpenGL errors
+		GLenum error = glGetError();
+		if (TR_UNLIKELY(error != GL_NO_ERROR))
 		{
-			// Check for OpenGL errors
-			GLenum error = glGetError();
-			if (error != GL_NO_ERROR)
+			contentRenderer->increaseFrameErrorsCount();
+			switch (error)
 			{
-				switch (error)
-				{
-				case GL_INVALID_ENUM:
-					DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_INVALID_ENUM",
-								commandTypeToStr(commandType).c_str(), commandType);
-					break;
-				case GL_INVALID_VALUE:
-					DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_INVALID_VALUE",
-								commandTypeToStr(commandType).c_str(), commandType);
-					break;
-				case GL_INVALID_OPERATION:
-					DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_INVALID_OPERATION",
-								commandTypeToStr(commandType).c_str(), commandType);
-					break;
-				case GL_OUT_OF_MEMORY:
-					DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_OUT_OF_MEMORY",
-								commandTypeToStr(commandType).c_str(), commandType);
-					break;
-				default:
-					DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: 0x%04x",
-								commandTypeToStr(commandType).c_str(), commandType, error);
-					break;
-				}
+			case GL_INVALID_ENUM:
+				DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_INVALID_ENUM",
+							commandTypeToStr(commandType).c_str(), commandType);
+				break;
+			case GL_INVALID_VALUE:
+				DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_INVALID_VALUE",
+							commandTypeToStr(commandType).c_str(), commandType);
+				break;
+			case GL_INVALID_OPERATION:
+				DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_INVALID_OPERATION",
+							commandTypeToStr(commandType).c_str(), commandType);
+				break;
+			case GL_OUT_OF_MEMORY:
+				contentRenderer->markOccurOutOfMemoryError();
+				DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_OUT_OF_MEMORY",
+							commandTypeToStr(commandType).c_str(), commandType);
+				break;
+			default:
+				DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: 0x%04x",
+							commandTypeToStr(commandType).c_str(), commandType, error);
+				break;
 			}
 		}
 	}
