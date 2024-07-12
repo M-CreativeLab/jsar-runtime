@@ -67,9 +67,9 @@ namespace renderer
 
   void TrContentRenderer::onCommandBufferRequestReceived(TrCommandBufferBase *req)
   {
-    lock_guard<mutex> lock(commandBufferRequestsMutex);
     if (!req->renderingInfo.isValid() && !commandbuffers::isXRFrameControlCommandType(req->type))
     {
+      unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
       defaultCommandBufferRequests.push_back(req);
     }
     else
@@ -111,7 +111,10 @@ namespace renderer
           else if (req->type == COMMAND_BUFFER_XRFRAME_END_REQ)
             frame->endFrame(viewIndex), delete req;
           else
+          {
+            unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
             frame->addCommandBuffer(req, viewIndex);
+          }
           break;
         }
       }
@@ -307,18 +310,23 @@ namespace renderer
     auto renderer = constellation->getRenderer();
     if (!asXRFrame)
     {
-      lock_guard<mutex> lock(commandBufferRequestsMutex);
-      auto commandBufferRequests = defaultCommandBufferRequests;
-      renderer->executeCommandBuffers(commandBufferRequests, this);
+      {
+        shared_lock<shared_mutex> lock(commandBufferRequestsMutex);
+        auto commandBufferRequests = defaultCommandBufferRequests;
+        renderer->executeCommandBuffers(commandBufferRequests, this);
+      }
 
       // clear the default commandbuffers queue.
-      for (auto commandBufferReq : defaultCommandBufferRequests)
-        delete commandBufferReq;
-      defaultCommandBufferRequests.clear();
+      {
+        unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
+        for (auto commandBufferReq : defaultCommandBufferRequests)
+          delete commandBufferReq;
+        defaultCommandBufferRequests.clear();
+      }
     }
     else
     {
-      lock_guard<mutex> lock(commandBufferRequestsMutex);
+      unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
       executeStereoFrame(viewIndex, [this](int stereoIdOfFrame, vector<TrCommandBufferBase *> &commandBufferRequests)
                          { return this->constellation->getRenderer()->executeCommandBuffers(commandBufferRequests, this); });
     }
@@ -440,7 +448,7 @@ namespace renderer
 
   size_t TrContentRenderer::getPendingStereoFramesCount()
   {
-    lock_guard<mutex> lock(commandBufferRequestsMutex);
+    shared_lock<shared_mutex> lock(commandBufferRequestsMutex);
     size_t count = 0;
     for (auto frame : stereoFramesList)
     {

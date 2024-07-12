@@ -9,6 +9,10 @@
 #include <sys/system_properties.h>
 #endif
 
+#ifndef TR_ENABLE_PERF_COUNTER
+#define TR_ENABLE_PERF_COUNTER
+#endif
+
 using namespace std;
 
 /**

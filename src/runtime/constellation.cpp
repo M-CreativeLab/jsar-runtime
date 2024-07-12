@@ -67,15 +67,20 @@ void TrConstellation::shutdown()
   initialized = false;
 }
 
-void TrConstellation::tick()
+void TrConstellation::tick(analytics::PerformanceCounter &perfCounter)
 {
   if (initialized == false)
     return;
   contentManager->tickOnFrame();
-  renderer->tick();
+  perfCounter.record("finishContentManager");
+  renderer->tick(perfCounter);
+  perfCounter.record("finishRenderer");
 
   if (xrDevice->enabled())
+  {
     xrDevice->syncInputSourcesToZone();
+    perfCounter.record("finishInputSourcesSync");
+  }
 }
 
 TrEventTarget *TrConstellation::getNativeEventTarget()

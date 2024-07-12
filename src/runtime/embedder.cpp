@@ -1,4 +1,5 @@
 #include "embedder.hpp"
+#include "common/analytics/perf_counter.hpp"
 
 TrEmbedder::TrEmbedder(TrHostEngine hostEngine)
     : constellation(std::make_unique<TrConstellation>(this)),
@@ -34,11 +35,14 @@ bool TrEmbedder::onStart(string argJson)
 
 bool TrEmbedder::onFrame()
 {
-  auto now = chrono::steady_clock::now();
-  constellation->tick();
-  auto duration = chrono::duration_cast<chrono::microseconds>(chrono::steady_clock::now() - now).count();
-  if (duration > 2000)
-    DEBUG(LOG_TAG_ERROR, "Detected a long tick(%dus) in host frame", duration);
+  analytics::PerformanceCounter perfCounter("HostTick");
+  constellation->tick(perfCounter);
+  perfCounter.end();
+
+#ifdef TR_ENABLE_PERF_COUNTER
+  if (perfCounter.duration() > 2.0)
+    DEBUG(LOG_TAG_ERROR, "Detected a long tick(>=2ms) in host frame: \n%s", perfCounter.toString().c_str());
+#endif
   return true;
 }
 

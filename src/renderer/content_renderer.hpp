@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <shared_mutex>
 #include "common/classes.hpp"
 #include "common/ipc.hpp"
 #include "common/command_buffers/shared.hpp"
@@ -76,7 +77,7 @@ namespace renderer
     xr::TrXRFrameRequest *currentBaseXRFrameReq = nullptr;
 
   private: // command buffers & rendering frames
-    mutex commandBufferRequestsMutex;
+    shared_mutex commandBufferRequestsMutex;
     vector<TrCommandBufferBase *> defaultCommandBufferRequests;
     vector<xr::StereoRenderingFrame *> stereoFramesList;
     xr::StereoRenderingFrame *stereoFrameForBackup = nullptr;

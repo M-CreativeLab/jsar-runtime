@@ -10,6 +10,7 @@
 #include "common/ipc.hpp"
 #include "common/command_buffers/command_buffers.hpp"
 #include "common/frame_request/types.hpp"
+#include "common/analytics/perf_counter.hpp"
 #include "common/collision/ray.hpp"
 #include "xr/device.hpp"
 
@@ -33,7 +34,7 @@ namespace renderer
 
   public:
     void initialize();
-    void tick();
+    void tick(analytics::PerformanceCounter &perfCounter);
     void shutdown();
     void setLogFilter(string filterExpr);
     void enableHostContextSummary();

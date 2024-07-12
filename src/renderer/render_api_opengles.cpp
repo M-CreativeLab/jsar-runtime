@@ -24,6 +24,8 @@ using namespace commandbuffers;
 
 #if SUPPORT_OPENGL_UNIFIED
 
+#define TR_OPENGL_FUNC inline
+
 void getline(const string &input, string &line, size_t &pos, char delim = '\n')
 {
 	if (pos >= input.size())
@@ -68,7 +70,7 @@ public: // Execute command buffer
 			bool isDefaultQueue);
 
 private:
-	void OnContextInit(WebGL1ContextInitCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnContextInit(WebGL1ContextInitCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		WebGL1ContextInitCommandBufferResponse res(req);
 		res.drawingViewport = GetDrawingViewport();
@@ -88,7 +90,7 @@ private:
 		res.renderer = string((const char *)glGetString(GL_RENDERER));
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
-	void OnContext2Init(WebGL2ContextInitCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnContext2Init(WebGL2ContextInitCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		WebGL2ContextInitCommandBufferResponse res(req);
 		// GLint values
@@ -120,14 +122,14 @@ private:
 		glGetFloatv(GL_MAX_TEXTURE_LOD_BIAS, &res.maxTextureLODBias);
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
-	void OnCreateProgram(CreateProgramCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnCreateProgram(CreateProgramCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint program = m_GLObjectManager.CreateProgram(req->clientId);
 		reqContentRenderer->getOpenGLContext()->RecordProgramOnCreated(program);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateProgram(%d) => %d", options.isDefaultQueue, req->clientId, program);
 	}
-	void OnDeleteProgram(DeleteProgramCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDeleteProgram(DeleteProgramCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto program = m_GLObjectManager.FindProgram(req->clientId);
 		m_GLObjectManager.DeleteProgram(req->clientId);
@@ -142,7 +144,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteProgram(%d)", options.isDefaultQueue, program);
 	}
-	void OnLinkProgram(LinkProgramCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnLinkProgram(LinkProgramCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto program = m_GLObjectManager.FindProgram(req->clientId);
 		glLinkProgram(program);
@@ -242,7 +244,7 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::LinkProgram(%d)", options.isDefaultQueue, program);
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
-	void OnUseProgram(UseProgramCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUseProgram(UseProgramCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto program = m_GLObjectManager.FindProgram(req->clientId);
 		glUseProgram(program);
@@ -250,7 +252,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::UseProgram(%d)", options.isDefaultQueue, program);
 	}
-	void OnGetProgramParameter(GetProgramParamCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnGetProgramParameter(GetProgramParamCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto program = m_GLObjectManager.FindProgram(req->clientId);
 		GLint value;
@@ -260,7 +262,7 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::GetProgramParameter() => %d", options.isDefaultQueue, res.value);
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
-	void OnGetProgramInfoLog(GetProgramInfoLogCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnGetProgramInfoLog(GetProgramInfoLogCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto program = m_GLObjectManager.FindProgram(req->clientId);
 		GLint retSize;
@@ -275,7 +277,7 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::GetProgramInfoLog: %s", options.isDefaultQueue, res.infoLog.c_str());
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
-	void OnAttachShader(AttachShaderCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnAttachShader(AttachShaderCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint program = m_GLObjectManager.FindProgram(req->program);
 		GLuint shader = m_GLObjectManager.FindShader(req->shader);
@@ -285,7 +287,7 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::AttachShader(program=%d, shader=%d)",
 						options.isDefaultQueue, program, shader);
 	}
-	void OnDetachShader(DetachShaderCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDetachShader(DetachShaderCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint program = m_GLObjectManager.FindProgram(req->program);
 		GLuint shader = m_GLObjectManager.FindShader(req->shader);
@@ -295,7 +297,7 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::DetachShader(program=%d, shader=%d)",
 						options.isDefaultQueue, program, shader);
 	}
-	void OnCreateShader(CreateShaderCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnCreateShader(CreateShaderCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint shader = m_GLObjectManager.CreateShader(req->clientId, req->shaderType);
 		reqContentRenderer->getOpenGLContext()->RecordShaderOnCreated(shader);
@@ -306,7 +308,7 @@ private:
 						gles::glEnumToString(req->shaderType).c_str(),
 						shader);
 	}
-	void OnDeleteShader(DeleteShaderCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDeleteShader(DeleteShaderCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto shader = m_GLObjectManager.FindShader(req->shader);
 		m_GLObjectManager.DeleteShader(req->shader);
@@ -315,7 +317,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteShader(%d)", options.isDefaultQueue, shader);
 	}
-	void OnShaderSource(ShaderSourceCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnShaderSource(ShaderSourceCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto shader = m_GLObjectManager.FindShader(req->shader);
 		auto source = req->source();
@@ -353,7 +355,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::ShaderSource(%d)", options.isDefaultQueue, shader);
 	}
-	void OnCompileShader(CompileShaderCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnCompileShader(CompileShaderCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto shader = m_GLObjectManager.FindShader(req->shader);
 		glCompileShader(shader);
@@ -377,7 +379,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CompileShader(%d)", options.isDefaultQueue, shader);
 	}
-	void OnGetShaderSource(GetShaderSourceCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnGetShaderSource(GetShaderSourceCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GetShaderSourceCommandBufferResponse res(req);
 		GLint sourceSize;
@@ -408,7 +410,7 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::GetShaderSource(): %s", options.isDefaultQueue, res.source.c_str());
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
-	void OnGetShaderParameter(GetShaderParamCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnGetShaderParameter(GetShaderParamCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint shader = m_GLObjectManager.FindShader(req->shader);
 		GLint value;
@@ -419,7 +421,7 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::GetShaderParameter: %d", options.isDefaultQueue, res.value);
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
-	void OnGetShaderInfoLog(GetShaderInfoLogCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnGetShaderInfoLog(GetShaderInfoLogCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint shader = m_GLObjectManager.FindShader(req->shader);
 		GLint logSize;
@@ -434,7 +436,7 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::GetShaderInfoLog: %s", options.isDefaultQueue, res.infoLog.c_str());
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
-	void OnCreateBuffer(CreateBufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnCreateBuffer(CreateBufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint buffer = m_GLObjectManager.CreateBuffer(req->clientId);
 		reqContentRenderer->getOpenGLContext()->RecordBufferOnCreated(buffer);
@@ -442,7 +444,7 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateBuffer(%d) => buffer(%d)",
 						options.isDefaultQueue, req->clientId, buffer);
 	}
-	void OnDeleteBuffer(DeleteBufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDeleteBuffer(DeleteBufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto buffer = m_GLObjectManager.FindBuffer(req->buffer);
 		m_GLObjectManager.DeleteBuffer(req->buffer);
@@ -450,7 +452,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteBuffer(%d)", options.isDefaultQueue, buffer);
 	}
-	void OnBindBuffer(BindBufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnBindBuffer(BindBufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto target = req->target;
 		auto buffer = m_GLObjectManager.FindBuffer(req->buffer);
@@ -474,7 +476,7 @@ private:
 						options.isDefaultQueue, gles::glEnumToString(target).c_str(), buffer);
 		}
 	}
-	void OnBufferData(BufferDataCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnBufferData(BufferDataCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto target = req->target;
 		auto size = req->dataSize;
@@ -492,27 +494,27 @@ private:
 						gles::glEnumToString(usage).c_str());
 		}
 	}
-	void OnBufferSubData(BufferSubDataCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnBufferSubData(BufferSubDataCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glBufferSubData(req->target, req->offset, req->dataSize, req->data);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BufferSubData(%d)", options.isDefaultQueue, req->target);
 	}
-	void OnCreateFramebuffer(CreateFramebufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnCreateFramebuffer(CreateFramebufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint framebuffer = m_GLObjectManager.CreateFramebuffer(req->clientId);
 		reqContentRenderer->getOpenGLContext()->RecordFramebufferOnCreated(framebuffer);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateFramebuffer() => %d", options.isDefaultQueue, framebuffer);
 	}
-	void OnDeleteFramebuffer(DeleteFramebufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDeleteFramebuffer(DeleteFramebufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glDeleteFramebuffers(1, &req->framebuffer);
 		reqContentRenderer->getOpenGLContext()->RecordFramebufferOnDeleted(req->framebuffer);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteFramebuffer: %d", options.isDefaultQueue, req->framebuffer);
 	}
-	void OnBindFramebuffer(BindFramebufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnBindFramebuffer(BindFramebufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto target = req->target;
 		GLuint framebuffer;
@@ -529,9 +531,9 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BindFramebuffer(%d)", options.isDefaultQueue, req->framebuffer);
 	}
-	void OnFramebufferRenderbuffer(FramebufferRenderbufferCommandBufferRequest *req,
-																 renderer::TrContentRenderer *reqContentRenderer,
-																 ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnFramebufferRenderbuffer(FramebufferRenderbufferCommandBufferRequest *req,
+																								renderer::TrContentRenderer *reqContentRenderer,
+																								ApiCallOptions &options)
 	{
 		auto target = req->target;
 		auto attachment = req->attachment;
@@ -543,9 +545,9 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::FramebufferRenderbuffer(%d, attachment=%d, renderbuffertarget=%d, renderbuffer=%d)",
 						options.isDefaultQueue, target, attachment, renderbuffertarget, renderbuffer);
 	}
-	void OnFramebufferTexture2D(FramebufferTexture2DCommandBufferRequest *req,
-															renderer::TrContentRenderer *reqContentRenderer,
-															ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnFramebufferTexture2D(FramebufferTexture2DCommandBufferRequest *req,
+																						 renderer::TrContentRenderer *reqContentRenderer,
+																						 ApiCallOptions &options)
 	{
 		auto target = req->target;
 		auto attachment = req->attachment;
@@ -559,23 +561,23 @@ private:
 						options.isDefaultQueue, target, attachment, textarget, texture, level);
 		}
 	}
-	void OnCheckFramebufferStatus(CheckFramebufferStatusCommandBufferRequest *req,
-																renderer::TrContentRenderer *reqContentRenderer,
-																ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnCheckFramebufferStatus(CheckFramebufferStatusCommandBufferRequest *req,
+																							 renderer::TrContentRenderer *reqContentRenderer,
+																							 ApiCallOptions &options)
 	{
 		GLenum ret = glCheckFramebufferStatus(req->target);
 		CheckFramebufferStatusCommandBufferResponse res(req, ret);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CheckFramebufferStatus() => %d", options.isDefaultQueue, res.status);
 	}
-	void OnCreateRenderbuffer(CreateRenderbufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnCreateRenderbuffer(CreateRenderbufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint renderbuffer = m_GLObjectManager.CreateRenderbuffer(req->clientId);
 		reqContentRenderer->getOpenGLContext()->RecordRenderbufferOnCreated(renderbuffer);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateRenderbuffer() => %d", options.isDefaultQueue, renderbuffer);
 	}
-	void OnDeleteRenderbuffer(DeleteRenderbufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDeleteRenderbuffer(DeleteRenderbufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint renderbuffer = m_GLObjectManager.FindRenderbuffer(req->renderbuffer);
 		m_GLObjectManager.DeleteRenderbuffer(req->renderbuffer);
@@ -583,7 +585,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteRenderbuffer(%d)", options.isDefaultQueue, renderbuffer);
 	}
-	void OnBindRenderbuffer(BindRenderbufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnBindRenderbuffer(BindRenderbufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto target = req->target;
 		auto renderbuffer = m_GLObjectManager.CreateRenderbuffer(req->renderbuffer);
@@ -592,9 +594,9 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BindRenderbuffer(%d)", options.isDefaultQueue, req->renderbuffer);
 	}
-	void OnRenderbufferStorage(RenderbufferStorageCommandBufferRequest *req,
-														 renderer::TrContentRenderer *reqContentRenderer,
-														 ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnRenderbufferStorage(RenderbufferStorageCommandBufferRequest *req,
+																						renderer::TrContentRenderer *reqContentRenderer,
+																						ApiCallOptions &options)
 	{
 		auto target = req->target;
 		auto internalformat = req->internalformat;
@@ -605,13 +607,13 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::RenderbufferStorage(%d, internal_format=%d, width=%d, height=%d)",
 						options.isDefaultQueue, target, internalformat, width, height);
 	}
-	void OnReadBuffer(ReadBufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnReadBuffer(ReadBufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glReadBuffer(req->mode);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::ReadBuffer(%d)", options.isDefaultQueue, req->mode);
 	}
-	void OnBindBufferBase(BindBufferBaseCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnBindBufferBase(BindBufferBaseCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto target = req->target;
 		auto index = req->index;
@@ -621,7 +623,7 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::BindBufferBase(%d, index=%d, target=%d)",
 						options.isDefaultQueue, buffer, index, target);
 	}
-	void OnBindBufferRange(BindBufferRangeCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnBindBufferRange(BindBufferRangeCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto target = req->target;
 		auto index = req->index;
@@ -632,7 +634,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BindBufferRange(%d)", options.isDefaultQueue, buffer);
 	}
-	void OnBlitFramebuffer(BlitFramebufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnBlitFramebuffer(BlitFramebufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glBlitFramebuffer(
 				req->srcX0,
@@ -649,9 +651,9 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::BlitFramebuffer(%d, %d, filter=%d)", options.isDefaultQueue,
 						req->srcX0, req->srcY0, req->filter);
 	}
-	void OnRenderbufferStorageMultisample(RenderbufferStorageMultisampleCommandBufferRequest *req,
-																				renderer::TrContentRenderer *reqContentRenderer,
-																				ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnRenderbufferStorageMultisample(RenderbufferStorageMultisampleCommandBufferRequest *req,
+																											 renderer::TrContentRenderer *reqContentRenderer,
+																											 ApiCallOptions &options)
 	{
 		auto target = req->target;
 		auto samples = req->samples;
@@ -663,14 +665,14 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::RenderbufferStorageMultisample(0x%x, samples=%d, internalformat=0x%x, size=[%d,%d])",
 						options.isDefaultQueue, target, samples, internalformat, width, height);
 	}
-	void OnCreateVertexArray(CreateVertexArrayCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnCreateVertexArray(CreateVertexArrayCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint vao = m_GLObjectManager.CreateVertexArray(req->clientId);
 		reqContentRenderer->getOpenGLContext()->RecordVertexArrayObjectOnCreated(vao);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateVertexArray(%d) => %d", options.isDefaultQueue, req->clientId, vao);
 	}
-	void OnDeleteVertexArray(DeleteVertexArrayCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDeleteVertexArray(DeleteVertexArrayCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint vao = m_GLObjectManager.FindVertexArray(req->vertexArray);
 		m_GLObjectManager.DeleteVertexArray(req->vertexArray);
@@ -678,7 +680,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteVertexArray(%d)", options.isDefaultQueue, vao);
 	}
-	void OnBindVertexArray(BindVertexArrayCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnBindVertexArray(BindVertexArrayCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto vao = m_GLObjectManager.FindVertexArray(req->vertexArray);
 		if (req->vertexArray != 0 && vao == 0)
@@ -691,14 +693,14 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BindVertexArray(%d)", options.isDefaultQueue, vao);
 	}
-	void OnCreateTexture(CreateTextureCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnCreateTexture(CreateTextureCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint texture = m_GLObjectManager.CreateTexture(req->clientId);
 		reqContentRenderer->getOpenGLContext()->RecordTextureOnCreated(texture);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateTexture(c%d) => texture(%d)", options.isDefaultQueue, req->clientId, texture);
 	}
-	void OnDeleteTexture(DeleteTextureCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDeleteTexture(DeleteTextureCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLuint texture = m_GLObjectManager.FindTexture(req->texture);
 		m_GLObjectManager.DeleteTexture(req->texture);
@@ -706,7 +708,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DeleteTexture(%d)", options.isDefaultQueue, texture);
 	}
-	void OnBindTexture(BindTextureCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnBindTexture(BindTextureCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto target = req->target;
 		auto texture = m_GLObjectManager.FindTexture(req->texture);
@@ -723,7 +725,7 @@ private:
 						options.isDefaultQueue, target, texture, activeUnit, contentGlContext->GetProgram());
 		}
 	}
-	void OnTexImage2D(TextureImage2DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnTexImage2D(TextureImage2DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto target = req->target;
 		auto level = req->level;
@@ -753,7 +755,7 @@ private:
 						currentTexture);
 		}
 	}
-	void OnTexSubImage2D(TextureSubImage2DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnTexSubImage2D(TextureSubImage2DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glTexSubImage2D(
 				req->target,
@@ -768,7 +770,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::TexSubImage2D: %d", options.isDefaultQueue, req->target);
 	}
-	void OnCopyTexImage2D(CopyTextureImage2DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnCopyTexImage2D(CopyTextureImage2DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glCopyTexImage2D(
 				req->target,
@@ -782,9 +784,9 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CopyTexImage2D: %d", options.isDefaultQueue, req->target);
 	}
-	void OnCopyTexSubImage2D(CopyTextureSubImage2DCommandBufferRequest *req,
-													 renderer::TrContentRenderer *reqContentRenderer,
-													 ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnCopyTexSubImage2D(CopyTextureSubImage2DCommandBufferRequest *req,
+																					renderer::TrContentRenderer *reqContentRenderer,
+																					ApiCallOptions &options)
 	{
 		glCopyTexSubImage2D(
 				req->target,
@@ -798,14 +800,14 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::CopyTexSubImage2D: %d", options.isDefaultQueue, req->target);
 	}
-	void OnTexParameteri(TextureParameteriCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnTexParameteri(TextureParameteriCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glTexParameteri(req->target, req->pname, req->param);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::TexParameteri(target=0x%x, pname=0x%x, param=%d)",
 						options.isDefaultQueue, req->target, req->pname, req->param);
 	}
-	void OnActiveTexture(ActiveTextureCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnActiveTexture(ActiveTextureCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto textureUnit = req->activeUnit;
 		glActiveTexture(textureUnit);
@@ -813,13 +815,13 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::ActiveTexture(%d)", options.isDefaultQueue, textureUnit - GL_TEXTURE0);
 	}
-	void OnGenerateMipmap(GenerateMipmapCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnGenerateMipmap(GenerateMipmapCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glGenerateMipmap(req->target);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::GenerateMipmap: %d", options.isDefaultQueue, req->target);
 	}
-	void OnTexImage3D(TextureImage3DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnTexImage3D(TextureImage3DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto target = req->target;
 		auto level = req->level;
@@ -839,7 +841,7 @@ private:
 						width, height, depth, pixels);
 		}
 	}
-	void OnTexSubImage3D(TextureSubImage3DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnTexSubImage3D(TextureSubImage3DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto target = req->target;
 		auto level = req->level;
@@ -861,23 +863,23 @@ private:
 						width, height, depth, pixels);
 		}
 	}
-	void OnEnableVertexAttribArray(EnableVertexAttribArrayCommandBufferRequest *req,
-																 renderer::TrContentRenderer *reqContentRenderer,
-																 ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnEnableVertexAttribArray(EnableVertexAttribArrayCommandBufferRequest *req,
+																								renderer::TrContentRenderer *reqContentRenderer,
+																								ApiCallOptions &options)
 	{
 		glEnableVertexAttribArray(req->index);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::EnableVertexAttribArray(%d)", options.isDefaultQueue, req->index);
 	}
-	void OnDisableVertexAttribArray(DisableVertexAttribArrayCommandBufferRequest *req,
-																	renderer::TrContentRenderer *reqContentRenderer,
-																	ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDisableVertexAttribArray(DisableVertexAttribArrayCommandBufferRequest *req,
+																								 renderer::TrContentRenderer *reqContentRenderer,
+																								 ApiCallOptions &options)
 	{
 		glDisableVertexAttribArray(req->index);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DisableVertexAttribArray(%d)", options.isDefaultQueue, req->index);
 	}
-	void OnVertexAttribPointer(VertexAttribPointerCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnVertexAttribPointer(VertexAttribPointerCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto index = req->index;
 		auto size = req->conponentSize;
@@ -891,9 +893,9 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::VertexAttribPointer(%d) size=%d type=0x%x normalized=%d stride=%d offset=%d",
 						options.isDefaultQueue, index, size, type, normalized, stride, offset);
 	}
-	void OnVertexAttribIPointer(VertexAttribIPointerCommandBufferRequest *req,
-															renderer::TrContentRenderer *reqContentRenderer,
-															ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnVertexAttribIPointer(VertexAttribIPointerCommandBufferRequest *req,
+																						 renderer::TrContentRenderer *reqContentRenderer,
+																						 ApiCallOptions &options)
 	{
 		auto index = req->index;
 		auto size = req->componentSize;
@@ -906,9 +908,9 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::VertexAttribIPointer(%d) size=%d type=0x%x stride=%d offset=%d",
 						options.isDefaultQueue, index, size, type, stride, offset);
 	}
-	void OnVertexAttribDivisor(VertexAttribDivisorCommandBufferRequest *req,
-														 renderer::TrContentRenderer *reqContentRenderer,
-														 ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnVertexAttribDivisor(VertexAttribDivisorCommandBufferRequest *req,
+																						renderer::TrContentRenderer *reqContentRenderer,
+																						ApiCallOptions &options)
 	{
 		auto index = req->index;
 		auto divisor = req->divisor;
@@ -916,7 +918,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::VertexAttribDivisor(%d, %d)", options.isDefaultQueue, index, divisor);
 	}
-	void OnUniformBlockBinding(UniformBlockBindingCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUniformBlockBinding(UniformBlockBindingCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto program = m_GLObjectManager.FindProgram(req->program);
 		auto uniformBlockIndex = req->uniformBlockIndex;
@@ -926,13 +928,13 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::UniformBlockBinding(program=%d, %d, %d)",
 						options.isDefaultQueue, program, uniformBlockIndex, uniformBlockBinding);
 	}
-	void OnUniform1f(Uniform1fCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUniform1f(Uniform1fCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glUniform1f(req->location, req->v0);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform1f(%d, %f)", options.isDefaultQueue, req->location, req->v0);
 	}
-	void OnUniform1fv(Uniform1fvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUniform1fv(Uniform1fvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto location = req->location;
 		auto count = req->values.size();
@@ -952,14 +954,14 @@ private:
 						options.isDefaultQueue, location, count, valuesStr.c_str());
 		}
 	}
-	void OnUniform1i(Uniform1iCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUniform1i(Uniform1iCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto loc = req->location;
 		glUniform1i(loc, req->v0);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform1i(%d): %d", options.isDefaultQueue, loc, req->v0);
 	}
-	void OnUniform1iv(Uniform1ivCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUniform1iv(Uniform1ivCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto loc = req->location;
 		auto count = req->values.size();
@@ -968,13 +970,13 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform1iv(%d)", options.isDefaultQueue, loc);
 	}
-	void OnUniform2f(Uniform2fCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUniform2f(Uniform2fCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glUniform2f(req->location, req->v0, req->v1);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform2f(%d)", options.isDefaultQueue, req->location);
 	}
-	void OnUniform2fv(Uniform2fvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUniform2fv(Uniform2fvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto loc = req->location;
 		auto count = req->values.size() / 2;
@@ -983,13 +985,13 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform2fv(%d, count=%d)", options.isDefaultQueue, loc, count);
 	}
-	void OnUniform2i(Uniform2iCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUniform2i(Uniform2iCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glUniform2i(req->location, req->v0, req->v1);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform2i(%d, %d, %d)", options.isDefaultQueue, req->location, req->v0, req->v1);
 	}
-	void OnUniform2iv(Uniform2ivCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUniform2iv(Uniform2ivCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto loc = req->location;
 		auto count = req->values.size() / 2;
@@ -998,7 +1000,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform2iv(%d)", options.isDefaultQueue, req->location);
 	}
-	void OnUniform3f(Uniform3fCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUniform3f(Uniform3fCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto loc = req->location;
 		auto v0 = req->v0;
@@ -1011,7 +1013,7 @@ private:
 						options.isDefaultQueue, loc, v0, v1, v2);
 		}
 	}
-	void OnUniform3fv(Uniform3fvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUniform3fv(Uniform3fvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto loc = req->location;
 		auto count = req->values.size() / 3;
@@ -1020,7 +1022,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform3fv(%d)", options.isDefaultQueue, loc);
 	}
-	void OnUniform3i(Uniform3iCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUniform3i(Uniform3iCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto loc = req->location;
 		auto v0 = req->v0;
@@ -1030,7 +1032,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform3i(%d)", options.isDefaultQueue, loc);
 	}
-	void OnUniform3iv(Uniform3ivCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUniform3iv(Uniform3ivCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto loc = req->location;
 		auto count = req->values.size() / 3;
@@ -1039,7 +1041,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform3iv(%d)", options.isDefaultQueue, loc);
 	}
-	void OnUniform4f(Uniform4fCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUniform4f(Uniform4fCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto loc = req->location;
 		auto v0 = req->v0;
@@ -1051,7 +1053,7 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform4f(%d): (%f, %f, %f, %f)",
 						options.isDefaultQueue, loc, v0, v1, v2, v3);
 	}
-	void OnUniform4fv(Uniform4fvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUniform4fv(Uniform4fvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto loc = req->location;
 		auto count = req->values.size() / 4;
@@ -1060,7 +1062,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform4fv(%d)", options.isDefaultQueue, loc);
 	}
-	void OnUniform4i(Uniform4iCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUniform4i(Uniform4iCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto loc = req->location;
 		auto v0 = req->v0;
@@ -1071,7 +1073,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform4i(%d)", options.isDefaultQueue, loc);
 	}
-	void OnUniform4iv(Uniform4ivCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnUniform4iv(Uniform4ivCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto loc = req->location;
 		auto count = req->values.size() / 4;
@@ -1080,10 +1082,10 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform4iv(%d)", options.isDefaultQueue, loc);
 	}
-	void OnUniformMatrix2fv(UniformMatrix2fvCommandBufferRequest *req,
-													renderer::TrContentRenderer *reqContentRenderer,
-													ApiCallOptions &options,
-													xr::DeviceFrame *deviceFrame)
+	TR_OPENGL_FUNC void OnUniformMatrix2fv(UniformMatrix2fvCommandBufferRequest *req,
+																				 renderer::TrContentRenderer *reqContentRenderer,
+																				 ApiCallOptions &options,
+																				 xr::DeviceFrame *deviceFrame)
 	{
 		auto loc = req->location;
 		auto count = req->count();
@@ -1093,10 +1095,10 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix2fv(%d)", options.isDefaultQueue, loc);
 	}
-	void OnUniformMatrix3fv(UniformMatrix3fvCommandBufferRequest *req,
-													renderer::TrContentRenderer *reqContentRenderer,
-													ApiCallOptions &options,
-													xr::DeviceFrame *deviceFrame)
+	TR_OPENGL_FUNC void OnUniformMatrix3fv(UniformMatrix3fvCommandBufferRequest *req,
+																				 renderer::TrContentRenderer *reqContentRenderer,
+																				 ApiCallOptions &options,
+																				 xr::DeviceFrame *deviceFrame)
 	{
 		auto loc = req->location;
 		auto count = req->count();
@@ -1106,10 +1108,10 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix3fv(%d)", options.isDefaultQueue, loc);
 	}
-	void OnUniformMatrix4fv(UniformMatrix4fvCommandBufferRequest *req,
-													renderer::TrContentRenderer *reqContentRenderer,
-													ApiCallOptions &options,
-													xr::DeviceFrame *deviceFrame)
+	TR_OPENGL_FUNC void OnUniformMatrix4fv(UniformMatrix4fvCommandBufferRequest *req,
+																				 renderer::TrContentRenderer *reqContentRenderer,
+																				 ApiCallOptions &options,
+																				 xr::DeviceFrame *deviceFrame)
 	{
 		auto location = req->location;
 		auto count = req->count();
@@ -1134,7 +1136,7 @@ private:
 		if (matrixToUse == nullptr)
 			matrixToUse = req->values.data();
 
-		if (matrixToUse == nullptr)
+		if (TR_UNLIKELY(matrixToUse == nullptr))
 		{
 			DEBUG(LOG_TAG_ERROR, "UniformMatrix4fv() fails to read the matrix value, placeholderType=%d, deviceFrame=%p",
 						req->computationGraph4values.placeholderId, deviceFrame);
@@ -1153,14 +1155,14 @@ private:
 						matrixToUse[12], matrixToUse[13], matrixToUse[14], matrixToUse[15]);
 		}
 	}
-	void OnDrawArrays(DrawArraysCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDrawArrays(DrawArraysCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glDrawArrays(req->mode, req->first, req->count);
 		m_DrawCallCountPerFrame += 1;
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DrawArrays(%d)", options.isDefaultQueue, req->count);
 	}
-	void OnDrawElements(DrawElementsCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDrawElements(DrawElementsCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto mode = req->mode;
 		auto count = req->count;
@@ -1180,7 +1182,7 @@ private:
 						indices);
 		}
 	}
-	void OnDrawBuffers(DrawBuffersCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDrawBuffers(DrawBuffersCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto n = req->n;
 		auto buffers = req->bufs;
@@ -1189,9 +1191,9 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DrawBuffers(%d)", options.isDefaultQueue, n);
 	}
-	void OnDrawArraysInstanced(DrawArraysInstancedCommandBufferRequest *req,
-														 renderer::TrContentRenderer *reqContentRenderer,
-														 ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDrawArraysInstanced(DrawArraysInstancedCommandBufferRequest *req,
+																						renderer::TrContentRenderer *reqContentRenderer,
+																						ApiCallOptions &options)
 	{
 		auto mode = req->mode;
 		auto first = req->first;
@@ -1203,9 +1205,9 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::DrawArraysInstanced(0x%x, %d, %d, %d)",
 						options.isDefaultQueue, mode, first, count, instanceCount);
 	}
-	void OnDrawElementsInstanced(DrawElementsInstancedCommandBufferRequest *req,
-															 renderer::TrContentRenderer *reqContentRenderer,
-															 ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDrawElementsInstanced(DrawElementsInstancedCommandBufferRequest *req,
+																							renderer::TrContentRenderer *reqContentRenderer,
+																							ApiCallOptions &options)
 	{
 		auto mode = req->mode;
 		auto count = req->count;
@@ -1218,9 +1220,9 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::DrawElementsInstanced(0x%x, %d, %d, %p, %d)",
 						options.isDefaultQueue, mode, count, type, indices, instanceCount);
 	}
-	void OnDrawRangeElements(DrawRangeElementsCommandBufferRequest *req,
-													 renderer::TrContentRenderer *reqContentRenderer,
-													 ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDrawRangeElements(DrawRangeElementsCommandBufferRequest *req,
+																					renderer::TrContentRenderer *reqContentRenderer,
+																					ApiCallOptions &options)
 	{
 		auto mode = req->mode;
 		auto start = req->start;
@@ -1234,7 +1236,7 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::DrawRangeElements(0x%x, %d, %d, %d, %d, %p)",
 						options.isDefaultQueue, mode, start, end, count, type, indices);
 	}
-	void OnPixelStorei(PixelStoreiCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnPixelStorei(PixelStoreiCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto pname = req->pname;
 		auto param = req->param;
@@ -1242,13 +1244,13 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::PixelStorei(0x%x, %d)", options.isDefaultQueue, pname, param);
 	}
-	void OnPolygonOffset(PolygonOffsetCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnPolygonOffset(PolygonOffsetCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glPolygonOffset(req->factor, req->units);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::PolygonOffset(%d, %d)", options.isDefaultQueue, req->factor, req->units);
 	}
-	void OnSetViewport(SetViewportCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnSetViewport(SetViewportCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto width = req->width;
 		auto height = req->height;
@@ -1260,7 +1262,7 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::SetViewport(%d, %d, %d, %d)",
 						options.isDefaultQueue, width, height, x, y);
 	}
-	void OnSetScissor(SetScissorCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnSetScissor(SetScissorCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto x = req->x;
 		auto y = req->y;
@@ -1270,9 +1272,9 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::SetScissor: (%d %d %d %d)", options.isDefaultQueue, x, y, width, height);
 	}
-	void OnGetSupportedExtensions(GetExtensionsCommandBufferRequest *req,
-																renderer::TrContentRenderer *reqContentRenderer,
-																ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnGetSupportedExtensions(GetExtensionsCommandBufferRequest *req,
+																							 renderer::TrContentRenderer *reqContentRenderer,
+																							 ApiCallOptions &options)
 	{
 		GetExtensionsCommandBufferResponse res(req);
 		GLint numOfExtensions;
@@ -1286,99 +1288,99 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::GetSupportedExtensions: %d", options.isDefaultQueue, numOfExtensions);
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
-	void OnDepthMask(DepthMaskCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDepthMask(DepthMaskCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glDepthMask(req->flag);
 		reqContentRenderer->getOpenGLContext()->RecordDepthMask(req->flag);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DepthMask(%d)", options.isDefaultQueue, req->flag);
 	}
-	void OnDepthFunc(DepthFuncCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDepthFunc(DepthFuncCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glDepthFunc(req->func);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DepthFunc(%s)", options.isDefaultQueue, gles::glDepthFuncToString(req->func).c_str());
 	}
-	void OnDepthRange(DepthRangeCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDepthRange(DepthRangeCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glDepthRangef(req->near, req->far);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DepthRange(%f, %f)", options.isDefaultQueue, req->near, req->far);
 	}
-	void OnStencilFunc(StencilFuncCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnStencilFunc(StencilFuncCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glStencilFunc(req->func, req->ref, req->mask);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::StencilFunc(%d, %d, %d)", options.isDefaultQueue, req->func, req->ref, req->mask);
 	}
-	void OnStencilFuncSeparate(StencilFuncSeparateCommandBufferRequest *req,
-														 renderer::TrContentRenderer *reqContentRenderer,
-														 ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnStencilFuncSeparate(StencilFuncSeparateCommandBufferRequest *req,
+																						renderer::TrContentRenderer *reqContentRenderer,
+																						ApiCallOptions &options)
 	{
 		glStencilFuncSeparate(req->face, req->func, req->ref, req->mask);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::StencilFuncSeparate: %d", options.isDefaultQueue, req->func);
 	}
-	void OnStencilMask(StencilMaskCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnStencilMask(StencilMaskCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glStencilMask(req->mask);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::StencilMask(%d)", options.isDefaultQueue, req->mask);
 	}
-	void OnStencilMaskSeparate(StencilMaskSeparateCommandBufferRequest *req,
-														 renderer::TrContentRenderer *reqContentRenderer,
-														 ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnStencilMaskSeparate(StencilMaskSeparateCommandBufferRequest *req,
+																						renderer::TrContentRenderer *reqContentRenderer,
+																						ApiCallOptions &options)
 	{
 		glStencilMaskSeparate(req->face, req->mask);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::StencilMaskSeparate(%d)", options.isDefaultQueue, req->mask);
 	}
-	void OnStencilOp(StencilOpCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnStencilOp(StencilOpCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glStencilOp(req->fail, req->zfail, req->zpass);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::StencilOp(%d, %d, %d)", options.isDefaultQueue, req->fail, req->zfail, req->zpass);
 	}
-	void OnStencilOpSeparate(StencilOpSeparateCommandBufferRequest *req,
-													 renderer::TrContentRenderer *reqContentRenderer,
-													 ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnStencilOpSeparate(StencilOpSeparateCommandBufferRequest *req,
+																					renderer::TrContentRenderer *reqContentRenderer,
+																					ApiCallOptions &options)
 	{
 		glStencilOpSeparate(req->face, req->fail, req->zfail, req->zpass);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::StencilOpSeparate(%d)", options.isDefaultQueue, req->fail);
 	}
-	void OnBlendColor(BlendColorCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnBlendColor(BlendColorCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glBlendColor(req->red, req->green, req->blue, req->alpha);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BlendColor(%f, %f, %f, %f)",
 						options.isDefaultQueue, req->red, req->green, req->blue, req->alpha);
 	}
-	void OnBlendEquation(BlendEquationCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnBlendEquation(BlendEquationCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glBlendEquation(req->mode);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BlendEquation(%d)", options.isDefaultQueue, req->mode);
 	}
-	void OnBlendEquationSeparate(BlendEquationSeparateCommandBufferRequest *req,
-															 renderer::TrContentRenderer *reqContentRenderer,
-															 ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnBlendEquationSeparate(BlendEquationSeparateCommandBufferRequest *req,
+																							renderer::TrContentRenderer *reqContentRenderer,
+																							ApiCallOptions &options)
 	{
 		glBlendEquationSeparate(req->modeRGB, req->modeAlpha);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BlendEquationSeparate(%d, %d)",
 						options.isDefaultQueue, req->modeRGB, req->modeAlpha);
 	}
-	void OnBlendFunc(BlendFuncCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnBlendFunc(BlendFuncCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glBlendFunc(req->sfactor, req->dfactor);
 		reqContentRenderer->getOpenGLContext()->RecordBlendFunc(req->sfactor, req->dfactor);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::BlendFunc(%d)", options.isDefaultQueue, req->sfactor);
 	}
-	void OnBlendFuncSeparate(BlendFuncSeparateCommandBufferRequest *req,
-													 renderer::TrContentRenderer *reqContentRenderer,
-													 ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnBlendFuncSeparate(BlendFuncSeparateCommandBufferRequest *req,
+																					renderer::TrContentRenderer *reqContentRenderer,
+																					ApiCallOptions &options)
 	{
 		auto srcRGB = req->srcRGB;
 		auto dstRGB = req->dstRGB;
@@ -1394,7 +1396,7 @@ private:
 						gles::glBlendFuncToString(srcAlpha).c_str(),
 						gles::glBlendFuncToString(dstAlpha).c_str());
 	}
-	void OnColorMask(ColorMaskCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnColorMask(ColorMaskCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto r = req->red;
 		auto g = req->green;
@@ -1404,7 +1406,7 @@ private:
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::ColorMask(%d, %d, %d, %d)", options.isDefaultQueue, r, g, b, a);
 	}
-	void OnCullFace(CullFaceCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnCullFace(CullFaceCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto mode = req->mode;
 		glCullFace(mode);
@@ -1417,7 +1419,7 @@ private:
 				DEBUG(DEBUG_TAG, "[%d] GL::CullFace(mode=0x%x)", options.isDefaultQueue, mode);
 		}
 	}
-	void OnFrontFace(FrontFaceCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnFrontFace(FrontFaceCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto mode = req->mode;
 		glFrontFace(mode);
@@ -1430,7 +1432,7 @@ private:
 				DEBUG(DEBUG_TAG, "[%d] GL::FrontFace(mode=0x%x)", options.isDefaultQueue, mode);
 		}
 	}
-	void OnEnable(EnableCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnEnable(EnableCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto cap = req->cap;
 		glEnable(cap);
@@ -1452,7 +1454,7 @@ private:
 				DEBUG(DEBUG_TAG, "[%d] GL::Enable(0x%x)", options.isDefaultQueue, cap);
 		}
 	}
-	void OnDisable(DisableCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnDisable(DisableCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto cap = req->cap;
 		glDisable(cap);
@@ -1474,7 +1476,7 @@ private:
 				DEBUG(DEBUG_TAG, "[%d] GL::Disable(0x%x)", options.isDefaultQueue, cap);
 		}
 	}
-	void OnGetBooleanv(GetBooleanvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnGetBooleanv(GetBooleanvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLboolean value;
 		glGetBooleanv(req->pname, &value);
@@ -1483,7 +1485,7 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::GetBooleanv(0x%x) => %d", options.isDefaultQueue, req->pname, res.value);
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
-	void OnGetIntegerv(GetIntegervCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnGetIntegerv(GetIntegervCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLint value;
 		glGetIntegerv(req->pname, &value);
@@ -1492,7 +1494,7 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::GetIntegerv(0x%x) => %d", options.isDefaultQueue, req->pname, res.value);
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
-	void OnGetFloatv(GetFloatvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnGetFloatv(GetFloatvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GLfloat value;
 		glGetFloatv(req->pname, &value);
@@ -1501,7 +1503,7 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::GetFloatv(0x%x) => %f", options.isDefaultQueue, req->pname);
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
-	void OnGetString(GetStringCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnGetString(GetStringCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		const GLubyte *ret = glGetString(req->pname); // returns null-terminated string
 		string value = reinterpret_cast<const char *>(ret);
@@ -1510,9 +1512,9 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::GetString(0x%x) => %s", options.isDefaultQueue, req->pname, res.value.c_str());
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
-	void OnGetShaderPrecisionFormat(GetShaderPrecisionFormatCommandBufferRequest *req,
-																	renderer::TrContentRenderer *reqContentRenderer,
-																	ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnGetShaderPrecisionFormat(GetShaderPrecisionFormatCommandBufferRequest *req,
+																								 renderer::TrContentRenderer *reqContentRenderer,
+																								 ApiCallOptions &options)
 	{
 		GLint range[2];
 		GLint precision;
@@ -1530,7 +1532,7 @@ private:
 		}
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
-	void OnGetError(GetErrorCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	TR_OPENGL_FUNC void OnGetError(GetErrorCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		GetErrorCommandBufferResponse res(req, glGetError());
 		if (options.printsCall)

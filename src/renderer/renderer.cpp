@@ -42,7 +42,7 @@ namespace renderer
     startWatchers();
   }
 
-  void TrRenderer::tick()
+  void TrRenderer::tick(analytics::PerformanceCounter &perfCounter)
   {
     if (api == nullptr)
       return; // Skip if api is not ready.
@@ -53,12 +53,16 @@ namespace renderer
     glHostContext->Record();
     if (isHostContextSummaryEnabled)
       glHostContext->Print();
+    perfCounter.record("  renderer.finishedHostContextRecord");
+
     {
       lock_guard<mutex> lock(contentRendererMutex);
       for (auto contentRenderer : contentRenderers)
         contentRenderer->onHostFrame(tickingTimepoint);
+      perfCounter.record("  renderer.finishedContentRendererFrame");
     }
     glHostContext->Restore();
+    perfCounter.record("  renderer.finishedHostContextRestore");
   }
 
   void TrRenderer::shutdown()

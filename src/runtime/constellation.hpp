@@ -9,6 +9,7 @@
 #include <dlfcn.h>
 #include "debug.hpp"
 #include "common/events/event_target.hpp"
+#include "common/analytics/perf_counter.hpp"
 #include "renderer/renderer.hpp"
 #include "xr/device.hpp"
 
@@ -56,7 +57,7 @@ public:
 public:
   bool initialize(string initJson);
   void shutdown();
-  void tick();
+  void tick(analytics::PerformanceCounter &perfCounter);
   TrConstellationInit &getOptions();
   bool isInitialized();
   TrEventTarget *getNativeEventTarget();
