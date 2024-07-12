@@ -3,7 +3,6 @@ import {
   type NativeDocument as JSARNativeDocument,
   type ResourceLoader as JSARResourceLoader,
   type RequestManager as JSARRequestManager,
-  type MediaPlayerBackend,
   type UserAgent as JSARUserAgent,
   type UserAgentInit as JSARUserAgentInit,
   type DOMParser,
@@ -15,9 +14,10 @@ import {
 } from '@yodaos-jsar/dom';
 import ImageDataImpl from '@yodaos-jsar/dom/src/living/image/ImageData';
 import * as ws from 'ws';
-import * as undici from 'undici';
 import { getClientContext, isWebXRSupported } from '@transmute/env';
 
+import { ResourceLoaderOnTransmute } from './ResourceLoader';
+import { MediaPlayerBackendOnTransmute } from './MediaPlayer';
 import { WebGLMatrix } from '../../webgl/WebGLMatrix';
 import { createBondXRSystem } from '../../webxr';
 import { WebXRDefaultExperience } from './xr/DefaultExperience';
@@ -67,75 +67,6 @@ class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
       }
     }
     return super.setMatrices(uniform, matrices);
-  }
-}
-
-type FetchReturnAs = 'string' | 'json' | 'arraybuffer';
-type FetchReturnTypes = string | object | ArrayBuffer;
-type FetchOptions = {
-  accept?: string;
-  cookieJar?: any;
-  referrer?: string;
-};
-
-class ResourceLoaderOnTransmute implements JSARResourceLoader {
-  fetch(url: string, options: FetchOptions, returnsAs: 'string'): Promise<string>;
-  fetch(url: string, options: FetchOptions, returnsAs: 'json'): Promise<object>;
-  fetch(url: string, options: FetchOptions, returnsAs: 'arraybuffer'): Promise<ArrayBuffer>;
-  fetch<T = FetchReturnTypes>(url: string, options: FetchOptions, returnsAs?: FetchReturnAs): Promise<T>;
-  async fetch(
-    url: string,
-    options: FetchOptions,
-    returnsAs?: FetchReturnAs
-  ): Promise<FetchReturnTypes> {
-    const urlObj = new URL(url);
-    if (urlObj.protocol === 'file:') {
-      throw new TypeError('file: protocol is not supported');
-    }
-    const reqInit: undici.RequestInit = {
-      ...(options == null ? {} : options),
-    };
-    const resp = await undici.request(url, <any>reqInit);
-    if (resp.statusCode >= 400) {
-      throw new Error(`Failed to fetch(${url}), statusCode=${resp.statusCode}`);
-    }
-    if (returnsAs === 'string') {
-      return resp.body.text();
-    } else if (returnsAs === 'json') {
-      return <object>resp.body.json();
-    } else if (returnsAs === 'arraybuffer') {
-      return resp.body.arrayBuffer();
-    } else {
-      throw new TypeError('Invalid return type, must be string, json or arraybuffer');
-    }
-  }
-}
-
-class MediaPlayerBackendOnTransmute implements MediaPlayerBackend {
-  paused: boolean;
-  currentTime: number;
-  duration: number;
-  volume: number;
-  loop: boolean;
-  onended: () => void;
-
-  constructor() {
-    // TODO
-  }
-  load(buffer: ArrayBuffer | ArrayBufferView, onloaded: () => void): void {
-    throw new TypeError('Method not implemented.');
-  }
-  play(when?: number): void {
-    throw new TypeError('Method not implemented.');
-  }
-  pause(): void {
-    throw new TypeError('Method not implemented.');
-  }
-  canPlayType(type: string): CanPlayTypeResult {
-    throw new TypeError('Method not implemented.');
-  }
-  dispose(): void {
-    throw new TypeError('Method not implemented.');
   }
 }
 

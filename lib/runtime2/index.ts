@@ -4,7 +4,7 @@ import { extname } from 'node:path';
 
 import { getPerformanceNow, isWebXRSupported } from '@transmute/env';
 import { dispatchXsmlEvent } from '@transmute/messaging';
-import { NativeDocumentOnTransmute } from './jsardom/impl-transmute';
+import { NativeDocumentOnTransmute } from './jsardom/TransmuteImpl';
 
 // viewers
 import createModel3dViewer from './viewers/model3d';  // glb, gltf ...
@@ -172,6 +172,7 @@ export class TransmuteRuntime2 extends EventTarget {
       spaceNode.setEnabled(true);
     } catch (err) {
       console.error(`occurs an error when loading document:`, err);
+      dispatchXsmlEvent(nativeDocument.id, 'error');
       // TODO: report to the native side.
       // remove the dom from appStack
       await dom.unload();

@@ -341,7 +341,6 @@ export class XMLHttpRequestImpl extends XMLHttpRequestEventTargetImpl implements
     this._url = xhrUrl;
     if (this._url.protocol === 'blob:') {
       this._blobFromUrl = resolveObjectURL(urlStr);
-      console.info(`created a blob from url:`, this._blobFromUrl, this._url, urlStr);
     }
     this._sync = !async;
     this._headers = {};
