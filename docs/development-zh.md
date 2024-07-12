@@ -1,4 +1,4 @@
-# 内部文档
+# 开发文档
 
 ## 日志
 
@@ -49,7 +49,7 @@ adb forward tcp:9229 tcp:9229
 ```
 07-12 22:14:52.517 10055 10075 D jsar    : client(10174): The context init is: ClientContext {
 07-12 22:14:52.517 10055 10075 D jsar    : client(10174):   id: 2,
-07-12 22:14:52.517 10055 10075 D jsar    : client(10174):   url: 'http://10.91.20.33:3000/spatial-externalmesh-glb.xsml',
+07-12 22:14:52.517 10055 10075 D jsar    : client(10174):   url: 'http://0.0.0.0:3000/spatial-externalmesh-glb.xsml',
 07-12 22:14:52.517 10055 10075 D jsar    : client(10174):   applicationCacheDirectory: '/path/to/your/cache/directory',
 07-12 22:14:52.517 10055 10075 D jsar    : client(10174):   httpsProxyServer: '',
 07-12 22:14:52.517 10055 10075 D jsar    : client(10174):   webglVersion: 2,
