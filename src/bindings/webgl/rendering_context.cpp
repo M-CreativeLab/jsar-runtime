@@ -993,6 +993,11 @@ namespace webgl
     }
 
     /**
+     * Mark the program as linked.
+     */
+    program->SetLinkStatus(true);
+
+    /**
      * Update the program's attribute locations.
      */
     for (auto &attribLocation : resp->attribLocations)
@@ -1105,6 +1110,17 @@ namespace webgl
 
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     int pname = info[1].As<Napi::Number>().Int32Value();
+
+    /**
+     * The following parameters are carried when linkProgram() is responded, thus we could return them from the client-side
+     * `WebGLProgram` object directly.
+     */
+    if (pname == WEBGL_LINK_STATUS)
+      return Napi::Boolean::New(env, program->GetLinkStatus());
+
+    /**
+     * Send a command buffer request and wait for the response if not hit the above conditions.
+     */
     auto req = GetProgramParamCommandBufferRequest(program->GetId(), pname);
     sendCommandBufferRequest(req, true);
 

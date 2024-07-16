@@ -259,7 +259,8 @@ private:
 		glGetProgramiv(program, req->pname, &value);
 		GetProgramParamCommandBufferResponse res(req, value);
 		if (options.printsCall)
-			DEBUG(DEBUG_TAG, "[%d] GL::GetProgramParameter() => %d", options.isDefaultQueue, res.value);
+			DEBUG(DEBUG_TAG, "[%d] GL::GetProgramParameter(%s) => %d",
+						options.isDefaultQueue, gles::glEnumToString(req->pname).c_str(), res.value);
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
 	TR_OPENGL_FUNC void OnGetProgramInfoLog(GetProgramInfoLogCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
@@ -327,8 +328,6 @@ private:
 			string line;
 			size_t pos = 0;
 
-			if (options.printsCall)
-				DEBUG(DEBUG_TAG, "Shader source(%d):", shader);
 			while (pos < source.size())
 			{
 				getline(source, line, pos);
@@ -342,8 +341,6 @@ private:
 					newLine = "#version 410 core";
 #endif
 				fixedSource += newLine + "\n";
-				if (options.printsCall)
-					DEBUG(DEBUG_TAG, " %s", newLine.c_str());
 			}
 		}
 
@@ -1192,6 +1189,7 @@ private:
 
 		glDrawElements(mode, count, type, indices);
 		m_DrawCallCountPerFrame += 1;
+
 		if (options.printsCall)
 		{
 			DEBUG(DEBUG_TAG, "[%d] GL::DrawElements(mode=%s, count=%d, type=%s, indices=%p)",
@@ -1200,6 +1198,51 @@ private:
 						count,
 						gles::glEnumToString(type).c_str(),
 						indices);
+
+			// Get current program
+			GLint program;
+			glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+			DEBUG(DEBUG_TAG, "    Program: %d", program);
+
+			// Print LINK_STATUS, VALIDATE_STATUS
+			{
+				GLint linkStatus, validateStatus;
+				glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
+				glGetProgramiv(program, GL_VALIDATE_STATUS, &validateStatus);
+				DEBUG(DEBUG_TAG, "    Program: LINK_STATUS=%d", linkStatus);
+				DEBUG(DEBUG_TAG, "    Program: VALIDATE_STATUS=%d", validateStatus);
+			}
+
+			// Print Element Array
+			{
+				GLint elementArrayBuffer;
+				glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &elementArrayBuffer);
+				DEBUG(DEBUG_TAG, "    Element Array Buffer: %d", elementArrayBuffer);
+			}
+
+			// Print Active Attributes
+			{
+				GLint numAttributes = 0;
+				glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &numAttributes);
+				for (int i = 0; i < numAttributes; i++)
+				{
+					GLchar name[256];
+					GLint size;
+					GLenum type;
+					glGetActiveAttrib(program, i, 256, NULL, &size, &type, name);
+					DEBUG(DEBUG_TAG, "    Active Attribute(%d): %s", i, name);
+
+					{
+						auto loc = glGetAttribLocation(program, name);
+						DEBUG(DEBUG_TAG, "    Active Attribute(%d): Size=%d", i, size);
+						DEBUG(DEBUG_TAG, "    Active Attribute(%d): Type=%s", i, gles::glEnumToString(type).c_str());
+
+						GLboolean enabled;
+						glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, (GLint *)&enabled);
+						DEBUG(DEBUG_TAG, "    Active Attribute(%d): Enabled=%s", i, enabled ? "Yes" : "No");
+					}
+				}
+			}
 		}
 	}
 	TR_OPENGL_FUNC void OnDrawBuffers(DrawBuffersCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)

@@ -11,6 +11,8 @@ namespace webgl
     static void Init(Napi::Env env);
     WebGLProgram(const Napi::CallbackInfo &info);
     int GetId() const { return id_; }
+    void SetLinkStatus(bool linkStatus) { linkStatus_ = linkStatus; }
+    bool GetLinkStatus() const { return linkStatus_; }
     void SetAttribLocation(const std::string &name, int location);
     bool HasAttribLocation(const std::string &name);
     int GetAttribLocation(const std::string &name);
@@ -29,6 +31,7 @@ namespace webgl
 
   private:
     int id_;
+    bool linkStatus_ = false;
     std::map<std::string, int> attribLocations_;
     std::map<std::string, int> uniformLocations_;
     std::map<std::string, int> uniformBlockIndices_;
