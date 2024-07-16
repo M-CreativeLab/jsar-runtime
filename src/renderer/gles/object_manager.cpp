@@ -14,7 +14,7 @@ namespace gles
     ClearBuffers();
     ClearFramebuffers();
     ClearRenderbuffers();
-    ClearVertexArrays(); 
+    ClearVertexArrays();
   }
 
   GLuint GLObjectManager::CreateProgram(uint32_t clientId)
@@ -207,10 +207,16 @@ namespace gles
     renderbuffers.clear();
   }
 
-  GLuint GLObjectManager::CreateVertexArray(uint32_t clientId)
+  GLuint GLObjectManager::CreateVertexArray()
   {
     GLuint vertexArray;
     glGenVertexArrays(1, &vertexArray);
+    return vertexArray;
+  }
+
+  GLuint GLObjectManager::CreateVertexArray(uint32_t clientId)
+  {
+    GLuint vertexArray = CreateVertexArray();
     vertexArrays[clientId] = vertexArray;
     return vertexArray;
   }

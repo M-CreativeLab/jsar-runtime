@@ -44,6 +44,7 @@ namespace gles
     void DeleteRenderbuffer(uint32_t clientId);
     void ClearRenderbuffers();
 
+    GLuint CreateVertexArray();
     GLuint CreateVertexArray(uint32_t clientId);
     GLuint FindVertexArray(uint32_t clientId);
     void DeleteVertexArray(uint32_t clientId);

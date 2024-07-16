@@ -70,6 +70,19 @@ public: // Execute command buffer
 			bool isDefaultQueue);
 
 private:
+	/**
+	 * Check if the current context has binding vao, if not create a new and bind it.
+	 */
+	void EnsureVertexArrayObject(OpenGLAppContextStorage *glContext)
+	{
+		if (glContext->GetVertexArrayObject() != 0)
+			return;
+		GLuint vao = m_GLObjectManager.CreateVertexArray();
+		glBindVertexArray(vao);
+		glContext->RecordVertexArrayObject(vao);
+	}
+
+private:
 	TR_OPENGL_FUNC void OnContextInit(WebGL1ContextInitCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		WebGL1ContextInitCommandBufferResponse res(req);
@@ -864,6 +877,12 @@ private:
 																								renderer::TrContentRenderer *reqContentRenderer,
 																								ApiCallOptions &options)
 	{
+		/**
+		 * `enableVertexAttribArray` without VAO is not supported in core profile, thus we need to ensure the VAO before calling
+		 * `enableVertexAttribArray()`.
+		 */
+		if (backendType == RHIBackendType::OpenGLCore)
+			EnsureVertexArrayObject(reqContentRenderer->getOpenGLContext());
 		glEnableVertexAttribArray(req->index);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::EnableVertexAttribArray(%d)", options.isDefaultQueue, req->index);
@@ -872,6 +891,12 @@ private:
 																								 renderer::TrContentRenderer *reqContentRenderer,
 																								 ApiCallOptions &options)
 	{
+		/**
+		 * `disableVertexAttribArray` without VAO is not supported in core profile, thus we need to ensure the VAO before calling
+		 * `disableVertexAttribArray()`.
+		 */
+		if (backendType == RHIBackendType::OpenGLCore)
+			EnsureVertexArrayObject(reqContentRenderer->getOpenGLContext());
 		glDisableVertexAttribArray(req->index);
 		if (options.printsCall)
 			DEBUG(DEBUG_TAG, "[%d] GL::DisableVertexAttribArray(%d)", options.isDefaultQueue, req->index);
@@ -1230,17 +1255,13 @@ private:
 					GLint size;
 					GLenum type;
 					glGetActiveAttrib(program, i, 256, NULL, &size, &type, name);
-					DEBUG(DEBUG_TAG, "    Active Attribute(%d): %s", i, name);
 
-					{
-						auto loc = glGetAttribLocation(program, name);
-						DEBUG(DEBUG_TAG, "    Active Attribute(%d): Size=%d", i, size);
-						DEBUG(DEBUG_TAG, "    Active Attribute(%d): Type=%s", i, gles::glEnumToString(type).c_str());
+					auto loc = glGetAttribLocation(program, name);
+					GLboolean enabled;
+					glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, (GLint *)&enabled);
 
-						GLboolean enabled;
-						glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, (GLint *)&enabled);
-						DEBUG(DEBUG_TAG, "    Active Attribute(%d): Enabled=%s", i, enabled ? "Yes" : "No");
-					}
+					DEBUG(DEBUG_TAG, "    Active Attribute(%d): Enabled=%s Size=%d Type=%s \"%s\"",
+								loc, enabled ? "Yes" : "No", size, gles::glEnumToString(type).c_str(), name);
 				}
 			}
 		}
