@@ -159,25 +159,29 @@ extern "C"
       setenv("JSAR_WEBGL_PLACEHOLDERS", "yes", 1);
     }
 
-    char exampleUrl[PROP_VALUE_MAX];
-    if (__system_property_get("jsar.example.url", exampleUrl) >= 0)
-      setenv("JSAR_EXAMPLE_URL", exampleUrl, 1);
-
-    char debugEnabled[PROP_VALUE_MAX];
-    if (__system_property_get("jsar.debug.enabled", debugEnabled) >= 0)
-    {
-      setenv("JSAR_DEBUG_ENABLED", debugEnabled, 1);
-      if (strcmp(debugEnabled, "yes") == 0)
-        setenv("NODE_ENV", "dev", 1);
-      else
-        setenv("NODE_ENV", "prod", 1);
-    }
-
     char xrFrameRate[PROP_VALUE_MAX];
     if (__system_property_get("jsar.xr.framerate", xrFrameRate) >= 0)
     {
       int frameRate = atoi(xrFrameRate);
       embedder->getRenderer()->configureClientFrameRate(frameRate);
+    }
+
+    char debugEnabledStr[PROP_VALUE_MAX];
+    if (__system_property_get("jsar.debug.enabled", debugEnabledStr) >= 0)
+    {
+      bool isDebugEnabled = strcmp(debugEnabledStr, "yes") == 0;
+      setenv("JSAR_DEBUG_ENABLED", debugEnabledStr, 1);
+      setenv("NODE_ENV", isDebugEnabled ? "dev" : "prod", 1);
+
+      if (isDebugEnabled)
+      {
+        char exampleUrl[PROP_VALUE_MAX];
+        if (__system_property_get("jsar.example.url", exampleUrl) >= 0)
+          setenv("JSAR_EXAMPLE_URL", exampleUrl, 1);
+        char enableResourcesCachingStr[PROP_VALUE_MAX];
+        if (__system_property_get("jsar.resources.caching", enableResourcesCachingStr) >= 0)
+          setenv("JSAR_RESOURCES_CACHING", enableResourcesCachingStr, 1);
+      }
     }
 #endif
   }

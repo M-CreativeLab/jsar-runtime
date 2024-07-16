@@ -26,7 +26,31 @@ JSAR 会将每个应用进程的日志也打印到 `jsar` 中，比如：
 - `loaded` 事件，表示文档加载完成，比如："dispatching XSML(2) event(loaded)"
 - `fcp` 事件，表示首次内容绘制完成，比如："dispatching XSML(2) event(fcp)"
 
-## 调试应用
+## 调试
+
+### AOSP 设备调试
+
+开发者可以基于 AOSP 的 adb 工具进行调试，需要使用到 `adb setprop` 和 `adb logcat` 命令。
+
+进入调试模式：
+
+```sh
+$ adb setprop jsar.debug.enabled yes
+```
+
+**设置下一次加载地址**
+
+```sh
+$ adb setprop jsar.example.url http://localhost:3000/spatial-externalmesh-glb.xsml
+```
+
+**禁用应用资源缓存**
+
+```sh
+$ adb setprop jsar.resources.caching no
+```
+
+### 使用 Chrome DevTools 调试
 
 在应用进程日志中找到：
 
