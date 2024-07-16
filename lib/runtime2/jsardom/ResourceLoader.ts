@@ -4,7 +4,7 @@ import fsPromises from 'node:fs/promises';
 import {
   type ResourceLoader as JSARResourceLoader,
 } from '@yodaos-jsar/dom';
-import { getClientContext } from '@transmute/env';
+import { getClientContext, isResourcesCachingDisabled } from '@transmute/env';
 import * as undici from 'undici';
 
 type FetchReturnsMap = {
@@ -35,15 +35,21 @@ function canParseURL(url: string): boolean {
 }
 
 export class ResourceLoaderOnTransmute implements JSARResourceLoader {
+  /**
+   * The flag indicates if the resources caching is enabled.
+   */
+  #isCachingEnabled = !isResourcesCachingDisabled();
   #clientContext = getClientContext();
   #cacheDirectory: string;
 
   constructor() {
-    this.#cacheDirectory = path.join(this.#clientContext.applicationCacheDirectory, '.res_cache');
-    fsPromises.mkdir(this.#cacheDirectory, { recursive: true })
-      .catch((err) => {
-        console.warn('failed to create cache directory', err);
-      });
+    if (this.#isCachingEnabled) {
+      this.#cacheDirectory = path.join(this.#clientContext.applicationCacheDirectory, '.res_cache');
+      fsPromises.mkdir(this.#cacheDirectory, { recursive: true })
+        .catch((err) => {
+          console.warn('failed to create cache directory', err);
+        });
+    }
   }
 
   /**
@@ -66,31 +72,45 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     if (urlObj.protocol === 'file:') {
       return this.#readFile(urlObj.pathname, returnsAs);
     } else {
+      if (!this.#isCachingEnabled) {
+        return this.#requestFile(url, options, returnsAs);
+      }
       const [isCached, cachedUrl] = await this.#isResourceCached(url);
       if (isCached && await this.#shouldUseResourceCache(url, cachedUrl)) {
         return this.#readFile(cachedUrl, returnsAs);
       } else {
-        const reqInit: undici.RequestInit = {
-          ...(options == null ? {} : options),
-        };
-        const resp = await undici.request(url, <any>reqInit);
-        if (resp.statusCode >= 400) {
-          throw new Error(`Failed to fetch(${url}), statusCode=${resp.statusCode}`);
-        }
-        if (returnsAs === 'string') {
-          const str = await resp.body.text();
-          this.#cacheResource(url, str);
-          return str as FetchReturnsMap[AsType];
-        } else if (returnsAs === 'json') {
-          const obj = await resp.body.json() as any;
-          this.#cacheResource(url, obj);
-          return obj as FetchReturnsMap[AsType];
-        } else if (returnsAs === 'arraybuffer') {
-          const buf = await resp.body.arrayBuffer();
-          this.#cacheResource(url, new Uint8Array(buf));
-          return buf as FetchReturnsMap[AsType];
-        }
+        return this.#requestFile(url, options, returnsAs);
       }
+    }
+  }
+
+  /**
+   * Make a network request to fetch a given resource file.
+   */
+  async #requestFile<AsType extends keyof FetchReturnsMap>(
+    url: string,
+    options: FetchOptions,
+    returnsAs?: AsType
+  ): Promise<FetchReturnsMap[AsType]> {
+    const reqInit: undici.RequestInit = {
+      ...(options == null ? {} : options),
+    };
+    const resp = await undici.request(url, <any>reqInit);
+    if (resp.statusCode >= 400) {
+      throw new Error(`Failed to fetch(${url}), statusCode=${resp.statusCode}`);
+    }
+    if (returnsAs === 'string') {
+      const str = await resp.body.text();
+      this.#cacheResource(url, str);
+      return str as FetchReturnsMap[AsType];
+    } else if (returnsAs === 'json') {
+      const obj = await resp.body.json() as any;
+      this.#cacheResource(url, obj);
+      return obj as FetchReturnsMap[AsType];
+    } else if (returnsAs === 'arraybuffer') {
+      const buf = await resp.body.arrayBuffer();
+      this.#cacheResource(url, new Uint8Array(buf));
+      return buf as FetchReturnsMap[AsType];
     }
   }
 
@@ -142,6 +162,9 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
    * @returns the cached path and whether the resource is cached.
    */
   async #isResourceCached(uri: string): Promise<[boolean, string?]> {
+    if (!this.#isCachingEnabled) {
+      throw new TypeError('Disallow to check cache hit when caching is disabled.');
+    }
     const cacheDir = this.#cacheDirectory;
     const filename = getHashOfUri(uri);
     const cachedPath = path.join(cacheDir, filename);
@@ -159,6 +182,9 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
    * @param content the resource content
    */
   async #cacheResource(uri: string, content: string | NodeJS.ArrayBufferView) {
+    if (this.#isCachingEnabled === false) {
+      return; // Don't cache if the caching is disabled.
+    }
     try {
       const cacheDir = this.#cacheDirectory;
       const filename = getHashOfUri(uri);

@@ -24,6 +24,32 @@ export function isWebXRSupported(): boolean {
 }
 
 /**
+ * The flag indicates if this application is running in debug mode.
+ */
+export const isDebugging = process.env.JSAR_DEBUG_ENABLED === 'yes';
+
+/**
+ * Check if this application should disable the resources caching forcibly.
+ * 
+ * NOTE: This only works in debug mode.
+ */
+export function isResourcesCachingDisabled(): boolean {
+  if (!isDebugging) {
+    return false;
+  }
+  return process.env.JSAR_RESOURCES_CACHING === 'no';
+}
+
+export function printSummary() {
+  console.info('Application Environment Summary');
+  console.info('- Debugging:', isDebugging ? 'Yes' : 'No');
+  console.info('- Client Context', nativeContext);
+  if (isDebugging) {
+    console.info('- Environment Variables:', process.env);
+  }
+}
+
+/**
  * Create an interval timer with 500ms to send keep alive update. It will be hangup when Script is busy.
  */
 setInterval(() => nativeContext.keepAlive(), 500);

@@ -6,7 +6,7 @@
  */
 import './polyfills/textdecoder';
 import minimist from 'minimist';
-import { getClientContext } from '@transmute/env';
+import * as env from '@transmute/env';
 
 import './polyfills';
 import {
@@ -18,9 +18,8 @@ import { prepareXRSystem } from './webxr';
 import { TransmuteRuntime2 } from './runtime2';
 import { dispatchXsmlEvent } from '@transmute/messaging';
 
-const bootstrapStart = performance.now();
+const bootstrapStarted = performance.now();
 const args = minimist(process.argv.slice(1));
-const clientContext = getClientContext();
 const id = args.id || 'unknown';
 console.info(`Starting the JavaScript runtime(${process.pid}) => ${id}`, process.argv);
 process.title = `TrScript ${id}`;
@@ -48,8 +47,10 @@ function bootwait(fn: () => void) {
 
 bootwait(async function main() {
   try {
-    const runtimeStart = performance.now();
-    console.info('The context init is:', clientContext);
+    const runtimeStarted = performance.now();
+    const clientContext = env.getClientContext();
+    env.printSummary();
+
     if (!connectRenderer(clientContext)) {
       throw new Error('failed to connect to the renderer.');
     }
@@ -58,11 +59,11 @@ bootwait(async function main() {
     runtime = new TransmuteRuntime2(getWebGLRenderingContext());
     runtime.start(clientContext.url, clientContext.id);
 
-    const initializedEnd = performance.now();
+    const initializedEnded = performance.now();
     console.info('Time summary:', {
-      bootstrap: runtimeStart - bootstrapStart,
-      initialize: initializedEnd - runtimeStart,
-      total: initializedEnd - bootstrapStart,
+      bootstrap: runtimeStarted - bootstrapStarted,
+      initialize: initializedEnded - runtimeStarted,
+      total: initializedEnded - bootstrapStarted,
     });
   } catch (err) {
     console.error('failed to start the runtime, occurs an error:', err);
