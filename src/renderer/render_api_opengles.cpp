@@ -1841,6 +1841,18 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 				DEBUG(DEBUG_TAG, "[%d] GL::Clear(%d): Unsupported", isDefaultQueue, commandType);
 			break;
 		}
+		case COMMAND_BUFFER_METRICS_PAINTING_REQ:
+		{
+			auto paintingMetricsReq = dynamic_cast<commandbuffers::PaintingMetricsCommandBufferRequest *>(commandBuffer);
+			if (paintingMetricsReq != nullptr)
+			{
+				auto content = contentRenderer->getContent();
+				auto category = paintingMetricsReq->category;
+				if (category == commandbuffers::MetricsCategory::FirstContentfulPaint)
+					content->dispatchXSMLEvent(TrXSMLEventType::FCP);
+			}
+			break;
+		}
 		default:
 			DEBUG(LOG_TAG_ERROR, "[%d] GL::Unknown command type: %s(%d)",
 						isDefaultQueue, commandTypeToStr(commandType).c_str(), commandType);

@@ -166,6 +166,18 @@ namespace webgl
     }
 
     /**
+     * It sends a fcp metrics command buffer request to print the real fcp value.
+     */
+    inline void sendFirstContentfulPaintMetrics()
+    {
+      if (isFirstContentfulPaintReported)
+        return;
+      commandbuffers::PaintingMetricsCommandBufferRequest req(commandbuffers::MetricsCategory::FirstContentfulPaint);
+      sendCommandBufferRequest(req);
+      isFirstContentfulPaintReported = true;
+    }
+
+    /**
      * It unpacks the pixels.
      */
     unsigned char *unpackPixels(int type, int format, int width, int height, unsigned char *pixels);
@@ -203,6 +215,7 @@ namespace webgl
     string version;
     string renderer;
     bool isWebGL2 = false;
+    bool isFirstContentfulPaintReported = false;
   };
 
   class WebGLRenderingContext : public WebGLBaseRenderingContext<WebGLRenderingContext>

@@ -31,17 +31,17 @@ IUnityLog *GET_UNITY_LOG_HANDLE();
 #define LOG_TAG_RENDERER "renderer"
 #define LOG_TAG_XR "jsar.xr"
 #define LOG_TAG_FONT "jsar.font"
+#define LOG_TAG_METRICS "jsar.metrics"
 
-#ifdef TR_LOGGING_SIMPLE_TAG
-// Simple tag
 #define LOG_TAG_IPC "jsar"
 #define LOG_TAG_CONSTELLATION "jsar"
 #define LOG_TAG_CONTENT "jsar"
 #define LOG_TAG_SCRIPT "jsar"
 #define LOG_TAG_CLIENT_ENTRY "jsar"
 #define LOG_TAG_CLIENT_CANVAS "jsar"
-#else
-// Normal tag
+
+#ifndef TR_LOGGING_SIMPLE_TAG
+// Non-simple logging
 #define LOG_TAG_IPC "jsar.ipc"
 #define LOG_TAG_CONSTELLATION "jsar.constellation"
 #define LOG_TAG_CONTENT "jsar.content"

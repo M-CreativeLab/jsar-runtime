@@ -116,4 +116,5 @@
   XX(GET_ERROR, GetErrorCommandBufferRequest)                                              \
   XX(XRFRAME_START, XRFrameStartCommandBufferRequest)                                      \
   XX(XRFRAME_FLUSH, XRFrameFlushCommandBufferRequest)                                      \
-  XX(XRFRAME_END, XRFrameEndCommandBufferRequest)
+  XX(XRFRAME_END, XRFrameEndCommandBufferRequest)                                          \
+  XX(METRICS_PAINTING, PaintingMetricsCommandBufferRequest)

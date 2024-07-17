@@ -214,6 +214,9 @@ namespace commandbuffers
     COMMAND_BUFFER_XRFRAME_START_REQ,
     COMMAND_BUFFER_XRFRAME_FLUSH_REQ,
     COMMAND_BUFFER_XRFRAME_END_REQ,
+
+    /** Metrics */
+    COMMAND_BUFFER_METRICS_PAINTING_REQ,
   };
 
   std::string commandTypeToStr(CommandBufferType type);

@@ -132,9 +132,18 @@ export const dispatchAliveEvent = function () {
   }));
 };
 
-export const dispatchXsmlEvent = function (id: number, eventType: 'loaded' | 'fcp' | 'error') {
-  if (eventType == 'loaded' || eventType == 'fcp') {
-    console.info(`dispatching XSML(${id}) event(${eventType})`);
+export const dispatchXsmlEvent = function (
+  id: number,
+  /**
+   * TODO: deprecate the "loaded" type, reason: not standard.
+   * 
+   * See: https://web.dev/articles/lcp
+   */
+  eventType: 'load' | 'loaded' | 'DOMContentLoaded' | 'error'
+) {
+  // Just duplicate a "load" event when receiving "loaded" event.
+  if (eventType === 'loaded') {
+    dispatchXsmlEvent(id, 'load');
   }
   return dispatchEvent(
     new CustomEvent('xsmlEvent', {

@@ -216,6 +216,12 @@ bool TrContentRuntime::sendCommandBufferResponse(TrCommandBufferResponse &res)
     return false;
 }
 
+bool TrContentRuntime::dispatchEvent(TrEvent &event)
+{
+  auto eventTarget = getConstellation()->getNativeEventTarget();
+  return eventTarget->dispatchEvent(event.type, event.detail.getString());
+}
+
 bool TrContentRuntime::sendEventResponse(TrEvent &event)
 {
   if (shouldDestroy || eventChanSender == nullptr)

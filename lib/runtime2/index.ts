@@ -167,7 +167,7 @@ export class TransmuteRuntime2 extends EventTarget {
       const spaceNode = dom.document.space.asNativeType<BABYLON.TransformNode>();
       {
         await dom.waitForSpaceReady();
-        dispatchXsmlEvent(nativeDocument.id, 'fcp');
+        dispatchXsmlEvent(nativeDocument.id, 'DOMContentLoaded');
       }
       spaceNode.setEnabled(true);
     } catch (err) {

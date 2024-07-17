@@ -61,6 +61,21 @@ public: // command buffer methods
   bool sendCommandBufferResponse(TrCommandBufferResponse &res);
 
 public: // event methods
+  /**
+   * It dispatches the content's event from native side.
+   */
+  bool dispatchEvent(TrEvent &event);
+  /**
+   * It dispatches a XSMLEvent with the given event type as the content's event.
+   */
+  inline bool dispatchXSMLEvent(TrXSMLEventType eventType)
+  {
+    auto event = TrEvent::MakeXSMLEvent(TrXSMLEvent(id, eventType));
+    return dispatchEvent(event);
+  }
+  /**
+   * It sends the event response to client side.
+   */
   bool sendEventResponse(TrEvent &event);
 
 public: // XR-related methods

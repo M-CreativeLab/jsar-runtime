@@ -2917,6 +2917,7 @@ namespace webgl
 
     auto req = DrawArraysCommandBufferRequest(mode, first, count);
     sendCommandBufferRequest(req);
+    sendFirstContentfulPaintMetrics();
     return env.Undefined();
   }
 
@@ -2938,6 +2939,7 @@ namespace webgl
 
     auto req = DrawElementsCommandBufferRequest(mode, count, type, offset);
     sendCommandBufferRequest(req);
+    sendFirstContentfulPaintMetrics();
     return env.Undefined();
   }
 
@@ -4554,6 +4556,7 @@ namespace webgl
     }
     auto commandBuffer = DrawBuffersCommandBufferRequest(buffers.size(), buffers.data());
     sendCommandBufferRequest(commandBuffer);
+    sendFirstContentfulPaintMetrics();
     return env.Undefined();
   }
 
@@ -4600,6 +4603,7 @@ namespace webgl
 
     auto commandBuffer = DrawArraysInstancedCommandBufferRequest(mode, first, count, instanceCount);
     sendCommandBufferRequest(commandBuffer);
+    sendFirstContentfulPaintMetrics();
     return env.Undefined();
   }
 
@@ -4653,6 +4657,7 @@ namespace webgl
 
     auto commandBuffer = DrawElementsInstancedCommandBufferRequest(mode, count, type, offset, instanceCount);
     sendCommandBufferRequest(commandBuffer);
+    sendFirstContentfulPaintMetrics();
     return env.Undefined();
   }
 
@@ -4713,6 +4718,7 @@ namespace webgl
 
     auto commandBuffer = DrawRangeElementsCommandBufferRequest(mode, start, end, count, type, offset);
     sendCommandBufferRequest(commandBuffer);
+    sendFirstContentfulPaintMetrics();
     return env.Undefined();
   }
 

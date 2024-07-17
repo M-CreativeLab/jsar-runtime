@@ -128,15 +128,22 @@ namespace events
 
   enum class TrXSMLEventType
   {
+    // Lifecycle Events
     Loaded,
-    FCP,
     Error,
+    // Metrics Events
+    FCP,
+    LCP,
+    // Unknown
     Unknown
   };
 
   class TrXSMLEvent
   {
   public:
+    /**
+     * Create a new XSMLEvent from the given source document(JSON).
+     */
     TrXSMLEvent(rapidjson::Document &sourceDoc)
     {
       id = sourceDoc["id"].GetUint();
@@ -145,23 +152,53 @@ namespace events
         type = TrXSMLEventType::Loaded;
       else if (strcmp(typeStr, "fcp") == 0)
         type = TrXSMLEventType::FCP;
+      else if (strcmp(typeStr, "lcp") == 0)
+        type = TrXSMLEventType::LCP;
       else if (strcmp(typeStr, "error") == 0)
         type = TrXSMLEventType::Error;
     }
+    /**
+     * Create a new XSMLEvent with the given id and type.
+     */
+    TrXSMLEvent(int id, TrXSMLEventType type) : id(id), type(type)
+    {
+    }
 
   public:
+    string serialize()
+    {
+      rapidjson::Document doc;
+      doc.SetObject();
+      auto &allocator = doc.GetAllocator();
+      doc.AddMember("id", id, allocator);
+      auto eventTypeValue = rapidjson::Value(typeToString(type).c_str(), allocator);
+      doc.AddMember("eventType", eventTypeValue, allocator);
+
+      rapidjson::StringBuffer buffer;
+      rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+      doc.Accept(writer);
+      return buffer.GetString();
+    }
     string toString()
+    {
+      return "XSMLEvent(" + typeToString(type) + ")";
+    }
+
+  private:
+    string typeToString(TrXSMLEventType type)
     {
       switch (type)
       {
       case TrXSMLEventType::Loaded:
-        return "XSMLEvent(Loaded)";
+        return "loaded";
       case TrXSMLEventType::FCP:
-        return "XSMLEvent(FCP)";
+        return "fcp";
+      case TrXSMLEventType::LCP:
+        return "lcp";
       case TrXSMLEventType::Error:
-        return "XSMLEvent(Error)";
+        return "error";
       default:
-        return "XSMLEvent(Unknown)";
+        return "unknown";
       }
     }
 
@@ -210,6 +247,10 @@ namespace events
       auto type = TrEventType::TR_EVENT_RPC_RESPONSE;
       auto detailData = res.serialize();
       return TrEvent(id, type, detailData);
+    }
+    static TrEvent MakeXSMLEvent(TrXSMLEvent xsmlEvent)
+    {
+      return TrEvent(TrEventType::TR_EVENT_XSML_EVENT, xsmlEvent.serialize());
     }
 
   public:
