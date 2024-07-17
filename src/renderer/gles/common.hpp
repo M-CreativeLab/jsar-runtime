@@ -58,4 +58,6 @@ namespace gles
    * @brief Converts a blending function `GLenum` to a string.
    */
   std::string glBlendFuncToString(GLenum func);
+  std::string glTextureInternalFormatToString(GLenum format);
+  std::string glTextureFormatToString(GLenum format);
 }

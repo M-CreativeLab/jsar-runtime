@@ -27,7 +27,7 @@ export class WebXRWebglLayerWrapper extends WebXRLayerWrapper {
 */
 export class WebXRWebGLLayerRenderTargetTextureProvider extends WebXRLayerRenderTargetTextureProvider {
   // The dimensions will always be defined in this class.
-  protected _framebufferDimensions: { framebufferWidth: number; framebufferHeight: number };
+  declare protected _framebufferDimensions: { framebufferWidth: number; framebufferHeight: number };
   private _rtt: BABYLON.Nullable<BABYLON.RenderTargetTexture>;
   private _framebuffer: WebGLFramebuffer;
   private _layer: XRWebGLLayer;

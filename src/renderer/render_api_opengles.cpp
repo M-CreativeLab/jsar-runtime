@@ -746,23 +746,17 @@ private:
 		auto format = req->format;
 		auto type = req->pixelType;
 
-		glTexImage2D(target,
-								 level, internalformat,
-								 width, height,
-								 border, format, type, req->pixels);
+		glTexImage2D(target, level, internalformat, width, height, border, format, type, req->pixels);
 		if (options.printsCall)
 		{
 			GLint currentTexture;
 			glGetIntegerv(GL_TEXTURE_BINDING_2D, &currentTexture);
-			DEBUG(DEBUG_TAG, "[%d] GL::TexImage2D(0x%x, level=%d, type=0x%x, internal_format=0x%x, format=0x%x, size=[%d,%d]) texture(%d)",
-						options.isDefaultQueue,
-						target,
-						level,
-						type,
-						internalformat,
-						format,
-						width, height,
-						currentTexture);
+			DEBUG(DEBUG_TAG, "[%d] GL::TexImage2D(%s [%d,%d]) => texture(%d)",
+						options.isDefaultQueue, gles::glEnumToString(target).c_str(), width, height, currentTexture);
+			DEBUG(DEBUG_TAG, "    level: %d", level);
+			DEBUG(DEBUG_TAG, "    type: %s", gles::glEnumToString(type).c_str());
+			DEBUG(DEBUG_TAG, "    internalformat: %s", gles::glTextureInternalFormatToString(internalformat).c_str());
+			DEBUG(DEBUG_TAG, "    format: %s", gles::glTextureFormatToString(format).c_str());
 		}
 	}
 	TR_OPENGL_FUNC void OnTexSubImage2D(TextureSubImage2DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
@@ -1166,15 +1160,14 @@ private:
 		}
 
 		glUniformMatrix4fv(location, count, transpose, matrixToUse);
-		if (options.printsCall)
+		if (TR_UNLIKELY(options.printsCall))
 		{
-			DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix4fv(%d, count=%d, transpose=%d): (%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)",
-						options.isDefaultQueue,
-						location, count, transpose,
-						matrixToUse[0], matrixToUse[1], matrixToUse[2], matrixToUse[3],
-						matrixToUse[4], matrixToUse[5], matrixToUse[6], matrixToUse[7],
-						matrixToUse[8], matrixToUse[9], matrixToUse[10], matrixToUse[11],
-						matrixToUse[12], matrixToUse[13], matrixToUse[14], matrixToUse[15]);
+			DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix4fv(%d, count=%d, transpose=%d)",
+						options.isDefaultQueue, location, count, transpose);
+			DEBUG(DEBUG_TAG, "    %+.3f %+.3f %+.3f %+.3f", matrixToUse[0], matrixToUse[1], matrixToUse[2], matrixToUse[3]);
+			DEBUG(DEBUG_TAG, "    %+.3f %+.3f %+.3f %+.3f", matrixToUse[4], matrixToUse[5], matrixToUse[6], matrixToUse[7]);
+			DEBUG(DEBUG_TAG, "    %+.3f %+.3f %+.3f %+.3f", matrixToUse[8], matrixToUse[9], matrixToUse[10], matrixToUse[11]);
+			DEBUG(DEBUG_TAG, "    %+.3f %+.3f %+.3f %+.3f", matrixToUse[12], matrixToUse[13], matrixToUse[14], matrixToUse[15]);
 		}
 	}
 	TR_OPENGL_FUNC void OnDrawArrays(DrawArraysCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
@@ -1183,12 +1176,7 @@ private:
 		auto first = req->first;
 		auto count = req->count;
 
-		if (TR_UNLIKELY(count >= 100 * 1000))
-		{
-			DEBUG(LOG_TAG_ERROR, "Skip this drawArrays(): the draw count(%d) is over 100k.", count);
-			return;
-		}
-
+		assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
 		glDrawArrays(mode, first, count);
 		m_DrawCallCountPerFrame += 1;
 		if (options.printsCall)
@@ -1206,12 +1194,7 @@ private:
 			DEBUG(LOG_TAG_ERROR, "Skip this drawElements(): the indices(%d) are not supported.", req->indicesOffset);
 			return;
 		}
-		if (TR_UNLIKELY(count >= 100 * 1000))
-		{
-			DEBUG(LOG_TAG_ERROR, "Skip this drawElements(): the draw count(%d) is over 100k.", count);
-			return;
-		}
-
+		assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
 		glDrawElements(mode, count, type, indices);
 		m_DrawCallCountPerFrame += 1;
 
@@ -1261,7 +1244,7 @@ private:
 					glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, (GLint *)&enabled);
 
 					DEBUG(DEBUG_TAG, "    Active Attribute(%d): Enabled=%s Size=%d Type=%s \"%s\"",
-								loc, enabled ? "Yes" : "No", size, gles::glEnumToString(type).c_str(), name);
+								i, enabled ? "Yes" : "No", size, gles::glEnumToString(type).c_str(), name);
 				}
 			}
 		}
@@ -1283,6 +1266,8 @@ private:
 		auto first = req->first;
 		auto count = req->count;
 		auto instanceCount = req->instanceCount;
+
+		assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
 		glDrawArraysInstanced(mode, first, count, instanceCount);
 		m_DrawCallCountPerFrame += 1;
 		if (options.printsCall)
@@ -1298,6 +1283,8 @@ private:
 		auto type = req->indicesType;
 		auto indices = reinterpret_cast<GLvoid *>(req->indicesOffset);
 		auto instanceCount = req->instanceCount;
+
+		assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
 		glDrawElementsInstanced(mode, count, type, indices, instanceCount);
 		m_DrawCallCountPerFrame += 1;
 		if (options.printsCall)
@@ -1314,6 +1301,8 @@ private:
 		auto count = req->count;
 		auto type = req->indicesType;
 		auto indices = reinterpret_cast<GLvoid *>(req->indicesOffset);
+
+		assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
 		glDrawRangeElements(mode, start, end, count, type, indices);
 		m_DrawCallCountPerFrame += 1;
 		if (options.printsCall)

@@ -559,7 +559,7 @@ const int WEBGL_COMPILE_STATUS = 0x8B81;
 const int WEBGL_DELETE_STATUS = 0x8B80;
 
 /**
- * Passed to `getProgramParameter` after calling `linkProgram` to determine if a program was linked correctly. Returns 
+ * Passed to `getProgramParameter` after calling `linkProgram` to determine if a program was linked correctly. Returns
  * false if there were errors. Use `getProgramInfoLog` to find the exact error.
  */
 const int WEBGL_LINK_STATUS = 0x8B82;
@@ -1122,3 +1122,12 @@ const int WEBGL2_DEPTH32F_STENCIL8 = 0x8CAD;
 const int WEBGL2_INVALID_INDEX = 0xFFFFFFFF;
 const int WEBGL2_TIMEOUT_IGNORED = -1;
 const int WEBGL2_MAX_CLIENT_WAIT_TIMEOUT_WEBGL = 0x9247;
+
+// Introduced by JSAR
+
+/**
+ * The maximum number of draw calls's `count` parameter.
+ * 
+ * Default value is 200k.
+ */
+const int WEBGL_MAX_COUNT_PER_DRAWCALL = 200 * 1000;

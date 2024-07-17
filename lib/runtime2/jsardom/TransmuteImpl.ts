@@ -12,7 +12,6 @@ import {
   type SpatialDocumentImpl,
   cdp as jsarCdp,
 } from '@yodaos-jsar/dom';
-import ImageDataImpl from '@yodaos-jsar/dom/src/living/image/ImageData';
 import * as ws from 'ws';
 import { getClientContext, isWebXRSupported } from '@transmute/env';
 
@@ -261,7 +260,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
   createImageBitmap(image: ArrayBuffer | ArrayBufferView): Promise<ImageBitmap> {
     return createImageBitmap(new Blob([image]));
   }
-  async decodeImage(bitmap: ImageBitmap, size?: [number, number]): Promise<ImageDataImpl> {
+  async decodeImage(bitmap: ImageBitmap, size?: [number, number]): Promise<any> {
     let expectedWidth = Math.floor(size[0]);
     let expectedHeight = Math.floor(size[1]);
     if (typeof expectedWidth !== 'number' || isNaN(expectedWidth) || expectedWidth <= 0) {
@@ -285,7 +284,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
       offscreenCanvas.width, offscreenCanvas.height
     );
     const imageData = ctx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
-    return imageData as ImageDataImpl;
+    return imageData as any;
   }
   stop(): void {
     // TODO

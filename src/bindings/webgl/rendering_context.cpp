@@ -1980,7 +1980,7 @@ namespace webgl
       }
     }
 
-    if (m_unpackFlipY == true || m_unpackPremultiplyAlpha == true)
+    if (m_unpackFlipY || m_unpackPremultiplyAlpha)
     {
       unsigned char *unpacked = unpackPixels(req.pixelType,
                                              req.format,
@@ -2915,6 +2915,13 @@ namespace webgl
     int first = info[1].As<Napi::Number>().Int32Value();
     int count = info[2].As<Napi::Number>().Int32Value();
 
+    if (TR_UNLIKELY(count >= WEBGL_MAX_COUNT_PER_DRAWCALL))
+    {
+      Napi::TypeError::New(env, "drawArrays() count exceeds the maximum count per draw call.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
     auto req = DrawArraysCommandBufferRequest(mode, first, count);
     sendCommandBufferRequest(req);
     sendFirstContentfulPaintMetrics();
@@ -2936,6 +2943,13 @@ namespace webgl
     int count = info[1].As<Napi::Number>().Int32Value();
     int type = info[2].As<Napi::Number>().Int32Value();
     int offset = info[3].As<Napi::Number>().Int32Value();
+
+    if (TR_UNLIKELY(count >= WEBGL_MAX_COUNT_PER_DRAWCALL))
+    {
+      Napi::TypeError::New(env, "drawElements() count exceeds the maximum count per draw call.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
 
     auto req = DrawElementsCommandBufferRequest(mode, count, type, offset);
     sendCommandBufferRequest(req);
@@ -4601,6 +4615,13 @@ namespace webgl
     uint32_t count = info[2].As<Napi::Number>().Uint32Value();
     uint32_t instanceCount = info[3].As<Napi::Number>().Uint32Value();
 
+    if (TR_UNLIKELY(count >= WEBGL_MAX_COUNT_PER_DRAWCALL))
+    {
+      Napi::TypeError::New(env, "drawArraysInstanced() count exceeds the maximum count per draw call.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
     auto commandBuffer = DrawArraysInstancedCommandBufferRequest(mode, first, count, instanceCount);
     sendCommandBufferRequest(commandBuffer);
     sendFirstContentfulPaintMetrics();
@@ -4654,6 +4675,13 @@ namespace webgl
     uint32_t type = info[2].As<Napi::Number>().Uint32Value();
     uint32_t offset = info[3].As<Napi::Number>().Uint32Value();
     uint32_t instanceCount = info[4].As<Napi::Number>().Uint32Value();
+
+    if (TR_UNLIKELY(count >= WEBGL_MAX_COUNT_PER_DRAWCALL))
+    {
+      Napi::TypeError::New(env, "drawElementsInstanced() count exceeds the maximum count per draw call.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
 
     auto commandBuffer = DrawElementsInstancedCommandBufferRequest(mode, count, type, offset, instanceCount);
     sendCommandBufferRequest(commandBuffer);
@@ -4715,6 +4743,13 @@ namespace webgl
     uint32_t count = info[3].As<Napi::Number>().Uint32Value();
     uint32_t type = info[4].As<Napi::Number>().Uint32Value();
     uint32_t offset = info[5].As<Napi::Number>().Uint32Value();
+
+    if (TR_UNLIKELY(count >= WEBGL_MAX_COUNT_PER_DRAWCALL))
+    {
+      Napi::TypeError::New(env, "drawRangeElements() count exceeds the maximum count per draw call.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
 
     auto commandBuffer = DrawRangeElementsCommandBufferRequest(mode, start, end, count, type, offset);
     sendCommandBufferRequest(commandBuffer);

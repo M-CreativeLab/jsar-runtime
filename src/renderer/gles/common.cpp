@@ -65,6 +65,11 @@ namespace gles
       // Shader Types
       CASE(GL_VERTEX_SHADER);
       CASE(GL_FRAGMENT_SHADER);
+      // Texture Targets
+      CASE(GL_TEXTURE_2D);
+      CASE(GL_TEXTURE_3D);
+      CASE(GL_TEXTURE_CUBE_MAP);
+      CASE(GL_TEXTURE_2D_ARRAY);
     default:
       std::stringstream ss;
       ss << "0x" << std::hex << e;
@@ -188,4 +193,110 @@ namespace gles
 #undef CASE
   }
 
+  std::string glTextureInternalFormatToString(GLenum format)
+  {
+#define CASE(x) \
+  case x:       \
+  {             \
+    return #x;  \
+  }
+    switch (format)
+    {
+      // Texture Internal Formats
+      CASE(GL_R8);
+      CASE(GL_R8_SNORM);
+      CASE(GL_R16);
+      CASE(GL_R16_SNORM);
+      CASE(GL_RG8);
+      CASE(GL_RG8_SNORM);
+      CASE(GL_RG16);
+      CASE(GL_RG16_SNORM);
+      CASE(GL_R3_G3_B2);
+      CASE(GL_RGB4);
+      CASE(GL_RGB5);
+      CASE(GL_RGB8);
+      CASE(GL_RGB8_SNORM);
+      CASE(GL_RGB10);
+      CASE(GL_RGB12);
+      CASE(GL_RGB16_SNORM);
+      CASE(GL_RGBA2);
+      CASE(GL_RGBA4);
+      CASE(GL_RGB5_A1);
+      CASE(GL_RGBA8);
+      CASE(GL_RGBA8_SNORM);
+      CASE(GL_RGB10_A2);
+      CASE(GL_RGB10_A2UI);
+      CASE(GL_RGBA12);
+      CASE(GL_RGBA16);
+      CASE(GL_SRGB8);
+      CASE(GL_SRGB8_ALPHA8);
+      CASE(GL_R16F);
+      CASE(GL_RG16F);
+      CASE(GL_RGB16F);
+      CASE(GL_RGBA16F);
+      CASE(GL_R32F);
+      CASE(GL_RG32F);
+      CASE(GL_RGB32F);
+      CASE(GL_RGBA32F);
+      CASE(GL_R11F_G11F_B10F);
+      CASE(GL_RGB9_E5);
+      CASE(GL_R8I);
+      CASE(GL_R8UI);
+      CASE(GL_R16I);
+      CASE(GL_R16UI);
+      CASE(GL_R32I);
+      CASE(GL_R32UI);
+      CASE(GL_RG8I);
+      CASE(GL_RG8UI);
+      CASE(GL_RG16I);
+      CASE(GL_RG16UI);
+      CASE(GL_RG32I);
+      CASE(GL_RG32UI);
+      CASE(GL_RGB8I);
+      CASE(GL_RGB8UI);
+      CASE(GL_RGB16I);
+      CASE(GL_RGB16UI);
+      CASE(GL_RGB32I);
+      CASE(GL_RGB32UI);
+      CASE(GL_RGBA8I);
+      CASE(GL_RGBA8UI);
+      CASE(GL_RGBA16I);
+      CASE(GL_RGBA16UI);
+      CASE(GL_RGBA32I);
+      CASE(GL_RGBA32UI);
+    default:
+      std::stringstream ss;
+      ss << "0x" << std::hex << format;
+      return ss.str();
+    }
+  }
+
+  std::string glTextureFormatToString(GLenum format)
+  {
+#define CASE(x) \
+  case x:       \
+  {             \
+    return #x;  \
+  }
+    switch (format)
+    {
+      // Texture Formats
+      CASE(GL_RED);
+      CASE(GL_RG);
+      CASE(GL_RGB);
+      CASE(GL_RGBA);
+      CASE(GL_BGR);
+      CASE(GL_BGRA);
+      CASE(GL_RED_INTEGER);
+      CASE(GL_RG_INTEGER);
+      CASE(GL_RGB_INTEGER);
+      CASE(GL_RGBA_INTEGER);
+      CASE(GL_BGR_INTEGER);
+      CASE(GL_BGRA_INTEGER);
+    default:
+      std::stringstream ss;
+      ss << "0x" << std::hex << format;
+      return ss.str();
+    }
+  }
 }
