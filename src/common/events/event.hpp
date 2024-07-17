@@ -129,7 +129,9 @@ namespace events
   enum class TrXSMLEventType
   {
     // Lifecycle Events
-    Loaded,
+    Loaded, // TODO: deprecated
+    Load,
+    DOMContentLoaded,
     Error,
     // Metrics Events
     FCP,
@@ -150,6 +152,10 @@ namespace events
       auto typeStr = sourceDoc["eventType"].GetString();
       if (strcmp(typeStr, "loaded") == 0)
         type = TrXSMLEventType::Loaded;
+      else if (strcmp(typeStr, "load") == 0)
+        type = TrXSMLEventType::Load;
+      else if (strcmp(typeStr, "DOMContentLoaded") == 0)
+        type = TrXSMLEventType::DOMContentLoaded;
       else if (strcmp(typeStr, "fcp") == 0)
         type = TrXSMLEventType::FCP;
       else if (strcmp(typeStr, "lcp") == 0)
@@ -191,6 +197,10 @@ namespace events
       {
       case TrXSMLEventType::Loaded:
         return "loaded";
+      case TrXSMLEventType::Load:
+        return "load";
+      case TrXSMLEventType::DOMContentLoaded:
+        return "DOMContentLoaded";
       case TrXSMLEventType::FCP:
         return "fcp";
       case TrXSMLEventType::LCP:

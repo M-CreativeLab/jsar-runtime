@@ -44,7 +44,7 @@ typedef function<void(TrAnimationFrameRequest &)> AnimationFrameRequestCallback;
 class ScriptEnvironment
 {
 public:
-  ScriptEnvironment();
+  ScriptEnvironment(int id);
   ~ScriptEnvironment();
 
 public:
@@ -53,6 +53,7 @@ public:
   void dispose();
 
 public:
+  int id;
   vector<string> scriptArgs;
   node::InitializationResult *nodeInitResult = nullptr;
   node::MultiIsolatePlatform *nodePlatform = nullptr;

@@ -39,12 +39,12 @@ using namespace bindings;
 TR_NAPI_MODULE_MAP(XX)
 #undef XX
 
-ScriptEnvironment::ScriptEnvironment()
+ScriptEnvironment::ScriptEnvironment(int id) : id(id)
 {
   const char *sourceData = reinterpret_cast<const char *>(get_jsbundle_ptr());
   size_t sourceSize = get_jsbundle_size();
 
-  auto& args = scriptArgs;
+  auto &args = scriptArgs;
   args.push_back("node");
   args.push_back("--experimental-vm-modules");
   args.push_back("--experimental-global-customevent");
@@ -52,8 +52,7 @@ ScriptEnvironment::ScriptEnvironment()
   args.push_back(string(sourceData, sourceSize));
 
   // TODO: Check if we are in debug mode
-  static int debugPort = 9229;
-  args.insert(args.begin() + 1, "--inspect=0.0.0.0:" + to_string(debugPort++));
+  args.insert(args.begin() + 1, "--inspect=0.0.0.0:" + to_string(9229 + id - 1));
 }
 
 ScriptEnvironment::~ScriptEnvironment()
@@ -135,9 +134,10 @@ void TrScriptRuntimePerProcess::start(vector<string> &scriptArgs)
     return;
   }
 
-  auto scriptEnv = ScriptEnvironment();
   auto clientContext = TrClientContextPerProcess::Get();
   assert(clientContext != nullptr);
+
+  ScriptEnvironment scriptEnv(clientContext->id);
   if (clientContext->enableV8Profiling)
   {
     string logfile = clientContext->applicationCacheDirectory + "/v8.log"; // TODO: support multiple apps
