@@ -1900,7 +1900,7 @@ namespace webgl
       return env.Undefined();
     }
 
-    auto req = TextureImage2DCommandBufferRequest(target, level, internalformat);
+    TextureImage2DCommandBufferRequest req(target, level, internalformat);
     unsigned char *pixelsData = nullptr;
     if (info.Length() == 6)
     {
@@ -1918,6 +1918,7 @@ namespace webgl
         SkBitmap *bitmap = imageBitmap->getSkBitmap();
         req.width = bitmap->width();
         req.height = bitmap->height();
+        req.format = WEBGL_RGBA;
         pixelsData = reinterpret_cast<unsigned char *>(bitmap->getPixels());
       }
       else if (imageSourceObject.InstanceOf(OffscreenCanvas::constructor->Value()))
@@ -1926,6 +1927,7 @@ namespace webgl
         SkBitmap *bitmap = canvas->getSkBitmap();
         req.width = bitmap->width();
         req.height = bitmap->height();
+        req.format = WEBGL_RGBA;
         pixelsData = reinterpret_cast<unsigned char *>(bitmap->getPixels());
       }
       else
@@ -3749,110 +3751,6 @@ namespace webgl
     Napi::HandleScope scope(env);
     Napi::TypeError::New(env, "drawingBufferHeight is readonly.")
         .ThrowAsJavaScriptException();
-  }
-
-  /**
-   * Source from https://github.com/stackgl/headless-gl/blob/v8.0.2/src/native/webgl.cc#L722
-   */
-  template <typename T>
-  unsigned char *WebGLBaseRenderingContext<T>::unpackPixels(int type, int format, int width, int height, unsigned char *pixels)
-  {
-    if (pixels == nullptr) // return null if the input is null.
-      return nullptr;
-
-    // Compute the pixel size
-    int pixelSize = 1;
-    if (type == WEBGL_UNSIGNED_BYTE || type == WEBGL_FLOAT)
-    {
-      if (type == WEBGL_FLOAT)
-        pixelSize = 4;
-      switch (format)
-      {
-      case WEBGL_ALPHA:
-      case WEBGL_LUMINANCE:
-        break;
-      case WEBGL_LUMINANCE_ALPHA:
-        pixelSize *= 2;
-        break;
-      case WEBGL_RGB:
-        pixelSize *= 3;
-        break;
-      case WEBGL_RGBA:
-        pixelSize *= 4;
-        break;
-      default:
-        break;
-      }
-    }
-    else
-    {
-      pixelSize = 2;
-    }
-
-    // Compute the row stride
-    int rowStride = width * pixelSize;
-    if ((rowStride % m_unpackAlignment) != 0)
-    {
-      rowStride += m_unpackAlignment - (rowStride % m_unpackAlignment);
-    }
-
-    int imageSize = rowStride * height;
-    unsigned char *unpacked = new unsigned char[imageSize];
-
-    if (m_unpackFlipY)
-    {
-      for (int i = 0, j = height - 1; j >= 0; ++i, --j)
-      {
-        memcpy(
-            reinterpret_cast<void *>(unpacked + j * rowStride),
-            reinterpret_cast<void *>(pixels + i * rowStride),
-            width * pixelSize);
-      }
-    }
-    else
-    {
-      memcpy(
-          reinterpret_cast<void *>(unpacked),
-          reinterpret_cast<void *>(pixels),
-          imageSize);
-    }
-
-    if (m_unpackPremultiplyAlpha && (format == WEBGL_LUMINANCE_ALPHA || format == WEBGL_RGBA))
-    {
-      for (int row = 0; row < height; ++row)
-      {
-        for (int col = 0; col < width; ++col)
-        {
-          unsigned char *pixel = unpacked + (row + rowStride) + (col * pixelSize);
-          if (format == WEBGL_LUMINANCE_ALPHA)
-          {
-            pixel[0] *= pixel[1] / 255.0f;
-          }
-          else if (type == WEBGL_UNSIGNED_BYTE)
-          {
-            float scale = pixel[3] / 255.0f;
-            pixel[0] *= scale;
-            pixel[1] *= scale;
-            pixel[2] *= scale;
-          }
-          else if (type == WEBGL_UNSIGNED_SHORT_4_4_4_4)
-          {
-            int r = pixel[0] & 0x0f;
-            int g = pixel[0] >> 4;
-            int b = pixel[1] & 0x0f;
-            int a = pixel[1] >> 4;
-            float scale = a / 15.0f;
-            r *= scale;
-            g *= scale;
-            b *= scale;
-
-            pixel[0] = r | (g << 4);
-            pixel[1] = b | (a << 4);
-          }
-        }
-      }
-    }
-    return unpacked;
   }
 
   template <typename T>
