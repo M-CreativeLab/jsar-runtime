@@ -129,6 +129,8 @@ namespace events
   enum class TrXSMLEventType
   {
     // Lifecycle Events
+    SpawnProcess,
+    BeforeLoading,
     Loaded, // TODO: deprecated
     Load,
     DOMContentLoaded,
@@ -150,7 +152,11 @@ namespace events
     {
       id = sourceDoc["id"].GetUint();
       auto typeStr = sourceDoc["eventType"].GetString();
-      if (strcmp(typeStr, "loaded") == 0)
+      if (strcmp(typeStr, "spawnprocess") == 0)
+        type = TrXSMLEventType::SpawnProcess;
+      else if (strcmp(typeStr, "beforeloading") == 0)
+        type = TrXSMLEventType::BeforeLoading;
+      else if (strcmp(typeStr, "loaded") == 0)
         type = TrXSMLEventType::Loaded;
       else if (strcmp(typeStr, "load") == 0)
         type = TrXSMLEventType::Load;
@@ -195,6 +201,10 @@ namespace events
     {
       switch (type)
       {
+      case TrXSMLEventType::SpawnProcess:
+        return "spawnprocess";
+      case TrXSMLEventType::BeforeLoading:
+        return "beforeloading";
       case TrXSMLEventType::Loaded:
         return "loaded";
       case TrXSMLEventType::Load:

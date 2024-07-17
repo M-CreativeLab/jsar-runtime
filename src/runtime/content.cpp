@@ -130,6 +130,7 @@ void TrContentRuntime::start(TrXSMLRequestInit init)
       } });
     auto renderer = contentManager->constellation->getRenderer();
     renderer->addContentRenderer(this);
+    dispatchXSMLEvent(TrXSMLEventType::SpawnProcess);
     DEBUG(LOG_TAG_CONTENT, "The client process(%d) is started.", pid);
   }
 }

@@ -143,7 +143,7 @@ public:
     else if (event.type == TrEventType::TR_EVENT_XSML_EVENT)
     {
       auto xsmlEvent = event.detail.get<TrXSMLEvent>();
-      fprintf(stdout, "#%d Received %s\n", xsmlEvent.id, xsmlEvent.toString().c_str());
+      DEBUG("example", "#%d Received %s", xsmlEvent.id, xsmlEvent.toString().c_str());
     }
     return true;
   }

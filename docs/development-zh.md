@@ -103,25 +103,18 @@ $ adb logcat -s jsar.metrics
 
 本节将针对以下几个指标作出说明。
 
-**`load`**
+| 指标 | 说明 |
+| --- | --- |
+| `spawnprocess` | 表示创建应用进程的时间，即 `fork()` 调用成功后 |
+| `beforeloading` | 表示开始加载文档的时间 |
+| `load`/`loaded` | 表示文档加载完成的时间 |
+| `DOMContentLoaded` | 表示文档依赖的内容（如样式表、脚本、图片、模型等）加载完成 |
+| `fcp` | 即 First Contentful Paint，表示首次内容绘制完成，在 JSAR 运行时，它表示渲染器第一次接收到绘制请求（Draw Call）时标记 |
+| `lcp` | 即 Largest Contentful Paint，表示最大内容绘制完成，它是页面中最大的绘制元素（如图片、视频等）绘制完成的时间点 |
 
-表示文档加载完成。
+参考文档：
 
-**`DOMContentLoaded`**
-
-表示文档依赖的内容（如样式表、脚本、图片、模型等）加载完成。
-
-**`fcp`**
-
-即 First Contentful Paint，表示首次内容绘制完成，在 JSAR 运行时，它表示渲染器第一次接收到绘制请求（Draw Call）时标记。
-
-参考 https://web.dev/articles/fcp。
-
-**`lcp`**
-
-即 Largest Contentful Paint，表示最大内容绘制完成，它是页面中最大的绘制元素（如图片、视频等）绘制完成的时间点。
-
-> TODO: 目前还未实现，暂时没有找到合适的方式在 3D 渲染中统计。
+- https://web.dev/articles/fcp
 
 ### 运行时性能
 

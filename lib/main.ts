@@ -55,6 +55,7 @@ bootwait(async function main() {
       throw new Error('failed to connect to the renderer.');
     }
     await prepareXRSystem();
+    dispatchXsmlEvent(id, 'beforeloading');
 
     runtime = new TransmuteRuntime2(getWebGLRenderingContext());
     runtime.start(clientContext.url, clientContext.id);

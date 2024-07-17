@@ -139,7 +139,7 @@ export const dispatchXsmlEvent = function (
    * 
    * See: https://web.dev/articles/lcp
    */
-  eventType: 'load' | 'loaded' | 'DOMContentLoaded' | 'error'
+  eventType: 'beforeloading' | 'load' | 'loaded' | 'DOMContentLoaded' | 'error'
 ) {
   // Just duplicate a "load" event when receiving "loaded" event.
   if (eventType === 'loaded') {
