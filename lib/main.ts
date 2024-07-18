@@ -28,6 +28,14 @@ requestGpuBusyCallback(() => {
   // }
 });
 
+/**
+ * FIXME: The unhandled rejection means network or other async operations failed, we just make a warning and keep the
+ * application running still.
+ */
+process.on('unhandledRejection', (reason) => {
+  console.warn('Received an unhandled rejection:', reason);
+});
+
 function bootwait(fn: () => void) {
   let seconds = parseInt(process.env.JSAR_BOOTWAIT, 10);
   if (isNaN(seconds)) {

@@ -326,7 +326,7 @@ bool TrContentRuntime::testClientProcessExitOnFrame()
     if (WIFEXITED(status) || WIFSTOPPED(status))
     {
       if (WIFEXITED(status)) // Exit
-        DEBUG(LOG_TAG_CONTENT, "The client process(%d) exits, and code: %d, core dump: %s", pid, WEXITSTATUS(status));
+        DEBUG(LOG_TAG_CONTENT, "The client process(%d) exits with code(%d)", pid, WEXITSTATUS(status));
       else // Stopped
         DEBUG(LOG_TAG_CONTENT, "The client process(%d) is stopped with a signal: %d", pid, WSTOPSIG(status));
       pid = -1;
