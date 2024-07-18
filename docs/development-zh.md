@@ -35,19 +35,19 @@ JSAR 会将每个应用进程的日志也打印到 `jsar` 中，比如：
 进入调试模式：
 
 ```sh
-$ adb setprop jsar.debug.enabled yes
+$ adb shell setprop jsar.debug.enabled yes
 ```
 
 **设置下一次加载地址**
 
 ```sh
-$ adb setprop jsar.example.url http://localhost:3000/spatial-externalmesh-glb.xsml
+$ adb shell setprop jsar.example.url http://localhost:3000/spatial-externalmesh-glb.xsml
 ```
 
 **禁用应用资源缓存**
 
 ```sh
-$ adb setprop jsar.resources.caching no
+$ adb shell setprop jsar.resources.caching no
 ```
 
 ### 使用 Chrome DevTools 调试
@@ -85,6 +85,7 @@ adb forward tcp:9229 tcp:9229
 
 以下是运行时目录的子目录结构：
 
+- `scripts` 存放应用进程的脚本文件：`jsar-bootstrap.js`, `jsar-runtime.js` 等
 - `.zones` 存放共享内存数据块，用于在 Host 进程与应用进程之间同步手势数据，不建议手动删除
 - `.res_cache` 存放资源缓存，比如 glTF 文件、纹理等，清空该文件夹内容等价于清空缓存
 - `.stat` 与 `.zones` 类似，也是基于 mmap 的共享内存，供开发者查看当前状态，不建议删除
