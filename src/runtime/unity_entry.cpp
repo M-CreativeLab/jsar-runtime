@@ -72,6 +72,11 @@ public:
 
   bool onEvent(TrEvent &event, TrContentRuntime *content) override
   {
+    if (event.type == TrEventType::TR_EVENT_XSML_EVENT)
+    {
+      auto xsmlEvent = event.detail.get<TrXSMLEvent>();
+      DEBUG(LOG_TAG_METRICS, "#%d Received %s", xsmlEvent.id, xsmlEvent.toString().c_str());
+    }
     pendingEvents.push_back(event);
     return true;
   }

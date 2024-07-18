@@ -53,6 +53,9 @@ bool TrConstellation::initialize(string initJson)
   else
     DEBUG(LOG_TAG_CONSTELLATION, "Failed to get the runtime path from current host");
 
+  // Fix the environment such as creating the cache dir.
+  options.fixEnvIfNeeded();
+
   contentManager->initialize();
   renderer->initialize();
   initialized = true;

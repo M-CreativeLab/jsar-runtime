@@ -35,6 +35,14 @@ public:
   bool isXRSupported = false;
 
 public:
+  /**
+   * Fix the environment if needed.
+   */
+  void fixEnvIfNeeded()
+  {
+    if (!filesystem::exists(applicationCacheDirectory))
+      filesystem::create_directory(applicationCacheDirectory);
+  }
   string getZoneDirname()
   {
     string zoneDirname = applicationCacheDirectory + "/.zones";

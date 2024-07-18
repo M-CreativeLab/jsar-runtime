@@ -512,7 +512,7 @@ export class WebXRMotionControllerTeleportation extends WebXRAbstractFeature {
         // set the ray and position
 
         let hitPossible = false;
-        const controlSelectionFeature = controllerData.xrController.inputSource.targetRayMode !== 'transient-pointer';
+        const controlSelectionFeature = <any>controllerData.xrController.inputSource.targetRayMode !== 'transient-pointer';
         controllerData.xrController.getWorldPointerRayToRef(this._tmpRay);
         if (this.straightRayEnabled) {
           // first check if direct ray possible

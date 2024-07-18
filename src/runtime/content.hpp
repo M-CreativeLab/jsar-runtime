@@ -170,6 +170,9 @@ private:
   void onRecvXrCommands(int timeout = 100);
 
 private:
+  void installScripts();
+
+private:
   TrConstellation *constellation = nullptr;
   shared_mutex contentsMutex;
   vector<TrContentRuntime *> contents;

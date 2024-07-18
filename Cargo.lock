@@ -878,7 +878,6 @@ dependencies = [
  "gl",
  "html_renderer",
  "jsar_jsbinding_macro",
- "jsar_jsbundle",
  "lazy_static",
  "log",
  "napi",

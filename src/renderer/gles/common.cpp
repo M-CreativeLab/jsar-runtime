@@ -205,29 +205,16 @@ namespace gles
       // Texture Internal Formats
       CASE(GL_R8);
       CASE(GL_R8_SNORM);
-      CASE(GL_R16);
-      CASE(GL_R16_SNORM);
       CASE(GL_RG8);
       CASE(GL_RG8_SNORM);
-      CASE(GL_RG16);
-      CASE(GL_RG16_SNORM);
-      CASE(GL_R3_G3_B2);
-      CASE(GL_RGB4);
-      CASE(GL_RGB5);
       CASE(GL_RGB8);
       CASE(GL_RGB8_SNORM);
-      CASE(GL_RGB10);
-      CASE(GL_RGB12);
-      CASE(GL_RGB16_SNORM);
-      CASE(GL_RGBA2);
       CASE(GL_RGBA4);
       CASE(GL_RGB5_A1);
       CASE(GL_RGBA8);
       CASE(GL_RGBA8_SNORM);
       CASE(GL_RGB10_A2);
       CASE(GL_RGB10_A2UI);
-      CASE(GL_RGBA12);
-      CASE(GL_RGBA16);
       CASE(GL_SRGB8);
       CASE(GL_SRGB8_ALPHA8);
       CASE(GL_R16F);
@@ -285,14 +272,10 @@ namespace gles
       CASE(GL_RG);
       CASE(GL_RGB);
       CASE(GL_RGBA);
-      CASE(GL_BGR);
-      CASE(GL_BGRA);
       CASE(GL_RED_INTEGER);
       CASE(GL_RG_INTEGER);
       CASE(GL_RGB_INTEGER);
       CASE(GL_RGBA_INTEGER);
-      CASE(GL_BGR_INTEGER);
-      CASE(GL_BGRA_INTEGER);
     default:
       std::stringstream ss;
       ss << "0x" << std::hex << format;

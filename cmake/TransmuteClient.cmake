@@ -15,16 +15,6 @@ add_executable(TransmuteClient
     ${TR_CLIENT_SOURCE}
 )
 
-set(TR_CRATE_TARGET unknown)
-if (APPLE)
-    set(TR_CRATE_TARGET universal-apple-darwin)
-elseif (ANDROID)
-    set(TR_CRATE_TARGET aarch64-linux-android)
-elseif (WIN32)
-    set(TR_CRATE_TARGET x86_64-pc-windows-msvc)
-endif()
-message(STATUS "Transmute crates target name: ${TR_CRATE_TARGET}")
-
 set(NODE_ADDON_API_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-addon-api/include)
 target_include_directories(TransmuteClient PRIVATE ${NODE_ADDON_API_HEADERS_PATH})
 

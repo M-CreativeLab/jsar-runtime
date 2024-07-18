@@ -4,12 +4,13 @@ version = "1.0.0"
 authors = ["The JSAR Project Developers"]
 license = "Apache-2.0"
 edition = "2021"
-publish = false
 build = "build.rs"
+publish = false
 
 [lib]
 name = "jsar_jsbundle"
 path = "lib.rs"
+crate-type = ["staticlib"]
 
 [dependencies]
 flate2 = "1.0.30"

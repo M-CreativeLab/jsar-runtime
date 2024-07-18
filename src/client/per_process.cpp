@@ -39,17 +39,15 @@ using namespace bindings;
 TR_NAPI_MODULE_MAP(XX)
 #undef XX
 
-ScriptEnvironment::ScriptEnvironment(int id) : id(id)
+ScriptEnvironment::ScriptEnvironment(int id, string& scriptsDir) : id(id)
 {
-  const char *sourceData = reinterpret_cast<const char *>(get_jsbundle_ptr());
-  size_t sourceSize = get_jsbundle_size();
-
   auto &args = scriptArgs;
   args.push_back("node");
   args.push_back("--experimental-vm-modules");
   args.push_back("--experimental-global-customevent");
-  args.push_back("-e");
-  args.push_back(string(sourceData, sourceSize));
+  args.push_back("--require");
+  args.push_back(scriptsDir + "/jsar-bootstrap.js");
+  args.push_back(scriptsDir + "/jsar-bundle.js");
 
   // TODO: Check if we are in debug mode
   args.insert(args.begin() + 1, "--inspect=0.0.0.0:" + to_string(9229 + id - 1));
@@ -69,23 +67,22 @@ bool ScriptEnvironment::initialize()
     else
       scriptArgsStr += arg + " ";
   }
-  DEBUG(LOG_TAG_SCRIPT, "Executing Node.js script: %s", scriptArgsStr.c_str());
+  fprintf(stdout, "Executing Node.js script: %s\n", scriptArgsStr.c_str());
   std::unique_ptr<node::InitializationResult> result =
       node::InitializeOncePerProcess(scriptArgs, {node::ProcessInitializationFlags::kNoInitializeV8,
-                                                  node::ProcessInitializationFlags::kNoInitializeNodeV8Platform,
-                                                  node::ProcessInitializationFlags::kNoPrintHelpOrVersionOutput});
+                                                  node::ProcessInitializationFlags::kNoInitializeNodeV8Platform});
 
   auto errors = result->errors();
   if (errors.size() > 0)
   {
-    DEBUG(LOG_TAG_SCRIPT, "Failed to initialize ScriptEnvironment, there are errors:");
+    fprintf(stderr, "Failed to initialize ScriptEnvironment, there are errors:\n");
     for (uint32_t n = 0; n < errors.size(); n++)
-      DEBUG(LOG_TAG_SCRIPT, "[%d]: %s", n, errors[n].c_str());
+      fprintf(stderr, "[%d]: %s\n", n, errors[n].c_str());
   }
 
   if (result->early_return() != 0)
   {
-    DEBUG(LOG_TAG_SCRIPT, "Early return: %d", result->early_return());
+    fprintf(stderr, "Early return: %d\n", result->early_return());
     return result->exit_code() != 0;
   }
   else
@@ -137,7 +134,8 @@ void TrScriptRuntimePerProcess::start(vector<string> &scriptArgs)
   auto clientContext = TrClientContextPerProcess::Get();
   assert(clientContext != nullptr);
 
-  ScriptEnvironment scriptEnv(clientContext->id);
+  string scriptsDir = clientContext->applicationCacheDirectory + "/scripts";
+  ScriptEnvironment scriptEnv(clientContext->id, scriptsDir);
   if (clientContext->enableV8Profiling)
   {
     string logfile = clientContext->applicationCacheDirectory + "/v8.log"; // TODO: support multiple apps

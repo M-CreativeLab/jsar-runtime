@@ -16,9 +16,9 @@ define create_universal_apple_binary
 	lipo -create -output build/output/crates/universal-apple-darwin/release/libjsar_jsbindings.a \
 		build/output/crates/aarch64-apple-darwin/release/libjsar_jsbindings.a \
 		build/output/crates/x86_64-apple-darwin/release/libjsar_jsbindings.a
-	lipo -create -output build/output/crates/universal-apple-darwin/release/libjsar_jsbindings.a \
-		build/output/crates/aarch64-apple-darwin/release/libjsar_jsbindings.a \
-		build/output/crates/x86_64-apple-darwin/release/libjsar_jsbindings.a
+	lipo -create -output build/output/crates/universal-apple-darwin/release/libjsar_jsbundle.a \
+		build/output/crates/aarch64-apple-darwin/release/libjsar_jsbundle.a \
+		build/output/crates/x86_64-apple-darwin/release/libjsar_jsbundle.a
 endef
 
 jsbundle:

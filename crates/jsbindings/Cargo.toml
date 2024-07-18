@@ -24,7 +24,6 @@ surfman = "0.9.2"
 gl = { version = "0.14.0" }
 html_renderer = { path = "../html_renderer" }
 jsar_jsbinding_macro = { path = "../jsbinding_macro" }
-jsar_jsbundle = { path = "../jsbundle" }
 napi = { version = "2", features = ["compat-mode", "noop"] }
 napi-derive = { version = "2", features = ["compat-mode", "noop"] }
 style = { workspace = true }

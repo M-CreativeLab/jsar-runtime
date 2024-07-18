@@ -89,7 +89,7 @@ class NavigatorImpl implements Navigator {
     throw new Error('Method not implemented.');
   }
   storage: StorageManager;
-  
+
 }
 
 export function createNavigator(): Navigator {

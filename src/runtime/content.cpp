@@ -1,4 +1,5 @@
 #include <iostream>
+#include <filesystem>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -12,10 +13,7 @@
 #include "debug.hpp"
 #include "embedder.hpp"
 #include "content.hpp"
-#include "crates/jsar_jsbindings.h"
-
-using namespace v8;
-using namespace node;
+#include "crates/jsar_jsbundle.h"
 
 TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManager(contentMgr),
                                                                    requestInit(TrXSMLRequestInit("", 0))
@@ -459,6 +457,8 @@ TrContentManager::~TrContentManager()
 
 bool TrContentManager::initialize()
 {
+  installScripts();
+
   auto eventTarget = constellation->getNativeEventTarget();
   eventTarget->addEventListener(TrEventType::TR_EVENT_XSML_REQUEST, [this](TrEventType type, TrEvent &event)
                                 { this->onRequestEvent(event); });
@@ -666,6 +666,35 @@ void TrContentManager::onRecvXrCommands(int timeout)
         xrDevice->handleCommandMessage(*xrCommandMessage, content);
         delete xrCommandMessage;
       }
+    }
+  }
+}
+
+void TrContentManager::installScripts()
+{
+  auto scriptsTargetDir = constellation->getOptions().applicationCacheDirectory + "/scripts";
+  if (!filesystem::exists(scriptsTargetDir))
+    filesystem::create_directory(scriptsTargetDir);
+
+  auto jsBootstrapSrc = get_jsbootstrap_ptr();
+  path bootstrapPath = path(scriptsTargetDir) / "jsar-bootstrap.js";
+  {
+    FILE *fp = fopen(bootstrapPath.c_str(), "wb");
+    if (fp != nullptr)
+    {
+      fwrite(jsBootstrapSrc, 1, get_jsbootstrap_size(), fp);
+      fclose(fp);
+    }
+  }
+
+  auto jsBundleSrc = get_jsbundle_ptr();
+  path bundlePath = path(scriptsTargetDir) / "jsar-bundle.js";
+  {
+    FILE *fp = fopen(bundlePath.c_str(), "wb");
+    if (fp != nullptr)
+    {
+      fwrite(jsBundleSrc, 1, get_jsbundle_size(), fp);
+      fclose(fp);
     }
   }
 }

@@ -8,8 +8,6 @@ extern "C"
 
     // C++ exports
     void jsar_load_gl();
-    const uint8_t *get_jsbundle_ptr();
-    uintptr_t get_jsbundle_size();
 
     // CSS parsing functions
     typedef struct

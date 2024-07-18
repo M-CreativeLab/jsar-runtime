@@ -1,2 +1,3 @@
-/jsbundle.js
-/jsbundle.js.gz
+/*.js
+/*.js.gz
+/*.js.map

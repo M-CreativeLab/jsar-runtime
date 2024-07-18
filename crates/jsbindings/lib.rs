@@ -8,7 +8,6 @@ extern crate ctor;
 
 #[macro_use]
 extern crate jsar_jsbinding_macro;
-extern crate jsar_jsbundle;
 #[macro_use]
 extern crate napi_derive;
 
@@ -49,19 +48,6 @@ pub extern "C" fn jsar_load_gl() {
     let symbol_cstr = std::ffi::CString::new(symbol).expect("Failed to convert string to C string");
     eglGetProcAddress(symbol_cstr.as_ptr()) as *const _
   });
-}
-
-/**
- * Expose the JS bundle to the runtime.
- */
-#[no_mangle]
-extern "C" fn get_jsbundle_ptr() -> *const u8 {
-  jsar_jsbundle::get_jsbundle_ptr()
-}
-
-#[no_mangle]
-extern "C" fn get_jsbundle_size() -> usize {
-  jsar_jsbundle::get_jsbundle_size()
 }
 
 #[repr(C)]

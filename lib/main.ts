@@ -1,24 +1,19 @@
-/**
- * A patch to the Node.js TextDecoder.
- *
- * Node.js TextDecoder with samll ICU doesn't support ascii encoding, however the fontkit library depends on
- * the ASCII decoder to parse the font file headers.
- */
-import './polyfills/textdecoder';
 import minimist from 'minimist';
 import * as env from '@transmute/env';
 
-import './polyfills';
 import {
   connectRenderer,
   getWebGLRenderingContext,
   requestGpuBusyCallback,
 } from './bindings/renderer';
+import { loadPolyfills } from './polyfills';
 import { prepareXRSystem } from './webxr';
 import { TransmuteRuntime2 } from './runtime2';
 import { dispatchXsmlEvent } from '@transmute/messaging';
 
 const bootstrapStarted = performance.now();
+loadPolyfills();
+
 const args = minimist(process.argv.slice(1));
 const id = args.id || 'unknown';
 console.info(`Starting the JavaScript runtime(${process.pid}) => ${id}`, process.argv);

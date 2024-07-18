@@ -69,6 +69,17 @@ elseif (WIN32)
     set(LIBRARY_PREFIX "")
 endif()
 
+# Set the Rust target
+set(TR_CRATE_TARGET unknown)
+if (APPLE)
+    set(TR_CRATE_TARGET universal-apple-darwin)
+elseif (ANDROID)
+    set(TR_CRATE_TARGET aarch64-linux-android)
+elseif (WIN32)
+    set(TR_CRATE_TARGET x86_64-pc-windows-msvc)
+endif()
+message(STATUS "Transmute crates target name: ${TR_CRATE_TARGET}")
+
 # Function to add library to the target
 function(tr_target_link_library TARGET LIBRARY_DIRECTORY LIBRARY_NAME USE_DYNAMIC_LINK)
     if (USE_DYNAMIC_LINK STREQUAL DYNAMIC)

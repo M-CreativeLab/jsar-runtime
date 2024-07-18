@@ -543,7 +543,7 @@ int main(int argc, char **argv)
   {
     // Start
     namespace fs = std::filesystem;
-    string dirname = fs::current_path().string();
+    string dirname = fs::current_path().string() + "/.cache";
 
     rapidjson::Document doc;
     auto &allocator = doc.GetAllocator();

@@ -44,7 +44,7 @@ typedef function<void(TrAnimationFrameRequest &)> AnimationFrameRequestCallback;
 class ScriptEnvironment
 {
 public:
-  ScriptEnvironment(int id);
+  ScriptEnvironment(int id, string& scriptsDir);
   ~ScriptEnvironment();
 
 public:
