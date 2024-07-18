@@ -197,14 +197,9 @@ private:
 			name[nameLength] = '\0';
 
 			GLint location = glGetAttribLocation(program, name);
-			if (location <= -1)
-				continue;
-
 			res.attribLocations.push_back(AttribLocation(name, location));
 			DEBUG(DEBUG_TAG, "    GL::LinkProgram(%d)::Attribute[%d](%s) => (size=%d, type=%s)",
-						program,
-						location, name,
-						size,
+						program, location, name, size,
 						gles::glUniformTypesToString(type).c_str());
 		}
 
@@ -1234,17 +1229,33 @@ private:
 				glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &numAttributes);
 				for (int i = 0; i < numAttributes; i++)
 				{
-					GLchar name[256];
+					GLchar *name = new GLchar[256];
 					GLint size;
 					GLenum type;
 					glGetActiveAttrib(program, i, 256, NULL, &size, &type, name);
 
-					auto loc = glGetAttribLocation(program, name);
-					GLboolean enabled;
-					glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, (GLint *)&enabled);
-
-					DEBUG(DEBUG_TAG, "    Active Attribute(%d): Enabled=%s Size=%d Type=%s \"%s\"",
-								i, enabled ? "Yes" : "No", size, gles::glEnumToString(type).c_str(), name);
+					GLint attribIndex = glGetAttribLocation(program, name);
+					if (attribIndex == -1)
+					{
+						glGetError(); // Clear the error
+						DEBUG(DEBUG_TAG, "    Active Attribute(%d): Size=%d Type=%s \"%s\"",
+									attribIndex, size, gles::glEnumToString(type).c_str(), name);
+					}
+					else
+					{
+						GLint enabled;
+						glGetVertexAttribiv(attribIndex, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &enabled);
+						GLint bufferBinding;
+						glGetVertexAttribiv(attribIndex, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &bufferBinding);
+						DEBUG(DEBUG_TAG, "    Active Attribute(%d): Enabled=%s Size=%d Type=%s BufferBinding=%d \"%s\"",
+									attribIndex,
+									enabled ? "Yes" : "No",
+									size,
+									gles::glEnumToString(type).c_str(),
+									bufferBinding,
+									name);
+					}
+					delete[] name;
 				}
 			}
 		}

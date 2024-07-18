@@ -118,7 +118,7 @@ public:
 
     // Check the environment variable to enable tracing
     const char *enableTracing = getenv("JSAR_ENABLE_RENDERER_TRACING");
-    if (enableTracing != nullptr)
+    if (enableTracing != nullptr && strcmp(enableTracing, "1") == 0)
       renderer->enableTracing();
   }
 

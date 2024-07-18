@@ -1919,6 +1919,7 @@ namespace webgl
         req.width = bitmap->width();
         req.height = bitmap->height();
         req.format = WEBGL_RGBA;
+        req.internalformat = WEBGL2_RGBA8;
         pixelsData = reinterpret_cast<unsigned char *>(bitmap->getPixels());
       }
       else if (imageSourceObject.InstanceOf(OffscreenCanvas::constructor->Value()))
@@ -1928,6 +1929,7 @@ namespace webgl
         req.width = bitmap->width();
         req.height = bitmap->height();
         req.format = WEBGL_RGBA;
+        req.internalformat = WEBGL2_RGBA8;
         pixelsData = reinterpret_cast<unsigned char *>(bitmap->getPixels());
       }
       else

@@ -466,7 +466,13 @@ namespace commandbuffers
     }
 
   public:
-    size_t count() const { return values.size() / matrixSize; }
+    size_t count() const
+    {
+      if (isComputationGraph())
+        return 1;
+      else
+        return values.size() / matrixSize;
+    }
     bool isComputationGraph() const
     {
       return computationGraph4values.placeholderId != WebGLMatrixPlaceholderId::NotSet;

@@ -187,7 +187,7 @@ extern "C"
         char enableRendererTracingStr[PROP_VALUE_MAX];
         if (
             __system_property_get("jsar.renderer.tracing", enableRendererTracingStr) >= 0 &&
-            strcmp(enableRendererTracingStr, "yes"))
+            strcmp(enableRendererTracingStr, "yes") == 0)
           renderer->enableTracing();
 
         char logfilter[PROP_VALUE_MAX];
