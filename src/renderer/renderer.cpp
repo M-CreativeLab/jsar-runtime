@@ -75,6 +75,7 @@ namespace renderer
     // TODO
   }
 
+  void TrRenderer::enableTracing() { isTracingEnabled = true; }
   void TrRenderer::enableHostContextSummary() { isHostContextSummaryEnabled = true; }
   void TrRenderer::enableAppContextSummary() { isAppContextSummaryEnabled = true; }
 

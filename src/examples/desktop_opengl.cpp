@@ -115,6 +115,11 @@ public:
     auto renderer = constellation->getRenderer();
     auto api = RenderAPI::Create(kUnityGfxRendererOpenGLCore, getConstellation());
     renderer->setApi(api);
+
+    // Check the environment variable to enable tracing
+    const char *enableTracing = getenv("JSAR_ENABLE_RENDERER_TRACING");
+    if (enableTracing != nullptr)
+      renderer->enableTracing();
   }
 
 public:

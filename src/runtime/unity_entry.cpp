@@ -144,10 +144,6 @@ extern "C"
       setenv("JSAR_DEVICE_VENDOR", deviceVendor, 1);
     }
 
-    char logfilter[PROP_VALUE_MAX];
-    if (__system_property_get("jsar.renderer.logfilter", logfilter) >= 0)
-      embedder->getRenderer()->setLogFilter(logfilter);
-
     char enableWebglPlaceholders[PROP_VALUE_MAX];
     if (
         /**
@@ -186,6 +182,17 @@ extern "C"
         char enableResourcesCachingStr[PROP_VALUE_MAX];
         if (__system_property_get("jsar.resources.caching", enableResourcesCachingStr) >= 0)
           setenv("JSAR_RESOURCES_CACHING", enableResourcesCachingStr, 1);
+
+        auto renderer = embedder->getRenderer();
+        char enableRendererTracingStr[PROP_VALUE_MAX];
+        if (
+            __system_property_get("jsar.renderer.tracing", enableRendererTracingStr) >= 0 &&
+            strcmp(enableRendererTracingStr, "yes"))
+          renderer->enableTracing();
+
+        char logfilter[PROP_VALUE_MAX];
+        if (__system_property_get("jsar.renderer.logfilter", logfilter) >= 0)
+          renderer->setLogFilter(logfilter);
       }
     }
 #endif

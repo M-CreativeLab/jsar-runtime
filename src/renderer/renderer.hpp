@@ -38,6 +38,7 @@ namespace renderer
     void tick(analytics::PerformanceCounter &perfCounter);
     void shutdown();
     void setLogFilter(string filterExpr);
+    void enableTracing();
     void enableHostContextSummary();
     void enableAppContextSummary();
     void configureClientFrameRate(uint32_t value);
@@ -95,14 +96,17 @@ namespace renderer
     bool executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, TrContentRenderer *contentRenderer);
     void calcFps();
 
+  public:
+    bool isTracingEnabled = false;
+    bool isHostContextSummaryEnabled = false;
+    bool isAppContextSummaryEnabled = false;
+    uint32_t clientDefaultFrameRate = 60;
+
   private:
     RenderAPI *api = nullptr;
     TrConstellation *constellation = nullptr;
     OpenGLHostContextStorage *glHostContext = nullptr;
     vector<TrContentRenderer *> contentRenderers;
-    bool isHostContextSummaryEnabled = false;
-    bool isAppContextSummaryEnabled = false;
-    uint32_t clientDefaultFrameRate = 60;
 
   private: // fields for frame request
     ipc::TrOneShotServer<TrFrameRequestMessage> *frameRequestChanServer = nullptr;

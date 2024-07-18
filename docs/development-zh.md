@@ -30,9 +30,9 @@ JSAR 会将每个应用进程的日志也打印到 `jsar` 中，比如：
 
 ### AOSP 设备调试
 
-开发者可以基于 AOSP 的 adb 工具进行调试，需要使用到 `adb setprop` 和 `adb logcat` 命令。
+开发者可以基于 AOSP 的 adb 工具进行调试，需要使用到 `adb shell setprop` 和 `adb logcat` 命令。
 
-进入调试模式：
+**进入调试模式**
 
 ```sh
 $ adb shell setprop jsar.debug.enabled yes
@@ -49,6 +49,33 @@ $ adb shell setprop jsar.example.url http://localhost:3000/spatial-externalmesh-
 ```sh
 $ adb shell setprop jsar.resources.caching no
 ```
+
+**打开渲染器指令跟踪**
+
+```sh
+$ adb shell setprop jsar.renderer.tracing yes
+```
+
+开启后可以在 `TR_GLES` 通道看到渲染器的指令调用，比如：
+
+```
+07-18 17:49:16.204 TR_GLES: [0] GL::ActiveTexture(0)
+07-18 17:49:16.204 TR_GLES: [0] GL::BindTexture(0xde1, 24) for active(33984) program(24)
+07-18 17:49:16.204 TR_GLES: [0] GL::ActiveTexture(1)
+07-18 17:49:16.204 TR_GLES: [0] GL::BindTexture(0xde1, 3) for active(33985) program(24)
+07-18 17:49:16.204 TR_GLES: [0] GL::DrawElements(mode=GL_TRIANGLES, count=5220, type=GL_UNSIGNED_INT, indices=0x0)
+07-18 17:49:16.204 TR_GLES:     Program: 24
+07-18 17:49:16.204 TR_GLES:     Program: LINK_STATUS=1
+07-18 17:49:16.204 TR_GLES:     Program: VALIDATE_STATUS=0
+07-18 17:49:16.204 TR_GLES:     Element Array Buffer: 92
+07-18 17:49:16.204 TR_GLES:     Active Attribute(0): Enabled=Yes Size=1 Type=0x8b51 "normal"
+07-18 17:49:16.204 TR_GLES:     Active Attribute(1): Enabled=Yes Size=1 Type=0x8b50 "uv"
+07-18 17:49:16.204 TR_GLES:     Active Attribute(2): Enabled=Yes Size=1 Type=0x8b52 "matricesWeights"
+07-18 17:49:16.204 TR_GLES:     Active Attribute(3): Enabled=Yes Size=1 Type=0x8b51 "position"
+07-18 17:49:16.204 TR_GLES:     Active Attribute(4): Enabled=Yes Size=1 Type=0x8b52 "matricesIndices"
+```
+
+以及后续可以使用 WebGL Inspector 等工具进行调试。
 
 ### 使用 Chrome DevTools 调试
 
@@ -105,13 +132,13 @@ $ adb logcat -s jsar.metrics
 本节将针对以下几个指标作出说明。
 
 | 指标 | 说明 |
-| --- | --- |
+| ---- | ---- |
 | `spawnprocess` | 表示创建应用进程的时间，即 `fork()` 调用成功后 |
 | `beforeloading` | 表示开始加载文档的时间 |
 | `load`/`loaded` | 表示文档加载完成的时间 |
 | `DOMContentLoaded` | 表示文档依赖的内容（如样式表、脚本、图片、模型等）加载完成 |
-| `fcp` | 即 First Contentful Paint，表示首次内容绘制完成，在 JSAR 运行时，它表示渲染器第一次接收到绘制请求（Draw Call）时标记 |
-| `lcp` | 即 Largest Contentful Paint，表示最大内容绘制完成，它是页面中最大的绘制元素（如图片、视频等）绘制完成的时间点 |
+| `fcp`              | 即 First Contentful Paint，表示首次内容绘制完成，在 JSAR 运行时，它表示渲染器第一次接收到绘制请求（Draw Call）时标记 |
+| `lcp`              | 即 Largest Contentful Paint，表示最大内容绘制完成，它是页面中最大的绘制元素（如图片、视频等）绘制完成的时间点        |
 
 参考文档：
 
