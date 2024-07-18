@@ -15,6 +15,7 @@
 #include <glm/glm.hpp>
 
 #include "canvas.hpp"
+#include "path2d.hpp"
 #include "client/per_process.hpp"
 
 namespace canvasbinding

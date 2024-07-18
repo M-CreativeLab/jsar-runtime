@@ -2256,7 +2256,6 @@ namespace webgl
 
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     std::string name = info[1].As<Napi::String>().Utf8Value();
-    fprintf(stderr, "GetUniformLocation: %s %d\n", name.c_str(), program->HasUniformLocation(name));
 
     if (!program->HasUniformLocation(name))
       return env.Null();

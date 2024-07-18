@@ -29,6 +29,8 @@ namespace canvasbinding
                                          InstanceMethod("lineTo", &CanvasRenderingContext2D::LineTo),
                                          InstanceMethod("bezierCurveTo", &CanvasRenderingContext2D::BezierCurveTo),
                                          InstanceMethod("quadraticCurveTo", &CanvasRenderingContext2D::QuadraticCurveTo),
+                                         InstanceMethod("arc", &CanvasRenderingContext2D::Arc),
+                                         InstanceMethod("arcTo", &CanvasRenderingContext2D::ArcTo),
                                          // Image mthods
                                          InstanceMethod("drawImage", &CanvasRenderingContext2D::DrawImage),
                                          InstanceMethod("createImageData", &CanvasRenderingContext2D::CreateImageData),
@@ -455,7 +457,42 @@ namespace canvasbinding
     if (info.Length() >= 6 && info[5].IsBoolean())
       ccw = info[5].ToBoolean().Value();
 
-    ellipseToSkPath(currentPath, x, y, radius, radius, 0, startAngle, endAngle, ccw);
+    try
+    {
+      bindings::canvas::Path2D::Ellipse(currentPath, x, y, radius, radius, 0, startAngle, endAngle, ccw);
+    }
+    catch (std::exception &e)
+    {
+      Napi::Error::New(env, e.what()).ThrowAsJavaScriptException();
+    }
+    return env.Null();
+  }
+
+  Napi::Value CanvasRenderingContext2D::ArcTo(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (currentPath == nullptr)
+    {
+      Napi::TypeError::New(env, "Path not started, call beginPath() first.").ThrowAsJavaScriptException();
+      return env.Null();
+    }
+    if (info.Length() != 5)
+    {
+      Napi::TypeError::New(env, "5 arguments expected").ThrowAsJavaScriptException();
+      return env.Null();
+    }
+
+    auto x1 = info[0].ToNumber().FloatValue();
+    auto y1 = info[1].ToNumber().FloatValue();
+    auto x2 = info[2].ToNumber().FloatValue();
+    auto y2 = info[3].ToNumber().FloatValue();
+    auto radius = info[4].ToNumber().FloatValue();
+
+    if (currentPath->isEmpty())
+      currentPath->moveTo(x1, y1);
+    bindings::canvas::Path2D::ApplyArcToTangent(currentPath, x1, y1, x2, y2, radius);
     return env.Null();
   }
 
@@ -1167,7 +1204,6 @@ namespace canvasbinding
     paint.setColor(strokeStyle);
     // TODO
     paint.setStrokeWidth(strokeWidth);
-    fprintf(stderr, "lineCap: %f %f\n", paint.getStrokeWidth(), strokeWidth);
 
     if (lineDash.size())
     {

@@ -14,6 +14,12 @@ namespace bindings
       Path2D(const Napi::CallbackInfo &info);
       ~Path2D();
 
+    public:
+      static void ApplyArcToTangent(SkPath *skPath, SkScalar x1, SkScalar y1, SkScalar x2, SkScalar y2, SkScalar radius);
+      static void Ellipse(SkPath *skPath,
+                          float x, float y, float radiusX, float radiusY, float rotation,
+                          float startAngle, float endAngle, bool ccw);
+
     private:
       Napi::Value AddPath(const Napi::CallbackInfo &info);
       Napi::Value ClosePath(const Napi::CallbackInfo &info);

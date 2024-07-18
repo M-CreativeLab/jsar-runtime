@@ -4,6 +4,7 @@
 #include "canvas.hpp"
 #include "rendering_context2d.hpp"
 #include "html_rendering_context.hpp"
+#include "path2d.hpp"
 
 namespace bindings
 {
@@ -18,6 +19,7 @@ namespace bindings
       OffscreenCanvas::Init(env, exports);
       CanvasRenderingContext2D::Init(env, exports);
       HTMLRenderingContext::Init(env, exports);
+      Path2D::Init(env, exports);
       return exports;
     }
   } // namespace canvas
