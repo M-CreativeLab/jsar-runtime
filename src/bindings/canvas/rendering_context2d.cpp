@@ -36,7 +36,13 @@ namespace canvasbinding
                                          InstanceMethod("putImageData", &CanvasRenderingContext2D::PutImageData),
                                          // Text methods
                                          InstanceMethod("measureText", &CanvasRenderingContext2D::MeasureText),
-                                         // States
+                                         // State methods
+                                         InstanceMethod("save", &CanvasRenderingContext2D::Save),
+                                         InstanceMethod("restore", &CanvasRenderingContext2D::Restore),
+                                         // Properties
+                                         InstanceAccessor("canvas",
+                                                          &CanvasRenderingContext2D::CanvasGetter,
+                                                          nullptr),
                                          InstanceAccessor("currentTransform",
                                                           &CanvasRenderingContext2D::CurrentTransformGetter,
                                                           &CanvasRenderingContext2D::CurrentTransformSetter),
@@ -756,6 +762,13 @@ namespace canvasbinding
     return env.Undefined();
   }
 
+  Napi::Value CanvasRenderingContext2D::CanvasGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return jsCanvas->Value();
+  }
+
   Napi::Value CanvasRenderingContext2D::CurrentTransformGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -1120,6 +1133,22 @@ namespace canvasbinding
 #undef XX
     Napi::TypeError::New(info.Env(), "Invalid value for `lineJoin`")
         .ThrowAsJavaScriptException();
+  }
+
+  Napi::Value CanvasRenderingContext2D::Save(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    skCanvas->save();
+    return env.Undefined();
+  }
+
+  Napi::Value CanvasRenderingContext2D::Restore(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    skCanvas->restore();
+    return env.Undefined();
   }
 
   SkPaint CanvasRenderingContext2D::getFillPaint()

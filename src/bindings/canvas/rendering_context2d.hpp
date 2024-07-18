@@ -100,6 +100,7 @@ namespace canvasbinding
     Napi::Value MeasureText(const Napi::CallbackInfo &info);
 
   private:
+    Napi::Value CanvasGetter(const Napi::CallbackInfo &info);
     Napi::Value CurrentTransformGetter(const Napi::CallbackInfo &info);
     void CurrentTransformSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value FillStyleGetter(const Napi::CallbackInfo &info);
@@ -122,6 +123,10 @@ namespace canvasbinding
     void LineCapSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value LineJoinGetter(const Napi::CallbackInfo &info);
     void LineJoinSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+
+  private: // State
+    Napi::Value Save(const Napi::CallbackInfo &info);
+    Napi::Value Restore(const Napi::CallbackInfo &info);
 
   private:
     SkPaint getFillPaint();
