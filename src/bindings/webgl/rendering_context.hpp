@@ -27,6 +27,15 @@ namespace webgl
     std::string powerPreference = "default";
   };
 
+#define ASSERT_MAX_COUNT_PER_DRAWCALL(count, funcName)                                                      \
+  if (TR_UNLIKELY(count >= WEBGL_MAX_COUNT_PER_DRAWCALL))                                                   \
+  {                                                                                                         \
+    string msg = "The " funcName " count(" + std::to_string(count) + ") exceeds" +                          \
+                 " the maximum count(" + std::to_string(WEBGL_MAX_COUNT_PER_DRAWCALL) + ") per draw call."; \
+    Napi::Error::New(env, msg).ThrowAsJavaScriptException();                                                \
+    return env.Undefined();                                                                                 \
+  }
+
   template <typename T>
   class WebGLBaseRenderingContext : public Napi::ObjectWrap<T>
   {
@@ -179,7 +188,7 @@ namespace webgl
 
     /**
      * It unpacks the pixels.
-     * 
+     *
      * Source from https://github.com/stackgl/headless-gl/blob/v8.0.2/src/native/webgl.cc#L722
      */
     unsigned char *unpackPixels(int type, int format, int width, int height, unsigned char *pixels)

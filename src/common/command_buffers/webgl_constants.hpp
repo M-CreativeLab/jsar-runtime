@@ -1128,6 +1128,6 @@ const int WEBGL2_MAX_CLIENT_WAIT_TIMEOUT_WEBGL = 0x9247;
 /**
  * The maximum number of draw calls's `count` parameter.
  * 
- * Default value is 200k.
+ * Default value is 1000k.
  */
-const int WEBGL_MAX_COUNT_PER_DRAWCALL = 200 * 1000;
+const int WEBGL_MAX_COUNT_PER_DRAWCALL = 1000 * 1000;
