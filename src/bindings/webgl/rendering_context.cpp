@@ -1018,30 +1018,31 @@ namespace webgl
       auto location = uniformLocation.location;
       auto size = uniformLocation.size;
 
-      if (size == 1)
+      /**
+       * FIXME: The OpenGL returns "foo[0]" from `glGetActiveUniform()`, thus we need to handle it here:
+       *
+       * 1. check if the name ends with "[0]"
+       * 2. grab the name without "[0]"
+       * 3. set the uniform location for the name without "[0]"
+       * 4. set the uniform location for the name with "[0]" and the index
+       * 5. repeat 4 for the rest of the indices
+       *
+       * After the above steps, we will have the names looks like: foo, foo[0], foo[1], foo[2], ...
+       */
+      std::string arraySuffix = "[0]";
+      int endedAt = name.length() - arraySuffix.length();
+      bool endsWithArray = name.size() > arraySuffix.size() && name.rfind(arraySuffix) != std::string::npos;
+
+      /**
+       * Check if size is 1 and not ends with [0], WebGL developers might use 1-size array such as: `[0]`.
+       */
+      if (size == 1 && !endsWithArray)
       {
         program->SetUniformLocation(name, location);
       }
-      else if (size > 1)
+      else if (endsWithArray)
       {
-        /**
-         * FIXME: The OpenGL returns "foo[0]" from `glGetActiveUniform()`, thus we need to handle it here:
-         *
-         * 1. check if the name ends with "[0]"
-         * 2. grab the name without "[0]"
-         * 3. set the uniform location for the name without "[0]"
-         * 4. set the uniform location for the name with "[0]" and the index
-         * 5. repeat 4 for the rest of the indices
-         *
-         * After the above steps, we will have the names looks like: foo, foo[0], foo[1], foo[2], ...
-         */
-        std::string suffix = "[0]";
-        auto end = name.length() - suffix.length();
-        if (name.size() < suffix.size() || name.rfind(suffix) != end)
-        {
-          continue;
-        }
-        auto arrayName = name.substr(0, end);
+        auto arrayName = name.substr(0, endedAt);
         program->SetUniformLocation(arrayName, location);
         program->SetUniformLocation(name, location);
         for (int i = 1; i < size; i++)
@@ -2255,6 +2256,7 @@ namespace webgl
 
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     std::string name = info[1].As<Napi::String>().Utf8Value();
+    fprintf(stderr, "GetUniformLocation: %s %d\n", name.c_str(), program->HasUniformLocation(name));
 
     if (!program->HasUniformLocation(name))
       return env.Null();
