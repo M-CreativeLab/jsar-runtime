@@ -110,6 +110,14 @@ function(tr_target_link_thirdparty_library TARGET LIBRARY_NAME)
     endif()
 endfunction()
 
+function(tr_target_link_labsound_library TARGET LIBRARY_NAME)
+    if (LIBRARY_NAME STREQUAL "node")
+        tr_target_link_library(${TARGET} ${TR_THIRDPARTY_PATH}/lib/LabSound ${LIBRARY_NAME} DYNAMIC)
+    else()
+        tr_target_link_library(${TARGET} ${TR_THIRDPARTY_PATH}/lib/LabSound ${LIBRARY_NAME} STATIC)
+    endif()
+endfunction()
+
 # Function to install the target to the release directory
 function(tr_target_install TARGET)
     install(TARGETS ${TARGET} DESTINATION ${TR_RELEASE_DEST})
