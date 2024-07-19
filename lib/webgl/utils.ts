@@ -17,7 +17,6 @@ export type NativeCallOptions = Partial<{
   };
 }>;
 
-let isEnableDebugging: boolean = false;
 const glConstantNamesMap: Map<number, string> = new Map();
 
 export function isTypedArray(data: any): data is TypedArray {
@@ -71,43 +70,6 @@ export function makeNativeCall(
   } catch (err) {
     console.error(`Failed to make native call => gl.${name}(${args.join(', ')})`, err);
     throw err;
-  }
-
-  if (isEnableDebugging) {
-    const { argTypes, argSep = ', ' } = options.debug || {};
-    let argsStr: string;
-    if (argTypes) {
-      argsStr = args
-        .filter((_, i) => argTypes[i] !== 'ignore')
-        .map((arg, i) => {
-          if (argTypes[i] === 'constant') {
-            return glConstantNamesMap.has(arg) ? `${glConstantNamesMap.get(arg)}(${arg})` : `${arg}`;
-          } else {
-            if (arg instanceof ArrayBuffer) {
-              return `ArrayBuffer(${arg.byteLength})`;
-            } else if (arg instanceof DataView) {
-              return `DataView(${arg.byteLength})`;
-            } else if (isTypedArray(arg)) {
-              const { byteLength, byteOffset } = arg;
-              return `${arg.constructor.name}(${byteLength}, offset=${byteOffset})`;
-            }
-            return arg;
-          }
-        })
-        .join(argSep);
-    } else {
-      argsStr = args.join(argSep);
-    }
-
-    let returnStr = '';
-    if (Array.isArray(r)) {
-      returnStr = `=> (${r.length}) { ${r.slice(0, 3).join(', ')} }`;
-    } else if (typeof r === 'number' || typeof r === 'boolean') {
-      returnStr = `=> ${r}`;
-    } else if (typeof r !== 'undefined') {
-      returnStr = `=> <${typeof r}>`;
-    }
-    console.info(`WebGL::${name}(${argsStr}) ${returnStr}`);
   }
   return r;
 }
