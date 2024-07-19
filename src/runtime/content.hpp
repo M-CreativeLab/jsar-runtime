@@ -6,6 +6,7 @@
 #include <filesystem>
 
 #include "common/classes.hpp"
+#include "common/scoped_thread.hpp"
 #include "common/ipc.hpp"
 #include "common/command_buffers/shared.hpp"
 #include "common/command_buffers/sender.hpp"
@@ -34,10 +35,25 @@ public:
   ~TrContentRuntime();
 
 public:
+  /**
+   * Start a content process with the given initialization options, and starts a command buffer receiver worker.
+   */
   void start(TrXSMLRequestInit init);
+  /**
+   * Send a `pause` event to the content process.
+   */
   void pause();
+  /**
+   * Send a `resume` event to the content process.
+   */
   void resume();
+  /**
+   * Terminate the content, it will remove the content renderer and send a kill signal to the content process.
+   */
   void terminate();
+  /**
+   * Dispose the content, it firstly call `terminate()` and wait for the content process to exit.
+   */
   void dispose();
 
 public: // lifecycle which is called by other classes
@@ -49,6 +65,12 @@ public: // lifecycle which is called by other classes
    * When the content's command buffers are executed. Internally this method will clear the command buffer requests.
    */
   void onCommandBuffersExecuted();
+  /**
+   * Called when the parent/host process receives the exit signal from the content process, it will dispose the related resources.
+   *
+   * @param exitCode The exit code of the content process.
+   */
+  void onProcessExit(int exitCode);
 
 public: // reference methods
   TrConstellation *getConstellation();
@@ -101,7 +123,7 @@ public: // XR-related methods
 private:
   void onClientProcess();
   bool testClientProcessExitOnFrame(); // true if the client process has exited
-  void recvCommandBuffers(uint32_t timeout);
+  void recvCommandBuffers(WorkerThread &worker, uint32_t timeout);
   void recvEvent();
   bool recvClientOutput();
   bool tickOnFrame();
@@ -120,13 +142,12 @@ private:
   atomic<bool> shouldDestroy = false;
 
 private:
-  TrEventReceiver *eventChanReceiver = nullptr;
-  TrEventSender *eventChanSender = nullptr;
+  std::unique_ptr<TrEventReceiver> eventChanReceiver = nullptr;
+  std::unique_ptr<TrEventSender> eventChanSender = nullptr;
+  std::unique_ptr<TrCommandBufferReceiver> commandBufferChanReceiver = nullptr;
+  std::unique_ptr<TrCommandBufferSender> commandBufferChanSender = nullptr;
   TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
-  TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
-  TrCommandBufferSender *commandBufferChanSender = nullptr;
-  std::unique_ptr<thread> commandBuffersRecvWorker;
-  atomic<bool> commandBuffersWorkerRunning = false;
+  std::unique_ptr<WorkerThread> commandBuffersRecvWorker;
 
   function<void(TrCommandBufferBase *)> onCommandBufferRequestReceived;
   TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
@@ -138,8 +159,9 @@ private:
   string lastClientOutput;
 
 private:
-  mutex recvCommandBuffersMutex;
   mutex commandBufferRequestsMutex;
+  mutex commandBufferExecutingMutex;
+  condition_variable commandBufferExecutingCv;
   atomic<bool> isCommandBufferRequestsExecuting = false;
 
   friend class TrContentManager;
@@ -168,6 +190,7 @@ public:
 private:
   void onRequestEvent(TrEvent &event);
   void onRecvXrCommands(int timeout = 100);
+  void onNewEventChan();
 
 private:
   void installScripts();
@@ -176,17 +199,12 @@ private:
   TrConstellation *constellation = nullptr;
   shared_mutex contentsMutex;
   vector<TrContentRuntime *> contents;
-  std::unique_ptr<thread> contentsDestroyingWorker;
-  atomic<bool> contentsDestroyingWorkerRunning = false;
 
-private: // event channel
+private: // channels & workers
   TrOneShotServer<TrEventMessage> *eventChanServer = nullptr;
-  atomic<bool> watcherRunning = false;
-  std::unique_ptr<thread> eventChanWatcher;
-
-private: // XR command channel
-  atomic<bool> xrCommandsWorkerRunning = false;
-  std::unique_ptr<thread> xrCommandsRecvWorker;
+  std::unique_ptr<WorkerThread> contentsDestroyingWorker;
+  std::unique_ptr<WorkerThread> eventChanWatcher;
+  std::unique_ptr<WorkerThread> xrCommandsRecvWorker;
 
   friend class TrContentRuntime;
   friend class TrConstellation;

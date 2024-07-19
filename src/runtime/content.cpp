@@ -35,32 +35,6 @@ TrContentRuntime::~TrContentRuntime()
     if (!recvClientOutput())
       break;
   }
-
-  if (commandBuffersRecvWorker != nullptr)
-  {
-    commandBuffersWorkerRunning = false;
-    commandBuffersRecvWorker->join();
-  }
-  if (eventChanReceiver != nullptr)
-  {
-    delete eventChanReceiver;
-    eventChanReceiver = nullptr;
-  }
-  if (eventChanSender != nullptr)
-  {
-    delete eventChanSender;
-    eventChanSender = nullptr;
-  }
-  if (commandBufferChanReceiver != nullptr)
-  {
-    delete commandBufferChanReceiver;
-    commandBufferChanReceiver = nullptr;
-  }
-  if (commandBufferChanSender != nullptr)
-  {
-    delete commandBufferChanSender;
-    commandBufferChanSender = nullptr;
-  }
 }
 
 void TrContentRuntime::start(TrXSMLRequestInit init)
@@ -111,21 +85,8 @@ void TrContentRuntime::start(TrXSMLRequestInit init)
     /** Configure pipes for parent process  */
     close(childPipes[1]);
 
-    commandBuffersWorkerRunning = true;
-    commandBuffersRecvWorker = std::make_unique<thread>([this]()
-                                                        {
-      while (commandBuffersWorkerRunning)
-      {
-        if (shouldDestroy)
-        {
-          DEBUG(LOG_TAG_ERROR, "The content#%d is disposing, skip to receive command buffers.", pid);
-          commandBuffersWorkerRunning = false;
-        }
-        else
-        {
-          recvCommandBuffers(-1);
-        }
-      } });
+    commandBuffersRecvWorker = std::make_unique<WorkerThread>("TrCommandBuffersWorker", [this](WorkerThread &worker)
+                                                              { recvCommandBuffers(worker, -1); });
     auto renderer = contentManager->constellation->getRenderer();
     renderer->addContentRenderer(this);
     dispatchXSMLEvent(TrXSMLEventType::SpawnProcess);
@@ -145,16 +106,7 @@ void TrContentRuntime::resume()
 
 void TrContentRuntime::terminate()
 {
-  /**
-   * Disposing the content runtime will wait for the command buffer is executed, also when a content is disposing, it should
-   * avoid the command buffer receiver to receive any new command buffer requests.
-   */
-  lock_guard<mutex> lock(recvCommandBuffersMutex);
-  auto renderer = contentManager->constellation->getRenderer();
-  assert(renderer != nullptr);
-  renderer->removeCommandBufferChanClient(commandBufferChanClient);
   DEBUG(LOG_TAG_CONTENT, "Terminating the client(%d).", pid);
-
   kill(pid, SIGKILL);
 }
 
@@ -164,18 +116,39 @@ void TrContentRuntime::dispose()
   while (true)
   {
     if (testClientProcessExitOnFrame()) // Return util the child is exit.
+    {
+      onProcessExit(1);
       break;
+    }
   }
 }
 
 void TrContentRuntime::onCommandBuffersExecuting()
 {
-  isCommandBufferRequestsExecuting = true;
+  isCommandBufferRequestsExecuting.store(true);
 }
 
 void TrContentRuntime::onCommandBuffersExecuted()
 {
-  isCommandBufferRequestsExecuting = false;
+  isCommandBufferRequestsExecuting.store(false);
+  commandBufferExecutingCv.notify_all();
+}
+
+void TrContentRuntime::onProcessExit(int _exitCode)
+{
+  // 1. Stop the receiver worker.
+  commandBuffersRecvWorker->stop();
+
+  // 2. Remove the content renderer and command buffer client.
+  auto renderer = contentManager->constellation->getRenderer();
+  if (renderer != nullptr)
+  {
+    renderer->removeContentRenderer(this);
+    renderer->removeCommandBufferChanClient(commandBufferChanClient);
+  }
+
+  // 3. Mark the content as should be destroyed, then the content manager will dispose it.
+  shouldDestroy = true;
 }
 
 TrConstellation *TrContentRuntime::getConstellation()
@@ -201,8 +174,8 @@ void TrContentRuntime::resetCommandBufferRequestHandler()
 void TrContentRuntime::setupWithCommandBufferClient(TrOneShotClient<TrCommandBufferMessage> *client)
 {
   assert(client != nullptr);
-  commandBufferChanReceiver = new TrCommandBufferReceiver(client);
-  commandBufferChanSender = new TrCommandBufferSender(client);
+  commandBufferChanReceiver = std::make_unique<TrCommandBufferReceiver>(client);
+  commandBufferChanSender = std::make_unique<TrCommandBufferSender>(client);
   commandBufferChanClient = client;
   DEBUG(LOG_TAG_CONTENT, "Setup the command buffer channel with client(%d, %d)", client->getPid(), id);
 }
@@ -344,29 +317,38 @@ bool TrContentRuntime::testClientProcessExitOnFrame()
   return false;
 }
 
-void TrContentRuntime::recvCommandBuffers(uint32_t timeout)
+void TrContentRuntime::recvCommandBuffers(WorkerThread &worker, uint32_t timeout)
 {
-  lock_guard<mutex> lock(recvCommandBuffersMutex);
+  /**
+   * When the following conditions are met, the worker thread will sleep and wait for the next frame tick:
+   *
+   * 1. The command buffer channel receiver is not ready.
+   * 2. The command buffer requests are executing.
+   */
   if (commandBufferChanReceiver == nullptr)
-    return; // Skip if the command buffer channel is not ready.
-  if (isCommandBufferRequestsExecuting == true)
-    return; // Skip if the command buffer requests are executing.
-
-  while (true)
   {
-    auto commandBuffer = commandBufferChanReceiver->recvCommandBufferRequest(timeout);
-    if (commandBuffer != nullptr)
-    {
-      lock_guard<mutex> lock(commandBufferRequestsMutex);
-      if (onCommandBufferRequestReceived)
-        onCommandBufferRequestReceived(commandBuffer);
-      else
-        DEBUG(LOG_TAG_CONTENT, "No command buffer request handler for the content(%d)", id);
-    }
+    worker.sleep();
+    return;
+  }
+  if (isCommandBufferRequestsExecuting.load())
+  {
+    /**
+     * When the executing is true, just wait for the execution is finished via the condition variable.
+     */
+    unique_lock<mutex> lock(commandBufferExecutingMutex);
+    commandBufferExecutingCv.wait(lock, [this]
+                                  { return !isCommandBufferRequestsExecuting.load(); });
+  }
+
+  // Do the command buffer receving work.
+  auto commandBuffer = commandBufferChanReceiver->recvCommandBufferRequest(timeout);
+  if (commandBuffer != nullptr)
+  {
+    lock_guard<mutex> lock(commandBufferRequestsMutex);
+    if (onCommandBufferRequestReceived)
+      onCommandBufferRequestReceived(commandBuffer);
     else
-    {
-      break;
-    }
+      DEBUG(LOG_TAG_CONTENT, "No command buffer request handler for the content(%d)", id);
   }
 }
 
@@ -463,92 +445,50 @@ bool TrContentManager::initialize()
   eventTarget->addEventListener(TrEventType::TR_EVENT_XSML_REQUEST, [this](TrEventType type, TrEvent &event)
                                 { this->onRequestEvent(event); });
 
-  watcherRunning = true;
-  eventChanWatcher = std::make_unique<thread>([this]()
-                                              {
-    SET_THREAD_NAME("TrEventChanWatcher");
-    while (watcherRunning)
+  eventChanWatcher = std::make_unique<WorkerThread>("TrEventChanWatcher", [this](WorkerThread &)
+                                                    { onNewEventChan(); });
+  xrCommandsRecvWorker = std::make_unique<WorkerThread>("TrXRCommandsWorker", [this](WorkerThread &)
+                                                        { onRecvXrCommands(); });
+  contentsDestroyingWorker = std::make_unique<WorkerThread>("TrContentsMgrWorker", [this](WorkerThread &)
+                                                            {
+    this_thread::sleep_for(chrono::milliseconds(1000));
     {
-      eventChanServer->tryAccept([this](TrOneShotClient<TrEventMessage> &newClient)
-                                 {
+      bool needDestroy = false;
+      {
+        /**
+         * Use a shared lock to check if there is a content that should be destroyed, this avoids the lock contention
+         * at frame tick.
+         * 
+         * TODO: Use a lock-free queue to simplify?
+         */
         shared_lock<shared_mutex> lock(contentsMutex);
-
-        bool foundNewClient = false;
-        for (auto it = contents.begin(); it != contents.end(); ++it)
+        for (auto content : contents)
         {
-          auto content = *it;
-          if (content->pid == newClient.getPid())
+          if (content->shouldDestroy)
           {
-            foundNewClient = true;
-            content->eventChanReceiver = new TrEventReceiver(&newClient);
-            content->eventChanSender = new TrEventSender(&newClient);
+            needDestroy = true;
             break;
           }
         }
+      }
 
-        if (foundNewClient)
-          DEBUG(LOG_TAG_CONTENT, "New client(#%d) connected to the event channel.", newClient.getPid());
-        else
-        {
-          DEBUG(LOG_TAG_CONTENT, "Failed to accept a new client(#%d) on the event channel: pid is not found",
-                newClient.getPid());
-          eventChanServer->removeClient(&newClient); // remove the client if it is not found by pid.
-        }
-      }, 1000);
-    } });
-
-  xrCommandsWorkerRunning = true;
-  xrCommandsRecvWorker = std::make_unique<thread>([this]()
-                                                  {
-    SET_THREAD_NAME("TrXRCommandsWorker");
-    while (xrCommandsWorkerRunning)
-      this->onRecvXrCommands(); });
-
-  contentsDestroyingWorkerRunning = true;
-  contentsDestroyingWorker = std::make_unique<thread>([this]()
-                                                      {
-    SET_THREAD_NAME("TrContentsMgrWorker");
-    while (contentsDestroyingWorkerRunning)
-    {
-      this_thread::sleep_for(chrono::milliseconds(1000));
+      if (needDestroy)
       {
-        bool needDestroy = false;
+        /**
+         * Only if there is a content that should be destroyed, then we need to use a unique lock to destroy it.
+         */
+        unique_lock<shared_mutex> lock(contentsMutex);
+        for (auto it = contents.begin(); it != contents.end();)
         {
-          /**
-           * Use a shared lock to check if there is a content that should be destroyed, this avoids the lock contention
-           * at frame tick.
-           * 
-           * TODO: Use a lock-free queue to simplify?
-           */
-          shared_lock<shared_mutex> lock(contentsMutex);
-          for (auto content : contents)
+          auto content = *it;
+          if (content->shouldDestroy)
           {
-            if (content->shouldDestroy)
-            {
-              needDestroy = true;
-              break;
-            }
+            delete content;
+            it = contents.erase(it);
           }
-        }
-
-        if (needDestroy)
-        {
-          /**
-           * Only if there is a content that should be destroyed, then we need to use a unique lock to destroy it.
-           */
-          unique_lock<shared_mutex> lock(contentsMutex);
-          for (auto it = contents.begin(); it != contents.end();)
+          else
           {
-            auto content = *it;
-            if (content->shouldDestroy)
-            {
-              delete content;
-              it = contents.erase(it);
-            }
-            else
-            {
-              ++it;
-            }
+            ++it;
           }
         }
       }
@@ -558,27 +498,15 @@ bool TrContentManager::initialize()
 
 bool TrContentManager::shutdown()
 {
-  if (contentsDestroyingWorker != nullptr)
-  {
-    contentsDestroyingWorkerRunning = false;
-    contentsDestroyingWorker->join();
-  }
+  contentsDestroyingWorker->stop();
+
+  DEBUG(LOG_TAG_CONTENT, "Disposing all contents(%zu)...", contents.size());
   for (auto content : contents)
     content->dispose();
   DEBUG(LOG_TAG_CONTENT, "All contents(%zu) has been disposed", contents.size());
 
-  if (eventChanWatcher != nullptr)
-  {
-    watcherRunning = false;
-    eventChanWatcher->join();
-    DEBUG(LOG_TAG_CONTENT, "Native Events Watcher is stopped.");
-  }
-  if (xrCommandsRecvWorker != nullptr)
-  {
-    xrCommandsWorkerRunning = false;
-    xrCommandsRecvWorker->join();
-    DEBUG(LOG_TAG_CONTENT, "XR Commands Receiver is stopped.");
-  }
+  eventChanWatcher->stop();
+  xrCommandsRecvWorker->stop();
   return true;
 }
 
@@ -589,15 +517,9 @@ bool TrContentManager::tickOnFrame()
   for (auto content : contents)
   {
     if (content->pid > 0 && content->testClientProcessExitOnFrame())
-    {
-      auto renderer = constellation->getRenderer();
-      renderer->removeContentRenderer(content);
-      content->shouldDestroy = true;
-    }
+      content->onProcessExit(1);
     else
-    {
       content->tickOnFrame();
-    }
   }
   return true;
 }
@@ -668,6 +590,35 @@ void TrContentManager::onRecvXrCommands(int timeout)
       }
     }
   }
+}
+
+void TrContentManager::onNewEventChan()
+{
+  eventChanServer->tryAccept([this](TrOneShotClient<TrEventMessage> &newClient)
+                             {
+        shared_lock<shared_mutex> lock(contentsMutex);
+
+        bool foundNewClient = false;
+        for (auto it = contents.begin(); it != contents.end(); ++it)
+        {
+          auto content = *it;
+          if (content->pid == newClient.getPid())
+          {
+            foundNewClient = true;
+            content->eventChanReceiver = std::make_unique<TrEventReceiver>(&newClient);
+            content->eventChanSender = std::make_unique<TrEventSender>(&newClient);
+            break;
+          }
+        }
+
+        if (foundNewClient)
+          DEBUG(LOG_TAG_CONTENT, "New client(#%d) connected to the event channel.", newClient.getPid());
+        else
+        {
+          DEBUG(LOG_TAG_CONTENT, "Failed to accept a new client(#%d) on the event channel: pid is not found",
+                newClient.getPid());
+          eventChanServer->removeClient(&newClient); // remove the client if it is not found by pid.
+        } }, 1000);
 }
 
 void TrContentManager::installScripts()
