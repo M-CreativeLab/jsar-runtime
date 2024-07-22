@@ -8,6 +8,7 @@ file(GLOB TR_CLIENT_SOURCE
     "src/bindings/webgl/*.cpp"
     "src/bindings/webxr/*.cpp"
     "src/client/*.cpp"
+    "src/pugixml/*.cpp"
 )
 
 add_executable(TransmuteClient
