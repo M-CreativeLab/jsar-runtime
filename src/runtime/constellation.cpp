@@ -1,6 +1,7 @@
 #include <rapidjson/document.h>
 #include "constellation.hpp"
 #include "content.hpp"
+#include "media_manager.hpp"
 #include "embedder.hpp"
 
 void __tr_empty()
@@ -20,6 +21,7 @@ TrConstellation::TrConstellation(TrEmbedder *embedder) : embedder(embedder)
 
   nativeEventTarget = std::make_unique<TrEventTarget>();
   contentManager = std::make_unique<TrContentManager>(this);
+  mediaManager = std::make_unique<TrMediaManager>();
   renderer = std::make_unique<TrRenderer>(this);
   xrDevice = std::make_unique<xr::Device>(this);
 }
@@ -57,6 +59,7 @@ bool TrConstellation::initialize(string initJson)
   options.fixEnvIfNeeded();
 
   contentManager->initialize();
+  mediaManager->initialize();
   renderer->initialize();
   initialized = true;
   return true;
@@ -67,6 +70,7 @@ void TrConstellation::shutdown()
   contentManager->shutdown();
   renderer->shutdown();
   xrDevice->shutdown();
+  mediaManager->shutdown();
   initialized = false;
 }
 

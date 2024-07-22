@@ -21,6 +21,7 @@ using namespace renderer;
 class TrEmbedder;
 class TrContentRuntime;
 class TrContentManager;
+class TrMediaManager;
 
 class TrConstellationInit
 {
@@ -81,6 +82,7 @@ private:
   TrConstellationInit options;
   std::unique_ptr<TrEventTarget> nativeEventTarget;
   std::unique_ptr<TrContentManager> contentManager;
+  std::unique_ptr<TrMediaManager> mediaManager;
   std::unique_ptr<TrRenderer> renderer;
   std::unique_ptr<xr::Device> xrDevice;
 
