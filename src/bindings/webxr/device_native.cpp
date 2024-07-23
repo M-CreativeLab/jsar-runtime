@@ -40,7 +40,7 @@ namespace bindings
 
     frameHandler = new Napi::FunctionReference();
     *frameHandler = Napi::Persistent(Napi::Function::New(env, NativeFrameHandler));
-    tsfnWithFrameHandler = Napi::ThreadSafeFunction::New(env, frameHandler->Value(), "XRDeviceNative::FrameHandler", 0, 1);
+    tsfnWithFrameHandler = Napi::ThreadSafeFunction::New(env, frameHandler->Value(), "XRDeviceNative::FrameHandler", 0, 2);
 
     // Register frame request handler
     // FIXME: should we move this to startSession?

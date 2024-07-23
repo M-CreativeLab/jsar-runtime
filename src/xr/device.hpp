@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <mutex>
+#include <shared_mutex>
 #include <atomic>
 #include <chrono>
 
@@ -210,7 +211,7 @@ namespace xr
     /**
      * The active eye's id, 0 for left and 1 for right. It's used in multi-pass rendering only.
      */
-    int m_ActiveEyeId;
+    atomic<int> m_ActiveEyeId;
     /**
      * The id to indentify the session, corresponding to the session's id in the WebXR API.
      */
@@ -227,7 +228,8 @@ namespace xr
     /**
      * A mutex to ensure the above data is thread-safe.
      */
-    mutex m_Mutex;
+    shared_mutex m_MutexForSessions;
+    shared_mutex m_MutexForValueUpdates;
 
   private: // command channel
     std::unique_ptr<ipc::TrOneShotServer<TrXRCommandMessage>> m_CommandChanServer = nullptr;

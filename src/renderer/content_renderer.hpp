@@ -4,6 +4,7 @@
 #include <shared_mutex>
 #include "common/classes.hpp"
 #include "common/ipc.hpp"
+#include "common/scoped_thread.hpp"
 #include "common/command_buffers/shared.hpp"
 #include "common/frame_request/types.hpp"
 #include "common/frame_request/sender.hpp"
@@ -42,6 +43,7 @@ namespace renderer
     }
 
   private: // private lifecycle
+    void onDispatchFrameRequest(WorkerThread &threadWorker);
     void onCommandBufferRequestReceived(TrCommandBufferBase *req);
     void onHostFrame(chrono::time_point<chrono::high_resolution_clock> time);
     void onStartFrame();
@@ -58,7 +60,7 @@ namespace renderer
       }
     }
     void dispatchAnimationFrameRequest();
-    void dispatchXRFrameRequest(xr::TrXRSession *session);
+    void dispatchXRFrameRequest(xr::TrXRSession *session, int viewIndex);
     /**
      * The frame rate control method.
      */
@@ -84,6 +86,10 @@ namespace renderer
     OpenGLAppContextStorage *glContext = nullptr;
     xr::Device *xrDevice = nullptr;
     xr::TrXRFrameRequest *currentBaseXRFrameReq = nullptr;
+    atomic<bool> isXRFrameBaseReqUpdating = false;
+    shared_mutex mutexForXRFrameBaseReq;
+    std::unique_ptr<WorkerThread> frameDispatcherThread = nullptr;
+    std::chrono::time_point<std::chrono::high_resolution_clock> lastDispatchedFrameTime = std::chrono::high_resolution_clock::now();
 
   private: // command buffers & rendering frames
     shared_mutex commandBufferRequestsMutex;

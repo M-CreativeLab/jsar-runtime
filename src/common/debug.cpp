@@ -55,16 +55,9 @@ void DEBUG(const char *tag, const char *format, ...)
 #ifdef __ANDROID__
   __android_log_vprint(ANDROID_LOG_DEBUG, tag, format, args);
 #else
-  char buffer[1024];
-  int length = vsnprintf(nullptr, 0, format, args);
-  if (length > 1024)
-    length = 1024;
-  vsnprintf(buffer, length + 1, format, args);
-
-  if (s_UnityLog == nullptr)
-    std::cout << fetchTimestamp() << " " << tag << ": " << buffer << std::endl;
-  else
-    UNITY_LOG(s_UnityLog, buffer);
+  fprintf(stdout, "%s ", fetchTimestamp().c_str());
+  vfprintf(stdout, format, args);
+  fprintf(stdout, "\n");
 #endif
   va_end(args);
 }

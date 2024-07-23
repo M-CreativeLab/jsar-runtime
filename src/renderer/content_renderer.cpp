@@ -17,6 +17,8 @@ namespace renderer
     assert(xrDevice != nullptr);
     glContext = new OpenGLAppContextStorage("content_renderer#" + std::to_string(content->pid));
     stereoFrameForBackup = new xr::StereoRenderingFrame(true);
+    frameDispatcherThread = std::make_unique<WorkerThread>("FrameDispatcher", [this](WorkerThread &worker)
+                                                           { this->onDispatchFrameRequest(worker); }, 1);
 
     // Register the command buffer request handler when creating the content renderer.
     content->setCommandBufferRequestHandler([this](TrCommandBufferBase *req)
@@ -72,6 +74,33 @@ namespace renderer
   pid_t TrContentRenderer::getContentPid()
   {
     return content->pid;
+  }
+
+  void TrContentRenderer::onDispatchFrameRequest(WorkerThread &threadWorker)
+  {
+    auto now = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::milliseconds>(now - lastDispatchedFrameTime).count();
+    if (duration <= 16)
+    {
+      threadWorker.sleep();
+      return;
+    }
+    lastDispatchedFrameTime = now;
+
+    dispatchAnimationFrameRequest();
+    if (xrDevice != nullptr && xrDevice->enabled())
+    {
+      if (isXRFrameBaseReqUpdating || getPendingStereoFramesCount() > 2)
+        return;
+      if (xrDevice->isRenderedAsMultipass()) // TODO: support singlepass?
+      {
+        xrDevice->iterateSessionsByContentPid(content->pid, [this](xr::TrXRSession *session)
+                                              {
+                                                shared_lock<shared_mutex> lock(mutexForXRFrameBaseReq);
+                                                dispatchXRFrameRequest(session, 0);
+                                                dispatchXRFrameRequest(session, 1); });
+      }
+    }
   }
 
   void TrContentRenderer::onCommandBufferRequestReceived(TrCommandBufferBase *req)
@@ -132,73 +161,49 @@ namespace renderer
 
   void TrContentRenderer::onHostFrame(chrono::time_point<chrono::high_resolution_clock> time)
   {
-    if (!shouldSkipDispatchingFrame(time))
+    bool isXRDeviceEnabled = xrDevice->enabled();
+    if (isXRDeviceEnabled)
     {
-      bool isXRDeviceEnabled = xrDevice->enabled();
-      if (isXRDeviceEnabled && xrDevice->isRenderedAsMultipass())
+      if (xrDevice->isRenderedAsMultipass())
       {
-        /**
-         * As for normal animation frame request in multipass xr mode, we only need to dispatch it at left eye.
-         */
-        if (xrDevice->getActiveEyeId() == 0)
-          dispatchAnimationFrameRequest();
-      }
-      else
-      {
-        dispatchAnimationFrameRequest();
-      }
-
-      if (isXRDeviceEnabled)
-      {
-        bool shouldDispatchXRFrame = false;
-        xr::StereoRenderingFrame *stereoRenderingFrame = nullptr;
-        // auto renderer = constellation->getRenderer();
-        // auto rhi = renderer->getApi();
-
-        if (xrDevice->isRenderedAsMultipass())
+        auto viewIndex = xrDevice->getActiveEyeId();
+        auto stereoRenderingFrame = getOrCreateStereoFrame(xrDevice);
+        if (stereoRenderingFrame != nullptr)
         {
-          auto viewIndex = xrDevice->getActiveEyeId();
-          stereoRenderingFrame = getOrCreateStereoFrame(xrDevice);
-          if (stereoRenderingFrame != nullptr)
+          stereoRenderingFrame->available(true); // mark the StereoRenderingFrame is available
+
+          xr::TrXRView view(viewIndex);
+          auto viewport = xrDevice->getViewport(viewIndex);
+          view.setViewport(viewport.width, viewport.height, viewport.x, viewport.y);
+          view.setViewMatrix(xrDevice->getViewMatrixForEye(viewIndex));
+          view.setProjectionMatrix(xrDevice->getProjectionMatrixForEye(viewIndex));
           {
-            stereoRenderingFrame->available(true); // mark the StereoRenderingFrame is available
-
-            xr::TrXRView view(viewIndex);
-            auto viewport = xrDevice->getViewport(viewIndex);
-            view.setViewport(viewport.width, viewport.height, viewport.x, viewport.y);
-            view.setViewMatrix(xrDevice->getViewMatrixForEye(viewIndex));
-            view.setProjectionMatrix(xrDevice->getProjectionMatrixForEye(viewIndex));
-
+            unique_lock<shared_mutex> lock(mutexForXRFrameBaseReq);
             if (viewIndex == 0) // Reset the `currentBaseXRFrameReq` when viewIndex is 0(left)
             {
+              isXRFrameBaseReqUpdating.store(true);
               currentBaseXRFrameReq->reset();
               // Set `currentBaseXRFrameReq` with the related data.
               currentBaseXRFrameReq->stereoId = stereoRenderingFrame->getId();
               currentBaseXRFrameReq->setViewerBaseMatrix(xrDevice->getViewerBaseMatrix());
             }
-            currentBaseXRFrameReq->viewIndex = viewIndex;
+            else
+              isXRFrameBaseReqUpdating.store(false);
             currentBaseXRFrameReq->views[viewIndex] = view;
-            shouldDispatchXRFrame = true;
           }
-          else
-          {
-            // TODO: OOM handling?
-          }
-        }
-        else if (xrDevice->getStereoRenderingMode() == xr::TrStereoRenderingMode::SinglePass)
-        {
-          // TODO: support SinglePass stereo rendering mode
         }
         else
         {
-          // TODO: support other stereo rendering modes such as SinglePass
+          // TODO: OOM handling?
         }
-
-        if (shouldDispatchXRFrame && stereoRenderingFrame != nullptr)
-        {
-          xrDevice->iterateSessionsByContentPid(content->pid, [this](xr::TrXRSession *session)
-                                                { this->dispatchXRFrameRequest(session); });
-        }
+      }
+      else if (xrDevice->getStereoRenderingMode() == xr::TrStereoRenderingMode::SinglePass)
+      {
+        // TODO: support SinglePass stereo rendering mode
+      }
+      else
+      {
+        // TODO: support other stereo rendering modes such as SinglePass
       }
     }
 
@@ -239,12 +244,13 @@ namespace renderer
     dispatchFrameRequest(req);
   }
 
-  inline void TrContentRenderer::dispatchXRFrameRequest(xr::TrXRSession *session)
+  inline void TrContentRenderer::dispatchXRFrameRequest(xr::TrXRSession *session, int viewIndex)
   {
     if (!session->isInFrustum())
       return;
 
     auto req = currentBaseXRFrameReq->clone();
+    req.viewIndex = viewIndex;
     req.sessionId = session->id;
     req.setLocalBaseMatrix(session->getLocalBaseMatrix());
 
@@ -262,7 +268,7 @@ namespace renderer
     /**
      * If XR is disabled, frame skip is not allowed.
      */
-    if (xrDevice == nullptr || !xrDevice->enabled())
+    if (TR_UNLIKELY(xrDevice == nullptr || !xrDevice->enabled()))
       return false;
 
     /**
@@ -386,9 +392,6 @@ namespace renderer
       /** If an ended frame is empty, it's needed to be removed here. */
       if (frame->empty())
       {
-        /**
-         * Note: in C++ STL, the `erase` function will return the next iterator that we need to use instead of `it++`.
-         */
         it = stereoFramesList.erase(it);
         delete frame;
         continue;

@@ -220,13 +220,13 @@ namespace bindings
     endTime = chrono::steady_clock::now();
 
     auto isMultipass = device->getDeviceInit().renderedAsMultipass();
-    if (!isMultipass || internal->viewIndex == 0)
+    if (!isMultipass || internal->viewIndex == 1)
     {
       auto& perfFs = device->clientContext->getPerfFs();
       auto duration = chrono::duration_cast<chrono::microseconds>(endTime - startTime).count() / 1000.0;
-      if (duration > 1000 / 60)
-        fprintf(stderr, "Detected a long frame(#%d) takes %fms in session(%d)\n", id, duration, sessionId);
       perfFs.setFrameDuration(duration);
+      if (duration > 16)
+        fprintf(stderr, "Detected a long frame(#%d) takes %fms in session(%d)\n", id, duration, sessionId);
 
       // Calculate the Fps and update to fs.
       if (session->calcFps())

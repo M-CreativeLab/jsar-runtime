@@ -429,20 +429,20 @@ namespace bindings
     device->requestFrame([](Napi::Env env, xr::TrXRFrameRequest *frameRequest, void *context)
                          {
                            auto xrSession = static_cast<XRSession *>(context);
-                           if (xrSession->ended)
+                           if (TR_UNLIKELY(xrSession->ended))
                            {
                              DEBUG(LOG_TAG, "skipped XRFrameRequest(), reason is: session is ended");
                              return;
                            }
 
-                           if (frameRequest == nullptr)
+                           if (TR_UNLIKELY(frameRequest == nullptr))
                            {
                              DEBUG(LOG_TAG, "skipped XRFrameRequest(), reason is: no data found");
                              xrSession->queueNextFrame();
                              return;
                            }
 
-                           if (frameRequest->sessionId == 0)
+                           if (TR_UNLIKELY(frameRequest->sessionId <= 0))
                            {
                              DEBUG(LOG_TAG, "skipped XRFrameRequest(), reason is: session is invalid");
                              xrSession->queueNextFrame();
@@ -450,7 +450,7 @@ namespace bindings
                            }
 
                            // Find the target session
-                           if (frameRequest->sessionId != xrSession->id)
+                           if (TR_UNLIKELY(frameRequest->sessionId != xrSession->id))
                            {
                              DEBUG(LOG_TAG, "skipped XRFrameRequest(), reason is: frame(session#%d) is not belongs to session(#%d)",
                                    frameRequest->sessionId, xrSession->id);
@@ -503,7 +503,7 @@ namespace bindings
 
   void XRSession::onFrame(Napi::Env env, xr::TrXRFrameRequest *frameRequest)
   {
-    if (queueNextFrame() == false)
+    if (TR_UNLIKELY(queueNextFrame() == false))
     {
       DEBUG(LOG_TAG, "queueNextFrame() failed because session is ended or suspended.");
       return;

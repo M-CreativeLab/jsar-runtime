@@ -30,6 +30,7 @@ namespace xr
   {
     // Clear the sessions
     {
+      std::unique_lock<std::shared_mutex> lock(m_MutexForSessions);
       for (auto session : m_Sessions)
         delete session;
       m_Sessions.clear();
@@ -71,6 +72,7 @@ namespace xr
     int tries = 0;
     while (tries <= 10)
     {
+      std::shared_lock<std::shared_mutex> lock(m_MutexForSessions);
       bool idExists = false;
       id = sessionIdGen.get();
       // Search for the session id, if the session id has been added, return false
@@ -90,6 +92,7 @@ namespace xr
 
     if (id > 0)
     {
+      std::unique_lock<std::shared_mutex> lock(m_MutexForSessions);
       TrXRSessionInit init;
       m_Sessions.push_back(new TrXRSession(id, this, contentRenderer, init));
       return id;
@@ -123,13 +126,13 @@ namespace xr
 
   Viewport Device::getViewport(int eyeId)
   {
-    std::lock_guard<std::mutex> lock(m_Mutex);
+    std::shared_lock<std::shared_mutex> lock(m_MutexForValueUpdates);
     return m_ViewportsByEyeId[eyeId];
   }
 
   float *Device::getViewerBaseMatrix()
   {
-    std::lock_guard<std::mutex> lock(m_Mutex);
+    std::shared_lock<std::shared_mutex> lock(m_MutexForValueUpdates);
     return m_ViewerBaseMatrix;
   }
 
@@ -138,7 +141,7 @@ namespace xr
     if (eye != 0 && eye != 1)
       return NULL; // Invalid eye id (0 or 1)
 
-    std::lock_guard<std::mutex> lock(m_Mutex);
+    std::shared_lock<std::shared_mutex> lock(m_MutexForValueUpdates);
     return m_ViewerStereoViewMatrix[eye];
   }
 
@@ -147,13 +150,13 @@ namespace xr
     if (eye != 0 && eye != 1)
       return NULL; // Invalid eye id (0 or 1)
 
-    std::lock_guard<std::mutex> lock(m_Mutex);
+    std::shared_lock<std::shared_mutex> lock(m_MutexForValueUpdates);
     return m_ViewerStereoProjectionMatrix[eye];
   }
 
   glm::mat4 Device::getLocalTransform(int id)
   {
-    std::lock_guard<std::mutex> lock(m_Mutex);
+    std::shared_lock<std::shared_mutex> lock(m_MutexForSessions);
     return getLocalTransformUnsafe(id);
   }
 
@@ -173,13 +176,12 @@ namespace xr
 
   int Device::getActiveEyeId()
   {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    return m_ActiveEyeId;
+    return m_ActiveEyeId.load();
   }
 
   void Device::iterateSessionsByContentPid(pid_t contentPid, std::function<void(TrXRSession *)> callback)
   {
-    std::lock_guard<std::mutex> lock(m_Mutex);
+    std::shared_lock<std::shared_mutex> lock(m_MutexForSessions);
     for (auto session : m_Sessions)
     {
       if (session->belongsTo(contentPid))
@@ -195,14 +197,14 @@ namespace xr
 
   bool Device::updateViewport(int eyeId, float x, float y, float width, float height)
   {
-    std::lock_guard<std::mutex> lock(m_Mutex);
+    std::unique_lock<std::shared_mutex> lock(m_MutexForValueUpdates);
     m_ViewportsByEyeId[eyeId] = Viewport(width, height, x, y);
     return true;
   }
 
   bool Device::updateViewerBaseMatrix(float *baseMatrixValues)
   {
-    std::lock_guard<std::mutex> lock(m_Mutex);
+    std::unique_lock<std::shared_mutex> lock(m_MutexForValueUpdates);
     for (int i = 0; i < 16; i++)
       m_ViewerBaseMatrix[i] = baseMatrixValues[i];
 
@@ -218,12 +220,11 @@ namespace xr
 
   bool Device::updateViewMatrix(int viewIndex, float *viewMatrixValues)
   {
+    std::unique_lock<std::shared_mutex> lock(m_MutexForValueUpdates);
     if (viewIndex != 0 && viewIndex != 1)
       return false; // Invalid eye id (0 or 1)
 
-    std::lock_guard<std::mutex> lock(m_Mutex);
     auto &targetViewMatrix = m_ViewerStereoViewMatrix[viewIndex];
-
     for (int i = 0; i < 16; i++)
       targetViewMatrix[i] = viewMatrixValues[i];
     m_ActiveEyeId = viewIndex;
@@ -243,12 +244,11 @@ namespace xr
 
   bool Device::updateProjectionMatrix(int viewIndex, float *projectionMatrixValues)
   {
+    std::unique_lock<std::shared_mutex> lock(m_MutexForValueUpdates);
     if (viewIndex != 0 && viewIndex != 1)
       return false; // Invalid eye id (0 or 1)
 
-    std::lock_guard<std::mutex> lock(m_Mutex);
     auto &targetProjectionMatrix = m_ViewerStereoProjectionMatrix[viewIndex];
-
     for (int i = 0; i < 16; i++)
       targetProjectionMatrix[i] = projectionMatrixValues[i];
     m_ActiveEyeId = viewIndex;
@@ -257,7 +257,7 @@ namespace xr
 
   bool Device::updateLocalTransform(int id, float *transform)
   {
-    std::lock_guard<std::mutex> lock(m_Mutex);
+    std::shared_lock<std::shared_mutex> lock(m_MutexForSessions);
     // Check for the session if it exists
     if (m_Sessions.size() == 0)
       return false;

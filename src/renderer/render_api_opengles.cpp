@@ -83,6 +83,74 @@ private:
 	}
 
 private:
+	void DumpDrawCallInfo(bool isDefaultQueue, GLint mode, GLsizei count, GLenum type, const GLvoid *indices)
+	{
+		DEBUG(DEBUG_TAG, "[%d] GL::DrawElements(mode=%s, count=%d, type=%s, indices=%p)",
+					isDefaultQueue,
+					gles::glEnumToString(mode).c_str(),
+					count,
+					gles::glEnumToString(type).c_str(),
+					indices);
+
+		// Get current program
+		GLint program;
+		glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+		DEBUG(DEBUG_TAG, "    Program: %d", program);
+
+		// Print LINK_STATUS, VALIDATE_STATUS
+		{
+			GLint linkStatus, validateStatus;
+			glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
+			glGetProgramiv(program, GL_VALIDATE_STATUS, &validateStatus);
+			DEBUG(DEBUG_TAG, "    Program: LINK_STATUS=%d", linkStatus);
+			DEBUG(DEBUG_TAG, "    Program: VALIDATE_STATUS=%d", validateStatus);
+		}
+
+		// Print Element Array
+		{
+			GLint elementArrayBuffer;
+			glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &elementArrayBuffer);
+			DEBUG(DEBUG_TAG, "    Element Array Buffer: %d", elementArrayBuffer);
+		}
+
+		// Print Active Attributes
+		{
+			GLint numAttributes = 0;
+			glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &numAttributes);
+			for (int i = 0; i < numAttributes; i++)
+			{
+				GLchar *name = new GLchar[256];
+				GLint size;
+				GLenum type;
+				glGetActiveAttrib(program, i, 256, NULL, &size, &type, name);
+
+				GLint attribIndex = glGetAttribLocation(program, name);
+				if (attribIndex == -1)
+				{
+					glGetError(); // Clear the error
+					DEBUG(DEBUG_TAG, "    Active Attribute(%d): Size=%d Type=%s \"%s\"",
+								attribIndex, size, gles::glEnumToString(type).c_str(), name);
+				}
+				else
+				{
+					GLint enabled;
+					glGetVertexAttribiv(attribIndex, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &enabled);
+					GLint bufferBinding;
+					glGetVertexAttribiv(attribIndex, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &bufferBinding);
+					DEBUG(DEBUG_TAG, "    Active Attribute(%d): Enabled=%s Size=%d Type=%s BufferBinding=%d \"%s\"",
+								attribIndex,
+								enabled ? "Yes" : "No",
+								size,
+								gles::glEnumToString(type).c_str(),
+								bufferBinding,
+								name);
+				}
+				delete[] name;
+			}
+		}
+	}
+
+private:
 	TR_OPENGL_FUNC void OnContextInit(WebGL1ContextInitCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		WebGL1ContextInitCommandBufferResponse res(req);
@@ -1194,71 +1262,7 @@ private:
 		reqContentRenderer->increaseDrawCallsCount(count);
 
 		if (TR_UNLIKELY(options.printsCall))
-		{
-			DEBUG(DEBUG_TAG, "[%d] GL::DrawElements(mode=%s, count=%d, type=%s, indices=%p)",
-						options.isDefaultQueue,
-						gles::glEnumToString(mode).c_str(),
-						count,
-						gles::glEnumToString(type).c_str(),
-						indices);
-
-			// Get current program
-			GLint program;
-			glGetIntegerv(GL_CURRENT_PROGRAM, &program);
-			DEBUG(DEBUG_TAG, "    Program: %d", program);
-
-			// Print LINK_STATUS, VALIDATE_STATUS
-			{
-				GLint linkStatus, validateStatus;
-				glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
-				glGetProgramiv(program, GL_VALIDATE_STATUS, &validateStatus);
-				DEBUG(DEBUG_TAG, "    Program: LINK_STATUS=%d", linkStatus);
-				DEBUG(DEBUG_TAG, "    Program: VALIDATE_STATUS=%d", validateStatus);
-			}
-
-			// Print Element Array
-			{
-				GLint elementArrayBuffer;
-				glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &elementArrayBuffer);
-				DEBUG(DEBUG_TAG, "    Element Array Buffer: %d", elementArrayBuffer);
-			}
-
-			// Print Active Attributes
-			{
-				GLint numAttributes = 0;
-				glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &numAttributes);
-				for (int i = 0; i < numAttributes; i++)
-				{
-					GLchar *name = new GLchar[256];
-					GLint size;
-					GLenum type;
-					glGetActiveAttrib(program, i, 256, NULL, &size, &type, name);
-
-					GLint attribIndex = glGetAttribLocation(program, name);
-					if (attribIndex == -1)
-					{
-						glGetError(); // Clear the error
-						DEBUG(DEBUG_TAG, "    Active Attribute(%d): Size=%d Type=%s \"%s\"",
-									attribIndex, size, gles::glEnumToString(type).c_str(), name);
-					}
-					else
-					{
-						GLint enabled;
-						glGetVertexAttribiv(attribIndex, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &enabled);
-						GLint bufferBinding;
-						glGetVertexAttribiv(attribIndex, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &bufferBinding);
-						DEBUG(DEBUG_TAG, "    Active Attribute(%d): Enabled=%s Size=%d Type=%s BufferBinding=%d \"%s\"",
-									attribIndex,
-									enabled ? "Yes" : "No",
-									size,
-									gles::glEnumToString(type).c_str(),
-									bufferBinding,
-									name);
-					}
-					delete[] name;
-				}
-			}
-		}
+			DumpDrawCallInfo(options.isDefaultQueue, mode, count, type, indices);
 	}
 	TR_OPENGL_FUNC void OnDrawBuffers(DrawBuffersCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{

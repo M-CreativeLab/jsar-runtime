@@ -33,8 +33,8 @@ protected:
 class WorkerThread : public ScopedThread
 {
 public:
-  WorkerThread(std::string name, std::function<void(WorkerThread &)> work)
-      : ScopedThread(), name(name), work(work)
+  WorkerThread(std::string name, std::function<void(WorkerThread &)> work, uint32_t waitTime = 100)
+      : ScopedThread(), name(name), work(work), waitTime(waitTime)
   {
     start();
   }
