@@ -182,4 +182,4 @@ $ cat /path/to/your/cache/directory/perf/host_fps
 | `host_frame_duration` | 渲染器的帧时间，单位为毫秒 |
 | `${pid}/fps` | 应用进程的 fps |
 | `${pid}/xrframe_duration` | 应用进程的 XR 帧时间，单位为毫秒 |
-| `${pid}/long_xrframes` | 应用进程渲染过程中长渲染帧次数 |
+| `${pid}/long_xrframes` | 应用进程渲染过程中长渲染帧次数，长渲染帧表示耗时超过 16ms 的渲染帧 |
