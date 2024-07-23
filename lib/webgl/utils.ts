@@ -17,8 +17,6 @@ export type NativeCallOptions = Partial<{
   };
 }>;
 
-const glConstantNamesMap: Map<number, string> = new Map();
-
 export function isTypedArray(data: any): data is TypedArray {
   return data instanceof Uint8Array ||
     data instanceof Uint8ClampedArray ||
@@ -35,22 +33,6 @@ export function unpackTypedArray(array: DataView | ArrayBufferView): Uint8Array 
   return (new Uint8Array(array.buffer)).subarray(
     array.byteOffset,
     array.byteLength + array.byteOffset);
-}
-
-/**
- * It fetches all the constants from the native implementation and stores them in a map `#constantNamesMap`, which is used to 
- * get the name of the constant from its value in debugging purposes.
- */
-export function setupConstantNamesMap(instance: any, nativeContextType: typeof WebGLRenderingContext | typeof WebGL2RenderingContext) {
-  if (instance == null || !instance) {
-    throw new TypeError('The instance of WebGLRenderingContext or WebGL2RenderingContext is not valid');
-  }
-  const allConstantNames = Object.getOwnPropertyNames(nativeContextType.prototype)
-    .filter(name => typeof instance[name] === 'number');
-  for (const name of allConstantNames) {
-    const value = instance[name];
-    glConstantNamesMap.set(value, name);
-  }
 }
 
 export function makeNativeCall(

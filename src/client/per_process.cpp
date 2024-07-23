@@ -146,6 +146,7 @@ void TrScriptRuntimePerProcess::start(vector<string> &scriptArgs)
   }
   scriptEnv.initialize();
 
+  clientContext->dispatchXSMLEvent(TrXSMLEventType::BeforeScripting);
   executeMainScript(scriptEnv, scriptArgs);
   scriptEnv.dispose();
 }

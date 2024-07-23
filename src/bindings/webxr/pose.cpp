@@ -114,7 +114,7 @@ namespace bindings
   XRViewerPose::~XRViewerPose()
   {
     for (size_t i = 0; i < views.size(); i++)
-      views[i].Unref();
+      views[i].Reset();
   }
 
   Napi::Value XRViewerPose::ViewsGetter(const Napi::CallbackInfo &info)

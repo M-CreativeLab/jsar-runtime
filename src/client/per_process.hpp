@@ -115,6 +115,12 @@ public: // frame request methods
 public: // event methods
   bool sendEventMessage(TrEventMessage &event);
   TrEventMessage *recvEventMessage(int timeout);
+  inline bool dispatchXSMLEvent(TrXSMLEventType eventType)
+  {
+    auto event = TrEvent::MakeXSMLEvent(TrXSMLEvent(id, eventType));
+    TrEventMessage msg(event);
+    return sendEventMessage(msg);
+  }
 
 public: // command buffer methods
   bool sendCommandBufferRequest(TrCommandBufferBase &commandBuffer, bool followsFlush = false);

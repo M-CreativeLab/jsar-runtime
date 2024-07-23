@@ -61,14 +61,15 @@ bootwait(async function main() {
     dispatchXsmlEvent(id, 'beforeloading');
 
     runtime = new TransmuteRuntime2(getWebGLRenderingContext());
-    runtime.start(clientContext.url, clientContext.id);
-
     const initializedEnded = performance.now();
     console.info('Time summary:', {
       bootstrap: runtimeStarted - bootstrapStarted,
       initialize: initializedEnded - runtimeStarted,
       total: initializedEnded - bootstrapStarted,
     });
+
+    // Start handling the request.
+    runtime.start(clientContext.url, clientContext.id);
   } catch (err) {
     console.error('failed to start the runtime, occurs an error:', err);
     dispatchXsmlEvent(id, 'error');

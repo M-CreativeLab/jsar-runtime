@@ -134,6 +134,7 @@ $ adb logcat -s jsar.metrics
 | 指标 | 说明 |
 | ---- | ---- |
 | `spawnprocess` | 表示创建应用进程的时间，即 `fork()` 调用成功后 |
+| `beforescripting` | 表示 Node.js 开始执行脚本的时间（包括 v8/Node.js 内部启动时间） |
 | `beforeloading` | 表示开始加载文档的时间 |
 | `load`/`loaded` | 表示文档加载完成的时间 |
 | `DOMContentLoaded` | 表示文档依赖的内容（如样式表、脚本、图片、模型等）加载完成 |

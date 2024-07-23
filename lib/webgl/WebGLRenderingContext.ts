@@ -3,7 +3,6 @@ import { getExtension } from './extensions';
 import {
   type NativeCallOptions,
   makeNativeCall,
-  setupConstantNamesMap,
   isTypedArray,
   unpackTypedArray
 } from './utils';
@@ -16,7 +15,6 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
 
   constructor(_canvas: HTMLCanvasElement | OffscreenCanvas, options?: WebGLContextAttributes) {
     super(options);
-    setupConstantNamesMap(this, glNative.WebGLRenderingContext);
   }
 
   private nativeCall(name: string, args: any[] = [], options: NativeCallOptions = {}) {

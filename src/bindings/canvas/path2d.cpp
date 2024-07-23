@@ -8,18 +8,20 @@ namespace bindings
 
     void Path2D::Init(Napi::Env env, Napi::Object exports)
     {
-      Napi::Function func = DefineClass(env, "Path2D",
-                                        {InstanceMethod("addPath", &Path2D::AddPath),
-                                         InstanceMethod("closePath", &Path2D::ClosePath),
-                                         InstanceMethod("moveTo", &Path2D::MoveTo),
-                                         InstanceMethod("lineTo", &Path2D::LineTo),
-                                         InstanceMethod("bezierCurveTo", &Path2D::BezierCurveTo),
-                                         InstanceMethod("quadraticCurveTo", &Path2D::QuadraticCurveTo),
-                                         InstanceMethod("arc", &Path2D::Arc),
-                                         InstanceMethod("arcTo", &Path2D::ArcTo),
-                                         InstanceMethod("ellipse", &Path2D::Ellipse),
-                                         InstanceMethod("rect", &Path2D::Rect),
-                                         InstanceMethod("roundRect", &Path2D::RoundRect)});
+      Napi::HandleScope scope(env);
+      auto properties = {
+          InstanceMethod("addPath", &Path2D::AddPath),
+          InstanceMethod("closePath", &Path2D::ClosePath),
+          InstanceMethod("moveTo", &Path2D::MoveTo),
+          InstanceMethod("lineTo", &Path2D::LineTo),
+          InstanceMethod("bezierCurveTo", &Path2D::BezierCurveTo),
+          InstanceMethod("quadraticCurveTo", &Path2D::QuadraticCurveTo),
+          InstanceMethod("arc", &Path2D::Arc),
+          InstanceMethod("arcTo", &Path2D::ArcTo),
+          InstanceMethod("ellipse", &Path2D::Ellipse),
+          InstanceMethod("rect", &Path2D::Rect),
+          InstanceMethod("roundRect", &Path2D::RoundRect)};
+      Napi::Function func = DefineClass(env, "Path2D", properties);
       constructor = new Napi::FunctionReference();
       *constructor = Napi::Persistent(func);
       exports.Set("Path2D", func);

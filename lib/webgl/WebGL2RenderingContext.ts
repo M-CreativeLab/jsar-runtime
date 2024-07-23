@@ -2,7 +2,6 @@ import WebGLRenderingContextImpl from './WebGLRenderingContext';
 import { WebGLShaderPrecisionFormatImpl } from './WebGLShaderPrecisionFormat';
 import {
   type NativeCallOptions,
-  setupConstantNamesMap,
   makeNativeCall,
   isTypedArray,
   unpackTypedArray
@@ -12,7 +11,6 @@ const glNative = process._linkedBinding('transmute:webgl');
 class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext implements WebGL2RenderingContext {
   constructor(_canvas: HTMLCanvasElement | OffscreenCanvas, options?: WebGLContextAttributes) {
     super(options);
-    setupConstantNamesMap(this, glNative.WebGL2RenderingContext);
   }
   private nativeCall(name: string, args: any[] = [], options: NativeCallOptions = {}) {
     return makeNativeCall.call(this, <Function>super[name], name, args, options);

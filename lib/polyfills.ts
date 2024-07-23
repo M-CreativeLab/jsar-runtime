@@ -25,9 +25,6 @@ import {
   XRRigidTransformImpl
 } from './webxr';
 
-
-
-
 export function loadPolyfills() {
   globalThis.XMLHttpRequest = XMLHttpRequestImpl;
   // globalThis.AudioContext = AudioContextImpl;

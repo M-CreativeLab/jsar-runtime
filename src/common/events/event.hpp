@@ -130,6 +130,7 @@ namespace events
   {
     // Lifecycle Events
     SpawnProcess,
+    BeforeScripting,
     BeforeLoading,
     Loaded, // TODO: deprecated
     Load,
@@ -154,6 +155,8 @@ namespace events
       auto typeStr = sourceDoc["eventType"].GetString();
       if (strcmp(typeStr, "spawnprocess") == 0)
         type = TrXSMLEventType::SpawnProcess;
+      else if (strcmp(typeStr, "beforescripting") == 0)
+        type = TrXSMLEventType::BeforeScripting;
       else if (strcmp(typeStr, "beforeloading") == 0)
         type = TrXSMLEventType::BeforeLoading;
       else if (strcmp(typeStr, "loaded") == 0)
@@ -203,6 +206,8 @@ namespace events
       {
       case TrXSMLEventType::SpawnProcess:
         return "spawnprocess";
+      case TrXSMLEventType::BeforeScripting:
+        return "beforescripting";
       case TrXSMLEventType::BeforeLoading:
         return "beforeloading";
       case TrXSMLEventType::Loaded:
