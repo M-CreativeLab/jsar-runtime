@@ -55,10 +55,15 @@ namespace renderer
       glHostContext->Print();
     perfCounter.record("  renderer.finishedHostContextRecord");
 
+    size_t totalDrawCallsCount = 0;
     {
       shared_lock<shared_mutex> lock(contentRendererMutex);
       for (auto contentRenderer : contentRenderers)
+      {
         contentRenderer->onHostFrame(tickingTimepoint);
+        totalDrawCallsCount += contentRenderer->drawCallsCountPerFrame;
+      }
+      constellation->getPerfFs()->findAndSetIntValue("drawcalls_count", totalDrawCallsCount);
       perfCounter.record("  renderer.finishedContentRendererFrame");
     }
     glHostContext->Restore();
@@ -293,6 +298,7 @@ namespace renderer
       fps = frameCount / (delta / 1000);
       frameCount = 0;
       lastFrameTimepoint = tickingTimepoint;
+      constellation->getPerfFs()->findAndSetIntValue("host_fps", fps);
     }
   }
 }

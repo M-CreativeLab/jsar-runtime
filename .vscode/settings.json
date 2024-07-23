@@ -87,6 +87,7 @@
     "typeindex": "cpp",
     "utility": "cpp",
     "future": "cpp",
-    "shared_mutex": "cpp"
+    "shared_mutex": "cpp",
+    "__memory": "cpp"
   }
 }

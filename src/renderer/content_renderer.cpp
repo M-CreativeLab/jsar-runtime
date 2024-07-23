@@ -223,6 +223,9 @@ namespace renderer
     glContext->Restore();
     if (constellation->getRenderer()->isAppContextSummaryEnabled)
       glContext->Print();
+
+    // Reset frame states
+    drawCallsCountPerFrame = 0;
   }
 
   void TrContentRenderer::onEndFrame()

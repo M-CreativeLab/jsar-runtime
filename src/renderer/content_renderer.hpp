@@ -33,8 +33,9 @@ namespace renderer
     pid_t getContentPid();
 
   public:
-    void increaseFrameErrorsCount() { lastFrameErrorsCount++; }
     void markOccurOutOfMemoryError() { lastFrameHasOutOfMemoryError = true; }
+    void increaseFrameErrorsCount() { lastFrameErrorsCount++; }
+    void increaseDrawCallsCount() { drawCallsCountPerFrame++; }
 
   private: // private lifecycle
     void onCommandBufferRequestReceived(TrCommandBufferBase *req);
@@ -87,6 +88,7 @@ namespace renderer
     xr::StereoRenderingFrame *stereoFrameForBackup = nullptr;
     bool lastFrameHasOutOfMemoryError = false;
     size_t lastFrameErrorsCount = 0;
+    size_t drawCallsCountPerFrame = 0;
 
   private: // frame rate control
     uint32_t targetFrameRate;

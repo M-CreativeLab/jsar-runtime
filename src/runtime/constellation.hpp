@@ -10,6 +10,7 @@
 #include "debug.hpp"
 #include "common/events/event_target.hpp"
 #include "common/analytics/perf_counter.hpp"
+#include "common/analytics/perf_fs.hpp"
 #include "renderer/renderer.hpp"
 #include "xr/device.hpp"
 
@@ -73,6 +74,7 @@ public:
   TrContentManager *getContentManager();
   TrRenderer *getRenderer();
   xr::Device *getXrDevice();
+  analytics::PerformanceFileSystem* getPerfFs();
   TrEmbedder *getEmbedder();
 
 public:
@@ -85,6 +87,7 @@ private:
   std::unique_ptr<TrMediaManager> mediaManager;
   std::unique_ptr<TrRenderer> renderer;
   std::unique_ptr<xr::Device> xrDevice;
+  std::unique_ptr<analytics::PerformanceFileSystem> perfFs;
 
 private:
   TrEmbedder *embedder = nullptr;

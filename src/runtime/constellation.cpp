@@ -61,6 +61,15 @@ bool TrConstellation::initialize(string initJson)
   contentManager->initialize();
   mediaManager->initialize();
   renderer->initialize();
+  {
+    // Initialize the performance file system for tracing the performance data.
+    auto perfFsDir = options.applicationCacheDirectory + "/perf";
+    if (!filesystem::exists(perfFsDir))
+      filesystem::create_directory(perfFsDir);
+    perfFs = std::make_unique<analytics::PerformanceFileSystem>(perfFsDir);
+    perfFs->createIntValue("host_fps", 0);
+    perfFs->createIntValue("drawcalls_count", 0);
+  }
   initialized = true;
   return true;
 }
@@ -110,10 +119,16 @@ xr::Device *TrConstellation::getXrDevice()
   return xrDevice.get();
 }
 
+analytics::PerformanceFileSystem* TrConstellation::getPerfFs()
+{
+  return perfFs.get();
+}
+
 TrEmbedder *TrConstellation::getEmbedder()
 {
   return embedder;
 }
+
 
 bool TrConstellation::onEvent(TrEvent &event, TrContentRuntime *content)
 {

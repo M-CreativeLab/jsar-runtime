@@ -147,4 +147,37 @@ $ adb logcat -s jsar.metrics
 
 ### 运行时性能
 
-> 待补充
+**如何查看运行时性能？**
+
+首先需要找到 `applicationCacheDirectory`，日志如下：
+
+```
+07-23 14:43:39.207 jsar: client(66793): ClientContext(1) url=http://localhost:3000/spatial-externalmesh-glb.xsml
+07-23 14:43:39.207 jsar: client(66793): ClientContext(1) applicationCacheDirectory=/path/to/your/cache/directory
+07-23 14:43:39.207 jsar: client(66793): ClientContext(1) httpsProxyServer=
+07-23 14:43:39.207 jsar: client(66793): ClientContext(1) eventChanPort=60257
+07-23 14:43:39.207 jsar: client(66793): ClientContext(1) frameChanPort=5014
+07-23 14:43:39.207 jsar: client(66793): ClientContext(1) commandBufferChanPort=45111
+```
+
+然后可以在 `applicationCacheDirectory` 下找到 `perf` 文件夹，里面存放了每次加载的性能指标，比如希望查看当前 fps 情况：
+
+```sh
+$ cat /path/to/your/cache/directory/perf/host_fps
+75
+```
+
+`perf` 文件夹主要分为两个部分：
+
+- 以数字开头的代表应用进程的性能指标，数字代表对应的应用进程 Pid，比如 1000, 1001 等
+- 其他文件则表示服务进程（即渲染器）的性能指标，比如 `host_fps` 表示渲染器的 fps 等
+
+`perf` 的具体列表如下：
+
+| 文件名 | 说明 |
+| ---- | ---- |
+| `host_fps` | 渲染器的 fps，一般来说需要与宿主引擎的渲染帧率一致 |
+| `host_last_frame_duration` | 渲染器的帧时间，单位为毫秒 |
+| `host_drawcalls_per_frame` | 渲染器的平均绘制指令数（所有应用总和） |
+| `host_drawcalls_count_per_frame` | 渲染器的绘制指令的绘制顶点数（所有应用总和） |
+| `${pid}/fps` | 应用进程的 fps |

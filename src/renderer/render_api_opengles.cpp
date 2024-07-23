@@ -1173,7 +1173,7 @@ private:
 
 		assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
 		glDrawArrays(mode, first, count);
-		m_DrawCallCountPerFrame += 1;
+		reqContentRenderer->increaseDrawCallsCount();
 		if (TR_UNLIKELY(options.printsCall))
 			DEBUG(DEBUG_TAG, "[%d] GL::DrawArrays(%d)", options.isDefaultQueue, req->count);
 	}
@@ -1191,7 +1191,7 @@ private:
 		}
 		assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
 		glDrawElements(mode, count, type, indices);
-		m_DrawCallCountPerFrame += 1;
+		reqContentRenderer->increaseDrawCallsCount();
 
 		if (TR_UNLIKELY(options.printsCall))
 		{
@@ -1265,7 +1265,7 @@ private:
 		auto n = req->n;
 		auto buffers = req->bufs;
 		glDrawBuffers(n, (const GLenum *)buffers);
-		m_DrawCallCountPerFrame += 1;
+		reqContentRenderer->increaseDrawCallsCount();
 		if (TR_UNLIKELY(options.printsCall))
 			DEBUG(DEBUG_TAG, "[%d] GL::DrawBuffers(%d)", options.isDefaultQueue, n);
 	}
@@ -1280,7 +1280,7 @@ private:
 
 		assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
 		glDrawArraysInstanced(mode, first, count, instanceCount);
-		m_DrawCallCountPerFrame += 1;
+		reqContentRenderer->increaseDrawCallsCount();
 		if (TR_UNLIKELY(options.printsCall))
 			DEBUG(DEBUG_TAG, "[%d] GL::DrawArraysInstanced(0x%x, %d, %d, %d)",
 						options.isDefaultQueue, mode, first, count, instanceCount);
@@ -1297,7 +1297,7 @@ private:
 
 		assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
 		glDrawElementsInstanced(mode, count, type, indices, instanceCount);
-		m_DrawCallCountPerFrame += 1;
+		reqContentRenderer->increaseDrawCallsCount();
 		if (TR_UNLIKELY(options.printsCall))
 			DEBUG(DEBUG_TAG, "[%d] GL::DrawElementsInstanced(0x%x, %d, %d, %p, %d)",
 						options.isDefaultQueue, mode, count, type, indices, instanceCount);
@@ -1315,7 +1315,7 @@ private:
 
 		assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
 		glDrawRangeElements(mode, start, end, count, type, indices);
-		m_DrawCallCountPerFrame += 1;
+		reqContentRenderer->increaseDrawCallsCount();
 		if (TR_UNLIKELY(options.printsCall))
 			DEBUG(DEBUG_TAG, "[%d] GL::DrawRangeElements(0x%x, %d, %d, %d, %d, %p)",
 						options.isDefaultQueue, mode, start, end, count, type, indices);
