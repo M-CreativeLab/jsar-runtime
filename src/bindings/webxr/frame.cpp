@@ -209,21 +209,28 @@ namespace bindings
     active = true;
     animationFrame = true;
     device->startFrame(internal);
-    startTime = chrono::high_resolution_clock::now();
+    session->updateFrameTime();
+    startTime = session->frameTimepoint;
   }
 
   void XRFrame::end()
   {
     active = false;
     device->endFrame(internal);
-    endTime = chrono::high_resolution_clock::now();
+    endTime = chrono::steady_clock::now();
 
     auto isMultipass = device->getDeviceInit().renderedAsMultipass();
     if (!isMultipass || internal->viewIndex == 0)
     {
-      auto duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime).count();
+      auto& perfFs = device->clientContext->getPerfFs();
+      auto duration = chrono::duration_cast<chrono::microseconds>(endTime - startTime).count() / 1000.0;
       if (duration > 1000 / 60)
-        fprintf(stderr, "Detected a long frame(#%d) takes %llums in session(%d)\n", id, duration, sessionId);
+        fprintf(stderr, "Detected a long frame(#%d) takes %fms in session(%d)\n", id, duration, sessionId);
+      perfFs.setFrameDuration(duration);
+
+      // Calculate the Fps and update to fs.
+      if (session->calcFps())
+        perfFs.setFps(session->fps);
     }
   }
 }

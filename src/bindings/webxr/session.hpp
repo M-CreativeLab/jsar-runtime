@@ -1,6 +1,7 @@
 #pragma once
 
 #include <napi.h>
+#include <chrono>
 #include "common.hpp"
 #include "device_native.hpp"
 #include "space.hpp"
@@ -61,6 +62,12 @@ namespace bindings
   private:
     void start();
     void stop();
+    /**
+     * @brief Calculate the frames per second.
+     * @returns true if the FPS was updated.
+     */
+    bool calcFps();
+    void updateFrameTime();
     void updateInputSourcesIfChanged(XRFrame *frame);
     void onFrame(Napi::Env env, xr::TrXRFrameRequest *frameRequest);
     bool queueNextFrame();
@@ -101,7 +108,15 @@ namespace bindings
     Napi::Reference<XRInputSourceArray> inputSources;
     Napi::FunctionReference onEventCallback;
 
+  private:
+    uint32_t fps = 0;
+    int frameCount = 0;
+    std::chrono::steady_clock::time_point frameTimepoint;
+    std::chrono::steady_clock::time_point lastFrameTimepoint = chrono::steady_clock::now();
+
   public:
     static Napi::FunctionReference *constructor;
+
+    friend class XRFrame;
   };
 }

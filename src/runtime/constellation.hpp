@@ -62,7 +62,7 @@ class TrHostPerformanceFileSystem : public analytics::PerformanceFileSystem
 {
 public:
   TrHostPerformanceFileSystem(TrConstellationInit &init)
-      : analytics::PerformanceFileSystem(init.applicationCacheDirectory + "/perf")
+      : analytics::PerformanceFileSystem(init.applicationCacheDirectory)
   {
     fps = makeValue<int>("host_fps", -1);
     drawCallsPerFrame = makeValue<int>("host_drawcalls_per_frame", -1);

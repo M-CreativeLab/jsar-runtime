@@ -37,22 +37,25 @@ namespace bindings
   public:
     bool supportsSessionMode(XRSessionMode sessionMode);
     bool supportsReferenceSpaceType(XRReferenceSpaceType referenceSpaceType);
-    void requestFrame(XRFrameCallback callback, void* context);
+    void requestFrame(XRFrameCallback callback, void *context);
     bool startFrame(xr::TrXRFrameRequest *frameRequest);
     bool endFrame(xr::TrXRFrameRequest *frameRequest);
     TrViewport getViewport(uint32_t viewIndex);
-    xr::TrDeviceInit& getDeviceInit();
+    xr::TrDeviceInit &getDeviceInit();
 
   private:
     void handleFrameRequest(xr::TrXRFrameRequest *frameRequest);
 
   private:
-    TrClientContextPerProcess* clientContext = nullptr;
+    TrClientContextPerProcess *clientContext = nullptr;
     Napi::FunctionReference *frameHandler = nullptr;
     Napi::ThreadSafeFunction tsfnWithFrameHandler;
     std::vector<ContextifiedXRFrameCallback> contextifiedFrameCallbacks;
 
   private:
     static Napi::FunctionReference *constructor;
+
+    friend class XRSession;
+    friend class XRFrame;
   };
 }

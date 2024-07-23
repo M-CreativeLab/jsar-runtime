@@ -16,6 +16,7 @@
 #include "debug.hpp"
 #include "ipc.hpp"
 #include "common/zone.hpp"
+#include "common/analytics/perf_fs.hpp"
 #include "common/command_buffers/shared.hpp"
 #include "common/command_buffers/command_buffers.hpp"
 #include "common/command_buffers/receiver.hpp"
@@ -44,7 +45,7 @@ typedef function<void(TrAnimationFrameRequest &)> AnimationFrameRequestCallback;
 class ScriptEnvironment
 {
 public:
-  ScriptEnvironment(int id, string& scriptsDir);
+  ScriptEnvironment(int id, string &scriptsDir);
   ~ScriptEnvironment();
 
 public:
@@ -76,6 +77,23 @@ protected:
 private:
   bool started = false;
   bool running = false;
+};
+
+class TrClientPerformanceFileSystem : public analytics::PerformanceFileSystem
+{
+public:
+  TrClientPerformanceFileSystem(std::string &cacheDir, const char *pidStr);
+  ~TrClientPerformanceFileSystem() = default;
+
+public:
+  inline void setFps(int value) { fps->set(value); }
+  inline void setFrameDuration(double value) { frameDuration->set(value); }
+  inline void setLongFrames(int value) { longFrames->set(value); }
+
+public:
+  std::unique_ptr<analytics::PerformanceValue<int>> fps;
+  std::unique_ptr<analytics::PerformanceValue<double>> frameDuration;
+  std::unique_ptr<analytics::PerformanceValue<int>> longFrames;
 };
 
 class TrClientContextPerProcess
@@ -164,8 +182,9 @@ public: // WebXR methods
     return xrCommand;
   }
 
-public: // font cache methods
-  font::FontCacheManager &getFontCacheManager();
+public:
+  font::FontCacheManager &getFontCacheManager() { return *fontCacheManager; }
+  TrClientPerformanceFileSystem &getPerfFs() { return *perfFs; }
 
 private:
   void onListenFrames();
@@ -201,7 +220,8 @@ private:
   ipc::TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
-  font::FontCacheManager *fontCacheManager = nullptr;
+  std::unique_ptr<font::FontCacheManager> fontCacheManager = nullptr;
+  std::unique_ptr<TrClientPerformanceFileSystem> perfFs = nullptr;
 
 private: // xr fields
   ipc::TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;

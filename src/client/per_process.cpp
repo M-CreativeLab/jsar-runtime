@@ -39,7 +39,7 @@ using namespace bindings;
 TR_NAPI_MODULE_MAP(XX)
 #undef XX
 
-ScriptEnvironment::ScriptEnvironment(int id, string& scriptsDir) : id(id)
+ScriptEnvironment::ScriptEnvironment(int id, string &scriptsDir) : id(id)
 {
   auto &args = scriptArgs;
   args.push_back("node");
@@ -226,6 +226,15 @@ void TrScriptRuntimePerProcess::onScriptExit(node::Environment *env, int exit_co
   exit(exit_code);
 }
 
+TrClientPerformanceFileSystem::TrClientPerformanceFileSystem(std::string &cacheDir, const char *pidStr)
+    : analytics::PerformanceFileSystem(cacheDir, pidStr)
+{
+  assert(pidStr != nullptr);
+  fps = makeValue<int>("fps", 0);
+  frameDuration = makeValue<double>("frame_duration", 0.0);
+  longFrames = makeValue<int>("long_frames", 0);
+}
+
 TrClientContextPerProcess *TrClientContextPerProcess::s_Instance = nullptr;
 TrIdGenerator *TrClientContextPerProcess::s_IdGenerator = new TrIdGenerator(1);
 
@@ -240,7 +249,7 @@ TrClientContextPerProcess *TrClientContextPerProcess::Get()
   return s_Instance;
 }
 
-TrClientContextPerProcess::TrClientContextPerProcess() : fontCacheManager(new font::FontCacheManager())
+TrClientContextPerProcess::TrClientContextPerProcess()
 {
 }
 
@@ -260,13 +269,6 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
   {
     delete frameChanReceiver;
     frameChanReceiver = nullptr;
-  }
-
-  // Clear for font cache
-  if (fontCacheManager != nullptr)
-  {
-    delete fontCacheManager;
-    fontCacheManager = nullptr;
   }
 
   // Clear for XR
@@ -294,6 +296,10 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
 
 void TrClientContextPerProcess::start()
 {
+  string pid = to_string(getpid());
+  perfFs = std::make_unique<TrClientPerformanceFileSystem>(applicationCacheDirectory, pid.c_str());
+  fontCacheManager = std::make_unique<font::FontCacheManager>();
+
   eventChanClient = ipc::TrOneShotClient<TrEventMessage>::MakeAndConnect(eventChanPort, false);
   assert(eventChanClient != nullptr);
   frameChanClient = ipc::TrOneShotClient<TrFrameRequestMessage>::MakeAndConnect(frameChanPort, false);
@@ -484,11 +490,6 @@ int TrClientContextPerProcess::getFramebufferWidth() { return framebufferWidth; 
 int TrClientContextPerProcess::getFramebufferHeight() { return framebufferHeight; }
 void TrClientContextPerProcess::setFramebufferWidth(int w) { framebufferWidth = w; }
 void TrClientContextPerProcess::setFramebufferHeight(int h) { framebufferHeight = h; }
-
-font::FontCacheManager &TrClientContextPerProcess::getFontCacheManager()
-{
-  return *fontCacheManager;
-}
 
 void TrClientContextPerProcess::onListenFrames()
 {

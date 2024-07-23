@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <filesystem>
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -70,10 +71,16 @@ namespace analytics
   class PerformanceFileSystem
   {
   public:
-    PerformanceFileSystem(std::string dir) : dir(dir)
+    PerformanceFileSystem(std::string cacheDir, const char *clientPidStr = nullptr)
     {
-      if (!filesystem::exists(dir))
-        filesystem::create_directory(dir);
+      std::filesystem::path dirPath = cacheDir + "/perf";
+      if (clientPidStr == nullptr)  // Clear the perf directory if starting as non-client mode.
+        std::filesystem::remove_all(dirPath);
+      if (clientPidStr != nullptr)
+        dirPath = dirPath / clientPidStr;
+      dir = dirPath.string();
+      if (!std::filesystem::exists(dir))
+        std::filesystem::create_directory(dir);
     }
     ~PerformanceFileSystem()
     {

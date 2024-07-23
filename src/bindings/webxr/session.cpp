@@ -472,6 +472,28 @@ namespace bindings
     ended = true;
   }
 
+  bool XRSession::calcFps()
+  {
+    auto delta = chrono::duration_cast<chrono::milliseconds>(frameTimepoint - lastFrameTimepoint).count();
+    frameCount += 1;
+    if (delta >= 1000)
+    {
+      fps = frameCount / (delta / 1000);
+      frameCount = 0;
+      lastFrameTimepoint = frameTimepoint;
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  void XRSession::updateFrameTime()
+  {
+    frameTimepoint = chrono::steady_clock::now();
+  }
+
   void XRSession::updateInputSourcesIfChanged(XRFrame *frame)
   {
     inputSources.Value().updateInputSources(frame, this, [this](vector<XRInputSource *> added, vector<XRInputSource *> removed)
