@@ -58,6 +58,32 @@ public:
   }
 };
 
+class TrHostPerformanceFileSystem : public analytics::PerformanceFileSystem
+{
+public:
+  TrHostPerformanceFileSystem(TrConstellationInit &init)
+      : analytics::PerformanceFileSystem(init.applicationCacheDirectory + "/perf")
+  {
+    fps = makeValue<int>("host_fps", -1);
+    drawCallsPerFrame = makeValue<int>("host_drawcalls_per_frame", -1);
+    drawCallsCountPerFrame = makeValue<int>("host_drawcalls_count_per_frame", -1);
+    frameDuration = makeValue<double>("host_frame_duration", -1.0);
+  }
+  ~TrHostPerformanceFileSystem() = default;
+
+public:
+  inline void setFps(int value) { fps->set(value); }
+  inline void setDrawCallsPerFrame(int value) { drawCallsPerFrame->set(value); }
+  inline void setDrawCallsCountPerFrame(int value) { drawCallsCountPerFrame->set(value); }
+  inline void setFrameDuration(double value) { frameDuration->set(value); }
+
+public:
+  std::unique_ptr<analytics::PerformanceValue<int>> fps;
+  std::unique_ptr<analytics::PerformanceValue<int>> drawCallsPerFrame;
+  std::unique_ptr<analytics::PerformanceValue<int>> drawCallsCountPerFrame;
+  std::unique_ptr<analytics::PerformanceValue<double>> frameDuration;
+};
+
 class TrConstellation
 {
 public:
@@ -74,7 +100,7 @@ public:
   TrContentManager *getContentManager();
   TrRenderer *getRenderer();
   xr::Device *getXrDevice();
-  analytics::PerformanceFileSystem* getPerfFs();
+  TrHostPerformanceFileSystem *getPerfFs();
   TrEmbedder *getEmbedder();
 
 public:
@@ -87,7 +113,7 @@ private:
   std::unique_ptr<TrMediaManager> mediaManager;
   std::unique_ptr<TrRenderer> renderer;
   std::unique_ptr<xr::Device> xrDevice;
-  std::unique_ptr<analytics::PerformanceFileSystem> perfFs;
+  std::unique_ptr<TrHostPerformanceFileSystem> perfFs;
 
 private:
   TrEmbedder *embedder = nullptr;

@@ -2,6 +2,8 @@
 
 #include <string>
 #include <map>
+#include <memory>
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
@@ -68,8 +70,10 @@ namespace analytics
   class PerformanceFileSystem
   {
   public:
-    PerformanceFileSystem(std::string &dir) : dir(dir)
+    PerformanceFileSystem(std::string dir) : dir(dir)
     {
+      if (!filesystem::exists(dir))
+        filesystem::create_directory(dir);
     }
     ~PerformanceFileSystem()
     {
@@ -78,7 +82,13 @@ namespace analytics
     }
 
   public:
-    inline PerformanceValue<int> *createIntValue(const char *name, int initialValue)
+    template <typename ValueType>
+    inline std::unique_ptr<analytics::PerformanceValue<ValueType>> makeValue(const char *name, ValueType initialValue)
+    {
+      std::string filename = dir + "/" + name;
+      return std::make_unique<PerformanceValue<ValueType>>(filename, initialValue);
+    }
+    inline PerformanceValue<int> *addIntValue(const char *name, int initialValue)
     {
       std::string filename = dir + "/" + name;
       auto newIntValue = intValues[name] = new PerformanceValue<int>(filename, initialValue);

@@ -225,6 +225,7 @@ namespace renderer
       glContext->Print();
 
     // Reset frame states
+    drawCallsPerFrame = 0;
     drawCallsCountPerFrame = 0;
   }
 
