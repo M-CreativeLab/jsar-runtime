@@ -177,7 +177,9 @@ $ cat /path/to/your/cache/directory/perf/host_fps
 | 文件名 | 说明 |
 | ---- | ---- |
 | `host_fps` | 渲染器的 fps，一般来说需要与宿主引擎的渲染帧率一致 |
-| `host_last_frame_duration` | 渲染器的帧时间，单位为毫秒 |
 | `host_drawcalls_per_frame` | 渲染器的平均绘制指令数（所有应用总和） |
 | `host_drawcalls_count_per_frame` | 渲染器的绘制指令的绘制顶点数（所有应用总和） |
+| `host_frame_duration` | 渲染器的帧时间，单位为毫秒 |
 | `${pid}/fps` | 应用进程的 fps |
+| `${pid}/xrframe_duration` | 应用进程的 XR 帧时间，单位为毫秒 |
+| `${pid}/long_xrframes` | 应用进程渲染过程中长渲染帧次数 |
