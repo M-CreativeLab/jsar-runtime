@@ -77,6 +77,14 @@ $ adb shell setprop jsar.renderer.tracing yes
 
 以及后续可以使用 WebGL Inspector 等工具进行调试。
 
+**设置客户端目标帧率**
+
+```sh
+$ adb shell setprop jsar.renderer.target_app_fps 60
+```
+
+默认为 45 帧。
+
 ### 使用 Chrome DevTools 调试
 
 在应用进程日志中找到：
@@ -95,20 +103,19 @@ adb forward tcp:9229 tcp:9229
 
 ## 运行时目录
 
-运行时目录用于存放运行时所需的缓存和临时文件。要获取 `applicationCacheDirectory`，首先打开日志输出，找到如下：
+运行时目录用于存放运行时所需的缓存和临时文件。要获取 `applicationCacheDirectory`，可以通过 `getprop` 命令查看：
 
-```
-07-12 22:14:52.517 10055 10075 D jsar    : client(10174): The context init is: ClientContext {
-07-12 22:14:52.517 10055 10075 D jsar    : client(10174):   id: 2,
-07-12 22:14:52.517 10055 10075 D jsar    : client(10174):   url: 'http://0.0.0.0:3000/spatial-externalmesh-glb.xsml',
-07-12 22:14:52.517 10055 10075 D jsar    : client(10174):   applicationCacheDirectory: '/path/to/your/cache/directory',
-07-12 22:14:52.517 10055 10075 D jsar    : client(10174):   httpsProxyServer: '',
-07-12 22:14:52.517 10055 10075 D jsar    : client(10174):   webglVersion: 2,
-07-12 22:14:52.517 10055 10075 D jsar    : client(10174):   xrDevice: { enabled: true, active: true, stereoRenderingMode: 'multipass' }
-07-12 22:14:52.517 10055 10075 D jsar    : client(10174): }
+```sh
+$ adb shell getprop | grep jsar
+[jsar.debug.enabled]: [yes]
+[jsar.example.url]: [http://localhost:3000/spatial-externalmesh-glb.xsml]
+[jsar.init.cache_directory]: [/path/to/your/cache/directory]
+[jsar.renderer.target_app_fps]: [45]
+[jsar.renderer.tracing]: [no]
+[jsar.resources.caching]: [no]
 ```
 
-其中 `applicationCacheDirectory` 就是运行时目录。
+其中 `jsar.init.cache_directory` 即运行时目录。
 
 以下是运行时目录的子目录结构：
 
