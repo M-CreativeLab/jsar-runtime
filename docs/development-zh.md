@@ -156,18 +156,7 @@ $ adb logcat -s jsar.metrics
 
 **如何查看运行时性能？**
 
-首先需要找到 `applicationCacheDirectory`，日志如下：
-
-```
-07-23 14:43:39.207 jsar: client(66793): ClientContext(1) url=http://localhost:3000/spatial-externalmesh-glb.xsml
-07-23 14:43:39.207 jsar: client(66793): ClientContext(1) applicationCacheDirectory=/path/to/your/cache/directory
-07-23 14:43:39.207 jsar: client(66793): ClientContext(1) httpsProxyServer=
-07-23 14:43:39.207 jsar: client(66793): ClientContext(1) eventChanPort=60257
-07-23 14:43:39.207 jsar: client(66793): ClientContext(1) frameChanPort=5014
-07-23 14:43:39.207 jsar: client(66793): ClientContext(1) commandBufferChanPort=45111
-```
-
-然后可以在 `applicationCacheDirectory` 下找到 `perf` 文件夹，里面存放了每次加载的性能指标，比如希望查看当前 fps 情况：
+在运行时目录下找到 `perf` 文件夹，里面存放了每次加载的性能指标，比如希望查看当前 fps 情况：
 
 ```sh
 $ cat /path/to/your/cache/directory/perf/host_fps
