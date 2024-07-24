@@ -285,65 +285,6 @@ namespace renderer
     dispatchFrameRequest(req);
   }
 
-  bool TrContentRenderer::shouldSkipDispatchingFrame(chrono::time_point<chrono::high_resolution_clock> time)
-  {
-    /**
-     * If XR is disabled, frame skip is not allowed.
-     */
-    if (TR_UNLIKELY(xrDevice == nullptr || !xrDevice->enabled()))
-      return false;
-
-    /**
-     * Zero `targetFrameRate` means disabling the frame rate control.
-     */
-    if (targetFrameRate == 0)
-      return false;
-
-    /**
-     * Only if the XR Multipass (1 frame = 2 ticks), we will directly using when rendering right tick.
-     */
-    if (xrDevice->isRenderedAsMultipass() && xrDevice->getActiveEyeId() == 1)
-      return skipDispatchingFrameState;
-
-    /**
-     * Main logic to check frame skipping.
-     */
-    if (isLastFrameTimepointSet == false)
-    {
-      lastFrameTimepoint = time;
-      isLastFrameTimepointSet = true;
-      skipDispatchingFrameState = false;
-    }
-    else
-    {
-      /**
-       * We need to skip a frame based on the script frame rate to avoid the unnecessary CPU usage.
-       */
-      auto duration = chrono::duration_cast<chrono::milliseconds>(time - lastFrameTimepoint);
-      if (duration.count() < 1000 / targetFrameRate)
-      {
-        skipDispatchingFrameState = true;
-      }
-      else
-      {
-        auto pendingFramesCount = getPendingStereoFramesCount();
-        /**
-         * When the frame count is greater than a fixed value, we can skip the frame for the script-side, namely in JavaScript, the
-         * frame of this time will be dropped when the last frame is not finished.
-         *
-         * By using this method, we can avoid the frame is not rendered in time, but it will cause the frame rate in script is not
-         * consistent with the host frame rate.
-         */
-        if (pendingFramesCount > 1)
-          skipDispatchingFrameState = true;
-        else
-          skipDispatchingFrameState = false;
-        lastFrameTimepoint = time;
-      }
-    }
-    return skipDispatchingFrameState;
-  }
-
   void TrContentRenderer::executeCommandBuffers(bool asXRFrame, int viewIndex)
   {
     if (content == nullptr) // FIXME: just skip executing command buffers if content is null, when content process is crashed.

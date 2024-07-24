@@ -62,10 +62,6 @@ namespace renderer
     void dispatchAnimationFrameRequest();
     void dispatchXRFrameRequest(xr::TrXRSession *session, int viewIndex);
     /**
-     * The frame rate control method.
-     */
-    bool shouldSkipDispatchingFrame(chrono::time_point<chrono::high_resolution_clock> time);
-    /**
      * Execute command buffers from content's list.
      *
      * @param asXRFrame If the frame execution intent is for XR rendering, yes means only the command buffers in XR frame
