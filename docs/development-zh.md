@@ -103,7 +103,7 @@ adb forward tcp:9229 tcp:9229
 
 ## 运行时目录
 
-运行时目录用于存放运行时所需的缓存和临时文件。要获取 `applicationCacheDirectory`，可以通过 `getprop` 命令查看：
+运行时目录用于存放运行时所需的缓存和临时文件，可通过 `getprop` 命令查看：
 
 ```sh
 $ adb shell getprop | grep jsar
