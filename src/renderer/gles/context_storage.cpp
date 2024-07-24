@@ -146,19 +146,27 @@ void OpenGLContextStorage::Restore()
     glUseProgram(0);
   useProgramError = glGetError();
 
-  if (m_VertexArrayObjectId >= 0)
-    glBindVertexArray(m_VertexArrayObjectId);
+  /**
+   * Restore the array buffer, it's still global state which the vao just set the pointer to a buffer object for each
+   * attribute.
+   */
+  if (m_ArrayBufferId >= 0)
+    glBindBuffer(GL_ARRAY_BUFFER, m_ArrayBufferId);
 
   /**
-   * Only if the vao is not bound, we need to restore the array buffer and element array buffer bindings.
+   * VAO records the ebo, it will update the GL_ELEMENT_ARRAY_BUFFER_BINDING state when bind a specific VAO.
    */
-  if (m_VertexArrayObjectId <= 0)
+  if (m_VertexArrayObjectId >= 0)
+    glBindVertexArray(m_VertexArrayObjectId);
+  else
   {
-    if (m_ArrayBufferId >= 0)
-      glBindBuffer(GL_ARRAY_BUFFER, m_ArrayBufferId);
+    /**
+     * Only if the vao is not called we need to restore the ebo.
+     */
     if (m_ElementArrayBufferId >= 0)
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ElementArrayBufferId);
   }
+
   if (m_FramebufferId >= 0)
     glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
   if (m_RenderbufferId >= 0)

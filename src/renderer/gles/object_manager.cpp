@@ -141,7 +141,6 @@ namespace gles
     GLuint buffer;
     glGenBuffers(1, &buffer);
     buffers[clientId] = buffer;
-    DEBUG(LOG_TAG_ERROR, "CreateBuffer(%u) => %u", clientId, buffer);
     return buffer;
   }
 
