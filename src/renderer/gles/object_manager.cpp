@@ -39,23 +39,7 @@ namespace gles
       }
       glBindTexture(GL_TEXTURE_2D, currentTexture);
     }
-
-    if (buffers.size() > 0)
-    {
-      DEBUG(LOG_TAG_ERROR, "ArrayBuffers(%zu):", buffers.size());
-      GLint currentBuffer = 0;
-      glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &currentBuffer);
-      for (auto it = buffers.begin(); it != buffers.end(); ++it)
-      {
-        auto buffer = it->second;
-        GLint size, usage;
-        glBindBuffer(GL_ARRAY_BUFFER, buffer);
-        glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-        glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_USAGE, &usage);
-        DEBUG(LOG_TAG_ERROR, " #%d: %s %dbytes", buffer, gles::glEnumToString(usage).c_str(), size);
-      }
-      glBindBuffer(GL_ARRAY_BUFFER, currentBuffer);
-    }
+    PrintBuffers();
   }
 
   GLuint GLObjectManager::CreateProgram(uint32_t clientId)
@@ -157,6 +141,7 @@ namespace gles
     GLuint buffer;
     glGenBuffers(1, &buffer);
     buffers[clientId] = buffer;
+    DEBUG(LOG_TAG_ERROR, "CreateBuffer(%u) => %u", clientId, buffer);
     return buffer;
   }
 
@@ -182,6 +167,27 @@ namespace gles
       glDeleteBuffers(1, &buffer);
     }
     buffers.clear();
+  }
+
+  void GLObjectManager::PrintBuffers()
+  {
+    if (buffers.size() > 0)
+    {
+      DEBUG(LOG_TAG_ERROR, "Buffers(%zu):", buffers.size());
+      GLint currentBuffer = 0;
+      glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &currentBuffer);
+      for (auto it = buffers.begin(); it != buffers.end(); ++it)
+      {
+        auto id = it->first;
+        auto buffer = it->second;
+        GLint size, usage;
+        glBindBuffer(GL_ARRAY_BUFFER, buffer);
+        glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+        glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_USAGE, &usage);
+        DEBUG(LOG_TAG_ERROR, " [%u](#%d): %s %dbytes", id, buffer, gles::glEnumToString(usage).c_str(), size);
+      }
+      glBindBuffer(GL_ARRAY_BUFFER, currentBuffer);
+    }
   }
 
   GLuint GLObjectManager::CreateFramebuffer(uint32_t clientId)

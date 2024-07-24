@@ -31,11 +31,13 @@ namespace gles
     GLuint FindTexture(uint32_t clientId);
     void DeleteTexture(uint32_t clientId);
     void ClearTextures();
+    void PrintTextures();
 
     GLuint CreateBuffer(uint32_t clientId);
     GLuint FindBuffer(uint32_t clientId);
     void DeleteBuffer(uint32_t clientId);
     void ClearBuffers();
+    void PrintBuffers();
 
     GLuint CreateFramebuffer(uint32_t clientId);
     GLuint FindFramebuffer(uint32_t clientId);

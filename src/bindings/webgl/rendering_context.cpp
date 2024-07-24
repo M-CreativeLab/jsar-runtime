@@ -1401,7 +1401,7 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    auto id = bufferIdGen.get();
+    uint32_t id = bufferIdGen.get();
     auto req = CreateBufferCommandBufferRequest(id);
     sendCommandBufferRequest(req);
     return Napi::Number::New(env, id);
@@ -2180,7 +2180,7 @@ namespace webgl
       Napi::TypeError::New(env, "disableVertexAttribArray() takes 1 argument.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int index = info[0].As<Napi::Number>().Int32Value();
+    uint32_t index = info[0].As<Napi::Number>().Uint32Value();
     auto req = DisableVertexAttribArrayCommandBufferRequest(index);
     sendCommandBufferRequest(req);
     return env.Undefined();
@@ -2197,12 +2197,12 @@ namespace webgl
       Napi::TypeError::New(env, "vertexAttribPointer() takes 6 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int index = info[0].As<Napi::Number>().Int32Value();
-    int size = info[1].As<Napi::Number>().Int32Value();
-    int type = info[2].As<Napi::Number>().Int32Value();
+    uint32_t index = info[0].As<Napi::Number>().Uint32Value();
+    uint32_t size = info[1].As<Napi::Number>().Uint32Value();
+    uint32_t type = info[2].As<Napi::Number>().Uint32Value();
     bool normalized = info[3].As<Napi::Boolean>().Value();
-    int stride = info[4].As<Napi::Number>().Int32Value();
-    int offset = info[5].As<Napi::Number>().Int32Value();
+    uint32_t stride = info[4].As<Napi::Number>().Uint32Value();
+    uint32_t offset = info[5].As<Napi::Number>().Uint32Value();
 
     auto req = VertexAttribPointerCommandBufferRequest(index, size, type, normalized, stride, offset);
     sendCommandBufferRequest(req);

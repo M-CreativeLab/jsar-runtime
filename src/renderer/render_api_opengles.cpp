@@ -615,6 +615,7 @@ private:
 		if (req->buffer != 0 && buffer == 0)
 		{
 			DEBUG(DEBUG_TAG, "Could not find buffer(cid=%d) to bind", req->buffer);
+			m_GLObjectManager.PrintBuffers();
 			return;
 		}
 
@@ -648,6 +649,9 @@ private:
 						size,
 						data,
 						gles::glEnumToString(usage).c_str());
+			GLint bindingBuffer;
+			glGetIntegerv(target == GL_ARRAY_BUFFER ? GL_ARRAY_BUFFER_BINDING : GL_ELEMENT_ARRAY_BUFFER_BINDING, &bindingBuffer);
+			DEBUG(DEBUG_TAG, "    Binding: %d", bindingBuffer);
 		}
 	}
 	TR_OPENGL_FUNC void OnBufferSubData(BufferSubDataCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
@@ -1052,8 +1056,19 @@ private:
 
 		glVertexAttribPointer(index, size, type, normalized, stride, (const char *)NULL + offset);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::VertexAttribPointer(%d) size=%d type=0x%x normalized=%d stride=%d offset=%d",
-						options.isDefaultQueue, index, size, type, normalized, stride, offset);
+		{
+			DEBUG(DEBUG_TAG, "[%d] GL::VertexAttribPointer(%d)", options.isDefaultQueue, index);
+			DEBUG(DEBUG_TAG, "    size=%d", size);
+			DEBUG(DEBUG_TAG, "    type=%s", gles::glEnumToString(type).c_str());
+			DEBUG(DEBUG_TAG, "    normalized=%s", normalized ? "Yes" : "No");
+			DEBUG(DEBUG_TAG, "    stride=%d", stride);
+			DEBUG(DEBUG_TAG, "    offset=%u", offset);
+
+			GLint bindingVao, bindingArrayBuffer;
+			glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &bindingVao);
+			glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &bindingArrayBuffer);
+			DEBUG(DEBUG_TAG, "    Binding(VAO = %d, ArrayBuffer = %d)", bindingVao, bindingArrayBuffer);
+		}
 	}
 	TR_OPENGL_FUNC void OnVertexAttribIPointer(VertexAttribIPointerCommandBufferRequest *req,
 																						 renderer::TrContentRenderer *reqContentRenderer,

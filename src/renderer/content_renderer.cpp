@@ -351,19 +351,17 @@ namespace renderer
     auto renderer = constellation->getRenderer();
     if (!asXRFrame)
     {
-      {
-        shared_lock<shared_mutex> lock(commandBufferRequestsMutex);
-        auto commandBufferRequests = defaultCommandBufferRequests;
-        renderer->executeCommandBuffers(commandBufferRequests, this);
-      }
+      vector<commandbuffers::TrCommandBufferBase *> commandBufferRequests;
 
-      // clear the default commandbuffers queue.
+      
       {
         unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
-        for (auto commandBufferReq : defaultCommandBufferRequests)
-          delete commandBufferReq;
+        commandBufferRequests = defaultCommandBufferRequests;
         defaultCommandBufferRequests.clear();
       }
+      renderer->executeCommandBuffers(commandBufferRequests, this);
+      for (auto commandBufferReq : commandBufferRequests)
+        delete commandBufferReq;
     }
     else
     {
