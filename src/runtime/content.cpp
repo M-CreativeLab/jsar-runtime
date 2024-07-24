@@ -29,7 +29,18 @@ TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManage
 
 TrContentRuntime::~TrContentRuntime()
 {
-  // Flush the client's output.
+  // 1. Stop the receiver worker.
+  commandBuffersRecvWorker->stop();
+
+  // 2. Remove the content renderer and command buffer client.
+  auto renderer = contentManager->constellation->getRenderer();
+  if (renderer != nullptr)
+  {
+    renderer->removeContentRenderer(this);
+    renderer->removeCommandBufferChanClient(commandBufferChanClient);
+  }
+
+  // 3. Flush the client's output.
   while (true)
   {
     if (!recvClientOutput())
@@ -86,7 +97,7 @@ void TrContentRuntime::start(TrXSMLRequestInit init)
     close(childPipes[1]);
 
     commandBuffersRecvWorker = std::make_unique<WorkerThread>("TrCommandBuffersWorker", [this](WorkerThread &worker)
-                                                              { recvCommandBuffers(worker, -1); });
+                                                              { recvCommandBuffers(worker, 100); });
     auto renderer = contentManager->constellation->getRenderer();
     renderer->addContentRenderer(this);
     dispatchXSMLEvent(TrXSMLEventType::SpawnProcess);
@@ -117,7 +128,7 @@ void TrContentRuntime::dispose()
   {
     if (testClientProcessExitOnFrame()) // Return util the child is exit.
     {
-      onProcessExit(1);
+      shouldDestroy = true;
       break;
     }
   }
@@ -132,23 +143,6 @@ void TrContentRuntime::onCommandBuffersExecuted()
 {
   isCommandBufferRequestsExecuting.store(false);
   commandBufferExecutingCv.notify_all();
-}
-
-void TrContentRuntime::onProcessExit(int _exitCode)
-{
-  // 1. Stop the receiver worker.
-  commandBuffersRecvWorker->stop();
-
-  // 2. Remove the content renderer and command buffer client.
-  auto renderer = contentManager->constellation->getRenderer();
-  if (renderer != nullptr)
-  {
-    renderer->removeContentRenderer(this);
-    renderer->removeCommandBufferChanClient(commandBufferChanClient);
-  }
-
-  // 3. Mark the content as should be destroyed, then the content manager will dispose it.
-  shouldDestroy = true;
 }
 
 TrConstellation *TrContentRuntime::getConstellation()
@@ -432,9 +426,6 @@ TrContentManager::~TrContentManager()
     delete eventChanServer;
     eventChanServer = nullptr;
   }
-  for (auto content : contents)
-    delete content;
-  contents.clear();
 }
 
 bool TrContentManager::initialize()
@@ -499,11 +490,13 @@ bool TrContentManager::initialize()
 bool TrContentManager::shutdown()
 {
   contentsDestroyingWorker->stop();
-
   DEBUG(LOG_TAG_CONTENT, "Disposing all contents(%zu)...", contents.size());
   for (auto content : contents)
+  {
     content->dispose();
-  DEBUG(LOG_TAG_CONTENT, "All contents(%zu) has been disposed", contents.size());
+    delete content;
+  }
+  contents.clear();
 
   eventChanWatcher->stop();
   xrCommandsRecvWorker->stop();
@@ -517,7 +510,7 @@ bool TrContentManager::tickOnFrame()
   for (auto content : contents)
   {
     if (content->pid > 0 && content->testClientProcessExitOnFrame())
-      content->onProcessExit(1);
+      content->shouldDestroy = true;
     else
       content->tickOnFrame();
   }

@@ -9,10 +9,6 @@
 #include <sys/system_properties.h>
 #endif
 
-#ifndef TR_ENABLE_PERF_COUNTER
-#define TR_ENABLE_PERF_COUNTER
-#endif
-
 using namespace std;
 
 /**
@@ -68,6 +64,19 @@ public:
     interfaces = nullptr;
     graphics = nullptr;
     log = nullptr;
+  }
+
+  bool onStart(string argJson)
+  {
+    auto result = TrEmbedder::onStart(argJson);
+    if (result)
+    {
+#if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
+      auto opts = getConstellation()->getOptions();
+      __system_property_set("jsar.init.cache_directory", opts.applicationCacheDirectory.c_str());
+#endif
+    }
+    return result;
   }
 
   bool onEvent(TrEvent &event, TrContentRuntime *content) override
@@ -160,11 +169,10 @@ extern "C"
       setenv("JSAR_WEBGL_PLACEHOLDERS", "yes", 1);
     }
 
-    char xrFrameRate[PROP_VALUE_MAX];
-    if (__system_property_get("jsar.xr.framerate", xrFrameRate) >= 0)
+    char targetClientFps[PROP_VALUE_MAX];
+    if (__system_property_get("jsar.renderer.target_app_fps", targetClientFps) >= 0)
     {
-      int frameRate = atoi(xrFrameRate);
-      embedder->getRenderer()->configureClientFrameRate(frameRate);
+      embedder->getRenderer()->configureClientFrameRate(atoi(targetClientFps));
     }
 
     char debugEnabledStr[PROP_VALUE_MAX];

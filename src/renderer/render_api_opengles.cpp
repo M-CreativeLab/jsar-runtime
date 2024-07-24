@@ -109,6 +109,10 @@ private:
 				reqContentRenderer->markOccurOutOfMemoryError();
 				DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_OUT_OF_MEMORY",
 							commandTypeToStr(commandType).c_str(), commandType);
+				{
+					// Check memory
+					m_GLObjectManager.PrintMemoryUsage();
+				}
 				break;
 			default:
 				DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: 0x%04x",
@@ -200,10 +204,26 @@ private:
 		glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &res.maxVertexAttribs);
 		glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &res.maxVertexTextureImageUnits);
 		glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &res.maxVertexUniformVectors);
-
 		res.vendor = string((const char *)glGetString(GL_VENDOR));
 		res.version = string((const char *)glGetString(GL_VERSION));
 		res.renderer = string((const char *)glGetString(GL_RENDERER));
+		{
+			DEBUG(DEBUG_TAG, "MAX_COMBINED_TEXTURE_IMAGE_UNITS=%d", res.maxCombinedTextureImageUnits);
+			DEBUG(DEBUG_TAG, "MAX_CUBE_MAP_TEXTURE_SIZE=%d", res.maxCubeMapTextureSize);
+			DEBUG(DEBUG_TAG, "MAX_FRAGMENT_UNIFORM_VECTORS=%d", res.maxFragmentUniformVectors);
+			DEBUG(DEBUG_TAG, "MAX_RENDERBUFFER_SIZE=%d", res.maxRenderbufferSize);
+			DEBUG(DEBUG_TAG, "MAX_TEXTURE_IMAGE_UNITS=%d", res.maxTextureImageUnits);
+			DEBUG(DEBUG_TAG, "MAX_TEXTURE_SIZE=%d", res.maxTextureSize);
+			DEBUG(DEBUG_TAG, "MAX_VARYING_VECTORS=%d", res.maxVaryingVectors);
+			DEBUG(DEBUG_TAG, "MAX_VERTEX_ATTRIBS=%d", res.maxVertexAttribs);
+			DEBUG(DEBUG_TAG, "MAX_VERTEX_TEXTURE_IMAGE_UNITS=%d", res.maxVertexTextureImageUnits);
+			DEBUG(DEBUG_TAG, "MAX_VERTEX_UNIFORM_VECTORS=%d", res.maxVertexUniformVectors);
+			DEBUG(DEBUG_TAG, "VENDOR=%s", res.vendor.c_str());
+			DEBUG(DEBUG_TAG, "VERSION=%s", res.version.c_str());
+			DEBUG(DEBUG_TAG, "RENDERER=%s", res.renderer.c_str());
+		}
+		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+			DEBUG(DEBUG_TAG, "[%d] GL::ContextInit()", options.isDefaultQueue);
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
 	TR_OPENGL_FUNC void OnContext2Init(WebGL2ContextInitCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
@@ -236,8 +256,34 @@ private:
 		glGetInteger64v(GL_MAX_UNIFORM_BLOCK_SIZE, &res.maxUniformBlockSize);
 		// GLfloat values
 		glGetFloatv(GL_MAX_TEXTURE_LOD_BIAS, &res.maxTextureLODBias);
-		CheckError(req, reqContentRenderer);
-
+		{
+			DEBUG(DEBUG_TAG, "MAX_3D_TEXTURE_SIZE=%d", res.max3DTextureSize);
+			DEBUG(DEBUG_TAG, "MAX_ARRAY_TEXTURE_LAYERS=%d", res.maxArrayTextureLayers);
+			DEBUG(DEBUG_TAG, "MAX_COLOR_ATTACHMENTS=%d", res.maxColorAttachments);
+			DEBUG(DEBUG_TAG, "MAX_COMBINED_UNIFORM_BLOCKS=%d", res.maxCombinedUniformBlocks);
+			DEBUG(DEBUG_TAG, "MAX_DRAW_BUFFERS=%d", res.maxDrawBuffers);
+			DEBUG(DEBUG_TAG, "MAX_ELEMENTS_INDICES=%d", res.maxElementsIndices);
+			DEBUG(DEBUG_TAG, "MAX_ELEMENTS_VERTICES=%d", res.maxElementsVertices);
+			DEBUG(DEBUG_TAG, "MAX_FRAGMENT_INPUT_COMPONENTS=%d", res.maxFragmentInputComponents);
+			DEBUG(DEBUG_TAG, "MAX_FRAGMENT_UNIFORM_BLOCKS=%d", res.maxFragmentUniformBlocks);
+			DEBUG(DEBUG_TAG, "MAX_FRAGMENT_UNIFORM_COMPONENTS=%d", res.maxFragmentUniformComponents);
+			DEBUG(DEBUG_TAG, "MAX_PROGRAM_TEXEL_OFFSET=%d", res.maxProgramTexelOffset);
+			DEBUG(DEBUG_TAG, "MAX_SAMPLES=%d", res.maxSamples);
+			DEBUG(DEBUG_TAG, "MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS=%d", res.maxTransformFeedbackInterleavedComponents);
+			DEBUG(DEBUG_TAG, "MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS=%d", res.maxTransformFeedbackSeparateAttributes);
+			DEBUG(DEBUG_TAG, "MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS=%d", res.maxTransformFeedbackSeparateComponents);
+			DEBUG(DEBUG_TAG, "MAX_UNIFORM_BUFFER_BINDINGS=%d", res.maxUniformBufferBindings);
+			DEBUG(DEBUG_TAG, "MAX_VARYING_COMPONENTS=%d", res.maxVaryingComponents);
+			DEBUG(DEBUG_TAG, "MAX_VERTEX_OUTPUT_COMPONENTS=%d", res.maxVertexOutputComponents);
+			DEBUG(DEBUG_TAG, "MAX_VERTEX_UNIFORM_BLOCKS=%d", res.maxVertexUniformBlocks);
+			DEBUG(DEBUG_TAG, "MAX_VERTEX_UNIFORM_COMPONENTS=%d", res.maxVertexUniformComponents);
+			DEBUG(DEBUG_TAG, "MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS=%d", res.maxCombinedFragmentUniformComponents);
+			DEBUG(DEBUG_TAG, "MAX_SERVER_WAIT_TIMEOUT=%d", res.maxServerWaitTimeout);
+			DEBUG(DEBUG_TAG, "MAX_UNIFORM_BLOCK_SIZE=%d", res.maxUniformBlockSize);
+			DEBUG(DEBUG_TAG, "MAX_TEXTURE_LOD_BIAS=%d", res.maxTextureLODBias);
+		}
+		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+			DEBUG(DEBUG_TAG, "[%d] GL::Context2Init()", options.isDefaultQueue);
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
 	TR_OPENGL_FUNC void OnCreateProgram(CreateProgramCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
@@ -1381,11 +1427,6 @@ private:
 		auto height = req->height;
 		auto x = req->x;
 		auto y = req->y;
-		// glViewport(x, y, width, height);
-
-		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::SetViewport(%d, %d, %d, %d)",
-						options.isDefaultQueue, width, height, x, y);
 	}
 	TR_OPENGL_FUNC void OnSetScissor(SetScissorCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
@@ -1721,12 +1762,13 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 	auto contentGlContext = contentRenderer->getOpenGLContext();
 	auto contextBaseState = OpenGLAppContextStorage("tmp", contentGlContext);
 
+	ApiCallOptions callOptions;
+	callOptions.printsCall = renderer->isTracingEnabled;
+
 	for (auto commandBuffer : commandBuffers)
 	{
 		auto commandType = commandBuffer->type;
-		ApiCallOptions callOptions;
 		callOptions.isDefaultQueue = commandBuffer->renderingInfo.isValid() == false;
-		callOptions.printsCall = renderer->isTracingEnabled;
 
 #define ADD_COMMAND_BUFFER_HANDLER(commandType, requestType, handlerName) \
 	case COMMAND_BUFFER_##commandType##_REQ:                                \
@@ -1898,37 +1940,6 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			DEBUG(LOG_TAG_ERROR, "[%d] GL::Unknown command type: %s(%d)",
 						isDefaultQueue, commandTypeToStr(commandType).c_str(), commandType);
 			break;
-		}
-
-		// Check for OpenGL errors
-		GLenum error = glGetError();
-		if (TR_UNLIKELY(error != GL_NO_ERROR))
-		{
-			contentRenderer->increaseFrameErrorsCount();
-			switch (error)
-			{
-			case GL_INVALID_ENUM:
-				DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_INVALID_ENUM",
-							commandTypeToStr(commandType).c_str(), commandType);
-				break;
-			case GL_INVALID_VALUE:
-				DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_INVALID_VALUE",
-							commandTypeToStr(commandType).c_str(), commandType);
-				break;
-			case GL_INVALID_OPERATION:
-				DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_INVALID_OPERATION",
-							commandTypeToStr(commandType).c_str(), commandType);
-				break;
-			case GL_OUT_OF_MEMORY:
-				contentRenderer->markOccurOutOfMemoryError();
-				DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_OUT_OF_MEMORY",
-							commandTypeToStr(commandType).c_str(), commandType);
-				break;
-			default:
-				DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: 0x%04x",
-							commandTypeToStr(commandType).c_str(), commandType, error);
-				break;
-			}
 		}
 	}
 

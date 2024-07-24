@@ -17,6 +17,47 @@ namespace gles
     ClearVertexArrays();
   }
 
+  void GLObjectManager::PrintMemoryUsage()
+  {
+    if (textures.size() > 0)
+    {
+      DEBUG(LOG_TAG_ERROR, "Textures(%zu):", textures.size());
+      GLint currentTexture = 0;
+      glGetIntegerv(GL_TEXTURE_BINDING_2D, &currentTexture);
+      for (auto it = textures.begin(); it != textures.end(); ++it)
+      {
+        auto texture = it->second;
+        GLint width, height, format;
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &format);
+        size_t bytes = width * height * gles::glTextureFormatToByteLength(format);
+
+        DEBUG(LOG_TAG_ERROR, " #%d: %dx%d %s %zubytes", texture,
+              width, height, gles::glTextureInternalFormatToString(format).c_str(), bytes);
+      }
+      glBindTexture(GL_TEXTURE_2D, currentTexture);
+    }
+
+    if (buffers.size() > 0)
+    {
+      DEBUG(LOG_TAG_ERROR, "ArrayBuffers(%zu):", buffers.size());
+      GLint currentBuffer = 0;
+      glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &currentBuffer);
+      for (auto it = buffers.begin(); it != buffers.end(); ++it)
+      {
+        auto buffer = it->second;
+        GLint size, usage;
+        glBindBuffer(GL_ARRAY_BUFFER, buffer);
+        glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+        glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_USAGE, &usage);
+        DEBUG(LOG_TAG_ERROR, " #%d: %s %dbytes", buffer, gles::glEnumToString(usage).c_str(), size);
+      }
+      glBindBuffer(GL_ARRAY_BUFFER, currentBuffer);
+    }
+  }
+
   GLuint GLObjectManager::CreateProgram(uint32_t clientId)
   {
     GLuint program = glCreateProgram();

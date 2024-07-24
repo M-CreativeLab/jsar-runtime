@@ -9,9 +9,9 @@
 // #include <OpenGLES/ES3/gl3.h>
 // #include <OpenGLES/ES3/gl3ext.h>
 #elif UNITY_ANDROID || UNITY_WEBGL
-// On Android and WebGL, use GLES 3.0
+// On Android and WebGL, use GLES 3.1
 // See: https://android.googlesource.com/platform/frameworks/native/+/kitkat-release/opengl/include
-#include <GLES3/gl3.h>
+#include <GLES3/gl31.h>
 #include <GLES3/gl3ext.h>
 #include <EGL/egl.h>
 #elif UNITY_OSX
@@ -41,6 +41,10 @@
 
 namespace gles
 {
+  /**
+   * @brief Converts a GLenum that represents a texture format to the number of bytes per pixel.
+   */
+  size_t glTextureFormatToByteLength(GLenum format);
   /**
    * @brief Converts a GLenum to a string for debugging purposes.
    */

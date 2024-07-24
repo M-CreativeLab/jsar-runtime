@@ -50,6 +50,12 @@ namespace renderer
     tickingTimepoint = std::chrono::high_resolution_clock::now();
     calcFps();
 
+    {
+      // Skip if there is no content renderer.
+      shared_lock<shared_mutex> lock(contentRendererMutex);
+      if (contentRenderers.size() == 0)
+        return;
+    }
     glHostContext->Record();
     if (isHostContextSummaryEnabled)
       glHostContext->Print();
@@ -186,6 +192,7 @@ namespace renderer
       if (contentRenderer->content == content)
       {
         contentRenderers.erase(it);
+        delete contentRenderer;
         break;
       }
     }

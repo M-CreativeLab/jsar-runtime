@@ -14,6 +14,9 @@ namespace gles
     ~GLObjectManager();
 
   public:
+    void PrintMemoryUsage();
+
+  public:
     GLuint CreateProgram(uint32_t clientId);
     GLuint FindProgram(uint32_t clientId);
     void DeleteProgram(uint32_t clientId);

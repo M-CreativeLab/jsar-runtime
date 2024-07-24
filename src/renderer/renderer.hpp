@@ -100,7 +100,7 @@ namespace renderer
     bool isTracingEnabled = false;
     bool isHostContextSummaryEnabled = false;
     bool isAppContextSummaryEnabled = false;
-    uint32_t clientDefaultFrameRate = 60;
+    uint32_t clientDefaultFrameRate = 45;
 
   private:
     RenderAPI *api = nullptr;

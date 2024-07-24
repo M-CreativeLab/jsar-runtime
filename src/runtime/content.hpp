@@ -65,12 +65,6 @@ public: // lifecycle which is called by other classes
    * When the content's command buffers are executed. Internally this method will clear the command buffer requests.
    */
   void onCommandBuffersExecuted();
-  /**
-   * Called when the parent/host process receives the exit signal from the content process, it will dispose the related resources.
-   *
-   * @param exitCode The exit code of the content process.
-   */
-  void onProcessExit(int exitCode);
 
 public: // reference methods
   TrConstellation *getConstellation();
@@ -183,6 +177,7 @@ public:
   bool initialize();
   bool shutdown();
   bool tickOnFrame();
+  bool hasContents() { return !contents.empty(); }
   TrContentRuntime *makeContent();
   TrContentRuntime *findContent(pid_t pid);
   void disposeContent(TrContentRuntime *content);

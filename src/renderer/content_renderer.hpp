@@ -87,6 +87,7 @@ namespace renderer
     xr::Device *xrDevice = nullptr;
     xr::TrXRFrameRequest *currentBaseXRFrameReq = nullptr;
     atomic<bool> isXRFrameBaseReqUpdating = false;
+    atomic<bool> isXRFrameBaseReqDirty = false;
     shared_mutex mutexForXRFrameBaseReq;
     std::unique_ptr<WorkerThread> frameDispatcherThread = nullptr;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastDispatchedFrameTime = std::chrono::high_resolution_clock::now();
