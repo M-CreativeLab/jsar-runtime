@@ -13,6 +13,7 @@
 #include "debug.hpp"
 #include "embedder.hpp"
 #include "content.hpp"
+#include "media_manager.hpp"
 #include "crates/jsar_jsbundle.h"
 
 TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManager(contentMgr),
@@ -196,12 +197,48 @@ bool TrContentRuntime::sendEventResponse(TrEvent &event)
   return eventChanSender->sendEvent(eventMessage);
 }
 
-void TrContentRuntime::setupWithXRCommandBufferClient(TrOneShotClient<xr::TrXRCommandMessage> *client)
+void TrContentRuntime::onMediaChanConnected(TrOneShotClient<media_comm::TrMediaCommandMessage> &client)
 {
-  assert(client != nullptr);
-  xrCommandChanReceiver = new xr::TrXRCommandReceiver(client);
-  xrCommandChanSender = new xr::TrXRCommandSender(client);
-  xrCommandChanClient = client;
+  if (mediaChanReceiver != nullptr || mediaChanSender != nullptr)
+  {
+    DEBUG(LOG_TAG_CONTENT, "The media channel connection is already established.");
+    return;
+  }
+  mediaChanReceiver = make_unique<media_comm::TrMediaCommandReceiver>(&client);
+  mediaChanSender = make_unique<media_comm::TrMediaCommandSender>(&client);
+}
+
+void TrContentRuntime::onXRCommandChanConnected(TrOneShotClient<xr::TrXRCommandMessage> &client)
+{
+  xrCommandChanReceiver = new xr::TrXRCommandReceiver(&client);
+  xrCommandChanSender = new xr::TrXRCommandSender(&client);
+  xrCommandChanClient = &client;
+}
+
+xr::TrXRSession *TrContentRuntime::getActiveXRSession()
+{
+  if (xrSessionsStack.empty())
+    return nullptr;
+  return xrSessionsStack.back();
+}
+
+void TrContentRuntime::appendXRSession(xr::TrXRSession *session)
+{
+  if (session != nullptr)
+    xrSessionsStack.push_back(session);
+}
+
+bool TrContentRuntime::removeXRSession(xr::TrXRSession *session)
+{
+  if (session == nullptr)
+    return false;
+  auto it = std::find(xrSessionsStack.begin(), xrSessionsStack.end(), session);
+  if (it != xrSessionsStack.end())
+  {
+    xrSessionsStack.erase(it);
+    return true;
+  }
+  return false;
 }
 
 void TrContentRuntime::onClientProcess()
@@ -226,6 +263,7 @@ void TrContentRuntime::onClientProcess()
   rapidjson::Document scriptContext;
   scriptContext.SetObject();
 
+  auto constellation = getConstellation();
   auto &allocator = scriptContext.GetAllocator();
   scriptContext.AddMember("id", requestInit.id, allocator);
   scriptContext.AddMember("disableCache", requestInit.disableCache, allocator);
@@ -233,6 +271,7 @@ void TrContentRuntime::onClientProcess()
   scriptContext.AddMember("runScripts", rapidjson::Value(requestInit.runScripts.c_str(), allocator), allocator);
   scriptContext.AddMember("eventChanPort", eventChanPort, allocator);
   scriptContext.AddMember("frameChanPort", frameChanPort, allocator);
+  scriptContext.AddMember("mediaChanPort", constellation->getMediaManager()->chanPort(), allocator);
   scriptContext.AddMember("commandBufferChanPort", commandBufferChanPort, allocator);
 
   // Add constellation options
@@ -242,7 +281,7 @@ void TrContentRuntime::onClientProcess()
                           rapidjson::Value(constellationOptions.httpsProxyServer.c_str(), allocator), allocator);
   scriptContext.AddMember("enableV8Profiling", constellationOptions.enableV8Profiling, allocator);
 
-  auto xrDevice = getConstellation()->getXrDevice();
+  auto xrDevice = constellation->getXrDevice();
   if (xrDevice != nullptr)
   {
     rapidjson::Value xrDeviceObject(rapidjson::kObjectType);
@@ -361,6 +400,19 @@ void TrContentRuntime::recvEvent()
   }
 }
 
+void TrContentRuntime::recvMediaRequest()
+{
+  if (TR_UNLIKELY(shouldDestroy || mediaChanReceiver == nullptr))
+    return;
+
+  media_comm::TrMediaCommandMessage mediaMessage;
+  if (mediaChanReceiver->recvCommand(mediaMessage, 0))
+  {
+    auto mediaManager = getConstellation()->getMediaManager();
+    mediaManager->onContentRequest(this, mediaMessage);
+  }
+}
+
 bool TrContentRuntime::recvClientOutput()
 {
   struct pollfd fds[1];
@@ -410,6 +462,7 @@ bool TrContentRuntime::recvClientOutput()
 bool TrContentRuntime::tickOnFrame()
 {
   recvEvent();
+  recvMediaRequest();
   recvClientOutput();
   return true;
 }
@@ -490,13 +543,16 @@ bool TrContentManager::initialize()
 bool TrContentManager::shutdown()
 {
   contentsDestroyingWorker->stop();
-  DEBUG(LOG_TAG_CONTENT, "Disposing all contents(%zu)...", contents.size());
-  for (auto content : contents)
   {
-    content->dispose();
-    delete content;
+    unique_lock<shared_mutex> lock(contentsMutex);
+    DEBUG(LOG_TAG_CONTENT, "Disposing all contents(%zu)...", contents.size());
+    for (auto content : contents)
+    {
+      content->dispose();
+      delete content;
+    }
+    contents.clear();
   }
-  contents.clear();
 
   eventChanWatcher->stop();
   xrCommandsRecvWorker->stop();

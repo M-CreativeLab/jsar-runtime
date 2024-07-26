@@ -9,7 +9,6 @@ namespace media
   {
   public:
     AudioPlayer();
-    AudioPlayer(std::string &srcUrl);
     ~AudioPlayer() = default;
   };
 }

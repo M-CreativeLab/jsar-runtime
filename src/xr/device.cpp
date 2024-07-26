@@ -4,6 +4,7 @@
 
 #include "runtime/constellation.hpp"
 #include "runtime/content.hpp"
+#include "runtime/media_manager.hpp"
 #include "math/matrix.hpp"
 #include "idgen.hpp"
 #include "./device.hpp"
@@ -215,6 +216,11 @@ namespace xr
      * TODO: support the eye tracking?
      */
     updateGazeFromBaseMatrix(m_ViewerBaseMatrix);
+
+    /**
+     * Update the listener's base matrix for the audio engine.
+     */
+    m_Constellation->getMediaManager()->updateListenerBaseMatrix(m_ViewerBaseMatrix);
     return true;
   }
 
@@ -255,25 +261,19 @@ namespace xr
     return true;
   }
 
-  bool Device::updateLocalTransform(int id, float *transform)
+  bool Device::updateLocalTransform(int id, float *baseMatrixValues)
   {
     std::shared_lock<std::shared_mutex> lock(m_MutexForSessions);
     // Check for the session if it exists
     if (m_Sessions.size() == 0)
       return false;
 
-    std::array<float, 16> input = {
-        transform[0], transform[1], transform[2], transform[3],
-        transform[4], transform[5], transform[6], transform[7],
-        transform[8], transform[9], transform[10], transform[11],
-        transform[12], transform[13], transform[14], transform[15]};
-    // auto rightHanded = math::ConvertMatrixToRightHanded(input);
     for (auto session : m_Sessions)
     {
       if (session->id == id)
       {
-        glm::mat4 localBaseMatrix = glm::make_mat4(input.data());
-        session->setLocalBaseMatrix(localBaseMatrix);
+        glm::mat4 baseMatrix = glm::make_mat4(baseMatrixValues);
+        session->setLocalBaseMatrix(baseMatrix);
         return true;
       }
     }
@@ -314,7 +314,7 @@ namespace xr
           if (content == nullptr)
             m_CommandChanServer->removeClient(&newClient);
           else
-            content->setupWithXRCommandBufferClient(&newClient);
+            content->onXRCommandChanConnected(newClient);
         }, m_AcceptTimeout);
       } });
   }

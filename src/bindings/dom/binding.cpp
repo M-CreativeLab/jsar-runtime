@@ -1,4 +1,5 @@
 #include "binding.hpp"
+#include "./audio.hpp"
 
 namespace bindings
 {
@@ -6,6 +7,8 @@ namespace bindings
   {
     Napi::Object InitModule(Napi::Env env, Napi::Object exports)
     {
+      Audio::Init(env, exports);
+      return exports;
     }
   }
 }

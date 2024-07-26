@@ -37,6 +37,7 @@ IUnityLog *GET_UNITY_LOG_HANDLE();
 #define LOG_TAG_CONTENT "jsar"
 #define LOG_TAG_SCRIPT "jsar"
 #define LOG_TAG_RENDERER "jsar"
+#define LOG_TAG_MEDIA "jsar"
 #define LOG_TAG_CLIENT_ENTRY "jsar"
 #define LOG_TAG_CLIENT_CANVAS "jsar"
 

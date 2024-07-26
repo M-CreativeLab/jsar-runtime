@@ -64,6 +64,7 @@ int main(int argc, char **argv)
   clientContext->url = url;
   clientContext->eventChanPort = contextDocument["eventChanPort"].GetUint();
   clientContext->frameChanPort = contextDocument["frameChanPort"].GetUint();
+  clientContext->mediaChanPort = contextDocument["mediaChanPort"].GetUint();
   clientContext->commandBufferChanPort = contextDocument["commandBufferChanPort"].GetUint();
 
   // Global settings

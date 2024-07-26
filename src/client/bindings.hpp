@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bindings/canvas/binding.hpp"
+#include "bindings/dom/binding.hpp"
 #include "bindings/env/binding.hpp"
 #include "bindings/math3d/binding.hpp"
 #include "bindings/messaging/binding.hpp"

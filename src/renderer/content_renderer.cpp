@@ -293,8 +293,6 @@ namespace renderer
     if (!asXRFrame)
     {
       vector<commandbuffers::TrCommandBufferBase *> commandBufferRequests;
-
-      
       {
         unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
         commandBufferRequests = defaultCommandBufferRequests;

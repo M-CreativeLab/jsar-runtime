@@ -114,5 +114,6 @@ namespace renderer
     frame_request::TrFrameRequestSender *frameRequestChanSender = nullptr;
 
     friend class TrRenderer;
+    friend class xr::TrXRSession;
   };
 }

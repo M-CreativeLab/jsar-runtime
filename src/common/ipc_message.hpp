@@ -295,6 +295,20 @@ namespace ipc
       return new T(*baseRef);
     }
 
+    /**
+     * It gets the reference to a T object which is stored in the `base` field, this is useful when the message's lifetime
+     * is managed at stack, this could avoid the unnecessary heap allocation than `createInstanceFromBase`.
+     *
+     * NOTE:
+     */
+    template <typename T>
+    T &getReferenceFromBase()
+    {
+      assert(base != nullptr);
+      T *pBase = reinterpret_cast<T *>(base);
+      return *pBase;
+    }
+
   private:
     template <typename T>
     size_t readFrom(char *src, size_t offset, T *dest)

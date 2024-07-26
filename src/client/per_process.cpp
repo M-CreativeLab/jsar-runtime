@@ -15,6 +15,7 @@ using namespace bindings;
 
 #define TR_NAPI_MODULE_MAP(XX) \
   XX(canvas)                   \
+  XX(dom)                      \
   XX(env)                      \
   XX(messaging)                \
   XX(math3d)                   \
@@ -300,24 +301,44 @@ void TrClientContextPerProcess::start()
   perfFs = std::make_unique<TrClientPerformanceFileSystem>(applicationCacheDirectory, pid.c_str());
   fontCacheManager = std::make_unique<font::FontCacheManager>();
 
+  // Required channels
   eventChanClient = ipc::TrOneShotClient<TrEventMessage>::MakeAndConnect(eventChanPort, false);
   assert(eventChanClient != nullptr);
   frameChanClient = ipc::TrOneShotClient<TrFrameRequestMessage>::MakeAndConnect(frameChanPort, false);
   assert(frameChanClient != nullptr);
+  mediaChanClient = ipc::TrOneShotClient<TrMediaCommandMessage>::MakeAndConnect(mediaChanPort, false);
+  assert(mediaChanClient != nullptr);
   commandBufferChanClient = ipc::TrOneShotClient<TrCommandBufferMessage>::MakeAndConnect(commandBufferChanPort, false);
   assert(commandBufferChanClient != nullptr);
 
-  if (!eventChanClient->isConnected() || !frameChanClient->isConnected())
+  if (
+      !eventChanClient->isConnected() ||
+      !mediaChanClient->isConnected() ||
+      !frameChanClient->isConnected())
   {
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to connect to the channels", id);
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to connect to the channels: event, media or frame", id);
     return;
   }
 
-  eventChanSender = new TrEventSender(eventChanClient);
-  eventChanReceiver = new TrEventReceiver(eventChanClient);
-  frameChanReceiver = new ipc::TrChannelReceiver<TrFrameRequestMessage>(frameChanClient);
-  commandBufferChanSender = new TrCommandBufferSender(commandBufferChanClient);
-  commandBufferChanReceiver = new TrCommandBufferReceiver(commandBufferChanClient);
+  {
+    // Create sender & receiver for event chan.
+    eventChanSender = new TrEventSender(eventChanClient);
+    eventChanReceiver = new TrEventReceiver(eventChanClient);
+  }
+  {
+    // Create receiver for frame chan.
+    frameChanReceiver = new TrChannelReceiver<TrFrameRequestMessage>(frameChanClient);
+  }
+  {
+    // Create sender & receiver for media chan.
+    mediaChanSender = std::make_unique<TrMediaCommandSender>(mediaChanClient);
+    mediaChanReceiver = std::make_unique<TrMediaCommandReceiver>(mediaChanClient);
+  }
+  {
+    // Create sender & receiver for commandbuffer chan.
+    commandBufferChanSender = new TrCommandBufferSender(commandBufferChanClient);
+    commandBufferChanReceiver = new TrCommandBufferReceiver(commandBufferChanClient);
+  }
 
   // XR device initialization
   if (xrDeviceInit.enabled && xrDeviceInit.commandChanPort > 0)
@@ -358,6 +379,7 @@ void TrClientContextPerProcess::print()
   fprintf(stdout, "ClientContext(%d) applicationCacheDirectory=%s\n", id, applicationCacheDirectory.c_str());
   fprintf(stdout, "ClientContext(%d) httpsProxyServer=%s\n", id, httpsProxyServer.c_str());
   fprintf(stdout, "ClientContext(%d) eventChanPort=%d\n", id, eventChanPort);
+  fprintf(stdout, "ClientContext(%d) mediaChanPort=%d\n", id, mediaChanPort);
   fprintf(stdout, "ClientContext(%d) frameChanPort=%d\n", id, frameChanPort);
   fprintf(stdout, "ClientContext(%d) commandBufferChanPort=%d\n", id, commandBufferChanPort);
 

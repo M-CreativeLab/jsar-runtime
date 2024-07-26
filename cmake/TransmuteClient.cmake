@@ -1,5 +1,6 @@
 file(GLOB TR_CLIENT_SOURCE
     "src/bindings/canvas/*.cpp"
+    "src/bindings/dom/*.cpp"
     "src/bindings/env/*.cpp"
     "src/bindings/logger/*.cpp"
     "src/bindings/math3d/*.cpp"
@@ -8,6 +9,7 @@ file(GLOB TR_CLIENT_SOURCE
     "src/bindings/webgl/*.cpp"
     "src/bindings/webxr/*.cpp"
     "src/client/*.cpp"
+    "src/client/**/*.cpp"
     "src/pugixml/*.cpp"
 )
 

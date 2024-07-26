@@ -128,6 +128,9 @@ declare namespace Transmute {
 
 declare namespace NodeJS {
   interface Process {
+    _linkedBinding(module: 'transmute:dom'): {
+      Audio: typeof Audio;
+    };
     _linkedBinding(module: 'transmute:env'): {
       ClientContext: typeof Transmute.TrClientContext;
     };

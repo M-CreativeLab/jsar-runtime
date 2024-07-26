@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include "idgen.hpp"
+#include "client/per_process.hpp"
 
 namespace media
 {
@@ -19,5 +21,17 @@ namespace media
     void play();
     void setMediaKeys();
     void setSinkId(std::string &sinkId);
+
+  public:
+    bool setSrc(void* buffer, size_t length);
+
+  private:
+    uint32_t id;
+    TrClientContextPerProcess* clientContext = nullptr;
+    const char* srcData = nullptr;
+    size_t srcDataLength = 0;
+
+  private:
+    static TrIdGenerator clientIdGen;
   };
 }

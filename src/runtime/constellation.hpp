@@ -98,6 +98,7 @@ public:
   bool isInitialized();
   TrEventTarget *getNativeEventTarget();
   TrContentManager *getContentManager();
+  TrMediaManager *getMediaManager();
   TrRenderer *getRenderer();
   xr::Device *getXrDevice();
   TrHostPerformanceFileSystem *getPerfFs();

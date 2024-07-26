@@ -18,9 +18,9 @@
 #if _MSC_VER
 #define UNITY_WIN 1
 #elif defined(__APPLE__)
-#if defined(TARGET_OS_TV)
+#if defined(TARGET_OS_TV) && TARGET_OS_TV
 #define UNITY_TVOS 1
-#elif defined(TARGET_OS_IOS)
+#elif defined(TARGET_OS_IOS) && TARGET_OS_IOS
 #define UNITY_IOS 1
 #else
 #define UNITY_OSX 1

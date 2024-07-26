@@ -26,6 +26,9 @@
 #include "common/events/receiver.hpp"
 #include "common/events/sender.hpp"
 #include "common/font/cache.hpp"
+#include "common/media/message.hpp"
+#include "common/media/sender.hpp"
+#include "common/media/receiver.hpp"
 #include "common/xr/types.hpp"
 #include "common/xr/input_sources.hpp"
 #include "common/xr/message.hpp"
@@ -35,9 +38,11 @@
 using namespace std;
 using namespace node;
 using namespace v8;
+using namespace ipc;
 using namespace commandbuffers;
-using namespace frame_request;
 using namespace events;
+using namespace frame_request;
+using namespace media_comm;
 
 typedef uint32_t FrameRequestId;
 typedef function<void(TrAnimationFrameRequest &)> AnimationFrameRequestCallback;
@@ -140,7 +145,14 @@ public: // event methods
     return sendEventMessage(msg);
   }
 
-public: // command buffer methods
+public: // media methods
+  bool sendMediaRequest(TrMediaCommandBase &mediaCommand)
+  {
+    assert(mediaChanSender != nullptr);
+    return mediaChanSender->sendCommand(mediaCommand);
+  }
+
+public: // commandbuffer methods
   bool sendCommandBufferRequest(TrCommandBufferBase &commandBuffer, bool followsFlush = false);
   TrCommandBufferResponse *recvCommandBufferResponse(int timeout);
 
@@ -207,28 +219,36 @@ public:
   uint32_t webglVersion = 2; // webgl2 by default
   uint32_t eventChanPort;
   uint32_t frameChanPort;
+  uint32_t mediaChanPort;
   uint32_t commandBufferChanPort;
   xr::TrDeviceInit xrDeviceInit;
   uint64_t startedAt;
 
-private:
-  ipc::TrOneShotClient<TrEventMessage> *eventChanClient = nullptr;
+private: // event fields
+  TrOneShotClient<TrEventMessage> *eventChanClient = nullptr;
   TrEventSender *eventChanSender = nullptr;
   TrEventReceiver *eventChanReceiver = nullptr;
-  ipc::TrOneShotClient<TrFrameRequestMessage> *frameChanClient = nullptr;
-  ipc::TrChannelReceiver<TrFrameRequestMessage> *frameChanReceiver = nullptr;
-  ipc::TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
+
+private: // frame fields
+  TrOneShotClient<TrFrameRequestMessage> *frameChanClient = nullptr;
+  TrChannelReceiver<TrFrameRequestMessage> *frameChanReceiver = nullptr;
+
+private: // media fields
+  TrOneShotClient<TrMediaCommandMessage> *mediaChanClient = nullptr;
+  unique_ptr<TrMediaCommandSender> mediaChanSender = nullptr;
+  unique_ptr<TrMediaCommandReceiver> mediaChanReceiver = nullptr;
+
+private: // command buffer fields
+  TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
-  std::unique_ptr<font::FontCacheManager> fontCacheManager = nullptr;
-  std::unique_ptr<TrClientPerformanceFileSystem> perfFs = nullptr;
 
 private: // xr fields
-  ipc::TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
+  TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
   xr::TrXRCommandSender *xrCommandChanSender = nullptr;
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
   xr::TrXRFrameRequest *currentXrFrameRequest = nullptr;
-  std::unique_ptr<xr::TrXRInputSourcesZone> xrInputSourcesZoneClient;
+  unique_ptr<xr::TrXRInputSourcesZone> xrInputSourcesZoneClient;
   int framebufferWidth = 0;
   int framebufferHeight = 0;
 
@@ -241,6 +261,10 @@ private: // frame request fields
 private: // service & script alive checking fields
   thread *serviceAliveListener = nullptr;
   atomic<uint64_t> scriptAliveTime = 0;
+
+private: // other fields
+  unique_ptr<font::FontCacheManager> fontCacheManager = nullptr;
+  unique_ptr<TrClientPerformanceFileSystem> perfFs = nullptr;
 
 private:
   static TrClientContextPerProcess *s_Instance;

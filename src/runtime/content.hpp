@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <memory>
 #include <shared_mutex>
 #include <filesystem>
 
@@ -18,6 +19,9 @@
 #include "common/events/message.hpp"
 #include "common/events/sender.hpp"
 #include "common/events/receiver.hpp"
+#include "common/media/message.hpp"
+#include "common/media/sender.hpp"
+#include "common/media/receiver.hpp"
 #include "common/xr/message.hpp"
 #include "common/xr/sender.hpp"
 #include "common/xr/receiver.hpp"
@@ -94,13 +98,17 @@ public: // event methods
    */
   bool sendEventResponse(TrEvent &event);
 
-public: // XR-related methods
+public: // media methods
   /**
-   * Setup and add the ipc client for XR command messages.
-   *
-   * @param client The client pointer to receive or send XR command messages.
+   * When the content's client is connected to the server side media channel.
    */
-  void setupWithXRCommandBufferClient(TrOneShotClient<xr::TrXRCommandMessage> *client);
+  void onMediaChanConnected(TrOneShotClient<media_comm::TrMediaCommandMessage> &client);
+
+public: // xr methods
+  /**
+   * When the content's client is connected to the server side XR command channel.
+   */
+  void onXRCommandChanConnected(TrOneShotClient<xr::TrXRCommandMessage> &client);
   /**
    * Send a XR command response to the content's client.
    *
@@ -113,12 +121,27 @@ public: // XR-related methods
       return xrCommandChanSender->sendCommand(resp);
     return false;
   }
+  /**
+   * Get the current active XRSession, it means the top of the sessions stack.
+   * 
+   * @returns a pointer to the active XRSession, or nullptr if there is no active session.
+   */
+  xr::TrXRSession *getActiveXRSession();
+  /**
+   * Append a XRSession to the content's XR sessions stack.
+   */
+  void appendXRSession(xr::TrXRSession *session);
+  /**
+   * Remove the XRSession from the content's XR sessions stack.
+   */
+  bool removeXRSession(xr::TrXRSession *session);
 
 private:
   void onClientProcess();
   bool testClientProcessExitOnFrame(); // true if the client process has exited
   void recvCommandBuffers(WorkerThread &worker, uint32_t timeout);
   void recvEvent();
+  void recvMediaRequest();
   bool recvClientOutput();
   bool tickOnFrame();
 
@@ -136,17 +159,42 @@ private:
   atomic<bool> shouldDestroy = false;
 
 private:
-  std::unique_ptr<TrEventReceiver> eventChanReceiver = nullptr;
-  std::unique_ptr<TrEventSender> eventChanSender = nullptr;
-  std::unique_ptr<TrCommandBufferReceiver> commandBufferChanReceiver = nullptr;
-  std::unique_ptr<TrCommandBufferSender> commandBufferChanSender = nullptr;
+  unique_ptr<TrEventReceiver> eventChanReceiver = nullptr;
+  unique_ptr<TrEventSender> eventChanSender = nullptr;
+  unique_ptr<media_comm::TrMediaCommandReceiver> mediaChanReceiver = nullptr;
+  unique_ptr<media_comm::TrMediaCommandSender> mediaChanSender = nullptr;
+  unique_ptr<TrCommandBufferReceiver> commandBufferChanReceiver = nullptr;
+  unique_ptr<TrCommandBufferSender> commandBufferChanSender = nullptr;
   TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
-  std::unique_ptr<WorkerThread> commandBuffersRecvWorker;
-
+  unique_ptr<WorkerThread> commandBuffersRecvWorker;
   function<void(TrCommandBufferBase *)> onCommandBufferRequestReceived;
+
+private: // XR fields
   TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
   xr::TrXRCommandSender *xrCommandChanSender = nullptr;
+  /**
+   * **Why we need to store the XRSession instances?**
+   *
+   * In WebXR, the `XRSession` is requested by the `XRSystem` and it decides if a new session should be created and to be
+   * activated. At traditional Web browsers, a page is corresponding to a window, it means that immersive-vr content is only
+   * available for a XRSession at a time, however multiple immersive-ar contents could be available at the same time.
+   *
+   * But in the JSAR environment, a page(XSML/HTML) is not just a window, but a volumetric space, it means that we could restrict
+   * the XRSession with `immersive-ar` to be one-per-page, such that we could make use of spatialized information for other resources
+   * which is not created with WebXR Device APIs, for example, we could treat a common <audio> element or `new Audio(url)` as a
+   * spatialized sound source.
+   *
+   * See https://developer.mozilla.org/en-US/docs/Web/API/XRSystem/requestSession for more detailed background information.
+   *
+   * **Design**
+   *
+   * Each content would have a stack for storing the XRSession instances, and the top of this stack is the active XRSession.
+   * When a new `XRSession` is requested, it will be pushed to the stack, and use the new session to render the visual content,
+   * and when this session is ended via (e.g. `end()` method), it will be popped from the stack, and the previous session will be
+   * activated.
+   */
+  vector<xr::TrXRSession *> xrSessionsStack;
 
 private:
   int childPipes[2];

@@ -1,29 +1,58 @@
 import { type MediaPlayerBackend } from '@yodaos-jsar/dom';
+const { Audio: AudioImpl } = process._linkedBinding('transmute:dom');
 
 export class MediaPlayerBackendOnTransmute implements MediaPlayerBackend {
-  paused: boolean;
-  currentTime: number;
-  duration: number;
-  volume: number;
-  loop: boolean;
-  onended: () => void;
+  private _audioInstance: HTMLAudioElement;
 
   constructor() {
-    // TODO
+    this._audioInstance = new AudioImpl();
   }
   load(buffer: ArrayBuffer | ArrayBufferView, onloaded: () => void): void {
-    throw new TypeError('Method not implemented.');
+    this._audioInstance.srcObject = new Blob([buffer]);
+    this._audioInstance.onloadeddata = onloaded;
+    this._audioInstance.load();
+    setTimeout(() => {
+      this._audioInstance.onloadeddata(new Event('loadeddata'));
+    }, 100);
   }
-  play(when?: number): void {
-    throw new TypeError('Method not implemented.');
+  play(when?: number | undefined): void {
+    this._audioInstance.currentTime = when || 0;
+    this._audioInstance.play();
   }
   pause(): void {
-    throw new TypeError('Method not implemented.');
+    this._audioInstance.pause();
   }
   canPlayType(type: string): CanPlayTypeResult {
-    throw new TypeError('Method not implemented.');
+    return this._audioInstance.canPlayType(type);
   }
   dispose(): void {
-    throw new TypeError('Method not implemented.');
+    return;
+  }
+  get paused(): boolean {
+    return this._audioInstance.paused;
+  }
+  get currentTime(): number {
+    return this._audioInstance.currentTime;
+  }
+  get duration(): number {
+    return this._audioInstance.duration;
+  }
+  get volume(): number {
+    return this._audioInstance.volume;
+  }
+  set volume(value: number) {
+    this._audioInstance.volume = value;
+  }
+  get loop(): boolean {
+    return this._audioInstance.loop;
+  }
+  set loop(value: boolean) {
+    this._audioInstance.loop = value;
+  }
+  get onended(): () => void {
+    return this._audioInstance.onended as any;
+  }
+  set onended(value: () => void) {
+    this._audioInstance.onended = value;
   }
 }

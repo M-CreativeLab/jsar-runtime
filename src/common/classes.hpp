@@ -4,6 +4,8 @@ class TrViewport;
 class TrConstellation;
 class TrContentManager;
 class TrContentRuntime;
+class TrSoundSource;
+class TrMediaManager;
 
 namespace renderer
 {

@@ -21,7 +21,7 @@ TrConstellation::TrConstellation(TrEmbedder *embedder) : embedder(embedder)
 
   nativeEventTarget = std::make_unique<TrEventTarget>();
   contentManager = std::make_unique<TrContentManager>(this);
-  mediaManager = std::make_unique<TrMediaManager>();
+  mediaManager = std::make_unique<TrMediaManager>(this);
   renderer = std::make_unique<TrRenderer>(this);
   xrDevice = std::make_unique<xr::Device>(this);
 }
@@ -69,9 +69,9 @@ bool TrConstellation::initialize(string initJson)
 void TrConstellation::shutdown()
 {
   contentManager->shutdown();
+  mediaManager->shutdown();
   renderer->shutdown();
   xrDevice->shutdown();
-  mediaManager->shutdown();
   initialized = false;
 }
 
@@ -99,6 +99,11 @@ TrEventTarget *TrConstellation::getNativeEventTarget()
 TrContentManager *TrConstellation::getContentManager()
 {
   return contentManager.get();
+}
+
+TrMediaManager *TrConstellation::getMediaManager()
+{
+  return mediaManager.get();
 }
 
 renderer::TrRenderer *TrConstellation::getRenderer()

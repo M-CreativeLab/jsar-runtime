@@ -2,6 +2,7 @@
 #include "common/command_buffers/shared.hpp"
 #include "common/frame_request/types.hpp"
 #include "common/events/message.hpp"
+#include "common/media/message.hpp"
 #include "common/xr/message.hpp"
 
 namespace ipc
@@ -581,6 +582,7 @@ namespace ipc
   SPECIALIZE_TEMPLATE(commandbuffers::TrCommandBufferMessage)
   SPECIALIZE_TEMPLATE(frame_request::TrFrameRequestMessage)
   SPECIALIZE_TEMPLATE(events::TrEventMessage)
+  SPECIALIZE_TEMPLATE(media_comm::TrMediaCommandMessage)
   SPECIALIZE_TEMPLATE(xr::TrXRCommandMessage)
 #undef SPECIALIZE_TEMPLATE
 }
