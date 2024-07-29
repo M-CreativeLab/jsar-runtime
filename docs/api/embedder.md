@@ -41,11 +41,11 @@ enum class TrHostEngine
 };
 ```
 
-## Virtual Methods
+### Virtual Methods
 
 The virtual methods that embedding developers are optional to implement for their applications. This section describes all the virtual methods that developers could implement.
 
-### `~TrEmbedder()`
+#### `~TrEmbedder()`
 
 If the custom embedder class has its own resources, the developers should release them in a custom destructor.
 
@@ -55,7 +55,7 @@ If the custom embedder class has its own resources, the developers should releas
 }
 ```
 
-### `bool onEvent(TrEvent &event, TrContentRuntime *content)`
+#### `bool onEvent(TrEvent &event, TrContentRuntime *content)`
 
 This virtual method will be called by the runtime when there is an event to be handled by the embedding application.
 
@@ -66,19 +66,19 @@ bool onEvent(TrEvent &event, TrContentRuntime *content) {
 }
 ```
 
-## Instance Methods
+### Instance Methods
 
 The instance methods are the methods inherited from the `TrEmbedder` class that developers could use to interact with the runtime.
 
-### `uint32_t getFps()`
+#### `uint32_t getFps()`
 
 This method returns the current frames per second of the runtime.
 
-### `uint32_t getUptime()`
+#### `uint32_t getUptime()`
 
 This method returns the current uptime of the runtime in milliseconds.
 
-### `void onStart(std::string argJson)`
+#### `void onStart(std::string argJson)`
 
 This method starts the runtime with the given arguments in JSON format:
 
@@ -102,13 +102,13 @@ The above fields are used to configure the runtime:
 
 Internally, this method will start the internal components: renderer, content manager, media service and other services.
 
-### `void onFrame()`
+#### `void onFrame()`
 
 This method should be called in every frame to update the runtime, such as `Update()` in Unity or `Tick()` in Unreal.
 
 Note: This frame in the method name doesn't mean the actual frame especially in the case of XR, it represents an update cycle by the host engine, the frame in OpenXR or WebXR should be configured by the `configureXrDevice(bool enabled, xr::TrDeviceInit &init)` method which will be explained later.
 
-### `bool configureXrDevice(bool enabled, xr::TrDeviceInit &init)`
+#### `bool configureXrDevice(bool enabled, xr::TrDeviceInit &init)`
 
 This method is used to configure the XR device, the `enabled` parameter is used to enable or disable the XR device, and the `init` parameter is used to configure the XR device.
 
@@ -131,7 +131,7 @@ enum class StereoRenderingMode
 
 In multi-pass rendering, the runtime will call `onFrame()` for each eye, that means one call for the left eye and another call for the right eye. However, in both single-pass rendering modes, the runtime will call `onFrame()` once, and the application should render the scene for both eyes which might be more efficient.
 
-### `void shutdown()`
+#### `void shutdown()`
 
 This method should be called to shutdown the runtime, it will release all the resources and stop the internal components, it will be returned when all the resources are released.
 
