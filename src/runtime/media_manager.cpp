@@ -57,8 +57,8 @@ void TrSoundSource::setSrcData(const char *audioBuffer, size_t sizeInBytes)
   if (decoder == nullptr)
     decoder = make_unique<ma_decoder>();
 
-  ma_sound* pSound = sound.get();
-  ma_decoder* pDecoder = decoder.get();
+  ma_sound *pSound = sound.get();
+  ma_decoder *pDecoder = decoder.get();
   ma_decoder_config decoderConfig = ma_decoder_config_init(TR_MEDIA_OUTPUT_FORMAT,
                                                            TR_MEDIA_OUTPUT_CHANNELS,
                                                            TR_MEDIA_OUTPUT_SAMPLE_RATE);
@@ -68,7 +68,7 @@ void TrSoundSource::setSrcData(const char *audioBuffer, size_t sizeInBytes)
   soundConfig.pFilePath = nullptr;
   soundConfig.pDataSource = pDecoder;
   soundConfig.channelsOut = 0;
-  soundConfig.isLooping = MA_TRUE;
+  soundConfig.isLooping = MA_FALSE;
   soundConfig.flags = MA_SOUND_FLAG_DECODE;
   ma_sound_init_ex(&mediaManager->audioEngine, &soundConfig, pSound);
   ma_sound_set_spatialization_enabled(pSound, MA_TRUE);
@@ -93,15 +93,41 @@ void TrSoundSource::setBaseMatrix(glm::mat4 &baseMatrix)
   applyBaseMatrixToSound();
 }
 
+bool TrSoundSource::dispatchMediaEvent(media_comm::TrMediaEventType eventType)
+{
+  media_comm::TrOnMediaEvent event(eventType, id);
+  return content->dispatchMediaEvent(event);
+}
+
 void TrSoundSource::applyBaseMatrixToSound()
 {
   if (sound == nullptr)
     return;
-  ma_sound* pSound = sound.get();
+  ma_sound *pSound = sound.get();
   auto position = baseMatrix[3];
   auto forward = glm::normalize(glm::vec3(-glm::column(baseMatrix, 2)));
   ma_sound_set_position(pSound, position.x, position.y, position.z);
   ma_sound_set_direction(pSound, forward.x, forward.y, forward.z);
+}
+
+void TrSoundSource::onBeforeData()
+{
+  if (sound != nullptr && isSrcDataLoaded)
+  {
+    ma_sound *pSound = sound.get();
+    auto soundAtEnd = ma_sound_get_at_end(pSound);
+    if (!isEnded && soundAtEnd)
+      dispatchMediaEvent(media_comm::TrMediaEventType::Ended);
+    isEnded = soundAtEnd;
+  }
+}
+
+void TrSoundSource::onAfterData()
+{
+  if (sound != nullptr && isSrcDataLoaded)
+  {
+    // TODO
+  }
 }
 
 void TrMediaManager::DataCallback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount)
@@ -277,5 +303,9 @@ void TrMediaManager::onContentRequest(TrContentRuntime *content, TrMediaCommandM
 
 void TrMediaManager::nextAudioData(void *pOutput, const void *pInput, ma_uint32 frameCount)
 {
+  for (auto &soundSource : soundSources)
+    soundSource->onBeforeData();
   ma_engine_read_pcm_frames(&audioEngine, pOutput, frameCount, nullptr);
+  for (auto &soundSource : soundSources)
+    soundSource->onAfterData();
 }

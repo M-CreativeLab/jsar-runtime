@@ -276,10 +276,14 @@ namespace media_comm
   class TrOnMediaEvent : public TrMediaCommandBase
   {
   public:
-    TrOnMediaEvent() : TrMediaCommandBase(TrMediaCommandType::OnMediaEvent, sizeof(TrOnMediaEvent)) {}
+    TrOnMediaEvent(TrMediaEventType eventType, uint32_t clientId)
+        : TrMediaCommandBase(TrMediaCommandType::OnMediaEvent, sizeof(TrOnMediaEvent)),
+          eventType(eventType), clientId(clientId)
+    {
+    }
 
   public:
     uint32_t clientId;
-    TrMediaEventType mediaEvent;
+    TrMediaEventType eventType;
   };
 }

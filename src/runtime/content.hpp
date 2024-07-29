@@ -101,8 +101,17 @@ public: // event methods
 public: // media methods
   /**
    * When the content's client is connected to the server side media channel.
+   * 
+   * @param client The media channel client.
    */
   void onMediaChanConnected(TrOneShotClient<media_comm::TrMediaCommandMessage> &client);
+  /**
+   * Dispatch the media event to the content.
+   * 
+   * @param event The media event to dispatch.
+   * @returns true if the event is dispatched successfully.
+   */
+  bool dispatchMediaEvent(media_comm::TrMediaCommandBase &event);
 
 public: // xr methods
   /**

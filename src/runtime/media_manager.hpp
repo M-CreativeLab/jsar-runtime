@@ -81,7 +81,10 @@ public:
   void setBaseMatrix(glm::mat4 &baseMatrix);
 
 private:
+  bool dispatchMediaEvent(media_comm::TrMediaEventType eventType);
   void applyBaseMatrixToSound();
+  void onBeforeData();
+  void onAfterData();
 
 public:
   uint32_t id;
@@ -91,9 +94,10 @@ private:
   TrContentRuntime *content = nullptr;
   unique_ptr<ma_sound> sound = nullptr;
   unique_ptr<ma_decoder> decoder = nullptr;
+  glm::mat4 baseMatrix = glm::mat4(1.0f);
   bool autoPlay = true;
   bool isSrcDataLoaded = false;
-  glm::mat4 baseMatrix = glm::mat4(1.0f);
+  bool isEnded = true;
 
   friend class TrMediaManager;
 };

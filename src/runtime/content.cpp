@@ -208,6 +208,13 @@ void TrContentRuntime::onMediaChanConnected(TrOneShotClient<media_comm::TrMediaC
   mediaChanSender = make_unique<media_comm::TrMediaCommandSender>(&client);
 }
 
+bool TrContentRuntime::dispatchMediaEvent(media_comm::TrMediaCommandBase &event)
+{
+  if (shouldDestroy || mediaChanSender == nullptr)
+    return false;
+  return mediaChanSender->sendCommand(event);
+}
+
 void TrContentRuntime::onXRCommandChanConnected(TrOneShotClient<xr::TrXRCommandMessage> &client)
 {
   xrCommandChanReceiver = new xr::TrXRCommandReceiver(&client);

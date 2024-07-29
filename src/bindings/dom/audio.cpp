@@ -18,6 +18,7 @@ namespace bindings
       *constructor = Napi::Persistent(func);
       env.SetInstanceData(constructor);
       exports.Set("Audio", func);
+      // exports.Set("HTMLAudioElement", func);
     }
 
     Audio::Audio(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Audio>(info)
@@ -44,8 +45,13 @@ namespace bindings
       }
 
       std::string type = info[0].As<Napi::String>().Utf8Value();
-      bool result = handle->canPlayType(type);
-      return Napi::Boolean::New(env, result);
+      auto result = handle->canPlayType(type);
+      if (result == media::CanPlayTypeResult::No)
+        return Napi::String::New(env, "");
+      else if (result == media::CanPlayTypeResult::Probably)
+        return Napi::String::New(env, "probably");
+      else
+        return Napi::String::New(env, "maybe");
     }
 
     Napi::Value Audio::FastSeek(const Napi::CallbackInfo &info)

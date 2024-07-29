@@ -12,10 +12,14 @@ namespace media
     clientContext->sendMediaRequest(request);
   }
 
-  bool MediaPlayer::canPlayType(const std::string &type)
+  CanPlayTypeResult MediaPlayer::canPlayType(const std::string &mimeType)
   {
-    // Method implementation
-    return false;
+    if (
+        mimeType == "audio/mpeg" ||
+        mimeType == "audio/wav")
+      return CanPlayTypeResult::Probably;
+    else
+      return CanPlayTypeResult::No;
   }
 
   void MediaPlayer::captureStream()
@@ -25,7 +29,11 @@ namespace media
 
   void MediaPlayer::fastSeek(long long time)
   {
-    // Method implementation
+    if (srcData == nullptr || srcDataLength == 0)
+      return;
+    assert(clientContext != nullptr);
+    media_comm::TrSeekRequest request(id, time);
+    clientContext->sendMediaRequest(request);
   }
 
   void MediaPlayer::load()
@@ -65,6 +73,13 @@ namespace media
   {
     if (buffer == nullptr || length == 0)
       return false;
+
+    if (srcData != nullptr)
+    {
+      free((void *)srcData);
+      srcData = nullptr;
+      srcDataLength = 0;
+    }
 
     srcData = (char *)malloc(length);
     if (srcData == nullptr)
