@@ -25,6 +25,7 @@ namespace media_comm
   XX(SetVolumeRequest)                 \
   XX(SetLoopingRequest)                \
   XX(EnableAudioSpatializationRequest) \
+  XX(OnMediaMetadata)                  \
   XX(OnMediaEvent)
 
   enum class TrMediaCommandType
@@ -161,7 +162,9 @@ namespace media_comm
         : TrMediaRequestSimple(that),
           clientId(that.clientId),
           srcData(nullptr),
-          sizeInBytes(0)
+          sizeInBytes(0),
+          initialVolume(that.initialVolume),
+          loopingAtStart(that.loopingAtStart)
     {
     }
     TrSetSrcDataRequest(uint32_t clientId, void *srcData, size_t size)
@@ -197,6 +200,8 @@ namespace media_comm
     uint32_t clientId;
     void *srcData = nullptr;
     size_t sizeInBytes;
+    double initialVolume = 1.0;
+    bool loopingAtStart = false;
   };
 
   class TrSetVolumeRequest : public TrMediaRequestSimple<TrSetVolumeRequest>
@@ -246,32 +251,81 @@ namespace media_comm
     TrAttenuationModel attenuationModel = TrAttenuationModel::Exponential;
   };
 
+  class TrOnMediaMetadata : public TrMediaCommandBase
+  {
+  public:
+    TrOnMediaMetadata(uint32_t clientId)
+        : TrMediaCommandBase(TrMediaCommandType::OnMediaMetadata, sizeof(TrOnMediaMetadata)),
+          clientId(clientId)
+    {
+    }
+
+  public:
+    uint32_t clientId;
+    double duration;
+  };
+
+#define TR_MEDIA_EVENT_TYPES_MAP(XX)   \
+  XX(Abort, "abort")                   \
+  XX(CanPlay, "canplay")               \
+  XX(CanPlayThrough, "canplaythrough") \
+  XX(DurationChange, "durationchange") \
+  XX(Emptied, "emptied")               \
+  XX(Ended, "ended")                   \
+  XX(Error, "error")                   \
+  XX(LoadedData, "loadeddata")         \
+  XX(LoadedMetadata, "loadedmetadata") \
+  XX(LoadStart, "loadstart")           \
+  XX(Pause, "pause")                   \
+  XX(Play, "play")                     \
+  XX(Playing, "playing")               \
+  XX(Progress, "progress")             \
+  XX(RateChange, "ratechange")         \
+  XX(Seeked, "seeked")                 \
+  XX(Seeking, "seeking")               \
+  XX(Stalled, "stalled")               \
+  XX(Suspend, "suspend")               \
+  XX(TimeUpdate, "timeupdate")         \
+  XX(VolumeChange, "volumechange")     \
+  XX(Waiting, "waiting")
+
   enum class TrMediaEventType
   {
-    Abort,
-    Canplay,
-    CanplayThrough,
-    DurationChange,
-    Emptied,
-    Encrypted,
-    Ended,
-    Error,
-    LoadedData,
-    LoadedMetadata,
-    LoadStart,
-    Pause,
-    Play,
-    Playing,
-    Progress,
-    RateChange,
-    Seeked,
-    Seeking,
-    Stalled,
-    Suspend,
-    TimeUpdate,
-    VolumeChange,
-    Waiting,
+    Unset = 0,
+#define XX(eventType, eventTypeString) eventType,
+    TR_MEDIA_EVENT_TYPES_MAP(XX)
+#undef XX
   };
+
+  inline std::string eventTypeToString(TrMediaEventType eventType)
+  {
+    switch (eventType)
+    {
+#define XX(eventType, eventTypeString) \
+  case TrMediaEventType::eventType:    \
+    return eventTypeString;
+      TR_MEDIA_EVENT_TYPES_MAP(XX)
+#undef XX
+
+    default:
+      return "unknown";
+    }
+  }
+
+  inline std::string eventTypeToEventName(TrMediaEventType eventType)
+  {
+    switch (eventType)
+    {
+#define XX(eventType, eventTypeString) \
+  case TrMediaEventType::eventType:    \
+    return "on" eventTypeString;
+      TR_MEDIA_EVENT_TYPES_MAP(XX)
+#undef XX
+
+    default:
+      return "";
+    }
+  }
 
   class TrOnMediaEvent : public TrMediaCommandBase
   {

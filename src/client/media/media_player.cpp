@@ -1,10 +1,12 @@
 #include "./media_player.hpp"
 #include "common/media/message.hpp"
 
-namespace media
+namespace media_client
 {
   TrIdGenerator MediaPlayer::clientIdGen = TrIdGenerator(0x1f);
-  MediaPlayer::MediaPlayer() : clientContext(TrClientContextPerProcess::Get())
+  MediaPlayer::MediaPlayer(MediaContentType contentType)
+      : events_comm::TrEventTarget<media_comm::TrMediaEventType>(),
+        clientContext(TrClientContextPerProcess::Get()), contentType(contentType)
   {
     assert(clientContext != nullptr);
     id = clientIdGen.get();
@@ -42,6 +44,8 @@ namespace media
       return;
     assert(clientContext != nullptr);
     media_comm::TrSetSrcDataRequest request(id, (void *)srcData, srcDataLength);
+    request.initialVolume = volume;
+    request.loopingAtStart = loopEnabled;
     clientContext->sendMediaRequest(request);
   }
 
@@ -57,16 +61,6 @@ namespace media
     assert(clientContext != nullptr);
     media_comm::TrPlayRequest request(id);
     clientContext->sendMediaRequest(request);
-  }
-
-  void MediaPlayer::setMediaKeys()
-  {
-    // Method implementation
-  }
-
-  void MediaPlayer::setSinkId(std::string &sinkId)
-  {
-    // Method implementation
   }
 
   bool MediaPlayer::setSrc(void *buffer, size_t length)
@@ -88,5 +82,40 @@ namespace media
     memcpy((void *)srcData, buffer, length);
     srcDataLength = length;
     return true;
+  }
+
+  double MediaPlayer::getDuration() const
+  {
+    return duration;
+  }
+
+  bool MediaPlayer::getLoop() const
+  {
+    return loopEnabled;
+  }
+
+  void MediaPlayer::setLoop(bool loop)
+  {
+    loopEnabled = loop;
+    if (clientContext != nullptr)
+    {
+      media_comm::TrSetLoopingRequest request(id, loopEnabled);
+      clientContext->sendMediaRequest(request);
+    }
+  }
+
+  double MediaPlayer::getVolume() const
+  {
+    return volume;
+  }
+
+  void MediaPlayer::setVolume(double volume)
+  {
+    this->volume = volume;
+    if (clientContext != nullptr)
+    {
+      media_comm::TrSetVolumeRequest request(id, volume);
+      clientContext->sendMediaRequest(request);
+    }
   }
 }

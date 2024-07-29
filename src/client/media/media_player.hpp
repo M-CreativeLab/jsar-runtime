@@ -3,9 +3,19 @@
 #include <string>
 #include "idgen.hpp"
 #include "client/per_process.hpp"
+#include "common/events_v2/event_target.hpp"
 
-namespace media
+namespace media_client
 {
+  using MediaEvent = events_comm::TrEvent<media_comm::TrMediaEventType, events_comm::TrEventDetailBase>;
+
+  enum class MediaContentType
+  {
+    Audio = 0,
+    Video,
+    Video3D,
+  };
+
   enum class CanPlayTypeResult
   {
     No = 0,
@@ -13,10 +23,10 @@ namespace media
     Maybe = 2
   };
 
-  class MediaPlayer
+  class MediaPlayer : public events_comm::TrEventTarget<media_comm::TrMediaEventType>
   {
   public:
-    MediaPlayer();
+    MediaPlayer(MediaContentType contentType = MediaContentType::Audio);
     virtual ~MediaPlayer() = default;
 
   public:
@@ -29,24 +39,44 @@ namespace media
     CanPlayTypeResult canPlayType(const std::string &mimeType);
     void captureStream();
     void fastSeek(long long time);
+    /**
+     * Load the media source data (e.g. audio data) to be played, `setSrc` must be called before this method to make sure
+     * the source data is set.
+     */
     void load();
+    /**
+     * Pause the media player.
+     */
     void pause();
+    /**
+     * Play the media player.
+     */
     void play();
-    void setMediaKeys();
-    void setSinkId(std::string &sinkId);
 
   public:
     /**
      * Set the media source data (e.g. audio data) to be played.
-     * 
+     *
      * @param buffer The buffer containing the source data.
      * @param length The length of the source data.
      * @returns True if the source data is set successfully, false otherwise.
      */
     bool setSrc(void *buffer, size_t length);
     /**
+     * Get the duration of the media in seconds.
+     */
+    double getDuration() const;
+    /**
+     * Get if this media player is in loop mode.
+     */
+    bool getLoop() const;
+    /**
+     * Set if this media player is in loop mode.
+     */
+    void setLoop(bool loop);
+    /**
      * Get the volume of this player.
-     * 
+     *
      * @returns The volume, a double value between 0 and 1.
      */
     double getVolume() const;
@@ -55,22 +85,32 @@ namespace media
      *
      * @param volume The volume to set, a double values must fall between 0 and 1, where 0 is effectively muted and 1 is the
      * loudest possible value.
-     * @return True if the volume is set successfully, false otherwise.
      */
-    bool setVolume(double volume);
+    void setVolume(double volume);
 
   private:
     uint32_t id;
+    MediaContentType contentType;
     TrClientContextPerProcess *clientContext = nullptr;
     const char *srcData = nullptr;
     size_t srcDataLength = 0;
     /**
+     * If the loop mode is enabled.
+     */
+    bool loopEnabled = false;
+    /**
      * The volume of this player, a double values must fall between 0 and 1, where 0 is effectively muted and 1 is the
      * loudest possible value.
      */
-    double volume = 0;
+    double volume = 1.0;
+    /**
+     * The duration of this media, this value will be updated from the server side.
+     */
+    double duration = -1.0;
 
   private:
     static TrIdGenerator clientIdGen;
+
+    friend class ::TrClientContextPerProcess;
   };
 }

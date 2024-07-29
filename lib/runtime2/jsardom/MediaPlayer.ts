@@ -11,9 +11,6 @@ export class MediaPlayerBackendOnTransmute implements MediaPlayerBackend {
     this._audioInstance.srcObject = new Blob([buffer]);
     this._audioInstance.onloadeddata = onloaded;
     this._audioInstance.load();
-    setTimeout(() => {
-      this._audioInstance.onloadeddata(new Event('loadeddata'));
-    }, 100);
   }
   play(when?: number | undefined): void {
     this._audioInstance.currentTime = when || 0;

@@ -55,19 +55,23 @@ class NavigatorImpl implements Navigator {
   webkitGamepads(): Gamepad[] {
     throw new Error('Method not implemented.');
   }
-  gpu: GPU;
   xr?: XRSystem;
-  webdriver: boolean;
+  get gpu(): GPU {
+    throw new TypeError('WebGPU is not supported in this environment');
+  }
+  get webdriver(): boolean {
+    return false;
+  }
   clearAppBadge(): Promise<void> {
     throw new Error('Method not implemented.');
   }
   setAppBadge(contents?: number): Promise<void> {
     throw new Error('Method not implemented.');
   }
-  hardwareConcurrency: number;
   registerProtocolHandler(scheme: string, url: string | URL): void {
     throw new Error('Method not implemented.');
   }
+  hardwareConcurrency: number;
   cookieEnabled: boolean;
   appCodeName: string;
   appName: string;
@@ -83,12 +87,12 @@ class NavigatorImpl implements Navigator {
   locks: LockManager;
   onLine: boolean;
   mimeTypes: MimeTypeArray;
-  pdfViewerEnabled: boolean;
+  pdfViewerEnabled: boolean = false;
   plugins: PluginArray;
-  javaEnabled(): boolean {
-    throw new Error('Method not implemented.');
-  }
   storage: StorageManager;
+  javaEnabled(): boolean {
+    return false;
+  }
 }
 
 export function createNavigator(): Navigator {

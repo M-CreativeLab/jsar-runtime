@@ -57,12 +57,16 @@ void TrSoundSource::setSrcData(const char *audioBuffer, size_t sizeInBytes)
   if (decoder == nullptr)
     decoder = make_unique<ma_decoder>();
 
+  dispatchMediaEvent(media_comm::TrMediaEventType::LoadStart);
   ma_sound *pSound = sound.get();
   ma_decoder *pDecoder = decoder.get();
   ma_decoder_config decoderConfig = ma_decoder_config_init(TR_MEDIA_OUTPUT_FORMAT,
                                                            TR_MEDIA_OUTPUT_CHANNELS,
                                                            TR_MEDIA_OUTPUT_SAMPLE_RATE);
   ma_decoder_init_memory(audioBuffer, sizeInBytes, &decoderConfig, pDecoder);
+  dispatchMediaMetadata();
+  dispatchMediaEvent(media_comm::TrMediaEventType::LoadedMetadata);
+  dispatchMediaEvent(media_comm::TrMediaEventType::LoadedData);
 
   ma_sound_config soundConfig = ma_sound_config_init();
   soundConfig.pFilePath = nullptr;
@@ -97,6 +101,18 @@ bool TrSoundSource::dispatchMediaEvent(media_comm::TrMediaEventType eventType)
 {
   media_comm::TrOnMediaEvent event(eventType, id);
   return content->dispatchMediaEvent(event);
+}
+
+bool TrSoundSource::dispatchMediaMetadata()
+{
+  media_comm::TrOnMediaMetadata metadata(id);
+  {
+    // Update the media metadata
+    ma_uint64 framesCount;
+    ma_decoder_get_length_in_pcm_frames(decoder.get(), &framesCount);
+    metadata.duration = static_cast<double>(framesCount) / decoder->outputSampleRate;
+  }
+  return content->dispatchMediaEvent(metadata);
 }
 
 void TrSoundSource::applyBaseMatrixToSound()
@@ -272,7 +288,11 @@ void TrMediaManager::onContentRequest(TrContentRuntime *content, TrMediaCommandM
     auto setSrcDataReq = TrMediaCommandBase::CreateFromMessage<TrSetSrcDataRequest>(reqMessage);
     auto soundSource = findSoundSourceById(setSrcDataReq.clientId);
     if (soundSource != nullptr && soundSource->content == content)
+    {
       soundSource->setSrcData((char *)setSrcDataReq.srcData, setSrcDataReq.sizeInBytes);
+      soundSource->setVolume(setSrcDataReq.initialVolume);
+      soundSource->setLooping(setSrcDataReq.loopingAtStart);
+    }
   }
   else if (messageType == TrMediaCommandType::SetVolumeRequest)
   {

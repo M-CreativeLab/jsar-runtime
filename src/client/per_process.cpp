@@ -7,6 +7,8 @@
 #include <sys/resource.h>
 
 #include "per_process.hpp"
+#include "media/media_player.hpp"
+#include "media/audio_player.hpp"
 #include "crates/jsar_jsbindings.h"
 #include "bindings.hpp"
 
@@ -333,6 +335,13 @@ void TrClientContextPerProcess::start()
     // Create sender & receiver for media chan.
     mediaChanSender = std::make_unique<TrMediaCommandSender>(mediaChanClient);
     mediaChanReceiver = std::make_unique<TrMediaCommandReceiver>(mediaChanClient);
+    mediaEventsPollingWorker = std::make_unique<WorkerThread>("TrMediaEventsPolling", [this](WorkerThread &worker)
+                                                              {
+                                                                media_comm::TrMediaCommandMessage incomingEvent;
+                                                                if (mediaChanReceiver->recvCommand(incomingEvent, 100))
+                                                                {
+                                                                  onListenMediaEvent(incomingEvent);
+                                                                } });
   }
   {
     // Create sender & receiver for commandbuffer chan.
@@ -453,6 +462,20 @@ TrEventMessage *TrClientContextPerProcess::recvEventMessage(int timeout)
   return eventChanReceiver->recvEvent(timeout);
 }
 
+shared_ptr<media_client::MediaPlayer> TrClientContextPerProcess::createMediaPlayer()
+{
+  auto player = make_shared<media_client::MediaPlayer>();
+  mediaPlayers.push_back(player);
+  return player;
+}
+
+shared_ptr<media_client::AudioPlayer> TrClientContextPerProcess::createAudioPlayer()
+{
+  auto player = make_shared<media_client::AudioPlayer>();
+  mediaPlayers.push_back(dynamic_pointer_cast<media_client::MediaPlayer>(player));
+  return player;
+}
+
 bool TrClientContextPerProcess::sendCommandBufferRequest(TrCommandBufferBase &commandBuffer, bool followsFlush)
 {
   if (isInXrFrame())
@@ -540,5 +563,41 @@ void TrClientContextPerProcess::onListenFrames()
           callback(frameRequestMsg);
       }
     }
+  }
+}
+
+void TrClientContextPerProcess::onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage)
+{
+  auto messageType = eventMessage.getType();
+  if (messageType == TrMediaCommandType::OnMediaEvent)
+  {
+    auto mediaEvent = TrMediaCommandBase::CreateFromMessage<TrOnMediaEvent>(eventMessage);
+    auto clientId = mediaEvent.clientId;
+    for (auto &mediaPlayer : mediaPlayers)
+    {
+      if (mediaPlayer->id == clientId)
+      {
+        mediaPlayer->dispatchEvent(mediaEvent.eventType);
+        break;
+      }
+    }
+  }
+  else if (messageType == TrMediaCommandType::OnMediaMetadata)
+  {
+    auto metadata = TrMediaCommandBase::CreateFromMessage<TrOnMediaMetadata>(eventMessage);
+    auto clientId = metadata.clientId;
+    for (auto &mediaPlayer : mediaPlayers)
+    {
+      if (mediaPlayer->id == clientId)
+      {
+        mediaPlayer->duration = metadata.duration;
+        // TODO: other metadata?
+        break;
+      }
+    }
+  }
+  else
+  {
+    fprintf(stderr, "ClientContext(%d) received an unknown media event message\n", id);
   }
 }

@@ -82,6 +82,7 @@ public:
 
 private:
   bool dispatchMediaEvent(media_comm::TrMediaEventType eventType);
+  bool dispatchMediaMetadata();
   void applyBaseMatrixToSound();
   void onBeforeData();
   void onAfterData();

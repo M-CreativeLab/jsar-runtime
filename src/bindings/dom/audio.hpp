@@ -3,6 +3,7 @@
 #include <memory>
 #include <napi.h>
 #include "client/media/audio_player.hpp"
+#include "client/per_process.hpp"
 
 namespace bindings
 {
@@ -23,10 +24,20 @@ namespace bindings
       Napi::Value Play(const Napi::CallbackInfo &info);
 
     private:
-      static Napi::Value OnLoadArrayBuffer(const Napi::CallbackInfo &info);
+      Napi::Value DurationGetter(const Napi::CallbackInfo &info);
+      void LoopSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+      Napi::Value LoopGetter(const Napi::CallbackInfo &info);
+      void VolumeSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+      Napi::Value VolumeGetter(const Napi::CallbackInfo &info);
 
     private:
-      std::unique_ptr<media::AudioPlayer> handle = nullptr;
+      static Napi::Value OnLoadArrayBuffer(const Napi::CallbackInfo &info);
+      static Napi::Value OnMediaEvent(const Napi::CallbackInfo &info);
+
+    private:
+      TrClientContextPerProcess *clientContext = nullptr;
+      std::shared_ptr<media_client::AudioPlayer> handle = nullptr;
+      Napi::ThreadSafeFunction onMediaEvent;
 
     private:
       static Napi::FunctionReference *constructor;

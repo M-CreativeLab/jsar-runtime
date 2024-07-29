@@ -14,8 +14,9 @@
 #include "base.hpp"
 #include "idgen.hpp"
 #include "debug.hpp"
-#include "ipc.hpp"
+#include "common/ipc.hpp"
 #include "common/zone.hpp"
+#include "common/scoped_thread.hpp"
 #include "common/analytics/perf_fs.hpp"
 #include "common/command_buffers/shared.hpp"
 #include "common/command_buffers/command_buffers.hpp"
@@ -34,6 +35,7 @@
 #include "common/xr/message.hpp"
 #include "common/xr/sender.hpp"
 #include "common/xr/receiver.hpp"
+#include "./classes.hpp"
 
 using namespace std;
 using namespace node;
@@ -146,6 +148,17 @@ public: // event methods
   }
 
 public: // media methods
+  /**
+   * Create a new media player, it returns a shared pointer to the created player.
+   */
+  shared_ptr<media_client::MediaPlayer> createMediaPlayer();
+  /**
+   * Create a new audio player, it returns a shared pointer to the created player.
+   */
+  shared_ptr<media_client::AudioPlayer> createAudioPlayer();
+  /**
+   * Send a media command to the media channel.
+   */
   bool sendMediaRequest(TrMediaCommandBase &mediaCommand)
   {
     assert(mediaChanSender != nullptr);
@@ -200,6 +213,7 @@ public:
 
 private:
   void onListenFrames();
+  void onListenMediaEvent(media_comm::TrMediaCommandMessage& eventMessage);
 
 public:
   uint32_t id;
@@ -237,6 +251,8 @@ private: // media fields
   TrOneShotClient<TrMediaCommandMessage> *mediaChanClient = nullptr;
   unique_ptr<TrMediaCommandSender> mediaChanSender = nullptr;
   unique_ptr<TrMediaCommandReceiver> mediaChanReceiver = nullptr;
+  unique_ptr<WorkerThread> mediaEventsPollingWorker = nullptr;
+  vector<shared_ptr<media_client::MediaPlayer>> mediaPlayers;
 
 private: // command buffer fields
   TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;

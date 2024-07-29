@@ -1,9 +1,8 @@
 #include "./audio_player.hpp"
 
-namespace media
+namespace media_client
 {
-  AudioPlayer::AudioPlayer() : MediaPlayer()
+  AudioPlayer::AudioPlayer() : MediaPlayer(MediaContentType::Audio)
   {
-    // Constructor implementation
   }
 }
