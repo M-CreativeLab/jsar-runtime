@@ -1,5 +1,4 @@
 #include "html_rendering_context.hpp"
-#include "crates/jsar_jsbindings.h"
 
 namespace canvasbinding
 {
@@ -57,9 +56,6 @@ namespace canvasbinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-
-    auto htmlStr = info[0].As<Napi::String>().Utf8Value();
-    render_html(htmlStr.c_str());
     return env.Undefined();
   }
 

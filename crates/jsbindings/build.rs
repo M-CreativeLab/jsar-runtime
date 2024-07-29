@@ -4,11 +4,7 @@ use std::io::Error;
 use std::path::Path;
 use std::path::PathBuf;
 
-extern crate napi_build;
-
 fn main() {
-  napi_build::setup();
-
   let current_dir = env::current_dir().unwrap();
   let file_name = "jsar_jsbindings.h";
   let source_path = current_dir.join(file_name);

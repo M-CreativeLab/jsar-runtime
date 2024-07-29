@@ -8,14 +8,9 @@ extern crate ctor;
 
 #[macro_use]
 extern crate jsar_jsbinding_macro;
-#[macro_use]
-extern crate napi_derive;
-
-pub mod htmlrender;
 
 use cssparser::{Parser, ParserInput};
 use std::os::raw::{c_char, c_void};
-use html_renderer::DocumentHtmlParser;
 use style::context::QuirksMode;
 use style::font_face::Source;
 use style::media_queries::{Device, MediaType};
@@ -32,12 +27,6 @@ use url::Url;
 extern "C" {
   #[cfg(target_os = "android")]
   fn eglGetProcAddress(procname: *const c_char) -> *const c_void;
-}
-
-#[ctor::ctor]
-#[cfg(target_os = "android")]
-fn init_platform_env() {
-  println!("Initialization for Android platform has been finished.");
 }
 
 #[no_mangle]
@@ -94,12 +83,4 @@ extern "C" fn parse_csscolor(color_str: *const c_char) -> RGBAColor {
     }
     None => RGBAColor::new(0, 0, 0, 1),
   }
-}
-
-#[no_mangle]
-extern "C" fn render_html(html_str: *const c_char) {
-  let src: &str = unsafe { std::ffi::CStr::from_ptr(html_str) }
-    .to_str()
-    .expect("Failed to convert C string to Rust string");
-  html_renderer::render_html(src);
 }
