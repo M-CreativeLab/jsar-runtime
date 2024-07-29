@@ -60,6 +60,10 @@ namespace xr
      */
     int requestSession(xr::TrXRSessionMode mode, TrContentRenderer *contentRenderer);
     /**
+     * It ends and removes a session by its id.
+     */
+    bool endAndRemoveSession(xr::TrXRSession *session);
+    /**
      * If this device is enabled.
      */
     bool enabled();

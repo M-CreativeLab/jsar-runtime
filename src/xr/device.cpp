@@ -105,6 +105,26 @@ namespace xr
     }
   }
 
+  bool Device::endAndRemoveSession(xr::TrXRSession *sessionToEnd)
+  {
+    std::unique_lock<std::shared_mutex> lock(m_MutexForSessions);
+    for (auto it = m_Sessions.begin(); it != m_Sessions.end();)
+    {
+      auto session = *it;
+      if (session == sessionToEnd)
+      {
+        delete *it;
+        it = m_Sessions.erase(it);
+        return true;
+      }
+      else
+      {
+        it++;
+      }
+    }
+    return false;
+  }
+
   bool Device::enabled()
   {
     return m_Enabled;

@@ -23,8 +23,8 @@ namespace xr
   TrXRSession::~TrXRSession()
   {
     auto content = contentRenderer->getContent();
-    assert(content != nullptr);
-    content->removeXRSession(this);
+    if (content != nullptr)
+      content->removeXRSession(this);
   }
 
   bool TrXRSession::belongsTo(TrContentRenderer *contentRenderer)

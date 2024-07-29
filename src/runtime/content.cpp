@@ -30,18 +30,29 @@ TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManage
 
 TrContentRuntime::~TrContentRuntime()
 {
-  // 1. Stop the receiver worker.
+  TrConstellation *constellation = getConstellation();
+
+  // Stopping the receiver worker.
   commandBuffersRecvWorker->stop();
 
-  // 2. Remove the content renderer and command buffer client.
-  auto renderer = contentManager->constellation->getRenderer();
+  // Removing the content renderer and command buffer client.
+  auto renderer = constellation->getRenderer();
   if (renderer != nullptr)
   {
     renderer->removeContentRenderer(this);
     renderer->removeCommandBufferChanClient(commandBufferChanClient);
   }
 
-  // 3. Flush the client's output.
+  // Removing the related XR sessions.
+  auto xrDevice = constellation->getXrDevice();
+  for (auto session : xrSessionsStack)
+  {
+    if (session != nullptr)
+      xrDevice->endAndRemoveSession(session);
+  }
+  xrSessionsStack.clear();
+
+  // Flush the client's output.
   while (true)
   {
     if (!recvClientOutput())
@@ -552,7 +563,6 @@ bool TrContentManager::shutdown()
   contentsDestroyingWorker->stop();
   {
     unique_lock<shared_mutex> lock(contentsMutex);
-    DEBUG(LOG_TAG_CONTENT, "Disposing all contents(%zu)...", contents.size());
     for (auto content : contents)
     {
       content->dispose();
@@ -560,6 +570,7 @@ bool TrContentManager::shutdown()
     }
     contents.clear();
   }
+  DEBUG(LOG_TAG_CONTENT, "All contents(%zu) has been disposed and removed", contents.size());
 
   eventChanWatcher->stop();
   xrCommandsRecvWorker->stop();
