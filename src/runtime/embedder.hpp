@@ -63,16 +63,12 @@ public: // API for lifecycle
    */
   virtual bool onEvent(TrEvent &event, TrContentRuntime *content) = 0;
 
-public: // API for getting sub components
-  TrConstellation *getConstellation();
-  TrEventTarget *getNativeEventTarget();
-  TrRenderer *getRenderer();
-  xr::Device *getXrDevice();
-
 public:
   bool isEmbeddingWith(TrHostEngine engine);
 
+public:
+  std::shared_ptr<TrConstellation> constellation;
+
 protected:
-  std::unique_ptr<TrConstellation> constellation;
   TrHostEngine hostEngine = TrHostEngine::None;
 };

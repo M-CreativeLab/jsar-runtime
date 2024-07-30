@@ -19,11 +19,11 @@ TrConstellation::TrConstellation(TrEmbedder *embedder) : embedder(embedder)
 {
   srand(static_cast<unsigned int>(time(nullptr)));
 
-  nativeEventTarget = std::make_unique<TrEventTarget>();
-  contentManager = std::make_unique<TrContentManager>(this);
-  mediaManager = std::make_unique<TrMediaManager>(this);
-  renderer = std::make_unique<TrRenderer>(this);
-  xrDevice = std::make_unique<xr::Device>(this);
+  nativeEventTarget = std::make_shared<TrEventTarget>();
+  contentManager = std::make_shared<TrContentManager>(this);
+  mediaManager = std::make_shared<TrMediaManager>(this);
+  renderer = std::make_shared<TrRenderer>(this);
+  xrDevice = std::make_shared<xr::Device>(this);
 }
 
 TrConstellation::~TrConstellation()
@@ -61,7 +61,7 @@ bool TrConstellation::initialize(string initJson)
   contentManager->initialize();
   mediaManager->initialize();
   renderer->initialize();
-  perfFs = std::make_unique<TrHostPerformanceFileSystem>(options);
+  perfFs = std::make_shared<TrHostPerformanceFileSystem>(options);
   initialized = true;
   return true;
 }
@@ -91,41 +91,10 @@ void TrConstellation::tick(analytics::PerformanceCounter &perfCounter)
   }
 }
 
-TrEventTarget *TrConstellation::getNativeEventTarget()
-{
-  return nativeEventTarget.get();
-}
-
-TrContentManager *TrConstellation::getContentManager()
-{
-  return contentManager.get();
-}
-
-TrMediaManager *TrConstellation::getMediaManager()
-{
-  return mediaManager.get();
-}
-
-renderer::TrRenderer *TrConstellation::getRenderer()
-{
-  return renderer.get();
-}
-
-xr::Device *TrConstellation::getXrDevice()
-{
-  return xrDevice.get();
-}
-
-TrHostPerformanceFileSystem* TrConstellation::getPerfFs()
-{
-  return perfFs.get();
-}
-
 TrEmbedder *TrConstellation::getEmbedder()
 {
   return embedder;
 }
-
 
 bool TrConstellation::onEvent(TrEvent &event, TrContentRuntime *content)
 {

@@ -15,7 +15,7 @@ RenderAPI *RenderAPI::Create(UnityGfxRenderer apiType, TrConstellation *constell
 	if (s_instance != nullptr)
 	{
 		s_instance->constellation = constellation;
-		s_instance->renderer = constellation->getRenderer();
+		s_instance->renderer = constellation->renderer.get();
 		return s_instance;
 	}
 	else

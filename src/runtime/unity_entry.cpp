@@ -48,7 +48,8 @@ public:
 
     deviceType = graphics->GetRenderer();
     // set the backend api to the renderer.
-    constellation->getRenderer()->setApi(RenderAPI::Create(deviceType, getConstellation()));
+    auto api = RenderAPI::Create(deviceType, constellation.get());
+    constellation->renderer->setApi(api);
   }
 
   void unload()
@@ -138,6 +139,8 @@ UnityEmbedder *UnityEmbedder::EnsureAndGet()
   assert(s_EmbedderInstance != nullptr);
   return s_EmbedderInstance;
 }
+
+#define TR_ENSURE_COMPONENT(name) UnityEmbedder::EnsureAndGet()->constellation->name
 
 extern "C"
 {
@@ -270,29 +273,28 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_DispatchNativeEvent(int type, const char *data)
   {
-    auto eventTarget = UnityEmbedder::EnsureAndGet()->getNativeEventTarget();
-    eventTarget->dispatchEvent(static_cast<TrEventType>(type), data);
+    TR_ENSURE_COMPONENT(nativeEventTarget)->dispatchEvent(static_cast<TrEventType>(type), data);
   }
 
   DLL_PUBLIC void TransmuteNative_SetViewport(int w, int h)
   {
     TrViewport viewport(w, h);
-    UnityEmbedder::EnsureAndGet()->getRenderer()->setDrawingViewport(viewport);
+    TR_ENSURE_COMPONENT(renderer)->setDrawingViewport(viewport);
   }
 
   DLL_PUBLIC void TransmuteNative_SetFov(float fov)
   {
-    UnityEmbedder::EnsureAndGet()->getRenderer()->setRecommendedFov(fov);
+    TR_ENSURE_COMPONENT(renderer)->setRecommendedFov(fov);
   }
 
   DLL_PUBLIC void TransmuteNative_SetTime(float t)
   {
-    UnityEmbedder::EnsureAndGet()->getRenderer()->setTime(t);
+    TR_ENSURE_COMPONENT(renderer)->setTime(t);
   }
 
   DLL_PUBLIC bool TransmuteNative_SetViewerStereoProjectionMatrix(int eyeId, float *transform)
   {
-    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
+    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
     if (xrDevice == NULL)
       return false;
     return xrDevice->updateProjectionMatrix(eyeId, transform);
@@ -300,7 +302,7 @@ extern "C"
 
   DLL_PUBLIC bool TransmuteNative_SetViewerTransformFromTRS(float *translation, float *rotation)
   {
-    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
+    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
     if (xrDevice == NULL)
       return false;
 
@@ -325,7 +327,7 @@ extern "C"
 
   DLL_PUBLIC bool TransmuteNative_SetViewerStereoViewMatrixFromTRS(int eyeId, float *translation, float *rotation)
   {
-    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
+    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
     if (xrDevice == NULL)
       return false;
 
@@ -350,7 +352,7 @@ extern "C"
 
   DLL_PUBLIC bool TransmuteNative_SetLocalTransformFromTRS(int id, float *translation, float *rotation)
   {
-    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
+    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
     if (xrDevice == NULL)
       return false;
 
@@ -375,7 +377,7 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_SetHandInputPose(int handness, int joint, float *translation, float *rotation, float radius)
   {
-    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
+    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
     if (xrDevice == NULL)
       return;
 
@@ -392,7 +394,7 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_SetHandInputRayPose(int handness, float *translation, float *rotation)
   {
-    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
+    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
     if (xrDevice == NULL)
       return;
 
@@ -405,7 +407,7 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_SetHandInputGripPose(int handness, float *translation, float *rotation)
   {
-    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
+    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
     if (xrDevice == NULL)
       return;
 
@@ -418,7 +420,7 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_SetHandInputActionState(int handness, int actionType, int state)
   {
-    auto xrDevice = UnityEmbedder::EnsureAndGet()->getXrDevice();
+    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
     if (xrDevice == NULL)
       return;
 

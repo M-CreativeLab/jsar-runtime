@@ -56,8 +56,8 @@ namespace xr
 
     // Update the sound sources' base matrix.
     auto content = contentRenderer->getContent();
-    constellation->getMediaManager()->iterateSoundSourcesByContent(content, [this](shared_ptr<TrSoundSource> soundSource)
-                                                                   { soundSource->setBaseMatrix(baseMatrix); });
+    constellation->mediaManager->iterateSoundSourcesByContent(content, [this](shared_ptr<TrSoundSource> soundSource)
+                                                              { soundSource->setBaseMatrix(baseMatrix); });
   }
 
   bool TrXRSession::isInFrustum()

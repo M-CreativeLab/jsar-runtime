@@ -71,8 +71,8 @@ public: // lifecycle which is called by other classes
   void onCommandBuffersExecuted();
 
 public: // reference methods
-  TrConstellation *getConstellation();
-  xr::Device *getXrDevice();
+  TrConstellation* getConstellation();
+  xr::Device* getXrDevice();
 
 public: // command buffer methods
   void setCommandBufferRequestHandler(function<void(TrCommandBufferBase *)> handler);
@@ -101,13 +101,13 @@ public: // event methods
 public: // media methods
   /**
    * When the content's client is connected to the server side media channel.
-   * 
+   *
    * @param client The media channel client.
    */
   void onMediaChanConnected(TrOneShotClient<media_comm::TrMediaCommandMessage> &client);
   /**
    * Dispatch the media event to the content.
-   * 
+   *
    * @param event The media event to dispatch.
    * @returns true if the event is dispatched successfully.
    */
@@ -132,7 +132,7 @@ public: // xr methods
   }
   /**
    * Get the current active XRSession, it means the top of the sessions stack.
-   * 
+   *
    * @returns a pointer to the active XRSession, or nullptr if there is no active session.
    */
   xr::TrXRSession *getActiveXRSession();
@@ -227,7 +227,7 @@ private:
 class TrContentManager
 {
 public:
-  TrContentManager(TrConstellation *constellation);
+  TrContentManager(TrConstellation* constellation);
   ~TrContentManager();
 
 public:
@@ -254,9 +254,9 @@ private:
 
 private: // channels & workers
   TrOneShotServer<TrEventMessage> *eventChanServer = nullptr;
-  std::unique_ptr<WorkerThread> contentsDestroyingWorker;
-  std::unique_ptr<WorkerThread> eventChanWatcher;
-  std::unique_ptr<WorkerThread> xrCommandsRecvWorker;
+  unique_ptr<WorkerThread> contentsDestroyingWorker;
+  unique_ptr<WorkerThread> eventChanWatcher;
+  unique_ptr<WorkerThread> xrCommandsRecvWorker;
 
   friend class TrContentRuntime;
   friend class TrConstellation;

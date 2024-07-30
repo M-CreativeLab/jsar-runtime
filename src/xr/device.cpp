@@ -240,7 +240,7 @@ namespace xr
     /**
      * Update the listener's base matrix for the audio engine.
      */
-    m_Constellation->getMediaManager()->updateListenerBaseMatrix(m_ViewerBaseMatrix);
+    m_Constellation->mediaManager->updateListenerBaseMatrix(m_ViewerBaseMatrix);
     return true;
   }
 
@@ -330,7 +330,7 @@ namespace xr
       while (m_CommandClientWatcherRunning)
       {
         m_CommandChanServer->tryAccept([this](ipc::TrOneShotClient<TrXRCommandMessage>& newClient){
-          auto content = m_Constellation->getContentManager()->findContent(newClient.getPid());
+          auto content = m_Constellation->contentManager->findContent(newClient.getPid());
           if (content == nullptr)
             m_CommandChanServer->removeClient(&newClient);
           else
@@ -345,7 +345,7 @@ namespace xr
 
   void Device::handleCommandMessage(TrXRCommandMessage &message, TrContentRuntime *content)
   {
-    TrContentRenderer *contentRenderer = m_Constellation->getRenderer()->findContentRenderer(content);
+    TrContentRenderer *contentRenderer = m_Constellation->renderer->findContentRenderer(content);
     if (contentRenderer == nullptr)
       return; // Just ignore the XR command message if the content renderer is not found.
 

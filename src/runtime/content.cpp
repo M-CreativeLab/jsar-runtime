@@ -19,7 +19,7 @@
 TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManager(contentMgr),
                                                                    requestInit(TrXSMLRequestInit("", 0))
 {
-  auto eventTarget = contentManager->constellation->getNativeEventTarget();
+  auto eventTarget = contentManager->constellation->nativeEventTarget;
   assert(eventTarget != nullptr);
 
   eventTarget->addEventListener(TrEventType::TR_EVENT_RPC_REQUEST, [this](TrEventType type, TrEvent &event)
@@ -30,13 +30,13 @@ TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManage
 
 TrContentRuntime::~TrContentRuntime()
 {
-  TrConstellation *constellation = getConstellation();
+  auto constellation = getConstellation();
 
   // Stopping the receiver worker.
   commandBuffersRecvWorker->stop();
 
   // Removing the content renderer and command buffer client.
-  auto renderer = constellation->getRenderer();
+  auto renderer = constellation->renderer;
   if (renderer != nullptr)
   {
     renderer->removeContentRenderer(this);
@@ -44,7 +44,7 @@ TrContentRuntime::~TrContentRuntime()
   }
 
   // Removing the related XR sessions.
-  auto xrDevice = constellation->getXrDevice();
+  auto xrDevice = constellation->xrDevice;
   for (auto session : xrSessionsStack)
   {
     if (session != nullptr)
@@ -80,8 +80,8 @@ void TrContentRuntime::start(TrXSMLRequestInit init)
   requestInit = init;
   constellationOptions = contentManager->constellation->getOptions();
   eventChanPort = contentManager->eventChanServer->getPort();
-  frameChanPort = contentManager->constellation->getRenderer()->getAnimationFrameChanPort();
-  commandBufferChanPort = contentManager->constellation->getRenderer()->getCommandBufferChanPort();
+  frameChanPort = contentManager->constellation->renderer->getAnimationFrameChanPort();
+  commandBufferChanPort = contentManager->constellation->renderer->getCommandBufferChanPort();
   DEBUG(LOG_TAG_CONTENT, "Start a new client process for %s", init.url.c_str());
 
   // start a new process for client.
@@ -110,7 +110,7 @@ void TrContentRuntime::start(TrXSMLRequestInit init)
 
     commandBuffersRecvWorker = std::make_unique<WorkerThread>("TrCommandBuffersWorker", [this](WorkerThread &worker)
                                                               { recvCommandBuffers(worker, 100); });
-    auto renderer = contentManager->constellation->getRenderer();
+    auto renderer = contentManager->constellation->renderer;
     renderer->addContentRenderer(this);
     dispatchXSMLEvent(TrXSMLEventType::SpawnProcess);
     DEBUG(LOG_TAG_CONTENT, "The client process(%d) is started.", pid);
@@ -157,14 +157,14 @@ void TrContentRuntime::onCommandBuffersExecuted()
   commandBufferExecutingCv.notify_all();
 }
 
-TrConstellation *TrContentRuntime::getConstellation()
+TrConstellation* TrContentRuntime::getConstellation()
 {
   return contentManager->constellation;
 }
 
-xr::Device *TrContentRuntime::getXrDevice()
+xr::Device* TrContentRuntime::getXrDevice()
 {
-  return contentManager->constellation->getXrDevice();
+  return contentManager->constellation->xrDevice.get();
 }
 
 void TrContentRuntime::setCommandBufferRequestHandler(function<void(TrCommandBufferBase *)> handler)
@@ -196,7 +196,7 @@ bool TrContentRuntime::sendCommandBufferResponse(TrCommandBufferResponse &res)
 
 bool TrContentRuntime::dispatchEvent(TrEvent &event)
 {
-  auto eventTarget = getConstellation()->getNativeEventTarget();
+  auto eventTarget = getConstellation()->nativeEventTarget;
   return eventTarget->dispatchEvent(event.type, event.detail.getString());
 }
 
@@ -289,7 +289,7 @@ void TrContentRuntime::onClientProcess()
   scriptContext.AddMember("runScripts", rapidjson::Value(requestInit.runScripts.c_str(), allocator), allocator);
   scriptContext.AddMember("eventChanPort", eventChanPort, allocator);
   scriptContext.AddMember("frameChanPort", frameChanPort, allocator);
-  scriptContext.AddMember("mediaChanPort", constellation->getMediaManager()->chanPort(), allocator);
+  scriptContext.AddMember("mediaChanPort", constellation->mediaManager->chanPort(), allocator);
   scriptContext.AddMember("commandBufferChanPort", commandBufferChanPort, allocator);
 
   // Add constellation options
@@ -299,7 +299,7 @@ void TrContentRuntime::onClientProcess()
                           rapidjson::Value(constellationOptions.httpsProxyServer.c_str(), allocator), allocator);
   scriptContext.AddMember("enableV8Profiling", constellationOptions.enableV8Profiling, allocator);
 
-  auto xrDevice = constellation->getXrDevice();
+  auto xrDevice = constellation->xrDevice;
   if (xrDevice != nullptr)
   {
     rapidjson::Value xrDeviceObject(rapidjson::kObjectType);
@@ -411,7 +411,7 @@ void TrContentRuntime::recvEvent()
   auto eventMessage = eventChanReceiver->recvEvent(0);
   if (eventMessage != nullptr)
   {
-    auto eventTarget = contentManager->constellation->getNativeEventTarget();
+    auto eventTarget = contentManager->constellation->nativeEventTarget;
     if (eventTarget != nullptr)
       eventTarget->dispatchEvent(eventMessage->type, eventMessage->detail());
     delete eventMessage;
@@ -426,7 +426,7 @@ void TrContentRuntime::recvMediaRequest()
   media_comm::TrMediaCommandMessage mediaMessage;
   if (mediaChanReceiver->recvCommand(mediaMessage, 0))
   {
-    auto mediaManager = getConstellation()->getMediaManager();
+    auto mediaManager = getConstellation()->mediaManager;
     mediaManager->onContentRequest(this, mediaMessage);
   }
 }
@@ -485,7 +485,7 @@ bool TrContentRuntime::tickOnFrame()
   return true;
 }
 
-TrContentManager::TrContentManager(TrConstellation *constellation) : constellation(constellation)
+TrContentManager::TrContentManager(TrConstellation* constellation) : constellation(constellation)
 {
   eventChanServer = new TrOneShotServer<TrEventMessage>("eventChan");
 }
@@ -503,7 +503,7 @@ bool TrContentManager::initialize()
 {
   installScripts();
 
-  auto eventTarget = constellation->getNativeEventTarget();
+  auto eventTarget = constellation->nativeEventTarget;
   eventTarget->addEventListener(TrEventType::TR_EVENT_XSML_REQUEST, [this](TrEventType type, TrEvent &event)
                                 { this->onRequestEvent(event); });
 
@@ -636,14 +636,13 @@ void TrContentManager::onRequestEvent(TrEvent &event)
 
 void TrContentManager::onRecvXrCommands(int timeout)
 {
-  if (contents.empty() || constellation->getXrDevice() == nullptr)
+  if (contents.empty() || constellation->xrDevice == nullptr)
   {
     this_thread::sleep_for(chrono::milliseconds(timeout));
   }
   else
   {
     shared_lock<shared_mutex> lock(contentsMutex);
-    auto xrDevice = constellation->getXrDevice();
     for (auto it = contents.begin(); it != contents.end(); ++it)
     {
       auto content = *it;
@@ -652,7 +651,7 @@ void TrContentManager::onRecvXrCommands(int timeout)
       auto xrCommandMessage = content->xrCommandChanReceiver->recvCommandMessage(timeout);
       if (xrCommandMessage != nullptr)
       {
-        xrDevice->handleCommandMessage(*xrCommandMessage, content);
+        constellation->xrDevice->handleCommandMessage(*xrCommandMessage, content);
         delete xrCommandMessage;
       }
     }

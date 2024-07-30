@@ -10,9 +10,9 @@ namespace renderer
   TrContentRenderer::TrContentRenderer(TrContentRuntime *content, TrConstellation *constellation)
       : content(content),
         constellation(constellation),
-        xrDevice(constellation->getXrDevice()),
-        targetFrameRate(constellation->getRenderer()->clientDefaultFrameRate),
-        currentBaseXRFrameReq(new xr::TrXRFrameRequest())
+        xrDevice(constellation->xrDevice.get()),
+        targetFrameRate(constellation->renderer->clientDefaultFrameRate),
+        currentBaseXRFrameReq(make_unique<xr::TrXRFrameRequest>())
   {
     assert(xrDevice != nullptr);
     glContext = new OpenGLAppContextStorage("content_renderer#" + std::to_string(content->pid));
@@ -186,7 +186,7 @@ namespace renderer
       if (xrDevice->isRenderedAsMultipass())
       {
         auto viewIndex = xrDevice->getActiveEyeId();
-        auto stereoRenderingFrame = getOrCreateStereoFrame(xrDevice);
+        auto stereoRenderingFrame = getOrCreateStereoFrame();
         if (stereoRenderingFrame != nullptr)
         {
           stereoRenderingFrame->available(true); // mark the StereoRenderingFrame is available
@@ -248,7 +248,7 @@ namespace renderer
   void TrContentRenderer::onStartFrame()
   {
     glContext->Restore();
-    if (constellation->getRenderer()->isAppContextSummaryEnabled)
+    if (constellation->renderer->isAppContextSummaryEnabled)
       glContext->Print();
 
     // Reset frame states
@@ -276,8 +276,7 @@ namespace renderer
     req.sessionId = session->id;
     req.setLocalBaseMatrix(session->getLocalBaseMatrix());
 
-    auto renderer = constellation->getRenderer();
-    auto hostContext = renderer->glHostContext;
+    auto hostContext = constellation->renderer->glHostContext;
     auto hostViewport = hostContext->GetViewport();
     req.framebufferId = hostContext->GetFramebuffer();
     req.framebufferWidth = hostViewport.width;
@@ -289,7 +288,7 @@ namespace renderer
   {
     if (content == nullptr) // FIXME: just skip executing command buffers if content is null, when content process is crashed.
       return;
-    auto renderer = constellation->getRenderer();
+
     if (!asXRFrame)
     {
       vector<commandbuffers::TrCommandBufferBase *> commandBufferRequests;
@@ -298,7 +297,7 @@ namespace renderer
         commandBufferRequests = defaultCommandBufferRequests;
         defaultCommandBufferRequests.clear();
       }
-      renderer->executeCommandBuffers(commandBufferRequests, this);
+      constellation->renderer->executeCommandBuffers(commandBufferRequests, this);
       for (auto commandBufferReq : commandBufferRequests)
         delete commandBufferReq;
     }
@@ -306,7 +305,7 @@ namespace renderer
     {
       unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
       executeStereoFrame(viewIndex, [this](int stereoIdOfFrame, vector<TrCommandBufferBase *> &commandBufferRequests)
-                         { return this->constellation->getRenderer()->executeCommandBuffers(commandBufferRequests, this); });
+                         { return constellation->renderer->executeCommandBuffers(commandBufferRequests, this); });
     }
   }
 
@@ -414,7 +413,7 @@ namespace renderer
     return called;
   }
 
-  xr::StereoRenderingFrame *TrContentRenderer::getOrCreateStereoFrame(xr::Device *xrDevice)
+  xr::StereoRenderingFrame *TrContentRenderer::getOrCreateStereoFrame()
   {
     unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
     if (xrDevice->getActiveEyeId() == 0)

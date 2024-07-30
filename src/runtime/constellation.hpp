@@ -96,27 +96,21 @@ public:
   void tick(analytics::PerformanceCounter &perfCounter);
   TrConstellationInit &getOptions();
   bool isInitialized();
-  TrEventTarget *getNativeEventTarget();
-  TrContentManager *getContentManager();
-  TrMediaManager *getMediaManager();
-  TrRenderer *getRenderer();
-  xr::Device *getXrDevice();
-  TrHostPerformanceFileSystem *getPerfFs();
   TrEmbedder *getEmbedder();
 
 public:
   bool onEvent(TrEvent &event, TrContentRuntime *content);
 
-private:
-  TrConstellationInit options;
-  std::unique_ptr<TrEventTarget> nativeEventTarget;
-  std::unique_ptr<TrContentManager> contentManager;
-  std::unique_ptr<TrMediaManager> mediaManager;
-  std::unique_ptr<TrRenderer> renderer;
-  std::unique_ptr<xr::Device> xrDevice;
-  std::unique_ptr<TrHostPerformanceFileSystem> perfFs;
+public:
+  shared_ptr<TrEventTarget> nativeEventTarget;
+  shared_ptr<TrContentManager> contentManager;
+  shared_ptr<TrMediaManager> mediaManager;
+  shared_ptr<TrRenderer> renderer;
+  shared_ptr<xr::Device> xrDevice;
+  shared_ptr<TrHostPerformanceFileSystem> perfFs;
 
 private:
+  TrConstellationInit options;
   TrEmbedder *embedder = nullptr;
   bool initialized = false;
 

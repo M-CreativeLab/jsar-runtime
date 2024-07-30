@@ -70,7 +70,7 @@ namespace renderer
         totalDrawCalls += contentRenderer->drawCallsPerFrame;
         totalDrawCallsCount += contentRenderer->drawCallsCountPerFrame;
       }
-      auto perfFs = constellation->getPerfFs();
+      auto perfFs = constellation->perfFs;
       perfFs->setDrawCallsPerFrame(totalDrawCalls);
       perfFs->setDrawCallsCountPerFrame(totalDrawCallsCount);
       perfCounter.record("  renderer.finishedContentRendererFrame");
@@ -254,7 +254,7 @@ namespace renderer
       while (watcherRunning)
       {
         commandBufferChanServer->tryAccept([this](TrOneShotClient<TrCommandBufferMessage> &newClient) {
-          auto content = constellation->getContentManager()->findContent(newClient.getPid());
+          auto content = constellation->contentManager->findContent(newClient.getPid());
           DEBUG(LOG_TAG_RENDERER, "New command buffer client: %d", newClient.getPid());
           if (content == nullptr)
             commandBufferChanServer->removeClient(&newClient);
@@ -277,7 +277,7 @@ namespace renderer
   bool TrRenderer::executeCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
                                          TrContentRenderer *contentRenderer)
   {
-    auto xrDevice = constellation->getXrDevice();
+    auto xrDevice = constellation->xrDevice.get();
     assert(xrDevice != nullptr);
     if (xrDevice->enabled() && xrDevice->isRenderedAsMultipass()) // TODO: support singlepass?
     {
@@ -294,7 +294,7 @@ namespace renderer
   {
     if (!enableFpsCalc) // Skip fps calculation if it is disabled.
       return;
-    auto xrDevice = constellation->getXrDevice();
+    auto xrDevice = constellation->xrDevice;
     if (xrDevice != nullptr &&
         xrDevice->enabled() &&
         xrDevice->isRenderedAsMultipass() &&
@@ -308,7 +308,7 @@ namespace renderer
       fps = frameCount / (delta / 1000);
       frameCount = 0;
       lastFrameTimepoint = tickingTimepoint;
-      constellation->getPerfFs()->setFps(fps);
+      constellation->perfFs->setFps(fps);
     }
   }
 }

@@ -112,8 +112,8 @@ class DesktopEmbedder : public TrEmbedder
 public:
   DesktopEmbedder() : TrEmbedder()
   {
-    auto renderer = constellation->getRenderer();
-    auto api = RenderAPI::Create(kUnityGfxRendererOpenGLCore, getConstellation());
+    auto renderer = constellation->renderer;
+    auto api = RenderAPI::Create(kUnityGfxRendererOpenGLCore, constellation.get());
     renderer->setApi(api);
 
     // Check the environment variable to enable tracing
@@ -543,7 +543,7 @@ int main(int argc, char **argv)
   assert(embedder != nullptr);
 
   auto drawingViewport = windowCtx.drawingViewport();
-  embedder->getRenderer()->setDrawingViewport(drawingViewport);
+  embedder->constellation->renderer->setDrawingViewport(drawingViewport);
 
   {
     // Start
@@ -585,7 +585,7 @@ int main(int argc, char **argv)
 
   {
     // Dispatch request event
-    auto eventTarget = embedder->getNativeEventTarget();
+    auto eventTarget = embedder->constellation->nativeEventTarget;
     assert(eventTarget != nullptr);
 
     for (int i = 0; i < n; i++)
@@ -706,7 +706,7 @@ int main(int argc, char **argv)
         {
           auto xrRenderer = windowCtx.xrRenderer;
           assert(xrRenderer != nullptr);
-          auto xrDevice = embedder->getXrDevice();
+          auto xrDevice = embedder->constellation->xrDevice;
           assert(xrDevice != nullptr);
 
           auto viewMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewMatrixForEye(viewIndex)));

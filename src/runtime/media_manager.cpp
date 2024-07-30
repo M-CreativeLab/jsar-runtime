@@ -247,7 +247,7 @@ void TrMediaManager::updateListenerBaseMatrix(glm::mat4 &baseMatrix)
 
 void TrMediaManager::onNewChanClient(TrOneShotClient<TrMediaCommandMessage> &chanClient)
 {
-  auto content = constellation->getContentManager()->findContent(chanClient.getPid());
+  auto content = constellation->contentManager->findContent(chanClient.getPid());
   if (content == nullptr)
     commandChanServer->removeClient(&chanClient);
   else

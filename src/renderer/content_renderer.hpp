@@ -12,6 +12,7 @@
 #include "xr/device.hpp"
 #include "./gles/context_storage.hpp"
 
+using namespace std;
 using namespace commandbuffers;
 using namespace frame_request;
 
@@ -70,7 +71,7 @@ namespace renderer
      */
     void executeCommandBuffers(bool asXRFrame, int viewIndex = 0);
     bool executeStereoFrame(int viewIndex, std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec);
-    xr::StereoRenderingFrame *getOrCreateStereoFrame(xr::Device *xrDevice);
+    xr::StereoRenderingFrame *getOrCreateStereoFrame();
     size_t getPendingStereoFramesCount();
 
   private:
@@ -81,7 +82,7 @@ namespace renderer
     TrConstellation *constellation = nullptr;
     OpenGLAppContextStorage *glContext = nullptr;
     xr::Device *xrDevice = nullptr;
-    xr::TrXRFrameRequest *currentBaseXRFrameReq = nullptr;
+    unique_ptr<xr::TrXRFrameRequest> currentBaseXRFrameReq = nullptr;
     atomic<bool> isXRFrameBaseReqUpdating = false;
     atomic<bool> isXRFrameBaseReqDirty = false;
     shared_mutex mutexForXRFrameBaseReq;
