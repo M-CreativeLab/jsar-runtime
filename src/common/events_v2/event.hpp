@@ -32,7 +32,7 @@ namespace events_comm
   public:
     int id;
     EventType type;
-    std::optional<DetailType> detail;
+    optional<DetailType> detail;
   };
 
   class TrEventDetailBase

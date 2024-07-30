@@ -78,10 +78,10 @@ public:
   inline void setFrameDuration(double value) { frameDuration->set(value); }
 
 public:
-  std::unique_ptr<analytics::PerformanceValue<int>> fps;
-  std::unique_ptr<analytics::PerformanceValue<int>> drawCallsPerFrame;
-  std::unique_ptr<analytics::PerformanceValue<int>> drawCallsCountPerFrame;
-  std::unique_ptr<analytics::PerformanceValue<double>> frameDuration;
+  unique_ptr<analytics::PerformanceValue<int>> fps;
+  unique_ptr<analytics::PerformanceValue<int>> drawCallsPerFrame;
+  unique_ptr<analytics::PerformanceValue<int>> drawCallsCountPerFrame;
+  unique_ptr<analytics::PerformanceValue<double>> frameDuration;
 };
 
 class TrConstellation
