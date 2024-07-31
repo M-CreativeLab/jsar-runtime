@@ -112,7 +112,12 @@ declare namespace Transmute {
     getScreenInputSource(): XRNativeInputSource;
   }
 
-  type NativeEventListener = (id: number, type: number, data: string) => void;
+  type NativeEventListener = (
+    eventId: number,    // The id of the incoming event
+    eventType: number,  // The type of the incoming event
+    peerId: number,     // The id of the peer event, such as a RpcResponse has a peer RpcRequest.
+    detailJson: string  // The detail of the incoming event in JSON format
+  ) => void;
   /**
    * The native event target is a class to handle the native event from the native side:
    * 
@@ -120,6 +125,12 @@ declare namespace Transmute {
    * - Receiving the event from the native side.
    */
   class NativeEventTarget {
+    static readonly EventTypes: {
+      [key: string]: number;
+    };
+    static readonly DocumentEventTypes: {
+      [key: string]: number;
+    };
     constructor(listener: NativeEventListener);
     dispatchEvent(eventInit: { type: number, detail?: string }): number;
     dispose(): void;

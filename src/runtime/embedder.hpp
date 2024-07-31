@@ -2,11 +2,9 @@
 
 #include <string>
 #include "constellation.hpp"
-#include "common/events/event_target.hpp"
 
 using namespace std;
 using namespace renderer;
-using namespace events;
 
 enum class TrHostEngine
 {
@@ -61,7 +59,7 @@ public: // API for lifecycle
   /**
    * The lifecycle `onEvent` should be called once an event is received from a specfic (content) source.
    */
-  virtual bool onEvent(TrEvent &event, TrContentRuntime *content) = 0;
+  virtual bool onEvent(events_comm::TrNativeEvent &event, TrContentRuntime *content) = 0;
 
 public:
   bool isEmbeddingWith(TrHostEngine engine);

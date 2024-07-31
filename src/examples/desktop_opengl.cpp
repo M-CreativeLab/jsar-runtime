@@ -107,6 +107,21 @@ private: // projection
   float fov = 60.0f;
 };
 
+/**
+ * Custom the response for the ping-pong RPC.
+ */
+class PongResponse : public events_comm::TrRpcResponse
+{
+public:
+  PongResponse() : TrRpcResponse(true)
+  {
+    dataDoc = make_unique<rapidjson::Document>();
+    dataDoc->SetObject();
+    auto& allocator = dataDoc->GetAllocator();
+    dataDoc->AddMember("text", "pong", allocator);
+  }
+};
+
 class DesktopEmbedder : public TrEmbedder
 {
 public:
@@ -123,32 +138,29 @@ public:
   }
 
 public:
-  bool onEvent(TrEvent &event, TrContentRuntime *content) override
+  bool onEvent(events_comm::TrNativeEvent &event, TrContentRuntime *content) override
   {
-    if (event.type == TrEventType::TR_EVENT_RPC_REQUEST)
+    if (event.type == events_comm::TrNativeEventType::RpcRequest)
     {
-      TrEvent eventResp;
-      auto rpcRequest = event.detail.get<TrRpcRequest>();
-      if (rpcRequest.method == "xr.initializeDevice")
+      events_comm::TrNativeEvent respEvent(events_comm::TrNativeEventType::RpcResponse);
+      auto request = event.detail<events_comm::TrRpcRequest>();
+      if (request.method == "ping")
       {
-        auto resp = xr::TrDeviceInitResponse();
-        resp.enabled = true;
-        resp.isDeviceActive = true;
-        resp.stereoRenderingMode = xr::TrStereoRenderingMode::MultiPass;
-        resp.makeSuccess();
-        eventResp = TrEvent::MakeRpcResponseEvent(event, resp);
+        PongResponse pongResp;
+        fprintf(stdout, "Received ping request %d\n", event.id);
+        content->respondRpcRequest(pongResp, event.id);
       }
       else
       {
-        auto resp = TrRpcResponse::MakeErrorResponse("Method not implemented");
-        eventResp = TrEvent::MakeRpcResponseEvent(event, resp);
+        events_comm::TrRpcResponse errorResp(false);
+        errorResp.message = "Method not found";
+        content->respondRpcRequest(errorResp, event.id);
       }
-      content->sendEventResponse(eventResp);
     }
-    else if (event.type == TrEventType::TR_EVENT_XSML_EVENT)
+    else if (event.type == events_comm::TrNativeEventType::DocumentEvent)
     {
-      auto xsmlEvent = event.detail.get<TrXSMLEvent>();
-      DEBUG("example", "#%d Received %s", xsmlEvent.id, xsmlEvent.toString().c_str());
+      auto docEvent = event.detail<events_comm::TrDocumentEvent>();
+      DEBUG("example", "#%d Received %s", docEvent.documentId, docEvent.toString().c_str());
     }
     return true;
   }
@@ -589,18 +601,7 @@ int main(int argc, char **argv)
     assert(eventTarget != nullptr);
 
     for (int i = 0; i < n; i++)
-    {
-      rapidjson::Document requestDoc;
-      rapidjson::Value requestUrlValue(requestUrl.c_str(), requestDoc.GetAllocator());
-
-      requestDoc.SetObject();
-      requestDoc.AddMember("url", requestUrlValue, requestDoc.GetAllocator());
-      requestDoc.AddMember("sessionId", i + 1, requestDoc.GetAllocator());
-      rapidjson::StringBuffer requestBuffer;
-      rapidjson::Writer<rapidjson::StringBuffer> requestWriter(requestBuffer);
-      requestDoc.Accept(requestWriter);
-      eventTarget->dispatchEvent(TrEventType::TR_EVENT_XSML_REQUEST, requestBuffer.GetString());
-    }
+      embedder->constellation->open(requestUrl);
   }
 
   glfwMakeContextCurrent(windowCtx.window);

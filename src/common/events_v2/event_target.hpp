@@ -4,7 +4,6 @@
 #include <map>
 #include <memory>
 
-#include "./event_types.hpp"
 #include "./event_listener.hpp"
 #include "./event.hpp"
 
@@ -17,8 +16,7 @@ namespace events_comm
    */
   template <
       typename EventType,
-      typename DetailType = TrEventDetailBase,
-      typename EventInstance = TrEvent<EventType, DetailType>,
+      typename EventInstance = TrEvent<EventType>,
       typename EventCallback = function<void(EventType, EventInstance &)>,
       typename EventListener = TrEventListener<EventType, EventInstance>>
   class TrEventTarget
@@ -31,24 +29,45 @@ namespace events_comm
     /**
      * Dispatch an event to the event target.
      * 
-     * @param type The type of the event.
-     * @param detail The detail of the event, it is optional.
+     * @param event The event instance reference to dispatch.
      */
-    bool dispatchEvent(EventType type, std::optional<DetailType> detail = std::nullopt)
+    bool dispatchEvent(EventInstance &event)
     {
-      EventInstance event(type, detail);
-      auto it = listeners.find(type);
+      auto it = listeners.find(event.type);
       if (it != listeners.end())
       {
         auto listener = *it->second;
-        listener(type, event);
+        listener(event.type, event);
       }
       if (globalListener != nullptr)
       {
         auto listener = *globalListener;
-        listener(type, event);
+        listener(event.type, event);
       }
       return true;
+    }
+    /**
+     * Dispatch an event to the event target.
+     *
+     * @param type The type of the event.
+     * @param detail The detail of the event, it is optional.
+     */
+    template <typename DetailObjectType>
+    bool dispatchEvent(EventType type, optional<DetailObjectType> detail = nullopt)
+    {
+      EventInstance event = EventInstance::MakeEvent(type, detail);
+      return dispatchEvent(event);
+    }
+    /**
+     * Dispatch an event to the event target, it creates the event instance from a detail string(JSON).
+     * 
+     * @param type The type of the event.
+     * @param detailJsonPtr The detail string(JSON) pointer of the event, it is optional.
+     */
+    bool dispatchEvent(EventType type, const char* detailJsonPtr = nullptr)
+    {
+      EventInstance event = EventInstance::MakeEventWithString(type, detailJsonPtr);
+      return dispatchEvent(event);
     }
     /**
      * Add an event listener to the event target.
@@ -92,7 +111,7 @@ namespace events_comm
     }
     /**
      * Set the global event listener of the event target.
-     * 
+     *
      * Global event listener is triggered when an event is dispatched to the event target no matter what the event type is.
      */
     void resetGlobalEventListener(EventCallback listenerCallback)

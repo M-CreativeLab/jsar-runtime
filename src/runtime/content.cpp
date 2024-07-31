@@ -16,16 +16,15 @@
 #include "media_manager.hpp"
 #include "crates/jsar_jsbundle.h"
 
-TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManager(contentMgr),
-                                                                   requestInit(TrXSMLRequestInit("", 0))
+TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManager(contentMgr)
 {
   auto eventTarget = contentManager->constellation->nativeEventTarget;
   assert(eventTarget != nullptr);
 
-  eventTarget->addEventListener(TrEventType::TR_EVENT_RPC_REQUEST, [this](TrEventType type, TrEvent &event)
-                                { this->getConstellation()->onEvent(event, this); });
-  eventTarget->addEventListener(TrEventType::TR_EVENT_XSML_EVENT, [this](TrEventType type, TrEvent &event)
-                                { this->getConstellation()->onEvent(event, this); });
+  eventTarget->addEventListener(events_comm::TrNativeEventType::RpcRequest, [this](auto type, auto &event)
+                                { this->getConstellation()->dispatchNativeEvent(event, this); });
+  eventTarget->addEventListener(events_comm::TrNativeEventType::DocumentEvent, [this](auto type, auto &event)
+                                { this->getConstellation()->dispatchNativeEvent(event, this); });
 }
 
 TrContentRuntime::~TrContentRuntime()
@@ -60,7 +59,7 @@ TrContentRuntime::~TrContentRuntime()
   }
 }
 
-void TrContentRuntime::start(TrXSMLRequestInit init)
+void TrContentRuntime::start(TrDocumentRequestInit &init)
 {
   if (pipe(childPipes) == -1)
   {
@@ -112,7 +111,7 @@ void TrContentRuntime::start(TrXSMLRequestInit init)
                                                               { recvCommandBuffers(worker, 100); });
     auto renderer = contentManager->constellation->renderer;
     renderer->addContentRenderer(this);
-    dispatchXSMLEvent(TrXSMLEventType::SpawnProcess);
+    reportDocumentEvent(TrDocumentEventType::SpawnProcess);
     DEBUG(LOG_TAG_CONTENT, "The client process(%d) is started.", pid);
   }
 }
@@ -157,12 +156,12 @@ void TrContentRuntime::onCommandBuffersExecuted()
   commandBufferExecutingCv.notify_all();
 }
 
-TrConstellation* TrContentRuntime::getConstellation()
+TrConstellation *TrContentRuntime::getConstellation()
 {
   return contentManager->constellation;
 }
 
-xr::Device* TrContentRuntime::getXrDevice()
+xr::Device *TrContentRuntime::getXrDevice()
 {
   return contentManager->constellation->xrDevice.get();
 }
@@ -194,18 +193,18 @@ bool TrContentRuntime::sendCommandBufferResponse(TrCommandBufferResponse &res)
     return false;
 }
 
-bool TrContentRuntime::dispatchEvent(TrEvent &event)
+bool TrContentRuntime::dispatchEvent(events_comm::TrNativeEvent &event)
 {
-  auto eventTarget = getConstellation()->nativeEventTarget;
-  return eventTarget->dispatchEvent(event.type, event.detail.getString());
+  return getConstellation()->nativeEventTarget->dispatchEvent(event);
 }
 
-bool TrContentRuntime::sendEventResponse(TrEvent &event)
+bool TrContentRuntime::respondRpcRequest(events_comm::TrRpcResponse &respDetail, uint32_t requestId)
 {
   if (shouldDestroy || eventChanSender == nullptr)
     return false;
-  TrEventMessage eventMessage(event);
-  return eventChanSender->sendEvent(eventMessage);
+
+  auto eventToDispatch = events_comm::TrNativeEvent::MakeEvent(events_comm::TrNativeEventType::RpcResponse, &respDetail);
+  return eventChanSender->dispatchEvent(eventToDispatch, requestId);
 }
 
 void TrContentRuntime::onMediaChanConnected(TrOneShotClient<media_comm::TrMediaCommandMessage> &client)
@@ -286,7 +285,7 @@ void TrContentRuntime::onClientProcess()
   scriptContext.AddMember("id", requestInit.id, allocator);
   scriptContext.AddMember("disableCache", requestInit.disableCache, allocator);
   scriptContext.AddMember("isPreview", requestInit.isPreview, allocator);
-  scriptContext.AddMember("runScripts", rapidjson::Value(requestInit.runScripts.c_str(), allocator), allocator);
+  scriptContext.AddMember("runScripts", rapidjson::Value(requestInit.getRunScriptsName().c_str(), allocator), allocator);
   scriptContext.AddMember("eventChanPort", eventChanPort, allocator);
   scriptContext.AddMember("frameChanPort", frameChanPort, allocator);
   scriptContext.AddMember("mediaChanPort", constellation->mediaManager->chanPort(), allocator);
@@ -408,13 +407,30 @@ void TrContentRuntime::recvEvent()
   if (shouldDestroy || eventChanReceiver == nullptr)
     return;
 
-  auto eventMessage = eventChanReceiver->recvEvent(0);
-  if (eventMessage != nullptr)
+  auto eventTarget = contentManager->constellation->nativeEventTarget;
+  assert(eventTarget != nullptr);
+
+  events_comm::TrNativeEventMessage eventMessage;
+  if (eventChanReceiver->recvEventOn(eventMessage, 0))
   {
-    auto eventTarget = contentManager->constellation->nativeEventTarget;
-    if (eventTarget != nullptr)
-      eventTarget->dispatchEvent(eventMessage->type, eventMessage->detail());
-    delete eventMessage;
+    switch (eventMessage.getType())
+    {
+#define CASE(eventType)                                                                                                       \
+  case events_comm::TrNativeEventType::eventType:                                                                             \
+  {                                                                                                                           \
+    auto sharedEvent = events_comm::TrSharedNativeEventBase::FromMessage<events_comm::Tr##eventType##Remote>(eventMessage);   \
+    auto eventToDispatch = events_comm::TrNativeEvent::MakeEventWithString(sharedEvent.type, sharedEvent.detailJson.c_str()); \
+    eventToDispatch.id = sharedEvent.eventId;                                                                                 \
+    eventTarget->dispatchEvent(eventToDispatch);                                                                              \
+    break;                                                                                                                    \
+  }
+      CASE(RpcRequest)
+      CASE(RpcResponse)
+      CASE(DocumentEvent)
+#undef CASE
+    default:
+      break;
+    }
   }
 }
 
@@ -485,9 +501,9 @@ bool TrContentRuntime::tickOnFrame()
   return true;
 }
 
-TrContentManager::TrContentManager(TrConstellation* constellation) : constellation(constellation)
+TrContentManager::TrContentManager(TrConstellation *constellation) : constellation(constellation)
 {
-  eventChanServer = new TrOneShotServer<TrEventMessage>("eventChan");
+  eventChanServer = new TrOneShotServer<events_comm::TrNativeEventMessage>("eventChan");
 }
 
 TrContentManager::~TrContentManager()
@@ -502,10 +518,6 @@ TrContentManager::~TrContentManager()
 bool TrContentManager::initialize()
 {
   installScripts();
-
-  auto eventTarget = constellation->nativeEventTarget;
-  eventTarget->addEventListener(TrEventType::TR_EVENT_XSML_REQUEST, [this](TrEventType type, TrEvent &event)
-                                { this->onRequestEvent(event); });
 
   eventChanWatcher = std::make_unique<WorkerThread>("TrEventChanWatcher", [this](WorkerThread &)
                                                     { onNewEventChan(); });
@@ -563,14 +575,15 @@ bool TrContentManager::shutdown()
   contentsDestroyingWorker->stop();
   {
     unique_lock<shared_mutex> lock(contentsMutex);
+    auto size = contents.size();
     for (auto content : contents)
     {
       content->dispose();
       delete content;
     }
     contents.clear();
+    DEBUG(LOG_TAG_CONTENT, "All contents(%zu) has been disposed and removed", size);
   }
-  DEBUG(LOG_TAG_CONTENT, "All contents(%zu) has been disposed and removed", contents.size());
 
   eventChanWatcher->stop();
   xrCommandsRecvWorker->stop();
@@ -624,16 +637,6 @@ void TrContentManager::disposeContent(TrContentRuntime *content)
   }
 }
 
-void TrContentManager::onRequestEvent(TrEvent &event)
-{
-  if (event.type != TrEventType::TR_EVENT_XSML_REQUEST)
-    return;
-
-  auto content = makeContent();
-  if (content != nullptr)
-    content->start(event.detail.get<TrXSMLRequestInit>());
-}
-
 void TrContentManager::onRecvXrCommands(int timeout)
 {
   if (contents.empty() || constellation->xrDevice == nullptr)
@@ -660,7 +663,7 @@ void TrContentManager::onRecvXrCommands(int timeout)
 
 void TrContentManager::onNewEventChan()
 {
-  eventChanServer->tryAccept([this](TrOneShotClient<TrEventMessage> &newClient)
+  eventChanServer->tryAccept([this](TrOneShotClient<events_comm::TrNativeEventMessage> &newClient)
                              {
         shared_lock<shared_mutex> lock(contentsMutex);
 
@@ -671,8 +674,8 @@ void TrContentManager::onNewEventChan()
           if (content->pid == newClient.getPid())
           {
             foundNewClient = true;
-            content->eventChanReceiver = std::make_unique<TrEventReceiver>(&newClient);
-            content->eventChanSender = std::make_unique<TrEventSender>(&newClient);
+            content->eventChanReceiver = std::make_unique<events_comm::TrNativeEventReceiver>(&newClient);
+            content->eventChanSender = std::make_unique<events_comm::TrNativeEventSender>(&newClient);
             break;
           }
         }

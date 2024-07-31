@@ -23,7 +23,7 @@ namespace commandbuffers
 
     if (TR_UNLIKELY(message == nullptr))
     {
-      DEBUG(LOG_TAG_CONTENT, "Failed to serialize command buffer: %d", req.type);
+      DEBUG(LOG_TAG_CONTENT, "Failed to serialize a CommandBufferRequest(%d)", req.type);
       return false;
     }
 
@@ -81,7 +81,7 @@ namespace commandbuffers
 
     if (message == nullptr)
     {
-      DEBUG(LOG_TAG_CONTENT, "Failed to serialize command buffer: %d", res.type);
+      DEBUG(LOG_TAG_CONTENT, "Failed to serialize a CommandBufferResponse(%d)", res.type);
       return false;
     }
 

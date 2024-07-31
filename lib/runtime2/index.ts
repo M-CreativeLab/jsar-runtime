@@ -2,7 +2,7 @@ import { JSARDOM } from '@yodaos-jsar/dom';
 import { extname } from 'node:path';
 
 import { getPerformanceNow, isWebXRSupported } from '@transmute/env';
-import { dispatchXsmlEvent } from '@transmute/messaging';
+import { reportDocumentEvent } from '@transmute/messaging';
 import { NativeDocumentOnTransmute } from './jsardom/TransmuteImpl';
 
 // viewers
@@ -52,7 +52,7 @@ export class TransmuteRuntime2 extends EventTarget {
     try {
       await this.load(url, nativeDocument);
     } catch (err) {
-      dispatchXsmlEvent(nativeDocument.id, 'error');
+      reportDocumentEvent(nativeDocument.id, 'error');
       console.error(`failed to load document(${url}):`, err);
     }
   }
@@ -125,17 +125,17 @@ export class TransmuteRuntime2 extends EventTarget {
 
     try {
       await dom.load();
-      dispatchXsmlEvent(nativeDocument.id, 'loaded');
+      reportDocumentEvent(nativeDocument.id, 'loaded');
 
       const spaceNode = dom.document.space.asNativeType<BABYLON.TransformNode>();
       {
         await dom.waitForSpaceReady();
-        dispatchXsmlEvent(nativeDocument.id, 'DOMContentLoaded');
+        reportDocumentEvent(nativeDocument.id, 'DOMContentLoaded');
       }
       spaceNode.setEnabled(true);
     } catch (err) {
       console.error(`occurs an error when loading document:`, err);
-      dispatchXsmlEvent(nativeDocument.id, 'error');
+      reportDocumentEvent(nativeDocument.id, 'error');
       // TODO: report to the native side.
       // remove the dom from appStack
       await dom.unload();

@@ -7,6 +7,7 @@
 #include <filesystem>
 
 #include "common/classes.hpp"
+#include "common/options.hpp"
 #include "common/scoped_thread.hpp"
 #include "common/ipc.hpp"
 #include "common/command_buffers/shared.hpp"
@@ -14,11 +15,11 @@
 #include "common/command_buffers/receiver.hpp"
 #include "common/command_buffers/command_buffers.hpp"
 
-#include "common/events/event_type.hpp"
-#include "common/events/event_target.hpp"
-#include "common/events/message.hpp"
-#include "common/events/sender.hpp"
-#include "common/events/receiver.hpp"
+#include "common/events_v2/event_target.hpp"
+#include "common/events_v2/native_event.hpp"
+#include "common/events_v2/native_message.hpp"
+#include "common/events_v2/native_sender.hpp"
+#include "common/events_v2/native_receiver.hpp"
 #include "common/media/message.hpp"
 #include "common/media/sender.hpp"
 #include "common/media/receiver.hpp"
@@ -29,7 +30,6 @@
 
 using namespace std;
 using namespace ipc;
-using namespace events;
 
 class TrContentManager;
 class TrContentRuntime
@@ -42,7 +42,7 @@ public:
   /**
    * Start a content process with the given initialization options, and starts a command buffer receiver worker.
    */
-  void start(TrXSMLRequestInit init);
+  void start(TrDocumentRequestInit& init);
   /**
    * Send a `pause` event to the content process.
    */
@@ -83,20 +83,32 @@ public: // command buffer methods
 public: // event methods
   /**
    * It dispatches the content's event from native side.
+   * 
+   * @param event The native event to dispatch.
+   * @returns true if the event is dispatched successfully.
    */
-  bool dispatchEvent(TrEvent &event);
+  bool dispatchEvent(events_comm::TrNativeEvent &event);
   /**
-   * It dispatches a XSMLEvent with the given event type as the content's event.
+   * Report a document event to the host native EventTarget, this is useful for reporting the events from the host process.
+   * 
+   * @param documentEventType The document event type, such as `TrDocumentEventType::SpawnProcess`.
+   * @returns true if the event is dispatched successfully.
    */
-  inline bool dispatchXSMLEvent(TrXSMLEventType eventType)
+  inline bool reportDocumentEvent(TrDocumentEventType documentEventType)
   {
-    auto event = TrEvent::MakeXSMLEvent(TrXSMLEvent(id, eventType));
+    events_comm::TrDocumentEvent detail(id, documentEventType);
+    auto event = events_comm::TrNativeEvent::MakeEvent(events_comm::TrNativeEventType::DocumentEvent, &detail);
     return dispatchEvent(event);
   }
   /**
-   * It sends the event response to client side.
+   * It responds to the RPC request for the content, internally it sends a `TrRpcResponse` event to the peer process, namely the
+   * content.
+   * 
+   * @param respDetail The RPC response detail.
+   * @param requestId The request ID of the RPC request.
+   * @returns true if the response is sent successfully.
    */
-  bool sendEventResponse(TrEvent &event);
+  bool respondRpcRequest(events_comm::TrRpcResponse &respDetail, uint32_t requestId);
 
 public: // media methods
   /**
@@ -162,14 +174,14 @@ private:
   int eventChanPort;
   int frameChanPort;
   int commandBufferChanPort;
-  TrXSMLRequestInit requestInit;
+  TrDocumentRequestInit requestInit;
   TrConstellationInit constellationOptions;
   TrContentManager *contentManager;
   atomic<bool> shouldDestroy = false;
 
 private:
-  unique_ptr<TrEventReceiver> eventChanReceiver = nullptr;
-  unique_ptr<TrEventSender> eventChanSender = nullptr;
+  unique_ptr<events_comm::TrNativeEventReceiver> eventChanReceiver = nullptr;
+  unique_ptr<events_comm::TrNativeEventSender> eventChanSender = nullptr;
   unique_ptr<media_comm::TrMediaCommandReceiver> mediaChanReceiver = nullptr;
   unique_ptr<media_comm::TrMediaCommandSender> mediaChanSender = nullptr;
   unique_ptr<TrCommandBufferReceiver> commandBufferChanReceiver = nullptr;
@@ -240,7 +252,6 @@ public:
   void disposeContent(TrContentRuntime *content);
 
 private:
-  void onRequestEvent(TrEvent &event);
   void onRecvXrCommands(int timeout = 100);
   void onNewEventChan();
 
@@ -253,7 +264,7 @@ private:
   vector<TrContentRuntime *> contents;
 
 private: // channels & workers
-  TrOneShotServer<TrEventMessage> *eventChanServer = nullptr;
+  TrOneShotServer<events_comm::TrNativeEventMessage> *eventChanServer = nullptr;
   unique_ptr<WorkerThread> contentsDestroyingWorker;
   unique_ptr<WorkerThread> eventChanWatcher;
   unique_ptr<WorkerThread> xrCommandsRecvWorker;

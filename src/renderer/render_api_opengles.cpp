@@ -1947,7 +1947,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 				auto content = contentRenderer->getContent();
 				auto category = paintingMetricsReq->category;
 				if (category == commandbuffers::MetricsCategory::FirstContentfulPaint)
-					content->dispatchXSMLEvent(TrXSMLEventType::FCP);
+					content->reportDocumentEvent(TrDocumentEventType::FCP);
 			}
 			break;
 		}

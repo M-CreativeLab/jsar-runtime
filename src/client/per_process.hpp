@@ -23,9 +23,9 @@
 #include "common/command_buffers/receiver.hpp"
 #include "common/command_buffers/sender.hpp"
 #include "common/frame_request/types.hpp"
-#include "common/events/message.hpp"
-#include "common/events/receiver.hpp"
-#include "common/events/sender.hpp"
+#include "common/events_v2/native_message.hpp"
+#include "common/events_v2/native_receiver.hpp"
+#include "common/events_v2/native_sender.hpp"
 #include "common/font/cache.hpp"
 #include "common/media/message.hpp"
 #include "common/media/sender.hpp"
@@ -42,8 +42,8 @@ using namespace node;
 using namespace v8;
 using namespace ipc;
 using namespace commandbuffers;
-using namespace events;
 using namespace frame_request;
+using namespace events_comm;
 using namespace media_comm;
 
 typedef uint32_t FrameRequestId;
@@ -138,13 +138,28 @@ public: // frame request methods
   void cancelFrame(FrameRequestId id);
 
 public: // event methods
-  bool sendEventMessage(TrEventMessage &event);
-  TrEventMessage *recvEventMessage(int timeout);
-  inline bool dispatchXSMLEvent(TrXSMLEventType eventType)
+  /**
+   * Send a native event to the host process.
+   *
+   * @param event The native event to send.
+   * @returns true if the event is sent successfully.
+   */
+  bool sendEvent(TrNativeEvent &event);
+  /**
+   * Receive a native event message from the host process.
+   * 
+   * @param timeout The timeout to wait for the next message.
+   * @returns The new instance of the event message, or nullptr if no message received.
+   */
+  TrNativeEventMessage *recvEventMessage(int timeout);
+  /**
+   * Report a document event to the host process.
+   */
+  inline bool reportDocumentEvent(TrDocumentEventType documentEventType)
   {
-    auto event = TrEvent::MakeXSMLEvent(TrXSMLEvent(id, eventType));
-    TrEventMessage msg(event);
-    return sendEventMessage(msg);
+    TrDocumentEvent detail(id, documentEventType);
+    auto event = TrNativeEvent::MakeEvent(TrNativeEventType::DocumentEvent, &detail);
+    return sendEvent(event);
   }
 
 public: // media methods
@@ -213,7 +228,7 @@ public:
 
 private:
   void onListenFrames();
-  void onListenMediaEvent(media_comm::TrMediaCommandMessage& eventMessage);
+  void onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage);
 
 public:
   uint32_t id;
@@ -239,9 +254,9 @@ public:
   uint64_t startedAt;
 
 private: // event fields
-  TrOneShotClient<TrEventMessage> *eventChanClient = nullptr;
-  TrEventSender *eventChanSender = nullptr;
-  TrEventReceiver *eventChanReceiver = nullptr;
+  TrOneShotClient<events_comm::TrNativeEventMessage> *eventChanClient = nullptr;
+  events_comm::TrNativeEventSender *eventChanSender = nullptr;
+  events_comm::TrNativeEventReceiver *eventChanReceiver = nullptr;
 
 private: // frame fields
   TrOneShotClient<TrFrameRequestMessage> *frameChanClient = nullptr;

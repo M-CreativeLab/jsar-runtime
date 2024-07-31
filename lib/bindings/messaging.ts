@@ -1,63 +1,53 @@
-const binding = process._linkedBinding('transmute:messaging');
-const nativeEventTarget = new binding.NativeEventTarget(onNativeEventListener);
+const { NativeEventTarget } = process._linkedBinding('transmute:messaging');
+
+const nativeEventTarget = new NativeEventTarget(onNativeEventListener);
 const eventTarget = new EventTarget();
 const RpcRequestWaitlist = new Map<number, (responseText: string) => void>();
 
 enum EventType {
-  rpcRequest = 0x100,
-  rpcResponse = 0x101,
-  message = 0x200,
-  error = 0x210,
-  close = 0x220,
-  xsmlRequest = 0x300,
-  xsmlEvent = 0x301,
-  alive = 0x400,
+  RpcRequest = NativeEventTarget.EventTypes.RpcRequest,
+  RpcResponse = NativeEventTarget.EventTypes.RpcResponse,
+  DocumentRequest = NativeEventTarget.EventTypes.DocumentRequest,
+  DocumentEvent = NativeEventTarget.EventTypes.DocumentEvent,
 }
 
-function getEventType(type: string): EventType {
+function eventNameToType(type: string): EventType {
   switch (type) {
-    case 'rpc':
-    case 'rpcRequest': // 'rpc' is an alias of 'rpc.request
-      return EventType.rpcRequest;
+    case 'rpcRequest':
+      return EventType.RpcRequest;
     case 'rpcResponse':
-      return EventType.rpcResponse;
-    case 'message':
-      return EventType.message;
-    case 'error':
-      return EventType.error;
-    case 'close':
-      return EventType.close;
-    case 'xsmlRequest':
-      return EventType.xsmlRequest;
-    case 'xsmlEvent':
-      return EventType.xsmlEvent;
+      return EventType.RpcResponse;
+    case 'documentRequest':
+      return EventType.DocumentRequest;
+    case 'documentEvent':
+      return EventType.DocumentEvent;
     default:
       throw new TypeError(`unknown event type: ${type}`);
   }
 }
 
-export const XsmlRequestEventName = 'xsmlRequest';
-
-export type XsmlRequestInit = {
+export type DocumentRequestInit = {
   url: string;
-  sessionId: number;
+  documentId: number;
   disableCache?: boolean;
   isPreview?: boolean;
   runScripts?: string;
 };
 
-export class XsmlRequestEvent extends Event {
+export class DocumentRequestEvent extends Event {
+  static Name = 'documentRequest';
+
   url: string;
-  sessionId: number;
+  documentId: number;
   disableCache: boolean = false;
   isPreview: boolean = false;
   runScripts: string = 'dangerously';
 
-  constructor(init: XsmlRequestInit) {
-    super(XsmlRequestEventName);
+  constructor(init: DocumentRequestInit) {
+    super(DocumentRequestEvent.Name);
 
     this.url = init.url;
-    this.sessionId = init.sessionId;
+    this.documentId = init.documentId;
     this.disableCache = init.disableCache || false;
     this.isPreview = init.isPreview || false;
     this.runScripts = init.runScripts || 'dangerously';
@@ -66,7 +56,7 @@ export class XsmlRequestEvent extends Event {
   get [Symbol.toStringTag]() {
     return JSON.stringify({
       url: this.url,
-      sessionId: this.sessionId,
+      documentId: this.documentId,
       disableCache: this.disableCache,
       isPreview: this.isPreview,
       runScripts: this.runScripts,
@@ -74,35 +64,48 @@ export class XsmlRequestEvent extends Event {
   }
 }
 
-function onNativeEventListener(id: number, type: number, message: string) {
-  if (type === EventType.rpcResponse) {
-    const callback = RpcRequestWaitlist.get(id);
-    if (typeof callback === 'function') {
-      RpcRequestWaitlist.delete(id);
-      callback(message);
-    }
-    return;
-  } else if (type === EventType.xsmlRequest) {
-    const req = <XsmlRequestInit>JSON.parse(message);
-    if (!req.url) {
-      console.warn('invalid xsml request, `url` is required.');
-      return;
-    }
-    if (!req.sessionId) {
-      console.warn('invalid xsml request, `sessionId` is required.');
-      return;
-    }
-    const requestEvent = new XsmlRequestEvent(req);
-    eventTarget.dispatchEvent(requestEvent);
-  } else if (type === EventType.message) {
-    const eventData = JSON.parse(message);
-    const newEvent = new CustomEvent(eventData.subType, { detail: eventData.message });
-    eventTarget.dispatchEvent(newEvent);
-  } else {
-    console.warn(`unknown event type: ${type}`);
+function onNativeEventListener(_eventId: number, eventType: number, peerId: number, message: string) {
+  switch (eventType) {
+    case EventType.RpcRequest:
+      break;
+    case EventType.RpcResponse:
+      {
+        const callback = RpcRequestWaitlist.get(peerId);
+        if (typeof callback === 'function') {
+          RpcRequestWaitlist.delete(peerId);
+          callback(message);
+        }
+      }
+      break;
+    case EventType.DocumentRequest:
+      {
+        let init: DocumentRequestInit;
+        try {
+          init = JSON.parse(message);
+        } catch (_err) {
+          // Do nothing.
+        }
+        if (init && init.url && init.documentId) {
+          eventTarget.dispatchEvent(new DocumentRequestEvent(init));
+        } else {
+          console.warn('Invalid document request, the JSON source is:', message);
+        }
+      }
+      break;
+    default:
+      console.warn('Unknown or unsupported (at client-side) event type:', eventType);
+      break;
   }
 }
 
+/**
+ * Add a listener for the specified event type.
+ * 
+ * @param type the type name of the event to listen for.
+ * @param callback the callback function that receives a notification when an event of the specified type occurs.
+ * @param options an options object that specifies characteristics about the event listener.
+ * @returns 
+ */
 export function addEventListener(
   type: string,
   callback: EventListenerOrEventListenerObject,
@@ -111,55 +114,79 @@ export function addEventListener(
   return eventTarget.addEventListener(type, callback, options);
 }
 
-export function addXsmlRequestListener(listener: (event: XsmlRequestEvent) => void) {
-  return eventTarget.addEventListener(XsmlRequestEventName, listener);
+/**
+ * Add a listener for document request event.
+ * @param callback 
+ * @returns 
+ */
+export function addDocumentRequestListener(callback: (event: DocumentRequestEvent) => void) {
+  return eventTarget.addEventListener(DocumentRequestEvent.Name, callback);
 }
 
+/**
+ * Remove a listener for the specified event type.
+ */
 export const removeEventListener = eventTarget.removeEventListener.bind(eventTarget);
 
-export const dispatchEvent = function dispatchEventToNative(event: CustomEvent): number {
+/**
+ * Dispatch an event to the host process.
+ */
+function dispatchEventToHost(type: 'rpcRequest', detail: { method: string, args: any[] }): number;
+function dispatchEventToHost(type: 'rpcResponse', detail: { success: boolean, data?: any, message?: string }): number;
+function dispatchEventToHost(type: 'documentEvent', detail: { documentId: number, eventType: number });
+function dispatchEventToHost(type: 'rpcRequest' | 'rpcResponse' | 'documentEvent', detail: any): number {
   return nativeEventTarget.dispatchEvent({
-    type: getEventType(event.type),
-    detail: JSON.stringify(event.detail),
+    type: eventNameToType(type),
+    detail: JSON.stringify(detail),
   });
-};
+}
 
-export const dispatchAliveEvent = function () {
-  return dispatchEvent(new CustomEvent('alive', {
-    detail: {
-      time: Date.now(),
-    }
-  }));
-};
-
-export const dispatchXsmlEvent = function (
-  id: number,
+/**
+ * Report a document event to the host process.
+ * @param id 
+ * @param eventType 
+ * @returns 
+ */
+export function reportDocumentEvent(
+  documentId: number,
   /**
    * TODO: deprecate the "loaded" type, reason: not standard.
    * 
    * See: https://web.dev/articles/lcp
    */
-  eventType: 'beforeloading' | 'load' | 'loaded' | 'DOMContentLoaded' | 'error'
+  eventName: 'beforeloading' | 'load' | 'loaded' | 'DOMContentLoaded' | 'error'
 ) {
   // Just duplicate a "load" event when receiving "loaded" event.
-  if (eventType === 'loaded') {
-    dispatchXsmlEvent(id, 'load');
+  if (eventName === 'loaded') {
+    reportDocumentEvent(documentId, 'load');
   }
-  return dispatchEvent(
-    new CustomEvent('xsmlEvent', {
-      detail: {
-        id,
-        eventType,
-      },
-    })
-  );
-};
 
+  const eventType = NativeEventTarget.DocumentEventTypes[eventName];
+  if (typeof eventType !== 'number') {
+    throw new TypeError(`Unknown document event type: ${eventName}`);
+  }
+  return dispatchEventToHost('documentEvent', {
+    documentId,
+    eventType,
+  });
+}
+
+/**
+ * Make a new rpc call to the host process, it returns a promise that resolves with the response data.
+ * 
+ * TODO: support introspection for the host SDK generation.
+ * 
+ * @param method the remote method name.
+ * @param args the arguments to pass to the remote method.
+ * @returns a promise that resolves with the response data.
+ */
 export const makeRpcCall = function makeRpcCallToNative(method: string, args: any[]) {
-  const detail = { method, args };
-  const id = dispatchEvent(new CustomEvent('rpcRequest', { detail }));
+  const reqId = dispatchEventToHost('rpcRequest', { method, args });
+  if (typeof reqId !== 'number') {
+    throw new Error('Failed to make rpc call to the host process: invalid request id.');
+  }
   return new Promise<any>((resolve, reject) => {
-    RpcRequestWaitlist.set(id, (responseText: string) => {
+    RpcRequestWaitlist.set(reqId, (responseText: string) => {
       let json: any;
       try {
         json = JSON.parse(responseText) || {};
@@ -193,8 +220,9 @@ export const makeRpcCall = function makeRpcCallToNative(method: string, args: an
 /**
  * Dispose the native listener, this drops the reference of the low-level tsfn instance.
  */
-export const dispose = () => {
+export function dispose() {
   if (typeof nativeEventTarget?.dispose === 'function') {
     nativeEventTarget.dispose();
   }
-};
+  RpcRequestWaitlist.clear();
+}

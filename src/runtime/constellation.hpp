@@ -8,7 +8,8 @@
 
 #include <dlfcn.h>
 #include "debug.hpp"
-#include "common/events/event_target.hpp"
+#include "common/options.hpp"
+#include "common/events_v2/native_event.hpp"
 #include "common/analytics/perf_counter.hpp"
 #include "common/analytics/perf_fs.hpp"
 #include "renderer/renderer.hpp"
@@ -16,7 +17,6 @@
 
 using namespace std;
 using namespace std::filesystem;
-using namespace events;
 using namespace renderer;
 
 class TrEmbedder;
@@ -91,18 +91,34 @@ public:
   ~TrConstellation();
 
 public:
+  /**
+   * Initialize the constellation with the given options.
+   */
   bool initialize(string initJson);
+  /**
+   * Shutdown the constellation.
+   */
   void shutdown();
+  /**
+   * Tick.
+   */
   void tick(analytics::PerformanceCounter &perfCounter);
   TrConstellationInit &getOptions();
   bool isInitialized();
   TrEmbedder *getEmbedder();
 
 public:
-  bool onEvent(TrEvent &event, TrContentRuntime *content);
+  /**
+   * Open a document that sends a request to the given URL.
+   */
+  bool open(string url, optional<TrDocumentRequestInit> init = nullopt);
+  /**
+   * Send the event to the embedder implementation.
+   */
+  bool dispatchNativeEvent(events_comm::TrNativeEvent &event, TrContentRuntime *content);
 
 public:
-  shared_ptr<TrEventTarget> nativeEventTarget;
+  shared_ptr<events_comm::TrNativeEventTarget> nativeEventTarget;
   shared_ptr<TrContentManager> contentManager;
   shared_ptr<TrMediaManager> mediaManager;
   shared_ptr<TrRenderer> renderer;

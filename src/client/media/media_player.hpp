@@ -7,7 +7,7 @@
 
 namespace media_client
 {
-  using MediaEvent = events_comm::TrEvent<media_comm::TrMediaEventType, events_comm::TrEventDetailBase>;
+  using MediaEvent = events_comm::TrEvent<media_comm::TrMediaEventType>;
 
   enum class MediaContentType
   {

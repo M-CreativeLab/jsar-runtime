@@ -149,7 +149,7 @@ void TrScriptRuntimePerProcess::start(vector<string> &scriptArgs)
   }
   scriptEnv.initialize();
 
-  clientContext->dispatchXSMLEvent(TrXSMLEventType::BeforeScripting);
+  clientContext->reportDocumentEvent(TrDocumentEventType::BeforeScripting);
   executeMainScript(scriptEnv, scriptArgs);
   scriptEnv.dispose();
 }
@@ -304,7 +304,7 @@ void TrClientContextPerProcess::start()
   fontCacheManager = std::make_unique<font::FontCacheManager>();
 
   // Required channels
-  eventChanClient = ipc::TrOneShotClient<TrEventMessage>::MakeAndConnect(eventChanPort, false);
+  eventChanClient = ipc::TrOneShotClient<TrNativeEventMessage>::MakeAndConnect(eventChanPort, false);
   assert(eventChanClient != nullptr);
   frameChanClient = ipc::TrOneShotClient<TrFrameRequestMessage>::MakeAndConnect(frameChanPort, false);
   assert(frameChanClient != nullptr);
@@ -324,8 +324,8 @@ void TrClientContextPerProcess::start()
 
   {
     // Create sender & receiver for event chan.
-    eventChanSender = new TrEventSender(eventChanClient);
-    eventChanReceiver = new TrEventReceiver(eventChanClient);
+    eventChanSender = new TrNativeEventSender(eventChanClient);
+    eventChanReceiver = new TrNativeEventReceiver(eventChanClient);
   }
   {
     // Create receiver for frame chan.
@@ -452,12 +452,12 @@ void TrClientContextPerProcess::cancelFrame(FrameRequestId id)
   frameRequestCallbacksMap.erase(id);
 }
 
-bool TrClientContextPerProcess::sendEventMessage(TrEventMessage &event)
+bool TrClientContextPerProcess::sendEvent(TrNativeEvent &event)
 {
-  return eventChanSender->sendEvent(event);
+  return eventChanSender->dispatchEvent(event);
 }
 
-TrEventMessage *TrClientContextPerProcess::recvEventMessage(int timeout)
+TrNativeEventMessage* TrClientContextPerProcess::recvEventMessage(int timeout)
 {
   return eventChanReceiver->recvEvent(timeout);
 }

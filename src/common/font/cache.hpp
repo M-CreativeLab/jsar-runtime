@@ -277,17 +277,6 @@ namespace font
         for (auto family : fontFamilies)
           DEBUG(LOG_TAG_FONT, "FontFamily: (%s)", family->familyName.c_str());
       }
-      else
-      {
-        DEBUG(LOG_TAG_FONT, "Generic font families:");
-        for (auto &family : genericFontFamilies)
-        {
-          auto id = family.first;
-          auto familyName = family.second;
-          DEBUG(LOG_TAG_FONT, "%s -> \"%s\"", generics::idToGenericName(id).c_str(),
-                familyName.c_str());
-        }
-      }
       DEBUG(LOG_TAG_FONT, "Loaded %d fonts", fontFamilies.size());
     }
 

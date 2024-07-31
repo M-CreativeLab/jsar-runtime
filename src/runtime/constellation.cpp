@@ -1,8 +1,9 @@
 #include <rapidjson/document.h>
 #include "constellation.hpp"
-#include "content.hpp"
-#include "media_manager.hpp"
-#include "embedder.hpp"
+#include "idgen.hpp"
+#include "./content.hpp"
+#include "./media_manager.hpp"
+#include "./embedder.hpp"
 
 void __tr_empty()
 {
@@ -19,7 +20,7 @@ TrConstellation::TrConstellation(TrEmbedder *embedder) : embedder(embedder)
 {
   srand(static_cast<unsigned int>(time(nullptr)));
 
-  nativeEventTarget = std::make_shared<TrEventTarget>();
+  nativeEventTarget = std::make_shared<events_comm::TrNativeEventTarget>();
   contentManager = std::make_shared<TrContentManager>(this);
   mediaManager = std::make_shared<TrMediaManager>(this);
   renderer = std::make_shared<TrRenderer>(this);
@@ -96,7 +97,27 @@ TrEmbedder *TrConstellation::getEmbedder()
   return embedder;
 }
 
-bool TrConstellation::onEvent(TrEvent &event, TrContentRuntime *content)
+bool TrConstellation::open(string url, optional<TrDocumentRequestInit> init)
+{
+  auto content = contentManager->makeContent();
+  if (content == nullptr)
+  {
+    DEBUG(LOG_TAG_CONSTELLATION, "Failed to create a new content");
+    return false;
+  }
+
+  static TrIdGenerator docIdGen(0x100);
+  TrDocumentRequestInit requestInit;
+  if (init.has_value())
+    requestInit = init.value();
+
+  requestInit.url = url;
+  requestInit.id = docIdGen.get();
+  content->start(requestInit);
+  return true;
+}
+
+bool TrConstellation::dispatchNativeEvent(events_comm::TrNativeEvent &event, TrContentRuntime *content)
 {
   assert(embedder != nullptr);
   return embedder->onEvent(event, content);

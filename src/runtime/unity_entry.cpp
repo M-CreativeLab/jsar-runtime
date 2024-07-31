@@ -2,7 +2,6 @@
 #include "unity_entry.hpp"
 #include "debug.hpp"
 #include "embedder.hpp"
-#include "common/events/event_type.hpp"
 #include "xr/device.hpp"
 
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
@@ -73,21 +72,21 @@ public:
     if (result)
     {
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
-      auto opts = getConstellation()->getOptions();
+      auto opts = constellation->getOptions();
       __system_property_set("jsar.init.cache_directory", opts.applicationCacheDirectory.c_str());
 #endif
     }
     return result;
   }
 
-  bool onEvent(TrEvent &event, TrContentRuntime *content) override
+  bool onEvent(events_comm::TrNativeEvent &event, TrContentRuntime *content) override
   {
-    if (event.type == TrEventType::TR_EVENT_XSML_EVENT)
+    if (event.type == events_comm::TrNativeEventType::DocumentEvent)
     {
-      auto xsmlEvent = event.detail.get<TrXSMLEvent>();
-      DEBUG(LOG_TAG_METRICS, "#%d Received %s", xsmlEvent.id, xsmlEvent.toString().c_str());
+      auto documentEvent = event.detail<events_comm::TrDocumentEvent>();
+      DEBUG(LOG_TAG_METRICS, "#%d Received %s", documentEvent.documentId, documentEvent.toString().c_str());
     }
-    pendingEvents.push_back(event);
+    pendingEvents.push_back(make_shared<events_comm::TrNativeEvent>(event));
     return true;
   }
 
@@ -96,9 +95,9 @@ public:
     if (pendingEvents.empty())
       return false;
     auto &event = pendingEvents.front();
-    *id = event.id;
-    *type = static_cast<int>(event.type);
-    *size = event.detail.size();
+    *id = event->id;
+    *type = static_cast<int>(event->type);
+    *size = event->getDetailByteLength();
     return true;
   }
 
@@ -106,7 +105,7 @@ public:
   {
     auto first = pendingEvents.begin();
     auto &event = *first;
-    auto &eventData = event.detail.getString();
+    auto &eventData = event->getDetailJson();
     memcpy((void *)outData, eventData.c_str(), eventData.size());
 
     // remove the event from the pending list
@@ -118,7 +117,7 @@ private:
   IUnityInterfaces *interfaces = nullptr;
   IUnityGraphics *graphics = nullptr;
   IUnityLog *log = nullptr;
-  vector<TrEvent> pendingEvents;
+  vector<shared_ptr<events_comm::TrNativeEvent>> pendingEvents;
 
 private:
   static UnityEmbedder *s_EmbedderInstance;
@@ -147,6 +146,8 @@ extern "C"
   static float s_WorldScalingFactor = 1.0;
   static void OnPlatformSetup(UnityEmbedder *embedder)
   {
+    auto renderer = embedder->constellation->renderer;
+
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
     char deviceVendor[PROP_VALUE_MAX];
     if (
@@ -175,7 +176,7 @@ extern "C"
     char targetClientFps[PROP_VALUE_MAX];
     if (__system_property_get("jsar.renderer.target_app_fps", targetClientFps) >= 0)
     {
-      embedder->getRenderer()->configureClientFrameRate(atoi(targetClientFps));
+      renderer->configureClientFrameRate(atoi(targetClientFps));
     }
 
     char debugEnabledStr[PROP_VALUE_MAX];
@@ -194,7 +195,6 @@ extern "C"
         if (__system_property_get("jsar.resources.caching", enableResourcesCachingStr) >= 0)
           setenv("JSAR_RESOURCES_CACHING", enableResourcesCachingStr, 1);
 
-        auto renderer = embedder->getRenderer();
         char enableRendererTracingStr[PROP_VALUE_MAX];
         if (
             __system_property_get("jsar.renderer.tracing", enableRendererTracingStr) >= 0 &&
@@ -273,7 +273,7 @@ extern "C"
 
   DLL_PUBLIC void TransmuteNative_DispatchNativeEvent(int type, const char *data)
   {
-    TR_ENSURE_COMPONENT(nativeEventTarget)->dispatchEvent(static_cast<TrEventType>(type), data);
+    TR_ENSURE_COMPONENT(nativeEventTarget)->dispatchEvent(static_cast<events_comm::TrNativeEventType>(type), data);
   }
 
   DLL_PUBLIC void TransmuteNative_SetViewport(int w, int h)

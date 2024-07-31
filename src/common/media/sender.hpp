@@ -35,7 +35,7 @@ namespace media_comm
 
       if (TR_UNLIKELY(message == nullptr))
       {
-        DEBUG(LOG_TAG_CONTENT, "Failed to serialize command buffer: %d", command.type);
+        DEBUG(LOG_TAG_CONTENT, "Failed to serialize MediaCommand(%d)", command.type);
         return false;
       }
 
