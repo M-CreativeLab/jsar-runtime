@@ -281,7 +281,7 @@ namespace xr
     return true;
   }
 
-  bool Device::updateLocalTransform(int id, float *baseMatrixValues)
+  bool Device::updateLocalTransformBySessionId(int id, float *baseMatrixValues)
   {
     std::shared_lock<std::shared_mutex> lock(m_MutexForSessions);
     // Check for the session if it exists
@@ -298,6 +298,24 @@ namespace xr
       }
     }
     return false;
+  }
+
+  bool Device::updateLocalTransformByDocumentId(int id, float *baseMatrixValues)
+  {
+    std::shared_lock<std::shared_mutex> lock(m_MutexForSessions);
+    if (m_Sessions.size() == 0)
+      return false;
+
+    auto content = m_Constellation->contentManager->getContent(id);
+    if (TR_UNLIKELY(content == nullptr))
+      return false;
+    auto session = content->getActiveXRSession();
+    if (session == nullptr)
+      return false;
+
+    glm::mat4 baseMatrix = glm::make_mat4(baseMatrixValues);
+    session->setLocalBaseMatrix(baseMatrix);
+    return true;
   }
 
   // InputSource

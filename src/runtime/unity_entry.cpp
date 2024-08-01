@@ -500,7 +500,7 @@ extern "C"
     float m[16];
     for (int i = 0; i < 16; i++)
       m[i] = base[i / 4][i % 4];
-    return xrDevice->updateLocalTransform(id, m);
+    return xrDevice->updateLocalTransformByDocumentId(id, m);
   }
 
   /**

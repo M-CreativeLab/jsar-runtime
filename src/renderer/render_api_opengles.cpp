@@ -1293,9 +1293,8 @@ private:
 		auto location = req->location;
 		auto count = req->count();
 		auto transpose = req->transpose;
-		auto contentId = reqContentRenderer->getContent()->id;
-
-		if (contentId == -1)
+		auto content = reqContentRenderer->getContent();
+		if (TR_UNLIKELY(content == nullptr || content->id == -1))
 		{
 			DEBUG(LOG_TAG_ERROR, "Occurs an invalid uniformmatrix(), content must not be -1.");
 			return;
@@ -1304,13 +1303,19 @@ private:
 		float *matrixToUse = nullptr;
 		if (req->isComputationGraph() && (deviceFrame != nullptr && deviceFrame->isMultiPass()))
 		{
+			auto activeXRSession = content->getActiveXRSession();
+			if (TR_UNLIKELY(activeXRSession == nullptr))
+			{
+				DEBUG(LOG_TAG_ERROR, "ComputationGraph() only works content which is enabled XR session.");
+				return;
+			}
 			auto multipassFrame = static_cast<xr::MultiPassFrame *>(deviceFrame);
-			auto matrix = multipassFrame->computeMatrixByGraph(contentId, req->computationGraph4values);
+			auto matrix = multipassFrame->computeMatrixByGraph(activeXRSession->id, req->computationGraph4values);
 			matrixToUse = glm::value_ptr(matrix);
 			assert(matrixToUse != nullptr);
 		}
 
-		if (matrixToUse == nullptr)
+		if (TR_UNLIKELY(matrixToUse == nullptr))
 			matrixToUse = req->values.data();
 
 		if (TR_UNLIKELY(matrixToUse == nullptr))

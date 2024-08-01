@@ -42,7 +42,7 @@ public:
   /**
    * Start a content process with the given initialization options, and starts a command buffer receiver worker.
    */
-  void start(TrDocumentRequestInit& init);
+  void start(TrDocumentRequestInit &init);
   /**
    * Send a `pause` event to the content process.
    */
@@ -71,8 +71,8 @@ public: // lifecycle which is called by other classes
   void onCommandBuffersExecuted();
 
 public: // reference methods
-  TrConstellation* getConstellation();
-  xr::Device* getXrDevice();
+  TrConstellation *getConstellation();
+  xr::Device *getXrDevice();
 
 public: // command buffer methods
   void setCommandBufferRequestHandler(function<void(TrCommandBufferBase *)> handler);
@@ -83,14 +83,14 @@ public: // command buffer methods
 public: // event methods
   /**
    * It dispatches the content's event from native side.
-   * 
+   *
    * @param event The native event to dispatch.
    * @returns true if the event is dispatched successfully.
    */
   bool dispatchEvent(events_comm::TrNativeEvent &event);
   /**
    * Report a document event to the host native EventTarget, this is useful for reporting the events from the host process.
-   * 
+   *
    * @param documentEventType The document event type, such as `TrDocumentEventType::SpawnProcess`.
    * @returns true if the event is dispatched successfully.
    */
@@ -103,7 +103,7 @@ public: // event methods
   /**
    * It responds to the RPC request for the content, internally it sends a `TrRpcResponse` event to the peer process, namely the
    * content.
-   * 
+   *
    * @param respDetail The RPC response detail.
    * @param requestId The request ID of the RPC request.
    * @returns true if the response is sent successfully.
@@ -239,7 +239,7 @@ private:
 class TrContentManager
 {
 public:
-  TrContentManager(TrConstellation* constellation);
+  TrContentManager(TrConstellation *constellation);
   ~TrContentManager();
 
 public:
@@ -248,6 +248,7 @@ public:
   bool tickOnFrame();
   bool hasContents() { return !contents.empty(); }
   TrContentRuntime *makeContent();
+  TrContentRuntime *getContent(int id);
   TrContentRuntime *findContent(pid_t pid);
   void disposeContent(TrContentRuntime *content);
 

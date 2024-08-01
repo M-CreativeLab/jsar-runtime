@@ -97,7 +97,7 @@ namespace xr
      *
      * @param computationGraph the computation graph to be operated.
      */
-    glm::mat4 computeMatrixByGraph(int contentId, commandbuffers::MatrixComputationGraph &computationGraph);
+    glm::mat4 computeMatrixByGraph(int sessionId, commandbuffers::MatrixComputationGraph &computationGraph);
 
   private:
     int m_ActiveEyeId = -1;

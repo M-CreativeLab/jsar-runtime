@@ -129,7 +129,7 @@ namespace xr
     return projection;
   }
 
-  glm::mat4 MultiPassFrame::computeMatrixByGraph(int contentId, commandbuffers::MatrixComputationGraph &computationGraph)
+  glm::mat4 MultiPassFrame::computeMatrixByGraph(int sessionId, commandbuffers::MatrixComputationGraph &computationGraph)
   {
     auto placeholder = computationGraph.placeholderId;
     auto isRightHandedSystem = computationGraph.handedness == commandbuffers::MatrixHandedness::MATRIX_RIGHT_HANDED;
@@ -144,13 +144,13 @@ namespace xr
     }
     else if (placeholder == WebGLMatrixPlaceholderId::ViewMatrix)
     {
-      auto contentLocal = getLocalTransform(contentId);
+      auto contentLocal = getLocalTransform(sessionId);
       auto originTransform = contentLocal * math::getOriginMatrix();
       matrix = getViewMatrixWithOffset(originTransform, isRightHandedSystem);
     }
     else if (placeholder == WebGLMatrixPlaceholderId::ViewProjectionMatrix)
     {
-      auto contentLocal = getLocalTransform(contentId);
+      auto contentLocal = getLocalTransform(sessionId);
       auto offsetTransform = contentLocal * math::getOriginMatrix();
       auto viewMatrix = getViewMatrixWithOffset(offsetTransform, isRightHandedSystem);
       matrix = getProjectionMatrix(isRightHandedSystem) * viewMatrix;

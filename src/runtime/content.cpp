@@ -614,6 +614,18 @@ TrContentRuntime *TrContentManager::makeContent()
   return content;
 }
 
+TrContentRuntime *TrContentManager::getContent(int id)
+{
+  shared_lock<shared_mutex> lock(contentsMutex);
+  for (auto it = contents.begin(); it != contents.end(); ++it)
+  {
+    auto content = *it;
+    if (content->id == id)
+      return content;
+  }
+  return nullptr;
+}
+
 TrContentRuntime *TrContentManager::findContent(pid_t pid)
 {
   shared_lock<shared_mutex> lock(contentsMutex);

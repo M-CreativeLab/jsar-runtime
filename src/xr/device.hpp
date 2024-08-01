@@ -133,7 +133,22 @@ namespace xr
      * @param projectionMatrixValues the float array to be updated.
      */
     bool updateProjectionMatrix(int viewIndex, float *projectionMatrixValues);
-    bool updateLocalTransform(int id, float *transform);
+    /**
+     * Update the local transform by the session id.
+     * 
+     * @param sessionId the session id to find the session.
+     * @param transform the float array to be updated.
+     * @returns true if the local transform is updated successfully.
+     */
+    bool updateLocalTransformBySessionId(int sessionId, float *transform);
+    /**
+     * Update the local transform by the document id, it will find the session by the document/content's active session id.
+     * 
+     * @param documentId the document id to find the session.
+     * @param transform the float array to be updated.
+     * @returns true if the local transform is updated successfully.
+     */
+    bool updateLocalTransformByDocumentId(int documentId, float *transform);
     /**
      * Update the gaze-related data from the eyeball or camera's base matrix.
      */
