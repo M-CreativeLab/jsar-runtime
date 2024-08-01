@@ -4,7 +4,7 @@ import fsPromises from 'node:fs/promises';
 import {
   type ResourceLoader as JSARResourceLoader,
 } from '@yodaos-jsar/dom';
-import { getClientContext, isResourcesCachingDisabled } from '@transmute/env';
+import { getClientContext, isResourcesCachingDisabled, getResourceCacheExpirationTime } from '@transmute/env';
 import * as undici from 'undici';
 
 type FetchReturnsMap = {
@@ -35,11 +35,12 @@ function canParseURL(url: string): boolean {
 }
 
 export class ResourceLoaderOnTransmute implements JSARResourceLoader {
+  #clientContext = getClientContext();
   /**
    * The flag indicates if the resources caching is enabled.
    */
   #isCachingEnabled = !isResourcesCachingDisabled();
-  #clientContext = getClientContext();
+  #cacheExpirationTime = getResourceCacheExpirationTime();
   #cacheDirectory: string;
 
   constructor() {
@@ -169,7 +170,19 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     const filename = getHashOfUri(uri);
     const cachedPath = path.join(cacheDir, filename);
     try {
-      await fsPromises.access(cachedPath);
+      const fstats = await fsPromises.stat(cachedPath);
+      if (fstats.isDirectory()) {
+        fsPromises.rmdir(cachedPath, { recursive: true });
+        throw new Error('The cached file is a directory.');
+      }
+      if (fstats.mtimeMs < Date.now() - this.#cacheExpirationTime) {
+        fsPromises.unlink(cachedPath);
+        throw new Error('The cached file is expired.');
+      }
+      if (!fstats.isFile()) {
+        fsPromises.unlink(cachedPath);
+        throw new Error('The cached file is not a file.');
+      }
       return [true, cachedPath];
     } catch (_err) {
       return [false];

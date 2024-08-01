@@ -40,6 +40,25 @@ export function isResourcesCachingDisabled(): boolean {
   return process.env.JSAR_RESOURCES_CACHING === 'no';
 }
 
+const defaultExpirationTime = 24 * 60 * 60 * 1000; // 24 hours by default
+
+/**
+ * Get the expiration time of the resource cache.
+ * 
+ * By default, the expiration time is 1 day, or from the environment variable `JSAR_RESOURCES_CACHE_EXPIRATION_TIME`, that is a number
+ * in milliseconds.
+ * 
+ * @returns the expiration time of the resource cache in milliseconds.
+ */
+export function getResourceCacheExpirationTime(): number {
+  const expirationTime = parseInt(process.env.JSAR_RESOURCES_CACHE_EXPIRATION_TIME);
+  if (typeof expirationTime !== 'number' || isNaN(expirationTime) || expirationTime < 0) {
+    return defaultExpirationTime;
+  } else {
+    return expirationTime;
+  }
+}
+
 export function printSummary() {
   console.info('Application Environment Summary');
   console.info('- Debugging:', isDebugging ? 'Yes' : 'No');
