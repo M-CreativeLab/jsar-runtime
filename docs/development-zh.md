@@ -21,10 +21,28 @@ JSAR 会将每个应用进程的日志也打印到 `jsar` 中，比如：
 
 ### 文档事件
 
-为了方便获取每次文档加载耗时，提供了以下两个事件日志的打印：
+为了方便获取每次文档加载耗时，提供了以下日志打印：
 
-- `loaded` 事件，表示文档加载完成，比如："dispatching XSML(2) event(loaded)"
-- `fcp` 事件，表示首次内容绘制完成，比如："dispatching XSML(2) event(fcp)"
+```
+08-01 15:56:34.370 13616 13638 D jsar.metrics: [1722498994370] DocumentEvent document#256 received spawnprocess +0ms
+08-01 15:56:34.770 13616 13638 D jsar.metrics: [1722498994756] DocumentEvent document#256 received beforescripting +386ms
+08-01 15:56:36.616 13616 13638 D jsar.metrics: [1722498996601] DocumentEvent document#256 received beforeloading +1845ms
+08-01 15:56:37.500 13616 13638 D jsar.metrics: [1722498997479] DocumentEvent document#256 received load +878ms
+08-01 15:56:37.503 13616 13638 D jsar.metrics: [1722498997480] DocumentEvent document#256 received loaded +1ms
+08-01 15:56:39.061 13616 13638 D jsar.metrics: [1722498999048] DocumentEvent document#256 received DOMContentLoaded +1568ms
+08-01 15:56:39.333 13616 13638 D jsar.metrics: [1722498999333] DocumentEvent document#256 received fcp +285ms
+```
+
+格式如下：
+
+```
+[时间戳] DocumentEvent document#<文档ID> received <事件名称> +<耗时>
+```
+
+其中：
+
+- 事件名称见下面的加载性能的部分
+- 耗时为当前事件与上一个事件的时间差
 
 ## 调试
 

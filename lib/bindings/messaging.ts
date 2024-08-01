@@ -133,7 +133,7 @@ export const removeEventListener = eventTarget.removeEventListener.bind(eventTar
  */
 function dispatchEventToHost(type: 'rpcRequest', detail: { method: string, args: any[] }): number;
 function dispatchEventToHost(type: 'rpcResponse', detail: { success: boolean, data?: any, message?: string }): number;
-function dispatchEventToHost(type: 'documentEvent', detail: { documentId: number, eventType: number });
+function dispatchEventToHost(type: 'documentEvent', detail: { documentId: number, eventType: number, timestamp: number });
 function dispatchEventToHost(type: 'rpcRequest' | 'rpcResponse' | 'documentEvent', detail: any): number {
   return nativeEventTarget.dispatchEvent({
     type: eventNameToType(type),
@@ -168,6 +168,7 @@ export function reportDocumentEvent(
   return dispatchEventToHost('documentEvent', {
     documentId,
     eventType,
+    timestamp: Date.now(),
   });
 }
 

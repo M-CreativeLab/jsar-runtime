@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include "common/options.hpp"
 #include "./event.hpp"
 #include "./event_target.hpp"
@@ -130,7 +131,11 @@ namespace events_comm
   public:
     TrDocumentEvent() = default;
     TrDocumentEvent(uint32_t documentId, TrDocumentEventType eventType)
-        : documentId(documentId), eventType(eventType) {}
+        : documentId(documentId), eventType(eventType)
+    {
+      auto now = chrono::system_clock::now();
+      timestamp = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count();
+    }
 
   public:
     string toString()
@@ -143,6 +148,10 @@ namespace events_comm
     {
       destDoc.AddMember("documentId", documentId, destDoc.GetAllocator());
       destDoc.AddMember("eventType", static_cast<int>(eventType), destDoc.GetAllocator());
+
+      rapidjson::Value timestampValue;
+      timestampValue.SetInt64(timestamp);
+      destDoc.AddMember("timestamp", timestampValue, destDoc.GetAllocator());
     }
     void deserialize(rapidjson::Document &srcDoc) override
     {
@@ -155,11 +164,15 @@ namespace events_comm
         eventType = TrDocumentEventType::Unknown;
       else
         eventType = static_cast<TrDocumentEventType>(srcDoc["eventType"].GetInt());
+
+      if (srcDoc.HasMember("timestamp") && srcDoc["timestamp"].IsInt64())
+        timestamp = srcDoc["timestamp"].GetInt64();
     }
 
   public:
     uint32_t documentId;
     TrDocumentEventType eventType;
+    long long timestamp = 0;
 
     friend class TrEventDetailStorage;
   };

@@ -96,8 +96,18 @@ public:
   {
     if (event.type == events_comm::TrNativeEventType::DocumentEvent)
     {
+      static long long prevTimestamp = 0;
+
       auto documentEvent = event.detail<events_comm::TrDocumentEvent>();
-      DEBUG(LOG_TAG_METRICS, "#%d Received %s", documentEvent.documentId, documentEvent.toString().c_str());
+      int duration = 0;
+      if (prevTimestamp != 0)
+        duration = documentEvent.timestamp - prevTimestamp;
+      prevTimestamp = documentEvent.timestamp;
+      DEBUG(LOG_TAG_METRICS, "[%zu] DocumentEvent document#%d received %s +%dms",
+            documentEvent.timestamp,
+            documentEvent.documentId,
+            documentEvent.toString().c_str(),
+            duration);
     }
     pendingEvents.push_back(make_shared<events_comm::TrNativeEvent>(event));
     return true;
@@ -306,7 +316,8 @@ extern "C"
   /**
    * The options for opening the URL.
    */
-  typedef struct {
+  typedef struct
+  {
     bool disableCache;
     bool isPreview;
   } UnityDocumentRequestInit;
