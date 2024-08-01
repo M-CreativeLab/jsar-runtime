@@ -97,13 +97,13 @@ TrEmbedder *TrConstellation::getEmbedder()
   return embedder;
 }
 
-bool TrConstellation::open(string url, optional<TrDocumentRequestInit> init)
+uint32_t TrConstellation::open(string url, optional<TrDocumentRequestInit> init)
 {
   auto content = contentManager->makeContent();
   if (content == nullptr)
   {
     DEBUG(LOG_TAG_CONSTELLATION, "Failed to create a new content");
-    return false;
+    return 0;
   }
 
   static TrIdGenerator docIdGen(0x100);
@@ -111,10 +111,10 @@ bool TrConstellation::open(string url, optional<TrDocumentRequestInit> init)
   if (init.has_value())
     requestInit = init.value();
 
-  requestInit.url = url;
   requestInit.id = docIdGen.get();
+  requestInit.url = url;
   content->start(requestInit);
-  return true;
+  return requestInit.id;
 }
 
 bool TrConstellation::dispatchNativeEvent(events_comm::TrNativeEvent &event, TrContentRuntime *content)

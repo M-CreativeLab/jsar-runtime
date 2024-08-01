@@ -110,8 +110,12 @@ public:
 public:
   /**
    * Open a document that sends a request to the given URL.
+   * 
+   * @param url The URL to be requested.
+   * @param init The request initialization.
+   * @returns The document ID.
    */
-  bool open(string url, optional<TrDocumentRequestInit> init = nullopt);
+  uint32_t open(string url, optional<TrDocumentRequestInit> init = nullopt);
   /**
    * Send the event to the embedder implementation.
    */
