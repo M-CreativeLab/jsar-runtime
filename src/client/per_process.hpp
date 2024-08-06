@@ -103,6 +103,9 @@ public:
   std::unique_ptr<analytics::PerformanceValue<int>> longFrames;
 };
 
+/**
+ * The client context is a singleton class in an application process.
+ */
 class TrClientContextPerProcess
 {
 public:
@@ -114,7 +117,17 @@ public:
   ~TrClientContextPerProcess();
 
 public:
+  /**
+   * This function should be called at hive initialization to initialize the context-free client context.
+   */
+  void preload();
+  /**
+   * Initialize(start) the client context at specialized application process, such as connecting sockets, channels, etc.
+   */
   void start();
+  /**
+   * Prints the client context information.
+   */
   void print();
 
   /**

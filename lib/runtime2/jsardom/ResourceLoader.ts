@@ -166,9 +166,7 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     if (!this.#isCachingEnabled) {
       throw new TypeError('Disallow to check cache hit when caching is disabled.');
     }
-    const cacheDir = this.#cacheDirectory;
-    const filename = getHashOfUri(uri);
-    const cachedPath = path.join(cacheDir, filename);
+    const cachedPath = path.join(this.#cacheDirectory, getHashOfUri(uri));
     try {
       const fstats = await fsPromises.stat(cachedPath);
       if (fstats.isDirectory()) {

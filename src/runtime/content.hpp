@@ -1,9 +1,10 @@
 #pragma once
 
 #include <atomic>
-#include <mutex>
 #include <memory>
+#include <mutex>
 #include <shared_mutex>
+#include <condition_variable>
 #include <filesystem>
 
 #include "common/classes.hpp"
@@ -26,10 +27,14 @@
 #include "common/xr/message.hpp"
 #include "common/xr/sender.hpp"
 #include "common/xr/receiver.hpp"
-#include "constellation.hpp"
+
+#include "./constellation.hpp"
+#include "./hive_daemon.hpp"
 
 using namespace std;
 using namespace ipc;
+
+#define INVALID_PID -1
 
 class TrContentManager;
 class TrContentRuntime
@@ -52,13 +57,12 @@ public:
    */
   void resume();
   /**
-   * Terminate the content, it will remove the content renderer and send a kill signal to the content process.
+   * Dispose the content instance.
+   *
+   * @param waitsForExit If true, it will wait for the client process to exit.
+   * @returns null, but it will be blocked util the process is exit when `waitsForExit` is true.
    */
-  void terminate();
-  /**
-   * Dispose the content, it firstly call `terminate()` and wait for the content process to exit.
-   */
-  void dispose();
+  void dispose(bool waitsForExit = false);
 
 public: // lifecycle which is called by other classes
   /**
@@ -69,6 +73,12 @@ public: // lifecycle which is called by other classes
    * When the content's command buffers are executed. Internally this method will clear the command buffer requests.
    */
   void onCommandBuffersExecuted();
+  /**
+   * When the content's client process is exited.
+   *
+   * @param exitCode The exit code of the client process, 0 means normal exit.
+   */
+  void onClientProcessExited(int exitCode);
 
 public: // reference methods
   TrConstellation *getConstellation();
@@ -158,26 +168,44 @@ public: // xr methods
   bool removeXRSession(xr::TrXRSession *session);
 
 private:
-  void onClientProcess();
-  bool testClientProcessExitOnFrame(); // true if the client process has exited
   void recvCommandBuffers(WorkerThread &worker, uint32_t timeout);
   void recvEvent();
   void recvMediaRequest();
-  bool recvClientOutput();
   bool tickOnFrame();
 
 public:
-  pid_t pid = -1;
+  /**
+   * The content id.
+   *
+   * A content corresponds to documents, user could use a content to browse multiple documents, but the initial document is
+   * unique, thus at JSAR, we use the initial document id as the content id and client id.
+   *
+   * __What's the difference between content and client?__
+   *
+   * A content is an instance in the host process, it manages the lifecycle of the client process, and the client is the instance
+   * at another process that is created via hived, our client process incubator.
+   *
+   * We use the same id for the content and client both to identify the content/client in the host process and the client process.
+   */
   int id = -1;
+  /**
+   * The OS process id of this content's client process, it will be set asynchronously when the client process is created, and respond
+   * via the hived.
+   *
+   * NOTE: Don't use pid to identify the content related component such as `ContentRenderer`, `Media`, etc, this is because we establish
+   * connections asynchronously to speed up the content creation, that causes the pid is unavailable when a content's component such as
+   * `ContentRenderer` is going to be created.
+   */
+  atomic<int> pid = INVALID_PID;
 
 private:
-  int eventChanPort;
-  int frameChanPort;
-  int commandBufferChanPort;
   TrDocumentRequestInit requestInit;
-  TrConstellationInit constellationOptions;
   TrContentManager *contentManager;
+  atomic<bool> started = false;
+  atomic<bool> available = false;
   atomic<bool> shouldDestroy = false;
+  mutex exitingMutex;
+  condition_variable exitedCv;
 
 private:
   unique_ptr<events_comm::TrNativeEventReceiver> eventChanReceiver = nullptr;
@@ -218,16 +246,13 @@ private: // XR fields
   vector<xr::TrXRSession *> xrSessionsStack;
 
 private:
-  int childPipes[2];
-  string lastClientOutput;
-
-private:
   mutex commandBufferRequestsMutex;
   mutex commandBufferExecutingMutex;
   condition_variable commandBufferExecutingCv;
   atomic<bool> isCommandBufferRequestsExecuting = false;
 
   friend class TrContentManager;
+  friend class TrHiveDaemon;
   friend class renderer::TrRenderer;
   friend class renderer::TrContentRenderer;
 };
@@ -247,22 +272,40 @@ public:
   bool shutdown();
   bool tickOnFrame();
   bool hasContents() { return !contents.empty(); }
+  /**
+   * Make a new content instance, this doesn't start the content process, just created a `TrContentRuntime` instance and added it
+   * to the managed list.
+   */
   TrContentRuntime *makeContent();
-  TrContentRuntime *getContent(int id);
-  TrContentRuntime *findContent(pid_t pid);
+  /**
+   * Get the content instance by its id.
+   */
+  TrContentRuntime *getContent(uint32_t id);
+  /**
+   * Find the content instance by its client process id.
+   */
+  TrContentRuntime *findContentByPid(pid_t pid);
+  /**
+   * Dispose the content instance, it will release the related resources and terminate the client process.
+   *
+   * @param content The content instance to dispose.
+   */
   void disposeContent(TrContentRuntime *content);
 
 private:
   void onRecvXrCommands(int timeout = 100);
   void onNewEventChan();
+  void onTryDestroyingContents();
 
 private:
   void installScripts();
+  void startHived();
 
 private:
   TrConstellation *constellation = nullptr;
   shared_mutex contentsMutex;
   vector<TrContentRuntime *> contents;
+  unique_ptr<TrHiveDaemon> hived;
 
 private: // channels & workers
   TrOneShotServer<events_comm::TrNativeEventMessage> *eventChanServer = nullptr;

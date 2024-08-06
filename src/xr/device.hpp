@@ -41,12 +41,15 @@ namespace xr
 
   public:
     /**
-     * Initialize the XR device.
-     *
-     * @param enabled if this XR device is enabled.
-     * @param init the configration init to initialize the device.
+     * Configure the XR Device with a specific `TrDeviceInit` configuration.
+     * 
+     * @param init the configuration init to configure the device.
      */
-    void initialize(bool enabled, TrDeviceInit &init);
+    void configure(TrDeviceInit &init);
+    /**
+     * Initialize the XR device.
+     */
+    void initialize();
     /**
      * Shutdown the XR device.
      */

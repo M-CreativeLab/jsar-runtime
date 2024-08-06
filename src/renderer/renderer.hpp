@@ -59,19 +59,26 @@ namespace renderer
      */
     void addContentRenderer(TrContentRuntime *content);
     /**
-     * Find the content renderer by the content pid.
-     *
-     * @param contentPid The pid of the content.
-     * @returns The content renderer if found, otherwise nullptr.
-     */
-    TrContentRenderer *findContentRenderer(pid_t contentPid);
-    /**
      * Find the content renderer by the content pointer.
      *
      * @param content The content to be found.
      * @returns The content renderer if found, otherwise nullptr.
      */
     TrContentRenderer *findContentRenderer(TrContentRuntime *content);
+    /**
+     * Find the content renderer by the content pid.
+     *
+     * @param contentId The content id.
+     * @returns The content renderer if found, otherwise nullptr.
+     */
+    TrContentRenderer *findContentRenderer(uint32_t contentId);
+    /**
+     * Find the content renderer by the content pid.
+     *
+     * @param contentPid The pid of the content.
+     * @returns The content renderer if found, otherwise nullptr.
+     */
+    TrContentRenderer *findContentRendererByPid(pid_t contentPid);
     /**
      * Remove the content renderer by the content pointer.
      *
@@ -81,9 +88,9 @@ namespace renderer
     /**
      * Remove the content renderer by the content pid.
      *
-     * @param contentPid The pid of the content.
+     * @param contentId The content id.
      */
-    void removeContentRenderer(pid_t contentPid);
+    void removeContentRenderer(uint32_t contentId);
 
   public: // API for host update
     void setDrawingViewport(TrViewport viewport);

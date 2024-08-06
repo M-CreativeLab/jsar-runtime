@@ -31,25 +31,9 @@ TrConstellation::~TrConstellation()
 {
 }
 
-bool TrConstellation::initialize(string initJson)
+bool TrConstellation::configure(TrConstellationInit& init)
 {
-  rapidjson::Document initDoc;
-  initDoc.Parse(initJson.c_str());
-  if (initDoc.HasParseError())
-  {
-    DEBUG(LOG_TAG_CONSTELLATION, "Failed to parse init json: %s", initJson.c_str());
-    return false;
-  }
-
-  if (initDoc.HasMember("applicationCacheDirectory"))
-    options.applicationCacheDirectory = initDoc["applicationCacheDirectory"].GetString();
-  if (initDoc.HasMember("httpsProxyServer"))
-    options.httpsProxyServer = initDoc["httpsProxyServer"].GetString();
-  if (initDoc.HasMember("enableV8Profiling") && initDoc["enableV8Profiling"].IsBool())
-    options.enableV8Profiling = initDoc["enableV8Profiling"].GetBool();
-  if (initDoc.HasMember("isXRSupported") && initDoc["isXRSupported"].IsBool())
-    options.isXRSupported = initDoc["isXRSupported"].GetBool();
-
+  options = init;
   Dl_info dlinfo;
   if (dladdr((void *)__tr_empty, &dlinfo))
     options.runtimeDirectory = path(dlinfo.dli_fname).parent_path().c_str();
@@ -58,12 +42,20 @@ bool TrConstellation::initialize(string initJson)
 
   // Fix the environment such as creating the cache dir.
   options.fixEnvIfNeeded();
+  return true;
+}
 
+bool TrConstellation::initialize()
+{
   contentManager->initialize();
   mediaManager->initialize();
   renderer->initialize();
+  xrDevice->initialize();
   perfFs = std::make_shared<TrHostPerformanceFileSystem>(options);
   initialized = true;
+
+  // Start the hived when all the components are ready.
+  contentManager->startHived();
   return true;
 }
 

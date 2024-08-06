@@ -297,21 +297,33 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
   }
 }
 
+void TrClientContextPerProcess::preload()
+{
+  fontCacheManager = std::make_unique<font::FontCacheManager>();
+}
+
 void TrClientContextPerProcess::start()
 {
+  auto startedAt0 = chrono::system_clock::now();
+
   string pid = to_string(getpid());
   perfFs = std::make_unique<TrClientPerformanceFileSystem>(applicationCacheDirectory, pid.c_str());
-  fontCacheManager = std::make_unique<font::FontCacheManager>();
 
   // Required channels
-  eventChanClient = ipc::TrOneShotClient<TrNativeEventMessage>::MakeAndConnect(eventChanPort, false);
+  eventChanClient = ipc::TrOneShotClient<TrNativeEventMessage>::MakeAndConnect(eventChanPort, false, id);
   assert(eventChanClient != nullptr);
-  frameChanClient = ipc::TrOneShotClient<TrFrameRequestMessage>::MakeAndConnect(frameChanPort, false);
+  frameChanClient = ipc::TrOneShotClient<TrFrameRequestMessage>::MakeAndConnect(frameChanPort, false, id);
   assert(frameChanClient != nullptr);
-  mediaChanClient = ipc::TrOneShotClient<TrMediaCommandMessage>::MakeAndConnect(mediaChanPort, false);
+  mediaChanClient = ipc::TrOneShotClient<TrMediaCommandMessage>::MakeAndConnect(mediaChanPort, false, id);
   assert(mediaChanClient != nullptr);
-  commandBufferChanClient = ipc::TrOneShotClient<TrCommandBufferMessage>::MakeAndConnect(commandBufferChanPort, false);
+  commandBufferChanClient = ipc::TrOneShotClient<TrCommandBufferMessage>::MakeAndConnect(commandBufferChanPort, false, id);
   assert(commandBufferChanClient != nullptr);
+
+  {
+    auto now = chrono::system_clock::now();
+    auto duration = chrono::duration_cast<chrono::milliseconds>(now - startedAt0);
+    fprintf(stdout, "The client(%u) is started at %lld ms.\n", id, duration.count());
+  }
 
   if (
       !eventChanClient->isConnected() ||
@@ -352,7 +364,7 @@ void TrClientContextPerProcess::start()
   // XR device initialization
   if (xrDeviceInit.enabled && xrDeviceInit.commandChanPort > 0)
   {
-    xrCommandChanClient = ipc::TrOneShotClient<xr::TrXRCommandMessage>::MakeAndConnect(xrDeviceInit.commandChanPort, false);
+    xrCommandChanClient = ipc::TrOneShotClient<xr::TrXRCommandMessage>::MakeAndConnect(xrDeviceInit.commandChanPort, false, id);
     xrCommandChanSender = new xr::TrXRCommandSender(xrCommandChanClient);
     xrCommandChanReceiver = new xr::TrXRCommandReceiver(xrCommandChanClient);
     xrInputSourcesZoneClient = std::make_unique<xr::TrXRInputSourcesZone>(xrDeviceInit.inputSourcesZonePath, TrZoneType::Client);
@@ -457,7 +469,7 @@ bool TrClientContextPerProcess::sendEvent(TrNativeEvent &event)
   return eventChanSender->dispatchEvent(event);
 }
 
-TrNativeEventMessage* TrClientContextPerProcess::recvEventMessage(int timeout)
+TrNativeEventMessage *TrClientContextPerProcess::recvEventMessage(int timeout)
 {
   return eventChanReceiver->recvEvent(timeout);
 }

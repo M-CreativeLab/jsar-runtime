@@ -299,12 +299,19 @@ namespace ipc
   class TrOneShotClient
   {
   public:
-    static TrOneShotClient<T> *MakeAndConnect(int port, bool blocking)
+    /**
+     * Make a new client and auto connect to the server with the given port.
+     *
+     * @param port The port number of the server.
+     * @param blocking If the client is in blocking mode.
+     * @param customId The custom id is an unsigned integer that will be sent at the handshake to recognize the client.
+     */
+    static TrOneShotClient<T> *MakeAndConnect(int port, bool blocking, uint32_t customId = -1)
     {
       TrOneShotClient<T> *client = new TrOneShotClient<T>();
       if (
           client->connect(port, blocking) &&
-          client->sendHandshake()) // If the client is connected and the handshake is successful.
+          client->sendHandshake(customId)) // If the client is connected and the handshake is successful.
       {
         client->handshaked = true;
         return client;
@@ -329,12 +336,7 @@ namespace ipc
     }
     ~TrOneShotClient()
     {
-      if (fd != -1)
-      {
-        ::close(fd);
-        fd = -1;
-      }
-      connected = false;
+      disconnect();
     }
 
   private:
@@ -372,19 +374,25 @@ namespace ipc
       }
       connected = false;
     }
-    bool sendHandshake()
+    bool sendHandshake(int customId)
     {
       if (fd == -1 || connected == false)
         return false;
 
       /**
-       * Create the handshake message [0x0f, 0x07, pid(4 bytes)]
+       * Create the handshake message [0x0f, 0x07, pid(4 bytes), customId(4 bytes)].
        */
-      char head[6];
+      char head[10];
       head[0] = HANDSHAKE_MAGIC[0]; /* magic number */
       head[1] = HANDSHAKE_MAGIC[1]; /* magic number */
       pid_t pid = getpid();
       memcpy(&head[2], &pid, sizeof(pid));
+
+      // Just fill zeros if the `customId` is not set(-1).
+      if (customId == -1)
+        memset(&head[6], 0, 4);
+      else
+        memcpy(&head[6], &customId, 4);
 
       /**
        * Send the handshake message.
@@ -424,7 +432,7 @@ namespace ipc
         return false;
       }
 
-      char head[6];
+      char head[10];
       ssize_t received = ::recv(fd, head, sizeof(head), 0);
       if (received == -1 || received != sizeof(head))
       {
@@ -441,6 +449,8 @@ namespace ipc
         }
         // convert head[2] ~ head[5] to pid.
         memcpy(&pid, &head[2], sizeof(pid));
+        // convert head[6] ~ head[9] to customId.
+        memcpy(&customId, &head[6], sizeof(customId));
         return true;
       }
     }
@@ -448,7 +458,10 @@ namespace ipc
     {
       invalidFlag = flag;
       if (flag == true)
-        DEBUG(LOG_TAG_IPC, "The client(#%d, port=%d) is marked as invalid.", pid, port);
+      {
+        disconnect();
+        DEBUG(LOG_TAG_IPC, "The client(#%d, port=%d) has been disconnected and marked as invalid.", pid, port);
+      }
     }
     bool invalid()
     {
@@ -457,15 +470,41 @@ namespace ipc
 
   public:
     pid_t getPid() { return pid; }
+    uint32_t getCustomId() { return customId; }
     bool isConnected() { return connected; }
 
   private:
+    /**
+     * The file descriptor of this client.
+     */
     int fd = -1;
+    /**
+     * The port number of the server.
+     */
     int port = -1;
+    /**
+     * The OS process id of this client.
+     */
     pid_t pid = -1;
+    /**
+     * The custom id extracted from the handshake, it's used to recognize the client when pid doesn't work.
+     */
+    uint32_t customId = -1;
+    /**
+     * If the client is in blocking mode.
+     */
     bool blocking = true;
+    /**
+     * The connection status.
+     */
     bool connected = false;
+    /**
+     * The handshake status.
+     */
     bool handshaked = false;
+    /**
+     * The invalid flag, true indicates that the client should not be used anymore.
+     */
     bool invalidFlag = false;
 
     friend class TrOneShotServer<T>;

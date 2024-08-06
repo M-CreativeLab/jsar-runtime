@@ -26,6 +26,11 @@ tr_target_link_library(TransmuteClient ${CMAKE_SOURCE_DIR}/build/output/crates/$
 tr_target_link_thirdparty_library(TransmuteClient node)
 tr_target_link_thirdparty_library(TransmuteClient skia)
 
+if (APPLE)
+    target_link_libraries(TransmuteClient PRIVATE "-framework CoreFoundation")
+    target_link_libraries(TransmuteClient PRIVATE "-framework Carbon")
+endif()
+
 # Set properties
 tr_target_set_properties(TransmuteClient USE_EXECUTABLE_PATH True)
 

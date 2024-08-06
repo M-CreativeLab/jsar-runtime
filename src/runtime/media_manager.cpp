@@ -192,10 +192,12 @@ void TrMediaManager::initialize()
 
 void TrMediaManager::shutdown()
 {
-  if (!initialized)
-    return;
-  chanClientsWatcher->stop();
-  ma_engine_stop(&audioEngine);
+  if (initialized)
+  {
+    chanClientsWatcher->stop();
+    ma_engine_stop(&audioEngine);
+  }
+  DEBUG(LOG_TAG_MEDIA, "TrMediaManager::shutdown() done.");
 }
 
 shared_ptr<TrSoundSource> TrMediaManager::createSoundSource(TrContentRuntime *content, uint32_t clientId)
@@ -247,7 +249,7 @@ void TrMediaManager::updateListenerBaseMatrix(glm::mat4 &baseMatrix)
 
 void TrMediaManager::onNewChanClient(TrOneShotClient<TrMediaCommandMessage> &chanClient)
 {
-  auto content = constellation->contentManager->findContent(chanClient.getPid());
+  auto content = constellation->contentManager->getContent(chanClient.getCustomId());
   if (content == nullptr)
     commandChanServer->removeClient(&chanClient);
   else

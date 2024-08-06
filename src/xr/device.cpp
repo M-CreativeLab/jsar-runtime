@@ -38,18 +38,21 @@ namespace xr
     }
   }
 
-  void Device::initialize(bool enabled, TrDeviceInit &init)
+  void Device::configure(TrDeviceInit &init)
   {
-    m_Enabled = enabled;
+    m_Enabled = true;
     m_StereoRenderingMode = init.stereoRenderingMode;
+    DEBUG(LOG_TAG_XR, "configure XRDevice: enabled=%d", m_Enabled);
+  }
 
+  void Device::initialize()
+  {
     // Initialize the input sources related fields.
-    auto &constellationOptions = m_Constellation->getOptions();
-    m_InputSourcesZone = std::make_unique<TrXRInputSourcesZone>(constellationOptions.getZoneFilename("inputsources"), TrZoneType::Server);
+    auto &opts = m_Constellation->getOptions();
+    m_InputSourcesZone = std::make_unique<TrXRInputSourcesZone>(opts.getZoneFilename("inputsources"), TrZoneType::Server);
 
     // Start command client watcher.
     startCommandClientWatcher();
-    DEBUG(LOG_TAG_XR, "The XR Device has been configured successfully: enabled=%s.", enabled ? "YES" : "NO");
   }
 
   void Device::shutdown()
@@ -348,7 +351,7 @@ namespace xr
       while (m_CommandClientWatcherRunning)
       {
         m_CommandChanServer->tryAccept([this](ipc::TrOneShotClient<TrXRCommandMessage>& newClient){
-          auto content = m_Constellation->contentManager->findContent(newClient.getPid());
+          auto content = m_Constellation->contentManager->getContent(newClient.getCustomId());
           if (content == nullptr)
             m_CommandChanServer->removeClient(&newClient);
           else

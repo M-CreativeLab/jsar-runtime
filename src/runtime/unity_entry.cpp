@@ -79,19 +79,6 @@ public:
     log = nullptr;
   }
 
-  bool onStart(string argJson)
-  {
-    auto result = TrEmbedder::onStart(argJson);
-    if (result)
-    {
-#if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
-      auto opts = constellation->getOptions();
-      __system_property_set("jsar.init.cache_directory", opts.applicationCacheDirectory.c_str());
-#endif
-    }
-    return result;
-  }
-
   bool onEvent(events_comm::TrNativeEvent &event, TrContentRuntime *content) override
   {
     if (event.type == events_comm::TrNativeEventType::DocumentEvent)
@@ -287,15 +274,31 @@ extern "C"
   }
 
 #endif
-
   /**
-   * Starting the Transmute runtime.
-   *
-   * @param argJson The JSON string of the runtime initialization arguments.
+   * This parses from the JSON string and configure the Transmute runtime.
    */
-  DLL_PUBLIC bool TransmuteNative_Start(const char *argJson)
+  DLL_PUBLIC bool TransmuteNative_Configure(const char *configJson)
   {
-    return UnityEmbedder::EnsureAndGet()->onStart(string(argJson));
+    rapidjson::Document configDoc;
+    configDoc.Parse(configJson);
+    if (configDoc.HasParseError())
+    {
+      DEBUG(LOG_TAG_CONSTELLATION, "Failed to parse init json: %s", configJson);
+      return false;
+    }
+
+    string applicationCacheDirectory = "";
+    string httpsProxyServer = "";
+    bool enableXR = false;
+
+    if (configDoc.HasMember("applicationCacheDirectory"))
+      applicationCacheDirectory = configDoc["applicationCacheDirectory"].GetString();
+    if (configDoc.HasMember("httpsProxyServer"))
+      httpsProxyServer = configDoc["httpsProxyServer"].GetString();
+    if (configDoc.HasMember("isXRSupported") && configDoc["isXRSupported"].IsBool())
+      enableXR = configDoc["isXRSupported"].GetBool();
+
+    return UnityEmbedder::EnsureAndGet()->configure(applicationCacheDirectory, httpsProxyServer, enableXR);
   }
 
   /**
@@ -305,12 +308,31 @@ extern "C"
    * @param isDeviceActive Whether the XR device is active.
    * @param stereoRenderingMode The stereo rendering mode, 0 for mono, 1 for stereo.
    */
-  DLL_PUBLIC bool TransmuteNative_ConfigureXRDevice(bool enabled, bool isDeviceActive, int stereoRenderingMode)
+  DLL_PUBLIC bool TransmuteNative_ConfigureXRDevice(bool isDeviceActive, int stereoRenderingMode)
   {
     xr::TrDeviceInit init;
+    init.enabled = true;
     init.active = isDeviceActive;
     init.stereoRenderingMode = (xr::TrStereoRenderingMode)stereoRenderingMode;
-    return UnityEmbedder::EnsureAndGet()->configureXrDevice(enabled, init);
+    return UnityEmbedder::EnsureAndGet()->configureXrDevice(init);
+  }
+
+  /**
+   * Starting the Transmute runtime.
+   *
+   * @param argJson The JSON string of the runtime initialization arguments.
+   */
+  DLL_PUBLIC bool TransmuteNative_Start()
+  {
+    bool result = UnityEmbedder::EnsureAndGet()->start();
+    if (result)
+    {
+#if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
+      auto opts = constellation->getOptions();
+      __system_property_set("jsar.init.cache_directory", opts.applicationCacheDirectory.c_str());
+#endif
+    }
+    return result;
   }
 
   /**

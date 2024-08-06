@@ -1,0 +1,80 @@
+08-06 20:50:32.533 The server(eventChan) is listening on 127.0.0.1:43143
+08-06 20:50:32.568 The server(frameRequestChan) is listening on 127.0.0.1:43279
+08-06 20:50:32.568 The server(commandBufferChan) is listening on 127.0.0.1:7619
+08-06 20:50:32.568 The server(xrCommandChan) is listening on 127.0.0.1:18850
+08-06 20:50:32.568 Note: SIGPIPE has been ignored because the host process has no handler for it.
+08-06 20:50:32.568 configure XRDevice: enabled=1
+08-06 20:50:32.627 The server(mediaCommandChan) is listening on 127.0.0.1:54306
+08-06 20:50:32.628 The server(HiveCommandChan) is listening on 127.0.0.1:5122
+08-06 20:50:32.629 The client process(54103) is started.
+08-06 20:50:32.756 [1722948632756] DocumentEvent document#256 received spawnprocess +0ms
+08-06 20:50:32.756 [1722948632756] DocumentEvent document#257 received spawnprocess +0ms
+08-06 20:50:32.756 [1722948632756] DocumentEvent document#258 received spawnprocess +0ms
+08-06 20:50:32.785 Loaded 332 fonts
+08-06 20:50:32.786 hive(54103): argv[0] = /Users/yorkie/workspace/jsar-runtime/build/output/release/universal-apple-darwin/TransmuteClient
+08-06 20:50:32.786 hive(54103): argv[1] = --hive
+08-06 20:50:32.786 hive(54103): argv[2] = {"hiveChanPort":5122,"eventChanPort":43143,"frameChanPort":43279,"mediaChanPort":54306,"commandBufferChanPort":7619,"applicationCacheDirectory":"/Users/yorkie/workspace/jsar-runtime/.cache","httpsProxyServer":"","enableV8Profiling":true,"xrDevice":{"enabled":true,"active":true,"stereoRenderingMode":0,"commandChanPort":18850,"inputSourcesZonePath":"/Users/yorkie/workspace/jsar-runtime/.cache/.zones/inputsources"}}
+08-06 20:50:32.786 hive(54103): Copy the following command to restart the client:
+08-06 20:50:32.786 hive(54103):   /Users/yorkie/workspace/jsar-runtime/build/output/release/universal-apple-darwin/TransmuteClient '--hive' '{"hiveChanPort":5122,"eventChanPort":43143,"frameChanPort":43279,"mediaChanPort":54306,"commandBufferChanPort":7619,"applicationCacheDirectory":"/Users/yorkie/workspace/jsar-runtime/.cache","httpsProxyServer":"","enableV8Profiling":true,"xrDevice":{"enabled":true,"active":true,"stereoRenderingMode":0,"commandChanPort":18850,"inputSourcesZonePath":"/Users/yorkie/workspace/jsar-runtime/.cache/.zones/inputsources"}}'
+08-06 20:50:32.786 hive(54103): 08-06 20:50:32.723 Loaded 332 fonts
+08-06 20:50:32.786 hive(54103): Hive daemon is started, and listening process creation commands.
+08-06 20:50:32.786 hive(54103): 08-06 20:50:32.756 Received SIGNAL (11), printing backtrace:
+08-06 20:50:32.786 hive(54103): 0   TransmuteClient                     0x00000001026afe24 _Z24printsStacktraceOnSignali + 80
+08-06 20:50:32.786 hive(54103): 1   libsystem_platform.dylib            0x0000000186e59a24 _sigtramp + 56
+08-06 20:50:32.786 hive(54103): 2   TransmuteClient                     0x00000001027e2040 _ZNKSt3__16thread6get_idB7v160006Ev + 24
+08-06 20:50:32.786 hive(54103): 3   TransmuteClient                     0x00000001027e1fdc _ZN12WorkerThread5sleepEv + 36
+08-06 20:50:32.786 hive(54103): 4   TransmuteClient                     0x00000001027e3a64 _ZZN12TrHiveServer5startEvENK3$_0clER12WorkerThread + 44
+08-06 20:50:32.786 hive(54103): 5   TransmuteClient                     0x00000001027e3a2c _ZNSt3__18__invokeB7v160006IRZN12TrHiveServer5startEvE3$_0JR12WorkerThreadEEEDTclclsr3stdE7declvalIT_EEspclsr3stdE7declvalIT0_EEEEOS6_DpOS7_ + 32
+08-06 20:50:32.786 hive(54103): 6   TransmuteClient                     0x00000001027e3a00 _ZNSt3__128__invoke_void_return_wrapperIvLb1EE6__callIJRZN12TrHiveServer5startEvE3$_0R12WorkerThreadEEEvDpOT_ + 32
+08-06 20:50:32.786 hive(54103): 7   TransmuteClient                     0x00000001027e39b0 _ZNSt3__110__function12__alloc_funcIZN12TrHiveServer5startEvE3$_0NS_9allocatorIS3_EEFvR12WorkerThreadEEclB7v160006ES7_ + 36
+08-06 20:50:32.786 hive(54103): 8   TransmuteClient                     0x00000001027e38b4 _ZNSt3__110__function6__funcIZN12TrHiveServer5startEvE3$_0NS_9allocatorIS3_EEFvR12WorkerThreadEEclES7_ + 36
+08-06 20:50:32.786 hive(54103): 9   TransmuteClient                     0x00000001027e2974 _ZNKSt3__110__function12__value_funcIFvR12WorkerThreadEEclB7v160006ES3_ + 56
+08-06 20:50:32.786 hive(54103): 10  TransmuteClient                     0x00000001027e1fac _ZNKSt3__18functionIFvR12WorkerThreadEEclES2_ + 32
+08-06 20:50:32.786 hive(54103): 11  TransmuteClient                     0x00000001027e1f44 _ZZN12WorkerThread5startEvENKUlvE_clEv + 76
+08-06 20:50:32.786 hive(54103): 12  TransmuteClient                     0x00000001027e1eec _ZNSt3__18__invokeB7v160006IZN12WorkerThread5startEvEUlvE_JEEEDTclclsr3stdE7declvalIT_EEspclsr3stdE7declvalIT0_EEEEOS3_DpOS4_ + 24
+08-06 20:50:32.786 hive(54103): 13  TransmuteClient                     0x00000001027e1ea0 _ZNSt3__116__thread_executeB7v160006INS_10unique_ptrINS_15__thread_structENS_14default_deleteIS2_EEEEZN12WorkerThread5startEvEUlvE_JEJEEEvRNS_5tupleIJT_T0_DpT1_EEENS_15__tuple_indicesIJXspT2_EEEE + 28
+08-06 20:50:32.786 hive(54103): 14  TransmuteClient                     0x00000001027e1b8c _ZNSt3__114__thread_proxyB7v160006INS_5tupleIJNS_10unique_ptrINS_15__thread_structENS_14default_deleteIS3_EEEEZN12WorkerThread5startEvEUlvE_EEEEEPvSA_ + 88
+08-06 20:50:32.786 hive(54103): 15  libsystem_pthread.dylib             0x0000000186e2a034 _pthread_start + 136
+08-06 20:50:32.787 hive(54103): 16  libsystem_pthread.dylib             0x0000000186e24e3c thread_start + 8
+08-06 20:50:32.787 The hive(54103) exits with code(1)
+08-06 20:50:33.759 New client(#257) connected to the event channel.
+08-06 20:50:33.759 New client(#256) connected to the event channel.
+08-06 20:50:33.759 Setup the command buffer channel with client(54105, 257)
+08-06 20:50:33.759 Setup the command buffer channel with client(54104, 256)
+08-06 20:50:33.760 New client(#258) connected to the event channel.
+08-06 20:50:33.760 Setup the command buffer channel with client(54106, 258)
+08-06 20:50:33.773 [1722948633764] DocumentEvent document#256 received beforescripting +1008ms
+08-06 20:50:33.773 [1722948633764] DocumentEvent document#257 received beforescripting +0ms
+08-06 20:50:33.773 [1722948633765] DocumentEvent document#258 received beforescripting +1ms
+08-06 20:50:33.788 The client(#54104, port=-1) has been disconnected and marked as invalid.
+08-06 20:50:33.788 Failed to read data from socket(29): The connection is closed by the peer.
+08-06 20:50:33.788 The client(#54104, port=-1) has been disconnected and marked as invalid.
+08-06 20:50:33.788 Failed to read data from socket(28): The connection is closed by the peer.
+08-06 20:50:33.789 The client(#54104, port=-1) has been disconnected and marked as invalid.
+08-06 20:50:33.789 Failed to read data from socket(22): The connection is closed by the peer.
+08-06 20:50:33.789 The client(#54104, port=-1) has been disconnected and marked as invalid.
+08-06 20:50:33.789 Failed to read data from socket(26): The connection is closed by the peer.
+08-06 20:50:33.831 The client(#54104, port=-1) has been disconnected and marked as invalid.
+08-06 20:50:33.831 Failed to send data(bytes=74): Broken pipe
+08-06 20:50:34.766 The client(#54105, port=-1) has been disconnected and marked as invalid.
+08-06 20:50:34.766 Failed to read data from socket(27): The connection is closed by the peer.
+08-06 20:50:34.769 The client(#54106, port=-1) has been disconnected and marked as invalid.
+08-06 20:50:34.769 Failed to read data from socket(35): The connection is closed by the peer.
+08-06 20:50:34.769 The client(#54106, port=-1) has been disconnected and marked as invalid.
+08-06 20:50:34.769 Failed to read data from socket(34): The connection is closed by the peer.
+08-06 20:50:34.769 The client(#54105, port=-1) has been disconnected and marked as invalid.
+08-06 20:50:34.769 Failed to read data from socket(30): The connection is closed by the peer.
+08-06 20:50:34.769 The client(#54103, port=-1) has been disconnected and marked as invalid.
+08-06 20:50:34.769 Failed to read data from socket(20): The connection is closed by the peer.
+08-06 20:50:34.773 The client(#54105, port=-1) has been disconnected and marked as invalid.
+08-06 20:50:34.773 Failed to read data from socket(21): The connection is closed by the peer.
+08-06 20:50:34.773 The client(#54105, port=-1) has been disconnected and marked as invalid.
+08-06 20:50:34.773 Failed to read data from socket(25): The connection is closed by the peer.
+08-06 20:50:34.773 The client(#54106, port=-1) has been disconnected and marked as invalid.
+08-06 20:50:34.773 Failed to read data from socket(31): The connection is closed by the peer.
+08-06 20:50:34.773 The client(#54106, port=-1) has been disconnected and marked as invalid.
+08-06 20:50:34.773 Failed to read data from socket(33): The connection is closed by the peer.
+08-06 20:50:34.800 The client(#54106, port=-1) has been disconnected and marked as invalid.
+08-06 20:50:34.800 Failed to send data(bytes=74): Broken pipe
+08-06 20:50:34.802 The client(#54105, port=-1) has been disconnected and marked as invalid.
+08-06 20:50:34.802 Failed to send data(bytes=74): Broken pipe

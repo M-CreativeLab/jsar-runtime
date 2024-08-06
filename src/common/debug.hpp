@@ -62,6 +62,11 @@ void DEBUG(const char *tag, const char *format, ...);
 void SET_THREAD_NAME(const std::string &name);
 
 /**
+ * Set the name of the current process.
+ */
+void SET_PROCESS_NAME(const std::string &name);
+
+/**
  * Enable backtrace logging on current process.
  */
 void ENABLE_BACKTRACE();

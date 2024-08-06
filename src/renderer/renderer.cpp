@@ -152,24 +152,13 @@ namespace renderer
   {
     if (api == nullptr)
       return;
-    if (content == nullptr || findContentRenderer(content->pid) != nullptr)
+    if (content == nullptr || findContentRenderer(content->id) != nullptr)
       return;
-    removeContentRenderer(content->pid); // Remove the old content renderer if it exists.
+    removeContentRenderer(content->id); // Remove the old content renderer if it exists.
     {
       unique_lock<shared_mutex> lock(contentRendererMutex);
       contentRenderers.push_back(new TrContentRenderer(content, constellation));
     }
-  }
-
-  TrContentRenderer *TrRenderer::findContentRenderer(pid_t contentPid)
-  {
-    shared_lock<shared_mutex> lock(contentRendererMutex);
-    for (auto contentRenderer : contentRenderers)
-    {
-      if (contentRenderer->content->pid == contentPid)
-        return contentRenderer;
-    }
-    return nullptr;
   }
 
   TrContentRenderer *TrRenderer::findContentRenderer(TrContentRuntime *content)
@@ -177,6 +166,28 @@ namespace renderer
     for (auto contentRenderer : contentRenderers)
     {
       if (contentRenderer->content == content)
+        return contentRenderer;
+    }
+    return nullptr;
+  }
+
+  TrContentRenderer *TrRenderer::findContentRenderer(uint32_t contentId)
+  {
+    shared_lock<shared_mutex> lock(contentRendererMutex);
+    for (auto contentRenderer : contentRenderers)
+    {
+      if (contentRenderer->content->id == contentId)
+        return contentRenderer;
+    }
+    return nullptr;
+  }
+
+  TrContentRenderer *TrRenderer::findContentRendererByPid(pid_t contentPid)
+  {
+    shared_lock<shared_mutex> lock(contentRendererMutex);
+    for (auto contentRenderer : contentRenderers)
+    {
+      if (contentRenderer->content->pid == contentPid)
         return contentRenderer;
     }
     return nullptr;
@@ -198,7 +209,7 @@ namespace renderer
     }
   }
 
-  void TrRenderer::removeContentRenderer(pid_t contentPid)
+  void TrRenderer::removeContentRenderer(uint32_t contentId)
   {
     unique_lock<shared_mutex> lock(contentRendererMutex);
     if (contentRenderers.size() == 0)
@@ -206,7 +217,7 @@ namespace renderer
     for (auto it = contentRenderers.begin(); it != contentRenderers.end(); it++)
     {
       auto contentRenderer = *it;
-      if (contentRenderer->content->pid == contentPid)
+      if (contentRenderer->content->id == contentId)
       {
         contentRenderers.erase(it);
         break;
@@ -243,9 +254,15 @@ namespace renderer
       while (watcherRunning)
       {
         frameRequestChanServer->tryAccept([this](TrOneShotClient<TrFrameRequestMessage> &newClient) {
-          auto contentRenderer = findContentRenderer(newClient.getPid());
+          auto peerId = newClient.getCustomId();
+          auto contentRenderer = findContentRenderer(peerId);
           if (contentRenderer != nullptr)
             contentRenderer->resetFrameRequestChanSenderWith(&newClient);
+          else
+          {
+            DEBUG(LOG_TAG_ERROR, "Failed to accept new frame request client: could not find #%d from contents.", peerId);
+            frameRequestChanServer->removeClient(&newClient);
+          }
         }, 100);
       } });
     commandBufferClientWatcher = std::make_unique<thread>([this]()
@@ -254,12 +271,15 @@ namespace renderer
       while (watcherRunning)
       {
         commandBufferChanServer->tryAccept([this](TrOneShotClient<TrCommandBufferMessage> &newClient) {
-          auto content = constellation->contentManager->findContent(newClient.getPid());
-          DEBUG(LOG_TAG_RENDERER, "New command buffer client: %d", newClient.getPid());
-          if (content == nullptr)
-            commandBufferChanServer->removeClient(&newClient);
-          else
+          auto peerId = newClient.getCustomId();
+          auto content = constellation->contentManager->getContent(peerId);
+          if (content != nullptr)
             content->setupWithCommandBufferClient(&newClient);
+          else
+          {
+            DEBUG(LOG_TAG_ERROR, "Failed to accept new command buffer client: could not find #%d from contents.", peerId);
+            commandBufferChanServer->removeClient(&newClient);
+          }
         }, 100);
       } });
   }

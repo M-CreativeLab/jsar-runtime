@@ -518,7 +518,7 @@ int main(int argc, char **argv)
       break;
     case 'n':
       n = atoi(optarg);
-      if (n <= 0)
+      if (n < 0)
         n = 1;
       break;
     default:
@@ -568,48 +568,30 @@ int main(int argc, char **argv)
   embedder->constellation->renderer->setDrawingViewport(drawingViewport);
 
   {
-    // Start
+    // Configure the embedder
     namespace fs = std::filesystem;
     string dirname = fs::current_path().string() + "/.cache";
+    string httpsProxy = getenv("https_proxy") == nullptr ? "" : getenv("https_proxy");
+    embedder->configure(dirname, httpsProxy, xrEnabled);
 
-    rapidjson::Document doc;
-    auto &allocator = doc.GetAllocator();
-    doc.SetObject();
-
-    rapidjson::Value dirnameValue(dirname.c_str(), allocator);
-    doc.AddMember("applicationCacheDirectory", dirnameValue, allocator);
+    if (xrEnabled)
     {
-      const char *httpsProxyServer = getenv("https_proxy");
-      if (httpsProxyServer != nullptr)
-      {
-        rapidjson::Value httpsProxyServerValue(httpsProxyServer, allocator);
-        doc.AddMember("httpsProxyServer", httpsProxyServerValue, allocator);
-      }
-      const char *enableV8Profiling = getenv("ENABLE_V8_PROFILING");
-      if (enableV8Profiling != nullptr)
-        doc.AddMember("enableV8Profiling", true, allocator);
+      xr::TrDeviceInit init;
+      init.active = true;
+      init.stereoRenderingMode = xr::TrStereoRenderingMode::MultiPass;
+      embedder->configureXrDevice(init);
+      windowCtx.createXrRenderer();
     }
-    doc.AddMember("isXRSupported", true, allocator);
-    rapidjson::StringBuffer buffer;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    doc.Accept(writer);
-    embedder->onStart(buffer.GetString());
   }
 
-  if (xrEnabled == true)
+  if (!embedder->start())
   {
-    xr::TrDeviceInit init;
-    init.active = true;
-    init.stereoRenderingMode = xr::TrStereoRenderingMode::MultiPass;
-    embedder->configureXrDevice(xrEnabled, init);
-    windowCtx.createXrRenderer();
+    fprintf(stderr, "Failed to start the embedder\n");
+    return 1;
   }
 
+  // Open the request URL
   {
-    // Dispatch request event
-    auto eventTarget = embedder->constellation->nativeEventTarget;
-    assert(eventTarget != nullptr);
-
     for (int i = 0; i < n; i++)
       embedder->constellation->open(requestUrl);
   }

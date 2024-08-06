@@ -92,9 +92,16 @@ public:
 
 public:
   /**
-   * Initialize the constellation with the given options.
+   * Configure the constellation, such as setting the storage directory, proxy server, etc.
+   * 
+   * @param init The constellation initialization.
    */
-  bool initialize(string initJson);
+  bool configure(TrConstellationInit& init);
+  /**
+   * This starts the constellation, initializing the content manager, media manager, renderer, etc, it's better to
+   * configure the constellation before this, otherwise, it will use the default configuration.
+   */
+  bool initialize();
   /**
    * Shutdown the constellation.
    */
@@ -122,6 +129,7 @@ public:
   bool dispatchNativeEvent(events_comm::TrNativeEvent &event, TrContentRuntime *content);
 
 public:
+  TrConstellationInit options;
   shared_ptr<events_comm::TrNativeEventTarget> nativeEventTarget;
   shared_ptr<TrContentManager> contentManager;
   shared_ptr<TrMediaManager> mediaManager;
@@ -130,7 +138,6 @@ public:
   shared_ptr<TrHostPerformanceFileSystem> perfFs;
 
 private:
-  TrConstellationInit options;
   TrEmbedder *embedder = nullptr;
   bool initialized = false;
 

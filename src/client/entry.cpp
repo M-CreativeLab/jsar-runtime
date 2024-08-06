@@ -1,111 +1,131 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <vector>
 #include <rapidjson/document.h>
-#include <node/uv.h>
+#include <semaphore.h>
+#include "common/debug.hpp"
+#include "./entry.hpp"
+#include "./hive_server.hpp"
 
-#include "debug.hpp"
-#include "per_process.hpp"
-#include "common/xr/types.hpp"
-
-using namespace std;
-
-int main(int argc, char **argv)
+TrClientEntry::TrClientEntry(TrClientMode mode) : mode(mode)
 {
-  uv_os_setpriority(0, -15);
-  for (uint32_t i = 0; i < argc; i++)
-    fprintf(stdout, "argv[%d] = %s\n", i, argv[i]);
+  clientContext = TrClientContextPerProcess::Create();
+}
 
-  if (argc <= 2)
-  {
-    fprintf(stderr, "Exited, reason: invalid arguments to JSAR client.\n");
+int TrClientEntry::run(string configJson, string url)
+{
+  if (!parseConfig(configJson))
     return 1;
+
+  clientContext->preload();
+  if (mode == TrClientMode::Hive)
+  {
+    return onHiveMode();
   }
   else
   {
-    ENABLE_BACKTRACE();
-    fprintf(stdout, "Copy the following command to restart the client:\n");
-    fprintf(stdout, "  %s '%s' '%s'\n", argv[0], argv[1], argv[2]);
+    TrDocumentRequestInit init;
+    init.url = url;
+    return onClientMode(init);
   }
+}
 
-  string url = string(argv[1]);
-  rapidjson::Document contextDocument;
-  contextDocument.Parse(argv[2]);
+bool TrClientEntry::parseConfig(string &configJson)
+{
+  rapidjson::Document document;
+  document.Parse(configJson.c_str());
 
-  if (contextDocument.HasParseError())
+  if (document.HasParseError())
   {
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "Exited, reason: failed to parse the context json \"%s\"", argv[1]);
-    return 1;
+    DEBUG(LOG_TAG_CLIENT_ENTRY, "Exited, reason: failed to parse the context json \"%s\"", configJson.c_str());
+    return false;
   }
-  if (!contextDocument.HasMember("eventChanPort") || !contextDocument["eventChanPort"].IsUint())
+  if (!document.HasMember("eventChanPort") || !document["eventChanPort"].IsUint())
   {
     DEBUG(LOG_TAG_CLIENT_ENTRY, "Exited, reason: `eventChanPort` is missing or not a number from context json.");
-    return 1;
+    return false;
   }
-  if (!contextDocument.HasMember("frameChanPort") || !contextDocument["frameChanPort"].IsUint())
+  if (!document.HasMember("frameChanPort") || !document["frameChanPort"].IsUint())
   {
     DEBUG(LOG_TAG_CLIENT_ENTRY, "Exited, reason: `frameChanPort` is missing or not a number from context json.");
-    return 1;
+    return false;
   }
-  if (!contextDocument.HasMember("commandBufferChanPort") || !contextDocument["commandBufferChanPort"].IsUint())
+  if (!document.HasMember("commandBufferChanPort") || !document["commandBufferChanPort"].IsUint())
   {
     DEBUG(LOG_TAG_CLIENT_ENTRY, "Exited, reason: `commandBufferChanPort` is missing or not a number from context json.");
-    return 1;
+    return false;
   }
 
-  auto clientContext = TrClientContextPerProcess::Create(); // create a new client context globally in child process.
-  if (!contextDocument.HasMember("id"))
-  {
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "Exited, reason: id is missing from context json.");
-    return 1;
-  }
-  // Application settings
-  clientContext->id = contextDocument["id"].GetInt();
-  clientContext->url = url;
-  clientContext->eventChanPort = contextDocument["eventChanPort"].GetUint();
-  clientContext->frameChanPort = contextDocument["frameChanPort"].GetUint();
-  clientContext->mediaChanPort = contextDocument["mediaChanPort"].GetUint();
-  clientContext->commandBufferChanPort = contextDocument["commandBufferChanPort"].GetUint();
+  // Update hive port if it's available.
+  if (document.HasMember("hiveChanPort") && document["hiveChanPort"].IsUint())
+    hivePort = document["hiveChanPort"].GetUint();
+
+  // Ports
+  clientContext->eventChanPort = document["eventChanPort"].GetUint();
+  clientContext->frameChanPort = document["frameChanPort"].GetUint();
+  clientContext->mediaChanPort = document["mediaChanPort"].GetUint();
+  clientContext->commandBufferChanPort = document["commandBufferChanPort"].GetUint();
 
   // Global settings
-  if (contextDocument.HasMember("applicationCacheDirectory"))
-    clientContext->applicationCacheDirectory = contextDocument["applicationCacheDirectory"].GetString();
-  if (contextDocument.HasMember("httpsProxyServer"))
-    clientContext->httpsProxyServer = contextDocument["httpsProxyServer"].GetString();
-  if (contextDocument.HasMember("enableV8Profiling") && contextDocument["enableV8Profiling"].IsBool())
-    clientContext->enableV8Profiling = contextDocument["enableV8Profiling"].GetBool();
+  if (document.HasMember("applicationCacheDirectory"))
+    clientContext->applicationCacheDirectory = document["applicationCacheDirectory"].GetString();
+  if (document.HasMember("httpsProxyServer"))
+    clientContext->httpsProxyServer = document["httpsProxyServer"].GetString();
+  if (document.HasMember("enableV8Profiling") && document["enableV8Profiling"].IsBool())
+    clientContext->enableV8Profiling = document["enableV8Profiling"].GetBool();
 
   // XR Device settings
-  if (contextDocument.HasMember("xrDevice") && contextDocument["xrDevice"].IsObject())
+  if (document.HasMember("xrDevice") && document["xrDevice"].IsObject())
   {
-    auto &xrDevice = contextDocument["xrDevice"];
-    if (xrDevice.HasMember("enabled") && xrDevice["enabled"].IsBool())
-      clientContext->xrDeviceInit.enabled = xrDevice["enabled"].GetBool();
-    if (xrDevice.HasMember("active") && xrDevice["active"].IsBool())
-      clientContext->xrDeviceInit.active = xrDevice["active"].GetBool();
-    if (xrDevice.HasMember("stereoRenderingMode") && xrDevice["stereoRenderingMode"].IsNumber())
-      clientContext->xrDeviceInit.stereoRenderingMode = (xr::TrStereoRenderingMode)xrDevice["stereoRenderingMode"].GetInt();
-    if (xrDevice.HasMember("commandChanPort") && xrDevice["commandChanPort"].IsInt())
-      clientContext->xrDeviceInit.commandChanPort = xrDevice["commandChanPort"].GetInt();
-    if (xrDevice.HasMember("inputSourcesZonePath") && xrDevice["inputSourcesZonePath"].IsString())
-      clientContext->xrDeviceInit.inputSourcesZonePath = xrDevice["inputSourcesZonePath"].GetString();
+    auto &xrDeviceDoc = document["xrDevice"];
+    if (xrDeviceDoc.HasMember("enabled") && xrDeviceDoc["enabled"].IsBool())
+      clientContext->xrDeviceInit.enabled = xrDeviceDoc["enabled"].GetBool();
+    if (xrDeviceDoc.HasMember("active") && xrDeviceDoc["active"].IsBool())
+      clientContext->xrDeviceInit.active = xrDeviceDoc["active"].GetBool();
+    if (xrDeviceDoc.HasMember("stereoRenderingMode") && xrDeviceDoc["stereoRenderingMode"].IsNumber())
+      clientContext->xrDeviceInit.stereoRenderingMode = (xr::TrStereoRenderingMode)xrDeviceDoc["stereoRenderingMode"].GetInt();
+    if (xrDeviceDoc.HasMember("commandChanPort") && xrDeviceDoc["commandChanPort"].IsInt())
+      clientContext->xrDeviceInit.commandChanPort = xrDeviceDoc["commandChanPort"].GetInt();
+    if (xrDeviceDoc.HasMember("inputSourcesZonePath") && xrDeviceDoc["inputSourcesZonePath"].IsString())
+      clientContext->xrDeviceInit.inputSourcesZonePath = xrDeviceDoc["inputSourcesZonePath"].GetString();
   }
   else
   {
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "There is no \"xrDevice\" field from the init JSON.");
+    fprintf(stderr, "There is no \"xrDevice\" field from the init JSON.\n");
   }
-  clientContext->print(); // prints the client context before the script starts.
-  clientContext->start(); // starts the client context.
+  return true;
+}
+
+int TrClientEntry::onHiveMode()
+{
+  SET_PROCESS_NAME("jsar_hive");
+  TrHiveServer server(this, hivePort);
+  server.start();
+
+  if (server.isChild)
+  {
+    sleep(1);
+    return onClientMode(server.requestInit);
+  }
+  else
+    return 0;
+}
+
+int TrClientEntry::onClientMode(TrDocumentRequestInit &init)
+{
+  string processTitle = "jsar_app(" + std::to_string(init.id) + ") " + init.url;
+  SET_PROCESS_NAME(processTitle);
+
+  clientContext->id = init.id;
+  clientContext->url = init.url;
+  clientContext->print();
+  clientContext->start();
 
   TrScriptRuntimePerProcess runtime;
   vector<string> args = {
       "--url",
-      url,
+      clientContext->url,
       "--id",
       std::to_string(clientContext->id),
   };
   runtime.start(args);
-
-  DEBUG(LOG_TAG_CLIENT_ENTRY, "Client instance is stopped normally.");
+  fprintf(stdout, "The client(%d|%s) is stopped.\n", clientContext->id, clientContext->url.c_str());
   return 0;
 }
