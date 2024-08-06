@@ -1,6 +1,7 @@
 #include <filesystem>
-#include <fcntl.h>
 #include <assert.h>
+#include <fcntl.h>
+#include <sys/wait.h>
 
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>

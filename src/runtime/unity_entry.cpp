@@ -324,11 +324,12 @@ extern "C"
    */
   DLL_PUBLIC bool TransmuteNative_Start()
   {
-    bool result = UnityEmbedder::EnsureAndGet()->start();
+    auto embedder = UnityEmbedder::EnsureAndGet();
+    bool result = embedder->start();
     if (result)
     {
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
-      auto opts = constellation->getOptions();
+      auto opts = embedder->constellation->getOptions();
       __system_property_set("jsar.init.cache_directory", opts.applicationCacheDirectory.c_str());
 #endif
     }

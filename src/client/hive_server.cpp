@@ -1,3 +1,4 @@
+#include <sys/wait.h>
 #include "common/hive/message.hpp"
 #include "common/hive/sender.hpp"
 #include "common/hive/receiver.hpp"
