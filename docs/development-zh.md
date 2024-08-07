@@ -158,13 +158,27 @@ $ adb logcat -s jsar.metrics
 
 | 指标 | 说明 |
 | ---- | ---- |
-| `spawnprocess` | 表示创建应用进程的时间，即 `fork()` 调用成功后 |
-| `beforescripting` | 表示 Node.js 开始执行脚本的时间（包括 v8/Node.js 内部启动时间） |
-| `beforeloading` | 表示开始加载文档的时间 |
-| `load`/`loaded` | 表示文档加载完成的时间 |
+| `spawnprocess`     | 表示创建应用进程的时间，即 `fork()` 调用成功后 |
+| `beforescripting`  | 表示 Node.js 开始执行脚本的时间（包括 v8/Node.js 内部启动时间） |
+| `beforeloading`    | 表示开始加载文档的时间 |
+| `dispatchrequest`  | 表示开始接收到请求的时间 |
+| `load`/`loaded`    | 表示文档加载完成的时间 |
 | `DOMContentLoaded` | 表示文档依赖的内容（如样式表、脚本、图片、模型等）加载完成 |
 | `fcp`              | 即 First Contentful Paint，表示首次内容绘制完成，在 JSAR 运行时，它表示渲染器第一次接收到绘制请求（Draw Call）时标记 |
 | `lcp`              | 即 Largest Contentful Paint，表示最大内容绘制完成，它是页面中最大的绘制元素（如图片、视频等）绘制完成的时间点        |
+
+其中 `spawnprocess`、`beforescripting` 以及 `beforeloading` 三个指标是预执行时的指标，在每次真实的用户请求过程中是从 `dispatchrequest` 开始的。
+
+**应用加载流程**
+
+一个 JSAR 应用在加载过程中，需要经历以下几个主要阶段：
+
+1. 启动进程并初始化一些连接，以让 WebGL、WebXR 以及其他功能能正常工作
+2. 初始化 Node.js 环境
+3. 加载 JavaScript 框架代码，如 Babylon.js、JSAR-DOM 等
+4. 处理文档请求（URL）并开始加载并渲染
+
+其中阶段一至阶段三与文档本身并不直接的依赖关系，即可以在不需要知道当前请求的 URL 的情况下完成，因此在 JSAR 运行过程中采取了预加载的方式，从运行时启动时就默认创建了一个应用进程，并执行阶段1-3，当有新的请求到来时，会直接使用已经初始化完成的应用进程，直接从阶段四开始，这样每次响应的耗时就能大量节省下来，与此同时，又会再初始化一个新的应用进程并执行预加载用于后续的请求响应。
 
 参考文档：
 
