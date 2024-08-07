@@ -182,7 +182,7 @@ void TrHiveDaemon::onDeamonProcess()
   hiveConfig.Accept(hiveConfigWriter);
 
   char *hiveArgs[] = {
-      const_cast<char *>(clientPath.c_str()),
+      const_cast<char *>("jsar-client"),
       const_cast<char *>("--hive"),
       const_cast<char *>(hiveConfigBuffer.GetString()),
       nullptr};
