@@ -80,6 +80,7 @@ void TrContentRuntime::start(TrDocumentRequestInit &init)
   requestInit = init;
   requestInit.id = id;
   isRequestDispatched = false;
+  reportDocumentEvent(TrDocumentEventType::DispatchRequest);
   tryDispatchRequest();
 }
 
@@ -317,6 +318,21 @@ void TrContentRuntime::recvMediaRequest()
   }
 }
 
+void TrContentRuntime::recvXRCommand(int timeout)
+{
+  auto xrDevice = getConstellation()->xrDevice;
+  if (xrCommandChanReceiver == nullptr || xrDevice == nullptr || !xrDevice->enabled())
+    return;
+
+  auto message = xrCommandChanReceiver->recvCommandMessage(timeout);
+  if (message != nullptr)
+  {
+    // NOTE: Don't expose the content reference to the XR handler.
+    xrDevice->handleCommandMessage(*message, this);
+    delete message;
+  }
+}
+
 bool TrContentRuntime::tryDispatchRequest()
 {
   if (isRequestDispatched || eventChanSender == nullptr)
@@ -364,8 +380,8 @@ bool TrContentManager::initialize()
 
   eventChanWatcher = std::make_unique<WorkerThread>("TrEventChanWatcher", [this](WorkerThread &)
                                                     { acceptEventChanClients(); });
-  xrCommandsRecvWorker = std::make_unique<WorkerThread>("TrXRCommandsWorker", [this](WorkerThread &)
-                                                        { onRecvXrCommands(); });
+  xrCommandsRecvWorker = std::make_unique<WorkerThread>("TrXRCommandsWorker", [this](WorkerThread &worker)
+                                                        { recvXRCommands(); worker.sleep(); }, 100);
   contentsDestroyingWorker = std::make_unique<WorkerThread>("TrContentsMgr", [this](WorkerThread &worker)
                                                             { onTryDestroyingContents(); worker.sleep(); }, 1000);
   return true;
@@ -399,9 +415,18 @@ bool TrContentManager::shutdown()
 bool TrContentManager::tickOnFrame()
 {
   hived->tick();
+
+  // When the hive daemon is ready, we need to make sure the pre-content is always ready.
   if (hived->daemonReady)
     preparePreContent();
 
+  if (isPreContentSet)
+  {
+    shared_lock<shared_mutex> lock(preContentMutex);
+    // Tick the pre-content runtime.
+    assert(preContent != nullptr);
+    preContent->tickOnFrame();
+  }
   {
     // Check the status of each content runtime.
     shared_lock<shared_mutex> lock(contentsMutex);
@@ -423,6 +448,7 @@ shared_ptr<TrContentRuntime> TrContentManager::makeContent()
     unique_lock<shared_mutex> lock(preContentMutex);
     content = preContent;
     preContent.reset();
+    isPreContentSet = false;
   }
   {
     unique_lock<shared_mutex> lock(contentsMutex);
@@ -483,31 +509,6 @@ void TrContentManager::onNewClientOnEventChan(TrOneShotClient<events_comm::TrNat
   else
   {
     content->onEventChanConnected(client);
-  }
-}
-
-void TrContentManager::onRecvXrCommands(int timeout)
-{
-  if (contents.empty() || constellation->xrDevice == nullptr)
-  {
-    this_thread::sleep_for(chrono::milliseconds(timeout));
-  }
-  else
-  {
-    shared_lock<shared_mutex> lock(contentsMutex);
-    for (auto it = contents.begin(); it != contents.end(); ++it)
-    {
-      auto content = *it;
-      if (content->xrCommandChanReceiver == nullptr)
-        continue;
-      auto xrCommandMessage = content->xrCommandChanReceiver->recvCommandMessage(timeout);
-      if (xrCommandMessage != nullptr)
-      {
-        // NOTE: Don't expose the content reference to the XR handler.
-        constellation->xrDevice->handleCommandMessage(*xrCommandMessage, content.get());
-        delete xrCommandMessage;
-      }
-    }
   }
 }
 
@@ -592,16 +593,45 @@ void TrContentManager::startHived()
 
 void TrContentManager::preparePreContent()
 {
-  unique_lock<shared_mutex> lock(preContentMutex);
-  if (preContent != nullptr)
-    return; // Just return if the pre-content is already prepared.
-
-  preContent = make_shared<TrContentRuntime>(this);
-  preContent->preStart();
+  if (isPreContentSet == true)
+  {
+    shared_lock<shared_mutex> lock(preContentMutex);
+    assert(preContent != nullptr);
+    return;
+  }
+  else
+  {
+    unique_lock<shared_mutex> lock(preContentMutex);
+    preContent = make_shared<TrContentRuntime>(this);
+    isPreContentSet = true;
+    preContent->preStart();
+  }
 }
 
 void TrContentManager::acceptEventChanClients(int timeout)
 {
   eventChanServer->tryAccept([this](TrOneShotClient<events_comm::TrNativeEventMessage> &newClient)
                              { onNewClientOnEventChan(newClient); }, timeout);
+}
+
+void TrContentManager::recvXRCommands(int timeout)
+{
+  if (constellation->xrDevice == nullptr)
+    return;
+
+  {
+    // Recv the XR commands for the pre-content.
+    shared_lock<shared_mutex> lock(preContentMutex);
+    if (preContent != nullptr)
+      preContent->recvXRCommand(timeout);
+  }
+
+  {
+    // Recv the XR commands for the contents.
+    shared_lock<shared_mutex> lock(contentsMutex);
+    if (contents.empty())
+      return;
+    for (auto content : contents)
+      content->recvXRCommand(timeout);
+  }
 }

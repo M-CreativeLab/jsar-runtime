@@ -22,7 +22,7 @@ bool TrEmbedder::configure(string storageDirectory, string httpsProxyServer, boo
   init.applicationCacheDirectory = storageDirectory;
   init.httpsProxyServer = httpsProxyServer;
   init.isXRSupported = enableXR;
-  init.enableV8Profiling = true;
+  init.enableV8Profiling = false;
   return constellation->configure(init);
 }
 

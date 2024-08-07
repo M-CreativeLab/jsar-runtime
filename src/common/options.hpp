@@ -9,6 +9,7 @@ using namespace std;
   XX(SpawnProcess, spawnprocess)         \
   XX(BeforeScripting, beforescripting)   \
   XX(BeforeLoading, beforeloading)       \
+  XX(DispatchRequest, dispatchrequest)   \
   XX(Loaded, loaded)                     \
   XX(Load, load)                         \
   XX(DOMContentLoaded, DOMContentLoaded) \
@@ -23,6 +24,7 @@ using namespace std;
  * - SpawnProcess: The event is triggered when the content process is spawned.
  * - BeforeScripting: The event is triggered before the document starts scripting.
  * - BeforeLoading: The event is triggered before the document starts loading.
+ * - DispatchRequest: The event is triggered when the document dispatches a request.
  * - Loaded: The event is triggered when the document is loaded.
  * - Load: The event is triggered when the document is loaded.
  * - DOMContentLoaded: The event is triggered when the document is parsed and the DOM tree is built.
@@ -86,6 +88,8 @@ inline string documentEventToName(TrDocumentEventType type)
     return "beforescripting";
   case TrDocumentEventType::BeforeLoading:
     return "beforeloading";
+  case TrDocumentEventType::DispatchRequest:
+    return "dispatchrequest";
   case TrDocumentEventType::Loaded:
     return "loaded";
   case TrDocumentEventType::Load:

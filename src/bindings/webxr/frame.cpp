@@ -225,7 +225,7 @@ namespace bindings
       auto& perfFs = device->clientContext->getPerfFs();
       auto duration = chrono::duration_cast<chrono::microseconds>(endTime - startTime).count() / 1000.0;
       perfFs.setFrameDuration(duration);
-      if (duration > 16)
+      if (duration > 1000 / 45)
         fprintf(stderr, "Detected a long frame(#%d) takes %fms in session(%d)\n", id, duration, sessionId);
 
       // Calculate the Fps and update to fs.

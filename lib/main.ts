@@ -59,7 +59,8 @@ bootwait(async function main() {
     await prepareXRSystem();
     reportDocumentEvent(id, 'beforeloading');
 
-    runtime = new TransmuteRuntime2(getWebGLRenderingContext());
+    runtime = new TransmuteRuntime2(getWebGLRenderingContext(), id);
+    await runtime.prepare();
     const initializedEnded = performance.now();
 
     console.info('Time summary:', {
@@ -70,8 +71,7 @@ bootwait(async function main() {
 
     // Start handling the request.
     addDocumentRequestListener(event => {
-      console.info('Received a document request:', event, clientContext);
-      runtime.start(event.url, event.documentId);
+      runtime.start(event.url);
     });
   } catch (err) {
     console.error('failed to start the runtime, occurs an error:', err);

@@ -182,6 +182,7 @@ private:
   void recvCommandBuffers(WorkerThread &worker, uint32_t timeout);
   void recvEvent();
   void recvMediaRequest();
+  void recvXRCommand(int timeout);
   bool tryDispatchRequest();
   bool tickOnFrame();
 
@@ -312,7 +313,6 @@ public:
 
 private:
   void onNewClientOnEventChan(TrOneShotClient<events_comm::TrNativeEventMessage> &client);
-  void onRecvXrCommands(int timeout = 100);
   void onTryDestroyingContents();
 
 private:
@@ -320,14 +320,19 @@ private:
   void startHived();
   void preparePreContent();
   void acceptEventChanClients(int timeout = 100);
+  void recvXRCommands(int timeout = 100);
 
 private:
   TrConstellation *constellation = nullptr;
   shared_mutex contentsMutex;
-  shared_mutex preContentMutex;
   vector<shared_ptr<TrContentRuntime>> contents;
-  shared_ptr<TrContentRuntime> preContent;
   unique_ptr<TrHiveDaemon> hived;
+
+private: // PreContent related fields
+  std::chrono::steady_clock::time_point lastSetTimeOnPreContent;
+  shared_mutex preContentMutex;
+  atomic<bool> isPreContentSet = false;
+  shared_ptr<TrContentRuntime> preContent;
 
 private: // channels & workers
   TrOneShotServer<events_comm::TrNativeEventMessage> *eventChanServer = nullptr;

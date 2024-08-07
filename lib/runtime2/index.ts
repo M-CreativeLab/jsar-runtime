@@ -14,45 +14,47 @@ Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
 });
 
 export class TransmuteRuntime2 extends EventTarget {
-  constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext) {
-    super();
+  #nativeDocument: NativeDocumentOnTransmute;
 
+  constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext, private id: number) {
+    super();
     this.dispatchEvent(new Event('rendererReady'));
-    this.prepare();
   }
 
-  start(url: string, id: number) {
-    this.onXsmlRequest(url, id);
+  start(url: string) {
+    console.info(`Content(#${this.id}): receiving a document request: ${url}`);
+    if (!this.#nativeDocument) {
+      throw new TypeError('Call prepare() before start()');
+    }
+    this.onDocumentRequest(url, this.id);
   }
 
   onGpuBusy() {
     // TODO
   }
 
-  private prepare() {
+  async prepare() {
     const exts = this.gl.getSupportedExtensions();
     console.info(`[WebGL] supported extensions(${exts.length}):`);
     for (let extName of exts) {
       console.info(`  - ${extName}`);
     }
     console.info(`[JSARDOM] version=${JSARDOM.version}`);
-  }
 
-  private async onXsmlRequest(url: string, id: number) {
-    console.info(`xsml request:`, url, id);
-
-    const nativeDocument = new NativeDocumentOnTransmute(this.gl);
+    this.#nativeDocument = new NativeDocumentOnTransmute(this.gl);
     if (isWebXRSupported()) {
-      await nativeDocument.enterDefaultXrExperience();
-      console.info(`Session#${id} has been entered XR experience.`);
+      await this.#nativeDocument.enterDefaultXrExperience();
     } else {
       console.info(`Skip enabling WebXR experience, reason: WebXR is not enabled.`);
     }
+    console.info(`The runtime#${this.id} has been ready.`);
+  }
 
+  private async onDocumentRequest(url: string, id: number) {
     try {
-      await this.load(url, nativeDocument);
+      await this.load(url, this.#nativeDocument);
     } catch (err) {
-      reportDocumentEvent(nativeDocument.id, 'error');
+      reportDocumentEvent(this.id, 'error');
       console.error(`failed to load document(${url}):`, err);
     }
   }
