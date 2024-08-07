@@ -1,6 +1,6 @@
 import minimist from 'minimist';
 import * as env from '@transmute/env';
-import { reportDocumentEvent } from '@transmute/messaging';
+import { reportDocumentEvent, addDocumentRequestListener } from '@transmute/messaging';
 
 import {
   connectRenderer,
@@ -17,7 +17,6 @@ loadPolyfills();
 const args = minimist(process.argv.slice(1));
 const id = args.id || 'unknown';
 console.info(`Starting the JavaScript runtime(${process.pid}) => ${id}`, process.argv);
-process.title = `TrScript ${id}`;
 
 let runtime: TransmuteRuntime2;
 requestGpuBusyCallback(() => {
@@ -70,7 +69,10 @@ bootwait(async function main() {
     });
 
     // Start handling the request.
-    runtime.start(clientContext.url, clientContext.id);
+    addDocumentRequestListener(event => {
+      console.info('Received a document request:', event, clientContext);
+      runtime.start(event.url, event.documentId);
+    });
   } catch (err) {
     console.error('failed to start the runtime, occurs an error:', err);
     reportDocumentEvent(id, 'error');

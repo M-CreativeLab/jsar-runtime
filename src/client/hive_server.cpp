@@ -130,6 +130,11 @@ void TrHiveServer::start()
                                                    { checkStatus(commandSender); worker.sleep(); }, 100);
 
   running = true;
+  {
+    // Send ready event
+    hive_comm::TrOnServerReadyEvent serverReadyEvent;
+    commandSender.sendCommand(serverReadyEvent);
+  }
   fprintf(stdout, "Hive daemon is started, and listening process creation commands.\n");
 
   while (true)

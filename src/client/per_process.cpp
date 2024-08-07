@@ -304,8 +304,6 @@ void TrClientContextPerProcess::preload()
 
 void TrClientContextPerProcess::start()
 {
-  auto startedAt0 = chrono::system_clock::now();
-
   string pid = to_string(getpid());
   perfFs = std::make_unique<TrClientPerformanceFileSystem>(applicationCacheDirectory, pid.c_str());
 
@@ -318,12 +316,6 @@ void TrClientContextPerProcess::start()
   assert(mediaChanClient != nullptr);
   commandBufferChanClient = ipc::TrOneShotClient<TrCommandBufferMessage>::MakeAndConnect(commandBufferChanPort, false, id);
   assert(commandBufferChanClient != nullptr);
-
-  {
-    auto now = chrono::system_clock::now();
-    auto duration = chrono::duration_cast<chrono::milliseconds>(now - startedAt0);
-    fprintf(stdout, "The client(%u) is started at %lld ms.\n", id, duration.count());
-  }
 
   if (
       !eventChanClient->isConnected() ||

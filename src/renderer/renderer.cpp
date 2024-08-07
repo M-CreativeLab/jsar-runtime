@@ -272,7 +272,7 @@ namespace renderer
       {
         commandBufferChanServer->tryAccept([this](TrOneShotClient<TrCommandBufferMessage> &newClient) {
           auto peerId = newClient.getCustomId();
-          auto content = constellation->contentManager->getContent(peerId);
+          auto content = constellation->contentManager->getContent(peerId, true);
           if (content != nullptr)
             content->setupWithCommandBufferClient(&newClient);
           else

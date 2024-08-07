@@ -330,13 +330,18 @@ void TrHiveDaemon::recvCommand()
     case hive_comm::TrHiveCommandType::TerminateClientResponse:
     {
       auto res = hive_comm::TrHiveCommandBase::FromMessage<hive_comm::TrTerminateClientResponse>(commandMessage);
-      // DEBUG(LOG_TAG_CLIENT_ENTRY, "The client(%d) is terminated: %s", res.documentId, res.success ? "success" : "failed");
+      // TODO: handle the response?
+      break;
+    }
+    case hive_comm::TrHiveCommandType::OnServerReadyEvent:
+    {
+      daemonReady = true;
       break;
     }
     case hive_comm::TrHiveCommandType::OnExitEvent:
     {
       auto exitEvent = hive_comm::TrHiveCommandBase::FromMessage<hive_comm::TrOnExitEvent>(commandMessage);
-      auto contentToExit = constellation->contentManager->getContent(exitEvent.documentId);
+      auto contentToExit = constellation->contentManager->getContent(exitEvent.documentId, true);
       if (contentToExit != nullptr)
         contentToExit->onClientProcessExited(exitEvent.code);
       break;

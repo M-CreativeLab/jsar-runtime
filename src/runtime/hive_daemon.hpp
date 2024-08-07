@@ -88,6 +88,7 @@ private:
 
 public:
   pid_t daemonPid;
+  atomic<bool> daemonReady = false;
   vector<pid_t> childPids;
   int childPipes[2];
   string runtimeDirectory;

@@ -45,6 +45,11 @@ public:
 
 public:
   /**
+   * Pre-start the content, it will start the content and initialize the environment which is not related to the request
+   * to boost the responding speed.
+   */
+  void preStart();
+  /**
    * Start a content process with the given initialization options, and starts a command buffer receiver worker.
    */
   void start(TrDocumentRequestInit &init);
@@ -91,6 +96,12 @@ public: // command buffer methods
   bool sendCommandBufferResponse(TrCommandBufferResponse &res);
 
 public: // event methods
+  /**
+   * When the content's client is connected to the server side event channel.
+   *
+   * @param client The event channel client.
+   */
+  void onEventChanConnected(TrOneShotClient<events_comm::TrNativeEventMessage> &client);
   /**
    * It dispatches the content's event from native side.
    *
@@ -171,6 +182,7 @@ private:
   void recvCommandBuffers(WorkerThread &worker, uint32_t timeout);
   void recvEvent();
   void recvMediaRequest();
+  bool tryDispatchRequest();
   bool tickOnFrame();
 
 public:
@@ -201,6 +213,7 @@ public:
 private:
   TrDocumentRequestInit requestInit;
   TrContentManager *contentManager;
+  bool isRequestDispatched = true;
   atomic<bool> started = false;
   atomic<bool> available = false;
   atomic<bool> shouldDestroy = false;
@@ -276,35 +289,44 @@ public:
    * Make a new content instance, this doesn't start the content process, just created a `TrContentRuntime` instance and added it
    * to the managed list.
    */
-  TrContentRuntime *makeContent();
+  shared_ptr<TrContentRuntime> makeContent();
   /**
    * Get the content instance by its id.
+   * 
+   * @param id The content id.
+   * @param includePreContent If true, it will return the pre-content instance if the id is matched.
    */
-  TrContentRuntime *getContent(uint32_t id);
+  shared_ptr<TrContentRuntime> getContent(uint32_t id, bool includePreContent = false);
   /**
    * Find the content instance by its client process id.
+   * 
+   * @param pid The client process id.
    */
-  TrContentRuntime *findContentByPid(pid_t pid);
+  shared_ptr<TrContentRuntime> findContentByPid(pid_t pid);
   /**
    * Dispose the content instance, it will release the related resources and terminate the client process.
    *
    * @param content The content instance to dispose.
    */
-  void disposeContent(TrContentRuntime *content);
+  void disposeContent(shared_ptr<TrContentRuntime> content);
 
 private:
+  void onNewClientOnEventChan(TrOneShotClient<events_comm::TrNativeEventMessage> &client);
   void onRecvXrCommands(int timeout = 100);
-  void onNewEventChan();
   void onTryDestroyingContents();
 
 private:
   void installScripts();
   void startHived();
+  void preparePreContent();
+  void acceptEventChanClients(int timeout = 100);
 
 private:
   TrConstellation *constellation = nullptr;
   shared_mutex contentsMutex;
-  vector<TrContentRuntime *> contents;
+  shared_mutex preContentMutex;
+  vector<shared_ptr<TrContentRuntime>> contents;
+  shared_ptr<TrContentRuntime> preContent;
   unique_ptr<TrHiveDaemon> hived;
 
 private: // channels & workers

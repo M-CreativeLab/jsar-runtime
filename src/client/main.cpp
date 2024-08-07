@@ -14,11 +14,10 @@ int main(int argc, char **argv)
   setvbuf(stdout, NULL, _IOLBF, 0);
   setvbuf(stderr, NULL, _IOLBF, 0);
 
-  for (uint32_t i = 0; i < argc; i++)
-    fprintf(stdout, "argv[%d] = %s\n", i, argv[i]);
-
   if (argc <= 2)
   {
+    for (uint32_t i = 0; i < argc; i++)
+      fprintf(stdout, "argv[%d] = %s\n", i, argv[i]);
     fprintf(stderr, "Exited, reason: invalid arguments to JSAR client.\n");
     return 1;
   }

@@ -100,10 +100,7 @@ int TrClientEntry::onHiveMode()
   server.start();
 
   if (server.isChild)
-  {
-    sleep(1);
     return onClientMode(server.requestInit);
-  }
   else
     return 0;
 }

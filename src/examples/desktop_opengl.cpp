@@ -474,10 +474,20 @@ void onFramebufferSizeChanged(GLFWwindow *window, int width, int height)
   glfwSetWindowTitle(window, ctx->title().c_str());
 }
 
-void processInput(GLFWwindow *window)
+void processInput(GLFWwindow *window, DesktopEmbedder *embedder)
 {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     glfwSetWindowShouldClose(window, true);
+
+  static bool isKeySpacePressed = false;
+  if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    isKeySpacePressed = true;
+  if (isKeySpacePressed && glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
+  {
+    isKeySpacePressed = false;
+    if (embedder != nullptr)
+      embedder->constellation->open("http://localhost:3000/html-in-spatial/paragraph.xsml");
+  }
 }
 
 void help()
@@ -499,7 +509,7 @@ int main(int argc, char **argv)
   int width = 800;
   int height = 600;
   bool xrEnabled = false;
-  int n = 1;
+  int nApps = 1;
   string requestUrl = "http://localhost:3000/spatial-element.xsml";
 
   int opt;
@@ -517,9 +527,9 @@ int main(int argc, char **argv)
       xrEnabled = true;
       break;
     case 'n':
-      n = atoi(optarg);
-      if (n < 0)
-        n = 1;
+      nApps = atoi(optarg);
+      if (nApps < 0)
+        nApps = 1;
       break;
     default:
       help();
@@ -590,12 +600,6 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  // Open the request URL
-  {
-    for (int i = 0; i < n; i++)
-      embedder->constellation->open(requestUrl);
-  }
-
   glfwMakeContextCurrent(windowCtx.window);
 
   unsigned int vertexShader;
@@ -659,13 +663,23 @@ int main(int argc, char **argv)
 
   // Create panel(screen-space)
   auto panel = windowCtx.createStatPanel();
-  bool initialized = false;
+  static bool isEmbedderReady = false;
+
   while (!glfwWindowShouldClose(windowCtx.window))
   {
-    processInput(windowCtx.window);
+    processInput(windowCtx.window, embedder);
 
     if (embedder != nullptr)
     {
+      // Handle the embedder ready state and send the open request.
+      // if (!isEmbedderReady && embedder->constellation->isRuntimeReady() == true)
+      // {
+      //   isEmbedderReady = true;
+      //   for (int i = 0; i < nApps; i++)
+      //     embedder->constellation->open(requestUrl);
+      // }
+
+      // Update the panel data
       panel->fps = embedder->getFps();       // update fps to panel
       panel->uptime = embedder->getUptime(); // update uptime to panel
     }

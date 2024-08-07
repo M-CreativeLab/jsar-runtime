@@ -98,15 +98,14 @@ uint32_t TrConstellation::open(string url, optional<TrDocumentRequestInit> init)
     return 0;
   }
 
-  static TrIdGenerator docIdGen(0x100);
   TrDocumentRequestInit requestInit;
   if (init.has_value())
     requestInit = init.value();
 
-  requestInit.id = docIdGen.get();
+  requestInit.id = content->id;
   requestInit.url = url;
   content->start(requestInit);
-  return requestInit.id;
+  return content->id;
 }
 
 bool TrConstellation::dispatchNativeEvent(events_comm::TrNativeEvent &event, TrContentRuntime *content)
@@ -123,4 +122,13 @@ TrConstellationInit &TrConstellation::getOptions()
 bool TrConstellation::isInitialized()
 {
   return initialized;
+}
+
+bool TrConstellation::isRuntimeReady()
+{
+  if (!initialized)
+    return false;
+
+  // just returns if hived is ready.
+  return contentManager->hived->daemonReady;
 }

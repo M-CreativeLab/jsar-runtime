@@ -351,7 +351,7 @@ namespace xr
       while (m_CommandClientWatcherRunning)
       {
         m_CommandChanServer->tryAccept([this](ipc::TrOneShotClient<TrXRCommandMessage>& newClient){
-          auto content = m_Constellation->contentManager->getContent(newClient.getCustomId());
+          auto content = m_Constellation->contentManager->getContent(newClient.getCustomId(), true);
           if (content == nullptr)
             m_CommandChanServer->removeClient(&newClient);
           else

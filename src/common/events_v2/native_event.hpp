@@ -126,6 +126,46 @@ namespace events_comm
     friend class TrEventDetailStorage;
   };
 
+  class TrDocumentRequest : public TrEventDetailObject
+  {
+  public:
+    TrDocumentRequest() = default;
+    TrDocumentRequest(TrDocumentRequestInit &init)
+        : documentId(init.id),
+          url(init.url),
+          disableCache(init.disableCache),
+          isPreview(init.isPreview),
+          runScripts(init.runScripts)
+    {
+    }
+
+  protected:
+    void serialize(rapidjson::Document &destDoc) override
+    {
+      auto &allocator = destDoc.GetAllocator();
+      destDoc.AddMember("documentId", documentId, allocator);
+      destDoc.AddMember("url", rapidjson::Value(url.c_str(), allocator), allocator);
+      destDoc.AddMember("disableCache", disableCache, allocator);
+      destDoc.AddMember("isPreview", isPreview, allocator);
+    }
+    void deserialize(rapidjson::Document &srcDoc) override
+    {
+      documentId = srcDoc["documentId"].GetUint();
+      url = srcDoc["url"].GetString();
+      disableCache = srcDoc["disableCache"].GetBool();
+      isPreview = srcDoc["isPreview"].GetBool();
+    }
+
+  public:
+    uint32_t documentId;
+    string url;
+    bool disableCache = false;
+    bool isPreview = false;
+    TrScriptRunMode runScripts = TrScriptRunMode::Dangerously;
+
+    friend class TrEventDetailStorage;
+  };
+
   class TrDocumentEvent : public TrEventDetailObject
   {
   public:

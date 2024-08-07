@@ -20,6 +20,7 @@ namespace hive_comm
   XX(TerminateClientResponse)    \
   XX(PingRequest)                \
   XX(PongResponse)               \
+  XX(OnServerReadyEvent)         \
   XX(OnExitEvent)                \
   XX(OnLogEntryEvent)
 
@@ -85,7 +86,6 @@ namespace hive_comm
     }
     TrCreateClientRequest(TrCreateClientRequest &that)
         : TrHiveCommandSimple(that),
-          url(that.url),
           documentId(that.documentId),
           disableCache(that.disableCache),
           isPreview(that.isPreview),
@@ -196,6 +196,13 @@ namespace hive_comm
     long long timestamp;
   };
 
+  class TrOnServerReadyEvent : public TrHiveCommandSimple<TrOnServerReadyEvent>
+  {
+  public:
+    TrOnServerReadyEvent() : TrHiveCommandSimple(TrHiveCommandType::OnServerReadyEvent) {}
+    TrOnServerReadyEvent(TrOnServerReadyEvent &that) : TrHiveCommandSimple(that) {}
+  };
+
   class TrOnExitEvent : public TrHiveCommandSimple<TrOnExitEvent>
   {
   public:
@@ -230,7 +237,6 @@ namespace hive_comm
         : TrHiveCommandSimple(that),
           timestamp(that.timestamp),
           level(that.level),
-          text(that.text),
           sourceDocumentId(that.sourceDocumentId),
           sourcePid(that.sourcePid)
     {

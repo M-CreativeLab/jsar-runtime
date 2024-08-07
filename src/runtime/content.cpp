@@ -10,6 +10,7 @@
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 
+#include "idgen.hpp"
 #include "debug.hpp"
 #include "embedder.hpp"
 #include "content.hpp"
@@ -18,6 +19,9 @@
 
 TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManager(contentMgr)
 {
+  static TrIdGenerator idGen(0x100);
+  id = idGen.get();
+
   auto eventTarget = contentManager->constellation->nativeEventTarget;
   assert(eventTarget != nullptr);
 
@@ -52,21 +56,31 @@ TrContentRuntime::~TrContentRuntime()
   xrSessionsStack.clear();
 }
 
-void TrContentRuntime::start(TrDocumentRequestInit &init)
+void TrContentRuntime::preStart()
 {
-  id = init.id;
-  requestInit = init;
   available = true;
-
   commandBuffersRecvWorker = std::make_unique<WorkerThread>("TrCommandBuffersWorker", [this](WorkerThread &worker)
                                                             { recvCommandBuffers(worker, 100); });
   auto renderer = contentManager->constellation->renderer;
   renderer->addContentRenderer(this);
 
   // Send the create process request to the hive daemon.
+  TrDocumentRequestInit init;
+  init.id = id;
   contentManager->hived->createClient(init, [this](pid_t pid)
                                       { this->pid = pid; });
   reportDocumentEvent(TrDocumentEventType::SpawnProcess);
+}
+
+void TrContentRuntime::start(TrDocumentRequestInit &init)
+{
+  if (!available) // PreStart if the process is not available.
+    preStart();
+
+  requestInit = init;
+  requestInit.id = id;
+  isRequestDispatched = false;
+  tryDispatchRequest();
 }
 
 void TrContentRuntime::pause()
@@ -91,7 +105,7 @@ void TrContentRuntime::dispose(bool waitsForExit)
   {
     unique_lock<mutex> lock(exitingMutex);
     exitedCv.wait(lock, [this]
-                   { return pid == INVALID_PID; });
+                  { return pid == INVALID_PID; });
   }
 }
 
@@ -151,6 +165,12 @@ bool TrContentRuntime::sendCommandBufferResponse(TrCommandBufferResponse &res)
     return false;
 }
 
+void TrContentRuntime::onEventChanConnected(TrOneShotClient<events_comm::TrNativeEventMessage> &client)
+{
+  eventChanReceiver = make_unique<events_comm::TrNativeEventReceiver>(&client);
+  eventChanSender = make_unique<events_comm::TrNativeEventSender>(&client);
+}
+
 bool TrContentRuntime::dispatchEvent(events_comm::TrNativeEvent &event)
 {
   return getConstellation()->nativeEventTarget->dispatchEvent(event);
@@ -174,6 +194,7 @@ void TrContentRuntime::onMediaChanConnected(TrOneShotClient<media_comm::TrMediaC
   }
   mediaChanReceiver = make_unique<media_comm::TrMediaCommandReceiver>(&client);
   mediaChanSender = make_unique<media_comm::TrMediaCommandSender>(&client);
+  tryDispatchRequest();
 }
 
 bool TrContentRuntime::dispatchMediaEvent(media_comm::TrMediaCommandBase &event)
@@ -296,6 +317,24 @@ void TrContentRuntime::recvMediaRequest()
   }
 }
 
+bool TrContentRuntime::tryDispatchRequest()
+{
+  if (isRequestDispatched || eventChanSender == nullptr)
+    return false;
+
+  events_comm::TrDocumentRequest request(requestInit);
+  auto requestEvent = events_comm::TrNativeEvent::MakeEvent(events_comm::TrNativeEventType::DocumentRequest, &request);
+  if (eventChanSender->dispatchEvent(requestEvent))
+  {
+    isRequestDispatched = true;
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
 bool TrContentRuntime::tickOnFrame()
 {
   recvEvent();
@@ -324,7 +363,7 @@ bool TrContentManager::initialize()
   installScripts();
 
   eventChanWatcher = std::make_unique<WorkerThread>("TrEventChanWatcher", [this](WorkerThread &)
-                                                    { onNewEventChan(); });
+                                                    { acceptEventChanClients(); });
   xrCommandsRecvWorker = std::make_unique<WorkerThread>("TrXRCommandsWorker", [this](WorkerThread &)
                                                         { onRecvXrCommands(); });
   contentsDestroyingWorker = std::make_unique<WorkerThread>("TrContentsMgr", [this](WorkerThread &worker)
@@ -360,6 +399,9 @@ bool TrContentManager::shutdown()
 bool TrContentManager::tickOnFrame()
 {
   hived->tick();
+  if (hived->daemonReady)
+    preparePreContent();
+
   {
     // Check the status of each content runtime.
     shared_lock<shared_mutex> lock(contentsMutex);
@@ -372,9 +414,16 @@ bool TrContentManager::tickOnFrame()
   return true;
 }
 
-TrContentRuntime *TrContentManager::makeContent()
+shared_ptr<TrContentRuntime> TrContentManager::makeContent()
 {
-  TrContentRuntime *content = new TrContentRuntime(this);
+  preparePreContent();
+
+  shared_ptr<TrContentRuntime> content = nullptr;
+  {
+    unique_lock<shared_mutex> lock(preContentMutex);
+    content = preContent;
+    preContent.reset();
+  }
   {
     unique_lock<shared_mutex> lock(contentsMutex);
     contents.push_back(content);
@@ -382,19 +431,27 @@ TrContentRuntime *TrContentManager::makeContent()
   return content;
 }
 
-TrContentRuntime *TrContentManager::getContent(uint32_t id)
+shared_ptr<TrContentRuntime> TrContentManager::getContent(uint32_t id, bool includePreContent)
 {
-  shared_lock<shared_mutex> lock(contentsMutex);
-  for (auto it = contents.begin(); it != contents.end(); ++it)
+  if (includePreContent)
   {
-    auto content = *it;
-    if (content->id == id)
-      return content;
+    shared_lock<shared_mutex> lock(preContentMutex);
+    if (preContent != nullptr && preContent->id == id)
+      return preContent;
+  }
+  {
+    shared_lock<shared_mutex> lock(contentsMutex);
+    for (auto it = contents.begin(); it != contents.end(); ++it)
+    {
+      auto content = *it;
+      if (content->id == id)
+        return content;
+    }
   }
   return nullptr;
 }
 
-TrContentRuntime *TrContentManager::findContentByPid(pid_t pid)
+shared_ptr<TrContentRuntime> TrContentManager::findContentByPid(pid_t pid)
 {
   shared_lock<shared_mutex> lock(contentsMutex);
   for (auto it = contents.begin(); it != contents.end(); ++it)
@@ -406,14 +463,26 @@ TrContentRuntime *TrContentManager::findContentByPid(pid_t pid)
   return nullptr;
 }
 
-void TrContentManager::disposeContent(TrContentRuntime *content)
+void TrContentManager::disposeContent(shared_ptr<TrContentRuntime> content)
 {
   unique_lock<shared_mutex> lock(contentsMutex);
   auto it = std::find(contents.begin(), contents.end(), content);
   if (it != contents.end())
-  {
     contents.erase(it);
-    delete content;
+}
+
+void TrContentManager::onNewClientOnEventChan(TrOneShotClient<events_comm::TrNativeEventMessage> &client)
+{
+  auto peerId = client.getCustomId();
+  auto content = getContent(peerId, true);
+  if (content == nullptr)
+  {
+    eventChanServer->removeClient(&client);
+    DEBUG(LOG_TAG_CONTENT, "Failed to accept a new event chan client: could not find #%d from contents", peerId);
+  }
+  else
+  {
+    content->onEventChanConnected(client);
   }
 }
 
@@ -434,40 +503,12 @@ void TrContentManager::onRecvXrCommands(int timeout)
       auto xrCommandMessage = content->xrCommandChanReceiver->recvCommandMessage(timeout);
       if (xrCommandMessage != nullptr)
       {
-        constellation->xrDevice->handleCommandMessage(*xrCommandMessage, content);
+        // NOTE: Don't expose the content reference to the XR handler.
+        constellation->xrDevice->handleCommandMessage(*xrCommandMessage, content.get());
         delete xrCommandMessage;
       }
     }
   }
-}
-
-void TrContentManager::onNewEventChan()
-{
-  eventChanServer->tryAccept([this](TrOneShotClient<events_comm::TrNativeEventMessage> &newClient)
-                             {
-        shared_lock<shared_mutex> lock(contentsMutex);
-
-        auto peerId = newClient.getCustomId();
-        bool foundNewClient = false;
-        for (auto it = contents.begin(); it != contents.end(); ++it)
-        {
-          auto content = *it;
-          if (content->id == peerId)
-          {
-            foundNewClient = true;
-            content->eventChanReceiver = std::make_unique<events_comm::TrNativeEventReceiver>(&newClient);
-            content->eventChanSender = std::make_unique<events_comm::TrNativeEventSender>(&newClient);
-            break;
-          }
-        }
-
-        if (foundNewClient)
-          DEBUG(LOG_TAG_CONTENT, "New client(#%d) connected to the event channel.", peerId);
-        else
-        {
-          DEBUG(LOG_TAG_CONTENT, "Failed to accept a new client(#%d) on the event channel: pid is not found", peerId);
-          eventChanServer->removeClient(&newClient); // remove the client if it is not found by pid.
-        } }, 100);
 }
 
 void TrContentManager::onTryDestroyingContents()
@@ -501,14 +542,9 @@ void TrContentManager::onTryDestroyingContents()
     {
       auto content = *it;
       if (content->shouldDestroy)
-      {
-        delete content;
         it = contents.erase(it);
-      }
       else
-      {
         ++it;
-      }
     }
   }
 }
@@ -552,4 +588,20 @@ void TrContentManager::startHived()
     hived->commandBufferChanPort = constellation->renderer->getCommandBufferChanPort();
   }
   hived->start();
+}
+
+void TrContentManager::preparePreContent()
+{
+  unique_lock<shared_mutex> lock(preContentMutex);
+  if (preContent != nullptr)
+    return; // Just return if the pre-content is already prepared.
+
+  preContent = make_shared<TrContentRuntime>(this);
+  preContent->preStart();
+}
+
+void TrContentManager::acceptEventChanClients(int timeout)
+{
+  eventChanServer->tryAccept([this](TrOneShotClient<events_comm::TrNativeEventMessage> &newClient)
+                             { onNewClientOnEventChan(newClient); }, timeout);
 }

@@ -110,8 +110,21 @@ public:
    * Tick.
    */
   void tick(analytics::PerformanceCounter &perfCounter);
+  /**
+   * Get the constellation options.
+   */
   TrConstellationInit &getOptions();
+  /**
+   * Check if the constellation is initialized.
+   */
   bool isInitialized();
+  /**
+   * Check if the runtime is ready to accept the request.
+   */
+  bool isRuntimeReady();
+  /**
+   * Get the current embedder.
+   */
   TrEmbedder *getEmbedder();
 
 public:

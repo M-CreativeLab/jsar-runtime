@@ -17,6 +17,12 @@ namespace events_comm
     }
 
   public:
+    /**
+     * Dispatches a native event to the peer.
+     * 
+     * @param event The native event to dispatch, you could use `TrNativeEvent::MakeEvent()` to create.
+     * @param peerId The peer id is used for request/response communication such as "RpcRequest/RpcResponse".
+     */
     bool dispatchEvent(TrNativeEvent &event, uint32_t peerId = 0)
     {
       TrNativeEventMessage *message = nullptr;
