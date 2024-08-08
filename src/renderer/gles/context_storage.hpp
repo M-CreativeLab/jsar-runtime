@@ -5,6 +5,7 @@
 
 #include "common/viewport.hpp"
 #include "./common.hpp"
+#include "./object_manager.hpp"
 
 class OpenGLTextureBinding
 {
@@ -243,6 +244,9 @@ public:
   void MarkAsDirty();
   bool IsDirty();
   bool IsChanged(OpenGLAppContextStorage *other);
+
+public:
+  gles::GLObjectManager m_GLObjectManager;
 
 private:
   bool m_Dirty = false;

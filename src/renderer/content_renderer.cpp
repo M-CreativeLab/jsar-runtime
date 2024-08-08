@@ -15,7 +15,7 @@ namespace renderer
         currentBaseXRFrameReq(make_unique<xr::TrXRFrameRequest>())
   {
     assert(xrDevice != nullptr);
-    glContext = new OpenGLAppContextStorage("content_renderer#" + std::to_string(content->pid));
+    glContext = new OpenGLAppContextStorage("content_renderer#" + std::to_string(content->id));
     stereoFrameForBackup = new xr::StereoRenderingFrame(true);
     frameDispatcherThread = std::make_unique<WorkerThread>("FrameDispatcher", [this](WorkerThread &worker)
                                                            { this->onDispatchFrameRequest(worker); }, 1);

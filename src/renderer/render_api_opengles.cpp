@@ -50,7 +50,6 @@ void getline(const string &input, string &line, size_t &pos, char delim = '\n')
 class RenderAPI_OpenGLCoreES : public RenderAPI
 {
 private:
-	gles::GLObjectManager m_GLObjectManager = gles::GLObjectManager();
 	bool m_DebugEnabled = true;
 
 public:
@@ -77,7 +76,7 @@ private:
 	{
 		if (glContext->GetVertexArrayObject() != 0)
 			return;
-		GLuint vao = m_GLObjectManager.CreateVertexArray();
+		GLuint vao = glContext->m_GLObjectManager.CreateVertexArray();
 		glBindVertexArray(vao);
 		glContext->RecordVertexArrayObject(vao);
 	}
@@ -87,6 +86,7 @@ private:
 	GLenum CheckError(RequestType *req, renderer::TrContentRenderer *reqContentRenderer)
 	{
 		auto commandType = req->type;
+		auto contentId = reqContentRenderer->getContent()->id;
 		GLenum error = glGetError();
 		if (TR_UNLIKELY(error != GL_NO_ERROR))
 		{
@@ -94,29 +94,30 @@ private:
 			switch (error)
 			{
 			case GL_INVALID_ENUM:
-				DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_INVALID_ENUM",
-							commandTypeToStr(commandType).c_str(), commandType);
+				DEBUG(LOG_TAG_ERROR, "%s(%d) on content#%d Occurs an OpenGL error: GL_INVALID_ENUM",
+							commandTypeToStr(commandType).c_str(), commandType, contentId);
 				break;
 			case GL_INVALID_VALUE:
-				DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_INVALID_VALUE",
-							commandTypeToStr(commandType).c_str(), commandType);
+				DEBUG(LOG_TAG_ERROR, "%s(%d) on content#%d Occurs an OpenGL error: GL_INVALID_VALUE",
+							commandTypeToStr(commandType).c_str(), commandType, contentId);
 				break;
 			case GL_INVALID_OPERATION:
-				DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_INVALID_OPERATION",
-							commandTypeToStr(commandType).c_str(), commandType);
+				DEBUG(LOG_TAG_ERROR, "%s(%d) on content#%d Occurs an OpenGL error: GL_INVALID_OPERATION",
+							commandTypeToStr(commandType).c_str(), commandType, contentId);
 				break;
 			case GL_OUT_OF_MEMORY:
 				reqContentRenderer->markOccurOutOfMemoryError();
-				DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: GL_OUT_OF_MEMORY",
-							commandTypeToStr(commandType).c_str(), commandType);
+				DEBUG(LOG_TAG_ERROR, "%s(%d) on content#%d Occurs an OpenGL error: GL_OUT_OF_MEMORY",
+							commandTypeToStr(commandType).c_str(), commandType, contentId);
 				{
 					// Check memory
+					auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 					m_GLObjectManager.PrintMemoryUsage();
 				}
 				break;
 			default:
-				DEBUG(LOG_TAG_ERROR, "%s(%d) Occurs an OpenGL error: 0x%04x",
-							commandTypeToStr(commandType).c_str(), commandType, error);
+				DEBUG(LOG_TAG_ERROR, "%s(%d) on content#%d Occurs an OpenGL error: 0x%04x",
+							commandTypeToStr(commandType).c_str(), commandType, contentId, error);
 				break;
 			}
 		}
@@ -288,15 +289,17 @@ private:
 	}
 	TR_OPENGL_FUNC void OnCreateProgram(CreateProgramCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		GLuint program = m_GLObjectManager.CreateProgram(req->clientId);
+		auto glContext = reqContentRenderer->getOpenGLContext();
+		GLuint program = glContext->m_GLObjectManager.CreateProgram(req->clientId);
 		reqContentRenderer->getOpenGLContext()->RecordProgramOnCreated(program);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
 			DEBUG(DEBUG_TAG, "[%d] GL::CreateProgram(%d) => %d", options.isDefaultQueue, req->clientId, program);
 	}
 	TR_OPENGL_FUNC void OnDeleteProgram(DeleteProgramCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		auto program = m_GLObjectManager.FindProgram(req->clientId);
-		m_GLObjectManager.DeleteProgram(req->clientId);
+		auto glContext = reqContentRenderer->getOpenGLContext();
+		auto program = glContext->m_GLObjectManager.FindProgram(req->clientId);
+		glContext->m_GLObjectManager.DeleteProgram(req->clientId);
 
 		/**
 		 * Reset the program in both "AppGlobal" and "XRFrame" when we receiving a delete program command to avoid the
@@ -310,7 +313,8 @@ private:
 	}
 	TR_OPENGL_FUNC void OnLinkProgram(LinkProgramCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		auto program = m_GLObjectManager.FindProgram(req->clientId);
+		auto glContext = reqContentRenderer->getOpenGLContext();
+		auto program = glContext->m_GLObjectManager.FindProgram(req->clientId);
 		glLinkProgram(program);
 		reqContentRenderer->getOpenGLContext()->MarkAsDirty();
 
@@ -328,6 +332,11 @@ private:
 			DEBUG(DEBUG_TAG, "Failed to link program(%d): %s", program, errorStr);
 			delete[] errorStr;
 			return;
+		}
+		else
+		{
+			auto contentId = reqContentRenderer->getContent()->id;
+			DEBUG(DEBUG_TAG, "    GL::LinkProgram(%d) on content#%d", program, contentId);
 		}
 
 		LinkProgramCommandBufferResponse res(req, true);
@@ -349,8 +358,8 @@ private:
 
 			GLint location = glGetAttribLocation(program, name);
 			res.attribLocations.push_back(AttribLocation(name, location));
-			DEBUG(DEBUG_TAG, "    GL::LinkProgram(%d)::Attribute[%d](%s) => (size=%d, type=%s)",
-						program, location, name, size,
+			DEBUG(DEBUG_TAG, "    Attribute[%d](%s) => (size=%d, type=%s)",
+						location, name, size,
 						gles::glUniformTypesToString(type).c_str());
 		}
 
@@ -374,10 +383,8 @@ private:
 				continue;
 
 			res.uniformLocations.push_back(UniformLocation(name, location, size));
-			DEBUG(DEBUG_TAG, "    GL::LinkProgram(%d)::Uniform[%d](%s) => (size=%d, type=%s)",
-						program,
-						location, name,
-						size,
+			DEBUG(DEBUG_TAG, "    Uniform[%d](%s) => (size=%d, type=%s)",
+						location, name, size,
 						gles::glUniformTypesToString(type).c_str());
 		}
 
@@ -396,24 +403,29 @@ private:
 
 			GLuint index = glGetUniformBlockIndex(program, name);
 			res.uniformBlocks.push_back(UniformBlock(name, index));
-			DEBUG(DEBUG_TAG, "    GL::LinkProgram(%d)::UniformBlock[%s] => %d", program, name, index);
+			DEBUG(DEBUG_TAG, "    UniformBlock[%s] => %d", name, index);
 		}
 
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+		{
 			DEBUG(DEBUG_TAG, "[%d] GL::LinkProgram(%d)", options.isDefaultQueue, program);
+		}
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
 	TR_OPENGL_FUNC void OnUseProgram(UseProgramCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		auto program = m_GLObjectManager.FindProgram(req->clientId);
+		auto glContext = reqContentRenderer->getOpenGLContext();
+		auto program = glContext->m_GLObjectManager.FindProgram(req->clientId);
 		glUseProgram(program);
 		reqContentRenderer->getOpenGLContext()->RecordProgram(program);
+
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
 			DEBUG(DEBUG_TAG, "[%d] GL::UseProgram(%d)", options.isDefaultQueue, program);
 	}
 	TR_OPENGL_FUNC void OnGetProgramParameter(GetProgramParamCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		auto program = m_GLObjectManager.FindProgram(req->clientId);
+		auto glContext = reqContentRenderer->getOpenGLContext();
+		auto program = glContext->m_GLObjectManager.FindProgram(req->clientId);
 		GLint value;
 		glGetProgramiv(program, req->pname, &value);
 		GetProgramParamCommandBufferResponse res(req, value);
@@ -424,7 +436,8 @@ private:
 	}
 	TR_OPENGL_FUNC void OnGetProgramInfoLog(GetProgramInfoLogCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		auto program = m_GLObjectManager.FindProgram(req->clientId);
+		auto glContext = reqContentRenderer->getOpenGLContext();
+		auto program = glContext->m_GLObjectManager.FindProgram(req->clientId);
 		GLint retSize;
 		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &retSize);
 		GLchar *infoLog = new GLchar[retSize];
@@ -439,8 +452,9 @@ private:
 	}
 	TR_OPENGL_FUNC void OnAttachShader(AttachShaderCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		GLuint program = m_GLObjectManager.FindProgram(req->program);
-		GLuint shader = m_GLObjectManager.FindShader(req->shader);
+		auto glContext = reqContentRenderer->getOpenGLContext();
+		GLuint program = glContext->m_GLObjectManager.FindProgram(req->program);
+		GLuint shader = glContext->m_GLObjectManager.FindShader(req->shader);
 		glAttachShader(program, shader);
 		reqContentRenderer->getOpenGLContext()->MarkAsDirty();
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
@@ -449,6 +463,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnDetachShader(DetachShaderCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		GLuint program = m_GLObjectManager.FindProgram(req->program);
 		GLuint shader = m_GLObjectManager.FindShader(req->shader);
 		glDetachShader(program, shader);
@@ -459,6 +474,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnCreateShader(CreateShaderCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		GLuint shader = m_GLObjectManager.CreateShader(req->clientId, req->shaderType);
 		reqContentRenderer->getOpenGLContext()->RecordShaderOnCreated(shader);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
@@ -470,6 +486,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnDeleteShader(DeleteShaderCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		auto shader = m_GLObjectManager.FindShader(req->shader);
 		m_GLObjectManager.DeleteShader(req->shader);
 		reqContentRenderer->getOpenGLContext()->RecordShaderOnDeleted(shader);
@@ -479,6 +496,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnShaderSource(ShaderSourceCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		auto shader = m_GLObjectManager.FindShader(req->shader);
 		auto source = req->source();
 
@@ -513,6 +531,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnCompileShader(CompileShaderCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		auto shader = m_GLObjectManager.FindShader(req->shader);
 		glCompileShader(shader);
 		reqContentRenderer->getOpenGLContext()->MarkAsDirty();
@@ -537,6 +556,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnGetShaderSource(GetShaderSourceCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		GetShaderSourceCommandBufferResponse res(req);
 		GLint sourceSize;
 		GLuint shader = m_GLObjectManager.FindShader(req->shader);
@@ -568,6 +588,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnGetShaderParameter(GetShaderParamCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		GLuint shader = m_GLObjectManager.FindShader(req->shader);
 		GLint value;
 		glGetShaderiv(shader, req->pname, &value);
@@ -579,6 +600,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnGetShaderInfoLog(GetShaderInfoLogCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		GLuint shader = m_GLObjectManager.FindShader(req->shader);
 		GLint logSize;
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logSize);
@@ -594,6 +616,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnCreateBuffer(CreateBufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		GLuint buffer = m_GLObjectManager.CreateBuffer(req->clientId);
 		reqContentRenderer->getOpenGLContext()->RecordBufferOnCreated(buffer);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
@@ -602,6 +625,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnDeleteBuffer(DeleteBufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		auto buffer = m_GLObjectManager.FindBuffer(req->buffer);
 		m_GLObjectManager.DeleteBuffer(req->buffer);
 		reqContentRenderer->getOpenGLContext()->RecordBufferOnDeleted(buffer);
@@ -610,6 +634,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnBindBuffer(BindBufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		auto target = req->target;
 		auto buffer = m_GLObjectManager.FindBuffer(req->buffer);
 		if (req->buffer != 0 && buffer == 0)
@@ -662,6 +687,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnCreateFramebuffer(CreateFramebufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		GLuint framebuffer = m_GLObjectManager.CreateFramebuffer(req->clientId);
 		reqContentRenderer->getOpenGLContext()->RecordFramebufferOnCreated(framebuffer);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
@@ -676,6 +702,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnBindFramebuffer(BindFramebufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		auto target = req->target;
 		GLuint framebuffer;
 		/**
@@ -695,6 +722,7 @@ private:
 																								renderer::TrContentRenderer *reqContentRenderer,
 																								ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		auto target = req->target;
 		auto attachment = req->attachment;
 		auto renderbuffertarget = req->renderbufferTarget;
@@ -709,6 +737,7 @@ private:
 																						 renderer::TrContentRenderer *reqContentRenderer,
 																						 ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		auto target = req->target;
 		auto attachment = req->attachment;
 		auto textarget = req->textarget;
@@ -732,6 +761,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnCreateRenderbuffer(CreateRenderbufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		GLuint renderbuffer = m_GLObjectManager.CreateRenderbuffer(req->clientId);
 		reqContentRenderer->getOpenGLContext()->RecordRenderbufferOnCreated(renderbuffer);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
@@ -739,6 +769,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnDeleteRenderbuffer(DeleteRenderbufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		GLuint renderbuffer = m_GLObjectManager.FindRenderbuffer(req->renderbuffer);
 		m_GLObjectManager.DeleteRenderbuffer(req->renderbuffer);
 		reqContentRenderer->getOpenGLContext()->RecordRenderbufferOnDeleted(renderbuffer);
@@ -747,6 +778,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnBindRenderbuffer(BindRenderbufferCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		auto target = req->target;
 		auto renderbuffer = m_GLObjectManager.CreateRenderbuffer(req->renderbuffer);
 		glBindRenderbuffer(target, renderbuffer);
@@ -775,6 +807,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnBindBufferBase(BindBufferBaseCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		auto target = req->target;
 		auto index = req->index;
 		auto buffer = m_GLObjectManager.FindBuffer(req->buffer);
@@ -827,6 +860,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnCreateVertexArray(CreateVertexArrayCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		GLuint vao = m_GLObjectManager.CreateVertexArray(req->clientId);
 		reqContentRenderer->getOpenGLContext()->RecordVertexArrayObjectOnCreated(vao);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
@@ -834,6 +868,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnDeleteVertexArray(DeleteVertexArrayCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		GLuint vao = m_GLObjectManager.FindVertexArray(req->vertexArray);
 		m_GLObjectManager.DeleteVertexArray(req->vertexArray);
 		reqContentRenderer->getOpenGLContext()->RecordVertexArrayObjectOnDeleted(vao);
@@ -842,6 +877,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnBindVertexArray(BindVertexArrayCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		auto vao = m_GLObjectManager.FindVertexArray(req->vertexArray);
 		if (req->vertexArray != 0 && vao == 0)
 		{
@@ -855,6 +891,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnCreateTexture(CreateTextureCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		GLuint texture = m_GLObjectManager.CreateTexture(req->clientId);
 		reqContentRenderer->getOpenGLContext()->RecordTextureOnCreated(texture);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
@@ -862,6 +899,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnDeleteTexture(DeleteTextureCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		GLuint texture = m_GLObjectManager.FindTexture(req->texture);
 		m_GLObjectManager.DeleteTexture(req->texture);
 		reqContentRenderer->getOpenGLContext()->RecordTextureOnDeleted(texture);
@@ -870,6 +908,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnBindTexture(BindTextureCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		auto target = req->target;
 		auto texture = m_GLObjectManager.FindTexture(req->texture);
 		renderer->getOpenGLContext()->RecordTextureBindingFromHost();
@@ -1097,6 +1136,7 @@ private:
 	}
 	TR_OPENGL_FUNC void OnUniformBlockBinding(UniformBlockBindingCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
+		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		auto program = m_GLObjectManager.FindProgram(req->program);
 		auto uniformBlockIndex = req->uniformBlockIndex;
 		auto uniformBlockBinding = req->uniformBlockBinding;
@@ -1120,6 +1160,8 @@ private:
 		glUniform1fv(location, count, value);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
 		{
+			auto glContext = reqContentRenderer->getOpenGLContext();
+			auto contentId = reqContentRenderer->getContent()->id;
 			std::string valuesStr = "";
 			for (int i = 0; i < count; i++)
 			{
@@ -1129,6 +1171,8 @@ private:
 			}
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform1fv(%d, count=%d, values=[%s])",
 						options.isDefaultQueue, location, count, valuesStr.c_str());
+			DEBUG(DEBUG_TAG, "    Content: %d", contentId);
+			DEBUG(DEBUG_TAG, "    Program: %d", glContext->GetProgram());
 		}
 	}
 	TR_OPENGL_FUNC void OnUniform1i(Uniform1iCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
@@ -1328,8 +1372,11 @@ private:
 		glUniformMatrix4fv(location, count, transpose, matrixToUse);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
 		{
+			GLint currentProgram;
+			glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
 			DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix4fv(%d, count=%d, transpose=%d)",
 						options.isDefaultQueue, location, count, transpose);
+			DEBUG(DEBUG_TAG, "    Program: %d", currentProgram);
 			DEBUG(DEBUG_TAG, "    %+.3f %+.3f %+.3f %+.3f", matrixToUse[0], matrixToUse[1], matrixToUse[2], matrixToUse[3]);
 			DEBUG(DEBUG_TAG, "    %+.3f %+.3f %+.3f %+.3f", matrixToUse[4], matrixToUse[5], matrixToUse[6], matrixToUse[7]);
 			DEBUG(DEBUG_TAG, "    %+.3f %+.3f %+.3f %+.3f", matrixToUse[8], matrixToUse[9], matrixToUse[10], matrixToUse[11]);
