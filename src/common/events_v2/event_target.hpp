@@ -112,7 +112,7 @@ namespace events_comm
         auto listeners = it->second;
         for (auto it = listeners.begin(); it != listeners.end();)
         {
-          if (listener == *it)
+          if (listener->equals(**it))
           {
             it = listeners.erase(it);
             break;

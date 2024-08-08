@@ -657,12 +657,12 @@ int main(int argc, char **argv)
     if (embedder != nullptr)
     {
       // Handle the embedder ready state and send the open request.
-      // if (!isEmbedderReady && embedder->constellation->isRuntimeReady() == true)
-      // {
-      //   isEmbedderReady = true;
-      //   for (int i = 0; i < nApps; i++)
-      //     embedder->constellation->open(requestUrl);
-      // }
+      if (!isEmbedderReady && embedder->constellation->isRuntimeReady() == true)
+      {
+        isEmbedderReady = true;
+        for (int i = 0; i < nApps; i++)
+          embedder->constellation->open(requestUrl);
+      }
 
       // Update the panel data
       panel->fps = embedder->getFps();       // update fps to panel

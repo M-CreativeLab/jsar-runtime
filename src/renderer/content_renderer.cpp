@@ -52,7 +52,7 @@ namespace renderer
     {
       DEBUG(LOG_TAG_ERROR, "Disposing the content(%d) due to the frame OOM or occurred errors(%d) > 10",
             content->id, lastFrameErrorsCount);
-      content->shouldDestroy = true;
+      content->dispose();
     }
   }
 

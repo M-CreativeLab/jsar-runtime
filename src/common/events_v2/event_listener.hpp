@@ -21,8 +21,16 @@ namespace events_comm
       eventCallback(type, event);
     }
 
-  private:
+  public:
+    bool equals(TrEventListener &listener)
+    {
+      return id == listener.id;
+    }
+
+  public:
     uint32_t id;
+
+  private:
     Callback eventCallback;
   };
 }

@@ -130,6 +130,12 @@ public: // event methods
    * @returns true if the response is sent successfully.
    */
   bool respondRpcRequest(events_comm::TrRpcResponse &respDetail, uint32_t requestId);
+  /**
+   * Log the document event for metrics.
+   * 
+   * @param docEvent The `TrDocumentEvent` reference to log.
+   */
+  void logDocumentEvent(events_comm::TrDocumentEvent &docEvent);
 
 public: // media methods
   /**
@@ -183,7 +189,6 @@ private:
   void recvEvent();
   void recvMediaRequest();
   void recvXRCommand(int timeout);
-  void handleDocumentEvent(events_comm::TrNativeEvent &event);
   bool tryDispatchRequest();
   bool tickOnFrame();
 
@@ -235,10 +240,6 @@ private:
   atomic<bool> shouldDestroy = false;
   mutex exitingMutex;
   condition_variable exitedCv;
-
-private:  // content listeners
-  shared_ptr<events_comm::TrNativeEventListener> rpcRequestListener = nullptr;
-  shared_ptr<events_comm::TrNativeEventListener> documentEventListener = nullptr;
 
 private:
   unique_ptr<events_comm::TrNativeEventReceiver> eventChanReceiver = nullptr;
@@ -333,6 +334,8 @@ public:
 private:
   void onNewClientOnEventChan(TrOneShotClient<events_comm::TrNativeEventMessage> &client);
   void onTryDestroyingContents();
+  void onRpcRequest(events_comm::TrNativeEvent &event);
+  void onDocumentEvent(events_comm::TrNativeEvent &event);
 
 private:
   void installScripts();
@@ -346,6 +349,10 @@ private:
   shared_mutex contentsMutex;
   vector<shared_ptr<TrContentRuntime>> contents;
   unique_ptr<TrHiveDaemon> hived;
+
+private:  // content listeners
+  shared_ptr<events_comm::TrNativeEventListener> rpcRequestListener = nullptr;
+  shared_ptr<events_comm::TrNativeEventListener> documentEventListener = nullptr;
 
 private: // pre-content
   bool enablePreContent = true;

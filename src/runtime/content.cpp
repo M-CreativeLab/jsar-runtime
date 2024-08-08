@@ -21,27 +21,11 @@ TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManage
 {
   static TrIdGenerator idGen(0x100);
   id = idGen.get();
-
-  auto eventTarget = contentManager->constellation->nativeEventTarget;
-  assert(eventTarget != nullptr);
-
-  rpcRequestListener = eventTarget->addEventListener(events_comm::TrNativeEventType::RpcRequest, [this](auto type, auto &event)
-                                                     { this->getConstellation()->dispatchNativeEvent(event, this); });
-  documentEventListener = eventTarget->addEventListener(events_comm::TrNativeEventType::DocumentEvent, [this](auto type, auto &event)
-                                                        { handleDocumentEvent(event); });
 }
 
 TrContentRuntime::~TrContentRuntime()
 {
   auto constellation = getConstellation();
-
-  // Removing the event listeners
-  auto eventTarget = constellation->nativeEventTarget;
-  if (eventTarget != nullptr)
-  {
-    eventTarget->removeEventListener(events_comm::TrNativeEventType::RpcRequest, rpcRequestListener);
-    eventTarget->removeEventListener(events_comm::TrNativeEventType::DocumentEvent, documentEventListener);
-  }
 
   // Stopping the receiver worker.
   commandBuffersRecvWorker->stop();
@@ -195,6 +179,19 @@ bool TrContentRuntime::respondRpcRequest(events_comm::TrRpcResponse &respDetail,
   return eventChanSender->dispatchEvent(eventToDispatch, requestId);
 }
 
+void TrContentRuntime::logDocumentEvent(events_comm::TrDocumentEvent &docEvent)
+{
+  int duration = 0;
+  if (prevDocumentEventTime != 0)
+    duration = docEvent.timestamp - prevDocumentEventTime;
+  prevDocumentEventTime = docEvent.timestamp;
+  DEBUG(LOG_TAG_METRICS, "content#%d received DocumentEvent(\"%s\") at %zu (+%dms)",
+        docEvent.documentId,
+        docEvent.toString().c_str(),
+        docEvent.timestamp,
+        duration);
+}
+
 void TrContentRuntime::onMediaChanConnected(TrOneShotClient<media_comm::TrMediaCommandMessage> &client)
 {
   if (mediaChanReceiver != nullptr || mediaChanSender != nullptr)
@@ -342,25 +339,6 @@ void TrContentRuntime::recvXRCommand(int timeout)
   }
 }
 
-void TrContentRuntime::handleDocumentEvent(events_comm::TrNativeEvent &event)
-{
-  {
-    // Print the DocumentEvent for metrices.
-    assert(event.type == events_comm::TrNativeEventType::DocumentEvent);
-    auto docEvent = event.detail<events_comm::TrDocumentEvent>();
-    int duration = 0;
-    if (prevDocumentEventTime != 0)
-      duration = docEvent.timestamp - prevDocumentEventTime;
-    prevDocumentEventTime = docEvent.timestamp;
-    DEBUG(LOG_TAG_METRICS, "content#%d received DocumentEvent(\"%s\") at %zu (+%dms)",
-          docEvent.documentId,
-          docEvent.toString().c_str(),
-          docEvent.timestamp,
-          duration);
-  }
-  getConstellation()->dispatchNativeEvent(event, this);
-}
-
 bool TrContentRuntime::tryDispatchRequest()
 {
   if (isRequestDispatched || eventChanSender == nullptr)
@@ -391,6 +369,12 @@ TrContentManager::TrContentManager(TrConstellation *constellation)
       hived(make_unique<TrHiveDaemon>(constellation))
 {
   eventChanServer = new TrOneShotServer<events_comm::TrNativeEventMessage>("eventChan");
+
+  auto eventTarget = constellation->nativeEventTarget;
+  rpcRequestListener = eventTarget->addEventListener(events_comm::TrNativeEventType::RpcRequest, [this](auto type, auto &event)
+                                                     { onRpcRequest(event); });
+  documentEventListener = eventTarget->addEventListener(events_comm::TrNativeEventType::DocumentEvent, [this](auto type, auto &event)
+                                                        { onDocumentEvent(event); });
 }
 
 TrContentManager::~TrContentManager()
@@ -434,6 +418,13 @@ bool TrContentManager::shutdown()
   }
   contentsDestroyingWorker->stop();
   DEBUG(LOG_TAG_CONTENT, "All contents(%zu) has been disposed and removed", contentsCount);
+
+  auto eventTarget = constellation->nativeEventTarget;
+  if (eventTarget != nullptr)
+  {
+    eventTarget->removeEventListener(events_comm::TrNativeEventType::RpcRequest, rpcRequestListener);
+    eventTarget->removeEventListener(events_comm::TrNativeEventType::DocumentEvent, documentEventListener);
+  }
 
   eventChanWatcher->stop();
   xrCommandsRecvWorker->stop();
@@ -580,6 +571,33 @@ void TrContentManager::onTryDestroyingContents()
   }
 }
 
+void TrContentManager::onRpcRequest(events_comm::TrNativeEvent &event)
+{
+  if (TR_UNLIKELY(event.type != events_comm::TrNativeEventType::RpcRequest))
+    return;
+
+  /**
+   * TODO: support by content?
+   */
+  constellation->dispatchNativeEvent(event, nullptr);
+}
+
+void TrContentManager::onDocumentEvent(events_comm::TrNativeEvent &event)
+{
+  if (TR_UNLIKELY(event.type != events_comm::TrNativeEventType::DocumentEvent))
+    return;
+
+  auto detail = event.detail<events_comm::TrDocumentEvent>();
+  auto content = getContent(detail.documentId, true);
+  if (TR_UNLIKELY(content == nullptr))
+  {
+    DEBUG(LOG_TAG_ERROR, "Failed to find the content(%d) for the DocumentEvent", detail.documentId);
+    return;
+  }
+  content->logDocumentEvent(detail);
+  constellation->dispatchNativeEvent(event, content.get());
+}
+
 void TrContentManager::installScripts()
 {
   auto scriptsTargetDir = constellation->getOptions().applicationCacheDirectory + "/scripts";
@@ -628,12 +646,12 @@ void TrContentManager::preparePreContent()
     if (chrono::system_clock::now() < preContentScheduledTimepoint)
       return;
 
+    auto preContent = make_shared<TrContentRuntime>(this);
     {
       unique_lock<shared_mutex> lock(contentsMutex);
-      auto preContent = make_shared<TrContentRuntime>(this);
       contents.push_back(preContent);
-      preContent->preStart();
     }
+    preContent->preStart();
     preContentScheduled = false;
     return;
   }

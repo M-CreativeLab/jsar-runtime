@@ -266,7 +266,7 @@ void printsStacktraceOnSignal(int signal)
   }
 #endif
 
-  if (signal == SIGSEGV || signal == SIGFPE || signal == SIGABRT)
+  if (signal == SIGSEGV || signal == SIGBUS || signal == SIGFPE || signal == SIGABRT)
     return exit(1);
 
 #ifndef _WIN32
