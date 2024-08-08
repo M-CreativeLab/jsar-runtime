@@ -183,6 +183,7 @@ private:
   void recvEvent();
   void recvMediaRequest();
   void recvXRCommand(int timeout);
+  void handleDocumentEvent(events_comm::TrNativeEvent &event);
   bool tryDispatchRequest();
   bool tickOnFrame();
 
@@ -212,14 +213,32 @@ public:
   atomic<int> pid = INVALID_PID;
 
 private:
-  TrDocumentRequestInit requestInit;
   TrContentManager *contentManager;
+  /**
+   * The content's initialization options.
+   */
+  TrDocumentRequestInit requestInit;
+  /**
+   * The previous received `DocumentEvent` timestamp in milliseconds, this is used to calculate the duration between two events.
+   */
+  long long prevDocumentEventTime = 0;
+  /**
+   * The flag `isRequestDispatched` is to control the request dispatching.
+   * 
+   * Call to start() will reset this flag to false and update the request to dispatch, then the tick function will check this flag to 
+   * dispatch the request.
+   */
   bool isRequestDispatched = true;
+  atomic<bool> used = false;
   atomic<bool> started = false;
   atomic<bool> available = false;
   atomic<bool> shouldDestroy = false;
   mutex exitingMutex;
   condition_variable exitedCv;
+
+private:  // content listeners
+  shared_ptr<events_comm::TrNativeEventListener> rpcRequestListener = nullptr;
+  shared_ptr<events_comm::TrNativeEventListener> documentEventListener = nullptr;
 
 private:
   unique_ptr<events_comm::TrNativeEventReceiver> eventChanReceiver = nullptr;
@@ -328,11 +347,10 @@ private:
   vector<shared_ptr<TrContentRuntime>> contents;
   unique_ptr<TrHiveDaemon> hived;
 
-private: // PreContent related fields
-  std::chrono::steady_clock::time_point lastSetTimeOnPreContent;
-  shared_mutex preContentMutex;
-  atomic<bool> isPreContentSet = false;
-  shared_ptr<TrContentRuntime> preContent;
+private: // pre-content
+  bool enablePreContent = true;
+  atomic<bool> preContentScheduled = false;
+  chrono::time_point<chrono::system_clock> preContentScheduledTimepoint;
 
 private: // channels & workers
   TrOneShotServer<events_comm::TrNativeEventMessage> *eventChanServer = nullptr;

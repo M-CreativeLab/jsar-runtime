@@ -50,12 +50,10 @@ namespace renderer
     tickingTimepoint = std::chrono::high_resolution_clock::now();
     calcFps();
 
-    {
-      // Skip if there is no content renderer.
-      shared_lock<shared_mutex> lock(contentRendererMutex);
-      if (contentRenderers.size() == 0)
-        return;
-    }
+    shared_lock<shared_mutex> lock(contentRendererMutex);
+    if (contentRenderers.empty())
+      return;
+
     glHostContext->Record();
     if (isHostContextSummaryEnabled)
       glHostContext->Print();
@@ -63,7 +61,6 @@ namespace renderer
 
     size_t totalDrawCalls = 0, totalDrawCallsCount = 0;
     {
-      shared_lock<shared_mutex> lock(contentRendererMutex);
       for (auto contentRenderer : contentRenderers)
       {
         contentRenderer->onHostFrame(tickingTimepoint);

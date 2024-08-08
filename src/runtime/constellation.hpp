@@ -153,6 +153,7 @@ public:
 private:
   TrEmbedder *embedder = nullptr;
   bool initialized = false;
+  bool disableTicking = false;
 
 private:
   static TrConstellation *s_Instance;

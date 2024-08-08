@@ -47,6 +47,7 @@ bool TrConstellation::configure(TrConstellationInit& init)
 
 bool TrConstellation::initialize()
 {
+  disableTicking = false;
   contentManager->initialize();
   mediaManager->initialize();
   renderer->initialize();
@@ -61,6 +62,7 @@ bool TrConstellation::initialize()
 
 void TrConstellation::shutdown()
 {
+  disableTicking = true;
   contentManager->shutdown();
   mediaManager->shutdown();
   renderer->shutdown();
@@ -70,8 +72,9 @@ void TrConstellation::shutdown()
 
 void TrConstellation::tick(analytics::PerformanceCounter &perfCounter)
 {
-  if (initialized == false)
+  if (TR_UNLIKELY(initialized == false || disableTicking))
     return;
+
   contentManager->tickOnFrame();
   perfCounter.record("finishContentManager");
   renderer->tick(perfCounter);
@@ -129,6 +132,8 @@ bool TrConstellation::isRuntimeReady()
   if (!initialized)
     return false;
 
-  // just returns if hived is ready.
-  return contentManager->hived->daemonReady;
+  if (!contentManager->hived->daemonReady)
+    return false;
+
+  return true;
 }

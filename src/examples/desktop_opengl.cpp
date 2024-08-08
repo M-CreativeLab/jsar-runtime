@@ -157,21 +157,6 @@ public:
         content->respondRpcRequest(errorResp, event.id);
       }
     }
-    else if (event.type == events_comm::TrNativeEventType::DocumentEvent)
-    {
-      static long long prevTimestamp = 0;
-
-      auto docEvent = event.detail<events_comm::TrDocumentEvent>();
-      int duration = 0;
-      if (prevTimestamp != 0)
-        duration = docEvent.timestamp - prevTimestamp;
-      prevTimestamp = docEvent.timestamp;
-      DEBUG("example", "[%zu] DocumentEvent document#%d received %s +%dms",
-            docEvent.timestamp,
-            docEvent.documentId,
-            docEvent.toString().c_str(),
-            duration);
-    }
     return true;
   }
 };

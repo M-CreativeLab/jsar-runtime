@@ -81,21 +81,6 @@ public:
 
   bool onEvent(events_comm::TrNativeEvent &event, TrContentRuntime *content) override
   {
-    if (event.type == events_comm::TrNativeEventType::DocumentEvent)
-    {
-      static long long prevTimestamp = 0;
-
-      auto documentEvent = event.detail<events_comm::TrDocumentEvent>();
-      int duration = 0;
-      if (prevTimestamp != 0)
-        duration = documentEvent.timestamp - prevTimestamp;
-      prevTimestamp = documentEvent.timestamp;
-      DEBUG(LOG_TAG_METRICS, "[%zu] DocumentEvent document#%d received %s +%dms",
-            documentEvent.timestamp,
-            documentEvent.documentId,
-            documentEvent.toString().c_str(),
-            duration);
-    }
     pendingEvents.push_back(make_shared<events_comm::TrNativeEvent>(event));
     return true;
   }

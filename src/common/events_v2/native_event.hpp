@@ -4,6 +4,7 @@
 #include "common/options.hpp"
 #include "./event.hpp"
 #include "./event_target.hpp"
+#include "./event_listener.hpp"
 
 using namespace std;
 
@@ -36,6 +37,7 @@ namespace events_comm
 
   using TrNativeEvent = TrEvent<TrNativeEventType>;
   using TrNativeEventTarget = TrEventTarget<TrNativeEventType>;
+  using TrNativeEventListener = TrEventListener<TrNativeEventType, TrNativeEvent>;
 
   class TrRpcRequest : public TrEventDetailObject
   {

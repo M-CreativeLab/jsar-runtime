@@ -25,15 +25,23 @@ TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManage
   auto eventTarget = contentManager->constellation->nativeEventTarget;
   assert(eventTarget != nullptr);
 
-  eventTarget->addEventListener(events_comm::TrNativeEventType::RpcRequest, [this](auto type, auto &event)
-                                { this->getConstellation()->dispatchNativeEvent(event, this); });
-  eventTarget->addEventListener(events_comm::TrNativeEventType::DocumentEvent, [this](auto type, auto &event)
-                                { this->getConstellation()->dispatchNativeEvent(event, this); });
+  rpcRequestListener = eventTarget->addEventListener(events_comm::TrNativeEventType::RpcRequest, [this](auto type, auto &event)
+                                                     { this->getConstellation()->dispatchNativeEvent(event, this); });
+  documentEventListener = eventTarget->addEventListener(events_comm::TrNativeEventType::DocumentEvent, [this](auto type, auto &event)
+                                                        { handleDocumentEvent(event); });
 }
 
 TrContentRuntime::~TrContentRuntime()
 {
   auto constellation = getConstellation();
+
+  // Removing the event listeners
+  auto eventTarget = constellation->nativeEventTarget;
+  if (eventTarget != nullptr)
+  {
+    eventTarget->removeEventListener(events_comm::TrNativeEventType::RpcRequest, rpcRequestListener);
+    eventTarget->removeEventListener(events_comm::TrNativeEventType::DocumentEvent, documentEventListener);
+  }
 
   // Stopping the receiver worker.
   commandBuffersRecvWorker->stop();
@@ -77,6 +85,7 @@ void TrContentRuntime::start(TrDocumentRequestInit &init)
   if (!available) // PreStart if the process is not available.
     preStart();
 
+  started = true;
   requestInit = init;
   requestInit.id = id;
   isRequestDispatched = false;
@@ -333,6 +342,25 @@ void TrContentRuntime::recvXRCommand(int timeout)
   }
 }
 
+void TrContentRuntime::handleDocumentEvent(events_comm::TrNativeEvent &event)
+{
+  {
+    // Print the DocumentEvent for metrices.
+    assert(event.type == events_comm::TrNativeEventType::DocumentEvent);
+    auto docEvent = event.detail<events_comm::TrDocumentEvent>();
+    int duration = 0;
+    if (prevDocumentEventTime != 0)
+      duration = docEvent.timestamp - prevDocumentEventTime;
+    prevDocumentEventTime = docEvent.timestamp;
+    DEBUG(LOG_TAG_METRICS, "content#%d received DocumentEvent(\"%s\") at %zu (+%dms)",
+          docEvent.documentId,
+          docEvent.toString().c_str(),
+          docEvent.timestamp,
+          duration);
+  }
+  getConstellation()->dispatchNativeEvent(event, this);
+}
+
 bool TrContentRuntime::tryDispatchRequest()
 {
   if (isRequestDispatched || eventChanSender == nullptr)
@@ -389,12 +417,14 @@ bool TrContentManager::initialize()
 
 bool TrContentManager::shutdown()
 {
+  enablePreContent = false;
   auto contentsCount = contents.size();
   {
     shared_lock<shared_mutex> lock(contentsMutex);
     for (auto content : contents)
       content->dispose();
   }
+
   while (true)
   {
     this_thread::sleep_for(chrono::milliseconds(100));
@@ -417,16 +447,9 @@ bool TrContentManager::tickOnFrame()
   hived->tick();
 
   // When the hive daemon is ready, we need to make sure the pre-content is always ready.
-  if (hived->daemonReady)
+  if (enablePreContent && hived->daemonReady)
     preparePreContent();
 
-  if (isPreContentSet)
-  {
-    shared_lock<shared_mutex> lock(preContentMutex);
-    // Tick the pre-content runtime.
-    assert(preContent != nullptr);
-    preContent->tickOnFrame();
-  }
   {
     // Check the status of each content runtime.
     shared_lock<shared_mutex> lock(contentsMutex);
@@ -441,37 +464,44 @@ bool TrContentManager::tickOnFrame()
 
 shared_ptr<TrContentRuntime> TrContentManager::makeContent()
 {
-  preparePreContent();
-
-  shared_ptr<TrContentRuntime> content = nullptr;
-  {
-    unique_lock<shared_mutex> lock(preContentMutex);
-    content = preContent;
-    preContent.reset();
-    isPreContentSet = false;
-  }
+  shared_ptr<TrContentRuntime> contentToUse;
   {
     unique_lock<shared_mutex> lock(contentsMutex);
-    contents.push_back(content);
+    for (auto content : contents)
+    {
+      if (!content->used)
+      {
+        content->used = true;
+        contentToUse = content;
+        break;
+      }
+    }
   }
-  return content;
+  if (contentToUse == nullptr)
+  {
+    // Create a new content runtime when there is no available content.
+    contentToUse = make_shared<TrContentRuntime>(this);
+    {
+      unique_lock<shared_mutex> lock(contentsMutex);
+      contentToUse->used = true;
+      contents.push_back(contentToUse);
+    }
+  }
+  return contentToUse;
 }
 
 shared_ptr<TrContentRuntime> TrContentManager::getContent(uint32_t id, bool includePreContent)
 {
-  if (includePreContent)
+  shared_lock<shared_mutex> lock(contentsMutex);
+  for (auto it = contents.begin(); it != contents.end(); ++it)
   {
-    shared_lock<shared_mutex> lock(preContentMutex);
-    if (preContent != nullptr && preContent->id == id)
-      return preContent;
-  }
-  {
-    shared_lock<shared_mutex> lock(contentsMutex);
-    for (auto it = contents.begin(); it != contents.end(); ++it)
+    auto content = *it;
+    if (content->id == id)
     {
-      auto content = *it;
-      if (content->id == id)
+      if (includePreContent || content->started)
         return content;
+      else
+        break;
     }
   }
   return nullptr;
@@ -593,18 +623,44 @@ void TrContentManager::startHived()
 
 void TrContentManager::preparePreContent()
 {
-  if (isPreContentSet == true)
+  if (preContentScheduled)
   {
-    shared_lock<shared_mutex> lock(preContentMutex);
-    assert(preContent != nullptr);
+    if (chrono::system_clock::now() < preContentScheduledTimepoint)
+      return;
+
+    {
+      unique_lock<shared_mutex> lock(contentsMutex);
+      auto preContent = make_shared<TrContentRuntime>(this);
+      contents.push_back(preContent);
+      preContent->preStart();
+    }
+    preContentScheduled = false;
     return;
   }
-  else
+
+  bool hasPreContent = false;
+  bool hasContents = false;
   {
-    unique_lock<shared_mutex> lock(preContentMutex);
-    preContent = make_shared<TrContentRuntime>(this);
-    isPreContentSet = true;
-    preContent->preStart();
+    shared_lock<shared_mutex> lock(contentsMutex);
+    hasContents = !contents.empty();
+    if (hasContents)
+    {
+      for (auto content : contents)
+      {
+        if (!content->used)
+        {
+          hasPreContent = true;
+          break;
+        }
+      }
+    }
+  }
+
+  if (!hasPreContent)
+  {
+    int delayTime = hasContents ? 2000 : 0;
+    preContentScheduledTimepoint = chrono::system_clock::now() + chrono::milliseconds(delayTime);
+    preContentScheduled = true;
   }
 }
 
@@ -618,13 +674,6 @@ void TrContentManager::recvXRCommands(int timeout)
 {
   if (constellation->xrDevice == nullptr)
     return;
-
-  {
-    // Recv the XR commands for the pre-content.
-    shared_lock<shared_mutex> lock(preContentMutex);
-    if (preContent != nullptr)
-      preContent->recvXRCommand(timeout);
-  }
 
   {
     // Recv the XR commands for the contents.

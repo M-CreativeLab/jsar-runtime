@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdlib.h>
+#include <set>
 #include <map>
 #include <memory>
 
@@ -28,16 +29,20 @@ namespace events_comm
   public:
     /**
      * Dispatch an event to the event target.
-     * 
+     *
      * @param event The event instance reference to dispatch.
      */
     bool dispatchEvent(EventInstance &event)
     {
-      auto it = listeners.find(event.type);
-      if (it != listeners.end())
+      auto it = eventToListenersMap.find(event.type);
+      if (it != eventToListenersMap.end())
       {
-        auto listener = *it->second;
-        listener(event.type, event);
+        auto listeners = it->second;
+        for (auto listenerPtr : listeners)
+        {
+          auto listener = *listenerPtr;
+          listener(event.type, event);
+        }
       }
       if (globalListener != nullptr)
       {
@@ -60,54 +65,75 @@ namespace events_comm
     }
     /**
      * Dispatch an event to the event target, it creates the event instance from a detail string(JSON).
-     * 
+     *
      * @param type The type of the event.
      * @param detailJsonPtr The detail string(JSON) pointer of the event, it is optional.
      */
-    bool dispatchEvent(EventType type, const char* detailJsonPtr = nullptr)
+    bool dispatchEvent(EventType type, const char *detailJsonPtr = nullptr)
     {
       EventInstance event = EventInstance::MakeEventWithString(type, detailJsonPtr);
       return dispatchEvent(event);
     }
     /**
      * Add an event listener to the event target.
+     * 
+     * @param type The event type
+     * @param listenerCallback The event listener callback
      */
     shared_ptr<EventListener> addEventListener(EventType type, EventCallback listenerCallback)
     {
       auto newListener = make_shared<EventListener>(listenerCallback);
-      listeners.insert({type, newListener});
+      auto it = eventToListenersMap.find(type);
+      if (it == eventToListenersMap.end())
+      {
+        eventToListenersMap.insert({type, {newListener}});
+      }
+      else
+      {
+        auto listeners = it->second;
+        listeners.push_back(newListener);
+      }
       return newListener;
     }
     /**
      * Remove an event listener from the event target.
+     * 
+     * @param type The event type
+     * @param listener The event listener to remove
      */
-    void removeEventListener(shared_ptr<EventListener> listener)
+    void removeEventListener(EventType type, shared_ptr<EventListener> listener)
     {
-      for (auto it = listeners.begin(); it != listeners.end();)
+      if (listener == nullptr)
+        return; // Just return if the listener is nullptr
+
+      auto it = eventToListenersMap.find(type);
+      if (it != eventToListenersMap.end())
       {
-        if (listener == it->second)
+        auto listeners = it->second;
+        for (auto it = listeners.begin(); it != listeners.end();)
         {
-          it = listeners.erase(it);
-          break;
-        }
-        else
-        {
-          ++it;
+          if (listener == *it)
+          {
+            it = listeners.erase(it);
+            break;
+          }
+          else
+          {
+            ++it;
+          }
         }
       }
     }
     /**
      * Remove all event listeners of the specified type from the event target.
+     * 
+     * @param type The event type
      */
     void removeEventListener(EventType type)
     {
-      for (auto it = listeners.begin(); it != listeners.end();)
-      {
-        if (it->first == type)
-          it = listeners.erase(it);
-        else
-          ++it;
-      }
+      auto it = eventToListenersMap.find(type);
+      if (it != eventToListenersMap.end())
+        eventToListenersMap.erase(it);
     }
     /**
      * Set the global event listener of the event target.
@@ -132,7 +158,7 @@ namespace events_comm
     /**
      * The map of event listeners.
      */
-    map<EventType, shared_ptr<EventListener>> listeners;
+    map<EventType, vector<shared_ptr<EventListener>>> eventToListenersMap;
     /**
      * The global event listener.
      */

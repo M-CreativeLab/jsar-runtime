@@ -3,6 +3,7 @@
 #include <vector>
 #include <cstring>
 #include <thread>
+#include <shared_mutex>
 #include <iostream>
 #include <csignal>
 #include <functional>
@@ -600,7 +601,10 @@ namespace ipc
           DEBUG(LOG_TAG_IPC, "Failed to set the client socket(%d) to non-blocking mode.", clientFd);
       }
 
-      clients.push_back(new TrOneShotClient<T>(clientFd, blocking));
+      {
+        unique_lock<shared_mutex> lock(mutexForClients);
+        clients.push_back(new TrOneShotClient<T>(clientFd, blocking));
+      }
       return clients.back();
     }
     /**
@@ -645,15 +649,17 @@ namespace ipc
      */
     void removeClient(TrOneShotClient<T> *client)
     {
-      if (client == nullptr)
-        return;
-      for (auto it = clients.begin(); it != clients.end(); it++)
+      if (client != nullptr)
       {
-        if (*it == client)
+        unique_lock<shared_mutex> lock(mutexForClients);
+        for (auto it = clients.begin(); it != clients.end(); it++)
         {
-          delete *it;
-          clients.erase(it);
-          break;
+          if (*it == client)
+          {
+            delete *it;
+            clients.erase(it);
+            break;
+          }
         }
       }
     }
@@ -671,5 +677,6 @@ namespace ipc
     bool blocking = true;
     struct pollfd fds[1];
     vector<TrOneShotClient<T> *> clients;
+    shared_mutex mutexForClients;
   };
 };

@@ -415,10 +415,26 @@ namespace renderer
 
   xr::StereoRenderingFrame *TrContentRenderer::getOrCreateStereoFrame()
   {
-    unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
+    assert(xrDevice != nullptr);
     if (xrDevice->getActiveEyeId() == 0)
-      stereoFramesList.push_back(xrDevice->createStereoRenderingFrame());
-    return stereoFramesList.back();
+    {
+      // Only create the stereo frame when the left eye is active.
+      xr::StereoRenderingFrame *frame = xrDevice->createStereoRenderingFrame();
+      if (frame != nullptr)
+      {
+        unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
+        stereoFramesList.push_back(frame);
+      }
+      return frame;
+    }
+    else
+    {
+      shared_lock<shared_mutex> lock(commandBufferRequestsMutex);
+      if (stereoFramesList.empty())
+        return nullptr;
+      else
+        return stereoFramesList.back();
+    }
   }
 
   size_t TrContentRenderer::getPendingStereoFramesCount()
