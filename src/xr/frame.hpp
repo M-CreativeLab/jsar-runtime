@@ -142,6 +142,10 @@ namespace xr
     bool ended(int passIndex);
     bool needFlush();
     bool needFlush(int passIndex);
+    /**
+     * In a single frame, we may have multiple flush commands, this method is used to reset the flush flag.
+     */
+    void resetFlush(int passIndex);
     int getId();
     bool addedOnce();
     bool empty();

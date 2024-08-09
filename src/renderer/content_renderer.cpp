@@ -93,6 +93,7 @@ namespace renderer
       if (
           isXRFrameBaseReqUpdating ||       // Skip the frame dispatching if the updating is not finished.
           isXRFrameBaseReqDirty == false || // Skip the frame dispatching if the base frame request is not dirty.
+          content->used == false ||         // Skip the frame dispatching if the content is not used.
           getPendingStereoFramesCount() > 2)
         return;
 
@@ -152,6 +153,7 @@ namespace renderer
       {
         if (frame->getId() == stereoId)
         {
+          unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
           if (req->type == COMMAND_BUFFER_XRFRAME_START_REQ)
             frame->startFrame(viewIndex), delete req;
           else if (req->type == COMMAND_BUFFER_XRFRAME_FLUSH_REQ)
@@ -160,7 +162,7 @@ namespace renderer
             frame->endFrame(viewIndex), delete req;
           else
           {
-            if (frame->ended())
+            if (frame->ended(viewIndex))
             {
               DEBUG(LOG_TAG_ERROR, "The command buffer(%d) has been ignored due to the stereo frame(%d) is ended.",
                     req->type, stereoId);
@@ -168,7 +170,6 @@ namespace renderer
             }
             else
             {
-              unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
               frame->addCommandBuffer(req, viewIndex);
             }
           }
@@ -317,13 +318,7 @@ namespace renderer
       auto frame = *it;
       if (
           !frame->available() /** Remove this frame when frame is still inavialble when executing */
-          /**
-           * We need to remove a frame when the frame is not started with a expiration check, and the expiration timeout is
-           * configurable, its default value is 2000ms.
-           *
-           * TODO: make the expiration timeout to be configurable.
-           */
-          || (!frame->started() && frame->expired(2000)))
+      )
       {
         it = stereoFramesList.erase(it);
         delete frame;
@@ -339,9 +334,10 @@ namespace renderer
               viewIndex == 0 ||
               (viewIndex == 1 && frame->ended(0)))
           {
-            auto commandBuffers = frame->getCommandBuffers(viewIndex);
+            auto &commandBuffers = frame->getCommandBuffers(viewIndex);
             exec(frame->getId(), commandBuffers);
             frame->clearCommandBuffers(viewIndex);
+            frame->resetFlush(viewIndex);
           }
         }
         it++;

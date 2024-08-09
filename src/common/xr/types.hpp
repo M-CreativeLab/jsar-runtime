@@ -240,7 +240,7 @@ namespace xr
   public:
     uint32_t sessionId;
     uint32_t stereoId;
-    uint8_t viewIndex;
+    int8_t viewIndex;
   };
 
   class TrXRFrameRequest : public TrFrameRequestSimple<TrXRFrameRequest>

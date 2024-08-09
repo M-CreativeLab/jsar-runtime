@@ -208,21 +208,6 @@ private:
 		res.vendor = string((const char *)glGetString(GL_VENDOR));
 		res.version = string((const char *)glGetString(GL_VERSION));
 		res.renderer = string((const char *)glGetString(GL_RENDERER));
-		{
-			DEBUG(DEBUG_TAG, "MAX_COMBINED_TEXTURE_IMAGE_UNITS=%d", res.maxCombinedTextureImageUnits);
-			DEBUG(DEBUG_TAG, "MAX_CUBE_MAP_TEXTURE_SIZE=%d", res.maxCubeMapTextureSize);
-			DEBUG(DEBUG_TAG, "MAX_FRAGMENT_UNIFORM_VECTORS=%d", res.maxFragmentUniformVectors);
-			DEBUG(DEBUG_TAG, "MAX_RENDERBUFFER_SIZE=%d", res.maxRenderbufferSize);
-			DEBUG(DEBUG_TAG, "MAX_TEXTURE_IMAGE_UNITS=%d", res.maxTextureImageUnits);
-			DEBUG(DEBUG_TAG, "MAX_TEXTURE_SIZE=%d", res.maxTextureSize);
-			DEBUG(DEBUG_TAG, "MAX_VARYING_VECTORS=%d", res.maxVaryingVectors);
-			DEBUG(DEBUG_TAG, "MAX_VERTEX_ATTRIBS=%d", res.maxVertexAttribs);
-			DEBUG(DEBUG_TAG, "MAX_VERTEX_TEXTURE_IMAGE_UNITS=%d", res.maxVertexTextureImageUnits);
-			DEBUG(DEBUG_TAG, "MAX_VERTEX_UNIFORM_VECTORS=%d", res.maxVertexUniformVectors);
-			DEBUG(DEBUG_TAG, "VENDOR=%s", res.vendor.c_str());
-			DEBUG(DEBUG_TAG, "VERSION=%s", res.version.c_str());
-			DEBUG(DEBUG_TAG, "RENDERER=%s", res.renderer.c_str());
-		}
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
 			DEBUG(DEBUG_TAG, "[%d] GL::ContextInit()", options.isDefaultQueue);
 		reqContentRenderer->sendCommandBufferResponse(res);
@@ -257,32 +242,6 @@ private:
 		glGetInteger64v(GL_MAX_UNIFORM_BLOCK_SIZE, &res.maxUniformBlockSize);
 		// GLfloat values
 		glGetFloatv(GL_MAX_TEXTURE_LOD_BIAS, &res.maxTextureLODBias);
-		{
-			DEBUG(DEBUG_TAG, "MAX_3D_TEXTURE_SIZE=%d", res.max3DTextureSize);
-			DEBUG(DEBUG_TAG, "MAX_ARRAY_TEXTURE_LAYERS=%d", res.maxArrayTextureLayers);
-			DEBUG(DEBUG_TAG, "MAX_COLOR_ATTACHMENTS=%d", res.maxColorAttachments);
-			DEBUG(DEBUG_TAG, "MAX_COMBINED_UNIFORM_BLOCKS=%d", res.maxCombinedUniformBlocks);
-			DEBUG(DEBUG_TAG, "MAX_DRAW_BUFFERS=%d", res.maxDrawBuffers);
-			DEBUG(DEBUG_TAG, "MAX_ELEMENTS_INDICES=%d", res.maxElementsIndices);
-			DEBUG(DEBUG_TAG, "MAX_ELEMENTS_VERTICES=%d", res.maxElementsVertices);
-			DEBUG(DEBUG_TAG, "MAX_FRAGMENT_INPUT_COMPONENTS=%d", res.maxFragmentInputComponents);
-			DEBUG(DEBUG_TAG, "MAX_FRAGMENT_UNIFORM_BLOCKS=%d", res.maxFragmentUniformBlocks);
-			DEBUG(DEBUG_TAG, "MAX_FRAGMENT_UNIFORM_COMPONENTS=%d", res.maxFragmentUniformComponents);
-			DEBUG(DEBUG_TAG, "MAX_PROGRAM_TEXEL_OFFSET=%d", res.maxProgramTexelOffset);
-			DEBUG(DEBUG_TAG, "MAX_SAMPLES=%d", res.maxSamples);
-			DEBUG(DEBUG_TAG, "MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS=%d", res.maxTransformFeedbackInterleavedComponents);
-			DEBUG(DEBUG_TAG, "MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS=%d", res.maxTransformFeedbackSeparateAttributes);
-			DEBUG(DEBUG_TAG, "MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS=%d", res.maxTransformFeedbackSeparateComponents);
-			DEBUG(DEBUG_TAG, "MAX_UNIFORM_BUFFER_BINDINGS=%d", res.maxUniformBufferBindings);
-			DEBUG(DEBUG_TAG, "MAX_VARYING_COMPONENTS=%d", res.maxVaryingComponents);
-			DEBUG(DEBUG_TAG, "MAX_VERTEX_OUTPUT_COMPONENTS=%d", res.maxVertexOutputComponents);
-			DEBUG(DEBUG_TAG, "MAX_VERTEX_UNIFORM_BLOCKS=%d", res.maxVertexUniformBlocks);
-			DEBUG(DEBUG_TAG, "MAX_VERTEX_UNIFORM_COMPONENTS=%d", res.maxVertexUniformComponents);
-			DEBUG(DEBUG_TAG, "MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS=%d", res.maxCombinedFragmentUniformComponents);
-			DEBUG(DEBUG_TAG, "MAX_SERVER_WAIT_TIMEOUT=%d", res.maxServerWaitTimeout);
-			DEBUG(DEBUG_TAG, "MAX_UNIFORM_BLOCK_SIZE=%d", res.maxUniformBlockSize);
-			DEBUG(DEBUG_TAG, "MAX_TEXTURE_LOD_BIAS=%d", res.maxTextureLODBias);
-		}
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
 			DEBUG(DEBUG_TAG, "[%d] GL::Context2Init()", options.isDefaultQueue);
 		reqContentRenderer->sendCommandBufferResponse(res);
@@ -329,7 +288,7 @@ private:
 			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &errorLength);
 			GLchar *errorStr = new GLchar[errorLength];
 			glGetProgramInfoLog(program, errorLength, NULL, errorStr);
-			DEBUG(DEBUG_TAG, "Failed to link program(%d): %s", program, errorStr);
+			DEBUG(LOG_TAG_ERROR, "Failed to link program(%d): %s", program, errorStr);
 			delete[] errorStr;
 			return;
 		}
@@ -639,6 +598,7 @@ private:
 		auto buffer = m_GLObjectManager.FindBuffer(req->buffer);
 		if (req->buffer != 0 && buffer == 0)
 		{
+			reqContentRenderer->increaseFrameErrorsCount();
 			DEBUG(DEBUG_TAG, "Could not find buffer(cid=%d) to bind", req->buffer);
 			m_GLObjectManager.PrintBuffers();
 			return;
@@ -881,7 +841,9 @@ private:
 		auto vao = m_GLObjectManager.FindVertexArray(req->vertexArray);
 		if (req->vertexArray != 0 && vao == 0)
 		{
+			reqContentRenderer->increaseFrameErrorsCount();
 			DEBUG(LOG_TAG_ERROR, "Could not find vertex array object(cid=%d) to bind", req->vertexArray);
+			m_GLObjectManager.PrintVertexArrays();
 			return;
 		}
 		glBindVertexArray(vao);

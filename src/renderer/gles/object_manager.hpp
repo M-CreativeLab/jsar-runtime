@@ -54,14 +54,31 @@ namespace gles
     GLuint FindVertexArray(uint32_t clientId);
     void DeleteVertexArray(uint32_t clientId);
     void ClearVertexArrays();
+    void PrintVertexArrays();
 
   private:
     map<uint32_t, GLuint> programs;
     map<uint32_t, GLuint> shaders;
-    map<uint32_t, GLuint> textures;
-    map<uint32_t, GLuint> buffers;
-    map<uint32_t, GLuint> framebuffers;
-    map<uint32_t, GLuint> renderbuffers;
-    map<uint32_t, GLuint> vertexArrays;
+
+  private:
+    map<uint32_t, GLuint*> textures;
+    map<uint32_t, GLuint*> buffers;
+    map<uint32_t, GLuint*> framebuffers;
+    map<uint32_t, GLuint*> renderbuffers;
+    map<uint32_t, GLuint*> vertexArrays;
+
+  // private:  // Fast access: these avoid the memory allocation overhead
+  //   GLuint fastTextures[16];
+  //   GLuint fastBuffers[128];
+  //   GLuint fastFramebuffers[16];
+  //   GLuint fastRenderbuffers[16];
+  //   GLuint fastVertexArrays[16];
+
+  // private:  // External objects, when fast objects are used up.
+  //   vector<unique_ptr<GLuint>> externalTextures;
+  //   vector<unique_ptr<GLuint>> externalBuffers;
+  //   vector<unique_ptr<GLuint>> externalFramebuffers;
+  //   vector<unique_ptr<GLuint>> externalRenderbuffers;
+  //   vector<unique_ptr<GLuint>> externalVertexArrays;
   };
 }

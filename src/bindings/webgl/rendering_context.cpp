@@ -927,7 +927,7 @@ namespace webgl
 
     auto id = programIdGen.get();
     auto commandBuffer = CreateProgramCommandBufferRequest(id);
-    sendCommandBufferRequest(commandBuffer, true);
+    sendCommandBufferRequest(commandBuffer);
     return WebGLProgram::constructor->New({Napi::Number::New(env, id)});
   }
 
@@ -980,15 +980,15 @@ namespace webgl
     auto resp = recvCommandBufferResponse<LinkProgramCommandBufferResponse>(COMMAND_BUFFER_LINK_PROGRAM_RES);
     if (resp == nullptr)
     {
-      Napi::TypeError::New(env, "Failed to linkProgram(id): timeout.")
-          .ThrowAsJavaScriptException();
+      string msg = "Failed to link program(" + to_string(program->GetId()) + "): timeout.";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!resp->success)
     {
       delete resp;
-      Napi::TypeError::New(env, "Failed to linkProgram(id): not successful.")
-          .ThrowAsJavaScriptException();
+      string msg = "Failed to link program(" + to_string(program->GetId()) + "): not successful.";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
 

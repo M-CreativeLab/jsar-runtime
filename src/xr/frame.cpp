@@ -347,6 +347,13 @@ namespace xr
     return m_ToFlush[passIndex];
   }
 
+  void StereoRenderingFrame::resetFlush(int passIndex)
+  {
+    if (passIndex > 1)
+      return;
+    m_ToFlush[passIndex] = false;
+  }
+
   int StereoRenderingFrame::getId() { return m_StereoId; }
   bool StereoRenderingFrame::addedOnce() { return m_IsAddedOnce; }
   bool StereoRenderingFrame::empty()

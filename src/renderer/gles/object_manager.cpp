@@ -26,15 +26,15 @@ namespace gles
       glGetIntegerv(GL_TEXTURE_BINDING_2D, &currentTexture);
       for (auto it = textures.begin(); it != textures.end(); ++it)
       {
-        auto texture = it->second;
+        auto pTexture = it->second;
         GLint width, height, format;
-        glBindTexture(GL_TEXTURE_2D, texture);
+        glBindTexture(GL_TEXTURE_2D, *pTexture);
         glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
         glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
         glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &format);
         size_t bytes = width * height * gles::glTextureFormatToByteLength(format);
 
-        DEBUG(LOG_TAG_ERROR, " #%d: %dx%d %s %zubytes", texture,
+        DEBUG(LOG_TAG_ERROR, " #%d: %dx%d %s %zubytes", *pTexture,
               width, height, gles::glTextureInternalFormatToString(format).c_str(), bytes);
       }
       glBindTexture(GL_TEXTURE_2D, currentTexture);
@@ -104,69 +104,63 @@ namespace gles
     shaders.clear();
   }
 
-  GLuint GLObjectManager::CreateTexture(uint32_t clientId)
-  {
-    GLuint texture;
-    glGenTextures(1, &texture);
-    textures[clientId] = texture;
-    return texture;
+#define DEFINE_CREATE_OBJECT(TYPE, NAME)                                     \
+  GLuint GLObjectManager::Create##TYPE(uint32_t clientId)                    \
+  {                                                                          \
+    auto p##NAME = new GLuint;                                               \
+    if (p##NAME == nullptr)                                                  \
+    {                                                                        \
+      DEBUG(LOG_TAG_ERROR, "OOM: Failed to allocate memory for " #NAME "."); \
+      return 0;                                                              \
+    }                                                                        \
+    glGen##TYPE##s(1, p##NAME);                                              \
+    NAME##s[clientId] = p##NAME;                                             \
+    return *p##NAME;                                                         \
   }
 
-  GLuint GLObjectManager::FindTexture(uint32_t clientId)
-  {
-    if (clientId == 0)
-      return 0;
-    return textures[clientId];
+#define DEFINE_FIND_OBJECT(TYPE, NAME)                            \
+  GLuint GLObjectManager::Find##TYPE(uint32_t clientId)           \
+  {                                                               \
+    if (clientId == 0 || NAME##s.find(clientId) == NAME##s.end()) \
+      return 0;                                                   \
+    auto p##NAME = NAME##s[clientId];                             \
+    return *p##NAME;                                              \
   }
 
-  void GLObjectManager::DeleteTexture(uint32_t clientId)
-  {
-    GLuint texture = textures[clientId];
-    glDeleteTextures(1, &texture);
-    textures.erase(clientId);
+#define DEFINE_DELETE_OBJECT(TYPE, NAME)                          \
+  void GLObjectManager::Delete##TYPE(uint32_t clientId)           \
+  {                                                               \
+    if (clientId == 0 || NAME##s.find(clientId) == NAME##s.end()) \
+      return;                                                     \
+    auto p##NAME = NAME##s[clientId];                             \
+    glDelete##TYPE##s(1, p##NAME);                                \
+    delete p##NAME;                                               \
+    NAME##s.erase(clientId);                                      \
   }
 
-  void GLObjectManager::ClearTextures()
-  {
-    for (auto it = textures.begin(); it != textures.end(); ++it)
-    {
-      GLuint texture = it->second;
-      glDeleteTextures(1, &texture);
-    }
-    textures.clear();
+#define DEFINE_CLEAR_OBJECTS(TYPE, NAME)                       \
+  void GLObjectManager::Clear##TYPE##s()                       \
+  {                                                            \
+    for (auto it = NAME##s.begin(); it != NAME##s.end(); ++it) \
+    {                                                          \
+      auto p##NAME = it->second;                               \
+      glDelete##TYPE##s(1, p##NAME);                           \
+      delete p##NAME;                                          \
+    }                                                          \
+    NAME##s.clear();                                           \
   }
 
-  GLuint GLObjectManager::CreateBuffer(uint32_t clientId)
-  {
-    GLuint buffer;
-    glGenBuffers(1, &buffer);
-    buffers[clientId] = buffer;
-    return buffer;
-  }
+#define DEFINE_OBJECT_METHODS(TYPE, NAME) \
+  DEFINE_CREATE_OBJECT(TYPE, NAME)        \
+  DEFINE_FIND_OBJECT(TYPE, NAME)          \
+  DEFINE_DELETE_OBJECT(TYPE, NAME)        \
+  DEFINE_CLEAR_OBJECTS(TYPE, NAME)
 
-  GLuint GLObjectManager::FindBuffer(uint32_t clientId)
-  {
-    if (clientId == 0)
-      return 0;
-    return buffers[clientId];
-  }
-
-  void GLObjectManager::DeleteBuffer(uint32_t clientId)
-  {
-    GLuint buffer = buffers[clientId];
-    glDeleteBuffers(1, &buffer);
-    buffers.erase(clientId);
-  }
-
-  void GLObjectManager::ClearBuffers()
-  {
-    for (auto it = buffers.begin(); it != buffers.end(); ++it)
-    {
-      GLuint buffer = it->second;
-      glDeleteBuffers(1, &buffer);
-    }
-    buffers.clear();
-  }
+  DEFINE_OBJECT_METHODS(Texture, texture)
+  DEFINE_OBJECT_METHODS(Buffer, buffer)
+  DEFINE_OBJECT_METHODS(Framebuffer, framebuffer)
+  DEFINE_OBJECT_METHODS(Renderbuffer, renderbuffer)
+  DEFINE_OBJECT_METHODS(VertexArray, vertexArray)
 
   void GLObjectManager::PrintBuffers()
   {
@@ -178,79 +172,15 @@ namespace gles
       for (auto it = buffers.begin(); it != buffers.end(); ++it)
       {
         auto id = it->first;
-        auto buffer = it->second;
+        auto pBuffer = it->second;
         GLint size, usage;
-        glBindBuffer(GL_ARRAY_BUFFER, buffer);
+        glBindBuffer(GL_ARRAY_BUFFER, *pBuffer);
         glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
         glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_USAGE, &usage);
-        DEBUG(LOG_TAG_ERROR, " [%u](#%d): %s %dbytes", id, buffer, gles::glEnumToString(usage).c_str(), size);
+        DEBUG(LOG_TAG_ERROR, " [%u] => Buffer(%d, usage=%s): %d bytes", id, *pBuffer, gles::glEnumToString(usage).c_str(), size);
       }
       glBindBuffer(GL_ARRAY_BUFFER, currentBuffer);
     }
-  }
-
-  GLuint GLObjectManager::CreateFramebuffer(uint32_t clientId)
-  {
-    GLuint framebuffer;
-    glGenFramebuffers(1, &framebuffer);
-    framebuffers[clientId] = framebuffer;
-    return framebuffer;
-  }
-
-  GLuint GLObjectManager::FindFramebuffer(uint32_t clientId)
-  {
-    if (clientId == 0)
-      return 0;
-    return framebuffers[clientId];
-  }
-
-  void GLObjectManager::DeleteFramebuffer(uint32_t clientId)
-  {
-    GLuint framebuffer = framebuffers[clientId];
-    glDeleteFramebuffers(1, &framebuffer);
-    framebuffers.erase(clientId);
-  }
-
-  void GLObjectManager::ClearFramebuffers()
-  {
-    for (auto it = framebuffers.begin(); it != framebuffers.end(); ++it)
-    {
-      GLuint framebuffer = it->second;
-      glDeleteFramebuffers(1, &framebuffer);
-    }
-    framebuffers.clear();
-  }
-
-  GLuint GLObjectManager::CreateRenderbuffer(uint32_t clientId)
-  {
-    GLuint renderbuffer;
-    glGenRenderbuffers(1, &renderbuffer);
-    renderbuffers[clientId] = renderbuffer;
-    return renderbuffer;
-  }
-
-  GLuint GLObjectManager::FindRenderbuffer(uint32_t clientId)
-  {
-    if (clientId == 0)
-      return 0;
-    return renderbuffers[clientId];
-  }
-
-  void GLObjectManager::DeleteRenderbuffer(uint32_t clientId)
-  {
-    GLuint renderbuffer = renderbuffers[clientId];
-    glDeleteRenderbuffers(1, &renderbuffer);
-    renderbuffers.erase(clientId);
-  }
-
-  void GLObjectManager::ClearRenderbuffers()
-  {
-    for (auto it = renderbuffers.begin(); it != renderbuffers.end(); ++it)
-    {
-      GLuint renderbuffer = it->second;
-      glDeleteRenderbuffers(1, &renderbuffer);
-    }
-    renderbuffers.clear();
   }
 
   GLuint GLObjectManager::CreateVertexArray()
@@ -260,34 +190,20 @@ namespace gles
     return vertexArray;
   }
 
-  GLuint GLObjectManager::CreateVertexArray(uint32_t clientId)
+  void GLObjectManager::PrintVertexArrays()
   {
-    GLuint vertexArray = CreateVertexArray();
-    vertexArrays[clientId] = vertexArray;
-    return vertexArray;
-  }
-
-  GLuint GLObjectManager::FindVertexArray(uint32_t clientId)
-  {
-    if (clientId == 0)
-      return 0;
-    return vertexArrays[clientId];
-  }
-
-  void GLObjectManager::DeleteVertexArray(uint32_t clientId)
-  {
-    GLuint vertexArray = vertexArrays[clientId];
-    glDeleteVertexArrays(1, &vertexArray);
-    vertexArrays.erase(clientId);
-  }
-
-  void GLObjectManager::ClearVertexArrays()
-  {
-    for (auto it = vertexArrays.begin(); it != vertexArrays.end(); ++it)
+    if (vertexArrays.size() > 0)
     {
-      GLuint vertexArray = it->second;
-      glDeleteVertexArrays(1, &vertexArray);
+      DEBUG(LOG_TAG_ERROR, "VertexArrays(%zu):", vertexArrays.size());
+      GLint currentBuffer = 0;
+      glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &currentBuffer);
+      for (auto it = vertexArrays.begin(); it != vertexArrays.end(); ++it)
+      {
+        auto id = it->first;
+        auto pVertexArray = it->second;
+        DEBUG(LOG_TAG_ERROR, " [%u] => VertexArray(%d)", id, *pVertexArray);
+      }
+      glBindBuffer(GL_ARRAY_BUFFER, currentBuffer);
     }
-    vertexArrays.clear();
   }
 }

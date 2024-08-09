@@ -676,7 +676,8 @@ void TrContentManager::preparePreContent()
 
   if (!hasPreContent)
   {
-    int delayTime = hasContents ? 2000 : 0;
+    // TODO: support the pre-content configuration?
+    int delayTime = hasContents ? 3000 : 0;
     preContentScheduledTimepoint = chrono::system_clock::now() + chrono::milliseconds(delayTime);
     preContentScheduled = true;
   }
