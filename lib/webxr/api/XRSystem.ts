@@ -53,8 +53,8 @@ class XRSessionWrapper extends XRSessionBinding {
   onvisibilitychange: XRSessionEventHandler = null;
   onframeratechange: XRSessionEventHandler = null;
 
-  constructor(device: XRDevice, mode: XRSessionMode, sessionId: number) {
-    super(device.handle, mode, sessionId, (...args) => this.#dispatchEvent.apply(this, args));
+  constructor(device: XRDevice, mode: XRSessionMode, nativeSession: Transmute.XRNativeSession) {
+    super(device.handle, mode, nativeSession, (...args) => this.#dispatchEvent.apply(this, args));
     this.#eventTarget = new EventTarget();
   }
 
@@ -163,24 +163,24 @@ export default class XRSystemImpl extends EventTarget implements XRSystem {
     // Call device's requestSession, which does some initialization (1.1 
     // fallback calls `vrDisplay.requestPresent()` for example). Could throw 
     // due to missing user gesture.
-    const sessionId = await this.#device.requestSession(mode, enabledFeatures);
-    const session = new XRSessionWrapper(this.#device, mode, sessionId);
+    const nativeSession = await this.#device.requestSession(mode, enabledFeatures);
+    const xrSession = new XRSessionWrapper(this.#device, mode, nativeSession);
 
     if (mode == 'inline') {
-      this.#inlineSessions.add(session);
+      this.#inlineSessions.add(xrSession);
     } else {
-      this.#immersiveSession = session;
+      this.#immersiveSession = xrSession;
     }
 
     const onSessionEnd = () => {
       if (mode == 'inline') {
-        this.#inlineSessions.delete(session);
+        this.#inlineSessions.delete(xrSession);
       } else {
         this.#immersiveSession = null;
       }
-      session.removeEventListener('end', onSessionEnd);
+      xrSession.removeEventListener('end', onSessionEnd);
     };
-    session.addEventListener('end', onSessionEnd);
-    return session as any as XRSession;
+    xrSession.addEventListener('end', onSessionEnd);
+    return xrSession as unknown as XRSession;
   }
 }

@@ -27,17 +27,6 @@ namespace xr
     m_CommandChanServer = std::make_unique<ipc::TrOneShotServer<TrXRCommandMessage>>("xrCommandChan");
   }
 
-  Device::~Device()
-  {
-    // Clear the sessions
-    {
-      std::unique_lock<std::shared_mutex> lock(m_MutexForSessions);
-      for (auto session : m_Sessions)
-        delete session;
-      m_Sessions.clear();
-    }
-  }
-
   void Device::configure(TrDeviceInit &init)
   {
     m_Enabled = true;
@@ -67,10 +56,10 @@ namespace xr
     return mode == xr::TrXRSessionMode::ImmersiveAR;
   }
 
-  int Device::requestSession(xr::TrXRSessionMode mode, TrContentRenderer *contentRenderer)
+  shared_ptr<TrXRSession> Device::requestSession(xr::TrXRSessionMode mode, TrContentRenderer *contentRenderer)
   {
     if (isSessionSupported(mode) == false)
-      return 0;
+      return nullptr;
 
     int id;
     int tries = 0;
@@ -98,25 +87,28 @@ namespace xr
     {
       std::unique_lock<std::shared_mutex> lock(m_MutexForSessions);
       TrXRSessionInit init;
-      m_Sessions.push_back(new TrXRSession(id, this, contentRenderer, init));
-      return id;
+      auto newSession = std::make_shared<TrXRSession>(id, this, contentRenderer, init);
+      m_Sessions.push_back(newSession);
+      return newSession;
     }
     else
     {
       DEBUG(LOG_TAG_XR, "Failed to generate a new session id, tries=%d", tries);
-      return 0;
+      return nullptr;
     }
   }
 
-  bool Device::endAndRemoveSession(xr::TrXRSession *sessionToEnd)
+  bool Device::endAndRemoveSession(TrXRSession *sessionToEnd)
   {
+    if (sessionToEnd == nullptr)
+      return false;
+
     std::unique_lock<std::shared_mutex> lock(m_MutexForSessions);
     for (auto it = m_Sessions.begin(); it != m_Sessions.end();)
     {
       auto session = *it;
-      if (session == sessionToEnd)
+      if (session.get() == sessionToEnd)
       {
-        delete *it;
         it = m_Sessions.erase(it);
         return true;
       }
@@ -209,7 +201,7 @@ namespace xr
     for (auto session : m_Sessions)
     {
       if (session->belongsTo(contentPid))
-        callback(session);
+        callback(session.get());
     }
   }
 
@@ -399,8 +391,9 @@ namespace xr
 
   xr::SessionResponse Device::onSessionRequest(xr::SessionRequest &request, TrContentRenderer *contentRenderer)
   {
-    auto sessionId = requestSession(request.sessionMode, contentRenderer);
-    xr::SessionResponse resp(sessionId);
+    auto newSession = requestSession(request.sessionMode, contentRenderer);
+    xr::SessionResponse resp(newSession->id);
+    resp.recommendedContentSize = newSession->recommendedContentSize;
     return resp;
   }
 

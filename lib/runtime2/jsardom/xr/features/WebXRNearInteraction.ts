@@ -369,14 +369,12 @@ export class WebXRNearInteraction extends WebXRAbstractFeature {
 
   private _controllerAvailablePredicate(mesh: AbstractMesh, controllerId: string): boolean {
     let parent: TransformNode = mesh;
-
     while (parent) {
       if (parent.reservedDataStore && parent.reservedDataStore.nearInteraction && parent.reservedDataStore.nearInteraction.excludedControllerId === controllerId) {
         return false;
       }
       parent = parent.parent as TransformNode;
     }
-
     return true;
   }
 
@@ -451,163 +449,161 @@ export class WebXRNearInteraction extends WebXRAbstractFeature {
   }
 
   protected _onXRFrame(_xrFrame: XRFrame) {
-    this._xrSessionManager.runWithXRFrameOnce(_xrFrame, () => {
-      Object.keys(this._controllers).forEach((id) => {
-        // only do this for the selected pointer
-        const controllerData = this._controllers[id];
-        const handData = controllerData.xrController?.inputSource.hand;
-        // If near interaction is not enabled/available for this controller, return early
-        if (
-          (!this._options.enableNearInteractionOnAllControllers && id !== this._attachedController) ||
-          !controllerData.xrController ||
-          (!handData && (!this._options.nearInteractionControllerMode || !controllerData.xrController.inputSource.gamepad))
-        ) {
-          controllerData.pick = null;
-          return;
-        }
-        controllerData.hoverInteraction = false;
-        controllerData.nearInteraction = false;
+    Object.keys(this._controllers).forEach((id) => {
+      // only do this for the selected pointer
+      const controllerData = this._controllers[id];
+      const handData = controllerData.xrController?.inputSource.hand;
+      // If near interaction is not enabled/available for this controller, return early
+      if (
+        (!this._options.enableNearInteractionOnAllControllers && id !== this._attachedController) ||
+        !controllerData.xrController ||
+        (!handData && (!this._options.nearInteractionControllerMode || !controllerData.xrController.inputSource.gamepad))
+      ) {
+        controllerData.pick = null;
+        return;
+      }
+      controllerData.hoverInteraction = false;
+      controllerData.nearInteraction = false;
 
-        // Every frame check collisions/input
-        if (controllerData.xrController) {
-          if (handData) {
-            const xrIndexTip = handData.get('index-finger-tip');
-            if (xrIndexTip) {
-              const indexTipPose = _xrFrame.getJointPose!(xrIndexTip, this._xrSessionManager.referenceSpace);
-              if (indexTipPose && indexTipPose.transform) {
-                const axisRHSMultiplier = this._scene.useRightHandedSystem ? 1 : -1;
-                TmpVectors.Vector3[0].set(indexTipPose.transform.position.x, indexTipPose.transform.position.y, indexTipPose.transform.position.z * axisRHSMultiplier);
-                TmpVectors.Quaternion[0].set(
-                  indexTipPose.transform.orientation.x,
-                  indexTipPose.transform.orientation.y,
-                  indexTipPose.transform.orientation.z * axisRHSMultiplier,
-                  indexTipPose.transform.orientation.w * axisRHSMultiplier
-                );
-                this._processTouchPoint(id, TmpVectors.Vector3[0], TmpVectors.Quaternion[0]);
-              }
+      // Every frame check collisions/input
+      if (controllerData.xrController) {
+        if (handData) {
+          const xrIndexTip = handData.get('index-finger-tip');
+          if (xrIndexTip) {
+            const indexTipPose = _xrFrame.getJointPose!(xrIndexTip, this._xrSessionManager.referenceSpace);
+            if (indexTipPose && indexTipPose.transform) {
+              const axisRHSMultiplier = this._scene.useRightHandedSystem ? 1 : -1;
+              TmpVectors.Vector3[0].set(indexTipPose.transform.position.x, indexTipPose.transform.position.y, indexTipPose.transform.position.z * axisRHSMultiplier);
+              TmpVectors.Quaternion[0].set(
+                indexTipPose.transform.orientation.x,
+                indexTipPose.transform.orientation.y,
+                indexTipPose.transform.orientation.z * axisRHSMultiplier,
+                indexTipPose.transform.orientation.w * axisRHSMultiplier
+              );
+              this._processTouchPoint(id, TmpVectors.Vector3[0], TmpVectors.Quaternion[0]);
             }
-          } else if (controllerData.xrController.inputSource.gamepad && this._options.nearInteractionControllerMode !== WebXRNearControllerMode.DISABLED) {
-            let controllerPose = controllerData.xrController.pointer;
-            if (controllerData.xrController.grip && this._options.nearInteractionControllerMode === WebXRNearControllerMode.CENTERED_ON_CONTROLLER) {
-              controllerPose = controllerData.xrController.grip;
-            }
-
-            this._processTouchPoint(id, controllerPose.position, controllerPose.rotationQuaternion!);
           }
+        } else if (controllerData.xrController.inputSource.gamepad && this._options.nearInteractionControllerMode !== WebXRNearControllerMode.DISABLED) {
+          let controllerPose = controllerData.xrController.pointer;
+          if (controllerData.xrController.grip && this._options.nearInteractionControllerMode === WebXRNearControllerMode.CENTERED_ON_CONTROLLER) {
+            controllerPose = controllerData.xrController.grip;
+          }
+
+          this._processTouchPoint(id, controllerPose.position, controllerPose.rotationQuaternion!);
+        }
+      } else {
+        return;
+      }
+
+      const accuratePickInfo = (originalScenePick: Nullable<PickingInfo>, utilityScenePick: Nullable<PickingInfo>): Nullable<PickingInfo> => {
+        let pick = null;
+        if (!utilityScenePick || !utilityScenePick.hit) {
+          // No hit in utility scene
+          pick = originalScenePick;
+        } else if (!originalScenePick || !originalScenePick.hit) {
+          // No hit in original scene
+          pick = utilityScenePick;
+        } else if (utilityScenePick.distance < originalScenePick.distance) {
+          // Hit is closer in utility scene
+          pick = utilityScenePick;
         } else {
-          return;
+          // Hit is closer in original scene
+          pick = originalScenePick;
         }
+        return pick;
+      };
+      const populateNearInteractionInfo = (nearInteractionInfo: Nullable<PickingInfo>): PickingInfo => {
+        let result = new PickingInfo();
 
-        const accuratePickInfo = (originalScenePick: Nullable<PickingInfo>, utilityScenePick: Nullable<PickingInfo>): Nullable<PickingInfo> => {
-          let pick = null;
-          if (!utilityScenePick || !utilityScenePick.hit) {
-            // No hit in utility scene
-            pick = originalScenePick;
-          } else if (!originalScenePick || !originalScenePick.hit) {
-            // No hit in original scene
-            pick = utilityScenePick;
-          } else if (utilityScenePick.distance < originalScenePick.distance) {
-            // Hit is closer in utility scene
-            pick = utilityScenePick;
-          } else {
-            // Hit is closer in original scene
-            pick = originalScenePick;
-          }
-          return pick;
-        };
-        const populateNearInteractionInfo = (nearInteractionInfo: Nullable<PickingInfo>): PickingInfo => {
-          let result = new PickingInfo();
+        let nearInteractionAtOrigin = false;
+        const nearInteraction = nearInteractionInfo && nearInteractionInfo.pickedPoint && nearInteractionInfo.hit;
+        if (nearInteractionInfo?.pickedPoint) {
+          nearInteractionAtOrigin = nearInteractionInfo.pickedPoint.x === 0 && nearInteractionInfo.pickedPoint.y === 0 && nearInteractionInfo.pickedPoint.z === 0;
+        }
+        if (nearInteraction && !nearInteractionAtOrigin) {
+          result = nearInteractionInfo!;
+        }
+        return result;
+      };
 
-          let nearInteractionAtOrigin = false;
-          const nearInteraction = nearInteractionInfo && nearInteractionInfo.pickedPoint && nearInteractionInfo.hit;
-          if (nearInteractionInfo?.pickedPoint) {
-            nearInteractionAtOrigin = nearInteractionInfo.pickedPoint.x === 0 && nearInteractionInfo.pickedPoint.y === 0 && nearInteractionInfo.pickedPoint.z === 0;
-          }
-          if (nearInteraction && !nearInteractionAtOrigin) {
-            result = nearInteractionInfo!;
-          }
-          return result;
-        };
+      // Don't perform touch logic while grabbing, to prevent triggering touch interactions while in the middle of a grab interaction
+      // Dont update cursor logic either - the cursor should already be visible for the grab to be in range,
+      // and in order to maintain its position on the target mesh it is parented for the duration of the grab.
+      if (!controllerData.grabInteraction) {
+        let pick = null;
 
-        // Don't perform touch logic while grabbing, to prevent triggering touch interactions while in the middle of a grab interaction
-        // Dont update cursor logic either - the cursor should already be visible for the grab to be in range,
-        // and in order to maintain its position on the target mesh it is parented for the duration of the grab.
-        if (!controllerData.grabInteraction) {
-          let pick = null;
-
-          // near interaction hover
-          let utilitySceneHoverPick = null;
-          if (this._options.useUtilityLayer && this._utilityLayerScene) {
-            utilitySceneHoverPick = this._pickWithSphere(
-              controllerData,
-              this._hoverRadius * this._xrSessionManager.worldScalingFactor,
-              this._utilityLayerScene,
-              (mesh: AbstractMesh) => this._nearInteractionPredicate(mesh)
-            );
-          }
-          const originalSceneHoverPick = this._pickWithSphere(
+        // near interaction hover
+        let utilitySceneHoverPick = null;
+        if (this._options.useUtilityLayer && this._utilityLayerScene) {
+          utilitySceneHoverPick = this._pickWithSphere(
             controllerData,
             this._hoverRadius * this._xrSessionManager.worldScalingFactor,
-            this._scene,
+            this._utilityLayerScene,
             (mesh: AbstractMesh) => this._nearInteractionPredicate(mesh)
           );
+        }
+        const originalSceneHoverPick = this._pickWithSphere(
+          controllerData,
+          this._hoverRadius * this._xrSessionManager.worldScalingFactor,
+          this._scene,
+          (mesh: AbstractMesh) => this._nearInteractionPredicate(mesh)
+        );
 
-          const hoverPickInfo = accuratePickInfo(originalSceneHoverPick, utilitySceneHoverPick);
-          if (hoverPickInfo && hoverPickInfo.hit) {
-            pick = populateNearInteractionInfo(hoverPickInfo);
-            if (pick.hit) {
-              controllerData.hoverInteraction = true;
-            }
-          }
-
-          // near interaction pick
-          if (controllerData.hoverInteraction) {
-            let utilitySceneNearPick = null;
-            const radius = (handData ? this._pickRadius : this._controllerPickRadius) * this._xrSessionManager.worldScalingFactor;
-            if (this._options.useUtilityLayer && this._utilityLayerScene) {
-              utilitySceneNearPick = this._pickWithSphere(controllerData, radius, this._utilityLayerScene, (mesh: AbstractMesh) => this._nearPickPredicate(mesh));
-            }
-            const originalSceneNearPick = this._pickWithSphere(controllerData, radius, this._scene, (mesh: AbstractMesh) => this._nearPickPredicate(mesh));
-            const pickInfo = accuratePickInfo(originalSceneNearPick, utilitySceneNearPick);
-            const nearPick = populateNearInteractionInfo(pickInfo);
-            if (nearPick.hit) {
-              // Near pick takes precedence over hover interaction
-              pick = nearPick;
-              controllerData.nearInteraction = true;
-            }
-          }
-
-          controllerData.stalePick = controllerData.pick;
-          controllerData.pick = pick;
-
-          // Update mesh under pointer
-          if (controllerData.pick && controllerData.pick.pickedPoint && controllerData.pick.hit) {
-            controllerData.meshUnderPointer = controllerData.pick.pickedMesh;
-            controllerData.pickedPointVisualCue.position.copyFrom(controllerData.pick.pickedPoint);
-            controllerData.pickedPointVisualCue.isVisible = true;
-
-            if (this._farInteractionFeature && this._farInteractionFeature.attached) {
-              this._farInteractionFeature._setPointerSelectionDisabledByPointerId(controllerData.id, true);
-            }
-          } else {
-            controllerData.meshUnderPointer = null;
-            controllerData.pickedPointVisualCue.isVisible = false;
-
-            if (this._farInteractionFeature && this._farInteractionFeature.attached) {
-              this._farInteractionFeature._setPointerSelectionDisabledByPointerId(controllerData.id, false);
-            }
+        const hoverPickInfo = accuratePickInfo(originalSceneHoverPick, utilitySceneHoverPick);
+        if (hoverPickInfo && hoverPickInfo.hit) {
+          pick = populateNearInteractionInfo(hoverPickInfo);
+          if (pick.hit) {
+            controllerData.hoverInteraction = true;
           }
         }
 
-        // Update the interaction animation. Only updates if the visible touch mesh is active
-        let state = ControllerOrbAnimationState.DEHYDRATED;
-        if (controllerData.grabInteraction || controllerData.nearInteraction) {
-          state = ControllerOrbAnimationState.TOUCH;
-        } else if (controllerData.hoverInteraction) {
-          state = ControllerOrbAnimationState.HOVER;
+        // near interaction pick
+        if (controllerData.hoverInteraction) {
+          let utilitySceneNearPick = null;
+          const radius = (handData ? this._pickRadius : this._controllerPickRadius) * this._xrSessionManager.worldScalingFactor;
+          if (this._options.useUtilityLayer && this._utilityLayerScene) {
+            utilitySceneNearPick = this._pickWithSphere(controllerData, radius, this._utilityLayerScene, (mesh: AbstractMesh) => this._nearPickPredicate(mesh));
+          }
+          const originalSceneNearPick = this._pickWithSphere(controllerData, radius, this._scene, (mesh: AbstractMesh) => this._nearPickPredicate(mesh));
+          const pickInfo = accuratePickInfo(originalSceneNearPick, utilitySceneNearPick);
+          const nearPick = populateNearInteractionInfo(pickInfo);
+          if (nearPick.hit) {
+            // Near pick takes precedence over hover interaction
+            pick = nearPick;
+            controllerData.nearInteraction = true;
+          }
         }
-        this._handleTransitionAnimation(controllerData, state);
-      });
+
+        controllerData.stalePick = controllerData.pick;
+        controllerData.pick = pick;
+
+        // Update mesh under pointer
+        if (controllerData.pick && controllerData.pick.pickedPoint && controllerData.pick.hit) {
+          controllerData.meshUnderPointer = controllerData.pick.pickedMesh;
+          controllerData.pickedPointVisualCue.position.copyFrom(controllerData.pick.pickedPoint);
+          controllerData.pickedPointVisualCue.isVisible = true;
+
+          if (this._farInteractionFeature && this._farInteractionFeature.attached) {
+            this._farInteractionFeature._setPointerSelectionDisabledByPointerId(controllerData.id, true);
+          }
+        } else {
+          controllerData.meshUnderPointer = null;
+          controllerData.pickedPointVisualCue.isVisible = false;
+
+          if (this._farInteractionFeature && this._farInteractionFeature.attached) {
+            this._farInteractionFeature._setPointerSelectionDisabledByPointerId(controllerData.id, false);
+          }
+        }
+      }
+
+      // Update the interaction animation. Only updates if the visible touch mesh is active
+      let state = ControllerOrbAnimationState.DEHYDRATED;
+      if (controllerData.grabInteraction || controllerData.nearInteraction) {
+        state = ControllerOrbAnimationState.TOUCH;
+      } else if (controllerData.hoverInteraction) {
+        state = ControllerOrbAnimationState.HOVER;
+      }
+      this._handleTransitionAnimation(controllerData, state);
     });
   }
 

@@ -47,6 +47,11 @@ namespace bindings
       Napi::TypeError::New(env, "Three arguments are required").ThrowAsJavaScriptException();
       return;
     }
+    if (!info[2].IsObject())
+    {
+      Napi::TypeError::New(env, "The 3rd argument must be an object").ThrowAsJavaScriptException();
+      return;
+    }
     if (!info[3].IsFunction())
     {
       Napi::TypeError::New(env, "The 4th argument must be a function").ThrowAsJavaScriptException();
@@ -64,7 +69,8 @@ namespace bindings
       return;
     }
 
-    id = info[2].As<Napi::Number>().Int32Value();
+    auto nativeSessionObject = info[2].ToObject();
+    id = nativeSessionObject.Get("id").ToNumber().Int32Value();
     immersive = xr::IsImmersive(mode);
 
     // Create the view spaces
@@ -95,9 +101,10 @@ namespace bindings
     onEventCallback = Napi::Persistent(info[3].As<Napi::Function>());
 
     // Define JS properties
-    auto thisObject = info.This().ToObject();
-    thisObject.DefineProperty(Napi::PropertyDescriptor::Value("inputSources", inputSources.Value(), napi_enumerable));
-    thisObject.DefineProperty(Napi::PropertyDescriptor::Value("enabledFeatures", enabledFeatures.Value(), napi_enumerable));
+    auto jsThis = info.This().ToObject();
+    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("recommendedContentSize", nativeSessionObject.Get("recommendedContentSize"), napi_enumerable));
+    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("inputSources", inputSources.Value(), napi_enumerable));
+    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("enabledFeatures", enabledFeatures.Value(), napi_enumerable));
 
     // Start the session
     start();

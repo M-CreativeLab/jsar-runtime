@@ -135,6 +135,7 @@ class WebXRControllerData {
   id: number;
   tmpRay: Ray;
   disabledByNearInteraction: boolean;
+
   // event support
   eventListeners?: { [event in XREventType]?: (event: XRInputSourceEvent) => void };
   screenCoordinates?: { x: number; y: number };
@@ -165,9 +166,9 @@ class WebXRControllerData {
   select(pickedMesh: AbstractMesh) {
     this.meshUnderPointer = pickedMesh;
     // Only show the selection mesh if the controller is a tracked-pointer
-    if (this.xrController.inputSource.targetRayMode === 'tracked-pointer') {
-      this.selectionMesh.isVisible = true;
-    }
+    // if (this.xrController.inputSource.targetRayMode === 'tracked-pointer') {
+    //   this.selectionMesh.isVisible = true;
+    // }
   }
 
   deselect() {
@@ -186,8 +187,6 @@ class WebXRControllerData {
  * A module that will enable pointer selection for motion controllers of XR Input Sources
  */
 export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
-  private static _IdCounter = 200;
-
   private _attachController = (xrController: WebXRInputSource) => {
     if (this._controllers[xrController.uniqueId]) {
       // already attached
@@ -321,9 +320,7 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
 
     if (this._options.gazeCamera) {
       const webXRCamera = this._options.gazeCamera;
-
       const { laserPointer, selectionMesh } = this._generateNewMeshPair(webXRCamera);
-
       this._controllers['camera'] = new WebXRControllerData({
         webXRCamera,
         laserPointer,
@@ -335,7 +332,6 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
       });
       this._attachGazeMode();
     }
-
     return true;
   }
 
@@ -503,6 +499,12 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
           // Update laser state
           this._updatePointerDistance(controllerData.laserPointer, pick.distance);
 
+          // Notify observers
+          this._xrSessionManager.onMeshPickObservable.notifyObservers({
+            mesh: pick.pickedMesh,
+            pick,
+          });
+
           // Update cursor state
           controllerData.selectionMesh.position.copyFrom(pick.pickedPoint);
           controllerData.selectionMesh.scaling.x = Math.sqrt(pick.distance);
@@ -521,6 +523,9 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
           }
           controllerData.select(pick.pickedMesh);
         } else {
+          this._xrSessionManager.onMeshUnpickObservable.notifyObservers({
+            mesh: controllerData.meshUnderPointer,
+          });
           controllerData.deselect();
           this._updatePointerDistance(controllerData.laserPointer, 1);
         }
@@ -532,33 +537,7 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
     return this._options.customUtilityLayerScene || UtilityLayerRenderer.DefaultUtilityLayer.utilityLayerScene;
   }
 
-  private _attachGazeMode(xrController?: WebXRInputSource) {
-    // const controllerData = this._controllers[(xrController && xrController.uniqueId) || 'camera'];
-    // const pointerEventInit: PointerEventInit = {
-    //   pointerId: controllerData.id,
-    //   pointerType: 'xr',
-    // };
-    // controllerData.onFrameObserver = this._xrSessionManager.onXRFrameObservable.add((frame) => {
-    //   this._xrSessionManager.runWithXRFrameOnce(frame, () => {
-    //     if (!controllerData.pick) {
-    //       return;
-    //     }
-    //     // this._augmentPointerInit(pointerEventInit, controllerData.id, controllerData.screenCoordinates);
-    //     // if (controllerData.pick.hit) {
-    //     //   // TODO
-    //     // }
-    //     // this._scene.simulatePointerMove(controllerData.pick, pointerEventInit);
-    //   });
-    // });
-
-    // if (xrController) {
-    //   xrController.onDisposeObservable.addOnce(() => {
-    //     if (controllerData.pick && !this._options.disablePointerUpOnTouchOut) {
-    //       this._scene.simulatePointerUp(controllerData.pick, pointerEventInit);
-    //       controllerData.finalPointerUpTriggered = true;
-    //     }
-    //   });
-    // }
+  private _attachGazeMode(_xrController?: WebXRInputSource) {
   }
 
   private _attachScreenRayMode(xrController: WebXRInputSource) {

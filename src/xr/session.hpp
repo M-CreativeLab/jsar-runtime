@@ -57,8 +57,18 @@ namespace xr
     /**
      * The base matrix of this session that represents how the session's content local space is transformed in the world
      * space.
+     * 
+     * NOTE: This base matrix scaling is always (1, 1, 1) because the WebXR `XRSpace` not includes the scale, or ensure the
+     * scale is (1, 1, 1).
      */
     glm::mat4 baseMatrix;
+    /**
+     * The recommanded content scale for this session, this value is used for computing the default bounding info with the
+     * base matrix which's scale will be ignored.
+     * 
+     * And this value is also exposed to the application side to adjust the content size to match the default bounding info.
+     */
+    float recommendedContentSize = 0.3f;
     /**
      * The bounding info of this session, it is used for native frustum culling.
      *

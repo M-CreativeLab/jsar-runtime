@@ -63,12 +63,12 @@ export class XRDevice {
    * @param {Set<string>} enabledFeatures
    * @return {Promise<number>}
    */
-  async requestSession(mode: XRSessionMode, _enabledFeatures: Set<string>): Promise<number> {
-    const sessionId = await this.#handle.requestSession(mode);
-    if (sessionId <= 0) {
+  async requestSession(mode: XRSessionMode, _enabledFeatures: Set<string>): Promise<Transmute.XRNativeSession> {
+    const newNativeSession = await this.#handle.requestSession(mode);
+    if (!newNativeSession || newNativeSession.id <= 0) {
       throw new Error('Failed to request session');
     }
-    return sessionId;
+    return newNativeSession;
   }
 
   /**

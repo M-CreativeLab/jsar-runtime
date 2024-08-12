@@ -13,7 +13,7 @@ namespace xr
         contentRenderer(contentRenderer),
         init(init),
         baseMatrix(1.0f),
-        boundingInfo(glm::vec3(-0.5), glm::vec3(0.5), baseMatrix)
+        boundingInfo(glm::vec3(-recommendedContentSize / 2), glm::vec3(recommendedContentSize / 2), baseMatrix)
   {
     auto content = contentRenderer->getContent();
     assert(content != nullptr);

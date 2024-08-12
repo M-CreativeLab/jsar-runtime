@@ -86,6 +86,7 @@ namespace xr
   public:
     bool success;
     uint32_t sessionId;
+    float recommendedContentSize = 1.0f;
   };
 
   class EndSessionRequest : public TrXRCommandBase<EndSessionRequest>

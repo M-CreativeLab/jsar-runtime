@@ -195,7 +195,7 @@ namespace bindings
       auto transform /** input source space to base(local/unbound) */ = XRSPACE_RELATIVE_TRANSFORM(inputSpace, baseSpace);
       return XRPose::NewInstance(env, device, transform, internal);
     }
-    // TODO
+    // TODO: support other space types
     return env.Undefined();
   }
 

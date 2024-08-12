@@ -47,6 +47,14 @@ export class WebXRSessionManager implements BABYLON.IDisposable, BABYLON.IWebXRR
    */
   public onXRSessionInit: BABYLON.Observable<XRSession> = new BABYLON.Observable<XRSession>();
   /**
+   * Fires when a mesh was picked in this session
+   */
+  public onMeshPickObservable: BABYLON.Observable<{ mesh: BABYLON.AbstractMesh, pick: BABYLON.PickingInfo }> = new BABYLON.Observable<{ mesh: BABYLON.AbstractMesh, pick: BABYLON.PickingInfo }>();
+  /**
+   * Fires when a mesh was unpicked in this session
+   */
+  public onMeshUnpickObservable: BABYLON.Observable<{ mesh: BABYLON.AbstractMesh }> = new BABYLON.Observable<{ mesh: BABYLON.AbstractMesh }>();
+  /**
    * Underlying xr session
    */
   public session: XRSession;

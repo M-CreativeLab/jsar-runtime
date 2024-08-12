@@ -509,7 +509,8 @@ int main(int argc, char **argv)
       height = atoi(optarg);
       break;
     case 'x':
-      xrEnabled = true;
+      if (strcmp(optarg, "r") == 0)
+        xrEnabled = true;
       break;
     case 'n':
       nApps = atoi(optarg);

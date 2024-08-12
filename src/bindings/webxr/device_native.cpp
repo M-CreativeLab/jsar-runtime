@@ -146,9 +146,12 @@ namespace bindings
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    auto sessionIdValue = Napi::Number::New(env, resp->sessionId);
+
+    auto jsNativeSessionObject = Napi::Object::New(env);
+    jsNativeSessionObject.Set("id", Napi::Number::New(env, resp->id));
+    jsNativeSessionObject.Set("recommendedContentSize", Napi::Number::New(env, resp->recommendedContentSize));
     delete resp;
-    deferred.Resolve(sessionIdValue);
+    deferred.Resolve(jsNativeSessionObject);
     return deferred.Promise();
   }
 

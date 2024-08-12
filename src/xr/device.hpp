@@ -2,6 +2,7 @@
 
 #include <array>
 #include <map>
+#include <memory>
 #include <vector>
 #include <mutex>
 #include <shared_mutex>
@@ -37,12 +38,12 @@ namespace xr
 
   public:
     Device(TrConstellation *constellation);
-    ~Device();
+    ~Device() = default;
 
   public:
     /**
      * Configure the XR Device with a specific `TrDeviceInit` configuration.
-     * 
+     *
      * @param init the configuration init to configure the device.
      */
     void configure(TrDeviceInit &init);
@@ -57,15 +58,15 @@ namespace xr
     /**
      * It returns if this session mode (immersive-ar, immersive-vr or inline) is supported by the XR device.
      */
-    bool isSessionSupported(xr::TrXRSessionMode mode);
+    bool isSessionSupported(TrXRSessionMode mode);
     /**
      * It requests a XR session with its mode and content source.
      */
-    int requestSession(xr::TrXRSessionMode mode, TrContentRenderer *contentRenderer);
+    shared_ptr<TrXRSession> requestSession(TrXRSessionMode mode, TrContentRenderer *contentRenderer);
     /**
      * It ends and removes a session by its id.
      */
-    bool endAndRemoveSession(xr::TrXRSession *session);
+    bool endAndRemoveSession(TrXRSession *session);
     /**
      * If this device is enabled.
      */
@@ -138,7 +139,7 @@ namespace xr
     bool updateProjectionMatrix(int viewIndex, float *projectionMatrixValues);
     /**
      * Update the local transform by the session id.
-     * 
+     *
      * @param sessionId the session id to find the session.
      * @param transform the float array to be updated.
      * @returns true if the local transform is updated successfully.
@@ -146,7 +147,7 @@ namespace xr
     bool updateLocalTransformBySessionId(int sessionId, float *transform);
     /**
      * Update the local transform by the document id, it will find the session by the document/content's active session id.
-     * 
+     *
      * @param documentId the document id to find the session.
      * @param transform the float array to be updated.
      * @returns true if the local transform is updated successfully.
@@ -237,7 +238,7 @@ namespace xr
     /**
      * The id to indentify the session, corresponding to the session's id in the WebXR API.
      */
-    vector<TrXRSession *> m_Sessions;
+    vector<shared_ptr<TrXRSession>> m_Sessions;
     /**
      * Input sources fields
      */

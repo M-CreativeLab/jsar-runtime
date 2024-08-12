@@ -1,3 +1,4 @@
+import { type NativeDocument as JSARNativeDocument } from '@yodaos-jsar/dom';
 import { WebXRExperienceHelper } from './ExperienceHelper';
 import { WebXRInput } from './Input';
 import { WebXRManagedOutputCanvasOptions } from './OutputCanvas';
@@ -114,9 +115,10 @@ export class WebXRDefaultExperience {
   public nearInteraction: WebXRNearInteraction;
 
   public static async CreateAsync(
-    scene: BABYLON.Scene,
+    nativeDocument: JSARNativeDocument,
     options: WebXRDefaultExperienceOptions & { xrSystem: XRSystem }
   ): Promise<WebXRDefaultExperience> {
+    const scene = nativeDocument.getNativeScene();
     const result = new WebXRDefaultExperience();
     scene.onDisposeObservable.addOnce(() => {
       result.dispose();

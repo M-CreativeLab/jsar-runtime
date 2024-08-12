@@ -10,6 +10,7 @@ import {
   type XRSessionBackend,
   type XRSessionBackendInit,
   type SpatialDocumentImpl,
+  JSARInputEvent,
   cdp as jsarCdp,
 } from '@yodaos-jsar/dom';
 import * as ws from 'ws';
@@ -20,6 +21,7 @@ import { MediaPlayerBackendOnTransmute } from './MediaPlayer';
 import { WebGLMatrix } from '../../webgl/WebGLMatrix';
 import { createBondXRSystem } from '../../webxr';
 import { WebXRDefaultExperience } from './xr/DefaultExperience';
+import type { WebXRExperienceHelper } from './xr/ExperienceHelper';
 
 type TransmuteEngineOptions = BABYLON.EngineOptions & {
   // TODO
@@ -133,6 +135,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
 
   private _id: number;
   private _xrSystem: XRSystem;
+  private _xrSession: XRSession;
   private _xrDefaultExperience: Promise<WebXRDefaultExperience> = null;
   private _scene: BABYLON.Scene;
   private _preloadMeshes: Map<string, Array<BABYLON.AbstractMesh | BABYLON.TransformNode>> = new Map();
@@ -178,10 +181,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     {
       // create default light
       const dir = new BABYLON.Vector3(0, 2, -5);
-      const light = new BABYLON.HemisphericLight(
-        'light_front',
-        dir,
-        scene);
+      const light = new BABYLON.HemisphericLight('light_front', dir, scene);
       light.intensity = 1;
       this._defaultLights.push(light);
     }
@@ -199,7 +199,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
   }
 
   configureDefaultXrExperience(glContext: WebGLRenderingContext | WebGL2RenderingContext) {
-    this._xrDefaultExperience = WebXRDefaultExperience.CreateAsync(this._scene, {
+    this._xrDefaultExperience = WebXRDefaultExperience.CreateAsync(this, {
       xrSystem: this._xrSystem,
       outputCanvasOptions: {
         renderingContext: glContext,
@@ -227,12 +227,45 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
         enableNearInteractionOnAllControllers: false,
       },
       disableTeleportation: true,
-      disableNearInteraction: true,
+      disableNearInteraction: false,
     });
+  }
+
+  #registerListenersForXR(xrExperience: WebXRExperienceHelper) {
+    xrExperience.sessionManager.onMeshPickObservable.add(({ mesh, pick }) => {
+      this.attachedDocument.dispatchEvent(new JSARInputEvent('raycast', {
+        sourceId: 'scene_default_ray',
+        sourceType: 'hand',
+        targetSpatialElementInternalGuid: mesh.uniqueId,
+        uvCoord: pick.getTextureCoordinates(),
+      }));
+    });
+    this._scene.onPointerObservable.add((pointerEvent) => {
+      if (pointerEvent.type === BABYLON.PointerEventTypes.POINTERDOWN) {
+        this.attachedDocument.dispatchEvent(new JSARInputEvent('raycast_action', {
+          sourceId: 'scene_default_ray',
+          type: 'down',
+        }));
+      } else if (pointerEvent.type === BABYLON.PointerEventTypes.POINTERUP) {
+        this.attachedDocument.dispatchEvent(new JSARInputEvent('raycast_action', {
+          sourceId: 'scene_default_ray',
+          type: 'up',
+        }));
+      }
+    });
+  }
+
+  #unregisterListenersForXR(xrExperience: WebXRExperienceHelper) {
+    xrExperience.sessionManager.onMeshPickObservable.clear();
+    this._scene.onPointerObservable.clear();
   }
 
   async enterDefaultXrExperience(): Promise<XRSession> {
     const { baseExperience, renderTarget } = await this._xrDefaultExperience;
+    baseExperience.sessionManager.onXRSessionInit.addOnce((session) => {
+      this._xrSession = session;
+      this.#registerListenersForXR(baseExperience);
+    });
     await baseExperience.enterXRAsync('immersive-ar', 'unbounded', {
       optionalFeatures: [],
     }, renderTarget);
@@ -242,24 +275,39 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
   getNativeScene(): BABYLON.Scene {
     return this._scene;
   }
+
   getContainerPose(): XRPose {
     throw new TypeError('Method not implemented.');
   }
+
+  getXRSession(): XRSession {
+    return this._xrSession;
+  }
+
+  getRecommendedBoudingSize(): number {
+    return this._xrSession?.['recommendedContentSize'] || 1.0;
+  }
+
   getPreloadedMeshes(): Map<string, (BABYLON.AbstractMesh | BABYLON.TransformNode)[]> {
     return this._preloadMeshes;
   }
+
   getPreloadedAnimationGroups(): Map<string, BABYLON.AnimationGroup[]> {
     return this._preloadAnimationGroups;
   }
+
   observeInputEvent(name?: string): void {
     // TODO
   }
+
   createBoundTransformNode(nameOrId: string): BABYLON.TransformNode {
     throw new TypeError('Method not implemented.');
   }
+
   createImageBitmap(image: ArrayBuffer | ArrayBufferView): Promise<ImageBitmap> {
     return createImageBitmap(new Blob([image]));
   }
+
   async decodeImage(bitmap: ImageBitmap, size?: [number, number]): Promise<any> {
     let expectedWidth = Math.floor(size[0]);
     let expectedHeight = Math.floor(size[1]);
@@ -298,6 +346,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     if (this._xrDefaultExperience instanceof Promise) {
       this._xrDefaultExperience
         .then(async ({ baseExperience }) => {
+          this.#unregisterListenersForXR(baseExperience);
           await baseExperience.exitXRAsync();
           baseExperience.dispose();
         });

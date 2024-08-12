@@ -77,14 +77,19 @@ declare namespace Transmute {
     dispatchEvent(type: 'mouseup', event: MouseEvent): void;
   }
 
+  type XRNativeSession = {
+    id: number;
+    recommendedContentSize: number;
+  };
   type XRNativeInputSource = {
     id: number;
     handness: string;
     targetRayMode: string;
   };
+
   class XRDeviceNative {
     isSessionSupported(mode: string): Promise<boolean>;
-    requestSession(mode: string): Promise<number>;
+    requestSession(mode: string): Promise<XRNativeSession>;
     requestFrameOfReferenceTransform(sessionId: number, type: XRReferenceSpaceType, options?): Float32Array;
     getViewport(sessionId: number, eye: XREye, viewIndex: number): {
       x: number;
