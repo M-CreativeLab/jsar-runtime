@@ -496,8 +496,9 @@ extern "C"
    * @param id The applet id, namely the XR session id.
    * @param translation The translation part of the transform, a 3-element float array.
    * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
+   * @param scale The scale part of the transform, a 3-element float array.
    */
-  DLL_PUBLIC bool TransmuteNative_SetLocalTransformFromTRS(int id, float *translation, float *rotation)
+  DLL_PUBLIC bool TransmuteNative_SetLocalTransformFromTRS(int id, float *translation, float *rotation, float *scale)
   {
     auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
     if (xrDevice == NULL)
@@ -510,8 +511,11 @@ extern "C"
     float ry = rotation[1];
     float rz = rotation[2];
     float rw = rotation[3];
+    float sx = scale[0];
+    float sy = scale[1];
+    float sz = scale[2];
 
-    auto S = glm::scale(glm::mat4(1), glm::vec3(1, 1, 1));
+    auto S = glm::scale(glm::mat4(1), glm::vec3(sx, sy, sz));
     auto T = glm::translate(glm::mat4(1), glm::vec3(tx, ty, tz));
     auto R = glm::mat4_cast(glm::quat(rw, rx, ry, rz));
     auto base = T * R * S;
