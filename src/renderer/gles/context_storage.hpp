@@ -59,6 +59,38 @@ public:
     m_DstAlpha = dstAlpha;
     m_IsSeparate = true;
   }
+  void Print()
+  {
+    DEBUG(DEBUG_TAG, "OpenGLBlendingFunc");
+    DEBUG(DEBUG_TAG, "  Separate: %s", m_IsSeparate ? "Yes" : "No");
+    if (m_IsSeparate)
+    {
+      DEBUG(DEBUG_TAG, "  SrcRGB: %d", m_Src);
+      DEBUG(DEBUG_TAG, "  DstRGB: %d", m_Dst);
+      DEBUG(DEBUG_TAG, "  SrcAlpha: %d", m_SrcAlpha);
+      DEBUG(DEBUG_TAG, "  DstAlpha: %d", m_DstAlpha);
+    }
+    else
+    {
+      DEBUG(DEBUG_TAG, "  SrcRGB: %d", m_Src);
+      DEBUG(DEBUG_TAG, "  DstRGB: %d", m_Dst);
+    }
+
+    DEBUG(DEBUG_TAG, "  Current OpenGL states:");
+    GLint blendDstAlpha;
+    glGetIntegerv(GL_BLEND_DST_ALPHA, &blendDstAlpha);
+    GLint blendDstRGB;
+    glGetIntegerv(GL_BLEND_DST_RGB, &blendDstRGB);
+    DEBUG(DEBUG_TAG, "  DstAlpha=%s", gles::glBlendFuncToString(blendDstAlpha).c_str());
+    DEBUG(DEBUG_TAG, "  DstRGB=%s", gles::glBlendFuncToString(blendDstRGB).c_str());
+
+    GLint blendSrcAlpha;
+    glGetIntegerv(GL_BLEND_SRC_ALPHA, &blendSrcAlpha);
+    GLint blendSrcRGB;
+    glGetIntegerv(GL_BLEND_SRC_RGB, &blendSrcRGB);
+    DEBUG(DEBUG_TAG, "  SrcAlpha=%s", gles::glBlendFuncToString(blendSrcAlpha).c_str());
+    DEBUG(DEBUG_TAG, "  SrcRGB=%s", gles::glBlendFuncToString(blendSrcRGB).c_str());
+  }
 
 private:
   bool m_IsSeparate = false;

@@ -233,11 +233,12 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
 
   #registerListenersForXR(xrExperience: WebXRExperienceHelper) {
     xrExperience.sessionManager.onMeshPickObservable.add(({ mesh, pick }) => {
+      const uvCoord = pick.getTextureCoordinates();
       this.attachedDocument.dispatchEvent(new JSARInputEvent('raycast', {
         sourceId: 'scene_default_ray',
         sourceType: 'hand',
         targetSpatialElementInternalGuid: mesh.uniqueId,
-        uvCoord: pick.getTextureCoordinates(),
+        uvCoord,
       }));
     });
     this._scene.onPointerObservable.add((pointerEvent) => {

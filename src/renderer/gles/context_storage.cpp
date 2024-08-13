@@ -118,26 +118,25 @@ void OpenGLContextStorage::Restore()
   m_DepthTestEnabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
   m_BlendEnabled ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
 
+  // Blend state restore
   /**
-   * FIXME: When the cull face is enabled, restore the cullface and frontface states.
+   * NOTE: The blend function state should not depend on the blend state, it causes the host blend state would be passed to
+   * the app context when the blend state is disabled.
    */
-  if (m_CullFaceEnabled)
-    glCullFace(m_CullFace);
+  if (!m_BlendFunc.IsSeparate())
+    glBlendFunc(m_BlendFunc.GetSrc(), m_BlendFunc.GetDst());
+  else
+    glBlendFuncSeparate(m_BlendFunc.GetSrcRgb(), m_BlendFunc.GetDstRgb(),
+                        m_BlendFunc.GetSrcAlpha(), m_BlendFunc.GetDstAlpha());
+
+  // Cull state restore
+  glCullFace(m_CullFace);
   if (m_FrontFace == GL_CW || m_FrontFace == GL_CCW)
     glFrontFace(m_FrontFace);
 
+  // Depth state restore
   glDepthMask(m_DepthMask);
-  if (m_DepthTestEnabled)
-    glDepthFunc(m_DepthFunc); // TODO: valid depth func enum?
-
-  if (m_BlendEnabled)
-  {
-    if (!m_BlendFunc.IsSeparate())
-      glBlendFunc(m_BlendFunc.GetSrc(), m_BlendFunc.GetDst());
-    else
-      glBlendFuncSeparate(m_BlendFunc.GetSrcRgb(), m_BlendFunc.GetDstRgb(),
-                          m_BlendFunc.GetSrcAlpha(), m_BlendFunc.GetDstAlpha());
-  }
+  glDepthFunc(m_DepthFunc); // TODO: valid depth func enum?
 
   // Restore the program, buffers, framebuffer, renderbuffer, vertex array object, and active texture unit
   if (m_ProgramId >= 0)

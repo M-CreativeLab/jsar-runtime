@@ -188,6 +188,79 @@ private:
 				delete[] name;
 			}
 		}
+
+		// Print Blend States
+		{
+			GLboolean blendEnabled;
+			glGetBooleanv(GL_BLEND, &blendEnabled);
+			if (blendEnabled)
+			{
+				DEBUG(DEBUG_TAG, "    Blend State:");
+
+				GLint blendColors[4];
+				glGetIntegerv(GL_BLEND_COLOR, blendColors);
+				DEBUG(DEBUG_TAG, "      Enabled=%s", blendEnabled ? "Yes" : "No");
+				DEBUG(DEBUG_TAG, "      Color=(%d, %d, %d, %d)",
+							blendColors[0], blendColors[1], blendColors[2], blendColors[3]);
+
+				GLint blendDstAlpha;
+				glGetIntegerv(GL_BLEND_DST_ALPHA, &blendDstAlpha);
+				GLint blendDstRGB;
+				glGetIntegerv(GL_BLEND_DST_RGB, &blendDstRGB);
+				DEBUG(DEBUG_TAG, "      DstAlpha=%s", gles::glBlendFuncToString(blendDstAlpha).c_str());
+				DEBUG(DEBUG_TAG, "      DstRGB=%s", gles::glBlendFuncToString(blendDstRGB).c_str());
+
+				GLint blendSrcAlpha;
+				glGetIntegerv(GL_BLEND_SRC_ALPHA, &blendSrcAlpha);
+				GLint blendSrcRGB;
+				glGetIntegerv(GL_BLEND_SRC_RGB, &blendSrcRGB);
+				DEBUG(DEBUG_TAG, "      SrcAlpha=%s", gles::glBlendFuncToString(blendSrcAlpha).c_str());
+				DEBUG(DEBUG_TAG, "      SrcRGB=%s", gles::glBlendFuncToString(blendSrcRGB).c_str());
+			}
+		}
+
+		// Print Color State
+		{
+			GLint colorMask[4];
+			glGetIntegerv(GL_COLOR_WRITEMASK, colorMask);
+			DEBUG(DEBUG_TAG, "    Color Mask: (%d, %d, %d, %d)",
+						colorMask[0], colorMask[1], colorMask[2], colorMask[3]);
+		}
+
+		// Print Cull State
+		{
+			GLboolean cullEnabled;
+			glGetBooleanv(GL_CULL_FACE, &cullEnabled);
+			if (cullEnabled)
+			{
+				GLint cullFace;
+				glGetIntegerv(GL_CULL_FACE_MODE, &cullFace);
+				DEBUG(DEBUG_TAG, "    Cull: Enabled=%s Face=%s", cullEnabled ? "Yes" : "No", gles::glEnumToString(cullFace).c_str());
+			}
+		}
+
+		// Print Depth State
+		{
+			GLboolean depthEnabled;
+			glGetBooleanv(GL_DEPTH_TEST, &depthEnabled);
+			if (depthEnabled)
+			{
+				DEBUG(DEBUG_TAG, "    Depth State:");
+				DEBUG(DEBUG_TAG, "      Enabled=%s", depthEnabled ? "Yes" : "No");
+
+				GLint depthFunc;
+				glGetIntegerv(GL_DEPTH_FUNC, &depthFunc);
+				DEBUG(DEBUG_TAG, "      Func=%s", gles::glDepthFuncToString(depthFunc).c_str());
+
+				GLboolean depthWriteMask;
+				glGetBooleanv(GL_DEPTH_WRITEMASK, &depthWriteMask);
+				DEBUG(DEBUG_TAG, "      WriteMask=%s", depthWriteMask ? "Yes" : "No");
+
+				GLfloat depthRange[2];
+				glGetFloatv(GL_DEPTH_RANGE, depthRange);
+				DEBUG(DEBUG_TAG, "      Range=(%f, %f)", depthRange[0], depthRange[1]);
+			}
+		}
 	}
 
 private:
@@ -900,10 +973,14 @@ private:
 		glTexImage2D(target, level, internalformat, width, height, border, format, type, req->pixels);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
 		{
+			GLint currentProgram;
+			glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
 			GLint currentTexture;
 			glGetIntegerv(GL_TEXTURE_BINDING_2D, &currentTexture);
+
 			DEBUG(DEBUG_TAG, "[%d] GL::TexImage2D(%s [%d,%d]) => texture(%d)",
 						options.isDefaultQueue, gles::glEnumToString(target).c_str(), width, height, currentTexture);
+			DEBUG(DEBUG_TAG, "    program: %d", currentProgram);
 			DEBUG(DEBUG_TAG, "    level: %d", level);
 			DEBUG(DEBUG_TAG, "    type: %s", gles::glEnumToString(type).c_str());
 			DEBUG(DEBUG_TAG, "    internalformat: %s", gles::glTextureInternalFormatToString(internalformat).c_str());
@@ -968,7 +1045,12 @@ private:
 		glActiveTexture(textureUnit);
 		reqContentRenderer->getOpenGLContext()->RecordActiveTextureUnit(textureUnit);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+		{
+			GLint currentProgram;
+			glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
 			DEBUG(DEBUG_TAG, "[%d] GL::ActiveTexture(%d)", options.isDefaultQueue, textureUnit - GL_TEXTURE0);
+			DEBUG(DEBUG_TAG, "    program: %d", currentProgram);
+		}
 	}
 	TR_OPENGL_FUNC void OnGenerateMipmap(GenerateMipmapCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{

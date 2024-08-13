@@ -579,16 +579,27 @@ export class WebXRNearInteraction extends WebXRAbstractFeature {
 
         // Update mesh under pointer
         if (controllerData.pick && controllerData.pick.pickedPoint && controllerData.pick.hit) {
+          // Notify session manager's onMeshPickObservable
+          this._xrSessionManager.onMeshPickObservable.notifyObservers({
+            mesh: pick.pickedMesh,
+            pick,
+          });
+
           controllerData.meshUnderPointer = controllerData.pick.pickedMesh;
           controllerData.pickedPointVisualCue.position.copyFrom(controllerData.pick.pickedPoint);
-          controllerData.pickedPointVisualCue.isVisible = true;
+          // controllerData.pickedPointVisualCue.isVisible = true;
 
           if (this._farInteractionFeature && this._farInteractionFeature.attached) {
             this._farInteractionFeature._setPointerSelectionDisabledByPointerId(controllerData.id, true);
           }
         } else {
+          // Notify session manager's onMeshUnpickObservable
+          this._xrSessionManager.onMeshUnpickObservable.notifyObservers({
+            mesh: controllerData.meshUnderPointer,
+          });
+
           controllerData.meshUnderPointer = null;
-          controllerData.pickedPointVisualCue.isVisible = false;
+          // controllerData.pickedPointVisualCue.isVisible = false;
 
           if (this._farInteractionFeature && this._farInteractionFeature.attached) {
             this._farInteractionFeature._setPointerSelectionDisabledByPointerId(controllerData.id, false);
@@ -689,14 +700,14 @@ export class WebXRNearInteraction extends WebXRAbstractFeature {
         }
         if (pressed && controllerData.pick && controllerData.meshUnderPointer && this._nearGrabPredicate(controllerData.meshUnderPointer)) {
           controllerData.grabInteraction = true;
-          controllerData.pickedPointVisualCue.isVisible = false;
+          // controllerData.pickedPointVisualCue.isVisible = false;
           this._scene.simulatePointerDown(controllerData.pick, pointerEventInit);
           controllerData.downTriggered = true;
         } else if (!pressed && controllerData.pick && controllerData.grabInteraction) {
           this._scene.simulatePointerUp(controllerData.pick, pointerEventInit);
           controllerData.downTriggered = false;
           controllerData.grabInteraction = false;
-          controllerData.pickedPointVisualCue.isVisible = true;
+          // controllerData.pickedPointVisualCue.isVisible = true;
         }
       } else {
         if (pressed && !this._options.enableNearInteractionOnAllControllers && !this._options.disableSwitchOnClick) {
@@ -742,7 +753,7 @@ export class WebXRNearInteraction extends WebXRAbstractFeature {
           this._nearGrabPredicate(controllerData.meshUnderPointer)
         ) {
           controllerData.grabInteraction = true;
-          controllerData.pickedPointVisualCue.isVisible = false;
+          // controllerData.pickedPointVisualCue.isVisible = false;
           this._scene.simulatePointerDown(controllerData.pick, pointerEventInit);
           controllerData.downTriggered = true;
         }
@@ -757,7 +768,7 @@ export class WebXRNearInteraction extends WebXRAbstractFeature {
         ) {
           this._scene.simulatePointerUp(controllerData.pick, pointerEventInit);
           controllerData.grabInteraction = false;
-          controllerData.pickedPointVisualCue.isVisible = true;
+          // controllerData.pickedPointVisualCue.isVisible = true;
           controllerData.downTriggered = false;
         }
       };
@@ -978,7 +989,7 @@ export class WebXRNearInteraction extends WebXRAbstractFeature {
     }
 
     const result = TmpVectors.Vector3[0];
-    const tmpVec = TmpVectors.Vector3[1];
+    const tmpVec = Vector3.Zero();  // NOTE: don't use TmpVectors.Vector3[1] here, it's used in the loop below
     const tmpRay = new Ray(Vector3.Zero(), Vector3.Zero(), 1);
 
     let distance = +Infinity;
@@ -991,7 +1002,6 @@ export class WebXRNearInteraction extends WebXRAbstractFeature {
 
     for (let index = 0; index < subMeshes.length; index++) {
       const subMesh = subMeshes[index];
-
       subMesh.projectToRef(center, <Vector3[]>mesh._positions, <IndicesArray>mesh.getIndices(), tmpVec);
 
       Vector3.TransformCoordinatesToRef(tmpVec, mesh.getWorldMatrix(), tmpVec);
@@ -1009,7 +1019,7 @@ export class WebXRNearInteraction extends WebXRAbstractFeature {
         distance = tmp;
 
         // ray between the sphere center and the point on the mesh
-        // Ray.CreateFromToToRef(sphere.center, tmpVec, tmpRay);
+        Ray.CreateFromToToRef(sphere.center, tmpVec, tmpRay);
         tmpRay.length = distance * 2;
         intersectionInfo = tmpRay.intersectsMesh(mesh);
 
