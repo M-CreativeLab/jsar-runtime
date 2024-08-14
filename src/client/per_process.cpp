@@ -53,7 +53,11 @@ ScriptEnvironment::ScriptEnvironment(int id, string &scriptsDir) : id(id)
   args.push_back(scriptsDir + "/jsar-bundle.js");
 
   // TODO: Check if we are in debug mode
-  args.insert(args.begin() + 1, "--inspect=0.0.0.0:" + to_string(9229 + id - 1));
+  int inspectPort = 9229 + id - 1;
+  args.insert(args.begin() + 1, "--inspect=0.0.0.0:" + to_string(inspectPort));
+
+  fprintf(stdout, "To debug with Chrome Inspector, it's recommend to use:\n");
+  fprintf(stdout, "  adb forward tcp:%d tcp:9229\n");
 }
 
 ScriptEnvironment::~ScriptEnvironment()
