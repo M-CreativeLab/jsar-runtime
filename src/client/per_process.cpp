@@ -56,8 +56,8 @@ ScriptEnvironment::ScriptEnvironment(int id, string &scriptsDir) : id(id)
   int inspectPort = 9229 + id - 1;
   args.insert(args.begin() + 1, "--inspect=0.0.0.0:" + to_string(inspectPort));
 
-  fprintf(stdout, "To debug with Chrome Inspector, it's recommend to use:\n");
-  fprintf(stdout, "  adb forward tcp:%d tcp:9229\n");
+  fprintf(stdout, "To debug with Chrome Inspector, it's recommend to use in your host computer:\n");
+  fprintf(stdout, "  adb forward tcp:9229 tcp:%d\n", inspectPort);
 }
 
 ScriptEnvironment::~ScriptEnvironment()
