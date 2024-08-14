@@ -21,12 +21,12 @@ export class TransmuteRuntime2 extends EventTarget {
     this.dispatchEvent(new Event('rendererReady'));
   }
 
-  start(url: string) {
+  async start(url: string) {
     console.info(`Content(#${this.id}): receiving a document request: ${url}`);
     if (!this.#nativeDocument) {
       throw new TypeError('Call prepare() before start()');
     }
-    this.onDocumentRequest(url, this.id);
+    await this.load(url, this.#nativeDocument);
   }
 
   onGpuBusy() {
@@ -48,15 +48,6 @@ export class TransmuteRuntime2 extends EventTarget {
       console.info(`Skip enabling WebXR experience, reason: WebXR is not enabled.`);
     }
     console.info(`The runtime#${this.id} has been ready.`);
-  }
-
-  private async onDocumentRequest(url: string, id: number) {
-    try {
-      await this.load(url, this.#nativeDocument);
-    } catch (err) {
-      reportDocumentEvent(this.id, 'error');
-      console.error(`failed to load document(${url}):`, err);
-    }
   }
 
   private async load(
@@ -136,12 +127,11 @@ export class TransmuteRuntime2 extends EventTarget {
       }
       spaceNode.setEnabled(true);
     } catch (err) {
-      console.error(`occurs an error when loading document:`, err);
-      reportDocumentEvent(nativeDocument.id, 'error');
-      // TODO: report to the native side.
-      // remove the dom from appStack
+      // Just unload and close the document
       await dom.unload();
       dom.nativeDocument.close();
+      // Report the error
+      throw err;
     }
   }
 }
