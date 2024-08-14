@@ -324,15 +324,17 @@ namespace xr
   }
 
   void Device::syncInputSourcesToZone() { return m_InputSourcesZone->syncData(); }
+  void Device::configureMainControllerInputSource(bool enabled, bool usingTouch)
+  {
+    auto mainController = m_InputSourcesZone->getMainControllerInputSource();
+    mainController->enabled = enabled;
+    mainController->handness = TrHandness::None;
+    mainController->targetRayMode = usingTouch ? TrXRTargetRayMode::Screen : TrXRTargetRayMode::TrackedPointer;
+  }
   TrXRInputSource *Device::getGazeInputSource() { return m_InputSourcesZone->getGazeInputSource(); }
+  TrXRInputSource *Device::getMainControllerInputSource() { return m_InputSourcesZone->getMainControllerInputSource(); }
   TrXRInputSource *Device::getHandInputSource(int id) { return m_InputSourcesZone->getHandInputSource(id); }
   TrXRInputSource *Device::getHandInputSource(TrHandness handness) { return m_InputSourcesZone->getHandInputSource(handness); }
-  TrXRInputSource *Device::getGamepadInputSource(int id) { return m_InputSourcesZone->getGamepadInputSource(id); }
-  TrXRInputSource *Device::getScreenInputSource(int id) { return m_InputSourcesZone->getScreenInputSource(id); }
-  void Device::addGamepadInputSource(TrXRInputSource &newInputSource) { return m_InputSourcesZone->addGamepadInputSource(newInputSource); }
-  void Device::removeGamepadInputSource(int id) { m_InputSourcesZone->removeGamepadInputSource(id); }
-  void Device::addScreenInputSource(TrXRInputSource &newInputSource) { m_InputSourcesZone->addScreenInputSource(newInputSource); }
-  void Device::removeScreenInputSource(int id) { m_InputSourcesZone->removeScreenInputSource(id); }
 
   int Device::getCommandChanPort() { return m_CommandChanServer->getPort(); }
   void Device::startCommandClientWatcher()

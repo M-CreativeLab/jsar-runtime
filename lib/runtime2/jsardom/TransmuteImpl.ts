@@ -212,6 +212,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
         },
       },
       pointerSelectionOptions: {
+        ignoreGazeController: true,
         preferredHandedness: 'right',
         enablePointerSelectionOnAllControllers: false,
         disableScenePointerVectorUpdate: true,

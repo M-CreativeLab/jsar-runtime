@@ -89,6 +89,11 @@ export interface IWebXRControllerPointerSelectionOptions {
   enablePointerSelectionOnAllControllers?: boolean;
 
   /**
+   * If set, the gaze mode will be ignored and the controller will be used for pointer selection
+   */
+  ignoreGazeController?: boolean;
+
+  /**
    * The preferred hand to give the pointer selection to. This will be prioritized when the controller initialize.
    * If switch is enabled, it will still allow the user to switch between the different controllers
    */
@@ -192,6 +197,13 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
       // already attached
       return;
     }
+    /**
+     * Skip the gaze controller if needed
+     */
+    if (this._options.ignoreGazeController && xrController.inputSource.targetRayMode === 'gaze') {
+      return;
+    }
+
     const { laserPointer, selectionMesh } = this._generateNewMeshPair(xrController.pointer);
 
     // get two new meshes
@@ -437,6 +449,7 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
           controllerGlobalPosition = controllerData.webXRCamera.position;
           controllerData.webXRCamera.getForwardRayToRef(controllerData.tmpRay);
         } else {
+          console.warn('no controller or camera found in', this._attachedController);
           return;
         }
 
@@ -538,6 +551,7 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
   }
 
   private _attachGazeMode(_xrController?: WebXRInputSource) {
+    // TODO
   }
 
   private _attachScreenRayMode(xrController: WebXRInputSource) {

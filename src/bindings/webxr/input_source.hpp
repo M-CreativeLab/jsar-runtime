@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+#include <vector>
 #include <napi.h>
 #include "client/per_process.hpp"
 #include "common/xr/input_sources.hpp"
@@ -50,6 +52,9 @@ namespace bindings
 
   public:
     void updateInputSources(XRFrame *frame, XRSession *session, InputSourcesChangedCallback onChangedCallback);
+
+  private:
+    XRInputSource* getInputSourceById(int id);
 
   private:
     TrClientContextPerProcess* clientContext = nullptr;

@@ -253,7 +253,7 @@ extern "C"
   /**
    * Get the render event function.
    */
-  DLL_PUBLIC UnityRenderingEvent TransmuteNative_GetRenderEventFunc()
+  DLL_PUBLIC UnityRenderingEvent TransmuteUnity_GetRenderEventFunc()
   {
     return OnUnityRenderEvent;
   }
@@ -262,7 +262,7 @@ extern "C"
   /**
    * This parses from the JSON string and configure the Transmute runtime.
    */
-  DLL_PUBLIC bool TransmuteNative_Configure(const char *configJson)
+  DLL_PUBLIC bool TransmuteUnity_Configure(const char *configJson)
   {
     rapidjson::Document configDoc;
     configDoc.Parse(configJson);
@@ -293,7 +293,7 @@ extern "C"
    * @param isDeviceActive Whether the XR device is active.
    * @param stereoRenderingMode The stereo rendering mode, 0 for mono, 1 for stereo.
    */
-  DLL_PUBLIC bool TransmuteNative_ConfigureXRDevice(bool isDeviceActive, int stereoRenderingMode)
+  DLL_PUBLIC bool TransmuteUnity_ConfigureXRDevice(bool isDeviceActive, int stereoRenderingMode)
   {
     xr::TrDeviceInit init;
     init.enabled = true;
@@ -307,7 +307,7 @@ extern "C"
    *
    * @param argJson The JSON string of the runtime initialization arguments.
    */
-  DLL_PUBLIC bool TransmuteNative_Start()
+  DLL_PUBLIC bool TransmuteUnity_Start()
   {
     auto embedder = UnityEmbedder::EnsureAndGet();
     bool result = embedder->start();
@@ -336,7 +336,7 @@ extern "C"
    * @param url The URL to open.
    * @return The document id or 0 if failed.
    */
-  DLL_PUBLIC int TransmuteNative_Open(const char *url, UnityDocumentRequestInit unityInit)
+  DLL_PUBLIC int TransmuteUnity_Open(const char *url, UnityDocumentRequestInit unityInit)
   {
     auto constellation = UnityEmbedder::EnsureAndGet()->constellation;
     TrDocumentRequestInit init;
@@ -353,7 +353,7 @@ extern "C"
    * @param type The event type.
    * @param size The event data size.
    */
-  DLL_PUBLIC bool TransmuteNative_GetEventFromJavaScript(int *id, int *type, uint32_t *size)
+  DLL_PUBLIC bool TransmuteUnity_GetEventFromJavaScript(int *id, int *type, uint32_t *size)
   {
     return UnityEmbedder::EnsureAndGet()->getEventHeader(id, type, size);
   }
@@ -364,7 +364,7 @@ extern "C"
    * @param data The event data.
    * @return Whether the event data is fetched successfully.
    */
-  DLL_PUBLIC void TransmuteNative_GetEventDataFromJavaScript(const char *data)
+  DLL_PUBLIC void TransmuteUnity_GetEventDataFromJavaScript(const char *data)
   {
     return UnityEmbedder::EnsureAndGet()->getEventData(data);
   }
@@ -375,7 +375,7 @@ extern "C"
    * @param type The event type.
    * @param data The event data.
    */
-  DLL_PUBLIC void TransmuteNative_DispatchNativeEvent(int type, const char *data)
+  DLL_PUBLIC void TransmuteUnity_DispatchNativeEvent(int type, const char *data)
   {
     TR_ENSURE_COMPONENT(nativeEventTarget)->dispatchEvent(static_cast<events_comm::TrNativeEventType>(type), data);
   }
@@ -386,7 +386,7 @@ extern "C"
    * @param w The width of the viewport.
    * @param h The height of the viewport.
    */
-  DLL_PUBLIC void TransmuteNative_SetViewport(int w, int h)
+  DLL_PUBLIC void TransmuteUnity_SetViewport(int w, int h)
   {
     TrViewport viewport(w, h);
     TR_ENSURE_COMPONENT(renderer)->setDrawingViewport(viewport);
@@ -397,7 +397,7 @@ extern "C"
    *
    * @param fov The field of view to be set.
    */
-  DLL_PUBLIC void TransmuteNative_SetFov(float fov)
+  DLL_PUBLIC void TransmuteUnity_SetFov(float fov)
   {
     TR_ENSURE_COMPONENT(renderer)->setRecommendedFov(fov);
   }
@@ -407,7 +407,7 @@ extern "C"
    *
    * @param time The time to be set.
    */
-  DLL_PUBLIC void TransmuteNative_SetTime(float t)
+  DLL_PUBLIC void TransmuteUnity_SetTime(float t)
   {
     TR_ENSURE_COMPONENT(renderer)->setTime(t);
   }
@@ -419,7 +419,7 @@ extern "C"
    * @param transform The projection matrix to be set, a valid transform is a 16-element float array that represents a 4x4 matrix,
    *                  and it's in column-major order.
    */
-  DLL_PUBLIC bool TransmuteNative_SetViewerStereoProjectionMatrix(int eyeId, float *transform)
+  DLL_PUBLIC bool TransmuteUnity_SetViewerStereoProjectionMatrix(int eyeId, float *transform)
   {
     auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
     if (xrDevice == NULL)
@@ -434,7 +434,7 @@ extern "C"
    * @param translation The translation part of the transform, a 3-element float array.
    * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
    */
-  DLL_PUBLIC bool TransmuteNative_SetViewerTransformFromTRS(float *translation, float *rotation)
+  DLL_PUBLIC bool TransmuteUnity_SetViewerTransformFromTRS(float *translation, float *rotation)
   {
     auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
     if (xrDevice == NULL)
@@ -465,7 +465,7 @@ extern "C"
    * @param eyeId The eye id, 0 for left and 1 for right.
    * @param translation The translation part of the transform, a 3-element float array.
    */
-  DLL_PUBLIC bool TransmuteNative_SetViewerStereoViewMatrixFromTRS(int eyeId, float *translation, float *rotation)
+  DLL_PUBLIC bool TransmuteUnity_SetViewerStereoViewMatrixFromTRS(int eyeId, float *translation, float *rotation)
   {
     auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
     if (xrDevice == NULL)
@@ -498,7 +498,7 @@ extern "C"
    * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
    * @param scale The scale part of the transform, a 3-element float array.
    */
-  DLL_PUBLIC bool TransmuteNative_SetLocalTransformFromTRS(int id, float *translation, float *rotation)
+  DLL_PUBLIC bool TransmuteUnity_SetLocalTransformFromTRS(int id, float *translation, float *rotation)
   {
     auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
     if (xrDevice == NULL)
@@ -534,6 +534,80 @@ extern "C"
    */
 
   /**
+   * Configure the main controller's input source, only this function will be called once, the main controller is able to be used
+   * at application-side.
+   *
+   * @param usingTouch If the main controller is using touch-based input.
+   */
+  DLL_PUBLIC void TransmuteUnity_ConfigureMainControllerInputSource(bool enabled, bool usingTouch)
+  {
+    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
+    if (xrDevice == NULL)
+      return;
+    xrDevice->configureMainControllerInputSource(enabled, usingTouch);
+  }
+
+  /**
+   * Update the main controller input source's targetRay pose.
+   *
+   * @param translation The translation part of the transform, a 3-element float array.
+   * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
+   */
+  DLL_PUBLIC void TransmuteUnity_SetMainControllerInputRayPose(float *translation, float *rotation)
+  {
+    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
+    if (xrDevice == NULL)
+      return;
+
+    auto mainController = xrDevice->getMainControllerInputSource();
+    if (mainController != nullptr)
+    {
+      auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
+      mainController->setTargetRayBaseMatrix(baseMatrix);
+    }
+  }
+
+  /**
+   * An action is a special type of event that's triggered by the input source, such as the controller button press, etc. Calling
+   * this function will not trigger an event to the client side, it just updates the action state such as pressed, released, etc.
+   * Then the client side will fetch the action state in a frame and dispatch the events accordingly.
+   *
+   * See https://developer.mozilla.org/en-US/docs/Web/API/WebXR_Device_API/Inputs#actions for more details.
+   *
+   * @param action The action type: primary(0), squeeze(1).
+   * @param state The action state: pressed(0), released(1).
+   */
+  DLL_PUBLIC void TransmuteUnity_SetMainControllerInputActionState(int actionType, int state)
+  {
+    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
+    if (xrDevice == NULL)
+      return;
+
+    auto mainController = xrDevice->getMainControllerInputSource();
+    if (mainController != nullptr)
+    {
+      if (actionType == xr::InputSourceActionType::XRPrimaryAction)
+        mainController->primaryActionPressed = state == 0; /** check if pressed */
+      else if (actionType == xr::InputSourceActionType::XRSqueezeAction)
+        mainController->squeezeActionPressed = state == 0; /** check if pressed */
+    }
+  }
+
+  /**
+   * Update if the hand input source is enabled.
+   */
+  DLL_PUBLIC void TransmuteUnity_SetHandInputEnabled(int handness, bool enabled)
+  {
+    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
+    if (xrDevice == NULL)
+      return;
+
+    auto hand = xrDevice->getHandInputSource(handness);
+    if (hand != nullptr)
+      hand->enabled = enabled;
+  }
+
+  /**
    * Update the hand input source's pose.
    *
    * @param handness The handness of the hand, 0 for left and 1 for right.
@@ -542,7 +616,7 @@ extern "C"
    * @param rotation The rotation of the joint, a 4-element float array that represents a quaternion.
    * @param radius The radius of the joint, a float value.
    */
-  DLL_PUBLIC void TransmuteNative_SetHandInputPose(int handness, int joint, float *translation, float *rotation, float radius)
+  DLL_PUBLIC void TransmuteUnity_SetHandInputPose(int handness, int joint, float *translation, float *rotation, float radius)
   {
     auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
     if (xrDevice == NULL)
@@ -566,7 +640,7 @@ extern "C"
    * @param translation The translation part of the transform, a 3-element float array.
    * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
    */
-  DLL_PUBLIC void TransmuteNative_SetHandInputRayPose(int handness, float *translation, float *rotation)
+  DLL_PUBLIC void TransmuteUnity_SetHandInputRayPose(int handness, float *translation, float *rotation)
   {
     auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
     if (xrDevice == NULL)
@@ -586,7 +660,7 @@ extern "C"
    * @param translation The translation part of the transform, a 3-element float array.
    * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
    */
-  DLL_PUBLIC void TransmuteNative_SetHandInputGripPose(int handness, float *translation, float *rotation)
+  DLL_PUBLIC void TransmuteUnity_SetHandInputGripPose(int handness, float *translation, float *rotation)
   {
     auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
     if (xrDevice == NULL)
@@ -610,7 +684,7 @@ extern "C"
    * @param action The action type: primary(0), squeeze(1).
    * @param state The action state: pressed(0), released(1).
    */
-  DLL_PUBLIC void TransmuteNative_SetHandInputActionState(int handness, int actionType, int state)
+  DLL_PUBLIC void TransmuteUnity_SetHandInputActionState(int handness, int actionType, int state)
   {
     auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
     if (xrDevice == NULL)

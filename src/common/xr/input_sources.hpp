@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include "idgen.hpp"
 #include "common/zone.hpp"
 #include "./common.hpp"
 
@@ -11,6 +12,7 @@ namespace xr
     Gaze = 0,
     Screen = 1,
     TrackedPointer = 2,
+    TransientPointer = 3,
   };
 
   enum class TrXRJointIndex
@@ -77,12 +79,14 @@ namespace xr
 
   public:
     TrXRInputSource()
-        : id(1),
-          handness(TrHandness::None),
+        : handness(TrHandness::None),
           targetRayMode(TrXRTargetRayMode::TrackedPointer)
     {
       for (int i = 0; i < JointsCount; i++)
         joints[i] = TrXRJointPose(static_cast<TrXRJointIndex>(i));
+
+      static TrIdGenerator idGen(0xf);
+      id = idGen.get();
     }
     TrXRInputSource(TrXRInputSource *from) : id(from->id)
     {
@@ -123,6 +127,7 @@ namespace xr
 
   public:
     int id;
+    bool enabled = false;
     TrHandness handness;
     TrXRJointPose joints[JointsCount];
     TrXRTargetRayMode targetRayMode;
@@ -136,23 +141,36 @@ namespace xr
   class TrXRInputSourcesData
   {
   public:
-    TrXRInputSourcesData(TrXRInputSourcesData &that) : gazeInputSource(that.gazeInputSource)
+    TrXRInputSourcesData(TrXRInputSourcesData &that)
+        : gazeInputSource(that.gazeInputSource),
+          mainControllerInputSource(that.mainControllerInputSource),
+          transientPointerInputSource(that.transientPointerInputSource)
     {
       handInputSources[0] = that.handInputSources[0];
       handInputSources[1] = that.handInputSources[1];
     }
     TrXRInputSourcesData()
     {
+      // Initialize the gaze input source.
+      gazeInputSource.enabled = true;
       gazeInputSource.handness = TrHandness::None;
       gazeInputSource.targetRayMode = TrXRTargetRayMode::Gaze;
-      handInputSources[0].handness = TrHandness::Left;
-      handInputSources[0].targetRayMode = TrXRTargetRayMode::TrackedPointer;
-      handInputSources[1].handness = TrHandness::Right;
-      handInputSources[1].targetRayMode = TrXRTargetRayMode::TrackedPointer;
+
+      // Initialize the hand input sources.
+      {
+        handInputSources[0].enabled = true;
+        handInputSources[0].handness = TrHandness::Left;
+        handInputSources[0].targetRayMode = TrXRTargetRayMode::TrackedPointer;
+        handInputSources[1].enabled = true;
+        handInputSources[1].handness = TrHandness::Right;
+        handInputSources[1].targetRayMode = TrXRTargetRayMode::TrackedPointer;
+      }
     }
 
   public:
     TrXRInputSource *getGazeInputSource() { return &gazeInputSource; }
+    TrXRInputSource *getMainControllerInputSource() { return &mainControllerInputSource; }
+    TrXRInputSource *getTransientPointerInputSource() { return &transientPointerInputSource; }
     TrXRInputSource *getHandInputSource(int id)
     {
       if (id != 0 && id != 1)
@@ -167,26 +185,52 @@ namespace xr
       else
         return &handInputSources[1];
     }
-    TrXRInputSource *getScreenInputSource(int id) { return &screenInputSources[id]; }
-    TrXRInputSource *getGamepadInputSource(int id) { return &gamepadInputSources[id]; }
+    TrXRInputSource *getInputSourceById(int id)
+    {
+      if (id == gazeInputSource.id)
+        return &gazeInputSource;
+      if (id == mainControllerInputSource.id)
+        return &mainControllerInputSource;
+      if (id == transientPointerInputSource.id)
+        return &transientPointerInputSource;
+      if (id == handInputSources[0].id)
+        return &handInputSources[0];
+      if (id == handInputSources[1].id)
+        return &handInputSources[1];
+      return nullptr;
+    }
+    void resetMainControllerInputSource()
+    {
+      mainControllerInputSource.enabled = false;
+    }
+    void resetMainControllerInputSource(TrXRInputSource &inputSource)
+    {
+      mainControllerInputSource.enabled = true;
+      mainControllerInputSource.update(&inputSource);
+    }
 
   public:
-    void addScreenInputSource(TrXRInputSource &inputSource) { screenInputSources.push_back(inputSource); }
-    void addGamepadInputSource(TrXRInputSource &inputSource) { gamepadInputSources.push_back(inputSource); }
-    void removeScreenInputSource(int id)
-    {
-      // TODO
-    }
-    void removeGamepadInputSource(int id)
-    {
-      // TODO
-    }
-
-  public:
+    /**
+     * The input source for gaze, which is used for eye tracking.
+     */
     TrXRInputSource gazeInputSource;
+    /**
+     * The input sources for the device main controller.
+     */
+    TrXRInputSource mainControllerInputSource;
+    /**
+     * The transient input source provided by the host or operating system, which customizes a flexible input source for the application.
+     * This is introduced by visionOS, and we may provide a slot for the host to implement this feature.
+     *
+     * @see https://webkit.org/blog/15162/introducing-natural-input-for-webxr-in-apple-vision-pro/
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/XRInputSource/targetRayMode#transient-pointer
+     */
+    TrXRInputSource transientPointerInputSource;
+    /**
+     * The input sources for hands.
+     */
     TrXRInputSource handInputSources[2];
-    vector<TrXRInputSource> screenInputSources;
-    vector<TrXRInputSource> gamepadInputSources;
+    // TODO: support extra input sources?
   };
 
   class TrXRInputSourcesZone : public TrZone<TrXRInputSourcesData>
@@ -202,15 +246,10 @@ namespace xr
 
   public:
     TrXRInputSource *getGazeInputSource() { return data->getGazeInputSource(); }
+    TrXRInputSource *getMainControllerInputSource() { return data->getMainControllerInputSource(); }
+    TrXRInputSource *getTransientPointerInputSource() { return data->getTransientPointerInputSource(); }
     TrXRInputSource *getHandInputSource(int id) { return data->getHandInputSource(id); }
     TrXRInputSource *getHandInputSource(TrHandness handness) { return data->getHandInputSource(handness); }
-    TrXRInputSource *getScreenInputSource(int id) { return data->getScreenInputSource(id); }
-    TrXRInputSource *getGamepadInputSource(int id) { return data->getGamepadInputSource(id); }
-
-  public:
-    void addScreenInputSource(TrXRInputSource &inputSource) { data->addScreenInputSource(inputSource); }
-    void addGamepadInputSource(TrXRInputSource &inputSource) { data->addGamepadInputSource(inputSource); }
-    void removeScreenInputSource(int id) { return data->removeScreenInputSource(id); }
-    void removeGamepadInputSource(int id) { return data->removeGamepadInputSource(id); }
+    TrXRInputSource *getInputSourceById(int id) { return data->getInputSourceById(id); }
   };
 }

@@ -1,3 +1,4 @@
+#include <array>
 #include "input_source.hpp"
 #include "space.hpp"
 #include "session.hpp"
@@ -104,6 +105,8 @@ namespace bindings
       return Napi::String::New(env, "gaze");
     else if (targetRayMode == xr::TrXRTargetRayMode::TrackedPointer)
       return Napi::String::New(env, "tracked-pointer");
+    else if (targetRayMode == xr::TrXRTargetRayMode::TransientPointer)
+      return Napi::String::New(env, "transient-pointer");
     else if (targetRayMode == xr::TrXRTargetRayMode::Screen)
       return Napi::String::New(env, "screen");
     else
@@ -183,37 +186,152 @@ namespace bindings
   {
   }
 
+  void checkInputSourceEnabledAndInsertTo(set<int> &targetSet, xr::TrXRInputSource *inputSource)
+  {
+    if (inputSource != nullptr && inputSource->enabled)
+      targetSet.insert(inputSource->id);
+  }
+
   void XRInputSourceArray::updateInputSources(XRFrame *frame,
                                               XRSession *session,
                                               InputSourcesChangedCallback onChangedCallback)
   {
     Napi::Env env = Env();
-    if (Length() == 0)
+    auto inputSourcesZone = clientContext->getXRInputSourcesZone();
+
+    /**
+     * 1. Prepare sets including: added, removed, new, and old.
+     */
+    set<int> addedInputSourceIds;
+    set<int> removedInputSourceIds;
+    set<int> newInputSourceIds;
     {
-      auto inputSourcesZone = clientContext->getXRInputSourcesZone();
-      vector<XRInputSource *> added;
-      auto gazeInputSourceValue = XRInputSource::NewInstance(env, session, inputSourcesZone->getGazeInputSource());
-      auto leftHandInputSourceValue = XRInputSource::NewInstance(env, session, inputSourcesZone->getHandInputSource(xr::TrHandness::Left));
-      auto rightHandInputSourceValue = XRInputSource::NewInstance(env, session, inputSourcesZone->getHandInputSource(xr::TrHandness::Right));
-
-      added.push_back(XRInputSource::Unwrap(gazeInputSourceValue));
-      added.push_back(XRInputSource::Unwrap(leftHandInputSourceValue));
-      added.push_back(XRInputSource::Unwrap(rightHandInputSourceValue));
-      // TODO: Add gamepad input sources
-      onChangedCallback(added, {});
-
-      for (uint32_t i = 0; i < added.size(); i++)
-        Set(i, added[i]->Value());
-      Set("length", Napi::Value::From(env, added.size()));
+      checkInputSourceEnabledAndInsertTo(newInputSourceIds, inputSourcesZone->getGazeInputSource());
+      checkInputSourceEnabledAndInsertTo(newInputSourceIds, inputSourcesZone->getMainControllerInputSource());
+      checkInputSourceEnabledAndInsertTo(newInputSourceIds, inputSourcesZone->getTransientPointerInputSource());
+      checkInputSourceEnabledAndInsertTo(newInputSourceIds, inputSourcesZone->getHandInputSource(xr::TrHandness::Left));
+      checkInputSourceEnabledAndInsertTo(newInputSourceIds, inputSourcesZone->getHandInputSource(xr::TrHandness::Right));
     }
-    else
+    set<int> currentInputSourceIds;
     {
-      // When the length is not zero, we need to update the internal input sources
+      // Fetch current input sources from the array.
       for (uint32_t i = 0; i < Length(); i++)
       {
         auto inputSource = XRInputSource::Unwrap(Get(i).ToObject());
-        inputSource->dispatchSelectOrSqueezeEvents(frame);
+        currentInputSourceIds.insert(inputSource->internal->id);
       }
     }
+
+    /**
+     * 2. Compare the new and old sets to get added and removed sets.
+     */
+    if (currentInputSourceIds.size() == 0)
+    {
+      addedInputSourceIds = newInputSourceIds;
+    }
+    else
+    {
+      set_difference(newInputSourceIds.begin(), newInputSourceIds.end(),
+                     currentInputSourceIds.begin(), currentInputSourceIds.end(),
+                     inserter(addedInputSourceIds, addedInputSourceIds.begin()));
+      set_difference(currentInputSourceIds.begin(), currentInputSourceIds.end(),
+                     newInputSourceIds.begin(), newInputSourceIds.end(),
+                     inserter(removedInputSourceIds, removedInputSourceIds.begin()));
+    }
+
+    /**
+     * 3. Update the new set to the current set.
+     */
+    currentInputSourceIds = newInputSourceIds;
+
+    /**
+     * 4. Process the removed input sources firstly.
+     */
+    if (removedInputSourceIds.size() > 0)
+    {
+      vector<XRInputSource *> removed;
+      for (auto id : removedInputSourceIds)
+      {
+        auto inputSource = getInputSourceById(id);
+        if (inputSource != nullptr)
+          removed.push_back(inputSource);
+      }
+      onChangedCallback({}, removed);
+    }
+
+    /**
+     * 5. Reset the array based on current input sources.
+     *
+     * NOTE: This is safe because we have already processed the removed input sources.
+     */
+    if (removedInputSourceIds.size() > 0 || addedInputSourceIds.size() > 0)
+    {
+      // Only update the JavaScript array object when there is a change, otherwise no need to update.
+      Napi::Array tmpArray = Napi::Array::New(env);
+      for (int id : currentInputSourceIds)
+      {
+        auto inputSource = getInputSourceById(id);
+        if (inputSource != nullptr)
+        {
+          // Reuse the existed input source object.
+          tmpArray.Set(tmpArray.Length(), inputSource->Value());
+        }
+        else
+        {
+          auto jsObject = XRInputSource::NewInstance(env, session, inputSourcesZone->getInputSourceById(id));
+          tmpArray.Set(tmpArray.Length(), jsObject);
+        }
+      }
+      Set("length", Napi::Number::New(env, 0));
+      for (uint32_t i = 0; i < tmpArray.Length(); i++)
+        Set(i, tmpArray.Get(i));
+    }
+
+    /**
+     * 6. Process the added input sources.
+     *
+     * NOTE: We don't create any new input source objects here, just use instances in the above step.
+     */
+    if (addedInputSourceIds.size() > 0)
+    {
+      vector<XRInputSource *> added;
+      for (auto id : addedInputSourceIds)
+      {
+        auto inputSource = getInputSourceById(id);
+        if (inputSource != nullptr)
+          added.push_back(inputSource);
+      }
+      if (added.size() > 0)
+        onChangedCallback(added, {});
+    }
+
+    /**
+     * 7. Dispatch `select` and `squeeze` events for all existed input sources.
+     */
+    for (uint32_t i = 0; i < Length(); i++)
+    {
+      Napi::Value value = Get(i);
+      if (value.IsObject())
+      {
+        auto inputSource = XRInputSource::Unwrap(value.ToObject());
+        inputSource->dispatchSelectOrSqueezeEvents(frame);
+      }
+      else
+        fprintf(stderr, "Failed to dispatch events on XRInputSource(%d): value is not an object.\n", i);
+    }
+  }
+
+  XRInputSource *XRInputSourceArray::getInputSourceById(int id)
+  {
+    for (uint32_t i = 0; i < Length(); i++)
+    {
+      auto inputSourceObject = Get(i).ToObject();
+      auto inputSource = XRInputSource::Unwrap(inputSourceObject);
+      if (inputSource->internal->id == id)
+      {
+        return inputSource;
+      }
+    }
+    return nullptr;
   }
 }

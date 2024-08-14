@@ -175,15 +175,29 @@ namespace xr
   public: // Input sources
     string getInputSourcesZonePath();
     void syncInputSourcesToZone();
+    /**
+     * Configure the main controller input source, it will enable the main controller input source, host could call this in any times.
+     * 
+     * @param enabled if the main controller input source is enabled.
+     * @param usingTouch if the main controller is using touch-based input.
+     */
+    void configureMainControllerInputSource(bool enabled, bool usingTouch);
+    /**
+     * Returns the gaze input source for updating fields.
+     */
     TrXRInputSource *getGazeInputSource();
+    /**
+     * Returns the main controller input source for updating fields.
+     */
+    TrXRInputSource *getMainControllerInputSource();
+    /**
+     * Returns the hand input source by hand id: 0 for left and 1 for right.
+     */
     TrXRInputSource *getHandInputSource(int id);
+    /**
+     * Returns the hand input source by handness.
+     */
     TrXRInputSource *getHandInputSource(TrHandness handness);
-    TrXRInputSource *getGamepadInputSource(int id);
-    TrXRInputSource *getScreenInputSource(int id);
-    void addGamepadInputSource(TrXRInputSource &newInputSource);
-    void removeGamepadInputSource(int id);
-    void addScreenInputSource(TrXRInputSource &newInputSource);
-    void removeScreenInputSource(int id);
 
   public: // Command channel
     int getCommandChanPort();

@@ -91,10 +91,12 @@ export class WebXRInputSource {
 
     this.pointer = new BABYLON.AbstractMesh(`${this._uniqueId}-pointer`, _scene);
     this.pointer.rotationQuaternion = new BABYLON.Quaternion();
+    this.pointer.parent = undefined;
 
     if (this.inputSource.gripSpace) {
       this.grip = new BABYLON.AbstractMesh(`${this._uniqueId}-grip`, this._scene);
       this.grip.rotationQuaternion = new BABYLON.Quaternion();
+      this.grip.parent = undefined;
     }
 
     this._tmpVector.set(0, 0, this._scene.useRightHandedSystem ? -1.0 : 1.0);
