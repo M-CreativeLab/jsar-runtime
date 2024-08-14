@@ -102,7 +102,13 @@ namespace commandbuffers
       return sizePerPixel;
     }
 
-    void setPixels(void *srcPixels)
+    /**
+     * Set the pixels data to this texture request.
+     * 
+     * @param srcPixels the source pixels data.
+     * @param copyPixels if true the pixels data will be copied to this object, otherwise just use the pointer to send.
+     */
+    void setPixels(void *srcPixels, bool copyPixels = true)
     {
       if (srcPixels == nullptr)
       {
@@ -113,10 +119,20 @@ namespace commandbuffers
         pixelsByteLength = computePixelsByteLength();
         if (pixelsByteLength > 0)
         {
-          pixels = malloc(pixelsByteLength);
-          if (pixels != nullptr)
+          if (copyPixels)
           {
-            memcpy(pixels, srcPixels, pixelsByteLength);
+            pixels = malloc(pixelsByteLength);
+            if (pixels != nullptr)
+            {
+              ownPixelsMemory = true;
+              memcpy(pixels, srcPixels, pixelsByteLength);
+              return;
+            }
+          }
+          else
+          {
+            pixels = srcPixels;
+            ownPixelsMemory = false;
             return;
           }
         }
@@ -141,14 +157,17 @@ namespace commandbuffers
         pixelsByteLength = pixelsSegment->getSize();
         pixels = malloc(pixelsByteLength);
         if (pixels != nullptr)
+        {
+          ownPixelsMemory = true;
           memcpy(pixels, pixelsSegment->getData(), pixelsByteLength);
+        }
       }
     }
 
   protected:
     void resetPixels()
     {
-      if (pixels != nullptr)
+      if (ownPixelsMemory && pixels != nullptr)
         free(pixels);
       pixels = nullptr;
       pixelsByteLength = 0;
@@ -159,6 +178,7 @@ namespace commandbuffers
     int level;
     int format;
     int pixelType;
+    bool ownPixelsMemory = false; // if true the pixels memory will be managed by this object.
     void *pixels = nullptr;
     size_t pixelsByteLength = 0;
   };

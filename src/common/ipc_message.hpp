@@ -17,11 +17,25 @@ namespace ipc
   class TrIpcMessageSegment
   {
   public:
-    TrIpcMessageSegment(size_t size, void *data) : size(size), data(new char[size])
+    TrIpcMessageSegment(size_t size, void *data, bool ownMemory = true)
+        : size(size),
+          ownMemory(ownMemory)
     {
-      memcpy(this->data.get(), data, size);
+      if (ownMemory)
+      {
+        this->data = new char[size];
+        memcpy(this->data, data, size);
+      }
+      else
+      {
+        this->data = (char *)data;
+      }
     }
-    ~TrIpcMessageSegment() = default;
+    ~TrIpcMessageSegment()
+    {
+      if (ownMemory && data != nullptr)
+        delete[] data;
+    }
 
     /**
      * It creates a segment from a vector<T> object.
@@ -29,14 +43,14 @@ namespace ipc
     template <typename T>
     TrIpcMessageSegment(vector<T> &vec) : size(vec.size() * sizeof(T)), data(new char[size])
     {
-      memcpy(this->data.get(), vec.data(), size);
+      memcpy(this->data, vec.data(), size);
     }
 
   public:
     inline size_t getSize() { return size; }
-    inline void *getData() { return data.get(); }
-    inline string toString() { return string(data.get(), size); }
-    inline const char *c_str() { return data.get(); }
+    inline void *getData() { return (void *)data; }
+    inline string toString() { return string(data, size); }
+    inline const char *c_str() { return data; }
 
     /**
      * It reads the segment data as a vector<T> object.
@@ -46,13 +60,14 @@ namespace ipc
     {
       vector<T> vec;
       vec.resize(size / sizeof(T));
-      memcpy(vec.data(), data.get(), size);
+      memcpy(vec.data(), data, size);
       return vec;
     }
 
   public:
     size_t size;
-    std::unique_ptr<char[]> data;
+    char *data;
+    bool ownMemory = true;
   };
 
   template <typename MessageType, typename MessageEnum>
@@ -100,7 +115,7 @@ namespace ipc
     }
     void addRawSegment(size_t size, void *data)
     {
-      addSegment(new TrIpcMessageSegment(size, data));
+      addSegment(new TrIpcMessageSegment(size, data, false));
     }
     void addStringSegment(string &str)
     {
@@ -176,7 +191,7 @@ namespace ipc
       for (auto &segment : segments)
       {
         offset = writeTo(buffer, offset, &segment->size, sizeof(segment->size));
-        offset = writeTo(buffer, offset, segment->data.get(), segment->size);
+        offset = writeTo(buffer, offset, segment->data, segment->size);
       }
 
       // Write base

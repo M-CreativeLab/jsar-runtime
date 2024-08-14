@@ -1985,26 +1985,29 @@ namespace webgl
       }
     }
 
+    unsigned char *unpacked = nullptr;
     if (m_unpackFlipY || m_unpackPremultiplyAlpha)
     {
-      unsigned char *unpacked = unpackPixels(req.pixelType,
-                                             req.format,
-                                             req.width,
-                                             req.height,
-                                             pixelsData);
-      if (unpacked == nullptr)
+      unpacked = unpackPixels(req.pixelType,
+                              req.format,
+                              req.width,
+                              req.height,
+                              pixelsData);
+      if (TR_UNLIKELY(unpacked == nullptr))
       {
         Napi::TypeError::New(env, "Failed to unpack pixels, the source data is null.").ThrowAsJavaScriptException();
         return env.Undefined();
       }
-      req.setPixels(unpacked);
-      delete[] unpacked;
+      req.setPixels(unpacked, false);
     }
     else
     {
-      req.setPixels(pixelsData);
+      req.setPixels(pixelsData, false);
     }
     sendCommandBufferRequest(req);
+
+    if (unpacked != nullptr)
+      delete[] unpacked;
     return env.Undefined();
   }
 
