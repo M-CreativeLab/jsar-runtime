@@ -8,24 +8,49 @@ The JSAR is a runtime SDK for embedding [WebXR][], [WebGL][] and Web 2D applicat
 
 JSAR is a 3d-first Web rendering engine, that is easily to *embed* and use. Developers are able to use the parts of Web APIs to build the spatial computing applications still.
 
-### Renderer Backends
+### Rendering Backends
 
 The followings are supported renderer backend:
 
-| Backend   | Status      | Test Suite |
-| --------- | ----------- | ---------- |
-| OpenGL4   | [x]         | -          |
-| OpenGLES3 | Ok          | -          |
-| Metal     | Not started | -          |
-| DirectX11 | Not started | -          |
+| Backend       | OS      | Status      | Test Suite |
+| ------------- | ------- | ----------- | ---------- |
+| [OpenGLES3][] | Android | Ok          | -          |
+| [OpenGL][]    | macOS   | Partially   | -          |
+| [Metal][]     | macOS   | Not started | -          |
+| [D3D11][]     | Windows | Not started | -          |
+
+[OpenGL]: https://www.opengl.org/
+[OpenGLES3]: https://www.khronos.org/opengles/
+[Metal]: https://developer.apple.com/metal/
+[D3D11]: https://learn.microsoft.com/en-us/windows/win32/direct3d11/atoc-dx-graphics-direct3d-11
+
+### Scripting & Modules
+
+| API                   | Status      | Test Suite |
+| --------------------- | ----------- | ---------- |
+| [JavaScript][]        | Not started | -          |
+| [TypeScript][]        | Not started | -          |
+| [ECMAScript Module][] | Not started | -          |
+| [WebAssembly][]       | Not started | -          |
+
+[JavaScript]: https://developer.mozilla.org/en-US/docs/Web/JavaScript
+[TypeScript]: https://www.typescriptlang.org/
+[ECMAScript Module]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules
+[WebAssembly]: https://webassembly.org/
+
+> Currently, JSAR runtime is not ready for scripting and modules, these features are supported by the XSML(JSAR-DOM) project, in the later version, we will move these features to the runtime.
 
 ### 3D Graphics
 
-| API                                                            | Status      | Test Suite                                                             |
-| -------------------------------------------------------------- | ----------- | ---------------------------------------------------------------------- |
-| [WebGL1](https://registry.khronos.org/webgl/specs/latest/1.0/) | Ok          | https://github.com/KhronosGroup/WebGL/tree/main/sdk/tests/conformance  |
-| [WebGL2](https://registry.khronos.org/webgl/specs/latest/2.0/) | Ok          | https://github.com/KhronosGroup/WebGL/tree/main/sdk/tests/conformance2 |
-| [WebGPU](https://www.w3.org/TR/webgpu/)                        | Not started | https://github.com/gpuweb/cts                                          |
+| API        | Status      | Test Suite                                                             |
+| ---------- | ----------- | ---------------------------------------------------------------------- |
+| [WebGL1][] | Ok          | https://github.com/KhronosGroup/WebGL/tree/main/sdk/tests/conformance  |
+| [WebGL2][] | Ok          | https://github.com/KhronosGroup/WebGL/tree/main/sdk/tests/conformance2 |
+| [WebGPU][] | Not started | https://github.com/gpuweb/cts                                          |
+
+[WebGL1]: https://registry.khronos.org/webgl/specs/latest/1.0/
+[WebGL2]: https://registry.khronos.org/webgl/specs/latest/2.0/
+[WebGPU]: https://www.w3.org/TR/webgpu/
 
 ### WebXR Device APIs
 
@@ -64,43 +89,58 @@ The followings are supported renderer backend:
 
 In Web multimedia, there are the following APIs that JSAR would support:
 
-- [x] Playback: play audio and video, and use Web Audio API to create audio effects.
-- [ ] Capture: capture audio and video from the device.
+- Playback: play audio and video, and use Web Audio API to create audio effects.
+- Capture: capture audio and video from the device.
 
 #### Playback
 
-| API                                                                                   | Status      | Test Suite |
-| ------------------------------------------------------------------------------------- | ----------- | ---------- |
-| [HTMLAudioElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAudioElement) | Ok          | -          |
-| [HTMLVideoElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement) | Not started | -          |
-| [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)       | Not started | -          |
+| API                    | Status      | Test Suite |
+| ---------------------- | ----------- | ---------- |
+| [`HTMLAudioElement`][] | Ok          | -          |
+| [`HTMLVideoElement`][] | Not started | -          |
+| [Web Audio API][]      | Not started | -          |
+
+[`HTMLAudioElement`]: https://developer.mozilla.org/en-US/docs/Web/API/HTMLAudioElement
+[`HTMLVideoElement`]: https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement
+[Web Audio API]: https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
 
 #### Capture
 
-| API                                                                             | Status      | Test Suite |
-| ------------------------------------------------------------------------------- | ----------- | ---------- |
-| [MediaDevices](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices)   | Not started | -          |
-| [MediaRecorder](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder) | Not started | -          |
-| [WebRTC](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API)           | Not started | -          |
+| API                 | Status      | Test Suite |
+| ------------------- | ----------- | ---------- |
+| [`MediaDevices`][]  | Not started | -          |
+| [`MediaRecorder`][] | Not started | -          |
+| [WebRTC][]          | Not started | -          |
+
+[`MediaDevices`]: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices
+[`MediaRecorder`]: https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder
+[WebRTC]: https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API
 
 ### Canvas
 
-| API                                                                                             | Status      | Test Suite |
-| ----------------------------------------------------------------------------------------------- | ----------- | ---------- |
-| [RenderingContext2D](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D) | Ok          | -          |
-| PDFRenderingContext                                                                             | Not started | -          |
-| HTMLRenderingContext                                                                            | Not started | -          |
+| API                      | Status      | Test Suite |
+| ------------------------ | ----------- | ---------- |
+| [`RenderingContext2D`][] | Ok          | -          |
+| `PDFRenderingContext`    | Not started | -          |
+| `HTMLRenderingContext`   | Not started | -          |
+
+[`RenderingContext2D`]: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
 
 > Note: `PDFRenderingContext` and `HTMLRenderingContext` are introduced by JSAR, which is used to customize the PDF and HTML rendering.
 
 ### Classic Rendering
 
-| API                                                                           | Status      | Test Suite |
-| ----------------------------------------------------------------------------- | ----------- | ---------- |
-| [DOM](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model) | Not started | -          |
-| [HTML5](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5)        | Not started | -          |
-| [CSS3](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS3)                 | Not started | -          |
-| [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components)  | Not started | -          |
+| API               | Status      | Test Suite |
+| ----------------- | ----------- | ---------- |
+| [DOM][]           | Not started | -          |
+| [HTML5][]         | Not started | -          |
+| [CSS3][]          | Not started | -          |
+| [Web Component][] | Not started | -          |
+
+[DOM]: https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model
+[HTML5]: https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5
+[CSS3]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS3
+[Web Component]: https://developer.mozilla.org/en-US/docs/Web/Web_Components
 
 ## Getting Started
 
