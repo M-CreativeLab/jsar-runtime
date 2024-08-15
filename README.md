@@ -1,6 +1,6 @@
 # JSAR Runtime
 
-The JSAR is a runtime SDK for embedding [WebXR][], [WebGL][] and Web 2D applications into [Unity][], [UnrealEngine][], RealityKit and standalone.
+The JSAR is a library for embedding [WebXR][], [WebGL][] and classic Web applications into [Unity][], [UnrealEngine][], RealityKit and standalone.
 
 > Standalone means you could also use JSAR to pack your WebXR application as a standalone application.
 
@@ -147,12 +147,12 @@ In Web multimedia, there are the following APIs that JSAR would support:
 
 | API               | Status      | Test Suite |
 | ----------------- | ----------- | ---------- |
-| [DOM][]           | Not started | -          |
+| [DOM API][]       | Not started | -          |
 | [HTML5][]         | Not started | -          |
 | [CSS3][]          | Not started | -          |
 | [Web Component][] | Not started | -          |
 
-[DOM]: https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model
+[DOM API]: https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model
 [HTML5]: https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5
 [CSS3]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS3
 [Web Component]: https://developer.mozilla.org/en-US/docs/Web/Web_Components
@@ -203,10 +203,18 @@ $ make darwin clean=yes
 
 ## Loaders
 
-- [jsar-loader-unity](https://github.com/M-CreativeLab/jsar-loader-unity)
-- jsar-loader-unreal
-- jsar-loader-ios
-- jsar-loader-android
+The loaders are more convenient way to integrate JSAR into your applications, the following loaders are planned to be developed:
+
+| Loader                | Status      | Description                                     |
+| --------------------- | ----------- | ----------------------------------------------- |
+| [jsar-loader-unity][] | Ok          | Integrates JSAR into Unity applications         |
+| jsar-loader-unreal    | Not started | Integrates JSAR into Unreal Engine applications |
+| jsar-loader-ios       | Not started | Integrates JSAR into iOS applications           |
+| jsar-loader-android   | Not started | Integrates JSAR into Android applications       |
+
+[jsar-loader-unity]: https://github.com/M-CreativeLab/jsar-loader-unity
+
+> To develop a new loader, you could see the [Embedder API Documentation](docs/api/embedder.md) for more details.
 
 ## License
 
