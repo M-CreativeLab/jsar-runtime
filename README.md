@@ -209,8 +209,7 @@ The loaders are more convenient way to integrate JSAR into your applications, th
 | --------------------- | ----------- | ----------------------------------------------- |
 | [jsar-loader-unity][] | Ok          | Integrates JSAR into Unity applications         |
 | jsar-loader-unreal    | Not started | Integrates JSAR into Unreal Engine applications |
-| jsar-loader-ios       | Not started | Integrates JSAR into iOS applications           |
-| jsar-loader-android   | Not started | Integrates JSAR into Android applications       |
+| jsar-loader-visionos  | Not started | Integrates JSAR into visionOS applications      |
 
 [jsar-loader-unity]: https://github.com/M-CreativeLab/jsar-loader-unity
 
