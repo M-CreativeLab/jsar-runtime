@@ -28,14 +28,14 @@ The followings are supported renderer backend:
 
 Like the classic Web browser, it supports not only the HTML document, but also lots of formats, such as PDF, SVG, etc. The following formats are JSAR is expected to support:
 
-| Format      | Status      | Recommended Use Case         |
-| ----------- | ----------- | ---------------------------- |
-| XSML        | Ok          | Using WebXR applications     |
-| HTML        | Not started | Browsering classic Web pages |
-| PDF         | Not started | Reading PDF documents        |
-| SVG         | Not started | Displaying SVG images        |
-| JPEG or PNG | Ok          | Viewing images               |
-| GLTF        | Ok          | Displaying 3D models         |
+| Format   | Status      | Recommended Use Case         |
+| -------- | ----------- | ---------------------------- |
+| XSML     | Ok          | Using WebXR applications     |
+| HTML     | Not started | Browsering classic Web pages |
+| PDF      | Not started | Reading PDF documents        |
+| SVG      | Not started | Displaying SVG images        |
+| GLTF     | Ok          | Displaying 3D models         |
+| JPEG/PNG | Ok          | Viewing images               |
 
 > XSML: namely eXtensible Spatial Markup Language, is a new format that is designed for spatial applications for HTML developers.
 
@@ -47,11 +47,13 @@ Like the classic Web browser, it supports not only the HTML document, but also l
 | [TypeScript][]        | Not started | -          |
 | [ECMAScript Module][] | Not started | -          |
 | [WebAssembly][]       | Not started | -          |
+| [Web Worker][]        | Not started | -          |
 
 [JavaScript]: https://developer.mozilla.org/en-US/docs/Web/JavaScript
 [TypeScript]: https://www.typescriptlang.org/
 [ECMAScript Module]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules
 [WebAssembly]: https://webassembly.org/
+[Web Worker]: https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API
 
 > Currently, JSAR runtime is not ready for scripting and modules, these features are supported by the XSML(JSAR-DOM) project, in the later version, we will move these features to the runtime.
 
@@ -125,11 +127,9 @@ In Web multimedia, there are the following APIs that JSAR would support:
 | ------------------- | ----------- | ---------- |
 | [`MediaDevices`][]  | Not started | -          |
 | [`MediaRecorder`][] | Not started | -          |
-| [WebRTC][]          | Not started | -          |
 
 [`MediaDevices`]: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices
 [`MediaRecorder`]: https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder
-[WebRTC]: https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API
 
 ### Canvas
 
@@ -145,12 +145,12 @@ In Web multimedia, there are the following APIs that JSAR would support:
 
 ### Classic Rendering
 
-| API               | Status      | Test Suite |
-| ----------------- | ----------- | ---------- |
-| [DOM API][]       | Not started | -          |
-| [HTML5][]         | Not started | -          |
-| [CSS3][]          | Not started | -          |
-| [Web Component][] | Not started | -          |
+| API               | Status           | Test Suite |
+| ----------------- | ---------------- | ---------- |
+| [DOM API][]       | Work in progress | -          |
+| [HTML5][]         | Not started      | -          |
+| [CSS3][]          | Not started      | -          |
+| [Web Component][] | Not started      | -          |
 
 [DOM API]: https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model
 [HTML5]: https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5
