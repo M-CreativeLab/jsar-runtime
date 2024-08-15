@@ -38,6 +38,12 @@ namespace canvasbinding
                                          InstanceMethod("putImageData", &CanvasRenderingContext2D::PutImageData),
                                          // Text methods
                                          InstanceMethod("measureText", &CanvasRenderingContext2D::MeasureText),
+                                         // Transform methods
+                                         InstanceMethod("transform", &CanvasRenderingContext2D::Transform),
+                                         InstanceMethod("setTransform", &CanvasRenderingContext2D::SetTransform),
+                                         InstanceMethod("scale", &CanvasRenderingContext2D::Scale),
+                                         InstanceMethod("rotate", &CanvasRenderingContext2D::Rotate),
+                                         InstanceMethod("translate", &CanvasRenderingContext2D::Translate),
                                          // State methods
                                          InstanceMethod("save", &CanvasRenderingContext2D::Save),
                                          InstanceMethod("restore", &CanvasRenderingContext2D::Restore),
@@ -45,9 +51,6 @@ namespace canvasbinding
                                          InstanceAccessor("canvas",
                                                           &CanvasRenderingContext2D::CanvasGetter,
                                                           nullptr),
-                                         InstanceAccessor("currentTransform",
-                                                          &CanvasRenderingContext2D::CurrentTransformGetter,
-                                                          &CanvasRenderingContext2D::CurrentTransformSetter),
                                          InstanceAccessor("fillStyle",
                                                           &CanvasRenderingContext2D::FillStyleGetter,
                                                           &CanvasRenderingContext2D::FillStyleSetter),
@@ -525,6 +528,124 @@ namespace canvasbinding
     return jsTextMetrics;
   }
 
+  Napi::Value CanvasRenderingContext2D::Transform(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() != 6)
+    {
+      Napi::TypeError::New(env, "6 arguments expected").ThrowAsJavaScriptException();
+      return env.Null();
+    }
+
+    auto a = info[0].ToNumber().FloatValue();
+    auto b = info[1].ToNumber().FloatValue();
+    auto c = info[2].ToNumber().FloatValue();
+    auto d = info[3].ToNumber().FloatValue();
+    auto e = info[4].ToNumber().FloatValue();
+    auto f = info[5].ToNumber().FloatValue();
+
+    skCanvas->concat(SkMatrix::MakeAll(a, b, e, c, d, f, 0, 0, 1));
+    return env.Null();
+  }
+
+  Napi::Value CanvasRenderingContext2D::SetTransform(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() == 0)
+    {
+      Napi::TypeError::New(env, "At least 1 argument expected").ThrowAsJavaScriptException();
+      return env.Null();
+    }
+
+    float a, b, c, d, e, f;
+    if (info.Length() == 1)
+    {
+      if (!info[0].IsObject())
+      {
+        // TODO: throw a TypeError?
+        return env.Null();
+      }
+      auto jsMatrixObject = info[0].ToObject();
+      a = jsMatrixObject.Get("a").ToNumber().FloatValue();
+      b = jsMatrixObject.Get("b").ToNumber().FloatValue();
+      c = jsMatrixObject.Get("c").ToNumber().FloatValue();
+      d = jsMatrixObject.Get("d").ToNumber().FloatValue();
+      e = jsMatrixObject.Get("e").ToNumber().FloatValue();
+      f = jsMatrixObject.Get("f").ToNumber().FloatValue();
+    }
+    else if (info.Length() == 6)
+    {
+      a = info[0].ToNumber().FloatValue();
+      b = info[1].ToNumber().FloatValue();
+      c = info[2].ToNumber().FloatValue();
+      d = info[3].ToNumber().FloatValue();
+      e = info[4].ToNumber().FloatValue();
+      f = info[5].ToNumber().FloatValue();
+    }
+    else
+    {
+      Napi::TypeError::New(env, "Invalid number of arguments to call setTransform()").ThrowAsJavaScriptException();
+      return env.Null();
+    }
+    skCanvas->resetMatrix();
+    skCanvas->concat(SkMatrix::MakeAll(a, b, e, c, d, f, 0, 0, 1));
+    return env.Null();
+  }
+
+  Napi::Value CanvasRenderingContext2D::Scale(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() != 2)
+    {
+      Napi::TypeError::New(env, "2 arguments expected").ThrowAsJavaScriptException();
+      return env.Null();
+    }
+
+    auto sx = info[0].ToNumber().FloatValue();
+    auto sy = info[1].ToNumber().FloatValue();
+    skCanvas->scale(sx, sy);
+    return env.Null();
+  }
+
+  Napi::Value CanvasRenderingContext2D::Rotate(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() != 1)
+    {
+      Napi::TypeError::New(env, "1 argument expected").ThrowAsJavaScriptException();
+      return env.Null();
+    }
+
+    auto angle = info[0].ToNumber().FloatValue();
+    skCanvas->rotate(angle);
+    return env.Null();
+  }
+
+  Napi::Value CanvasRenderingContext2D::Translate(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() != 2)
+    {
+      Napi::TypeError::New(env, "2 arguments expected").ThrowAsJavaScriptException();
+      return env.Null();
+    }
+
+    auto dx = info[0].ToNumber().FloatValue();
+    auto dy = info[1].ToNumber().FloatValue();
+    skCanvas->translate(dx, dy);
+    return env.Null();
+  }
+
   Napi::Value CanvasRenderingContext2D::DrawImage(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -804,19 +925,6 @@ namespace canvasbinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     return jsCanvas->Value();
-  }
-
-  Napi::Value CanvasRenderingContext2D::CurrentTransformGetter(const Napi::CallbackInfo &info)
-  {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
-    // TODO
-    return env.Null();
-  }
-
-  void CanvasRenderingContext2D::CurrentTransformSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
-  {
-    // TODO
   }
 
   Napi::Value CanvasRenderingContext2D::FillStyleGetter(const Napi::CallbackInfo &info)

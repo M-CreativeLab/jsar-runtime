@@ -100,10 +100,19 @@ namespace canvasbinding
   private: // Text methods
     Napi::Value MeasureText(const Napi::CallbackInfo &info);
 
-  private:
+  private: // Transform methods
+    Napi::Value Transform(const Napi::CallbackInfo &info);
+    Napi::Value SetTransform(const Napi::CallbackInfo &info);
+    Napi::Value Rotate(const Napi::CallbackInfo &info);
+    Napi::Value Scale(const Napi::CallbackInfo &info);
+    Napi::Value Translate(const Napi::CallbackInfo &info);
+
+  private: // State
+    Napi::Value Save(const Napi::CallbackInfo &info);
+    Napi::Value Restore(const Napi::CallbackInfo &info);
+
+  private: // Getter & Setter
     Napi::Value CanvasGetter(const Napi::CallbackInfo &info);
-    Napi::Value CurrentTransformGetter(const Napi::CallbackInfo &info);
-    void CurrentTransformSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value FillStyleGetter(const Napi::CallbackInfo &info);
     void FillStyleSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value StrokeStyleGetter(const Napi::CallbackInfo &info);
@@ -124,10 +133,6 @@ namespace canvasbinding
     void LineCapSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value LineJoinGetter(const Napi::CallbackInfo &info);
     void LineJoinSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
-
-  private: // State
-    Napi::Value Save(const Napi::CallbackInfo &info);
-    Napi::Value Restore(const Napi::CallbackInfo &info);
 
   private:
     SkPaint getFillPaint();
