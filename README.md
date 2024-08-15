@@ -24,6 +24,21 @@ The followings are supported renderer backend:
 [Metal]: https://developer.apple.com/metal/
 [D3D11]: https://learn.microsoft.com/en-us/windows/win32/direct3d11/atoc-dx-graphics-direct3d-11
 
+### Request Formats
+
+Like the classic Web browser, it supports not only the HTML document, but also lots of formats, such as PDF, SVG, etc. The following formats are JSAR is expected to support:
+
+| Format      | Status      | Recommended Use Case         |
+| ----------- | ----------- | ---------------------------- |
+| XSML        | Ok          | Using WebXR applications     |
+| HTML        | Not started | Browsering classic Web pages |
+| PDF         | Not started | Reading PDF documents        |
+| SVG         | Not started | Displaying SVG images        |
+| JPEG or PNG | Ok          | Viewing images               |
+| GLTF        | Ok          | Displaying 3D models         |
+
+> XSML: namely eXtensible Spatial Markup Language, is a new format that is designed for spatial applications for HTML developers.
+
 ### Scripting & Modules
 
 | API                   | Status      | Test Suite |
