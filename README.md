@@ -4,38 +4,111 @@ The JSAR is a runtime SDK for embedding [WebXR][], [WebGL][] and Web 2D applicat
 
 > Standalone means you could also use JSAR to pack your WebXR application as a standalone application.
 
-It's a 3d-first web rendering engine, that is easily to embed and use, and it supports the following Web APIs:
+## Overview
 
-- [ ] Graphics
-  - [x] WebGL1
-  - [x] WebGL2
-  - [ ] WebGL Exts
-  - [ ] WebGPU
-- [ ] WebXR Device API
-  - [x] Basic rendering
-  - [x] Input sources
-  - [ ] Features
-- [ ] Web Audio API
-- [ ] Canvas
-  - [x] RenderingContext2D
-  - [ ] PDFRenderingContext
-  - [ ] HTMLRenderingContext
-- [ ] 2D Application Rendering
-  - [ ] HTML5
-  - [ ] CSS3
-  - [ ] Web Component
+JSAR is a 3d-first Web rendering engine, that is easily to *embed* and use. Developers are able to use the parts of Web APIs to build the spatial computing applications still.
 
-And the followings are supported renderer backend:
+### Renderer Backends
 
-- [x] OpenGL & OpenGLES
-- [ ] Metal
-- [ ] DirectX11
+The followings are supported renderer backend:
+
+| Backend   | Status      | Test Suite |
+| --------- | ----------- | ---------- |
+| OpenGL4   | [x]         | -          |
+| OpenGLES3 | Ok          | -          |
+| Metal     | Not started | -          |
+| DirectX11 | Not started | -          |
+
+### 3D Graphics
+
+| API                                                            | Status      | Test Suite                                                             |
+| -------------------------------------------------------------- | ----------- | ---------------------------------------------------------------------- |
+| [WebGL1](https://registry.khronos.org/webgl/specs/latest/1.0/) | Ok          | https://github.com/KhronosGroup/WebGL/tree/main/sdk/tests/conformance  |
+| [WebGL2](https://registry.khronos.org/webgl/specs/latest/2.0/) | Ok          | https://github.com/KhronosGroup/WebGL/tree/main/sdk/tests/conformance2 |
+| [WebGPU](https://www.w3.org/TR/webgpu/)                        | Not started | https://github.com/gpuweb/cts                                          |
+
+### WebXR Device APIs
+
+| API                                                                                                               | Status | Test Suite |
+| ----------------------------------------------------------------------------------------------------------------- | ------ | ---------- |
+| [Spaces and Reference Spaces](https://developer.mozilla.org/en-US/docs/Web/API/WebXR_Device_API/Spatial_tracking) | Ok     | -          |
+| [Stereo Rendering](https://developer.mozilla.org/en-US/docs/Web/API/WebXR_Device_API/Rendering)                   | Ok     | -          |
+| [Inputs and Input Sources](https://developer.mozilla.org/en-US/docs/Web/API/WebXR_Device_API/Inputs)              | Ok     | -          |
+
+#### Supported Input Sources
+
+| Input Source    | Status          | Target Ray Mode        | Gamepad | Profiles |
+| --------------- | --------------- | ---------------------- | ------- | -------- |
+| gaze            | Ok              | gaze                   | No      | -        |
+| hand(2)         | Ok              | tracked-pointer        | No      | -        |
+| main controller | Ok              | tracked-pointer/screen | Yes     | -        |
+| transient       | Not implemented | transient-pointer      | No      | -        |
+
+> Note: Gamepad is not supported in the current version.
+
+#### Features
+
+| Feature            | Status          | Test Suite |
+| ------------------ | --------------- | ---------- |
+| Hit Test           | Not implemented | -          |
+| Anchors            | Not implemented | -          |
+| Hand Tracking      | Ok              | -          |
+| Eye Tracking       | Not implemented | -          |
+| Depth Sensing      | Not implemented | -          |
+| Face Tracking      | Not implemented | -          |
+| Body Tracking      | Not implemented | -          |
+| Environment Probes | Not implemented | -          |
+| Light Estimation   | Not implemented | -          |
+
+### Multimedia APIs
+
+In Web multimedia, there are the following APIs that JSAR would support:
+
+- [x] Playback: play audio and video, and use Web Audio API to create audio effects.
+- [ ] Capture: capture audio and video from the device.
+
+#### Playback
+
+| API                                                                                   | Status      | Test Suite |
+| ------------------------------------------------------------------------------------- | ----------- | ---------- |
+| [HTMLAudioElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAudioElement) | Ok          | -          |
+| [HTMLVideoElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement) | Not started | -          |
+| [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)       | Not started | -          |
+
+#### Capture
+
+| API                                                                             | Status      | Test Suite |
+| ------------------------------------------------------------------------------- | ----------- | ---------- |
+| [MediaDevices](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices)   | Not started | -          |
+| [MediaRecorder](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder) | Not started | -          |
+| [WebRTC](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API)           | Not started | -          |
+
+### Canvas
+
+| API                                                                                             | Status      | Test Suite |
+| ----------------------------------------------------------------------------------------------- | ----------- | ---------- |
+| [RenderingContext2D](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D) | Ok          | -          |
+| PDFRenderingContext                                                                             | Not started | -          |
+| HTMLRenderingContext                                                                            | Not started | -          |
+
+> Note: `PDFRenderingContext` and `HTMLRenderingContext` are introduced by JSAR, which is used to customize the PDF and HTML rendering.
+
+### Classic Rendering
+
+| API                                                                           | Status      | Test Suite |
+| ----------------------------------------------------------------------------- | ----------- | ---------- |
+| [DOM](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model) | Not started | -          |
+| [HTML5](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5)        | Not started | -          |
+| [CSS3](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS3)                 | Not started | -          |
+| [Web Component](https://developer.mozilla.org/en-US/docs/Web/Web_Components)  | Not started | -          |
 
 ## Getting Started
 
-TODO
+> TODO
 
-## Development
+## Contributing
+
+To contribute to the project, you need to follow the steps below to build this project from source.
 
 ### Prerequisites
 
