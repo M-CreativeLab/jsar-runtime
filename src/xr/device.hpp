@@ -205,8 +205,10 @@ namespace xr
     void handleCommandMessage(TrXRCommandMessage &message, TrContentRuntime *content);
 
   private: // XR command channel handlers
-    xr::IsSessionSupportedResponse onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request, TrContentRenderer *contentRenderer);
-    xr::SessionResponse onSessionRequest(xr::SessionRequest &request, TrContentRenderer *contentRenderer);
+    void onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request, TrContentRenderer *contentRenderer);
+    void onSessionRequest(xr::SessionRequest &request, TrContentRenderer *contentRenderer);
+    void onEndSessionRequest(xr::EndSessionRequest &request, TrContentRenderer *contentRenderer);
+    void onSetInputSourceTargetRayHitTestResult(xr::SetInputSourceTargetRayHitTestResult &request, TrContentRenderer *contentRenderer);
 
   private:
     /**

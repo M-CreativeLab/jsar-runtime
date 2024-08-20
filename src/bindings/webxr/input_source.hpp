@@ -16,9 +16,12 @@ namespace bindings
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, XRSession *session, xr::TrXRInputSource* internal);
+    static Napi::Object NewInstance(Napi::Env env, XRSession *session, xr::TrXRInputSource *internal);
     XRInputSource(const Napi::CallbackInfo &info);
     ~XRInputSource();
+
+  private:
+    Napi::Value SetTargetRayHitTestResult(const Napi::CallbackInfo &info);
 
   private:
     Napi::Value GamepadGetter(const Napi::CallbackInfo &info);
@@ -33,6 +36,7 @@ namespace bindings
 
   public:
     xr::TrXRInputSource *internal = nullptr;
+    TrClientContextPerProcess *clientContext = nullptr;
     Napi::ObjectReference xrSessionRef;
 
   private:
@@ -54,10 +58,10 @@ namespace bindings
     void updateInputSources(XRFrame *frame, XRSession *session, InputSourcesChangedCallback onChangedCallback);
 
   private:
-    XRInputSource* getInputSourceById(int id);
+    XRInputSource *getInputSourceById(int id);
 
   private:
-    TrClientContextPerProcess* clientContext = nullptr;
+    TrClientContextPerProcess *clientContext = nullptr;
 
   private:
     static Napi::FunctionReference *constructor;

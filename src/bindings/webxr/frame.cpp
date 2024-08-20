@@ -208,8 +208,16 @@ namespace bindings
   {
     active = true;
     animationFrame = true;
+    bool isNewStereoFrame = false;
+    auto isMultipass = device->getDeviceInit().renderedAsMultipass();
+    if (
+      !device->getDeviceInit().renderedAsMultipass() || /** SinglePass */
+      internal->viewIndex == 1 /** MultiPass's right view */
+    )
+      isNewStereoFrame = true;
+
     device->startFrame(internal);
-    session->updateFrameTime();
+    session->updateFrameTime(isNewStereoFrame);
     startTime = session->frameTimepoint;
   }
 
@@ -219,16 +227,16 @@ namespace bindings
     device->endFrame(internal);
     endTime = chrono::steady_clock::now();
 
+    auto frameDuration = chrono::duration_cast<chrono::microseconds>(endTime - startTime).count() / 1000.0;
+    if (frameDuration > 1000 / 45)
+      fprintf(stderr, "Detected a long frame(#%d) at session(%d)'s view(%d) takes %fms\n",
+              id, sessionId, internal->viewIndex, frameDuration);
+
     auto isMultipass = device->getDeviceInit().renderedAsMultipass();
     if (!isMultipass || internal->viewIndex == 1)
     {
-      auto& perfFs = device->clientContext->getPerfFs();
-      auto duration = chrono::duration_cast<chrono::microseconds>(endTime - startTime).count() / 1000.0;
-      perfFs.setFrameDuration(duration);
-      if (duration > 1000 / 45)
-        fprintf(stderr, "Detected a long frame(#%d) takes %fms in session(%d)\n", id, duration, sessionId);
-
-      // Calculate the Fps and update to fs.
+      // Calculate the Fps and update to fs on the right view
+      auto &perfFs = device->clientContext->getPerfFs();
       if (session->calcFps())
         perfFs.setFps(session->fps);
     }

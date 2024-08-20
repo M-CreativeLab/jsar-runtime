@@ -51,7 +51,7 @@ TrContentRuntime::~TrContentRuntime()
 void TrContentRuntime::preStart()
 {
   available = true;
-  commandBuffersRecvWorker = std::make_unique<WorkerThread>("TrCommandBuffersWorker", [this](WorkerThread &worker)
+  commandBuffersRecvWorker = std::make_unique<WorkerThread>("TrCBWorker", [this](WorkerThread &worker)
                                                             { recvCommandBuffers(worker, 100); });
   auto renderer = contentManager->constellation->renderer;
   renderer->addContentRenderer(this);
@@ -324,11 +324,11 @@ void TrContentRuntime::recvMediaRequest()
   }
 }
 
-void TrContentRuntime::recvXRCommand(int timeout)
+bool TrContentRuntime::recvXRCommand(int timeout)
 {
   auto xrDevice = getConstellation()->xrDevice;
-  if (xrCommandChanReceiver == nullptr || xrDevice == nullptr || !xrDevice->enabled())
-    return;
+  if (TR_UNLIKELY(xrCommandChanReceiver == nullptr || xrDevice == nullptr || !xrDevice->enabled()))
+    return false;
 
   auto message = xrCommandChanReceiver->recvCommandMessage(timeout);
   if (message != nullptr)
@@ -336,6 +336,11 @@ void TrContentRuntime::recvXRCommand(int timeout)
     // NOTE: Don't expose the content reference to the XR handler.
     xrDevice->handleCommandMessage(*message, this);
     delete message;
+    return true;
+  }
+  else
+  {
+    return false;
   }
 }
 
@@ -393,7 +398,7 @@ bool TrContentManager::initialize()
   eventChanWatcher = std::make_unique<WorkerThread>("TrEventChanWatcher", [this](WorkerThread &)
                                                     { acceptEventChanClients(); });
   xrCommandsRecvWorker = std::make_unique<WorkerThread>("TrXRCommandsWorker", [this](WorkerThread &worker)
-                                                        { recvXRCommands(); worker.sleep(); }, 100);
+                                                        { recvXRCommands(worker); }, 100);
   contentsDestroyingWorker = std::make_unique<WorkerThread>("TrContentsMgr", [this](WorkerThread &worker)
                                                             { onTryDestroyingContents(); worker.sleep(); }, 1000);
   return true;
@@ -689,17 +694,27 @@ void TrContentManager::acceptEventChanClients(int timeout)
                              { onNewClientOnEventChan(newClient); }, timeout);
 }
 
-void TrContentManager::recvXRCommands(int timeout)
+void TrContentManager::recvXRCommands(WorkerThread &worker, int timeout)
 {
-  if (constellation->xrDevice == nullptr)
-    return;
-
+  if (TR_UNLIKELY(constellation->xrDevice == nullptr))
   {
-    // Recv the XR commands for the contents.
+    worker.sleep();
+    return;
+  }
+
+  // Check if no contents are available
+  {
     shared_lock<shared_mutex> lock(contentsMutex);
     if (contents.empty())
       return;
-    for (auto content : contents)
-      content->recvXRCommand(timeout);
   }
+
+  // Receive the XR commands for each content.
+  bool receivedOne = false;
+  for (auto content : contents)
+    if (content->recvXRCommand(0) && !receivedOne)
+      receivedOne = true;
+
+  if (!receivedOne)
+    worker.sleep();
 }

@@ -188,7 +188,7 @@ private:
   void recvCommandBuffers(WorkerThread &worker, uint32_t timeout);
   void recvEvent();
   void recvMediaRequest();
-  void recvXRCommand(int timeout);
+  bool recvXRCommand(int timeout);
   bool tryDispatchRequest();
   bool tickOnFrame();
 
@@ -342,7 +342,7 @@ private:
   void startHived();
   void preparePreContent();
   void acceptEventChanClients(int timeout = 100);
-  void recvXRCommands(int timeout = 100);
+  void recvXRCommands(WorkerThread& worker, int timeout = 100);
 
 private:
   TrConstellation *constellation = nullptr;

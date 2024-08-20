@@ -481,13 +481,13 @@ namespace bindings
 
   bool XRSession::calcFps()
   {
-    auto delta = chrono::duration_cast<chrono::milliseconds>(frameTimepoint - lastFrameTimepoint).count();
     frameCount += 1;
+    auto delta = chrono::duration_cast<chrono::milliseconds>(frameTimepoint - lastRecordedFrameTimepoint).count();
     if (delta >= 1000)
     {
       fps = frameCount / (delta / 1000);
       frameCount = 0;
-      lastFrameTimepoint = frameTimepoint;
+      lastRecordedFrameTimepoint = frameTimepoint;
       return true;
     }
     else
@@ -496,9 +496,17 @@ namespace bindings
     }
   }
 
-  void XRSession::updateFrameTime()
+  #define FRAME_TIME_DELTA_THRESHOLD 1000 / 45
+  void XRSession::updateFrameTime(bool updateStereoFrame)
   {
     frameTimepoint = chrono::steady_clock::now();
+    if (updateStereoFrame)
+    {
+      auto stereoFrameDelta = chrono::duration_cast<chrono::milliseconds>(frameTimepoint - lastStereoFrameTimepoint).count();
+      if (stereoFrameDelta > FRAME_TIME_DELTA_THRESHOLD)
+        fprintf(stderr, "Detected an invalid stereo frame dispatching, time delta(%lld ms) over %d ms\n", stereoFrameDelta, FRAME_TIME_DELTA_THRESHOLD);
+      lastStereoFrameTimepoint = frameTimepoint;
+    }
   }
 
   void XRSession::updateInputSourcesIfChanged(XRFrame *frame)

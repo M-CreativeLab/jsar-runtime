@@ -72,6 +72,24 @@ namespace xr
     float baseMatrix[16];
   };
 
+  class TrRayHitResult
+  {
+  public:
+    TrRayHitResult() {};
+    TrRayHitResult(bool hit, float *matrixValues = nullptr)
+    {
+      this->hit = hit;
+      if (matrixValues != nullptr)
+        memcpy(baseMatrix, matrixValues, sizeof(float) * 16);
+      else
+        memset(baseMatrix, 0, sizeof(float) * 16);
+    }
+
+  public:
+    bool hit = false;
+    float baseMatrix[16];
+  };
+
   class TrXRInputSource
   {
   public:
@@ -124,6 +142,10 @@ namespace xr
     {
       setGripBaseMatrix(glm::value_ptr(matrix));
     }
+    inline void setTargetRayHitResult(TrRayHitResult &result)
+    {
+      memcpy(&targetRayHitResult, &result, sizeof(TrRayHitResult));
+    }
 
   public:
     int id;
@@ -133,6 +155,7 @@ namespace xr
     TrXRTargetRayMode targetRayMode;
     float targetRayBaseMatrix[16];
     float gripBaseMatrix[16];
+    TrRayHitResult targetRayHitResult;
     /** action states */
     bool primaryActionPressed = false;
     bool squeezeActionPressed = false;

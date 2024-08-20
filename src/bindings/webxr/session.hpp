@@ -67,7 +67,7 @@ namespace bindings
      * @returns true if the FPS was updated.
      */
     bool calcFps();
-    void updateFrameTime();
+    void updateFrameTime(bool updateStereoFrame = false);
     void updateInputSourcesIfChanged(XRFrame *frame);
     void onFrame(Napi::Env env, xr::TrXRFrameRequest *frameRequest);
     bool queueNextFrame();
@@ -111,8 +111,18 @@ namespace bindings
   private:
     uint32_t fps = 0;
     int frameCount = 0;
+    /**
+     * Every frame timepoint, updated at the start of each frame.
+     */
     std::chrono::steady_clock::time_point frameTimepoint;
-    std::chrono::steady_clock::time_point lastFrameTimepoint = chrono::steady_clock::now();
+    /**
+     * The last stereo frame timepoint, updated at the start of each frame from the `frameTimepoint`.
+     */
+    std::chrono::steady_clock::time_point lastStereoFrameTimepoint;
+    /**
+     * The last recorded frame timepoint, updated by manual at calculating FPS.
+     */
+    std::chrono::steady_clock::time_point lastRecordedFrameTimepoint = chrono::steady_clock::now();
 
   public:
     static Napi::FunctionReference *constructor;

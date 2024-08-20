@@ -25,7 +25,7 @@ namespace bindings {
     glm::quat orientation;
     glm::mat4 matrix;
 
-  private:
+  public:
     static Napi::FunctionReference *constructor;
   };
 }

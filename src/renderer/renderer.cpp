@@ -264,7 +264,7 @@ namespace renderer
       } });
     commandBufferClientWatcher = std::make_unique<thread>([this]()
                                                           {
-      SET_THREAD_NAME("TrCommandBufferWatcher");
+      SET_THREAD_NAME("TrCBWatcher");
       while (watcherRunning)
       {
         commandBufferChanServer->tryAccept([this](TrOneShotClient<TrCommandBufferMessage> &newClient) {

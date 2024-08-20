@@ -50,6 +50,7 @@ public:
     running = true;
     handle = std::make_unique<std::thread>([this]()
                                            {
+      SET_THREAD_NAME(name.c_str());
       while (running)
       {
         if (work && !paused)

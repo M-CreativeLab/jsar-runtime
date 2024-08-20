@@ -94,7 +94,7 @@ namespace renderer
           isXRFrameBaseReqUpdating ||       // Skip the frame dispatching if the updating is not finished.
           isXRFrameBaseReqDirty == false || // Skip the frame dispatching if the base frame request is not dirty.
           content->used == false ||         // Skip the frame dispatching if the content is not used.
-          getPendingStereoFramesCount() > 2)
+          getPendingStereoFramesCount() > 0)
         return;
 
       if (xrDevice->isRenderedAsMultipass()) // TODO: support singlepass?

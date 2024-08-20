@@ -168,18 +168,26 @@ class WebXRControllerData {
     this.disabledByNearInteraction = props.disabledByNearInteraction;
   }
 
-  select(pickedMesh: AbstractMesh) {
+  select(pickedMesh: AbstractMesh, pickedPoint: Vector3, normal: Vector3) {
     this.meshUnderPointer = pickedMesh;
-    // Only show the selection mesh if the controller is a tracked-pointer
-    // if (this.xrController.inputSource.targetRayMode === 'tracked-pointer') {
-    //   this.selectionMesh.isVisible = true;
-    // }
+
+    // const cursorMesh = this.selectionMesh;
+    if (this.xrController?.inputSource) {
+      const pointerPosition = pickedPoint;
+      const pointerRotation = BABYLON.Quaternion.RotationQuaternionFromAxis(BABYLON.Axis.Y, BABYLON.Axis.X, normal);
+      const cursor = new XRRigidTransform(pointerPosition, pointerRotation);
+      const inputSource = this.xrController.inputSource;
+      inputSource.setTargetRayHitTestResult(true, cursor);
+    }
   }
 
   deselect() {
     this.meshUnderPointer = null;
     this.laserPointer.isVisible = false;
     this.selectionMesh.isVisible = false;
+    if (this.xrController?.inputSource) {
+      this.xrController.inputSource.setTargetRayHitTestResult(false);
+    }
   }
 
   reset() {
@@ -534,7 +542,7 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
             Vector3.RotationFromAxisToRef(axis2, pickNormal, axis1, controllerData.selectionMesh.rotation);
             controllerData.selectionMesh.position.addInPlace(pickNormal.scale(deltaFighting));
           }
-          controllerData.select(pick.pickedMesh);
+          controllerData.select(pick.pickedMesh, pick.pickedPoint, pickNormal);
         } else {
           this._xrSessionManager.onMeshUnpickObservable.notifyObservers({
             mesh: controllerData.meshUnderPointer,
@@ -781,6 +789,8 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
         },
         sceneToRenderTo
       );
+
+    selectionMesh.parent = null;
     selectionMesh.bakeCurrentTransformIntoVertices();
     selectionMesh.isPickable = false;
     selectionMesh.isVisible = false;

@@ -356,7 +356,9 @@ namespace xr
 
 #define TR_XRCOMMAND_METHODS_MAP(XX) \
   XX(IsSessionSupportedRequest)      \
-  XX(SessionRequest)
+  XX(SessionRequest)                 \
+  XX(EndSessionRequest)              \
+  XX(SetInputSourceTargetRayHitTestResult)
 
   void Device::handleCommandMessage(TrXRCommandMessage &message, TrContentRuntime *content)
   {
@@ -371,32 +373,46 @@ namespace xr
   case xr::TrXRCmdType::hander:                      \
   {                                                  \
     auto req = message.createInstance<xr::hander>(); \
-    auto res = on##hander(*req, contentRenderer);    \
-    content->sendXRCommandResponse(res);             \
+    on##hander(*req, contentRenderer);               \
     delete req;                                      \
     break;                                           \
   }
       TR_XRCOMMAND_METHODS_MAP(XX)
 #undef XX
     default:
-      DEBUG(LOG_TAG_XR, "Unknown command type: %d", (int)type);
+      DEBUG(LOG_TAG_XR, "Unknown XR command type: %d", (int)type);
       break;
     }
   }
 
-  xr::IsSessionSupportedResponse Device::onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request, TrContentRenderer *contentRenderer)
+  void Device::onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request, TrContentRenderer *contentRenderer)
   {
     xr::IsSessionSupportedResponse resp;
     resp.supported = isSessionSupported(request.sessionMode);
-    return resp;
+    contentRenderer->getContent()->sendXRCommandResponse(resp);
   }
 
-  xr::SessionResponse Device::onSessionRequest(xr::SessionRequest &request, TrContentRenderer *contentRenderer)
+  void Device::onSessionRequest(xr::SessionRequest &request, TrContentRenderer *contentRenderer)
   {
     auto newSession = requestSession(request.sessionMode, contentRenderer);
     xr::SessionResponse resp(newSession->id);
     resp.recommendedContentSize = newSession->recommendedContentSize;
-    return resp;
+    contentRenderer->getContent()->sendXRCommandResponse(resp);
   }
 
+  void Device::onEndSessionRequest(xr::EndSessionRequest &request, TrContentRenderer *contentRenderer)
+  {
+    // TODO: implement the end session request
+  }
+
+  void Device::onSetInputSourceTargetRayHitTestResult(xr::SetInputSourceTargetRayHitTestResult &request, TrContentRenderer *contentRenderer)
+  {
+    auto inputSource = m_InputSourcesZone->getInputSourceById(request.inputSourceId);
+    if (inputSource != nullptr)
+    {
+      // Update ray hit
+      TrRayHitResult hitResult(request.hit, request.rayEndBaseMatrix);
+      inputSource->setTargetRayHitResult(hitResult);
+    }
+  }
 }

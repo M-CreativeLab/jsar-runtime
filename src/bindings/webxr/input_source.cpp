@@ -4,6 +4,7 @@
 #include "session.hpp"
 #include "frame.hpp"
 #include "hand.hpp"
+#include "rigid_transform.hpp"
 
 namespace bindings
 {
@@ -16,6 +17,7 @@ namespace bindings
                                       {
                                           InstanceAccessor("hand", &XRInputSource::HandGetter, nullptr),
                                           InstanceAccessor("gamepad", &XRInputSource::GamepadGetter, nullptr),
+                                          InstanceMethod("setTargetRayHitTestResult", &XRInputSource::SetTargetRayHitTestResult),
                                       });
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
@@ -50,6 +52,7 @@ namespace bindings
 
     auto sessionValue = info[0].As<Napi::Object>();
     xrSessionRef = Napi::Persistent(sessionValue);
+    clientContext = TrClientContextPerProcess::Get();
 
     auto internalExternal = info[1].As<Napi::External<xr::TrXRInputSource>>();
     internal = internalExternal.Data();
@@ -65,6 +68,68 @@ namespace bindings
   {
     internal = nullptr;
     xrSessionRef.Unref();
+  }
+
+  Napi::Value XRInputSource::SetTargetRayHitTestResult(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() == 0)
+    {
+      Napi::TypeError::New(env, "Expected 1 argument at least").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    XRSession *session = XRSession::Unwrap(xrSessionRef.Value());
+    if (session == nullptr)
+    {
+      Napi::TypeError::New(env, "Failed to get the session").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    static bool missDispatched = false;
+    xr::SetInputSourceTargetRayHitTestResult req(session->id, internal->id);
+    auto hit = info[0].ToBoolean().Value();
+    if (!hit)
+    {
+      if (missDispatched)
+      {
+        /**
+         * If the "miss" state has been dispatched, just avoid to dispatch it again for performance.
+         */
+        return env.Undefined();
+      }
+      xr::TrRayHitResult hitResult(false);
+      req.setResult(false, nullptr);
+      missDispatched = true;
+    }
+    else if (info.Length() >= 2 && info[1].IsObject())
+    {
+      auto jsHitTestResult = info[1].ToObject();
+      if (jsHitTestResult.InstanceOf(XRRigidTransform::constructor->Value()))
+      {
+        auto transform = XRRigidTransform::Unwrap(jsHitTestResult);
+        float *matrixValues = glm::value_ptr(transform->matrix);
+
+        xr::TrRayHitResult hitResult(true, matrixValues);
+        req.setResult(true, matrixValues);
+        missDispatched = false; // When there is a new hit again, we need to reset the flag to dispatch the "miss" once again.
+      }
+      else
+      {
+        Napi::TypeError::New(env, "Expected a XRRigidTransform object.").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+    }
+    else
+    {
+      Napi::TypeError::New(env, "Expected a XRRigidTransform object.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    clientContext->sendXrCommand(req);
+    return env.Undefined();
   }
 
   Napi::Value XRInputSource::GamepadGetter(const Napi::CallbackInfo &info)

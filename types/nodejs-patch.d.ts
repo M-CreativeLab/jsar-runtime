@@ -1,9 +1,53 @@
+/**
+ * Add patch for the OffscreenCanvas to support the HTMLRenderingContext.
+ */
+interface OffscreenCanvas {
+  getContext(contextId: 'jsar:htmlrenderer'): Transmute.HTMLRenderingContext;
+}
+
+/**
+ * New APIs for WebXR Device API.
+ */
+interface XRInputSource {
+  /**
+   * Set the target ray's hit test result, this is used for updating the host ray rendering.
+   *
+   * @param hit If the target ray hits an object.
+   * @param endTransform The ray's end transform if hit or null.
+   * @returns null
+   */
+  setTargetRayHitTestResult(hit: boolean, endTransform?: XRRigidTransform | null): void;
+}
+
+/**
+ * Transmute: The JSAR internal APIs.
+ */
 declare namespace Transmute {
+  /**
+   * Frame request callback.
+   * 
+   * @param time The current time in milliseconds.
+   * @param data The data passed from the native side.
+   */
   type FrameRequestCallback = (time: number, data: unknown) => void;
+
+  /**
+   * Represents the session context object, basically including the session id and its local transform.
+   */
   type NativeSessionContextItem = {
+    /**
+     * The session id.
+     */
     sessionId: number;
+    /**
+     * The session's local transform.
+     */
     localTransform: Float32Array;
   };
+
+  /**
+   * The native frame context object.
+   */
   type NativeFrameContext = {
     type: string;
     activeEyeId?: number;
@@ -14,6 +58,17 @@ declare namespace Transmute {
     sessions: NativeSessionContextItem[];
   };
 
+  /**
+   * The client context which is returned via the "transmute:env" module.
+   * 
+   * This object contains the following properties:
+   * - id: The client context id.
+   * - url: The current URL.
+   * - applicationCacheDirectory: The application cache directory.
+   * - httpsProxyServer: The HTTPS proxy server.
+   * - webglVersion: The WebGL version.
+   * - xrDevice: The XR device information.
+   */
   class TrClientContext {
     id: number;
     url: string;
@@ -35,7 +90,11 @@ declare namespace Transmute {
     fastPerformanceNow(): number;
   }
 
+  /**
+   * The render exception callback.
+   */
   type RenderExceptionCallback = (code: number) => void;
+
   /**
    * The render loop is the backend implementation for `requestAnimationFrame` and `cancelAnimationFrame`.
    */
@@ -142,6 +201,9 @@ declare namespace Transmute {
   }
 }
 
+/**
+ * Custom the Node.js `process._linkedBinding` method to support the JSAR's native modules.
+ */
 declare namespace NodeJS {
   interface Process {
     _linkedBinding(module: 'transmute:dom'): {
@@ -180,11 +242,4 @@ declare namespace NodeJS {
     };
     _linkedBinding(module: string): any;
   }
-}
-
-/**
- * Add patch for the OffscreenCanvas to support the HTMLRenderingContext.
- */
-interface OffscreenCanvas {
-  getContext(contextId: 'jsar:htmlrenderer'): Transmute.HTMLRenderingContext;
 }

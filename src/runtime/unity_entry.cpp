@@ -130,11 +130,23 @@ UnityEmbedder *UnityEmbedder::Create(IUnityInterfaces *unityInterfaces)
 }
 UnityEmbedder *UnityEmbedder::EnsureAndGet()
 {
-  assert(s_EmbedderInstance != nullptr);
   return s_EmbedderInstance;
 }
 
-#define TR_ENSURE_COMPONENT(name) UnityEmbedder::EnsureAndGet()->constellation->name
+#define TR_ENSURE_EMBEDDER(falseValue, block)    \
+  auto embedder = UnityEmbedder::EnsureAndGet(); \
+  if (TR_UNLIKELY(embedder == nullptr))          \
+    return falseValue;                           \
+  block
+
+#define TR_ENSURE_COMPONENT(name, falseValue, block) \
+  auto embedder = UnityEmbedder::EnsureAndGet();     \
+  if (TR_UNLIKELY(embedder == nullptr))              \
+    return falseValue;                               \
+  auto name = embedder->constellation->name;         \
+  if (TR_UNLIKELY(name == nullptr))                  \
+    return falseValue;                               \
+  block
 
 /**
  * The world scaling factor.
@@ -148,6 +160,11 @@ static float s_WorldScalingFactor = 1.0;
  */
 static void OnPlatformSetup(UnityEmbedder *embedder)
 {
+  if (embedder == nullptr)
+  {
+    DEBUG(LOG_TAG_UNITY, "Skip setting for the platform, reason: embedder is not created.");
+    return;
+  }
   auto renderer = embedder->constellation->renderer;
 
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
@@ -225,12 +242,12 @@ extern "C"
    */
   DLL_PUBLIC void UnityPluginLoad(IUnityInterfaces *unityInterfaces)
   {
-    auto embedder = UnityEmbedder::Create(unityInterfaces);
-    if (embedder == nullptr)
-    {
-      DEBUG(LOG_TAG_UNITY, "Failed to create UnityEmbedder instance");
-      return;
-    }
+    UnityEmbedder *embedder = nullptr;
+#if defined(UNITY_OSX) || defined(UNITY_WIN)
+    return;
+#else
+    embedder = UnityEmbedder::Create(unityInterfaces);
+#endif
     OnPlatformSetup(embedder);
   }
 
@@ -239,7 +256,7 @@ extern "C"
    */
   DLL_PUBLIC void UnityPluginUnload()
   {
-    UnityEmbedder::EnsureAndGet()->unload();
+    TR_ENSURE_EMBEDDER(/** void */, { embedder->unload(); });
   }
 
   /**
@@ -247,7 +264,7 @@ extern "C"
    */
   static void OnUnityRenderEvent(int eventID)
   {
-    UnityEmbedder::EnsureAndGet()->onFrame();
+    TR_ENSURE_EMBEDDER(/** void */, { embedder->onFrame(); });
   }
 
   /**
@@ -264,6 +281,10 @@ extern "C"
    */
   DLL_PUBLIC bool TransmuteUnity_Configure(const char *configJson)
   {
+    auto embedder = UnityEmbedder::EnsureAndGet();
+    if (embedder == nullptr)
+      return false;
+
     rapidjson::Document configDoc;
     configDoc.Parse(configJson);
     if (configDoc.HasParseError())
@@ -283,7 +304,7 @@ extern "C"
     if (configDoc.HasMember("isXRSupported") && configDoc["isXRSupported"].IsBool())
       enableXR = configDoc["isXRSupported"].GetBool();
 
-    return UnityEmbedder::EnsureAndGet()->configure(applicationCacheDirectory, httpsProxyServer, enableXR);
+    return embedder->configure(applicationCacheDirectory, httpsProxyServer, enableXR);
   }
 
   /**
@@ -295,11 +316,19 @@ extern "C"
    */
   DLL_PUBLIC bool TransmuteUnity_ConfigureXRDevice(bool isDeviceActive, int stereoRenderingMode)
   {
-    xr::TrDeviceInit init;
-    init.enabled = true;
-    init.active = isDeviceActive;
-    init.stereoRenderingMode = (xr::TrStereoRenderingMode)stereoRenderingMode;
-    return UnityEmbedder::EnsureAndGet()->configureXrDevice(init);
+    auto embedder = UnityEmbedder::EnsureAndGet();
+    if (embedder != nullptr)
+    {
+      xr::TrDeviceInit init;
+      init.enabled = true;
+      init.active = isDeviceActive;
+      init.stereoRenderingMode = (xr::TrStereoRenderingMode)stereoRenderingMode;
+      return embedder->configureXrDevice(init);
+    }
+    else
+    {
+      return false;
+    }
   }
 
   /**
@@ -310,15 +339,22 @@ extern "C"
   DLL_PUBLIC bool TransmuteUnity_Start()
   {
     auto embedder = UnityEmbedder::EnsureAndGet();
-    bool result = embedder->start();
-    if (result)
+    if (embedder != nullptr)
     {
+      bool result = embedder->start();
+      if (result)
+      {
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
-      auto opts = embedder->constellation->getOptions();
-      __system_property_set("jsar.init.cache_directory", opts.applicationCacheDirectory.c_str());
+        auto opts = embedder->constellation->getOptions();
+        __system_property_set("jsar.init.cache_directory", opts.applicationCacheDirectory.c_str());
 #endif
+      }
+      return result;
     }
-    return result;
+    else
+    {
+      return false;
+    }
   }
 
   /**
@@ -338,12 +374,15 @@ extern "C"
    */
   DLL_PUBLIC int TransmuteUnity_Open(const char *url, UnityDocumentRequestInit unityInit)
   {
-    auto constellation = UnityEmbedder::EnsureAndGet()->constellation;
+    auto embedder = UnityEmbedder::EnsureAndGet();
+    if (embedder == nullptr || embedder->constellation == nullptr)
+      return 0;
+
     TrDocumentRequestInit init;
     init.disableCache = unityInit.disableCache;
     init.isPreview = unityInit.isPreview;
     init.runScripts = TrScriptRunMode::Dangerously;
-    return constellation->open(url, make_optional(init));
+    return embedder->constellation->open(url, make_optional(init));
   }
 
   /**
@@ -355,7 +394,7 @@ extern "C"
    */
   DLL_PUBLIC bool TransmuteUnity_GetEventFromJavaScript(int *id, int *type, uint32_t *size)
   {
-    return UnityEmbedder::EnsureAndGet()->getEventHeader(id, type, size);
+    TR_ENSURE_EMBEDDER(false, { return embedder->getEventHeader(id, type, size); });
   }
 
   /**
@@ -366,7 +405,7 @@ extern "C"
    */
   DLL_PUBLIC void TransmuteUnity_GetEventDataFromJavaScript(const char *data)
   {
-    return UnityEmbedder::EnsureAndGet()->getEventData(data);
+    TR_ENSURE_EMBEDDER(/** void */, { embedder->getEventData(data); });
   }
 
   /**
@@ -375,9 +414,9 @@ extern "C"
    * @param type The event type.
    * @param data The event data.
    */
-  DLL_PUBLIC void TransmuteUnity_DispatchNativeEvent(int type, const char *data)
+  DLL_PUBLIC bool TransmuteUnity_DispatchNativeEvent(int type, const char *data)
   {
-    TR_ENSURE_COMPONENT(nativeEventTarget)->dispatchEvent(static_cast<events_comm::TrNativeEventType>(type), data);
+    TR_ENSURE_COMPONENT(nativeEventTarget, false, { return nativeEventTarget->dispatchEvent(static_cast<events_comm::TrNativeEventType>(type), data); });
   }
 
   /**
@@ -388,8 +427,10 @@ extern "C"
    */
   DLL_PUBLIC void TransmuteUnity_SetViewport(int w, int h)
   {
-    TrViewport viewport(w, h);
-    TR_ENSURE_COMPONENT(renderer)->setDrawingViewport(viewport);
+    TR_ENSURE_COMPONENT(renderer, /** void */, {
+      TrViewport viewport(w, h);
+      renderer->setDrawingViewport(viewport);
+    });
   }
 
   /**
@@ -399,7 +440,9 @@ extern "C"
    */
   DLL_PUBLIC void TransmuteUnity_SetFov(float fov)
   {
-    TR_ENSURE_COMPONENT(renderer)->setRecommendedFov(fov);
+    TR_ENSURE_COMPONENT(renderer, /** void */, {
+      renderer->setRecommendedFov(fov);
+    });
   }
 
   /**
@@ -409,7 +452,9 @@ extern "C"
    */
   DLL_PUBLIC void TransmuteUnity_SetTime(float t)
   {
-    TR_ENSURE_COMPONENT(renderer)->setTime(t);
+    TR_ENSURE_COMPONENT(renderer, /** void */, {
+      renderer->setTime(t);
+    });
   }
 
   /**
@@ -421,10 +466,7 @@ extern "C"
    */
   DLL_PUBLIC bool TransmuteUnity_SetViewerStereoProjectionMatrix(int eyeId, float *transform)
   {
-    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
-    if (xrDevice == NULL)
-      return false;
-    return xrDevice->updateProjectionMatrix(eyeId, transform);
+    TR_ENSURE_COMPONENT(xrDevice, false, { return xrDevice->updateProjectionMatrix(eyeId, transform); });
   }
 
   /**
@@ -436,27 +478,25 @@ extern "C"
    */
   DLL_PUBLIC bool TransmuteUnity_SetViewerTransformFromTRS(float *translation, float *rotation)
   {
-    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
-    if (xrDevice == NULL)
-      return false;
+    TR_ENSURE_COMPONENT(xrDevice, false, {
+      float tx = translation[0];
+      float ty = translation[1];
+      float tz = translation[2];
+      float rx = rotation[0];
+      float ry = rotation[1];
+      float rz = rotation[2];
+      float rw = rotation[3];
 
-    float tx = translation[0];
-    float ty = translation[1];
-    float tz = translation[2];
-    float rx = rotation[0];
-    float ry = rotation[1];
-    float rz = rotation[2];
-    float rw = rotation[3];
+      auto scalingMatrix = glm::scale(glm::mat4(1), glm::vec3(1.0, 1.0, 1.0));
+      auto translationMatrix = glm::translate(glm::mat4(1), glm::vec3(tx, ty, tz));
+      auto rotationMatrix = glm::mat4_cast(glm::quat(rw, rx, ry, rz));
+      auto base = translationMatrix * rotationMatrix * scalingMatrix;
 
-    auto scalingMatrix = glm::scale(glm::mat4(1), glm::vec3(1.0, 1.0, 1.0));
-    auto translationMatrix = glm::translate(glm::mat4(1), glm::vec3(tx, ty, tz));
-    auto rotationMatrix = glm::mat4_cast(glm::quat(rw, rx, ry, rz));
-    auto base = translationMatrix * rotationMatrix * scalingMatrix;
-
-    float m[16];
-    for (int i = 0; i < 16; i++)
-      m[i] = base[i / 4][i % 4];
-    return xrDevice->updateViewerBaseMatrix(m);
+      float m[16];
+      for (int i = 0; i < 16; i++)
+        m[i] = base[i / 4][i % 4];
+      return xrDevice->updateViewerBaseMatrix(m);
+    });
   }
 
   /**
@@ -467,27 +507,25 @@ extern "C"
    */
   DLL_PUBLIC bool TransmuteUnity_SetViewerStereoViewMatrixFromTRS(int eyeId, float *translation, float *rotation)
   {
-    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
-    if (xrDevice == NULL)
-      return false;
+    TR_ENSURE_COMPONENT(xrDevice, false, {
+      float tx = translation[0] * s_WorldScalingFactor;
+      float ty = translation[1] * s_WorldScalingFactor;
+      float tz = translation[2] * s_WorldScalingFactor;
+      float rx = rotation[0];
+      float ry = rotation[1];
+      float rz = rotation[2];
+      float rw = rotation[3];
 
-    float tx = translation[0] * s_WorldScalingFactor;
-    float ty = translation[1] * s_WorldScalingFactor;
-    float tz = translation[2] * s_WorldScalingFactor;
-    float rx = rotation[0];
-    float ry = rotation[1];
-    float rz = rotation[2];
-    float rw = rotation[3];
+      auto S = glm::scale(glm::mat4(1), glm::vec3(-1, 1, -1));
+      auto T = glm::translate(glm::mat4(1), glm::vec3(tx, ty, tz));
+      auto R = glm::mat4_cast(glm::quat(rw, rx, ry, rz));
+      auto base = T * R * S;
 
-    auto S = glm::scale(glm::mat4(1), glm::vec3(-1, 1, -1));
-    auto T = glm::translate(glm::mat4(1), glm::vec3(tx, ty, tz));
-    auto R = glm::mat4_cast(glm::quat(rw, rx, ry, rz));
-    auto base = T * R * S;
-
-    float m[16];
-    for (int i = 0; i < 16; i++)
-      m[i] = base[i / 4][i % 4];
-    return xrDevice->updateViewMatrix(eyeId, m);
+      float m[16];
+      for (int i = 0; i < 16; i++)
+        m[i] = base[i / 4][i % 4];
+      return xrDevice->updateViewMatrix(eyeId, m);
+    });
   }
 
   /**
@@ -500,27 +538,25 @@ extern "C"
    */
   DLL_PUBLIC bool TransmuteUnity_SetLocalTransformFromTRS(int id, float *translation, float *rotation)
   {
-    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
-    if (xrDevice == NULL)
-      return false;
+    TR_ENSURE_COMPONENT(xrDevice, false, {
+      float tx = translation[0] * s_WorldScalingFactor;
+      float ty = translation[1] * s_WorldScalingFactor;
+      float tz = translation[2] * s_WorldScalingFactor;
+      float rx = rotation[0];
+      float ry = rotation[1];
+      float rz = rotation[2];
+      float rw = rotation[3];
 
-    float tx = translation[0] * s_WorldScalingFactor;
-    float ty = translation[1] * s_WorldScalingFactor;
-    float tz = translation[2] * s_WorldScalingFactor;
-    float rx = rotation[0];
-    float ry = rotation[1];
-    float rz = rotation[2];
-    float rw = rotation[3];
+      auto S = glm::scale(glm::mat4(1), glm::vec3(1, 1, 1));
+      auto T = glm::translate(glm::mat4(1), glm::vec3(tx, ty, tz));
+      auto R = glm::mat4_cast(glm::quat(rw, rx, ry, rz));
+      auto base = T * R * S;
 
-    auto S = glm::scale(glm::mat4(1), glm::vec3(1, 1, 1));
-    auto T = glm::translate(glm::mat4(1), glm::vec3(tx, ty, tz));
-    auto R = glm::mat4_cast(glm::quat(rw, rx, ry, rz));
-    auto base = T * R * S;
-
-    float m[16];
-    for (int i = 0; i < 16; i++)
-      m[i] = base[i / 4][i % 4];
-    return xrDevice->updateLocalTransformByDocumentId(id, m);
+      float m[16];
+      for (int i = 0; i < 16; i++)
+        m[i] = base[i / 4][i % 4];
+      return xrDevice->updateLocalTransformByDocumentId(id, m);
+    });
   }
 
   /**
@@ -541,10 +577,9 @@ extern "C"
    */
   DLL_PUBLIC void TransmuteUnity_ConfigureMainControllerInputSource(bool enabled, bool usingTouch)
   {
-    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
-    if (xrDevice == NULL)
-      return;
-    xrDevice->configureMainControllerInputSource(enabled, usingTouch);
+    TR_ENSURE_COMPONENT(xrDevice, /** void */, {
+      xrDevice->configureMainControllerInputSource(enabled, usingTouch);
+    });
   }
 
   /**
@@ -555,15 +590,42 @@ extern "C"
    */
   DLL_PUBLIC void TransmuteUnity_SetMainControllerInputRayPose(float *translation, float *rotation)
   {
-    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
-    if (xrDevice == NULL)
-      return;
-
+    TR_ENSURE_COMPONENT(xrDevice, /** void */, {});
     auto mainController = xrDevice->getMainControllerInputSource();
     if (mainController != nullptr)
     {
       auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
       mainController->setTargetRayBaseMatrix(baseMatrix);
+    }
+  }
+
+  DLL_PUBLIC bool TransmuteUnity_GetMainControllerInputRayHitResult(float *outHitPosition, float *outHitRotationQuat)
+  {
+    TR_ENSURE_COMPONENT(xrDevice, false, {});
+    auto mainController = xrDevice->getMainControllerInputSource();
+    if (mainController == nullptr)
+      return false;
+
+    if (!mainController->targetRayHitResult.hit)
+    {
+      return false;
+    }
+    else
+    {
+      float *matrixValues = mainController->targetRayHitResult.baseMatrix;
+      glm::mat4 hitMatrix = glm::make_mat4(matrixValues);
+      glm::vec3 position = glm::vec3(hitMatrix[3]);
+      glm::quat rotation = glm::quat_cast(hitMatrix);
+
+      // Convert to Unity Coordinate System
+      outHitPosition[0] = position.x;
+      outHitPosition[1] = position.y;
+      outHitPosition[2] = -position.z;
+      outHitRotationQuat[0] = -rotation.x;
+      outHitRotationQuat[1] = -rotation.y;
+      outHitRotationQuat[2] = rotation.z;
+      outHitRotationQuat[3] = rotation.w;
+      return true;
     }
   }
 
@@ -579,10 +641,7 @@ extern "C"
    */
   DLL_PUBLIC void TransmuteUnity_SetMainControllerInputActionState(int actionType, int state)
   {
-    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
-    if (xrDevice == NULL)
-      return;
-
+    TR_ENSURE_COMPONENT(xrDevice, /** void */, {});
     auto mainController = xrDevice->getMainControllerInputSource();
     if (mainController != nullptr)
     {
@@ -598,10 +657,7 @@ extern "C"
    */
   DLL_PUBLIC void TransmuteUnity_SetHandInputEnabled(int handness, bool enabled)
   {
-    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
-    if (xrDevice == NULL)
-      return;
-
+    TR_ENSURE_COMPONENT(xrDevice, /** void */, {});
     auto hand = xrDevice->getHandInputSource(handness);
     if (hand != nullptr)
       hand->enabled = enabled;
@@ -618,10 +674,7 @@ extern "C"
    */
   DLL_PUBLIC void TransmuteUnity_SetHandInputPose(int handness, int joint, float *translation, float *rotation, float radius)
   {
-    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
-    if (xrDevice == NULL)
-      return;
-
+    TR_ENSURE_COMPONENT(xrDevice, /** void */, {});
     auto hand = xrDevice->getHandInputSource(handness);
     if (hand == nullptr)
       return;
@@ -642,15 +695,13 @@ extern "C"
    */
   DLL_PUBLIC void TransmuteUnity_SetHandInputRayPose(int handness, float *translation, float *rotation)
   {
-    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
-    if (xrDevice == NULL)
-      return;
-
+    TR_ENSURE_COMPONENT(xrDevice, /** void */, {});
     auto hand = xrDevice->getHandInputSource(handness);
-    if (hand == nullptr)
-      return;
-    auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
-    hand->setTargetRayBaseMatrix(baseMatrix);
+    if (hand != nullptr)
+    {
+      auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
+      hand->setTargetRayBaseMatrix(baseMatrix);
+    }
   }
 
   /**
@@ -662,15 +713,13 @@ extern "C"
    */
   DLL_PUBLIC void TransmuteUnity_SetHandInputGripPose(int handness, float *translation, float *rotation)
   {
-    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
-    if (xrDevice == NULL)
-      return;
-
+    TR_ENSURE_COMPONENT(xrDevice, /** void */, {});
     auto hand = xrDevice->getHandInputSource(handness);
-    if (hand == nullptr)
-      return;
-    auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
-    hand->setGripBaseMatrix(baseMatrix);
+    if (hand != nullptr)
+    {
+      auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
+      hand->setGripBaseMatrix(baseMatrix);
+    }
   }
 
   /**
@@ -686,17 +735,14 @@ extern "C"
    */
   DLL_PUBLIC void TransmuteUnity_SetHandInputActionState(int handness, int actionType, int state)
   {
-    auto xrDevice = TR_ENSURE_COMPONENT(xrDevice);
-    if (xrDevice == NULL)
-      return;
-
+    TR_ENSURE_COMPONENT(xrDevice, /** void */, {});
     auto hand = xrDevice->getHandInputSource(handness);
-    if (hand == nullptr)
-      return;
-
-    if (actionType == xr::InputSourceActionType::XRPrimaryAction)
-      hand->primaryActionPressed = state == 0; /** check if pressed */
-    else if (actionType == xr::InputSourceActionType::XRSqueezeAction)
-      hand->squeezeActionPressed = state == 0; /** check if pressed */
+    if (hand != nullptr)
+    {
+      if (actionType == xr::InputSourceActionType::XRPrimaryAction)
+        hand->primaryActionPressed = state == 0; /** check if pressed */
+      else if (actionType == xr::InputSourceActionType::XRSqueezeAction)
+        hand->squeezeActionPressed = state == 0; /** check if pressed */
+    }
   }
 }
