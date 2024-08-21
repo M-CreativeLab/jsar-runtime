@@ -212,7 +212,7 @@ namespace bindings
     auto isMultipass = device->getDeviceInit().renderedAsMultipass();
     if (
       !device->getDeviceInit().renderedAsMultipass() || /** SinglePass */
-      internal->viewIndex == 1 /** MultiPass's right view */
+      internal->viewIndex == 0 /** MultiPass's right view */
     )
       isNewStereoFrame = true;
 
@@ -228,9 +228,11 @@ namespace bindings
     endTime = chrono::steady_clock::now();
 
     auto frameDuration = chrono::duration_cast<chrono::microseconds>(endTime - startTime).count() / 1000.0;
-    if (frameDuration > 1000 / 45)
-      fprintf(stderr, "Detected a long frame(#%d) at session(%d)'s view(%d) takes %fms\n",
-              id, sessionId, internal->viewIndex, frameDuration);
+    // fprintf(stderr, "Frame(%d|%d) takes %fms\n", id, internal->viewIndex, frameDuration);
+#define FRAME_DURATION_THRESHOLD 1000 / 45 / 2
+    if (frameDuration > FRAME_DURATION_THRESHOLD)
+      fprintf(stderr, "Detected a long frame(#%d) at session(%d)'s view(%d) takes %fms > %dms\n",
+              id, sessionId, internal->viewIndex, frameDuration, FRAME_DURATION_THRESHOLD);
 
     auto isMultipass = device->getDeviceInit().renderedAsMultipass();
     if (!isMultipass || internal->viewIndex == 1)

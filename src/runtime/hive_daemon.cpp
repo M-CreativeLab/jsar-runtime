@@ -171,6 +171,12 @@ void TrHiveDaemon::onDeamonProcess()
     xrDeviceObject.AddMember("active", true, allocator);
     xrDeviceObject.AddMember("stereoRenderingMode", static_cast<int>(xrDevice->getStereoRenderingMode()), allocator);
     xrDeviceObject.AddMember("commandChanPort", xrDevice->getCommandChanPort(), allocator);
+    xrDeviceObject.AddMember("sessionContextZoneDirectory",
+                             rapidjson::Value(xrDevice->getSessionContextZoneDirectory().c_str(), allocator),
+                             allocator);
+    xrDeviceObject.AddMember("deviceContextZonePath",
+                             rapidjson::Value(xrDevice->getDeviceContextZonePath().c_str(), allocator),
+                             allocator);
     xrDeviceObject.AddMember("inputSourcesZonePath",
                              rapidjson::Value(xrDevice->getInputSourcesZonePath().c_str(), allocator),
                              allocator);
@@ -341,6 +347,7 @@ void TrHiveDaemon::recvCommand()
     case hive_comm::TrHiveCommandType::OnExitEvent:
     {
       auto exitEvent = hive_comm::TrHiveCommandBase::FromMessage<hive_comm::TrOnExitEvent>(commandMessage);
+      DEBUG(LOG_TAG_ERROR, "Received exit event from client(%d): %d", exitEvent.documentId, exitEvent.code);
       auto contentToExit = constellation->contentManager->getContent(exitEvent.documentId, true);
       if (contentToExit != nullptr)
         contentToExit->onClientProcessExited(exitEvent.code);

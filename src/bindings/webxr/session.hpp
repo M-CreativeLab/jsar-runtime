@@ -7,6 +7,7 @@
 #include "space.hpp"
 #include "xr/render_state.hpp"
 
+#include "common/scoped_thread.hpp"
 #include "common/frame_request/types.hpp"
 #include "common/xr/types.hpp"
 #include "client/per_process.hpp"
@@ -45,6 +46,7 @@ namespace bindings
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    static Napi::Value FrameHandler(const Napi::CallbackInfo &info);
     XRSession(const Napi::CallbackInfo &info);
     ~XRSession();
 
@@ -62,6 +64,7 @@ namespace bindings
   private:
     void start();
     void stop();
+    void tick();
     /**
      * @brief Calculate the frames per second.
      * @returns true if the FPS was updated.
@@ -111,6 +114,7 @@ namespace bindings
   private:
     uint32_t fps = 0;
     int frameCount = 0;
+    atomic<bool> inXRFrame = false;
     /**
      * Every frame timepoint, updated at the start of each frame.
      */
@@ -123,6 +127,16 @@ namespace bindings
      * The last recorded frame timepoint, updated by manual at calculating FPS.
      */
     std::chrono::steady_clock::time_point lastRecordedFrameTimepoint = chrono::steady_clock::now();
+    /**
+     * The session context zone client.
+     */
+    unique_ptr<xr::TrXRSessionContextZone> sessionContextZoneClient;
+    /**
+     * The frames worker thread.
+     */
+    unique_ptr<WorkerThread> framesWorker;
+    Napi::FunctionReference *frameHandlerRef = nullptr;
+    Napi::ThreadSafeFunction frameHandlerTSFN;
 
   public:
     static Napi::FunctionReference *constructor;

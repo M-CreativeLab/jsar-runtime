@@ -4,6 +4,7 @@
 #include <napi.h>
 
 #include "common/xr/types.hpp"
+#include "./common.hpp"
 #include "./device_native.hpp"
 #include "./session.hpp"
 

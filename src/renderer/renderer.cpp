@@ -44,7 +44,7 @@ namespace renderer
 
   void TrRenderer::tick(analytics::PerformanceCounter &perfCounter)
   {
-    if (api == nullptr)
+    if (TR_UNLIKELY(api == nullptr))
       return; // Skip if api is not ready.
 
     tickingTimepoint = std::chrono::high_resolution_clock::now();
@@ -55,6 +55,9 @@ namespace renderer
       return;
 
     glHostContext->Record();
+    // Update the view's framebuffer and viewport when the host context is recorded.
+    constellation->xrDevice->updateViewFramebuffer(glHostContext->GetFramebuffer(),
+                                                   glHostContext->GetViewport());
     if (isHostContextSummaryEnabled)
       glHostContext->Print();
     perfCounter.record("  renderer.finishedHostContextRecord");

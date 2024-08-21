@@ -23,7 +23,7 @@ enum class TrZoneType
 };
 
 /**
- * Zone is a mmap-based method to share the C/C++ struct/class in processes.
+ * Zone is a mmap-based method to share the C/C++ struct/class from server to client, it means these objects are read-only for the client.
  */
 template <typename DataType>
 class TrZone
@@ -49,11 +49,19 @@ protected:
 
 public:
   string getFilename() { return filename; }
+  /**
+   * Sync the server-side object to the shared memory to protect the data consistency at the client-side.
+   */
   void syncData()
   {
     if (memoryAddr != nullptr && data != nullptr)
       memcpy(memoryAddr, reinterpret_cast<void *>(data.get()), memorySize);
   }
+  /**
+   * Get the data from the shared memory.
+   *
+   * @return The data pointer.
+   */
   DataType *getData() { return reinterpret_cast<DataType *>(memoryAddr); }
 
 private:

@@ -46,6 +46,7 @@ TrContentRuntime::~TrContentRuntime()
       xrDevice->endAndRemoveSession(session);
   }
   xrSessionsStack.clear();
+  DEBUG(LOG_TAG_CONTENT, "The content runtime(%d) has been destroyed", id);
 }
 
 void TrContentRuntime::preStart()
@@ -97,6 +98,7 @@ void TrContentRuntime::dispose(bool waitsForExit)
   contentManager->hived->terminateClient(id);
   if (waitsForExit)
   {
+    DEBUG(LOG_TAG_CONTENT, "Waiting for the content(%d) to exit...", id);
     unique_lock<mutex> lock(exitingMutex);
     exitedCv.wait(lock, [this]
                   { return pid == INVALID_PID; });

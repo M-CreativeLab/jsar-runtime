@@ -160,7 +160,7 @@ public: // event methods
   bool sendEvent(TrNativeEvent &event);
   /**
    * Receive a native event message from the host process.
-   * 
+   *
    * @param timeout The timeout to wait for the next message.
    * @returns The new instance of the event message, or nullptr if no message received.
    */
@@ -202,12 +202,21 @@ public: // WebXR methods
   bool flushXrFrame();
   bool finishXrFrame(xr::TrXRFrameRequest *frameRequest);
   inline bool isInXrFrame() { return currentXrFrameRequest != nullptr; }
-  xr::TrXRInputSourcesZone *getXRInputSourcesZone();
+  xr::TrXRDeviceContextZone *getXRDeviceContextZone() { return xrDeviceContextZoneClient.get(); }
+  xr::TrXRInputSourcesZone *getXRInputSourcesZone() { return xrInputSourcesZoneClient.get(); }
 
-  int getFramebufferWidth();
-  int getFramebufferHeight();
-  void setFramebufferWidth(int w);
-  void setFramebufferHeight(int h);
+  /**
+   * Get the framebuffer's width, or zero if the XR is not enabled.
+   * 
+   * @returns the framebuffer's width
+   */
+  int getFramebufferWidth() { return xrDeviceContextZoneClient == nullptr ? 0 : xrDeviceContextZoneClient->getFramebufferConfig().width; }
+  /**
+   * Get the framebuffer's height, or zero if the XR is not enabled.
+   * 
+   * @returns the framebuffer's height
+   */
+  int getFramebufferHeight() { return xrDeviceContextZoneClient == nullptr ? 0 : xrDeviceContextZoneClient->getFramebufferConfig().height; }
 
   template <typename CommandType>
   bool sendXrCommand(xr::TrXRCommandBase<CommandType> &xrCommand)
@@ -292,6 +301,7 @@ private: // xr fields
   xr::TrXRCommandSender *xrCommandChanSender = nullptr;
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
   xr::TrXRFrameRequest *currentXrFrameRequest = nullptr;
+  unique_ptr<xr::TrXRDeviceContextZone> xrDeviceContextZoneClient;
   unique_ptr<xr::TrXRInputSourcesZone> xrInputSourcesZoneClient;
   int framebufferWidth = 0;
   int framebufferHeight = 0;

@@ -38,7 +38,12 @@ namespace xr
   {
     // Initialize the input sources related fields.
     auto &opts = m_Constellation->getOptions();
+    m_SessionContextZoneDirectory = opts.getZoneDirname("sessions");
+    m_DeviceContextZone = std::make_unique<TrXRDeviceContextZone>(opts.getZoneFilename("device"), TrZoneType::Server);
     m_InputSourcesZone = std::make_unique<TrXRInputSourcesZone>(opts.getZoneFilename("inputsources"), TrZoneType::Server);
+
+    // Update configurations to zone objects
+    m_DeviceContextZone->configure(m_Enabled, m_StereoRenderingMode);
 
     // Start command client watcher.
     startCommandClientWatcher();
@@ -49,6 +54,16 @@ namespace xr
     m_CommandClientWatcherRunning = false;
     if (m_CommandClientWatcher != nullptr)
       m_CommandClientWatcher->join();
+  }
+
+  void Device::tick()
+  {
+    if (isRenderedAsMultipass() == false || m_ActiveEyeId == 1)
+      m_DeviceContextZone->syncData();
+
+    for (auto session : m_Sessions)
+      session->tick();
+    m_InputSourcesZone->syncData();
   }
 
   bool Device::isSessionSupported(xr::TrXRSessionMode mode)
@@ -208,13 +223,23 @@ namespace xr
   bool Device::updateFov(float fov)
   {
     m_FieldOfView = fov;
+    m_DeviceContextZone->updateRecommendedFov(fov);
     return true;
   }
 
-  bool Device::updateViewport(int eyeId, float x, float y, float width, float height)
+  bool Device::updateViewFramebuffer(int framebufferId, TrViewport viewport)
+  {
+    m_DeviceContextZone->updateViewFramebuffer(m_ActiveEyeId, framebufferId, viewport);
+    return true;
+  }
+
+  bool Device::updateViewport(int eyeId, float x, float y, float w, float h)
   {
     std::unique_lock<std::shared_mutex> lock(m_MutexForValueUpdates);
-    m_ViewportsByEyeId[eyeId] = Viewport(width, height, x, y);
+    m_ViewportsByEyeId[eyeId] = Viewport(w, h, x, y);
+
+    auto &view = m_DeviceContextZone->getStereoView(eyeId);
+    view.setViewport(w, h, x, y);
     return true;
   }
 
@@ -223,6 +248,7 @@ namespace xr
     std::unique_lock<std::shared_mutex> lock(m_MutexForValueUpdates);
     for (int i = 0; i < 16; i++)
       m_ViewerBaseMatrix[i] = baseMatrixValues[i];
+    m_DeviceContextZone->updateViewerBaseMatrix(baseMatrixValues);
 
     /**
      * Currently we use the viewer's base matrix to update the gaze data when the eye tracking is not supported
@@ -242,13 +268,17 @@ namespace xr
   bool Device::updateViewMatrix(int viewIndex, float *viewMatrixValues)
   {
     std::unique_lock<std::shared_mutex> lock(m_MutexForValueUpdates);
-    if (viewIndex != 0 && viewIndex != 1)
+    if (TR_UNLIKELY(viewIndex != 0 && viewIndex != 1))
       return false; // Invalid eye id (0 or 1)
 
     auto &targetViewMatrix = m_ViewerStereoViewMatrix[viewIndex];
     for (int i = 0; i < 16; i++)
       targetViewMatrix[i] = viewMatrixValues[i];
     m_ActiveEyeId = viewIndex;
+
+    // Update to the device context
+    auto &view = m_DeviceContextZone->getStereoView(viewIndex);
+    view.setViewMatrix(viewMatrixValues);
 
     // Update the merged frustum by the view matrix
     if (viewIndex == 1)
@@ -273,6 +303,10 @@ namespace xr
     for (int i = 0; i < 16; i++)
       targetProjectionMatrix[i] = projectionMatrixValues[i];
     m_ActiveEyeId = viewIndex;
+
+    // Update to the device context
+    auto &view = m_DeviceContextZone->getStereoView(viewIndex);
+    view.setProjectionMatrix(projectionMatrixValues);
     return true;
   }
 
@@ -298,9 +332,6 @@ namespace xr
   bool Device::updateLocalTransformByDocumentId(int id, float *baseMatrixValues)
   {
     std::shared_lock<std::shared_mutex> lock(m_MutexForSessions);
-    if (m_Sessions.size() == 0)
-      return false;
-
     auto content = m_Constellation->contentManager->getContent(id);
     if (TR_UNLIKELY(content == nullptr))
       return false;
@@ -323,7 +354,6 @@ namespace xr
       return m_InputSourcesZone->getFilename();
   }
 
-  void Device::syncInputSourcesToZone() { return m_InputSourcesZone->syncData(); }
   void Device::configureMainControllerInputSource(bool enabled, bool usingTouch)
   {
     auto mainController = m_InputSourcesZone->getMainControllerInputSource();

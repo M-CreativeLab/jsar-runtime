@@ -18,6 +18,10 @@ namespace xr
     auto content = contentRenderer->getContent();
     assert(content != nullptr);
     content->appendXRSession(this);
+
+    auto constellation = xrDevice->m_Constellation;
+    auto &opt = constellation->getOptions();
+    contextZone = make_unique<TrXRSessionContextZone>(opt.getZoneFilename(to_string(id), "sessions"), TrZoneType::Server, id);
   }
 
   TrXRSession::~TrXRSession()
@@ -25,6 +29,12 @@ namespace xr
     auto content = contentRenderer->getContent();
     if (content != nullptr)
       content->removeXRSession(this);
+  }
+
+  void TrXRSession::tick()
+  {
+    // TODO: need to check if this session is active?
+    contextZone->syncData();
   }
 
   bool TrXRSession::belongsTo(TrContentRenderer *contentRenderer)
@@ -53,6 +63,9 @@ namespace xr
   {
     baseMatrix = matrix;
     boundingInfo.update(baseMatrix);
+
+    // Update to the context zone.
+    contextZone->setLocalBaseMatrix(glm::value_ptr(baseMatrix));
 
     // Update the sound sources' base matrix.
     auto content = contentRenderer->getContent();

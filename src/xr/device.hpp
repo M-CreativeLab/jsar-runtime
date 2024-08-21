@@ -56,6 +56,10 @@ namespace xr
      */
     void shutdown();
     /**
+     * Tick function.
+     */
+    void tick();
+    /**
      * It returns if this session mode (immersive-ar, immersive-vr or inline) is supported by the XR device.
      */
     bool isSessionSupported(TrXRSessionMode mode);
@@ -116,6 +120,13 @@ namespace xr
   public:
     bool updateFov(float fov);
     /**
+     * Update the current view's framebuffer.
+     * 
+     * @param framebufferId the framebuffer id to update.
+     * @param viewport the viewport to update.
+     */
+    bool updateViewFramebuffer(int framebufferId, TrViewport viewport);
+    /**
      * Update current framebuffer's viewport.
      */
     bool updateViewport(int eyeId, float x, float y, float width, float height);
@@ -171,13 +182,29 @@ namespace xr
       auto forward = glm::normalize(glm::vec3(-glm::column(baseMatrix, 2)));
       m_GazeRay.update(origin, forward);
     }
+    /**
+     * Get the session context zone directory.
+     * 
+     * @returns the session context zone directory.
+     */
+    string getSessionContextZoneDirectory() { return m_SessionContextZoneDirectory; }
+    /**
+     * Get the device context zone path.
+     *
+     * @returns the device context zone path.
+     */
+    string getDeviceContextZonePath() { return m_DeviceContextZone->getFilename(); }
 
   public: // Input sources
+    /**
+     * Get the input sources zone path.
+     *
+     * @returns the input sources zone path.
+     */
     string getInputSourcesZonePath();
-    void syncInputSourcesToZone();
     /**
      * Configure the main controller input source, it will enable the main controller input source, host could call this in any times.
-     * 
+     *
      * @param enabled if the main controller input source is enabled.
      * @param usingTouch if the main controller is using touch-based input.
      */
@@ -255,15 +282,20 @@ namespace xr
      * The id to indentify the session, corresponding to the session's id in the WebXR API.
      */
     vector<shared_ptr<TrXRSession>> m_Sessions;
+    string m_SessionContextZoneDirectory;
     /**
-     * Input sources fields
+     * The device context zone for device-related shared data.
      */
-    std::unique_ptr<TrXRInputSourcesZone> m_InputSourcesZone;
+    unique_ptr<TrXRDeviceContextZone> m_DeviceContextZone;
+    /**
+     * The input sources zone for input-related shared data.
+     */
+    unique_ptr<TrXRInputSourcesZone> m_InputSourcesZone;
     /**
      * The native ray for gaze, it's used to detect which session's content is gazed or loss focus.
      */
     collision::TrRay m_GazeRay;
-    std::array<math3d::TrPlane, 6> m_ViewerFrustumPlanes;
+    array<math3d::TrPlane, 6> m_ViewerFrustumPlanes;
     /**
      * A mutex to ensure the above data is thread-safe.
      */

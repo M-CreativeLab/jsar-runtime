@@ -177,8 +177,8 @@ namespace bindings
 
     auto instance = data->device;
     auto frameRequest = data->frameRequest;
-    instance->clientContext->setFramebufferWidth(frameRequest->framebufferWidth);
-    instance->clientContext->setFramebufferHeight(frameRequest->framebufferHeight);
+    // instance->clientContext->setFramebufferWidth(frameRequest->framebufferWidth);
+    // instance->clientContext->setFramebufferHeight(frameRequest->framebufferHeight);
 
     auto contextifiedFrameCallbacks = instance->contextifiedFrameCallbacks;
     instance->contextifiedFrameCallbacks.clear(); // Clear the contextifiedFrameCallbacks

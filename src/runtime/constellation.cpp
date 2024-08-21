@@ -31,7 +31,7 @@ TrConstellation::~TrConstellation()
 {
 }
 
-bool TrConstellation::configure(TrConstellationInit& init)
+bool TrConstellation::configure(TrConstellationInit &init)
 {
   options = init;
   Dl_info dlinfo;
@@ -82,7 +82,7 @@ void TrConstellation::tick(analytics::PerformanceCounter &perfCounter)
 
   if (xrDevice->enabled())
   {
-    xrDevice->syncInputSourcesToZone();
+    xrDevice->tick();
     perfCounter.record("finishInputSourcesSync");
   }
 }

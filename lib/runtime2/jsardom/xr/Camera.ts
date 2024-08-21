@@ -244,11 +244,11 @@ export class WebXRCamera extends BABYLON.FreeCamera {
         // so we only need to set the output render target once for the rig parent.
         if (i == 0) {
           this._xrSessionManager.trySetViewportForView(this.viewport, view);
-          this.outputRenderTarget = renderTargetTexture;
+          // this.outputRenderTarget = renderTargetTexture;
         }
       } else {
         this._xrSessionManager.trySetViewportForView(this.viewport, view);
-        this.outputRenderTarget = renderTargetTexture || this._xrSessionManager.getRenderTargetTextureForView(view);
+        // this.outputRenderTarget = renderTargetTexture || this._xrSessionManager.getRenderTargetTextureForView(view);
       }
     });
   }

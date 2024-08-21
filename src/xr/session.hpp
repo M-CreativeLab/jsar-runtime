@@ -21,6 +21,10 @@ namespace xr
 
   public:
     /**
+     * Execute the session tick.
+     */
+    void tick();
+    /**
      * Check if the session belongs to the content by `contentRenderer` pointer.
      */
     bool belongsTo(TrContentRenderer *contentRenderer);
@@ -35,7 +39,24 @@ namespace xr
      */
     bool isActive();
     glm::mat4 getLocalBaseMatrix();
+    /**
+     * Set the local base matrix of this session.
+     * 
+     * @param matrix The local base matrix.
+     */
     void setLocalBaseMatrix(glm::mat4 matrix);
+    /**
+     * Set the stereo frame id to the session's context zone.
+     * 
+     * @param id The stereo id.
+     */
+    void setStereoId(uint32_t id) { contextZone->setStereoId(id); }
+    /**
+     * Set the pending stereo frames count to the session's context zone.
+     * 
+     * @param count The pending stereo frames count.
+     */
+    void setPendingStereoFramesCount(int count) { contextZone->setPendingStereoFramesCount(count); }
     /**
      * Check if the session's content in the viewer's frustum.
      */
@@ -57,7 +78,7 @@ namespace xr
     /**
      * The base matrix of this session that represents how the session's content local space is transformed in the world
      * space.
-     * 
+     *
      * NOTE: This base matrix scaling is always (1, 1, 1) because the WebXR `XRSpace` not includes the scale, or ensure the
      * scale is (1, 1, 1).
      */
@@ -65,7 +86,7 @@ namespace xr
     /**
      * The recommanded content scale for this session, this value is used for computing the default bounding info with the
      * base matrix which's scale will be ignored.
-     * 
+     *
      * And this value is also exposed to the application side to adjust the content size to match the default bounding info.
      */
     float recommendedContentSize = 0.3f;
@@ -81,5 +102,9 @@ namespace xr
     Device *xrDevice = nullptr;
     TrConstellation *constellation = nullptr;
     TrContentRenderer *contentRenderer = nullptr;
+    /**
+     * The session context zone for session-related shared data to client-side.
+     */
+    unique_ptr<TrXRSessionContextZone> contextZone;
   };
 }

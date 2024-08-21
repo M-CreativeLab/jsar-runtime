@@ -88,25 +88,25 @@ namespace renderer
     lastDispatchedFrameTime = now;
 
     dispatchAnimationFrameRequest();
-    if (xrDevice != nullptr && xrDevice->enabled())
-    {
-      if (
-          isXRFrameBaseReqUpdating ||       // Skip the frame dispatching if the updating is not finished.
-          isXRFrameBaseReqDirty == false || // Skip the frame dispatching if the base frame request is not dirty.
-          content->used == false ||         // Skip the frame dispatching if the content is not used.
-          getPendingStereoFramesCount() > 0)
-        return;
+    // if (xrDevice != nullptr && xrDevice->enabled())
+    // {
+    //   if (
+    //       isXRFrameBaseReqUpdating ||       // Skip the frame dispatching if the updating is not finished.
+    //       isXRFrameBaseReqDirty == false || // Skip the frame dispatching if the base frame request is not dirty.
+    //       content->used == false ||         // Skip the frame dispatching if the content is not used.
+    //       getPendingStereoFramesCount() > 0)
+    //     return;
 
-      if (xrDevice->isRenderedAsMultipass()) // TODO: support singlepass?
-      {
-        shared_lock<shared_mutex> lock(mutexForXRFrameBaseReq);
-        xrDevice->iterateSessionsByContentPid(content->pid, [this](xr::TrXRSession *session)
-                                              {
-                                                dispatchXRFrameRequest(session, 0);
-                                                dispatchXRFrameRequest(session, 1); });
-        isXRFrameBaseReqDirty.store(false);
-      }
-    }
+    //   if (xrDevice->isRenderedAsMultipass()) // TODO: support singlepass?
+    //   {
+    //     shared_lock<shared_mutex> lock(mutexForXRFrameBaseReq);
+    //     xrDevice->iterateSessionsByContentPid(content->pid, [this](xr::TrXRSession *session)
+    //                                           {
+    //                                             dispatchXRFrameRequest(session, 0);
+    //                                             dispatchXRFrameRequest(session, 1); });
+    //     isXRFrameBaseReqDirty.store(false);
+    //   }
+    // }
   }
 
   void TrContentRenderer::onCommandBufferRequestReceived(TrCommandBufferBase *req)
@@ -191,6 +191,14 @@ namespace renderer
         if (stereoRenderingFrame != nullptr)
         {
           stereoRenderingFrame->available(true); // mark the StereoRenderingFrame is available
+
+          // Update the content's active session with the stereo id.
+          auto activeSession = content->getActiveXRSession();
+          if (activeSession != nullptr)
+          {
+            activeSession->setStereoId(stereoRenderingFrame->getId());
+            activeSession->setPendingStereoFramesCount(getPendingStereoFramesCount());
+          }
 
           xr::TrXRView view(viewIndex);
           auto viewport = xrDevice->getViewport(viewIndex);

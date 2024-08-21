@@ -45,16 +45,50 @@ public:
     if (!filesystem::exists(applicationCacheDirectory))
       filesystem::create_directory(applicationCacheDirectory);
   }
-  string getZoneDirname()
+  /**
+   * Get the zone directory name.
+   *
+   * NOTE: call this function will have side effect that it will create the directory if it doesn't exist.
+   * 
+   * @param subDir The sub directory name, `nullopt` means no sub directory.
+   * @returns The zone directory name.
+   */
+  string getZoneDirname(optional<string> subDir = nullopt)
   {
     string zoneDirname = applicationCacheDirectory + "/.zones";
     if (!filesystem::exists(zoneDirname))
       filesystem::create_directory(zoneDirname);
+
+    // Ensure the sub directory.
+    if (subDir.has_value())
+    {
+      zoneDirname += "/" + subDir.value();
+      if (!filesystem::exists(zoneDirname))
+        filesystem::create_directory(zoneDirname);
+    }
     return zoneDirname;
   }
+  /**
+   * Get the full path by its zone name.
+   *
+   * NOTE: call this function will have side effect that it will create the directory if it doesn't exist.
+   *
+   * @returns The full path of the zone filename.
+   */
   string getZoneFilename(string zoneName)
   {
     return getZoneDirname() + "/" + zoneName;
+  }
+  /**
+   * Get the full path by its zone name with a sub directory: {zoneRoot}/{subDir}/{zoneName}.
+   *
+   * NOTE: call this function will have side effect that it will create the directory if it doesn't exist.
+   *
+   * @returns The full path of the zone filename.
+   */
+  string getZoneFilename(string zoneName, string subDir)
+  {
+    return getZoneDirname(subDir) + "/" + zoneName;
   }
 };
 
@@ -93,10 +127,10 @@ public:
 public:
   /**
    * Configure the constellation, such as setting the storage directory, proxy server, etc.
-   * 
+   *
    * @param init The constellation initialization.
    */
-  bool configure(TrConstellationInit& init);
+  bool configure(TrConstellationInit &init);
   /**
    * This starts the constellation, initializing the content manager, media manager, renderer, etc, it's better to
    * configure the constellation before this, otherwise, it will use the default configuration.
@@ -130,7 +164,7 @@ public:
 public:
   /**
    * Open a document that sends a request to the given URL.
-   * 
+   *
    * @param url The URL to be requested.
    * @param init The request initialization.
    * @returns The document ID.

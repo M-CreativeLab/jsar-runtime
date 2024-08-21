@@ -227,8 +227,9 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
         preferredHandedness: 'right',
         enableNearInteractionOnAllControllers: false,
       },
+      disablePointerSelection: false,
       disableTeleportation: true,
-      disableNearInteraction: false,
+      disableNearInteraction: true,
     });
   }
 
