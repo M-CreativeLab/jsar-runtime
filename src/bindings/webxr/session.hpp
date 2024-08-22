@@ -73,7 +73,6 @@ namespace bindings
     void updateFrameTime(bool updateStereoFrame = false);
     void updateInputSourcesIfChanged(XRFrame *frame);
     void onFrame(Napi::Env env, xr::TrXRFrameRequest *frameRequest);
-    bool queueNextFrame();
     void addViewSpace(Napi::Env env, XRViewSpaceType type);
     Napi::Array createEnabledFeatures(Napi::Env env);
     Napi::Value createInputSourcesChangeEvent(Napi::Env env,
@@ -114,7 +113,6 @@ namespace bindings
   private:
     uint32_t fps = 0;
     int frameCount = 0;
-    atomic<bool> inXRFrame = false;
     /**
      * Every frame timepoint, updated at the start of each frame.
      */
@@ -132,11 +130,12 @@ namespace bindings
      */
     unique_ptr<xr::TrXRSessionContextZone> sessionContextZoneClient;
     /**
-     * The frames worker thread.
+     * The frames callback handler
      */
-    unique_ptr<WorkerThread> framesWorker;
     Napi::FunctionReference *frameHandlerRef = nullptr;
     Napi::ThreadSafeFunction frameHandlerTSFN;
+    uv_loop_t *eventloop;
+    uv_timer_t tickHandle;
 
   public:
     static Napi::FunctionReference *constructor;

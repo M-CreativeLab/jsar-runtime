@@ -267,6 +267,21 @@ namespace xr
         data.reset(getData());
     }
 
+  protected:
+    void updateData(TrXRInputSourcesData *sharedInputSources)
+    {
+      if (data->gazeInputSource.enabled)
+        data->gazeInputSource.setTargetRayHitResult(sharedInputSources->gazeInputSource.targetRayHitResult);
+      if (data->mainControllerInputSource.enabled)
+        data->mainControllerInputSource.setTargetRayHitResult(sharedInputSources->mainControllerInputSource.targetRayHitResult);
+      if (data->transientPointerInputSource.enabled)
+        data->transientPointerInputSource.setTargetRayHitResult(sharedInputSources->transientPointerInputSource.targetRayHitResult);
+      if (data->handInputSources[0].enabled)
+        data->handInputSources[0].setTargetRayHitResult(sharedInputSources->handInputSources[0].targetRayHitResult);
+      if (data->handInputSources[1].enabled)
+        data->handInputSources[1].setTargetRayHitResult(sharedInputSources->handInputSources[1].targetRayHitResult);
+    }
+
   public:
     TrXRInputSource *getGazeInputSource() { return data->getGazeInputSource(); }
     TrXRInputSource *getMainControllerInputSource() { return data->getMainControllerInputSource(); }

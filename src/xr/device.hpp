@@ -88,7 +88,7 @@ namespace xr
      *
      * @returns a new instance of StereoRenderingFrame.
      */
-    StereoRenderingFrame *createStereoRenderingFrame();
+    StereoRenderingFrame *createStereoRenderingFrame(int stereoId);
 
   public:
     /**
@@ -235,7 +235,6 @@ namespace xr
     void onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request, TrContentRenderer *contentRenderer);
     void onSessionRequest(xr::SessionRequest &request, TrContentRenderer *contentRenderer);
     void onEndSessionRequest(xr::EndSessionRequest &request, TrContentRenderer *contentRenderer);
-    void onSetInputSourceTargetRayHitTestResult(xr::SetInputSourceTargetRayHitTestResult &request, TrContentRenderer *contentRenderer);
 
   private:
     /**

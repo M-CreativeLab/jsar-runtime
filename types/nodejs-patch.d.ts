@@ -27,9 +27,8 @@ declare namespace Transmute {
    * Frame request callback.
    * 
    * @param time The current time in milliseconds.
-   * @param data The data passed from the native side.
    */
-  type FrameRequestCallback = (time: number, data: unknown) => void;
+  type FrameRequestCallback = (time: number) => void;
 
   /**
    * Represents the session context object, basically including the session id and its local transform.

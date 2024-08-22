@@ -124,7 +124,7 @@ namespace xr
   class StereoRenderingFrame
   {
   public:
-    StereoRenderingFrame(bool isMultiPass);
+    StereoRenderingFrame(bool isMultiPass, int id);
     ~StereoRenderingFrame();
 
   public:

@@ -1,11 +1,9 @@
 import { getContext as createWebGLRenderingContext } from '../webgl';
 
 const {
-  RenderLoop,
   AnimationFrameListener,
 } = process._linkedBinding('transmute:renderer');
 
-let globalRenderLoop: Transmute.RenderLoop = null;
 let globalAnimationFrameListener: Transmute.AnimationFrameListener = null;
 let globalGlContext: WebGLRenderingContext | WebGL2RenderingContext = null;
 let isReady = false;
@@ -53,14 +51,14 @@ export function requestGpuBusyCallback(callback: GpuBusyCallback) {
   ongpubusyCallbacks.push(callback);
 }
 
-function onAnimationFrame(time: number, data: any) {
+function onAnimationFrame(time: number) {
   try {
     const callbackThisFrame = onframeCallbacks.slice();
     onframeCallbacks.length = 0;
 
     while (callbackThisFrame.length > 0) {
       const onframe = callbackThisFrame.shift();
-      onframe.callback(time, data);
+      onframe.callback(time);
     }
   } catch (err) {
     console.warn('error in frame callback:', err);
@@ -79,16 +77,6 @@ export function connectRenderer(clientContext: Transmute.TrClientContext): boole
   if (isReady) {
     throw new TypeError('renderer is already connected.');
   }
-
-  // const loop = globalRenderLoop = new RenderLoop();
-  // loop.setExceptionCallback(function (code) {
-  //   if (code === 0x03 /** kFrameExecutionGpuBusy */) {
-  //     ongpubusyCallbacks.forEach(cb => cb());
-  //   } else {
-  //     logger.error(`Unknown renderer exception occurred, the code is: ${code}`);
-  //   }
-  // });
-  // loop.setFrameCallback(onAnimationFrame);
 
   /**
    * Setup for animation frame listener.

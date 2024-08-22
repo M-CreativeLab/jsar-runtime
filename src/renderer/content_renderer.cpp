@@ -11,14 +11,11 @@ namespace renderer
       : content(content),
         constellation(constellation),
         xrDevice(constellation->xrDevice.get()),
-        targetFrameRate(constellation->renderer->clientDefaultFrameRate),
-        currentBaseXRFrameReq(make_unique<xr::TrXRFrameRequest>())
+        targetFrameRate(constellation->renderer->clientDefaultFrameRate)
   {
     assert(xrDevice != nullptr);
     glContext = new OpenGLAppContextStorage("content_renderer#" + std::to_string(content->id));
-    stereoFrameForBackup = new xr::StereoRenderingFrame(true);
-    frameDispatcherThread = std::make_unique<WorkerThread>("FrameDispatcher", [this](WorkerThread &worker)
-                                                           { this->onDispatchFrameRequest(worker); }, 1);
+    stereoFrameForBackup = new xr::StereoRenderingFrame(true, 0xf);
 
     // Register the command buffer request handler when creating the content renderer.
     content->setCommandBufferRequestHandler([this](TrCommandBufferBase *req)
@@ -27,7 +24,7 @@ namespace renderer
 
   TrContentRenderer::~TrContentRenderer()
   {
-    frameDispatcherThread->stop();
+    // frameDispatcherThread->stop();
     content->resetCommandBufferRequestHandler();
     content = nullptr;
     xrDevice = nullptr;
@@ -76,39 +73,6 @@ namespace renderer
     return content->pid;
   }
 
-  void TrContentRenderer::onDispatchFrameRequest(WorkerThread &threadWorker)
-  {
-    auto now = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<chrono::milliseconds>(now - lastDispatchedFrameTime).count();
-    if (duration <= 1000 / targetFrameRate)
-    {
-      threadWorker.sleep();
-      return;
-    }
-    lastDispatchedFrameTime = now;
-
-    dispatchAnimationFrameRequest();
-    // if (xrDevice != nullptr && xrDevice->enabled())
-    // {
-    //   if (
-    //       isXRFrameBaseReqUpdating ||       // Skip the frame dispatching if the updating is not finished.
-    //       isXRFrameBaseReqDirty == false || // Skip the frame dispatching if the base frame request is not dirty.
-    //       content->used == false ||         // Skip the frame dispatching if the content is not used.
-    //       getPendingStereoFramesCount() > 0)
-    //     return;
-
-    //   if (xrDevice->isRenderedAsMultipass()) // TODO: support singlepass?
-    //   {
-    //     shared_lock<shared_mutex> lock(mutexForXRFrameBaseReq);
-    //     xrDevice->iterateSessionsByContentPid(content->pid, [this](xr::TrXRSession *session)
-    //                                           {
-    //                                             dispatchXRFrameRequest(session, 0);
-    //                                             dispatchXRFrameRequest(session, 1); });
-    //     isXRFrameBaseReqDirty.store(false);
-    //   }
-    // }
-  }
-
   void TrContentRenderer::onCommandBufferRequestReceived(TrCommandBufferBase *req)
   {
     if (!req->renderingInfo.isValid() && !commandbuffers::isXRFrameControlCommandType(req->type))
@@ -144,36 +108,55 @@ namespace renderer
         viewIndex = req->renderingInfo.viewIndex;
       }
 
-      vector<xr::StereoRenderingFrame *> stereoFramesListCopy;
+      xr::StereoRenderingFrame *frame = nullptr;
+      if (req->type == COMMAND_BUFFER_XRFRAME_START_REQ && viewIndex == 0)
       {
-        shared_lock<shared_mutex> lock(commandBufferRequestsMutex);
-        stereoFramesListCopy = stereoFramesList;
-      }
-      for (auto frame : stereoFramesListCopy)
-      {
-        if (frame->getId() == stereoId)
+        frame = xrDevice->createStereoRenderingFrame(stereoId);
         {
           unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
-          if (req->type == COMMAND_BUFFER_XRFRAME_START_REQ)
-            frame->startFrame(viewIndex), delete req;
-          else if (req->type == COMMAND_BUFFER_XRFRAME_FLUSH_REQ)
-            frame->flushFrame(viewIndex), delete req;
-          else if (req->type == COMMAND_BUFFER_XRFRAME_END_REQ)
-            frame->endFrame(viewIndex), delete req;
+          frame->available(true);
+          stereoFramesList.push_back(frame);
+        }
+      }
+      else
+      {
+        shared_lock<shared_mutex> lock(commandBufferRequestsMutex);
+        for (auto stereoFrame : stereoFramesList)
+        {
+          if (stereoFrame->getId() == stereoId)
+          {
+            frame = stereoFrame;
+            break;
+          }
+        }
+        if (frame == nullptr)
+        {
+          DEBUG(LOG_TAG_ERROR, "The stereo frame(%d) is not found for the viewIndex(%d)", stereoId, viewIndex);
+          delete req;
+          return;
+        }
+      }
+
+      {
+        unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
+        if (req->type == COMMAND_BUFFER_XRFRAME_START_REQ)
+          frame->startFrame(viewIndex), delete req;
+        else if (req->type == COMMAND_BUFFER_XRFRAME_FLUSH_REQ)
+          frame->flushFrame(viewIndex), delete req;
+        else if (req->type == COMMAND_BUFFER_XRFRAME_END_REQ)
+          frame->endFrame(viewIndex), delete req;
+        else
+        {
+          if (frame->ended(viewIndex))
+          {
+            DEBUG(LOG_TAG_ERROR, "The command buffer(%d) has been ignored due to the stereo frame(%d) is ended.",
+                  req->type, stereoId);
+            delete req;
+          }
           else
           {
-            if (frame->ended(viewIndex))
-            {
-              DEBUG(LOG_TAG_ERROR, "The command buffer(%d) has been ignored due to the stereo frame(%d) is ended.",
-                    req->type, stereoId);
-              delete req;
-            }
-            else
-            {
-              frame->addCommandBuffer(req, viewIndex);
-            }
+            frame->addCommandBuffer(req, viewIndex);
           }
-          break;
         }
       }
     }
@@ -187,45 +170,19 @@ namespace renderer
       if (xrDevice->isRenderedAsMultipass())
       {
         auto viewIndex = xrDevice->getActiveEyeId();
-        auto stereoRenderingFrame = getOrCreateStereoFrame();
-        if (stereoRenderingFrame != nullptr)
+        if (viewIndex == 0)
         {
-          stereoRenderingFrame->available(true); // mark the StereoRenderingFrame is available
-
-          // Update the content's active session with the stereo id.
+          static TrIdGenerator stereoIdGenerator(0x567);
+          currentStereoId = stereoIdGenerator.get();
+        }
+        if (currentStereoId != 0)
+        {
           auto activeSession = content->getActiveXRSession();
           if (activeSession != nullptr)
           {
-            activeSession->setStereoId(stereoRenderingFrame->getId());
+            activeSession->setStereoId(currentStereoId);
             activeSession->setPendingStereoFramesCount(getPendingStereoFramesCount());
           }
-
-          xr::TrXRView view(viewIndex);
-          auto viewport = xrDevice->getViewport(viewIndex);
-          view.setViewport(viewport.width, viewport.height, viewport.x, viewport.y);
-          view.setViewMatrix(xrDevice->getViewMatrixForEye(viewIndex));
-          view.setProjectionMatrix(xrDevice->getProjectionMatrixForEye(viewIndex));
-          {
-            unique_lock<shared_mutex> lock(mutexForXRFrameBaseReq);
-            if (viewIndex == 0) // Reset the `currentBaseXRFrameReq` when viewIndex is 0(left)
-            {
-              isXRFrameBaseReqUpdating.store(true);
-              currentBaseXRFrameReq->reset();
-              {
-                // Set `currentBaseXRFrameReq` with the related data.
-                currentBaseXRFrameReq->stereoId = stereoRenderingFrame->getId();
-                currentBaseXRFrameReq->setViewerBaseMatrix(xrDevice->getViewerBaseMatrix());
-              }
-              isXRFrameBaseReqDirty.store(true);
-            }
-            else
-              isXRFrameBaseReqUpdating.store(false);
-            currentBaseXRFrameReq->views[viewIndex] = view;
-          }
-        }
-        else
-        {
-          // TODO: OOM handling?
         }
       }
       else if (xrDevice->getStereoRenderingMode() == xr::TrStereoRenderingMode::SinglePass)
@@ -267,30 +224,6 @@ namespace renderer
 
   void TrContentRenderer::onEndFrame()
   {
-  }
-
-  inline void TrContentRenderer::dispatchAnimationFrameRequest()
-  {
-    TrAnimationFrameRequest req;
-    dispatchFrameRequest(req);
-  }
-
-  inline void TrContentRenderer::dispatchXRFrameRequest(xr::TrXRSession *session, int viewIndex)
-  {
-    if (!session->isInFrustum())
-      return;
-
-    auto req = currentBaseXRFrameReq->clone();
-    req.viewIndex = viewIndex;
-    req.sessionId = session->id;
-    req.setLocalBaseMatrix(session->getLocalBaseMatrix());
-
-    auto hostContext = constellation->renderer->glHostContext;
-    auto hostViewport = hostContext->GetViewport();
-    req.framebufferId = hostContext->GetFramebuffer();
-    req.framebufferWidth = hostViewport.width;
-    req.framebufferHeight = hostViewport.height;
-    dispatchFrameRequest(req);
   }
 
   void TrContentRenderer::executeCommandBuffers(bool asXRFrame, int viewIndex)
@@ -415,30 +348,6 @@ namespace renderer
         exec(stereoFrameForBackup->getId(), commandBufferInLastFrame);
     }
     return called;
-  }
-
-  xr::StereoRenderingFrame *TrContentRenderer::getOrCreateStereoFrame()
-  {
-    assert(xrDevice != nullptr);
-    if (xrDevice->getActiveEyeId() == 0)
-    {
-      // Only create the stereo frame when the left eye is active.
-      xr::StereoRenderingFrame *frame = xrDevice->createStereoRenderingFrame();
-      if (frame != nullptr)
-      {
-        unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
-        stereoFramesList.push_back(frame);
-      }
-      return frame;
-    }
-    else
-    {
-      shared_lock<shared_mutex> lock(commandBufferRequestsMutex);
-      if (stereoFramesList.empty())
-        return nullptr;
-      else
-        return stereoFramesList.back();
-    }
   }
 
   size_t TrContentRenderer::getPendingStereoFramesCount()

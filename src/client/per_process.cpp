@@ -98,7 +98,7 @@ bool ScriptEnvironment::initialize()
   }
 
   // Initialize the v8/nodejs platform.
-  std::unique_ptr<node::MultiIsolatePlatform> platform = node::MultiIsolatePlatform::Create(1);
+  std::unique_ptr<node::MultiIsolatePlatform> platform = node::MultiIsolatePlatform::Create(4);
   v8::V8::InitializePlatform(platform.get());
   v8::V8::Initialize();
   nodePlatform = platform.release();
@@ -165,8 +165,6 @@ void TrScriptRuntimePerProcess::terminate()
 
 int TrScriptRuntimePerProcess::executeMainScript(ScriptEnvironment &env, vector<string> &scriptArgs)
 {
-  SET_THREAD_NAME("TrScript");
-
   int exit_code = 0;
   auto nodePlatform = env.nodePlatform;
   auto nodeInitResult = env.nodeInitResult;
@@ -205,8 +203,6 @@ int TrScriptRuntimePerProcess::executeMainScript(ScriptEnvironment &env, vector<
 #define XX(name) AddLinkedBinding(nodeEnv, transmute_##name##_napi_mod);
     TR_NAPI_MODULE_MAP(XX)
 #undef XX
-    // The followings are created by Rust
-    // AddLinkedBinding(nodeEnv, transmute_htmlrender_napi_mod);
 
     MaybeLocal<Value> ret = node::LoadEnvironment(nodeEnv, node::StartExecutionCallback{});
     if (ret.IsEmpty())
@@ -214,23 +210,15 @@ int TrScriptRuntimePerProcess::executeMainScript(ScriptEnvironment &env, vector<
 
     exit_code = node::SpinEventLoop(nodeEnv).FromMaybe(1);
     node::Stop(nodeEnv);
-    SET_THREAD_NAME("TrScript_Stopped");
-
-    {
-      /**
-       * Removing the globals after Node.js instance is stopped.
-       */
-
-      // Dispose the default audio context
-      // disposeDefaultAudioContext();
-    }
   }
+  DEBUG(LOG_TAG_SCRIPT, "Script execution finished with code: %d", exit_code);
   return exit_code;
 }
 
 void TrScriptRuntimePerProcess::onScriptExit(node::Environment *env, int exit_code)
 {
-  exit(exit_code);
+  DEBUG(LOG_TAG_ERROR, "Script exited with code: %d", exit_code);
+  exit(2);
 }
 
 TrClientPerformanceFileSystem::TrClientPerformanceFileSystem(std::string &cacheDir, const char *pidStr)
@@ -292,13 +280,6 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
 
   // Clear for frame request callbacks
   frameRequestCallbacksMap.clear();
-  framesListenerRunning = false;
-  if (framesListener != nullptr)
-  {
-    framesListener->join();
-    delete framesListener;
-    framesListener = nullptr;
-  }
 }
 
 void TrClientContextPerProcess::preload()
@@ -366,13 +347,6 @@ void TrClientContextPerProcess::start()
     xrDeviceContextZoneClient = make_unique<xr::TrXRDeviceContextZone>(xrDeviceInit.deviceContextZonePath, TrZoneType::Client);
     xrInputSourcesZoneClient = make_unique<xr::TrXRInputSourcesZone>(xrDeviceInit.inputSourcesZonePath, TrZoneType::Client);
   }
-
-  // Start the frames listener
-  framesListenerRunning = true;
-  framesListener = new thread([this]()
-                              {
-                                SET_THREAD_NAME("TrFramesListener");
-                                this->onListenFrames(); });
 
   // Start the service alive listener
   serviceAliveListener = new thread([]()
@@ -533,36 +507,6 @@ bool TrClientContextPerProcess::finishXrFrame(xr::TrXRFrameRequest *frameRequest
   currentXrFrameRequest = nullptr;
   XRFrameEndCommandBufferRequest req(frameRequest->stereoId, frameRequest->viewIndex);
   return commandBufferChanSender->sendCommandBufferRequest(req, true);
-}
-
-void TrClientContextPerProcess::onListenFrames()
-{
-  while (framesListenerRunning)
-  {
-    TrFrameRequestMessage frameRequestMsg;
-    if (!frameRequestMsg.deserialize(frameChanReceiver, -1))
-      continue;
-
-    auto msgType = frameRequestMsg.getType();
-    if (TR_UNLIKELY(msgType == TrFrameRequestType::Unknown))
-    {
-      DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) received an unknown frame request message", id);
-      continue;
-    }
-
-    // Check if the script is responsible.
-    if (!isScriptNotResponding())
-    {
-      // Notify the frame request callbacks
-      shared_lock<shared_mutex> lock(frameRequestMutex);
-      for (auto &pair : frameRequestCallbacksMap)
-      {
-        auto callback = pair.second;
-        if (callback.type == msgType)
-          callback(frameRequestMsg);
-      }
-    }
-  }
 }
 
 void TrClientContextPerProcess::onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage)

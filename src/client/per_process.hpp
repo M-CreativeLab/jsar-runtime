@@ -223,6 +223,13 @@ public: // WebXR methods
   {
     if (!xrCommandChanSender)
       return false;
+    if (currentXrFrameRequest != nullptr)
+    {
+      xrCommand.stereoId = currentXrFrameRequest->stereoId;
+      xrCommand.stereoTimestamp = currentXrFrameRequest->stereoTimestamp;
+      auto now = chrono::time_point_cast<chrono::milliseconds>(chrono::steady_clock::now());
+      xrCommand.sentAtTimestamp = now.time_since_epoch().count();
+    }
     return xrCommandChanSender->sendCommand(xrCommand);
   }
 
@@ -249,7 +256,6 @@ public:
   TrClientPerformanceFileSystem &getPerfFs() { return *perfFs; }
 
 private:
-  void onListenFrames();
   void onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage);
 
 public:
@@ -308,9 +314,7 @@ private: // xr fields
 
 private: // frame request fields
   map<FrameRequestId, TrFrameRequestCallback> frameRequestCallbacksMap;
-  thread *framesListener = nullptr; // a thread to listen for frame requests
   shared_mutex frameRequestMutex;
-  atomic<bool> framesListenerRunning = false;
 
 private: // service & script alive checking fields
   thread *serviceAliveListener = nullptr;

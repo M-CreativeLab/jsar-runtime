@@ -188,7 +188,7 @@ private:
   void recvCommandBuffers(WorkerThread &worker, uint32_t timeout);
   void recvEvent();
   void recvMediaRequest();
-  bool recvXRCommand(int timeout);
+  bool recvXRCommand(int timeout = 0);
   bool tryDispatchRequest();
   bool tickOnFrame();
 
@@ -342,7 +342,6 @@ private:
   void startHived();
   void preparePreContent();
   void acceptEventChanClients(int timeout = 100);
-  void recvXRCommands(WorkerThread& worker, int timeout = 100);
 
 private:
   TrConstellation *constellation = nullptr;
@@ -363,7 +362,6 @@ private: // channels & workers
   TrOneShotServer<events_comm::TrNativeEventMessage> *eventChanServer = nullptr;
   unique_ptr<WorkerThread> contentsDestroyingWorker;
   unique_ptr<WorkerThread> eventChanWatcher;
-  unique_ptr<WorkerThread> xrCommandsRecvWorker;
 
   friend class TrContentRuntime;
   friend class TrConstellation;

@@ -162,11 +162,10 @@ namespace xr
     return matrix;
   }
 
-  static int s_NextStereoId = 1;
-  StereoRenderingFrame::StereoRenderingFrame(bool isMultiPass)
+  StereoRenderingFrame::StereoRenderingFrame(bool isMultiPass, int id)
   {
     m_IsMultiPass = isMultiPass;
-    m_StereoId = s_NextStereoId++;
+    m_StereoId = id;
     m_CreatedTime = std::chrono::high_resolution_clock::now();
   }
   StereoRenderingFrame::~StereoRenderingFrame()

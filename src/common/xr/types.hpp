@@ -126,6 +126,7 @@ namespace xr
   public:
     uint32_t sessionId;
     int stereoId;
+    long long stereoTimestamp;
     int viewIndex;
     float localBaseMatrix[16];
     float viewerBaseMatrix[16];

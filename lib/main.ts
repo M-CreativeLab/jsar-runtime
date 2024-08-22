@@ -4,8 +4,7 @@ import { reportDocumentEvent, addDocumentRequestListener } from '@transmute/mess
 
 import {
   connectRenderer,
-  getWebGLRenderingContext,
-  requestGpuBusyCallback,
+  getWebGLRenderingContext
 } from './bindings/renderer';
 import { loadPolyfills } from './polyfills';
 import { prepareXRSystem } from './webxr';
@@ -19,13 +18,6 @@ const id = args.id || 'unknown';
 console.info(`Starting the JavaScript runtime(${process.pid}) => ${id}`, process.argv);
 
 let runtime: TransmuteRuntime2;
-requestGpuBusyCallback(() => {
-  // if (runtime && typeof runtime.onGpuBusy === 'function') {
-  //   runtime.onGpuBusy();
-  // } else {
-  //   process.exit(1);
-  // }
-});
 
 /**
  * FIXME: The unhandled rejection means network or other async operations failed, we just make a warning and keep the
@@ -33,6 +25,11 @@ requestGpuBusyCallback(() => {
  */
 process.on('unhandledRejection', (reason) => {
   console.warn('Received an unhandled rejection:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
+  console.error('Exiting the process');
+  setTimeout(() => process.exit(1), 500);
 });
 
 function bootwait(fn: () => void) {

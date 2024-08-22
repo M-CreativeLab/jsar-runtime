@@ -11,7 +11,7 @@
 
 namespace xr
 {
-  static uint32_t MIN_FRAME_RATE = 60;
+  static uint32_t MIN_FRAME_RATE = 45;
   static uint32_t MAX_FRAME_RATE = 90;
   static TrIdGenerator sessionIdGen(1);
 
@@ -150,9 +150,9 @@ namespace xr
     return m_StereoRenderingMode;
   }
 
-  StereoRenderingFrame *Device::createStereoRenderingFrame()
+  StereoRenderingFrame *Device::createStereoRenderingFrame(int stereoId)
   {
-    return new StereoRenderingFrame(m_StereoRenderingMode == TrStereoRenderingMode::MultiPass);
+    return new StereoRenderingFrame(m_StereoRenderingMode == TrStereoRenderingMode::MultiPass, stereoId);
   }
 
   Viewport Device::getViewport(int eyeId)
@@ -387,8 +387,7 @@ namespace xr
 #define TR_XRCOMMAND_METHODS_MAP(XX) \
   XX(IsSessionSupportedRequest)      \
   XX(SessionRequest)                 \
-  XX(EndSessionRequest)              \
-  XX(SetInputSourceTargetRayHitTestResult)
+  XX(EndSessionRequest)
 
   void Device::handleCommandMessage(TrXRCommandMessage &message, TrContentRuntime *content)
   {
@@ -433,16 +432,5 @@ namespace xr
   void Device::onEndSessionRequest(xr::EndSessionRequest &request, TrContentRenderer *contentRenderer)
   {
     // TODO: implement the end session request
-  }
-
-  void Device::onSetInputSourceTargetRayHitTestResult(xr::SetInputSourceTargetRayHitTestResult &request, TrContentRenderer *contentRenderer)
-  {
-    auto inputSource = m_InputSourcesZone->getInputSourceById(request.inputSourceId);
-    if (inputSource != nullptr)
-    {
-      // Update ray hit
-      TrRayHitResult hitResult(request.hit, request.rayEndBaseMatrix);
-      inputSource->setTargetRayHitResult(hitResult);
-    }
   }
 }

@@ -71,6 +71,7 @@ namespace bindings
     XRFrameContext(xr::TrXRSessionContextData sessionContext, xr::TrXRDeviceContextData deviceContext, XRSession *session)
         : sessionId(sessionContext.sessionId),
           stereoId(sessionContext.stereoId),
+          stereoTimestamp(sessionContext.timestampOnSettingStereoId),
           framebufferId(deviceContext.framebufferConf.id),
           framebufferWidth(deviceContext.framebufferConf.width),
           framebufferHeight(deviceContext.framebufferConf.height),
@@ -88,6 +89,7 @@ namespace bindings
   public:
     uint32_t sessionId;
     uint32_t stereoId;
+    long long stereoTimestamp;
     float localBaseMatrix[16];
     float viewerBaseMatrix[16];
     xr::TrXRView views[2];

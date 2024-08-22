@@ -10,7 +10,6 @@
 #include <windows.h>
 #else
 #include <sys/mman.h>
-#include <semaphore.h>
 #include <unistd.h>
 #endif
 
@@ -46,6 +45,10 @@ public:
 
 protected:
   virtual size_t getDataSize() { return sizeof(DataType); }
+  /**
+   * Implement this to pull the client(shared) update to the server-side object, disabled by default.
+   */
+  virtual void updateData(DataType *sharedData) {}
 
 public:
   string getFilename() { return filename; }
@@ -54,8 +57,14 @@ public:
    */
   void syncData()
   {
-    if (memoryAddr != nullptr && data != nullptr)
+    if (
+        type == TrZoneType::Server && // Only server can use this method to sync.
+        memoryAddr != nullptr &&
+        data != nullptr)
+    {
+      updateData(reinterpret_cast<DataType *>(memoryAddr));
       memcpy(memoryAddr, reinterpret_cast<void *>(data.get()), memorySize);
+    }
   }
   /**
    * Get the data from the shared memory.
@@ -88,8 +97,7 @@ private:
   {
     unmap(); // unmap first if needed.
 
-    int mode = type == TrZoneType::Server ? PROT_READ | PROT_WRITE : PROT_READ;
-    void *addr = mmap(NULL, memorySize, mode, MAP_SHARED, handleFd, 0);
+    void *addr = mmap(NULL, memorySize, PROT_READ | PROT_WRITE, MAP_SHARED, handleFd, 0);
     if (addr == MAP_FAILED || addr == nullptr)
     {
       DEBUG(LOG_TAG_ERROR, "Failed to create map for %s", filename.c_str());
@@ -112,7 +120,6 @@ private:
   TrZoneType type;
   string filename;
   int handleFd;
-  sem_t *semaphore = nullptr;
 
 private:
   void *memoryAddr = nullptr;

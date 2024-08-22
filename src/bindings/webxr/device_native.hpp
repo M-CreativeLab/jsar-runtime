@@ -27,7 +27,6 @@ namespace bindings
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
     static XRDeviceNative *GetInstance();
-    static Napi::Value NativeFrameHandler(const Napi::CallbackInfo &info);
     XRDeviceNative(const Napi::CallbackInfo &info);
 
   private:
@@ -44,12 +43,7 @@ namespace bindings
     xr::TrDeviceInit &getDeviceInit();
 
   private:
-    void handleFrameRequest(xr::TrXRFrameRequest *frameRequest);
-
-  private:
     TrClientContextPerProcess *clientContext = nullptr;
-    Napi::FunctionReference *frameHandler = nullptr;
-    Napi::ThreadSafeFunction tsfnWithFrameHandler;
     std::vector<ContextifiedXRFrameCallback> contextifiedFrameCallbacks;
 
   private:

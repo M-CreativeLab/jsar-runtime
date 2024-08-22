@@ -43,10 +43,6 @@ namespace xr
      * Response to the `UpdateBaseLayerRequest`.
      */
     UpdateBaseLayerResponse,
-    /**
-     * Request to update the input source target ray hit test result.
-     */
-    SetInputSourceTargetRayHitTestResult,
     Unknown = -1,
   };
 
@@ -64,6 +60,9 @@ namespace xr
     TrXRCmdType type;
     uint32_t id = xrCmdIdGen.get();
     size_t baseSize = sizeof(T);
+    int stereoId = 0;
+    long long stereoTimestamp = 0;
+    long long sentAtTimestamp = 0;
   };
 
   class IsSessionSupportedRequest : public TrXRCommandBase<IsSessionSupportedRequest>
@@ -162,29 +161,6 @@ namespace xr
 
   public:
     bool success;
-  };
-
-  class SetInputSourceTargetRayHitTestResult : public TrXRCommandBase<SetInputSourceTargetRayHitTestResult>
-  {
-  public:
-    SetInputSourceTargetRayHitTestResult(uint32_t sessionId, uint32_t inputSourceId) : TrXRCommandBase(TrXRCmdType::SetInputSourceTargetRayHitTestResult),
-                                                                                       sessionId(sessionId), inputSourceId(inputSourceId), hit(false), rayEndBaseMatrix()
-    {
-    }
-
-  public:
-    void setResult(bool hit, float *values = nullptr)
-    {
-      this->hit = hit;
-      if (values != nullptr)
-        memcpy(rayEndBaseMatrix, values, sizeof(float) * 16);
-    }
-
-  public:
-    uint32_t sessionId;
-    uint32_t inputSourceId;
-    bool hit;
-    float rayEndBaseMatrix[16];
   };
 
   class TrXRCommandMessage

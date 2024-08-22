@@ -89,7 +89,6 @@ namespace bindings
     }
 
     static bool missDispatched = false;
-    xr::SetInputSourceTargetRayHitTestResult req(session->id, internal->id);
     auto hit = info[0].ToBoolean().Value();
     if (!hit)
     {
@@ -101,7 +100,7 @@ namespace bindings
         return env.Undefined();
       }
       xr::TrRayHitResult hitResult(false);
-      req.setResult(false, nullptr);
+      internal->setTargetRayHitResult(hitResult);
       missDispatched = true;
     }
     else if (info.Length() >= 2 && info[1].IsObject())
@@ -113,7 +112,7 @@ namespace bindings
         float *matrixValues = glm::value_ptr(transform->matrix);
 
         xr::TrRayHitResult hitResult(true, matrixValues);
-        req.setResult(true, matrixValues);
+        internal->setTargetRayHitResult(hitResult);
         missDispatched = false; // When there is a new hit again, we need to reset the flag to dispatch the "miss" once again.
       }
       else
@@ -127,8 +126,6 @@ namespace bindings
       Napi::TypeError::New(env, "Expected a XRRigidTransform object.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-
-    clientContext->sendXrCommand(req);
     return env.Undefined();
   }
 

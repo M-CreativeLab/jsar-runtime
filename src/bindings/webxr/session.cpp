@@ -32,6 +32,20 @@ namespace bindings
     return exports;
   }
 
+  inline xr::TrXRFrameRequest createFrameRequestForView(uint32_t viewIndex, XRFrameContext& frameContext)
+  {
+    auto req = xr::TrXRFrameRequest();
+    req.sessionId = frameContext.sessionId;
+    req.stereoId = frameContext.stereoId;
+    req.stereoTimestamp = frameContext.stereoTimestamp;
+    memcpy(req.localBaseMatrix, frameContext.localBaseMatrix, sizeof(float) * 16);
+    memcpy(req.viewerBaseMatrix, frameContext.viewerBaseMatrix, sizeof(float) * 16);
+    req.views[0] = frameContext.views[0];
+    req.views[1] = frameContext.views[1];
+    req.viewIndex = viewIndex;
+    return req;
+  }
+
   Napi::Value XRSession::FrameHandler(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -61,31 +75,18 @@ namespace bindings
     auto deviceContext = xrSession->device->clientContext->getXRDeviceContextZone()->getData();
     if (prevStereoId != -1 && prevStereoId == sessionContext->stereoId)
       return env.Undefined();
-    if (sessionContext->getPendingStereoFramesCount() > 0)
-      return env.Undefined();
-    XRFrameContext frameContext(*sessionContext, *deviceContext, xrSession);
 
-    {
-      // static chrono::steady_clock::time_point lastFrameTimepoint = chrono::steady_clock::now();
-      // auto frameTimepoint = chrono::steady_clock::now();
-      // auto delta = chrono::duration_cast<chrono::milliseconds>(frameTimepoint - lastFrameTimepoint).count();
-      // DEBUG(LOG_TAG, "XRFrameRequest(%d) delta: %d ms", frameContext.stereoId, delta);
-      // lastFrameTimepoint = frameTimepoint;
-    }
+    XRFrameContext frameContext(*sessionContext, *deviceContext, xrSession);
+    int pendingsAtServer = sessionContext->getPendingStereoFramesCount();
+    if (pendingsAtServer >= 2)
+      return env.Undefined(); // Skip the frame if there are more than 2 pending frames.
 
     /**
      * TODO: support singlepass rendering
      */
-    for (uint32_t i = 0; i < 2; i++)
+    for (uint32_t viewIndex = 0; viewIndex < 2; viewIndex++)
     {
-      auto req = xr::TrXRFrameRequest();
-      req.sessionId = frameContext.sessionId;
-      req.stereoId = frameContext.stereoId;
-      memcpy(req.localBaseMatrix, frameContext.localBaseMatrix, sizeof(float) * 16);
-      memcpy(req.viewerBaseMatrix, frameContext.viewerBaseMatrix, sizeof(float) * 16);
-      req.views[0] = frameContext.views[0];
-      req.views[1] = frameContext.views[1];
-      req.viewIndex = i;
+      auto req = createFrameRequestForView(viewIndex, frameContext);
       xrSession->onFrame(env, &req);
     }
     prevStereoId = sessionContext->stereoId;
@@ -180,6 +181,11 @@ namespace bindings
     frameHandlerRef = new Napi::FunctionReference();
     *frameHandlerRef = Napi::Persistent(Napi::Function::New(env, FrameHandler));
     frameHandlerTSFN = Napi::ThreadSafeFunction::New(env, frameHandlerRef->Value(), "XRSession::FrameHandler", 0, 2);
+
+    // Prepare the uv handles
+    napi_get_uv_event_loop(env, &eventloop);
+    tickHandle.data = this;
+    uv_timer_init(eventloop, &tickHandle);
 
     // Start the session
     start();
@@ -508,8 +514,10 @@ namespace bindings
     if (started == true)
       return; // Already started
 
-    framesWorker = make_unique<WorkerThread>("XRFramesWorker", [this](WorkerThread &worker)
-                                             { tick(); worker.sleep(); }, 1);
+    uv_timer_start(&tickHandle, [](uv_timer_t *handle)
+                  {
+                    auto session = static_cast<XRSession *>(handle->data);
+                    session->tick(); }, 0, 2);
     started = true;
   }
 
@@ -518,6 +526,7 @@ namespace bindings
     if (started == false)
       return; // Not started yet
 
+    uv_timer_stop(&tickHandle);
     ended = true;
   }
 
@@ -526,11 +535,10 @@ namespace bindings
     static chrono::steady_clock::time_point timepointOnLastTick = chrono::steady_clock::now();
     chrono::steady_clock::time_point timepointOnNow = chrono::steady_clock::now();
     auto delta = chrono::duration_cast<chrono::milliseconds>(timepointOnNow - timepointOnLastTick).count();
-
-    if (delta >= 1000 / 60 && !inXRFrame)
+    if (delta >= FRAME_TIME_DELTA_THRESHOLD)
     {
-      frameHandlerTSFN.BlockingCall(this, [](Napi::Env env, Napi::Function jsCallback, XRSession *session)
-                                    { jsCallback.Call({session->Value()}); });
+      frameHandlerTSFN.NonBlockingCall(this, [](Napi::Env env, Napi::Function jsCallback, XRSession *session)
+                                       { jsCallback.Call({session->Value()}); });
       timepointOnLastTick = timepointOnNow;
     }
   }
@@ -544,7 +552,7 @@ namespace bindings
       fps = frameCount / (delta / 1000);
       frameCount = 0;
       lastRecordedFrameTimepoint = frameTimepoint;
-      fprintf(stdout, "Content FPS: %d\n", fps);
+      fprintf(stdout, "Session(%d) Content FPS: %d\n", id, fps);
       return true;
     }
     else
@@ -569,12 +577,6 @@ namespace bindings
 
   void XRSession::onFrame(Napi::Env env, xr::TrXRFrameRequest *frameRequest)
   {
-    // if (TR_UNLIKELY(queueNextFrame() == false))
-    // {
-    //   DEBUG(LOG_TAG, "queueNextFrame() failed because session is ended or suspended.");
-    //   return;
-    // }
-
     // - If session’s pending render state is not null, apply the pending render state.
     if (pendingRenderState != nullptr)
     {
@@ -612,33 +614,20 @@ namespace bindings
       currentFrameCallbacks.push_back(it);
     pendingFrameCallbacks.clear();
 
-    inXRFrame = true;
+    xrFrameUnwrapped->start();
+    // Update the input sources
+    updateInputSourcesIfChanged(xrFrameUnwrapped);
+
+    // Call all the frame callbacks
+    auto time = Napi::Number::New(env, frameRequest->time);
+    for (auto &it : currentFrameCallbacks)
     {
-      xrFrameUnwrapped->start();
-      // Update the input sources
-      updateInputSourcesIfChanged(xrFrameUnwrapped);
-
-      // Call all the frame callbacks
-      auto time = Napi::Number::New(env, frameRequest->time);
-      for (auto &it : currentFrameCallbacks)
-      {
-        auto descriptor = *it;
-        if (descriptor.cancelled != true)
-          descriptor.callback->Call(this->Value(), {time, xrFrameObject});
-      }
-      currentFrameCallbacks.clear();
-      xrFrameUnwrapped->end();
+      auto descriptor = *it;
+      if (descriptor.cancelled != true)
+        descriptor.callback->Call(this->Value(), {time, xrFrameObject});
     }
-    inXRFrame = false;
-  }
-
-  bool XRSession::queueNextFrame()
-  {
-    if (ended == true)
-      return false;
-    started = false;
-    start();
-    return true;
+    currentFrameCallbacks.clear();
+    xrFrameUnwrapped->end();
   }
 
   void XRSession::addViewSpace(Napi::Env env, XRViewSpaceType type)

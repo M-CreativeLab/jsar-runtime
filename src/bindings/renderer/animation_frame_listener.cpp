@@ -30,14 +30,16 @@ namespace bindings
     }
 
     connected = false;
+    napi_get_uv_event_loop(env, &eventloop);
+    tickHandle.data = this;
+    uv_timer_init(eventloop, &tickHandle);
   }
 
   AnimationFrameListener::~AnimationFrameListener()
   {
     if (!connected)
       return;
-    if (internalRequestId > 0)
-      clientContext->cancelFrame(internalRequestId);
+    uv_timer_stop(&tickHandle);
     onframeTsfn.Release();
   }
 
@@ -59,10 +61,14 @@ namespace bindings
     }
 
     Napi::Function callback = info[0].As<Napi::Function>();
-    onframeTsfn = Napi::ThreadSafeFunction::New(env, callback, "onframe", 0, 1);
+    onframeTsfn = Napi::ThreadSafeFunction::New(env, callback, "onframe", 0, 2);
     connected = true; // mark the `connected` to be true before `requestFrame()`.
-    internalRequestId = clientContext->requestAnimationFrame([this](TrAnimationFrameRequest &request)
-                                                             { onFrameRequest(request); });
+
+    uv_timer_start(&tickHandle, [](uv_timer_t *handle)
+                  {
+      auto self = static_cast<AnimationFrameListener *>(handle->data);
+      self->tick();
+                  }, 0, 1);
     return env.Undefined();
   }
 
@@ -73,13 +79,30 @@ namespace bindings
     return Napi::Boolean::New(env, connected);
   }
 
-  void AnimationFrameListener::onFrameRequest(TrAnimationFrameRequest &request)
+#define FRAME_TIME_DELTA_THRESHOLD 1000 / 45
+  void AnimationFrameListener::tick()
   {
-    if (!connected)
+    if (TR_UNLIKELY(!connected))
       return;
-    onframeTsfn.BlockingCall(&request, [](Napi::Env env, Napi::Function jsCallback, TrAnimationFrameRequest *request)
-                             {
+
+    static chrono::steady_clock::time_point lastFrameTime = chrono::steady_clock::now();
+    auto frameTime = chrono::steady_clock::now();
+    auto delta = chrono::duration_cast<chrono::milliseconds>(frameTime - lastFrameTime).count();
+    if (delta >= FRAME_TIME_DELTA_THRESHOLD)
+    {
+      lastFrameTime = frameTime;
+      onFrameRequest();
+    }
+  }
+
+  void AnimationFrameListener::onFrameRequest()
+  {
+    TrAnimationFrameRequest *frameRequest = new TrAnimationFrameRequest();
+    frameRequest->resetTime();
+    onframeTsfn.NonBlockingCall(frameRequest, [](Napi::Env env, Napi::Function jsCallback, TrAnimationFrameRequest *request)
+                                {
       auto timeValue = Napi::Number::New(env, request->time);
+      delete request;
       jsCallback.Call({timeValue}); });
   }
 }

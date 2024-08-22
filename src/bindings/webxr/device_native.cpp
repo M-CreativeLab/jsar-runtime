@@ -37,20 +37,6 @@ namespace bindings
 
     clientContext = TrClientContextPerProcess::Get();
     assert(clientContext != nullptr);
-
-    frameHandler = new Napi::FunctionReference();
-    *frameHandler = Napi::Persistent(Napi::Function::New(env, NativeFrameHandler));
-    tsfnWithFrameHandler = Napi::ThreadSafeFunction::New(env, frameHandler->Value(), "XRDeviceNative::FrameHandler", 0, 2);
-
-    // Register frame request handler
-    // FIXME: should we move this to startSession?
-    clientContext->requestFrame(frame_request::TrFrameRequestType::XRFrame, [this](frame_request::TrFrameRequestMessage &msg)
-                                {
-                                  auto xrFrameReq = xr::TrXRFrameRequest::MakeFromMessage<xr::TrXRFrameRequest>(msg);
-                                  if (xrFrameReq != nullptr)
-                                  {
-                                    this->handleFrameRequest(xrFrameReq);
-                                  } });
   }
 
   Napi::Value XRDeviceNative::IsSessionSupported(const Napi::CallbackInfo &info)
@@ -155,43 +141,6 @@ namespace bindings
     return deferred.Promise();
   }
 
-  Napi::Value XRDeviceNative::NativeFrameHandler(const Napi::CallbackInfo &info)
-  {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
-
-    if (info.Length() < 1 || !info[0].IsExternal())
-    {
-      Napi::TypeError::New(env, "expected an external.")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
-    auto data = info[0].As<Napi::External<XRFrameRequestContext>>().Data();
-    if (data == nullptr)
-    {
-      Napi::TypeError::New(env, "invalid external data.")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
-    auto instance = data->device;
-    auto frameRequest = data->frameRequest;
-    // instance->clientContext->setFramebufferWidth(frameRequest->framebufferWidth);
-    // instance->clientContext->setFramebufferHeight(frameRequest->framebufferHeight);
-
-    auto contextifiedFrameCallbacks = instance->contextifiedFrameCallbacks;
-    instance->contextifiedFrameCallbacks.clear(); // Clear the contextifiedFrameCallbacks
-
-    for (auto &callbackWithContext : contextifiedFrameCallbacks)
-      callbackWithContext.callback(env, frameRequest, callbackWithContext.context);
-
-    // Clear the `XRFrameRequestContext` struct
-    delete frameRequest;
-    delete data;
-    return env.Undefined();
-  }
-
   bool XRDeviceNative::supportsSessionMode(XRSessionMode mode)
   {
     if (mode == XRSessionMode::IMMERSIVE_AR)
@@ -243,12 +192,5 @@ namespace bindings
   xr::TrDeviceInit &XRDeviceNative::getDeviceInit()
   {
     return clientContext->xrDeviceInit;
-  }
-
-  void XRDeviceNative::handleFrameRequest(xr::TrXRFrameRequest *frameRequest)
-  {
-    auto data = new XRFrameRequestContext{this, frameRequest};
-    tsfnWithFrameHandler.NonBlockingCall(data, [](Napi::Env env, Napi::Function jsCallback, XRFrameRequestContext *context)
-                                         { jsCallback.Call({Napi::External<XRFrameRequestContext>::New(env, context)}); });
   }
 }

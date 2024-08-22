@@ -101,8 +101,8 @@ namespace frame_request
   public:
     void resetTime()
     {
-      auto now = chrono::system_clock::now();
-      time = chrono::duration_cast<chrono::microseconds>(now.time_since_epoch()).count();
+      auto now = chrono::time_point_cast<chrono::milliseconds>(chrono::system_clock::now());
+      time = now.time_since_epoch().count();
     }
 
   public:

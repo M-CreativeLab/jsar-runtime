@@ -66,6 +66,7 @@ namespace bindings
       recvingEvents = true;
       eventRecvThread = thread([this]()
                                {
+        SET_THREAD_NAME("TrEventRecv");
         while (recvingEvents)
         {
           TrNativeEventMessage* newEventMessage = clientContext->recvEventMessage(-1);

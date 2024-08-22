@@ -367,6 +367,7 @@ bool TrContentRuntime::tryDispatchRequest()
 bool TrContentRuntime::tickOnFrame()
 {
   recvEvent();
+  recvXRCommand();
   recvMediaRequest();
   return true;
 }
@@ -399,8 +400,6 @@ bool TrContentManager::initialize()
 
   eventChanWatcher = std::make_unique<WorkerThread>("TrEventChanWatcher", [this](WorkerThread &)
                                                     { acceptEventChanClients(); });
-  xrCommandsRecvWorker = std::make_unique<WorkerThread>("TrXRCommandsWorker", [this](WorkerThread &worker)
-                                                        { recvXRCommands(worker); }, 100);
   contentsDestroyingWorker = std::make_unique<WorkerThread>("TrContentsMgr", [this](WorkerThread &worker)
                                                             { onTryDestroyingContents(); worker.sleep(); }, 1000);
   return true;
@@ -434,7 +433,6 @@ bool TrContentManager::shutdown()
   }
 
   eventChanWatcher->stop();
-  xrCommandsRecvWorker->stop();
   hived->shutdown();
   DEBUG(LOG_TAG_CONTENT, "TrContentManager::shutdown() done.");
   return true;
@@ -694,29 +692,4 @@ void TrContentManager::acceptEventChanClients(int timeout)
 {
   eventChanServer->tryAccept([this](TrOneShotClient<events_comm::TrNativeEventMessage> &newClient)
                              { onNewClientOnEventChan(newClient); }, timeout);
-}
-
-void TrContentManager::recvXRCommands(WorkerThread &worker, int timeout)
-{
-  if (TR_UNLIKELY(constellation->xrDevice == nullptr))
-  {
-    worker.sleep();
-    return;
-  }
-
-  // Check if no contents are available
-  {
-    shared_lock<shared_mutex> lock(contentsMutex);
-    if (contents.empty())
-      return;
-  }
-
-  // Receive the XR commands for each content.
-  bool receivedOne = false;
-  for (auto content : contents)
-    if (content->recvXRCommand(0) && !receivedOne)
-      receivedOne = true;
-
-  if (!receivedOne)
-    worker.sleep();
 }

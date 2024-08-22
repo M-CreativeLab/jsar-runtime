@@ -244,17 +244,17 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
       }));
     });
     this._scene.onPointerObservable.add((pointerEvent) => {
-      if (pointerEvent.type === BABYLON.PointerEventTypes.POINTERDOWN) {
-        this.attachedDocument.dispatchEvent(new JSARInputEvent('raycast_action', {
-          sourceId: 'scene_default_ray',
-          type: 'down',
-        }));
-      } else if (pointerEvent.type === BABYLON.PointerEventTypes.POINTERUP) {
-        this.attachedDocument.dispatchEvent(new JSARInputEvent('raycast_action', {
-          sourceId: 'scene_default_ray',
-          type: 'up',
-        }));
-      }
+      // if (pointerEvent.type === BABYLON.PointerEventTypes.POINTERDOWN) {
+      //   this.attachedDocument.dispatchEvent(new JSARInputEvent('raycast_action', {
+      //     sourceId: 'scene_default_ray',
+      //     type: 'down',
+      //   }));
+      // } else if (pointerEvent.type === BABYLON.PointerEventTypes.POINTERUP) {
+      //   this.attachedDocument.dispatchEvent(new JSARInputEvent('raycast_action', {
+      //     sourceId: 'scene_default_ray',
+      //     type: 'up',
+      //   }));
+      // }
     });
   }
 

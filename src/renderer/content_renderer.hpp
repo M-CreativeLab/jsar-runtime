@@ -44,24 +44,12 @@ namespace renderer
     }
 
   private: // private lifecycle
-    void onDispatchFrameRequest(WorkerThread &threadWorker);
     void onCommandBufferRequestReceived(TrCommandBufferBase *req);
     void onHostFrame(chrono::time_point<chrono::high_resolution_clock> time);
     void onStartFrame();
     void onEndFrame();
 
   private:
-    template <typename T>
-    void dispatchFrameRequest(TrFrameRequestSimple<T> &req)
-    {
-      if (frameRequestChanSender != nullptr)
-      {
-        req.resetTime();
-        frameRequestChanSender->sendFrameRequest(req);
-      }
-    }
-    void dispatchAnimationFrameRequest();
-    void dispatchXRFrameRequest(xr::TrXRSession *session, int viewIndex);
     /**
      * Execute command buffers from content's list.
      *
@@ -71,7 +59,6 @@ namespace renderer
      */
     void executeCommandBuffers(bool asXRFrame, int viewIndex = 0);
     bool executeStereoFrame(int viewIndex, std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec);
-    xr::StereoRenderingFrame *getOrCreateStereoFrame();
     size_t getPendingStereoFramesCount();
 
   private:
@@ -82,12 +69,7 @@ namespace renderer
     TrConstellation *constellation = nullptr;
     OpenGLAppContextStorage *glContext = nullptr;
     xr::Device *xrDevice = nullptr;
-    unique_ptr<xr::TrXRFrameRequest> currentBaseXRFrameReq = nullptr;
-    atomic<bool> isXRFrameBaseReqUpdating = false;
-    atomic<bool> isXRFrameBaseReqDirty = false;
-    shared_mutex mutexForXRFrameBaseReq;
-    std::unique_ptr<WorkerThread> frameDispatcherThread = nullptr;
-    std::chrono::time_point<std::chrono::high_resolution_clock> lastDispatchedFrameTime = std::chrono::high_resolution_clock::now();
+    int currentStereoId = 0;
 
   private: // command buffers & rendering frames
     shared_mutex commandBufferRequestsMutex;
@@ -101,15 +83,6 @@ namespace renderer
 
   private: // frame rate control
     uint32_t targetFrameRate;
-    /**
-     * If the host frame should be skipped for the script.
-     *
-     * In multi-pass rendering, this could be set by the left eye's frame callback, and used by both eyes, so that the
-     * right eye's frame callback will not be called.
-     */
-    bool skipDispatchingFrameState = false;
-    bool isLastFrameTimepointSet = false;
-    chrono::time_point<chrono::high_resolution_clock> lastFrameTimepoint;
 
   private:
     frame_request::TrFrameRequestSender *frameRequestChanSender = nullptr;

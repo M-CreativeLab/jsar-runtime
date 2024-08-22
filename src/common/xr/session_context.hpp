@@ -17,7 +17,9 @@ namespace xr
       memcpy(localBaseMatrix, glm::value_ptr(identity), sizeof(localBaseMatrix));
     }
     TrXRSessionContextData(TrXRSessionContextData &that) : sessionId(that.sessionId.load()),
-                                                           stereoId(that.stereoId.load())
+                                                           stereoId(that.stereoId.load()),
+                                                           timestampOnSettingStereoId(that.timestampOnSettingStereoId),
+                                                           pendingStereoFramesCount(that.pendingStereoFramesCount.load())
     {
       memcpy(localBaseMatrix, that.localBaseMatrix, sizeof(localBaseMatrix));
     }
@@ -26,6 +28,12 @@ namespace xr
     }
 
   public:
+    void setStereoId(uint32_t id)
+    {
+      stereoId = id;
+      auto now = chrono::time_point_cast<chrono::milliseconds>(chrono::steady_clock::now());
+      timestampOnSettingStereoId = now.time_since_epoch().count();
+    }
     int getPendingStereoFramesCount()
     {
       return pendingStereoFramesCount.load();
@@ -52,6 +60,10 @@ namespace xr
      * The frame request id.
      */
     atomic<uint32_t> stereoId;
+    /**
+     * The timestamp will be updated when setting the stereo id.
+     */
+    long long timestampOnSettingStereoId;
     /**
      * The pending stereo frames to be executed.
      *
@@ -84,7 +96,7 @@ namespace xr
     uint32_t getSessionId() { return data->sessionId; }
     uint32_t getStereoId() { return data->stereoId; }
     int getPendingStereoFramesCount() { return data->pendingStereoFramesCount; }
-    void setStereoId(uint32_t id) { data.get()->stereoId = id; }
+    void setStereoId(uint32_t id) { data->setStereoId(id); }
     void setPendingStereoFramesCount(int count) { data->setPendingStereoFramesCount(count); }
     void setLocalBaseMatrix(float *matrixValues) { data->setLocalBaseMatrix(matrixValues); }
   };

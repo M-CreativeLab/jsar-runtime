@@ -25,13 +25,15 @@ namespace bindings
     Napi::Value IsConnected(const Napi::CallbackInfo &info);
 
   private:
-    void onFrameRequest(TrAnimationFrameRequest &request);
+    void tick();
+    void onFrameRequest();
 
   private:
     atomic<bool> connected = false;
     TrClientContextPerProcess *clientContext = nullptr;
-    FrameRequestId internalRequestId;
     Napi::ThreadSafeFunction onframeTsfn;
+    uv_loop_t *eventloop;
+    uv_timer_t tickHandle;
 
   private:
     static Napi::FunctionReference *constructor;
