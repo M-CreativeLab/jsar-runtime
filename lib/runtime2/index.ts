@@ -23,6 +23,11 @@ export class TransmuteRuntime2 extends EventTarget {
 
   async start(url: string) {
     console.info(`Content(#${this.id}): receiving a document request: ${url}`);
+    if (isWebXRSupported()) {
+      await this.#nativeDocument.enterDefaultXrExperience();
+    } else {
+      console.info(`Skip enabling WebXR experience, reason: WebXR is not enabled.`);
+    }
     if (!this.#nativeDocument) {
       throw new TypeError('Call prepare() before start()');
     }
@@ -42,11 +47,6 @@ export class TransmuteRuntime2 extends EventTarget {
     console.info(`[JSARDOM] version=${JSARDOM.version}`);
 
     this.#nativeDocument = new NativeDocumentOnTransmute(this.gl);
-    if (isWebXRSupported()) {
-      await this.#nativeDocument.enterDefaultXrExperience();
-    } else {
-      console.info(`Skip enabling WebXR experience, reason: WebXR is not enabled.`);
-    }
     console.info(`The runtime#${this.id} has been ready.`);
   }
 
