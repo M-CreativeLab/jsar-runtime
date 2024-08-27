@@ -354,17 +354,12 @@ namespace xr
       return m_InputSourcesZone->getFilename();
   }
 
-  void Device::configureMainControllerInputSource(bool enabled, bool usingTouch)
-  {
-    auto mainController = m_InputSourcesZone->getMainControllerInputSource();
-    mainController->enabled = enabled;
-    mainController->handness = TrHandness::None;
-    mainController->targetRayMode = usingTouch ? TrXRTargetRayMode::Screen : TrXRTargetRayMode::TrackedPointer;
-  }
   TrXRInputSource *Device::getGazeInputSource() { return m_InputSourcesZone->getGazeInputSource(); }
   TrXRInputSource *Device::getMainControllerInputSource() { return m_InputSourcesZone->getMainControllerInputSource(); }
   TrXRInputSource *Device::getHandInputSource(int id) { return m_InputSourcesZone->getHandInputSource(id); }
   TrXRInputSource *Device::getHandInputSource(TrHandness handness) { return m_InputSourcesZone->getHandInputSource(handness); }
+  TrXRInputSource *Device::getScreenControllerInputSource(int index) { return m_InputSourcesZone->getScreenInputSource(index); }
+  TrXRInputSource *Device::getInputSourceById(int id) { return m_InputSourcesZone->getInputSourceById(id); }
 
   int Device::getCommandChanPort() { return m_CommandChanServer->getPort(); }
   void Device::startCommandClientWatcher()

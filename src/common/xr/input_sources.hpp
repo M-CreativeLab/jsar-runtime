@@ -105,6 +105,7 @@ namespace xr
 
       static TrIdGenerator idGen(0xf);
       id = idGen.get();
+      setName("default");
     }
     TrXRInputSource(TrXRInputSource *from) : id(from->id)
     {
@@ -114,6 +115,7 @@ namespace xr
   public:
     void update(TrXRInputSource *from)
     {
+      memcpy(name, from->name, sizeof(name));
       handness = from->handness;
       targetRayMode = from->targetRayMode;
       primaryActionPressed = from->primaryActionPressed;
@@ -125,6 +127,14 @@ namespace xr
         gripBaseMatrix[i] = from->gripBaseMatrix[i];
       for (int i = 0; i < JointsCount; i++)
         joints[i] = from->joints[i];
+    }
+    inline void setName(string nameStr)
+    {
+      if (nameStr.length() <= sizeof(name))
+      {
+        memset(name, 0, sizeof(name));
+        strncpy(name, nameStr.c_str(), nameStr.length());
+      }
     }
     inline void setTargetRayBaseMatrix(float *values)
     {
@@ -149,6 +159,7 @@ namespace xr
 
   public:
     int id;
+    char name[32];
     bool enabled = false;
     TrHandness handness;
     TrXRJointPose joints[JointsCount];
@@ -164,6 +175,9 @@ namespace xr
   class TrXRInputSourcesData
   {
   public:
+    static const int MaxScreenControllerInputSourcesLength = 2;
+
+  public:
     TrXRInputSourcesData(TrXRInputSourcesData &that)
         : gazeInputSource(that.gazeInputSource),
           mainControllerInputSource(that.mainControllerInputSource),
@@ -171,6 +185,8 @@ namespace xr
     {
       handInputSources[0] = that.handInputSources[0];
       handInputSources[1] = that.handInputSources[1];
+      for (int i = 0; i < MaxScreenControllerInputSourcesLength; i++)
+        screenControllerInputSources[i] = that.screenControllerInputSources[i];
     }
     TrXRInputSourcesData()
     {
@@ -181,12 +197,17 @@ namespace xr
 
       // Initialize the hand input sources.
       {
-        handInputSources[0].enabled = true;
         handInputSources[0].handness = TrHandness::Left;
         handInputSources[0].targetRayMode = TrXRTargetRayMode::TrackedPointer;
-        handInputSources[1].enabled = true;
         handInputSources[1].handness = TrHandness::Right;
         handInputSources[1].targetRayMode = TrXRTargetRayMode::TrackedPointer;
+      }
+
+      // Initialize the screen controllers
+      for (int i = 0; i < MaxScreenControllerInputSourcesLength; i++)
+      {
+        screenControllerInputSources[i].handness = TrHandness::None;
+        screenControllerInputSources[i].targetRayMode = TrXRTargetRayMode::Screen;
       }
     }
 
@@ -208,6 +229,12 @@ namespace xr
       else
         return &handInputSources[1];
     }
+    TrXRInputSource *getScreenInputSource(int index)
+    {
+      if (index < 0 || index >= MaxScreenControllerInputSourcesLength)
+        return nullptr;
+      return &screenControllerInputSources[index];
+    }
     TrXRInputSource *getInputSourceById(int id)
     {
       if (id == gazeInputSource.id)
@@ -220,6 +247,11 @@ namespace xr
         return &handInputSources[0];
       if (id == handInputSources[1].id)
         return &handInputSources[1];
+      for (int i = 0; i < MaxScreenControllerInputSourcesLength; i++)
+      {
+        if (id == screenControllerInputSources[i].id)
+          return &screenControllerInputSources[i];
+      }
       return nullptr;
     }
     void resetMainControllerInputSource()
@@ -238,7 +270,7 @@ namespace xr
      */
     TrXRInputSource gazeInputSource;
     /**
-     * The input sources for the device main controller.
+     * The input sources for the device's main controller, commonly used the ray-based controller.
      */
     TrXRInputSource mainControllerInputSource;
     /**
@@ -253,6 +285,10 @@ namespace xr
      * The input sources for hands.
      */
     TrXRInputSource handInputSources[2];
+    /**
+     * The input sources for screen(touch) controllers, and we support 2 screen controllers at most.
+     */
+    TrXRInputSource screenControllerInputSources[MaxScreenControllerInputSourcesLength];
     // TODO: support extra input sources?
   };
 
@@ -288,6 +324,7 @@ namespace xr
     TrXRInputSource *getTransientPointerInputSource() { return data->getTransientPointerInputSource(); }
     TrXRInputSource *getHandInputSource(int id) { return data->getHandInputSource(id); }
     TrXRInputSource *getHandInputSource(TrHandness handness) { return data->getHandInputSource(handness); }
+    TrXRInputSource *getScreenInputSource(int index) { return data->getScreenInputSource(index); }
     TrXRInputSource *getInputSourceById(int id) { return data->getInputSourceById(id); }
   };
 }

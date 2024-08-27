@@ -570,49 +570,126 @@ extern "C"
    */
 
   /**
-   * Configure the main controller's input source, only this function will be called once, the main controller is able to be used
-   * at application-side.
-   *
-   * @param usingTouch If the main controller is using touch-based input.
+   * Get the main controller's input source id, that is the key to call other input source related APIs.
+   * 
+   * @returns The main controller's input source id.
    */
-  DLL_PUBLIC void TransmuteUnity_ConfigureMainControllerInputSource(bool enabled, bool usingTouch)
+  DLL_PUBLIC int TransmuteUnity_GetMainControllerInputSource()
   {
-    TR_ENSURE_COMPONENT(xrDevice, /** void */, {
-      xrDevice->configureMainControllerInputSource(enabled, usingTouch);
+    TR_ENSURE_COMPONENT(xrDevice, -1, {
+      auto mainController = xrDevice->getMainControllerInputSource();
+      return mainController != nullptr ? mainController->id : -1;
     });
   }
 
   /**
-   * Update the main controller input source's targetRay pose.
+   * Get the hand input source id by the handness.
+   * 
+   * @param handness The handness, 0 for left and 1 for right.
+   * @returns The hand input source id.
+   */
+  DLL_PUBLIC int TransmuteUnity_GetHandInputSource(int handness)
+  {
+    TR_ENSURE_COMPONENT(xrDevice, -1, {
+      auto hand = xrDevice->getHandInputSource(handness);
+      return hand != nullptr ? hand->id : -1;
+    });
+  }
+
+  /**
+   * Get the screen controller input source id by the index.
+   * 
+   * @param index The index of the screen controller.
+   * @returns The screen controller input source id.
+   */
+  DLL_PUBLIC int TransmuteUnity_GetScreenControllerInputSource(int index)
+  {
+    TR_ENSURE_COMPONENT(xrDevice, -1, {
+      auto screenController = xrDevice->getScreenControllerInputSource(index);
+      return screenController != nullptr ? screenController->id : -1;
+    });
+  }
+
+  /**
+   * Update if the main controller's input source is enabled.
    *
+   * @param enabled Whether the main controller's input source is enabled.
+   */
+  DLL_PUBLIC void TransmuteUnity_SetInputSourceEnabled(int id, bool enabled)
+  {
+    TR_ENSURE_COMPONENT(xrDevice, /** void */, {});
+    auto inputSource = xrDevice->getInputSourceById(id);
+    if (inputSource != nullptr)
+      inputSource->enabled = enabled;
+  }
+
+  /**
+   * Update the target ray pose for the specific input source.
+   *
+   * @param id The input source id.
    * @param translation The translation part of the transform, a 3-element float array.
    * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
    */
-  DLL_PUBLIC void TransmuteUnity_SetMainControllerInputRayPose(float *translation, float *rotation)
+  DLL_PUBLIC void TranmusteUnity_SetInputSourceRayPose(int id, float *translation, float *rotation)
   {
     TR_ENSURE_COMPONENT(xrDevice, /** void */, {});
-    auto mainController = xrDevice->getMainControllerInputSource();
-    if (mainController != nullptr)
+    if (id < 0)
+    {
+      DEBUG(LOG_TAG_UNITY, "Invalid input source id: %d", id);
+      return;
+    }
+    auto inputSource = xrDevice->getInputSourceById(id);
+    if (inputSource != nullptr)
     {
       auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
-      mainController->setTargetRayBaseMatrix(baseMatrix);
+      inputSource->setTargetRayBaseMatrix(baseMatrix);
+    }
+    else
+    {
+      DEBUG(LOG_TAG_UNITY, "Failed to find the input source by id: %d", id);
     }
   }
 
-  DLL_PUBLIC bool TransmuteUnity_GetMainControllerInputRayHitResult(float *outHitPosition, float *outHitRotationQuat)
+  /**
+   * Update the grip pose for the specific input source.
+   * 
+   * @param id The input source id.
+   * @param translation The translation part of the transform, a 3-element float array.
+   * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
+   */
+  DLL_PUBLIC void TransmuteUnity_SetInputSourceGripPose(int id, float *translation, float *rotation)
+  {
+    TR_ENSURE_COMPONENT(xrDevice, /** void */, {});
+    auto inputSource = xrDevice->getInputSourceById(id);
+    if (inputSource != nullptr)
+    {
+      auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
+      inputSource->setGripBaseMatrix(baseMatrix);
+    }
+  }
+
+  /**
+   * Get the hit result of the target ray for the specific input source.
+   *
+   * @param id The input source id.
+   * @param outHitPosition The hit position, a 3-element float array.
+   * @param outHitRotationQuat The hit rotation quaternion, a 4-element float array.
+   * @return Whether the hit result is valid.
+   */
+  DLL_PUBLIC bool TransmuteUnity_GetInputSourceRayHitResult(int id, float *outHitPosition, float *outHitRotationQuat)
   {
     TR_ENSURE_COMPONENT(xrDevice, false, {});
-    auto mainController = xrDevice->getMainControllerInputSource();
-    if (mainController == nullptr)
+    auto inputSource = xrDevice->getInputSourceById(id);
+    if (inputSource == nullptr)
       return false;
 
-    if (!mainController->targetRayHitResult.hit)
+    if (!inputSource->targetRayHitResult.hit)
     {
       return false;
     }
     else
     {
-      float *matrixValues = mainController->targetRayHitResult.baseMatrix;
+      float *matrixValues = inputSource->targetRayHitResult.baseMatrix;
       glm::mat4 hitMatrix = glm::make_mat4(matrixValues);
       glm::vec3 position = glm::vec3(hitMatrix[3]);
       glm::quat rotation = glm::quat_cast(hitMatrix);
@@ -639,32 +716,21 @@ extern "C"
    * @param action The action type: primary(0), squeeze(1).
    * @param state The action state: pressed(0), released(1).
    */
-  DLL_PUBLIC void TransmuteUnity_SetMainControllerInputActionState(int actionType, int state)
+  DLL_PUBLIC void TransmuteUnity_SetInputSourceActionState(int id, int actionType, int state)
   {
     TR_ENSURE_COMPONENT(xrDevice, /** void */, {});
-    auto mainController = xrDevice->getMainControllerInputSource();
-    if (mainController != nullptr)
+    auto inputSource = xrDevice->getInputSourceById(id);
+    if (inputSource != nullptr)
     {
       if (actionType == xr::InputSourceActionType::XRPrimaryAction)
-        mainController->primaryActionPressed = state == 0; /** check if pressed */
+        inputSource->primaryActionPressed = state == 0; /** check if pressed */
       else if (actionType == xr::InputSourceActionType::XRSqueezeAction)
-        mainController->squeezeActionPressed = state == 0; /** check if pressed */
+        inputSource->squeezeActionPressed = state == 0; /** check if pressed */
     }
   }
 
   /**
-   * Update if the hand input source is enabled.
-   */
-  DLL_PUBLIC void TransmuteUnity_SetHandInputEnabled(int handness, bool enabled)
-  {
-    TR_ENSURE_COMPONENT(xrDevice, /** void */, {});
-    auto hand = xrDevice->getHandInputSource(handness);
-    if (hand != nullptr)
-      hand->enabled = enabled;
-  }
-
-  /**
-   * Update the hand input source's pose.
+   * Update the hand input source's joint pose.
    *
    * @param handness The handness of the hand, 0 for left and 1 for right.
    * @param joint The joint index of the hand, 0 for wrist, 1 for thumb, 2 for index, 3 for middle, 4 for ring, 5 for pinky.
@@ -672,7 +738,7 @@ extern "C"
    * @param rotation The rotation of the joint, a 4-element float array that represents a quaternion.
    * @param radius The radius of the joint, a float value.
    */
-  DLL_PUBLIC void TransmuteUnity_SetHandInputPose(int handness, int joint, float *translation, float *rotation, float radius)
+  DLL_PUBLIC void TransmuteUnity_SetHandInputSourceJointPose(int handness, int joint, float *translation, float *rotation, float radius)
   {
     TR_ENSURE_COMPONENT(xrDevice, /** void */, {});
     auto hand = xrDevice->getHandInputSource(handness);
@@ -684,65 +750,5 @@ extern "C"
     float defaultScale[3] = {1, 1, 1};
     auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, defaultScale, s_WorldScalingFactor);
     hand->joints[joint].setBaseMatrix(baseMatrix);
-  }
-
-  /**
-   * Update the target ray pose for the hand input source.
-   *
-   * @param handness The handness of the hand, 0 for left and 1 for right.
-   * @param translation The translation part of the transform, a 3-element float array.
-   * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
-   */
-  DLL_PUBLIC void TransmuteUnity_SetHandInputRayPose(int handness, float *translation, float *rotation)
-  {
-    TR_ENSURE_COMPONENT(xrDevice, /** void */, {});
-    auto hand = xrDevice->getHandInputSource(handness);
-    if (hand != nullptr)
-    {
-      auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
-      hand->setTargetRayBaseMatrix(baseMatrix);
-    }
-  }
-
-  /**
-   * Update the grip pose for the hand input source.
-   *
-   * @param handness The handness of the hand, 0 for left and 1 for right.
-   * @param translation The translation part of the transform, a 3-element float array.
-   * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.
-   */
-  DLL_PUBLIC void TransmuteUnity_SetHandInputGripPose(int handness, float *translation, float *rotation)
-  {
-    TR_ENSURE_COMPONENT(xrDevice, /** void */, {});
-    auto hand = xrDevice->getHandInputSource(handness);
-    if (hand != nullptr)
-    {
-      auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
-      hand->setGripBaseMatrix(baseMatrix);
-    }
-  }
-
-  /**
-   * An action is a special type of event that's triggered by the input source, such as the controller button press, etc. Calling
-   * this function will not trigger an event to the client side, it just updates the action state such as pressed, released, etc.
-   * Then the client side will fetch the action state in a frame and dispatch the events accordingly.
-   *
-   * See https://developer.mozilla.org/en-US/docs/Web/API/WebXR_Device_API/Inputs#actions for more details.
-   *
-   * @param handness The handness of the hand, 0 for left and 1 for right.
-   * @param action The action type: primary(0), squeeze(1).
-   * @param state The action state: pressed(0), released(1).
-   */
-  DLL_PUBLIC void TransmuteUnity_SetHandInputActionState(int handness, int actionType, int state)
-  {
-    TR_ENSURE_COMPONENT(xrDevice, /** void */, {});
-    auto hand = xrDevice->getHandInputSource(handness);
-    if (hand != nullptr)
-    {
-      if (actionType == xr::InputSourceActionType::XRPrimaryAction)
-        hand->primaryActionPressed = state == 0; /** check if pressed */
-      else if (actionType == xr::InputSourceActionType::XRSqueezeAction)
-        hand->squeezeActionPressed = state == 0; /** check if pressed */
-    }
   }
 }

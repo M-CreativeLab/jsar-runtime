@@ -203,13 +203,6 @@ namespace xr
      */
     string getInputSourcesZonePath();
     /**
-     * Configure the main controller input source, it will enable the main controller input source, host could call this in any times.
-     *
-     * @param enabled if the main controller input source is enabled.
-     * @param usingTouch if the main controller is using touch-based input.
-     */
-    void configureMainControllerInputSource(bool enabled, bool usingTouch);
-    /**
      * Returns the gaze input source for updating fields.
      */
     TrXRInputSource *getGazeInputSource();
@@ -225,6 +218,20 @@ namespace xr
      * Returns the hand input source by handness.
      */
     TrXRInputSource *getHandInputSource(TrHandness handness);
+    /**
+     * Returns the screen controller input source.
+     * 
+     * @param index the index of the screen controller.
+     * @returns the screen controller input source.
+     */
+    TrXRInputSource *getScreenControllerInputSource(int index);
+    /**
+     * Get the input source by its id.
+     * 
+     * @param id the input source id.
+     * @returns the input source object.
+     */
+    TrXRInputSource *getInputSourceById(int id);
 
   public: // Command channel
     int getCommandChanPort();
@@ -281,6 +288,9 @@ namespace xr
      * The id to indentify the session, corresponding to the session's id in the WebXR API.
      */
     vector<shared_ptr<TrXRSession>> m_Sessions;
+    /**
+     * The session context zone directory for session-related shared data.
+     */
     string m_SessionContextZoneDirectory;
     /**
      * The device context zone for device-related shared data.

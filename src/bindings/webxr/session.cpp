@@ -135,14 +135,11 @@ namespace bindings
     auto nativeSessionObject = info[2].ToObject();
     id = nativeSessionObject.Get("id").ToNumber().Int32Value();
     immersive = xr::IsImmersive(mode);
-    fprintf(stdout, "Created XRSession(%d) with mode: %s\n", id, modeString.c_str());
 
     // Create zone client
     auto clientContext = TrClientContextPerProcess::Get();
     string zonePath = clientContext->xrDeviceInit.sessionContextZoneDirectory + "/" + to_string(id);
-    fprintf(stdout, "Creating XRSessionContextZoneClient(%s)\n", zonePath.c_str());
     sessionContextZoneClient = make_unique<xr::TrXRSessionContextZone>(zonePath, TrZoneType::Client);
-    fprintf(stdout, "Created XRSessionContextZoneClient(%s)\n", zonePath.c_str());
 
     // Create the view spaces
     if (immersive)

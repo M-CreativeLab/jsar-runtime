@@ -1,5 +1,6 @@
 import { JSARDOM } from '@yodaos-jsar/dom';
-import { extname } from 'node:path';
+import { extname, resolve as resolvePath } from 'node:path';
+import { existsSync } from 'node:fs';
 
 import { getPerformanceNow, isWebXRSupported } from '@transmute/env';
 import { reportDocumentEvent } from '@transmute/messaging';
@@ -12,6 +13,19 @@ import createImage2dViewer from './viewers/image2d';  // png, jpg, etc ...
 Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
   get: () => getPerformanceNow(),
 });
+
+/**
+ * Validate the input path.
+ * @param input the input path.
+ * @returns if the input path is valid.
+ */
+function validatePath(input: string): boolean {
+  try {
+    return existsSync(resolvePath(input));
+  } catch (err) {
+    return false;
+  }
+}
 
 export class TransmuteRuntime2 extends EventTarget {
   #nativeDocument: NativeDocumentOnTransmute;
@@ -107,10 +121,14 @@ export class TransmuteRuntime2 extends EventTarget {
           break;
       }
     } catch (_err) {
-      urlBase = 'https://example.com/'
+      if (validatePath(codeOrUrl)) {
+        urlBase = codeOrUrl;
+      } else {
+        urlBase = 'https://example.com/';
+      }
     }
 
-    console.info(`loading a JSAR document`, codeOrUrl);
+    console.info(`loading a JSAR document`, codeOrUrl, { url: urlBase });
     const dom = new JSARDOM(codeOrUrl, {
       url: urlBase,
       nativeDocument,
