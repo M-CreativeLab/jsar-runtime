@@ -273,6 +273,8 @@ namespace bindings
       checkInputSourceEnabledAndInsertTo(newInputSourceIds, inputSourcesZone->getTransientPointerInputSource());
       checkInputSourceEnabledAndInsertTo(newInputSourceIds, inputSourcesZone->getHandInputSource(xr::TrHandness::Left));
       checkInputSourceEnabledAndInsertTo(newInputSourceIds, inputSourcesZone->getHandInputSource(xr::TrHandness::Right));
+      checkInputSourceEnabledAndInsertTo(newInputSourceIds, inputSourcesZone->getScreenInputSource(0));
+      checkInputSourceEnabledAndInsertTo(newInputSourceIds, inputSourcesZone->getScreenInputSource(1));
     }
     set<int> currentInputSourceIds;
     {

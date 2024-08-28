@@ -666,6 +666,10 @@ extern "C"
       auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
       inputSource->setGripBaseMatrix(baseMatrix);
     }
+    else
+    {
+      DEBUG(LOG_TAG_UNITY, "Failed to find the input source by id: %d", id);
+    }
   }
 
   /**
@@ -681,7 +685,10 @@ extern "C"
     TR_ENSURE_COMPONENT(xrDevice, false, {});
     auto inputSource = xrDevice->getInputSourceById(id);
     if (inputSource == nullptr)
+    {
+      DEBUG(LOG_TAG_UNITY, "Failed to find the input source by id: %d", id);
       return false;
+    }
 
     if (!inputSource->targetRayHitResult.hit)
     {

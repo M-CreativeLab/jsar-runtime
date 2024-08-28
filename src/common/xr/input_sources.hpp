@@ -254,6 +254,18 @@ namespace xr
       }
       return nullptr;
     }
+    vector<TrXRInputSource*> listInputSources()
+    {
+      vector<TrXRInputSource*> inputSources;
+      inputSources.push_back(&gazeInputSource);
+      inputSources.push_back(&mainControllerInputSource);
+      inputSources.push_back(&transientPointerInputSource);
+      inputSources.push_back(&handInputSources[0]);
+      inputSources.push_back(&handInputSources[1]);
+      for (int i = 0; i < MaxScreenControllerInputSourcesLength; i++)
+        inputSources.push_back(&screenControllerInputSources[i]);
+      return inputSources;
+    }
     void resetMainControllerInputSource()
     {
       mainControllerInputSource.enabled = false;
@@ -316,6 +328,10 @@ namespace xr
         data->handInputSources[0].setTargetRayHitResult(sharedInputSources->handInputSources[0].targetRayHitResult);
       if (data->handInputSources[1].enabled)
         data->handInputSources[1].setTargetRayHitResult(sharedInputSources->handInputSources[1].targetRayHitResult);
+      if (data->screenControllerInputSources[0].enabled)
+        data->screenControllerInputSources[0].setTargetRayHitResult(sharedInputSources->screenControllerInputSources[0].targetRayHitResult);
+      if (data->screenControllerInputSources[1].enabled)
+        data->screenControllerInputSources[1].setTargetRayHitResult(sharedInputSources->screenControllerInputSources[1].targetRayHitResult);
     }
 
   public:
