@@ -564,36 +564,78 @@ export class WebXRControllerPointerSelection extends WebXRAbstractFeature {
 
   private _attachScreenRayMode(xrController: WebXRInputSource) {
     const controllerData = this._controllers[xrController.uniqueId];
-    let downTriggered = false;
     const pointerEventInit: PointerEventInit = {
       pointerId: controllerData.id,
       pointerType: 'xr',
     };
     controllerData.onFrameObserver = this._xrSessionManager.onXRFrameObservable.add(() => {
-      this._augmentPointerInit(pointerEventInit, controllerData.id, controllerData.screenCoordinates);
-      if (!controllerData.pick || (this._options.disablePointerUpOnTouchOut && downTriggered)) {
-        return;
-      }
-      if (!downTriggered) {
-        this._scene.simulatePointerDown(controllerData.pick, pointerEventInit);
-        controllerData.pointerDownTriggered = true;
-        downTriggered = true;
-        if (this._options.disablePointerUpOnTouchOut) {
-          this._scene.simulatePointerUp(controllerData.pick, pointerEventInit);
-        }
-      } else {
+      (<BABYLON.StandardMaterial>controllerData.laserPointer.material).disableLighting = this.disablePointerLighting;
+      (<BABYLON.StandardMaterial>controllerData.selectionMesh.material).disableLighting = this.disableSelectionMeshLighting;
+
+      if (controllerData.pick) {
+        this._augmentPointerInit(pointerEventInit, controllerData.id, controllerData.screenCoordinates);
         this._scene.simulatePointerMove(controllerData.pick, pointerEventInit);
       }
     });
-    xrController.onDisposeObservable.addOnce(() => {
+
+    // use the select and squeeze events
+    const selectStartListener = (event: XRInputSourceEvent) => {
       this._augmentPointerInit(pointerEventInit, controllerData.id, controllerData.screenCoordinates);
-      this._xrSessionManager.runInXRFrame(() => {
-        if (controllerData.pick && !controllerData.finalPointerUpTriggered && downTriggered && !this._options.disablePointerUpOnTouchOut) {
-          this._scene.simulatePointerUp(controllerData.pick, pointerEventInit);
-          controllerData.finalPointerUpTriggered = true;
-        }
-      });
-    });
+      if (controllerData.xrController && event.inputSource === controllerData.xrController.inputSource && controllerData.pick) {
+        this._scene.simulatePointerDown(controllerData.pick, pointerEventInit);
+        controllerData.pointerDownTriggered = true;
+        (<BABYLON.StandardMaterial>controllerData.selectionMesh.material).emissiveColor = this.selectionMeshPickedColor;
+        (<BABYLON.StandardMaterial>controllerData.laserPointer.material).emissiveColor = this.laserPointerPickedColor;
+      }
+    };
+
+    const selectEndListener = (event: XRInputSourceEvent) => {
+      this._augmentPointerInit(pointerEventInit, controllerData.id, controllerData.screenCoordinates);
+      if (controllerData.xrController && event.inputSource === controllerData.xrController.inputSource && controllerData.pick) {
+        this._scene.simulatePointerUp(controllerData.pick, pointerEventInit);
+        (<BABYLON.StandardMaterial>controllerData.selectionMesh.material).emissiveColor = this.selectionMeshDefaultColor;
+        (<BABYLON.StandardMaterial>controllerData.laserPointer.material).emissiveColor = this.laserPointerDefaultColor;
+      }
+    };
+
+    controllerData.eventListeners = {
+      selectend: selectEndListener,
+      selectstart: selectStartListener,
+    };
+
+    this._xrSessionManager.session.addEventListener('selectstart', selectStartListener);
+    this._xrSessionManager.session.addEventListener('selectend', selectEndListener);
+
+    // let downTriggered = false;
+    // const pointerEventInit: PointerEventInit = {
+    //   pointerId: controllerData.id,
+    //   pointerType: 'xr',
+    // };
+    // controllerData.onFrameObserver = this._xrSessionManager.onXRFrameObservable.add(() => {
+    //   this._augmentPointerInit(pointerEventInit, controllerData.id, controllerData.screenCoordinates);
+    //   if (!controllerData.pick || (this._options.disablePointerUpOnTouchOut && downTriggered)) {
+    //     return;
+    //   }
+    //   if (!downTriggered) {
+    //     this._scene.simulatePointerDown(controllerData.pick, pointerEventInit);
+    //     controllerData.pointerDownTriggered = true;
+    //     downTriggered = true;
+    //     if (this._options.disablePointerUpOnTouchOut) {
+    //       this._scene.simulatePointerUp(controllerData.pick, pointerEventInit);
+    //     }
+    //   } else {
+    //     this._scene.simulatePointerMove(controllerData.pick, pointerEventInit);
+    //   }
+    // });
+    // xrController.onDisposeObservable.addOnce(() => {
+    //   this._augmentPointerInit(pointerEventInit, controllerData.id, controllerData.screenCoordinates);
+    //   this._xrSessionManager.runInXRFrame(() => {
+    //     if (controllerData.pick && !controllerData.finalPointerUpTriggered && downTriggered && !this._options.disablePointerUpOnTouchOut) {
+    //       this._scene.simulatePointerUp(controllerData.pick, pointerEventInit);
+    //       controllerData.finalPointerUpTriggered = true;
+    //     }
+    //   });
+    // });
   }
 
   private _attachTrackedPointerRayMode(xrController: WebXRInputSource) {
