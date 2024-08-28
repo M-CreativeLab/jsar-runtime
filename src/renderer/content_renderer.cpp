@@ -182,6 +182,7 @@ namespace renderer
           {
             activeSession->setStereoId(currentStereoId);
             activeSession->setPendingStereoFramesCount(getPendingStereoFramesCount());
+            activeSession->updateStatesInZone();
           }
         }
       }

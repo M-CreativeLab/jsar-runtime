@@ -76,11 +76,13 @@ namespace bindings
     if (prevStereoId != -1 && prevStereoId == sessionContext->stereoId)
       return env.Undefined();
 
-    XRFrameContext frameContext(*sessionContext, *deviceContext, xrSession);
     int pendingsAtServer = sessionContext->getPendingStereoFramesCount();
     if (pendingsAtServer >= 2)
       return env.Undefined(); // Skip the frame if there are more than 2 pending frames.
+    if (!sessionContext->inFrustum)
+      return env.Undefined(); // Skip the frame if the session is not in the frustum.
 
+    XRFrameContext frameContext(*sessionContext, *deviceContext, xrSession);
     /**
      * TODO: support singlepass rendering
      */

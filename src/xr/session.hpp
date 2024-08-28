@@ -58,6 +58,13 @@ namespace xr
      */
     void setPendingStereoFramesCount(int count) { contextZone->setPendingStereoFramesCount(count); }
     /**
+     * Update the states in zone.
+     */
+    void updateStatesInZone()
+    {
+      contextZone->setInFrustum(isInFrustum());
+    }
+    /**
      * Check if the session's content in the viewer's frustum.
      */
     bool isInFrustum();

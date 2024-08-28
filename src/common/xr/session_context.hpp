@@ -42,6 +42,10 @@ namespace xr
     {
       pendingStereoFramesCount = count;
     }
+    void setInFrustum(bool value)
+    {
+      inFrustum = value;
+    }
     void setLocalBaseMatrix(glm::mat4 &baseMatrix)
     {
       memcpy(localBaseMatrix, glm::value_ptr(baseMatrix), sizeof(localBaseMatrix));
@@ -71,6 +75,11 @@ namespace xr
      */
     atomic<int> pendingStereoFramesCount = 0;
     /**
+     * The flag to indicate if the session's content is in the viewer's frustum, the client-side will read this value to know
+     * if the session's content should be visible.
+     */
+    bool inFrustum = false;
+    /**
      * The session's local base matrix.
      */
     float localBaseMatrix[16];
@@ -98,6 +107,7 @@ namespace xr
     int getPendingStereoFramesCount() { return data->pendingStereoFramesCount; }
     void setStereoId(uint32_t id) { data->setStereoId(id); }
     void setPendingStereoFramesCount(int count) { data->setPendingStereoFramesCount(count); }
+    void setInFrustum(bool value) { data->setInFrustum(value); }
     void setLocalBaseMatrix(float *matrixValues) { data->setLocalBaseMatrix(matrixValues); }
   };
 }
