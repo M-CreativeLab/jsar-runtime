@@ -186,6 +186,16 @@ $ adb logcat -s jsar.metrics
 
 ### 运行时性能
 
+**如何查看运行时进程？**
+
+```sh
+$ adb shell top
+  PID USER         PR  NI VIRT  RES  SHR S[%CPU] %MEM     TIME+ ARGS
+13301 u0_a132      20   0  21G  92M  28M S  6.3   1.2   0:03.55 jsar-client --h+
+```
+
+找到如上进程，参数为 "jsar-client" 开头的部分为 JSAR 应用进程。
+
 **如何查看运行时性能？**
 
 在运行时目录下找到 `perf` 文件夹，里面存放了每次加载的性能指标，比如希望查看当前 fps 情况：
