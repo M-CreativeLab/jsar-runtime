@@ -41,19 +41,23 @@ namespace xr
     glm::mat4 getLocalBaseMatrix();
     /**
      * Set the local base matrix of this session.
-     * 
+     *
      * @param matrix The local base matrix.
      */
     void setLocalBaseMatrix(glm::mat4 matrix);
     /**
+     * Get the collision box of this session.
+     */
+    void getCollisionBox(float *outMin, float *outMax) { return contextZone->getCollisionBoxMinMax(outMin, outMax); }
+    /**
      * Set the stereo frame id to the session's context zone.
-     * 
+     *
      * @param id The stereo id.
      */
     void setStereoId(uint32_t id) { contextZone->setStereoId(id); }
     /**
      * Set the pending stereo frames count to the session's context zone.
-     * 
+     *
      * @param count The pending stereo frames count.
      */
     void setPendingStereoFramesCount(int count) { contextZone->setPendingStereoFramesCount(count); }

@@ -165,6 +165,15 @@ namespace xr
      */
     bool updateLocalTransformByDocumentId(int documentId, float *transform);
     /**
+     * Get the collision box by the document id, it will find the session by the document/content's active session id.
+     * 
+     * @param documentId the document id to find the session.
+     * @param outMin the min vector to store the result.
+     * @param outMax the max vector to store the result.
+     * @returns true if the local bounding box is found.
+     */
+    bool getCollisionBoxByDocumentId(int documentId, float *outMin, float *outMax);
+    /**
      * Update the gaze-related data from the eyeball or camera's base matrix.
      */
     void updateGazeFromBaseMatrix(float *baseMatrixValues)

@@ -59,6 +59,7 @@ namespace bindings
     Napi::Value RequestReferenceSpace(const Napi::CallbackInfo &info);
     Napi::Value UpdateRenderState(const Napi::CallbackInfo &info);
     Napi::Value UpdateTargetFrameRate(const Napi::CallbackInfo &info);
+    Napi::Value UpdateCollisionBox(const Napi::CallbackInfo &info);
     Napi::Value End(const Napi::CallbackInfo &info);
 
   private:

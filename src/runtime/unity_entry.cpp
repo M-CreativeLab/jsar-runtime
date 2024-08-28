@@ -560,6 +560,20 @@ extern "C"
   }
 
   /**
+   * Get the collision box for a specific applet.
+   * 
+   * @param id The applet id.
+   * @param outMin The minimum point of the bounding box, a 3-element float array.
+   * @param outMax The maximum point of the bounding box, a 3-element float array.
+   * @return Whether the collision box is fetched successfully.
+   */
+  DLL_PUBLIC bool TransmuteUnity_GetCollisionBox(int id, float *outMin, float *outMax)
+  {
+    TR_ENSURE_COMPONENT(xrDevice, false, {});
+    return xrDevice->getCollisionBoxByDocumentId(id, outMin, outMax);
+  }
+
+  /**
    * __Input Source Updates__
    *
    * Input source represents the input device, such as the controller, hand, etc, in WebXR and OpenXR, it's called input source.
@@ -571,7 +585,7 @@ extern "C"
 
   /**
    * Get the main controller's input source id, that is the key to call other input source related APIs.
-   * 
+   *
    * @returns The main controller's input source id.
    */
   DLL_PUBLIC int TransmuteUnity_GetMainControllerInputSource()
@@ -584,7 +598,7 @@ extern "C"
 
   /**
    * Get the hand input source id by the handness.
-   * 
+   *
    * @param handness The handness, 0 for left and 1 for right.
    * @returns The hand input source id.
    */
@@ -598,7 +612,7 @@ extern "C"
 
   /**
    * Get the screen controller input source id by the index.
-   * 
+   *
    * @param index The index of the screen controller.
    * @returns The screen controller input source id.
    */
@@ -652,7 +666,7 @@ extern "C"
 
   /**
    * Update the grip pose for the specific input source.
-   * 
+   *
    * @param id The input source id.
    * @param translation The translation part of the transform, a 3-element float array.
    * @param rotation The rotation part of the transform, a 4-element float array that represents a quaternion.

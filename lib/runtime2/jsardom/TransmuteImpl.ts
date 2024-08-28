@@ -146,14 +146,11 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
   constructor(glContext: WebGLRenderingContext | WebGL2RenderingContext) {
     super();
 
-    const now = performance.now();
     this._id = getClientContext().id;
     this._xrSystem = createBondXRSystem();
     this.engine = new EngineOnTransmute(glContext, true, {
       xrCompatible: true,
     });
-    console.info('Engine created in', performance.now() - now, 'ms');
-
     this.userAgent = new UserAgentBackendOnTransmute({
       defaultStylesheet: '',
       devicePixelRatio: 1,
@@ -259,11 +256,32 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
         }));
       }
     });
+
+    const updateCollisionBox = () => {
+      const xrSession = xrExperience.sessionManager.session;
+      const spaceNode = this.attachedDocument.space.asNativeType<BABYLON.TransformNode>();
+      try {
+        const { min, max } = spaceNode.getHierarchyBoundingVectors(true, (mesh) => mesh.isPickable);
+        xrSession.updateCollisionBox(
+          [min.x, min.y, min.z],
+          [max.x, max.y, max.z]
+        );
+      } catch (err) {
+        console.error('Failed to update collision box:', err);
+      }
+    };
+    this.addEventListener('documentLoaded', () => {
+      updateCollisionBox();
+      this._scene.onNewMeshAddedObservable.add(() => {
+        updateCollisionBox();
+      });
+    }, { once: true });
   }
 
   #unregisterListenersForXR(xrExperience: WebXRExperienceHelper) {
     xrExperience.sessionManager.onMeshPickObservable.clear();
     this._scene.onPointerObservable.clear();
+    this._scene.onNewMeshAddedObservable.clear();
   }
 
   async enterDefaultXrExperience(): Promise<XRSession> {
@@ -276,6 +294,10 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
       optionalFeatures: [],
     }, renderTarget);
     return baseExperience.sessionManager?.session;
+  }
+
+  dispatchDocumentLoadedEvent() {
+    this.dispatchEvent(new Event('documentLoaded'));
   }
 
   getNativeScene(): BABYLON.Scene {

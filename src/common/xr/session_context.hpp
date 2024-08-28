@@ -54,8 +54,26 @@ namespace xr
     {
       memcpy(localBaseMatrix, matrixValues, sizeof(localBaseMatrix));
     }
+    void getCollisionBoxMinMax(float *min, float *max)
+    {
+      min[0] = collisionBoxMinMax[0];
+      min[1] = collisionBoxMinMax[1];
+      min[2] = collisionBoxMinMax[2];
+      max[0] = collisionBoxMinMax[3];
+      max[1] = collisionBoxMinMax[4];
+      max[2] = collisionBoxMinMax[5];
+    }
+    void setCollisionBoxMinMax(float *min, float *max)
+    {
+      collisionBoxMinMax[0] = min[0];
+      collisionBoxMinMax[1] = min[1];
+      collisionBoxMinMax[2] = min[2];
+      collisionBoxMinMax[3] = max[0];
+      collisionBoxMinMax[4] = max[1];
+      collisionBoxMinMax[5] = max[2];
+    }
 
-  public:
+  public: // Fields for the server-side
     /**
      * The session id.
      */
@@ -83,6 +101,12 @@ namespace xr
      * The session's local base matrix.
      */
     float localBaseMatrix[16];
+
+  public: // Fields for the client-side
+    /**
+     * The min & max vectors to describe the collision box.
+     */
+    float collisionBoxMinMax[6] = {-0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f};
   };
 
   class TrXRSessionContextZone : public TrZone<TrXRSessionContextData>
@@ -101,6 +125,13 @@ namespace xr
       }
     }
 
+  protected:
+    void updateData(TrXRSessionContextData *sharedSessionContext)
+    {
+      data->setCollisionBoxMinMax(sharedSessionContext->collisionBoxMinMax,
+                                  sharedSessionContext->collisionBoxMinMax + 3);
+    }
+
   public:
     uint32_t getSessionId() { return data->sessionId; }
     uint32_t getStereoId() { return data->stereoId; }
@@ -109,5 +140,7 @@ namespace xr
     void setPendingStereoFramesCount(int count) { data->setPendingStereoFramesCount(count); }
     void setInFrustum(bool value) { data->setInFrustum(value); }
     void setLocalBaseMatrix(float *matrixValues) { data->setLocalBaseMatrix(matrixValues); }
+    void getCollisionBoxMinMax(float *min, float *max) { data->getCollisionBoxMinMax(min, max); }
+    void setCollisionBoxMinMax(float *min, float *max) { data->setCollisionBoxMinMax(min, max); }
   };
 }

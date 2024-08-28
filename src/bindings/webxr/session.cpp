@@ -23,6 +23,7 @@ namespace bindings
                                       InstanceMethod("requestReferenceSpace", &XRSession::RequestReferenceSpace),
                                       InstanceMethod("updateRenderState", &XRSession::UpdateRenderState),
                                       InstanceMethod("updateTargetFrameRate", &XRSession::UpdateTargetFrameRate),
+                                      InstanceMethod("updateCollisionBox", &XRSession::UpdateCollisionBox),
                                       InstanceMethod("end", &XRSession::End)});
 
     constructor = new Napi::FunctionReference();
@@ -495,6 +496,36 @@ namespace bindings
 
     // auto frameRate = info[0].As<Napi::Number>().FloatValue();
     // device->updateTargetFrameRate(frameRate);
+    return env.Undefined();
+  }
+
+  Napi::Value XRSession::UpdateCollisionBox(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "updateCollisionBox requires 2 arguments: min and max").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    float minValues[3];
+    float maxValues[3];
+    auto min = info[0].As<Napi::Array>();
+    auto max = info[1].As<Napi::Array>();
+    for (int i = 0; i < 3; i++)
+    {
+      minValues[i] = min.Get(i).ToNumber().FloatValue();
+      maxValues[i] = max.Get(i).ToNumber().FloatValue();
+    }
+
+    if (sessionContextZoneClient == nullptr)
+    {
+      Napi::Error::New(env, "Invalid XRSession object").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    sessionContextZoneClient->setCollisionBoxMinMax(minValues, maxValues);
     return env.Undefined();
   }
 

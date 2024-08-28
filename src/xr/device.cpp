@@ -344,6 +344,20 @@ namespace xr
     return true;
   }
 
+  bool Device::getCollisionBoxByDocumentId(int id, float *outMin, float *outMax)
+  {
+    std::shared_lock<std::shared_mutex> lock(m_MutexForSessions);
+    auto content = m_Constellation->contentManager->getContent(id);
+    if (TR_UNLIKELY(content == nullptr))
+      return false;
+    auto session = content->getActiveXRSession();
+    if (session == nullptr)
+      return false;
+
+    session->getCollisionBox(outMin, outMax);
+    return true;
+  }
+
   // InputSource
 
   string Device::getInputSourcesZonePath()

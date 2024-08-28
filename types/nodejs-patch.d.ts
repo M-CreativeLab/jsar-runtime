@@ -8,6 +8,13 @@ interface OffscreenCanvas {
 /**
  * New APIs for WebXR Device API.
  */
+interface XRSession {
+  /**
+   * Update the session's collision box, which is used for the collision detection with native ray.
+   */
+  updateCollisionBox(min: number[], max: number[]): void;
+}
+
 interface XRInputSource {
   /**
    * Set the target ray's hit test result, this is used for updating the host ray rendering.

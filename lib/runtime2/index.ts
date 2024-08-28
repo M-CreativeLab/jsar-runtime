@@ -144,6 +144,7 @@ export class TransmuteRuntime2 extends EventTarget {
         reportDocumentEvent(nativeDocument.id, 'DOMContentLoaded');
       }
       spaceNode.setEnabled(true);
+      this.#nativeDocument.dispatchDocumentLoadedEvent();
     } catch (err) {
       // Just unload and close the document
       await dom.unload();
