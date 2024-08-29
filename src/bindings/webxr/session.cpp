@@ -582,7 +582,6 @@ namespace bindings
       fps = frameCount / (delta / 1000);
       frameCount = 0;
       lastRecordedFrameTimepoint = frameTimepoint;
-      fprintf(stdout, "Session(%d) Content FPS: %d\n", id, fps);
       return true;
     }
     else

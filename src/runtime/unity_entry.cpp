@@ -386,6 +386,22 @@ extern "C"
   }
 
   /**
+   * Close the document with the given document id.
+   *
+   * @param documentId The document id to close.
+   * @return Whether the document is closed successfully.
+   */
+  DLL_PUBLIC bool TransmuteUnity_Close(int documentId)
+  {
+    TR_ENSURE_COMPONENT(contentManager, false, {});
+    auto content = contentManager->getContent(documentId, false);
+    if (content == nullptr)
+      return false;
+    content->dispose(false);
+    return true;
+  }
+
+  /**
    * Fetch the event from the JavaScript side.
    *
    * @param id The event id.
@@ -561,7 +577,7 @@ extern "C"
 
   /**
    * Get the collision box for a specific applet.
-   * 
+   *
    * @param id The applet id.
    * @param outMin The minimum point of the bounding box, a 3-element float array.
    * @param outMax The maximum point of the bounding box, a 3-element float array.
