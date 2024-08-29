@@ -33,7 +33,7 @@ namespace bindings
     return exports;
   }
 
-  inline xr::TrXRFrameRequest createFrameRequestForView(uint32_t viewIndex, XRFrameContext& frameContext)
+  inline xr::TrXRFrameRequest createFrameRequestForView(uint32_t viewIndex, XRFrameContext &frameContext)
   {
     auto req = xr::TrXRFrameRequest();
     req.sessionId = frameContext.sessionId;
@@ -514,10 +514,18 @@ namespace bindings
     float maxValues[3];
     auto min = info[0].As<Napi::Array>();
     auto max = info[1].As<Napi::Array>();
+
     for (int i = 0; i < 3; i++)
     {
-      minValues[i] = min.Get(i).ToNumber().FloatValue();
-      maxValues[i] = max.Get(i).ToNumber().FloatValue();
+      auto minValue = min.Get(i).ToNumber().FloatValue();
+      auto maxValue = max.Get(i).ToNumber().FloatValue();
+      if (minValue > maxValue ||
+          minValue == INFINITY ||
+          maxValue == -INFINITY)
+        return env.Undefined();
+
+      minValues[i] = minValue;
+      maxValues[i] = maxValue;
     }
 
     if (sessionContextZoneClient == nullptr)
@@ -545,7 +553,7 @@ namespace bindings
       return; // Already started
 
     uv_timer_start(&tickHandle, [](uv_timer_t *handle)
-                  {
+                   {
                     auto session = static_cast<XRSession *>(handle->data);
                     session->tick(); }, 0, 2);
     started = true;
