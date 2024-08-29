@@ -133,7 +133,7 @@ public:
    * Iterate all the sound sources by the specified content, and call the callback function for each sound source.
    */
   void iterateSoundSourcesByContent(TrContentRuntime *content, std::function<void(shared_ptr<TrSoundSource>)> callback);
-  shared_ptr<TrSoundSource> findSoundSourceById(uint32_t id);
+  shared_ptr<TrSoundSource> findSoundSource(TrContentRuntime *content, uint32_t id);
   /**
    * Update the listener's base matrix, the audio engine will use this matrix to calculate the listener's position and
    * orientation.

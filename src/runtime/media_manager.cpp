@@ -224,12 +224,12 @@ void TrMediaManager::iterateSoundSourcesByContent(TrContentRuntime *content, std
   }
 }
 
-shared_ptr<TrSoundSource> TrMediaManager::findSoundSourceById(uint32_t id)
+shared_ptr<TrSoundSource> TrMediaManager::findSoundSource(TrContentRuntime *content, uint32_t id)
 {
   shared_lock<shared_mutex> lock(mutexForSoundSources);
   for (auto &soundSource : soundSources)
   {
-    if (soundSource->id == id)
+    if (soundSource->content == content && soundSource->id == id)
       return soundSource;
   }
   return nullptr;
@@ -267,28 +267,28 @@ void TrMediaManager::onContentRequest(TrContentRuntime *content, TrMediaCommandM
   else if (messageType == TrMediaCommandType::PlayRequest)
   {
     auto playReq = TrMediaCommandBase::CreateFromMessage<TrPlayRequest>(reqMessage);
-    auto soundSource = findSoundSourceById(playReq.clientId);
+    auto soundSource = findSoundSource(content, playReq.clientId);
     if (soundSource != nullptr && soundSource->content == content)
       soundSource->play();
   }
   else if (messageType == TrMediaCommandType::PauseRequest)
   {
     auto pauseReq = TrMediaCommandBase::CreateFromMessage<TrPauseRequest>(reqMessage);
-    auto soundSource = findSoundSourceById(pauseReq.clientId);
+    auto soundSource = findSoundSource(content, pauseReq.clientId);
     if (soundSource != nullptr && soundSource->content == content)
       soundSource->pause();
   }
   else if (messageType == TrMediaCommandType::CloseRequest)
   {
     auto closeReq = TrMediaCommandBase::CreateFromMessage<TrCloseRequest>(reqMessage);
-    auto soundSource = findSoundSourceById(closeReq.clientId);
+    auto soundSource = findSoundSource(content, closeReq.clientId);
     if (soundSource != nullptr && soundSource->content == content)
       soundSource->close();
   }
   else if (messageType == TrMediaCommandType::SetSrcDataRequest)
   {
     auto setSrcDataReq = TrMediaCommandBase::CreateFromMessage<TrSetSrcDataRequest>(reqMessage);
-    auto soundSource = findSoundSourceById(setSrcDataReq.clientId);
+    auto soundSource = findSoundSource(content, setSrcDataReq.clientId);
     if (soundSource != nullptr && soundSource->content == content)
     {
       soundSource->setSrcData((char *)setSrcDataReq.srcData, setSrcDataReq.sizeInBytes);
@@ -299,21 +299,21 @@ void TrMediaManager::onContentRequest(TrContentRuntime *content, TrMediaCommandM
   else if (messageType == TrMediaCommandType::SetVolumeRequest)
   {
     auto setVolumeReq = TrMediaCommandBase::CreateFromMessage<TrSetVolumeRequest>(reqMessage);
-    auto soundSource = findSoundSourceById(setVolumeReq.clientId);
+    auto soundSource = findSoundSource(content, setVolumeReq.clientId);
     if (soundSource != nullptr && soundSource->content == content)
       soundSource->setVolume(setVolumeReq.volume);
   }
   else if (messageType == TrMediaCommandType::SetLoopingRequest)
   {
     auto setLoopingReq = TrMediaCommandBase::CreateFromMessage<TrSetLoopingRequest>(reqMessage);
-    auto soundSource = findSoundSourceById(setLoopingReq.clientId);
+    auto soundSource = findSoundSource(content, setLoopingReq.clientId);
     if (soundSource != nullptr && soundSource->content == content)
       soundSource->setLooping(setLoopingReq.looping);
   }
   else if (messageType == TrMediaCommandType::EnableAudioSpatializationRequest)
   {
     auto enableSpatializationReq = TrMediaCommandBase::CreateFromMessage<TrEnableAudioSpatializationRequest>(reqMessage);
-    auto soundSource = findSoundSourceById(enableSpatializationReq.clientId);
+    auto soundSource = findSoundSource(content, enableSpatializationReq.clientId);
     if (soundSource != nullptr && soundSource->content == content)
       soundSource->enableSpatialization(enableSpatializationReq.enabled);
   }

@@ -209,7 +209,10 @@ void TrContentRuntime::onMediaChanConnected(TrOneShotClient<media_comm::TrMediaC
 bool TrContentRuntime::dispatchMediaEvent(media_comm::TrMediaCommandBase &event)
 {
   if (shouldDestroy || mediaChanSender == nullptr)
+  {
+    DEBUG(LOG_TAG_ERROR, "Failed to dispatch media event(%d) to the invalid content(%d)", event.type, id);
     return false;
+  }
   return mediaChanSender->sendCommand(event);
 }
 
