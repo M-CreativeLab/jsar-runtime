@@ -66,6 +66,8 @@ namespace renderer
     {
       for (auto contentRenderer : contentRenderers)
       {
+        if (contentRenderer->content->disableRendering) // Skip the content renderer if this is disabled at content.
+          continue;
         contentRenderer->onHostFrame(tickingTimepoint);
         totalDrawCalls += contentRenderer->drawCallsPerFrame;
         totalDrawCallsCount += contentRenderer->drawCallsCountPerFrame;

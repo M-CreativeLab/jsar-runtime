@@ -95,6 +95,7 @@ void TrContentRuntime::dispose(bool waitsForExit)
     return;
 
   available = false;
+  disableRendering = true;
   contentManager->hived->terminateClient(id);
   if (waitsForExit)
   {

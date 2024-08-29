@@ -236,7 +236,19 @@ private:
   bool isRequestDispatched = true;
   atomic<bool> used = false;
   atomic<bool> started = false;
+  /**
+   * The flag `available` is to indicate the content is available for the client process, it's set to true when the client process is
+   * started or pre-started.
+   */
   atomic<bool> available = false;
+  /**
+   * The flag `shouldDestroy` is to indicate the content should not be rendered, it's a quick set to skip the rendering of the content.
+   */
+  atomic<bool> disableRendering = false;
+  /**
+   * The flag `shouldDestroy` is to indicate the content is going to be destroyed, the content cleanup thread will check this flag to
+   * remove the content related resources.
+   */
   atomic<bool> shouldDestroy = false;
   mutex exitingMutex;
   condition_variable exitedCv;

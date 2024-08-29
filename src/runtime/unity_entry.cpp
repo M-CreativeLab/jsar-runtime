@@ -396,7 +396,10 @@ extern "C"
     TR_ENSURE_COMPONENT(contentManager, false, {});
     auto content = contentManager->getContent(documentId, false);
     if (content == nullptr)
+    {
+      DEBUG(LOG_TAG_UNITY, "Could not find the content with id: %d", documentId);
       return false;
+    }
     content->dispose(false);
     return true;
   }
