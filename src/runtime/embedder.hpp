@@ -57,6 +57,10 @@ public: // API for configuration and operations
    * Get the current uptime of the runtime.
    */
   uint32_t getUptime();
+  /**
+   * Get the runtime version.
+   */
+  string getVersion();
 
 public: // API for lifecycle
   /**

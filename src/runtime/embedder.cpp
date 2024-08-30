@@ -57,6 +57,15 @@ uint32_t TrEmbedder::getUptime()
   return constellation->renderer->getUptime();
 }
 
+string TrEmbedder::getVersion()
+{
+#ifdef TR_VERSION
+  return TR_VERSION;
+#else
+  return "unset";
+#endif
+}
+
 bool TrEmbedder::onFrame()
 {
   analytics::PerformanceCounter perfCounter("HostTick");

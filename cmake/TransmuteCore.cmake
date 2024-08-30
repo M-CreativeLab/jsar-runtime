@@ -11,6 +11,14 @@ if(APPLE)
     list(APPEND TR_CORE_SOURCE ${TR_CORE_SOURCE_MM})
 endif()
 
+execute_process(
+    COMMAND node ${CMAKE_SOURCE_DIR}/tools/printversion.cjs
+    OUTPUT_VARIABLE TR_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+)
+add_definitions(-DTR_VERSION="${TR_VERSION}")
+
 set(TRANSMUTE_CORE_LIBNAME TransmuteCore)
 add_library(TransmuteCore SHARED 
     ${TR_COMMON_SOURCE}

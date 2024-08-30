@@ -168,6 +168,10 @@ static void OnPlatformSetup(UnityEmbedder *embedder)
   auto renderer = embedder->constellation->renderer;
 
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
+  // Update the runtime version
+  __system_property_set("jsar.runtime.version", embedder->getVersion().c_str());
+  // TODO: add "jsar.runtime.versions"?
+
   char deviceVendor[PROP_VALUE_MAX];
   if (
       __system_property_get("ro.product.vendor.brand", deviceVendor) >= 0 ||
