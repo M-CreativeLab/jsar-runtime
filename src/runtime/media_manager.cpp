@@ -188,12 +188,18 @@ void TrMediaManager::initialize()
                                                                                 { onNewChanClient(chanClient); },
                                                                                 1000); });
   initialized = true;
+  disabled = false;
 }
 
 void TrMediaManager::shutdown()
 {
+  disabled = true;
   if (initialized)
   {
+    {
+      unique_lock<shared_mutex> lock(mutexForSoundSources);
+      soundSources.clear();
+    }
     chanClientsWatcher->stop();
     ma_engine_stop(&audioEngine);
   }
@@ -202,7 +208,7 @@ void TrMediaManager::shutdown()
 
 shared_ptr<TrSoundSource> TrMediaManager::createSoundSource(TrContentRuntime *content, uint32_t clientId)
 {
-  if (!initialized)
+  if (TR_UNLIKELY(!initialized || disabled))
     return nullptr;
 
   unique_lock<shared_mutex> lock(mutexForSoundSources);
@@ -235,10 +241,27 @@ shared_ptr<TrSoundSource> TrMediaManager::findSoundSource(TrContentRuntime *cont
   return nullptr;
 }
 
+void TrMediaManager::removeSoundSourcesByContent(TrContentRuntime *content)
+{
+  if (!content)
+    return;
+
+  unique_lock<shared_mutex> lock(mutexForSoundSources);
+  auto it = soundSources.begin();
+  while (it != soundSources.end())
+  {
+    if ((*it)->content == content)
+      it = soundSources.erase(it);
+    else
+      ++it;
+  }
+}
+
 void TrMediaManager::updateListenerBaseMatrix(glm::mat4 &baseMatrix)
 {
-  if (!initialized)
+  if (TR_UNLIKELY(!initialized || disabled))
     return;
+
   auto position = baseMatrix[3];
   auto forward = glm::normalize(glm::vec3(-glm::column(baseMatrix, 2)));
   auto up = glm::normalize(glm::vec3(glm::column(baseMatrix, 1)));
@@ -258,6 +281,9 @@ void TrMediaManager::onNewChanClient(TrOneShotClient<TrMediaCommandMessage> &cha
 
 void TrMediaManager::onContentRequest(TrContentRuntime *content, TrMediaCommandMessage &reqMessage)
 {
+  if (TR_UNLIKELY(!initialized || disabled)) // Skip request if the media manager is not initialized or disabled.
+    return;
+
   auto messageType = reqMessage.getType();
   if (messageType == TrMediaCommandType::CreateSoundRequest)
   {

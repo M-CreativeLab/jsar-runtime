@@ -96,6 +96,7 @@ void TrContentRuntime::dispose(bool waitsForExit)
 
   available = false;
   disableRendering = true;
+  contentManager->constellation->mediaManager->removeSoundSourcesByContent(this); // Remove the sound sources.
   contentManager->hived->terminateClient(id);
   if (waitsForExit)
   {
