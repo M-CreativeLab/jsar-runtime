@@ -156,10 +156,10 @@ void TrContentRuntime::setupWithCommandBufferClient(TrOneShotClient<TrCommandBuf
 
 bool TrContentRuntime::sendCommandBufferResponse(TrCommandBufferResponse &res)
 {
-  if (!shouldDestroy && commandBufferChanSender != nullptr)
-    return commandBufferChanSender->sendCommandBufferResponse(res);
-  else
+  if (TR_UNLIKELY(!available || shouldDestroy || commandBufferChanSender == nullptr))
     return false;
+  else
+    return commandBufferChanSender->sendCommandBufferResponse(res);
 }
 
 void TrContentRuntime::onEventChanConnected(TrOneShotClient<events_comm::TrNativeEventMessage> &client)
@@ -175,9 +175,8 @@ bool TrContentRuntime::dispatchEvent(events_comm::TrNativeEvent &event)
 
 bool TrContentRuntime::respondRpcRequest(events_comm::TrRpcResponse &respDetail, uint32_t requestId)
 {
-  if (shouldDestroy || eventChanSender == nullptr)
+  if (TR_UNLIKELY(!available || shouldDestroy || eventChanSender == nullptr))
     return false;
-
   auto eventToDispatch = events_comm::TrNativeEvent::MakeEvent(events_comm::TrNativeEventType::RpcResponse, &respDetail);
   return eventChanSender->dispatchEvent(eventToDispatch, requestId);
 }
@@ -209,11 +208,8 @@ void TrContentRuntime::onMediaChanConnected(TrOneShotClient<media_comm::TrMediaC
 
 bool TrContentRuntime::dispatchMediaEvent(media_comm::TrMediaCommandBase &event)
 {
-  if (shouldDestroy || mediaChanSender == nullptr)
-  {
-    DEBUG(LOG_TAG_ERROR, "Failed to dispatch media event(%d) to the invalid content(%d)", event.type, id);
+  if (TR_UNLIKELY(!available || shouldDestroy || mediaChanSender == nullptr))
     return false;
-  }
   return mediaChanSender->sendCommand(event);
 }
 
@@ -287,7 +283,7 @@ void TrContentRuntime::recvCommandBuffers(WorkerThread &worker, uint32_t timeout
 
 void TrContentRuntime::recvEvent()
 {
-  if (shouldDestroy || eventChanReceiver == nullptr)
+  if (TR_UNLIKELY(!available || shouldDestroy || eventChanReceiver == nullptr))
     return;
 
   auto eventTarget = contentManager->constellation->nativeEventTarget;
@@ -319,7 +315,7 @@ void TrContentRuntime::recvEvent()
 
 void TrContentRuntime::recvMediaRequest()
 {
-  if (TR_UNLIKELY(shouldDestroy || mediaChanReceiver == nullptr))
+  if (TR_UNLIKELY(!available || shouldDestroy || mediaChanReceiver == nullptr))
     return;
 
   media_comm::TrMediaCommandMessage mediaMessage;
