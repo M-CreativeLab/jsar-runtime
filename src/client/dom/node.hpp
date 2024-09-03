@@ -24,12 +24,13 @@ namespace dom
   {
   public:
     Node();
+    Node(Node &other);
     ~Node() = default;
 
   public:
-    std::shared_ptr<Node> appendChild(std::shared_ptr<Node> node);
-    std::shared_ptr<Node> cloneNode(bool deep = false);
-    bool contains(std::shared_ptr<Node> node);
+    // std::shared_ptr<Node> appendChild(std::shared_ptr<Node> node);
+    // std::shared_ptr<Node> cloneNode(bool deep = false);
+    // bool contains(std::shared_ptr<Node> node);
 
   public:
     std::string baseURI;

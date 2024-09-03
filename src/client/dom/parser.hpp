@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <memory>
 #include "./document.hpp"
 
 namespace dom
@@ -18,6 +19,10 @@ namespace dom
     DOMParser();
     ~DOMParser() = default;
 
-    Document parseFromString(const std::string& source, DOMParsingType type);
+    template <typename DocumentType>
+    shared_ptr<DocumentType> parseFromString(const std::string& source, DOMParsingType _type)
+    {
+      return make_shared<DocumentType>(source);
+    }
   };
 }

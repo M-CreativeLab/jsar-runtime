@@ -111,6 +111,13 @@ export class TransmuteRuntime2 extends EventTarget {
           console.info(`switched to the 2d image viewer.`);
           break;
         case '.html':
+          {
+            const htmlstr = await fetch(codeOrUrl).then(res => res.text());
+            const domParser = new DOMParser();
+            const htmlDoc = domParser.parseFromString(htmlstr, 'text/html');
+            console.info('HTML Document:', htmlDoc);
+          }
+          break;
         case '.mp3':
         case '.mp4':
         case '.webm':
