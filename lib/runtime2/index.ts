@@ -112,10 +112,15 @@ export class TransmuteRuntime2 extends EventTarget {
           break;
         case '.html':
           {
-            const htmlstr = await fetch(codeOrUrl).then(res => res.text());
-            const domParser = new DOMParser();
-            const htmlDoc = domParser.parseFromString(htmlstr, 'text/html');
-            console.info('HTML Document:', htmlDoc);
+            try {
+              const htmlstr = await fetch(codeOrUrl).then(res => res.text());
+              const domParser = new DOMParser();
+              const htmlDoc = domParser.parseFromString(htmlstr, 'text/html');
+              console.info(htmlDoc);
+              console.info('first child:', htmlDoc.firstChild);
+            } catch (err) {
+              console.error('Failed to append a null node:', err);
+            }
           }
           break;
         case '.mp3':

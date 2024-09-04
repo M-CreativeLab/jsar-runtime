@@ -17,7 +17,7 @@ namespace dom
     ~Document() = default;
 
   protected:
-    shared_ptr<pugi::xml_document> internalDoc;
+    shared_ptr<pugi::xml_document> docInternal;
   };
 
   class XMLDocument : public Document

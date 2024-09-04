@@ -10,6 +10,7 @@ namespace bindings
     Napi::Object InitModule(Napi::Env env, Napi::Object exports)
     {
       Audio::Init(env, exports);
+      dombinding::Node::Init(env);
       dombinding::DOMParser::Init(env, exports);
       dombinding::Document::Init(env, exports);
       dombinding::XMLDocument::Init(env, exports);

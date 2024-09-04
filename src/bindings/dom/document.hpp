@@ -3,56 +3,62 @@
 #include <memory>
 #include <napi.h>
 #include "client/dom/document.hpp"
+#include "./node.hpp"
 
 using namespace std;
 
 namespace dombinding
 {
-  template <typename T, typename DocumentType>
-  class BaseDocument : public Napi::ObjectWrap<T>
+  template <typename ObjectType, typename DocumentType>
+  class DocumentBase : public NodeBase<ObjectType, DocumentType>
   {
   public:
+    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties()
+    {
+      auto props = NodeBase<ObjectType, DocumentType>::GetClassProperties();
+      auto documentProps = vector<Napi::ClassPropertyDescriptor<ObjectType>>(
+          {
+              ObjectType::InstanceMethod("adoptNode", &ObjectType::AdoptNode),
+              ObjectType::InstanceMethod("append", &ObjectType::Append),
+              ObjectType::InstanceMethod("close", &ObjectType::Close),
+              ObjectType::InstanceMethod("createAttribute", &ObjectType::CreateAttribute),
+              ObjectType::InstanceMethod("createAttributeNS", &ObjectType::CreateAttributeNS),
+              ObjectType::InstanceMethod("createCDATASection", &ObjectType::CreateCDATASection),
+              ObjectType::InstanceMethod("createComment", &ObjectType::CreateComment),
+              ObjectType::InstanceMethod("createDocumentFragment", &ObjectType::CreateDocumentFragment),
+              ObjectType::InstanceMethod("createElement", &ObjectType::CreateElement),
+              ObjectType::InstanceMethod("createElementNS", &ObjectType::CreateElementNS),
+          });
+      props.insert(props.end(), documentProps.begin(), documentProps.end());
+      return props;
+    }
     static void Init(Napi::Env env, const std::string &name)
     {
-      Napi::Function func = T::DefineClass(env, name.c_str(),
-                                           {
-                                               T::InstanceMethod("adoptNode", &T::AdoptNode),
-                                               T::InstanceMethod("append", &T::Append),
-                                               T::InstanceMethod("close", &T::Close),
-                                               T::InstanceMethod("createAttribute", &T::CreateAttribute),
-                                               T::InstanceMethod("createAttributeNS", &T::CreateAttributeNS),
-                                               T::InstanceMethod("createCDATASection", &T::CreateCDATASection),
-                                               T::InstanceMethod("createComment", &T::CreateComment),
-                                               T::InstanceMethod("createDocumentFragment", &T::CreateDocumentFragment),
-                                               T::InstanceMethod("createElement", &T::CreateElement),
-                                               T::InstanceMethod("createElementNS", &T::CreateElementNS),
-                                           });
-      T::constructor = new Napi::FunctionReference();
-      *T::constructor = Napi::Persistent(func);
+      auto props = GetClassProperties();
+      Napi::Function func = ObjectType::DefineClass(env, name.c_str(), props);
+      ObjectType::constructor = new Napi::FunctionReference();
+      *ObjectType::constructor = Napi::Persistent(func);
       env.Global().Set(name, func);
     }
     /**
      * Create a new JavaScript instance of the document
-     * 
+     *
      * @param env The env
-     * @param internalDoc The internal document
+     * @param document The document
      */
-    static Napi::Object NewInstance(Napi::Env env, shared_ptr<DocumentType> internalDoc)
+    static Napi::Object NewInstance(Napi::Env env, shared_ptr<DocumentType> document)
     {
       Napi::EscapableHandleScope scope(env);
-      Napi::Object obj = T::constructor->New({});
-      T *instance = Napi::ObjectWrap<T>::Unwrap(obj);
-      instance->internalDoc = internalDoc;
+      Napi::External<DocumentType> external = Napi::External<DocumentType>::New(env, document.get());
+      Napi::Object obj = ObjectType::constructor->New({external});
       return scope.Escape(obj).ToObject();
     }
 
   public:
-    BaseDocument(const Napi::CallbackInfo &info) : Napi::ObjectWrap<T>(info)
+    DocumentBase(const Napi::CallbackInfo &info) : NodeBase<ObjectType, DocumentType>(info)
     {
     }
-    ~BaseDocument()
-    {
-    }
+    ~DocumentBase() = default;
 
   protected:
     Napi::Value AdoptNode(const Napi::CallbackInfo &info)
@@ -95,12 +101,9 @@ namespace dombinding
     {
       return info.Env().Undefined();
     }
-
-  protected:
-    shared_ptr<DocumentType> internalDoc;
   };
 
-  class Document : public BaseDocument<Document, dom::HTMLDocument>
+  class Document : public DocumentBase<Document, dom::HTMLDocument>
   {
   public:
     static void Init(Napi::Env env, Napi::Object exports);
@@ -112,7 +115,7 @@ namespace dombinding
     static Napi::FunctionReference *constructor;
   };
 
-  class XMLDocument : public BaseDocument<XMLDocument, dom::XMLDocument>
+  class XMLDocument : public DocumentBase<XMLDocument, dom::XMLDocument>
   {
   public:
     static void Init(Napi::Env env, Napi::Object exports);

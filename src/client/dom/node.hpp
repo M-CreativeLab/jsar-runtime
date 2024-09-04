@@ -1,12 +1,17 @@
 #pragma once
 
 #include <string>
+#include <memory>
+#include "pugixml/pugixml.hpp"
+
+using namespace std;
 
 namespace dom
 {
   enum class NodeType
   {
-    ELEMENT_NODE = 1,
+    NULL_NODE = 0,
+    ELEMENT_NODE,
     ATTRIBUTE_NODE,
     TEXT_NODE,
     CDATA_SECTION_NODE,
@@ -24,22 +29,43 @@ namespace dom
   {
   public:
     Node();
+    Node(pugi::xml_node node);
     Node(Node &other);
     ~Node() = default;
+
+  public:
+    shared_ptr<Node> getFirstChild();
+    shared_ptr<Node> getLastChild();
+    shared_ptr<Node> getParentNode();
 
   public:
     // std::shared_ptr<Node> appendChild(std::shared_ptr<Node> node);
     // std::shared_ptr<Node> cloneNode(bool deep = false);
     // bool contains(std::shared_ptr<Node> node);
+    bool hasChildNodes();
+
+  protected:
+    void print();
+    void resetInternal(pugi::xml_node *nodeToSet);
 
   public:
-    std::string baseURI;
-    bool isConnected;
+    string baseURI;
+    bool connected;
+    /**
+     * A string containing the name of the `Node`.
+     */
+    string nodeName;
+    /**
+     * An `unsigned short` representing the type of the node.
+     */
     NodeType nodeType;
-    std::string textContent;
+    string textContent;
 
-    std::shared_ptr<Node> firstChild;
-    std::shared_ptr<Node> lastChild;
-    std::shared_ptr<Node> parentNode;
+    shared_ptr<Node> firstChild;
+    shared_ptr<Node> lastChild;
+    shared_ptr<Node> parentNode;
+
+  protected:
+    shared_ptr<pugi::xml_node> internal;
   };
 }
