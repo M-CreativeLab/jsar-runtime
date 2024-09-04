@@ -9,12 +9,23 @@ using namespace pugi;
 
 namespace dom
 {
+  enum class DocumentCompatMode
+  {
+    NO_QUIRKS = 0, // Standards
+    QUIRKS,
+    LIMITED_QUIRKS,
+  };
+
   class Document : public Node
   {
   public:
-    Document();
+    Document(string contentType = "text/html");
     Document(Document &other);
     ~Document() = default;
+
+  public:
+    DocumentCompatMode compatMode = DocumentCompatMode::NO_QUIRKS;
+    string contentType = "text/html";
 
   protected:
     shared_ptr<pugi::xml_document> docInternal;

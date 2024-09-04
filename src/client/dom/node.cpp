@@ -19,6 +19,14 @@ namespace dom
   {
   }
 
+  vector<shared_ptr<Node>> Node::getChildNodes()
+  {
+    vector<shared_ptr<Node>> childNodes;
+    for (auto child : internal->children())
+      childNodes.push_back(make_shared<Node>(child));
+    return childNodes;
+  }
+
   shared_ptr<Node> Node::getFirstChild()
   {
     if (!internal->empty())
@@ -41,6 +49,12 @@ namespace dom
       return make_shared<Node>(internal->parent());
     else
       return nullptr;
+  }
+
+  string Node::getTextContent()
+  {
+    auto text = internal->text();
+    return text.as_string();
   }
 
   bool Node::hasChildNodes()

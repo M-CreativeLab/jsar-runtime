@@ -19,7 +19,9 @@ namespace dombinding
     {
       return {
           // Getters & Setters
+          NodeBase<ObjectType, NodeType>::InstanceAccessor("childNodes", &NodeBase<ObjectType, NodeType>::ChildNodesGetter, nullptr),
           NodeBase<ObjectType, NodeType>::InstanceAccessor("firstChild", &NodeBase<ObjectType, NodeType>::FirstChildGetter, nullptr),
+          NodeBase<ObjectType, NodeType>::InstanceAccessor("lastChild", &NodeBase<ObjectType, NodeType>::LastChildGetter, nullptr),
           // Methods
           NodeBase<ObjectType, NodeType>::InstanceMethod("appendChild", &NodeBase<ObjectType, NodeType>::AppendChild),
           NodeBase<ObjectType, NodeType>::InstanceMethod("cloneNode", &NodeBase<ObjectType, NodeType>::CloneNode),
@@ -58,6 +60,17 @@ namespace dombinding
     virtual ~NodeBase() = default;
 
   protected: // Getters & Setters
+    Napi::Value ChildNodesGetter(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      auto childNodes = node->getChildNodes();
+      Napi::Array jsChildNodes = Napi::Array::New(env, childNodes.size());
+      for (size_t i = 0; i < childNodes.size(); i++)
+        jsChildNodes.Set(i, NodeBase<Node, dom::Node>::NewInstance(env, childNodes[i]));
+      return jsChildNodes;
+    }
     Napi::Value FirstChildGetter(const Napi::CallbackInfo &info)
     {
       Napi::Env env = info.Env();
@@ -68,6 +81,27 @@ namespace dombinding
         return NodeBase<Node, dom::Node>::NewInstance(env, firstChildNode);
       else
         return env.Null();
+    }
+    Napi::Value LastChildGetter(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      shared_ptr<dom::Node> lastChildNode = node->getLastChild();
+      if (lastChildNode != nullptr)
+        return NodeBase<Node, dom::Node>::NewInstance(env, lastChildNode);
+      else
+        return env.Null();
+    }
+    Napi::Value TextContentGetter(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      if (node->nodeType == dom::NodeType::DOCUMENT_NODE || node->nodeType == dom::NodeType::DOCUMENT_TYPE_NODE)
+        return env.Null();
+      else
+        return Napi::String::New(env, node->getTextContent());
     }
 
   protected: // Methods

@@ -2,17 +2,21 @@
 
 namespace dom
 {
-  Document::Document() : Node()
+  Document::Document(string contentType)
+      : Node(),
+        contentType(contentType)
   {
     docInternal = std::make_shared<pugi::xml_document>();
   }
 
-  Document::Document(Document &other) : Node(other)
+  Document::Document(Document &other)
+      : Node(other),
+        contentType(other.contentType),
+        docInternal(other.docInternal)
   {
-    docInternal = other.docInternal;
   }
 
-  XMLDocument::XMLDocument(const std::string &source) : Document()
+  XMLDocument::XMLDocument(const std::string &source) : Document("text/xml")
   {
     auto r = docInternal->load_string(source.c_str());
     if (r.status != pugi::xml_parse_status::status_ok)
@@ -20,7 +24,7 @@ namespace dom
     resetInternal(docInternal.get());
   }
 
-  HTMLDocument::HTMLDocument(const std::string &source) : Document()
+  HTMLDocument::HTMLDocument(const std::string &source) : Document("text/html")
   {
     auto r = docInternal->load_string(source.c_str());
     if (r.status != pugi::xml_parse_status::status_ok)

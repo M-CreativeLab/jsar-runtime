@@ -57,6 +57,31 @@ namespace dombinding
   public:
     DocumentBase(const Napi::CallbackInfo &info) : NodeBase<ObjectType, DocumentType>(info)
     {
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      auto jsThis = info.This().As<Napi::Object>();
+      /**
+       * Set the `compatMode` property.
+       *
+       * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/compatMode
+       */
+      switch (this->node->compatMode)
+      {
+      case dom::DocumentCompatMode::NO_QUIRKS:
+      case dom::DocumentCompatMode::LIMITED_QUIRKS:
+        jsThis.Set("compatMode", Napi::String::New(env, "CSS1Compat"));
+        break;
+      case dom::DocumentCompatMode::QUIRKS:
+        jsThis.Set("compatMode", Napi::String::New(env, "BackCompat"));
+        break;
+      }
+      /**
+       * Set the `contentType` property.
+       *
+       * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/compatMode
+       */
+      jsThis.Set("contentType", Napi::String::New(env, this->node->contentType));
     }
     ~DocumentBase() = default;
 

@@ -117,7 +117,14 @@ export class TransmuteRuntime2 extends EventTarget {
               const domParser = new DOMParser();
               const htmlDoc = domParser.parseFromString(htmlstr, 'text/html');
               console.info(htmlDoc);
+              console.info('text content:', htmlDoc.textContent);
               console.info('first child:', htmlDoc.firstChild);
+
+              {
+                // child nodes
+                const childNodes = htmlDoc.firstChild.childNodes;
+                console.info('child nodes:', childNodes);
+              }
             } catch (err) {
               console.error('Failed to append a null node:', err);
             }

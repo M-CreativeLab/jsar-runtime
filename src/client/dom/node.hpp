@@ -34,9 +34,11 @@ namespace dom
     ~Node() = default;
 
   public:
+    vector<shared_ptr<Node>> getChildNodes();
     shared_ptr<Node> getFirstChild();
     shared_ptr<Node> getLastChild();
     shared_ptr<Node> getParentNode();
+    string getTextContent();
 
   public:
     // std::shared_ptr<Node> appendChild(std::shared_ptr<Node> node);
