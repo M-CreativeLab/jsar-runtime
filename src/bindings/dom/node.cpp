@@ -20,9 +20,7 @@ namespace dombinding
     Napi::Object obj;
     if (node->nodeType == dom::NodeType::ELEMENT_NODE)
     {
-      auto element = dynamic_cast<dom::Element *>(node.get());
-      auto external = Napi::External<dom::Element>::New(env, element);
-      obj = Element::constructor->New({external});
+      obj = CreateElement(env, node);
     }
     else
     {

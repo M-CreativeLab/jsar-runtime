@@ -5,7 +5,7 @@ namespace dombinding
 {
   Napi::FunctionReference *DOMParser::constructor;
 
-  void DOMParser::Init(Napi::Env env, Napi::Object exports)
+  void DOMParser::Init(Napi::Env env)
   {
     Napi::Function func = DefineClass(env, "DOMParser",
                                       {InstanceMethod("parseFromString", &DOMParser::ParseFromString)});

@@ -9,7 +9,7 @@ namespace dombinding
   class DOMParser : public Napi::ObjectWrap<DOMParser>
   {
   public:
-    static void Init(Napi::Env env, Napi::Object exports);
+    static void Init(Napi::Env env);
     DOMParser(const Napi::CallbackInfo &info);
     ~DOMParser();
 

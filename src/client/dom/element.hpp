@@ -11,6 +11,9 @@ namespace dom
   class Element : public Node
   {
   public:
+    static shared_ptr<Element> CreateElement(pugi::xml_node node);
+
+  public:
     Element();
     Element(pugi::xml_node node);
     Element(Element &other);

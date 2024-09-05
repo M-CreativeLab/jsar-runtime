@@ -2,8 +2,26 @@
 #include "./element.hpp"
 #include "./attr.hpp"
 
+// include the element-specific headers
+#include "./html_html_element.hpp"
+#include "./html_head_element.hpp"
+#include "./html_body_element.hpp"
+
 namespace dom
 {
+  shared_ptr<Element> Element::CreateElement(pugi::xml_node node)
+  {
+    string nodeName = node.name();
+    if (nodeName == "html")
+      return make_shared<HTMLHtmlElement>(node);
+    else if (nodeName == "head")
+      return make_shared<HTMLHeadElement>(node);
+    else if (nodeName == "body")
+      return make_shared<HTMLBodyElement>(node);
+    else
+      return make_shared<Element>(node);
+  }
+
   Element::Element() : Node()
   {
   }

@@ -28,6 +28,12 @@ namespace dom
   class Node : public enable_shared_from_this<Node>
   {
   public:
+    /**
+     * Create a new `Node` object from a `pugi::xml_node`.
+     */
+    static shared_ptr<Node> CreateNode(pugi::xml_node node);
+
+  public:
     Node();
     Node(pugi::xml_node node);
     Node(Node &other);
@@ -52,10 +58,6 @@ namespace dom
     {
       return dynamic_pointer_cast<T>(shared_from_this());
     }
-    /**
-     * Create a new `Node` object from a `pugi::xml_node`.
-     */
-    shared_ptr<Node> createNode(pugi::xml_node node);
     /**
      * Print the internal `pugi::xml_node` object.
      */
