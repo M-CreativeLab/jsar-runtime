@@ -2,6 +2,7 @@
 
 #include <memory>
 #include "./node.hpp"
+#include "./element.hpp"
 #include "pugixml/pugixml.hpp"
 
 using namespace std;
@@ -24,6 +25,9 @@ namespace dom
     ~Document() = default;
 
   public:
+    shared_ptr<Element> getElementById(const string &id);
+
+  public:
     DocumentCompatMode compatMode = DocumentCompatMode::NO_QUIRKS;
     string contentType = "text/html";
 
@@ -34,14 +38,20 @@ namespace dom
   class XMLDocument : public Document
   {
   public:
-    XMLDocument(const std::string &source);
+    XMLDocument(const std::string &source, bool autoConnect);
     ~XMLDocument() = default;
   };
 
   class HTMLDocument : public Document
   {
   public:
-    HTMLDocument(const std::string &source);
+    /**
+     * Create a new HTMLDocument from a string source.
+     * 
+     * @param source The source of the document.
+     * @param autoConnect If true, the document will be automatically to be connected as the DOM root.
+     */
+    HTMLDocument(const std::string &source, bool autoConnect);
     ~HTMLDocument() = default;
   };
 }

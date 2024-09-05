@@ -112,10 +112,11 @@ export class TransmuteRuntime2 extends EventTarget {
           break;
         case '.html':
           {
+            const { DocumentRenderingContext } = process._linkedBinding('transmute:dom');
             try {
               const htmlstr = await fetch(codeOrUrl).then(res => res.text());
-              const domParser = new DOMParser();
-              const htmlDoc = domParser.parseFromString(htmlstr, 'text/html');
+              const renderingContext = new DocumentRenderingContext();
+              const htmlDoc = renderingContext.start(htmlstr, 'text/html');
               console.info(htmlDoc);
               console.info('text content:', htmlDoc.textContent);
               console.info('first child:', htmlDoc.firstChild);

@@ -1,4 +1,4 @@
-#include "./parser.hpp"
+#include "./dom_parser.hpp"
 #include "./element.hpp"
 #include <iostream>
 
@@ -37,40 +37,13 @@ namespace dom
   Node::Node(Node &other)
       : internal(other.internal),
         nodeName(other.nodeName),
-        nodeType(other.nodeType)
+        nodeType(other.nodeType),
+        textContent(other.textContent),
+        parentNode(other.parentNode),
+        firstChild(other.firstChild),
+        lastChild(other.lastChild),
+        childNodes(other.childNodes)
   {
-  }
-
-  vector<shared_ptr<Node>> Node::getChildNodes()
-  {
-    vector<shared_ptr<Node>> childNodes;
-    for (auto child : internal->children())
-      childNodes.push_back(CreateNode(child));
-    return childNodes;
-  }
-
-  shared_ptr<Node> Node::getFirstChild()
-  {
-    if (!internal->empty())
-      return CreateNode(internal->first_child());
-    else
-      return nullptr;
-  }
-
-  shared_ptr<Node> Node::getLastChild()
-  {
-    if (!internal->empty())
-      return CreateNode(internal->last_child());
-    else
-      return nullptr;
-  }
-
-  shared_ptr<Node> Node::getParentNode()
-  {
-    if (!internal->empty())
-      return CreateNode(internal->parent());
-    else
-      return nullptr;
   }
 
   string Node::getTextContent()
@@ -79,17 +52,13 @@ namespace dom
     return text.as_string();
   }
 
-  bool Node::hasChildNodes()
-  {
-    return !internal->empty();
-  }
-
-  void Node::print()
+  void Node::print(bool showTree)
   {
     if (!internal->empty())
     {
       cout << "node(" << nodeName << "):" << endl;
-      internal->print(cout);
+      if (showTree)
+        internal->print(cout);
     }
   }
 
@@ -134,5 +103,35 @@ namespace dom
       nodeType = NodeType::NULL_NODE;
       break;
     }
+
+    if (!internal->text().empty())
+      textContent = internal->text().as_string();
+
+    for (auto child : internal->children())
+      childNodes.push_back(CreateNode(child));
+
+    size_t childCount = childNodes.size();
+    if (childCount == 1)
+    {
+      firstChild = childNodes[0];
+      lastChild = childNodes[0];
+    }
+    else if (childCount == 2)
+    {
+      firstChild = childNodes[0];
+      lastChild = childNodes[1];
+    }
+    else if (childCount > 2)
+    {
+      firstChild = childNodes[0];
+      lastChild = childNodes[childCount - 1];
+    }
+  }
+
+  void Node::connect()
+  {
+    connected = true;
+    for (auto child : childNodes)
+      child->connect();
   }
 }

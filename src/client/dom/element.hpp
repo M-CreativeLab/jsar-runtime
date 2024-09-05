@@ -36,6 +36,18 @@ namespace dom
     string getOuterHTML();
     void setOuterHTML(const string &html);
 
+  protected: // Element lifecycle callbacks
+    virtual void connect() override
+    {
+      connectedCallback();
+      Node::connect();
+    }
+    virtual void createdCallback() {};
+    virtual void connectedCallback() {};
+    virtual void disconnectedCallback() {};
+    virtual void adoptedCallback() {};
+    virtual void attributeChangedCallback(const string &name, const string &oldValue, const string &newValue) {};
+
   public:
     string id;
     string namespaceURI;

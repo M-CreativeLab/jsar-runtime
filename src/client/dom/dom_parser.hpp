@@ -10,6 +10,7 @@ namespace dom
   {
     XML,
     HTML,
+    XSML,
     SVG,
   };
 
@@ -22,7 +23,7 @@ namespace dom
     template <typename DocumentType>
     shared_ptr<DocumentType> parseFromString(const std::string& source, DOMParsingType _type)
     {
-      return make_shared<DocumentType>(source);
+      return make_shared<DocumentType>(source, false);
     }
   };
 }

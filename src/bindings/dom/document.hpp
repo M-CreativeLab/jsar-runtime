@@ -4,6 +4,7 @@
 #include <napi.h>
 #include "client/dom/document.hpp"
 #include "./node.hpp"
+#include "./element.hpp"
 
 using namespace std;
 
@@ -28,6 +29,7 @@ namespace dombinding
               ObjectType::InstanceMethod("createDocumentFragment", &ObjectType::CreateDocumentFragment),
               ObjectType::InstanceMethod("createElement", &ObjectType::CreateElement),
               ObjectType::InstanceMethod("createElementNS", &ObjectType::CreateElementNS),
+              ObjectType::InstanceMethod("getElementById", &ObjectType::GetElementById),
           });
       props.insert(props.end(), documentProps.begin(), documentProps.end());
       return props;
@@ -120,11 +122,46 @@ namespace dombinding
     }
     Napi::Value CreateElement(const Napi::CallbackInfo &info)
     {
-      return info.Env().Undefined();
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      if (info.Length() < 1)
+      {
+        Napi::TypeError::New(env, "Failed to execute 'createElement' on 'Document': 1 argument required, but only 0 present.").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+      auto tagName = info[0].ToString().Utf8Value();
+      if (tagName.empty())
+      {
+        Napi::TypeError::New(env, "Failed to execute 'createElement' on 'Document': The tag name provided ('') is not a valid name.").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+      return dombinding::CreateElement(env, tagName);
     }
     Napi::Value CreateElementNS(const Napi::CallbackInfo &info)
     {
-      return info.Env().Undefined();
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      Napi::TypeError::New(env, "Failed to execute 'createElementNS' on 'Document': This method is not implemented.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    Napi::Value GetElementById(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      if (info.Length() < 1)
+      {
+        Napi::TypeError::New(env, "Failed to execute 'getElementById' on 'Document': 1 argument required, but only 0 present.").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+      auto idStr = info[0].ToString().Utf8Value();
+      auto element = this->node->getElementById(idStr);
+      if (element == nullptr)
+        return env.Null();
+      else
+        return dombinding::CreateElement(env, element);
     }
   };
 

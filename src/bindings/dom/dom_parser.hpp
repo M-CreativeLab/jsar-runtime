@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <napi.h>
-#include "client/dom/parser.hpp"
+#include "client/dom/dom_parser.hpp"
 
 namespace dombinding
 {

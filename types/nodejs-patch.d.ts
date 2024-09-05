@@ -205,6 +205,20 @@ declare namespace Transmute {
     dispatchEvent(eventInit: { type: number, detail?: string }): number;
     dispose(): void;
   }
+
+  /**
+   * The internal rendering context for the document rendering.
+   */
+  class DocumentRenderingContext {
+    constructor();
+    /**
+     * Start a new document rendering from the source and MIME type.
+     * 
+     * @param source the document source.
+     * @param mimeType the MIME type: 'text/html', 'text/xsml', 'text/svg+xml', etc.
+     */
+    start(source: string, mimeType: 'text/html'): Document;
+  }
 }
 
 /**
@@ -214,6 +228,7 @@ declare namespace NodeJS {
   interface Process {
     _linkedBinding(module: 'transmute:dom'): {
       Audio: typeof Audio;
+      DocumentRenderingContext: typeof Transmute.DocumentRenderingContext;
     };
     _linkedBinding(module: 'transmute:env'): {
       ClientContext: typeof Transmute.TrClientContext;

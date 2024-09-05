@@ -8,6 +8,7 @@
 namespace dombinding
 {
   Napi::Object CreateElement(Napi::Env env, shared_ptr<dom::Node> elementNode);
+  Napi::Object CreateElement(Napi::Env env, string tagName);
 
   template <typename ObjectType, typename ElementType>
   class ElementBase : public NodeBase<ObjectType, ElementType>

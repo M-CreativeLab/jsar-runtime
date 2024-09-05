@@ -7,6 +7,7 @@
 #include "./html_head_element.hpp"
 #include "./html_body_element.hpp"
 #include "./html_meta_element.hpp"
+#include "./html_script_element.hpp"
 
 namespace dom
 {
@@ -21,12 +22,15 @@ namespace dom
       return make_shared<HTMLBodyElement>(node);
     else if (nodeName == "meta")
       return make_shared<HTMLMetaElement>(node);
+    else if (nodeName == "script")
+      return make_shared<HTMLScriptElement>(node);
     else
       return make_shared<Element>(node);
   }
 
   Element::Element() : Node()
   {
+    createdCallback();
   }
 
   Element::Element(pugi::xml_node node) : Node(node)
@@ -66,6 +70,8 @@ namespace dom
         // TODO: implement classList
       }
     }
+
+    createdCallback();
   }
 
   Element::Element(Element &other)
@@ -115,20 +121,31 @@ namespace dom
     return this->internal->attributes_begin() != this->internal->attributes_end();
   }
 
-  void Element::setAttribute(const string &name, const string &value)
+  void Element::setAttribute(const string &name, const string &newValue)
   {
     auto attr = this->internal->attribute(name.c_str());
     if (attr.empty())
       attr = this->internal->append_attribute(name.c_str());
-    attr.set_value(value.c_str());
+
+    string oldValue = attr.value();
+    attr.set_value(newValue.c_str());
+    attributeChangedCallback(name, oldValue, newValue);
   }
 
   void Element::setAttributeNode(shared_ptr<Attr> attr)
   {
     auto attrName = attr->name;
-    if (!this->internal->attribute(attrName.c_str()).empty()) // Remmove the existing attribute
+    string oldValue;
+    string newValue = attr->value;
+
+    auto attrNode = this->internal->attribute(attrName.c_str());
+    if (!attrNode.empty()) // Remmove the existing attribute
+    {
+      oldValue = attrNode.value();
       this->internal->remove_attribute(attrName.c_str());
-    this->internal->append_attribute(attrName.c_str()).set_value(attr->value.c_str());
+    }
+    this->internal->append_attribute(attrName.c_str()).set_value(newValue.c_str());
+    attributeChangedCallback(attrName, oldValue, newValue);
   }
 
   void Element::setId(const string &idValue)

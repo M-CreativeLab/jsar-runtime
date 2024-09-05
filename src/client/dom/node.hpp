@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <memory>
 #include "pugixml/pugixml.hpp"
 
@@ -34,20 +35,26 @@ namespace dom
     static shared_ptr<Node> CreateNode(pugi::xml_node node);
 
   public:
+    /**
+     * Create an empty `Node` object.
+     */
     Node();
+    /**
+     * Create a new `Node` object from a `pugi::xml_node`.
+     */
     Node(pugi::xml_node node);
     Node(Node &other);
     virtual ~Node() = default;
 
   public:
-    vector<shared_ptr<Node>> getChildNodes();
-    shared_ptr<Node> getFirstChild();
-    shared_ptr<Node> getLastChild();
-    shared_ptr<Node> getParentNode();
+    inline vector<shared_ptr<Node>> getChildNodes() { return childNodes; }
+    inline shared_ptr<Node> getFirstChild() { return firstChild; }
+    inline shared_ptr<Node> getLastChild() { return lastChild; }
+    inline shared_ptr<Node> getParentNode() { return parentNode; }
     string getTextContent();
 
   public:
-    bool hasChildNodes();
+    inline bool hasChildNodes() { return childNodes.size() > 0; }
 
   protected:
     /**
@@ -60,16 +67,27 @@ namespace dom
     }
     /**
      * Print the internal `pugi::xml_node` object.
+     * 
+     * @param showTree If true, the tree will be printed.
      */
-    void print();
+    void print(bool showTree = true);
     /**
      * Reset the internal `pugi::xml_node` object.
+     * 
+     * @param nodeToSet The `pugi::xml_node` object to set.
      */
     void resetInternal(pugi::xml_node *nodeToSet);
+    /**
+     * Connect the node to the relevant context object.
+     */
+    virtual void connect();
 
   public:
     string baseURI;
-    bool connected;
+    /**
+     * A boolean value that is true if the node is connected to its relevant context object, and false if not.
+     */
+    bool connected = false;
     /**
      * A string containing the name of the `Node`.
      */
@@ -83,6 +101,7 @@ namespace dom
     shared_ptr<Node> firstChild;
     shared_ptr<Node> lastChild;
     shared_ptr<Node> parentNode;
+    vector<shared_ptr<Node>> childNodes;
 
   protected:
     shared_ptr<pugi::xml_node> internal;

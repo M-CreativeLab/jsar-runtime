@@ -1,0 +1,27 @@
+#include "./html_script_element.hpp"
+
+namespace dombinding
+{
+  Napi::FunctionReference *HTMLScriptElement::constructor;
+
+  vector<Napi::ClassPropertyDescriptor<HTMLScriptElement>> HTMLScriptElement::GetClassProperties()
+  {
+    using T = HTMLScriptElement;
+    auto props = HTMLElementBase<HTMLScriptElement, dom::HTMLScriptElement>::GetClassProperties();
+    auto added = vector<Napi::ClassPropertyDescriptor<HTMLScriptElement>>(
+        {
+            T::InstanceAccessor("async", &T::AsyncGetter, &T::AsyncSetter),
+        });
+    props.insert(props.end(), added.begin(), added.end());
+    return props;
+  }
+
+  void HTMLScriptElement::Init(Napi::Env env)
+  {
+    auto props = GetClassProperties();
+    Napi::Function func = DefineClass(env, "HTMLScriptElement", props);
+    constructor = new Napi::FunctionReference();
+    *constructor = Napi::Persistent(func);
+    env.Global().Set("HTMLScriptElement", func);
+  }
+}
