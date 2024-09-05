@@ -3,6 +3,7 @@
 #include "./html_html_element.hpp"
 #include "./html_head_element.hpp"
 #include "./html_body_element.hpp"
+#include "./html_meta_element.hpp"
 
 namespace dombinding
 {
@@ -36,6 +37,8 @@ namespace dombinding
       return CreateTypedElementInternal<HTMLHeadElement, dom::HTMLHeadElement>(env, element);
     else if (element->tagName == "BODY")
       return CreateTypedElementInternal<HTMLBodyElement, dom::HTMLBodyElement>(env, element);
+    else if (element->tagName == "META")
+      return CreateTypedElementInternal<HTMLMetaElement, dom::HTMLMetaElement>(env, element);
     else
       return CreateTypedElementInternal(env, element);
   }

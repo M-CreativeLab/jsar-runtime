@@ -25,6 +25,8 @@ namespace dom
     shared_ptr<Attr> getAttributeNode(const string &name);
     bool hasAttribute(const std::string &name);
     bool hasAttributes();
+    void setAttribute(const string &name, const string &value);
+    void setAttributeNode(shared_ptr<Attr> attr);
 
   public:
     void setId(const string &id);

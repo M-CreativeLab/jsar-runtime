@@ -28,6 +28,10 @@ namespace dombinding
               T::InstanceMethod("before", &T::Before),
               T::InstanceMethod("checkVisibility", &T::CheckVisibility),
               T::InstanceMethod("closest", &T::Closest),
+              T::InstanceMethod("getAttribute", &T::GetAttribute),
+              T::InstanceMethod("getAttributeNames", &T::GetAttributeNames),
+              T::InstanceMethod("hasAttribute", &T::HasAttribute),
+              T::InstanceMethod("hasAttributes", &T::HasAttributes),
           });
       props.insert(props.end(), added.begin(), added.end());
       return props;

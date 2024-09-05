@@ -6,6 +6,7 @@
 #include "./html_html_element.hpp"
 #include "./html_head_element.hpp"
 #include "./html_body_element.hpp"
+#include "./html_meta_element.hpp"
 
 namespace dom
 {
@@ -18,6 +19,8 @@ namespace dom
       return make_shared<HTMLHeadElement>(node);
     else if (nodeName == "body")
       return make_shared<HTMLBodyElement>(node);
+    else if (nodeName == "meta")
+      return make_shared<HTMLMetaElement>(node);
     else
       return make_shared<Element>(node);
   }
@@ -110,6 +113,22 @@ namespace dom
   bool Element::hasAttributes()
   {
     return this->internal->attributes_begin() != this->internal->attributes_end();
+  }
+
+  void Element::setAttribute(const string &name, const string &value)
+  {
+    auto attr = this->internal->attribute(name.c_str());
+    if (attr.empty())
+      attr = this->internal->append_attribute(name.c_str());
+    attr.set_value(value.c_str());
+  }
+
+  void Element::setAttributeNode(shared_ptr<Attr> attr)
+  {
+    auto attrName = attr->name;
+    if (!this->internal->attribute(attrName.c_str()).empty()) // Remmove the existing attribute
+      this->internal->remove_attribute(attrName.c_str());
+    this->internal->append_attribute(attrName.c_str()).set_value(attr->value.c_str());
   }
 
   void Element::setId(const string &idValue)

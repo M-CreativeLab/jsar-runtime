@@ -124,6 +124,14 @@ export class TransmuteRuntime2 extends EventTarget {
                 const childNodes = htmlDoc.firstChild.childNodes;
                 console.info('child nodes:', childNodes);
               }
+              {
+                // Meta
+                const meta = htmlDoc.firstChild.firstChild.firstChild as HTMLMetaElement;
+                console.info('meta', meta, {
+                  name: meta.name,
+                  charset: meta.getAttribute('charset'),
+                });
+              }
             } catch (err) {
               console.error('Failed to append a null node:', err);
             }
