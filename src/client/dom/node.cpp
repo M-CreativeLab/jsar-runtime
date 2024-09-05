@@ -1,4 +1,5 @@
 #include "./parser.hpp"
+#include "./element.hpp"
 #include <iostream>
 
 namespace dom
@@ -23,14 +24,14 @@ namespace dom
   {
     vector<shared_ptr<Node>> childNodes;
     for (auto child : internal->children())
-      childNodes.push_back(make_shared<Node>(child));
+      childNodes.push_back(createNode(child));
     return childNodes;
   }
 
   shared_ptr<Node> Node::getFirstChild()
   {
     if (!internal->empty())
-      return make_shared<Node>(internal->first_child());
+      return createNode(internal->first_child());
     else
       return nullptr;
   }
@@ -38,7 +39,7 @@ namespace dom
   shared_ptr<Node> Node::getLastChild()
   {
     if (!internal->empty())
-      return make_shared<Node>(internal->last_child());
+      return createNode(internal->last_child());
     else
       return nullptr;
   }
@@ -46,7 +47,7 @@ namespace dom
   shared_ptr<Node> Node::getParentNode()
   {
     if (!internal->empty())
-      return make_shared<Node>(internal->parent());
+      return createNode(internal->parent());
     else
       return nullptr;
   }
@@ -60,6 +61,27 @@ namespace dom
   bool Node::hasChildNodes()
   {
     return !internal->empty();
+  }
+
+  shared_ptr<Node> Node::createNode(pugi::xml_node node)
+  {
+    shared_ptr<Node> newNode = nullptr;
+    switch (node.type())
+    {
+    case pugi::xml_node_type::node_element:
+      newNode = dynamic_pointer_cast<Node>(make_shared<Element>(node));
+      break;
+    case pugi::xml_node_type::node_null:
+    case pugi::xml_node_type::node_document:
+    case pugi::xml_node_type::node_doctype:
+    case pugi::xml_node_type::node_declaration:
+      // Skip to create the above types of nodes
+      break;
+    default:
+      newNode = make_shared<Node>(node);
+      break;
+    }
+    return newNode;
   }
 
   void Node::print()

@@ -9,7 +9,7 @@ using namespace std;
 
 namespace dombinding
 {
-  class Node;
+  Napi::Object CreateNode(Napi::Env env, shared_ptr<dom::Node> node);
 
   template <typename ObjectType, typename NodeType>
   class NodeBase : public Napi::ObjectWrap<ObjectType>
@@ -31,13 +31,6 @@ namespace dombinding
           NodeBase<ObjectType, NodeType>::InstanceMethod("hasChildNodes", &NodeBase<ObjectType, NodeType>::HasChildNodes),
           NodeBase<ObjectType, NodeType>::InstanceMethod("insertBefore", &NodeBase<ObjectType, NodeType>::InsertBefore),
       };
-    }
-    static Napi::Object NewInstance(Napi::Env env, shared_ptr<NodeType> node)
-    {
-      Napi::EscapableHandleScope scope(env);
-      Napi::External<dom::Node> external = Napi::External<dom::Node>::New(env, node.get());
-      Napi::Object obj = ObjectType::constructor->New({external});
-      return scope.Escape(obj).ToObject();
     }
 
   public:
@@ -68,7 +61,7 @@ namespace dombinding
       auto childNodes = node->getChildNodes();
       Napi::Array jsChildNodes = Napi::Array::New(env, childNodes.size());
       for (size_t i = 0; i < childNodes.size(); i++)
-        jsChildNodes.Set(i, NodeBase<Node, dom::Node>::NewInstance(env, childNodes[i]));
+        jsChildNodes.Set(i, CreateNode(env, childNodes[i]));
       return jsChildNodes;
     }
     Napi::Value FirstChildGetter(const Napi::CallbackInfo &info)
@@ -78,7 +71,7 @@ namespace dombinding
 
       shared_ptr<dom::Node> firstChildNode = node->getFirstChild();
       if (firstChildNode != nullptr)
-        return NodeBase<Node, dom::Node>::NewInstance(env, firstChildNode);
+        return CreateNode(env, firstChildNode);
       else
         return env.Null();
     }
@@ -89,7 +82,7 @@ namespace dombinding
 
       shared_ptr<dom::Node> lastChildNode = node->getLastChild();
       if (lastChildNode != nullptr)
-        return NodeBase<Node, dom::Node>::NewInstance(env, lastChildNode);
+        return CreateNode(env, lastChildNode);
       else
         return env.Null();
     }

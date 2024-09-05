@@ -25,13 +25,13 @@ namespace dom
     NOTATION_NODE,
   };
 
-  class Node
+  class Node : public enable_shared_from_this<Node>
   {
   public:
     Node();
     Node(pugi::xml_node node);
     Node(Node &other);
-    ~Node() = default;
+    virtual ~Node() = default;
 
   public:
     vector<shared_ptr<Node>> getChildNodes();
@@ -41,13 +41,28 @@ namespace dom
     string getTextContent();
 
   public:
-    // std::shared_ptr<Node> appendChild(std::shared_ptr<Node> node);
-    // std::shared_ptr<Node> cloneNode(bool deep = false);
-    // bool contains(std::shared_ptr<Node> node);
     bool hasChildNodes();
 
   protected:
+    /**
+     * Get the shared pointer of the current `Node` object.
+     */
+    template <typename T = Node>
+    inline shared_ptr<T> getPtr()
+    {
+      return dynamic_pointer_cast<T>(shared_from_this());
+    }
+    /**
+     * Create a new `Node` object from a `pugi::xml_node`.
+     */
+    shared_ptr<Node> createNode(pugi::xml_node node);
+    /**
+     * Print the internal `pugi::xml_node` object.
+     */
     void print();
+    /**
+     * Reset the internal `pugi::xml_node` object.
+     */
     void resetInternal(pugi::xml_node *nodeToSet);
 
   public:

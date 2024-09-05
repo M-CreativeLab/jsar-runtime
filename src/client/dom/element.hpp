@@ -1,30 +1,42 @@
 #pragma once
 
+#include <string>
 #include "./node.hpp"
+
+using namespace std;
 
 namespace dom
 {
+  class Attr;
   class Element : public Node
   {
   public:
     Element();
+    Element(pugi::xml_node node);
+    Element(Element &other);
     ~Element() = default;
 
   public:
+    string getAttribute(const string &name);
+    vector<string> getAttributeNames();
+    shared_ptr<Attr> getAttributeNode(const string &name);
     bool hasAttribute(const std::string &name);
-    bool hasAttributeNS(const std::string &namespaceURI, const std::string &localName);
     bool hasAttributes();
 
   public:
-    std::string getInnerHTML();
-    void setInnerHTML(const std::string &html);
-    std::string getOuterHTML();
-    void setOuterHTML(const std::string &html);
+    void setId(const string &id);
+    void setClassName(const string &className);
+    string getInnerHTML();
+    void setInnerHTML(const string &html);
+    string getOuterHTML();
+    void setOuterHTML(const string &html);
 
   public:
-    std::string id;
-    std::string localName;
-    std::string namespaceURI;
-    std::string tagName;
+    string id;
+    string namespaceURI;
+    string tagName;
+    string localName;
+    string className;
+    string prefix;
   };
 }

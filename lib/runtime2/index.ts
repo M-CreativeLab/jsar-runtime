@@ -119,7 +119,6 @@ export class TransmuteRuntime2 extends EventTarget {
               console.info(htmlDoc);
               console.info('text content:', htmlDoc.textContent);
               console.info('first child:', htmlDoc.firstChild);
-
               {
                 // child nodes
                 const childNodes = htmlDoc.firstChild.childNodes;
