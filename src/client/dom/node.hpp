@@ -90,6 +90,10 @@ namespace dom
      * Connect the node to the relevant context object.
      */
     virtual void connect();
+    /**
+     * Load the specific node, the stage "load" will be called after all the nodes in the DOM tree are connected.
+     */
+    virtual void load();
 
   public:
     string baseURI;

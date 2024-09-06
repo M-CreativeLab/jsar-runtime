@@ -43,10 +43,43 @@ namespace dom
       connectedCallback();
       Node::connect();
     }
+    virtual void load() override
+    {
+      beforeLoadedCallback();
+      Node::load();
+      afterLoadedCallback();
+    }
+    /**
+     * When the element is created.
+     */
     virtual void createdCallback() {};
+    /**
+     * When the element is connected to DOM.
+     */
     virtual void connectedCallback() {};
+    /**
+     * When the element is disconnected from DOM.
+     */
     virtual void disconnectedCallback() {};
+    /**
+     * When the element is moved to a new document each time.
+     */
     virtual void adoptedCallback() {};
+    /**
+     * Before the element is loaded.
+     */
+    virtual void beforeLoadedCallback() {};
+    /**
+     * After the element is loaded.
+     */
+    virtual void afterLoadedCallback() {};
+    /**
+     * When the element's attribute is changed.
+     * 
+     * @param name The name of the attribute.
+     * @param oldValue The old value of the attribute.
+     * @param newValue The new value of the attribute.
+     */
     virtual void attributeChangedCallback(const string &name, const string &oldValue, const string &newValue) {};
 
   public:

@@ -149,4 +149,10 @@ namespace dom
     for (auto child : childNodes)
       child->connect();
   }
+
+  void Node::load()
+  {
+    for (auto child : childNodes)
+      child->load();
+  }
 }

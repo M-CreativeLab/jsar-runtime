@@ -111,11 +111,13 @@ export class TransmuteRuntime2 extends EventTarget {
           console.info(`switched to the 2d image viewer.`);
           break;
         case '.html':
-          {
+          try {
             const { DocumentRenderingContext } = process._linkedBinding('transmute:dom');
             const htmlstr = await fetch(codeOrUrl).then(res => res.text());
             const renderingContext = new DocumentRenderingContext();
             renderingContext.start(htmlstr, 'text/html');
+          } catch (err) {
+            console.error(`failed to open the html document: ${codeOrUrl}`, err);
           }
           break;
         case '.mp3':

@@ -11,13 +11,36 @@ namespace dom
       src = getAttribute("src");
     if (hasAttribute("type"))
       type = getAttribute("type");
+
+    async = hasAttribute("async");
+    defer = hasAttribute("defer");
   }
 
   void HTMLScriptElement::connectedCallback()
   {
     auto renderingContext = ownerDocument.lock()->renderingContext;
-    auto scriptingContext = renderingContext->scriptingContext;
-    scriptingContext->compile(textContent);
-    scriptingContext->run();
+    compiledScriptId = renderingContext->scriptingContext->compile(textContent);
+
+    bool skipScriptExecution = false;
+    if (isClassicScript() && defer)
+      skipScriptExecution = true;
+
+    if (!skipScriptExecution)
+      executeScript();
+  }
+
+  void HTMLScriptElement::beforeLoadedCallback()
+  {
+    if (!scriptExecutedOnce)
+      executeScript();
+  }
+
+  void HTMLScriptElement::executeScript()
+  {
+    if (compiledScriptId == 0)
+      return;
+    auto renderingContext = ownerDocument.lock()->renderingContext;
+    renderingContext->scriptingContext->run(compiledScriptId);
+    scriptExecutedOnce = true;
   }
 }

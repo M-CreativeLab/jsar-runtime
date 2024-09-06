@@ -3,8 +3,10 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <map>
 #include <assert.h>
 #include <node/v8.h>
+#include "idgen.hpp"
 
 using namespace std;
 
@@ -97,6 +99,10 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(WebGLRenderingContext);
         V8_SET_GLOBAL_FROM_MAIN(WebGL2RenderingContext);
 
+        // Expose the WebXR Device API
+        V8_SET_GLOBAL_FROM_MAIN(XRRigidTransform);
+        V8_SET_GLOBAL_FROM_MAIN(XRWebGLLayer);
+
         // Expose the specific objects
         if (!documentValue.IsEmpty())
           V8_SET_GLOBAL_FROM_VALUE(document, documentValue.Get(isolate).As<v8::Object>());
@@ -108,7 +114,7 @@ namespace dom
       scriptingContext.Reset(isolate, newContext);
       isContextInitialized = true;
     }
-    void compile(const std::string &source)
+    uint32_t compile(const std::string &source)
     {
       assert(isContextInitialized);
       auto context = scriptingContext.Get(isolate);
@@ -121,12 +127,17 @@ namespace dom
       auto maybeScript = v8::Script::Compile(context, sourceString);
 
       v8::Local<v8::Script> script;
-      if (maybeScript.ToLocal(&script))
-        scripts.push_back(v8::Global<v8::Script>(isolate, script));
-      else
+      if (!maybeScript.ToLocal(&script))
+      {
         fprintf(stderr, "Failed to compile script\n"); // TODO: throw exception?
+        return 0;
+      }
+      static TrIdGenerator scriptIdGen(0xf9);
+      auto scriptId = scriptIdGen.get();
+      scripts.insert({scriptId, v8::Global<v8::Script>(isolate, script)});
+      return scriptId;
     }
-    void run()
+    void run(uint32_t scriptId)
     {
       assert(isContextInitialized);
       auto context = scriptingContext.Get(isolate);
@@ -134,10 +145,12 @@ namespace dom
       v8::Context::Scope context_scope(context);
       v8::HandleScope handle_scope(isolate);
 
-      // run all scripts
-      for (auto &script : scripts)
+      auto script = scripts[scriptId].Get(isolate);
+      auto result = script->Run(context);
+      if (result.IsEmpty())
       {
-        script.Get(isolate)->Run(context).ToLocalChecked();
+        fprintf(stderr, "Failed to run script\n");
+        return;
       }
     }
 
@@ -145,7 +158,7 @@ namespace dom
     v8::Isolate *isolate;
     v8::Global<v8::Value> documentValue;
     v8::Global<v8::Context> scriptingContext;
-    vector<v8::Global<v8::Script>> scripts;
+    map<uint32_t, v8::Global<v8::Script>> scripts;
     bool isContextInitialized = false;
   };
 }

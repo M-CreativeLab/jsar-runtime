@@ -32,7 +32,10 @@ namespace dom
   {
     renderingContext = renderingContextToSet;
     if (autoConnect)
+    {
       connect();
+      load();
+    }
   }
 
   shared_ptr<Element> Document::getElementById(const string &id)

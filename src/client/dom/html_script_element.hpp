@@ -31,6 +31,10 @@ namespace dom
   protected:
     void createdCallback() override;
     void connectedCallback() override;
+    void beforeLoadedCallback() override;
+
+  private:
+    void executeScript();
 
   public:
     /**
@@ -67,5 +71,9 @@ namespace dom
      * A string representing the type of the script. It reflects the type attribute of the <script> element.
      */
     string type;
+
+  private:
+    uint32_t compiledScriptId = 0;
+    bool scriptExecutedOnce = false;
   };
 }
