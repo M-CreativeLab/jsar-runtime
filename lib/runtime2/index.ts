@@ -113,29 +113,9 @@ export class TransmuteRuntime2 extends EventTarget {
         case '.html':
           {
             const { DocumentRenderingContext } = process._linkedBinding('transmute:dom');
-            try {
-              const htmlstr = await fetch(codeOrUrl).then(res => res.text());
-              const renderingContext = new DocumentRenderingContext();
-              const htmlDoc = renderingContext.start(htmlstr, 'text/html');
-              console.info(htmlDoc);
-              console.info('text content:', htmlDoc.textContent);
-              console.info('first child:', htmlDoc.firstChild);
-              {
-                // child nodes
-                const childNodes = htmlDoc.firstChild.childNodes;
-                console.info('child nodes:', childNodes);
-              }
-              {
-                // Meta
-                const meta = htmlDoc.firstChild.firstChild.firstChild as HTMLMetaElement;
-                console.info('meta', meta, {
-                  name: meta.name,
-                  charset: meta.getAttribute('charset'),
-                });
-              }
-            } catch (err) {
-              console.error('Failed to append a null node:', err);
-            }
+            const htmlstr = await fetch(codeOrUrl).then(res => res.text());
+            const renderingContext = new DocumentRenderingContext();
+            renderingContext.start(htmlstr, 'text/html');
           }
           break;
         case '.mp3':

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <memory>
+#include <v8.h>
 #include "./dom_parser.hpp"
 #include "./dom_scripting.hpp"
 #include "./document.hpp"
@@ -17,7 +18,7 @@ namespace dom
 
   public:
     template <typename DocumentType>
-    shared_ptr<DocumentType> start(const std::string &source, DOMParsingType type)
+    shared_ptr<DocumentType> create(const std::string &source, DOMParsingType type)
     {
       shared_ptr<DocumentType> document;
       if (type == DOMParsingType::HTML)
@@ -26,8 +27,13 @@ namespace dom
         throw std::runtime_error("Unsupported document type");
 
       document->setSource(source);
-      document->open(shared_from_this());
       return document;
+    }
+
+    template <typename DocumentType>
+    void open(shared_ptr<DocumentType> document)
+    {
+      document->open(shared_from_this());
     }
 
   public:

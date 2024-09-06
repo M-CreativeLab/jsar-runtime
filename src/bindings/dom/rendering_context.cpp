@@ -5,6 +5,13 @@ namespace dombinding
 {
   Napi::FunctionReference *DocumentRenderingContext::constructor;
 
+  inline v8::Local<v8::Value> V8LocalValueFromJsValue(napi_value v)
+  {
+    v8::Local<v8::Value> local;
+    memcpy(static_cast<void *>(&local), &v, sizeof(v));
+    return local;
+  }
+
   void DocumentRenderingContext::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function func = DefineClass(env, "DocumentRenderingContext",
@@ -58,8 +65,23 @@ namespace dombinding
 
     if (parsingType == dom::DOMParsingType::HTML)
     {
-      auto htmlDoc = renderingContext->start<dom::HTMLDocument>(jsSourceString.Utf8Value(), parsingType);
-      return Document::NewInstance(env, htmlDoc);
+      try
+      {
+        auto doc = renderingContext->create<dom::HTMLDocument>(jsSourceString.Utf8Value(), parsingType);
+        auto jsInstance = Document::NewInstance(env, doc);
+        {
+          auto scriptingContext = renderingContext->scriptingContext;
+          scriptingContext->setDocumentValue(V8LocalValueFromJsValue(jsInstance));
+          scriptingContext->makeContext();
+        }
+        renderingContext->open(doc);
+        return jsInstance;
+      }
+      catch (const std::exception &e)
+      {
+        Napi::TypeError::New(env, e.what()).ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
     }
     else
     {
