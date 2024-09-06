@@ -1,16 +1,17 @@
 #include "./dom_parser.hpp"
+#include "./document.hpp"
 #include "./element.hpp"
 #include <iostream>
 
 namespace dom
 {
-  shared_ptr<Node> Node::CreateNode(pugi::xml_node node)
+  shared_ptr<Node> Node::CreateNode(pugi::xml_node node, weak_ptr<Document> ownerDocument)
   {
     shared_ptr<Node> newNode = nullptr;
     switch (node.type())
     {
     case pugi::xml_node_type::node_element:
-      newNode = dynamic_pointer_cast<Node>(Element::CreateElement(node));
+      newNode = dynamic_pointer_cast<Node>(Element::CreateElement(node, ownerDocument));
       break;
     case pugi::xml_node_type::node_null:
     case pugi::xml_node_type::node_document:
@@ -19,7 +20,7 @@ namespace dom
       // Skip to create the above types of nodes
       break;
     default:
-      newNode = make_shared<Node>(node);
+      newNode = make_shared<Node>(node, ownerDocument);
       break;
     }
     return newNode;
@@ -29,9 +30,9 @@ namespace dom
   {
   }
 
-  Node::Node(pugi::xml_node node)
+  Node::Node(pugi::xml_node node, weak_ptr<Document> ownerDocument)
   {
-    resetInternal(&node);
+    resetInternal(&node, ownerDocument);
   }
 
   Node::Node(Node &other)
@@ -42,7 +43,8 @@ namespace dom
         parentNode(other.parentNode),
         firstChild(other.firstChild),
         lastChild(other.lastChild),
-        childNodes(other.childNodes)
+        childNodes(other.childNodes),
+        ownerDocument(other.ownerDocument)
   {
   }
 
@@ -62,12 +64,25 @@ namespace dom
     }
   }
 
-  void Node::resetInternal(pugi::xml_node *nodeToSet)
+  void Node::resetInternal(pugi::xml_node *nodeToSet, weak_ptr<Document> fromDocument)
   {
     if (nodeToSet != nullptr && !nodeToSet->empty())
       internal = make_shared<pugi::xml_node>(*nodeToSet);
 
-    switch (internal->type())
+    weak_ptr<Document> childOwnerDocument;
+    auto internalType = internal->type();
+    if (internalType != pugi::xml_node_type::node_document)
+    {
+      ownerDocument = fromDocument;
+      childOwnerDocument = fromDocument;
+    }
+    else
+    {
+      ownerDocument.reset();
+      childOwnerDocument = getWeakPtr<Document>();
+    }
+
+    switch (internalType)
     {
     case pugi::xml_node_type::node_document:
       nodeType = NodeType::DOCUMENT_NODE;
@@ -108,7 +123,7 @@ namespace dom
       textContent = internal->text().as_string();
 
     for (auto child : internal->children())
-      childNodes.push_back(CreateNode(child));
+      childNodes.push_back(CreateNode(child, childOwnerDocument));
 
     size_t childCount = childNodes.size();
     if (childCount == 1)

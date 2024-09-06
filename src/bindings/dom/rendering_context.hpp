@@ -17,7 +17,7 @@ namespace dombinding
     Napi::Value Start(const Napi::CallbackInfo &info);
 
   private:
-    dom::DocumentRenderingContext renderingContext;
+    shared_ptr<dom::DocumentRenderingContext> renderingContext;
 
   private:
     static Napi::FunctionReference *constructor;

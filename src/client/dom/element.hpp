@@ -8,14 +8,15 @@ using namespace std;
 namespace dom
 {
   class Attr;
+  class Document;
   class Element : public Node
   {
   public:
-    static shared_ptr<Element> CreateElement(pugi::xml_node node);
+    static shared_ptr<Element> CreateElement(pugi::xml_node node, weak_ptr<Document> ownerDocument);
 
   public:
     Element();
-    Element(pugi::xml_node node);
+    Element(pugi::xml_node node, weak_ptr<Document> ownerDocument);
     Element(Element &other);
     ~Element() = default;
 

@@ -29,18 +29,8 @@ namespace dom
     inline bool isImportMap() { return type == "importmap"; }
 
   protected:
-    void createdCallback() override
-    {
-      if (hasAttribute("src"))
-        src = getAttribute("src");
-      if (hasAttribute("type"))
-        type = getAttribute("type");
-    }
-
-    void connectedCallback() override
-    {
-      fprintf(stderr, "Script connected: %s\n", textContent.c_str());
-    }
+    void createdCallback() override;
+    void connectedCallback() override;
 
   public:
     /**

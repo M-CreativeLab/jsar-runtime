@@ -23,7 +23,9 @@ namespace dom
     template <typename DocumentType>
     shared_ptr<DocumentType> parseFromString(const std::string& source, DOMParsingType _type)
     {
-      return make_shared<DocumentType>(source, false);
+      auto document = make_shared<DocumentType>(false);
+      document->setSource(source);
+      return document;
     }
   };
 }

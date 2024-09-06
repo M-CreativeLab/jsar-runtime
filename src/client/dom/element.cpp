@@ -11,21 +11,21 @@
 
 namespace dom
 {
-  shared_ptr<Element> Element::CreateElement(pugi::xml_node node)
+  shared_ptr<Element> Element::CreateElement(pugi::xml_node node, weak_ptr<Document> ownerDocument)
   {
     string nodeName = node.name();
     if (nodeName == "html")
-      return make_shared<HTMLHtmlElement>(node);
+      return make_shared<HTMLHtmlElement>(node, ownerDocument);
     else if (nodeName == "head")
-      return make_shared<HTMLHeadElement>(node);
+      return make_shared<HTMLHeadElement>(node, ownerDocument);
     else if (nodeName == "body")
-      return make_shared<HTMLBodyElement>(node);
+      return make_shared<HTMLBodyElement>(node, ownerDocument);
     else if (nodeName == "meta")
-      return make_shared<HTMLMetaElement>(node);
+      return make_shared<HTMLMetaElement>(node, ownerDocument);
     else if (nodeName == "script")
-      return make_shared<HTMLScriptElement>(node);
+      return make_shared<HTMLScriptElement>(node, ownerDocument);
     else
-      return make_shared<Element>(node);
+      return make_shared<Element>(node, ownerDocument);
   }
 
   Element::Element() : Node()
@@ -33,7 +33,7 @@ namespace dom
     createdCallback();
   }
 
-  Element::Element(pugi::xml_node node) : Node(node)
+  Element::Element(pugi::xml_node node, weak_ptr<Document> ownerDocument) : Node(node, ownerDocument)
   {
     auto idAttr = this->internal->attribute("id");
     if (!idAttr.empty())

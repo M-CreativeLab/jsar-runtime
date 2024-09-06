@@ -17,28 +17,35 @@ namespace dom
     LIMITED_QUIRKS,
   };
 
+  class DocumentRenderingContext;
   class Document : public Node
   {
   public:
-    Document(string contentType = "text/html");
+    Document(string contentType = "text/html", bool autoConnect = false);
     Document(Document &other);
     ~Document() = default;
 
   public:
+    void setSource(const string &source);
+    void open(shared_ptr<DocumentRenderingContext> renderingContext);
     shared_ptr<Element> getElementById(const string &id);
 
   public:
     DocumentCompatMode compatMode = DocumentCompatMode::NO_QUIRKS;
     string contentType = "text/html";
 
+  public:
+    shared_ptr<DocumentRenderingContext> renderingContext;
+
   protected:
+    bool autoConnect;
     shared_ptr<pugi::xml_document> docInternal;
   };
 
   class XMLDocument : public Document
   {
   public:
-    XMLDocument(const std::string &source, bool autoConnect);
+    XMLDocument(bool autoConnect);
     ~XMLDocument() = default;
   };
 
@@ -51,7 +58,7 @@ namespace dom
      * @param source The source of the document.
      * @param autoConnect If true, the document will be automatically to be connected as the DOM root.
      */
-    HTMLDocument(const std::string &source, bool autoConnect);
+    HTMLDocument(bool autoConnect);
     ~HTMLDocument() = default;
   };
 }

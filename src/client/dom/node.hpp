@@ -26,13 +26,14 @@ namespace dom
     NOTATION_NODE,
   };
 
+  class Document;
   class Node : public enable_shared_from_this<Node>
   {
   public:
     /**
      * Create a new `Node` object from a `pugi::xml_node`.
      */
-    static shared_ptr<Node> CreateNode(pugi::xml_node node);
+    static shared_ptr<Node> CreateNode(pugi::xml_node node, weak_ptr<Document> ownerDocument);
 
   public:
     /**
@@ -42,7 +43,7 @@ namespace dom
     /**
      * Create a new `Node` object from a `pugi::xml_node`.
      */
-    Node(pugi::xml_node node);
+    Node(pugi::xml_node node, weak_ptr<Document> ownerDocument);
     Node(Node &other);
     virtual ~Node() = default;
 
@@ -66,6 +67,14 @@ namespace dom
       return dynamic_pointer_cast<T>(shared_from_this());
     }
     /**
+     * Get the weak pointer of the current `Node` object.
+     */
+    template <typename T = Node>
+    inline weak_ptr<T> getWeakPtr()
+    {
+      return dynamic_pointer_cast<T>(shared_from_this());
+    }
+    /**
      * Print the internal `pugi::xml_node` object.
      * 
      * @param showTree If true, the tree will be printed.
@@ -76,7 +85,7 @@ namespace dom
      * 
      * @param nodeToSet The `pugi::xml_node` object to set.
      */
-    void resetInternal(pugi::xml_node *nodeToSet);
+    void resetInternal(pugi::xml_node *nodeToSet, weak_ptr<Document> fromDocument);
     /**
      * Connect the node to the relevant context object.
      */
@@ -96,6 +105,13 @@ namespace dom
      * An `unsigned short` representing the type of the node.
      */
     NodeType nodeType;
+    /**
+     * Returns the `Document` that this node belongs to. If the node is itself a document, returns null.
+     */
+    weak_ptr<Document> ownerDocument;
+    /**
+     * Returns or sets the textual content of an element and all its descendants.
+     */
     string textContent;
 
     shared_ptr<Node> firstChild;

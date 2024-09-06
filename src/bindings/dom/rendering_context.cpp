@@ -15,7 +15,9 @@ namespace dombinding
     exports.Set("DocumentRenderingContext", func);
   }
 
-  DocumentRenderingContext::DocumentRenderingContext(const Napi::CallbackInfo &info) : Napi::ObjectWrap<DocumentRenderingContext>(info)
+  DocumentRenderingContext::DocumentRenderingContext(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<DocumentRenderingContext>(info),
+        renderingContext(std::make_shared<dom::DocumentRenderingContext>())
   {
   }
 
@@ -56,7 +58,7 @@ namespace dombinding
 
     if (parsingType == dom::DOMParsingType::HTML)
     {
-      auto htmlDoc = renderingContext.start<dom::HTMLDocument>(jsSourceString.Utf8Value(), parsingType);
+      auto htmlDoc = renderingContext->start<dom::HTMLDocument>(jsSourceString.Utf8Value(), parsingType);
       return Document::NewInstance(env, htmlDoc);
     }
     else
