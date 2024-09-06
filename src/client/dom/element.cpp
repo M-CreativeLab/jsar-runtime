@@ -150,6 +150,17 @@ namespace dom
     attributeChangedCallback(attrName, oldValue, newValue);
   }
 
+  void Element::removeAttribute(const string &name)
+  {
+    auto attr = this->internal->attribute(name.c_str());
+    if (!attr.empty())
+    {
+      string oldValue = attr.value();
+      this->internal->remove_attribute(name.c_str());
+      attributeChangedCallback(name, oldValue, "");
+    }
+  }
+
   void Element::setId(const string &idValue)
   {
     auto idAttr = this->internal->attribute("id");

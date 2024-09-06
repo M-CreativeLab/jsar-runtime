@@ -28,6 +28,7 @@ namespace dom
     bool hasAttributes();
     void setAttribute(const string &name, const string &value);
     void setAttributeNode(shared_ptr<Attr> attr);
+    void removeAttribute(const string &name);
 
   public:
     void setId(const string &id);

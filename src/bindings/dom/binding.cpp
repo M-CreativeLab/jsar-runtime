@@ -17,10 +17,9 @@ namespace bindings
       dombinding::Element::Init(env);
       dombinding::HTMLElement::Init(env);
       {
-        dombinding::HTMLHtmlElement::Init(env);
-        dombinding::HTMLHeadElement::Init(env);
-        dombinding::HTMLBodyElement::Init(env);
-        dombinding::HTMLMetaElement::Init(env);
+#define XX(tagNameStr, className) dombinding::className::Init(env);
+        TYPED_ELEMENT_MAP(XX)
+#undef XX
         Audio::Init(env, exports);
       }
       dombinding::Document::Init(env, exports);

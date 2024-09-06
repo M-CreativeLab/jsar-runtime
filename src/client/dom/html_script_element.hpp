@@ -27,6 +27,14 @@ namespace dom
     inline bool isClassicScript() { return type.empty() || type == "text/javascript" || type == "application/javascript"; }
     inline bool isModuleScript() { return type == "module"; }
     inline bool isImportMap() { return type == "importmap"; }
+    inline void setAsync(bool value)
+    {
+      async = value;
+      if (async == true)
+        setAttribute("async", "async");
+      else
+        removeAttribute("async");
+    }
 
   protected:
     void createdCallback() override;

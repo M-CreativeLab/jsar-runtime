@@ -34,13 +34,6 @@ namespace dombinding
     return scope.Escape(instance).ToObject();
   }
 
-#define TYPED_ELEMENT_MAP(XX) \
-  XX("HTML", HTMLHtmlElement) \
-  XX("HEAD", HTMLHeadElement) \
-  XX("BODY", HTMLBodyElement) \
-  XX("META", HTMLMetaElement) \
-  XX("SCRIPT", HTMLScriptElement)
-
   Napi::Object CreateElement(Napi::Env env, shared_ptr<dom::Node> elementNode)
   {
     assert(elementNode->nodeType == dom::NodeType::ELEMENT_NODE);

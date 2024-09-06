@@ -24,4 +24,21 @@ namespace dombinding
     *constructor = Napi::Persistent(func);
     env.Global().Set("HTMLScriptElement", func);
   }
+
+  Napi::Value HTMLScriptElement::AsyncGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    return Napi::Boolean::New(env, this->node->async);
+  }
+
+  void HTMLScriptElement::AsyncSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    auto asyncValue = value.ToBoolean().Value();
+    this->node->setAsync(asyncValue);
+  }
 }

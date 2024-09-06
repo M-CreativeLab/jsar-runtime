@@ -3295,6 +3295,13 @@ PUGI_IMPL_NS_BEGIN
 				LOC_TAG:
 					if (PUGI_IMPL_IS_CHARTYPE(*s, ct_start_symbol)) // '<#...'
 					{
+						// Pop(Close) the last element for the following elements
+						if (cursor->name != nullptr)
+						{
+							if (strcmp(cursor->name, "meta") == 0 ||
+									strcmp(cursor->name, "link") == 0)
+								PUGI_IMPL_POPNODE();
+						}
 						PUGI_IMPL_PUSHNODE(node_element); // Append a new node to the tree.
 
 						cursor->name = s;
