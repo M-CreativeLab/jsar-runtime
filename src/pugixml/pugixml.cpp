@@ -3352,7 +3352,14 @@ PUGI_IMPL_NS_BEGIN
 										}
 										else PUGI_IMPL_THROW_ERROR(status_bad_attribute, s);
 									}
-									else PUGI_IMPL_THROW_ERROR(status_bad_attribute, s);
+									else	// '<script async'
+									{
+										a->value = a->name;
+
+										// Step back
+										--s;
+										ch = *s;
+									}
 								}
 								else if (*s == '/')
 								{
