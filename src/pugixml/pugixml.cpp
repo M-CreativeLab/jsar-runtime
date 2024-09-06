@@ -2946,6 +2946,16 @@ PUGI_IMPL_NS_BEGIN
 		return result;
 	}
 
+	inline bool is_tag_autoclose(char_t* name)
+	{
+		/**
+		 * TODO: improve the performance to compare
+		 */
+		return strcmp(name, "meta") == 0 || 
+					 strcmp(name, "link") == 0 ||
+					 strcmp(name, "img") == 0;
+	}
+
 	struct xml_parser
 	{
 		xml_allocator* alloc;
@@ -3298,8 +3308,7 @@ PUGI_IMPL_NS_BEGIN
 						// Pop(Close) the last element for the following elements
 						if (cursor->name != nullptr)
 						{
-							if (strcmp(cursor->name, "meta") == 0 ||
-									strcmp(cursor->name, "link") == 0)
+							if (is_tag_autoclose(cursor->name))
 								PUGI_IMPL_POPNODE();
 						}
 						PUGI_IMPL_PUSHNODE(node_element); // Append a new node to the tree.
@@ -3420,21 +3429,41 @@ PUGI_IMPL_NS_BEGIN
 					else if (*s == '/')
 					{
 						++s;
-
 						mark = s;
 
 						char_t* name = cursor->name;
 						if (!name) PUGI_IMPL_THROW_ERROR(status_end_element_mismatch, mark);
 
+						bool tag_mismatch = false;
 						while (PUGI_IMPL_IS_CHARTYPE(*s, ct_symbol))
 						{
-							if (*s++ != *name++) PUGI_IMPL_THROW_ERROR(status_end_element_mismatch, mark);
+							if (*s++ != *name++) tag_mismatch = true;
 						}
 
-						if (*name)
+						if (!tag_mismatch && *name)
 						{
-							if (*s == 0 && name[0] == endch && name[1] == 0) PUGI_IMPL_THROW_ERROR(status_bad_end_element, s);
-							else PUGI_IMPL_THROW_ERROR(status_end_element_mismatch, mark);
+							if (*s == 0 && name[0] == endch && name[1] == 0)
+							{
+								PUGI_IMPL_THROW_ERROR(status_bad_end_element, s);
+							}
+							else
+							{
+								tag_mismatch = true;
+							}
+						}
+
+						if (tag_mismatch)
+						{
+							char_t* c_name = cursor->name;
+							if (is_tag_autoclose(cursor->name))
+							{
+								PUGI_IMPL_POPNODE();
+								name = cursor->name;
+							}
+							else
+							{
+								PUGI_IMPL_THROW_ERROR(status_end_element_mismatch, mark);
+							}
 						}
 
 						PUGI_IMPL_POPNODE(); // Pop.
