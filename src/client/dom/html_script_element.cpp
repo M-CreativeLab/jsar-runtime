@@ -19,8 +19,14 @@ namespace dom
   void HTMLScriptElement::connectedCallback()
   {
     auto renderingContext = ownerDocument.lock()->renderingContext;
-    compiledScriptId = renderingContext->scriptingContext->compile(textContent);
+    compiledScript = renderingContext->scriptingContext->create(
+        baseURI, isClassicScript() ? dom::SourceTextType::Classic : dom::SourceTextType::ESM);
+    compiledScript->crossOrigin = crossOrigin == HTMLScriptCrossOrigin::Anonymous ? true : false;
 
+    // Compile
+    renderingContext->scriptingContext->compile(compiledScript, textContent);
+
+    // Evaluate if needed
     bool skipScriptExecution = false;
     if (isClassicScript() && defer)
       skipScriptExecution = true;
@@ -37,10 +43,10 @@ namespace dom
 
   void HTMLScriptElement::executeScript()
   {
-    if (compiledScriptId == 0)
+    if (compiledScript == nullptr)
       return;
     auto renderingContext = ownerDocument.lock()->renderingContext;
-    renderingContext->scriptingContext->run(compiledScriptId);
+    renderingContext->scriptingContext->evaluate(compiledScript);
     scriptExecutedOnce = true;
   }
 }

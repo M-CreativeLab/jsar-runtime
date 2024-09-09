@@ -2,6 +2,7 @@
 
 #include <string>
 #include "./html_element.hpp"
+#include "./dom_scripting.hpp"
 
 namespace dom
 {
@@ -81,7 +82,7 @@ namespace dom
     string type;
 
   private:
-    uint32_t compiledScriptId = 0;
+    shared_ptr<dom::DOMScript> compiledScript;
     bool scriptExecutedOnce = false;
   };
 }

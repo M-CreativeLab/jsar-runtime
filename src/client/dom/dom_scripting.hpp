@@ -4,9 +4,7 @@
 #include <memory>
 #include <vector>
 #include <map>
-#include <assert.h>
 #include <node/v8.h>
-#include "idgen.hpp"
 
 using namespace std;
 
@@ -17,148 +15,131 @@ namespace dom
     kSandboxObject = 0x100,
   };
 
-  class DOMScriptingContext
+  enum class SourceTextType
+  {
+    Classic,
+    ESM,
+  };
+
+  class DOMScriptingContext;
+
+  /**
+   * The virtual class for DOM script including the classic script and ECMAScript module.
+   */
+  class DOMScript
+  {
+  protected:
+    DOMScript();
+    virtual ~DOMScript() = default;
+
+  public:
+    /**
+     * Compile the script source code.
+     *
+     * @param isolate The V8 isolate.
+     * @param source The source code of the script.
+     * @param url The URL of the script.
+     */
+    virtual bool compile(v8::Isolate *isolate, const string &source) = 0;
+    /**
+     * Evaluate the script.
+     *
+     * @param isolate The V8 isolate.
+     */
+    virtual void evaluate(v8::Isolate *isolate) = 0;
+
+  public:
+    uint32_t id;
+    string url;
+    bool crossOrigin = false;
+  };
+
+  /**
+   * The context class for DOM scripting, this is the implementation of how the DOM compiles and evaluates the script.
+   */
+  class DOMScriptingContext : public enable_shared_from_this<DOMScriptingContext>
   {
   private:
-    static void PropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info)
-    {
-      auto isolate = info.GetIsolate();
-      auto context = isolate->GetCurrentContext();
-      auto sandbox = context->GetEmbedderData(ContextEmbedderIndex::kSandboxObject).As<v8::Object>();
-
-      v8::MaybeLocal<v8::Value> maybeValue = sandbox->GetRealNamedProperty(context, property);
-      if (maybeValue.IsEmpty())
-        maybeValue = context->Global()->GetRealNamedProperty(context, property);
-
-      v8::Local<v8::Value> resultValue;
-      if (maybeValue.ToLocal(&resultValue))
-      {
-        if (resultValue == sandbox)
-          resultValue = context->Global();
-
-        info.GetReturnValue().Set(resultValue);
-      }
-    }
+    static void PropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
 
   public:
-    DOMScriptingContext()
-        : isolate(v8::Isolate::GetCurrent())
-    {
-    }
+    DOMScriptingContext();
 
   public:
-    void setDocumentValue(v8::Local<v8::Value> value)
-    {
-      auto mainContext = isolate->GetCurrentContext();
-      v8::Isolate::Scope isolate_scope(isolate);
-      v8::Context::Scope context_scope(mainContext);
-      {
-        documentValue.Reset(isolate, value);
-      }
-    }
-    void makeContext()
-    {
-      auto mainContext = isolate->GetCurrentContext();
-      v8::Context::Scope context_scope(mainContext);
-      v8::HandleScope handle_scope(isolate);
-
-      v8::Local<v8::FunctionTemplate> globalFuncTemplate = v8::FunctionTemplate::New(isolate);
-      v8::Local<v8::ObjectTemplate> globalObjectTemplate = globalFuncTemplate->InstanceTemplate();
-
-      v8::NamedPropertyHandlerConfiguration namedConfig(
-          PropertyGetterCallback,
-          nullptr,
-          nullptr,
-          nullptr,
-          nullptr,
-          nullptr,
-          nullptr,
-          {},
-          v8::PropertyHandlerFlags::kHasNoSideEffect);
-      globalObjectTemplate->SetHandler(namedConfig);
-
-      auto newContext = v8::Context::New(isolate, nullptr, globalObjectTemplate);
-      auto global = mainContext->Global();
-      auto sandbox = v8::Object::New(isolate);
-      {
-#define V8_SET_GLOBAL_FROM_VALUE(name, value) \
-  sandbox->Set(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked(), value).FromJust()
-#define V8_SET_GLOBAL_FROM_MAIN(name)                                                                                 \
-  do                                                                                                                  \
-  {                                                                                                                   \
-    auto value = global->Get(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked()).ToLocalChecked(); \
-    V8_SET_GLOBAL_FROM_VALUE(name, value);                                                                            \
-  } while (0)
-
-        // Set the global object for scripting
-        V8_SET_GLOBAL_FROM_MAIN(URL);
-        V8_SET_GLOBAL_FROM_MAIN(Blob);
-        V8_SET_GLOBAL_FROM_MAIN(console);
-
-        // Expose the WebGL and WebGL2 contexts
-        V8_SET_GLOBAL_FROM_MAIN(WebGLRenderingContext);
-        V8_SET_GLOBAL_FROM_MAIN(WebGL2RenderingContext);
-
-        // Expose the WebXR Device API
-        V8_SET_GLOBAL_FROM_MAIN(XRRigidTransform);
-        V8_SET_GLOBAL_FROM_MAIN(XRWebGLLayer);
-
-        // Expose the specific objects
-        if (!documentValue.IsEmpty())
-          V8_SET_GLOBAL_FROM_VALUE(document, documentValue.Get(isolate).As<v8::Object>());
-#undef V8_SET_GLOBAL_FROM_MAIN
-#undef V8_SET_GLOBAL_FROM_VALUE
-      }
-      newContext->SetEmbedderData(ContextEmbedderIndex::kSandboxObject, sandbox);
-      newContext->SetSecurityToken(mainContext->GetSecurityToken());
-      scriptingContext.Reset(isolate, newContext);
-      isContextInitialized = true;
-    }
-    uint32_t compile(const std::string &source)
-    {
-      assert(isContextInitialized);
-      auto context = scriptingContext.Get(isolate);
-      v8::Isolate::Scope isolate_scope(isolate);
-      v8::Context::Scope context_scope(context);
-      v8::HandleScope handle_scope(isolate);
-
-      // create a new script
-      auto sourceString = v8::String::NewFromUtf8(isolate, source.c_str()).ToLocalChecked();
-      auto maybeScript = v8::Script::Compile(context, sourceString);
-
-      v8::Local<v8::Script> script;
-      if (!maybeScript.ToLocal(&script))
-      {
-        fprintf(stderr, "Failed to compile script\n"); // TODO: throw exception?
-        return 0;
-      }
-      static TrIdGenerator scriptIdGen(0xf9);
-      auto scriptId = scriptIdGen.get();
-      scripts.insert({scriptId, v8::Global<v8::Script>(isolate, script)});
-      return scriptId;
-    }
-    void run(uint32_t scriptId)
-    {
-      assert(isContextInitialized);
-      auto context = scriptingContext.Get(isolate);
-      v8::Isolate::Scope isolate_scope(isolate);
-      v8::Context::Scope context_scope(context);
-      v8::HandleScope handle_scope(isolate);
-
-      auto script = scripts[scriptId].Get(isolate);
-      auto result = script->Run(context);
-      if (result.IsEmpty())
-      {
-        fprintf(stderr, "Failed to run script\n");
-        return;
-      }
-    }
+    /**
+     * Set the script's `document` v8::Value instance.
+     */
+    void setDocumentValue(v8::Local<v8::Value> value);
+    /**
+     * Make the v8::Context for the script.
+     */
+    void makeContext();
+    /**
+     * Create a new DOM script object.
+     *
+     * @param url The URL of the script.
+     * @param type The type of the script: classic or module.
+     * @returns The new DOM script object.
+     */
+    shared_ptr<DOMScript> create(const string &url, SourceTextType type);
+    /**
+     * Compile the given script.
+     *
+     * @param script The script to compile.
+     * @param source The source code of the script.
+     * @returns Whether the script is compiled successfully.
+     */
+    bool compile(shared_ptr<DOMScript> script, const std::string &source);
+    /**
+     * Evaluate the given script.
+     *
+     * @param script The script to evaluate.
+     */
+    void evaluate(shared_ptr<DOMScript> script);
 
   private:
     v8::Isolate *isolate;
     v8::Global<v8::Value> documentValue;
     v8::Global<v8::Context> scriptingContext;
-    map<uint32_t, v8::Global<v8::Script>> scripts;
+    map<uint32_t, shared_ptr<DOMScript>> scripts;
     bool isContextInitialized = false;
+  };
+
+  class DOMClassicScript : public DOMScript
+  {
+  public:
+    DOMClassicScript(shared_ptr<DOMScriptingContext> context);
+    ~DOMClassicScript() override;
+
+  public:
+    bool compile(v8::Isolate *isolate, const string &sourceStr) override;
+    void evaluate(v8::Isolate *isolate) override;
+
+  private:
+    v8::Global<v8::Script> scriptStore;
+  };
+
+  class DOMModule : public DOMScript
+  {
+  private:
+    static v8::MaybeLocal<v8::Module> ResolveModuleCallback(v8::Local<v8::Context> context,
+                                                            v8::Local<v8::String> specifier,
+                                                            v8::Local<v8::FixedArray> importAssertions,
+                                                            v8::Local<v8::Module> referrer);
+
+  public:
+    DOMModule(shared_ptr<DOMScriptingContext> context);
+    ~DOMModule() override;
+
+  public:
+    bool compile(v8::Isolate *isolate, const string &sourceStr) override;
+    void evaluate(v8::Isolate *isolate) override;
+
+  private:
+    bool instantiate(v8::Isolate *isolate);
+
+  private:
+    v8::Global<v8::Module> moduleStore;
+    unordered_map<string, v8::Global<v8::Object>> resolveCache;
   };
 }
