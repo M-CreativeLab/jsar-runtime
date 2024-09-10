@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <node/v8.h>
 
 using namespace std;
@@ -73,7 +74,7 @@ namespace dom
     /**
      * Make the v8::Context for the script.
      */
-    void makeContext();
+    void makeV8Context();
     /**
      * Create a new DOM script object.
      *

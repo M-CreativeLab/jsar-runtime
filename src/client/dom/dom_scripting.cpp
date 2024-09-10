@@ -41,7 +41,7 @@ namespace dom
     }
   }
 
-  void DOMScriptingContext::makeContext()
+  void DOMScriptingContext::makeV8Context()
   {
     auto mainContext = isolate->GetCurrentContext();
     v8::Context::Scope context_scope(mainContext);

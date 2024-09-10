@@ -62,6 +62,10 @@ namespace dom
       if (showTree)
         internal->print(cout);
     }
+    else
+    {
+      cout << "node(Empty)" << endl;
+    }
   }
 
   void Node::resetInternal(pugi::xml_node *nodeToSet, weak_ptr<Document> fromDocument)

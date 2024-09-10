@@ -96,10 +96,11 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     const reqInit: undici.RequestInit = {
       ...(options == null ? {} : options),
     };
-    const resp = await undici.request(url, <any>reqInit);
+    const resp = await undici.request(url, <any>{ maxRedirections: 5, ...reqInit });
     if (resp.statusCode >= 400) {
       throw new Error(`Failed to fetch(${url}), statusCode=${resp.statusCode}`);
     }
+
     if (returnsAs === 'string') {
       const str = await resp.body.text();
       this.#cacheResource(url, str);
@@ -196,16 +197,14 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     if (this.#isCachingEnabled === false) {
       return; // Don't cache if the caching is disabled.
     }
-    try {
-      const cacheDir = this.#cacheDirectory;
-      const filename = getHashOfUri(uri);
-      const contentPath = path.join(cacheDir, filename);
-      await fsPromises.writeFile(contentPath, content);
-      const md5filePath = path.join(cacheDir, `${filename}.md5`);
-      await fsPromises.writeFile(md5filePath, hash('md5', content));
-    } catch (err) {
-      console.warn('failed to cache resource', err, uri);
-    }
+    const cacheDir = this.#cacheDirectory;
+    const filename = getHashOfUri(uri);
+    const contentPath = path.join(cacheDir, filename);
+    const md5filePath = path.join(cacheDir, `${filename}.md5`);
+    await Promise.all([
+      fsPromises.writeFile(contentPath, content),
+      fsPromises.writeFile(md5filePath, hash('md5', content)),
+    ]);
   }
 
   /**

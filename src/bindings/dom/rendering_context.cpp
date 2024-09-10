@@ -15,7 +15,8 @@ namespace dombinding
   void DocumentRenderingContext::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function func = DefineClass(env, "DocumentRenderingContext",
-                                      {InstanceMethod("start", &DocumentRenderingContext::Start)});
+                                      {InstanceMethod("setResourceLoader", &DocumentRenderingContext::SetResourceLoader),
+                                       InstanceMethod("start", &DocumentRenderingContext::Start)});
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
@@ -32,6 +33,30 @@ namespace dombinding
   {
   }
 
+  Napi::Value DocumentRenderingContext::SetResourceLoader(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() == 0 && !info[0].IsObject())
+    {
+      Napi::TypeError::New(env, "Expected an object.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto jsResourceLoader = info[0].As<Napi::Object>();
+    if (jsResourceLoader.Has("fetch") && jsResourceLoader.Get("fetch").IsFunction())
+    {
+      renderingContext->setResourceLoaderValue(V8LocalValueFromJsValue(jsResourceLoader));
+      return env.Undefined();
+    }
+    else
+    {
+      Napi::TypeError::New(env, "Expected an object with a fetch function.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+  }
+
   Napi::Value DocumentRenderingContext::Start(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -43,7 +68,7 @@ namespace dombinding
       return env.Undefined();
     }
 
-    auto jsSourceString = info[0].As<Napi::String>();
+    auto urlString = info[0].As<Napi::String>();
     dom::DOMParsingType parsingType = dom::DOMParsingType::HTML;
     if (info.Length() >= 2 && info[1].IsString())
     {
@@ -67,12 +92,12 @@ namespace dombinding
     {
       try
       {
-        auto doc = renderingContext->create<dom::HTMLDocument>(jsSourceString.Utf8Value(), parsingType);
+        auto doc = renderingContext->create<dom::HTMLDocument>(urlString.Utf8Value(), parsingType);
         auto jsInstance = Document::NewInstance(env, doc);
         {
           auto scriptingContext = renderingContext->scriptingContext;
           scriptingContext->setDocumentValue(V8LocalValueFromJsValue(jsInstance));
-          scriptingContext->makeContext();
+          scriptingContext->makeV8Context();
         }
         renderingContext->open(doc);
         return jsInstance;

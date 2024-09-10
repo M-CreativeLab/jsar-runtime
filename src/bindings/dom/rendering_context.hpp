@@ -14,6 +14,7 @@ namespace dombinding
     ~DocumentRenderingContext();
 
   private:
+    Napi::Value SetResourceLoader(const Napi::CallbackInfo &info);
     Napi::Value Start(const Napi::CallbackInfo &info);
 
   private:

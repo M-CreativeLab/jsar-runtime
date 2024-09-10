@@ -137,7 +137,7 @@ namespace dombinding
   protected:
     void ResetNode(const Napi::CallbackInfo &info, NodeType *nodeToSet)
     {
-      node = make_shared<NodeType>(*nodeToSet);
+      node = nodeToSet;
       {
         Napi::Env env = info.Env();
         Napi::HandleScope scope(env);
@@ -152,7 +152,7 @@ namespace dombinding
     }
 
   protected:
-    shared_ptr<NodeType> node;
+    NodeType *node = nullptr;
   };
 
   class Node : public NodeBase<Node, dom::Node>

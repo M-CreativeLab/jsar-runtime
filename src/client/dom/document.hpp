@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include "./node.hpp"
 #include "./element.hpp"
@@ -21,14 +22,18 @@ namespace dom
   class Document : public Node
   {
   public:
-    Document(string contentType = "text/html", bool autoConnect = false);
+    Document(string contentType, shared_ptr<DocumentRenderingContext> renderingContext, bool autoConnect = false);
     Document(Document &other);
-    ~Document() = default;
+    virtual ~Document() = default;
 
   public:
+    void setUrl(const string &url);
     void setSource(const string &source);
-    void open(shared_ptr<DocumentRenderingContext> renderingContext);
+    void open();
     shared_ptr<Element> getElementById(const string &id);
+
+  private:
+    void openInternal();
 
   public:
     DocumentCompatMode compatMode = DocumentCompatMode::NO_QUIRKS;
@@ -40,12 +45,16 @@ namespace dom
   protected:
     bool autoConnect;
     shared_ptr<pugi::xml_document> docInternal;
+
+  private:
+    bool isSourceLoaded = false;
+    bool shouldOpen = false;
   };
 
   class XMLDocument : public Document
   {
   public:
-    XMLDocument(bool autoConnect);
+    XMLDocument(shared_ptr<DocumentRenderingContext> renderingContext, bool autoConnect);
     ~XMLDocument() = default;
   };
 
@@ -58,7 +67,7 @@ namespace dom
      * @param source The source of the document.
      * @param autoConnect If true, the document will be automatically to be connected as the DOM root.
      */
-    HTMLDocument(bool autoConnect);
+    HTMLDocument(shared_ptr<DocumentRenderingContext> renderingContext, bool autoConnect);
     ~HTMLDocument() = default;
   };
 }

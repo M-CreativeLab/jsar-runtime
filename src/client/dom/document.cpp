@@ -5,9 +5,10 @@
 
 namespace dom
 {
-  Document::Document(string contentType, bool autoConnect)
+  Document::Document(string contentType, shared_ptr<DocumentRenderingContext> renderingContext, bool autoConnect)
       : Node(),
         contentType(contentType),
+        renderingContext(renderingContext),
         autoConnect(autoConnect)
   {
     docInternal = std::make_shared<pugi::xml_document>();
@@ -20,22 +21,32 @@ namespace dom
   {
   }
 
+  void Document::setUrl(const string &url)
+  {
+    if (renderingContext == nullptr)
+      throw std::runtime_error("DocumentRenderingContext is not set");
+    baseURI = url;
+    renderingContext->fetchTextSourceResource(url, [this](const string &source)
+                                              { setSource(source); });
+  }
+
   void Document::setSource(const string &source)
   {
     auto r = docInternal->load_string(source.c_str());
     if (r.status != pugi::xml_parse_status::status_ok)
       throw std::runtime_error("Failed to parse XML document: " + std::string(r.description()));
     resetInternal(docInternal.get(), getPtr<Document>());
+    isSourceLoaded = true;
+
+    if (shouldOpen)
+      openInternal();
   }
 
-  void Document::open(shared_ptr<DocumentRenderingContext> renderingContextToSet)
+  void Document::open()
   {
-    renderingContext = renderingContextToSet;
-    if (autoConnect)
-    {
-      connect();
-      load();
-    }
+    shouldOpen = true;
+    if (isSourceLoaded)
+      openInternal();
   }
 
   shared_ptr<Element> Document::getElementById(const string &id)
@@ -47,11 +58,22 @@ namespace dom
     return nullptr;
   }
 
-  XMLDocument::XMLDocument(bool autoConnect) : Document("text/xml", autoConnect)
+  void Document::openInternal()
+  {
+    if (autoConnect)
+    {
+      connect();
+      load();
+    }
+  }
+
+  XMLDocument::XMLDocument(shared_ptr<DocumentRenderingContext> renderingContext, bool autoConnect)
+      : Document("text/xml", renderingContext, autoConnect)
   {
   }
 
-  HTMLDocument::HTMLDocument(bool autoConnect) : Document("text/html", autoConnect)
+  HTMLDocument::HTMLDocument(shared_ptr<DocumentRenderingContext> renderingContext, bool autoConnect)
+      : Document("text/html", renderingContext, autoConnect)
   {
   }
 }
