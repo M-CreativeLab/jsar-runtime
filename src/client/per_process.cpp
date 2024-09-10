@@ -77,7 +77,8 @@ bool ScriptEnvironment::initialize()
   fprintf(stdout, "Executing Node.js script: %s\n", scriptArgsStr.c_str());
   std::unique_ptr<node::InitializationResult> result =
       node::InitializeOncePerProcess(scriptArgs, {node::ProcessInitializationFlags::kNoInitializeV8,
-                                                  node::ProcessInitializationFlags::kNoInitializeNodeV8Platform});
+                                                  node::ProcessInitializationFlags::kNoInitializeNodeV8Platform,
+                                                  node::ProcessInitializationFlags::kNoDefaultSignalHandling});
 
   auto errors = result->errors();
   if (errors.size() > 0)

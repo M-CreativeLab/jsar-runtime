@@ -5,6 +5,7 @@ import { existsSync } from 'node:fs';
 import { getPerformanceNow, isWebXRSupported } from '@transmute/env';
 import { reportDocumentEvent } from '@transmute/messaging';
 import { NativeDocumentOnTransmute } from './jsardom/TransmuteImpl';
+import { ResourceLoaderOnTransmute } from './jsardom/ResourceLoader';
 
 // viewers
 import createModel3dViewer from './viewers/model3d';  // glb, gltf ...
@@ -78,8 +79,20 @@ export class TransmuteRuntime2 extends EventTarget {
       codeOrUrl = process.env.JSAR_EXAMPLE_URL;
     }
 
+    let urlObj: URL = null;
+    /**
+     * If the input is a path, convert it to a URL.
+     */
+    if (codeOrUrl.startsWith('/')) {
+      urlObj = new URL(codeOrUrl, 'file://');
+      codeOrUrl = urlObj.href;
+    }
+
     try {
-      const urlObj = new URL(codeOrUrl);
+      if (urlObj == null) {
+        urlObj = new URL(codeOrUrl);
+      }
+
       /**
        * Supports the formats to open directly:
        * 
@@ -111,6 +124,16 @@ export class TransmuteRuntime2 extends EventTarget {
           console.info(`switched to the 2d image viewer.`);
           break;
         case '.html':
+          try {
+            const { DocumentRenderingContext } = process._linkedBinding('transmute:dom');
+            const renderingContext = new DocumentRenderingContext();
+            renderingContext.setResourceLoader(new ResourceLoaderOnTransmute());
+            renderingContext.start(codeOrUrl, 'text/html');
+            return;
+          } catch (err) {
+            console.error(`failed to open the html document: ${codeOrUrl}`, err);
+          }
+          break;
         case '.mp3':
         case '.mp4':
         case '.webm':

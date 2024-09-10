@@ -205,6 +205,66 @@ declare namespace Transmute {
     dispatchEvent(eventInit: { type: number, detail?: string }): number;
     dispose(): void;
   }
+
+  /**
+   * The resource response types.
+   * 
+   * - string: The response is a string.
+   * - arraybuffer: The response is an ArrayBuffer.
+   * - json: The response is a JSON object.
+   */
+  type ResourceResponseTypesMap = {
+    string: string;
+    arraybuffer: ArrayBuffer;
+    json: object;
+  };
+
+  /**
+   * The resource fetching options.
+   */
+  type ResourceFetchingOptions = {
+    /** The accept header. */
+    accept?: string;
+    /** The cookie jar. */
+    cookieJar?: any;
+    /** The referrer. */
+    referrer?: string;
+  };
+
+  /**
+   * The resource loader interface.
+   */
+  interface ResourceLoader {
+    /**
+     * Fetch a resource from the network or file system.
+     * 
+     * @param url 
+     * @param options 
+     * @param returnsAs
+     * @returns The corresponding response type.
+     */
+    fetch<AsType extends keyof ResourceResponseTypesMap>(url: string, options: ResourceFetchingOptions, returnsAs?: AsType): Promise<ResourceResponseTypesMap[AsType]>;
+  }
+
+  /**
+   * The internal rendering context for the document rendering.
+   */
+  class DocumentRenderingContext {
+    constructor();
+    /**
+     * Set the resource loader, which will be used for fetching the resources such as images, scripts, etc.
+     * 
+     * @param loader the resource loader.
+     */
+    setResourceLoader(loader: ResourceLoader): void;
+    /**
+     * Start a new document rendering from the source and MIME type.
+     * 
+     * @param source the document source.
+     * @param mimeType the MIME type: 'text/html', 'text/xsml', 'text/svg+xml', etc.
+     */
+    start(source: string, mimeType: 'text/html'): Document;
+  }
 }
 
 /**
@@ -214,6 +274,7 @@ declare namespace NodeJS {
   interface Process {
     _linkedBinding(module: 'transmute:dom'): {
       Audio: typeof Audio;
+      DocumentRenderingContext: typeof Transmute.DocumentRenderingContext;
     };
     _linkedBinding(module: 'transmute:env'): {
       ClientContext: typeof Transmute.TrClientContext;

@@ -1,0 +1,169 @@
+#pragma once
+
+#include <memory>
+#include <vector>
+#include <napi.h>
+#include "client/dom/node.hpp"
+
+using namespace std;
+
+namespace dombinding
+{
+  Napi::Object CreateNode(Napi::Env env, shared_ptr<dom::Node> node);
+
+  template <typename ObjectType, typename NodeType>
+  class NodeBase : public Napi::ObjectWrap<ObjectType>
+  {
+  public:
+    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties()
+    {
+      return {
+          // Getters & Setters
+          NodeBase<ObjectType, NodeType>::InstanceAccessor("childNodes", &NodeBase<ObjectType, NodeType>::ChildNodesGetter, nullptr),
+          NodeBase<ObjectType, NodeType>::InstanceAccessor("firstChild", &NodeBase<ObjectType, NodeType>::FirstChildGetter, nullptr),
+          NodeBase<ObjectType, NodeType>::InstanceAccessor("lastChild", &NodeBase<ObjectType, NodeType>::LastChildGetter, nullptr),
+          // Methods
+          NodeBase<ObjectType, NodeType>::InstanceMethod("appendChild", &NodeBase<ObjectType, NodeType>::AppendChild),
+          NodeBase<ObjectType, NodeType>::InstanceMethod("cloneNode", &NodeBase<ObjectType, NodeType>::CloneNode),
+          NodeBase<ObjectType, NodeType>::InstanceMethod("compareDocumentPosition", &NodeBase<ObjectType, NodeType>::CompareDocumentPosition),
+          NodeBase<ObjectType, NodeType>::InstanceMethod("contains", &NodeBase<ObjectType, NodeType>::Contains),
+          NodeBase<ObjectType, NodeType>::InstanceMethod("getRootNode", &NodeBase<ObjectType, NodeType>::GetRootNode),
+          NodeBase<ObjectType, NodeType>::InstanceMethod("hasChildNodes", &NodeBase<ObjectType, NodeType>::HasChildNodes),
+          NodeBase<ObjectType, NodeType>::InstanceMethod("insertBefore", &NodeBase<ObjectType, NodeType>::InsertBefore),
+      };
+    }
+
+  public:
+    NodeBase(const Napi::CallbackInfo &info) : Napi::ObjectWrap<ObjectType>(info)
+    {
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      if (info.Length() >= 1 && info[0].IsExternal())
+      {
+        NodeType *data = info[0].As<Napi::External<NodeType>>().Data();
+        ResetNode(info, data);
+      }
+      else
+      {
+        Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
+        return;
+      }
+    }
+    virtual ~NodeBase() = default;
+
+  protected: // Getters & Setters
+    Napi::Value ChildNodesGetter(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      auto childNodes = node->getChildNodes();
+      Napi::Array jsChildNodes = Napi::Array::New(env, childNodes.size());
+      for (size_t i = 0; i < childNodes.size(); i++)
+        jsChildNodes.Set(i, CreateNode(env, childNodes[i]));
+      return jsChildNodes;
+    }
+    Napi::Value FirstChildGetter(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      shared_ptr<dom::Node> firstChildNode = node->getFirstChild();
+      if (firstChildNode != nullptr)
+        return CreateNode(env, firstChildNode);
+      else
+        return env.Null();
+    }
+    Napi::Value LastChildGetter(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      shared_ptr<dom::Node> lastChildNode = node->getLastChild();
+      if (lastChildNode != nullptr)
+        return CreateNode(env, lastChildNode);
+      else
+        return env.Null();
+    }
+    Napi::Value TextContentGetter(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      if (node->nodeType == dom::NodeType::DOCUMENT_NODE || node->nodeType == dom::NodeType::DOCUMENT_TYPE_NODE)
+        return env.Null();
+      else
+        return Napi::String::New(env, node->getTextContent());
+    }
+
+  protected: // Methods
+    Napi::Value AppendChild(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      return env.Undefined();
+    }
+    Napi::Value CloneNode(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      return env.Undefined();
+    }
+    Napi::Value CompareDocumentPosition(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      return env.Undefined();
+    }
+    Napi::Value Contains(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      return env.Undefined();
+    }
+    Napi::Value GetRootNode(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      return env.Undefined();
+    }
+    Napi::Value HasChildNodes(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      return env.Undefined();
+    }
+    Napi::Value InsertBefore(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      return env.Undefined();
+    }
+
+  protected:
+    void ResetNode(const Napi::CallbackInfo &info, NodeType *nodeToSet)
+    {
+      node = nodeToSet;
+      {
+        Napi::Env env = info.Env();
+        Napi::HandleScope scope(env);
+
+        // Update the static properties which are not be changed
+        auto jsThis = info.This().As<Napi::Object>();
+        jsThis.Set("baseURI", Napi::String::New(env, node->baseURI));
+        jsThis.Set("nodeName", Napi::String::New(env, node->nodeName));
+        jsThis.Set("isConnected", Napi::Boolean::New(env, node->connected));
+        jsThis.Set("nodeType", Napi::Number::New(env, static_cast<int>(node->nodeType)));
+      }
+    }
+
+  protected:
+    NodeType *node = nullptr;
+  };
+
+  class Node : public NodeBase<Node, dom::Node>
+  {
+  public:
+    using NodeBase::NodeBase;
+
+  public:
+    static void Init(Napi::Env env);
+
+  public:
+    static Napi::FunctionReference *constructor;
+  };
+}

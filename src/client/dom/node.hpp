@@ -1,12 +1,18 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <memory>
+#include "pugixml/pugixml.hpp"
+
+using namespace std;
 
 namespace dom
 {
   enum class NodeType
   {
-    ELEMENT_NODE = 1,
+    NULL_NODE = 0,
+    ELEMENT_NODE,
     ATTRIBUTE_NODE,
     TEXT_NODE,
     CDATA_SECTION_NODE,
@@ -20,25 +26,104 @@ namespace dom
     NOTATION_NODE,
   };
 
-  class Node
+  class Document;
+  class Node : public enable_shared_from_this<Node>
   {
   public:
+    /**
+     * Create a new `Node` object from a `pugi::xml_node`.
+     */
+    static shared_ptr<Node> CreateNode(pugi::xml_node node, weak_ptr<Document> ownerDocument);
+
+  public:
+    /**
+     * Create an empty `Node` object.
+     */
     Node();
-    ~Node() = default;
+    /**
+     * Create a new `Node` object from a `pugi::xml_node`.
+     */
+    Node(pugi::xml_node node, weak_ptr<Document> ownerDocument);
+    Node(Node &other);
+    virtual ~Node() = default;
 
   public:
-    std::shared_ptr<Node> appendChild(std::shared_ptr<Node> node);
-    std::shared_ptr<Node> cloneNode(bool deep = false);
-    bool contains(std::shared_ptr<Node> node);
+    inline vector<shared_ptr<Node>> getChildNodes() { return childNodes; }
+    inline shared_ptr<Node> getFirstChild() { return firstChild; }
+    inline shared_ptr<Node> getLastChild() { return lastChild; }
+    inline shared_ptr<Node> getParentNode() { return parentNode; }
+    string getTextContent();
 
   public:
-    std::string baseURI;
-    bool isConnected;
+    inline bool hasChildNodes() { return childNodes.size() > 0; }
+
+  protected:
+    /**
+     * Get the shared pointer of the current `Node` object.
+     */
+    template <typename T = Node>
+    inline shared_ptr<T> getPtr()
+    {
+      return dynamic_pointer_cast<T>(shared_from_this());
+    }
+    /**
+     * Get the weak pointer of the current `Node` object.
+     */
+    template <typename T = Node>
+    inline weak_ptr<T> getWeakPtr()
+    {
+      return dynamic_pointer_cast<T>(shared_from_this());
+    }
+    /**
+     * Print the internal `pugi::xml_node` object.
+     * 
+     * @param showTree If true, the tree will be printed.
+     */
+    void print(bool showTree = true);
+    /**
+     * Reset the internal `pugi::xml_node` object.
+     * 
+     * @param nodeToSet The `pugi::xml_node` object to set.
+     */
+    void resetInternal(pugi::xml_node *nodeToSet, weak_ptr<Document> fromDocument);
+    /**
+     * Connect the node to the relevant context object.
+     */
+    virtual void connect();
+    /**
+     * Load the specific node, the stage "load" will be called after all the nodes in the DOM tree are connected.
+     */
+    virtual void load();
+
+  public:
+    string baseURI;
+    /**
+     * A boolean value that is true if the node is connected to its relevant context object, and false if not.
+     */
+    bool connected = false;
+    /**
+     * A string containing the name of the `Node`.
+     */
+    string nodeName;
+    /**
+     * An `unsigned short` representing the type of the node.
+     */
     NodeType nodeType;
-    std::string textContent;
+    /**
+     * Returns the `Document` that this node belongs to. If the node is itself a document, returns null.
+     */
+    weak_ptr<Document> ownerDocument;
+    /**
+     * Returns or sets the textual content of an element and all its descendants.
+     */
+    string textContent;
 
-    std::shared_ptr<Node> firstChild;
-    std::shared_ptr<Node> lastChild;
-    std::shared_ptr<Node> parentNode;
+    shared_ptr<Node> firstChild;
+    shared_ptr<Node> lastChild;
+    shared_ptr<Node> parentNode;
+    vector<shared_ptr<Node>> childNodes;
+
+  protected:
+    shared_ptr<pugi::xml_node> internal;
   };
 }
