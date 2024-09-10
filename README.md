@@ -31,7 +31,7 @@ Like the classic Web browser, it supports not only the HTML document, but also l
 | Format   | Status      | Recommended Use Case         |
 | -------- | ----------- | ---------------------------- |
 | XSML     | Ok          | Using WebXR applications     |
-| HTML     | Not started | Browsering classic Web pages |
+| HTML     | Partially   | Browsering classic Web pages |
 | PDF      | Not started | Reading PDF documents        |
 | SVG      | Not started | Displaying SVG images        |
 | GLTF     | Ok          | Displaying 3D models         |
@@ -43,7 +43,7 @@ Like the classic Web browser, it supports not only the HTML document, but also l
 
 | API                   | Status      | Test Suite |
 | --------------------- | ----------- | ---------- |
-| [JavaScript][]        | Not started | -          |
+| [JavaScript][]        | Ok          | -          |
 | [TypeScript][]        | Not started | -          |
 | [ECMAScript Module][] | Not started | -          |
 | [WebAssembly][]       | Not started | -          |
