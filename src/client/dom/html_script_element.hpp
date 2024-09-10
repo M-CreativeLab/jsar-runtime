@@ -43,6 +43,9 @@ namespace dom
     void beforeLoadedCallback() override;
 
   private:
+    void loadSource();
+    void compileScript(const string &source);
+    void scheduleScriptExecution();
     void executeScript();
 
   public:
@@ -83,6 +86,8 @@ namespace dom
 
   private:
     shared_ptr<dom::DOMScript> compiledScript;
+    bool scriptCompiled = false;
     bool scriptExecutedOnce = false;
+    bool scriptExecutionScheduled = false;
   };
 }

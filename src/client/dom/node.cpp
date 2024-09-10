@@ -72,6 +72,8 @@ namespace dom
   {
     if (nodeToSet != nullptr && !nodeToSet->empty())
       internal = make_shared<pugi::xml_node>(*nodeToSet);
+    if (!fromDocument.expired())
+      baseURI = fromDocument.lock()->baseURI;
 
     weak_ptr<Document> childOwnerDocument;
     auto internalType = internal->type();
