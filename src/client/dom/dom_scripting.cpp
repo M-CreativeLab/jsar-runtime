@@ -68,11 +68,15 @@ namespace dom
     {
 #define V8_SET_GLOBAL_FROM_VALUE(name, value) \
   sandbox->Set(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked(), value).FromJust()
-#define V8_SET_GLOBAL_FROM_MAIN(name)                                                                                 \
-  do                                                                                                                  \
-  {                                                                                                                   \
-    auto value = global->Get(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked()).ToLocalChecked(); \
-    V8_SET_GLOBAL_FROM_VALUE(name, value);                                                                            \
+#define V8_SET_GLOBAL_FROM_MAIN(name)                                                                     \
+  do                                                                                                      \
+  {                                                                                                       \
+    v8::Local<v8::Value> valueToSet;                                                                      \
+    auto maybeValue = global->Get(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked()); \
+    if (!maybeValue.IsEmpty() && maybeValue.ToLocal(&valueToSet))                                         \
+    {                                                                                                     \
+      V8_SET_GLOBAL_FROM_VALUE(name, valueToSet);                                                         \
+    }                                                                                                     \
   } while (0)
 
       // Set the global object for scripting
@@ -217,7 +221,7 @@ namespace dom
                                                               v8::Local<v8::FixedArray> importAssertions,
                                                               v8::Local<v8::Module> referrer)
   {
-    v8::Isolate* isolate = context->GetIsolate();
+    v8::Isolate *isolate = context->GetIsolate();
     auto specifier_utf8 = v8::String::Utf8Value(context->GetIsolate(), specifier);
     string specifierStr(*specifier_utf8, specifier_utf8.length());
     fprintf(stderr, "ResolveModuleCallback: %s\n", specifierStr.c_str());

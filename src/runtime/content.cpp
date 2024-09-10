@@ -610,25 +610,34 @@ void TrContentManager::installScripts()
   if (!filesystem::exists(scriptsTargetDir))
     filesystem::create_directory(scriptsTargetDir);
 
-  auto jsBootstrapSrc = get_jsbootstrap_ptr();
-  path bootstrapPath = path(scriptsTargetDir) / "jsar-bootstrap.js";
-  {
-    FILE *fp = fopen(bootstrapPath.c_str(), "wb");
-    if (fp != nullptr)
-    {
-      fwrite(jsBootstrapSrc, 1, get_jsbootstrap_size(), fp);
-      fclose(fp);
-    }
+#define INSTALL_BOOTSTRAP_SCRIPT(framework, scriptName)                                         \
+  {                                                                                             \
+    auto sourcePtr = JSBundle::GetBootstrapSourcePtr(JSFrameworkName::framework);               \
+    path sourcePath = path(scriptsTargetDir) / scriptName;                                      \
+    {                                                                                           \
+      FILE *fp = fopen(sourcePath.c_str(), "wb");                                               \
+      if (fp != nullptr)                                                                        \
+      {                                                                                         \
+        fwrite(sourcePtr, 1, JSBundle::GetBootstrapSourceSize(JSFrameworkName::framework), fp); \
+        fclose(fp);                                                                             \
+      }                                                                                         \
+    }                                                                                           \
   }
 
-  auto jsBundleSrc = get_jsbundle_ptr();
-  path bundlePath = path(scriptsTargetDir) / "jsar-bundle.js";
+  INSTALL_BOOTSTRAP_SCRIPT(BABYLON, "jsar-bootstrap-babylon.js");
+#undef INSTALL_BOOTSTRAP_SCRIPT
+
   {
-    FILE *fp = fopen(bundlePath.c_str(), "wb");
-    if (fp != nullptr)
+    // Install the client entry script.
+    auto jsBundleSrc = JSBundle::GetClientEntrySourcePtr();
+    path entryPath = path(scriptsTargetDir) / "jsar-client-entry.js";
     {
-      fwrite(jsBundleSrc, 1, get_jsbundle_size(), fp);
-      fclose(fp);
+      FILE *fp = fopen(entryPath.c_str(), "wb");
+      if (fp != nullptr)
+      {
+        fwrite(jsBundleSrc, 1, get_jsbundle_size(), fp);
+        fclose(fp);
+      }
     }
   }
 }

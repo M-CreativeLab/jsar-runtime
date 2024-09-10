@@ -49,8 +49,8 @@ ScriptEnvironment::ScriptEnvironment(int id, string &scriptsDir) : id(id)
   args.push_back("--experimental-vm-modules");
   args.push_back("--experimental-global-customevent");
   args.push_back("-r");
-  args.push_back(scriptsDir + "/jsar-bootstrap.js");
-  args.push_back(scriptsDir + "/jsar-bundle.js");
+  args.push_back(scriptsDir + "/jsar-bootstrap-babylon.js");
+  args.push_back(scriptsDir + "/jsar-client-entry.js");
 
   // TODO: Check if we are in debug mode
   int inspectPort = 9229 + id - 1;
