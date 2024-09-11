@@ -28,9 +28,111 @@ namespace dom
     }
   }
 
+  v8::MaybeLocal<v8::Promise> DOMScriptingContext::ImportModuleDynamicallyCallback(v8::Local<v8::Context> context,
+                                                                                   v8::Local<v8::Data> hostDefinedOptions,
+                                                                                   v8::Local<v8::Value> resourceName,
+                                                                                   v8::Local<v8::String> specifier,
+                                                                                   v8::Local<v8::FixedArray> importAssertions)
+  {
+    auto isolate = context->GetIsolate();
+    v8::EscapableHandleScope handleScope(isolate);
+
+    v8::Local<v8::FixedArray> options = hostDefinedOptions.As<v8::FixedArray>();
+    DOMScriptingContext *scriptingContext = nullptr;
+    {
+      auto externalObject = context->GetEmbedderData(ContextEmbedderIndex::kEnvironmentObject).As<v8::External>();
+      if (!externalObject.IsEmpty())
+        scriptingContext = static_cast<DOMScriptingContext *>(externalObject->Value());
+    }
+    if (scriptingContext == nullptr)
+    {
+      std::cerr << "Failed to get the scripting context object" << std::endl;
+      return v8::MaybeLocal<v8::Promise>();
+    }
+
+    v8::String::Utf8Value specifier_utf8(isolate, specifier);
+    string specifierStr(*specifier_utf8, specifier_utf8.length());
+
+    auto type = options->Get(context, HostDefinedOptions::kType).As<v8::Number>()->Int32Value(context).ToChecked();
+    auto id = options->Get(context, HostDefinedOptions::kID).As<v8::Number>()->Int32Value(context).ToChecked();
+
+    if (type != (int)SourceTextType::ESM)
+    {
+      v8::Local<v8::Promise::Resolver> resolver;
+      if (!v8::Promise::Resolver::New(context).ToLocal(&resolver))
+        return v8::MaybeLocal<v8::Promise>();
+
+      auto typeError = v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, "dynamic import() is only supported in ECMAScript module.").ToLocalChecked());
+      resolver->Reject(context, typeError).ToChecked();
+      return handleScope.Escape(resolver->GetPromise());
+    }
+    else
+    {
+      shared_ptr<DOMModule> dependent = nullptr;
+      {
+        auto &map = scriptingContext->idToModuleMap;
+        if (!map.empty())
+        {
+          auto it = map.find(id);
+          if (it != map.end())
+            dependent = it->second;
+        }
+      }
+      if (dependent == nullptr)
+      {
+        std::cerr << "request for '" << specifierStr << "' is from invalid module" << std::endl;
+        return v8::MaybeLocal<v8::Promise>();
+      }
+
+      auto moduleUrl = crates::jsar::UrlHelper::CreateUrlStringWithPath(dependent->url, specifierStr);
+      if (moduleUrl == "")
+      {
+        std::cerr << "Failed to create URL for '" << specifierStr << "'" << std::endl;
+        return v8::MaybeLocal<v8::Promise>();
+      }
+
+      v8::Local<v8::Promise::Resolver> resolver;
+      if (!v8::Promise::Resolver::New(context).ToLocal(&resolver))
+        return v8::MaybeLocal<v8::Promise>();
+
+      auto renderingContext = dependent->documentRenderingContext.lock();
+      auto script = renderingContext->createScript(moduleUrl, SourceTextType::ESM);
+      auto specifierRef = make_shared<string>(specifierStr);
+
+      shared_ptr<v8::Persistent<v8::Promise::Resolver>> persistentResolver = make_shared<v8::Persistent<v8::Promise::Resolver>>(isolate, resolver);
+      auto onSourceLoaded = [persistentResolver, isolate, renderingContext, script](const string &source)
+      {
+        auto moduleRef = dynamic_pointer_cast<DOMModule>(script);
+        moduleRef->linkFinishedCallback = [persistentResolver, isolate, renderingContext, script]()
+        {
+          v8::Isolate::Scope isolateScope(isolate);
+          v8::HandleScope handleScope(isolate);
+          auto resolver = persistentResolver->Get(isolate);
+          renderingContext->scriptingContext->evaluate(script);
+          // TODO: support resolve the module exports
+          resolver->Resolve(isolate->GetCurrentContext(), v8::Undefined(isolate)).ToChecked();
+          persistentResolver->Reset();
+        };
+        renderingContext->scriptingContext->compile(script, source);
+      };
+      renderingContext->fetchTextSourceResource(moduleUrl, onSourceLoaded);
+      return handleScope.Escape(resolver->GetPromise());
+    }
+  }
+
   DOMScriptingContext::DOMScriptingContext()
       : isolate(v8::Isolate::GetCurrent())
   {
+  }
+
+  void DOMScriptingContext::enableDynamicImport()
+  {
+    auto mainContext = isolate->GetCurrentContext();
+    v8::Isolate::Scope isolateScope(isolate);
+    v8::Context::Scope contextScope(mainContext);
+    {
+      isolate->SetHostImportModuleDynamicallyCallback(ImportModuleDynamicallyCallback);
+    }
   }
 
   void DOMScriptingContext::setDocumentValue(v8::Local<v8::Value> value)
@@ -100,6 +202,7 @@ namespace dom
 #undef V8_SET_GLOBAL_FROM_MAIN
 #undef V8_SET_GLOBAL_FROM_VALUE
     }
+    newContext->SetEmbedderData(ContextEmbedderIndex::kMagicIndex, v8::Number::New(isolate, 0x5432));
     newContext->SetEmbedderData(ContextEmbedderIndex::kSandboxObject, sandbox);
     newContext->SetEmbedderData(ContextEmbedderIndex::kEnvironmentObject, v8::External::New(isolate, this));
     newContext->SetSecurityToken(mainContext->GetSecurityToken());
@@ -115,13 +218,14 @@ namespace dom
     {
       auto classicScript = make_shared<DOMClassicScript>(context);
       classicScript->url = url;
-      scripts.insert({script->id, classicScript});
+      idToScriptMap.insert({classicScript->id, classicScript});
       script = dynamic_pointer_cast<DOMScript>(classicScript);
     }
     else if (type == SourceTextType::ESM)
     {
       auto module = make_shared<DOMModule>(context);
       module->url = url;
+      idToModuleMap.insert({module->id, module});
       script = dynamic_pointer_cast<DOMScript>(module);
     }
     return script;
@@ -150,7 +254,12 @@ namespace dom
   void DOMScriptingContext::evaluate(shared_ptr<DOMScript> script)
   {
     assert(isContextInitialized);
-    script->evaluate(isolate);
+    auto context = scriptingContext.Get(isolate);
+    v8::Isolate::Scope isolateScope(isolate);
+    v8::Context::Scope contextScope(context);
+    {
+      script->evaluate(isolate);
+    }
   }
 
   shared_ptr<DOMModule> DOMScriptingContext::getModuleFromV8(v8::Local<v8::Module> module)
@@ -192,6 +301,11 @@ namespace dom
     auto urlString = v8::String::NewFromUtf8(isolate, url.c_str()).ToLocalChecked();
     int lineOffset = 0;
     int columnOffset = 0;
+
+    v8::Local<v8::PrimitiveArray> hostDefinedOptions = v8::PrimitiveArray::New(isolate, HostDefinedOptions::kLength);
+    hostDefinedOptions->Set(isolate, HostDefinedOptions::kType, v8::Number::New(isolate, (int)SourceTextType::Classic));
+    hostDefinedOptions->Set(isolate, HostDefinedOptions::kID, v8::Number::New(isolate, id));
+
     v8::ScriptOrigin origin(isolate,
                             urlString,
                             lineOffset,
@@ -201,7 +315,8 @@ namespace dom
                             v8::Local<v8::Value>(),
                             false,
                             false,
-                            false);
+                            false,
+                            hostDefinedOptions);
 
     // create the script
     auto sourceString = v8::String::NewFromUtf8(isolate, sourceStr.c_str()).ToLocalChecked();
@@ -291,6 +406,11 @@ namespace dom
     auto urlString = v8::String::NewFromUtf8(isolate, url.c_str()).ToLocalChecked();
     int lineOffset = 0;
     int columnOffset = 0;
+
+    v8::Local<v8::PrimitiveArray> hostDefinedOptions = v8::PrimitiveArray::New(isolate, HostDefinedOptions::kLength);
+    hostDefinedOptions->Set(isolate, HostDefinedOptions::kType, v8::Number::New(isolate, (int)SourceTextType::ESM));
+    hostDefinedOptions->Set(isolate, HostDefinedOptions::kID, v8::Number::New(isolate, id));
+
     v8::ScriptOrigin origin(isolate,
                             urlString,
                             lineOffset,
@@ -300,7 +420,8 @@ namespace dom
                             v8::Local<v8::Value>(),
                             false,
                             false,
-                            true);
+                            true,
+                            hostDefinedOptions);
 
     // create the script
     auto sourceString = v8::String::NewFromUtf8(isolate, sourceStr.c_str()).ToLocalChecked();

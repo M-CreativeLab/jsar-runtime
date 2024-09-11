@@ -6,15 +6,24 @@
 #include <map>
 #include <unordered_map>
 #include <node/v8.h>
+#include <node/node.h>
 
 using namespace std;
 
 namespace dom
 {
-  enum ContextEmbedderIndex
+  enum ContextEmbedderIndex : int
   {
-    kEnvironmentObject = 0x100,
+    kMagicIndex = 255,
+    kEnvironmentObject,
     kSandboxObject,
+  };
+
+  enum HostDefinedOptions : int
+  {
+    kType = 10,
+    kID,
+    kLength,
   };
 
   enum class SourceTextType
@@ -35,11 +44,26 @@ namespace dom
   {
   private:
     static void PropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+    static v8::MaybeLocal<v8::Promise> ImportModuleDynamicallyCallback(v8::Local<v8::Context> context,
+                                                                       v8::Local<v8::Data> hostDefinedOptions,
+                                                                       v8::Local<v8::Value> resourceName,
+                                                                       v8::Local<v8::String> specifier,
+                                                                       v8::Local<v8::FixedArray> importAssertions);
 
   public:
     DOMScriptingContext();
 
   public:
+    /**
+     * Enable the dynamic import for the script.
+     *
+     * Internally it will call `v8::Isolate`'s `SetHostImportModuleDynamicallyCallback` to set the dynamic import callback, it causes the
+     * `import()` calls in different contexts will be handled by the same callback.
+     *
+     * These scripts are running inside the Node.js, that has its own callback for dynamic `import()`, and JSAR esm implementation can't work
+     * well with it, so we need to make sure the Node.js script won't use `import()` anymore.
+     */
+    void enableDynamicImport();
     /**
      * Set the script's `document` v8::Value instance.
      */
@@ -73,7 +97,7 @@ namespace dom
     void evaluate(shared_ptr<DOMScript> script);
     /**
      * Get the `DOMModule` object from the given v8 module.
-     * 
+     *
      * @param v8module The v8 module object.
      */
     shared_ptr<DOMModule> getModuleFromV8(v8::Local<v8::Module> v8module);
@@ -82,8 +106,9 @@ namespace dom
     v8::Isolate *isolate;
     v8::Global<v8::Value> documentValue;
     v8::Global<v8::Context> scriptingContext;
-    map<uint32_t, shared_ptr<DOMClassicScript>> scripts;
     unordered_map<int, shared_ptr<DOMModule>> hashToModuleMap;
+    unordered_map<uint32_t, shared_ptr<DOMClassicScript>> idToScriptMap;
+    unordered_map<uint32_t, shared_ptr<DOMModule>> idToModuleMap;
     bool isContextInitialized = false;
   };
 
