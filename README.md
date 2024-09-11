@@ -45,7 +45,7 @@ Like the classic Web browser, it supports not only the HTML document, but also l
 | --------------------- | ----------- | ---------- |
 | [JavaScript][]        | Ok          | -          |
 | [TypeScript][]        | Not started | -          |
-| [ECMAScript Module][] | Not started | -          |
+| [ECMAScript Module][] | Partially   | -          |
 | [WebAssembly][]       | Not started | -          |
 | [Web Worker][]        | Not started | -          |
 

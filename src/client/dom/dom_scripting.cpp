@@ -1,5 +1,7 @@
 #include <assert.h>
+#include "crates/jsar_jsbindings.h"
 #include "./dom_scripting.hpp"
+#include "./rendering_context.hpp"
 #include "idgen.hpp"
 
 using namespace std;
@@ -99,28 +101,29 @@ namespace dom
 #undef V8_SET_GLOBAL_FROM_VALUE
     }
     newContext->SetEmbedderData(ContextEmbedderIndex::kSandboxObject, sandbox);
+    newContext->SetEmbedderData(ContextEmbedderIndex::kEnvironmentObject, v8::External::New(isolate, this));
     newContext->SetSecurityToken(mainContext->GetSecurityToken());
     scriptingContext.Reset(isolate, newContext);
     isContextInitialized = true;
   }
 
-  shared_ptr<DOMScript> DOMScriptingContext::create(const string &url, SourceTextType type)
+  shared_ptr<DOMScript> DOMScriptingContext::create(shared_ptr<DocumentRenderingContext> context, const string &url, SourceTextType type)
   {
     assert(isContextInitialized);
     shared_ptr<DOMScript> script;
-    switch (type)
+    if (type == SourceTextType::Classic)
     {
-    case SourceTextType::Classic:
-      script = make_shared<DOMClassicScript>(shared_from_this());
-      break;
-    case SourceTextType::ESM:
-      script = make_shared<DOMModule>(shared_from_this());
-      break;
-    default:
-      break;
+      auto classicScript = make_shared<DOMClassicScript>(context);
+      classicScript->url = url;
+      scripts.insert({script->id, classicScript});
+      script = dynamic_pointer_cast<DOMScript>(classicScript);
     }
-    script->url = url;
-    scripts.insert({script->id, script});
+    else if (type == SourceTextType::ESM)
+    {
+      auto module = make_shared<DOMModule>(context);
+      module->url = url;
+      script = dynamic_pointer_cast<DOMScript>(module);
+    }
     return script;
   }
 
@@ -130,32 +133,49 @@ namespace dom
     auto context = scriptingContext.Get(isolate);
     v8::Isolate::Scope isolateScope(isolate);
     v8::Context::Scope contextScope(context);
-    return script->compile(isolate, source);
+
+    if (!script->compile(isolate, source))
+      return false;
+
+    // If the script is ESM, add it to the module map
+    if (script->sourceTextType == SourceTextType::ESM)
+    {
+      auto module = dynamic_pointer_cast<DOMModule>(script);
+      hashToModuleMap.insert({module->getModuleHash(), module});
+      module->link(isolate);
+    }
+    return true;
   }
 
   void DOMScriptingContext::evaluate(shared_ptr<DOMScript> script)
   {
     assert(isContextInitialized);
-
-    // Check if the script is in the list
-    auto it = scripts.find(script->id);
-    if (it == scripts.end())
-      return;
-
-    auto context = scriptingContext.Get(isolate);
-    v8::Isolate::Scope isolateScope(isolate);
-    v8::Context::Scope contextScope(context);
     script->evaluate(isolate);
   }
 
-  DOMScript::DOMScript()
+  shared_ptr<DOMModule> DOMScriptingContext::getModuleFromV8(v8::Local<v8::Module> module)
+  {
+    auto range = hashToModuleMap.equal_range(module->GetIdentityHash());
+    for (auto it = range.first; it != range.second; ++it)
+    {
+      if (it->second->moduleStore.Get(isolate) == module)
+      {
+        return it->second;
+      }
+    }
+    return nullptr;
+  }
+
+  DOMScript::DOMScript(SourceTextType sourceTextType, shared_ptr<DocumentRenderingContext> context)
+      : sourceTextType(sourceTextType),
+        documentRenderingContext(context)
   {
     static TrIdGenerator scriptIdGen(0xf9);
     id = scriptIdGen.get();
   }
 
-  DOMClassicScript::DOMClassicScript(shared_ptr<DOMScriptingContext> context)
-      : DOMScript()
+  DOMClassicScript::DOMClassicScript(shared_ptr<DocumentRenderingContext> context)
+      : DOMScript(SourceTextType::Classic, context)
   {
   }
 
@@ -222,15 +242,39 @@ namespace dom
                                                               v8::Local<v8::Module> referrer)
   {
     v8::Isolate *isolate = context->GetIsolate();
+    DOMScriptingContext *scriptingContext = nullptr;
+    {
+      auto externalObject = context->GetEmbedderData(ContextEmbedderIndex::kEnvironmentObject).As<v8::External>();
+      if (!externalObject.IsEmpty())
+        scriptingContext = static_cast<DOMScriptingContext *>(externalObject->Value());
+    }
+    if (scriptingContext == nullptr)
+    {
+      fprintf(stderr, "Failed to get the scripting context object\n");
+      return v8::MaybeLocal<v8::Module>();
+    }
+
     auto specifier_utf8 = v8::String::Utf8Value(context->GetIsolate(), specifier);
     string specifierStr(*specifier_utf8, specifier_utf8.length());
-    fprintf(stderr, "ResolveModuleCallback: %s\n", specifierStr.c_str());
 
-    return v8::MaybeLocal<v8::Module>();
+    auto dependent = scriptingContext->getModuleFromV8(referrer);
+    if (dependent == nullptr)
+    {
+      fprintf(stderr, "request for '%s' is from invalid module\n", specifierStr.c_str());
+      return v8::MaybeLocal<v8::Module>();
+    }
+    if (dependent->resolveCache.count(specifierStr) != 1)
+    {
+      fprintf(stderr, "request for '%s' is not in cache\n", specifierStr.c_str());
+      return v8::MaybeLocal<v8::Module>();
+    }
+
+    auto module = dependent->resolveCache[specifierStr];
+    return module->moduleStore.Get(isolate);
   }
 
-  DOMModule::DOMModule(shared_ptr<DOMScriptingContext> context)
-      : DOMScript()
+  DOMModule::DOMModule(shared_ptr<DocumentRenderingContext> context)
+      : DOMScript(SourceTextType::ESM, context)
   {
   }
 
@@ -269,12 +313,15 @@ namespace dom
 
     if (!v8::ScriptCompiler::CompileModule(isolate, &source, options).ToLocal(&module))
     {
-      fprintf(stderr, "Failed to compile module\n"); // TODO: throw exception?
+      fprintf(stderr, "#\n");
+      fprintf(stderr, "# Occurred compilitation error\n");
+      fprintf(stderr, "# URL: %s\n", url.c_str());
+      fprintf(stderr, "#\n");
+      fprintf(stderr, "%s\n", sourceStr.c_str());
       return false;
     }
     else
     {
-      // TODO: compile the modules via the module graph
       moduleStore.Reset(isolate, module);
       return true;
     }
@@ -282,24 +329,56 @@ namespace dom
 
   void DOMModule::evaluate(v8::Isolate *isolate)
   {
+    if (linked)
+    {
+      doEvaluate(isolate);
+    }
+    else
+    {
+      evaluationScheduled = true;
+    }
+  }
+
+  int DOMModule::getModuleHash()
+  {
+    assert(!moduleStore.IsEmpty());
+    auto module = moduleStore.Get(v8::Isolate::GetCurrent());
+    return module->GetIdentityHash();
+  }
+
+  void DOMModule::link(v8::Isolate *isolate)
+  {
     v8::HandleScope scope(isolate);
     auto module = moduleStore.Get(isolate);
-    auto context = isolate->GetCurrentContext();
+    auto v8Context = isolate->GetCurrentContext();
+    auto renderingContext = documentRenderingContext.lock();
 
-    if (!instantiate(isolate))
-      return;
-
-    v8::Local<v8::Value> resultValue;
+    // Get module requests
+    vector<ModuleRequestInfo> moduleRequestInfos;
+    auto moduleRequests = module->GetModuleRequests();
+    for (int i = 0; i < moduleRequests->Length(); i++)
     {
-      v8::TryCatch tryCatch(isolate);
-      if (!module->Evaluate(context).ToLocal(&resultValue) || resultValue.IsEmpty())
+      auto moduleRequest = moduleRequests->Get(v8Context, i).As<v8::ModuleRequest>();
+      auto specifier = moduleRequest->GetSpecifier();
+      string specifier_utf8(*v8::String::Utf8Value(isolate, specifier));
+
+      auto moduleUrl = crates::jsar::UrlHelper::CreateUrlStringWithPath(url, specifier_utf8);
+      if (moduleUrl != "")
+        moduleRequestInfos.push_back({specifier_utf8, moduleUrl});
+    }
+
+    validModuleRequestsCount = moduleRequestInfos.size();
+    if (validModuleRequestsCount == 0)
+    {
+      onLinkFinished();
+    }
+    else
+    {
+      for (auto moduleRequestInfo : moduleRequestInfos)
       {
-        if (tryCatch.HasCaught())
-        {
-          if (tryCatch.HasTerminated())
-            tryCatch.ReThrow();
-          return;
-        }
+        auto script = renderingContext->createScript(moduleRequestInfo.url, SourceTextType::ESM);
+        renderingContext->fetchTextSourceResource(moduleRequestInfo.url, [this, script, moduleRequestInfo](const string &source)
+                                                  { handleModuleRequestSource(script, moduleRequestInfo.specifier, source); });
       }
     }
   }
@@ -323,5 +402,59 @@ namespace dom
       return false;
     }
     return true;
+  }
+
+  void DOMModule::handleModuleRequestSource(shared_ptr<DOMScript> module, const string &specifier, const string &source)
+  {
+    auto renderingContext = documentRenderingContext.lock();
+    renderingContext->scriptingContext->compile(module, source);
+    {
+      // update resolve cache
+      resolveCache.insert({specifier, dynamic_pointer_cast<DOMModule>(module)});
+    }
+    validModuleRequestsCount--;
+    checkLinkFinished();
+  }
+
+  void DOMModule::checkLinkFinished()
+  {
+    if (validModuleRequestsCount == 0)
+      onLinkFinished();
+  }
+
+  void DOMModule::onLinkFinished()
+  {
+    linked = true;
+    if (evaluationScheduled)
+      doEvaluate(v8::Isolate::GetCurrent());
+  }
+
+  void DOMModule::doEvaluate(v8::Isolate *isolate)
+  {
+    if (evaluatedOnce)
+      return;
+    evaluatedOnce = true;
+
+    v8::HandleScope scope(isolate);
+    auto module = moduleStore.Get(isolate);
+    auto context = isolate->GetCurrentContext();
+    v8::TryCatch tryCatch(isolate);
+
+    if (!instantiate(isolate))
+      return;
+
+    v8::Local<v8::Value> resultValue;
+    {
+      v8::TryCatch tryCatch(isolate);
+      if (!module->Evaluate(context).ToLocal(&resultValue) || resultValue.IsEmpty())
+      {
+        if (tryCatch.HasCaught())
+        {
+          if (tryCatch.HasTerminated())
+            tryCatch.ReThrow();
+          return;
+        }
+      }
+    }
   }
 }

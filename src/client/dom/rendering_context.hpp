@@ -78,6 +78,15 @@ namespace dom
      */
     void fetchTextSourceResource(const std::string &url, const StringResponseCallback &callback);
 
+    /**
+     * Create a new script object from this context.
+     * 
+     * @param url The URL of the script.
+     * @param type The type of the script: classic or module.
+     * @returns The new DOM script object.
+     */
+    shared_ptr<DOMScript> createScript(const std::string &url, SourceTextType type);
+
   public:
     shared_ptr<DOMScriptingContext> scriptingContext;
     vector<shared_ptr<Document>> documents;

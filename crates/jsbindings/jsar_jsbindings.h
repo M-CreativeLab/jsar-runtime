@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <string>
 
 extern "C"
 {
@@ -35,3 +36,28 @@ extern "C"
    */
   extern size_t create_url_with_path(const char *base_url, const char *path, char **out_url_str, size_t out_url_max_len);
 } // extern "C"
+
+namespace crates
+{
+  namespace jsar
+  {
+    class UrlHelper
+    {
+    public:
+      /**
+       * Create a new URL string by combining a base URL and a sub path.
+       * 
+       * @param baseUrl The base URL to use.
+       * @param subPath The sub path to append to the base URL.
+       * @param urlMaxLength The maximum length of the output URL string.
+       * @returns The new URL string.
+       */
+      static inline std::string CreateUrlStringWithPath(const std::string &baseUrl, const std::string &subPath, size_t urlMaxLength = 512)
+      {
+        char newUrl[urlMaxLength];
+        size_t len = create_url_with_path(baseUrl.c_str(), subPath.c_str(), (char **)&newUrl, sizeof(newUrl));
+        return len == 0 ? "" : std::string(newUrl, len);
+      }
+    };
+  }
+}

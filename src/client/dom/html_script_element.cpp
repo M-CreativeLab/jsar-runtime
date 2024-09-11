@@ -22,8 +22,7 @@ namespace dom
   void HTMLScriptElement::connectedCallback()
   {
     auto renderingContext = ownerDocument.lock()->renderingContext;
-    compiledScript = renderingContext->scriptingContext->create(
-        baseURI, isClassicScript() ? dom::SourceTextType::Classic : dom::SourceTextType::ESM);
+    compiledScript = renderingContext->createScript(baseURI, isClassicScript() ? dom::SourceTextType::Classic : dom::SourceTextType::ESM);
     compiledScript->crossOrigin = crossOrigin == HTMLScriptCrossOrigin::Anonymous ? true : false;
     loadSource();
   }
@@ -33,7 +32,6 @@ namespace dom
     scheduleScriptExecution();
   }
 
-#define MAX_SCRIPT_URL_LENGTH 512
   void HTMLScriptElement::loadSource()
   {
     if (src == "" || src.empty())
@@ -45,15 +43,14 @@ namespace dom
     {
       auto renderingContext = ownerDocument.lock()->renderingContext;
       {
-        char newUrl[MAX_SCRIPT_URL_LENGTH]; // TODO: support the URL without this limit?
-        size_t len = create_url_with_path(baseURI.c_str(), src.c_str(), (char **)&newUrl, sizeof(newUrl));
-        if (len == 0)
+        auto resourceUrl = crates::jsar::UrlHelper::CreateUrlStringWithPath(baseURI, src);
+        if (resourceUrl == "")
         {
-          fprintf(stderr, "Failed to parse the URL: %s\n", src.c_str());
+          std::cerr << "Failed to parse the URL: " << src << std::endl;
         }
         else
         {
-          renderingContext->fetchTextSourceResource(newUrl, [this](const std::string &source)
+          renderingContext->fetchTextSourceResource(resourceUrl, [this](const std::string &source)
                                                     { compileScript(source); });
         }
       }
