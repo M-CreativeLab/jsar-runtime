@@ -174,6 +174,7 @@ namespace dom
     unordered_map<string, shared_ptr<DOMModule>> resolveCache;
     bool linked = false;
     size_t validModuleRequestsCount;
+    std::function<void()> linkFinishedCallback;
     bool evaluatedOnce = false;
     bool evaluationScheduled = false;
   };

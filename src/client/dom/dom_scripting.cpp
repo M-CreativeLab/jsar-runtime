@@ -404,16 +404,21 @@ namespace dom
     return true;
   }
 
-  void DOMModule::handleModuleRequestSource(shared_ptr<DOMScript> module, const string &specifier, const string &source)
+  void DOMModule::handleModuleRequestSource(shared_ptr<DOMScript> script, const string &specifier, const string &source)
   {
     auto renderingContext = documentRenderingContext.lock();
-    renderingContext->scriptingContext->compile(module, source);
+    /**
+     * FIXME: Create references to the `specifier` and `script` objects to prevent them from being destroyed when the callback is called.
+     */
+    auto specifierRef = make_shared<string>(specifier);
+    auto moduleRef = dynamic_pointer_cast<DOMModule>(script);
+    moduleRef->linkFinishedCallback = [this, specifierRef, moduleRef]()
     {
-      // update resolve cache
-      resolveCache.insert({specifier, dynamic_pointer_cast<DOMModule>(module)});
-    }
-    validModuleRequestsCount--;
-    checkLinkFinished();
+      resolveCache.insert({specifierRef->c_str(), moduleRef});
+      validModuleRequestsCount--;
+      checkLinkFinished();
+    };
+    renderingContext->scriptingContext->compile(script, source);
   }
 
   void DOMModule::checkLinkFinished()
@@ -425,6 +430,8 @@ namespace dom
   void DOMModule::onLinkFinished()
   {
     linked = true;
+    if (linkFinishedCallback)
+      linkFinishedCallback();
     if (evaluationScheduled)
       doEvaluate(v8::Isolate::GetCurrent());
   }

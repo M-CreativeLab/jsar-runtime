@@ -4,12 +4,8 @@
   <meta charset="utf-8" />
   <title>ESM Basics</title>
   <script type="module">
-    import hello from './esm/exports-as-default.js';
+    import './esm/foo.js';
     console.log('Hello, ECMAScript Module!');
-    hello('world');
-
-    import { hello as helloAsNamed } from './esm/exports-as-named.js';
-    helloAsNamed('world');
   </script>
 </head>
 
