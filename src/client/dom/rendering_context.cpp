@@ -79,4 +79,9 @@ namespace dom
           callback(result);
         } });
   }
+
+  shared_ptr<DOMScript> DocumentRenderingContext::createScript(const std::string &url, SourceTextType type)
+  {
+    return scriptingContext->create(shared_from_this(), url, type);
+  }
 }

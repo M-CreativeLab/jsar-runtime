@@ -1,0 +1,18 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>ESM: Dynamic Imports</title>
+  <script type="module">
+    Promise.all([
+      import('./esm/foo.js'),
+    ]).then(([foo]) => {
+      console.log(foo);
+    });
+  </script>
+</head>
+
+<body>
+</body>
+
+</html>

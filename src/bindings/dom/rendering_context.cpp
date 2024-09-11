@@ -27,6 +27,7 @@ namespace dombinding
       : Napi::ObjectWrap<DocumentRenderingContext>(info),
         renderingContext(std::make_shared<dom::DocumentRenderingContext>())
   {
+    renderingContext->scriptingContext->enableDynamicImport();
   }
 
   DocumentRenderingContext::~DocumentRenderingContext()
