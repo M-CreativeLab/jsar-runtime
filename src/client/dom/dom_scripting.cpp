@@ -224,6 +224,7 @@ namespace dom
        * Re-exposing the following types is to avoid the "instanceof" issues between v8 contexts.
        */
       // Typed arrays
+      V8_SET_GLOBAL_FROM_MAIN(Array);
       V8_SET_GLOBAL_FROM_MAIN(Int8Array);
       V8_SET_GLOBAL_FROM_MAIN(Uint8Array);
       V8_SET_GLOBAL_FROM_MAIN(Uint8ClampedArray);

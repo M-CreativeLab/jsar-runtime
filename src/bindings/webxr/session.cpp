@@ -614,6 +614,8 @@ namespace bindings
 
   void XRSession::onFrame(Napi::Env env, xr::TrXRFrameRequest *frameRequest)
   {
+    Napi::HandleScope scope(env);
+
     // - If session’s pending render state is not null, apply the pending render state.
     if (pendingRenderState != nullptr)
     {
@@ -661,7 +663,27 @@ namespace bindings
     {
       auto descriptor = *it;
       if (descriptor.cancelled != true)
-        descriptor.callback->Call(this->Value(), {time, xrFrameObject});
+      {
+        auto callback = descriptor.callback;
+        try
+        {
+          descriptor.callback->Call(this->Value(), {time, xrFrameObject});
+        }
+        catch (const Napi::Error &err)
+        {
+          string errorDescription = "Unknown frame error.";
+          if (!err.IsEmpty())
+          {
+            auto stack = err.Get("stack");
+            auto message = err.Get("message");
+            if (stack.IsString())
+              errorDescription = stack.As<Napi::String>().Utf8Value();
+            else if (message.IsString())
+              errorDescription = message.As<Napi::String>().Utf8Value();
+          }
+          std::cerr << "An error occurred in frame: " << errorDescription << std::endl;
+        }
+      }
     }
     currentFrameCallbacks.clear();
     xrFrameUnwrapped->end();

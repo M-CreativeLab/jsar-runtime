@@ -2411,7 +2411,7 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    int x = info[1].As<Napi::Number>().Int32Value();
+    int x = info[1].ToNumber().Int32Value();
 
     auto req = Uniform1iCommandBufferRequest(location->GetValue(), x);
     sendCommandBufferRequest(req);
@@ -2468,8 +2468,8 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    float x = info[1].As<Napi::Number>().FloatValue();
-    float y = info[2].As<Napi::Number>().FloatValue();
+    float x = info[1].ToNumber().FloatValue();
+    float y = info[2].ToNumber().FloatValue();
 
     auto req = Uniform2fCommandBufferRequest(location->GetValue(), x, y);
     sendCommandBufferRequest(req);
@@ -2531,8 +2531,8 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    int x = info[1].As<Napi::Number>().Int32Value();
-    int y = info[2].As<Napi::Number>().Int32Value();
+    int x = info[1].ToNumber().Int32Value();
+    int y = info[2].ToNumber().Int32Value();
 
     auto req = Uniform2iCommandBufferRequest(location->GetValue(), x, y);
     sendCommandBufferRequest(req);
@@ -2594,9 +2594,9 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    float x = info[1].As<Napi::Number>().FloatValue();
-    float y = info[2].As<Napi::Number>().FloatValue();
-    float z = info[3].As<Napi::Number>().FloatValue();
+    float x = info[1].ToNumber().FloatValue();
+    float y = info[2].ToNumber().FloatValue();
+    float z = info[3].ToNumber().FloatValue();
 
     auto req = Uniform3fCommandBufferRequest(location->GetValue(), x, y, z);
     sendCommandBufferRequest(req);
@@ -2622,17 +2622,39 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    Napi::Float32Array array = info[1].As<Napi::Float32Array>();
-    size_t length = array.ElementLength();
-    if (length != 3)
+    auto jsValues = info[1];
+    size_t length;
+
+    if (jsValues.IsArray())
+      length = jsValues.As<Napi::Array>().Length();
+    else if (jsValues.IsTypedArray() && jsValues.As<Napi::TypedArray>().TypedArrayType() == napi_typedarray_type::napi_float32_array)
+      length = jsValues.As<Napi::Float32Array>().ElementLength();
+    else
     {
-      Napi::TypeError::New(env, "uniform3fv() takes 3 float elements array.").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "uniform3fv() 2nd argument must be a float array or Float32Array.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    if (length < 3)
+    {
+      Napi::TypeError::New(env, "uniform3fv() should take at least 3 values").ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
     std::vector<float> data(length);
-    for (size_t i = 0; i < length; i++)
-      data[i] = array.Get(i).ToNumber().FloatValue();
+    if (jsValues.IsArray())
+    {
+      auto array = jsValues.As<Napi::Array>();
+      for (size_t i = 0; i < length; i++)
+        data[i] = array.Get(i).ToNumber().FloatValue();
+    }
+    else
+    {
+      auto array = jsValues.As<Napi::Float32Array>();
+      for (size_t i = 0; i < length; i++)
+        data[i] = array.Get(i).ToNumber().FloatValue();
+    }
 
     auto req = Uniform3fvCommandBufferRequest(location->GetValue(), data);
     sendCommandBufferRequest(req);
@@ -2658,9 +2680,9 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    int x = info[1].As<Napi::Number>().Int32Value();
-    int y = info[2].As<Napi::Number>().Int32Value();
-    int z = info[3].As<Napi::Number>().Int32Value();
+    int x = info[1].ToNumber().Int32Value();
+    int y = info[2].ToNumber().Int32Value();
+    int z = info[3].ToNumber().Int32Value();
 
     auto req = Uniform3iCommandBufferRequest(location->GetValue(), x, y, z);
     sendCommandBufferRequest(req);
@@ -2722,10 +2744,10 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    float x = info[1].As<Napi::Number>().FloatValue();
-    float y = info[2].As<Napi::Number>().FloatValue();
-    float z = info[3].As<Napi::Number>().FloatValue();
-    float w = info[4].As<Napi::Number>().FloatValue();
+    float x = info[1].ToNumber().FloatValue();
+    float y = info[2].ToNumber().FloatValue();
+    float z = info[3].ToNumber().FloatValue();
+    float w = info[4].ToNumber().FloatValue();
 
     auto req = Uniform4fCommandBufferRequest(location->GetValue(), x, y, z, w);
     sendCommandBufferRequest(req);
@@ -2787,10 +2809,10 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    int x = info[1].As<Napi::Number>().Int32Value();
-    int y = info[2].As<Napi::Number>().Int32Value();
-    int z = info[3].As<Napi::Number>().Int32Value();
-    int w = info[4].As<Napi::Number>().Int32Value();
+    int x = info[1].ToNumber().Int32Value();
+    int y = info[2].ToNumber().Int32Value();
+    int z = info[3].ToNumber().Int32Value();
+    int w = info[4].ToNumber().Int32Value();
 
     auto req = Uniform4iCommandBufferRequest(location->GetValue(), x, y, z, w);
     sendCommandBufferRequest(req);

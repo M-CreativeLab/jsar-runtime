@@ -11,16 +11,15 @@
     const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
 
     // Create lights
-    var light = new THREE.PointLight(0xffffff, 2, 100); // soft white light
-    light.position.z = 1;
+    const light = new THREE.DirectionalLight(0xffffff, 0.5);
+    light.position.set(0, 1, 1);
     scene.add(light);
 
     // Create meshes
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    const cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
-    camera.position.z = 5;
+    const geometry = new THREE.TorusKnotGeometry(0.2, 0.05, 50, 16);
+    const material = new THREE.MeshLambertMaterial({ color: 0x00ffff, wireframe: true });
+    const obj = new THREE.Mesh(geometry, material);
+    scene.add(obj);
 
     const gl = navigator.gl;
     navigator.xr.requestSession('immersive-ar', {}).then((session) => {
@@ -38,11 +37,14 @@
       renderer.xr.setSession(session);
 
       function animate() {
-        cube.rotation.x += 0.01;
-        cube.rotation.y += 0.01;
+        obj.rotation.x += 0.01;
+        obj.rotation.y += 0.01;
         renderer.render(scene, camera);
       }
+
+      camera.position.z = 5;
       renderer.setAnimationLoop(animate);
+      console.info('Started...');
     }, (err) => {
       console.warn('Failed to start XR session:', err);
     });

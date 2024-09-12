@@ -227,14 +227,29 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
 
     let useCache = true;
     try {
-      const resp = await undici.request(`${resourceUri}.md5`, {
-        headersTimeout: 500,
-        bodyTimeout: 1000
-      });
+      const resp = await (new Promise<undici.Dispatcher.ResponseData>((resolve, reject) => {
+        /**
+         * FIXME: I do this because the undici.request() seems not supporting custom timeout.
+         */
+        const requestTimer = setTimeout(() => reject(new Error('request timeout')), 1000);
+        undici.request(`${resourceUri}.md5`).then((data) => {
+          clearTimeout(requestTimer);
+          resolve(data);
+        }, (err) => {
+          clearTimeout(requestTimer);
+          reject(err);
+        });
+      }));
+
+      /**
+       * Check if the MD5 values are same.
+       */
       if (resp.statusCode === 200) {
-        const onlineMd5 = await resp.body.text();  // server-side in base64 encoded.
-        const localMd5 = Buffer.from(await this.#readTextFile(`${cachePath}.md5`), 'hex').toString('base64');
-        if (onlineMd5 !== localMd5) {
+        const [remote, local] = await Promise.all([
+          resp.body.text(),
+          this.#readTextFile(`${cachePath}.md5`)
+        ]);
+        if (remote !== Buffer.from(local, 'hex').toString('base64')) {
           useCache = false;
         }
       }
