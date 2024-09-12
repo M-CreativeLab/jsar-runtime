@@ -1,4 +1,6 @@
 #include <assert.h>
+#include <rapidjson/document.h>
+
 #include "crates/jsar_jsbindings.h"
 #include "./dom_scripting.hpp"
 #include "./rendering_context.hpp"
@@ -88,7 +90,7 @@ namespace dom
         return v8::MaybeLocal<v8::Promise>();
       }
 
-      auto moduleUrl = crates::jsar::UrlHelper::CreateUrlStringWithPath(dependent->url, specifierStr);
+      auto moduleUrl = dependent->getUrlBySpecifier(specifierStr);
       if (moduleUrl == "")
       {
         std::cerr << "Failed to create URL for '" << specifierStr << "'" << std::endl;
@@ -192,10 +194,11 @@ namespace dom
        */
 
       // Baisc objects
-      V8_SET_GLOBAL_FROM_MAIN(URL);
-      V8_SET_GLOBAL_FROM_MAIN(Blob);
       V8_SET_GLOBAL_FROM_MAIN(navigator);
       V8_SET_GLOBAL_FROM_MAIN(console);
+      V8_SET_GLOBAL_FROM_MAIN(URL);
+      V8_SET_GLOBAL_FROM_MAIN(Blob);
+      V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
 
       // Global functions
       V8_SET_GLOBAL_FROM_MAIN(fetch);
@@ -205,6 +208,11 @@ namespace dom
       V8_SET_GLOBAL_FROM_MAIN(clearInterval);
       V8_SET_GLOBAL_FROM_MAIN(requestAnimationFrame);
       V8_SET_GLOBAL_FROM_MAIN(cancelAnimationFrame);
+
+      // Fetch API related objects
+      V8_SET_GLOBAL_FROM_MAIN(Headers);
+      V8_SET_GLOBAL_FROM_MAIN(Request);
+      V8_SET_GLOBAL_FROM_MAIN(Response);
 
       // WebGL objects
       V8_SET_GLOBAL_FROM_MAIN(WebGLRenderingContext);
@@ -334,6 +342,68 @@ namespace dom
       }
     }
     return nullptr;
+  }
+
+  bool DOMScriptingContext::updateImportMapFromJSON(const string &json)
+  {
+    rapidjson::Document importMapDocument;
+    importMapDocument.Parse(json.c_str());
+    if (importMapDocument.HasParseError())
+      return false;
+
+    if (importMapDocument.IsObject())
+    {
+      if (importMapDocument.HasMember("imports"))
+      {
+        auto imports = importMapDocument["imports"].GetObject();
+        for (auto it = imports.MemberBegin(); it != imports.MemberEnd(); ++it)
+        {
+          string key = it->name.GetString();
+          string value = it->value.GetString();
+          // check the key ends with "/"
+          
+          if (key.back() == '/')
+          {
+            /**
+             * Only the key and value are both end with "/", it is a prefix match.
+             * 
+             * See: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap#mapping_path_prefixes
+             */
+            if (value.back() == '/')
+            {
+              importPrefixMap.insert({key, value});
+            }
+          }
+          else
+          {
+            importExactMap.insert({key, value});
+          }
+        }
+      }
+      // TODO: support "integrity"
+    }
+    return true;
+  }
+
+  optional<string> DOMScriptingContext::exactMatchImportMap(const string &specifier)
+  {
+    if (importExactMap.count(specifier) == 1)
+      return importExactMap[specifier];
+    else
+      return nullopt;
+  }
+
+  optional<string> DOMScriptingContext::prefixMatchImportMap(const string &specifier)
+  {
+    for (auto it = importPrefixMap.begin(); it != importPrefixMap.end(); ++it)
+    {
+      if (specifier.find(it->first) == 0)
+      {
+        auto prefix = it->second;
+        return prefix + specifier.substr(it->first.length());
+      }
+    }
+    return nullopt;
   }
 
   DOMScript::DOMScript(SourceTextType sourceTextType, shared_ptr<DocumentRenderingContext> context)
@@ -528,6 +598,33 @@ namespace dom
     return module->GetIdentityHash();
   }
 
+  string DOMModule::getUrlBySpecifier(const string& specifier)
+  {
+    /**
+     * When specifier starts with "http:" or "https:", it is a URL string and should be used directly.
+     */
+    if (specifier.find("http:") == 0 || specifier.find("https:") == 0)
+      return specifier;
+
+    string nextSpecifier;
+    auto scriptingContext = documentRenderingContext.lock()->scriptingContext;
+    auto exactMatchUrl = scriptingContext->exactMatchImportMap(specifier);
+    if (exactMatchUrl.has_value())
+    {
+      nextSpecifier = exactMatchUrl.value();
+    }
+    else
+    {
+      auto prefixMatchUrl = scriptingContext->prefixMatchImportMap(specifier);
+      if (prefixMatchUrl.has_value())
+        nextSpecifier = prefixMatchUrl.value();
+    }
+
+    if (nextSpecifier.empty())
+      nextSpecifier = specifier;
+    return crates::jsar::UrlHelper::CreateUrlStringWithPath(url, nextSpecifier);
+  }
+
   void DOMModule::link(v8::Isolate *isolate)
   {
     v8::HandleScope scope(isolate);
@@ -544,7 +641,7 @@ namespace dom
       auto specifier = moduleRequest->GetSpecifier();
       string specifier_utf8(*v8::String::Utf8Value(isolate, specifier));
 
-      auto moduleUrl = crates::jsar::UrlHelper::CreateUrlStringWithPath(url, specifier_utf8);
+      auto moduleUrl = getUrlBySpecifier(specifier_utf8);
       if (moduleUrl != "")
         moduleRequestInfos.push_back({specifier_utf8, moduleUrl});
     }

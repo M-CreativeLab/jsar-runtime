@@ -87,6 +87,17 @@ namespace dom
      */
     shared_ptr<DOMScript> createScript(const std::string &url, SourceTextType type);
 
+    /**
+     * Parse the input json string and update the import map.
+     * 
+     * @param json The JSON string of the import map.
+     * @returns Whether the input json is valid.
+     */
+    inline bool updateImportMap(const std::string &json)
+    {
+      return scriptingContext->updateImportMapFromJSON(json);
+    }
+
   public:
     shared_ptr<DOMScriptingContext> scriptingContext;
     vector<shared_ptr<Document>> documents;

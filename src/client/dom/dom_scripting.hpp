@@ -101,6 +101,29 @@ namespace dom
      * @param v8module The v8 module object.
      */
     shared_ptr<DOMModule> getModuleFromV8(v8::Local<v8::Module> v8module);
+    /**
+     * Update the import map from the given JSON string.
+     *
+     * @param json The JSON string of the import map.
+     * @returns Whether the input json is valid.
+     */
+    bool updateImportMapFromJSON(const string &json);
+    /**
+     * Do the exact match import map for the given specifier, such as "three" -> "https://cdn.skypack.dev/three".
+     * 
+     * @param specifier The specifier to match.
+     * @returns The matched URL string if found, otherwise nullopt.
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap#bare_modules
+     */
+    optional<string> exactMatchImportMap(const string &specifier);
+    /**
+     * Do the prefix match import map for the given specifier, such as "three/foo" -> "https://cdn.skypack.dev/three/foo".
+     * 
+     * @param specifier The specifier to match.
+     * @returns The matched prefix URL string if found, otherwise nullopt.
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap#mapping_path_prefixes
+     */
+    optional<string> prefixMatchImportMap(const string &specifier);
 
   private:
     v8::Isolate *isolate;
@@ -109,6 +132,8 @@ namespace dom
     unordered_map<int, shared_ptr<DOMModule>> hashToModuleMap;
     unordered_map<uint32_t, shared_ptr<DOMClassicScript>> idToScriptMap;
     unordered_map<uint32_t, shared_ptr<DOMModule>> idToModuleMap;
+    map<string, string> importExactMap;
+    map<string, string> importPrefixMap;
     bool isContextInitialized = false;
   };
 
@@ -185,6 +210,12 @@ namespace dom
     bool compile(v8::Isolate *isolate, const string &sourceStr) override;
     void evaluate(v8::Isolate *isolate) override;
     int getModuleHash();
+    /**
+     * Get the URL string by the specifier.
+     * 
+     * @returns The module URL string to be fetched.
+     */
+    string getUrlBySpecifier(const string &specifier);
 
   private:
     void link(v8::Isolate *isolate);

@@ -3,8 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <title>Simple HTML</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/",
+        "three/examples/": "https://cdn.jsdelivr.net/npm/three@latest/examples/"
+      }
+    }
+  </script>
   <script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@latest/build/three.module.js';
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    console.info(GLTFLoader);
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);

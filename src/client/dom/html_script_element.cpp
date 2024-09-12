@@ -22,9 +22,24 @@ namespace dom
   void HTMLScriptElement::connectedCallback()
   {
     auto renderingContext = ownerDocument.lock()->renderingContext;
-    compiledScript = renderingContext->createScript(baseURI, isClassicScript() ? dom::SourceTextType::Classic : dom::SourceTextType::ESM);
-    compiledScript->crossOrigin = crossOrigin == HTMLScriptCrossOrigin::Anonymous ? true : false;
-    loadSource();
+    if (isImportMap())
+    {
+      if (!renderingContext->updateImportMap(textContent))
+      {
+        /**
+         * TODO: Follow the spec to handle the error.
+         * 
+         * See: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap#exceptions
+         */
+        std::cerr << "Failed to parse the import map: " << textContent << std::endl;
+      }
+    }
+    else
+    {
+      compiledScript = renderingContext->createScript(baseURI, isClassicScript() ? dom::SourceTextType::Classic : dom::SourceTextType::ESM);
+      compiledScript->crossOrigin = crossOrigin == HTMLScriptCrossOrigin::Anonymous ? true : false;
+      loadSource();
+    }
   }
 
   void HTMLScriptElement::beforeLoadedCallback()
