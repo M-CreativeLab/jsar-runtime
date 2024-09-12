@@ -70,9 +70,9 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() <= 2)
+    if (info.Length() < 2)
     {
-      Napi::TypeError::New(env, "XRWebGLLayer constructor requires two arguments").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "XRWebGLLayer constructor requires 2 arguments").ThrowAsJavaScriptException();
       return;
     }
 

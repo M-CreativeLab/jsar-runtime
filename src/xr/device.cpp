@@ -433,9 +433,17 @@ namespace xr
   void Device::onSessionRequest(xr::SessionRequest &request, TrContentRenderer *contentRenderer)
   {
     auto newSession = requestSession(request.sessionMode, contentRenderer);
-    xr::SessionResponse resp(newSession->id);
-    resp.recommendedContentSize = newSession->recommendedContentSize;
-    contentRenderer->getContent()->sendXRCommandResponse(resp);
+    if (newSession == nullptr)
+    {
+      xr::SessionResponse resp(0);
+      contentRenderer->getContent()->sendXRCommandResponse(resp);
+    }
+    else
+    {
+      xr::SessionResponse resp(newSession->id);
+      resp.recommendedContentSize = newSession->recommendedContentSize;
+      contentRenderer->getContent()->sendXRCommandResponse(resp);
+    }
   }
 
   void Device::onEndSessionRequest(xr::EndSessionRequest &request, TrContentRenderer *contentRenderer)

@@ -33,18 +33,23 @@ export class TransmuteRuntime2 extends EventTarget {
 
   constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext, private id: number) {
     super();
-
-    globalThis.gl = gl;
+    {
+      /**
+       * Print the supported WebGL extensions and versions.
+       */
+      const exts = gl.getSupportedExtensions();
+      console.info(`[WebGL] supported extensions(${exts.length}):`);
+      for (let extName of exts) {
+        console.info(`  - ${extName}`);
+      }
+      console.info(`[JSARDOM] version=${JSARDOM.version}`);
+    }
+    this.#nativeDocument = new NativeDocumentOnTransmute(this.gl);
     this.dispatchEvent(new Event('rendererReady'));
   }
 
   async start(url: string) {
     console.info(`Content(#${this.id}): receiving a document request: ${url}`);
-    if (isWebXRSupported()) {
-      await this.#nativeDocument.enterDefaultXrExperience();
-    } else {
-      console.info(`Skip enabling WebXR experience, reason: WebXR is not enabled.`);
-    }
     if (!this.#nativeDocument) {
       throw new TypeError('Call prepare() before start()');
     }
@@ -53,18 +58,6 @@ export class TransmuteRuntime2 extends EventTarget {
 
   onGpuBusy() {
     // TODO
-  }
-
-  async prepare() {
-    const exts = this.gl.getSupportedExtensions();
-    console.info(`[WebGL] supported extensions(${exts.length}):`);
-    for (let extName of exts) {
-      console.info(`  - ${extName}`);
-    }
-    console.info(`[JSARDOM] version=${JSARDOM.version}`);
-
-    this.#nativeDocument = new NativeDocumentOnTransmute(this.gl);
-    console.info(`The runtime#${this.id} has been ready.`);
   }
 
   private async load(
@@ -151,6 +144,13 @@ export class TransmuteRuntime2 extends EventTarget {
       } else {
         urlBase = 'https://example.com/';
       }
+    }
+
+    if (isWebXRSupported()) {
+      nativeDocument.configureDefaultXrExperience(this.gl);
+      await nativeDocument.enterDefaultXrExperience();
+    } else {
+      console.info(`Skip enabling WebXR experience, reason: WebXR is not enabled.`);
     }
 
     console.info(`loading a JSAR document`, codeOrUrl, { url: urlBase });

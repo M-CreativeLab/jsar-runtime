@@ -147,7 +147,10 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     super();
 
     this._id = getClientContext().id;
-    this._xrSystem = createBondXRSystem();
+    if (navigator.xr == null) {
+      throw new TypeError('WebXR is not supported.');
+    }
+    this._xrSystem = navigator.xr;
     this.engine = new EngineOnTransmute(glContext, true, {
       xrCompatible: true,
     });
@@ -183,9 +186,6 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
       this._defaultLights.push(light);
     }
 
-    if (isWebXRSupported()) {
-      this.configureDefaultXrExperience(glContext);
-    }
     this.engine.runRenderLoop(() => {
       scene.render();
     });

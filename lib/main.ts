@@ -2,12 +2,13 @@ import minimist from 'minimist';
 import * as env from '@transmute/env';
 import { reportDocumentEvent, addDocumentRequestListener } from '@transmute/messaging';
 
+import * as Navigator from './navigator';
 import {
   connectRenderer,
   getWebGLRenderingContext
 } from './bindings/renderer';
 import { loadPolyfills } from './polyfills';
-import { prepareXRSystem } from './webxr';
+import { prepareXRSystem, createXRSystem } from './webxr';
 import { TransmuteRuntime2 } from './runtime2';
 
 const bootstrapStarted = performance.now();
@@ -54,12 +55,17 @@ bootwait(async function main() {
       throw new Error('failed to connect to the renderer.');
     }
     await prepareXRSystem();
+    Navigator.configureXRSystem(createXRSystem());
+
+    const gl = getWebGLRenderingContext();
+    Navigator.configureGL(gl);
     reportDocumentEvent(id, 'beforeloading');
 
-    runtime = new TransmuteRuntime2(getWebGLRenderingContext(), id);
-    await runtime.prepare();
+    /**
+     * Create the runtime.
+     */
+    runtime = new TransmuteRuntime2(gl, id);
     const initializedEnded = performance.now();
-
     console.info('Time summary:', {
       bootstrap: runtimeStarted - bootstrapStarted,
       initialize: initializedEnded - runtimeStarted,

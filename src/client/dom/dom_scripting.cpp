@@ -194,7 +194,9 @@ namespace dom
       // Baisc objects
       V8_SET_GLOBAL_FROM_MAIN(URL);
       V8_SET_GLOBAL_FROM_MAIN(Blob);
+      V8_SET_GLOBAL_FROM_MAIN(navigator);
       V8_SET_GLOBAL_FROM_MAIN(console);
+      V8_SET_GLOBAL_FROM_MAIN(fetch);
 
       // Typed arrays
       V8_SET_GLOBAL_FROM_MAIN(Int8Array);

@@ -21,6 +21,13 @@ export function createBondXRSystem(): XRSystem {
   return new XRSystemImpl(xrDevice);
 }
 
+export function createXRSystem(): XRSystem {
+  if (xrDevice == null) {
+    throw new Error('Failed to create XR system, please call prepareXRSystem() first.');
+  }
+  return createBondXRSystem();
+}
+
 export {
   XRSystemImpl,
   XRRigidTransformImpl,

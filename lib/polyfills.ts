@@ -1,7 +1,7 @@
 /**
  * Browser Pollyfills for Node.js
  */
-import { createNavigator } from './navigator';
+import { navigator } from './navigator';
 import { createWindow } from './window';
 import { XMLHttpRequestImpl } from './xhr';
 import { ErrorEventImpl } from './events/error-event';
@@ -112,7 +112,7 @@ export function loadPolyfills() {
    */
   Object.defineProperties(globalThis, {
     'navigator': {
-      value: createNavigator(),
+      value: navigator,
       writable: false,
       enumerable: true,
       configurable: false,

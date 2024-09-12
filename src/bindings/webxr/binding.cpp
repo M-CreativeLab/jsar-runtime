@@ -7,6 +7,7 @@
 #include "session.hpp"
 #include "pose.hpp"
 #include "rigid_transform.hpp"
+#include "render_state.hpp"
 #include "space.hpp"
 #include "view.hpp"
 #include "viewport.hpp"
@@ -39,6 +40,7 @@ namespace bindings
 
       // Session
       XRSession::Init(env, exports);
+      XRRenderState::Init(env, exports);
 
       // RigidTransform
       XRRigidTransform::Init(env, exports);

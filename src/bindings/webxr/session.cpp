@@ -634,7 +634,7 @@ namespace bindings
     // - If session’s renderState's baseLayer is null, abort these steps.
     if (activeRenderState == nullptr || activeRenderState->baseLayer == nullptr)
     {
-      DEBUG(LOG_TAG, "activeRenderState or activeRenderState->baseLayer is null, aborting frame rendering.");
+      std::cerr << "activeRenderState or activeRenderState->baseLayer is null, aborting frame rendering." << std::endl;
       return;
     }
 

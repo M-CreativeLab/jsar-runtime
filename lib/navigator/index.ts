@@ -55,7 +55,24 @@ class NavigatorImpl implements Navigator {
   webkitGamepads(): Gamepad[] {
     throw new Error('Method not implemented.');
   }
+
+  /**
+   * The `XRSystem` interface provides methods to:
+   * 
+   * 1. Get the default `XRSession`.
+   * 2. Request a new `XRSession`.
+   */
   xr?: XRSystem;
+
+  /**
+   * The `gl` property is the default `WebGLRenderingContext` or `WebGL2RenderingContext` for the spatial rendering 
+   * context.
+   */
+  gl?: WebGLRenderingContext | WebGL2RenderingContext;
+
+  /**
+   * The `gpu` provides the WebGPU context.
+   */
   get gpu(): GPU {
     throw new TypeError('WebGPU is not supported in this environment');
   }
@@ -95,6 +112,22 @@ class NavigatorImpl implements Navigator {
   }
 }
 
-export function createNavigator(): Navigator {
-  return new NavigatorImpl();
+export const navigator = new NavigatorImpl();
+
+let isXRConfigured = false;
+export function configureXRSystem(xr: XRSystem) {
+  if (isXRConfigured) {
+    throw new TypeError('XRSystem is already configured on navigator');
+  }
+  navigator.xr = xr;
+  isXRConfigured = true;
+}
+
+let isGLConfigured = false;
+export function configureGL(gl: WebGLRenderingContext | WebGL2RenderingContext) {
+  if (isGLConfigured) {
+    throw new TypeError('WebGLRenderingContext is already configured on navigator');
+  }
+  navigator.gl = gl;
+  isGLConfigured = true;
 }
