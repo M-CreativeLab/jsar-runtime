@@ -14,12 +14,11 @@ import {
   cdp as jsarCdp,
 } from '@yodaos-jsar/dom';
 import * as ws from 'ws';
-import { getClientContext, isWebXRSupported } from '@transmute/env';
+import { getClientContext } from '@transmute/env';
 
 import { ResourceLoaderOnTransmute } from './ResourceLoader';
 import { MediaPlayerBackendOnTransmute } from './MediaPlayer';
 import { WebGLMatrix } from '../../webgl/WebGLMatrix';
-import { createBondXRSystem } from '../../webxr';
 import { WebXRDefaultExperience } from './xr/DefaultExperience';
 import type { WebXRExperienceHelper } from './xr/ExperienceHelper';
 

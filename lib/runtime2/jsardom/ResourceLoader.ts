@@ -227,7 +227,10 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
 
     let useCache = true;
     try {
-      const resp = await undici.request(`${resourceUri}.md5`, { headersTimeout: 500 });
+      const resp = await undici.request(`${resourceUri}.md5`, {
+        headersTimeout: 500,
+        bodyTimeout: 1000
+      });
       if (resp.statusCode === 200) {
         const onlineMd5 = await resp.body.text();  // server-side in base64 encoded.
         const localMd5 = Buffer.from(await this.#readTextFile(`${cachePath}.md5`), 'hex').toString('base64');

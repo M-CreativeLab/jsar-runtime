@@ -7,25 +7,27 @@ const {
 } = process._linkedBinding('transmute:webxr');
 
 let xrDevice: XRDevice = null;
-export async function prepareXRSystem(): Promise<void> {
+
+/**
+ * Initialize the XRDevice.
+ */
+export async function initDevice() {
   if (xrDevice != null) {
     throw new TypeError('Only 1 XRDevice in a process.');
   }
   xrDevice = new XRDevice();
 }
 
-export function createBondXRSystem(): XRSystem {
-  if (xrDevice == null) {
-    throw new Error('Failed to create XR system, please call prepareXRSystem() first.');
-  }
-  return new XRSystemImpl(xrDevice);
-}
-
+/**
+ * Create a new `XRSystem` object.
+ * 
+ * @returns created instance.
+ */
 export function createXRSystem(): XRSystem {
   if (xrDevice == null) {
-    throw new Error('Failed to create XR system, please call prepareXRSystem() first.');
+    initDevice();
   }
-  return createBondXRSystem();
+  return new XRSystemImpl(xrDevice);
 }
 
 export {

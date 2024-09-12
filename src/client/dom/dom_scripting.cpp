@@ -196,20 +196,13 @@ namespace dom
       V8_SET_GLOBAL_FROM_MAIN(Blob);
       V8_SET_GLOBAL_FROM_MAIN(navigator);
       V8_SET_GLOBAL_FROM_MAIN(console);
+
+      // Global functions
       V8_SET_GLOBAL_FROM_MAIN(fetch);
-
-      // Typed arrays
-      V8_SET_GLOBAL_FROM_MAIN(Int8Array);
-      V8_SET_GLOBAL_FROM_MAIN(Uint8Array);
-      V8_SET_GLOBAL_FROM_MAIN(Uint8ClampedArray);
-      V8_SET_GLOBAL_FROM_MAIN(Int16Array);
-      V8_SET_GLOBAL_FROM_MAIN(Uint16Array);
-      V8_SET_GLOBAL_FROM_MAIN(Int32Array);
-      V8_SET_GLOBAL_FROM_MAIN(Uint32Array);
-      V8_SET_GLOBAL_FROM_MAIN(Float32Array);
-      V8_SET_GLOBAL_FROM_MAIN(Float64Array);
-
-      // Animation frame provider
+      V8_SET_GLOBAL_FROM_MAIN(setTimeout);
+      V8_SET_GLOBAL_FROM_MAIN(clearTimeout);
+      V8_SET_GLOBAL_FROM_MAIN(setInterval);
+      V8_SET_GLOBAL_FROM_MAIN(clearInterval);
       V8_SET_GLOBAL_FROM_MAIN(requestAnimationFrame);
       V8_SET_GLOBAL_FROM_MAIN(cancelAnimationFrame);
 
@@ -226,6 +219,20 @@ namespace dom
        * `gl`: The WEBGLRenderingContext/WEBGL2RenderingContext object for rendering the spatial objects.
        */
       V8_SET_GLOBAL_FROM_MAIN(gl);
+
+      /**
+       * Re-exposing the following types is to avoid the "instanceof" issues between v8 contexts.
+       */
+      // Typed arrays
+      V8_SET_GLOBAL_FROM_MAIN(Int8Array);
+      V8_SET_GLOBAL_FROM_MAIN(Uint8Array);
+      V8_SET_GLOBAL_FROM_MAIN(Uint8ClampedArray);
+      V8_SET_GLOBAL_FROM_MAIN(Int16Array);
+      V8_SET_GLOBAL_FROM_MAIN(Uint16Array);
+      V8_SET_GLOBAL_FROM_MAIN(Int32Array);
+      V8_SET_GLOBAL_FROM_MAIN(Uint32Array);
+      V8_SET_GLOBAL_FROM_MAIN(Float32Array);
+      V8_SET_GLOBAL_FROM_MAIN(Float64Array);
 
       // Specific objects, such as: `document`, `window`, etc.
       if (!documentValue.IsEmpty())

@@ -8,7 +8,7 @@ import {
   getWebGLRenderingContext
 } from './bindings/renderer';
 import { loadPolyfills } from './polyfills';
-import { prepareXRSystem, createXRSystem } from './webxr';
+import { initDevice as initXRDevice, createXRSystem } from './webxr';
 import { TransmuteRuntime2 } from './runtime2';
 
 const bootstrapStarted = performance.now();
@@ -54,7 +54,7 @@ bootwait(async function main() {
     if (!connectRenderer(clientContext)) {
       throw new Error('failed to connect to the renderer.');
     }
-    await prepareXRSystem();
+    initXRDevice();
     Navigator.configureXRSystem(createXRSystem());
 
     const gl = getWebGLRenderingContext();
