@@ -42,6 +42,7 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
   #isCachingEnabled = !isResourcesCachingDisabled();
   #cacheExpirationTime = getResourceCacheExpirationTime();
   #cacheDirectory: string;
+  #networkProxyAgent: undici.ProxyAgent;
 
   constructor() {
     if (this.#isCachingEnabled) {
@@ -50,6 +51,18 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
         .catch((err) => {
           console.warn('failed to create cache directory', err);
         });
+    }
+
+    let proxyAddr: string = '';
+    if (process.env['https_proxy']) {
+      proxyAddr = process.env['https_proxy'];
+    } else if (process.env['http_proxy']) {
+      proxyAddr = process.env['http_proxy'];
+    } else if (process.env['all_proxy']) {
+      proxyAddr = process.env['all_proxy'];
+    }
+    if (proxyAddr !== '') {
+      this.#networkProxyAgent = new undici.ProxyAgent(proxyAddr);
     }
   }
 
@@ -96,7 +109,11 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     const reqInit: undici.RequestInit = {
       ...(options == null ? {} : options),
     };
-    const resp = await undici.request(url, <any>{ maxRedirections: 5, ...reqInit });
+    const resp = await undici.request(url, <any>{
+      maxRedirections: 5,
+      dispatcher: this.#networkProxyAgent || undici.getGlobalDispatcher(),
+      ...reqInit
+    });
     if (resp.statusCode >= 400) {
       throw new Error(`Failed to fetch(${url}), statusCode=${resp.statusCode}`);
     }
@@ -232,7 +249,7 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
          * FIXME: I do this because the undici.request() seems not supporting custom timeout.
          */
         const requestTimer = setTimeout(() => reject(new Error('request timeout')), 1000);
-        undici.request(`${resourceUri}.md5`).then((data) => {
+        undici.request(`${resourceUri}.md5`, { dispatcher: this.#networkProxyAgent || undici.getGlobalDispatcher() }).then((data) => {
           clearTimeout(requestTimer);
           resolve(data);
         }, (err) => {
