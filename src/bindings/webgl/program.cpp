@@ -26,6 +26,36 @@ namespace webgl
     id_ = info[0].As<Napi::Number>().Int32Value();
   }
 
+  commandbuffers::ActiveInfo WebGLProgram::GetActiveAttrib(int index)
+  {
+    return activeAttribs_[index];
+  }
+
+  void WebGLProgram::SetActiveAttrib(int index, const commandbuffers::ActiveInfo &activeInfo)
+  {
+    activeAttribs_[index] = activeInfo;
+  }
+
+  bool WebGLProgram::HasActiveAttrib(int index)
+  {
+    return activeAttribs_.find(index) != activeAttribs_.end();
+  }
+
+  commandbuffers::ActiveInfo WebGLProgram::GetActiveUniform(int index)
+  {
+    return activeUniforms_[index];
+  }
+
+  void WebGLProgram::SetActiveUniform(int index, commandbuffers::ActiveInfo &activeInfo)
+  {
+    activeUniforms_[index] = activeInfo;
+  }
+
+  bool WebGLProgram::HasActiveUniform(int index)
+  {
+    return activeUniforms_.find(index) != activeUniforms_.end();
+  }
+
   void WebGLProgram::SetAttribLocation(const std::string &name, int location)
   {
     attribLocations_[name] = location;

@@ -387,6 +387,7 @@ private:
 
 			glGetActiveAttrib(program, i, sizeof(name) - 1, &nameLength, &size, &type, name);
 			name[nameLength] = '\0';
+			res.activeAttribs.push_back(ActiveInfo(name, size, type));
 
 			GLint location = glGetAttribLocation(program, name);
 			res.attribLocations.push_back(AttribLocation(name, location));
@@ -409,6 +410,7 @@ private:
 
 			glGetActiveUniform(program, i, sizeof(name) - 1, &nameLength, &size, &type, name);
 			name[nameLength] = '\0';
+			res.activeUniforms.push_back(ActiveInfo(name, size, type));
 
 			GLint location = glGetUniformLocation(program, name);
 			if (location <= -1)

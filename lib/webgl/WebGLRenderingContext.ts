@@ -583,7 +583,7 @@ export default class WebGLRenderingContextImpl extends glNative.WebGLRenderingCo
       } else if (data instanceof ArrayBuffer) {
         dataBuffer = new Uint8Array(data);
       } else {
-        throw new Error('Invalid data type for bufferData(), expected ArrayBuffer or TypedArray.');
+        throw new Error('Invalid data type for bufferData(), expected ArrayBuffer or TypedArray, but got ' + typeof data);
       }
       return this.nativeCall('bufferData', [target, dataBuffer, usage], {
         debug: {

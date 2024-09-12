@@ -1,0 +1,42 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Simple HTML</title>
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@latest/build/three.module.js';
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
+
+    // Create meshes
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
+    camera.position.z = 5;
+
+    try {
+      const renderer = new THREE.WebGLRenderer({
+        canvas: {
+          addEventListener() { },
+        },
+        context: gl,
+      });
+      function animate() {
+        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.01;
+        renderer.render(scene, camera);
+      }
+      renderer.setAnimationLoop(animate);
+    } catch (err) {
+      console.info('Error:', err?.stack);
+    }
+  </script>
+</head>
+
+<body>
+  <h1>Simple HTML</h1>
+  <p>Some text</p>
+</body>
+
+</html>

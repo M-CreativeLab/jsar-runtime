@@ -33,6 +33,8 @@ export class TransmuteRuntime2 extends EventTarget {
 
   constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext, private id: number) {
     super();
+
+    globalThis.gl = gl;
     this.dispatchEvent(new Event('rendererReady'));
   }
 

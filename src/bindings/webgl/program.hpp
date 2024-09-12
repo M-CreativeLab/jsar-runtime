@@ -2,6 +2,8 @@
 
 #include <map>
 #include <napi.h>
+#include "common/command_buffers/details/program.hpp"
+#include "./active_info.hpp"
 
 namespace webgl
 {
@@ -13,6 +15,12 @@ namespace webgl
     int GetId() const { return id_; }
     void SetLinkStatus(bool linkStatus) { linkStatus_ = linkStatus; }
     bool GetLinkStatus() const { return linkStatus_; }
+    commandbuffers::ActiveInfo GetActiveAttrib(int index);
+    void SetActiveAttrib(int index, const commandbuffers::ActiveInfo &activeInfo);
+    bool HasActiveAttrib(int index);
+    commandbuffers::ActiveInfo GetActiveUniform(int index);
+    void SetActiveUniform(int index, commandbuffers::ActiveInfo &activeInfo);
+    bool HasActiveUniform(int index);
     void SetAttribLocation(const std::string &name, int location);
     bool HasAttribLocation(const std::string &name);
     int GetAttribLocation(const std::string &name);
@@ -23,17 +31,19 @@ namespace webgl
     bool HasUniformBlockIndex(const std::string &name);
     int GetUniformBlockIndex(const std::string &name);
 
-  public:
-    static Napi::FunctionReference *constructor;
-
   private:
     Napi::Value ToString(const Napi::CallbackInfo &info);
 
   private:
     int id_;
     bool linkStatus_ = false;
+    std::map<int, commandbuffers::ActiveInfo> activeAttribs_;
+    std::map<int, commandbuffers::ActiveInfo> activeUniforms_;
     std::map<std::string, int> attribLocations_;
     std::map<std::string, int> uniformLocations_;
     std::map<std::string, int> uniformBlockIndices_;
+
+  public:
+    static Napi::FunctionReference *constructor;
   };
 }

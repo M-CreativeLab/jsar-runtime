@@ -4,10 +4,11 @@
 #include "../canvas/canvas.hpp"
 
 #include "idgen.hpp"
-#include "placeholders.hpp"
-#include "program.hpp"
-#include "texture.hpp"
-#include "uniform_location.hpp"
+#include "./placeholders.hpp"
+#include "./program.hpp"
+#include "./texture.hpp"
+#include "./uniform_location.hpp"
+#include "./active_info.hpp"
 
 using namespace std;
 using namespace node;
@@ -747,6 +748,8 @@ namespace webgl
       InstanceMethod("enableVertexAttribArray", &T::EnableVertexAttribArray),   \
       InstanceMethod("disableVertexAttribArray", &T::DisableVertexAttribArray), \
       InstanceMethod("vertexAttribPointer", &T::VertexAttribPointer),           \
+      InstanceMethod("getActiveAttrib", &T::GetActiveAttrib),                   \
+      InstanceMethod("getActiveUniform", &T::GetActiveUniform),                 \
       InstanceMethod("getAttribLocation", &T::GetAttribLocation),               \
       InstanceMethod("getUniformLocation", &T::GetUniformLocation),             \
       InstanceMethod("uniform1f", &T::Uniform1f),                               \
@@ -996,6 +999,18 @@ namespace webgl
      * Mark the program as linked.
      */
     program->SetLinkStatus(true);
+
+    /**
+     * Update the program's active attributes and uniforms.
+     */
+    {
+      int index = 0;
+      for (auto &activeInfo : resp->activeAttribs)
+        program->SetActiveAttrib(index++, activeInfo);
+      index = 0;
+      for (auto &activeInfo : resp->activeUniforms)
+        program->SetActiveUniform(index++, activeInfo);
+    }
 
     /**
      * Update the program's attribute locations.
@@ -1895,12 +1910,6 @@ namespace webgl
     auto level = info[1].As<Napi::Number>().Uint32Value();
     auto internalformat = info[2].As<Napi::Number>().Uint32Value();
 
-    if (target != WEBGL_TEXTURE_2D)
-    {
-      Napi::TypeError::New(env, "texImage2D() only supports target TEXTURE_2D.").ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
     TextureImage2DCommandBufferRequest req(target, level, internalformat);
     unsigned char *pixelsData = nullptr;
     if (info.Length() == 6)
@@ -2210,6 +2219,64 @@ namespace webgl
     auto req = VertexAttribPointerCommandBufferRequest(index, size, type, normalized, stride, offset);
     sendCommandBufferRequest(req);
     return env.Undefined();
+  }
+
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::GetActiveAttrib(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "getActiveAttrib() requires 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLProgram::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "getActiveAttrib() 1st argument(program) must be a WebGLProgram.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
+    int index = 0;
+    if (info[1].IsNumber())
+      index = info[1].As<Napi::Number>().Int32Value();
+
+    if (program->HasActiveAttrib(index))
+      return WebGLActiveInfo::NewInstance(env, program->GetActiveAttrib(index));
+    else
+      return env.Null();
+  }
+
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::GetActiveUniform(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "getActiveUniform() requires 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLProgram::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "getActiveUniform() 1st argument(program) must be a WebGLProgram.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
+    int index = 0;
+    if (info[1].IsNumber())
+      index = info[1].As<Napi::Number>().Int32Value();
+
+    if (program->HasActiveUniform(index))
+      return WebGLActiveInfo::NewInstance(env, program->GetActiveUniform(index));
+    else
+      return env.Null();
   }
 
   template <typename T>
@@ -3483,6 +3550,24 @@ namespace webgl
       {
         return Napi::String::New(env, version);
       }
+      else if (pname == WEBGL_VIEWPORT)
+      {
+        auto array = Napi::Int32Array::New(env, 4);
+        array.Set(static_cast<uint32_t>(0), Napi::Number::New(env, viewport.x));
+        array.Set(static_cast<uint32_t>(1), Napi::Number::New(env, viewport.y));
+        array.Set(static_cast<uint32_t>(2), Napi::Number::New(env, viewport.width));
+        array.Set(static_cast<uint32_t>(3), Napi::Number::New(env, viewport.height));
+        return array;
+      }
+      else if (pname == WEBGL_SCISSOR_BOX)
+      {
+        auto array = Napi::Int32Array::New(env, 4);
+        array.Set(static_cast<uint32_t>(0), Napi::Number::New(env, 0));
+        array.Set(static_cast<uint32_t>(1), Napi::Number::New(env, 0));
+        array.Set(static_cast<uint32_t>(2), Napi::Number::New(env, viewport.width));
+        array.Set(static_cast<uint32_t>(3), Napi::Number::New(env, viewport.height));
+        return array;
+      }
       switch (pname)
       {
       // GLenum
@@ -3608,8 +3693,7 @@ namespace webgl
         return value;
       }
       default:
-        Napi::TypeError::New(env, "getParameter() don't support the parameter: " + std::to_string(pname))
-            .ThrowAsJavaScriptException();
+        fprintf(stderr, "getParameter() don't support the parameter: 0x%x\n", pname);
         return env.Undefined();
       }
     }

@@ -61,7 +61,10 @@ function onAnimationFrame(time: number) {
       onframe.callback(time);
     }
   } catch (err) {
-    console.warn('error in frame callback:', err);
+    console.warn('#');
+    console.warn('# Occurred error in an animation frame callback.');
+    console.warn('#');
+    console.warn('#', err?.stack || err);
   }
 }
 

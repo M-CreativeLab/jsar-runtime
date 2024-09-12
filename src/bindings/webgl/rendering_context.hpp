@@ -88,6 +88,8 @@ namespace webgl
     Napi::Value EnableVertexAttribArray(const Napi::CallbackInfo &info);
     Napi::Value DisableVertexAttribArray(const Napi::CallbackInfo &info);
     Napi::Value VertexAttribPointer(const Napi::CallbackInfo &info);
+    Napi::Value GetActiveAttrib(const Napi::CallbackInfo &info);
+    Napi::Value GetActiveUniform(const Napi::CallbackInfo &info);
     Napi::Value GetAttribLocation(const Napi::CallbackInfo &info);
     Napi::Value GetUniformLocation(const Napi::CallbackInfo &info);
     Napi::Value Uniform1f(const Napi::CallbackInfo &info);

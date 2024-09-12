@@ -1,9 +1,10 @@
-#include "binding.hpp"
-#include "rendering_context.hpp"
-#include "placeholders.hpp"
-#include "program.hpp"
-#include "texture.hpp"
-#include "uniform_location.hpp"
+#include "./binding.hpp"
+#include "./active_info.hpp"
+#include "./placeholders.hpp"
+#include "./program.hpp"
+#include "./rendering_context.hpp"
+#include "./texture.hpp"
+#include "./uniform_location.hpp"
 
 namespace bindings
 {
@@ -11,6 +12,7 @@ namespace bindings
   {
     Napi::Object InitModule(Napi::Env env, Napi::Object exports)
     {
+      ::webgl::WebGLActiveInfo::Init(env);
       ::webgl::WebGLProgram::Init(env);
       ::webgl::WebGLTexture::Init(env);
       ::webgl::WebGLUniformLocation::Init(env);

@@ -41,6 +41,21 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
+  class ActiveInfo
+  {
+  public:
+    ActiveInfo() = default;
+    ActiveInfo(const ActiveInfo &that) = default;
+    ActiveInfo(string name, int size, int type) : name(name), size(size), type(type)
+    {
+    }
+
+  public:
+    string name;
+    int size;
+    int type;
+  };
+
   class AttribLocation
   {
   public:
@@ -82,6 +97,8 @@ namespace commandbuffers
 
   enum LinkProgramCommandBufferResponseSegmentType
   {
+    SEGMENT_ACTIVE_ATTRIB,
+    SEGMENT_ACTIVE_UNIFORM,
     SEGMENT_ATTRIB_LOCATION,
     SEGMENT_UNIFORM_LOCATION,
     SEGMENT_UNIFORM_BLOCK
@@ -101,6 +118,10 @@ namespace commandbuffers
     TrCommandBufferMessage *serialize() override
     {
       auto message = new TrCommandBufferMessage(type, size, this);
+      for (auto &activeAttrib : activeAttribs)
+        addActiveInfoSegment(activeAttrib, SEGMENT_ACTIVE_ATTRIB, message);
+      for (auto &activeUniform : activeUniforms)
+        addActiveInfoSegment(activeUniform, SEGMENT_ACTIVE_UNIFORM, message);
       for (auto &attribLocation : attribLocations)
         addAttribLocationSegment(attribLocation, message);
       for (auto &uniformLocation : uniformLocations)
@@ -133,6 +154,16 @@ namespace commandbuffers
 
         switch (segmentType)
         {
+        case SEGMENT_ACTIVE_ATTRIB:
+        {
+          activeAttribs.push_back(getActiveInfoFromBuffer(name, &pSourceData));
+          break;
+        }
+        case SEGMENT_ACTIVE_UNIFORM:
+        {
+          activeUniforms.push_back(getActiveInfoFromBuffer(name, &pSourceData));
+          break;
+        }
         case SEGMENT_ATTRIB_LOCATION:
         {
           int location;
@@ -182,6 +213,34 @@ namespace commandbuffers
       return base;
     }
 
+    ActiveInfo getActiveInfoFromBuffer(string &name, char **pSrcData)
+    {
+      char *buf = *pSrcData;
+      int size;
+      {
+        memcpy(&size, buf, sizeof(int));
+        buf += sizeof(int);
+      }
+      int type;
+      {
+        memcpy(&type, buf, sizeof(int));
+        buf += sizeof(int);
+      }
+      return ActiveInfo(name, size, type);
+    }
+
+    void addActiveInfoSegment(ActiveInfo &activeInfo, LinkProgramCommandBufferResponseSegmentType segmentType, TrCommandBufferMessage *message)
+    {
+      auto base = getSegmentBase(segmentType, activeInfo.name);
+      base.insert(base.end(),
+                  reinterpret_cast<char *>(&activeInfo.size),
+                  reinterpret_cast<char *>(&activeInfo.size) + sizeof(activeInfo.size));
+      base.insert(base.end(),
+                  reinterpret_cast<char *>(&activeInfo.type),
+                  reinterpret_cast<char *>(&activeInfo.type) + sizeof(activeInfo.type));
+      message->addSegment(new ipc::TrIpcMessageSegment(base));
+    }
+
     void addAttribLocationSegment(AttribLocation &attribLocation, TrCommandBufferMessage *message)
     {
       auto base = getSegmentBase(SEGMENT_ATTRIB_LOCATION, attribLocation.name);
@@ -214,6 +273,8 @@ namespace commandbuffers
 
   public:
     bool success;
+    vector<ActiveInfo> activeAttribs;
+    vector<ActiveInfo> activeUniforms;
     vector<AttribLocation> attribLocations;
     vector<UniformLocation> uniformLocations;
     vector<UniformBlock> uniformBlocks;

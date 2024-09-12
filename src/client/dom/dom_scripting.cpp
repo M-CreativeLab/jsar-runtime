@@ -26,6 +26,10 @@ namespace dom
 
       info.GetReturnValue().Set(resultValue);
     }
+    else
+    {
+      info.GetReturnValue().SetUndefined();
+    }
   }
 
   v8::MaybeLocal<v8::Promise> DOMScriptingContext::ImportModuleDynamicallyCallback(v8::Local<v8::Context> context,
@@ -183,22 +187,69 @@ namespace dom
     }                                                                                                     \
   } while (0)
 
-      // Set the global object for scripting
+      /**
+       * Configure the global objects and functions for the DOM scripting.
+       */
+
+      // Baisc objects
       V8_SET_GLOBAL_FROM_MAIN(URL);
       V8_SET_GLOBAL_FROM_MAIN(Blob);
       V8_SET_GLOBAL_FROM_MAIN(console);
 
-      // Expose the WebGL and WebGL2 contexts
+      // Typed arrays
+      V8_SET_GLOBAL_FROM_MAIN(Int8Array);
+      V8_SET_GLOBAL_FROM_MAIN(Uint8Array);
+      V8_SET_GLOBAL_FROM_MAIN(Uint8ClampedArray);
+      V8_SET_GLOBAL_FROM_MAIN(Int16Array);
+      V8_SET_GLOBAL_FROM_MAIN(Uint16Array);
+      V8_SET_GLOBAL_FROM_MAIN(Int32Array);
+      V8_SET_GLOBAL_FROM_MAIN(Uint32Array);
+      V8_SET_GLOBAL_FROM_MAIN(Float32Array);
+      V8_SET_GLOBAL_FROM_MAIN(Float64Array);
+
+      // Animation frame provider
+      V8_SET_GLOBAL_FROM_MAIN(requestAnimationFrame);
+      V8_SET_GLOBAL_FROM_MAIN(cancelAnimationFrame);
+
+      // WebGL objects
       V8_SET_GLOBAL_FROM_MAIN(WebGLRenderingContext);
       V8_SET_GLOBAL_FROM_MAIN(WebGL2RenderingContext);
 
-      // Expose the WebXR Device API
+      // WebXR Device API
       V8_SET_GLOBAL_FROM_MAIN(XRRigidTransform);
       V8_SET_GLOBAL_FROM_MAIN(XRWebGLLayer);
 
-      // Expose the specific objects
+      // Expose the new global objects for the spatial application
+      /**
+       * `gl`: The WEBGLRenderingContext/WEBGL2RenderingContext object for rendering the spatial objects.
+       */
+      V8_SET_GLOBAL_FROM_MAIN(gl);
+
+      // Specific objects, such as: `document`, `window`, etc.
       if (!documentValue.IsEmpty())
         V8_SET_GLOBAL_FROM_VALUE(document, documentValue.Get(isolate).As<v8::Object>());
+
+      v8::Local<v8::Object> windowObject = v8::Object::New(isolate);
+      {
+#define V8_SET_WINDOW_FROM_MAIN(name)                                                                                  \
+  do                                                                                                                   \
+  {                                                                                                                    \
+    v8::Local<v8::Value> valueToSet;                                                                                   \
+    auto maybeValue = global->Get(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked());              \
+    if (!maybeValue.IsEmpty() && maybeValue.ToLocal(&valueToSet))                                                      \
+    {                                                                                                                  \
+      windowObject->Set(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked(), valueToSet).FromJust(); \
+    }                                                                                                                  \
+  } while (0)
+
+        // Create window object
+        V8_SET_WINDOW_FROM_MAIN(requestAnimationFrame);
+        V8_SET_WINDOW_FROM_MAIN(cancelAnimationFrame);
+#undef V8_SET_WINDOW_FROM_MAIN
+      }
+      V8_SET_GLOBAL_FROM_VALUE(window, windowObject);
+      V8_SET_GLOBAL_FROM_VALUE(self, windowObject);
+
 #undef V8_SET_GLOBAL_FROM_MAIN
 #undef V8_SET_GLOBAL_FROM_VALUE
     }
@@ -566,7 +617,6 @@ namespace dom
     v8::HandleScope scope(isolate);
     auto module = moduleStore.Get(isolate);
     auto context = isolate->GetCurrentContext();
-    v8::TryCatch tryCatch(isolate);
 
     if (!instantiate(isolate))
       return;
@@ -574,13 +624,29 @@ namespace dom
     v8::Local<v8::Value> resultValue;
     {
       v8::TryCatch tryCatch(isolate);
-      if (!module->Evaluate(context).ToLocal(&resultValue) || resultValue.IsEmpty())
+      if (!module->Evaluate(context).ToLocal(&resultValue))
       {
         if (tryCatch.HasCaught())
         {
           if (tryCatch.HasTerminated())
             tryCatch.ReThrow();
           return;
+        }
+      }
+      else
+      {
+        if (resultValue->IsPromise())
+        {
+          auto promise = v8::Local<v8::Promise>::Cast(resultValue);
+          auto resolve = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
+                                           { info.GetReturnValue().Set(info[0]); })
+                             .ToLocalChecked();
+          auto reject = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
+                                          {
+                                            v8::String::Utf8Value message(info.GetIsolate(), info[0]);
+                                            fprintf(stderr, "Failed to execute script: %s\n", *message); })
+                            .ToLocalChecked();
+          promise->Then(context, resolve, reject).ToLocalChecked();
         }
       }
     }
