@@ -102,26 +102,21 @@ namespace dom
         return v8::MaybeLocal<v8::Promise>();
 
       auto renderingContext = dependent->documentRenderingContext.lock();
-      auto script = renderingContext->createScript(moduleUrl, SourceTextType::ESM);
+      auto persistentResolver = make_shared<v8::Persistent<v8::Promise::Resolver>>(isolate, resolver);
       auto specifierRef = make_shared<string>(specifierStr);
-
-      shared_ptr<v8::Persistent<v8::Promise::Resolver>> persistentResolver = make_shared<v8::Persistent<v8::Promise::Resolver>>(isolate, resolver);
-      auto onSourceLoaded = [persistentResolver, isolate, renderingContext, script](const string &source)
+      auto onModuleLoaded = [isolate, persistentResolver, dependent, renderingContext, specifierRef](shared_ptr<DOMModule> module)
       {
-        auto moduleRef = dynamic_pointer_cast<DOMModule>(script);
-        moduleRef->linkFinishedCallback = [persistentResolver, isolate, renderingContext, script]()
-        {
-          v8::Isolate::Scope isolateScope(isolate);
-          v8::HandleScope handleScope(isolate);
-          auto resolver = persistentResolver->Get(isolate);
-          renderingContext->scriptingContext->evaluate(script);
-          // TODO: support resolve the module exports
-          resolver->Resolve(isolate->GetCurrentContext(), v8::Undefined(isolate)).ToChecked();
-          persistentResolver->Reset();
-        };
-        renderingContext->scriptingContext->compile(script, source);
+        v8::Isolate::Scope isolateScope(isolate);
+        v8::HandleScope handleScope(isolate);
+
+        auto resolver = persistentResolver->Get(isolate);
+        dependent->resolveCache.insert({*specifierRef, module});
+        renderingContext->scriptingContext->evaluate(dynamic_pointer_cast<DOMScript>(module));
+        // TODO: support resolve the module exports
+        resolver->Resolve(isolate->GetCurrentContext(), v8::Undefined(isolate)).ToChecked();
+        persistentResolver->Reset();
       };
-      renderingContext->fetchTextSourceResource(moduleUrl, onSourceLoaded);
+      renderingContext->tryImportModule(moduleUrl, false, onModuleLoaded);
       return handleScope.Escape(resolver->GetPromise());
     }
   }
@@ -295,6 +290,7 @@ namespace dom
       auto module = make_shared<DOMModule>(context);
       module->url = url;
       idToModuleMap.insert({module->id, module});
+      urlToModuleMap.insert({url, module});
       script = dynamic_pointer_cast<DOMScript>(module);
     }
     return script;
@@ -344,6 +340,15 @@ namespace dom
     return nullptr;
   }
 
+  shared_ptr<DOMModule> DOMScriptingContext::getModuleFromUrl(const string &url)
+  {
+    auto it = urlToModuleMap.find(url);
+    if (it != urlToModuleMap.end())
+      return it->second;
+    else
+      return nullptr;
+  }
+
   bool DOMScriptingContext::updateImportMapFromJSON(const string &json)
   {
     rapidjson::Document importMapDocument;
@@ -361,12 +366,12 @@ namespace dom
           string key = it->name.GetString();
           string value = it->value.GetString();
           // check the key ends with "/"
-          
+
           if (key.back() == '/')
           {
             /**
              * Only the key and value are both end with "/", it is a prefix match.
-             * 
+             *
              * See: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap#mapping_path_prefixes
              */
             if (value.back() == '/')
@@ -598,7 +603,7 @@ namespace dom
     return module->GetIdentityHash();
   }
 
-  string DOMModule::getUrlBySpecifier(const string& specifier)
+  string DOMModule::getUrlBySpecifier(const string &specifier)
   {
     /**
      * When specifier starts with "http:" or "https:", it is a URL string and should be used directly.
@@ -623,6 +628,11 @@ namespace dom
     if (nextSpecifier.empty())
       nextSpecifier = specifier;
     return crates::jsar::UrlHelper::CreateUrlStringWithPath(url, nextSpecifier);
+  }
+
+  void DOMModule::setLinkFinishedCallback(function<void(shared_ptr<DOMModule>)> callback)
+  {
+    linkFinishedCallback = callback;
   }
 
   void DOMModule::link(v8::Isolate *isolate)
@@ -655,9 +665,9 @@ namespace dom
     {
       for (auto moduleRequestInfo : moduleRequestInfos)
       {
-        auto script = renderingContext->createScript(moduleRequestInfo.url, SourceTextType::ESM);
-        renderingContext->fetchTextSourceResource(moduleRequestInfo.url, [this, script, moduleRequestInfo](const string &source)
-                                                  { handleModuleRequestSource(script, moduleRequestInfo.specifier, source); });
+        auto specifierRef = make_shared<string>(moduleRequestInfo.specifier); // reference to ensure lifetime when callback is called.
+        renderingContext->tryImportModule(moduleRequestInfo.url, false, [this, specifierRef](shared_ptr<DOMModule> module)
+                                          { handleModuleLoaded(*specifierRef, module); });
       }
     }
   }
@@ -683,21 +693,12 @@ namespace dom
     return true;
   }
 
-  void DOMModule::handleModuleRequestSource(shared_ptr<DOMScript> script, const string &specifier, const string &source)
+  void DOMModule::handleModuleLoaded(const string &specifier, shared_ptr<DOMModule> newModule)
   {
-    auto renderingContext = documentRenderingContext.lock();
-    /**
-     * FIXME: Create references to the `specifier` and `script` objects to prevent them from being destroyed when the callback is called.
-     */
-    auto specifierRef = make_shared<string>(specifier);
-    auto moduleRef = dynamic_pointer_cast<DOMModule>(script);
-    moduleRef->linkFinishedCallback = [this, specifierRef, moduleRef]()
-    {
-      resolveCache.insert({specifierRef->c_str(), moduleRef});
-      validModuleRequestsCount--;
-      checkLinkFinished();
-    };
-    renderingContext->scriptingContext->compile(script, source);
+    assert(newModule != nullptr);
+    resolveCache.insert({specifier, newModule});
+    validModuleRequestsCount--;
+    checkLinkFinished();
   }
 
   void DOMModule::checkLinkFinished()
@@ -710,7 +711,10 @@ namespace dom
   {
     linked = true;
     if (linkFinishedCallback)
-      linkFinishedCallback();
+    {
+      auto selfRef = dynamic_pointer_cast<DOMModule>(shared_from_this());
+      linkFinishedCallback(selfRef);
+    }
     if (evaluationScheduled)
       doEvaluate(v8::Isolate::GetCurrent());
   }

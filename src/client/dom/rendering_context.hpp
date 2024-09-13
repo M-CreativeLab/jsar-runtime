@@ -80,7 +80,7 @@ namespace dom
 
     /**
      * Create a new script object from this context.
-     * 
+     *
      * @param url The URL of the script.
      * @param type The type of the script: classic or module.
      * @returns The new DOM script object.
@@ -88,8 +88,17 @@ namespace dom
     shared_ptr<DOMScript> createScript(const std::string &url, SourceTextType type);
 
     /**
+     * Try to import a module from the given URL.
+     *
+     * @param url The URL of the module.
+     * @param disableCache Whether to disable the cache.
+     * @param loadedCallback The callback to call when the module is loaded.
+     */
+    void tryImportModule(const std::string &url, const bool disableCache, std::function<void(shared_ptr<DOMModule>)> loadedCallback);
+
+    /**
      * Parse the input json string and update the import map.
-     * 
+     *
      * @param json The JSON string of the import map.
      * @returns Whether the input json is valid.
      */

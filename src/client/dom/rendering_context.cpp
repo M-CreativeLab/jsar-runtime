@@ -84,4 +84,26 @@ namespace dom
   {
     return scriptingContext->create(shared_from_this(), url, type);
   }
+
+  void DocumentRenderingContext::tryImportModule(const std::string &url, bool disableCache,
+                                                 std::function<void(shared_ptr<DOMModule>)> loadedCallback)
+  {
+    if (!disableCache)
+    {
+      auto module = scriptingContext->getModuleFromUrl(url);
+      if (module)
+      {
+        loadedCallback(module);
+        return;
+      }
+    }
+    auto script = createScript(url, SourceTextType::ESM);
+    auto onModuleSourceLoaded = [this, script, loadedCallback](const string &source)
+    {
+      auto module = dynamic_pointer_cast<DOMModule>(script);
+      module->setLinkFinishedCallback(loadedCallback);
+      scriptingContext->compile(script, source);
+    };
+    fetchTextSourceResource(url, onModuleSourceLoaded);
+  }
 }

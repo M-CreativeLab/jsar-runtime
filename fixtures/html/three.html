@@ -31,6 +31,11 @@
     const obj = new THREE.Mesh(geometry, material);
     scene.add(obj);
 
+    const loader = new GLTFLoader();
+    loader.load('https://github.com/mrdoob/three.js/raw/master/examples/models/gltf/Horse.glb', (gltf) => {
+      scene.add(gltf.scene);
+    });
+
     const gl = navigator.gl;
     navigator.xr.requestSession('immersive-ar', {}).then((session) => {
       const baseLayer = new XRWebGLLayer(session, gl);

@@ -99,8 +99,16 @@ namespace dom
      * Get the `DOMModule` object from the given v8 module.
      *
      * @param v8module The v8 module object.
+     * @returns The module object if found, otherwise nullptr.
      */
     shared_ptr<DOMModule> getModuleFromV8(v8::Local<v8::Module> v8module);
+    /**
+     * Get the `DOMModule` object from the given URL, it's used to check whether the URL is already loaded.
+     *
+     * @param url The URL of the module.
+     * @returns The module object if found, otherwise nullptr.
+     */
+    shared_ptr<DOMModule> getModuleFromUrl(const string &url);
     /**
      * Update the import map from the given JSON string.
      *
@@ -110,7 +118,7 @@ namespace dom
     bool updateImportMapFromJSON(const string &json);
     /**
      * Do the exact match import map for the given specifier, such as "three" -> "https://cdn.skypack.dev/three".
-     * 
+     *
      * @param specifier The specifier to match.
      * @returns The matched URL string if found, otherwise nullopt.
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap#bare_modules
@@ -118,7 +126,7 @@ namespace dom
     optional<string> exactMatchImportMap(const string &specifier);
     /**
      * Do the prefix match import map for the given specifier, such as "three/foo" -> "https://cdn.skypack.dev/three/foo".
-     * 
+     *
      * @param specifier The specifier to match.
      * @returns The matched prefix URL string if found, otherwise nullopt.
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap#mapping_path_prefixes
@@ -132,6 +140,7 @@ namespace dom
     unordered_map<int, shared_ptr<DOMModule>> hashToModuleMap;
     unordered_map<uint32_t, shared_ptr<DOMClassicScript>> idToScriptMap;
     unordered_map<uint32_t, shared_ptr<DOMModule>> idToModuleMap;
+    unordered_map<string, shared_ptr<DOMModule>> urlToModuleMap;
     map<string, string> importExactMap;
     map<string, string> importPrefixMap;
     bool isContextInitialized = false;
@@ -140,7 +149,7 @@ namespace dom
   /**
    * The virtual class for DOM script including the classic script and ECMAScript module.
    */
-  class DOMScript
+  class DOMScript : public enable_shared_from_this<DOMScript>
   {
   protected:
     DOMScript(SourceTextType sourceTextType, shared_ptr<DocumentRenderingContext> context);
@@ -212,15 +221,21 @@ namespace dom
     int getModuleHash();
     /**
      * Get the URL string by the specifier.
-     * 
+     *
      * @returns The module URL string to be fetched.
      */
     string getUrlBySpecifier(const string &specifier);
+    /**
+     * Set the callback when the module linking is finished.
+     *
+     * @param callback The callback to call when the module linking is finished.
+     */
+    void setLinkFinishedCallback(function<void(shared_ptr<DOMModule>)> callback);
 
   private:
     void link(v8::Isolate *isolate);
     bool instantiate(v8::Isolate *isolate);
-    void handleModuleRequestSource(shared_ptr<DOMScript> module, const string &specifier, const string &source);
+    void handleModuleLoaded(const string &specifier, shared_ptr<DOMModule> module);
     void checkLinkFinished();
     void onLinkFinished();
     void doEvaluate(v8::Isolate *isolate);
@@ -230,7 +245,7 @@ namespace dom
     unordered_map<string, shared_ptr<DOMModule>> resolveCache;
     bool linked = false;
     size_t validModuleRequestsCount;
-    std::function<void()> linkFinishedCallback;
+    function<void(shared_ptr<DOMModule>)> linkFinishedCallback;
     bool evaluatedOnce = false;
     bool evaluationScheduled = false;
   };
