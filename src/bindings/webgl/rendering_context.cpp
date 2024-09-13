@@ -2375,6 +2375,74 @@ namespace webgl
     return jsUniformLocation;
   }
 
+  class UniformError : public std::runtime_error
+  {
+  public:
+    UniformError(const std::string &msg) : std::runtime_error(msg) {}
+
+  public:
+    string message(const std::string method) { return method + "() " + what(); }
+  };
+
+  /**
+   * This function is used in uniform*v() functions to get a vector of values from the 2nd argument: Array, Int32Array, Float32Array.
+   *
+   * @param env Napi::Env
+   * @param jsValues Napi::Value
+   * @param valueTypedArrayType napi_typedarray_type
+   * @param n size_t
+   * @returns vector<ValueType>
+   */
+  template <typename ValueType>
+  vector<ValueType> getUniformValuesVector(Napi::Env env, Napi::Value jsValues, napi_typedarray_type valueTypedArrayType, size_t n)
+  {
+    if (valueTypedArrayType != napi_float32_array && valueTypedArrayType != napi_int32_array)
+      throw UniformError("TypedArray type should be either napi_float32_array or napi_int32_array.");
+
+    size_t valuesCount;
+    if (jsValues.IsArray())
+      valuesCount = jsValues.As<Napi::Array>().Length();
+    else if (jsValues.IsTypedArray())
+    {
+      auto typedArray = jsValues.As<Napi::TypedArray>();
+      if (typedArray.TypedArrayType() != valueTypedArrayType)
+        throw UniformError("value must be correct TypedArray type.");
+      valuesCount = typedArray.ElementLength();
+    }
+    else
+      throw UniformError("value must be a float array or Float32Array.");
+
+    if (valuesCount < n)
+    {
+      auto msg = "should take at least " + std::to_string(n) + " values";
+      throw UniformError(msg);
+    }
+
+    std::vector<ValueType> data(valuesCount);
+    if (jsValues.IsArray())
+    {
+      auto array = jsValues.As<Napi::Array>();
+      for (size_t i = 0; i < valuesCount; i++)
+        data[i] = array.Get(i).ToNumber();
+    }
+    else
+    {
+      if (valueTypedArrayType == napi_float32_array)
+      {
+        auto array = jsValues.As<Napi::Float32Array>();
+        for (size_t i = 0; i < valuesCount; i++)
+          data[i] = array.Get(i).ToNumber().FloatValue();
+      }
+      else if (valueTypedArrayType == napi_int32_array)
+      {
+        auto array = jsValues.As<Napi::Int32Array>();
+        for (size_t i = 0; i < valuesCount; i++)
+          data[i] = array.Get(i).ToNumber().Int32Value();
+      }
+    }
+    return data;
+  }
+
   template <typename T>
   Napi::Value WebGLBaseRenderingContext<T>::Uniform1f(const Napi::CallbackInfo &info)
   {
@@ -2394,7 +2462,7 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    auto x = info[1].As<Napi::Number>().FloatValue();
+    auto x = info[1].ToNumber().FloatValue();
     auto req = Uniform1fCommandBufferRequest(location->GetValue(), x);
     sendCommandBufferRequest(req);
     return env.Undefined();
@@ -2419,15 +2487,16 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    Napi::Float32Array array = info[1].As<Napi::Float32Array>();
-    size_t length = array.ElementLength();
-
-    std::vector<float> data(length);
-    for (size_t i = 0; i < length; i++)
-      data[i] = array.Get(i).ToNumber().FloatValue();
-
-    auto req = Uniform1fvCommandBufferRequest(location->GetValue(), data);
-    sendCommandBufferRequest(req);
+    try
+    {
+      auto data = getUniformValuesVector<float>(env, info[1], napi_float32_array, 1);
+      auto req = Uniform1fvCommandBufferRequest(location->GetValue(), data);
+      sendCommandBufferRequest(req);
+    }
+    catch (UniformError &e)
+    {
+      Napi::TypeError::New(env, e.message("uniform1fv")).ThrowAsJavaScriptException();
+    }
     return env.Undefined();
   }
 
@@ -2476,15 +2545,16 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    Napi::Int32Array array = info[1].As<Napi::Int32Array>();
-    size_t length = array.ElementLength();
-
-    std::vector<int> data(length);
-    for (size_t i = 0; i < length; i++)
-      data[i] = array.Get(i).ToNumber().Int32Value();
-
-    auto req = Uniform1ivCommandBufferRequest(location->GetValue(), data);
-    sendCommandBufferRequest(req);
+    try
+    {
+      auto data = getUniformValuesVector<int32_t>(env, info[1], napi_int32_array, 1);
+      auto req = Uniform1ivCommandBufferRequest(location->GetValue(), data);
+      sendCommandBufferRequest(req);
+    }
+    catch (UniformError &e)
+    {
+      Napi::TypeError::New(env, e.message("uniform1fi")).ThrowAsJavaScriptException();
+    }
     return env.Undefined();
   }
 
@@ -2534,20 +2604,16 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    Napi::Float32Array array = info[1].As<Napi::Float32Array>();
-    size_t length = array.ElementLength();
-    if (length != 2)
+    try
     {
-      Napi::TypeError::New(env, "uniform2fv() takes 2 float elements array.").ThrowAsJavaScriptException();
-      return env.Undefined();
+      auto data = getUniformValuesVector<float>(env, info[1], napi_float32_array, 2);
+      auto req = Uniform2fvCommandBufferRequest(location->GetValue(), data);
+      sendCommandBufferRequest(req);
     }
-
-    std::vector<float> data(length);
-    for (size_t i = 0; i < length; i++)
-      data[i] = array.Get(i).ToNumber().FloatValue();
-
-    auto req = Uniform2fvCommandBufferRequest(location->GetValue(), data);
-    sendCommandBufferRequest(req);
+    catch (UniformError &e)
+    {
+      Napi::TypeError::New(env, e.message("uniform2fv")).ThrowAsJavaScriptException();
+    }
     return env.Undefined();
   }
 
@@ -2597,20 +2663,16 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    Napi::Int32Array array = info[1].As<Napi::Int32Array>();
-    size_t length = array.ElementLength();
-    if (length != 2)
+    try
     {
-      Napi::TypeError::New(env, "uniform2iv() takes 2 int elements array.").ThrowAsJavaScriptException();
-      return env.Undefined();
+      auto data = getUniformValuesVector<int32_t>(env, info[1], napi_int32_array, 2);
+      auto req = Uniform2ivCommandBufferRequest(location->GetValue(), data);
+      sendCommandBufferRequest(req);
     }
-
-    std::vector<int> data(length);
-    for (size_t i = 0; i < length; i++)
-      data[i] = array.Get(i).ToNumber().Int32Value();
-
-    auto req = Uniform2ivCommandBufferRequest(location->GetValue(), data);
-    sendCommandBufferRequest(req);
+    catch (UniformError &e)
+    {
+      Napi::TypeError::New(env, e.message("uniform2iv")).ThrowAsJavaScriptException();
+    }
     return env.Undefined();
   }
 
@@ -2661,42 +2723,16 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    auto jsValues = info[1];
-    size_t length;
-
-    if (jsValues.IsArray())
-      length = jsValues.As<Napi::Array>().Length();
-    else if (jsValues.IsTypedArray() && jsValues.As<Napi::TypedArray>().TypedArrayType() == napi_typedarray_type::napi_float32_array)
-      length = jsValues.As<Napi::Float32Array>().ElementLength();
-    else
+    try
     {
-      Napi::TypeError::New(env, "uniform3fv() 2nd argument must be a float array or Float32Array.")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
+      auto data = getUniformValuesVector<float>(env, info[1], napi_float32_array, 3);
+      auto req = Uniform3fvCommandBufferRequest(location->GetValue(), data);
+      sendCommandBufferRequest(req);
     }
-
-    if (length < 3)
+    catch (UniformError &e)
     {
-      Napi::TypeError::New(env, "uniform3fv() should take at least 3 values").ThrowAsJavaScriptException();
-      return env.Undefined();
+      Napi::TypeError::New(env, e.message("uniform3fv")).ThrowAsJavaScriptException();
     }
-
-    std::vector<float> data(length);
-    if (jsValues.IsArray())
-    {
-      auto array = jsValues.As<Napi::Array>();
-      for (size_t i = 0; i < length; i++)
-        data[i] = array.Get(i).ToNumber().FloatValue();
-    }
-    else
-    {
-      auto array = jsValues.As<Napi::Float32Array>();
-      for (size_t i = 0; i < length; i++)
-        data[i] = array.Get(i).ToNumber().FloatValue();
-    }
-
-    auto req = Uniform3fvCommandBufferRequest(location->GetValue(), data);
-    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 
@@ -2747,20 +2783,16 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    Napi::Int32Array array = info[1].As<Napi::Int32Array>();
-    size_t length = array.ElementLength();
-    if (length != 3)
+    try
     {
-      Napi::TypeError::New(env, "uniform3iv() takes 3 int elements array.").ThrowAsJavaScriptException();
-      return env.Undefined();
+      auto data = getUniformValuesVector<int32_t>(env, info[1], napi_int32_array, 3);
+      auto req = Uniform3ivCommandBufferRequest(location->GetValue(), data);
+      sendCommandBufferRequest(req);
     }
-
-    std::vector<int> data(length);
-    for (size_t i = 0; i < length; i++)
-      data[i] = array.Get(i).ToNumber().Int32Value();
-
-    auto req = Uniform3ivCommandBufferRequest(location->GetValue(), data);
-    sendCommandBufferRequest(req);
+    catch (UniformError &e)
+    {
+      Napi::TypeError::New(env, e.message("uniform3iv")).ThrowAsJavaScriptException();
+    }
     return env.Undefined();
   }
 
@@ -2812,20 +2844,16 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    Napi::Float32Array array = info[1].As<Napi::Float32Array>();
-    size_t length = array.ElementLength();
-    if (length != 4)
+    try
     {
-      Napi::TypeError::New(env, "uniform4fv() takes 4 float elements array.").ThrowAsJavaScriptException();
-      return env.Undefined();
+      auto data = getUniformValuesVector<float>(env, info[1], napi_float32_array, 4);
+      auto req = Uniform4fvCommandBufferRequest(location->GetValue(), data);
+      sendCommandBufferRequest(req);
     }
-
-    std::vector<float> data(length);
-    for (size_t i = 0; i < length; i++)
-      data[i] = array.Get(i).ToNumber().FloatValue();
-
-    auto req = Uniform4fvCommandBufferRequest(location->GetValue(), data);
-    sendCommandBufferRequest(req);
+    catch (UniformError &e)
+    {
+      Napi::TypeError::New(env, e.message("uniform4fv")).ThrowAsJavaScriptException();
+    }
     return env.Undefined();
   }
 
@@ -2877,20 +2905,16 @@ namespace webgl
     }
 
     auto location = Napi::ObjectWrap<WebGLUniformLocation>::Unwrap(info[0].As<Napi::Object>());
-    Napi::Int32Array array = info[1].As<Napi::Int32Array>();
-    size_t length = array.ElementLength();
-    if (length != 4)
+    try
     {
-      Napi::TypeError::New(env, "uniform4iv() takes 4 int elements array.").ThrowAsJavaScriptException();
-      return env.Undefined();
+      auto data = getUniformValuesVector<int32_t>(env, info[1], napi_int32_array, 4);
+      auto req = Uniform4ivCommandBufferRequest(location->GetValue(), data);
+      sendCommandBufferRequest(req);
     }
-
-    std::vector<int> data(length);
-    for (size_t i = 0; i < length; i++)
-      data[i] = array.Get(i).ToNumber().Int32Value();
-
-    auto req = Uniform4ivCommandBufferRequest(location->GetValue(), data);
-    sendCommandBufferRequest(req);
+    catch (UniformError &e)
+    {
+      Napi::TypeError::New(env, e.message("uniform4iv")).ThrowAsJavaScriptException();
+    }
     return env.Undefined();
   }
 
