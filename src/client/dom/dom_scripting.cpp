@@ -228,6 +228,7 @@ namespace dom
        */
       // Typed arrays
       V8_SET_GLOBAL_FROM_MAIN(Array);
+      V8_SET_GLOBAL_FROM_MAIN(ArrayBuffer);
       V8_SET_GLOBAL_FROM_MAIN(Int8Array);
       V8_SET_GLOBAL_FROM_MAIN(Uint8Array);
       V8_SET_GLOBAL_FROM_MAIN(Uint8ClampedArray);
@@ -237,6 +238,7 @@ namespace dom
       V8_SET_GLOBAL_FROM_MAIN(Uint32Array);
       V8_SET_GLOBAL_FROM_MAIN(Float32Array);
       V8_SET_GLOBAL_FROM_MAIN(Float64Array);
+      V8_SET_GLOBAL_FROM_MAIN(DataView);
 
       // Specific objects, such as: `document`, `window`, etc.
       if (!documentValue.IsEmpty())

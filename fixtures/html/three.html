@@ -33,7 +33,12 @@
 
     const loader = new GLTFLoader();
     loader.load('https://github.com/mrdoob/three.js/raw/master/examples/models/gltf/Horse.glb', (gltf) => {
+      console.info('The model has been loaded', gltf);
       scene.add(gltf.scene);
+    }, (progress) => {
+      console.info('Loading progress:', progress);
+    }, (err) => {
+      console.warn('Failed to load the model:', err);
     });
 
     const gl = navigator.gl;
