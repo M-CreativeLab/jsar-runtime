@@ -14,7 +14,7 @@ namespace dom
 {
   enum ContextEmbedderIndex : int
   {
-    kMagicIndex = 255,
+    kMagicIndex = 1024,
     kEnvironmentObject,
     kSandboxObject,
   };
@@ -44,6 +44,7 @@ namespace dom
   {
   private:
     static void PropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+    static void WindowProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
     static v8::MaybeLocal<v8::Promise> ImportModuleDynamicallyCallback(v8::Local<v8::Context> context,
                                                                        v8::Local<v8::Data> hostDefinedOptions,
                                                                        v8::Local<v8::Value> resourceName,
@@ -132,6 +133,9 @@ namespace dom
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap#mapping_path_prefixes
      */
     optional<string> prefixMatchImportMap(const string &specifier);
+
+  private:
+    v8::Local<v8::Value> createWindowProxy(v8::Local<v8::Context> context);
 
   private:
     v8::Isolate *isolate;

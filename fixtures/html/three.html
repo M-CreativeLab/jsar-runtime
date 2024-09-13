@@ -15,7 +15,6 @@
   <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-    console.info(GLTFLoader);
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
@@ -32,7 +31,7 @@
     scene.add(obj);
 
     const loader = new GLTFLoader();
-    loader.load('https://github.com/mrdoob/three.js/raw/master/examples/models/gltf/Horse.glb', (gltf) => {
+    loader.load('http://ar.rokidcdn.com/web-assets/pages/models/grass.glb', (gltf) => {
       console.info('The model has been loaded', gltf);
       scene.add(gltf.scene);
     }, (progress) => {

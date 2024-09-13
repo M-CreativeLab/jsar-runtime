@@ -34,6 +34,24 @@ namespace dom
     }
   }
 
+  void DOMScriptingContext::WindowProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info)
+  {
+    auto isolate = info.GetIsolate();
+    auto context = isolate->GetCurrentContext();
+    auto globalObject = context->Global();
+
+    v8::MaybeLocal<v8::Value> maybeValue = globalObject->Get(context, property);
+    /**
+     * TODO: add new an embedder data for the window-only properties.
+     */
+
+    v8::Local<v8::Value> resultValue;
+    if (maybeValue.ToLocal(&resultValue))
+      info.GetReturnValue().Set(resultValue);
+    else
+      info.GetReturnValue().SetUndefined();
+  }
+
   v8::MaybeLocal<v8::Promise> DOMScriptingContext::ImportModuleDynamicallyCallback(v8::Local<v8::Context> context,
                                                                                    v8::Local<v8::Data> hostDefinedOptions,
                                                                                    v8::Local<v8::Value> resourceName,
@@ -149,28 +167,29 @@ namespace dom
   void DOMScriptingContext::makeV8Context()
   {
     auto mainContext = isolate->GetCurrentContext();
-    v8::Context::Scope context_scope(mainContext);
-    v8::HandleScope handle_scope(isolate);
-
-    v8::Local<v8::FunctionTemplate> globalFuncTemplate = v8::FunctionTemplate::New(isolate);
-    v8::Local<v8::ObjectTemplate> globalObjectTemplate = globalFuncTemplate->InstanceTemplate();
-
-    v8::NamedPropertyHandlerConfiguration namedConfig(
-        PropertyGetterCallback,
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr,
-        {},
-        v8::PropertyHandlerFlags::kHasNoSideEffect);
-    globalObjectTemplate->SetHandler(namedConfig);
-
-    auto newContext = v8::Context::New(isolate, nullptr, globalObjectTemplate);
-    auto global = mainContext->Global();
-    auto sandbox = v8::Object::New(isolate);
     {
+      v8::Context::Scope contextScope(mainContext);
+      v8::HandleScope handleScope(isolate);
+
+      v8::Local<v8::FunctionTemplate> globalFuncTemplate = v8::FunctionTemplate::New(isolate);
+      v8::Local<v8::ObjectTemplate> globalObjectTemplate = globalFuncTemplate->InstanceTemplate();
+
+      v8::NamedPropertyHandlerConfiguration namedConfig(
+          PropertyGetterCallback,
+          nullptr,
+          nullptr,
+          nullptr,
+          nullptr,
+          nullptr,
+          nullptr,
+          {},
+          v8::PropertyHandlerFlags::kHasNoSideEffect);
+      globalObjectTemplate->SetHandler(namedConfig);
+
+      auto newContext = v8::Context::New(isolate, nullptr, globalObjectTemplate);
+      auto global = mainContext->Global();
+      auto sandbox = v8::Object::New(isolate);
+      {
 #define V8_SET_GLOBAL_FROM_VALUE(name, value) \
   sandbox->Set(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked(), value).FromJust()
 #define V8_SET_GLOBAL_FROM_MAIN(name)                                                                     \
@@ -184,95 +203,87 @@ namespace dom
     }                                                                                                     \
   } while (0)
 
-      /**
-       * Configure the global objects and functions for the DOM scripting.
-       */
+        /**
+         * Configure the global objects and functions for the DOM scripting.
+         */
 
-      // Baisc objects
-      V8_SET_GLOBAL_FROM_MAIN(navigator);
-      V8_SET_GLOBAL_FROM_MAIN(console);
-      V8_SET_GLOBAL_FROM_MAIN(URL);
-      V8_SET_GLOBAL_FROM_MAIN(Blob);
-      V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
+        // Baisc objects
+        V8_SET_GLOBAL_FROM_MAIN(navigator);
+        V8_SET_GLOBAL_FROM_MAIN(console);
+        V8_SET_GLOBAL_FROM_MAIN(URL);
+        V8_SET_GLOBAL_FROM_MAIN(Blob);
+        V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
 
-      // Global functions
-      V8_SET_GLOBAL_FROM_MAIN(fetch);
-      V8_SET_GLOBAL_FROM_MAIN(setTimeout);
-      V8_SET_GLOBAL_FROM_MAIN(clearTimeout);
-      V8_SET_GLOBAL_FROM_MAIN(setInterval);
-      V8_SET_GLOBAL_FROM_MAIN(clearInterval);
-      V8_SET_GLOBAL_FROM_MAIN(requestAnimationFrame);
-      V8_SET_GLOBAL_FROM_MAIN(cancelAnimationFrame);
+        // Global functions
+        V8_SET_GLOBAL_FROM_MAIN(fetch);
+        V8_SET_GLOBAL_FROM_MAIN(setTimeout);
+        V8_SET_GLOBAL_FROM_MAIN(clearTimeout);
+        V8_SET_GLOBAL_FROM_MAIN(setInterval);
+        V8_SET_GLOBAL_FROM_MAIN(clearInterval);
+        V8_SET_GLOBAL_FROM_MAIN(requestAnimationFrame);
+        V8_SET_GLOBAL_FROM_MAIN(cancelAnimationFrame);
 
-      // Fetch API related objects
-      V8_SET_GLOBAL_FROM_MAIN(Headers);
-      V8_SET_GLOBAL_FROM_MAIN(Request);
-      V8_SET_GLOBAL_FROM_MAIN(Response);
+        // Fetch API related objects
+        V8_SET_GLOBAL_FROM_MAIN(Headers);
+        V8_SET_GLOBAL_FROM_MAIN(Request);
+        V8_SET_GLOBAL_FROM_MAIN(Response);
 
-      // WebGL objects
-      V8_SET_GLOBAL_FROM_MAIN(WebGLRenderingContext);
-      V8_SET_GLOBAL_FROM_MAIN(WebGL2RenderingContext);
+        // WebGL objects
+        V8_SET_GLOBAL_FROM_MAIN(WebGLRenderingContext);
+        V8_SET_GLOBAL_FROM_MAIN(WebGL2RenderingContext);
 
-      // WebXR Device API
-      V8_SET_GLOBAL_FROM_MAIN(XRRigidTransform);
-      V8_SET_GLOBAL_FROM_MAIN(XRWebGLLayer);
+        // WebXR Device API
+        V8_SET_GLOBAL_FROM_MAIN(XRRigidTransform);
+        V8_SET_GLOBAL_FROM_MAIN(XRWebGLLayer);
 
-      // Expose the new global objects for the spatial application
-      /**
-       * `gl`: The WEBGLRenderingContext/WEBGL2RenderingContext object for rendering the spatial objects.
-       */
-      V8_SET_GLOBAL_FROM_MAIN(gl);
+        // Expose the new global objects for the spatial application
+        /**
+         * `gl`: The WEBGLRenderingContext/WEBGL2RenderingContext object for rendering the spatial objects.
+         */
+        V8_SET_GLOBAL_FROM_MAIN(gl);
 
-      /**
-       * Re-exposing the following types is to avoid the "instanceof" issues between v8 contexts.
-       */
-      // Typed arrays
-      V8_SET_GLOBAL_FROM_MAIN(Array);
-      V8_SET_GLOBAL_FROM_MAIN(ArrayBuffer);
-      V8_SET_GLOBAL_FROM_MAIN(Int8Array);
-      V8_SET_GLOBAL_FROM_MAIN(Uint8Array);
-      V8_SET_GLOBAL_FROM_MAIN(Uint8ClampedArray);
-      V8_SET_GLOBAL_FROM_MAIN(Int16Array);
-      V8_SET_GLOBAL_FROM_MAIN(Uint16Array);
-      V8_SET_GLOBAL_FROM_MAIN(Int32Array);
-      V8_SET_GLOBAL_FROM_MAIN(Uint32Array);
-      V8_SET_GLOBAL_FROM_MAIN(Float32Array);
-      V8_SET_GLOBAL_FROM_MAIN(Float64Array);
-      V8_SET_GLOBAL_FROM_MAIN(DataView);
+        /**
+         * Re-exposing the following types is to avoid the "instanceof" issues between v8 contexts.
+         */
+        // Typed arrays
+        V8_SET_GLOBAL_FROM_MAIN(Array);
+        V8_SET_GLOBAL_FROM_MAIN(ArrayBuffer);
+        V8_SET_GLOBAL_FROM_MAIN(Int8Array);
+        V8_SET_GLOBAL_FROM_MAIN(Uint8Array);
+        V8_SET_GLOBAL_FROM_MAIN(Uint8ClampedArray);
+        V8_SET_GLOBAL_FROM_MAIN(Int16Array);
+        V8_SET_GLOBAL_FROM_MAIN(Uint16Array);
+        V8_SET_GLOBAL_FROM_MAIN(Int32Array);
+        V8_SET_GLOBAL_FROM_MAIN(Uint32Array);
+        V8_SET_GLOBAL_FROM_MAIN(Float32Array);
+        V8_SET_GLOBAL_FROM_MAIN(Float64Array);
+        V8_SET_GLOBAL_FROM_MAIN(DataView);
 
-      // Specific objects, such as: `document`, `window`, etc.
-      if (!documentValue.IsEmpty())
-        V8_SET_GLOBAL_FROM_VALUE(document, documentValue.Get(isolate).As<v8::Object>());
-
-      v8::Local<v8::Object> windowObject = v8::Object::New(isolate);
-      {
-#define V8_SET_WINDOW_FROM_MAIN(name)                                                                                  \
-  do                                                                                                                   \
-  {                                                                                                                    \
-    v8::Local<v8::Value> valueToSet;                                                                                   \
-    auto maybeValue = global->Get(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked());              \
-    if (!maybeValue.IsEmpty() && maybeValue.ToLocal(&valueToSet))                                                      \
-    {                                                                                                                  \
-      windowObject->Set(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked(), valueToSet).FromJust(); \
-    }                                                                                                                  \
-  } while (0)
-
-        // Create window object
-        V8_SET_WINDOW_FROM_MAIN(requestAnimationFrame);
-        V8_SET_WINDOW_FROM_MAIN(cancelAnimationFrame);
-#undef V8_SET_WINDOW_FROM_MAIN
-      }
-      V8_SET_GLOBAL_FROM_VALUE(window, windowObject);
-      V8_SET_GLOBAL_FROM_VALUE(self, windowObject);
+        // Specific objects, such as: `document`, `window`, etc.
+        if (!documentValue.IsEmpty())
+          V8_SET_GLOBAL_FROM_VALUE(document, documentValue.Get(isolate).As<v8::Object>());
 
 #undef V8_SET_GLOBAL_FROM_MAIN
 #undef V8_SET_GLOBAL_FROM_VALUE
+      }
+      newContext->SetEmbedderData(ContextEmbedderIndex::kMagicIndex, v8::Number::New(isolate, 0x5432));
+      newContext->SetEmbedderData(ContextEmbedderIndex::kSandboxObject, sandbox);
+      newContext->SetEmbedderData(ContextEmbedderIndex::kEnvironmentObject, v8::External::New(isolate, this));
+      newContext->SetSecurityToken(mainContext->GetSecurityToken());
+      scriptingContext.Reset(isolate, newContext);
     }
-    newContext->SetEmbedderData(ContextEmbedderIndex::kMagicIndex, v8::Number::New(isolate, 0x5432));
-    newContext->SetEmbedderData(ContextEmbedderIndex::kSandboxObject, sandbox);
-    newContext->SetEmbedderData(ContextEmbedderIndex::kEnvironmentObject, v8::External::New(isolate, this));
-    newContext->SetSecurityToken(mainContext->GetSecurityToken());
-    scriptingContext.Reset(isolate, newContext);
+
+    {
+      // Initialize the new context globals.
+      auto newContext = scriptingContext.Get(isolate);
+      v8::Context::Scope contextScope(newContext);
+      v8::HandleScope handleScope(isolate);
+
+      v8::Local<v8::Value> windowProxy = createWindowProxy(newContext);
+      auto global = newContext->Global();
+      global->Set(newContext, v8::String::NewFromUtf8(isolate, "window").ToLocalChecked(), windowProxy).FromJust();
+      global->Set(newContext, v8::String::NewFromUtf8(isolate, "self").ToLocalChecked(), windowProxy).FromJust();
+    }
     isContextInitialized = true;
   }
 
@@ -411,6 +422,30 @@ namespace dom
       }
     }
     return nullopt;
+  }
+
+  v8::Local<v8::Value> DOMScriptingContext::createWindowProxy(v8::Local<v8::Context> context)
+  {
+    v8::Context::Scope contextScope(context);
+    v8::EscapableHandleScope handleScope(isolate);
+
+    v8::Local<v8::FunctionTemplate> windowProxyFunctionTemplate = v8::FunctionTemplate::New(isolate);
+    v8::Local<v8::ObjectTemplate> windowProxyTemplate = windowProxyFunctionTemplate->InstanceTemplate();
+
+    v8::NamedPropertyHandlerConfiguration namedConfig(
+        WindowProxyPropertyGetterCallback,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        {},
+        v8::PropertyHandlerFlags::kHasNoSideEffect);
+    windowProxyTemplate->SetHandler(namedConfig);
+
+    auto windowProxy = windowProxyTemplate->NewInstance(context).ToLocalChecked();
+    return handleScope.Escape(windowProxy);
   }
 
   DOMScript::DOMScript(SourceTextType sourceTextType, shared_ptr<DocumentRenderingContext> context)
