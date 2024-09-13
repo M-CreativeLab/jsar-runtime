@@ -3122,12 +3122,7 @@ namespace webgl
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    if (!info[1].IsNumber())
-    {
-      Napi::TypeError::New(env, "pixelStorei() 2nd argument(param) must be a number")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
+
     int pname = info[0].As<Napi::Number>().Int32Value();
     int param = info[1].ToNumber().Int32Value();
 
