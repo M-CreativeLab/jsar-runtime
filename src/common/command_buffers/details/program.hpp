@@ -292,6 +292,39 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
+  class BindAttribLocationCommandBufferRequest : public TrCommandBufferSimpleRequest<BindAttribLocationCommandBufferRequest>
+  {
+  public:
+    BindAttribLocationCommandBufferRequest(uint32_t program, uint32_t index, const string &name) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BIND_ATTRIB_LOCATION_REQ),
+                                                                                                   program(program),
+                                                                                                   attribIndex(index),
+                                                                                                   attribName(name)
+    {
+    }
+    BindAttribLocationCommandBufferRequest(BindAttribLocationCommandBufferRequest &that) : TrCommandBufferSimpleRequest(that),
+                                                                                             program(that.program),
+                                                                                             attribIndex(that.attribIndex)
+    {
+    }
+
+  public:
+    TrCommandBufferMessage *serialize() override
+    {
+      auto message = new TrCommandBufferMessage(type, size, this);
+      message->addStringSegment(attribName);
+      return message;
+    }
+    void deserialize(TrCommandBufferMessage &message) override
+    {
+      attribName = message.getSegment(0)->toString();
+    }
+
+  public:
+    uint32_t program;
+    uint32_t attribIndex;
+    string attribName;
+  };
+
   class GetProgramParamCommandBufferRequest : public TrCommandBufferSimpleRequest<GetProgramParamCommandBufferRequest>
   {
   public:

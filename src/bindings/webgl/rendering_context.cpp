@@ -709,6 +709,7 @@ namespace webgl
       InstanceMethod("deleteProgram", &T::DeleteProgram),                       \
       InstanceMethod("linkProgram", &T::LinkProgram),                           \
       InstanceMethod("useProgram", &T::UseProgram),                             \
+      InstanceMethod("bindAttribLocation", &T::BindAttribLocation),             \
       InstanceMethod("getProgramParameter", &T::GetProgramParameter),           \
       InstanceMethod("getProgramInfoLog", &T::GetProgramInfoLog),               \
       InstanceMethod("attachShader", &T::AttachShader),                         \
@@ -1102,6 +1103,44 @@ namespace webgl
 
     WebGLProgram *program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     auto req = UseProgramCommandBufferRequest(program->GetId());
+    sendCommandBufferRequest(req);
+    return env.Undefined();
+  }
+
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::BindAttribLocation(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 3)
+    {
+      Napi::TypeError::New(env, "bindAttribLocation() takes 3 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsObject() || !info[0].As<Napi::Object>().InstanceOf(WebGLProgram::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "bindAttribLocation() 1st argument(program) must be a WebGLProgram.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[1].IsNumber())
+    {
+      Napi::TypeError::New(env, "bindAttribLocation() 2nd argument(index) must be a number.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[2].IsString())
+    {
+      Napi::TypeError::New(env, "bindAttribLocation() 3rd argument(name) must be a string.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    WebGLProgram *program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
+    int index = info[1].ToNumber().Int32Value();
+    std::string name = info[2].As<Napi::String>().Utf8Value();
+    auto req = BindAttribLocationCommandBufferRequest(program->GetId(), index, name);
     sendCommandBufferRequest(req);
     return env.Undefined();
   }

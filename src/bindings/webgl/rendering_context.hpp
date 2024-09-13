@@ -49,6 +49,7 @@ namespace webgl
     Napi::Value DeleteProgram(const Napi::CallbackInfo &info);
     Napi::Value LinkProgram(const Napi::CallbackInfo &info);
     Napi::Value UseProgram(const Napi::CallbackInfo &info);
+    Napi::Value BindAttribLocation(const Napi::CallbackInfo &info);
     Napi::Value GetProgramParameter(const Napi::CallbackInfo &info);
     Napi::Value GetProgramInfoLog(const Napi::CallbackInfo &info);
     Napi::Value AttachShader(const Napi::CallbackInfo &info);

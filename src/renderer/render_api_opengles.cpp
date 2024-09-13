@@ -456,6 +456,16 @@ private:
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
 			DEBUG(DEBUG_TAG, "[%d] GL::UseProgram(%d)", options.isDefaultQueue, program);
 	}
+	TR_OPENGL_FUNC void OnBindAttribLocation(BindAttribLocationCommandBufferRequest * req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	{
+		auto glContext = reqContentRenderer->getOpenGLContext();
+		auto program = glContext->m_GLObjectManager.FindProgram(req->program);
+		glBindAttribLocation(program, req->attribIndex, req->attribName.c_str());
+
+		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+			DEBUG(DEBUG_TAG, "[%d] GL::BindAttribLocation(program=%d, index=%d, name=%s)",
+						options.isDefaultQueue, program, req->attribIndex, req->attribName.c_str());
+	}
 	TR_OPENGL_FUNC void OnGetProgramParameter(GetProgramParamCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto glContext = reqContentRenderer->getOpenGLContext();
@@ -1911,6 +1921,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			ADD_COMMAND_BUFFER_HANDLER(DELETE_PROGRAM, DeleteProgramCommandBufferRequest, DeleteProgram)
 			ADD_COMMAND_BUFFER_HANDLER(LINK_PROGRAM, LinkProgramCommandBufferRequest, LinkProgram)
 			ADD_COMMAND_BUFFER_HANDLER(USE_PROGRAM, UseProgramCommandBufferRequest, UseProgram)
+			ADD_COMMAND_BUFFER_HANDLER(BIND_ATTRIB_LOCATION, BindAttribLocationCommandBufferRequest, BindAttribLocation)
 			ADD_COMMAND_BUFFER_HANDLER(GET_PROGRAM_PARAM, GetProgramParamCommandBufferRequest, GetProgramParameter)
 			ADD_COMMAND_BUFFER_HANDLER(GET_PROGRAM_INFO_LOG, GetProgramInfoLogCommandBufferRequest, GetProgramInfoLog)
 			ADD_COMMAND_BUFFER_HANDLER(ATTACH_SHADER, AttachShaderCommandBufferRequest, AttachShader)

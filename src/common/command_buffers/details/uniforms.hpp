@@ -273,6 +273,9 @@ namespace commandbuffers
           values(values)
     {
     }
+    Uniform3fvCommandBufferRequest(Uniform3fvCommandBufferRequest &that) : TrCommandBufferSimpleRequest(that), location(that.location)
+    {
+    }
 
   public:
     TrCommandBufferMessage *serialize() override

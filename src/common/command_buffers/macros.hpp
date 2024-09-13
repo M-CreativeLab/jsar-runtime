@@ -7,6 +7,7 @@
   XX(DELETE_PROGRAM, DeleteProgramCommandBufferRequest)                                    \
   XX(LINK_PROGRAM, LinkProgramCommandBufferRequest)                                        \
   XX(USE_PROGRAM, UseProgramCommandBufferRequest)                                          \
+  XX(BIND_ATTRIB_LOCATION, BindAttribLocationCommandBufferRequest)                         \
   XX(GET_PROGRAM_PARAM, GetProgramParamCommandBufferRequest)                               \
   XX(GET_PROGRAM_INFO_LOG, GetProgramInfoLogCommandBufferRequest)                          \
   XX(ATTACH_SHADER, AttachShaderCommandBufferRequest)                                      \
