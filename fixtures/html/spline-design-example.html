@@ -6,16 +6,16 @@
   <script type="importmap">
     {
       "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/"
+        "three": "https://unpkg.com/three@0.149.0/build/three.module.js",
+        "three/examples/": "https://unpkg.com/three@0.149.0/examples/",
+        "@splinetool/loader": "https://unpkg.com/@splinetool/loader@1.9.25/build/SplineLoader.js"
       }
     }
   </script>
   <script type="module">
     import * as THREE from 'three';
-    import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-    console.info(DRACOLoader);
+    import SplineLoader from '@splinetool/loader';
+    console.info(SplineLoader);
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
@@ -25,21 +25,17 @@
     light.position.set(0, 1, 1);
     scene.add(light);
 
-    // Create meshes
-    const geometry = new THREE.TorusKnotGeometry(0.2, 0.05, 50, 16);
-    const material = new THREE.MeshLambertMaterial({ color: 0x00ffff, wireframe: true });
-    const obj = new THREE.Mesh(geometry, material);
-    scene.add(obj);
-
-    const loader = new GLTFLoader();
-    loader.load('http://ar.rokidcdn.com/web-assets/pages/models/grass.glb', (gltf) => {
-      console.info('The model has been loaded', gltf);
-      scene.add(gltf.scene);
-    }, (progress) => {
-      console.info('Loading progress:', progress);
-    }, (err) => {
-      console.warn('Failed to load the model:', err);
-    });
+    const loader = new SplineLoader();
+    loader.load(
+      'https://prod.spline.design/7kxN3695TfdH7qO9/scene.splinecode',
+      (splineScene) => {
+        scene.add(splineScene);
+      },
+      null,
+      (error) => {
+        console.error('Failed to load Spline scene:', error);
+      }
+    );
 
     const gl = navigator.gl;
     navigator.xr.requestSession('immersive-ar', {}).then((session) => {
@@ -57,8 +53,6 @@
       renderer.xr.setSession(session);
 
       function animate() {
-        obj.rotation.x += 0.01;
-        obj.rotation.y += 0.01;
         renderer.render(scene, camera);
       }
 

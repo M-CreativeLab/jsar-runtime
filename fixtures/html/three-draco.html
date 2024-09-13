@@ -15,7 +15,11 @@
     import * as THREE from 'three';
     import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-    console.info(DRACOLoader);
+
+    // Configure and create Draco decoder.
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('https://threejs.org/examples/jsm/libs/draco/');
+    dracoLoader.setDecoderConfig({ type: 'js' });
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
@@ -25,21 +29,20 @@
     light.position.set(0, 1, 1);
     scene.add(light);
 
-    // Create meshes
-    const geometry = new THREE.TorusKnotGeometry(0.2, 0.05, 50, 16);
-    const material = new THREE.MeshLambertMaterial({ color: 0x00ffff, wireframe: true });
-    const obj = new THREE.Mesh(geometry, material);
-    scene.add(obj);
+    dracoLoader.load('https://threejs.org/examples/models/draco/bunny.drc', function (geometry) {
+      console.info('The geometry has been loaded', geometry);
+      geometry.computeVertexNormals();
 
-    const loader = new GLTFLoader();
-    loader.load('http://ar.rokidcdn.com/web-assets/pages/models/grass.glb', (gltf) => {
-      console.info('The model has been loaded', gltf);
-      scene.add(gltf.scene);
-    }, (progress) => {
-      console.info('Loading progress:', progress);
-    }, (err) => {
-      console.warn('Failed to load the model:', err);
+      const material = new THREE.MeshStandardMaterial({ color: 0xa5a5a5 });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+
+      // Release decoder resources.
+      dracoLoader.dispose();
     });
+    console.info('Start loading the geometry...');
 
     const gl = navigator.gl;
     navigator.xr.requestSession('immersive-ar', {}).then((session) => {
@@ -57,18 +60,14 @@
       renderer.xr.setSession(session);
 
       function animate() {
-        obj.rotation.x += 0.01;
-        obj.rotation.y += 0.01;
         renderer.render(scene, camera);
       }
 
       camera.position.z = 5;
       renderer.setAnimationLoop(animate);
-      console.info('Started...');
     }, (err) => {
       console.warn('Failed to start XR session:', err);
     });
-    console.info('navigator.xr', navigator.xr);
   </script>
 </head>
 

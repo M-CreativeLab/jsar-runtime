@@ -709,6 +709,9 @@ namespace dom
     }
   }
 
+  template <typename T>
+  inline void USE(T &&) {}
+
   bool DOMModule::instantiate(v8::Isolate *isolate)
   {
     v8::HandleScope scope(isolate);
@@ -716,15 +719,24 @@ namespace dom
     auto context = isolate->GetCurrentContext();
     v8::TryCatch tryCatch(isolate);
 
-    bool r = false;
-    if (!module->InstantiateModule(context, ResolveModuleCallback).To(&r) || !r)
-      return false;
+    USE(module->InstantiateModule(context, ResolveModuleCallback));
+    resolveCache.clear(); // clear the resolve cache after instantiation, which is used in module initialization.
 
     if (tryCatch.HasCaught() && !tryCatch.HasTerminated())
     {
       assert(tryCatch.Message().IsEmpty() != true);
       assert(tryCatch.Exception().IsEmpty() != true);
-      tryCatch.ReThrow();
+      auto stackTrace = tryCatch.StackTrace(context).ToLocalChecked();
+      if (!stackTrace.IsEmpty())
+      {
+        auto stackTraceString = stackTrace->ToString(context).ToLocalChecked();
+        v8::String::Utf8Value stackTraceUtf8(isolate, stackTraceString);
+        std::cerr << "#" << std::endl;
+        std::cerr << "# Occurred module instantiation error" << std::endl;
+        std::cerr << "# URL: " << url << std::endl;
+        std::cerr << "# Error:" << *stackTraceUtf8 << std::endl;
+        std::cerr << "#" << std::endl;
+      }
       return false;
     }
     return true;
