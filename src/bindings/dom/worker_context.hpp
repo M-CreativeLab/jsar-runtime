@@ -13,10 +13,12 @@ namespace dombinding
     static void Init(Napi::Env env, Napi::Object exports);
 
   public:
-    using RuntimeContextBase::RuntimeContextBase;
+    WorkerContext(const Napi::CallbackInfo &info);
 
   private:
     Napi::Value Start(const Napi::CallbackInfo &info);
+    Napi::Value StartFromSource(const Napi::CallbackInfo &info);
+    Napi::Value DispatchEvent(const Napi::CallbackInfo &info);
 
   private:
     static Napi::FunctionReference *constructor;

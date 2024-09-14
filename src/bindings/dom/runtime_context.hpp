@@ -6,9 +6,10 @@
 
 namespace dombinding
 {
-  inline v8::Local<v8::Value> convertNapiValueToV8Local(napi_value v)
+  template <typename T = v8::Value>
+  inline v8::Local<T> convertNapiValueToV8Local(napi_value v)
   {
-    v8::Local<v8::Value> local;
+    v8::Local<T> local;
     memcpy(static_cast<void *>(&local), &v, sizeof(v));
     return local;
   }

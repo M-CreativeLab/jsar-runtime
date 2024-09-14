@@ -519,6 +519,47 @@ namespace dom
     runtimeContext->fetchTextSourceResource(url, onModuleSourceLoaded);
   }
 
+  bool DOMScriptingContext::dispatchEvent(v8::Local<v8::Object> event)
+  {
+    assert(isContextInitialized);
+    assert(!v8ContextStore.IsEmpty());
+
+    auto context = v8ContextStore.Get(isolate);
+    v8::Isolate::Scope isolateScope(isolate);
+    v8::Context::Scope contextScope(context);
+
+    auto eventType = event->Get(context, v8::String::NewFromUtf8(isolate, "type").ToLocalChecked()).ToLocalChecked();
+    auto eventType_utf8 = v8::String::Utf8Value(isolate, eventType);
+
+    auto global = context->Global();
+    auto listenerName = "on" + string(*eventType_utf8, eventType_utf8.length());
+
+    auto eventListener = global->Get(context, v8::String::NewFromUtf8(isolate, listenerName.c_str()).ToLocalChecked());
+    if (!eventListener.IsEmpty() && eventListener.ToLocalChecked()->IsFunction())
+    {
+      v8::TryCatch tryCatch(isolate);
+      auto function = eventListener.ToLocalChecked().As<v8::Function>();
+      v8::Local<v8::Value> argv[] = {event};
+      v8::Local<v8::Value> result;
+      if (!function->Call(context, global, 1, argv).ToLocal(&result))
+      {
+        if (tryCatch.HasCaught())
+        {
+          v8::Local<v8::Message> message = tryCatch.Message();
+          v8::String::Utf8Value messageUtf8(isolate, message->Get());
+          std::cerr << "Failed to call the event listener: " << listenerName << ", ";
+          std::cerr << "occurred an error: " << *messageUtf8 << std::endl;
+        }
+        else
+        {
+          std::cerr << "Failed to call the event listener: " << listenerName << std::endl;
+        }
+      }
+    }
+    // TODO: call dispatchEvent?
+    return true;
+  }
+
   v8::Local<v8::Value> DOMScriptingContext::createWindowProxy(v8::Local<v8::Context> context)
   {
     v8::Context::Scope contextScope(context);

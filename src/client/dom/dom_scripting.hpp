@@ -155,6 +155,13 @@ namespace dom
      */
     void tryImportModule(const std::string &url, const bool disableCache, std::function<void(shared_ptr<DOMModule>)> loadedCallback);
 
+    /**
+     * Dispatch the global event in this scripting context.
+     * 
+     * @param event The event object to dispatch.
+     */
+    bool dispatchEvent(v8::Local<v8::Object> event);
+
   private:
     /**
      * Create the `Window` or `WindowProxy` object for the main script.

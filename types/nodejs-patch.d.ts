@@ -282,14 +282,28 @@ declare namespace Transmute {
   class WorkerContext extends RuntimeContext {
     /**
      * Create a new v8 context for scripting.
-     * @param options 
+     * @param baseURI The base URI for the worker.
+     * @param options The worker options.
      */
-    constructor(options?: WorkerOptions);
+    constructor(baseURI: string, options?: WorkerOptions);
     /**
-     * Run the given code.
-     * @param code 
+     * Start the worker execution from the URL, internally it will fetch the script and execute it.
+     * 
+     * @param url The worker script URL or relative path to the base URI.
      */
-    start(source: string): void;
+    start(url: string): void;
+    /**
+     * Start the worker execution from the source code.
+     * 
+     * @param source The worker script source code.
+     */
+    startFromSource(source: string): void;
+    /**
+     * Dispatch an event to the worker context.
+     * 
+     * @param event the event object.
+     */
+    dispatchEvent(event: Event): void;
   }
 }
 

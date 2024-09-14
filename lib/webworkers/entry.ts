@@ -4,18 +4,22 @@ import type { WorkerRequest } from './worker';
 const { WorkerContext } = process._linkedBinding('transmute:dom');
 
 const workerRequest: WorkerRequest = workerData;
-const workerContext = new WorkerContext(workerRequest?.options);
+const workerContext = new WorkerContext(workerRequest.baseURI, workerRequest?.options);
 workerContext.setResourceLoader(new ResourceLoaderOnTransmute());
-console.info('Started a new worker entry', workerRequest);
 
 parentPort.on('message', (message) => {
-  // workerScripting.dispatchEvent(message);
+  workerContext.dispatchEvent(new MessageEvent('message', { data: message }));
+});
+parentPort.on('messageerror', (error) => {
+  workerContext.dispatchEvent(new ErrorEvent('messageerror', { error }));
+});
+parentPort.on('error', (error) => {
+  workerContext.dispatchEvent(new ErrorEvent('error', { error }));
 });
 
 // Executing the worker script
-if (workerRequest.code) {
-  const codeBlob = workerRequest.code;
-  codeBlob.text().then((codeText) => {
-    workerContext.start(codeText);
-  });
+if (workerRequest.scriptSource) {
+  workerRequest.scriptSource.text().then((t) => workerContext.startFromSource(t));
+} else {
+  workerContext.start(workerRequest.requestUrl);
 }

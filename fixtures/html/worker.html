@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <title>Web Workers</title>
   <script>
-    console.info(Worker);
-    console.info(new Worker('worker.js'));
+    const worker = new Worker('worker.js');
+    worker.postMessage({ foo: 'bar' });
   </script>
 </head>
 

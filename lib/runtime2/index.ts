@@ -123,7 +123,8 @@ export class TransmuteRuntime2 extends EventTarget {
             const { DocumentRenderingContext } = process._linkedBinding('transmute:dom');
             const renderingContext = new DocumentRenderingContext();
             renderingContext.setResourceLoader(new ResourceLoaderOnTransmute());
-            renderingContext.start(codeOrUrl, 'text/html');
+            // Set the global `document` object from the `DocumentRenderingContext`.
+            globalThis.document = renderingContext.start(codeOrUrl, 'text/html');
             return;
           } catch (err) {
             console.error(`failed to open the html document: ${codeOrUrl}`, err);

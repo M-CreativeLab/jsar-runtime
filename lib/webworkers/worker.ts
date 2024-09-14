@@ -3,8 +3,9 @@ import * as WorkerThreads from 'node:worker_threads';
 import { resolveObjectURL } from 'node:buffer';
 
 export type WorkerRequest = {
-  url: string;
-  code?: Blob;
+  baseURI: string;
+  requestUrl: string;
+  scriptSource?: Blob;
   options?: WorkerOptions;
 };
 
@@ -20,20 +21,25 @@ export class WorkerImpl extends EventTarget implements Worker {
   postMessage(message: unknown, options?: unknown): void {
     this.#handle?.postMessage(message);
   }
+
   terminate(): void {
     this.#handle?.terminate();
   }
 
   constructor(url: string | URL, options?: WorkerOptions) {
     super();
+    if (typeof document === 'undefined' || document.baseURI === undefined) {
+      throw new Error('Workers are only supported in the browser environment');
+    }
 
     const workerScriptUrl = url instanceof URL ? url.href : url;
     const workerRequest: WorkerRequest = {
-      url: workerScriptUrl,
+      baseURI: document.baseURI,
+      requestUrl: workerScriptUrl,
       options,
     };
     if (workerScriptUrl.startsWith('blob:')) {
-      workerRequest.code = resolveObjectURL(workerScriptUrl);
+      workerRequest.scriptSource = resolveObjectURL(workerScriptUrl);
     }
 
     const entryPath = path.resolve(__dirname, './jsar-webworkers-entry.js');
