@@ -29,14 +29,17 @@
     light.position.set(0, 1, 1);
     scene.add(light);
 
+    // Mesh
+    let dracoMesh;
+
     dracoLoader.load('https://threejs.org/examples/models/draco/bunny.drc', function (geometry) {
-      console.info('The geometry has been loaded', geometry);
       geometry.computeVertexNormals();
 
       const material = new THREE.MeshStandardMaterial({ color: 0xa5a5a5 });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
+      dracoMesh = mesh;
       scene.add(mesh);
 
       // Release decoder resources.
@@ -55,11 +58,17 @@
         },
         context: gl,
       });
+      renderer.shadowMap.enabled = true;
       renderer.xr.enabled = true;
       renderer.xr.setReferenceSpaceType('local');
       renderer.xr.setSession(session);
 
       function animate() {
+        if (dracoMesh) {
+          const timer = Date.now() * 0.0003;
+          dracoMesh.rotation.x = Math.sin(timer) * 0.5;
+          dracoMesh.rotation.z = Math.cos(timer) * 0.5;
+        }
         renderer.render(scene, camera);
       }
 

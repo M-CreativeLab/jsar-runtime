@@ -52,6 +52,24 @@ namespace dom
       info.GetReturnValue().SetUndefined();
   }
 
+  void DOMScriptingContext::WorkerSelfProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info)
+  {
+    auto isolate = info.GetIsolate();
+    auto context = isolate->GetCurrentContext();
+    auto globalObject = context->Global();
+
+    v8::MaybeLocal<v8::Value> maybeValue = globalObject->Get(context, property);
+    /**
+     * TODO: add new an embedder data for the window-only properties.
+     */
+
+    v8::Local<v8::Value> resultValue;
+    if (maybeValue.ToLocal(&resultValue))
+      info.GetReturnValue().Set(resultValue);
+    else
+      info.GetReturnValue().SetUndefined();
+  }
+
   v8::MaybeLocal<v8::Promise> DOMScriptingContext::ImportModuleDynamicallyCallback(v8::Local<v8::Context> context,
                                                                                    v8::Local<v8::Data> hostDefinedOptions,
                                                                                    v8::Local<v8::Value> resourceName,
@@ -207,6 +225,8 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(Worker);
 
         // Global functions
+        V8_SET_GLOBAL_FROM_MAIN(atob);
+        V8_SET_GLOBAL_FROM_MAIN(btoa);
         V8_SET_GLOBAL_FROM_MAIN(fetch);
         V8_SET_GLOBAL_FROM_MAIN(setTimeout);
         V8_SET_GLOBAL_FROM_MAIN(clearTimeout);
@@ -322,7 +342,9 @@ namespace dom
   } while (0)
 
         /**
-         * Configure the global objects and functions for the DOM scripting.
+         * Configure the WorkerGlobalScope objects and functions.
+         * 
+         * See https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope
          */
 
         // Baisc objects
@@ -332,22 +354,19 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
 
         // Global functions
+        V8_SET_GLOBAL_FROM_MAIN(atob);
+        V8_SET_GLOBAL_FROM_MAIN(btoa);
         V8_SET_GLOBAL_FROM_MAIN(fetch);
         V8_SET_GLOBAL_FROM_MAIN(setTimeout);
         V8_SET_GLOBAL_FROM_MAIN(clearTimeout);
         V8_SET_GLOBAL_FROM_MAIN(setInterval);
         V8_SET_GLOBAL_FROM_MAIN(clearInterval);
+        V8_SET_GLOBAL_FROM_MAIN(postMessage);
 
         // Fetch API related objects
         V8_SET_GLOBAL_FROM_MAIN(Headers);
         V8_SET_GLOBAL_FROM_MAIN(Request);
         V8_SET_GLOBAL_FROM_MAIN(Response);
-
-        // Expose the new global objects for the spatial application
-        /**
-         * `gl`: The WEBGLRenderingContext/WEBGL2RenderingContext object for rendering the spatial objects.
-         */
-        V8_SET_GLOBAL_FROM_MAIN(gl);
 
 #undef V8_SET_GLOBAL_FROM_MAIN
 #undef V8_SET_GLOBAL_FROM_VALUE
@@ -357,6 +376,15 @@ namespace dom
       workerContext->SetEmbedderData(ContextEmbedderIndex::kEnvironmentObject, v8::External::New(isolate, this));
       workerContext->SetSecurityToken(mainContext->GetSecurityToken());
       v8ContextStore.Reset(isolate, workerContext);
+    }
+
+    {
+      auto newContext = v8ContextStore.Get(isolate);
+      v8::Context::Scope contextScope(newContext);
+      v8::HandleScope handleScope(isolate);
+      v8::Local<v8::Value> selfProxy = createWorkerSelfProxy(newContext);
+      auto global = newContext->Global();
+      global->Set(newContext, v8::String::NewFromUtf8(isolate, "self").ToLocalChecked(), selfProxy).FromJust();
     }
     isContextInitialized = true;
   }
@@ -582,6 +610,30 @@ namespace dom
 
     auto windowProxy = windowProxyTemplate->NewInstance(context).ToLocalChecked();
     return handleScope.Escape(windowProxy);
+  }
+
+  v8::Local<v8::Value> DOMScriptingContext::createWorkerSelfProxy(v8::Local<v8::Context> context)
+  {
+    v8::Context::Scope contextScope(context);
+    v8::EscapableHandleScope handleScope(isolate);
+
+    v8::Local<v8::FunctionTemplate> selfProxyFunctionTemplate = v8::FunctionTemplate::New(isolate);
+    v8::Local<v8::ObjectTemplate> selfProxyTemplate = selfProxyFunctionTemplate->InstanceTemplate();
+
+    v8::NamedPropertyHandlerConfiguration namedConfig(
+        WorkerSelfProxyPropertyGetterCallback,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        {},
+        v8::PropertyHandlerFlags::kHasNoSideEffect);
+    selfProxyTemplate->SetHandler(namedConfig);
+
+    auto selfProxy = selfProxyTemplate->NewInstance(context).ToLocalChecked();
+    return handleScope.Escape(selfProxy);
   }
 
   DOMScript::DOMScript(SourceTextType sourceTextType, shared_ptr<RuntimeContext> runtimeContext)

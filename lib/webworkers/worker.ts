@@ -63,6 +63,13 @@ export class WorkerImpl extends EventTarget implements Worker {
       }
       this.dispatchEvent(event);
     });
+    this.#handle.on('messageerror', (error) => {
+      const event = new MessageEvent('messageerror', { data: error });
+      if (typeof this.onmessageerror === 'function') {
+        this.onmessageerror(event);
+      }
+      this.dispatchEvent(event);
+    });
     this.#handle.on('error', (error) => {
       const event = new ErrorEvent('error', { error });
       if (typeof this.onerror === 'function') {

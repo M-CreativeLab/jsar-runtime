@@ -3,6 +3,15 @@ import { ResourceLoaderOnTransmute } from '../runtime2/jsardom/ResourceLoader';
 import type { WorkerRequest } from './worker';
 const { WorkerContext } = process._linkedBinding('transmute:dom');
 
+{
+  // Define the global object before creating the WorkerContext.
+  Object.defineProperty(globalThis, 'postMessage', {
+    value: parentPort.postMessage.bind(parentPort),
+    configurable: true,
+    writable: true,
+  });
+}
+
 const workerRequest: WorkerRequest = workerData;
 const workerContext = new WorkerContext(workerRequest.baseURI, workerRequest?.options);
 workerContext.setResourceLoader(new ResourceLoaderOnTransmute());

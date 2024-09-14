@@ -45,6 +45,7 @@ namespace dom
   private:
     static void PropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
     static void WindowProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+    static void WorkerSelfProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
     static v8::MaybeLocal<v8::Promise> ImportModuleDynamicallyCallback(v8::Local<v8::Context> context,
                                                                        v8::Local<v8::Data> hostDefinedOptions,
                                                                        v8::Local<v8::Value> resourceName,
@@ -170,6 +171,14 @@ namespace dom
      * @returns The `Window` or `WindowProxy` object.
      */
     v8::Local<v8::Value> createWindowProxy(v8::Local<v8::Context> context);
+
+    /**
+     * Create the `WorkerGlobalScope.self` proxy object.
+     * 
+     * @param context The v8 context to create this object.
+     * @returns The `WorkerGlobalScope.self` proxy object.
+     */
+    v8::Local<v8::Value> createWorkerSelfProxy(v8::Local<v8::Context> context);
 
   private:
     v8::Isolate *isolate;
