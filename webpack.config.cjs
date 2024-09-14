@@ -45,6 +45,7 @@ function getBaseConfig(entry, filename) {
       }),
       new CompressionPlugin({
         test: /\.js$/,
+        minRatio: Infinity,
         algorithm: 'gzip',
       }),
       new BundleAnalyzerPlugin({
@@ -68,4 +69,7 @@ module.exports = [
   {
     ...getBaseConfig('./lib/main.ts', 'jsar-client-entry'),
   },
+  {
+    ...getBaseConfig('./lib/webworkers/entry.ts', 'jsar-webworkers-entry'),
+  }
 ];

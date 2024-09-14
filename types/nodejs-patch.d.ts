@@ -247,16 +247,26 @@ declare namespace Transmute {
   }
 
   /**
-   * The internal rendering context for the document rendering.
+   * What's a WebRuntimeContext?
+   * 
+   * The WebRuntimeContext is a context for the web runtime, such as the main document rendering, worker execution, audio worklet, etc.
    */
-  class DocumentRenderingContext {
-    constructor();
+  class RuntimeContext {
     /**
-     * Set the resource loader, which will be used for fetching the resources such as images, scripts, etc.
-     * 
+     * Configure the resource loader for the context.
      * @param loader the resource loader.
      */
     setResourceLoader(loader: ResourceLoader): void;
+  }
+
+  /**
+   * The internal rendering context for the document rendering.
+   */
+  class DocumentRenderingContext extends RuntimeContext {
+    /**
+     * Create a new document rendering context.
+     */
+    constructor();
     /**
      * Start a new document rendering from the source and MIME type.
      * 
@@ -264,6 +274,22 @@ declare namespace Transmute {
      * @param mimeType the MIME type: 'text/html', 'text/xsml', 'text/svg+xml', etc.
      */
     start(source: string, mimeType: 'text/html'): Document;
+  }
+
+  /**
+   * The `RuntimeContext` for the worker execution.
+   */
+  class WorkerContext extends RuntimeContext {
+    /**
+     * Create a new v8 context for scripting.
+     * @param options 
+     */
+    constructor(options?: WorkerOptions);
+    /**
+     * Run the given code.
+     * @param code 
+     */
+    start(source: string): void;
   }
 }
 
@@ -275,6 +301,7 @@ declare namespace NodeJS {
     _linkedBinding(module: 'transmute:dom'): {
       Audio: typeof Audio;
       DocumentRenderingContext: typeof Transmute.DocumentRenderingContext;
+      WorkerContext: typeof Transmute.WorkerContext;
     };
     _linkedBinding(module: 'transmute:env'): {
       ClientContext: typeof Transmute.TrClientContext;

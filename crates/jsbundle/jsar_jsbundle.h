@@ -6,8 +6,8 @@ extern "C"
 {
   const uint8_t *get_jsbootstrap_ptr(int jsframework_name);
   uintptr_t get_jsbootstrap_size(int jsframework_name);
-  const uint8_t *get_jsbundle_ptr();
-  uintptr_t get_jsbundle_size();
+  const uint8_t *get_jsbundle_ptr(int id);
+  uintptr_t get_jsbundle_size(int id);
 }
 
 /**
@@ -17,6 +17,12 @@ enum class JSFrameworkName
 {
   BABYLON = 0,
   THREE = 1
+};
+
+enum class JSBundles
+{
+  MainEntry = 0,
+  WebWorkersEntry = 1,
 };
 
 class JSBundle
@@ -49,9 +55,9 @@ public:
    *
    * @returns The pointer to the JavaScript client entry source code.
    */
-  static inline const uint8_t *GetClientEntrySourcePtr()
+  static inline const uint8_t *GetClientEntrySourcePtr(JSBundles id = JSBundles::MainEntry)
   {
-    return get_jsbundle_ptr();
+    return get_jsbundle_ptr(static_cast<int>(id));
   }
 
   /**
@@ -59,8 +65,8 @@ public:
    *
    * @returns The size of the JavaScript client entry source code.
    */
-  static inline uintptr_t GetClientEntrySourceSize()
+  static inline uintptr_t GetClientEntrySourceSize(JSBundles id = JSBundles::MainEntry)
   {
-    return get_jsbundle_size();
+    return get_jsbundle_size(static_cast<int>(id));
   }
 };

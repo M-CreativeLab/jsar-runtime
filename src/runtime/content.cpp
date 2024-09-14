@@ -627,19 +627,23 @@ void TrContentManager::installScripts()
   INSTALL_BOOTSTRAP_SCRIPT(BABYLON, "jsar-bootstrap-babylon.js");
 #undef INSTALL_BOOTSTRAP_SCRIPT
 
-  {
-    // Install the client entry script.
-    auto jsBundleSrc = JSBundle::GetClientEntrySourcePtr();
-    path entryPath = path(scriptsTargetDir) / "jsar-client-entry.js";
-    {
-      FILE *fp = fopen(entryPath.c_str(), "wb");
-      if (fp != nullptr)
-      {
-        fwrite(jsBundleSrc, 1, get_jsbundle_size(), fp);
-        fclose(fp);
-      }
-    }
+#define INSTALL_JSBUNDLE_SCRIPT(id, scriptName)                                      \
+  {                                                                                  \
+    auto sourcePtr = JSBundle::GetClientEntrySourcePtr(JSBundles::id);               \
+    path sourcePath = path(scriptsTargetDir) / scriptName;                           \
+    {                                                                                \
+      FILE *fp = fopen(sourcePath.c_str(), "wb");                                    \
+      if (fp != nullptr)                                                             \
+      {                                                                              \
+        fwrite(sourcePtr, 1, JSBundle::GetClientEntrySourceSize(JSBundles::id), fp); \
+        fclose(fp);                                                                  \
+      }                                                                              \
+    }                                                                                \
   }
+
+  INSTALL_JSBUNDLE_SCRIPT(MainEntry, "jsar-client-entry.js");
+  INSTALL_JSBUNDLE_SCRIPT(WebWorkersEntry, "jsar-webworkers-entry.js");
+#undef INSTALL_JSBUNDLE_SCRIPT
 }
 
 void TrContentManager::startHived()

@@ -273,12 +273,6 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     } catch (err) {
       console.warn(`failed to fetch the md5 file for ${resourceUri}, the error is: ${err}`);
     }
-
-    if (useCache) {
-      console.info(`use the cached resource(${cachePath}) for "${resourceUri}".`);
-    } else {
-      console.info(`use the online resource for "${resourceUri}".`);
-    }
     return useCache;
   }
 }

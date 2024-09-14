@@ -2,12 +2,12 @@
 
 #include <memory>
 #include <napi.h>
-#include "client/dom/rendering_context.hpp"
+#include "client/dom/worker_context.hpp"
 #include "./runtime_context.hpp"
 
 namespace dombinding
 {
-  class DocumentRenderingContext : public RuntimeContextBase<DocumentRenderingContext, dom::DocumentRenderingContext>
+  class WorkerContext : public RuntimeContextBase<WorkerContext, dom::WorkerContext>
   {
   public:
     static void Init(Napi::Env env, Napi::Object exports);

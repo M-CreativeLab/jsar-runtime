@@ -85,6 +85,9 @@ private:
 	template <typename RequestType>
 	GLenum CheckError(RequestType *req, renderer::TrContentRenderer *reqContentRenderer)
 	{
+		/**
+		 * TODO: check the request content is still valid.
+		 */
 		auto commandType = req->type;
 		auto contentId = reqContentRenderer->getContent()->id;
 		GLenum error = glGetError();

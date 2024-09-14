@@ -32,7 +32,7 @@ namespace dom
     ESM,
   };
 
-  class DocumentRenderingContext;
+  class RuntimeContext;
   class DOMScript;
   class DOMClassicScript;
   class DOMModule;
@@ -40,7 +40,7 @@ namespace dom
   /**
    * The context class for DOM scripting, this is the implementation of how the DOM compiles and evaluates the script.
    */
-  class DOMScriptingContext : public enable_shared_from_this<DOMScriptingContext>
+  class DOMScriptingContext : public std::enable_shared_from_this<DOMScriptingContext>
   {
   private:
     static void PropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
@@ -52,7 +52,7 @@ namespace dom
                                                                        v8::Local<v8::FixedArray> importAssertions);
 
   public:
-    DOMScriptingContext();
+    DOMScriptingContext(shared_ptr<RuntimeContext> runtimeContext);
 
   public:
     /**
@@ -65,23 +65,29 @@ namespace dom
      * well with it, so we need to make sure the Node.js script won't use `import()` anymore.
      */
     void enableDynamicImport();
+
     /**
-     * Set the script's `document` v8::Value instance.
+     * Make a v8::Context for the main script.
+     *
+     * @param documentValue The document object to be used in the main script.
      */
-    void setDocumentValue(v8::Local<v8::Value> value);
+    void makeMainContext(v8::Local<v8::Value> documentValue);
+
     /**
-     * Make the v8::Context for the script.
+     * Make a v8::Context for the worker script.
      */
-    void makeV8Context();
+    void makeWorkerContext();
+
     /**
      * Create a new DOM script object.
      *
-     * @param context The document rendering context.
+     * @param context The runtime context.
      * @param url The URL of the script.
      * @param type The type of the script: classic or module.
      * @returns The new DOM script object.
      */
-    shared_ptr<DOMScript> create(shared_ptr<DocumentRenderingContext> context, const string &url, SourceTextType type);
+    shared_ptr<DOMScript> create(shared_ptr<RuntimeContext> runtimeContext, const string &url, SourceTextType type);
+
     /**
      * Compile the given script.
      *
@@ -90,12 +96,14 @@ namespace dom
      * @returns Whether the script is compiled successfully.
      */
     bool compile(shared_ptr<DOMScript> script, const std::string &source);
+
     /**
      * Evaluate the given script.
      *
      * @param script The script to evaluate.
      */
     void evaluate(shared_ptr<DOMScript> script);
+
     /**
      * Get the `DOMModule` object from the given v8 module.
      *
@@ -103,6 +111,7 @@ namespace dom
      * @returns The module object if found, otherwise nullptr.
      */
     shared_ptr<DOMModule> getModuleFromV8(v8::Local<v8::Module> v8module);
+
     /**
      * Get the `DOMModule` object from the given URL, it's used to check whether the URL is already loaded.
      *
@@ -110,6 +119,7 @@ namespace dom
      * @returns The module object if found, otherwise nullptr.
      */
     shared_ptr<DOMModule> getModuleFromUrl(const string &url);
+
     /**
      * Update the import map from the given JSON string.
      *
@@ -117,6 +127,7 @@ namespace dom
      * @returns Whether the input json is valid.
      */
     bool updateImportMapFromJSON(const string &json);
+
     /**
      * Do the exact match import map for the given specifier, such as "three" -> "https://cdn.skypack.dev/three".
      *
@@ -125,6 +136,7 @@ namespace dom
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap#bare_modules
      */
     optional<string> exactMatchImportMap(const string &specifier);
+
     /**
      * Do the prefix match import map for the given specifier, such as "three/foo" -> "https://cdn.skypack.dev/three/foo".
      *
@@ -134,13 +146,28 @@ namespace dom
      */
     optional<string> prefixMatchImportMap(const string &specifier);
 
+    /**
+     * Try to import a module from the given URL.
+     *
+     * @param url The URL of the module.
+     * @param disableCache Whether to disable the cache.
+     * @param loadedCallback The callback to call when the module is loaded.
+     */
+    void tryImportModule(const std::string &url, const bool disableCache, std::function<void(shared_ptr<DOMModule>)> loadedCallback);
+
   private:
+    /**
+     * Create the `Window` or `WindowProxy` object for the main script.
+     *
+     * @param context The v8 context to create this object.
+     * @returns The `Window` or `WindowProxy` object.
+     */
     v8::Local<v8::Value> createWindowProxy(v8::Local<v8::Context> context);
 
   private:
     v8::Isolate *isolate;
-    v8::Global<v8::Value> documentValue;
-    v8::Global<v8::Context> scriptingContext;
+    v8::Global<v8::Context> v8ContextStore;
+    shared_ptr<RuntimeContext> runtimeContext;
     unordered_map<int, shared_ptr<DOMModule>> hashToModuleMap;
     unordered_map<uint32_t, shared_ptr<DOMClassicScript>> idToScriptMap;
     unordered_map<uint32_t, shared_ptr<DOMModule>> idToModuleMap;
@@ -156,7 +183,7 @@ namespace dom
   class DOMScript : public enable_shared_from_this<DOMScript>
   {
   protected:
-    DOMScript(SourceTextType sourceTextType, shared_ptr<DocumentRenderingContext> context);
+    DOMScript(SourceTextType sourceTextType, shared_ptr<RuntimeContext> runtimeContext);
     virtual ~DOMScript() = default;
 
   public:
@@ -182,13 +209,13 @@ namespace dom
     bool crossOrigin = false;
 
   protected:
-    weak_ptr<DocumentRenderingContext> documentRenderingContext;
+    weak_ptr<RuntimeContext> runtimeContext;
   };
 
   class DOMClassicScript : public DOMScript
   {
   public:
-    DOMClassicScript(shared_ptr<DocumentRenderingContext> context);
+    DOMClassicScript(shared_ptr<RuntimeContext> runtimeContext);
     ~DOMClassicScript() override;
 
   public:
@@ -216,7 +243,7 @@ namespace dom
                                                             v8::Local<v8::Module> referrer);
 
   public:
-    DOMModule(shared_ptr<DocumentRenderingContext> context);
+    DOMModule(shared_ptr<RuntimeContext> runtimeContext);
     ~DOMModule() override;
 
   public:

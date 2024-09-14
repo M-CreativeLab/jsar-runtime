@@ -2,9 +2,9 @@
 #include <rapidjson/document.h>
 
 #include "crates/jsar_jsbindings.h"
-#include "./dom_scripting.hpp"
-#include "./rendering_context.hpp"
 #include "idgen.hpp"
+#include "./dom_scripting.hpp"
+#include "./runtime_context.hpp"
 
 using namespace std;
 
@@ -119,28 +119,28 @@ namespace dom
       if (!v8::Promise::Resolver::New(context).ToLocal(&resolver))
         return v8::MaybeLocal<v8::Promise>();
 
-      auto renderingContext = dependent->documentRenderingContext.lock();
+      auto scriptingContext = dependent->runtimeContext.lock()->scriptingContext;
       auto persistentResolver = make_shared<v8::Persistent<v8::Promise::Resolver>>(isolate, resolver);
       auto specifierRef = make_shared<string>(specifierStr);
-      auto onModuleLoaded = [isolate, persistentResolver, dependent, renderingContext, specifierRef](shared_ptr<DOMModule> module)
+      auto onModuleLoaded = [isolate, persistentResolver, dependent, scriptingContext, specifierRef](shared_ptr<DOMModule> module)
       {
         v8::Isolate::Scope isolateScope(isolate);
         v8::HandleScope handleScope(isolate);
 
         auto resolver = persistentResolver->Get(isolate);
         dependent->resolveCache.insert({*specifierRef, module});
-        renderingContext->scriptingContext->evaluate(dynamic_pointer_cast<DOMScript>(module));
+        scriptingContext->evaluate(dynamic_pointer_cast<DOMScript>(module));
         // TODO: support resolve the module exports
         resolver->Resolve(isolate->GetCurrentContext(), v8::Undefined(isolate)).ToChecked();
         persistentResolver->Reset();
       };
-      renderingContext->tryImportModule(moduleUrl, false, onModuleLoaded);
+      scriptingContext->tryImportModule(moduleUrl, false, onModuleLoaded);
       return handleScope.Escape(resolver->GetPromise());
     }
   }
 
-  DOMScriptingContext::DOMScriptingContext()
-      : isolate(v8::Isolate::GetCurrent())
+  DOMScriptingContext::DOMScriptingContext(shared_ptr<RuntimeContext> runtimeContext)
+      : isolate(v8::Isolate::GetCurrent()), runtimeContext(runtimeContext)
   {
   }
 
@@ -149,25 +149,16 @@ namespace dom
     auto mainContext = isolate->GetCurrentContext();
     v8::Isolate::Scope isolateScope(isolate);
     v8::Context::Scope contextScope(mainContext);
-    {
-      isolate->SetHostImportModuleDynamicallyCallback(ImportModuleDynamicallyCallback);
-    }
+    isolate->SetHostImportModuleDynamicallyCallback(ImportModuleDynamicallyCallback);
   }
 
-  void DOMScriptingContext::setDocumentValue(v8::Local<v8::Value> value)
+  void DOMScriptingContext::makeMainContext(v8::Local<v8::Value> documentValue)
   {
-    auto mainContext = isolate->GetCurrentContext();
-    v8::Isolate::Scope isolate_scope(isolate);
-    v8::Context::Scope context_scope(mainContext);
-    {
-      documentValue.Reset(isolate, value);
-    }
-  }
-
-  void DOMScriptingContext::makeV8Context()
-  {
+    assert(!isContextInitialized);
+    assert(v8ContextStore.IsEmpty());
     auto mainContext = isolate->GetCurrentContext();
     {
+      v8::Isolate::Scope isolateScope(isolate);
       v8::Context::Scope contextScope(mainContext);
       v8::HandleScope handleScope(isolate);
 
@@ -213,6 +204,7 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(URL);
         V8_SET_GLOBAL_FROM_MAIN(Blob);
         V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
+        V8_SET_GLOBAL_FROM_MAIN(Worker);
 
         // Global functions
         V8_SET_GLOBAL_FROM_MAIN(fetch);
@@ -261,7 +253,7 @@ namespace dom
 
         // Specific objects, such as: `document`, `window`, etc.
         if (!documentValue.IsEmpty())
-          V8_SET_GLOBAL_FROM_VALUE(document, documentValue.Get(isolate).As<v8::Object>());
+          V8_SET_GLOBAL_FROM_VALUE(document, documentValue);
 
 #undef V8_SET_GLOBAL_FROM_MAIN
 #undef V8_SET_GLOBAL_FROM_VALUE
@@ -270,12 +262,12 @@ namespace dom
       newContext->SetEmbedderData(ContextEmbedderIndex::kSandboxObject, sandbox);
       newContext->SetEmbedderData(ContextEmbedderIndex::kEnvironmentObject, v8::External::New(isolate, this));
       newContext->SetSecurityToken(mainContext->GetSecurityToken());
-      scriptingContext.Reset(isolate, newContext);
+      v8ContextStore.Reset(isolate, newContext);
     }
 
     {
       // Initialize the new context globals.
-      auto newContext = scriptingContext.Get(isolate);
+      auto newContext = v8ContextStore.Get(isolate);
       v8::Context::Scope contextScope(newContext);
       v8::HandleScope handleScope(isolate);
 
@@ -287,20 +279,102 @@ namespace dom
     isContextInitialized = true;
   }
 
-  shared_ptr<DOMScript> DOMScriptingContext::create(shared_ptr<DocumentRenderingContext> context, const string &url, SourceTextType type)
+  void DOMScriptingContext::makeWorkerContext()
+  {
+    assert(!isContextInitialized);
+    assert(v8ContextStore.IsEmpty());
+    auto mainContext = isolate->GetCurrentContext();
+    {
+      v8::Isolate::Scope isolateScope(isolate);
+      v8::Context::Scope contextScope(mainContext);
+      v8::HandleScope handleScope(isolate);
+
+      v8::Local<v8::FunctionTemplate> globalFuncTemplate = v8::FunctionTemplate::New(isolate);
+      v8::Local<v8::ObjectTemplate> globalObjectTemplate = globalFuncTemplate->InstanceTemplate();
+
+      v8::NamedPropertyHandlerConfiguration namedConfig(
+          PropertyGetterCallback,
+          nullptr,
+          nullptr,
+          nullptr,
+          nullptr,
+          nullptr,
+          nullptr,
+          {},
+          v8::PropertyHandlerFlags::kHasNoSideEffect);
+      globalObjectTemplate->SetHandler(namedConfig);
+
+      auto workerContext = v8::Context::New(isolate, nullptr, globalObjectTemplate);
+      auto global = mainContext->Global();
+      auto sandbox = v8::Object::New(isolate);
+      {
+#define V8_SET_GLOBAL_FROM_VALUE(name, value) \
+  sandbox->Set(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked(), value).FromJust()
+#define V8_SET_GLOBAL_FROM_MAIN(name)                                                                     \
+  do                                                                                                      \
+  {                                                                                                       \
+    v8::Local<v8::Value> valueToSet;                                                                      \
+    auto maybeValue = global->Get(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked()); \
+    if (!maybeValue.IsEmpty() && maybeValue.ToLocal(&valueToSet))                                         \
+    {                                                                                                     \
+      V8_SET_GLOBAL_FROM_VALUE(name, valueToSet);                                                         \
+    }                                                                                                     \
+  } while (0)
+
+        /**
+         * Configure the global objects and functions for the DOM scripting.
+         */
+
+        // Baisc objects
+        V8_SET_GLOBAL_FROM_MAIN(console);
+        V8_SET_GLOBAL_FROM_MAIN(URL);
+        V8_SET_GLOBAL_FROM_MAIN(Blob);
+        V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
+
+        // Global functions
+        V8_SET_GLOBAL_FROM_MAIN(fetch);
+        V8_SET_GLOBAL_FROM_MAIN(setTimeout);
+        V8_SET_GLOBAL_FROM_MAIN(clearTimeout);
+        V8_SET_GLOBAL_FROM_MAIN(setInterval);
+        V8_SET_GLOBAL_FROM_MAIN(clearInterval);
+
+        // Fetch API related objects
+        V8_SET_GLOBAL_FROM_MAIN(Headers);
+        V8_SET_GLOBAL_FROM_MAIN(Request);
+        V8_SET_GLOBAL_FROM_MAIN(Response);
+
+        // Expose the new global objects for the spatial application
+        /**
+         * `gl`: The WEBGLRenderingContext/WEBGL2RenderingContext object for rendering the spatial objects.
+         */
+        V8_SET_GLOBAL_FROM_MAIN(gl);
+
+#undef V8_SET_GLOBAL_FROM_MAIN
+#undef V8_SET_GLOBAL_FROM_VALUE
+      }
+      workerContext->SetEmbedderData(ContextEmbedderIndex::kMagicIndex, v8::Number::New(isolate, 0x6432));
+      workerContext->SetEmbedderData(ContextEmbedderIndex::kSandboxObject, sandbox);
+      workerContext->SetEmbedderData(ContextEmbedderIndex::kEnvironmentObject, v8::External::New(isolate, this));
+      workerContext->SetSecurityToken(mainContext->GetSecurityToken());
+      v8ContextStore.Reset(isolate, workerContext);
+    }
+    isContextInitialized = true;
+  }
+
+  shared_ptr<DOMScript> DOMScriptingContext::create(shared_ptr<RuntimeContext> runtimeContext, const string &url, SourceTextType type)
   {
     assert(isContextInitialized);
     shared_ptr<DOMScript> script;
     if (type == SourceTextType::Classic)
     {
-      auto classicScript = make_shared<DOMClassicScript>(context);
+      auto classicScript = make_shared<DOMClassicScript>(runtimeContext);
       classicScript->url = url;
       idToScriptMap.insert({classicScript->id, classicScript});
       script = dynamic_pointer_cast<DOMScript>(classicScript);
     }
     else if (type == SourceTextType::ESM)
     {
-      auto module = make_shared<DOMModule>(context);
+      auto module = make_shared<DOMModule>(runtimeContext);
       module->url = url;
       idToModuleMap.insert({module->id, module});
       urlToModuleMap.insert({url, module});
@@ -312,7 +386,7 @@ namespace dom
   bool DOMScriptingContext::compile(shared_ptr<DOMScript> script, const std::string &source)
   {
     assert(isContextInitialized);
-    auto context = scriptingContext.Get(isolate);
+    auto context = v8ContextStore.Get(isolate);
     v8::Isolate::Scope isolateScope(isolate);
     v8::Context::Scope contextScope(context);
 
@@ -332,7 +406,7 @@ namespace dom
   void DOMScriptingContext::evaluate(shared_ptr<DOMScript> script)
   {
     assert(isContextInitialized);
-    auto context = scriptingContext.Get(isolate);
+    auto context = v8ContextStore.Get(isolate);
     v8::Isolate::Scope isolateScope(isolate);
     v8::Context::Scope contextScope(context);
     {
@@ -424,6 +498,27 @@ namespace dom
     return nullopt;
   }
 
+  void DOMScriptingContext::tryImportModule(const string &url, const bool disableCache, function<void(shared_ptr<DOMModule>)> loadedCallback)
+  {
+    if (!disableCache)
+    {
+      auto module = getModuleFromUrl(url);
+      if (module)
+      {
+        loadedCallback(module);
+        return;
+      }
+    }
+    shared_ptr<DOMScript> script = create(runtimeContext, url, SourceTextType::ESM);
+    auto onModuleSourceLoaded = [this, script, loadedCallback](const string &source)
+    {
+      auto module = dynamic_pointer_cast<DOMModule>(script);
+      module->setLinkFinishedCallback(loadedCallback);
+      compile(script, source);
+    };
+    runtimeContext->fetchTextSourceResource(url, onModuleSourceLoaded);
+  }
+
   v8::Local<v8::Value> DOMScriptingContext::createWindowProxy(v8::Local<v8::Context> context)
   {
     v8::Context::Scope contextScope(context);
@@ -448,16 +543,16 @@ namespace dom
     return handleScope.Escape(windowProxy);
   }
 
-  DOMScript::DOMScript(SourceTextType sourceTextType, shared_ptr<DocumentRenderingContext> context)
+  DOMScript::DOMScript(SourceTextType sourceTextType, shared_ptr<RuntimeContext> runtimeContext)
       : sourceTextType(sourceTextType),
-        documentRenderingContext(context)
+        runtimeContext(runtimeContext)
   {
     static TrIdGenerator scriptIdGen(0xf9);
     id = scriptIdGen.get();
   }
 
-  DOMClassicScript::DOMClassicScript(shared_ptr<DocumentRenderingContext> context)
-      : DOMScript(SourceTextType::Classic, context)
+  DOMClassicScript::DOMClassicScript(shared_ptr<RuntimeContext> runtimeContext)
+      : DOMScript(SourceTextType::Classic, runtimeContext)
   {
   }
 
@@ -561,8 +656,8 @@ namespace dom
     return module->moduleStore.Get(isolate);
   }
 
-  DOMModule::DOMModule(shared_ptr<DocumentRenderingContext> context)
-      : DOMScript(SourceTextType::ESM, context)
+  DOMModule::DOMModule(shared_ptr<RuntimeContext> runtimeContext)
+      : DOMScript(SourceTextType::ESM, runtimeContext)
   {
   }
 
@@ -649,7 +744,7 @@ namespace dom
       return specifier;
 
     string nextSpecifier;
-    auto scriptingContext = documentRenderingContext.lock()->scriptingContext;
+    auto scriptingContext = runtimeContext.lock()->scriptingContext;
     auto exactMatchUrl = scriptingContext->exactMatchImportMap(specifier);
     if (exactMatchUrl.has_value())
     {
@@ -677,7 +772,7 @@ namespace dom
     v8::HandleScope scope(isolate);
     auto module = moduleStore.Get(isolate);
     auto v8Context = isolate->GetCurrentContext();
-    auto renderingContext = documentRenderingContext.lock();
+    auto scriptingContext = runtimeContext.lock()->scriptingContext;
 
     // Get module requests
     vector<ModuleRequestInfo> moduleRequestInfos;
@@ -703,7 +798,7 @@ namespace dom
       for (auto moduleRequestInfo : moduleRequestInfos)
       {
         auto specifierRef = make_shared<string>(moduleRequestInfo.specifier); // reference to ensure lifetime when callback is called.
-        renderingContext->tryImportModule(moduleRequestInfo.url, false, [this, specifierRef](shared_ptr<DOMModule> module)
+        scriptingContext->tryImportModule(moduleRequestInfo.url, false, [this, specifierRef](shared_ptr<DOMModule> module)
                                           { handleModuleLoaded(*specifierRef, module); });
       }
     }

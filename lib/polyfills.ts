@@ -24,6 +24,9 @@ import {
   XRWebGLLayerImpl,
   XRRigidTransformImpl
 } from './webxr';
+import {
+  WorkerImpl,
+} from './webworkers/worker';
 
 export function loadPolyfills() {
   globalThis.XMLHttpRequest = XMLHttpRequestImpl;
@@ -84,8 +87,8 @@ export function loadPolyfills() {
   });
 
   /**
- * Canvas2D classes
- */
+   * Canvas2D classes
+   */
   Object.defineProperties(globalThis, {
     'ImageData': {
       value: ImageData,
@@ -136,6 +139,19 @@ export function loadPolyfills() {
       configurable: false,
     },
   });
+
+  /**
+   * Web Workers
+   */
+  Object.defineProperties(globalThis, {
+    'Worker': {
+      value: WorkerImpl,
+      writable: false,
+      enumerable: true,
+      configurable: false,
+    },
+  });
+
   globalThis.window = createWindow();
 
   console.info('Polyfills have been loaded.');

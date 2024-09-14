@@ -7,6 +7,7 @@ use std::path::PathBuf;
 fn main() {
   install_script("jsar-bootstrap-babylon.js");
   install_script("jsar-client-entry.js");
+  install_script("jsar-webworkers-entry.js");
   install_header("jsar_jsbundle.h");
 }
 

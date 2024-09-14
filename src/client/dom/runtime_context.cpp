@@ -1,16 +1,11 @@
 #include <node/v8.h>
-#include "./rendering_context.hpp"
+#include "./runtime_context.hpp"
 
 namespace dom
 {
-  void DocumentRenderingContext::setResourceLoaderValue(v8::Local<v8::Value> value)
+  void RuntimeContext::initialize()
   {
-    auto context = isolate->GetCurrentContext();
-    v8::Isolate::Scope isolateScope(isolate);
-    v8::Context::Scope contextScope(context);
-    {
-      resourceLoaderValue.Reset(isolate, value.As<v8::Object>());
-    }
+    scriptingContext = make_shared<DOMScriptingContext>(getSharedPtr());
   }
 
   void ResolveResource(const v8::FunctionCallbackInfo<v8::Value> &info)
@@ -26,7 +21,17 @@ namespace dom
     }
   }
 
-  void DocumentRenderingContext::fetchResource(const std::string &url, const std::string &responseType, const ResponseCallback &callback)
+  void RuntimeContext::setResourceLoaderValue(v8::Local<v8::Value> value)
+  {
+    auto context = isolate->GetCurrentContext();
+    v8::Isolate::Scope isolateScope(isolate);
+    v8::Context::Scope contextScope(context);
+    {
+      resourceLoaderValue.Reset(isolate, value.As<v8::Object>());
+    }
+  }
+
+  void RuntimeContext::fetchResource(const std::string &url, const std::string &responseType, const ResponseCallback &callback)
   {
     auto context = isolate->GetCurrentContext();
     v8::Isolate::Scope isolateScope(isolate);
@@ -66,7 +71,7 @@ namespace dom
     }
   }
 
-  void DocumentRenderingContext::fetchTextSourceResource(const std::string &url, const StringResponseCallback &callback)
+  void RuntimeContext::fetchTextSourceResource(const std::string &url, const StringResponseCallback &callback)
   {
     fetchResource(url, "string", [callback](const v8::FunctionCallbackInfo<v8::Value> &info)
                   {
@@ -78,32 +83,5 @@ namespace dom
           auto result = string(*value_utf8, value_utf8.length());
           callback(result);
         } });
-  }
-
-  shared_ptr<DOMScript> DocumentRenderingContext::createScript(const std::string &url, SourceTextType type)
-  {
-    return scriptingContext->create(shared_from_this(), url, type);
-  }
-
-  void DocumentRenderingContext::tryImportModule(const std::string &url, bool disableCache,
-                                                 std::function<void(shared_ptr<DOMModule>)> loadedCallback)
-  {
-    if (!disableCache)
-    {
-      auto module = scriptingContext->getModuleFromUrl(url);
-      if (module)
-      {
-        loadedCallback(module);
-        return;
-      }
-    }
-    auto script = createScript(url, SourceTextType::ESM);
-    auto onModuleSourceLoaded = [this, script, loadedCallback](const string &source)
-    {
-      auto module = dynamic_pointer_cast<DOMModule>(script);
-      module->setLinkFinishedCallback(loadedCallback);
-      scriptingContext->compile(script, source);
-    };
-    fetchTextSourceResource(url, onModuleSourceLoaded);
   }
 }

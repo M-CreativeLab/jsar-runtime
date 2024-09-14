@@ -13,9 +13,6 @@
   </script>
   <script type="module">
     import * as THREE from 'three';
-    import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-    console.info(DRACOLoader);
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
@@ -30,16 +27,6 @@
     const material = new THREE.MeshLambertMaterial({ color: 0x00ffff, wireframe: true });
     const obj = new THREE.Mesh(geometry, material);
     scene.add(obj);
-
-    const loader = new GLTFLoader();
-    loader.load('http://ar.rokidcdn.com/web-assets/pages/models/grass.glb', (gltf) => {
-      console.info('The model has been loaded', gltf);
-      scene.add(gltf.scene);
-    }, (progress) => {
-      console.info('Loading progress:', progress);
-    }, (err) => {
-      console.warn('Failed to load the model:', err);
-    });
 
     const gl = navigator.gl;
     navigator.xr.requestSession('immersive-ar', {}).then((session) => {

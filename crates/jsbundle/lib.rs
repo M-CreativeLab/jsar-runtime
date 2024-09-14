@@ -4,6 +4,7 @@ use std::io::Read;
 
 const JSBOOTSTRAP_BABYLON_COMPRESSED: &[u8] = include_bytes!("jsar-bootstrap-babylon.js.gz");
 const JSBUNDLE_CLIENT_ENTRY_COMPRESSED: &[u8] = include_bytes!("jsar-client-entry.js.gz");
+const JSBUNDLE_WEBWORKERS_ENTRY_COMPRESSED: &[u8] = include_bytes!("jsar-webworkers-entry.js.gz");
 
 fn decompress_js_source(js: &[u8]) -> String {
   let mut decoder = GzDecoder::new(js);
@@ -15,24 +16,37 @@ fn decompress_js_source(js: &[u8]) -> String {
 lazy_static! {
   static ref JSBOOTSTRAP_BABYLON_SRC: String = decompress_js_source(JSBOOTSTRAP_BABYLON_COMPRESSED);
   static ref JSBUNDLE_CLIENT_ENTRY_SRC: String = decompress_js_source(JSBUNDLE_CLIENT_ENTRY_COMPRESSED);
+  static ref JSBUNDLE_WEBWORKERS_ENTRY_SRC: String = decompress_js_source(JSBUNDLE_WEBWORKERS_ENTRY_COMPRESSED);
 }
 
 #[no_mangle]
-extern "C" fn get_jsbootstrap_ptr(jsframework: i32) -> *const u8 {
+extern "C" fn get_jsbootstrap_ptr(_framework_id: i32) -> *const u8 {
   JSBOOTSTRAP_BABYLON_SRC.as_ptr()
 }
 
 #[no_mangle]
-extern "C" fn get_jsbootstrap_size(jsframework: i32) -> usize {
+extern "C" fn get_jsbootstrap_size(_framework_id: i32) -> usize {
   JSBOOTSTRAP_BABYLON_SRC.len()
 }
 
 #[no_mangle]
-extern "C" fn get_jsbundle_ptr() -> *const u8 {
-  JSBUNDLE_CLIENT_ENTRY_SRC.as_ptr()
+extern "C" fn get_jsbundle_ptr(id: i32) -> *const u8 {
+  if id == 0 {
+    return JSBUNDLE_CLIENT_ENTRY_SRC.as_ptr()
+  } else if id == 1 {
+    return JSBUNDLE_WEBWORKERS_ENTRY_SRC.as_ptr()
+  } else {
+    unreachable!()
+  }
 }
 
 #[no_mangle]
-extern "C" fn get_jsbundle_size() -> usize {
-  JSBUNDLE_CLIENT_ENTRY_SRC.len()
+extern "C" fn get_jsbundle_size(id: i32) -> usize {
+  if id == 0 {
+    return JSBUNDLE_CLIENT_ENTRY_SRC.len()
+  } else if id == 1 {
+    return JSBUNDLE_WEBWORKERS_ENTRY_SRC.len()
+  } else {
+    unreachable!()
+  }
 }
