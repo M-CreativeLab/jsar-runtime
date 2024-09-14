@@ -45,17 +45,15 @@ Like the classic Web browser, it supports not only the HTML document, but also l
 | --------------------- | ----------- | ---------- |
 | [JavaScript][]        | Ok          | -          |
 | [TypeScript][]        | Not started | -          |
-| [ECMAScript Module][] | Partially   | -          |
-| [WebAssembly][]       | Not started | -          |
-| [Web Worker][]        | Not started | -          |
+| [ECMAScript Module][] | Ok          | -          |
+| [WebAssembly][]       | Ok          | -          |
+| [Web Worker][]        | Ok          | -          |
 
 [JavaScript]: https://developer.mozilla.org/en-US/docs/Web/JavaScript
 [TypeScript]: https://www.typescriptlang.org/
 [ECMAScript Module]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules
 [WebAssembly]: https://webassembly.org/
 [Web Worker]: https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API
-
-> Currently, JSAR runtime is not ready for scripting and modules, these features are supported by the XSML(JSAR-DOM) project, in the later version, we will move these features to the runtime.
 
 ### 3D Graphics
 

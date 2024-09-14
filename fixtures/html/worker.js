@@ -1,5 +1,7 @@
 console.info('worker.js loaded');
 
 onmessage = function(e) {
-  console.info('worker.js received message:', e.data);
+  if (e.data.text === 'foo') {
+    postMessage('bar');
+  }
 };

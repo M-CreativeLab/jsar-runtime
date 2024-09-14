@@ -5,7 +5,10 @@
   <title>Web Workers</title>
   <script>
     const worker = new Worker('worker.js');
-    worker.postMessage({ foo: 'bar' });
+    worker.onmessage = (event) => {
+      console.log('Received message from worker:', event.data);
+    };
+    worker.postMessage({ text: 'foo' });
   </script>
 </head>
 
