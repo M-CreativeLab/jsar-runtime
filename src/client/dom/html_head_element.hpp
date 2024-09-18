@@ -9,5 +9,8 @@ namespace dom
   {
   public:
     using HTMLElement::HTMLElement;
+    HTMLHeadElement(weak_ptr<Document> ownerDocument) : HTMLElement("HEAD", ownerDocument)
+    {
+    }
   };
 }

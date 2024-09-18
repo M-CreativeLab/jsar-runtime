@@ -8,7 +8,7 @@
 namespace dombinding
 {
   Napi::Object CreateElement(Napi::Env env, shared_ptr<dom::Node> elementNode);
-  Napi::Object CreateElement(Napi::Env env, string tagName);
+  Napi::Object CreateElement(Napi::Env env, string tagName, weak_ptr<dom::Document> ownerDocument);
 
   template <typename ObjectType, typename ElementType>
   class ElementBase : public NodeBase<ObjectType, ElementType>
@@ -168,11 +168,4 @@ namespace dombinding
   public:
     static Napi::FunctionReference *constructor;
   };
-
-#define TYPED_ELEMENT_MAP(XX) \
-  XX("HTML", HTMLHtmlElement) \
-  XX("HEAD", HTMLHeadElement) \
-  XX("BODY", HTMLBodyElement) \
-  XX("META", HTMLMetaElement) \
-  XX("SCRIPT", HTMLScriptElement)
 }

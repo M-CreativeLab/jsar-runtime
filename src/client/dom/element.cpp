@@ -1,38 +1,48 @@
 #include <algorithm>
 #include "./element.hpp"
 #include "./attr.hpp"
-
-// include the element-specific headers
-#include "./html_html_element.hpp"
-#include "./html_head_element.hpp"
-#include "./html_body_element.hpp"
-#include "./html_meta_element.hpp"
-#include "./html_script_element.hpp"
+#include "./all_html_elements.hpp"
+#include "common/utility.hpp"
 
 namespace dom
 {
   shared_ptr<Element> Element::CreateElement(pugi::xml_node node, weak_ptr<Document> ownerDocument)
   {
     string nodeName = node.name();
-    shared_ptr<Element> element;
-    if (nodeName == "html")
-      element = make_shared<HTMLHtmlElement>(node, ownerDocument);
-    else if (nodeName == "head")
-      element = make_shared<HTMLHeadElement>(node, ownerDocument);
-    else if (nodeName == "body")
-      element = make_shared<HTMLBodyElement>(node, ownerDocument);
-    else if (nodeName == "meta")
-      element = make_shared<HTMLMetaElement>(node, ownerDocument);
-    else if (nodeName == "script")
-      element = make_shared<HTMLScriptElement>(node, ownerDocument);
-    else
-      element = make_shared<Element>(node, ownerDocument);
+#define XX(tagName, className)                                                 \
+  if (nodeName == tagName)                                                     \
+  {                                                                            \
+    shared_ptr<Element> element = make_shared<className>(node, ownerDocument); \
+    element->createdCallback();                                                \
+    return element;                                                            \
+  }
+    TYPED_ELEMENT_MAP(XX)
+#undef XX
 
+    shared_ptr<Element> element = make_shared<Element>(node, ownerDocument);
     element->createdCallback();
     return element;
   }
 
-  Element::Element() : Node()
+  shared_ptr<Element> Element::CreateElement(string tagName, weak_ptr<Document> ownerDocument)
+  {
+#define XX(tagNameStr, className)                                        \
+  if (tagName == tagNameStr)                                             \
+  {                                                                      \
+    shared_ptr<Element> element = make_shared<className>(ownerDocument); \
+    element->createdCallback();                                          \
+    return element;                                                      \
+  }
+    TYPED_ELEMENT_MAP(XX)
+#undef XX
+
+    shared_ptr<Element> element = make_shared<Element>(tagName, ownerDocument);
+    element->createdCallback();
+    return element;
+  }
+
+  Element::Element(string tagName, optional<weak_ptr<Document>> ownerDocument)
+      : Node(NodeType::ELEMENT_NODE, tagName, ownerDocument), tagName(ToUpperCase(tagName))
   {
     createdCallback();
   }
@@ -159,6 +169,14 @@ namespace dom
       this->internal->remove_attribute(name.c_str());
       attributeChangedCallback(name, oldValue, "");
     }
+  }
+
+  bool Element::is(const string expectedTagName)
+  {
+    string expectedTagNameUpper;
+    expectedTagNameUpper.resize(expectedTagName.size());
+    transform(expectedTagName.begin(), expectedTagName.end(), expectedTagNameUpper.begin(), ::toupper);
+    return tagName == expectedTagNameUpper;
   }
 
   void Element::setId(const string &idValue)

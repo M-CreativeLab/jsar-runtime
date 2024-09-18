@@ -51,7 +51,8 @@ namespace dombinding
     static Napi::Object NewInstance(Napi::Env env, shared_ptr<DocumentType> document)
     {
       Napi::EscapableHandleScope scope(env);
-      Napi::External<DocumentType> external = Napi::External<DocumentType>::New(env, document.get());
+      NodeContainer<DocumentType> nodeContainer(document);
+      auto external = Napi::External<NodeContainer<DocumentType>>::New(env, &nodeContainer);
       Napi::Object obj = ObjectType::constructor->New({external});
       return scope.Escape(obj).ToObject();
     }
@@ -136,7 +137,7 @@ namespace dombinding
         Napi::TypeError::New(env, "Failed to execute 'createElement' on 'Document': The tag name provided ('') is not a valid name.").ThrowAsJavaScriptException();
         return env.Undefined();
       }
-      return dombinding::CreateElement(env, tagName);
+      return dombinding::CreateElement(env, tagName, this->node);
     }
     Napi::Value CreateElementNS(const Napi::CallbackInfo &info)
     {

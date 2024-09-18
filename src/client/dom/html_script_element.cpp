@@ -21,7 +21,7 @@ namespace dom
 
   void HTMLScriptElement::connectedCallback()
   {
-    auto renderingContext = ownerDocument.lock()->renderingContext;
+    auto renderingContext = ownerDocument->lock()->renderingContext;
     if (isImportMap())
     {
       if (!renderingContext->updateImportMap(textContent))
@@ -56,7 +56,7 @@ namespace dom
     }
     else
     {
-      auto renderingContext = ownerDocument.lock()->renderingContext;
+      auto renderingContext = ownerDocument->lock()->renderingContext;
       {
         auto resourceUrl = crates::jsar::UrlHelper::CreateUrlStringWithPath(baseURI, src);
         if (resourceUrl == "")
@@ -74,7 +74,7 @@ namespace dom
 
   void HTMLScriptElement::compileScript(const string &source)
   {
-    auto renderingContext = ownerDocument.lock()->renderingContext;
+    auto renderingContext = ownerDocument->lock()->renderingContext;
     renderingContext->scriptingContext->compile(compiledScript, source);
     scriptCompiled = true;
 
@@ -102,7 +102,7 @@ namespace dom
   {
     if (compiledScript == nullptr || !scriptCompiled)
       return;
-    auto renderingContext = ownerDocument.lock()->renderingContext;
+    auto renderingContext = ownerDocument->lock()->renderingContext;
     renderingContext->scriptingContext->evaluate(compiledScript);
     scriptExecutedOnce = true;
     scriptExecutionScheduled = false;

@@ -4,7 +4,7 @@
 namespace dom
 {
   Attr::Attr(pugi::xml_attribute attr, shared_ptr<Element> ownerElement)
-      : Node(),
+      : Node(NodeType::ATTRIBUTE_NODE, attr.name(), ownerElement->ownerDocument),
         name(attr.name()),
         value(attr.value()),
         specified(true),

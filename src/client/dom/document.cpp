@@ -6,7 +6,7 @@
 namespace dom
 {
   Document::Document(string contentType, shared_ptr<DocumentRenderingContext> renderingContext, bool autoConnect)
-      : Node(),
+      : Node(NodeType::DOCUMENT_NODE, "#document", std::nullopt),
         contentType(contentType),
         renderingContext(renderingContext),
         autoConnect(autoConnect)
@@ -35,7 +35,8 @@ namespace dom
     auto r = docInternal->load_string(source.c_str());
     if (r.status != pugi::xml_parse_status::status_ok)
       throw std::runtime_error("Failed to parse XML document: " + std::string(r.description()));
-    resetInternal(docInternal.get(), getPtr<Document>());
+
+    resetFrom(docInternal, getPtr<Document>());
     isSourceLoaded = true;
 
     if (shouldOpen)

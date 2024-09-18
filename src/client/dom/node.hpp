@@ -39,7 +39,7 @@ namespace dom
     /**
      * Create an empty `Node` object.
      */
-    Node();
+    Node(NodeType nodeType, string nodeName, optional<weak_ptr<Document>> ownerDocument);
     /**
      * Create a new `Node` object from a `pugi::xml_node`.
      */
@@ -55,6 +55,11 @@ namespace dom
     string getTextContent();
 
   public:
+    /**
+     * Returns if this node has any child nodes.
+     * 
+     * @returns True if the node has child nodes, otherwise false.
+     */
     inline bool hasChildNodes() { return childNodes.size() > 0; }
 
   protected:
@@ -74,18 +79,13 @@ namespace dom
     {
       return dynamic_pointer_cast<T>(shared_from_this());
     }
+    void resetFrom(shared_ptr<pugi::xml_node> node, weak_ptr<Document> ownerDocument);
     /**
      * Print the internal `pugi::xml_node` object.
      * 
      * @param showTree If true, the tree will be printed.
      */
     void print(bool showTree = true);
-    /**
-     * Reset the internal `pugi::xml_node` object.
-     * 
-     * @param nodeToSet The `pugi::xml_node` object to set.
-     */
-    void resetInternal(pugi::xml_node *nodeToSet, weak_ptr<Document> fromDocument);
     /**
      * Connect the node to the relevant context object.
      */
@@ -95,7 +95,15 @@ namespace dom
      */
     virtual void load();
 
+  private:
+    void updateFromDocument(optional<weak_ptr<Document>> document);
+    void updateFromInternal();
+    void updateTreeFromInternal();
+
   public:
+    /**
+     * The Node's document base URI.
+     */
     string baseURI;
     /**
      * A boolean value that is true if the node is connected to its relevant context object, and false if not.
@@ -112,13 +120,18 @@ namespace dom
     /**
      * Returns the `Document` that this node belongs to. If the node is itself a document, returns null.
      */
-    weak_ptr<Document> ownerDocument;
+    optional<weak_ptr<Document>> ownerDocument = nullopt;
     /**
      * Returns or sets the textual content of an element and all its descendants.
      */
     string textContent;
-
+    /**
+     * The first child of the node.
+     */
     shared_ptr<Node> firstChild;
+    /**
+     * The last child of the node.
+     */
     shared_ptr<Node> lastChild;
     shared_ptr<Node> parentNode;
     vector<shared_ptr<Node>> childNodes;

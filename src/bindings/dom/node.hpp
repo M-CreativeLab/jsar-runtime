@@ -11,6 +11,24 @@ namespace dombinding
 {
   Napi::Object CreateNode(Napi::Env env, shared_ptr<dom::Node> node);
 
+  /**
+   * A container for the NodeType instance.
+   * 
+   * Napi::External<T> doesn't support shared_ptr<T> directly, thus we need to wrap it via this container
+   * class.
+   * 
+   * @tparam NodeType The node type
+   */
+  template <typename NodeType>
+  class NodeContainer
+  {
+  public:
+    NodeContainer(shared_ptr<NodeType> node) : node(node) {}
+
+  public:
+    shared_ptr<NodeType> node;
+  };
+
   template <typename ObjectType, typename NodeType>
   class NodeBase : public Napi::ObjectWrap<ObjectType>
   {
@@ -41,8 +59,8 @@ namespace dombinding
 
       if (info.Length() >= 1 && info[0].IsExternal())
       {
-        NodeType *data = info[0].As<Napi::External<NodeType>>().Data();
-        ResetNode(info, data);
+        NodeContainer<NodeType> *container = info[0].As<Napi::External<NodeContainer<NodeType>>>().Data();
+        ResetNode(info, container->node);
       }
       else
       {
@@ -135,7 +153,7 @@ namespace dombinding
     }
 
   protected:
-    void ResetNode(const Napi::CallbackInfo &info, NodeType *nodeToSet)
+    void ResetNode(const Napi::CallbackInfo &info, shared_ptr<NodeType> nodeToSet)
     {
       node = nodeToSet;
       {
@@ -152,7 +170,7 @@ namespace dombinding
     }
 
   protected:
-    NodeType *node = nullptr;
+    shared_ptr<NodeType> node = nullptr;
   };
 
   class Node : public NodeBase<Node, dom::Node>

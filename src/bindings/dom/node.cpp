@@ -24,7 +24,8 @@ namespace dombinding
     }
     else
     {
-      auto external = Napi::External<dom::Node>::New(env, node.get());
+      NodeContainer nodeContainer(node);
+      auto external = Napi::External<NodeContainer<dom::Node>>::New(env, &nodeContainer);
       obj = Node::constructor->New({external});
     }
     return scope.Escape(obj).ToObject();

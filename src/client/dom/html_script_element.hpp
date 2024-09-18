@@ -23,6 +23,9 @@ namespace dom
   {
   public:
     using HTMLElement::HTMLElement;
+    HTMLScriptElement(weak_ptr<Document> ownerDocument) : HTMLElement("SCRIPT", ownerDocument)
+    {
+    }
 
   public:
     inline bool isClassicScript() { return type.empty() || type == "text/javascript" || type == "application/javascript"; }
