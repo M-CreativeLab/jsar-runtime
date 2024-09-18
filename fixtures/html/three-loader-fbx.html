@@ -1,0 +1,127 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Three.js: Fbx Loader</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
+
+    // Create lights
+    const light = new THREE.DirectionalLight(0xffffff, 0.5);
+    light.position.set(0, 1, 1);
+    scene.add(light);
+
+    const clock = new THREE.Clock();
+    let object, mixer;
+    // Mesh
+    {
+      const manager = new THREE.LoadingManager();
+
+      const params = {
+        asset: 'Samba Dancing'
+      };
+      const assets = [
+        'Samba Dancing',
+        'morph_test'
+      ];
+
+      (function init() {
+        // ground
+        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2000, 2000), new THREE.MeshPhongMaterial({ color: 0x999999, depthWrite: false }));
+        mesh.rotation.x = - Math.PI / 2;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+
+        const grid = new THREE.GridHelper(2000, 20, 0x000000, 0x000000);
+        grid.material.opacity = 0.2;
+        grid.material.transparent = true;
+        scene.add(grid);
+
+        loader = new FBXLoader(manager);
+        loadAsset(params.asset);
+      })();
+
+      function loadAsset(asset) {
+        loader.load('https://threejs.org/examples/models/fbx/' + asset + '.fbx', function (group) {
+          if (object) {
+            object.traverse(function (child) {
+              if (child.material) {
+                const materials = Array.isArray(child.material) ? child.material : [child.material];
+                materials.forEach(material => {
+                  if (material.map) material.map.dispose();
+                  material.dispose();
+                });
+              }
+              if (child.geometry) child.geometry.dispose();
+            });
+            scene.remove(object);
+          }
+
+          object = group;
+          if (object.animations && object.animations.length) {
+            mixer = new THREE.AnimationMixer(object);
+            const action = mixer.clipAction(object.animations[0]);
+            action.play();
+          } else {
+            mixer = null;
+          }
+
+          object.traverse(function (child) {
+            if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+            }
+          });
+          scene.add(object);
+        });
+      }
+    }
+
+    const gl = navigator.gl;
+    navigator.xr.requestSession('immersive-ar', {}).then((session) => {
+      const baseLayer = new XRWebGLLayer(session, gl);
+      session.updateRenderState({ baseLayer });
+
+      const renderer = new THREE.WebGLRenderer({
+        canvas: {
+          addEventListener() { },
+        },
+        context: gl,
+      });
+      renderer.shadowMap.enabled = true;
+      renderer.xr.enabled = true;
+      renderer.xr.setReferenceSpaceType('local');
+      renderer.xr.setSession(session);
+
+      function animate() {
+        const delta = clock.getDelta();
+        if (mixer) {
+          mixer.update(delta);
+        }
+        renderer.render(scene, camera);
+      }
+
+      camera.position.z = 5;
+      renderer.setAnimationLoop(animate);
+    }, (err) => {
+      console.warn('Failed to start XR session:', err);
+    });
+  </script>
+</head>
+
+<body>
+</body>
+
+</html>
