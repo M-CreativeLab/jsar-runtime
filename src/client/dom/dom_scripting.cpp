@@ -201,6 +201,15 @@ namespace dom
       {
 #define V8_SET_GLOBAL_FROM_VALUE(name, value) \
   sandbox->Set(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked(), value).FromJust()
+#define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                         \
+  try                                                                                           \
+  {                                                                                             \
+    V8_SET_GLOBAL_FROM_VALUE(name, valueOrExpr);                                                \
+  }                                                                                             \
+  catch (const std::exception &e)                                                               \
+  {                                                                                             \
+    std::cerr << "Failed to set the global object: " << #name << ", " << e.what() << std::endl; \
+  }
 #define V8_SET_GLOBAL_FROM_MAIN(name)                                                                     \
   do                                                                                                      \
   {                                                                                                       \
@@ -227,7 +236,7 @@ namespace dom
         // Global functions
         V8_SET_GLOBAL_FROM_MAIN(atob);
         V8_SET_GLOBAL_FROM_MAIN(btoa);
-        V8_SET_GLOBAL_FROM_MAIN(fetch);
+        V8_TRY_SET_GLOBAL_FROM_VALUE(fetch, runtimeContext->createWHATWGFetchImpl(newContext));
         V8_SET_GLOBAL_FROM_MAIN(setTimeout);
         V8_SET_GLOBAL_FROM_MAIN(clearTimeout);
         V8_SET_GLOBAL_FROM_MAIN(setInterval);
@@ -276,6 +285,7 @@ namespace dom
           V8_SET_GLOBAL_FROM_VALUE(document, documentValue);
 
 #undef V8_SET_GLOBAL_FROM_MAIN
+#undef V8_TRY_SET_GLOBAL_FROM_VALUE
 #undef V8_SET_GLOBAL_FROM_VALUE
       }
       newContext->SetEmbedderData(ContextEmbedderIndex::kMagicIndex, v8::Number::New(isolate, 0x5432));
@@ -330,6 +340,15 @@ namespace dom
       {
 #define V8_SET_GLOBAL_FROM_VALUE(name, value) \
   sandbox->Set(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked(), value).FromJust()
+#define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                         \
+  try                                                                                           \
+  {                                                                                             \
+    V8_SET_GLOBAL_FROM_VALUE(name, valueOrExpr);                                                \
+  }                                                                                             \
+  catch (const std::exception &e)                                                               \
+  {                                                                                             \
+    std::cerr << "Failed to set the global object: " << #name << ", " << e.what() << std::endl; \
+  }
 #define V8_SET_GLOBAL_FROM_MAIN(name)                                                                     \
   do                                                                                                      \
   {                                                                                                       \
@@ -343,7 +362,7 @@ namespace dom
 
         /**
          * Configure the WorkerGlobalScope objects and functions.
-         * 
+         *
          * See https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope
          */
 
@@ -356,7 +375,7 @@ namespace dom
         // Global functions
         V8_SET_GLOBAL_FROM_MAIN(atob);
         V8_SET_GLOBAL_FROM_MAIN(btoa);
-        V8_SET_GLOBAL_FROM_MAIN(fetch);
+        V8_TRY_SET_GLOBAL_FROM_VALUE(fetch, runtimeContext->createWHATWGFetchImpl(workerContext));
         V8_SET_GLOBAL_FROM_MAIN(setTimeout);
         V8_SET_GLOBAL_FROM_MAIN(clearTimeout);
         V8_SET_GLOBAL_FROM_MAIN(setInterval);

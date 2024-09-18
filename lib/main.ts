@@ -25,11 +25,20 @@ let runtime: TransmuteRuntime2;
  * application running still.
  */
 process.on('unhandledRejection', (reason) => {
-  console.warn('Received an unhandled rejection:', reason);
+  const message: string = reason instanceof Error ? (reason.stack || reason.message) : String(reason);
+  console.warn('#');
+  console.warn('# Unhandled rejection:');
+  console.warn('#');
+  console.warn(message);
+  console.warn('\n');
 });
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught exception:', err);
-  console.error('Exiting the process');
+process.on('uncaughtException', (e) => {
+  const message: string = e instanceof Error ? (e.stack || e.message) : String(e);
+  console.warn('#');
+  console.warn('# Unhandled rejection:');
+  console.warn('#');
+  console.warn(message);
+  console.warn('Exiting the process after 500ms...\n');
   setTimeout(() => process.exit(1), 500);
 });
 

@@ -99,6 +99,52 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
   }
 
   /**
+   * Create a WHATWG fetch implementation.
+   * 
+   * @param baseURI The base URI to be used with relative URLs and CORS checks.
+   * @returns the fetch(input, init?) function.
+   */
+  createWHATWGFetchImpl(baseURI: string): (input: RequestInfo, init?: RequestInit) => Promise<Response> {
+    const self: ResourceLoaderOnTransmute = this;
+    const fetchImpl = fetch;  // Save the Node.js fetch implementation.
+
+    return async function fetch(input: RequestInfo, init?: RequestInit): Promise<Response> {
+      /**
+       * TODO: Support CORS.
+       */
+      let urlObj: URL;
+      const url = typeof input === 'string' ? input : input.url;
+      if (url.startsWith('http:') || url.startsWith('https:')) {
+        urlObj = new URL(url);
+      } else if (url.startsWith('/') || url.startsWith('./') || url.startsWith('../')) {
+        urlObj = new URL(url, baseURI);
+      } else {
+        throw new TypeError(`Failed to fetch: Invalid URL ${input}`);
+      }
+
+      if (!self.#isCachingEnabled) {
+        return fetchImpl(url, init);
+      }
+      const [isCached, cachedUrl] = await self.#isResourceCached(url);
+      if (isCached && await self.#shouldUseResourceCache(url, cachedUrl)) {
+        const cache: ArrayBuffer = await self.#readBinaryFile(cachedUrl);
+        const readable = new ReadableStream({
+          start(controller) {
+            controller.enqueue(cache);
+            controller.close();
+          },
+        });
+        return new Response(readable, {
+          status: 200,
+          statusText: 'OK',
+        });
+      } else {
+        return fetchImpl(url, init);
+      }
+    }
+  }
+
+  /**
    * Make a network request to fetch a given resource file.
    */
   async #requestFile<AsType extends keyof FetchReturnsMap>(

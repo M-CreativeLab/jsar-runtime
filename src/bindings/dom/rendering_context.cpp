@@ -56,6 +56,8 @@ namespace dombinding
       try
       {
         auto doc = contextImpl->create<dom::HTMLDocument>(urlString.Utf8Value(), parsingType);
+        contextImpl->setBaseURI(doc->baseURI);
+
         auto jsInstance = Document::NewInstance(env, doc);
         {
           auto scriptingContext = contextImpl->scriptingContext;

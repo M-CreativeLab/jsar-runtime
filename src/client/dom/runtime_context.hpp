@@ -28,6 +28,13 @@ namespace dom
     virtual void initialize();
 
     /**
+     * Set the base URI value.
+     * 
+     * @param baseURI The base URI value to set.
+     */
+    void setBaseURI(const std::string baseURI);
+
+    /**
      * Set the resource loader value.
      *
      * @param value The `ResourceLoader` value to set.
@@ -51,6 +58,13 @@ namespace dom
      */
     void fetchTextSourceResource(const std::string &url, const StringResponseCallback &callback);
 
+    /**
+     * Create the WHATWG `fetch` function with the given base URI.
+     *
+     * @param context The context to create the function in.
+     */
+    v8::Local<v8::Value> createWHATWGFetchImpl(v8::Local<v8::Context> context);
+
   protected:
     /**
      * Get the shared pointer of the runtime context.
@@ -64,6 +78,7 @@ namespace dom
     }
 
   public:
+    std::string baseURI;
     shared_ptr<DOMScriptingContext> scriptingContext;
 
   protected:

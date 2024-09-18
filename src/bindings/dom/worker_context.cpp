@@ -36,7 +36,7 @@ namespace dombinding
     }
 
     auto baseURI = info[0].As<Napi::String>().Utf8Value();
-    contextImpl->baseURI = baseURI;
+    contextImpl->setBaseURI(baseURI);
 
     if (info.Length() >= 2 && info[1].IsObject())
     {
@@ -62,6 +62,10 @@ namespace dombinding
         contextImpl->workerName = jsOptionsObject.Get("name").ToString().Utf8Value();
       }
     }
+
+    // Make the worker's context
+    auto scriptingContext = contextImpl->scriptingContext;
+    scriptingContext->makeWorkerContext();
   }
 
   Napi::Value WorkerContext::Start(const Napi::CallbackInfo &info)

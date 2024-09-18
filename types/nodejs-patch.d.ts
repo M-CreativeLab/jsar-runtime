@@ -244,6 +244,14 @@ declare namespace Transmute {
      * @returns The corresponding response type.
      */
     fetch<AsType extends keyof ResourceResponseTypesMap>(url: string, options: ResourceFetchingOptions, returnsAs?: AsType): Promise<ResourceResponseTypesMap[AsType]>;
+
+    /**
+     * Create a WHATWG fetch implementation.
+     * 
+     * @param baseURI The base URI to be used with relative URLs and CORS checks.
+     * @returns the fetch(input, init?) function.
+     */
+    createWHATWGFetchImpl(baseURI: string): (input: RequestInfo, init?: RequestInit) => Promise<Response>;
   }
 
   /**

@@ -2,7 +2,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>Simple HTML</title>
+  <title>Three.js: Draco Loader</title>
   <script type="importmap">
     {
       "imports": {
@@ -19,7 +19,6 @@
     // Configure and create Draco decoder.
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('https://threejs.org/examples/jsm/libs/draco/');
-    dracoLoader.setDecoderConfig({ type: 'js' });
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);

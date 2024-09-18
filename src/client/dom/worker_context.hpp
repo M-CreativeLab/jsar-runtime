@@ -25,11 +25,6 @@ namespace dom
     using RuntimeContext::RuntimeContext;
 
   public:
-    void initialize() override
-    {
-      RuntimeContext::initialize();
-      scriptingContext->makeWorkerContext();
-    }
     void start(const std::string &url)
     {
       assert(scriptStarted == false);
@@ -74,7 +69,6 @@ namespace dom
     }
 
   public:
-    std::string baseURI;
     std::string workerName;
     SourceTextType sourceType = SourceTextType::Classic;
     WorkerCredentials credentials = WorkerCredentials::SameOrigin;
