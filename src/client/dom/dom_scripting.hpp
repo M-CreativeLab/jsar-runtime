@@ -280,6 +280,7 @@ namespace dom
     void setLinkFinishedCallback(function<void(shared_ptr<DOMModule>)> callback);
 
   private:
+    v8::Local<v8::Value> getExports(v8::Isolate *isolate);
     void link(v8::Isolate *isolate);
     bool instantiate(v8::Isolate *isolate);
     void handleModuleLoaded(const string &specifier, shared_ptr<DOMModule> module);

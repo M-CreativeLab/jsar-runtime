@@ -7,7 +7,7 @@
     Promise.all([
       import('./esm/foo.js'),
     ]).then(([foo]) => {
-      console.log(foo);
+      console.log(foo.test());
     });
   </script>
 </head>

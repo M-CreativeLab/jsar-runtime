@@ -148,8 +148,7 @@ namespace dom
         auto resolver = persistentResolver->Get(isolate);
         dependent->resolveCache.insert({*specifierRef, module});
         scriptingContext->evaluate(dynamic_pointer_cast<DOMScript>(module));
-        // TODO: support resolve the module exports
-        resolver->Resolve(isolate->GetCurrentContext(), v8::Undefined(isolate)).ToChecked();
+        resolver->Resolve(isolate->GetCurrentContext(), module->getExports(isolate)).ToChecked();
         persistentResolver->Reset();
       };
       scriptingContext->tryImportModule(moduleUrl, false, onModuleLoaded);
@@ -879,6 +878,20 @@ namespace dom
     linkFinishedCallback = callback;
   }
 
+  v8::Local<v8::Value> DOMModule::getExports(v8::Isolate *isolate)
+  {
+    v8::EscapableHandleScope handleScope(isolate);
+    auto module = moduleStore.Get(isolate);
+    if (module.IsEmpty())
+      return handleScope.Escape(v8::Undefined(isolate));
+
+    auto modNamespace = module->GetModuleNamespace();
+    if (modNamespace.IsEmpty())
+      return handleScope.Escape(v8::Undefined(isolate));
+    else
+      return handleScope.Escape(modNamespace);
+  }
+
   void DOMModule::link(v8::Isolate *isolate)
   {
     v8::HandleScope scope(isolate);
@@ -1002,18 +1015,33 @@ namespace dom
       }
       else
       {
-        if (resultValue->IsPromise())
+        if (!resultValue->IsPromise())
+        {
+          std::cerr << "Failed to execute script: the result is not a promise" << std::endl;
+        }
+        else
         {
           auto promise = v8::Local<v8::Promise>::Cast(resultValue);
-          auto resolve = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
-                                           { info.GetReturnValue().Set(info[0]); })
-                             .ToLocalChecked();
-          auto reject = v8::Function::New(context, [](const v8::FunctionCallbackInfo<v8::Value> &info)
-                                          {
-                                            v8::String::Utf8Value message(info.GetIsolate(), info[0]);
-                                            fprintf(stderr, "Failed to execute script: %s\n", *message); })
-                            .ToLocalChecked();
-          promise->Then(context, resolve, reject).ToLocalChecked();
+          auto resolveCallback = [](const v8::FunctionCallbackInfo<v8::Value> &info)
+          {
+            v8::Isolate *isolate = info.GetIsolate();
+            v8::Local<v8::Context> context = isolate->GetCurrentContext();
+            v8::Context::Scope contextScope(context);
+            v8::HandleScope handleScope(isolate);
+            assert(info.Length() > 0);
+            info.GetReturnValue().Set(info[0]);
+          };
+          auto rejectCallback = [](const v8::FunctionCallbackInfo<v8::Value> &info)
+          {
+            v8::Isolate *isolate = info.GetIsolate();
+            v8::Local<v8::Context> context = isolate->GetCurrentContext();
+            v8::Context::Scope contextScope(context);
+            v8::HandleScope handleScope(isolate);
+            v8::String::Utf8Value message(info.GetIsolate(), info[0]);
+            std::cerr << "Failed to execute script: " << *message << std::endl;
+          };
+          v8::Local<v8::Function> resolveFunc = v8::Function::New(context, resolveCallback).ToLocalChecked();
+          v8::Local<v8::Function> rejectFunc = v8::Function::New(context, rejectCallback).ToLocalChecked();
         }
       }
     }

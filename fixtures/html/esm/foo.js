@@ -10,3 +10,7 @@ import { sum, sumWithSome } from './bar/ops.js';
 console.log(some);
 console.log(sum(some, 10) === sumWithSome(10));
 console.log(sum);
+
+export function test() {
+  return 'foo';
+}
