@@ -7,9 +7,6 @@
 
 namespace dombinding
 {
-  Napi::Object CreateElement(Napi::Env env, shared_ptr<dom::Node> elementNode);
-  Napi::Object CreateElement(Napi::Env env, string tagName, weak_ptr<dom::Document> ownerDocument);
-
   template <typename ObjectType, typename ElementType>
   class ElementBase : public NodeBase<ObjectType, ElementType>
   {
@@ -164,6 +161,25 @@ namespace dombinding
 
   public:
     static void Init(Napi::Env env);
+
+    /**
+     * Create corresponding JS `Element` instance from the element-implementation object.
+     *
+     * @param env The N-API environment.
+     * @param elementNode The element-implementation object.
+     * @returns The JS `Element` instance.
+     */
+    static Napi::Object NewInstance(Napi::Env env, shared_ptr<dom::Node> elementNode);
+
+    /**
+     * Create a new JS `Element` instance by the given tag name.
+     * 
+     * @param env The N-API environment.
+     * @param namespaceURI The namespace URI of the element.
+     * @param tagName The tag name of the element.
+     * @param ownerDocument The owner document of the element.
+     */
+    static Napi::Object NewInstance(Napi::Env env, string namespaceURI, string tagName, weak_ptr<dom::Document> ownerDocument);
 
   public:
     static Napi::FunctionReference *constructor;

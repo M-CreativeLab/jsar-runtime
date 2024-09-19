@@ -3,19 +3,38 @@
 <head>
   <meta charset="utf-8" />
   <title>Images</title>
-  <script>
-    const html = document.firstChild;
-    const body = html.childNodes[1];
-    console.log('Children:', body.childNodes);
 
-    const newImage = document.createElement('img');
-    console.log('New image:', newImage);
-  </script>
 </head>
 
 <body>
   <h1>Images:</h1>
   <img src="https://placekitten.com/200/300" alt="A cute kitten" />
 </body>
+
+<script>
+  const html = document.firstChild;
+  const body = html.childNodes[1];
+  for (const child of body.childNodes) {
+    console.log('Child:', child, 'isConnected:', child.isConnected);
+  }
+
+  const image = document.createElement('img');
+  function onImageLoad() {
+    removeEventListeners();
+    console.info('Image loaded:', image);
+  }
+  function onImageError(event) {
+    removeEventListeners();
+    console.error('Image error:', event);
+  }
+  function removeEventListeners() {
+    image.removeEventListener('load', onImageLoad, false);
+    image.removeEventListener('error', onImageError, false);
+  }
+  // image.addEventListener( 'load', onImageLoad, false );
+  // image.addEventListener( 'error', onImageError, false );
+  image.src = 'https://t4.ftcdn.net/jpg/06/00/90/17/360_F_600901739_93i8HBQhHjqXyvNBrHWEiJOveQYdMe6m.jpg';
+  console.info(image);
+</script>
 
 </html>

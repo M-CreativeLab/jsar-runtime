@@ -36,7 +36,7 @@ namespace dom
      * @param ownerDocument The owner document of the element.
      * @returns The created `Element` object.
      */
-    static shared_ptr<Element> CreateElement(string tagName, weak_ptr<Document> ownerDocument);
+    static shared_ptr<Element> CreateElement(string namespaceURI, string tagName, weak_ptr<Document> ownerDocument);
 
   public:
     Element(string tagName, optional<weak_ptr<Document>> ownerDocument);

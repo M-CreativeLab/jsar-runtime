@@ -44,7 +44,6 @@ namespace dom
      * Create a new `Node` object from a `pugi::xml_node`.
      */
     Node(pugi::xml_node node, weak_ptr<Document> ownerDocument);
-    Node(Node &other);
     virtual ~Node() = default;
 
   public:
@@ -108,7 +107,7 @@ namespace dom
     /**
      * A boolean value that is true if the node is connected to its relevant context object, and false if not.
      */
-    bool connected = false;
+    bool connected;
     /**
      * A string containing the name of the `Node`.
      */

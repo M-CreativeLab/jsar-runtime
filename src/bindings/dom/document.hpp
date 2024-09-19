@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <napi.h>
+#include "common/utility.hpp"
 #include "client/dom/document.hpp"
 #include "./node.hpp"
 #include "./element.hpp"
@@ -131,21 +132,35 @@ namespace dombinding
         Napi::TypeError::New(env, "Failed to execute 'createElement' on 'Document': 1 argument required, but only 0 present.").ThrowAsJavaScriptException();
         return env.Undefined();
       }
-      auto tagName = info[0].ToString().Utf8Value();
+
+      auto tagName = ToLowerCase(info[0].ToString().Utf8Value());
       if (tagName.empty())
       {
         Napi::TypeError::New(env, "Failed to execute 'createElement' on 'Document': The tag name provided ('') is not a valid name.").ThrowAsJavaScriptException();
         return env.Undefined();
       }
-      return dombinding::CreateElement(env, tagName, this->node);
+      return Element::NewInstance(env, "http://www.w3.org/1999/xhtml", tagName, this->node);
     }
     Napi::Value CreateElementNS(const Napi::CallbackInfo &info)
     {
       Napi::Env env = info.Env();
       Napi::HandleScope scope(env);
 
-      Napi::TypeError::New(env, "Failed to execute 'createElementNS' on 'Document': This method is not implemented.").ThrowAsJavaScriptException();
-      return env.Undefined();
+      if (info.Length() < 2)
+      {
+        auto msg = "Failed to execute 'createElementNS' on 'Document': 2 arguments required, but only " + to_string(info.Length()) + " present.";
+        Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+
+      auto namespaceURI = ToLowerCase(info[0].ToString().Utf8Value());
+      auto tagName = ToLowerCase(info[1].ToString().Utf8Value());
+      if (tagName.empty())
+      {
+        Napi::TypeError::New(env, "Failed to execute 'createElementNS' on 'Document': The tag name provided ('') is not a valid name.").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+      return Element::NewInstance(env, namespaceURI, tagName, this->node);
     }
     Napi::Value GetElementById(const Napi::CallbackInfo &info)
     {
@@ -162,7 +177,7 @@ namespace dombinding
       if (element == nullptr)
         return env.Null();
       else
-        return dombinding::CreateElement(env, element);
+        return Element::NewInstance(env, element);
     }
   };
 

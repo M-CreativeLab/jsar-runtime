@@ -16,7 +16,7 @@ namespace dombinding
   }
 
   template <typename ObjectType = Element, typename ElementType = dom::Element>
-  inline Napi::Object CreateTypedElementInternal(Napi::Env env, shared_ptr<dom::Element> element)
+  inline Napi::Object CreateElementFromImpl(Napi::Env env, shared_ptr<dom::Element> element)
   {
     Napi::EscapableHandleScope scope(env);
     shared_ptr<ElementType> typedElement = dynamic_pointer_cast<ElementType>(element);
@@ -27,40 +27,40 @@ namespace dombinding
   }
 
   template <typename ObjectType = Element, typename ElementType = dom::Element>
-  inline Napi::Object CreateTypedElementInternal(Napi::Env env, string tagName, weak_ptr<dom::Document> ownerDocument)
+  inline Napi::Object CreateElementFromNew(Napi::Env env, string namespaceURI, string tagName, weak_ptr<dom::Document> ownerDocument)
   {
     Napi::EscapableHandleScope scope(env);
-    shared_ptr<ElementType> typedElement = dynamic_pointer_cast<ElementType>(dom::Element::CreateElement(tagName, ownerDocument));
+    shared_ptr<ElementType> typedElement = dynamic_pointer_cast<ElementType>(dom::Element::CreateElement(namespaceURI, tagName, ownerDocument));
     NodeContainer<ElementType> elementContainer(typedElement);
     auto external = Napi::External<NodeContainer<ElementType>>::New(env, &elementContainer);
     auto instance = ObjectType::constructor->New({external});
     return scope.Escape(instance).ToObject();
   }
 
-  Napi::Object CreateElement(Napi::Env env, shared_ptr<dom::Node> elementNode)
+  Napi::Object Element::NewInstance(Napi::Env env, shared_ptr<dom::Node> elementNode)
   {
     assert(elementNode->nodeType == dom::NodeType::ELEMENT_NODE);
     auto element = dynamic_pointer_cast<dom::Element>(elementNode);
 
-#define XX(tagNameStr, className)                                               \
-  if (element->is(tagNameStr))                                                  \
-  {                                                                             \
-    return CreateTypedElementInternal<className, dom::className>(env, element); \
+#define XX(tagNameStr, className)                                          \
+  if (element->is(tagNameStr))                                             \
+  {                                                                        \
+    return CreateElementFromImpl<className, dom::className>(env, element); \
   }
     TYPED_ELEMENT_MAP(XX)
 #undef XX
-    return CreateTypedElementInternal(env, element);
+    return CreateElementFromImpl(env, element);
   }
 
-  Napi::Object CreateElement(Napi::Env env, string tagName, weak_ptr<dom::Document> ownerDocument)
+  Napi::Object Element::NewInstance(Napi::Env env, string namespaceURI, string tagName, weak_ptr<dom::Document> ownerDocument)
   {
-#define XX(tagNameStr, className)                                                              \
-  if (tagName == tagNameStr)                                                                   \
-  {                                                                                            \
-    return CreateTypedElementInternal<className, dom::className>(env, tagName, ownerDocument); \
+#define XX(tagNameStr, className)                                                                      \
+  if (tagName == tagNameStr)                                                                           \
+  {                                                                                                    \
+    return CreateElementFromNew<className, dom::className>(env, namespaceURI, tagName, ownerDocument); \
   }
     TYPED_ELEMENT_MAP(XX)
 #undef XX
-    return CreateTypedElementInternal(env, "element", ownerDocument);
+    return CreateElementFromNew(env, namespaceURI, tagName, ownerDocument);
   }
 }

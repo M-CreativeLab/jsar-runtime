@@ -24,12 +24,13 @@ namespace dom
     return element;
   }
 
-  shared_ptr<Element> Element::CreateElement(string tagName, weak_ptr<Document> ownerDocument)
+  shared_ptr<Element> Element::CreateElement(string namespaceURI, string tagName, weak_ptr<Document> ownerDocument)
   {
 #define XX(tagNameStr, className)                                        \
   if (tagName == tagNameStr)                                             \
   {                                                                      \
     shared_ptr<Element> element = make_shared<className>(ownerDocument); \
+    element->namespaceURI = namespaceURI;                                \
     element->createdCallback();                                          \
     return element;                                                      \
   }
@@ -37,6 +38,7 @@ namespace dom
 #undef XX
 
     shared_ptr<Element> element = make_shared<Element>(tagName, ownerDocument);
+    element->namespaceURI = namespaceURI;
     element->createdCallback();
     return element;
   }
