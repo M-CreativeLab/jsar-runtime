@@ -120,6 +120,14 @@ void TrContentRuntime::onCommandBuffersExecuted()
 
 void TrContentRuntime::onClientProcessExited(int exitCode)
 {
+  if (!used)
+  {
+    /**
+     * FIXME: This means the pre-content is failed to boot up, we must let this abort the process to expose related problems.
+     */
+    DEBUG(LOG_TAG_ERROR, "Occurred a fatal error: the content(%d) is not used but the process is exited.", id);
+    assert(false);
+  }
   available = false; // make sure this state is still false.
   pid = INVALID_PID;
   shouldDestroy = true;
