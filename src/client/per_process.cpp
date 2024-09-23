@@ -48,6 +48,13 @@ ScriptEnvironment::ScriptEnvironment(int id, string &scriptsDir) : id(id)
   args.push_back("node");
   args.push_back("--experimental-vm-modules");
   args.push_back("--experimental-global-customevent");
+  /**
+   * Add --preserve-symlinks and --preserve-symlinks-main to avoid the call to `realpathSync()` when resolving modules and optimize its performance.
+   */
+  {
+    args.push_back("--preserve-symlinks");
+    args.push_back("--preserve-symlinks-main");
+  }
   args.push_back("-r");
   args.push_back(scriptsDir + "/jsar-bootstrap-babylon.js");
   args.push_back(scriptsDir + "/jsar-client-entry.js");
@@ -64,17 +71,28 @@ ScriptEnvironment::~ScriptEnvironment()
 {
 }
 
+void printNodeEnv(const string &name)
+{
+  char *str = getenv(name.c_str());
+  if (str != nullptr)
+    std::cout << "  " << name << ": " << str << std::endl;
+  else
+    std::cout << "  " << name << ": (null)" << std::endl;
+}
+
 bool ScriptEnvironment::initialize()
 {
   string scriptArgsStr = "";
   for (auto &arg : scriptArgs)
+    scriptArgsStr += arg + " ";
+
+  std::cout << "Node.js commandline: " << scriptArgsStr << std::endl;
   {
-    if (arg.size() > 1024)
-      scriptArgsStr += "<...>";
-    else
-      scriptArgsStr += arg + " ";
+    std::cout << "Environment Variables List:" << std::endl;
+    printNodeEnv("NODE_DEBUG");
+    printNodeEnv("NODE_OPTIONS");
   }
-  fprintf(stdout, "Executing Node.js script: %s\n", scriptArgsStr.c_str());
+
   std::unique_ptr<node::InitializationResult> result =
       node::InitializeOncePerProcess(scriptArgs, {node::ProcessInitializationFlags::kNoInitializeV8,
                                                   node::ProcessInitializationFlags::kNoInitializeNodeV8Platform,
@@ -175,12 +193,26 @@ int TrScriptRuntimePerProcess::executeMainScript(ScriptEnvironment &env, vector<
   for (uint32_t n = 0; n < scriptArgs.size(); n++)
     args.push_back(scriptArgs[n]);
 
+  auto &execArgs = nodeInitResult->exec_args();
+  {
+    // Print the command line arguments and the exec arguments.
+    std::cout << "Command Args: ";
+    for (auto &arg : args)
+      std::cout << "(" << arg << ") ";
+    std::cout << std::endl;
+
+    std::cout << "   Exec Args: ";
+    for (auto &arg : execArgs)
+      std::cout << "(" << arg << ") ";
+    std::cout << std::endl;
+  }
+
   // Setup up a libuv event loop, v8::Isolate, and Node.js Environment.
   vector<string> errors;
   auto setup = node::CommonEnvironmentSetup::Create(nodePlatform,
                                                     &errors,
                                                     args,
-                                                    nodeInitResult->exec_args());
+                                                    execArgs);
 
   if (!setup)
   {
