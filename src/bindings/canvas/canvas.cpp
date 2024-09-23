@@ -22,7 +22,10 @@ namespace canvasbinding
     exports.Set("OffscreenCanvas", tpl);
   }
 
-  OffscreenCanvas::OffscreenCanvas(const Napi::CallbackInfo &info) : Napi::ObjectWrap<OffscreenCanvas>(info)
+  OffscreenCanvas::OffscreenCanvas(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<OffscreenCanvas>(info),
+        CanvasWrap<OffscreenCanvasRenderingContext2D, canvas::OffscreenCanvas>(),
+        ImageSourceWrap<canvas::OffscreenCanvas>()
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -33,128 +36,51 @@ namespace canvasbinding
       return;
     }
 
-    width = info[0].ToNumber().Uint32Value();
-    height = info[1].ToNumber().Uint32Value();
+    auto width = info[0].ToNumber().Uint32Value();
+    auto height = info[1].ToNumber().Uint32Value();
+    dataImpl = make_shared<canvas::OffscreenCanvas>(width, height);
+    setCanvasImpl(dataImpl);
   }
 
   OffscreenCanvas::~OffscreenCanvas()
   {
-    if (skBitmap != nullptr)
-    {
-      delete skBitmap;
-      skBitmap = nullptr;
-    }
   }
 
   Napi::Value OffscreenCanvas::WidthGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return Napi::Number::New(env, width);
+    return Napi::Number::New(env, dataImpl->width());
   }
 
   void OffscreenCanvas::WidthSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-
-    if (!currentContext2d.IsEmpty())
-      DEBUG(LOG_TAG_CLIENT_CANVAS, "Trying to change width of canvas with active 2d context.");
-    width = value.ToNumber().Uint32Value();
+    dataImpl->setWidth(value.ToNumber().Uint32Value());
   }
 
   Napi::Value OffscreenCanvas::HeightGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return Napi::Number::New(env, height);
+    return Napi::Number::New(env, dataImpl->height());
   }
 
   void OffscreenCanvas::HeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    if (!currentContext2d.IsEmpty())
-      DEBUG(LOG_TAG_CLIENT_CANVAS, "Trying to change height of canvas with active 2d context.");
-    height = value.ToNumber().Uint32Value();
+    dataImpl->setHeight(value.ToNumber().Uint32Value());
   }
 
-  Napi::Value OffscreenCanvas::GetContext(const Napi::CallbackInfo &info)
+  uint32_t OffscreenCanvas::width()
   {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
-
-    auto type = info[0].ToString().Utf8Value();
-    if (type == "2d")
-    {
-      if (!currentContext2d.IsEmpty())
-        return currentContext2d.Value();
-
-      resetSkSurface();
-      auto context = CanvasRenderingContext2D::NewInstance(env, this);
-      currentContext2d = Napi::Persistent(context);
-      return context;
-    }
-    else if (type == "jsar:htmlrenderer")
-    {
-      if (!htmlRenderingContext.IsEmpty())
-        return htmlRenderingContext.Value();
-
-      resetSkSurface();
-      auto context = HTMLRenderingContext::NewInstance(env, this);
-      htmlRenderingContext = Napi::Persistent(context);
-      return context;
-    }
-    else
-    {
-      // TODO: support other context types like webgl
-      string msg = "Unsupported context type: (" + type + ")";
-      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
+    return dataImpl->width();
   }
 
-  uint32_t OffscreenCanvas::getWidth()
+  uint32_t OffscreenCanvas::height()
   {
-    return width;
+    return dataImpl->height();
   }
-
-  uint32_t OffscreenCanvas::getHeight()
-  {
-    return height;
-  }
-
-  SkBitmap *OffscreenCanvas::getSkBitmap()
-  {
-    auto skCanvas = skSurface->getCanvas();
-    if (skCanvas == nullptr)
-      return nullptr;
-    if (!skCanvas->readPixels(*skBitmap, 0, 0))
-      return nullptr;
-    return skBitmap;
-  }
-
-  sk_sp<SkSurface> &OffscreenCanvas::getSkSurface()
-  {
-    return skSurface;
-  }
-
-  void OffscreenCanvas::resetSkSurface()
-  {
-    auto imageInfo = SkImageInfo::MakeN32Premul(width, height);
-    {
-      // Reset SkSurface
-      if (skSurface != nullptr)
-        skSurface.reset();
-      skSurface = SkSurfaces::Raster(imageInfo);
-    }
-    {
-      // Reset SkBitmap
-      if (skBitmap != nullptr)
-        delete skBitmap;
-      skBitmap = new SkBitmap();
-      skBitmap->allocN32Pixels(width, height);
-    }
-  }
-
 } // namespace webgl

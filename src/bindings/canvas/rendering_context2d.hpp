@@ -1,73 +1,35 @@
 #pragma once
 
+#include <memory>
 #include <napi.h>
-#include <skia/include/core/SkData.h>
-#include <skia/include/core/SkMatrix.h>
-#include <skia/include/core/SkImage.h>
-#include <skia/include/core/SkSurface.h>
-#include <skia/include/core/SkCanvas.h>
-#include <skia/include/core/SkFont.h>
-#include <skia/include/core/SkFontMgr.h>
-#include <skia/include/core/SkPath.h>
-#include <skia/include/core/SkPathEffect.h>
-#include <skia/include/core/SkTextBlob.h>
-#include <skia/include/core/SkTypeface.h>
-#include <glm/glm.hpp>
 
-#include "canvas.hpp"
-#include "path2d.hpp"
 #include "client/per_process.hpp"
+#include "client/canvas/canvas.hpp"
+#include "client/canvas/rendering_context2d.hpp"
+#include "./canvas.hpp"
+
+namespace dombinding
+{
+  class HTMLCanvasElement;
+}
 
 namespace canvasbinding
 {
-  enum class TextAlign
-  {
-    Start,
-    End,
-    Left,
-    Right,
-    Center
-  };
-
-  enum class TextBaseline
-  {
-    Top,
-    Hanging,
-    Middle,
-    Alphabetic,
-    Ideographic,
-    Bottom
-  };
-
-  class TextMetrics
+  template <typename ObjectType, typename CanvasType>
+  class CanvasRenderingContext2DBase : public Napi::ObjectWrap<ObjectType>
   {
   public:
-    TextMetrics()
-    {
-    }
-
-  public:
-    float width;
-    float actualBoundingBoxLeft;
-    float actualBoundingBoxRight;
-    float fontBoundingBoxAscent;
-    float fontBoundingBoxDescent;
-    float actualBoundingBoxAscent;
-    float actualBoundingBoxDescent;
-    float emHeightAscent;
-    float emHeightDescent;
-    float hangingBaseline;
-    float alphabeticBaseline;
-    float ideographicBaseline;
-  };
-
-  class CanvasRenderingContext2D : public Napi::ObjectWrap<CanvasRenderingContext2D>
-  {
-  public:
-    static void Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, OffscreenCanvas *canvas);
-    CanvasRenderingContext2D(const Napi::CallbackInfo &info);
-    ~CanvasRenderingContext2D();
+    /**
+     * Create a new instance of `CanvasRenderingContext2D` with the given context implementation instance.
+     *
+     * @param env The N-API environment.
+     * @param contextImpl The context implementation instance.
+     * @param canvas The canvas element.
+     * @returns The new instance of `CanvasRenderingContext2D`.
+     */
+    static Napi::Object NewInstance(Napi::Env env, std::shared_ptr<canvas::RenderingContextBase<CanvasType>> contextImpl, Napi::Value canvasValue);
+    static std::vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties();
+    CanvasRenderingContext2DBase(const Napi::CallbackInfo &info);
 
   private:
     Napi::Value Fill(const Napi::CallbackInfo &info);
@@ -135,42 +97,51 @@ namespace canvasbinding
     void LineJoinSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
 
   private:
-    SkPaint getFillPaint();
-    SkPaint getStrokePaint();
-    SkPaint *getShadowPaint(SkPaint &basePaint);
-    TextMetrics measureText(const std::string &text);
-    void closeSkPath(SkPath *path);
-    bool ellipseToSkPath(SkPath *path, float x, float y, float radiusX, float radiusY, float rotation,
-                         float startAngle, float endAngle, bool anticlockwise);
+    Napi::ObjectReference canvasRef;
+    std::shared_ptr<canvas::CanvasRenderingContext2D<CanvasType>> contextImpl;
+  };
+
+  class CanvasRenderingContext2D : public CanvasRenderingContext2DBase<CanvasRenderingContext2D, canvas::Canvas>
+  {
+  public:
+    using CanvasRenderingContext2DBase::CanvasRenderingContext2DBase;
+    static void Init(Napi::Env env);
+    /**
+     * Create a new instance of `CanvasRenderingContext2D`.
+     *
+     * @param env The N-API environment.
+     * @param contextImpl The context implementation instance.
+     * @param canvasValue The canvas element to create the rendering context for.
+     * @returns The new instance of `CanvasRenderingContext2D` or null if something went wrong.
+     */
+    static Napi::Object NewInstance(Napi::Env env,
+                                    std::shared_ptr<canvas::RenderingContextBase<canvas::Canvas>> contextImpl,
+                                    Napi::Value canvasValue);
+
+  public:
+    static Napi::FunctionReference *constructor;
+  };
+
+  class OffscreenCanvasRenderingContext2D : public CanvasRenderingContext2DBase<OffscreenCanvasRenderingContext2D, canvas::OffscreenCanvas>
+  {
+  public:
+    using CanvasRenderingContext2DBase::CanvasRenderingContext2DBase;
+    static std::vector<Napi::ClassPropertyDescriptor<OffscreenCanvasRenderingContext2D>> GetClassProperties();
+    static void Init(Napi::Env env);
+
+    /**
+     * Create a new instance of `OffscreenCanvasRenderingContext2D`.
+     *
+     * @param env The N-API environment.
+     * @param contextImpl The context implementation instance.
+     * @param canvasValue The offscreen canvas element to create the rendering context for.
+     */
+    static Napi::Object NewInstance(Napi::Env env,
+                                    std::shared_ptr<canvas::RenderingContextBase<canvas::OffscreenCanvas>> contextImpl,
+                                    Napi::Value canvasValue);
 
   private:
-    Napi::ObjectReference *jsCanvas = nullptr;
-    TrClientContextPerProcess *clientContext = nullptr;
-    SkCanvas *skCanvas;
-    SkPaint *skPaint;
-    SkFont *skFont;
-
-  private: // text & font
-    std::string fontStr = "14px monospace";
-    TextAlign textAlign = TextAlign::Start;
-    TextBaseline textBaseline = TextBaseline::Alphabetic;
-
-  private: // style
-    SkColor fillStyle = SK_ColorBLACK;
-    SkColor strokeStyle = SK_ColorBLACK;
-
-  private:
-    float shadowBlur = 0.0f;
-    SkColor shadowColor = SK_ColorTRANSPARENT;
-    glm::vec2 shadowOffset = glm::vec2(0.0f);
-    float globalAlpha = 1.0f;
-    float strokeWidth = 1.0f;
-    SkBlendMode globalCompositeOperation = SkBlendMode::kSrcOver;
-    std::vector<float> lineDash;
-
-  private:
-    SkPath *currentPath = nullptr;
-    SkMatrix currentTransform = SkMatrix::I();
+    Napi::Value Commit(const Napi::CallbackInfo &info);
 
   public:
     static Napi::FunctionReference *constructor;

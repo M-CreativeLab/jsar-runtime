@@ -17,7 +17,11 @@ namespace bindings
       ImageData::Init(env, exports);
       ImageBitmap::Init(env, exports);
       OffscreenCanvas::Init(env, exports);
-      CanvasRenderingContext2D::Init(env, exports);
+      {
+        // Initialize the rendering context classes for 2d
+        CanvasRenderingContext2D::Init(env);
+        OffscreenCanvasRenderingContext2D::Init(env);
+      }
       HTMLRenderingContext::Init(env, exports);
       Path2D::Init(env, exports);
       return exports;

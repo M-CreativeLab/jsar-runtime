@@ -5,12 +5,13 @@
 
 using namespace std;
 
-#define TYPED_ELEMENT_MAP(XX) \
-  XX("html", HTMLHtmlElement) \
-  XX("head", HTMLHeadElement) \
-  XX("body", HTMLBodyElement) \
-  XX("img", HTMLImageElement) \
-  XX("meta", HTMLMetaElement) \
+#define TYPED_ELEMENT_MAP(XX)     \
+  XX("html", HTMLHtmlElement)     \
+  XX("head", HTMLHeadElement)     \
+  XX("body", HTMLBodyElement)     \
+  XX("canvas", HTMLCanvasElement) \
+  XX("img", HTMLImageElement)     \
+  XX("meta", HTMLMetaElement)     \
   XX("script", HTMLScriptElement)
 
 namespace dom
@@ -22,7 +23,7 @@ namespace dom
   public:
     /**
      * Create a new `Element` object from a `pugi::xml_node`, which is used to create and initialize an element from the XML parser.
-     * 
+     *
      * @param node The `pugi::xml_node` object.
      * @param ownerDocument The owner document of the element.
      * @returns The created `Element` object.
@@ -31,7 +32,7 @@ namespace dom
 
     /**
      * Create a new `Element` object from a tag name, which is used to create an element from scripts such as: `document.createElement('div')`.
-     * 
+     *
      * @param tagName The tag name of the element.
      * @param ownerDocument The owner document of the element.
      * @returns The created `Element` object.

@@ -1,0 +1,22 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Canvas</title>
+
+</head>
+
+<body>
+</body>
+
+<script>
+  const canvas = document.createElement('canvas');
+  console.info(canvas);
+
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = 'red';
+  ctx.fillRect(0, 0, 10, 10);
+  console.info(ctx.getImageData(0, 0, 100, 100));
+</script>
+
+</html>

@@ -16,6 +16,8 @@ namespace dombinding
 
   private:
     Napi::Value CurrentSrcGetter(const Napi::CallbackInfo &info);
+    Napi::Value SrcGetter(const Napi::CallbackInfo &info);
+    void SrcSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
 
   public:
     static Napi::FunctionReference *constructor;

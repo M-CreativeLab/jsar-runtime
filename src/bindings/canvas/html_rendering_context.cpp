@@ -39,8 +39,8 @@ namespace canvasbinding
     clientContext = TrClientContextPerProcess::Get();
     assert(clientContext != nullptr);
 
-    skCanvas = canvas->skSurface->getCanvas();
-    skCanvas->drawColor(SK_ColorWHITE);
+    // skCanvas = canvas->skSurface->getCanvas();
+    // skCanvas->drawColor(SK_ColorWHITE);
   }
 
   HTMLRenderingContext::~HTMLRenderingContext()

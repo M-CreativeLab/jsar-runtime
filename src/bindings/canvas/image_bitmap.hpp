@@ -1,37 +1,30 @@
 #pragma once
 
+#include <memory>
 #include <napi.h>
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkBitmap.h>
+#include "client/canvas/image_bitmap.hpp"
+#include "./image_source.hpp"
 
-namespace bindings
+namespace canvasbinding
 {
-  namespace canvas
+  class ImageBitmap : public Napi::ObjectWrap<ImageBitmap>,
+                      public ImageSourceWrap<canvas::ImageBitmap>
   {
-    class ImageBitmap : public Napi::ObjectWrap<ImageBitmap>
-    {
-    public:
-      static void Init(Napi::Env env, Napi::Object exports);
-      ImageBitmap(const Napi::CallbackInfo &info);
-      ~ImageBitmap();
+  public:
+    static void Init(Napi::Env env, Napi::Object exports);
+    ImageBitmap(const Napi::CallbackInfo &info);
+    ~ImageBitmap();
 
-    public:
-      SkBitmap *getSkBitmap() { return skBitmap; }
-      size_t getByteLength() {
-        return skBitmap->computeByteSize();
-      }
+  private:
+    static Napi::Value CreateImageBitmap(const Napi::CallbackInfo &info);
+    static Napi::Value OnBlobArrayBufferCallback(const Napi::CallbackInfo &info,
+                                                 float sx, float sy, float sw, float sh, const std::string blobType);
+    static Napi::Value OnBlobRejectionCallback(const Napi::CallbackInfo &info);
+    Napi::Value Close(const Napi::CallbackInfo &info);
 
-    private:
-      static Napi::Value CreateImageBitmap(const Napi::CallbackInfo &info);
-      Napi::Value Close(const Napi::CallbackInfo &info);
-
-    private:
-      uint32_t width;
-      uint32_t height;
-      SkBitmap *skBitmap;
-
-    public:
-      static Napi::FunctionReference *constructor;
-    };
-  }
+  public:
+    static Napi::FunctionReference *constructor;
+  };
 }

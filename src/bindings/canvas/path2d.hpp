@@ -1,43 +1,35 @@
 #pragma once
 
+#include <memory>
 #include <napi.h>
-#include <skia/include/core/SkPath.h>
+#include "client/canvas/path2d.hpp"
 
-namespace bindings
+namespace canvasbinding
 {
-  namespace canvas
+  class Path2D : public Napi::ObjectWrap<Path2D>
   {
-    class Path2D : public Napi::ObjectWrap<Path2D>
-    {
-    public:
-      static void Init(Napi::Env env, Napi::Object exports);
-      Path2D(const Napi::CallbackInfo &info);
-      ~Path2D();
+  public:
+    static void Init(Napi::Env env, Napi::Object exports);
+    Path2D(const Napi::CallbackInfo &info);
+    ~Path2D();
 
-    public:
-      static void ApplyArcToTangent(SkPath *skPath, SkScalar x1, SkScalar y1, SkScalar x2, SkScalar y2, SkScalar radius);
-      static void Ellipse(SkPath *skPath,
-                          float x, float y, float radiusX, float radiusY, float rotation,
-                          float startAngle, float endAngle, bool ccw);
+  private:
+    Napi::Value AddPath(const Napi::CallbackInfo &info);
+    Napi::Value ClosePath(const Napi::CallbackInfo &info);
+    Napi::Value MoveTo(const Napi::CallbackInfo &info);
+    Napi::Value LineTo(const Napi::CallbackInfo &info);
+    Napi::Value BezierCurveTo(const Napi::CallbackInfo &info);
+    Napi::Value QuadraticCurveTo(const Napi::CallbackInfo &info);
+    Napi::Value Arc(const Napi::CallbackInfo &info);
+    Napi::Value ArcTo(const Napi::CallbackInfo &info);
+    Napi::Value Ellipse(const Napi::CallbackInfo &info);
+    Napi::Value Rect(const Napi::CallbackInfo &info);
+    Napi::Value RoundRect(const Napi::CallbackInfo &info);
 
-    private:
-      Napi::Value AddPath(const Napi::CallbackInfo &info);
-      Napi::Value ClosePath(const Napi::CallbackInfo &info);
-      Napi::Value MoveTo(const Napi::CallbackInfo &info);
-      Napi::Value LineTo(const Napi::CallbackInfo &info);
-      Napi::Value BezierCurveTo(const Napi::CallbackInfo &info);
-      Napi::Value QuadraticCurveTo(const Napi::CallbackInfo &info);
-      Napi::Value Arc(const Napi::CallbackInfo &info);
-      Napi::Value ArcTo(const Napi::CallbackInfo &info);
-      Napi::Value Ellipse(const Napi::CallbackInfo &info);
-      Napi::Value Rect(const Napi::CallbackInfo &info);
-      Napi::Value RoundRect(const Napi::CallbackInfo &info);
+  private:
+    std::shared_ptr<canvas::Path2D> path2dImpl;
 
-    private:
-      SkPath skPath;
-
-    public:
-      static Napi::FunctionReference *constructor;
-    };
-  }
+  public:
+    static Napi::FunctionReference *constructor;
+  };
 }

@@ -21,8 +21,25 @@
 #endif
 
 /**
- * Create a new string with all characters in lowercase.
+ * Shared reference is a template class that holds the shared pointer of a type.
  * 
+ * You can use this class to hold the shared pointer and pass this class via C/C++ native pointer, reference and also the smart pointers.
+ * This class is useful when you have to pass a C++ native pointer like v8::External or N-API External, it will help you to manage the
+ * reference count in the whole life cycle of the object.
+ */
+template <typename T>
+class SharedReference
+{
+public:
+  SharedReference(std::shared_ptr<T> value) : value(value) {}
+
+public:
+  std::shared_ptr<T> value;
+};
+
+/**
+ * Create a new string with all characters in lowercase.
+ *
  * @param str The source string to convert to lowercase.
  * @returns The new string with all characters in lowercase.
  */
@@ -35,7 +52,7 @@ inline std::string ToLowerCase(const std::string &str)
 
 /**
  * Create a new string with all characters in uppercase.
- * 
+ *
  * @param str The source string to convert to uppercase.
  * @returns The new string with all characters in uppercase.
  */

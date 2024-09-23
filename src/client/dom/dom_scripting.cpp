@@ -230,6 +230,7 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(URL);
         V8_SET_GLOBAL_FROM_MAIN(Blob);
         V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
+        V8_SET_GLOBAL_FROM_MAIN(OffscreenCanvas);
         V8_SET_GLOBAL_FROM_MAIN(Worker);
 
         // Global functions
@@ -370,6 +371,8 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(URL);
         V8_SET_GLOBAL_FROM_MAIN(Blob);
         V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
+        V8_SET_GLOBAL_FROM_MAIN(OffscreenCanvas);
+        V8_SET_GLOBAL_FROM_MAIN(Worker);
 
         // Global functions
         V8_SET_GLOBAL_FROM_MAIN(atob);

@@ -90,6 +90,18 @@ namespace dom
         } });
   }
 
+  void RuntimeContext::fetchImageResource(const std::string &url, const ImageResponseCallback &callback)
+  {
+    fetchResource(url, "arraybuffer", [callback](const v8::FunctionCallbackInfo<v8::Value> &info)
+                  {
+        auto isolate = info.GetIsolate();
+        v8::HandleScope handleScope(isolate);
+        {
+          auto value = info[0].As<v8::Object>();
+          callback("");
+        } });
+  }
+
   v8::Local<v8::Value> RuntimeContext::createWHATWGFetchImpl(v8::Local<v8::Context> context)
   {
     assert(!baseURI.empty() && baseURI != "");

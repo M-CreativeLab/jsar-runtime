@@ -1,9 +1,11 @@
-#include "rendering_context.hpp"
+
+#include "idgen.hpp"
+#include "client/canvas/image_source.hpp"
+
 #include "../canvas/image_bitmap.hpp"
 #include "../canvas/image_data.hpp"
 #include "../canvas/canvas.hpp"
-
-#include "idgen.hpp"
+#include "./rendering_context.hpp"
 #include "./placeholders.hpp"
 #include "./program.hpp"
 #include "./texture.hpp"
@@ -13,7 +15,6 @@
 using namespace std;
 using namespace node;
 using namespace commandbuffers;
-using namespace bindings::canvas;
 using namespace canvasbinding;
 
 namespace webgl
@@ -1950,6 +1951,7 @@ namespace webgl
     auto internalformat = info[2].As<Napi::Number>().Uint32Value();
 
     TextureImage2DCommandBufferRequest req(target, level, internalformat);
+    SkPixmap imagePixmap; // for image source pixels
     unsigned char *pixelsData = nullptr;
     if (info.Length() == 6)
     {
@@ -1960,34 +1962,42 @@ namespace webgl
         Napi::TypeError::New(env, "the image source should be an object.").ThrowAsJavaScriptException();
         return env.Undefined();
       }
+
+      shared_ptr<canvas::ImageSource> imageSource = nullptr;
       auto imageSourceObject = info[5].ToObject();
-      if (imageSourceObject.InstanceOf(ImageBitmap::constructor->Value()))
-      {
-        auto imageBitmap = ImageBitmap::Unwrap(imageSourceObject);
-        SkBitmap *bitmap = imageBitmap->getSkBitmap();
-        req.width = bitmap->width();
-        req.height = bitmap->height();
-        req.format = WEBGL_RGBA;
-        req.internalformat = WEBGL2_RGBA8;
-        pixelsData = reinterpret_cast<unsigned char *>(bitmap->getPixels());
-      }
-      else if (imageSourceObject.InstanceOf(OffscreenCanvas::constructor->Value()))
-      {
-        auto canvas = OffscreenCanvas::Unwrap(imageSourceObject);
-        SkBitmap *bitmap = canvas->getSkBitmap();
-        req.width = bitmap->width();
-        req.height = bitmap->height();
-        req.format = WEBGL_RGBA;
-        req.internalformat = WEBGL2_RGBA8;
-        pixelsData = reinterpret_cast<unsigned char *>(bitmap->getPixels());
-      }
+      if (imageSourceObject.InstanceOf(canvasbinding::ImageBitmap::constructor->Value()))
+        imageSource = canvasbinding::ImageBitmap::Unwrap(imageSourceObject)->getImageSource();
+      else if (imageSourceObject.InstanceOf(canvasbinding::ImageData::constructor->Value()))
+        imageSource = canvasbinding::ImageData::Unwrap(imageSourceObject)->getImageSource();
+      else if (imageSourceObject.InstanceOf(canvasbinding::OffscreenCanvas::constructor->Value()))
+        imageSource = canvasbinding::OffscreenCanvas::Unwrap(imageSourceObject)->getImageSource();
       else
+      {
+        /**
+         * TODO: support HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
+         */
+      }
+
+      if (imageSource == nullptr)
       {
         env.Global().Get("console").As<Napi::Object>().Get("log").As<Napi::Function>()({imageSourceObject});
         Napi::TypeError::New(env, "Unsupported `imageSource` type")
             .ThrowAsJavaScriptException();
         return env.Undefined();
       }
+
+      if (!imageSource->readPixels(imagePixmap))
+      {
+        Napi::TypeError::New(env, "Failed to read pixels from image source.")
+            .ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+
+      req.width = imagePixmap.width();
+      req.height = imagePixmap.height();
+      req.format = WEBGL_RGBA;
+      req.internalformat = WEBGL2_RGBA8;
+      pixelsData = reinterpret_cast<unsigned char *>(imagePixmap.writable_addr());
     }
     else if (info.Length() == 9)
     {

@@ -1,6 +1,8 @@
 #include <assert.h>
 #include "./html_image_element.hpp"
 
+using namespace std;
+
 namespace dombinding
 {
   Napi::FunctionReference *HTMLImageElement::constructor;
@@ -12,6 +14,7 @@ namespace dombinding
     auto added = vector<Napi::ClassPropertyDescriptor<HTMLImageElement>>(
         {
             T::InstanceAccessor("currentSrc", &T::CurrentSrcGetter, nullptr),
+            T::InstanceAccessor("src", &T::SrcGetter, &T::SrcSetter),
         });
     props.insert(props.end(), added.begin(), added.end());
     return props;
@@ -30,6 +33,22 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return Napi::String::New(info.Env(), this->node->currentSrc);
+    return Napi::String::New(info.Env(), node->currentSrc);
+  }
+
+  Napi::Value HTMLImageElement::SrcGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::String::New(info.Env(), node->getSrc());
+  }
+
+  void HTMLImageElement::SrcSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    string newSrc = value.ToString().Utf8Value();
+    node->setSrc(newSrc);
   }
 }
