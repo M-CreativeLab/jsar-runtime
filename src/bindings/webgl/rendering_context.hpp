@@ -363,6 +363,8 @@ namespace webgl
     Napi::Value BindVertexArray(const Napi::CallbackInfo &info);
     Napi::Value TexImage3D(const Napi::CallbackInfo &info);
     Napi::Value TexSubImage3D(const Napi::CallbackInfo &info);
+    Napi::Value TexStorage2D(const Napi::CallbackInfo &info);
+    Napi::Value TexStorage3D(const Napi::CallbackInfo &info);
     Napi::Value GetUniformBlockIndex(const Napi::CallbackInfo &info);
     Napi::Value UniformBlockBinding(const Napi::CallbackInfo &info);
     Napi::Value VertexAttribIPointer(const Napi::CallbackInfo &info);

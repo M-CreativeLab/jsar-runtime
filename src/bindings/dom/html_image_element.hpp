@@ -2,13 +2,16 @@
 
 #include "client/dom/html_image_element.hpp"
 #include "./html_element.hpp"
+#include "../canvas/image_source.hpp"
 
 namespace dombinding
 {
-  class HTMLImageElement : public HTMLElementBase<HTMLImageElement, dom::HTMLImageElement>
+  class HTMLImageElement : public HTMLElementBase<HTMLImageElement, dom::HTMLImageElement>,
+                           public canvasbinding::ImageSourceWrap<dom::HTMLImageElement>
   {
   public:
     using HTMLElementBase::HTMLElementBase;
+    HTMLImageElement(const Napi::CallbackInfo &info);
 
   public:
     static vector<Napi::ClassPropertyDescriptor<HTMLImageElement>> GetClassProperties();

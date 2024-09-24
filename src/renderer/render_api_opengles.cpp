@@ -1017,6 +1017,17 @@ private:
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
 			DEBUG(DEBUG_TAG, "[%d] GL::TexSubImage2D: %d", options.isDefaultQueue, req->target);
 	}
+	TR_OPENGL_FUNC void OnTexStorage2D(TextureStorage2DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	{
+		glTexStorage2D(
+				req->target,
+				req->levels,
+				req->internalformat,
+				req->width,
+				req->height);
+		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+			DEBUG(DEBUG_TAG, "[%d] GL::TexStorage2D(%d)", options.isDefaultQueue, req->target);
+	}
 	TR_OPENGL_FUNC void OnCopyTexImage2D(CopyTextureImage2DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glCopyTexImage2D(
@@ -1113,6 +1124,21 @@ private:
 						options.isDefaultQueue, target, level,
 						xoffset, yoffset, zoffset,
 						width, height, depth, pixels);
+		}
+	}
+	TR_OPENGL_FUNC void OnTexStorage3D(TextureStorage3DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	{
+		auto target = req->target;
+		auto levels = req->levels;
+		auto internalformat = req->internalformat;
+		auto width = req->width;
+		auto height = req->height;
+		auto depth = req->depth;
+		glTexStorage3D(target, levels, internalformat, width, height, depth);
+		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+		{
+			DEBUG(DEBUG_TAG, "[%d] GL::TexStorage3D(target=0x%x, levels=%d, internalformat=0x%x, size=[%d,%d,%d])",
+						options.isDefaultQueue, target, levels, internalformat, width, height, depth);
 		}
 	}
 	TR_OPENGL_FUNC void OnEnableVertexAttribArray(EnableVertexAttribArrayCommandBufferRequest *req,
@@ -1964,6 +1990,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			ADD_COMMAND_BUFFER_HANDLER(BIND_TEXTURE, BindTextureCommandBufferRequest, BindTexture)
 			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_IMAGE_2D, TextureImage2DCommandBufferRequest, TexImage2D)
 			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_SUB_IMAGE_2D, TextureSubImage2DCommandBufferRequest, TexSubImage2D)
+			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_STORAGE_2D, TextureStorage2DCommandBufferRequest, TexStorage2D)
 			ADD_COMMAND_BUFFER_HANDLER(COPY_TEXTURE_IMAGE_2D, CopyTextureImage2DCommandBufferRequest, CopyTexImage2D)
 			ADD_COMMAND_BUFFER_HANDLER(COPY_TEXTURE_SUB_IMAGE_2D, CopyTextureSubImage2DCommandBufferRequest, CopyTexSubImage2D)
 			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_PARAMETERI, TextureParameteriCommandBufferRequest, TexParameteri)
@@ -1971,6 +1998,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			ADD_COMMAND_BUFFER_HANDLER(GENERATE_MIPMAP, GenerateMipmapCommandBufferRequest, GenerateMipmap)
 			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_IMAGE_3D, TextureImage3DCommandBufferRequest, TexImage3D)
 			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_SUB_IMAGE_3D, TextureSubImage3DCommandBufferRequest, TexSubImage3D)
+			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_STORAGE_3D, TextureStorage3DCommandBufferRequest, TexStorage3D)
 			ADD_COMMAND_BUFFER_HANDLER(ENABLE_VERTEX_ATTRIB_ARRAY, EnableVertexAttribArrayCommandBufferRequest, EnableVertexAttribArray)
 			ADD_COMMAND_BUFFER_HANDLER(DISABLE_VERTEX_ATTRIB_ARRAY, DisableVertexAttribArrayCommandBufferRequest, DisableVertexAttribArray)
 			ADD_COMMAND_BUFFER_HANDLER(VERTEX_ATTRIB_POINTER, VertexAttribPointerCommandBufferRequest, VertexAttribPointer)

@@ -5,6 +5,7 @@
 #include "../canvas/image_bitmap.hpp"
 #include "../canvas/image_data.hpp"
 #include "../canvas/canvas.hpp"
+#include "../dom/html_image_element.hpp"
 #include "./rendering_context.hpp"
 #include "./placeholders.hpp"
 #include "./program.hpp"
@@ -818,6 +819,8 @@ namespace webgl
       InstanceMethod("bindVertexArray", &T::BindVertexArray),                               \
       InstanceMethod("texImage3D", &T::TexImage3D),                                         \
       InstanceMethod("texSubImage3D", &T::TexSubImage3D),                                   \
+      InstanceMethod("texStorage2D", &T::TexStorage2D),                                     \
+      InstanceMethod("texStorage3D", &T::TexStorage3D),                                     \
       InstanceMethod("getUniformBlockIndex", &T::GetUniformBlockIndex),                     \
       InstanceMethod("uniformBlockBinding", &T::UniformBlockBinding),                       \
       InstanceMethod("vertexAttribIPointer", &T::VertexAttribIPointer),                     \
@@ -1971,6 +1974,8 @@ namespace webgl
         imageSource = canvasbinding::ImageData::Unwrap(imageSourceObject)->getImageSource();
       else if (imageSourceObject.InstanceOf(canvasbinding::OffscreenCanvas::constructor->Value()))
         imageSource = canvasbinding::OffscreenCanvas::Unwrap(imageSourceObject)->getImageSource();
+      else if (imageSourceObject.InstanceOf(dombinding::HTMLImageElement::constructor->Value()))
+        imageSource = dombinding::HTMLImageElement::Unwrap(imageSourceObject)->getImageSource();
       else
       {
         /**
@@ -2075,50 +2080,121 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    int target = info[0].As<Napi::Number>().Int32Value();
-    int level = info[1].As<Napi::Number>().Int32Value();
-    int xoffset = info[2].As<Napi::Number>().Int32Value();
-    int yoffset = info[3].As<Napi::Number>().Int32Value();
-    int width = info[4].As<Napi::Number>().Int32Value();
-    int height = info[5].As<Napi::Number>().Int32Value();
-    int format = info[6].As<Napi::Number>().Int32Value();
-    int type = info[7].As<Napi::Number>().Int32Value();
-
-    Napi::Value imageSource = info[8];
-    if (imageSource.IsNull())
+    if (info.Length() < 7)
     {
-      // TODO: When the image source is null, just create TexSubImage2DCommandBuffer with empty mode
-    }
-
-    // Otherwise, the image source should be a TypedArray
-    if (!imageSource.IsTypedArray())
-    {
-      Napi::TypeError::New(env, "the pixels should be a TypedArray.").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "texSubImage2D() takes at least 7 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    Napi::TypedArray pixels = info[8].As<Napi::TypedArray>();
-    Napi::ArrayBuffer data = pixels.ArrayBuffer();
 
-    if (m_unpackFlipY == true || m_unpackPremultiplyAlpha == true)
+    int target = info[0].ToNumber().Int32Value();
+    int level = info[1].ToNumber().Int32Value();
+    int xoffset = info[2].ToNumber().Int32Value();
+    int yoffset = info[3].ToNumber().Int32Value();
+
+    TextureSubImage2DCommandBufferRequest req(target, level, xoffset, yoffset);
+    SkPixmap imagePixmap; // for image source pixels
+    unsigned char *pixelsData = nullptr;
+
+    if (info.Length() == 7)
     {
-      unsigned char *packedPixels = reinterpret_cast<unsigned char *>(data.Data());
-      unsigned char *pixels = unpackPixels(type, format, width, height, packedPixels);
-      if (pixels == nullptr)
+      req.format = info[4].ToNumber().Int32Value();
+      req.pixelType = info[5].ToNumber().Int32Value();
+
+      if (!info[6].IsObject())
+      {
+        Napi::TypeError::New(env, "the image source should be an object.").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+
+      env.Global().Get("console").As<Napi::Object>().Get("log").As<Napi::Function>()({info[6]});
+
+      shared_ptr<canvas::ImageSource> imageSource = nullptr;
+      auto imageSourceObject = info[6].ToObject();
+      if (imageSourceObject.InstanceOf(canvasbinding::ImageBitmap::constructor->Value()))
+        imageSource = canvasbinding::ImageBitmap::Unwrap(imageSourceObject)->getImageSource();
+      else if (imageSourceObject.InstanceOf(canvasbinding::ImageData::constructor->Value()))
+        imageSource = canvasbinding::ImageData::Unwrap(imageSourceObject)->getImageSource();
+      else if (imageSourceObject.InstanceOf(canvasbinding::OffscreenCanvas::constructor->Value()))
+        imageSource = canvasbinding::OffscreenCanvas::Unwrap(imageSourceObject)->getImageSource();
+      else if (imageSourceObject.InstanceOf(dombinding::HTMLImageElement::constructor->Value()))
+        imageSource = dombinding::HTMLImageElement::Unwrap(imageSourceObject)->getImageSource();
+      else
+      {
+        /**
+         * TODO: support HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
+         */
+      }
+
+      if (imageSource == nullptr)
+      {
+        Napi::TypeError::New(env, "Failed to call `texSubImage2D`: unsupported `imageSource` type")
+            .ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+
+      if (!imageSource->readPixels(imagePixmap))
+      {
+        Napi::TypeError::New(env, "Failed to call `texSubImage2D`: unable to read pixels from image source.")
+            .ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+
+      req.width = imagePixmap.width();
+      req.height = imagePixmap.height();
+      pixelsData = reinterpret_cast<unsigned char *>(imagePixmap.writable_addr());
+    }
+    else if (info.Length() >= 8)
+    {
+      req.width = info[4].ToNumber().Int32Value();
+      req.height = info[5].ToNumber().Int32Value();
+      req.format = info[6].ToNumber().Int32Value();
+      req.pixelType = info[7].ToNumber().Int32Value();
+
+      if (info.Length() >= 9)
+      {
+        auto pixelsValue = info[8];
+        if (pixelsValue.IsNull() || pixelsValue.IsUndefined())
+        {
+          pixelsData = nullptr;
+        }
+        else if (pixelsValue.IsTypedArray())
+        {
+          auto typedarray = pixelsValue.As<Napi::TypedArray>();
+          pixelsData = static_cast<unsigned char *>(typedarray.ArrayBuffer().Data()) + typedarray.ByteOffset();
+        }
+        else
+        {
+          Napi::TypeError::New(env, "The pixels should be a TypedArray(ArrayBufferView).").ThrowAsJavaScriptException();
+          return env.Undefined();
+        }
+      }
+    }
+
+    unsigned char *unpacked = nullptr;
+    if (
+        pixelsData != nullptr &&
+        (m_unpackFlipY == true || m_unpackPremultiplyAlpha == true))
+    {
+      unsigned char *unpacked = unpackPixels(req.pixelType,
+                                             req.format,
+                                             req.width,
+                                             req.height,
+                                             pixelsData);
+      if (TR_UNLIKELY(unpacked == nullptr))
       {
         Napi::TypeError::New(env, "Failed to unpack pixels, the source data is null.").ThrowAsJavaScriptException();
         return env.Undefined();
       }
-      auto req = TextureSubImage2DCommandBufferRequest(target, level, xoffset, yoffset, width, height, format, type,
-                                                       pixels);
-      sendCommandBufferRequest(req);
-      delete[] pixels;
+      req.setPixels(unpacked, false);
     }
     else
     {
-      auto req = TextureSubImage2DCommandBufferRequest(target, level, xoffset, yoffset, width, height, format, type,
-                                                       reinterpret_cast<unsigned char *>(data.Data()));
-      sendCommandBufferRequest(req);
+      req.setPixels(pixelsData, false);
     }
+    sendCommandBufferRequest(req);
+
+    if (unpacked != nullptr)
+      delete[] unpacked;
     return env.Undefined();
   }
 
@@ -4435,6 +4511,55 @@ namespace webgl
 
     auto commandBuffer = commandbuffers::TextureSubImage3DCommandBufferRequest(
         target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels);
+    sendCommandBufferRequest(commandBuffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGL2RenderingContext::TexStorage2D(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 5)
+    {
+      Napi::TypeError::New(env, "texStorage2D() takes 5 arguments.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    uint32_t target = info[0].ToNumber().Uint32Value();
+    uint32_t levels = info[1].ToNumber().Uint32Value();
+    uint32_t internalformat = info[2].ToNumber().Uint32Value();
+    uint32_t width = info[3].ToNumber().Uint32Value();
+    uint32_t height = info[4].ToNumber().Uint32Value();
+
+    auto commandBuffer = commandbuffers::TextureStorage2DCommandBufferRequest(
+        target, levels, internalformat, width, height);
+    sendCommandBufferRequest(commandBuffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGL2RenderingContext::TexStorage3D(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 6)
+    {
+      Napi::TypeError::New(env, "texStorage3D() takes 6 arguments.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    uint32_t target = info[0].ToNumber().Uint32Value();
+    uint32_t levels = info[1].ToNumber().Uint32Value();
+    uint32_t internalformat = info[2].ToNumber().Uint32Value();
+    uint32_t width = info[3].ToNumber().Uint32Value();
+    uint32_t height = info[4].ToNumber().Uint32Value();
+    uint32_t depth = info[5].ToNumber().Uint32Value();
+
+    auto commandBuffer = commandbuffers::TextureStorage3DCommandBufferRequest(
+        target, levels, internalformat, width, height, depth);
     sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }

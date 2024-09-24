@@ -23,7 +23,13 @@ namespace dom
   public:
     size_t width() override { return skBitmap->width(); }
     size_t height() override { return skBitmap->height(); }
-    bool readPixels(SkPixmap &dst) override { return skBitmap->readPixels(dst); }
+    bool readPixels(SkPixmap &dst) override
+    {
+      dst.reset(skBitmap->info(),
+                skBitmap->getPixels(),
+                skBitmap->rowBytes());
+      return skBitmap->readPixels(dst);
+    }
 
   public:
     /**
@@ -56,17 +62,12 @@ namespace dom
     void loadImage(const std::string &src);
 
     /**
-     * Loads the image from the given data.
-     */
-    void loadImageFromData(const void *data, size_t length);
-
-    /**
      * Called when the image is loaded.
      *
      * @param imageData The image data.
      * @param imageByteLength The length of the image data.
      */
-    void onImageLoaded(const void* imageData, size_t imageByteLength);
+    void onImageLoaded(const void *imageData, size_t imageByteLength);
 
   public:
     /**

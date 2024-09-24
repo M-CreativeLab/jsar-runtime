@@ -33,6 +33,13 @@ namespace dombinding
     env.Global().Set("HTMLImageElement", func);
   }
 
+  HTMLImageElement::HTMLImageElement(const Napi::CallbackInfo &info)
+      : HTMLElementBase(info),
+        canvasbinding::ImageSourceWrap<dom::HTMLImageElement>()
+  {
+    dataImpl = node;
+  }
+
   Napi::Value HTMLImageElement::CurrentSrcGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();

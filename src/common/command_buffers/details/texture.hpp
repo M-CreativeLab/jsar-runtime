@@ -104,7 +104,7 @@ namespace commandbuffers
 
     /**
      * Set the pixels data to this texture request.
-     * 
+     *
      * @param srcPixels the source pixels data.
      * @param copyPixels if true the pixels data will be copied to this object, otherwise just use the pointer to send.
      */
@@ -214,69 +214,50 @@ namespace commandbuffers
     int border = 0;
   };
 
-  class TextureSubImage2DCommandBufferRequest : public TrCommandBufferSimpleRequest<TextureSubImage2DCommandBufferRequest>
+  class TextureSubImage2DCommandBufferRequest : public TextureImageNDCommandBufferRequest<TextureSubImage2DCommandBufferRequest>
   {
   public:
-    TextureSubImage2DCommandBufferRequest(
-        uint32_t target,
-        uint32_t level,
-        uint32_t xoffset,
-        uint32_t yoffset,
-        uint32_t width,
-        uint32_t height,
-        uint32_t format,
-        uint32_t type,
-        void *pixels)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_TEXTURE_SUB_IMAGE_2D_REQ)
+  TextureSubImage2DCommandBufferRequest(uint32_t target, uint32_t level, int xoffset, int yoffset)
+        : TextureImageNDCommandBufferRequest(COMMAND_BUFFER_TEXTURE_SUB_IMAGE_2D_REQ),
+          xoffset(xoffset),
+          yoffset(yoffset)
     {
       this->target = target;
       this->level = level;
-      this->xoffset = xoffset;
-      this->yoffset = yoffset;
-      this->width = width;
-      this->height = height;
-      this->format = format;
-      this->pixelType = type;
-
-      if (pixels != nullptr)
-      {
-        // TODO: compute size of pixels
-        pixelsBufferSize = width * height * 4;
-        pixels = malloc(pixelsBufferSize);
-        memcpy(this->pixels, pixels, pixelsBufferSize);
-      }
     }
 
   public:
-    TrCommandBufferMessage *serialize() override
+    size_t computePixelsByteLength() override
     {
-      auto message = new TrCommandBufferMessage(type, size, this);
-      if (pixels != nullptr && pixelsBufferSize > 0)
-        message->addRawSegment(pixelsBufferSize, pixels);
-      return message;
-    }
-    void deserialize(TrCommandBufferMessage &message) override
-    {
-      auto pixelsSegment = message.getSegment(0);
-      if (pixelsSegment != nullptr)
-      {
-        pixelsBufferSize = pixelsSegment->getSize();
-        pixels = malloc(pixelsBufferSize);
-        memcpy(pixels, pixelsSegment->getData(), pixelsBufferSize);
-      }
+      return width * height * getPixelSize();
     }
 
   public:
-    int target;
-    int level;
     int xoffset;
     int yoffset;
     int width;
     int height;
-    int format;
-    int pixelType;
-    void *pixels = nullptr;
-    size_t pixelsBufferSize = 0;
+  };
+
+  class TextureStorage2DCommandBufferRequest : public TrCommandBufferSimpleRequest<TextureStorage2DCommandBufferRequest>
+  {
+  public:
+    TextureStorage2DCommandBufferRequest(int target, int levels, int internalformat, int width, int height)
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_TEXTURE_STORAGE_2D_REQ),
+          target(target),
+          levels(levels),
+          internalformat(internalformat),
+          width(width),
+          height(height)
+    {
+    }
+
+  public:
+    int target;
+    int levels;
+    int internalformat;
+    int width;
+    int height;
   };
 
   class CopyTextureImage2DCommandBufferRequest : public TrCommandBufferSimpleRequest<CopyTextureImage2DCommandBufferRequest>
@@ -467,5 +448,28 @@ namespace commandbuffers
     int pixelType;
     void *pixels = nullptr;
     size_t pixelsBufferSize = 0;
+  };
+
+  class TextureStorage3DCommandBufferRequest : public TrCommandBufferSimpleRequest<TextureStorage3DCommandBufferRequest>
+  {
+  public:
+    TextureStorage3DCommandBufferRequest(int target, int levels, int internalformat, int width, int height, int depth)
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_TEXTURE_STORAGE_2D_REQ),
+          target(target),
+          levels(levels),
+          internalformat(internalformat),
+          width(width),
+          height(height),
+          depth(depth)
+    {
+    }
+
+  public:
+    int target;
+    int levels;
+    int internalformat;
+    int width;
+    int height;
+    int depth;
   };
 }
