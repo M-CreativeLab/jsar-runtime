@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include "pugixml/pugixml.hpp"
+#include "common/events_v2/event_target.hpp"
 
 using namespace std;
 
@@ -26,8 +27,83 @@ namespace dom
     NOTATION_NODE,
   };
 
+#define NODE_EVENT_TYPES_MAP(XX) \
+  XX(SelectStart)
+
+#define ELEMENT_EVENT_TYPES_MAP(XX) \
+  XX(AnimationCancel)               \
+  XX(AnimationEnd)                  \
+  XX(AnimationIteration)            \
+  XX(AnimationStart)                \
+  XX(AuxClick)                      \
+  XX(BeforeInput)                   \
+  XX(Blur)                          \
+  XX(Click)                         \
+  XX(CompositionEnd)                \
+  XX(CompositionStart)              \
+  XX(CompositionUpdate)             \
+  XX(ContextMenu)                   \
+  XX(Copy)                          \
+  XX(Cut)                           \
+  XX(DoubleClick)                   \
+  XX(Input)                         \
+  XX(KeyDown)                       \
+  XX(KeyUp)                         \
+  XX(MouseDown)                     \
+  XX(MouseEnter)                    \
+  XX(MouseLeave)                    \
+  XX(MouseMove)                     \
+  XX(MouseOut)                      \
+  XX(MouseOver)                     \
+  XX(MouseUp)                       \
+  XX(Paste)                         \
+  XX(PointerCancel)                 \
+  XX(PointerDown)                   \
+  XX(PointerEnter)                  \
+  XX(PointerLeave)                  \
+  XX(PointerMove)                   \
+  XX(PointerOut)                    \
+  XX(PointerOver)                   \
+  XX(PointerUp)                     \
+  XX(Scroll)                        \
+  XX(ScrollEnd)
+
+#define HTMLELEMENT_EVENT_TYPES_MAP(XX) \
+  XX(BeforeToggle)                      \
+  XX(Cancel)                            \
+  XX(Change)                            \
+  XX(Drag)                              \
+  XX(DragEnd)                           \
+  XX(DragEnter)                         \
+  XX(DragLeave)                         \
+  XX(DragOver)                          \
+  XX(DragStart)                         \
+  XX(Drop)                              \
+  XX(Error)                             \
+  XX(Load)                              \
+  XX(Toggle)
+
+#define DOCUMENT_EVENT_TYPES_MAP(XX) \
+  XX(DOMContentLoaded)               \
+  XX(FullscreenChange)               \
+  XX(FullscreenError)                \
+  XX(SelectionChange)                \
+  XX(VisibilityChange)
+
+  enum class DOMEventType
+  {
+#define XX(eventType) \
+  eventType,
+    NODE_EVENT_TYPES_MAP(XX)        // `Node` Events
+    ELEMENT_EVENT_TYPES_MAP(XX)     // `Element` Events
+    HTMLELEMENT_EVENT_TYPES_MAP(XX) // `HTMLElement` Events
+    DOCUMENT_EVENT_TYPES_MAP(XX)    // `Document` Events
+#undef XX
+  };
+
   class Document;
-  class Node : public enable_shared_from_this<Node>
+  class Node : public events_comm::TrEventTarget<DOMEventType>,
+               public enable_shared_from_this<Node>
   {
   public:
     /**
@@ -56,7 +132,7 @@ namespace dom
   public:
     /**
      * Returns if this node has any child nodes.
-     * 
+     *
      * @returns True if the node has child nodes, otherwise false.
      */
     inline bool hasChildNodes() { return childNodes.size() > 0; }
@@ -68,7 +144,7 @@ namespace dom
     template <typename T = Node>
     inline shared_ptr<T> getPtr()
     {
-      return dynamic_pointer_cast<T>(shared_from_this());
+      return dynamic_pointer_cast<T>(this->shared_from_this());
     }
     /**
      * Get the weak pointer of the current `Node` object.
@@ -76,12 +152,12 @@ namespace dom
     template <typename T = Node>
     inline weak_ptr<T> getWeakPtr()
     {
-      return dynamic_pointer_cast<T>(shared_from_this());
+      return dynamic_pointer_cast<T>(this->shared_from_this());
     }
     void resetFrom(shared_ptr<pugi::xml_node> node, weak_ptr<Document> ownerDocument);
     /**
      * Print the internal `pugi::xml_node` object.
-     * 
+     *
      * @param showTree If true, the tree will be printed.
      */
     void print(bool showTree = true);

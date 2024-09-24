@@ -24,6 +24,10 @@ namespace events_comm
   {
   public:
     TrEventTarget() = default;
+    TrEventTarget(const TrEventTarget &other) : eventToListenersMap(other.eventToListenersMap)
+    {
+      // Copy will ignore the global listener
+    };
     virtual ~TrEventTarget() = default;
 
   public:
