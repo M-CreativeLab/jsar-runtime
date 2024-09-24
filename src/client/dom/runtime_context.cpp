@@ -90,15 +90,37 @@ namespace dom
         } });
   }
 
-  void RuntimeContext::fetchImageResource(const std::string &url, const ImageResponseCallback &callback)
+  /**
+   * Fetch the image resource from the given URL.
+   *
+   * @param url The URL of the image to fetch.
+   * @param callback The callback to call when the image is fetched.
+   */
+  void RuntimeContext::fetchImageResource(const std::string &url, const BufferResponseCallback &callback)
   {
     fetchResource(url, "arraybuffer", [callback](const v8::FunctionCallbackInfo<v8::Value> &info)
                   {
         auto isolate = info.GetIsolate();
+        auto context = isolate->GetCurrentContext();
         v8::HandleScope handleScope(isolate);
         {
-          auto value = info[0].As<v8::Object>();
-          callback("");
+          v8::Local<v8::Value> value = info[0];
+          if (!value->IsArrayBuffer() && value->IsObject())
+          {
+            /**
+             * Node.js Buffer and ArrayBufferView objects have a `buffer` property that points to the underlying ArrayBuffer.
+             */
+            auto valueObject = value->ToObject(context).ToLocalChecked();
+            auto bufferKey = v8::String::NewFromUtf8(isolate, "buffer").ToLocalChecked();
+            value = valueObject->Get(context, bufferKey).ToLocalChecked();
+          }
+
+          /**
+           * TODO: Handle this failure case?
+           */
+          assert(value->IsArrayBuffer());
+          auto arrayBuffer = value.As<v8::ArrayBuffer>();
+          callback(arrayBuffer->Data(), arrayBuffer->ByteLength());
         } });
   }
 

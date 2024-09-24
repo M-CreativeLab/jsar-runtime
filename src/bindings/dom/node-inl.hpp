@@ -171,10 +171,11 @@ namespace dombinding
       return env.Undefined();
     }
 
+    auto jsThisReference = make_shared<Napi::ObjectReference>(Napi::Persistent(info.This().As<Napi::Object>()));
     auto listenerReference = make_shared<Napi::FunctionReference>(Napi::Persistent(listenerValue.As<Napi::Function>()));
-    auto listenerCallback = [listenerReference](dom::DOMEventType type, dom::Event &event)
+    auto listenerCallback = [listenerReference, jsThisReference](dom::DOMEventType type, dom::Event &event)
     {
-      Napi::Env env = listenerReference->Env();
+      Napi::Env env = jsThisReference->Env();
       Napi::HandleScope scope(env);
 
       Napi::Function eventConstructor;
@@ -202,8 +203,9 @@ namespace dombinding
         return;
       }
 
+      auto jsThis = jsThisReference->Value();
       Napi::Object eventObject = eventConstructor.New({Napi::String::New(env, eventTypeStr)});
-      listenerReference->Call({eventObject});
+      listenerReference->Call(jsThis, {eventObject});
     };
 
     auto nativeListener = node->addEventListener(eventType, listenerCallback);

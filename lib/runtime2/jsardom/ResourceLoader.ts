@@ -1,6 +1,8 @@
 import path from 'node:path';
 import crypto from 'node:crypto';
 import fsPromises from 'node:fs/promises';
+import { resolveObjectURL } from 'node:buffer';
+
 import {
   type ResourceLoader as JSARResourceLoader,
 } from '@yodaos-jsar/dom';
@@ -79,6 +81,24 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     options: FetchOptions,
     returnsAs?: AsType
   ): Promise<FetchReturnsMap[AsType]> {
+    if (typeof url !== 'string') {
+      throw new TypeError('The URL must be a string, but got ' + typeof url);
+    }
+
+    /**
+     * Check if the URL is a blob URL, and directly return the response from the resolved `Blob` object.
+     */
+    if (url.startsWith('blob:')) {
+      const blob = resolveObjectURL(url);
+      if (!blob) {
+        throw new TypeError('Failed to resolve the blob URL: ' + url);
+      }
+      return this.#readBlob(blob, returnsAs);
+    }
+
+    /**
+     * Check if this URL is a valid URL.
+     */
     if (!canParseURL(url)) {
       throw new TypeError(`Failed to fetch: Invalid URL ${url}`);
     }
@@ -176,6 +196,25 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
       const buf = await resp.body.arrayBuffer();
       this.#cacheResource(url, new Uint8Array(buf));
       return buf as FetchReturnsMap[AsType];
+    }
+  }
+
+  /**
+   * Read blob content with the specified return type.
+   * @param blob the blob object.
+   * @param returnsAs expected return type.
+   * @returns the expected content.
+   */
+  async #readBlob<AsType extends keyof FetchReturnsMap>(blob: Blob, returnsAs: AsType): Promise<FetchReturnsMap[AsType]> {
+    switch (returnsAs) {
+      case 'string':
+        return blob.text() as Promise<FetchReturnsMap[AsType]>;
+      case 'json':
+        return JSON.parse(await blob.text()) as FetchReturnsMap[AsType];
+      case 'arraybuffer':
+        return blob.arrayBuffer() as Promise<FetchReturnsMap[AsType]>;
+      default:
+        throw new TypeError(`Unknown return type: "${returnsAs}"`);
     }
   }
 

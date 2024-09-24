@@ -21,7 +21,8 @@
   const image = document.createElement('img');
   function onImageLoad() {
     removeEventListeners();
-    console.info('Image loaded:', image);
+    console.info('Image loaded:', this);
+    console.info('Image sizes:', this.width, this.height);
   }
   function onImageError(event) {
     removeEventListeners();

@@ -12,7 +12,7 @@ namespace dom
 {
   typedef std::function<void(const v8::FunctionCallbackInfo<v8::Value> &)> ResponseCallback;
   typedef std::function<void(const std::string &)> StringResponseCallback;
-  typedef std::function<void(const std::string &)> ImageResponseCallback;
+  typedef std::function<void(const void *, size_t)> BufferResponseCallback;
 
   class RuntimeContext : public std::enable_shared_from_this<RuntimeContext>
   {
@@ -30,7 +30,7 @@ namespace dom
 
     /**
      * Set the base URI value.
-     * 
+     *
      * @param baseURI The base URI value to set.
      */
     void setBaseURI(const std::string baseURI);
@@ -61,11 +61,11 @@ namespace dom
 
     /**
      * Fetch the image resource from the given URL.
-     * 
+     *
      * @param url The URL of the image to fetch.
      * @param callback The callback to call when the image is fetched.
      */
-    void fetchImageResource(const std::string &url, const ImageResponseCallback &callback);
+    void fetchImageResource(const std::string &url, const BufferResponseCallback &callback);
 
     /**
      * Create the WHATWG `fetch` function with the given base URI.

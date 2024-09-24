@@ -1,17 +1,29 @@
 #pragma once
 
 #include <string>
+#include <skia/include/core/SkImage.h>
+#include <skia/include/core/SkBitmap.h>
 #include "./html_element.hpp"
+#include "../canvas/image_source.hpp"
 
 namespace dom
 {
-  class HTMLImageElement : public HTMLElement
+  class HTMLImageElement : public HTMLElement,
+                           public canvas::ImageSource
   {
   public:
     using HTMLElement::HTMLElement;
-    HTMLImageElement(weak_ptr<Document> ownerDocument) : HTMLElement("IMG", ownerDocument)
+    HTMLImageElement(weak_ptr<Document> ownerDocument)
+        : HTMLElement("IMG", ownerDocument),
+          canvas::ImageSource(),
+          skBitmap(std::make_shared<SkBitmap>())
     {
     }
+
+  public:
+    size_t width() override { return skBitmap->width(); }
+    size_t height() override { return skBitmap->height(); }
+    bool readPixels(SkPixmap &dst) override { return skBitmap->readPixels(dst); }
 
   public:
     /**
@@ -44,11 +56,17 @@ namespace dom
     void loadImage(const std::string &src);
 
     /**
-     * Called when the image is loaded.
-     * 
-     * @param pixels The image data.
+     * Loads the image from the given data.
      */
-    void onImageLoaded(char *pixels);
+    void loadImageFromData(const void *data, size_t length);
+
+    /**
+     * Called when the image is loaded.
+     *
+     * @param imageData The image data.
+     * @param imageByteLength The length of the image data.
+     */
+    void onImageLoaded(const void* imageData, size_t imageByteLength);
 
   public:
     /**
@@ -60,5 +78,8 @@ namespace dom
      * Returns a string representing the URL from which the currently displayed image was loaded.
      */
     std::string currentSrc;
+
+  private:
+    std::shared_ptr<SkBitmap> skBitmap;
   };
 }

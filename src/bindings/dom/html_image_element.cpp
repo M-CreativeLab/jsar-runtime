@@ -15,6 +15,10 @@ namespace dombinding
         {
             T::InstanceAccessor("currentSrc", &T::CurrentSrcGetter, nullptr),
             T::InstanceAccessor("src", &T::SrcGetter, &T::SrcSetter),
+            T::InstanceAccessor("naturalWidth", &T::NaturalWidthGetter, nullptr),
+            T::InstanceAccessor("naturalHeight", &T::NaturalHeightGetter, nullptr),
+            T::InstanceAccessor("width", &T::WidthGetter, nullptr),
+            T::InstanceAccessor("height", &T::HeightGetter, nullptr),
         });
     props.insert(props.end(), added.begin(), added.end());
     return props;
@@ -50,5 +54,33 @@ namespace dombinding
 
     string newSrc = value.ToString().Utf8Value();
     node->setSrc(newSrc);
+  }
+
+  Napi::Value HTMLImageElement::NaturalWidthGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Number::New(info.Env(), node->width());
+  }
+
+  Napi::Value HTMLImageElement::NaturalHeightGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Number::New(info.Env(), node->height());
+  }
+
+  Napi::Value HTMLImageElement::WidthGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Number::New(info.Env(), node->width());
+  }
+
+  Napi::Value HTMLImageElement::HeightGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Number::New(info.Env(), node->height());
   }
 }

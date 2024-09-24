@@ -18,6 +18,10 @@ namespace dombinding
     Napi::Value CurrentSrcGetter(const Napi::CallbackInfo &info);
     Napi::Value SrcGetter(const Napi::CallbackInfo &info);
     void SrcSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value NaturalWidthGetter(const Napi::CallbackInfo &info);
+    Napi::Value NaturalHeightGetter(const Napi::CallbackInfo &info);
+    Napi::Value WidthGetter(const Napi::CallbackInfo &info);
+    Napi::Value HeightGetter(const Napi::CallbackInfo &info);
 
   public:
     static Napi::FunctionReference *constructor;
