@@ -226,12 +226,41 @@ namespace dom
 
         // Baisc objects
         V8_SET_GLOBAL_FROM_MAIN(navigator);
+        V8_SET_GLOBAL_FROM_MAIN(location);
         V8_SET_GLOBAL_FROM_MAIN(console);
+
+        // Basic constructors
         V8_SET_GLOBAL_FROM_MAIN(URL);
         V8_SET_GLOBAL_FROM_MAIN(Blob);
+        V8_SET_GLOBAL_FROM_MAIN(FormData);
+        V8_SET_GLOBAL_FROM_MAIN(XMLHttpRequest);
+        V8_SET_GLOBAL_FROM_MAIN(WebSocket);
         V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
         V8_SET_GLOBAL_FROM_MAIN(OffscreenCanvas);
         V8_SET_GLOBAL_FROM_MAIN(Worker);
+
+        // Events
+        V8_SET_GLOBAL_FROM_MAIN(Event);
+        V8_SET_GLOBAL_FROM_MAIN(EventTarget);
+        V8_SET_GLOBAL_FROM_MAIN(AnimationEvent);
+        V8_SET_GLOBAL_FROM_MAIN(BlobEvent);
+        V8_SET_GLOBAL_FROM_MAIN(CloseEvent);
+        V8_SET_GLOBAL_FROM_MAIN(CompositionEvent);
+        V8_SET_GLOBAL_FROM_MAIN(CustomEvent);
+        V8_SET_GLOBAL_FROM_MAIN(ErrorEvent);
+        V8_SET_GLOBAL_FROM_MAIN(FocusEvent);
+        V8_SET_GLOBAL_FROM_MAIN(FormDataEvent);
+        V8_SET_GLOBAL_FROM_MAIN(HashChangeEvent);
+        V8_SET_GLOBAL_FROM_MAIN(InputEvent);
+        V8_SET_GLOBAL_FROM_MAIN(KeyboardEvent);
+        V8_SET_GLOBAL_FROM_MAIN(MessageEvent);
+        V8_SET_GLOBAL_FROM_MAIN(MouseEvent);
+        V8_SET_GLOBAL_FROM_MAIN(PointerEvent);
+        V8_SET_GLOBAL_FROM_MAIN(ProgressEvent);
+        V8_SET_GLOBAL_FROM_MAIN(TouchEvent);
+        V8_SET_GLOBAL_FROM_MAIN(UIEvent);
+        V8_SET_GLOBAL_FROM_MAIN(WebGLContextEvent);
+        V8_SET_GLOBAL_FROM_MAIN(WheelEvent);
 
         // Global functions
         V8_SET_GLOBAL_FROM_MAIN(atob);
@@ -256,12 +285,6 @@ namespace dom
         // WebXR Device API
         V8_SET_GLOBAL_FROM_MAIN(XRRigidTransform);
         V8_SET_GLOBAL_FROM_MAIN(XRWebGLLayer);
-
-        // Expose the new global objects for the spatial application
-        /**
-         * `gl`: The WEBGLRenderingContext/WEBGL2RenderingContext object for rendering the spatial objects.
-         */
-        V8_SET_GLOBAL_FROM_MAIN(gl);
 
         /**
          * Re-exposing the following types is to avoid the "instanceof" issues between v8 contexts.
@@ -368,6 +391,8 @@ namespace dom
 
         // Baisc objects
         V8_SET_GLOBAL_FROM_MAIN(console);
+
+        // Basic constructors
         V8_SET_GLOBAL_FROM_MAIN(URL);
         V8_SET_GLOBAL_FROM_MAIN(Blob);
         V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
