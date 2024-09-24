@@ -101,6 +101,37 @@ namespace webgl
     return uniformBlockIndices_[name];
   }
 
+  void WebGLProgram::printInfo()
+  {
+    std::cout << "Program " << id_ << " info:" << std::endl;
+    std::cout << "Link status: " << (linkStatus_ ? "true" : "false") << std::endl;
+    std::cout << "Active attributes:" << std::endl;
+    for (auto &pair : activeAttribs_)
+    {
+      auto activeInfo = pair.second;
+      std::cout << "  " << pair.first << ": " << activeInfo.name << ", type: " << activeInfo.type << ", size: " << activeInfo.size << std::endl;
+    }
+
+    std::cout << "Active uniforms:" << std::endl;
+    for (auto &pair : activeUniforms_)
+    {
+      auto activeInfo = pair.second;
+      std::cout << "  " << pair.first << ": " << activeInfo.name << ", type: " << activeInfo.type << ", size: " << activeInfo.size << std::endl;
+    }
+
+    std::cout << "Attribute locations:" << std::endl;
+    for (auto &pair : attribLocations_)
+    {
+      std::cout << "  " << pair.first << ": " << pair.second << std::endl;
+    }
+
+    std::cout << "Uniform locations:" << std::endl;
+    for (auto &pair : uniformLocations_)
+    {
+      std::cout << "  " << pair.first << ": " << pair.second << std::endl;
+    }
+  }
+
   Napi::Value WebGLProgram::ToString(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();

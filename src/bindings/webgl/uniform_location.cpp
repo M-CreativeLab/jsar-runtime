@@ -27,6 +27,9 @@ namespace webgl
     }
 
     value_ = info[0].As<Napi::Number>().Int32Value();
+
+    auto jsThis = info.This().As<Napi::Object>();
+    jsThis.Set("_value", Napi::Number::New(env, value_));
   }
 
   Napi::Value WebGLUniformLocation::ToString(const Napi::CallbackInfo &info)

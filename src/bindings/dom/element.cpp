@@ -34,7 +34,7 @@ namespace dombinding
     NodeContainer<ElementType> elementContainer(typedElement);
     auto external = Napi::External<NodeContainer<ElementType>>::New(env, &elementContainer);
     auto instance = ObjectType::constructor->New({external});
-    return scope.Escape(instance).ToObject();
+    return scope.Escape(napi_value(instance)).ToObject();
   }
 
   Napi::Object Element::NewInstance(Napi::Env env, shared_ptr<dom::Node> elementNode)

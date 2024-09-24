@@ -420,8 +420,8 @@ private:
 				continue;
 
 			res.uniformLocations.push_back(UniformLocation(name, location, size));
-			DEBUG(DEBUG_TAG, "    Uniform[%d](%s) => (size=%d, type=%s)",
-						location, name, size,
+			DEBUG(DEBUG_TAG, "    Uniform[%d](%s) => (loc=%d, size=%d, type=%s)",
+						i, name, location, size,
 						gles::glUniformTypesToString(type).c_str());
 		}
 

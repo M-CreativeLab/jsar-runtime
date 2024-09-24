@@ -31,6 +31,9 @@ namespace webgl
     bool HasUniformBlockIndex(const std::string &name);
     int GetUniformBlockIndex(const std::string &name);
 
+  public:
+    void printInfo();
+
   private:
     Napi::Value ToString(const Napi::CallbackInfo &info);
 

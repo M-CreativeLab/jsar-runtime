@@ -26,21 +26,33 @@
     scene.add(light);
 
     // Add a reference mesh
-    const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-    const material = new THREE.MeshBasicMaterial({ color: 0xcc0000 });
-    const cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
+    // const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+    // const material = new THREE.MeshBasicMaterial({ color: 0xcc0000 });
+    // const cube = new THREE.Mesh(geometry, material);
+    // scene.add(cube);
 
     const loader = new SplineLoader();
+    console.info(loader.load + '');
     loader.load(
-      'https://prod.spline.design/7kxN3695TfdH7qO9/scene.splinecode',
+      'https://prod.spline.design/K6UApM1PGghptXei/scene.splinecode',
       (splineScene) => {
         console.info('Loaded Spline scene.', Object.keys(splineScene));
         scene.add(splineScene);
+
+        const box = new THREE.Box3();
+        scene.traverse(object => {
+          if (object instanceof THREE.Mesh || object instanceof THREE.Group) {
+            box.expandByObject(object);
+          }
+        });
+        const size = box.getSize(new THREE.Vector3());
+        const scale = 1 / Math.max(size.x, size.y, size.z);
+        console.info('Scaling scene by', scale);
+        scene.scale.set(scale, scale, scale);
       },
       null,
       (error) => {
-        console.error('Failed to load Spline scene:', error);
+        console.error('Failed to load Spline scene:', error?.stack || error?.message || error);
       }
     );
 
