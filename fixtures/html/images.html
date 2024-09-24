@@ -31,8 +31,8 @@
     image.removeEventListener('load', onImageLoad, false);
     image.removeEventListener('error', onImageError, false);
   }
-  // image.addEventListener( 'load', onImageLoad, false );
-  // image.addEventListener( 'error', onImageError, false );
+  image.addEventListener('load', onImageLoad, false);
+  image.addEventListener('error', onImageError, false);
   image.src = 'https://t4.ftcdn.net/jpg/06/00/90/17/360_F_600901739_93i8HBQhHjqXyvNBrHWEiJOveQYdMe6m.jpg';
   console.info(image);
 </script>

@@ -1,0 +1,29 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Events</title>
+</head>
+
+<body>
+</body>
+
+<script>
+  let count = 0;
+  function onload(event) {
+    console.info('load', count++, event);
+  }
+
+  // document.onload = onload;
+  document.addEventListener('load', onload);
+  document.dispatchEvent(new Event('load'));
+
+  document.removeEventListener('load', onload);
+  let times = 100;
+  while (times--) {
+    document.dispatchEvent(new Event('load'));
+  }
+  console.assert(count === 1, 'count should be 1');
+</script>
+
+</html>

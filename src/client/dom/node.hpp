@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include "pugixml/pugixml.hpp"
+#include "common/utility.hpp"
 #include "common/events_v2/event_target.hpp"
 
 using namespace std;
@@ -28,71 +29,71 @@ namespace dom
   };
 
 #define NODE_EVENT_TYPES_MAP(XX) \
-  XX(SelectStart)
+  XX(SelectStart, "selectstart")
 
-#define ELEMENT_EVENT_TYPES_MAP(XX) \
-  XX(AnimationCancel)               \
-  XX(AnimationEnd)                  \
-  XX(AnimationIteration)            \
-  XX(AnimationStart)                \
-  XX(AuxClick)                      \
-  XX(BeforeInput)                   \
-  XX(Blur)                          \
-  XX(Click)                         \
-  XX(CompositionEnd)                \
-  XX(CompositionStart)              \
-  XX(CompositionUpdate)             \
-  XX(ContextMenu)                   \
-  XX(Copy)                          \
-  XX(Cut)                           \
-  XX(DoubleClick)                   \
-  XX(Input)                         \
-  XX(KeyDown)                       \
-  XX(KeyUp)                         \
-  XX(MouseDown)                     \
-  XX(MouseEnter)                    \
-  XX(MouseLeave)                    \
-  XX(MouseMove)                     \
-  XX(MouseOut)                      \
-  XX(MouseOver)                     \
-  XX(MouseUp)                       \
-  XX(Paste)                         \
-  XX(PointerCancel)                 \
-  XX(PointerDown)                   \
-  XX(PointerEnter)                  \
-  XX(PointerLeave)                  \
-  XX(PointerMove)                   \
-  XX(PointerOut)                    \
-  XX(PointerOver)                   \
-  XX(PointerUp)                     \
-  XX(Scroll)                        \
-  XX(ScrollEnd)
+#define ELEMENT_EVENT_TYPES_MAP(XX)            \
+  XX(AnimationCancel, "animationcancel")       \
+  XX(AnimationEnd, "animationend")             \
+  XX(AnimationIteration, "animationiteration") \
+  XX(AnimationStart, "animationstart")         \
+  XX(AuxClick, "auxclick")                     \
+  XX(BeforeInput, "beforeinput")               \
+  XX(Blur, "blur")                             \
+  XX(Click, "click")                           \
+  XX(CompositionEnd, "compositionend")         \
+  XX(CompositionStart, "compositionstart")     \
+  XX(CompositionUpdate, "compositionupdate")   \
+  XX(ContextMenu, "contextmenu")               \
+  XX(Copy, "copy")                             \
+  XX(Cut, "cut")                               \
+  XX(DoubleClick, "dbclick")                   \
+  XX(Input, "input")                           \
+  XX(KeyDown, "keydown")                       \
+  XX(KeyUp, "keyup")                           \
+  XX(MouseDown, "mousedown")                   \
+  XX(MouseEnter, "mouseenter")                 \
+  XX(MouseLeave, "mouseleave")                 \
+  XX(MouseMove, "mousemove")                   \
+  XX(MouseOut, "mouseout")                     \
+  XX(MouseOver, "mouseover")                   \
+  XX(MouseUp, "mouseup")                       \
+  XX(Paste, "paste")                           \
+  XX(PointerCancel, "pointercancel")           \
+  XX(PointerDown, "pointerdown")               \
+  XX(PointerEnter, "pointerenter")             \
+  XX(PointerLeave, "pointerleave")             \
+  XX(PointerMove, "pointermove")               \
+  XX(PointerOut, "pointerout")                 \
+  XX(PointerOver, "pointerover")               \
+  XX(PointerUp, "pointerup")                   \
+  XX(Scroll, "scroll")                         \
+  XX(ScrollEnd, "scrollend")
 
 #define HTMLELEMENT_EVENT_TYPES_MAP(XX) \
-  XX(BeforeToggle)                      \
-  XX(Cancel)                            \
-  XX(Change)                            \
-  XX(Drag)                              \
-  XX(DragEnd)                           \
-  XX(DragEnter)                         \
-  XX(DragLeave)                         \
-  XX(DragOver)                          \
-  XX(DragStart)                         \
-  XX(Drop)                              \
-  XX(Error)                             \
-  XX(Load)                              \
-  XX(Toggle)
+  XX(BeforeToggle, "beforetoggle")      \
+  XX(Cancel, "cancel")                  \
+  XX(Change, "change")                  \
+  XX(Drag, "drag")                      \
+  XX(DragEnd, "dragend")                \
+  XX(DragEnter, "dragenter")            \
+  XX(DragLeave, "dragleave")            \
+  XX(DragOver, "dragover")              \
+  XX(DragStart, "dragstart")            \
+  XX(Drop, "drop")                      \
+  XX(Error, "error")                    \
+  XX(Load, "load")                      \
+  XX(Toggle, "toggle")
 
-#define DOCUMENT_EVENT_TYPES_MAP(XX) \
-  XX(DOMContentLoaded)               \
-  XX(FullscreenChange)               \
-  XX(FullscreenError)                \
-  XX(SelectionChange)                \
-  XX(VisibilityChange)
+#define DOCUMENT_EVENT_TYPES_MAP(XX)       \
+  XX(DOMContentLoaded, "domcontentloaded") \
+  XX(FullscreenChange, "fullscreenchange") \
+  XX(FullscreenError, "fullscreenerror")   \
+  XX(SelectionChange, "selectionchange")   \
+  XX(VisibilityChange, "visibilitychange")
 
   enum class DOMEventType
   {
-#define XX(eventType) \
+#define XX(eventType, _) \
   eventType,
     NODE_EVENT_TYPES_MAP(XX)        // `Node` Events
     ELEMENT_EVENT_TYPES_MAP(XX)     // `Element` Events
@@ -100,6 +101,55 @@ namespace dom
     DOCUMENT_EVENT_TYPES_MAP(XX)    // `Document` Events
 #undef XX
   };
+
+  /**
+   * Convert the event type string such as "click" to the `DOMEventType` enum.
+   *
+   * @param typeStr The event type string.
+   * @returns The `DOMEventType` enum.
+   */
+  inline DOMEventType StringToEventType(std::string typeStr)
+  {
+#define XX(eventType, eventName)         \
+  if (ToLowerCase(typeStr) == eventName) \
+    return DOMEventType::eventType;
+
+    NODE_EVENT_TYPES_MAP(XX)
+    ELEMENT_EVENT_TYPES_MAP(XX)
+    HTMLELEMENT_EVENT_TYPES_MAP(XX)
+    DOCUMENT_EVENT_TYPES_MAP(XX)
+#undef XX
+
+    throw std::invalid_argument("Invalid event type string: " + typeStr);
+  }
+
+  /**
+   * Convert the `DOMEventType` enum to the event type string such as "click".
+   *
+   * @param eventType The `DOMEventType` enum.
+   * @returns The event type string.
+   */
+  inline std::string EventTypeToString(DOMEventType eventType)
+  {
+    switch (eventType)
+    {
+#define XX(eventType, eventName) \
+  case DOMEventType::eventType:  \
+    return eventName;
+
+      NODE_EVENT_TYPES_MAP(XX)
+      ELEMENT_EVENT_TYPES_MAP(XX)
+      HTMLELEMENT_EVENT_TYPES_MAP(XX)
+      DOCUMENT_EVENT_TYPES_MAP(XX)
+#undef XX
+
+    default:
+      throw std::invalid_argument("Invalid event type: " + std::to_string(static_cast<int>(eventType)));
+    }
+  }
+
+  using Event = events_comm::TrEvent<DOMEventType>;
+  using EventListener = events_comm::TrEventListener<DOMEventType, Event>;
 
   class Document;
   class Node : public events_comm::TrEventTarget<DOMEventType>,

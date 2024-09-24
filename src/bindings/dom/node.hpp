@@ -2,7 +2,9 @@
 
 #include <memory>
 #include <vector>
+#include <unordered_map>
 #include <napi.h>
+#include "common/utility.hpp"
 #include "client/dom/node.hpp"
 
 using namespace std;
@@ -48,6 +50,10 @@ namespace dombinding
           T::InstanceMethod("getRootNode", &T::GetRootNode),
           T::InstanceMethod("hasChildNodes", &T::HasChildNodes),
           T::InstanceMethod("insertBefore", &T::InsertBefore),
+          // Methods for EventTarget
+          T::InstanceMethod("addEventListener", &T::AddEventListener),
+          T::InstanceMethod("removeEventListener", &T::RemoveEventListener),
+          T::InstanceMethod("dispatchEvent", &T::DispatchEvent),
       };
     }
 
@@ -71,11 +77,19 @@ namespace dombinding
     Napi::Value HasChildNodes(const Napi::CallbackInfo &info);
     Napi::Value InsertBefore(const Napi::CallbackInfo &info);
 
+  protected:  // Methods for EventTarget
+    Napi::Value AddEventListener(const Napi::CallbackInfo &info);
+    Napi::Value RemoveEventListener(const Napi::CallbackInfo &info);
+    Napi::Value DispatchEvent(const Napi::CallbackInfo &info);
+
   protected:
     void ResetNode(const Napi::CallbackInfo &info, shared_ptr<NodeType> nodeToSet);
 
   protected:
     shared_ptr<NodeType> node = nullptr;
+
+  private:
+    unordered_map<shared_ptr<Napi::FunctionReference>, uint32_t> listenerRefToNativeIdMap;
   };
 
   class Node : public NodeBase<Node, dom::Node>

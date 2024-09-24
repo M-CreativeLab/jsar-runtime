@@ -15,6 +15,6 @@ namespace dom
   void HTMLImageElement::onImageLoaded(char *pixels)
   {
     complete = true;
-    std::cout << "Image loaded" << std::endl;
+    dispatchEvent(DOMEventType::Load);
   }
 }

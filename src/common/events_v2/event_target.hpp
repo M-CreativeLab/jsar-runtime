@@ -113,17 +113,44 @@ namespace events_comm
       auto it = eventToListenersMap.find(type);
       if (it != eventToListenersMap.end())
       {
-        auto listeners = it->second;
-        for (auto it = listeners.begin(); it != listeners.end();)
+        auto& listeners = it->second;
+        for (auto childIt = listeners.begin(); childIt != listeners.end();)
         {
-          if (listener->equals(**it))
+          if (listener->equals(**childIt))
           {
-            it = listeners.erase(it);
+            childIt = listeners.erase(childIt);
             break;
           }
           else
           {
-            ++it;
+            ++childIt;
+          }
+        }
+      }
+    }
+    /**
+     * Remove an event listener from the event target by the listener id.
+     * 
+     * @param type The event type
+     * @param listenerId The id of the event listener to remove
+     */
+    void removeEventListener(EventType type, uint32_t listenerId)
+    {
+      auto it = eventToListenersMap.find(type);
+      if (it != eventToListenersMap.end())
+      {
+        auto& listeners = it->second;
+        for (auto childIt = listeners.begin(); childIt != listeners.end();)
+        {
+          auto listener = *childIt;
+          if (listenerId == listener->id)
+          {
+            childIt = listeners.erase(childIt);
+            break;
+          }
+          else
+          {
+            ++childIt;
           }
         }
       }
