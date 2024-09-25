@@ -25,8 +25,20 @@
 
     // Mesh
     const loader = new GLTFLoader();
-    loader.load('http://ar.rokidcdn.com/web-assets/pages/models/grass.glb', (gltf) => {
+    loader.load('http://ar.rokidcdn.com/web-assets/pages/models/welcome.glb', (gltf) => {
+      console.info('Loaded GLTF scene.', gltf);
       scene.add(gltf.scene);
+
+      const box = new THREE.Box3();
+      scene.traverse(object => {
+        if (object instanceof THREE.Mesh || object instanceof THREE.Group) {
+          box.expandByObject(object);
+        }
+      });
+      const size = box.getSize(new THREE.Vector3());
+      const scale = 1 / Math.max(size.x, size.y, size.z);
+      console.info('Scaling scene by', scale);
+      scene.scale.set(scale, scale, scale);
     });
 
     const gl = navigator.gl;

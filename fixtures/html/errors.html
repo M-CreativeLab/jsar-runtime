@@ -1,0 +1,28 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Script Errors</title>
+
+</head>
+
+<body>
+</body>
+
+<script>
+  function foo() {
+    console.info(new Error().stack);
+    bar();
+  }
+  function bar() {
+    throw new Error('named error');
+  }
+
+  try {
+    foo();
+  } catch (err) {
+    console.info(err.stack);
+  }
+</script>
+
+</html>

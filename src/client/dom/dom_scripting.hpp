@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <node/v8.h>
 #include <node/node.h>
+#include "common/utility.hpp"
 
 using namespace std;
 
@@ -14,9 +15,9 @@ namespace dom
 {
   enum ContextEmbedderIndex : int
   {
-    kMagicIndex = 1024,
-    kEnvironmentObject,
-    kSandboxObject,
+    kSandboxObject = 50,
+    kScriptingContextExternal,
+    kContextTag,
   };
 
   enum HostDefinedOptions : int
@@ -32,6 +33,51 @@ namespace dom
     ESM,
   };
 
+  /**
+   * Copied from `src/node_context_data.h` in Node.js source code because this is useful for context validation.
+   */
+  class ContextEmbedderTag
+  {
+  public:
+    /**
+     * Tag the given context as a JSAR context
+     */
+    static inline void TagMyContext(v8::Local<v8::Context> context)
+    {
+      // Used by ContextEmbedderTag::IsMyContext to know that we are on a node
+      // context.
+      context->SetAlignedPointerInEmbedderData(
+          ContextEmbedderIndex::kContextTag,
+          ContextEmbedderTag::kMyContextTagPtr);
+    }
+
+    static inline bool IsMyContext(v8::Local<v8::Context> context)
+    {
+      if (TR_UNLIKELY(context.IsEmpty()))
+      {
+        return false;
+      }
+      if (TR_UNLIKELY(context->GetNumberOfEmbedderDataFields() <=
+                      ContextEmbedderIndex::kContextTag))
+      {
+        return false;
+      }
+      if (TR_UNLIKELY(context->GetAlignedPointerFromEmbedderData(
+                          ContextEmbedderIndex::kContextTag) !=
+                      ContextEmbedderTag::kMyContextTagPtr))
+      {
+        return false;
+      }
+      return true;
+    }
+
+  private:
+    static void *const kMyContextTagPtr;
+    static int const kMyContextTag;
+
+    ContextEmbedderTag() = delete;
+  };
+
   class RuntimeContext;
   class DOMScript;
   class DOMClassicScript;
@@ -42,6 +88,9 @@ namespace dom
    */
   class DOMScriptingContext : public std::enable_shared_from_this<DOMScriptingContext>
   {
+  public:
+    static DOMScriptingContext *GetCurrent(v8::Local<v8::Context> context);
+
   private:
     static void PropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
     static void WindowProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
@@ -158,7 +207,7 @@ namespace dom
 
     /**
      * Dispatch the global event in this scripting context.
-     * 
+     *
      * @param event The event object to dispatch.
      */
     bool dispatchEvent(v8::Local<v8::Object> event);
@@ -174,7 +223,7 @@ namespace dom
 
     /**
      * Create the `WorkerGlobalScope.self` proxy object.
-     * 
+     *
      * @param context The v8 context to create this object.
      * @returns The `WorkerGlobalScope.self` proxy object.
      */

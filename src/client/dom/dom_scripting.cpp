@@ -10,6 +10,19 @@ using namespace std;
 
 namespace dom
 {
+  int const ContextEmbedderTag::kMyContextTag = 0x8e8f99;
+  void *const ContextEmbedderTag::kMyContextTagPtr = const_cast<void *>(
+      static_cast<const void *>(&ContextEmbedderTag::kMyContextTag));
+
+  DOMScriptingContext *DOMScriptingContext::GetCurrent(v8::Local<v8::Context> context)
+  {
+    auto externalObject = context->GetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal).As<v8::External>();
+    if (!externalObject.IsEmpty())
+      return static_cast<DOMScriptingContext *>(externalObject->Value());
+    else
+      return nullptr;
+  }
+
   void DOMScriptingContext::PropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info)
   {
     auto isolate = info.GetIsolate();
@@ -80,12 +93,7 @@ namespace dom
     v8::EscapableHandleScope handleScope(isolate);
 
     v8::Local<v8::FixedArray> options = hostDefinedOptions.As<v8::FixedArray>();
-    DOMScriptingContext *scriptingContext = nullptr;
-    {
-      auto externalObject = context->GetEmbedderData(ContextEmbedderIndex::kEnvironmentObject).As<v8::External>();
-      if (!externalObject.IsEmpty())
-        scriptingContext = static_cast<DOMScriptingContext *>(externalObject->Value());
-    }
+    DOMScriptingContext *scriptingContext = DOMScriptingContext::GetCurrent(context);
     if (scriptingContext == nullptr)
     {
       std::cerr << "Failed to get the scripting context object" << std::endl;
@@ -311,9 +319,9 @@ namespace dom
 #undef V8_TRY_SET_GLOBAL_FROM_VALUE
 #undef V8_SET_GLOBAL_FROM_VALUE
       }
-      newContext->SetEmbedderData(ContextEmbedderIndex::kMagicIndex, v8::Number::New(isolate, 0x5432));
+      ContextEmbedderTag::TagMyContext(newContext);
       newContext->SetEmbedderData(ContextEmbedderIndex::kSandboxObject, sandbox);
-      newContext->SetEmbedderData(ContextEmbedderIndex::kEnvironmentObject, v8::External::New(isolate, this));
+      newContext->SetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal, v8::External::New(isolate, this));
       newContext->SetSecurityToken(mainContext->GetSecurityToken());
       v8ContextStore.Reset(isolate, newContext);
     }
@@ -417,9 +425,10 @@ namespace dom
 #undef V8_SET_GLOBAL_FROM_MAIN
 #undef V8_SET_GLOBAL_FROM_VALUE
       }
-      workerContext->SetEmbedderData(ContextEmbedderIndex::kMagicIndex, v8::Number::New(isolate, 0x6432));
+
+      ContextEmbedderTag::TagMyContext(workerContext);
       workerContext->SetEmbedderData(ContextEmbedderIndex::kSandboxObject, sandbox);
-      workerContext->SetEmbedderData(ContextEmbedderIndex::kEnvironmentObject, v8::External::New(isolate, this));
+      workerContext->SetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal, v8::External::New(isolate, this));
       workerContext->SetSecurityToken(mainContext->GetSecurityToken());
       v8ContextStore.Reset(isolate, workerContext);
     }
@@ -728,11 +737,10 @@ namespace dom
     // create the script
     auto sourceString = v8::String::NewFromUtf8(isolate, sourceStr.c_str()).ToLocalChecked();
     v8::ScriptCompiler::Source source(sourceString, origin);
-    v8::ScriptCompiler::CompileOptions options = v8::ScriptCompiler::kNoCompileOptions;
 
     // compile the script
     auto context = isolate->GetCurrentContext();
-    auto maybeScript = v8::ScriptCompiler::Compile(context, &source, options);
+    auto maybeScript = v8::ScriptCompiler::Compile(context, &source, v8::ScriptCompiler::kNoCompileOptions);
 
     v8::Local<v8::Script> script;
     if (maybeScript.ToLocal(&script))
@@ -764,12 +772,7 @@ namespace dom
                                                               v8::Local<v8::Module> referrer)
   {
     v8::Isolate *isolate = context->GetIsolate();
-    DOMScriptingContext *scriptingContext = nullptr;
-    {
-      auto externalObject = context->GetEmbedderData(ContextEmbedderIndex::kEnvironmentObject).As<v8::External>();
-      if (!externalObject.IsEmpty())
-        scriptingContext = static_cast<DOMScriptingContext *>(externalObject->Value());
-    }
+    DOMScriptingContext *scriptingContext = DOMScriptingContext::GetCurrent(context);
     if (scriptingContext == nullptr)
     {
       fprintf(stderr, "Failed to get the scripting context object\n");

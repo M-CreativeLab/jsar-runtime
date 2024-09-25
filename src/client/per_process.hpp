@@ -69,6 +69,11 @@ public:
 
 class TrScriptRuntimePerProcess
 {
+private:
+  static MaybeLocal<Value> PrepareStackTraceCallback(Local<Context> context,
+                                                     Local<Value> exception,
+                                                     Local<Array> trace);
+
 public:
   TrScriptRuntimePerProcess();
   ~TrScriptRuntimePerProcess();
@@ -207,13 +212,13 @@ public: // WebXR methods
 
   /**
    * Get the framebuffer's width, or zero if the XR is not enabled.
-   * 
+   *
    * @returns the framebuffer's width
    */
   int getFramebufferWidth() { return xrDeviceContextZoneClient == nullptr ? 0 : xrDeviceContextZoneClient->getFramebufferConfig().width; }
   /**
    * Get the framebuffer's height, or zero if the XR is not enabled.
-   * 
+   *
    * @returns the framebuffer's height
    */
   int getFramebufferHeight() { return xrDeviceContextZoneClient == nullptr ? 0 : xrDeviceContextZoneClient->getFramebufferConfig().height; }

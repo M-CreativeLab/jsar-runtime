@@ -7,6 +7,7 @@
 #include <sys/resource.h>
 
 #include "per_process.hpp"
+#include "dom/dom_scripting.hpp"
 #include "media/media_player.hpp"
 #include "media/audio_player.hpp"
 #include "crates/jsar_jsbindings.h"
@@ -101,14 +102,14 @@ bool ScriptEnvironment::initialize()
   auto errors = result->errors();
   if (errors.size() > 0)
   {
-    fprintf(stderr, "Failed to initialize ScriptEnvironment, there are errors:\n");
+    std::cerr << "Failed to initialize ScriptEnvironment, there are errors:" << std::endl;
     for (uint32_t n = 0; n < errors.size(); n++)
-      fprintf(stderr, "[%d]: %s\n", n, errors[n].c_str());
+      std::cerr << "[" << n << "]: " << errors[n] << std::endl;
   }
 
-  if (result->early_return() != 0)
+  if (result->early_return())
   {
-    fprintf(stderr, "Early return: %d\n", result->early_return());
+    std::cerr << "Failed to initialize ScriptEnvironment, early return." << std::endl;
     return result->exit_code() != 0;
   }
   else
@@ -134,6 +135,40 @@ void ScriptEnvironment::dispose()
   V8::Dispose();
   V8::DisposePlatform();
   node::TearDownOncePerProcess();
+}
+
+MaybeLocal<Value> TrScriptRuntimePerProcess::PrepareStackTraceCallback(Local<Context> context,
+                                                                       Local<Value> exception,
+                                                                       Local<Array> trace)
+{
+  if (::dom::ContextEmbedderTag::IsMyContext(context))
+  {
+    /**
+     * Prepare the stack trace for our own context.
+     */
+    Isolate *isolate = context->GetIsolate();
+    HandleScope handleScope(isolate);
+    Local<String> errorWithStack = exception->ToString(context).ToLocalChecked();
+    Local<String> breakLine = String::NewFromUtf8(isolate, "\n").ToLocalChecked();
+    Local<String> beforeLine = String::NewFromUtf8(isolate, "    at ").ToLocalChecked();
+
+    for (uint32_t n = 0; n < trace->Length(); n++)
+    {
+      Local<Value> stackFrame = trace->Get(context, n).ToLocalChecked();
+      Local<String> stackFrameString;
+      if (stackFrame->ToString(context).ToLocal(&stackFrameString))
+      {
+        errorWithStack = String::Concat(isolate, errorWithStack, breakLine);
+        errorWithStack = String::Concat(isolate, errorWithStack, beforeLine);
+        errorWithStack = String::Concat(isolate, errorWithStack, stackFrameString);
+      }
+    }
+    return errorWithStack;
+  }
+  else
+  {
+    return node::PrepareStackTraceCallback(context, exception, trace);
+  }
 }
 
 TrScriptRuntimePerProcess::TrScriptRuntimePerProcess()
@@ -226,6 +261,7 @@ int TrScriptRuntimePerProcess::executeMainScript(ScriptEnvironment &env, vector<
   node::Environment *nodeEnv = setup->env();
   node::SetProcessExitHandler(nodeEnv, [this](node::Environment *env, int exit_code)
                               { this->onScriptExit(env, exit_code); });
+  isolate->SetPrepareStackTraceCallback(PrepareStackTraceCallback);
 
   {
     Locker locker(isolate);

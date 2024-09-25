@@ -45,8 +45,16 @@ let root;
   })();
 
   function fitTo(targetSize = 1) {
-    const scaling = 0.001;
-    root.scale.set(scaling, scaling, scaling);
+    const box = new THREE.Box3();
+    scene.traverse(object => {
+      if (object instanceof THREE.Mesh || object instanceof THREE.Group) {
+        box.expandByObject(object);
+      }
+    });
+    const size = box.getSize(new THREE.Vector3());
+    const scale = 1 / Math.max(size.x, size.y, size.z);
+    console.info('Scaling scene by', scale);
+    scene.scale.set(scale, scale, scale);
   }
 
   function loadMolecule(model) {
