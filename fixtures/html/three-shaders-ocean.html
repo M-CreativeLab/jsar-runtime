@@ -1,0 +1,133 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Three.js: Shaders(Ocean)</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { Water } from 'three/addons/objects/Water.js';
+    import { Sky } from 'three/addons/objects/Sky.js';
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
+    let water, sun, mesh;
+
+    function init(renderer) {
+      sun = new THREE.Vector3();
+
+      // Water
+      const waterGeometry = new THREE.PlaneGeometry(1000, 1000);
+      water = new Water(
+        waterGeometry,
+        {
+          textureWidth: 512,
+          textureHeight: 512,
+          waterNormals: new THREE.TextureLoader().load('https://threejs.org/examples/textures/waternormals.jpg', function (texture) {
+            texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+          }),
+          sunDirection: new THREE.Vector3(),
+          sunColor: 0xffffff,
+          waterColor: 0x001e0f,
+          distortionScale: 3.7,
+          fog: scene.fog !== undefined
+        }
+      );
+
+      water.rotation.x = - Math.PI / 2;
+      water.position.y = -5;
+      scene.add(water);
+
+      // Skybox
+      const sky = new Sky();
+      sky.scale.setScalar(10000);
+      scene.add(sky);
+
+      const skyUniforms = sky.material.uniforms;
+      skyUniforms['turbidity'].value = 10;
+      skyUniforms['rayleigh'].value = 2;
+      skyUniforms['mieCoefficient'].value = 0.005;
+      skyUniforms['mieDirectionalG'].value = 0.8;
+
+      const parameters = {
+        elevation: 2,
+        azimuth: 180
+      };
+
+      const pmremGenerator = new THREE.PMREMGenerator(renderer);
+      const sceneEnv = new THREE.Scene();
+
+      let renderTarget;
+      function updateSun() {
+        const phi = THREE.MathUtils.degToRad(90 - parameters.elevation);
+        const theta = THREE.MathUtils.degToRad(parameters.azimuth);
+        sun.setFromSphericalCoords(1, phi, theta);
+
+        sky.material.uniforms['sunPosition'].value.copy(sun);
+        water.material.uniforms['sunDirection'].value.copy(sun).normalize();
+
+        if (renderTarget !== undefined) renderTarget.dispose();
+
+        sceneEnv.add(sky);
+        renderTarget = pmremGenerator.fromScene(sceneEnv);
+        scene.add(sky);
+        scene.environment = renderTarget.texture;
+      }
+
+      updateSun();
+
+      const geometry = new THREE.BoxGeometry(10, 10, 10);
+      const material = new THREE.MeshStandardMaterial({ roughness: 0 });
+      mesh = new THREE.Mesh(geometry, material);
+      mesh.position.z = -20;
+      scene.add(mesh);
+    }
+
+    const gl = navigator.gl;
+    navigator.xr.requestSession('immersive-ar', {}).then((session) => {
+      const baseLayer = new XRWebGLLayer(session, gl);
+      session.updateRenderState({ baseLayer });
+
+      const renderer = new THREE.WebGLRenderer({
+        canvas: {
+          addEventListener() { },
+        },
+        context: gl,
+      });
+      renderer.shadowMap.enabled = true;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 0.5;
+      renderer.xr.enabled = true;
+      renderer.xr.setReferenceSpaceType('local');
+      renderer.xr.setSession(session);
+
+      init(renderer);
+
+      function animate() {
+        const time = Date.now() * 0.001;
+        mesh.position.y = Math.sin(time) * 5 + 1;
+        mesh.rotation.x = time * 0.5;
+        mesh.rotation.z = time * 0.51;
+        water.material.uniforms['time'].value += 1.0 / 60.0;
+        renderer.render(scene, camera);
+      }
+
+      camera.position.z = 5;
+      renderer.setAnimationLoop(animate);
+    }, (err) => {
+      console.warn('Failed to start XR session:', err);
+    });
+  </script>
+</head>
+
+<body>
+</body>
+
+</html>
