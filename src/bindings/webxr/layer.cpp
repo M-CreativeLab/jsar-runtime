@@ -1,6 +1,7 @@
 #include "layer.hpp"
 #include "view.hpp"
 #include "viewport.hpp"
+#include "../webgl/framebuffer.hpp"
 
 namespace bindings
 {
@@ -93,6 +94,7 @@ namespace bindings
       return;
     }
     glContext = Napi::Persistent(contextValue.ToObject());
+    hostFramebuffer = Napi::Persistent(webgl::WebGLFramebuffer::NewInstance(env, true));
 
     // Update properties from options
     auto optionsValue = info[2];
@@ -119,6 +121,7 @@ namespace bindings
   XRWebGLLayer::~XRWebGLLayer()
   {
     glContext.Reset();
+    hostFramebuffer.Reset();
   }
 
   Napi::Value XRWebGLLayer::AntialiasGetter(const Napi::CallbackInfo &info)
@@ -133,9 +136,7 @@ namespace bindings
 
   Napi::Value XRWebGLLayer::FramebufferGetter(const Napi::CallbackInfo &info)
   {
-    Napi::Env env = info.Env();
-    // FIXME: -1 means the host framebuffer, maybe we should use Framebuffer object instead.
-    return Napi::Number::New(env, -1);
+    return hostFramebuffer.Value();
   }
 
   Napi::Value XRWebGLLayer::FramebufferWidthGetter(const Napi::CallbackInfo &info)

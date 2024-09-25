@@ -117,14 +117,14 @@ function addLights() {
   dirLight = new THREE.DirectionalLight(0xffffff, .8);
   dirLight.position.set(200, 200, 200);
   dirLight.castShadow = true;
-  // dirLight.shadowDarkness = .1;
+  dirLight.shadowDarkness = .1;
 
   backLight = new THREE.DirectionalLight(0xffffff, .4);
   backLight.position.set(-200, 200, 50);
-  // backLight.shadowDarkness = .1;
-  // backLight.castShadow = true;
+  backLight.shadowDarkness = .1;
+  backLight.castShadow = true;
 
-  // scene.add(backLight);
+  scene.add(backLight);
   scene.add(hemiLight);
   scene.add(dirLight);
 }
@@ -457,13 +457,8 @@ function calc(v, vmin, vmax, tmin, tmax) {
 }
 
 function loop() {
-  try {
-    throw new Error('This is an error');
-    renderer.render(scene, camera);
-    walter.update();
-  } catch (err) {
-    console.info('Caught error:', err.stack);
-  }
+  renderer.render(scene, camera);
+  walter.update();
 }
 
 try {

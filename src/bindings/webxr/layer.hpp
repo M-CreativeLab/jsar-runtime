@@ -56,6 +56,7 @@ namespace bindings
     xr::WebGLLayer config;
     XRSession *session;
     Napi::ObjectReference glContext;
+    Napi::ObjectReference hostFramebuffer;
 
   private:
     static Napi::FunctionReference *constructor;

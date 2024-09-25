@@ -1,4 +1,6 @@
 #include "./binding.hpp"
+#include "./framebuffer.hpp"
+#include "./object.hpp"
 #include "./active_info.hpp"
 #include "./placeholders.hpp"
 #include "./program.hpp"
@@ -12,6 +14,8 @@ namespace bindings
   {
     Napi::Object InitModule(Napi::Env env, Napi::Object exports)
     {
+      ::webgl::WebGLFramebuffer::Init(env);
+      ::webgl::WebGLObject::Init(env);
       ::webgl::WebGLActiveInfo::Init(env);
       ::webgl::WebGLProgram::Init(env);
       ::webgl::WebGLTexture::Init(env);

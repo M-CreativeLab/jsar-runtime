@@ -7,6 +7,8 @@
 #include "../canvas/canvas.hpp"
 #include "../dom/html_image_element.hpp"
 #include "./rendering_context.hpp"
+
+#include "./framebuffer.hpp"
 #include "./placeholders.hpp"
 #include "./program.hpp"
 #include "./texture.hpp"
@@ -1653,10 +1655,12 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    auto id = framebufferIdGen.get();
-    auto req = CreateFramebufferCommandBufferRequest(id);
+    auto framebufferObject = WebGLFramebuffer::NewInstance(env);
+    auto framebufferUnwrapped = WebGLFramebuffer::Unwrap(framebufferObject);
+
+    auto req = CreateFramebufferCommandBufferRequest(framebufferUnwrapped->id);
     sendCommandBufferRequest(req);
-    return Napi::Number::New(env, id);
+    return framebufferObject;
   }
 
   template <typename T>
@@ -1670,9 +1674,24 @@ namespace webgl
       Napi::TypeError::New(env, "deleteFramebuffer() takes 1 argument.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    int framebuffer = info[0].As<Napi::Number>().Int32Value();
-    auto req = DeleteFramebufferCommandBufferRequest(framebuffer);
-    sendCommandBufferRequest(req);
+    else if (
+        !info[0].IsObject() ||
+        !info[0].As<Napi::Object>().InstanceOf(WebGLFramebuffer::constructor->Value()))
+    {
+      Napi::TypeError::New(env, "deleteFramebuffer() 1st argument must be a WebGLFramebuffer.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto framebuffer = WebGLFramebuffer::Unwrap(info[0].As<Napi::Object>());
+    if (!framebuffer->isHost)
+    {
+      /**
+       * Host framebuffer could not be deleted by client-side.
+       */
+      auto req = DeleteFramebufferCommandBufferRequest(framebuffer->id);
+      sendCommandBufferRequest(req);
+    }
     return env.Undefined();
   }
 
@@ -1687,19 +1706,31 @@ namespace webgl
       Napi::TypeError::New(env, "bindFramebuffer() takes 2 arguments.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    if (!info[0].IsNumber())
+    if (!info[0].IsNumber()) // target
     {
-      Napi::TypeError::New(env, "the first argument should be a number when calling bindFramebuffer().")
+      Napi::TypeError::New(env, "the first argument must be a number.")
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
-    int target = info[0].As<Napi::Number>().Int32Value();
-    int framebuffer = 0;
-    if (info[1].IsNumber())
-      framebuffer = info[1].As<Napi::Number>().Int32Value();
+    int framebufferReqId = 0;
+    if (
+        !info[1].IsObject() ||
+        !info[1].As<Napi::Object>().InstanceOf(WebGLFramebuffer::constructor->Value()))
+    {
+      framebufferReqId = 0;
+    }
+    else
+    {
+      auto framebuffer = WebGLFramebuffer::Unwrap(info[1].As<Napi::Object>());
+      /**
+       * If the framebuffer is a host framebuffer, using -1 as the request id.
+       */
+      framebufferReqId = framebuffer->isHost ? -1 : framebuffer->id;
+    }
 
-    auto req = BindFramebufferCommandBufferRequest(target, framebuffer);
+    int target = info[0].As<Napi::Number>().Int32Value();
+    auto req = BindFramebufferCommandBufferRequest(target, framebufferReqId);
     sendCommandBufferRequest(req);
     return env.Undefined();
   }
@@ -2049,7 +2080,9 @@ namespace webgl
     }
 
     unsigned char *unpacked = nullptr;
-    if (m_unpackFlipY || m_unpackPremultiplyAlpha)
+    if (
+        pixelsData != nullptr &&
+        (m_unpackFlipY || m_unpackPremultiplyAlpha))
     {
       unpacked = unpackPixels(req.pixelType,
                               req.format,
