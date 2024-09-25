@@ -236,6 +236,7 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(navigator);
         V8_SET_GLOBAL_FROM_MAIN(location);
         V8_SET_GLOBAL_FROM_MAIN(console);
+        V8_SET_GLOBAL_FROM_MAIN(performance);
 
         // Basic constructors
         V8_SET_GLOBAL_FROM_MAIN(URL);

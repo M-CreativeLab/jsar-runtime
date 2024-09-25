@@ -111,7 +111,7 @@
       init(renderer);
 
       function animate() {
-        const time = Date.now() * 0.001;
+        const time = performance.now() * 0.001;
         mesh.position.y = Math.sin(time) * 5 + 1;
         mesh.rotation.x = time * 0.5;
         mesh.rotation.z = time * 0.51;
