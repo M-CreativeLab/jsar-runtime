@@ -245,6 +245,7 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(WebSocket);
         V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
         V8_SET_GLOBAL_FROM_MAIN(OffscreenCanvas);
+        V8_SET_GLOBAL_FROM_MAIN(Image);
         V8_SET_GLOBAL_FROM_MAIN(Worker);
 
         // Events

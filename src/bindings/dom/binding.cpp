@@ -17,6 +17,7 @@ namespace bindings
       dombinding::Node::Init(env);
       dombinding::Element::Init(env);
       dombinding::HTMLElement::Init(env);
+      dombinding::HTMLMediaElement::Init(env);
       {
 #define XX(tagNameStr, className) dombinding::className::Init(env);
         TYPED_ELEMENT_MAP(XX)

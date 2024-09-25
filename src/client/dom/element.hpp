@@ -12,7 +12,8 @@ using namespace std;
   XX("canvas", HTMLCanvasElement) \
   XX("img", HTMLImageElement)     \
   XX("meta", HTMLMetaElement)     \
-  XX("script", HTMLScriptElement)
+  XX("script", HTMLScriptElement) \
+  XX("video", HTMLVideoElement)
 
 namespace dom
 {

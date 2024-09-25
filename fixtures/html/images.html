@@ -36,6 +36,20 @@
   image.addEventListener('error', onImageError, false);
   image.src = 'https://t4.ftcdn.net/jpg/06/00/90/17/360_F_600901739_93i8HBQhHjqXyvNBrHWEiJOveQYdMe6m.jpg';
   console.info(image);
+
+  {
+    // Create image via Image constructor
+    const image = new Image();
+    console.info('new Image():', image, image.width, image.height);
+    const image2 = new Image(100);
+    console.info('new Image(100):', image2, image2.width, image.height);
+    const image3 = new Image(100, 200);
+    console.info('new Image(100, 200):', image3, image3.width, image3.height);
+    image3.addEventListener('load', function() {
+      console.info('new Image(100, 200)', image3.width, image3.height);
+    });
+    image3.src = 'https://t4.ftcdn.net/jpg/06/00/90/17/360_F_600901739_93i8HBQhHjqXyvNBrHWEiJOveQYdMe6m.jpg';
+  }
 </script>
 
 </html>

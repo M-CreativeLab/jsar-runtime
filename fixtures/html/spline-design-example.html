@@ -67,6 +67,7 @@
         },
         context: gl,
       });
+      renderer.preserveDrawingBuffer = true;
       renderer.xr.enabled = true;
       renderer.xr.setReferenceSpaceType('local');
       renderer.xr.setSession(session);

@@ -16,6 +16,7 @@ namespace dombinding
   public:
     static vector<Napi::ClassPropertyDescriptor<HTMLImageElement>> GetClassProperties();
     static void Init(Napi::Env env);
+    static Napi::Value ImageConstructor(const Napi::CallbackInfo &info);
 
   private:
     Napi::Value CurrentSrcGetter(const Napi::CallbackInfo &info);

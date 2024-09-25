@@ -8,6 +8,21 @@ namespace dombinding
     DocumentBase<Document, dom::HTMLDocument>::Init(env, "Document");
   }
 
+  Document* Document::GetCurrent(Napi::Env env)
+  {
+    Napi::HandleScope scope(env);
+    auto document = env.Global().Get("document");
+    if (document.IsObject())
+    {
+      auto objectObject = document.ToObject();
+      if (objectObject.InstanceOf(Document::constructor->Value()))
+      {
+        return Document::Unwrap(objectObject);
+      }
+    }
+    return nullptr;
+  }
+
   Document::Document(const Napi::CallbackInfo &info) : DocumentBase<Document, dom::HTMLDocument>(info)
   {
   }

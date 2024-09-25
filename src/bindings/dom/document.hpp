@@ -185,6 +185,7 @@ namespace dombinding
   {
   public:
     static void Init(Napi::Env env, Napi::Object exports);
+    static Document* GetCurrent(Napi::Env env);
 
   public:
     Document(const Napi::CallbackInfo &info);

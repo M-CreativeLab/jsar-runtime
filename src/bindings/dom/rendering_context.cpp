@@ -64,6 +64,7 @@ namespace dombinding
           scriptingContext->makeMainContext(convertNapiValueToV8Local(jsInstance));
         }
         contextImpl->open(doc);
+        env.Global().Set("document", jsInstance);
         return jsInstance;
       }
       catch (const std::exception &e)

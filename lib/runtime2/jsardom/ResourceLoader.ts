@@ -97,6 +97,13 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     }
 
     /**
+     * Check if the URL is a data URL, and directly return the decoded content.
+     */
+    if (url.startsWith('data:')) {
+      return this.#readDataURL(url, returnsAs);
+    }
+
+    /**
      * Check if this URL is a valid URL.
      */
     if (!canParseURL(url)) {
@@ -216,6 +223,24 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
       default:
         throw new TypeError(`Unknown return type: "${returnsAs}"`);
     }
+  }
+
+  /**
+   * Read data URL such as `data:image/png;base64,...`.
+   * @param url the data URL.
+   * @param returnsAs expected return type.
+   * @returns the expected content.
+   */
+  async #readDataURL<AsType extends keyof FetchReturnsMap>(url: string, returnsAs: AsType): Promise<FetchReturnsMap[AsType]> {
+    const m = url.match(/^data:(.*?)(;base64)?,(.*)/);
+    if (!m) {
+      throw new TypeError(`Invalid data URL: ${url}`);
+    }
+    const [, mimeType, isBase64, data] = m;
+    const blob = new Blob([
+      isBase64 ? atob(data) : decodeURIComponent(data)],
+      { type: mimeType });
+    return this.#readBlob(blob, returnsAs);
   }
 
   /**

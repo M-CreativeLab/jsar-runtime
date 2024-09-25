@@ -3,5 +3,7 @@
 #include "./html_body_element.hpp"
 #include "./html_canvas_element.hpp"
 #include "./html_image_element.hpp"
+#include "./html_media_element.hpp"
 #include "./html_meta_element.hpp"
 #include "./html_script_element.hpp"
+#include "./html_video_element.hpp"
