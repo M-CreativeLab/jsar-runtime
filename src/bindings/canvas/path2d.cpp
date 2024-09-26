@@ -23,6 +23,7 @@ namespace canvasbinding
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
     exports.Set("Path2D", func);
+    env.Global().Set("Path2D", func);
   }
 
   Path2D::Path2D(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Path2D>(info)

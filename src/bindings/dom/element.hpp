@@ -28,6 +28,7 @@ namespace dombinding
               T::InstanceMethod("closest", &T::Closest),
               T::InstanceMethod("getAttribute", &T::GetAttribute),
               T::InstanceMethod("getAttributeNames", &T::GetAttributeNames),
+              T::InstanceMethod("getBoundingClientRect", &T::GetBoundingClientRect),
               T::InstanceMethod("hasAttribute", &T::HasAttribute),
               T::InstanceMethod("hasAttributes", &T::HasAttributes),
           });
@@ -131,6 +132,14 @@ namespace dombinding
       for (size_t i = 0; i < attrNames.size(); i++)
         result[i] = Napi::String::New(env, attrNames[i]);
       return result;
+    }
+    Napi::Value GetBoundingClientRect(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      // TODO: Implement this method.
+      return Napi::Object::New(env);
     }
     Napi::Value HasAttribute(const Napi::CallbackInfo &info)
     {

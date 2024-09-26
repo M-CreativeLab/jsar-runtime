@@ -29,8 +29,9 @@ import {
 } from './webworkers/worker';
 
 export function loadPolyfills() {
-  // Load the DOM bindings
-  process._linkedBinding('transmute:dom');  // This will update the DOM interfaces in the global scope
+  // Load Web APIs
+  process._linkedBinding('transmute:dom');
+  process._linkedBinding('transmute:canvas');
 
   globalThis.XMLHttpRequest = XMLHttpRequestImpl;
   // globalThis.AudioContext = AudioContextImpl;

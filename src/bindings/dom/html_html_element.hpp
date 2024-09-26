@@ -1,7 +1,7 @@
 #pragma once
 
 #include "client/dom/html_html_element.hpp"
-#include "./html_element.hpp"
+#include "./html_element-inl.hpp"
 
 namespace dombinding
 {

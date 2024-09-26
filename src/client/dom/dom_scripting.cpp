@@ -245,10 +245,32 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(XMLHttpRequest);
         V8_SET_GLOBAL_FROM_MAIN(WebSocket);
         V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
-        V8_SET_GLOBAL_FROM_MAIN(OffscreenCanvas);
         V8_SET_GLOBAL_FROM_MAIN(Audio);
         V8_SET_GLOBAL_FROM_MAIN(Image);
         V8_SET_GLOBAL_FROM_MAIN(Worker);
+
+        // DOM nodes
+        V8_SET_GLOBAL_FROM_MAIN(HTMLAnchorElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLAreaElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLAudioElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLBaseElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLBodyElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLBRElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLButtonElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLCanvasElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLDataElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLDataListElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLDetailsElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLDialogElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLDivElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLDListElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLEmbedElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLFieldSetElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLFormElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLHeadElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLHeadingElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLHRElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLHtmlElement);
 
         // Events
         V8_SET_GLOBAL_FROM_MAIN(Event);
@@ -288,6 +310,12 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(Headers);
         V8_SET_GLOBAL_FROM_MAIN(Request);
         V8_SET_GLOBAL_FROM_MAIN(Response);
+
+        // Canvas API
+        V8_SET_GLOBAL_FROM_MAIN(OffscreenCanvas);
+        V8_SET_GLOBAL_FROM_MAIN(OffscreenCanvasRenderingContext2D);
+        V8_SET_GLOBAL_FROM_MAIN(CanvasRenderingContext2D);
+        V8_SET_GLOBAL_FROM_MAIN(Path2D);
 
         // WebGL objects
         V8_SET_GLOBAL_FROM_MAIN(WebGLRenderingContext);
@@ -801,9 +829,32 @@ namespace dom
 
     auto script = scriptStore.Get(isolate);
     auto context = isolate->GetCurrentContext();
-    auto result = script->Run(context);
+
+    v8::TryCatch tryCatch(isolate);
+    v8::MaybeLocal<v8::Value> result = script->Run(context);
     if (result.IsEmpty())
-      fprintf(stderr, "Failed to run script\n"); // TODO: throw exception?
+    {
+      std::cerr << "#" << std::endl;
+      std::cerr << "# Failed to execute script" << std::endl;
+      std::cerr << "# URL: " << url << std::endl;
+      if (tryCatch.HasCaught())
+      {
+        auto stackTrace = tryCatch.StackTrace(context).ToLocalChecked();
+        if (!stackTrace.IsEmpty())
+        {
+          v8::String::Utf8Value stackTraceUtf8(isolate, stackTrace);
+          std::string stackTraceStr(*stackTraceUtf8, stackTraceUtf8.length());
+          std::cerr << "# " << stackTraceStr << std::endl;
+        }
+        else
+        {
+          v8::Local<v8::Message> message = tryCatch.Message();
+          v8::String::Utf8Value messageUtf8(isolate, message->Get());
+          std::string messageStr(*messageUtf8, messageUtf8.length());
+          std::cerr << "# Error: " << messageStr << std::endl;
+        }
+      }
+    }
   }
 
   v8::MaybeLocal<v8::Module> DOMModule::ResolveModuleCallback(v8::Local<v8::Context> context,

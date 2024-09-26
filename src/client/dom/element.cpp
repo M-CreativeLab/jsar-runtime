@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "./element.hpp"
+#include "./html_element.hpp"
 #include "./attr.hpp"
 #include "./all_html_elements.hpp"
 #include "common/utility.hpp"
@@ -19,9 +20,9 @@ namespace dom
     TYPED_ELEMENT_MAP(XX)
 #undef XX
 
-    shared_ptr<Element> element = make_shared<Element>(node, ownerDocument);
+    shared_ptr<HTMLElement> element = make_shared<HTMLElement>(node, ownerDocument);
     element->createdCallback();
-    return element;
+    return dynamic_pointer_cast<Element>(element);
   }
 
   shared_ptr<Element> Element::CreateElement(string namespaceURI, string tagName, weak_ptr<Document> ownerDocument)
@@ -37,10 +38,10 @@ namespace dom
     TYPED_ELEMENT_MAP(XX)
 #undef XX
 
-    shared_ptr<Element> element = make_shared<Element>(tagName, ownerDocument);
+    shared_ptr<HTMLElement> element = make_shared<HTMLElement>(tagName, ownerDocument);
     element->namespaceURI = namespaceURI;
     element->createdCallback();
-    return element;
+    return dynamic_pointer_cast<Element>(element);
   }
 
   Element::Element(string tagName, optional<weak_ptr<Document>> ownerDocument)

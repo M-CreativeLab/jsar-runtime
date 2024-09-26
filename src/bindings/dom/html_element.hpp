@@ -11,7 +11,13 @@ namespace dombinding
   class HTMLElementBase : public ElementBase<ObjectType, HTMLElementType>
   {
   public:
+    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties();
+
+  public:
     using ElementBase<ObjectType, HTMLElementType>::ElementBase;
+
+  public:
+    Napi::Value StyleGetter(const Napi::CallbackInfo &info);
   };
 
   class HTMLElement : public HTMLElementBase<HTMLElement, dom::HTMLElement>

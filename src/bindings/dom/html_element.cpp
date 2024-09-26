@@ -1,5 +1,5 @@
 #include <assert.h>
-#include "./html_element.hpp"
+#include "./html_element-inl.hpp"
 
 namespace dombinding
 {

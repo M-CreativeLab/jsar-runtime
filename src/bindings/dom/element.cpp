@@ -1,6 +1,7 @@
 #include <iostream>
 #include <assert.h>
 #include "./element.hpp"
+#include "./html_element-inl.hpp"
 #include "./all_html_elements.hpp"
 
 namespace dombinding
@@ -15,7 +16,7 @@ namespace dombinding
     env.Global().Set("Element", func);
   }
 
-  template <typename ObjectType = Element, typename ElementType = dom::Element>
+  template <typename ObjectType = HTMLElement, typename ElementType = dom::HTMLElement>
   inline Napi::Object CreateElementFromImpl(Napi::Env env, shared_ptr<dom::Element> element)
   {
     Napi::EscapableHandleScope scope(env);
@@ -26,7 +27,7 @@ namespace dombinding
     return scope.Escape(instance).ToObject();
   }
 
-  template <typename ObjectType = Element, typename ElementType = dom::Element>
+  template <typename ObjectType = HTMLElement, typename ElementType = dom::HTMLElement>
   inline Napi::Object CreateElementFromNew(Napi::Env env, string namespaceURI, string tagName, weak_ptr<dom::Document> ownerDocument)
   {
     Napi::EscapableHandleScope scope(env);
