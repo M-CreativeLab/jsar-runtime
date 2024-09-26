@@ -1,5 +1,6 @@
 #include <assert.h>
 #include "./html_audio_element.hpp"
+#include "./document.hpp"
 
 namespace dombinding
 {
@@ -24,14 +25,43 @@ namespace dombinding
 
     auto global = env.Global();
     global.Set("HTMLAudioElement", func);
-    // global.Set("Audio", Napi::Function::New(env, AudioConstructor));
+    global.Set("Audio", Napi::Function::New(env, AudioConstructor));
   }
 
   Napi::Value HTMLAudioElement::AudioConstructor(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    Napi::Object obj = constructor->New({});
-    return obj;
+
+    if (!info.IsConstructCall())
+    {
+      auto msg = "Failed to construct 'Audio': "
+                 "Please use the 'new' operator, this object constructor cannot be called as a function.";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      return env.Null();
+    }
+
+    Document *document = Document::GetCurrent(env);
+    if (TR_UNLIKELY(document == nullptr))
+    {
+      auto msg = "Failed to construct 'Audio': "
+                 "The global object 'document' is not an instance of 'Document'.";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      return env.Null();
+    }
+
+    auto documentObject = document->Value();
+    auto audioValue = documentObject
+        .Get("createElement")
+        .As<Napi::Function>()
+        .Call(documentObject, {Napi::String::New(env, "audio")});
+
+    auto audioObject = audioValue.As<Napi::Object>();
+    if (info.Length() >= 1 && info[0].IsString())
+    {
+      auto src = info[0].As<Napi::String>().Utf8Value();
+      audioObject.Set("src", Napi::String::New(env, src));
+    }
+    return audioValue;
   }
 }

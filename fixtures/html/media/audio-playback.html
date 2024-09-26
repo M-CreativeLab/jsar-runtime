@@ -9,16 +9,27 @@
 <body>
 </body>
 
-<script>
+<script type="module">
   const audio1 = document.createElement('audio');
   audio1.addEventListener('loadedmetadata', () => {
     console.log('loadedmetadata');
   });
   audio1.addEventListener('ended', () => {
     console.log('ended');
+    setTimeout(playFromBlob, 500);
   });
   audio1.autoplay = true;
   audio1.src = '../../violons11.wav';
+
+  function playFromBlob() {
+    const audio2 = document.createElement('audio');
+    import('../../violons11.wav').then((audioBuffer) => {
+      const audioBlob = new Blob([audioBuffer]);
+      audio2.addEventListener('ended', () => console.info('audio2 ended'));
+      audio2.autoplay = true;
+      audio2.srcObject = audioBlob;
+    });
+  }
 </script>
 
 </html>

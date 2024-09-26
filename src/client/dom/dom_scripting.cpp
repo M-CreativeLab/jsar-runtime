@@ -246,6 +246,7 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(WebSocket);
         V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
         V8_SET_GLOBAL_FROM_MAIN(OffscreenCanvas);
+        V8_SET_GLOBAL_FROM_MAIN(Audio);
         V8_SET_GLOBAL_FROM_MAIN(Image);
         V8_SET_GLOBAL_FROM_MAIN(Worker);
 
@@ -488,6 +489,21 @@ namespace dom
     return true;
   }
 
+  bool DOMScriptingContext::compileAsSyntheticModule(shared_ptr<DOMModule> module, SyntheticModuleType type, const void *sourceData, size_t sourceByteLength)
+  {
+    assert(isContextInitialized);
+    auto context = v8ContextStore.Get(isolate);
+    v8::Isolate::Scope isolateScope(isolate);
+    v8::Context::Scope contextScope(context);
+
+    if (!module->compileAsSyntheticModule(isolate, type, sourceData, sourceByteLength))
+      return false;
+
+    hashToModuleMap.insert({module->getModuleHash(), module});
+    module->link(isolate);
+    return true;
+  }
+
   void DOMScriptingContext::evaluate(shared_ptr<DOMScript> script)
   {
     assert(isContextInitialized);
@@ -595,13 +611,35 @@ namespace dom
       }
     }
     shared_ptr<DOMScript> script = create(runtimeContext, url, SourceTextType::ESM);
-    auto onModuleSourceLoaded = [this, script, loadedCallback](const string &source)
+    auto onModuleSourceLoaded = [this, script, loadedCallback](const void *sourceData, size_t sourceByteLength)
     {
       auto module = dynamic_pointer_cast<DOMModule>(script);
       module->setLinkFinishedCallback(loadedCallback);
-      compile(script, source);
+
+      auto extension = crates::jsar::UrlHelper::ParseUrlToModuleExtension(module->url);
+      if (extension.isTextSourceModule())
+      {
+        string source(static_cast<const char *>(sourceData), sourceByteLength);
+        compile(script, source);
+      }
+      else if (
+          extension.isBinary() ||
+          extension.isWebAssembly() ||
+          extension.isAudio() ||
+          extension.isImage())
+      {
+        compileAsSyntheticModule(module, SyntheticModuleType::ArrayBuffer, sourceData, sourceByteLength);
+      }
+      else if (extension.isJson())
+      {
+        compileAsSyntheticModule(module, SyntheticModuleType::JSON, sourceData, sourceByteLength);
+      }
+      else
+      {
+        std::cerr << "Failed to load the module: " << module->url << ", the extension is not supported." << std::endl;
+      }
     };
-    runtimeContext->fetchTextSourceResource(url, onModuleSourceLoaded);
+    runtimeContext->fetchArrayBufferLikeResource(url, onModuleSourceLoaded);
   }
 
   bool DOMScriptingContext::dispatchEvent(v8::Local<v8::Object> event)
@@ -776,10 +814,7 @@ namespace dom
     v8::Isolate *isolate = context->GetIsolate();
     DOMScriptingContext *scriptingContext = DOMScriptingContext::GetCurrent(context);
     if (scriptingContext == nullptr)
-    {
-      fprintf(stderr, "Failed to get the scripting context object\n");
       return v8::MaybeLocal<v8::Module>();
-    }
 
     auto specifier_utf8 = v8::String::Utf8Value(context->GetIsolate(), specifier);
     string specifierStr(*specifier_utf8, specifier_utf8.length());
@@ -798,6 +833,31 @@ namespace dom
 
     auto module = dependent->resolveCache[specifierStr];
     return module->moduleStore.Get(isolate);
+  }
+
+  v8::MaybeLocal<v8::Value> DOMModule::SyntheticModuleEvaluationStepsCallback(v8::Local<v8::Context> context,
+                                                                              v8::Local<v8::Module> v8module)
+  {
+    v8::Isolate *isolate = context->GetIsolate();
+    v8::HandleScope handleScope(isolate);
+
+    DOMScriptingContext *scriptingContext = DOMScriptingContext::GetCurrent(context);
+    if (scriptingContext == nullptr)
+      return v8::MaybeLocal<v8::Value>();
+
+    shared_ptr<DOMModule> module = scriptingContext->getModuleFromV8(v8module);
+    if (module == nullptr)
+      return v8::MaybeLocal<v8::Value>();
+
+    v8::Local<v8::Promise::Resolver> resolver;
+    if (!v8::Promise::Resolver::New(context).ToLocal(&resolver))
+      return v8::MaybeLocal<v8::Value>();
+
+    auto defaultExportName = v8::String::NewFromUtf8(isolate, "default").ToLocalChecked();
+    USE(v8module->SetSyntheticModuleExport(isolate, defaultExportName, module->getExports(isolate)));
+
+    resolver->Resolve(context, v8::Undefined(isolate)).ToChecked();
+    return resolver->GetPromise();
   }
 
   DOMModule::DOMModule(shared_ptr<RuntimeContext> runtimeContext)
@@ -846,11 +906,11 @@ namespace dom
 
     if (!v8::ScriptCompiler::CompileModule(isolate, &source, options).ToLocal(&module))
     {
-      fprintf(stderr, "#\n");
-      fprintf(stderr, "# Occurred compilitation error\n");
-      fprintf(stderr, "# URL: %s\n", url.c_str());
-      fprintf(stderr, "#\n");
-      fprintf(stderr, "%s\n", sourceStr.c_str());
+      std::cerr << "#" << std::endl;
+      std::cerr << "# Occurred module compilation error" << std::endl;
+      std::cerr << "# URL: " << url << std::endl;
+      std::cerr << "#" << std::endl;
+      std::cerr << sourceStr << std::endl;
       return false;
     }
     else
@@ -858,6 +918,58 @@ namespace dom
       moduleStore.Reset(isolate, module);
       return true;
     }
+  }
+
+  bool DOMModule::compileAsSyntheticModule(v8::Isolate *isolate, SyntheticModuleType type, const void *sourceData, size_t sourceByteLength)
+  {
+    v8::HandleScope scope(isolate);
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+
+    v8::TryCatch tryCatch(isolate);
+    v8::Local<v8::String> urlString = v8::String::NewFromUtf8(isolate, url.c_str()).ToLocalChecked();
+    v8::Local<v8::String> defaultExportName = v8::String::NewFromUtf8(isolate, "default").ToLocalChecked();
+
+    switch (type)
+    {
+    case SyntheticModuleType::JSON:
+    {
+      v8::Local<v8::Value> sourceJsonObject;
+      v8::Local<v8::String> sourceString = v8::String::NewFromUtf8(isolate, static_cast<const char *>(sourceData), v8::NewStringType::kNormal, sourceByteLength).ToLocalChecked();
+      if (v8::JSON::Parse(context, sourceString).ToLocal(&sourceJsonObject))
+        syntheticModuleNamespaceStore.Reset(isolate, sourceJsonObject);
+      break;
+    }
+    case SyntheticModuleType::ArrayBuffer:
+    {
+      v8::Local<v8::ArrayBuffer> sourceArrayBuffer = v8::ArrayBuffer::New(isolate, sourceByteLength);
+      memcpy(sourceArrayBuffer->GetBackingStore()->Data(), sourceData, sourceByteLength);
+      syntheticModuleNamespaceStore.Reset(isolate, sourceArrayBuffer.As<v8::Value>());
+      break;
+    }
+    default:
+      break;
+    }
+
+    if (tryCatch.HasCaught())
+    {
+      std::cerr << "#" << std::endl;
+      std::cerr << "# Occurred synthetic module compilation error" << std::endl;
+      std::cerr << "# URL: " << url << std::endl;
+      {
+        // Print the exception message
+        v8::Local<v8::Message> message = tryCatch.Message();
+        v8::String::Utf8Value messageUtf8(isolate, message->Get());
+        std::string messageStr(*messageUtf8, messageUtf8.length());
+        std::cerr << "# Error: " << messageStr << std::endl;
+      }
+      std::cerr << "#" << std::endl;
+      return false;
+    }
+
+    v8::Local<v8::Module> module = v8::Module::CreateSyntheticModule(isolate,
+                                                                     urlString, {defaultExportName}, SyntheticModuleEvaluationStepsCallback);
+    moduleStore.Reset(isolate, module);
+    return true;
   }
 
   void DOMModule::evaluate(v8::Isolate *isolate)
@@ -914,21 +1026,38 @@ namespace dom
   v8::Local<v8::Value> DOMModule::getExports(v8::Isolate *isolate)
   {
     v8::EscapableHandleScope handleScope(isolate);
-    auto module = moduleStore.Get(isolate);
+    v8::Local<v8::Module> module = moduleStore.Get(isolate);
     if (module.IsEmpty())
       return handleScope.Escape(v8::Undefined(isolate));
 
-    auto modNamespace = module->GetModuleNamespace();
-    if (modNamespace.IsEmpty())
-      return handleScope.Escape(v8::Undefined(isolate));
+    if (module->IsSyntheticModule())
+    {
+      if (syntheticModuleNamespaceStore.IsEmpty())
+        return handleScope.Escape(v8::Undefined(isolate));
+      else
+        return handleScope.Escape(syntheticModuleNamespaceStore.Get(isolate));
+    }
     else
-      return handleScope.Escape(modNamespace);
+    {
+      auto modNamespace = module->GetModuleNamespace();
+      if (modNamespace.IsEmpty())
+        return handleScope.Escape(v8::Undefined(isolate));
+      else
+        return handleScope.Escape(modNamespace);
+    }
   }
 
   void DOMModule::link(v8::Isolate *isolate)
   {
     v8::HandleScope scope(isolate);
     auto module = moduleStore.Get(isolate);
+
+    if (module->IsSyntheticModule()) // Synthetic module should not be linked
+    {
+      onLinkFinished();
+      return;
+    }
+
     auto v8Context = isolate->GetCurrentContext();
     auto scriptingContext = runtimeContext.lock()->scriptingContext;
 
@@ -961,9 +1090,6 @@ namespace dom
       }
     }
   }
-
-  template <typename T>
-  inline void USE(T &&) {}
 
   bool DOMModule::instantiate(v8::Isolate *isolate)
   {
@@ -1017,8 +1143,11 @@ namespace dom
       auto selfRef = dynamic_pointer_cast<DOMModule>(shared_from_this());
       linkFinishedCallback(selfRef);
     }
+
+    v8::Isolate *isolate = v8::Isolate::GetCurrent();
+    instantiate(isolate);
     if (evaluationScheduled)
-      doEvaluate(v8::Isolate::GetCurrent());
+      doEvaluate(isolate);
   }
 
   void DOMModule::doEvaluate(v8::Isolate *isolate)
@@ -1031,8 +1160,13 @@ namespace dom
     auto module = moduleStore.Get(isolate);
     auto context = isolate->GetCurrentContext();
 
-    if (!instantiate(isolate))
+    if (module->IsSyntheticModule()) // Synthetic module should not be evaluated
       return;
+    if (module->GetStatus() != v8::Module::Status::kInstantiated)
+    {
+      std::cerr << "Failed to evaluate the module: " << url << ", the module is not instantiated." << std::endl;
+      return;
+    }
 
     v8::Local<v8::Value> resultValue;
     {

@@ -2,7 +2,6 @@
 #include "./node.hpp"
 #include "./element.hpp"
 #include "./all_html_elements.hpp"
-#include "./audio.hpp"
 #include "./document.hpp"
 #include "./dom_parser.hpp"
 #include "./rendering_context.hpp"
@@ -22,7 +21,6 @@ namespace bindings
 #define XX(tagNameStr, className) dombinding::className::Init(env);
         TYPED_ELEMENT_MAP(XX)
 #undef XX
-        Audio::Init(env, exports);
       }
       dombinding::Document::Init(env, exports);
       dombinding::XMLDocument::Init(env, exports);

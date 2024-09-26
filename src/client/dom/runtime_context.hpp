@@ -60,12 +60,23 @@ namespace dom
     void fetchTextSourceResource(const std::string &url, const StringResponseCallback &callback);
 
     /**
-     * Fetch the image resource from the given URL.
+     * Fetch the arraybuffer-like resource from the given URL.
      *
      * @param url The URL of the image to fetch.
      * @param callback The callback to call when the image is fetched.
      */
-    void fetchImageResource(const std::string &url, const BufferResponseCallback &callback);
+    void fetchArrayBufferLikeResource(const std::string &url, const BufferResponseCallback &callback);
+
+    /**
+     * Fetch the image resource from the given URL.
+     * 
+     * @param url The URL of the image to fetch.
+     * @param callback The callback to call when the image is fetched.
+     */
+    inline void fetchImageResource(const std::string &url, const BufferResponseCallback &callback)
+    {
+      return fetchArrayBufferLikeResource(url, callback);
+    }
 
     /**
      * Create the WHATWG `fetch` function with the given base URI.

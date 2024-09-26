@@ -115,3 +115,51 @@ extern "C" fn create_url_with_path(
     new_url_len
   }
 }
+
+#[repr(i32)]
+enum ModuleExtensionIndex {
+  JavaScript = 0,
+  TypeScript,
+  JSON,
+  Bin,
+  Data,
+  WebAssembly,
+  PNG,
+  JPEG,
+  GIF,
+  SVG,
+  MP3,
+  WAV,
+  OGG,
+}
+
+#[no_mangle]
+extern "C" fn parse_url_to_module_extension(url_str: *const c_char) -> ModuleExtensionIndex {
+  let url_string: &str = unsafe { std::ffi::CStr::from_ptr(url_str) }
+    .to_str()
+    .expect("Failed to convert C string to Rust string");
+
+  let url = Url::parse(url_string).unwrap();
+
+  // Check if the URL path ends with a file extension like .html, .css, etc.
+  if let Some(file_extension) = url.path().rsplit('.').next() {
+    match file_extension {
+      "js" | "mjs" => ModuleExtensionIndex::JavaScript,
+      "ts" => ModuleExtensionIndex::TypeScript,
+      "json" => ModuleExtensionIndex::JSON,
+      "bin" => ModuleExtensionIndex::Bin,
+      "data" => ModuleExtensionIndex::Data,
+      "wasm" => ModuleExtensionIndex::WebAssembly,
+      "png" => ModuleExtensionIndex::PNG,
+      "jpg" | "jpeg" => ModuleExtensionIndex::JPEG,
+      "gif" => ModuleExtensionIndex::GIF,
+      "svg" => ModuleExtensionIndex::SVG,
+      "mp3" => ModuleExtensionIndex::MP3,
+      "wav" => ModuleExtensionIndex::WAV,
+      "ogg" => ModuleExtensionIndex::OGG,
+      _ => ModuleExtensionIndex::JavaScript,
+    }
+  } else {
+    ModuleExtensionIndex::JavaScript
+  }
+}

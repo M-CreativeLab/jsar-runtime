@@ -1,11 +1,10 @@
 import { type MediaPlayerBackend } from '@yodaos-jsar/dom';
-const { Audio: AudioImpl } = process._linkedBinding('transmute:dom');
 
 export class MediaPlayerBackendOnTransmute implements MediaPlayerBackend {
   private _audioInstance: HTMLAudioElement;
 
   constructor() {
-    this._audioInstance = new AudioImpl();
+    this._audioInstance = new Audio();
   }
   load(buffer: ArrayBuffer | ArrayBufferView, onloaded: () => void): void {
     this._audioInstance.srcObject = new Blob([buffer]);

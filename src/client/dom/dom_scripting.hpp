@@ -11,6 +11,9 @@
 
 using namespace std;
 
+template <typename T>
+inline void USE(T &&) {}
+
 namespace dom
 {
   enum ContextEmbedderIndex : int
@@ -31,6 +34,43 @@ namespace dom
   {
     Classic,
     ESM,
+  };
+
+  /**
+   * The types for the synthetic module.
+   */
+  enum class SyntheticModuleType
+  {
+    /**
+     * A JSON module such as `import data from './data.json'`.
+     */
+    JSON,
+    /**
+     * An ArrayBuffer module such as `import data from './data.bin'`.
+     */
+    ArrayBuffer,
+    /**
+     * TODO: How to support the following types?
+     * 
+     * For example, when we wanna import an image as an instance of `HTMLImageElement`:
+     * 
+     * ```js
+     * import image from './image.png';
+     * console.info(image instanceof HTMLImageElement); // true
+     * ```
+     * 
+     * The same for other types:
+     * 
+     * - import blob files as an instance of `Blob`
+     * - import audio files as an instance of `Audio`
+     * - import video files as an instance of `Video`
+     * - import wasm files as an instance of `WebAssembly`
+     */
+    Blob,
+    Audio,
+    Video,
+    Image,
+    WebAssembly,
   };
 
   /**
@@ -146,6 +186,15 @@ namespace dom
      * @returns Whether the script is compiled successfully.
      */
     bool compile(shared_ptr<DOMScript> script, const std::string &source);
+
+    /**
+     * Compile the given script as a synthetic module.
+     *
+     * @param scriptModule The script module object to compile.
+     * @param sourceData The source data of the script.
+     * @param sourceLength The length of the source data.
+     */
+    bool compileAsSyntheticModule(shared_ptr<DOMModule> scriptModule, SyntheticModuleType type, const void *sourceData, size_t sourceLength);
 
     /**
      * Evaluate the given script.
@@ -306,6 +355,8 @@ namespace dom
                                                             v8::Local<v8::String> specifier,
                                                             v8::Local<v8::FixedArray> importAssertions,
                                                             v8::Local<v8::Module> referrer);
+    static v8::MaybeLocal<v8::Value> SyntheticModuleEvaluationStepsCallback(v8::Local<v8::Context> context,
+                                                                            v8::Local<v8::Module> module);
 
   public:
     DOMModule(shared_ptr<RuntimeContext> runtimeContext);
@@ -313,6 +364,7 @@ namespace dom
 
   public:
     bool compile(v8::Isolate *isolate, const string &sourceStr) override;
+    bool compileAsSyntheticModule(v8::Isolate *isolate, SyntheticModuleType type, const void *sourceData, size_t sourceByteLength);
     void evaluate(v8::Isolate *isolate) override;
     int getModuleHash();
     /**
@@ -339,6 +391,7 @@ namespace dom
 
   private:
     v8::Global<v8::Module> moduleStore;
+    v8::Global<v8::Value> syntheticModuleNamespaceStore;
     unordered_map<string, shared_ptr<DOMModule>> resolveCache;
     bool linked = false;
     size_t validModuleRequestsCount;

@@ -90,13 +90,7 @@ namespace dom
         } });
   }
 
-  /**
-   * Fetch the image resource from the given URL.
-   *
-   * @param url The URL of the image to fetch.
-   * @param callback The callback to call when the image is fetched.
-   */
-  void RuntimeContext::fetchImageResource(const std::string &url, const BufferResponseCallback &callback)
+  void RuntimeContext::fetchArrayBufferLikeResource(const std::string &url, const BufferResponseCallback &callback)
   {
     fetchResource(url, "arraybuffer", [callback](const v8::FunctionCallbackInfo<v8::Value> &info)
                   {

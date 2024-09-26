@@ -1,0 +1,36 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Media: Audio Constructor</title>
+
+</head>
+
+<body>
+</body>
+
+<script type="module">
+  import audiobuffer from '../../violons11.wav';
+
+  const audio1 = new Audio('../../violons11.wav');
+  console.info(audio1);
+  audio1.play();
+
+  audio1.addEventListener('loadeddata', () => {
+    console.info('audio1 loadeddata');
+    console.info('duration:', audio1.duration);
+  });
+  audio1.addEventListener('ended', () => {
+    console.info('audio1 ended');
+    playFromBuffer(audiobuffer);
+  });
+
+  function playFromBuffer(buffer) {
+    const blob = new Blob([buffer], { type: 'audio/wav' });
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.play();
+  }
+</script>
+
+</html>

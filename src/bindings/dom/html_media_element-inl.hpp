@@ -132,7 +132,11 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return Napi::Value();
+
+    if (srcObjectRef.IsEmpty())
+      return env.Undefined();
+    else
+      return srcObjectRef.Value();
   }
 
   template <typename ObjectType, typename HTMLMediaElementType>
@@ -140,6 +144,56 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
+
+    if (!value.IsObject())
+    {
+      auto msg = "Failed to set the 'srcObject' property on 'HTMLMediaElement': "
+                 "The provided value is not of object.";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      return;
+    }
+
+    auto global = env.Global();
+    auto valueObject = value.ToObject();
+
+    if (valueObject.InstanceOf(global.Get("Blob").As<Napi::Function>()))
+    {
+      auto arraybuffer = valueObject.Get("arrayBuffer").As<Napi::Function>().Call(valueObject, {});
+      if (arraybuffer.IsPromise())
+      {
+        Napi::Function func = Napi::Function::New(
+            env,
+            [](const Napi::CallbackInfo &info) -> Napi::Value
+            {
+              Napi::Env env = info.Env();
+              Napi::HandleScope scope(env);
+
+              auto jsThis = info.This().As<Napi::Object>();
+              auto arraybuffer = info[0].As<Napi::ArrayBuffer>();
+              auto *element = HTMLMediaElementBase<ObjectType, HTMLMediaElementType>::Unwrap(jsThis);
+              element->node->setSrcBuffer(arraybuffer.Data(), arraybuffer.ByteLength());
+              return env.Undefined();
+            });
+
+        auto onArrayBufferLoaded = func.Get("bind").As<Napi::Function>().Call(func, {info.This()});
+        arraybuffer
+            .ToObject()
+            .Get("then")
+            .As<Napi::Function>()
+            .Call(arraybuffer, {onArrayBufferLoaded});
+      }
+    }
+    /**
+     * TODO: Support MediaStream, MediaSource, File
+     */
+    else
+    {
+      auto msg = "Failed to set the 'srcObject' property on 'HTMLMediaElement': "
+                 "The provided value is not of type 'MediaStream', 'MediaSource', 'Blob' or 'File'.";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      return;
+    }
+    srcObjectRef.Reset(valueObject);
   }
 
   template <typename ObjectType, typename HTMLMediaElementType>

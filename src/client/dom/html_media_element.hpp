@@ -8,6 +8,15 @@
 
 namespace dom
 {
+  enum class MediaReadyState
+  {
+    HAVE_NOTHING = 0,
+    HAVE_METADATA = 1,
+    HAVE_CURRENT_DATA = 2,
+    HAVE_FUTURE_DATA = 3,
+    HAVE_ENOUGH_DATA = 4
+  };
+
   class HTMLMediaElement : public HTMLElement
   {
   public:
@@ -29,7 +38,7 @@ namespace dom
 
   public:
     /**
-     * Sets the image source URL.
+     * Sets the media source URL.
      *
      * @param src The URL of the image to load.
      */
@@ -40,13 +49,24 @@ namespace dom
     }
 
     /**
-     * Returns the image source URL.
+     * Returns the media source URL.
      *
      * @returns The URL of the image to load.
      */
     std::string getSrc()
     {
       return getAttribute("src");
+    }
+
+    /**
+     * Sets the media source buffer.
+     *
+     * @param data The buffer of the media source.
+     * @param byteLength The length of the buffer.
+     */
+    inline void setSrcBuffer(const void *data, size_t byteLength)
+    {
+      onMediaLoaded(data, byteLength);
     }
 
     /**
@@ -107,21 +127,37 @@ namespace dom
      * Resets the media element to its initial state and begins the process of selecting a media source and loading the
      * media in preparation for playback to begin at the beginning.
      */
-    inline void load() { player_->load(); }
+    inline void load()
+    {
+      readyState = MediaReadyState::HAVE_NOTHING;
+      player_->load();
+    }
 
     /**
      * Pauses the media playback.
      */
-    inline void pause() { player_->pause(); }
+    inline void pause()
+    {
+      if (readyState >= MediaReadyState::HAVE_CURRENT_DATA)
+        player_->pause();
+      else
+        playScheduled_ = false;
+    }
 
     /**
      * Starts the media playback.
      */
-    inline void play() { player_->play(); }
+    inline void play()
+    {
+      if (readyState >= MediaReadyState::HAVE_CURRENT_DATA)
+        player_->play();
+      else
+        playScheduled_ = true;
+    }
 
     /**
      * Sets the media source object.
-     * 
+     *
      * @param callback The callback function that is called when the media event occurs.
      */
     inline void resetEventCallback(std::function<void(media_comm::TrMediaEventType, media_client::MediaEvent &)> callback)
@@ -168,6 +204,19 @@ namespace dom
      * to the new time. The time is specified relative to the media's timeline.
      */
     float currentTime;
+    /**
+     * A number which is one of the five possible state constants:
+     *
+     * - `HAVE_NOTHING` (0) - No information is available about the media resource.
+     * - `HAVE_METADATA` (1) - Enough of the media resource has been retrieved that the metadata attributes are initialized.
+     * - `HAVE_CURRENT_DATA` (2) - Data is available for the current playback position, but not enough to actually play more
+     *  than one frame.
+     * - `HAVE_FUTURE_DATA` (3) - Data for the current playback position as well as for at least a little bit of time into the
+     * future is available (in this case, one frame's worth).
+     * - `HAVE_ENOUGH_DATA` (4) - Enough data is available—and the download rate is high enough—that the media can be played
+     * through to the end without interruption.
+     */
+    MediaReadyState readyState = MediaReadyState::HAVE_NOTHING;
 
   private:
     TrClientContextPerProcess *clientContext;
@@ -175,6 +224,7 @@ namespace dom
     std::string currentSrc_ = "";
     std::function<void(media_comm::TrMediaEventType, media_client::MediaEvent &)> eventCallback_;
     float duration_ = 0;
+    bool playScheduled_ = false;
     bool ended_ = false;
   };
 }

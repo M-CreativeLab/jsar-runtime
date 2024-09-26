@@ -21,8 +21,14 @@ namespace dom
 
   void HTMLMediaElement::onMediaEvent(media_comm::TrMediaEventType eventType, media_client::MediaEvent &event)
   {
-    if (eventType == media_comm::TrMediaEventType::LoadedData && autoPlay == true)
-      player_->play();
+    if (eventType == media_comm::TrMediaEventType::LoadedMetadata)
+      readyState = MediaReadyState::HAVE_METADATA;
+    else if (eventType == media_comm::TrMediaEventType::LoadedData)
+    {
+      readyState = MediaReadyState::HAVE_ENOUGH_DATA;
+      if (autoPlay || playScheduled_)
+        player_->play();
+    }
 
     if (eventCallback_ != nullptr)
       eventCallback_(eventType, event);

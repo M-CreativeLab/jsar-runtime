@@ -41,6 +41,9 @@ namespace dombinding
     Napi::Value Load(const Napi::CallbackInfo &info);
     Napi::Value Pause(const Napi::CallbackInfo &info);
     Napi::Value Play(const Napi::CallbackInfo &info);
+
+  private:
+    Napi::ObjectReference srcObjectRef;
   };
 
   class HTMLMediaElement : public HTMLMediaElementBase<HTMLMediaElement, dom::HTMLMediaElement>
