@@ -84,6 +84,29 @@ namespace dom
   XX(Load, "load")                      \
   XX(Toggle, "toggle")
 
+#define HTMLMEDIAELEMENT_EVENT_TYPES_MAP(XX) \
+  XX(Abort, "abort")                         \
+  XX(CanPlay, "canplay")                     \
+  XX(CanPlayThrough, "canplaythrough")       \
+  XX(DurationChange, "durationchange")       \
+  XX(Emptied, "emptied")                     \
+  XX(Ended, "ended")                         \
+  XX(LoadedData, "loadeddata")               \
+  XX(LoadedMetadata, "loadedmetadata")       \
+  XX(LoadStart, "loadstart")                 \
+  XX(Pause, "pause")                         \
+  XX(Play, "play")                           \
+  XX(Playing, "playing")                     \
+  XX(Progress, "progress")                   \
+  XX(RateChange, "ratechange")               \
+  XX(Seeked, "seeked")                       \
+  XX(Seeking, "seeking")                     \
+  XX(Stalled, "stalled")                     \
+  XX(Suspend, "suspend")                     \
+  XX(TimeUpdate, "timeupdate")               \
+  XX(VolumeChange, "volumechange")           \
+  XX(Waiting, "waiting")
+
 #define DOCUMENT_EVENT_TYPES_MAP(XX)       \
   XX(DOMContentLoaded, "domcontentloaded") \
   XX(FullscreenChange, "fullscreenchange") \
@@ -91,14 +114,18 @@ namespace dom
   XX(SelectionChange, "selectionchange")   \
   XX(VisibilityChange, "visibilitychange")
 
+#define DOM_EVENT_TYPES_MAP(XX)        \
+  NODE_EVENT_TYPES_MAP(XX)             \
+  ELEMENT_EVENT_TYPES_MAP(XX)          \
+  HTMLELEMENT_EVENT_TYPES_MAP(XX)      \
+  HTMLMEDIAELEMENT_EVENT_TYPES_MAP(XX) \
+  DOCUMENT_EVENT_TYPES_MAP(XX)
+
   enum class DOMEventType
   {
 #define XX(eventType, _) \
   eventType,
-    NODE_EVENT_TYPES_MAP(XX)        // `Node` Events
-    ELEMENT_EVENT_TYPES_MAP(XX)     // `Element` Events
-    HTMLELEMENT_EVENT_TYPES_MAP(XX) // `HTMLElement` Events
-    DOCUMENT_EVENT_TYPES_MAP(XX)    // `Document` Events
+    DOM_EVENT_TYPES_MAP(XX)
 #undef XX
   };
 
@@ -114,10 +141,7 @@ namespace dom
   if (ToLowerCase(typeStr) == eventName) \
     return DOMEventType::eventType;
 
-    NODE_EVENT_TYPES_MAP(XX)
-    ELEMENT_EVENT_TYPES_MAP(XX)
-    HTMLELEMENT_EVENT_TYPES_MAP(XX)
-    DOCUMENT_EVENT_TYPES_MAP(XX)
+    DOM_EVENT_TYPES_MAP(XX)
 #undef XX
 
     throw std::invalid_argument("Invalid event type string: " + typeStr);
@@ -137,10 +161,7 @@ namespace dom
   case DOMEventType::eventType:  \
     return eventName;
 
-      NODE_EVENT_TYPES_MAP(XX)
-      ELEMENT_EVENT_TYPES_MAP(XX)
-      HTMLELEMENT_EVENT_TYPES_MAP(XX)
-      DOCUMENT_EVENT_TYPES_MAP(XX)
+      DOM_EVENT_TYPES_MAP(XX)
 #undef XX
 
     default:

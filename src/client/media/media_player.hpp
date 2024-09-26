@@ -3,30 +3,17 @@
 #include <string>
 #include "idgen.hpp"
 #include "client/per_process.hpp"
+#include "common/media/types.hpp"
 #include "common/events_v2/event_target.hpp"
 
 namespace media_client
 {
   using MediaEvent = events_comm::TrEvent<media_comm::TrMediaEventType>;
 
-  enum class MediaContentType
-  {
-    Audio = 0,
-    Video,
-    Video3D,
-  };
-
-  enum class CanPlayTypeResult
-  {
-    No = 0,
-    Probably = 1,
-    Maybe = 2
-  };
-
   class MediaPlayer : public events_comm::TrEventTarget<media_comm::TrMediaEventType>
   {
   public:
-    MediaPlayer(MediaContentType contentType = MediaContentType::Audio);
+    MediaPlayer(media_comm::MediaContentType contentType = media_comm::MediaContentType::Audio);
     virtual ~MediaPlayer() = default;
 
   public:

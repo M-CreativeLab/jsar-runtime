@@ -75,9 +75,9 @@ namespace bindings
 
       std::string type = info[0].As<Napi::String>().Utf8Value();
       auto result = handle->canPlayType(type);
-      if (result == media_client::CanPlayTypeResult::No)
+      if (result == media_comm::CanPlayTypeResult::No)
         return Napi::String::New(env, "");
-      else if (result == media_client::CanPlayTypeResult::Probably)
+      else if (result == media_comm::CanPlayTypeResult::Probably)
         return Napi::String::New(env, "probably");
       else
         return Napi::String::New(env, "maybe");

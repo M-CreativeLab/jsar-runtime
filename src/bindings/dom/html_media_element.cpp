@@ -1,5 +1,5 @@
 #include <assert.h>
-#include "./html_media_element.hpp"
+#include "./html_media_element-inl.hpp"
 
 namespace dombinding
 {

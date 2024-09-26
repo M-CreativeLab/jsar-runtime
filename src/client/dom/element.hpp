@@ -6,10 +6,11 @@
 using namespace std;
 
 #define TYPED_ELEMENT_MAP(XX)     \
-  XX("html", HTMLHtmlElement)     \
-  XX("head", HTMLHeadElement)     \
+  XX("audio", HTMLAudioElement)   \
   XX("body", HTMLBodyElement)     \
   XX("canvas", HTMLCanvasElement) \
+  XX("head", HTMLHeadElement)     \
+  XX("html", HTMLHtmlElement)     \
   XX("img", HTMLImageElement)     \
   XX("meta", HTMLMetaElement)     \
   XX("script", HTMLScriptElement) \

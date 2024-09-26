@@ -1,0 +1,24 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Media: Audio Playback</title>
+
+</head>
+
+<body>
+</body>
+
+<script>
+  const audio1 = document.createElement('audio');
+  audio1.addEventListener('loadedmetadata', () => {
+    console.log('loadedmetadata');
+  });
+  audio1.addEventListener('ended', () => {
+    console.log('ended');
+  });
+  audio1.autoplay = true;
+  audio1.src = '../../violons11.wav';
+</script>
+
+</html>

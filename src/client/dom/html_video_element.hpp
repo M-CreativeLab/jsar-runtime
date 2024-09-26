@@ -10,7 +10,7 @@ namespace dom
   public:
     using HTMLMediaElement::HTMLMediaElement;
     HTMLVideoElement(weak_ptr<Document> ownerDocument)
-        : HTMLMediaElement("VIDEO", ownerDocument)
+        : HTMLMediaElement("VIDEO", media_comm::MediaContentType::Video, ownerDocument)
     {
     }
   };

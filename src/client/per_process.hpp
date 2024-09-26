@@ -27,6 +27,7 @@
 #include "common/events_v2/native_receiver.hpp"
 #include "common/events_v2/native_sender.hpp"
 #include "common/font/cache.hpp"
+#include "common/media/types.hpp"
 #include "common/media/message.hpp"
 #include "common/media/sender.hpp"
 #include "common/media/receiver.hpp"
@@ -184,7 +185,7 @@ public: // media methods
   /**
    * Create a new media player, it returns a shared pointer to the created player.
    */
-  shared_ptr<media_client::MediaPlayer> createMediaPlayer();
+  shared_ptr<media_client::MediaPlayer> createMediaPlayer(media_comm::MediaContentType contentType = media_comm::MediaContentType::Audio);
   /**
    * Create a new audio player, it returns a shared pointer to the created player.
    */

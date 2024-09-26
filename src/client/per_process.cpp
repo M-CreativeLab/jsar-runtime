@@ -514,9 +514,9 @@ TrNativeEventMessage *TrClientContextPerProcess::recvEventMessage(int timeout)
   return eventChanReceiver->recvEvent(timeout);
 }
 
-shared_ptr<media_client::MediaPlayer> TrClientContextPerProcess::createMediaPlayer()
+shared_ptr<media_client::MediaPlayer> TrClientContextPerProcess::createMediaPlayer(media_comm::MediaContentType contentType)
 {
-  auto player = make_shared<media_client::MediaPlayer>();
+  auto player = make_shared<media_client::MediaPlayer>(contentType);
   mediaPlayers.push_back(player);
   return player;
 }

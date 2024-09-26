@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
+#include <thread>
 #include <napi.h>
 #include "common/utility.hpp"
 #include "client/dom/node.hpp"
@@ -59,7 +60,7 @@ namespace dombinding
 
   public:
     NodeBase(const Napi::CallbackInfo &info);
-    virtual ~NodeBase() = default;
+    virtual ~NodeBase();
 
   protected: // Getters & Setters
     Napi::Value IsConnectedGetter(const Napi::CallbackInfo &info);
@@ -85,11 +86,20 @@ namespace dombinding
   protected:
     void ResetNode(const Napi::CallbackInfo &info, shared_ptr<NodeType> nodeToSet);
 
+  private:
+    static Napi::Value OnEventListenerCallback(const Napi::CallbackInfo &info);
+
   protected:
     shared_ptr<NodeType> node = nullptr;
 
   private:
+    std::thread::id jsThreadId;
     unordered_map<shared_ptr<Napi::FunctionReference>, uint32_t> listenerRefToNativeIdMap;
+    Napi::FunctionReference listenerCallback;
+    /**
+     * The N-API thread-safe function to be called when the dispatcher fires from other threads.
+     */
+    Napi::ThreadSafeFunction threadSafeListenerCallback;
   };
 
   class Node : public NodeBase<Node, dom::Node>

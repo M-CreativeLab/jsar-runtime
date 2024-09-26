@@ -1,7 +1,7 @@
 #pragma once
 
 #include "client/dom/html_video_element.hpp"
-#include "./html_media_element.hpp"
+#include "./html_media_element-inl.hpp"
 
 namespace dombinding
 {

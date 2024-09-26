@@ -104,6 +104,16 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     }
 
     /**
+     * Resolve the relative URL.
+     */
+    if (
+      (url.startsWith('./') || url.startsWith('../')) &&
+      typeof globalThis.document !== 'undefined'
+    ) {
+      url = new URL(url, globalThis.document.baseURI).href;
+    }
+
+    /**
      * Check if this URL is a valid URL.
      */
     if (!canParseURL(url)) {

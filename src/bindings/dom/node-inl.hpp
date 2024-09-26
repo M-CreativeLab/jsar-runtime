@@ -7,7 +7,9 @@
 namespace dombinding
 {
   template <typename ObjectType, typename NodeType>
-  NodeBase<ObjectType, NodeType>::NodeBase(const Napi::CallbackInfo &info) : Napi::ObjectWrap<ObjectType>(info)
+  NodeBase<ObjectType, NodeType>::NodeBase(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<ObjectType>(info),
+        jsThreadId(std::this_thread::get_id())
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -22,6 +24,24 @@ namespace dombinding
       Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
       return;
     }
+
+    Napi::Function callbackFn = Napi::Function::New(env, &NodeBase<ObjectType, NodeType>::OnEventListenerCallback);
+    listenerCallback = Napi::Persistent(callbackFn);
+
+    Napi::Object callbackObject = callbackFn.ToObject();
+    Napi::Function onEventListenerCallback = callbackObject
+                                                 .Get("bind")
+                                                 .As<Napi::Function>()
+                                                 .Call(callbackObject, {info.This()})
+                                                 .As<Napi::Function>();
+    threadSafeListenerCallback = Napi::ThreadSafeFunction::New(env, onEventListenerCallback, "EventListenerCallback", 0, 2);
+  }
+
+  template <typename ObjectType, typename NodeType>
+  NodeBase<ObjectType, NodeType>::~NodeBase()
+  {
+    listenerCallback.Reset();
+    threadSafeListenerCallback.Release();
   }
 
   template <typename ObjectType, typename NodeType>
@@ -165,51 +185,46 @@ namespace dombinding
     }
     catch (const invalid_argument &e)
     {
-      auto msg = "Failed to execute 'addEventListener' on 'EventTarget': "
-                 "The event provided is invalid.";
+      auto msg = "Failed to execute 'addEventListener' on 'EventTarget': " + string(e.what());
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
-    auto jsThisReference = make_shared<Napi::ObjectReference>(Napi::Persistent(info.This().As<Napi::Object>()));
-    auto listenerReference = make_shared<Napi::FunctionReference>(Napi::Persistent(listenerValue.As<Napi::Function>()));
-    auto listenerCallback = [listenerReference, jsThisReference](dom::DOMEventType type, dom::Event &event)
+    auto jsThisRef = make_shared<Napi::ObjectReference>(Napi::Persistent(info.This().As<Napi::Object>()));
+    auto listenerRef = make_shared<Napi::FunctionReference>(Napi::Persistent(listenerValue.As<Napi::Function>()));
+    auto listenerCallback = [this, jsThisRef, listenerRef](dom::DOMEventType type, dom::Event &event)
     {
-      Napi::Env env = jsThisReference->Env();
-      Napi::HandleScope scope(env);
-
-      Napi::Function eventConstructor;
-      if (env.Global().Get("Event").IsFunction())
-        eventConstructor = env.Global().Get("Event").As<Napi::Function>();
-
-      if (eventConstructor.IsEmpty())
+      if (this->jsThreadId != std::this_thread::get_id())
       {
-        auto msg = "Failed to execute 'addEventListener' on 'EventTarget': "
-                   "The event constructor is not found.";
-        Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+        /**
+         * When the caller thread is not the same as the JavaScript thread, we need to call tsfn.
+         */
+        shared_ptr<dom::Event> eventRef = make_shared<dom::Event>(event);
+        threadSafeListenerCallback.NonBlockingCall(
+            [eventRef, listenerRef](Napi::Env env, Napi::Function jsCallback)
+            {
+              Napi::HandleScope scope(env);
+              jsCallback.Call({Napi::Number::New(env, static_cast<int>(eventRef->type)),
+                               listenerRef->Value()});
+            });
         return;
       }
-
-      string eventTypeStr;
-      try
+      else
       {
-        eventTypeStr = dom::EventTypeToString(type);
-      }
-      catch (const invalid_argument &e)
-      {
-        auto msg = "Failed to execute 'addEventListener' on 'EventTarget': "
-                   "The event provided is invalid.";
-        Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
-        return;
-      }
+        /**
+         * When the caller thread is the same as the JavaScript thread, we can call the listener directly.
+         */
+        Napi::Env env = jsThisRef->Env();
+        Napi::HandleScope scope(env);
 
-      auto jsThis = jsThisReference->Value();
-      Napi::Object eventObject = eventConstructor.New({Napi::String::New(env, eventTypeStr)});
-      listenerReference->Call(jsThis, {eventObject});
+        assert(!this->listenerCallback.IsEmpty());
+        this->listenerCallback.Call(jsThisRef->Value(), {Napi::Number::New(env, static_cast<int>(type)),
+                                                         listenerRef->Value()});
+      }
     };
 
     auto nativeListener = node->addEventListener(eventType, listenerCallback);
-    listenerRefToNativeIdMap.insert({listenerReference, nativeListener->id});
+    listenerRefToNativeIdMap.insert({listenerRef, nativeListener->id});
     return env.Undefined();
   }
 
@@ -246,8 +261,7 @@ namespace dombinding
     }
     catch (const invalid_argument &e)
     {
-      auto msg = "Failed to execute 'addEventListener' on 'EventTarget': "
-                 "The event provided is invalid.";
+      auto msg = "Failed to execute 'addEventListener' on 'EventTarget': " + string(e.what());
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -301,8 +315,7 @@ namespace dombinding
     }
     catch (const invalid_argument &e)
     {
-      auto msg = "Failed to execute 'dispatchEvent' on 'EventTarget': "
-                 "The event provided is invalid.";
+      auto msg = "Failed to execute 'dispatchEvent' on 'EventTarget': " + string(e.what());
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -341,5 +354,57 @@ namespace dombinding
       jsThis.Set("isConnected", Napi::Boolean::New(env, node->connected));
       jsThis.Set("nodeType", Napi::Number::New(env, static_cast<int>(node->nodeType)));
     }
+  }
+
+  template <typename ObjectType, typename NodeType>
+  Napi::Value NodeBase<ObjectType, NodeType>::OnEventListenerCallback(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    Napi::Function eventConstructor;
+    if (env.Global().Get("Event").IsFunction())
+      eventConstructor = env.Global().Get("Event").As<Napi::Function>();
+
+    if (eventConstructor.IsEmpty())
+    {
+      auto msg = "Failed to execute 'addEventListener' on 'EventTarget': "
+                 "The event constructor is not found.";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    if (info.Length() < 2)
+    {
+      auto msg = "Failed to execute 'addEventListener' on 'EventTarget': "
+                 "1 argument required, but only " +
+                 to_string(info.Length()) + " present.";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[1].IsFunction())
+    {
+      auto msg = "Failed to execute 'addEventListener' on 'EventTarget': "
+                 "The listener provided is not a function.";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    string eventTypeStr;
+    try
+    {
+      dom::DOMEventType type = static_cast<dom::DOMEventType>(info[0].ToNumber().Int32Value());
+      eventTypeStr = dom::EventTypeToString(type);
+    }
+    catch (const invalid_argument &e)
+    {
+      auto msg = "Failed to execute 'addEventListener' on 'EventTarget': " + string(e.what());
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    Napi::Object eventObject = eventConstructor.New({Napi::String::New(env, eventTypeStr)});
+    info[1].As<Napi::Function>().Call(info.This(), {eventObject});
+    return env.Undefined();
   }
 }
