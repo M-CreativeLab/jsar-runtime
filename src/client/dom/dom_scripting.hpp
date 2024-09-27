@@ -340,6 +340,8 @@ namespace dom
     v8::Global<v8::Script> scriptStore;
   };
 
+  using ModuleLinkedCallback = std::function<void(std::shared_ptr<DOMModule>)>;
+
   class DOMModule : public DOMScript
   {
     friend class DOMScriptingContext;
@@ -374,11 +376,12 @@ namespace dom
      */
     string getUrlBySpecifier(const string &specifier);
     /**
-     * Set the callback when the module linking is finished.
+     * Register a callback to be called once when the module is linked or directly call the callback if the module is already linked.
      *
      * @param callback The callback to call when the module linking is finished.
+     * @param checkLinked Whether to check the module is already linked and call the callback directly.
      */
-    void setLinkFinishedCallback(function<void(shared_ptr<DOMModule>)> callback);
+    void registerLinkedCallback(ModuleLinkedCallback callback, bool checkLinked = true);
 
   private:
     v8::Local<v8::Value> getExports(v8::Isolate *isolate);
@@ -395,7 +398,7 @@ namespace dom
     unordered_map<string, shared_ptr<DOMModule>> resolveCache;
     bool linked = false;
     size_t validModuleRequestsCount;
-    function<void(shared_ptr<DOMModule>)> linkFinishedCallback;
+    vector<ModuleLinkedCallback> linkedCallbacks;
     bool evaluatedOnce = false;
     bool evaluationScheduled = false;
   };

@@ -634,7 +634,7 @@ namespace dom
       auto module = getModuleFromUrl(url);
       if (module)
       {
-        loadedCallback(module);
+        module->registerLinkedCallback(loadedCallback);
         return;
       }
     }
@@ -642,7 +642,7 @@ namespace dom
     auto onModuleSourceLoaded = [this, script, loadedCallback](const void *sourceData, size_t sourceByteLength)
     {
       auto module = dynamic_pointer_cast<DOMModule>(script);
-      module->setLinkFinishedCallback(loadedCallback);
+      module->registerLinkedCallback(loadedCallback, false /** Do not check for linked */);
 
       auto extension = crates::jsar::UrlHelper::ParseUrlToModuleExtension(module->url);
       if (extension.isTextSourceModule())
@@ -863,27 +863,32 @@ namespace dom
                                                               v8::Local<v8::Module> referrer)
   {
     v8::Isolate *isolate = context->GetIsolate();
+
+    auto specifier_utf8 = v8::String::Utf8Value(isolate, specifier);
+    string specifierStr(*specifier_utf8, specifier_utf8.length());
+
     DOMScriptingContext *scriptingContext = DOMScriptingContext::GetCurrent(context);
     if (scriptingContext == nullptr)
+    {
+      std::cerr << "request for '" << specifierStr << "' failed, scripting context is valid" << std::endl;
       return v8::MaybeLocal<v8::Module>();
-
-    auto specifier_utf8 = v8::String::Utf8Value(context->GetIsolate(), specifier);
-    string specifierStr(*specifier_utf8, specifier_utf8.length());
+    }
 
     auto dependent = scriptingContext->getModuleFromV8(referrer);
     if (dependent == nullptr)
     {
-      fprintf(stderr, "request for '%s' is from invalid module\n", specifierStr.c_str());
+      std::cerr << "request for '" << specifierStr << "' is from invalid module" << std::endl;
       return v8::MaybeLocal<v8::Module>();
     }
     if (dependent->resolveCache.count(specifierStr) != 1)
     {
-      fprintf(stderr, "request for '%s' is not in cache\n", specifierStr.c_str());
+      std::cerr << "request for '" << specifierStr << "' is not in cache" << std::endl;
       return v8::MaybeLocal<v8::Module>();
     }
 
     auto module = dependent->resolveCache[specifierStr];
-    return module->moduleStore.Get(isolate);
+    auto res = module->moduleStore.Get(isolate);
+    return res;
   }
 
   v8::MaybeLocal<v8::Value> DOMModule::SyntheticModuleEvaluationStepsCallback(v8::Local<v8::Context> context,
@@ -1069,9 +1074,12 @@ namespace dom
     return crates::jsar::UrlHelper::CreateUrlStringWithPath(url, nextSpecifier);
   }
 
-  void DOMModule::setLinkFinishedCallback(function<void(shared_ptr<DOMModule>)> callback)
+  void DOMModule::registerLinkedCallback(ModuleLinkedCallback callback, bool checkLinked)
   {
-    linkFinishedCallback = callback;
+    if (checkLinked && linked)
+      callback(dynamic_pointer_cast<DOMModule>(shared_from_this()));
+    else
+      linkedCallbacks.push_back(callback);
   }
 
   v8::Local<v8::Value> DOMModule::getExports(v8::Isolate *isolate)
@@ -1145,8 +1153,8 @@ namespace dom
   bool DOMModule::instantiate(v8::Isolate *isolate)
   {
     v8::HandleScope scope(isolate);
-    auto module = moduleStore.Get(isolate);
-    auto context = isolate->GetCurrentContext();
+    v8::Local<v8::Module> module = moduleStore.Get(isolate);
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
     v8::TryCatch tryCatch(isolate);
 
     USE(module->InstantiateModule(context, ResolveModuleCallback));
@@ -1169,7 +1177,10 @@ namespace dom
       }
       return false;
     }
-    return true;
+    else
+    {
+      return true;
+    }
   }
 
   void DOMModule::handleModuleLoaded(const string &specifier, shared_ptr<DOMModule> newModule)
@@ -1188,15 +1199,21 @@ namespace dom
 
   void DOMModule::onLinkFinished()
   {
-    linked = true;
-    if (linkFinishedCallback)
-    {
-      auto selfRef = dynamic_pointer_cast<DOMModule>(shared_from_this());
-      linkFinishedCallback(selfRef);
-    }
+    if (TR_UNLIKELY(linked))
+      return;
 
     v8::Isolate *isolate = v8::Isolate::GetCurrent();
     instantiate(isolate);
+
+    linked = true;
+    if (linkedCallbacks.size() > 0)
+    {
+      auto selfRef = dynamic_pointer_cast<DOMModule>(shared_from_this());
+      for (auto callback : linkedCallbacks)
+        callback(selfRef);
+      linkedCallbacks.clear();
+    }
+
     if (evaluationScheduled)
       doEvaluate(isolate);
   }
