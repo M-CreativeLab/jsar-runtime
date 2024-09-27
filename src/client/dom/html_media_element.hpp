@@ -21,7 +21,7 @@ namespace dom
   {
   public:
     using HTMLElement::HTMLElement;
-    HTMLMediaElement(std::__1::string tagName,
+    HTMLMediaElement(std::string tagName,
                      media_comm::MediaContentType contentType,
                      weak_ptr<Document> ownerDocument)
         : HTMLElement(tagName, ownerDocument),

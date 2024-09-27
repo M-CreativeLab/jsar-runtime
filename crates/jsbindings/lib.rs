@@ -110,7 +110,7 @@ extern "C" fn create_url_with_path(
   } else {
     // Copy the new URL string to the output buffer.
     unsafe {
-      std::ptr::copy_nonoverlapping(new_url_str.as_ptr(), out_url_str as *mut i8, new_url_len);
+      std::ptr::copy_nonoverlapping(new_url_str.as_ptr(), out_url_str as *mut c_char, new_url_len);
     }
     new_url_len
   }
