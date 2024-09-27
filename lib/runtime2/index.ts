@@ -10,6 +10,7 @@ import { ResourceLoaderOnTransmute } from './jsardom/ResourceLoader';
 // viewers
 import createModel3dViewer from './viewers/model3d';  // glb, gltf ...
 import createImage2dViewer from './viewers/image2d';  // png, jpg, etc ...
+import createSplineDesignViewer from './viewers/splinedesign';  // splinedesign
 
 Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
   get: () => getPerformanceNow(),
@@ -109,15 +110,17 @@ export class TransmuteRuntime2 extends EventTarget {
         case '.gltf':
           codeOrUrl = createModel3dViewer(codeOrUrl, { playAnimation: true });
           urlBase = urlObj.href;
-          console.info(`switched to the 3d model viewer.`);
           break;
         case '.png':
         case '.jpg':
         case '.jpeg':
           codeOrUrl = createImage2dViewer(codeOrUrl);
           urlBase = urlObj.href;
-          console.info(`switched to the 2d image viewer.`);
           break;
+        case '.splinecode':
+          const sourceBlob = new Blob([createSplineDesignViewer(codeOrUrl)], { type: 'text/plain' });
+          codeOrUrl = URL.createObjectURL(sourceBlob);
+          /** Continue to html rendering */
         case '.html':
           try {
             const { DocumentRenderingContext } = process._linkedBinding('transmute:dom');

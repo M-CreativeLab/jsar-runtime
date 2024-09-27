@@ -25,7 +25,14 @@ namespace dom
   {
     if (renderingContext == nullptr)
       throw std::runtime_error("DocumentRenderingContext is not set");
-    baseURI = url;
+
+    if (url.find_first_of("http:") == 0 ||
+        url.find_first_of("https:") == 0 ||
+        url.find_first_of("file:") == 0)
+      baseURI = url;
+    else
+      baseURI = "http://example.com";
+
     renderingContext->fetchTextSourceResource(url, [this](const string &source)
                                               { setSource(source); });
   }

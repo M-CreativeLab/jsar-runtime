@@ -117,7 +117,7 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
      * Check if this URL is a valid URL.
      */
     if (!canParseURL(url)) {
-      throw new TypeError(`Failed to fetch: Invalid URL ${url}`);
+      throw new TypeError(`Failed to fetch: Invalid URL("${url}")`);
     }
     const urlObj = new URL(url);
     if (urlObj.protocol === 'file:') {
