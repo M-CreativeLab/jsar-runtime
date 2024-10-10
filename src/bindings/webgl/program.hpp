@@ -47,6 +47,6 @@ namespace webgl
     std::map<std::string, int> uniformBlockIndices_;
 
   public:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

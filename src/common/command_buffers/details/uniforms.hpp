@@ -384,6 +384,11 @@ namespace commandbuffers
   class Uniform4xvCommandBufferRequest : public TrCommandBufferRequest
   {
   public:
+    Uniform4xvCommandBufferRequest(Uniform4xvCommandBufferRequest &that)
+        : TrCommandBufferRequest(that),
+          location(that.location)
+    {
+    }
     Uniform4xvCommandBufferRequest(CommandBufferType type, uint32_t location, const std::vector<Tv> &values)
         : TrCommandBufferRequest(type, sizeof(Tb)),
           location(location),
@@ -425,6 +430,7 @@ namespace commandbuffers
       : public Uniform4xvCommandBufferRequest<Uniform4fvCommandBufferRequest, float>
   {
   public:
+    using Uniform4xvCommandBufferRequest::Uniform4xvCommandBufferRequest;
     Uniform4fvCommandBufferRequest(uint32_t location, const std::vector<float> &values)
         : Uniform4xvCommandBufferRequest(COMMAND_BUFFER_UNIFORM4FV_REQ, location, values)
     {
@@ -444,6 +450,7 @@ namespace commandbuffers
   class Uniform4ivCommandBufferRequest : public Uniform4xvCommandBufferRequest<Uniform4ivCommandBufferRequest, int>
   {
   public:
+    using Uniform4xvCommandBufferRequest::Uniform4xvCommandBufferRequest;
     Uniform4ivCommandBufferRequest(uint32_t location, const std::vector<int> &values)
         : Uniform4xvCommandBufferRequest(COMMAND_BUFFER_UNIFORM4IV_REQ, location, values)
     {

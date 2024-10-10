@@ -2,8 +2,7 @@
 
 namespace canvasbinding
 {
-  Napi::FunctionReference *HTMLRenderingContext::constructor;
-
+  thread_local Napi::FunctionReference *HTMLRenderingContext::constructor;
   void HTMLRenderingContext::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function tpl = DefineClass(env, "HTMLRenderingContext",

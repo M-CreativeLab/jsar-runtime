@@ -24,6 +24,9 @@ namespace bindings
 
   class XRDeviceNative : public Napi::ObjectWrap<XRDeviceNative>
   {
+    friend class XRSession;
+    friend class XRFrame;
+
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
     static XRDeviceNative *GetInstance();
@@ -47,9 +50,6 @@ namespace bindings
     std::vector<ContextifiedXRFrameCallback> contextifiedFrameCallbacks;
 
   private:
-    static Napi::FunctionReference *constructor;
-
-    friend class XRSession;
-    friend class XRFrame;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

@@ -2,8 +2,7 @@
 
 namespace webgl
 {
-  Napi::FunctionReference *WebGLActiveInfo::constructor;
-
+  thread_local Napi::FunctionReference *WebGLActiveInfo::constructor;
   void WebGLActiveInfo::Init(Napi::Env env)
   {
     Napi::HandleScope scope(env);

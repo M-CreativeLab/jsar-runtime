@@ -30,6 +30,6 @@ namespace canvasbinding
     std::shared_ptr<canvas::Path2D> path2dImpl;
 
   public:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

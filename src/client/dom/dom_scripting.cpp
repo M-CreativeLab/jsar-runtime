@@ -208,14 +208,14 @@ namespace dom
       {
 #define V8_SET_GLOBAL_FROM_VALUE(name, value) \
   sandbox->Set(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked(), value).FromJust()
-#define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                         \
-  try                                                                                           \
-  {                                                                                             \
-    V8_SET_GLOBAL_FROM_VALUE(name, valueOrExpr);                                                \
-  }                                                                                             \
-  catch (const std::exception &e)                                                               \
-  {                                                                                             \
-    std::cerr << "Failed to set the global object: " << #name << ", " << e.what() << std::endl; \
+#define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                                                  \
+  try                                                                                                                    \
+  {                                                                                                                      \
+    V8_SET_GLOBAL_FROM_VALUE(name, valueOrExpr);                                                                         \
+  }                                                                                                                      \
+  catch (const std::exception &e)                                                                                        \
+  {                                                                                                                      \
+    std::cerr << "Failed to set the global object(" << #name << ") for main context, reason: " << e.what() << std::endl; \
   }
 #define V8_SET_GLOBAL_FROM_MAIN(name)                                                                     \
   do                                                                                                      \
@@ -402,14 +402,14 @@ namespace dom
       {
 #define V8_SET_GLOBAL_FROM_VALUE(name, value) \
   sandbox->Set(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked(), value).FromJust()
-#define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                         \
-  try                                                                                           \
-  {                                                                                             \
-    V8_SET_GLOBAL_FROM_VALUE(name, valueOrExpr);                                                \
-  }                                                                                             \
-  catch (const std::exception &e)                                                               \
-  {                                                                                             \
-    std::cerr << "Failed to set the global object: " << #name << ", " << e.what() << std::endl; \
+#define V8_TRY_SET_GLOBAL_FROM_VALUE(name, valueOrExpr)                                                                    \
+  try                                                                                                                      \
+  {                                                                                                                        \
+    V8_SET_GLOBAL_FROM_VALUE(name, valueOrExpr);                                                                           \
+  }                                                                                                                        \
+  catch (const std::exception &e)                                                                                          \
+  {                                                                                                                        \
+    std::cerr << "Failed to set the global object(" << #name << ") for worker context, reason: " << e.what() << std::endl; \
   }
 #define V8_SET_GLOBAL_FROM_MAIN(name)                                                                     \
   do                                                                                                      \

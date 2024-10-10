@@ -8,6 +8,7 @@ import {
 } from '@yodaos-jsar/dom';
 import { getClientContext, isResourcesCachingDisabled, getResourceCacheExpirationTime } from '@transmute/env';
 import * as undici from 'undici';
+import { parse as parseCacheControl } from 'cache-control-parser';
 
 type FetchReturnsMap = {
   json: object;
@@ -25,8 +26,13 @@ function hash(algorithm: 'md5' | 'sha256', content: string | NodeJS.ArrayBufferV
     .update(content)
     .digest('hex');
 }
-const getHashOfUri = (uri: string) => hash('sha256', uri);
+const getHashOfUri = (uri: string) => hash('md5', uri);
 
+/**
+ * Parse the URL string is valid to create a new `URL` object.
+ * @param url 
+ * @returns 
+ */
 function canParseURL(url: string): boolean {
   try {
     new URL(url);
@@ -34,6 +40,20 @@ function canParseURL(url: string): boolean {
   } catch (_e) {
     return false;
   }
+}
+
+/**
+ * Make a new `Response` object from the given `ArrayBuffer`.
+ * @param arraybuffer 
+ * @param fromResp 
+ * @returns 
+ */
+function makeResponse(arraybuffer: ArrayBuffer, fromResp: Response = new Response(null, { status: 200, statusText: 'OK' })): Response {
+  return new Response(arraybuffer, {
+    status: fromResp.status,
+    statusText: fromResp.statusText,
+    headers: fromResp.headers,
+  });
 }
 
 export class ResourceLoaderOnTransmute implements JSARResourceLoader {
@@ -164,19 +184,22 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
       }
       const [isCached, cachedUrl] = await self.#isResourceCached(url);
       if (isCached && await self.#shouldUseResourceCache(url, cachedUrl)) {
-        const cache: ArrayBuffer = await self.#readBinaryFile(cachedUrl);
-        const readable = new ReadableStream({
-          start(controller) {
-            controller.enqueue(cache);
-            controller.close();
-          },
-        });
-        return new Response(readable, {
-          status: 200,
-          statusText: 'OK',
-        });
+        return makeResponse(await self.#readBinaryFile(cachedUrl));
       } else {
-        return fetchImpl(url, init);
+        return fetchImpl(url, init).then(async resp => {
+          // Cache the fetched resource.
+          if (resp.ok) {
+            let arraybuffer: ArrayBuffer;
+            try {
+              arraybuffer = await resp.arrayBuffer();
+              self.#cacheResource(url, new Uint8Array(arraybuffer), resp);
+              return makeResponse(arraybuffer, resp);
+            } catch (err) {
+              console.info('Failed to read arraybuffer from an Ok response', err);
+            }
+          }
+          return resp;
+        });
       }
     }
   }
@@ -189,6 +212,12 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     options: FetchOptions,
     returnsAs?: AsType
   ): Promise<FetchReturnsMap[AsType]> {
+    const now = performance.now();
+    const logElapsed = () => {
+      const elapsed = performance.now() - now;
+      console.info(`Fetching ${url} in ${elapsed}ms`);
+    };
+
     const reqInit: undici.RequestInit = {
       ...(options == null ? {} : options),
     };
@@ -203,15 +232,18 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
 
     if (returnsAs === 'string') {
       const str = await resp.body.text();
-      this.#cacheResource(url, str);
+      this.#cacheResource(url, str, resp);
+      logElapsed();
       return str as FetchReturnsMap[AsType];
     } else if (returnsAs === 'json') {
       const obj = await resp.body.json() as any;
-      this.#cacheResource(url, obj);
+      this.#cacheResource(url, obj, resp);
+      logElapsed();
       return obj as FetchReturnsMap[AsType];
     } else if (returnsAs === 'arraybuffer') {
       const buf = await resp.body.arrayBuffer();
-      this.#cacheResource(url, new Uint8Array(buf));
+      this.#cacheResource(url, new Uint8Array(buf), resp);
+      logElapsed();
       return buf as FetchReturnsMap[AsType];
     }
   }
@@ -329,8 +361,9 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
    * Cache a resource to the cache directory.
    * @param uri the resource uri
    * @param content the resource content
+   * @param fromResp the response object from the network request to save the metadata.
    */
-  async #cacheResource(uri: string, content: string | NodeJS.ArrayBufferView) {
+  async #cacheResource(uri: string, content: string | NodeJS.ArrayBufferView, fromResp: Response | undici.Dispatcher.ResponseData) {
     if (this.#isCachingEnabled === false) {
       return; // Don't cache if the caching is disabled.
     }
@@ -338,10 +371,19 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     const filename = getHashOfUri(uri);
     const contentPath = path.join(cacheDir, filename);
     const md5filePath = path.join(cacheDir, `${filename}.md5`);
-    await Promise.all([
+    const contentHash = hash('md5', content);
+
+    const cachingWrites = [
       fsPromises.writeFile(contentPath, content),
-      fsPromises.writeFile(md5filePath, hash('md5', content)),
-    ]);
+      fsPromises.writeFile(md5filePath, contentHash),
+    ];
+    const metadataPath = path.join(cacheDir, `${filename}.metadata`);
+    cachingWrites.push(fsPromises.writeFile(metadataPath, JSON.stringify({
+      url: uri,
+      contentHash,
+      ...fromResp.headers,
+    }, null, 2), 'utf8'));
+    await Promise.all(cachingWrites);
   }
 
   /**
@@ -364,11 +406,35 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
 
     let useCache = true;
     try {
+      /**
+       * 1. Read the metadata file.
+       */
+      const metadata = JSON.parse(await fsPromises.readFile(`${cachePath}.metadata`, 'utf8'));
+      const cacheControl = parseCacheControl(metadata['cache-control'] || metadata['Cache-Control'] || '');
+
+      if (cacheControl['no-cache']) {
+        return false;
+      }
+
+      /**
+       * 2. Check if the date and max-age are valid
+       */
+      const cachedDateTime = new Date(metadata['date'] || metadata['Date']).getTime();
+      if (!isNaN(cachedDateTime) && cacheControl['max-age'] >= 0) {
+        const expiredDate = new Date(cachedDateTime + cacheControl['max-age'] * 1000);
+        if (expiredDate > new Date()) {
+          return true;
+        }
+      }
+
+      /**
+       * 3. Fetch the remote md5 file to compare with the local one.
+       */
       const resp = await (new Promise<undici.Dispatcher.ResponseData>((resolve, reject) => {
         /**
          * FIXME: I do this because the undici.request() seems not supporting custom timeout.
          */
-        const requestTimer = setTimeout(() => reject(new Error('request timeout')), 1000);
+        const requestTimer = setTimeout(() => reject(new Error('request timeout')), 500);
         undici.request(`${resourceUri}.md5`, { dispatcher: this.#networkProxyAgent || undici.getGlobalDispatcher() }).then((data) => {
           clearTimeout(requestTimer);
           resolve(data);

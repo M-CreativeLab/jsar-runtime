@@ -1,6 +1,6 @@
-
 #include "idgen.hpp"
 #include "client/canvas/image_source.hpp"
+#include "crates/jsar_jsbindings.h"
 
 #include "../canvas/image_bitmap.hpp"
 #include "../canvas/image_data.hpp"
@@ -22,8 +22,8 @@ using namespace canvasbinding;
 
 namespace webgl
 {
-  Napi::FunctionReference *WebGLRenderingContext::webglConstructor;
-  Napi::FunctionReference *WebGL2RenderingContext::webgl2Constructor;
+  thread_local Napi::FunctionReference *WebGLRenderingContext::webglConstructor;
+  thread_local Napi::FunctionReference *WebGL2RenderingContext::webgl2Constructor;
 
   /**
    * The id generators for the client-side.
@@ -896,6 +896,16 @@ namespace webgl
     this->version = resp->version;
     this->renderer = resp->renderer;
     delete resp;
+
+    /**
+     * Write _screenCanvas(ReadOnlyScreenCanvas) property
+     * 
+     * TODO: will change to `.canvas` when DOM implementation is ready.
+     */
+    auto jsThis = info.This().As<Napi::Object>();
+    auto canvas = canvasbinding::ReadOnlyScreenCanvas::NewInstance(env,
+                                                                   getDrawingBufferWidth(), getDrawingBufferHeight());
+    jsThis.Set("_screenCanvas", canvas);
   }
 
   template <typename T>
@@ -1338,17 +1348,9 @@ namespace webgl
     }
     int shader = info[0].As<Napi::Number>().Int32Value();
     std::string source = info[1].As<Napi::String>().Utf8Value();
+    std::string patchedSource = crates::jsar::webgl::GLSLSourcePatcher::GetPatchedSource(source);
 
-    // split by line
-    // std::vector<std::string> lines;
-    // std::istringstream f(source);
-    // std::string line;
-    // while (std::getline(f, line))
-    // {
-    //   DEBUG("Unity", "[src]: %s", line.c_str());
-    // }
-
-    auto commandBuffer = ShaderSourceCommandBufferRequest(shader, source);
+    auto commandBuffer = ShaderSourceCommandBufferRequest(shader, patchedSource);
     sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }
@@ -1886,6 +1888,8 @@ namespace webgl
     int internalformat = info[1].As<Napi::Number>().Int32Value();
     int width = info[2].As<Napi::Number>().Int32Value();
     int height = info[3].As<Napi::Number>().Int32Value();
+
+    std::cout << "renderbufferStorage: " << target << ", " << internalformat << ", " << width << ", " << height << std::endl;
 
     auto req = RenderbufferStorageCommandBufferRequest(target, internalformat, width, height);
     sendCommandBufferRequest(req);
@@ -3143,6 +3147,7 @@ namespace webgl
     Napi::Float32Array matricesArray = info[2].As<Napi::Float32Array>();
     UniformMatrix4fvCommandBufferRequest req(location->GetValue(), transpose);
 
+    string locationName = location->GetName();
     if (matricesArray.Has(WEBGL_PLACEHOLDERS_PLACEHOLDER_ID_KEY))
     {
       auto placeholderIdValue = matricesArray.Get(WEBGL_PLACEHOLDERS_PLACEHOLDER_ID_KEY);
@@ -3159,6 +3164,21 @@ namespace webgl
 
       if (matricesArray.Has(WEBGL_PLACEHOLDERS_INVERSE_MATRIX_KEY))
         computationGraph.inverseMatrix = matricesArray.Get(WEBGL_PLACEHOLDERS_INVERSE_MATRIX_KEY).ToBoolean().Value();
+      req.computationGraph4values = computationGraph;
+    }
+    else if (
+        m_clientContext->isInXrFrame() &&
+        (locationName == "projectionMatrix" ||
+         locationName == "viewMatrix"))
+    {
+      WebGLMatrixPlaceholderId placeholderId = WebGLMatrixPlaceholderId::NotSet;
+      if (locationName == "projectionMatrix")
+        placeholderId = WebGLMatrixPlaceholderId::ProjectionMatrix;
+      else if (locationName == "viewMatrix")
+        placeholderId = WebGLMatrixPlaceholderId::ViewMatrix;
+
+      MatrixComputationGraph computationGraph(placeholderId, MatrixHandedness::MATRIX_RIGHT_HANDED);
+      computationGraph.inverseMatrix = false;
       req.computationGraph4values = computationGraph;
     }
     else

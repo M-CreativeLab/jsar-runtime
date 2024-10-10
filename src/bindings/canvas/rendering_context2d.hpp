@@ -119,7 +119,7 @@ namespace canvasbinding
                                     Napi::Value canvasValue);
 
   public:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 
   class OffscreenCanvasRenderingContext2D : public CanvasRenderingContext2DBase<OffscreenCanvasRenderingContext2D, canvas::OffscreenCanvas>
@@ -144,6 +144,6 @@ namespace canvasbinding
     Napi::Value Commit(const Napi::CallbackInfo &info);
 
   public:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

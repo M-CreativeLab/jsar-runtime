@@ -5,8 +5,8 @@
 
 namespace bindings
 {
-  Napi::FunctionReference *XRLayer::constructor;
-  Napi::FunctionReference *XRWebGLLayer::constructor;
+  thread_local Napi::FunctionReference *XRLayer::constructor;
+  thread_local Napi::FunctionReference *XRWebGLLayer::constructor;
 
   template <typename T>
   XRLayerBase<T>::XRLayerBase(const Napi::CallbackInfo &info) : Napi::ObjectWrap<T>(info)

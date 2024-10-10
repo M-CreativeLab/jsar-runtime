@@ -7,7 +7,9 @@
 #include <skia/include/core/SkCanvas.h>
 #include <skia/include/core/SkBitmap.h>
 #include "client/canvas/canvas.hpp"
+#include "client/dom/dom_event_target.hpp"
 #include "./image_source.hpp"
+#include "../dom/event_target-inl.hpp"
 
 namespace canvasbinding
 {
@@ -34,6 +36,9 @@ namespace canvasbinding
                           public CanvasWrap<OffscreenCanvasRenderingContext2D, canvas::OffscreenCanvas>,
                           public ImageSourceWrap<canvas::OffscreenCanvas>
   {
+    friend class CanvasRenderingContext2D;
+    friend class HTMLRenderingContext;
+
   public:
     static void Init(Napi::Env env, Napi::Object exports);
     OffscreenCanvas(const Napi::CallbackInfo &info);
@@ -51,10 +56,31 @@ namespace canvasbinding
     uint32_t height();
 
   public:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
+  };
 
-    friend class CanvasRenderingContext2D;
-    friend class HTMLRenderingContext;
+  /**
+   * The `ReadOnlyScreenCanvas` class is introduced by JSAR, it represents the canvas corresponding to the device screen, and this canvas is
+   * read-only.
+   */
+  class ReadOnlyScreenCanvas : public dombinding::EventTargetWrap<ReadOnlyScreenCanvas, dom::DOMEventTarget>
+  {
+  public:
+    static void Init(Napi::Env env, Napi::Object exports);
+    static Napi::Object NewInstance(Napi::Env env, uint32_t width, uint32_t height);
+    ReadOnlyScreenCanvas(const Napi::CallbackInfo &info);
+    ~ReadOnlyScreenCanvas();
+
+  private:
+    Napi::Value WidthGetter(const Napi::CallbackInfo &info);
+    Napi::Value HeightGetter(const Napi::CallbackInfo &info);
+
+  private:
+    uint32_t width_;
+    uint32_t height_;
+
+  public:
+    static thread_local Napi::FunctionReference *constructor;
   };
 }
 

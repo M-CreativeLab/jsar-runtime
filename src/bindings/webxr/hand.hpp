@@ -27,6 +27,6 @@ namespace bindings
     std::map<std::string, Napi::ObjectReference*> entries;
 
   private:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

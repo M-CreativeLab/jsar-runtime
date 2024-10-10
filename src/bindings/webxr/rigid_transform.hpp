@@ -26,6 +26,6 @@ namespace bindings {
     glm::mat4 matrix;
 
   public:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

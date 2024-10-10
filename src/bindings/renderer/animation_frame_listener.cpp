@@ -2,7 +2,7 @@
 
 namespace bindings
 {
-  Napi::FunctionReference *AnimationFrameListener::constructor;
+  thread_local Napi::FunctionReference *AnimationFrameListener::constructor;
   Napi::Object AnimationFrameListener::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function func = DefineClass(env, "AnimationFrameListener",

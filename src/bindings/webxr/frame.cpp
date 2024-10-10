@@ -4,8 +4,8 @@
 
 namespace bindings
 {
-  Napi::FunctionReference *XRFrame::constructor;
-  uint32_t XRFrame::NEXT_FRAME_ID = 0;
+  thread_local Napi::FunctionReference *XRFrame::constructor;
+  thread_local uint32_t XRFrame::NEXT_FRAME_ID = 0;
 
   Napi::Object XRFrame::Init(Napi::Env env, Napi::Object exports)
   {
@@ -26,7 +26,6 @@ namespace bindings
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
-    env.SetInstanceData(constructor);
     exports.Set("XRFrame", tpl);
     return exports;
   }

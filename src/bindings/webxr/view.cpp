@@ -3,8 +3,7 @@
 
 namespace bindings
 {
-  Napi::FunctionReference *XRView::constructor;
-
+  thread_local Napi::FunctionReference *XRView::constructor;
   Napi::Object XRView::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function tpl = DefineClass(env, "XRView",

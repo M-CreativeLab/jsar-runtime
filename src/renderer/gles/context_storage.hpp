@@ -2,6 +2,7 @@
 
 #include <string>
 #include <map>
+#include <memory>
 
 #include "common/viewport.hpp"
 #include "./common.hpp"
@@ -11,7 +12,7 @@ class OpenGLTextureBinding
 {
 public:
   OpenGLTextureBinding(GLenum target, GLuint texture) : m_Target(target), m_Texture(texture) {}
-  OpenGLTextureBinding(OpenGLTextureBinding *from) : m_Target(from->m_Target), m_Texture(from->m_Texture) {}
+  OpenGLTextureBinding(OpenGLTextureBinding &from) : m_Target(from.m_Target), m_Texture(from.m_Texture) {}
   inline void Reset(GLenum target, GLuint texture)
   {
     m_Target = target;
@@ -125,11 +126,10 @@ public:
     m_VertexArrayObjectId = from->m_VertexArrayObjectId;
     m_LastActiveTextureUnit = from->m_LastActiveTextureUnit;
     for (auto it = from->m_TextureBindingsWithUnit.begin(); it != from->m_TextureBindingsWithUnit.end(); it++)
-      m_TextureBindingsWithUnit[it->first] = new OpenGLTextureBinding(it->second);
+      m_TextureBindingsWithUnit[it->first] = std::make_shared<OpenGLTextureBinding>(*it->second);
   }
   ~OpenGLContextStorage()
   {
-    ClearTextureBindings();
   }
 
   void RecordViewport(int x, int y, int w, int h);
@@ -189,7 +189,7 @@ protected:
   GLint m_VertexArrayObjectId = 0;
   /** Textures */
   GLenum m_LastActiveTextureUnit = GL_TEXTURE0;
-  std::map<GLenum, OpenGLTextureBinding *> m_TextureBindingsWithUnit;
+  std::map<GLenum, std::shared_ptr<OpenGLTextureBinding>> m_TextureBindingsWithUnit;
   bool m_ForceChanged = false;
 };
 
@@ -233,7 +233,9 @@ public:
 class OpenGLAppContextStorage : public OpenGLContextStorage
 {
 public:
-  OpenGLAppContextStorage(std::string name) : OpenGLContextStorage(name)
+  OpenGLAppContextStorage(std::string name)
+      : OpenGLContextStorage(name),
+        m_GLObjectManager(std::make_shared<gles::GLObjectManager>())
   {
     /**
      * Initial values for WebGL or OpenGLES.
@@ -242,7 +244,9 @@ public:
     m_CullFace = GL_BACK;
     m_FrontFace = GL_CCW;
   }
-  OpenGLAppContextStorage(std::string name, OpenGLAppContextStorage *from) : OpenGLContextStorage(name, from)
+  OpenGLAppContextStorage(std::string name, OpenGLAppContextStorage *from)
+      : OpenGLContextStorage(name, from),
+        m_GLObjectManager(from->m_GLObjectManager)
   {
     m_Programs = OpenGLNamesStorage(&from->m_Programs);
     m_Shaders = OpenGLNamesStorage(&from->m_Shaders);
@@ -278,7 +282,7 @@ public:
   bool IsChanged(OpenGLAppContextStorage *other);
 
 public:
-  gles::GLObjectManager m_GLObjectManager;
+  std::shared_ptr<gles::GLObjectManager> m_GLObjectManager;
 
 private:
   bool m_Dirty = false;

@@ -2,7 +2,7 @@
 
 namespace webgl
 {
-  Napi::FunctionReference *WebGLFramebuffer::constructor;
+  thread_local Napi::FunctionReference *WebGLFramebuffer::constructor;
   void WebGLFramebuffer::Init(Napi::Env env)
   {
     Napi::HandleScope scope(env);

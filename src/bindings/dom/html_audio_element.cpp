@@ -4,7 +4,7 @@
 
 namespace dombinding
 {
-  Napi::FunctionReference *HTMLAudioElement::constructor;
+  thread_local Napi::FunctionReference *HTMLAudioElement::constructor;
   vector<Napi::ClassPropertyDescriptor<HTMLAudioElement>> HTMLAudioElement::GetClassProperties()
   {
     auto props = HTMLMediaElementBase<HTMLAudioElement, dom::HTMLAudioElement>::GetClassProperties();

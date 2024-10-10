@@ -24,7 +24,7 @@
 
     // Create meshes
     const geometry = new THREE.TorusKnotGeometry(0.2, 0.05, 50, 16);
-    const material = new THREE.MeshLambertMaterial({ color: 0x00ffff, wireframe: true });
+    const material = new THREE.MeshLambertMaterial({ color: 0x00ffff, wireframe: false });
     const obj = new THREE.Mesh(geometry, material);
     scene.add(obj);
 

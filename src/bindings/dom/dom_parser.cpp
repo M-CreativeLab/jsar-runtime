@@ -3,8 +3,7 @@
 
 namespace dombinding
 {
-  Napi::FunctionReference *DOMParser::constructor;
-
+  thread_local Napi::FunctionReference *DOMParser::constructor;
   void DOMParser::Init(Napi::Env env)
   {
     Napi::Function func = DefineClass(env, "DOMParser",

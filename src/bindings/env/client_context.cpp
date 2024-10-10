@@ -3,8 +3,7 @@
 
 namespace bindings
 {
-  Napi::FunctionReference *ClientContext::constructor;
-
+  thread_local Napi::FunctionReference *ClientContext::constructor;
   void ClientContext::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function func = DefineClass(env, "ClientContext",

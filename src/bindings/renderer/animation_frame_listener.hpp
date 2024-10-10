@@ -36,6 +36,6 @@ namespace bindings
     uv_timer_t tickHandle;
 
   private:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

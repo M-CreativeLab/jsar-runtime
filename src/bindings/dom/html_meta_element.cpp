@@ -3,8 +3,6 @@
 
 namespace dombinding
 {
-  Napi::FunctionReference *HTMLMetaElement::constructor;
-
   vector<Napi::ClassPropertyDescriptor<HTMLMetaElement>> HTMLMetaElement::GetClassProperties()
   {
     using T = HTMLMetaElement;
@@ -20,6 +18,7 @@ namespace dombinding
     return props;
   }
 
+  thread_local Napi::FunctionReference *HTMLMetaElement::constructor;
   void HTMLMetaElement::Init(Napi::Env env)
   {
     auto props = GetClassProperties();

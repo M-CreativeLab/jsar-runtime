@@ -120,14 +120,6 @@ void TrContentRuntime::onCommandBuffersExecuted()
 
 void TrContentRuntime::onClientProcessExited(int exitCode)
 {
-  if (!used)
-  {
-    /**
-     * FIXME: This means the pre-content is failed to boot up, we must let this abort the process to expose related problems.
-     */
-    DEBUG(LOG_TAG_ERROR, "Occurred a fatal error: the content(%d) is not used but the process is exited.", id);
-    assert(false);
-  }
   available = false; // make sure this state is still false.
   pid = INVALID_PID;
   shouldDestroy = true;
@@ -409,8 +401,6 @@ bool TrContentManager::initialize()
 
   eventChanWatcher = std::make_unique<WorkerThread>("TrEventChanWatcher", [this](WorkerThread &)
                                                     { acceptEventChanClients(); });
-  contentsDestroyingWorker = std::make_unique<WorkerThread>("TrContentsMgr", [this](WorkerThread &worker)
-                                                            { onTryDestroyingContents(); worker.sleep(); }, 1000);
   return true;
 }
 
@@ -431,7 +421,6 @@ bool TrContentManager::shutdown()
     if (contents.empty())
       break;
   }
-  contentsDestroyingWorker->stop();
   DEBUG(LOG_TAG_CONTENT, "All contents(%zu) has been disposed and removed", contentsCount);
 
   auto eventTarget = constellation->nativeEventTarget;
@@ -464,6 +453,11 @@ bool TrContentManager::tickOnFrame()
         content->tickOnFrame();
     }
   }
+
+  /**
+   * Check if there is contents that need to be destroyed.
+   */
+  onTryDestroyingContents();
   return true;
 }
 

@@ -16,6 +16,6 @@ namespace dombinding
     static Napi::Value AudioConstructor(const Napi::CallbackInfo &info);
 
   public:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

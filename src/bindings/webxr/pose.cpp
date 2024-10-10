@@ -3,8 +3,8 @@
 
 namespace bindings
 {
-  Napi::FunctionReference *XRPose::constructor;
-  Napi::FunctionReference *XRViewerPose::constructor;
+  thread_local Napi::FunctionReference *XRPose::constructor;
+  thread_local Napi::FunctionReference *XRViewerPose::constructor;
 
   Napi::Object XRPose::Init(Napi::Env env, Napi::Object exports)
   {

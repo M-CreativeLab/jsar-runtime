@@ -3,14 +3,13 @@
 
 namespace bindings
 {
-  Napi::FunctionReference *XRDeviceNative::constructor;
-
   struct XRFrameRequestContext
   {
     XRDeviceNative *device;
     xr::TrXRFrameRequest *frameRequest;
   };
 
+  thread_local Napi::FunctionReference *XRDeviceNative::constructor;
   Napi::Object XRDeviceNative::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function tpl = DefineClass(env, "XRDeviceNative",

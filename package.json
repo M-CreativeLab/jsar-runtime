@@ -9,6 +9,7 @@
   "dependencies": {
     "@yodaos-jsar/dom": "file:../jsar-dom",
     "babylonjs": "^6.10.0",
+    "cache-control-parser": "^2.0.6",
     "minimist": "^1.2.8",
     "undici": "^6.3.0",
     "windows-1252": "^3.0.4",

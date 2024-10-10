@@ -37,6 +37,7 @@ namespace dombinding
     }
     static void Init(Napi::Env env, const std::string &name)
     {
+      Napi::HandleScope scope(env);
       auto props = GetClassProperties();
       Napi::Function func = ObjectType::DefineClass(env, name.c_str(), props);
       ObjectType::constructor = new Napi::FunctionReference();
@@ -191,7 +192,7 @@ namespace dombinding
     Document(const Napi::CallbackInfo &info);
 
   public:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 
   class XMLDocument : public DocumentBase<XMLDocument, dom::XMLDocument>
@@ -203,6 +204,6 @@ namespace dombinding
     XMLDocument(const Napi::CallbackInfo &info);
 
   public:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

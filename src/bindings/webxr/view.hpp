@@ -35,6 +35,6 @@ namespace bindings
     float viewportScale = 1.0f;
 
   private:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

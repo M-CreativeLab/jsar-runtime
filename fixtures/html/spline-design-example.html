@@ -34,7 +34,7 @@
     const loader = new SplineLoader();
     console.info(loader.load + '');
     loader.load(
-      'https://prod.spline.design/0PowQ-88FCBk662k/scene.splinecode',
+      'https://prod.spline.design/7kxN3695TfdH7qO9/scene.splinecode',
       (splineScene) => {
         console.info('Loaded Spline scene.', Object.keys(splineScene));
         scene.add(splineScene);
@@ -63,6 +63,8 @@
 
       const renderer = new THREE.WebGLRenderer({
         canvas: {
+          width: 800,
+          height: 600,
           addEventListener() { },
         },
         context: gl,
@@ -85,10 +87,5 @@
     console.info('navigator.xr', navigator.xr);
   </script>
 </head>
-
-<body>
-  <h1>Simple HTML</h1>
-  <p>Some text</p>
-</body>
 
 </html>

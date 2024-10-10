@@ -3,7 +3,7 @@
 
 namespace dombinding
 {
-  Napi::FunctionReference *HTMLHtmlElement::constructor;
+  thread_local Napi::FunctionReference *HTMLHtmlElement::constructor;
   void HTMLHtmlElement::Init(Napi::Env env)
   {
     auto props = GetClassProperties();

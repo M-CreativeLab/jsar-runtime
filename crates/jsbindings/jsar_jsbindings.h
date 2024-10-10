@@ -45,6 +45,21 @@ extern "C"
    * @returns The module extension index.
    */
   extern int parse_url_to_module_extension(const char *url);
+
+  /**
+   * Patch a GLSL source string.
+   *
+   * @param input The GLSL source string to patch.
+   * @returns The patched GLSL source string, caller need to release this memory by calling release_rust_cstring().
+   */
+  extern char *patch_glsl_source(const char *input);
+
+  /**
+   * Release a Rust CString.
+   *
+   * @param s The CString to release.
+   */
+  extern void release_rust_cstring(char *s);
 } // extern "C"
 
 namespace crates
@@ -164,5 +179,29 @@ namespace crates
         return ModuleExtension((ModuleExtensionIndex)parse_url_to_module_extension(url.c_str()));
       }
     };
+
+    namespace webgl
+    {
+      /**
+       * GLSLPatcher is used to patch a GLSL source string.
+       */
+      class GLSLSourcePatcher
+      {
+      public:
+        /**
+         * Get the patched GLSL source string.
+         *
+         * @param source The GLSL source string to patch.
+         * @returns The patched GLSL source string.
+         */
+        static inline std::string GetPatchedSource(const std::string &source)
+        {
+          char *patchedSourceStr = patch_glsl_source(source.c_str());
+          std::string patchedSource(patchedSourceStr);
+          release_rust_cstring(patchedSourceStr);
+          return patchedSource;
+        }
+      };
+    }
   }
 }

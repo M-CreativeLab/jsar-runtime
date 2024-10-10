@@ -59,7 +59,8 @@ namespace gles
   void GLObjectManager::DeleteProgram(uint32_t clientId)
   {
     GLuint program = programs[clientId];
-    glDeleteProgram(program);
+    if (program > 0)
+      glDeleteProgram(program);
     programs.erase(clientId);
   }
 
@@ -68,7 +69,8 @@ namespace gles
     for (auto it = programs.begin(); it != programs.end(); ++it)
     {
       GLuint program = it->second;
-      glDeleteProgram(program);
+      if (program > 0)
+        glDeleteProgram(program);
     }
     programs.clear();
   }
@@ -138,16 +140,16 @@ namespace gles
     NAME##s.erase(clientId);                                      \
   }
 
-#define DEFINE_CLEAR_OBJECTS(TYPE, NAME)                       \
-  void GLObjectManager::Clear##TYPE##s()                       \
-  {                                                            \
-    for (auto it = NAME##s.begin(); it != NAME##s.end(); ++it) \
-    {                                                          \
-      auto p##NAME = it->second;                               \
-      glDelete##TYPE##s(1, p##NAME);                           \
-      delete p##NAME;                                          \
-    }                                                          \
-    NAME##s.clear();                                           \
+#define DEFINE_CLEAR_OBJECTS(TYPE, NAME)                           \
+  void GLObjectManager::Clear##TYPE##s()                           \
+  {                                                                \
+    for (auto it = NAME##s.begin(); it != NAME##s.end(); ++it)     \
+    {                                                              \
+      auto p##NAME = it->second;                                   \
+      glDelete##TYPE##s(1, p##NAME);                               \
+      delete p##NAME;                                              \
+    }                                                              \
+    NAME##s.clear();                                               \
   }
 
 #define DEFINE_OBJECT_METHODS(TYPE, NAME) \

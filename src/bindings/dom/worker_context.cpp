@@ -5,8 +5,7 @@ using namespace std;
 
 namespace dombinding
 {
-  Napi::FunctionReference *WorkerContext::constructor;
-
+  thread_local Napi::FunctionReference *WorkerContext::constructor;
   void WorkerContext::Init(Napi::Env env, Napi::Object exports)
   {
     auto props = GetClassProperties();
@@ -62,10 +61,6 @@ namespace dombinding
         contextImpl->workerName = jsOptionsObject.Get("name").ToString().Utf8Value();
       }
     }
-
-    // Make the worker's context
-    auto scriptingContext = contextImpl->scriptingContext;
-    scriptingContext->makeWorkerContext();
   }
 
   Napi::Value WorkerContext::Start(const Napi::CallbackInfo &info)
@@ -78,6 +73,11 @@ namespace dombinding
       Napi::TypeError::New(env, "Expected a string.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
+
+    // Make the worker's context
+    auto scriptingContext = contextImpl->scriptingContext;
+    scriptingContext->makeWorkerContext();
+
     auto scriptUrl = info[0].As<Napi::String>().Utf8Value();
     contextImpl->start(scriptUrl);
     return env.Undefined();
@@ -93,6 +93,11 @@ namespace dombinding
       Napi::TypeError::New(env, "source is required.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
+
+    // Make the worker's context
+    auto scriptingContext = contextImpl->scriptingContext;
+    scriptingContext->makeWorkerContext();
+
     auto scriptSource = info[0].As<Napi::String>().Utf8Value();
     contextImpl->startFromSource(scriptSource);
     return env.Undefined();

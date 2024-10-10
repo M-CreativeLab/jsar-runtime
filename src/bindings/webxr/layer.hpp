@@ -26,7 +26,7 @@ namespace bindings
     XRLayer(const Napi::CallbackInfo &info);
 
   private:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 
   class XRWebGLLayer : public XRLayerBase<XRWebGLLayer>
@@ -59,6 +59,6 @@ namespace bindings
     Napi::ObjectReference hostFramebuffer;
 
   private:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

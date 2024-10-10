@@ -30,6 +30,6 @@ namespace dombinding
     Napi::Value ToBlob(const Napi::CallbackInfo &info);
 
   public:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

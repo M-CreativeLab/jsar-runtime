@@ -45,7 +45,7 @@ namespace canvasbinding
     inline size_t height() { return dataImpl->height(); }
 
   public:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
 
   public:
     friend class ImageBitmap;

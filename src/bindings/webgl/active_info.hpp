@@ -19,6 +19,6 @@ namespace webgl
     int type;
 
   private:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

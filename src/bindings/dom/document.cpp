@@ -2,15 +2,22 @@
 
 namespace dombinding
 {
-  Napi::FunctionReference *Document::constructor;
+  thread_local Napi::FunctionReference *Document::constructor;
   void Document::Init(Napi::Env env, Napi::Object exports)
   {
     DocumentBase<Document, dom::HTMLDocument>::Init(env, "Document");
+    {
+      auto tid = std::this_thread::get_id();
+      std::cerr << "Document::Init() => " << tid << std::endl;
+    }
   }
 
-  Document* Document::GetCurrent(Napi::Env env)
+  Document *Document::GetCurrent(Napi::Env env)
   {
     Napi::HandleScope scope(env);
+    auto tid = std::this_thread::get_id();
+    std::cerr << "GetCurrent() => " << tid << std::endl;
+
     auto document = env.Global().Get("document");
     if (document.IsObject())
     {
@@ -27,7 +34,7 @@ namespace dombinding
   {
   }
 
-  Napi::FunctionReference *XMLDocument::constructor;
+  thread_local Napi::FunctionReference *XMLDocument::constructor;
   void XMLDocument::Init(Napi::Env env, Napi::Object exports)
   {
     DocumentBase<XMLDocument, dom::XMLDocument>::Init(env, "XMLDocument");

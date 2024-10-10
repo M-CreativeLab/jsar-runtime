@@ -2,8 +2,7 @@
 
 namespace bindings
 {
-  Napi::FunctionReference *XRRenderState::constructor;
-
+  thread_local Napi::FunctionReference *XRRenderState::constructor;
   Napi::Object XRRenderState::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function tpl = DefineClass(env, "XRRenderState",

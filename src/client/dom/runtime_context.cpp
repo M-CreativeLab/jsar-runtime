@@ -33,6 +33,7 @@ namespace dom
     v8::Context::Scope contextScope(context);
     {
       resourceLoaderValue.Reset(isolate, value.As<v8::Object>());
+      assert(!resourceLoaderValue.IsEmpty());
     }
   }
 
@@ -44,7 +45,7 @@ namespace dom
     v8::HandleScope handleScope(isolate);
     {
       if (resourceLoaderValue.IsEmpty())
-        throw std::runtime_error("Resource loader not set");
+        throw std::runtime_error("ResourceLoader not set");
 
       auto fetchKeyString = v8::String::NewFromUtf8(isolate, "fetch").ToLocalChecked();
       v8::Local<v8::Object> resourceLoaderObject = v8::Local<v8::Object>::New(isolate, resourceLoaderValue);
@@ -127,7 +128,7 @@ namespace dom
     v8::EscapableHandleScope handleScope(isolate);
 
     if (resourceLoaderValue.IsEmpty())
-      throw std::runtime_error("Resource loader not set");
+      throw std::runtime_error("ResourceLoader not set");
 
     auto keyString = v8::String::NewFromUtf8(isolate, "createWHATWGFetchImpl").ToLocalChecked();
     v8::Local<v8::Object> resourceLoaderObject = v8::Local<v8::Object>::New(isolate, resourceLoaderValue);

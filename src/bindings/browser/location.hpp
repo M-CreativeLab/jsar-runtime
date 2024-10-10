@@ -26,6 +26,6 @@ namespace browserbinding
     browser::Location locationImpl;
 
   public:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

@@ -191,6 +191,6 @@ namespace dombinding
     static Napi::Object NewInstance(Napi::Env env, string namespaceURI, string tagName, weak_ptr<dom::Document> ownerDocument);
 
   public:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

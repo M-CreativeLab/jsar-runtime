@@ -10,8 +10,8 @@ namespace bindings
 {
 #define FRAME_TIME_DELTA_THRESHOLD 1000 / 45
 
-  Napi::FunctionReference *XRSession::constructor;
-  uint32_t XRFrameCallbackDescriptor::NEXT_HANDLE = 0;
+  thread_local Napi::FunctionReference *XRSession::constructor;
+  thread_local uint32_t XRFrameCallbackDescriptor::NEXT_HANDLE = 0;
 
   Napi::Object XRSession::Init(Napi::Env env, Napi::Object exports)
   {

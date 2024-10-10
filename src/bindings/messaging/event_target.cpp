@@ -4,7 +4,7 @@ namespace bindings
 {
   namespace messaging
   {
-    Napi::FunctionReference *NativeEventTarget::constructor;
+    thread_local Napi::FunctionReference *NativeEventTarget::constructor;
 
     void NativeEventTarget::Init(Napi::Env env, Napi::Object exports)
     {

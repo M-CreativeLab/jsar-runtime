@@ -6,8 +6,6 @@ using namespace std;
 
 namespace dombinding
 {
-  Napi::FunctionReference *HTMLImageElement::constructor;
-
   vector<Napi::ClassPropertyDescriptor<HTMLImageElement>> HTMLImageElement::GetClassProperties()
   {
     using T = HTMLImageElement;
@@ -25,8 +23,10 @@ namespace dombinding
     return props;
   }
 
+  thread_local Napi::FunctionReference *HTMLImageElement::constructor;
   void HTMLImageElement::Init(Napi::Env env)
   {
+    Napi::HandleScope scope(env);
     auto props = GetClassProperties();
     Napi::Function func = DefineClass(env, "HTMLImageElement", props);
     constructor = new Napi::FunctionReference();
@@ -34,13 +34,19 @@ namespace dombinding
 
     auto global = env.Global();
     global.Set("HTMLImageElement", func);
-    global.Set("Image", Napi::Function::New(env, &HTMLImageElement::ImageConstructor));
+    global.Set("Image", Napi::Function::New(env, HTMLImageElement::ImageConstructor));
   }
 
   Napi::Value HTMLImageElement::ImageConstructor(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
+
+    auto console = env.Global().Get("console").As<Napi::Object>();
+    auto trace = console.Get("trace").As<Napi::Function>();
+    trace.Call(console, {Napi::String::New(env, "Image()")});
+    auto tid = std::this_thread::get_id();
+    std::cout << "Image() tid: " << tid << std::endl;
 
     if (!info.IsConstructCall())
     {

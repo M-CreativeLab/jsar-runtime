@@ -21,6 +21,6 @@ namespace bindings
     TrClientContextPerProcess *clientContext = nullptr;
 
   private:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 } // namespace bindings

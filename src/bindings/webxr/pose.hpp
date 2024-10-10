@@ -80,7 +80,7 @@ namespace bindings
     XRPose(const Napi::CallbackInfo &info);
 
   private:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 
   class XRViewerPose : public XRPoseBase<XRViewerPose>
@@ -103,6 +103,6 @@ namespace bindings
     std::vector<Napi::ObjectReference> views;
 
   private:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

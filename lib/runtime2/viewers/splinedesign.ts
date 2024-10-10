@@ -40,7 +40,7 @@ export default function createViewer(url: string) {
           }
         });
         const size = box.getSize(new THREE.Vector3());
-        const scale = 1 / Math.max(size.x, size.y, size.z);
+        const scale = 0.3 / Math.max(size.x, size.y, size.z);
         console.info('Scaling scene by', scale);
         scene.scale.set(scale, scale, scale);
       },
@@ -56,12 +56,11 @@ export default function createViewer(url: string) {
       session.updateRenderState({ baseLayer });
 
       const renderer = new THREE.WebGLRenderer({
-        canvas: {
-          addEventListener() { },
-        },
+        canvas: gl._screenCanvas,
         context: gl,
       });
       renderer.preserveDrawingBuffer = true;
+      renderer.autoClear = false;
       renderer.xr.enabled = true;
       renderer.xr.setReferenceSpaceType('local');
       renderer.xr.setSession(session);

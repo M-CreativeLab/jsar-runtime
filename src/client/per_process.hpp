@@ -50,6 +50,19 @@ using namespace media_comm;
 typedef uint32_t FrameRequestId;
 typedef function<void(TrAnimationFrameRequest &)> AnimationFrameRequestCallback;
 
+/**
+ * `ScriptEnvironment` represents the environment for executing scripts within the application. It encapsulates the
+ * necessary components and settings for initializing and running a Node.js-based script execution environment.
+
+ * This class is responsible for:
+ * - Managing the lifecycle of the script environment
+ * - Initializing Node.js runtime
+ * - Handling script arguments
+ * - Providing access to the Node.js platform and initialization results
+
+ * Each `ScriptEnvironment` instance corresponds to a separate script execution context, allowing for isolated and
+ * controlled script execution within the application.
+ */
 class ScriptEnvironment
 {
 public:
@@ -208,6 +221,7 @@ public: // WebXR methods
   bool flushXrFrame();
   bool finishXrFrame(xr::TrXRFrameRequest *frameRequest);
   inline bool isInXrFrame() { return currentXrFrameRequest != nullptr; }
+  inline xr::TrXRFrameRequest* getCurrentXRFrameRequest() { return currentXrFrameRequest; }
   xr::TrXRDeviceContextZone *getXRDeviceContextZone() { return xrDeviceContextZoneClient.get(); }
   xr::TrXRInputSourcesZone *getXRInputSourcesZone() { return xrInputSourcesZoneClient.get(); }
 

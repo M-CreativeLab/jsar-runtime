@@ -2,7 +2,7 @@
 
 namespace webgl
 {
-  Napi::FunctionReference *WebGLProgram::constructor;
+  thread_local Napi::FunctionReference *WebGLProgram::constructor;
   void WebGLProgram::Init(Napi::Env env)
   {
     Napi::Function tpl = DefineClass(env, "WebGLProgram",

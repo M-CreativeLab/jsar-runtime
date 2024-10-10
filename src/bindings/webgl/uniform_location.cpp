@@ -2,7 +2,7 @@
 
 namespace webgl
 {
-  Napi::FunctionReference *WebGLUniformLocation::constructor;
+  thread_local Napi::FunctionReference *WebGLUniformLocation::constructor;
   void WebGLUniformLocation::Init(Napi::Env env)
   {
     Napi::Function tpl = DefineClass(env, "WebGLUniformLocation",

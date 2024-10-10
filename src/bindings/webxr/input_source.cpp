@@ -8,8 +8,8 @@
 
 namespace bindings
 {
-  Napi::FunctionReference *XRInputSource::constructor;
-  Napi::FunctionReference *XRInputSourceArray::constructor;
+  thread_local Napi::FunctionReference *XRInputSource::constructor;
+  thread_local Napi::FunctionReference *XRInputSourceArray::constructor;
 
   Napi::Object XRInputSource::Init(Napi::Env env, Napi::Object exports)
   {

@@ -29,6 +29,6 @@ namespace dombinding
     static void Init(Napi::Env env);
 
   public:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

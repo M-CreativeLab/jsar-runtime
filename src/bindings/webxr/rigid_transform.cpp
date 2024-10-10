@@ -2,8 +2,7 @@
 
 namespace bindings
 {
-  Napi::FunctionReference *XRRigidTransform::constructor;
-
+  thread_local Napi::FunctionReference *XRRigidTransform::constructor;
   Napi::Object XRRigidTransform::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function tpl = DefineClass(env, "XRRigidTransform",

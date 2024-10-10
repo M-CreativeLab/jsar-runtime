@@ -42,7 +42,7 @@ namespace bindings
     XRSpace(const Napi::CallbackInfo &info);
 
   private:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 
   class XRReferenceSpace : public XRSpaceBase<XRReferenceSpace>
@@ -63,7 +63,7 @@ namespace bindings
     mat4 offsetMatrix;
 
   public:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 
   class XRViewSpace : public XRSpaceBase<XRViewSpace>
@@ -86,7 +86,7 @@ namespace bindings
     glm::mat4 projectionMatrix;
 
   private:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 
   class XRJointSpace : public XRSpaceBase<XRJointSpace>
@@ -104,7 +104,7 @@ namespace bindings
     xr::TrXRInputSource *inputSource;
 
   private:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 
   class XRTargetRayOrGripSpace : public XRSpaceBase<XRTargetRayOrGripSpace>
@@ -121,6 +121,6 @@ namespace bindings
     xr::TrXRInputSource *inputSource;
 
   private:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

@@ -7,14 +7,29 @@
 
 namespace renderer
 {
+  TrBackupGLContextScope::TrBackupGLContextScope(TrContentRenderer *contentRenderer)
+      : contentRenderer(contentRenderer)
+  {
+    string name = contentRenderer->glContext.GetName();
+    contentRenderer->glContextForBackup = OpenGLAppContextStorage(name, &contentRenderer->glContext);
+    contentRenderer->usingBackupContext = true;
+  }
+
+  TrBackupGLContextScope::~TrBackupGLContextScope()
+  {
+    contentRenderer->usingBackupContext = false;
+  }
+
   TrContentRenderer::TrContentRenderer(TrContentRuntime *content, TrConstellation *constellation)
       : content(content),
         constellation(constellation),
         xrDevice(constellation->xrDevice.get()),
-        targetFrameRate(constellation->renderer->clientDefaultFrameRate)
+        targetFrameRate(constellation->renderer->clientDefaultFrameRate),
+        glContext("content_renderer#" + std::to_string(content->id)),
+        glContextForBackup("content_renderer#" + std::to_string(content->id) + "_backup"),
+        usingBackupContext(false)
   {
     assert(xrDevice != nullptr);
-    glContext = new OpenGLAppContextStorage("content_renderer#" + std::to_string(content->id));
     stereoFrameForBackup = new xr::StereoRenderingFrame(true, 0xf);
 
     // Register the command buffer request handler when creating the content renderer.
@@ -28,11 +43,6 @@ namespace renderer
     content->resetCommandBufferRequestHandler();
     content = nullptr;
     xrDevice = nullptr;
-    if (glContext == nullptr)
-    {
-      delete glContext;
-      glContext = nullptr;
-    }
   }
 
   void TrContentRenderer::onCommandBuffersExecuting()
@@ -60,7 +70,7 @@ namespace renderer
 
   OpenGLAppContextStorage *TrContentRenderer::getOpenGLContext()
   {
-    return glContext;
+    return usingBackupContext ? &glContextForBackup : &glContext;
   }
 
   TrContentRuntime *TrContentRenderer::getContent()
@@ -199,7 +209,7 @@ namespace renderer
     onStartFrame();
     {
       executeCommandBuffers(false);
-      if (xrDevice->enabled())
+      if (content->used && xrDevice->enabled())
       {
         // set framebuffer?
         if (xrDevice->getStereoRenderingMode() == xr::TrStereoRenderingMode::MultiPass)
@@ -214,9 +224,9 @@ namespace renderer
 
   void TrContentRenderer::onStartFrame()
   {
-    glContext->Restore();
+    glContext.Restore();
     if (constellation->renderer->isAppContextSummaryEnabled)
-      glContext->Print();
+      glContext.Print();
 
     // Reset frame states
     drawCallsPerFrame = 0;
@@ -346,7 +356,10 @@ namespace renderer
     {
       auto &commandBufferInLastFrame = stereoFrameForBackup->getCommandBuffers(viewIndex);
       if (commandBufferInLastFrame.size() > 0)
+      {
+        TrBackupGLContextScope contextScopeForBackup(this);
         exec(stereoFrameForBackup->getId(), commandBufferInLastFrame);
+      }
     }
     return called;
   }

@@ -2,8 +2,7 @@
 
 namespace dombinding
 {
-  Napi::FunctionReference *HTMLScriptElement::constructor;
-
+  thread_local Napi::FunctionReference *HTMLScriptElement::constructor;
   vector<Napi::ClassPropertyDescriptor<HTMLScriptElement>> HTMLScriptElement::GetClassProperties()
   {
     using T = HTMLScriptElement;

@@ -2,8 +2,7 @@
 
 namespace canvasbinding
 {
-  Napi::FunctionReference *Path2D::constructor;
-
+  thread_local Napi::FunctionReference *Path2D::constructor;
   void Path2D::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::HandleScope scope(env);

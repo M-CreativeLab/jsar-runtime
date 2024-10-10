@@ -3,8 +3,7 @@
 
 namespace dombinding
 {
-  Napi::FunctionReference *Node::constructor;
-
+  thread_local Napi::FunctionReference *Node::constructor;
   void Node::Init(Napi::Env env)
   {
     auto props = GetClassProperties();

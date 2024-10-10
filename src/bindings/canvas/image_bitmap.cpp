@@ -7,7 +7,7 @@ using namespace std;
 
 namespace canvasbinding
 {
-  Napi::FunctionReference *ImageBitmap::constructor;
+  thread_local Napi::FunctionReference *ImageBitmap::constructor;
   void ImageBitmap::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function func = DefineClass(env, "ImageBitmap",

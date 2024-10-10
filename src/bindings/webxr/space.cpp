@@ -4,11 +4,11 @@
 
 namespace bindings
 {
-  Napi::FunctionReference *XRSpace::constructor;
-  Napi::FunctionReference *XRReferenceSpace::constructor;
-  Napi::FunctionReference *XRViewSpace::constructor;
-  Napi::FunctionReference *XRJointSpace::constructor;
-  Napi::FunctionReference *XRTargetRayOrGripSpace::constructor;
+  thread_local Napi::FunctionReference *XRSpace::constructor;
+  thread_local Napi::FunctionReference *XRReferenceSpace::constructor;
+  thread_local Napi::FunctionReference *XRViewSpace::constructor;
+  thread_local Napi::FunctionReference *XRJointSpace::constructor;
+  thread_local Napi::FunctionReference *XRTargetRayOrGripSpace::constructor;
 
   template <typename T>
   XRSpaceBase<T>::XRSpaceBase(const Napi::CallbackInfo &info,

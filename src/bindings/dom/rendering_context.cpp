@@ -3,8 +3,7 @@
 
 namespace dombinding
 {
-  Napi::FunctionReference *DocumentRenderingContext::constructor;
-
+  thread_local Napi::FunctionReference *DocumentRenderingContext::constructor;
   void DocumentRenderingContext::Init(Napi::Env env, Napi::Object exports)
   {
     auto props = GetClassProperties();

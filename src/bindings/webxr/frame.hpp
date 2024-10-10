@@ -14,6 +14,9 @@ namespace bindings
 {
   class XRFrame : public Napi::ObjectWrap<XRFrame>
   {
+    friend class XRSession;
+    friend class XRInputSource;
+
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
     static Napi::Object NewInstance(Napi::Env env, xr::TrXRFrameRequest *frameRequest, XRSession *session);
@@ -51,10 +54,7 @@ namespace bindings
     chrono::time_point<chrono::high_resolution_clock> endTime;
 
   private:
-    static Napi::FunctionReference *constructor;
-    static uint32_t NEXT_FRAME_ID;
-
-  friend class XRSession;
-  friend class XRInputSource;
+    static thread_local Napi::FunctionReference *constructor;
+    static thread_local uint32_t NEXT_FRAME_ID;
   };
 }

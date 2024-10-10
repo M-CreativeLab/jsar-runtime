@@ -18,8 +18,33 @@ using namespace frame_request;
 
 namespace renderer
 {
+  class TrContentRenderer;
+  /**
+   * A scope class for backup GL context, using this class will automatically restore the gl context after the scope:
+   * 
+   * ```cpp
+   * {
+   *   TrBackupGLContextScope scope(contentRenderer);
+   *   // do something with the backup GL context
+   * }
+   * ```
+   */
+  class TrBackupGLContextScope
+  {
+  public:
+    TrBackupGLContextScope(TrContentRenderer *contentRenderer);
+    ~TrBackupGLContextScope();
+
+  private:
+    TrContentRenderer *contentRenderer;
+  };
+
   class TrContentRenderer
   {
+    friend class TrBackupGLContextScope;
+    friend class TrRenderer;
+    friend class xr::TrXRSession;
+
   public:
     TrContentRenderer(TrContentRuntime *content, TrConstellation *constellation);
     ~TrContentRenderer();
@@ -67,7 +92,9 @@ namespace renderer
   private:
     TrContentRuntime *content = nullptr;
     TrConstellation *constellation = nullptr;
-    OpenGLAppContextStorage *glContext = nullptr;
+    OpenGLAppContextStorage glContext;
+    OpenGLAppContextStorage glContextForBackup;
+    bool usingBackupContext = false;
     xr::Device *xrDevice = nullptr;
     int currentStereoId = 0;
 
@@ -86,8 +113,5 @@ namespace renderer
 
   private:
     frame_request::TrFrameRequestSender *frameRequestChanSender = nullptr;
-
-    friend class TrRenderer;
-    friend class xr::TrXRSession;
   };
 }

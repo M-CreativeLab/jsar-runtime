@@ -39,11 +39,13 @@ namespace bindings
     bool cancelled;
 
   private:
-    static uint32_t NEXT_HANDLE;
+    static thread_local uint32_t NEXT_HANDLE;
   };
 
   class XRSession : public Napi::ObjectWrap<XRSession>
   {
+    friend class XRFrame;
+
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
     static Napi::Value FrameHandler(const Napi::CallbackInfo &info);
@@ -139,8 +141,6 @@ namespace bindings
     uv_timer_t tickHandle;
 
   public:
-    static Napi::FunctionReference *constructor;
-
-    friend class XRFrame;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

@@ -28,7 +28,8 @@ namespace dom
   }
 
   Node::Node(NodeType nodeType, string nodeName, optional<weak_ptr<Document>> ownerDocument)
-      : internal(make_shared<pugi::xml_node>()),
+      : DOMEventTarget(),
+        internal(make_shared<pugi::xml_node>()),
         connected(false),
         nodeType(nodeType),
         nodeName(ToLowerCase(nodeName))
@@ -37,7 +38,8 @@ namespace dom
   }
 
   Node::Node(pugi::xml_node node, weak_ptr<Document> ownerDocument)
-      : internal(make_shared<pugi::xml_node>(node)), connected(false)
+      : DOMEventTarget(),
+        internal(make_shared<pugi::xml_node>(node)), connected(false)
   {
     updateFromInternal();
     updateFromDocument(ownerDocument);

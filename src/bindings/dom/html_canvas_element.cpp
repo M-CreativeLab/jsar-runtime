@@ -3,8 +3,6 @@
 
 namespace dombinding
 {
-  Napi::FunctionReference *HTMLCanvasElement::constructor;
-
   vector<Napi::ClassPropertyDescriptor<HTMLCanvasElement>> HTMLCanvasElement::GetClassProperties()
   {
     using T = HTMLCanvasElement;
@@ -20,6 +18,7 @@ namespace dombinding
     return props;
   }
 
+  thread_local Napi::FunctionReference *HTMLCanvasElement::constructor;
   void HTMLCanvasElement::Init(Napi::Env env)
   {
     auto props = GetClassProperties();

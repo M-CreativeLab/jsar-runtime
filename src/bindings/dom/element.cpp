@@ -6,7 +6,7 @@
 
 namespace dombinding
 {
-  Napi::FunctionReference *Element::constructor;
+  thread_local Napi::FunctionReference *Element::constructor;
   void Element::Init(Napi::Env env)
   {
     auto props = GetClassProperties();

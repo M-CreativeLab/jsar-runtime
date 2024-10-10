@@ -7,6 +7,7 @@
 #include <napi.h>
 #include "common/utility.hpp"
 #include "client/dom/node.hpp"
+#include "./event_target-inl.hpp"
 
 using namespace std;
 
@@ -31,31 +32,31 @@ namespace dombinding
   };
 
   template <typename ObjectType, typename NodeType>
-  class NodeBase : public Napi::ObjectWrap<ObjectType>
+  class NodeBase : public EventTargetWrap<ObjectType, NodeType>
   {
   public:
     static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties()
     {
       using T = NodeBase<ObjectType, NodeType>;
-      return {
-          // Getters & Setters
-          T::InstanceAccessor("isConnected", &T::IsConnectedGetter, nullptr),
-          T::InstanceAccessor("childNodes", &T::ChildNodesGetter, nullptr),
-          T::InstanceAccessor("firstChild", &T::FirstChildGetter, nullptr),
-          T::InstanceAccessor("lastChild", &T::LastChildGetter, nullptr),
-          // Methods
-          T::InstanceMethod("appendChild", &T::AppendChild),
-          T::InstanceMethod("cloneNode", &T::CloneNode),
-          T::InstanceMethod("compareDocumentPosition", &T::CompareDocumentPosition),
-          T::InstanceMethod("contains", &T::Contains),
-          T::InstanceMethod("getRootNode", &T::GetRootNode),
-          T::InstanceMethod("hasChildNodes", &T::HasChildNodes),
-          T::InstanceMethod("insertBefore", &T::InsertBefore),
-          // Methods for EventTarget
-          T::InstanceMethod("addEventListener", &T::AddEventListener),
-          T::InstanceMethod("removeEventListener", &T::RemoveEventListener),
-          T::InstanceMethod("dispatchEvent", &T::DispatchEvent),
-      };
+      auto props = EventTargetWrap<ObjectType, NodeType>::GetClassProperties();
+      auto added = vector<Napi::ClassPropertyDescriptor<ObjectType>>(
+          {
+              // Getters & Setters
+              T::InstanceAccessor("isConnected", &T::IsConnectedGetter, nullptr),
+              T::InstanceAccessor("childNodes", &T::ChildNodesGetter, nullptr),
+              T::InstanceAccessor("firstChild", &T::FirstChildGetter, nullptr),
+              T::InstanceAccessor("lastChild", &T::LastChildGetter, nullptr),
+              // Methods
+              T::InstanceMethod("appendChild", &T::AppendChild),
+              T::InstanceMethod("cloneNode", &T::CloneNode),
+              T::InstanceMethod("compareDocumentPosition", &T::CompareDocumentPosition),
+              T::InstanceMethod("contains", &T::Contains),
+              T::InstanceMethod("getRootNode", &T::GetRootNode),
+              T::InstanceMethod("hasChildNodes", &T::HasChildNodes),
+              T::InstanceMethod("insertBefore", &T::InsertBefore),
+          });
+      props.insert(props.end(), added.begin(), added.end());
+      return props;
     }
 
   public:
@@ -78,28 +79,11 @@ namespace dombinding
     Napi::Value HasChildNodes(const Napi::CallbackInfo &info);
     Napi::Value InsertBefore(const Napi::CallbackInfo &info);
 
-  protected:  // Methods for EventTarget
-    Napi::Value AddEventListener(const Napi::CallbackInfo &info);
-    Napi::Value RemoveEventListener(const Napi::CallbackInfo &info);
-    Napi::Value DispatchEvent(const Napi::CallbackInfo &info);
-
   protected:
     void ResetNode(const Napi::CallbackInfo &info, shared_ptr<NodeType> nodeToSet);
 
-  private:
-    static Napi::Value OnEventListenerCallback(const Napi::CallbackInfo &info);
-
   protected:
     shared_ptr<NodeType> node = nullptr;
-
-  private:
-    std::thread::id jsThreadId;
-    unordered_map<shared_ptr<Napi::FunctionReference>, uint32_t> listenerRefToNativeIdMap;
-    Napi::FunctionReference listenerCallback;
-    /**
-     * The N-API thread-safe function to be called when the dispatcher fires from other threads.
-     */
-    Napi::ThreadSafeFunction threadSafeListenerCallback;
   };
 
   class Node : public NodeBase<Node, dom::Node>
@@ -120,7 +104,7 @@ namespace dombinding
     static Napi::Object NewInstance(Napi::Env env, shared_ptr<dom::Node> node);
 
   public:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }
 

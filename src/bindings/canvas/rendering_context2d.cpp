@@ -2,7 +2,7 @@
 
 namespace canvasbinding
 {
-  Napi::FunctionReference *CanvasRenderingContext2D::constructor;
+  thread_local Napi::FunctionReference *CanvasRenderingContext2D::constructor;
   void CanvasRenderingContext2D::Init(Napi::Env env)
   {
     auto props = GetClassProperties();
@@ -38,7 +38,7 @@ namespace canvasbinding
     return CanvasRenderingContext2DBase<OffscreenCanvasRenderingContext2D, canvas::OffscreenCanvas>::NewInstance(env, contextImpl, canvasValue);
   }
 
-  Napi::FunctionReference *OffscreenCanvasRenderingContext2D::constructor;
+  thread_local Napi::FunctionReference *OffscreenCanvasRenderingContext2D::constructor;
   void OffscreenCanvasRenderingContext2D::Init(Napi::Env env)
   {
     auto props = GetClassProperties();

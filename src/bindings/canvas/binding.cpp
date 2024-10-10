@@ -17,6 +17,7 @@ namespace bindings
       ImageData::Init(env, exports);
       ImageBitmap::Init(env, exports);
       OffscreenCanvas::Init(env, exports);
+      ReadOnlyScreenCanvas::Init(env, exports);
       {
         // Initialize the rendering context classes for 2d
         CanvasRenderingContext2D::Init(env);

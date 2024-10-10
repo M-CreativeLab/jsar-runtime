@@ -83,9 +83,9 @@ void OpenGLContextStorage::RecordTextureBindingWithUnit(GLenum target, GLuint te
   GLint activeUnit;
   glGetIntegerv(GL_ACTIVE_TEXTURE, &activeUnit);
 
-  auto binding = m_TextureBindingsWithUnit[activeUnit];
+  auto &binding = m_TextureBindingsWithUnit[activeUnit];
   if (binding == nullptr)
-    m_TextureBindingsWithUnit[activeUnit] = new OpenGLTextureBinding(target, texture);
+    m_TextureBindingsWithUnit[activeUnit] = std::make_shared<OpenGLTextureBinding>(target, texture);
   else
     binding->Reset(target, texture);
 }
@@ -175,7 +175,7 @@ void OpenGLContextStorage::Restore()
   for (auto it = m_TextureBindingsWithUnit.begin(); it != m_TextureBindingsWithUnit.end(); it++)
   {
     auto unit = it->first;
-    auto binding = it->second;
+    auto &binding = it->second;
     auto target = binding->GetTarget();
     auto texture = binding->GetTexture();
     glActiveTexture(unit);
@@ -224,8 +224,6 @@ void OpenGLContextStorage::Print()
 
 void OpenGLContextStorage::ClearTextureBindings()
 {
-  for (auto it = m_TextureBindingsWithUnit.begin(); it != m_TextureBindingsWithUnit.end(); it++)
-    delete it->second;
   m_TextureBindingsWithUnit.clear();
 }
 
@@ -250,7 +248,7 @@ void OpenGLHostContextStorage::Record()
 
     // TODO: how to support other texture targets?
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &texture);
-    m_TextureBindingsWithUnit[i] = new OpenGLTextureBinding(GL_TEXTURE_2D, texture);
+    m_TextureBindingsWithUnit[i] = std::make_shared<OpenGLTextureBinding>(GL_TEXTURE_2D, texture);
   }
   glActiveTexture(m_LastActiveTextureUnit);
 
@@ -281,7 +279,7 @@ void OpenGLHostContextStorage::Record()
 
 void OpenGLHostContextStorage::RecordTextureBindingFromHost()
 {
-  auto binding = m_TextureBindingsWithUnit[m_LastActiveTextureUnit];
+  auto &binding = m_TextureBindingsWithUnit[m_LastActiveTextureUnit];
   if (binding != nullptr)
     return;
 
@@ -294,7 +292,7 @@ void OpenGLHostContextStorage::RecordTextureBindingFromHost()
     glActiveTexture(m_LastActiveTextureUnit);
 
   glGetIntegerv(GL_TEXTURE_BINDING_2D, (GLint *)&texture);
-  m_TextureBindingsWithUnit[m_LastActiveTextureUnit] = new OpenGLTextureBinding(GL_TEXTURE_2D, texture);
+  m_TextureBindingsWithUnit[m_LastActiveTextureUnit] = std::make_shared<OpenGLTextureBinding>(GL_TEXTURE_2D, texture);
 
   if (isActiveNotMatched)
     glActiveTexture(beforeActiveUnit);
@@ -459,21 +457,6 @@ bool OpenGLAppContextStorage::IsDirty()
 
 bool OpenGLAppContextStorage::IsChanged(OpenGLAppContextStorage *other)
 {
-  if (m_ProgramId != other->m_ProgramId)
-    return true;
-  if (m_ArrayBufferId != other->m_ArrayBufferId)
-    return true;
-  if (m_ElementArrayBufferId != other->m_ElementArrayBufferId)
-    return true;
-  if (m_FramebufferId != other->m_FramebufferId)
-    return true;
-  if (m_RenderbufferId != other->m_RenderbufferId)
-    return true;
-  if (m_VertexArrayObjectId != other->m_VertexArrayObjectId)
-    return true;
-  if (m_LastActiveTextureUnit != other->m_LastActiveTextureUnit)
-    return true;
-
   if (m_Programs.IsChanged(&other->m_Programs))
     return true;
   if (m_Shaders.IsChanged(&other->m_Shaders))

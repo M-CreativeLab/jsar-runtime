@@ -2,8 +2,7 @@
 
 namespace bindings
 {
-  Napi::FunctionReference *XRViewport::constructor;
-
+  thread_local Napi::FunctionReference *XRViewport::constructor;
   Napi::Object XRViewport::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function tpl = DefineClass(env, "XRViewport",

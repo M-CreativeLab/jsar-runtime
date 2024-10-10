@@ -25,6 +25,6 @@ namespace dombinding
     void NameSetter(const Napi::CallbackInfo &info, const Napi::Value &value);  
 
   public:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

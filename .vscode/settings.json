@@ -89,6 +89,10 @@
     "future": "cpp",
     "shared_mutex": "cpp",
     "__memory": "cpp",
-    "semaphore": "cpp"
+    "semaphore": "cpp",
+    "any": "cpp",
+    "cinttypes": "cpp",
+    "forward_list": "cpp",
+    "list": "cpp"
   }
 }

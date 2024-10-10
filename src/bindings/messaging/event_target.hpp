@@ -27,7 +27,7 @@ namespace bindings
       bool recvingEvents = false;
 
     public:
-      static Napi::FunctionReference *constructor;
+      static thread_local Napi::FunctionReference *constructor;
     };
   }
 }

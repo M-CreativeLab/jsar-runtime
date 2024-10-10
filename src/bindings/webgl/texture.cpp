@@ -2,7 +2,7 @@
 
 namespace webgl
 {
-  Napi::FunctionReference *WebGLTexture::constructor;
+  thread_local Napi::FunctionReference *WebGLTexture::constructor;
   void WebGLTexture::Init(Napi::Env env)
   {
     Napi::Function tpl = DefineClass(env, "WebGLTexture", {

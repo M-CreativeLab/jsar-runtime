@@ -3,7 +3,7 @@
 
 namespace dombinding
 {
-  Napi::FunctionReference *HTMLMediaElement::constructor;
+  thread_local Napi::FunctionReference *HTMLMediaElement::constructor;
   void HTMLMediaElement::Init(Napi::Env env)
   {
     auto props = GetClassProperties();

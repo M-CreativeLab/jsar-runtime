@@ -58,6 +58,6 @@ namespace webgl
     WebGLObject(const Napi::CallbackInfo &info);
 
   private:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

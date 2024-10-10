@@ -20,6 +20,6 @@ namespace dombinding
     dom::DOMParser parser;
 
   private:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

@@ -372,7 +372,6 @@ private: // pre-content
 
 private: // channels & workers
   TrOneShotServer<events_comm::TrNativeEventMessage> *eventChanServer = nullptr;
-  unique_ptr<WorkerThread> contentsDestroyingWorker;
   unique_ptr<WorkerThread> eventChanWatcher;
 
   friend class TrContentRuntime;

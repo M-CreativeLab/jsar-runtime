@@ -334,7 +334,7 @@ namespace webgl
     WebGLRenderingContext(const Napi::CallbackInfo &info);
 
   private:
-    static Napi::FunctionReference *webglConstructor;
+    static thread_local Napi::FunctionReference *webglConstructor;
   };
 
   class WebGL2RenderingContext : public WebGLBaseRenderingContext<WebGL2RenderingContext>
@@ -405,6 +405,6 @@ namespace webgl
     float maxTextureLODBias;
 
   private:
-    static Napi::FunctionReference *webgl2Constructor;
+    static thread_local Napi::FunctionReference *webgl2Constructor;
   };
 }

@@ -3,7 +3,7 @@
 
 namespace dombinding
 {
-  Napi::FunctionReference *HTMLVideoElement::constructor;
+  thread_local Napi::FunctionReference *HTMLVideoElement::constructor;
   vector<Napi::ClassPropertyDescriptor<HTMLVideoElement>> HTMLVideoElement::GetClassProperties()
   {
     // using T = HTMLVideoElement;

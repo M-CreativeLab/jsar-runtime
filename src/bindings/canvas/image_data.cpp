@@ -10,8 +10,7 @@ using namespace std;
 
 namespace canvasbinding
 {
-  Napi::FunctionReference *ImageData::constructor;
-
+  thread_local Napi::FunctionReference *ImageData::constructor;
   void ImageData::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function func = DefineClass(env, "ImageData",

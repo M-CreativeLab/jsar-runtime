@@ -1,0 +1,22 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>WebGL</title>
+</head>
+
+<body>
+</body>
+
+<script>
+  const gl = navigator['gl'];
+  console.info('WebGL size:', gl.drawingBufferWidth, gl.drawingBufferHeight);
+  console.info('WebGL version:', gl.getParameter(gl.VERSION));
+  console.info('WebGL vendor:', gl.getParameter(gl.VENDOR));
+  console.info('WebGL renderer:', gl.getParameter(gl.RENDERER));
+
+  const glCanvas = gl._screenCanvas;
+  console.info('WebGL canvas:', glCanvas, glCanvas.width, glCanvas.height);
+</script>
+
+</html>

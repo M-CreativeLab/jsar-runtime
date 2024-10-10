@@ -3,7 +3,7 @@
 
 namespace browserbinding
 {
-  Napi::FunctionReference *Location::constructor;
+  thread_local Napi::FunctionReference *Location::constructor;
   void Location::Init(Napi::Env env)
   {
     Napi::Function func = DefineClass(env, "Location", {

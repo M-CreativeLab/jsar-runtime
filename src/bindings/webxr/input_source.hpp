@@ -44,7 +44,7 @@ namespace bindings
     bool squeezeActionPressed = false;
 
   private:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 
   class XRInputSourceArray : public Napi::Array
@@ -64,6 +64,6 @@ namespace bindings
     TrClientContextPerProcess *clientContext = nullptr;
 
   private:
-    static Napi::FunctionReference *constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

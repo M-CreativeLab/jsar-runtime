@@ -3,8 +3,7 @@
 
 namespace bindings
 {
-  Napi::FunctionReference *XRHand::constructor;
-
+  thread_local Napi::FunctionReference *XRHand::constructor;
   Napi::Object XRHand::Init(Napi::Env env, Napi::Object exports)
   {
     Napi::Function tpl = DefineClass(env, "XRHand",
