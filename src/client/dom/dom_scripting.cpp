@@ -244,6 +244,7 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(FormData);
         V8_SET_GLOBAL_FROM_MAIN(XMLHttpRequest);
         V8_SET_GLOBAL_FROM_MAIN(WebSocket);
+        V8_SET_GLOBAL_FROM_MAIN(EventSource);
         V8_SET_GLOBAL_FROM_MAIN(TextDecoder);
         V8_SET_GLOBAL_FROM_MAIN(Audio);
         V8_SET_GLOBAL_FROM_MAIN(Image);

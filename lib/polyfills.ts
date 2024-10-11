@@ -1,6 +1,7 @@
 /**
  * Browser Pollyfills for Node.js
  */
+import * as undici from 'undici';
 import { navigator } from './navigator';
 import { createWindow } from './window';
 import { XMLHttpRequestImpl } from './xhr';
@@ -24,17 +25,15 @@ import {
   XRWebGLLayerImpl,
   XRRigidTransformImpl
 } from './webxr';
-import {
-  WorkerImpl,
-} from './webworkers/worker';
+import { WorkerImpl } from './webworkers/worker';
 
 export function loadPolyfills() {
   // Load Web APIs
   process._linkedBinding('transmute:dom');
   process._linkedBinding('transmute:canvas');
 
+  globalThis.WebSocket = undici.WebSocket as unknown as typeof WebSocket;
   globalThis.XMLHttpRequest = XMLHttpRequestImpl;
-  // globalThis.AudioContext = AudioContextImpl;
 
   /**
    * Events

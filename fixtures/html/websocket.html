@@ -1,0 +1,26 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>WebSocket: Echo</title>
+</head>
+
+<body>
+</body>
+
+<script>
+  const ws = new WebSocket('wss://echo.websocket.org');
+  ws.onopen = () => {
+    setInterval(() => {
+      const now = Date.now();
+      ws.send(`hello world ${now}`);
+      console.info(`send message`, now);
+    }, 1000);
+  };
+  ws.onmessage = (e) => {
+    console.info(`received message`, e.data);
+  };
+  console.log('hello!!!');
+</script>
+
+</html>
