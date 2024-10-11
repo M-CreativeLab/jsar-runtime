@@ -279,9 +279,12 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
       throw new TypeError(`Invalid data URL: ${url}`);
     }
     const [, mimeType, isBase64, data] = m;
-    const blob = new Blob([
-      isBase64 ? atob(data) : decodeURIComponent(data)],
-      { type: mimeType });
+    const byteChars = isBase64 ? atob(data) : decodeURIComponent(data);
+    const byteArray = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) {
+      byteArray[i] = byteChars.charCodeAt(i);
+    }
+    const blob = new Blob([byteArray], { type: mimeType });
     return this.#readBlob(blob, returnsAs);
   }
 

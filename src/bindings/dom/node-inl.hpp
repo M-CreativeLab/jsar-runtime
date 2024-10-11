@@ -142,7 +142,7 @@ namespace dombinding
   void NodeBase<ObjectType, NodeType>::ResetNode(const Napi::CallbackInfo &info, shared_ptr<NodeType> nodeToSet)
   {
     node = nodeToSet;
-    this->eventTarget = node;
+    this->setEventTarget(node);
     {
       Napi::Env env = info.Env();
       Napi::HandleScope scope(env);

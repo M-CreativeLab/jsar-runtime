@@ -22,6 +22,10 @@ namespace dombinding
       };
     }
 
+  protected:
+    static Napi::Value OnEventGlobalListenerCallback(const Napi::CallbackInfo &info);
+    static Napi::Value OnEventListenerCallback(const Napi::CallbackInfo &info);
+
   public:
     EventTargetWrap(const Napi::CallbackInfo &info);
     virtual ~EventTargetWrap();
@@ -32,7 +36,12 @@ namespace dombinding
     Napi::Value DispatchEvent(const Napi::CallbackInfo &info);
 
   protected:
-    static Napi::Value OnEventListenerCallback(const Napi::CallbackInfo &info);
+    /**
+     * Set the native event target object to initialize this class.
+     * 
+     * @param eventTarget The native event target object.
+     */
+    void setEventTarget(std::shared_ptr<EventTargetType> eventTarget);
 
   protected:
     std::shared_ptr<EventTargetType> eventTarget;
@@ -40,10 +49,12 @@ namespace dombinding
   private:
     std::thread::id jsThreadId;
     std::unordered_map<std::shared_ptr<Napi::FunctionReference>, uint32_t> listenerRefToNativeIdMap;
+    Napi::FunctionReference globalListenerCallback;
     Napi::FunctionReference listenerCallback;
     /**
-     * The N-API thread-safe function to be called when the dispatcher fires from other threads.
+     * The N-API thread-safe functions to be called when the dispatcher fires from other threads.
      */
+    Napi::ThreadSafeFunction threadSafeGlobalListenerCallback;
     Napi::ThreadSafeFunction threadSafeListenerCallback;
   };
 }

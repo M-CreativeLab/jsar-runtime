@@ -125,7 +125,7 @@ namespace canvasbinding
 
     width_ = info[0].ToNumber().Uint32Value();
     height_ = info[1].ToNumber().Uint32Value();
-    this->eventTarget = make_shared<dom::DOMEventTarget>();
+    setEventTarget(make_shared<dom::DOMEventTarget>());
 
     auto jsThis = info.This().As<Napi::Object>();
     jsThis.Set("width", Napi::Number::New(env, width_));
