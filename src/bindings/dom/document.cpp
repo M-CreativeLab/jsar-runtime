@@ -15,9 +15,6 @@ namespace dombinding
   Document *Document::GetCurrent(Napi::Env env)
   {
     Napi::HandleScope scope(env);
-    auto tid = std::this_thread::get_id();
-    std::cerr << "GetCurrent() => " << tid << std::endl;
-
     auto document = env.Global().Get("document");
     if (document.IsObject())
     {

@@ -42,12 +42,6 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    auto console = env.Global().Get("console").As<Napi::Object>();
-    auto trace = console.Get("trace").As<Napi::Function>();
-    trace.Call(console, {Napi::String::New(env, "Image()")});
-    auto tid = std::this_thread::get_id();
-    std::cout << "Image() tid: " << tid << std::endl;
-
     if (!info.IsConstructCall())
     {
       auto msg = "Failed to construct 'Image': "
