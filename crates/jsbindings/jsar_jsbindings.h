@@ -6,8 +6,17 @@
 
 extern "C"
 {
-  // C++ exports
+  /**
+   * Load the WebGL bindings.
+   */
   void jsar_load_gl();
+
+  /**
+   * Release a Rust CString.
+   *
+   * @param s The CString to release.
+   */
+  extern void release_rust_cstring(char *s);
 
   // CSS parsing functions
   typedef struct
@@ -54,12 +63,26 @@ extern "C"
    */
   extern char *patch_glsl_source(const char *input);
 
+  typedef struct
+  {
+    const char *code;
+    const char *message;
+  } TranspiledTypeScriptOutput;
+
   /**
-   * Release a Rust CString.
+   * Transpile TypeScript source code to JavaScript.
    *
-   * @param s The CString to release.
+   * @param input The TypeScript source code
+   * @returns The transpiled JavaScript code and error message if any.
    */
-  extern void release_rust_cstring(char *s);
+  extern TranspiledTypeScriptOutput transpile_typescript_to_js(const char *input);
+
+  /**
+   * Release the transpiled TypeScript output.
+   *
+   * @param output The transpiled TypeScript output to release.
+   */
+  extern void release_transpiled_typescript_output(TranspiledTypeScriptOutput output);
 } // extern "C"
 
 namespace crates
@@ -99,6 +122,14 @@ namespace crates
       {
         return index == ModuleExtensionIndex::kJavaScript ||
                index == ModuleExtensionIndex::kTypeScript;
+      }
+
+      /**
+       * Returns if this module is a Typescript module.
+       */
+      inline bool isTypeScript()
+      {
+        return index == ModuleExtensionIndex::kTypeScript;
       }
 
       /**
@@ -148,6 +179,33 @@ namespace crates
 
     public:
       ModuleExtensionIndex index;
+    };
+
+    class TypeScriptTranspiler
+    {
+    public:
+      /**
+       * Transpile TypeScript source code to JavaScript.
+       *
+       * @param input The TypeScript source code.
+       * @returns The transpiled JavaScript code and error message if any.
+       */
+      static std::string Transpile(const std::string &input)
+      {
+        std::string errorMessage;
+        std::string transpiledCode;
+        TranspiledTypeScriptOutput out = transpile_typescript_to_js(input.c_str());
+        if (out.code == nullptr)
+          errorMessage = out.message == nullptr ? "Failed to transpile TypeScript to JavaScript." : out.message;
+        else
+          transpiledCode = out.code;
+
+        release_transpiled_typescript_output(out);
+        if (!errorMessage.empty())
+          throw std::runtime_error(errorMessage);
+        else
+          return transpiledCode;
+      }
     };
 
     class UrlHelper

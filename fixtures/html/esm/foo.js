@@ -14,3 +14,6 @@ console.log(sum);
 export function test() {
   return 'foo';
 }
+
+import { Foo } from './foo.ts';
+new Foo();

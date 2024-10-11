@@ -41,13 +41,13 @@ Like the classic Web browser, it supports not only the HTML document, but also l
 
 ### Scripting & Modules
 
-| API                   | Status      | Test Suite |
-| --------------------- | ----------- | ---------- |
-| [JavaScript][]        | Ok          | -          |
-| [TypeScript][]        | Not started | -          |
-| [ECMAScript Module][] | Ok          | -          |
-| [WebAssembly][]       | Ok          | -          |
-| [Web Worker][]        | Ok          | -          |
+| API                   | Status | Test Suite |
+| --------------------- | ------ | ---------- |
+| [JavaScript][]        | Ok     | -          |
+| [TypeScript][]        | Ok     | -          |
+| [ECMAScript Module][] | Ok     | -          |
+| [WebAssembly][]       | Ok     | -          |
+| [Web Worker][]        | Ok     | -          |
 
 [JavaScript]: https://developer.mozilla.org/en-US/docs/Web/JavaScript
 [TypeScript]: https://www.typescriptlang.org/

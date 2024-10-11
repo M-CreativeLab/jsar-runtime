@@ -183,9 +183,10 @@ namespace dom
      *
      * @param script The script to compile.
      * @param source The source code of the script.
+     * @param isTypeScript Whether the script is a TypeScript.
      * @returns Whether the script is compiled successfully.
      */
-    bool compile(shared_ptr<DOMScript> script, const std::string &source);
+    bool compile(shared_ptr<DOMScript> script, const std::string &source, bool isTypeScript = false);
 
     /**
      * Compile the given script as a synthetic module.
@@ -306,9 +307,9 @@ namespace dom
      *
      * @param isolate The V8 isolate.
      * @param source The source code of the script.
-     * @param url The URL of the script.
+     * @param isTypeScript Whether the script is a TypeScript.
      */
-    virtual bool compile(v8::Isolate *isolate, const string &source) = 0;
+    virtual bool compile(v8::Isolate *isolate, const string &source, bool isTypeScript) = 0;
     /**
      * Evaluate the script.
      *
@@ -333,7 +334,7 @@ namespace dom
     ~DOMClassicScript() override;
 
   public:
-    bool compile(v8::Isolate *isolate, const string &sourceStr) override;
+    bool compile(v8::Isolate *isolate, const string &sourceStr, bool isTypeScript) override;
     void evaluate(v8::Isolate *isolate) override;
 
   private:
@@ -365,7 +366,7 @@ namespace dom
     ~DOMModule() override;
 
   public:
-    bool compile(v8::Isolate *isolate, const string &sourceStr) override;
+    bool compile(v8::Isolate *isolate, const string &sourceStr, bool isTypeScript) override;
     bool compileAsSyntheticModule(v8::Isolate *isolate, SyntheticModuleType type, const void *sourceData, size_t sourceByteLength);
     void evaluate(v8::Isolate *isolate) override;
     int getModuleHash();

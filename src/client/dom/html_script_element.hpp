@@ -47,7 +47,7 @@ namespace dom
 
   private:
     void loadSource();
-    void compileScript(const string &source);
+    void compileScript(const string &source, bool isTypeScript);
     void scheduleScriptExecution();
     void executeScript();
 

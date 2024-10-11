@@ -28,7 +28,7 @@ namespace dom
       {
         /**
          * TODO: Follow the spec to handle the error.
-         * 
+         *
          * See: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap#exceptions
          */
         std::cerr << "Failed to parse the import map: " << textContent << std::endl;
@@ -51,7 +51,7 @@ namespace dom
   {
     if (src == "" || src.empty())
     {
-      compileScript(textContent);
+      compileScript(textContent, false);
       return;
     }
     else
@@ -65,17 +65,21 @@ namespace dom
         }
         else
         {
-          renderingContext->fetchTextSourceResource(resourceUrl, [this](const std::string &source)
-                                                    { compileScript(source); });
+          auto resourceExt = crates::jsar::UrlHelper::ParseUrlToModuleExtension(resourceUrl);
+          assert(resourceExt.isTextSourceModule());
+          bool isTypeScript = resourceExt.isTypeScript();
+
+          renderingContext->fetchTextSourceResource(resourceUrl, [this, isTypeScript](const std::string &source)
+                                                    { compileScript(source, isTypeScript); });
         }
       }
     }
   }
 
-  void HTMLScriptElement::compileScript(const string &source)
+  void HTMLScriptElement::compileScript(const string &source, bool isTypeScript)
   {
     auto renderingContext = ownerDocument->lock()->renderingContext;
-    renderingContext->scriptingContext->compile(compiledScript, source);
+    renderingContext->scriptingContext->compile(compiledScript, source, isTypeScript);
     scriptCompiled = true;
 
     // After compile

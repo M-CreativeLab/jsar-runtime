@@ -27,6 +27,12 @@ use style::values::specified::color::Color;
 use style_traits::ParsingMode;
 use url::Url;
 
+mod glsl_transpiler;
+mod typescript_transpiler;
+
+use glsl_lang::ast;
+use glsl_lang::visitor::{HostMut, Visit, VisitorMut};
+
 extern "C" {
   #[cfg(target_os = "android")]
   fn eglGetProcAddress(procname: *const c_char) -> *const c_void;
@@ -40,6 +46,16 @@ pub extern "C" fn jsar_load_gl() {
     let symbol_cstr = std::ffi::CString::new(symbol).expect("Failed to convert string to C string");
     eglGetProcAddress(symbol_cstr.as_ptr()) as *const _
   });
+}
+
+#[no_mangle]
+extern "C" fn release_rust_cstring(s: *mut c_char) {
+  unsafe {
+    if s.is_null() {
+      return;
+    }
+    let _ = CString::from_raw(s);
+  }
 }
 
 #[repr(C)]
@@ -170,10 +186,6 @@ extern "C" fn parse_url_to_module_extension(url_str: *const c_char) -> ModuleExt
   }
 }
 
-mod glsl_transpiler;
-use glsl_lang::ast;
-use glsl_lang::visitor::{HostMut, Visit, VisitorMut};
-
 struct MyGLSLPatcher {}
 
 impl MyGLSLPatcher {
@@ -273,13 +285,45 @@ extern "C" fn patch_glsl_source(source_str: *const c_char) -> *mut c_char {
   patched_source_str.into_raw()
 }
 
+#[repr(C)]
+pub struct TranspiledTypeScriptOutput {
+  code: *mut c_char,
+  error_message: *mut c_char,
+}
+
 #[no_mangle]
-extern "C" fn release_rust_cstring(s: *mut c_char) {
-  unsafe {
-    if s.is_null() {
-      return;
+extern "C" fn transpile_typescript_to_js(input_str: *const c_char) -> TranspiledTypeScriptOutput {
+  let input_string: &str = unsafe { std::ffi::CStr::from_ptr(input_str) }
+    .to_str()
+    .expect("Failed to read TypeScript input string");
+
+  let output = typescript_transpiler::transpile_typescript_to_js(input_string.into());
+  if let Err(e) = output {
+    let error_message = format!("Error: {:?}", e);
+    let error_message_cstring = CString::new(error_message).expect("Failed to create error CString");
+    TranspiledTypeScriptOutput {
+      code: std::ptr::null_mut(),
+      error_message: error_message_cstring.into_raw(),
     }
-    let _ = CString::from_raw(s);
+  } else {
+    let output_string = output.unwrap().code;
+    let output_cstring = CString::new(output_string).expect("Failed to create output CString");
+    TranspiledTypeScriptOutput {
+      code: output_cstring.into_raw(),
+      error_message: std::ptr::null_mut(),
+    }
+  }
+}
+
+#[no_mangle]
+extern "C" fn release_transpiled_typescript_output(output: TranspiledTypeScriptOutput) {
+  unsafe {
+    if !output.code.is_null() {
+      let _ = CString::from_raw(output.code);
+    }
+    if !output.error_message.is_null() {
+      let _ = CString::from_raw(output.error_message);
+    }
   }
 }
 

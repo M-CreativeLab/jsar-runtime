@@ -498,14 +498,14 @@ namespace dom
     return script;
   }
 
-  bool DOMScriptingContext::compile(shared_ptr<DOMScript> script, const std::string &source)
+  bool DOMScriptingContext::compile(shared_ptr<DOMScript> script, const std::string &source, bool isTypeScript)
   {
     assert(isContextInitialized);
     auto context = v8ContextStore.Get(isolate);
     v8::Isolate::Scope isolateScope(isolate);
     v8::Context::Scope contextScope(context);
 
-    if (!script->compile(isolate, source))
+    if (!script->compile(isolate, source, isTypeScript))
       return false;
 
     // If the script is ESM, add it to the module map
@@ -649,7 +649,7 @@ namespace dom
       if (extension.isTextSourceModule())
       {
         string source(static_cast<const char *>(sourceData), sourceByteLength);
-        compile(script, source);
+        compile(script, source, extension.isTypeScript());
       }
       else if (
           extension.isBinary() ||
@@ -778,7 +778,7 @@ namespace dom
     scriptStore.Reset();
   }
 
-  bool DOMClassicScript::compile(v8::Isolate *isolate, const string &sourceStr)
+  bool DOMClassicScript::compile(v8::Isolate *isolate, const string &sourceStr, bool isTypeScript)
   {
     v8::HandleScope scope(isolate);
 
@@ -803,8 +803,27 @@ namespace dom
                             false,
                             hostDefinedOptions);
 
+    // Transpile the TypeScript source code if necessary.
+    string scriptSourceString;
+    if (isTypeScript)
+    {
+      try
+      {
+        scriptSourceString = crates::jsar::TypeScriptTranspiler::Transpile(sourceStr);
+      }
+      catch (const std::exception &e)
+      {
+        std::cerr << "Failed to compile TypeScript: " << e.what() << std::endl;
+        return false;
+      }
+    }
+    else
+    {
+      scriptSourceString = sourceStr;
+    }
+
     // create the script
-    auto sourceString = v8::String::NewFromUtf8(isolate, sourceStr.c_str()).ToLocalChecked();
+    auto sourceString = v8::String::NewFromUtf8(isolate, scriptSourceString.c_str()).ToLocalChecked();
     v8::ScriptCompiler::Source source(sourceString, origin);
 
     // compile the script
@@ -819,7 +838,7 @@ namespace dom
     }
     else
     {
-      fprintf(stderr, "Failed to compile script\n"); // TODO: throw exception?
+      std::cerr << "Failed to compile script" << std::endl;
       return false;
     }
   }
@@ -927,7 +946,7 @@ namespace dom
     moduleStore.Reset();
   }
 
-  bool DOMModule::compile(v8::Isolate *isolate, const string &sourceStr)
+  bool DOMModule::compile(v8::Isolate *isolate, const string &sourceStr, bool isTypeScript)
   {
     v8::HandleScope scope(isolate);
 
@@ -952,8 +971,27 @@ namespace dom
                             true,
                             hostDefinedOptions);
 
+    // Transpile the TypeScript source code if necessary.
+    string scriptSourceString;
+    if (isTypeScript)
+    {
+      try
+      {
+        scriptSourceString = crates::jsar::TypeScriptTranspiler::Transpile(sourceStr);
+      }
+      catch (const std::exception &e)
+      {
+        std::cerr << "Failed to compile TypeScript: " << e.what() << std::endl;
+        return false;
+      }
+    }
+    else
+    {
+      scriptSourceString = sourceStr;
+    }
+
     // create the script
-    auto sourceString = v8::String::NewFromUtf8(isolate, sourceStr.c_str()).ToLocalChecked();
+    auto sourceString = v8::String::NewFromUtf8(isolate, scriptSourceString.c_str()).ToLocalChecked();
     v8::ScriptCompiler::Source source(sourceString, origin);
     v8::ScriptCompiler::CompileOptions options = v8::ScriptCompiler::kNoCompileOptions;
 
@@ -1055,6 +1093,11 @@ namespace dom
      */
     if (specifier.find("http:") == 0 || specifier.find("https:") == 0)
       return specifier;
+
+    /**
+     * TODO: support jsr: scheme
+     * @see https://jsr.io/docs/api#jsr-registry-api
+     */
 
     string nextSpecifier;
     auto scriptingContext = runtimeContext.lock()->scriptingContext;
