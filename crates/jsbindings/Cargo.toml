@@ -36,12 +36,6 @@ style_traits = { workspace = true }
 swc_common = "0.40.2"
 swc_error_reporters = { version = "1.0.0" }
 swc_fast_ts_strip = { version = "0.12.0" }
-swc_ecma_parser = { version = "0.152.2", features = ["typescript"] }
-swc_ecma_transforms = { version = "0.244.0", features = [
-  "swc_ecma_transforms_compat",
-  "swc_ecma_transforms_module",
-  "typescript",
-] }
 url = { workspace = true }
 
 [target.'cfg(target_os = "android")'.dependencies]
