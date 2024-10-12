@@ -9,11 +9,14 @@ using namespace std;
   XX("audio", HTMLAudioElement)   \
   XX("body", HTMLBodyElement)     \
   XX("canvas", HTMLCanvasElement) \
+  XX("div", HTMLDivElement)       \
   XX("head", HTMLHeadElement)     \
   XX("html", HTMLHtmlElement)     \
   XX("img", HTMLImageElement)     \
   XX("meta", HTMLMetaElement)     \
+  XX("p", HTMLParagraphElement)   \
   XX("script", HTMLScriptElement) \
+  XX("span", HTMLSpanElement)     \
   XX("video", HTMLVideoElement)
 
 namespace dom
