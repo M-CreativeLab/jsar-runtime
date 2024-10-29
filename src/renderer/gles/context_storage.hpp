@@ -108,6 +108,12 @@ public:
   {
     glGetBooleanv(GL_CULL_FACE, &m_CullFaceEnabled);
     glGetBooleanv(GL_DEPTH_TEST, &m_DepthTestEnabled);
+    {
+      m_ColorMask[0] = GL_TRUE;
+      m_ColorMask[1] = GL_TRUE;
+      m_ColorMask[2] = GL_TRUE;
+      m_ColorMask[3] = GL_TRUE;
+    }
   }
   OpenGLContextStorage(std::string name, OpenGLContextStorage *from) : m_Name(name)
   {
@@ -116,6 +122,12 @@ public:
     m_Viewport[2] = from->m_Viewport[2];
     m_Viewport[3] = from->m_Viewport[3];
     m_CullFaceEnabled = from->m_CullFaceEnabled;
+    {
+      m_ColorMask[0] = from->m_ColorMask[0];
+      m_ColorMask[1] = from->m_ColorMask[1];
+      m_ColorMask[2] = from->m_ColorMask[2];
+      m_ColorMask[3] = from->m_ColorMask[3];
+    }
     m_DepthTestEnabled = from->m_DepthTestEnabled;
     m_DepthMask = from->m_DepthMask;
     m_ProgramId = from->m_ProgramId;
@@ -166,15 +178,21 @@ public:
 protected:
   std::string m_Name;
   GLint m_Viewport[4] = {-1, -1, -1, -1};
-  /** States */
+  bool m_ForceChanged = false;
+
+protected:  /** Global States */
   // Culling & face
   GLboolean m_CullFaceEnabled;
   GLenum m_CullFace;
   GLenum m_FrontFace;
+  // Color
+  GLboolean m_ColorMask[4]; // [reg, green, blue, alpha]
   // Depth
   GLboolean m_DepthTestEnabled;
   GLboolean m_DepthMask; // If depth buffer writing is enabled
   GLenum m_DepthFunc = GL_LEQUAL;
+  // Dither
+  GLboolean m_DitherEnabled;
   // Blending
   GLboolean m_BlendEnabled;
   OpenGLBlendingFunc m_BlendFunc;
@@ -182,19 +200,16 @@ protected:
   GLboolean m_StencilTestEnabled;
   // Scissor
   GLboolean m_ScissorTestEnabled;
-  /** Program */
+
+protected:  /** OpenGLES objects */
   GLint m_ProgramId = 0;
-  /** Buffers */
   GLint m_ArrayBufferId = 0;
   GLint m_ElementArrayBufferId = 0;
   GLint m_FramebufferId = 0;
   GLint m_RenderbufferId = 0;
-  /** Vertex Array Object */
   GLint m_VertexArrayObjectId = 0;
-  /** Textures */
   GLenum m_LastActiveTextureUnit = GL_TEXTURE0;
   std::map<GLenum, std::shared_ptr<OpenGLTextureBinding>> m_TextureBindingsWithUnit;
-  bool m_ForceChanged = false;
 };
 
 class OpenGLHostContextStorage : public OpenGLContextStorage

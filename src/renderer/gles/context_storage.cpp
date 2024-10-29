@@ -116,6 +116,7 @@ void OpenGLContextStorage::Restore()
   // Restore the capabilities
   m_CullFaceEnabled ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
   m_DepthTestEnabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
+  m_DitherEnabled ? glEnable(GL_DITHER) : glDisable(GL_DITHER);
   m_BlendEnabled ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
   m_StencilTestEnabled ? glEnable(GL_STENCIL_TEST) : glDisable(GL_STENCIL_TEST);
   m_ScissorTestEnabled ? glEnable(GL_SCISSOR_TEST) : glDisable(GL_SCISSOR_TEST);
@@ -135,6 +136,9 @@ void OpenGLContextStorage::Restore()
   glCullFace(m_CullFace);
   if (m_FrontFace == GL_CW || m_FrontFace == GL_CCW)
     glFrontFace(m_FrontFace);
+
+  // Color state restore
+  glColorMask(m_ColorMask[0], m_ColorMask[1], m_ColorMask[2], m_ColorMask[3]);
 
   // Depth state restore
   glDepthMask(m_DepthMask);
@@ -257,6 +261,7 @@ void OpenGLHostContextStorage::Record()
   // Enable or disable
   m_CullFaceEnabled = glIsEnabled(GL_CULL_FACE);
   m_DepthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
+  m_DitherEnabled = glIsEnabled(GL_DITHER);
   m_BlendEnabled = glIsEnabled(GL_BLEND);
   m_StencilTestEnabled = glIsEnabled(GL_STENCIL_TEST);
   m_ScissorTestEnabled = glIsEnabled(GL_SCISSOR_TEST);
@@ -264,6 +269,7 @@ void OpenGLHostContextStorage::Record()
   // States
   glGetIntegerv(GL_CULL_FACE_MODE, (GLint *)&m_CullFace);
   glGetIntegerv(GL_FRONT_FACE, (GLint *)&m_FrontFace);
+  glGetBooleanv(GL_COLOR_WRITEMASK, (GLboolean*)&m_ColorMask);
   glGetIntegerv(GL_DEPTH_FUNC, (GLint *)&m_DepthFunc);
   glGetBooleanv(GL_DEPTH_WRITEMASK, &m_DepthMask);
 
@@ -322,6 +328,7 @@ OpenGLAppContextStorage::OpenGLAppContextStorage(std::string name)
   m_CullFace = GL_BACK;
   m_FrontFace = GL_CCW;
   m_DepthTestEnabled = true;
+  m_DitherEnabled = true;
   m_StencilTestEnabled = false;
   m_ScissorTestEnabled = false;
 }
