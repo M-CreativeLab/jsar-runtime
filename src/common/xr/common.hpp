@@ -139,6 +139,7 @@ namespace xr
     int id = -1;
     int width;
     int height;
+    bool useDoubleWide = false;
   };
 
   class TrXRView

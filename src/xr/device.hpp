@@ -124,8 +124,9 @@ namespace xr
      * 
      * @param framebufferId the framebuffer id to update.
      * @param viewport the viewport to update.
+     * @param useDoubleWide if the framebuffer is double wide.
      */
-    bool updateViewFramebuffer(int framebufferId, TrViewport viewport);
+    bool updateViewFramebuffer(int framebufferId, TrViewport viewport, bool useDoubleWide);
     /**
      * Update current framebuffer's viewport.
      */

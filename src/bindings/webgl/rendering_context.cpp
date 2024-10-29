@@ -870,10 +870,13 @@ namespace webgl
       }
     }
 
+    auto sentAt = std::chrono::system_clock::now();
     auto initCommandBuffer = WebGL1ContextInitCommandBufferRequest();
     sendCommandBufferRequest(initCommandBuffer, true);
 
-    auto resp = recvCommandBufferResponse<WebGL1ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES);
+    auto resp = recvCommandBufferResponse<WebGL1ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES, 3000);
+    auto respondAt = std::chrono::system_clock::now();
+    std::cout << "Received WebGL context response in " << std::chrono::duration_cast<std::chrono::milliseconds>(respondAt - sentAt).count() << "ms" << std::endl;
     if (resp == nullptr)
     {
       Napi::TypeError::New(env, "Failed to initialize WebGL context")
@@ -1772,8 +1775,8 @@ namespace webgl
     auto jsTexture = info[3];
     if (!jsTexture.IsObject() || !jsTexture.As<Napi::Object>().InstanceOf(WebGLTexture::constructor->Value()))
     {
-      Napi::TypeError::New(env, "framebufferTexture2D() 4th argument(texture) must be a WebGLTexture.")
-          .ThrowAsJavaScriptException();
+      setGLError("framebufferTexture2d", WebGLError::INVALID_OPERATION,
+                 "texture isn't 0 or the name of an existing texture object");
       return env.Undefined();
     }
 
@@ -1782,6 +1785,25 @@ namespace webgl
     int textarget = info[2].As<Napi::Number>().Int32Value();
     auto texture = Napi::ObjectWrap<WebGLTexture>::Unwrap(jsTexture.As<Napi::Object>());
     int level = info[4].As<Napi::Number>().Int32Value();
+
+    if (target != WEBGL_FRAMEBUFFER)
+    {
+      setGLError("framebufferTexture2d", WebGLError::INVALID_ENUM,
+                 "target must be FRAMEBUFFER");
+      return env.Undefined();
+    }
+    if (textarget != WEBGL_TEXTURE_2D &&
+      textarget != WEBGL_TEXTURE_CUBE_MAP_POSITIVE_X &&
+      textarget != WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_X &&
+      textarget != WEBGL_TEXTURE_CUBE_MAP_POSITIVE_Y &&
+      textarget != WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Y &&
+      textarget != WEBGL_TEXTURE_CUBE_MAP_POSITIVE_Z &&
+      textarget != WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Z)
+    {
+      setGLError("framebufferTexture2d", WebGLError::INVALID_ENUM,
+                 "textarget must be TEXTURE_2D or one of the TEXTURE_CUBE_MAP_* targets");
+      return env.Undefined();
+    }
 
     auto req = FramebufferTexture2DCommandBufferRequest(target, attachment, textarget, texture->GetId(), level);
     sendCommandBufferRequest(req);
@@ -3961,20 +3983,7 @@ namespace webgl
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-
-    auto req = GetErrorCommandBufferRequest();
-    sendCommandBufferRequest(req, true);
-
-    auto resp = recvCommandBufferResponse<GetErrorCommandBufferResponse>(COMMAND_BUFFER_GET_ERROR_RES);
-    if (resp == nullptr)
-    {
-      Napi::TypeError::New(env, "getError() failed to get the error code.")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-    auto r = Napi::Number::New(env, resp->error);
-    delete resp;
-    return r;
+    return Napi::Number::New(env, getGLError());
   }
 
   template <typename T>

@@ -178,6 +178,10 @@ protected:
   // Blending
   GLboolean m_BlendEnabled;
   OpenGLBlendingFunc m_BlendFunc;
+  // Stencil
+  GLboolean m_StencilTestEnabled;
+  // Scissor
+  GLboolean m_ScissorTestEnabled;
   /** Program */
   GLint m_ProgramId = 0;
   /** Buffers */
@@ -204,6 +208,8 @@ public:
 public:
   void Record();
   void RecordTextureBindingFromHost();
+  void ConfigureFramebuffer();
+  void RestoreFramebuffer();
 };
 
 class OpenGLNamesStorage : public std::map<GLuint, bool>
@@ -233,32 +239,11 @@ public:
 class OpenGLAppContextStorage : public OpenGLContextStorage
 {
 public:
-  OpenGLAppContextStorage(std::string name)
-      : OpenGLContextStorage(name),
-        m_GLObjectManager(std::make_shared<gles::GLObjectManager>())
-  {
-    /**
-     * Initial values for WebGL or OpenGLES.
-     */
-    m_CullFaceEnabled = true;
-    m_CullFace = GL_BACK;
-    m_FrontFace = GL_CCW;
-  }
-  OpenGLAppContextStorage(std::string name, OpenGLAppContextStorage *from)
-      : OpenGLContextStorage(name, from),
-        m_GLObjectManager(from->m_GLObjectManager)
-  {
-    m_Programs = OpenGLNamesStorage(&from->m_Programs);
-    m_Shaders = OpenGLNamesStorage(&from->m_Shaders);
-    m_Buffers = OpenGLNamesStorage(&from->m_Buffers);
-    m_Framebuffers = OpenGLNamesStorage(&from->m_Framebuffers);
-    m_Renderbuffers = OpenGLNamesStorage(&from->m_Renderbuffers);
-    m_VertexArrayObjects = OpenGLNamesStorage(&from->m_VertexArrayObjects);
-    m_Textures = OpenGLNamesStorage(&from->m_Textures);
-    m_Samplers = OpenGLNamesStorage(&from->m_Samplers);
-  }
+  OpenGLAppContextStorage(std::string name);
+  OpenGLAppContextStorage(std::string name, OpenGLAppContextStorage *from);
 
 public:
+  void RecordViewport(int x, int y, int w, int h);
   void RecordProgramOnCreated(GLuint program);
   void RecordProgramOnDeleted(GLuint program);
   void RecordShaderOnCreated(GLuint shader);

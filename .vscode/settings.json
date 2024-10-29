@@ -93,6 +93,7 @@
     "any": "cpp",
     "cinttypes": "cpp",
     "forward_list": "cpp",
-    "list": "cpp"
+    "list": "cpp",
+    "memory_resource": "cpp"
   }
 }

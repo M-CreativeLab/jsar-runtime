@@ -9,8 +9,6 @@ export class WebXRCamera extends BABYLON.FreeCamera {
   private _referenceQuaternion: BABYLON.Quaternion = BABYLON.Quaternion.Identity();
   private _referencedPosition: BABYLON.Vector3 = new BABYLON.Vector3();
   private _trackingState: BABYLON.WebXRTrackingState = BABYLON.WebXRTrackingState.NOT_TRACKING;
-  private _xrProjectionMatrix: BABYLON.Matrix = BABYLON.Matrix.Identity();
-  private _xrComputedViewMatrix: BABYLON.Matrix = BABYLON.Matrix.Identity();
 
   /**
    * This will be triggered after the first XR Frame initialized the camera,
@@ -65,8 +63,9 @@ export class WebXRCamera extends BABYLON.FreeCamera {
     this.minZ = 0.01;
     this.maxZ = 1000;
     this.rotationQuaternion = new BABYLON.Quaternion();
-    this.cameraRigMode = BABYLON.Camera.RIG_MODE_NONE;
+    this.cameraRigMode = BABYLON.Camera.RIG_MODE_CUSTOM;
     this.updateUpVectorFromRotation = true;
+    this._updateNumberOfRigCameras(1);
     // freeze projection matrix, which will be copied later
     this.freezeProjectionMatrix();
     this._deferOnly = true;
@@ -131,18 +130,6 @@ export class WebXRCamera extends BABYLON.FreeCamera {
    */
   public getClassName(): string {
     return 'WebXRCamera';
-  }
-
-  public getViewMatrix(_force?: boolean): BABYLON.Matrix {
-    return this._xrComputedViewMatrix;
-  }
-
-  public getProjectionMatrix(_force?: boolean): BABYLON.Matrix {
-    return this._getXRProjectionMatrix();
-  }
-
-  private _getXRProjectionMatrix(): BABYLON.Matrix {
-    return this._xrProjectionMatrix;
   }
 
   /**
@@ -230,13 +217,32 @@ export class WebXRCamera extends BABYLON.FreeCamera {
       }
     }
 
+    if (this.rigCameras.length !== pose.views.length) {
+      this._updateNumberOfRigCameras(pose.views.length);
+    }
+
     pose.views.forEach((view: XRView, i: number) => {
-      this._updateViewMatrix(view);
-      this._updateProjectionMatrix(view);
-      if (view.eye === 'left') {
-        const fov = Math.atan2(1, view.projectionMatrix[5]) * 2;
-        this.fov = fov;
+      const currentRig = <BABYLON.TargetCamera>this.rigCameras[i];
+      // update right and left, where applicable
+      if (!currentRig.isLeftCamera && !currentRig.isRightCamera) {
+        if (view.eye === 'right') {
+          currentRig._isRightCamera = true;
+        } else if (view.eye === 'left') {
+          currentRig._isLeftCamera = true;
+        }
       }
+
+      // Update matrices: view and projection
+      this._updateMatricesToRigCamera(view, currentRig);
+
+      // Update fov
+      const fov = Math.atan2(1, view.projectionMatrix[5]) * 2;
+      currentRig.fov = fov;
+      if (view.eye === 'left') {
+        this.fov = fov;
+        this._projectionMatrix.copyFrom(currentRig._projectionMatrix);
+      }
+
       const renderTargetTexture = this._xrSessionManager.getRenderTargetTextureForView(view);
       this._renderingMultiview = renderTargetTexture?._texture?.isMultiview || false;
       if (this._renderingMultiview) {
@@ -247,31 +253,55 @@ export class WebXRCamera extends BABYLON.FreeCamera {
           this.outputRenderTarget = renderTargetTexture;
         }
       } else {
-        this._xrSessionManager.trySetViewportForView(this.viewport, view);
+        this._xrSessionManager.trySetViewportForView(currentRig.viewport, view);
         this.outputRenderTarget = renderTargetTexture || this._xrSessionManager.getRenderTargetTextureForView(view);
       }
+      currentRig.layerMask = this.layerMask;
     });
   }
 
-  private _updateViewMatrix(view: XRView) {
-    const { position, orientation } = view.transform;
-    const viewPosition = new BABYLON.Vector3(position.x, position.y, position.z);
-    const viewOrientation = new BABYLON.Quaternion(orientation.x, orientation.y, orientation.z, orientation.w);
+  private _updateMatricesToRigCamera(view: XRView, camera: BABYLON.TargetCamera) {
+    camera.parent = this.parent;
+    {
+      const { position, orientation } = view.transform;
+      camera.position
+        .set(position.x, position.y, position.z)
+        .scaleInPlace(1.0);
+      camera.rotationQuaternion
+        .set(orientation.x, orientation.y, orientation.z, orientation.w);
 
-    if (!this._scene.useRightHandedSystem) {
-      viewPosition.z *= -1;
-      viewOrientation.z *= -1;
-      viewOrientation.w *= -1;
+      if (!this._scene.useRightHandedSystem) {
+        camera.position.z *= -1;
+        camera.rotationQuaternion.z *= -1;
+        camera.rotationQuaternion.w *= -1;
+      } else {
+        camera.rotationQuaternion.multiplyInPlace(new BABYLON.Quaternion(0, 1, 0, 0));
+      }
+
+      BABYLON.Matrix.FromFloat32ArrayToRefScaled(view.projectionMatrix, 0, 1, camera._projectionMatrix);
+      if (!this._scene.useRightHandedSystem) {
+        camera._projectionMatrix.toggleProjectionMatrixHandInPlace();
+      }
     }
-    viewOrientation.toRotationMatrix(this._xrComputedViewMatrix);
-    this._xrComputedViewMatrix.setTranslationFromFloats(viewPosition.x, viewPosition.y, viewPosition.z);
-    this._xrComputedViewMatrix.invertToRef(this._xrComputedViewMatrix);
   }
 
-  private _updateProjectionMatrix(view: XRView) {
-    BABYLON.Matrix.FromFloat32ArrayToRefScaled(view.projectionMatrix, 0, 1, this._xrProjectionMatrix);
-    if (!this._scene.useRightHandedSystem) {
-      this._xrProjectionMatrix.toggleProjectionMatrixHandInPlace();
+  private _updateNumberOfRigCameras(viewCount = 1) {
+    while (this.rigCameras.length < viewCount) {
+      const newCamera = new BABYLON.TargetCamera('XR-RigCamera: ' + this.rigCameras.length, BABYLON.Vector3.Zero(), this.getScene());
+      newCamera.minZ = 0.1;
+      newCamera.rotationQuaternion = new BABYLON.Quaternion();
+      newCamera.updateUpVectorFromRotation = true;
+      newCamera.isRigCamera = true;
+      newCamera.rigParent = this;
+      // do not compute projection matrix, provided by XR
+      newCamera.freezeProjectionMatrix();
+      this.rigCameras.push(newCamera);
+    }
+    while (this.rigCameras.length > viewCount) {
+      const removedCamera = this.rigCameras.pop();
+      if (removedCamera) {
+        removedCamera.dispose();
+      }
     }
   }
 }

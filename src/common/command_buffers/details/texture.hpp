@@ -239,27 +239,6 @@ namespace commandbuffers
     int height;
   };
 
-  class TextureStorage2DCommandBufferRequest : public TrCommandBufferSimpleRequest<TextureStorage2DCommandBufferRequest>
-  {
-  public:
-    TextureStorage2DCommandBufferRequest(int target, int levels, int internalformat, int width, int height)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_TEXTURE_STORAGE_2D_REQ),
-          target(target),
-          levels(levels),
-          internalformat(internalformat),
-          width(width),
-          height(height)
-    {
-    }
-
-  public:
-    int target;
-    int levels;
-    int internalformat;
-    int width;
-    int height;
-  };
-
   class CopyTextureImage2DCommandBufferRequest : public TrCommandBufferSimpleRequest<CopyTextureImage2DCommandBufferRequest>
   {
   public:
@@ -450,17 +429,15 @@ namespace commandbuffers
     size_t pixelsBufferSize = 0;
   };
 
-  class TextureStorage3DCommandBufferRequest : public TrCommandBufferSimpleRequest<TextureStorage3DCommandBufferRequest>
+  template <typename T, CommandBufferType cbType>
+  class TextureStorageNDCommandBufferRequest : public TrCommandBufferSimpleRequest<T>
   {
   public:
-    TextureStorage3DCommandBufferRequest(int target, int levels, int internalformat, int width, int height, int depth)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_TEXTURE_STORAGE_2D_REQ),
+    TextureStorageNDCommandBufferRequest(uint32_t target, uint32_t levels, uint32_t internalformat)
+        : TrCommandBufferSimpleRequest<T>(cbType),
           target(target),
           levels(levels),
-          internalformat(internalformat),
-          width(width),
-          height(height),
-          depth(depth)
+          internalformat(internalformat)
     {
     }
 
@@ -468,6 +445,30 @@ namespace commandbuffers
     int target;
     int levels;
     int internalformat;
+  };
+
+  class TextureStorage2DCommandBufferRequest : public TextureStorageNDCommandBufferRequest<TextureStorage2DCommandBufferRequest, COMMAND_BUFFER_TEXTURE_STORAGE_2D_REQ>
+  {
+  public:
+    TextureStorage2DCommandBufferRequest(uint32_t target, uint32_t levels, uint32_t internalformat, uint32_t width, uint32_t height)
+        : TextureStorageNDCommandBufferRequest(target, levels, internalformat), width(width), height(height)
+    {
+    }
+
+  public:
+    int width;
+    int height;
+  };
+
+  class TextureStorage3DCommandBufferRequest : public TextureStorageNDCommandBufferRequest<TextureStorage3DCommandBufferRequest, COMMAND_BUFFER_TEXTURE_STORAGE_3D_REQ>
+  {
+  public:
+    TextureStorage3DCommandBufferRequest(uint32_t target, uint32_t levels, uint32_t internalformat, uint32_t width, uint32_t height, uint32_t depth)
+        : TextureStorageNDCommandBufferRequest(target, levels, internalformat), width(width), height(height), depth(depth)
+    {
+    }
+
+  public:
     int width;
     int height;
     int depth;

@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@yodaos-jsar/dom": "file:../jsar-dom",
-    "babylonjs": "^6.10.0",
+    "babylonjs": "file:../Babylon.js/packages/public/umd/babylonjs",
     "cache-control-parser": "^2.0.6",
     "minimist": "^1.2.8",
     "undici": "^6.3.0",

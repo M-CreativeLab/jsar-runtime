@@ -157,12 +157,13 @@ export class TransmuteRuntime2 extends EventTarget {
     }
 
     console.info(`loading a JSAR document`, codeOrUrl, { url: urlBase });
-    const dom = new JSARDOM(codeOrUrl, {
-      url: urlBase,
-      nativeDocument,
-    });
+    let dom: JSARDOM<NativeDocumentOnTransmute> = null;
 
     try {
+      dom = new JSARDOM(codeOrUrl, {
+        url: urlBase,
+        nativeDocument,
+      });
       await dom.load();
       reportDocumentEvent(nativeDocument.id, 'loaded');
 
@@ -174,9 +175,11 @@ export class TransmuteRuntime2 extends EventTarget {
       spaceNode.setEnabled(true);
       this.#nativeDocument.dispatchDocumentLoadedEvent();
     } catch (err) {
-      // Just unload and close the document
-      await dom.unload();
-      dom.nativeDocument.close();
+      if (dom != null) {
+        // Just unload and close the document
+        await dom.unload();
+        dom.nativeDocument.close();
+      }
       // Report the error
       throw err;
     }

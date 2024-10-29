@@ -47,7 +47,6 @@
   XX(BIND_TEXTURE, BindTextureCommandBufferRequest)                                        \
   XX(TEXTURE_IMAGE_2D, TextureImage2DCommandBufferRequest)                                 \
   XX(TEXTURE_SUB_IMAGE_2D, TextureSubImage2DCommandBufferRequest)                          \
-  XX(TEXTURE_STORAGE_2D, TextureStorage2DCommandBufferRequest)                             \
   XX(COPY_TEXTURE_IMAGE_2D, CopyTextureImage2DCommandBufferRequest)                        \
   XX(COPY_TEXTURE_SUB_IMAGE_2D, CopyTextureSubImage2DCommandBufferRequest)                 \
   XX(TEXTURE_PARAMETERI, TextureParameteriCommandBufferRequest)                            \
@@ -55,6 +54,7 @@
   XX(GENERATE_MIPMAP, GenerateMipmapCommandBufferRequest)                                  \
   XX(TEXTURE_IMAGE_3D, TextureImage3DCommandBufferRequest)                                 \
   XX(TEXTURE_SUB_IMAGE_3D, TextureSubImage3DCommandBufferRequest)                          \
+  XX(TEXTURE_STORAGE_2D, TextureStorage2DCommandBufferRequest)                             \
   XX(TEXTURE_STORAGE_3D, TextureStorage3DCommandBufferRequest)                             \
   XX(ENABLE_VERTEX_ATTRIB_ARRAY, EnableVertexAttribArrayCommandBufferRequest)              \
   XX(DISABLE_VERTEX_ATTRIB_ARRAY, DisableVertexAttribArrayCommandBufferRequest)            \

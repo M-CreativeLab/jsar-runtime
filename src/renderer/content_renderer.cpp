@@ -174,35 +174,39 @@ namespace renderer
 
   void TrContentRenderer::onHostFrame(chrono::time_point<chrono::high_resolution_clock> time)
   {
+    static TrIdGenerator stereoIdGenerator(0x567);
+
     bool isXRDeviceEnabled = xrDevice->enabled();
     if (isXRDeviceEnabled)
     {
-      if (xrDevice->isRenderedAsMultipass())
+      switch (xrDevice->getStereoRenderingMode())
       {
-        auto viewIndex = xrDevice->getActiveEyeId();
-        if (viewIndex == 0)
-        {
-          static TrIdGenerator stereoIdGenerator(0x567);
+      case xr::TrStereoRenderingMode::MultiPass:
+      {
+        if (xrDevice->getActiveEyeId() == 0) // Update the `currentStereoId` only when rendering the left eye.
           currentStereoId = stereoIdGenerator.get();
-        }
-        if (currentStereoId != 0)
+        break;
+      }
+      case xr::TrStereoRenderingMode::SinglePass:
+      case xr::TrStereoRenderingMode::SinglePassInstanced:
+      case xr::TrStereoRenderingMode::SinglePassMultiview:
+      {
+        currentStereoId = stereoIdGenerator.get(); // Update the `currentStereoId` for each frame.
+        break;
+      }
+      default:
+        break;
+      }
+
+      if (currentStereoId != 0)
+      {
+        auto activeSession = content->getActiveXRSession();
+        if (activeSession != nullptr)
         {
-          auto activeSession = content->getActiveXRSession();
-          if (activeSession != nullptr)
-          {
-            activeSession->setStereoId(currentStereoId);
-            activeSession->setPendingStereoFramesCount(getPendingStereoFramesCount());
-            activeSession->updateStatesInZone();
-          }
+          activeSession->setStereoId(currentStereoId);
+          activeSession->setPendingStereoFramesCount(getPendingStereoFramesCount());
+          activeSession->updateStatesInZone();
         }
-      }
-      else if (xrDevice->getStereoRenderingMode() == xr::TrStereoRenderingMode::SinglePass)
-      {
-        // TODO: support SinglePass stereo rendering mode
-      }
-      else
-      {
-        // TODO: support other stereo rendering modes such as SinglePass
       }
     }
 
@@ -211,12 +215,31 @@ namespace renderer
       executeCommandBuffers(false);
       if (content->used && xrDevice->enabled())
       {
-        // set framebuffer?
-        if (xrDevice->getStereoRenderingMode() == xr::TrStereoRenderingMode::MultiPass)
+        // FIXME: This make sure the XR frame will be rendered in the host context.
+        constellation->renderer->glHostContext->ConfigureFramebuffer();
+
+        // Execute the XR frame
+        switch (xrDevice->getStereoRenderingMode())
         {
-          auto viewIndex = xrDevice->getActiveEyeId();
-          executeCommandBuffers(true, viewIndex);
+        case xr::TrStereoRenderingMode::MultiPass:
+        {
+          executeCommandBuffers(true, xrDevice->getActiveEyeId());
+          break;
         }
+        case xr::TrStereoRenderingMode::SinglePass:
+        case xr::TrStereoRenderingMode::SinglePassInstanced:
+        case xr::TrStereoRenderingMode::SinglePassMultiview:
+        {
+          executeCommandBuffers(true, 0);
+          executeCommandBuffers(true, 1);
+          break;
+        }
+        default:
+          break;
+        }
+
+        // Restore the framebuffer configuration
+        constellation->renderer->glHostContext->RestoreFramebuffer();
       }
     }
     onEndFrame();

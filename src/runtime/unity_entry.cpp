@@ -224,6 +224,18 @@ static void OnPlatformSetup(UnityEmbedder *embedder)
           strcmp(enableRendererTracingStr, "yes") == 0)
         renderer->enableTracing();
 
+      char enablePrintHostContextSummaryStr[PROP_VALUE_MAX];
+      if (
+          __system_property_get("jsar.renderer.print_host_context_summary", enablePrintHostContextSummaryStr) >= 0 &&
+          strcmp(enablePrintHostContextSummaryStr, "yes") == 0)
+        renderer->enableHostContextSummary();
+
+      char enablePrintAppContextSummaryStr[PROP_VALUE_MAX];
+      if (
+          __system_property_get("jsar.renderer.print_app_context_summary", enablePrintAppContextSummaryStr) >= 0 &&
+          strcmp(enablePrintAppContextSummaryStr, "yes") == 0)
+        renderer->enableAppContextSummary();
+
       char logfilter[PROP_VALUE_MAX];
       if (__system_property_get("jsar.renderer.logfilter", logfilter) >= 0)
         renderer->setLogFilter(logfilter);

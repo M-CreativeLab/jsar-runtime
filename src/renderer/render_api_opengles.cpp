@@ -25,6 +25,7 @@ using namespace commandbuffers;
 #if SUPPORT_OPENGL_UNIFIED
 
 #define TR_OPENGL_FUNC inline
+#define TR_OPENGL_GET_NUMBER(v) isnan(v) ? 0 : v
 
 void getline(const string &input, string &line, size_t &pos, char delim = '\n')
 {
@@ -126,10 +127,11 @@ private:
 		}
 		return error;
 	}
-	void DumpDrawCallInfo(bool isDefaultQueue, GLint mode, GLsizei count, GLenum type, const GLvoid *indices)
+	void DumpDrawCallInfo(string funcName, bool isDefaultQueue, GLint mode, GLsizei count, GLenum type, const GLvoid *indices)
 	{
-		DEBUG(DEBUG_TAG, "[%d] GL::DrawElements(mode=%s, count=%d, type=%s, indices=%p)",
+		DEBUG(DEBUG_TAG, "[%d] GL::%s(mode=%s, count=%d, type=%s, indices=%p)",
 					isDefaultQueue,
+					funcName.c_str(),
 					gles::glEnumToString(mode).c_str(),
 					count,
 					gles::glEnumToString(type).c_str(),
@@ -155,6 +157,13 @@ private:
 			glGetProgramiv(program, GL_VALIDATE_STATUS, &validateStatus);
 			DEBUG(DEBUG_TAG, "    Program: LINK_STATUS=%d", linkStatus);
 			DEBUG(DEBUG_TAG, "    Program: VALIDATE_STATUS=%d", validateStatus);
+		}
+
+		// Print current framebuffer
+		{
+			GLint framebuffer;
+			glGetIntegerv(GL_FRAMEBUFFER_BINDING, &framebuffer);
+			DEBUG(DEBUG_TAG, "    Framebuffer: %d", framebuffer);
 		}
 
 		// Print Element Array
@@ -595,37 +604,51 @@ private:
 		glGetShaderiv(shader, GL_COMPILE_STATUS, &compileStatus);
 		if (compileStatus != GL_TRUE)
 		{
-			DEBUG(DEBUG_TAG, "Failed to compile shader(%d)", shader);
-			DEBUG(DEBUG_TAG, "###############################################");
-
+			DEBUG(LOG_TAG_ERROR, "Failed to compile shader(%d)", shader);
 			GLint logLength;
 			glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
 			if (logLength > 0)
 			{
 				std::vector<GLchar> log(logLength);
 				glGetShaderInfoLog(shader, logLength, nullptr, log.data());
-				DEBUG(DEBUG_TAG, "%s", log.data());
+				DEBUG(LOG_TAG_ERROR, "Shader compile log: %s", log.data());
 			}
 
-			// Dump the shader source
+			// Print the shader source
 			GLint sourceSize;
 			glGetShaderiv(shader, GL_SHADER_SOURCE_LENGTH, &sourceSize);
 			GLchar *source = new GLchar[sourceSize];
 			GLint maxLength = sourceSize;
 			GLint bytesWritten;
+			string shaderSource = "";
 			while (true)
 			{
 				glGetShaderSource(shader, maxLength, &bytesWritten, source);
 				if (bytesWritten < maxLength - 1)
 					break;
 				maxLength += sourceSize;
+				shaderSource += string(source);
 				source = (GLchar *)realloc(source, maxLength);
 			}
-			DEBUG(DEBUG_TAG, "Shader Source:");
-			DEBUG(DEBUG_TAG, "\n%s", source);
 			delete[] source;
 
-			DEBUG(DEBUG_TAG, "###############################################");
+			DEBUG(LOG_TAG_ERROR, "=============== Shader Source ===============");
+			string line;
+			uint32_t lineNum = 1;
+			size_t pos = 0;
+			while (pos < shaderSource.size())
+			{
+				getline(shaderSource, line, pos);
+
+				int num = lineNum++;
+				if (num < 10)
+					DEBUG(LOG_TAG_ERROR, "[00%d] %s", num, line.c_str());
+				else if (num < 100)
+					DEBUG(LOG_TAG_ERROR, "[0%d] %s", num, line.c_str());
+				else
+					DEBUG(LOG_TAG_ERROR, "[%d] %s", lineNum++, line.c_str());
+			}
+			DEBUG(LOG_TAG_ERROR, "=============== Shader Source ===============");
 		}
 
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
@@ -1049,17 +1072,6 @@ private:
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
 			DEBUG(DEBUG_TAG, "[%d] GL::TexSubImage2D: %d", options.isDefaultQueue, req->target);
 	}
-	TR_OPENGL_FUNC void OnTexStorage2D(TextureStorage2DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
-	{
-		glTexStorage2D(
-				req->target,
-				req->levels,
-				req->internalformat,
-				req->width,
-				req->height);
-		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::TexStorage2D(%d)", options.isDefaultQueue, req->target);
-	}
 	TR_OPENGL_FUNC void OnCopyTexImage2D(CopyTextureImage2DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glCopyTexImage2D(
@@ -1156,6 +1168,20 @@ private:
 						options.isDefaultQueue, target, level,
 						xoffset, yoffset, zoffset,
 						width, height, depth, pixels);
+		}
+	}
+	TR_OPENGL_FUNC void OnTexStorage2D(TextureStorage2DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	{
+		auto target = req->target;
+		auto levels = req->levels;
+		auto internalformat = req->internalformat;
+		auto width = req->width;
+		auto height = req->height;
+		glTexStorage2D(target, levels, internalformat, width, height);
+		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+		{
+			DEBUG(DEBUG_TAG, "[%d] GL::TexStorage2D(target=0x%x, levels=%d, internalformat=0x%x, size=[%d,%d])",
+						options.isDefaultQueue, target, levels, internalformat, width, height);
 		}
 	}
 	TR_OPENGL_FUNC void OnTexStorage3D(TextureStorage3DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
@@ -1382,10 +1408,11 @@ private:
 	TR_OPENGL_FUNC void OnUniform4f(Uniform4fCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto loc = req->location;
-		auto v0 = req->v0;
-		auto v1 = req->v1;
-		auto v2 = req->v2;
-		auto v3 = req->v3;
+		auto v0 = TR_OPENGL_GET_NUMBER(req->v0);
+		auto v1 = TR_OPENGL_GET_NUMBER(req->v1);
+		auto v2 = TR_OPENGL_GET_NUMBER(req->v2);
+		auto v3 = TR_OPENGL_GET_NUMBER(req->v3);
+
 		glUniform4f(loc, v0, v1, v2, v3);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform4f(%d): (%f, %f, %f, %f)",
@@ -1462,7 +1489,7 @@ private:
 		}
 
 		float *matrixToUse = nullptr;
-		if (req->isComputationGraph() && (deviceFrame != nullptr && deviceFrame->isMultiPass()))
+		if (req->isComputationGraph() && deviceFrame != nullptr)
 		{
 			auto activeXRSession = content->getActiveXRSession();
 			if (TR_UNLIKELY(activeXRSession == nullptr))
@@ -1470,8 +1497,15 @@ private:
 				DEBUG(LOG_TAG_ERROR, "ComputationGraph() only works content which is enabled XR session.");
 				return;
 			}
-			auto multipassFrame = static_cast<xr::MultiPassFrame *>(deviceFrame);
-			auto matrix = multipassFrame->computeMatrixByGraph(activeXRSession->id, req->computationGraph4values);
+
+			int viewIndexByGuess = 0;
+			if (!deviceFrame->isMultiPass())
+			{
+				auto viewport = reqContentRenderer->getOpenGLContext()->GetViewport();
+				if (viewport.x == viewport.width)
+					viewIndexByGuess = 1; // viewport(w, 0, w, h) might be the right eye.
+			}
+			auto matrix = deviceFrame->computeMatrixByGraph(req->computationGraph4values, activeXRSession->id, viewIndexByGuess);
 			matrixToUse = glm::value_ptr(matrix);
 			assert(matrixToUse != nullptr);
 		}
@@ -1525,11 +1559,17 @@ private:
 			return;
 		}
 		assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
+
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		{
+			DEBUG(LOG_TAG_ERROR, "Skip this drawElements(): the framebuffer is not complete.");
+			return;
+		}
 		glDrawElements(mode, count, type, indices);
 		reqContentRenderer->increaseDrawCallsCount(count);
 
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DumpDrawCallInfo(options.isDefaultQueue, mode, count, type, indices);
+			DumpDrawCallInfo("DrawElements", options.isDefaultQueue, mode, count, type, indices);
 	}
 	TR_OPENGL_FUNC void OnDrawBuffers(DrawBuffersCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
@@ -1553,8 +1593,7 @@ private:
 		glDrawArraysInstanced(mode, first, count, instanceCount);
 		reqContentRenderer->increaseDrawCallsCount(count);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::DrawArraysInstanced(0x%x, %d, %d, %d)",
-						options.isDefaultQueue, mode, first, count, instanceCount);
+			DumpDrawCallInfo("DrawArraysInstanced", options.isDefaultQueue, mode, count, 0, nullptr);
 	}
 	TR_OPENGL_FUNC void OnDrawElementsInstanced(DrawElementsInstancedCommandBufferRequest *req,
 																							renderer::TrContentRenderer *reqContentRenderer,
@@ -1611,6 +1650,10 @@ private:
 		auto height = req->height;
 		auto x = req->x;
 		auto y = req->y;
+		glViewport(x, y, width, height);
+		reqContentRenderer->getOpenGLContext()->RecordViewport(x, y, width, height);
+		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+			DEBUG(DEBUG_TAG, "[%d] GL::SetViewport: (%d %d %d %d)", options.isDefaultQueue, x, y, width, height);
 	}
 	TR_OPENGL_FUNC void OnSetScissor(SetScissorCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
@@ -2022,7 +2065,6 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			ADD_COMMAND_BUFFER_HANDLER(BIND_TEXTURE, BindTextureCommandBufferRequest, BindTexture)
 			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_IMAGE_2D, TextureImage2DCommandBufferRequest, TexImage2D)
 			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_SUB_IMAGE_2D, TextureSubImage2DCommandBufferRequest, TexSubImage2D)
-			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_STORAGE_2D, TextureStorage2DCommandBufferRequest, TexStorage2D)
 			ADD_COMMAND_BUFFER_HANDLER(COPY_TEXTURE_IMAGE_2D, CopyTextureImage2DCommandBufferRequest, CopyTexImage2D)
 			ADD_COMMAND_BUFFER_HANDLER(COPY_TEXTURE_SUB_IMAGE_2D, CopyTextureSubImage2DCommandBufferRequest, CopyTexSubImage2D)
 			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_PARAMETERI, TextureParameteriCommandBufferRequest, TexParameteri)
@@ -2030,6 +2072,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			ADD_COMMAND_BUFFER_HANDLER(GENERATE_MIPMAP, GenerateMipmapCommandBufferRequest, GenerateMipmap)
 			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_IMAGE_3D, TextureImage3DCommandBufferRequest, TexImage3D)
 			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_SUB_IMAGE_3D, TextureSubImage3DCommandBufferRequest, TexSubImage3D)
+			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_STORAGE_2D, TextureStorage2DCommandBufferRequest, TexStorage2D)
 			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_STORAGE_3D, TextureStorage3DCommandBufferRequest, TexStorage3D)
 			ADD_COMMAND_BUFFER_HANDLER(ENABLE_VERTEX_ATTRIB_ARRAY, EnableVertexAttribArrayCommandBufferRequest, EnableVertexAttribArray)
 			ADD_COMMAND_BUFFER_HANDLER(DISABLE_VERTEX_ATTRIB_ARRAY, DisableVertexAttribArrayCommandBufferRequest, DisableVertexAttribArray)

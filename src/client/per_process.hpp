@@ -237,6 +237,15 @@ public: // WebXR methods
    * @returns the framebuffer's height
    */
   int getFramebufferHeight() { return xrDeviceContextZoneClient == nullptr ? 0 : xrDeviceContextZoneClient->getFramebufferConfig().height; }
+  /**
+   * Check if the framebuffer is double-wide, or false if the XR is not enabled.
+   * 
+   * Double-wide is used at desktop example app, which doesn't depend on any other OpenGL extension like OVR_multiview, but at the production device, the framebuffer
+   * is commonly not double-wide.
+   * 
+   * @returns true if the framebuffer is double width
+   */
+  bool isFramebufferDoubleWide() { return xrDeviceContextZoneClient != nullptr && xrDeviceContextZoneClient->getFramebufferConfig().useDoubleWide; }
 
   template <typename CommandType>
   bool sendXrCommand(xr::TrXRCommandBase<CommandType> &xrCommand)

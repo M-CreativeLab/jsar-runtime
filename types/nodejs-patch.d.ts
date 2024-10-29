@@ -6,6 +6,16 @@ interface OffscreenCanvas {
 }
 
 /**
+ * New APIs for WebGL APIs.
+ */
+interface WebGLUniformLocation {
+  /**
+   * The name of the uniform variable.
+   */
+  name: string;
+}
+
+/**
  * New APIs for WebXR Device API.
  */
 interface XRSession {
@@ -24,6 +34,13 @@ interface XRInputSource {
    * @returns null
    */
   setTargetRayHitTestResult(hit: boolean, endTransform?: XRRigidTransform | null): void;
+}
+
+interface XRWebGLLayer {
+  /**
+   * Indicates whether the `XRWebGLLayer` is multiview required, if true, the application should use OVR_multiview2 extension to render.
+   */
+  multiviewRequired: boolean;
 }
 
 /**
@@ -131,6 +148,7 @@ declare namespace Transmute {
       ProjectionMatrix: WebGLPlaceholderId;
       ViewMatrix: WebGLPlaceholderId;
       ViewProjectionMatrix: WebGLPlaceholderId;
+      ViewProjectionMatrixForRightEye: WebGLPlaceholderId;
       [key: string]: WebGLPlaceholderId;
     };
   };

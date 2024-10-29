@@ -25,6 +25,12 @@ export class WebGLMatrix extends Float32Array {
       placeholderId: placeholdersNative.placeholderIds.ViewProjectionMatrix,
     });
   }
+  static CreateViewProjectionMatrixForRightEye(from: Float32Array, useRightHanded: boolean = false) {
+    return new WebGLMatrix(from, {
+      useRightHanded,
+      placeholderId: placeholdersNative.placeholderIds.ViewProjectionMatrixForRightEye,
+    });
+  }
   constructor(from: Float32Array, init: WebGLMatrixInit) {
     super(from);
     this[placeholdersNative.useRightHandedKey] = init.useRightHanded;

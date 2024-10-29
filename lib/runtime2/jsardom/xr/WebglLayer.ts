@@ -70,7 +70,7 @@ export class WebXRWebGLLayerRenderTargetTextureProvider extends WebXRLayerRender
       layerHeight !== this._framebufferDimensions.framebufferHeight ||
       framebuffer !== this._framebuffer
     ) {
-      this._rtt = this._createRenderTargetTexture(layerWidth, layerHeight, framebuffer);
+      this._rtt = this._createRenderTargetTexture(layerWidth, layerHeight, framebuffer, undefined, undefined, this._layer.multiviewRequired);
       this._framebufferDimensions.framebufferWidth = layerWidth;
       this._framebufferDimensions.framebufferHeight = layerHeight;
       this._framebuffer = framebuffer;

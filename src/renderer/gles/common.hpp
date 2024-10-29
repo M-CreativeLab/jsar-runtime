@@ -16,6 +16,7 @@
 #include <EGL/egl.h>
 #elif UNITY_OSX
 #include <OpenGL/gl3.h>
+#include <OpenGL/glext.h>
 #include <OpenGL/gl3ext.h>
 #elif UNITY_WIN
 // On Windows, use gl3w to initialize and load OpenGL Core functions. In principle any other
