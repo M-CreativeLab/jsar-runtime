@@ -46,7 +46,8 @@ namespace dom
   XX(PointerOver, "pointerover")               \
   XX(PointerUp, "pointerup")                   \
   XX(Scroll, "scroll")                         \
-  XX(ScrollEnd, "scrollend")
+  XX(ScrollEnd, "scrollend")                   \
+  XX(SecurityPolicyViolation, "securitypolicyviolation")
 
 #define HTMLELEMENT_EVENT_TYPES_MAP(XX) \
   XX(BeforeToggle, "beforetoggle")      \

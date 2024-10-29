@@ -29,9 +29,54 @@ function validatePath(input: string): boolean {
   }
 }
 
-export class TransmuteRuntime2 extends EventTarget {
-  #nativeDocument: NativeDocumentOnTransmute;
+/**
+ * Execute the XSML code or URL.
+ * 
+ * TODO: XSML will be deprecated.
+ * 
+ * @param gl the WebGL rendering context.
+ * @param codeOrUrl the XSML code or URL.
+ * @param urlBase the base URL.
+ */
+async function evaluateXSML(gl: WebGLRenderingContext | WebGL2RenderingContext, codeOrUrl: string, urlBase: string) {
+  const nativeDocument = new NativeDocumentOnTransmute(gl);
+  if (isWebXRSupported()) {
+    nativeDocument.configureDefaultXrExperience(gl);
+    await nativeDocument.enterDefaultXrExperience();
+  } else {
+    console.info(`Skip enabling WebXR experience, reason: WebXR is not enabled.`);
+  }
 
+  console.info(`loading a JSAR document`, codeOrUrl, { url: urlBase });
+  let dom: JSARDOM<NativeDocumentOnTransmute> = null;
+
+  try {
+    dom = new JSARDOM(codeOrUrl, {
+      url: urlBase,
+      nativeDocument,
+    });
+    await dom.load();
+    reportDocumentEvent(nativeDocument.id, 'loaded');
+
+    const spaceNode = dom.document.space.asNativeType<BABYLON.TransformNode>();
+    {
+      await dom.waitForSpaceReady();
+      reportDocumentEvent(nativeDocument.id, 'DOMContentLoaded');
+    }
+    spaceNode.setEnabled(true);
+    nativeDocument.dispatchDocumentLoadedEvent();
+  } catch (err) {
+    if (dom != null) {
+      // Just unload and close the document
+      await dom.unload();
+      dom.nativeDocument.close();
+    }
+    // Report the error
+    throw err;
+  }
+}
+
+export class TransmuteRuntime2 extends EventTarget {
   constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext, private id: number) {
     super();
     {
@@ -45,27 +90,15 @@ export class TransmuteRuntime2 extends EventTarget {
       }
       console.info(`[JSARDOM] version=${JSARDOM.version}`);
     }
-    this.#nativeDocument = new NativeDocumentOnTransmute(this.gl);
     this.dispatchEvent(new Event('rendererReady'));
   }
 
   async start(url: string) {
     console.info(`Content(#${this.id}): receiving a document request: ${url}`);
-    if (!this.#nativeDocument) {
-      throw new TypeError('Call prepare() before start()');
-    }
-    await this.load(url, this.#nativeDocument);
+    await this.load(url);
   }
 
-  onGpuBusy() {
-    // TODO
-  }
-
-  private async load(
-    codeOrUrl: string,
-    nativeDocument: NativeDocumentOnTransmute,
-    urlBase?: string
-  ) {
+  private async load(codeOrUrl: string, urlBase?: string) {
     if (!this.gl) {
       throw new TypeError('The webgl is not ready or lost context state');
     }
@@ -76,6 +109,8 @@ export class TransmuteRuntime2 extends EventTarget {
     }
 
     let urlObj: URL = null;
+    let loadAsHTML = false; /** If load the content as HTML */
+
     /**
      * If the input is a path, convert it to a URL.
      */
@@ -84,104 +119,68 @@ export class TransmuteRuntime2 extends EventTarget {
       codeOrUrl = urlObj.href;
     }
 
-    try {
-      if (urlObj == null) {
-        urlObj = new URL(codeOrUrl);
-      }
-
-      /**
-       * Supports the formats to open directly:
-       * 
-       * - [x] `xsml` for mixed reality content.
-       * - [ ] `html` for web page preview.
-       * - [x] `glb`, `gltf`, `usdz`, etc, for 3D model preview.
-       * - [x] `png`, `jpg`, etc, for image preview.
-       * - [ ] `mp3`, `mp4`, `webm`, etc, for media preview.
-       * - [ ] `pdf`, `epub`, etc, for document preview.
-       *
-       * BTW, the users could open the above formats in a html or xsml document in a new volume.
-       */
-      const urlExt = extname(urlObj.pathname);
-      /**
-       * TODO: implement this via mime type instead of the file extension?
-       */
-      switch (urlExt) {
-        case '.glb':
-        case '.gltf':
-          codeOrUrl = createModel3dViewer(codeOrUrl, { playAnimation: true });
-          urlBase = urlObj.href;
-          break;
-        case '.png':
-        case '.jpg':
-        case '.jpeg':
-          codeOrUrl = createImage2dViewer(codeOrUrl);
-          urlBase = urlObj.href;
-          break;
-        case '.splinecode':
-          const sourceBlob = new Blob([createSplineDesignViewer(codeOrUrl)], { type: 'text/plain' });
-          codeOrUrl = URL.createObjectURL(sourceBlob);
-          /** Continue to html rendering */
-        case '.html':
-          try {
-            const { DocumentRenderingContext } = process._linkedBinding('transmute:dom');
-            const renderingContext = new DocumentRenderingContext();
-            renderingContext.setResourceLoader(new ResourceLoaderOnTransmute());
-            renderingContext.start(codeOrUrl, 'text/html');
-            return;
-          } catch (err) {
-            console.error(`failed to open the html document: ${codeOrUrl}`, err);
-          }
-          break;
-        case '.mp3':
-        case '.mp4':
-        case '.webm':
-        case '.pdf':
-        case '.epub':
-          throw new Error(`the format is not supported yet: ${urlExt}`);
-        default:
-          break;
-      }
-    } catch (_err) {
-      if (validatePath(codeOrUrl)) {
-        urlBase = codeOrUrl;
-      } else {
-        urlBase = 'https://example.com/';
-      }
+    if (urlObj == null) {
+      urlObj = new URL(codeOrUrl);
     }
 
-    if (isWebXRSupported()) {
-      nativeDocument.configureDefaultXrExperience(this.gl);
-      await nativeDocument.enterDefaultXrExperience();
+    /**
+     * Create the HTML rendering context.
+     */
+    const { DocumentRenderingContext } = process._linkedBinding('transmute:dom');
+    const renderingContext = new DocumentRenderingContext();
+    renderingContext.setResourceLoader(new ResourceLoaderOnTransmute());
+
+    /**
+     * Supports the formats to open directly:
+     * 
+     * - [x] `xsml` for mixed reality content.
+     * - [x] `html` for web page preview.
+     * - [x] `glb`, `gltf`, `usdz`, etc, for 3D model preview.
+     * - [x] `png`, `jpg`, etc, for image preview.
+     * - [ ] `mp3`, `mp4`, `webm`, etc, for media preview.
+     * - [ ] `pdf`, `epub`, etc, for document preview.
+     *
+     * BTW, the users could open the above formats in a html or xsml document in a new volume.
+     */
+    const urlExt = extname(urlObj.pathname);
+    /**
+     * TODO: implement this via mime type instead of the file extension?
+     */
+    switch (urlExt) {
+      case '.glb':
+      case '.gltf':
+        codeOrUrl = createModel3dViewer(codeOrUrl, { playAnimation: true });
+        urlBase = urlObj.href;
+        break;
+      case '.png':
+      case '.jpg':
+      case '.jpeg':
+        codeOrUrl = createImage2dViewer(codeOrUrl);
+        urlBase = urlObj.href;
+        break;
+      case '.splinecode':
+        const sourceBlob = new Blob([createSplineDesignViewer(codeOrUrl)], { type: 'text/plain' });
+        codeOrUrl = URL.createObjectURL(sourceBlob);
+      /** Continue to html rendering */
+      case '.html':
+        loadAsHTML = true;
+        break;
+      case '.mp3':
+      case '.mp4':
+      case '.webm':
+      case '.pdf':
+      case '.epub':
+        throw new Error(`the format is not supported yet: ${urlExt}`);
+      default:
+        break;
+    }
+
+    if (loadAsHTML) {
+      renderingContext.start(codeOrUrl, 'text/html');
     } else {
-      console.info(`Skip enabling WebXR experience, reason: WebXR is not enabled.`);
+      renderingContext.start('', 'text/html');
+      await evaluateXSML(this.gl, codeOrUrl, urlBase);
     }
-
-    console.info(`loading a JSAR document`, codeOrUrl, { url: urlBase });
-    let dom: JSARDOM<NativeDocumentOnTransmute> = null;
-
-    try {
-      dom = new JSARDOM(codeOrUrl, {
-        url: urlBase,
-        nativeDocument,
-      });
-      await dom.load();
-      reportDocumentEvent(nativeDocument.id, 'loaded');
-
-      const spaceNode = dom.document.space.asNativeType<BABYLON.TransformNode>();
-      {
-        await dom.waitForSpaceReady();
-        reportDocumentEvent(nativeDocument.id, 'DOMContentLoaded');
-      }
-      spaceNode.setEnabled(true);
-      this.#nativeDocument.dispatchDocumentLoadedEvent();
-    } catch (err) {
-      if (dom != null) {
-        // Just unload and close the document
-        await dom.unload();
-        dom.nativeDocument.close();
-      }
-      // Report the error
-      throw err;
-    }
+    console.info(`Content(#${this.id}): the document is loaded successfully.`);
   }
 }
