@@ -27,6 +27,17 @@ namespace webgl
     std::string powerPreference = "default";
   };
 
+  enum class WebGLError
+  {
+    NO_ERROR = WEBGL_NO_ERROR,
+    INVALID_ENUM = WEBGL_INVALID_ENUM,
+    INVALID_VALUE = WEBGL_INVALID_VALUE,
+    INVALID_OPERATION = WEBGL_INVALID_OPERATION,
+    INVALID_FRAMEBUFFER_OPERATION = WEBGL_INVALID_FRAMEBUFFER_OPERATION,
+    OUT_OF_MEMORY = WEBGL_OUT_OF_MEMORY,
+    CONTEXT_LOST_WEBGL = WEBGL_CONTEXT_LOST_WEBGL
+  };
+
 #define ASSERT_MAX_COUNT_PER_DRAWCALL(count, funcName)                                                      \
   if (TR_UNLIKELY(count >= WEBGL_MAX_COUNT_PER_DRAWCALL))                                                   \
   {                                                                                                         \
@@ -175,6 +186,33 @@ namespace webgl
     }
 
     /**
+     * Set the WebGL error for the function.
+     *
+     * @param func the function name that causes the error.
+     * @param error the WebGL error.
+     * @param message the error message for debugging.
+     */
+    inline void setGLError(std::string func, WebGLError error, std::string message)
+    {
+      glError = error;
+#if WEBGL_DEBUG
+      std::cerr << func << "(): " << message << std::endl;
+#endif
+    }
+
+    /**
+     * Get the WebGL error and reset it.
+     *
+     * @returns the WebGL error.
+     */
+    inline int getGLError()
+    {
+      auto res = static_cast<int>(glError);
+      glError = WebGLError::NO_ERROR;
+      return res;
+    }
+
+    /**
      * It sends a fcp metrics command buffer request to print the real fcp value.
      */
     inline void sendFirstContentfulPaintMetrics()
@@ -303,6 +341,7 @@ namespace webgl
      */
     uint32_t m_unpackAlignment = 4;
     ContextAttributes contextAttributes;
+    WebGLError glError = WebGLError::NO_ERROR;
     /**
      * Static fields from OpenGL backend
      */
@@ -360,6 +399,8 @@ namespace webgl
     Napi::Value BindVertexArray(const Napi::CallbackInfo &info);
     Napi::Value TexImage3D(const Napi::CallbackInfo &info);
     Napi::Value TexSubImage3D(const Napi::CallbackInfo &info);
+    Napi::Value TexStorage2D(const Napi::CallbackInfo &info);
+    Napi::Value TexStorage3D(const Napi::CallbackInfo &info);
     Napi::Value GetUniformBlockIndex(const Napi::CallbackInfo &info);
     Napi::Value UniformBlockBinding(const Napi::CallbackInfo &info);
     Napi::Value VertexAttribIPointer(const Napi::CallbackInfo &info);

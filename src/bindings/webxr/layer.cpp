@@ -35,6 +35,7 @@ namespace bindings
     Napi::Function tpl = DefineClass(env, "XRWebGLLayer",
                                      {InstanceAccessor("antialias", &XRWebGLLayer::AntialiasGetter, nullptr),
                                       InstanceAccessor("ignoreDepthValues", &XRWebGLLayer::IgnoreDepthValuesGetter, nullptr),
+                                      InstanceAccessor("multiviewRequired", &XRWebGLLayer::MultiviewRequiredGetter, nullptr),
                                       InstanceAccessor("framebuffer", &XRWebGLLayer::FramebufferGetter, nullptr),
                                       InstanceAccessor("framebufferWidth", &XRWebGLLayer::FramebufferWidthGetter, nullptr),
                                       InstanceAccessor("framebufferHeight", &XRWebGLLayer::FramebufferHeightGetter, nullptr),
@@ -107,13 +108,14 @@ namespace bindings
         config.stencil = optionsObject.Get("stencil").ToBoolean().Value();
       if (optionsObject.Has("alpha"))
         config.alpha = optionsObject.Get("alpha").ToBoolean().Value();
-      if (optionsObject.Has("multiview"))
-        config.multiview = optionsObject.Get("multiview").ToBoolean().Value();
       if (optionsObject.Has("ignoreDepthValues"))
         config.ignoreDepthValues = optionsObject.Get("ignoreDepthValues").ToBoolean().Value();
       if (optionsObject.Has("framebufferScaleFactor"))
         config.framebufferScaleFactor = optionsObject.Get("framebufferScaleFactor").ToNumber().FloatValue();
     }
+
+    // Update the multiviewRequired flag
+    config.multiviewRequired = session->device->getDeviceInit().multiviewRequired();
   }
 
   XRWebGLLayer::~XRWebGLLayer()
@@ -129,6 +131,11 @@ namespace bindings
   Napi::Value XRWebGLLayer::IgnoreDepthValuesGetter(const Napi::CallbackInfo &info)
   {
     return Napi::Boolean::New(info.Env(), config.ignoreDepthValues);
+  }
+
+  Napi::Value XRWebGLLayer::MultiviewRequiredGetter(const Napi::CallbackInfo &info)
+  {
+    return Napi::Boolean::New(info.Env(), config.multiviewRequired);
   }
 
   Napi::Value XRWebGLLayer::FramebufferGetter(const Napi::CallbackInfo &info)

@@ -39,11 +39,15 @@ class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
     this.disableUniformBuffers = true;
   }
 
-  get useRightHandedSystem(): boolean {
+  get activeScene(): BABYLON.Scene {
     if (this.scenes.length <= 0) {
       throw new Error('No scene available');
     }
-    return this.scenes[0].useRightHandedSystem;
+    return this.scenes[0];
+  }
+
+  get useRightHandedSystem(): boolean {
+    return this.activeScene.useRightHandedSystem;
   }
 
   setMatrices(uniform: WebGLUniformLocation, matrices: Float32Array): boolean {
@@ -62,6 +66,9 @@ class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
           break;
         case 'viewProjection':
           matrices = WebGLMatrix.CreateViewProjectionMatrix(matrices, this.useRightHandedSystem);
+          break;
+        case 'viewProjectionR':
+          matrices = WebGLMatrix.CreateViewProjectionMatrixForRightEye(matrices, this.useRightHandedSystem);
           break;
         default:
           break;
@@ -178,9 +185,12 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     {
       // create default light
       const dir = new BABYLON.Vector3(0, 2, -5);
-      const light = new BABYLON.HemisphericLight('light_front', dir, scene);
-      light.intensity = 1;
-      this._defaultLights.push(light);
+      const frontLight = new BABYLON.DirectionalLight('light_front', dir, scene);
+      frontLight.intensity = 2;
+      this._defaultLights.push(frontLight);
+      const backLight = new BABYLON.DirectionalLight('light_back', dir.negate(), scene);
+      backLight.intensity = 2;
+      this._defaultLights.push(backLight);
     }
 
     if (isWebXRSupported()) {

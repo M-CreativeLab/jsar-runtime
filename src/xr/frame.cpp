@@ -17,11 +17,6 @@ namespace xr
     memcpy(m_LocalTransform, transform, sizeof(float) * 16);
   }
 
-  DeviceFrame::DeviceFrame(xr::Device *device) : m_XrDevice(device)
-  {
-  }
-  DeviceFrame::~DeviceFrame() {}
-
   void DeviceFrame::start() { m_Ended = false; }
   void DeviceFrame::end() { m_Ended = true; }
   bool DeviceFrame::ended() { return m_Ended; }
@@ -85,23 +80,29 @@ namespace xr
 
   int MultiPassFrame::getActiveEyeId() { return m_ActiveEyeId; }
 
-  glm::mat4 MultiPassFrame::getViewMatrix(bool rightHanded)
+  /**
+   * Get glm::mat4 from a view matrix float array.
+   */
+  inline glm::mat4 GetViewMat(float *sourceViewMatrixFloats, bool rightHanded)
   {
     if (rightHanded)
-      return glm::make_mat4(m_ViewerViewMatrix);
+      return glm::make_mat4(sourceViewMatrixFloats);
 
     /**
      * When the matrix is expected to be left-handed, we get the base matrix for `viewMatrix` and convert it to left-handed.
      *
      * FIXME: Do we have more efficient way to convert the matrix to left-handed?
      */
-    auto viewBaseMatrix = glm::inverse(glm::make_mat4(m_ViewerViewMatrix));
+    auto viewBaseMatrix = glm::inverse(glm::make_mat4(sourceViewMatrixFloats));
     return glm::inverse(math::convertBaseMatrixToLH(viewBaseMatrix));
   }
 
-  glm::mat4 MultiPassFrame::getViewMatrixWithOffset(glm::mat4 &offsetTransform, bool rightHanded)
+  /**
+   * Get glm::mat4 from a view matrix float array with an offset transform.
+   */
+  inline glm::mat4 GetViewMatWithOffset(float *sourceViewMatrixFloats, glm::mat4 &offsetTransform, bool rightHanded)
   {
-    auto viewBaseMatrix = glm::inverse(glm::make_mat4(m_ViewerViewMatrix));
+    auto viewBaseMatrix = glm::inverse(glm::make_mat4(sourceViewMatrixFloats));
     glm::mat4 worldToLocal;
     if (rightHanded)
     {
@@ -115,9 +116,12 @@ namespace xr
     return glm::inverse(worldToLocal * viewBaseMatrix);
   }
 
-  glm::mat4 MultiPassFrame::getProjectionMatrix(bool rightHanded)
+  /**
+   * Get glm::mat4 from a projection matrix float array.
+   */
+  inline glm::mat4 GetProjectionMat(float *sourceProjectionMatrixFloats, bool rightHanded)
   {
-    auto projection = glm::make_mat4(m_ViewerProjectionMatrix);
+    auto projection = glm::make_mat4(sourceProjectionMatrixFloats);
     if (rightHanded)
       return projection;
 
@@ -129,7 +133,22 @@ namespace xr
     return projection;
   }
 
-  glm::mat4 MultiPassFrame::computeMatrixByGraph(int sessionId, commandbuffers::MatrixComputationGraph &computationGraph)
+  glm::mat4 MultiPassFrame::getViewMatrix(bool rightHanded)
+  {
+    return GetViewMat(m_ViewerViewMatrix, rightHanded);
+  }
+
+  glm::mat4 MultiPassFrame::getViewMatrixWithOffset(glm::mat4 &offsetTransform, bool rightHanded)
+  {
+    return GetViewMatWithOffset(m_ViewerViewMatrix, offsetTransform, rightHanded);
+  }
+
+  glm::mat4 MultiPassFrame::getProjectionMatrix(bool rightHanded)
+  {
+    return GetProjectionMat(m_ViewerProjectionMatrix, rightHanded);
+  }
+
+  glm::mat4 MultiPassFrame::computeMatrixByGraph(commandbuffers::MatrixComputationGraph &computationGraph, int sessionId, int viewIndex)
   {
     auto placeholder = computationGraph.placeholderId;
     auto isRightHandedSystem = computationGraph.handedness == commandbuffers::MatrixHandedness::MATRIX_RIGHT_HANDED;
@@ -154,6 +173,74 @@ namespace xr
       auto offsetTransform = contentLocal * math::getOriginMatrix();
       auto viewMatrix = getViewMatrixWithOffset(offsetTransform, isRightHandedSystem);
       matrix = getProjectionMatrix(isRightHandedSystem) * viewMatrix;
+    }
+
+    // Check if `inverseMatrix` is true.
+    if (computationGraph.inverseMatrix)
+      matrix = glm::inverse(matrix);
+    return matrix;
+  }
+
+  SinglePassFrame::SinglePassFrame(xr::Device *device, int stereoId)
+      : DeviceFrame(device)
+  {
+    m_IsMultiPass = false;
+    m_CurrentStereoId = stereoId;
+
+    auto viewerBaseMatrix = device->getViewerBaseMatrix();
+    memcpy(m_ViewerTransform, viewerBaseMatrix, sizeof(float) * 16);
+
+    {
+      // Setup for left eye
+      auto viewMatrix = device->getViewMatrixForEye(0);
+      auto projectionMatrix = device->getProjectionMatrixForEye(0);
+      memcpy(m_ViewMatrixForLeftEye, viewMatrix, sizeof(float) * 16);
+      memcpy(m_ProjectionMatrixForLeftEye, projectionMatrix, sizeof(float) * 16);
+    }
+    {
+      // Setup for right eye
+      auto viewMatrix = device->getViewMatrixForEye(1);
+      auto projectionMatrix = device->getProjectionMatrixForEye(1);
+      memcpy(m_ViewMatrixForRightEye, viewMatrix, sizeof(float) * 16);
+      memcpy(m_ProjectionMatrixForRightEye, projectionMatrix, sizeof(float) * 16);
+    }
+  }
+
+  glm::mat4 SinglePassFrame::computeMatrixByGraph(commandbuffers::MatrixComputationGraph &computationGraph, int sessionId, int viewIndex)
+  {
+    auto placeholder = computationGraph.placeholderId;
+    auto isRightHandedSystem = computationGraph.handedness == commandbuffers::MatrixHandedness::MATRIX_RIGHT_HANDED;
+
+    auto projectionMatrixFloats = viewIndex == 0 ? m_ProjectionMatrixForLeftEye : m_ProjectionMatrixForRightEye;
+    auto viewMatrixFloats = viewIndex == 0 ? m_ViewMatrixForLeftEye : m_ViewMatrixForRightEye;
+
+    glm::mat4 matrix;
+    /**
+     * TODO: support real computation graph.
+     */
+    if (placeholder == WebGLMatrixPlaceholderId::ProjectionMatrix)
+    {
+      matrix = GetProjectionMat(projectionMatrixFloats, isRightHandedSystem);
+    }
+    else if (placeholder == WebGLMatrixPlaceholderId::ViewMatrix)
+    {
+      auto contentLocal = getLocalTransform(sessionId);
+      auto originTransform = contentLocal * math::getOriginMatrix();
+      matrix = GetViewMatWithOffset(viewMatrixFloats, originTransform, isRightHandedSystem);
+    }
+    else if (placeholder == WebGLMatrixPlaceholderId::ViewProjectionMatrix)
+    {
+      auto contentLocal = getLocalTransform(sessionId);
+      auto offsetTransform = contentLocal * math::getOriginMatrix();
+      auto viewMatrix = GetViewMatWithOffset(viewMatrixFloats, offsetTransform, isRightHandedSystem);
+      matrix = GetProjectionMat(projectionMatrixFloats, isRightHandedSystem) * viewMatrix;
+    }
+    else if (placeholder == WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye)
+    {
+      auto contentLocal = getLocalTransform(sessionId);
+      auto offsetTransform = contentLocal * math::getOriginMatrix();
+      auto viewMatrix = GetViewMatWithOffset(m_ViewMatrixForRightEye, offsetTransform, isRightHandedSystem);
+      matrix = GetProjectionMat(m_ProjectionMatrixForRightEye, isRightHandedSystem) * viewMatrix;
     }
 
     // Check if `inverseMatrix` is true.
@@ -313,7 +400,7 @@ namespace xr
   bool StereoRenderingFrame::started(int passIndex)
   {
     assert(passIndex == 0 || passIndex == 1);
-    return m_Started[passIndex];
+    return m_IsMultiPass ? m_Started[passIndex] : m_Started[0];
   }
 
   bool StereoRenderingFrame::ended()
@@ -326,9 +413,9 @@ namespace xr
 
   bool StereoRenderingFrame::ended(int passIndex)
   {
-    if (passIndex > 1)
+    if (passIndex > 1 || passIndex < 0)
       return false;
-    return m_Ended[passIndex];
+    return m_IsMultiPass ? m_Ended[passIndex] : m_Ended[0];
   }
 
   bool StereoRenderingFrame::needFlush()
@@ -343,7 +430,7 @@ namespace xr
   {
     if (passIndex > 1)
       return false;
-    return m_ToFlush[passIndex];
+    return m_IsMultiPass ? m_ToFlush[passIndex] : m_ToFlush[0];
   }
 
   void StereoRenderingFrame::resetFlush(int passIndex)
@@ -378,7 +465,10 @@ namespace xr
   {
     if (m_Idempotentable == false)
       return false;
-    return m_Idempotent[0] && m_Idempotent[1];
+    if (m_IsMultiPass)
+      return m_Idempotent[0] && m_Idempotent[1];
+    else
+      return m_Idempotent[0];
   }
   void StereoRenderingFrame::idempotent(int passIndex, bool value)
   {

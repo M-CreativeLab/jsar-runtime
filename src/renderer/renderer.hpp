@@ -107,6 +107,7 @@ namespace renderer
     bool isTracingEnabled = false;
     bool isHostContextSummaryEnabled = false;
     bool isAppContextSummaryEnabled = false;
+    bool useDoubleWideFramebuffer = false;
     uint32_t clientDefaultFrameRate = 45;
 
   private:

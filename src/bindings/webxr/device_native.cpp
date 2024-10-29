@@ -185,8 +185,25 @@ namespace bindings
 
   TrViewport XRDeviceNative::getViewport(uint32_t viewIndex)
   {
-    // TODO
-    return TrViewport();
+    int width = clientContext->getFramebufferWidth();
+    int height = clientContext->getFramebufferHeight();
+
+    if (clientContext->isFramebufferDoubleWide())
+    {
+      if (getDeviceInit().stereoRenderingMode != xr::TrStereoRenderingMode::MultiPass)
+        width /= 2;
+      if (viewIndex == 0)
+        return TrViewport(width, height, 0, 0);
+      else
+        return TrViewport(width, height, width, 0);
+    }
+    else
+    {
+      /**
+       * Non-double wide framebuffer, the viewports are the same.
+       */
+      return TrViewport(width, height, 0, 0);
+    }
   }
 
   xr::TrDeviceInit &XRDeviceNative::getDeviceInit()

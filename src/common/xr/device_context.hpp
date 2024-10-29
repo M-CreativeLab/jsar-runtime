@@ -56,13 +56,25 @@ namespace xr
     string inputSourcesZonePath;
 
   public:
+    /**
+     * If the renderer should render contents as multipass mode.
+     */
     bool renderedAsMultipass() { return stereoRenderingMode == TrStereoRenderingMode::MultiPass; }
+    /**
+     * If the renderer should use multiview mode to render contents.
+     */
+    bool multiviewRequired() { return stereoRenderingMode == TrStereoRenderingMode::SinglePassMultiview || stereoRenderingMode == TrStereoRenderingMode::SinglePassInstanced; }
   };
 
   class TrXRStereoFrameInfo
   {
   public:
-    TrXRStereoFrameInfo() = default;
+    TrXRStereoFrameInfo()
+    {
+      memset(viewerBaseMatrix, 0, sizeof(float) * 16);
+      views[0].viewIndex = 0;
+      views[1].viewIndex = 1;
+    }
     ~TrXRStereoFrameInfo() = default;
 
   public:
@@ -151,10 +163,12 @@ namespace xr
     TrXRView &getStereoView(uint32_t viewIndex) { return data->stereoFrame.getView(viewIndex); }
     void updateRecommendedFov(float fov) { data->recommendedFov = fov; }
     void updateViewerBaseMatrix(float *matrixValues) { data->stereoFrame.updateViewerBaseMatrix(matrixValues); }
-    void updateViewFramebuffer(int viewIndex, int framebufferId, TrViewport viewport)
+    void updateViewFramebuffer(int viewIndex, int framebufferId, TrViewport viewport, bool useDoubleWide)
     {
+      assert(viewIndex >= 0 && viewIndex < 2);
       data->framebufferConf.height = viewport.height;
       data->framebufferConf.width = viewport.width;
+      data->framebufferConf.useDoubleWide = useDoubleWide;
       auto &view = data->stereoFrame.getView(viewIndex);
       view.viewFramebuffer = framebufferId;
       view.viewport = viewport;

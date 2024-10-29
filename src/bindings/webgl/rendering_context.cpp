@@ -813,6 +813,8 @@ namespace webgl
       InstanceMethod("bindVertexArray", &T::BindVertexArray),                               \
       InstanceMethod("texImage3D", &T::TexImage3D),                                         \
       InstanceMethod("texSubImage3D", &T::TexSubImage3D),                                   \
+      InstanceMethod("texStorage2D", &T::TexStorage2D),                                     \
+      InstanceMethod("texStorage3D", &T::TexStorage3D),                                     \
       InstanceMethod("getUniformBlockIndex", &T::GetUniformBlockIndex),                     \
       InstanceMethod("uniformBlockBinding", &T::UniformBlockBinding),                       \
       InstanceMethod("vertexAttribIPointer", &T::VertexAttribIPointer),                     \
@@ -860,10 +862,13 @@ namespace webgl
       }
     }
 
+    auto sentAt = std::chrono::system_clock::now();
     auto initCommandBuffer = WebGL1ContextInitCommandBufferRequest();
     sendCommandBufferRequest(initCommandBuffer, true);
 
-    auto resp = recvCommandBufferResponse<WebGL1ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES);
+    auto resp = recvCommandBufferResponse<WebGL1ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES, 3000);
+    auto respondAt = std::chrono::system_clock::now();
+    std::cout << "Received WebGL context response in " << std::chrono::duration_cast<std::chrono::milliseconds>(respondAt - sentAt).count() << "ms" << std::endl;
     if (resp == nullptr)
     {
       Napi::TypeError::New(env, "Failed to initialize WebGL context")
@@ -1681,8 +1686,8 @@ namespace webgl
     auto jsTexture = info[3];
     if (!jsTexture.IsObject() || !jsTexture.As<Napi::Object>().InstanceOf(WebGLTexture::constructor->Value()))
     {
-      Napi::TypeError::New(env, "framebufferTexture2D() 4th argument(texture) must be a WebGLTexture.")
-          .ThrowAsJavaScriptException();
+      setGLError("framebufferTexture2d", WebGLError::INVALID_OPERATION,
+                 "texture isn't 0 or the name of an existing texture object");
       return env.Undefined();
     }
 
@@ -1691,6 +1696,25 @@ namespace webgl
     int textarget = info[2].As<Napi::Number>().Int32Value();
     auto texture = Napi::ObjectWrap<WebGLTexture>::Unwrap(jsTexture.As<Napi::Object>());
     int level = info[4].As<Napi::Number>().Int32Value();
+
+    if (target != WEBGL_FRAMEBUFFER)
+    {
+      setGLError("framebufferTexture2d", WebGLError::INVALID_ENUM,
+                 "target must be FRAMEBUFFER");
+      return env.Undefined();
+    }
+    if (textarget != WEBGL_TEXTURE_2D &&
+      textarget != WEBGL_TEXTURE_CUBE_MAP_POSITIVE_X &&
+      textarget != WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_X &&
+      textarget != WEBGL_TEXTURE_CUBE_MAP_POSITIVE_Y &&
+      textarget != WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Y &&
+      textarget != WEBGL_TEXTURE_CUBE_MAP_POSITIVE_Z &&
+      textarget != WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Z)
+    {
+      setGLError("framebufferTexture2d", WebGLError::INVALID_ENUM,
+                 "textarget must be TEXTURE_2D or one of the TEXTURE_CUBE_MAP_* targets");
+      return env.Undefined();
+    }
 
     auto req = FramebufferTexture2DCommandBufferRequest(target, attachment, textarget, texture->GetId(), level);
     sendCommandBufferRequest(req);
@@ -1894,12 +1918,6 @@ namespace webgl
     auto target = info[0].As<Napi::Number>().Uint32Value();
     auto level = info[1].As<Napi::Number>().Uint32Value();
     auto internalformat = info[2].As<Napi::Number>().Uint32Value();
-
-    if (target != WEBGL_TEXTURE_2D)
-    {
-      Napi::TypeError::New(env, "texImage2D() only supports target TEXTURE_2D.").ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
 
     TextureImage2DCommandBufferRequest req(target, level, internalformat);
     unsigned char *pixelsData = nullptr;
@@ -3658,20 +3676,7 @@ namespace webgl
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-
-    auto req = GetErrorCommandBufferRequest();
-    sendCommandBufferRequest(req, true);
-
-    auto resp = recvCommandBufferResponse<GetErrorCommandBufferResponse>(COMMAND_BUFFER_GET_ERROR_RES);
-    if (resp == nullptr)
-    {
-      Napi::TypeError::New(env, "getError() failed to get the error code.")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-    auto r = Napi::Number::New(env, resp->error);
-    delete resp;
-    return r;
+    return Napi::Number::New(env, getGLError());
   }
 
   template <typename T>
@@ -4261,6 +4266,55 @@ namespace webgl
 
     auto commandBuffer = commandbuffers::TextureSubImage3DCommandBufferRequest(
         target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels);
+    sendCommandBufferRequest(commandBuffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGL2RenderingContext::TexStorage2D(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 5)
+    {
+      Napi::TypeError::New(env, "texStorage2D() takes 5 arguments.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    uint32_t target = info[0].ToNumber().Uint32Value();
+    uint32_t levels = info[1].ToNumber().Uint32Value();
+    uint32_t internalformat = info[2].ToNumber().Uint32Value();
+    uint32_t width = info[3].ToNumber().Uint32Value();
+    uint32_t height = info[4].ToNumber().Uint32Value();
+
+    auto commandBuffer = commandbuffers::TextureStorage2DCommandBufferRequest(
+        target, levels, internalformat, width, height);
+    sendCommandBufferRequest(commandBuffer);
+    return env.Undefined();
+  }
+
+  Napi::Value WebGL2RenderingContext::TexStorage3D(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 6)
+    {
+      Napi::TypeError::New(env, "texStorage3D() takes 6 arguments.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    uint32_t target = info[0].ToNumber().Uint32Value();
+    uint32_t levels = info[1].ToNumber().Uint32Value();
+    uint32_t internalformat = info[2].ToNumber().Uint32Value();
+    uint32_t width = info[3].ToNumber().Uint32Value();
+    uint32_t height = info[4].ToNumber().Uint32Value();
+    uint32_t depth = info[5].ToNumber().Uint32Value();
+
+    auto commandBuffer = commandbuffers::TextureStorage3DCommandBufferRequest(
+        target, levels, internalformat, width, height, depth);
     sendCommandBufferRequest(commandBuffer);
     return env.Undefined();
   }

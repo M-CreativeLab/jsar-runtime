@@ -11,7 +11,7 @@ namespace xr
                    depth(true),
                    stencil(false),
                    alpha(true),
-                   multiview(false),
+                   multiviewRequired(false),
                    ignoreDepthValues(false),
                    framebufferScaleFactor(1.0f),
                    framebuffer(0),
@@ -27,7 +27,7 @@ namespace xr
       depth = layer->depth;
       stencil = layer->stencil;
       alpha = layer->alpha;
-      multiview = layer->multiview;
+      multiviewRequired = layer->multiviewRequired;
       ignoreDepthValues = layer->ignoreDepthValues;
       framebufferScaleFactor = layer->framebufferScaleFactor;
       framebuffer = layer->framebuffer;
@@ -40,7 +40,7 @@ namespace xr
     bool depth;
     bool stencil;
     bool alpha;
-    bool multiview;
+    bool multiviewRequired;
     bool ignoreDepthValues;
     float framebufferScaleFactor;
     uint32_t framebuffer;

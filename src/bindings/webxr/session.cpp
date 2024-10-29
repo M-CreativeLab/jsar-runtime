@@ -62,12 +62,12 @@ namespace bindings
     auto xrSession = XRSession::Unwrap(info[0].ToObject());
     if (TR_UNLIKELY(xrSession == nullptr || xrSession->ended))
     {
-      fprintf(stderr, "skipped XRFrame(), reason is: session is ended\n");
+      std::cerr << "skipped XRFrame(), reason is: session is ended" << std::endl;
       return env.Undefined();
     }
     if (TR_UNLIKELY(xrSession->id < 0))
     {
-      fprintf(stderr, "skipped XRFrameRequest(), reason is: session is invalid\n");
+      std::cerr << "skipped XRFrameRequest(), reason is: session is invalid" << std::endl;
       return env.Undefined();
     }
 
@@ -84,12 +84,21 @@ namespace bindings
       return env.Undefined(); // Skip the frame if the session is not in the frustum.
 
     XRFrameContext frameContext(*sessionContext, *deviceContext, xrSession);
-    /**
-     * TODO: support singlepass rendering
-     */
-    for (uint32_t viewIndex = 0; viewIndex < 2; viewIndex++)
+    if (deviceContext->stereoRenderingMode == xr::TrStereoRenderingMode::MultiPass)
     {
-      auto req = createFrameRequestForView(viewIndex, frameContext);
+      for (uint32_t viewIndex = 0; viewIndex < 2; viewIndex++)
+      {
+        auto req = createFrameRequestForView(viewIndex, frameContext);
+        xrSession->onFrame(env, &req);
+      }
+    }
+    else
+    {
+      /**
+       * Singlepass/SinglepassInstanced stereo rendering.
+       * Calling `onFrame()` once with the viewIndex set to 0 is enough for stereo rendering.
+       */
+      auto req = createFrameRequestForView(0, frameContext);
       xrSession->onFrame(env, &req);
     }
     prevStereoId = sessionContext->stereoId;
@@ -661,7 +670,36 @@ namespace bindings
     {
       auto descriptor = *it;
       if (descriptor.cancelled != true)
-        descriptor.callback->Call(this->Value(), {time, xrFrameObject});
+      {
+        Napi::HandleScope scope(env);
+        auto jsCallback = descriptor.callback;
+        try
+        {
+          jsCallback->Call(this->Value(), {time, xrFrameObject});
+        }
+        catch (const Napi::Error &e)
+        {
+          std::cerr << "Error in XRSession::onFrame(): ";
+          auto jsError = e.Value();
+          if (jsError.IsString())
+          {
+            std::cerr << jsError.ToString().Utf8Value();
+          }
+          else if (jsError.IsObject())
+          {
+            auto errorObject = jsError.ToObject();
+            auto jsMessage = errorObject.Get("message");
+            if (errorObject.Has("stack") && errorObject.Get("stack").IsString())
+              jsMessage = errorObject.Get("stack").ToString();
+            std::cerr << jsMessage.ToString().Utf8Value();
+          }
+          else
+          {
+            std::cerr << e.what();
+          }
+          std::cerr << std::endl;
+        }
+      }
     }
     currentFrameCallbacks.clear();
     xrFrameUnwrapped->end();

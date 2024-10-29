@@ -41,6 +41,7 @@ namespace bindings
   public:
     Napi::Value AntialiasGetter(const Napi::CallbackInfo &info);
     Napi::Value IgnoreDepthValuesGetter(const Napi::CallbackInfo &info);
+    Napi::Value MultiviewRequiredGetter(const Napi::CallbackInfo &info);
     Napi::Value FramebufferGetter(const Napi::CallbackInfo &info);
     Napi::Value FramebufferWidthGetter(const Napi::CallbackInfo &info);
     Napi::Value FramebufferHeightGetter(const Napi::CallbackInfo &info);

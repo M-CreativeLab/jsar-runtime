@@ -21,7 +21,9 @@ namespace xr
   }
 
   Device::Device(TrConstellation *constellation)
-      : m_Constellation(constellation), m_FieldOfView(0.0f)
+      : m_Constellation(constellation),
+        m_FieldOfView(0.0f),
+        m_ActiveEyeId(0)
   {
     // Initialize the command chan server
     m_CommandChanServer = std::make_unique<ipc::TrOneShotServer<TrXRCommandMessage>>("xrCommandChan");
@@ -222,14 +224,16 @@ namespace xr
 
   bool Device::updateFov(float fov)
   {
+    assert(m_DeviceContextZone != nullptr);
     m_FieldOfView = fov;
     m_DeviceContextZone->updateRecommendedFov(fov);
     return true;
   }
 
-  bool Device::updateViewFramebuffer(int framebufferId, TrViewport viewport)
+  bool Device::updateViewFramebuffer(int framebufferId, TrViewport viewport, bool useDoubleWide)
   {
-    m_DeviceContextZone->updateViewFramebuffer(m_ActiveEyeId, framebufferId, viewport);
+    assert(m_DeviceContextZone != nullptr);
+    m_DeviceContextZone->updateViewFramebuffer(m_ActiveEyeId, framebufferId, viewport, useDoubleWide);
     return true;
   }
 

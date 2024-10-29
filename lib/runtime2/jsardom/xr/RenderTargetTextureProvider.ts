@@ -1,4 +1,5 @@
 import { WebXRLayerWrapper } from './LayerWrapper';
+import { MultiviewRenderTarget } from '../MultiviewRenderTarget';
 
 /**
  * An interface for objects that provide render target textures for XR rendering.
@@ -75,7 +76,7 @@ export abstract class WebXRLayerRenderTargetTextureProvider implements IWebXRRen
 
     // Create render target texture from the internal texture
     const renderTargetTexture = multiview ?
-      new BABYLON.MultiviewRenderTarget(this._scene, textureSize) :
+      new MultiviewRenderTarget(this._scene, textureSize) :
       new BABYLON.RenderTargetTexture('XR renderTargetTexture', textureSize, this._scene);
     const renderTargetWrapper = renderTargetTexture.renderTarget as BABYLON.WebGLRenderTargetWrapper;
     renderTargetWrapper._samples = renderTargetTexture.samples;

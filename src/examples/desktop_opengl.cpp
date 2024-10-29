@@ -130,6 +130,7 @@ public:
     auto renderer = constellation->renderer;
     auto api = RenderAPI::Create(kUnityGfxRendererOpenGLCore, constellation.get());
     renderer->setApi(api);
+    renderer->useDoubleWideFramebuffer = true;
 
     // Check the environment variable to enable tracing
     const char *enableTracing = getenv("JSAR_ENABLE_RENDERER_TRACING");
@@ -491,14 +492,15 @@ int main(int argc, char **argv)
   glfwWindowHint(GLFW_SAMPLES, 4);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  int width = 800;
+  int width = 960;
   int height = 600;
   bool xrEnabled = false;
+  bool multiPass = false;
   int nApps = 1;
   string requestUrl = "http://localhost:3000/spatial-element.xsml";
 
   int opt;
-  while ((opt = getopt(argc, argv, "w:h:x:n:")) != -1)
+  while ((opt = getopt(argc, argv, "w:h:x:mn:")) != -1)
   {
     switch (opt)
     {
@@ -511,6 +513,9 @@ int main(int argc, char **argv)
     case 'x':
       if (strcmp(optarg, "r") == 0)
         xrEnabled = true;
+      break;
+    case 'm':
+      multiPass = true;
       break;
     case 'n':
       nApps = atoi(optarg);
@@ -574,7 +579,7 @@ int main(int argc, char **argv)
     {
       xr::TrDeviceInit init;
       init.active = true;
-      init.stereoRenderingMode = xr::TrStereoRenderingMode::MultiPass;
+      init.stereoRenderingMode = multiPass ? xr::TrStereoRenderingMode::MultiPass : xr::TrStereoRenderingMode::SinglePass;
       embedder->configureXrDevice(init);
       windowCtx.createXrRenderer();
     }
@@ -677,26 +682,29 @@ int main(int argc, char **argv)
 
     int viewsCount = xrEnabled ? 2 : 1;
     auto drawingViewport = windowCtx.drawingViewport();
-    for (int viewIndex = 0; viewIndex < viewsCount; viewIndex++)
+
+    if (embedder == nullptr)
+      continue;
+
+    if (xrEnabled && multiPass)
     {
-      TrViewport eyeViewport(
-          drawingViewport.width / viewsCount,             // width
-          drawingViewport.height,                         // height
-          viewIndex * drawingViewport.width / viewsCount, // x
-          0                                               // y
-      );
-      glViewport(eyeViewport.x, eyeViewport.y, eyeViewport.width, eyeViewport.height);
-
-      // render JSAR content
-      if (embedder != nullptr)
+      for (int viewIndex = 0; viewIndex < 2; viewIndex++)
       {
-        glGetError(); // Clear the error
+        uint32_t w = drawingViewport.width / viewsCount;
+        uint32_t h = drawingViewport.height;
+        uint32_t x = viewIndex * w;
+        uint32_t y = 0;
 
-        /**
-         * Configure XR frame data.
-         */
-        if (xrEnabled)
+        TrViewport eyeViewport(w, h, x, y);
+        glViewport(eyeViewport.x, eyeViewport.y, eyeViewport.width, eyeViewport.height);
+
+        // render JSAR content
         {
+          glGetError(); // Clear the error
+
+          /**
+           * Configure XR frame data.
+           */
           auto xrRenderer = windowCtx.xrRenderer;
           assert(xrRenderer != nullptr);
           auto xrDevice = embedder->constellation->xrDevice;
@@ -709,7 +717,34 @@ int main(int argc, char **argv)
 
           auto viewerBaseMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewerBaseMatrix()));
           xrDevice->updateViewerBaseMatrix(viewerBaseMatrix);
+          embedder->onFrame();
         }
+      }
+    }
+    else
+    {
+      glViewport(0, 0, drawingViewport.width, drawingViewport.height);
+      {
+        glGetError(); // Clear the error
+        if (xrEnabled)
+        {
+          /**
+           * Configure XR frame data.
+           */
+          auto xrRenderer = windowCtx.xrRenderer;
+          assert(xrRenderer != nullptr);
+          auto xrDevice = embedder->constellation->xrDevice;
+          assert(xrDevice != nullptr);
+
+          for (int viewIndex = 0; viewIndex < 2; viewIndex++)
+          {
+            auto viewMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewMatrixForEye(viewIndex)));
+            auto projectionMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getProjectionMatrix()));
+            xrDevice->updateViewMatrix(viewIndex, viewMatrix);
+            xrDevice->updateProjectionMatrix(viewIndex, projectionMatrix);
+          }
+        }
+        // render JSAR content
         embedder->onFrame();
       }
     }

@@ -53,6 +53,8 @@
   XX(GENERATE_MIPMAP, GenerateMipmapCommandBufferRequest)                                  \
   XX(TEXTURE_IMAGE_3D, TextureImage3DCommandBufferRequest)                                 \
   XX(TEXTURE_SUB_IMAGE_3D, TextureSubImage3DCommandBufferRequest)                          \
+  XX(TEXTURE_STORAGE_2D, TextureStorage2DCommandBufferRequest)                             \
+  XX(TEXTURE_STORAGE_3D, TextureStorage3DCommandBufferRequest)                             \
   XX(ENABLE_VERTEX_ATTRIB_ARRAY, EnableVertexAttribArrayCommandBufferRequest)              \
   XX(DISABLE_VERTEX_ATTRIB_ARRAY, DisableVertexAttribArrayCommandBufferRequest)            \
   XX(VERTEX_ATTRIB_POINTER, VertexAttribPointerCommandBufferRequest)                       \

@@ -89,6 +89,7 @@
     "future": "cpp",
     "shared_mutex": "cpp",
     "__memory": "cpp",
-    "semaphore": "cpp"
+    "semaphore": "cpp",
+    "memory_resource": "cpp"
   }
 }

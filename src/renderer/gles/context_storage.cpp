@@ -117,6 +117,8 @@ void OpenGLContextStorage::Restore()
   m_CullFaceEnabled ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
   m_DepthTestEnabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
   m_BlendEnabled ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
+  m_StencilTestEnabled ? glEnable(GL_STENCIL_TEST) : glDisable(GL_STENCIL_TEST);
+  m_ScissorTestEnabled ? glEnable(GL_SCISSOR_TEST) : glDisable(GL_SCISSOR_TEST);
 
   // Blend state restore
   /**
@@ -258,6 +260,8 @@ void OpenGLHostContextStorage::Record()
   m_CullFaceEnabled = glIsEnabled(GL_CULL_FACE);
   m_DepthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
   m_BlendEnabled = glIsEnabled(GL_BLEND);
+  m_StencilTestEnabled = glIsEnabled(GL_STENCIL_TEST);
+  m_ScissorTestEnabled = glIsEnabled(GL_SCISSOR_TEST);
 
   // States
   glGetIntegerv(GL_CULL_FACE_MODE, (GLint *)&m_CullFace);
@@ -298,6 +302,52 @@ void OpenGLHostContextStorage::RecordTextureBindingFromHost()
 
   if (isActiveNotMatched)
     glActiveTexture(beforeActiveUnit);
+}
+
+void OpenGLHostContextStorage::ConfigureFramebuffer()
+{
+  glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
+}
+
+void OpenGLHostContextStorage::RestoreFramebuffer()
+{
+}
+
+OpenGLAppContextStorage::OpenGLAppContextStorage(std::string name)
+    : OpenGLContextStorage(name)
+{
+  /**
+   * Initial values for WebGL or OpenGLES.
+   */
+  m_CullFaceEnabled = true;
+  m_CullFace = GL_BACK;
+  m_FrontFace = GL_CCW;
+  m_DepthTestEnabled = true;
+  m_StencilTestEnabled = false;
+  m_ScissorTestEnabled = false;
+}
+
+OpenGLAppContextStorage::OpenGLAppContextStorage(std::string name, OpenGLAppContextStorage *from)
+    : OpenGLContextStorage(name, from)
+{
+  m_Programs = OpenGLNamesStorage(&from->m_Programs);
+  m_Shaders = OpenGLNamesStorage(&from->m_Shaders);
+  m_Buffers = OpenGLNamesStorage(&from->m_Buffers);
+  m_Framebuffers = OpenGLNamesStorage(&from->m_Framebuffers);
+  m_Renderbuffers = OpenGLNamesStorage(&from->m_Renderbuffers);
+  m_VertexArrayObjects = OpenGLNamesStorage(&from->m_VertexArrayObjects);
+  m_Textures = OpenGLNamesStorage(&from->m_Textures);
+  m_Samplers = OpenGLNamesStorage(&from->m_Samplers);
+}
+
+void OpenGLAppContextStorage::RecordViewport(int x, int y, int w, int h)
+{
+  if (m_Viewport[0] == x && m_Viewport[1] == y && m_Viewport[2] == w && m_Viewport[3] == h)
+    return;
+  m_Viewport[0] = x;
+  m_Viewport[1] = y;
+  m_Viewport[2] = w;
+  m_Viewport[3] = h;
 }
 
 void OpenGLAppContextStorage::RecordProgramOnCreated(GLuint program)

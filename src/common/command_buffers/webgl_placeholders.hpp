@@ -9,7 +9,8 @@ static const char *WEBGL_PLACEHOLDERS_PLACEHOLDER_ID_KEY = "_placeholderId";
 #define PLACEHOLDER_ID_MAP(XX) \
   XX(ProjectionMatrix, 10)     \
   XX(ViewMatrix, 11)           \
-  XX(ViewProjectionMatrix, 12)
+  XX(ViewProjectionMatrix, 12) \
+  XX(ViewProjectionMatrixForRightEye, 13)
 
 static const char *WEBGL_PLACEHOLDERS_IDS[] = {
 #define XX(id, _) #id,

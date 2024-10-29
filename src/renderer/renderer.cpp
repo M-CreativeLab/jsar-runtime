@@ -57,7 +57,8 @@ namespace renderer
     glHostContext->Record();
     // Update the view's framebuffer and viewport when the host context is recorded.
     constellation->xrDevice->updateViewFramebuffer(glHostContext->GetFramebuffer(),
-                                                   glHostContext->GetViewport());
+                                                   glHostContext->GetViewport(),
+                                                   useDoubleWideFramebuffer);
     if (isHostContextSummaryEnabled)
       glHostContext->Print();
     perfCounter.record("  renderer.finishedHostContextRecord");
@@ -301,10 +302,18 @@ namespace renderer
   {
     auto xrDevice = constellation->xrDevice.get();
     assert(xrDevice != nullptr);
-    if (xrDevice->enabled() && xrDevice->isRenderedAsMultipass()) // TODO: support singlepass?
+    if (xrDevice->enabled())
     {
-      xr::MultiPassFrame deviceFrame(xrDevice, 0);
-      return api->ExecuteCommandBuffer(commandBuffers, contentRenderer, &deviceFrame, true);
+      if (xrDevice->isRenderedAsMultipass())
+      {
+        xr::MultiPassFrame deviceFrame(xrDevice, 0);
+        return api->ExecuteCommandBuffer(commandBuffers, contentRenderer, &deviceFrame, true);
+      }
+      else
+      {
+        xr::SinglePassFrame deviceFrame(xrDevice, 0);
+        return api->ExecuteCommandBuffer(commandBuffers, contentRenderer, &deviceFrame, true);
+      }
     }
     else
     {

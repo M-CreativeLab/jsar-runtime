@@ -35,8 +35,8 @@ namespace xr
   class DeviceFrame
   {
   public:
-    DeviceFrame(xr::Device *device);
-    ~DeviceFrame();
+    DeviceFrame(xr::Device *device) : m_XrDevice(device) {}
+    virtual ~DeviceFrame() = default;
 
   public:
     void start();
@@ -56,6 +56,9 @@ namespace xr
     InputSource &getGazeInputSource();
     InputSource &getHandInputSource(Handness handness);
 
+  public:
+    virtual glm::mat4 computeMatrixByGraph(commandbuffers::MatrixComputationGraph &computationGraph, int sessionId, int viewIndex) = 0;
+
   protected:
     Device *m_XrDevice = nullptr;
     bool m_Ended = false;
@@ -65,6 +68,9 @@ namespace xr
     int m_CurrentStereoId = -1;
   };
 
+  /**
+   * The `DeviceFrame` for multi-pass rendering.
+   */
   class MultiPassFrame : public DeviceFrame
   {
   public:
@@ -97,7 +103,7 @@ namespace xr
      *
      * @param computationGraph the computation graph to be operated.
      */
-    glm::mat4 computeMatrixByGraph(int sessionId, commandbuffers::MatrixComputationGraph &computationGraph);
+    glm::mat4 computeMatrixByGraph(commandbuffers::MatrixComputationGraph &computationGraph, int sessionId, int viewIndex) override;
 
   private:
     int m_ActiveEyeId = -1;
@@ -109,6 +115,24 @@ namespace xr
      * The viewer's projection matrix for the active eye in current pass.
      */
     float m_ViewerProjectionMatrix[16];
+  };
+
+  /**
+   * The `DeviceFrame` for single-pass rendering.
+   */
+  class SinglePassFrame : public DeviceFrame
+  {
+  public:
+    explicit SinglePassFrame(Device *device, int stereoId);
+
+  public:
+    glm::mat4 computeMatrixByGraph(commandbuffers::MatrixComputationGraph &computationGraph, int sessionId, int viewIndex) override;
+
+  private:
+    float m_ViewMatrixForLeftEye[16];
+    float m_ProjectionMatrixForLeftEye[16];
+    float m_ViewMatrixForRightEye[16];
+    float m_ProjectionMatrixForRightEye[16];
   };
 
   enum FrameActionResult
