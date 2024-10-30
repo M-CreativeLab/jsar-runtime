@@ -4,14 +4,14 @@
 #include <skia/include/codec/SkJpegDecoder.h>
 #include "./html_image_element.hpp"
 #include "./document.hpp"
-#include "./rendering_context.hpp"
+#include "./browsing_context.hpp"
 
 namespace dom
 {
   void HTMLImageElement::loadImage(const std::string &src)
   {
-    auto renderingContext = ownerDocument->lock()->renderingContext;
-    renderingContext->fetchImageResource(src, [this](const void *imageData, size_t imageByteLength)
+    auto browsingContext = ownerDocument->lock()->browsingContext;
+    browsingContext->fetchImageResource(src, [this](const void *imageData, size_t imageByteLength)
                                          { onImageLoaded(imageData, imageByteLength); });
   }
 

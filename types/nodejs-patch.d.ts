@@ -286,11 +286,11 @@ declare namespace Transmute {
   }
 
   /**
-   * The internal rendering context for the document rendering.
+   * A browsing context is an environment in which an agent displays a `Document`. The HTML or depreated XSML document depends on this context to bootstrap.
    */
-  class DocumentRenderingContext extends RuntimeContext {
+  class BrowsingContext extends RuntimeContext {
     /**
-     * Create a new document rendering context.
+     * Create the browsing context.
      */
     constructor();
     /**
@@ -340,7 +340,7 @@ declare namespace NodeJS {
   interface Process {
     _linkedBinding(module: 'transmute:dom'): {
       Audio: typeof Audio;
-      DocumentRenderingContext: typeof Transmute.DocumentRenderingContext;
+      BrowsingContext: typeof Transmute.BrowsingContext;
       WorkerContext: typeof Transmute.WorkerContext;
     };
     _linkedBinding(module: 'transmute:env'): {

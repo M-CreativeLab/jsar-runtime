@@ -1,6 +1,5 @@
 import { JSARDOM } from '@yodaos-jsar/dom';
-import { extname, resolve as resolvePath } from 'node:path';
-import { existsSync } from 'node:fs';
+import { extname } from 'node:path';
 
 import { getPerformanceNow, isWebXRSupported } from '@transmute/env';
 import { reportDocumentEvent } from '@transmute/messaging';
@@ -64,7 +63,7 @@ async function evaluateXSML(gl: WebGLRenderingContext | WebGL2RenderingContext, 
 }
 
 export class TransmuteRuntime2 extends EventTarget {
-  #documentRenderingContext: Transmute.DocumentRenderingContext;
+  #browsingContext: Transmute.BrowsingContext;
 
   constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext, private id: number) {
     super();
@@ -81,12 +80,12 @@ export class TransmuteRuntime2 extends EventTarget {
     }
     {
       /**
-       * Initialize the `DocumentRenderingContext` instance.
+       * Initialize the `BrowsingContext` instance.
        */
-      const { DocumentRenderingContext } = process._linkedBinding('transmute:dom');
-      const renderingContext = new DocumentRenderingContext();
-      renderingContext.setResourceLoader(new ResourceLoaderOnTransmute());
-      this.#documentRenderingContext = renderingContext;
+      const { BrowsingContext } = process._linkedBinding('transmute:dom');
+      const browsingContext = new BrowsingContext();
+      browsingContext.setResourceLoader(new ResourceLoaderOnTransmute());
+      this.#browsingContext = browsingContext;
     }
     this.dispatchEvent(new Event('rendererReady'));
   }
@@ -166,10 +165,15 @@ export class TransmuteRuntime2 extends EventTarget {
         break;
     }
 
+    // Start the browsing context.
     if (loadAsHTML) {
-      this.#documentRenderingContext.start(codeOrUrl, 'text/html');
+      this.#browsingContext.start(codeOrUrl, 'text/html');
     } else {
-      this.#documentRenderingContext.start('', 'text/html');
+      this.#browsingContext.start('', 'text/html');
+    }
+
+    // If not loading as HTML, evaluate the XSML.
+    if (!loadAsHTML) {
       await evaluateXSML(this.gl, codeOrUrl, urlBase);
     }
     console.info(`Content(#${this.id}): the document is loaded successfully.`);

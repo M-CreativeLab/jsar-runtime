@@ -1,25 +1,25 @@
-#include "./rendering_context.hpp"
+#include "./browsing_context.hpp"
 #include "./document.hpp"
 
 namespace dombinding
 {
-  thread_local Napi::FunctionReference *DocumentRenderingContext::constructor;
-  void DocumentRenderingContext::Init(Napi::Env env, Napi::Object exports)
+  thread_local Napi::FunctionReference *BrowsingContext::constructor;
+  void BrowsingContext::Init(Napi::Env env, Napi::Object exports)
   {
     auto props = GetClassProperties();
     {
-      auto newProps = vector<Napi::ClassPropertyDescriptor<DocumentRenderingContext>>({
-          InstanceMethod("start", &DocumentRenderingContext::Start),
+      auto newProps = vector<Napi::ClassPropertyDescriptor<BrowsingContext>>({
+          InstanceMethod("start", &BrowsingContext::Start),
       });
       props.insert(props.end(), newProps.begin(), newProps.end());
     }
-    Napi::Function func = DefineClass(env, "DocumentRenderingContext", props);
+    Napi::Function func = DefineClass(env, "BrowsingContext", props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
-    exports.Set("DocumentRenderingContext", func);
+    exports.Set("BrowsingContext", func);
   }
 
-  Napi::Value DocumentRenderingContext::Start(const Napi::CallbackInfo &info)
+  Napi::Value BrowsingContext::Start(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);

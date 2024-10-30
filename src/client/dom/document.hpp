@@ -18,11 +18,11 @@ namespace dom
     LIMITED_QUIRKS,
   };
 
-  class DocumentRenderingContext;
+  class BrowsingContext;
   class Document : public Node
   {
   public:
-    Document(string contentType, shared_ptr<DocumentRenderingContext> renderingContext, bool autoConnect = false);
+    Document(string contentType, shared_ptr<BrowsingContext> browsingContext, bool autoConnect = false);
     Document(Document &other);
     virtual ~Document() = default;
 
@@ -40,7 +40,7 @@ namespace dom
     string contentType = "text/html";
 
   public:
-    shared_ptr<DocumentRenderingContext> renderingContext;
+    shared_ptr<BrowsingContext> browsingContext;
 
   protected:
     bool autoConnect;
@@ -54,7 +54,7 @@ namespace dom
   class XMLDocument : public Document
   {
   public:
-    XMLDocument(shared_ptr<DocumentRenderingContext> renderingContext, bool autoConnect);
+    XMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect);
     ~XMLDocument() = default;
   };
 
@@ -64,10 +64,10 @@ namespace dom
     /**
      * Create a new HTMLDocument from a string source.
      * 
-     * @param source The source of the document.
+     * @param browsingContext The browsing context that the document belongs to.
      * @param autoConnect If true, the document will be automatically to be connected as the DOM root.
      */
-    HTMLDocument(shared_ptr<DocumentRenderingContext> renderingContext, bool autoConnect);
+    HTMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect);
     ~HTMLDocument() = default;
   };
 }

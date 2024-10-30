@@ -2,14 +2,14 @@
 #include "common/media/message.hpp"
 #include "./html_media_element.hpp"
 #include "./document.hpp"
-#include "./rendering_context.hpp"
+#include "./browsing_context.hpp"
 
 namespace dom
 {
   void HTMLMediaElement::loadMedia(const std::string &src)
   {
-    auto renderingContext = ownerDocument->lock()->renderingContext;
-    renderingContext->fetchImageResource(src, [this](const void *data, size_t byteLength)
+    auto browsingContext = ownerDocument->lock()->browsingContext;
+    browsingContext->fetchImageResource(src, [this](const void *data, size_t byteLength)
                                          { onMediaLoaded(data, byteLength); });
   }
 

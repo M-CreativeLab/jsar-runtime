@@ -12,7 +12,7 @@
 
 namespace dom
 {
-  class DocumentRenderingContext : public RuntimeContext
+  class BrowsingContext : public RuntimeContext
   {
   public:
     using RuntimeContext::RuntimeContext;
@@ -30,7 +30,7 @@ namespace dom
     {
       shared_ptr<DocumentType> document;
       if (type == DOMParsingType::HTML)
-        document = make_shared<DocumentType>(getSharedPtr<DocumentRenderingContext>(), true);
+        document = make_shared<DocumentType>(getSharedPtr<BrowsingContext>(), true);
       else
         throw std::runtime_error("Unsupported document type");
 

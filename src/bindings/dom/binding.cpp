@@ -4,7 +4,7 @@
 #include "./all_html_elements.hpp"
 #include "./document.hpp"
 #include "./dom_parser.hpp"
-#include "./rendering_context.hpp"
+#include "./browsing_context.hpp"
 #include "./worker_context.hpp"
 
 namespace bindings
@@ -26,7 +26,7 @@ namespace bindings
       dombinding::XMLDocument::Init(env, exports);
 
       dombinding::DOMParser::Init(env);
-      dombinding::DocumentRenderingContext::Init(env, exports);
+      dombinding::BrowsingContext::Init(env, exports);
       dombinding::WorkerContext::Init(env, exports);
       return exports;
     }

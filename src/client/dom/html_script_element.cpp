@@ -4,7 +4,7 @@
 #include "crates/jsar_jsbindings.h"
 #include "./html_script_element.hpp"
 #include "./document.hpp"
-#include "./rendering_context.hpp"
+#include "./browsing_context.hpp"
 
 namespace dom
 {
@@ -21,10 +21,10 @@ namespace dom
 
   void HTMLScriptElement::connectedCallback()
   {
-    auto renderingContext = ownerDocument->lock()->renderingContext;
+    auto browsingContext = ownerDocument->lock()->browsingContext;
     if (isImportMap())
     {
-      if (!renderingContext->updateImportMap(textContent))
+      if (!browsingContext->updateImportMap(textContent))
       {
         /**
          * TODO: Follow the spec to handle the error.
@@ -36,7 +36,7 @@ namespace dom
     }
     else
     {
-      compiledScript = renderingContext->createScript(baseURI, isClassicScript() ? dom::SourceTextType::Classic : dom::SourceTextType::ESM);
+      compiledScript = browsingContext->createScript(baseURI, isClassicScript() ? dom::SourceTextType::Classic : dom::SourceTextType::ESM);
       compiledScript->crossOrigin = crossOrigin == HTMLScriptCrossOrigin::Anonymous ? true : false;
       loadSource();
     }
@@ -56,7 +56,7 @@ namespace dom
     }
     else
     {
-      auto renderingContext = ownerDocument->lock()->renderingContext;
+      auto browsingContext = ownerDocument->lock()->browsingContext;
       {
         auto resourceUrl = crates::jsar::UrlHelper::CreateUrlStringWithPath(baseURI, src);
         if (resourceUrl == "")
@@ -69,8 +69,8 @@ namespace dom
           assert(resourceExt.isTextSourceModule());
           bool isTypeScript = resourceExt.isTypeScript();
 
-          renderingContext->fetchTextSourceResource(resourceUrl, [this, isTypeScript](const std::string &source)
-                                                    { compileScript(source, isTypeScript); });
+          browsingContext->fetchTextSourceResource(resourceUrl, [this, isTypeScript](const std::string &source)
+                                                   { compileScript(source, isTypeScript); });
         }
       }
     }
@@ -78,8 +78,8 @@ namespace dom
 
   void HTMLScriptElement::compileScript(const string &source, bool isTypeScript)
   {
-    auto renderingContext = ownerDocument->lock()->renderingContext;
-    renderingContext->scriptingContext->compile(compiledScript, source, isTypeScript);
+    auto browsingContext = ownerDocument->lock()->browsingContext;
+    browsingContext->scriptingContext->compile(compiledScript, source, isTypeScript);
     scriptCompiled = true;
 
     // After compile
@@ -106,8 +106,8 @@ namespace dom
   {
     if (compiledScript == nullptr || !scriptCompiled)
       return;
-    auto renderingContext = ownerDocument->lock()->renderingContext;
-    renderingContext->scriptingContext->evaluate(compiledScript);
+    auto browsingContext = ownerDocument->lock()->browsingContext;
+    browsingContext->scriptingContext->evaluate(compiledScript);
     scriptExecutedOnce = true;
     scriptExecutionScheduled = false;
   }
