@@ -82,9 +82,21 @@ namespace browser
     }
 
   public:
+    void alert(string message)
+    {
+      clientContext->makeRpcCall("window.alert", {message});
+    }
+    void close()
+    {
+      clientContext->makeRpcCall("window.close", {});
+    }
     void open(string url, WindowTarget target, WindowFeatures features = WindowFeatures())
     {
       clientContext->makeRpcCall("window.open", {url, WindowTargetToString(target)});
+    }
+    void prompt(string message, string defaultValue)
+    {
+      clientContext->makeRpcCall("window.prompt", {message, defaultValue});
     }
 
   private:

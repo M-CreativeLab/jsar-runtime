@@ -43,13 +43,11 @@ namespace browserbinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() < 1 || !info[0].IsString())
-    {
-      Napi::TypeError::New(env, "Invalid argument").ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
+    std::string message = "";
+    if (info.Length() >= 1 && info[0].IsString())
+      message = info[0].As<Napi::String>().Utf8Value();
 
-    std::string message = info[0].As<Napi::String>().Utf8Value();
+    eventTarget->alert(message);
     return env.Undefined();
   }
 
@@ -64,6 +62,8 @@ namespace browserbinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
+
+    eventTarget->close();
     return env.Undefined();
   }
 
@@ -128,14 +128,15 @@ namespace browserbinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() < 1 || !info[0].IsString())
-    {
-      Napi::TypeError::New(env, "Invalid argument").ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
+    std::string message = "";
+    if (info.Length() >= 1 && info[0].IsString())
+      message = info[0].As<Napi::String>().Utf8Value();
 
-    std::string message = info[0].As<Napi::String>().Utf8Value();
-    // TODO
+    std::string defaultValue = "";
+    if (info.Length() >= 2 && info[1].IsString())
+      defaultValue = info[1].As<Napi::String>().Utf8Value();
+
+    eventTarget->prompt(message, defaultValue);
     return env.Undefined();
   }
 }
