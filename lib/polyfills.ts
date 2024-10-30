@@ -29,6 +29,7 @@ import { WorkerImpl } from './webworkers/worker';
 
 export function loadPolyfills() {
   // Load Web APIs
+  process._linkedBinding('transmute:browser');
   process._linkedBinding('transmute:dom');
   process._linkedBinding('transmute:canvas');
 

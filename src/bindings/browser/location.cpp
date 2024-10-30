@@ -7,10 +7,10 @@ namespace browserbinding
   void Location::Init(Napi::Env env)
   {
     Napi::Function func = DefineClass(env, "Location", {
-      InstanceMethod("assign", &Location::assign),
-      InstanceMethod("reload", &Location::reload),
-      InstanceMethod("replace", &Location::replace),
-      InstanceMethod("toString", &Location::toString),
+      InstanceMethod("assign", &Location::Assign),
+      InstanceMethod("reload", &Location::Reload),
+      InstanceMethod("replace", &Location::Replace),
+      InstanceMethod("toString", &Location::ToString),
     });
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
@@ -24,6 +24,8 @@ namespace browserbinding
     /**
      * TODO: Implement the following code.
      */
+    auto instance = constructor->New({});
+    return scope.Escape(instance).ToObject();
   }
 
   Location::Location(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Location>(info)
@@ -47,5 +49,58 @@ namespace browserbinding
     jsThis.Set("pathname", Napi::String::New(env, locationImpl.pathname));
     jsThis.Set("port", Napi::Number::New(env, locationImpl.port));
     jsThis.Set("protocol", Napi::String::New(env, locationImpl.protocol));
+  }
+
+  Napi::Value Location::Assign(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1 || !info[0].IsString())
+    {
+      Napi::TypeError::New(env, "Invalid argument").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    std::string url = info[0].As<Napi::String>().Utf8Value();
+    return env.Undefined();
+  }
+
+  Napi::Value Location::Reload(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1 || !info[0].IsBoolean())
+    {
+      Napi::TypeError::New(env, "Invalid argument").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    bool forceReload = info[0].As<Napi::Boolean>().Value();
+    return env.Undefined();
+  }
+
+  Napi::Value Location::Replace(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1 || !info[0].IsString())
+    {
+      Napi::TypeError::New(env, "Invalid argument").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    std::string url = info[0].As<Napi::String>().Utf8Value();
+    return env.Undefined();
+  }
+
+  Napi::Value Location::ToString(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    return Napi::String::New(env, locationImpl.href);
   }
 }

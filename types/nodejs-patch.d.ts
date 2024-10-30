@@ -338,6 +338,9 @@ declare namespace Transmute {
  */
 declare namespace NodeJS {
   interface Process {
+    _linkedBinding(module: 'transmute:browser'): {
+      // The browser APIs
+    };
     _linkedBinding(module: 'transmute:dom'): {
       Audio: typeof Audio;
       BrowsingContext: typeof Transmute.BrowsingContext;

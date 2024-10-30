@@ -14,13 +14,13 @@ namespace browserbinding
 
   public:
     Location(const Napi::CallbackInfo &info);
-    ~Location();
+    ~Location() = default;
 
   public:
-    Napi::Value assign(const Napi::CallbackInfo &info);
-    Napi::Value reload(const Napi::CallbackInfo &info);
-    Napi::Value replace(const Napi::CallbackInfo &info);
-    Napi::Value toString(const Napi::CallbackInfo &info);
+    Napi::Value Assign(const Napi::CallbackInfo &info);
+    Napi::Value Reload(const Napi::CallbackInfo &info);
+    Napi::Value Replace(const Napi::CallbackInfo &info);
+    Napi::Value ToString(const Napi::CallbackInfo &info);
 
   private:
     browser::Location locationImpl;

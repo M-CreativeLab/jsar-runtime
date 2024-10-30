@@ -16,16 +16,6 @@
 using namespace std;
 using namespace bindings;
 
-#define TR_NAPI_MODULE_MAP(XX) \
-  XX(canvas)                   \
-  XX(dom)                      \
-  XX(env)                      \
-  XX(messaging)                \
-  XX(math3d)                   \
-  XX(renderer)                 \
-  XX(webgl)                    \
-  XX(webxr)
-
 #define XX(varname)                                                           \
   static napi_value __napi_reg_##varname(napi_env env, napi_value exports)    \
   {                                                                           \
