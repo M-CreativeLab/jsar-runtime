@@ -2,7 +2,6 @@
     "configurations": [
         {
             "name": "Mac",
-            "configurationProvider": "ms-vscode.cmake-tools",
             "defines": [],
             "macFrameworkPath": [
                 "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks"
@@ -11,15 +10,6 @@
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "macos-clang-arm64"
-        },
-        {
-            "name": "Windows",
-            "configurationProvider": "ms-vscode.cmake-tools",
-            "defines": [
-                "_WIN32"
-            ],
-            "cStandard": "c17",
-            "cppStandard": "c++17"
         }
     ],
     "version": 4

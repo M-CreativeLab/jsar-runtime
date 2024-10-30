@@ -63,7 +63,6 @@ async function evaluateXSML(gl: WebGLRenderingContext | WebGL2RenderingContext, 
   }
 }
 
-
 export class TransmuteRuntime2 extends EventTarget {
   #documentRenderingContext: Transmute.DocumentRenderingContext;
 

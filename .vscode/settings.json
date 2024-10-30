@@ -96,5 +96,9 @@
     "list": "cpp",
     "memory_resource": "cpp"
   },
-  "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+  "cmake.buildDirectory": "${workspaceFolder}/build/targets/darwin",
+  "C_Cpp.default.cppStandard": "c++17",
+  "C_Cpp.default.cStandard": "c17",
+  "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+  "C_Cpp.errorSquiggles": "enabledIfIncludesResolve"
 }
