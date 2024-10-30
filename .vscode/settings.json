@@ -95,5 +95,6 @@
     "forward_list": "cpp",
     "list": "cpp",
     "memory_resource": "cpp"
-  }
+  },
+  "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }

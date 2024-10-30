@@ -18,8 +18,6 @@ const args = minimist(process.argv.slice(1));
 const id = args.id || 'unknown';
 console.info(`Starting the JavaScript runtime(${process.pid}) => ${id}`, process.argv);
 
-let runtime: TransmuteRuntime2;
-
 /**
  * FIXME: The unhandled rejection means network or other async operations failed, we just make a warning and keep the
  * application running still.
@@ -73,7 +71,7 @@ bootwait(async function main() {
     /**
      * Create the runtime.
      */
-    runtime = new TransmuteRuntime2(gl, id);
+    const runtime = new TransmuteRuntime2(gl, id);
     const initializedEnded = performance.now();
     console.info('Time summary:', {
       bootstrap: runtimeStarted - bootstrapStarted,

@@ -17,19 +17,6 @@ Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
 });
 
 /**
- * Validate the input path.
- * @param input the input path.
- * @returns if the input path is valid.
- */
-function validatePath(input: string): boolean {
-  try {
-    return existsSync(resolvePath(input));
-  } catch (err) {
-    return false;
-  }
-}
-
-/**
  * Execute the XSML code or URL.
  * 
  * TODO: XSML will be deprecated.
@@ -76,7 +63,10 @@ async function evaluateXSML(gl: WebGLRenderingContext | WebGL2RenderingContext, 
   }
 }
 
+
 export class TransmuteRuntime2 extends EventTarget {
+  #documentRenderingContext: Transmute.DocumentRenderingContext;
+
   constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext, private id: number) {
     super();
     {
@@ -89,6 +79,15 @@ export class TransmuteRuntime2 extends EventTarget {
         console.info(`  - ${extName}`);
       }
       console.info(`[JSARDOM] version=${JSARDOM.version}`);
+    }
+    {
+      /**
+       * Initialize the `DocumentRenderingContext` instance.
+       */
+      const { DocumentRenderingContext } = process._linkedBinding('transmute:dom');
+      const renderingContext = new DocumentRenderingContext();
+      renderingContext.setResourceLoader(new ResourceLoaderOnTransmute());
+      this.#documentRenderingContext = renderingContext;
     }
     this.dispatchEvent(new Event('rendererReady'));
   }
@@ -122,13 +121,6 @@ export class TransmuteRuntime2 extends EventTarget {
     if (urlObj == null) {
       urlObj = new URL(codeOrUrl);
     }
-
-    /**
-     * Create the HTML rendering context.
-     */
-    const { DocumentRenderingContext } = process._linkedBinding('transmute:dom');
-    const renderingContext = new DocumentRenderingContext();
-    renderingContext.setResourceLoader(new ResourceLoaderOnTransmute());
 
     /**
      * Supports the formats to open directly:
@@ -176,9 +168,9 @@ export class TransmuteRuntime2 extends EventTarget {
     }
 
     if (loadAsHTML) {
-      renderingContext.start(codeOrUrl, 'text/html');
+      this.#documentRenderingContext.start(codeOrUrl, 'text/html');
     } else {
-      renderingContext.start('', 'text/html');
+      this.#documentRenderingContext.start('', 'text/html');
       await evaluateXSML(this.gl, codeOrUrl, urlBase);
     }
     console.info(`Content(#${this.id}): the document is loaded successfully.`);
