@@ -1,4 +1,5 @@
 #include "./window.hpp"
+#include "./location.hpp"
 
 namespace browserbinding
 {
@@ -7,13 +8,13 @@ namespace browserbinding
   {
     Napi::Function func = DefineClass(env, "Window",
                                       {
-                                          InstanceMethod("alert", &Window::Alert),
-                                          InstanceMethod("blur", &Window::Blur),
-                                          InstanceMethod("close", &Window::Close),
-                                          InstanceMethod("confirm", &Window::Confirm),
-                                          InstanceMethod("focus", &Window::Focus),
-                                          InstanceMethod("open", &Window::Open),
-                                          InstanceMethod("prompt", &Window::Prompt),
+                                          InstanceMethod("alert", &Window::Alert, napi_property_attributes::napi_default_jsproperty),
+                                          InstanceMethod("blur", &Window::Blur, napi_property_attributes::napi_default_jsproperty),
+                                          InstanceMethod("close", &Window::Close, napi_property_attributes::napi_default_jsproperty),
+                                          InstanceMethod("confirm", &Window::Confirm, napi_property_attributes::napi_default_jsproperty),
+                                          InstanceMethod("focus", &Window::Focus, napi_property_attributes::napi_default_jsproperty),
+                                          InstanceMethod("open", &Window::Open, napi_property_attributes::napi_default_jsproperty),
+                                          InstanceMethod("prompt", &Window::Prompt, napi_property_attributes::napi_default_jsproperty),
                                       });
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
@@ -23,11 +24,10 @@ namespace browserbinding
   Napi::Object Window::NewInstance(Napi::Env env, std::string url)
   {
     Napi::EscapableHandleScope scope(env);
-    /**
-     * TODO: Implement the following code.
-     */
-    auto instance = constructor->New({});
-    return scope.Escape(instance).ToObject();
+    auto windowInstance = constructor->New({});
+    auto locationInstance = Location::NewInstance(env, url);
+    windowInstance.Set("location", locationInstance);
+    return scope.Escape(windowInstance).ToObject();
   }
 
   Window::Window(const Napi::CallbackInfo &info)
@@ -35,8 +35,7 @@ namespace browserbinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-
-    // TODO: Implement the following code.
+    eventTarget = make_shared<browser::Window>();
   }
 
   Napi::Value Window::Alert(const Napi::CallbackInfo &info)
@@ -95,14 +94,32 @@ namespace browserbinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() < 1 || !info[0].IsString())
+    string url = "about:blank";
+    if (info.Length() >= 1 && info[0].IsString())
+      url = info[0].As<Napi::String>().Utf8Value();
+
+    browser::WindowTarget target = browser::WindowTarget::Self;
+    if (info.Length() >= 2 && info[1].IsString())
     {
-      Napi::TypeError::New(env, "Invalid argument").ThrowAsJavaScriptException();
+      string targetStr = info[1].As<Napi::String>().Utf8Value();
+      if (targetStr == "_blank")
+        target = browser::WindowTarget::Blank;
+      else if (targetStr == "_blankClassic")
+        target = browser::WindowTarget::BlankClassic;
+      else if (targetStr == "_parent")
+        target = browser::WindowTarget::Parent;
+      else if (targetStr == "_top")
+        target = browser::WindowTarget::Top;
+    }
+
+    if (target != browser::WindowTarget::BlankClassic)
+    {
+      Napi::TypeError::New(env, "Only \"_blankClassic\" is supported").ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
-    std::string url = info[0].As<Napi::String>().Utf8Value();
-    // TODO
+    // TODO: support parsing window features
+    eventTarget->open(url, target);
     return env.Undefined();
   }
 

@@ -41,10 +41,18 @@ namespace events_comm
 
   class TrRpcRequest : public TrEventDetailObject
   {
+  public:
+    TrRpcRequest() = default;
+    TrRpcRequest(uint32_t documentId, string method, vector<string> args)
+        : documentId(documentId), method(method), args(args)
+    {
+    }
+
   protected:
     void serialize(rapidjson::Document &destDoc) override
     {
       auto &allocator = destDoc.GetAllocator();
+      destDoc.AddMember("documentId", documentId, allocator);
       destDoc.AddMember("method", rapidjson::Value(method.c_str(), allocator), allocator);
 
       rapidjson::Value argsArray(rapidjson::kArrayType);
@@ -54,6 +62,7 @@ namespace events_comm
     }
     void deserialize(rapidjson::Document &srcDoc) override
     {
+      documentId = srcDoc["documentId"].GetUint();
       method = srcDoc["method"].GetString();
       if (srcDoc.HasMember("args") && srcDoc["args"].IsArray())
       {
@@ -69,6 +78,7 @@ namespace events_comm
     }
 
   public:
+    uint32_t documentId;
     string method;
     vector<string> args;
 
@@ -87,6 +97,7 @@ namespace events_comm
   class TrRpcResponse : public TrEventDetailObject
   {
   public:
+    TrRpcResponse() = default;
     TrRpcResponse(bool success) : success(success)
     {
     }

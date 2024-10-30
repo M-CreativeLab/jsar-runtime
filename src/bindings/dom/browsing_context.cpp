@@ -1,5 +1,6 @@
 #include "./browsing_context.hpp"
 #include "./document.hpp"
+#include "../browser/window.hpp"
 
 namespace dombinding
 {
@@ -59,8 +60,10 @@ namespace dombinding
 
         auto jsInstance = Document::NewInstance(env, doc);
         {
+          auto window = browserbinding::Window::NewInstance(env, doc->baseURI);
           auto scriptingContext = contextImpl->scriptingContext;
-          scriptingContext->makeMainContext(convertNapiValueToV8Local(jsInstance));
+          scriptingContext->makeMainContext(convertNapiValueToV8Local(window),
+                                            convertNapiValueToV8Local(jsInstance));
         }
         contextImpl->open(doc);
         env.Global().Set("document", jsInstance);

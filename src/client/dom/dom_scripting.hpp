@@ -19,6 +19,7 @@ namespace dom
   enum ContextEmbedderIndex : int
   {
     kSandboxObject = 50,
+    kInternalObject,
     kScriptingContextExternal,
     kContextTag,
   };
@@ -134,6 +135,7 @@ namespace dom
   private:
     static void PropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
     static void WindowProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+    static void WindowProxyPropertyEnumeratorCallback(const v8::PropertyCallbackInfo<v8::Array>& info);
     static void WorkerSelfProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
     static v8::MaybeLocal<v8::Promise> ImportModuleDynamicallyCallback(v8::Local<v8::Context> context,
                                                                        v8::Local<v8::Data> hostDefinedOptions,
@@ -159,9 +161,10 @@ namespace dom
     /**
      * Make a v8::Context for the main script.
      *
+     * @param windowValue The window object to be used in the main script.
      * @param documentValue The document object to be used in the main script.
      */
-    void makeMainContext(v8::Local<v8::Value> documentValue);
+    void makeMainContext(v8::Local<v8::Value> windowValue, v8::Local<v8::Value> documentValue);
 
     /**
      * Make a v8::Context for the worker script.

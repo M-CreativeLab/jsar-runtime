@@ -270,7 +270,9 @@ namespace ipc
             {
               msg = strerror(errno);
             }
-            DEBUG(LOG_TAG_IPC, "Failed to read data from socket(%d): %s", fd, msg.c_str());
+            DEBUG(LOG_TAG_IPC, "Failed to recv(%d): %s", fd, msg.c_str());
+            DEBUG(LOG_TAG_IPC, "  bytes received %d/%d.", bytesReceived, outSize);
+            DEBUG(LOG_TAG_IPC, "  data: %s", (char *)outData);
             return false;
           }
           else

@@ -584,10 +584,14 @@ void TrContentManager::onRpcRequest(events_comm::TrNativeEvent &event)
   if (TR_UNLIKELY(event.type != events_comm::TrNativeEventType::RpcRequest))
     return;
 
-  /**
-   * TODO: support by content?
-   */
-  constellation->dispatchNativeEvent(event, nullptr);
+  auto detail = event.detail<events_comm::TrRpcRequest>();
+  auto content = getContent(detail.documentId, true);
+  if (TR_UNLIKELY(content == nullptr))
+  {
+    DEBUG(LOG_TAG_ERROR, "Failed to find the content(%d) for the RpcRequest", detail.documentId);
+    return;
+  }
+  constellation->dispatchNativeEvent(event, content.get());
 }
 
 void TrContentManager::onDocumentEvent(events_comm::TrNativeEvent &event)

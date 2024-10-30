@@ -145,10 +145,10 @@ public:
     {
       events_comm::TrNativeEvent respEvent(events_comm::TrNativeEventType::RpcResponse);
       auto request = event.detail<events_comm::TrRpcRequest>();
+      std::cout << "Received RPC request: " << request.method << std::endl;
       if (request.method == "ping")
       {
         PongResponse pongResp;
-        fprintf(stdout, "Received ping request %d\n", event.id);
         content->respondRpcRequest(pongResp, event.id);
       }
       else

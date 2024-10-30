@@ -8,7 +8,11 @@ namespace browser
   class Location
   {
   public:
-    Location() {}
+    Location() = default;
+    Location(std::string url)
+        : href(url)
+    {
+    }
 
   public:
     std::string hash;

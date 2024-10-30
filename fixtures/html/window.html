@@ -4,13 +4,14 @@
   <meta charset="utf-8" />
   <title>Window</title>
   <script>
-    console.log('window', window);
     console.info('window.URL', window.URL);
     console.info('window.fetch', window.fetch);
 
-    console.info('self', self);
     console.info('self.URL', self.URL);
     console.info('self.fetch', self.fetch);
+
+    console.info(window.location);
+    window.open('http://www.example.com', '_blankClassic');
   </script>
 </head>
 

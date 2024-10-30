@@ -193,6 +193,23 @@ public: // event methods
     auto event = TrNativeEvent::MakeEvent(TrNativeEventType::DocumentEvent, &detail);
     return sendEvent(event);
   }
+  /**
+   * Send an RPC request to the host process and waits for the response.
+   *
+   * @param method The method name to call.
+   * @param args The arguments to pass to the method.
+   * @returns true if the RPC call is successful and the response is received.
+   */
+  inline bool makeRpcCall(string method, vector<string> args)
+  {
+    TrRpcRequest req(id, method, args);
+    auto event = TrNativeEvent::MakeEvent(TrNativeEventType::RpcRequest, &req);
+    if (sendEvent(event))
+    {
+      // TODO: wait for the response, moved from `NativeEventTarget`.
+    }
+    return false;
+  }
 
 public: // media methods
   /**
@@ -221,7 +238,7 @@ public: // WebXR methods
   bool flushXrFrame();
   bool finishXrFrame(xr::TrXRFrameRequest *frameRequest);
   inline bool isInXrFrame() { return currentXrFrameRequest != nullptr; }
-  inline xr::TrXRFrameRequest* getCurrentXRFrameRequest() { return currentXrFrameRequest; }
+  inline xr::TrXRFrameRequest *getCurrentXRFrameRequest() { return currentXrFrameRequest; }
   xr::TrXRDeviceContextZone *getXRDeviceContextZone() { return xrDeviceContextZoneClient.get(); }
   xr::TrXRInputSourcesZone *getXRInputSourcesZone() { return xrInputSourcesZoneClient.get(); }
 
@@ -239,10 +256,10 @@ public: // WebXR methods
   int getFramebufferHeight() { return xrDeviceContextZoneClient == nullptr ? 0 : xrDeviceContextZoneClient->getFramebufferConfig().height; }
   /**
    * Check if the framebuffer is double-wide, or false if the XR is not enabled.
-   * 
+   *
    * Double-wide is used at desktop example app, which doesn't depend on any other OpenGL extension like OVR_multiview, but at the production device, the framebuffer
    * is commonly not double-wide.
-   * 
+   *
    * @returns true if the framebuffer is double width
    */
   bool isFramebufferDoubleWide() { return xrDeviceContextZoneClient != nullptr && xrDeviceContextZoneClient->getFramebufferConfig().useDoubleWide; }

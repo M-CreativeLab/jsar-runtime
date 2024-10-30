@@ -6,29 +6,29 @@ namespace browserbinding
   thread_local Napi::FunctionReference *Location::constructor;
   void Location::Init(Napi::Env env)
   {
-    Napi::Function func = DefineClass(env, "Location", {
-      InstanceMethod("assign", &Location::Assign),
-      InstanceMethod("reload", &Location::Reload),
-      InstanceMethod("replace", &Location::Replace),
-      InstanceMethod("toString", &Location::ToString),
-    });
+    Napi::Function func = DefineClass(env, "Location",
+                                      {
+                                          InstanceMethod("assign", &Location::Assign, napi_property_attributes::napi_default_jsproperty),
+                                          InstanceMethod("reload", &Location::Reload, napi_property_attributes::napi_default_jsproperty),
+                                          InstanceMethod("replace", &Location::Replace, napi_property_attributes::napi_default_jsproperty),
+                                          InstanceMethod("toString", &Location::ToString, napi_property_attributes::napi_default_jsproperty),
+                                      });
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
-
     env.Global().Set("Location", func);
   }
 
   Napi::Object Location::NewInstance(Napi::Env env, std::string url)
   {
     Napi::EscapableHandleScope scope(env);
-    /**
-     * TODO: Implement the following code.
-     */
-    auto instance = constructor->New({});
+    SharedReference locationRef(std::make_shared<browser::Location>(url));
+    auto external = Napi::External<SharedReference<browser::Location>>::New(env, &locationRef);
+    auto instance = constructor->New({external});
     return scope.Escape(instance).ToObject();
   }
 
-  Location::Location(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Location>(info)
+  Location::Location(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<Location>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -38,7 +38,9 @@ namespace browserbinding
       Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
       return;
     }
-    locationImpl = *info[0].As<Napi::External<browser::Location>>().Data();
+
+    SharedReference<browser::Location> locationRef = *info[0].As<Napi::External<SharedReference<browser::Location>>>().Data();
+    locationImpl = *locationRef.value.get();
 
     auto jsThis = info.This().As<Napi::Object>();
     jsThis.Set("hash", Napi::String::New(env, locationImpl.hash));

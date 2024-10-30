@@ -52,17 +52,73 @@ namespace dom
     auto isolate = info.GetIsolate();
     auto context = isolate->GetCurrentContext();
     auto globalObject = context->Global();
+    auto internalValue = context->GetEmbedderData(ContextEmbedderIndex::kInternalObject);
 
-    v8::MaybeLocal<v8::Value> maybeValue = globalObject->Get(context, property);
     /**
-     * TODO: add new an embedder data for the window-only properties.
+     * 1. Check if the property is in the window object.
      */
+    if (!internalValue.IsEmpty() && internalValue->IsObject())
+    {
+      auto internalObject = internalValue.As<v8::Object>();
+      auto windowKey = v8::String::NewFromUtf8(isolate, "window").ToLocalChecked();
+      auto windowValue = internalObject->GetRealNamedProperty(context, windowKey).ToLocalChecked();
+      auto windowObject = windowValue.As<v8::Object>();
+      if (windowObject->Has(context, property).ToChecked())
+      {
+        v8::MaybeLocal<v8::Value> maybeValue = windowObject->Get(context, property);
+        v8::Local<v8::Value> resultValue;
+        if (maybeValue.ToLocal(&resultValue))
+        {
+          /**
+           * If the property is a function, we need to return a bound function with the window object to avoid the scope issue.
+           */
+          if (resultValue->IsFunction())
+          {
+            auto func = resultValue.As<v8::Function>();
+            auto bind = func->Get(context, v8::String::NewFromUtf8(isolate, "bind").ToLocalChecked()).ToLocalChecked().As<v8::Function>();
+            resultValue = bind->Call(context, func, 1, &windowValue).ToLocalChecked();
+          }
+          return info.GetReturnValue().Set(resultValue);
+        }
+      }
+    }
 
-    v8::Local<v8::Value> resultValue;
-    if (maybeValue.ToLocal(&resultValue))
-      info.GetReturnValue().Set(resultValue);
-    else
-      info.GetReturnValue().SetUndefined();
+    /**
+     * 2. Check if the property is in the global object.
+     */
+    if (globalObject->Has(context, property).ToChecked())
+    {
+      v8::MaybeLocal<v8::Value> maybeValue = globalObject->Get(context, property);
+      v8::Local<v8::Value> resultValue;
+      if (maybeValue.ToLocal(&resultValue))
+        return info.GetReturnValue().Set(resultValue);
+    }
+
+    /**
+     * 3. Otherwise, namely the property is not found from the window and global objects, returns undefined.
+     */
+    info.GetReturnValue().SetUndefined();
+  }
+
+  void DOMScriptingContext::WindowProxyPropertyEnumeratorCallback(const v8::PropertyCallbackInfo<v8::Array> &info)
+  {
+    auto isolate = info.GetIsolate();
+    auto context = isolate->GetCurrentContext();
+    auto globalObject = context->Global();
+    v8::HandleScope handleScope(isolate);
+
+    uint32_t propertyIndex = 0;
+    v8::Local<v8::Array> resultArray = v8::Array::New(isolate);
+    {
+      auto globalPropertyNames = globalObject->GetPropertyNames(context).ToLocalChecked();
+      auto globalLength = globalPropertyNames->Length();
+      for (uint32_t propertyIndex = 0; propertyIndex < globalLength; propertyIndex++)
+      {
+        auto propertyName = globalPropertyNames->Get(context, propertyIndex).ToLocalChecked();
+        resultArray->Set(context, propertyIndex, propertyName).ToChecked();
+      }
+    }
+    info.GetReturnValue().Set(resultArray);
   }
 
   void DOMScriptingContext::WorkerSelfProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info)
@@ -177,7 +233,7 @@ namespace dom
     isolate->SetHostImportModuleDynamicallyCallback(ImportModuleDynamicallyCallback);
   }
 
-  void DOMScriptingContext::makeMainContext(v8::Local<v8::Value> documentValue)
+  void DOMScriptingContext::makeMainContext(v8::Local<v8::Value> windowValue, v8::Local<v8::Value> documentValue)
   {
     assert(!isContextInitialized);
     assert(v8ContextStore.IsEmpty());
@@ -351,8 +407,20 @@ namespace dom
 #undef V8_TRY_SET_GLOBAL_FROM_VALUE
 #undef V8_SET_GLOBAL_FROM_VALUE
       }
+
+      auto internal = v8::Object::New(isolate);
+      {
+        // Internal object is used to store internally.
+#define V8_SET_GLOBAL_FROM_VALUE(name, value) \
+  internal->Set(mainContext, v8::String::NewFromUtf8(isolate, #name).ToLocalChecked(), value).FromJust()
+
+        V8_SET_GLOBAL_FROM_VALUE(window, windowValue);
+#undef V8_SET_GLOBAL_FROM_VALUE
+      }
+
       ContextEmbedderTag::TagMyContext(newContext);
       newContext->SetEmbedderData(ContextEmbedderIndex::kSandboxObject, sandbox);
+      newContext->SetEmbedderData(ContextEmbedderIndex::kInternalObject, internal);
       newContext->SetEmbedderData(ContextEmbedderIndex::kScriptingContextExternal, v8::External::New(isolate, this));
       newContext->SetSecurityToken(mainContext->GetSecurityToken());
       v8ContextStore.Reset(isolate, newContext);
@@ -725,7 +793,7 @@ namespace dom
         nullptr,
         nullptr,
         nullptr,
-        nullptr,
+        WindowProxyPropertyEnumeratorCallback,
         nullptr,
         nullptr,
         {},
