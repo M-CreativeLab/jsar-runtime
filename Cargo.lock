@@ -880,9 +880,7 @@ dependencies = [
 
 [[package]]
 name = "glsl-lang"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45ffbb664d30ead9f0e5e67bf8bed9c6dbe5cb884bbb77c0e6f036e2393ffb61"
+version = "0.6.1"
 dependencies = [
  "glsl-lang-lexer",
  "glsl-lang-types",
@@ -895,9 +893,7 @@ dependencies = [
 
 [[package]]
 name = "glsl-lang-lexer"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9128df51e9e97290ca55a9f980a888de63a0aa5a49a0f2af7d13da9d6f63122"
+version = "0.6.1"
 dependencies = [
  "glsl-lang-pp",
  "glsl-lang-types",
@@ -908,9 +904,7 @@ dependencies = [
 
 [[package]]
 name = "glsl-lang-pp"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21585a419de2ea57502484d2ba31713ffa731ff359fe2f99cabc139cba98c955"
+version = "0.6.1"
 dependencies = [
  "arrayvec",
  "bimap",
@@ -928,9 +922,7 @@ dependencies = [
 
 [[package]]
 name = "glsl-lang-types"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef9702702049730a7289fb45524b826ae745a3bac46f4346a496c7c8185944fc"
+version = "0.6.1"
 dependencies = [
  "lang-util",
  "thiserror",
@@ -1231,9 +1223,9 @@ dependencies = [
 
 [[package]]
 name = "lang-util"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02d6cde280d262a2a5bcf4b18c8a5db2f86a034e750eaca96ff93d971f9d3f4d"
+checksum = "6d1ff113d52dd7efb231f1309d6fef82fbf0cc0f3c4597e02e5a6dc9c3197774"
 dependencies = [
  "derive_more 1.0.0",
  "lalrpop-util",
@@ -1245,9 +1237,9 @@ dependencies = [
 
 [[package]]
 name = "lang-util-derive"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c67163960de3113c0d188c129eb53953fe341976fe4d00bc03b21ad548bd8474"
+checksum = "f440b77c4d69537fbf388080e3d25f8d82b816d6bfbff4bb5b2ec1a69755f596"
 dependencies = [
  "darling",
  "proc-macro2",

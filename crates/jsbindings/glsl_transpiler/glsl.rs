@@ -886,12 +886,19 @@ pub fn show_fully_specified_type<F>(
 where
   F: Write + ?Sized,
 {
+  let mut has_qualifier = false;
   if let Some(ref qual) = t.qualifier {
     show_type_qualifier(f, qual, state)?;
-    f.write_char(' ')?;
+    has_qualifier = true;
   }
 
-  show_type_specifier(f, &t.ty, state)
+  if let Some(ref ty) = t.ty {
+    if has_qualifier {
+      f.write_char(' ')?; // Put space between qualifier and type if both are present
+    }
+    show_type_specifier(f, ty, state)?;
+  }
+  Ok(())
 }
 
 /// Transpile a struct_non_declaration to GLSL

@@ -18,6 +18,14 @@ euclid = "0.22"
 fnv = "1.0"
 getopts = "0.2.11"
 gleam = "0.15"
+glsl-lang = { path = "../glsl-lang/lang", features = [
+  "lexer-v2-full",
+  "parser-expr",
+  "parser-statement",
+] }
+glsl-lang-pp = { path = "../glsl-lang/lang-pp", features = [
+  "full",
+] }
 headers = "0.3"
 html5ever = "0.27"
 http = "0.2"

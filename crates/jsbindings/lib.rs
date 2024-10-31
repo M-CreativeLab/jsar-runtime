@@ -132,17 +132,37 @@ extern "C" fn parse_whatwg_url(input: *const c_char) -> WHATWGUrl {
   let protocol = format!("{}:", url.scheme());
 
   WHATWGUrl {
-    host: CString::new(host).expect("Failed to create host CString").into_raw(),
-    hostname: CString::new(hostname).expect("Failed to create hostname CString").into_raw(),
+    host: CString::new(host)
+      .expect("Failed to create host CString")
+      .into_raw(),
+    hostname: CString::new(hostname)
+      .expect("Failed to create hostname CString")
+      .into_raw(),
     port: port.into(),
-    href: CString::new(url.as_str()).expect("Failed to create href CString").into_raw(),
-    origin: CString::new(origin).expect("Failed to create origin CString").into_raw(),
-    password: CString::new(url.password().unwrap_or("")).expect("Failed to create password CString").into_raw(),
-    pathname: CString::new(url.path()).expect("Failed to create pathname CString").into_raw(),
-    protocol: CString::new(protocol).expect("Failed to create protocol CString").into_raw(),
-    search: CString::new(url.query().unwrap_or("")).expect("Failed to create search CString").into_raw(),
-    username: CString::new(url.username()).expect("Failed to create username CString").into_raw(),
-    hash: CString::new(url.fragment().unwrap_or("")).expect("Failed to create hash CString").into_raw(),
+    href: CString::new(url.as_str())
+      .expect("Failed to create href CString")
+      .into_raw(),
+    origin: CString::new(origin)
+      .expect("Failed to create origin CString")
+      .into_raw(),
+    password: CString::new(url.password().unwrap_or(""))
+      .expect("Failed to create password CString")
+      .into_raw(),
+    pathname: CString::new(url.path())
+      .expect("Failed to create pathname CString")
+      .into_raw(),
+    protocol: CString::new(protocol)
+      .expect("Failed to create protocol CString")
+      .into_raw(),
+    search: CString::new(url.query().unwrap_or(""))
+      .expect("Failed to create search CString")
+      .into_raw(),
+    username: CString::new(url.username())
+      .expect("Failed to create username CString")
+      .into_raw(),
+    hash: CString::new(url.fragment().unwrap_or(""))
+      .expect("Failed to create hash CString")
+      .into_raw(),
   }
 }
 
@@ -324,9 +344,7 @@ impl VisitorMut for MyGLSLPatcher {
 
 fn patch_glsl_source_from_str(s: &str) -> String {
   use glsl_lang::{
-    ast::{NodeDisplay, TranslationUnit},
-    lexer::v2_full::fs::PreprocessorExt,
-    parse::IntoParseBuilderExt,
+    ast::TranslationUnit, lexer::v2_full::fs::PreprocessorExt, parse::IntoParseBuilderExt,
   };
 
   let mut processor = glsl_lang_pp::processor::fs::StdProcessor::new();
@@ -338,7 +356,7 @@ fn patch_glsl_source_from_str(s: &str) -> String {
       iter.into_directives().inject(&mut tu);
       tu
     })
-    .expect("Failed to parse GLSL");
+    .expect(format!("Failed to parse GLSL source: \n{}\n", s).as_str());
 
   let mut my_glsl_patcher = MyGLSLPatcher {};
   tu.visit_mut(&mut my_glsl_patcher);
@@ -351,6 +369,25 @@ fn patch_glsl_source_from_str(s: &str) -> String {
   )
   .expect("Failed to show GLSL");
   s
+}
+
+#[test]
+fn test_patch_glsl_source() {
+  let source_str = r#"
+#extension GL_OVR_multiview2 : enable
+layout(num_views = 2) in;
+
+precision highp float;
+highp float a = 1.0;
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNormal;
+layout (location = 0) out highp vec4 glFragColor;
+
+void main() { 
+  gl_FragColor = vec4(1, 1, 1, 1); 
+}"#;
+  let patched_source_str = patch_glsl_source_from_str(source_str);
+  println!("{}", patched_source_str);
 }
 
 #[no_mangle]
@@ -404,17 +441,4 @@ extern "C" fn release_transpiled_typescript_output(output: TranspiledTypeScriptO
       let _ = CString::from_raw(output.error_message);
     }
   }
-}
-
-#[test]
-fn test_patch_glsl_source() {
-  let source_str = r#"
-precision highp float;
-highp float a = 1.0;
-
-void main() { 
-  gl_FragColor = vec4(1, 1, 1, 1); 
-}"#;
-  let patched_source_str = patch_glsl_source_from_str(source_str);
-  println!("{}", patched_source_str);
 }
