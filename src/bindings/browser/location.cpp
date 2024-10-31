@@ -43,7 +43,6 @@ namespace browserbinding
     locationImpl = *locationRef.value.get();
 
     auto jsThis = info.This().As<Napi::Object>();
-    jsThis.Set("hash", Napi::String::New(env, locationImpl.hash));
     jsThis.Set("host", Napi::String::New(env, locationImpl.host));
     jsThis.Set("hostname", Napi::String::New(env, locationImpl.hostname));
     jsThis.Set("href", Napi::String::New(env, locationImpl.href));
@@ -51,6 +50,8 @@ namespace browserbinding
     jsThis.Set("pathname", Napi::String::New(env, locationImpl.pathname));
     jsThis.Set("port", Napi::Number::New(env, locationImpl.port));
     jsThis.Set("protocol", Napi::String::New(env, locationImpl.protocol));
+    jsThis.Set("search", Napi::String::New(env, locationImpl.search));
+    jsThis.Set("hash", Napi::String::New(env, locationImpl.hash));
   }
 
   Napi::Value Location::Assign(const Napi::CallbackInfo &info)

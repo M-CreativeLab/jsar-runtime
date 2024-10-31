@@ -104,6 +104,84 @@ extern "C" fn parse_csscolor(color_str: *const c_char) -> RGBAColor {
   }
 }
 
+#[repr(C)]
+pub struct WHATWGUrl {
+  host: *mut c_char,
+  hostname: *mut c_char,
+  href: *mut c_char,
+  origin: *mut c_char,
+  password: *mut c_char,
+  pathname: *mut c_char,
+  port: i32,
+  protocol: *mut c_char,
+  search: *mut c_char,
+  username: *mut c_char,
+  hash: *mut c_char,
+}
+
+#[no_mangle]
+extern "C" fn parse_whatwg_url(input: *const c_char) -> WHATWGUrl {
+  let input_str: &str = unsafe { std::ffi::CStr::from_ptr(input) }
+    .to_str()
+    .expect("Failed to convert C string to Rust string");
+  let url = Url::parse(input_str).expect("Failed to parse URL");
+  let hostname = url.host_str().unwrap_or("");
+  let port = url.port().unwrap_or(0);
+  let host = format!("{}:{}", hostname, port);
+  let origin = url.origin().ascii_serialization();
+  let protocol = format!("{}:", url.scheme());
+
+  WHATWGUrl {
+    host: CString::new(host).expect("Failed to create host CString").into_raw(),
+    hostname: CString::new(hostname).expect("Failed to create hostname CString").into_raw(),
+    port: port.into(),
+    href: CString::new(url.as_str()).expect("Failed to create href CString").into_raw(),
+    origin: CString::new(origin).expect("Failed to create origin CString").into_raw(),
+    password: CString::new(url.password().unwrap_or("")).expect("Failed to create password CString").into_raw(),
+    pathname: CString::new(url.path()).expect("Failed to create pathname CString").into_raw(),
+    protocol: CString::new(protocol).expect("Failed to create protocol CString").into_raw(),
+    search: CString::new(url.query().unwrap_or("")).expect("Failed to create search CString").into_raw(),
+    username: CString::new(url.username()).expect("Failed to create username CString").into_raw(),
+    hash: CString::new(url.fragment().unwrap_or("")).expect("Failed to create hash CString").into_raw(),
+  }
+}
+
+#[no_mangle]
+extern "C" fn release_whatwg_url(url: WHATWGUrl) {
+  unsafe {
+    if !url.host.is_null() {
+      let _ = CString::from_raw(url.host);
+    }
+    if !url.hostname.is_null() {
+      let _ = CString::from_raw(url.hostname);
+    }
+    if !url.href.is_null() {
+      let _ = CString::from_raw(url.href);
+    }
+    if !url.origin.is_null() {
+      let _ = CString::from_raw(url.origin);
+    }
+    if !url.password.is_null() {
+      let _ = CString::from_raw(url.password);
+    }
+    if !url.pathname.is_null() {
+      let _ = CString::from_raw(url.pathname);
+    }
+    if !url.protocol.is_null() {
+      let _ = CString::from_raw(url.protocol);
+    }
+    if !url.search.is_null() {
+      let _ = CString::from_raw(url.search);
+    }
+    if !url.username.is_null() {
+      let _ = CString::from_raw(url.username);
+    }
+    if !url.hash.is_null() {
+      let _ = CString::from_raw(url.hash);
+    }
+  }
+}
+
 #[no_mangle]
 extern "C" fn create_url_with_path(
   url_str: *const c_char,
@@ -300,7 +378,8 @@ extern "C" fn transpile_typescript_to_js(input_str: *const c_char) -> Transpiled
   let output = typescript_transpiler::transpile_typescript_to_js(input_string.into());
   if let Err(e) = output {
     let error_message = format!("Error: {:?}", e);
-    let error_message_cstring = CString::new(error_message).expect("Failed to create error CString");
+    let error_message_cstring =
+      CString::new(error_message).expect("Failed to create error CString");
     TranspiledTypeScriptOutput {
       code: std::ptr::null_mut(),
       error_message: error_message_cstring.into_raw(),

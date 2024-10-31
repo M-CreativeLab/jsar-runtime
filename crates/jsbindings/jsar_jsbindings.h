@@ -34,6 +34,36 @@ extern "C"
    */
   extern RGBAColor parse_csscolor(const char *color_str);
 
+  typedef struct
+  {
+    const char *host;
+    const char *hostname;
+    const char *href;
+    const char *origin;
+    const char *password;
+    const char *pathname;
+    int32_t port;
+    const char *protocol;
+    const char *search;
+    const char *username;
+    const char *hash;
+  } WHATWGUrl;
+
+  /**
+   * Parse a URL string into a WHATWGUrl struct.
+   *
+   * @param url The URL string to parse.
+   * @returns The parsed WHATWGUrl struct.
+   */
+  extern WHATWGUrl parse_whatwg_url(const char *url);
+
+  /**
+   * Release a WHATWGUrl struct.
+   *
+   * @param url The WHATWGUrl struct to release.
+   */
+  extern void release_whatwg_url(WHATWGUrl url);
+
   /**
    * Create a new URL string by combining a base URL and a sub path.
    *
@@ -206,6 +236,50 @@ namespace crates
         else
           return transpiledCode;
       }
+    };
+
+    class Url
+    {
+    public:
+      /**
+       * Parse a URL string into a WHATWGUrl struct.
+       *
+       * @param url The URL string to parse.
+       * @returns The parsed WHATWGUrl struct.
+       */
+      static inline Url Parse(const std::string &url)
+      {
+        return Url(parse_whatwg_url(url.c_str()));
+      }
+
+    private:
+      Url(WHATWGUrl whatwgUrl) : host(whatwgUrl.host),
+                                 hostname(whatwgUrl.hostname),
+                                 href(whatwgUrl.href),
+                                 origin(whatwgUrl.origin),
+                                 password(whatwgUrl.password),
+                                 pathname(whatwgUrl.pathname),
+                                 port(whatwgUrl.port),
+                                 protocol(whatwgUrl.protocol),
+                                 search(whatwgUrl.search),
+                                 username(whatwgUrl.username),
+                                 hash(whatwgUrl.hash)
+      {
+        release_whatwg_url(whatwgUrl);
+      }
+
+    public:
+      std::string host;
+      std::string hostname;
+      std::string href;
+      std::string origin;
+      std::string password;
+      std::string pathname;
+      int32_t port;
+      std::string protocol;
+      std::string search;
+      std::string username;
+      std::string hash;
     };
 
     class UrlHelper
