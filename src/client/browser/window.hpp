@@ -75,9 +75,8 @@ namespace browser
   class Window : public dom::DOMEventTarget
   {
   public:
-    Window()
-        : dom::DOMEventTarget(),
-          clientContext(TrClientContextPerProcess::Get())
+    Window() : dom::DOMEventTarget(),
+               clientContext(TrClientContextPerProcess::Get())
     {
     }
 

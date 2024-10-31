@@ -24,10 +24,11 @@ namespace browserbinding
   Napi::Object Window::NewInstance(Napi::Env env, std::string url)
   {
     Napi::EscapableHandleScope scope(env);
-    auto windowInstance = constructor->New({});
-    auto locationInstance = Location::NewInstance(env, url);
-    windowInstance.Set("location", locationInstance);
-    return scope.Escape(windowInstance).ToObject();
+    auto windowObject = constructor->New({});
+    auto locationObject = Location::NewInstance(env, url);
+    windowObject.Set("location", locationObject);
+    windowObject.Set("origin", locationObject.Get("origin"));
+    return scope.Escape(windowObject).ToObject();
   }
 
   Window::Window(const Napi::CallbackInfo &info)
