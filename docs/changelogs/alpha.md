@@ -2,6 +2,12 @@
 
 The alpha version of JSAR is the first version of the project.
 
+## v0.5.0
+
+- Added ability to support Unity Universal RP.
+- Added ability to support more stereo rendering modes: `SinglePass`, `SinglePassInstanced`, and `SinglePassMultiview`.
+- Fixed the GLES state managment for stencil buffer and color mask.
+
 ## v0.4.0
 
 - Added the WebGL 1.0 APIs.
