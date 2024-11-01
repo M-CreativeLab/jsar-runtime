@@ -1224,8 +1224,6 @@ dependencies = [
 [[package]]
 name = "lang-util"
 version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d1ff113d52dd7efb231f1309d6fef82fbf0cc0f3c4597e02e5a6dc9c3197774"
 dependencies = [
  "derive_more 1.0.0",
  "lalrpop-util",
@@ -1238,8 +1236,6 @@ dependencies = [
 [[package]]
 name = "lang-util-derive"
 version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f440b77c4d69537fbf388080e3d25f8d82b816d6bfbff4bb5b2ec1a69755f596"
 dependencies = [
  "darling",
  "proc-macro2",

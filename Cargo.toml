@@ -20,8 +20,6 @@ getopts = "0.2.11"
 gleam = "0.15"
 glsl-lang = { path = "../glsl-lang/lang", features = [
   "lexer-v2-full",
-  "parser-expr",
-  "parser-statement",
 ] }
 glsl-lang-pp = { path = "../glsl-lang/lang-pp", features = [
   "full",
