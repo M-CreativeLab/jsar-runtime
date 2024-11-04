@@ -13,5 +13,5 @@ Using browser-compat-data allows us to leverage the work of the MDN community, a
 To generate the documentation, you need to run the following command:
 
 ```bash
-npm run build
+npm run build # Not working yet
 ```

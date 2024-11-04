@@ -1,0 +1,13 @@
+{
+  "browsers": {
+    "jsar": {
+      "name": "JSAR",
+      "type": "xr",
+      "preview_name": "Canary",
+      "pref_url": "jsar://flags",
+      "accepts_flags": true,
+      "accepts_webextensions": false,
+      "releases": {}
+    }
+  }
+}
