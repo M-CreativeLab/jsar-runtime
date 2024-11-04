@@ -1,0 +1,561 @@
+{
+  "html": {
+    "global_attributes": {
+      "accesskey": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/accesskey",
+          "spec_url": "https://html.spec.whatwg.org/multipage/interaction.html#the-accesskey-attribute",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "anchor": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/anchor",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": true,
+            "standard_track": false,
+            "deprecated": false
+          }
+        }
+      },
+      "autocapitalize": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/autocapitalize",
+          "spec_url": "https://html.spec.whatwg.org/multipage/interaction.html#attr-autocapitalize",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "autocorrect": {
+        "__compat": {
+          "spec_url": "https://html.spec.whatwg.org/multipage/interaction.html#attr-autocorrect",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": true,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "autofocus": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/autofocus",
+          "spec_url": "https://html.spec.whatwg.org/multipage/interaction.html#dom-fe-autofocus",
+          "tags": [
+            "web-features:autofocus"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "class": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/class",
+          "spec_url": "https://html.spec.whatwg.org/multipage/dom.html#global-attributes:classes-2",
+          "support": {
+            "jsar": {
+              "version_added": "1"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "contenteditable": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/contenteditable",
+          "spec_url": "https://html.spec.whatwg.org/multipage/interaction.html#attr-contenteditable",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "plaintext-only": {
+          "__compat": {
+            "description": "<code>contenteditable=\"plaintext-only\"</code>",
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      },
+      "data_attributes": {
+        "__compat": {
+          "description": "<code>data-*</code> attributes",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/data-*",
+          "spec_url": "https://html.spec.whatwg.org/multipage/dom.html#attr-data-*",
+          "support": {
+            "jsar": {
+              "version_added": "1"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "dir": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/dir",
+          "spec_url": "https://html.spec.whatwg.org/multipage/dom.html#the-dir-attribute",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "draggable": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/draggable",
+          "spec_url": "https://html.spec.whatwg.org/multipage/dnd.html#the-draggable-attribute",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "enterkeyhint": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/enterkeyhint",
+          "spec_url": "https://html.spec.whatwg.org/multipage/interaction.html#attr-enterkeyhint",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "exportparts": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/exportparts",
+          "spec_url": "https://drafts.csswg.org/css-shadow-parts/#element-attrdef-html-global-exportparts",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "hidden": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/hidden",
+          "spec_url": "https://html.spec.whatwg.org/multipage/interaction.html#the-hidden-attribute",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "until-found_value": {
+          "__compat": {
+            "description": "<code>until-found</code> value",
+            "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/hidden",
+            "spec_url": "https://html.spec.whatwg.org/multipage/interaction.html#the-hidden-attribute",
+            "tags": [
+              "web-features:hidden-until-found"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": true,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      },
+      "id": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/id",
+          "spec_url": "https://html.spec.whatwg.org/multipage/dom.html#global-attributes:the-id-attribute-2",
+          "support": {
+            "jsar": {
+              "version_added": "1"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "inert": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/inert",
+          "spec_url": "https://html.spec.whatwg.org/multipage/interaction.html#the-inert-attribute",
+          "tags": [
+            "web-features:inert"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "inputmode": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/inputmode",
+          "spec_url": "https://html.spec.whatwg.org/multipage/interaction.html#attr-inputmode",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "is": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/is",
+          "spec_url": "https://html.spec.whatwg.org/multipage/custom-elements.html#attr-is",
+          "tags": [
+            "web-features:customized-built-in-elements"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "lang": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/lang",
+          "spec_url": "https://html.spec.whatwg.org/multipage/dom.html#attr-lang",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "nonce": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/nonce",
+          "spec_url": "https://html.spec.whatwg.org/multipage/urls-and-fetching.html#attr-nonce",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "nonce_hiding": {
+          "__compat": {
+            "description": "<code>nonce</code> hiding behavior",
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      },
+      "part": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/part",
+          "spec_url": "https://drafts.csswg.org/css-shadow-parts/#part-attr",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "popover": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/popover",
+          "spec_url": "https://html.spec.whatwg.org/multipage/popover.html#the-popover-attribute",
+          "tags": [
+            "web-features:popover"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "slot": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/slot",
+          "spec_url": [
+            "https://html.spec.whatwg.org/multipage/dom.html#attr-slot",
+            "https://dom.spec.whatwg.org/#ref-for-dom-element-slot①"
+          ],
+          "tags": [
+            "web-features:slot"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "spellcheck": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/spellcheck",
+          "spec_url": "https://html.spec.whatwg.org/multipage/interaction.html#attr-spellcheck",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "style": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/style",
+          "spec_url": "https://html.spec.whatwg.org/multipage/dom.html#the-style-attribute",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "tabindex": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/tabindex",
+          "spec_url": "https://html.spec.whatwg.org/multipage/interaction.html#attr-tabindex",
+          "tags": [
+            "web-features:tabindex"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "title": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/title",
+          "spec_url": "https://html.spec.whatwg.org/multipage/dom.html#the-title-attribute",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "multi-line_titles": {
+          "__compat": {
+            "description": "Multi-line titles",
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      },
+      "translate": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/translate",
+          "spec_url": "https://html.spec.whatwg.org/multipage/dom.html#attr-translate",
+          "tags": [
+            "web-features:translate"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "virtualkeyboardpolicy": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/virtualkeyboardpolicy",
+          "spec_url": "https://w3c.github.io/virtual-keyboard/#dom-elementcontenteditable-virtualkeyboardpolicy",
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": true,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "writingsuggestions": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/writingsuggestions",
+          "spec_url": "https://html.spec.whatwg.org/multipage/interaction.html#writing-suggestions",
+          "tags": [
+            "web-features:writingsuggestions"
+          ],
+          "support": {
+            "jsar": {
+              "version_added": false
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

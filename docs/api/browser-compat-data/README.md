@@ -1,4 +1,4 @@
-# Web APIs
+# Browser compatibility data
 
 In this directory, we maintain the compatibility data for Web APIs that JSAR did implement that follows the format: https://github.com/mdn/browser-compat-data.
 
