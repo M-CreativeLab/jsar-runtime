@@ -1,5 +1,9 @@
 /// <reference path="transmute-private.d.ts" />
 
+/**
+ * This file declares the new APIs and properties which is introduced by JSAR in its usecases.
+ */
+
 interface OffscreenCanvas {
   /**
    * JSAR added a new context type 'jsar:htmlrenderer' for customizing the HTML content rendering, developers can use this context
@@ -14,7 +18,7 @@ interface OffscreenCanvas {
 interface WebGLUniformLocation {
   /**
    * The `name` to the uniform variable, we introduced this new property to help developers to debug the shader program better and it
-   * also used internally for ATW(Asynchronous Time Warp) in JSAR's asynchronous stereo rendering.
+   * also used internally for JSAR's defferred composition in stereo rendering.
    * 
    * For example, if you have a uniform variable in the shader program:
    * 
@@ -34,9 +38,9 @@ interface WebGLUniformLocation {
 
 interface XRSession {
   /**
-   * In JSAR's asynchronous stereo rendering, we leverage the hit testing to host to decrease the latency when user interacts with the
-   * virtual objects or the UI elements. With this method, the client(application) process does not need to do hit testing in every frame
-   * and avoid the latency from the client to the host.
+   * In JSAR's __Defferred Composition__, we leverage the hit testing to host to decrease the latency when user interacts with the virtual objects 
+   * or the UI elements. With this method, the client(application) process does not need to do hit testing in every frame and avoid the latency
+   * from the client to the host.
    * 
    * This method `updateCollisionBox` is used to tell the host the collision box of a virtual object, then the host will do the hit testing
    * to compute the hit point by itself.
@@ -53,18 +57,38 @@ interface XRSession {
 
 interface XRInputSource {
   /**
-   * Set the target ray's hit test result, this is used for updating the host ray rendering.
-   *
+   * This method is also used in JSAR's _Defferred Composition_, but different from `updateCollisionBox`, it computes the hit point by the client
+   * process every frame, and sends the hit point to the host.
+   * 
    * @param hit If the target ray hits an object.
    * @param endTransform The ray's end transform if hit or null.
    * @returns null
+   * @deprecated This method has been deprecated because it takes more latency and more CPU usage at the client side.
    */
   setTargetRayHitTestResult(hit: boolean, endTransform?: XRRigidTransform | null): void;
 }
 
 interface XRWebGLLayer {
   /**
-   * Indicates whether the `XRWebGLLayer` is multiview required, if true, the application should use OVR_multiview2 extension to render.
+   * At JSAR, the WebXR rendering pipeline disallows developers to create framebuffer objects for stereo rendering, because the framebuffer is
+   * always created by the host such as Unity, Unreal Engine, etc and the framebuffer is shared to the client process for rendering the WebXR
+   * content.
+   * 
+   * If the framebuffer is multiview required, namely calling `glFramebufferTextureMultiviewOVR()` in the host, the client process must use the
+   * followings in their vertex shader:
+   * 
+   * ```glsl
+   * #extension GL_OVR_multiview2 : enable
+   * layout(num_views = 2) in;
+   * ```
+   * 
+   * Otherwise, any draw calls will occur an error by the `ovr_multiview*` extension.
+   * 
+   * To help WebXR developers to know if the framebuffer is multiview required, this property `multiviewRequired` is introduced in every created
+   * `XRWebGLLayer` object, and developers can check this property to know if the framebuffer is multiview required and change their shaders.
+   * 
+   * @see https://registry.khronos.org/OpenGL/extensions/OVR/OVR_multiview.txt
+   * @see https://registry.khronos.org/OpenGL/extensions/OVR/OVR_multiview2.txt
    */
-  multiviewRequired: boolean;
+  readonly multiviewRequired: boolean;
 }
