@@ -1,6 +1,6 @@
 # Defferred Composition
 
-Defferred composition is a technique that allows you to defer the composition of some of virtual objects in low latency scenarios. This is useful when you want to do composition of virtual objects from different processes or threads, and you also require low latency in this composition. JSAR uses defferred composition to compose virtual objects from WebXR processes in the host scene created by Unity, UnrealEngine or any other engine.
+Defferred composition is a new technique introduced by JSAR that allows you to defer the composition of some of virtual objects in low latency scenarios. This is useful when you want to do composition of virtual objects from different processes or threads, and you also require low latency in this composition. JSAR uses defferred composition to compose virtual objects from WebXR processes into the host scene created by Unity, Unreal Engine or any other 3D engine.
 
 ## Principles
 
