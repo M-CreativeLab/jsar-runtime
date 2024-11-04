@@ -1,0 +1,201 @@
+{
+  "api": {
+    "Worker": {
+      "__compat": {
+        "mdn_url": "https://developer.mozilla.org/docs/Web/API/Worker",
+        "spec_url": "https://html.spec.whatwg.org/multipage/workers.html#dedicated-workers-and-the-worker-interface",
+        "support": {
+          "jsar": {
+            "version_added": "1"
+          }
+        },
+        "status": {
+          "experimental": false,
+          "standard_track": true,
+          "deprecated": false
+        }
+      },
+      "Worker": {
+        "__compat": {
+          "description": "<code>Worker()</code> constructor",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Worker/Worker",
+          "spec_url": "https://html.spec.whatwg.org/multipage/workers.html#dom-worker-dev",
+          "support": {
+            "jsar": {
+              "version_added": "1"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        },
+        "ecmascript_modules": {
+          "__compat": {
+            "description": "Support for ECMAScript modules",
+            "tags": [
+              "web-features:js-modules-workers"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": "1"
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "mime_checks": {
+          "__compat": {
+            "description": "Strict MIME type checks for worker scripts",
+            "support": {
+              "jsar": {
+                "version_added": false
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "options_name_parameter": {
+          "__compat": {
+            "description": "<code>options.name</code> parameter",
+            "support": {
+              "jsar": {
+                "version_added": "1"
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        },
+        "options_type_parameter": {
+          "__compat": {
+            "description": "<code>options.type</code> parameter",
+            "tags": [
+              "web-features:js-modules-workers"
+            ],
+            "support": {
+              "jsar": {
+                "version_added": "1"
+              }
+            },
+            "status": {
+              "experimental": false,
+              "standard_track": true,
+              "deprecated": false
+            }
+          }
+        }
+      },
+      "worker_support": {
+        "__compat": {
+          "description": "Available in workers",
+          "support": {
+            "jsar": {
+              "version_added": "1"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "error_event": {
+        "__compat": {
+          "description": "<code>error</code> event",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Worker/error_event",
+          "spec_url": "https://html.spec.whatwg.org/multipage/workers.html#handler-abstractworker-onerror",
+          "support": {
+            "jsar": {
+              "version_added": "1"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "message_event": {
+        "__compat": {
+          "description": "<code>message</code> event",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Worker/message_event",
+          "spec_url": "https://html.spec.whatwg.org/multipage/indices.html#event-message",
+          "support": {
+            "jsar": {
+              "version_added": "1"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "messageerror_event": {
+        "__compat": {
+          "description": "<code>messageerror</code> event",
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Worker/messageerror_event",
+          "spec_url": "https://html.spec.whatwg.org/multipage/indices.html#event-messageerror",
+          "support": {
+            "jsar": {
+              "version_added": "1"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "postMessage": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Worker/postMessage",
+          "spec_url": "https://html.spec.whatwg.org/multipage/workers.html#dom-worker-postmessage-dev",
+          "support": {
+            "jsar": {
+              "version_added": "1"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      },
+      "terminate": {
+        "__compat": {
+          "mdn_url": "https://developer.mozilla.org/docs/Web/API/Worker/terminate",
+          "spec_url": "https://html.spec.whatwg.org/multipage/workers.html#dom-worker-terminate-dev",
+          "support": {
+            "jsar": {
+              "version_added": "1"
+            }
+          },
+          "status": {
+            "experimental": false,
+            "standard_track": true,
+            "deprecated": false
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "api": {
+    "HTMLDocument": {
+      "__compat": {
+        "mdn_url": "https://developer.mozilla.org/docs/Web/API/HTMLDocument",
+        "spec_url": "https://html.spec.whatwg.org/multipage/nav-history-apis.html#htmldocument",
+        "support": {
+          "jsar": {
+            "version_added": "1"
+          }
+        },
+        "status": {
+          "experimental": false,
+          "standard_track": true,
+          "deprecated": false
+        }
+      }
+    }
+  }
+}
