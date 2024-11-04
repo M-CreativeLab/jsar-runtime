@@ -55,7 +55,7 @@ class EngineOnTransmute extends BABYLON.Engine implements JSARNativeEngine {
      * placeholders. The placeholders will be computed at the native rendering loop.
      */
     if (this.webglPlaceholdersEnabled) {
-      const name = (uniform as any)?.name;
+      const name = uniform?.name;
       switch (name) {
         case 'projection':
           matrices = WebGLMatrix.CreateProjectionMatrix(matrices, this.useRightHandedSystem);

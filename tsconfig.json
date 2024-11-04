@@ -10,6 +10,8 @@
     "types": [
       "node",
       "nodejs-patch",
+      "transmute-webapis",
+      "transmute-private"
     ],
     "typeRoots": [
       "node_modules/@types",
