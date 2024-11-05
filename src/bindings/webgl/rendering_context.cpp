@@ -5,6 +5,7 @@
 #include "../canvas/image_bitmap.hpp"
 #include "../canvas/image_data.hpp"
 #include "../canvas/canvas.hpp"
+#include "../dom/html_canvas_element.hpp"
 #include "../dom/html_image_element.hpp"
 #include "./rendering_context.hpp"
 
@@ -2031,6 +2032,8 @@ namespace webgl
         imageSource = canvasbinding::ImageData::Unwrap(imageSourceObject)->getImageSource();
       else if (imageSourceObject.InstanceOf(canvasbinding::OffscreenCanvas::constructor->Value()))
         imageSource = canvasbinding::OffscreenCanvas::Unwrap(imageSourceObject)->getImageSource();
+      else if (imageSourceObject.InstanceOf(dombinding::HTMLCanvasElement::constructor->Value()))
+        imageSource = dombinding::HTMLCanvasElement::Unwrap(imageSourceObject)->getImageSource();
       else if (imageSourceObject.InstanceOf(dombinding::HTMLImageElement::constructor->Value()))
         imageSource = dombinding::HTMLImageElement::Unwrap(imageSourceObject)->getImageSource();
       else

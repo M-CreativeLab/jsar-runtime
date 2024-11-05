@@ -4,12 +4,14 @@
 #include "client/canvas/canvas.hpp"
 #include "./html_element-inl.hpp"
 #include "../canvas/canvas.hpp"
+#include "../canvas/image_source.hpp"
 #include "../canvas/rendering_context2d.hpp"
 
 namespace dombinding
 {
   class HTMLCanvasElement : public HTMLElementBase<HTMLCanvasElement, dom::HTMLCanvasElement>,
-                            public canvasbinding::CanvasWrap<canvasbinding::CanvasRenderingContext2D, canvas::Canvas>
+                            public canvasbinding::CanvasWrap<canvasbinding::CanvasRenderingContext2D, canvas::Canvas>,
+                            public canvasbinding::ImageSourceWrap<dom::HTMLCanvasElement>
   {
   public:
     using HTMLElementBase::HTMLElementBase;

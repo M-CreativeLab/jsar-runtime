@@ -14,7 +14,9 @@ fn main() {
 fn install_script(file_name: &str) {
   let current_dir = env::current_dir().unwrap();
   let gzipped_file_name = file_name.to_string() + ".gz";
-  let source_path: std::path::PathBuf = current_dir.join("../../build/output").join(gzipped_file_name.clone());
+  let source_path: std::path::PathBuf = current_dir
+    .join("../../build/output")
+    .join(gzipped_file_name.clone());
   println!("cargo:rerun-if-changed={}", source_path.display());
 
   if !source_path.exists() {

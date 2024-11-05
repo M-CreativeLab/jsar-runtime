@@ -18,12 +18,8 @@ euclid = "0.22"
 fnv = "1.0"
 getopts = "0.2.11"
 gleam = "0.15"
-glsl-lang = { path = "../glsl-lang/lang", features = [
-  "lexer-v2-full",
-] }
-glsl-lang-pp = { path = "../glsl-lang/lang-pp", features = [
-  "full",
-] }
+glsl-lang = { path = "../glsl-lang/lang", features = ["lexer-v2-full"] }
+glsl-lang-pp = { path = "../glsl-lang/lang-pp", features = ["full"] }
 headers = "0.3"
 html5ever = "0.27"
 http = "0.2"
@@ -62,6 +58,7 @@ rand = "0.8"
 rand_core = "0.6"
 rand_isaac = "0.3"
 regex = "1.10"
+reqwest = { version = "=0.12.8" }
 rustls = { version = "0.21.10", features = ["dangerous_configuration"] }
 rustls-pemfile = "1.0.4"
 script_traits = { path = "crates/servo_shared/script" }

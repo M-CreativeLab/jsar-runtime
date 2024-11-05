@@ -30,8 +30,10 @@ namespace dombinding
 
   HTMLCanvasElement::HTMLCanvasElement(const Napi::CallbackInfo &info)
       : HTMLElementBase(info),
-        canvasbinding::CanvasWrap<canvasbinding::CanvasRenderingContext2D, canvas::Canvas>(node->canvasImpl())
+        canvasbinding::CanvasWrap<canvasbinding::CanvasRenderingContext2D, canvas::Canvas>(node->canvasImpl()),
+        canvasbinding::ImageSourceWrap<dom::HTMLCanvasElement>()
   {
+    dataImpl = node;
   }
 
   Napi::Value HTMLCanvasElement::WidthGetter(const Napi::CallbackInfo &info)

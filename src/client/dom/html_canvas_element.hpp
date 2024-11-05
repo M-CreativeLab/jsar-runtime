@@ -9,15 +9,22 @@ namespace dom
 {
   using CanvasRenderingContext = canvas::RenderingContextBase<canvas::Canvas>;
 
-  class HTMLCanvasElement : public HTMLElement
+  class HTMLCanvasElement : public HTMLElement,
+                            public canvas::ImageSource
   {
   public:
     using HTMLElement::HTMLElement;
     HTMLCanvasElement(weak_ptr<Document> ownerDocument)
         : HTMLElement("CANVAS", ownerDocument),
+          canvas::ImageSource(),
           canvasImpl_(std::make_shared<canvas::Canvas>())
     {
     }
+
+  public:
+    size_t width() override { return canvasImpl_->width(); }
+    size_t height() override { return canvasImpl_->height(); }
+    bool readPixels(SkPixmap &dst) override { return canvasImpl_->readPixels(dst); }
 
   public:
     /**
@@ -91,7 +98,7 @@ namespace dom
 
     /**
      * Get the canvas implementation object.
-     * 
+     *
      * @returns The canvas implementation object.
      */
     inline std::shared_ptr<canvas::Canvas> canvasImpl() { return canvasImpl_; }
