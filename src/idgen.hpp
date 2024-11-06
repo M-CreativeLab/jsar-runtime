@@ -3,13 +3,25 @@
 #include <cstdint>
 #include <iostream>
 
+/**
+ * @brief The ID generator class in Transmute library.
+ */
 class TrIdGenerator
 {
 public:
+  /**
+   * @brief Construct a new TrIdGenerator object
+   * 
+   * @param initialId The initial ID value.
+   */
   TrIdGenerator(uint32_t initialId = 0) : counter(initialId), initialId(initialId) {}
   ~TrIdGenerator() {}
 
 public:
+  /**
+   * @brief Get the next ID.
+   * @returns The next ID.
+   */
   uint32_t get()
   {
     if (counter >= maxId)

@@ -16,15 +16,32 @@ namespace xr
 {
   class Device;
 
+  /**
+   * This is used to store the local transform matrix for a specific WebXR session.
+   */
   class FrameContextBySessionId
   {
   public:
+    /**
+     * Constructor.
+     * 
+     * @param sessionId The session id.
+     */
     FrameContextBySessionId(int sessionId);
     ~FrameContextBySessionId();
 
   public:
+    /**
+     * @returns The session id.
+     */
     int getSessionId();
+    /**
+     * @returns The local transform matrix.
+     */
     float *getLocalTransform();
+    /**
+     * Set the local transform matrix.
+     */
     void setLocalTransform(float *transform);
 
   private:
@@ -32,31 +49,103 @@ namespace xr
     float m_LocalTransform[16];
   };
 
+  /**
+   * The abstract class to represent a device-specific frame. The `DeviceFrame` manages the frame context for each session, 
+   * and provides its stereo-related information including:
+   * 
+   * - Rendering mode (single-pass or multi-pass)
+   * - Viewer transform
+   * - Local transform for each session
+   * - Input sources
+   */
   class DeviceFrame
   {
   public:
+    /**
+     * Construct a `DeviceFrame` with a specific XR device.
+     * 
+     * @param device The XR device.
+     */
     DeviceFrame(xr::Device *device) : m_XrDevice(device) {}
     virtual ~DeviceFrame() = default;
 
   public:
+    /**
+     * Mark the device frame as started.
+     */
     void start();
+    /**
+     * Mark the device frame as ended.
+     */
     void end();
+    /**
+     * @returns If the device frame is ended.
+     */
     bool ended();
+    /**
+     * @returns If the device frame is multi-pass.
+     */
     bool isMultiPass();
+    /**
+     * @returns The viewer transform matrix in float array.
+     */
     float *getViewerTransform();
+    /**
+     * @param sessionId The session id.
+     * @returns The local transform matrix for a specific session.
+     */
     glm::mat4 getLocalTransform(int sessionId);
+    /**
+     * Add a session to the device frame's sessions.
+     * 
+     * @param sessionId The session id.
+     * @returns The `FrameContextBySessionId` for the session.
+     */
     FrameContextBySessionId *addSession(int sessionId);
+    /**
+     * @param sessionId The session id.
+     * @returns The `FrameContextBySessionId` for a specific session.
+     */
     FrameContextBySessionId *getSession(int sessionId);
+    /**
+     * Iterate all sessions in the device frame.
+     * 
+     * @param callback The callback function to be called for each session.
+     */
     void iterateSessions(std::function<void(int, FrameContextBySessionId *)> callback);
 
+    /**
+     * @returns The count of sessions in the device frame.
+     */
     size_t getCountOfSessions();
+    /**
+     * @returns The current stereo id.
+     */
     int getCurrentStereoId();
+    /**
+     * Set the current stereo id.
+     */
     void setStereoId(int id);
 
+    /**
+     * @returns The gaze input source.
+     */
     InputSource &getGazeInputSource();
+    /**
+     * @param handness The handness.
+     * @returns The hand input source.
+     */
     InputSource &getHandInputSource(Handness handness);
 
   public:
+    /**
+     * It computes the matrix by the given computation graph, every device frame implementation should implement this method.
+     * 
+     * @param computationGraph The computation graph.
+     * @param sessionId The session id.
+     * @param viewIndex The view index.
+     * @returns The computed matrix by the input computation graph.
+     */
     virtual glm::mat4 computeMatrixByGraph(commandbuffers::MatrixComputationGraph &computationGraph, int sessionId, int viewIndex) = 0;
 
   protected:
@@ -74,10 +163,19 @@ namespace xr
   class MultiPassFrame : public DeviceFrame
   {
   public:
+    /**
+     * Construct a `MultiPassFrame` with a specific XR device and stereo id.
+     * 
+     * @param device The XR device.
+     * @param stereoId The stereo id.
+     */
     explicit MultiPassFrame(Device *device, int stereoId);
     ~MultiPassFrame();
 
   public:
+    /**
+     * @returns The active eye id.
+     */
     int getActiveEyeId();
     /**
      * It returns the view matrix for the active eye.
@@ -102,19 +200,15 @@ namespace xr
      * It does operate the computation graph based on current frame, and returns glm::mat4.
      *
      * @param computationGraph the computation graph to be operated.
+     * @param sessionId the session id.
+     * @param viewIndex the view index.
      */
     glm::mat4 computeMatrixByGraph(commandbuffers::MatrixComputationGraph &computationGraph, int sessionId, int viewIndex) override;
 
   private:
     int m_ActiveEyeId = -1;
-    /**
-     * The viewer's view matrix for the active eye in current pass.
-     */
-    float m_ViewerViewMatrix[16];
-    /**
-     * The viewer's projection matrix for the active eye in current pass.
-     */
-    float m_ViewerProjectionMatrix[16];
+    float m_ViewerViewMatrix[16]; // The viewer's view matrix for the active eye in current pass.
+    float m_ViewerProjectionMatrix[16]; // The viewer's projection matrix for the active eye in current pass.
   };
 
   /**
@@ -123,6 +217,12 @@ namespace xr
   class SinglePassFrame : public DeviceFrame
   {
   public:
+    /**
+     * Construct a `SinglePassFrame` with a specific XR device and stereo id.
+     * 
+     * @param device The XR device.
+     * @param stereoId The stereo id.
+     */
     explicit SinglePassFrame(Device *device, int stereoId);
 
   public:
