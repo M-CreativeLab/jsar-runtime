@@ -147,7 +147,6 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
   private _preloadMeshes: Map<string, Array<BABYLON.AbstractMesh | BABYLON.TransformNode>> = new Map();
   private _preloadAnimationGroups: Map<string, BABYLON.AnimationGroup[]> = new Map();
   private _defaultCamera: BABYLON.Camera;
-  private _defaultLights: BABYLON.Light[] = [];
 
   constructor(glContext: WebGLRenderingContext | WebGL2RenderingContext) {
     super();
@@ -175,6 +174,9 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     scene.blockMaterialDirtyMechanism = true;
     scene.performancePriority = BABYLON.ScenePerformancePriority.Intermediate;
 
+    // Create default skybox, light and camera
+    scene.createDefaultSkybox();
+    scene.createDefaultLight();
     this._defaultCamera = new BABYLON.ArcRotateCamera(
       'default_camera',
       Math.PI / 2,
@@ -183,17 +185,6 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
       BABYLON.Vector3.Zero(),
       scene);
     this._defaultCamera.position.y += 1.0;
-
-    {
-      // create default light
-      const dir = new BABYLON.Vector3(0, 2, -5);
-      const frontLight = new BABYLON.DirectionalLight('light_front', dir, scene);
-      frontLight.intensity = 2;
-      this._defaultLights.push(frontLight);
-      const backLight = new BABYLON.DirectionalLight('light_back', dir.negate(), scene);
-      backLight.intensity = 2;
-      this._defaultLights.push(backLight);
-    }
 
     this.engine.runRenderLoop(() => {
       scene.render();

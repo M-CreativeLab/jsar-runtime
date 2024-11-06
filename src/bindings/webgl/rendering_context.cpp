@@ -903,7 +903,7 @@ namespace webgl
 
     /**
      * Write _screenCanvas(ReadOnlyScreenCanvas) property
-     * 
+     *
      * TODO: will change to `.canvas` when DOM implementation is ready.
      */
     auto jsThis = info.This().As<Napi::Object>();
@@ -1794,12 +1794,12 @@ namespace webgl
       return env.Undefined();
     }
     if (textarget != WEBGL_TEXTURE_2D &&
-      textarget != WEBGL_TEXTURE_CUBE_MAP_POSITIVE_X &&
-      textarget != WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_X &&
-      textarget != WEBGL_TEXTURE_CUBE_MAP_POSITIVE_Y &&
-      textarget != WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Y &&
-      textarget != WEBGL_TEXTURE_CUBE_MAP_POSITIVE_Z &&
-      textarget != WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Z)
+        textarget != WEBGL_TEXTURE_CUBE_MAP_POSITIVE_X &&
+        textarget != WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_X &&
+        textarget != WEBGL_TEXTURE_CUBE_MAP_POSITIVE_Y &&
+        textarget != WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Y &&
+        textarget != WEBGL_TEXTURE_CUBE_MAP_POSITIVE_Z &&
+        textarget != WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Z)
     {
       setGLError("framebufferTexture2d", WebGLError::INVALID_ENUM,
                  "textarget must be TEXTURE_2D or one of the TEXTURE_CUBE_MAP_* targets");
