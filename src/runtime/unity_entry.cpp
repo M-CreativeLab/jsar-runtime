@@ -294,6 +294,8 @@ extern "C"
 #endif
   /**
    * This parses from the JSON string and configure the Transmute runtime.
+   *
+   * @param configJson The JSON string to configure the runtime.
    */
   DLL_PUBLIC bool TransmuteUnity_Configure(const char *configJson)
   {
@@ -326,7 +328,6 @@ extern "C"
   /**
    * Configure the XR device, this is required to execute the JSAR in XR device.
    *
-   * @param enabled Whether the XR device is enabled.
    * @param isDeviceActive Whether the XR device is active.
    * @param stereoRenderingMode The stereo rendering mode, 0 for mono, 1 for stereo.
    */
@@ -349,8 +350,6 @@ extern "C"
 
   /**
    * Starting the Transmute runtime.
-   *
-   * @param argJson The JSON string of the runtime initialization arguments.
    */
   DLL_PUBLIC bool TransmuteUnity_Start()
   {
@@ -374,11 +373,17 @@ extern "C"
   }
 
   /**
-   * The options for opening the URL.
+   * The options for opening an URL.
    */
   typedef struct
   {
+    /**
+     * Whether to disable the cache.
+     */
     bool disableCache;
+    /**
+     * Whether rendering in preview mode.
+     */
     bool isPreview;
   } UnityDocumentRequestInit;
 
@@ -399,6 +404,49 @@ extern "C"
     init.isPreview = unityInit.isPreview;
     init.runScripts = TrScriptRunMode::Dangerously;
     return embedder->constellation->open(url, make_optional(init));
+  }
+
+  /**
+   * Pause a specific document.
+   *
+   * The paused document will not receive updates from the host, and there will be no rendering, and the developer should resume the document
+   * via `TransmuteUnity_Resume` to continue the rendering.
+   *
+   * The usecase of pausing a document is to hide a specific document when it's not visible or not needed to render.
+   *
+   * @param documentId The document id to pause.
+   * @return Whether the document is paused successfully.
+   */
+  DLL_PUBLIC bool TransmuteUnity_Puase(int documentId)
+  {
+    TR_ENSURE_COMPONENT(contentManager, false, {});
+    auto content = contentManager->getContent(documentId, false);
+    if (content == nullptr)
+    {
+      DEBUG(LOG_TAG_UNITY, "Could not find the content with id: %d", documentId);
+      return false;
+    }
+    content->pause();
+    return true;
+  }
+
+  /**
+   * Resume the paused document, see `TransmuteUnity_Pause()` for more details.
+   *
+   * @param documentId The document id to resume.
+   * @return Whether the document is resumed successfully.
+   */
+  DLL_PUBLIC bool TransmuteUnity_Resume(int documentId)
+  {
+    TR_ENSURE_COMPONENT(contentManager, false, {});
+    auto content = contentManager->getContent(documentId, false);
+    if (content == nullptr)
+    {
+      DEBUG(LOG_TAG_UNITY, "Could not find the content with id: %d", documentId);
+      return false;
+    }
+    content->resume();
+    return true;
   }
 
   /**
