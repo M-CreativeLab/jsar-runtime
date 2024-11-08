@@ -779,6 +779,7 @@ namespace webgl
       InstanceMethod("uniformMatrix4fv", &T::UniformMatrix4fv),                 \
       InstanceMethod("drawArrays", &T::DrawArrays),                             \
       InstanceMethod("drawElements", &T::DrawElements),                         \
+      InstanceMethod("lineWidth", &T::LineWidth),                               \
       InstanceMethod("pixelStorei", &T::PixelStorei),                           \
       InstanceMethod("polygonOffset", &T::PolygonOffset),                       \
       InstanceMethod("viewport", &T::Viewport),                                 \
@@ -3294,6 +3295,24 @@ namespace webgl
     auto req = DrawElementsCommandBufferRequest(mode, count, type, offset);
     sendCommandBufferRequest(req);
     sendFirstContentfulPaintMetrics();
+    return env.Undefined();
+  }
+
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::LineWidth(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() != 1)
+    {
+      Napi::TypeError::New(env, "lineWidth() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    float width = info[0].As<Napi::Number>().FloatValue();
+
+    auto req = LineWidthCommandBufferRequest(width);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 

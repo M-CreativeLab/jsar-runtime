@@ -43,6 +43,19 @@ namespace commandbuffers
     int height;
   };
 
+  class LineWidthCommandBufferRequest : public TrCommandBufferSimpleRequest<LineWidthCommandBufferRequest>
+  {
+  public:
+    LineWidthCommandBufferRequest(float width)
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_LINE_WIDTH_REQ),
+          width(width)
+    {
+    }
+
+  public:
+    float width;
+  };
+
   class PixelStoreiCommandBufferRequest : public TrCommandBufferSimpleRequest<PixelStoreiCommandBufferRequest>
   {
   public:
