@@ -2,6 +2,31 @@
 
 The alpha version of JSAR is the first version of the project.
 
+## v0.6.0
+
+- HTML is introduced as the main entry point to start an application.
+  - Include the following elements (element rendering is not working yet):
+    - `<audio>`
+    - `<body>`
+    - `<canvas>`
+    - `<div>`
+    - `<head>`
+    - `<html>`
+    - `<img>`
+    - `<meta>`
+    - `<p>`
+    - `<script>`
+    - `<span>`
+    - `<video>`
+  - Add scripting and module system support:
+    - Scripting: JavaScript & TypeScript
+    - ECMAScript Modules
+  - Add Web Canvas API: `HTMLCanvasElement` and `OffscreenCanvas`.
+  - Add `location` object to support parsing the request URL.
+  - Add `window.open(url)` to open a new window (this depends on the embedder).
+  - Add `window.close()` to close the current application.
+- Support running three.js projects in HTML.
+
 ## v0.5.0
 
 - Added ability to support Unity Universal RP.
