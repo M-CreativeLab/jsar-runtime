@@ -25,6 +25,12 @@ The alpha version of JSAR is the first version of the project.
   - Add `location` object to support parsing the request URL.
   - Add `window.open(url)` to open a new window (this depends on the embedder).
   - Add `window.close()` to close the current application.
+- WebGL:
+  - Fix the extension `OVR_multiview2` constant values.
+  - Add new WebGL2 extension: `EXT_color_buffer_float`.
+  - Add new WebGL2 extension: `EXT_texture_filter_anisotropic`.
+  - Implement the WebGL method: `gl.hint()`.
+  - Implement the WebGL method: `gl.lineWidth()`.
 - Support running three.js projects in HTML.
 
 ## v0.5.0
