@@ -444,6 +444,9 @@ namespace webgl
     float maxTextureLODBias;
 
   private:
+    int32_t OVR_maxViews;
+
+  private:
     static thread_local Napi::FunctionReference *webgl2Constructor;
   };
 }

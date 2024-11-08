@@ -3193,17 +3193,45 @@ namespace webgl
     }
     else if (
         m_clientContext->isInXrFrame() &&
-        (locationName == "projectionMatrix" ||
-         locationName == "viewMatrix"))
+        (
+            /**
+             * Match for three.js matrix uniforms
+             */
+            locationName == "projectionMatrix" ||
+            locationName == "projectionMatrices" ||
+            locationName == "projectionMatrices[0]" ||
+            locationName == "viewMatrix" ||
+            locationName == "viewMatrices" ||
+            locationName == "viewMatrices[0]"
+            /**
+             * TODO: Compatibility with other libraries: Babylon.js, etc.
+             */
+            ))
     {
+      bool forMultiview = false;
       WebGLMatrixPlaceholderId placeholderId = WebGLMatrixPlaceholderId::NotSet;
       if (locationName == "projectionMatrix")
+      {
         placeholderId = WebGLMatrixPlaceholderId::ProjectionMatrix;
+      }
+      else if (locationName == "projectionMatrices" || locationName == "projectionMatrices[0]")
+      {
+        placeholderId = WebGLMatrixPlaceholderId::ProjectionMatrix;
+        forMultiview = true;
+      }
       else if (locationName == "viewMatrix")
+      {
         placeholderId = WebGLMatrixPlaceholderId::ViewMatrix;
+      }
+      else if (locationName == "viewMatrices" || locationName == "viewMatrices[0]")
+      {
+        placeholderId = WebGLMatrixPlaceholderId::ViewMatrix;
+        forMultiview = true;
+      }
 
       MatrixComputationGraph computationGraph(placeholderId, MatrixHandedness::MATRIX_RIGHT_HANDED);
       computationGraph.inverseMatrix = false;
+      computationGraph.multiview = forMultiview;
       req.computationGraph4values = computationGraph;
     }
     else
@@ -4167,6 +4195,7 @@ namespace webgl
     this->maxServerWaitTimeout = resp->maxServerWaitTimeout;
     this->maxUniformBlockSize = resp->maxUniformBlockSize;
     this->maxTextureLODBias = resp->maxTextureLODBias;
+    this->OVR_maxViews = resp->OVR_maxViews;
     delete resp;
   }
 
@@ -4234,6 +4263,8 @@ namespace webgl
         return Napi::Number::New(env, maxUniformBlockSize);
       else if (pname == WEBGL2_MAX_TEXTURE_LOD_BIAS)
         return Napi::Number::New(env, maxTextureLODBias);
+      else if (pname == WEBGL2_EXT_MAX_VIEWS_OVR)
+        return Napi::Number::New(env, OVR_maxViews);
     }
     return WebGLBaseRenderingContext<WebGL2RenderingContext>::GetParameter(info);
   }

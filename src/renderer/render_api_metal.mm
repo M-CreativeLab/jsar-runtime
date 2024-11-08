@@ -86,6 +86,8 @@ public:
   bool SupportsWebGL2() { return false; }
   int GetDrawingBufferWidth() { return m_DrawingBufferWidth; }
   int GetDrawingBufferHeight() { return m_DrawingBufferHeight; }
+  void EnableGraphicsDebugLog(bool apiOnly) {}
+  void DisableGraphicsDebugLog() {}
 
   bool ExecuteCommandBuffer() { return true; }
   bool ExecuteCommandBuffer(

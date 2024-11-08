@@ -56,10 +56,12 @@ private:
 public:
 	RenderAPI_OpenGLCoreES(RHIBackendType backendType);
 	~RenderAPI_OpenGLCoreES() {}
-	virtual void ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces);
-	bool SupportsWebGL2();
-	int GetDrawingBufferWidth();
-	int GetDrawingBufferHeight();
+	void ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces) override;
+	bool SupportsWebGL2() override;
+	int GetDrawingBufferWidth() override;
+	int GetDrawingBufferHeight() override;
+	void EnableGraphicsDebugLog(bool apiOnly) override;
+	void DisableGraphicsDebugLog() override;
 
 public: // Execute command buffer
 	bool ExecuteCommandBuffer();
@@ -67,7 +69,7 @@ public: // Execute command buffer
 			vector<TrCommandBufferBase *> &commandBuffers,
 			renderer::TrContentRenderer *content,
 			xr::DeviceFrame *deviceFrame,
-			bool isDefaultQueue);
+			bool isDefaultQueue) override;
 
 private:
 	/**
@@ -157,13 +159,6 @@ private:
 			glGetProgramiv(program, GL_VALIDATE_STATUS, &validateStatus);
 			DEBUG(DEBUG_TAG, "    Program: LINK_STATUS=%d", linkStatus);
 			DEBUG(DEBUG_TAG, "    Program: VALIDATE_STATUS=%d", validateStatus);
-		}
-
-		// Print current framebuffer
-		{
-			GLint framebuffer;
-			glGetIntegerv(GL_FRAMEBUFFER_BINDING, &framebuffer);
-			DEBUG(DEBUG_TAG, "    Framebuffer: %d", framebuffer);
 		}
 
 		// Print Element Array
@@ -335,8 +330,15 @@ private:
 		glGetInteger64v(GL_MAX_UNIFORM_BLOCK_SIZE, &res.maxUniformBlockSize);
 		// GLfloat values
 		glGetFloatv(GL_MAX_TEXTURE_LOD_BIAS, &res.maxTextureLODBias);
+		// Check for extensions
+		{
+			glGetIntegerv(WEBGL2_EXT_MAX_VIEWS_OVR, &res.OVR_maxViews);
+		}
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+		{
 			DEBUG(DEBUG_TAG, "[%d] GL::Context2Init()", options.isDefaultQueue);
+			DEBUG(DEBUG_TAG, "    OVR_multiview.MAX_VIEWS_OVR = %d", res.OVR_maxViews);
+		}
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
 	TR_OPENGL_FUNC void OnCreateProgram(CreateProgramCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
@@ -511,7 +513,7 @@ private:
 		delete[] infoLog;
 
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::GetProgramInfoLog: %s", options.isDefaultQueue, res.infoLog.c_str());
+			DEBUG(DEBUG_TAG, "[%d] GL::GetProgramInfoLog: \"%s\"(%d)", options.isDefaultQueue, res.infoLog.c_str(), retSize);
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
 	TR_OPENGL_FUNC void OnAttachShader(AttachShaderCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
@@ -1489,6 +1491,10 @@ private:
 		}
 
 		float *matrixToUse = nullptr;
+		bool needToFreeMatrix = false; // Set `true` if the matrix allocation is operated.
+		bool usePlaceholder = false;
+		size_t matrixValuesSize = req->values.size();
+
 		if (req->isComputationGraph() && deviceFrame != nullptr)
 		{
 			auto activeXRSession = content->getActiveXRSession();
@@ -1498,20 +1504,35 @@ private:
 				return;
 			}
 
-			int viewIndexByGuess = 0;
-			if (!deviceFrame->isMultiPass())
+			bool isForMultiview = req->computationGraph4values.multiview;
+			if (isForMultiview)
 			{
-				auto viewport = reqContentRenderer->getOpenGLContext()->GetViewport();
-				if (viewport.x == viewport.width)
-					viewIndexByGuess = 1; // viewport(w, 0, w, h) might be the right eye.
+				auto matrixL = deviceFrame->computeMatrixByGraph(req->computationGraph4values, activeXRSession->id, 0);
+				auto matrixR = deviceFrame->computeMatrixByGraph(req->computationGraph4values, activeXRSession->id, 1);
+				matrixToUse = new float[32];
+				needToFreeMatrix = true;
+				matrixValuesSize = 32;
+				count = 2;
+				memcpy(matrixToUse, glm::value_ptr(matrixL), 16 * sizeof(float));
+				memcpy(matrixToUse + 16, glm::value_ptr(matrixR), 16 * sizeof(float));
 			}
-			auto matrix = deviceFrame->computeMatrixByGraph(req->computationGraph4values, activeXRSession->id, viewIndexByGuess);
-			matrixToUse = glm::value_ptr(matrix);
-			assert(matrixToUse != nullptr);
+			else
+			{
+				auto matrix = deviceFrame->computeMatrixByGraph(req->computationGraph4values, activeXRSession->id, 0);
+				matrixToUse = new float[16];
+				needToFreeMatrix = true;
+				matrixValuesSize = 16;
+				count = 1;
+				memcpy(matrixToUse, glm::value_ptr(matrix), 16 * sizeof(float));
+			}
+			usePlaceholder = true;
 		}
 
 		if (TR_UNLIKELY(matrixToUse == nullptr))
+		{
 			matrixToUse = req->values.data();
+			matrixValuesSize = req->values.size();
+		}
 
 		if (TR_UNLIKELY(matrixToUse == nullptr))
 		{
@@ -1525,14 +1546,27 @@ private:
 		{
 			GLint currentProgram;
 			glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-			DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix4fv(%d, count=%d, transpose=%d)",
-						options.isDefaultQueue, location, count, transpose);
+			DEBUG(DEBUG_TAG, "[%d] GL::UniformMatrix4fv(%d, values=[%d, use_placeholder=%s], count=%d, transpose=%s)",
+						options.isDefaultQueue,
+						location,
+						matrixValuesSize, usePlaceholder ? "true" : "false",
+						count,
+						transpose ? "true" : "false");
 			DEBUG(DEBUG_TAG, "    Program: %d", currentProgram);
-			DEBUG(DEBUG_TAG, "    %+.3f %+.3f %+.3f %+.3f", matrixToUse[0], matrixToUse[1], matrixToUse[2], matrixToUse[3]);
-			DEBUG(DEBUG_TAG, "    %+.3f %+.3f %+.3f %+.3f", matrixToUse[4], matrixToUse[5], matrixToUse[6], matrixToUse[7]);
-			DEBUG(DEBUG_TAG, "    %+.3f %+.3f %+.3f %+.3f", matrixToUse[8], matrixToUse[9], matrixToUse[10], matrixToUse[11]);
-			DEBUG(DEBUG_TAG, "    %+.3f %+.3f %+.3f %+.3f", matrixToUse[12], matrixToUse[13], matrixToUse[14], matrixToUse[15]);
+			for (int i = 0; i < count; i++)
+			{
+				float *m = matrixToUse + i * 16;
+				DEBUG(DEBUG_TAG, "    matrix[%d]:", i);
+				DEBUG(DEBUG_TAG, "      %+.3f %+.3f %+.3f %+.3f", m[0], m[1], m[2], m[3]);
+				DEBUG(DEBUG_TAG, "      %+.3f %+.3f %+.3f %+.3f", m[4], m[5], m[6], m[7]);
+				DEBUG(DEBUG_TAG, "      %+.3f %+.3f %+.3f %+.3f", m[8], m[9], m[10], m[11]);
+				DEBUG(DEBUG_TAG, "      %+.3f %+.3f %+.3f %+.3f", m[12], m[13], m[14], m[15]);
+			}
 		}
+
+		// Free the matrix if it is allocated.
+		if (needToFreeMatrix)
+			delete[] matrixToUse;
 	}
 	TR_OPENGL_FUNC void OnDrawArrays(DrawArraysCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
@@ -1947,11 +1981,15 @@ RenderAPI_OpenGLCoreES::RenderAPI_OpenGLCoreES(RHIBackendType type)
 
 void RenderAPI_OpenGLCoreES::ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces)
 {
-	if (type == kUnityGfxDeviceEventInitialize)
+	switch (type)
 	{
-	}
-	else if (type == kUnityGfxDeviceEventShutdown)
-	{
+	case kUnityGfxDeviceEventInitialize:
+	case kUnityGfxDeviceEventShutdown:
+	case kUnityGfxDeviceEventBeforeReset:
+	case kUnityGfxDeviceEventAfterReset:
+		break;
+	default:
+		assert(false);
 	}
 }
 
@@ -1968,6 +2006,102 @@ int RenderAPI_OpenGLCoreES::GetDrawingBufferWidth()
 int RenderAPI_OpenGLCoreES::GetDrawingBufferHeight()
 {
 	return renderer->getOpenGLContext()->GetViewport().height;
+}
+
+#ifdef ANDROID
+/**
+ * Custom debug callback for KHR_debug extension.
+ */
+static void KHR_CustomDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
+																		const GLchar *message, const void *userParam)
+{
+	if (
+			source == GL_DEBUG_SOURCE_WINDOW_SYSTEM ||
+			source == GL_DEBUG_SOURCE_THIRD_PARTY ||
+			source == GL_DEBUG_SOURCE_OTHER ||
+			type == GL_DEBUG_TYPE_PERFORMANCE ||
+			type == GL_DEBUG_TYPE_MARKER)
+		return;
+
+	string sourceStr;
+	switch (source)
+	{
+	case GL_DEBUG_SOURCE_API:
+		sourceStr = "API";
+		break;
+	case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+		sourceStr = "Window System";
+		break;
+	case GL_DEBUG_SOURCE_SHADER_COMPILER:
+		sourceStr = "Shader Compiler";
+		break;
+	case GL_DEBUG_SOURCE_THIRD_PARTY:
+		sourceStr = "Third Party";
+		break;
+	case GL_DEBUG_SOURCE_APPLICATION:
+		sourceStr = "Application";
+		break;
+	case GL_DEBUG_SOURCE_OTHER:
+		sourceStr = "Other";
+		break;
+	default:
+		sourceStr = "Unknown";
+		break;
+	}
+
+	string typeStr;
+	switch (type)
+	{
+	case GL_DEBUG_TYPE_ERROR:
+		typeStr = "Error";
+		break;
+	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+		typeStr = "Deprecated";
+		break;
+	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+		typeStr = "Undefined";
+		break;
+	case GL_DEBUG_TYPE_PORTABILITY:
+		typeStr = "Portability";
+		break;
+	case GL_DEBUG_TYPE_PERFORMANCE:
+		typeStr = "Performance";
+		break;
+	case GL_DEBUG_TYPE_OTHER:
+		typeStr = "Other";
+		break;
+	case GL_DEBUG_TYPE_MARKER:
+		typeStr = "Marker";
+		break;
+	default:
+		typeStr = "Unknown";
+		break;
+	}
+	DEBUG(LOG_TAG_ERROR, "[KHR_debug] source=(%s) type=(%s): %s", sourceStr.c_str(), typeStr.c_str(), message);
+}
+#endif
+
+void RenderAPI_OpenGLCoreES::EnableGraphicsDebugLog(bool _apiOnly)
+{
+#ifdef ANDROID
+	// Open KHR_debug extension
+	if (backendType == RHIBackendType::OpenGLESv3)
+	{
+		glEnable(GL_DEBUG_OUTPUT);
+		glDebugMessageCallbackKHR((GLDEBUGPROC)KHR_CustomDebugCallback, nullptr);
+	}
+#endif
+}
+
+void RenderAPI_OpenGLCoreES::DisableGraphicsDebugLog()
+{
+#ifdef ANDROID
+	if (backendType == RHIBackendType::OpenGLESv3)
+	{
+		glDisable(GL_DEBUG_OUTPUT);
+		glDebugMessageCallbackKHR(nullptr, nullptr);
+	}
+#endif
 }
 
 bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(

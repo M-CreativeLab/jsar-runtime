@@ -370,7 +370,7 @@ namespace commandbuffers
   class GetProgramInfoLogCommandBufferResponse : public TrCommandBufferSimpleResponse<GetProgramInfoLogCommandBufferResponse>
   {
   public:
-    GetProgramInfoLogCommandBufferResponse(GetProgramInfoLogCommandBufferRequest *req, const string &infoLog)
+    GetProgramInfoLogCommandBufferResponse(GetProgramInfoLogCommandBufferRequest *req, const string infoLog)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_RES, req),
           infoLog(infoLog)
     {

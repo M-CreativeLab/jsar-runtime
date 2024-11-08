@@ -1123,6 +1123,14 @@ const int WEBGL2_INVALID_INDEX = 0xFFFFFFFF;
 const int WEBGL2_TIMEOUT_IGNORED = -1;
 const int WEBGL2_MAX_CLIENT_WAIT_TIMEOUT_WEBGL = 0x9247;
 
+// Extensions: all extension constants are prefixed with WEBGL2_EXT_
+
+/**
+ * OVR_multiview
+ */
+const int WEBGL2_EXT_MAX_VIEWS_OVR = 0x9631;
+const int WEBGL2_EXT_FRAMEBUFFER_INCOMPLETE_VIEW_TARGETS_OVR = 0x9633;
+
 // Introduced by JSAR
 
 /**

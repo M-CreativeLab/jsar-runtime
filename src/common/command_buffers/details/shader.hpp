@@ -195,7 +195,7 @@ namespace commandbuffers
   class GetShaderInfoLogCommandBufferResponse : public TrCommandBufferSimpleResponse<GetShaderInfoLogCommandBufferResponse>
   {
   public:
-    GetShaderInfoLogCommandBufferResponse(GetShaderInfoLogCommandBufferRequest *req, const string &log)
+    GetShaderInfoLogCommandBufferResponse(GetShaderInfoLogCommandBufferRequest *req, const string log)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SHADER_INFO_LOG_RES, req), infoLog(log)
     {
     }

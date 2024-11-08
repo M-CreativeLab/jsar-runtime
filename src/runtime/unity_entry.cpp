@@ -61,6 +61,18 @@ public:
     deviceType = graphics->GetRenderer();
     // set the backend api to the renderer.
     auto api = RenderAPI::Create(deviceType, constellation.get());
+
+    /**
+     * Check if the graphics debug log should be enabled by the property `jsar.renderer.graphics.debug`.
+     */
+#if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
+    char enableGraphicsDebugLogStr[PROP_VALUE_MAX];
+    if (__system_property_get("jsar.renderer.graphics.debug", enableGraphicsDebugLogStr) >= 0)
+    {
+      if (strcmp(enableGraphicsDebugLogStr, "yes") == 0)
+        api->EnableGraphicsDebugLog(true);
+    }
+#endif
     constellation->renderer->setApi(api);
   }
 

@@ -15,11 +15,18 @@ namespace commandbuffers
   class MatrixComputationGraph
   {
   public:
-    MatrixComputationGraph() : handedness(MatrixHandedness::MATRIX_LEFT_HANDED), placeholderId(WebGLMatrixPlaceholderId::NotSet), inverseMatrix(false)
+    MatrixComputationGraph()
+        : handedness(MatrixHandedness::MATRIX_LEFT_HANDED),
+          placeholderId(WebGLMatrixPlaceholderId::NotSet),
+          inverseMatrix(false),
+          multiview(false)
     {
     }
     MatrixComputationGraph(WebGLMatrixPlaceholderId placeholder, MatrixHandedness handedness = MatrixHandedness::MATRIX_LEFT_HANDED)
-        : placeholderId(placeholder), handedness(handedness)
+        : placeholderId(placeholder),
+          handedness(handedness),
+          inverseMatrix(false),
+          multiview(false)
     {
     }
 
@@ -27,6 +34,10 @@ namespace commandbuffers
     MatrixHandedness handedness;
     WebGLMatrixPlaceholderId placeholderId;
     bool inverseMatrix;
+    /**
+     * If true, this computation graph's output is for multiview, namely an array of matrices.
+     */
+    bool multiview;
   };
 
   class UniformBlockBindingCommandBufferRequest

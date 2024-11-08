@@ -23,7 +23,7 @@ enum class WebGLMatrixPlaceholderId
 #define XX(id, v) id = v,
   PLACEHOLDER_ID_MAP(XX)
 #undef XX
-  NotSet = 0,
+      NotSet = 0,
 };
 
 inline bool isValidPlaceholderId(uint32_t placeholderId)

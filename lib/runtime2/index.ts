@@ -155,6 +155,9 @@ export class TransmuteRuntime2 extends EventTarget {
       case '.html':
         loadAsHTML = true;
         break;
+      /**
+       * TODO: support the following format viewers.
+       */
       case '.mp3':
       case '.mp4':
       case '.webm':

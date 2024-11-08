@@ -390,6 +390,30 @@ void main() {
   println!("{}", patched_source_str);
 }
 
+#[test]
+fn test_patch_glsl_source_threejs() {
+  let source_str = r#"
+#version 300 es
+#extension GL_OVR_multiview2 : enable
+layout(num_views = 2) in;
+#define VIEW_ID gl_ViewID_OVR
+
+uniform mat4 modelMatrix;
+uniform mat4 viewMatrices[2];
+uniform mat4 modelViewMatrices[2];
+
+#define viewMatrix viewMatrices[VIEW_ID]
+#define modelViewMatrix modelMatrix * viewMatrix
+
+in vec3 position;
+void main() {
+  gl_Position = modelViewMatrix * vec4(position, 1.0);
+}
+  "#;
+  let patched_source_str = patch_glsl_source_from_str(source_str);
+  println!("{}", patched_source_str);
+}
+
 #[no_mangle]
 extern "C" fn patch_glsl_source(source_str: *const c_char) -> *mut c_char {
   let source_string: &str = unsafe { std::ffi::CStr::from_ptr(source_str) }

@@ -52,5 +52,8 @@ namespace commandbuffers
     int64_t maxServerWaitTimeout;
     int64_t maxUniformBlockSize;
     float maxTextureLODBias;
+
+  public: // Extensions
+    int32_t OVR_maxViews;
   };
 }

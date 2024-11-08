@@ -25,25 +25,51 @@ enum FrameExecutionCode
   kFrameExecutionSkipped = 4,
 };
 
+/**
+ * The options to be used when making a RHI API call.
+ */
 class ApiCallOptions
 {
 public:
+  /**
+   * Executes this call in the default queue.
+   */
   bool isDefaultQueue;
+  /**
+   * Should print the information of this call.
+   */
   bool printsCall;
 };
 
+/**
+ * The possible backend types of the RHI.
+ */
 enum class RHIBackendType
 {
   OpenGLCore,
   OpenGLESv2,
   OpenGLESv3,
+  VULKAN,
   Metal,
   D3D11,
   D3D12,
 };
 
 /**
- * Rendering Hardware Interface for JSAR runtime.
+ * Rendering Hardware Interface.
+ *
+ * This virtual class is used to define the platform-independent high-level graphics APIs. It is used to abstract the
+ * platform-specific graphics APIs, such as OpenGL, OpenGL ES, Metal, D3D11, D3D12, etc.
+ *
+ * Supported APIs:
+ *
+ * | API Type          | Supported |
+ * |-------------------|-----------|
+ * | OpenGL            | Yes       |
+ * | OpenGL ES         | Yes       |
+ * | Metal             | No        |
+ * | D3D11             | No        |
+ * | D3D12             | No        |
  */
 class RenderAPI
 {
@@ -51,24 +77,55 @@ private:
   static RenderAPI *s_instance;
 
 public:
+  /**
+   * @returns the singleton instance of the current RHI.
+   */
   static RenderAPI *Get() { return s_instance; }
+
+  /**
+   * Creates the RHI instance.
+   *
+   * @param apiType the type of the RHI, such as: OpenGL, OpenGL ES, Metal, D3D11, D3D12, etc.
+   * @param constellation the constellation instance.
+   * @returns the created RHI instance.
+   */
   static RenderAPI *Create(UnityGfxRenderer apiType, TrConstellation *constellation);
 
 public:
-  virtual ~RenderAPI()
-  {
-    s_instance = NULL;
-  }
+  virtual ~RenderAPI() { s_instance = NULL; }
 
-  // Process general event like initialization, shutdown, device loss/reset etc.
+  /**
+   * Process general event like initialization, shutdown, device loss/reset etc.
+   *
+   * @param type the type of the event.
+   * @param interfaces the Unity interfaces.
+   */
   virtual void ProcessDeviceEvent(UnityGfxDeviceEventType type, IUnityInterfaces *interfaces) = 0;
+
+  /**
+   * @returns if the backend supports WebGL2.
+   */
   virtual bool SupportsWebGL2() = 0;
+
+  /**
+   * @returns the drawing buffer width.
+   */
   virtual int GetDrawingBufferWidth() = 0;
+
+  /**
+   * @returns the drawing buffer height.
+   */
   virtual int GetDrawingBufferHeight() = 0;
 
   /**
    * Executes the commands from the given command queue with the device frame, and it also returns a boolean value indicating if
    * there are any commands to execute.
+   *
+   * @param commandBuffers the command buffer queue.
+   * @param content the content renderer.
+   * @param deviceFrame the XR device frame that stores the frame context: views, projection matrices, etc.
+   * @param isDefaultQueue a boolean value indicating if the command queue is the default queue or XR frame queue.
+   * @returns a boolean value indicating if there are any commands to execute.
    */
   virtual bool ExecuteCommandBuffer(
       vector<commandbuffers::TrCommandBufferBase *> &commandBuffers,
@@ -76,57 +133,101 @@ public:
       xr::DeviceFrame *deviceFrame,
       bool isDefaultQueue) = 0;
 
+  /**
+   * Enables the graphics debug log, which is useful when you want to debug the backend graphics api.
+   *
+   * @param apiOnly a boolean value indicating if the log should be enabled for the api only.
+   */
+  virtual void EnableGraphicsDebugLog(bool apiOnly) = 0;
+
+  /**
+   * Disables the graphics debug log.
+   */
+  virtual void DisableGraphicsDebugLog() = 0;
+
+  /**
+   * Adds a command buffer to the command buffer queue.
+   *
+   * @param commandBuffer the command buffer to be added.
+   */
   void AddCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer);
+
+  /**
+   * @returns the number of command buffers in the queue.
+   */
   size_t GetCommandBuffersCount();
+
+  /**
+   * Sets the time of the current frame.
+   */
   void SetTime(float time) { this->time = time; }
 
   /**
-   * It returns the backend type of the current RHI.
+   * @returns the backend type of the RHI.
    */
   RHIBackendType GetBackendType() { return backendType; }
+
+  /**
+   * Enables the loggings for the application.
+   */
   void EnableAppGlobalLog() { m_EnableLogOnAppGlobal = true; }
+
+  /**
+   * Enables the loggings for the XR frame.
+   */
   void EnableXRFrameLog() { m_EnableLogOnXRFrame = true; }
+
+  /**
+   * Enables the context switch logs.
+   */
   void EnableContextLog() { m_PrintsContext = true; }
 
+  /**
+   * Checks if the viewport should be changed with the given `XYWH`.
+   *
+   * @param x the x position of the viewport.
+   * @param y the y position of the viewport.
+   * @param width the width of the viewport.
+   * @param height the height of the viewport.
+   * @returns a boolean value indicating if the viewport has changed.
+   */
   bool HasViewportChanged(int x, int y, int width, int height)
   {
     return m_DrawingViewport.isEqual(width, height, x, y);
   }
+
+  /**
+   * Sets the drawing viewport.
+   *
+   * @param viewport the viewport to be set.
+   */
   void SetDrawingViewport(TrViewport &viewport)
   {
     m_DrawingViewport = viewport;
   }
+
+  /**
+   * @returns the drawing viewport.
+   */
   TrViewport GetDrawingViewport() { return m_DrawingViewport; }
+
+  /**
+   * Sets the field of view.
+   *
+   * @param fov the field of view to be set.
+   */
   void SetFieldOfView(float fov) { this->fov = fov; }
-  void SetViewerPosition(float x, float y, float z)
-  {
-    m_ViewerPosition[0] = x;
-    m_ViewerPosition[1] = y;
-    m_ViewerPosition[2] = z;
-  }
-  void SetViewerRotation(float x, float y, float z, float w)
-  {
-    M_ViewerRotation[0] = x;
-    M_ViewerRotation[1] = y;
-    M_ViewerRotation[2] = z;
-    M_ViewerRotation[3] = w;
-  }
-  void SetLocalPosition(float x, float y, float z)
-  {
-    m_LocalPosition[0] = x;
-    m_LocalPosition[1] = y;
-    m_LocalPosition[2] = z;
-  }
-  void SetLocalRotation(float x, float y, float z, float w)
-  {
-    m_LocalRotation[0] = x;
-    m_LocalRotation[1] = y;
-    m_LocalRotation[2] = z;
-    m_LocalRotation[3] = w;
-  }
 
   // Lifecycles
+
+  /**
+   * This lifecycle method is called when the RHI instance is created.
+   */
   void OnCreated();
+
+  /**
+   * This lifecycle method is called when the frame is started.
+   */
   bool OnFrameStarted();
 
 private:
@@ -139,21 +240,68 @@ private:
   bool CheckGpuBusyStatus();
 
 protected:
+  /**
+   * The backend type of the RHI.
+   *
+   * @see RHIBackendType
+   */
   RHIBackendType backendType;
+
+  /**
+   * The time of the current frame.
+   *
+   * @deprecated
+   */
   float time = 0.0f;
+
+  /**
+   * The field of view to be used by the application.
+   */
   float fov = 0.0f;
-  float m_ViewerPosition[3] = {0.0f, 0.0f, 0.0f};
-  float M_ViewerRotation[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-  float m_LocalPosition[3] = {0.0f, 0.0f, 0.0f};
-  float m_LocalRotation[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+
+  /**
+   * The drawing viewport.
+   */
   TrViewport m_DrawingViewport;
+
+  /**
+   * The flag if the logging is enabled for the application.
+   */
   bool m_EnableLogOnAppGlobal = false;
+
+  /**
+   * The flag if the logging is enabled for the XR frame.
+   */
   bool m_EnableLogOnXRFrame = false;
+
+  /**
+   * The flag if the context switch logs should be printed.
+   */
   bool m_PrintsContext = false;
+
+  /**
+   * The default command buffer queue.
+   */
   std::vector<commandbuffers::TrCommandBufferBase *> m_CommandBuffers;
+
+  /**
+   * The mutex for the command buffer queue.
+   */
   std::mutex m_CommandBuffersMutex;
+
+  /**
+   * The mutex for the state.
+   */
   std::mutex m_StateMutex;
+
+  /**
+   * The number of draw calls per frame.
+   */
   size_t m_DrawCallCountPerFrame = 0;
+
+  /**
+   * The analytics instance for performance measurements.
+   */
   analytics::Analytics *m_Analytics;
 
 private:

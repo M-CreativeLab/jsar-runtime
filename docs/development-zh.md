@@ -8,6 +8,7 @@
 - `jsar.error` 错误日志，包括渲染器报错都会统一打印到该通道，建议开启
 - `renderer` JSAR 渲染器日志
 - `DEBUG` Android 平台的崩溃日志，建议开启
+- `TR_GLES` 与 OpenGLES 相关的日志
 
 ### 应用进程
 
@@ -95,6 +96,22 @@ $ adb shell setprop jsar.renderer.tracing yes
 
 以及后续可以使用 WebGL Inspector 等工具进行调试。
 
+**开启图形接口调试**
+
+当遇到渲染错误时，需要开启图形接口的调试日志，可以通过以下命令开启：
+
+```sh
+$ adb shell setprop jsar.renderer.graphics.debug yes
+```
+
+在 OpenGLES 平台上，开启后会在 `TR_GLES` 通道看到图形接口的调用，比如：
+
+```
+07-18 17:49:16.204 TR_GLES: [KHR_debug] GL::DebugMessageCallback(0x0, 0x0, 0x0, 0x0)
+```
+
+正如上面所见，在 OpenGLES 开启调试，会使用 [`KHR_debug`](https://registry.khronos.org/OpenGL/extensions/KHR/KHR_debug.txt) 扩展来输出调试信息。
+
 **设置客户端目标帧率**
 
 ```sh
@@ -156,14 +173,14 @@ $ adb logcat -s jsar.metrics
 
 本节将针对以下几个指标作出说明。
 
-| 指标 | 说明 |
-| ---- | ---- |
-| `spawnprocess`     | 表示创建应用进程的时间，即 `fork()` 调用成功后 |
-| `beforescripting`  | 表示 Node.js 开始执行脚本的时间（包括 v8/Node.js 内部启动时间） |
-| `beforeloading`    | 表示开始加载文档的时间 |
-| `dispatchrequest`  | 表示开始接收到请求的时间 |
-| `load`/`loaded`    | 表示文档加载完成的时间 |
-| `DOMContentLoaded` | 表示文档依赖的内容（如样式表、脚本、图片、模型等）加载完成 |
+| 指标               | 说明                                                                                                                 |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `spawnprocess`     | 表示创建应用进程的时间，即 `fork()` 调用成功后                                                                       |
+| `beforescripting`  | 表示 Node.js 开始执行脚本的时间（包括 v8/Node.js 内部启动时间）                                                      |
+| `beforeloading`    | 表示开始加载文档的时间                                                                                               |
+| `dispatchrequest`  | 表示开始接收到请求的时间                                                                                             |
+| `load`/`loaded`    | 表示文档加载完成的时间                                                                                               |
+| `DOMContentLoaded` | 表示文档依赖的内容（如样式表、脚本、图片、模型等）加载完成                                                           |
 | `fcp`              | 即 First Contentful Paint，表示首次内容绘制完成，在 JSAR 运行时，它表示渲染器第一次接收到绘制请求（Draw Call）时标记 |
 | `lcp`              | 即 Largest Contentful Paint，表示最大内容绘制完成，它是页面中最大的绘制元素（如图片、视频等）绘制完成的时间点        |
 
@@ -212,12 +229,12 @@ $ cat /path/to/your/cache/directory/perf/host_fps
 
 `perf` 的具体列表如下：
 
-| 文件名 | 说明 |
-| ---- | ---- |
-| `host_fps` | 渲染器帧率，一般来说需要与宿主引擎的渲染帧率一致 |
-| `host_drawcalls_per_frame` | 渲染器的平均绘制指令数（所有应用总和） |
-| `host_drawcalls_count_per_frame` | 渲染器的绘制指令的绘制顶点数（所有应用总和） |
-| `host_frame_duration` | 渲染器的帧时间，单位为毫秒 |
-| `${pid}/fps` | 应用进程帧率 |
-| `${pid}/xrframe_duration` | 应用进程的 XR 帧时间，单位为毫秒 |
-| `${pid}/long_xrframes` | 应用进程渲染过程中长渲染帧次数，长渲染帧表示耗时超过 16ms 的渲染帧 |
+| 文件名                           | 说明                                                               |
+| -------------------------------- | ------------------------------------------------------------------ |
+| `host_fps`                       | 渲染器帧率，一般来说需要与宿主引擎的渲染帧率一致                   |
+| `host_drawcalls_per_frame`       | 渲染器的平均绘制指令数（所有应用总和）                             |
+| `host_drawcalls_count_per_frame` | 渲染器的绘制指令的绘制顶点数（所有应用总和）                       |
+| `host_frame_duration`            | 渲染器的帧时间，单位为毫秒                                         |
+| `${pid}/fps`                     | 应用进程帧率                                                       |
+| `${pid}/xrframe_duration`        | 应用进程的 XR 帧时间，单位为毫秒                                   |
+| `${pid}/long_xrframes`           | 应用进程渲染过程中长渲染帧次数，长渲染帧表示耗时超过 16ms 的渲染帧 |
