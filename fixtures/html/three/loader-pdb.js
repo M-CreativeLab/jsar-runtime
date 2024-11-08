@@ -58,7 +58,7 @@ let root;
   }
 
   function loadMolecule(model) {
-    const url = 'https://threejs.org/examples/models/pdb/' + model;
+    const url = 'https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/examples/models/pdb/' + model;
     while (root.children.length > 0) {
       const object = root.children[0];
       object.parent.remove(object);
