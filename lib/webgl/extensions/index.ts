@@ -1,3 +1,5 @@
+import EXT_color_buffer_float from './ext_color_buffer_float';
+import EXT_texture_filter_anisotropic from './ext_texture_filter_anisotropic';
 import OES_element_index_uint from './oes_element_index_uint';
 import OES_standard_derivatives from './oes_standard_derivatives';
 import OES_texture_float_linear from './oes_texture_float_linear';
@@ -6,6 +8,10 @@ import OVR_multiview2 from './ovr_multiview';
 
 export function getExtension(_gl: WebGLRenderingContext, name: string) {
   switch (name) {
+    case 'EXT_color_buffer_float':
+      return new EXT_color_buffer_float();
+    case 'EXT_texture_filter_anisotropic':
+      return new EXT_texture_filter_anisotropic();
     case 'OES_element_index_uint':
       return new OES_element_index_uint();
     case 'OES_standard_derivatives':
