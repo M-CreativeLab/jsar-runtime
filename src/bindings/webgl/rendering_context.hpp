@@ -125,6 +125,7 @@ namespace webgl
     Napi::Value UniformMatrix4fv(const Napi::CallbackInfo &info);
     Napi::Value DrawArrays(const Napi::CallbackInfo &info);
     Napi::Value DrawElements(const Napi::CallbackInfo &info);
+    Napi::Value Hint(const Napi::CallbackInfo &info);
     Napi::Value LineWidth(const Napi::CallbackInfo &info);
     Napi::Value PixelStorei(const Napi::CallbackInfo &info);
     Napi::Value PolygonOffset(const Napi::CallbackInfo &info);

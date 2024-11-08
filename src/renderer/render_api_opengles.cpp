@@ -1664,6 +1664,14 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::DrawRangeElements(0x%x, %d, %d, %d, %d, %p)",
 						options.isDefaultQueue, mode, start, end, count, type, indices);
 	}
+	TR_OPENGL_FUNC void OnHint(HintCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	{
+		auto target = req->target;
+		auto mode = req->mode;
+		glHint(target, mode);
+		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+			DEBUG(DEBUG_TAG, "[%d] GL::Hint(0x%x, 0x%x)", options.isDefaultQueue, target, mode);
+	}
 	TR_OPENGL_FUNC void OnLineWidth(LineWidthCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glLineWidth(req->width);
@@ -2248,6 +2256,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			ADD_COMMAND_BUFFER_HANDLER(DRAW_ELEMENTS_INSTANCED, DrawElementsInstancedCommandBufferRequest, DrawElementsInstanced)
 			ADD_COMMAND_BUFFER_HANDLER(DRAW_RANGE_ELEMENTS, DrawRangeElementsCommandBufferRequest, DrawRangeElements)
 			ADD_COMMAND_BUFFER_HANDLER(DRAW_BUFFERS, DrawBuffersCommandBufferRequest, DrawBuffers)
+			ADD_COMMAND_BUFFER_HANDLER(HINT, HintCommandBufferRequest, Hint)
 			ADD_COMMAND_BUFFER_HANDLER(LINE_WIDTH, LineWidthCommandBufferRequest, LineWidth)
 			ADD_COMMAND_BUFFER_HANDLER(PIXEL_STOREI, PixelStoreiCommandBufferRequest, PixelStorei)
 			ADD_COMMAND_BUFFER_HANDLER(POLYGON_OFFSET, PolygonOffsetCommandBufferRequest, PolygonOffset)

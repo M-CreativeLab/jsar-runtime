@@ -779,6 +779,7 @@ namespace webgl
       InstanceMethod("uniformMatrix4fv", &T::UniformMatrix4fv),                 \
       InstanceMethod("drawArrays", &T::DrawArrays),                             \
       InstanceMethod("drawElements", &T::DrawElements),                         \
+      InstanceMethod("hint", &T::Hint),                                         \
       InstanceMethod("lineWidth", &T::LineWidth),                               \
       InstanceMethod("pixelStorei", &T::PixelStorei),                           \
       InstanceMethod("polygonOffset", &T::PolygonOffset),                       \
@@ -3295,6 +3296,25 @@ namespace webgl
     auto req = DrawElementsCommandBufferRequest(mode, count, type, offset);
     sendCommandBufferRequest(req);
     sendFirstContentfulPaintMetrics();
+    return env.Undefined();
+  }
+
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::Hint(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() != 2)
+    {
+      Napi::TypeError::New(env, "hint() takes 2 arguments.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    int target = info[0].As<Napi::Number>().Int32Value();
+    int mode = info[1].As<Napi::Number>().Int32Value();
+
+    auto req = HintCommandBufferRequest(target, mode);
+    sendCommandBufferRequest(req);
     return env.Undefined();
   }
 

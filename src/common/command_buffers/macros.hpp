@@ -87,6 +87,7 @@
   XX(DRAW_ELEMENTS_INSTANCED, DrawElementsInstancedCommandBufferRequest)                   \
   XX(DRAW_RANGE_ELEMENTS, DrawRangeElementsCommandBufferRequest)                           \
   XX(DRAW_BUFFERS, DrawBuffersCommandBufferRequest)                                        \
+  XX(HINT, HintCommandBufferRequest)                                                       \
   XX(LINE_WIDTH, LineWidthCommandBufferRequest)                                            \
   XX(PIXEL_STOREI, PixelStoreiCommandBufferRequest)                                        \
   XX(POLYGON_OFFSET, PolygonOffsetCommandBufferRequest)                                    \

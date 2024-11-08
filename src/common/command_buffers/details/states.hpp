@@ -43,6 +43,21 @@ namespace commandbuffers
     int height;
   };
 
+  class HintCommandBufferRequest : public TrCommandBufferSimpleRequest<HintCommandBufferRequest>
+  {
+  public:
+    HintCommandBufferRequest(int target, int mode)
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_HINT_REQ),
+          target(target),
+          mode(mode)
+    {
+    }
+
+  public:
+    int target;
+    int mode;
+  };
+
   class LineWidthCommandBufferRequest : public TrCommandBufferSimpleRequest<LineWidthCommandBufferRequest>
   {
   public:
