@@ -6,8 +6,8 @@
   <script type="importmap">
     {
       "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/"
+        "three": "https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/build/three.module.js",
+        "three/addons/": "https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/examples/jsm/"
       }
     }
   </script>
@@ -21,6 +21,13 @@
     let water, sun, mesh;
 
     function init(renderer) {
+      // scene init
+      scene.fog = new THREE.FogExp2(0xaabbbb, 0.0002);
+
+      var light = new THREE.DirectionalLight(0xffffff);
+      light.position.set(1, 1, 1);
+      scene.add(light);
+
       sun = new THREE.Vector3();
 
       // Water
@@ -30,7 +37,7 @@
         {
           textureWidth: 512,
           textureHeight: 512,
-          waterNormals: new THREE.TextureLoader().load('https://threejs.org/examples/textures/waternormals.jpg', function (texture) {
+          waterNormals: new THREE.TextureLoader().load('https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/examples/textures/waternormals.jpg', function (texture) {
             texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
           }),
           sunDirection: new THREE.Vector3(),

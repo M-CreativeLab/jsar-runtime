@@ -52,7 +52,7 @@ let root;
       }
     });
     const size = box.getSize(new THREE.Vector3());
-    const scale = 1 / Math.max(size.x, size.y, size.z);
+    const scale = targetSize / Math.max(size.x, size.y, size.z);
     console.info('Scaling scene by', scale);
     scene.scale.set(scale, scale, scale);
   }
@@ -122,7 +122,7 @@ let root;
         object.lookAt(end);
         root.add(object);
       }
-      fitTo(1);
+      fitTo(0.3);
     });
   }
 }

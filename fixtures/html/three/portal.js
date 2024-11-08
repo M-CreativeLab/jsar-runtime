@@ -114,7 +114,7 @@ let portalCamera, leftPortal, rightPortal, leftPortalTexture, reflectedPosition,
       }
     });
     const size = box.getSize(new THREE.Vector3());
-    const scale = 1 / Math.max(size.x, size.y, size.z);
+    const scale = 0.3 / Math.max(size.x, size.y, size.z);
     console.info('Scaling scene by', scale);
     scene.scale.set(scale, scale, scale);
   })();

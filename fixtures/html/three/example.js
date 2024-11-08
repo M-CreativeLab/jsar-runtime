@@ -21,6 +21,19 @@ var mouse = {
   }
 }
 
+function fitTo(scene, targetSize = 1) {
+  const box = new THREE.Box3();
+  scene.traverse(object => {
+    if (object instanceof THREE.Mesh || object instanceof THREE.Group) {
+      box.expandByObject(object);
+    }
+  });
+  const size = box.getSize(new THREE.Vector3());
+  const scale = targetSize / Math.max(size.x, size.y, size.z);
+  console.info('Scaling scene by', scale);
+  scene.scale.set(scale, scale, scale);
+}
+
 function init(cb) {
 
   container.width = window.innerWidth;
@@ -468,18 +481,7 @@ try {
   addLights();
   createWalter();
 
-  {
-    const box = new THREE.Box3();
-    scene.traverse(object => {
-      if (object instanceof THREE.Mesh || object instanceof THREE.Group) {
-        box.expandByObject(object);
-      }
-    });
-    const size = box.getSize(new THREE.Vector3());
-    const scale = 1 / Math.max(size.x, size.y, size.z);
-    console.info('Scaling scene by', scale);
-    scene.scale.set(scale, scale, scale);
-  }
+  fitTo(scene, 0.3);
 } catch (err) {
   console.error(err);
 }

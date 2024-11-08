@@ -18,15 +18,26 @@
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
 
+    function fitTo(scene, targetSize = 1) {
+      const box = new THREE.Box3();
+      scene.traverse(object => {
+        box.expandByObject(object);
+      });
+      const size = box.getSize(new THREE.Vector3());
+      const scale = targetSize / Math.max(size.x, size.y, size.z);
+      console.info('Scaling scene by', scale);
+      scene.scale.set(scale, scale, scale);
+    }
+
     // Create lights
     const light = new THREE.DirectionalLight(0xffffff, 0.5);
     light.position.set(0, 1, 1);
     scene.add(light);
 
     function box(width, height, depth) {
-      width = width * 0.5,
-        height = height * 0.5,
-        depth = depth * 0.5;
+      width = width * 0.3;
+      height = height * 0.3;
+      depth = depth * 0.3;
 
       const geometry = new THREE.BufferGeometry();
       const position = [];
@@ -96,6 +107,8 @@
 
       objects.push(lineSegments);
       scene.add(lineSegments);
+
+      fitTo(scene, 0.3);
     }
 
     const gl = navigator.gl;
