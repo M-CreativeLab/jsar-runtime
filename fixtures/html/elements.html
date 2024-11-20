@@ -6,11 +6,17 @@
 </head>
 
 <body>
+  <div id="d1" data-foobar="a"></div>
+  <div id="d2"></div>
 </body>
 
 <script>
   console.info(document.createElement('div'));
   console.info(document.createElement('video'));
+
+  const d1 = document.getElementById('d1');
+  console.info(d1.id);
+  console.info(d1.getAttribute('data-foobar'));
 </script>
 
 </html>

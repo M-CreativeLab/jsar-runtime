@@ -69,16 +69,11 @@ namespace dom
 
   shared_ptr<Element> Document::getElementById(const string &id)
   {
-    for (auto childNode : childNodes)
-    {
-      if (childNode->nodeType == NodeType::ELEMENT_NODE)
-      {
-        auto element = std::dynamic_pointer_cast<Element>(childNode);
-        if (element->getAttribute("id") == id)
-          return element;
-      }
-    }
-    return nullptr;
+    auto it = elementMapById.find(id);
+    if (it != elementMapById.end())
+      return it->second;
+    else
+      return nullptr;
   }
 
   shared_ptr<HTMLHeadElement> Document::head()
@@ -114,6 +109,23 @@ namespace dom
             bodyElement = std::dynamic_pointer_cast<HTMLBodyElement>(childNode);
         }
       }
+
+      /**
+       * Iterate all the child nodes of the document and update the element maps.
+       */
+      auto updateElementMaps = [this](shared_ptr<Node> childNode)
+      {
+        if (childNode->nodeType == NodeType::ELEMENT_NODE)
+        {
+          auto element = std::dynamic_pointer_cast<Element>(childNode);
+          if (!element->id.empty())
+            elementMapById[element->id] = element;
+        }
+        return true;
+      };
+
+      elementMapById.clear();
+      iterateChildNodes(updateElementMaps);
     }
   }
 

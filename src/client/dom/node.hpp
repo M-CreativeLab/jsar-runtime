@@ -85,6 +85,19 @@ namespace dom
     }
     void resetFrom(shared_ptr<pugi::xml_node> node, weak_ptr<Document> ownerDocument);
     /**
+     * Iterate all the child nodes of the current node including the child nodes of the child nodes.
+     *
+     * @param callback The callback function that will be called for each child node, return false to stop the iteration.
+     */
+    void iterateChildNodes(function<bool(shared_ptr<Node>)> callback)
+    {
+      for (auto childNode : childNodes)
+      {
+        if (callback(childNode))
+          childNode->iterateChildNodes(callback);
+      }
+    }
+    /**
      * Print the internal `pugi::xml_node` object.
      *
      * @param showTree If true, the tree will be printed.

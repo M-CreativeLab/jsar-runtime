@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <memory>
+#include <map>
 #include "./node.hpp"
 #include "./element.hpp"
 #include "./html_head_element.hpp"
@@ -55,6 +56,7 @@ namespace dom
     shared_ptr<pugi::xml_document> docInternal;
     shared_ptr<HTMLHeadElement> headElement;
     shared_ptr<HTMLBodyElement> bodyElement;
+    std::map<string, shared_ptr<Element>> elementMapById;
 
   private:
     bool isSourceLoaded = false;
