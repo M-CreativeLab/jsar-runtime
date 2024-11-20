@@ -182,7 +182,7 @@ namespace dombinding
 
     /**
      * Create a new JS `Element` instance by the given tag name.
-     * 
+     *
      * @param env The N-API environment.
      * @param namespaceURI The namespace URI of the element.
      * @param tagName The tag name of the element.

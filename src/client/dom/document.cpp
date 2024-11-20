@@ -76,6 +76,47 @@ namespace dom
       return nullptr;
   }
 
+  std::vector<shared_ptr<Element>> Document::getElementsByClassName(const string &className)
+  {
+    std::vector<shared_ptr<Element>> elements;
+    for (auto element : allElementsList)
+    {
+      if (element->hasAttribute("class"))
+      {
+        auto classes = element->getAttribute("class");
+        if (classes.find(className) != std::string::npos)
+          elements.push_back(element);
+      }
+    }
+    return elements;
+  }
+
+  std::vector<shared_ptr<Element>> Document::getElementsByName(const string &name)
+  {
+    std::vector<shared_ptr<Element>> elements;
+    for (auto element : allElementsList)
+    {
+      if (element->hasAttribute("name"))
+      {
+        auto elementName = element->getAttribute("name");
+        if (elementName == name)
+          elements.push_back(element);
+      }
+    }
+    return elements;
+  }
+
+  std::vector<shared_ptr<Element>> Document::getElementsByTagName(const string &tagName)
+  {
+    std::vector<shared_ptr<Element>> elements;
+    for (auto element : allElementsList)
+    {
+      if (element->is(tagName))
+        elements.push_back(element);
+    }
+    return elements;
+  }
+
   shared_ptr<HTMLHeadElement> Document::head()
   {
     return headElement;
@@ -113,19 +154,21 @@ namespace dom
       /**
        * Iterate all the child nodes of the document and update the element maps.
        */
-      auto updateElementMaps = [this](shared_ptr<Node> childNode)
+      auto updateElementListAndMaps = [this](shared_ptr<Node> childNode)
       {
         if (childNode->nodeType == NodeType::ELEMENT_NODE)
         {
           auto element = std::dynamic_pointer_cast<Element>(childNode);
+          allElementsList.push_back(element);
           if (!element->id.empty())
             elementMapById[element->id] = element;
         }
         return true;
       };
 
+      allElementsList.clear();
       elementMapById.clear();
-      iterateChildNodes(updateElementMaps);
+      iterateChildNodes(updateElementListAndMaps);
     }
   }
 

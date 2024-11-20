@@ -35,6 +35,9 @@ namespace dombinding
               ObjectType::InstanceMethod("createElement", &ObjectType::CreateElement, napi_default_method),
               ObjectType::InstanceMethod("createElementNS", &ObjectType::CreateElementNS, napi_default_method),
               ObjectType::InstanceMethod("getElementById", &ObjectType::GetElementById, napi_default_method),
+              ObjectType::InstanceMethod("getElementsByClassName", &ObjectType::GetElementsByClassName, napi_default_method),
+              ObjectType::InstanceMethod("getElementsByName", &ObjectType::GetElementsByName, napi_default_method),
+              ObjectType::InstanceMethod("getElementsByTagName", &ObjectType::GetElementsByTagName, napi_default_method),
           });
       props.insert(props.end(), documentProps.begin(), documentProps.end());
       return props;
@@ -205,6 +208,57 @@ namespace dombinding
         return env.Null();
       else
         return Element::NewInstance(env, element);
+    }
+    Napi::Value GetElementsByClassName(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      if (info.Length() < 1)
+      {
+        Napi::TypeError::New(env, "Failed to execute 'getElementsByClassName' on 'Document': 1 argument required, but only 0 present.").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+      auto className = info[0].ToString().Utf8Value();
+      auto elements = this->node->getElementsByClassName(className);
+      auto arr = Napi::Array::New(env, elements.size());
+      for (size_t i = 0; i < elements.size(); i++)
+        arr.Set(i, Element::NewInstance(env, elements[i]));
+      return arr;
+    }
+    Napi::Value GetElementsByName(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      if (info.Length() < 1)
+      {
+        Napi::TypeError::New(env, "Failed to execute 'getElementsByName' on 'Document': 1 argument required, but only 0 present.").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+      auto name = info[0].ToString().Utf8Value();
+      auto elements = this->node->getElementsByName(name);
+      auto arr = Napi::Array::New(env, elements.size());
+      for (size_t i = 0; i < elements.size(); i++)
+        arr.Set(i, Element::NewInstance(env, elements[i]));
+      return arr;
+    }
+    Napi::Value GetElementsByTagName(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      if (info.Length() < 1)
+      {
+        Napi::TypeError::New(env, "Failed to execute 'getElementsByTagName' on 'Document': 1 argument required, but only 0 present.").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+      auto tagName = info[0].ToString().Utf8Value();
+      auto elements = this->node->getElementsByTagName(tagName);
+      auto arr = Napi::Array::New(env, elements.size());
+      for (size_t i = 0; i < elements.size(); i++)
+        arr.Set(i, Element::NewInstance(env, elements[i]));
+      return arr;
     }
 
   private:

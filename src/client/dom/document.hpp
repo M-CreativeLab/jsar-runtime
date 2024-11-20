@@ -34,6 +34,9 @@ namespace dom
     void setSource(const string &source);
     void open();
     shared_ptr<Element> getElementById(const string &id);
+    std::vector<shared_ptr<Element>> getElementsByClassName(const string &className);
+    std::vector<shared_ptr<Element>> getElementsByName(const string &name);
+    std::vector<shared_ptr<Element>> getElementsByTagName(const string &tagName);
     shared_ptr<HTMLHeadElement> head();
     shared_ptr<HTMLBodyElement> body();
 
@@ -56,6 +59,7 @@ namespace dom
     shared_ptr<pugi::xml_document> docInternal;
     shared_ptr<HTMLHeadElement> headElement;
     shared_ptr<HTMLBodyElement> bodyElement;
+    std::vector<shared_ptr<Element>> allElementsList;
     std::map<string, shared_ptr<Element>> elementMapById;
 
   private:
@@ -75,7 +79,7 @@ namespace dom
   public:
     /**
      * Create a new HTMLDocument from a string source.
-     * 
+     *
      * @param browsingContext The browsing context that the document belongs to.
      * @param autoConnect If true, the document will be automatically to be connected as the DOM root.
      */
