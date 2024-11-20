@@ -13,6 +13,8 @@ using namespace std;
 
 namespace dombinding
 {
+#define NODE_IMPL_FIELD "_nodeImpl"
+
   /**
    * A container for the NodeType instance.
    *
@@ -35,6 +37,18 @@ namespace dombinding
   class NodeBase : public EventTargetWrap<ObjectType, NodeType>
   {
   public:
+    /**
+     * Check if the given object is an instance of `Node`.
+     * 
+     * @returns True if the object is an instance of `Node`, otherwise false.
+     */
+    static bool IsNodeInstance(Napi::Object object);
+
+    /**
+     * Get the class properties of `Node`.
+     * 
+     * @returns The class properties of `Node`.
+     */
     static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties()
     {
       using T = NodeBase<ObjectType, NodeType>;
@@ -42,10 +56,11 @@ namespace dombinding
       auto added = vector<Napi::ClassPropertyDescriptor<ObjectType>>(
           {
               // Getters & Setters
-              T::InstanceAccessor("isConnected", &T::IsConnectedGetter, nullptr),
-              T::InstanceAccessor("childNodes", &T::ChildNodesGetter, nullptr),
-              T::InstanceAccessor("firstChild", &T::FirstChildGetter, nullptr),
-              T::InstanceAccessor("lastChild", &T::LastChildGetter, nullptr),
+              T::InstanceAccessor(NODE_IMPL_FIELD, &T::NodeImplGetter, nullptr, napi_default),
+              T::InstanceAccessor("isConnected", &T::IsConnectedGetter, nullptr, napi_default_jsproperty),
+              T::InstanceAccessor("childNodes", &T::ChildNodesGetter, nullptr, napi_default_jsproperty),
+              T::InstanceAccessor("firstChild", &T::FirstChildGetter, nullptr, napi_default_jsproperty),
+              T::InstanceAccessor("lastChild", &T::LastChildGetter, nullptr, napi_default_jsproperty),
               // Methods
               T::InstanceMethod("appendChild", &T::AppendChild),
               T::InstanceMethod("cloneNode", &T::CloneNode),
@@ -64,6 +79,7 @@ namespace dombinding
     virtual ~NodeBase();
 
   protected: // Getters & Setters
+    Napi::Value NodeImplGetter(const Napi::CallbackInfo &info);
     Napi::Value IsConnectedGetter(const Napi::CallbackInfo &info);
     Napi::Value ChildNodesGetter(const Napi::CallbackInfo &info);
     Napi::Value FirstChildGetter(const Napi::CallbackInfo &info);

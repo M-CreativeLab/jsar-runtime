@@ -52,16 +52,16 @@ namespace dom
     ArrayBuffer,
     /**
      * TODO: How to support the following types?
-     * 
+     *
      * For example, when we wanna import an image as an instance of `HTMLImageElement`:
-     * 
+     *
      * ```js
      * import image from './image.png';
      * console.info(image instanceof HTMLImageElement); // true
      * ```
-     * 
+     *
      * The same for other types:
-     * 
+     *
      * - import blob files as an instance of `Blob`
      * - import audio files as an instance of `Audio`
      * - import video files as an instance of `Video`
@@ -135,7 +135,7 @@ namespace dom
   private:
     static void PropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
     static void WindowProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
-    static void WindowProxyPropertyEnumeratorCallback(const v8::PropertyCallbackInfo<v8::Array>& info);
+    static void WindowProxyPropertyEnumeratorCallback(const v8::PropertyCallbackInfo<v8::Array> &info);
     static void WorkerSelfProxyPropertyGetterCallback(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
     static v8::MaybeLocal<v8::Promise> ImportModuleDynamicallyCallback(v8::Local<v8::Context> context,
                                                                        v8::Local<v8::Data> hostDefinedOptions,
@@ -256,7 +256,9 @@ namespace dom
      * @param disableCache Whether to disable the cache.
      * @param loadedCallback The callback to call when the module is loaded.
      */
-    void tryImportModule(const std::string &url, const bool disableCache, std::function<void(shared_ptr<DOMModule>)> loadedCallback);
+    void tryImportModule(const std::string &url, const bool disableCache,
+                         std::function<void(shared_ptr<DOMModule>)> loadedCallback,
+                         std::function<void(const std::string &)> errorCallback = nullptr);
 
     /**
      * Dispatch the global event in this scripting context.

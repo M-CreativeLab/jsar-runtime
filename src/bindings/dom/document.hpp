@@ -20,17 +20,21 @@ namespace dombinding
       auto props = NodeBase<ObjectType, DocumentType>::GetClassProperties();
       auto documentProps = vector<Napi::ClassPropertyDescriptor<ObjectType>>(
           {
-              ObjectType::InstanceMethod("adoptNode", &ObjectType::AdoptNode),
-              ObjectType::InstanceMethod("append", &ObjectType::Append),
-              ObjectType::InstanceMethod("close", &ObjectType::Close),
-              ObjectType::InstanceMethod("createAttribute", &ObjectType::CreateAttribute),
-              ObjectType::InstanceMethod("createAttributeNS", &ObjectType::CreateAttributeNS),
-              ObjectType::InstanceMethod("createCDATASection", &ObjectType::CreateCDATASection),
-              ObjectType::InstanceMethod("createComment", &ObjectType::CreateComment),
-              ObjectType::InstanceMethod("createDocumentFragment", &ObjectType::CreateDocumentFragment),
-              ObjectType::InstanceMethod("createElement", &ObjectType::CreateElement),
-              ObjectType::InstanceMethod("createElementNS", &ObjectType::CreateElementNS),
-              ObjectType::InstanceMethod("getElementById", &ObjectType::GetElementById),
+              // Properties
+              ObjectType::InstanceAccessor("head", &ObjectType::HeadGetter, nullptr, napi_default_jsproperty),
+              ObjectType::InstanceAccessor("body", &ObjectType::BodyGetter, nullptr, napi_default_jsproperty),
+              // Methods
+              ObjectType::InstanceMethod("adoptNode", &ObjectType::AdoptNode, napi_default_method),
+              ObjectType::InstanceMethod("append", &ObjectType::Append, napi_default_method),
+              ObjectType::InstanceMethod("close", &ObjectType::Close, napi_default_method),
+              ObjectType::InstanceMethod("createAttribute", &ObjectType::CreateAttribute, napi_default_method),
+              ObjectType::InstanceMethod("createAttributeNS", &ObjectType::CreateAttributeNS, napi_default_method),
+              ObjectType::InstanceMethod("createCDATASection", &ObjectType::CreateCDATASection, napi_default_method),
+              ObjectType::InstanceMethod("createComment", &ObjectType::CreateComment, napi_default_method),
+              ObjectType::InstanceMethod("createDocumentFragment", &ObjectType::CreateDocumentFragment, napi_default_method),
+              ObjectType::InstanceMethod("createElement", &ObjectType::CreateElement, napi_default_method),
+              ObjectType::InstanceMethod("createElementNS", &ObjectType::CreateElementNS, napi_default_method),
+              ObjectType::InstanceMethod("getElementById", &ObjectType::GetElementById, napi_default_method),
           });
       props.insert(props.end(), documentProps.begin(), documentProps.end());
       return props;
@@ -91,6 +95,28 @@ namespace dombinding
     ~DocumentBase() = default;
 
   protected:
+    Napi::Value HeadGetter(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      if (this->headElement == nullptr)
+      {
+        auto head = this->node->head();
+        if (head != nullptr)
+          this->headElement = make_unique<Napi::ObjectReference>(Napi::Persistent(Element::NewInstance(env, head)));
+      }
+      return this->headElement == nullptr ? env.Null() : this->headElement->Value();
+    }
+    Napi::Value BodyGetter(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      if (this->bodyElement == nullptr)
+      {
+        auto body = this->node->body();
+        if (body != nullptr)
+          this->bodyElement = make_unique<Napi::ObjectReference>(Napi::Persistent(Element::NewInstance(env, body)));
+      }
+      return this->bodyElement == nullptr ? env.Null() : this->bodyElement->Value();
+    }
     Napi::Value AdoptNode(const Napi::CallbackInfo &info)
     {
       return info.Env().Undefined();
@@ -180,6 +206,10 @@ namespace dombinding
       else
         return Element::NewInstance(env, element);
     }
+
+  private:
+    std::unique_ptr<Napi::ObjectReference> headElement = nullptr;
+    std::unique_ptr<Napi::ObjectReference> bodyElement = nullptr;
   };
 
   class Document : public DocumentBase<Document, dom::HTMLDocument>

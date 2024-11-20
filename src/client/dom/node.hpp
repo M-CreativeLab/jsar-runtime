@@ -51,6 +51,7 @@ namespace dom
     virtual ~Node() = default;
 
   public:
+    shared_ptr<Node> appendChild(shared_ptr<Node> aChild);
     inline vector<shared_ptr<Node>> getChildNodes() { return childNodes; }
     inline shared_ptr<Node> getFirstChild() { return firstChild; }
     inline shared_ptr<Node> getLastChild() { return lastChild; }
@@ -97,6 +98,10 @@ namespace dom
      * Load the specific node, the stage "load" will be called after all the nodes in the DOM tree are connected.
      */
     virtual void load();
+    /**
+     * This method is called when the internal `pugi::xml_node` object is updated.
+     */
+    virtual void onInternalUpdated() {}
 
   private:
     void updateFromDocument(optional<weak_ptr<Document>> document);

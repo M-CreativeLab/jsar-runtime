@@ -4,6 +4,8 @@
 #include <memory>
 #include "./node.hpp"
 #include "./element.hpp"
+#include "./html_head_element.hpp"
+#include "./html_body_element.hpp"
 #include "pugixml/pugixml.hpp"
 
 using namespace std;
@@ -31,6 +33,11 @@ namespace dom
     void setSource(const string &source);
     void open();
     shared_ptr<Element> getElementById(const string &id);
+    shared_ptr<HTMLHeadElement> head();
+    shared_ptr<HTMLBodyElement> body();
+
+  protected:
+    void onInternalUpdated() override;
 
   private:
     void openInternal();
@@ -41,10 +48,13 @@ namespace dom
 
   public:
     shared_ptr<BrowsingContext> browsingContext;
+    shared_ptr<Element> documentElement;
 
   protected:
     bool autoConnect;
     shared_ptr<pugi::xml_document> docInternal;
+    shared_ptr<HTMLHeadElement> headElement;
+    shared_ptr<HTMLBodyElement> bodyElement;
 
   private:
     bool isSourceLoaded = false;

@@ -39,6 +39,11 @@ namespace dom
       else
         removeAttribute("async");
     }
+    inline void setSrc(const string &value)
+    {
+      src = value;
+      setAttribute("src", value);
+    }
 
   protected:
     void createdCallback() override;

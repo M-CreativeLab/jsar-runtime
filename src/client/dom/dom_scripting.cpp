@@ -388,6 +388,7 @@ namespace dom
         // Typed arrays
         V8_SET_GLOBAL_FROM_MAIN(Array);
         V8_SET_GLOBAL_FROM_MAIN(ArrayBuffer);
+        V8_SET_GLOBAL_FROM_MAIN(SharedArrayBuffer);
         V8_SET_GLOBAL_FROM_MAIN(Int8Array);
         V8_SET_GLOBAL_FROM_MAIN(Uint8Array);
         V8_SET_GLOBAL_FROM_MAIN(Uint8ClampedArray);
@@ -696,7 +697,9 @@ namespace dom
     return nullopt;
   }
 
-  void DOMScriptingContext::tryImportModule(const string &url, const bool disableCache, function<void(shared_ptr<DOMModule>)> loadedCallback)
+  void DOMScriptingContext::tryImportModule(const string &url, const bool disableCache,
+                                            function<void(shared_ptr<DOMModule>)> loadedCallback,
+                                            function<void(const string &)> errorCallback)
   {
     if (!disableCache)
     {

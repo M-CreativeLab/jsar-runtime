@@ -7,6 +7,12 @@
 namespace dombinding
 {
   template <typename ObjectType, typename NodeType>
+  bool NodeBase<ObjectType, NodeType>::IsNodeInstance(Napi::Object object)
+  {
+    return object.Has(NODE_IMPL_FIELD);
+  }
+
+  template <typename ObjectType, typename NodeType>
   NodeBase<ObjectType, NodeType>::NodeBase(const Napi::CallbackInfo &info)
       : EventTargetWrap<ObjectType, NodeType>(info)
   {
@@ -28,6 +34,14 @@ namespace dombinding
   template <typename ObjectType, typename NodeType>
   NodeBase<ObjectType, NodeType>::~NodeBase()
   {
+  }
+
+  template <typename ObjectType, typename NodeType>
+  Napi::Value NodeBase<ObjectType, NodeType>::NodeImplGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::External<NodeContainer<NodeType>>::New(env, new NodeContainer<NodeType>(node));
   }
 
   template <typename ObjectType, typename NodeType>
@@ -93,7 +107,20 @@ namespace dombinding
   Napi::Value NodeBase<ObjectType, NodeType>::AppendChild(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
-    return env.Undefined();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1 ||
+        !info[0].IsObject() ||
+        !IsNodeInstance(info[0].ToObject()))
+    {
+      Napi::TypeError::New(env, "Illegal arguments").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto jsChildNodeImplExternal = info[0].ToObject().Get(NODE_IMPL_FIELD).As<Napi::External<NodeContainer<dom::Node>>>();
+    auto childNodeImpl = jsChildNodeImplExternal.Data()->node;
+    node->appendChild(childNodeImpl);
+    return info[0].ToObject();
   }
 
   template <typename ObjectType, typename NodeType>
@@ -151,7 +178,6 @@ namespace dombinding
       auto jsThis = info.This().As<Napi::Object>();
       jsThis.Set("baseURI", Napi::String::New(env, node->baseURI));
       jsThis.Set("nodeName", Napi::String::New(env, node->nodeName));
-      jsThis.Set("isConnected", Napi::Boolean::New(env, node->connected));
       jsThis.Set("nodeType", Napi::Number::New(env, static_cast<int>(node->nodeType)));
     }
   }

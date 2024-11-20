@@ -69,11 +69,52 @@ namespace dom
 
   shared_ptr<Element> Document::getElementById(const string &id)
   {
-    // auto node = docInternal->document_element().find_child_by_attribute("id", id.c_str());
-    // if (node.empty())
-    //   return nullptr;
-    // return Element::CreateElement(node);
+    for (auto childNode : childNodes)
+    {
+      if (childNode->nodeType == NodeType::ELEMENT_NODE)
+      {
+        auto element = std::dynamic_pointer_cast<Element>(childNode);
+        if (element->getAttribute("id") == id)
+          return element;
+      }
+    }
     return nullptr;
+  }
+
+  shared_ptr<HTMLHeadElement> Document::head()
+  {
+    return headElement;
+  }
+
+  shared_ptr<HTMLBodyElement> Document::body()
+  {
+    return bodyElement;
+  }
+
+  void Document::onInternalUpdated()
+  {
+    for (auto childNode : childNodes)
+    {
+      if (childNode->nodeType == NodeType::ELEMENT_NODE)
+      {
+        documentElement = std::dynamic_pointer_cast<Element>(childNode);
+        break;
+      }
+    }
+
+    if (documentElement != nullptr)
+    {
+      for (auto childNode : documentElement->childNodes)
+      {
+        if (childNode->nodeType == NodeType::ELEMENT_NODE)
+        {
+          if (childNode->nodeName == "head")
+            headElement = std::dynamic_pointer_cast<HTMLHeadElement>(childNode);
+          else if (childNode->nodeName == "body")
+            bodyElement = std::dynamic_pointer_cast<HTMLBodyElement>(childNode);
+        }
+      }
+    }
   }
 
   void Document::openInternal()

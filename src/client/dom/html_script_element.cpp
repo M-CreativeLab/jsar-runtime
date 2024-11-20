@@ -110,5 +110,6 @@ namespace dom
     browsingContext->scriptingContext->evaluate(compiledScript);
     scriptExecutedOnce = true;
     scriptExecutionScheduled = false;
+    dispatchEvent(dom::DOMEventType::Load);
   }
 }

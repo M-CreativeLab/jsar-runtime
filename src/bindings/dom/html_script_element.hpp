@@ -17,6 +17,8 @@ namespace dombinding
   private:
     Napi::Value AsyncGetter(const Napi::CallbackInfo &info);
     void AsyncSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value SrcGetter(const Napi::CallbackInfo &info);
+    void SrcSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
 
   public:
     static thread_local Napi::FunctionReference *constructor;

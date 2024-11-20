@@ -238,7 +238,8 @@ extern "C" fn create_url_with_path(
 
 #[repr(i32)]
 enum ModuleExtensionIndex {
-  JavaScript = 0,
+  None = 0,
+  JavaScript,
   TypeScript,
   JSON,
   Bin,
@@ -277,10 +278,10 @@ extern "C" fn parse_url_to_module_extension(url_str: *const c_char) -> ModuleExt
       "mp3" => ModuleExtensionIndex::MP3,
       "wav" => ModuleExtensionIndex::WAV,
       "ogg" => ModuleExtensionIndex::OGG,
-      _ => ModuleExtensionIndex::JavaScript,
+      _ => ModuleExtensionIndex::None,
     }
   } else {
-    ModuleExtensionIndex::JavaScript
+    ModuleExtensionIndex::None
   }
 }
 

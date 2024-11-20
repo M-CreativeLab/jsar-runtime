@@ -1,0 +1,29 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Document</title>
+</head>
+
+<body>
+</body>
+
+<script>
+  console.info(document);
+  console.info(document.head);
+  console.info(document.body);
+  console.info(document.title);
+  console.info(document.head.isConnected);
+
+  const script = document.createElement('script');
+  script.src = './simple.js';
+  script.addEventListener('load', () => {
+    console.info('load event listener');
+  });
+  script.onload = function() {
+    console.info('onload');
+  };
+  document.head.appendChild(script);
+</script>
+
+</html>

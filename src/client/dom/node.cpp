@@ -44,6 +44,19 @@ namespace dom
     updateFromInternal();
     updateFromDocument(ownerDocument);
     updateTreeFromInternal();
+    onInternalUpdated();
+  }
+
+  shared_ptr<Node> Node::appendChild(shared_ptr<Node> aChild)
+  {
+    if (aChild == nullptr)
+      return nullptr;
+    childNodes.push_back(aChild);
+
+    // Connect the child node if the parent node is connected
+    if (connected && !aChild->connected)
+      aChild->connect();
+    return aChild;
   }
 
   string Node::getTextContent()
@@ -58,6 +71,7 @@ namespace dom
     updateFromInternal();
     updateFromDocument(ownerDocument);
     updateTreeFromInternal();
+    onInternalUpdated();
   }
 
   void Node::print(bool showTree)

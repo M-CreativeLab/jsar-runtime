@@ -10,7 +10,8 @@
 
 namespace dom
 {
-  typedef std::function<void(const v8::FunctionCallbackInfo<v8::Value> &)> ResponseCallback;
+  typedef std::function<void(const v8::FunctionCallbackInfo<v8::Value> &)> FunctionCallback;
+  typedef std::function<void(const std::string &)> ErrorCallback;
   typedef std::function<void(const std::string &)> StringResponseCallback;
   typedef std::function<void(const void *, size_t)> BufferResponseCallback;
 
@@ -47,35 +48,47 @@ namespace dom
      *
      * @param url The URL of the resource to fetch.
      * @param responseType The type of the response to expect: "string", "arraybuffer" or "json".
-     * @param callback The callback to call when the resource is fetched.
+     * @param responseCallback The callback to call when the resource is fetched.
+     * @param errorCallback The callback to be called when an error occurs during fetching the resource.
      */
-    void fetchResource(const std::string &url, const std::string &responseType, const ResponseCallback &callback);
+    void fetchResource(const std::string &url, const std::string &responseType,
+                       const FunctionCallback &responseCallback,
+                       const std::optional<FunctionCallback> errorCallback = std::nullopt);
 
     /**
      * Fetch the text source type of the resource from the given URL.
      *
      * @param url The URL of the resource to fetch.
-     * @param callback The callback to call when the resource is fetched.
+     * @param responseCallback The callback to call when the resource is fetched.
+     * @param errorCallback The callback to be called when an error occurs during fetching the resource.
      */
-    void fetchTextSourceResource(const std::string &url, const StringResponseCallback &callback);
+    void fetchTextSourceResource(const std::string &url,
+                                 const StringResponseCallback &responseCallback,
+                                 const std::optional<ErrorCallback> errorCallback = std::nullopt);
 
     /**
      * Fetch the arraybuffer-like resource from the given URL.
      *
      * @param url The URL of the image to fetch.
-     * @param callback The callback to call when the image is fetched.
+     * @param responseCallback The callback to call when the image is fetched.
+     * @param errorCallback The callback to be called when an error occurs during fetching the resource.
      */
-    void fetchArrayBufferLikeResource(const std::string &url, const BufferResponseCallback &callback);
+    void fetchArrayBufferLikeResource(const std::string &url,
+                                      const BufferResponseCallback &responseCallback,
+                                      const std::optional<ErrorCallback> errorCallback = std::nullopt);
 
     /**
      * Fetch the image resource from the given URL.
-     * 
+     *
      * @param url The URL of the image to fetch.
-     * @param callback The callback to call when the image is fetched.
+     * @param responseCallback The callback to call when the image is fetched.
+     * @param errorCallback The callback to be called when an error occurs during fetching the resource.
      */
-    inline void fetchImageResource(const std::string &url, const BufferResponseCallback &callback)
+    inline void fetchImageResource(const std::string &url,
+                                   const BufferResponseCallback &responseCallback,
+                                   const std::optional<ErrorCallback> errorCallback = std::nullopt)
     {
-      return fetchArrayBufferLikeResource(url, callback);
+      return fetchArrayBufferLikeResource(url, responseCallback, errorCallback);
     }
 
     /**
