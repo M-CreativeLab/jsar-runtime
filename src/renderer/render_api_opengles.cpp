@@ -1111,6 +1111,13 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::TexParameteri(target=0x%x, pname=0x%x, param=%d)",
 						options.isDefaultQueue, req->target, req->pname, req->param);
 	}
+	TR_OPENGL_FUNC void OnTexParameterf(TextureParameterfCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
+	{
+		glTexParameterf(req->target, req->pname, req->param);
+		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+			DEBUG(DEBUG_TAG, "[%d] GL::TexParameterf(target=0x%x, pname=0x%x, param=%f)",
+						options.isDefaultQueue, req->target, req->pname, req->param);
+	}
 	TR_OPENGL_FUNC void OnActiveTexture(ActiveTextureCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		auto textureUnit = req->activeUnit;
@@ -1701,7 +1708,7 @@ private:
 		glViewport(x, y, width, height);
 		reqContentRenderer->getOpenGLContext()->RecordViewport(x, y, width, height);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::SetViewport: (%d %d %d %d)", options.isDefaultQueue, x, y, width, height);
+			DEBUG(DEBUG_TAG, "[%d] GL::SetViewport: (x=%d y=%d w=%d h=%d)", options.isDefaultQueue, x, y, width, height);
 	}
 	TR_OPENGL_FUNC void OnSetScissor(SetScissorCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
@@ -2216,6 +2223,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 			ADD_COMMAND_BUFFER_HANDLER(COPY_TEXTURE_IMAGE_2D, CopyTextureImage2DCommandBufferRequest, CopyTexImage2D)
 			ADD_COMMAND_BUFFER_HANDLER(COPY_TEXTURE_SUB_IMAGE_2D, CopyTextureSubImage2DCommandBufferRequest, CopyTexSubImage2D)
 			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_PARAMETERI, TextureParameteriCommandBufferRequest, TexParameteri)
+			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_PARAMETERF, TextureParameterfCommandBufferRequest, TexParameterf)
 			ADD_COMMAND_BUFFER_HANDLER(ACTIVE_TEXTURE, ActiveTextureCommandBufferRequest, ActiveTexture)
 			ADD_COMMAND_BUFFER_HANDLER(GENERATE_MIPMAP, GenerateMipmapCommandBufferRequest, GenerateMipmap)
 			ADD_COMMAND_BUFFER_HANDLER(TEXTURE_IMAGE_3D, TextureImage3DCommandBufferRequest, TexImage3D)

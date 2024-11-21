@@ -95,6 +95,7 @@ namespace webgl
     Napi::Value CopyTexImage2D(const Napi::CallbackInfo &info);
     Napi::Value CopyTexSubImage2D(const Napi::CallbackInfo &info);
     Napi::Value TexParameteri(const Napi::CallbackInfo &info);
+    Napi::Value TexParameterf(const Napi::CallbackInfo &info);
     Napi::Value ActiveTexture(const Napi::CallbackInfo &info);
     Napi::Value GenerateMipmap(const Napi::CallbackInfo &info);
     Napi::Value EnableVertexAttribArray(const Napi::CallbackInfo &info);

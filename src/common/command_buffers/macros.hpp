@@ -50,6 +50,7 @@
   XX(COPY_TEXTURE_IMAGE_2D, CopyTextureImage2DCommandBufferRequest)                        \
   XX(COPY_TEXTURE_SUB_IMAGE_2D, CopyTextureSubImage2DCommandBufferRequest)                 \
   XX(TEXTURE_PARAMETERI, TextureParameteriCommandBufferRequest)                            \
+  XX(TEXTURE_PARAMETERF, TextureParameterfCommandBufferRequest)                            \
   XX(ACTIVE_TEXTURE, ActiveTextureCommandBufferRequest)                                    \
   XX(GENERATE_MIPMAP, GenerateMipmapCommandBufferRequest)                                  \
   XX(TEXTURE_IMAGE_3D, TextureImage3DCommandBufferRequest)                                 \

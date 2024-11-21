@@ -323,6 +323,20 @@ namespace commandbuffers
     int param;
   };
 
+  class TextureParameterfCommandBufferRequest : public TrCommandBufferSimpleRequest<TextureParameterfCommandBufferRequest>
+  {
+  public:
+    TextureParameterfCommandBufferRequest(uint32_t target, uint32_t pname, float param)
+        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_TEXTURE_PARAMETERF_REQ), target(target), pname(pname), param(param)
+    {
+    }
+
+  public:
+    int target;
+    int pname;
+    float param;
+  };
+
   class ActiveTextureCommandBufferRequest : public TrCommandBufferSimpleRequest<ActiveTextureCommandBufferRequest>
   {
   public:

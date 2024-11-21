@@ -749,6 +749,7 @@ namespace webgl
       InstanceMethod("copyTexImage2D", &T::CopyTexImage2D),                     \
       InstanceMethod("copyTexSubImage2D", &T::CopyTexSubImage2D),               \
       InstanceMethod("texParameteri", &T::TexParameteri),                       \
+      InstanceMethod("texParameterf", &T::TexParameterf),                       \
       InstanceMethod("activeTexture", &T::ActiveTexture),                       \
       InstanceMethod("generateMipmap", &T::GenerateMipmap),                     \
       InstanceMethod("enableVertexAttribArray", &T::EnableVertexAttribArray),   \
@@ -2313,6 +2314,21 @@ namespace webgl
     int param = info[2].As<Napi::Number>().Int32Value();
 
     auto req = TextureParameteriCommandBufferRequest(target, pname, param);
+    sendCommandBufferRequest(req);
+    return env.Undefined();
+  }
+
+  template <typename T>
+  Napi::Value WebGLBaseRenderingContext<T>::TexParameterf(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    int target = info[0].As<Napi::Number>().Int32Value();
+    int pname = info[1].As<Napi::Number>().Int32Value();
+    float param = info[2].As<Napi::Number>().FloatValue();
+
+    auto req = TextureParameterfCommandBufferRequest(target, pname, param);
     sendCommandBufferRequest(req);
     return env.Undefined();
   }

@@ -74,7 +74,8 @@ namespace bindings
 
     if (info.Length() < 2)
     {
-      Napi::TypeError::New(env, "XRWebGLLayer constructor requires 2 arguments").ThrowAsJavaScriptException();
+      auto msg = "XRWebGLLayer constructor requires 2 arguments, but only " + std::to_string(info.Length()) + " were provided";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return;
     }
 

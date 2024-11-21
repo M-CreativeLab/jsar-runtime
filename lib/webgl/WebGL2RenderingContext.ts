@@ -55,11 +55,16 @@ class WebGL2RenderingContextImpl extends glNative.WebGL2RenderingContext impleme
         dataBuffer = unpackTypedArray(data);
       } else if (data instanceof ArrayBuffer) {
         dataBuffer = new Uint8Array(data);
+      } else if (Array.isArray(data)) {
+        dataBuffer = unpackTypedArray(new Float32Array(data));
       } else {
         console.warn('#');
         console.warn('# Invalid data type for bufferData().');
         console.warn('# target:', target);
-        console.warn('# data:', isTypedArray(data), Array.isArray(data), data);
+        console.warn('# data:',
+          'is TypedArray?' + isTypedArray(data) ? 'yes' : 'no',
+          'is Array?' + Array.isArray(data) ? 'yes' : 'no',
+          data);
         console.warn('#');
         throw new Error('Invalid data type for bufferData(), expected ArrayBuffer or TypedArray, but got ' + typeof data);
       }
