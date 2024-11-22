@@ -2,7 +2,6 @@ import 'babylonjs';
 
 async function createScene(engine) {
   const scene = new BABYLON.Scene(engine);
-  scene.useRightHandedSystem = false;
   scene.autoClear = false;
   scene.autoClearDepthAndStencil = false;
   scene.blockMaterialDirtyMechanism = true;

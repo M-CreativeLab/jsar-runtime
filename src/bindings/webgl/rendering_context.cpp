@@ -3220,7 +3220,14 @@ namespace webgl
             locationName == "projectionMatrices[0]" ||
             locationName == "viewMatrix" ||
             locationName == "viewMatrices" ||
-            locationName == "viewMatrices[0]"
+            locationName == "viewMatrices[0]" ||
+            /**
+             * Match for Babylon.js matrix uniforms
+             */
+            locationName == "projection" ||
+            locationName == "view" ||
+            locationName == "viewProjection" ||
+            locationName == "viewProjectionR"
             /**
              * TODO: Compatibility with other libraries: Babylon.js, etc.
              */
@@ -3228,7 +3235,7 @@ namespace webgl
     {
       bool forMultiview = false;
       WebGLMatrixPlaceholderId placeholderId = WebGLMatrixPlaceholderId::NotSet;
-      if (locationName == "projectionMatrix")
+      if (locationName == "projectionMatrix" || locationName == "projection")
       {
         placeholderId = WebGLMatrixPlaceholderId::ProjectionMatrix;
       }
@@ -3237,7 +3244,7 @@ namespace webgl
         placeholderId = WebGLMatrixPlaceholderId::ProjectionMatrix;
         forMultiview = true;
       }
-      else if (locationName == "viewMatrix")
+      else if (locationName == "viewMatrix" || locationName == "view")
       {
         placeholderId = WebGLMatrixPlaceholderId::ViewMatrix;
       }
@@ -3245,6 +3252,14 @@ namespace webgl
       {
         placeholderId = WebGLMatrixPlaceholderId::ViewMatrix;
         forMultiview = true;
+      }
+      else if (locationName == "viewProjection")
+      {
+        placeholderId = WebGLMatrixPlaceholderId::ViewProjectionMatrix;
+      }
+      else if (locationName == "viewProjectionR")
+      {
+        placeholderId = WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye;
       }
 
       MatrixComputationGraph computationGraph(placeholderId, MatrixHandedness::MATRIX_RIGHT_HANDED);
