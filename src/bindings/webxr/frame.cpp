@@ -114,13 +114,13 @@ namespace bindings
       Napi::TypeError::New(env, NON_ACTIVE_MSG).ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    if (info.Length() < 1)
+    if (info.Length() < 1 || !info[0].IsObject())
     {
       Napi::TypeError::New(env, "getViewerPose requires a reference space object").ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
-    auto referenceSpace = XRReferenceSpace::Unwrap(info[0].As<Napi::Object>());
+    auto referenceSpace = XRReferenceSpace::Unwrap(info[0].ToObject());
     auto viewerSpace = session->getViewerSpace();
     referenceSpace->ensurePoseUpdated(id, session, internal);
     viewerSpace->ensurePoseUpdated(id, session, internal);
