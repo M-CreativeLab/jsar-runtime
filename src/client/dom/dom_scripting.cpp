@@ -328,6 +328,9 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(HTMLHeadingElement);
         V8_SET_GLOBAL_FROM_MAIN(HTMLHRElement);
         V8_SET_GLOBAL_FROM_MAIN(HTMLHtmlElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLIFrameElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLImageElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLInputElement);
 
         // Events
         V8_SET_GLOBAL_FROM_MAIN(Event);

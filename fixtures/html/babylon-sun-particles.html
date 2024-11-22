@@ -1,0 +1,144 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Babylon.js Sample</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "babylonjs": "http://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/babylon/umd/babylonjs/babylon.js"
+      }
+    }
+  </script>
+  <script type="module">
+    import 'babylonjs';
+
+    async function createScene(engine) {
+      const scene = new BABYLON.Scene(engine);
+      scene.useRightHandedSystem = false;
+      scene.autoClear = false;
+      scene.autoClearDepthAndStencil = false;
+      scene.blockMaterialDirtyMechanism = true;
+      scene.performancePriority = BABYLON.ScenePerformancePriority.Intermediate;
+
+      scene.createDefaultSkybox();
+      scene.createDefaultCamera(true);
+
+      // Run the render loop
+      engine.runRenderLoop(() => scene.render());
+
+      // Create XR experience and enter XR
+      const { baseExperience, renderTarget } = await scene.createDefaultXRExperienceAsync({
+        disableDefaultUI: true,
+        disablePointerSelection: true,
+        disableNearInteraction: true,
+        disableHandTracking: true,
+        disableTeleportation: true,
+        outputCanvasOptions: {
+          renderingContext: navigator.gl,
+        },
+      });
+      await baseExperience.enterXRAsync('immersive-ar', 'local', renderTarget, {
+        optionalFeatures: [],
+      });
+      return scene;
+    }
+
+    let engine;
+    if (!navigator.gl) {
+      const canvas = document.createElement('canvas');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      document.body.appendChild(canvas);
+      engine = new BABYLON.Engine(canvas, true, {
+        xrCompatible: true
+      });
+    } else {
+      engine = new BABYLON.Engine(navigator.gl, true, {
+        xrCompatible: true
+      });
+    }
+    engine.disableUniformBuffers = true;
+
+    createScene(engine).then(scene => {
+      // Create a particle system
+      var surfaceParticles = new BABYLON.ParticleSystem('surfaceParticles', 1600, scene);
+
+      // Texture of each particle
+      surfaceParticles.particleTexture = new BABYLON.Texture('https://raw.githubusercontent.com/PatrickRyanMS/BabylonJStextures/master/ParticleSystems/Sun/T_SunSurface.png', scene);
+
+      // Create core sphere
+      var coreSphere = BABYLON.MeshBuilder.CreateSphere('coreSphere', { diameter: 2.01, segments: 64 }, scene);
+
+      // Create core material
+      var coreMat = new BABYLON.StandardMaterial('coreMat', scene)
+      coreMat.emissiveColor = new BABYLON.Color3(0.3773, 0.0930, 0.0266);
+
+      // Assign core material to sphere
+      coreSphere.material = coreMat;
+
+      // Pre-warm
+      surfaceParticles.preWarmStepOffset = 10;
+      surfaceParticles.preWarmCycles = 100;
+
+      // Initial rotation
+      surfaceParticles.minInitialRotation = -2 * Math.PI;
+      surfaceParticles.maxInitialRotation = 2 * Math.PI;
+
+      // Where the sun particles come from
+      var sunEmitter = new BABYLON.SphereParticleEmitter();
+      sunEmitter.radius = 1;
+      sunEmitter.radiusRange = 0; // emit only from shape surface
+
+      // Assign particles to emitters
+      surfaceParticles.emitter = coreSphere; // the starting object, the emitter
+      surfaceParticles.particleEmitterType = sunEmitter;
+
+      // Color gradient over time
+      surfaceParticles.addColorGradient(0, new BABYLON.Color4(0.8509, 0.4784, 0.1019, 0.0));
+      surfaceParticles.addColorGradient(0.4, new BABYLON.Color4(0.6259, 0.3056, 0.0619, 0.5));
+      surfaceParticles.addColorGradient(0.5, new BABYLON.Color4(0.6039, 0.2887, 0.0579, 0.5));
+      surfaceParticles.addColorGradient(1.0, new BABYLON.Color4(0.3207, 0.0713, 0.0075, 0.0));
+
+      // Size of each particle (random between...
+      surfaceParticles.minSize = 0.4;
+      surfaceParticles.maxSize = 0.7;
+
+      // Life time of each particle (random between...
+      surfaceParticles.minLifeTime = 8.0;
+      surfaceParticles.maxLifeTime = 8.0;
+
+      // Emission rate
+      surfaceParticles.emitRate = 200;
+
+      // Blend mode : BLENDMODE_ONEONE, BLENDMODE_STANDARD, or BLENDMODE_ADD
+      surfaceParticles.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD;
+
+      // Set the gravity of all particles
+      surfaceParticles.gravity = new BABYLON.Vector3(0, 0, 0);
+
+      // Angular speed, in radians
+      surfaceParticles.minAngularSpeed = -0.4;
+      surfaceParticles.maxAngularSpeed = 0.4;
+
+      // Speed
+      surfaceParticles.minEmitPower = 0;
+      surfaceParticles.maxEmitPower = 0;
+      surfaceParticles.updateSpeed = 0.005;
+
+      // No billboard
+      surfaceParticles.isBillboardBased = false;
+
+      // Start the particle system
+      surfaceParticles.start();
+
+    }, err => {
+      console.error(err);
+    });
+  </script>
+</head>
+
+<body>
+</body>
+
+</html>

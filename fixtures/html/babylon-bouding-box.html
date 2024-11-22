@@ -2,7 +2,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>Babylon.js Sample</title>
+  <title>Babylon.js Sample Particles</title>
   <script type="importmap">
     {
       "imports": {
@@ -63,12 +63,23 @@
     createScene(engine).then(scene => {
       scene.createDefaultLight();
 
-      const mat = new BABYLON.StandardMaterial('mat', scene);
-      mat.diffuseColor = new BABYLON.Color3(1, 1, 1);
+      var sphere = BABYLON.MeshBuilder.CreateSphere('sphere', { diameter: 0.2, segments: 32 }, scene);
+      sphere.position.y = 0.2;
 
-      const box = BABYLON.MeshBuilder.CreateBox('box', { size: 0.5 }, scene);
-      box.material = mat;
-    }, err => {
+      // Our built-in 'ground' shape.
+      var ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 0.6, height: 0.6 }, scene);
+      let sphereMin = sphere.getBoundingInfo().boundingBox.minimum;
+      let sphereMax = sphere.getBoundingInfo().boundingBox.maximum;
+
+      let groundMin = ground.getBoundingInfo().boundingBox.minimum;
+      let groundMax = ground.getBoundingInfo().boundingBox.maximum;
+
+      let newMin = BABYLON.Vector3.Minimize(sphereMin, groundMin);
+      let newMax = BABYLON.Vector3.Maximize(sphereMax, groundMax);
+
+      sphere.setBoundingInfo(new BABYLON.BoundingInfo(newMin, newMax));
+      sphere.showBoundingBox = true;
+    }).catch(err => {
       console.error(err);
     });
   </script>

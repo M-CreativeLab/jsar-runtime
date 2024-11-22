@@ -113,7 +113,7 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
       if (!blob) {
         throw new TypeError('Failed to resolve the blob URL: ' + url);
       }
-      return this.#readBlob(blob, returnsAs);
+      return this.#readBlob(blob as Blob, returnsAs);
     }
 
     /**

@@ -1,0 +1,82 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Babylon.js Sample Particles</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "babylonjs": "http://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/babylon/umd/babylonjs/babylon.js",
+        "babylonjs-gltf-loader": "http://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/babylon/umd/babylonjs-loaders/babylon.glTFFileLoader.js"
+      }
+    }
+  </script>
+  <script type="module">
+    import 'babylonjs';
+    import 'babylonjs-gltf-loader';
+
+    async function createScene(engine) {
+      const scene = new BABYLON.Scene(engine);
+      scene.useRightHandedSystem = false;
+      scene.autoClear = false;
+      scene.autoClearDepthAndStencil = false;
+      scene.blockMaterialDirtyMechanism = true;
+      scene.performancePriority = BABYLON.ScenePerformancePriority.Intermediate;
+
+      scene.createDefaultSkybox();
+      scene.createDefaultCamera(true);
+
+      // Run the render loop
+      engine.runRenderLoop(() => scene.render());
+
+      // Create XR experience and enter XR
+      const { baseExperience, renderTarget } = await scene.createDefaultXRExperienceAsync({
+        disableDefaultUI: true,
+        disablePointerSelection: true,
+        disableNearInteraction: true,
+        disableHandTracking: true,
+        disableTeleportation: true,
+        outputCanvasOptions: {
+          renderingContext: navigator.gl,
+        },
+      });
+      await baseExperience.enterXRAsync('immersive-ar', 'local', renderTarget, {
+        optionalFeatures: [],
+      });
+      return scene;
+    }
+
+    let engine;
+    if (!navigator.gl) {
+      const canvas = document.createElement('canvas');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      document.body.appendChild(canvas);
+      engine = new BABYLON.Engine(canvas, true, {
+        xrCompatible: true
+      });
+    } else {
+      engine = new BABYLON.Engine(navigator.gl, true, {
+        xrCompatible: true
+      });
+    }
+    engine.disableUniformBuffers = true;
+
+    createScene(engine).then(scene => {
+      scene.createDefaultLight();
+
+      // Append glTF model to scene.
+      BABYLON.SceneLoader.Append("https://ar.rokidcdn.com/web-assets/pages/models/", "floating_fox.glb", scene, () => {
+        // Loaded
+        console.info('Model loaded', scene.meshes);
+      });
+    }).catch(err => {
+      console.error(err);
+    });
+  </script>
+</head>
+
+<body>
+</body>
+
+</html>
