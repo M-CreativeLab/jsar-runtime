@@ -129,9 +129,9 @@ private:
 		}
 		return error;
 	}
-	void DumpDrawCallInfo(string funcName, bool isDefaultQueue, GLint mode, GLsizei count, GLenum type, const GLvoid *indices)
+	void DumpDrawCallInfo(const char *logTag, string funcName, bool isDefaultQueue, GLint mode, GLsizei count, GLenum type, const GLvoid *indices)
 	{
-		DEBUG(DEBUG_TAG, "[%d] GL::%s(mode=%s, count=%d, type=%s, indices=%p)",
+		DEBUG(logTag, "[%d] GL::%s(mode=%s, count=%d, type=%s, indices=%p)",
 					isDefaultQueue,
 					funcName.c_str(),
 					gles::glEnumToString(mode).c_str(),
@@ -142,13 +142,13 @@ private:
 		// Get current program
 		GLint program;
 		glGetIntegerv(GL_CURRENT_PROGRAM, &program);
-		DEBUG(DEBUG_TAG, "    Program: %d", program);
+		DEBUG(logTag, "    Program: %d", program);
 
 		// Print bond framebuffer
 		{
 			GLint framebuffer;
 			glGetIntegerv(GL_FRAMEBUFFER_BINDING, &framebuffer);
-			DEBUG(DEBUG_TAG, "    Framebuffer: %d (%s)", framebuffer,
+			DEBUG(logTag, "    Framebuffer: %d (%s)", framebuffer,
 						glCheckFramebufferStatus(GL_FRAMEBUFFER) ? "Complete" : "Incomplete");
 		}
 
@@ -157,15 +157,15 @@ private:
 			GLint linkStatus, validateStatus;
 			glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
 			glGetProgramiv(program, GL_VALIDATE_STATUS, &validateStatus);
-			DEBUG(DEBUG_TAG, "    Program: LINK_STATUS=%d", linkStatus);
-			DEBUG(DEBUG_TAG, "    Program: VALIDATE_STATUS=%d", validateStatus);
+			DEBUG(logTag, "    Program: LINK_STATUS=%d", linkStatus);
+			DEBUG(logTag, "    Program: VALIDATE_STATUS=%d", validateStatus);
 		}
 
 		// Print Element Array
 		{
 			GLint elementArrayBuffer;
 			glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &elementArrayBuffer);
-			DEBUG(DEBUG_TAG, "    Element Array Buffer: %d", elementArrayBuffer);
+			DEBUG(logTag, "    Element Array Buffer: %d", elementArrayBuffer);
 		}
 
 		// Print Active Attributes
@@ -183,7 +183,7 @@ private:
 				if (attribIndex == -1)
 				{
 					glGetError(); // Clear the error
-					DEBUG(DEBUG_TAG, "    Active Attribute(%d): Size=%d Type=%s \"%s\"",
+					DEBUG(logTag, "    Active Attribute(%d): Size=%d Type=%s \"%s\"",
 								attribIndex, size, gles::glEnumToString(type).c_str(), name);
 				}
 				else
@@ -192,7 +192,7 @@ private:
 					glGetVertexAttribiv(attribIndex, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &enabled);
 					GLint bufferBinding;
 					glGetVertexAttribiv(attribIndex, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &bufferBinding);
-					DEBUG(DEBUG_TAG, "    Active Attribute(%d): Enabled=%s Size=%d Type=%s BufferBinding=%d \"%s\"",
+					DEBUG(logTag, "    Active Attribute(%d): Enabled=%s Size=%d Type=%s BufferBinding=%d \"%s\"",
 								attribIndex,
 								enabled ? "Yes" : "No",
 								size,
@@ -210,27 +210,27 @@ private:
 			glGetBooleanv(GL_BLEND, &blendEnabled);
 			if (blendEnabled)
 			{
-				DEBUG(DEBUG_TAG, "    Blend State:");
+				DEBUG(logTag, "    Blend State:");
 
 				GLint blendColors[4];
 				glGetIntegerv(GL_BLEND_COLOR, blendColors);
-				DEBUG(DEBUG_TAG, "      Enabled=%s", blendEnabled ? "Yes" : "No");
-				DEBUG(DEBUG_TAG, "      Color=(%d, %d, %d, %d)",
+				DEBUG(logTag, "      Enabled=%s", blendEnabled ? "Yes" : "No");
+				DEBUG(logTag, "      Color=(%d, %d, %d, %d)",
 							blendColors[0], blendColors[1], blendColors[2], blendColors[3]);
 
 				GLint blendDstAlpha;
 				glGetIntegerv(GL_BLEND_DST_ALPHA, &blendDstAlpha);
 				GLint blendDstRGB;
 				glGetIntegerv(GL_BLEND_DST_RGB, &blendDstRGB);
-				DEBUG(DEBUG_TAG, "      DstAlpha=%s", gles::glBlendFuncToString(blendDstAlpha).c_str());
-				DEBUG(DEBUG_TAG, "      DstRGB=%s", gles::glBlendFuncToString(blendDstRGB).c_str());
+				DEBUG(logTag, "      DstAlpha=%s", gles::glBlendFuncToString(blendDstAlpha).c_str());
+				DEBUG(logTag, "      DstRGB=%s", gles::glBlendFuncToString(blendDstRGB).c_str());
 
 				GLint blendSrcAlpha;
 				glGetIntegerv(GL_BLEND_SRC_ALPHA, &blendSrcAlpha);
 				GLint blendSrcRGB;
 				glGetIntegerv(GL_BLEND_SRC_RGB, &blendSrcRGB);
-				DEBUG(DEBUG_TAG, "      SrcAlpha=%s", gles::glBlendFuncToString(blendSrcAlpha).c_str());
-				DEBUG(DEBUG_TAG, "      SrcRGB=%s", gles::glBlendFuncToString(blendSrcRGB).c_str());
+				DEBUG(logTag, "      SrcAlpha=%s", gles::glBlendFuncToString(blendSrcAlpha).c_str());
+				DEBUG(logTag, "      SrcRGB=%s", gles::glBlendFuncToString(blendSrcRGB).c_str());
 			}
 		}
 
@@ -238,7 +238,7 @@ private:
 		{
 			GLint colorMask[4];
 			glGetIntegerv(GL_COLOR_WRITEMASK, colorMask);
-			DEBUG(DEBUG_TAG, "    Color Mask: (%d, %d, %d, %d)",
+			DEBUG(logTag, "    Color Mask: (%d, %d, %d, %d)",
 						colorMask[0], colorMask[1], colorMask[2], colorMask[3]);
 		}
 
@@ -250,7 +250,7 @@ private:
 			{
 				GLint cullFace;
 				glGetIntegerv(GL_CULL_FACE_MODE, &cullFace);
-				DEBUG(DEBUG_TAG, "    Cull: Enabled=%s Face=%s", cullEnabled ? "Yes" : "No", gles::glEnumToString(cullFace).c_str());
+				DEBUG(logTag, "    Cull: Enabled=%s Face=%s", cullEnabled ? "Yes" : "No", gles::glEnumToString(cullFace).c_str());
 			}
 		}
 
@@ -260,20 +260,20 @@ private:
 			glGetBooleanv(GL_DEPTH_TEST, &depthEnabled);
 			if (depthEnabled)
 			{
-				DEBUG(DEBUG_TAG, "    Depth State:");
-				DEBUG(DEBUG_TAG, "      Enabled=%s", depthEnabled ? "Yes" : "No");
+				DEBUG(logTag, "    Depth State:");
+				DEBUG(logTag, "      Enabled=%s", depthEnabled ? "Yes" : "No");
 
 				GLint depthFunc;
 				glGetIntegerv(GL_DEPTH_FUNC, &depthFunc);
-				DEBUG(DEBUG_TAG, "      Func=%s", gles::glDepthFuncToString(depthFunc).c_str());
+				DEBUG(logTag, "      Func=%s", gles::glDepthFuncToString(depthFunc).c_str());
 
 				GLboolean depthWriteMask;
 				glGetBooleanv(GL_DEPTH_WRITEMASK, &depthWriteMask);
-				DEBUG(DEBUG_TAG, "      WriteMask=%s", depthWriteMask ? "Yes" : "No");
+				DEBUG(logTag, "      WriteMask=%s", depthWriteMask ? "Yes" : "No");
 
 				GLfloat depthRange[2];
 				glGetFloatv(GL_DEPTH_RANGE, depthRange);
-				DEBUG(DEBUG_TAG, "      Range=(%f, %f)", depthRange[0], depthRange[1]);
+				DEBUG(logTag, "      Range=(%f, %f)", depthRange[0], depthRange[1]);
 			}
 		}
 	}
@@ -1108,14 +1108,16 @@ private:
 	{
 		glTexParameteri(req->target, req->pname, req->param);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::TexParameteri(target=0x%x, pname=0x%x, param=%d)",
+			DEBUG(options.printsCall ? DEBUG_TAG : LOG_TAG_ERROR,
+						"[%d] GL::TexParameteri(target=0x%x, pname=0x%x, param=%d)",
 						options.isDefaultQueue, req->target, req->pname, req->param);
 	}
 	TR_OPENGL_FUNC void OnTexParameterf(TextureParameterfCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
 		glTexParameterf(req->target, req->pname, req->param);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::TexParameterf(target=0x%x, pname=0x%x, param=%f)",
+			DEBUG(options.printsCall ? DEBUG_TAG : LOG_TAG_ERROR,
+						"[%d] GL::TexParameterf(target=0x%x, pname=0x%x, param=%f)",
 						options.isDefaultQueue, req->target, req->pname, req->param);
 	}
 	TR_OPENGL_FUNC void OnActiveTexture(ActiveTextureCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
@@ -1610,7 +1612,7 @@ private:
 		reqContentRenderer->increaseDrawCallsCount(count);
 
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DumpDrawCallInfo("DrawElements", options.isDefaultQueue, mode, count, type, indices);
+			DumpDrawCallInfo(LOG_TAG_ERROR, "DrawElements", options.isDefaultQueue, mode, count, type, indices);
 	}
 	TR_OPENGL_FUNC void OnDrawBuffers(DrawBuffersCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
@@ -1634,7 +1636,7 @@ private:
 		glDrawArraysInstanced(mode, first, count, instanceCount);
 		reqContentRenderer->increaseDrawCallsCount(count);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DumpDrawCallInfo("DrawArraysInstanced", options.isDefaultQueue, mode, count, 0, nullptr);
+			DumpDrawCallInfo(LOG_TAG_ERROR, "DrawArraysInstanced", options.isDefaultQueue, mode, count, 0, nullptr);
 	}
 	TR_OPENGL_FUNC void OnDrawElementsInstanced(DrawElementsInstancedCommandBufferRequest *req,
 																							renderer::TrContentRenderer *reqContentRenderer,
@@ -1650,8 +1652,7 @@ private:
 		glDrawElementsInstanced(mode, count, type, indices, instanceCount);
 		reqContentRenderer->increaseDrawCallsCount(count);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::DrawElementsInstanced(0x%x, %d, %d, %p, %d)",
-						options.isDefaultQueue, mode, count, type, indices, instanceCount);
+			DumpDrawCallInfo(LOG_TAG_ERROR, "DrawElementsInstanced", options.isDefaultQueue, mode, count, type, indices);
 	}
 	TR_OPENGL_FUNC void OnDrawRangeElements(DrawRangeElementsCommandBufferRequest *req,
 																					renderer::TrContentRenderer *reqContentRenderer,
@@ -1668,8 +1669,7 @@ private:
 		glDrawRangeElements(mode, start, end, count, type, indices);
 		reqContentRenderer->increaseDrawCallsCount(count);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::DrawRangeElements(0x%x, %d, %d, %d, %d, %p)",
-						options.isDefaultQueue, mode, start, end, count, type, indices);
+			DumpDrawCallInfo(LOG_TAG_ERROR, "DrawRangeElements", options.isDefaultQueue, mode, count, type, indices);
 	}
 	TR_OPENGL_FUNC void OnHint(HintCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
