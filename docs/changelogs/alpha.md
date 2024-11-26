@@ -32,6 +32,7 @@ The alpha version of JSAR is the first version of the project.
   - Fix the extension `OVR_multiview2` constant values.
   - Implement the WebGL method: `gl.hint()`.
   - Implement the WebGL method: `gl.lineWidth()`.
+  - Implement the WebGL method: `gl.texParameterf()`.
 - Support running three.js projects in HTML.
 - Support running Babylon.js projects in HTML.
 
