@@ -25,13 +25,15 @@ The alpha version of JSAR is the first version of the project.
   - Add `location` object to support parsing the request URL.
   - Add `window.open(url)` to open a new window (this depends on the embedder).
   - Add `window.close()` to close the current application.
+  - Add `document.head` and `document.body` to access the head and body elements.
+  - Add `getElementById(id)` to get an element by its ID.
+  - Add `getElementsByTagName(tagName)` and `getElementsByName(name)` to get elements by tag name and name.
 - WebGL:
   - Fix the extension `OVR_multiview2` constant values.
-  - Add new WebGL2 extension: `EXT_color_buffer_float`.
-  - Add new WebGL2 extension: `EXT_texture_filter_anisotropic`.
   - Implement the WebGL method: `gl.hint()`.
   - Implement the WebGL method: `gl.lineWidth()`.
 - Support running three.js projects in HTML.
+- Support running Babylon.js projects in HTML.
 
 ## v0.5.0
 
