@@ -366,11 +366,29 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
    * @param content the resource content
    * @param fromResp the response object from the network request to save the metadata.
    */
-  async #cacheResource(uri: string, content: string | NodeJS.ArrayBufferView, fromResp: Response | undici.Dispatcher.ResponseData) {
+  async #cacheResource(
+    uri: string,
+    content: string | NodeJS.ArrayBufferView,
+    fromResp: Response | undici.Dispatcher.ResponseData
+  ) {
     if (this.#isCachingEnabled === false) {
       return; // Don't cache if the caching is disabled.
     }
     const cacheDir = this.#cacheDirectory;
+    /**
+     * Make sure the cache directory exists. This case is for the situation that when the user modifies the 
+     * cache directory manually.
+     */
+    try {
+      const dirStat = await fsPromises.stat(cacheDir);
+      if (!dirStat.isDirectory()) {
+        fsPromises.unlink(cacheDir);
+        throw new Error('The cache directory must be a directory.');
+      }
+    } catch (_err) {
+      await fsPromises.mkdir(cacheDir, { recursive: true });
+    }
+
     const filename = getHashOfUri(uri);
     const contentPath = path.join(cacheDir, filename);
     const md5filePath = path.join(cacheDir, `${filename}.md5`);
