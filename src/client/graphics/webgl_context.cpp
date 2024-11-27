@@ -367,10 +367,11 @@ namespace client_graphics
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::framebufferRenderbuffer(WebGLFramebufferBindingTarget target,
-                                             WebGLFramebufferAttachment attachment,
-                                             WebGLRenderbufferBindingTarget renderbuffertarget,
-                                             std::shared_ptr<WebGLRenderbuffer> renderbuffer)
+  void WebGLContext::framebufferRenderbuffer(
+      WebGLFramebufferBindingTarget target,
+      WebGLFramebufferAttachment attachment,
+      WebGLRenderbufferBindingTarget renderbuffertarget,
+      std::shared_ptr<WebGLRenderbuffer> renderbuffer)
   {
     auto req = FramebufferRenderbufferCommandBufferRequest(static_cast<uint32_t>(target),
                                                            static_cast<uint32_t>(attachment),
@@ -379,11 +380,12 @@ namespace client_graphics
     sendCommandBufferRequest(req);
   }
 
-  void WebGLContext::framebufferTexture2D(WebGLFramebufferBindingTarget target,
-                                          WebGLFramebufferAttachment attachment,
-                                          WebGLTexture2DTarget textarget,
-                                          std::shared_ptr<WebGLTexture> texture,
-                                          int level)
+  void WebGLContext::framebufferTexture2D(
+      WebGLFramebufferBindingTarget target,
+      WebGLFramebufferAttachment attachment,
+      WebGLTexture2DTarget textarget,
+      std::shared_ptr<WebGLTexture> texture,
+      int level)
   {
     auto req = FramebufferTexture2DCommandBufferRequest(static_cast<uint32_t>(target),
                                                         static_cast<uint32_t>(attachment),
@@ -435,6 +437,201 @@ namespace client_graphics
   void WebGLContext::renderbufferStorage(WebGLRenderbufferBindingTarget target, int internalformat, int width, int height)
   {
     auto req = RenderbufferStorageCommandBufferRequest(static_cast<uint32_t>(target), internalformat, width, height);
+    sendCommandBufferRequest(req);
+  }
+
+  std::shared_ptr<WebGLTexture> WebGLContext::createTexture()
+  {
+    auto texture = std::make_shared<WebGLTexture>();
+    auto req = CreateTextureCommandBufferRequest(texture->id);
+    sendCommandBufferRequest(req);
+    return texture;
+  }
+
+  void WebGLContext::deleteTexture(std::shared_ptr<WebGLTexture> texture)
+  {
+    auto req = DeleteTextureCommandBufferRequest(texture->id);
+    sendCommandBufferRequest(req);
+    texture->markDeleted();
+  }
+
+  void WebGLContext::bindTexture(WebGLTextureTarget target, std::shared_ptr<WebGLTexture> texture)
+  {
+    auto req = BindTextureCommandBufferRequest(static_cast<uint32_t>(target), texture->id);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::texImage2D(
+      WebGLTexture2DTarget target,
+      int level,
+      int internalformat,
+      size_t width,
+      size_t height,
+      int border,
+      WebGLTextureFormat format,
+      WebGLPixelType type,
+      unsigned char *pixels)
+  {
+    auto req = TextureImage2DCommandBufferRequest(static_cast<uint32_t>(target),
+                                                  level,
+                                                  internalformat);
+    req.width = width;
+    req.height = height;
+    req.border = border;
+    req.format = static_cast<uint32_t>(format);
+    req.pixelType = static_cast<uint32_t>(type);
+
+    unsigned char *unpacked = nullptr;
+    if (
+        pixels != nullptr &&
+        (unpackFlipY_ || unpackPremultiplyAlpha_))
+    {
+      unpacked = unpackPixels(type,
+                              format,
+                              width,
+                              height,
+                              pixels);
+      if (TR_UNLIKELY(unpacked == nullptr))
+        throw std::runtime_error("Failed to unpack pixels, the source data is null.");
+      req.setPixels(unpacked, false);
+    }
+    else
+    {
+      req.setPixels(pixels, false);
+    }
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::texSubImage2D(
+      WebGLTexture2DTarget target,
+      int level,
+      int xoffset,
+      int yoffset,
+      size_t width,
+      size_t height,
+      WebGLTextureFormat format,
+      WebGLPixelType type,
+      unsigned char *pixels)
+  {
+    auto req = TextureSubImage2DCommandBufferRequest(static_cast<uint32_t>(target),
+                                                     level,
+                                                     xoffset,
+                                                     yoffset);
+    req.width = width;
+    req.height = height;
+    req.format = static_cast<uint32_t>(format);
+    req.pixelType = static_cast<uint32_t>(type);
+
+    unsigned char *unpacked = nullptr;
+    if (
+        pixels != nullptr &&
+        (unpackFlipY_ || unpackPremultiplyAlpha_))
+    {
+      unpacked = unpackPixels(type,
+                              format,
+                              width,
+                              height,
+                              pixels);
+      if (TR_UNLIKELY(unpacked == nullptr))
+        throw std::runtime_error("Failed to unpack pixels, the source data is null.");
+      req.setPixels(unpacked, false);
+    }
+    else
+    {
+      req.setPixels(pixels, false);
+    }
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::copyTexImage2D(
+      WebGLTexture2DTarget target,
+      int level,
+      int internalformat,
+      int x,
+      int y,
+      size_t width,
+      size_t height,
+      int border)
+  {
+    auto req = CopyTextureImage2DCommandBufferRequest(static_cast<uint32_t>(target),
+                                                      level,
+                                                      internalformat,
+                                                      x,
+                                                      y,
+                                                      width,
+                                                      height,
+                                                      border);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::copyTexSubImage2D(
+      WebGLTexture2DTarget target,
+      int level,
+      int xoffset,
+      int yoffset,
+      int x,
+      int y,
+      size_t width,
+      size_t height)
+  {
+    auto req = CopyTextureSubImage2DCommandBufferRequest(static_cast<uint32_t>(target),
+                                                         level,
+                                                         xoffset,
+                                                         yoffset,
+                                                         x,
+                                                         y,
+                                                         width,
+                                                         height);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::texParameterf(WebGLTextureTarget target, WebGLTextureParameterName pname, float param)
+  {
+    auto req = TextureParameterfCommandBufferRequest(static_cast<uint32_t>(target),
+                                                     static_cast<uint32_t>(pname),
+                                                     param);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::texParameteri(WebGLTextureTarget target, WebGLTextureParameterName pname, int param)
+  {
+    auto req = TextureParameteriCommandBufferRequest(static_cast<uint32_t>(target),
+                                                     static_cast<uint32_t>(pname),
+                                                     param);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::texParameterfv(WebGLTextureTarget target, WebGLTextureParameterName pname, const std::vector<float> params)
+  {
+    throw std::runtime_error("Not implemented yet.");
+  }
+
+  void WebGLContext::texParameteriv(WebGLTextureTarget target, WebGLTextureParameterName pname, const std::vector<int> params)
+  {
+    throw std::runtime_error("Not implemented yet.");
+  }
+
+  void WebGLContext::activeTexture(WebGLTextureUnit texture)
+  {
+    auto req = ActiveTextureCommandBufferRequest(static_cast<uint32_t>(texture));
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::generateMipmap(WebGLTextureTarget target)
+  {
+    auto req = GenerateMipmapCommandBufferRequest(static_cast<uint32_t>(target));
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::enableVertexAttribArray(unsigned int index)
+  {
+    auto req = EnableVertexAttribArrayCommandBufferRequest(index);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::disableVertexAttribArray(unsigned int index)
+  {
+    auto req = DisableVertexAttribArrayCommandBufferRequest(index);
     sendCommandBufferRequest(req);
   }
 

@@ -169,15 +169,17 @@ namespace client_graphics
     std::shared_ptr<WebGLFramebuffer> createFramebuffer();
     void deleteFramebuffer(std::shared_ptr<WebGLFramebuffer> framebuffer);
     void bindFramebuffer(WebGLFramebufferBindingTarget target, std::shared_ptr<WebGLFramebuffer> framebuffer);
-    void framebufferRenderbuffer(WebGLFramebufferBindingTarget target,
-                                 WebGLFramebufferAttachment attachment,
-                                 WebGLRenderbufferBindingTarget renderbuffertarget,
-                                 std::shared_ptr<WebGLRenderbuffer> renderbuffer);
-    void framebufferTexture2D(WebGLFramebufferBindingTarget target,
-                              WebGLFramebufferAttachment attachment,
-                              WebGLTexture2DTarget textarget,
-                              std::shared_ptr<WebGLTexture> texture,
-                              int level);
+    void framebufferRenderbuffer(
+        WebGLFramebufferBindingTarget target,
+        WebGLFramebufferAttachment attachment,
+        WebGLRenderbufferBindingTarget renderbuffertarget,
+        std::shared_ptr<WebGLRenderbuffer> renderbuffer);
+    void framebufferTexture2D(
+        WebGLFramebufferBindingTarget target,
+        WebGLFramebufferAttachment attachment,
+        WebGLTexture2DTarget textarget,
+        std::shared_ptr<WebGLTexture> texture,
+        int level);
     uint32_t checkFramebufferStatus(WebGLFramebufferBindingTarget target);
     std::shared_ptr<WebGLRenderbuffer> createRenderbuffer();
     void deleteRenderbuffer(std::shared_ptr<WebGLRenderbuffer> renderbuffer);
@@ -186,12 +188,44 @@ namespace client_graphics
     std::shared_ptr<WebGLTexture> createTexture();
     void deleteTexture(std::shared_ptr<WebGLTexture> texture);
     void bindTexture(WebGLTextureTarget target, std::shared_ptr<WebGLTexture> texture);
-    void texImage2D(WebGLTexture2DTarget target, int level, int internalformat, size_t width, size_t height, int border,
-                    WebGLTextureFormat format, WebGLPixelType type, const void *pixels);
-    void texSubImage2D(WebGLTexture2DTarget target, int level, int xoffset, int yoffset, size_t width, size_t height,
-                       WebGLTextureFormat format, WebGLPixelType type, const void *pixels);
-    void copyTexImage2D(WebGLTexture2DTarget target, int level, int internalformat, int x, int y, size_t width, size_t height, int border);
-    void copyTexSubImage2D(WebGLTexture2DTarget target, int level, int xoffset, int yoffset, int x, int y, size_t width, size_t height);
+    void texImage2D(
+        WebGLTexture2DTarget target,
+        int level,
+        int internalformat,
+        size_t width,
+        size_t height,
+        int border,
+        WebGLTextureFormat format,
+        WebGLPixelType type,
+        unsigned char *pixels);
+    void texSubImage2D(
+        WebGLTexture2DTarget target,
+        int level,
+        int xoffset,
+        int yoffset,
+        size_t width,
+        size_t height,
+        WebGLTextureFormat format,
+        WebGLPixelType type,
+        unsigned char *pixels);
+    void copyTexImage2D(
+        WebGLTexture2DTarget target,
+        int level,
+        int internalformat,
+        int x,
+        int y,
+        size_t width,
+        size_t height,
+        int border);
+    void copyTexSubImage2D(
+        WebGLTexture2DTarget target,
+        int level,
+        int xoffset,
+        int yoffset,
+        int x,
+        int y,
+        size_t width,
+        size_t height);
     void texParameterf(WebGLTextureTarget target, WebGLTextureParameterName pname, float param);
     void texParameteri(WebGLTextureTarget target, WebGLTextureParameterName pname, int param);
     void texParameterfv(WebGLTextureTarget target, WebGLTextureParameterName pname, const std::vector<float> params);
@@ -301,6 +335,25 @@ namespace client_graphics
       sendCommandBufferRequest(req);
       isFirstContentfulPaintReported_ = true;
     }
+
+    /**
+     * It unpacks the pixels from the source buffer to the destination buffer.
+     *
+     * @param type The pixel type.
+     * @param format The pixel format.
+     * @param width The width of the image.
+     * @param height The height of the image.
+     * @param srcPixels The source pixels buffer.
+     * @param dstPixels The destination pixels buffer, if it is null, a new buffer will be created.
+     * @returns The destination pixels buffer.
+     */
+    unsigned char *unpackPixels(
+        WebGLPixelType type,
+        WebGLTextureFormat format,
+        size_t width,
+        size_t height,
+        unsigned char *srcPixels,
+        unsigned char *dstPixels = nullptr);
 
   public:
     ContextAttributes contextAttributes;
