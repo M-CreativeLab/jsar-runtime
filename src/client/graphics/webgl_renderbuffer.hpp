@@ -5,6 +5,11 @@
 
 namespace client_graphics
 {
+  enum class WebGLRenderbufferBindingTarget : uint32_t
+  {
+    kRenderbuffer = WEBGL_RENDERBUFFER,
+  };
+
   class WebGLRenderbuffer : public WebGLObject
   {
   public:

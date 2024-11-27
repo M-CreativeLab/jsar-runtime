@@ -6,6 +6,38 @@
 
 namespace client_graphics
 {
+  enum class WebGLFramebufferBindingTarget : uint32_t
+  {
+    kFramebuffer = WEBGL_FRAMEBUFFER,
+    kReadFramebuffer = WEBGL2_READ_FRAMEBUFFER,
+    kDrawFramebuffer = WEBGL2_DRAW_FRAMEBUFFER,
+  };
+
+  enum class WebGLFramebufferAttachment : uint32_t
+  {
+    kColorAttachment0 = WEBGL_COLOR_ATTACHMENT0,
+    kDepthAttachment = WEBGL_DEPTH_ATTACHMENT,
+    kStencilAttachment = WEBGL_STENCIL_ATTACHMENT,
+    kDepthStencilAttachment = WEBGL_DEPTH_STENCIL_ATTACHMENT,
+
+    // WebGL2
+    kColorAttachment1 = WEBGL2_COLOR_ATTACHMENT1,
+    kColorAttachment2 = WEBGL2_COLOR_ATTACHMENT2,
+    kColorAttachment3 = WEBGL2_COLOR_ATTACHMENT3,
+    kColorAttachment4 = WEBGL2_COLOR_ATTACHMENT4,
+    kColorAttachment5 = WEBGL2_COLOR_ATTACHMENT5,
+    kColorAttachment6 = WEBGL2_COLOR_ATTACHMENT6,
+    kColorAttachment7 = WEBGL2_COLOR_ATTACHMENT7,
+    kColorAttachment8 = WEBGL2_COLOR_ATTACHMENT8,
+    kColorAttachment9 = WEBGL2_COLOR_ATTACHMENT9,
+    kColorAttachment10 = WEBGL2_COLOR_ATTACHMENT10,
+    kColorAttachment11 = WEBGL2_COLOR_ATTACHMENT11,
+    kColorAttachment12 = WEBGL2_COLOR_ATTACHMENT12,
+    kColorAttachment13 = WEBGL2_COLOR_ATTACHMENT13,
+    kColorAttachment14 = WEBGL2_COLOR_ATTACHMENT14,
+    kColorAttachment15 = WEBGL2_COLOR_ATTACHMENT15,
+  };
+
   class WebGLFramebuffer : public WebGLObject
   {
   public:

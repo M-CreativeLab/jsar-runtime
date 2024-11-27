@@ -301,6 +301,143 @@ namespace client_graphics
     }
   }
 
+  std::shared_ptr<WebGLBuffer> WebGLContext::createBuffer()
+  {
+    auto buffer = std::make_shared<WebGLBuffer>();
+    auto req = CreateBufferCommandBufferRequest(buffer->id);
+    sendCommandBufferRequest(req);
+    return buffer;
+  }
+
+  void WebGLContext::deleteBuffer(std::shared_ptr<WebGLBuffer> buffer)
+  {
+    auto req = DeleteBufferCommandBufferRequest(buffer->id);
+    sendCommandBufferRequest(req);
+    buffer->markDeleted();
+  }
+
+  void WebGLContext::bindBuffer(WebGLBufferBindingTarget target, std::shared_ptr<WebGLBuffer> buffer)
+  {
+    auto req = BindBufferCommandBufferRequest(static_cast<uint32_t>(target), buffer->id);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::bufferData(WebGLBufferBindingTarget target, size_t size, WebGLBufferUsage usage)
+  {
+    auto req = BufferDataCommandBufferRequest(static_cast<uint32_t>(target),
+                                              size,
+                                              nullptr,
+                                              static_cast<uint32_t>(usage));
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::bufferData(WebGLBufferBindingTarget target, size_t srcSize, void *srcData, WebGLBufferUsage usage)
+  {
+    auto req = BufferDataCommandBufferRequest(static_cast<uint32_t>(target),
+                                              srcSize,
+                                              srcData,
+                                              static_cast<uint32_t>(usage));
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::bufferSubData(WebGLBufferBindingTarget target, int offset, size_t size, void *data)
+  {
+    auto req = BufferSubDataCommandBufferRequest(static_cast<uint32_t>(target), offset, size, data);
+    sendCommandBufferRequest(req);
+  }
+
+  std::shared_ptr<WebGLFramebuffer> WebGLContext::createFramebuffer()
+  {
+    auto framebuffer = std::make_shared<WebGLFramebuffer>();
+    auto req = CreateFramebufferCommandBufferRequest(framebuffer->id);
+    sendCommandBufferRequest(req);
+    return framebuffer;
+  }
+
+  void WebGLContext::deleteFramebuffer(std::shared_ptr<WebGLFramebuffer> framebuffer)
+  {
+    auto req = DeleteFramebufferCommandBufferRequest(framebuffer->id);
+    sendCommandBufferRequest(req);
+    framebuffer->markDeleted();
+  }
+
+  void WebGLContext::bindFramebuffer(WebGLFramebufferBindingTarget target, std::shared_ptr<WebGLFramebuffer> framebuffer)
+  {
+    auto req = BindFramebufferCommandBufferRequest(static_cast<uint32_t>(target), framebuffer->id);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::framebufferRenderbuffer(WebGLFramebufferBindingTarget target,
+                                             WebGLFramebufferAttachment attachment,
+                                             WebGLRenderbufferBindingTarget renderbuffertarget,
+                                             std::shared_ptr<WebGLRenderbuffer> renderbuffer)
+  {
+    auto req = FramebufferRenderbufferCommandBufferRequest(static_cast<uint32_t>(target),
+                                                           static_cast<uint32_t>(attachment),
+                                                           static_cast<uint32_t>(renderbuffertarget),
+                                                           renderbuffer->id);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::framebufferTexture2D(WebGLFramebufferBindingTarget target,
+                                          WebGLFramebufferAttachment attachment,
+                                          WebGLTexture2DTarget textarget,
+                                          std::shared_ptr<WebGLTexture> texture,
+                                          int level)
+  {
+    auto req = FramebufferTexture2DCommandBufferRequest(static_cast<uint32_t>(target),
+                                                        static_cast<uint32_t>(attachment),
+                                                        static_cast<uint32_t>(textarget),
+                                                        texture->id,
+                                                        level);
+    sendCommandBufferRequest(req);
+  }
+
+  uint32_t WebGLContext::checkFramebufferStatus(WebGLFramebufferBindingTarget target)
+  {
+    auto req = CheckFramebufferStatusCommandBufferRequest(static_cast<uint32_t>(target));
+    sendCommandBufferRequest(req, true);
+
+    auto resp = recvCommandBufferResponse<CheckFramebufferStatusCommandBufferResponse>(COMMAND_BUFFER_CHECK_FRAMEBUFFER_STATUS_RES);
+    if (resp != nullptr)
+    {
+      uint32_t r = resp->status;
+      delete resp;
+      return r;
+    }
+    else
+    {
+      throw std::runtime_error("Failed to check framebuffer status: timeout.");
+    }
+  }
+
+  std::shared_ptr<WebGLRenderbuffer> WebGLContext::createRenderbuffer()
+  {
+    auto renderbuffer = std::make_shared<WebGLRenderbuffer>();
+    auto req = CreateRenderbufferCommandBufferRequest(renderbuffer->id);
+    sendCommandBufferRequest(req);
+    return renderbuffer;
+  }
+
+  void WebGLContext::deleteRenderbuffer(std::shared_ptr<WebGLRenderbuffer> renderbuffer)
+  {
+    auto req = DeleteRenderbufferCommandBufferRequest(renderbuffer->id);
+    sendCommandBufferRequest(req);
+    renderbuffer->markDeleted();
+  }
+
+  void WebGLContext::bindRenderbuffer(WebGLRenderbufferBindingTarget target, std::shared_ptr<WebGLRenderbuffer> renderbuffer)
+  {
+    auto req = BindRenderbufferCommandBufferRequest(static_cast<uint32_t>(target), renderbuffer->id);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::renderbufferStorage(WebGLRenderbufferBindingTarget target, int internalformat, int width, int height)
+  {
+    auto req = RenderbufferStorageCommandBufferRequest(static_cast<uint32_t>(target), internalformat, width, height);
+    sendCommandBufferRequest(req);
+  }
+
   bool WebGLContext::makeXRCompatible()
   {
     contextAttributes.xrCompatible = true;

@@ -162,19 +162,27 @@ namespace client_graphics
     std::string getShaderInfoLog(std::shared_ptr<WebGLShader> shader);
     std::shared_ptr<WebGLBuffer> createBuffer();
     void deleteBuffer(std::shared_ptr<WebGLBuffer> buffer);
-    void bindBuffer(int target, std::shared_ptr<WebGLBuffer> buffer);
-    void bufferData(int target, size_t size, const void *data, int usage);
-    void bufferSubData(int target, int offset, size_t size, const void *data);
+    void bindBuffer(WebGLBufferBindingTarget target, std::shared_ptr<WebGLBuffer> buffer);
+    void bufferData(WebGLBufferBindingTarget target, size_t size, WebGLBufferUsage usage);
+    void bufferData(WebGLBufferBindingTarget target, size_t srcSize, void *srcData, WebGLBufferUsage usage);
+    void bufferSubData(WebGLBufferBindingTarget target, int offset, size_t size, void *data);
     std::shared_ptr<WebGLFramebuffer> createFramebuffer();
     void deleteFramebuffer(std::shared_ptr<WebGLFramebuffer> framebuffer);
-    void bindFramebuffer(int target, std::shared_ptr<WebGLFramebuffer> framebuffer);
-    void framebufferRenderbuffer(int target, int attachment, int renderbuffertarget, std::shared_ptr<WebGLFramebuffer> renderbuffer);
-    void framebufferTexture2D(int target, int attachment, int textarget, std::shared_ptr<WebGLTexture> texture, int level);
-    int checkFramebufferStatus();
+    void bindFramebuffer(WebGLFramebufferBindingTarget target, std::shared_ptr<WebGLFramebuffer> framebuffer);
+    void framebufferRenderbuffer(WebGLFramebufferBindingTarget target,
+                                 WebGLFramebufferAttachment attachment,
+                                 WebGLRenderbufferBindingTarget renderbuffertarget,
+                                 std::shared_ptr<WebGLRenderbuffer> renderbuffer);
+    void framebufferTexture2D(WebGLFramebufferBindingTarget target,
+                              WebGLFramebufferAttachment attachment,
+                              WebGLTexture2DTarget textarget,
+                              std::shared_ptr<WebGLTexture> texture,
+                              int level);
+    uint32_t checkFramebufferStatus(WebGLFramebufferBindingTarget target);
     std::shared_ptr<WebGLRenderbuffer> createRenderbuffer();
     void deleteRenderbuffer(std::shared_ptr<WebGLRenderbuffer> renderbuffer);
-    void bindRenderbuffer(int target, std::shared_ptr<WebGLRenderbuffer> renderbuffer);
-    void renderbufferStorage(int target, int internalformat, int width, int height);
+    void bindRenderbuffer(WebGLRenderbufferBindingTarget target, std::shared_ptr<WebGLRenderbuffer> renderbuffer);
+    void renderbufferStorage(WebGLRenderbufferBindingTarget target, int internalformat, int width, int height);
     std::shared_ptr<WebGLTexture> createTexture();
     void deleteTexture(std::shared_ptr<WebGLTexture> texture);
     void bindTexture(WebGLTextureTarget target, std::shared_ptr<WebGLTexture> texture);
