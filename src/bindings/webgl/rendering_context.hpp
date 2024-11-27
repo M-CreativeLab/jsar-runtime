@@ -7,6 +7,7 @@
 #include <napi.h>
 
 #include "client/per_process.hpp"
+#include "client/graphics/webgl_context.hpp"
 #include "common/utility.hpp"
 #include "common/command_buffers/webgl_constants.hpp"
 #include "common/command_buffers/command_buffers.hpp"
