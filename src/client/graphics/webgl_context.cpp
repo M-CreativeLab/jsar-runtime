@@ -1,5 +1,7 @@
 #include "crates/jsar_jsbindings.h"
 #include "./webgl_context.hpp"
+#include "./webgl_active_info.hpp"
+#include "./webgl_uniform_location.hpp"
 
 namespace client_graphics
 {
@@ -632,6 +634,269 @@ namespace client_graphics
   void WebGLContext::disableVertexAttribArray(unsigned int index)
   {
     auto req = DisableVertexAttribArrayCommandBufferRequest(index);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::vertexAttribPointer(unsigned int index, size_t size, int type, bool normalized, size_t stride, int offset)
+  {
+    auto req = VertexAttribPointerCommandBufferRequest(index, size, type, normalized, stride, offset);
+    sendCommandBufferRequest(req);
+  }
+
+  std::optional<WebGLActiveInfo> WebGLContext::getActiveAttrib(std::shared_ptr<WebGLProgram> program, unsigned int index)
+  {
+    if (program->hasActiveAttrib(index))
+      return program->getActiveAttrib(index);
+    else
+      return std::nullopt;
+  }
+
+  std::optional<WebGLActiveInfo> WebGLContext::getActiveUniform(std::shared_ptr<WebGLProgram> program, unsigned int index)
+  {
+    if (program->hasActiveUniform(index))
+      return program->getActiveUniform(index);
+    else
+      return std::nullopt;
+  }
+
+  int WebGLContext::getAttribLocation(std::shared_ptr<WebGLProgram> program, const std::string &name)
+  {
+    return program->hasAttribLocation(name) ? program->getAttribLocation(name) : -1;
+  }
+
+  std::optional<WebGLUniformLocation> WebGLContext::getUniformLocation(std::shared_ptr<WebGLProgram> program,
+                                                                       const std::string &name)
+  {
+    if (program->hasUniformLocation(name))
+      return program->getUniformLocation(name);
+    else
+      return std::nullopt;
+  }
+
+  void WebGLContext::uniform1f(WebGLUniformLocation location, float v0)
+  {
+    auto req = Uniform1fCommandBufferRequest(location.index, v0);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniform1fv(WebGLUniformLocation location, const std::vector<float> value)
+  {
+    auto req = Uniform1fvCommandBufferRequest(location.index, value);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniform1i(WebGLUniformLocation location, int v0)
+  {
+    auto req = Uniform1iCommandBufferRequest(location.index, v0);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniform1iv(WebGLUniformLocation location, const std::vector<int> value)
+  {
+    auto req = Uniform1ivCommandBufferRequest(location.index, value);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniform2f(WebGLUniformLocation location, float v0, float v1)
+  {
+    auto req = Uniform2fCommandBufferRequest(location.index, v0, v1);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniform2fv(WebGLUniformLocation location, const std::vector<float> value)
+  {
+    auto req = Uniform2fvCommandBufferRequest(location.index, value);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniform2i(WebGLUniformLocation location, int v0, int v1)
+  {
+    auto req = Uniform2iCommandBufferRequest(location.index, v0, v1);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniform2iv(WebGLUniformLocation location, const std::vector<int> value)
+  {
+    auto req = Uniform2ivCommandBufferRequest(location.index, value);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniform3f(WebGLUniformLocation location, float v0, float v1, float v2)
+  {
+    auto req = Uniform3fCommandBufferRequest(location.index, v0, v1, v2);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniform3fv(WebGLUniformLocation location, const std::vector<float> value)
+  {
+    auto req = Uniform3fvCommandBufferRequest(location.index, value);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniform3i(WebGLUniformLocation location, int v0, int v1, int v2)
+  {
+    auto req = Uniform3iCommandBufferRequest(location.index, v0, v1, v2);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniform3iv(WebGLUniformLocation location, const std::vector<int> value)
+  {
+    auto req = Uniform3ivCommandBufferRequest(location.index, value);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniform4f(WebGLUniformLocation location, float v0, float v1, float v2, float v3)
+  {
+    auto req = Uniform4fCommandBufferRequest(location.index, v0, v1, v2, v3);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniform4fv(WebGLUniformLocation location, const std::vector<float> value)
+  {
+    auto req = Uniform4fvCommandBufferRequest(location.index, value);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniform4i(WebGLUniformLocation location, int v0, int v1, int v2, int v3)
+  {
+    auto req = Uniform4iCommandBufferRequest(location.index, v0, v1, v2, v3);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniform4iv(WebGLUniformLocation location, const std::vector<int> value)
+  {
+    auto req = Uniform4ivCommandBufferRequest(location.index, value);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniformMatrix2fv(WebGLUniformLocation location, bool transpose, glm::mat2 m)
+  {
+    std::vector<float> values = {
+        m[0][0], m[0][1],
+        m[1][0], m[1][1]};
+    uniformMatrix2fv(location, transpose, values);
+  }
+
+  void WebGLContext::uniformMatrix2fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  {
+    if (values.size() % 4 != 0)
+      throw std::runtime_error("Invalid matrix size, expected 4 but got " + std::to_string(values.size()));
+
+    auto req = UniformMatrix2fvCommandBufferRequest(location.index, transpose, values);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniformMatrix3fv(WebGLUniformLocation location, bool transpose, glm::mat3 m)
+  {
+    std::vector<float> values = {
+        m[0][0], m[0][1], m[0][2],
+        m[1][0], m[1][1], m[1][2],
+        m[2][0], m[2][1], m[2][2]};
+    uniformMatrix3fv(location, transpose, values);
+  }
+
+  void WebGLContext::uniformMatrix3fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  {
+    if (values.size() % 9 != 0)
+      throw std::runtime_error("Invalid matrix size, expected 9 but got " + std::to_string(values.size()));
+
+    auto req = UniformMatrix3fvCommandBufferRequest(location.index, transpose, values);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniformMatrix4fv(WebGLUniformLocation location, bool transpose, glm::mat4 m)
+  {
+    std::vector<float> values = {
+        m[0][0], m[0][1], m[0][2], m[0][3],
+        m[1][0], m[1][1], m[1][2], m[1][3],
+        m[2][0], m[2][1], m[2][2], m[2][3],
+        m[3][0], m[3][1], m[3][2], m[3][3]};
+    uniformMatrix4fv(location, transpose, values);
+  }
+
+  void WebGLContext::uniformMatrix4fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  {
+    UniformMatrix4fvCommandBufferRequest req(location.index, transpose);
+    auto locationName = location.name;
+    if (clientContext_->isInXrFrame() &&
+        (
+            /**
+             * Match for three.js matrix uniforms
+             */
+            locationName == "projectionMatrix" ||
+            locationName == "projectionMatrices" ||
+            locationName == "projectionMatrices[0]" ||
+            locationName == "viewMatrix" ||
+            locationName == "viewMatrices" ||
+            locationName == "viewMatrices[0]" ||
+            /**
+             * Match for Babylon.js matrix uniforms
+             */
+            locationName == "projection" ||
+            locationName == "view" ||
+            locationName == "viewProjection" ||
+            locationName == "viewProjectionR"
+            /**
+             * TODO: Compatibility with other libraries: Babylon.js, etc.
+             */
+            ))
+    {
+      bool forMultiview = false;
+      WebGLMatrixPlaceholderId placeholderId = WebGLMatrixPlaceholderId::NotSet;
+      if (locationName == "projectionMatrix" || locationName == "projection")
+      {
+        placeholderId = WebGLMatrixPlaceholderId::ProjectionMatrix;
+      }
+      else if (locationName == "projectionMatrices" || locationName == "projectionMatrices[0]")
+      {
+        placeholderId = WebGLMatrixPlaceholderId::ProjectionMatrix;
+        forMultiview = true;
+      }
+      else if (locationName == "viewMatrix" || locationName == "view")
+      {
+        placeholderId = WebGLMatrixPlaceholderId::ViewMatrix;
+      }
+      else if (locationName == "viewMatrices" || locationName == "viewMatrices[0]")
+      {
+        placeholderId = WebGLMatrixPlaceholderId::ViewMatrix;
+        forMultiview = true;
+      }
+      else if (locationName == "viewProjection")
+      {
+        placeholderId = WebGLMatrixPlaceholderId::ViewProjectionMatrix;
+      }
+      else if (locationName == "viewProjectionR")
+      {
+        placeholderId = WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye;
+      }
+
+      MatrixComputationGraph computationGraph(placeholderId, MatrixHandedness::MATRIX_RIGHT_HANDED);
+      computationGraph.inverseMatrix = false;
+      computationGraph.multiview = forMultiview;
+      req.computationGraph4values = computationGraph;
+    }
+    else
+    {
+      size_t length = values.size();
+      if (length % 16 != 0)
+        throw std::runtime_error("uniformMatrix4fv() must take 16x float elements array but accept " + std::to_string(length) + ".");
+
+      req.values.resize(length);
+      auto valuesSrc = values.data();
+      std::copy(valuesSrc, valuesSrc + length, req.values.begin());
+    }
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::drawArrays(WebGLDrawMode mode, int first, int count)
+  {
+    auto req = DrawArraysCommandBufferRequest(static_cast<uint32_t>(mode), first, count);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::drawElements(WebGLDrawMode mode, int count, int type, int offset)
+  {
+    auto req = DrawElementsCommandBufferRequest(static_cast<uint32_t>(mode), count, type, offset);
     sendCommandBufferRequest(req);
   }
 

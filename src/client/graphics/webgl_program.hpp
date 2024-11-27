@@ -4,6 +4,7 @@
 #include "common/command_buffers/details/program.hpp"
 #include "./webgl_object.hpp"
 #include "./webgl_active_info.hpp"
+#include "./webgl_uniform_location.hpp"
 
 namespace client_graphics
 {
@@ -15,10 +16,10 @@ namespace client_graphics
   public:
     void setLinkStatus(bool linkStatus) { linkStatus_ = linkStatus; }
     bool getLinkStatus() const { return linkStatus_; }
-    commandbuffers::ActiveInfo getActiveAttrib(int index);
+    WebGLActiveInfo getActiveAttrib(int index);
     void setActiveAttrib(int index, const commandbuffers::ActiveInfo &activeInfo);
     bool hasActiveAttrib(int index);
-    commandbuffers::ActiveInfo getActiveUniform(int index);
+    WebGLActiveInfo getActiveUniform(int index);
     void setActiveUniform(int index, commandbuffers::ActiveInfo &activeInfo);
     bool hasActiveUniform(int index);
     void setAttribLocation(const std::string &name, int location);
@@ -26,7 +27,7 @@ namespace client_graphics
     int getAttribLocation(const std::string &name);
     void setUniformLocation(const std::string &name, int location);
     bool hasUniformLocation(const std::string &name);
-    int getUniformLocation(const std::string &name);
+    WebGLUniformLocation getUniformLocation(const std::string &name);
     void setUniformBlockIndex(const std::string &name, int index);
     bool hasUniformBlockIndex(const std::string &name);
     int getUniformBlockIndex(const std::string &name);
