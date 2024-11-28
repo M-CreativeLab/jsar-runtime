@@ -1213,7 +1213,7 @@ namespace client_graphics
   int WebGLContext::getError()
   {
     auto res = static_cast<int>(lastError_);
-    lastError_ = WebGLError::NO_ERROR; // Reset the error after reading.
+    lastError_ = WebGLError::kNoError; // Reset the error after reading.
     return res;
   }
 

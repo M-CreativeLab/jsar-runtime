@@ -23,13 +23,13 @@ namespace client_graphics
 {
   enum class WebGLError
   {
-    NO_ERROR = WEBGL_NO_ERROR,
-    INVALID_ENUM = WEBGL_INVALID_ENUM,
-    INVALID_VALUE = WEBGL_INVALID_VALUE,
-    INVALID_OPERATION = WEBGL_INVALID_OPERATION,
-    INVALID_FRAMEBUFFER_OPERATION = WEBGL_INVALID_FRAMEBUFFER_OPERATION,
-    OUT_OF_MEMORY = WEBGL_OUT_OF_MEMORY,
-    CONTEXT_LOST_WEBGL = WEBGL_CONTEXT_LOST_WEBGL
+    kNoError = WEBGL_NO_ERROR,
+    kInvalidEnum = WEBGL_INVALID_ENUM,
+    kInvalidValue = WEBGL_INVALID_VALUE,
+    kInvalidOperation = WEBGL_INVALID_OPERATION,
+    kInvalidFramebufferOperation = WEBGL_INVALID_FRAMEBUFFER_OPERATION,
+    kOutOfMemory = WEBGL_OUT_OF_MEMORY,
+    kContextLost = WEBGL_CONTEXT_LOST_WEBGL
   };
 
   enum class WebGLDrawMode
@@ -428,7 +428,7 @@ namespace client_graphics
   protected:
     TrClientContextPerProcess *clientContext_;
     TrViewport viewport_;
-    WebGLError lastError_ = WebGLError::NO_ERROR;
+    WebGLError lastError_ = WebGLError::kNoError;
     std::optional<std::vector<std::string>> supportedExtensions_ = std::nullopt;
     bool isWebGL2_ = false;
     bool isFirstContentfulPaintReported_ = false;
