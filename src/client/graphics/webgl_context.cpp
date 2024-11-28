@@ -1,3 +1,4 @@
+#include <string>
 #include "crates/jsar_jsbindings.h"
 #include "./webgl_context.hpp"
 #include "./webgl_active_info.hpp"
@@ -898,6 +899,349 @@ namespace client_graphics
   {
     auto req = DrawElementsCommandBufferRequest(static_cast<uint32_t>(mode), count, type, offset);
     sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::pixelStorei(WebGLPixelStorageParameterName pname, int param)
+  {
+    if (pname == WebGLPixelStorageParameterName::kUnpackFlipY)
+      unpackFlipY_ = param;
+    else if (pname == WebGLPixelStorageParameterName::kUnpackPremultiplyAlpha)
+      unpackPremultiplyAlpha_ = param;
+    else if (pname == WebGLPixelStorageParameterName::kUnpackColorspaceConversion)
+    {
+      // TODO: implement this.
+    }
+    else
+    {
+      auto req = PixelStoreiCommandBufferRequest(static_cast<uint32_t>(pname), param);
+      sendCommandBufferRequest(req);
+    }
+  }
+
+  void WebGLContext::polygonOffset(float factor, float units)
+  {
+    auto req = PolygonOffsetCommandBufferRequest(factor, units);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::viewport(int x, int y, size_t width, size_t height)
+  {
+    auto req = SetViewportCommandBufferRequest(x, y, width, height);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::scissor(int x, int y, size_t width, size_t height)
+  {
+    auto req = SetScissorCommandBufferRequest(x, y, width, height);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::clearColor(float red, float green, float blue, float alpha)
+  {
+    auto req = ClearColorCommandBufferRequest(red, green, blue, alpha);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::clearDepth(float depth)
+  {
+    auto req = ClearDepthCommandBufferRequest(depth);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::clearStencil(int s)
+  {
+    auto req = ClearStencilCommandBufferRequest(s);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::clear(int mask)
+  {
+    auto req = ClearCommandBufferRequest(mask);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::depthMask(bool flag)
+  {
+    auto req = DepthMaskCommandBufferRequest(flag);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::depthFunc(int func)
+  {
+    auto req = DepthFuncCommandBufferRequest(func);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::depthRange(float zNear, float zFar)
+  {
+    auto req = DepthRangeCommandBufferRequest(zNear, zFar);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::stencilFunc(int func, int ref, unsigned int mask)
+  {
+    auto req = StencilFuncCommandBufferRequest(func, ref, mask);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::stencilFuncSeparate(int face, int func, int ref, unsigned int mask)
+  {
+    auto req = StencilFuncSeparateCommandBufferRequest(face, func, ref, mask);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::stencilMask(unsigned int mask)
+  {
+    auto req = StencilMaskCommandBufferRequest(mask);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::stencilMaskSeparate(int face, unsigned int mask)
+  {
+    auto req = StencilMaskSeparateCommandBufferRequest(face, mask);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::stencilOp(int fail, int zfail, int zpass)
+  {
+    auto req = StencilOpCommandBufferRequest(fail, zfail, zpass);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::stencilOpSeparate(int face, int fail, int zfail, int zpass)
+  {
+    auto req = StencilOpSeparateCommandBufferRequest(face, fail, zfail, zpass);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::blendColor(float red, float green, float blue, float alpha)
+  {
+    auto req = BlendColorCommandBufferRequest(red, green, blue, alpha);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::blendEquation(int mode)
+  {
+    auto req = BlendEquationCommandBufferRequest(mode);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::blendEquationSeparate(int modeRGB, int modeAlpha)
+  {
+    auto req = BlendEquationSeparateCommandBufferRequest(modeRGB, modeAlpha);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::blendFunc(int sfactor, int dfactor)
+  {
+    auto req = BlendFuncCommandBufferRequest(sfactor, dfactor);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::blendFuncSeparate(int srcRGB, int dstRGB, int srcAlpha, int dstAlpha)
+  {
+    auto req = BlendFuncSeparateCommandBufferRequest(srcRGB, dstRGB, srcAlpha, dstAlpha);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::colorMask(bool red, bool green, bool blue, bool alpha)
+  {
+    auto req = ColorMaskCommandBufferRequest(red, green, blue, alpha);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::cullFace(int mode)
+  {
+    auto req = CullFaceCommandBufferRequest(mode);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::frontFace(int mode)
+  {
+    auto req = FrontFaceCommandBufferRequest(mode);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::enable(int cap)
+  {
+    auto req = EnableCommandBufferRequest(cap);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::disable(int cap)
+  {
+    auto req = DisableCommandBufferRequest(cap);
+    sendCommandBufferRequest(req);
+  }
+
+  bool WebGLContext::getParameter(WebGLBooleanParameterName pname)
+  {
+    auto req = GetBooleanvCommandBufferRequest(static_cast<uint32_t>(pname));
+    sendCommandBufferRequest(req, true);
+
+    auto resp = recvCommandBufferResponse<GetBooleanvCommandBufferResponse>(COMMAND_BUFFER_GET_BOOLEANV_RES);
+    if (resp == nullptr)
+    {
+      std::string msg = "Failed to get boolean parameter(" + std::to_string(static_cast<uint32_t>(pname)) + "): timeout.";
+      throw std::runtime_error(msg);
+    }
+    auto v = resp->value;
+    delete resp;
+    return v;
+  }
+
+  float WebGLContext::getParameter(WebGLFloatParameterName pname)
+  {
+    throw std::runtime_error("Not implemented yet.");
+  }
+
+  std::vector<float> WebGLContext::getParameter(WebGLFloatArrayParameterName pname)
+  {
+    if (pname == WebGLFloatArrayParameterName::kViewport)
+    {
+      return {
+          static_cast<float>(viewport_.x),
+          static_cast<float>(viewport_.y),
+          static_cast<float>(viewport_.width),
+          static_cast<float>(viewport_.height)};
+    }
+    else if (pname == WebGLFloatArrayParameterName::kScissorBox)
+    {
+      return {
+          static_cast<float>(0),
+          static_cast<float>(0),
+          static_cast<float>(viewport_.width),
+          static_cast<float>(viewport_.height)};
+    }
+    assert(false);
+  }
+
+  int WebGLContext::getParameter(WebGLIntegerParameterName pname)
+  {
+    /**
+     * The following parameters are static and could be returned directly.
+     */
+    if (pname == WebGLIntegerParameterName::kMaxCombinedTextureImageUnits)
+      return maxCombinedTextureImageUnits;
+    else if (pname == WebGLIntegerParameterName::kMaxCubeMapTextureSize)
+      return maxCubeMapTextureSize;
+    else if (pname == WebGLIntegerParameterName::kMaxFragmentUniformVectors)
+      return maxFragmentUniformVectors;
+    else if (pname == WebGLIntegerParameterName::kMaxRenderbufferSize)
+      return maxRenderbufferSize;
+    else if (pname == WebGLIntegerParameterName::kMaxTextureImageUnits)
+      return maxTextureImageUnits;
+    else if (pname == WebGLIntegerParameterName::kMaxTextureSize)
+      return maxTextureSize;
+    else if (pname == WebGLIntegerParameterName::kMaxVaryingVectors)
+      return maxVaryingVectors;
+    else if (pname == WebGLIntegerParameterName::kMaxVertexAttribs)
+      return maxVertexAttribs;
+    else if (pname == WebGLIntegerParameterName::kMaxVertexTextureImageUnits)
+      return maxVertexTextureImageUnits;
+    else if (pname == WebGLIntegerParameterName::kMaxVertexUniformVectors)
+      return maxVertexUniformVectors;
+
+    auto req = GetIntegervCommandBufferRequest(static_cast<uint32_t>(pname));
+    sendCommandBufferRequest(req, true);
+
+    auto resp = recvCommandBufferResponse<GetIntegervCommandBufferResponse>(COMMAND_BUFFER_GET_INTEGERV_RES);
+    if (resp == nullptr)
+      throw std::runtime_error("Failed to get integer parameter: timeout.");
+
+    int v = resp->value;
+    delete resp;
+    return v;
+  }
+
+  int64_t WebGLContext::getParameter(WebGLInteger64ParameterName pname)
+  {
+    throw std::runtime_error("Not implemented yet.");
+  }
+
+  bool WebGLContext::getParameter(WebGLBooleanIndexedParameterName pname, int index)
+  {
+    throw std::runtime_error("Not implemented yet.");
+  }
+
+  float WebGLContext::getParameter(WebGLFloatArrayParameterName pname, int index)
+  {
+    auto values = getParameter(pname);
+    if (index < 0 || index >= values.size())
+      throw std::runtime_error("Index out of range: " + std::to_string(index));
+    return values[index];
+  }
+
+  std::string WebGLContext::getParameter(WebGLStringParameterName pname)
+  {
+    if (pname == WebGLStringParameterName::kVendor)
+      return vendor;
+    else if (pname == WebGLStringParameterName::kRenderer)
+      return renderer;
+    else if (pname == WebGLStringParameterName::kVersion)
+      return version;
+
+    auto req = GetStringCommandBufferRequest(static_cast<uint32_t>(pname));
+    sendCommandBufferRequest(req, true);
+
+    auto resp = recvCommandBufferResponse<GetStringCommandBufferResponse>(COMMAND_BUFFER_GET_STRING_RES);
+    if (resp == nullptr)
+    {
+      std::string msg = "Failed to get string parameter(" + std::to_string(static_cast<uint32_t>(pname)) + "): timeout.";
+      throw std::runtime_error(msg);
+    }
+
+    std::string v(resp->value);
+    delete resp;
+    return v;
+  }
+
+  WebGLShaderPrecisionFormat WebGLContext::getShaderPrecisionFormat(int shadertype, int precisiontype)
+  {
+    auto req = GetShaderPrecisionFormatCommandBufferRequest(shadertype, precisiontype);
+    sendCommandBufferRequest(req, true);
+
+    auto resp = recvCommandBufferResponse<GetShaderPrecisionFormatCommandBufferResponse>(COMMAND_BUFFER_GET_SHADER_PRECISION_FORMAT_RES);
+    if (resp == nullptr)
+      throw std::runtime_error("Failed to get shader precision format: timeout.");
+
+    WebGLShaderPrecisionFormat format(*resp);
+    delete resp;
+    return format;
+  }
+
+  int WebGLContext::getError()
+  {
+    auto res = static_cast<int>(lastError_);
+    lastError_ = WebGLError::NO_ERROR; // Reset the error after reading.
+    return res;
+  }
+
+  std::vector<std::string> WebGLContext::getSupportedExtensions()
+  {
+    if (supportedExtensions_.has_value())
+      return supportedExtensions_.value();
+
+    auto req = GetExtensionsCommandBufferRequest();
+    sendCommandBufferRequest(req, true);
+
+    auto resp = recvCommandBufferResponse<GetExtensionsCommandBufferResponse>(COMMAND_BUFFER_GET_EXTENSIONS_RES);
+    if (resp == nullptr)
+      throw std::runtime_error("Failed to get supported extensions: timeout.");
+
+    std::vector<std::string> extensionsList;
+    for (size_t i = 0; i < resp->extensions.size(); i++)
+    {
+      // remove GL_ prefix
+      std::string extension = resp->extensions[i];
+      if (extension.find("GL_") == 0)
+        extensionsList.push_back(extension.substr(3));
+      else
+        extensionsList.push_back(extension);
+    }
+    delete resp;
+    supportedExtensions_ = extensionsList;
+    return supportedExtensions_.value();
   }
 
   bool WebGLContext::makeXRCompatible()
