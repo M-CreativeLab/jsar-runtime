@@ -172,18 +172,66 @@ namespace client_graphics
     std::string powerPreference = "default";
   };
 
+  /**
+   * The `WebGLContext` class implements the WebGLRenderingContext interface in C/C++ at the client-side, this is used to
+   * implement the WebGL API, and support native C/C++ renderer.
+   */
   class WebGLContext
   {
   public:
     WebGLContext(ContextAttributes &attrs, bool isWebGL2 = false);
 
   public: // graphics methods
+    /**
+     * It creates and initializes a WebGLProgram object.
+     *
+     * @returns The created WebGLProgram object.
+     */
     std::shared_ptr<WebGLProgram> createProgram();
+    /**
+     * It deletes a given WebGLProgram object, and this method has no effect if the program has already been deleted.
+     *
+     * @param program The WebGLProgram object to delete.
+     */
     void deleteProgram(std::shared_ptr<WebGLProgram> program);
+    /**
+     * It links a given `WebGLProgram`, completing the process of preparing the GPU code for the program's fragment and
+     * vertex shaders.
+     *
+     * @param program The WebGLProgram object to link.
+     */
     void linkProgram(std::shared_ptr<WebGLProgram> program);
+    /**
+     * It sets the specified WebGLProgram as part of the current rendering state.
+     *
+     * @param program The WebGLProgram object to use.
+     */
     void useProgram(std::shared_ptr<WebGLProgram> program);
+    /**
+     * It binds a generic vertex index to an attribute variable.
+     *
+     * @param program The WebGLProgram object to bind the attribute to.
+     * @param index The index of the generic vertex to bind.
+     * @param name A string specifying the name of the variable to bind to the generic vertex index. This name cannot start
+     *             with "webgl_" or "_webgl_", as these are reserved for use by WebGL.
+     */
     void bindAttribLocation(std::shared_ptr<WebGLProgram> program, uint32_t index, const std::string &name);
+    /**
+     * It returns information about the given program.
+     *
+     * @param program The WebGLProgram object to get information from.
+     * @param pname A GLenum specifying the information to query.
+     * @returns the requested program information (as specified with pname).
+     */
     int getProgramParameter(std::shared_ptr<WebGLProgram> program, int pname);
+    /**
+     * It returns the information log for the specified `WebGLProgram` object. It contains errors that occurred during failed
+     * linking or validation of `WebGLProgram` objects.
+     *
+     * @param program The WebGLProgram object to get the information log from.
+     * @returns A string that contains diagnostic messages, warning messages, and other information about the last linking or
+     *          validation operation.
+     */
     std::string getProgramInfoLog(std::shared_ptr<WebGLProgram> program);
     std::shared_ptr<WebGLShader> createShader(WebGLShaderType type);
     void deleteShader(std::shared_ptr<WebGLShader> shader);
@@ -478,7 +526,7 @@ namespace client_graphics
         std::optional<int> length = 0);
     /**
      * It updates a subset of a buffer object's data store.
-     * 
+     *
      * @param target The binding point (target).
      * @param dstByteOffset An offset in bytes where the data replacement will start.
      * @param srcSize The size of the source data.

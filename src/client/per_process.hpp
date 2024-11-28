@@ -124,11 +124,22 @@ public:
 
 /**
  * The client context is a singleton class in an application process.
+ *
+ * Every client process has a unique client context, which is responsible for managing the client-side resources, such as
+ * the media players, command buffers, frame requests, and event channels.
  */
 class TrClientContextPerProcess
 {
 public:
+  /**
+   * Create the client context instance, and throws an exception if the instance already exists.
+   *
+   * @returns The new instance of the client context.
+   */
   static TrClientContextPerProcess *Create();
+  /**
+   * @returns The current instance of the client context.
+   */
   static TrClientContextPerProcess *Get();
 
 public:

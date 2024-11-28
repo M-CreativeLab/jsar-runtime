@@ -294,8 +294,9 @@ TrIdGenerator *TrClientContextPerProcess::s_IdGenerator = new TrIdGenerator(1);
 
 TrClientContextPerProcess *TrClientContextPerProcess::Create()
 {
-  if (s_Instance == nullptr)
-    s_Instance = new TrClientContextPerProcess();
+  if (s_Instance != nullptr)
+    throw std::runtime_error("TrClientContextPerProcess is already created.");
+  s_Instance = new TrClientContextPerProcess();
   return s_Instance;
 }
 TrClientContextPerProcess *TrClientContextPerProcess::Get()

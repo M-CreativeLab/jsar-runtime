@@ -64,6 +64,8 @@ namespace client_graphics
 
   void WebGLContext::deleteProgram(std::shared_ptr<WebGLProgram> program)
   {
+    if (program->isDeleted())
+      return;
     auto req = DeleteProgramCommandBufferRequest(program->id);
     sendCommandBufferRequest(req);
     program->markDeleted();
