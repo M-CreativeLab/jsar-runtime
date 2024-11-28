@@ -798,5 +798,38 @@ namespace client_graphics
         int type,
         int stride,
         int offset);
+
+  public: // WebGL2 properties
+    int max3DTextureSize;
+    int maxArrayTextureLayers;
+    int maxColorAttachments;
+    int maxCombinedUniformBlocks;
+    int maxDrawBuffers;
+    int maxElementsIndices;
+    int maxElementsVertices;
+    int maxFragmentInputComponents;
+    int maxFragmentUniformBlocks;
+    int maxFragmentUniformComponents;
+    int maxProgramTexelOffset;
+    int maxSamples;
+    int maxTransformFeedbackInterleavedComponents;
+    int maxTransformFeedbackSeparateAttributes;
+    int maxTransformFeedbackSeparateComponents;
+    int maxUniformBufferBindings;
+    int maxVaryingComponents;
+    int maxVertexOutputComponents;
+    int maxVertexUniformBlocks;
+    int maxVertexUniformComponents;
+    int minProgramTexelOffset;
+    int64_t maxClientWaitTimeout;
+    int64_t maxCombinedFragmentUniformComponents;
+    int64_t maxCombinedVertexUniformComponents;
+    int64_t maxElementIndex;
+    int64_t maxServerWaitTimeout;
+    int64_t maxUniformBlockSize;
+    float maxTextureLODBias;
+
+  public: // Extension properties
+    int32_t OVR_maxViews;
   };
 }
