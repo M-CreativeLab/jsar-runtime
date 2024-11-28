@@ -474,20 +474,29 @@ namespace client_graphics
         size_t srcSize,
         void *srcData,
         WebGLBufferUsage usage,
-        int srcOffset = 0,
-        int length = 0);
-    void bufferSubData(WebGLBufferBindingTarget target, int dstByteOffset, size_t size, void *data);
+        std::optional<int> srcOffset = 0,
+        std::optional<int> length = 0);
+    /**
+     * It updates a subset of a buffer object's data store.
+     * 
+     * @param target The binding point (target).
+     * @param dstByteOffset An offset in bytes where the data replacement will start.
+     * @param srcSize The size of the source data.
+     * @param srcData The source data to copy from.
+     * @param srcOffset The element index offset where to start reading the buffer.
+     * @param length A `uint` defaulting to 0, where 0 means bufferSubData should calculate the length.
+     */
     void bufferSubData(
         WebGLBufferBindingTarget target,
         int dstByteOffset,
         size_t srcSize,
         void *srcData,
-        int srcOffset = 0,
-        int length = 0);
-    void clearBufferfv(WebGLBufferBindingTarget buffer, int drawbuffer, const std::vector<float> values);
-    void clearBufferiv(WebGLBufferBindingTarget buffer, int drawbuffer, const std::vector<int> values);
-    void clearBufferuiv(WebGLBufferBindingTarget buffer, int drawbuffer, const std::vector<unsigned int> values);
-    void clearBufferfi(WebGLBufferBindingTarget buffer, int drawbuffer, float depth, int stencil);
+        std::optional<int> srcOffset = std::nullopt,
+        std::optional<int> length = 0);
+    void clearBufferfv(WebGLFramebufferAttachmentType buffer, int drawbuffer, const std::vector<float> values);
+    void clearBufferiv(WebGLFramebufferAttachmentType buffer, int drawbuffer, const std::vector<int> values);
+    void clearBufferuiv(WebGLFramebufferAttachmentType buffer, int drawbuffer, const std::vector<unsigned int> values);
+    void clearBufferfi(WebGLFramebufferAttachmentType buffer, int drawbuffer, float depth, int stencil);
     void compressedTexImage3D(
         WebGLTexture2DTarget target,
         int level,
@@ -533,7 +542,7 @@ namespace client_graphics
     void deleteSampler(std::shared_ptr<WebGLSampler> sampler);
     void deleteVertexArray(std::shared_ptr<WebGLVertexArray> vertexArray);
     void drawArraysInstanced(WebGLDrawMode mode, int first, int count, int instanceCount);
-    void drawBuffers(const std::vector<int> buffers);
+    void drawBuffers(const std::vector<uint32_t> buffers);
     void drawElementsInstanced(WebGLDrawMode mode, int count, int type, int offset, int instanceCount);
     void drawRangeElements(WebGLDrawMode mode, int start, int end, int count, int type, int offset);
     void endQuery(WebGLQueryTarget target);

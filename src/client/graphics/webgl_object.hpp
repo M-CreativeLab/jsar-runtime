@@ -40,7 +40,11 @@ namespace client_graphics
     /**
      * @returns if this `WebGLObject` is marked to be deleted.
      */
-    bool isDeleted() const { return deleted_; }
+    bool isDeleted() { return deleted_; }
+    /**
+     * @returns if this `WebGLObject` is valid.
+     */
+    bool isValid() { return !deleted_; }
 
   public:
     int id;

@@ -38,6 +38,17 @@ namespace client_graphics
     kColorAttachment15 = WEBGL2_COLOR_ATTACHMENT15,
   };
 
+  /**
+   * The type of the framebuffer attachment.
+   */
+  enum class WebGLFramebufferAttachmentType : uint32_t
+  {
+    kColor = WEBGL2_COLOR,
+    kDepth = WEBGL2_DEPTH,
+    kStencil = WEBGL2_STENCIL,
+    kDepthStencil = WEBGL2_DEPTH_STENCIL,
+  };
+
   class WebGLFramebuffer : public WebGLObject
   {
   public:

@@ -6,6 +6,21 @@
 
 namespace client_graphics
 {
+
+#ifndef TR_WEBGL_STRICT
+#define NOT_IMPLEMENTED() throw std::runtime_error("Not implemented")
+#else
+#define NOT_IMPLEMENTED()
+#endif
+
+#define ASSERT_MAX_COUNT_PER_DRAWCALL(count, funcName)                                                      \
+  if (TR_UNLIKELY(count >= WEBGL_MAX_COUNT_PER_DRAWCALL))                                                   \
+  {                                                                                                         \
+    string msg = "The " funcName " count(" + std::to_string(count) + ") exceeds" +                          \
+                 " the maximum count(" + std::to_string(WEBGL_MAX_COUNT_PER_DRAWCALL) + ") per draw call."; \
+    throw std::runtime_error(msg);                                                                          \
+  }
+
   WebGLContext::WebGLContext(ContextAttributes &attrs, bool isWebGL2)
       : contextAttributes(attrs), isWebGL2_(isWebGL2)
   {
@@ -606,12 +621,12 @@ namespace client_graphics
 
   void WebGLContext::texParameterfv(WebGLTextureTarget target, WebGLTextureParameterName pname, const std::vector<float> params)
   {
-    throw std::runtime_error("Not implemented yet.");
+    NOT_IMPLEMENTED();
   }
 
   void WebGLContext::texParameteriv(WebGLTextureTarget target, WebGLTextureParameterName pname, const std::vector<int> params)
   {
-    throw std::runtime_error("Not implemented yet.");
+    NOT_IMPLEMENTED();
   }
 
   void WebGLContext::activeTexture(WebGLTextureUnit texture)
@@ -1092,7 +1107,7 @@ namespace client_graphics
 
   float WebGLContext::getParameter(WebGLFloatParameterName pname)
   {
-    throw std::runtime_error("Not implemented yet.");
+    NOT_IMPLEMENTED();
   }
 
   std::vector<float> WebGLContext::getParameter(WebGLFloatArrayParameterName pname)
@@ -1156,12 +1171,12 @@ namespace client_graphics
 
   int64_t WebGLContext::getParameter(WebGLInteger64ParameterName pname)
   {
-    throw std::runtime_error("Not implemented yet.");
+    NOT_IMPLEMENTED();
   }
 
   bool WebGLContext::getParameter(WebGLBooleanIndexedParameterName pname, int index)
   {
-    throw std::runtime_error("Not implemented yet.");
+    NOT_IMPLEMENTED();
   }
 
   float WebGLContext::getParameter(WebGLFloatArrayParameterName pname, int index)
@@ -1248,5 +1263,519 @@ namespace client_graphics
   {
     contextAttributes.xrCompatible = true;
     return true;
+  }
+
+  WebGL2Context::WebGL2Context(ContextAttributes &attrs)
+      : WebGLContext(attrs, true)
+  {
+    auto req = WebGL2ContextInitCommandBufferRequest();
+    sendCommandBufferRequest(req, true);
+
+    // Wait for the context init response
+    auto resp = recvCommandBufferResponse<WebGL2ContextInitCommandBufferResponse>(COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_RES);
+    if (resp == nullptr)
+      throw std::runtime_error("Failed to initialize WebGL2 context: timeout.");
+
+    max3DTextureSize = resp->max3DTextureSize;
+    maxArrayTextureLayers = resp->maxArrayTextureLayers;
+    maxColorAttachments = resp->maxColorAttachments;
+    maxCombinedUniformBlocks = resp->maxCombinedUniformBlocks;
+    maxDrawBuffers = resp->maxDrawBuffers;
+    maxElementsIndices = resp->maxElementsIndices;
+    maxElementsVertices = resp->maxElementsVertices;
+    maxFragmentInputComponents = resp->maxFragmentInputComponents;
+    maxFragmentUniformBlocks = resp->maxFragmentUniformBlocks;
+    maxFragmentUniformComponents = resp->maxFragmentUniformComponents;
+    maxProgramTexelOffset = resp->maxProgramTexelOffset;
+    maxSamples = resp->maxSamples;
+    maxTransformFeedbackInterleavedComponents = resp->maxTransformFeedbackInterleavedComponents;
+    maxTransformFeedbackSeparateAttributes = resp->maxTransformFeedbackSeparateAttributes;
+    maxTransformFeedbackSeparateComponents = resp->maxTransformFeedbackSeparateComponents;
+    maxUniformBufferBindings = resp->maxUniformBufferBindings;
+    maxVaryingComponents = resp->maxVaryingComponents;
+    maxVertexOutputComponents = resp->maxVertexOutputComponents;
+    maxVertexUniformBlocks = resp->maxVertexUniformBlocks;
+    maxVertexUniformComponents = resp->maxVertexUniformComponents;
+    minProgramTexelOffset = resp->minProgramTexelOffset;
+    maxClientWaitTimeout = resp->maxClientWaitTimeout;
+    maxCombinedFragmentUniformComponents = resp->maxCombinedFragmentUniformComponents;
+    maxCombinedVertexUniformComponents = resp->maxCombinedVertexUniformComponents;
+    maxElementIndex = resp->maxElementIndex;
+    maxServerWaitTimeout = resp->maxServerWaitTimeout;
+    maxUniformBlockSize = resp->maxUniformBlockSize;
+    maxTextureLODBias = resp->maxTextureLODBias;
+    OVR_maxViews = resp->OVR_maxViews;
+    delete resp;
+  }
+
+  void WebGL2Context::beginQuery(WebGLQueryTarget target, std::shared_ptr<WebGLQuery> query)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::beginTransformFeedback(WebGLDrawMode mode)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::bindBufferBase(WebGLBufferBindingTarget target, uint32_t index, std::shared_ptr<WebGLBuffer> buffer)
+  {
+    auto req = BindBufferBaseCommandBufferRequest(static_cast<uint32_t>(target), index, buffer->id);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGL2Context::bindBufferRange(WebGLBufferBindingTarget target, uint32_t index, std::shared_ptr<WebGLBuffer> buffer,
+                                      int offset, size_t size)
+  {
+    auto req = BindBufferRangeCommandBufferRequest(static_cast<uint32_t>(target), index, buffer->id, offset, size);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGL2Context::bindSampler(uint32_t unit, std::shared_ptr<WebGLSampler> sampler)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::bindVertexArray(std::shared_ptr<WebGLVertexArray> vertexArray)
+  {
+    auto req = BindVertexArrayCommandBufferRequest(vertexArray->id);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGL2Context::blitFramebuffer(
+      int srcX0,
+      int srcY0,
+      int srcX1,
+      int srcY1,
+      int dstX0,
+      int dstY0,
+      int dstX1,
+      int dstY1,
+      int mask,
+      int filter)
+  {
+    auto req = BlitFramebufferCommandBufferRequest(
+        srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGL2Context::bufferData(WebGLBufferBindingTarget target, size_t size, WebGLBufferUsage usage)
+  {
+    auto req = BufferDataCommandBufferRequest(static_cast<uint32_t>(target), size, nullptr,
+                                              static_cast<uint32_t>(usage));
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGL2Context::bufferData(WebGLBufferBindingTarget target, size_t srcSize, void *srcData,
+                                 WebGLBufferUsage usage,
+                                 std::optional<int> srcOffset,
+                                 std::optional<int> length)
+  {
+    // TODO: implement the srcOffset and length
+    auto req = BufferDataCommandBufferRequest(static_cast<uint32_t>(target), srcSize, srcData,
+                                              static_cast<uint32_t>(usage));
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGL2Context::bufferSubData(WebGLBufferBindingTarget target, int dstByteOffset, size_t srcSize, void *srcData,
+                                    std::optional<int> srcOffset,
+                                    std::optional<int> length)
+  {
+    // TODO: implement the srcOffset and length
+    auto req = BufferSubDataCommandBufferRequest(static_cast<uint32_t>(target), dstByteOffset, srcSize, srcData);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGL2Context::clearBufferfv(WebGLFramebufferAttachmentType buffer, int drawbuffer, std::vector<float> values)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::clearBufferiv(WebGLFramebufferAttachmentType buffer, int drawbuffer, std::vector<int> values)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::clearBufferuiv(WebGLFramebufferAttachmentType buffer, int drawbuffer, std::vector<unsigned int> values)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::clearBufferfi(WebGLFramebufferAttachmentType buffer, int drawbuffer, float depth, int stencil)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::compressedTexImage3D(
+      WebGLTexture2DTarget target,
+      int level,
+      int internalformat,
+      size_t width,
+      size_t height,
+      size_t depth,
+      int border,
+      size_t imageSize,
+      unsigned char *data)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::compressedTexSubImage3D(
+      WebGLTexture2DTarget target,
+      int level,
+      int xoffset,
+      int yoffset,
+      int zoffset,
+      size_t width,
+      size_t height,
+      size_t depth,
+      int format,
+      size_t imageSize,
+      unsigned char *data)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::copyBufferSubData(
+      WebGLBufferBindingTarget readTarget,
+      WebGLBufferBindingTarget writeTarget,
+      int readOffset,
+      int writeOffset,
+      size_t size)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::copyTexSubImage3D(
+      WebGLTexture2DTarget target,
+      int level,
+      int xoffset,
+      int yoffset,
+      int zoffset,
+      int x,
+      int y,
+      size_t width,
+      size_t height)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  std::shared_ptr<WebGLQuery> WebGL2Context::createQuery()
+  {
+    NOT_IMPLEMENTED();
+    return nullptr;
+  }
+
+  std::shared_ptr<WebGLSampler> WebGL2Context::createSampler()
+  {
+    NOT_IMPLEMENTED();
+    return nullptr;
+  }
+
+  std::shared_ptr<WebGLVertexArray> WebGL2Context::createVertexArray()
+  {
+    auto vao = std::make_shared<WebGLVertexArray>();
+    auto req = CreateVertexArrayCommandBufferRequest(vao->id);
+    sendCommandBufferRequest(req);
+    return vao;
+  }
+
+  void WebGL2Context::deleteQuery(std::shared_ptr<WebGLQuery> query)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::deleteSampler(std::shared_ptr<WebGLSampler> sampler)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::deleteVertexArray(std::shared_ptr<WebGLVertexArray> vertexArray)
+  {
+    auto req = DeleteVertexArrayCommandBufferRequest(vertexArray->id);
+    sendCommandBufferRequest(req);
+    vertexArray->markDeleted();
+  }
+
+  void WebGL2Context::drawArraysInstanced(WebGLDrawMode mode, int first, int count, int instanceCount)
+  {
+    ASSERT_MAX_COUNT_PER_DRAWCALL(count, "drawArraysInstanced()");
+    auto commandBuffer = DrawArraysInstancedCommandBufferRequest(static_cast<uint32_t>(mode), first, count,
+                                                                 instanceCount);
+    sendCommandBufferRequest(commandBuffer);
+    sendFirstContentfulPaintMetrics();
+  }
+
+  void WebGL2Context::drawBuffers(const std::vector<uint32_t> buffers)
+  {
+    auto commandBuffer = DrawBuffersCommandBufferRequest(buffers.size(), buffers.data());
+    sendCommandBufferRequest(commandBuffer);
+  }
+
+  void WebGL2Context::drawElementsInstanced(WebGLDrawMode mode, int count, int type, int offset, int instanceCount)
+  {
+    ASSERT_MAX_COUNT_PER_DRAWCALL(count, "drawElementsInstanced()");
+    auto commandBuffer = DrawElementsInstancedCommandBufferRequest(static_cast<uint32_t>(mode), count, type, offset,
+                                                                   instanceCount);
+    sendCommandBufferRequest(commandBuffer);
+    sendFirstContentfulPaintMetrics();
+  }
+
+  void WebGL2Context::drawRangeElements(WebGLDrawMode mode, int start, int end, int count, int type, int offset)
+  {
+    ASSERT_MAX_COUNT_PER_DRAWCALL(count, "drawRangeElements()");
+    auto commandBuffer = DrawRangeElementsCommandBufferRequest(static_cast<uint32_t>(mode), start, end,
+                                                               count, type, offset);
+    sendCommandBufferRequest(commandBuffer);
+    sendFirstContentfulPaintMetrics();
+  }
+
+  void WebGL2Context::endQuery(WebGLQueryTarget target)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::framebufferTextureLayer(
+      WebGLFramebufferBindingTarget target,
+      WebGLFramebufferAttachment attachment,
+      std::shared_ptr<WebGLTexture> texture,
+      int level,
+      int layer)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  std::string WebGL2Context::getActiveUniformBlockName(std::shared_ptr<WebGLProgram> program, int uniformBlockIndex)
+  {
+    NOT_IMPLEMENTED();
+    return "";
+  }
+
+  void WebGL2Context::getBufferSubData(
+      WebGLBufferBindingTarget target,
+      int srcByteOffset,
+      size_t dstSize,
+      void *dstData,
+      std::optional<int> dstOffset = std::nullopt,
+      std::optional<int> length = std::nullopt)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  int WebGL2Context::getFragDataLocation(std::shared_ptr<WebGLProgram> program, const std::string &name)
+  {
+    NOT_IMPLEMENTED();
+    return -1;
+  }
+
+  std::shared_ptr<WebGLQuery> WebGL2Context::getQuery(WebGLQueryTarget target, int pname)
+  {
+    NOT_IMPLEMENTED();
+    return nullptr;
+  }
+
+  void WebGL2Context::invalidateFramebuffer(WebGLFramebufferBindingTarget target, const std::vector<int> attachments)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::invalidateSubFramebuffer(
+      WebGLFramebufferBindingTarget target,
+      const std::vector<int> attachments,
+      int x,
+      int y,
+      size_t width,
+      size_t height)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  bool WebGL2Context::isQuery(std::shared_ptr<WebGLQuery> query)
+  {
+    return query->isValid();
+  }
+
+  bool WebGL2Context::isSampler(std::shared_ptr<WebGLSampler> sampler)
+  {
+    return sampler->isValid();
+  }
+
+  bool WebGL2Context::isVertexArray(std::shared_ptr<WebGLVertexArray> vertexArray)
+  {
+    return vertexArray->isValid();
+  }
+
+  void WebGL2Context::readBuffer(int src)
+  {
+    auto req = ReadBufferCommandBufferRequest(src);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGL2Context::renderbufferStorageMultisample(
+      WebGLRenderbufferBindingTarget target,
+      int samples,
+      int internalformat,
+      int width,
+      int height)
+  {
+    auto commandBuffer = RenderbufferStorageMultisampleCommandBufferRequest(
+        static_cast<uint32_t>(target), samples, internalformat, width, height);
+    sendCommandBufferRequest(commandBuffer);
+  }
+
+  void WebGL2Context::texImage3D(
+      WebGLTexture2DTarget target,
+      int level,
+      int internalformat,
+      size_t width,
+      size_t height,
+      size_t depth,
+      int border,
+      WebGLTextureFormat format,
+      WebGLPixelType type,
+      unsigned char *pixels)
+  {
+    TextureImage3DCommandBufferRequest req;
+    req.target = static_cast<uint32_t>(target);
+    req.level = level;
+    req.internalformat = internalformat;
+    req.width = width;
+    req.height = height;
+    req.depth = depth;
+    req.border = border;
+    req.format = static_cast<uint32_t>(format);
+    req.pixelType = static_cast<uint32_t>(type);
+    req.setPixels(pixels);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGL2Context::texStorage2D(
+      WebGLTexture2DTarget target,
+      int levels,
+      int internalformat,
+      size_t width,
+      size_t height)
+  {
+    auto req = TextureStorage2DCommandBufferRequest(static_cast<uint32_t>(target),
+                                                    levels, internalformat, width, height);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGL2Context::texStorage3D(
+      WebGLTexture2DTarget target,
+      int levels,
+      int internalformat,
+      size_t width,
+      size_t height,
+      size_t depth)
+  {
+    auto req = commandbuffers::TextureStorage3DCommandBufferRequest(static_cast<uint32_t>(target),
+                                                                    levels, internalformat, width, height, depth);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGL2Context::texSubImage3D(
+      WebGLTexture2DTarget target,
+      int level,
+      int xoffset,
+      int yoffset,
+      int zoffset,
+      size_t width,
+      size_t height,
+      size_t depth,
+      WebGLTextureFormat format,
+      WebGLPixelType type,
+      unsigned char *pixels)
+  {
+    auto commandBuffer = TextureSubImage3DCommandBufferRequest(static_cast<uint32_t>(target),
+                                                               level, xoffset, yoffset, zoffset, width, height, depth,
+                                                               static_cast<uint32_t>(format),
+                                                               static_cast<uint32_t>(type),
+                                                               pixels);
+    sendCommandBufferRequest(commandBuffer);
+  }
+
+  void WebGL2Context::uniformBlockBinding(std::shared_ptr<WebGLProgram> program,
+                                          int uniformBlockIndex,
+                                          uint32_t uniformBlockBinding)
+  {
+    if (uniformBlockIndex < UINT32_MAX)
+    {
+      auto commandBuffer = commandbuffers::UniformBlockBindingCommandBufferRequest(program->id,
+                                                                                   uniformBlockIndex,
+                                                                                   uniformBlockBinding);
+      sendCommandBufferRequest(commandBuffer);
+    }
+    else
+    {
+      throw std::runtime_error("Uniform block index is out of range.");
+    }
+  }
+
+  void WebGL2Context::uniformMatrix3x2fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::uniformMatrix4x2fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::uniformMatrix2x3fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::uniformMatrix4x3fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::uniformMatrix2x4fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::uniformMatrix3x4fv(WebGLUniformLocation location, bool transpose, std::vector<float> values)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::vertexAttribDivisor(uint32_t index, uint32_t divisor)
+  {
+    auto req = VertexAttribDivisorCommandBufferRequest(index, divisor);
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGL2Context::vertexAttribI4i(uint32_t index, int x, int y, int z, int w)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::vertexAttribI4ui(uint32_t index, uint x, uint y, uint z, uint w)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::vertexAttribI4iv(uint32_t index, const std::vector<int> values)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::vertexAttribI4uiv(uint32_t index, const std::vector<uint> values)
+  {
+    NOT_IMPLEMENTED();
+  }
+
+  void WebGL2Context::vertexAttribIPointer(
+      uint32_t index,
+      int size,
+      int type,
+      int stride,
+      int offset)
+  {
+    auto commandBuffer = VertexAttribIPointerCommandBufferRequest(index, size, type, stride, offset);
+    sendCommandBufferRequest(commandBuffer);
   }
 }
