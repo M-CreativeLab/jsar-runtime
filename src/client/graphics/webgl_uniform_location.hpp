@@ -7,7 +7,16 @@ namespace client_graphics
   class WebGLUniformLocation
   {
   public:
-    WebGLUniformLocation(int index, const std::string &name) : index(index), name(name) {}
+    WebGLUniformLocation()
+        : index(0),
+          name("")
+    {
+    }
+    WebGLUniformLocation(uint32_t index, const std::string &name)
+        : index(index),
+          name(name)
+    {
+    }
 
   public:
     uint32_t index;

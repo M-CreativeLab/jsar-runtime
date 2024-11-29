@@ -24,6 +24,13 @@ public:
            this->x == x &&
            this->y == y;
   }
+  inline void set(uint32_t width, uint32_t height, uint32_t x, uint32_t y)
+  {
+    this->width = width;
+    this->height = height;
+    this->x = x;
+    this->y = y;
+  }
 
 public:
   string toString() const

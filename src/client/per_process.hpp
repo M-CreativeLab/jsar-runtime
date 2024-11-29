@@ -355,6 +355,7 @@ private: // media fields
   vector<shared_ptr<media_client::MediaPlayer>> mediaPlayers;
 
 private: // command buffer fields
+  shared_ptr<client_graphics::WebGL2Context> hostWebGLContext = nullptr;
   TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;

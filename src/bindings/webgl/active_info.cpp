@@ -12,11 +12,11 @@ namespace webgl
     *constructor = Napi::Persistent(func);
   }
 
-  Napi::Object WebGLActiveInfo::NewInstance(Napi::Env env, commandbuffers::ActiveInfo activeInfo)
+  Napi::Object WebGLActiveInfo::NewInstance(Napi::Env env, client_graphics::WebGLActiveInfo &activeInfo)
   {
     Napi::EscapableHandleScope scope(env);
 
-    auto external = Napi::External<commandbuffers::ActiveInfo>::New(env, new commandbuffers::ActiveInfo(activeInfo));
+    auto external = Napi::External<client_graphics::WebGLActiveInfo>::New(env, new client_graphics::WebGLActiveInfo(activeInfo));
     Napi::Object obj = constructor->New({external});
     return scope.Escape(napi_value(obj)).ToObject();
   }
@@ -32,21 +32,21 @@ namespace webgl
       return;
     }
 
-    Napi::External<commandbuffers::ActiveInfo> external = info[0].As<Napi::External<commandbuffers::ActiveInfo>>();
-    commandbuffers::ActiveInfo *activeInfo = external.Data();
+    Napi::External<client_graphics::WebGLActiveInfo> external = info[0].As<Napi::External<client_graphics::WebGLActiveInfo>>();
+    client_graphics::WebGLActiveInfo *activeInfo = external.Data();
     if (activeInfo == nullptr)
     {
       Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
       return;
     }
-    this->name = activeInfo->name;
-    this->size = activeInfo->size;
-    this->type = activeInfo->type;
+    name = activeInfo->name;
+    size = activeInfo->size;
+    type = activeInfo->type;
     delete activeInfo;
 
     auto jsThis = info.This().As<Napi::Object>();
-    jsThis.Set("name", Napi::String::New(env, this->name));
-    jsThis.Set("size", Napi::Number::New(env, this->size));
-    jsThis.Set("type", Napi::Number::New(env, this->type));
+    jsThis.Set("name", Napi::String::New(env, name));
+    jsThis.Set("size", Napi::Number::New(env, size));
+    jsThis.Set("type", Napi::Number::New(env, type));
   }
 }

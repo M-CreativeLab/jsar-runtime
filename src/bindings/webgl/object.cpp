@@ -12,9 +12,4 @@ namespace webgl
     *constructor = Napi::Persistent(func);
     env.Global().Set(Napi::String::New(env, "WebGLObject"), func);
   }
-
-  WebGLObject::WebGLObject(const Napi::CallbackInfo &info)
-      : WebGLObjectBase<WebGLObject>(info)
-  {
-  }
 }

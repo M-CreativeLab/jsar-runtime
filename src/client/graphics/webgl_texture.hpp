@@ -62,6 +62,12 @@ namespace client_graphics
     kTextureCubeMapNegativeZ = WEBGL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
   };
 
+  enum class WebGLTexture3DTarget
+  {
+    kTexture3D = WEBGL2_TEXTURE_3D,
+    kTexture2DArray = WEBGL2_TEXTURE_2D_ARRAY,
+  };
+
   enum class WebGLTextureFormat
   {
     kRed = WEBGL2_RED,

@@ -14,7 +14,18 @@ namespace webgl
     *constructor = Napi::Persistent(tpl);
   }
 
-  WebGLUniformLocation::WebGLUniformLocation(const Napi::CallbackInfo &info) : Napi::ObjectWrap<WebGLUniformLocation>(info)
+  Napi::Object WebGLUniformLocation::NewInstance(Napi::Env env, client_graphics::WebGLUniformLocation &handle)
+  {
+    Napi::EscapableHandleScope scope(env);
+    Napi::Object obj = constructor->New({});
+    WebGLUniformLocation *instance = WebGLUniformLocation::Unwrap(obj);
+    instance->handle_ = handle;
+    return scope.Escape(obj).ToObject();
+  }
+
+  WebGLUniformLocation::WebGLUniformLocation(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<WebGLUniformLocation>(info),
+        handle_(std::nullopt)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);

@@ -804,6 +804,11 @@ namespace client_graphics
     sendCommandBufferRequest(req);
   }
 
+  void WebGLContext::uniformMatrix2fv(WebGLUniformLocation location, bool transpose, MatrixComputationGraph &graphToValues)
+  {
+    NOT_IMPLEMENTED();
+  }
+
   void WebGLContext::uniformMatrix3fv(WebGLUniformLocation location, bool transpose, glm::mat3 m)
   {
     std::vector<float> values = {
@@ -820,6 +825,11 @@ namespace client_graphics
 
     auto req = UniformMatrix3fvCommandBufferRequest(location.index, transpose, values);
     sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::uniformMatrix3fv(WebGLUniformLocation location, bool transpose, MatrixComputationGraph &graphToValues)
+  {
+    NOT_IMPLEMENTED();
   }
 
   void WebGLContext::uniformMatrix4fv(WebGLUniformLocation location, bool transpose, glm::mat4 m)
@@ -906,15 +916,38 @@ namespace client_graphics
     sendCommandBufferRequest(req);
   }
 
+  void WebGLContext::uniformMatrix4fv(WebGLUniformLocation location, bool transpose, MatrixComputationGraph &graphToValues)
+  {
+    UniformMatrix4fvCommandBufferRequest req(location.index, transpose);
+    req.computationGraph4values = graphToValues;
+    sendCommandBufferRequest(req);
+  }
+
   void WebGLContext::drawArrays(WebGLDrawMode mode, int first, int count)
   {
+    ASSERT_MAX_COUNT_PER_DRAWCALL(count, "drawArrays()");
     auto req = DrawArraysCommandBufferRequest(static_cast<uint32_t>(mode), first, count);
     sendCommandBufferRequest(req);
+    sendFirstContentfulPaintMetrics();
   }
 
   void WebGLContext::drawElements(WebGLDrawMode mode, int count, int type, int offset)
   {
+    ASSERT_MAX_COUNT_PER_DRAWCALL(count, "drawElements()");
     auto req = DrawElementsCommandBufferRequest(static_cast<uint32_t>(mode), count, type, offset);
+    sendCommandBufferRequest(req);
+    sendFirstContentfulPaintMetrics();
+  }
+
+  void WebGLContext::hint(WebGLHintTargetBehavior target, WebGLHintBehaviorMode mode)
+  {
+    auto req = HintCommandBufferRequest(static_cast<uint32_t>(target), static_cast<uint32_t>(mode));
+    sendCommandBufferRequest(req);
+  }
+
+  void WebGLContext::lineWidth(float width)
+  {
+    auto req = LineWidthCommandBufferRequest(width);
     sendCommandBufferRequest(req);
   }
 
@@ -943,8 +976,18 @@ namespace client_graphics
 
   void WebGLContext::viewport(int x, int y, size_t width, size_t height)
   {
-    auto req = SetViewportCommandBufferRequest(x, y, width, height);
-    sendCommandBufferRequest(req);
+    if (x < 0 || y < 0 || width < 0 || height < 0)
+    {
+      string msg = "viewport() arguments must be positive. x: " + std::to_string(x) + ", y: " + std::to_string(y) +
+                   ", width: " + std::to_string(width) + ", height: " + std::to_string(height);
+      throw std::runtime_error(msg);
+    }
+    if (!viewport_.isEqual(width, height, x, y))
+    {
+      auto req = SetViewportCommandBufferRequest(x, y, width, height);
+      sendCommandBufferRequest(req);
+      viewport_.set(width, height, x, y);
+    }
   }
 
   void WebGLContext::scissor(int x, int y, size_t width, size_t height)
@@ -955,26 +998,29 @@ namespace client_graphics
 
   void WebGLContext::clearColor(float red, float green, float blue, float alpha)
   {
-    auto req = ClearColorCommandBufferRequest(red, green, blue, alpha);
-    sendCommandBufferRequest(req);
+    // auto req = ClearColorCommandBufferRequest(red, green, blue, alpha);
+    // sendCommandBufferRequest(req);
+    clearColor_ = glm::vec4(red, green, blue, alpha);
   }
 
   void WebGLContext::clearDepth(float depth)
   {
-    auto req = ClearDepthCommandBufferRequest(depth);
-    sendCommandBufferRequest(req);
+    // auto req = ClearDepthCommandBufferRequest(depth);
+    // sendCommandBufferRequest(req);
+    clearDepth_ = depth;
   }
 
   void WebGLContext::clearStencil(int s)
   {
-    auto req = ClearStencilCommandBufferRequest(s);
-    sendCommandBufferRequest(req);
+    // auto req = ClearStencilCommandBufferRequest(s);
+    // sendCommandBufferRequest(req);
+    clearStencil_ = s;
   }
 
   void WebGLContext::clear(int mask)
   {
-    auto req = ClearCommandBufferRequest(mask);
-    sendCommandBufferRequest(req);
+    // auto req = ClearCommandBufferRequest(mask);
+    // sendCommandBufferRequest(req);
   }
 
   void WebGLContext::depthMask(bool flag)
@@ -1035,6 +1081,7 @@ namespace client_graphics
   {
     auto req = BlendColorCommandBufferRequest(red, green, blue, alpha);
     sendCommandBufferRequest(req);
+    blendColor_ = glm::vec4(red, green, blue, alpha);
   }
 
   void WebGLContext::blendEquation(int mode)
@@ -1409,7 +1456,7 @@ namespace client_graphics
   }
 
   void WebGL2Context::compressedTexImage3D(
-      WebGLTexture2DTarget target,
+      WebGLTexture3DTarget target,
       int level,
       int internalformat,
       size_t width,
@@ -1423,7 +1470,7 @@ namespace client_graphics
   }
 
   void WebGL2Context::compressedTexSubImage3D(
-      WebGLTexture2DTarget target,
+      WebGLTexture3DTarget target,
       int level,
       int xoffset,
       int yoffset,
@@ -1558,8 +1605,8 @@ namespace client_graphics
       int srcByteOffset,
       size_t dstSize,
       void *dstData,
-      std::optional<int> dstOffset = std::nullopt,
-      std::optional<int> length = std::nullopt)
+      std::optional<int> dstOffset,
+      std::optional<int> length)
   {
     NOT_IMPLEMENTED();
   }
@@ -1570,10 +1617,94 @@ namespace client_graphics
     return -1;
   }
 
+  int WebGL2Context::getParameterV2(WebGL2IntegerParameterName pname)
+  {
+    /**
+     * The following parameters are static and could be returned directly.
+     */
+    if (pname == WebGL2IntegerParameterName::kMax3DTextureSize)
+      return max3DTextureSize;
+    else if (pname == WebGL2IntegerParameterName::kMaxArrayTextureLayers)
+      return maxArrayTextureLayers;
+    else if (pname == WebGL2IntegerParameterName::kMaxColorAttachments)
+      return maxColorAttachments;
+    else if (pname == WebGL2IntegerParameterName::kMaxCombinedUniformBlocks)
+      return maxCombinedUniformBlocks;
+    else if (pname == WebGL2IntegerParameterName::kMaxDrawBuffers)
+      return maxDrawBuffers;
+    else if (pname == WebGL2IntegerParameterName::kMaxElementsIndices)
+      return maxElementsIndices;
+    else if (pname == WebGL2IntegerParameterName::kMaxElementsVertices)
+      return maxElementsVertices;
+    else if (pname == WebGL2IntegerParameterName::kMaxFragmentInputComponents)
+      return maxFragmentInputComponents;
+    else if (pname == WebGL2IntegerParameterName::kMaxFragmentUniformBlocks)
+      return maxFragmentUniformBlocks;
+    else if (pname == WebGL2IntegerParameterName::kMaxFragmentUniformComponents)
+      return maxFragmentUniformComponents;
+    else if (pname == WebGL2IntegerParameterName::kMaxProgramTexelOffset)
+      return maxProgramTexelOffset;
+    else if (pname == WebGL2IntegerParameterName::kMaxSamples)
+      return maxSamples;
+    else if (pname == WebGL2IntegerParameterName::kMaxTransformFeedbackInterleavedComponents)
+      return maxTransformFeedbackInterleavedComponents;
+    else if (pname == WebGL2IntegerParameterName::kMaxTransformFeedbackSeparateAttribs)
+      return maxTransformFeedbackSeparateAttributes;
+    else if (pname == WebGL2IntegerParameterName::kMaxTransformFeedbackSeparateComponents)
+      return maxTransformFeedbackSeparateComponents;
+    else if (pname == WebGL2IntegerParameterName::kMaxUniformBufferBindings)
+      return maxUniformBufferBindings;
+    else if (pname == WebGL2IntegerParameterName::kMaxVaryingComponents)
+      return maxVaryingComponents;
+    else if (pname == WebGL2IntegerParameterName::kMaxVertexOutputComponents)
+      return maxVertexOutputComponents;
+    else if (pname == WebGL2IntegerParameterName::kMaxVertexUniformBlocks)
+      return maxVertexUniformBlocks;
+    else if (pname == WebGL2IntegerParameterName::kMaxVertexUniformComponents)
+      return maxVertexUniformComponents;
+    else if (pname == WebGL2IntegerParameterName::kMinProgramTexelOffset)
+      return minProgramTexelOffset;
+    else if (pname == WebGL2IntegerParameterName::kMaxClientWaitTimeoutWebGL)
+      return maxClientWaitTimeout;
+    else if (pname == WebGL2IntegerParameterName::kMaxCombinedFragmentUniformComponents)
+      return maxCombinedFragmentUniformComponents;
+    else if (pname == WebGL2IntegerParameterName::kMaxCombinedVertexUniformComponents)
+      return maxCombinedVertexUniformComponents;
+    else if (pname == WebGL2IntegerParameterName::kMaxElementIndex)
+      return maxElementIndex;
+    else if (pname == WebGL2IntegerParameterName::kMaxServerWaitTimeout)
+      return maxServerWaitTimeout;
+    else if (pname == WebGL2IntegerParameterName::kMaxUniformBlockSize)
+      return maxUniformBlockSize;
+    else if (pname == WebGL2IntegerParameterName::kMaxTextureLodBias)
+      return maxTextureLODBias;
+    else if (pname == WebGL2IntegerParameterName::kExtMaxViewsOvr)
+      return OVR_maxViews;
+
+    auto req = GetIntegervCommandBufferRequest(static_cast<uint32_t>(pname));
+    sendCommandBufferRequest(req, true);
+
+    auto resp = recvCommandBufferResponse<GetIntegervCommandBufferResponse>(COMMAND_BUFFER_GET_INTEGERV_RES);
+    if (resp == nullptr)
+      throw std::runtime_error("Failed to get integer parameter: timeout.");
+
+    int v = resp->value;
+    delete resp;
+    return v;
+  }
+
   std::shared_ptr<WebGLQuery> WebGL2Context::getQuery(WebGLQueryTarget target, int pname)
   {
     NOT_IMPLEMENTED();
     return nullptr;
+  }
+
+  int WebGL2Context::getUniformBlockIndex(std::shared_ptr<WebGLProgram> program, const std::string &uniformBlockName)
+  {
+    if (program == nullptr || !program->isValid() || !program->hasUniformBlockIndex(uniformBlockName))
+      return -1;
+    else
+      return program->getUniformBlockIndex(uniformBlockName);
   }
 
   void WebGL2Context::invalidateFramebuffer(WebGLFramebufferBindingTarget target, const std::vector<int> attachments)
@@ -1626,7 +1757,7 @@ namespace client_graphics
   }
 
   void WebGL2Context::texImage3D(
-      WebGLTexture2DTarget target,
+      WebGLTexture3DTarget target,
       int level,
       int internalformat,
       size_t width,
@@ -1664,7 +1795,7 @@ namespace client_graphics
   }
 
   void WebGL2Context::texStorage3D(
-      WebGLTexture2DTarget target,
+      WebGLTexture3DTarget target,
       int levels,
       int internalformat,
       size_t width,
@@ -1677,7 +1808,7 @@ namespace client_graphics
   }
 
   void WebGL2Context::texSubImage3D(
-      WebGLTexture2DTarget target,
+      WebGLTexture3DTarget target,
       int level,
       int xoffset,
       int yoffset,

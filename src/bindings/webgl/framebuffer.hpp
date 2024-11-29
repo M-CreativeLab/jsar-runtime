@@ -1,32 +1,40 @@
 #pragma once
 
 #include <napi.h>
+#include "client/graphics/webgl_framebuffer.hpp"
 #include "./object.hpp"
 
 namespace webgl
 {
-  class WebGLFramebuffer : public WebGLObjectBase<WebGLFramebuffer>
+  class WebGLFramebuffer : public WebGLObjectBase<WebGLFramebuffer, client_graphics::WebGLFramebuffer>
   {
   public:
+    static void Init(Napi::Env env);
     /**
      * Create a new instance of WebGLFramebuffer.
-     * 
+     *
      * @param env The Napi::Env that is calling this function.
+     * @param handle The handle to the client graphics `WebGLFramebuffer`.
      * @param isHostFramebuffer Whether the framebuffer is a host framebuffer.
-     * @return Napi::Object The new instance of WebGLFramebuffer.
+     * @return Napi::Object The new instance of `WebGLFramebuffer`.
      */
-    static Napi::Object NewInstance(Napi::Env env, bool isHostFramebuffer = false)
+    static Napi::Object NewInstance(
+        Napi::Env env,
+        std::shared_ptr<client_graphics::WebGLFramebuffer> handle,
+        bool isHostFramebuffer = false)
     {
       Napi::EscapableHandleScope scope(env);
-      Napi::Object obj = WebGLObjectBase<WebGLFramebuffer>::NewInstance(env);
+      Napi::Object obj = WebGLObjectBase<WebGLFramebuffer, client_graphics::WebGLFramebuffer>::NewInstance(env, handle);
       WebGLFramebuffer *instance = WebGLFramebuffer::Unwrap(obj);
       instance->isHost = isHostFramebuffer;
       return scope.Escape(obj).ToObject();
     }
 
   public:
-    WebGLFramebuffer(const Napi::CallbackInfo &info);
-    static void Init(Napi::Env env);
+    WebGLFramebuffer(const Napi::CallbackInfo &info)
+        : WebGLObjectBase<WebGLFramebuffer, client_graphics::WebGLFramebuffer>(info), isHost(false)
+    {
+    }
 
   public:
     /**
