@@ -15,6 +15,16 @@ namespace webgl
   public:
     static void Init(Napi::Env env);
     /**
+     * A convenient function to check whether a given JavaScript `value` is an instance of `WebGLShader`.
+     * 
+     * @param value The value to check.
+     * @return Whether the value is an instance of `WebGLShader`.
+     */
+    static bool IsInstanceOf(const Napi::Value &value)
+    {
+      return value.As<Napi::Object>().InstanceOf(constructor->Value());
+    }
+    /**
      * It creates a new instance of `WebGLShader`.
      *
      * @param env The `Napi::Env` in which the instance is being created.

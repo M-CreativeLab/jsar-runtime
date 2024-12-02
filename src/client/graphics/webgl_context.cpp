@@ -64,7 +64,7 @@ namespace client_graphics
 
   void WebGLContext::deleteProgram(std::shared_ptr<WebGLProgram> program)
   {
-    if (program->isDeleted())
+    if (program == nullptr || program->isDeleted())
       return;
     auto req = DeleteProgramCommandBufferRequest(program->id);
     sendCommandBufferRequest(req);
@@ -73,6 +73,9 @@ namespace client_graphics
 
   void WebGLContext::linkProgram(std::shared_ptr<WebGLProgram> program)
   {
+    if (program == nullptr || !program->isValid())
+      return;
+
     auto req = LinkProgramCommandBufferRequest(program->id);
     sendCommandBufferRequest(req, true);
 
@@ -338,7 +341,14 @@ namespace client_graphics
 
   void WebGLContext::bindBuffer(WebGLBufferBindingTarget target, std::shared_ptr<WebGLBuffer> buffer)
   {
-    auto req = BindBufferCommandBufferRequest(static_cast<uint32_t>(target), buffer->id);
+    uint32_t bufferId = 0;
+    if (buffer != nullptr)
+    {
+      if (!buffer->isValid()) // Just ignore the invalid buffer
+        return;
+      bufferId = buffer->id;
+    }
+    auto req = BindBufferCommandBufferRequest(static_cast<uint32_t>(target), bufferId);
     sendCommandBufferRequest(req);
   }
 
@@ -383,7 +393,18 @@ namespace client_graphics
 
   void WebGLContext::bindFramebuffer(WebGLFramebufferBindingTarget target, std::shared_ptr<WebGLFramebuffer> framebuffer)
   {
-    auto req = BindFramebufferCommandBufferRequest(static_cast<uint32_t>(target), framebuffer->id);
+    uint32_t framebufferId = 0;
+    if (framebuffer == nullptr)
+    {
+      framebufferId = 0;
+    }
+    else
+    {
+      if (!framebuffer->isValid()) // Just ignore the invalid framebuffer
+        return;
+      framebufferId = framebuffer->id;
+    }
+    auto req = BindFramebufferCommandBufferRequest(static_cast<uint32_t>(target), framebufferId);
     sendCommandBufferRequest(req);
   }
 
@@ -443,6 +464,8 @@ namespace client_graphics
 
   void WebGLContext::deleteRenderbuffer(std::shared_ptr<WebGLRenderbuffer> renderbuffer)
   {
+    if (renderbuffer == nullptr || renderbuffer->isDeleted())
+      return;
     auto req = DeleteRenderbufferCommandBufferRequest(renderbuffer->id);
     sendCommandBufferRequest(req);
     renderbuffer->markDeleted();
@@ -450,7 +473,14 @@ namespace client_graphics
 
   void WebGLContext::bindRenderbuffer(WebGLRenderbufferBindingTarget target, std::shared_ptr<WebGLRenderbuffer> renderbuffer)
   {
-    auto req = BindRenderbufferCommandBufferRequest(static_cast<uint32_t>(target), renderbuffer->id);
+    uint32_t renderbufferId = 0;
+    if (renderbuffer != nullptr)
+    {
+      if (!renderbuffer->isValid()) // Just ignore the invalid renderbuffer
+        return;
+      renderbufferId = renderbuffer->id;
+    }
+    auto req = BindRenderbufferCommandBufferRequest(static_cast<uint32_t>(target), renderbufferId);
     sendCommandBufferRequest(req);
   }
 
@@ -470,6 +500,8 @@ namespace client_graphics
 
   void WebGLContext::deleteTexture(std::shared_ptr<WebGLTexture> texture)
   {
+    if (texture == nullptr || texture->isDeleted())
+      return;
     auto req = DeleteTextureCommandBufferRequest(texture->id);
     sendCommandBufferRequest(req);
     texture->markDeleted();
@@ -477,7 +509,18 @@ namespace client_graphics
 
   void WebGLContext::bindTexture(WebGLTextureTarget target, std::shared_ptr<WebGLTexture> texture)
   {
-    auto req = BindTextureCommandBufferRequest(static_cast<uint32_t>(target), texture->id);
+    uint32_t textureId = 0;
+    if (texture == nullptr)
+    {
+      textureId = 0;
+    }
+    else
+    {
+      if (!texture->isValid()) // Just ignore the invalid texture
+        return;
+      textureId = texture->id;
+    }
+    auto req = BindTextureCommandBufferRequest(static_cast<uint32_t>(target), textureId);
     sendCommandBufferRequest(req);
   }
 
@@ -1369,14 +1412,28 @@ namespace client_graphics
 
   void WebGL2Context::bindBufferBase(WebGLBufferBindingTarget target, uint32_t index, std::shared_ptr<WebGLBuffer> buffer)
   {
-    auto req = BindBufferBaseCommandBufferRequest(static_cast<uint32_t>(target), index, buffer->id);
+    uint32_t bufferId = 0;
+    if (buffer != nullptr)
+    {
+      if (!buffer->isValid())
+        return;
+      bufferId = buffer->id;
+    }
+    auto req = BindBufferBaseCommandBufferRequest(static_cast<uint32_t>(target), index, bufferId);
     sendCommandBufferRequest(req);
   }
 
   void WebGL2Context::bindBufferRange(WebGLBufferBindingTarget target, uint32_t index, std::shared_ptr<WebGLBuffer> buffer,
                                       int offset, size_t size)
   {
-    auto req = BindBufferRangeCommandBufferRequest(static_cast<uint32_t>(target), index, buffer->id, offset, size);
+    uint32_t bufferId = 0;
+    if (buffer != nullptr)
+    {
+      if (!buffer->isValid())
+        return;
+      bufferId = buffer->id;
+    }
+    auto req = BindBufferRangeCommandBufferRequest(static_cast<uint32_t>(target), index, bufferId, offset, size);
     sendCommandBufferRequest(req);
   }
 
@@ -1387,7 +1444,14 @@ namespace client_graphics
 
   void WebGL2Context::bindVertexArray(std::shared_ptr<WebGLVertexArray> vertexArray)
   {
-    auto req = BindVertexArrayCommandBufferRequest(vertexArray->id);
+    uint32_t vaoId = 0;
+    if (vertexArray != nullptr)
+    {
+      if (!vertexArray->isValid())
+        return;
+      vaoId = vertexArray->id;
+    }
+    auto req = BindVertexArrayCommandBufferRequest(vaoId);
     sendCommandBufferRequest(req);
   }
 
@@ -1541,6 +1605,8 @@ namespace client_graphics
 
   void WebGL2Context::deleteVertexArray(std::shared_ptr<WebGLVertexArray> vertexArray)
   {
+    if (vertexArray == nullptr || vertexArray->isDeleted())
+      return;
     auto req = DeleteVertexArrayCommandBufferRequest(vertexArray->id);
     sendCommandBufferRequest(req);
     vertexArray->markDeleted();

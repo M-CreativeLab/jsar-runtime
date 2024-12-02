@@ -496,6 +496,14 @@ namespace client_graphics
     }
 
     /**
+     * @returns if the context is lost.
+     */
+    inline bool isContextLost()
+    {
+      return isContextLost_;
+    }
+
+    /**
      * It sets the WebGL error for the function.
      *
      * @param func the function name that causes the error.
@@ -685,6 +693,7 @@ namespace client_graphics
     WebGLError lastError_ = WebGLError::kNoError;
     std::optional<std::vector<std::string>> supportedExtensions_ = std::nullopt;
     bool isWebGL2_ = false;
+    bool isContextLost_ = false;
     bool isFirstContentfulPaintReported_ = false;
     bool unpackFlipY_ = false;
     bool unpackPremultiplyAlpha_ = false;

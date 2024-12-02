@@ -40,21 +40,29 @@ declare namespace Transmute {
 
   /**
    * The client context which is returned via the "transmute:env" module.
-   * 
-   * This object contains the following properties:
-   * - id: The client context id.
-   * - url: The current URL.
-   * - applicationCacheDirectory: The application cache directory.
-   * - httpsProxyServer: The HTTPS proxy server.
-   * - webglVersion: The WebGL version.
-   * - xrDevice: The XR device information.
    */
   class TrClientContext {
+    /**
+     * The client context id.
+     */
     id: number;
+    /**
+     * The client context URL.
+     */
     url: string;
     applicationCacheDirectory: string;
     httpsProxyServer: string;
+    /**
+     * The webgl version, 1 for WebGL1, 2 for WebGL2.
+     */
     webglVersion: number;
+    /**
+     * The webgl context to draw to the host scene.
+     */
+    gl: WebGLRenderingContext | WebGL2RenderingContext;
+    /**
+     * The WebXR device configuration.
+     */
     xrDevice: {
       enabled: boolean;
       active: boolean;

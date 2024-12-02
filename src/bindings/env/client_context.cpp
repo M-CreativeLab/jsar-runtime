@@ -1,5 +1,6 @@
 #include "client_context.hpp"
 #include "common/xr/types.hpp"
+#include "../webgl/rendering_context-inl.hpp"
 
 namespace bindings
 {
@@ -36,6 +37,9 @@ namespace bindings
                    Napi::String::New(env, clientContext->applicationCacheDirectory));
     thisObject.Set("httpsProxyServer", Napi::String::New(env, clientContext->httpsProxyServer));
     thisObject.Set("webglVersion", Napi::Number::New(env, clientContext->webglVersion));
+    thisObject.Set("gl", clientContext->webglVersion == 2
+                             ? ::webgl::WebGL2RenderingContext::MakeFromHost(env)
+                             : ::webgl::WebGLRenderingContext::MakeFromHost(env));
 
     if (clientContext->xrDeviceInit.enabled == true)
     {

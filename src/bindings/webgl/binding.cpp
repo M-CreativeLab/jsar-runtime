@@ -26,6 +26,7 @@ namespace bindings
       ::webgl::WebGLProgram::Init(env);
       ::webgl::WebGLTexture::Init(env);
       ::webgl::WebGLShader::Init(env);
+      ::webgl::WebGLShaderPrecisionFormat::Init(env);
       ::webgl::WebGLUniformLocation::Init(env);
       ::webgl::WebGLVertexArray::Init(env);
       ::webgl::WebGLRenderingContext::Init(env, exports);

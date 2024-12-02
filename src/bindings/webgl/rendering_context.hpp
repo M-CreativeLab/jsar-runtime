@@ -41,10 +41,21 @@ namespace webgl
   class WebGLBaseRenderingContext : public Napi::ObjectWrap<ObjectType>
   {
   public:
+    /**
+     * Create a new `WebGLBaseRenderingContext<T>` object for the host environment, this rendering context is used to
+     * draw the graphics and objects in the host scene.
+     *
+     * @param env the N-API environment.
+     * @returns a new `WebGLBaseRenderingContext<T>` object.
+     */
+    static Napi::Object MakeFromHost(Napi::Env env);
+
+  public:
     WebGLBaseRenderingContext(const Napi::CallbackInfo &info);
 
   public:
     Napi::Value MakeXRCompatible(const Napi::CallbackInfo &info);
+    Napi::Value IsContextLost(const Napi::CallbackInfo &info);
     Napi::Value GetContextAttributes(const Napi::CallbackInfo &info);
     Napi::Value CreateProgram(const Napi::CallbackInfo &info);
     Napi::Value DeleteProgram(const Napi::CallbackInfo &info);
@@ -167,20 +178,46 @@ namespace webgl
 
   class WebGLRenderingContext : public WebGLBaseRenderingContext<WebGLRenderingContext, client_graphics::WebGLContext>
   {
+    friend class WebGLBaseRenderingContext<WebGLRenderingContext, client_graphics::WebGLContext>;
+
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    /**
+     * Create a new `WebGLRenderingContext` object for the host environment, this rendering context is used to
+     * draw the graphics and objects in the host scene.
+     *
+     * @param env the N-API environment.
+     * @returns a new `WebGLRenderingContext` object.
+     */
+    static inline Napi::Object MakeFromHost(Napi::Env env)
+    {
+      return WebGLBaseRenderingContext<WebGLRenderingContext, client_graphics::WebGLContext>::MakeFromHost(env);
+    }
 
   public:
     WebGLRenderingContext(const Napi::CallbackInfo &info);
 
   private:
-    static thread_local Napi::FunctionReference *webglConstructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 
   class WebGL2RenderingContext : public WebGLBaseRenderingContext<WebGL2RenderingContext, client_graphics::WebGL2Context>
   {
+    friend class WebGLBaseRenderingContext<WebGL2RenderingContext, client_graphics::WebGL2Context>;
+
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    /**
+     * Create a new `WebGL2RenderingContext` object for the host environment, this rendering context is used to
+     * draw the graphics and objects in the host scene.
+     *
+     * @param env the N-API environment.
+     * @returns a new `WebGL2RenderingContext` object.
+     */
+    static inline Napi::Object MakeFromHost(Napi::Env env)
+    {
+      return WebGLBaseRenderingContext<WebGL2RenderingContext, client_graphics::WebGL2Context>::MakeFromHost(env);
+    }
 
   public:
     WebGL2RenderingContext(const Napi::CallbackInfo &info);
@@ -250,6 +287,6 @@ namespace webgl
     int32_t OVR_maxViews;
 
   private:
-    static thread_local Napi::FunctionReference *webgl2Constructor;
+    static thread_local Napi::FunctionReference *constructor;
   };
 }

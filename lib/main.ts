@@ -3,10 +3,7 @@ import * as env from '@transmute/env';
 import { reportDocumentEvent, addDocumentRequestListener } from '@transmute/messaging';
 
 import * as Navigator from './navigator';
-import {
-  connectRenderer,
-  getWebGLRenderingContext
-} from './bindings/renderer';
+import { connectRenderer } from './bindings/renderer';
 import { loadPolyfills } from './polyfills';
 import { initDevice as initXRDevice, createXRSystem } from './webxr';
 import { TransmuteRuntime2 } from './runtime2';
@@ -64,7 +61,7 @@ bootwait(async function main() {
     initXRDevice();
     Navigator.configureXRSystem(createXRSystem());
 
-    const gl = getWebGLRenderingContext();
+    const gl = env.getHostWebGLRenderingContext();
     Navigator.configureGL(gl);
     reportDocumentEvent(id, 'beforeloading');
 

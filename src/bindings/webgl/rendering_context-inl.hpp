@@ -24,6 +24,28 @@ using namespace canvasbinding;
 
 namespace webgl
 {
+  enum class WebGLRenderingContextSourceType : uint32_t
+  {
+    kHost = 0x0109,
+    kCanvas,
+    kOffscreenCanvas = 1,
+  };
+
+  template <typename ObjectType, typename ContextType>
+  Napi::Object WebGLBaseRenderingContext<ObjectType, ContextType>::MakeFromHost(Napi::Env env)
+  {
+    Napi::EscapableHandleScope scope(env);
+    WebGLRenderingContextSourceType sourceType = WebGLRenderingContextSourceType::kHost;
+    auto typeExternal = Napi::External<uint32_t>::New(env, reinterpret_cast<uint32_t *>(&sourceType));
+    if (ObjectType::constructor == nullptr)
+    {
+      Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
+      return env.Undefined().ToObject();
+    }
+    Napi::Object instance = ObjectType::constructor->New({typeExternal});
+    return scope.Escape(instance).ToObject();
+  }
+
   template <typename ObjectType, typename ContextType>
   WebGLBaseRenderingContext<ObjectType, ContextType>::WebGLBaseRenderingContext(const Napi::CallbackInfo &info)
       : Napi::ObjectWrap<ObjectType>(info)
@@ -31,15 +53,51 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    /**
-     * Write _screenCanvas(ReadOnlyScreenCanvas) property
-     *
-     * TODO: will change to `.canvas` when DOM implementation is ready.
-     */
-    auto jsThis = info.This().As<Napi::Object>();
-    auto canvas = canvasbinding::ReadOnlyScreenCanvas::NewInstance(env,
-                                                                   getDrawingBufferWidth(), getDrawingBufferHeight());
-    jsThis.Set("_screenCanvas", canvas);
+    if (info.Length() < 1 || !info[0].IsExternal())
+    {
+      Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
+      return;
+    }
+
+    auto externalData = info[0].As<Napi::External<uint32_t>>().Data();
+    if (externalData == nullptr)
+    {
+      Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
+      return;
+    }
+
+    WebGLRenderingContextSourceType sourceType = static_cast<WebGLRenderingContextSourceType>(*externalData);
+    if (sourceType == WebGLRenderingContextSourceType::kHost)
+    {
+      auto clientContext = TrClientContextPerProcess::Get();
+      assert(clientContext != nullptr);
+      glContext_ = clientContext->getHostWebGLContext();
+      assert(glContext_ != nullptr);
+
+      /**
+       * Write _screenCanvas(ReadOnlyScreenCanvas) property
+       *
+       * TODO: will change to `.canvas` when DOM implementation is ready.
+       * TODO: move to the MakeFromHost() method.
+       */
+      auto jsThis = info.This().As<Napi::Object>();
+      auto canvas = canvasbinding::ReadOnlyScreenCanvas::NewInstance(env,
+                                                                     getDrawingBufferWidth(), getDrawingBufferHeight());
+      jsThis.Set("_screenCanvas", canvas);
+    }
+    else if (
+        sourceType == WebGLRenderingContextSourceType::kCanvas ||
+        sourceType == WebGLRenderingContextSourceType::kOffscreenCanvas)
+    {
+      Napi::TypeError::New(env, "WebGL context creation has not yet supported from canvas or offscreen canvas.")
+          .ThrowAsJavaScriptException();
+      return;
+    }
+    else
+    {
+      Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
+      return;
+    }
   }
 
   template <typename ObjectType, typename ContextType>
@@ -52,6 +110,14 @@ namespace webgl
     auto deferred = Napi::Promise::Deferred::New(env);
     deferred.Resolve(env.Undefined());
     return deferred.Promise();
+  }
+
+  template <typename ObjectType, typename ContextType>
+  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::IsContextLost(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Boolean::New(env, glContext_->isContextLost());
   }
 
   template <typename ObjectType, typename ContextType>
@@ -268,9 +334,9 @@ namespace webgl
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
-    if (!info[1].IsNumber())
+    if (!WebGLShader::IsInstanceOf(info[1]))
     {
-      Napi::TypeError::New(env, "attachShader() 2nd argument(shader) must be a number.")
+      Napi::TypeError::New(env, "attachShader() 2nd argument(shader) must be an instance of `WebGLShader`.")
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -524,12 +590,60 @@ namespace webgl
     }
 
     auto targetInt = info[0].As<Napi::Number>().Int32Value();
-    auto buffer = info[1].As<Napi::Uint8Array>();
-    auto usageInt = info[2].As<Napi::Number>().Int32Value();
-
     auto target = static_cast<client_graphics::WebGLBufferBindingTarget>(targetInt);
+    auto usageInt = info[2].As<Napi::Number>().Int32Value();
     auto usage = static_cast<client_graphics::WebGLBufferUsage>(usageInt);
-    glContext_->bufferData(target, buffer.ByteLength(), buffer.Data(), usage);
+
+    auto jsBuffer = info[1];
+    void *bufferData = nullptr;
+    size_t bufferSize = 0;
+    if (jsBuffer.IsDataView() || jsBuffer.IsTypedArray())
+    {
+      Napi::ArrayBuffer byteBuffer;
+      size_t byteLength, byteOffset;
+      if (jsBuffer.IsDataView())
+      {
+        auto dataView = jsBuffer.As<Napi::DataView>();
+        byteBuffer = dataView.ArrayBuffer();
+        byteLength = dataView.ByteLength();
+        byteOffset = dataView.ByteOffset();
+      }
+      else
+      {
+        auto typedArray = jsBuffer.As<Napi::TypedArray>();
+        byteBuffer = typedArray.ArrayBuffer();
+        byteLength = typedArray.ByteLength();
+        byteOffset = typedArray.ByteOffset();
+      }
+      auto buffer = Napi::Uint8Array::New(env, byteLength, byteBuffer, byteOffset);
+      bufferData = buffer.Data();
+      bufferSize = buffer.ByteLength();
+    }
+    else if (jsBuffer.IsArray())
+    {
+      auto valuesArray = jsBuffer.As<Napi::Array>();
+      auto float32Array = Napi::Float32Array::New(env, valuesArray.Length(), napi_typedarray_type::napi_float32_array);
+      for (uint32_t i = 0; i < valuesArray.Length(); i++)
+        float32Array[i] = valuesArray.Get(i).ToNumber().FloatValue();
+      bufferData = float32Array.Data();
+      bufferSize = float32Array.ByteLength();
+    }
+    else if (jsBuffer.IsArrayBuffer())
+    {
+      auto buffer = jsBuffer.As<Napi::ArrayBuffer>();
+      bufferData = buffer.Data();
+      bufferSize = buffer.ByteLength();
+    }
+    else
+    {
+      auto consoleWarn = env.Global().Get("console").As<Napi::Object>().Get("warn").As<Napi::Function>();
+      auto msg = "Failed to execute 'bufferData' on 'WebGLRenderingContext': parameter 2 is not of type 'ArrayBufferView'";
+      consoleWarn.Call(env.Global(), {Napi::String::New(env, msg), jsBuffer});
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    glContext_->bufferData(target, bufferSize, bufferData, usage);
     return env.Undefined();
   }
 
@@ -637,9 +751,9 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() < 2)
+    if (info.Length() < 1)
     {
-      Napi::TypeError::New(env, "bindFramebuffer() takes 2 arguments.").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "bindFramebuffer() must take a target parameter").ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[0].IsNumber()) // target
