@@ -39,6 +39,16 @@ declare namespace Transmute {
   };
 
   /**
+   * The initialization options for the client context.
+   */
+  type ClientContextInit = {
+    /**
+     * The flag indicates if the client context is running in Web workers, otherwise it is running in the main thread.
+     */
+    isWorker: boolean;
+  };
+
+  /**
    * The client context which is returned via the "transmute:env" module.
    */
   class TrClientContext {
@@ -57,9 +67,9 @@ declare namespace Transmute {
      */
     webglVersion: number;
     /**
-     * The webgl context to draw to the host scene.
+     * The webgl context to draw to the host scene, it's only available in the main thread.
      */
-    gl: WebGLRenderingContext | WebGL2RenderingContext;
+    gl?: WebGLRenderingContext | WebGL2RenderingContext;
     /**
      * The WebXR device configuration.
      */
@@ -68,6 +78,13 @@ declare namespace Transmute {
       active: boolean;
       stereoRenderingMode: 'multipass' | 'singlepass' | 'singlepass-instanced' | 'singlepass-multiview' | 'unknown';
     };
+
+    /**
+     * Create a new client context.
+     * 
+     * @param init the initialization options.
+     */
+    constructor(init: ClientContextInit);
     /**
      * Send a keep alive message.
      */

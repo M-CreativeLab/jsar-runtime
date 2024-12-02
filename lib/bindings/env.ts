@@ -1,3 +1,4 @@
+import { isMainThread } from 'node:worker_threads';
 import { getHostWebGLContext } from '../webgl';
 
 let nativeContext: Transmute.TrClientContext = null;
@@ -13,7 +14,9 @@ try {
 
   // Load the native module "transmute:env" and create the `ClientContext` instance after dependencies are loaded.
   const binding = process._linkedBinding('transmute:env');
-  nativeContext = new binding.ClientContext();
+  nativeContext = new binding.ClientContext({
+    isWorker: !isMainThread,
+  });
 } catch (err) {
   console.error('failed to initialize "transmute:env" module.', err);
 }

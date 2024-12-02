@@ -82,7 +82,8 @@ namespace webgl
        */
       auto jsThis = info.This().As<Napi::Object>();
       auto canvas = canvasbinding::ReadOnlyScreenCanvas::NewInstance(env,
-                                                                     getDrawingBufferWidth(), getDrawingBufferHeight());
+                                                                     getDrawingBufferWidth(),
+                                                                     getDrawingBufferHeight());
       jsThis.Set("_screenCanvas", canvas);
     }
     else if (
@@ -765,16 +766,14 @@ namespace webgl
 
     int targetInt = info[0].As<Napi::Number>().Int32Value();
     auto target = static_cast<client_graphics::WebGLFramebufferBindingTarget>(targetInt);
-    if (
-        !info[1].IsObject() ||
-        !info[1].As<Napi::Object>().InstanceOf(WebGLFramebuffer::constructor->Value()))
-    {
-      glContext_->bindFramebuffer(target, nullptr);
-    }
-    else
+    if (WebGLFramebuffer::IsInstanceOf(info[1]))
     {
       auto framebuffer = Napi::ObjectWrap<WebGLFramebuffer>::Unwrap(info[1].As<Napi::Object>());
       glContext_->bindFramebuffer(target, framebuffer->handle());
+    }
+    else
+    {
+      glContext_->bindFramebuffer(target, nullptr);
     }
     return env.Undefined();
   }
@@ -893,9 +892,10 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() < 1)
+    if (info.Length() < 1 || !WebGLRenderbuffer::IsInstanceOf(info[0]))
     {
-      Napi::TypeError::New(env, "deleteRenderbuffer() takes 1 argument.").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "deleteRenderbuffer() takes 1 argument and it must be a WebGLRenderbuffer.")
+          .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -910,9 +910,9 @@ namespace webgl
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() < 2)
+    if (info.Length() < 1)
     {
-      Napi::TypeError::New(env, "bindRenderbuffer() takes 2 arguments.").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "bindRenderbuffer() must take a target parameter.").ThrowAsJavaScriptException();
       return env.Undefined();
     }
     if (!info[0].IsNumber())
@@ -924,7 +924,7 @@ namespace webgl
 
     auto targetInt = info[0].As<Napi::Number>().Int32Value();
     auto target = static_cast<client_graphics::WebGLRenderbufferBindingTarget>(targetInt);
-    if (info[0].IsObject())
+    if (WebGLRenderbuffer::IsInstanceOf(info[1]))
     {
       auto renderbuffer = Napi::ObjectWrap<WebGLRenderbuffer>::Unwrap(info[1].As<Napi::Object>());
       glContext_->bindRenderbuffer(target, renderbuffer->handle());
@@ -1008,23 +1008,21 @@ namespace webgl
     auto targetInt = info[0].As<Napi::Number>().Int32Value();
     auto target = static_cast<client_graphics::WebGLTextureTarget>(targetInt);
 
-    if (info[1].IsNull())
-    {
-      glContext_->bindTexture(target, nullptr);
-      return env.Undefined();
-    }
-    else if (info[1].IsObject() && WebGLTexture::IsInstanceOf(info[1]))
+    if (WebGLTexture::IsInstanceOf(info[1]))
     {
       auto texture = Napi::ObjectWrap<WebGLTexture>::Unwrap(info[1].As<Napi::Object>());
       glContext_->bindTexture(target, texture->handle());
-      return env.Undefined();
+    }
+    else if (info[1].IsNull() || info[1].IsUndefined())
+    {
+      glContext_->bindTexture(target, nullptr);
     }
     else
     {
       Napi::TypeError::New(env, "the texture to bindTexture() is invalid, must be null or a WebGLTexture object.")
           .ThrowAsJavaScriptException();
-      return env.Undefined();
     }
+    return env.Undefined();
   }
 
   template <typename ObjectType, typename ContextType>

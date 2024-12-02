@@ -13,8 +13,18 @@ namespace webgl
   public:
     static void Init(Napi::Env env);
     /**
-     * Create a new instance of `WebGLRenderbuffer`.
+     * A convenient function to check whether a given JavaScript `value` is an instance of `WebGLRenderbuffer`.
      * 
+     * @param value The value to check.
+     * @return Whether the value is an instance of `WebGLRenderbuffer`.
+     */
+    static bool IsInstanceOf(const Napi::Value &value)
+    {
+      return value.As<Napi::Object>().InstanceOf(constructor->Value());
+    }
+    /**
+     * Create a new instance of `WebGLRenderbuffer`.
+     *
      * @param env The environment that the instance will be created in.
      * @param handle The native handle of the instance.
      * @returns The new instance of `WebGLRenderbuffer`.

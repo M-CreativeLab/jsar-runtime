@@ -111,6 +111,10 @@ private:
 				DEBUG(LOG_TAG_ERROR, "%s(%d) on content#%d Occurs an OpenGL error: GL_INVALID_OPERATION",
 							commandTypeToStr(commandType).c_str(), commandType, contentId);
 				break;
+			case GL_INVALID_FRAMEBUFFER_OPERATION:
+				DEBUG(LOG_TAG_ERROR, "%s(%d) on content#%d Occurs an OpenGL error: GL_INVALID_FRAMEBUFFER_OPERATION",
+							commandTypeToStr(commandType).c_str(), commandType, contentId);
+				break;
 			case GL_OUT_OF_MEMORY:
 				reqContentRenderer->markOccurOutOfMemoryError();
 				DEBUG(LOG_TAG_ERROR, "%s(%d) on content#%d Occurs an OpenGL error: GL_OUT_OF_MEMORY",
@@ -1587,7 +1591,7 @@ private:
 		glDrawArrays(mode, first, count);
 		reqContentRenderer->increaseDrawCallsCount(count);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::DrawArrays(%d)", options.isDefaultQueue, req->count);
+			DumpDrawCallInfo(LOG_TAG_ERROR, "DrawArrays", options.isDefaultQueue, mode, count, 0, nullptr);
 	}
 	TR_OPENGL_FUNC void OnDrawElements(DrawElementsCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{

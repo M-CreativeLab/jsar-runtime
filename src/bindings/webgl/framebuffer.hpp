@@ -11,6 +11,16 @@ namespace webgl
   public:
     static void Init(Napi::Env env);
     /**
+     * A convenient function to check whether a given JavaScript `value` is an instance of `WebGLFramebuffer`.
+     * 
+     * @param value The value to check.
+     * @return Whether the value is an instance of `WebGLFramebuffer`.
+     */
+    static bool IsInstanceOf(const Napi::Value &value)
+    {
+      return value.As<Napi::Object>().InstanceOf(constructor->Value());
+    }
+    /**
      * Create a new instance of WebGLFramebuffer.
      *
      * @param env The Napi::Env that is calling this function.

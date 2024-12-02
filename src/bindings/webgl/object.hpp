@@ -45,6 +45,11 @@ namespace webgl
 
       SharedReference<HandleType> handleRef = *info[0].As<Napi::External<SharedReference<HandleType>>>().Data();
       handle_ = handleRef.value;
+
+#ifdef TR_DEBUG
+      auto jsThis = info.This().ToObject();
+      jsThis.Set("id", Napi::Number::New(env, id()));
+#endif
     }
 
   public:
@@ -56,11 +61,11 @@ namespace webgl
       return handle_;
     }
     /**
-     * @returns the id of this `WebGLObject`.
+     * @returns the id of this `WebGLObject` or zero if the handle is null.
      */
     uint32_t id()
     {
-      return handle_->id;
+      return handle_ == nullptr ? 0 : handle_->id;
     }
 
   protected:

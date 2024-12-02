@@ -28,7 +28,7 @@ namespace client_graphics
   public:
     WebGLObject(WebGLObjectType type) : type(type)
     {
-      static TrIdGenerator idGen(1);
+      static TrIdGenerator idGen(0x1);
       id = idGen.get();
     }
 
