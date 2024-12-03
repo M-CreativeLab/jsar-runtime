@@ -34,7 +34,7 @@ function fitTo(scene, targetSize = 1) {
   scene.scale.set(scale, scale, scale);
 }
 
-function init(cb) {
+async function init(cb) {
 
   container.width = window.innerWidth;
   container.height = window.innerHeight;
@@ -47,7 +47,8 @@ function init(cb) {
   scene = new THREE.Scene();
 
   const gl = navigator.gl;
-  navigator.xr.requestSession('immersive-ar', {}).then((session) => {
+  try {
+    const session = await navigator.xr.requestSession('immersive-ar', {});
     console.info('XR session started:', session);
     const baseLayer = new XRWebGLLayer(session, gl);
     session.updateRenderState({ baseLayer });
@@ -63,19 +64,10 @@ function init(cb) {
     renderer.xr.setReferenceSpaceType('local');
     renderer.xr.setSession(session);
     cb();
-  }, (err) => {
+  } catch (err) {
     console.warn('Failed to start XR session:', err);
     cb(err);
-  });
-
-  // window.addEventListener('load', function () {
-  //   document.addEventListener('mousemove', mousemove, false);
-  //   window.addEventListener('resize', onWindowResize, false);
-  //   document.addEventListener('mouseup', mouseup, false);
-  //   document.addEventListener('mousedown', mousedown, false);
-  //   document.addEventListener('touchend', touchend, false);
-  //   document.addEventListener('touchmove', touchmove, false);
-  // });
+  }
 }
 
 function onWindowResize() {

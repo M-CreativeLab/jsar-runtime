@@ -1,5 +1,6 @@
 #include "client_context.hpp"
 #include "common/xr/types.hpp"
+#include "../webgl/rendering_context-inl.hpp"
 
 namespace bindings
 {
@@ -28,6 +29,16 @@ namespace bindings
       Napi::TypeError::New(env, "Client context is not available.").ThrowAsJavaScriptException();
       return;
     }
+    if (info.Length() < 1 || !info[0].IsObject())
+    {
+      Napi::TypeError::New(env, "Failed to construct 'ClientContext': missing init object.").ThrowAsJavaScriptException();
+      return;
+    }
+
+    auto initObject = info[0].ToObject();
+    bool isWorker = false;
+    if (initObject.Has("isWorker"))
+      isWorker = initObject.Get("isWorker").ToBoolean();
 
     auto thisObject = info.This().ToObject();
     thisObject.Set("id", Napi::Number::New(env, clientContext->id));
@@ -36,6 +47,14 @@ namespace bindings
                    Napi::String::New(env, clientContext->applicationCacheDirectory));
     thisObject.Set("httpsProxyServer", Napi::String::New(env, clientContext->httpsProxyServer));
     thisObject.Set("webglVersion", Napi::Number::New(env, clientContext->webglVersion));
+
+    // Disable the host webgl context for worker threads
+    if (!isWorker)
+    {
+      thisObject.Set("gl", clientContext->webglVersion == 2
+                               ? ::webgl::WebGL2RenderingContext::MakeFromHost(env)
+                               : ::webgl::WebGLRenderingContext::MakeFromHost(env));
+    }
 
     if (clientContext->xrDeviceInit.enabled == true)
     {

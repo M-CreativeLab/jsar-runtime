@@ -241,7 +241,24 @@ public: // media methods
   }
 
 public: // commandbuffer methods
+  /**
+   * @returns the host WebGL context.
+   */
+  inline shared_ptr<client_graphics::WebGL2Context> getHostWebGLContext() { return hostWebGLContext; }
+  /**
+   * Send a command buffer request to the command buffer channel.
+   * 
+   * @param commandBuffer The command buffer to send.
+   * @param followsFlush If the command buffer follows a flush command, a flush command will cause the renderer to flush the buffer queue.
+   * @returns true if the command buffer request is sent successfully.
+   */
   bool sendCommandBufferRequest(TrCommandBufferBase &commandBuffer, bool followsFlush = false);
+  /**
+   * Receive a command buffer response from the command buffer channel with a timeout.
+   * 
+   * @param timeout The time in milliseconds to wait for the response.
+   * @returns The new instance of the command buffer response, or nullptr if no response received or timeout.
+   */
   TrCommandBufferResponse *recvCommandBufferResponse(int timeout);
 
 public: // WebXR methods
@@ -275,6 +292,12 @@ public: // WebXR methods
    */
   bool isFramebufferDoubleWide() { return xrDeviceContextZoneClient != nullptr && xrDeviceContextZoneClient->getFramebufferConfig().useDoubleWide; }
 
+  /**
+   * Send an XR command to the XR channel.
+   *
+   * @param xrCommand The XR command to send.
+   * @returns true if the command is sent successfully.
+   */
   template <typename CommandType>
   bool sendXrCommand(xr::TrXRCommandBase<CommandType> &xrCommand)
   {
@@ -355,6 +378,7 @@ private: // media fields
   vector<shared_ptr<media_client::MediaPlayer>> mediaPlayers;
 
 private: // command buffer fields
+  shared_ptr<client_graphics::WebGL2Context> hostWebGLContext = nullptr;
   TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;

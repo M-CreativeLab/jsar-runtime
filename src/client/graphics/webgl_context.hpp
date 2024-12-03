@@ -43,6 +43,19 @@ namespace client_graphics
     kTriangles = WEBGL_TRIANGLES,
   };
 
+  enum class WebGLHintTargetBehavior
+  {
+    kGenerateMipmap = WEBGL_GENERATE_MIPMAP_HINT,
+    kFragmentShaderDerivative = WEBGL2_FRAGMENT_SHADER_DERIVATIVE_HINT,
+  };
+
+  enum class WebGLHintBehaviorMode
+  {
+    kFastest = WEBGL_FASTEST,
+    kNicest = WEBGL_NICEST,
+    kDontCare = WEBGL_DONT_CARE,
+  };
+
   enum class WebGLPixelStorageParameterName
   {
     kPackAlignment = WEBGL_PACK_ALIGNMENT,
@@ -156,6 +169,39 @@ namespace client_graphics
     kShadingLanguageVersion = WEBGL_SHADING_LANGUAGE_VERSION,
     kVendor = WEBGL_VENDOR,
     kVersion = WEBGL_VERSION,
+  };
+
+  enum class WebGL2IntegerParameterName
+  {
+    kMax3DTextureSize = WEBGL2_MAX_3D_TEXTURE_SIZE,
+    kMaxArrayTextureLayers = WEBGL2_MAX_ARRAY_TEXTURE_LAYERS,
+    kMaxColorAttachments = WEBGL2_MAX_COLOR_ATTACHMENTS,
+    kMaxCombinedUniformBlocks = WEBGL2_MAX_COMBINED_UNIFORM_BLOCKS,
+    kMaxDrawBuffers = WEBGL2_MAX_DRAW_BUFFERS,
+    kMaxElementsIndices = WEBGL2_MAX_ELEMENTS_INDICES,
+    kMaxElementsVertices = WEBGL2_MAX_ELEMENTS_VERTICES,
+    kMaxFragmentInputComponents = WEBGL2_MAX_FRAGMENT_INPUT_COMPONENTS,
+    kMaxFragmentUniformBlocks = WEBGL2_MAX_FRAGMENT_UNIFORM_BLOCKS,
+    kMaxFragmentUniformComponents = WEBGL2_MAX_FRAGMENT_UNIFORM_COMPONENTS,
+    kMaxProgramTexelOffset = WEBGL2_MAX_PROGRAM_TEXEL_OFFSET,
+    kMaxSamples = WEBGL2_MAX_SAMPLES,
+    kMaxTransformFeedbackInterleavedComponents = WEBGL2_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS,
+    kMaxTransformFeedbackSeparateAttribs = WEBGL2_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS,
+    kMaxTransformFeedbackSeparateComponents = WEBGL2_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS,
+    kMaxUniformBufferBindings = WEBGL2_MAX_UNIFORM_BUFFER_BINDINGS,
+    kMaxVaryingComponents = WEBGL2_MAX_VARYING_COMPONENTS,
+    kMaxVertexOutputComponents = WEBGL2_MAX_VERTEX_OUTPUT_COMPONENTS,
+    kMaxVertexUniformBlocks = WEBGL2_MAX_VERTEX_UNIFORM_BLOCKS,
+    kMaxVertexUniformComponents = WEBGL2_MAX_VERTEX_UNIFORM_COMPONENTS,
+    kMinProgramTexelOffset = WEBGL2_MIN_PROGRAM_TEXEL_OFFSET,
+    kMaxClientWaitTimeoutWebGL = WEBGL2_MAX_CLIENT_WAIT_TIMEOUT_WEBGL,
+    kMaxCombinedFragmentUniformComponents = WEBGL2_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS,
+    kMaxCombinedVertexUniformComponents = WEBGL2_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS,
+    kMaxElementIndex = WEBGL2_MAX_ELEMENT_INDEX,
+    kMaxServerWaitTimeout = WEBGL2_MAX_SERVER_WAIT_TIMEOUT,
+    kMaxUniformBlockSize = WEBGL2_MAX_UNIFORM_BLOCK_SIZE,
+    kMaxTextureLodBias = WEBGL2_MAX_TEXTURE_LOD_BIAS,
+    kExtMaxViewsOvr = WEBGL2_EXT_MAX_VIEWS_OVR,
   };
 
   class ContextAttributes
@@ -339,12 +385,17 @@ namespace client_graphics
     void uniform4iv(WebGLUniformLocation location, const std::vector<int> value);
     void uniformMatrix2fv(WebGLUniformLocation location, bool transpose, glm::mat2 m);
     void uniformMatrix2fv(WebGLUniformLocation location, bool transpose, std::vector<float> values);
+    void uniformMatrix2fv(WebGLUniformLocation location, bool transpose, MatrixComputationGraph &graphToValues);
     void uniformMatrix3fv(WebGLUniformLocation location, bool transpose, glm::mat3 m);
     void uniformMatrix3fv(WebGLUniformLocation location, bool transpose, std::vector<float> values);
+    void uniformMatrix3fv(WebGLUniformLocation location, bool transpose, MatrixComputationGraph &graphToValues);
     void uniformMatrix4fv(WebGLUniformLocation location, bool transpose, glm::mat4 m);
     void uniformMatrix4fv(WebGLUniformLocation location, bool transpose, std::vector<float> values);
+    void uniformMatrix4fv(WebGLUniformLocation location, bool transpose, MatrixComputationGraph &graphToValues);
     void drawArrays(WebGLDrawMode mode, int first, int count);
     void drawElements(WebGLDrawMode mode, int count, int type, int offset);
+    void hint(WebGLHintTargetBehavior target, WebGLHintBehaviorMode mode);
+    void lineWidth(float width);
     void pixelStorei(WebGLPixelStorageParameterName pname, int param);
     void polygonOffset(float factor, float units);
     void viewport(int x, int y, size_t width, size_t height);
@@ -372,20 +423,54 @@ namespace client_graphics
     void frontFace(int mode);
     void enable(int cap);
     void disable(int cap);
+    /**
+     * @param pname The parameter name that returns a boolean value.
+     * @returns The boolean value for the parameter name.
+     */
     bool getParameter(WebGLBooleanParameterName pname);
+    /**
+     * @param pname The parameter name that returns a float value.
+     * @returns The float value for the parameter name.
+     */
     float getParameter(WebGLFloatParameterName pname);
+    /**
+     * @param pname The parameter name that returns a float array value.
+     * @returns The float array value for the parameter name.
+     */
     std::vector<float> getParameter(WebGLFloatArrayParameterName pname);
+    /**
+     * @param pname The parameter name that returns an integer value.
+     * @returns The integer value for the parameter name.
+     */
     int getParameter(WebGLIntegerParameterName pname);
+    /**
+     * @param pname The parameter name that returns a 64-bit integer value.
+     * @returns The 64-bit integer value for the parameter name.
+     */
     int64_t getParameter(WebGLInteger64ParameterName pname);
+    /**
+     * @param pname The parameter name that returns a boolean value.
+     * @param index The index of the parameter.
+     * @returns The boolean value for the parameter name.
+     */
     bool getParameter(WebGLBooleanIndexedParameterName pname, int index);
+    /**
+     * @param pname The parameter name that returns a float value.
+     * @param index The index of the parameter.
+     * @returns The float value for the parameter name.
+     */
     float getParameter(WebGLFloatArrayParameterName pname, int index);
+    /**
+     * @param pname The parameter name that returns a string.
+     * @returns The string value for the parameter name, such as `renderer`, `vendor` or others.
+     */
     std::string getParameter(WebGLStringParameterName pname);
     WebGLShaderPrecisionFormat getShaderPrecisionFormat(int shadertype, int precisiontype);
     int getError();
     std::vector<std::string> getSupportedExtensions();
     bool makeXRCompatible();
 
-  protected:
+  public:
     /**
      * @returns the width of the current drawing buffer, commonly the bound framebuffer.
      */
@@ -402,6 +487,38 @@ namespace client_graphics
       return viewport_.height;
     }
 
+    /**
+     * @returns if this context is a WebGL2 context.
+     */
+    inline bool isWebGL2()
+    {
+      return isWebGL2_;
+    }
+
+    /**
+     * @returns if the context is lost.
+     */
+    inline bool isContextLost()
+    {
+      return isContextLost_;
+    }
+
+    /**
+     * It sets the WebGL error for the function.
+     *
+     * @param func the function name that causes the error.
+     * @param error the WebGL error.
+     * @param message the error message for debugging.
+     */
+    inline void setError(std::string func, WebGLError error, std::string message)
+    {
+      lastError_ = error;
+#if WEBGL_DEBUG
+      std::cerr << func << "(): " << message << std::endl;
+#endif
+    }
+
+  protected:
     /**
      * It sends a command buffer request to the server.
      *
@@ -455,7 +572,104 @@ namespace client_graphics
         size_t width,
         size_t height,
         unsigned char *srcPixels,
-        unsigned char *dstPixels = nullptr);
+        unsigned char *dstPixels = nullptr)
+    {
+      if (srcPixels == nullptr) // return null if the input is null.
+        return nullptr;
+
+      // Compute the pixel size
+      int pixelSize = 1;
+      if (type == WebGLPixelType::kUnsignedByte || type == WebGLPixelType::kFloat)
+      {
+        if (type == WebGLPixelType::kFloat)
+          pixelSize = 4;
+        switch (format)
+        {
+        case WebGLTextureFormat::kAlpha:
+        case WebGLTextureFormat::kLuminance:
+          break;
+        case WebGLTextureFormat::kLuminanceAlpha:
+          pixelSize *= 2;
+          break;
+        case WebGLTextureFormat::kRGB:
+          pixelSize *= 3;
+          break;
+        case WebGLTextureFormat::kRGBA:
+          pixelSize *= 4;
+          break;
+        default:
+          break;
+        }
+      }
+      else
+      {
+        pixelSize = 2;
+      }
+
+      // Compute the row stride
+      int rowStride = width * pixelSize;
+      if ((rowStride % unpackAlignment_) != 0)
+        rowStride += unpackAlignment_ - (rowStride % unpackAlignment_);
+
+      int imageSize = rowStride * height;
+      unsigned char *unpacked = new unsigned char[imageSize];
+      if (unpackFlipY_)
+      {
+        for (int i = 0, j = height - 1; j >= 0; ++i, --j)
+        {
+          memcpy(
+              reinterpret_cast<void *>(unpacked + j * rowStride),
+              reinterpret_cast<void *>(srcPixels + i * rowStride),
+              width * pixelSize);
+        }
+      }
+      else
+      {
+        memcpy(
+            reinterpret_cast<void *>(unpacked),
+            reinterpret_cast<void *>(srcPixels),
+            imageSize);
+      }
+
+      if (
+          unpackPremultiplyAlpha_ &&
+          (format == WebGLTextureFormat::kLuminanceAlpha || format == WebGLTextureFormat::kRGBA))
+      {
+        for (int row = 0; row < height; ++row)
+        {
+          for (int col = 0; col < width; ++col)
+          {
+            unsigned char *pixel = unpacked + (row * rowStride) + (col * pixelSize);
+            if (format == WebGLTextureFormat::kLuminanceAlpha)
+            {
+              pixel[0] *= pixel[1] / 255.0f;
+            }
+            else if (type == WebGLPixelType::kUnsignedByte)
+            {
+              float scale = pixel[3] / 255.0f;
+              pixel[0] *= scale;
+              pixel[1] *= scale;
+              pixel[2] *= scale;
+            }
+            else if (type == WebGLPixelType::kUnsignedShort4444)
+            {
+              int r = pixel[0] & 0x0f;
+              int g = pixel[0] >> 4;
+              int b = pixel[1] & 0x0f;
+              int a = pixel[1] >> 4;
+              float scale = a / 15.0f;
+              r *= scale;
+              g *= scale;
+              b *= scale;
+
+              pixel[0] = r | (g << 4);
+              pixel[1] = b | (a << 4);
+            }
+          }
+        }
+      }
+      return unpacked;
+    }
 
   public:
     ContextAttributes contextAttributes;
@@ -479,9 +693,14 @@ namespace client_graphics
     WebGLError lastError_ = WebGLError::kNoError;
     std::optional<std::vector<std::string>> supportedExtensions_ = std::nullopt;
     bool isWebGL2_ = false;
+    bool isContextLost_ = false;
     bool isFirstContentfulPaintReported_ = false;
     bool unpackFlipY_ = false;
     bool unpackPremultiplyAlpha_ = false;
+    glm::vec4 clearColor_ = {0.0f, 0.0f, 0.0f, 1.0f};
+    float clearDepth_ = 1.0f;
+    int clearStencil_ = 0;
+    glm::vec4 blendColor_ = {0.0f, 0.0f, 0.0f, 1.0f};
     /**
      * TODO: Read the value from the host
      */
@@ -546,7 +765,7 @@ namespace client_graphics
     void clearBufferuiv(WebGLFramebufferAttachmentType buffer, int drawbuffer, const std::vector<unsigned int> values);
     void clearBufferfi(WebGLFramebufferAttachmentType buffer, int drawbuffer, float depth, int stencil);
     void compressedTexImage3D(
-        WebGLTexture2DTarget target,
+        WebGLTexture3DTarget target,
         int level,
         int internalformat,
         size_t width,
@@ -556,7 +775,7 @@ namespace client_graphics
         size_t imageSize,
         unsigned char *data);
     void compressedTexSubImage3D(
-        WebGLTexture2DTarget target,
+        WebGLTexture3DTarget target,
         int level,
         int xoffset,
         int yoffset,
@@ -625,7 +844,16 @@ namespace client_graphics
         std::optional<int> dstOffset = std::nullopt,
         std::optional<int> length = std::nullopt);
     int getFragDataLocation(std::shared_ptr<WebGLProgram> program, const std::string &name);
+    int getParameterV2(WebGL2IntegerParameterName pname);
     std::shared_ptr<WebGLQuery> getQuery(WebGLQueryTarget target, int pname);
+    /**
+     * It retrieves the index of a uniform block within a WebGLProgram.
+     *
+     * @param program The program to query.
+     * @param uniformBlockName The name of the uniform block.
+     * @returns The index of the uniform block.
+     */
+    int getUniformBlockIndex(std::shared_ptr<WebGLProgram> program, const std::string &uniformBlockName);
     /**
      * It invalidates the contents of attachments in a framebuffer.
      *
@@ -700,7 +928,7 @@ namespace client_graphics
      * @param pixels The pixel data.
      */
     void texImage3D(
-        WebGLTexture2DTarget target,
+        WebGLTexture3DTarget target,
         int level,
         int internalformat,
         size_t width,
@@ -736,7 +964,7 @@ namespace client_graphics
      * @param depth The depth of the texture image.
      */
     void texStorage3D(
-        WebGLTexture2DTarget target,
+        WebGLTexture3DTarget target,
         int levels,
         int internalformat,
         size_t width,
@@ -758,7 +986,7 @@ namespace client_graphics
      * @param pixels The pixel data.
      */
     void texSubImage3D(
-        WebGLTexture2DTarget target,
+        WebGLTexture3DTarget target,
         int level,
         int xoffset,
         int yoffset,

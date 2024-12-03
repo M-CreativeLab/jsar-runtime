@@ -1,11 +1,9 @@
-import { getContext as createWebGLRenderingContext } from '../webgl';
-
 const {
   AnimationFrameListener,
 } = process._linkedBinding('transmute:renderer');
 
 let globalAnimationFrameListener: Transmute.AnimationFrameListener = null;
-let globalGlContext: WebGLRenderingContext | WebGL2RenderingContext = null;
+let hostGlContext: WebGLRenderingContext | WebGL2RenderingContext = null;
 let isReady = false;
 
 const onreadyCallbacks: Array<(gl: WebGLRenderingContext) => void> = [];
@@ -16,7 +14,7 @@ const onframeCallbacks: Array<{
 
 export function requestRendererReady(callback: (gl: WebGLRenderingContext) => void) {
   if (isReady) {
-    callback(globalGlContext);
+    callback(hostGlContext);
     return;
   } else {
     onreadyCallbacks.push(callback);
@@ -90,25 +88,21 @@ export function connectRenderer(clientContext: Transmute.TrClientContext): boole
   /**
    * Initialize the global WebGL context.
    */
-  try {
-    globalGlContext = createWebGLRenderingContext(clientContext.webglVersion === 1 ? 'webgl' : 'webgl2');
-  } catch (err) {
-    console.warn('failed to create webgl context:', err);
-  }
-  if (globalGlContext == null) {
-    throw new Error('failed to create webgl context.');
+  hostGlContext = clientContext.gl;
+  if (hostGlContext == null || !hostGlContext) {
+    throw new Error('failed to get host webgl context.');
   }
 
-  const gl = globalGlContext;
+  const gl = hostGlContext;
   onreadyCallbacks.forEach(cb => cb(gl));
   onreadyCallbacks.length = 0;
   isReady = true;
   return isReady;
 }
 
-export function getWebGLRenderingContext(): WebGLRenderingContext | WebGL2RenderingContext {
+export function getHostWebGLRenderingContext(): WebGLRenderingContext | WebGL2RenderingContext {
   if (!isReady) {
     throw new Error('renderer is not ready, call connectRenderer() first.');
   }
-  return globalGlContext;
+  return hostGlContext;
 }

@@ -3,6 +3,7 @@
 #include <string>
 #include <napi.h>
 #include "common/command_buffers/details/program.hpp"
+#include "client/graphics/webgl_active_info.hpp"
 
 namespace webgl
 {
@@ -10,7 +11,7 @@ namespace webgl
   {
   public:
     static void Init(Napi::Env env);
-    static Napi::Object NewInstance(Napi::Env env, commandbuffers::ActiveInfo activeInfo);
+    static Napi::Object NewInstance(Napi::Env env, client_graphics::WebGLActiveInfo &activeInfo);
     WebGLActiveInfo(const Napi::CallbackInfo &info);
 
   private:

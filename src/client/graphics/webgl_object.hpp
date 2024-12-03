@@ -26,11 +26,23 @@ namespace client_graphics
   class WebGLObject
   {
   public:
+    /**
+     * Create a new `WebGLObject` with auto-generated id.
+     * 
+     * @param type The type of the `WebGLObject`.
+     */
     WebGLObject(WebGLObjectType type) : type(type)
     {
-      static TrIdGenerator idGen(1);
+      static TrIdGenerator idGen(0x10);
       id = idGen.get();
     }
+    /**
+     * Create a new `WebGLObject` with the given id.
+     * 
+     * @param type The type of the `WebGLObject`.
+     * @param id The id of the `WebGLObject`.
+     */
+    WebGLObject(WebGLObjectType type, int id) : type(type), id(id) {}
 
   public:
     /**

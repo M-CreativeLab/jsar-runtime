@@ -3,50 +3,53 @@
 #include <map>
 #include <napi.h>
 #include "common/command_buffers/details/program.hpp"
+#include "client/graphics/webgl_program.hpp"
+
+#include "./object.hpp"
 #include "./active_info.hpp"
 
 namespace webgl
 {
-  class WebGLProgram : public Napi::ObjectWrap<WebGLProgram>
+  class WebGLProgram : public WebGLObjectBase<WebGLProgram, client_graphics::WebGLProgram>
   {
-  public:
-    static void Init(Napi::Env env);
-    WebGLProgram(const Napi::CallbackInfo &info);
-    int GetId() const { return id_; }
-    void SetLinkStatus(bool linkStatus) { linkStatus_ = linkStatus; }
-    bool GetLinkStatus() const { return linkStatus_; }
-    commandbuffers::ActiveInfo GetActiveAttrib(int index);
-    void SetActiveAttrib(int index, const commandbuffers::ActiveInfo &activeInfo);
-    bool HasActiveAttrib(int index);
-    commandbuffers::ActiveInfo GetActiveUniform(int index);
-    void SetActiveUniform(int index, commandbuffers::ActiveInfo &activeInfo);
-    bool HasActiveUniform(int index);
-    void SetAttribLocation(const std::string &name, int location);
-    bool HasAttribLocation(const std::string &name);
-    int GetAttribLocation(const std::string &name);
-    void SetUniformLocation(const std::string &name, int location);
-    bool HasUniformLocation(const std::string &name);
-    int GetUniformLocation(const std::string &name);
-    void SetUniformBlockIndex(const std::string &name, int index);
-    bool HasUniformBlockIndex(const std::string &name);
-    int GetUniformBlockIndex(const std::string &name);
+    friend class WebGLObjectBase<WebGLProgram, client_graphics::WebGLProgram>;
 
   public:
-    void printInfo();
+    /**
+     * Initialize the `WebGLProgram` class for JavaScript binding.
+     */
+    static void Init(Napi::Env env);
+    /**
+     * A convenient function to check whether a given JavaScript `value` is an instance of `WebGLTexture`.
+     * 
+     * @param value The value to check.
+     * @return Whether the value is an instance of `WebGLTexture`.
+     */
+    static bool IsInstanceOf(const Napi::Value &value)
+    {
+      return value.IsObject() && value.As<Napi::Object>().InstanceOf(constructor->Value());
+    }
+    /**
+     * It creates a new instance of `WebGLProgram`.
+     * 
+     * @param env The `Napi::Env` in which the instance is being created.
+     * @param handle The `std::shared_ptr<client_graphics::WebGLProgram>` to be used in the instance.
+     */
+    static Napi::Object NewInstance(Napi::Env env, std::shared_ptr<client_graphics::WebGLProgram> handle)
+    {
+      return WebGLObjectBase<WebGLProgram, client_graphics::WebGLProgram>::NewInstance(env, handle);
+    }
+
+  public:
+    WebGLProgram(const Napi::CallbackInfo &info);
+
+  public:
+    void printInfo() { handle_->printInfo(); }
 
   private:
     Napi::Value ToString(const Napi::CallbackInfo &info);
 
   private:
-    int id_;
-    bool linkStatus_ = false;
-    std::map<int, commandbuffers::ActiveInfo> activeAttribs_;
-    std::map<int, commandbuffers::ActiveInfo> activeUniforms_;
-    std::map<std::string, int> attribLocations_;
-    std::map<std::string, int> uniformLocations_;
-    std::map<std::string, int> uniformBlockIndices_;
-
-  public:
     static thread_local Napi::FunctionReference *constructor;
   };
 }

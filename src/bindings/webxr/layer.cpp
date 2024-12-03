@@ -96,7 +96,7 @@ namespace bindings
       return;
     }
     glContext = Napi::Persistent(contextValue.ToObject());
-    hostFramebuffer = Napi::Persistent(webgl::WebGLFramebuffer::NewInstance(env, true));
+    hostFramebuffer = Napi::Persistent(webgl::WebGLFramebuffer::NewInstance(env, nullptr, true));
 
     // Update properties from options
     auto optionsValue = info[2];

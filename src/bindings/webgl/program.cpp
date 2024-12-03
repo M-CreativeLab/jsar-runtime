@@ -11,125 +11,9 @@ namespace webgl
     *constructor = Napi::Persistent(tpl);
   }
 
-  WebGLProgram::WebGLProgram(const Napi::CallbackInfo &info) : Napi::ObjectWrap<WebGLProgram>(info)
+  WebGLProgram::WebGLProgram(const Napi::CallbackInfo &info)
+      : WebGLObjectBase<WebGLProgram, client_graphics::WebGLProgram>(info)
   {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
-
-    if (info.Length() != 1 || !info[0].IsNumber())
-    {
-      Napi::TypeError::New(env, "Number expected to instantiate WebGLProgram")
-          .ThrowAsJavaScriptException();
-      return;
-    }
-
-    id_ = info[0].As<Napi::Number>().Int32Value();
-  }
-
-  commandbuffers::ActiveInfo WebGLProgram::GetActiveAttrib(int index)
-  {
-    return activeAttribs_[index];
-  }
-
-  void WebGLProgram::SetActiveAttrib(int index, const commandbuffers::ActiveInfo &activeInfo)
-  {
-    activeAttribs_[index] = activeInfo;
-  }
-
-  bool WebGLProgram::HasActiveAttrib(int index)
-  {
-    return activeAttribs_.find(index) != activeAttribs_.end();
-  }
-
-  commandbuffers::ActiveInfo WebGLProgram::GetActiveUniform(int index)
-  {
-    return activeUniforms_[index];
-  }
-
-  void WebGLProgram::SetActiveUniform(int index, commandbuffers::ActiveInfo &activeInfo)
-  {
-    activeUniforms_[index] = activeInfo;
-  }
-
-  bool WebGLProgram::HasActiveUniform(int index)
-  {
-    return activeUniforms_.find(index) != activeUniforms_.end();
-  }
-
-  void WebGLProgram::SetAttribLocation(const std::string &name, int location)
-  {
-    attribLocations_[name] = location;
-  }
-
-  bool WebGLProgram::HasAttribLocation(const std::string &name)
-  {
-    return attribLocations_.find(name) != attribLocations_.end();
-  }
-
-  int WebGLProgram::GetAttribLocation(const std::string &name)
-  {
-    return attribLocations_[name];
-  }
-
-  void WebGLProgram::SetUniformLocation(const std::string &name, int location)
-  {
-    uniformLocations_[name] = location;
-  }
-
-  bool WebGLProgram::HasUniformLocation(const std::string &name)
-  {
-    return uniformLocations_.find(name) != uniformLocations_.end();
-  }
-
-  int WebGLProgram::GetUniformLocation(const std::string &name)
-  {
-    return uniformLocations_[name];
-  }
-
-  void WebGLProgram::SetUniformBlockIndex(const std::string &name, int index)
-  {
-    uniformBlockIndices_[name] = index;
-  }
-
-  bool WebGLProgram::HasUniformBlockIndex(const std::string &name)
-  {
-    return uniformBlockIndices_.find(name) != uniformBlockIndices_.end();
-  }
-
-  int WebGLProgram::GetUniformBlockIndex(const std::string &name)
-  {
-    return uniformBlockIndices_[name];
-  }
-
-  void WebGLProgram::printInfo()
-  {
-    std::cout << "Program " << id_ << " info:" << std::endl;
-    std::cout << "Link status: " << (linkStatus_ ? "true" : "false") << std::endl;
-    std::cout << "Active attributes:" << std::endl;
-    for (auto &pair : activeAttribs_)
-    {
-      auto activeInfo = pair.second;
-      std::cout << "  " << pair.first << ": " << activeInfo.name << ", type: " << activeInfo.type << ", size: " << activeInfo.size << std::endl;
-    }
-
-    std::cout << "Active uniforms:" << std::endl;
-    for (auto &pair : activeUniforms_)
-    {
-      auto activeInfo = pair.second;
-      std::cout << "  " << pair.first << ": " << activeInfo.name << ", type: " << activeInfo.type << ", size: " << activeInfo.size << std::endl;
-    }
-
-    std::cout << "Attribute locations:" << std::endl;
-    for (auto &pair : attribLocations_)
-    {
-      std::cout << "  " << pair.first << ": " << pair.second << std::endl;
-    }
-
-    std::cout << "Uniform locations:" << std::endl;
-    for (auto &pair : uniformLocations_)
-    {
-      std::cout << "  " << pair.first << ": " << pair.second << std::endl;
-    }
   }
 
   Napi::Value WebGLProgram::ToString(const Napi::CallbackInfo &info)
@@ -137,7 +21,7 @@ namespace webgl
     Napi::Env env = info.Env();
 
     // Output "Program(id)"
-    std::string result = "Program(" + std::to_string(id_) + ")";
+    std::string result = "Program(" + std::to_string(id()) + ")";
     return Napi::String::New(env, result.c_str());
   }
 

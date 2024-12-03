@@ -6,6 +6,12 @@ namespace dom
   class Element;
 }
 
+namespace client_graphics
+{
+  class WebGLContext;
+  class WebGL2Context;
+}
+
 namespace media_client
 {
   class MediaPlayer;

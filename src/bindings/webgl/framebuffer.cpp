@@ -12,9 +12,4 @@ namespace webgl
     *constructor = Napi::Persistent(func);
     env.Global().Set(Napi::String::New(env, "WebGLFramebuffer"), func);
   }
-
-  WebGLFramebuffer::WebGLFramebuffer(const Napi::CallbackInfo &info)
-      : WebGLObjectBase<WebGLFramebuffer>(info), isHost(false)
-  {
-  }
 }

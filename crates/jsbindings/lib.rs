@@ -362,6 +362,35 @@ fn patch_glsl_source_from_str(s: &str) -> String {
   let mut my_glsl_patcher = MyGLSLPatcher {};
   tu.visit_mut(&mut my_glsl_patcher);
 
+  {
+    /**
+     * This reorders the preprocessor directives in the GLSL source code.
+     * 
+     * 1. Move the #version directive to the top.
+     * 2. Move the #extension directives to the top after the #version directive if exists.
+     */
+    let mut versions_list = Vec::new();
+    let mut extensions_list = Vec::new();
+    tu.0.retain(|decl| match &decl.content {
+      ast::ExternalDeclarationData::Preprocessor(processor) => {
+        match processor.content {
+          ast::PreprocessorData::Version(_) => {
+            versions_list.push(decl.clone());
+            false
+          }
+          ast::PreprocessorData::Extension(_) => {
+            extensions_list.push(decl.clone());
+            false
+          }
+          _ => true,
+        }
+      }
+      _ => true,
+    });
+    tu.0.splice(0..0, extensions_list);
+    tu.0.splice(0..0, versions_list);
+  }
+
   let mut s = String::new();
   glsl_transpiler::glsl::show_translation_unit(
     &mut s,
@@ -378,11 +407,13 @@ fn test_patch_glsl_source() {
 #extension GL_OVR_multiview2 : enable
 layout(num_views = 2) in;
 
+#version 300 es
 precision highp float;
 highp float a = 1.0;
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
 layout (location = 0) out highp vec4 glFragColor;
+#extension GL_OES_standard_derivatives : enable
 
 void main() { 
   gl_FragColor = vec4(1, 1, 1, 1); 

@@ -8,6 +8,7 @@
 
 #include "per_process.hpp"
 #include "dom/dom_scripting.hpp"
+#include "graphics/webgl_context.hpp"
 #include "media/media_player.hpp"
 #include "media/audio_player.hpp"
 #include "crates/jsar_jsbindings.h"
@@ -396,6 +397,10 @@ void TrClientContextPerProcess::start()
     // Create sender & receiver for commandbuffer chan.
     commandBufferChanSender = new TrCommandBufferSender(commandBufferChanClient);
     commandBufferChanReceiver = new TrCommandBufferReceiver(commandBufferChanClient);
+
+    // Create graphics apis
+    client_graphics::ContextAttributes contextAttrs;
+    hostWebGLContext = make_shared<client_graphics::WebGL2Context>(contextAttrs);
   }
 
   // XR device initialization
