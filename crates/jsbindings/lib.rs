@@ -236,6 +236,7 @@ extern "C" fn create_url_with_path(
   }
 }
 
+#[derive(PartialEq)]
 #[repr(i32)]
 enum ModuleExtensionIndex {
   None = 0,
@@ -252,6 +253,27 @@ enum ModuleExtensionIndex {
   MP3,
   WAV,
   OGG,
+}
+
+impl std::fmt::Debug for ModuleExtensionIndex {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      ModuleExtensionIndex::None => write!(f, "None"),
+      ModuleExtensionIndex::JavaScript => write!(f, "JavaScript"),
+      ModuleExtensionIndex::TypeScript => write!(f, "TypeScript"),
+      ModuleExtensionIndex::JSON => write!(f, "JSON"),
+      ModuleExtensionIndex::Bin => write!(f, "Bin"),
+      ModuleExtensionIndex::Data => write!(f, "Data"),
+      ModuleExtensionIndex::WebAssembly => write!(f, "WebAssembly"),
+      ModuleExtensionIndex::PNG => write!(f, "PNG"),
+      ModuleExtensionIndex::JPEG => write!(f, "JPEG"),
+      ModuleExtensionIndex::GIF => write!(f, "GIF"),
+      ModuleExtensionIndex::SVG => write!(f, "SVG"),
+      ModuleExtensionIndex::MP3 => write!(f, "MP3"),
+      ModuleExtensionIndex::WAV => write!(f, "WAV"),
+      ModuleExtensionIndex::OGG => write!(f, "OGG"),
+    }
+  }
 }
 
 #[no_mangle]
@@ -365,26 +387,24 @@ fn patch_glsl_source_from_str(s: &str) -> String {
   {
     /**
      * This reorders the preprocessor directives in the GLSL source code.
-     * 
+     *
      * 1. Move the #version directive to the top.
      * 2. Move the #extension directives to the top after the #version directive if exists.
      */
     let mut versions_list = Vec::new();
     let mut extensions_list = Vec::new();
     tu.0.retain(|decl| match &decl.content {
-      ast::ExternalDeclarationData::Preprocessor(processor) => {
-        match processor.content {
-          ast::PreprocessorData::Version(_) => {
-            versions_list.push(decl.clone());
-            false
-          }
-          ast::PreprocessorData::Extension(_) => {
-            extensions_list.push(decl.clone());
-            false
-          }
-          _ => true,
+      ast::ExternalDeclarationData::Preprocessor(processor) => match processor.content {
+        ast::PreprocessorData::Version(_) => {
+          versions_list.push(decl.clone());
+          false
         }
-      }
+        ast::PreprocessorData::Extension(_) => {
+          extensions_list.push(decl.clone());
+          false
+        }
+        _ => true,
+      },
       _ => true,
     });
     tu.0.splice(0..0, extensions_list);
@@ -399,51 +419,6 @@ fn patch_glsl_source_from_str(s: &str) -> String {
   )
   .expect("Failed to show GLSL");
   s
-}
-
-#[test]
-fn test_patch_glsl_source() {
-  let source_str = r#"
-#extension GL_OVR_multiview2 : enable
-layout(num_views = 2) in;
-
-#version 300 es
-precision highp float;
-highp float a = 1.0;
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aNormal;
-layout (location = 0) out highp vec4 glFragColor;
-#extension GL_OES_standard_derivatives : enable
-
-void main() { 
-  gl_FragColor = vec4(1, 1, 1, 1); 
-}"#;
-  let patched_source_str = patch_glsl_source_from_str(source_str);
-  println!("{}", patched_source_str);
-}
-
-#[test]
-fn test_patch_glsl_source_threejs() {
-  let source_str = r#"
-#version 300 es
-#extension GL_OVR_multiview2 : enable
-layout(num_views = 2) in;
-#define VIEW_ID gl_ViewID_OVR
-
-uniform mat4 modelMatrix;
-uniform mat4 viewMatrices[2];
-uniform mat4 modelViewMatrices[2];
-
-#define viewMatrix viewMatrices[VIEW_ID]
-#define modelViewMatrix modelMatrix * viewMatrix
-
-in vec3 position;
-void main() {
-  gl_Position = modelViewMatrix * vec4(position, 1.0);
-}
-  "#;
-  let patched_source_str = patch_glsl_source_from_str(source_str);
-  println!("{}", patched_source_str);
 }
 
 #[no_mangle]
@@ -496,5 +471,198 @@ extern "C" fn release_transpiled_typescript_output(output: TranspiledTypeScriptO
     if !output.error_message.is_null() {
       let _ = CString::from_raw(output.error_message);
     }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use std::ffi::CString;
+
+  #[test]
+  fn test_parse_csscolor() {
+    let color_str = CString::new("rgba(255, 0, 0, 0.5)").unwrap();
+    let color = parse_csscolor(color_str.as_ptr());
+    assert_eq!(color.r, 255);
+    assert_eq!(color.g, 0);
+    assert_eq!(color.b, 0);
+    assert_eq!(color.a, 127);
+  }
+
+  #[test]
+  fn test_parse_whatwg_url() {
+    let url_str = CString::new("https://example.com:8080/path?query#fragment").unwrap();
+    let url = parse_whatwg_url(url_str.as_ptr());
+    assert_eq!(
+      unsafe { CString::from_raw(url.host).to_str().unwrap() },
+      "example.com:8080"
+    );
+    assert_eq!(
+      unsafe { CString::from_raw(url.hostname).to_str().unwrap() },
+      "example.com"
+    );
+    assert_eq!(url.port, 8080);
+    assert_eq!(
+      unsafe { CString::from_raw(url.href).to_str().unwrap() },
+      "https://example.com:8080/path?query#fragment"
+    );
+    assert_eq!(
+      unsafe { CString::from_raw(url.origin).to_str().unwrap() },
+      "https://example.com:8080"
+    );
+    assert_eq!(
+      unsafe { CString::from_raw(url.password).to_str().unwrap() },
+      ""
+    );
+    assert_eq!(
+      unsafe { CString::from_raw(url.pathname).to_str().unwrap() },
+      "/path"
+    );
+    assert_eq!(
+      unsafe { CString::from_raw(url.protocol).to_str().unwrap() },
+      "https:"
+    );
+    assert_eq!(
+      unsafe { CString::from_raw(url.search).to_str().unwrap() },
+      "query"
+    );
+    assert_eq!(
+      unsafe { CString::from_raw(url.username).to_str().unwrap() },
+      ""
+    );
+    assert_eq!(
+      unsafe { CString::from_raw(url.hash).to_str().unwrap() },
+      "fragment"
+    );
+  }
+
+  #[test]
+  fn test_parse_url_to_module_extension() {
+    let url_str = CString::new("https://example.com/index.js").unwrap();
+    let extension = parse_url_to_module_extension(url_str.as_ptr());
+    assert_eq!(extension, ModuleExtensionIndex::JavaScript);
+
+    let url_str = CString::new("https://example.com/index.ts").unwrap();
+    let extension = parse_url_to_module_extension(url_str.as_ptr());
+    assert_eq!(extension, ModuleExtensionIndex::TypeScript);
+
+    let url_str = CString::new("https://example.com/data.json").unwrap();
+    let extension = parse_url_to_module_extension(url_str.as_ptr());
+    assert_eq!(extension, ModuleExtensionIndex::JSON);
+
+    let url_str = CString::new("https://example.com/file.bin").unwrap();
+    let extension = parse_url_to_module_extension(url_str.as_ptr());
+    assert_eq!(extension, ModuleExtensionIndex::Bin);
+
+    let url_str = CString::new("https://example.com/file.data").unwrap();
+    let extension = parse_url_to_module_extension(url_str.as_ptr());
+    assert_eq!(extension, ModuleExtensionIndex::Data);
+
+    let url_str = CString::new("https://example.com/file.wasm").unwrap();
+    let extension = parse_url_to_module_extension(url_str.as_ptr());
+    assert_eq!(extension, ModuleExtensionIndex::WebAssembly);
+
+    let url_str = CString::new("https://example.com/image.png").unwrap();
+    let extension = parse_url_to_module_extension(url_str.as_ptr());
+    assert_eq!(extension, ModuleExtensionIndex::PNG);
+
+    let url_str = CString::new("https://example.com/image.jpg").unwrap();
+    let extension = parse_url_to_module_extension(url_str.as_ptr());
+    assert_eq!(extension, ModuleExtensionIndex::JPEG);
+
+    let url_str = CString::new("https://example.com/image.gif").unwrap();
+    let extension = parse_url_to_module_extension(url_str.as_ptr());
+    assert_eq!(extension, ModuleExtensionIndex::GIF);
+
+    let url_str = CString::new("https://example.com/image.svg").unwrap();
+    let extension = parse_url_to_module_extension(url_str.as_ptr());
+    assert_eq!(extension, ModuleExtensionIndex::SVG);
+
+    let url_str = CString::new("https://example.com/audio.mp3").unwrap();
+    let extension = parse_url_to_module_extension(url_str.as_ptr());
+    assert_eq!(extension, ModuleExtensionIndex::MP3);
+
+    let url_str = CString::new("https://example.com/audio.wav").unwrap();
+    let extension = parse_url_to_module_extension(url_str.as_ptr());
+    assert_eq!(extension, ModuleExtensionIndex::WAV);
+
+    let url_str = CString::new("https://example.com/audio.ogg").unwrap();
+    let extension = parse_url_to_module_extension(url_str.as_ptr());
+    assert_eq!(extension, ModuleExtensionIndex::OGG);
+
+    let url_str = CString::new("https://example.com/unknown").unwrap();
+    let extension = parse_url_to_module_extension(url_str.as_ptr());
+    assert_eq!(extension, ModuleExtensionIndex::None);
+  }
+
+  #[test]
+  fn test_patch_glsl_source() {
+    let source_str = r#"
+#extension GL_OVR_multiview2 : enable
+layout(num_views = 2) in;
+
+#version 300 es
+precision highp float;
+highp float a = 1.0;
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNormal;
+layout (location = 0) out highp vec4 glFragColor;
+#extension GL_OES_standard_derivatives : enable
+
+void main() { 
+  gl_FragColor = vec4(1, 1, 1, 1); 
+}"#;
+    let patched_source_str = patch_glsl_source_from_str(source_str);
+    assert_eq!(
+      patched_source_str,
+      r#"#version 300 es
+#extension GL_OVR_multiview2 : enable
+#extension GL_OES_standard_derivatives : enable
+layout(num_views = 2) in;
+precision highp float;
+highp float a = 1.;
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec3 aNormal;
+layout(location = 0) out highp vec4 glFragColor;
+void main() {
+    gl_FragColor = vec4(1, 1, 1, 1);
+}
+"#)
+  }
+
+  #[test]
+  fn test_patch_glsl_source_threejs() {
+    let source_str = r#"
+#version 300 es
+#extension GL_OVR_multiview2 : enable
+layout(num_views = 2) in;
+#define VIEW_ID gl_ViewID_OVR
+
+uniform mat4 modelMatrix;
+uniform mat4 viewMatrices[2];
+uniform mat4 modelViewMatrices[2];
+
+#define viewMatrix viewMatrices[VIEW_ID]
+#define modelViewMatrix modelMatrix * viewMatrix
+
+in vec3 position;
+void main() {
+  gl_Position = modelViewMatrix * vec4(position, 1.0);
+}
+  "#;
+    let patched_source_str = patch_glsl_source_from_str(source_str);
+    assert_eq!(
+      patched_source_str,
+      r#"#version 300 es
+#extension GL_OVR_multiview2 : enable
+layout(num_views = 2) in;
+uniform mat4 modelMatrix;
+uniform mat4 viewMatrices[2];
+uniform mat4 modelViewMatrices[2];
+in vec3 position;
+void main() {
+    gl_Position = modelMatrix * viewMatrices[gl_ViewID_OVR] * vec4(position, 1.);
+}
+"#)
   }
 }
