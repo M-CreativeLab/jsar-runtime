@@ -18,9 +18,13 @@ pub fn transpile_typescript_to_js(input: String) -> Result<TransformOutput, Erro
   )
 }
 
-#[test]
-fn test_transpile_typescript_to_js() {
-  let input = r#"
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_transpile_typescript_to_js() {
+    let input = r#"
 interface IBar {
   bar: string;
 }
@@ -36,14 +40,49 @@ const b: number = 2;
 const c: number = a + b;
 console.log(c);
   "#
-  .to_string();
+    .to_string();
 
-  let out = transpile_typescript_to_js(input);
-  if let Err(e) = out {
-    println!("Error: {:?}", e);
-  } else {
+    let out = transpile_typescript_to_js(input);
+    if let Err(e) = out {
+      println!("Error: {:?}", e);
+    } else {
+      let _out = out.unwrap();
+      println!("Output: {}", _out.code);
+      println!("Map: {:?}", _out.map);
+    }
+  }
+
+  #[test]
+  fn test_transpile_typescript_to_js_with_error() {
+    let input = r#"
+interface IBar {
+  bar: string;
+}
+class Foo implements IBar {
+  private foo: string;
+  bar: string;
+  constructor() {
+    console.log("Hello, World!");
+  }
+}
+const a: number = 1;
+const b: number = 2;
+const c: number = a + b
+console.log(c);
+  "#
+    .to_string();
+
+    let out = transpile_typescript_to_js(input);
+    assert!(out.is_err());
+  }
+
+  #[test]
+  fn test_transpile_typescript_to_js_with_empty_input() {
+    let input = "".to_string();
+
+    let out = transpile_typescript_to_js(input);
+    assert!(out.is_ok());
     let _out = out.unwrap();
-    println!("Output: {}", _out.code);
-    println!("Map: {:?}", _out.map);
+    assert_eq!(_out.code, "");
   }
 }
