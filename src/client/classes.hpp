@@ -18,6 +18,11 @@ namespace client_graphics
   class WebGL2Context;
 }
 
+namespace client_xr
+{
+  class XRDeviceClient;
+}
+
 namespace media_client
 {
   class MediaPlayer;

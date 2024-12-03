@@ -388,6 +388,7 @@ private: // command buffer fields
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;
 
 private: // xr fields
+  shared_ptr<client_xr::XRDeviceClient> xrDeviceClient = nullptr;
   TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
   xr::TrXRCommandSender *xrCommandChanSender = nullptr;
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;

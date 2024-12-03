@@ -710,6 +710,18 @@ namespace client_graphics
   class WebGL2Context : public WebGLContext
   {
   public:
+    /**
+     * It creates a new WebGL2Context object.
+     * 
+     * @param attrs The context attributes.
+     * @returns The created WebGL2Context object.
+     */
+    static std::shared_ptr<WebGL2Context> Make(ContextAttributes &attrs)
+    {
+      return std::make_shared<WebGL2Context>(attrs);
+    }
+
+  public:
     WebGL2Context(ContextAttributes &attrs);
 
   public:

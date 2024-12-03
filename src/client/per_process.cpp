@@ -6,14 +6,15 @@
 #include <unistd.h>
 #include <sys/resource.h>
 
-#include "per_process.hpp"
-#include "builtin_scene/scene.hpp"
-#include "dom/dom_scripting.hpp"
-#include "graphics/webgl_context.hpp"
-#include "media/media_player.hpp"
-#include "media/audio_player.hpp"
 #include "crates/jsar_jsbindings.h"
-#include "bindings.hpp"
+#include "./per_process.hpp"
+#include "./builtin_scene/scene.hpp"
+#include "./dom/dom_scripting.hpp"
+#include "./graphics/webgl_context.hpp"
+#include "./media/media_player.hpp"
+#include "./media/audio_player.hpp"
+#include "./xr/device.hpp"
+#include "./bindings.hpp"
 
 using namespace std;
 using namespace bindings;
@@ -401,7 +402,7 @@ void TrClientContextPerProcess::start()
 
     // Create graphics apis
     client_graphics::ContextAttributes contextAttrs;
-    hostWebGLContext = make_shared<client_graphics::WebGL2Context>(contextAttrs);
+    hostWebGLContext = client_graphics::WebGL2Context::Make(contextAttrs);
   }
 
   // XR device initialization
@@ -412,10 +413,13 @@ void TrClientContextPerProcess::start()
     xrCommandChanReceiver = new xr::TrXRCommandReceiver(xrCommandChanClient);
     xrDeviceContextZoneClient = make_unique<xr::TrXRDeviceContextZone>(xrDeviceInit.deviceContextZonePath, TrZoneType::Client);
     xrInputSourcesZoneClient = make_unique<xr::TrXRInputSourcesZone>(xrDeviceInit.inputSourcesZonePath, TrZoneType::Client);
+
+    // Create XR device client
+    xrDeviceClient = client_xr::XRDeviceClient::Make(this);
   }
 
   // Initialize the built-in scene
-  builtinScene = make_shared<builtin_scene::Scene>(hostWebGLContext);
+  builtinScene = builtin_scene::Scene::Make(hostWebGLContext, xrDeviceClient);
 
   // Start the service alive listener
   serviceAliveListener = new thread([]()
