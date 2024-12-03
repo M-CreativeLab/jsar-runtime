@@ -7,6 +7,7 @@
 #include <sys/resource.h>
 
 #include "per_process.hpp"
+#include "builtin_scene/scene.hpp"
 #include "dom/dom_scripting.hpp"
 #include "graphics/webgl_context.hpp"
 #include "media/media_player.hpp"
@@ -412,6 +413,9 @@ void TrClientContextPerProcess::start()
     xrDeviceContextZoneClient = make_unique<xr::TrXRDeviceContextZone>(xrDeviceInit.deviceContextZonePath, TrZoneType::Client);
     xrInputSourcesZoneClient = make_unique<xr::TrXRInputSourcesZone>(xrDeviceInit.inputSourcesZonePath, TrZoneType::Client);
   }
+
+  // Initialize the built-in scene
+  builtinScene = make_shared<builtin_scene::Scene>(hostWebGLContext);
 
   // Start the service alive listener
   serviceAliveListener = new thread([]()

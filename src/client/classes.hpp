@@ -6,6 +6,12 @@ namespace dom
   class Element;
 }
 
+namespace builtin_scene
+{
+  class Scene;
+  class Hierarchy;
+}
+
 namespace client_graphics
 {
   class WebGLContext;

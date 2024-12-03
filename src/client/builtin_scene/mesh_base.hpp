@@ -8,7 +8,7 @@ namespace builtin_scene
   class MeshBase : public Transform
   {
   public:
-    MeshBase();
-    ~MeshBase();
+    MeshBase() {}
+    ~MeshBase() = default;
   };
 }

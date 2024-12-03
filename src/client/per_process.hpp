@@ -360,6 +360,10 @@ public:
   uint32_t commandBufferChanPort;
   xr::TrDeviceInit xrDeviceInit;
   uint64_t startedAt;
+  /**
+   * The built-in scene for the DOM rendering.
+   */
+  std::shared_ptr<builtin_scene::Scene> builtinScene;
 
 private: // event fields
   TrOneShotClient<events_comm::TrNativeEventMessage> *eventChanClient = nullptr;
