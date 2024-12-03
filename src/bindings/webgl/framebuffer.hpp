@@ -12,7 +12,7 @@ namespace webgl
     static void Init(Napi::Env env);
     /**
      * A convenient function to check whether a given JavaScript `value` is an instance of `WebGLFramebuffer`.
-     * 
+     *
      * @param value The value to check.
      * @return Whether the value is an instance of `WebGLFramebuffer`.
      */
@@ -34,9 +34,18 @@ namespace webgl
         bool isHostFramebuffer = false)
     {
       Napi::EscapableHandleScope scope(env);
-      Napi::Object obj = WebGLObjectBase<WebGLFramebuffer, client_graphics::WebGLFramebuffer>::NewInstance(env, handle);
-      WebGLFramebuffer *instance = WebGLFramebuffer::Unwrap(obj);
-      instance->isHost = isHostFramebuffer;
+      Napi::Object obj;
+      if (isHostFramebuffer)
+      {
+        auto hostHandle = std::make_shared<client_graphics::WebGLHostFramebuffer>();
+        obj = WebGLObjectBase<WebGLFramebuffer, client_graphics::WebGLFramebuffer>::NewInstance(env, hostHandle);
+        auto instance = WebGLFramebuffer::Unwrap(obj);
+        instance->isHost = true;
+      }
+      else
+      {
+        obj = WebGLObjectBase<WebGLFramebuffer, client_graphics::WebGLFramebuffer>::NewInstance(env, handle);
+      }
       return scope.Escape(obj).ToObject();
     }
 

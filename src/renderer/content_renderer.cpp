@@ -55,7 +55,7 @@ namespace renderer
   void TrContentRenderer::onCommandBuffersExecuted()
   {
     content->onCommandBuffersExecuted();
-    if (lastFrameHasOutOfMemoryError || lastFrameErrorsCount > 10)
+    if (lastFrameHasOutOfMemoryError || lastFrameErrorsCount > 20)
     {
       DEBUG(LOG_TAG_ERROR, "Disposing the content(%d) due to the frame OOM or occurred errors(%d) > 10",
             content->id, lastFrameErrorsCount);

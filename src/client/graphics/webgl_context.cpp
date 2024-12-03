@@ -969,7 +969,7 @@ namespace client_graphics
   void WebGLContext::drawArrays(WebGLDrawMode mode, int first, int count)
   {
     ASSERT_MAX_COUNT_PER_DRAWCALL(count, "drawArrays()");
-    auto req = DrawArraysCommandBufferRequest(static_cast<uint32_t>(mode), first, count);
+    auto req = DrawArraysCommandBufferRequest(static_cast<int>(mode), first, count);
     sendCommandBufferRequest(req);
     sendFirstContentfulPaintMetrics();
   }
@@ -977,14 +977,14 @@ namespace client_graphics
   void WebGLContext::drawElements(WebGLDrawMode mode, int count, int type, int offset)
   {
     ASSERT_MAX_COUNT_PER_DRAWCALL(count, "drawElements()");
-    auto req = DrawElementsCommandBufferRequest(static_cast<uint32_t>(mode), count, type, offset);
+    auto req = DrawElementsCommandBufferRequest(static_cast<int>(mode), count, type, offset);
     sendCommandBufferRequest(req);
     sendFirstContentfulPaintMetrics();
   }
 
   void WebGLContext::hint(WebGLHintTargetBehavior target, WebGLHintBehaviorMode mode)
   {
-    auto req = HintCommandBufferRequest(static_cast<uint32_t>(target), static_cast<uint32_t>(mode));
+    auto req = HintCommandBufferRequest(static_cast<int>(target), static_cast<uint32_t>(mode));
     sendCommandBufferRequest(req);
   }
 

@@ -73,26 +73,42 @@ extern "C" void glDebugMessageCallbackKHR(GLDEBUGPROC callback, const void *user
 namespace gles
 {
   /**
-   * @brief Converts a GLenum that represents a texture format to the number of bytes per pixel.
+   * Converts a GLenum that represents a texture format to the number of bytes per pixel.
    */
   size_t glTextureFormatToByteLength(GLenum format);
   /**
-   * @brief Converts a GLenum to a string for debugging purposes.
+   * Converts a GLenum to a string for debugging purposes.
    */
   std::string glEnumToString(GLenum e);
   /**
-   * @brief Converts a GLenum that represents a uniform type to a string.
+   * Converts a GLenum that represents an error to a string.
+   * 
+   * @param e The GLenum to convert.
+   * @return The string representation of the error.
+   */
+  std::string glErrorToString(GLenum e);
+  /**
+   * Converts a GLenum that represents a uniform type to a string.
    * @see https://docs.gl/es3/glGetActiveUniform
    */
   std::string glUniformTypesToString(GLenum type);
   /**
-   * @brief Converts a depth function `GLenum` to a string.
+   * Converts a depth function `GLenum` to a string.
   */
   std::string glDepthFuncToString(GLenum func);
   /**
-   * @brief Converts a blending function `GLenum` to a string.
+   * Converts a blending function `GLenum` to a string.
    */
   std::string glBlendFuncToString(GLenum func);
+  std::string glDrawBufferTargetToString(GLenum target);
+  std::string glFramebufferAttachmentToString(GLenum attachment);
   std::string glTextureInternalFormatToString(GLenum format);
   std::string glTextureFormatToString(GLenum format);
+  /**
+   * Converts a texture parameter `GLenum` to a string.
+   * 
+   * @param pname The texture parameter to convert.
+   * @return The string representation of the texture parameter.
+   */
+  std::string glTextureParameterToString(GLenum pname);
 }

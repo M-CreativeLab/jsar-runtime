@@ -53,6 +53,55 @@ fetchTimestamp()
   return std::string(timestamp);
 }
 
+namespace stylized_shell
+{
+  enum class Style : uint32_t
+  {
+    kDefault = 0,
+    kBold = 1,
+    kUnderline = 4,
+    kReverseColors = 7,
+  };
+
+  enum class TextColor : uint32_t
+  {
+    kBlack = 30,
+    kRed = 31,
+    kGreen = 32,
+    kYellow = 33,
+    kBlue = 34,
+    kMagenta = 35,
+    kCyan = 36,
+    kWhite = 37,
+  };
+
+  enum class BackgroundColor : uint32_t
+  {
+    kBlack = 40,
+    kRed = 41,
+    kGreen = 42,
+    kYellow = 43,
+    kBlue = 44,
+    kMagenta = 45,
+    kCyan = 46,
+    kWhite = 47,
+  };
+
+  inline void start(FILE *stream, bool enabled, Style style, TextColor text)
+  {
+    if (enabled)
+      fprintf(stream, "\033[%d;%dm",
+              static_cast<uint32_t>(style),
+              static_cast<uint32_t>(text));
+  }
+
+  inline void end(FILE *stream, bool enabled)
+  {
+    if (enabled)
+      fprintf(stream, "\033[0m");
+  }
+}
+
 void DEBUG(const char *tag, const char *format, ...)
 {
   va_list args;
@@ -60,9 +109,19 @@ void DEBUG(const char *tag, const char *format, ...)
 #ifdef __ANDROID__
   __android_log_vprint(ANDROID_LOG_DEBUG, tag, format, args);
 #else
-  fprintf(stdout, "%s ", fetchTimestamp().c_str());
-  vfprintf(stdout, format, args);
-  fprintf(stdout, "\n");
+  FILE *stream = stdout;
+  bool stylized = false;
+  if (strcmp(tag, LOG_TAG_ERROR) == 0)
+  {
+    stream = stderr;
+    stylized = true;
+  }
+
+  stylized_shell::start(stream, stylized, stylized_shell::Style::kDefault, stylized_shell::TextColor::kRed);
+  fprintf(stream, "%s ", fetchTimestamp().c_str());
+  vfprintf(stream, format, args);
+  fprintf(stream, "\n");
+  stylized_shell::end(stream, stylized);
 #endif
   va_end(args);
 }
@@ -83,7 +142,7 @@ void SET_THREAD_NAME(const std::string &name)
 
 /**
  * Copied from "https://github.com/openwebos/nodejs/blob/master/src/platform_darwin_proctitle.cc".
- * 
+ *
  * NOTE: This doesn't work for forked process either, but it won't crash.
  * TODO: Supports for forked process namely applications.
  */
@@ -91,7 +150,8 @@ void SET_THREAD_NAME(const std::string &name)
 void _SetProcessTitleOnDarwin(const std::string &name)
 {
   static int symbol_lookup_status = 0; // 1 = ok, 2 = unavailable
-  if (symbol_lookup_status == 2) {
+  if (symbol_lookup_status == 2)
+  {
     // feature is unavailable
     return;
   }

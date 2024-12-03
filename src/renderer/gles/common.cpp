@@ -113,6 +113,12 @@ namespace gles
       CASE(GL_DYNAMIC_DRAW);
       CASE(GL_DYNAMIC_READ);
       CASE(GL_DYNAMIC_COPY);
+      // Framebuffer Targets
+      CASE(GL_DRAW_FRAMEBUFFER);
+      CASE(GL_READ_FRAMEBUFFER);
+      // Binding Targets
+      CASE(GL_FRAMEBUFFER);
+      CASE(GL_RENDERBUFFER);
       // Draw Modes
       CASE(GL_POINTS);
       CASE(GL_LINES);
@@ -135,12 +141,69 @@ namespace gles
       CASE(GL_TEXTURE_CUBE_MAP_POSITIVE_Z);
       CASE(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
       CASE(GL_TEXTURE_2D_ARRAY);
+      // Texture Units
+      CASE(GL_TEXTURE0);
+      CASE(GL_TEXTURE1);
+      CASE(GL_TEXTURE2);
+      CASE(GL_TEXTURE3);
+      CASE(GL_TEXTURE4);
+      CASE(GL_TEXTURE5);
+      CASE(GL_TEXTURE6);
+      CASE(GL_TEXTURE7);
+      CASE(GL_TEXTURE8);
+      CASE(GL_TEXTURE9);
+      CASE(GL_TEXTURE10);
+      CASE(GL_TEXTURE11);
+      CASE(GL_TEXTURE12);
+      CASE(GL_TEXTURE13);
+      CASE(GL_TEXTURE14);
+      CASE(GL_TEXTURE15);
+      CASE(GL_TEXTURE16);
+      CASE(GL_TEXTURE17);
+      CASE(GL_TEXTURE18);
+      CASE(GL_TEXTURE19);
+      CASE(GL_TEXTURE20);
+      CASE(GL_TEXTURE21);
+      CASE(GL_TEXTURE22);
+      CASE(GL_TEXTURE23);
+      CASE(GL_TEXTURE24);
+      CASE(GL_TEXTURE25);
+      CASE(GL_TEXTURE26);
+      CASE(GL_TEXTURE27);
+      CASE(GL_TEXTURE28);
+      CASE(GL_TEXTURE29);
+      CASE(GL_TEXTURE30);
+      CASE(GL_TEXTURE31);
     default:
       std::stringstream ss;
       ss << "0x" << std::hex << e;
       return ss.str();
     }
 #undef CASE
+  }
+
+  std::string glErrorToString(GLenum e)
+  {
+#define CASE(x) \
+  case x:       \
+  {             \
+    return #x;  \
+  }
+
+    switch (e)
+    {
+      // Errors
+      CASE(GL_NO_ERROR);
+      CASE(GL_INVALID_ENUM);
+      CASE(GL_INVALID_VALUE);
+      CASE(GL_INVALID_OPERATION);
+      CASE(GL_INVALID_FRAMEBUFFER_OPERATION);
+      CASE(GL_OUT_OF_MEMORY);
+    default:
+      std::stringstream ss;
+      ss << "0x" << std::hex << e;
+      return ss.str();
+    }
   }
 
   std::string glUniformTypesToString(GLenum type)
@@ -258,6 +321,78 @@ namespace gles
 #undef CASE
   }
 
+  std::string glDrawBufferTargetToString(GLenum target)
+  {
+#define CASE(x) \
+  case x:       \
+  {             \
+    return #x;  \
+  }
+    switch (target)
+    {
+      // Draw Targets
+      CASE(GL_NONE);
+      CASE(GL_BACK);
+      CASE(GL_COLOR_ATTACHMENT0);
+      CASE(GL_COLOR_ATTACHMENT1);
+      CASE(GL_COLOR_ATTACHMENT2);
+      CASE(GL_COLOR_ATTACHMENT3);
+      CASE(GL_COLOR_ATTACHMENT4);
+      CASE(GL_COLOR_ATTACHMENT5);
+      CASE(GL_COLOR_ATTACHMENT6);
+      CASE(GL_COLOR_ATTACHMENT7);
+      CASE(GL_COLOR_ATTACHMENT8);
+      CASE(GL_COLOR_ATTACHMENT9);
+      CASE(GL_COLOR_ATTACHMENT10);
+      CASE(GL_COLOR_ATTACHMENT11);
+      CASE(GL_COLOR_ATTACHMENT12);
+      CASE(GL_COLOR_ATTACHMENT13);
+      CASE(GL_COLOR_ATTACHMENT14);
+      CASE(GL_COLOR_ATTACHMENT15);
+    default:
+      std::stringstream ss;
+      ss << "0x" << std::hex << target;
+      return ss.str();
+    }
+#undef CASE
+  }
+
+  std::string glFramebufferAttachmentToString(GLenum attachment)
+  {
+#define CASE(x) \
+  case x:       \
+  {             \
+    return #x;  \
+  }
+    switch (attachment)
+    {
+      // Framebuffer Attachments
+      CASE(GL_COLOR_ATTACHMENT0);
+      CASE(GL_COLOR_ATTACHMENT1);
+      CASE(GL_COLOR_ATTACHMENT2);
+      CASE(GL_COLOR_ATTACHMENT3);
+      CASE(GL_COLOR_ATTACHMENT4);
+      CASE(GL_COLOR_ATTACHMENT5);
+      CASE(GL_COLOR_ATTACHMENT6);
+      CASE(GL_COLOR_ATTACHMENT7);
+      CASE(GL_COLOR_ATTACHMENT8);
+      CASE(GL_COLOR_ATTACHMENT9);
+      CASE(GL_COLOR_ATTACHMENT10);
+      CASE(GL_COLOR_ATTACHMENT11);
+      CASE(GL_COLOR_ATTACHMENT12);
+      CASE(GL_COLOR_ATTACHMENT13);
+      CASE(GL_COLOR_ATTACHMENT14);
+      CASE(GL_COLOR_ATTACHMENT15);
+      CASE(GL_DEPTH_ATTACHMENT);
+      CASE(GL_STENCIL_ATTACHMENT);
+      CASE(GL_DEPTH_STENCIL_ATTACHMENT);
+    default:
+      std::stringstream ss;
+      ss << "0x" << std::hex << attachment;
+      return ss.str();
+    }
+  }
+
   std::string glTextureInternalFormatToString(GLenum format)
   {
 #define CASE(x) \
@@ -321,6 +456,7 @@ namespace gles
       ss << "0x" << std::hex << format;
       return ss.str();
     }
+#undef CASE
   }
 
   std::string glTextureFormatToString(GLenum format)
@@ -346,5 +482,41 @@ namespace gles
       ss << "0x" << std::hex << format;
       return ss.str();
     }
+#undef CASE
   }
+
+  std::string glTextureParameterToString(GLenum pname)
+  {
+#define CASE(x) \
+  case x:       \
+  {             \
+    return #x;  \
+  }
+    switch (pname)
+    {
+      // Texture Parameters
+      CASE(GL_TEXTURE_MIN_FILTER);
+      CASE(GL_TEXTURE_MAG_FILTER);
+      CASE(GL_TEXTURE_WRAP_S);
+      CASE(GL_TEXTURE_WRAP_T);
+      CASE(GL_TEXTURE_WRAP_R);
+      CASE(GL_TEXTURE_MIN_LOD);
+      CASE(GL_TEXTURE_MAX_LOD);
+      CASE(GL_TEXTURE_BASE_LEVEL);
+      CASE(GL_TEXTURE_MAX_LEVEL);
+      CASE(GL_TEXTURE_COMPARE_MODE);
+      CASE(GL_TEXTURE_COMPARE_FUNC);
+      CASE(GL_TEXTURE_SWIZZLE_R);
+      CASE(GL_TEXTURE_SWIZZLE_G);
+      CASE(GL_TEXTURE_SWIZZLE_B);
+      CASE(GL_TEXTURE_SWIZZLE_A);
+      CASE(GL_TEXTURE_SWIZZLE_RGBA);
+      CASE(GL_TEXTURE_IMMUTABLE_FORMAT);
+    default:
+      std::stringstream ss;
+      ss << "0x" << std::hex << pname;
+      return ss.str();
+    }
+  }
+#undef CASE
 }

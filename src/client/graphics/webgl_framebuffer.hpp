@@ -53,5 +53,22 @@ namespace client_graphics
   {
   public:
     WebGLFramebuffer() : WebGLObject(WebGLObjectType::Framebuffer) {}
+  
+  protected:
+    /**
+     * Create a new `WebGLFramebuffer` with the given id, that is used for the specific framebuffers
+     * like the default framebuffer or the host framebuffer.
+     */
+    WebGLFramebuffer(int defaultId) : WebGLObject(WebGLObjectType::Framebuffer, defaultId) {}
+  };
+
+  /**
+   * The host framebuffer is a special framebuffer that is created and managed by the host process,
+   * but it could be used by the client process to draw the content.
+   */
+  class WebGLHostFramebuffer : public WebGLFramebuffer
+  {
+  public:
+    WebGLHostFramebuffer() : WebGLFramebuffer(-1) {}
   };
 }
