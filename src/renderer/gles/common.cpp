@@ -510,7 +510,6 @@ namespace gles
       CASE(GL_TEXTURE_SWIZZLE_G);
       CASE(GL_TEXTURE_SWIZZLE_B);
       CASE(GL_TEXTURE_SWIZZLE_A);
-      CASE(GL_TEXTURE_SWIZZLE_RGBA);
       CASE(GL_TEXTURE_IMMUTABLE_FORMAT);
     default:
       std::stringstream ss;
