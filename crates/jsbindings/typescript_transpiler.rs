@@ -55,7 +55,7 @@ console.log(c);
   #[test]
   fn test_transpile_typescript_to_js_with_error() {
     let input = r#"
-interface IBar {
+$interface IBar {
   bar: string;
 }
 class Foo implements IBar {

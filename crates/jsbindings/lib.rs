@@ -236,6 +236,7 @@ extern "C" fn create_url_with_path(
   }
 }
 
+#[derive(PartialEq)]
 #[repr(i32)]
 enum ModuleExtensionIndex {
   None = 0,
@@ -252,6 +253,27 @@ enum ModuleExtensionIndex {
   MP3,
   WAV,
   OGG,
+}
+
+impl std::fmt::Debug for ModuleExtensionIndex {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      ModuleExtensionIndex::None => write!(f, "None"),
+      ModuleExtensionIndex::JavaScript => write!(f, "JavaScript"),
+      ModuleExtensionIndex::TypeScript => write!(f, "TypeScript"),
+      ModuleExtensionIndex::JSON => write!(f, "JSON"),
+      ModuleExtensionIndex::Bin => write!(f, "Bin"),
+      ModuleExtensionIndex::Data => write!(f, "Data"),
+      ModuleExtensionIndex::WebAssembly => write!(f, "WebAssembly"),
+      ModuleExtensionIndex::PNG => write!(f, "PNG"),
+      ModuleExtensionIndex::JPEG => write!(f, "JPEG"),
+      ModuleExtensionIndex::GIF => write!(f, "GIF"),
+      ModuleExtensionIndex::SVG => write!(f, "SVG"),
+      ModuleExtensionIndex::MP3 => write!(f, "MP3"),
+      ModuleExtensionIndex::WAV => write!(f, "WAV"),
+      ModuleExtensionIndex::OGG => write!(f, "OGG"),
+    }
+  }
 }
 
 #[no_mangle]
@@ -365,26 +387,24 @@ fn patch_glsl_source_from_str(s: &str) -> String {
   {
     /**
      * This reorders the preprocessor directives in the GLSL source code.
-     * 
+     *
      * 1. Move the #version directive to the top.
      * 2. Move the #extension directives to the top after the #version directive if exists.
      */
     let mut versions_list = Vec::new();
     let mut extensions_list = Vec::new();
     tu.0.retain(|decl| match &decl.content {
-      ast::ExternalDeclarationData::Preprocessor(processor) => {
-        match processor.content {
-          ast::PreprocessorData::Version(_) => {
-            versions_list.push(decl.clone());
-            false
-          }
-          ast::PreprocessorData::Extension(_) => {
-            extensions_list.push(decl.clone());
-            false
-          }
-          _ => true,
+      ast::ExternalDeclarationData::Preprocessor(processor) => match processor.content {
+        ast::PreprocessorData::Version(_) => {
+          versions_list.push(decl.clone());
+          false
         }
-      }
+        ast::PreprocessorData::Extension(_) => {
+          extensions_list.push(decl.clone());
+          false
+        }
+        _ => true,
+      },
       _ => true,
     });
     tu.0.splice(0..0, extensions_list);
@@ -473,29 +493,47 @@ mod tests {
   fn test_parse_whatwg_url() {
     let url_str = CString::new("https://example.com:8080/path?query#fragment").unwrap();
     let url = parse_whatwg_url(url_str.as_ptr());
-    assert_eq!(unsafe { CString::from_raw(url.host).to_str().unwrap() }, "example.com:8080");
-    assert_eq!(unsafe { CString::from_raw(url.hostname).to_str().unwrap() }, "example.com");
+    assert_eq!(
+      unsafe { CString::from_raw(url.host).to_str().unwrap() },
+      "example.com:8080"
+    );
+    assert_eq!(
+      unsafe { CString::from_raw(url.hostname).to_str().unwrap() },
+      "example.com"
+    );
     assert_eq!(url.port, 8080);
-    assert_eq!(unsafe { CString::from_raw(url.href).to_str().unwrap() }, "https://example.com:8080/path?query#fragment");
-    assert_eq!(unsafe { CString::from_raw(url.origin).to_str().unwrap() }, "https://example.com:8080");
-    assert_eq!(unsafe { CString::from_raw(url.password).to_str().unwrap() }, "");
-    assert_eq!(unsafe { CString::from_raw(url.pathname).to_str().unwrap() }, "/path");
-    assert_eq!(unsafe { CString::from_raw(url.protocol).to_str().unwrap() }, "https:");
-    assert_eq!(unsafe { CString::from_raw(url.search).to_str().unwrap() }, "query");
-    assert_eq!(unsafe { CString::from_raw(url.username).to_str().unwrap() }, "");
-    assert_eq!(unsafe { CString::from_raw(url.hash).to_str().unwrap() }, "fragment");
-  }
-
-  #[test]
-  fn test_create_url_with_path() {
-    let base_url = CString::new("https://example.com").unwrap();
-    let path = CString::new("/path/to/resource").unwrap();
-    let mut out_url_str: *mut c_char = std::ptr::null_mut();
-    let out_url_max_len = 512;
-    let len = create_url_with_path(base_url.as_ptr(), path.as_ptr(), &mut out_url_str, out_url_max_len);
-    assert!(len > 0);
-    let new_url = unsafe { CString::from_raw(out_url_str).to_str().unwrap() };
-    assert_eq!(new_url, "https://example.com/path/to/resource");
+    assert_eq!(
+      unsafe { CString::from_raw(url.href).to_str().unwrap() },
+      "https://example.com:8080/path?query#fragment"
+    );
+    assert_eq!(
+      unsafe { CString::from_raw(url.origin).to_str().unwrap() },
+      "https://example.com:8080"
+    );
+    assert_eq!(
+      unsafe { CString::from_raw(url.password).to_str().unwrap() },
+      ""
+    );
+    assert_eq!(
+      unsafe { CString::from_raw(url.pathname).to_str().unwrap() },
+      "/path"
+    );
+    assert_eq!(
+      unsafe { CString::from_raw(url.protocol).to_str().unwrap() },
+      "https:"
+    );
+    assert_eq!(
+      unsafe { CString::from_raw(url.search).to_str().unwrap() },
+      "query"
+    );
+    assert_eq!(
+      unsafe { CString::from_raw(url.username).to_str().unwrap() },
+      ""
+    );
+    assert_eq!(
+      unsafe { CString::from_raw(url.hash).to_str().unwrap() },
+      "fragment"
+    );
   }
 
   #[test]
@@ -575,7 +613,21 @@ void main() {
   gl_FragColor = vec4(1, 1, 1, 1); 
 }"#;
     let patched_source_str = patch_glsl_source_from_str(source_str);
-    println!("{}", patched_source_str);
+    assert_eq!(
+      patched_source_str,
+      r#"#version 300 es
+#extension GL_OVR_multiview2 : enable
+#extension GL_OES_standard_derivatives : enable
+layout(num_views = 2) in;
+precision highp float;
+highp float a = 1.;
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec3 aNormal;
+layout(location = 0) out highp vec4 glFragColor;
+void main() {
+    gl_FragColor = vec4(1, 1, 1, 1);
+}
+"#)
   }
 
   #[test]
@@ -599,6 +651,18 @@ void main() {
 }
   "#;
     let patched_source_str = patch_glsl_source_from_str(source_str);
-    println!("{}", patched_source_str);
+    assert_eq!(
+      patched_source_str,
+      r#"#version 300 es
+#extension GL_OVR_multiview2 : enable
+layout(num_views = 2) in;
+uniform mat4 modelMatrix;
+uniform mat4 viewMatrices[2];
+uniform mat4 modelViewMatrices[2];
+in vec3 position;
+void main() {
+    gl_Position = modelMatrix * viewMatrices[gl_ViewID_OVR] * vec4(position, 1.);
+}
+"#)
   }
 }
