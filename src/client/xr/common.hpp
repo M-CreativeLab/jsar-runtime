@@ -78,6 +78,14 @@ namespace client_xr
   class XRSessionRequestInit
   {
   public:
+    static XRSessionRequestInit Default()
+    {
+      XRSessionRequestInit init;
+      init.requiredFeatures = {"viewer"};
+      return init;
+    }
+
+  public:
     XRSessionRequestInit() {}
 
   public:
@@ -99,14 +107,18 @@ namespace client_xr
   class XRSessionConfiguration
   {
   public:
-    XRSessionConfiguration(xr::SessionResponse &response)
+    XRSessionConfiguration(xr::SessionResponse &response, XRSessionMode mode, XRSessionRequestInit requestInit)
         : id(response.id),
-          recommendedContentSize(response.recommendedContentSize)
+          recommendedContentSize(response.recommendedContentSize),
+          mode(mode),
+          requestInit(requestInit)
     {
     }
 
   public:
     int id;
+    XRSessionMode mode;
+    XRSessionRequestInit requestInit;
     float recommendedContentSize;
   };
 

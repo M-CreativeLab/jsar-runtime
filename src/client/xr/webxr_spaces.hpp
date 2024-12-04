@@ -103,7 +103,20 @@ namespace client_xr
   class XRViewSpace : public XRSpace
   {
   public:
-    XRViewSpace(XRViewSpaceType type, glm::mat4 projectionMatrix = glm::mat4(1.0f))
+    /**
+     * Create a new `XRViewSpace` instance.
+     * 
+     * @param type The view space type.
+     * @param projectionMatrix The projection matrix.
+     * @returns The new `XRViewSpace` instance.
+     */
+    static inline std::shared_ptr<XRViewSpace> Make(XRViewSpaceType type, glm::mat4 projectionMatrix = glm::mat4(1.0f))
+    {
+      return std::make_shared<XRViewSpace>(type, projectionMatrix);
+    }
+
+  public:
+    XRViewSpace(XRViewSpaceType type, glm::mat4 projectionMatrix)
         : XRSpace(),
           type_(type),
           projectionMatrix_(projectionMatrix)

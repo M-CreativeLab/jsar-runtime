@@ -20,7 +20,7 @@ namespace client_xr
   public:
     /**
      * Create a new `XRSession` object.
-     * 
+     *
      * @param config the `XRSessionConfiguration` object, which is returned by the `XRDeviceClient` object.
      * @param device the `XRDeviceClient` object.
      * @returns a new `XRSession` object.
@@ -31,11 +31,8 @@ namespace client_xr
     }
 
   public:
-    XRSession(XRSessionConfiguration config, std::shared_ptr<XRDeviceClient> device)
-        : id(config.id),
-          device_(device)
-    {
-    }
+    XRSession(XRSessionConfiguration config, std::shared_ptr<XRDeviceClient> device);
+    ~XRSession();
 
   public:
     /**
@@ -43,13 +40,22 @@ namespace client_xr
      */
     inline std::shared_ptr<XRDeviceClient> device() const { return device_; }
     /**
+     * @returns `true` if the session is immersive, `false` otherwise.
+     */
+    inline bool immersive() { return xr::IsImmersive(mode); }
+    /**
      * @returns the blend mode to mixing the application content with the host environment.
      */
-    XREnvironmentBlendMode environmentBlendMode();
+    inline XREnvironmentBlendMode environmentBlendMode() const { return environmentBlendMode_; }
     /**
      * @returns the `XRRenderState` object that represents the current render state of the session.
      */
-    XRRenderState *renderState();
+    inline XRRenderState renderState() { return XRRenderState(activeRenderState_.get()); }
+
+  public:
+    void updateRenderState(XRRenderState *state);
+    void updateTargetFrameRate(float targetFrameRate);
+    void updateCollisionBox();
     /**
      * It ends the session, and no more frames will be rendered.
      */
@@ -74,6 +80,12 @@ namespace client_xr
      * @returns `true` if the FPS was calculated successfully, `false` otherwise.
      */
     bool calcFps();
+    /**
+     * It adds a view space to the session with the specified type.
+     *
+     * @param type the view space type.
+     */
+    void addViewSpace(XRViewSpaceType type);
 
   public:
     /**
@@ -89,10 +101,6 @@ namespace client_xr
      */
     XRSessionRequestInit requestInit;
     /**
-     * If the session is immersive.
-     */
-    bool immersive;
-    /**
      * If the session is started.
      */
     bool started;
@@ -104,7 +112,11 @@ namespace client_xr
      * If the session is suspended.
      */
     bool suspended;
+    /**
+     * Enabled features.
+     */
     std::vector<std::string> enabledFeatures;
+    std::optional<XRInputSourceArray> inputSources;
 
   private:
     std::shared_ptr<XRDeviceClient> device_;
@@ -113,8 +125,12 @@ namespace client_xr
      */
     std::unique_ptr<xr::TrXRSessionContextZone> sessionContextZoneClient_;
     XREnvironmentBlendMode environmentBlendMode_;
-    XRRenderState *ativeRenderState_ = nullptr;
-    XRRenderState *pendingRenderState_ = nullptr;
+    std::unique_ptr<XRRenderState> activeRenderState_ = nullptr;
+    std::unique_ptr<XRRenderState> pendingRenderState_ = nullptr;
+    std::vector<std::shared_ptr<XRViewSpace>> viewSpaces_;
+    std::shared_ptr<XRReferenceSpace> viewerSpace_;
+    std::shared_ptr<XRReferenceSpace> localSpace_;
+    std::shared_ptr<XRReferenceSpace> unboundedSpace_;
     uint32_t fps_ = 0;
     int framesCount_ = 0;
     /**

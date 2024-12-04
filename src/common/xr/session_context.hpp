@@ -112,6 +112,21 @@ namespace xr
   class TrXRSessionContextZone : public TrZone<TrXRSessionContextData>
   {
   public:
+    /**
+     * Create a new `TrXRSessionContextZone` instance.
+     * 
+     * @param filename the filename of the zone.
+     * @param type the zone type.
+     * @param sessionId the session id.
+     * @returns the new `TrXRSessionContextZone` instance.
+     */
+    static inline std::unique_ptr<TrXRSessionContextZone> Make(string filename, TrZoneType type,
+                                                               optional<uint32_t> sessionId = nullopt)
+    {
+      return std::make_unique<TrXRSessionContextZone>(filename, type, sessionId);
+    }
+
+  public:
     TrXRSessionContextZone(string filename, TrZoneType type, optional<uint32_t> sessionId = nullopt) : TrZone<TrXRSessionContextData>(filename, type)
     {
       if (type == TrZoneType::Server)

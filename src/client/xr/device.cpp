@@ -48,7 +48,7 @@ namespace client_xr
     if (resp == nullptr)
       throw std::runtime_error("failed to receive XR command(SessionResponse).");
 
-    XRSessionConfiguration sessionConfig(*resp);
+    XRSessionConfiguration sessionConfig(*resp, mode, init.value_or(XRSessionRequestInit::Default()));
     delete resp;
     return sessionConfig;
   }
