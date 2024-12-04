@@ -13,6 +13,6 @@ namespace client_xr
 
   shared_ptr<XRSession> XRSystem::requestSession(XRSessionMode mode, std::optional<XRSessionRequestInit> init)
   {
-    return XRSession::Make();
+    return XRSession::Make(xrDevice_->requestSession(mode, init), xrDevice_);
   }
 }

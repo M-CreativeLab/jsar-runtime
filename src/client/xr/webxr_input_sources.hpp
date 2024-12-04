@@ -21,11 +21,7 @@ namespace client_xr
   class XRInputSource
   {
   public:
-    XRInputSource(std::shared_ptr<XRSession> session, xr::TrXRInputSource *inputSourceData)
-        : session_(session),
-          inputSourceData_(inputSourceData)
-    {
-    }
+    XRInputSource(std::shared_ptr<XRSession> session, xr::TrXRInputSource *inputSourceData);
 
   public:
     /**

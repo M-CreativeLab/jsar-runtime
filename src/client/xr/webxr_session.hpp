@@ -20,14 +20,20 @@ namespace client_xr
   public:
     /**
      * Create a new `XRSession` object.
+     * 
+     * @param config the `XRSessionConfiguration` object, which is returned by the `XRDeviceClient` object.
+     * @param device the `XRDeviceClient` object.
+     * @returns a new `XRSession` object.
      */
-    static std::shared_ptr<XRSession> Make()
+    static std::shared_ptr<XRSession> Make(XRSessionConfiguration config, std::shared_ptr<XRDeviceClient> device)
     {
-      return std::make_shared<XRSession>();
+      return std::make_shared<XRSession>(config, device);
     }
 
   public:
-    XRSession()
+    XRSession(XRSessionConfiguration config, std::shared_ptr<XRDeviceClient> device)
+        : id(config.id),
+          device_(device)
     {
     }
 
@@ -35,7 +41,7 @@ namespace client_xr
     /**
      * @returns the `XRDeviceClient` object.
      */
-    std::shared_ptr<XRDeviceClient> device();
+    inline std::shared_ptr<XRDeviceClient> device() const { return device_; }
     /**
      * @returns the blend mode to mixing the application content with the host environment.
      */
@@ -101,6 +107,7 @@ namespace client_xr
     std::vector<std::string> enabledFeatures;
 
   private:
+    std::shared_ptr<XRDeviceClient> device_;
     /**
      * The session context zone client.
      */

@@ -46,7 +46,8 @@ namespace client_xr
      *             configuration for all options.
      * @returns an `XRSession` object if the device supports the requested mode and features.
      */
-    std::shared_ptr<XRSession> requestSession(XRSessionMode mode, std::optional<XRSessionRequestInit> init = std::nullopt);
+    std::shared_ptr<XRSession> requestSession(XRSessionMode mode = XRSessionMode::ImmersiveAR,
+                                              std::optional<XRSessionRequestInit> init = std::nullopt);
 
   private:
     std::shared_ptr<XRDeviceClient> xrDevice_;

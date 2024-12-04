@@ -35,7 +35,7 @@ namespace builtin_scene
       assert(xrDeviceClient_ != nullptr);
 
       auto xrSystem = xrDeviceClient->getXRSystem();
-      xrSession_ = xrSystem->requestSession(client_xr::XRSessionMode::ImmersiveAR);
+      xrSession_ = xrSystem->requestSession();
     }
     ~Scene() = default;
 
