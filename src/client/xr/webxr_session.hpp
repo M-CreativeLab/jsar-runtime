@@ -5,6 +5,7 @@
 #include "./common.hpp"
 #include "./webxr_frame.hpp"
 #include "./webxr_hand.hpp"
+#include "./webxr_input_sources.hpp"
 #include "./webxr_poses.hpp"
 #include "./webxr_rigid_transform.hpp"
 #include "./webxr_layers.hpp"
@@ -31,6 +32,10 @@ namespace client_xr
     }
 
   public:
+    /**
+     * @returns the `XRDeviceClient` object.
+     */
+    std::shared_ptr<XRDeviceClient> device();
     /**
      * @returns the blend mode to mixing the application content with the host environment.
      */

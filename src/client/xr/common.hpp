@@ -13,9 +13,11 @@ namespace client_xr
 {
   static const char *LOG_TAG = "jsar.xr";
 
-  using XRSessionMode = xr::TrXRSessionMode;
   using XRRenderState = xr::RenderState;
+  using XRSessionMode = xr::TrXRSessionMode;
   using XRJointIndex = xr::TrXRJointIndex;
+  using XRHandedness = xr::TrHandness;
+  using XRTargetRayMode = xr::TrXRTargetRayMode;
 
   enum XREnvironmentBlendMode
   {
