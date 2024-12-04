@@ -27,7 +27,7 @@ namespace client_xr
 
   /**
    * The type of the reference space in XR.
-   * 
+   *
    * The application developer can request different types of reference spaces to render the spatial content in different
    * ways. The reference space type is used to determine the origin of the coordinate system and the orientation of the
    * content.
@@ -48,6 +48,46 @@ namespace client_xr
     kNone = 2,
   };
   using XRViewSpaceType = XREye;
+
+  /**
+   * The `XRSessionRequestInit` class represents the options for requesting a new WebXR session.
+   *
+   * see https://developer.mozilla.org/en-US/docs/Web/API/XRSystem/requestSession#options
+   */
+  class XRSessionRequestInit
+  {
+  public:
+    XRSessionRequestInit() {}
+
+  public:
+    /**
+     * An array of values which the returned XRSession must support.
+     */
+    std::vector<std::string> requiredFeatures;
+    /**
+     * An array of values identifying features which the returned XRSession may optionally support.
+     */
+    std::vector<std::string> optionalFeatures;
+    // TODO: more options
+  };
+
+  /**
+   * The `XRSessionConfiguration` class represents the configuration of a new WebXR session. It is returned by the
+   * XR device server after the request of a new WebXR session.
+   */
+  class XRSessionConfiguration
+  {
+  public:
+    XRSessionConfiguration(xr::SessionResponse &response)
+        : id(response.id),
+          recommendedContentSize(response.recommendedContentSize)
+    {
+    }
+
+  public:
+    int id;
+    float recommendedContentSize;
+  };
 
   class XRDeviceNative;
   class XRSession;
