@@ -9,10 +9,12 @@ namespace client_xr
       throw std::invalid_argument("mode should be 'immersive-ar', 'immersive-vr' or 'inline'.");
 
     xr::IsSessionSupportedRequest request(mode);
-    if (!clientContext->sendXrCommand(request))
+    if (!clientContext_->sendXrCommand(request))
       throw std::runtime_error("failed to send XR command(IsSessionSupportedRequest).");
 
-    auto resp = clientContext->recvXrCommand<xr::IsSessionSupportedResponse>(xr::TrXRCmdType::IsSessionSupportedResponse, requestTimeout);
+    auto resp = clientContext_->recvXrCommand<xr::IsSessionSupportedResponse>(
+        xr::TrXRCmdType::IsSessionSupportedResponse,
+        requestTimeout_);
     if (resp == nullptr)
       throw std::runtime_error("failed to receive XR command(SessionResponse).");
 
@@ -39,10 +41,10 @@ namespace client_xr
   XRSessionConfiguration XRDeviceClient::requestSession(XRSessionMode mode, std::optional<XRSessionRequestInit> init)
   {
     xr::SessionRequest request(mode);
-    if (!clientContext->sendXrCommand(request))
+    if (!clientContext_->sendXrCommand(request))
       throw std::runtime_error("failed to send XR command(SessionRequest).");
 
-    auto resp = clientContext->recvXrCommand<xr::SessionResponse>(xr::TrXRCmdType::SessionResponse, requestTimeout);
+    auto resp = clientContext_->recvXrCommand<xr::SessionResponse>(xr::TrXRCmdType::SessionResponse, requestTimeout_);
     if (resp == nullptr)
       throw std::runtime_error("failed to receive XR command(SessionResponse).");
 
@@ -62,25 +64,25 @@ namespace client_xr
 
   void XRDeviceClient::requestFrame(XRFrameCallback callback, void *context)
   {
-    contextifiedFrameCallbacks.push_back(ContextifiedXRFrameCallback(callback, context));
+    contextifiedFrameCallbacks_.push_back(ContextifiedXRFrameCallback(callback, context));
   }
 
   bool XRDeviceClient::startFrame(xr::TrXRFrameRequest *frameRequest)
   {
-    return clientContext->startXrFrame(frameRequest);
+    return clientContext_->startXrFrame(frameRequest);
   }
 
   bool XRDeviceClient::endFrame(xr::TrXRFrameRequest *frameRequest)
   {
-    return clientContext->finishXrFrame(frameRequest);
+    return clientContext_->finishXrFrame(frameRequest);
   }
 
   TrViewport XRDeviceClient::getViewport(uint32_t viewIndex)
   {
-    int width = clientContext->getFramebufferWidth();
-    int height = clientContext->getFramebufferHeight();
+    int width = clientContext_->getFramebufferWidth();
+    int height = clientContext_->getFramebufferHeight();
 
-    if (clientContext->isFramebufferDoubleWide())
+    if (clientContext_->isFramebufferDoubleWide())
     {
       if (getDeviceInit().stereoRenderingMode != xr::TrStereoRenderingMode::MultiPass)
         width /= 2;
@@ -100,6 +102,6 @@ namespace client_xr
 
   xr::TrDeviceInit &XRDeviceClient::getDeviceInit()
   {
-    return clientContext->xrDeviceInit;
+    return clientContext_->xrDeviceInit;
   }
 }

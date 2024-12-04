@@ -4,6 +4,7 @@
 #include "./hierarchy.hpp"
 #include "../graphics/webgl_context.hpp"
 #include "../xr/device.hpp"
+#include "../xr/webxr_session.hpp"
 
 namespace builtin_scene
 {
@@ -12,7 +13,7 @@ namespace builtin_scene
   public:
     /**
      * Create a new instance of the Scene.
-     * 
+     *
      * @param glContext The WebGL2 context to use.
      * @param xrDeviceClient The XR device client to use.
      * @returns The new instance of the Scene.
@@ -26,10 +27,15 @@ namespace builtin_scene
   public:
     Scene(std::shared_ptr<client_graphics::WebGL2Context> glContext,
           std::shared_ptr<client_xr::XRDeviceClient> xrDeviceClient)
-        : Hierarchy(), glContext(glContext), xrDeviceClient(xrDeviceClient)
+        : Hierarchy(),
+          glContext_(glContext),
+          xrDeviceClient_(xrDeviceClient)
     {
-      assert(glContext != nullptr);
-      assert(xrDeviceClient != nullptr);
+      assert(glContext_ != nullptr);
+      assert(xrDeviceClient_ != nullptr);
+
+      auto xrSystem = xrDeviceClient->getXRSystem();
+      xrSession_ = xrSystem->requestSession(client_xr::XRSessionMode::ImmersiveAR);
     }
     ~Scene() = default;
 
@@ -39,7 +45,8 @@ namespace builtin_scene
     }
 
   private:
-    std::shared_ptr<client_graphics::WebGL2Context> glContext;
-    std::shared_ptr<client_xr::XRDeviceClient> xrDeviceClient;
+    std::shared_ptr<client_graphics::WebGL2Context> glContext_;
+    std::shared_ptr<client_xr::XRDeviceClient> xrDeviceClient_;
+    std::shared_ptr<client_xr::XRSession> xrSession_;
   };
 }
