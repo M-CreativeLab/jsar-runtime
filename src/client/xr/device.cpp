@@ -1,5 +1,5 @@
 #include "./device.hpp"
-#include "common/xr/message.hpp"
+#include "./common.hpp"
 
 namespace client_xr
 {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <common/viewport.hpp>
 
 namespace xr
 {
@@ -14,6 +15,12 @@ namespace xr
                                                                         height(height),
                                                                         x(x),
                                                                         y(y)
+    {
+    }
+    Viewport(TrViewport &viewport) : width(viewport.width),
+                                     height(viewport.height),
+                                     x(viewport.x),
+                                     y(viewport.y)
     {
     }
 

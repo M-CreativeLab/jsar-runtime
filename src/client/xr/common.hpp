@@ -3,9 +3,11 @@
 #include <string>
 #include <chrono>
 #include <glm/glm.hpp>
-#include "common/xr/types.hpp"
+
+#include <common/xr/types.hpp>
+#include <common/xr/message.hpp>
 // TODO: move xr/render_state.hpp to common directory.
-#include "xr/render_state.hpp"
+#include <xr/render_state.hpp>
 
 namespace client_xr
 {
