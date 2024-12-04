@@ -7,6 +7,7 @@
 #include "./webxr_hand.hpp"
 #include "./webxr_poses.hpp"
 #include "./webxr_rigid_transform.hpp"
+#include "./webxr_layers.hpp"
 #include "./webxr_spaces.hpp"
 #include "./webxr_view.hpp"
 #include "./webxr_viewport.hpp"
