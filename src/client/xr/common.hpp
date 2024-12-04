@@ -4,12 +4,16 @@
 #include <chrono>
 #include <glm/glm.hpp>
 #include "common/xr/types.hpp"
+// TODO: move xr/render_state.hpp to common directory.
+#include "xr/render_state.hpp"
 
 namespace client_xr
 {
   static const char *LOG_TAG = "jsar.xr";
 
   using XRSessionMode = xr::TrXRSessionMode;
+  using XRRenderState = xr::RenderState;
+  using XRJointIndex = xr::TrXRJointIndex;
 
   enum XREnvironmentBlendMode
   {
@@ -48,6 +52,19 @@ namespace client_xr
     kNone = 2,
   };
   using XRViewSpaceType = XREye;
+
+  class XRDeviceClient;
+  class XRSession;
+  class XRFrame;
+  class XRSpace;
+  class XRReferenceSpace;
+  class XRViewSpace;
+  class XRTargetRayOrGripSpace;
+  class XRPose;
+  class XRViewerPose;
+  class XRHand;
+  class XRInputSource;
+  class XRInputSourceArray;
 
   /**
    * The `XRSessionRequestInit` class represents the options for requesting a new WebXR session.
@@ -88,19 +105,6 @@ namespace client_xr
     int id;
     float recommendedContentSize;
   };
-
-  class XRDeviceNative;
-  class XRSession;
-  class XRFrame;
-  class XRSpace;
-  class XRReferenceSpace;
-  class XRViewSpace;
-  class XRTargetRayOrGripSpace;
-  class XRPose;
-  class XRViewerPose;
-  class XRHand;
-  class XRInputSource;
-  class XRInputSourceArray;
 
   // class XRFrameContext
   // {
