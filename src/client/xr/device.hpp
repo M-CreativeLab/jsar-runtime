@@ -8,34 +8,34 @@
 
 namespace client_xr
 {
-  /**
-   * The callback function for the XR frame request.
-   */
-  typedef std::function<void(Napi::Env env, xr::TrXRFrameRequest *, void *context)> XRFrameCallback;
+  // /**
+  //  * The callback function for the XR frame request.
+  //  */
+  // typedef std::function<void(Napi::Env env, xr::TrXRFrameRequest *, void *context)> XRFrameCallback;
 
-  /**
-   * The `XRFrameCallback` with context.
-   *
-   * TODO(yorkie): Use `std::function` instead of this class.
-   */
-  class ContextifiedXRFrameCallback
-  {
-  public:
-    /**
-     * Create a new instance of the `ContextifiedXRFrameCallback`.
-     */
-    ContextifiedXRFrameCallback(XRFrameCallback callback, void *context) : callback(callback), context(context) {}
+  // /**
+  //  * The `XRFrameCallback` with context.
+  //  *
+  //  * TODO(yorkie): Use `std::function` instead of this class.
+  //  */
+  // class ContextifiedXRFrameCallback
+  // {
+  // public:
+  //   /**
+  //    * Create a new instance of the `ContextifiedXRFrameCallback`.
+  //    */
+  //   ContextifiedXRFrameCallback(XRFrameCallback callback, void *context) : callback(callback), context(context) {}
 
-  public:
-    /**
-     * The callback function.
-     */
-    XRFrameCallback callback;
-    /**
-     * The context to pass to the callback function.
-     */
-    void *context = nullptr;
-  };
+  // public:
+  //   /**
+  //    * The callback function.
+  //    */
+  //   XRFrameCallback callback;
+  //   /**
+  //    * The context to pass to the callback function.
+  //    */
+  //   void *context = nullptr;
+  // };
 
   /**
    * The XRDevice client class.
@@ -64,12 +64,18 @@ namespace client_xr
 
   public:
     /**
+     * @returns the device's context zone.
+     */
+    inline xr::TrXRDeviceContextZone *contextZone() { return clientContext_->getXRDeviceContextZone(); }
+
+  public:
+    /**
      * @returns the WebXR `XRSystem` instance.
      */
-    inline std::shared_ptr<XRSystem> getXRSystem()
+    inline std::shared_ptr<XRSystem> getXRSystem(uv_loop_t *eventloop)
     {
       if (xrSystem_ == nullptr)
-        xrSystem_ = XRSystem::Make(shared_from_this());
+        xrSystem_ = XRSystem::Make(shared_from_this(), eventloop);
       return xrSystem_;
     }
     /**
@@ -137,7 +143,7 @@ namespace client_xr
 
   private:
     TrClientContextPerProcess *clientContext_ = nullptr;
-    std::vector<ContextifiedXRFrameCallback> contextifiedFrameCallbacks_;
+    // std::vector<ContextifiedXRFrameCallback> contextifiedFrameCallbacks_;
     std::shared_ptr<XRSystem> xrSystem_;
     int requestTimeout_ = 1000;
   };

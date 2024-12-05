@@ -74,6 +74,17 @@ namespace bindings
         xrDeviceObject.Set("stereoRenderingMode", Napi::String::New(env, "unknown"));
       thisObject.Set("xrDevice", xrDeviceObject);
     }
+
+    if (!isWorker)
+    {
+      /**
+       * Configure the scripting event loop to enable the native rendering.
+       *
+       * The native rendering such as "builtin_scene" requires the scripting's event loop to be set, and then the renderer can use
+       * the event loop to schedule the rendering tasks.
+       */
+      clientContext->setScriptingEventLoop(env);
+    }
   }
 
   Napi::Value ClientContext::KeepAlive(const Napi::CallbackInfo &info)

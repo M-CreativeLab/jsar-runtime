@@ -7,13 +7,65 @@
 
 namespace client_xr
 {
+  class XRFrameContext
+  {
+  public:
+    XRFrameContext(xr::TrXRSessionContextData sessionContext,
+                   xr::TrXRDeviceContextData deviceContext,
+                   std::shared_ptr<XRSession> session)
+        : sessionId(sessionContext.sessionId),
+          stereoId(sessionContext.stereoId),
+          stereoTimestamp(sessionContext.timestampOnSettingStereoId),
+          framebufferId(deviceContext.framebufferConf.id),
+          framebufferWidth(deviceContext.framebufferConf.width),
+          framebufferHeight(deviceContext.framebufferConf.height),
+          session(session)
+    {
+      memcpy(localBaseMatrix, sessionContext.localBaseMatrix, sizeof(localBaseMatrix));
+      memcpy(viewerBaseMatrix, deviceContext.stereoFrame.viewerBaseMatrix, sizeof(viewerBaseMatrix));
+      views[0] = deviceContext.stereoFrame.views[0];
+      views[1] = deviceContext.stereoFrame.views[1];
+
+      auto now = chrono::system_clock::now();
+      time = chrono::duration_cast<chrono::microseconds>(now.time_since_epoch()).count();
+    }
+
+  public:
+    inline xr::TrXRFrameRequest createFrameRequestForView(uint32_t viewIndex)
+    {
+      auto req = xr::TrXRFrameRequest();
+      req.sessionId = sessionId;
+      req.stereoId = stereoId;
+      req.stereoTimestamp = stereoTimestamp;
+      memcpy(req.localBaseMatrix, localBaseMatrix, sizeof(float) * 16);
+      memcpy(req.viewerBaseMatrix, viewerBaseMatrix, sizeof(float) * 16);
+      req.views[0] = views[0];
+      req.views[1] = views[1];
+      req.viewIndex = viewIndex;
+      return req;
+    }
+
+  public:
+    uint32_t sessionId;
+    uint32_t stereoId;
+    long long stereoTimestamp;
+    float localBaseMatrix[16];
+    float viewerBaseMatrix[16];
+    xr::TrXRView views[2];
+    int framebufferId = -1;
+    int framebufferWidth;
+    int framebufferHeight;
+    std::shared_ptr<XRSession> session;
+    uint32_t time = 0;
+  };
+
   class XRFrame
   {
     friend class XRSession;
     friend class XRInputSource;
 
   public:
-    XRFrame();
+    XRFrame(xr::TrXRFrameRequest &frameRequest, std::shared_ptr<XRSession> session);
 
   public:
     uint32_t id() const { return id_; }
@@ -38,13 +90,13 @@ namespace client_xr
      */
     std::shared_ptr<XRPose> getPose(std::shared_ptr<XRSpace> space, std::shared_ptr<XRSpace> baseSpace);
     /**
-     * The `getViewerPose()` method, a member of the `XRFrame` interface, returns a `XRViewerPose` object which describes the 
+     * The `getViewerPose()` method, a member of the `XRFrame` interface, returns a `XRViewerPose` object which describes the
      * viewer's pose (position and orientation) relative to the specified reference space.
-     * 
-     * @param referenceSpace An `XRReferenceSpace` object specifying the space to use as the reference point or base for the 
+     *
+     * @param referenceSpace An `XRReferenceSpace` object specifying the space to use as the reference point or base for the
      *                       computation of the viewer's current pose.
      * @returns a `XRViewerPose` describing the viewer's position and orientation relative to the specified reference space.
-     * @throws `InvalidStateError` if `getViewerPose()` was not called within the context of a callback to a session's 
+     * @throws `InvalidStateError` if `getViewerPose()` was not called within the context of a callback to a session's
      *         `XRSession.requestAnimationFrame()`.
      */
     std::shared_ptr<XRViewerPose> getViewerPose(std::shared_ptr<XRReferenceSpace> referenceSpace);

@@ -8,25 +8,36 @@
 namespace client_xr
 {
   class XRDeviceClient;
-  class XRSystem
+  class XRSystem : public std::enable_shared_from_this<XRSystem>
   {
   public:
     /**
      * Create a new instance of the XRSystem with a `XRDeviceClient` instance.
      *
-     * @param xrDevice The XRDeviceClient instance to use.
+     * @param device The `XRDeviceClient` instance to use.
+     * @param eventloop The libuv's event loop to use.
      * @returns The new instance of the XRSystem.
      */
-    static std::shared_ptr<XRSystem> Make(std::shared_ptr<XRDeviceClient> xrDevice)
+    static std::shared_ptr<XRSystem> Make(std::shared_ptr<XRDeviceClient> device, uv_loop_t *eventloop)
     {
-      return std::make_shared<XRSystem>(xrDevice);
+      return std::make_shared<XRSystem>(device, eventloop);
     }
 
   public:
-    XRSystem(std::shared_ptr<XRDeviceClient> xrDevice)
-        : xrDevice_(xrDevice)
+    XRSystem(std::shared_ptr<XRDeviceClient> device, uv_loop_t *eventloop)
+        : xrDevice_(device), eventloop_(eventloop)
     {
     }
+
+  public:
+    /**
+     * @returns the `XRDeviceClient` instance that the `XRSystem` is using.
+     */
+    std::shared_ptr<XRDeviceClient> device() { return xrDevice_; }
+    /**
+     * @returns the libuv's event loop that the `XRSystem` is using.
+     */
+    uv_loop_t *eventloop() { return eventloop_; }
 
   public:
     /**
@@ -51,5 +62,6 @@ namespace client_xr
 
   private:
     std::shared_ptr<XRDeviceClient> xrDevice_;
+    uv_loop_t *eventloop_;
   };
 }

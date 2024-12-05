@@ -5,6 +5,7 @@
 #include "../graphics/webgl_context.hpp"
 #include "../xr/device.hpp"
 #include "../xr/webxr_session.hpp"
+#include "../per_process.hpp"
 
 namespace builtin_scene
 {
@@ -34,8 +35,17 @@ namespace builtin_scene
       assert(glContext_ != nullptr);
       assert(xrDeviceClient_ != nullptr);
 
-      auto xrSystem = xrDeviceClient->getXRSystem();
-      xrSession_ = xrSystem->requestSession();
+      auto clientContext = TrClientContextPerProcess::Get();
+      assert(clientContext != nullptr);
+
+      auto setupXRSession = [this, clientContext](auto type, auto &event)
+      {
+        auto xrSystem = xrDeviceClient_->getXRSystem(clientContext->getScriptingEventLoop());
+        xrSession_ = xrSystem->requestSession();
+        xrSession_->requestAnimationFrame([](uint32_t time, client_xr::XRFrame &frame)
+                                          { std::cerr << "frame time: " << time << std::endl; });
+      };
+      clientContext->addEventListener(TrClientContextEventType::ScriptingEventLoopReady, setupXRSession);
     }
     ~Scene() = default;
 

@@ -122,13 +122,18 @@ public:
   std::unique_ptr<analytics::PerformanceValue<int>> longFrames;
 };
 
+enum class TrClientContextEventType
+{
+  ScriptingEventLoopReady, // When the event loop is ready.
+};
+
 /**
  * The client context is a singleton class in an application process.
  *
  * Every client process has a unique client context, which is responsible for managing the client-side resources, such as
  * the media players, command buffers, frame requests, and event channels.
  */
-class TrClientContextPerProcess
+class TrClientContextPerProcess : public TrEventTarget<TrClientContextEventType>
 {
 public:
   /**
@@ -247,7 +252,7 @@ public: // commandbuffer methods
   inline shared_ptr<client_graphics::WebGL2Context> getHostWebGLContext() { return hostWebGLContext; }
   /**
    * Send a command buffer request to the command buffer channel.
-   * 
+   *
    * @param commandBuffer The command buffer to send.
    * @param followsFlush If the command buffer follows a flush command, a flush command will cause the renderer to flush the buffer queue.
    * @returns true if the command buffer request is sent successfully.
@@ -255,7 +260,7 @@ public: // commandbuffer methods
   bool sendCommandBufferRequest(TrCommandBufferBase &commandBuffer, bool followsFlush = false);
   /**
    * Receive a command buffer response from the command buffer channel with a timeout.
-   * 
+   *
    * @param timeout The time in milliseconds to wait for the response.
    * @returns The new instance of the command buffer response, or nullptr if no response received or timeout.
    */
@@ -332,6 +337,12 @@ public: // WebXR methods
   }
 
 public:
+  uv_loop_t *getScriptingEventLoop() { return scriptingEventLoop; }
+  void setScriptingEventLoop(napi_env env)
+  {
+    napi_get_uv_event_loop(env, &scriptingEventLoop);
+    dispatchEvent(TrClientContextEventType::ScriptingEventLoopReady);
+  }
   font::FontCacheManager &getFontCacheManager() { return *fontCacheManager; }
   TrClientPerformanceFileSystem &getPerfFs() { return *perfFs; }
 
@@ -407,6 +418,7 @@ private: // service & script alive checking fields
   atomic<uint64_t> scriptAliveTime = 0;
 
 private: // other fields
+  uv_loop_t *scriptingEventLoop = nullptr;
   unique_ptr<font::FontCacheManager> fontCacheManager = nullptr;
   unique_ptr<TrClientPerformanceFileSystem> perfFs = nullptr;
 

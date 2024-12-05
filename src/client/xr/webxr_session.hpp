@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <chrono>
+#include <idgen.hpp>
 #include "./common.hpp"
 #include "./webxr_frame.hpp"
 #include "./webxr_hand.hpp"
@@ -15,23 +16,58 @@
 
 namespace client_xr
 {
-  class XRSession
+  enum class XRSessionUpdateState
+  {
+    kSuccess = 0,
+    kSessionEnded,        // Skip the frame if the session is ended.
+    kInvalidSessionId,    // Skip the frame if the session id is invalid.
+    kStereoIdMismatch,    // Skip the frame if the stereo id is mismatched.
+    kPendingStereoFrames, // Skip the frame if there are more than 2 pending frames.
+    kSessionNotInFrustum, // Skip the frame if the session is not in the frustum.
+  };
+
+  using XRFrameCallback = std::function<void(uint32_t, XRFrame &)>;
+  class XRFrameCallbackWrapper
+  {
+  public:
+    XRFrameCallbackWrapper(XRFrameCallback callback)
+        : callback(callback), cancelled(false)
+    {
+      static TrIdGenerator callbackIdGen(1);
+      handle = callbackIdGen.get();
+    }
+    ~XRFrameCallbackWrapper() {}
+
+  public:
+    void cancel() { cancelled = true; }
+    void operator()(uint32_t time, XRFrame &frame)
+    {
+      callback(time, frame);
+    }
+
+  public:
+    XRFrameCallback callback;
+    uint32_t handle;
+    bool cancelled;
+  };
+
+  class XRSession : public std::enable_shared_from_this<XRSession>
   {
   public:
     /**
      * Create a new `XRSession` object.
      *
      * @param config the `XRSessionConfiguration` object, which is returned by the `XRDeviceClient` object.
-     * @param device the `XRDeviceClient` object.
+     * @param xrSystem the `XRSystem` object.
      * @returns a new `XRSession` object.
      */
-    static std::shared_ptr<XRSession> Make(XRSessionConfiguration config, std::shared_ptr<XRDeviceClient> device)
+    static std::shared_ptr<XRSession> Make(XRSessionConfiguration config, std::shared_ptr<XRSystem> xrSystem)
     {
-      return std::make_shared<XRSession>(config, device);
+      return std::make_shared<XRSession>(config, xrSystem);
     }
 
   public:
-    XRSession(XRSessionConfiguration config, std::shared_ptr<XRDeviceClient> device);
+    XRSession(XRSessionConfiguration config, std::shared_ptr<XRSystem> xrSystem);
     ~XRSession();
 
   public:
@@ -56,6 +92,9 @@ namespace client_xr
     void updateRenderState(XRRenderState *state);
     void updateTargetFrameRate(float targetFrameRate);
     void updateCollisionBox();
+    void updateInputSourcesIfChanged(XRFrame& frame);
+    uint32_t requestAnimationFrame(XRFrameCallback callback);
+    void cancelAnimationFrame(uint32_t handle);
     /**
      * It ends the session, and no more frames will be rendered.
      */
@@ -71,9 +110,17 @@ namespace client_xr
      */
     void stop();
     /**
+     * This function will be called in ticks.
+     */
+    void tick();
+    /**
      * Update the session.
      */
-    void update();
+    XRSessionUpdateState update();
+    /**
+     * This function will be called in each WebXR frame.
+     */
+    void dispatchXRFrame(xr::TrXRFrameRequest &frameRequest);
     /**
      * It calculates the FPS(frames per second) of the session.
      *
@@ -127,6 +174,8 @@ namespace client_xr
     XREnvironmentBlendMode environmentBlendMode_;
     std::unique_ptr<XRRenderState> activeRenderState_ = nullptr;
     std::unique_ptr<XRRenderState> pendingRenderState_ = nullptr;
+    std::vector<std::shared_ptr<XRFrameCallbackWrapper>> pendingFrameCallbacks_;
+    std::vector<std::shared_ptr<XRFrameCallbackWrapper>> currentFrameCallbacks_;
     std::vector<std::shared_ptr<XRViewSpace>> viewSpaces_;
     std::shared_ptr<XRReferenceSpace> viewerSpace_;
     std::shared_ptr<XRReferenceSpace> localSpace_;
@@ -145,5 +194,7 @@ namespace client_xr
      * The last recorded frame timepoint, updated by manual at calculating FPS.
      */
     std::chrono::steady_clock::time_point lastRecordedFrameTimepoint_ = chrono::steady_clock::now();
+    uv_loop_t *eventloop_;
+    uv_timer_t tickHandle_;
   };
 }

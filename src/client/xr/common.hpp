@@ -58,6 +58,7 @@ namespace client_xr
   using XRViewSpaceType = XREye;
 
   class XRDeviceClient;
+  class XRSystem;
   class XRSession;
   class XRFrame;
   class XRSpace;
