@@ -56,9 +56,11 @@ namespace client_xr
   {
   }
 
-  void XRSession::addViewSpace(XRViewSpaceType type)
+  void XRSession::updateFrameTime(bool updateStereoFrame)
   {
-    viewSpaces_.push_back(XRViewSpace::Make(type));
+    frameTimepoint_ = chrono::steady_clock::now();
+    if (updateStereoFrame)
+      lastStereoFrameTimepoint_ = frameTimepoint_;
   }
 
   void XRSession::updateRenderState(XRRenderState newState)
@@ -269,7 +271,7 @@ namespace client_xr
     // - If session’s mode is "inline" and session’s renderState's output canvas is null,
     //   abort these steps.
     // ???
-    XRFrame frame(frameRequest, shared_from_this());
+    XRFrame frame(&frameRequest, shared_from_this());
 
     // Move the pending frame callbacks to current map
     currentFrameCallbacks_.clear();
@@ -301,5 +303,27 @@ namespace client_xr
       currentFrameCallbacks_.clear();
     }
     frame.endFrame();
+  }
+
+  bool XRSession::calcFps()
+  {
+    framesCount_ += 1;
+    auto delta = chrono::duration_cast<chrono::milliseconds>(frameTimepoint_ - lastRecordedFrameTimepoint_).count();
+    if (delta >= 1000)
+    {
+      fps_ = framesCount_ / (delta / 1000);
+      framesCount_ = 0;
+      lastRecordedFrameTimepoint_ = frameTimepoint_;
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  void XRSession::addViewSpace(XRViewSpaceType type)
+  {
+    viewSpaces_.push_back(XRViewSpace::Make(type));
   }
 }

@@ -40,6 +40,7 @@ namespace builtin_scene
 
       frameCallback_ = [this](uint32_t time, client_xr::XRFrame &frame)
       {
+        assert(xrSession_ != nullptr); // ensure the WebXR session is ready.
         update(time, frame);
         xrSession_->requestAnimationFrame(frameCallback_);
       };

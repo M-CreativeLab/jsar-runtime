@@ -65,7 +65,7 @@ namespace client_xr
     friend class XRInputSource;
 
   public:
-    XRFrame(xr::TrXRFrameRequest &frameRequest, std::shared_ptr<XRSession> session);
+    XRFrame(xr::TrXRFrameRequest *frameRequest, std::shared_ptr<XRSession> session);
 
   public:
     uint32_t id() const { return id_; }
@@ -100,17 +100,28 @@ namespace client_xr
      *         `XRSession.requestAnimationFrame()`.
      */
     std::shared_ptr<XRViewerPose> getViewerPose(std::shared_ptr<XRReferenceSpace> referenceSpace);
+    /**
+     * The `getJointPose()` method of the `XRFrame` interface returns an `XRJointPose` object providing the pose of a hand
+     * joint (see `XRHand`) relative to a given base space.
+     *
+     * @param jointSpace An `XRJointSpace` object specifying the joint for which to obtain the pose.
+     * @param baseSpace An `XRSpace` object specifying the space to use as the base or origin for the purposes of computing
+     *                 the relative position and orientation.
+     * @returns an `XRJointPose` object specifying the position and orientation of the joint relative to the `XRSpace`
+     *         indicated by `baseSpace`.
+     */
+    std::shared_ptr<XRJointPose> getJointPose(std::shared_ptr<XRJointSpace> jointSpace, std::shared_ptr<XRSpace> baseSpace);
 
   private:
     uint32_t id_;
     uint32_t stereoId_;
     uint32_t sessionId_;
-    uint32_t timestamp;
+    uint32_t timestamp_;
     bool active_;
     bool animationFrame_;
     std::shared_ptr<XRSession> session_;
     std::shared_ptr<XRDeviceClient> device_;
-    xr::TrXRFrameRequest *internal_;
+    xr::TrXRFrameRequest *frameRequestData_;
     std::chrono::time_point<std::chrono::high_resolution_clock> startTime_;
     std::chrono::time_point<std::chrono::high_resolution_clock> endTime_;
 

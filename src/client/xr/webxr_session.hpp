@@ -54,6 +54,8 @@ namespace client_xr
 
   class XRSession : public std::enable_shared_from_this<XRSession>
   {
+    friend class XRFrame;
+
   public:
     /**
      * Create a new `XRSession` object.
@@ -88,12 +90,30 @@ namespace client_xr
      * @returns the `XRRenderState` object that represents the current render state of the session.
      */
     inline XRRenderState renderState() { return XRRenderState(*activeRenderState_); }
+    /**
+     * @returns the frame time of the session.
+     */
+    inline std::chrono::steady_clock::time_point frameTime() { return frameTimepoint_; }
+    /**
+     * @returns the viewer reference space of the session.
+     */
+    inline std::shared_ptr<XRReferenceSpace> viewerSpace() { return viewerSpace_; }
+    /**
+     * @returns the local reference space of the session.
+     */
+    inline std::shared_ptr<XRReferenceSpace> localSpace() { return localSpace_; }
 
   public:
     /**
-     * The `updateRenderState()` method of the `XRSession` interface of the WebXR API schedules changes to be applied to the 
+     * Update the frame time of the session.
+     *
+     * @param updateStereoFrame indicates whether the stereo frame time should be updated.
+     */
+    void updateFrameTime(bool updateStereoFrame);
+    /**
+     * The `updateRenderState()` method of the `XRSession` interface of the WebXR API schedules changes to be applied to the
      * active render state (`XRRenderState`) prior to rendering of the next frame.
-     * 
+     *
      * @param newState The `XRRenderState` object representing the new render state to be applied.
      */
     void updateRenderState(XRRenderState newState);

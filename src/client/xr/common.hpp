@@ -62,10 +62,13 @@ namespace client_xr
   class XRFrame;
   class XRSpace;
   class XRReferenceSpace;
+  class XRJointSpace;
   class XRViewSpace;
   class XRTargetRayOrGripSpace;
   class XRPose;
   class XRViewerPose;
+  class XRJointPose;
+  class XRView;
   class XRHand;
   class XRInputSource;
   class XRInputSourceArray;

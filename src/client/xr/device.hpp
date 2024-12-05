@@ -67,6 +67,10 @@ namespace client_xr
      * @returns the device's context zone.
      */
     inline xr::TrXRDeviceContextZone *contextZone() { return clientContext_->getXRDeviceContextZone(); }
+    /**
+     * @returns the client context.
+     */
+    inline TrClientContextPerProcess *clientContext() { return clientContext_; }
 
   public:
     /**

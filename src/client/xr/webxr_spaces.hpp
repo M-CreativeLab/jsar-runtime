@@ -7,6 +7,8 @@
 
 namespace client_xr
 {
+#define XRSPACE_RELATIVE_TRANSFORM(space, baseSpace) baseSpace->inverseBaseMatrix() * space->baseMatrix()
+
   class XRSpace
   {
   public:
@@ -19,8 +21,9 @@ namespace client_xr
     virtual ~XRSpace() = default;
 
   public:
-    glm::mat4 &baseMatrix() { return baseMatrix_; }
-    glm::mat4 &inverseBaseMatrix()
+    inline bool isReferenceSpace() const { return isReferenceSpace_; }
+    inline glm::mat4 &baseMatrix() { return baseMatrix_; }
+    inline glm::mat4 &inverseBaseMatrix()
     {
       if (isInverseMatrixDirty_)
       {
