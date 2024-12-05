@@ -52,6 +52,6 @@ namespace xr
     WebGLLayer *baseLayer = nullptr;
     float depthFar;
     float depthNear;
-    uint32_t inlineVerticalFieldOfView;
+    float inlineVerticalFieldOfView;
   };
 }

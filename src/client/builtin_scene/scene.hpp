@@ -38,25 +38,37 @@ namespace builtin_scene
       auto clientContext = TrClientContextPerProcess::Get();
       assert(clientContext != nullptr);
 
+      frameCallback_ = [this](uint32_t time, client_xr::XRFrame &frame)
+      {
+        update(time, frame);
+        xrSession_->requestAnimationFrame(frameCallback_);
+      };
+
       auto setupXRSession = [this, clientContext](auto type, auto &event)
       {
         auto xrSystem = xrDeviceClient_->getXRSystem(clientContext->getScriptingEventLoop());
         xrSession_ = xrSystem->requestSession();
-        xrSession_->requestAnimationFrame([](uint32_t time, client_xr::XRFrame &frame)
-                                          { std::cerr << "frame time: " << time << std::endl; });
+
+        // Update the render state
+        client_xr::XRRenderState renderState;
+        renderState.baseLayer = client_xr::XRWebGLLayer::Make(xrSession_, glContext_);
+        xrSession_->updateRenderState(renderState);
+        xrSession_->requestAnimationFrame(frameCallback_);
       };
       clientContext->addEventListener(TrClientContextEventType::ScriptingEventLoopReady, setupXRSession);
     }
     ~Scene() = default;
 
   public:
-    void update()
+    void update(uint32_t time, client_xr::XRFrame &frame)
     {
+      // TODO
     }
 
   private:
     std::shared_ptr<client_graphics::WebGL2Context> glContext_;
     std::shared_ptr<client_xr::XRDeviceClient> xrDeviceClient_;
     std::shared_ptr<client_xr::XRSession> xrSession_;
+    client_xr::XRFrameCallback frameCallback_;
   };
 }

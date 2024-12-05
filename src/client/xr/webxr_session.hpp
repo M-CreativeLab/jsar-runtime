@@ -8,6 +8,7 @@
 #include "./webxr_hand.hpp"
 #include "./webxr_input_sources.hpp"
 #include "./webxr_poses.hpp"
+#include "./webxr_renderstate.hpp"
 #include "./webxr_rigid_transform.hpp"
 #include "./webxr_layers.hpp"
 #include "./webxr_spaces.hpp"
@@ -86,13 +87,19 @@ namespace client_xr
     /**
      * @returns the `XRRenderState` object that represents the current render state of the session.
      */
-    inline XRRenderState renderState() { return XRRenderState(activeRenderState_.get()); }
+    inline XRRenderState renderState() { return XRRenderState(*activeRenderState_); }
 
   public:
-    void updateRenderState(XRRenderState *state);
+    /**
+     * The `updateRenderState()` method of the `XRSession` interface of the WebXR API schedules changes to be applied to the 
+     * active render state (`XRRenderState`) prior to rendering of the next frame.
+     * 
+     * @param newState The `XRRenderState` object representing the new render state to be applied.
+     */
+    void updateRenderState(XRRenderState newState);
     void updateTargetFrameRate(float targetFrameRate);
     void updateCollisionBox();
-    void updateInputSourcesIfChanged(XRFrame& frame);
+    void updateInputSourcesIfChanged(XRFrame &frame);
     uint32_t requestAnimationFrame(XRFrameCallback callback);
     void cancelAnimationFrame(uint32_t handle);
     /**

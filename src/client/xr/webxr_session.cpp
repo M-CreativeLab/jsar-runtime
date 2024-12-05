@@ -61,12 +61,36 @@ namespace client_xr
     viewSpaces_.push_back(XRViewSpace::Make(type));
   }
 
-  void XRSession::updateRenderState(XRRenderState *state)
+  void XRSession::updateRenderState(XRRenderState newState)
   {
+    if (newState.baseLayer != nullptr)
+    {
+      auto newBaseLayer = newState.baseLayer;
+      if (newBaseLayer->session() == nullptr)
+        throw std::runtime_error("invalid `baseLayer` object, it must be associated with the session.");
+      if (newBaseLayer->session()->id != id)
+        throw std::runtime_error("invalid `baseLayer` object, session id mismatch.");
+    }
+    if (newState.inlineVerticalFieldOfView > 0)
+    {
+      if (immersive())
+        throw std::runtime_error("invalid `inlineVerticalFieldOfView` value, it must be null for immersive sessions.");
+      newState.inlineVerticalFieldOfView = fmin(3.13, fmax(0.01, newState.inlineVerticalFieldOfView));
+    }
+
+    if (pendingRenderState_ == nullptr)
+    {
+      if (activeRenderState_ != nullptr)
+        pendingRenderState_ = std::make_unique<XRRenderState>(*activeRenderState_);
+      else
+        pendingRenderState_ = std::make_unique<XRRenderState>();
+    }
+    pendingRenderState_->update(newState);
   }
 
   void XRSession::updateTargetFrameRate(float targetFrameRate)
   {
+    // TODO
   }
 
   void XRSession::updateCollisionBox()
@@ -83,7 +107,7 @@ namespace client_xr
       throw std::runtime_error("session is ended.");
 
     auto callbackWrapper = std::make_shared<XRFrameCallbackWrapper>(callback);
-    currentFrameCallbacks_.push_back(callbackWrapper);
+    pendingFrameCallbacks_.push_back(callbackWrapper);
     return callbackWrapper->handle;
   }
 
@@ -123,6 +147,11 @@ namespace client_xr
     }
   }
 
+  void XRSession::end()
+  {
+    stop();
+  }
+
   void XRSession::start()
   {
     if (started)
@@ -156,9 +185,16 @@ namespace client_xr
     auto delta = chrono::duration_cast<chrono::milliseconds>(timepointOnNow - timepointOnLastTick).count();
     if (delta >= FRAME_TIME_DELTA_THRESHOLD)
     {
-      if (update() != XRSessionUpdateState::kSuccess)
+      switch (update())
       {
-        std::cerr << "failed to update the session." << std::endl;
+      case XRSessionUpdateState::kSessionEnded:
+        std::cerr << "skipped this frame: " << "session is ended." << std::endl;
+        break;
+      case XRSessionUpdateState::kInvalidSessionId:
+        std::cerr << "skipped this frame: " << "invalid session id." << std::endl;
+        break;
+      default:
+        break;
       }
       timepointOnLastTick = timepointOnNow;
     }
@@ -167,15 +203,9 @@ namespace client_xr
   XRSessionUpdateState XRSession::update()
   {
     if (ended)
-    {
-      std::cerr << "skipped this frame: " << "session is ended." << std::endl;
       return XRSessionUpdateState::kSessionEnded;
-    }
     if (id < 0)
-    {
-      std::cerr << "skipped this frame: " << "invalid session id." << std::endl;
       return XRSessionUpdateState::kInvalidSessionId;
-    }
 
     static int prevStereoId = -1;
     auto sessionContext = sessionContextZoneClient_->getData();
@@ -217,7 +247,7 @@ namespace client_xr
     if (pendingRenderState_ != nullptr)
     {
       // Apply pending render state.
-      activeRenderState_->update(pendingRenderState_.get());
+      activeRenderState_->update(*pendingRenderState_);
 
       // Clear the pending render state.
       pendingRenderState_ = nullptr;
@@ -253,7 +283,6 @@ namespace client_xr
       updateInputSourcesIfChanged(frame);
 
       // Call all the frame callbacks
-      auto time = frameRequest.time;
       for (auto &it : currentFrameCallbacks_)
       {
         if (!it->cancelled)
@@ -261,7 +290,7 @@ namespace client_xr
           auto callback = *it;
           try
           {
-            callback(time, frame);
+            callback(frameRequest.time, frame);
           }
           catch (const std::exception &e)
           {

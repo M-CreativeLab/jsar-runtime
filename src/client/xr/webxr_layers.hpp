@@ -15,6 +15,9 @@ namespace client_xr
     }
     virtual ~XRLayer() = default;
 
+  public:
+    std::shared_ptr<XRSession> session() const { return session_; }
+
   protected:
     std::shared_ptr<XRSession> session_;
   };
@@ -22,10 +25,23 @@ namespace client_xr
   class XRWebGLLayer : public XRLayer, public xr::WebGLLayer
   {
   public:
+    static std::shared_ptr<XRWebGLLayer> Make(std::shared_ptr<XRSession> session,
+                                              std::shared_ptr<client_graphics::WebGLContext> glContext)
+    {
+      return std::make_shared<XRWebGLLayer>(session, glContext);
+    }
+
+  public:
     XRWebGLLayer(std::shared_ptr<XRSession> session, std::shared_ptr<client_graphics::WebGLContext> glContext)
         : XRLayer(session),
           xr::WebGLLayer(),
           glContext_(glContext)
+    {
+    }
+    XRWebGLLayer(xr::WebGLLayer& layerData)
+        : XRLayer(nullptr),
+          xr::WebGLLayer(layerData),
+          glContext_(nullptr)
     {
     }
 
