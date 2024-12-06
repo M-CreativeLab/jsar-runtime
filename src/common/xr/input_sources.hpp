@@ -45,6 +45,71 @@ namespace xr
     JointPinkyFingerTip = 24,
   };
 
+  /**
+   * Convert a joint index to a string.
+   *
+   * @param index The joint index.
+   * @returns The joint name.
+   */
+  inline std::string to_string(TrXRJointIndex index)
+  {
+    switch (index)
+    {
+    case TrXRJointIndex::JointWrist:
+      return "wrist";
+    case TrXRJointIndex::JointThumbMetacarpal:
+      return "thumb-metacarpal";
+    case TrXRJointIndex::JointThumbPhalanxProximal:
+      return "thumb-phalanx-proximal";
+    case TrXRJointIndex::JointThumbPhalanxDistal:
+      return "thumb-phalanx-distal";
+    case TrXRJointIndex::JointThumbTip:
+      return "thumb-tip";
+    case TrXRJointIndex::JointIndexFingerMetacarpal:
+      return "index-finger-metacarpal";
+    case TrXRJointIndex::JointIndexFingerPhalanxProximal:
+      return "index-finger-phalanx-proximal";
+    case TrXRJointIndex::JointIndexFingerPhalanxIntermediate:
+      return "index-finger-phalanx-intermediate";
+    case TrXRJointIndex::JointIndexFingerPhalanxDistal:
+      return "index-finger-phalanx-distal";
+    case TrXRJointIndex::JointIndexFingerTip:
+      return "index-finger-tip";
+    case TrXRJointIndex::JointMiddleFingerMetacarpal:
+      return "middle-finger-metacarpal";
+    case TrXRJointIndex::JointMiddleFingerPhalanxProximal:
+      return "middle-finger-phalanx-proximal";
+    case TrXRJointIndex::JointMiddleFingerPhalanxIntermediate:
+      return "middle-finger-phalanx-intermediate";
+    case TrXRJointIndex::JointMiddleFingerPhalanxDistal:
+      return "middle-finger-phalanx-distal";
+    case TrXRJointIndex::JointMiddleFingerTip:
+      return "middle-finger-tip";
+    case TrXRJointIndex::JointRingFingerMetacarpal:
+      return "ring-finger-metacarpal";
+    case TrXRJointIndex::JointRingFingerPhalanxProximal:
+      return "ring-finger-phalanx-proximal";
+    case TrXRJointIndex::JointRingFingerPhalanxIntermediate:
+      return "ring-finger-phalanx-intermediate";
+    case TrXRJointIndex::JointRingFingerPhalanxDistal:
+      return "ring-finger-phalanx-distal";
+    case TrXRJointIndex::JointRingFingerTip:
+      return "ring-finger-tip";
+    case TrXRJointIndex::JointPinkyFingerMetacarpal:
+      return "pinky-finger-metacarpal";
+    case TrXRJointIndex::JointPinkyFingerPhalanxProximal:
+      return "pinky-finger-phalanx-proximal";
+    case TrXRJointIndex::JointPinkyFingerPhalanxIntermediate:
+      return "pinky-finger-phalanx-intermediate";
+    case TrXRJointIndex::JointPinkyFingerPhalanxDistal:
+      return "pinky-finger-phalanx-distal";
+    case TrXRJointIndex::JointPinkyFingerTip:
+      return "pinky-finger-tip";
+    default:
+      return "unknown";
+    }
+  }
+
   enum class TrXRInputSourceActionType
   {
     XRPrimaryAction = 0,
@@ -254,9 +319,9 @@ namespace xr
       }
       return nullptr;
     }
-    vector<TrXRInputSource*> listInputSources()
+    vector<TrXRInputSource *> listInputSources()
     {
-      vector<TrXRInputSource*> inputSources;
+      vector<TrXRInputSource *> inputSources;
       inputSources.push_back(&gazeInputSource);
       inputSources.push_back(&mainControllerInputSource);
       inputSources.push_back(&transientPointerInputSource);
