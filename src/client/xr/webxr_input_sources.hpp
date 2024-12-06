@@ -10,7 +10,8 @@
 namespace client_xr
 {
   using InputSourceInternalResetCallback = function<xr::TrXRInputSource *(xr::TrXRFrameRequest *)>;
-  using InputSourcesChangedCallback = function<void(vector<XRInputSource *> added, vector<XRInputSource *> removed)>;
+  using InputSourcesChangedCallback = function<void(vector<std::shared_ptr<XRInputSource>> added,
+                                                    vector<std::shared_ptr<XRInputSource>> removed)>;
 
   /**
    * The WebXR Device API's `XRInputSource` interface describes a single source of control input which is part of the user's
@@ -20,6 +21,8 @@ namespace client_xr
    */
   class XRInputSource
   {
+    friend class XRInputSourceArray;
+
   public:
     XRInputSource(std::shared_ptr<XRSession> session, xr::TrXRInputSource *inputSourceData);
 
@@ -90,6 +93,8 @@ namespace client_xr
 
   class XRInputSourceArray : public std::vector<std::shared_ptr<XRInputSource>>
   {
+    friend class XRSession;
+
   public:
     XRInputSourceArray(std::shared_ptr<XRSession> session);
 

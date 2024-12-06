@@ -92,6 +92,11 @@ namespace client_xr
 
   void XRSession::updateInputSourcesIfChanged(XRFrame &frame)
   {
+    if (inputSources.has_value())
+    {
+      inputSources.value().updateInputSources(frame, *this, [this](auto added, auto removed)
+                                              { dispatchEvent(dom::DOMEventType::XRInputSourcesChange, ""); });
+    }
   }
 
   uint32_t XRSession::requestAnimationFrame(XRFrameCallback callback)
