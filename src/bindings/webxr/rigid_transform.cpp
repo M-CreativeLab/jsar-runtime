@@ -30,24 +30,29 @@ namespace bindings
     return scope.Escape(obj).ToObject();
   }
 
-  XRRigidTransform::XRRigidTransform(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRRigidTransform>(info),
-                                                                       position(glm::vec3(0.0f)),
-                                                                       orientation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f)),
-                                                                       matrix(glm::mat4(1.0f))
+  XRRigidTransform::XRRigidTransform(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRRigidTransform>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    bool isMatrixSet = false;
 
     if (info.Length() == 0)
     {
-      matrix = glm::mat4(1.0f);
-      isMatrixSet = true;
+      transformData_ = client_xr::XRRigidTransform();
     }
     else if (info.Length() == 1)
     {
-      // Check if the first argument is a Float32Array
-      if (info[0].IsTypedArray())
+      if (info[0].IsExternal())
+      {
+        auto external = info[0].As<Napi::External<client_xr::XRRigidTransform>>();
+        auto pTransform = external.Data();
+        if (pTransform == nullptr)
+        {
+          Napi::TypeError::New(env, "Illegal constructor: invalid external data.").ThrowAsJavaScriptException();
+          return;
+        }
+        transformData_ = client_xr::XRRigidTransform(*pTransform);
+      }
+      else if (info[0].IsTypedArray()) // Check if the first argument is a Float32Array
       {
         auto array = info[0].As<Napi::TypedArray>();
         if (array.TypedArrayType() == napi_float32_array)
@@ -58,23 +63,25 @@ namespace bindings
           float *data = reinterpret_cast<float *>(buffer.Data()) + byteOffset / sizeof(float);
           if (byteLength == 16 * sizeof(float))
           {
-            matrix = glm::make_mat4(data);
-            isMatrixSet = true;
+            transformData_ = client_xr::XRRigidTransform(glm::make_mat4(data));
           }
           else
           {
-            Napi::TypeError::New(env, "TypedArray must have 16 elements").ThrowAsJavaScriptException();
+            Napi::TypeError::New(env, "Illegal constructor: TypedArray must have 16 elements")
+                .ThrowAsJavaScriptException();
             return;
           }
         }
         else
         {
-          Napi::TypeError::New(env, "TypedArray must be of type Float32Array").ThrowAsJavaScriptException();
+          Napi::TypeError::New(env, "Illegal constructor: TypedArray must be of type Float32Array")
+              .ThrowAsJavaScriptException();
           return;
         }
       }
       else if (info[0].IsObject())
       {
+        glm::vec3 position(0.0f);
         auto jsPosition = info[0].As<Napi::Object>();
         if (jsPosition.Has("x") && jsPosition.Get("x").IsNumber())
           position.x = jsPosition.Get("x").As<Napi::Number>().FloatValue();
@@ -82,10 +89,14 @@ namespace bindings
           position.y = jsPosition.Get("y").As<Napi::Number>().FloatValue();
         if (jsPosition.Has("z") && jsPosition.Get("z").IsNumber())
           position.z = jsPosition.Get("z").As<Napi::Number>().FloatValue();
+        transformData_ = client_xr::XRRigidTransform(position);
       }
     }
     else if (info.Length() == 2)
     {
+      glm::vec3 position(0.0f);
+      glm::quat orientation(1.0f, 0.0f, 0.0f, 0.0f);
+
       auto jsPosition = info[0].As<Napi::Object>();
       if (jsPosition.Has("x") && jsPosition.Get("x").IsNumber())
         position.x = jsPosition.Get("x").As<Napi::Number>().FloatValue();
@@ -103,21 +114,13 @@ namespace bindings
         orientation.z = jsOrientation.Get("z").As<Napi::Number>().FloatValue();
       if (jsOrientation.Has("w") && jsOrientation.Get("w").IsNumber())
         orientation.w = jsOrientation.Get("w").As<Napi::Number>().FloatValue();
-    }
-    else
-    {
-      Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
-      return;
-    }
 
-    if (isMatrixSet == true)
-    {
-      position = glm::vec3(matrix[3]);
-      orientation = glm::quat_cast(matrix);
+      transformData_ = client_xr::XRRigidTransform(position, orientation);
     }
     else
     {
-      matrix = glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(orientation);
+      Napi::TypeError::New(env, "Illegal constructor: invalid number of arguments").ThrowAsJavaScriptException();
+      return;
     }
 
     auto jsThis = info.This().As<Napi::Object>();
@@ -131,22 +134,15 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    // Returns a new XRRigidTransform object with the inverse matrix
-    glm::mat4 inverseMatrix = glm::inverse(matrix);
-    Napi::Float32Array inverseMatrixDataArray = Napi::Float32Array::New(env, 16);
-    for (int i = 0; i < 4; i++)
-    {
-      for (int j = 0; j < 4; j++)
-      {
-        inverseMatrixDataArray.Set(static_cast<uint32_t>(i * 4 + j), Napi::Number::New(env, inverseMatrix[i][j]));
-      }
-    }
-    return constructor->New({inverseMatrixDataArray});
+    auto inverseTransform = transformData_.inverse();
+    auto external = Napi::External<client_xr::XRRigidTransform>::New(env, &inverseTransform);
+    return constructor->New({external});
   }
 
   Napi::Value XRRigidTransform::CreatePositionValue(Napi::Env env)
   {
     Napi::EscapableHandleScope scope(env);
+    auto position = transformData_.position();
     auto domPointObject = Napi::Object::New(env);
     domPointObject.Set("x", Napi::Number::New(env, position.x));
     domPointObject.Set("y", Napi::Number::New(env, position.y));
@@ -158,6 +154,7 @@ namespace bindings
   Napi::Value XRRigidTransform::CreateOrientationValue(Napi::Env env)
   {
     Napi::EscapableHandleScope scope(env);
+    auto orientation = transformData_.orientation();
     auto domPointObject = Napi::Object::New(env);
     domPointObject.Set("x", Napi::Number::New(env, orientation.x));
     domPointObject.Set("y", Napi::Number::New(env, orientation.y));
@@ -169,13 +166,13 @@ namespace bindings
   Napi::Value XRRigidTransform::CreateMatrixValue(Napi::Env env)
   {
     Napi::EscapableHandleScope scope(env);
-    Napi::Float32Array matrixDataArray = Napi::Float32Array::New(env, 16);
+
+    auto matrix = transformData_.matrix();
+    auto matrixDataArray = Napi::Float32Array::New(env, 16);
     for (int i = 0; i < 4; i++)
     {
       for (int j = 0; j < 4; j++)
-      {
         matrixDataArray.Set(static_cast<uint32_t>(i * 4 + j), Napi::Number::New(env, matrix[i][j]));
-      }
     }
     return scope.Escape(matrixDataArray);
   }

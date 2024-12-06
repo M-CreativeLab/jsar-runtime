@@ -59,11 +59,11 @@ namespace bindings
 
     Napi::Object transformObj = info[1].As<Napi::Object>();
     auto transform = XRRigidTransform::Unwrap(transformObj);
-    this->transformMatrix = transform->matrix;
+    this->transformMatrix = transform->matrix();
 
     Napi::Object projectionObj = info[2].As<Napi::Object>();
     auto projection = XRRigidTransform::Unwrap(projectionObj);
-    this->projectionMatrix = projection->matrix;
+    this->projectionMatrix = projection->matrix();
 
     index = info[3].As<Napi::Number>().Uint32Value();
     viewport = *info[4].As<Napi::External<TrViewport>>().Data();

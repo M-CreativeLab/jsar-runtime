@@ -109,7 +109,7 @@ namespace bindings
       if (jsHitTestResult.InstanceOf(XRRigidTransform::constructor->Value()))
       {
         auto transform = XRRigidTransform::Unwrap(jsHitTestResult);
-        float *matrixValues = glm::value_ptr(transform->matrix);
+        float *matrixValues = glm::value_ptr(transform->matrix());
 
         xr::TrRayHitResult hitResult(true, matrixValues);
         internal->setTargetRayHitResult(hitResult);

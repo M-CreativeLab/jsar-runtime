@@ -115,7 +115,7 @@ namespace client_xr
   public:
     /**
      * Create a new `XRSessionConfiguration` instance.
-     * 
+     *
      * @param response The session response from the XR device server.
      * @param mode The session mode.
      * @param requestInit The initial options when requesting this session.
