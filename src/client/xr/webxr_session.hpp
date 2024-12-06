@@ -52,8 +52,10 @@ namespace client_xr
     bool cancelled;
   };
 
-  class XRSession : public std::enable_shared_from_this<XRSession>
+  class XRSession : public dom::DOMEventTarget,
+                    public std::enable_shared_from_this<XRSession>
   {
+    friend class XRSystem;
     friend class XRFrame;
 
   public:
@@ -71,7 +73,25 @@ namespace client_xr
 
   public:
     XRSession(XRSessionConfiguration config, std::shared_ptr<XRSystem> xrSystem);
-    ~XRSession();
+    virtual ~XRSession();
+
+  public:
+    /**
+     * The lifecycle "Primary Action Start" event handler.
+     */
+    virtual void onPrimaryActionStart(XRInputSource &inputSource, XRFrame &frame) {}
+    /**
+     * The lifecycle "Primary Action End" event handler.
+     */
+    virtual void onPrimaryActionEnd(XRInputSource &inputSource, XRFrame &frame) {}
+    /**
+     * The lifecycle "Squeeze Action Start" event handler.
+     */
+    virtual void onSqueezeActionStart(XRInputSource &inputSource, XRFrame &frame) {}
+    /**
+     * The lifecycle "Squeeze Action End" event handler.
+     */
+    virtual void onSqueezeActionEnd(XRInputSource &inputSource, XRFrame &frame) {}
 
   public:
     /**
@@ -128,6 +148,14 @@ namespace client_xr
     void end();
 
   private:
+    /**
+     * @returns `true` if the specified feature is enabled, `false` otherwise.
+     */
+    bool isFeatureEnabled(xr::TrXRFeature feature);
+    /**
+     * Initialize the session.
+     */
+    void initialize();
     /**
      * Start the session.
      */
@@ -189,7 +217,7 @@ namespace client_xr
     /**
      * Enabled features.
      */
-    std::vector<std::string> enabledFeatures;
+    std::vector<xr::TrXRFeature> enabledFeatures;
     std::optional<XRInputSourceArray> inputSources;
 
   private:

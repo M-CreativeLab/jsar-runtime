@@ -21,7 +21,8 @@ namespace xr
 
     auto constellation = xrDevice->m_Constellation;
     auto &opt = constellation->getOptions();
-    contextZone = make_unique<TrXRSessionContextZone>(opt.getZoneFilename(to_string(id), "sessions"), TrZoneType::Server, id);
+    contextZone = make_unique<TrXRSessionContextZone>(opt.getZoneFilename(std::to_string(id), "sessions"),
+                                                      TrZoneType::Server, id);
   }
 
   TrXRSession::~TrXRSession()

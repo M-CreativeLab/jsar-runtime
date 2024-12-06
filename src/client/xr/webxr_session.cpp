@@ -10,11 +10,13 @@ using namespace std;
 namespace client_xr
 {
   XRSession::XRSession(XRSessionConfiguration config, std::shared_ptr<XRSystem> xrSystem)
-      : id(config.id),
+      : dom::DOMEventTarget(),
         device_(xrSystem->device()),
         eventloop_(xrSystem->eventloop()),
+        id(config.id),
         mode(config.mode),
         requestInit(config.requestInit),
+        enabledFeatures(config.enabledFeatures),
         started(false),
         ended(false),
         suspended(false)
@@ -39,17 +41,6 @@ namespace client_xr
 
     activeRenderState_ = std::make_unique<XRRenderState>();
     pendingRenderState_ = nullptr;
-
-    viewerSpace_ = std::make_shared<XRReferenceSpace>(XRReferenceSpaceType::kViewer);
-    localSpace_ = std::make_shared<XRReferenceSpace>(XRReferenceSpaceType::kLocal);
-    unboundedSpace_ = std::make_shared<XRReferenceSpace>(XRReferenceSpaceType::kUnbounded);
-
-    // Prepare the uv handles
-    tickHandle_.data = this;
-    uv_timer_init(eventloop_, &tickHandle_);
-
-    // Start the session
-    start();
   }
 
   XRSession::~XRSession()
@@ -152,6 +143,28 @@ namespace client_xr
   void XRSession::end()
   {
     stop();
+  }
+
+  bool XRSession::isFeatureEnabled(xr::TrXRFeature feature)
+  {
+    for (auto &it : enabledFeatures)
+    {
+      if (it == feature)
+        return true;
+    }
+    return false;
+  }
+
+  void XRSession::initialize()
+  {
+    viewerSpace_ = std::make_shared<XRReferenceSpace>(XRReferenceSpaceType::kViewer);
+    localSpace_ = std::make_shared<XRReferenceSpace>(XRReferenceSpaceType::kLocal);
+    unboundedSpace_ = std::make_shared<XRReferenceSpace>(XRReferenceSpaceType::kUnbounded);
+    inputSources = XRInputSourceArray(shared_from_this());
+
+    // Prepare the uv handles
+    tickHandle_.data = this;
+    uv_timer_init(eventloop_, &tickHandle_);
   }
 
   void XRSession::start()

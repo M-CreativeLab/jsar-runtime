@@ -79,6 +79,9 @@ namespace client_xr
     XRSpace targetRaySpace();
 
   private:
+    bool dispatchSelectOrSqueezeEvents(XRFrame &frame);
+
+  private:
     std::shared_ptr<XRSession> session_;
     xr::TrXRInputSource *inputSourceData_;
     bool primaryActionPressed_ = false;
@@ -100,7 +103,7 @@ namespace client_xr
   private:
     /**
      * Update the input sources.
-     * 
+     *
      * @param frame The `XRFrame` object representing the frame to be updated.
      * @param session The `XRSession` object representing the session to be updated.
      * @param onChangedCallback The callback function to be called when the input sources have changed.

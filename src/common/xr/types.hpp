@@ -51,9 +51,9 @@ namespace xr
     inline bool isValid() { return sessionId > 0 && viewIndex >= 0; }
     inline string toString()
     {
-      return "Info(session=" + to_string(sessionId) + "," +
-             "stereoId=" + to_string(stereoId) + "," +
-             "viewIndex=" + to_string(viewIndex) + ")";
+      return "Info(session=" + std::to_string(sessionId) + "," +
+             "stereoId=" + std::to_string(stereoId) + "," +
+             "viewIndex=" + std::to_string(viewIndex) + ")";
     }
 
   public:

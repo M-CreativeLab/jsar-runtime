@@ -102,6 +102,47 @@ namespace xr
     VIEWER,
   };
 
+  /**
+   * Convert the `TrXRFeature` enum to a string.
+   * 
+   * @param feature The feature to convert.
+   * @returns The string representation of the feature.
+   */
+  inline std::string to_string(TrXRFeature feature)
+  {
+    switch (feature)
+    {
+    case TrXRFeature::ANCHORS:
+      return "anchors";
+    case TrXRFeature::BOUNDED_FLOOR:
+      return "bounded-floor";
+    case TrXRFeature::DEPTH_SENSING:
+      return "depth-sensing";
+    case TrXRFeature::DOM_OVERLAY:
+      return "dom-overlay";
+    case TrXRFeature::HAND_TRACKING:
+      return "hand-tracking";
+    case TrXRFeature::HIT_TEST:
+      return "hit-test";
+    case TrXRFeature::LAYERS:
+      return "layers";
+    case TrXRFeature::LIGHT_ESTIMATION:
+      return "light-estimation";
+    case TrXRFeature::LOCAL:
+      return "local";
+    case TrXRFeature::LOCAL_FLOOR:
+      return "local-floor";
+    case TrXRFeature::SECONDARY_VIEWS:
+      return "secondary-views";
+    case TrXRFeature::UNBOUNDED:
+      return "unbounded";
+    case TrXRFeature::VIEWER:
+      return "viewer";
+    default:
+      return "unknown";
+    }
+  }
+
   class TrXRSessionInit
   {
   public:

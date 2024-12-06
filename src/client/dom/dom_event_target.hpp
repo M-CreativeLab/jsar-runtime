@@ -101,13 +101,25 @@ namespace dom
   XX(WebGLContextLost, "webglcontextlost")                   \
   XX(WebGLContextRestored, "webglcontextrestored")
 
+#define WEBXR_EVENT_TYPES_MAP(XX)           \
+  XX(XRDeviceChange, "devicechange")        \
+  XX(XRSessionEnd, "end")                   \
+  XX(XRSessionSelect, "select")             \
+  XX(XRSessionSelectEnd, "selectend")       \
+  XX(XRSessionSelectStart, "selectstart")   \
+  XX(XRSessionSqueeze, "squeeze")           \
+  XX(XRSessionSqueezeEnd, "squeezeend")     \
+  XX(XRSessionSqueezeStart, "squeezestart") \
+  XX(XRSessionVisibilityChange, "visibilitychange")
+
 #define DOM_EVENT_TYPES_MAP(XX)        \
   NODE_EVENT_TYPES_MAP(XX)             \
   ELEMENT_EVENT_TYPES_MAP(XX)          \
   HTMLELEMENT_EVENT_TYPES_MAP(XX)      \
   HTMLMEDIAELEMENT_EVENT_TYPES_MAP(XX) \
   DOCUMENT_EVENT_TYPES_MAP(XX)         \
-  CANVAS_EVENT_TYPES_MAP(XX)
+  CANVAS_EVENT_TYPES_MAP(XX)           \
+  WEBXR_EVENT_TYPES_MAP(XX)
 
   enum class DOMEventType
   {

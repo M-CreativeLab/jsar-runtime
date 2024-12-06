@@ -8,6 +8,7 @@
 #include <common/xr/message.hpp>
 // TODO: move xr/render_state.hpp to common directory.
 #include <xr/render_state.hpp>
+#include "../dom/dom_event_target.hpp"
 
 namespace client_xr
 {
@@ -84,7 +85,9 @@ namespace client_xr
     static XRSessionRequestInit Default()
     {
       XRSessionRequestInit init;
-      init.requiredFeatures = {"viewer"};
+      init.requiredFeatures = {
+          xr::TrXRFeature::LOCAL,
+          xr::TrXRFeature::VIEWER};
       return init;
     }
 
@@ -95,11 +98,11 @@ namespace client_xr
     /**
      * An array of values which the returned XRSession must support.
      */
-    std::vector<std::string> requiredFeatures;
+    std::vector<xr::TrXRFeature> requiredFeatures;
     /**
      * An array of values identifying features which the returned XRSession may optionally support.
      */
-    std::vector<std::string> optionalFeatures;
+    std::vector<xr::TrXRFeature> optionalFeatures;
     // TODO: more options
   };
 
@@ -110,11 +113,23 @@ namespace client_xr
   class XRSessionConfiguration
   {
   public:
-    XRSessionConfiguration(xr::SessionResponse &response, XRSessionMode mode, XRSessionRequestInit requestInit)
+    /**
+     * Create a new `XRSessionConfiguration` instance.
+     * 
+     * @param response The session response from the XR device server.
+     * @param mode The session mode.
+     * @param requestInit The initial options when requesting this session.
+     * @param enabledFeatures The enabled features.
+     */
+    XRSessionConfiguration(xr::SessionResponse &response,
+                           XRSessionMode mode,
+                           XRSessionRequestInit requestInit,
+                           std::vector<xr::TrXRFeature> enabledFeatures)
         : id(response.id),
           recommendedContentSize(response.recommendedContentSize),
           mode(mode),
-          requestInit(requestInit)
+          requestInit(requestInit),
+          enabledFeatures(enabledFeatures)
     {
     }
 
@@ -123,5 +138,6 @@ namespace client_xr
     XRSessionMode mode;
     XRSessionRequestInit requestInit;
     float recommendedContentSize;
+    std::vector<xr::TrXRFeature> enabledFeatures;
   };
 }

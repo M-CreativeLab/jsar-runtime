@@ -90,6 +90,11 @@ namespace client_xr
      */
     bool isSessionSupported(XRSessionMode mode);
     /**
+     * @param feature The feature to check.
+     * @returns `true` if the feature is supported.
+     */
+    bool supportsFeature(xr::TrXRFeature feature);
+    /**
      * It returns `true` if the specified reference space type is supported by the user's WebXR device.
      *
      * @param referenceSpaceType The reference space type to check.
@@ -100,18 +105,24 @@ namespace client_xr
      * It requests a new WebXR session.
      *
      * @param mode The session mode to request.
+     * @param features The WebXR features to request.
      * @param init The options to request the session.
      * @returns The session configuration to create a new `XRSession` instance.
      */
-    XRSessionConfiguration requestSession(XRSessionMode mode, std::optional<XRSessionRequestInit> init = std::nullopt);
+    XRSessionConfiguration requestSession(XRSessionMode mode,
+                                          std::vector<xr::TrXRFeature> features,
+                                          std::optional<XRSessionRequestInit> init = std::nullopt);
     /**
      * It requests a new WebXR session with the unresolved mode string.
      *
      * @param modeString The unresolved mode string to request, such as `immersive-ar`, `immersive-vr`, or `inline`
+     * @param features The WebXR features to request.
      * @param init The options to request the session.
      * @returns The session configuration to create a new `XRSession` instance.
      */
-    XRSessionConfiguration requestSession(std::string modeString, std::optional<XRSessionRequestInit> init = std::nullopt);
+    XRSessionConfiguration requestSession(std::string modeString,
+                                          std::vector<xr::TrXRFeature> features,
+                                          std::optional<XRSessionRequestInit> init = std::nullopt);
     /**
      * Request a new WebXR frame.
      *

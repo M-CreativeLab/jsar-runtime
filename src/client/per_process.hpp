@@ -337,6 +337,9 @@ public: // WebXR methods
   }
 
 public:
+  /**
+   * @returns the scripting thread's event loop.
+   */
   uv_loop_t *getScriptingEventLoop() { return scriptingEventLoop; }
   void setScriptingEventLoop(napi_env env)
   {

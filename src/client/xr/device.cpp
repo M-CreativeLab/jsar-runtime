@@ -23,6 +23,19 @@ namespace client_xr
     return supported;
   }
 
+  bool XRDeviceClient::supportsFeature(xr::TrXRFeature feature)
+  {
+    switch (feature)
+    {
+    case xr::TrXRFeature::LOCAL:
+    case xr::TrXRFeature::VIEWER:
+    case xr::TrXRFeature::HAND_TRACKING:
+      return true;
+    default:
+      return false;
+    }
+  }
+
   bool XRDeviceClient::supportsReferenceSpaceType(XRReferenceSpaceType referenceSpaceType)
   {
     if (
@@ -38,7 +51,9 @@ namespace client_xr
     }
   }
 
-  XRSessionConfiguration XRDeviceClient::requestSession(XRSessionMode mode, std::optional<XRSessionRequestInit> init)
+  XRSessionConfiguration XRDeviceClient::requestSession(XRSessionMode mode,
+                                                        std::vector<xr::TrXRFeature> features,
+                                                        std::optional<XRSessionRequestInit> init)
   {
     xr::SessionRequest request(mode);
     if (!clientContext_->sendXrCommand(request))
@@ -48,18 +63,19 @@ namespace client_xr
     if (resp == nullptr)
       throw std::runtime_error("failed to receive XR command(SessionResponse).");
 
-    XRSessionConfiguration sessionConfig(*resp, mode, init.value_or(XRSessionRequestInit::Default()));
+    XRSessionConfiguration sessionConfig(*resp, mode, init.value_or(XRSessionRequestInit::Default()), features);
     delete resp;
     return sessionConfig;
   }
 
-  XRSessionConfiguration XRDeviceClient::requestSession(std::string modeString, std::optional<XRSessionRequestInit> init)
+  XRSessionConfiguration XRDeviceClient::requestSession(std::string modeString,
+                                                        std::vector<xr::TrXRFeature> features,
+                                                        std::optional<XRSessionRequestInit> init)
   {
     xr::TrXRSessionMode mode = xr::MakeSessionMode(modeString);
     if (mode == xr::TrXRSessionMode::Unknown)
       throw std::invalid_argument("mode should be 'immersive-ar', 'immersive-vr' or 'inline'.");
-
-    return requestSession(mode, init);
+    return requestSession(mode, features, init);
   }
 
   void XRDeviceClient::requestFrame(XRFrameCallback callback, void *context)

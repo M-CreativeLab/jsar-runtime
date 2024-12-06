@@ -4,11 +4,13 @@
 #include <optional>
 #include "./common.hpp"
 #include "./webxr_session.hpp"
+#include "../dom/dom_event_target.hpp"
 
 namespace client_xr
 {
   class XRDeviceClient;
-  class XRSystem : public std::enable_shared_from_this<XRSystem>
+  class XRSystem : public dom::DOMEventTarget,
+                   public std::enable_shared_from_this<XRSystem>
   {
   public:
     /**
@@ -25,19 +27,23 @@ namespace client_xr
 
   public:
     XRSystem(std::shared_ptr<XRDeviceClient> device, uv_loop_t *eventloop)
-        : xrDevice_(device), eventloop_(eventloop)
+        : dom::DOMEventTarget(),
+          device_(device),
+          eventloop_(eventloop)
     {
+      assert(device_ != nullptr);
+      assert(eventloop_ != nullptr);
     }
 
   public:
     /**
      * @returns the `XRDeviceClient` instance that the `XRSystem` is using.
      */
-    std::shared_ptr<XRDeviceClient> device() { return xrDevice_; }
+    std::shared_ptr<XRDeviceClient> device() const { return device_; }
     /**
      * @returns the libuv's event loop that the `XRSystem` is using.
      */
-    uv_loop_t *eventloop() { return eventloop_; }
+    uv_loop_t *eventloop() const { return eventloop_; }
 
   public:
     /**
@@ -61,7 +67,7 @@ namespace client_xr
                                               std::optional<XRSessionRequestInit> init = std::nullopt);
 
   private:
-    std::shared_ptr<XRDeviceClient> xrDevice_;
+    std::shared_ptr<XRDeviceClient> device_;
     uv_loop_t *eventloop_;
   };
 }
