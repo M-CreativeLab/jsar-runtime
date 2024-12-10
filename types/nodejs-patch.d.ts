@@ -57,10 +57,14 @@ declare namespace NodeJS {
      * It loads the transmute's native webxr module, which contains the implementation of WebXR APIs.
      */
     _linkedBinding(module: 'transmute:webxr'): {
-      XRDeviceNative: typeof Transmute.XRDeviceNative;
+      /**
+       * It returns the `XRSystem` object, which is the entry point to the WebXR API.
+       * 
+       * @returns The `XRSystem` object.
+       */
+      getXRSystem(): XRSystem;
       XRSession: any;
       XRFrame: typeof XRFrame;
-      XRWebGLLayer: typeof XRWebGLLayer;
       XRRigidTransform: typeof XRRigidTransform;
     };
     _linkedBinding(module: string): any;

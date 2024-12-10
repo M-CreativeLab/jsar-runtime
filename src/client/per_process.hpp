@@ -270,6 +270,7 @@ public: // WebXR methods
   bool startXrFrame(xr::TrXRFrameRequest *frameRequest);
   bool flushXrFrame();
   bool finishXrFrame(xr::TrXRFrameRequest *frameRequest);
+  inline shared_ptr<client_xr::XRDeviceClient> getXRDeviceClient() { return xrDeviceClient; }
   inline bool isInXrFrame() { return currentXrFrameRequest != nullptr; }
   inline xr::TrXRFrameRequest *getCurrentXRFrameRequest() { return currentXrFrameRequest; }
   xr::TrXRDeviceContextZone *getXRDeviceContextZone() { return xrDeviceContextZoneClient.get(); }

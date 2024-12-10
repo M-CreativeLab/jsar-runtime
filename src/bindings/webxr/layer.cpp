@@ -1,37 +1,36 @@
-#include "layer.hpp"
-#include "view.hpp"
-#include "viewport.hpp"
+#include "./layer-inl.hpp"
+#include "./view.hpp"
+#include "./viewport.hpp"
 #include "../webgl/framebuffer.hpp"
 
 namespace bindings
 {
+  using namespace std;
+
   thread_local Napi::FunctionReference *XRLayer::constructor;
   thread_local Napi::FunctionReference *XRWebGLLayer::constructor;
 
-  template <typename T>
-  XRLayerBase<T>::XRLayerBase(const Napi::CallbackInfo &info) : Napi::ObjectWrap<T>(info)
-  {
-    clientContext = TrClientContextPerProcess::Get();
-    assert(clientContext != nullptr);
-  }
-
-  Napi::Object XRLayer::Init(Napi::Env env, Napi::Object exports)
+  void XRLayer::Init(Napi::Env env)
   {
     Napi::Function tpl = DefineClass(env, "XRLayer", {});
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
     env.SetInstanceData(constructor);
-    exports.Set("XRLayer", tpl);
-    return exports;
+    env.Global().Set("XRLayer", tpl);
   }
 
-  XRLayer::XRLayer(const Napi::CallbackInfo &info) : XRLayerBase<XRLayer>(info)
+  XRLayer::XRLayer(const Napi::CallbackInfo &info)
+      : XRLayerBase<XRLayer>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
+
+    // Always throw an error if an instance is created directly
+    Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
+    return;
   }
 
-  Napi::Object XRWebGLLayer::Init(Napi::Env env, Napi::Object exports)
+  void XRWebGLLayer::Init(Napi::Env env)
   {
     Napi::Function tpl = DefineClass(env, "XRWebGLLayer",
                                      {InstanceAccessor("antialias", &XRWebGLLayer::AntialiasGetter, nullptr),
@@ -47,17 +46,16 @@ namespace bindings
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
     env.SetInstanceData(constructor);
-    exports.Set("XRWebGLLayer", tpl);
-    return exports;
+    env.Global().Set("XRWebGLLayer", tpl);
   }
 
-  Napi::Value XRWebGLLayer::NewInstance(Napi::Env env, xr::WebGLLayer layer)
+  Napi::Value XRWebGLLayer::NewInstance(Napi::Env env, shared_ptr<client_xr::XRWebGLLayer> layer)
   {
     Napi::EscapableHandleScope scope(env);
-    Napi::Object obj = constructor->New({});
-    XRWebGLLayer *instance = XRWebGLLayer::Unwrap(obj);
-    instance->config = layer;
-    return scope.Escape(obj).ToObject();
+    SharedReference<client_xr::XRWebGLLayer> handleRef(layer);
+    auto handleExternal = Napi::External<SharedReference<client_xr::XRWebGLLayer>>::New(env, &handleRef);
+    Napi::Object instance = constructor->New({handleExternal});
+    return scope.Escape(instance).ToObject();
   }
 
   Napi::Value XRWebGLLayer::GetNativeFramebufferScaleFactor(const Napi::CallbackInfo &info)
@@ -66,12 +64,37 @@ namespace bindings
     return Napi::Number::New(info.Env(), 1.0);
   }
 
-  XRWebGLLayer::XRWebGLLayer(const Napi::CallbackInfo &info) : XRLayerBase<XRWebGLLayer>(info),
-                                                               session(nullptr)
+  XRWebGLLayer::XRWebGLLayer(const Napi::CallbackInfo &info)
+      : XRLayerBase<XRWebGLLayer, client_xr::XRWebGLLayer>(info),
+        session(nullptr)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
+    auto consoleTrace = env.Global()
+                            .Get("console")
+                            .As<Napi::Object>()
+                            .Get("trace")
+                            .As<Napi::Function>();
+    consoleTrace.Call({Napi::String::New(env, "XRWebGLLayer constructor"), info[0], info[1]});
+
+    /**
+     * If the first argument is an external, we assume it is a shared pointer to an existing `XRWebGLLayer` instance.
+     */
+    if (info.Length() >= 1 && info[0].IsExternal())
+    {
+      auto external = info[0].As<Napi::External<SharedReference<client_xr::XRWebGLLayer>>>();
+      auto handleRef = external.Data();
+      if (handleRef == nullptr)
+      {
+        Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
+        return;
+      }
+      handle_ = handleRef->value;
+      return;
+    }
+
+    std::cout << "Checking arguments from normal constructor" << std::endl;
     if (info.Length() < 2)
     {
       auto msg = "XRWebGLLayer constructor requires 2 arguments, but only " + std::to_string(info.Length()) + " were provided";
@@ -80,9 +103,9 @@ namespace bindings
     }
 
     auto sessionValue = info[0];
-    if (!sessionValue.IsObject())
+    if (!sessionValue.IsObject() || !XRSession::IsInstanceOf(sessionValue))
     {
-      Napi::TypeError::New(env, "XRWebGLLayer constructor requires a XRSession object as the first argument")
+      Napi::TypeError::New(env, "session must be an `XRSession` object.")
           .ThrowAsJavaScriptException();
       return;
     }
@@ -95,30 +118,47 @@ namespace bindings
           .ThrowAsJavaScriptException();
       return;
     }
-    glContext = Napi::Persistent(contextValue.ToObject());
-    hostFramebuffer = Napi::Persistent(webgl::WebGLFramebuffer::NewInstance(env, nullptr, true));
 
-    // Update properties from options
-    auto optionsValue = info[2];
-    if (optionsValue.IsObject())
+    shared_ptr<client_graphics::WebGLContext> glContextObject;
+    if (webgl::WebGLRenderingContext::IsInstanceOf(contextValue))
     {
-      auto optionsObject = optionsValue.As<Napi::Object>();
-      if (optionsObject.Has("antialias"))
-        config.antialias = optionsObject.Get("antialias").ToBoolean().Value();
-      if (optionsObject.Has("depth"))
-        config.depth = optionsObject.Get("depth").ToBoolean().Value();
-      if (optionsObject.Has("stencil"))
-        config.stencil = optionsObject.Get("stencil").ToBoolean().Value();
-      if (optionsObject.Has("alpha"))
-        config.alpha = optionsObject.Get("alpha").ToBoolean().Value();
-      if (optionsObject.Has("ignoreDepthValues"))
-        config.ignoreDepthValues = optionsObject.Get("ignoreDepthValues").ToBoolean().Value();
-      if (optionsObject.Has("framebufferScaleFactor"))
-        config.framebufferScaleFactor = optionsObject.Get("framebufferScaleFactor").ToNumber().FloatValue();
+      auto unwrapped = webgl::WebGLRenderingContext::Unwrap(contextValue.ToObject());
+      glContextObject = unwrapped->getContext();
+    }
+    else if (webgl::WebGL2RenderingContext::IsInstanceOf(contextValue))
+    {
+      auto unwrapped = webgl::WebGL2RenderingContext::Unwrap(contextValue.ToObject());
+      glContextObject = unwrapped->getContext();
+    }
+    else
+    {
+      auto msg = "the baseLayer must be a WebGLRenderingContext or WebGLRenderingContext2.";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      return;
     }
 
-    // Update the multiviewRequired flag
-    config.multiviewRequired = session->device->getDeviceInit().multiviewRequired();
+    // glContext = Napi::Persistent(contextValue.ToObject());
+    // hostFramebuffer = Napi::Persistent(webgl::WebGLFramebuffer::NewInstance(env, nullptr, true));
+    // handle_ = client_xr::XRWebGLLayer::Make(session->handle(), glContextObject);
+
+    // Update properties from options
+    // auto optionsValue = info[2];
+    // if (optionsValue.IsObject())
+    // {
+    //   auto optionsObject = optionsValue.As<Napi::Object>();
+    //   if (optionsObject.Has("antialias"))
+    //     handle_->antialias = optionsObject.Get("antialias").ToBoolean().Value();
+    //   if (optionsObject.Has("depth"))
+    //     handle_->depth = optionsObject.Get("depth").ToBoolean().Value();
+    //   if (optionsObject.Has("stencil"))
+    //     handle_->stencil = optionsObject.Get("stencil").ToBoolean().Value();
+    //   if (optionsObject.Has("alpha"))
+    //     handle_->alpha = optionsObject.Get("alpha").ToBoolean().Value();
+    //   if (optionsObject.Has("ignoreDepthValues"))
+    //     handle_->ignoreDepthValues = optionsObject.Get("ignoreDepthValues").ToBoolean().Value();
+    //   if (optionsObject.Has("framebufferScaleFactor"))
+    //     handle_->framebufferScaleFactor = optionsObject.Get("framebufferScaleFactor").ToNumber().FloatValue();
+    // }
   }
 
   XRWebGLLayer::~XRWebGLLayer()
@@ -129,17 +169,17 @@ namespace bindings
 
   Napi::Value XRWebGLLayer::AntialiasGetter(const Napi::CallbackInfo &info)
   {
-    return Napi::Boolean::New(info.Env(), config.antialias);
+    return Napi::Boolean::New(info.Env(), handle_->antialias);
   }
 
   Napi::Value XRWebGLLayer::IgnoreDepthValuesGetter(const Napi::CallbackInfo &info)
   {
-    return Napi::Boolean::New(info.Env(), config.ignoreDepthValues);
+    return Napi::Boolean::New(info.Env(), handle_->ignoreDepthValues);
   }
 
   Napi::Value XRWebGLLayer::MultiviewRequiredGetter(const Napi::CallbackInfo &info)
   {
-    return Napi::Boolean::New(info.Env(), config.multiviewRequired);
+    return Napi::Boolean::New(info.Env(), handle_->multiviewRequired);
   }
 
   Napi::Value XRWebGLLayer::FramebufferGetter(const Napi::CallbackInfo &info)
@@ -159,12 +199,12 @@ namespace bindings
 
   Napi::Value XRWebGLLayer::FixedFoveationGetter(const Napi::CallbackInfo &info)
   {
-    return Napi::Number::New(info.Env(), config.framebufferScaleFactor);
+    return Napi::Number::New(info.Env(), handle_->framebufferScaleFactor);
   }
 
   void XRWebGLLayer::FixedFoveationSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
   {
-    config.framebufferScaleFactor = value.ToNumber().FloatValue();
+    handle_->framebufferScaleFactor = value.ToNumber().FloatValue();
   }
 
   Napi::Value XRWebGLLayer::GetViewport(const Napi::CallbackInfo &info)

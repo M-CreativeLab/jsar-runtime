@@ -19,14 +19,29 @@ namespace client_xr
   using XRHandedness = xr::TrHandness;
   using XRTargetRayMode = xr::TrXRTargetRayMode;
 
-  enum XREnvironmentBlendMode
+  enum class XREnvironmentBlendMode
   {
     kOpaque = 0,
     kAdditive,
     kAlphaBlend,
   };
 
-  enum XRSpaceSubType
+  inline std::string to_string(XREnvironmentBlendMode blendMode)
+  {
+    switch (blendMode)
+    {
+    case XREnvironmentBlendMode::kOpaque:
+      return "opaque";
+    case XREnvironmentBlendMode::kAdditive:
+      return "additive";
+    case XREnvironmentBlendMode::kAlphaBlend:
+      return "alpha-blend";
+    default:
+      return "unknown";
+    }
+  }
+
+  enum class XRSpaceSubType
   {
     kUnset = -1,
     kGrip = 0,
@@ -40,14 +55,34 @@ namespace client_xr
    * ways. The reference space type is used to determine the origin of the coordinate system and the orientation of the
    * content.
    */
-  enum XRReferenceSpaceType
+  enum class XRReferenceSpaceType
   {
     kViewer = 0,
     kLocal,
     kLocalFloor,
     kBoundedFloor,
     kUnbounded,
+    kUnknown,
   };
+
+  inline std::string to_string(XRReferenceSpaceType referenceSpaceType)
+  {
+    switch (referenceSpaceType)
+    {
+    case XRReferenceSpaceType::kViewer:
+      return "viewer";
+    case XRReferenceSpaceType::kLocal:
+      return "local";
+    case XRReferenceSpaceType::kLocalFloor:
+      return "local-floor";
+    case XRReferenceSpaceType::kBoundedFloor:
+      return "bounded-floor";
+    case XRReferenceSpaceType::kUnbounded:
+      return "unbounded";
+    default:
+      return "unknown";
+    }
+  }
 
   enum XREye
   {
@@ -125,7 +160,7 @@ namespace client_xr
                            XRSessionMode mode,
                            XRSessionRequestInit requestInit,
                            std::vector<xr::TrXRFeature> enabledFeatures)
-        : id(response.id),
+        : id(response.sessionId),
           recommendedContentSize(response.recommendedContentSize),
           mode(mode),
           requestInit(requestInit),

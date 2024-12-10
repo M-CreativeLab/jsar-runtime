@@ -10,7 +10,7 @@ class TrIdGenerator
 {
 public:
   /**
-   * @brief Construct a new TrIdGenerator object
+   * Construct a new TrIdGenerator object
    * 
    * @param initialId The initial ID value.
    */
@@ -19,7 +19,7 @@ public:
 
 public:
   /**
-   * @brief Get the next ID.
+   * Get the next ID.
    * @returns The next ID.
    */
   uint32_t get()
@@ -28,6 +28,10 @@ public:
       counter = initialId;
     return counter++;
   }
+  /**
+   * Get the minimum ID.
+   */
+  uint32_t min() const { return initialId; }
 
 private:
   uint32_t counter;

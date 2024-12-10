@@ -8,35 +8,6 @@
 
 namespace client_xr
 {
-  // /**
-  //  * The callback function for the XR frame request.
-  //  */
-  // typedef std::function<void(Napi::Env env, xr::TrXRFrameRequest *, void *context)> XRFrameCallback;
-
-  // /**
-  //  * The `XRFrameCallback` with context.
-  //  *
-  //  * TODO(yorkie): Use `std::function` instead of this class.
-  //  */
-  // class ContextifiedXRFrameCallback
-  // {
-  // public:
-  //   /**
-  //    * Create a new instance of the `ContextifiedXRFrameCallback`.
-  //    */
-  //   ContextifiedXRFrameCallback(XRFrameCallback callback, void *context) : callback(callback), context(context) {}
-
-  // public:
-  //   /**
-  //    * The callback function.
-  //    */
-  //   XRFrameCallback callback;
-  //   /**
-  //    * The context to pass to the callback function.
-  //    */
-  //   void *context = nullptr;
-  // };
-
   /**
    * The XRDevice client class.
    *
@@ -78,6 +49,7 @@ namespace client_xr
 
   public:
     /**
+     * @param eventloop The libuv's event loop to use.
      * @returns the WebXR `XRSystem` instance.
      */
     inline std::shared_ptr<XRSystem> getXRSystem(uv_loop_t *eventloop)

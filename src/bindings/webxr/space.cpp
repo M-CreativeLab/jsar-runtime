@@ -95,6 +95,16 @@ namespace bindings
     return scope.Escape(obj).ToObject();
   }
 
+  Napi::Object XRReferenceSpace::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRReferenceSpace> handle)
+  {
+    Napi::EscapableHandleScope scope(env);
+    SharedReference<client_xr::XRReferenceSpace> sharedHandle(handle);
+
+    auto handleExternal = Napi::External<SharedReference<client_xr::XRReferenceSpace>>::New(env, &sharedHandle);
+    Napi::Object instance = constructor->New({handleExternal});
+    return scope.Escape(instance).ToObject();
+  }
+
   XRReferenceSpace::XRReferenceSpace(const Napi::CallbackInfo &info) : XRSpaceBase(info, XRSpaceSubType::UNSET, true),
                                                                        offsetMatrix(mat4(1.0f))
   {
@@ -140,7 +150,7 @@ namespace bindings
     else if (referenceSpaceType == XRReferenceSpaceType::UNBOUNDED)
     {
       auto localOffset = createMat4FromArray(frameRequest->localBaseMatrix);
-      baseMatrix =  localOffset * math::getOriginMatrix();
+      baseMatrix = localOffset * math::getOriginMatrix();
       XRSpaceBase<XRReferenceSpace>::onPoseUpdate(session, frameRequest);
     }
     // TODO: other reference space types to update?
@@ -230,7 +240,7 @@ namespace bindings
       return;
     }
     // TODO: check if a device
-    auto& view = frameRequest->views[frameRequest->viewIndex];
+    auto &view = frameRequest->views[frameRequest->viewIndex];
     baseMatrix = glm::inverse(view.getViewMatrix());
     projectionMatrix = view.getProjectionMatrix();
     XRSpaceBase<XRViewSpace>::onPoseUpdate(session, frameRequest);

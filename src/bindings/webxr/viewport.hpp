@@ -1,8 +1,9 @@
 #pragma once
 
 #include <napi.h>
-#include "common.hpp"
-#include "common/viewport.hpp"
+#include <common/viewport.hpp>
+#include <client/xr/webxr_viewport.hpp>
+#include "./common.hpp"
 
 namespace bindings
 {
@@ -11,10 +12,11 @@ namespace bindings
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
     static Napi::Object NewInstance(Napi::Env env, TrViewport viewport);
+    static Napi::Object NewInstance(Napi::Env env, client_xr::XRViewport viewport);
     XRViewport(const Napi::CallbackInfo &info);
 
   public:
-    TrViewport config;
+    client_xr::XRViewport config;
 
   private:
     static thread_local Napi::FunctionReference *constructor;

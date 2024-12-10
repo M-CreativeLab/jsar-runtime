@@ -3,7 +3,6 @@
 #include <napi.h>
 #include <chrono>
 #include "common.hpp"
-#include "device_native.hpp"
 #include "space.hpp"
 #include "xr/render_state.hpp"
 
@@ -11,6 +10,7 @@
 #include "common/frame_request/types.hpp"
 #include "common/xr/types.hpp"
 #include "client/per_process.hpp"
+#include "client/xr/webxr_session.hpp"
 
 namespace bindings
 {
@@ -48,9 +48,14 @@ namespace bindings
 
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    static Napi::Object NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRSession> handle);
+    static bool IsInstanceOf(Napi::Value value)
+    {
+      return value.As<Napi::Object>().InstanceOf(constructor->Value());
+    }
     static Napi::Value FrameHandler(const Napi::CallbackInfo &info);
     XRSession(const Napi::CallbackInfo &info);
-    ~XRSession();
+    ~XRSession() = default;
 
   private:
     Napi::Value RenderStateGetter(const Napi::CallbackInfo &info);
@@ -65,18 +70,6 @@ namespace bindings
     Napi::Value End(const Napi::CallbackInfo &info);
 
   private:
-    void start();
-    void stop();
-    void tick();
-    /**
-     * @brief Calculate the frames per second.
-     * @returns true if the FPS was updated.
-     */
-    bool calcFps();
-    void updateFrameTime(bool updateStereoFrame = false);
-    void updateInputSourcesIfChanged(XRFrame *frame);
-    void onFrame(Napi::Env env, xr::TrXRFrameRequest *frameRequest);
-    void addViewSpace(Napi::Env env, XRViewSpaceType type);
     Napi::Array createEnabledFeatures(Napi::Env env);
     Napi::Value createInputSourcesChangeEvent(Napi::Env env,
                                               std::vector<XRInputSource *> &added,
@@ -87,58 +80,18 @@ namespace bindings
     void onPrimaryActionEnd(XRInputSource *inputSource, XRFrame *frame);
     void onSqueezeActionStart(XRInputSource *inputSource, XRFrame *frame);
     void onSqueezeActionEnd(XRInputSource *inputSource, XRFrame *frame);
-    XRReferenceSpace *getLocalSpace();
-    XRReferenceSpace *getViewerSpace();
-    void iterateViewSpaces(std::function<void(XRViewSpace *, uint32_t, XRSession *)> callback);
 
   public:
-    XRDeviceNative *device;
-    int32_t id;
-    xr::TrXRSessionMode mode = xr::TrXRSessionMode::ImmersiveAR;
-    xr::TrXRSessionInit config;
-    bool immersive;
-    bool started;
-    bool ended;
-    bool suspended;
-    xr::RenderState *activeRenderState = nullptr;
-    xr::RenderState *pendingRenderState = nullptr;
-    XREnvironmentBlendMode environmentBlendMode;
-    std::vector<XRFrameCallbackDescriptor *> pendingFrameCallbacks;
-    std::vector<XRFrameCallbackDescriptor *> currentFrameCallbacks;
-    Napi::Reference<Napi::Array> enabledFeatures;
-    Napi::ObjectReference localSpace;
-    Napi::ObjectReference viewerSpace;
-    Napi::ObjectReference unboundedSpace;
-    std::vector<Napi::ObjectReference *> viewSpaces;
-    Napi::Reference<XRInputSourceArray> inputSources;
+    inline int32_t id() const { return handle_->id; }
+    inline client_xr::XRSessionMode mode() const { return handle_->mode; }
+    inline client_xr::XRSessionRequestInit requestInit() const { return handle_->requestInit; }
+    inline bool immersive() const { return handle_->immersive(); }
+    inline client_xr::XREnvironmentBlendMode environmentBlendMode() const { return handle_->environmentBlendMode(); }
+    inline std::shared_ptr<client_xr::XRSession> handle() const { return handle_; }
     Napi::FunctionReference onEventCallback;
 
   private:
-    uint32_t fps = 0;
-    int frameCount = 0;
-    /**
-     * Every frame timepoint, updated at the start of each frame.
-     */
-    std::chrono::steady_clock::time_point frameTimepoint;
-    /**
-     * The last stereo frame timepoint, updated at the start of each frame from the `frameTimepoint`.
-     */
-    std::chrono::steady_clock::time_point lastStereoFrameTimepoint;
-    /**
-     * The last recorded frame timepoint, updated by manual at calculating FPS.
-     */
-    std::chrono::steady_clock::time_point lastRecordedFrameTimepoint = chrono::steady_clock::now();
-    /**
-     * The session context zone client.
-     */
-    unique_ptr<xr::TrXRSessionContextZone> sessionContextZoneClient;
-    /**
-     * The frames callback handler
-     */
-    Napi::FunctionReference *frameHandlerRef = nullptr;
-    Napi::ThreadSafeFunction frameHandlerTSFN;
-    uv_loop_t *eventloop;
-    uv_timer_t tickHandle;
+    std::shared_ptr<client_xr::XRSession> handle_;
 
   public:
     static thread_local Napi::FunctionReference *constructor;

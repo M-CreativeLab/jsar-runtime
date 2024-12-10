@@ -76,7 +76,11 @@ public:
 private:
   void initHandle()
   {
-    handleFd = open(filename.c_str(), O_CREAT | O_RDWR, 0666);
+    if (type == TrZoneType::Client)
+      handleFd = open(filename.c_str(), O_RDWR);  // client can only read.
+    else
+      handleFd = open(filename.c_str(), O_CREAT | O_RDWR, 0666);
+    assert(handleFd > 0);
   }
   void deinitHandle()
   {
@@ -97,6 +101,7 @@ private:
   {
     unmap(); // unmap first if needed.
 
+    assert(handleFd > 0);
     void *addr = mmap(NULL, memorySize, PROT_READ | PROT_WRITE, MAP_SHARED, handleFd, 0);
     if (addr == MAP_FAILED || addr == nullptr)
     {

@@ -20,8 +20,13 @@ namespace bindings
 
   Napi::Object XRViewport::NewInstance(Napi::Env env, TrViewport viewport)
   {
+    return NewInstance(env, client_xr::XRViewport(viewport));
+  }
+
+  Napi::Object XRViewport::NewInstance(Napi::Env env, client_xr::XRViewport viewport)
+  {
     Napi::EscapableHandleScope scope(env);
-    auto jsViewport = Napi::External<TrViewport>::New(env, &viewport);
+    auto jsViewport = Napi::External<client_xr::XRViewport>::New(env, &viewport);
     Napi::Object obj = constructor->New({jsViewport});
     return scope.Escape(obj).ToObject();
   }
@@ -33,14 +38,14 @@ namespace bindings
 
     if (info.Length() == 1 && info[0].IsExternal())
     {
-      config = *static_cast<TrViewport *>(info[0].As<Napi::External<TrViewport>>().Data());
+      config = *static_cast<client_xr::XRViewport *>(info[0].As<Napi::External<client_xr::XRViewport>>().Data());
     }
     else if (info.Length() == 4)
     {
-      config = TrViewport(info[0].As<Napi::Number>().Uint32Value(),
-                          info[1].As<Napi::Number>().Uint32Value(),
-                          info[2].As<Napi::Number>().Uint32Value(),
-                          info[3].As<Napi::Number>().Uint32Value());
+      config = client_xr::XRViewport(info[0].As<Napi::Number>().Uint32Value(),
+                                     info[1].As<Napi::Number>().Uint32Value(),
+                                     info[2].As<Napi::Number>().Uint32Value(),
+                                     info[3].As<Napi::Number>().Uint32Value());
     }
     else
     {

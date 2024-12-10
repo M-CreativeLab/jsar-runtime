@@ -168,6 +168,7 @@ namespace webgl
     void DrawingBufferHeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
 
   public:
+    std::shared_ptr<ContextType> getContext() { return glContext_; }
     int getDrawingBufferWidth() { return glContext_->drawingBufferWidth(); }
     int getDrawingBufferHeight() { return glContext_->drawingBufferHeight(); }
     bool isWebGL2Context() { return glContext_->isWebGL2(); }
@@ -182,6 +183,16 @@ namespace webgl
 
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    /**
+     * Check if the given value is an instance of `WebGLRenderingContext`.
+     * 
+     * @param value the value to check.
+     * @returns `true` if the value is an instance of `WebGLRenderingContext`, `false` otherwise.
+     */
+    static inline bool IsInstanceOf(Napi::Value value)
+    {
+      return value.As<Napi::Object>().InstanceOf(WebGLRenderingContext::constructor->Value());
+    }
     /**
      * Create a new `WebGLRenderingContext` object for the host environment, this rendering context is used to
      * draw the graphics and objects in the host scene.
@@ -207,6 +218,16 @@ namespace webgl
 
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    /**
+     * Check if the given value is an instance of `WebGL2RenderingContext`.
+     * 
+     * @param value the value to check.
+     * @returns `true` if the value is an instance of `WebGL2RenderingContext`, `false` otherwise.
+     */
+    static inline bool IsInstanceOf(Napi::Value value)
+    {
+      return value.As<Napi::Object>().InstanceOf(WebGL2RenderingContext::constructor->Value());
+    }
     /**
      * Create a new `WebGL2RenderingContext` object for the host environment, this rendering context is used to
      * draw the graphics and objects in the host scene.

@@ -5,7 +5,7 @@ import { reportDocumentEvent, addDocumentRequestListener } from '@transmute/mess
 import * as Navigator from './navigator';
 import { connectRenderer } from './bindings/renderer';
 import { loadPolyfills } from './polyfills';
-import { initDevice as initXRDevice, createXRSystem } from './webxr';
+import { getXRSystem } from './webxr';
 import { TransmuteRuntime2 } from './runtime2';
 
 const bootstrapStarted = performance.now();
@@ -58,8 +58,7 @@ bootwait(async function main() {
     if (!connectRenderer(clientContext)) {
       throw new Error('failed to connect to the renderer.');
     }
-    initXRDevice();
-    Navigator.configureXRSystem(createXRSystem());
+    Navigator.configureXRSystem(getXRSystem());
 
     const gl = env.getHostWebGLRenderingContext();
     Navigator.configureGL(gl);

@@ -73,7 +73,7 @@ namespace client_xr
 
   public:
     XRSession(XRSessionConfiguration config, std::shared_ptr<XRSystem> xrSystem);
-    virtual ~XRSession();
+    virtual ~XRSession() = default;
 
   public:
     /**
@@ -138,8 +138,25 @@ namespace client_xr
      */
     void updateRenderState(XRRenderState newState);
     void updateTargetFrameRate(float targetFrameRate);
-    void updateCollisionBox();
+    void updateCollisionBox(glm::vec3 min, glm::vec3 max);
     void updateInputSourcesIfChanged(XRFrame &frame);
+    /**
+     * The `requestReferenceSpace()` method of the `XRSession` interface returns a promise that resolves with an instance of
+     * either `XRReferenceSpace` or `XRBoundedReferenceSpace` as appropriate given the type of reference space requested.
+     *
+     * @param type The type of reference space to be requested.
+     * @returns an `XRReferenceSpace` object representing the requested reference space.
+     */
+    std::shared_ptr<XRReferenceSpace> requestReferenceSpace(XRReferenceSpaceType type);
+    /**
+     * The `requestReferenceSpace()` method of the `XRSession` interface returns a promise that resolves with an instance of
+     * either `XRReferenceSpace` or `XRBoundedReferenceSpace` as appropriate given the type of reference space requested.
+     *
+     * @param typeString A string specifying the type of reference space for which an instance is to be returned. The string
+     *                   must be one of the values: "local", "local-floor", "bounded-floor", "unbounded".
+     * @returns an `XRReferenceSpace` object representing the requested reference space.
+     */
+    std::shared_ptr<XRReferenceSpace> requestReferenceSpace(std::string typeString);
     uint32_t requestAnimationFrame(XRFrameCallback callback);
     void cancelAnimationFrame(uint32_t handle);
     /**

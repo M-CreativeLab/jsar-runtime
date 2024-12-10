@@ -1,39 +1,44 @@
 #pragma once
 
 #include <napi.h>
-#include "common.hpp"
-#include "session.hpp"
-#include "client/per_process.hpp"
-#include "bindings/webgl/rendering_context.hpp"
-#include "xr/layer.hpp"
+#include <client/per_process.hpp>
+#include <client/xr/webxr_layers.hpp>
+#include <xr/layer.hpp>
+#include "../bindings/webgl/rendering_context.hpp"
+#include "./common.hpp"
+#include "./session.hpp"
 
 namespace bindings
 {
-  template <typename T>
-  class XRLayerBase : public Napi::ObjectWrap<T>
+  template <typename ObjectType, typename HandleType = client_xr::XRLayer>
+  class XRLayerBase : public Napi::ObjectWrap<ObjectType>
   {
   public:
     XRLayerBase(const Napi::CallbackInfo &info);
 
+  public:
+    inline std::shared_ptr<HandleType> handle() { return handle_; }
+
   protected:
     TrClientContextPerProcess* clientContext = nullptr;
+    std::shared_ptr<HandleType> handle_;
   };
 
   class XRLayer : public XRLayerBase<XRLayer>
   {
   public:
-    static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    static void Init(Napi::Env env);
     XRLayer(const Napi::CallbackInfo &info);
 
   private:
     static thread_local Napi::FunctionReference *constructor;
   };
 
-  class XRWebGLLayer : public XRLayerBase<XRWebGLLayer>
+  class XRWebGLLayer : public XRLayerBase<XRWebGLLayer, client_xr::XRWebGLLayer>
   {
   public:
-    static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Value NewInstance(Napi::Env env, xr::WebGLLayer layer);
+    static void Init(Napi::Env env);
+    static Napi::Value NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRWebGLLayer> layer);
     static Napi::Value GetNativeFramebufferScaleFactor(const Napi::CallbackInfo &info);
     XRWebGLLayer(const Napi::CallbackInfo &info);
     ~XRWebGLLayer();
@@ -54,7 +59,6 @@ namespace bindings
     webgl::WebGL2RenderingContext *getWebGL2RenderingContext();
 
   public:
-    xr::WebGLLayer config;
     XRSession *session;
     Napi::ObjectReference glContext;
     Napi::ObjectReference hostFramebuffer;

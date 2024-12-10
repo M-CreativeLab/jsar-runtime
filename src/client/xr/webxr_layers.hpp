@@ -9,10 +9,7 @@ namespace client_xr
   class XRLayer
   {
   public:
-    XRLayer(std::shared_ptr<XRSession> session)
-        : session_(session)
-    {
-    }
+    XRLayer(std::shared_ptr<XRSession> session);
     virtual ~XRLayer() = default;
 
   public:
@@ -32,18 +29,8 @@ namespace client_xr
     }
 
   public:
-    XRWebGLLayer(std::shared_ptr<XRSession> session, std::shared_ptr<client_graphics::WebGLContext> glContext)
-        : XRLayer(session),
-          xr::WebGLLayer(),
-          glContext_(glContext)
-    {
-    }
-    XRWebGLLayer(xr::WebGLLayer& layerData)
-        : XRLayer(nullptr),
-          xr::WebGLLayer(layerData),
-          glContext_(nullptr)
-    {
-    }
+    XRWebGLLayer(std::shared_ptr<XRSession> session, std::shared_ptr<client_graphics::WebGLContext> glContext);
+    XRWebGLLayer(xr::WebGLLayer &layerData);
 
   private:
     std::shared_ptr<client_graphics::WebGLContext> glContext_;
@@ -52,10 +39,7 @@ namespace client_xr
   class XRCompositionLayer : public XRLayer
   {
   public:
-    XRCompositionLayer(std::shared_ptr<XRSession> session)
-        : XRLayer(session)
-    {
-    }
+    XRCompositionLayer(std::shared_ptr<XRSession> session);
 
   public:
     bool blendTextureSourceAlpha = false;

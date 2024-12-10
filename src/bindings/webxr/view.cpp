@@ -54,8 +54,8 @@ namespace bindings
 
     Napi::Object sessionObj = info[0].As<Napi::Object>();
     auto session = XRSession::Unwrap(sessionObj);
-    sessionId = session->id;
-    device = session->device;
+    sessionId = session->id();
+    // device = session->device;
 
     Napi::Object transformObj = info[1].As<Napi::Object>();
     auto transform = XRRigidTransform::Unwrap(transformObj);
@@ -109,8 +109,8 @@ namespace bindings
     return env.Undefined();
   }
 
-  TrViewport XRView::getViewport()
+  client_xr::XRViewport XRView::getViewport()
   {
-    return device->getViewport(index);
+    return handle_->viewport();
   }
 }

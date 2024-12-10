@@ -2,7 +2,8 @@
 
 #include <napi.h>
 #include <glm/glm.hpp>
-#include "common/xr/types.hpp"
+#include <common/xr/types.hpp>
+#include <client/xr/webxr_spaces.hpp>
 #include "./common.hpp"
 
 using namespace std;
@@ -50,6 +51,7 @@ namespace bindings
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
     static Napi::Object NewInstance(Napi::Env env, XRReferenceSpaceType type);
+    static Napi::Object NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRReferenceSpace> handle);
     XRReferenceSpace(const Napi::CallbackInfo &info);
 
   private:
