@@ -1,4 +1,5 @@
 #include <cmath>
+#include <common/utility.hpp>
 #include "session.hpp"
 #include "common.hpp"
 #include "render_state.hpp"
@@ -33,6 +34,15 @@ namespace bindings
     return exports;
   }
 
+  Napi::Object XRSession::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRSession> handle)
+  {
+    Napi::EscapableHandleScope scope(env);
+    SharedReference<client_xr::XRSession> handleRef(handle);
+    auto handleExternal = Napi::External<SharedReference<client_xr::XRSession>>::New(env, &handleRef);
+    Napi::Object instance = constructor->New({handleExternal});
+    return scope.Escape(instance).ToObject();
+  }
+
   inline xr::TrXRFrameRequest createFrameRequestForView(uint32_t viewIndex, XRFrameContext &frameContext)
   {
     auto req = xr::TrXRFrameRequest();
@@ -51,200 +61,64 @@ namespace bindings
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-
-    if (info.Length() < 1 || !info[0].IsObject())
-    {
-      Napi::TypeError::New(env, "expected an external.")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
-    auto xrSession = XRSession::Unwrap(info[0].ToObject());
-    if (TR_UNLIKELY(xrSession == nullptr || xrSession->ended))
-    {
-      std::cerr << "skipped XRFrame(), reason is: session is ended" << std::endl;
-      return env.Undefined();
-    }
-    if (TR_UNLIKELY(xrSession->id < 0))
-    {
-      std::cerr << "skipped XRFrameRequest(), reason is: session is invalid" << std::endl;
-      return env.Undefined();
-    }
-
-    static int prevStereoId = -1;
-    auto sessionContext = xrSession->sessionContextZoneClient->getData();
-    auto deviceContext = xrSession->device->clientContext->getXRDeviceContextZone()->getData();
-    if (prevStereoId != -1 && prevStereoId == sessionContext->stereoId)
-      return env.Undefined();
-
-    int pendingsAtServer = sessionContext->getPendingStereoFramesCount();
-    if (pendingsAtServer >= 2)
-      return env.Undefined(); // Skip the frame if there are more than 2 pending frames.
-    if (!sessionContext->inFrustum)
-      return env.Undefined(); // Skip the frame if the session is not in the frustum.
-
-    XRFrameContext frameContext(*sessionContext, *deviceContext, xrSession);
-    if (deviceContext->stereoRenderingMode == xr::TrStereoRenderingMode::MultiPass)
-    {
-      for (uint32_t viewIndex = 0; viewIndex < 2; viewIndex++)
-      {
-        auto req = createFrameRequestForView(viewIndex, frameContext);
-        xrSession->onFrame(env, &req);
-      }
-    }
-    else
-    {
-      /**
-       * Singlepass/SinglepassInstanced stereo rendering.
-       * Calling `onFrame()` once with the viewIndex set to 0 is enough for stereo rendering.
-       */
-      auto req = createFrameRequestForView(0, frameContext);
-      xrSession->onFrame(env, &req);
-    }
-    prevStereoId = sessionContext->stereoId;
     return env.Undefined();
   }
 
-  XRSession::XRSession(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRSession>(info),
-                                                         id(-1),
-                                                         mode(xr::TrXRSessionMode::Unknown),
-                                                         immersive(true),
-                                                         started(false),
-                                                         ended(false),
-                                                         suspended(false),
-                                                         device(nullptr)
+  XRSession::XRSession(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<XRSession>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() < 4)
+    if (info.Length() <= 0 || !info[0].IsExternal())
     {
-      Napi::TypeError::New(env, "Three arguments are required").ThrowAsJavaScriptException();
-      return;
-    }
-    if (!info[2].IsObject())
-    {
-      Napi::TypeError::New(env, "The 3rd argument must be an object").ThrowAsJavaScriptException();
-      return;
-    }
-    if (!info[3].IsFunction())
-    {
-      Napi::TypeError::New(env, "The 4th argument must be a function").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "Illegal constructor")
+          .ThrowAsJavaScriptException();
       return;
     }
 
-    auto deviceObject = info[0].As<Napi::Object>();
-    device = XRDeviceNative::Unwrap(deviceObject);
-
-    auto modeString = info[1].As<Napi::String>().Utf8Value();
-    mode = xr::MakeSessionMode(modeString);
-    if (mode == xr::TrXRSessionMode::Unknown)
+    auto handleExternal = info[0].As<Napi::External<SharedReference<client_xr::XRSession>>>();
+    auto handleRef = handleExternal.Data();
+    if (handleRef == nullptr)
     {
-      Napi::TypeError::New(env, "Invalid session mode").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "Illegal constructor")
+          .ThrowAsJavaScriptException();
       return;
     }
-
-    auto nativeSessionObject = info[2].ToObject();
-    id = nativeSessionObject.Get("id").ToNumber().Int32Value();
-    immersive = xr::IsImmersive(mode);
-
-    // Create zone client
-    auto clientContext = TrClientContextPerProcess::Get();
-    string zonePath = clientContext->xrDeviceInit.sessionContextZoneDirectory + "/" + to_string(id);
-    sessionContextZoneClient = make_unique<xr::TrXRSessionContextZone>(zonePath, TrZoneType::Client);
-
-    // Create the view spaces
-    if (immersive)
-    {
-      addViewSpace(env, XRViewSpaceType::LEFT);
-      addViewSpace(env, XRViewSpaceType::RIGHT);
-    }
-    else
-    {
-      addViewSpace(env, XRViewSpaceType::NONE);
-    }
-
-    // Create the initial `XRRenderState` object
-    activeRenderState = new xr::RenderState();
-    pendingRenderState = nullptr;
-    enabledFeatures = Napi::Persistent(createEnabledFeatures(env));
-
-    // Create ReferenceSpace instances.
-    localSpace = Napi::Persistent(XRReferenceSpace::NewInstance(env, XRReferenceSpaceType::LOCAL));
-    viewerSpace = Napi::Persistent(XRReferenceSpace::NewInstance(env, XRReferenceSpaceType::VIEWER));
-    unboundedSpace = Napi::Persistent(XRReferenceSpace::NewInstance(env, XRReferenceSpaceType::UNBOUNDED));
-
-    // Create the `XRInputSourceArray` object
-    inputSources = Napi::Persistent(XRInputSourceArray::New(env));
+    handle_ = handleRef->value;
+    assert(handle_ != nullptr);
 
     // Set the event callback
-    onEventCallback = Napi::Persistent(info[3].As<Napi::Function>());
+    // onEventCallback = Napi::Persistent(info[3].As<Napi::Function>());
 
     // Define JS properties
     auto jsThis = info.This().ToObject();
-    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("recommendedContentSize", nativeSessionObject.Get("recommendedContentSize"), napi_enumerable));
-    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("inputSources", inputSources.Value(), napi_enumerable));
-    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("enabledFeatures", enabledFeatures.Value(), napi_enumerable));
+    // jsThis.DefineProperty(Napi::PropertyDescriptor::Value("recommendedContentSize", nativeSessionObject.Get("recommendedContentSize"), napi_enumerable));
+    // jsThis.DefineProperty(Napi::PropertyDescriptor::Value("inputSources", inputSources.Value(), napi_enumerable));
+    // jsThis.DefineProperty(Napi::PropertyDescriptor::Value("enabledFeatures", enabledFeatures.Value(), napi_enumerable));
 
-    // Prepare the frame handler
-    frameHandlerRef = new Napi::FunctionReference();
-    *frameHandlerRef = Napi::Persistent(Napi::Function::New(env, FrameHandler));
-    frameHandlerTSFN = Napi::ThreadSafeFunction::New(env, frameHandlerRef->Value(), "XRSession::FrameHandler", 0, 2);
+    // // Prepare the frame handler
+    // frameHandlerRef = new Napi::FunctionReference();
+    // *frameHandlerRef = Napi::Persistent(Napi::Function::New(env, FrameHandler));
+    // frameHandlerTSFN = Napi::ThreadSafeFunction::New(env, frameHandlerRef->Value(), "XRSession::FrameHandler", 0, 2);
 
-    // Prepare the uv handles
-    napi_get_uv_event_loop(env, &eventloop);
-    tickHandle.data = this;
-    uv_timer_init(eventloop, &tickHandle);
+    // // Prepare the uv handles
+    // napi_get_uv_event_loop(env, &eventloop);
+    // tickHandle.data = this;
+    // uv_timer_init(eventloop, &tickHandle);
 
-    // Start the session
-    start();
+    // // Start the session
+    // start();
 
-    if (started == true)
-      Ref(); // If started, we need increment the reference count to prevent the object from being garbage collected.
-  }
-
-  XRSession::~XRSession()
-  {
-    DEBUG(LOG_TAG, "XRSession(%d) is being deleted", id);
-
-    if (activeRenderState != nullptr)
-    {
-      delete activeRenderState;
-      activeRenderState = nullptr;
-    }
-    if (pendingRenderState != nullptr)
-    {
-      delete pendingRenderState;
-      pendingRenderState = nullptr;
-    }
-    for (auto &it : pendingFrameCallbacks)
-      delete it;
-    pendingFrameCallbacks.clear();
-
-    for (auto &it : currentFrameCallbacks)
-      delete it;
-    currentFrameCallbacks.clear();
-
-    // if (device != nullptr)
-    //   device->removeSession(id);
-
-    localSpace.Unref();
-    viewerSpace.Unref();
-
-    // Clear the view spaces
-    for (auto &it : viewSpaces)
-    {
-      it->Unref();
-      delete it;
-    }
-    viewSpaces.clear();
+    // if (started == true)
+    //   Ref(); // If started, we need increment the reference count to prevent the object from being garbage collected.
   }
 
   Napi::Value XRSession::RenderStateGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return XRRenderState::NewInstance(env, *activeRenderState);
+    return XRRenderState::NewInstance(env, handle_->renderState());
   }
 
   Napi::Value XRSession::EnvironmentBlendModeGetter(const Napi::CallbackInfo &info)
@@ -252,34 +126,14 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (environmentBlendMode == OPAQUE)
-    {
-      return Napi::String::New(env, "opaque");
-    }
-    else if (environmentBlendMode == ADDITIVE)
-    {
-      return Napi::String::New(env, "additive");
-    }
-    else if (environmentBlendMode == ALPHA_BLEND)
-    {
-      return Napi::String::New(env, "alpha-blend");
-    }
-    else
-    {
-      return Napi::String::New(env, "unknown");
-    }
+    auto mode = handle_->environmentBlendMode();
+    return Napi::String::New(env, client_xr::to_string(mode));
   }
 
   Napi::Value XRSession::RequestAnimationFrame(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-
-    if (ended == true)
-    {
-      Napi::Error::New(env, "Session has ended").ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
 
     if (info.Length() < 1)
     {
@@ -292,13 +146,37 @@ namespace bindings
       return env.Undefined();
     }
 
-    auto callback = info[0].As<Napi::Function>();
-    auto frameCallbackDescriptor = new XRFrameCallbackDescriptor(callback);
-    pendingFrameCallbacks.push_back(frameCallbackDescriptor);
-    return Napi::Number::New(env, frameCallbackDescriptor->handle);
+    Napi::ThreadSafeFunction *tscb = nullptr;
+    Napi::ThreadSafeFunction tsfn = Napi::ThreadSafeFunction::New(
+        env,
+        info[0].As<Napi::Function>(),
+        "XRSession::RequestAnimationFrame",
+        0,
+        2,
+        [tscb](Napi::Env env)
+        {
+          if (tscb != nullptr)
+            delete tscb;
+        });
+    tscb = new Napi::ThreadSafeFunction(tsfn);
+    tscb->Acquire();
+    std::cout << "RequestAnimationFrame Set callback done" << std::endl;
+
+    auto callback = [tscb](uint32_t time, client_xr::XRFrame &frame)
+    {
+      std::cout << "RequestAnimationFrame callback called" << std::endl;
+
+      assert(tscb != nullptr);
+      tscb->BlockingCall([time](Napi::Env env, Napi::Function jsCallback)
+                         { jsCallback.Call({Napi::Number::New(env, time)}); });
+      tscb->Release();
+    };
+    auto id = handle_->requestAnimationFrame(callback);
+    return Napi::Number::New(env, id);
   }
 
-  Napi::Value XRSession::CancelAnimationFrame(const Napi::CallbackInfo &info)
+  Napi::Value
+  XRSession::CancelAnimationFrame(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -314,38 +192,7 @@ namespace bindings
       return env.Undefined();
     }
 
-    auto targetHandle = info[0].As<Napi::Number>().Uint32Value();
-
-    // Find the target callback handle from the pending list, then remove it directly.
-    for (auto it = pendingFrameCallbacks.begin(); it != pendingFrameCallbacks.end();)
-    {
-      auto callbackDescriptor = *it;
-      if (callbackDescriptor->handle == targetHandle)
-      {
-        delete callbackDescriptor;
-        it = pendingFrameCallbacks.erase(it);
-        break;
-      }
-      else
-      {
-        ++it;
-      }
-    }
-
-    // Find the target callback handle from the current list, then mark it as cancelled.
-    for (auto it = currentFrameCallbacks.begin(); it != currentFrameCallbacks.end();)
-    {
-      auto callbackDescriptor = *it;
-      if (callbackDescriptor->handle == targetHandle)
-      {
-        callbackDescriptor->cancelled = true;
-        break;
-      }
-      else
-      {
-        ++it;
-      }
-    }
+    handle_->cancelAnimationFrame(info[0].As<Napi::Number>().Uint32Value());
     return env.Undefined();
   }
 
@@ -355,61 +202,23 @@ namespace bindings
     Napi::HandleScope scope(env);
     auto deferred = Napi::Promise::Deferred::New(env);
 
-    if (ended == true)
-    {
-      deferred.Reject(Napi::String::New(env, "Session has ended"));
-      return deferred.Promise();
-    }
-
     if (info.Length() < 1)
     {
       deferred.Reject(Napi::String::New(env, "One argument is required"));
       return deferred.Promise();
     }
 
-    auto typeString = info[0].As<Napi::String>().Utf8Value();
-    XRReferenceSpaceType type;
-
-    if (typeString == "viewer")
-      type = VIEWER;
-    else if (typeString == "local")
-      type = LOCAL;
-    else if (typeString == "local-floor")
-      type = LOCAL_FLOOR;
-    else if (typeString == "bounded-floor")
-      type = BOUNDED_FLOOR;
-    else if (typeString == "unbounded")
-      type = UNBOUNDED;
-    else
+    auto typeString = info[0].ToString().Utf8Value();
+    try
     {
-      deferred.Reject(Napi::String::New(env, "Invalid reference space type"));
+      deferred.Resolve(XRReferenceSpace::NewInstance(env, handle_->requestReferenceSpace(typeString)));
       return deferred.Promise();
     }
-
-    if (!device->supportsReferenceSpaceType(type))
+    catch(const std::exception& e)
     {
-      deferred.Reject(Napi::String::New(env, "Reference space type is not supported"));
+      deferred.Reject(Napi::String::New(env, e.what()));
       return deferred.Promise();
     }
-
-    if (type == VIEWER)
-    {
-      deferred.Resolve(viewerSpace.Value());
-    }
-    else if (type == LOCAL)
-    {
-      deferred.Resolve(localSpace.Value());
-    }
-    else if (type == UNBOUNDED)
-    {
-      deferred.Resolve(unboundedSpace.Value());
-    }
-    else
-    {
-      deferred.Reject(Napi::String::New(env, "Not implemented yet"));
-      // TODO: others
-    }
-    return deferred.Promise();
   }
 
   Napi::Value XRSession::UpdateRenderState(const Napi::CallbackInfo &info)
@@ -417,20 +226,16 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (ended == true)
+    if (handle_->ended)
     {
-      Napi::Error::New(env, "Session has ended").ThrowAsJavaScriptException();
+      auto msg = "Failed to update state: session(" + std::to_string(id()) + ") has been ended";
+      Napi::Error::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
-    if (info.Length() < 1)
+    if (info.Length() < 1 || !info[0].IsObject())
     {
-      Napi::TypeError::New(env, "One argument is required").ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-    if (!info[0].IsObject())
-    {
-      Napi::TypeError::New(env, "Argument must be an object").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "Failed to update state: a state object is required").ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
@@ -443,7 +248,7 @@ namespace bindings
         Napi::TypeError::New(env, "Invalid baseLayer").ThrowAsJavaScriptException();
         return env.Undefined();
       }
-      if (baseLayer->session->id != id)
+      if (baseLayer->session->id() != id())
       {
         Napi::TypeError::New(env, "baseLayer is not associated with this session").ThrowAsJavaScriptException();
         return env.Undefined();
@@ -456,7 +261,7 @@ namespace bindings
       auto isFovSet = !inlineVerticalFov.IsNull() && !inlineVerticalFov.IsUndefined();
       if (isFovSet)
       {
-        if (immersive == true)
+        if (immersive() == true)
         {
           Napi::TypeError::New(env, "Cannot set inlineVerticalFieldOfView for immersive sessions").ThrowAsJavaScriptException();
           return env.Undefined();
@@ -470,25 +275,20 @@ namespace bindings
       }
     }
 
-    if (pendingRenderState == nullptr)
-    {
-      if (activeRenderState != nullptr)
-        pendingRenderState = new xr::RenderState(activeRenderState);
-      else
-        pendingRenderState = new xr::RenderState();
-    }
-
+    client_xr::XRRenderState newState;
     if (newStateObject.Has("baseLayer"))
     {
       auto baseLayer = XRWebGLLayer::Unwrap(newStateObject.Get("baseLayer").ToObject());
-      pendingRenderState->updateBaseLayer(&baseLayer->config);
+      newState.baseLayer = baseLayer->handle();
     }
     if (newStateObject.Has("depthNear"))
-      pendingRenderState->depthNear = newStateObject.Get("depthNear").ToNumber().FloatValue();
+      newState.depthNear = newStateObject.Get("depthNear").ToNumber().FloatValue();
     if (newStateObject.Has("depthFar"))
-      pendingRenderState->depthFar = newStateObject.Get("depthFar").ToNumber().FloatValue();
+      newState.depthFar = newStateObject.Get("depthFar").ToNumber().FloatValue();
     if (newStateObject.Has("inlineVerticalFieldOfView"))
-      pendingRenderState->inlineVerticalFieldOfView = newStateObject.Get("inlineVerticalFieldOfView").ToNumber().FloatValue();
+      newState.inlineVerticalFieldOfView = newStateObject.Get("inlineVerticalFieldOfView").ToNumber().FloatValue();
+
+    handle_->updateRenderState(newState);
     return env.Undefined();
   }
 
@@ -503,8 +303,7 @@ namespace bindings
       return env.Undefined();
     }
 
-    // auto frameRate = info[0].As<Napi::Number>().FloatValue();
-    // device->updateTargetFrameRate(frameRate);
+    handle_->updateTargetFrameRate(info[0].As<Napi::Number>().FloatValue());
     return env.Undefined();
   }
 
@@ -519,8 +318,7 @@ namespace bindings
       return env.Undefined();
     }
 
-    float minValues[3];
-    float maxValues[3];
+    glm::vec3 minVec, maxVec;
     auto min = info[0].As<Napi::Array>();
     auto max = info[1].As<Napi::Array>();
 
@@ -533,16 +331,11 @@ namespace bindings
           maxValue == -INFINITY)
         return env.Undefined();
 
-      minValues[i] = minValue;
-      maxValues[i] = maxValue;
+      minVec[i] = minValue;
+      maxVec[i] = maxValue;
     }
 
-    if (sessionContextZoneClient == nullptr)
-    {
-      Napi::Error::New(env, "Invalid XRSession object").ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-    sessionContextZoneClient->setCollisionBoxMinMax(minValues, maxValues);
+    handle_->updateCollisionBox(minVec, maxVec);
     return env.Undefined();
   }
 
@@ -551,167 +344,9 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    stop();
+    handle_->end();
     Unref();
     return env.Undefined();
-  }
-
-  void XRSession::start()
-  {
-    if (started == true)
-      return; // Already started
-
-    uv_timer_start(&tickHandle, [](uv_timer_t *handle)
-                   {
-                    auto session = static_cast<XRSession *>(handle->data);
-                    session->tick(); }, 0, 2);
-    started = true;
-  }
-
-  void XRSession::stop()
-  {
-    if (started == false)
-      return; // Not started yet
-
-    uv_timer_stop(&tickHandle);
-    ended = true;
-  }
-
-  void XRSession::tick()
-  {
-    static chrono::steady_clock::time_point timepointOnLastTick = chrono::steady_clock::now();
-    chrono::steady_clock::time_point timepointOnNow = chrono::steady_clock::now();
-    auto delta = chrono::duration_cast<chrono::milliseconds>(timepointOnNow - timepointOnLastTick).count();
-    if (delta >= FRAME_TIME_DELTA_THRESHOLD)
-    {
-      frameHandlerTSFN.NonBlockingCall(this, [](Napi::Env env, Napi::Function jsCallback, XRSession *session)
-                                       { jsCallback.Call({session->Value()}); });
-      timepointOnLastTick = timepointOnNow;
-    }
-  }
-
-  bool XRSession::calcFps()
-  {
-    frameCount += 1;
-    auto delta = chrono::duration_cast<chrono::milliseconds>(frameTimepoint - lastRecordedFrameTimepoint).count();
-    if (delta >= 1000)
-    {
-      fps = frameCount / (delta / 1000);
-      frameCount = 0;
-      lastRecordedFrameTimepoint = frameTimepoint;
-      return true;
-    }
-    else
-    {
-      return false;
-    }
-  }
-
-  void XRSession::updateFrameTime(bool updateStereoFrame)
-  {
-    frameTimepoint = chrono::steady_clock::now();
-    if (updateStereoFrame)
-      lastStereoFrameTimepoint = frameTimepoint;
-  }
-
-  void XRSession::updateInputSourcesIfChanged(XRFrame *frame)
-  {
-    inputSources.Value().updateInputSources(frame, this, [this](vector<XRInputSource *> added, vector<XRInputSource *> removed)
-                                            { onEventCallback.Call({Napi::String::New(Env(), "inputsourceschange"),
-                                                                    createInputSourcesChangeEvent(Env(), added, removed)}); });
-  }
-
-  void XRSession::onFrame(Napi::Env env, xr::TrXRFrameRequest *frameRequest)
-  {
-    Napi::HandleScope scope(env);
-
-    // - If session’s pending render state is not null, apply the pending render state.
-    if (pendingRenderState != nullptr)
-    {
-      // Apply pending render state.
-      activeRenderState->update(pendingRenderState);
-
-      // Clear the pending render state.
-      delete pendingRenderState;
-      pendingRenderState = nullptr;
-
-      // Report to the device since it'll need to handle the layer for rendering.
-      if (activeRenderState->baseLayer != nullptr)
-      {
-        // device->setActiveLayer(activeRenderState->baseLayer);
-      }
-    }
-
-    // - If session’s renderState's baseLayer is null, abort these steps.
-    if (activeRenderState == nullptr || activeRenderState->baseLayer == nullptr)
-    {
-      std::cerr << "activeRenderState or activeRenderState->baseLayer is null, aborting frame rendering." << std::endl;
-      return;
-    }
-
-    // - If session’s mode is "inline" and session’s renderState's output canvas is null,
-    //   abort these steps.
-    // ???
-
-    auto xrFrameObject = XRFrame::NewInstance(env, frameRequest, this);
-    auto xrFrameUnwrapped = XRFrame::Unwrap(xrFrameObject);
-
-    // Move the pending frame callbacks to current map
-    currentFrameCallbacks.clear();
-    for (auto &it : pendingFrameCallbacks)
-      currentFrameCallbacks.push_back(it);
-    pendingFrameCallbacks.clear();
-
-    xrFrameUnwrapped->start();
-    // Update the input sources
-    updateInputSourcesIfChanged(xrFrameUnwrapped);
-
-    // Call all the frame callbacks
-    auto time = Napi::Number::New(env, frameRequest->time);
-    for (auto &it : currentFrameCallbacks)
-    {
-      auto descriptor = *it;
-      if (descriptor.cancelled != true)
-      {
-        Napi::HandleScope scope(env);
-        auto jsCallback = descriptor.callback;
-        try
-        {
-          jsCallback->Call(this->Value(), {time, xrFrameObject});
-        }
-        catch (const Napi::Error &e)
-        {
-          std::cerr << "Error in XRSession::onFrame(): ";
-          auto jsError = e.Value();
-          if (jsError.IsString())
-          {
-            std::cerr << jsError.ToString().Utf8Value();
-          }
-          else if (jsError.IsObject())
-          {
-            auto errorObject = jsError.ToObject();
-            auto jsMessage = errorObject.Get("message");
-            if (errorObject.Has("stack") && errorObject.Get("stack").IsString())
-              jsMessage = errorObject.Get("stack").ToString();
-            std::cerr << jsMessage.ToString().Utf8Value();
-          }
-          else
-          {
-            std::cerr << e.what();
-          }
-          std::cerr << std::endl;
-        }
-      }
-    }
-    currentFrameCallbacks.clear();
-    xrFrameUnwrapped->end();
-  }
-
-  void XRSession::addViewSpace(Napi::Env env, XRViewSpaceType type)
-  {
-    auto xrViewSpaceRef = new Napi::ObjectReference();
-    *xrViewSpaceRef = Napi::Persistent(XRViewSpace::NewInstance(env, type));
-    viewSpaces.push_back(xrViewSpaceRef);
   }
 
   Napi::Array XRSession::createEnabledFeatures(Napi::Env env)
@@ -790,28 +425,5 @@ namespace bindings
     eventProps.Set("inputSource", inputSource->Value());
     onEventCallback.Call({Napi::String::New(env, "squeeze"), eventProps});
     onEventCallback.Call({Napi::String::New(env, "squeezeend"), eventProps});
-  }
-
-  XRReferenceSpace *XRSession::getLocalSpace()
-  {
-    auto object = localSpace.Value();
-    return XRReferenceSpace::Unwrap(object);
-  }
-
-  XRReferenceSpace *XRSession::getViewerSpace()
-  {
-    auto object = viewerSpace.Value();
-    return XRReferenceSpace::Unwrap(object);
-  }
-
-  void XRSession::iterateViewSpaces(std::function<void(XRViewSpace *, uint32_t, XRSession *)> callback)
-  {
-    uint32_t viewIndex = 0;
-    for (auto &it : viewSpaces)
-    {
-      auto object = (*it).Value();
-      auto space = XRViewSpace::Unwrap(object);
-      callback(space, viewIndex++, this);
-    }
   }
 }

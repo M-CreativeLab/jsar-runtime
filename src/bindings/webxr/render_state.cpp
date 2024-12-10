@@ -18,46 +18,55 @@ namespace bindings
     return exports;
   }
 
-  Napi::Object XRRenderState::NewInstance(Napi::Env env, xr::RenderState state)
+  Napi::Object XRRenderState::NewInstance(Napi::Env env, client_xr::XRRenderState state)
   {
     Napi::EscapableHandleScope scope(env);
-    Napi::Object obj = constructor->New({});
-    XRRenderState *instance = XRRenderState::Unwrap(obj);
-    instance->state = state;
-    return scope.Escape(obj).ToObject();
+
+    auto stateExternal = Napi::External<client_xr::XRRenderState>::New(env, &state);
+    Napi::Object instance = constructor->New({stateExternal});
+    return scope.Escape(instance).ToObject();
   }
 
   XRRenderState::XRRenderState(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRRenderState>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
+
+    if (info.Length() < 1 || !info[0].IsExternal())
+    {
+      Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
+      return;
+    }
+
+    auto external = info[0].As<Napi::External<client_xr::XRRenderState>>();
+    handle_ = *external.Data();
   }
 
   Napi::Value XRRenderState::BaseLayerGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return XRWebGLLayer::NewInstance(env, *state.baseLayer);
+    return XRWebGLLayer::NewInstance(env, handle_.baseLayer);
   }
 
   Napi::Value XRRenderState::DepthFarGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return Napi::Number::New(env, state.depthFar);
+    return Napi::Number::New(env, handle_.depthFar);
   }
 
   Napi::Value XRRenderState::DepthNearGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return Napi::Number::New(env, state.depthNear);
+    return Napi::Number::New(env, handle_.depthNear);
   }
 
   Napi::Value XRRenderState::InlineVerticalFieldOfViewGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return Napi::Number::New(env, state.inlineVerticalFieldOfView);
+    return Napi::Number::New(env, handle_.inlineVerticalFieldOfView);
   }
 }

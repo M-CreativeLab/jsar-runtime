@@ -114,7 +114,7 @@ namespace xr
   public:
     /**
      * Create a new `TrXRSessionContextZone` instance.
-     * 
+     *
      * @param filename the filename of the zone.
      * @param type the zone type.
      * @param sessionId the session id.
@@ -127,12 +127,14 @@ namespace xr
     }
 
   public:
-    TrXRSessionContextZone(string filename, TrZoneType type, optional<uint32_t> sessionId = nullopt) : TrZone<TrXRSessionContextData>(filename, type)
+    TrXRSessionContextZone(string filename, TrZoneType type, optional<uint32_t> sessionId = nullopt)
+        : TrZone<TrXRSessionContextData>(filename, type)
     {
       if (type == TrZoneType::Server)
       {
         assert(sessionId.has_value());
         data = std::make_unique<TrXRSessionContextData>(sessionId.value());
+        syncData(); // Sync the data after creating the new instance.
       }
       else
       {

@@ -1,0 +1,33 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>WebXR APIs</title>
+  <script>
+    console.info(navigator.xr);
+    setTimeout(async () => {
+      try {
+        const requestMode = 'immersive-ar';
+        const supports = await navigator.xr.isSessionSupported(requestMode);
+        if (supports) {
+          const newSession = await navigator.xr.requestSession(requestMode);
+          console.info(newSession);
+    //       const baseLayer = new XRWebGLLayer(newSession, navigator.gl);
+    //       newSession.updateRenderState({ baseLayer });
+    //       console.info(newSession, baseLayer);
+
+    //       newSession.requestAnimationFrame((time, frame) => {
+    //         console.info(time, frame);
+    //       });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }, 0);
+  </script>
+</head>
+
+<body>
+</body>
+
+</html>

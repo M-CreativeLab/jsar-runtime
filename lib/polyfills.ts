@@ -22,7 +22,6 @@ import {
   WebGL2RenderingContextImpl
 } from './webgl';
 import {
-  XRWebGLLayerImpl,
   XRRigidTransformImpl
 } from './webxr';
 import { WorkerImpl } from './webworkers/worker';
@@ -78,12 +77,6 @@ export function loadPolyfills() {
   Object.defineProperties(globalThis, {
     'XRRigidTransform': {
       value: XRRigidTransformImpl,
-      writable: false,
-      enumerable: true,
-      configurable: false,
-    },
-    'XRWebGLLayer': {
-      value: XRWebGLLayerImpl,
       writable: false,
       enumerable: true,
       configurable: false,

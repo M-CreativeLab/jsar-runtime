@@ -3,9 +3,9 @@
 #include <chrono>
 #include <napi.h>
 
-#include "common/xr/types.hpp"
+#include <common/xr/types.hpp>
+#include <client/xr/webxr_frame.hpp>
 #include "./common.hpp"
-#include "./device_native.hpp"
 #include "./session.hpp"
 
 using namespace std;
@@ -49,9 +49,11 @@ namespace bindings
     uint32_t timestamp;
     XRSession *session;
     xr::TrXRFrameRequest *internal;
-    XRDeviceNative *device;
     chrono::time_point<chrono::high_resolution_clock> startTime;
     chrono::time_point<chrono::high_resolution_clock> endTime;
+
+  private:
+    std::shared_ptr<client_xr::XRFrame> handle_;
 
   private:
     static thread_local Napi::FunctionReference *constructor;

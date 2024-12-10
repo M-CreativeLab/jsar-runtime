@@ -3,6 +3,7 @@
 #include <napi.h>
 #include "layer.hpp"
 #include "xr/render_state.hpp"
+#include <client/xr/webxr_renderstate.hpp>
 
 namespace bindings
 {
@@ -10,7 +11,7 @@ namespace bindings
   {
   public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, xr::RenderState state);
+    static Napi::Object NewInstance(Napi::Env env, client_xr::XRRenderState state);
     XRRenderState(const Napi::CallbackInfo &info);
 
   private:
@@ -20,7 +21,10 @@ namespace bindings
     Napi::Value InlineVerticalFieldOfViewGetter(const Napi::CallbackInfo &info);
 
   public:
-    xr::RenderState state;
+    inline client_xr::XRRenderState handle() { return handle_; }
+
+  private:
+    client_xr::XRRenderState handle_;
 
   private:
     static thread_local Napi::FunctionReference *constructor;

@@ -5,11 +5,12 @@
 #include "./webxr_input_sources.hpp"
 #include "../per_process.hpp"
 
-using namespace std;
-
 namespace client_xr
 {
-  XRSession::XRSession(XRSessionConfiguration config, std::shared_ptr<XRSystem> xrSystem)
+  using namespace std;
+  using namespace std::chrono;
+
+  XRSession::XRSession(XRSessionConfiguration config, shared_ptr<XRSystem> xrSystem)
       : dom::DOMEventTarget(),
         device_(xrSystem->device()),
         eventloop_(xrSystem->eventloop()),
@@ -39,17 +40,13 @@ namespace client_xr
       addViewSpace(XRViewSpaceType::kNone);
     }
 
-    activeRenderState_ = std::make_unique<XRRenderState>();
+    activeRenderState_ = make_unique<XRRenderState>();
     pendingRenderState_ = nullptr;
-  }
-
-  XRSession::~XRSession()
-  {
   }
 
   void XRSession::updateFrameTime(bool updateStereoFrame)
   {
-    frameTimepoint_ = chrono::steady_clock::now();
+    frameTimepoint_ = steady_clock::now();
     if (updateStereoFrame)
       lastStereoFrameTimepoint_ = frameTimepoint_;
   }
@@ -60,23 +57,23 @@ namespace client_xr
     {
       auto newBaseLayer = newState.baseLayer;
       if (newBaseLayer->session() == nullptr)
-        throw std::runtime_error("invalid `baseLayer` object, it must be associated with the session.");
+        throw runtime_error("invalid `baseLayer` object, it must be associated with the session.");
       if (newBaseLayer->session()->id != id)
-        throw std::runtime_error("invalid `baseLayer` object, session id mismatch.");
+        throw runtime_error("invalid `baseLayer` object, session id mismatch.");
     }
     if (newState.inlineVerticalFieldOfView > 0)
     {
       if (immersive())
-        throw std::runtime_error("invalid `inlineVerticalFieldOfView` value, it must be null for immersive sessions.");
+        throw runtime_error("invalid `inlineVerticalFieldOfView` value, it must be null for immersive sessions.");
       newState.inlineVerticalFieldOfView = fmin(3.13, fmax(0.01, newState.inlineVerticalFieldOfView));
     }
 
     if (pendingRenderState_ == nullptr)
     {
       if (activeRenderState_ != nullptr)
-        pendingRenderState_ = std::make_unique<XRRenderState>(*activeRenderState_);
+        pendingRenderState_ = make_unique<XRRenderState>(*activeRenderState_);
       else
-        pendingRenderState_ = std::make_unique<XRRenderState>();
+        pendingRenderState_ = make_unique<XRRenderState>();
     }
     pendingRenderState_->update(newState);
   }
@@ -86,8 +83,12 @@ namespace client_xr
     // TODO
   }
 
-  void XRSession::updateCollisionBox()
+  void XRSession::updateCollisionBox(glm::vec3 min, glm::vec3 max)
   {
+    assert(sessionContextZoneClient_ != nullptr);
+    float minValues[3] = {min.x, min.y, min.z};
+    float maxValues[3] = {max.x, max.y, max.z};
+    sessionContextZoneClient_->setCollisionBoxMinMax(minValues, maxValues);
   }
 
   void XRSession::updateInputSourcesIfChanged(XRFrame &frame)
@@ -99,12 +100,54 @@ namespace client_xr
     }
   }
 
+  std::shared_ptr<XRReferenceSpace> XRSession::requestReferenceSpace(XRReferenceSpaceType type)
+  {
+    if (TR_UNLIKELY(ended))
+      throw runtime_error("session is ended.");
+    if (TR_UNLIKELY(!device_->supportsReferenceSpaceType(type)))
+      throw runtime_error("unsupported reference space type.");
+
+    switch (type)
+    {
+    case XRReferenceSpaceType::kLocal:
+      return localSpace_;
+    case XRReferenceSpaceType::kUnbounded:
+      return unboundedSpace_;
+    default:
+      throw runtime_error("unsupported reference space type.");
+    }
+  }
+
+  std::shared_ptr<XRReferenceSpace> XRSession::requestReferenceSpace(std::string typeString)
+  {
+    XRReferenceSpaceType type = XRReferenceSpaceType::kUnknown;
+    if (typeString == "viewer")
+      type = XRReferenceSpaceType::kViewer;
+    else if (typeString == "local")
+      type = XRReferenceSpaceType::kLocal;
+    else if (typeString == "local-floor")
+      type = XRReferenceSpaceType::kLocalFloor;
+    else if (typeString == "bounded-floor")
+      type = XRReferenceSpaceType::kBoundedFloor;
+    else if (typeString == "unbounded")
+      type = XRReferenceSpaceType::kUnbounded;
+
+    try
+    {
+      return requestReferenceSpace(type);
+    }
+    catch (const exception &e)
+    {
+      throw runtime_error("unsupported reference space type: " + typeString);
+    }
+  }
+
   uint32_t XRSession::requestAnimationFrame(XRFrameCallback callback)
   {
     if (ended)
-      throw std::runtime_error("session is ended.");
+      throw runtime_error("session is ended.");
 
-    auto callbackWrapper = std::make_shared<XRFrameCallbackWrapper>(callback);
+    auto callbackWrapper = make_shared<XRFrameCallbackWrapper>(callback);
     pendingFrameCallbacks_.push_back(callbackWrapper);
     return callbackWrapper->handle;
   }
@@ -162,9 +205,9 @@ namespace client_xr
 
   void XRSession::initialize()
   {
-    viewerSpace_ = std::make_shared<XRReferenceSpace>(XRReferenceSpaceType::kViewer);
-    localSpace_ = std::make_shared<XRReferenceSpace>(XRReferenceSpaceType::kLocal);
-    unboundedSpace_ = std::make_shared<XRReferenceSpace>(XRReferenceSpaceType::kUnbounded);
+    viewerSpace_ = make_shared<XRReferenceSpace>(XRReferenceSpaceType::kViewer);
+    localSpace_ = make_shared<XRReferenceSpace>(XRReferenceSpaceType::kLocal);
+    unboundedSpace_ = make_shared<XRReferenceSpace>(XRReferenceSpaceType::kUnbounded);
     inputSources = XRInputSourceArray(shared_from_this());
 
     // Prepare the uv handles
@@ -200,19 +243,25 @@ namespace client_xr
 #define FRAME_TIME_DELTA_THRESHOLD 1000 / 45
   void XRSession::tick()
   {
-    static chrono::steady_clock::time_point timepointOnLastTick = chrono::steady_clock::now();
-    chrono::steady_clock::time_point timepointOnNow = chrono::steady_clock::now();
-    auto delta = chrono::duration_cast<chrono::milliseconds>(timepointOnNow - timepointOnLastTick).count();
+    static steady_clock::time_point timepointOnLastTick = steady_clock::now();
+    steady_clock::time_point timepointOnNow = steady_clock::now();
+    auto delta = duration_cast<milliseconds>(timepointOnNow - timepointOnLastTick).count();
     if (delta >= FRAME_TIME_DELTA_THRESHOLD)
     {
       switch (update())
       {
       case XRSessionUpdateState::kSessionEnded:
-        std::cerr << "skipped this frame: " << "session is ended." << std::endl;
+        cerr << "skipped this frame: " << "session is ended." << endl;
         break;
       case XRSessionUpdateState::kInvalidSessionId:
-        std::cerr << "skipped this frame: " << "invalid session id." << std::endl;
+        cerr << "skipped this frame: " << "invalid session id." << endl;
         break;
+      // case XRSessionUpdateState::kStereoIdMismatch:
+      //   cerr << "skipped this frame: " << "stereo id mismatch." << endl;
+      //   break;
+      // case XRSessionUpdateState::kPendingStereoFrames:
+      //   cerr << "skipped this frame: " << "pending stereo frames." << endl;
+      //   break;
       default:
         break;
       }
@@ -228,8 +277,8 @@ namespace client_xr
       return XRSessionUpdateState::kInvalidSessionId;
 
     static int prevStereoId = -1;
-    auto sessionContext = sessionContextZoneClient_->getData();
-    auto deviceContext = device_->contextZone()->getData();
+    xr::TrXRSessionContextData *sessionContext = sessionContextZoneClient_->getData();
+    xr::TrXRDeviceContextData *deviceContext = device_->contextZone()->getData();
     if (prevStereoId != -1 && prevStereoId == sessionContext->stereoId)
       return XRSessionUpdateState::kStereoIdMismatch;
 
@@ -282,7 +331,7 @@ namespace client_xr
     // - If session’s renderState's baseLayer is null, abort these steps.
     if (activeRenderState_ == nullptr || activeRenderState_->baseLayer == nullptr)
     {
-      std::cerr << "activeRenderState or activeRenderState->baseLayer is null, aborting frame rendering." << std::endl;
+      cerr << "activeRenderState or activeRenderState->baseLayer is null, aborting frame rendering." << endl;
       return;
     }
 
@@ -312,9 +361,9 @@ namespace client_xr
           {
             callback(frameRequest.time, frame);
           }
-          catch (const std::exception &e)
+          catch (const exception &e)
           {
-            std::cerr << "failed to execute frame callback: " << e.what() << '\n';
+            cerr << "failed to execute frame callback: " << e.what() << '\n';
           }
         }
       }
@@ -326,7 +375,7 @@ namespace client_xr
   bool XRSession::calcFps()
   {
     framesCount_ += 1;
-    auto delta = chrono::duration_cast<chrono::milliseconds>(frameTimepoint_ - lastRecordedFrameTimepoint_).count();
+    auto delta = duration_cast<milliseconds>(frameTimepoint_ - lastRecordedFrameTimepoint_).count();
     if (delta >= 1000)
     {
       fps_ = framesCount_ / (delta / 1000);

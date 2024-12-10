@@ -1,37 +1,20 @@
-import XRSystemImpl from './api/XRSystem';
-import { XRDevice } from './device';
-
+const webxrNative = process._linkedBinding('transmute:webxr');
 const {
   XRRigidTransform: XRRigidTransformImpl,
-  XRWebGLLayer: XRWebGLLayerImpl,
-} = process._linkedBinding('transmute:webxr');
+} = webxrNative;
 
-let xrDevice: XRDevice = null;
-
-/**
- * Initialize the XRDevice.
- */
-export async function initDevice() {
-  if (xrDevice != null) {
-    throw new TypeError('Only 1 XRDevice in a process.');
-  }
-  xrDevice = new XRDevice();
-}
+let globalXRSystem: XRSystem = null;
 
 /**
- * Create a new `XRSystem` object.
- * 
- * @returns created instance.
+ * @returns The `XRSystem` object.
  */
-export function createXRSystem(): XRSystem {
-  if (xrDevice == null) {
-    initDevice();
+export function getXRSystem(): XRSystem {
+  if (globalXRSystem == null) {
+    globalXRSystem = webxrNative.getXRSystem();
   }
-  return new XRSystemImpl(xrDevice);
+  return globalXRSystem;
 }
 
 export {
-  XRSystemImpl,
   XRRigidTransformImpl,
-  XRWebGLLayerImpl,
 }

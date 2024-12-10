@@ -88,27 +88,27 @@ namespace bindings
     auto baseReferenceSpace = XRReferenceSpace::Unwrap(info[3].ToObject());
     auto xrSession = XRSession::Unwrap(info[4].ToObject());
 
-    /**
-     * Create views.
-     *
-     * If the device is rendered as multipass, only one view is created, and the view is for the current eye.
-     * Otherwise, 2 views are created, one for each eye.
-     */
-    if (device->getDeviceInit().renderedAsMultipass())
-    {
-      xr::TrXRView &view = frameRequest->views[frameRequest->viewIndex];
-      auto jsView = XRView::NewInstance(env, xrSession, view, baseReferenceSpace);
-      views.push_back(Napi::Persistent(jsView));
-    }
-    else
-    {
-      for (size_t viewIndex = 0; viewIndex < xr::TrXRFrameRequest::ViewsCount; viewIndex++)
-      {
-        xr::TrXRView &view = frameRequest->views[viewIndex];
-        auto jsView = XRView::NewInstance(env, xrSession, view, baseReferenceSpace);
-        views.push_back(Napi::Persistent(jsView));
-      }
-    }
+    // /**
+    //  * Create views.
+    //  *
+    //  * If the device is rendered as multipass, only one view is created, and the view is for the current eye.
+    //  * Otherwise, 2 views are created, one for each eye.
+    //  */
+    // if (device->getDeviceInit().renderedAsMultipass())
+    // {
+    //   xr::TrXRView &view = frameRequest->views[frameRequest->viewIndex];
+    //   auto jsView = XRView::NewInstance(env, xrSession, view, baseReferenceSpace);
+    //   views.push_back(Napi::Persistent(jsView));
+    // }
+    // else
+    // {
+    //   for (size_t viewIndex = 0; viewIndex < xr::TrXRFrameRequest::ViewsCount; viewIndex++)
+    //   {
+    //     xr::TrXRView &view = frameRequest->views[viewIndex];
+    //     auto jsView = XRView::NewInstance(env, xrSession, view, baseReferenceSpace);
+    //     views.push_back(Napi::Persistent(jsView));
+    //   }
+    // }
   }
 
   XRViewerPose::~XRViewerPose()

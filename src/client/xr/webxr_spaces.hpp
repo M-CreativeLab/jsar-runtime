@@ -7,7 +7,7 @@
 
 namespace client_xr
 {
-#define XRSPACE_RELATIVE_TRANSFORM(space, baseSpace) baseSpace->inverseBaseMatrix() * space->baseMatrix()
+#define TR_XRSPACE_RELATIVE_TRANSFORM(space, baseSpace) baseSpace->inverseBaseMatrix() * space->baseMatrix()
 
   class XRSpace
   {

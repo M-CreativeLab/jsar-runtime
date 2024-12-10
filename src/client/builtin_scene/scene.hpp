@@ -64,6 +64,7 @@ namespace builtin_scene
     void update(uint32_t time, client_xr::XRFrame &frame)
     {
       // TODO
+      std::cout << "Scene update" << std::endl;
     }
 
   private:

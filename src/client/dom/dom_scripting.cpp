@@ -382,6 +382,10 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(WebGL2RenderingContext);
 
         // WebXR Device API
+        V8_SET_GLOBAL_FROM_MAIN(XRSystem);
+        V8_SET_GLOBAL_FROM_MAIN(XRSession);
+        V8_SET_GLOBAL_FROM_MAIN(XRFrame);
+        V8_SET_GLOBAL_FROM_MAIN(XRReferenceSpace);
         V8_SET_GLOBAL_FROM_MAIN(XRRigidTransform);
         V8_SET_GLOBAL_FROM_MAIN(XRWebGLLayer);
 

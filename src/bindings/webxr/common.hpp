@@ -14,20 +14,6 @@ namespace bindings
 
   static const char *LOG_TAG = "jsar.xr";
 
-  enum XRSessionMode
-  {
-    IMMERSIVE_VR = 0,
-    IMMERSIVE_AR = 1,
-    INLINE = 2
-  };
-
-  enum XREnvironmentBlendMode
-  {
-    OPAQUE = 0,
-    ADDITIVE = 1,
-    ALPHA_BLEND = 2
-  };
-
   enum XRSpaceSubType
   {
     GRIP = 0,

@@ -62,8 +62,8 @@ namespace bindings
 
     Napi::Object sessionObj = info[0].As<Napi::Object>();
     session = XRSession::Unwrap(sessionObj);
-    sessionId = session->id;
-    device = session->device;
+    sessionId = session->id();
+    // device = session->device;
 
     Napi::External<xr::TrXRFrameRequest> external = info[1].As<Napi::External<xr::TrXRFrameRequest>>();
     internal = external.Data();
@@ -120,14 +120,15 @@ namespace bindings
       return env.Undefined();
     }
 
-    auto referenceSpace = XRReferenceSpace::Unwrap(info[0].ToObject());
-    auto viewerSpace = session->getViewerSpace();
-    referenceSpace->ensurePoseUpdated(id, session, internal);
-    viewerSpace->ensurePoseUpdated(id, session, internal);
+    // auto referenceSpace = XRReferenceSpace::Unwrap(info[0].ToObject());
+    // auto viewerSpace = session->getViewerSpace();
+    // referenceSpace->ensurePoseUpdated(id, session, internal);
+    // viewerSpace->ensurePoseUpdated(id, session, internal);
 
-    auto viewerTransform /** viewer to refspace(local) */ = XRSPACE_RELATIVE_TRANSFORM(viewerSpace, referenceSpace);
-    auto viewerPoseObject = XRViewerPose::NewInstance(env, device, viewerTransform, internal, referenceSpace, session);
-    return viewerPoseObject;
+    // auto viewerTransform /** viewer to refspace(local) */ = XRSPACE_RELATIVE_TRANSFORM(viewerSpace, referenceSpace);
+    // auto viewerPoseObject = XRViewerPose::NewInstance(env, device, viewerTransform, internal, referenceSpace, session);
+    // return viewerPoseObject;
+    return env.Undefined();
   }
 
   Napi::Value XRFrame::GetJointPose(const Napi::CallbackInfo &info)
@@ -135,35 +136,36 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (active == false)
-    {
-      Napi::TypeError::New(env, NON_ACTIVE_MSG).ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
+    // if (active == false)
+    // {
+    //   Napi::TypeError::New(env, NON_ACTIVE_MSG).ThrowAsJavaScriptException();
+    //   return env.Undefined();
+    // }
 
-    if (info.Length() < 2)
-    {
-      Napi::TypeError::New(env, "getJointPose requires a joint space and an XRSpace object").ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
+    // if (info.Length() < 2)
+    // {
+    //   Napi::TypeError::New(env, "getJointPose requires a joint space and an XRSpace object").ThrowAsJavaScriptException();
+    //   return env.Undefined();
+    // }
 
-    auto jointSpace = XRJointSpace::Unwrap(info[0].As<Napi::Object>());
-    auto baseSpace = XRSpace::Unwrap(info[1].As<Napi::Object>());
-    jointSpace->ensurePoseUpdated(id, session, internal);
+    // auto jointSpace = XRJointSpace::Unwrap(info[0].As<Napi::Object>());
+    // auto baseSpace = XRSpace::Unwrap(info[1].As<Napi::Object>());
+    // jointSpace->ensurePoseUpdated(id, session, internal);
 
-    if (baseSpace->isReferenceSpace == true)
-    {
-      auto baseReferenceSpace = XRReferenceSpace::Unwrap(info[1].As<Napi::Object>());
-      baseReferenceSpace->ensurePoseUpdated(id, session, internal);
-      auto jointTransform /** joint to space(local) */ = XRSPACE_RELATIVE_TRANSFORM(jointSpace, baseReferenceSpace);
-      return XRPose::NewInstance(env, device, jointTransform, internal);
-    }
-    else
-    {
-      Napi::TypeError::New(env, "getJointPose not support a non ReferenceSpace as `baseSpace`")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
+    // if (baseSpace->isReferenceSpace == true)
+    // {
+    //   auto baseReferenceSpace = XRReferenceSpace::Unwrap(info[1].As<Napi::Object>());
+    //   baseReferenceSpace->ensurePoseUpdated(id, session, internal);
+    //   auto jointTransform /** joint to space(local) */ = XRSPACE_RELATIVE_TRANSFORM(jointSpace, baseReferenceSpace);
+    //   return XRPose::NewInstance(env, device, jointTransform, internal);
+    // }
+    // else
+    // {
+    //   Napi::TypeError::New(env, "getJointPose not support a non ReferenceSpace as `baseSpace`")
+    //       .ThrowAsJavaScriptException();
+    //   return env.Undefined();
+    // }
+    return env.Undefined();
   }
 
   Napi::Value XRFrame::GetPose(const Napi::CallbackInfo &info)
@@ -171,80 +173,45 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (active == false)
-    {
-      Napi::TypeError::New(env, NON_ACTIVE_MSG).ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
+    // if (active == false)
+    // {
+    //   Napi::TypeError::New(env, NON_ACTIVE_MSG).ThrowAsJavaScriptException();
+    //   return env.Undefined();
+    // }
 
-    if (info.Length() < 2)
-    {
-      Napi::TypeError::New(env, "getPose requires a reference space object and an XRSpace object").ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
+    // if (info.Length() < 2)
+    // {
+    //   Napi::TypeError::New(env, "getPose requires a reference space object and an XRSpace object").ThrowAsJavaScriptException();
+    //   return env.Undefined();
+    // }
 
-    auto space = XRSpace::Unwrap(info[0].As<Napi::Object>());
-    auto baseSpace = XRSpace::Unwrap(info[1].As<Napi::Object>());
-    baseSpace->ensurePoseUpdated(id, session, internal);
+    // auto space = XRSpace::Unwrap(info[0].As<Napi::Object>());
+    // auto baseSpace = XRSpace::Unwrap(info[1].As<Napi::Object>());
+    // baseSpace->ensurePoseUpdated(id, session, internal);
 
-    if (!space->isReferenceSpace && space->subType != XRSpaceSubType::UNSET)
-    {
-      auto inputSpace = XRTargetRayOrGripSpace::Unwrap(info[0].As<Napi::Object>());
-      inputSpace->ensurePoseUpdated(id, session, internal);
-      auto transform /** input source space to base(local/unbound) */ = XRSPACE_RELATIVE_TRANSFORM(inputSpace, baseSpace);
-      return XRPose::NewInstance(env, device, transform, internal);
-    }
+    // if (!space->isReferenceSpace && space->subType != XRSpaceSubType::UNSET)
+    // {
+    //   auto inputSpace = XRTargetRayOrGripSpace::Unwrap(info[0].As<Napi::Object>());
+    //   inputSpace->ensurePoseUpdated(id, session, internal);
+    //   auto transform /** input source space to base(local/unbound) */ = XRSPACE_RELATIVE_TRANSFORM(inputSpace, baseSpace);
+    //   return XRPose::NewInstance(env, device, transform, internal);
+    // }
     // TODO: support other space types
     return env.Undefined();
   }
 
   uint32_t XRFrame::getStereoRenderingId()
   {
-    return internal->stereoId;
+    return handle_->stereoId();
   }
 
   void XRFrame::start()
   {
-    active = true;
-    animationFrame = true;
-    bool isNewStereoFrame = false;
-    auto isMultipass = device->getDeviceInit().renderedAsMultipass();
-    if (
-        !isMultipass ||          /** SinglePass */
-        internal->viewIndex == 0 /** MultiPass's right view */
-    )
-      isNewStereoFrame = true;
-
-    device->startFrame(internal);
-    session->updateFrameTime(isNewStereoFrame);
-    startTime = session->frameTimepoint;
+    handle_->startFrame();
   }
 
   void XRFrame::end()
   {
-    active = false;
-    device->endFrame(internal);
-    endTime = chrono::steady_clock::now();
-
-    auto isMultipass = device->getDeviceInit().renderedAsMultipass();
-    auto frameDuration = chrono::duration_cast<chrono::microseconds>(endTime - startTime).count() / 1000.0;
-
-    // Calculate the fps threshold and log if the frame takes too long
-    int threshold = 1000 / 45;
-    if (isMultipass)
-      threshold /= 2;
-    if (frameDuration > threshold)
-    {
-      std::cerr << "Detected a long frame(#" << id << ") at session(" << sessionId << ")'s view(" << internal->viewIndex << ")";
-      std::cerr << " takes " << frameDuration << "ms > " << threshold << "ms" << std::endl;
-    }
-
-    if (!isMultipass || internal->viewIndex == 1)
-    {
-      // Calculate the Fps and update to fs on the right view
-      auto &perfFs = device->clientContext->getPerfFs();
-      if (session->calcFps())
-        perfFs.setFps(session->fps);
-    }
+    handle_->endFrame();
   }
 }

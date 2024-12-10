@@ -77,7 +77,7 @@ namespace client_xr
     {
       auto inputSpace = dynamic_pointer_cast<XRTargetRayOrGripSpace>(space);
       inputSpace->ensurePoseUpdated(id_, session_, *frameRequestData_);
-      auto transform /** input source space to base(local/unbound) */ = XRSPACE_RELATIVE_TRANSFORM(inputSpace, baseSpace);
+      auto transform /** input source space to base(local/unbound) */ = TR_XRSPACE_RELATIVE_TRANSFORM(inputSpace, baseSpace);
       return std::make_shared<XRPose>(session_, transform);
     }
     else
@@ -97,7 +97,7 @@ namespace client_xr
     referenceSpace->ensurePoseUpdated(id_, session_, *frameRequestData_);
     viewerSpace->ensurePoseUpdated(id_, session_, *frameRequestData_);
 
-    auto viewerTransform /** viewer space to reference space */ = XRSPACE_RELATIVE_TRANSFORM(viewerSpace, referenceSpace);
+    auto viewerTransform /** viewer space to reference space */ = TR_XRSPACE_RELATIVE_TRANSFORM(viewerSpace, referenceSpace);
     return std::make_shared<XRViewerPose>(session_, viewerTransform, referenceSpace);
   }
 
@@ -110,7 +110,7 @@ namespace client_xr
     if (baseSpace->isReferenceSpace())
     {
       baseSpace->ensurePoseUpdated(id_, session_, *frameRequestData_);
-      auto transform /** joint space to base(local/unbound) */ = XRSPACE_RELATIVE_TRANSFORM(jointSpace, baseSpace);
+      auto transform /** joint space to base(local/unbound) */ = TR_XRSPACE_RELATIVE_TRANSFORM(jointSpace, baseSpace);
       return std::make_shared<XRJointPose>(session_, transform);
     }
     else

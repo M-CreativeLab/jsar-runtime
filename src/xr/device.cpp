@@ -100,7 +100,7 @@ namespace xr
         tries++;
     }
 
-    if (id > 0)
+    if (id >= sessionIdGen.min())
     {
       std::unique_lock<std::shared_mutex> lock(m_MutexForSessions);
       TrXRSessionInit init;
