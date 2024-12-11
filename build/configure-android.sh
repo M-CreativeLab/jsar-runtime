@@ -7,7 +7,7 @@ HOST_ARCH="x86_64"
 
 TOOLCHAIN=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/$HOST_OS-$HOST_ARCH
 export PATH=$TOOLCHAIN/bin:$PATH
-echo "PATH => $PATH"
+echo "export PATH=$PATH"
 
 cmake \
     -G "Unix Makefiles" \
