@@ -16,7 +16,7 @@ add_definitions(-DTR_LOGGING_SIMPLE_TAG=1)
 
 # Set the common libraries to be linked by client, common and other tools
 if (ANDROID)
-    link_libraries(android log)
+    link_libraries(log)
 elseif (LINUX)
     link_libraries(X11 pthread)
 elseif (WIN32)
@@ -24,6 +24,7 @@ elseif (WIN32)
 endif()
 
 # Set the common cmake parameters
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/build/output/release)
 set(TR_RELEASE_DEST unknown)
 if (APPLE)
@@ -33,29 +34,6 @@ elseif (ANDROID)
 elseif (WIN32)
     set(TR_RELEASE_DEST x86_64-pc-windows-msvc)
 endif()
-
-# Set Node.js version used and its headers.
-set(NODEJS_VERSION 18.12.1)
-set(NODEJS_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-v${NODEJS_VERSION}/include)
-include_directories(${NODEJS_HEADERS_PATH} ${NODEJS_HEADERS_PATH}/node)
-
-# Skia headers
-set(SKIA_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/skia)
-include_directories(
-    ${SKIA_HEADERS_PATH}
-    ${SKIA_HEADERS_PATH}/include
-)
-
-# Add Unity headers
-set(UNITY_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/Unity/include)
-include_directories(${UNITY_HEADERS_PATH})
-
-# Add LabSound headers
-set(LABSOUND_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/LabSound/include)
-include_directories(${LABSOUND_HEADERS_PATH})
-
-# Add rust crates headers & libraries
-include_directories(${CMAKE_SOURCE_DIR}/build/output/headers)
 
 # Set library linking parameters
 set(STATICLIB_EXTNAME a)
@@ -80,6 +58,44 @@ elseif (WIN32)
 endif()
 message(STATUS "Transmute crates target name: ${TR_CRATE_TARGET}")
 
+# Set the thirdparty library path
+if (APPLE)
+    set(TR_THIRDPARTY_PATH ${CMAKE_SOURCE_DIR}/thirdparty/libs/${CMAKE_SYSTEM_NAME})
+elseif (WIN32)
+    set(TR_THIRDPARTY_PATH ${CMAKE_SOURCE_DIR}/thirdparty/libs/${CMAKE_SYSTEM_NAME}/x86_64)
+else()
+    set(TR_THIRDPARTY_PATH ${CMAKE_SOURCE_DIR}/thirdparty/libs/${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR})
+endif()
+message(STATUS "Transmute thirdparty directory: ${TR_THIRDPARTY_PATH}")
+
+# Set Node.js version used and its headers.
+set(NODEJS_VERSION 18.12.1)
+set(NODEJS_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-v${NODEJS_VERSION}/include)
+set(NODEJS_LIBRARY_VERSION "")
+if (APPLE)
+    set(NODEJS_LIBRARY_VERSION ".108")
+endif()
+set(NODEJS_LIBRARY_BINARY_PATH ${TR_THIRDPARTY_PATH}/lib/${LIBRARY_PREFIX}node${NODEJS_LIBRARY_VERSION}.${DYNAMICLIB_EXTNAME})
+include_directories(${NODEJS_HEADERS_PATH} ${NODEJS_HEADERS_PATH}/node)
+
+# Skia headers
+set(SKIA_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/skia)
+include_directories(
+    ${SKIA_HEADERS_PATH}
+    ${SKIA_HEADERS_PATH}/include
+)
+
+# Add Unity headers
+set(UNITY_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/Unity/include)
+include_directories(${UNITY_HEADERS_PATH})
+
+# Add LabSound headers
+set(LABSOUND_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/LabSound/include)
+include_directories(${LABSOUND_HEADERS_PATH})
+
+# Add rust crates headers & libraries
+include_directories(${CMAKE_SOURCE_DIR}/build/output/headers)
+
 # Function to add library to the target
 function(tr_target_link_library TARGET LIBRARY_DIRECTORY LIBRARY_NAME USE_DYNAMIC_LINK)
     if (USE_DYNAMIC_LINK STREQUAL DYNAMIC)
@@ -90,16 +106,6 @@ function(tr_target_link_library TARGET LIBRARY_DIRECTORY LIBRARY_NAME USE_DYNAMI
             PRIVATE ${LIBRARY_DIRECTORY}/${LIBRARY_PREFIX}${LIBRARY_NAME}.${STATICLIB_EXTNAME})
     endif()
 endfunction()
-
-# Set the thirdparty library path
-if (APPLE)
-    set(TR_THIRDPARTY_PATH ${CMAKE_SOURCE_DIR}/thirdparty/libs/${CMAKE_SYSTEM_NAME})
-elseif (WIN32)
-    set(TR_THIRDPARTY_PATH ${CMAKE_SOURCE_DIR}/thirdparty/libs/${CMAKE_SYSTEM_NAME}/x86_64)
-else()
-    set(TR_THIRDPARTY_PATH ${CMAKE_SOURCE_DIR}/thirdparty/libs/${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR})
-endif()
-message(STATUS "Transmute thirdparty directory: ${TR_THIRDPARTY_PATH}")
 
 # Function to add thirdparty library to the target
 function(tr_target_link_thirdparty_library TARGET LIBRARY_NAME)

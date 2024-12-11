@@ -31,9 +31,10 @@
 //! [`ast`]: crate::ast
 //! [`transpiler`]: crate::transpiler
 
-use std::fmt::Write;
+#![allow(dead_code)]
 
 use once_cell::sync::Lazy;
+use std::fmt::Write;
 
 /// Indentation style of the output
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
