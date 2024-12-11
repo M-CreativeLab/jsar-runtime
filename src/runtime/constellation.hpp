@@ -30,11 +30,24 @@ public:
   TrConstellationInit();
 
 public:
-  string runtimeDirectory;
   string applicationCacheDirectory;
+  /**
+   * The directory that the library is running in.
+   */
+  string runDirectory;
   string httpsProxyServer;
   bool enableV8Profiling = false;
   bool isXRSupported = false;
+
+public:
+  /**
+   * @returns The runtime directory to store the Transmute exectable files or the runtime files.
+   */
+  string runtimeDirectory() { return applicationCacheDirectory + "/runtime"; }
+  /**
+   * @returns The scripts directory to store the scripts such as the bundle scripts.
+   */
+  string scriptsDirectory() { return applicationCacheDirectory + "/scripts"; }
 
 public:
   /**
@@ -44,6 +57,8 @@ public:
   {
     if (!filesystem::exists(applicationCacheDirectory))
       filesystem::create_directory(applicationCacheDirectory);
+
+    // TODO: Ensure the runtime and scripts directory?
   }
   /**
    * Get the zone directory name.

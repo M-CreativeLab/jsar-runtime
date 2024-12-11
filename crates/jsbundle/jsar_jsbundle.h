@@ -4,6 +4,10 @@
 
 extern "C"
 {
+  const uint8_t *get_libnode_ptr();
+  uintptr_t get_libnode_size();
+  const uint8_t *get_libnode_md5_ptr();
+  uintptr_t get_libnode_md5_size();
   const uint8_t *get_jsbootstrap_ptr(int jsframework_name);
   uintptr_t get_jsbootstrap_size(int jsframework_name);
   const uint8_t *get_jsbundle_ptr(int id);
@@ -33,6 +37,7 @@ public:
    *
    * @param jsframework_name The name of the JavaScript framework.
    * @returns The pointer to the JavaScript bootstrap source code.
+   * Get the str pointer to the libnode source code.
    */
   static inline const uint8_t *GetBootstrapSourcePtr(JSFrameworkName jsframework_name = JSFrameworkName::BABYLON)
   {

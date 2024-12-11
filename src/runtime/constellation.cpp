@@ -36,7 +36,10 @@ bool TrConstellation::configure(TrConstellationInit &init)
   options = init;
   Dl_info dlinfo;
   if (dladdr((void *)__tr_empty, &dlinfo))
-    options.runtimeDirectory = path(dlinfo.dli_fname).parent_path().c_str();
+  {
+    options.runDirectory = path(dlinfo.dli_fname).parent_path().c_str();
+    DEBUG(LOG_TAG_CONSTELLATION, "The run path is %s", options.runDirectory.c_str());
+  }
   else
     DEBUG(LOG_TAG_CONSTELLATION, "Failed to get the runtime path from current host");
 
