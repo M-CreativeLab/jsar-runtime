@@ -15,6 +15,7 @@
 #include "embedder.hpp"
 #include "content.hpp"
 #include "media_manager.hpp"
+#include "res/client.bin.h"
 #include "crates/jsar_jsbundle.h"
 
 TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManager(contentMgr)
@@ -405,6 +406,7 @@ TrContentManager::~TrContentManager()
 
 bool TrContentManager::initialize()
 {
+  installExecutable();
   installScripts();
 
   eventChanWatcher = std::make_unique<WorkerThread>("TrEventChanWatcher", [this](WorkerThread &)
@@ -612,9 +614,160 @@ void TrContentManager::onDocumentEvent(events_comm::TrNativeEvent &event)
   constellation->dispatchNativeEvent(event, content.get());
 }
 
+/**
+ * Install the executable to the runtime directory.
+ *
+ * @param runtimeDir The runtime directory to install the executable.
+ * @param executableName The name of the executable.
+ * @param writeContent The function to write the content to the file.
+ */
+static void InstallExecutable(string runtimeDir, string executableName, string executableMd5,
+                              std::function<void(FILE *)> writeContent)
+{
+  path execPath = path(runtimeDir) / executableName;
+  path execMd5Path = execPath.string() + ".md5";
+  bool shouldInstall = false;
+
+  /**
+   * Check if the executable file exists, if not, we should always install it.
+   */
+  if (filesystem::exists(execPath))
+  {
+    /**
+     * If the MD5 file doesn't exist, we should install the executable.
+     */
+    if (!filesystem::exists(execMd5Path))
+    {
+      shouldInstall = true;
+    }
+    else
+    {
+      /**
+       * Otherwise, we need to compare the MD5 hash of the executable content.
+       */
+      FILE *md5fp = fopen(execMd5Path.c_str(), "rb");
+      if (md5fp != nullptr)
+      {
+        char md5[33];
+        fread(md5, 1, 32, md5fp);
+        md5[32] = '\0';
+        fclose(md5fp);
+
+        /**
+         * If the MD5 hash is different, we should install the executable.
+         */
+        if (string(md5) != executableMd5)
+        {
+          shouldInstall = true;
+          DEBUG(LOG_TAG_CONTENT, "The MD5 hash of the executable is different, re-install it.");
+        }
+      }
+      else
+      {
+        /**
+         * If the MD5 file is not readable, we should install the executable.
+         */
+        shouldInstall = true;
+      }
+    }
+
+    /**
+     * When the executable is already installed and the md5 hash is also verified, we need to check if the file's permission.
+     */
+    if (!shouldInstall)
+    {
+      struct stat st;
+      if (stat(execPath.c_str(), &st) != 0)
+      {
+        auto msg = "Failed to stat() on the executable file";
+        DEBUG(LOG_TAG_ERROR, "%s: %s", msg, strerror(errno));
+        throw runtime_error(msg);
+      }
+
+      /**
+       * Skip the installation when both the file are verified and executable.
+       */
+      if ((st.st_mode & S_IXUSR) != 0)
+        return;
+    }
+  }
+  else
+  {
+    shouldInstall = true;
+  }
+
+  /**
+   * Install the executable file and the MD5 hash.
+   */
+  if (shouldInstall)
+  {
+    // Write the file content.
+    FILE *fp = fopen(execPath.c_str(), "wb");
+    if (fp != nullptr)
+    {
+      writeContent(fp);
+      fclose(fp);
+    }
+
+    // Write the MD5 hash of the content.
+    FILE *md5fp = fopen(execMd5Path.c_str(), "wb");
+    if (md5fp != nullptr)
+    {
+      fwrite(executableMd5.c_str(), 1, executableMd5.size(), md5fp);
+      fclose(md5fp);
+    }
+  }
+
+  // Make the library executable.
+  if (chmod(execPath.c_str(), 0755) == -1)
+  {
+    auto msg = "Failed to chmod for the executable file";
+    DEBUG(LOG_TAG_ERROR, "%s: %s", msg, strerror(errno));
+    throw runtime_error(msg);
+  }
+}
+
+/**
+ * Install the Node.js library to the target directory.
+ *
+ * @param runtimeDir The runtime directory to install the library.
+ */
+static void InstallNodejsLibrary(string runtimeDir)
+{
+  string name;
+#ifdef __APPLE__
+  name = "libnode.108.dylib";
+#elif defined(__ANDROID__)
+  name = "libnode.so";
+#else
+  throw runtime_error("Unsupported platform to install the Node.js library");
+#endif
+
+  string md5 = string(reinterpret_cast<const char *>(get_libnode_md5_ptr()), get_libnode_md5_size());
+  return InstallExecutable(runtimeDir, name, md5, [](FILE *fp)
+                           { fwrite(get_libnode_ptr(), 1, get_libnode_size(), fp); });
+}
+
+void TrContentManager::installExecutable()
+{
+  auto executableTargetDir = constellation->getOptions().runtimeDirectory();
+  if (!filesystem::exists(executableTargetDir))
+    filesystem::create_directory(executableTargetDir);
+
+  // Install the Node.js library.
+  InstallNodejsLibrary(executableTargetDir);
+
+  // Install the TransmuteClient executable.
+  InstallExecutable(executableTargetDir,
+                    "TransmuteClient",
+                    string(transmute_client_binary_md5),
+                    [](FILE *fp)
+                    { fwrite(transmute_client_binary, 1, transmute_client_binary_len, fp); });
+}
+
 void TrContentManager::installScripts()
 {
-  auto scriptsTargetDir = constellation->getOptions().applicationCacheDirectory + "/scripts";
+  auto scriptsTargetDir = constellation->getOptions().scriptsDirectory();
   if (!filesystem::exists(scriptsTargetDir))
     filesystem::create_directory(scriptsTargetDir);
 

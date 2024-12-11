@@ -350,6 +350,7 @@ private:
   void onDocumentEvent(events_comm::TrNativeEvent &event);
 
 private:
+  void installExecutable();
   void installScripts();
   void startHived();
   void preparePreContent();

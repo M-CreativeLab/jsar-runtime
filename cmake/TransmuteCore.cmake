@@ -25,6 +25,18 @@ add_library(TransmuteCore SHARED
     ${TR_CORE_SOURCE}
 )
 
+# Generate the TransmuteClient binary header, which the core library will embed and install at runtime.
+set(TRANSMUTE_CLIENT_BINARY_FILE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/TransmuteClient")
+set(TRANSMUTE_CLIENT_BINARY_HEADER "${CMAKE_SOURCE_DIR}/src/runtime/res/client.bin.h")
+add_custom_command(
+    OUTPUT ${TRANSMUTE_CLIENT_BINARY_HEADER}
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/generate_binary_header.sh transmute_client_binary ${TRANSMUTE_CLIENT_BINARY_FILE} ${TRANSMUTE_CLIENT_BINARY_HEADER}
+    DEPENDS TransmuteClient
+    COMMENT "Generating client binary header"
+)
+add_custom_target(TransmuteClientBinaryHeader DEPENDS ${TRANSMUTE_CLIENT_BINARY_HEADER})
+add_dependencies(TransmuteCore TransmuteClientBinaryHeader) # Ensure the header is generated before building the core library.
+
 if(APPLE)
     set(APPLE_RENDERER_DEPS
         "-framework Foundation"

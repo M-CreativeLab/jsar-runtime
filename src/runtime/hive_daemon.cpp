@@ -29,7 +29,7 @@ TrHiveDaemon::~TrHiveDaemon()
 
 void TrHiveDaemon::start()
 {
-  runtimeDirectory = constellation->getOptions().runtimeDirectory;
+  runtimeDirectory = constellation->getOptions().runtimeDirectory();
   commandChanServer = make_unique<TrOneShotServer<hive_comm::TrHiveCommandMessage>>("HiveCommandChan");
   assert(commandChanServer != nullptr);
   assert(eventChanPort != 0);
@@ -70,12 +70,12 @@ void TrHiveDaemon::start()
   {
     /** Configure pipes for parent process  */
     close(childPipes[1]);
-    DEBUG(LOG_TAG_CONTENT, "The client process(%d) is started.", daemonPid);
+    DEBUG(LOG_TAG_CONTENT, "The hive process(%d) is started.", daemonPid);
 
     // The followings are only running at parent process
     recvWorker = make_unique<WorkerThread>("hiveCommandReceiver", [this](WorkerThread &_worker)
                                            { recvCommand(); });
-    acceptChanClient(-1); // Wait for the hive to connected
+    acceptChanClient(1500); // Wait 1.5s for the hive to connected
   }
 }
 
@@ -131,18 +131,6 @@ void TrHiveDaemon::onDeamonProcess()
   path basePath = path(runtimeDirectory);
   path clientPath = basePath / "TransmuteClient";
   auto embedder = constellation->getEmbedder();
-  /**
-   * NOTE: Even though the `libTransmuteClient.{so|dylib}` is a shared library name, the file is actually an executable, and the reason
-   * to do this trick is to make Unity copy this file to the apk.
-   */
-  if (embedder->isEmbeddingWith(TrHostEngine::Unity))
-  {
-#ifdef __ANDROID__
-    clientPath = basePath / "libTransmuteClient.so";
-#elif __APPLE__
-    clientPath = basePath / "libTransmuteClient.dylib";
-#endif
-  }
 
   rapidjson::Document hiveConfig;
   hiveConfig.SetObject();

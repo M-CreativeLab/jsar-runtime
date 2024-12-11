@@ -5,6 +5,26 @@
 extern "C"
 {
   /**
+   * Get the str pointer to the libnode source code.
+   */
+  const uint8_t *get_libnode_ptr();
+
+  /**
+   * Get the size of the libnode source code.
+   */
+  uintptr_t get_libnode_size();
+
+  /**
+   * Get the str pointer to the MD5 of the libnode source code.
+   */
+  const uint8_t *get_libnode_md5_ptr();
+
+  /**
+   * Get the size of the MD5 of the libnode source code.
+   */
+  uintptr_t get_libnode_md5_size();
+
+  /**
    * Get the str pointer to the JavaScript bootstrap source code.
    */
   const uint8_t *get_jsbootstrap_ptr();
