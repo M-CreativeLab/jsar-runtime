@@ -2,26 +2,16 @@
 #![allow(clippy::uninlined_format_args)]
 #![allow(deprecated)]
 
-#[macro_use]
-extern crate log;
 extern crate ctor;
-
-#[macro_use]
 extern crate jsar_jsbinding_macro;
+extern crate log;
 
 use cssparser::{Parser, ParserInput};
-use std::any::Any;
 use std::ffi::CString;
-use std::os::raw::{c_char, c_void};
+use std::os::raw::c_char;
 use std::path::Path;
 use style::context::QuirksMode;
-use style::font_face::Source;
-use style::media_queries::{Device, MediaType};
-use style::parser::{Parse, ParserContext};
-use style::properties::{
-  parse_one_declaration_into, PropertyDeclarationBlock, PropertyId, ShorthandId,
-  SourcePropertyDeclaration,
-};
+use style::parser::ParserContext;
 use style::stylesheets::{CssRuleType, Origin};
 use style::values::specified::color::Color;
 use style_traits::ParsingMode;
@@ -32,6 +22,9 @@ mod typescript_transpiler;
 
 use glsl_lang::ast;
 use glsl_lang::visitor::{HostMut, Visit, VisitorMut};
+
+#[cfg(target_os = "android")]
+use std::ffi::c_void;
 
 extern "C" {
   #[cfg(target_os = "android")]
@@ -385,7 +378,7 @@ fn patch_glsl_source_from_str(s: &str) -> String {
   tu.visit_mut(&mut my_glsl_patcher);
 
   {
-    /**
+    /*
      * This reorders the preprocessor directives in the GLSL source code.
      *
      * 1. Move the #version directive to the top.
@@ -627,7 +620,8 @@ layout(location = 0) out highp vec4 glFragColor;
 void main() {
     gl_FragColor = vec4(1, 1, 1, 1);
 }
-"#)
+"#
+    )
   }
 
   #[test]
@@ -663,6 +657,7 @@ in vec3 position;
 void main() {
     gl_Position = modelMatrix * viewMatrices[gl_ViewID_OVR] * vec4(position, 1.);
 }
-"#)
+"#
+    )
   }
 }

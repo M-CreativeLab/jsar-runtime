@@ -17,20 +17,16 @@ fn install_nodejs_library() {
   let target = env::var("TARGET").unwrap();
   let library_prefix: &str;
   let library_name: &str;
-  let dest_dir: &str;
 
   if target.contains("apple") {
     library_prefix = "Darwin/lib";
     library_name = "libnode.108.dylib";
-    dest_dir = "darwin";
   } else if target.contains("android") {
     library_prefix = "Android/aarch64/lib";
     library_name = "libnode.so";
-    dest_dir = "android-aarch64";
   } else if target.contains("windows") {
     library_prefix = "Windows/x64_64/lib";
-    library_name = "node.lib";
-    dest_dir = "windows-x64_64";
+    library_name = "libnode.lib";
   } else {
     panic!("Unsupported target: {}", target);
   }
@@ -39,7 +35,7 @@ fn install_nodejs_library() {
   let source_path: std::path::PathBuf = current_dir
     .join("../../thirdparty/libs")
     .join(library_prefix)
-    .join(library_name.clone());
+    .join(library_name);
   println!("cargo:rerun-if-changed={}", source_path.display());
 
   if !source_path.exists() {
@@ -50,7 +46,7 @@ fn install_nodejs_library() {
     );
   }
 
-  let destination_dir = current_dir.join("res");
+  let destination_dir = current_dir.join("res").join(target);
   if !destination_dir.exists() {
     std::fs::create_dir_all(&destination_dir).expect("Failed to create the destination directory.");
   }
