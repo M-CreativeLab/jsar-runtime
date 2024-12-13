@@ -1,16 +1,18 @@
 #pragma once
 
-#include <napi.h>
 #include <chrono>
-#include "common.hpp"
-#include "space.hpp"
-#include "xr/render_state.hpp"
+#include <napi.h>
 
-#include "common/scoped_thread.hpp"
-#include "common/frame_request/types.hpp"
-#include "common/xr/types.hpp"
-#include "client/per_process.hpp"
-#include "client/xr/webxr_session.hpp"
+#include <common/scoped_thread.hpp>
+#include <common/frame_request/types.hpp>
+#include <common/xr/types.hpp>
+#include <xr/render_state.hpp>
+#include <client/per_process.hpp>
+#include <client/xr/webxr_session.hpp>
+
+#include "../dom/event_target-inl.hpp"
+#include "./common.hpp"
+#include "./space.hpp"
 
 namespace bindings
 {
@@ -42,18 +44,21 @@ namespace bindings
     static thread_local uint32_t NEXT_HANDLE;
   };
 
-  class XRSession : public Napi::ObjectWrap<XRSession>
+  class XRSession : public XRHandleWrap<XRSession, client_xr::XRSession, dombinding::EventTargetWrap>
   {
+    friend class XRHandleWrap<XRSession, client_xr::XRSession, dombinding::EventTargetWrap>;
     friend class XRFrame;
 
   public:
     static void Init(Napi::Env env);
-    static Napi::Object NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRSession> handle);
-    static bool IsInstanceOf(Napi::Value value)
+    static inline Napi::Object NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRSession> handle)
+    {
+      return XRHandleWrap<XRSession, client_xr::XRSession>::NewInstance(env, handle);
+    }
+    static inline bool IsInstanceOf(Napi::Value value)
     {
       return value.As<Napi::Object>().InstanceOf(constructor->Value());
     }
-    static Napi::Value FrameHandler(const Napi::CallbackInfo &info);
 
   public:
     XRSession(const Napi::CallbackInfo &info);
@@ -89,10 +94,6 @@ namespace bindings
     inline client_xr::XRSessionRequestInit requestInit() const { return handle_->requestInit; }
     inline bool immersive() const { return handle_->immersive(); }
     inline client_xr::XREnvironmentBlendMode environmentBlendMode() const { return handle_->environmentBlendMode(); }
-    inline std::shared_ptr<client_xr::XRSession> handle() const { return handle_; }
-
-  private:
-    std::shared_ptr<client_xr::XRSession> handle_;
 
   public:
     static thread_local Napi::FunctionReference *constructor;

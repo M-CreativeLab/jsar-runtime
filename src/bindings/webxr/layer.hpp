@@ -11,17 +11,19 @@
 namespace bindings
 {
   template <typename ObjectType, typename HandleType = client_xr::XRLayer>
-  class XRLayerBase : public Napi::ObjectWrap<ObjectType>
+  class XRLayerBase : public XRHandleWrap<ObjectType, HandleType>
   {
+  public:
+    static inline Napi::Object NewInstance(Napi::Env env, std::shared_ptr<HandleType> handle)
+    {
+      return XRHandleWrap<ObjectType, HandleType>::NewInstance(env, handle);
+    }
+
   public:
     XRLayerBase(const Napi::CallbackInfo &info);
 
-  public:
-    inline std::shared_ptr<HandleType> handle() { return handle_; }
-
   protected:
-    TrClientContextPerProcess* clientContext = nullptr;
-    std::shared_ptr<HandleType> handle_;
+    TrClientContextPerProcess *clientContext = nullptr;
   };
 
   class XRLayer : public XRLayerBase<XRLayer>
@@ -36,10 +38,14 @@ namespace bindings
 
   class XRWebGLLayer : public XRLayerBase<XRWebGLLayer, client_xr::XRWebGLLayer>
   {
+    friend class XRHandleWrap<XRWebGLLayer, client_xr::XRWebGLLayer>;
+
   public:
     static void Init(Napi::Env env);
     static Napi::Value NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRWebGLLayer> layer);
     static Napi::Value GetNativeFramebufferScaleFactor(const Napi::CallbackInfo &info);
+
+  public:
     XRWebGLLayer(const Napi::CallbackInfo &info);
     ~XRWebGLLayer();
 
@@ -55,12 +61,7 @@ namespace bindings
     Napi::Value GetViewport(const Napi::CallbackInfo &info);
 
   public:
-    webgl::WebGLRenderingContext *getWebGLRenderingContext();
-    webgl::WebGL2RenderingContext *getWebGL2RenderingContext();
-
-  public:
     XRSession *session;
-    Napi::ObjectReference glContext;
     Napi::ObjectReference hostFramebuffer;
 
   private:

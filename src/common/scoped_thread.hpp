@@ -2,6 +2,7 @@
 
 #include <thread>
 #include <atomic>
+#include <common/debug.hpp>
 
 class ScopedThread
 {
