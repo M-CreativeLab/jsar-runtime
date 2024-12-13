@@ -29,13 +29,23 @@ namespace bindings
   class XRInputSourceArray;
 
   /**
+   * Just bypass the Napi::ObjectWrap<T> class with adding an ignore type to compatible with other containers.
+   */
+  template <typename ObjectType, typename _>
+  class _ObjectWrap : public Napi::ObjectWrap<ObjectType>
+  {
+    using Napi::ObjectWrap<ObjectType>::ObjectWrap;
+  };
+
+  /**
    * A wrapper class for WebXR objects.
    *
    * @tparam ObjectType the WebXR object type.
    * @tparam HandleType the WebXR object handle type.
+   * @tparam ObjectContainer the WebXR object container type.
    */
-  template <typename ObjectType, typename HandleType>
-  class XRHandleWrap : public Napi::ObjectWrap<ObjectType>
+  template <typename ObjectType, typename HandleType, template <typename, typename> class ObjectContainer = _ObjectWrap>
+  class XRHandleWrap : public ObjectContainer<ObjectType, HandleType>
   {
     /**
      * A shared reference to the XR object native handle.
@@ -63,15 +73,23 @@ namespace bindings
     }
 
   public:
-    XRHandleWrap(const Napi::CallbackInfo &info)
-        : Napi::ObjectWrap<ObjectType>(info)
+    /**
+     * Construct a new `XRHandleWrap` instance.
+     *
+     * @param info the N-API callback info.
+     * @param externalRequired whether an external object is required.
+     */
+    XRHandleWrap(const Napi::CallbackInfo &info, bool externalRequired = true)
+        : ObjectContainer<ObjectType, HandleType>(info)
     {
       Napi::Env env = info.Env();
       Napi::HandleScope scope(env);
 
       if (info.Length() < 1 || !info[0].IsExternal())
       {
-        Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
+        // Throw an error if an external is required.
+        if (externalRequired)
+          Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
         return;
       }
 
@@ -92,6 +110,6 @@ namespace bindings
     inline std::shared_ptr<HandleType> handle() { return handle_; }
 
   protected:
-    std::shared_ptr<HandleType> handle_;
+    std::shared_ptr<HandleType> handle_ = nullptr;
   };
 }

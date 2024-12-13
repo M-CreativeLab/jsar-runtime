@@ -15,16 +15,17 @@
           const baseLayer = new XRWebGLLayer(newSession, navigator.gl);
           newSession.updateRenderState({ baseLayer });
           console.info(newSession, baseLayer);
+          console.info(newSession.addEventListener);
 
           const baseReferenceSpace = await newSession.requestReferenceSpace('local');
-          function renderloop(time, frame) {
-            newSession.requestAnimationFrame(renderloop);
+          // function renderloop(time, frame) {
+          //   newSession.requestAnimationFrame(renderloop);
 
-            const viewerPose = frame.getViewerPose(baseReferenceSpace);
-            console.info(viewerPose.transform);
-            console.info(viewerPose.views.map(view => view.transform));
-          }
-          newSession.requestAnimationFrame(renderloop);
+          //   const viewerPose = frame.getViewerPose(baseReferenceSpace);
+          //   console.info(viewerPose.transform);
+          //   console.info(viewerPose.views.map(view => view.transform));
+          // }
+          // newSession.requestAnimationFrame(renderloop);
         }
       } catch (err) {
         console.error(err);

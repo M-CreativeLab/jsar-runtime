@@ -5,7 +5,7 @@ namespace bindings
 {
   template <typename ObjectType, typename HandleType>
   XRLayerBase<ObjectType, HandleType>::XRLayerBase(const Napi::CallbackInfo &info)
-      : Napi::ObjectWrap<ObjectType>(info)
+      : XRHandleWrap<ObjectType, HandleType>(info, false)
   {
     clientContext = TrClientContextPerProcess::Get();
     assert(clientContext != nullptr);

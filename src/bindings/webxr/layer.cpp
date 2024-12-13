@@ -51,11 +51,7 @@ namespace bindings
 
   Napi::Value XRWebGLLayer::NewInstance(Napi::Env env, shared_ptr<client_xr::XRWebGLLayer> layer)
   {
-    Napi::EscapableHandleScope scope(env);
-    SharedReference<client_xr::XRWebGLLayer> handleRef(layer);
-    auto handleExternal = Napi::External<SharedReference<client_xr::XRWebGLLayer>>::New(env, &handleRef);
-    Napi::Object instance = constructor->New({handleExternal});
-    return scope.Escape(instance).ToObject();
+    return XRLayerBase<XRWebGLLayer, client_xr::XRWebGLLayer>::NewInstance(env, layer);
   }
 
   Napi::Value XRWebGLLayer::GetNativeFramebufferScaleFactor(const Napi::CallbackInfo &info)
@@ -71,19 +67,9 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    /**
-     * If the first argument is an external, we assume it is a shared pointer to an existing `XRWebGLLayer` instance.
-     */
-    if (info.Length() >= 1 && info[0].IsExternal())
+    if (handle_ != nullptr)
     {
-      auto external = info[0].As<Napi::External<SharedReference<client_xr::XRWebGLLayer>>>();
-      auto handleRef = external.Data();
-      if (handleRef == nullptr)
-      {
-        Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
-        return;
-      }
-      handle_ = handleRef->value;
+      // Skip when the `handle_` is already created.
       return;
     }
 
@@ -113,15 +99,9 @@ namespace bindings
 
     shared_ptr<client_graphics::WebGLContext> glContextObject;
     if (webgl::WebGLRenderingContext::IsInstanceOf(contextValue))
-    {
-      auto unwrapped = webgl::WebGLRenderingContext::Unwrap(contextValue.ToObject());
-      glContextObject = unwrapped->getContext();
-    }
+      glContextObject = webgl::WebGLRenderingContext::Unwrap(contextValue.ToObject())->getContext();
     else if (webgl::WebGL2RenderingContext::IsInstanceOf(contextValue))
-    {
-      auto unwrapped = webgl::WebGL2RenderingContext::Unwrap(contextValue.ToObject());
-      glContextObject = unwrapped->getContext();
-    }
+      glContextObject = webgl::WebGL2RenderingContext::Unwrap(contextValue.ToObject())->getContext();
     else
     {
       auto msg = "the baseLayer must be a WebGLRenderingContext or WebGLRenderingContext2.";
@@ -129,7 +109,6 @@ namespace bindings
       return;
     }
 
-    glContext = Napi::Persistent(contextValue.ToObject());
     hostFramebuffer = Napi::Persistent(webgl::WebGLFramebuffer::NewInstance(env, nullptr, true));
     handle_ = client_xr::XRWebGLLayer::Make(session->handle(), glContextObject);
 
@@ -155,7 +134,6 @@ namespace bindings
 
   XRWebGLLayer::~XRWebGLLayer()
   {
-    glContext.Reset();
     hostFramebuffer.Reset();
   }
 
@@ -213,18 +191,5 @@ namespace bindings
     auto xrView = XRView::Unwrap(info[0].ToObject());
     auto viewport = xrView->getViewport();
     return XRViewport::NewInstance(env, viewport);
-  }
-
-  webgl::WebGLRenderingContext *XRWebGLLayer::getWebGLRenderingContext()
-  {
-    return webgl::WebGLRenderingContext::Unwrap(glContext.Value());
-  }
-
-  webgl::WebGL2RenderingContext *XRWebGLLayer::getWebGL2RenderingContext()
-  {
-    auto context = webgl::WebGL2RenderingContext::Unwrap(glContext.Value());
-    if (!context->isWebGL2Context())
-      return nullptr;
-    return context;
   }
 }
