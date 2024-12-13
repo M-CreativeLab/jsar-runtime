@@ -14,26 +14,27 @@ namespace bindings
   thread_local Napi::FunctionReference *XRSession::constructor;
   thread_local uint32_t XRFrameCallbackDescriptor::NEXT_HANDLE = 0;
 
-  Napi::Object XRSession::Init(Napi::Env env, Napi::Object exports)
+  // static
+  void XRSession::Init(Napi::Env env)
   {
     Napi::Function tpl = DefineClass(env, "XRSession",
-                                     {InstanceAccessor("renderState", &XRSession::RenderStateGetter, nullptr),
-                                      InstanceAccessor("environmentBlendMode", &XRSession::EnvironmentBlendModeGetter, nullptr),
-                                      InstanceMethod("requestAnimationFrame", &XRSession::RequestAnimationFrame),
-                                      InstanceMethod("cancelAnimationFrame", &XRSession::CancelAnimationFrame),
-                                      InstanceMethod("requestReferenceSpace", &XRSession::RequestReferenceSpace),
-                                      InstanceMethod("updateRenderState", &XRSession::UpdateRenderState),
-                                      InstanceMethod("updateTargetFrameRate", &XRSession::UpdateTargetFrameRate),
-                                      InstanceMethod("updateCollisionBox", &XRSession::UpdateCollisionBox),
-                                      InstanceMethod("end", &XRSession::End)});
+                                     {InstanceAccessor("renderState", &XRSession::RenderStateGetter, nullptr, napi_default_jsproperty),
+                                      InstanceAccessor("environmentBlendMode", &XRSession::EnvironmentBlendModeGetter, nullptr, napi_default_jsproperty),
+                                      InstanceMethod("requestAnimationFrame", &XRSession::RequestAnimationFrame, napi_default_method),
+                                      InstanceMethod("cancelAnimationFrame", &XRSession::CancelAnimationFrame, napi_default_method),
+                                      InstanceMethod("requestReferenceSpace", &XRSession::RequestReferenceSpace, napi_default_method),
+                                      InstanceMethod("updateRenderState", &XRSession::UpdateRenderState, napi_default_method),
+                                      InstanceMethod("updateTargetFrameRate", &XRSession::UpdateTargetFrameRate, napi_default_method),
+                                      InstanceMethod("updateCollisionBox", &XRSession::UpdateCollisionBox, napi_default_method),
+                                      InstanceMethod("end", &XRSession::End, napi_default_method)});
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
     env.SetInstanceData(constructor);
-    exports.Set("XRSession", tpl);
-    return exports;
+    env.Global().Set("XRSession", tpl);
   }
 
+  // static
   Napi::Object XRSession::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRSession> handle)
   {
     Napi::EscapableHandleScope scope(env);
@@ -43,20 +44,7 @@ namespace bindings
     return scope.Escape(instance).ToObject();
   }
 
-  inline xr::TrXRFrameRequest createFrameRequestForView(uint32_t viewIndex, XRFrameContext &frameContext)
-  {
-    auto req = xr::TrXRFrameRequest();
-    req.sessionId = frameContext.sessionId;
-    req.stereoId = frameContext.stereoId;
-    req.stereoTimestamp = frameContext.stereoTimestamp;
-    memcpy(req.localBaseMatrix, frameContext.localBaseMatrix, sizeof(float) * 16);
-    memcpy(req.viewerBaseMatrix, frameContext.viewerBaseMatrix, sizeof(float) * 16);
-    req.views[0] = frameContext.views[0];
-    req.views[1] = frameContext.views[1];
-    req.viewIndex = viewIndex;
-    return req;
-  }
-
+  // static
   Napi::Value XRSession::FrameHandler(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -88,24 +76,11 @@ namespace bindings
     handle_ = handleRef->value;
     assert(handle_ != nullptr);
 
-    // Set the event callback
-    // onEventCallback = Napi::Persistent(info[3].As<Napi::Function>());
-
     // Define JS properties
     auto jsThis = info.This().ToObject();
     // jsThis.DefineProperty(Napi::PropertyDescriptor::Value("recommendedContentSize", nativeSessionObject.Get("recommendedContentSize"), napi_enumerable));
     // jsThis.DefineProperty(Napi::PropertyDescriptor::Value("inputSources", inputSources.Value(), napi_enumerable));
     // jsThis.DefineProperty(Napi::PropertyDescriptor::Value("enabledFeatures", enabledFeatures.Value(), napi_enumerable));
-
-    // // Prepare the frame handler
-    // frameHandlerRef = new Napi::FunctionReference();
-    // *frameHandlerRef = Napi::Persistent(Napi::Function::New(env, FrameHandler));
-    // frameHandlerTSFN = Napi::ThreadSafeFunction::New(env, frameHandlerRef->Value(), "XRSession::FrameHandler", 0, 2);
-
-    // // Prepare the uv handles
-    // napi_get_uv_event_loop(env, &eventloop);
-    // tickHandle.data = this;
-    // uv_timer_init(eventloop, &tickHandle);
 
     // // Start the session
     // start();
@@ -160,15 +135,15 @@ namespace bindings
         });
     tscb = new Napi::ThreadSafeFunction(tsfn);
     tscb->Acquire();
-    std::cout << "RequestAnimationFrame Set callback done" << std::endl;
 
-    auto callback = [tscb](uint32_t time, client_xr::XRFrame &frame)
+    auto callback = [this, tscb](uint32_t time, std::shared_ptr<client_xr::XRFrame> frame)
     {
-      std::cout << "RequestAnimationFrame callback called" << std::endl;
-
       assert(tscb != nullptr);
-      tscb->BlockingCall([time](Napi::Env env, Napi::Function jsCallback)
-                         { jsCallback.Call({Napi::Number::New(env, time)}); });
+      tscb->BlockingCall([this, time, frame](Napi::Env env, Napi::Function jsCallback)
+                         {
+                          auto jsTime = Napi::Number::New(env, time);
+                          auto jsFrame = XRFrame::NewInstance(env, this, frame);
+                          jsCallback.Call({jsTime, jsFrame}); });
       tscb->Release();
     };
     auto id = handle_->requestAnimationFrame(callback);
@@ -214,7 +189,7 @@ namespace bindings
       deferred.Resolve(XRReferenceSpace::NewInstance(env, handle_->requestReferenceSpace(typeString)));
       return deferred.Promise();
     }
-    catch(const std::exception& e)
+    catch (const std::exception &e)
     {
       deferred.Reject(Napi::String::New(env, e.what()));
       return deferred.Promise();
@@ -389,7 +364,7 @@ namespace bindings
     auto eventProps = Napi::Object::New(env);
     eventProps.Set("frame", frame->Value());
     eventProps.Set("inputSource", inputSource->Value());
-    onEventCallback.Call({Napi::String::New(env, "selectstart"), eventProps});
+    // onEventCallback.Call({Napi::String::New(env, "selectstart"), eventProps});
   }
 
   void XRSession::onPrimaryActionEnd(XRInputSource *inputSource, XRFrame *frame)
@@ -400,8 +375,8 @@ namespace bindings
     auto eventProps = Napi::Object::New(env);
     eventProps.Set("frame", frame->Value());
     eventProps.Set("inputSource", inputSource->Value());
-    onEventCallback.Call({Napi::String::New(env, "select"), eventProps});
-    onEventCallback.Call({Napi::String::New(env, "selectend"), eventProps});
+    // onEventCallback.Call({Napi::String::New(env, "select"), eventProps});
+    // onEventCallback.Call({Napi::String::New(env, "selectend"), eventProps});
   }
 
   void XRSession::onSqueezeActionStart(XRInputSource *inputSource, XRFrame *frame)
@@ -412,7 +387,7 @@ namespace bindings
     auto eventProps = Napi::Object::New(env);
     eventProps.Set("frame", frame->Value());
     eventProps.Set("inputSource", inputSource->Value());
-    onEventCallback.Call({Napi::String::New(env, "squeezestart"), eventProps});
+    // onEventCallback.Call({Napi::String::New(env, "squeezestart"), eventProps});
   }
 
   void XRSession::onSqueezeActionEnd(XRInputSource *inputSource, XRFrame *frame)
@@ -423,7 +398,7 @@ namespace bindings
     auto eventProps = Napi::Object::New(env);
     eventProps.Set("frame", frame->Value());
     eventProps.Set("inputSource", inputSource->Value());
-    onEventCallback.Call({Napi::String::New(env, "squeeze"), eventProps});
-    onEventCallback.Call({Napi::String::New(env, "squeezeend"), eventProps});
+    // onEventCallback.Call({Napi::String::New(env, "squeeze"), eventProps});
+    // onEventCallback.Call({Napi::String::New(env, "squeezeend"), eventProps});
   }
 }

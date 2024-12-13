@@ -10,14 +10,17 @@ namespace bindings
   class XRRigidTransform : public Napi::ObjectWrap<XRRigidTransform>
   {
   public:
-    static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    static void Init(Napi::Env env);
+    static Napi::Object NewInstance(Napi::Env env, client_xr::XRRigidTransform handle);
     static Napi::Object NewInstance(Napi::Env env, const glm::mat4 &matrix);
+
+  public:
     XRRigidTransform(const Napi::CallbackInfo &info);
 
   public:
-    inline glm::vec3 &position() { return transformData_.position(); }
-    inline glm::quat &orientation() { return transformData_.orientation(); }
-    inline glm::mat4 &matrix() { return transformData_.matrix(); }
+    inline glm::vec3 &position() { return data_.position(); }
+    inline glm::quat &orientation() { return data_.orientation(); }
+    inline glm::mat4 &matrix() { return data_.matrix(); }
 
   private:
     Napi::Value InverseGetter(const Napi::CallbackInfo &info);
@@ -28,7 +31,7 @@ namespace bindings
     Napi::Value CreateMatrixValue(Napi::Env env);
 
   private:
-    client_xr::XRRigidTransform transformData_;
+    client_xr::XRRigidTransform data_;
 
   public:
     static thread_local Napi::FunctionReference *constructor;

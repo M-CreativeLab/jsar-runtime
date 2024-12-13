@@ -12,13 +12,19 @@
         if (supports) {
           const newSession = await navigator.xr.requestSession(requestMode);
           console.info(newSession);
-    //       const baseLayer = new XRWebGLLayer(newSession, navigator.gl);
-    //       newSession.updateRenderState({ baseLayer });
-    //       console.info(newSession, baseLayer);
+          const baseLayer = new XRWebGLLayer(newSession, navigator.gl);
+          newSession.updateRenderState({ baseLayer });
+          console.info(newSession, baseLayer);
 
-    //       newSession.requestAnimationFrame((time, frame) => {
-    //         console.info(time, frame);
-    //       });
+          const baseReferenceSpace = await newSession.requestReferenceSpace('local');
+          function renderloop(time, frame) {
+            newSession.requestAnimationFrame(renderloop);
+
+            const viewerPose = frame.getViewerPose(baseReferenceSpace);
+            console.info(viewerPose.transform);
+            console.info(viewerPose.views.map(view => view.transform));
+          }
+          newSession.requestAnimationFrame(renderloop);
         }
       } catch (err) {
         console.error(err);

@@ -2,8 +2,12 @@
 
 namespace bindings
 {
+  using namespace std;
+
   thread_local Napi::FunctionReference *XRRenderState::constructor;
-  Napi::Object XRRenderState::Init(Napi::Env env, Napi::Object exports)
+
+  // static
+  void XRRenderState::Init(Napi::Env env)
   {
     Napi::Function tpl = DefineClass(env, "XRRenderState",
                                      {InstanceAccessor("baseLayer", &XRRenderState::BaseLayerGetter, nullptr),
@@ -14,8 +18,7 @@ namespace bindings
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
     env.SetInstanceData(constructor);
-    exports.Set("XRRenderState", tpl);
-    return exports;
+    env.Global().Set("XRRenderState", tpl);
   }
 
   Napi::Object XRRenderState::NewInstance(Napi::Env env, client_xr::XRRenderState state)

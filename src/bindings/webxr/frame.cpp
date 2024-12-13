@@ -7,7 +7,8 @@ namespace bindings
   thread_local Napi::FunctionReference *XRFrame::constructor;
   thread_local uint32_t XRFrame::NEXT_FRAME_ID = 0;
 
-  Napi::Object XRFrame::Init(Napi::Env env, Napi::Object exports)
+  // static
+  void XRFrame::Init(Napi::Env env)
   {
     Napi::Function tpl = DefineClass(env, "XRFrame",
                                      {
@@ -26,20 +27,20 @@ namespace bindings
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
-    exports.Set("XRFrame", tpl);
-    return exports;
+    env.Global().Set("XRFrame", tpl);
   }
 
-  Napi::Object XRFrame::NewInstance(Napi::Env env, xr::TrXRFrameRequest *frameRequest, XRSession *session)
+  Napi::Object XRFrame::NewInstance(Napi::Env env, XRSession *session, std::shared_ptr<client_xr::XRFrame> frame)
   {
     Napi::EscapableHandleScope scope(env);
-    Napi::Object obj = XRFrame::constructor->New({session->Value(), Napi::External<xr::TrXRFrameRequest>::New(env, frameRequest)});
-    return scope.Escape(napi_value(obj)).ToObject();
+    auto handleRef = SharedReference<client_xr::XRFrame>(frame);
+    auto handleExternal = Napi::External<SharedReference<client_xr::XRFrame>>::New(env, &handleRef);
+    Napi::Object instance = XRFrame::constructor->New({session->Value(), handleExternal});
+    return scope.Escape(instance).ToObject();
   }
 
-  XRFrame::XRFrame(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRFrame>(info),
-                                                     active(false),
-                                                     animationFrame(false)
+  XRFrame::XRFrame(const Napi::CallbackInfo &info)
+      : Napi::ObjectWrap<XRFrame>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
@@ -61,20 +62,28 @@ namespace bindings
     }
 
     Napi::Object sessionObj = info[0].As<Napi::Object>();
-    session = XRSession::Unwrap(sessionObj);
-    sessionId = session->id();
-    // device = session->device;
+    session_ = XRSession::Unwrap(sessionObj);
 
-    Napi::External<xr::TrXRFrameRequest> external = info[1].As<Napi::External<xr::TrXRFrameRequest>>();
-    internal = external.Data();
-    id = internal->id;
+    auto handleExternal = info[1].As<Napi::External<SharedReference<client_xr::XRFrame>>>();
+    auto handleRef = handleExternal.Data();
+    if (handleRef == nullptr)
+    {
+      Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
+      return;
+    }
+    handle_ = handleRef->value;
 
     auto jsThis = info.This().ToObject();
     jsThis.DefineProperty(Napi::PropertyDescriptor::Value("session", sessionObj, napi_enumerable));
     jsThis.DefineProperty(Napi::PropertyDescriptor::Value("trackedAnchor", env.Null(), napi_enumerable)); // TODO: support trackedAnchor
+
     // Properties added by JSAR
-    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("_id", Napi::Number::New(env, id), napi_enumerable));
-    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("_stereoId", Napi::Number::New(env, internal->stereoId), napi_enumerable));
+    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("_id",
+                                                          Napi::Number::New(env, id()),
+                                                          napi_enumerable));
+    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("_stereoId",
+                                                          Napi::Number::New(env, handle_->stereoId()),
+                                                          napi_enumerable));
   }
 
 #define NOT_IMPLEMENTED_YET(method)                                                                    \
@@ -104,31 +113,15 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (TR_UNLIKELY(animationFrame == false))
-    {
-      Napi::TypeError::New(env, NON_ANIMFRAME_MSG).ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-    if (TR_UNLIKELY(active == false))
-    {
-      Napi::TypeError::New(env, NON_ACTIVE_MSG).ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
     if (info.Length() < 1 || !info[0].IsObject())
     {
       Napi::TypeError::New(env, "getViewerPose requires a reference space object").ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
-    // auto referenceSpace = XRReferenceSpace::Unwrap(info[0].ToObject());
-    // auto viewerSpace = session->getViewerSpace();
-    // referenceSpace->ensurePoseUpdated(id, session, internal);
-    // viewerSpace->ensurePoseUpdated(id, session, internal);
-
-    // auto viewerTransform /** viewer to refspace(local) */ = XRSPACE_RELATIVE_TRANSFORM(viewerSpace, referenceSpace);
-    // auto viewerPoseObject = XRViewerPose::NewInstance(env, device, viewerTransform, internal, referenceSpace, session);
-    // return viewerPoseObject;
-    return env.Undefined();
+    auto referenceSpace = XRReferenceSpace::Unwrap(info[0].ToObject());
+    auto viewerSpace = handle_->getViewerPose(referenceSpace->handle());
+    return XRViewerPose::NewInstance(env, viewerSpace);
   }
 
   Napi::Value XRFrame::GetJointPose(const Napi::CallbackInfo &info)
@@ -142,30 +135,18 @@ namespace bindings
     //   return env.Undefined();
     // }
 
-    // if (info.Length() < 2)
-    // {
-    //   Napi::TypeError::New(env, "getJointPose requires a joint space and an XRSpace object").ThrowAsJavaScriptException();
-    //   return env.Undefined();
-    // }
+    if (
+        info.Length() < 2 || !info[0].IsObject() || !info[1].IsObject())
+    {
+      Napi::TypeError::New(env, "getJointPose() requires `XRJointSpace` and `XRSpace` parameters")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
 
-    // auto jointSpace = XRJointSpace::Unwrap(info[0].As<Napi::Object>());
-    // auto baseSpace = XRSpace::Unwrap(info[1].As<Napi::Object>());
-    // jointSpace->ensurePoseUpdated(id, session, internal);
-
-    // if (baseSpace->isReferenceSpace == true)
-    // {
-    //   auto baseReferenceSpace = XRReferenceSpace::Unwrap(info[1].As<Napi::Object>());
-    //   baseReferenceSpace->ensurePoseUpdated(id, session, internal);
-    //   auto jointTransform /** joint to space(local) */ = XRSPACE_RELATIVE_TRANSFORM(jointSpace, baseReferenceSpace);
-    //   return XRPose::NewInstance(env, device, jointTransform, internal);
-    // }
-    // else
-    // {
-    //   Napi::TypeError::New(env, "getJointPose not support a non ReferenceSpace as `baseSpace`")
-    //       .ThrowAsJavaScriptException();
-    //   return env.Undefined();
-    // }
-    return env.Undefined();
+    auto jointSpace = XRJointSpace::Unwrap(info[0].As<Napi::Object>());
+    auto baseSpace = XRSpace::Unwrap(info[1].As<Napi::Object>());
+    auto pose = handle_->getJointPose(jointSpace->handle(), baseSpace->handle());
+    return XRJointPose::NewInstance(env, pose);
   }
 
   Napi::Value XRFrame::GetPose(const Napi::CallbackInfo &info)
@@ -185,24 +166,18 @@ namespace bindings
     //   return env.Undefined();
     // }
 
-    // auto space = XRSpace::Unwrap(info[0].As<Napi::Object>());
-    // auto baseSpace = XRSpace::Unwrap(info[1].As<Napi::Object>());
-    // baseSpace->ensurePoseUpdated(id, session, internal);
+    if (
+        info.Length() < 2 || !info[0].IsObject() || !info[1].IsObject())
+    {
+      Napi::TypeError::New(env, "getPose() requires `XRSpace` and `XRSpace` parameters")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
 
-    // if (!space->isReferenceSpace && space->subType != XRSpaceSubType::UNSET)
-    // {
-    //   auto inputSpace = XRTargetRayOrGripSpace::Unwrap(info[0].As<Napi::Object>());
-    //   inputSpace->ensurePoseUpdated(id, session, internal);
-    //   auto transform /** input source space to base(local/unbound) */ = XRSPACE_RELATIVE_TRANSFORM(inputSpace, baseSpace);
-    //   return XRPose::NewInstance(env, device, transform, internal);
-    // }
-    // TODO: support other space types
-    return env.Undefined();
-  }
-
-  uint32_t XRFrame::getStereoRenderingId()
-  {
-    return handle_->stereoId();
+    auto space = XRSpace::Unwrap(info[0].As<Napi::Object>());
+    auto baseSpace = XRSpace::Unwrap(info[1].As<Napi::Object>());
+    auto pose = handle_->getPose(space->handle(), baseSpace->handle());
+    return XRPose::NewInstance(env, pose);
   }
 
   void XRFrame::start()

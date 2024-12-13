@@ -31,7 +31,7 @@ namespace bindings
       XRSystem::Init(env);
 
       // Frame
-      XRFrame::Init(env, exports);
+      XRFrame::Init(env);
 
       // Input Source
       XRHand::Init(env, exports);
@@ -42,28 +42,29 @@ namespace bindings
       XRWebGLLayer::Init(env);
 
       // Poses
-      XRPose::Init(env, exports);
-      XRViewerPose::Init(env, exports);
+      XRPose::Init(env);
+      XRViewerPose::Init(env);
+      XRJointPose::Init(env);
 
       // Session
-      XRSession::Init(env, exports);
-      XRRenderState::Init(env, exports);
+      XRSession::Init(env);
+      XRRenderState::Init(env);
 
       // RigidTransform
-      XRRigidTransform::Init(env, exports);
+      XRRigidTransform::Init(env);
 
       // Spaces
-      XRSpace::Init(env, exports);
-      XRReferenceSpace::Init(env, exports);
-      XRViewSpace::Init(env, exports);
-      XRJointSpace::Init(env, exports);
-      XRTargetRayOrGripSpace::Init(env, exports);
+      XRSpace::Init(env);
+      XRReferenceSpace::Init(env);
+      XRViewSpace::Init(env);
+      XRJointSpace::Init(env);
+      XRTargetRayOrGripSpace::Init(env);
 
       // View
-      XRView::Init(env, exports);
+      XRView::Init(env);
 
       // Viewport
-      XRViewport::Init(env, exports);
+      XRViewport::Init(env);
 
       // Set method
       exports.Set(Napi::String::New(env, "getXRSystem"), Napi::Function::New(env, GetXRSystem));

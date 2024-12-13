@@ -2,34 +2,41 @@
 #include "./webxr_poses.hpp"
 #include "./webxr_view.hpp"
 #include "./webxr_session.hpp"
+#include "./webxr_frame.hpp"
 
 namespace client_xr
 {
-  XRPose::XRPose(std::shared_ptr<XRSession> session, glm::mat4 &transformationMatrix)
+  XRPose::XRPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix)
       : session_(session),
+        device_(session->device()),
+        frameRequestData_(frame->frameRequestData_),
         transform(transformationMatrix),
         emulatedPosition(false)
   {
   }
 
-  XRPose::XRPose(std::shared_ptr<XRSession> session, XRRigidTransform &transform)
+  XRPose::XRPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, XRRigidTransform &transform)
       : session_(session),
+        device_(session->device()),
+        frameRequestData_(frame->frameRequestData_),
         transform(transform),
         emulatedPosition(false)
   {
   }
 
   XRViewerPose::XRViewerPose(std::shared_ptr<XRSession> session,
+                             std::shared_ptr<XRFrame> frame,
                              glm::mat4 &transformationMatrix,
                              std::shared_ptr<XRReferenceSpace> baseReferenceSpace)
-      : XRPose(session, transformationMatrix)
+      : XRPose(session, frame, transformationMatrix)
   {
     setupViews(baseReferenceSpace);
   }
   XRViewerPose::XRViewerPose(std::shared_ptr<XRSession> session,
+                             std::shared_ptr<XRFrame> frame,
                              XRRigidTransform &transform,
                              std::shared_ptr<XRReferenceSpace> baseReferenceSpace)
-      : XRPose(session, transform)
+      : XRPose(session, frame, transform)
   {
     setupViews(baseReferenceSpace);
   }
@@ -58,13 +65,13 @@ namespace client_xr
     }
   }
 
-  XRJointPose::XRJointPose(std::shared_ptr<XRSession> session, glm::mat4 &transformationMatrix)
-      : XRPose(session, transformationMatrix)
+  XRJointPose::XRJointPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix)
+      : XRPose(session, frame, transformationMatrix)
   {
   }
 
-  XRJointPose::XRJointPose(std::shared_ptr<XRSession> session, XRRigidTransform &transform)
-      : XRPose(session, transform)
+  XRJointPose::XRJointPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, XRRigidTransform &transform)
+      : XRPose(session, frame, transform)
   {
   }
 }

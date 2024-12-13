@@ -10,7 +10,7 @@ namespace bindings
   class XRViewport : public Napi::ObjectWrap<XRViewport>
   {
   public:
-    static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    static void Init(Napi::Env env);
     static Napi::Object NewInstance(Napi::Env env, TrViewport viewport);
     static Napi::Object NewInstance(Napi::Env env, client_xr::XRViewport viewport);
     XRViewport(const Napi::CallbackInfo &info);

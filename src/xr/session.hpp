@@ -16,7 +16,24 @@ namespace xr
   class TrXRSession
   {
   public:
-    TrXRSession(uint32_t id, Device *xrDevice, TrContentRenderer *contentRenderer, TrXRSessionInit &init);
+    /**
+     * Make a new shared instance of `xr::TrXRSession`.
+     * 
+     * @param id The session id.
+     * @param xrDevice The XR device.
+     * @param contentRenderer The content renderer.
+     * @param mode The session mode.
+     * @param init The session initialization info.
+     */
+    static std::shared_ptr<TrXRSession> Make(uint32_t id, Device *xrDevice, TrContentRenderer *contentRenderer,
+                                             TrXRSessionMode mode, TrXRSessionInit &init)
+    {
+      return std::make_shared<TrXRSession>(id, xrDevice, contentRenderer, mode, init);
+    }
+
+  public:
+    TrXRSession(uint32_t id, Device *xrDevice, TrContentRenderer *contentRenderer,
+                TrXRSessionMode mode, TrXRSessionInit &init);
     ~TrXRSession();
 
   public:
@@ -82,6 +99,10 @@ namespace xr
      * The XR session id.
      */
     uint32_t id;
+    /**
+     * The XR session mode.
+     */
+    TrXRSessionMode mode;
     /**
      * The XR session initialization info including required and optional features.
      */

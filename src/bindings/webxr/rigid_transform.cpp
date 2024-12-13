@@ -3,7 +3,9 @@
 namespace bindings
 {
   thread_local Napi::FunctionReference *XRRigidTransform::constructor;
-  Napi::Object XRRigidTransform::Init(Napi::Env env, Napi::Object exports)
+
+  // static
+  void XRRigidTransform::Init(Napi::Env env)
   {
     Napi::Function tpl = DefineClass(env, "XRRigidTransform",
                                      {InstanceAccessor("inverse", &XRRigidTransform::InverseGetter, nullptr)});
@@ -11,10 +13,19 @@ namespace bindings
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
     env.SetInstanceData(constructor);
-    exports.Set("XRRigidTransform", tpl);
-    return exports;
+    env.Global().Set("XRRigidTransform", tpl);
   }
 
+  // static
+  Napi::Object XRRigidTransform::NewInstance(Napi::Env env, client_xr::XRRigidTransform handle)
+  {
+    Napi::EscapableHandleScope scope(env);
+    auto handleExternal = Napi::External<client_xr::XRRigidTransform>::New(env, &handle);
+    Napi::Object instance = constructor->New({handleExternal});
+    return scope.Escape(instance).ToObject();
+  }
+
+  // static
   Napi::Object XRRigidTransform::NewInstance(Napi::Env env, const glm::mat4 &matrix)
   {
     Napi::EscapableHandleScope scope(env);
@@ -37,7 +48,7 @@ namespace bindings
 
     if (info.Length() == 0)
     {
-      transformData_ = client_xr::XRRigidTransform();
+      data_ = client_xr::XRRigidTransform();
     }
     else if (info.Length() == 1)
     {
@@ -50,7 +61,7 @@ namespace bindings
           Napi::TypeError::New(env, "Illegal constructor: invalid external data.").ThrowAsJavaScriptException();
           return;
         }
-        transformData_ = client_xr::XRRigidTransform(*pTransform);
+        data_ = client_xr::XRRigidTransform(*pTransform);
       }
       else if (info[0].IsTypedArray()) // Check if the first argument is a Float32Array
       {
@@ -63,7 +74,7 @@ namespace bindings
           float *data = reinterpret_cast<float *>(buffer.Data()) + byteOffset / sizeof(float);
           if (byteLength == 16 * sizeof(float))
           {
-            transformData_ = client_xr::XRRigidTransform(glm::make_mat4(data));
+            data_ = client_xr::XRRigidTransform(glm::make_mat4(data));
           }
           else
           {
@@ -89,7 +100,7 @@ namespace bindings
           position.y = jsPosition.Get("y").As<Napi::Number>().FloatValue();
         if (jsPosition.Has("z") && jsPosition.Get("z").IsNumber())
           position.z = jsPosition.Get("z").As<Napi::Number>().FloatValue();
-        transformData_ = client_xr::XRRigidTransform(position);
+        data_ = client_xr::XRRigidTransform(position);
       }
     }
     else if (info.Length() == 2)
@@ -115,7 +126,7 @@ namespace bindings
       if (jsOrientation.Has("w") && jsOrientation.Get("w").IsNumber())
         orientation.w = jsOrientation.Get("w").As<Napi::Number>().FloatValue();
 
-      transformData_ = client_xr::XRRigidTransform(position, orientation);
+      data_ = client_xr::XRRigidTransform(position, orientation);
     }
     else
     {
@@ -134,7 +145,7 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    auto inverseTransform = transformData_.inverse();
+    auto inverseTransform = data_.inverse();
     auto external = Napi::External<client_xr::XRRigidTransform>::New(env, &inverseTransform);
     return constructor->New({external});
   }
@@ -142,7 +153,7 @@ namespace bindings
   Napi::Value XRRigidTransform::CreatePositionValue(Napi::Env env)
   {
     Napi::EscapableHandleScope scope(env);
-    auto position = transformData_.position();
+    auto position = data_.position();
     auto domPointObject = Napi::Object::New(env);
     domPointObject.Set("x", Napi::Number::New(env, position.x));
     domPointObject.Set("y", Napi::Number::New(env, position.y));
@@ -154,7 +165,7 @@ namespace bindings
   Napi::Value XRRigidTransform::CreateOrientationValue(Napi::Env env)
   {
     Napi::EscapableHandleScope scope(env);
-    auto orientation = transformData_.orientation();
+    auto orientation = data_.orientation();
     auto domPointObject = Napi::Object::New(env);
     domPointObject.Set("x", Napi::Number::New(env, orientation.x));
     domPointObject.Set("y", Napi::Number::New(env, orientation.y));
@@ -167,7 +178,7 @@ namespace bindings
   {
     Napi::EscapableHandleScope scope(env);
 
-    auto matrix = transformData_.matrix();
+    auto matrix = data_.matrix();
     auto matrixDataArray = Napi::Float32Array::New(env, 16);
     for (int i = 0; i < 4; i++)
     {

@@ -27,7 +27,7 @@ namespace client_xr
     kSessionNotInFrustum, // Skip the frame if the session is not in the frustum.
   };
 
-  using XRFrameCallback = std::function<void(uint32_t, XRFrame &)>;
+  using XRFrameCallback = std::function<void(uint32_t, std::shared_ptr<XRFrame>)>;
   class XRFrameCallbackWrapper
   {
   public:
@@ -41,7 +41,7 @@ namespace client_xr
 
   public:
     void cancel() { cancelled = true; }
-    void operator()(uint32_t time, XRFrame &frame)
+    void operator()(uint32_t time, std::shared_ptr<XRFrame> frame)
     {
       callback(time, frame);
     }
@@ -79,19 +79,19 @@ namespace client_xr
     /**
      * The lifecycle "Primary Action Start" event handler.
      */
-    virtual void onPrimaryActionStart(XRInputSource &inputSource, XRFrame &frame) {}
+    virtual void onPrimaryActionStart(XRInputSource &inputSource, std::shared_ptr<XRFrame> frame) {}
     /**
      * The lifecycle "Primary Action End" event handler.
      */
-    virtual void onPrimaryActionEnd(XRInputSource &inputSource, XRFrame &frame) {}
+    virtual void onPrimaryActionEnd(XRInputSource &inputSource, std::shared_ptr<XRFrame> frame) {}
     /**
      * The lifecycle "Squeeze Action Start" event handler.
      */
-    virtual void onSqueezeActionStart(XRInputSource &inputSource, XRFrame &frame) {}
+    virtual void onSqueezeActionStart(XRInputSource &inputSource, std::shared_ptr<XRFrame> frame) {}
     /**
      * The lifecycle "Squeeze Action End" event handler.
      */
-    virtual void onSqueezeActionEnd(XRInputSource &inputSource, XRFrame &frame) {}
+    virtual void onSqueezeActionEnd(XRInputSource &inputSource, std::shared_ptr<XRFrame> frame) {}
 
   public:
     /**
@@ -139,7 +139,7 @@ namespace client_xr
     void updateRenderState(XRRenderState newState);
     void updateTargetFrameRate(float targetFrameRate);
     void updateCollisionBox(glm::vec3 min, glm::vec3 max);
-    void updateInputSourcesIfChanged(XRFrame &frame);
+    void updateInputSourcesIfChanged(std::shared_ptr<XRFrame> frame);
     /**
      * The `requestReferenceSpace()` method of the `XRSession` interface returns a promise that resolves with an instance of
      * either `XRReferenceSpace` or `XRBoundedReferenceSpace` as appropriate given the type of reference space requested.
@@ -254,6 +254,11 @@ namespace client_xr
     std::shared_ptr<XRReferenceSpace> unboundedSpace_;
     uint32_t fps_ = 0;
     int framesCount_ = 0;
+    int prevStereoId_ = -1;
+    /**
+     * Update on every tick.
+     */
+    std::chrono::steady_clock::time_point lastTickTimepoint_ = std::chrono::steady_clock::now();
     /**
      * Every frame timepoint, updated at the start of each frame.
      */

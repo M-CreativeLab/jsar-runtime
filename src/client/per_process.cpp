@@ -17,6 +17,8 @@
 #include "./bindings.hpp"
 
 using namespace std;
+using namespace node;
+using namespace v8;
 using namespace bindings;
 
 #define XX(varname)                                                           \

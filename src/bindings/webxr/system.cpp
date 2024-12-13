@@ -4,37 +4,39 @@
 #include "./system.hpp"
 #include "./session.hpp"
 
+using namespace std;
+using namespace Napi;
+
 namespace bindings::webxr
 {
-  using namespace std;
-
-  thread_local Napi::FunctionReference *XRSystem::constructor;
+  thread_local FunctionReference *XRSystem::constructor;
   void XRSystem::Init(Napi::Env env)
   {
-    Napi::Function tpl = DefineClass(env, "XRSystem",
-                                     {
-                                         InstanceMethod("isSessionSupported", &XRSystem::IsSessionSupported, napi_default_method),
-                                         InstanceMethod("requestSession", &XRSystem::RequestSession, napi_default_method),
-                                     });
+#define MODULE_NAME "XRSystem"
+    Function tpl = DefineClass(env, MODULE_NAME,
+                               {
+                                   InstanceMethod("isSessionSupported", &XRSystem::IsSessionSupported, napi_default_method),
+                                   InstanceMethod("requestSession", &XRSystem::RequestSession, napi_default_method),
+                               });
 
-    constructor = new Napi::FunctionReference();
-    *constructor = Napi::Persistent(tpl);
+    constructor = new FunctionReference();
+    *constructor = Persistent(tpl);
     env.SetInstanceData(constructor);
-    env.Global().Set("XRSystem", tpl);
+    env.Global().Set(MODULE_NAME, tpl);
+#undef MODULE_NAME
   }
 
-  Napi::Object XRSystem::NewInstance(Napi::Env env)
+  Object XRSystem::NewInstance(Napi::Env env)
   {
-    Napi::EscapableHandleScope scope(env);
-    Napi::Object obj = constructor->New({});
+    EscapableHandleScope scope(env);
+    Object obj = constructor->New({});
     return scope.Escape(obj).ToObject();
   }
 
-  XRSystem::XRSystem(const Napi::CallbackInfo &info)
-      : Napi::ObjectWrap<XRSystem>(info)
+  XRSystem::XRSystem(const CallbackInfo &info) : ObjectWrap<XRSystem>(info)
   {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+    auto env = info.Env();
+    HandleScope scope(env);
 
     auto clientContext = TrClientContextPerProcess::Get();
     assert(clientContext != nullptr);
@@ -44,16 +46,16 @@ namespace bindings::webxr
     handle_ = clientContext->getXRDeviceClient()->getXRSystem(jsEventloop);
   }
 
-  Napi::Value XRSystem::IsSessionSupported(const Napi::CallbackInfo &info)
+  Value XRSystem::IsSessionSupported(const CallbackInfo &info)
   {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+    auto env = info.Env();
+    HandleScope scope(env);
 
     bool supported = false;
     if (info.Length() >= 1 && info[0].IsString())
     {
       client_xr::XRSessionMode mode = client_xr::XRSessionMode::Unknown;
-      auto modeString = info[0].As<Napi::String>().Utf8Value();
+      auto modeString = info[0].As<String>().Utf8Value();
       if (modeString == "inline")
         mode = client_xr::XRSessionMode::Inline;
       else if (modeString == "immersive-vr")
@@ -65,15 +67,15 @@ namespace bindings::webxr
         supported = handle_->isSessionSupported(mode);
     }
 
-    Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
-    deferred.Resolve(Napi::Boolean::New(env, supported));
+    Promise::Deferred deferred = Promise::Deferred::New(env);
+    deferred.Resolve(Boolean::New(env, supported));
     return deferred.Promise();
   }
 
-  Napi::Value XRSystem::RequestSession(const Napi::CallbackInfo &info)
+  Value XRSystem::RequestSession(const CallbackInfo &info)
   {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+    auto env = info.Env();
+    HandleScope scope(env);
 
     Napi::Value modeValue;
     client_xr::XRSessionMode mode = client_xr::XRSessionMode::Unknown;
@@ -93,7 +95,7 @@ namespace bindings::webxr
     else
     {
       auto msg = "The provided value '" + modeString + "' is not a valid enum value of type XRSessionMode";
-      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      TypeError::New(env, msg).ThrowAsJavaScriptException();
     }
 
     optional<client_xr::XRSessionRequestInit> requestInit = nullopt;
@@ -102,7 +104,7 @@ namespace bindings::webxr
       // TODO
     }
 
-    Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
+    Promise::Deferred deferred = Promise::Deferred::New(env);
     auto newSession = XRSession::NewInstance(env, handle_->requestSession(mode, requestInit));
     deferred.Resolve(newSession);
     return deferred.Promise();

@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <algorithm>
+#include <limits>
 #include <glm/glm.hpp>
 
 #include "runtime/constellation.hpp"
@@ -104,7 +105,7 @@ namespace xr
     {
       std::unique_lock<std::shared_mutex> lock(m_MutexForSessions);
       TrXRSessionInit init;
-      auto newSession = std::make_shared<TrXRSession>(id, this, contentRenderer, init);
+      auto newSession = TrXRSession::Make(id, this, contentRenderer, mode, init);
       m_Sessions.push_back(newSession);
       return newSession;
     }
@@ -339,13 +340,18 @@ namespace xr
     auto content = m_Constellation->contentManager->getContent(id);
     if (TR_UNLIKELY(content == nullptr))
       return false;
-    auto session = content->getActiveXRSession();
-    if (session == nullptr)
-      return false;
 
-    glm::mat4 baseMatrix = glm::make_mat4(baseMatrixValues);
-    session->setLocalBaseMatrix(baseMatrix);
-    return true;
+    bool updated = false;
+    for (auto session : content->getXRSessions())
+    {
+      if (session != nullptr)
+      {
+        glm::mat4 baseMatrix = glm::make_mat4(baseMatrixValues);
+        session->setLocalBaseMatrix(baseMatrix);
+        updated = true;
+      }
+    }
+    return updated;
   }
 
   bool Device::getCollisionBoxByDocumentId(int id, float *outMin, float *outMax)
@@ -354,12 +360,28 @@ namespace xr
     auto content = m_Constellation->contentManager->getContent(id);
     if (TR_UNLIKELY(content == nullptr))
       return false;
-    auto session = content->getActiveXRSession();
-    if (session == nullptr)
-      return false;
 
-    session->getCollisionBox(outMin, outMax);
-    return true;
+    bool updated = false;
+    float inf = std::numeric_limits<float>::infinity();
+    float min[3] = {-inf, -inf, -inf};
+    float max[3] = {inf, inf, inf};
+
+    for (auto session : content->getXRSessions())
+    {
+      if (session != nullptr)
+      {
+        float boxMin[3];
+        float boxMax[3];
+        session->getCollisionBox(boxMin, boxMax);
+        min[0] = std::min(min[0], boxMin[0]);
+        min[1] = std::min(min[1], boxMin[1]);
+        min[2] = std::min(min[2], boxMin[2]);
+      }
+    }
+
+    memcpy(outMin, min, sizeof(float) * 3);
+    memcpy(outMax, max, sizeof(float) * 3);
+    return updated;
   }
 
   // InputSource

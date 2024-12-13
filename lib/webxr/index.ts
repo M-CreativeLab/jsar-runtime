@@ -1,8 +1,4 @@
 const webxrNative = process._linkedBinding('transmute:webxr');
-const {
-  XRRigidTransform: XRRigidTransformImpl,
-} = webxrNative;
-
 let globalXRSystem: XRSystem = null;
 
 /**
@@ -13,8 +9,4 @@ export function getXRSystem(): XRSystem {
     globalXRSystem = webxrNative.getXRSystem();
   }
   return globalXRSystem;
-}
-
-export {
-  XRRigidTransformImpl,
 }

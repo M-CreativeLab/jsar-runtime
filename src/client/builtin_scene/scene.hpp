@@ -38,10 +38,10 @@ namespace builtin_scene
       auto clientContext = TrClientContextPerProcess::Get();
       assert(clientContext != nullptr);
 
-      frameCallback_ = [this](uint32_t time, client_xr::XRFrame &frame)
+      frameCallback_ = [this](uint32_t time, std::shared_ptr<client_xr::XRFrame> frame)
       {
         assert(xrSession_ != nullptr); // ensure the WebXR session is ready.
-        update(time, frame);
+        update(time, *frame);
         xrSession_->requestAnimationFrame(frameCallback_);
       };
 
@@ -64,7 +64,7 @@ namespace builtin_scene
     void update(uint32_t time, client_xr::XRFrame &frame)
     {
       // TODO
-      std::cout << "Scene update" << std::endl;
+      // std::cout << "Scene update" << std::endl;
     }
 
   private:

@@ -6,11 +6,13 @@
 
 namespace xr
 {
-  TrXRSession::TrXRSession(uint32_t id, Device *xrDevice, TrContentRenderer *contentRenderer, TrXRSessionInit &init)
+  TrXRSession::TrXRSession(uint32_t id, Device *xrDevice, TrContentRenderer *contentRenderer,
+                           TrXRSessionMode mode, TrXRSessionInit &init)
       : id(id),
         xrDevice(xrDevice),
         constellation(xrDevice->m_Constellation),
         contentRenderer(contentRenderer),
+        mode(mode),
         init(init),
         baseMatrix(1.0f),
         boundingInfo(glm::vec3(-recommendedContentSize / 2), glm::vec3(recommendedContentSize / 2), baseMatrix)

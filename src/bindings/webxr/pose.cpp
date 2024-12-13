@@ -1,12 +1,18 @@
 #include "pose.hpp"
 #include "./session.hpp"
+#include "./frame.hpp"
 
 namespace bindings
 {
+  using namespace std;
+  using namespace glm;
+
   thread_local Napi::FunctionReference *XRPose::constructor;
   thread_local Napi::FunctionReference *XRViewerPose::constructor;
+  thread_local Napi::FunctionReference *XRJointPose::constructor;
 
-  Napi::Object XRPose::Init(Napi::Env env, Napi::Object exports)
+  // static
+  void XRPose::Init(Napi::Env env)
   {
     Napi::Function tpl = DefineClass(env, "XRPose",
                                      {InstanceAccessor("transform", &XRPose::TransformGetter, nullptr),
@@ -15,25 +21,29 @@ namespace bindings
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
     env.SetInstanceData(constructor);
-    exports.Set("XRPose", tpl);
-    return exports;
+    env.Global().Set("XRPose", tpl);
   }
 
-  Napi::Object XRPose::NewInstance(Napi::Env env, XRDeviceNative *device, mat4 &transform, xr::TrXRFrameRequest *frameRequest)
+  // static
+  Napi::Object XRPose::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRPose> handle)
   {
-    Napi::EscapableHandleScope scope(env);
-    auto deviceNativeExternal = Napi::External<XRDeviceNative>::New(env, device);
-    auto transformExternal = Napi::External<mat4>::New(env, &transform);
-    auto frameRequestExternal = Napi::External<xr::TrXRFrameRequest>::New(env, frameRequest);
-    Napi::Object obj = constructor->New({deviceNativeExternal, transformExternal, frameRequestExternal});
-    return scope.Escape(obj).ToObject();
+    return XRPoseBase<XRPose>::NewInstance(env, handle);
   }
 
-  XRPose::XRPose(const Napi::CallbackInfo &info) : XRPoseBase(info)
+  // static
+  Napi::Object XRPose::NewInstance(Napi::Env env, XRSession *session, XRFrame *frame, mat4 &transformationMatrix)
+  {
+    auto handle = make_shared<client_xr::XRPose>(session->handle(), frame->handle(), transformationMatrix);
+    return NewInstance(env, handle);
+  }
+
+  XRPose::XRPose(const Napi::CallbackInfo &info)
+      : XRPoseBase(info)
   {
   }
 
-  Napi::Object XRViewerPose::Init(Napi::Env env, Napi::Object exports)
+  // static
+  void XRViewerPose::Init(Napi::Env env)
   {
     Napi::Function tpl = DefineClass(env, "XRViewerPose",
                                      {InstanceAccessor("transform", &XRViewerPose::TransformGetter, nullptr),
@@ -43,72 +53,35 @@ namespace bindings
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
     env.SetInstanceData(constructor);
-    exports.Set("XRViewerPose", tpl);
-    return exports;
+    env.Global().Set("XRViewerPose", tpl);
   }
 
-  Napi::Object XRViewerPose::NewInstance(Napi::Env env, XRDeviceNative *device, mat4 &transform, xr::TrXRFrameRequest *frameRequest, XRReferenceSpace *baseSpace, XRSession *xrSession)
+  // static
+  Napi::Object XRViewerPose::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRViewerPose> handle)
   {
-    Napi::EscapableHandleScope scope(env);
-    auto deviceNativeExternal = Napi::External<XRDeviceNative>::New(env, device);
-    auto transformExternal = Napi::External<mat4>::New(env, &transform);
-    auto frameRequestExternal = Napi::External<xr::TrXRFrameRequest>::New(env, frameRequest);
-    Napi::Object obj = constructor->New({deviceNativeExternal,
-                                         transformExternal,
-                                         frameRequestExternal,
-                                         baseSpace->Value(),
-                                         xrSession->Value()});
-    return scope.Escape(obj).ToObject();
+    return XRPoseBase<XRViewerPose, client_xr::XRViewerPose>::NewInstance(env, handle);
   }
 
-  XRViewerPose::XRViewerPose(const Napi::CallbackInfo &info) : XRPoseBase(info)
+  // static
+  Napi::Object XRViewerPose::NewInstance(Napi::Env env, XRSession *session, mat4 &transformationMatrix,
+                                         XRFrame &frame,
+                                         XRReferenceSpace &baseSpace)
+  {
+    auto handle = make_shared<client_xr::XRViewerPose>(session->handle(), frame.handle(), transformationMatrix, baseSpace.handle());
+    return NewInstance(env, handle);
+  }
+
+  XRViewerPose::XRViewerPose(const Napi::CallbackInfo &info)
+      : XRPoseBase(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() < 5)
+    for (auto viewHandle : handle_->views())
     {
-      Napi::TypeError::New(env, "XRViewerPose() requires 5 arguments to construct.")
-          .ThrowAsJavaScriptException();
-      return;
+      auto view = XRView::NewInstance(env, viewHandle);
+      views.push_back(Napi::Persistent(view));
     }
-    if (!info[3].IsObject() || !info[3].ToObject().InstanceOf(XRReferenceSpace::constructor->Value()))
-    {
-      Napi::TypeError::New(env, "Invalid argument to construct XRViewerPose(): not a `XRReferenceSpace` object.")
-          .ThrowAsJavaScriptException();
-      return;
-    }
-    if (!info[4].IsObject() || !info[4].ToObject().InstanceOf(XRSession::constructor->Value()))
-    {
-      Napi::TypeError::New(env, "Invalid argument to construct XRViewerPose(): not a `XRSession` object.")
-          .ThrowAsJavaScriptException();
-      return;
-    }
-
-    auto baseReferenceSpace = XRReferenceSpace::Unwrap(info[3].ToObject());
-    auto xrSession = XRSession::Unwrap(info[4].ToObject());
-
-    // /**
-    //  * Create views.
-    //  *
-    //  * If the device is rendered as multipass, only one view is created, and the view is for the current eye.
-    //  * Otherwise, 2 views are created, one for each eye.
-    //  */
-    // if (device->getDeviceInit().renderedAsMultipass())
-    // {
-    //   xr::TrXRView &view = frameRequest->views[frameRequest->viewIndex];
-    //   auto jsView = XRView::NewInstance(env, xrSession, view, baseReferenceSpace);
-    //   views.push_back(Napi::Persistent(jsView));
-    // }
-    // else
-    // {
-    //   for (size_t viewIndex = 0; viewIndex < xr::TrXRFrameRequest::ViewsCount; viewIndex++)
-    //   {
-    //     xr::TrXRView &view = frameRequest->views[viewIndex];
-    //     auto jsView = XRView::NewInstance(env, xrSession, view, baseReferenceSpace);
-    //     views.push_back(Napi::Persistent(jsView));
-    //   }
-    // }
   }
 
   XRViewerPose::~XRViewerPose()
@@ -126,5 +99,27 @@ namespace bindings
     for (size_t i = 0; i < views.size(); i++)
       viewsArray[i] = views[i].Value();
     return viewsArray;
+  }
+
+  // static
+  void XRJointPose::Init(Napi::Env env)
+  {
+    Napi::Function tpl = DefineClass(env, "XRJointPose",
+                                     {InstanceValue("radius", Napi::Number::New(env, 0.0))});
+    constructor = new Napi::FunctionReference();
+    *constructor = Napi::Persistent(tpl);
+    env.SetInstanceData(constructor);
+    env.Global().Set("XRJointPose", tpl);
+  }
+
+  // static
+  Napi::Object XRJointPose::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRJointPose> handle)
+  {
+    return XRPoseBase<XRJointPose, client_xr::XRJointPose>::NewInstance(env, handle);
+  }
+
+  XRJointPose::XRJointPose(const Napi::CallbackInfo &info)
+      : XRPoseBase(info)
+  {
   }
 }

@@ -14,7 +14,7 @@ namespace client_xr
   {
   }
 
-  bool XRInputSource::dispatchSelectOrSqueezeEvents(XRFrame &frame)
+  bool XRInputSource::dispatchSelectOrSqueezeEvents(std::shared_ptr<XRFrame> frame)
   {
     assert(session_ != nullptr);
 
@@ -84,8 +84,8 @@ namespace client_xr
       targetSet.insert(inputSource->id);
   }
 
-  void XRInputSourceArray::updateInputSources(XRFrame &frame,
-                                              XRSession &session,
+  void XRInputSourceArray::updateInputSources(std::shared_ptr<XRFrame> frame,
+                                              std::shared_ptr<XRSession> session,
                                               InputSourcesChangedCallback onChangedCallback)
   {
     auto inputSourcesZone = device_->inputSourcesZone();
@@ -172,8 +172,7 @@ namespace client_xr
         }
         else
         {
-          auto newInputSource = make_shared<XRInputSource>(session.shared_from_this(),
-                                                           inputSourcesZone->getInputSourceById(id));
+          auto newInputSource = make_shared<XRInputSource>(session, inputSourcesZone->getInputSourceById(id));
           tmpArray.push_back(newInputSource);
         }
       }

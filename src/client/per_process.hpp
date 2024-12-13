@@ -39,8 +39,6 @@
 #include "./classes.hpp"
 
 using namespace std;
-using namespace node;
-using namespace v8;
 using namespace ipc;
 using namespace commandbuffers;
 using namespace frame_request;
@@ -84,9 +82,9 @@ public:
 class TrScriptRuntimePerProcess
 {
 private:
-  static MaybeLocal<Value> PrepareStackTraceCallback(Local<Context> context,
-                                                     Local<Value> exception,
-                                                     Local<Array> trace);
+  static v8::MaybeLocal<v8::Value> PrepareStackTraceCallback(v8::Local<v8::Context> context,
+                                                             v8::Local<v8::Value> exception,
+                                                             v8::Local<v8::Array> trace);
 
 public:
   TrScriptRuntimePerProcess();
