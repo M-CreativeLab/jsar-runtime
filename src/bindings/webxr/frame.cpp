@@ -10,7 +10,8 @@ namespace bindings
   // static
   void XRFrame::Init(Napi::Env env)
   {
-    Napi::Function tpl = DefineClass(env, "XRFrame",
+#define MODULE_NAME "XRFrame"
+    Napi::Function tpl = DefineClass(env, MODULE_NAME,
                                      {
                                          InstanceMethod("createAnchor", &XRFrame::CreateAnchor),
                                          InstanceMethod("getHitTestResults", &XRFrame::GetHitTestResults),
@@ -27,51 +28,24 @@ namespace bindings
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
-    env.Global().Set("XRFrame", tpl);
-  }
-
-  Napi::Object XRFrame::NewInstance(Napi::Env env, XRSession *session, std::shared_ptr<client_xr::XRFrame> frame)
-  {
-    Napi::EscapableHandleScope scope(env);
-    auto handleRef = SharedReference<client_xr::XRFrame>(frame);
-    auto handleExternal = Napi::External<SharedReference<client_xr::XRFrame>>::New(env, &handleRef);
-    Napi::Object instance = XRFrame::constructor->New({session->Value(), handleExternal});
-    return scope.Escape(instance).ToObject();
+    env.Global().Set(MODULE_NAME, tpl);
+#undef MODULE_NAME
   }
 
   XRFrame::XRFrame(const Napi::CallbackInfo &info)
-      : Napi::ObjectWrap<XRFrame>(info)
+      : XRHandleWrap<XRFrame, client_xr::XRFrame>(info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() < 2)
-    {
-      Napi::TypeError::New(env, "Invalid arguments number to create XRFrame(session, [[native frame]]).").ThrowAsJavaScriptException();
-      return;
-    }
-    if (!info[0].IsObject() || !info[0].ToObject().InstanceOf(XRSession::constructor->Value()))
-    {
-      Napi::TypeError::New(env, "XRFrame constructor requires a `XRSession` object.").ThrowAsJavaScriptException();
-      return;
-    }
-    if (!info[1].IsExternal())
-    {
-      Napi::TypeError::New(env, "Create a XRFrame object from JavaScript is not allowed.").ThrowAsJavaScriptException();
-      return;
-    }
-
-    Napi::Object sessionObj = info[0].As<Napi::Object>();
-    session_ = XRSession::Unwrap(sessionObj);
-
-    auto handleExternal = info[1].As<Napi::External<SharedReference<client_xr::XRFrame>>>();
-    auto handleRef = handleExternal.Data();
-    if (handleRef == nullptr)
+    if (info.Length() < 2 || !info[1].IsObject())
     {
       Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
       return;
     }
-    handle_ = handleRef->value;
+
+    Napi::Object sessionObj = info[1].As<Napi::Object>();
+    session_ = XRSession::Unwrap(sessionObj);
 
     auto jsThis = info.This().ToObject();
     jsThis.DefineProperty(Napi::PropertyDescriptor::Value("session", sessionObj, napi_enumerable));
@@ -129,12 +103,11 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    // if (active == false)
-    // {
-    //   Napi::TypeError::New(env, NON_ACTIVE_MSG).ThrowAsJavaScriptException();
-    //   return env.Undefined();
-    // }
-
+    if (handle_->active() == false)
+    {
+      Napi::TypeError::New(env, NON_ACTIVE_MSG).ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
     if (
         info.Length() < 2 || !info[0].IsObject() || !info[1].IsObject())
     {
@@ -154,18 +127,11 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    // if (active == false)
-    // {
-    //   Napi::TypeError::New(env, NON_ACTIVE_MSG).ThrowAsJavaScriptException();
-    //   return env.Undefined();
-    // }
-
-    // if (info.Length() < 2)
-    // {
-    //   Napi::TypeError::New(env, "getPose requires a reference space object and an XRSpace object").ThrowAsJavaScriptException();
-    //   return env.Undefined();
-    // }
-
+    if (handle_->active() == false)
+    {
+      Napi::TypeError::New(env, NON_ACTIVE_MSG).ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
     if (
         info.Length() < 2 || !info[0].IsObject() || !info[1].IsObject())
     {

@@ -94,7 +94,8 @@
     "cinttypes": "cpp",
     "forward_list": "cpp",
     "list": "cpp",
-    "memory_resource": "cpp"
+    "memory_resource": "cpp",
+    "__availability": "cpp"
   },
   "cmake.buildDirectory": "${workspaceFolder}/build/targets/darwin",
   "C_Cpp.default.cppStandard": "c++17",

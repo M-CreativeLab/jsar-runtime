@@ -83,8 +83,10 @@ namespace client_xr
     XRFrame(XRFrame &other);
 
   public:
-    uint32_t id() { return id_; }
-    uint32_t stereoId() { return stereoId_; }
+    inline uint32_t id() { return id_; }
+    inline uint32_t stereoId() { return stereoId_; }
+    inline bool active() { return active_; }
+    inline bool animationFrame() { return animationFrame_; }
 
   public:
     void startFrame();
