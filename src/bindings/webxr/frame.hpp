@@ -12,14 +12,26 @@ using namespace std;
 
 namespace bindings
 {
-  class XRFrame : public Napi::ObjectWrap<XRFrame>
+  class XRFrame : public XRHandleWrap<XRFrame, client_xr::XRFrame>
   {
+    friend class XRHandleWrap<XRFrame, client_xr::XRFrame>;
     friend class XRSession;
     friend class XRInputSource;
 
   public:
     static void Init(Napi::Env env);
-    static Napi::Object NewInstance(Napi::Env env, XRSession *session, std::shared_ptr<client_xr::XRFrame> frame);
+    /**
+     * Create a new WebXR frame instance.
+     * 
+     * @param env the N-API environment.
+     * @param session the WebXR session.
+     * @param frame the WebXR frame.
+     * @returns a new WebXR frame instance.
+     */
+    static inline Napi::Object NewInstance(Napi::Env env, XRSession *session, std::shared_ptr<client_xr::XRFrame> frame)
+    {
+      return XRHandleWrap<XRFrame, client_xr::XRFrame>::NewInstance(env, frame, session->Value());
+    }
 
   public:
     XRFrame(const Napi::CallbackInfo &info);
@@ -42,14 +54,12 @@ namespace bindings
     void end();
 
   public:
-    inline std::shared_ptr<client_xr::XRFrame> handle() { return handle_; }
     inline uint32_t id() { return handle_->id(); }
     inline XRSession *session() { return session_; }
     inline uint32_t sessionId() { return session_->id(); }
     inline uint32_t stereoId() { return handle_->stereoId(); }
 
   private:
-    std::shared_ptr<client_xr::XRFrame> handle_;
     XRSession *session_;
 
   private:
