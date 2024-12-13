@@ -179,6 +179,14 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
+    if (eventTarget == nullptr)
+    {
+      auto msg = "Failed to execute 'addEventListener' on 'EventTarget': "
+                 "The event target object is not initialized.";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
     if (info.Length() < 2)
     {
       auto msg = "Failed to execute 'addEventListener' on 'EventTarget': "
@@ -255,6 +263,14 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
+    if (eventTarget == nullptr)
+    {
+      auto msg = "Failed to execute 'removeEventListener' on 'EventTarget': "
+                 "The event target object is not initialized.";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
     if (info.Length() < 2)
     {
       auto msg = "Failed to execute 'removeEventListener' on 'EventTarget': "
@@ -310,6 +326,14 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
+
+    if (eventTarget == nullptr)
+    {
+      auto msg = "Failed to execute 'dispatchEvent' on 'EventTarget': "
+                 "The event target object is not initialized.";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
 
     if (info.Length() < 1 || !info[0].IsObject())
     {

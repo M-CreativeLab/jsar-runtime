@@ -44,7 +44,7 @@ namespace dombinding
     void setEventTarget(std::shared_ptr<EventTargetType> eventTarget);
 
   protected:
-    std::shared_ptr<EventTargetType> eventTarget;
+    std::shared_ptr<EventTargetType> eventTarget = nullptr;
 
   private:
     std::thread::id jsThreadId;

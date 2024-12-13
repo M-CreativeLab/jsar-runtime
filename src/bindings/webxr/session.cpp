@@ -51,11 +51,15 @@ namespace bindings
     auto env = info.Env();
     HandleScope scope(env);
 
+    setEventTarget(handle_);
+
     // Define JS properties
     // auto jsThis = info.This().ToObject();
     // jsThis.DefineProperty(Napi::PropertyDescriptor::Value("recommendedContentSize", nativeSessionObject.Get("recommendedContentSize"), napi_enumerable));
     // jsThis.DefineProperty(Napi::PropertyDescriptor::Value("inputSources", inputSources.Value(), napi_enumerable));
     // jsThis.DefineProperty(Napi::PropertyDescriptor::Value("enabledFeatures", enabledFeatures.Value(), napi_enumerable));
+
+    Ref();  // Ref the WebXR session object to keep it alive until the `end()` method is called.
   }
 
   Value XRSession::RenderStateGetter(const CallbackInfo &info)
