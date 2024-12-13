@@ -11,11 +11,13 @@
         const supports = await navigator.xr.isSessionSupported(requestMode);
         if (supports) {
           const newSession = await navigator.xr.requestSession(requestMode);
+          newSession.addEventListener('inputsourceschange', e => {
+            console.info('inputsourceschange', e);
+          });
           console.info(newSession);
           const baseLayer = new XRWebGLLayer(newSession, navigator.gl);
           newSession.updateRenderState({ baseLayer });
           console.info(newSession, baseLayer);
-          console.info(newSession.addEventListener);
 
           const baseReferenceSpace = await newSession.requestReferenceSpace('local');
           // function renderloop(time, frame) {
