@@ -20,7 +20,8 @@ namespace client_xr
   class XRRenderState
   {
   public:
-    XRRenderState() : depthFar(1000.0),
+    XRRenderState() : baseLayer(nullptr),
+                      depthFar(1000.0),
                       depthNear(0.1),
                       inlineVerticalFieldOfView(0)
     {
@@ -43,10 +44,14 @@ namespace client_xr
   public:
     void update(XRRenderState &newState)
     {
-      baseLayer = newState.baseLayer;
-      depthFar = newState.depthFar;
-      depthNear = newState.depthNear;
-      inlineVerticalFieldOfView = newState.inlineVerticalFieldOfView;
+      if (newState.baseLayer != nullptr && baseLayer != newState.baseLayer)
+        baseLayer = newState.baseLayer;
+      if (depthFar != newState.depthFar)
+        depthFar = newState.depthFar;
+      if (depthNear != newState.depthNear)
+        depthNear = newState.depthNear;
+      if (inlineVerticalFieldOfView != newState.inlineVerticalFieldOfView)
+        inlineVerticalFieldOfView = newState.inlineVerticalFieldOfView;
     }
 
   public:

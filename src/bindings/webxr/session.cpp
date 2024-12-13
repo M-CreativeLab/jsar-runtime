@@ -59,7 +59,7 @@ namespace bindings
     // jsThis.DefineProperty(Napi::PropertyDescriptor::Value("inputSources", inputSources.Value(), napi_enumerable));
     // jsThis.DefineProperty(Napi::PropertyDescriptor::Value("enabledFeatures", enabledFeatures.Value(), napi_enumerable));
 
-    Ref();  // Ref the WebXR session object to keep it alive until the `end()` method is called.
+    Ref(); // Ref the WebXR session object to keep it alive until the `end()` method is called.
   }
 
   Value XRSession::RenderStateGetter(const CallbackInfo &info)
@@ -112,11 +112,21 @@ namespace bindings
     auto callback = [this, tscb](uint32_t time, shared_ptr<client_xr::XRFrame> frame)
     {
       assert(tscb != nullptr);
-      tscb->BlockingCall([this, time, frame](Napi::Env env, Function jsCallback)
-                         {
-                          auto jsTime = Number::New(env, time);
-                          auto jsFrame = XRFrame::NewInstance(env, this, frame);
-                          jsCallback.Call({jsTime, jsFrame}); });
+      auto callHandler = [this, time, frame](Napi::Env env, Function jsCallback)
+      {
+        auto jsTime = Number::New(env, time);
+        auto jsFrame = XRFrame::NewInstance(env, this, frame);
+        try
+        {
+          jsCallback.Call({jsTime, jsFrame});
+        }
+        catch (const Napi::Error &e)
+        {
+          std::cerr << "Failed to execute frame callback: " << e.Message() << std::endl;
+        }
+      };
+
+      tscb->BlockingCall(callHandler);
       tscb->Release();
     };
     auto id = handle_->requestAnimationFrame(callback);
@@ -235,7 +245,14 @@ namespace bindings
     if (newStateObject.Has("inlineVerticalFieldOfView"))
       newState.inlineVerticalFieldOfView = newStateObject.Get("inlineVerticalFieldOfView").ToNumber().FloatValue();
 
-    handle_->updateRenderState(newState);
+    try
+    {
+      handle_->updateRenderState(newState);
+    }
+    catch (const std::exception &e)
+    {
+      TypeError::New(env, e.what()).ThrowAsJavaScriptException();
+    }
     return env.Undefined();
   }
 

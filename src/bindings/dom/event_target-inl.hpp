@@ -219,6 +219,9 @@ namespace dombinding
       return env.Undefined();
     }
 
+#define PRINT_LISTENER_ERROR(type, err) \
+  std::cerr << "occurred an error when calling listener on event(" << type << "): " << err.Message() << std::endl
+
     auto jsThisRef = make_shared<Napi::ObjectReference>(Napi::Persistent(info.This().As<Napi::Object>()));
     auto listenerRef = make_shared<Napi::FunctionReference>(Napi::Persistent(listenerValue.As<Napi::Function>()));
     auto listenerCallback = [this, jsThisRef, listenerRef](dom::DOMEventType type, dom::Event &event)
@@ -230,11 +233,19 @@ namespace dombinding
          */
         shared_ptr<dom::Event> eventRef = make_shared<dom::Event>(event);
         threadSafeListenerCallback.NonBlockingCall(
-            [eventRef, listenerRef](Napi::Env env, Napi::Function jsCallback)
+            [type, eventRef, listenerRef](Napi::Env env, Napi::Function jsCallback)
             {
               Napi::HandleScope scope(env);
-              jsCallback.Call({Napi::Number::New(env, static_cast<int>(eventRef->type)),
-                               listenerRef->Value()});
+              try
+              {
+                jsCallback.Call({Napi::Number::New(env, static_cast<int>(eventRef->type)),
+                                 listenerRef->Value()});
+              }
+              catch (const Napi::Error &e)
+              {
+                std::string eventTypeStr = dom::EventTypeToString(type);
+                PRINT_LISTENER_ERROR(eventTypeStr, e);
+              }
             });
         return;
       }
@@ -247,8 +258,16 @@ namespace dombinding
         Napi::HandleScope scope(env);
 
         assert(!this->listenerCallback.IsEmpty());
-        this->listenerCallback.Call(jsThisRef->Value(), {Napi::Number::New(env, static_cast<int>(type)),
-                                                         listenerRef->Value()});
+        try
+        {
+          this->listenerCallback.Call(jsThisRef->Value(), {Napi::Number::New(env, static_cast<int>(type)),
+                                                           listenerRef->Value()});
+        }
+        catch (const Napi::Error &e)
+        {
+          std::string eventTypeStr = dom::EventTypeToString(type);
+          PRINT_LISTENER_ERROR(eventTypeStr, e);
+        }
       }
     };
 
