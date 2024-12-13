@@ -25,6 +25,13 @@ namespace xr
     }
 
   public:
+    friend std::ostream &operator<<(std::ostream &os, const Viewport &viewport)
+    {
+      os << "Viewport(" << viewport.width << ", " << viewport.height << ", " << viewport.x << ", " << viewport.y << ")";
+      return os;
+    }
+
+  public:
     uint32_t width;
     uint32_t height;
     uint32_t x;

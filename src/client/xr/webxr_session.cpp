@@ -111,6 +111,8 @@ namespace client_xr
     {
     case XRReferenceSpaceType::kLocal:
       return localSpace_;
+    case XRReferenceSpaceType::kViewer:
+      return viewerSpace_;
     case XRReferenceSpaceType::kUnbounded:
       return unboundedSpace_;
     default:
@@ -330,9 +332,14 @@ namespace client_xr
     }
 
     // - If session’s renderState's baseLayer is null, abort these steps.
-    if (activeRenderState_ == nullptr || activeRenderState_->baseLayer == nullptr)
+    if (activeRenderState_ == nullptr)
     {
-      cerr << "activeRenderState or activeRenderState->baseLayer is null, aborting frame rendering." << endl;
+      cerr << "activeRenderState is null, aborting frame rendering." << endl;
+      return;
+    }
+    if (activeRenderState_->baseLayer == nullptr)
+    {
+      cerr << "activeRenderState->baseLayer is null, aborting frame rendering." << endl;
       return;
     }
 
