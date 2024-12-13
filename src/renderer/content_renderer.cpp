@@ -200,12 +200,12 @@ namespace renderer
 
       if (currentStereoId != 0)
       {
-        auto activeSession = content->getActiveXRSession();
-        if (activeSession != nullptr)
+        auto pendingStereoFramesCount = getPendingStereoFramesCount();
+        for (auto session : content->getXRSessions())
         {
-          activeSession->setStereoId(currentStereoId);
-          activeSession->setPendingStereoFramesCount(getPendingStereoFramesCount());
-          activeSession->updateStatesInZone();
+          session->setStereoId(currentStereoId);
+          session->setPendingStereoFramesCount(pendingStereoFramesCount);
+          session->updateStatesInZone();
         }
       }
     }

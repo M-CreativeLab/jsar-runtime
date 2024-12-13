@@ -91,11 +91,11 @@ namespace client_xr
     sessionContextZoneClient_->setCollisionBoxMinMax(minValues, maxValues);
   }
 
-  void XRSession::updateInputSourcesIfChanged(XRFrame &frame)
+  void XRSession::updateInputSourcesIfChanged(std::shared_ptr<XRFrame> frame)
   {
     if (inputSources.has_value())
     {
-      inputSources.value().updateInputSources(frame, *this, [this](auto added, auto removed)
+      inputSources.value().updateInputSources(frame, shared_from_this(), [this](auto added, auto removed)
                                               { dispatchEvent(dom::DOMEventType::XRInputSourcesChange, ""); });
     }
   }
@@ -205,9 +205,11 @@ namespace client_xr
 
   void XRSession::initialize()
   {
-    viewerSpace_ = make_shared<XRReferenceSpace>(XRReferenceSpaceType::kViewer);
-    localSpace_ = make_shared<XRReferenceSpace>(XRReferenceSpaceType::kLocal);
-    unboundedSpace_ = make_shared<XRReferenceSpace>(XRReferenceSpaceType::kUnbounded);
+    viewerSpace_ = XRReferenceSpace::Make(XRReferenceSpaceType::kViewer);
+    std::cout << "viewerSpace_: " << viewerSpace_.get() << " at " << id << std::endl;
+
+    localSpace_ = XRReferenceSpace::Make(XRReferenceSpaceType::kLocal);
+    unboundedSpace_ = XRReferenceSpace::Make(XRReferenceSpaceType::kUnbounded);
     inputSources = XRInputSourceArray(shared_from_this());
 
     // Prepare the uv handles
@@ -243,29 +245,29 @@ namespace client_xr
 #define FRAME_TIME_DELTA_THRESHOLD 1000 / 45
   void XRSession::tick()
   {
-    static steady_clock::time_point timepointOnLastTick = steady_clock::now();
     steady_clock::time_point timepointOnNow = steady_clock::now();
-    auto delta = duration_cast<milliseconds>(timepointOnNow - timepointOnLastTick).count();
+    auto delta = duration_cast<milliseconds>(timepointOnNow - lastTickTimepoint_).count();
     if (delta >= FRAME_TIME_DELTA_THRESHOLD)
     {
       switch (update())
       {
       case XRSessionUpdateState::kSessionEnded:
-        cerr << "skipped this frame: " << "session is ended." << endl;
+        cerr << "[session#" << id << "] " << "skipped this frame: " << "session is ended." << endl;
         break;
       case XRSessionUpdateState::kInvalidSessionId:
-        cerr << "skipped this frame: " << "invalid session id." << endl;
+        cerr << "[session#" << id << "] " << "skipped this frame: " << "invalid session id." << endl;
         break;
+      // Uncomment the following cases if you need to print the logs.
       // case XRSessionUpdateState::kStereoIdMismatch:
-      //   cerr << "skipped this frame: " << "stereo id mismatch." << endl;
+      //   cerr << "[session#" << id << "] " << "skipped this frame: " << "stereo id mismatch." << endl;
       //   break;
       // case XRSessionUpdateState::kPendingStereoFrames:
-      //   cerr << "skipped this frame: " << "pending stereo frames." << endl;
+      //   cerr << "[session#" << id << "] " << "skipped this frame: " << "pending stereo frames." << endl;
       //   break;
       default:
         break;
       }
-      timepointOnLastTick = timepointOnNow;
+      lastTickTimepoint_ = timepointOnNow;
     }
   }
 
@@ -276,10 +278,9 @@ namespace client_xr
     if (id < 0)
       return XRSessionUpdateState::kInvalidSessionId;
 
-    static int prevStereoId = -1;
     xr::TrXRSessionContextData *sessionContext = sessionContextZoneClient_->getData();
     xr::TrXRDeviceContextData *deviceContext = device_->contextZone()->getData();
-    if (prevStereoId != -1 && prevStereoId == sessionContext->stereoId)
+    if (prevStereoId_ != -1 && prevStereoId_ == sessionContext->stereoId)
       return XRSessionUpdateState::kStereoIdMismatch;
 
     int pendingsAtServer = sessionContext->getPendingStereoFramesCount();
@@ -306,7 +307,7 @@ namespace client_xr
       auto req = frameContext.createFrameRequestForView(0);
       dispatchXRFrame(req);
     }
-    prevStereoId = sessionContext->stereoId;
+    prevStereoId_ = sessionContext->stereoId;
     return XRSessionUpdateState::kSuccess;
   }
 
@@ -338,7 +339,7 @@ namespace client_xr
     // - If session’s mode is "inline" and session’s renderState's output canvas is null,
     //   abort these steps.
     // ???
-    XRFrame frame(&frameRequest, shared_from_this());
+    auto frame = XRFrame::Make(&frameRequest, shared_from_this());
 
     // Move the pending frame callbacks to current map
     currentFrameCallbacks_.clear();
@@ -346,7 +347,7 @@ namespace client_xr
       currentFrameCallbacks_.push_back(it);
     pendingFrameCallbacks_.clear();
 
-    frame.startFrame();
+    frame->startFrame();
     {
       // Update the input sources if changed
       updateInputSourcesIfChanged(frame);
@@ -369,7 +370,7 @@ namespace client_xr
       }
       currentFrameCallbacks_.clear();
     }
-    frame.endFrame();
+    frame->endFrame();
   }
 
   bool XRSession::calcFps()

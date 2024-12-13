@@ -132,7 +132,7 @@ public: // event methods
   bool respondRpcRequest(events_comm::TrRpcResponse &respDetail, uint32_t requestId);
   /**
    * Log the document event for metrics.
-   * 
+   *
    * @param docEvent The `TrDocumentEvent` reference to log.
    */
   void logDocumentEvent(events_comm::TrDocumentEvent &docEvent);
@@ -169,6 +169,10 @@ public: // xr methods
       return xrCommandChanSender->sendCommand(resp);
     return false;
   }
+  /**
+   * @returns a `std::vector` of the `XRSession` instances, which includes all the WebXR sessions by the content.
+   */
+  vector<xr::TrXRSession *>& getXRSessions() { return xrSessionsStack; }
   /**
    * Get the current active XRSession, it means the top of the sessions stack.
    *
@@ -229,8 +233,8 @@ private:
   long long prevDocumentEventTime = 0;
   /**
    * The flag `isRequestDispatched` is to control the request dispatching.
-   * 
-   * Call to start() will reset this flag to false and update the request to dispatch, then the tick function will check this flag to 
+   *
+   * Call to start() will reset this flag to false and update the request to dispatch, then the tick function will check this flag to
    * dispatch the request.
    */
   bool isRequestDispatched = true;
@@ -325,14 +329,14 @@ public:
   shared_ptr<TrContentRuntime> makeContent();
   /**
    * Get the content instance by its id.
-   * 
+   *
    * @param id The content id.
    * @param includePreContent If true, it will return the pre-content instance if the id is matched.
    */
   shared_ptr<TrContentRuntime> getContent(uint32_t id, bool includePreContent = false);
   /**
    * Find the content instance by its client process id.
-   * 
+   *
    * @param pid The client process id.
    */
   shared_ptr<TrContentRuntime> findContentByPid(pid_t pid);
@@ -362,7 +366,7 @@ private:
   vector<shared_ptr<TrContentRuntime>> contents;
   unique_ptr<TrHiveDaemon> hived;
 
-private:  // content listeners
+private: // content listeners
   shared_ptr<events_comm::TrNativeEventListener> rpcRequestListener = nullptr;
   shared_ptr<events_comm::TrNativeEventListener> documentEventListener = nullptr;
 

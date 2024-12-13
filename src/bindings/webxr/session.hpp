@@ -47,13 +47,15 @@ namespace bindings
     friend class XRFrame;
 
   public:
-    static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    static void Init(Napi::Env env);
     static Napi::Object NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRSession> handle);
     static bool IsInstanceOf(Napi::Value value)
     {
       return value.As<Napi::Object>().InstanceOf(constructor->Value());
     }
     static Napi::Value FrameHandler(const Napi::CallbackInfo &info);
+
+  public:
     XRSession(const Napi::CallbackInfo &info);
     ~XRSession() = default;
 
@@ -88,7 +90,6 @@ namespace bindings
     inline bool immersive() const { return handle_->immersive(); }
     inline client_xr::XREnvironmentBlendMode environmentBlendMode() const { return handle_->environmentBlendMode(); }
     inline std::shared_ptr<client_xr::XRSession> handle() const { return handle_; }
-    Napi::FunctionReference onEventCallback;
 
   private:
     std::shared_ptr<client_xr::XRSession> handle_;

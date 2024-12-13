@@ -18,8 +18,10 @@ namespace bindings
     friend class XRInputSource;
 
   public:
-    static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, xr::TrXRFrameRequest *frameRequest, XRSession *session);
+    static void Init(Napi::Env env);
+    static Napi::Object NewInstance(Napi::Env env, XRSession *session, std::shared_ptr<client_xr::XRFrame> frame);
+
+  public:
     XRFrame(const Napi::CallbackInfo &info);
 
   private:
@@ -36,24 +38,19 @@ namespace bindings
     Napi::Value GetJointPose(const Napi::CallbackInfo &info);
 
   public:
-    uint32_t getStereoRenderingId();
     void start();
     void end();
 
-  private:
-    uint32_t id;
-    uint32_t stereoId;
-    bool active;
-    bool animationFrame;
-    uint32_t sessionId;
-    uint32_t timestamp;
-    XRSession *session;
-    xr::TrXRFrameRequest *internal;
-    chrono::time_point<chrono::high_resolution_clock> startTime;
-    chrono::time_point<chrono::high_resolution_clock> endTime;
+  public:
+    inline std::shared_ptr<client_xr::XRFrame> handle() { return handle_; }
+    inline uint32_t id() { return handle_->id(); }
+    inline XRSession *session() { return session_; }
+    inline uint32_t sessionId() { return session_->id(); }
+    inline uint32_t stereoId() { return handle_->stereoId(); }
 
   private:
     std::shared_ptr<client_xr::XRFrame> handle_;
+    XRSession *session_;
 
   private:
     static thread_local Napi::FunctionReference *constructor;

@@ -3,8 +3,12 @@
 
 namespace bindings
 {
+  using namespace std;
+
   thread_local Napi::FunctionReference *XRView::constructor;
-  Napi::Object XRView::Init(Napi::Env env, Napi::Object exports)
+
+  // static
+  void XRView::Init(Napi::Env env)
   {
     Napi::Function tpl = DefineClass(env, "XRView",
                                      {
@@ -14,25 +18,17 @@ namespace bindings
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
     env.SetInstanceData(constructor);
-    exports.Set("XRView", tpl);
-    return exports;
+    env.Global().Set("XRView", tpl);
   }
 
-  Napi::Object XRView::NewInstance(Napi::Env env, XRSession *session, xr::TrXRView &view, XRReferenceSpace* baseReferenceSpace)
+  // static
+  Napi::Object XRView::NewInstance(Napi::Env env, shared_ptr<client_xr::XRView> handle)
   {
     Napi::EscapableHandleScope scope(env);
-    auto viewBaseMatrix = baseReferenceSpace->getInverseBaseMatrix() * glm::inverse(view.getViewMatrix());
-    auto viewMatrixTransform = XRRigidTransform::NewInstance(env, viewBaseMatrix);
-    auto projectionMatrixTransform = XRRigidTransform::NewInstance(env, view.getProjectionMatrix());
-    auto viewIndex = Napi::Number::New(env, view.viewIndex);
-    auto viewportExternal = Napi::External<TrViewport>::New(env, &view.viewport);
-
-    Napi::Object obj = constructor->New({session->Value(),
-                                         viewMatrixTransform,
-                                         projectionMatrixTransform,
-                                         viewIndex,
-                                         viewportExternal});
-    return scope.Escape(obj).ToObject();
+    SharedReference<client_xr::XRView> handleRef(handle);
+    auto handleExternal = Napi::External<SharedReference<client_xr::XRView>>::New(env, &handleRef);
+    Napi::Object instance = XRView::constructor->New({handleExternal});
+    return scope.Escape(instance).ToObject();
   }
 
   XRView::XRView(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRView>(info)
@@ -40,38 +36,28 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    if (info.Length() < 5)
+    if (info.Length() < 1 || !info[0].IsExternal())
     {
-      Napi::TypeError::New(env, "Invalid arguments to construct XRView(session, viewTransform, projectionTransform, viewIndex, viewport).")
-          .ThrowAsJavaScriptException();
-      return;
-    }
-    if (!info[4].IsExternal())
-    {
-      Napi::TypeError::New(env, "XRView constructor requires a TrViewport external object.").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
       return;
     }
 
-    Napi::Object sessionObj = info[0].As<Napi::Object>();
-    auto session = XRSession::Unwrap(sessionObj);
-    sessionId = session->id();
-    // device = session->device;
+    auto handleExternal = info[0].As<Napi::External<SharedReference<client_xr::XRView>>>();
+    auto handleRef = handleExternal.Data();
+    if (!handleRef)
+    {
+      Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
+      return;
+    }
+    handle_ = handleRef->value;
 
-    Napi::Object transformObj = info[1].As<Napi::Object>();
-    auto transform = XRRigidTransform::Unwrap(transformObj);
-    this->transformMatrix = transform->matrix();
-
-    Napi::Object projectionObj = info[2].As<Napi::Object>();
-    auto projection = XRRigidTransform::Unwrap(projectionObj);
-    this->projectionMatrix = projection->matrix();
-
-    index = info[3].As<Napi::Number>().Uint32Value();
-    viewport = *info[4].As<Napi::External<TrViewport>>().Data();
-
+    // Define properties
     auto jsThis = info.This().As<Napi::Object>();
     jsThis.DefineProperty(Napi::PropertyDescriptor::Value("eye", InitEye(env), napi_enumerable));
     jsThis.DefineProperty(Napi::PropertyDescriptor::Value("projectionMatrix", InitProjectionMatrix(env), napi_enumerable));
-    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("transform", XRRigidTransform::NewInstance(env, transformMatrix), napi_enumerable));
+    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("transform",
+                                                          XRRigidTransform::NewInstance(env, handle_->transform()),
+                                                          napi_enumerable));
     jsThis.DefineProperty(Napi::PropertyDescriptor::Value("recommendedViewportScale", env.Null(), napi_enumerable));
   }
 
@@ -79,9 +65,11 @@ namespace bindings
   {
     Napi::EscapableHandleScope scope(env);
     Napi::String jsEye;
-    if (index == 0)
+
+    auto eye = handle_->eye();
+    if (eye == client_xr::XREye::kLeft)
       jsEye = Napi::String::New(env, "left");
-    else if (index == 1)
+    else if (eye == client_xr::XREye::kRight)
       jsEye = Napi::String::New(env, "right");
     else
       jsEye = Napi::String::New(env, "none");
@@ -91,6 +79,7 @@ namespace bindings
   Napi::Value XRView::InitProjectionMatrix(Napi::Env env)
   {
     Napi::EscapableHandleScope scope(env);
+    auto projectionMatrix = handle_->projectionMatrix();
     auto float32arrayValue = Napi::Float32Array::New(env, 16);
     for (int i = 0; i < 4; i++)
     {
@@ -106,6 +95,19 @@ namespace bindings
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
+
+    float scale = 1.0f;
+    if (info.Length() > 0)
+      scale = info[0].ToNumber().FloatValue();
+
+    try
+    {
+      handle_->requestViewportScale(scale);
+    }
+    catch (const std::exception &e)
+    {
+      Napi::Error::New(env, e.what()).ThrowAsJavaScriptException();
+    }
     return env.Undefined();
   }
 

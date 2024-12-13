@@ -3,7 +3,9 @@
 namespace bindings
 {
   thread_local Napi::FunctionReference *XRViewport::constructor;
-  Napi::Object XRViewport::Init(Napi::Env env, Napi::Object exports)
+
+  // static
+  void XRViewport::Init(Napi::Env env)
   {
     Napi::Function tpl = DefineClass(env, "XRViewport",
                                      {InstanceValue("width", Napi::Number::New(env, 0), napi_default_jsproperty),
@@ -14,8 +16,7 @@ namespace bindings
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
     env.SetInstanceData(constructor);
-    exports.Set("XRViewport", tpl);
-    return exports;
+    env.Global().Set("XRViewport", tpl);
   }
 
   Napi::Object XRViewport::NewInstance(Napi::Env env, TrViewport viewport)

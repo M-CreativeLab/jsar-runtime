@@ -22,6 +22,13 @@ namespace client_xr
   class XRWebGLLayer : public XRLayer, public xr::WebGLLayer
   {
   public:
+    /**
+     * It creates a new `XRWebGLLayer` object.
+     * 
+     * @param session The XR session.
+     * @param glContext The WebGL context to use.
+     * @returns The created `XRWebGLLayer` object.
+     */
     static std::shared_ptr<XRWebGLLayer> Make(std::shared_ptr<XRSession> session,
                                               std::shared_ptr<client_graphics::WebGLContext> glContext)
     {

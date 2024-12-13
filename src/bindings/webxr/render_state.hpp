@@ -10,8 +10,10 @@ namespace bindings
   class XRRenderState : public Napi::ObjectWrap<XRRenderState>
   {
   public:
-    static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    static void Init(Napi::Env env);
     static Napi::Object NewInstance(Napi::Env env, client_xr::XRRenderState state);
+
+  public:
     XRRenderState(const Napi::CallbackInfo &info);
 
   private:

@@ -21,6 +21,19 @@ namespace client_xr
   {
   }
 
+  XRFrame::XRFrame(XRFrame &other)
+      : frameRequestData_(other.frameRequestData_),
+        id_(other.id_),
+        stereoId_(other.stereoId_),
+        timestamp_(other.timestamp_),
+        session_(other.session_),
+        sessionId_(other.sessionId_),
+        device_(other.device_),
+        active_(other.active_),
+        animationFrame_(other.animationFrame_)
+  {
+  }
+
   void XRFrame::startFrame()
   {
     active_ = true;
@@ -72,13 +85,14 @@ namespace client_xr
     if (space == nullptr || baseSpace == nullptr)
       return nullptr;
 
-    baseSpace->ensurePoseUpdated(id_, session_, *frameRequestData_);
+    auto &frameRequestData = *frameRequestData_;
+    baseSpace->ensurePoseUpdated(id_, session_, frameRequestData);
     if (!space->isReferenceSpace() && space->subType != XRSpaceSubType::kUnset)
     {
       auto inputSpace = dynamic_pointer_cast<XRTargetRayOrGripSpace>(space);
-      inputSpace->ensurePoseUpdated(id_, session_, *frameRequestData_);
+      inputSpace->ensurePoseUpdated(id_, session_, frameRequestData);
       auto transform /** input source space to base(local/unbound) */ = TR_XRSPACE_RELATIVE_TRANSFORM(inputSpace, baseSpace);
-      return std::make_shared<XRPose>(session_, transform);
+      return std::make_shared<XRPose>(session_, shared_from_this(), transform);
     }
     else
     {
@@ -94,11 +108,12 @@ namespace client_xr
     auto viewerSpace = session_->viewerSpace();
     assert(viewerSpace != nullptr);
 
-    referenceSpace->ensurePoseUpdated(id_, session_, *frameRequestData_);
-    viewerSpace->ensurePoseUpdated(id_, session_, *frameRequestData_);
+    auto &frameRequestData = *frameRequestData_;
+    referenceSpace->ensurePoseUpdated(id_, session_, frameRequestData);
+    viewerSpace->ensurePoseUpdated(id_, session_, frameRequestData);
 
     auto viewerTransform /** viewer space to reference space */ = TR_XRSPACE_RELATIVE_TRANSFORM(viewerSpace, referenceSpace);
-    return std::make_shared<XRViewerPose>(session_, viewerTransform, referenceSpace);
+    return std::make_shared<XRViewerPose>(session_, shared_from_this(), viewerTransform, referenceSpace);
   }
 
   std::shared_ptr<XRJointPose> XRFrame::getJointPose(std::shared_ptr<XRJointSpace> jointSpace, std::shared_ptr<XRSpace> baseSpace)
@@ -106,12 +121,13 @@ namespace client_xr
     if (jointSpace == nullptr || baseSpace == nullptr)
       return nullptr;
 
-    jointSpace->ensurePoseUpdated(id_, session_, *frameRequestData_);
+    auto &frameRequestData = *frameRequestData_;
+    jointSpace->ensurePoseUpdated(id_, session_, frameRequestData);
     if (baseSpace->isReferenceSpace())
     {
-      baseSpace->ensurePoseUpdated(id_, session_, *frameRequestData_);
+      baseSpace->ensurePoseUpdated(id_, session_, frameRequestData);
       auto transform /** joint space to base(local/unbound) */ = TR_XRSPACE_RELATIVE_TRANSFORM(jointSpace, baseSpace);
-      return std::make_shared<XRJointPose>(session_, transform);
+      return std::make_shared<XRJointPose>(session_, shared_from_this(), transform);
     }
     else
     {

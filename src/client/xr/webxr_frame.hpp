@@ -59,17 +59,32 @@ namespace client_xr
     uint32_t time = 0;
   };
 
-  class XRFrame
+  class XRFrame : public std::enable_shared_from_this<XRFrame>
   {
     friend class XRSession;
+    friend class XRPose;
     friend class XRInputSource;
 
   public:
-    XRFrame(xr::TrXRFrameRequest *frameRequest, std::shared_ptr<XRSession> session);
+    /**
+     * Create a new `XRFrame` object.
+     * 
+     * @param frameRequest the frame request data.
+     * @param session the `XRSession` object.
+     * @returns a new `XRFrame` object.
+     */
+    static std::shared_ptr<XRFrame> Make(xr::TrXRFrameRequest *frameRequest, std::shared_ptr<XRSession> session)
+    {
+      return std::make_shared<XRFrame>(frameRequest, session);
+    }
 
   public:
-    uint32_t id() const { return id_; }
-    uint32_t stereoId() const { return stereoId_; }
+    XRFrame(xr::TrXRFrameRequest *frameRequest, std::shared_ptr<XRSession> session);
+    XRFrame(XRFrame &other);
+
+  public:
+    uint32_t id() { return id_; }
+    uint32_t stereoId() { return stereoId_; }
 
   public:
     void startFrame();

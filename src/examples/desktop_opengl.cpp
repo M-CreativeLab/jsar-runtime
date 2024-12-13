@@ -736,6 +736,9 @@ int main(int argc, char **argv)
           auto xrDevice = embedder->constellation->xrDevice;
           assert(xrDevice != nullptr);
 
+          auto viewerBaseMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewerBaseMatrix()));
+          xrDevice->updateViewerBaseMatrix(viewerBaseMatrix);
+
           for (int viewIndex = 0; viewIndex < 2; viewIndex++)
           {
             auto viewMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewMatrixForEye(viewIndex)));

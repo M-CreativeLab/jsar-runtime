@@ -9,8 +9,8 @@ namespace client_xr
   class XRPose
   {
   public:
-    XRPose(std::shared_ptr<XRSession> session, glm::mat4 &transformationMatrix);
-    XRPose(std::shared_ptr<XRSession> session, XRRigidTransform &transform);
+    XRPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix);
+    XRPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, XRRigidTransform &transform);
 
   public:
     XRRigidTransform transform;
@@ -25,9 +25,9 @@ namespace client_xr
   class XRViewerPose : public XRPose
   {
   public:
-    XRViewerPose(std::shared_ptr<XRSession> session, glm::mat4 &transformationMatrix,
+    XRViewerPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix,
                  std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
-    XRViewerPose(std::shared_ptr<XRSession> session, XRRigidTransform &transform,
+    XRViewerPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, XRRigidTransform &transform,
                  std::shared_ptr<XRReferenceSpace> baseReferenceSpace);
 
   public:
@@ -43,7 +43,7 @@ namespace client_xr
   class XRJointPose : public XRPose
   {
   public:
-    XRJointPose(std::shared_ptr<XRSession> session, glm::mat4 &transformationMatrix);
-    XRJointPose(std::shared_ptr<XRSession> session, XRRigidTransform &transform);
+    XRJointPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, glm::mat4 &transformationMatrix);
+    XRJointPose(std::shared_ptr<XRSession> session, std::shared_ptr<XRFrame> frame, XRRigidTransform &transform);
   };
 }

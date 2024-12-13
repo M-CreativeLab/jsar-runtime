@@ -18,6 +18,13 @@ namespace client_xr
           isReferenceSpace_(isReferenceSpace)
     {
     }
+    XRSpace(glm::mat4 baseMatrix, XRSpaceSubType subType)
+        : subType(subType),
+          lastFrameId_(-1),
+          baseMatrix_(baseMatrix),
+          isReferenceSpace_(false)
+    {
+    }
     virtual ~XRSpace() = default;
 
   public:
@@ -48,7 +55,7 @@ namespace client_xr
     }
 
   public:
-    XRSpaceSubType subType;
+    XRSpaceSubType subType = XRSpaceSubType::kUnset;
 
   protected:
     bool isReferenceSpace_;
@@ -60,6 +67,18 @@ namespace client_xr
 
   class XRReferenceSpace : public XRSpace
   {
+  public:
+    /**
+     * Create a new `XRReferenceSpace` instance.
+     * 
+     * @param type The reference space type, such as `XRReferenceSpaceType::kViewer`.
+     * @returns The new `XRReferenceSpace` instance.
+     */
+    static std::shared_ptr<XRReferenceSpace> Make(XRReferenceSpaceType type)
+    {
+      return std::make_shared<XRReferenceSpace>(type);
+    }
+
   public:
     XRReferenceSpace(XRReferenceSpaceType type)
         : XRSpace(true),
@@ -108,7 +127,7 @@ namespace client_xr
   public:
     /**
      * Create a new `XRViewSpace` instance.
-     * 
+     *
      * @param type The view space type.
      * @param projectionMatrix The projection matrix.
      * @returns The new `XRViewSpace` instance.
@@ -147,7 +166,7 @@ namespace client_xr
 
   public:
     XREye eye() const { return type_; }
-    glm::mat4 projectionMatrix() const { return projectionMatrix_; }
+    glm::mat4 &projectionMatrix() { return projectionMatrix_; }
 
   private:
     XRViewSpaceType type_;

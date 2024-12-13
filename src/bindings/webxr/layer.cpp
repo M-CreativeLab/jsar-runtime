@@ -71,13 +71,6 @@ namespace bindings
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    auto consoleTrace = env.Global()
-                            .Get("console")
-                            .As<Napi::Object>()
-                            .Get("trace")
-                            .As<Napi::Function>();
-    consoleTrace.Call({Napi::String::New(env, "XRWebGLLayer constructor"), info[0], info[1]});
-
     /**
      * If the first argument is an external, we assume it is a shared pointer to an existing `XRWebGLLayer` instance.
      */
@@ -94,7 +87,6 @@ namespace bindings
       return;
     }
 
-    std::cout << "Checking arguments from normal constructor" << std::endl;
     if (info.Length() < 2)
     {
       auto msg = "XRWebGLLayer constructor requires 2 arguments, but only " + std::to_string(info.Length()) + " were provided";
@@ -137,28 +129,28 @@ namespace bindings
       return;
     }
 
-    // glContext = Napi::Persistent(contextValue.ToObject());
-    // hostFramebuffer = Napi::Persistent(webgl::WebGLFramebuffer::NewInstance(env, nullptr, true));
-    // handle_ = client_xr::XRWebGLLayer::Make(session->handle(), glContextObject);
+    glContext = Napi::Persistent(contextValue.ToObject());
+    hostFramebuffer = Napi::Persistent(webgl::WebGLFramebuffer::NewInstance(env, nullptr, true));
+    handle_ = client_xr::XRWebGLLayer::Make(session->handle(), glContextObject);
 
     // Update properties from options
-    // auto optionsValue = info[2];
-    // if (optionsValue.IsObject())
-    // {
-    //   auto optionsObject = optionsValue.As<Napi::Object>();
-    //   if (optionsObject.Has("antialias"))
-    //     handle_->antialias = optionsObject.Get("antialias").ToBoolean().Value();
-    //   if (optionsObject.Has("depth"))
-    //     handle_->depth = optionsObject.Get("depth").ToBoolean().Value();
-    //   if (optionsObject.Has("stencil"))
-    //     handle_->stencil = optionsObject.Get("stencil").ToBoolean().Value();
-    //   if (optionsObject.Has("alpha"))
-    //     handle_->alpha = optionsObject.Get("alpha").ToBoolean().Value();
-    //   if (optionsObject.Has("ignoreDepthValues"))
-    //     handle_->ignoreDepthValues = optionsObject.Get("ignoreDepthValues").ToBoolean().Value();
-    //   if (optionsObject.Has("framebufferScaleFactor"))
-    //     handle_->framebufferScaleFactor = optionsObject.Get("framebufferScaleFactor").ToNumber().FloatValue();
-    // }
+    auto optionsValue = info[2];
+    if (optionsValue.IsObject())
+    {
+      auto optionsObject = optionsValue.As<Napi::Object>();
+      if (optionsObject.Has("antialias"))
+        handle_->antialias = optionsObject.Get("antialias").ToBoolean().Value();
+      if (optionsObject.Has("depth"))
+        handle_->depth = optionsObject.Get("depth").ToBoolean().Value();
+      if (optionsObject.Has("stencil"))
+        handle_->stencil = optionsObject.Get("stencil").ToBoolean().Value();
+      if (optionsObject.Has("alpha"))
+        handle_->alpha = optionsObject.Get("alpha").ToBoolean().Value();
+      if (optionsObject.Has("ignoreDepthValues"))
+        handle_->ignoreDepthValues = optionsObject.Get("ignoreDepthValues").ToBoolean().Value();
+      if (optionsObject.Has("framebufferScaleFactor"))
+        handle_->framebufferScaleFactor = optionsObject.Get("framebufferScaleFactor").ToNumber().FloatValue();
+    }
   }
 
   XRWebGLLayer::~XRWebGLLayer()

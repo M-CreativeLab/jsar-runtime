@@ -63,10 +63,13 @@ declare namespace NodeJS {
        * @returns The `XRSystem` object.
        */
       getXRSystem(): XRSystem;
-      XRSession: any;
-      XRFrame: typeof XRFrame;
-      XRRigidTransform: typeof XRRigidTransform;
     };
+
+    /**
+     * Loads a native linked binding.
+     * 
+     * @param module The name of the module to load.
+     */
     _linkedBinding(module: string): any;
   }
 }

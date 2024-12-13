@@ -14,8 +14,10 @@ namespace bindings
   class XRView : public Napi::ObjectWrap<XRView>
   {
   public:
-    static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, XRSession *session, xr::TrXRView &view, XRReferenceSpace* baseReferenceSpace);
+    static void Init(Napi::Env env);
+    static Napi::Object NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRView> handle);
+
+  public:
     XRView(const Napi::CallbackInfo &info);
 
   private:
@@ -25,14 +27,6 @@ namespace bindings
 
   public:
     client_xr::XRViewport getViewport();
-
-  private:
-    uint32_t index;
-    uint32_t sessionId;
-    mat4 transformMatrix; // TODO: change to `viewMatrix`
-    mat4 projectionMatrix;
-    TrViewport viewport;
-    float viewportScale = 1.0f;
 
   private:
     std::shared_ptr<client_xr::XRView> handle_;
