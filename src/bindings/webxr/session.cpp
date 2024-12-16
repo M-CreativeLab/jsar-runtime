@@ -53,6 +53,51 @@ namespace bindings
 
     setEventTarget(handle_);
 
+    auto frameCallback = [this](const CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      HandleScope scope(env);
+
+      auto time = info[0];
+      auto frame = info[1];
+
+      // Execute all pending frame callbacks
+      auto currentFrameCallbacks = pendingFrameCallbacks_;
+      pendingFrameCallbacks_.clear();
+
+      for (auto &frameCallbackRef : currentFrameCallbacks)
+      {
+        auto frameCallback = frameCallbackRef->Value();
+        try
+        {
+          frameCallback.Call({time, frame});
+        }
+        catch (const Napi::Error &e)
+        {
+          std::cerr << "Failed to execute frame callback: " << e.Message() << std::endl;
+        }
+        frameCallbackRef->Reset();
+        delete frameCallbackRef;
+      }
+    };
+    animationFrameTsfn_ = ThreadSafeFunction::New(
+        env,
+        Function::New(env, frameCallback),
+        "XRSession::FrameCallback",
+        0,
+        2);
+
+    auto globalFrameCallback = [this](uint32_t time, shared_ptr<client_xr::XRFrame> frame)
+    {
+      auto callHandler = [this, time, frame](Napi::Env env, Function jsCallback)
+      {
+        jsCallback.Call({Number::New(env, time),
+                         XRFrame::NewInstance(env, this, frame)});
+      };
+      animationFrameTsfn_.NonBlockingCall(callHandler);
+    };
+    handle_->setGlobalAnimationFrameCallback(globalFrameCallback);
+
     // Define JS properties
     // auto jsThis = info.This().ToObject();
     // jsThis.DefineProperty(Napi::PropertyDescriptor::Value("recommendedContentSize", nativeSessionObject.Get("recommendedContentSize"), napi_enumerable));
@@ -75,7 +120,7 @@ namespace bindings
     HandleScope scope(env);
 
     auto mode = handle_->environmentBlendMode();
-    return Napi::String::New(env, client_xr::to_string(mode));
+    return String::New(env, client_xr::to_string(mode));
   }
 
   Value XRSession::RequestAnimationFrame(const CallbackInfo &info)
@@ -94,43 +139,10 @@ namespace bindings
       return env.Undefined();
     }
 
-    ThreadSafeFunction *tscb = nullptr;
-    ThreadSafeFunction tsfn = ThreadSafeFunction::New(
-        env,
-        info[0].As<Function>(),
-        "XRSession::RequestAnimationFrame",
-        0,
-        2,
-        [tscb](Napi::Env env)
-        {
-          if (tscb != nullptr)
-            delete tscb;
-        });
-    tscb = new ThreadSafeFunction(tsfn);
-    tscb->Acquire();
-
-    auto callback = [this, tscb](uint32_t time, shared_ptr<client_xr::XRFrame> frame)
-    {
-      assert(tscb != nullptr);
-      auto callHandler = [this, time, frame](Napi::Env env, Function jsCallback)
-      {
-        auto jsTime = Number::New(env, time);
-        auto jsFrame = XRFrame::NewInstance(env, this, frame);
-        try
-        {
-          jsCallback.Call({jsTime, jsFrame});
-        }
-        catch (const Napi::Error &e)
-        {
-          std::cerr << "Failed to execute frame callback: " << e.Message() << std::endl;
-        }
-      };
-
-      tscb->BlockingCall(callHandler);
-      tscb->Release();
-    };
-    auto id = handle_->requestAnimationFrame(callback);
-    return Number::New(env, id);
+    auto frameCallbackRef = new FunctionReference();
+    *frameCallbackRef = Persistent(info[0].As<Function>());
+    pendingFrameCallbacks_.push_back(frameCallbackRef);
+    return Number::New(env, pendingFrameCallbacks_.size());
   }
 
   Value XRSession::CancelAnimationFrame(const CallbackInfo &info)

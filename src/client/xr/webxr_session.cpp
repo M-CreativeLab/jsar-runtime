@@ -20,7 +20,8 @@ namespace client_xr
         enabledFeatures(config.enabledFeatures),
         started(false),
         ended(false),
-        suspended(false)
+        suspended(false),
+        deltaThresholdInFrame_(1000 / 45)
   {
     auto clientContext = TrClientContextPerProcess::Get();
     assert(clientContext != nullptr);
@@ -78,9 +79,11 @@ namespace client_xr
     pendingRenderState_->update(newState);
   }
 
-  void XRSession::updateTargetFrameRate(float targetFrameRate)
+  void XRSession::updateTargetFrameRate(float target)
   {
-    // TODO
+    if (target <= 0 || target > 120)
+      throw runtime_error("invalid target frame rate value.");
+    deltaThresholdInFrame_ = 1000 / target;
   }
 
   void XRSession::updateCollisionBox(glm::vec3 min, glm::vec3 max)
@@ -190,6 +193,14 @@ namespace client_xr
     }
   }
 
+  void XRSession::setGlobalAnimationFrameCallback(XRFrameCallback callback)
+  {
+    if (callback)
+      globalFrameCallback_ = callback;
+    else
+      globalFrameCallback_ = nullopt;
+  }
+
   void XRSession::end()
   {
     stop();
@@ -208,8 +219,6 @@ namespace client_xr
   void XRSession::initialize()
   {
     viewerSpace_ = XRReferenceSpace::Make(XRReferenceSpaceType::kViewer);
-    std::cout << "viewerSpace_: " << viewerSpace_.get() << " at " << id << std::endl;
-
     localSpace_ = XRReferenceSpace::Make(XRReferenceSpaceType::kLocal);
     unboundedSpace_ = XRReferenceSpace::Make(XRReferenceSpaceType::kUnbounded);
     inputSources = XRInputSourceArray(shared_from_this());
@@ -244,12 +253,11 @@ namespace client_xr
     ended = true;
   }
 
-#define FRAME_TIME_DELTA_THRESHOLD 1000 / 45
   void XRSession::tick()
   {
     steady_clock::time_point timepointOnNow = steady_clock::now();
     auto delta = duration_cast<milliseconds>(timepointOnNow - lastTickTimepoint_).count();
-    if (delta >= FRAME_TIME_DELTA_THRESHOLD)
+    if (delta >= deltaThresholdInFrame_)
     {
       switch (update())
       {
@@ -376,6 +384,13 @@ namespace client_xr
         }
       }
       currentFrameCallbacks_.clear();
+
+      // Call the global frame callback
+      if (globalFrameCallback_.has_value())
+      {
+        auto callback = globalFrameCallback_.value();
+        callback(frameRequest.time, frame);
+      }
     }
     frame->endFrame();
   }

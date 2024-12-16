@@ -159,6 +159,7 @@ namespace client_xr
     std::shared_ptr<XRReferenceSpace> requestReferenceSpace(std::string typeString);
     uint32_t requestAnimationFrame(XRFrameCallback callback);
     void cancelAnimationFrame(uint32_t handle);
+    void setGlobalAnimationFrameCallback(XRFrameCallback callback);
     /**
      * It ends the session, and no more frames will be rendered.
      */
@@ -246,12 +247,14 @@ namespace client_xr
     XREnvironmentBlendMode environmentBlendMode_;
     std::unique_ptr<XRRenderState> activeRenderState_ = nullptr;
     std::unique_ptr<XRRenderState> pendingRenderState_ = nullptr;
+    std::optional<XRFrameCallback> globalFrameCallback_ = std::nullopt;
     std::vector<std::shared_ptr<XRFrameCallbackWrapper>> pendingFrameCallbacks_;
     std::vector<std::shared_ptr<XRFrameCallbackWrapper>> currentFrameCallbacks_;
     std::vector<std::shared_ptr<XRViewSpace>> viewSpaces_;
     std::shared_ptr<XRReferenceSpace> viewerSpace_;
     std::shared_ptr<XRReferenceSpace> localSpace_;
     std::shared_ptr<XRReferenceSpace> unboundedSpace_;
+    uint32_t deltaThresholdInFrame_;
     uint32_t fps_ = 0;
     int framesCount_ = 0;
     int prevStereoId_ = -1;

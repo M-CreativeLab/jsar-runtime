@@ -3,45 +3,46 @@
 namespace bindings
 {
   using namespace std;
+  using namespace Napi;
 
-  thread_local Napi::FunctionReference *XRRenderState::constructor;
+  thread_local FunctionReference *XRRenderState::constructor;
 
   // static
   void XRRenderState::Init(Napi::Env env)
   {
-    Napi::Function tpl = DefineClass(env, "XRRenderState",
-                                     {InstanceAccessor("baseLayer", &XRRenderState::BaseLayerGetter, nullptr),
-                                      InstanceAccessor("depthFar", &XRRenderState::DepthFarGetter, nullptr),
-                                      InstanceAccessor("depthNear", &XRRenderState::DepthNearGetter, nullptr),
-                                      InstanceAccessor("inlineVerticalFieldOfView", &XRRenderState::InlineVerticalFieldOfViewGetter, nullptr)});
+    Function tpl = DefineClass(env, "XRRenderState",
+                               {InstanceAccessor("baseLayer", &XRRenderState::BaseLayerGetter, nullptr),
+                                InstanceAccessor("depthFar", &XRRenderState::DepthFarGetter, nullptr),
+                                InstanceAccessor("depthNear", &XRRenderState::DepthNearGetter, nullptr),
+                                InstanceAccessor("inlineVerticalFieldOfView", &XRRenderState::InlineVerticalFieldOfViewGetter, nullptr)});
 
-    constructor = new Napi::FunctionReference();
-    *constructor = Napi::Persistent(tpl);
+    constructor = new FunctionReference();
+    *constructor = Persistent(tpl);
     env.SetInstanceData(constructor);
     env.Global().Set("XRRenderState", tpl);
   }
 
-  Napi::Object XRRenderState::NewInstance(Napi::Env env, client_xr::XRRenderState state)
+  Object XRRenderState::NewInstance(Napi::Env env, client_xr::XRRenderState state)
   {
-    Napi::EscapableHandleScope scope(env);
+    EscapableHandleScope scope(env);
 
-    auto stateExternal = Napi::External<client_xr::XRRenderState>::New(env, &state);
-    Napi::Object instance = constructor->New({stateExternal});
+    auto stateExternal = External<client_xr::XRRenderState>::New(env, &state);
+    Object instance = constructor->New({stateExternal});
     return scope.Escape(instance).ToObject();
   }
 
-  XRRenderState::XRRenderState(const Napi::CallbackInfo &info) : Napi::ObjectWrap<XRRenderState>(info)
+  XRRenderState::XRRenderState(const CallbackInfo &info) : ObjectWrap<XRRenderState>(info)
   {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+    auto env = info.Env();
+    HandleScope scope(info.Env());
 
     if (info.Length() < 1 || !info[0].IsExternal())
     {
-      Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
+      TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
       return;
     }
 
-    auto external = info[0].As<Napi::External<client_xr::XRRenderState>>();
+    auto external = info[0].As<External<client_xr::XRRenderState>>();
     handle_ = *external.Data();
   }
 
@@ -49,7 +50,11 @@ namespace bindings
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return XRWebGLLayer::NewInstance(env, handle_.baseLayer);
+
+    if (handle_.baseLayer == nullptr)
+      return env.Null();
+    else
+      return XRWebGLLayer::NewInstance(env, handle_.baseLayer);
   }
 
   Napi::Value XRRenderState::DepthFarGetter(const Napi::CallbackInfo &info)
