@@ -53,50 +53,21 @@ namespace bindings
 
     setEventTarget(handle_);
 
-    auto frameCallback = [this](const CallbackInfo &info)
-    {
-      Napi::Env env = info.Env();
-      HandleScope scope(env);
-
-      auto time = info[0];
-      auto frame = info[1];
-
-      // Execute all pending frame callbacks
-      auto currentFrameCallbacks = pendingFrameCallbacks_;
-      pendingFrameCallbacks_.clear();
-
-      for (auto &frameCallbackRef : currentFrameCallbacks)
-      {
-        auto frameCallback = frameCallbackRef->Value();
-        try
-        {
-          frameCallback.Call({time, frame});
-        }
-        catch (const Napi::Error &e)
-        {
-          std::cerr << "Failed to execute frame callback: " << e.Message() << std::endl;
-        }
-        frameCallbackRef->Reset();
-        delete frameCallbackRef;
-      }
-    };
-    animationFrameTsfn_ = ThreadSafeFunction::New(
+    frameDispatcherTsfn_ = ThreadSafeFunction::New(
         env,
-        Function::New(env, frameCallback),
-        "XRSession::FrameCallback",
-        0,
-        2);
+        Function::New(env, [](const auto &info) {}),
+        "XRSession::FrameDispatcher", 0, 2);
 
-    auto globalFrameCallback = [this](uint32_t time, shared_ptr<client_xr::XRFrame> frame)
+    auto dispatcher = [this](shared_ptr<xr::TrXRFrameRequest> frameRequest, client_xr::XRFrameDispatcherCallback dispatch)
     {
-      auto callHandler = [this, time, frame](Napi::Env env, Function jsCallback)
-      {
-        jsCallback.Call({Number::New(env, time),
-                         XRFrame::NewInstance(env, this, frame)});
-      };
-      animationFrameTsfn_.NonBlockingCall(callHandler);
+      frameDispatcherTsfn_.NonBlockingCall([frameRequest, dispatch](Napi::Env env, Function jsCallback)
+                                           { dispatch(frameRequest, (napi_env)env); });
     };
-    handle_->setGlobalAnimationFrameCallback(globalFrameCallback);
+    /**
+     * Configure the WebXR session to use the provided frame dispatcher, which will dispatch the WebXR frame to the JavaScript
+     * thread.
+     */
+    handle_->setXRFrameDispatcher(dispatcher);
 
     // Define JS properties
     // auto jsThis = info.This().ToObject();
@@ -141,8 +112,21 @@ namespace bindings
 
     auto frameCallbackRef = new FunctionReference();
     *frameCallbackRef = Persistent(info[0].As<Function>());
-    pendingFrameCallbacks_.push_back(frameCallbackRef);
-    return Number::New(env, pendingFrameCallbacks_.size());
+
+    auto frameHandler = [this, frameCallbackRef](uint32_t time,
+                                                 std::shared_ptr<client_xr::XRFrame> frame,
+                                                 void *envData)
+    {
+      Napi::Env env((napi_env)envData); // covert void* to napi_env
+      Napi::HandleScope scope(env);
+
+      frameCallbackRef->Call({Number::New(env, time),
+                              XRFrame::NewInstance(env, this, frame)});
+      frameCallbackRef->Reset();
+      delete frameCallbackRef;
+    };
+    auto id = handle_->requestAnimationFrame(frameHandler);
+    return Number::New(env, id);
   }
 
   Value XRSession::CancelAnimationFrame(const CallbackInfo &info)

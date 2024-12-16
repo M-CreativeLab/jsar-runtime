@@ -31,17 +31,23 @@ namespace client_xr
     }
 
   public:
-    inline xr::TrXRFrameRequest createFrameRequestForView(uint32_t viewIndex)
+    /**
+     * Create a new `xr::TrXRFrameRequest` object for the specified view index.
+     * 
+     * @param viewIndex the view index.
+     * @returns a new `xr::TrXRFrameRequest` object.
+     */
+    inline std::shared_ptr<xr::TrXRFrameRequest> createFrameRequestForView(uint32_t viewIndex)
     {
-      auto req = xr::TrXRFrameRequest();
-      req.sessionId = sessionId;
-      req.stereoId = stereoId;
-      req.stereoTimestamp = stereoTimestamp;
-      memcpy(req.localBaseMatrix, localBaseMatrix, sizeof(float) * 16);
-      memcpy(req.viewerBaseMatrix, viewerBaseMatrix, sizeof(float) * 16);
-      req.views[0] = views[0];
-      req.views[1] = views[1];
-      req.viewIndex = viewIndex;
+      auto req = std::make_shared<xr::TrXRFrameRequest>();
+      req->sessionId = sessionId;
+      req->stereoId = stereoId;
+      req->stereoTimestamp = stereoTimestamp;
+      memcpy(req->localBaseMatrix, localBaseMatrix, sizeof(float) * 16);
+      memcpy(req->viewerBaseMatrix, viewerBaseMatrix, sizeof(float) * 16);
+      req->views[0] = views[0];
+      req->views[1] = views[1];
+      req->viewIndex = viewIndex;
       return req;
     }
 
