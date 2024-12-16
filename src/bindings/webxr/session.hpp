@@ -95,6 +95,10 @@ namespace bindings
     inline bool immersive() const { return handle_->immersive(); }
     inline client_xr::XREnvironmentBlendMode environmentBlendMode() const { return handle_->environmentBlendMode(); }
 
+  private:
+    Napi::ThreadSafeFunction animationFrameTsfn_;
+    std::vector<Napi::FunctionReference *> pendingFrameCallbacks_;
+
   public:
     static thread_local Napi::FunctionReference *constructor;
   };

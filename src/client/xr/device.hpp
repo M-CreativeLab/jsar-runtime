@@ -100,13 +100,6 @@ namespace client_xr
                                           std::vector<xr::TrXRFeature> features,
                                           std::optional<XRSessionRequestInit> init = std::nullopt);
     /**
-     * Request a new WebXR frame.
-     *
-     * @param callback The callback function to call when the frame is ready.
-     * @param context The context to pass to the callback function.
-     */
-    void requestFrame(XRFrameCallback callback, void *context);
-    /**
      * Starts a new WebXR frame.
      *
      * @param frameRequest The frame request to start.
@@ -134,7 +127,6 @@ namespace client_xr
 
   private:
     TrClientContextPerProcess *clientContext_ = nullptr;
-    // std::vector<ContextifiedXRFrameCallback> contextifiedFrameCallbacks_;
     std::shared_ptr<XRSystem> xrSystem_;
     int requestTimeout_ = 1000;
   };

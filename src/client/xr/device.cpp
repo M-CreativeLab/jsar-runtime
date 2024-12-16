@@ -78,11 +78,6 @@ namespace client_xr
     return requestSession(mode, features, init);
   }
 
-  void XRDeviceClient::requestFrame(XRFrameCallback callback, void *context)
-  {
-    // contextifiedFrameCallbacks_.push_back(ContextifiedXRFrameCallback(callback, context));
-  }
-
   bool XRDeviceClient::startFrame(xr::TrXRFrameRequest *frameRequest)
   {
     return clientContext_->startXrFrame(frameRequest);

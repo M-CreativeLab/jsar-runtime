@@ -22,11 +22,12 @@
           function renderloop(time, frame) {
             newSession.requestAnimationFrame(renderloop);
 
+            console.info(newSession.renderState.baseLayer.framebuffer);
             const viewerPose = frame.getViewerPose(baseReferenceSpace);
-            for (const view of viewerPose.views) {
-              const viewport = baseLayer.getViewport(view);
-              console.info(viewport, view.eye);
-            }
+            // for (const view of viewerPose.views) {
+            //   const viewport = baseLayer.getViewport(view);
+            //   console.info(viewport, view.eye);
+            // }
           }
           newSession.requestAnimationFrame(renderloop);
         }

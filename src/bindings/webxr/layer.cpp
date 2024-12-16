@@ -51,6 +51,7 @@ namespace bindings
 
   Napi::Value XRWebGLLayer::NewInstance(Napi::Env env, shared_ptr<client_xr::XRWebGLLayer> layer)
   {
+    assert(layer != nullptr);
     return XRLayerBase<XRWebGLLayer, client_xr::XRWebGLLayer>::NewInstance(env, layer);
   }
 
@@ -109,7 +110,6 @@ namespace bindings
       return;
     }
 
-    hostFramebuffer = Napi::Persistent(webgl::WebGLFramebuffer::NewInstance(env, nullptr, true));
     handle_ = client_xr::XRWebGLLayer::Make(session->handle(), glContextObject);
 
     // Update properties from options
@@ -134,7 +134,6 @@ namespace bindings
 
   XRWebGLLayer::~XRWebGLLayer()
   {
-    hostFramebuffer.Reset();
   }
 
   Napi::Value XRWebGLLayer::AntialiasGetter(const Napi::CallbackInfo &info)
@@ -154,7 +153,12 @@ namespace bindings
 
   Napi::Value XRWebGLLayer::FramebufferGetter(const Napi::CallbackInfo &info)
   {
-    return hostFramebuffer.Value();
+    /**
+     * Always returns a host framebuffer because the current layer is to represent the host framebuffer.
+     * 
+     * TODO: support returning non-host framebuffers.
+     */
+    return webgl::WebGLFramebuffer::NewInstance(info.Env(), nullptr, true);
   }
 
   Napi::Value XRWebGLLayer::FramebufferWidthGetter(const Napi::CallbackInfo &info)
