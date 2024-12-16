@@ -10,6 +10,7 @@ namespace client_xr
   using namespace std;
   using namespace std::chrono;
 
+#define DEFAULT_FRAME_RATE 45
   XRSession::XRSession(XRSessionConfiguration config, shared_ptr<XRSystem> xrSystem)
       : dom::DOMEventTarget(),
         device_(xrSystem->device()),
@@ -21,8 +22,9 @@ namespace client_xr
         started(false),
         ended(false),
         suspended(false),
-        deltaThresholdInFrame_(1000 / 45)
+        deltaThresholdInFrame_(1000 / DEFAULT_FRAME_RATE)
   {
+#undef DEFAULT_FRAME_RATE
     auto clientContext = TrClientContextPerProcess::Get();
     assert(clientContext != nullptr);
 

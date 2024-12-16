@@ -134,6 +134,8 @@ namespace bindings
 
   XRWebGLLayer::~XRWebGLLayer()
   {
+    if (!framebufferReference.IsEmpty())
+      framebufferReference.Reset();
   }
 
   Napi::Value XRWebGLLayer::AntialiasGetter(const Napi::CallbackInfo &info)
@@ -158,7 +160,12 @@ namespace bindings
      * 
      * TODO: support returning non-host framebuffers.
      */
-    return webgl::WebGLFramebuffer::NewInstance(info.Env(), nullptr, true);
+    if (framebufferReference.IsEmpty())
+    {
+      auto hostFramebuffer = webgl::WebGLFramebuffer::NewInstance(info.Env(), nullptr, true);
+      framebufferReference.Reset(hostFramebuffer, 1);
+    }
+    return framebufferReference.Value();
   }
 
   Napi::Value XRWebGLLayer::FramebufferWidthGetter(const Napi::CallbackInfo &info)

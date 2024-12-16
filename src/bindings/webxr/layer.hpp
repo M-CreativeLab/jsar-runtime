@@ -62,6 +62,7 @@ namespace bindings
 
   public:
     XRSession *session;
+    Napi::ObjectReference framebufferReference;
 
   private:
     static thread_local Napi::FunctionReference *constructor;
