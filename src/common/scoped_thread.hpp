@@ -52,6 +52,11 @@ public:
     handle = std::make_unique<std::thread>([this]()
                                            {
       SET_THREAD_NAME(name.c_str());
+      /**
+       * Sleep for 10ms to wait for the thread and instance to be ready.
+       */
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
       while (running)
       {
         if (work && !paused)
