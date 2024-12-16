@@ -96,8 +96,7 @@ namespace bindings
     inline client_xr::XREnvironmentBlendMode environmentBlendMode() const { return handle_->environmentBlendMode(); }
 
   private:
-    Napi::ThreadSafeFunction animationFrameTsfn_;
-    std::vector<Napi::FunctionReference *> pendingFrameCallbacks_;
+    Napi::ThreadSafeFunction frameDispatcherTsfn_;
 
   public:
     static thread_local Napi::FunctionReference *constructor;

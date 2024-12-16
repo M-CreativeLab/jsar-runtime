@@ -38,7 +38,7 @@ namespace builtin_scene
       auto clientContext = TrClientContextPerProcess::Get();
       assert(clientContext != nullptr);
 
-      frameCallback_ = [this](uint32_t time, std::shared_ptr<client_xr::XRFrame> frame)
+      frameCallback_ = [this](uint32_t time, std::shared_ptr<client_xr::XRFrame> frame, void* env_)
       {
         assert(xrSession_ != nullptr); // ensure the WebXR session is ready.
         update(time, *frame);

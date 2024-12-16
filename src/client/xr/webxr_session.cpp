@@ -94,7 +94,7 @@ namespace client_xr
     sessionContextZoneClient_->setCollisionBoxMinMax(minValues, maxValues);
   }
 
-  void XRSession::updateInputSourcesIfChanged(std::shared_ptr<XRFrame> frame)
+  void XRSession::updateInputSourcesIfChanged(shared_ptr<XRFrame> frame)
   {
     if (inputSources.has_value())
     {
@@ -103,7 +103,7 @@ namespace client_xr
     }
   }
 
-  std::shared_ptr<XRReferenceSpace> XRSession::requestReferenceSpace(XRReferenceSpaceType type)
+  shared_ptr<XRReferenceSpace> XRSession::requestReferenceSpace(XRReferenceSpaceType type)
   {
     if (TR_UNLIKELY(ended))
       throw runtime_error("session is ended.");
@@ -123,7 +123,7 @@ namespace client_xr
     }
   }
 
-  std::shared_ptr<XRReferenceSpace> XRSession::requestReferenceSpace(std::string typeString)
+  shared_ptr<XRReferenceSpace> XRSession::requestReferenceSpace(string typeString)
   {
     XRReferenceSpaceType type = XRReferenceSpaceType::kUnknown;
     if (typeString == "viewer")
@@ -193,12 +193,9 @@ namespace client_xr
     }
   }
 
-  void XRSession::setGlobalAnimationFrameCallback(XRFrameCallback callback)
+  void XRSession::setXRFrameDispatcher(XRFrameDispatcherFunction dispatch)
   {
-    if (callback)
-      globalFrameCallback_ = callback;
-    else
-      globalFrameCallback_ = nullopt;
+    frameDispatcher_ = XRFrameDispatcher(dispatch);
   }
 
   void XRSession::end()
@@ -303,10 +300,7 @@ namespace client_xr
     if (deviceContext->stereoRenderingMode == xr::TrStereoRenderingMode::MultiPass)
     {
       for (uint32_t viewIndex = 0; viewIndex < 2; viewIndex++)
-      {
-        auto req = frameContext.createFrameRequestForView(viewIndex);
-        dispatchXRFrame(req);
-      }
+        dispatchXRFrame(frameContext.createFrameRequestForView(viewIndex));
     }
     else
     {
@@ -314,14 +308,27 @@ namespace client_xr
        * Singlepass/SinglepassInstanced stereo rendering.
        * Calling `onFrame()` once with the viewIndex set to 0 is enough for stereo rendering.
        */
-      auto req = frameContext.createFrameRequestForView(0);
-      dispatchXRFrame(req);
+      dispatchXRFrame(frameContext.createFrameRequestForView(0));
     }
     prevStereoId_ = sessionContext->stereoId;
     return XRSessionUpdateState::kSuccess;
   }
 
-  void XRSession::dispatchXRFrame(xr::TrXRFrameRequest &frameRequest)
+  void XRSession::dispatchXRFrame(shared_ptr<xr::TrXRFrameRequest> frameRequest)
+  {
+    if (frameDispatcher_.has_value())
+    {
+      auto &dispatcher = frameDispatcher_.value();
+      dispatcher.dispatch(frameRequest, [this](auto frameRequest, void *env)
+                          { onXRFrame(frameRequest, env); });
+    }
+    else
+    {
+      onXRFrame(frameRequest, nullptr);
+    }
+  }
+
+  void XRSession::onXRFrame(shared_ptr<xr::TrXRFrameRequest> frameRequest, void *env)
   {
     // - If session’s pending render state is not null, apply the pending render state.
     if (pendingRenderState_ != nullptr)
@@ -354,7 +361,10 @@ namespace client_xr
     // - If session’s mode is "inline" and session’s renderState's output canvas is null,
     //   abort these steps.
     // ???
-    auto frame = XRFrame::Make(&frameRequest, shared_from_this());
+    /**
+     * TODO: using shared_ptr instead of raw pointer for the frame request?
+     */
+    auto frame = XRFrame::Make(frameRequest.get(), shared_from_this());
 
     // Move the pending frame callbacks to current map
     currentFrameCallbacks_.clear();
@@ -375,7 +385,7 @@ namespace client_xr
           auto callback = *it;
           try
           {
-            callback(frameRequest.time, frame);
+            callback(frameRequest->time, frame, env);
           }
           catch (const exception &e)
           {
@@ -384,13 +394,6 @@ namespace client_xr
         }
       }
       currentFrameCallbacks_.clear();
-
-      // Call the global frame callback
-      if (globalFrameCallback_.has_value())
-      {
-        auto callback = globalFrameCallback_.value();
-        callback(frameRequest.time, frame);
-      }
     }
     frame->endFrame();
   }

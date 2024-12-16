@@ -27,7 +27,28 @@ namespace client_xr
     kSessionNotInFrustum, // Skip the frame if the session is not in the frustum.
   };
 
-  using XRFrameCallback = std::function<void(uint32_t, std::shared_ptr<XRFrame>)>;
+  using XRFrameDispatcherCallback = std::function<void(std::shared_ptr<xr::TrXRFrameRequest>, void *)>;
+  using XRFrameDispatcherFunction = std::function<void(std::shared_ptr<xr::TrXRFrameRequest>, XRFrameDispatcherCallback)>;
+
+  class XRFrameDispatcher
+  {
+  public:
+    XRFrameDispatcher(XRFrameDispatcherFunction dispatch)
+        : dispatch_(dispatch)
+    {
+    }
+
+  public:
+    void dispatch(shared_ptr<xr::TrXRFrameRequest> frameRequest, XRFrameDispatcherCallback callback)
+    {
+      dispatch_(frameRequest, callback);
+    }
+
+  private:
+    XRFrameDispatcherFunction dispatch_;
+  };
+
+  using XRFrameCallback = std::function<void(uint32_t, std::shared_ptr<XRFrame>, void *)>;
   class XRFrameCallbackWrapper
   {
   public:
@@ -41,9 +62,9 @@ namespace client_xr
 
   public:
     void cancel() { cancelled = true; }
-    void operator()(uint32_t time, std::shared_ptr<XRFrame> frame)
+    void operator()(uint32_t time, std::shared_ptr<XRFrame> frame, void *env)
     {
-      callback(time, frame);
+      callback(time, frame, env);
     }
 
   public:
@@ -159,7 +180,12 @@ namespace client_xr
     std::shared_ptr<XRReferenceSpace> requestReferenceSpace(std::string typeString);
     uint32_t requestAnimationFrame(XRFrameCallback callback);
     void cancelAnimationFrame(uint32_t handle);
-    void setGlobalAnimationFrameCallback(XRFrameCallback callback);
+    /**
+     * Set the frame dispatcher, which is used to dispatch the WebXR frame to its handler.
+     *
+     * @param dispatch the frame dispatcher.
+     */
+    void setXRFrameDispatcher(XRFrameDispatcherFunction dispatch);
     /**
      * It ends the session, and no more frames will be rendered.
      */
@@ -191,9 +217,17 @@ namespace client_xr
      */
     XRSessionUpdateState update();
     /**
-     * This function will be called in each WebXR frame.
+     * Dispatch a WebXR frame to its handler.
+     *
+     * @param frameRequest the frame request.
      */
-    void dispatchXRFrame(xr::TrXRFrameRequest &frameRequest);
+    void dispatchXRFrame(std::shared_ptr<xr::TrXRFrameRequest> frameRequest);
+    /**
+     * This function will be called in each WebXR frame.
+     *
+     * @param frameRequest the frame request.
+     */
+    void onXRFrame(std::shared_ptr<xr::TrXRFrameRequest> frameRequest, void *env = nullptr);
     /**
      * It calculates the FPS(frames per second) of the session.
      *
@@ -244,10 +278,13 @@ namespace client_xr
      * The session context zone client.
      */
     std::unique_ptr<xr::TrXRSessionContextZone> sessionContextZoneClient_;
+    /**
+     * The frame dispatcher.
+     */
+    std::optional<XRFrameDispatcher> frameDispatcher_;
     XREnvironmentBlendMode environmentBlendMode_;
     std::unique_ptr<XRRenderState> activeRenderState_ = nullptr;
     std::unique_ptr<XRRenderState> pendingRenderState_ = nullptr;
-    std::optional<XRFrameCallback> globalFrameCallback_ = std::nullopt;
     std::vector<std::shared_ptr<XRFrameCallbackWrapper>> pendingFrameCallbacks_;
     std::vector<std::shared_ptr<XRFrameCallbackWrapper>> currentFrameCallbacks_;
     std::vector<std::shared_ptr<XRViewSpace>> viewSpaces_;
