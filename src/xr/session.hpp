@@ -129,6 +129,7 @@ namespace xr
      * TODO: Support the mesh-based bounding info?
      */
     culling::TrBoundingInfo boundingInfo;
+    uint32_t nextStereoId;
 
   private:
     Device *xrDevice = nullptr;

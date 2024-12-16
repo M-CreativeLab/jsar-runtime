@@ -36,6 +36,33 @@ namespace xr
 
   void TrXRSession::tick()
   {
+    static TrIdGenerator stereoIdGenerator(0x567);
+    switch (xrDevice->getStereoRenderingMode())
+    {
+    case xr::TrStereoRenderingMode::MultiPass:
+    {
+      if (xrDevice->getActiveEyeId() == 0) // Update the `nextStereoId` only when rendering the left eye.
+        nextStereoId = stereoIdGenerator.get();
+      break;
+    }
+    case xr::TrStereoRenderingMode::SinglePass:
+    case xr::TrStereoRenderingMode::SinglePassInstanced:
+    case xr::TrStereoRenderingMode::SinglePassMultiview:
+    {
+      nextStereoId = stereoIdGenerator.get(); // Update the `nextStereoId` for each frame.
+      break;
+    }
+    default:
+      break;
+    }
+
+    // Update the stereo id and zone states.
+    if (nextStereoId >= stereoIdGenerator.min())
+    {
+      setStereoId(nextStereoId);
+      updateStatesInZone();
+    }
+
     // TODO: need to check if this session is active?
     contextZone->syncData();
   }
