@@ -174,42 +174,19 @@ namespace renderer
 
   void TrContentRenderer::onHostFrame(chrono::time_point<chrono::high_resolution_clock> time)
   {
-    static TrIdGenerator stereoIdGenerator(0x567);
-
-    bool isXRDeviceEnabled = xrDevice->enabled();
-    if (isXRDeviceEnabled)
+    /**
+     * Update the pending stereo frames count for each WebXR session if the WebXR device is enabled.
+     */
+    if (xrDevice->enabled())
     {
-      switch (xrDevice->getStereoRenderingMode())
-      {
-      case xr::TrStereoRenderingMode::MultiPass:
-      {
-        if (xrDevice->getActiveEyeId() == 0) // Update the `currentStereoId` only when rendering the left eye.
-          currentStereoId = stereoIdGenerator.get();
-        break;
-      }
-      case xr::TrStereoRenderingMode::SinglePass:
-      case xr::TrStereoRenderingMode::SinglePassInstanced:
-      case xr::TrStereoRenderingMode::SinglePassMultiview:
-      {
-        currentStereoId = stereoIdGenerator.get(); // Update the `currentStereoId` for each frame.
-        break;
-      }
-      default:
-        break;
-      }
-
-      if (currentStereoId != 0)
-      {
-        auto pendingStereoFramesCount = getPendingStereoFramesCount();
-        for (auto session : content->getXRSessions())
-        {
-          session->setStereoId(currentStereoId);
-          session->setPendingStereoFramesCount(pendingStereoFramesCount);
-          session->updateStatesInZone();
-        }
-      }
+      auto pendingStereoFramesCount = getPendingStereoFramesCount();
+      for (auto session : content->getXRSessions())
+        session->setPendingStereoFramesCount(pendingStereoFramesCount);
     }
 
+    /**
+     * Execute the content's command buffers.
+     */
     onStartFrame();
     {
       executeCommandBuffers(false);

@@ -96,7 +96,6 @@ namespace renderer
     OpenGLAppContextStorage glContextForBackup;
     bool usingBackupContext = false;
     xr::Device *xrDevice = nullptr;
-    int currentStereoId = 0;
 
   private: // command buffers & rendering frames
     shared_mutex commandBufferRequestsMutex;
