@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "./ecs.hpp"
 #include "./hierarchy.hpp"
 #include "../graphics/webgl_context.hpp"
 #include "../xr/device.hpp"
@@ -9,7 +10,8 @@
 
 namespace builtin_scene
 {
-  class Scene : public Hierarchy
+  class Scene : public Hierarchy,
+                public ecs::App
   {
   public:
     /**
@@ -29,6 +31,7 @@ namespace builtin_scene
     Scene(std::shared_ptr<client_graphics::WebGL2Context> glContext,
           std::shared_ptr<client_xr::XRDeviceClient> xrDeviceClient)
         : Hierarchy(),
+          ecs::App(),
           glContext_(glContext),
           xrDeviceClient_(xrDeviceClient)
     {
@@ -38,7 +41,7 @@ namespace builtin_scene
       auto clientContext = TrClientContextPerProcess::Get();
       assert(clientContext != nullptr);
 
-      frameCallback_ = [this](uint32_t time, std::shared_ptr<client_xr::XRFrame> frame, void* env_)
+      frameCallback_ = [this](uint32_t time, std::shared_ptr<client_xr::XRFrame> frame, void *env_)
       {
         assert(xrSession_ != nullptr); // ensure the WebXR session is ready.
         update(time, *frame);
@@ -54,6 +57,8 @@ namespace builtin_scene
         client_xr::XRRenderState renderState;
         renderState.baseLayer = client_xr::XRWebGLLayer::Make(xrSession_, glContext_);
         xrSession_->updateRenderState(renderState);
+
+        bootstrap();
         xrSession_->requestAnimationFrame(frameCallback_);
       };
       clientContext->addEventListener(TrClientContextEventType::ScriptingEventLoopReady, setupXRSession);
@@ -61,10 +66,14 @@ namespace builtin_scene
     ~Scene() = default;
 
   public:
+    void bootstrap()
+    {
+      // addSystem(ecs::SchedulerLabel::kUpdate, std::make_shared<LayoutSystem>());
+      ecs::App::startup();
+    }
     void update(uint32_t time, client_xr::XRFrame &frame)
     {
-      // TODO
-      // std::cout << "Scene update" << std::endl;
+      ecs::App::update();
     }
 
   private:
