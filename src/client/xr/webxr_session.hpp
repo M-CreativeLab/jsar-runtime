@@ -7,6 +7,7 @@
 #include <bindings/webxr/common.hpp>
 
 #include "./common.hpp"
+#include "./webxr_session_events.hpp"
 #include "./webxr_frame.hpp"
 #include "./webxr_hand.hpp"
 #include "./webxr_input_sources.hpp"
@@ -104,19 +105,33 @@ namespace client_xr
     /**
      * The lifecycle "Primary Action Start" event handler.
      */
-    virtual void onPrimaryActionStart(XRInputSource &inputSource, std::shared_ptr<XRFrame> frame) {}
+    virtual void onPrimaryActionStart(std::shared_ptr<XRInputSource> inputSource, std::shared_ptr<XRFrame> frame)
+    {
+      dispatchEvent(XRInputSourceEvent::Make(XRInputSourceEventType::kSelectStart, frame, inputSource));
+    }
     /**
      * The lifecycle "Primary Action End" event handler.
      */
-    virtual void onPrimaryActionEnd(XRInputSource &inputSource, std::shared_ptr<XRFrame> frame) {}
+    virtual void onPrimaryActionEnd(std::shared_ptr<XRInputSource> inputSource, std::shared_ptr<XRFrame> frame)
+    {
+      dispatchEvent(XRInputSourceEvent::Make(XRInputSourceEventType::kSelect, frame, inputSource));
+      dispatchEvent(XRInputSourceEvent::Make(XRInputSourceEventType::kSelectEnd, frame, inputSource));
+    }
     /**
      * The lifecycle "Squeeze Action Start" event handler.
      */
-    virtual void onSqueezeActionStart(XRInputSource &inputSource, std::shared_ptr<XRFrame> frame) {}
+    virtual void onSqueezeActionStart(std::shared_ptr<XRInputSource> inputSource, std::shared_ptr<XRFrame> frame)
+    {
+      dispatchEvent(XRInputSourceEvent::Make(XRInputSourceEventType::kSqueezeStart, frame, inputSource));
+    }
     /**
      * The lifecycle "Squeeze Action End" event handler.
      */
-    virtual void onSqueezeActionEnd(XRInputSource &inputSource, std::shared_ptr<XRFrame> frame) {}
+    virtual void onSqueezeActionEnd(std::shared_ptr<XRInputSource> inputSource, std::shared_ptr<XRFrame> frame)
+    {
+      dispatchEvent(XRInputSourceEvent::Make(XRInputSourceEventType::kSqueeze, frame, inputSource));
+      dispatchEvent(XRInputSourceEvent::Make(XRInputSourceEventType::kSqueezeEnd, frame, inputSource));
+    }
 
   public:
     /**

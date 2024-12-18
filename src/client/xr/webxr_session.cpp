@@ -103,8 +103,7 @@ namespace client_xr
     {
       auto selfSession = shared_from_this();
       inputSources.value().updateInputSources(frame, selfSession, [this, selfSession](auto added, auto removed)
-                                              { auto event = make_shared<XRInputSourcesChangeEvent>(selfSession, added, removed);
-                                                dispatchEvent(event); });
+                                              { dispatchEvent(XRInputSourcesChangeEvent::Make(selfSession, added, removed)); });
     }
   }
 
@@ -206,6 +205,7 @@ namespace client_xr
   void XRSession::end()
   {
     stop();
+    dispatchEvent(XRSessionEvent::Make(XRSessionEventType::kEnd, shared_from_this()));
   }
 
   bool XRSession::isFeatureEnabled(xr::TrXRFeature feature)

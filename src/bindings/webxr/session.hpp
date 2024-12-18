@@ -79,15 +79,6 @@ namespace bindings
 
   private:
     Napi::Array createEnabledFeatures(Napi::Env env);
-    Napi::Value createInputSourcesChangeEvent(Napi::Env env,
-                                              std::vector<XRInputSource *> &added,
-                                              std::vector<XRInputSource *> &removed);
-
-  public:
-    void onPrimaryActionStart(XRInputSource *inputSource, XRFrame *frame);
-    void onPrimaryActionEnd(XRInputSource *inputSource, XRFrame *frame);
-    void onSqueezeActionStart(XRInputSource *inputSource, XRFrame *frame);
-    void onSqueezeActionEnd(XRInputSource *inputSource, XRFrame *frame);
 
   public:
     inline int32_t id() const { return handle_->id; }
