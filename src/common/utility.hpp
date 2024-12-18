@@ -22,7 +22,7 @@
 
 /**
  * Shared reference is a template class that holds the shared pointer of a type.
- * 
+ *
  * You can use this class to hold the shared pointer and pass this class via C/C++ native pointer, reference and also the smart pointers.
  * This class is useful when you have to pass a C++ native pointer like v8::External or N-API External, it will help you to manage the
  * reference count in the whole life cycle of the object.
@@ -35,6 +35,62 @@ public:
 
 public:
   std::shared_ptr<T> value;
+};
+
+/**
+ * Weak reference is a template base class that holds the weak pointer, this class is useful to connect the reference object to a JavaScript
+ * object.
+ *
+ * @tparam T The type of the object that the weak reference holds.
+ */
+template <typename T>
+class WeakReference
+{
+public:
+  WeakReference() : value_(nullptr) {}
+  WeakReference(WeakReference &that) : value_(that.value_) {}
+
+public:
+  /**
+   * @returns The instance reference.
+   */
+  T *getReference()
+  {
+    return value_;
+  }
+  /**
+   * Set the weak reference to the specified value.
+   *
+   * @param instance The new value to set, or `nullptr` to set the reference value.
+   */
+  void setReference(T *value = nullptr)
+  {
+    if (value != nullptr && value_ != nullptr)
+      throw std::runtime_error("Weak reference must be reset a nullptr before setting a new instance.");
+    value_ = value;
+  }
+
+  /**
+   * Reference this object to the specified value, you must ensure that this object is not referenced to another object before calling this
+   * method.
+   * 
+   * @param value The value to reference.
+   */
+  inline void ref(T *value)
+  {
+    setReference(value);
+  }
+
+  /**
+   * Unreference this object.
+   */
+  inline void unref()
+  {
+    setReference(nullptr);
+  }
+
+private:
+  T *value_;
 };
 
 /**

@@ -2,6 +2,7 @@ file(GLOB TR_CLIENT_SOURCE
     "src/bindings/browser/*.cpp"
     "src/bindings/canvas/*.cpp"
     "src/bindings/dom/*.cpp"
+    "src/bindings/dom/**/*.cpp"
     "src/bindings/env/*.cpp"
     "src/bindings/logger/*.cpp"
     "src/bindings/math3d/*.cpp"

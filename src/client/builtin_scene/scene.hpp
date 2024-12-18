@@ -45,7 +45,7 @@ namespace builtin_scene
         xrSession_->requestAnimationFrame(frameCallback_);
       };
 
-      auto setupXRSession = [this, clientContext](auto type, auto &event)
+      auto setupXRSession = [this, clientContext](auto type, auto event)
       {
         auto xrSystem = xrDeviceClient_->getXRSystem(clientContext->getScriptingEventLoop());
         xrSession_ = xrSystem->requestSession();

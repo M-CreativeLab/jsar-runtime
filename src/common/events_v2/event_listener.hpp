@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include "idgen.hpp"
 
 using namespace std;
@@ -7,7 +8,8 @@ using namespace std;
 namespace events_comm
 {
   static TrIdGenerator listenerIdGenerator(1);
-  template <typename EventType, typename EventInstance, typename Callback = function<void(EventType, EventInstance &)>>
+  template <typename EventType, typename EventInstance,
+            typename Callback = function<void(EventType, std::shared_ptr<EventInstance>)>>
   class TrEventListener
   {
   public:
@@ -16,7 +18,7 @@ namespace events_comm
           id(listenerIdGenerator.get())
     {
     }
-    void operator()(EventType type, EventInstance &event)
+    void operator()(EventType type, std::shared_ptr<EventInstance> event)
     {
       eventCallback(type, event);
     }

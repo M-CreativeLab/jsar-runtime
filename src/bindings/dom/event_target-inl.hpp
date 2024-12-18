@@ -2,6 +2,7 @@
 
 #include <napi.h>
 #include "./event_target.hpp"
+#include "./event.hpp"
 
 namespace dombinding
 {
@@ -14,18 +15,6 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    Napi::Function eventConstructor;
-    if (env.Global().Get("Event").IsFunction())
-      eventConstructor = env.Global().Get("Event").As<Napi::Function>();
-
-    if (eventConstructor.IsEmpty())
-    {
-      auto msg = "Failed to dispatch event on 'EventTarget': "
-                 "The `Event` constructor is not found in context.";
-      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
     if (info.Length() < 1)
     {
       auto msg = "Failed to dispatch event on 'EventTarget': "
@@ -35,15 +24,10 @@ namespace dombinding
       return env.Undefined();
     }
 
-    string eventTypeStr;
-    try
+    if (!info[0].IsObject())
     {
-      dom::DOMEventType type = static_cast<dom::DOMEventType>(info[0].ToNumber().Int32Value());
-      eventTypeStr = dom::EventTypeToString(type);
-    }
-    catch (const invalid_argument &e)
-    {
-      auto msg = "Failed to dispatch event on 'EventTarget': " + string(e.what());
+      auto msg = "Failed to dispatch event on 'EventTarget': "
+                 "The event object provided is not an object.";
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
@@ -56,16 +40,16 @@ namespace dombinding
       return env.Undefined();
     }
 
+    auto jsEvent = info[0].ToObject();
+    auto jsEventType = jsEvent.Get("type").ToString();
     auto jsThis = info.This().As<Napi::Object>();
-    auto onEventName = "on" + ToLowerCase(eventTypeStr);
+
+    auto onEventName = "on" + ToLowerCase(jsEventType.Utf8Value());
     if (jsThis.Has(onEventName))
     {
       auto onEventValue = jsThis.Get(onEventName);
       if (onEventValue.IsFunction())
-      {
-        Napi::Object eventObject = eventConstructor.New({Napi::String::New(env, eventTypeStr)});
-        onEventValue.As<Napi::Function>().Call(jsThis, {eventObject});
-      }
+        onEventValue.As<Napi::Function>().Call(jsThis, {jsEvent});
     }
     return env.Undefined();
   }
@@ -78,18 +62,6 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-
-    Napi::Function eventConstructor;
-    if (env.Global().Get("Event").IsFunction())
-      eventConstructor = env.Global().Get("Event").As<Napi::Function>();
-
-    if (eventConstructor.IsEmpty())
-    {
-      auto msg = "Failed to dispatch event on 'EventTarget': "
-                 "The `Event` constructor is not found.";
-      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
 
     if (info.Length() < 2)
     {
@@ -106,22 +78,7 @@ namespace dombinding
       Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
-
-    string eventTypeStr;
-    try
-    {
-      dom::DOMEventType type = static_cast<dom::DOMEventType>(info[0].ToNumber().Int32Value());
-      eventTypeStr = dom::EventTypeToString(type);
-    }
-    catch (const invalid_argument &e)
-    {
-      auto msg = "Failed to dispatch event on 'EventTarget': " + string(e.what());
-      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
-    Napi::Object eventObject = eventConstructor.New({Napi::String::New(env, eventTypeStr)});
-    info[1].As<Napi::Function>().Call(info.This(), {eventObject});
+    info[1].As<Napi::Function>().Call(info.This(), {info[0]});
     return env.Undefined();
   }
 
@@ -224,22 +181,21 @@ namespace dombinding
 
     auto jsThisRef = make_shared<Napi::ObjectReference>(Napi::Persistent(info.This().As<Napi::Object>()));
     auto listenerRef = make_shared<Napi::FunctionReference>(Napi::Persistent(listenerValue.As<Napi::Function>()));
-    auto listenerCallback = [this, jsThisRef, listenerRef](dom::DOMEventType type, dom::Event &event)
+    auto listenerCallback = [this, jsThisRef, listenerRef](dom::DOMEventType type, std::shared_ptr<dom::Event> event)
     {
       if (this->jsThreadId != std::this_thread::get_id())
       {
         /**
          * When the caller thread is not the same as the JavaScript thread, we need to call tsfn.
          */
-        shared_ptr<dom::Event> eventRef = make_shared<dom::Event>(event);
         threadSafeListenerCallback.NonBlockingCall(
-            [type, eventRef, listenerRef](Napi::Env env, Napi::Function jsCallback)
+            [type, event, listenerRef](Napi::Env env, Napi::Function jsCallback)
             {
               Napi::HandleScope scope(env);
               try
               {
-                jsCallback.Call({Napi::Number::New(env, static_cast<int>(eventRef->type)),
-                                 listenerRef->Value()});
+                auto jsEvent = dombinding::Event::Make(env, event);
+                jsCallback.Call({jsEvent, listenerRef->Value()});
               }
               catch (const Napi::Error &e)
               {
@@ -260,8 +216,8 @@ namespace dombinding
         assert(!this->listenerCallback.IsEmpty());
         try
         {
-          this->listenerCallback.Call(jsThisRef->Value(), {Napi::Number::New(env, static_cast<int>(type)),
-                                                           listenerRef->Value()});
+          auto jsEvent = dombinding::Event::Make(env, event);
+          this->listenerCallback.Call(jsThisRef->Value(), {jsEvent, listenerRef->Value()});
         }
         catch (const Napi::Error &e)
         {
@@ -391,16 +347,16 @@ namespace dombinding
   template <typename ObjectType, typename EventTargetType>
   void EventTargetWrap<ObjectType, EventTargetType>::setEventTarget(std::shared_ptr<EventTargetType> eventTarget)
   {
-    auto listenerCallback = [this](dom::DOMEventType type, dom::Event &event)
+    auto listenerCallback = [this](dom::DOMEventType type, std::shared_ptr<dom::Event> event)
     {
       if (this->jsThreadId != std::this_thread::get_id())
       {
-        shared_ptr<dom::Event> eventRef = make_shared<dom::Event>(event);
         this->threadSafeGlobalListenerCallback.NonBlockingCall(
-            [eventRef](Napi::Env env, Napi::Function jsCallback)
+            [event](Napi::Env env, Napi::Function jsCallback)
             {
               Napi::HandleScope scope(env);
-              jsCallback.Call({Napi::Number::New(env, static_cast<int>(eventRef->type))});
+              auto jsEvent = dombinding::Event::Make(env, event);
+              jsCallback.Call({jsEvent});
             });
         return;
       }
@@ -409,7 +365,8 @@ namespace dombinding
         assert(!this->globalListenerCallback.IsEmpty());
         Napi::Env env = this->globalListenerCallback.Env();
         Napi::HandleScope scope(env);
-        this->globalListenerCallback.Call(this->Value(), {Napi::Number::New(env, static_cast<int>(type))});
+        auto jsEvent = dombinding::Event::Make(env, event);
+        this->globalListenerCallback.Call(this->Value(), {jsEvent});
       }
     };
 

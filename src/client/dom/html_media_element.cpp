@@ -6,7 +6,9 @@
 
 namespace dom
 {
-  void HTMLMediaElement::loadMedia(const std::string &src)
+  using namespace std;
+
+  void HTMLMediaElement::loadMedia(const string &src)
   {
     auto browsingContext = ownerDocument->lock()->browsingContext;
     browsingContext->fetchImageResource(src, [this](const void *data, size_t byteLength)
@@ -19,7 +21,7 @@ namespace dom
     player_->load();
   }
 
-  void HTMLMediaElement::onMediaEvent(media_comm::TrMediaEventType eventType, media_client::MediaEvent &event)
+  void HTMLMediaElement::onMediaEvent(media_comm::TrMediaEventType eventType, shared_ptr<media_client::MediaEvent> event)
   {
     if (eventType == media_comm::TrMediaEventType::LoadedMetadata)
       readyState = MediaReadyState::HAVE_METADATA;

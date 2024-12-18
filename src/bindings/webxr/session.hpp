@@ -62,9 +62,10 @@ namespace bindings
 
   public:
     XRSession(const Napi::CallbackInfo &info);
-    ~XRSession() = default;
+    ~XRSession();
 
   private:
+    Napi::Value InputSourcesGetter(const Napi::CallbackInfo &info);
     Napi::Value RenderStateGetter(const Napi::CallbackInfo &info);
     Napi::Value EnvironmentBlendModeGetter(const Napi::CallbackInfo &info);
     Napi::Value EnabledFeaturesGetter(const Napi::CallbackInfo &info);
@@ -97,6 +98,8 @@ namespace bindings
 
   private:
     Napi::ThreadSafeFunction frameDispatcherTsfn_;
+    Napi::Reference<XRInputSourceArray> inputSourcesRef_;
+    Napi::Reference<Napi::Array> enabledFeaturesRef_;
 
   public:
     static thread_local Napi::FunctionReference *constructor;

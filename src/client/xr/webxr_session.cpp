@@ -2,6 +2,7 @@
 #include "./device.hpp"
 #include "./webxr_system.hpp"
 #include "./webxr_session.hpp"
+#include "./webxr_session_events.hpp"
 #include "./webxr_input_sources.hpp"
 #include "../per_process.hpp"
 
@@ -100,8 +101,10 @@ namespace client_xr
   {
     if (inputSources.has_value())
     {
-      inputSources.value().updateInputSources(frame, shared_from_this(), [this](auto added, auto removed)
-                                              { dispatchEvent(dom::DOMEventType::XRInputSourcesChange, ""); });
+      auto selfSession = shared_from_this();
+      inputSources.value().updateInputSources(frame, selfSession, [this, selfSession](auto added, auto removed)
+                                              { auto event = make_shared<XRInputSourcesChangeEvent>(selfSession, added, removed);
+                                                dispatchEvent(event); });
     }
   }
 

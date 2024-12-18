@@ -26,7 +26,7 @@ string(STRIP ${TR_COMMIT_HASH} TR_COMMIT_HASH)
 string(STRIP ${TR_COMMIT_SHORT_HASH} TR_COMMIT_SHORT_HASH)
 
 message("Transmute Version ${TR_VERSION_MAJOR}.${TR_VERSION_MINOR}.${TR_VERSION_PATCH}")
-message("          Commit ${TR_COMMIT_HASH}")
+message("           Commit ${TR_COMMIT_HASH}")
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING

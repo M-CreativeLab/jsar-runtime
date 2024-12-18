@@ -70,7 +70,7 @@ namespace client_xr
   public:
     /**
      * Create a new `XRReferenceSpace` instance.
-     * 
+     *
      * @param type The reference space type, such as `XRReferenceSpaceType::kViewer`.
      * @returns The new `XRReferenceSpace` instance.
      */
@@ -176,7 +176,20 @@ namespace client_xr
   class XRJointSpace : public XRSpace
   {
   public:
-    XRJointSpace(XRInputSource *inputSource, XRJointIndex index)
+    /**
+     * Create a new `XRJointSpace` instance.
+     * 
+     * @param inputSource The input source.
+     * @param index The joint index.
+     * @returns The new `XRJointSpace` instance.
+     */
+    static inline std::shared_ptr<XRJointSpace> Make(std::shared_ptr<XRInputSource> inputSource, XRJointIndex index)
+    {
+      return std::make_shared<XRJointSpace>(inputSource, index);
+    }
+
+  public:
+    XRJointSpace(std::shared_ptr<XRInputSource> inputSource, XRJointIndex index)
         : XRSpace(),
           inputSource(inputSource),
           index(index),
@@ -192,7 +205,7 @@ namespace client_xr
     }
 
   public:
-    XRInputSource *inputSource;
+    std::shared_ptr<XRInputSource> inputSource;
     XRJointIndex index;
     std::string name;
   };
@@ -200,7 +213,20 @@ namespace client_xr
   class XRTargetRayOrGripSpace : public XRSpace
   {
   public:
-    XRTargetRayOrGripSpace(XRInputSource *inputSource, XRSpaceSubType targetRayOrGrip)
+    /**
+     * Create a new `XRTargetRayOrGripSpace` instance.
+     * 
+     * @param inputSource The input source.
+     * @param targetRayOrGrip The target ray or grip space.
+     * @returns The new `XRTargetRayOrGripSpace` instance.
+     */
+    static std::shared_ptr<XRTargetRayOrGripSpace> Make(std::shared_ptr<XRInputSource> inputSource, XRSpaceSubType targetRayOrGrip)
+    {
+      return std::make_shared<XRTargetRayOrGripSpace>(inputSource, targetRayOrGrip);
+    }
+
+  public:
+    XRTargetRayOrGripSpace(std::shared_ptr<XRInputSource> inputSource, XRSpaceSubType targetRayOrGrip)
         : XRSpace(), inputSource(inputSource), subType(targetRayOrGrip)
     {
     }
@@ -213,7 +239,7 @@ namespace client_xr
     }
 
   public:
-    XRInputSource *inputSource;
+    std::shared_ptr<XRInputSource> inputSource;
     XRSpaceSubType subType;
   };
 }

@@ -2,26 +2,33 @@
 
 #include <set>
 #include <vector>
+#include <optional>
+
 #include <napi.h>
-#include "client/per_process.hpp"
-#include "common/xr/input_sources.hpp"
-#include "common.hpp"
+#include <client/per_process.hpp>
+#include <client/xr/webxr_input_sources.hpp>
+#include <common/xr/input_sources.hpp>
+#include "./common.hpp"
 
 namespace bindings
 {
   using InputSourceInternalResetCallback = function<xr::TrXRInputSource *(xr::TrXRFrameRequest *)>;
   using InputSourcesChangedCallback = function<void(vector<XRInputSource *> added, vector<XRInputSource *> removed)>;
 
-  class XRInputSource : public Napi::ObjectWrap<XRInputSource>
+  class XRInputSource : public XRHandleWrap<XRInputSource, client_xr::XRInputSource>
   {
-  public:
-    static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    static Napi::Object NewInstance(Napi::Env env, XRSession *session, xr::TrXRInputSource *internal);
-    XRInputSource(const Napi::CallbackInfo &info);
-    ~XRInputSource();
+    friend class XRHandleWrap<XRInputSource, client_xr::XRInputSource>;
 
-  private:
-    Napi::Value SetTargetRayHitTestResult(const Napi::CallbackInfo &info);
+  public:
+    /**
+     * Add `XRInputSource` class to the provided `env`.
+     *
+     * @param env The `Napi::Env` to add the class to.
+     */
+    static void Init(Napi::Env env);
+    static Napi::Object NewInstance(Napi::Env env, shared_ptr<client_xr::XRInputSource> handle);
+    XRInputSource(const Napi::CallbackInfo &info);
+    ~XRInputSource() = default;
 
   private:
     Napi::Value GamepadGetter(const Napi::CallbackInfo &info);
@@ -34,15 +41,6 @@ namespace bindings
   public:
     bool dispatchSelectOrSqueezeEvents(XRFrame *frame);
 
-  public:
-    xr::TrXRInputSource *internal = nullptr;
-    TrClientContextPerProcess *clientContext = nullptr;
-    Napi::ObjectReference xrSessionRef;
-
-  private:
-    bool primaryActionPressed = false;
-    bool squeezeActionPressed = false;
-
   private:
     static thread_local Napi::FunctionReference *constructor;
   };
@@ -50,18 +48,14 @@ namespace bindings
   class XRInputSourceArray : public Napi::Array
   {
   public:
-    static XRInputSourceArray New(Napi::Env env);
-    XRInputSourceArray(napi_env env, napi_value value);
-    ~XRInputSourceArray();
+    static XRInputSourceArray New(Napi::Env env, std::optional<client_xr::XRInputSourceArray> handle);
 
   public:
-    void updateInputSources(XRFrame *frame, XRSession *session, InputSourcesChangedCallback onChangedCallback);
+    XRInputSourceArray(napi_env env, napi_value value);
+    ~XRInputSourceArray() = default;
 
-  private:
-    XRInputSource *getInputSourceById(int id);
-
-  private:
-    TrClientContextPerProcess *clientContext = nullptr;
+  public:
+    void update(std::optional<client_xr::XRInputSourceArray>);
 
   private:
     static thread_local Napi::FunctionReference *constructor;

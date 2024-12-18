@@ -5,100 +5,103 @@
 namespace bindings
 {
   using namespace std;
+  using namespace Napi;
 
-  thread_local Napi::FunctionReference *XRSpace::constructor;
-  thread_local Napi::FunctionReference *XRReferenceSpace::constructor;
-  thread_local Napi::FunctionReference *XRViewSpace::constructor;
-  thread_local Napi::FunctionReference *XRJointSpace::constructor;
-  thread_local Napi::FunctionReference *XRTargetRayOrGripSpace::constructor;
+  thread_local FunctionReference *XRSpace::constructor;
+  thread_local FunctionReference *XRReferenceSpace::constructor;
+  thread_local FunctionReference *XRViewSpace::constructor;
+  thread_local FunctionReference *XRJointSpace::constructor;
+  thread_local FunctionReference *XRTargetRayOrGripSpace::constructor;
 
   // static
   void XRSpace::Init(Napi::Env env)
   {
-    Napi::HandleScope scope(env);
-    Napi::Function func = DefineClass(env, "XRSpace", {});
-    constructor = new Napi::FunctionReference();
-    *constructor = Napi::Persistent(func);
+    HandleScope scope(env);
+    Function func = DefineClass(env, "XRSpace", {});
+    constructor = new FunctionReference();
+    *constructor = Persistent(func);
     env.Global().Set("XRSpace", func);
   }
 
   // static
-  Napi::Object XRSpace::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRSpace> handle)
+  Object XRSpace::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRSpace> handle)
   {
     return XRSpaceBase<XRSpace>::NewInstance(env, handle);
   }
 
   // static
-  Napi::Object XRSpace::NewInstance(Napi::Env env, client_xr::XRSpaceSubType subType, mat4 baseMatrix)
+  Object XRSpace::NewInstance(Napi::Env env, client_xr::XRSpaceSubType subType, mat4 baseMatrix)
   {
     return NewInstance(env, make_shared<client_xr::XRSpace>(baseMatrix, subType));
   }
 
-  XRSpace::XRSpace(const Napi::CallbackInfo &info) : XRSpaceBase(info)
+  XRSpace::XRSpace(const CallbackInfo &info) : XRSpaceBase(info)
   {
   }
 
   // static
   void XRReferenceSpace::Init(Napi::Env env)
   {
-    Napi::HandleScope scope(env);
-    Napi::Function func = DefineClass(env, "XRReferenceSpace",
-                                      {InstanceMethod("getOffsetReferenceSpace", &XRReferenceSpace::GetOffsetReferenceSpace)});
-    constructor = new Napi::FunctionReference();
-    *constructor = Napi::Persistent(func);
-    env.Global().Set("XRReferenceSpace", func);
+#define MODULE_NAME "XRReferenceSpace"
+    HandleScope scope(env);
+    Function func = DefineClass(env, MODULE_NAME,
+                                {InstanceMethod("getOffsetReferenceSpace", &XRReferenceSpace::GetOffsetReferenceSpace)});
+    constructor = new FunctionReference();
+    *constructor = Persistent(func);
+    env.Global().Set(MODULE_NAME, func);
+#undef MODULE_NAME
   }
 
   // static
-  Napi::Object XRReferenceSpace::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRReferenceSpace> handle)
+  Object XRReferenceSpace::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRReferenceSpace> handle)
   {
     return XRSpaceBase<XRReferenceSpace, client_xr::XRReferenceSpace>::NewInstance(env, handle);
   }
 
   // static
-  Napi::Object XRReferenceSpace::NewInstance(Napi::Env env, client_xr::XRReferenceSpaceType type)
+  Object XRReferenceSpace::NewInstance(Napi::Env env, client_xr::XRReferenceSpaceType type)
   {
     return NewInstance(env, make_shared<client_xr::XRReferenceSpace>(type));
   }
 
-  XRReferenceSpace::XRReferenceSpace(const Napi::CallbackInfo &info) : XRSpaceBase(info)
+  XRReferenceSpace::XRReferenceSpace(const CallbackInfo &info) : XRSpaceBase(info)
   {
   }
 
-  Napi::Value XRReferenceSpace::GetOffsetReferenceSpace(const Napi::CallbackInfo &info)
+  Value XRReferenceSpace::GetOffsetReferenceSpace(const CallbackInfo &info)
   {
     // TODO
-    return Napi::Value();
+    return Value();
   }
 
   // static
   void XRViewSpace::Init(Napi::Env env)
   {
-    Napi::HandleScope scope(env);
-    Napi::Function func = DefineClass(env, "XRViewSpace",
-                                      {
-                                          InstanceAccessor("eye", &XRViewSpace::EyeGetter, nullptr),
-                                      });
-    constructor = new Napi::FunctionReference();
-    *constructor = Napi::Persistent(func);
+    HandleScope scope(env);
+    Function func = DefineClass(env, "XRViewSpace",
+                                {
+                                    InstanceAccessor("eye", &XRViewSpace::EyeGetter, nullptr),
+                                });
+    constructor = new FunctionReference();
+    *constructor = Persistent(func);
   }
 
   // static
-  Napi::Object XRViewSpace::NewInstance(Napi::Env env, client_xr::XRViewSpaceType type)
+  Object XRViewSpace::NewInstance(Napi::Env env, client_xr::XRViewSpaceType type)
   {
     auto handle = client_xr::XRViewSpace::Make(type);
     return XRSpaceBase<XRViewSpace, client_xr::XRViewSpace>::NewInstance(env, handle);
   }
 
-  XRViewSpace::XRViewSpace(const Napi::CallbackInfo &info)
+  XRViewSpace::XRViewSpace(const CallbackInfo &info)
       : XRSpaceBase(info)
   {
   }
 
-  Napi::Value XRViewSpace::EyeGetter(const Napi::CallbackInfo &info)
+  Value XRViewSpace::EyeGetter(const CallbackInfo &info)
   {
     Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+    HandleScope scope(env);
 
     string eye;
     switch (handle_->eye())
@@ -113,31 +116,37 @@ namespace bindings
       eye = "none";
       break;
     }
-    return Napi::String::New(env, eye);
+    return String::New(env, eye);
   }
 
   // static
   void XRJointSpace::Init(Napi::Env env)
   {
-    Napi::HandleScope scope(env);
-    Napi::Function func = DefineClass(env, "XRJointSpace", {});
-    constructor = new Napi::FunctionReference();
-    *constructor = Napi::Persistent(func);
-    env.Global().Set("XRJointSpace", func);
+#define MODULE_NAME "XRJointSpace"
+    HandleScope scope(env);
+    Function func = DefineClass(env, MODULE_NAME, {});
+    constructor = new FunctionReference();
+    *constructor = Persistent(func);
+    env.Global().Set(MODULE_NAME, func);
+#undef MODULE_NAME
   }
 
   // static
-  Napi::Object XRJointSpace::NewInstance(Napi::Env env, xr::TrXRInputSource *inputSource, client_xr::XRJointIndex index)
+  Object XRJointSpace::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRJointSpace> handle)
   {
-    auto handle = make_shared<client_xr::XRJointSpace>(nullptr, index);
     return XRSpaceBase<XRJointSpace, client_xr::XRJointSpace>::NewInstance(env, handle);
   }
 
-  XRJointSpace::XRJointSpace(const Napi::CallbackInfo &info)
-      : XRSpaceBase(info)
+  // static
+  Object XRJointSpace::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRInputSource> inputSource, client_xr::XRJointIndex index)
+  {
+    return NewInstance(env, client_xr::XRJointSpace::Make(inputSource, index));
+  }
+
+  XRJointSpace::XRJointSpace(const CallbackInfo &info) : XRSpaceBase(info)
   {
     Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+    HandleScope scope(env);
 
     auto jsThis = info.This().ToObject();
     jsThis.Set("jointName", Napi::String::New(env, handle_->name));
@@ -146,21 +155,28 @@ namespace bindings
   // static
   void XRTargetRayOrGripSpace::Init(Napi::Env env)
   {
-    Napi::HandleScope scope(env);
-    Napi::Function func = DefineClass(env, "XRSpace" /** use the same name as XRSpace */, {});
-    constructor = new Napi::FunctionReference();
-    *constructor = Napi::Persistent(func);
+    HandleScope scope(env);
+    Function func = DefineClass(env, "XRSpace" /** use the same name as XRSpace */, {});
+    constructor = new FunctionReference();
+    *constructor = Persistent(func);
   }
 
   // static
-  Napi::Object XRTargetRayOrGripSpace::NewInstance(Napi::Env env, xr::TrXRInputSource *inputSource, bool isGrip)
+  Object XRTargetRayOrGripSpace::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRTargetRayOrGripSpace> handle)
   {
-    auto handle = make_shared<client_xr::XRTargetRayOrGripSpace>(nullptr,
-                                                                 isGrip ? client_xr::XRSpaceSubType::kGrip : client_xr::XRSpaceSubType::kTargetRay);
     return XRSpaceBase<XRTargetRayOrGripSpace, client_xr::XRTargetRayOrGripSpace>::NewInstance(env, handle);
   }
 
-  XRTargetRayOrGripSpace::XRTargetRayOrGripSpace(const Napi::CallbackInfo &info) : XRSpaceBase(info)
+  // static
+  Object XRTargetRayOrGripSpace::NewInstance(Napi::Env env, shared_ptr<client_xr::XRInputSource> inputSource, bool isGrip)
+  {
+    auto handle = client_xr::XRTargetRayOrGripSpace::Make(
+        inputSource,
+        isGrip ? client_xr::XRSpaceSubType::kGrip : client_xr::XRSpaceSubType::kTargetRay);
+    return NewInstance(env, handle);
+  }
+
+  XRTargetRayOrGripSpace::XRTargetRayOrGripSpace(const CallbackInfo &info) : XRSpaceBase(info)
   {
   }
 }

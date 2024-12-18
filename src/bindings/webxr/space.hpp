@@ -97,7 +97,8 @@ namespace bindings
 
   public:
     static void Init(Napi::Env env);
-    static Napi::Object NewInstance(Napi::Env env, xr::TrXRInputSource *inputSource, client_xr::XRJointIndex index);
+    static Napi::Object NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRJointSpace> handle);
+    static Napi::Object NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRInputSource> inputSource, client_xr::XRJointIndex index);
 
   public:
     XRJointSpace(const Napi::CallbackInfo &info);
@@ -112,14 +113,14 @@ namespace bindings
 
   public:
     static void Init(Napi::Env env);
-    static Napi::Object NewInstance(Napi::Env env, xr::TrXRInputSource *inputSource, bool isGrip);
+    static Napi::Object NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRTargetRayOrGripSpace> handle);
+    static Napi::Object NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRInputSource> inputSource, bool isGrip);
+
+  public:
     XRTargetRayOrGripSpace(const Napi::CallbackInfo &info);
 
   public:
     void onPoseUpdate(XRSession *session, xr::TrXRFrameRequest *frameRequest);
-
-  private:
-    xr::TrXRInputSource *inputSource;
 
   private:
     static thread_local Napi::FunctionReference *constructor;

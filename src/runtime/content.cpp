@@ -170,7 +170,7 @@ void TrContentRuntime::onEventChanConnected(TrOneShotClient<events_comm::TrNativ
   eventChanSender = make_unique<events_comm::TrNativeEventSender>(&client);
 }
 
-bool TrContentRuntime::dispatchEvent(events_comm::TrNativeEvent &event)
+bool TrContentRuntime::dispatchEvent(std::shared_ptr<events_comm::TrNativeEvent> event)
 {
   return getConstellation()->nativeEventTarget->dispatchEvent(event);
 }
@@ -301,7 +301,7 @@ void TrContentRuntime::recvEvent()
   {                                                                                                                           \
     auto sharedEvent = events_comm::TrSharedNativeEventBase::FromMessage<events_comm::Tr##eventType##Remote>(eventMessage);   \
     auto eventToDispatch = events_comm::TrNativeEvent::MakeEventWithString(sharedEvent.type, sharedEvent.detailJson.c_str()); \
-    eventToDispatch.id = sharedEvent.eventId;                                                                                 \
+    eventToDispatch->id = sharedEvent.eventId;                                                                                \
     eventTarget->dispatchEvent(eventToDispatch);                                                                              \
     break;                                                                                                                    \
   }
@@ -381,9 +381,9 @@ TrContentManager::TrContentManager(TrConstellation *constellation)
   eventChanServer = new TrOneShotServer<events_comm::TrNativeEventMessage>("eventChan");
 
   auto eventTarget = constellation->nativeEventTarget;
-  rpcRequestListener = eventTarget->addEventListener(events_comm::TrNativeEventType::RpcRequest, [this](auto type, auto &event)
+  rpcRequestListener = eventTarget->addEventListener(events_comm::TrNativeEventType::RpcRequest, [this](auto type, auto event)
                                                      { onRpcRequest(event); });
-  documentEventListener = eventTarget->addEventListener(events_comm::TrNativeEventType::DocumentEvent, [this](auto type, auto &event)
+  documentEventListener = eventTarget->addEventListener(events_comm::TrNativeEventType::DocumentEvent, [this](auto type, auto event)
                                                         { onDocumentEvent(event); });
 }
 
@@ -581,27 +581,27 @@ void TrContentManager::onTryDestroyingContents()
   }
 }
 
-void TrContentManager::onRpcRequest(events_comm::TrNativeEvent &event)
+void TrContentManager::onRpcRequest(std::shared_ptr<events_comm::TrNativeEvent> event)
 {
-  if (TR_UNLIKELY(event.type != events_comm::TrNativeEventType::RpcRequest))
+  if (TR_UNLIKELY(event->type != events_comm::TrNativeEventType::RpcRequest))
     return;
 
-  auto detail = event.detail<events_comm::TrRpcRequest>();
+  auto detail = event->detail<events_comm::TrRpcRequest>();
   auto content = getContent(detail.documentId, true);
   if (TR_UNLIKELY(content == nullptr))
   {
     DEBUG(LOG_TAG_ERROR, "Failed to find the content(%d) for the RpcRequest", detail.documentId);
     return;
   }
-  constellation->dispatchNativeEvent(event, content.get());
+  constellation->dispatchNativeEvent(*event, content.get());
 }
 
-void TrContentManager::onDocumentEvent(events_comm::TrNativeEvent &event)
+void TrContentManager::onDocumentEvent(std::shared_ptr<events_comm::TrNativeEvent> event)
 {
-  if (TR_UNLIKELY(event.type != events_comm::TrNativeEventType::DocumentEvent))
+  if (TR_UNLIKELY(event->type != events_comm::TrNativeEventType::DocumentEvent))
     return;
 
-  auto detail = event.detail<events_comm::TrDocumentEvent>();
+  auto detail = event->detail<events_comm::TrDocumentEvent>();
   auto content = getContent(detail.documentId, true);
   if (TR_UNLIKELY(content == nullptr))
   {
@@ -609,7 +609,7 @@ void TrContentManager::onDocumentEvent(events_comm::TrNativeEvent &event)
     return;
   }
   content->logDocumentEvent(detail);
-  constellation->dispatchNativeEvent(event, content.get());
+  constellation->dispatchNativeEvent(*event, content.get());
 }
 
 /**

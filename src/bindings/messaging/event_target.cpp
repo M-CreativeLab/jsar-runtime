@@ -139,9 +139,9 @@ namespace bindings
         return env.Undefined();
       }
 
-      TrNativeEvent event = TrNativeEvent::MakeEventWithString(eventType, detailJsonSrc.c_str());
+      auto event = TrNativeEvent::MakeEventWithString(eventType, detailJsonSrc.c_str());
       clientContext->sendEvent(event);
-      return Napi::Number::New(env, event.id);
+      return Napi::Number::New(env, event->id);
     }
   }
 }

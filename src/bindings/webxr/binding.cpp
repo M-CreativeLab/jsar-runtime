@@ -34,8 +34,8 @@ namespace bindings
       XRFrame::Init(env);
 
       // Input Source
-      XRHand::Init(env, exports);
-      XRInputSource::Init(env, exports);
+      XRHand::Init(env);
+      XRInputSource::Init(env);
 
       // Layers
       XRLayer::Init(env);

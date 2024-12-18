@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
 #include <thread>
 #include <mutex>
 #include <shared_mutex>
@@ -190,7 +191,7 @@ public: // event methods
    * @param event The native event to send.
    * @returns true if the event is sent successfully.
    */
-  bool sendEvent(TrNativeEvent &event);
+  bool sendEvent(std::shared_ptr<TrNativeEvent> event);
   /**
    * Receive a native event message from the host process.
    *

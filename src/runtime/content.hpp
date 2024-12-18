@@ -108,7 +108,7 @@ public: // event methods
    * @param event The native event to dispatch.
    * @returns true if the event is dispatched successfully.
    */
-  bool dispatchEvent(events_comm::TrNativeEvent &event);
+  bool dispatchEvent(std::shared_ptr<events_comm::TrNativeEvent> event);
   /**
    * Report a document event to the host native EventTarget, this is useful for reporting the events from the host process.
    *
@@ -350,8 +350,8 @@ public:
 private:
   void onNewClientOnEventChan(TrOneShotClient<events_comm::TrNativeEventMessage> &client);
   void onTryDestroyingContents();
-  void onRpcRequest(events_comm::TrNativeEvent &event);
-  void onDocumentEvent(events_comm::TrNativeEvent &event);
+  void onRpcRequest(std::shared_ptr<events_comm::TrNativeEvent> event);
+  void onDocumentEvent(std::shared_ptr<events_comm::TrNativeEvent> event);
 
 private:
   void installExecutable();
