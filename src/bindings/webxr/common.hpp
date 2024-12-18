@@ -64,8 +64,10 @@ namespace bindings
      */
     static Napi::Object NewInstance(Napi::Env env, std::shared_ptr<HandleType> handle, std::optional<Napi::Value> arg = std::nullopt)
     {
+      assert(handle != nullptr);
+
       Napi::EscapableHandleScope scope(env);
-      auto handleRef = HandleReference(handle);
+      HandleReference handleRef(handle);
       auto handleExternal = Napi::External<HandleReference>::New(env, &handleRef);
       auto args = arg.has_value() ? std::vector<napi_value>{handleExternal, arg.value()}
                                   : std::vector<napi_value>{handleExternal};
@@ -102,6 +104,7 @@ namespace bindings
         return;
       }
       handle_ = handleRef->value;
+      assert(handle_ != nullptr);
     }
 
   public:

@@ -6,6 +6,7 @@ namespace bindings
 {
   using namespace std;
   using namespace glm;
+  using namespace Napi;
 
   thread_local Napi::FunctionReference *XRPose::constructor;
   thread_local Napi::FunctionReference *XRViewerPose::constructor;
@@ -27,6 +28,7 @@ namespace bindings
   // static
   Napi::Object XRPose::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRPose> handle)
   {
+    assert(handle != nullptr);
     return XRPoseBase<XRPose>::NewInstance(env, handle);
   }
 
@@ -40,47 +42,44 @@ namespace bindings
   XRPose::XRPose(const Napi::CallbackInfo &info)
       : XRPoseBase(info)
   {
+    assert(handle_ != nullptr);
   }
 
   // static
   void XRViewerPose::Init(Napi::Env env)
   {
-    Napi::Function tpl = DefineClass(env, "XRViewerPose",
-                                     {InstanceAccessor("transform", &XRViewerPose::TransformGetter, nullptr),
-                                      InstanceAccessor("emulatedPosition", &XRViewerPose::EmulatedPositionGetter, nullptr),
-                                      InstanceAccessor("views", &XRViewerPose::ViewsGetter, nullptr)});
+#define MODULE_NAME "XRViewerPose"
+    Napi::Function tpl = DefineClass(
+        env, MODULE_NAME,
+        {InstanceAccessor("transform", &XRViewerPose::TransformGetter, nullptr),
+         InstanceAccessor("emulatedPosition", &XRViewerPose::EmulatedPositionGetter, nullptr),
+         InstanceAccessor("views", &XRViewerPose::ViewsGetter, nullptr)});
 
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(tpl);
     env.SetInstanceData(constructor);
-    env.Global().Set("XRViewerPose", tpl);
+    env.Global().Set(MODULE_NAME, tpl);
+#undef MODULE_NAME
   }
 
   // static
-  Napi::Object XRViewerPose::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRViewerPose> handle)
+  Napi::Object XRViewerPose::NewInstance(Napi::Env env, shared_ptr<client_xr::XRViewerPose> handle)
   {
+    assert(handle != nullptr);
     return XRPoseBase<XRViewerPose, client_xr::XRViewerPose>::NewInstance(env, handle);
   }
 
-  // static
-  Napi::Object XRViewerPose::NewInstance(Napi::Env env, XRSession *session, mat4 &transformationMatrix,
-                                         XRFrame &frame,
-                                         XRReferenceSpace &baseSpace)
+  XRViewerPose::XRViewerPose(const CallbackInfo &info)
+      : XRPoseBase<XRViewerPose, client_xr::XRViewerPose>(info)
   {
-    auto handle = make_shared<client_xr::XRViewerPose>(session->handle(), frame.handle(), transformationMatrix, baseSpace.handle());
-    return NewInstance(env, handle);
-  }
+    auto env = info.Env();
+    HandleScope scope(env);
 
-  XRViewerPose::XRViewerPose(const Napi::CallbackInfo &info)
-      : XRPoseBase(info)
-  {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
-
+    assert(handle_ != nullptr);
     for (auto viewHandle : handle_->views())
     {
       auto view = XRView::NewInstance(env, viewHandle);
-      views.push_back(Napi::Persistent(view));
+      views.push_back(Persistent(view));
     }
   }
 
@@ -90,12 +89,12 @@ namespace bindings
       views[i].Reset();
   }
 
-  Napi::Value XRViewerPose::ViewsGetter(const Napi::CallbackInfo &info)
+  Value XRViewerPose::ViewsGetter(const CallbackInfo &info)
   {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+    auto env = info.Env();
+    HandleScope scope(env);
 
-    Napi::Array viewsArray = Napi::Array::New(env, views.size());
+    auto viewsArray = Array::New(env, views.size());
     for (size_t i = 0; i < views.size(); i++)
       viewsArray[i] = views[i].Value();
     return viewsArray;
@@ -104,21 +103,24 @@ namespace bindings
   // static
   void XRJointPose::Init(Napi::Env env)
   {
-    Napi::Function tpl = DefineClass(env, "XRJointPose",
-                                     {InstanceValue("radius", Napi::Number::New(env, 0.0))});
-    constructor = new Napi::FunctionReference();
-    *constructor = Napi::Persistent(tpl);
+#define MODULE_NAME "XRJointPose"
+    Function tpl = DefineClass(env, MODULE_NAME,
+                               {InstanceValue("radius", Number::New(env, 0.0))});
+    constructor = new FunctionReference();
+    *constructor = Persistent(tpl);
     env.SetInstanceData(constructor);
-    env.Global().Set("XRJointPose", tpl);
+    env.Global().Set(MODULE_NAME, tpl);
+#undef MODULE_NAME
   }
 
   // static
-  Napi::Object XRJointPose::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRJointPose> handle)
+  Object XRJointPose::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRJointPose> handle)
   {
+    assert(handle != nullptr);
     return XRPoseBase<XRJointPose, client_xr::XRJointPose>::NewInstance(env, handle);
   }
 
-  XRJointPose::XRJointPose(const Napi::CallbackInfo &info)
+  XRJointPose::XRJointPose(const CallbackInfo &info)
       : XRPoseBase(info)
   {
   }

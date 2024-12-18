@@ -16,11 +16,13 @@ namespace bindings
   // static
   void XRSpace::Init(Napi::Env env)
   {
+#define MODULE_NAME "XRSpace"
     HandleScope scope(env);
-    Function func = DefineClass(env, "XRSpace", {});
+    Function func = DefineClass(env, MODULE_NAME, {});
     constructor = new FunctionReference();
     *constructor = Persistent(func);
-    env.Global().Set("XRSpace", func);
+    env.Global().Set(MODULE_NAME, func);
+#undef MODULE_NAME
   }
 
   // static
@@ -77,13 +79,16 @@ namespace bindings
   // static
   void XRViewSpace::Init(Napi::Env env)
   {
+#define MODULE_NAME "XRViewSpace"
     HandleScope scope(env);
-    Function func = DefineClass(env, "XRViewSpace",
-                                {
-                                    InstanceAccessor("eye", &XRViewSpace::EyeGetter, nullptr),
-                                });
+    Function func = DefineClass(
+        env, MODULE_NAME,
+        {
+            InstanceAccessor("eye", &XRViewSpace::EyeGetter, nullptr),
+        });
     constructor = new FunctionReference();
     *constructor = Persistent(func);
+#undef MODULE_NAME
   }
 
   // static
@@ -165,15 +170,6 @@ namespace bindings
   Object XRTargetRayOrGripSpace::NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRTargetRayOrGripSpace> handle)
   {
     return XRSpaceBase<XRTargetRayOrGripSpace, client_xr::XRTargetRayOrGripSpace>::NewInstance(env, handle);
-  }
-
-  // static
-  Object XRTargetRayOrGripSpace::NewInstance(Napi::Env env, shared_ptr<client_xr::XRInputSource> inputSource, bool isGrip)
-  {
-    auto handle = client_xr::XRTargetRayOrGripSpace::Make(
-        inputSource,
-        isGrip ? client_xr::XRSpaceSubType::kGrip : client_xr::XRSpaceSubType::kTargetRay);
-    return NewInstance(env, handle);
   }
 
   XRTargetRayOrGripSpace::XRTargetRayOrGripSpace(const CallbackInfo &info) : XRSpaceBase(info)

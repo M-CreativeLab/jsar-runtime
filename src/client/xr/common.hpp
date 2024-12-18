@@ -48,6 +48,19 @@ namespace client_xr
     kTargetRay,
   };
 
+  inline std::string to_string(XRSpaceSubType spaceSubType)
+  {
+    switch (spaceSubType)
+    {
+    case XRSpaceSubType::kGrip:
+      return "grip";
+    case XRSpaceSubType::kTargetRay:
+      return "targetRay";
+    default:
+      return "unset";
+    }
+  }
+
   /**
    * The type of the reference space in XR.
    *

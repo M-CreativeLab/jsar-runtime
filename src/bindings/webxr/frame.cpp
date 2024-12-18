@@ -142,8 +142,24 @@ namespace bindings
 
     auto space = XRSpace::Unwrap(info[0].As<Napi::Object>());
     auto baseSpace = XRSpace::Unwrap(info[1].As<Napi::Object>());
-    auto pose = handle_->getPose(space->handle(), baseSpace->handle());
-    return XRPose::NewInstance(env, pose);
+    try
+    {
+      auto pose = handle_->getPose(space->handle(), baseSpace->handle());
+      return XRPose::NewInstance(env, pose);
+    }
+    catch (const std::invalid_argument &e)
+    {
+      auto consoleWarn = env.Global()
+                             .Get("console")
+                             .As<Napi::Object>()
+                             .Get("warn")
+                             .As<Napi::Function>();
+      auto msg = "Failed to get pose: " + std::string(e.what());
+      consoleWarn.Call({Napi::String::New(env, msg), info[0], info[1]});
+      Napi::TypeError::New(env, msg)
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
   }
 
   void XRFrame::start()

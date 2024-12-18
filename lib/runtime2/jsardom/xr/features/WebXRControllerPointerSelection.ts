@@ -172,22 +172,12 @@ class WebXRControllerData {
     this.meshUnderPointer = pickedMesh;
 
     // const cursorMesh = this.selectionMesh;
-    if (this.xrController?.inputSource) {
-      const pointerPosition = pickedPoint;
-      const pointerRotation = BABYLON.Quaternion.RotationQuaternionFromAxis(BABYLON.Axis.Y, BABYLON.Axis.X, normal);
-      const cursor = new XRRigidTransform(pointerPosition, pointerRotation);
-      const inputSource = this.xrController.inputSource;
-      inputSource.setTargetRayHitTestResult(true, cursor);
-    }
   }
 
   deselect() {
     this.meshUnderPointer = null;
     this.laserPointer.isVisible = false;
     this.selectionMesh.isVisible = false;
-    if (this.xrController?.inputSource) {
-      this.xrController.inputSource.setTargetRayHitTestResult(false);
-    }
   }
 
   reset() {

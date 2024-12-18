@@ -22,6 +22,8 @@ namespace client_xr
   class XRInputSource : public enable_shared_from_this<XRInputSource>
   {
     friend class XRHand;
+    friend class XRJointSpace;
+    friend class XRTargetRayOrGripSpace;
     friend class XRInputSourceArray;
 
   public:

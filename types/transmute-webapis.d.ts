@@ -55,19 +55,6 @@ interface XRSession {
   updateCollisionBox(min: number[], max: number[]): void;
 }
 
-interface XRInputSource {
-  /**
-   * This method is also used in JSAR's _Defferred Composition_, but different from `updateCollisionBox`, it computes the hit point by the client
-   * process every frame, and sends the hit point to the host.
-   * 
-   * @param hit If the target ray hits an object.
-   * @param endTransform The ray's end transform if hit or null.
-   * @returns null
-   * @deprecated This method has been deprecated because it takes more latency and more CPU usage at the client side.
-   */
-  setTargetRayHitTestResult(hit: boolean, endTransform?: XRRigidTransform | null): void;
-}
-
 interface XRWebGLLayer {
   /**
    * At JSAR, the WebXR rendering pipeline disallows developers to create framebuffer objects for stereo rendering, because the framebuffer is

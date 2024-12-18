@@ -113,6 +113,8 @@ namespace client_xr
      * @param baseSpace An `XRSpace` to use as the base or origin for the purposes of computing the relative position and
      *                  orientation.
      * @returns an `XRPose` object specifying the position and orientation, relative to the `XRSpace` indicated by `baseSpace`.
+     * @throws `std::invalid_argument` if `space` or `baseSpace` is `nullptr`.
+     * @throws `std::invalid_argument` if `space` is not target ray or grip space.
      */
     std::shared_ptr<XRPose> getPose(std::shared_ptr<XRSpace> space, std::shared_ptr<XRSpace> baseSpace);
     /**

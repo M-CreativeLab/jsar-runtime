@@ -23,8 +23,8 @@ namespace bindings
 
   public:
     inline std::shared_ptr<HandleType> handle() { return handle_; }
-    inline client_xr::XRSpaceSubType subType() const { return handle_->subType; }
-    inline bool isReferenceSpace() const { return handle_->isReferenceSpace(); }
+    inline client_xr::XRSpaceSubType subType() { return handle_->subType; }
+    inline bool isReferenceSpace() { return handle_->isReferenceSpace(); }
     inline glm::mat4 baseMatrix() { return handle_->baseMatrix(); }
     inline glm::mat4 inverseBaseMatrix() { return handle_->inverseBaseMatrix(); }
 
@@ -114,7 +114,6 @@ namespace bindings
   public:
     static void Init(Napi::Env env);
     static Napi::Object NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRTargetRayOrGripSpace> handle);
-    static Napi::Object NewInstance(Napi::Env env, std::shared_ptr<client_xr::XRInputSource> inputSource, bool isGrip);
 
   public:
     XRTargetRayOrGripSpace(const Napi::CallbackInfo &info);

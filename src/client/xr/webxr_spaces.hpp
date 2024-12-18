@@ -87,24 +87,7 @@ namespace client_xr
     }
 
   public:
-    void onPoseUpdate(std::shared_ptr<XRSession> session, xr::TrXRFrameRequest &frameRequest) override
-    {
-      if (type_ == XRReferenceSpaceType::kViewer)
-      {
-        baseMatrix_ = glm::make_mat4(frameRequest.viewerBaseMatrix);
-        XRSpace::onPoseUpdate(session, frameRequest);
-      }
-      else if (type_ == XRReferenceSpaceType::kLocal)
-      {
-        baseMatrix_ = glm::make_mat4(frameRequest.localBaseMatrix);
-        XRSpace::onPoseUpdate(session, frameRequest);
-      }
-      else if (type_ == XRReferenceSpaceType::kUnbounded)
-      {
-        baseMatrix_ = glm::make_mat4(frameRequest.localBaseMatrix) * math::getOriginMatrix();
-        XRSpace::onPoseUpdate(session, frameRequest);
-      }
-    }
+    void onPoseUpdate(std::shared_ptr<XRSession> session, xr::TrXRFrameRequest &frameRequest) override;
 
   public:
     XRReferenceSpaceType referenceSpaceType() const { return type_; }
@@ -146,23 +129,7 @@ namespace client_xr
     }
 
   public:
-    void onPoseUpdate(std::shared_ptr<XRSession> session, xr::TrXRFrameRequest &frameRequest) override
-    {
-      if (type_ == XRViewSpaceType::kNone)
-        return; // No need to update the pose if the type is none.
-
-      if (type_ != frameRequest.viewIndex)
-      {
-        std::cerr << "failed to update pose for XRViewSpace: viewIndex mismatch" << std::endl;
-        return;
-      }
-
-      // TODO: check if a device
-      auto &view = frameRequest.views[frameRequest.viewIndex];
-      baseMatrix_ = glm::inverse(view.getViewMatrix());
-      projectionMatrix_ = view.getProjectionMatrix();
-      XRSpace::onPoseUpdate(session, frameRequest);
-    }
+    void onPoseUpdate(std::shared_ptr<XRSession> session, xr::TrXRFrameRequest &frameRequest) override;
 
   public:
     XREye eye() const { return type_; }
@@ -178,7 +145,7 @@ namespace client_xr
   public:
     /**
      * Create a new `XRJointSpace` instance.
-     * 
+     *
      * @param inputSource The input source.
      * @param index The joint index.
      * @returns The new `XRJointSpace` instance.
@@ -198,11 +165,7 @@ namespace client_xr
     }
 
   public:
-    void onPoseUpdate(std::shared_ptr<XRSession> session, xr::TrXRFrameRequest &frameRequest) override
-    {
-      // TODO
-      XRSpace::onPoseUpdate(session, frameRequest);
-    }
+    void onPoseUpdate(std::shared_ptr<XRSession> session, xr::TrXRFrameRequest &frameRequest) override;
 
   public:
     std::shared_ptr<XRInputSource> inputSource;
@@ -215,7 +178,7 @@ namespace client_xr
   public:
     /**
      * Create a new `XRTargetRayOrGripSpace` instance.
-     * 
+     *
      * @param inputSource The input source.
      * @param targetRayOrGrip The target ray or grip space.
      * @returns The new `XRTargetRayOrGripSpace` instance.
@@ -227,19 +190,15 @@ namespace client_xr
 
   public:
     XRTargetRayOrGripSpace(std::shared_ptr<XRInputSource> inputSource, XRSpaceSubType targetRayOrGrip)
-        : XRSpace(), inputSource(inputSource), subType(targetRayOrGrip)
+        : XRSpace(), inputSource(inputSource)
     {
+      this->subType = targetRayOrGrip;
     }
 
   public:
-    void onPoseUpdate(std::shared_ptr<XRSession> session, xr::TrXRFrameRequest &frameRequest) override
-    {
-      // TODO
-      XRSpace::onPoseUpdate(session, frameRequest);
-    }
+    void onPoseUpdate(std::shared_ptr<XRSession> session, xr::TrXRFrameRequest &frameRequest) override;
 
   public:
     std::shared_ptr<XRInputSource> inputSource;
-    XRSpaceSubType subType;
   };
 }

@@ -82,8 +82,10 @@ namespace client_xr
 
   std::shared_ptr<XRPose> XRFrame::getPose(std::shared_ptr<XRSpace> space, std::shared_ptr<XRSpace> baseSpace)
   {
-    if (space == nullptr || baseSpace == nullptr)
-      return nullptr;
+    if (space == nullptr)
+      throw std::invalid_argument("`space` parameter is required");
+    if (baseSpace == nullptr)
+      throw std::invalid_argument("`baseSpace` parameter is required");
 
     auto &frameRequestData = *frameRequestData_;
     baseSpace->ensurePoseUpdated(id_, session_, frameRequestData);
@@ -96,7 +98,7 @@ namespace client_xr
     }
     else
     {
-      return nullptr;
+      throw std::invalid_argument("`space` parameter is not supported");
     }
   }
 
