@@ -3,6 +3,9 @@
 #include <memory>
 #include <chrono>
 #include <idgen.hpp>
+#include <common/utility.hpp>
+#include <bindings/webxr/common.hpp>
+
 #include "./common.hpp"
 #include "./webxr_frame.hpp"
 #include "./webxr_hand.hpp"
@@ -74,6 +77,7 @@ namespace client_xr
   };
 
   class XRSession : public dom::DOMEventTarget,
+                    public WeakReference<bindings::XRSession>,
                     public std::enable_shared_from_this<XRSession>
   {
     friend class XRSystem;

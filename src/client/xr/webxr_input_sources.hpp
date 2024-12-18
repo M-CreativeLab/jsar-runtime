@@ -19,8 +19,9 @@ namespace client_xr
    * direction in which it is being aimed and optionally may generate events if the user triggers performs actions using the
    * device.
    */
-  class XRInputSource
+  class XRInputSource : public enable_shared_from_this<XRInputSource>
   {
+    friend class XRHand;
     friend class XRInputSourceArray;
 
   public:
@@ -32,11 +33,14 @@ namespace client_xr
      * virtual objects so they appear to be held in (or part of) the user's hand. For example, if a user were holding a virtual
      * straight rod, the native origin of this `XRSpace` would be located at the approximate center of mass of the user's fist.
      *
-     * @returns An `XRSpace` object representing the position and orientation of the input device in virtual space, suitable for
-     *          rendering an image of the device into the scene. `gripSpace` is `null` if the input source is not inherently
-     *          trackable. For example, only inputs whose `targetRayMode` is `tracked-pointer` provide a `gripSpace`.
+     * @returns An `XRTargetRayOrGripSpace` object representing the position and orientation of the input device in virtual space,
+     *          suitable for rendering an image of the device into the scene. `gripSpace` is `null` if the input source is not
+     *          inherently trackable. For example, only inputs whose `targetRayMode` is `tracked-pointer` provide a `gripSpace`.
      */
-    XRSpace gripSpace();
+    inline std::shared_ptr<XRTargetRayOrGripSpace> gripSpace()
+    {
+      return XRTargetRayOrGripSpace::Make(shared_from_this(), client_xr::XRSpaceSubType::kGrip);
+    }
     /**
      * The read-only `hand` property of the `XRInputSource` interface is a `XRHand` object providing access to a hand-tracking
      * device.
@@ -44,14 +48,20 @@ namespace client_xr
      * @returns An `XRHand` object or `std::nullopt` if the `XRSession` has not been requested with the `hand-tracking` feature
      *          descriptor.
      */
-    std::optional<XRHand> hand();
+    inline XRHand hand()
+    {
+      return XRHand(shared_from_this());
+    }
     /**
      * The read-only `XRInputSource` property `handedness` indicates which of the user's hands the WebXR input source is associated
      * with, or if it's not associated with a hand at all.
      *
      * @returns a `XRHandedness` enum value indicating the handedness of the input source.
      */
-    XRHandedness handedness();
+    inline XRHandedness handedness()
+    {
+      return inputSourceData_->handness;
+    }
     /**
      * The read-only `XRInputSource` property `targetRayMode` indicates the method by which the target ray for the input source
      * should be generated and how it should be presented to the user.
@@ -66,7 +76,10 @@ namespace client_xr
      *
      * @returns a `XRTargetRayMode` indicating which method to use when generating and presenting the target ray to the user.
      */
-    XRTargetRayMode targetRayMode();
+    inline XRTargetRayMode targetRayMode()
+    {
+      return inputSourceData_->targetRayMode;
+    }
     /**
      * The read-only `XRInputSource` property `targetRaySpace` returns an `XRSpace` (typically an `XRReferenceSpace`) representing
      * the position and orientation of the target ray in the virtual space. Its native origin tracks the position of the origin
@@ -79,7 +92,10 @@ namespace client_xr
      * @returns an `XRSpace` object — typically an `XRReferenceSpace` or `XRBoundedReferenceSpace` — which represents the position and
      *          orientation of the input controller's target ray in virtual space.
      */
-    XRSpace targetRaySpace();
+    inline std::shared_ptr<XRTargetRayOrGripSpace> targetRaySpace()
+    {
+      return XRTargetRayOrGripSpace::Make(shared_from_this(), client_xr::XRSpaceSubType::kTargetRay);
+    }
 
   private:
     bool dispatchSelectOrSqueezeEvents(std::shared_ptr<XRFrame> frame);

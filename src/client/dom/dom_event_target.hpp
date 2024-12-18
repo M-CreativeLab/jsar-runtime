@@ -170,10 +170,110 @@ namespace dom
     }
   }
 
-  using Event = events_comm::TrEvent<DOMEventType>;
-  using EventListener = events_comm::TrEventListener<DOMEventType, Event>;
+  enum class DOMEventConstructorType
+  {
+    kEvent = 0x0,
+    kXRSessionEvent,
+    kXRInputSourceEvent,
+    kXRInputSourcesChangeEvent,
+  };
 
-  class DOMEventTarget : public events_comm::TrEventTarget<DOMEventType>
+  class DOMEventInit
+  {
+  public:
+    static DOMEventInit Default()
+    {
+      return DOMEventInit{
+          .bubbles = false,
+          .cancelable = false,
+          .composed = false,
+      };
+    }
+
+  public:
+    /**
+     * A boolean value indicating whether the event bubbles. The default is `false`.
+     */
+    bool bubbles = false;
+    /**
+     * A boolean value indicating whether the event can be cancelled. The default is `false`.
+     */
+    bool cancelable = false;
+    /**
+     * A boolean value indicating whether the event will trigger listeners outside of a shadow root. The default is `false`.
+     */
+    bool composed = false;
+  };
+
+  class Event : public events_comm::TrEvent<DOMEventType>
+  {
+  public:
+    using events_comm::TrEvent<DOMEventType>::TrEvent;
+
+  public:
+    /**
+     * It creates a new `Event`.
+     *
+     * @param constructor The constructor type of the event.
+     * @param type The event type.
+     * @param init The event initialization options.
+     */
+    Event(DOMEventConstructorType constructor, DOMEventType type, DOMEventInit init = DOMEventInit::Default())
+        : events_comm::TrEvent<DOMEventType>(type),
+          constructor_(constructor),
+          bubbles_(init.bubbles),
+          cancelable_(init.cancelable),
+          composed_(init.composed)
+    {
+    }
+    Event(Event &that)
+        : events_comm::TrEvent<DOMEventType>(that),
+          constructor_(that.constructor_),
+          bubbles_(that.bubbles_),
+          cancelable_(that.cancelable_),
+          composed_(that.composed_)
+    {
+    }
+
+  public:
+    /**
+     * The constructor type of the event.
+     */
+    DOMEventConstructorType constructor() const { return constructor_; }
+    /**
+     * The bubbles read-only property of the `Event` interface indicates whether the event bubbles up through the DOM tree or not.
+     */
+    inline bool bubbles() { return bubbles_; }
+    /**
+     * The cancelable read-only property of the Event interface indicates whether the event can be canceled, and therefore prevented as if the event never happened.
+     */
+    inline bool cancelable() { return cancelable_; }
+    /**
+     * The read-only composed property of the Event interface returns a boolean value which indicates whether or not the event will propagate across the shadow DOM boundary
+     * into the standard DOM.
+     */
+    inline bool composed() { return composed_; }
+    /**
+     * The type read-only property of the Event interface returns a string representing the type of the event.
+     * 
+     * @returns The event type string, such as "click", "keydown", etc.
+     */
+    inline std::string typeStr() { return EventTypeToString(type); }
+
+  private:
+    DOMEventConstructorType constructor_ = DOMEventConstructorType::kEvent;
+    bool bubbles_ = false;
+    bool cancelable_ = false;
+    bool composed_ = false;
+  };
+
+  class EventListener : public events_comm::TrEventListener<DOMEventType, Event>
+  {
+  public:
+    using events_comm::TrEventListener<DOMEventType, Event>::TrEventListener;
+  };
+
+  class DOMEventTarget : public events_comm::TrEventTarget<DOMEventType, Event>
   {
   public:
     DOMEventTarget() = default;

@@ -28,7 +28,7 @@ namespace dom
           clientContext(TrClientContextPerProcess::Get()),
           player_(clientContext->createMediaPlayer(contentType))
     {
-      player_->resetGlobalEventListener([this](auto eventType, auto &event)
+      player_->resetGlobalEventListener([this](auto eventType, auto event)
                                         { onMediaEvent(eventType, event); });
     }
     virtual ~HTMLMediaElement()
@@ -160,7 +160,8 @@ namespace dom
      *
      * @param callback The callback function that is called when the media event occurs.
      */
-    inline void resetEventCallback(std::function<void(media_comm::TrMediaEventType, media_client::MediaEvent &)> callback)
+    inline void resetEventCallback(
+        std::function<void(media_comm::TrMediaEventType, std::shared_ptr<media_client::MediaEvent>)> callback)
     {
       eventCallback_ = callback;
     }
@@ -181,7 +182,8 @@ namespace dom
     /**
      * Callback function that is called when a media event occurs.
      */
-    void onMediaEvent(media_comm::TrMediaEventType eventType, media_client::MediaEvent &event);
+    void onMediaEvent(media_comm::TrMediaEventType eventType,
+                      std::shared_ptr<media_client::MediaEvent> event);
 
   public:
     /**
@@ -222,7 +224,7 @@ namespace dom
     TrClientContextPerProcess *clientContext;
     std::shared_ptr<media_client::MediaPlayer> player_;
     std::string currentSrc_ = "";
-    std::function<void(media_comm::TrMediaEventType, media_client::MediaEvent &)> eventCallback_;
+    std::function<void(media_comm::TrMediaEventType, std::shared_ptr<media_client::MediaEvent>)> eventCallback_;
     float duration_ = 0;
     bool playScheduled_ = false;
     bool ended_ = false;

@@ -510,7 +510,7 @@ void TrClientContextPerProcess::cancelFrame(FrameRequestId id)
   frameRequestCallbacksMap.erase(id);
 }
 
-bool TrClientContextPerProcess::sendEvent(TrNativeEvent &event)
+bool TrClientContextPerProcess::sendEvent(shared_ptr<TrNativeEvent> event)
 {
   return eventChanSender->dispatchEvent(event);
 }

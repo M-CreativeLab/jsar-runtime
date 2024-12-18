@@ -18,7 +18,7 @@ namespace events_comm
   template <
       typename EventType,
       typename EventInstance = TrEvent<EventType>,
-      typename EventCallback = function<void(EventType, EventInstance &)>,
+      typename EventCallback = std::function<void(EventType, std::shared_ptr<EventInstance>)>,
       typename EventListener = TrEventListener<EventType, EventInstance>>
   class TrEventTarget
   {
@@ -36,22 +36,22 @@ namespace events_comm
      *
      * @param event The event instance reference to dispatch.
      */
-    bool dispatchEvent(EventInstance &event)
+    bool dispatchEvent(std::shared_ptr<EventInstance> event)
     {
-      auto it = eventToListenersMap.find(event.type);
+      auto it = eventToListenersMap.find(event->type);
       if (it != eventToListenersMap.end())
       {
         auto listeners = it->second;
         for (auto listenerPtr : listeners)
         {
           auto listener = *listenerPtr;
-          listener(event.type, event);
+          listener(event->type, event);
         }
       }
       if (globalListener != nullptr)
       {
         auto listener = *globalListener;
-        listener(event.type, event);
+        listener(event->type, event);
       }
       return true;
     }
@@ -64,7 +64,7 @@ namespace events_comm
     template <typename DetailObjectType>
     bool dispatchEvent(EventType type, optional<DetailObjectType> detail = nullopt)
     {
-      EventInstance event = EventInstance::MakeEvent(type, detail);
+      auto event = TrEvent<EventType>::template MakeEvent<EventInstance>(type, detail);
       return dispatchEvent(event);
     }
     /**
@@ -75,7 +75,7 @@ namespace events_comm
      */
     bool dispatchEvent(EventType type, const char *detailJsonPtr = nullptr)
     {
-      EventInstance event = EventInstance::MakeEventWithString(type, detailJsonPtr);
+      auto event = EventInstance::template MakeEventWithString<EventInstance>(type, detailJsonPtr);
       return dispatchEvent(event);
     }
     /**
@@ -84,7 +84,7 @@ namespace events_comm
      * @param type The event type
      * @param listenerCallback The event listener callback
      */
-    shared_ptr<EventListener> addEventListener(EventType type, EventCallback listenerCallback)
+    std::shared_ptr<EventListener> addEventListener(EventType type, EventCallback listenerCallback)
     {
       auto newListener = make_shared<EventListener>(listenerCallback);
       auto it = eventToListenersMap.find(type);
@@ -105,7 +105,7 @@ namespace events_comm
      * @param type The event type
      * @param listener The event listener to remove
      */
-    void removeEventListener(EventType type, shared_ptr<EventListener> listener)
+    void removeEventListener(EventType type, std::shared_ptr<EventListener> listener)
     {
       if (listener == nullptr)
         return; // Just return if the listener is nullptr
@@ -189,7 +189,7 @@ namespace events_comm
     /**
      * The map of event listeners.
      */
-    map<EventType, vector<shared_ptr<EventListener>>> eventToListenersMap;
+    map<EventType, vector<std::shared_ptr<EventListener>>> eventToListenersMap;
     /**
      * The global event listener.
      */

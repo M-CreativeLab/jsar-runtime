@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <common/utility.hpp>
+#include <bindings/webxr/common.hpp>
 #include "./common.hpp"
 #include "../graphics/webgl_context.hpp"
 
@@ -19,12 +21,14 @@ namespace client_xr
     std::shared_ptr<XRSession> session_;
   };
 
-  class XRWebGLLayer : public XRLayer, public xr::WebGLLayer
+  class XRWebGLLayer : public XRLayer,
+                       public xr::WebGLLayer,
+                       public WeakReference<bindings::XRWebGLLayer>
   {
   public:
     /**
      * It creates a new `XRWebGLLayer` object.
-     * 
+     *
      * @param session The XR session.
      * @param glContext The WebGL context to use.
      * @returns The created `XRWebGLLayer` object.

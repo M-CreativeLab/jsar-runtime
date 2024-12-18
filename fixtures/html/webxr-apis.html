@@ -11,10 +11,11 @@
         const supports = await navigator.xr.isSessionSupported(requestMode);
         if (supports) {
           const newSession = await navigator.xr.requestSession(requestMode);
-          newSession.addEventListener('inputsourceschange', e => {
-            console.info('inputsourceschange', e);
+          newSession.addEventListener('inputsourceschange', evt => {
+            console.info(evt.type, evt, newSession.inputSources);
           });
           console.info(newSession);
+
           const baseLayer = new XRWebGLLayer(newSession, navigator.gl);
           newSession.updateRenderState({ baseLayer });
 

@@ -106,37 +106,46 @@ namespace events_comm
     /**
      * Create a new event with the given type and detail.
      *
+     * @tparam DetailObjectType The type of the detail object.
+     * @tparam InstanceType The type of the event instance to create.
      * @param type The type of the event.
      * @param detail The detail of the event, it is optional.
      */
-    template <typename DetailObjectType>
-    static inline TrEvent<EventType> MakeEvent(EventType type, DetailObjectType *detail = nullptr)
+    template <typename InstanceType = TrEvent<EventType>, typename DetailObjectType>
+    static inline std::shared_ptr<InstanceType> MakeEvent(EventType type, DetailObjectType *detail = nullptr)
     {
-      TrEvent<EventType> event(type);
+      auto event = std::make_shared<InstanceType>(type);
       if (detail != nullptr)
-        event.detailStorage.setJsonFromInstance(*detail);
+        event->detailStorage.setJsonFromInstance(*detail);
       return event;
     }
 
     /**
      * Create a new event with the given type and detail JSON string.
      *
+     * @tparam InstanceType The type of the event instance to create.
      * @param type The type of the event.
      * @param detailJsonPtr A null-terminated pointer to the detail's JSON string.
      */
-    static inline TrEvent<EventType> MakeEventWithString(EventType type, const char *detailJsonPtr)
+    template <typename InstanceType = TrEvent<EventType>>
+    static inline std::shared_ptr<InstanceType> MakeEventWithString(EventType type, const char *detailJsonPtr)
     {
-      TrEvent<EventType> event(type);
+      auto event = std::make_shared<InstanceType>(type);
       if (detailJsonPtr != nullptr)
-        event.detailStorage.setJsonFromString(string(detailJsonPtr));
+        event->detailStorage.setJsonFromString(string(detailJsonPtr));
       return event;
     }
 
   public:
-    TrEvent(EventType type) : id(eventIdGenerator.get()), type(type) {}
-    TrEvent(TrEvent &that) : id(that.id), type(that.type), detailStorage(that.detailStorage)
+    TrEvent(EventType type)
+        : id(eventIdGenerator.get()), type(type)
     {
     }
+    TrEvent(TrEvent &that)
+        : id(that.id), type(that.type), detailStorage(that.detailStorage)
+    {
+    }
+    virtual ~TrEvent() = default;
 
   public:
     /**

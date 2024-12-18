@@ -27,6 +27,7 @@ namespace bindings
   class XRHand;
   class XRInputSource;
   class XRInputSourceArray;
+  class XRWebGLLayer;
 
   /**
    * Just bypass the Napi::ObjectWrap<T> class with adding an ignore type to compatible with other containers.

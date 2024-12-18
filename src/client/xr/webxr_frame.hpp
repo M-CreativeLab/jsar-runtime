@@ -2,6 +2,8 @@
 
 #include <memory>
 #include <chrono>
+#include <common/utility.hpp>
+#include <bindings/webxr/common.hpp>
 #include "./common.hpp"
 #include "./webxr_poses.hpp"
 
@@ -65,7 +67,8 @@ namespace client_xr
     uint32_t time = 0;
   };
 
-  class XRFrame : public std::enable_shared_from_this<XRFrame>
+  class XRFrame : public std::enable_shared_from_this<XRFrame>,
+                  public WeakReference<bindings::XRFrame>
   {
     friend class XRSession;
     friend class XRPose;

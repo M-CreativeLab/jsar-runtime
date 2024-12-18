@@ -19,20 +19,20 @@ namespace events_comm
   public:
     /**
      * Dispatches a native event to the peer.
-     * 
+     *
      * @param event The native event to dispatch, you could use `TrNativeEvent::MakeEvent()` to create.
      * @param peerId The peer id is used for request/response communication such as "RpcRequest/RpcResponse".
      */
-    bool dispatchEvent(TrNativeEvent &event, uint32_t peerId = 0)
+    bool dispatchEvent(std::shared_ptr<TrNativeEvent> event, uint32_t peerId = 0)
     {
       TrNativeEventMessage *message = nullptr;
-      switch (event.type)
+      switch (event->type)
       {
-#define XX(eventType)                                           \
-  case TrNativeEventType::eventType:                            \
-  {                                                             \
-    message = Tr##eventType##Remote(event, peerId).serialize(); \
-    break;                                                      \
+#define XX(eventType)                                            \
+  case TrNativeEventType::eventType:                             \
+  {                                                              \
+    message = Tr##eventType##Remote(*event, peerId).serialize(); \
+    break;                                                       \
   }
         TR_NATIVE_EVENTS_MAP(XX)
 #undef XX
@@ -42,7 +42,7 @@ namespace events_comm
 
       if (TR_UNLIKELY(message == nullptr))
       {
-        DEBUG(LOG_TAG_CONTENT, "Failed to serialize a NativeEvent(0x%x)", event.type);
+        DEBUG(LOG_TAG_CONTENT, "Failed to serialize a NativeEvent(0x%x)", event->type);
         return false;
       }
 

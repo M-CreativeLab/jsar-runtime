@@ -26,7 +26,8 @@ namespace bindings
 #define MODULE_NAME "XRSession"
     auto props = dombinding::EventTargetWrap<XRSession, client_xr::XRSession>::GetClassProperties();
     auto added = vector<ClassPropertyDescriptor<XRSession>>(
-        {InstanceAccessor("renderState", &XRSession::RenderStateGetter, nullptr, napi_default_jsproperty),
+        {InstanceAccessor("inputSources", &XRSession::InputSourcesGetter, nullptr, napi_default_jsproperty),
+         InstanceAccessor("renderState", &XRSession::RenderStateGetter, nullptr, napi_default_jsproperty),
          InstanceAccessor("environmentBlendMode", &XRSession::EnvironmentBlendModeGetter, nullptr, napi_default_jsproperty),
          InstanceMethod("requestAnimationFrame", &XRSession::RequestAnimationFrame, napi_default_method),
          InstanceMethod("cancelAnimationFrame", &XRSession::CancelAnimationFrame, napi_default_method),
@@ -51,8 +52,10 @@ namespace bindings
     auto env = info.Env();
     HandleScope scope(env);
 
+    // Update the `handle_` to event target
     setEventTarget(handle_);
 
+    // Initialize the frame dispatcher
     frameDispatcherTsfn_ = ThreadSafeFunction::New(
         env,
         Function::New(env, [](const auto &info) {}),
@@ -69,13 +72,34 @@ namespace bindings
      */
     handle_->setXRFrameDispatcher(dispatcher);
 
-    // Define JS properties
-    // auto jsThis = info.This().ToObject();
-    // jsThis.DefineProperty(Napi::PropertyDescriptor::Value("recommendedContentSize", nativeSessionObject.Get("recommendedContentSize"), napi_enumerable));
-    // jsThis.DefineProperty(Napi::PropertyDescriptor::Value("inputSources", inputSources.Value(), napi_enumerable));
-    // jsThis.DefineProperty(Napi::PropertyDescriptor::Value("enabledFeatures", enabledFeatures.Value(), napi_enumerable));
+    /**
+     * Initialize the object references.
+     */
+    inputSourcesRef_ = Persistent(XRInputSourceArray::New(env, handle_->inputSources));
+    enabledFeaturesRef_ = Persistent(createEnabledFeatures(env));
 
-    Ref(); // Ref the WebXR session object to keep it alive until the `end()` method is called.
+    // Define JS properties
+    auto jsThis = info.This().ToObject();
+    // jsThis.DefineProperty(Napi::PropertyDescriptor::Value("recommendedContentSize", nativeSessionObject.Get("recommendedContentSize"), napi_enumerable));
+    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("enabledFeatures", enabledFeaturesRef_.Value(), napi_enumerable));
+
+    Ref();              // Ref the WebXR session object to keep it alive until the `end()` method is called.
+    handle_->ref(this); // Ref the handle object to allow this object to be accessed from the handle object.
+  }
+
+  XRSession::~XRSession()
+  {
+    handle_->unref();
+    frameDispatcherTsfn_.Release();
+  }
+
+  Value XRSession::InputSourcesGetter(const CallbackInfo &info)
+  {
+    auto env = info.Env();
+    HandleScope scope(env);
+    auto inputSources = inputSourcesRef_.Value();
+    inputSources.update(handle_->inputSources);
+    return inputSources;
   }
 
   Value XRSession::RenderStateGetter(const CallbackInfo &info)
@@ -312,8 +336,9 @@ namespace bindings
   Napi::Array XRSession::createEnabledFeatures(Napi::Env env)
   {
     auto enabledFeaturesArray = Napi::Array::New(env);
-    enabledFeaturesArray.Set(uint32_t(0), Napi::String::New(env, "viewer"));
-    enabledFeaturesArray.Set(uint32_t(1), Napi::String::New(env, "local"));
+    uint32_t index = 0;
+    for (auto feat : handle_->enabledFeatures)
+      enabledFeaturesArray.Set(index++, Napi::String::New(env, to_string(feat)));
     return enabledFeaturesArray;
   }
 
