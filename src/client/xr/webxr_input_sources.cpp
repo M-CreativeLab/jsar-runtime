@@ -25,7 +25,7 @@ namespace client_xr
       {
         // When the primary action is pressed for the first time.
         primaryActionPressed_ = true;
-        session_->onPrimaryActionStart(*this, frame);
+        session_->onPrimaryActionStart(shared_from_this(), frame);
       }
     }
     else
@@ -35,7 +35,7 @@ namespace client_xr
       {
         // When the primary action is released.
         primaryActionPressed_ = false;
-        session_->onPrimaryActionEnd(*this, frame);
+        session_->onPrimaryActionEnd(shared_from_this(), frame);
       }
     }
 
@@ -46,7 +46,7 @@ namespace client_xr
       {
         // When the squeeze action is pressed for the first time.
         squeezeActionPressed_ = true;
-        session_->onSqueezeActionStart(*this, frame);
+        session_->onSqueezeActionStart(shared_from_this(), frame);
       }
     }
     else
@@ -56,7 +56,7 @@ namespace client_xr
       {
         // When the squeeze action is released.
         squeezeActionPressed_ = false;
-        session_->onSqueezeActionEnd(*this, frame);
+        session_->onSqueezeActionEnd(shared_from_this(), frame);
       }
     }
     return true;
