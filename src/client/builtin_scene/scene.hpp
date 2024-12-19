@@ -1,8 +1,10 @@
 #pragma once
 
 #include <memory>
-#include "./ecs.hpp"
+#include "./ecs-inl.hpp"
 #include "./hierarchy.hpp"
+#include "./transform.hpp"
+
 #include "../graphics/webgl_context.hpp"
 #include "../xr/device.hpp"
 #include "../xr/webxr_session.hpp"
@@ -10,8 +12,8 @@
 
 namespace builtin_scene
 {
-  class Scene : public Hierarchy,
-                public ecs::App
+  class Scene : public ecs::App,
+                public Hierarchy
   {
   public:
     /**
@@ -30,8 +32,8 @@ namespace builtin_scene
   public:
     Scene(std::shared_ptr<client_graphics::WebGL2Context> glContext,
           std::shared_ptr<client_xr::XRDeviceClient> xrDeviceClient)
-        : Hierarchy(),
-          ecs::App(),
+        : ecs::App(),
+          Hierarchy(),
           glContext_(glContext),
           xrDeviceClient_(xrDeviceClient)
     {
@@ -68,6 +70,7 @@ namespace builtin_scene
   public:
     void bootstrap()
     {
+      registerComponent<Position>();
       // addSystem(ecs::SchedulerLabel::kUpdate, std::make_shared<LayoutSystem>());
       ecs::App::startup();
     }

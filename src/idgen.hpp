@@ -16,8 +16,16 @@ public:
    * Create a new Id generator.
    *
    * @param initialId The initial id to start with, and the default value is 0.
+   * @param maxId The maximum id value, and the default value is `UINT32_MAX`.
    */
-  TrIdGenerator(uint32_t initialId = 0) : counter(initialId), initialId(initialId) {}
+  TrIdGenerator(uint32_t initialId = 0, uint32_t maxId = UINT32_MAX)
+      : counter(initialId),
+        initialId(initialId),
+        maxId(maxId)
+  {
+    if (maxId < initialId)
+      throw std::runtime_error("The maximum id value should be greater than the initial id value.");
+  }
   ~TrIdGenerator() = default;
 
 public:
@@ -35,9 +43,13 @@ public:
    * @returns a `uint32_t` value that represents the minimum id value, namely the `initialId`.
    */
   uint32_t min() const { return initialId; }
+  /**
+   * @returns a `uint32_t` value that represents the maximum id value, namely the `maxId`.
+   */
+  uint32_t max() const { return maxId; }
 
 private:
   uint32_t counter;
-  uint32_t initialId = 0;
-  uint32_t maxId = UINT32_MAX;
+  uint32_t initialId;
+  uint32_t maxId;
 };
