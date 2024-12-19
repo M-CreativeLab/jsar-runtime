@@ -1,5 +1,14 @@
+/**
+ * The ECS (Entity Component System) for the built-in scene.
+ * 
+ * Thanks to the following links for the code inspiration:
+ * - https://bevyengine.org/
+ * - https://austinmorlan.com/posts/entity_component_system/
+ */
+
 #pragma once
 
+#include <array>
 #include <memory>
 #include <vector>
 #include <idgen.hpp>
@@ -38,7 +47,9 @@ namespace builtin_scene::ecs
   };
 
   typedef uint32_t EntityId;
+  typedef uint32_t ComponentId;
   typedef uint32_t SystemId;
+  typedef const char *ComponentName;
 
   /**
    * The class for all entities in the ECS.
@@ -64,7 +75,7 @@ namespace builtin_scene::ecs
 
   /**
    * The base class for all components in the ECS.
-   * 
+   *
    * Components are the data that is attached to entities.
    */
   class Component
@@ -72,6 +83,228 @@ namespace builtin_scene::ecs
   public:
     Component() {}
     virtual ~Component() = default;
+  };
+
+  class IComponentSet
+  {
+  public:
+    virtual ~IComponentSet() = default;
+    virtual void onEntityDestroyed(EntityId entity) = 0;
+  };
+
+  /**
+   * The template class for managing a set of components of the given type.
+   * 
+   * @tparam T The type of the component.
+   */
+  template <typename T>
+  class ComponentSet : IComponentSet
+  {
+    friend class ComponentsManager;
+
+  public:
+    /**
+     * Create a new instance of the `ComponentSet`.
+     * 
+     * @returns The new instance of the `ComponentSet`.
+     */
+    static inline std::shared_ptr<ComponentSet<T>> Make()
+    {
+      return std::make_shared<ComponentSet>();
+    }
+    /**
+     * Create a new instance of the `ComponentSet` with the given components.
+     * 
+     * @param entity The entity to attach the components to.
+     * @param components The components to attach.
+     * @returns The new instance of the `ComponentSet`.
+     */
+    static inline std::shared_ptr<ComponentSet<T>> Make(EntityId entity, std::vector<T> &components)
+    {
+      return std::make_shared<ComponentSet>(entity, components);
+    }
+
+  public:
+    ComponentSet()
+    {
+    }
+    ComponentSet(EntityId entity, std::vector<T> &components)
+    {
+      for (auto &component : components)
+        insert(entity, component);
+    }
+
+  public:
+    /**
+     * Insert a new component for the given entity.
+     *
+     * @param entity The entity to attach the component to.
+     * @param component The component to attach.
+     */
+    void insert(EntityId entity, T component)
+    {
+      if (entityToIndexMap_.find(entity) != entityToIndexMap_.end())
+        throw std::runtime_error("Entity already has a component of this type.");
+
+      auto index = size_;
+      entityToIndexMap_[entity] = index;
+      indexToEntityMap_[index] = entity;
+      components_[index] = component;
+      size_ += 1;
+    }
+
+    /**
+     * Remove the component of the given entity.
+     * 
+     * @param entity The entity to remove the component from.
+     */
+    void remove(EntityId entity)
+    {
+      if (entityToIndexMap_.find(entity) == entityToIndexMap_.end())
+        throw std::runtime_error("Entity does not have a component of this type.");
+
+      size_t indexToRemove = entityToIndexMap_[entity];
+      size_t lastIndex = size_ - 1;
+      components_[indexToRemove] = components_[lastIndex];
+
+      EntityId lastEntity = indexToEntityMap_[lastIndex];
+      entityToIndexMap_[lastEntity] = indexToRemove;
+      indexToEntityMap_[indexToRemove] = lastEntity;
+
+      entityToIndexMap_.erase(entity);
+      indexToEntityMap_.erase(lastIndex);
+      size_ -= 1;
+    }
+
+    T &get(EntityId entity)
+    {
+      if (entityToIndexMap_.find(entity) == entityToIndexMap_.end())
+        throw std::runtime_error("Entity does not have a component of this type.");
+      return components_[entityToIndexMap_[entity]];
+    }
+
+  private:
+    void onEntityDestroyed(EntityId entity) override
+    {
+      if (entityToIndexMap_.find(entity) != entityToIndexMap_.end())
+        remove(entity);
+    }
+
+  private:
+    std::array<T, 5000> components_;
+    std::unordered_map<EntityId, size_t> entityToIndexMap_;
+    std::unordered_map<size_t, EntityId> indexToEntityMap_;
+    size_t size_ = 0;
+  };
+
+  /**
+   * The class for managing all components in the ECS.
+   */
+  class ComponentsManager
+  {
+  public:
+    ComponentsManager()
+    {
+    }
+
+  public:
+    /**
+     * Register a new component type.
+     * 
+     * @tparam ComponentType The type of the component.
+     * @throws std::runtime_error if the component is already registered.
+     */
+    template <typename ComponentType>
+    void registerComponent()
+    {
+      ComponentName name = typeid(ComponentType).name();
+      if (componentIds_.find(name) != componentIds_.end())
+        throw std::runtime_error("Component(" + std::string(name) + ") already registered.");
+
+      componentIds_.insert({name, nextComponentId_});
+      componentSets_.insert({name, ComponentSet<ComponentType>::Make()});
+      nextComponentId_ += 1;
+    }
+
+    /**
+     * Get the Id of the component of the given type.
+     * 
+     * @tparam ComponentType The type of the component.
+     * @returns The Id of the component of the given type.
+     */
+    template <typename ComponentType>
+    ComponentId getComponentId()
+    {
+      ComponentName name = typeid(ComponentType).name();
+      if (componentIds_.find(name) == componentIds_.end())
+        throw std::runtime_error("Component(" + std::string(name) + ") not found.");
+      return componentIds_[name];
+    }
+
+    /**
+     * Add the component of the given type to the given entity.
+     * 
+     * @tparam ComponentType The type of the component.
+     * @param entity The entity to add the component to.
+     * @param component The component to add.
+     */
+    template <typename ComponentType>
+    inline void addComponent(EntityId entity, ComponentType component)
+    {
+      getComponentSet<ComponentType>()->insert(entity, component);
+    }
+
+    /**
+     * Remove the component of the given type from the given entity.
+     * 
+     * @tparam ComponentType The type of the component.
+     * @param entity The entity to remove the component from.
+     */
+    template <typename ComponentType>
+    inline void removeComponent(EntityId entity)
+    {
+      getComponentSet<ComponentType>()->remove(entity);
+    }
+
+    /**
+     * Get the component of the given type for the given entity.
+     * 
+     * @tparam ComponentType The type of the component.
+     * @param entity The entity to get the component for.
+     * @returns The component of the given type for the given entity.
+     */
+    template <typename ComponentType>
+    inline ComponentType &getComponent(EntityId entity)
+    {
+      return getComponentSet<ComponentType>()->get(entity);
+    }
+
+    void onEntityDestroyed(EntityId entity)
+    {
+      for (auto &pair : componentSets_)
+        pair.second->onEntityDestroyed(entity);
+    }
+
+  private:
+    /**
+     * Get the `ComponentSet` for the given component type.
+     *
+     * @tparam ComponentType The type of the component.
+     * @returns The `ComponentSet` for the given component type.
+     */
+    template <typename ComponentType>
+    std::shared_ptr<ComponentSet<ComponentType>> getComponentSet()
+    {
+      ComponentName name = typeid(ComponentType).name();
+      if (componentSets_.find(name) == componentSets_.end())
+        throw std::runtime_error("Component(" + std::string(name) + ") not found.");
+      return std::static_pointer_cast<ComponentSet<ComponentType>>(componentSets_[name]);
+    }
+
+  private:
+    std::unordered_map<ComponentName, ComponentId> componentIds_{};
+    std::unordered_map<ComponentName, std::shared_ptr<IComponentSet>> componentSets_{};
+    ComponentId nextComponentId_ = 0;
   };
 
   /**
@@ -124,24 +357,6 @@ namespace builtin_scene::ecs
     static thread_local TrIdGenerator idGen_;
   };
 
-  class EntityWithComponents : public Entity
-  {
-  public:
-    static std::shared_ptr<EntityWithComponents> Make(std::vector<Component> &components)
-    {
-      return std::make_shared<EntityWithComponents>(components);
-    }
-
-  public:
-    EntityWithComponents(std::vector<Component> &components) : components(components)
-    {
-    }
-
-  public:
-    Entity entity;
-    std::vector<Component> components;
-  };
-
   /**
    * The main class for the ECS.
    */
@@ -153,20 +368,23 @@ namespace builtin_scene::ecs
   public:
     /**
      * Spawn a new entity with the given components.
-     * 
+     *
      * @param components The components to attach to the entity.
      * @returns The Id of the new entity.
      */
-    EntityId spawn(std::vector<Component> components)
+    template <typename... ComponentTypeList>
+    EntityId spawn(ComponentTypeList... components)
     {
-      auto newEntity = EntityWithComponents::Make(components);
-      auto newId = newEntity->id();
-      entities_.push_back(std::make_pair(newId, newEntity));
-      return newId;
+      auto newEntity = std::make_shared<Entity>();
+      EntityId entityId = newEntity->id();
+      entities_.push_back(std::make_pair(entityId, newEntity));
+
+      // Add the components to the entity.
+      (componentsMgr_.addComponent(entityId, components), ...);
     }
     /**
      * Add a system to the ECS with the given label.
-     * 
+     *
      * @param label The label to use for scheduling the system.
      * @param system The system to add.
      * @returns The Id of the added system.
@@ -175,6 +393,24 @@ namespace builtin_scene::ecs
     {
       systems_.push_back(std::make_pair(label, system));
       return system->id();
+    }
+    /**
+     * Remove a system from the ECS app.
+     *
+     * @param id The Id of the system to remove.
+     * @returns `true` if the system was removed, `false` otherwise.
+     */
+    bool removeSystem(SystemId id)
+    {
+      for (auto it = systems_.begin(); it != systems_.end(); ++it)
+      {
+        if (it->second->id() == id)
+        {
+          systems_.erase(it);
+          return true;
+        }
+      }
+      return false;
     }
 
   protected:
@@ -208,13 +444,15 @@ namespace builtin_scene::ecs
     {
       for (auto &pair : systems_)
       {
+        auto system = pair.second;
         if (pair.first == label)
-          pair.second->runOnce();
+          system->runOnce();
       }
     }
 
   private:
-    std::vector<std::pair<EntityId, std::shared_ptr<EntityWithComponents>>> entities_;
+    ComponentsManager componentsMgr_;
+    std::vector<std::pair<EntityId, std::shared_ptr<Entity>>> entities_;
     std::vector<std::pair<SchedulerLabel, std::shared_ptr<System>>> systems_;
   };
 }
