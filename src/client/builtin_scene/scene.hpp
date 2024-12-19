@@ -12,6 +12,18 @@
 
 namespace builtin_scene
 {
+  class Timer : public ecs::Resource
+  {
+  public:
+    Timer(uint32_t interval) : interval_(interval) {}
+  
+  public:
+    uint32_t interval() { return interval_; }
+
+  private:
+    uint32_t interval_;
+  };
+
   /**
    * The `DefaultPlugin` loads the default components and systems for the builtin scene.
    */
@@ -23,7 +35,9 @@ namespace builtin_scene
   protected:
     void build(ecs::App &app) override
     {
+      app.addResource(ecs::Resource::Make<Timer>(10));
       app.registerComponent<transform::Position>();
+      // app.addSystem(ecs::SchedulerLabel::kUpdate, ecs::System::Make<LayoutSystem>());
     }
   };
 
@@ -89,7 +103,6 @@ namespace builtin_scene
     void bootstrap()
     {
       addPlugin<DefaultPlugin>();
-      // addSystem(ecs::SchedulerLabel::kUpdate, std::make_shared<LayoutSystem>());
       ecs::App::startup();
     }
     void update(uint32_t time, client_xr::XRFrame &frame)

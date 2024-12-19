@@ -43,6 +43,33 @@ namespace builtin_scene::ecs
     }
   }
 
+  template <typename ResourceType>
+  void ResourcesManager::addResource(std::shared_ptr<ResourceType> resource)
+  {
+    ResourceName name = typeid(ResourceType).name();
+    if (resources_.find(name) != resources_.end())
+      throw std::runtime_error("Resource(" + std::string(name) + ") already registered.");
+    resources_.insert({name, resource});
+  }
+
+  template <typename ResourceType>
+  void ResourcesManager::removeResource()
+  {
+    ResourceName name = typeid(ResourceType).name();
+    if (resources_.find(name) == resources_.end())
+      throw std::runtime_error("Resource(" + std::string(name) + ") not found.");
+    resources_.erase(name);
+  }
+
+  template <typename ResourceType>
+  std::shared_ptr<ResourceType> ResourcesManager::getResource()
+  {
+    ResourceName name = typeid(ResourceType).name();
+    if (resources_.find(name) == resources_.end())
+      throw std::runtime_error("Resource(" + std::string(name) + ") not found.");
+    return std::dynamic_pointer_cast<ResourceType>(resources_[name]);
+  }
+
   template <typename T>
   void ComponentSet<T>::insert(EntityId entity, T component)
   {

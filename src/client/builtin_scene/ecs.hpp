@@ -51,6 +51,7 @@ namespace builtin_scene::ecs
   typedef uint32_t SystemId;
   typedef const char *ComponentName;
   typedef const char *PluginName;
+  typedef const char *ResourceName;
 
   constexpr EntityId MAX_ENTITY_ID = 10 * 10000;
   constexpr SystemId MAX_SYSTEM_ID = 1000;
@@ -58,6 +59,7 @@ namespace builtin_scene::ecs
   // Forward declarations.
   class App;
   class Plugin;
+  class Resource;
   class Entity;
   class Component;
   class System;
@@ -128,6 +130,97 @@ namespace builtin_scene::ecs
     std::unordered_map<PluginName, uint8_t> pluginIds_{};
     std::unordered_map<PluginName, std::shared_ptr<Plugin>> plugins_{};
     uint8_t nextPluginId_ = 0;
+  };
+
+  /**
+   * The base class for the resources which are used to store the global data such as meshes, textures, etc.
+   */
+  class Resource
+  {
+    friend class ResourcesManager;
+
+  public:
+    /**
+     * Create a new instance of the specified resource type.
+     *
+     * @tparam ResourceType The type of the resource.
+     * @tparam Args The types of the arguments to pass to the constructor of the resource.
+     * @param args The arguments to pass to the constructor of the resource.
+     * @returns The new instance of the specified resource type.
+     */
+    template <typename ResourceType, typename... Args>
+    static inline std::shared_ptr<ResourceType> Make(Args... args)
+    {
+      return std::make_shared<ResourceType>(args...);
+    }
+
+  public:
+    Resource() = default;
+    virtual ~Resource() = default;
+  };
+
+  /**
+   * The class for managing all resources in the ECS.
+   */
+  class ResourcesManager
+  {
+  public:
+    ResourcesManager() = default;
+
+  public:
+    /**
+     * Add a resource to the manager.
+     *
+     * @tparam ResourceType The type of the resource.
+     * @param resource The resource to add.
+     */
+    template <typename ResourceType>
+    void addResource(std::shared_ptr<ResourceType> resource);
+    /**
+     * Remove a resource from the manager.
+     *
+     * @tparam ResourceType The type of the resource.
+     */
+    template <typename ResourceType>
+    void removeResource();
+
+    /**
+     * Get the resource of the given type.
+     *
+     * @tparam ResourceType The type of the resource.
+     * @returns The resource of the given type.
+     */
+    template <typename ResourceType>
+    std::shared_ptr<ResourceType> getResource();
+
+  private:
+    std::unordered_map<ResourceName, std::shared_ptr<Resource>> resources_{};
+  };
+
+  /**
+   * A specialized `Resource` class for managing one kind of assets, such as meshes, textures, etc.
+   * 
+   * @tparam T The type of the asset.
+   */
+  template <typename T>
+  class Assets : public Resource
+  {
+  public:
+    Assets() = default;
+
+  public:
+    /**
+     * Add a new asset to the assets.
+     * 
+     * @param asset The asset to add.
+     */
+    void add(T asset)
+    {
+      list_.push_back(asset);
+    }
+
+  private:
+    std::vector<T> list_{};
   };
 
   /**
@@ -415,7 +508,7 @@ namespace builtin_scene::ecs
       componentsMgr_.registerComponent<ComponentType>();
     }
     /**
-     * Add a plugin.
+     * Add a plugin to the app.
      *
      * @tparam PluginType The type of the plugin.
      */
@@ -423,6 +516,38 @@ namespace builtin_scene::ecs
     inline void addPlugin()
     {
       pluginsMgr_.registerPlugin<PluginType>();
+    }
+    /**
+     * Add a resource to the app.
+     *
+     * @tparam ResourceType The type of the resource.
+     * @param Resource The resource to add.
+     */
+    template <typename ResourceType>
+    inline void addResource(std::shared_ptr<ResourceType> Resource)
+    {
+      resourcesMgr_.addResource(Resource);
+    }
+    /**
+     * Remove a resource from the app.
+     *
+     * @tparam ResourceType The type of the resource.
+     */
+    template <typename ResourceType>
+    inline void removeResource()
+    {
+      resourcesMgr_.removeResource<ResourceType>();
+    }
+    /**
+     * Get the resource of the given type.
+     *
+     * @tparam ResourceType The type of the resource.
+     * @returns The resource of the given type.
+     */
+    template <typename ResourceType>
+    inline std::shared_ptr<ResourceType> getResource()
+    {
+      return resourcesMgr_.getResource<ResourceType>();
     }
     /**
      * Add a system to the ECS with the given label.
@@ -460,6 +585,7 @@ namespace builtin_scene::ecs
 
   private:
     PluginsManager pluginsMgr_;
+    ResourcesManager resourcesMgr_;
     ComponentsManager componentsMgr_;
     std::vector<std::pair<EntityId, std::shared_ptr<Entity>>> entities_;
     std::unordered_map<SchedulerLabel, std::shared_ptr<ISystemSet>> systemSets_{};
@@ -471,6 +597,21 @@ namespace builtin_scene::ecs
   class System
   {
     friend class App;
+
+  public:
+    /**
+     * Create a new instance of the specified system type.
+     *
+     * @tparam SystemType The type of the system.
+     * @tparam Args The types of the arguments to pass to the constructor of the system.
+     * @param args The arguments to pass to the constructor of the system.
+     * @returns The new instance of the specified system type.
+     */
+    template <typename SystemType, typename... Args>
+    static std::shared_ptr<SystemType> Make(Args... args)
+    {
+      return std::make_shared<SystemType>(args...);
+    }
 
   public:
     System() : next_(nullptr) {}
@@ -543,6 +684,17 @@ namespace builtin_scene::ecs
     inline std::vector<IncludeComponentType> queryEntitiesWithComponent()
     {
       return connectedApp_->queryEntitiesWithComponent<QueryComponentType, IncludeComponentType>();
+    }
+    /**
+     * Get the resource of the given type.
+     *
+     * @tparam ResourceType The type of the resource.
+     * @returns The resource of the given type.
+     */
+    template <typename ResourceType>
+    inline std::shared_ptr<ResourceType> getResource()
+    {
+      return connectedApp_->getResource<ResourceType>();
     }
 
   private:
