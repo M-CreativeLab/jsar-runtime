@@ -2,7 +2,7 @@
 
 #include "./ecs.hpp"
 
-namespace builtin_scene
+namespace builtin_scene::transform
 {
   class Position : public ecs::Component
   {

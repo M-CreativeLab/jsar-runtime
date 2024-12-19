@@ -23,7 +23,7 @@ namespace builtin_scene
   protected:
     void build(ecs::App &app) override
     {
-      app.registerComponent<Position>();
+      app.registerComponent<transform::Position>();
     }
   };
 
