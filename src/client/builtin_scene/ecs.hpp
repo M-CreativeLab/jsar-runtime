@@ -56,6 +56,9 @@ namespace builtin_scene::ecs
 
   // Forward declarations.
   class App;
+  class Entity;
+  class Component;
+  class System;
 
   /**
    * The class for all entities in the ECS.
@@ -274,66 +277,6 @@ namespace builtin_scene::ecs
     ComponentId nextComponentId_ = 0;
   };
 
-  /**
-   * The base class for all systems in the ECS.
-   */
-  class System
-  {
-    friend class App;
-
-  public:
-    System() : next_(nullptr) {}
-    virtual ~System() = default;
-
-  public:
-    /**
-     * This method should be implemented by the derived class to execute the system.
-     */
-    virtual void onExecute() = 0;
-
-  public:
-    /**
-     * @returns The Id of the system.
-     */
-    inline SystemId id() { return id_; }
-
-  public:
-    /**
-     * Run the system once, it also runs the next system in the chain if it's configured.
-     */
-    void runOnce();
-    /**
-     * Add a system to the chain of this system, the former will be executed after the latter.
-     *
-     * @param next The next system to run.
-     */
-    std::shared_ptr<System> chain(std::shared_ptr<System> next);
-
-  protected: // Methods for system implementations.
-    /**
-     * Spawn a new entity with the given components.
-     *
-     * @param components The components to attach to the entity.
-     * @returns The Id of the new entity.
-     */
-    template <typename... ComponentTypeList>
-    EntityId spawn(ComponentTypeList... components);
-
-  private:
-    void connect(std::shared_ptr<App> app)
-    {
-      connectedApp_ = app;
-    }
-
-  private:
-    SystemId id_;
-    std::shared_ptr<App> connectedApp_ = nullptr;
-    std::shared_ptr<System> next_ = nullptr;
-
-  private:
-    static thread_local TrIdGenerator idGen_;
-  };
-
   class ISystemSet
   {
   public:
@@ -373,19 +316,27 @@ namespace builtin_scene::ecs
      * @returns The Id of the new entity.
      */
     template <typename... ComponentTypeList>
-    EntityId spawn(ComponentTypeList... components)
-    {
-      auto newEntity = std::make_shared<Entity>();
-      EntityId entityId = newEntity->id();
-      entities_.push_back(std::make_pair(entityId, newEntity));
-
-      // Add the components to the entity.
-      (componentsMgr_.addComponent(entityId, components), ...);
-      return entityId;
-    }
+    EntityId spawn(ComponentTypeList... components);
+    /**
+     * Query all entities with the given component type.
+     *
+     * @tparam ComponentType The type of the component.
+     * @returns The list of entity Ids with the given component type.
+     */
+    template <typename ComponentType>
+    std::vector<EntityId> queryEntities();
+    /**
+     * Query all entities with the given query component type and include the include component type.
+     *
+     * @tparam QueryComponentType The component type to query.
+     * @tparam IncludeComponentType The component type to be included as the result.
+     * @returns The list of components of the given type.
+     */
+    template <typename QueryComponentType, typename IncludeComponentType>
+    std::vector<IncludeComponentType> queryEntitiesWithComponent();
     /**
      * Register a new component type to use in the app.
-     * 
+     *
      * @tparam ComponentType The type of the component.
      */
     template <typename ComponentType>
@@ -401,70 +352,130 @@ namespace builtin_scene::ecs
      * @returns The Id of the added system.
      * @throws std::runtime_error if the system is null.
      */
-    SystemId addSystem(SchedulerLabel label, std::shared_ptr<System> system)
-    {
-      if (system == nullptr)
-        throw std::runtime_error("System is null.");
-
-      if (systemSets_.find(label) == systemSets_.end())
-        systemSets_[label] = std::make_shared<LabeledSystemSet<SchedulerLabel>>();
-      auto systemSet = std::static_pointer_cast<LabeledSystemSet<SchedulerLabel>>(systemSets_[label]);
-      systemSet->addSystem(system);
-      system->connect(shared_from_this());
-      return system->id();
-    }
+    SystemId addSystem(SchedulerLabel label, std::shared_ptr<System> system);
     /**
      * Remove a system from the ECS app.
      *
      * @param id The Id of the system to remove.
      */
-    void removeSystem(SystemId id)
-    {
-      for (auto &pair : systemSets_)
-      {
-        auto systemSet = pair.second;
-        systemSet->removeSystem(id);
-      }
-    }
+    void removeSystem(SystemId id);
 
   protected:
     /**
      * The derived class should call this method when the environment is ready to start the ECS.
      */
-    void startup()
-    {
-      runSystems(SchedulerLabel::kPreStartup);
-      runSystems(SchedulerLabel::kStartup);
-      runSystems(SchedulerLabel::kPostStartup);
-    }
+    void startup();
     /**
      * The derived class should call this method to update the ECS.
      */
-    void update()
-    {
-      runSystems(SchedulerLabel::kFirst);
-      runSystems(SchedulerLabel::kPreUpdate);
-      runSystems(SchedulerLabel::kStateTransition);
-      runSystems(SchedulerLabel::kUpdate);
-      runSystems(SchedulerLabel::kPostUpdate);
-      runSystems(SchedulerLabel::kLast);
-    }
+    void update();
 
   private:
     /**
      * Run all systems with the given label.
+     *
+     * @param label The label to use for scheduling the systems.
      */
-    void runSystems(SchedulerLabel label)
-    {
-      if (systemSets_.find(label) == systemSets_.end())
-        return;
-      auto systemSet = systemSets_[label];
-      systemSet->run();
-    }
+    void runSystems(SchedulerLabel label);
 
   private:
     ComponentsManager componentsMgr_;
     std::vector<std::pair<EntityId, std::shared_ptr<Entity>>> entities_;
     std::unordered_map<SchedulerLabel, std::shared_ptr<ISystemSet>> systemSets_{};
+  };
+
+  /**
+   * The base class for all systems in the ECS.
+   */
+  class System
+  {
+    friend class App;
+
+  public:
+    System() : next_(nullptr) {}
+    virtual ~System() = default;
+
+  public:
+    /**
+     * This method should be implemented by the derived class to execute the system.
+     */
+    virtual void onExecute() = 0;
+
+  public:
+    /**
+     * @returns The Id of the system.
+     */
+    inline SystemId id() { return id_; }
+
+  public:
+    /**
+     * Run the system once, it also runs the next system in the chain if it's configured.
+     */
+    void runOnce()
+    {
+      onExecute();
+      if (next_ != nullptr)
+        next_->runOnce();
+    }
+    /**
+     * Add a system to the chain of this system, the former will be executed after the latter.
+     *
+     * @param next The next system to run.
+     */
+    std::shared_ptr<System> chain(std::shared_ptr<System> next)
+    {
+      next_ = next;
+      return next;
+    }
+
+  protected: // Methods for system implementations.
+    /**
+     * Spawn a new entity with the given components.
+     *
+     * @param components The components to attach to the entity.
+     * @returns The Id of the new entity.
+     */
+    template <typename... ComponentTypeList>
+    inline EntityId spawn(ComponentTypeList... components)
+    {
+      return connectedApp_->spawn(components...);
+    }
+    /**
+     * Query all entities with the given component type.
+     *
+     * @tparam ComponentType The type of the component.
+     * @returns The list of entity Ids with the given component type.
+     */
+    template <typename ComponentType>
+    inline std::vector<EntityId> queryEntities()
+    {
+      return connectedApp_->queryEntities<ComponentType>();
+    }
+    /**
+     * Query all entities with the given query component type and include the include component type.
+     *
+     * @tparam QueryComponentType The component type to query.
+     * @tparam IncludeComponentType The component type to be included as the result.
+     * @returns The list of components of the given type.
+     */
+    template <typename QueryComponentType, typename IncludeComponentType>
+    inline std::vector<IncludeComponentType> queryEntitiesWithComponent()
+    {
+      return connectedApp_->queryEntitiesWithComponent<QueryComponentType, IncludeComponentType>();
+    }
+
+  private:
+    void connect(std::shared_ptr<App> app)
+    {
+      connectedApp_ = app;
+    }
+
+  private:
+    SystemId id_;
+    std::shared_ptr<App> connectedApp_ = nullptr;
+    std::shared_ptr<System> next_ = nullptr;
+
+  private:
+    static thread_local TrIdGenerator idGen_;
   };
 }

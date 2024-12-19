@@ -79,25 +79,6 @@ namespace builtin_scene::ecs
       pair.second->onEntityDestroyed(entity);
   }
 
-  void System::runOnce()
-  {
-    onExecute();
-    if (next_ != nullptr)
-      next_->runOnce();
-  }
-
-  std::shared_ptr<System> System::chain(std::shared_ptr<System> next)
-  {
-    next_ = next;
-    return next;
-  }
-
-  template <typename... ComponentTypeList>
-  EntityId System::spawn(ComponentTypeList... components)
-  {
-    return connectedApp_->spawn(components...);
-  }
-
   bool ISystemSet::addSystem(std::shared_ptr<System> system)
   {
     systems_.push_back(system);
@@ -121,5 +102,96 @@ namespace builtin_scene::ecs
   {
     for (auto &system : systems_)
       system->runOnce();
+  }
+
+  template <typename... ComponentTypeList>
+  EntityId App::spawn(ComponentTypeList... components)
+  {
+    auto newEntity = std::make_shared<Entity>();
+    EntityId entityId = newEntity->id();
+    entities_.push_back(std::make_pair(entityId, newEntity));
+
+    // Add the components to the entity.
+    (componentsMgr_.addComponent(entityId, components), ...);
+    return entityId;
+  }
+
+  template <typename ComponentType>
+  std::vector<EntityId> App::queryEntities()
+  {
+    std::vector<EntityId> result;
+    auto componentSet = componentsMgr_.getComponentSet<ComponentType>();
+    for (auto &pair : entities_)
+    {
+      EntityId entityId = pair.first;
+      if (componentSet->entityToIndexMap_.find(entityId) != componentSet->entityToIndexMap_.end())
+        result.push_back(entityId);
+    }
+    return result;
+  }
+
+  template <typename QueryComponentType, typename IncludeComponentType>
+  std::vector<IncludeComponentType> App::queryEntitiesWithComponent()
+  {
+    std::vector<IncludeComponentType> result;
+    auto queryComponentSet = componentsMgr_.getComponentSet<QueryComponentType>();
+    auto includeComponentSet = componentsMgr_.getComponentSet<IncludeComponentType>();
+    for (auto &pair : entities_)
+    {
+      EntityId entityId = pair.first;
+      if (queryComponentSet->entityToIndexMap_.find(entityId) != queryComponentSet->entityToIndexMap_.end())
+      {
+        IncludeComponentType includeComponent = includeComponentSet->get(entityId);
+        result.push_back(includeComponent);
+      }
+    }
+    return result;
+  }
+
+  SystemId App::addSystem(SchedulerLabel label, std::shared_ptr<System> system)
+  {
+    if (system == nullptr)
+      throw std::runtime_error("System is null.");
+
+    if (systemSets_.find(label) == systemSets_.end())
+      systemSets_[label] = std::make_shared<LabeledSystemSet<SchedulerLabel>>();
+    auto systemSet = std::static_pointer_cast<LabeledSystemSet<SchedulerLabel>>(systemSets_[label]);
+    systemSet->addSystem(system);
+    system->connect(shared_from_this());
+    return system->id();
+  }
+
+  void App::removeSystem(SystemId id)
+  {
+    for (auto &pair : systemSets_)
+    {
+      auto systemSet = pair.second;
+      systemSet->removeSystem(id);
+    }
+  }
+
+  void App::startup()
+  {
+    runSystems(SchedulerLabel::kPreStartup);
+    runSystems(SchedulerLabel::kStartup);
+    runSystems(SchedulerLabel::kPostStartup);
+  }
+
+  void App::update()
+  {
+    runSystems(SchedulerLabel::kFirst);
+    runSystems(SchedulerLabel::kPreUpdate);
+    runSystems(SchedulerLabel::kStateTransition);
+    runSystems(SchedulerLabel::kUpdate);
+    runSystems(SchedulerLabel::kPostUpdate);
+    runSystems(SchedulerLabel::kLast);
+  }
+
+  void App::runSystems(SchedulerLabel label)
+  {
+    if (systemSets_.find(label) == systemSets_.end())
+      return;
+    auto systemSet = systemSets_[label];
+    systemSet->run();
   }
 }
