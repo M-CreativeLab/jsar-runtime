@@ -6,6 +6,44 @@ namespace builtin_scene::ecs
   thread_local TrIdGenerator System::idGen_ = TrIdGenerator(0, MAX_SYSTEM_ID);
 
   template <typename T>
+  void PluginsManager::registerPlugin()
+  {
+    PluginName name = typeid(T).name();
+    if (pluginIds_.find(name) != pluginIds_.end())
+      throw std::runtime_error("Plugin(" + std::string(name) + ") already registered.");
+    pluginIds_.insert({name, nextPluginId_});
+    plugins_.insert({name, std::make_shared<T>()});
+    nextPluginId_ += 1;
+  }
+
+  template <typename T>
+  uint32_t PluginsManager::getPluginId()
+  {
+    PluginName name = typeid(T).name();
+    if (pluginIds_.find(name) == pluginIds_.end())
+      throw std::runtime_error("Plugin(" + std::string(name) + ") not found.");
+    return pluginIds_[name];
+  }
+
+  template <typename T>
+  std::shared_ptr<T> PluginsManager::getPlugin()
+  {
+    PluginName name = typeid(T).name();
+    if (plugins_.find(name) == plugins_.end())
+      throw std::runtime_error("Plugin(" + std::string(name) + ") not found.");
+    return std::dynamic_pointer_cast<T>(plugins_[name]);
+  }
+
+  void PluginsManager::build(App &app)
+  {
+    for (auto &pair : plugins_)
+    {
+      auto plugin = pair.second;
+      plugin->build(app);
+    }
+  }
+
+  template <typename T>
   void ComponentSet<T>::insert(EntityId entity, T component)
   {
     if (entityToIndexMap_.find(entity) != entityToIndexMap_.end())
@@ -172,6 +210,10 @@ namespace builtin_scene::ecs
 
   void App::startup()
   {
+    // Build the plugins.
+    pluginsMgr_.build(*this);
+
+    // Schedule the "startup" systems.
     runSystems(SchedulerLabel::kPreStartup);
     runSystems(SchedulerLabel::kStartup);
     runSystems(SchedulerLabel::kPostStartup);

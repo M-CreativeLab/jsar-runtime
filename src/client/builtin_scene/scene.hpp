@@ -12,6 +12,24 @@
 
 namespace builtin_scene
 {
+  /**
+   * The `DefaultPlugin` loads the default components and systems for the builtin scene.
+   */
+  class DefaultPlugin : public ecs::Plugin
+  {
+  public:
+    using ecs::Plugin::Plugin;
+
+  protected:
+    void build(ecs::App &app) override
+    {
+      app.registerComponent<Position>();
+    }
+  };
+
+  /**
+   * The main class for the builtin scene which inherits from the `ecs::App`.
+   */
   class Scene : public ecs::App,
                 public Hierarchy
   {
@@ -70,7 +88,7 @@ namespace builtin_scene
   public:
     void bootstrap()
     {
-      registerComponent<Position>();
+      addPlugin<DefaultPlugin>();
       // addSystem(ecs::SchedulerLabel::kUpdate, std::make_shared<LayoutSystem>());
       ecs::App::startup();
     }

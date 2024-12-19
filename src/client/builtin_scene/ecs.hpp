@@ -50,15 +50,85 @@ namespace builtin_scene::ecs
   typedef uint32_t ComponentId;
   typedef uint32_t SystemId;
   typedef const char *ComponentName;
+  typedef const char *PluginName;
 
   constexpr EntityId MAX_ENTITY_ID = 10 * 10000;
   constexpr SystemId MAX_SYSTEM_ID = 1000;
 
   // Forward declarations.
   class App;
+  class Plugin;
   class Entity;
   class Component;
   class System;
+
+  /**
+   * The plugin is used to register some components and systems to the ECS app.
+   */
+  class Plugin
+  {
+    friend class PluginsManager;
+
+  public:
+    Plugin() = default;
+    virtual ~Plugin() = default;
+
+  protected:
+    /**
+     * Implement this method to register the components and systems to the ECS app.
+     *
+     * @param app The ECS app to register the components and systems to.
+     */
+    virtual void build(App &app) = 0;
+  };
+
+  /**
+   * The class for managing all plugins in the ECS.
+   */
+  class PluginsManager
+  {
+  public:
+    PluginsManager() = default;
+
+  public:
+    /**
+     * Register a new plugin.
+     *
+     * @tparam T The type of the plugin.
+     */
+    template <typename T>
+    void registerPlugin();
+
+    /**
+     * Get the Id of the plugin of the given type.
+     *
+     * @tparam T The type of the plugin.
+     * @returns The Id of the plugin of the given type.
+     */
+    template <typename T>
+    uint32_t getPluginId();
+
+    /**
+     * Get the plugin of the given type.
+     *
+     * @tparam T The type of the plugin.
+     * @returns The plugin of the given type.
+     */
+    template <typename T>
+    std::shared_ptr<T> getPlugin();
+
+    /**
+     * Build all registered plugins.
+     *
+     * @param app The ECS app to register the components and systems to.
+     */
+    void build(App &app);
+
+  private:
+    std::unordered_map<PluginName, uint8_t> pluginIds_{};
+    std::unordered_map<PluginName, std::shared_ptr<Plugin>> plugins_{};
+    uint8_t nextPluginId_ = 0;
+  };
 
   /**
    * The class for all entities in the ECS.
@@ -340,9 +410,19 @@ namespace builtin_scene::ecs
      * @tparam ComponentType The type of the component.
      */
     template <typename ComponentType>
-    void registerComponent()
+    inline void registerComponent()
     {
       componentsMgr_.registerComponent<ComponentType>();
+    }
+    /**
+     * Add a plugin.
+     *
+     * @tparam PluginType The type of the plugin.
+     */
+    template <typename PluginType>
+    inline void addPlugin()
+    {
+      pluginsMgr_.registerPlugin<PluginType>();
     }
     /**
      * Add a system to the ECS with the given label.
@@ -379,6 +459,7 @@ namespace builtin_scene::ecs
     void runSystems(SchedulerLabel label);
 
   private:
+    PluginsManager pluginsMgr_;
     ComponentsManager componentsMgr_;
     std::vector<std::pair<EntityId, std::shared_ptr<Entity>>> entities_;
     std::unordered_map<SchedulerLabel, std::shared_ptr<ISystemSet>> systemSets_{};
