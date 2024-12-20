@@ -198,32 +198,6 @@ namespace builtin_scene::ecs
   };
 
   /**
-   * A specialized `Resource` class for managing one kind of assets, such as meshes, textures, etc.
-   * 
-   * @tparam T The type of the asset.
-   */
-  template <typename T>
-  class Assets : public Resource
-  {
-  public:
-    Assets() = default;
-
-  public:
-    /**
-     * Add a new asset to the assets.
-     * 
-     * @param asset The asset to add.
-     */
-    void add(T asset)
-    {
-      list_.push_back(asset);
-    }
-
-  private:
-    std::vector<T> list_{};
-  };
-
-  /**
    * The class for all entities in the ECS.
    */
   class Entity

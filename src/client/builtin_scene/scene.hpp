@@ -2,8 +2,10 @@
 
 #include <memory>
 #include "./ecs-inl.hpp"
+#include "./asset.hpp"
 #include "./hierarchy.hpp"
 #include "./transform.hpp"
+#include "./meshes/builder.hpp"
 
 #include "../graphics/webgl_context.hpp"
 #include "../xr/device.hpp"
@@ -36,6 +38,7 @@ namespace builtin_scene
     void build(ecs::App &app) override
     {
       app.addResource(ecs::Resource::Make<Timer>(10));
+      app.addResource(ecs::Resource::Make<Meshes>());
       app.registerComponent<transform::Position>();
       // app.addSystem(ecs::SchedulerLabel::kUpdate, ecs::System::Make<LayoutSystem>());
     }
