@@ -1,15 +1,19 @@
 #pragma once
 
+#include <glm/glm.hpp>
 #include "../material_base.hpp"
 
-namespace builtin_scene
+namespace builtin_scene::materials
 {
-  namespace materials
+  class NormalMaterial : Material
   {
-    class NormalMaterial : Material
+  public:
+    NormalMaterial() = default;
+
+  public:
+    ShaderRef fragmentShader() override
     {
-    public:
-      NormalMaterial();
-    };
-  }
+      return ShaderRef("materials/normal.frag");
+    }
+  };
 }
