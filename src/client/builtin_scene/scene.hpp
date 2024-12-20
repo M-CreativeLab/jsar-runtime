@@ -3,6 +3,7 @@
 #include <memory>
 #include "./ecs-inl.hpp"
 #include "./asset.hpp"
+#include "./camera.hpp"
 #include "./hierarchy.hpp"
 #include "./transform.hpp"
 #include "./meshes.hpp"
@@ -41,7 +42,8 @@ namespace builtin_scene
       app.addResource(ecs::Resource::Make<Timer>(10));
       app.addResource(ecs::Resource::Make<Meshes>());
       app.addResource(ecs::Resource::Make<Materials>());
-      app.registerComponent<transform::Position>();
+      app.registerComponent<Position>();
+      app.registerComponent<Camera>();
       // app.addSystem(ecs::SchedulerLabel::kUpdate, ecs::System::Make<LayoutSystem>());
     }
   };

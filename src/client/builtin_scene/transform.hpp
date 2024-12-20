@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 #include "./ecs.hpp"
 
-namespace builtin_scene::transform
+namespace builtin_scene
 {
   class Position : public ecs::Component
   {
