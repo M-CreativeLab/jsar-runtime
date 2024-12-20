@@ -2,14 +2,11 @@
 
 #include "../material_base.hpp"
 
-namespace builtin_scene
+namespace builtin_scene::materials
 {
-  namespace materials
+  class ColorMaterial : Material
   {
-    class ColorMaterial : Material
-    {
-    public:
-      ColorMaterial();
-    };
-  }
+  public:
+    ColorMaterial() = default;
+  };
 }

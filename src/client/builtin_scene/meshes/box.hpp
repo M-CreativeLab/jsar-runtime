@@ -15,6 +15,35 @@ namespace builtin_scene::meshes
           height_(height),
           depth_(depth)
     {
+      MeshVertexAttributeData<float, 3> positions(Mesh::ATTRIBUTE_POSITION);
+      {
+        auto x = width / 2.0f;
+        auto y = height / 2.0f;
+        auto z = depth / 2.0f;
+        positions.setValues({
+            {-x, -y, -z},
+            {x, -y, -z},
+            {x, y, -z},
+            {-x, y, -z},
+            {-x, -y, z},
+            {x, -y, z},
+            {x, y, z},
+            {-x, y, z},
+        });
+        insertAttribute(positions);
+      }
+      MeshVertexAttributeData<float, 3> normals(Mesh::ATTRIBUTE_NORMAL);
+      {
+        normals.setValues({
+            {0.0f, 0.0f, -1.0f},
+            {0.0f, 0.0f, -1.0f},
+            {0.0f, 0.0f, -1.0f},
+            {0.0f, 0.0f, -1.0f},
+            {0.0f, 0.0f, 1.0f},
+            {0.0f, 0.0f, 1.0f},
+        });
+        insertAttribute(normals);
+      }
     }
     Box(float size) : Box(size, size, size)
     {

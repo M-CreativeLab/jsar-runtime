@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <glm/glm.hpp>
 #include "./asset.hpp"
 
 namespace builtin_scene
@@ -70,43 +71,49 @@ namespace builtin_scene
   template <typename Format, size_t N>
   class MeshVertexAttributeTraits
   {
-    VertexFormat format = VertexFormat::kUnknown;
+  public:
+    static const VertexFormat format = VertexFormat::kUnknown;
     using V = void;
   };
 
   template <>
   class MeshVertexAttributeTraits<float, 2>
   {
-    VertexFormat format = VertexFormat::kFloat32x2;
-    using V = float[2];
+  public:
+    static const VertexFormat format = VertexFormat::kFloat32x2;
+    using V = glm::vec2;
   };
 
   template <>
   class MeshVertexAttributeTraits<float, 3>
   {
-    VertexFormat format = VertexFormat::kFloat32x3;
-    using V = float[3];
+  public:
+    static const VertexFormat format = VertexFormat::kFloat32x3;
+    using V = glm::vec3;
   };
 
   template <>
   class MeshVertexAttributeTraits<float, 4>
   {
-    VertexFormat format = VertexFormat::kFloat32x4;
-    using V = float[4];
+  public:
+    static const VertexFormat format = VertexFormat::kFloat32x4;
+    using V = glm::vec4;
   };
 
   template <>
   class MeshVertexAttributeTraits<uint16_t, 2>
   {
-    VertexFormat format = VertexFormat::kUint16x2;
-    using V = uint16_t[2];
+  public:
+    static const VertexFormat format = VertexFormat::kUint16x2;
+    using V = glm::u16vec2;
   };
 
   template <>
   class MeshVertexAttributeTraits<uint16_t, 4>
   {
-    VertexFormat format = VertexFormat::kUint16x4;
-    using V = uint16_t[4];
+  public:
+    static const VertexFormat format = VertexFormat::kUint16x4;
+    using V = glm::u16vec4;
   };
 
   /**
@@ -175,19 +182,37 @@ namespace builtin_scene
         : attribute_(attribute)
     {
     }
-    MeshVertexAttributeData(MeshVertexAttributeData<Format, N>& other)
+    MeshVertexAttributeData(MeshVertexAttributeData<Format, N> &other)
         : attribute_(other.attribute_), values(other.values)
     {
     }
 
   public:
     /**
-     * The values of the vertex attribute.
+     * @returns The attribute id.
      */
-    std::vector<typename Traits::V> values{};
+    inline MeshVertexAttributeId attributeId() { return attribute_.id; }
+    /**
+     * @returns The attribute name.
+     */
+    inline std::string attributeName() { return attribute_.name; }
+
+  public:
+    /**
+     * Set the values of the vertex attribute.
+     * 
+     * @param values The values of the vertex attribute.
+     */
+    void setValues(std::vector<typename Traits::V> values) { this->values = values; }
 
   public:
     VertexFormat format() override { return Traits::format; }
+
+  public:
+    /**
+     * The values of the vertex attribute.
+     */
+    std::vector<typename Traits::V> values{};
 
   private:
     MeshVertexAttribute<Format, N> attribute_;
@@ -247,7 +272,7 @@ namespace builtin_scene
   public:
     /**
      * Update the indices of the mesh.
-     * 
+     *
      * @param indices The indices of the mesh.
      */
     inline void updateIndices(Indices<uint32_t> indices)
@@ -255,18 +280,28 @@ namespace builtin_scene
       indices_ = indices;
     }
     /**
-     * Insert a new vertex attribute data.
+     * Insert a new vertex attribute data directly.
      * 
+     * @param data The mesh vertex attribute data.
+     */
+    template <typename Format, size_t N>
+    inline void insertAttribute(MeshVertexAttributeData<Format, N> &data)
+    {
+      attributes_[data.attributeId()] = std::make_shared<MeshVertexAttributeData<Format, N>>(data);
+    }
+    /**
+     * Insert a new vertex attribute data.
+     *
      * @param attribute The mesh vertex attribute to insert data.
      * @param data The mesh vertex attribute data.
      * @throws std::runtime_error If the vertex attribute data format is invalid.
      */
     template <typename Format, size_t N>
-    void insertAttribute(MeshVertexAttribute<Format, N> attribute, MeshVertexAttributeData<Format, N>& data)
+    void insertAttribute(MeshVertexAttribute<Format, N> attribute, MeshVertexAttributeData<Format, N> &data)
     {
       if (attribute.format != data.format())
         throw std::runtime_error("Invalid vertex attribute data format.");
-      attributes_[attribute.id] = std::make_shared<MeshVertexAttributeData<Format, N>>(data);
+      insertAttribute(data);
     }
 
   public:
@@ -298,10 +333,4 @@ namespace builtin_scene
   MeshVertexAttribute<float, 4> Mesh::ATTRIBUTE_COLOR("Vertex_Color", 5, VertexFormat::kFloat32x3);
   MeshVertexAttribute<float, 4> Mesh::ATTRIBUTE_JOINT_WEIGHTS("Vertex_JointWeights", 6, VertexFormat::kFloat32x4);
   MeshVertexAttribute<uint16_t, 4> Mesh::ATTRIBUTE_JOINT_INDEX("Vertex_JointIndex", 7, VertexFormat::kFloat32x4);
-
-  class Meshes : public asset::Assets<std::shared_ptr<Mesh>>
-  {
-  public:
-    using asset::Assets<std::shared_ptr<Mesh>>::Assets;
-  };
 }

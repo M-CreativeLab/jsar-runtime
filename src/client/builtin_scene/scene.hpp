@@ -5,7 +5,8 @@
 #include "./asset.hpp"
 #include "./hierarchy.hpp"
 #include "./transform.hpp"
-#include "./meshes/builder.hpp"
+#include "./meshes.hpp"
+#include "./materials.hpp"
 
 #include "../graphics/webgl_context.hpp"
 #include "../xr/device.hpp"
@@ -39,6 +40,7 @@ namespace builtin_scene
     {
       app.addResource(ecs::Resource::Make<Timer>(10));
       app.addResource(ecs::Resource::Make<Meshes>());
+      app.addResource(ecs::Resource::Make<Materials>());
       app.registerComponent<transform::Position>();
       // app.addSystem(ecs::SchedulerLabel::kUpdate, ecs::System::Make<LayoutSystem>());
     }
