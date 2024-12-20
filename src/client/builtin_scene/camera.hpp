@@ -19,4 +19,15 @@ namespace builtin_scene
     bool isActive_ = false;
     std::optional<TrViewport> viewport_ = std::nullopt;
   };
+
+  class CameraSystem : public ecs::System
+  {
+  public:
+    using ecs::System::System;
+
+  public:
+    void onExecute()
+    {
+    }
+  };
 }

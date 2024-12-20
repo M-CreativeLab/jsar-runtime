@@ -3,6 +3,7 @@
 #include <memory>
 #include "./ecs-inl.hpp"
 #include "./asset.hpp"
+#include "./timer.hpp"
 #include "./camera.hpp"
 #include "./hierarchy.hpp"
 #include "./transform.hpp"
@@ -16,18 +17,6 @@
 
 namespace builtin_scene
 {
-  class Timer : public ecs::Resource
-  {
-  public:
-    Timer(uint32_t interval) : interval_(interval) {}
-  
-  public:
-    uint32_t interval() { return interval_; }
-
-  private:
-    uint32_t interval_;
-  };
-
   /**
    * The `DefaultPlugin` loads the default components and systems for the builtin scene.
    */
@@ -39,12 +28,18 @@ namespace builtin_scene
   protected:
     void build(ecs::App &app) override
     {
-      app.addResource(ecs::Resource::Make<Timer>(10));
+      // Resources
+      app.addResource(ecs::Resource::Make<Timer>(16));
       app.addResource(ecs::Resource::Make<Meshes>());
       app.addResource(ecs::Resource::Make<Materials>());
+
+      // Components
       app.registerComponent<Position>();
       app.registerComponent<Camera>();
-      // app.addSystem(ecs::SchedulerLabel::kUpdate, ecs::System::Make<LayoutSystem>());
+
+      // Systems
+      app.addSystem(ecs::SchedulerLabel::kPreUpdate, ecs::System::Make<TimerSystem>());
+      app.addSystem(ecs::SchedulerLabel::kUpdate, ecs::System::Make<CameraSystem>());
     }
   };
 
