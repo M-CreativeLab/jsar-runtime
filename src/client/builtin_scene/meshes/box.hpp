@@ -6,44 +6,16 @@
 namespace builtin_scene::meshes
 {
   class Box : public Mesh,
+              public MeshBuilder,
               public Primitive3d
   {
   public:
     Box(float width, float height, float depth)
-        : Mesh("Box"),
+        : Mesh("Box", PrimitiveTopology::kTriangleList),
           width_(width),
           height_(height),
           depth_(depth)
     {
-      MeshVertexAttributeData<float, 3> positions(Mesh::ATTRIBUTE_POSITION);
-      {
-        auto x = width / 2.0f;
-        auto y = height / 2.0f;
-        auto z = depth / 2.0f;
-        positions.setValues({
-            {-x, -y, -z},
-            {x, -y, -z},
-            {x, y, -z},
-            {-x, y, -z},
-            {-x, -y, z},
-            {x, -y, z},
-            {x, y, z},
-            {-x, y, z},
-        });
-        insertAttribute(positions);
-      }
-      MeshVertexAttributeData<float, 3> normals(Mesh::ATTRIBUTE_NORMAL);
-      {
-        normals.setValues({
-            {0.0f, 0.0f, -1.0f},
-            {0.0f, 0.0f, -1.0f},
-            {0.0f, 0.0f, -1.0f},
-            {0.0f, 0.0f, -1.0f},
-            {0.0f, 0.0f, 1.0f},
-            {0.0f, 0.0f, 1.0f},
-        });
-        insertAttribute(normals);
-      }
     }
     Box(float size) : Box(size, size, size)
     {
@@ -57,6 +29,10 @@ namespace builtin_scene::meshes
   public:
     float area() override { return 2.0f * (width_ * height_ + width_ * depth_ + height_ * depth_); }
     float volume() override { return width_ * height_ * depth_; }
+    void build() override
+    {
+      // TODO: Implement the box mesh builder.
+    }
 
   private:
     float width_;
@@ -64,7 +40,7 @@ namespace builtin_scene::meshes
     float depth_;
   };
 
-  class Cube : Box
+  class Cube : public Box
   {
   public:
     Cube(float size) : Box(size), halfSize(size / 2.0f)

@@ -40,7 +40,7 @@ namespace builtin_scene
   };
 
   template <typename T>
-  class Indices : std::vector<T>
+  class Indices : public std::vector<T>
   {
   public:
     using std::vector<T>::vector;
@@ -171,6 +171,24 @@ namespace builtin_scene
   class MeshVertexAttributeData : public IMeshVertexAttributeData
   {
     using Traits = MeshVertexAttributeTraits<Format, N>;
+    using ValueType = typename Traits::V;
+
+  public:
+    /**
+     * Create a new mesh vertex attribute data.
+     *
+     * @param attribute The mesh vertex attribute.
+     * @param values The values of the vertex attribute.
+     * @returns The created mesh vertex attribute data.
+     */
+    static std::shared_ptr<MeshVertexAttributeData<Format, N>> Make(
+        MeshVertexAttribute<Format, N> attribute,
+        std::vector<ValueType> &values)
+    {
+      auto instance = std::make_shared<MeshVertexAttributeData<Format, N>>(attribute);
+      instance->setValues(values);
+      return instance;
+    }
 
   public:
     /**
@@ -200,10 +218,10 @@ namespace builtin_scene
   public:
     /**
      * Set the values of the vertex attribute.
-     * 
+     *
      * @param values The values of the vertex attribute.
      */
-    void setValues(std::vector<typename Traits::V> values) { this->values = values; }
+    void setValues(std::vector<ValueType> values) { this->values = values; }
 
   public:
     VertexFormat format() override { return Traits::format; }
@@ -212,7 +230,7 @@ namespace builtin_scene
     /**
      * The values of the vertex attribute.
      */
-    std::vector<typename Traits::V> values{};
+    std::vector<ValueType> values{};
 
   private:
     MeshVertexAttribute<Format, N> attribute_;
@@ -264,7 +282,9 @@ namespace builtin_scene
      *
      * @param name The name of the mesh.
      */
-    Mesh(std::string name) : name(name)
+    Mesh(std::string name, PrimitiveTopology primitiveTopology)
+        : name(name),
+          primitiveTopology(primitiveTopology)
     {
     }
     virtual ~Mesh() = default;
@@ -281,25 +301,31 @@ namespace builtin_scene
     }
     /**
      * Insert a new vertex attribute data directly.
-     * 
+     *
      * @param data The mesh vertex attribute data.
+     * @throws std::runtime_error If data is `nullptr`.
      */
     template <typename Format, size_t N>
-    inline void insertAttribute(MeshVertexAttributeData<Format, N> &data)
+    inline void insertAttribute(std::shared_ptr<MeshVertexAttributeData<Format, N>> data)
     {
-      attributes_[data.attributeId()] = std::make_shared<MeshVertexAttributeData<Format, N>>(data);
+      if (data == nullptr)
+        throw std::runtime_error("Invalid vertex attribute data.");
+      attributes_[data->attributeId()] = data;
     }
     /**
      * Insert a new vertex attribute data.
      *
      * @param attribute The mesh vertex attribute to insert data.
      * @param data The mesh vertex attribute data.
+     * @throws std::runtime_error If data is `nullptr`.
      * @throws std::runtime_error If the vertex attribute data format is invalid.
      */
     template <typename Format, size_t N>
-    void insertAttribute(MeshVertexAttribute<Format, N> attribute, MeshVertexAttributeData<Format, N> &data)
+    void insertAttribute(MeshVertexAttribute<Format, N> attribute, std::shared_ptr<MeshVertexAttributeData<Format, N>> data)
     {
-      if (attribute.format != data.format())
+      if (data == nullptr)
+        throw std::runtime_error("Invalid vertex attribute data.");
+      if (attribute.format != data->format())
         throw std::runtime_error("Invalid vertex attribute data format.");
       insertAttribute(data);
     }
@@ -318,7 +344,7 @@ namespace builtin_scene
     /**
      * The primitive topology of the mesh.
      */
-    PrimitiveTopology primitiveTopology = PrimitiveTopology::kTriangleList;
+    PrimitiveTopology primitiveTopology;
 
   protected:
     Indices<uint32_t> indices_{};
