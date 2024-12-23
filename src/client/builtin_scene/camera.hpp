@@ -10,17 +10,17 @@ namespace builtin_scene
   class Camera : public ecs::Component
   {
   public:
-    Camera()
-    {
-    }
-    ~Camera() = default;
+    using ecs::Component::Component;
+
+  public:
+    bool active() { return active_; }
 
   private:
-    bool isActive_ = false;
+    bool active_ = false;
     std::optional<TrViewport> viewport_ = std::nullopt;
   };
 
-  class CameraSystem : public ecs::System
+  class CameraStartupSystem : public ecs::System
   {
   public:
     using ecs::System::System;
@@ -28,6 +28,28 @@ namespace builtin_scene
   public:
     void onExecute()
     {
+      // Create the camera for rendering.
+      spawn(Camera());
+    }
+  };
+
+  class CameraUpdateSystem : public ecs::System
+  {
+  public:
+    using ecs::System::System;
+
+  public:
+    void onExecute()
+    {
+      auto cameraEntity = firstEntity<Camera>();
+      if (!cameraEntity.has_value())
+        throw std::runtime_error("Camera not found.");
+
+      auto camera = getComponent<Camera>(cameraEntity.value());
+      if (camera.has_value() && camera->active())
+      {
+        // Update and render the camera.
+      }
     }
   };
 }

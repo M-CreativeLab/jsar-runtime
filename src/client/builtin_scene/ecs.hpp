@@ -227,7 +227,7 @@ namespace builtin_scene::ecs
   class Component
   {
   public:
-    Component() {}
+    Component() = default;
     virtual ~Component() = default;
   };
 
@@ -307,6 +307,13 @@ namespace builtin_scene::ecs
      * @throws std::runtime_error if the entity does not have a component of this type.
      */
     T &get(EntityId entity);
+    /**
+     * Check if the component set contains the component of the given entity.
+     *
+     * @param entity The entity to check.
+     * @returns `true` if the component set contains the component of the given entity, `false` otherwise.
+     */
+    inline bool contains(EntityId entity) { return entityToIndexMap_.find(entity) != entityToIndexMap_.end(); }
 
   private:
     void onEntityDestroyed(EntityId entity) override;
@@ -392,7 +399,6 @@ namespace builtin_scene::ecs
      */
     void onEntityDestroyed(EntityId entity);
 
-  private:
     /**
      * Get the `ComponentSet` for the given component type.
      *
@@ -471,6 +477,32 @@ namespace builtin_scene::ecs
      */
     template <typename QueryComponentType, typename IncludeComponentType>
     std::vector<IncludeComponentType> queryEntitiesWithComponent();
+    /**
+     * Get the first entity with the given component type, or an empty optional if not found.
+     *
+     * @tparam ComponentType The type of the component.
+     * @returns The Id of the first entity with the given component type.
+     */
+    template <typename ComponentType>
+    std::optional<EntityId> firstEntity();
+    /**
+     * Get the first entity with the given component type, or an empty optional if not found.
+     *
+     * @tparam QueryComponentType The type of the query component.
+     * @tparam IncludeComponentType The type of the include component.
+     * @returns The include component of the first entity with the query component type.
+     */
+    template <typename QueryComponentType, typename IncludeComponentType>
+    std::optional<IncludeComponentType> firstEntityWithComponent();
+    /**
+     * Get the component of the given entity.
+     *
+     * @tparam ComponentType The type of the component.
+     * @param entity The entity to get the component for.
+     * @returns The component of the given type for the given entity or an empty optional if not found.
+     */
+    template <typename ComponentType>
+    std::optional<ComponentType> getComponent(EntityId entity);
     /**
      * Register a new component type to use in the app.
      *
@@ -643,10 +675,7 @@ namespace builtin_scene::ecs
      * @returns The list of entity Ids with the given component type.
      */
     template <typename ComponentType>
-    inline std::vector<EntityId> queryEntities()
-    {
-      return connectedApp_->queryEntities<ComponentType>();
-    }
+    inline std::vector<EntityId> queryEntities() { return connectedApp_->queryEntities<ComponentType>(); }
     /**
      * Query all entities with the given query component type and include the include component type.
      *
@@ -659,6 +688,35 @@ namespace builtin_scene::ecs
     {
       return connectedApp_->queryEntitiesWithComponent<QueryComponentType, IncludeComponentType>();
     }
+    /**
+     * Get the first entity with the given component type, or an empty optional if not found.
+     *
+     * @tparam ComponentType The type of the component.
+     * @returns The Id of the first entity with the given component type.
+     */
+    template <typename ComponentType>
+    inline std::optional<EntityId> firstEntity() { return connectedApp_->firstEntity<ComponentType>(); }
+    /**
+     * Get the first entity with the given component type, or an empty optional if not found.
+     *
+     * @tparam QueryComponentType The type of the query component.
+     * @tparam IncludeComponentType The type of the include component.
+     * @returns The include component of the first entity with the query component type.
+     */
+    template <typename QueryComponentType, typename IncludeComponentType>
+    inline std::optional<IncludeComponentType> firstEntityWithComponent()
+    {
+      return connectedApp_->firstEntityWithComponent<QueryComponentType, IncludeComponentType>();
+    }
+    /**
+     * Get the component of the given entity.
+     *
+     * @tparam ComponentType The type of the component.
+     * @param entity The entity to get the component for.
+     * @returns The component of the given type for the given entity or an empty optional if not found.
+     */
+    template <typename ComponentType>
+    inline std::optional<ComponentType> getComponent(EntityId entity) { return connectedApp_->getComponent<ComponentType>(entity); }
     /**
      * Get the resource of the given type.
      *

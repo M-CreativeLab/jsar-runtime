@@ -1,3 +1,5 @@
+#pragma once
+
 #include "./ecs.hpp"
 
 namespace builtin_scene::ecs
@@ -189,7 +191,7 @@ namespace builtin_scene::ecs
     for (auto &pair : entities_)
     {
       EntityId entityId = pair.first;
-      if (componentSet->entityToIndexMap_.find(entityId) != componentSet->entityToIndexMap_.end())
+      if (componentSet->contains(entityId))
         result.push_back(entityId);
     }
     return result;
@@ -204,13 +206,55 @@ namespace builtin_scene::ecs
     for (auto &pair : entities_)
     {
       EntityId entityId = pair.first;
-      if (queryComponentSet->entityToIndexMap_.find(entityId) != queryComponentSet->entityToIndexMap_.end())
+      if (queryComponentSet->contains(entityId))
       {
         IncludeComponentType includeComponent = includeComponentSet->get(entityId);
         result.push_back(includeComponent);
       }
     }
     return result;
+  }
+
+  template <typename ComponentType>
+  std::optional<EntityId> App::firstEntity()
+  {
+    std::optional<EntityId> result = std::nullopt;
+    auto componentSet = componentsMgr_.getComponentSet<ComponentType>();
+    for (auto &pair : entities_)
+    {
+      EntityId entityId = pair.first;
+      if (componentSet->contains(entityId))
+      {
+        result = entityId;
+        break;
+      }
+    }
+    return result;
+  }
+
+  template <typename QueryComponentType, typename IncludeComponentType>
+  std::optional<IncludeComponentType> App::firstEntityWithComponent()
+  {
+    std::optional<IncludeComponentType> result = std::nullopt;
+    auto queryComponentSet = componentsMgr_.getComponentSet<QueryComponentType>();
+    auto includeComponentSet = componentsMgr_.getComponentSet<IncludeComponentType>();
+    for (auto &pair : entities_)
+    {
+      EntityId entityId = pair.first;
+      if (queryComponentSet->contains(entityId))
+      {
+        IncludeComponentType includeComponent = includeComponentSet->get(entityId);
+        result = includeComponent;
+        break;
+      }
+    }
+    return result;
+  }
+
+  template <typename ComponentType>
+  std::optional<ComponentType> App::getComponent(EntityId entity)
+  {
+    return componentsMgr_.getComponent<ComponentType>(entity);
   }
 
   SystemId App::addSystem(SchedulerLabel label, std::shared_ptr<System> system)

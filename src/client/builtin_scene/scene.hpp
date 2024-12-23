@@ -28,26 +28,31 @@ namespace builtin_scene
   protected:
     void build(ecs::App &app) override
     {
+      using namespace ecs;
+
       // Resources
-      app.addResource(ecs::Resource::Make<Timer>(16));
-      app.addResource(ecs::Resource::Make<Meshes>());
-      app.addResource(ecs::Resource::Make<Materials>());
+      app.addResource(Resource::Make<Timer>(16));
+      app.addResource(Resource::Make<Meshes>());
+      app.addResource(Resource::Make<Materials>());
 
       // Components
+      app.registerComponent<hierarchy::Element>();
+      app.registerComponent<hierarchy::Children>();
+      app.registerComponent<hierarchy::Parent>();
       app.registerComponent<Position>();
       app.registerComponent<Camera>();
 
       // Systems
-      app.addSystem(ecs::SchedulerLabel::kPreUpdate, ecs::System::Make<TimerSystem>());
-      app.addSystem(ecs::SchedulerLabel::kUpdate, ecs::System::Make<CameraSystem>());
+      app.addSystem(SchedulerLabel::kStartup, System::Make<CameraStartupSystem>());
+      app.addSystem(SchedulerLabel::kPreUpdate, System::Make<TimerSystem>());
+      app.addSystem(SchedulerLabel::kUpdate, System::Make<CameraUpdateSystem>());
     }
   };
 
   /**
    * The main class for the builtin scene which inherits from the `ecs::App`.
    */
-  class Scene : public ecs::App,
-                public Hierarchy
+  class Scene : public ecs::App
   {
   public:
     /**
@@ -67,7 +72,6 @@ namespace builtin_scene
     Scene(std::shared_ptr<client_graphics::WebGL2Context> glContext,
           std::shared_ptr<client_xr::XRDeviceClient> xrDeviceClient)
         : ecs::App(),
-          Hierarchy(),
           glContext_(glContext),
           xrDeviceClient_(xrDeviceClient)
     {
@@ -102,6 +106,21 @@ namespace builtin_scene
     ~Scene() = default;
 
   public:
+    /**
+     * Create a new element to the scene for rendering.
+     *
+     * @param name The tag name of the element.
+     */
+    ecs::EntityId createElementEntity(std::string name)
+    {
+      return spawn(
+          hierarchy::Element(name),
+          hierarchy::Children(),
+          hierarchy::Parent(),
+          Position());
+    }
+
+  private:
     void bootstrap()
     {
       addPlugin<DefaultPlugin>();
