@@ -1,1 +1,3 @@
 /runtime/jsbundle.h
+*.gen.h
+*.gen.hpp

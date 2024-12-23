@@ -15,10 +15,22 @@ file(GLOB TR_CLIENT_SOURCE
     "src/pugixml/*.cpp"
 )
 
+# Add the client shaders header target
+set(TR_SHADERS_SOURCE "${CMAKE_SOURCE_DIR}/src/client/builtin_scene/")
+set(TR_SHADERS_HEADER "${CMAKE_SOURCE_DIR}/src/client/builtin_scene/shaders_store.gen.hpp")
+set(TR_SHADERS_HEADER_GENERATOR "${CMAKE_SOURCE_DIR}/tools/generate_shaders_header.cmake")
+add_custom_target(TransmuteClientShadersHeader
+    ALL
+    COMMAND ${CMAKE_COMMAND} -DHEADER_OUTPUT=${TR_SHADERS_HEADER} -DSHADERS_DIR=${TR_SHADERS_SOURCE} -P ${TR_SHADERS_HEADER_GENERATOR}
+    COMMENT "[target] Generating the shaders header"
+)
+
+# Add executable target
 add_executable(TransmuteClient
     ${TR_COMMON_SOURCE}
     ${TR_CLIENT_SOURCE}
 )
+add_dependencies(TransmuteClient TransmuteClientShadersHeader)
 
 set(NODE_ADDON_API_HEADERS_PATH ${CMAKE_SOURCE_DIR}/thirdparty/headers/node-addon-api/include)
 target_include_directories(TransmuteClient PRIVATE ${NODE_ADDON_API_HEADERS_PATH})
@@ -28,7 +40,7 @@ tr_target_link_library(TransmuteClient ${CMAKE_SOURCE_DIR}/build/output/crates/$
 tr_target_link_thirdparty_library(TransmuteClient node)
 tr_target_link_thirdparty_library(TransmuteClient skia)
 
-if (APPLE)
+if(APPLE)
     target_link_libraries(TransmuteClient PRIVATE "-framework CoreFoundation")
     target_link_libraries(TransmuteClient PRIVATE "-framework Carbon")
 endif()

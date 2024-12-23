@@ -28,9 +28,10 @@ add_library(TransmuteCore SHARED
 # Generate the TransmuteClient binary header, which the core library will embed and install at runtime.
 set(TRANSMUTE_CLIENT_BINARY_FILE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/TransmuteClient")
 set(TRANSMUTE_CLIENT_BINARY_HEADER "${CMAKE_SOURCE_DIR}/src/runtime/res/client.bin.h")
+set(TR_BINARY_GENERATOR "${CMAKE_SOURCE_DIR}/tools/generate_binary_header.sh")
 add_custom_command(
     OUTPUT ${TRANSMUTE_CLIENT_BINARY_HEADER}
-    COMMAND ${CMAKE_SOURCE_DIR}/tools/generate_binary_header.sh transmute_client_binary ${TRANSMUTE_CLIENT_BINARY_FILE} ${TRANSMUTE_CLIENT_BINARY_HEADER}
+    COMMAND ${TR_BINARY_GENERATOR} transmute_client_binary ${TRANSMUTE_CLIENT_BINARY_FILE} ${TRANSMUTE_CLIENT_BINARY_HEADER}
     DEPENDS TransmuteClient
     COMMENT "Generating client binary header"
 )
