@@ -5,10 +5,12 @@
 
 namespace builtin_scene::materials
 {
-  class ColorMaterial : Material
+  class ColorMaterial : public Material
   {
   public:
     ColorMaterial() = default;
+    ColorMaterial(float red, float green, float blue)
+        : color(red, green, blue) {}
 
   public:
     ShaderRef fragmentShader() override

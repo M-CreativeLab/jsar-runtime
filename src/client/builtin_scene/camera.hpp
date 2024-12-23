@@ -46,7 +46,7 @@ namespace builtin_scene
         throw std::runtime_error("Camera not found.");
 
       auto camera = getComponent<Camera>(cameraEntity.value());
-      if (camera.has_value() && camera->active())
+      if (camera != nullptr && camera->active())
       {
         // Update and render the camera.
       }

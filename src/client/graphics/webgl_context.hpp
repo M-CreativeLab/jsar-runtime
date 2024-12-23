@@ -403,7 +403,7 @@ namespace client_graphics
     void clearColor(float red, float green, float blue, float alpha);
     void clearDepth(float depth);
     void clearStencil(int s);
-    void clear(int mask);
+    void clear(int mask = WEBGL_COLOR_BUFFER_BIT | WEBGL_DEPTH_BUFFER_BIT | WEBGL_STENCIL_BUFFER_BIT);
     void depthMask(bool flag);
     void depthFunc(int func);
     void depthRange(float zNear, float zFar);

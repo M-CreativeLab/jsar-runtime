@@ -292,7 +292,19 @@ namespace builtin_scene::ecs
      * @param entity The entity to attach the component to.
      * @param component The component to attach.
      */
-    void insert(EntityId entity, T component);
+    std::shared_ptr<T> insert(EntityId entity, std::shared_ptr<T> component);
+    /**
+     * Insert a new component with the given arguments to construct the component, then attach it to the entity.
+     * 
+     * @tparam InitialzingArgs The types of the arguments to construct the component.
+     * @param entity The entity to attach the component to.
+     * @param args The arguments to construct the component.
+     */
+    template <typename... InitialzingArgs>
+    inline std::shared_ptr<T> insertWithArgs(EntityId entity, InitialzingArgs... args)
+    {
+      return insert(entity, std::make_shared<T>(args...));
+    }
     /**
      * Remove the component of the given entity.
      *
@@ -306,7 +318,7 @@ namespace builtin_scene::ecs
      * @returns The component of the given entity.
      * @throws std::runtime_error if the entity does not have a component of this type.
      */
-    T &get(EntityId entity);
+    std::shared_ptr<T> get(EntityId entity);
     /**
      * Check if the component set contains the component of the given entity.
      *
@@ -319,7 +331,7 @@ namespace builtin_scene::ecs
     void onEntityDestroyed(EntityId entity) override;
 
   private:
-    std::array<T, MAX_ENTITY_ID> components_;
+    std::array<std::shared_ptr<T>, MAX_ENTITY_ID> components_;
     std::unordered_map<EntityId, size_t> entityToIndexMap_;
     std::unordered_map<size_t, EntityId> indexToEntityMap_;
     size_t size_ = 0;
@@ -360,11 +372,27 @@ namespace builtin_scene::ecs
      * @tparam ComponentType The type of the component.
      * @param entity The entity to add the component to.
      * @param component The component to add.
+     * @returns The added component.
      */
     template <typename ComponentType>
-    inline void addComponent(EntityId entity, ComponentType component)
+    inline std::shared_ptr<ComponentType> addComponent(EntityId entity, ComponentType component)
     {
-      getComponentSet<ComponentType>()->insert(entity, component);
+      return getComponentSet<ComponentType>()->insert(entity, std::make_shared<ComponentType>(component));
+    }
+
+    /**
+     * Add the component of the given type to the given entity, with the provided arguments to construct the component.
+     * 
+     * @tparam ComponentType The type of the component.
+     * @tparam InitialzingArgs The types of the arguments to construct the component.
+     * @param entity The entity to add the component to.
+     * @param args The arguments to construct the component.
+     * @returns The added component.
+     */
+    template <typename ComponentType, typename... InitialzingArgs>
+    inline std::shared_ptr<ComponentType> addComponentWithArgs(EntityId entity, InitialzingArgs... args)
+    {
+      return getComponentSet<ComponentType>()->insertWithArgs(entity, args...);
     }
 
     /**
@@ -387,7 +415,7 @@ namespace builtin_scene::ecs
      * @returns The component of the given type for the given entity.
      */
     template <typename ComponentType>
-    inline ComponentType &getComponent(EntityId entity)
+    inline std::shared_ptr<ComponentType> getComponent(EntityId entity)
     {
       return getComponentSet<ComponentType>()->get(entity);
     }
@@ -502,7 +530,7 @@ namespace builtin_scene::ecs
      * @returns The component of the given type for the given entity or an empty optional if not found.
      */
     template <typename ComponentType>
-    std::optional<ComponentType> getComponent(EntityId entity);
+    std::shared_ptr<ComponentType> getComponent(EntityId entity);
     /**
      * Register a new component type to use in the app.
      *
@@ -528,11 +556,13 @@ namespace builtin_scene::ecs
      *
      * @tparam ResourceType The type of the resource.
      * @param Resource The resource to add.
+     * @returns The added resource.
      */
     template <typename ResourceType>
-    inline void addResource(std::shared_ptr<ResourceType> Resource)
+    inline std::shared_ptr<ResourceType> addResource(std::shared_ptr<ResourceType> resource)
     {
-      resourcesMgr_.addResource(Resource);
+      resourcesMgr_.addResource(resource);
+      return resource;
     }
     /**
      * Remove a resource from the app.
@@ -649,6 +679,7 @@ namespace builtin_scene::ecs
      * Add a system to the chain of this system, the former will be executed after the latter.
      *
      * @param next The next system to run.
+     * @returns The next system.
      */
     std::shared_ptr<System> chain(std::shared_ptr<System> next)
     {
@@ -713,10 +744,10 @@ namespace builtin_scene::ecs
      *
      * @tparam ComponentType The type of the component.
      * @param entity The entity to get the component for.
-     * @returns The component of the given type for the given entity or an empty optional if not found.
+     * @returns The component of the given type for the given entity or nullptr if not found.
      */
     template <typename ComponentType>
-    inline std::optional<ComponentType> getComponent(EntityId entity) { return connectedApp_->getComponent<ComponentType>(entity); }
+    inline std::shared_ptr<ComponentType> getComponent(EntityId entity) { return connectedApp_->getComponent<ComponentType>(entity); }
     /**
      * Get the resource of the given type.
      *

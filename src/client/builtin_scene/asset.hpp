@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <unordered_map>
 #include <idgen.hpp>
 #include "./ecs.hpp"
@@ -24,16 +25,19 @@ namespace builtin_scene::asset
     /**
      * Add a new asset to the assets.
      *
+     * @tparam S The type of the asset to add.
      * @param asset The asset to add.
      */
-    void add(T asset)
+    template <typename S>
+    std::shared_ptr<T> add(std::shared_ptr<S> asset)
     {
       static TrIdGenerator assetIdGen(0x1);
       AssetId assetId = assetIdGen.get();
       if (assetId >= MAX_ASSET_ID)
         throw std::runtime_error("The asset id is out of range.");
 
-      assets_[assetId] = asset;
+      assets_[assetId] = dynamic_pointer_cast<T>(asset);
+      return asset;
     }
     /**
      * Check if the assets contain the asset of the given id.
@@ -51,7 +55,7 @@ namespace builtin_scene::asset
      * @param assetId The id of the asset to get.
      * @returns The asset of the given id.
      */
-    inline T &get(AssetId assetId)
+    inline std::shared_ptr<T> &get(AssetId assetId)
     {
       return assets_[assetId];
     }
@@ -89,6 +93,6 @@ namespace builtin_scene::asset
     }
 
   private:
-    std::unordered_map<AssetId, T> assets_{};
+    std::unordered_map<AssetId, std::shared_ptr<T>> assets_{};
   };
 } // namespace builtin_scene::asset

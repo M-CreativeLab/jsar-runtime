@@ -1,14 +1,16 @@
 #pragma once
 
+#include <memory>
+#include "./asset.hpp"
+#include "./material_base.hpp"
 #include "./materials/color.hpp"
 #include "./materials/normal.hpp"
-#include "./material_base.hpp"
 
 namespace builtin_scene
 {
-  class Materials : public asset::Assets<std::shared_ptr<Material>>
+  class Materials : public asset::Assets<Material>
   {
   public:
-    using asset::Assets<std::shared_ptr<Material>>::Assets;
+    using asset::Assets<Material>::Assets;
   };
 }

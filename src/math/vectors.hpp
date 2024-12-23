@@ -17,6 +17,10 @@ namespace math
     using glm::vec3::vec3;
 
   public:
+    static const Vec3 Identity;
+    static const Vec3 One;
+
+  public:
     /**
      * Appends the vector to the given data.
      * 
@@ -97,6 +101,9 @@ namespace math
       return Vec3(cross.x, cross.y, cross.z);
     }
   };
+
+  const Vec3 Vec3::Identity(0.0f, 0.0f, 0.0f);
+  const Vec3 Vec3::One(1.0f, 1.0f, 1.0f);
 
   /**
    * The forward direction.

@@ -66,14 +66,20 @@ namespace builtin_scene::ecs
   template <typename ResourceType>
   std::shared_ptr<ResourceType> ResourcesManager::getResource()
   {
+    if (resources_.empty())
+      throw std::runtime_error("No resources available.");
+
     ResourceName name = typeid(ResourceType).name();
     if (resources_.find(name) == resources_.end())
-      throw std::runtime_error("Resource(" + std::string(name) + ") not found.");
+    {
+      auto msg = "Resource(" + std::string(name) + ") not found";
+      throw std::runtime_error(msg);
+    }
     return std::dynamic_pointer_cast<ResourceType>(resources_[name]);
   }
 
   template <typename T>
-  void ComponentSet<T>::insert(EntityId entity, T component)
+  std::shared_ptr<T> ComponentSet<T>::insert(EntityId entity, std::shared_ptr<T> component)
   {
     if (entityToIndexMap_.find(entity) != entityToIndexMap_.end())
       throw std::runtime_error("Entity already has a component of this type.");
@@ -83,6 +89,7 @@ namespace builtin_scene::ecs
     indexToEntityMap_[index] = entity;
     components_[index] = component;
     size_ += 1;
+    return component;
   }
 
   template <typename T>
@@ -105,11 +112,12 @@ namespace builtin_scene::ecs
   }
 
   template <typename T>
-  T &ComponentSet<T>::get(EntityId entity)
+  std::shared_ptr<T> ComponentSet<T>::get(EntityId entity)
   {
-    if (entityToIndexMap_.find(entity) == entityToIndexMap_.end())
-      throw std::runtime_error("Entity does not have a component of this type.");
-    return components_[entityToIndexMap_[entity]];
+    if (entityToIndexMap_.find(entity) != entityToIndexMap_.end())
+      return components_[entityToIndexMap_[entity]];
+    else
+      return nullptr;
   }
 
   template <typename T>
@@ -252,7 +260,7 @@ namespace builtin_scene::ecs
   }
 
   template <typename ComponentType>
-  std::optional<ComponentType> App::getComponent(EntityId entity)
+  std::shared_ptr<ComponentType> App::getComponent(EntityId entity)
   {
     return componentsMgr_.getComponent<ComponentType>(entity);
   }

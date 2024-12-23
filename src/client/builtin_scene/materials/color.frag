@@ -15,5 +15,5 @@ void main() {
   outColor *= texture(tex, (textureTransformation * vec3(uvs, 1.0)).xy);
 #endif
 
-  outColor.rgb = color_mapping(outColor.rgb);
+  outColor.rgb = pow(outColor.rgb, vec3(1.0 / 2.2));
 }

@@ -1,6 +1,10 @@
 #pragma once
 
+#include <memory>
+#include "./asset.hpp"
+#include "./ecs.hpp"
 #include "./mesh_base.hpp"
+#include "./mesh_material.hpp"
 #include "./meshes/builder.hpp"
 #include "./meshes/box.hpp"
 #include "./meshes/plane.hpp"
@@ -8,10 +12,26 @@
 
 namespace builtin_scene
 {
-  class Meshes : public asset::Assets<std::shared_ptr<Mesh>>
+  class Meshes : public asset::Assets<Mesh>
   {
   public:
-    using asset::Assets<std::shared_ptr<Mesh>>::Assets;
+    using asset::Assets<Mesh>::Assets;
+  };
+
+  class Mesh3d : public ecs::Component
+  {
+  public:
+    using ecs::Component::Component;
+
+  public:
+    Mesh3d(std::shared_ptr<Mesh> handle)
+        : ecs::Component(),
+          handle(handle)
+    {
+    }
+
+  public:
+    std::shared_ptr<Mesh> handle = nullptr;
   };
 
   class MeshBuilder
@@ -51,7 +71,7 @@ namespace builtin_scene
     }
     /**
      * Create a (UV) sphere mesh with the given parameters.
-     * 
+     *
      * @param radius The radius of the sphere.
      * @param sectors The number of longitudinal sectors, aka horizontal resolution. The default is 32.
      * @param stacks The number of latitudinal stacks, aka vertical resolution. The default is 18.
@@ -64,7 +84,7 @@ namespace builtin_scene
   private:
     /**
      * Create a new mesh and build it.
-     * 
+     *
      * @tparam MeshType The type of the mesh to create.
      * @tparam Args The types of the arguments to pass to the mesh
      * @param args The arguments to pass to the mesh

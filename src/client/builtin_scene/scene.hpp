@@ -9,6 +9,7 @@
 #include "./transform.hpp"
 #include "./meshes.hpp"
 #include "./materials.hpp"
+#include "./renderer.hpp"
 
 #include "../graphics/webgl_context.hpp"
 #include "../xr/device.hpp"
@@ -39,13 +40,18 @@ namespace builtin_scene
       app.registerComponent<hierarchy::Element>();
       app.registerComponent<hierarchy::Children>();
       app.registerComponent<hierarchy::Parent>();
-      app.registerComponent<Position>();
+      app.registerComponent<Transform>();
       app.registerComponent<Camera>();
+      app.registerComponent<Mesh3d>();
+      app.registerComponent<MeshMaterial3d>();
 
       // Systems
       app.addSystem(SchedulerLabel::kStartup, System::Make<CameraStartupSystem>());
       app.addSystem(SchedulerLabel::kPreUpdate, System::Make<TimerSystem>());
-      app.addSystem(SchedulerLabel::kUpdate, System::Make<CameraUpdateSystem>());
+
+      auto updateChain = System::Make<CameraUpdateSystem>()
+                             ->chain(System::Make<RenderSystem>());
+      app.addSystem(SchedulerLabel::kUpdate, updateChain);
     }
   };
 
@@ -117,7 +123,7 @@ namespace builtin_scene
           hierarchy::Element(name),
           hierarchy::Children(),
           hierarchy::Parent(),
-          Position());
+          Transform());
     }
 
   private:
@@ -125,6 +131,20 @@ namespace builtin_scene
     {
       addPlugin<DefaultPlugin>();
       ecs::App::startup();
+
+      // Add renderer
+      addResource(ecs::Resource::Make<Renderer>(glContext_));
+
+      // Get the meshes and materials resources
+      auto meshes = getResource<Meshes>();
+      auto materials = getResource<Materials>();
+
+      // Spawn the default mesh
+      auto colorMaterial = Material::Make<materials::ColorMaterial>(1.0f, 0.0f, 0.0f);
+      spawn(
+          Mesh3d(meshes->add(MeshBuilder::CreateSphere(0.5f))),
+          MeshMaterial3d(materials->add(colorMaterial)),
+          Transform());
     }
     void update(uint32_t time, client_xr::XRFrame &frame)
     {
