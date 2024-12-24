@@ -246,7 +246,7 @@ namespace xr
   public: // Command channel
     int getCommandChanPort();
     void startCommandClientWatcher();
-    void handleCommandMessage(TrXRCommandMessage &message, TrContentRuntime *content);
+    void handleCommandMessage(TrXRCommandMessage &message, std::shared_ptr<TrContentRuntime> content);
 
   private: // XR command channel handlers
     void onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request,

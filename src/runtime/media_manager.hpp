@@ -38,7 +38,7 @@ class TrMediaManager;
 class TrSoundSource
 {
 public:
-  TrSoundSource(TrMediaManager *mediaManager, TrContentRuntime *content, uint32_t id);
+  TrSoundSource(TrMediaManager *mediaManager, std::shared_ptr<TrContentRuntime> content, uint32_t id);
   ~TrSoundSource();
 
 public:
@@ -92,9 +92,9 @@ public:
 
 private:
   TrMediaManager *mediaManager = nullptr;
-  TrContentRuntime *content = nullptr;
-  unique_ptr<ma_sound> sound = nullptr;
-  unique_ptr<ma_decoder> decoder = nullptr;
+  std::shared_ptr<TrContentRuntime> content = nullptr;
+  std::unique_ptr<ma_sound> sound = nullptr;
+  std::unique_ptr<ma_decoder> decoder = nullptr;
   glm::mat4 baseMatrix = glm::mat4(1.0f);
   bool autoPlay = true;
   bool isSrcDataLoaded = false;
@@ -132,14 +132,14 @@ public:
    * @param clientId The client id which the sound source is created for.
    * @returns The sound source if created successfully, otherwise returns `nullptr`.
    */
-  shared_ptr<TrSoundSource> createSoundSource(TrContentRuntime *content, uint32_t clientId);
+  shared_ptr<TrSoundSource> createSoundSource(std::shared_ptr<TrContentRuntime> content, uint32_t clientId);
   /**
    * Iterate all the sound sources by the specified content, and call the callback function for each sound source.
    * 
    * @param content The content which the sound sources belong to.
    * @param callback The callback function which will be called for each sound source.
    */
-  void iterateSoundSourcesByContent(TrContentRuntime *content, std::function<void(shared_ptr<TrSoundSource>)> callback);
+  void iterateSoundSourcesByContent(std::shared_ptr<TrContentRuntime> content, std::function<void(shared_ptr<TrSoundSource>)> callback);
   /**
    * Find the sound source by the specified content and sound source's id.
    * 
@@ -147,14 +147,14 @@ public:
    * @param id The sound source's id.
    * @returns The sound source if found, otherwise returns `nullptr`.
    */
-  shared_ptr<TrSoundSource> findSoundSource(TrContentRuntime *content, uint32_t id);
+  shared_ptr<TrSoundSource> findSoundSource(std::shared_ptr<TrContentRuntime> content, uint32_t id);
   /**
    * Remove the sound sources by the specified content, it's used for releasing the sound sources when the content is
    * closed.
    * 
-   * @param content The content which the sound sources belong to.
+   * @param contentId The content id which the sound sources belong to.
    */
-  void removeSoundSourcesByContent(TrContentRuntime *content);
+  void removeSoundSourcesByContent(int contentId);
   /**
    * Update the listener's base matrix, the audio engine will use this matrix to calculate the listener's position and
    * orientation.
@@ -176,7 +176,7 @@ public:
 
 private:
   void onNewChanClient(TrOneShotClient<TrMediaCommandMessage> &chanClient);
-  void onContentRequest(TrContentRuntime *content, TrMediaCommandMessage &reqMessage);
+  void onContentRequest(std::shared_ptr<TrContentRuntime> content, TrMediaCommandMessage &reqMessage);
   void nextAudioData(void *pOutput, const void *pInput, ma_uint32 frameCount);
 
 private:

@@ -12,6 +12,8 @@
 
 namespace xr
 {
+  using namespace std;
+
   static uint32_t MIN_FRAME_RATE = 45;
   static uint32_t MAX_FRAME_RATE = 90;
   static TrIdGenerator sessionIdGen(1);
@@ -424,7 +426,7 @@ namespace xr
   XX(SessionRequest)                 \
   XX(EndSessionRequest)
 
-  void Device::handleCommandMessage(TrXRCommandMessage &message, TrContentRuntime *content)
+  void Device::handleCommandMessage(TrXRCommandMessage &message, shared_ptr<TrContentRuntime> content)
   {
     auto contentRenderer = m_Constellation->renderer->findContentRenderer(content);
     if (contentRenderer == nullptr)

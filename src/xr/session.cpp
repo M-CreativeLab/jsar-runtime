@@ -69,11 +69,6 @@ namespace xr
     contextZone->syncData();
   }
 
-  bool TrXRSession::belongsTo(shared_ptr<TrContentRenderer> contentRenderer)
-  {
-    return this->contentRenderer == contentRenderer;
-  }
-
   bool TrXRSession::belongsTo(pid_t contentPid)
   {
     return contentRenderer->getContentPid() == contentPid;

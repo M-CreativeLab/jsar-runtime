@@ -31,6 +31,18 @@ namespace renderer
   class TrRenderer
   {
   public:
+    /**
+     * Create a new renderer with the constellation.
+     *
+     * @param constellation The constellation that the renderer belongs to.
+     * @returns The created `TrRenderer` instance.
+     */
+    static inline std::shared_ptr<TrRenderer> Make(TrConstellation *constellation)
+    {
+      return std::make_shared<TrRenderer>(constellation);
+    }
+
+  public:
     TrRenderer(TrConstellation *constellation);
     ~TrRenderer();
 
@@ -58,14 +70,14 @@ namespace renderer
      *
      * @param content The content to be rendered.
      */
-    void addContentRenderer(TrContentRuntime *content);
+    void addContentRenderer(std::shared_ptr<TrContentRuntime> content);
     /**
      * Find the content renderer by the content pointer.
      *
      * @param content The content to be found.
      * @returns The content renderer if found, otherwise nullptr.
      */
-    std::shared_ptr<TrContentRenderer> findContentRenderer(TrContentRuntime *content);
+    std::shared_ptr<TrContentRenderer> findContentRenderer(std::shared_ptr<TrContentRuntime> content);
     /**
      * Find the content renderer by the content pid.
      *
@@ -81,17 +93,17 @@ namespace renderer
      */
     std::shared_ptr<TrContentRenderer> findContentRendererByPid(pid_t contentPid);
     /**
-     * Remove the content renderer by the content pointer.
-     *
-     * @param content The content to be removed.
-     */
-    void removeContentRenderer(TrContentRuntime *content);
-    /**
      * Remove the content renderer by the content pid.
      *
      * @param contentId The content id.
      */
     void removeContentRenderer(uint32_t contentId);
+    /**
+     * Remove the content renderer by the content pointer.
+     *
+     * @param content The content to be removed.
+     */
+    void removeContentRenderer(TrContentRuntime& content);
 
   public: // API for host update
     void setDrawingViewport(TrViewport viewport);
@@ -118,7 +130,7 @@ namespace renderer
     std::vector<std::shared_ptr<TrContentRenderer>> contentRenderers;
 
   private: // fields for frame request
-    ipc::TrOneShotServer<TrFrameRequestMessage> *frameRequestChanServer = nullptr;
+    std::unique_ptr<ipc::TrOneShotServer<TrFrameRequestMessage>> frameRequestChanServer = nullptr;
     atomic<bool> watcherRunning = false; // This is shared by all the watchers.
 
   private: // fields for frame rate calculation
@@ -131,11 +143,11 @@ namespace renderer
 
   private: // fields for senders management
     std::unique_ptr<thread> chanSendersWatcher = nullptr;
-    shared_mutex contentRendererMutex;
+    std::shared_mutex contentRendererMutex;
 
   private: // fields for command buffer
     std::unique_ptr<thread> commandBufferClientWatcher = nullptr;
-    ipc::TrOneShotServer<TrCommandBufferMessage> *commandBufferChanServer = nullptr;
+    std::unique_ptr<ipc::TrOneShotServer<TrCommandBufferMessage>> commandBufferChanServer = nullptr;
 
     friend class TrContentRenderer;
   };

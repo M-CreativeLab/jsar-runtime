@@ -207,7 +207,7 @@ public:
    * @param content The content to dispatch the event.
    * @returns If the event is dispatched successfully.
    */
-  bool dispatchNativeEvent(events_comm::TrNativeEvent &event, TrContentRuntime *content);
+  bool dispatchNativeEvent(events_comm::TrNativeEvent &event, std::shared_ptr<TrContentRuntime> content);
 
 public:
   /**
@@ -217,35 +217,35 @@ public:
   /**
    * The smart pointer to the native event target.
    */
-  shared_ptr<events_comm::TrNativeEventTarget> nativeEventTarget;
+  std::shared_ptr<events_comm::TrNativeEventTarget> nativeEventTarget;
   /**
    * The smart pointer to the contents manager.
    *
    * A content manager does manage the lifecycle of the contents, it creates, updates, and destroys the contents
    * based on the requests from the embedder.
    */
-  shared_ptr<TrContentManager> contentManager;
+  std::shared_ptr<TrContentManager> contentManager;
   /**
    * The smart pointer to the media manager.
    */
-  shared_ptr<TrMediaManager> mediaManager;
+  std::shared_ptr<TrMediaManager> mediaManager;
   /**
    * The smart pointer to the renderer.
    *
    * A renderer does control the rendering of each content, and it's responsible for managing the graphics context
    * recording and restoring, etc.
    */
-  shared_ptr<TrRenderer> renderer;
+  std::shared_ptr<TrRenderer> renderer;
   /**
    * The smart pointer to the XR device.
    *
    * An XR device does manage the XR session, frames, input sources, etc.
    */
-  shared_ptr<xr::Device> xrDevice;
+  std::shared_ptr<xr::Device> xrDevice;
   /**
    * The performance file system for the host.
    */
-  shared_ptr<TrHostPerformanceFileSystem> perfFs;
+  std::shared_ptr<TrHostPerformanceFileSystem> perfFs;
 
 private:
   TrEmbedder *embedder = nullptr;

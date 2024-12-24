@@ -20,8 +20,8 @@ namespace renderer
     contentRenderer->usingBackupContext = false;
   }
 
-  TrContentRenderer::TrContentRenderer(TrContentRuntime *content, TrConstellation *constellation)
-      : content(content),
+  TrContentRenderer::TrContentRenderer(shared_ptr<TrContentRuntime> content, TrConstellation *constellation)
+      : content(weak_ptr<TrContentRuntime>(content)),
         constellation(constellation),
         xrDevice(constellation->xrDevice.get()),
         targetFrameRate(constellation->renderer->clientDefaultFrameRate),
@@ -40,8 +40,9 @@ namespace renderer
   TrContentRenderer::~TrContentRenderer()
   {
     // frameDispatcherThread->stop();
-    content->resetCommandBufferRequestHandler();
-    content = nullptr;
+    auto contentRef = getContent();
+    if (contentRef != nullptr)
+      contentRef->resetCommandBufferRequestHandler();
     xrDevice = nullptr;
   }
 
@@ -49,23 +50,24 @@ namespace renderer
   {
     lastFrameHasOutOfMemoryError = false;
     lastFrameErrorsCount = 0;
-    content->onCommandBuffersExecuting();
+    getContent()->onCommandBuffersExecuting();
   }
 
   void TrContentRenderer::onCommandBuffersExecuted()
   {
-    content->onCommandBuffersExecuted();
+    auto mContent = getContent();
+    mContent->onCommandBuffersExecuted();
     if (lastFrameHasOutOfMemoryError || lastFrameErrorsCount > 20)
     {
       DEBUG(LOG_TAG_ERROR, "Disposing the content(%d) due to the frame OOM or occurred errors(%d) > 10",
-            content->id, lastFrameErrorsCount);
-      content->dispose();
+            mContent->id, lastFrameErrorsCount);
+      mContent->dispose();
     }
   }
 
   bool TrContentRenderer::sendCommandBufferResponse(TrCommandBufferResponse &res)
   {
-    return content->sendCommandBufferResponse(res);
+    return getContent()->sendCommandBufferResponse(res);
   }
 
   OpenGLAppContextStorage *TrContentRenderer::getOpenGLContext()
@@ -73,14 +75,9 @@ namespace renderer
     return usingBackupContext ? &glContextForBackup : &glContext;
   }
 
-  TrContentRuntime *TrContentRenderer::getContent()
-  {
-    return content;
-  }
-
   pid_t TrContentRenderer::getContentPid()
   {
-    return content->pid;
+    return getContent()->pid;
   }
 
   void TrContentRenderer::onCommandBufferRequestReceived(TrCommandBufferBase *req)
@@ -180,7 +177,7 @@ namespace renderer
     if (xrDevice->enabled())
     {
       auto pendingStereoFramesCount = getPendingStereoFramesCount();
-      for (auto session : content->getXRSessions())
+      for (auto session : getContent()->getXRSessions())
         session->setPendingStereoFramesCount(pendingStereoFramesCount);
     }
 
@@ -190,7 +187,7 @@ namespace renderer
     onStartFrame();
     {
       executeCommandBuffers(false);
-      if (content->used && xrDevice->enabled())
+      if (getContent()->used && xrDevice->enabled())
       {
         // FIXME: This make sure the XR frame will be rendered in the host context.
         constellation->renderer->glHostContext->ConfigureFramebuffer();
@@ -239,7 +236,7 @@ namespace renderer
 
   void TrContentRenderer::executeCommandBuffers(bool asXRFrame, int viewIndex)
   {
-    if (content == nullptr) // FIXME: just skip executing command buffers if content is null, when content process is crashed.
+    if (getContent() == nullptr) // FIXME: just skip executing command buffers if content is null, when content process is crashed.
       return;
 
     if (!asXRFrame)

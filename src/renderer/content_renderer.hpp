@@ -53,14 +53,14 @@ namespace renderer
      * @param constellation The constellation that the content belongs to.
      * @return The created content renderer.
      */
-    static inline std::shared_ptr<TrContentRenderer> Make(TrContentRuntime *content,
+    static inline std::shared_ptr<TrContentRenderer> Make(std::shared_ptr<TrContentRuntime> content,
                                                           TrConstellation *constellation)
     {
       return std::make_shared<TrContentRenderer>(content, constellation);
     }
 
   public:
-    TrContentRenderer(TrContentRuntime *content, TrConstellation *constellation);
+    TrContentRenderer(std::shared_ptr<TrContentRuntime> content, TrConstellation *constellation);
     ~TrContentRenderer();
 
   public: // public lifecycle
@@ -70,7 +70,7 @@ namespace renderer
   public:
     bool sendCommandBufferResponse(TrCommandBufferResponse &res);
     OpenGLAppContextStorage *getOpenGLContext();
-    TrContentRuntime *getContent();
+    inline shared_ptr<TrContentRuntime> getContent() { return content.lock(); }
     pid_t getContentPid();
 
   public:
@@ -83,6 +83,11 @@ namespace renderer
     }
 
   private: // private lifecycle
+    /**
+     * The callback function to handle the command buffer request received.
+     * 
+     * @param req The command buffer request to be handled.
+     */
     void onCommandBufferRequestReceived(TrCommandBufferBase *req);
     void onHostFrame(chrono::time_point<chrono::high_resolution_clock> time);
     void onStartFrame();
@@ -104,7 +109,7 @@ namespace renderer
     void resetFrameRequestChanSenderWith(ipc::TrOneShotClient<TrFrameRequestMessage> *client);
 
   private:
-    TrContentRuntime *content = nullptr;
+    std::weak_ptr<TrContentRuntime> content;
     TrConstellation *constellation = nullptr;
     OpenGLAppContextStorage glContext;
     OpenGLAppContextStorage glContextForBackup;
@@ -112,13 +117,25 @@ namespace renderer
     xr::Device *xrDevice = nullptr;
 
   private: // command buffers & rendering frames
-    shared_mutex commandBufferRequestsMutex;
-    vector<TrCommandBufferBase *> defaultCommandBufferRequests;
-    vector<xr::StereoRenderingFrame *> stereoFramesList;
+    std::shared_mutex commandBufferRequestsMutex;
+    std::vector<TrCommandBufferBase *> defaultCommandBufferRequests;
+    std::vector<xr::StereoRenderingFrame *> stereoFramesList;
     xr::StereoRenderingFrame *stereoFrameForBackup = nullptr;
+    /**
+     * The last frame has OOM error or not.
+     */
     bool lastFrameHasOutOfMemoryError = false;
+    /**
+     * The number of errors occurred in the last frame rendering.
+     */
     size_t lastFrameErrorsCount = 0;
+    /**
+     * The number of draw calls per frame.
+     */
     size_t drawCallsPerFrame = 0;
+    /**
+     * The number to describe the vertices count to be drawn per frame.
+     */
     size_t drawCallsCountPerFrame = 0;
 
   private: // frame rate control

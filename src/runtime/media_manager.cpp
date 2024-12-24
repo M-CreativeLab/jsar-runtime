@@ -9,10 +9,14 @@
 #include <iostream>
 #include <fstream>
 
+using namespace std;
+
 TrSoundSource::TrSoundSource(TrMediaManager *mediaManager,
-                             TrContentRuntime *content,
+                             shared_ptr<TrContentRuntime> content,
                              uint32_t id)
-    : mediaManager(mediaManager), content(content), id(id)
+    : mediaManager(mediaManager),
+      content(content),
+      id(id)
 {
 }
 
@@ -206,7 +210,7 @@ void TrMediaManager::shutdown()
   DEBUG(LOG_TAG_MEDIA, "TrMediaManager::shutdown() done.");
 }
 
-shared_ptr<TrSoundSource> TrMediaManager::createSoundSource(TrContentRuntime *content, uint32_t clientId)
+shared_ptr<TrSoundSource> TrMediaManager::createSoundSource(shared_ptr<TrContentRuntime> content, uint32_t clientId)
 {
   if (TR_UNLIKELY(!initialized || disabled))
     return nullptr;
@@ -217,7 +221,7 @@ shared_ptr<TrSoundSource> TrMediaManager::createSoundSource(TrContentRuntime *co
   return newSound;
 }
 
-void TrMediaManager::iterateSoundSourcesByContent(TrContentRuntime *content, std::function<void(shared_ptr<TrSoundSource>)> callback)
+void TrMediaManager::iterateSoundSourcesByContent(shared_ptr<TrContentRuntime> content, std::function<void(shared_ptr<TrSoundSource>)> callback)
 {
   if (!content)
     return;
@@ -230,7 +234,7 @@ void TrMediaManager::iterateSoundSourcesByContent(TrContentRuntime *content, std
   }
 }
 
-shared_ptr<TrSoundSource> TrMediaManager::findSoundSource(TrContentRuntime *content, uint32_t id)
+shared_ptr<TrSoundSource> TrMediaManager::findSoundSource(shared_ptr<TrContentRuntime> content, uint32_t id)
 {
   shared_lock<shared_mutex> lock(mutexForSoundSources);
   for (auto &soundSource : soundSources)
@@ -241,16 +245,14 @@ shared_ptr<TrSoundSource> TrMediaManager::findSoundSource(TrContentRuntime *cont
   return nullptr;
 }
 
-void TrMediaManager::removeSoundSourcesByContent(TrContentRuntime *content)
+void TrMediaManager::removeSoundSourcesByContent(int contentId)
 {
-  if (!content)
-    return;
-
   unique_lock<shared_mutex> lock(mutexForSoundSources);
   auto it = soundSources.begin();
   while (it != soundSources.end())
   {
-    if ((*it)->content == content)
+    auto item = *it;
+    if (item->content != nullptr && item->content->id == contentId)
       it = soundSources.erase(it);
     else
       ++it;
@@ -279,7 +281,7 @@ void TrMediaManager::onNewChanClient(TrOneShotClient<TrMediaCommandMessage> &cha
     content->onMediaChanConnected(chanClient);
 }
 
-void TrMediaManager::onContentRequest(TrContentRuntime *content, TrMediaCommandMessage &reqMessage)
+void TrMediaManager::onContentRequest(shared_ptr<TrContentRuntime> content, TrMediaCommandMessage &reqMessage)
 {
   if (TR_UNLIKELY(!initialized || disabled)) // Skip request if the media manager is not initialized or disabled.
     return;

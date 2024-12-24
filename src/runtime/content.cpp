@@ -18,45 +18,21 @@
 #include "res/client.bin.h"
 #include "crates/jsar_jsbundle.h"
 
+using namespace std;
+
 TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManager(contentMgr)
 {
   static TrIdGenerator idGen(0x100);
   id = idGen.get();
 }
 
-TrContentRuntime::~TrContentRuntime()
-{
-  auto constellation = getConstellation();
-
-  // Stopping the receiver worker.
-  commandBuffersRecvWorker->stop();
-
-  // Removing the content renderer and command buffer client.
-  auto renderer = constellation->renderer;
-  if (renderer != nullptr)
-  {
-    renderer->removeContentRenderer(this);
-    renderer->removeCommandBufferChanClient(commandBufferChanClient);
-  }
-
-  // Removing the related XR sessions.
-  auto xrDevice = constellation->xrDevice;
-  for (auto session : xrSessionsStack)
-  {
-    if (session != nullptr)
-      xrDevice->endAndRemoveSession(session);
-  }
-  xrSessionsStack.clear();
-  DEBUG(LOG_TAG_CONTENT, "The content runtime(%d) has been destroyed", id);
-}
-
 void TrContentRuntime::preStart()
 {
   available = true;
-  commandBuffersRecvWorker = std::make_unique<WorkerThread>("TrCBWorker", [this](WorkerThread &worker)
-                                                            { recvCommandBuffers(worker, 100); });
+  commandBuffersRecvWorker = make_unique<WorkerThread>("TrCBWorker", [this](WorkerThread &worker)
+                                                       { recvCommandBuffers(worker, 100); });
   auto renderer = contentManager->constellation->renderer;
-  renderer->addContentRenderer(this);
+  renderer->addContentRenderer(shared_from_this());
 
   // Send the create process request to the hive daemon.
   TrDocumentRequestInit init;
@@ -97,7 +73,7 @@ void TrContentRuntime::dispose(bool waitsForExit)
 
   available = false;
   disableRendering = true;
-  contentManager->constellation->mediaManager->removeSoundSourcesByContent(this); // Remove the sound sources.
+  contentManager->constellation->mediaManager->removeSoundSourcesByContent(id); // Remove the sound sources.
   contentManager->hived->terminateClient(id);
   if (waitsForExit)
   {
@@ -324,7 +300,7 @@ void TrContentRuntime::recvMediaRequest()
   if (mediaChanReceiver->recvCommand(mediaMessage, 0))
   {
     auto mediaManager = getConstellation()->mediaManager;
-    mediaManager->onContentRequest(this, mediaMessage);
+    mediaManager->onContentRequest(shared_from_this(), mediaMessage);
   }
 }
 
@@ -338,7 +314,7 @@ bool TrContentRuntime::recvXRCommand(int timeout)
   if (message != nullptr)
   {
     // NOTE: Don't expose the content reference to the XR handler.
-    xrDevice->handleCommandMessage(*message, this);
+    xrDevice->handleCommandMessage(*message, shared_from_this());
     delete message;
     return true;
   }
@@ -374,6 +350,33 @@ bool TrContentRuntime::tickOnFrame()
   return true;
 }
 
+void TrContentRuntime::release()
+{
+  std::cout << "Releasing the content runtime(" << id << ")" << std::endl;
+  auto constellation = getConstellation();
+
+  // Stopping the receiver worker.
+  commandBuffersRecvWorker->stop();
+
+  // Removing the content renderer and command buffer client.
+  auto renderer = constellation->renderer;
+  if (renderer != nullptr)
+  {
+    renderer->removeContentRenderer(id);
+    renderer->removeCommandBufferChanClient(commandBufferChanClient);
+  }
+
+  // Removing the related XR sessions.
+  auto xrDevice = constellation->xrDevice;
+  for (auto session : xrSessionsStack)
+  {
+    if (session != nullptr)
+      xrDevice->endAndRemoveSession(session);
+  }
+  xrSessionsStack.clear();
+  DEBUG(LOG_TAG_CONTENT, "The content runtime(%d) has been destroyed", id);
+}
+
 TrContentManager::TrContentManager(TrConstellation *constellation)
     : constellation(constellation),
       hived(make_unique<TrHiveDaemon>(constellation))
@@ -394,6 +397,7 @@ TrContentManager::~TrContentManager()
     delete eventChanServer;
     eventChanServer = nullptr;
   }
+  DEBUG(LOG_TAG_CONTENT, "ContentManager(%p) is destroyed", this);
 }
 
 bool TrContentManager::initialize()
@@ -481,7 +485,7 @@ shared_ptr<TrContentRuntime> TrContentManager::makeContent()
   if (contentToUse == nullptr)
   {
     // Create a new content runtime when there is no available content.
-    contentToUse = make_shared<TrContentRuntime>(this);
+    contentToUse = TrContentRuntime::Make(this);
     {
       unique_lock<shared_mutex> lock(contentsMutex);
       contentToUse->used = true;
@@ -572,7 +576,7 @@ void TrContentManager::onTryDestroyingContents()
     unique_lock<shared_mutex> lock(contentsMutex);
     for (auto it = contents.begin(); it != contents.end();)
     {
-      auto content = *it;
+      shared_ptr<TrContentRuntime> content = *it;
       if (content->shouldDestroy)
         it = contents.erase(it);
       else
@@ -593,7 +597,7 @@ void TrContentManager::onRpcRequest(std::shared_ptr<events_comm::TrNativeEvent> 
     DEBUG(LOG_TAG_ERROR, "Failed to find the content(%d) for the RpcRequest", detail.documentId);
     return;
   }
-  constellation->dispatchNativeEvent(*event, content.get());
+  constellation->dispatchNativeEvent(*event, content);
 }
 
 void TrContentManager::onDocumentEvent(std::shared_ptr<events_comm::TrNativeEvent> event)
@@ -609,7 +613,7 @@ void TrContentManager::onDocumentEvent(std::shared_ptr<events_comm::TrNativeEven
     return;
   }
   content->logDocumentEvent(detail);
-  constellation->dispatchNativeEvent(*event, content.get());
+  constellation->dispatchNativeEvent(*event, content);
 }
 
 /**
@@ -824,7 +828,7 @@ void TrContentManager::preparePreContent()
     if (chrono::system_clock::now() < preContentScheduledTimepoint)
       return;
 
-    auto preContent = make_shared<TrContentRuntime>(this);
+    auto preContent = TrContentRuntime::Make(this);
     {
       unique_lock<shared_mutex> lock(contentsMutex);
       contents.push_back(preContent);

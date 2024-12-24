@@ -69,8 +69,12 @@ public: // API for lifecycle
   bool onFrame();
   /**
    * The lifecycle `onEvent` should be called once an event is received from a specfic (content) source.
+   * 
+   * @param event The native event from the source.
+   * @param content The content runtime which the event is from.
+   * @returns true if the event is handled, false otherwise.
    */
-  virtual bool onEvent(events_comm::TrNativeEvent &event, TrContentRuntime *content) = 0;
+  virtual bool onEvent(events_comm::TrNativeEvent &event, std::shared_ptr<TrContentRuntime> content) = 0;
 
 public:
   bool isEmbeddingWith(TrHostEngine engine);

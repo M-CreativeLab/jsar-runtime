@@ -230,6 +230,12 @@ public:
    */
   bool OnFrameStarted();
 
+protected:
+  /**
+   * @returns the `renderer::TrRenderer` shared pointer to use.
+   */
+  inline std::shared_ptr<renderer::TrRenderer> GetRenderer() { return renderer.lock(); }
+
 private:
   /**
    * This method is used to record the frame time and report the GPU busy status by checking the time difference between
@@ -313,7 +319,7 @@ private:
 
 protected:
   TrConstellation *constellation = nullptr;
-  renderer::TrRenderer *renderer = nullptr;
+  std::weak_ptr<renderer::TrRenderer> renderer;
 };
 
 // Create a graphics API implementation instance for the given API type.

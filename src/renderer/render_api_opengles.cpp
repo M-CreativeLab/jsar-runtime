@@ -799,11 +799,12 @@ private:
 		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		auto target = req->target;
 		GLuint framebuffer;
+
 		/**
 		 * FIXME: When framebuffer is -1, assume to bind the host framebuffer.
 		 */
 		if (req->framebuffer == -1)
-			framebuffer = renderer->getOpenGLContext()->GetFramebuffer();
+			framebuffer = GetRenderer()->getOpenGLContext()->GetFramebuffer();
 		else
 			framebuffer = m_GLObjectManager->FindFramebuffer(req->framebuffer);
 
@@ -1018,7 +1019,7 @@ private:
 		auto &m_GLObjectManager = reqContentRenderer->getOpenGLContext()->m_GLObjectManager;
 		auto target = req->target;
 		auto texture = m_GLObjectManager->FindTexture(req->texture);
-		renderer->getOpenGLContext()->RecordTextureBindingFromHost();
+		GetRenderer()->getOpenGLContext()->RecordTextureBindingFromHost();
 		glBindTexture(target, texture);
 
 		auto contentGlContext = reqContentRenderer->getOpenGLContext();
@@ -2031,12 +2032,12 @@ bool RenderAPI_OpenGLCoreES::SupportsWebGL2()
 
 int RenderAPI_OpenGLCoreES::GetDrawingBufferWidth()
 {
-	return renderer->getOpenGLContext()->GetViewport().width;
+	return GetRenderer()->getOpenGLContext()->GetViewport().width;
 }
 
 int RenderAPI_OpenGLCoreES::GetDrawingBufferHeight()
 {
-	return renderer->getOpenGLContext()->GetViewport().height;
+	return GetRenderer()->getOpenGLContext()->GetViewport().height;
 }
 
 #ifdef ANDROID
@@ -2155,7 +2156,7 @@ bool RenderAPI_OpenGLCoreES::ExecuteCommandBuffer(
 	auto contextBaseState = OpenGLAppContextStorage("tmp", contentGlContext);
 
 	ApiCallOptions callOptions;
-	callOptions.printsCall = renderer->isTracingEnabled;
+	callOptions.printsCall = GetRenderer()->isTracingEnabled;
 
 	for (auto commandBuffer : commandBuffers)
 	{

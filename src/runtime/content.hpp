@@ -43,7 +43,7 @@ class TrContentManager;
  * The content runtime is a class that manages the corresponding content process, it's responsible for the lifecycle of the content
  * process, such as starting, pausing, resuming, and disposing.
  */
-class TrContentRuntime
+class TrContentRuntime : public std::enable_shared_from_this<TrContentRuntime>
 {
   friend class TrContentManager;
   friend class TrHiveDaemon;
@@ -52,12 +52,26 @@ class TrContentRuntime
 
 public:
   /**
+   * Create a new content runtime instance.
+   *
+   * @param manager The content manager instance.
+   * @returns The shared pointer of the content runtime.
+   */
+  static std::shared_ptr<TrContentRuntime> Make(TrContentManager *manager)
+  {
+    return std::shared_ptr<TrContentRuntime>(new TrContentRuntime(manager), [](TrContentRuntime *content)
+                                             { content->release();
+                                               delete content; });
+  }
+
+public:
+  /**
    * Construct a new content runtime with the given content manager.
    *
    * @param manager The content manager instance.
    */
   TrContentRuntime(TrContentManager *manager);
-  ~TrContentRuntime();
+  ~TrContentRuntime() = default;
 
 public:
   /**
@@ -228,6 +242,7 @@ private:
   bool recvXRCommand(int timeout = 0);
   bool tryDispatchRequest();
   bool tickOnFrame();
+  void release();
 
 public:
   /**
@@ -353,6 +368,10 @@ private:
  */
 class TrContentManager
 {
+  friend class TrContentRuntime;
+  friend class TrConstellation;
+  friend class TrRenderer;
+
 public:
   TrContentManager(TrConstellation *constellation);
   ~TrContentManager();
@@ -365,21 +384,25 @@ public:
   /**
    * Make a new content instance, this doesn't start the content process, just created a `TrContentRuntime` instance and added it
    * to the managed list.
+   *
+   * @returns The content instance.
    */
-  shared_ptr<TrContentRuntime> makeContent();
+  std::shared_ptr<TrContentRuntime> makeContent();
   /**
    * Get the content instance by its id.
    *
    * @param id The content id.
    * @param includePreContent If true, it will return the pre-content instance if the id is matched.
+   * @returns The content instance if found, or nullptr if not found.
    */
-  shared_ptr<TrContentRuntime> getContent(uint32_t id, bool includePreContent = false);
+  std::shared_ptr<TrContentRuntime> getContent(uint32_t id, bool includePreContent = false);
   /**
    * Find the content instance by its client process id.
    *
    * @param pid The client process id.
+   * @returns The content instance if found, or nullptr if not found.
    */
-  shared_ptr<TrContentRuntime> findContentByPid(pid_t pid);
+  std::shared_ptr<TrContentRuntime> findContentByPid(pid_t pid);
   /**
    * Dispose the content instance, it will release the related resources and terminate the client process.
    *
@@ -433,8 +456,4 @@ private: // pre-content
 private: // channels & workers
   TrOneShotServer<events_comm::TrNativeEventMessage> *eventChanServer = nullptr;
   unique_ptr<WorkerThread> eventChanWatcher;
-
-  friend class TrContentRuntime;
-  friend class TrConstellation;
-  friend class TrRenderer;
 };

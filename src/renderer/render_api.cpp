@@ -7,6 +7,8 @@
 #include "runtime/content.hpp"
 #include "xr/frame.hpp"
 
+using namespace std;
+
 RenderAPI *RenderAPI::s_instance = nullptr;
 RenderAPI *RenderAPI::Create(UnityGfxRenderer apiType, TrConstellation *constellation)
 {
@@ -15,7 +17,7 @@ RenderAPI *RenderAPI::Create(UnityGfxRenderer apiType, TrConstellation *constell
 	if (s_instance != nullptr)
 	{
 		s_instance->constellation = constellation;
-		s_instance->renderer = constellation->renderer.get();
+		s_instance->renderer = weak_ptr<TrRenderer>(constellation->renderer);
 		return s_instance;
 	}
 	else

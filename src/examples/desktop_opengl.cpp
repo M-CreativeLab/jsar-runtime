@@ -139,7 +139,7 @@ public:
   }
 
 public:
-  bool onEvent(events_comm::TrNativeEvent &event, TrContentRuntime *content) override
+  bool onEvent(events_comm::TrNativeEvent &event, std::shared_ptr<TrContentRuntime> content) override
   {
     if (event.type == events_comm::TrNativeEventType::RpcRequest)
     {

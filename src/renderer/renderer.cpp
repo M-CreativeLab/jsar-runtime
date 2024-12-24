@@ -1,3 +1,5 @@
+#include <iostream>
+#include <sstream>
 #include <assert.h>
 #include "renderer.hpp"
 #include "render_api.hpp"
@@ -12,22 +14,33 @@ namespace renderer
   static uint32_t MIN_FRAME_RATE = 60;
   static uint32_t MAX_FRAME_RATE = 90;
 
-  TrRenderer::TrRenderer(TrConstellation *constellation) : constellation(constellation), api(nullptr)
+  using FrameRequestChanServer = ipc::TrOneShotServer<TrFrameRequestMessage>;
+  using CommandBufferChanServer = ipc::TrOneShotServer<TrCommandBufferMessage>;
+
+  TrRenderer::TrRenderer(TrConstellation *constellation)
+      : constellation(constellation),
+        api(nullptr),
+        frameRequestChanServer(std::make_unique<FrameRequestChanServer>("frameRequestChan")),
+        commandBufferChanServer(std::make_unique<CommandBufferChanServer>("commandBufferChan"))
   {
-    frameRequestChanServer = new ipc::TrOneShotServer<TrFrameRequestMessage>("frameRequestChan");
-    commandBufferChanServer = new ipc::TrOneShotServer<TrCommandBufferMessage>("commandBufferChan");
   }
 
   TrRenderer::~TrRenderer()
   {
     api = nullptr;
     constellation = nullptr;
-    if (glHostContext != nullptr)
-      delete glHostContext;
-    delete frameRequestChanServer;
-    delete commandBufferChanServer;
 
+    // TODO: use unique_ptr for `glHostContext`.
+    if (glHostContext != nullptr)
+    {
+      delete glHostContext;
+      glHostContext = nullptr;
+    }
     contentRenderers.clear();
+
+    ostringstream threadIdStrStream;
+    threadIdStrStream << std::this_thread::get_id();
+    DEBUG(LOG_TAG_RENDERER, "Renderer(%p) is destroyed at %s", this, threadIdStrStream.str().c_str());
   }
 
   void TrRenderer::initialize()
@@ -66,7 +79,7 @@ namespace renderer
     {
       for (auto contentRenderer : contentRenderers)
       {
-        if (contentRenderer->content->disableRendering) // Skip the content renderer if this is disabled at content.
+        if (contentRenderer->getContent()->disableRendering) // Skip the content renderer if this is disabled at content.
           continue;
         contentRenderer->onHostFrame(tickingTimepoint);
         totalDrawCalls += contentRenderer->drawCallsPerFrame;
@@ -150,7 +163,7 @@ namespace renderer
     return glHostContext;
   }
 
-  void TrRenderer::addContentRenderer(TrContentRuntime *content)
+  void TrRenderer::addContentRenderer(std::shared_ptr<TrContentRuntime> content)
   {
     if (api == nullptr)
       return;
@@ -163,11 +176,11 @@ namespace renderer
     }
   }
 
-  shared_ptr<TrContentRenderer> TrRenderer::findContentRenderer(TrContentRuntime *content)
+  shared_ptr<TrContentRenderer> TrRenderer::findContentRenderer(std::shared_ptr<TrContentRuntime> content)
   {
     for (auto contentRenderer : contentRenderers)
     {
-      if (contentRenderer->content == content)
+      if (contentRenderer->getContent() == content)
         return contentRenderer;
     }
     return nullptr;
@@ -178,7 +191,7 @@ namespace renderer
     shared_lock<shared_mutex> lock(contentRendererMutex);
     for (auto contentRenderer : contentRenderers)
     {
-      if (contentRenderer->content->id == contentId)
+      if (contentRenderer->getContent()->id == contentId)
         return contentRenderer;
     }
     return nullptr;
@@ -189,25 +202,10 @@ namespace renderer
     shared_lock<shared_mutex> lock(contentRendererMutex);
     for (auto contentRenderer : contentRenderers)
     {
-      if (contentRenderer->content->pid == contentPid)
+      if (contentRenderer->getContentPid() == contentPid)
         return contentRenderer;
     }
     return nullptr;
-  }
-
-  void TrRenderer::removeContentRenderer(TrContentRuntime *content)
-  {
-    if (content == nullptr || contentRenderers.size() == 0)
-      return;
-    for (auto it = contentRenderers.begin(); it != contentRenderers.end(); it++)
-    {
-      auto contentRenderer = *it;
-      if (contentRenderer->content == content)
-      {
-        contentRenderers.erase(it);
-        break;
-      }
-    }
   }
 
   void TrRenderer::removeContentRenderer(uint32_t contentId)
@@ -215,15 +213,21 @@ namespace renderer
     unique_lock<shared_mutex> lock(contentRendererMutex);
     if (contentRenderers.size() == 0)
       return;
+
     for (auto it = contentRenderers.begin(); it != contentRenderers.end(); it++)
     {
-      auto contentRenderer = *it;
-      if (contentRenderer->content->id == contentId)
+      auto content = (*it)->getContent();
+      if (content != nullptr && content->id == contentId)
       {
         contentRenderers.erase(it);
         break;
       }
     }
+  }
+
+  void TrRenderer::removeContentRenderer(TrContentRuntime& content)
+  {
+    removeContentRenderer(content.id);
   }
 
   void TrRenderer::setDrawingViewport(TrViewport viewport)

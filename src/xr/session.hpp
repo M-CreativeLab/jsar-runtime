@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <glm/glm.hpp>
-#include "idgen.hpp"
+#include <idgen.hpp>
 #include "common/xr/types.hpp"
 #include "common/classes.hpp"
 #include "common/collision/ray.hpp"
@@ -42,13 +42,6 @@ namespace xr
      * Execute the session tick.
      */
     void tick();
-    /**
-     * Check if this WebXR session belongs to the content by `contentRenderer` pointer.
-     *
-     * @param contentRenderer The content renderer.
-     * @returns true if the session belongs to the content, otherwise false.
-     */
-    bool belongsTo(std::shared_ptr<TrContentRenderer> contentRenderer);
     /**
      * Check if this WebXR session belongs to the content by its pid.
      */

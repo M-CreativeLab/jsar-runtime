@@ -5,6 +5,8 @@
 #include "./media_manager.hpp"
 #include "./embedder.hpp"
 
+using namespace std;
+
 void __tr_empty()
 {
   /**
@@ -16,19 +18,21 @@ TrConstellationInit::TrConstellationInit()
 {
 }
 
-TrConstellation::TrConstellation(TrEmbedder *embedder) : embedder(embedder)
+TrConstellation::TrConstellation(TrEmbedder *embedder)
+    : embedder(embedder)
 {
   srand(static_cast<unsigned int>(time(nullptr)));
 
   nativeEventTarget = std::make_shared<events_comm::TrNativeEventTarget>();
   contentManager = std::make_shared<TrContentManager>(this);
   mediaManager = std::make_shared<TrMediaManager>(this);
-  renderer = std::make_shared<TrRenderer>(this);
+  renderer = TrRenderer::Make(this);
   xrDevice = std::make_shared<xr::Device>(this);
 }
 
 TrConstellation::~TrConstellation()
 {
+  DEBUG(LOG_TAG_CONSTELLATION, "Constellation(%p) is destroyed.", this);
 }
 
 bool TrConstellation::configure(TrConstellationInit &init)
@@ -114,7 +118,7 @@ uint32_t TrConstellation::open(string url, optional<TrDocumentRequestInit> init)
   return content->id;
 }
 
-bool TrConstellation::dispatchNativeEvent(events_comm::TrNativeEvent &event, TrContentRuntime *content)
+bool TrConstellation::dispatchNativeEvent(events_comm::TrNativeEvent &event, shared_ptr<TrContentRuntime> content)
 {
   assert(embedder != nullptr);
   return embedder->onEvent(event, content);
