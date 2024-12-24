@@ -9,7 +9,7 @@
 #include "./transform.hpp"
 #include "./meshes.hpp"
 #include "./materials.hpp"
-#include "./renderer.hpp"
+#include "./client_renderer.hpp"
 
 #include "../graphics/webgl_context.hpp"
 #include "../xr/device.hpp"

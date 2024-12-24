@@ -21,6 +21,23 @@ namespace client_graphics
     throw std::runtime_error(msg);                                                                          \
   }
 
+  void WebGLState::Restore(WebGLState &state, std::shared_ptr<WebGL2Context> context)
+  {
+    context->useProgram(state.program.value_or(nullptr));
+    if (state.vertexBuffer.has_value())
+      context->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, state.vertexBuffer.value());
+
+    if (state.vertexArray.has_value())
+      context->bindVertexArray(state.vertexArray.value());
+    else
+      context->bindBuffer(WebGLBufferBindingTarget::kElementArrayBuffer, state.elementBuffer.value_or(nullptr));
+
+    if (state.framebuffer.has_value())
+      context->bindFramebuffer(WebGLFramebufferBindingTarget::kFramebuffer, state.framebuffer.value());
+    if (state.renderbuffer.has_value())
+      context->bindRenderbuffer(WebGLRenderbufferBindingTarget::kRenderbuffer, state.renderbuffer.value());
+  }
+
   WebGLContext::WebGLContext(ContextAttributes &attrs, bool isWebGL2)
       : contextAttributes(attrs), isWebGL2_(isWebGL2)
   {
@@ -180,8 +197,9 @@ namespace client_graphics
 
   void WebGLContext::useProgram(std::shared_ptr<WebGLProgram> program)
   {
-    auto req = UseProgramCommandBufferRequest(program->id);
+    auto req = UseProgramCommandBufferRequest(program == nullptr ? 0 : program->id);
     sendCommandBufferRequest(req);
+    clientState_.program = program;
   }
 
   void WebGLContext::bindAttribLocation(std::shared_ptr<WebGLProgram> program, uint32_t index, const std::string &name)
@@ -350,6 +368,12 @@ namespace client_graphics
     }
     auto req = BindBufferCommandBufferRequest(static_cast<uint32_t>(target), bufferId);
     sendCommandBufferRequest(req);
+
+    // Record the buffer to the client state
+    if (target == WebGLBufferBindingTarget::kArrayBuffer)
+      clientState_.vertexBuffer = buffer;
+    else if (target == WebGLBufferBindingTarget::kElementArrayBuffer)
+      clientState_.elementBuffer = buffer;
   }
 
   void WebGLContext::bufferData(WebGLBufferBindingTarget target, size_t size, WebGLBufferUsage usage)
@@ -406,6 +430,7 @@ namespace client_graphics
     }
     auto req = BindFramebufferCommandBufferRequest(static_cast<uint32_t>(target), framebufferId);
     sendCommandBufferRequest(req);
+    clientState_.framebuffer = framebuffer;
   }
 
   void WebGLContext::framebufferRenderbuffer(
@@ -482,6 +507,7 @@ namespace client_graphics
     }
     auto req = BindRenderbufferCommandBufferRequest(static_cast<uint32_t>(target), renderbufferId);
     sendCommandBufferRequest(req);
+    clientState_.renderbuffer = renderbuffer;
   }
 
   void WebGLContext::renderbufferStorage(WebGLRenderbufferBindingTarget target, int internalformat, int width, int height)
@@ -1453,6 +1479,7 @@ namespace client_graphics
     }
     auto req = BindVertexArrayCommandBufferRequest(vaoId);
     sendCommandBufferRequest(req);
+    clientState_.vertexArray = vertexArray;
   }
 
   void WebGL2Context::blitFramebuffer(

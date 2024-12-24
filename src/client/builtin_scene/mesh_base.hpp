@@ -73,6 +73,7 @@ namespace builtin_scene
   {
   public:
     static const VertexFormat format = VertexFormat::kUnknown;
+    static const int formatType = 0;
     using V = void;
   };
 
@@ -81,6 +82,7 @@ namespace builtin_scene
   {
   public:
     static const VertexFormat format = VertexFormat::kFloat32x2;
+    static const int formatType = WEBGL_FLOAT;
     using V = glm::vec2;
   };
 
@@ -89,6 +91,7 @@ namespace builtin_scene
   {
   public:
     static const VertexFormat format = VertexFormat::kFloat32x3;
+    static const int formatType = WEBGL_FLOAT;
     using V = glm::vec3;
   };
 
@@ -97,6 +100,7 @@ namespace builtin_scene
   {
   public:
     static const VertexFormat format = VertexFormat::kFloat32x4;
+    static const int formatType = WEBGL_FLOAT;
     using V = glm::vec4;
   };
 
@@ -105,6 +109,7 @@ namespace builtin_scene
   {
   public:
     static const VertexFormat format = VertexFormat::kUint16x2;
+    static const int formatType = WEBGL_UNSIGNED_INT;
     using V = glm::u16vec2;
   };
 
@@ -113,6 +118,7 @@ namespace builtin_scene
   {
   public:
     static const VertexFormat format = VertexFormat::kUint16x4;
+    static const int formatType = WEBGL_UNSIGNED_INT;
     using V = glm::u16vec4;
   };
 
@@ -162,6 +168,11 @@ namespace builtin_scene
 
   public:
     virtual VertexFormat format() = 0;
+    virtual size_t formatSize() = 0;
+    virtual int formatType() = 0;
+    virtual bool normalized() = 0;
+    virtual size_t stride() = 0;
+    virtual size_t offset() = 0;
   };
 
   /**
@@ -224,7 +235,31 @@ namespace builtin_scene
     void setValues(std::vector<ValueType> values) { this->values = values; }
 
   public:
+    /**
+     * The vertex format.
+     */
     VertexFormat format() override { return Traits::format; }
+    /**
+     * the number of components per generic vertex attribute. Must be 1, 2, 3, 4. The initial value is 4.
+     */
+    size_t formatSize() override { return N; }
+    /**
+     * the data type of each component in the array, such as `WEBGL_FLOAT`, `WEBGL_UNSIGNED_INT`, etc.
+     */
+    int formatType() override { return Traits::formatType; }
+    /**
+     * Whether fixed-point data values should be normalized (`WEBGL_TRUE`) or converted directly as fixed-point values
+     * (`WEBGL_FALSE`) when they are accessed.
+     */
+    bool normalized() override { return false; }
+    /**
+     * The byte offset between consecutive generic vertex attributes.
+     */
+    size_t stride() override { return sizeof(ValueType); }
+    /**
+     * A pointer to the first generic vertex attribute in the array.
+     */
+    size_t offset() override { return 0; }
 
   public:
     /**
@@ -335,6 +370,10 @@ namespace builtin_scene
      * @returns The mesh indices.
      */
     inline Indices<uint32_t> indices() { return indices_; }
+    /**
+     * @returns The mesh vertex attributes.
+     */
+    inline std::unordered_map<MeshVertexAttributeId, std::shared_ptr<IMeshVertexAttributeData>> &attributes() { return attributes_; }
 
   public:
     /**

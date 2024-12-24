@@ -219,6 +219,32 @@ namespace client_graphics
   };
 
   /**
+   * The `WebGLState` class represents the current state of the `WebGLRenderingContext` object.
+   */
+  class WebGLState
+  {
+  public:
+    /**
+     * It restores the given `WebGLState` object to the current rendering state.
+     * 
+     * @param state The `WebGLState` object to restore.
+     * @param context The `WebGL2Context` object to restore the state to.
+     */
+    static void Restore(WebGLState &state, std::shared_ptr<WebGL2Context> context);
+
+  public:
+    WebGLState() = default;
+
+  public:
+    std::optional<std::shared_ptr<WebGLProgram>> program = std::nullopt;
+    std::optional<std::shared_ptr<WebGLVertexArray>> vertexArray = std::nullopt;
+    std::optional<std::shared_ptr<WebGLBuffer>> vertexBuffer = std::nullopt;
+    std::optional<std::shared_ptr<WebGLBuffer>> elementBuffer = std::nullopt;
+    std::optional<std::shared_ptr<WebGLFramebuffer>> framebuffer = std::nullopt;
+    std::optional<std::shared_ptr<WebGLRenderbuffer>> renderbuffer = std::nullopt;
+  };
+
+  /**
    * The `WebGLContext` class implements the WebGLRenderingContext interface in C/C++ at the client-side, this is used to
    * implement the WebGL API, and support native C/C++ renderer.
    */
@@ -672,6 +698,12 @@ namespace client_graphics
     }
 
   public:
+    /**
+     * @returns the client state of the WebGL context.
+     */
+    WebGLState &clientState() { return clientState_; }
+
+  public:
     ContextAttributes contextAttributes;
     int maxCombinedTextureImageUnits;
     int maxCubeMapTextureSize;
@@ -690,6 +722,7 @@ namespace client_graphics
   protected:
     TrClientContextPerProcess *clientContext_;
     TrViewport viewport_;
+    WebGLState clientState_;
     WebGLError lastError_ = WebGLError::kNoError;
     std::optional<std::vector<std::string>> supportedExtensions_ = std::nullopt;
     bool isWebGL2_ = false;
@@ -712,7 +745,7 @@ namespace client_graphics
   public:
     /**
      * It creates a new WebGL2Context object.
-     * 
+     *
      * @param attrs The context attributes.
      * @returns The created WebGL2Context object.
      */

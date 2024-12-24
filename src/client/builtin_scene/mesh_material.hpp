@@ -21,8 +21,19 @@ namespace builtin_scene
     }
 
   public:
-    inline bool isInitialized() { return initialized_; }
-    inline void setInitialized(bool initialized) { initialized_ = initialized; }
+    inline std::shared_ptr<client_graphics::WebGLProgram> program()
+    {
+      return program_;
+    }
+    inline void initialize(std::shared_ptr<client_graphics::WebGLProgram> program)
+    {
+      if (program == nullptr)
+        throw std::runtime_error("The program is not initialized.");
+
+      program_ = program;
+      initialized_ = true;
+    }
+    inline bool initialized() { return initialized_; }
     inline ShaderRef vertexShader() const
     {
       return handle_->vertexShader();
