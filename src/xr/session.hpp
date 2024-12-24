@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <glm/glm.hpp>
 #include "idgen.hpp"
 #include "common/xr/types.hpp"
@@ -18,21 +19,21 @@ namespace xr
   public:
     /**
      * Make a new shared instance of `xr::TrXRSession`.
-     * 
+     *
      * @param id The session id.
      * @param xrDevice The XR device.
      * @param contentRenderer The content renderer.
      * @param mode The session mode.
      * @param init The session initialization info.
      */
-    static std::shared_ptr<TrXRSession> Make(uint32_t id, Device *xrDevice, TrContentRenderer *contentRenderer,
+    static std::shared_ptr<TrXRSession> Make(uint32_t id, Device *xrDevice, std::shared_ptr<TrContentRenderer> contentRenderer,
                                              TrXRSessionMode mode, TrXRSessionInit &init)
     {
       return std::make_shared<TrXRSession>(id, xrDevice, contentRenderer, mode, init);
     }
 
   public:
-    TrXRSession(uint32_t id, Device *xrDevice, TrContentRenderer *contentRenderer,
+    TrXRSession(uint32_t id, Device *xrDevice, std::shared_ptr<TrContentRenderer> contentRenderer,
                 TrXRSessionMode mode, TrXRSessionInit &init);
     ~TrXRSession();
 
@@ -42,15 +43,18 @@ namespace xr
      */
     void tick();
     /**
-     * Check if the session belongs to the content by `contentRenderer` pointer.
+     * Check if this WebXR session belongs to the content by `contentRenderer` pointer.
+     *
+     * @param contentRenderer The content renderer.
+     * @returns true if the session belongs to the content, otherwise false.
      */
-    bool belongsTo(TrContentRenderer *contentRenderer);
+    bool belongsTo(std::shared_ptr<TrContentRenderer> contentRenderer);
     /**
-     * Check if the session belongs to the content by its pid.
+     * Check if this WebXR session belongs to the content by its pid.
      */
     bool belongsTo(pid_t contentPid);
     /**
-     * Check if this session is active.
+     * Check if this WebXR session is active.
      *
      * @returns true if the session is active, otherwise false.
      */
@@ -134,7 +138,7 @@ namespace xr
   private:
     Device *xrDevice = nullptr;
     TrConstellation *constellation = nullptr;
-    TrContentRenderer *contentRenderer = nullptr;
+    std::shared_ptr<TrContentRenderer> contentRenderer = nullptr;
     /**
      * The session context zone for session-related shared data to client-side.
      */

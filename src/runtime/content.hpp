@@ -36,10 +36,26 @@ using namespace ipc;
 
 #define INVALID_PID -1
 
+// Forward declarations
 class TrContentManager;
+
+/**
+ * The content runtime is a class that manages the corresponding content process, it's responsible for the lifecycle of the content
+ * process, such as starting, pausing, resuming, and disposing.
+ */
 class TrContentRuntime
 {
+  friend class TrContentManager;
+  friend class TrHiveDaemon;
+  friend class renderer::TrRenderer;
+  friend class renderer::TrContentRenderer;
+
 public:
+  /**
+   * Construct a new content runtime with the given content manager.
+   *
+   * @param manager The content manager instance.
+   */
   TrContentRuntime(TrContentManager *manager);
   ~TrContentRuntime();
 
@@ -51,6 +67,8 @@ public:
   void preStart();
   /**
    * Start a content process with the given initialization options, and starts a command buffer receiver worker.
+   *
+   * @param init The initialization options for the content.
    */
   void start(TrDocumentRequestInit &init);
   /**
@@ -86,7 +104,13 @@ public: // lifecycle which is called by other classes
   void onClientProcessExited(int exitCode);
 
 public: // reference methods
+  /**
+   * @returns the constellation instance.
+   */
   TrConstellation *getConstellation();
+  /**
+   * @returns the WebXR device instance.
+   */
   xr::Device *getXrDevice();
 
 public: // command buffer methods
@@ -152,27 +176,31 @@ public: // media methods
    */
   bool dispatchMediaEvent(media_comm::TrMediaCommandBase &event);
 
-public: // xr methods
+public: // WebXR methods
   /**
-   * When the content's client is connected to the server side XR command channel.
+   * When the content's client is connected to the server-side WebXR command channel.
+   *
+   * @param client The channel client for the WebXR command.
    */
   void onXRCommandChanConnected(TrOneShotClient<xr::TrXRCommandMessage> &client);
   /**
-   * Send a XR command response to the content's client.
+   * It responds a WebXR command response.
    *
+   * @tparam CommandType The XR command type.
    * @param resp The XR command response to send.
+   * @returns true if the response is sent successfully.
    */
   template <typename CommandType>
-  bool sendXRCommandResponse(xr::TrXRCommandBase<CommandType> &resp)
+  inline bool sendXRCommandResponse(xr::TrXRCommandBase<CommandType> &resp)
   {
-    if (xrCommandChanSender != nullptr)
-      return xrCommandChanSender->sendCommand(resp);
-    return false;
+    return (xrCommandChanSender != nullptr)
+               ? xrCommandChanSender->sendCommand(resp)
+               : false;
   }
   /**
    * @returns a `std::vector` of the `XRSession` instances, which includes all the WebXR sessions by the content.
    */
-  vector<xr::TrXRSession *>& getXRSessions() { return xrSessionsStack; }
+  inline vector<xr::TrXRSession *> &getXRSessions() { return xrSessionsStack; }
   /**
    * Get the current active XRSession, it means the top of the sessions stack.
    *
@@ -180,11 +208,16 @@ public: // xr methods
    */
   xr::TrXRSession *getActiveXRSession();
   /**
-   * Append a XRSession to the content's XR sessions stack.
+   * Append a WebXR session to the content's XR sessions stack.
+   *
+   * @param session The `xr::XRSession` pointer to append.
    */
   void appendXRSession(xr::TrXRSession *session);
   /**
-   * Remove the XRSession from the content's XR sessions stack.
+   * Remove the WebXR session from the content's XR sessions stack.
+   *
+   * @param session The `xr::XRSession` pointer to remove.
+   * @returns true if the session is removed successfully.
    */
   bool removeXRSession(xr::TrXRSession *session);
 
@@ -222,6 +255,9 @@ public:
   atomic<int> pid = INVALID_PID;
 
 private:
+  /**
+   * The content manager.
+   */
   TrContentManager *contentManager;
   /**
    * The content's initialization options.
@@ -238,7 +274,16 @@ private:
    * dispatch the request.
    */
   bool isRequestDispatched = true;
+  /**
+   * The flag `used` is to indicate the content is used, each pre-started content would be marked as not used (`false`), only the call
+   * to `start()` will set this flag to `true`.
+   *
+   * This flag will be used to filter the content that is used or not used.
+   */
   atomic<bool> used = false;
+  /**
+   * The flag `started` is to indicate the content is started, it's set to true when the client process is started.
+   */
   atomic<bool> started = false;
   /**
    * The flag `available` is to indicate the content is available for the client process, it's set to true when the client process is
@@ -300,11 +345,6 @@ private:
   mutex commandBufferExecutingMutex;
   condition_variable commandBufferExecutingCv;
   atomic<bool> isCommandBufferRequestsExecuting = false;
-
-  friend class TrContentManager;
-  friend class TrHiveDaemon;
-  friend class renderer::TrRenderer;
-  friend class renderer::TrContentRenderer;
 };
 
 /**
@@ -354,8 +394,23 @@ private:
   void onDocumentEvent(std::shared_ptr<events_comm::TrNativeEvent> event);
 
 private:
+  /**
+   * Install the executable and its dependencies libraries to the runtime directory.
+   *
+   * This method will install the TransmuteClient executable from the library itself to the runtime directory, and it will also
+   * install the dependencies libraries such as `libnode.so`.
+   */
   void installExecutable();
+  /**
+   * Install the bundled JavaScript scripts, which are used to bootstrap the content runtime at client process.
+   */
   void installScripts();
+  /**
+   * Start the hived process, that is, the Hive Daemon, which is the incubator of the content client processes.
+   *
+   * The `TrHiveDaemon` instance is an agent for the hive daemon process, it provides the methods to create, terminate and messaging
+   * with the content processes.
+   */
   void startHived();
   void preparePreContent();
   void acceptEventChanClients(int timeout = 100);
@@ -363,12 +418,12 @@ private:
 private:
   TrConstellation *constellation = nullptr;
   shared_mutex contentsMutex;
-  vector<shared_ptr<TrContentRuntime>> contents;
-  unique_ptr<TrHiveDaemon> hived;
+  std::vector<std::shared_ptr<TrContentRuntime>> contents;
+  std::unique_ptr<TrHiveDaemon> hived;
 
 private: // content listeners
-  shared_ptr<events_comm::TrNativeEventListener> rpcRequestListener = nullptr;
-  shared_ptr<events_comm::TrNativeEventListener> documentEventListener = nullptr;
+  std::shared_ptr<events_comm::TrNativeEventListener> rpcRequestListener = nullptr;
+  std::shared_ptr<events_comm::TrNativeEventListener> documentEventListener = nullptr;
 
 private: // pre-content
   bool enablePreContent = true;

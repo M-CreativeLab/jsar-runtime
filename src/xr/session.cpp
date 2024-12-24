@@ -6,7 +6,9 @@
 
 namespace xr
 {
-  TrXRSession::TrXRSession(uint32_t id, Device *xrDevice, TrContentRenderer *contentRenderer,
+  using namespace std;
+
+  TrXRSession::TrXRSession(uint32_t id, Device *xrDevice, shared_ptr<TrContentRenderer> contentRenderer,
                            TrXRSessionMode mode, TrXRSessionInit &init)
       : id(id),
         xrDevice(xrDevice),
@@ -67,7 +69,7 @@ namespace xr
     contextZone->syncData();
   }
 
-  bool TrXRSession::belongsTo(TrContentRenderer *contentRenderer)
+  bool TrXRSession::belongsTo(shared_ptr<TrContentRenderer> contentRenderer)
   {
     return this->contentRenderer == contentRenderer;
   }

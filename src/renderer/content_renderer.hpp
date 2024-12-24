@@ -21,7 +21,7 @@ namespace renderer
   class TrContentRenderer;
   /**
    * A scope class for backup GL context, using this class will automatically restore the gl context after the scope:
-   * 
+   *
    * ```cpp
    * {
    *   TrBackupGLContextScope scope(contentRenderer);
@@ -44,6 +44,20 @@ namespace renderer
     friend class TrBackupGLContextScope;
     friend class TrRenderer;
     friend class xr::TrXRSession;
+
+  public:
+    /**
+     * Create a new content renderer with the content and constellation.
+     *
+     * @param content The content to be rendered.
+     * @param constellation The constellation that the content belongs to.
+     * @return The created content renderer.
+     */
+    static inline std::shared_ptr<TrContentRenderer> Make(TrContentRuntime *content,
+                                                          TrConstellation *constellation)
+    {
+      return std::make_shared<TrContentRenderer>(content, constellation);
+    }
 
   public:
     TrContentRenderer(TrContentRuntime *content, TrConstellation *constellation);

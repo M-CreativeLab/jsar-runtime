@@ -5,6 +5,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <atomic>
+#include <memory>
 
 #include "common/classes.hpp"
 #include "common/viewport.hpp"
@@ -64,21 +65,21 @@ namespace renderer
      * @param content The content to be found.
      * @returns The content renderer if found, otherwise nullptr.
      */
-    TrContentRenderer *findContentRenderer(TrContentRuntime *content);
+    std::shared_ptr<TrContentRenderer> findContentRenderer(TrContentRuntime *content);
     /**
      * Find the content renderer by the content pid.
      *
      * @param contentId The content id.
      * @returns The content renderer if found, otherwise nullptr.
      */
-    TrContentRenderer *findContentRenderer(uint32_t contentId);
+    std::shared_ptr<TrContentRenderer> findContentRenderer(uint32_t contentId);
     /**
      * Find the content renderer by the content pid.
      *
      * @param contentPid The pid of the content.
      * @returns The content renderer if found, otherwise nullptr.
      */
-    TrContentRenderer *findContentRendererByPid(pid_t contentPid);
+    std::shared_ptr<TrContentRenderer> findContentRendererByPid(pid_t contentPid);
     /**
      * Remove the content renderer by the content pointer.
      *
@@ -114,7 +115,7 @@ namespace renderer
     RenderAPI *api = nullptr;
     TrConstellation *constellation = nullptr;
     OpenGLHostContextStorage *glHostContext = nullptr;
-    vector<TrContentRenderer *> contentRenderers;
+    std::vector<std::shared_ptr<TrContentRenderer>> contentRenderers;
 
   private: // fields for frame request
     ipc::TrOneShotServer<TrFrameRequestMessage> *frameRequestChanServer = nullptr;

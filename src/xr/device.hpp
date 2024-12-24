@@ -66,7 +66,7 @@ namespace xr
     /**
      * It requests a XR session with its mode and content source.
      */
-    shared_ptr<TrXRSession> requestSession(TrXRSessionMode mode, TrContentRenderer *contentRenderer);
+    shared_ptr<TrXRSession> requestSession(TrXRSessionMode mode, std::shared_ptr<TrContentRenderer> contentRenderer);
     /**
      * It ends and removes a session by its id.
      */
@@ -121,7 +121,7 @@ namespace xr
     bool updateFov(float fov);
     /**
      * Update the current view's framebuffer.
-     * 
+     *
      * @param framebufferId the framebuffer id to update.
      * @param viewport the viewport to update.
      * @param useDoubleWide if the framebuffer is double wide.
@@ -167,7 +167,7 @@ namespace xr
     bool updateLocalTransformByDocumentId(int documentId, float *transform);
     /**
      * Get the collision box by the document id, it will find the session by the document/content's active session id.
-     * 
+     *
      * @param documentId the document id to find the session.
      * @param outMin the min vector to store the result.
      * @param outMax the max vector to store the result.
@@ -194,7 +194,7 @@ namespace xr
     }
     /**
      * Get the session context zone directory.
-     * 
+     *
      * @returns the session context zone directory.
      */
     string getSessionContextZoneDirectory() { return m_SessionContextZoneDirectory; }
@@ -230,14 +230,14 @@ namespace xr
     TrXRInputSource *getHandInputSource(TrHandness handness);
     /**
      * Returns the screen controller input source.
-     * 
+     *
      * @param index the index of the screen controller.
      * @returns the screen controller input source.
      */
     TrXRInputSource *getScreenControllerInputSource(int index);
     /**
      * Get the input source by its id.
-     * 
+     *
      * @param id the input source id.
      * @returns the input source object.
      */
@@ -249,9 +249,10 @@ namespace xr
     void handleCommandMessage(TrXRCommandMessage &message, TrContentRuntime *content);
 
   private: // XR command channel handlers
-    void onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request, TrContentRenderer *contentRenderer);
-    void onSessionRequest(xr::SessionRequest &request, TrContentRenderer *contentRenderer);
-    void onEndSessionRequest(xr::EndSessionRequest &request, TrContentRenderer *contentRenderer);
+    void onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request,
+                                     std::shared_ptr<TrContentRenderer> contentRenderer);
+    void onSessionRequest(xr::SessionRequest &request, std::shared_ptr<TrContentRenderer> contentRenderer);
+    void onEndSessionRequest(xr::EndSessionRequest &request, std::shared_ptr<TrContentRenderer> contentRenderer);
 
   private:
     /**

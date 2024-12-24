@@ -49,6 +49,13 @@ enum class TrScriptRunMode
   Disabled
 };
 
+/**
+ * The request initialization options for the document.
+ * 
+ * - `url`: The document URL.
+ * - `id`: The document id.
+ * - `disableCache`: The flag to disable the cache.
+ */
 class TrDocumentRequestInit
 {
 public:
@@ -56,6 +63,9 @@ public:
   TrDocumentRequestInit(TrDocumentRequestInit &that) = default;
 
 public:
+  /**
+   * @returns The string representation of the mode to run the scripts.
+   */
   string getRunScriptsName()
   {
     switch (runScripts)

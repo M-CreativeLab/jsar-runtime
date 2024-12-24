@@ -7,6 +7,8 @@
 
 namespace renderer
 {
+  using namespace std;
+
   static uint32_t MIN_FRAME_RATE = 60;
   static uint32_t MAX_FRAME_RATE = 90;
 
@@ -25,9 +27,6 @@ namespace renderer
     delete frameRequestChanServer;
     delete commandBufferChanServer;
 
-    // clear ContentRenderer list.
-    for (auto contentRenderer : contentRenderers)
-      delete contentRenderer;
     contentRenderers.clear();
   }
 
@@ -160,11 +159,11 @@ namespace renderer
     removeContentRenderer(content->id); // Remove the old content renderer if it exists.
     {
       unique_lock<shared_mutex> lock(contentRendererMutex);
-      contentRenderers.push_back(new TrContentRenderer(content, constellation));
+      contentRenderers.push_back(TrContentRenderer::Make(content, constellation));
     }
   }
 
-  TrContentRenderer *TrRenderer::findContentRenderer(TrContentRuntime *content)
+  shared_ptr<TrContentRenderer> TrRenderer::findContentRenderer(TrContentRuntime *content)
   {
     for (auto contentRenderer : contentRenderers)
     {
@@ -174,7 +173,7 @@ namespace renderer
     return nullptr;
   }
 
-  TrContentRenderer *TrRenderer::findContentRenderer(uint32_t contentId)
+  shared_ptr<TrContentRenderer> TrRenderer::findContentRenderer(uint32_t contentId)
   {
     shared_lock<shared_mutex> lock(contentRendererMutex);
     for (auto contentRenderer : contentRenderers)
@@ -185,7 +184,7 @@ namespace renderer
     return nullptr;
   }
 
-  TrContentRenderer *TrRenderer::findContentRendererByPid(pid_t contentPid)
+  shared_ptr<TrContentRenderer> TrRenderer::findContentRendererByPid(pid_t contentPid)
   {
     shared_lock<shared_mutex> lock(contentRendererMutex);
     for (auto contentRenderer : contentRenderers)
@@ -206,7 +205,6 @@ namespace renderer
       if (contentRenderer->content == content)
       {
         contentRenderers.erase(it);
-        delete contentRenderer;
         break;
       }
     }
