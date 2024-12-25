@@ -58,13 +58,18 @@ namespace commandbuffers
   };
 
   template <typename Derived, CommandBufferType Type>
+    requires is_commandbuffer_request<Type>
   class TrCommandBufferSimpleRequest : public TrCommandBufferRequest
   {
   public:
-    TrCommandBufferSimpleRequest() : TrCommandBufferRequest(Type, sizeof(Derived))
+    TrCommandBufferSimpleRequest()
+        : TrCommandBufferRequest(Type, sizeof(Derived))
     {
     }
-    TrCommandBufferSimpleRequest(TrCommandBufferSimpleRequest &that) : TrCommandBufferRequest(that) {}
+    TrCommandBufferSimpleRequest(TrCommandBufferSimpleRequest &that)
+        : TrCommandBufferRequest(that)
+    {
+    }
     ~TrCommandBufferSimpleRequest() = default;
 
   public:

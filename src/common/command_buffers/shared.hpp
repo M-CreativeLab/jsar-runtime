@@ -6,6 +6,8 @@
 #include "common/ipc.hpp"
 #include "common/ipc_message.hpp"
 #include "common/ipc_serializable.hpp"
+
+#include "./macros.hpp"
 #include "./webgl_constants.hpp"
 
 namespace commandbuffers
@@ -238,9 +240,29 @@ namespace commandbuffers
            type == COMMAND_BUFFER_XRFRAME_END_REQ;
   }
 
+  // Check this command type is a request type.
+  template <CommandBufferType Type>
+  concept is_commandbuffer_request = (
+#define XX(name, type) Type == COMMAND_BUFFER_##name##_REQ ||
+      TR_COMMAND_BUFFER_REQUESTS_MAP(XX)
+#undef XX
+          false);
+
+  // Check this command type is a response type.
+  template <CommandBufferType Type>
+  concept is_commandbuffer_response = (
+#define XX(name, type) Type == COMMAND_BUFFER_##name##_REQ ||
+      TR_COMMAND_BUFFER_RESPONSES_MAP(XX)
+#undef XX
+          false);
+
   using namespace ipc;
   class TrCommandBufferMessage : public TrIpcMessage<TrCommandBufferMessage, CommandBufferType>
   {
+    friend class TrCommandBufferBase;
+    friend class TrCommandBufferSender;
+    friend class TrCommandBufferReceiver;
+
   public:
     TrCommandBufferMessage()
         : TrIpcMessage(COMMAND_BUFFER_UNKNOWN, 0, nullptr)
@@ -250,9 +272,5 @@ namespace commandbuffers
         : TrIpcMessage(type, size, base)
     {
     }
-
-    friend class TrCommandBufferBase;
-    friend class TrCommandBufferSender;
-    friend class TrCommandBufferReceiver;
   };
 }

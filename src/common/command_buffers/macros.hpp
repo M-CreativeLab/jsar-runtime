@@ -43,6 +43,7 @@
   XX(CREATE_VERTEX_ARRAY, CreateVertexArrayCommandBufferRequest)                           \
   XX(DELETE_VERTEX_ARRAY, DeleteVertexArrayCommandBufferRequest)                           \
   XX(BIND_VERTEX_ARRAY, BindVertexArrayCommandBufferRequest)                               \
+  XX(IS_VERTEX_ARRAY, IsVertexArrayCommandBufferRequest)                                   \
   XX(CREATE_TEXTURE, CreateTextureCommandBufferRequest)                                    \
   XX(DELETE_TEXTURE, DeleteTextureCommandBufferRequest)                                    \
   XX(BIND_TEXTURE, BindTextureCommandBufferRequest)                                        \
@@ -96,6 +97,10 @@
   XX(SET_VIEWPORT, SetViewportCommandBufferRequest)                                        \
   XX(SET_SCISSOR, SetScissorCommandBufferRequest)                                          \
   XX(GET_EXTENSIONS, GetExtensionsCommandBufferRequest)                                    \
+  XX(CLEAR, ClearCommandBufferRequest)                                                     \
+  XX(CLEAR_COLOR, ClearColorCommandBufferRequest)                                          \
+  XX(CLEAR_DEPTH, ClearDepthCommandBufferRequest)                                          \
+  XX(CLEAR_STENCIL, ClearStencilCommandBufferRequest)                                      \
   XX(DEPTH_MASK, DepthMaskCommandBufferRequest)                                            \
   XX(DEPTH_FUNC, DepthFuncCommandBufferRequest)                                            \
   XX(DEPTH_RANGE, DepthRangeCommandBufferRequest)                                          \
@@ -121,6 +126,13 @@
   XX(GET_STRING, GetStringCommandBufferRequest)                                            \
   XX(GET_SHADER_PRECISION_FORMAT, GetShaderPrecisionFormatCommandBufferRequest)            \
   XX(GET_ERROR, GetErrorCommandBufferRequest)                                              \
+  XX(CREATE_SAMPLER, CreateSamplerCommandBufferRequest)                                    \
+  XX(DELETE_SAMPLER, DeleteSamplerCommandBufferRequest)                                    \
+  XX(BIND_SAMPLER, BindSamplerCommandBufferRequest)                                        \
+  XX(SAMPLER_PARAMETERI, SamplerParameteriCommandBufferRequest)                            \
+  XX(SAMPLER_PARAMETERF, SamplerParameterfCommandBufferRequest)                            \
+  XX(GET_SAMPLER_PARAMETER, GetSamplerParameterCommandBufferRequest)                       \
+  XX(IS_SAMPLER, IsSamplerCommandBufferRequest)                                            \
   XX(XRFRAME_START, XRFrameStartCommandBufferRequest)                                      \
   XX(XRFRAME_FLUSH, XRFrameFlushCommandBufferRequest)                                      \
   XX(XRFRAME_END, XRFrameEndCommandBufferRequest)                                          \

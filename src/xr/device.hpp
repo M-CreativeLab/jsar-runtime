@@ -26,6 +26,9 @@
 
 namespace xr
 {
+  using IndexedMatrixMap = std::map<int, float[16]>;              // viewIndex -> matrix
+  using SessionsList = std::vector<std::shared_ptr<TrXRSession>>; // session list type
+
   /**
    * The WebXR device is used to manage WebXR sessions, input sources and other resources.
    */
@@ -311,15 +314,15 @@ namespace xr
     /**
      * The viewer(camera or eyes) view matrix.
      */
-    std::map<int, float[16]> m_ViewerStereoViewMatrix;
+    IndexedMatrixMap m_ViewerStereoViewMatrix;
     /**
      * The viewer(camera or eyes) projection matrix.
      */
-    std::map<int, float[16]> m_ViewerStereoProjectionMatrix;
+    IndexedMatrixMap m_ViewerStereoProjectionMatrix;
     /**
      * The local(object) transform matrix.
      */
-    std::map<int, float[16]> m_LocalTransforms;
+    IndexedMatrixMap m_LocalTransforms;
     /**
      * The active eye's id, 0 for left and 1 for right. It's used in multi-pass rendering only.
      */
@@ -327,7 +330,7 @@ namespace xr
     /**
      * The id to indentify the session, corresponding to the session's id in the WebXR API.
      */
-    std::vector<std::shared_ptr<TrXRSession>> m_Sessions;
+    SessionsList m_Sessions;
     /**
      * The session context zone directory for session-related shared data.
      */

@@ -14,8 +14,8 @@ namespace xr
 {
   using namespace std;
 
-  static uint32_t MIN_FRAME_RATE = 45;
-  static uint32_t MAX_FRAME_RATE = 90;
+  static const uint32_t MIN_FRAME_RATE = 45;
+  static const uint32_t MAX_FRAME_RATE = 90;
   static TrIdGenerator sessionIdGen(1);
 
   Device::Device(TrConstellation *constellation)
