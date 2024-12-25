@@ -16,10 +16,6 @@ void __tr_empty()
    */
 }
 
-TrConstellationInit::TrConstellationInit()
-{
-}
-
 TrConstellation::TrConstellation(TrEmbedder *embedder)
     : embedder(embedder)
 {

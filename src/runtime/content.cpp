@@ -10,13 +10,14 @@
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 
+#include <common/debug.hpp>
+#include <crates/jsar_jsbundle.h>
+
 #include "idgen.hpp"
-#include "debug.hpp"
-#include "embedder.hpp"
-#include "content.hpp"
-#include "media_manager.hpp"
-#include "res/client.bin.h"
-#include "crates/jsar_jsbundle.h"
+#include "./embedder.hpp"
+#include "./content.hpp"
+#include "./media_manager.hpp"
+#include "./res/client.bin.h"
 
 using namespace std;
 using namespace std::filesystem;

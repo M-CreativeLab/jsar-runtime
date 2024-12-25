@@ -20,34 +20,55 @@ class TrContentRuntime;
 class TrContentManager;
 class TrMediaManager;
 
+/**
+ * The constellation initialization options.
+ *
+ * - `applicationCacheDirectory`: The root directory to store the runtime files.
+ * - `runDirectory`: The directory that the library is running in.
+ * - `httpsProxyServer`: The https proxy server.
+ * - `enableV8Profiling`: Enable the v8 profiling at client-side.
+ * - `isXRSupported`: Supports the WebXR API.
+ */
 class TrConstellationInit
 {
 public:
-  TrConstellationInit();
+  TrConstellationInit() = default;
 
 public:
-  string applicationCacheDirectory;
+  /**
+   * The root directory to store the runtime files.
+   */
+  std::string applicationCacheDirectory;
   /**
    * The directory that the library is running in.
    */
-  string runDirectory;
-  string httpsProxyServer;
+  std::string runDirectory;
+  /**
+   * The https proxy server.
+   */
+  std::string httpsProxyServer;
+  /**
+   * Enable the v8 profiling at client-side.
+   */
   bool enableV8Profiling = false;
+  /**
+   * Supports the WebXR API.
+   */
   bool isXRSupported = false;
 
 public:
   /**
    * @returns The runtime directory to store the Transmute exectable files or the runtime files.
    */
-  string runtimeDirectory() { return applicationCacheDirectory + "/runtime"; }
+  inline std::string runtimeDirectory() { return applicationCacheDirectory + "/runtime"; }
   /**
    * @returns The scripts directory to store the scripts such as the bundle scripts.
    */
-  string scriptsDirectory() { return applicationCacheDirectory + "/scripts"; }
+  inline std::string scriptsDirectory() { return applicationCacheDirectory + "/scripts"; }
 
 public:
   /**
-   * Fix the environment if needed.
+   * Make the environment ready, calling this function before the runtime starts to fix the environment issues.
    */
   void fixEnvIfNeeded()
   {
@@ -64,9 +85,9 @@ public:
    * @param subDir The sub directory name, `nullopt` means no sub directory.
    * @returns The zone directory name.
    */
-  string getZoneDirname(optional<string> subDir = nullopt)
+  std::string getZoneDirname(optional<std::string> subDir = std::nullopt)
   {
-    string zoneDirname = applicationCacheDirectory + "/.zones";
+    std::string zoneDirname = applicationCacheDirectory + "/.zones";
     if (!filesystem::exists(zoneDirname))
       filesystem::create_directory(zoneDirname);
 
@@ -86,7 +107,7 @@ public:
    *
    * @returns The full path of the zone filename.
    */
-  string getZoneFilename(string zoneName)
+  inline std::string getZoneFilename(std::string zoneName)
   {
     return getZoneDirname() + "/" + zoneName;
   }
@@ -97,7 +118,7 @@ public:
    *
    * @returns The full path of the zone filename.
    */
-  string getZoneFilename(string zoneName, string subDir)
+  inline std::string getZoneFilename(std::string zoneName, std::string subDir)
   {
     return getZoneDirname(subDir) + "/" + zoneName;
   }
