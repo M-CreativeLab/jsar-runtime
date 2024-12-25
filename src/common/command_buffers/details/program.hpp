@@ -5,8 +5,9 @@
 
 namespace commandbuffers
 {
-  class CreateProgramCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateProgramCommandBufferRequest,
-                                                                                COMMAND_BUFFER_CREATE_PROGRAM_REQ>
+  class CreateProgramCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<CreateProgramCommandBufferRequest,
+                                            COMMAND_BUFFER_CREATE_PROGRAM_REQ>
   {
   public:
     CreateProgramCommandBufferRequest() = delete;
@@ -19,8 +20,9 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
-  class DeleteProgramCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteProgramCommandBufferRequest,
-                                                                                COMMAND_BUFFER_DELETE_PROGRAM_REQ>
+  class DeleteProgramCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<DeleteProgramCommandBufferRequest,
+                                            COMMAND_BUFFER_DELETE_PROGRAM_REQ>
   {
   public:
     DeleteProgramCommandBufferRequest() = delete;
@@ -33,8 +35,9 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
-  class LinkProgramCommandBufferRequest : public TrCommandBufferSimpleRequest<LinkProgramCommandBufferRequest,
-                                                                              COMMAND_BUFFER_LINK_PROGRAM_REQ>
+  class LinkProgramCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<LinkProgramCommandBufferRequest,
+                                            COMMAND_BUFFER_LINK_PROGRAM_REQ>
   {
   public:
     LinkProgramCommandBufferRequest() = delete;
@@ -110,7 +113,8 @@ namespace commandbuffers
     SEGMENT_UNIFORM_BLOCK
   };
 
-  class LinkProgramCommandBufferResponse : public TrCommandBufferSimpleResponse<LinkProgramCommandBufferResponse>
+  class LinkProgramCommandBufferResponse final
+      : public TrCommandBufferSimpleResponse<LinkProgramCommandBufferResponse>
   {
   public:
     LinkProgramCommandBufferResponse(LinkProgramCommandBufferResponse &that) : TrCommandBufferSimpleResponse(that), success(that.success) {}
@@ -286,8 +290,8 @@ namespace commandbuffers
     vector<UniformBlock> uniformBlocks;
   };
 
-  class UseProgramCommandBufferRequest : public TrCommandBufferSimpleRequest<UseProgramCommandBufferRequest,
-                                                                             COMMAND_BUFFER_USE_PROGRAM_REQ>
+  class UseProgramCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<UseProgramCommandBufferRequest, COMMAND_BUFFER_USE_PROGRAM_REQ>
   {
   public:
     UseProgramCommandBufferRequest() = delete;
@@ -300,8 +304,9 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
-  class BindAttribLocationCommandBufferRequest : public TrCommandBufferSimpleRequest<BindAttribLocationCommandBufferRequest,
-                                                                                     COMMAND_BUFFER_BIND_ATTRIB_LOCATION_REQ>
+  class BindAttribLocationCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<BindAttribLocationCommandBufferRequest,
+                                            COMMAND_BUFFER_BIND_ATTRIB_LOCATION_REQ>
   {
   public:
     BindAttribLocationCommandBufferRequest() = delete;
@@ -337,8 +342,9 @@ namespace commandbuffers
     string attribName;
   };
 
-  class GetProgramParamCommandBufferRequest : public TrCommandBufferSimpleRequest<GetProgramParamCommandBufferRequest,
-                                                                                  COMMAND_BUFFER_GET_PROGRAM_PARAM_REQ>
+  class GetProgramParamCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<GetProgramParamCommandBufferRequest,
+                                            COMMAND_BUFFER_GET_PROGRAM_PARAM_REQ>
   {
   public:
     GetProgramParamCommandBufferRequest() = delete;
@@ -354,7 +360,8 @@ namespace commandbuffers
     uint32_t pname;
   };
 
-  class GetProgramParamCommandBufferResponse : public TrCommandBufferSimpleResponse<GetProgramParamCommandBufferResponse>
+  class GetProgramParamCommandBufferResponse final
+      : public TrCommandBufferSimpleResponse<GetProgramParamCommandBufferResponse>
   {
   public:
     GetProgramParamCommandBufferResponse(GetProgramParamCommandBufferResponse &that)
@@ -371,8 +378,9 @@ namespace commandbuffers
     int value;
   };
 
-  class GetProgramInfoLogCommandBufferRequest : public TrCommandBufferSimpleRequest<GetProgramInfoLogCommandBufferRequest,
-                                                                                    COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_REQ>
+  class GetProgramInfoLogCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<GetProgramInfoLogCommandBufferRequest,
+                                            COMMAND_BUFFER_GET_PROGRAM_INFO_LOG_REQ>
   {
   public:
     GetProgramInfoLogCommandBufferRequest() = delete;
@@ -385,7 +393,8 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
-  class GetProgramInfoLogCommandBufferResponse : public TrCommandBufferSimpleResponse<GetProgramInfoLogCommandBufferResponse>
+  class GetProgramInfoLogCommandBufferResponse final
+      : public TrCommandBufferSimpleResponse<GetProgramInfoLogCommandBufferResponse>
   {
   public:
     GetProgramInfoLogCommandBufferResponse(GetProgramInfoLogCommandBufferRequest *req, const string infoLog)

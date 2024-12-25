@@ -5,8 +5,9 @@
 
 namespace commandbuffers
 {
-  class AttachShaderCommandBufferRequest : public TrCommandBufferSimpleRequest<AttachShaderCommandBufferRequest,
-                                                                               COMMAND_BUFFER_ATTACH_SHADER_REQ>
+  class AttachShaderCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<AttachShaderCommandBufferRequest,
+                                            COMMAND_BUFFER_ATTACH_SHADER_REQ>
   {
   public:
     AttachShaderCommandBufferRequest() = delete;
@@ -22,8 +23,9 @@ namespace commandbuffers
     uint32_t shader;
   };
 
-  class DetachShaderCommandBufferRequest : public TrCommandBufferSimpleRequest<DetachShaderCommandBufferRequest,
-                                                                               COMMAND_BUFFER_DETACH_SHADER_REQ>
+  class DetachShaderCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<DetachShaderCommandBufferRequest,
+                                            COMMAND_BUFFER_DETACH_SHADER_REQ>
   {
   public:
     DetachShaderCommandBufferRequest() = delete;
@@ -39,8 +41,9 @@ namespace commandbuffers
     uint32_t shader;
   };
 
-  class CreateShaderCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateShaderCommandBufferRequest,
-                                                                               COMMAND_BUFFER_CREATE_SHADER_REQ>
+  class CreateShaderCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<CreateShaderCommandBufferRequest,
+                                            COMMAND_BUFFER_CREATE_SHADER_REQ>
   {
   public:
     CreateShaderCommandBufferRequest() = delete;
@@ -56,8 +59,9 @@ namespace commandbuffers
     uint32_t shaderType;
   };
 
-  class DeleteShaderCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteShaderCommandBufferRequest,
-                                                                               COMMAND_BUFFER_DELETE_SHADER_REQ>
+  class DeleteShaderCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<DeleteShaderCommandBufferRequest,
+                                            COMMAND_BUFFER_DELETE_SHADER_REQ>
   {
   public:
     DeleteShaderCommandBufferRequest() = delete;
@@ -71,8 +75,9 @@ namespace commandbuffers
     uint32_t shader;
   };
 
-  class CompileShaderCommandBufferRequest : public TrCommandBufferSimpleRequest<CompileShaderCommandBufferRequest,
-                                                                                COMMAND_BUFFER_COMPILE_SHADER_REQ>
+  class CompileShaderCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<CompileShaderCommandBufferRequest,
+                                            COMMAND_BUFFER_COMPILE_SHADER_REQ>
   {
   public:
     CompileShaderCommandBufferRequest(uint32_t shader)
@@ -85,8 +90,9 @@ namespace commandbuffers
     uint32_t shader;
   };
 
-  class ShaderSourceCommandBufferRequest : public TrCommandBufferSimpleRequest<ShaderSourceCommandBufferRequest,
-                                                                               COMMAND_BUFFER_SHADER_SOURCE_REQ>
+  class ShaderSourceCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<ShaderSourceCommandBufferRequest,
+                                            COMMAND_BUFFER_SHADER_SOURCE_REQ>
   {
   public:
     ShaderSourceCommandBufferRequest(uint32_t shader, const string &source)
@@ -133,8 +139,9 @@ namespace commandbuffers
     size_t sourceSize;
   };
 
-  class GetShaderSourceCommandBufferRequest : public TrCommandBufferSimpleRequest<GetShaderSourceCommandBufferRequest,
-                                                                                  COMMAND_BUFFER_GET_SHADER_SOURCE_REQ>
+  class GetShaderSourceCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<GetShaderSourceCommandBufferRequest,
+                                            COMMAND_BUFFER_GET_SHADER_SOURCE_REQ>
   {
   public:
     GetShaderSourceCommandBufferRequest() = delete;
@@ -148,7 +155,8 @@ namespace commandbuffers
     uint32_t shader;
   };
 
-  class GetShaderSourceCommandBufferResponse : public TrCommandBufferSimpleResponse<GetShaderSourceCommandBufferResponse>
+  class GetShaderSourceCommandBufferResponse final
+      : public TrCommandBufferSimpleResponse<GetShaderSourceCommandBufferResponse>
   {
   public:
     GetShaderSourceCommandBufferResponse() = delete;
@@ -173,8 +181,9 @@ namespace commandbuffers
     string source;
   };
 
-  class GetShaderParamCommandBufferRequest : public TrCommandBufferSimpleRequest<GetShaderParamCommandBufferRequest,
-                                                                                 COMMAND_BUFFER_GET_SHADER_PARAM_REQ>
+  class GetShaderParamCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<GetShaderParamCommandBufferRequest,
+                                            COMMAND_BUFFER_GET_SHADER_PARAM_REQ>
   {
   public:
     GetShaderParamCommandBufferRequest() = delete;
@@ -203,8 +212,9 @@ namespace commandbuffers
     int32_t value;
   };
 
-  class GetShaderInfoLogCommandBufferRequest : public TrCommandBufferSimpleRequest<GetShaderInfoLogCommandBufferRequest,
-                                                                                   COMMAND_BUFFER_GET_SHADER_INFO_LOG_REQ>
+  class GetShaderInfoLogCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<GetShaderInfoLogCommandBufferRequest,
+                                            COMMAND_BUFFER_GET_SHADER_INFO_LOG_REQ>
   {
   public:
     GetShaderInfoLogCommandBufferRequest() = delete;
@@ -218,7 +228,8 @@ namespace commandbuffers
     uint32_t shader;
   };
 
-  class GetShaderInfoLogCommandBufferResponse : public TrCommandBufferSimpleResponse<GetShaderInfoLogCommandBufferResponse>
+  class GetShaderInfoLogCommandBufferResponse final
+      : public TrCommandBufferSimpleResponse<GetShaderInfoLogCommandBufferResponse>
   {
   public:
     GetShaderInfoLogCommandBufferResponse() = delete;

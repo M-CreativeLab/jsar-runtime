@@ -43,7 +43,7 @@ class TrContentManager;
  * The content runtime is a class that manages the corresponding content process, it's responsible for the lifecycle of the content
  * process, such as starting, pausing, resuming, and disposing.
  */
-class TrContentRuntime : public std::enable_shared_from_this<TrContentRuntime>
+class TrContentRuntime final : public std::enable_shared_from_this<TrContentRuntime>
 {
   friend class TrContentManager;
   friend class TrHiveDaemon;
@@ -365,7 +365,7 @@ private:
  * A `TrContentManager` is to manage the lifecycle of content instances, that is, to create, run, and dispose of JavaScript runtime
  * environments.
  */
-class TrContentManager
+class TrContentManager final
 {
   friend class TrContentRuntime;
   friend class TrConstellation;

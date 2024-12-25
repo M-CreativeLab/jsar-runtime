@@ -31,7 +31,7 @@ protected:
 /**
  * The `WorkerThread` class is a thread wrapper that does the work in a new thread, and it could be stopped, paused and resumed.
  */
-class WorkerThread : public ScopedThread
+class WorkerThread final : public ScopedThread
 {
 public:
   WorkerThread(std::string name, std::function<void(WorkerThread &)> work, uint32_t waitTime = 100)

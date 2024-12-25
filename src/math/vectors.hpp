@@ -108,7 +108,7 @@ namespace math
   /**
    * The forward direction.
    */
-  class Dir3 : public Vec3
+  class Dir3 final : public Vec3
   {
   public:
     /**

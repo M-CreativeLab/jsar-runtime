@@ -14,7 +14,7 @@ namespace xr
   using namespace renderer;
   using namespace collision;
 
-  class TrXRSession
+  class TrXRSession final
   {
   public:
     /**

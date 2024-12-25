@@ -5,8 +5,9 @@
 
 namespace commandbuffers
 {
-  class CreateSamplerCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateSamplerCommandBufferRequest,
-                                                                                COMMAND_BUFFER_CREATE_SAMPLER_REQ>
+  class CreateSamplerCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<CreateSamplerCommandBufferRequest,
+                                            COMMAND_BUFFER_CREATE_SAMPLER_REQ>
   {
   public:
     CreateSamplerCommandBufferRequest() = delete;
@@ -19,8 +20,9 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
-  class DeleteSamplerCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteSamplerCommandBufferRequest,
-                                                                                COMMAND_BUFFER_DELETE_SAMPLER_REQ>
+  class DeleteSamplerCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<DeleteSamplerCommandBufferRequest,
+                                            COMMAND_BUFFER_DELETE_SAMPLER_REQ>
   {
   public:
     DeleteSamplerCommandBufferRequest() = delete;
@@ -33,8 +35,9 @@ namespace commandbuffers
     uint32_t sampler;
   };
 
-  class BindSamplerCommandBufferRequest : public TrCommandBufferSimpleRequest<BindSamplerCommandBufferRequest,
-                                                                              COMMAND_BUFFER_BIND_SAMPLER_REQ>
+  class BindSamplerCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<BindSamplerCommandBufferRequest,
+                                            COMMAND_BUFFER_BIND_SAMPLER_REQ>
   {
   public:
     BindSamplerCommandBufferRequest() = delete;
@@ -50,8 +53,9 @@ namespace commandbuffers
     uint32_t sampler;
   };
 
-  class SamplerParameteriCommandBufferRequest : public TrCommandBufferSimpleRequest<SamplerParameteriCommandBufferRequest,
-                                                                                    COMMAND_BUFFER_SAMPLER_PARAMETERI_REQ>
+  class SamplerParameteriCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<SamplerParameteriCommandBufferRequest,
+                                            COMMAND_BUFFER_SAMPLER_PARAMETERI_REQ>
   {
   public:
     SamplerParameteriCommandBufferRequest() = delete;
@@ -69,8 +73,9 @@ namespace commandbuffers
     int32_t param;
   };
 
-  class SamplerParameterfCommandBufferRequest : public TrCommandBufferSimpleRequest<SamplerParameterfCommandBufferRequest,
-                                                                                    COMMAND_BUFFER_SAMPLER_PARAMETERF_REQ>
+  class SamplerParameterfCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<SamplerParameterfCommandBufferRequest,
+                                            COMMAND_BUFFER_SAMPLER_PARAMETERF_REQ>
   {
   public:
     SamplerParameterfCommandBufferRequest() = delete;
@@ -88,8 +93,9 @@ namespace commandbuffers
     float param;
   };
 
-  class GetSamplerParameterCommandBufferRequest : public TrCommandBufferSimpleRequest<GetSamplerParameterCommandBufferRequest,
-                                                                                      COMMAND_BUFFER_GET_SAMPLER_PARAMETER_REQ>
+  class GetSamplerParameterCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<GetSamplerParameterCommandBufferRequest,
+                                            COMMAND_BUFFER_GET_SAMPLER_PARAMETER_REQ>
   {
   public:
     GetSamplerParameterCommandBufferRequest() = delete;
@@ -105,7 +111,8 @@ namespace commandbuffers
     uint32_t pname;
   };
 
-  class GetSamplerParameterCommandBufferResponse : public TrCommandBufferSimpleResponse<GetSamplerParameterCommandBufferResponse>
+  class GetSamplerParameterCommandBufferResponse final
+      : public TrCommandBufferSimpleResponse<GetSamplerParameterCommandBufferResponse>
   {
   public:
     GetSamplerParameterCommandBufferResponse(GetSamplerParameterCommandBufferRequest *req, int value)
@@ -118,8 +125,9 @@ namespace commandbuffers
     int32_t value;
   };
 
-  class IsSamplerCommandBufferRequest : public TrCommandBufferSimpleRequest<IsSamplerCommandBufferRequest,
-                                                                            COMMAND_BUFFER_IS_SAMPLER_REQ>
+  class IsSamplerCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<IsSamplerCommandBufferRequest,
+                                            COMMAND_BUFFER_IS_SAMPLER_REQ>
   {
   public:
     IsSamplerCommandBufferRequest() = delete;
@@ -133,7 +141,8 @@ namespace commandbuffers
     uint32_t sampler;
   };
 
-  class IsSamplerCommandBufferResponse : public TrCommandBufferSimpleResponse<IsSamplerCommandBufferResponse>
+  class IsSamplerCommandBufferResponse final
+      : public TrCommandBufferSimpleResponse<IsSamplerCommandBufferResponse>
   {
   public:
     IsSamplerCommandBufferResponse(IsSamplerCommandBufferRequest *req, bool value)

@@ -29,7 +29,7 @@ class TrMediaManager;
  * - `enableV8Profiling`: Enable the v8 profiling at client-side.
  * - `isXRSupported`: Supports the WebXR API.
  */
-class TrConstellationInit
+class TrConstellationInit final
 {
 public:
   TrConstellationInit() = default;

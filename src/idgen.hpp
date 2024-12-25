@@ -9,7 +9,7 @@
  * This class implements the ID generating based on the simple self-incremental counter, it will not guarantee the accurate unique
  * ID, but it's enough for the runtime to generate the client ids such as the WebXR session, framebuffer id, etc.
  */
-class TrIdGenerator
+class TrIdGenerator final
 {
 public:
   /**

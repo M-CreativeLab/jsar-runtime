@@ -28,7 +28,7 @@ enum FrameExecutionCode
 /**
  * The options to be used when making a RHI API call.
  */
-class ApiCallOptions
+class ApiCallOptions final
 {
 public:
   /**

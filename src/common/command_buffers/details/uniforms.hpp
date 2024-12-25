@@ -40,8 +40,9 @@ namespace commandbuffers
     bool multiview;
   };
 
-  class UniformBlockBindingCommandBufferRequest
-      : public TrCommandBufferSimpleRequest<UniformBlockBindingCommandBufferRequest, COMMAND_BUFFER_UNIFORM_BLOCK_BINDING_REQ>
+  class UniformBlockBindingCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<UniformBlockBindingCommandBufferRequest,
+                                            COMMAND_BUFFER_UNIFORM_BLOCK_BINDING_REQ>
   {
   public:
     UniformBlockBindingCommandBufferRequest() = delete;
@@ -59,7 +60,7 @@ namespace commandbuffers
     uint32_t uniformBlockBinding;
   };
 
-  class Uniform1fCommandBufferRequest
+  class Uniform1fCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<Uniform1fCommandBufferRequest, COMMAND_BUFFER_UNIFORM1F_REQ>
   {
   public:
@@ -75,7 +76,7 @@ namespace commandbuffers
     float v0;
   };
 
-  class Uniform1fvCommandBufferRequest
+  class Uniform1fvCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<Uniform1fvCommandBufferRequest, COMMAND_BUFFER_UNIFORM1FV_REQ>
   {
   public:
@@ -112,7 +113,7 @@ namespace commandbuffers
     std::vector<float> values;
   };
 
-  class Uniform1iCommandBufferRequest
+  class Uniform1iCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<Uniform1iCommandBufferRequest, COMMAND_BUFFER_UNIFORM1I_REQ>
   {
   public:
@@ -129,7 +130,7 @@ namespace commandbuffers
     int v0;
   };
 
-  class Uniform1ivCommandBufferRequest
+  class Uniform1ivCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<Uniform1ivCommandBufferRequest, COMMAND_BUFFER_UNIFORM1IV_REQ>
   {
   public:
@@ -166,7 +167,7 @@ namespace commandbuffers
     std::vector<int> values;
   };
 
-  class Uniform2fCommandBufferRequest
+  class Uniform2fCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<Uniform2fCommandBufferRequest, COMMAND_BUFFER_UNIFORM2F_REQ>
   {
   public:
@@ -185,7 +186,7 @@ namespace commandbuffers
     float v1;
   };
 
-  class Uniform2fvCommandBufferRequest
+  class Uniform2fvCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<Uniform2fvCommandBufferRequest, COMMAND_BUFFER_UNIFORM2FV_REQ>
   {
   public:
@@ -222,7 +223,7 @@ namespace commandbuffers
     std::vector<float> values;
   };
 
-  class Uniform2iCommandBufferRequest
+  class Uniform2iCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<Uniform2iCommandBufferRequest, COMMAND_BUFFER_UNIFORM2I_REQ>
   {
   public:
@@ -241,7 +242,7 @@ namespace commandbuffers
     int v1;
   };
 
-  class Uniform2ivCommandBufferRequest
+  class Uniform2ivCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<Uniform2ivCommandBufferRequest, COMMAND_BUFFER_UNIFORM2IV_REQ>
   {
   public:
@@ -278,7 +279,7 @@ namespace commandbuffers
     std::vector<int> values;
   };
 
-  class Uniform3fCommandBufferRequest
+  class Uniform3fCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<Uniform3fCommandBufferRequest, COMMAND_BUFFER_UNIFORM3F_REQ>
   {
   public:
@@ -299,7 +300,7 @@ namespace commandbuffers
     float v2;
   };
 
-  class Uniform3fvCommandBufferRequest
+  class Uniform3fvCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<Uniform3fvCommandBufferRequest, COMMAND_BUFFER_UNIFORM3FV_REQ>
   {
   public:
@@ -336,7 +337,7 @@ namespace commandbuffers
     std::vector<float> values;
   };
 
-  class Uniform3iCommandBufferRequest
+  class Uniform3iCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<Uniform3iCommandBufferRequest, COMMAND_BUFFER_UNIFORM3I_REQ>
   {
   public:
@@ -357,7 +358,7 @@ namespace commandbuffers
     int v2;
   };
 
-  class Uniform3ivCommandBufferRequest
+  class Uniform3ivCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<Uniform3ivCommandBufferRequest, COMMAND_BUFFER_UNIFORM3IV_REQ>
   {
   public:
@@ -409,12 +410,12 @@ namespace commandbuffers
     }
 
   public:
-    TrCommandBufferMessage *serialize() override
+    TrCommandBufferMessage *serialize() override final
     {
       auto message = new TrCommandBufferMessage(type, size, this);
       return message;
     }
-    void deserialize(TrCommandBufferMessage &message) override
+    void deserialize(TrCommandBufferMessage &message) override final
     {
     }
 
@@ -443,14 +444,14 @@ namespace commandbuffers
     }
 
   public:
-    TrCommandBufferMessage *serialize() override
+    TrCommandBufferMessage *serialize() override final
     {
       auto message = new TrCommandBufferMessage(type, size, this);
       if (values.size() > 3 && values.size() % 4 == 0) // Check the value size is 4x
         message->addVecSegment(values);
       return message;
     }
-    void deserialize(TrCommandBufferMessage &message) override
+    void deserialize(TrCommandBufferMessage &message) override final
     {
       auto valuesSegment = message.getSegment(0);
       if (valuesSegment != nullptr)
@@ -462,7 +463,7 @@ namespace commandbuffers
     std::vector<Tv> values;
   };
 
-  class Uniform4fCommandBufferRequest
+  class Uniform4fCommandBufferRequest final
       : public Uniform4xCommandBufferRequest<Uniform4fCommandBufferRequest, float>
   {
   public:
@@ -472,7 +473,7 @@ namespace commandbuffers
     }
   };
 
-  class Uniform4fvCommandBufferRequest
+  class Uniform4fvCommandBufferRequest final
       : public Uniform4xvCommandBufferRequest<Uniform4fvCommandBufferRequest, float>
   {
   public:
@@ -483,7 +484,7 @@ namespace commandbuffers
     }
   };
 
-  class Uniform4iCommandBufferRequest
+  class Uniform4iCommandBufferRequest final
       : public Uniform4xCommandBufferRequest<Uniform4iCommandBufferRequest, int>
   {
   public:
@@ -493,10 +494,13 @@ namespace commandbuffers
     }
   };
 
-  class Uniform4ivCommandBufferRequest : public Uniform4xvCommandBufferRequest<Uniform4ivCommandBufferRequest, int>
+  class Uniform4ivCommandBufferRequest final
+      : public Uniform4xvCommandBufferRequest<Uniform4ivCommandBufferRequest, int>
   {
   public:
     using Uniform4xvCommandBufferRequest::Uniform4xvCommandBufferRequest;
+
+  public:
     Uniform4ivCommandBufferRequest(uint32_t location, const std::vector<int> &values)
         : Uniform4xvCommandBufferRequest(COMMAND_BUFFER_UNIFORM4IV_REQ, location, values)
     {
@@ -535,14 +539,14 @@ namespace commandbuffers
     }
 
   public:
-    TrCommandBufferMessage *serialize() override
+    TrCommandBufferMessage *serialize() override final
     {
       auto message = new TrCommandBufferMessage(type, size, this);
       if (values.size() > matrixSize - 1 && values.size() % matrixSize == 0) // Check the value size is Nx
         message->addVecSegment(values);
       return message;
     }
-    void deserialize(TrCommandBufferMessage &message) override
+    void deserialize(TrCommandBufferMessage &message) override final
     {
       auto valuesSegment = message.getSegment(0);
       if (valuesSegment != nullptr)
@@ -556,7 +560,7 @@ namespace commandbuffers
     MatrixComputationGraph computationGraph4values;
   };
 
-  class UniformMatrix2fvCommandBufferRequest
+  class UniformMatrix2fvCommandBufferRequest final
       : public UniformMatrixNfvCommandBufferRequest<UniformMatrix2fvCommandBufferRequest, 2 * 2>
   {
   public:
@@ -571,7 +575,7 @@ namespace commandbuffers
     }
   };
 
-  class UniformMatrix3fvCommandBufferRequest
+  class UniformMatrix3fvCommandBufferRequest final
       : public UniformMatrixNfvCommandBufferRequest<UniformMatrix3fvCommandBufferRequest, 3 * 3>
   {
   public:
@@ -586,7 +590,7 @@ namespace commandbuffers
     }
   };
 
-  class UniformMatrix4fvCommandBufferRequest
+  class UniformMatrix4fvCommandBufferRequest final
       : public UniformMatrixNfvCommandBufferRequest<UniformMatrix4fvCommandBufferRequest, 4 * 4>
   {
   public:

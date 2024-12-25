@@ -5,8 +5,9 @@
 
 namespace commandbuffers
 {
-  class CreateVertexArrayCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateVertexArrayCommandBufferRequest,
-                                                                                    COMMAND_BUFFER_CREATE_VERTEX_ARRAY_REQ>
+  class CreateVertexArrayCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<CreateVertexArrayCommandBufferRequest,
+                                            COMMAND_BUFFER_CREATE_VERTEX_ARRAY_REQ>
   {
   public:
     CreateVertexArrayCommandBufferRequest() = delete;
@@ -20,8 +21,9 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
-  class DeleteVertexArrayCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteVertexArrayCommandBufferRequest,
-                                                                                    COMMAND_BUFFER_DELETE_VERTEX_ARRAY_REQ>
+  class DeleteVertexArrayCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<DeleteVertexArrayCommandBufferRequest,
+                                            COMMAND_BUFFER_DELETE_VERTEX_ARRAY_REQ>
   {
   public:
     DeleteVertexArrayCommandBufferRequest() = delete;
@@ -35,8 +37,9 @@ namespace commandbuffers
     uint32_t vertexArray;
   };
 
-  class BindVertexArrayCommandBufferRequest : public TrCommandBufferSimpleRequest<BindVertexArrayCommandBufferRequest,
-                                                                                  COMMAND_BUFFER_BIND_VERTEX_ARRAY_REQ>
+  class BindVertexArrayCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<BindVertexArrayCommandBufferRequest,
+                                            COMMAND_BUFFER_BIND_VERTEX_ARRAY_REQ>
   {
   public:
     BindVertexArrayCommandBufferRequest() = delete;
@@ -50,8 +53,9 @@ namespace commandbuffers
     uint32_t vertexArray;
   };
 
-  class IsVertexArrayCommandBufferRequest : public TrCommandBufferSimpleRequest<IsVertexArrayCommandBufferRequest,
-                                                                                COMMAND_BUFFER_IS_VERTEX_ARRAY_REQ>
+  class IsVertexArrayCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<IsVertexArrayCommandBufferRequest,
+                                            COMMAND_BUFFER_IS_VERTEX_ARRAY_REQ>
   {
   public:
     IsVertexArrayCommandBufferRequest() = delete;

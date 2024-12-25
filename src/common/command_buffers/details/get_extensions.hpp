@@ -5,14 +5,16 @@
 
 namespace commandbuffers
 {
-  class GetExtensionsCommandBufferRequest : public TrCommandBufferSimpleRequest<GetExtensionsCommandBufferRequest,
-                                                                                COMMAND_BUFFER_GET_EXTENSIONS_REQ>
+  class GetExtensionsCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<GetExtensionsCommandBufferRequest,
+                                            COMMAND_BUFFER_GET_EXTENSIONS_REQ>
   {
   public:
     using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
   };
 
-  class GetExtensionsCommandBufferResponse : public TrCommandBufferSimpleResponse<GetExtensionsCommandBufferResponse>
+  class GetExtensionsCommandBufferResponse final
+      : public TrCommandBufferSimpleResponse<GetExtensionsCommandBufferResponse>
   {
   public:
     GetExtensionsCommandBufferResponse(GetExtensionsCommandBufferResponse &that) : TrCommandBufferSimpleResponse(that) {}
@@ -44,6 +46,6 @@ namespace commandbuffers
     }
 
   public:
-    vector<string> extensions;
+    std::vector<std::string> extensions;
   };
 }

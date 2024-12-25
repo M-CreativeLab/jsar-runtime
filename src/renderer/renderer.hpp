@@ -28,7 +28,7 @@ class RenderAPI;
 
 namespace renderer
 {
-  class TrRenderer
+  class TrRenderer final
   {
   public:
     /**

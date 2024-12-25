@@ -35,65 +35,73 @@ namespace commandbuffers
     ValueType value;
   };
 
-  class GetBooleanvCommandBufferRequest : public GetParameterCommandBufferRequest<GetBooleanvCommandBufferRequest,
-                                                                                  COMMAND_BUFFER_GET_BOOLEANV_REQ>
+  class GetBooleanvCommandBufferRequest final
+      : public GetParameterCommandBufferRequest<GetBooleanvCommandBufferRequest,
+                                                COMMAND_BUFFER_GET_BOOLEANV_REQ>
   {
   public:
     using GetParameterCommandBufferRequest::GetParameterCommandBufferRequest;
   };
 
-  class GetBooleanvCommandBufferResponse : public GetParameterCommandBufferResponse<GetBooleanvCommandBufferResponse,
-                                                                                    GetBooleanvCommandBufferRequest,
-                                                                                    bool,
-                                                                                    COMMAND_BUFFER_GET_BOOLEANV_RES>
+  class GetBooleanvCommandBufferResponse final
+      : public GetParameterCommandBufferResponse<GetBooleanvCommandBufferResponse,
+                                                 GetBooleanvCommandBufferRequest,
+                                                 bool,
+                                                 COMMAND_BUFFER_GET_BOOLEANV_RES>
   {
   public:
     using GetParameterCommandBufferResponse::GetParameterCommandBufferResponse;
   };
 
-  class GetIntegervCommandBufferRequest : public GetParameterCommandBufferRequest<GetIntegervCommandBufferRequest,
-                                                                                  COMMAND_BUFFER_GET_INTEGERV_REQ>
+  class GetIntegervCommandBufferRequest final
+      : public GetParameterCommandBufferRequest<GetIntegervCommandBufferRequest,
+                                                COMMAND_BUFFER_GET_INTEGERV_REQ>
   {
   public:
     using GetParameterCommandBufferRequest::GetParameterCommandBufferRequest;
   };
 
-  class GetIntegervCommandBufferResponse : public GetParameterCommandBufferResponse<GetIntegervCommandBufferResponse,
-                                                                                    GetIntegervCommandBufferRequest,
-                                                                                    int,
-                                                                                    COMMAND_BUFFER_GET_INTEGERV_RES>
+  class GetIntegervCommandBufferResponse final
+      : public GetParameterCommandBufferResponse<GetIntegervCommandBufferResponse,
+                                                 GetIntegervCommandBufferRequest,
+                                                 int,
+                                                 COMMAND_BUFFER_GET_INTEGERV_RES>
   {
   public:
     using GetParameterCommandBufferResponse::GetParameterCommandBufferResponse;
   };
 
-  class GetFloatvCommandBufferRequest : public GetParameterCommandBufferRequest<GetFloatvCommandBufferRequest,
-                                                                                COMMAND_BUFFER_GET_FLOATV_REQ>
+  class GetFloatvCommandBufferRequest final
+      : public GetParameterCommandBufferRequest<GetFloatvCommandBufferRequest,
+                                                COMMAND_BUFFER_GET_FLOATV_REQ>
   {
   public:
     using GetParameterCommandBufferRequest::GetParameterCommandBufferRequest;
   };
 
-  class GetFloatvCommandBufferResponse : public GetParameterCommandBufferResponse<GetFloatvCommandBufferResponse,
-                                                                                GetFloatvCommandBufferRequest,
-                                                                                float,
-                                                                                COMMAND_BUFFER_GET_FLOATV_RES>
+  class GetFloatvCommandBufferResponse final
+      : public GetParameterCommandBufferResponse<GetFloatvCommandBufferResponse,
+                                                 GetFloatvCommandBufferRequest,
+                                                 float,
+                                                 COMMAND_BUFFER_GET_FLOATV_RES>
   {
   public:
     using GetParameterCommandBufferResponse::GetParameterCommandBufferResponse;
   };
 
-  class GetStringCommandBufferRequest : public GetParameterCommandBufferRequest<GetStringCommandBufferRequest,
-                                                                                COMMAND_BUFFER_GET_STRING_REQ>
+  class GetStringCommandBufferRequest final
+      : public GetParameterCommandBufferRequest<GetStringCommandBufferRequest,
+                                                COMMAND_BUFFER_GET_STRING_REQ>
   {
   public:
     using GetParameterCommandBufferRequest::GetParameterCommandBufferRequest;
   };
 
-  class GetStringCommandBufferResponse : public GetParameterCommandBufferResponse<GetStringCommandBufferResponse,
-                                                                                  GetStringCommandBufferRequest,
-                                                                                  std::string,
-                                                                                  COMMAND_BUFFER_GET_STRING_RES>
+  class GetStringCommandBufferResponse final
+      : public GetParameterCommandBufferResponse<GetStringCommandBufferResponse,
+                                                 GetStringCommandBufferRequest,
+                                                 std::string,
+                                                 COMMAND_BUFFER_GET_STRING_RES>
   {
   public:
     using GetParameterCommandBufferResponse::GetParameterCommandBufferResponse;
@@ -117,8 +125,9 @@ namespace commandbuffers
     }
   };
 
-  class GetShaderPrecisionFormatCommandBufferRequest : public TrCommandBufferSimpleRequest<GetShaderPrecisionFormatCommandBufferRequest,
-                                                                                           COMMAND_BUFFER_GET_SHADER_PRECISION_FORMAT_REQ>
+  class GetShaderPrecisionFormatCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<GetShaderPrecisionFormatCommandBufferRequest,
+                                            COMMAND_BUFFER_GET_SHADER_PRECISION_FORMAT_REQ>
   {
   public:
     GetShaderPrecisionFormatCommandBufferRequest() = delete;
@@ -134,11 +143,13 @@ namespace commandbuffers
     int precisiontype;
   };
 
-  class GetShaderPrecisionFormatCommandBufferResponse : public TrCommandBufferSimpleResponse<GetShaderPrecisionFormatCommandBufferResponse>
+  class GetShaderPrecisionFormatCommandBufferResponse final
+      : public TrCommandBufferSimpleResponse<GetShaderPrecisionFormatCommandBufferResponse>
   {
   public:
     GetShaderPrecisionFormatCommandBufferResponse() = delete;
-    GetShaderPrecisionFormatCommandBufferResponse(GetShaderPrecisionFormatCommandBufferRequest *req, int rangeMin, int rangeMax, int precision)
+    GetShaderPrecisionFormatCommandBufferResponse(GetShaderPrecisionFormatCommandBufferRequest *req,
+                                                  int rangeMin, int rangeMax, int precision)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SHADER_PRECISION_FORMAT_RES, req),
           rangeMin(rangeMin),
           rangeMax(rangeMax),
@@ -152,13 +163,15 @@ namespace commandbuffers
     int precision;
   };
 
-  class GetErrorCommandBufferRequest : public TrCommandBufferSimpleRequest<GetErrorCommandBufferRequest, COMMAND_BUFFER_GET_ERROR_REQ>
+  class GetErrorCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<GetErrorCommandBufferRequest, COMMAND_BUFFER_GET_ERROR_REQ>
   {
   public:
     using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
   };
 
-  class GetErrorCommandBufferResponse : public TrCommandBufferSimpleResponse<GetErrorCommandBufferResponse>
+  class GetErrorCommandBufferResponse final
+      : public TrCommandBufferSimpleResponse<GetErrorCommandBufferResponse>
   {
   public:
     GetErrorCommandBufferResponse() = delete;

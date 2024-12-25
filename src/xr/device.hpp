@@ -29,7 +29,7 @@ namespace xr
   /**
    * The WebXR device is used to manage WebXR sessions, input sources and other resources.
    */
-  class Device
+  class Device final
   {
     friend class TrXRSession;
 

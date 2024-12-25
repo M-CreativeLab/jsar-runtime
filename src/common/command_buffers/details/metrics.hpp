@@ -11,8 +11,9 @@ namespace commandbuffers
     LargestContentfulPaint = 2,
   };
 
-  class PaintingMetricsCommandBufferRequest : public TrCommandBufferSimpleRequest<PaintingMetricsCommandBufferRequest,
-                                                                                  COMMAND_BUFFER_METRICS_PAINTING_REQ>
+  class PaintingMetricsCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<PaintingMetricsCommandBufferRequest,
+                                            COMMAND_BUFFER_METRICS_PAINTING_REQ>
   {
   public:
     PaintingMetricsCommandBufferRequest() = delete;

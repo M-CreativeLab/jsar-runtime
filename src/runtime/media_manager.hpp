@@ -103,8 +103,11 @@ private:
  * The media manager class which is for managing the audio and video's playbacks and recordings, and it also provides
  * the audio spatialization APIs for managing the audio sources and listeners.
  */
-class TrMediaManager
+class TrMediaManager final
 {
+  friend class TrSoundSource;
+  friend class TrContentRuntime;
+
 public:
   static void DataCallback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount);
 
@@ -185,7 +188,4 @@ private:
   unique_ptr<WorkerThread> chanClientsWatcher = nullptr;
   atomic<bool> initialized = false;
   atomic<bool> disabled = false;
-
-  friend class TrSoundSource;
-  friend class TrContentRuntime;
 };

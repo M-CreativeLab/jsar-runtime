@@ -15,7 +15,7 @@
 /**
  * The Hive Daemon is a process that manages the creation of content processes.
  */
-class TrHiveDaemon
+class TrHiveDaemon final
 {
   friend class TrContentManager;
 

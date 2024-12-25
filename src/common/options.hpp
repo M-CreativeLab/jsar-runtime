@@ -56,7 +56,7 @@ enum class TrScriptRunMode
  * - `id`: The document id.
  * - `disableCache`: The flag to disable the cache.
  */
-class TrDocumentRequestInit
+class TrDocumentRequestInit final
 {
 public:
   TrDocumentRequestInit() = default;
@@ -81,14 +81,14 @@ public:
   }
 
 public:
-  string url;
+  std::string url;
   uint32_t id = 0;
   bool disableCache = false;
   bool isPreview = false;
   TrScriptRunMode runScripts = TrScriptRunMode::Dangerously;
 };
 
-inline string documentEventToName(TrDocumentEventType type)
+inline std::string documentEventToName(TrDocumentEventType type)
 {
   switch (type)
   {

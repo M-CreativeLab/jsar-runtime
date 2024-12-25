@@ -6,8 +6,8 @@
 
 namespace commandbuffers
 {
-  class CreateWebGLContextRequest : public TrCommandBufferSimpleRequest<CreateWebGLContextRequest,
-                                                                        COMMAND_BUFFER_CREATE_WEBGL_CONTEXT_REQ>
+  class CreateWebGLContextRequest final
+      : public TrCommandBufferSimpleRequest<CreateWebGLContextRequest, COMMAND_BUFFER_CREATE_WEBGL_CONTEXT_REQ>
   {
   public:
     using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
@@ -22,14 +22,16 @@ namespace commandbuffers
     uint32_t contextId;
   };
 
-  class WebGL1ContextInitCommandBufferRequest : public TrCommandBufferSimpleRequest<WebGL1ContextInitCommandBufferRequest,
-                                                                                    COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ>
+  class WebGL1ContextInitCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<WebGL1ContextInitCommandBufferRequest,
+                                            COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ>
   {
   public:
     using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
   };
 
-  class WebGL1ContextInitCommandBufferResponse : public TrCommandBufferSimpleResponse<WebGL1ContextInitCommandBufferResponse>
+  class WebGL1ContextInitCommandBufferResponse final
+      : public TrCommandBufferSimpleResponse<WebGL1ContextInitCommandBufferResponse>
   {
   public:
     WebGL1ContextInitCommandBufferResponse(WebGL1ContextInitCommandBufferRequest *req)
@@ -88,14 +90,16 @@ namespace commandbuffers
     string renderer;
   };
 
-  class WebGL2ContextInitCommandBufferRequest : public TrCommandBufferSimpleRequest<WebGL2ContextInitCommandBufferRequest,
-                                                                                    COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_REQ>
+  class WebGL2ContextInitCommandBufferRequest final
+      : public TrCommandBufferSimpleRequest<WebGL2ContextInitCommandBufferRequest,
+                                            COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_REQ>
   {
   public:
     using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
   };
 
-  class WebGL2ContextInitCommandBufferResponse : public TrCommandBufferSimpleResponse<WebGL2ContextInitCommandBufferResponse>
+  class WebGL2ContextInitCommandBufferResponse final
+      : public TrCommandBufferSimpleResponse<WebGL2ContextInitCommandBufferResponse>
   {
   public:
     WebGL2ContextInitCommandBufferResponse(WebGL2ContextInitCommandBufferRequest *req)

@@ -27,7 +27,7 @@ using namespace std;
 /**
  * The embedder class for Unity, it depends on the Unity native interfaces to embed the Transmute runtime into Unity.
  */
-class UnityEmbedder : public TrEmbedder
+class UnityEmbedder final : public TrEmbedder
 {
 public:
   static UnityEmbedder *Create(IUnityInterfaces *unityInterfaces);

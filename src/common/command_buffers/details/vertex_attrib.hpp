@@ -5,7 +5,7 @@
 
 namespace commandbuffers
 {
-  class EnableVertexAttribArrayCommandBufferRequest
+  class EnableVertexAttribArrayCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<EnableVertexAttribArrayCommandBufferRequest,
                                             COMMAND_BUFFER_ENABLE_VERTEX_ATTRIB_ARRAY_REQ>
   {
@@ -21,7 +21,7 @@ namespace commandbuffers
     uint32_t index;
   };
 
-  class DisableVertexAttribArrayCommandBufferRequest
+  class DisableVertexAttribArrayCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<DisableVertexAttribArrayCommandBufferRequest,
                                             COMMAND_BUFFER_DISABLE_VERTEX_ATTRIB_ARRAY_REQ>
   {
@@ -37,7 +37,7 @@ namespace commandbuffers
     uint32_t index;
   };
 
-  class VertexAttribPointerCommandBufferRequest
+  class VertexAttribPointerCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<VertexAttribPointerCommandBufferRequest, COMMAND_BUFFER_VERTEX_ATTRIB_POINTER_REQ>
   {
   public:
@@ -62,7 +62,7 @@ namespace commandbuffers
     uint32_t offset;
   };
 
-  class VertexAttribIPointerCommandBufferRequest
+  class VertexAttribIPointerCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<VertexAttribIPointerCommandBufferRequest, COMMAND_BUFFER_VERTEX_ATTRIB_IPOINTER_REQ>
   {
   public:
@@ -85,7 +85,7 @@ namespace commandbuffers
     uint32_t offset;
   };
 
-  class VertexAttribDivisorCommandBufferRequest
+  class VertexAttribDivisorCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<VertexAttribDivisorCommandBufferRequest, COMMAND_BUFFER_VERTEX_ATTRIB_DIVISOR_REQ>
   {
   public:

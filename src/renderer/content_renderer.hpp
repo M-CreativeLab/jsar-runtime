@@ -29,7 +29,7 @@ namespace renderer
    * }
    * ```
    */
-  class TrBackupGLContextScope
+  class TrBackupGLContextScope final
   {
   public:
     TrBackupGLContextScope(TrContentRenderer *contentRenderer);
@@ -39,7 +39,7 @@ namespace renderer
     TrContentRenderer *contentRenderer;
   };
 
-  class TrContentRenderer
+  class TrContentRenderer final
   {
     friend class TrBackupGLContextScope;
     friend class TrRenderer;
@@ -85,7 +85,7 @@ namespace renderer
   private: // private lifecycle
     /**
      * The callback function to handle the command buffer request received.
-     * 
+     *
      * @param req The command buffer request to be handled.
      */
     void onCommandBufferRequestReceived(TrCommandBufferBase *req);
