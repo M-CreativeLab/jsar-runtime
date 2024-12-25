@@ -108,6 +108,9 @@ namespace renderer
   private:
     void resetFrameRequestChanSenderWith(ipc::TrOneShotClient<TrFrameRequestMessage> *client);
 
+  public:
+    uint32_t id;
+
   private:
     std::weak_ptr<TrContentRuntime> content;
     TrConstellation *constellation = nullptr;

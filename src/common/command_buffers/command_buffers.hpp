@@ -1,7 +1,6 @@
 #pragma once
 
 #include "./details/webgl_context_init.hpp"
-#include "./details/webgl2_context_init.hpp"
 #include "./details/get_extensions.hpp"
 #include "./details/program.hpp"
 #include "./details/shader.hpp"

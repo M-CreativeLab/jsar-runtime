@@ -704,6 +704,7 @@ namespace client_graphics
     WebGLState &clientState() { return clientState_; }
 
   public:
+    uint32_t id;
     ContextAttributes contextAttributes;
     int maxCombinedTextureImageUnits;
     int maxCubeMapTextureSize;
@@ -744,12 +745,12 @@ namespace client_graphics
   {
   public:
     /**
-     * It creates a new WebGL2Context object.
+     * It creates a new `WebGL2Context` object.
      *
      * @param attrs The context attributes.
-     * @returns The created WebGL2Context object.
+     * @returns The created `WebGL2Context` object.
      */
-    static std::shared_ptr<WebGL2Context> Make(ContextAttributes &attrs)
+    static inline std::shared_ptr<WebGL2Context> Make(ContextAttributes &attrs)
     {
       return std::make_shared<WebGL2Context>(attrs);
     }

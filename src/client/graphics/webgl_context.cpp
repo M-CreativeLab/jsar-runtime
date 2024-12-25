@@ -1,5 +1,7 @@
 #include <string>
-#include "crates/jsar_jsbindings.h"
+#include <idgen.hpp>
+#include <crates/jsar_jsbindings.h>
+
 #include "./webgl_context.hpp"
 #include "./webgl_active_info.hpp"
 #include "./webgl_uniform_location.hpp"
@@ -43,6 +45,12 @@ namespace client_graphics
   {
     clientContext_ = TrClientContextPerProcess::Get();
     assert(clientContext_ != nullptr);
+
+    static TrIdGenerator idGen(1);
+    id = idGen.get();
+
+    auto createReq = CreateWebGLContextRequest(id);
+    sendCommandBufferRequest(createReq, true);
 
     auto sentAt = std::chrono::system_clock::now();
     auto initCommandBuffer = WebGL1ContextInitCommandBufferRequest();
