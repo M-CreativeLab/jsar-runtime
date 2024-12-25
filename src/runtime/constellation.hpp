@@ -15,10 +15,6 @@
 #include "renderer/renderer.hpp"
 #include "xr/device.hpp"
 
-using namespace std;
-using namespace std::filesystem;
-using namespace renderer;
-
 class TrEmbedder;
 class TrContentRuntime;
 class TrContentManager;
@@ -235,7 +231,7 @@ public:
    * A renderer does control the rendering of each content, and it's responsible for managing the graphics context
    * recording and restoring, etc.
    */
-  std::shared_ptr<TrRenderer> renderer;
+  std::shared_ptr<renderer::TrRenderer> renderer;
   /**
    * The smart pointer to the XR device.
    *

@@ -23,10 +23,6 @@ using namespace media_comm;
 
 class TrMediaManager;
 
-#define TR_MEDIA_OUTPUT_CHANNELS 2
-#define TR_MEDIA_OUTPUT_SAMPLE_RATE 44100
-#define TR_MEDIA_OUTPUT_FORMAT ma_format_f32
-
 /**
  * The sound source class which is representing the sound source in the audio engine, it provides the APIs for playing,
  * pausing, spatialization and other audio control operations.
@@ -127,7 +123,7 @@ public:
   void shutdown();
   /**
    * Create a new sound source for the specified content.
-   * 
+   *
    * @param content The content which the sound source belongs to.
    * @param clientId The client id which the sound source is created for.
    * @returns The sound source if created successfully, otherwise returns `nullptr`.
@@ -135,14 +131,14 @@ public:
   shared_ptr<TrSoundSource> createSoundSource(std::shared_ptr<TrContentRuntime> content, uint32_t clientId);
   /**
    * Iterate all the sound sources by the specified content, and call the callback function for each sound source.
-   * 
+   *
    * @param content The content which the sound sources belong to.
    * @param callback The callback function which will be called for each sound source.
    */
   void iterateSoundSourcesByContent(std::shared_ptr<TrContentRuntime> content, std::function<void(shared_ptr<TrSoundSource>)> callback);
   /**
    * Find the sound source by the specified content and sound source's id.
-   * 
+   *
    * @param content The content which the sound source belongs to.
    * @param id The sound source's id.
    * @returns The sound source if found, otherwise returns `nullptr`.
@@ -151,14 +147,14 @@ public:
   /**
    * Remove the sound sources by the specified content, it's used for releasing the sound sources when the content is
    * closed.
-   * 
+   *
    * @param contentId The content id which the sound sources belong to.
    */
   void removeSoundSourcesByContent(int contentId);
   /**
    * Update the listener's base matrix, the audio engine will use this matrix to calculate the listener's position and
    * orientation.
-   * 
+   *
    * @param baseMatrixValues The base matrix values in the column-major order.
    */
   void updateListenerBaseMatrix(float *baseMatrixValues)
@@ -172,7 +168,7 @@ public:
   /**
    * It returns the command channel's port number for clients to connect.
    */
-  int chanPort() { return commandChanServer->getPort(); }
+  inline int chanPort() { return commandChanServer->getPort(); }
 
 private:
   void onNewChanClient(TrOneShotClient<TrMediaCommandMessage> &chanClient);

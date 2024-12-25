@@ -1,8 +1,11 @@
 #include "embedder.hpp"
 #include "common/analytics/perf_counter.hpp"
 
+using namespace std;
+using namespace renderer;
+
 TrEmbedder::TrEmbedder(TrHostEngine hostEngine)
-    : constellation(std::make_shared<TrConstellation>(this)),
+    : constellation(make_shared<TrConstellation>(this)),
       hostEngine(hostEngine)
 {
   struct sigaction sa;
@@ -37,35 +40,6 @@ bool TrEmbedder::configureXrDevice(xr::TrDeviceInit &init)
   return true;
 }
 
-bool TrEmbedder::start()
-{
-  return constellation->initialize();
-}
-
-void TrEmbedder::shutdown()
-{
-  constellation->shutdown();
-}
-
-uint32_t TrEmbedder::getFps()
-{
-  return constellation->renderer->getFps();
-}
-
-uint32_t TrEmbedder::getUptime()
-{
-  return constellation->renderer->getUptime();
-}
-
-string TrEmbedder::getVersion()
-{
-#ifdef TR_VERSION
-  return TR_VERSION;
-#else
-  return "unset";
-#endif
-}
-
 bool TrEmbedder::onFrame()
 {
   analytics::PerformanceCounter perfCounter("HostTick");
@@ -79,9 +53,4 @@ bool TrEmbedder::onFrame()
   constellation->getPerfFs()->setFrameDuration(frameDuration);
 #endif
   return true;
-}
-
-bool TrEmbedder::isEmbeddingWith(TrHostEngine engine)
-{
-  return hostEngine == engine;
 }

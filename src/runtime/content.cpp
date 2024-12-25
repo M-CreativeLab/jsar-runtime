@@ -19,6 +19,7 @@
 #include "crates/jsar_jsbundle.h"
 
 using namespace std;
+using namespace std::filesystem;
 
 TrContentRuntime::TrContentRuntime(TrContentManager *contentMgr) : contentManager(contentMgr)
 {

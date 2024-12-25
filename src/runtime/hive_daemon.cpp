@@ -23,10 +23,6 @@ TrHiveDaemon::TrHiveDaemon(TrConstellation *constellation)
 {
 }
 
-TrHiveDaemon::~TrHiveDaemon()
-{
-}
-
 void TrHiveDaemon::start()
 {
   runtimeDirectory = constellation->getOptions().runtimeDirectory();

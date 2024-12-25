@@ -1,13 +1,14 @@
 #include <stdlib.h>
-#include "math/matrix.hpp"
+#include <common/debug.hpp>
+#include <math/matrix.hpp>
+#include <renderer/render_api.hpp>
+#include <xr/device.hpp>
+
 #include "base.hpp"
-#include "debug.hpp"
-#include "platform_base.hpp"
-#include "embedder.hpp"
-#include "constellation.hpp"
-#include "content.hpp"
-#include "renderer/render_api.hpp"
-#include "xr/device.hpp"
+#include "./platform_base.hpp"
+#include "./embedder.hpp"
+#include "./constellation.hpp"
+#include "./content.hpp"
 
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
 #include <sys/system_properties.h>

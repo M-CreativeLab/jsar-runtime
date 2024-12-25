@@ -97,7 +97,6 @@ public:
    * Dispose the content instance.
    *
    * @param waitsForExit If true, it will wait for the client process to exit.
-   * @returns null, but it will be blocked util the process is exit when `waitsForExit` is true.
    */
   void dispose(bool waitsForExit = false);
 

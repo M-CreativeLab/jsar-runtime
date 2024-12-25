@@ -9,6 +9,10 @@
 #include <iostream>
 #include <fstream>
 
+#define TR_MEDIA_OUTPUT_CHANNELS 2
+#define TR_MEDIA_OUTPUT_SAMPLE_RATE 44100
+#define TR_MEDIA_OUTPUT_FORMAT ma_format_f32
+
 using namespace std;
 
 TrSoundSource::TrSoundSource(TrMediaManager *mediaManager,

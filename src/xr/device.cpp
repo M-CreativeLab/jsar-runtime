@@ -18,11 +18,6 @@ namespace xr
   static uint32_t MAX_FRAME_RATE = 90;
   static TrIdGenerator sessionIdGen(1);
 
-  Device *Device::GetInstance()
-  {
-    return nullptr;
-  }
-
   Device::Device(TrConstellation *constellation)
       : m_Constellation(constellation),
         m_FieldOfView(0.0f),

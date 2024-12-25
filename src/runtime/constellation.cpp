@@ -6,6 +6,8 @@
 #include "./embedder.hpp"
 
 using namespace std;
+using namespace std::filesystem;
+using namespace renderer;
 
 void __tr_empty()
 {
@@ -27,7 +29,7 @@ TrConstellation::TrConstellation(TrEmbedder *embedder)
   contentManager = std::make_shared<TrContentManager>(this);
   mediaManager = std::make_shared<TrMediaManager>(this);
   renderer = TrRenderer::Make(this);
-  xrDevice = std::make_shared<xr::Device>(this);
+  xrDevice = xr::Device::Make(this);
 }
 
 TrConstellation::~TrConstellation()

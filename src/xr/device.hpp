@@ -24,19 +24,27 @@
 #include "./viewport.hpp"
 #include "./input_source.hpp"
 
-using namespace std;
-
 namespace xr
 {
   /**
-   * The XR Device is used to manage XR sessions, input sources and other XR resources.
+   * The WebXR device is used to manage WebXR sessions, input sources and other resources.
    */
   class Device
   {
   public:
-    static Device *GetInstance();
+    /**
+     * Create a new WebXR device instance.
+     * 
+     * @param constellation The constellation instance.
+     * @returns The new WebXR device instance.
+     */
+    static std::shared_ptr<Device> Make(TrConstellation *constellation)
+    {
+      return std::make_shared<Device>(constellation);
+    }
 
   public:
+    Device() = delete;
     Device(TrConstellation *constellation);
     ~Device() = default;
 
