@@ -57,6 +57,12 @@ namespace commandbuffers
     int requestId;
   };
 
+  /**
+   * A convienent template class to define the exchange-able command buffer request.
+   *
+   * @tparam Derived The derived class of the request.
+   * @tparam Type The type of the command buffer, which should be a request command buffer type.
+   */
   template <typename Derived, CommandBufferType Type>
     requires is_commandbuffer_request<Type>
   class TrCommandBufferSimpleRequest : public TrCommandBufferRequest
@@ -79,13 +85,19 @@ namespace commandbuffers
     }
   };
 
-  template <typename T>
+  /**
+   * A convienent template class to define the exchange-able command buffer response.
+   *
+   * @tparam Derived The derived class of the response.
+   * @todo Support template parameter `Type` to specify the type of the command buffer.
+   */
+  template <typename Derived>
   class TrCommandBufferSimpleResponse : public TrCommandBufferResponse
   {
   public:
     TrCommandBufferSimpleResponse(TrCommandBufferSimpleResponse &that) : TrCommandBufferResponse(that) {}
     TrCommandBufferSimpleResponse(CommandBufferType type, TrCommandBufferRequest *req)
-        : TrCommandBufferResponse(type, sizeof(T), req)
+        : TrCommandBufferResponse(type, sizeof(Derived), req)
     {
     }
   };
