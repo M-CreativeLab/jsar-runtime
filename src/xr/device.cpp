@@ -71,7 +71,7 @@ namespace xr
     return mode == xr::TrXRSessionMode::ImmersiveAR;
   }
 
-  shared_ptr<TrXRSession> Device::requestSession(xr::TrXRSessionMode mode, shared_ptr<TrContentRenderer> contentRenderer)
+  shared_ptr<TrXRSession> Device::requestSession(xr::TrXRSessionMode mode, shared_ptr<TrContentRuntime> content)
   {
     if (isSessionSupported(mode) == false)
       return nullptr;
@@ -102,7 +102,7 @@ namespace xr
     {
       std::unique_lock<std::shared_mutex> lock(m_MutexForSessions);
       TrXRSessionInit init;
-      auto newSession = TrXRSession::Make(id, this, contentRenderer, mode, init);
+      auto newSession = TrXRSession::Make(id, this, content, mode, init);
       m_Sessions.push_back(newSession);
       return newSession;
     }
@@ -423,10 +423,6 @@ namespace xr
 
   void Device::handleCommandMessage(TrXRCommandMessage &message, shared_ptr<TrContentRuntime> content)
   {
-    auto contentRenderer = m_Constellation->renderer->findContentRenderer(content);
-    if (contentRenderer == nullptr)
-      return; // Just ignore the XR command message if the content renderer is not found.
-
     auto type = message.type;
     switch (type)
     {
@@ -434,7 +430,7 @@ namespace xr
   case xr::TrXRCmdType::hander:                      \
   {                                                  \
     auto req = message.createInstance<xr::hander>(); \
-    on##hander(*req, contentRenderer);               \
+    on##hander(*req, content);                       \
     delete req;                                      \
     break;                                           \
   }
@@ -446,30 +442,30 @@ namespace xr
     }
   }
 
-  void Device::onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request, shared_ptr<TrContentRenderer> contentRenderer)
+  void Device::onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request, shared_ptr<TrContentRuntime> content)
   {
     xr::IsSessionSupportedResponse resp;
     resp.supported = isSessionSupported(request.sessionMode);
-    contentRenderer->getContent()->sendXRCommandResponse(resp);
+    content->sendXRCommandResponse(resp);
   }
 
-  void Device::onSessionRequest(xr::SessionRequest &request, shared_ptr<TrContentRenderer> contentRenderer)
+  void Device::onSessionRequest(xr::SessionRequest &request, shared_ptr<TrContentRuntime> content)
   {
-    auto newSession = requestSession(request.sessionMode, contentRenderer);
+    auto newSession = requestSession(request.sessionMode, content);
     if (newSession == nullptr)
     {
       xr::SessionResponse resp(0);
-      contentRenderer->getContent()->sendXRCommandResponse(resp);
+      content->sendXRCommandResponse(resp);
     }
     else
     {
       xr::SessionResponse resp(newSession->id);
       resp.recommendedContentSize = newSession->recommendedContentSize;
-      contentRenderer->getContent()->sendXRCommandResponse(resp);
+      content->sendXRCommandResponse(resp);
     }
   }
 
-  void Device::onEndSessionRequest(xr::EndSessionRequest &request, shared_ptr<TrContentRenderer> contentRenderer)
+  void Device::onEndSessionRequest(xr::EndSessionRequest &request, shared_ptr<TrContentRuntime> content)
   {
     // TODO: implement the end session request
   }

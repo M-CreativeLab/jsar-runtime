@@ -46,12 +46,17 @@ public:
  */
 enum class RHIBackendType
 {
+  // OpenGL core profile
   OpenGLCore,
+  // OpenGL ES 2.0
   OpenGLESv2,
+  // OpenGL ES 3.0, 3.1, 3.2
   OpenGLESv3,
   VULKAN,
   Metal,
+  // Direct3D 11
   D3D11,
+  // Direct3D 12
   D3D12,
 };
 
@@ -80,7 +85,7 @@ public:
   /**
    * @returns the singleton instance of the current RHI.
    */
-  static RenderAPI *Get() { return s_instance; }
+  static inline RenderAPI *Get() { return s_instance; }
 
   /**
    * Creates the RHI instance.
@@ -92,7 +97,7 @@ public:
   static RenderAPI *Create(UnityGfxRenderer apiType, TrConstellation *constellation);
 
 public:
-  virtual ~RenderAPI() { s_instance = NULL; }
+  virtual ~RenderAPI() { s_instance = nullptr; }
 
   /**
    * Process general event like initialization, shutdown, device loss/reset etc.
@@ -160,27 +165,27 @@ public:
   /**
    * Sets the time of the current frame.
    */
-  void SetTime(float time) { this->time = time; }
+  inline void SetTime(float time) { this->time = time; }
 
   /**
    * @returns the backend type of the RHI.
    */
-  RHIBackendType GetBackendType() { return backendType; }
+  inline RHIBackendType GetBackendType() { return backendType; }
 
   /**
    * Enables the loggings for the application.
    */
-  void EnableAppGlobalLog() { m_EnableLogOnAppGlobal = true; }
+  inline void EnableAppGlobalLog() { m_EnableLogOnAppGlobal = true; }
 
   /**
    * Enables the loggings for the XR frame.
    */
-  void EnableXRFrameLog() { m_EnableLogOnXRFrame = true; }
+  inline void EnableXRFrameLog() { m_EnableLogOnXRFrame = true; }
 
   /**
    * Enables the context switch logs.
    */
-  void EnableContextLog() { m_PrintsContext = true; }
+  inline void EnableContextLog() { m_PrintsContext = true; }
 
   /**
    * Checks if the viewport should be changed with the given `XYWH`.
@@ -191,7 +196,7 @@ public:
    * @param height the height of the viewport.
    * @returns a boolean value indicating if the viewport has changed.
    */
-  bool HasViewportChanged(int x, int y, int width, int height)
+  inline bool HasViewportChanged(int x, int y, int width, int height)
   {
     return m_DrawingViewport.isEqual(width, height, x, y);
   }
@@ -201,7 +206,7 @@ public:
    *
    * @param viewport the viewport to be set.
    */
-  void SetDrawingViewport(TrViewport &viewport)
+  inline void SetDrawingViewport(TrViewport &viewport)
   {
     m_DrawingViewport = viewport;
   }
@@ -209,14 +214,14 @@ public:
   /**
    * @returns the drawing viewport.
    */
-  TrViewport GetDrawingViewport() { return m_DrawingViewport; }
+  inline TrViewport GetDrawingViewport() { return m_DrawingViewport; }
 
   /**
    * Sets the field of view.
    *
    * @param fov the field of view to be set.
    */
-  void SetFieldOfView(float fov) { this->fov = fov; }
+  inline void SetFieldOfView(float fov) { this->fov = fov; }
 
   // Lifecycles
 

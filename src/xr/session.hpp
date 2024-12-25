@@ -18,23 +18,24 @@ namespace xr
   {
   public:
     /**
-     * Make a new shared instance of `xr::TrXRSession`.
+     * Construct a new instance of `xr::TrXRSession`.
      *
-     * @param id The session id.
-     * @param xrDevice The XR device.
-     * @param contentRenderer The content renderer.
-     * @param mode The session mode.
-     * @param init The session initialization info.
+     * @param sessionId The session id.
+     * @param device The WebXR device.
+     * @param content The content source which the WebXR session belongs to.
+     * @param mode The requested session mode.
+     * @param init The requested session initialization info.
+     * @returns The new `xr::TrXRSession` instance.
      */
-    static std::shared_ptr<TrXRSession> Make(uint32_t id, Device *xrDevice, std::shared_ptr<TrContentRenderer> contentRenderer,
-                                             TrXRSessionMode mode, TrXRSessionInit &init)
+    static inline std::shared_ptr<TrXRSession> Make(uint32_t sessionId, Device *device, std::shared_ptr<TrContentRuntime> content,
+                                                    TrXRSessionMode mode,
+                                                    TrXRSessionInit &init)
     {
-      return std::make_shared<TrXRSession>(id, xrDevice, contentRenderer, mode, init);
+      return std::make_shared<TrXRSession>(sessionId, device, content, mode, init);
     }
 
   public:
-    TrXRSession(uint32_t id, Device *xrDevice, std::shared_ptr<TrContentRenderer> contentRenderer,
-                TrXRSessionMode mode, TrXRSessionInit &init);
+    TrXRSession(uint32_t id, Device *device, std::shared_ptr<TrContentRuntime> content, TrXRSessionMode mode, TrXRSessionInit &init);
     ~TrXRSession();
 
   public:
@@ -129,9 +130,9 @@ namespace xr
     uint32_t nextStereoId;
 
   private:
-    Device *xrDevice = nullptr;
+    Device *device = nullptr;
     TrConstellation *constellation = nullptr;
-    std::shared_ptr<TrContentRenderer> contentRenderer = nullptr;
+    std::weak_ptr<TrContentRuntime> content;
     /**
      * The session context zone for session-related shared data to client-side.
      */

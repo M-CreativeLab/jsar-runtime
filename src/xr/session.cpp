@@ -8,22 +8,21 @@ namespace xr
 {
   using namespace std;
 
-  TrXRSession::TrXRSession(uint32_t id, Device *xrDevice, shared_ptr<TrContentRenderer> contentRenderer,
+  TrXRSession::TrXRSession(uint32_t id, Device *device, shared_ptr<TrContentRuntime> content,
                            TrXRSessionMode mode, TrXRSessionInit &init)
       : id(id),
-        xrDevice(xrDevice),
-        constellation(xrDevice->m_Constellation),
-        contentRenderer(contentRenderer),
+        device(device),
+        constellation(device->m_Constellation),
+        content(weak_ptr<TrContentRuntime>(content)),
         mode(mode),
         init(init),
         baseMatrix(1.0f),
         boundingInfo(glm::vec3(-recommendedContentSize / 2), glm::vec3(recommendedContentSize / 2), baseMatrix)
   {
-    auto content = contentRenderer->getContent();
+    assert(device != nullptr);
     assert(content != nullptr);
     content->appendXRSession(this);
 
-    auto constellation = xrDevice->m_Constellation;
     auto &opt = constellation->getOptions();
     contextZone = make_unique<TrXRSessionContextZone>(opt.getZoneFilename(std::to_string(id), "sessions"),
                                                       TrZoneType::Server, id);
@@ -31,19 +30,19 @@ namespace xr
 
   TrXRSession::~TrXRSession()
   {
-    auto content = contentRenderer->getContent();
-    if (content != nullptr)
-      content->removeXRSession(this);
+    auto contentRef = content.lock();
+    if (contentRef != nullptr)
+      contentRef->removeXRSession(this);
   }
 
   void TrXRSession::tick()
   {
     static TrIdGenerator stereoIdGenerator(0x567);
-    switch (xrDevice->getStereoRenderingMode())
+    switch (device->getStereoRenderingMode())
     {
     case xr::TrStereoRenderingMode::MultiPass:
     {
-      if (xrDevice->getActiveEyeId() == 0) // Update the `nextStereoId` only when rendering the left eye.
+      if (device->getActiveEyeId() == 0) // Update the `nextStereoId` only when rendering the left eye.
         nextStereoId = stereoIdGenerator.get();
       break;
     }
@@ -71,14 +70,18 @@ namespace xr
 
   bool TrXRSession::belongsTo(pid_t contentPid)
   {
-    return contentRenderer->getContentPid() == contentPid;
+    auto contentRef = content.lock();
+    return contentRef == nullptr
+               ? false
+               : contentRef->pid == contentPid;
   }
 
   bool TrXRSession::isActive()
   {
-    auto content = contentRenderer->getContent();
-    assert(content != nullptr);
-    return content->getActiveXRSession() == this;
+    auto contentRef = content.lock();
+    return contentRef == nullptr
+               ? false
+               : contentRef->getActiveXRSession() == this;
   }
 
   glm::mat4 TrXRSession::getLocalBaseMatrix()
@@ -88,6 +91,9 @@ namespace xr
 
   void TrXRSession::setLocalBaseMatrix(glm::mat4 matrix)
   {
+    auto contentRef = content.lock();
+    assert(contentRef != nullptr);
+
     baseMatrix = matrix;
     boundingInfo.update(baseMatrix);
 
@@ -95,18 +101,17 @@ namespace xr
     contextZone->setLocalBaseMatrix(glm::value_ptr(baseMatrix));
 
     // Update the sound sources' base matrix.
-    auto content = contentRenderer->getContent();
-    constellation->mediaManager->iterateSoundSourcesByContent(content, [this](shared_ptr<TrSoundSource> soundSource)
+    constellation->mediaManager->iterateSoundSourcesByContent(contentRef, [this](shared_ptr<TrSoundSource> soundSource)
                                                               { soundSource->setBaseMatrix(baseMatrix); });
   }
 
   bool TrXRSession::isInFrustum()
   {
-    return boundingInfo.isInFrustum(xrDevice->m_ViewerFrustumPlanes);
+    return boundingInfo.isInFrustum(device->m_ViewerFrustumPlanes);
   }
 
   bool TrXRSession::isCompletelyInFrustum()
   {
-    return boundingInfo.isCompletelyInFrustum(xrDevice->m_ViewerFrustumPlanes);
+    return boundingInfo.isCompletelyInFrustum(device->m_ViewerFrustumPlanes);
   }
 }

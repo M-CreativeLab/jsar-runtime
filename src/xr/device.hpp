@@ -31,10 +31,12 @@ namespace xr
    */
   class Device
   {
+    friend class TrXRSession;
+
   public:
     /**
      * Create a new WebXR device instance.
-     * 
+     *
      * @param constellation The constellation instance.
      * @returns The new WebXR device instance.
      */
@@ -69,50 +71,70 @@ namespace xr
     void tick();
     /**
      * It returns if this session mode (immersive-ar, immersive-vr or inline) is supported by the XR device.
+     *
+     * @param mode the session mode to check if it is supported.
+     * @returns `true` if the session mode is supported.
      */
     bool isSessionSupported(TrXRSessionMode mode);
     /**
      * It requests a XR session with its mode and content source.
+     *
+     * @param mode the session mode to request the WebXR session.
+     * @param content the content source to request the WebXR session.
+     * @returns the new instance of `TrXRSession`.
      */
-    shared_ptr<TrXRSession> requestSession(TrXRSessionMode mode, std::shared_ptr<TrContentRenderer> contentRenderer);
+    std::shared_ptr<TrXRSession> requestSession(TrXRSessionMode mode, std::shared_ptr<TrContentRuntime> content);
     /**
      * It ends and removes a session by its id.
+     *
+     * @param session the session to end and remove.
+     * @returns `true` if the session is ended and removed successfully.
      */
     bool endAndRemoveSession(TrXRSession *session);
     /**
-     * If this device is enabled.
+     * @returns `true` if the device is enabled.
      */
     bool enabled();
     /**
-     * If this device is rendering as multipass.
+     * @returns `true` if the device is rendering as multipass.
      */
     bool isRenderedAsMultipass();
     /**
-     * It returns the stereo rendering mode.
+     * @returns the mode for stereo rendering.
      */
     TrStereoRenderingMode getStereoRenderingMode();
     /**
      * It creates a new stereo rendering frame.
      *
-     * @returns a new instance of StereoRenderingFrame.
+     * @param stereoId the stereo id for the new stereo rendering frame.
+     * @returns a new `StereoRenderingFrame` instance.
      */
     StereoRenderingFrame *createStereoRenderingFrame(int stereoId);
 
   public:
     /**
      * It returns the viewport for the specific view index.
+     *
+     * @param viewIndex the view index to get the viewport.
+     * @returns the viewport for the specific view index.
      */
     Viewport getViewport(int viewIndex);
     /**
-     * It returns the XR viewer/camera's base matrix.
+     * @returns the WebXR viewer base matrix.
      */
     float *getViewerBaseMatrix();
     /**
-     * It returns the view matrix for eye.
+     * Get the view matrix for specific eye.
+     *
+     * @param eye the eye index to get the view matrix.
+     * @returns the view matrix.
      */
     float *getViewMatrixForEye(int eye);
     /**
-     * It returns the projection matrix for eye.
+     * Get the projection matrix for eye.
+     *
+     * @param eye the eye index to get the projection matrix.
+     * @returns the projection matrix.
      */
     float *getProjectionMatrixForEye(int eye);
     glm::mat4 getLocalTransform(int id);
@@ -205,13 +227,13 @@ namespace xr
      *
      * @returns the session context zone directory.
      */
-    string getSessionContextZoneDirectory() { return m_SessionContextZoneDirectory; }
+    inline std::string getSessionContextZoneDirectory() { return m_SessionContextZoneDirectory; }
     /**
      * Get the device context zone path.
      *
      * @returns the device context zone path.
      */
-    string getDeviceContextZonePath() { return m_DeviceContextZone->getFilename(); }
+    inline std::string getDeviceContextZonePath() { return m_DeviceContextZone->getFilename(); }
 
   public: // Input sources
     /**
@@ -219,7 +241,7 @@ namespace xr
      *
      * @returns the input sources zone path.
      */
-    string getInputSourcesZonePath();
+    std::string getInputSourcesZonePath();
     /**
      * Returns the gaze input source for updating fields.
      */
@@ -257,10 +279,9 @@ namespace xr
     void handleCommandMessage(TrXRCommandMessage &message, std::shared_ptr<TrContentRuntime> content);
 
   private: // XR command channel handlers
-    void onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request,
-                                     std::shared_ptr<TrContentRenderer> contentRenderer);
-    void onSessionRequest(xr::SessionRequest &request, std::shared_ptr<TrContentRenderer> contentRenderer);
-    void onEndSessionRequest(xr::EndSessionRequest &request, std::shared_ptr<TrContentRenderer> contentRenderer);
+    void onIsSessionSupportedRequest(xr::IsSessionSupportedRequest &request, std::shared_ptr<TrContentRuntime> content);
+    void onSessionRequest(xr::SessionRequest &request, std::shared_ptr<TrContentRuntime> content);
+    void onEndSessionRequest(xr::EndSessionRequest &request, std::shared_ptr<TrContentRuntime> content);
 
   private:
     /**
@@ -274,15 +295,15 @@ namespace xr
     /**
      * Recommanded field of view.
      */
-    atomic<float> m_FieldOfView;
+    std::atomic<float> m_FieldOfView;
     /**
      * The stereo rendering mode, it affects how to use frame callback and execute frame.
      */
-    atomic<TrStereoRenderingMode> m_StereoRenderingMode = TrStereoRenderingMode::Unknown;
+    std::atomic<TrStereoRenderingMode> m_StereoRenderingMode = TrStereoRenderingMode::Unknown;
     /**
      * The viewport for each view.
      */
-    map<int, Viewport> m_ViewportsByEyeId;
+    std::map<int, Viewport> m_ViewportsByEyeId;
     /**
      * The viewer(camera) base matrix.
      */
@@ -290,52 +311,50 @@ namespace xr
     /**
      * The viewer(camera or eyes) view matrix.
      */
-    map<int, float[16]> m_ViewerStereoViewMatrix;
+    std::map<int, float[16]> m_ViewerStereoViewMatrix;
     /**
      * The viewer(camera or eyes) projection matrix.
      */
-    map<int, float[16]> m_ViewerStereoProjectionMatrix;
+    std::map<int, float[16]> m_ViewerStereoProjectionMatrix;
     /**
      * The local(object) transform matrix.
      */
-    map<int, float[16]> m_LocalTransforms;
+    std::map<int, float[16]> m_LocalTransforms;
     /**
      * The active eye's id, 0 for left and 1 for right. It's used in multi-pass rendering only.
      */
-    atomic<int> m_ActiveEyeId;
+    std::atomic<int> m_ActiveEyeId;
     /**
      * The id to indentify the session, corresponding to the session's id in the WebXR API.
      */
-    vector<shared_ptr<TrXRSession>> m_Sessions;
+    std::vector<std::shared_ptr<TrXRSession>> m_Sessions;
     /**
      * The session context zone directory for session-related shared data.
      */
-    string m_SessionContextZoneDirectory;
+    std::string m_SessionContextZoneDirectory;
     /**
      * The device context zone for device-related shared data.
      */
-    unique_ptr<TrXRDeviceContextZone> m_DeviceContextZone;
+    std::unique_ptr<TrXRDeviceContextZone> m_DeviceContextZone;
     /**
      * The input sources zone for input-related shared data.
      */
-    unique_ptr<TrXRInputSourcesZone> m_InputSourcesZone;
+    std::unique_ptr<TrXRInputSourcesZone> m_InputSourcesZone;
     /**
      * The native ray for gaze, it's used to detect which session's content is gazed or loss focus.
      */
     collision::TrRay m_GazeRay;
-    array<math3d::TrPlane, 6> m_ViewerFrustumPlanes;
+    std::array<math3d::TrPlane, 6> m_ViewerFrustumPlanes;
     /**
      * A mutex to ensure the above data is thread-safe.
      */
-    shared_mutex m_MutexForSessions;
-    shared_mutex m_MutexForValueUpdates;
+    std::shared_mutex m_MutexForSessions;
+    std::shared_mutex m_MutexForValueUpdates;
 
   private: // command channel
     std::unique_ptr<ipc::TrOneShotServer<TrXRCommandMessage>> m_CommandChanServer = nullptr;
-    std::unique_ptr<thread> m_CommandClientWatcher = nullptr;
-    atomic<bool> m_CommandClientWatcherRunning = false;
+    std::unique_ptr<std::thread> m_CommandClientWatcher = nullptr;
+    std::atomic<bool> m_CommandClientWatcherRunning = false;
     int m_AcceptTimeout = 1000;
-
-    friend class TrXRSession;
   };
 } // namespace xr
