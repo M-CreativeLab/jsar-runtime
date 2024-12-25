@@ -5,11 +5,13 @@
 
 namespace commandbuffers
 {
-  class SetViewportCommandBufferRequest : public TrCommandBufferSimpleRequest<SetViewportCommandBufferRequest>
+  class SetViewportCommandBufferRequest : public TrCommandBufferSimpleRequest<SetViewportCommandBufferRequest,
+                                                                              COMMAND_BUFFER_SET_VIEWPORT_REQ>
   {
   public:
+    SetViewportCommandBufferRequest() = delete;
     SetViewportCommandBufferRequest(int x, int y, int width, int height)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_SET_VIEWPORT_REQ),
+        : TrCommandBufferSimpleRequest(),
           x(x),
           y(y),
           width(width),
@@ -24,11 +26,13 @@ namespace commandbuffers
     int height;
   };
 
-  class SetScissorCommandBufferRequest : public TrCommandBufferSimpleRequest<SetScissorCommandBufferRequest>
+  class SetScissorCommandBufferRequest : public TrCommandBufferSimpleRequest<SetScissorCommandBufferRequest,
+                                                                             COMMAND_BUFFER_SET_SCISSOR_REQ>
   {
   public:
+    SetScissorCommandBufferRequest() = delete;
     SetScissorCommandBufferRequest(int x, int y, int width, int height)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_SET_SCISSOR_REQ),
+        : TrCommandBufferSimpleRequest(),
           x(x),
           y(y),
           width(width),
@@ -43,11 +47,12 @@ namespace commandbuffers
     int height;
   };
 
-  class HintCommandBufferRequest : public TrCommandBufferSimpleRequest<HintCommandBufferRequest>
+  class HintCommandBufferRequest : public TrCommandBufferSimpleRequest<HintCommandBufferRequest, COMMAND_BUFFER_HINT_REQ>
   {
   public:
+    HintCommandBufferRequest() = delete;
     HintCommandBufferRequest(int target, int mode)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_HINT_REQ),
+        : TrCommandBufferSimpleRequest(),
           target(target),
           mode(mode)
     {
@@ -58,11 +63,13 @@ namespace commandbuffers
     int mode;
   };
 
-  class LineWidthCommandBufferRequest : public TrCommandBufferSimpleRequest<LineWidthCommandBufferRequest>
+  class LineWidthCommandBufferRequest : public TrCommandBufferSimpleRequest<LineWidthCommandBufferRequest,
+                                                                            COMMAND_BUFFER_LINE_WIDTH_REQ>
   {
   public:
+    LineWidthCommandBufferRequest() = delete;
     LineWidthCommandBufferRequest(float width)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_LINE_WIDTH_REQ),
+        : TrCommandBufferSimpleRequest(),
           width(width)
     {
     }
@@ -71,11 +78,13 @@ namespace commandbuffers
     float width;
   };
 
-  class PixelStoreiCommandBufferRequest : public TrCommandBufferSimpleRequest<PixelStoreiCommandBufferRequest>
+  class PixelStoreiCommandBufferRequest : public TrCommandBufferSimpleRequest<PixelStoreiCommandBufferRequest,
+                                                                              COMMAND_BUFFER_PIXEL_STOREI_REQ>
   {
   public:
+    PixelStoreiCommandBufferRequest() = delete;
     PixelStoreiCommandBufferRequest(int pname, int param)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_PIXEL_STOREI_REQ),
+        : TrCommandBufferSimpleRequest(),
           pname(pname),
           param(param)
     {
@@ -86,11 +95,13 @@ namespace commandbuffers
     int param;
   };
 
-  class PolygonOffsetCommandBufferRequest : public TrCommandBufferSimpleRequest<PolygonOffsetCommandBufferRequest>
+  class PolygonOffsetCommandBufferRequest : public TrCommandBufferSimpleRequest<PolygonOffsetCommandBufferRequest,
+                                                                                COMMAND_BUFFER_POLYGON_OFFSET_REQ>
   {
   public:
+    PolygonOffsetCommandBufferRequest() = delete;
     PolygonOffsetCommandBufferRequest(float factor, float units)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_POLYGON_OFFSET_REQ),
+        : TrCommandBufferSimpleRequest(),
           factor(factor),
           units(units)
     {
@@ -101,11 +112,13 @@ namespace commandbuffers
     float units;
   };
 
-  class DepthMaskCommandBufferRequest : public TrCommandBufferSimpleRequest<DepthMaskCommandBufferRequest>
+  class DepthMaskCommandBufferRequest : public TrCommandBufferSimpleRequest<DepthMaskCommandBufferRequest,
+                                                                            COMMAND_BUFFER_DEPTH_MASK_REQ>
   {
   public:
+    DepthMaskCommandBufferRequest() = delete;
     DepthMaskCommandBufferRequest(bool flag)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DEPTH_MASK_REQ),
+        : TrCommandBufferSimpleRequest(),
           flag(flag)
     {
     }
@@ -114,11 +127,13 @@ namespace commandbuffers
     bool flag;
   };
 
-  class DepthFuncCommandBufferRequest : public TrCommandBufferSimpleRequest<DepthFuncCommandBufferRequest>
+  class DepthFuncCommandBufferRequest : public TrCommandBufferSimpleRequest<DepthFuncCommandBufferRequest,
+                                                                            COMMAND_BUFFER_DEPTH_FUNC_REQ>
   {
   public:
+    DepthFuncCommandBufferRequest() = delete;
     DepthFuncCommandBufferRequest(int func)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DEPTH_FUNC_REQ),
+        : TrCommandBufferSimpleRequest(),
           func(func)
     {
     }
@@ -127,11 +142,13 @@ namespace commandbuffers
     int func;
   };
 
-  class DepthRangeCommandBufferRequest : public TrCommandBufferSimpleRequest<DepthRangeCommandBufferRequest>
+  class DepthRangeCommandBufferRequest : public TrCommandBufferSimpleRequest<DepthRangeCommandBufferRequest,
+                                                                             COMMAND_BUFFER_DEPTH_RANGE_REQ>
   {
   public:
+    DepthRangeCommandBufferRequest() = delete;
     DepthRangeCommandBufferRequest(float near, float far)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DEPTH_RANGE_REQ),
+        : TrCommandBufferSimpleRequest(),
           near(near),
           far(far)
     {
@@ -142,11 +159,13 @@ namespace commandbuffers
     float far;
   };
 
-  class StencilFuncCommandBufferRequest : public TrCommandBufferSimpleRequest<StencilFuncCommandBufferRequest>
+  class StencilFuncCommandBufferRequest : public TrCommandBufferSimpleRequest<StencilFuncCommandBufferRequest,
+                                                                              COMMAND_BUFFER_STENCIL_FUNC_REQ>
   {
   public:
+    StencilFuncCommandBufferRequest() = delete;
     StencilFuncCommandBufferRequest(int func, int ref, int mask)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_STENCIL_FUNC_REQ),
+        : TrCommandBufferSimpleRequest(),
           func(func),
           ref(ref),
           mask(mask)
@@ -159,11 +178,13 @@ namespace commandbuffers
     int mask;
   };
 
-  class StencilFuncSeparateCommandBufferRequest : public TrCommandBufferSimpleRequest<StencilFuncSeparateCommandBufferRequest>
+  class StencilFuncSeparateCommandBufferRequest : public TrCommandBufferSimpleRequest<StencilFuncSeparateCommandBufferRequest,
+                                                                                      COMMAND_BUFFER_STENCIL_FUNC_SEPARATE_REQ>
   {
   public:
+    StencilFuncSeparateCommandBufferRequest() = delete;
     StencilFuncSeparateCommandBufferRequest(int face, int func, int ref, int mask)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_STENCIL_FUNC_SEPARATE_REQ),
+        : TrCommandBufferSimpleRequest(),
           face(face),
           func(func),
           ref(ref),
@@ -178,11 +199,13 @@ namespace commandbuffers
     int mask;
   };
 
-  class StencilMaskCommandBufferRequest : public TrCommandBufferSimpleRequest<StencilMaskCommandBufferRequest>
+  class StencilMaskCommandBufferRequest : public TrCommandBufferSimpleRequest<StencilMaskCommandBufferRequest,
+                                                                              COMMAND_BUFFER_STENCIL_MASK_REQ>
   {
   public:
+    StencilMaskCommandBufferRequest() = delete;
     StencilMaskCommandBufferRequest(int mask)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_STENCIL_MASK_REQ),
+        : TrCommandBufferSimpleRequest(),
           mask(mask)
     {
     }
@@ -191,11 +214,13 @@ namespace commandbuffers
     int mask;
   };
 
-  class StencilMaskSeparateCommandBufferRequest : public TrCommandBufferSimpleRequest<StencilMaskSeparateCommandBufferRequest>
+  class StencilMaskSeparateCommandBufferRequest : public TrCommandBufferSimpleRequest<StencilMaskSeparateCommandBufferRequest,
+                                                                                      COMMAND_BUFFER_STENCIL_MASK_SEPARATE_REQ>
   {
   public:
+    StencilMaskSeparateCommandBufferRequest() = delete;
     StencilMaskSeparateCommandBufferRequest(int face, int mask)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_STENCIL_MASK_SEPARATE_REQ),
+        : TrCommandBufferSimpleRequest(),
           face(face),
           mask(mask)
     {
@@ -206,11 +231,12 @@ namespace commandbuffers
     int mask;
   };
 
-  class StencilOpCommandBufferRequest : public TrCommandBufferSimpleRequest<StencilOpCommandBufferRequest>
+  class StencilOpCommandBufferRequest : public TrCommandBufferSimpleRequest<StencilOpCommandBufferRequest, COMMAND_BUFFER_STENCIL_OP_REQ>
   {
   public:
+    StencilOpCommandBufferRequest() = delete;
     StencilOpCommandBufferRequest(int fail, int zfail, int zpass)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_STENCIL_OP_REQ),
+        : TrCommandBufferSimpleRequest(),
           fail(fail),
           zfail(zfail),
           zpass(zpass)
@@ -223,11 +249,13 @@ namespace commandbuffers
     int zpass;
   };
 
-  class StencilOpSeparateCommandBufferRequest : public TrCommandBufferSimpleRequest<StencilOpSeparateCommandBufferRequest>
+  class StencilOpSeparateCommandBufferRequest : public TrCommandBufferSimpleRequest<StencilOpSeparateCommandBufferRequest,
+                                                                                    COMMAND_BUFFER_STENCIL_OP_SEPARATE_REQ>
   {
   public:
+    StencilOpSeparateCommandBufferRequest() = delete;
     StencilOpSeparateCommandBufferRequest(int face, int fail, int zfail, int zpass)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_STENCIL_OP_SEPARATE_REQ),
+        : TrCommandBufferSimpleRequest(),
           face(face),
           fail(fail),
           zfail(zfail),
@@ -242,11 +270,13 @@ namespace commandbuffers
     int zpass;
   };
 
-  class BlendColorCommandBufferRequest : public TrCommandBufferSimpleRequest<BlendColorCommandBufferRequest>
+  class BlendColorCommandBufferRequest : public TrCommandBufferSimpleRequest<BlendColorCommandBufferRequest,
+                                                                             COMMAND_BUFFER_BLEND_COLOR_REQ>
   {
   public:
+    BlendColorCommandBufferRequest() = delete;
     BlendColorCommandBufferRequest(float red, float green, float blue, float alpha)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BLEND_COLOR_REQ),
+        : TrCommandBufferSimpleRequest(),
           red(red),
           green(green),
           blue(blue),
@@ -261,11 +291,13 @@ namespace commandbuffers
     float alpha;
   };
 
-  class BlendEquationCommandBufferRequest : public TrCommandBufferSimpleRequest<BlendEquationCommandBufferRequest>
+  class BlendEquationCommandBufferRequest : public TrCommandBufferSimpleRequest<BlendEquationCommandBufferRequest,
+                                                                                COMMAND_BUFFER_BLEND_EQUATION_REQ>
   {
   public:
+    BlendEquationCommandBufferRequest() = delete;
     BlendEquationCommandBufferRequest(int mode)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BLEND_EQUATION_REQ),
+        : TrCommandBufferSimpleRequest(),
           mode(mode)
     {
     }
@@ -274,11 +306,13 @@ namespace commandbuffers
     int mode;
   };
 
-  class BlendEquationSeparateCommandBufferRequest : public TrCommandBufferSimpleRequest<BlendEquationSeparateCommandBufferRequest>
+  class BlendEquationSeparateCommandBufferRequest : public TrCommandBufferSimpleRequest<BlendEquationSeparateCommandBufferRequest,
+                                                                                        COMMAND_BUFFER_BLEND_EQUATION_SEPARATE_REQ>
   {
   public:
+    BlendEquationSeparateCommandBufferRequest() = delete;
     BlendEquationSeparateCommandBufferRequest(int modeRGB, int modeAlpha)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BLEND_EQUATION_SEPARATE_REQ),
+        : TrCommandBufferSimpleRequest(),
           modeRGB(modeRGB),
           modeAlpha(modeAlpha)
     {
@@ -289,11 +323,12 @@ namespace commandbuffers
     int modeAlpha;
   };
 
-  class BlendFuncCommandBufferRequest : public TrCommandBufferSimpleRequest<BlendFuncCommandBufferRequest>
+  class BlendFuncCommandBufferRequest : public TrCommandBufferSimpleRequest<BlendFuncCommandBufferRequest, COMMAND_BUFFER_BLEND_FUNC_REQ>
   {
   public:
+    BlendFuncCommandBufferRequest() = delete;
     BlendFuncCommandBufferRequest(int sfactor, int dfactor)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BLEND_FUNC_REQ),
+        : TrCommandBufferSimpleRequest(),
           sfactor(sfactor),
           dfactor(dfactor)
     {
@@ -304,11 +339,13 @@ namespace commandbuffers
     int dfactor;
   };
 
-  class BlendFuncSeparateCommandBufferRequest : public TrCommandBufferSimpleRequest<BlendFuncSeparateCommandBufferRequest>
+  class BlendFuncSeparateCommandBufferRequest : public TrCommandBufferSimpleRequest<BlendFuncSeparateCommandBufferRequest,
+                                                                                    COMMAND_BUFFER_BLEND_FUNC_SEPARATE_REQ>
   {
   public:
+    BlendFuncSeparateCommandBufferRequest() = delete;
     BlendFuncSeparateCommandBufferRequest(int srcRGB, int dstRGB, int srcAlpha, int dstAlpha)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BLEND_FUNC_SEPARATE_REQ),
+        : TrCommandBufferSimpleRequest(),
           srcRGB(srcRGB),
           dstRGB(dstRGB),
           srcAlpha(srcAlpha),
@@ -323,11 +360,13 @@ namespace commandbuffers
     int dstAlpha;
   };
 
-  class ColorMaskCommandBufferRequest : public TrCommandBufferSimpleRequest<ColorMaskCommandBufferRequest>
+  class ColorMaskCommandBufferRequest : public TrCommandBufferSimpleRequest<ColorMaskCommandBufferRequest,
+                                                                            COMMAND_BUFFER_COLOR_MASK_REQ>
   {
   public:
+    ColorMaskCommandBufferRequest() = delete;
     ColorMaskCommandBufferRequest(bool red, bool green, bool blue, bool alpha)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_COLOR_MASK_REQ),
+        : TrCommandBufferSimpleRequest(),
           red(red),
           green(green),
           blue(blue),
@@ -342,11 +381,13 @@ namespace commandbuffers
     bool alpha;
   };
 
-  class CullFaceCommandBufferRequest : public TrCommandBufferSimpleRequest<CullFaceCommandBufferRequest>
+  class CullFaceCommandBufferRequest : public TrCommandBufferSimpleRequest<CullFaceCommandBufferRequest,
+                                                                           COMMAND_BUFFER_CULL_FACE_REQ>
   {
   public:
+    CullFaceCommandBufferRequest() = delete;
     CullFaceCommandBufferRequest(int mode)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CULL_FACE_REQ),
+        : TrCommandBufferSimpleRequest(),
           mode(mode)
     {
     }
@@ -355,11 +396,13 @@ namespace commandbuffers
     int mode;
   };
 
-  class FrontFaceCommandBufferRequest : public TrCommandBufferSimpleRequest<FrontFaceCommandBufferRequest>
+  class FrontFaceCommandBufferRequest : public TrCommandBufferSimpleRequest<FrontFaceCommandBufferRequest,
+                                                                            COMMAND_BUFFER_FRONT_FACE_REQ>
   {
   public:
+    FrontFaceCommandBufferRequest() = delete;
     FrontFaceCommandBufferRequest(int mode)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_FRONT_FACE_REQ),
+        : TrCommandBufferSimpleRequest(),
           mode(mode)
     {
     }
@@ -368,11 +411,13 @@ namespace commandbuffers
     int mode;
   };
 
-  class EnableCommandBufferRequest : public TrCommandBufferSimpleRequest<EnableCommandBufferRequest>
+  template <typename Derived, CommandBufferType Type>
+  class CapabilityCommandBufferRequest : public TrCommandBufferSimpleRequest<Derived, Type>
   {
   public:
-    EnableCommandBufferRequest(int cap)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_ENABLE_REQ),
+    CapabilityCommandBufferRequest() = delete;
+    CapabilityCommandBufferRequest(int cap)
+        : TrCommandBufferSimpleRequest<Derived, Type>(),
           cap(cap)
     {
     }
@@ -381,16 +426,17 @@ namespace commandbuffers
     int cap;
   };
 
-  class DisableCommandBufferRequest : public TrCommandBufferSimpleRequest<DisableCommandBufferRequest>
+  class EnableCommandBufferRequest
+      : public CapabilityCommandBufferRequest<EnableCommandBufferRequest, COMMAND_BUFFER_ENABLE_REQ>
   {
   public:
-    DisableCommandBufferRequest(int cap)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DISABLE_REQ),
-          cap(cap)
-    {
-    }
+    using CapabilityCommandBufferRequest::CapabilityCommandBufferRequest;
+  };
 
+  class DisableCommandBufferRequest
+      : public CapabilityCommandBufferRequest<DisableCommandBufferRequest, COMMAND_BUFFER_DISABLE_REQ>
+  {
   public:
-    int cap;
+    using CapabilityCommandBufferRequest::CapabilityCommandBufferRequest;
   };
 }

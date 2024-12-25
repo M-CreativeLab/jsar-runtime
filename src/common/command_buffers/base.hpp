@@ -57,20 +57,20 @@ namespace commandbuffers
     int requestId;
   };
 
-  template <typename T>
+  template <typename Derived, CommandBufferType Type>
   class TrCommandBufferSimpleRequest : public TrCommandBufferRequest
   {
   public:
-    TrCommandBufferSimpleRequest(TrCommandBufferSimpleRequest &that) : TrCommandBufferRequest(that) {}
-    TrCommandBufferSimpleRequest(CommandBufferType type)
-        : TrCommandBufferRequest(type, sizeof(T))
+    TrCommandBufferSimpleRequest() : TrCommandBufferRequest(Type, sizeof(Derived))
     {
     }
+    TrCommandBufferSimpleRequest(TrCommandBufferSimpleRequest &that) : TrCommandBufferRequest(that) {}
+    ~TrCommandBufferSimpleRequest() = default;
 
   public:
     inline void print()
     {
-      DEBUG(LOG_TAG_RENDERER, "GL::%s()", commandTypeToStr(type).c_str());
+      DEBUG(LOG_TAG_RENDERER, "GL::%s()", commandTypeToStr(Type).c_str());
     }
   };
 

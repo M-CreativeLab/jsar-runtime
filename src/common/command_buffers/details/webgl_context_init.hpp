@@ -6,33 +6,36 @@
 
 namespace commandbuffers
 {
-  class CreateWebGLContextRequest : public TrCommandBufferSimpleRequest<CreateWebGLContextRequest>
+  class CreateWebGLContextRequest : public TrCommandBufferSimpleRequest<CreateWebGLContextRequest,
+                                                                        COMMAND_BUFFER_CREATE_WEBGL_CONTEXT_REQ>
   {
   public:
+    using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
+
     CreateWebGLContextRequest(uint32_t contextId)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CREATE_WEBGL_CONTEXT_REQ),
+        : TrCommandBufferSimpleRequest(),
           contextId(contextId)
     {
     }
-    ~CreateWebGLContextRequest() = default;
 
   public:
     uint32_t contextId;
   };
 
-  class WebGL1ContextInitCommandBufferRequest : public TrCommandBufferSimpleRequest<WebGL1ContextInitCommandBufferRequest>
+  class WebGL1ContextInitCommandBufferRequest : public TrCommandBufferSimpleRequest<WebGL1ContextInitCommandBufferRequest,
+                                                                                    COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ>
   {
   public:
-    WebGL1ContextInitCommandBufferRequest()
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ)
-    {
-    }
-    ~WebGL1ContextInitCommandBufferRequest() {}
+    using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
   };
 
   class WebGL1ContextInitCommandBufferResponse : public TrCommandBufferSimpleResponse<WebGL1ContextInitCommandBufferResponse>
   {
   public:
+    WebGL1ContextInitCommandBufferResponse(WebGL1ContextInitCommandBufferRequest *req)
+        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES, req)
+    {
+    }
     WebGL1ContextInitCommandBufferResponse(WebGL1ContextInitCommandBufferResponse &that)
         : TrCommandBufferSimpleResponse(that),
           drawingViewport(that.drawingViewport),
@@ -46,10 +49,6 @@ namespace commandbuffers
           maxVertexAttribs(that.maxVertexAttribs),
           maxVertexTextureImageUnits(that.maxVertexTextureImageUnits),
           maxVertexUniformVectors(that.maxVertexUniformVectors)
-    {
-    }
-    WebGL1ContextInitCommandBufferResponse(WebGL1ContextInitCommandBufferRequest *req)
-        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_WEBGL_CONTEXT_INIT_RES, req)
     {
     }
     ~WebGL1ContextInitCommandBufferResponse()
@@ -89,13 +88,11 @@ namespace commandbuffers
     string renderer;
   };
 
-  class WebGL2ContextInitCommandBufferRequest : public TrCommandBufferSimpleRequest<WebGL2ContextInitCommandBufferRequest>
+  class WebGL2ContextInitCommandBufferRequest : public TrCommandBufferSimpleRequest<WebGL2ContextInitCommandBufferRequest,
+                                                                                    COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_REQ>
   {
   public:
-    WebGL2ContextInitCommandBufferRequest() : TrCommandBufferSimpleRequest(COMMAND_BUFFER_WEBGL2_CONTEXT_INIT_REQ)
-    {
-    }
-    ~WebGL2ContextInitCommandBufferRequest() {}
+    using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
   };
 
   class WebGL2ContextInitCommandBufferResponse : public TrCommandBufferSimpleResponse<WebGL2ContextInitCommandBufferResponse>

@@ -5,57 +5,61 @@
 
 namespace commandbuffers
 {
-  class CreateVertexArrayCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateVertexArrayCommandBufferRequest>
+  class CreateVertexArrayCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateVertexArrayCommandBufferRequest,
+                                                                                    COMMAND_BUFFER_CREATE_VERTEX_ARRAY_REQ>
   {
   public:
+    CreateVertexArrayCommandBufferRequest() = delete;
     CreateVertexArrayCommandBufferRequest(uint32_t clientId)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CREATE_VERTEX_ARRAY_REQ),
+        : TrCommandBufferSimpleRequest(),
           clientId(clientId)
     {
     }
-    ~CreateVertexArrayCommandBufferRequest() {}
 
   public:
     uint32_t clientId;
   };
 
-  class DeleteVertexArrayCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteVertexArrayCommandBufferRequest>
+  class DeleteVertexArrayCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteVertexArrayCommandBufferRequest,
+                                                                                    COMMAND_BUFFER_DELETE_VERTEX_ARRAY_REQ>
   {
   public:
+    DeleteVertexArrayCommandBufferRequest() = delete;
     DeleteVertexArrayCommandBufferRequest(uint32_t vertexArray)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DELETE_VERTEX_ARRAY_REQ),
+        : TrCommandBufferSimpleRequest(),
           vertexArray(vertexArray)
     {
     }
-    ~DeleteVertexArrayCommandBufferRequest() {}
 
   public:
     uint32_t vertexArray;
   };
 
-  class BindVertexArrayCommandBufferRequest : public TrCommandBufferSimpleRequest<BindVertexArrayCommandBufferRequest>
+  class BindVertexArrayCommandBufferRequest : public TrCommandBufferSimpleRequest<BindVertexArrayCommandBufferRequest,
+                                                                                  COMMAND_BUFFER_BIND_VERTEX_ARRAY_REQ>
   {
   public:
+    BindVertexArrayCommandBufferRequest() = delete;
     BindVertexArrayCommandBufferRequest(uint32_t vertexArray)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BIND_VERTEX_ARRAY_REQ),
+        : TrCommandBufferSimpleRequest(),
           vertexArray(vertexArray)
     {
     }
-    ~BindVertexArrayCommandBufferRequest() {}
 
   public:
     uint32_t vertexArray;
   };
 
-  class IsVertexArrayCommandBufferRequest : public TrCommandBufferSimpleRequest<IsVertexArrayCommandBufferRequest>
+  class IsVertexArrayCommandBufferRequest : public TrCommandBufferSimpleRequest<IsVertexArrayCommandBufferRequest,
+                                                                                COMMAND_BUFFER_IS_VERTEX_ARRAY_REQ>
   {
   public:
+    IsVertexArrayCommandBufferRequest() = delete;
     IsVertexArrayCommandBufferRequest(uint32_t vertexArray)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_IS_VERTEX_ARRAY_REQ),
+        : TrCommandBufferSimpleRequest(),
           vertexArray(vertexArray)
     {
     }
-    ~IsVertexArrayCommandBufferRequest() {}
 
   public:
     uint32_t vertexArray;

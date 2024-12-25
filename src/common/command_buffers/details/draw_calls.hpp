@@ -5,11 +5,13 @@
 
 namespace commandbuffers
 {
-  class DrawArraysCommandBufferRequest : public TrCommandBufferSimpleRequest<DrawArraysCommandBufferRequest>
+  class DrawArraysCommandBufferRequest : public TrCommandBufferSimpleRequest<DrawArraysCommandBufferRequest,
+                                                                             COMMAND_BUFFER_DRAW_ARRAYS_REQ>
   {
   public:
+    DrawArraysCommandBufferRequest() = delete;
     DrawArraysCommandBufferRequest(int mode, int first, int count)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DRAW_ARRAYS_REQ),
+        : TrCommandBufferSimpleRequest(),
           mode(mode),
           first(first),
           count(count)
@@ -22,11 +24,13 @@ namespace commandbuffers
     int count;
   };
 
-  class DrawArraysInstancedCommandBufferRequest : public TrCommandBufferSimpleRequest<DrawArraysInstancedCommandBufferRequest>
+  class DrawArraysInstancedCommandBufferRequest : public TrCommandBufferSimpleRequest<DrawArraysInstancedCommandBufferRequest,
+                                                                                      COMMAND_BUFFER_DRAW_ARRAYS_INSTANCED_REQ>
   {
   public:
+    DrawArraysInstancedCommandBufferRequest() = delete;
     DrawArraysInstancedCommandBufferRequest(int mode, int first, int count, int instanceCount)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DRAW_ARRAYS_INSTANCED_REQ),
+        : TrCommandBufferSimpleRequest(),
           mode(mode),
           first(first),
           count(count),
@@ -41,11 +45,13 @@ namespace commandbuffers
     int instanceCount;
   };
 
-  class DrawElementsCommandBufferRequest : public TrCommandBufferSimpleRequest<DrawElementsCommandBufferRequest>
+  class DrawElementsCommandBufferRequest : public TrCommandBufferSimpleRequest<DrawElementsCommandBufferRequest,
+                                                                               COMMAND_BUFFER_DRAW_ELEMENTS_REQ>
   {
   public:
+    DrawElementsCommandBufferRequest() = delete;
     DrawElementsCommandBufferRequest(int mode, int count, int type, int offset)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DRAW_ELEMENTS_REQ),
+        : TrCommandBufferSimpleRequest(),
           mode(mode),
           count(count),
           indicesType(type),
@@ -60,11 +66,13 @@ namespace commandbuffers
     int indicesOffset;
   };
 
-  class DrawElementsInstancedCommandBufferRequest : public TrCommandBufferSimpleRequest<DrawElementsInstancedCommandBufferRequest>
+  class DrawElementsInstancedCommandBufferRequest : public TrCommandBufferSimpleRequest<DrawElementsInstancedCommandBufferRequest,
+                                                                                        COMMAND_BUFFER_DRAW_ELEMENTS_INSTANCED_REQ>
   {
   public:
+    DrawElementsInstancedCommandBufferRequest() = delete;
     DrawElementsInstancedCommandBufferRequest(int mode, int count, int type, int offset, int instanceCount)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DRAW_ELEMENTS_INSTANCED_REQ),
+        : TrCommandBufferSimpleRequest(),
           mode(mode),
           count(count),
           indicesType(type),
@@ -81,11 +89,13 @@ namespace commandbuffers
     int instanceCount;
   };
 
-  class DrawBuffersCommandBufferRequest : public TrCommandBufferSimpleRequest<DrawBuffersCommandBufferRequest>
+  class DrawBuffersCommandBufferRequest : public TrCommandBufferSimpleRequest<DrawBuffersCommandBufferRequest,
+                                                                              COMMAND_BUFFER_DRAW_BUFFERS_REQ>
   {
   public:
+    DrawBuffersCommandBufferRequest() = delete;
     DrawBuffersCommandBufferRequest(size_t n, const uint32_t *bufs)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DRAW_BUFFERS_REQ),
+        : TrCommandBufferSimpleRequest(),
           n(n)
     {
       for (size_t i = 0; i < n; i++)
@@ -97,12 +107,14 @@ namespace commandbuffers
     uint32_t bufs[16];
   };
 
-  class DrawRangeElementsCommandBufferRequest : public TrCommandBufferSimpleRequest<DrawRangeElementsCommandBufferRequest>
+  class DrawRangeElementsCommandBufferRequest : public TrCommandBufferSimpleRequest<DrawRangeElementsCommandBufferRequest,
+                                                                                    COMMAND_BUFFER_DRAW_RANGE_ELEMENTS_REQ>
   {
 
   public:
+    DrawRangeElementsCommandBufferRequest() = delete;
     DrawRangeElementsCommandBufferRequest(int mode, int start, int end, int count, int type, int offset)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DRAW_RANGE_ELEMENTS_REQ),
+        : TrCommandBufferSimpleRequest(),
           mode(mode),
           start(start),
           end(end),

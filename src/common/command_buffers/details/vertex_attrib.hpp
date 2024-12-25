@@ -6,11 +6,13 @@
 namespace commandbuffers
 {
   class EnableVertexAttribArrayCommandBufferRequest
-      : public TrCommandBufferSimpleRequest<EnableVertexAttribArrayCommandBufferRequest>
+      : public TrCommandBufferSimpleRequest<EnableVertexAttribArrayCommandBufferRequest,
+                                            COMMAND_BUFFER_ENABLE_VERTEX_ATTRIB_ARRAY_REQ>
   {
   public:
+    EnableVertexAttribArrayCommandBufferRequest() = delete;
     EnableVertexAttribArrayCommandBufferRequest(uint32_t index)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_ENABLE_VERTEX_ATTRIB_ARRAY_REQ),
+        : TrCommandBufferSimpleRequest(),
           index(index)
     {
     }
@@ -20,11 +22,13 @@ namespace commandbuffers
   };
 
   class DisableVertexAttribArrayCommandBufferRequest
-      : public TrCommandBufferSimpleRequest<DisableVertexAttribArrayCommandBufferRequest>
+      : public TrCommandBufferSimpleRequest<DisableVertexAttribArrayCommandBufferRequest,
+                                            COMMAND_BUFFER_DISABLE_VERTEX_ATTRIB_ARRAY_REQ>
   {
   public:
+    DisableVertexAttribArrayCommandBufferRequest() = delete;
     DisableVertexAttribArrayCommandBufferRequest(uint32_t index)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DISABLE_VERTEX_ATTRIB_ARRAY_REQ),
+        : TrCommandBufferSimpleRequest(),
           index(index)
     {
     }
@@ -34,11 +38,12 @@ namespace commandbuffers
   };
 
   class VertexAttribPointerCommandBufferRequest
-      : public TrCommandBufferSimpleRequest<VertexAttribPointerCommandBufferRequest>
+      : public TrCommandBufferSimpleRequest<VertexAttribPointerCommandBufferRequest, COMMAND_BUFFER_VERTEX_ATTRIB_POINTER_REQ>
   {
   public:
+    VertexAttribPointerCommandBufferRequest() = delete;
     VertexAttribPointerCommandBufferRequest(uint32_t index, uint32_t size, uint32_t type, uint32_t normalized, uint32_t stride, uint32_t offset)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_VERTEX_ATTRIB_POINTER_REQ),
+        : TrCommandBufferSimpleRequest(),
           index(index),
           conponentSize(size),
           componentType(type),
@@ -58,11 +63,12 @@ namespace commandbuffers
   };
 
   class VertexAttribIPointerCommandBufferRequest
-      : public TrCommandBufferSimpleRequest<VertexAttribIPointerCommandBufferRequest>
+      : public TrCommandBufferSimpleRequest<VertexAttribIPointerCommandBufferRequest, COMMAND_BUFFER_VERTEX_ATTRIB_IPOINTER_REQ>
   {
   public:
+    VertexAttribIPointerCommandBufferRequest() = delete;
     VertexAttribIPointerCommandBufferRequest(uint32_t index, uint32_t size, uint32_t type, uint32_t stride, uint32_t offset)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_VERTEX_ATTRIB_IPOINTER_REQ),
+        : TrCommandBufferSimpleRequest(),
           index(index),
           componentSize(size),
           componentType(type),
@@ -70,7 +76,6 @@ namespace commandbuffers
           offset(offset)
     {
     }
-    ~VertexAttribIPointerCommandBufferRequest() {}
 
   public:
     uint32_t index;
@@ -81,16 +86,16 @@ namespace commandbuffers
   };
 
   class VertexAttribDivisorCommandBufferRequest
-      : public TrCommandBufferSimpleRequest<VertexAttribDivisorCommandBufferRequest>
+      : public TrCommandBufferSimpleRequest<VertexAttribDivisorCommandBufferRequest, COMMAND_BUFFER_VERTEX_ATTRIB_DIVISOR_REQ>
   {
   public:
+    VertexAttribDivisorCommandBufferRequest() = delete;
     VertexAttribDivisorCommandBufferRequest(uint32_t index, uint32_t divisor)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_VERTEX_ATTRIB_DIVISOR_REQ),
+        : TrCommandBufferSimpleRequest(),
           index(index),
           divisor(divisor)
     {
     }
-    ~VertexAttribDivisorCommandBufferRequest() {}
 
   public:
     uint32_t index;

@@ -5,12 +5,11 @@
 
 namespace commandbuffers
 {
-  class GetExtensionsCommandBufferRequest : public TrCommandBufferSimpleRequest<GetExtensionsCommandBufferRequest>
+  class GetExtensionsCommandBufferRequest : public TrCommandBufferSimpleRequest<GetExtensionsCommandBufferRequest,
+                                                                                COMMAND_BUFFER_GET_EXTENSIONS_REQ>
   {
   public:
-    GetExtensionsCommandBufferRequest() : TrCommandBufferSimpleRequest(COMMAND_BUFFER_GET_EXTENSIONS_REQ)
-    {
-    }
+    using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
   };
 
   class GetExtensionsCommandBufferResponse : public TrCommandBufferSimpleResponse<GetExtensionsCommandBufferResponse>

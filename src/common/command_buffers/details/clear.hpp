@@ -5,11 +5,13 @@
 
 namespace commandbuffers
 {
-  class ClearCommandBufferRequest : public TrCommandBufferSimpleRequest<ClearCommandBufferRequest>
+  class ClearCommandBufferRequest : public TrCommandBufferSimpleRequest<ClearCommandBufferRequest,
+                                                                        COMMAND_BUFFER_CLEAR_REQ>
   {
   public:
+    ClearCommandBufferRequest() = delete;
     ClearCommandBufferRequest(int mask)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CLEAR_REQ),
+        : TrCommandBufferSimpleRequest(),
           mask(mask)
     {
     }
@@ -18,11 +20,13 @@ namespace commandbuffers
     int mask;
   };
 
-  class ClearColorCommandBufferRequest : public TrCommandBufferSimpleRequest<ClearColorCommandBufferRequest>
+  class ClearColorCommandBufferRequest : public TrCommandBufferSimpleRequest<ClearColorCommandBufferRequest,
+                                                                             COMMAND_BUFFER_CLEAR_COLOR_REQ>
   {
   public:
+    ClearColorCommandBufferRequest() = delete;
     ClearColorCommandBufferRequest(float r, float g, float b, float a)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CLEAR_COLOR_REQ),
+        : TrCommandBufferSimpleRequest(),
           r(r),
           g(g),
           b(b),
@@ -37,11 +41,13 @@ namespace commandbuffers
     float a;
   };
 
-  class ClearDepthCommandBufferRequest : public TrCommandBufferSimpleRequest<ClearDepthCommandBufferRequest>
+  class ClearDepthCommandBufferRequest : public TrCommandBufferSimpleRequest<ClearDepthCommandBufferRequest,
+                                                                             COMMAND_BUFFER_CLEAR_DEPTH_REQ>
   {
   public:
+    ClearDepthCommandBufferRequest() = delete;
     ClearDepthCommandBufferRequest(float depth)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CLEAR_DEPTH_REQ),
+        : TrCommandBufferSimpleRequest(),
           depth(depth)
     {
     }
@@ -50,11 +56,13 @@ namespace commandbuffers
     float depth;
   };
 
-  class ClearStencilCommandBufferRequest : public TrCommandBufferSimpleRequest<ClearStencilCommandBufferRequest>
+  class ClearStencilCommandBufferRequest : public TrCommandBufferSimpleRequest<ClearStencilCommandBufferRequest,
+                                                                               COMMAND_BUFFER_CLEAR_STENCIL_REQ>
   {
   public:
+    ClearStencilCommandBufferRequest() = delete;
     ClearStencilCommandBufferRequest(int stencil)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CLEAR_STENCIL_REQ),
+        : TrCommandBufferSimpleRequest(),
           stencil(stencil)
     {
     }

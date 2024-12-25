@@ -125,3 +125,24 @@
   XX(XRFRAME_FLUSH, XRFrameFlushCommandBufferRequest)                                      \
   XX(XRFRAME_END, XRFrameEndCommandBufferRequest)                                          \
   XX(METRICS_PAINTING, PaintingMetricsCommandBufferRequest)
+
+#define TR_COMMAND_BUFFER_RESPONSES_MAP(XX)                                      \
+  XX(WEBGL_CONTEXT_INIT, WebGL1ContextInitCommandBufferResponse)                 \
+  XX(WEBGL2_CONTEXT_INIT, WebGL2ContextInitCommandBufferResponse)                \
+  XX(GET_EXTENSIONS, GetExtensionsCommandBufferResponse)                         \
+  XX(LINK_PROGRAM, LinkProgramCommandBufferResponse)                             \
+  XX(GET_PROGRAM_PARAM, GetProgramParamCommandBufferResponse)                    \
+  XX(GET_PROGRAM_INFO_LOG, GetProgramInfoLogCommandBufferResponse)               \
+  XX(GET_SHADER_SOURCE, GetShaderSourceCommandBufferResponse)                    \
+  XX(GET_SHADER_PARAM, GetShaderParamCommandBufferResponse)                      \
+  XX(GET_SHADER_INFO_LOG, GetShaderInfoLogCommandBufferResponse)                 \
+  XX(CHECK_FRAMEBUFFER_STATUS, CheckFramebufferStatusCommandBufferResponse)      \
+  XX(IS_VERTEX_ARRAY, IsVertexArrayCommandBufferResponse)                        \
+  XX(GET_SAMPLER_PARAMETER, GetSamplerParameterCommandBufferResponse)            \
+  XX(IS_SAMPLER, IsSamplerCommandBufferResponse)                                 \
+  XX(GET_BOOLEANV, GetBooleanvCommandBufferResponse)                             \
+  XX(GET_INTEGERV, GetIntegervCommandBufferResponse)                             \
+  XX(GET_FLOATV, GetFloatvCommandBufferResponse)                                 \
+  XX(GET_STRING, GetStringCommandBufferResponse)                                 \
+  XX(GET_SHADER_PRECISION_FORMAT, GetShaderPrecisionFormatCommandBufferResponse) \
+  XX(GET_ERROR, GetErrorCommandBufferResponse)

@@ -5,11 +5,13 @@
 
 namespace commandbuffers
 {
-  class GetBooleanvCommandBufferRequest : public TrCommandBufferSimpleRequest<GetBooleanvCommandBufferRequest>
+  template <typename Derived, CommandBufferType Type>
+  class GetParameterCommandBufferRequest : public TrCommandBufferSimpleRequest<Derived, Type>
   {
   public:
-    GetBooleanvCommandBufferRequest(int pname)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_GET_BOOLEANV_REQ),
+    GetParameterCommandBufferRequest() = delete;
+    GetParameterCommandBufferRequest(int pname)
+        : TrCommandBufferSimpleRequest<Derived, Type>(),
           pname(pname)
     {
     }
@@ -18,90 +20,87 @@ namespace commandbuffers
     int pname;
   };
 
-  class GetBooleanvCommandBufferResponse : public TrCommandBufferSimpleResponse<GetBooleanvCommandBufferResponse>
+  template <typename Derived, typename ReqType, typename ValueType, CommandBufferType Type>
+  class GetParameterCommandBufferResponse : public TrCommandBufferSimpleResponse<Derived>
   {
   public:
-    GetBooleanvCommandBufferResponse(GetBooleanvCommandBufferRequest *req, bool value)
-        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_BOOLEANV_RES, req),
+    GetParameterCommandBufferResponse() = delete;
+    GetParameterCommandBufferResponse(ReqType *req, ValueType value)
+        : TrCommandBufferSimpleResponse<Derived>(Type, req),
           value(value)
     {
     }
 
   public:
-    bool value;
+    ValueType value;
   };
 
-  class GetIntegervCommandBufferRequest : public TrCommandBufferSimpleRequest<GetIntegervCommandBufferRequest>
+  class GetBooleanvCommandBufferRequest : public GetParameterCommandBufferRequest<GetBooleanvCommandBufferRequest,
+                                                                                  COMMAND_BUFFER_GET_BOOLEANV_REQ>
   {
   public:
-    GetIntegervCommandBufferRequest(int pname)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_GET_INTEGERV_REQ),
-          pname(pname)
-    {
-    }
-
-  public:
-    int pname;
+    using GetParameterCommandBufferRequest::GetParameterCommandBufferRequest;
   };
 
-  class GetIntegervCommandBufferResponse : public TrCommandBufferSimpleResponse<GetIntegervCommandBufferResponse>
+  class GetBooleanvCommandBufferResponse : public GetParameterCommandBufferResponse<GetBooleanvCommandBufferResponse,
+                                                                                    GetBooleanvCommandBufferRequest,
+                                                                                    bool,
+                                                                                    COMMAND_BUFFER_GET_BOOLEANV_RES>
   {
   public:
-    GetIntegervCommandBufferResponse(GetIntegervCommandBufferRequest *req, int value)
-        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_INTEGERV_RES, req),
-          value(value)
-    {
-    }
-
-  public:
-    int value;
+    using GetParameterCommandBufferResponse::GetParameterCommandBufferResponse;
   };
 
-  class GetFloatvCommandBufferRequest : public TrCommandBufferSimpleRequest<GetFloatvCommandBufferRequest>
+  class GetIntegervCommandBufferRequest : public GetParameterCommandBufferRequest<GetIntegervCommandBufferRequest,
+                                                                                  COMMAND_BUFFER_GET_INTEGERV_REQ>
   {
   public:
-    GetFloatvCommandBufferRequest(int pname)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_GET_FLOATV_REQ),
-          pname(pname)
-    {
-    }
-
-  public:
-    int pname;
+    using GetParameterCommandBufferRequest::GetParameterCommandBufferRequest;
   };
 
-  class GetFloatvCommandBufferResponse : public TrCommandBufferSimpleResponse<GetFloatvCommandBufferResponse>
+  class GetIntegervCommandBufferResponse : public GetParameterCommandBufferResponse<GetIntegervCommandBufferResponse,
+                                                                                    GetIntegervCommandBufferRequest,
+                                                                                    int,
+                                                                                    COMMAND_BUFFER_GET_INTEGERV_RES>
   {
   public:
-    GetFloatvCommandBufferResponse(GetFloatvCommandBufferRequest *req, float value)
-        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_FLOATV_RES, req),
-          value(value)
-    {
-    }
-
-  public:
-    float value;
+    using GetParameterCommandBufferResponse::GetParameterCommandBufferResponse;
   };
 
-  class GetStringCommandBufferRequest : public TrCommandBufferSimpleRequest<GetStringCommandBufferRequest>
+  class GetFloatvCommandBufferRequest : public GetParameterCommandBufferRequest<GetFloatvCommandBufferRequest,
+                                                                                COMMAND_BUFFER_GET_FLOATV_REQ>
   {
   public:
-    GetStringCommandBufferRequest(int pname)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_GET_STRING_REQ),
-          pname(pname)
-    {
-    }
-
-  public:
-    int pname;
+    using GetParameterCommandBufferRequest::GetParameterCommandBufferRequest;
   };
 
-  class GetStringCommandBufferResponse : public TrCommandBufferSimpleResponse<GetStringCommandBufferResponse>
+  class GetFloatvCommandBufferResponse : public GetParameterCommandBufferResponse<GetFloatvCommandBufferResponse,
+                                                                                GetFloatvCommandBufferRequest,
+                                                                                float,
+                                                                                COMMAND_BUFFER_GET_FLOATV_RES>
   {
   public:
-    GetStringCommandBufferResponse(GetStringCommandBufferRequest *req, std::string &value)
-        : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_STRING_RES, req),
-          value(value)
+    using GetParameterCommandBufferResponse::GetParameterCommandBufferResponse;
+  };
+
+  class GetStringCommandBufferRequest : public GetParameterCommandBufferRequest<GetStringCommandBufferRequest,
+                                                                                COMMAND_BUFFER_GET_STRING_REQ>
+  {
+  public:
+    using GetParameterCommandBufferRequest::GetParameterCommandBufferRequest;
+  };
+
+  class GetStringCommandBufferResponse : public GetParameterCommandBufferResponse<GetStringCommandBufferResponse,
+                                                                                  GetStringCommandBufferRequest,
+                                                                                  std::string,
+                                                                                  COMMAND_BUFFER_GET_STRING_RES>
+  {
+  public:
+    using GetParameterCommandBufferResponse::GetParameterCommandBufferResponse;
+
+  public:
+    GetStringCommandBufferResponse(GetStringCommandBufferResponse &that)
+        : GetParameterCommandBufferResponse(that)
     {
     }
 
@@ -116,16 +115,15 @@ namespace commandbuffers
     {
       value = message.getSegment(0)->toString();
     }
-
-  public:
-    std::string value;
   };
 
-  class GetShaderPrecisionFormatCommandBufferRequest : public TrCommandBufferSimpleRequest<GetShaderPrecisionFormatCommandBufferRequest>
+  class GetShaderPrecisionFormatCommandBufferRequest : public TrCommandBufferSimpleRequest<GetShaderPrecisionFormatCommandBufferRequest,
+                                                                                           COMMAND_BUFFER_GET_SHADER_PRECISION_FORMAT_REQ>
   {
   public:
+    GetShaderPrecisionFormatCommandBufferRequest() = delete;
     GetShaderPrecisionFormatCommandBufferRequest(int shadertype, int precisiontype)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_GET_SHADER_PRECISION_FORMAT_REQ),
+        : TrCommandBufferSimpleRequest(),
           shadertype(shadertype),
           precisiontype(precisiontype)
     {
@@ -139,6 +137,7 @@ namespace commandbuffers
   class GetShaderPrecisionFormatCommandBufferResponse : public TrCommandBufferSimpleResponse<GetShaderPrecisionFormatCommandBufferResponse>
   {
   public:
+    GetShaderPrecisionFormatCommandBufferResponse() = delete;
     GetShaderPrecisionFormatCommandBufferResponse(GetShaderPrecisionFormatCommandBufferRequest *req, int rangeMin, int rangeMax, int precision)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_SHADER_PRECISION_FORMAT_RES, req),
           rangeMin(rangeMin),
@@ -153,18 +152,16 @@ namespace commandbuffers
     int precision;
   };
 
-  class GetErrorCommandBufferRequest : public TrCommandBufferSimpleRequest<GetErrorCommandBufferRequest>
+  class GetErrorCommandBufferRequest : public TrCommandBufferSimpleRequest<GetErrorCommandBufferRequest, COMMAND_BUFFER_GET_ERROR_REQ>
   {
   public:
-    GetErrorCommandBufferRequest()
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_GET_ERROR_REQ)
-    {
-    }
+    using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
   };
 
   class GetErrorCommandBufferResponse : public TrCommandBufferSimpleResponse<GetErrorCommandBufferResponse>
   {
   public:
+    GetErrorCommandBufferResponse() = delete;
     GetErrorCommandBufferResponse(GetErrorCommandBufferRequest *req, int error)
         : TrCommandBufferSimpleResponse(COMMAND_BUFFER_GET_ERROR_RES, req),
           error(error)

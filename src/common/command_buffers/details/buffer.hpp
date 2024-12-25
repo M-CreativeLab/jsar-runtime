@@ -5,10 +5,12 @@
 
 namespace commandbuffers
 {
-  class CreateBufferCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateBufferCommandBufferRequest>
+  class CreateBufferCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateBufferCommandBufferRequest,
+                                                                               COMMAND_BUFFER_CREATE_BUFFER_REQ>
   {
   public:
-    CreateBufferCommandBufferRequest(uint32_t clientId) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CREATE_BUFFER_REQ),
+    CreateBufferCommandBufferRequest() = delete;
+    CreateBufferCommandBufferRequest(uint32_t clientId) : TrCommandBufferSimpleRequest(),
                                                           clientId(clientId)
     {
     }
@@ -17,10 +19,12 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
-  class DeleteBufferCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteBufferCommandBufferRequest>
+  class DeleteBufferCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteBufferCommandBufferRequest,
+                                                                               COMMAND_BUFFER_DELETE_BUFFER_REQ>
   {
   public:
-    DeleteBufferCommandBufferRequest(uint32_t buffer) : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DELETE_BUFFER_REQ),
+    DeleteBufferCommandBufferRequest() = delete;
+    DeleteBufferCommandBufferRequest(uint32_t buffer) : TrCommandBufferSimpleRequest(),
                                                         buffer(buffer)
     {
     }
@@ -29,11 +33,13 @@ namespace commandbuffers
     uint32_t buffer;
   };
 
-  class BindBufferCommandBufferRequest : public TrCommandBufferSimpleRequest<BindBufferCommandBufferRequest>
+  class BindBufferCommandBufferRequest : public TrCommandBufferSimpleRequest<BindBufferCommandBufferRequest,
+                                                                             COMMAND_BUFFER_BIND_BUFFER_REQ>
   {
   public:
+    BindBufferCommandBufferRequest() = delete;
     BindBufferCommandBufferRequest(uint32_t target, uint32_t buffer)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BIND_BUFFER_REQ),
+        : TrCommandBufferSimpleRequest(),
           target(target),
           buffer(buffer)
     {
@@ -44,11 +50,13 @@ namespace commandbuffers
     uint32_t buffer;
   };
 
-  class BufferDataCommandBufferRequest : public TrCommandBufferSimpleRequest<BufferDataCommandBufferRequest>
+  class BufferDataCommandBufferRequest : public TrCommandBufferSimpleRequest<BufferDataCommandBufferRequest,
+                                                                             COMMAND_BUFFER_BUFFER_DATA_REQ>
   {
   public:
+    BufferDataCommandBufferRequest() = delete;
     BufferDataCommandBufferRequest(uint32_t target, uint32_t srcSize, void *srcData, uint32_t usage)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BUFFER_DATA_REQ),
+        : TrCommandBufferSimpleRequest(),
           target(target),
           dataSize(srcSize),
           usage(usage)
@@ -95,11 +103,13 @@ namespace commandbuffers
     uint32_t usage;
   };
 
-  class BufferSubDataCommandBufferRequest : public TrCommandBufferSimpleRequest<BufferSubDataCommandBufferRequest>
+  class BufferSubDataCommandBufferRequest : public TrCommandBufferSimpleRequest<BufferSubDataCommandBufferRequest,
+                                                                                COMMAND_BUFFER_BUFFER_SUB_DATA_REQ>
   {
   public:
+    BufferSubDataCommandBufferRequest() = delete;
     BufferSubDataCommandBufferRequest(uint32_t target, uint32_t offset, uint32_t srcSize, void *srcData)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BUFFER_SUB_DATA_REQ),
+        : TrCommandBufferSimpleRequest(),
           target(target),
           offset(offset),
           dataSize(srcSize)
@@ -139,11 +149,13 @@ namespace commandbuffers
     void *data;
   };
 
-  class CreateFramebufferCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateFramebufferCommandBufferRequest>
+  class CreateFramebufferCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateFramebufferCommandBufferRequest,
+                                                                                    COMMAND_BUFFER_CREATE_FRAMEBUFFER_REQ>
   {
   public:
+    CreateFramebufferCommandBufferRequest() = delete;
     CreateFramebufferCommandBufferRequest(uint32_t clientId)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CREATE_FRAMEBUFFER_REQ),
+        : TrCommandBufferSimpleRequest(),
           clientId(clientId)
     {
     }
@@ -152,11 +164,13 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
-  class DeleteFramebufferCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteFramebufferCommandBufferRequest>
+  class DeleteFramebufferCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteFramebufferCommandBufferRequest,
+                                                                                    COMMAND_BUFFER_DELETE_FRAMEBUFFER_REQ>
   {
   public:
+    DeleteFramebufferCommandBufferRequest() = delete;
     DeleteFramebufferCommandBufferRequest(uint32_t framebuffer)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DELETE_FRAMEBUFFER_REQ),
+        : TrCommandBufferSimpleRequest(),
           framebuffer(framebuffer)
     {
     }
@@ -165,11 +179,13 @@ namespace commandbuffers
     uint32_t framebuffer;
   };
 
-  class BindFramebufferCommandBufferRequest : public TrCommandBufferSimpleRequest<BindFramebufferCommandBufferRequest>
+  class BindFramebufferCommandBufferRequest : public TrCommandBufferSimpleRequest<BindFramebufferCommandBufferRequest,
+                                                                                  COMMAND_BUFFER_BIND_FRAMEBUFFER_REQ>
   {
   public:
+    BindFramebufferCommandBufferRequest() = delete;
     BindFramebufferCommandBufferRequest(uint32_t target, uint32_t framebuffer)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BIND_FRAMEBUFFER_REQ),
+        : TrCommandBufferSimpleRequest(),
           target(target),
           framebuffer(framebuffer)
     {
@@ -180,11 +196,13 @@ namespace commandbuffers
     uint32_t framebuffer;
   };
 
-  class FramebufferRenderbufferCommandBufferRequest : public TrCommandBufferSimpleRequest<FramebufferRenderbufferCommandBufferRequest>
+  class FramebufferRenderbufferCommandBufferRequest : public TrCommandBufferSimpleRequest<FramebufferRenderbufferCommandBufferRequest,
+                                                                                          COMMAND_BUFFER_FRAMEBUFFER_RENDERBUFFER_REQ>
   {
   public:
+    FramebufferRenderbufferCommandBufferRequest() = delete;
     FramebufferRenderbufferCommandBufferRequest(uint32_t target, uint32_t attachment, uint32_t renderbufferTarget, uint32_t renderbuffer)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_FRAMEBUFFER_RENDERBUFFER_REQ),
+        : TrCommandBufferSimpleRequest(),
           target(target),
           attachment(attachment),
           renderbufferTarget(renderbufferTarget),
@@ -199,11 +217,13 @@ namespace commandbuffers
     uint32_t renderbufferTarget;
   };
 
-  class FramebufferTexture2DCommandBufferRequest : public TrCommandBufferSimpleRequest<FramebufferTexture2DCommandBufferRequest>
+  class FramebufferTexture2DCommandBufferRequest : public TrCommandBufferSimpleRequest<FramebufferTexture2DCommandBufferRequest,
+                                                                                       COMMAND_BUFFER_FRAMEBUFFER_TEXTURE2D_REQ>
   {
   public:
+    FramebufferTexture2DCommandBufferRequest() = delete;
     FramebufferTexture2DCommandBufferRequest(uint32_t target, uint32_t attachment, uint32_t textarget, uint32_t texture, uint32_t level)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_FRAMEBUFFER_TEXTURE2D_REQ),
+        : TrCommandBufferSimpleRequest(),
           target(target),
           attachment(attachment),
           textarget(textarget),
@@ -220,11 +240,13 @@ namespace commandbuffers
     uint32_t level;
   };
 
-  class CheckFramebufferStatusCommandBufferRequest : public TrCommandBufferSimpleRequest<CheckFramebufferStatusCommandBufferRequest>
+  class CheckFramebufferStatusCommandBufferRequest : public TrCommandBufferSimpleRequest<CheckFramebufferStatusCommandBufferRequest,
+                                                                                         COMMAND_BUFFER_CHECK_FRAMEBUFFER_STATUS_REQ>
   {
   public:
+    CheckFramebufferStatusCommandBufferRequest() = delete;
     CheckFramebufferStatusCommandBufferRequest(uint32_t target)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CHECK_FRAMEBUFFER_STATUS_REQ),
+        : TrCommandBufferSimpleRequest(),
           target(target)
     {
     }
@@ -246,11 +268,13 @@ namespace commandbuffers
     uint32_t status;
   };
 
-  class CreateRenderbufferCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateRenderbufferCommandBufferRequest>
+  class CreateRenderbufferCommandBufferRequest : public TrCommandBufferSimpleRequest<CreateRenderbufferCommandBufferRequest,
+                                                                                     COMMAND_BUFFER_CREATE_RENDERBUFFER_REQ>
   {
   public:
+    CreateRenderbufferCommandBufferRequest() = delete;
     CreateRenderbufferCommandBufferRequest(uint32_t clientId)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_CREATE_RENDERBUFFER_REQ),
+        : TrCommandBufferSimpleRequest(),
           clientId(clientId)
     {
     }
@@ -259,11 +283,13 @@ namespace commandbuffers
     uint32_t clientId;
   };
 
-  class DeleteRenderbufferCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteRenderbufferCommandBufferRequest>
+  class DeleteRenderbufferCommandBufferRequest : public TrCommandBufferSimpleRequest<DeleteRenderbufferCommandBufferRequest,
+                                                                                     COMMAND_BUFFER_DELETE_RENDERBUFFER_REQ>
   {
   public:
+    DeleteRenderbufferCommandBufferRequest() = delete;
     DeleteRenderbufferCommandBufferRequest(uint32_t renderbuffer)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_DELETE_RENDERBUFFER_REQ),
+        : TrCommandBufferSimpleRequest(),
           renderbuffer(renderbuffer)
     {
     }
@@ -272,11 +298,13 @@ namespace commandbuffers
     uint32_t renderbuffer;
   };
 
-  class BindRenderbufferCommandBufferRequest : public TrCommandBufferSimpleRequest<BindRenderbufferCommandBufferRequest>
+  class BindRenderbufferCommandBufferRequest : public TrCommandBufferSimpleRequest<BindRenderbufferCommandBufferRequest,
+                                                                                   COMMAND_BUFFER_BIND_RENDERBUFFER_REQ>
   {
   public:
+    BindRenderbufferCommandBufferRequest() = delete;
     BindRenderbufferCommandBufferRequest(uint32_t target, uint32_t renderbuffer)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BIND_RENDERBUFFER_REQ),
+        : TrCommandBufferSimpleRequest(),
           target(target),
           renderbuffer(renderbuffer)
     {
@@ -287,11 +315,13 @@ namespace commandbuffers
     uint32_t renderbuffer;
   };
 
-  class RenderbufferStorageCommandBufferRequest : public TrCommandBufferSimpleRequest<RenderbufferStorageCommandBufferRequest>
+  class RenderbufferStorageCommandBufferRequest : public TrCommandBufferSimpleRequest<RenderbufferStorageCommandBufferRequest,
+                                                                                      COMMAND_BUFFER_RENDERBUFFER_STORAGE_REQ>
   {
   public:
+    RenderbufferStorageCommandBufferRequest() = delete;
     RenderbufferStorageCommandBufferRequest(uint32_t target, uint32_t internalformat, uint32_t width, uint32_t height)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_RENDERBUFFER_STORAGE_REQ),
+        : TrCommandBufferSimpleRequest(),
           target(target),
           internalformat(internalformat),
           width(width),
@@ -306,11 +336,13 @@ namespace commandbuffers
     uint32_t height;
   };
 
-  class ReadBufferCommandBufferRequest : public TrCommandBufferSimpleRequest<ReadBufferCommandBufferRequest>
+  class ReadBufferCommandBufferRequest : public TrCommandBufferSimpleRequest<ReadBufferCommandBufferRequest,
+                                                                             COMMAND_BUFFER_READ_BUFFER_REQ>
   {
   public:
+    ReadBufferCommandBufferRequest() = delete;
     ReadBufferCommandBufferRequest(uint32_t mode)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_READ_BUFFER_REQ),
+        : TrCommandBufferSimpleRequest(),
           mode(mode)
     {
     }
@@ -319,11 +351,13 @@ namespace commandbuffers
     uint32_t mode;
   };
 
-  class BindBufferBaseCommandBufferRequest : public TrCommandBufferSimpleRequest<BindBufferBaseCommandBufferRequest>
+  class BindBufferBaseCommandBufferRequest : public TrCommandBufferSimpleRequest<BindBufferBaseCommandBufferRequest,
+                                                                                 COMMAND_BUFFER_BIND_BUFFER_BASE_REQ>
   {
   public:
+    BindBufferBaseCommandBufferRequest() = delete;
     BindBufferBaseCommandBufferRequest(uint32_t target, uint32_t index, uint32_t buffer)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BIND_BUFFER_BASE_REQ),
+        : TrCommandBufferSimpleRequest(),
           target(target),
           index(index),
           buffer(buffer)
@@ -336,11 +370,13 @@ namespace commandbuffers
     uint32_t buffer;
   };
 
-  class BindBufferRangeCommandBufferRequest : public TrCommandBufferSimpleRequest<BindBufferRangeCommandBufferRequest>
+  class BindBufferRangeCommandBufferRequest : public TrCommandBufferSimpleRequest<BindBufferRangeCommandBufferRequest,
+                                                                                  COMMAND_BUFFER_BIND_BUFFER_RANGE_REQ>
   {
   public:
+    BindBufferRangeCommandBufferRequest() = delete;
     BindBufferRangeCommandBufferRequest(uint32_t target, uint32_t index, uint32_t buffer, uint32_t offset, uint32_t size)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BIND_BUFFER_RANGE_REQ),
+        : TrCommandBufferSimpleRequest(),
           target(target),
           index(index),
           buffer(buffer),
@@ -357,11 +393,15 @@ namespace commandbuffers
     uint32_t bufferSize;
   };
 
-  class BlitFramebufferCommandBufferRequest : public TrCommandBufferSimpleRequest<BlitFramebufferCommandBufferRequest>
+  class BlitFramebufferCommandBufferRequest : public TrCommandBufferSimpleRequest<BlitFramebufferCommandBufferRequest,
+                                                                                  COMMAND_BUFFER_BLIT_FRAMEBUFFER_REQ>
   {
   public:
-    BlitFramebufferCommandBufferRequest(uint32_t srcX0, uint32_t srcY0, uint32_t srcX1, uint32_t srcY1, uint32_t dstX0, uint32_t dstY0, uint32_t dstX1, uint32_t dstY1, uint32_t mask, uint32_t filter)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_BLIT_FRAMEBUFFER_REQ),
+    BlitFramebufferCommandBufferRequest() = delete;
+    BlitFramebufferCommandBufferRequest(uint32_t srcX0, uint32_t srcY0, uint32_t srcX1, uint32_t srcY1,
+                                        uint32_t dstX0, uint32_t dstY0, uint32_t dstX1, uint32_t dstY1,
+                                        uint32_t mask, uint32_t filter)
+        : TrCommandBufferSimpleRequest(),
           srcX0(srcX0),
           srcY0(srcY0),
           srcX1(srcX1),
@@ -388,11 +428,13 @@ namespace commandbuffers
     uint32_t filter;
   };
 
-  class RenderbufferStorageMultisampleCommandBufferRequest : public TrCommandBufferSimpleRequest<RenderbufferStorageMultisampleCommandBufferRequest>
+  class RenderbufferStorageMultisampleCommandBufferRequest : public TrCommandBufferSimpleRequest<RenderbufferStorageMultisampleCommandBufferRequest,
+                                                                                                 COMMAND_BUFFER_RENDERBUFFER_STORAGE_MULTISAMPLE_REQ>
   {
   public:
+    RenderbufferStorageMultisampleCommandBufferRequest() = delete;
     RenderbufferStorageMultisampleCommandBufferRequest(uint32_t target, uint32_t samples, uint32_t internalformat, uint32_t width, uint32_t height)
-        : TrCommandBufferSimpleRequest(COMMAND_BUFFER_RENDERBUFFER_STORAGE_MULTISAMPLE_REQ),
+        : TrCommandBufferSimpleRequest(),
           target(target),
           samples(samples),
           internalformat(internalformat),
