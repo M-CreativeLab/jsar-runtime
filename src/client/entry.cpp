@@ -4,6 +4,8 @@
 #include "./entry.hpp"
 #include "./hive_server.hpp"
 
+using namespace std;
+
 TrClientEntry::TrClientEntry(TrClientMode mode) : mode(mode)
 {
   clientContext = TrClientContextPerProcess::Create();

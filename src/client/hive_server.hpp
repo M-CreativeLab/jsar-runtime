@@ -10,7 +10,7 @@
 #include "common/hive/sender.hpp"
 #include "./entry.hpp"
 
-class TrHiveChildProcess
+class TrHiveChildProcess final
 {
 public:
   TrHiveChildProcess(uint32_t documentId);
@@ -28,7 +28,7 @@ public:
   string lastOutput;
 };
 
-class TrHiveServer
+class TrHiveServer final
 {
 public:
   TrHiveServer(TrClientEntry *clientEntry, int port);

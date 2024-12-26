@@ -13,7 +13,7 @@ namespace xr
   /**
    * The configuration to initialize a XR device.
    */
-  class TrDeviceInit
+  class TrDeviceInit final
   {
   public:
     TrDeviceInit() {}

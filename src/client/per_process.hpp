@@ -80,7 +80,7 @@ public:
   node::MultiIsolatePlatform *nodePlatform = nullptr;
 };
 
-class TrScriptRuntimePerProcess
+class TrScriptRuntimePerProcess final
 {
 private:
   static v8::MaybeLocal<v8::Value> PrepareStackTraceCallback(v8::Local<v8::Context> context,
@@ -132,7 +132,7 @@ enum class TrClientContextEventType
  * Every client process has a unique client context, which is responsible for managing the client-side resources, such as
  * the media players, command buffers, frame requests, and event channels.
  */
-class TrClientContextPerProcess : public TrEventTarget<TrClientContextEventType>
+class TrClientContextPerProcess final : public TrEventTarget<TrClientContextEventType>
 {
 public:
   /**

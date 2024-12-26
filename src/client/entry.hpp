@@ -3,8 +3,6 @@
 #include <string>
 #include "./per_process.hpp"
 
-using namespace std;
-
 /**
  * The client could be in 2 modes: Hive or Client.
  */
@@ -17,7 +15,7 @@ enum class TrClientMode
 /**
  * The entry point for the client.
  */
-class TrClientEntry
+class TrClientEntry final
 {
 public:
   /**
@@ -32,7 +30,7 @@ public:
   /**
    * Run the entry point from a given configuration and URL.
    */
-  int run(string configJson, string url);
+  int run(std::string configJson, std::string url);
 
 private:
   /**
@@ -40,7 +38,7 @@ private:
    * 
    * @param configJson The configuration JSON.
    */
-  bool parseConfig(string &configJson);
+  bool parseConfig(std::string &configJson);
   /**
    * When the client is in Hive mode.
    */
