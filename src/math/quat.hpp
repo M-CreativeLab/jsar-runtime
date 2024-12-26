@@ -16,7 +16,7 @@ namespace math
   public:
     /**
      * Creates a quaternion from the given components.
-     * 
+     *
      * @param x The x component.
      * @param y The y component.
      * @param z The z component.
@@ -29,7 +29,7 @@ namespace math
     }
     /**
      * Creates a quaternion from the given quaternion.
-     * 
+     *
      * @param quat The quaternion.
      * @returns The quaternion.
      */
@@ -39,7 +39,7 @@ namespace math
     }
     /**
      * Creates a quaternion from an axis and an angle.
-     * 
+     *
      * @param axis The axis of rotation.
      * @param angle The angle of rotation.
      * @returns The rotation quaternion.
@@ -88,6 +88,16 @@ namespace math
     inline Quat normalize() const
     {
       return Quat::From(glm::normalize(static_cast<glm::quat>(*this)));
+    }
+
+  public: // custom equality operators
+    inline bool operator==(const Quat &rhs) const
+    {
+      return x == rhs.x && y == rhs.y && z == rhs.z && w == rhs.w;
+    }
+    inline bool operator!=(const Quat &rhs) const
+    {
+      return !(*this == rhs);
     }
   };
 
