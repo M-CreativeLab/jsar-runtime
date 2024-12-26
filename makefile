@@ -46,6 +46,7 @@ windows:
 	make -C ./build windows JOBS=${JOBS}
 
 test:
+	cargo test
 	ctest --test-dir build/targets/darwin
 
 .PHONY: jsbundle darwin android test all
