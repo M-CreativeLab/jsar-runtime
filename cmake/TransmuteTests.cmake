@@ -1,4 +1,3 @@
-
 ### Tests
 
 file(GLOB TR_CATCH2_SOURCE
@@ -17,6 +16,7 @@ if (TR_BUILD_TESTS)
     add_executable(TransmuteUnitTests
         ${TR_CATCH2_SOURCE}
         tests/runtime.cpp
+        tests/math.cpp
     )
     target_include_directories(TransmuteUnitTests
         PRIVATE
