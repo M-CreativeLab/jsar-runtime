@@ -8,7 +8,7 @@
 #include "./platform_base.hpp"
 #include "./embedder.hpp"
 #include "./constellation.hpp"
-#include "./content.hpp"
+#include "./content_manager.hpp"
 
 #if defined(__ANDROID__) && (__ANDROID_API__ >= 26)
 #include <sys/system_properties.h>

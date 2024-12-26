@@ -8,6 +8,7 @@
 #include <filesystem>
 
 #include "common/classes.hpp"
+#include "common/debug.hpp"
 #include "common/options.hpp"
 #include "common/scoped_thread.hpp"
 #include "common/ipc.hpp"
@@ -30,9 +31,6 @@
 
 #include "./constellation.hpp"
 #include "./hive_daemon.hpp"
-
-using namespace std;
-using namespace ipc;
 
 #define INVALID_PID -1
 
@@ -127,9 +125,9 @@ public: // reference methods
   xr::Device *getXrDevice();
 
 public: // command buffer methods
-  void setCommandBufferRequestHandler(function<void(TrCommandBufferBase *)> handler);
+  void setCommandBufferRequestHandler(std::function<void(TrCommandBufferBase *)> handler);
   void resetCommandBufferRequestHandler();
-  void setupWithCommandBufferClient(TrOneShotClient<TrCommandBufferMessage> *client);
+  void setupWithCommandBufferClient(ipc::TrOneShotClient<TrCommandBufferMessage> *client);
   bool sendCommandBufferResponse(TrCommandBufferResponse &res);
 
 public: // event methods
@@ -138,7 +136,7 @@ public: // event methods
    *
    * @param client The event channel client.
    */
-  void onEventChanConnected(TrOneShotClient<events_comm::TrNativeEventMessage> &client);
+  void onEventChanConnected(ipc::TrOneShotClient<events_comm::TrNativeEventMessage> &client);
   /**
    * It dispatches the content's event from native side.
    *
@@ -213,7 +211,7 @@ public: // WebXR methods
   /**
    * @returns a `std::vector` of the `XRSession` instances, which includes all the WebXR sessions by the content.
    */
-  inline vector<xr::TrXRSession *> &getXRSessions() { return xrSessionsStack; }
+  inline std::vector<xr::TrXRSession *> &getXRSessions() { return xrSessionsStack; }
   /**
    * Get the current active XRSession, it means the top of the sessions stack.
    *
@@ -266,7 +264,7 @@ public:
    * connections asynchronously to speed up the content creation, that causes the pid is unavailable when a content's component such as
    * `ContentRenderer` is going to be created.
    */
-  atomic<int> pid = INVALID_PID;
+  std::atomic<int> pid = INVALID_PID;
 
 private:
   /**
@@ -294,41 +292,41 @@ private:
    *
    * This flag will be used to filter the content that is used or not used.
    */
-  atomic<bool> used = false;
+  std::atomic<bool> used = false;
   /**
    * The flag `started` is to indicate the content is started, it's set to true when the client process is started.
    */
-  atomic<bool> started = false;
+  std::atomic<bool> started = false;
   /**
    * The flag `available` is to indicate the content is available for the client process, it's set to true when the client process is
    * started or pre-started.
    */
-  atomic<bool> available = false;
+  std::atomic<bool> available = false;
   /**
    * The flag `shouldDestroy` is to indicate the content should not be rendered, it's a quick set to skip the rendering of the content.
    */
-  atomic<bool> disableRendering = false;
+  std::atomic<bool> disableRendering = false;
   /**
    * The flag `shouldDestroy` is to indicate the content is going to be destroyed, the content cleanup thread will check this flag to
    * remove the content related resources.
    */
-  atomic<bool> shouldDestroy = false;
-  mutex exitingMutex;
-  condition_variable exitedCv;
+  std::atomic<bool> shouldDestroy = false;
+  std::mutex exitingMutex;
+  std::condition_variable exitedCv;
 
 private:
-  unique_ptr<events_comm::TrNativeEventReceiver> eventChanReceiver = nullptr;
-  unique_ptr<events_comm::TrNativeEventSender> eventChanSender = nullptr;
-  unique_ptr<media_comm::TrMediaCommandReceiver> mediaChanReceiver = nullptr;
-  unique_ptr<media_comm::TrMediaCommandSender> mediaChanSender = nullptr;
-  unique_ptr<TrCommandBufferReceiver> commandBufferChanReceiver = nullptr;
-  unique_ptr<TrCommandBufferSender> commandBufferChanSender = nullptr;
-  TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
-  unique_ptr<WorkerThread> commandBuffersRecvWorker;
-  function<void(TrCommandBufferBase *)> onCommandBufferRequestReceived;
+  std::unique_ptr<events_comm::TrNativeEventReceiver> eventChanReceiver = nullptr;
+  std::unique_ptr<events_comm::TrNativeEventSender> eventChanSender = nullptr;
+  std::unique_ptr<media_comm::TrMediaCommandReceiver> mediaChanReceiver = nullptr;
+  std::unique_ptr<media_comm::TrMediaCommandSender> mediaChanSender = nullptr;
+  std::unique_ptr<TrCommandBufferReceiver> commandBufferChanReceiver = nullptr;
+  std::unique_ptr<TrCommandBufferSender> commandBufferChanSender = nullptr;
+  ipc::TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
+  std::unique_ptr<WorkerThread> commandBuffersRecvWorker;
+  std::function<void(TrCommandBufferBase *)> onCommandBufferRequestReceived;
 
 private: // XR fields
-  TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
+  ipc::TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
   xr::TrXRCommandSender *xrCommandChanSender = nullptr;
   /**
@@ -355,104 +353,8 @@ private: // XR fields
   vector<xr::TrXRSession *> xrSessionsStack;
 
 private:
-  mutex commandBufferRequestsMutex;
-  mutex commandBufferExecutingMutex;
-  condition_variable commandBufferExecutingCv;
-  atomic<bool> isCommandBufferRequestsExecuting = false;
-};
-
-/**
- * A `TrContentManager` is to manage the lifecycle of content instances, that is, to create, run, and dispose of JavaScript runtime
- * environments.
- */
-class TrContentManager final
-{
-  friend class TrContentRuntime;
-  friend class TrConstellation;
-  friend class TrRenderer;
-
-public:
-  TrContentManager(TrConstellation *constellation);
-  ~TrContentManager();
-
-public:
-  bool initialize();
-  bool shutdown();
-  bool tickOnFrame();
-  bool hasContents() { return !contents.empty(); }
-  /**
-   * Make a new content instance, this doesn't start the content process, just created a `TrContentRuntime` instance and added it
-   * to the managed list.
-   *
-   * @returns The content instance.
-   */
-  std::shared_ptr<TrContentRuntime> makeContent();
-  /**
-   * Get the content instance by its id.
-   *
-   * @param id The content id.
-   * @param includePreContent If true, it will return the pre-content instance if the id is matched.
-   * @returns The content instance if found, or nullptr if not found.
-   */
-  std::shared_ptr<TrContentRuntime> getContent(uint32_t id, bool includePreContent = false);
-  /**
-   * Find the content instance by its client process id.
-   *
-   * @param pid The client process id.
-   * @returns The content instance if found, or nullptr if not found.
-   */
-  std::shared_ptr<TrContentRuntime> findContentByPid(pid_t pid);
-  /**
-   * Dispose the content instance, it will release the related resources and terminate the client process.
-   *
-   * @param content The content instance to dispose.
-   */
-  void disposeContent(shared_ptr<TrContentRuntime> content);
-
-private:
-  void onNewClientOnEventChan(TrOneShotClient<events_comm::TrNativeEventMessage> &client);
-  void onTryDestroyingContents();
-  void onRpcRequest(std::shared_ptr<events_comm::TrNativeEvent> event);
-  void onDocumentEvent(std::shared_ptr<events_comm::TrNativeEvent> event);
-
-private:
-  /**
-   * Install the executable and its dependencies libraries to the runtime directory.
-   *
-   * This method will install the TransmuteClient executable from the library itself to the runtime directory, and it will also
-   * install the dependencies libraries such as `libnode.so`.
-   */
-  void installExecutable();
-  /**
-   * Install the bundled JavaScript scripts, which are used to bootstrap the content runtime at client process.
-   */
-  void installScripts();
-  /**
-   * Start the hived process, that is, the Hive Daemon, which is the incubator of the content client processes.
-   *
-   * The `TrHiveDaemon` instance is an agent for the hive daemon process, it provides the methods to create, terminate and messaging
-   * with the content processes.
-   */
-  void startHived();
-  void preparePreContent();
-  void acceptEventChanClients(int timeout = 100);
-
-private:
-  TrConstellation *constellation = nullptr;
-  shared_mutex contentsMutex;
-  std::vector<std::shared_ptr<TrContentRuntime>> contents;
-  std::unique_ptr<TrHiveDaemon> hived;
-
-private: // content listeners
-  std::shared_ptr<events_comm::TrNativeEventListener> rpcRequestListener = nullptr;
-  std::shared_ptr<events_comm::TrNativeEventListener> documentEventListener = nullptr;
-
-private: // pre-content
-  bool enablePreContent = true;
-  atomic<bool> preContentScheduled = false;
-  chrono::time_point<chrono::system_clock> preContentScheduledTimepoint;
-
-private: // channels & workers
-  TrOneShotServer<events_comm::TrNativeEventMessage> *eventChanServer = nullptr;
-  unique_ptr<WorkerThread> eventChanWatcher;
+  std::mutex commandBufferRequestsMutex;
+  std::mutex commandBufferExecutingMutex;
+  std::condition_variable commandBufferExecutingCv;
+  std::atomic<bool> isCommandBufferRequestsExecuting = false;
 };

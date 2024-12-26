@@ -87,7 +87,7 @@ public:
    */
   std::string getZoneDirname(optional<std::string> subDir = std::nullopt)
   {
-    std::string zoneDirname = applicationCacheDirectory + "/.zones";
+    auto zoneDirname = applicationCacheDirectory + "/.zones";
     if (!filesystem::exists(zoneDirname))
       filesystem::create_directory(zoneDirname);
 

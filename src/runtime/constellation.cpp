@@ -1,7 +1,7 @@
 #include <rapidjson/document.h>
 #include "constellation.hpp"
 #include "idgen.hpp"
-#include "./content.hpp"
+#include "./content_manager.hpp"
 #include "./media_manager.hpp"
 #include "./embedder.hpp"
 

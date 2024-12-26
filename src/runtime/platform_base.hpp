@@ -15,6 +15,7 @@
 // UNITY_WEBGL - WebGL
 // UNITY_EMBEDDED_LINUX - EmbeddedLinux OpenGLES
 // UNITY_EMBEDDED_LINUX_GL - EmbeddedLinux OpenGLCore
+
 #if _MSC_VER
 #define UNITY_WIN 1
 #elif defined(__APPLE__)

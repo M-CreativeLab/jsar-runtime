@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "constellation.hpp"
+#include "./constellation.hpp"
 
 /**
  * The host engines that the JSAR runtime would be embedded with.

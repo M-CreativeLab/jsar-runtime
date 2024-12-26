@@ -4,7 +4,7 @@
 #include "renderer.hpp"
 #include "render_api.hpp"
 #include "runtime/constellation.hpp"
-#include "runtime/content.hpp"
+#include "runtime/content_manager.hpp"
 #include "./content_renderer.hpp"
 
 namespace renderer

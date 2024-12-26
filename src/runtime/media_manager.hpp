@@ -17,7 +17,6 @@
 #include "common/media/sender.hpp"
 #include "common/media/receiver.hpp"
 
-using namespace std;
 using namespace ipc;
 using namespace media_comm;
 
@@ -131,14 +130,15 @@ public:
    * @param clientId The client id which the sound source is created for.
    * @returns The sound source if created successfully, otherwise returns `nullptr`.
    */
-  shared_ptr<TrSoundSource> createSoundSource(std::shared_ptr<TrContentRuntime> content, uint32_t clientId);
+  std::shared_ptr<TrSoundSource> createSoundSource(std::shared_ptr<TrContentRuntime> content, uint32_t clientId);
   /**
    * Iterate all the sound sources by the specified content, and call the callback function for each sound source.
    *
    * @param content The content which the sound sources belong to.
    * @param callback The callback function which will be called for each sound source.
    */
-  void iterateSoundSourcesByContent(std::shared_ptr<TrContentRuntime> content, std::function<void(shared_ptr<TrSoundSource>)> callback);
+  void iterateSoundSourcesByContent(std::shared_ptr<TrContentRuntime> content,
+                                    std::function<void(std::shared_ptr<TrSoundSource>)> callback);
   /**
    * Find the sound source by the specified content and sound source's id.
    *
@@ -146,7 +146,7 @@ public:
    * @param id The sound source's id.
    * @returns The sound source if found, otherwise returns `nullptr`.
    */
-  shared_ptr<TrSoundSource> findSoundSource(std::shared_ptr<TrContentRuntime> content, uint32_t id);
+  std::shared_ptr<TrSoundSource> findSoundSource(std::shared_ptr<TrContentRuntime> content, uint32_t id);
   /**
    * Remove the sound sources by the specified content, it's used for releasing the sound sources when the content is
    * closed.
@@ -182,10 +182,10 @@ private:
   TrConstellation *constellation = nullptr;
   ma_engine audioEngine;
   ma_device audioDevice;
-  shared_mutex mutexForSoundSources;
-  vector<shared_ptr<TrSoundSource>> soundSources;
-  unique_ptr<TrOneShotServer<TrMediaCommandMessage>> commandChanServer = nullptr;
-  unique_ptr<WorkerThread> chanClientsWatcher = nullptr;
-  atomic<bool> initialized = false;
-  atomic<bool> disabled = false;
+  std::shared_mutex mutexForSoundSources;
+  vector<std::shared_ptr<TrSoundSource>> soundSources;
+  std::unique_ptr<TrOneShotServer<TrMediaCommandMessage>> commandChanServer = nullptr;
+  std::unique_ptr<WorkerThread> chanClientsWatcher = nullptr;
+  std::atomic<bool> initialized = false;
+  std::atomic<bool> disabled = false;
 };

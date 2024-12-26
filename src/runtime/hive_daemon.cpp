@@ -12,7 +12,7 @@
 #include "common/options.hpp"
 #include "./hive_daemon.hpp"
 #include "./constellation.hpp"
-#include "./content.hpp"
+#include "./content_manager.hpp"
 #include "./embedder.hpp"
 
 using namespace std;

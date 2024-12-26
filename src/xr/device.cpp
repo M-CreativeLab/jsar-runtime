@@ -3,11 +3,12 @@
 #include <limits>
 #include <glm/glm.hpp>
 
-#include "runtime/constellation.hpp"
-#include "runtime/content.hpp"
-#include "runtime/media_manager.hpp"
-#include "math/matrix.hpp"
-#include "idgen.hpp"
+#include <idgen.hpp>
+#include <math/matrix.hpp>
+#include <runtime/constellation.hpp>
+#include <runtime/content_manager.hpp>
+#include <runtime/media_manager.hpp>
+
 #include "./device.hpp"
 
 namespace xr
