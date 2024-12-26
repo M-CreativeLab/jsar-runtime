@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.6)
+cmake_policy(SET CMP0069 NEW)
 
 project(transmute)
 set(CMAKE_CXX_STANDARD 20)
@@ -121,6 +122,7 @@ include(cmake/TransmuteCXXFlags.cmake)
 include(cmake/TransmuteCommon.cmake)
 include(cmake/TransmuteCore.cmake)
 include(cmake/TransmuteClient.cmake)
+include(cmake/TransmuteTests.cmake)
 
 message("C++ Flags: ${CMAKE_CXX_FLAGS}")
 message("Build type: ${CMAKE_BUILD_TYPE}")

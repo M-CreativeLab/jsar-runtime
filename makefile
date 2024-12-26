@@ -45,4 +45,7 @@ windows:
 	@$(call build_crates,x86_64-pc-windows-msvc)
 	make -C ./build windows JOBS=${JOBS}
 
-.PHONY: jsbundle darwin android all
+test:
+	ctest --test-dir build/targets/darwin
+
+.PHONY: jsbundle darwin android test all
