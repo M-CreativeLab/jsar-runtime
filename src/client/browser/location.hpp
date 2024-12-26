@@ -6,7 +6,7 @@
 
 namespace browser
 {
-  class Location
+  class Location final
   {
   public:
     Location() = default;

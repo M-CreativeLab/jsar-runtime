@@ -40,12 +40,10 @@ namespace canvas
     Bottom
   };
 
-  class TextMetrics
+  class TextMetrics final
   {
   public:
-    TextMetrics()
-    {
-    }
+    TextMetrics() = default;
 
   public:
     float width;

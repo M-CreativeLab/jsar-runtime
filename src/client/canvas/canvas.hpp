@@ -29,15 +29,15 @@ namespace canvas
     std::shared_ptr<RenderingContextBase<T>> getContext(RenderingContextType type);
 
   public:
-    size_t width() override
+    size_t width() override final
     {
       return skSurface == nullptr ? 0 : skSurface->width();
     }
-    size_t height() override
+    size_t height() override final
     {
       return skSurface == nullptr ? 0 : skSurface->height();
     }
-    bool readPixels(SkPixmap &dst) override
+    bool readPixels(SkPixmap &dst) override final
     {
       if (skSurface == nullptr)
         return false;
@@ -76,7 +76,7 @@ namespace canvas
     uint32_t heightToSet;
   };
 
-  class Canvas : public CanvasBase<Canvas>
+  class Canvas final : public CanvasBase<Canvas>
   {
   public:
     using CanvasBase::CanvasBase;
@@ -85,7 +85,7 @@ namespace canvas
     std::string toDataURL(std::string type, double encoderOptions);
   };
 
-  class OffscreenCanvas : public CanvasBase<OffscreenCanvas>
+  class OffscreenCanvas final : public CanvasBase<OffscreenCanvas>
   {
   public:
     using CanvasBase::CanvasBase;

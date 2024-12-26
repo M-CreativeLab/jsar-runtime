@@ -9,8 +9,6 @@
 #include "../per_process.hpp"
 #include "../dom/dom_event_target.hpp"
 
-using namespace std;
-
 namespace browser
 {
   enum class WindowTarget
@@ -37,7 +35,13 @@ namespace browser
     Top
   };
 
-  inline std::string WindowTargetToString(WindowTarget target)
+  /**
+   * Convert the window target to the string.
+   *
+   * @param target The window target.
+   * @returns The string representation of the window target.
+   */
+  inline std::string to_string(WindowTarget target)
   {
     switch (target)
     {
@@ -56,7 +60,7 @@ namespace browser
     }
   }
 
-  class WindowFeatures
+  class WindowFeatures final
   {
   public:
     WindowFeatures() = default;
@@ -81,19 +85,19 @@ namespace browser
     }
 
   public:
-    void alert(string message)
+    inline void alert(string message)
     {
       clientContext->makeRpcCall("window.alert", {message});
     }
-    void close()
+    inline void close()
     {
       clientContext->makeRpcCall("window.close", {});
     }
-    void open(string url, WindowTarget target, WindowFeatures features = WindowFeatures())
+    inline void open(string url, WindowTarget target, WindowFeatures features = WindowFeatures())
     {
-      clientContext->makeRpcCall("window.open", {url, WindowTargetToString(target)});
+      clientContext->makeRpcCall("window.open", {url, to_string(target)});
     }
-    void prompt(string message, string defaultValue)
+    inline void prompt(string message, string defaultValue)
     {
       clientContext->makeRpcCall("window.prompt", {message, defaultValue});
     }
