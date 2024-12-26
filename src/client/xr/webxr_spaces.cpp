@@ -20,7 +20,7 @@ namespace client_xr
     }
     else if (type_ == XRReferenceSpaceType::kUnbounded)
     {
-      baseMatrix_ = make_mat4(frameRequest.localBaseMatrix) * math::getOriginMatrix();
+      baseMatrix_ = make_mat4(frameRequest.localBaseMatrix) * math::GetOriginMatrix();
       XRSpace::onPoseUpdate(session, frameRequest);
     }
   }

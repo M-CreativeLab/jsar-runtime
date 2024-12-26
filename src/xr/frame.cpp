@@ -94,7 +94,7 @@ namespace xr
      * FIXME: Do we have more efficient way to convert the matrix to left-handed?
      */
     auto viewBaseMatrix = glm::inverse(glm::make_mat4(sourceViewMatrixFloats));
-    return glm::inverse(math::convertBaseMatrixToLH(viewBaseMatrix));
+    return glm::inverse(math::ConvertBaseMatrixToLH(viewBaseMatrix));
   }
 
   /**
@@ -110,8 +110,8 @@ namespace xr
     }
     else
     {
-      worldToLocal = glm::inverse(math::convertBaseMatrixToLH(offsetTransform));
-      viewBaseMatrix = math::convertBaseMatrixToLH(viewBaseMatrix);
+      worldToLocal = glm::inverse(math::ConvertBaseMatrixToLH(offsetTransform));
+      viewBaseMatrix = math::ConvertBaseMatrixToLH(viewBaseMatrix);
     }
     return glm::inverse(worldToLocal * viewBaseMatrix);
   }
@@ -164,13 +164,13 @@ namespace xr
     else if (placeholder == WebGLMatrixPlaceholderId::ViewMatrix)
     {
       auto contentLocal = getLocalTransform(sessionId);
-      auto originTransform = contentLocal * math::getOriginMatrix();
+      auto originTransform = contentLocal * math::GetOriginMatrix();
       matrix = getViewMatrixWithOffset(originTransform, isRightHandedSystem);
     }
     else if (placeholder == WebGLMatrixPlaceholderId::ViewProjectionMatrix)
     {
       auto contentLocal = getLocalTransform(sessionId);
-      auto offsetTransform = contentLocal * math::getOriginMatrix();
+      auto offsetTransform = contentLocal * math::GetOriginMatrix();
       auto viewMatrix = getViewMatrixWithOffset(offsetTransform, isRightHandedSystem);
       matrix = getProjectionMatrix(isRightHandedSystem) * viewMatrix;
     }
@@ -225,20 +225,20 @@ namespace xr
     else if (placeholder == WebGLMatrixPlaceholderId::ViewMatrix)
     {
       auto contentLocal = getLocalTransform(sessionId);
-      auto originTransform = contentLocal * math::getOriginMatrix();
+      auto originTransform = contentLocal * math::GetOriginMatrix();
       matrix = GetViewMatWithOffset(viewMatrixFloats, originTransform, isRightHandedSystem);
     }
     else if (placeholder == WebGLMatrixPlaceholderId::ViewProjectionMatrix)
     {
       auto contentLocal = getLocalTransform(sessionId);
-      auto offsetTransform = contentLocal * math::getOriginMatrix();
+      auto offsetTransform = contentLocal * math::GetOriginMatrix();
       auto viewMatrix = GetViewMatWithOffset(viewMatrixFloats, offsetTransform, isRightHandedSystem);
       matrix = GetProjectionMat(projectionMatrixFloats, isRightHandedSystem) * viewMatrix;
     }
     else if (placeholder == WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye)
     {
       auto contentLocal = getLocalTransform(sessionId);
-      auto offsetTransform = contentLocal * math::getOriginMatrix();
+      auto offsetTransform = contentLocal * math::GetOriginMatrix();
       auto viewMatrix = GetViewMatWithOffset(m_ViewMatrixForRightEye, offsetTransform, isRightHandedSystem);
       matrix = GetProjectionMat(m_ProjectionMatrixForRightEye, isRightHandedSystem) * viewMatrix;
     }

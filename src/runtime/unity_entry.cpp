@@ -751,7 +751,7 @@ extern "C"
     auto inputSource = xrDevice->getInputSourceById(id);
     if (inputSource != nullptr)
     {
-      auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
+      auto baseMatrix = math::CreateMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
       inputSource->setTargetRayBaseMatrix(baseMatrix);
     }
     else
@@ -773,7 +773,7 @@ extern "C"
     auto inputSource = xrDevice->getInputSourceById(id);
     if (inputSource != nullptr)
     {
-      auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
+      auto baseMatrix = math::CreateMatrixFromTRS(translation, rotation, new float[3]{1, 1, 1}, s_WorldScalingFactor);
       inputSource->setGripBaseMatrix(baseMatrix);
     }
     else
@@ -865,7 +865,7 @@ extern "C"
       return; // out of range
 
     float defaultScale[3] = {1, 1, 1};
-    auto baseMatrix = math::makeMatrixFromTRS(translation, rotation, defaultScale, s_WorldScalingFactor);
+    auto baseMatrix = math::CreateMatrixFromTRS(translation, rotation, defaultScale, s_WorldScalingFactor);
     hand->joints[joint].setBaseMatrix(baseMatrix);
   }
 }

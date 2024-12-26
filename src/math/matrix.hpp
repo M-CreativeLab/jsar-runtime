@@ -10,18 +10,26 @@
 
 namespace math
 {
-  /**
-   * Create a 4x4 matrix from an array of 16 floats.
-   *
-   * @param src The source array.
-   */
-  inline glm::mat4 createMat4FromArray(float *src)
+  namespace matrix
   {
-    return glm::mat4(
-        src[0], src[1], src[2], src[3],
-        src[4], src[5], src[6], src[7],
-        src[8], src[9], src[10], src[11],
-        src[12], src[13], src[14], src[15]);
+    static const glm::mat4 Identity = glm::identity<glm::mat4>();
+    static const glm::mat4 Origin = glm::identity<glm::mat4>();
+
+    /**
+     * Convert a matrix to a string.
+     *
+     * @param matrix The matrix to convert.
+     * @return The string representation of the matrix.
+     */
+    inline std::string to_string(glm::mat4 &matrix)
+    {
+      std::string output = "(";
+      output += std::to_string(matrix[0][0]);
+      for (int i = 1; i < 16; i++)
+        output += ("," + std::to_string(matrix[i / 4][i % 4]));
+      output += ")";
+      return output;
+    }
   }
 
   /**
@@ -32,7 +40,7 @@ namespace math
    * @param scale The scale vector.
    * @param worldScalingFactor The world scaling factor.
    */
-  inline glm::mat4 makeMatrixFromTRS(float *translation, float *rotation, float *scale, float worldScalingFactor = 1.0f)
+  inline glm::mat4 CreateMatrixFromTRS(float *translation, float *rotation, float *scale, float worldScalingFactor = 1.0f)
   {
     float tx = translation[0] * worldScalingFactor;
     float ty = translation[1] * worldScalingFactor;
@@ -52,19 +60,16 @@ namespace math
   }
 
   /**
-   * Get an origin matrix.
+   * @returns the origin matrix (identity matrix).
    */
-  inline glm::mat4 getOriginMatrix()
-  {
-    return glm::identity<glm::mat4>();
-  }
+  inline glm::mat4 GetOriginMatrix() { return matrix::Origin; }
 
   /**
    * Convert a projection matrix to a left-handed coordinate system.
    *
    * @param src The source matrix to convert.
    */
-  inline glm::mat4 getProjectionMatrixInLH(glm::mat4 &src)
+  inline glm::mat4 GetProjectionMatrixInLH(glm::mat4 &src)
   {
     float *m = glm::value_ptr(src);
     m[8] *= -1;
@@ -79,7 +84,7 @@ namespace math
    *
    * @param baseMatrix The base matrix to convert.
    */
-  inline glm::mat4 convertBaseMatrixToLH(glm::mat4 &baseMatrix)
+  inline glm::mat4 ConvertBaseMatrixToLH(glm::mat4 &baseMatrix)
   {
     // decompose the src matrix
     auto scale = glm::vec3(glm::length(baseMatrix[0]), glm::length(baseMatrix[1]), glm::length(baseMatrix[2]));
@@ -96,28 +101,5 @@ namespace math
     auto R = glm::mat4_cast(rotation);
     auto S = glm::scale(glm::mat4(1), scale);
     return T * R * S;
-  }
-
-  /**
-   * Get a view matrix with a transform.
-   *
-   * @param worldToView The world to view matrix.
-   */
-  inline glm::mat4 getViewMatrixWithTransform(glm::mat4 &worldToView, glm::mat4 &transform)
-  {
-    auto viewBaseMatrix = glm::inverse(worldToView);
-    auto worldToLocalMatrix = glm::inverse(convertBaseMatrixToLH(transform));
-    auto viewBaseMatrixInLH = convertBaseMatrixToLH(viewBaseMatrix);
-    return glm::inverse(worldToLocalMatrix * viewBaseMatrixInLH);
-  }
-
-  inline std::string matrixToString(float* matrixValues)
-  {
-    std::string output = "(";
-    output += std::to_string(matrixValues[0]);
-    for (int i = 1; i < 16; i++)
-      output += ("," + std::to_string(matrixValues[i]));
-    output += ")";
-    return output;
   }
 }
