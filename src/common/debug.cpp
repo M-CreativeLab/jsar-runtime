@@ -271,7 +271,7 @@ _Unwind_Reason_Code android_unwind_callback(struct _Unwind_Context *ctx, void *a
 }
 #endif
 
-void printsStacktraceOnSignal(int signal)
+void PrintsStacktraceOnSignal(int signal)
 {
   DEBUG(LOG_TAG_ERROR, "Received SIGNAL (%d), printing backtrace:", signal);
 #ifdef __APPLE__
@@ -335,6 +335,7 @@ void printsStacktraceOnSignal(int signal)
 #endif
 }
 
+// Signals to be watched
 constexpr int SIGNALS[] = {
     SIGABRT,
     SIGSEGV,
@@ -348,6 +349,47 @@ constexpr int SIGNALS[] = {
 
 void ENABLE_BACKTRACE()
 {
+  /**
+   * `TR_SIGNAL_ONSTACK` is to enable signal handling on a new alternate stack, which is useful
+   * when the stack is corrupted such as stack overflow or underflow.
+   * 
+   * If you met the backtrace not printing, you can try to enable this macro.
+   */
+#ifdef TR_SIGNAL_ONSTACK
+#define STACK_SIZE (SIGSTKSZ)
+  stack_t ss;
+  struct sigaction sa;
+
+  ss.ss_sp = malloc(STACK_SIZE);
+  if (ss.ss_sp == NULL)
+  {
+    perror("malloc");
+    return exit(1);
+  }
+  ss.ss_size = STACK_SIZE;
+  ss.ss_flags = 0;
+
+  if (sigaltstack(&ss, NULL) == -1)
+  {
+    perror("sigaltstack");
+    return exit(1);
+  }
+
+  sa.sa_flags = SA_ONSTACK;
+#ifdef __APPLE__
+  sa.__sigaction_u.__sa_handler = PrintsStacktraceOnSignal;
+#else
+  sa.sa_handler = PrintsStacktraceOnSignal;
+#endif
+  sigemptyset(&sa.sa_mask);
+
   for (int id : SIGNALS)
-    signal(id, printsStacktraceOnSignal);
+  {
+    if (sigaction(id, &sa, NULL) == -1)
+      DEBUG(LOG_TAG_ERROR, "Failed to set signal action for %d", id);
+  }
+#else
+  for (int id : SIGNALS)
+    signal(id, PrintsStacktraceOnSignal);
+#endif
 }
