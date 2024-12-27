@@ -25,7 +25,7 @@ namespace builtin_scene
     }
     void initializeMesh3d(std::shared_ptr<Mesh3d> mesh3d)
     {
-      client_graphics::WebGLState clientState = glContext_->clientState();
+      // client_graphics::WebGLState clientState = glContext_->clientState();
       auto vao = glContext_->createVertexArray();
       auto vbo = glContext_->createBuffer();
       auto ebo = glContext_->createBuffer();

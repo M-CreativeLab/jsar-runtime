@@ -4,6 +4,7 @@
 #include <chrono>
 #include <idgen.hpp>
 #include <common/utility.hpp>
+#include <client/graphics/webgl_context.hpp>
 #include <bindings/webxr/common.hpp>
 
 #include "./common.hpp"
@@ -81,8 +82,10 @@ namespace client_xr
                     public WeakReference<bindings::XRSession>,
                     public std::enable_shared_from_this<XRSession>
   {
+    friend class XRDeviceClient;
     friend class XRSystem;
     friend class XRFrame;
+    friend class client_graphics::WebGLContext;
 
   public:
     /**
@@ -138,6 +141,21 @@ namespace client_xr
      * @returns the `XRDeviceClient` object.
      */
     inline std::shared_ptr<XRDeviceClient> device() const { return device_; }
+    /**
+     * Get the `WebGLContext` object to be used for this WebXR session.
+     *
+     * At user-land, the `WebGLContext` object is configured by the `XRWebGLLayer` object and set it to the render state's
+     * `baseLayer`, this operation indicates that the `XRSession` is rendering to the `WebGLContext` instance.
+     *
+     * @returns the `WebGLContext` object.
+     */
+    inline std::shared_ptr<client_graphics::WebGLContext> glContext()
+    {
+      auto baseLayer = renderState().baseLayer;
+      if (baseLayer == nullptr)
+        return nullptr;
+      return baseLayer->glContext();
+    }
     /**
      * @returns `true` if the session is immersive, `false` otherwise.
      */
@@ -259,6 +277,31 @@ namespace client_xr
      * @param type the view space type.
      */
     void addViewSpace(XRViewSpaceType type);
+    /**
+     * Check if a new frame is started and not ended, this is used to determine for commandbuffers sender to know which queue
+     * to send the command buffer.
+     *
+     * @returns `true` if a new frame is started and not ended.
+     */
+    inline bool runsInFrame() { return currentFrameRequestData_ != nullptr; }
+    /**
+     * Mark the current frame is started, it will set the current frame request data, and `runInFrame()` will return `true`.
+     */
+    inline void markCurrentFrameStarted(xr::TrXRFrameRequest *reqData) { currentFrameRequestData_ = reqData; }
+    /**
+     * Mark the current frame is ended, it will clear the current frame request data, and `runInFrame()` will return `false`.
+     */
+    inline void markCurrentFrameEnded() { currentFrameRequestData_ = nullptr; }
+    /**
+     * Append the rendering info to the specific command buffer.
+     *
+     * @param commandBuffer the command buffer to append the rendering info.
+     * @returns the command buffer with the rendering info.
+     */
+    void appendRenderingInfoToCommandBuffer(commandbuffers::TrCommandBufferBase &commandBuffer);
+    std::optional<commandbuffers::XRFrameFlushCommandBufferRequest> createFlushFrameCommand();
+    commandbuffers::XRFrameStartCommandBufferRequest createStartFrameCommand();
+    commandbuffers::XRFrameEndCommandBufferRequest createEndFrameCommand(xr::TrXRFrameRequest *requestData);
 
   public:
     /**
@@ -330,6 +373,7 @@ namespace client_xr
      * The last recorded frame timepoint, updated by manual at calculating FPS.
      */
     std::chrono::steady_clock::time_point lastRecordedFrameTimepoint_ = chrono::steady_clock::now();
+    xr::TrXRFrameRequest *currentFrameRequestData_ = nullptr;
     uv_loop_t *eventloop_;
     uv_timer_t tickHandle_;
   };

@@ -4,8 +4,9 @@
 #include <string>
 #include <memory>
 #include <glm/glm.hpp>
+#include <common/command_buffers/webgl_constants.hpp>
+#include <client/xr/common.hpp>
 
-#include "common/command_buffers/webgl_constants.hpp"
 #include "../per_process.hpp"
 #include "./webgl_program.hpp"
 #include "./webgl_shader.hpp"
@@ -226,7 +227,7 @@ namespace client_graphics
   public:
     /**
      * It restores the given `WebGLState` object to the current rendering state.
-     * 
+     *
      * @param state The `WebGLState` object to restore.
      * @param context The `WebGL2Context` object to restore the state to.
      */
@@ -250,6 +251,9 @@ namespace client_graphics
    */
   class WebGLContext
   {
+    friend class client_xr::XRSession;      // Allow XRSession to call `connectXRSession()`.
+    friend class client_xr::XRDeviceClient; // Allow XRDeviceClient to call `sendCommandBuffer()`.
+
   public:
     WebGLContext(ContextAttributes &attrs, bool isWebGL2 = false);
 
@@ -530,6 +534,14 @@ namespace client_graphics
     }
 
     /**
+     * @returns if the context could be for WebXR rendering.
+     */
+    inline bool isXRCompatible()
+    {
+      return contextAttributes.xrCompatible;
+    }
+
+    /**
      * It sets the WebGL error for the function.
      *
      * @param func the function name that causes the error.
@@ -697,11 +709,28 @@ namespace client_graphics
       return unpacked;
     }
 
-  public:
+  private:
     /**
      * @returns the client state of the WebGL context.
      */
     WebGLState &clientState() { return clientState_; }
+    /**
+     * an XR-compatible WebGL context could be configured as an `XRWebGLLayer` object and be connected to a specific WebXR
+     * session. At the same time, each WebXR session could own 1 base layer, thus the XR-compatible WebGL context to a WebXR
+     * session is a one-to-one relationship.
+     *
+     * @returns the current connected WebXR session, or `nullptr` if it is not connected.
+     */
+    inline std::shared_ptr<client_xr::XRSession> connectedXRSession() { return connectedXRSession_.lock(); }
+    /**
+     * It connects the current WebGL context to a WebXR session.
+     *
+     * @param session The WebXR session to connect.
+     */
+    inline void connectXRSession(std::shared_ptr<client_xr::XRSession> session)
+    {
+      connectedXRSession_ = session;
+    }
 
   public:
     uint32_t id;
@@ -739,6 +768,10 @@ namespace client_graphics
      * TODO: Read the value from the host
      */
     uint32_t unpackAlignment_ = 4;
+
+  private:
+    // XR-compatible field
+    weak_ptr<client_xr::XRSession> connectedXRSession_;
   };
 
   class WebGL2Context : public WebGLContext

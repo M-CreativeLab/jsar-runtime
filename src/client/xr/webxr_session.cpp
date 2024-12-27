@@ -80,6 +80,11 @@ namespace client_xr
         pendingRenderState_ = make_unique<XRRenderState>();
     }
     pendingRenderState_->update(newState);
+
+    // connect the session to the base layer
+    auto baseRenderingContext = glContext();
+    if (baseRenderingContext != nullptr)
+      baseRenderingContext->connectXRSession(shared_from_this());
   }
 
   void XRSession::updateTargetFrameRate(float target)

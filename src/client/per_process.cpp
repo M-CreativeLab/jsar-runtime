@@ -421,7 +421,7 @@ void TrClientContextPerProcess::start()
   }
 
   // Initialize the built-in scene
-  builtinScene = builtin_scene::Scene::Make(hostWebGLContext, xrDeviceClient);
+  // builtinScene = builtin_scene::Scene::Make(hostWebGLContext, xrDeviceClient);
 
   // Start the service alive listener
   serviceAliveListener = new thread([]()

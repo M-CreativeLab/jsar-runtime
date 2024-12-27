@@ -43,6 +43,9 @@ namespace client_xr
     XRWebGLLayer(std::shared_ptr<XRSession> session, std::shared_ptr<client_graphics::WebGLContext> glContext);
     XRWebGLLayer(xr::WebGLLayer &layerData);
 
+  public:
+    inline std::shared_ptr<client_graphics::WebGLContext> glContext() { return glContext_; }
+
   private:
     std::shared_ptr<client_graphics::WebGLContext> glContext_;
   };
