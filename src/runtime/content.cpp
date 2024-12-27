@@ -248,6 +248,7 @@ void TrContentRuntime::recvCommandBuffers(WorkerThread &worker, uint32_t timeout
   auto commandBuffer = commandBufferChanReceiver->recvCommandBufferRequest(timeout);
   if (commandBuffer != nullptr)
   {
+    // TODO: Support context creation and contextual dispatching.
     lock_guard<mutex> lock(commandBufferRequestsMutex);
     if (onCommandBufferRequestReceived)
       onCommandBufferRequestReceived(commandBuffer);

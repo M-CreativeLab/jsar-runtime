@@ -28,7 +28,7 @@ namespace commandbuffers
    */
   class TrCommandBufferBase : public ipc::TrIpcSerializableBase<TrCommandBufferMessage, CommandBufferType>
   {
-#define INVALID_CONTEXT_ID (MinimumContextId - 1)
+#define INVALID_CONTEXT_ID 0x0
 
   public:
     /**
@@ -84,6 +84,7 @@ namespace commandbuffers
     TrCommandBufferRequest(TrCommandBufferRequest &that)
         : TrCommandBufferBase(that.type, that.size)
     {
+      contextId = that.contextId;
       renderingInfo = that.renderingInfo;
     }
   };
@@ -100,6 +101,7 @@ namespace commandbuffers
         : TrCommandBufferBase(that.type, that.size),
           requestId(that.requestId)
     {
+      contextId = that.contextId;
     }
 
   public:
