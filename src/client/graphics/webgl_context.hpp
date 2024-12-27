@@ -205,7 +205,7 @@ namespace client_graphics
     kExtMaxViewsOvr = WEBGL2_EXT_MAX_VIEWS_OVR,
   };
 
-  class ContextAttributes
+  class ContextAttributes final
   {
   public:
     bool alpha = true;
@@ -561,12 +561,9 @@ namespace client_graphics
      * It sends a command buffer request to the server.
      *
      * @param commandBuffer
-     * @param useDefaultQueue - if true, the command buffer will be executed in the default queue.
+     * @param followsFlush - if true, the command buffer will be executed in the default queue.
      */
-    inline bool sendCommandBufferRequest(commandbuffers::TrCommandBufferBase &commandBuffer, bool forceDefaultQueue = false)
-    {
-      return clientContext_->sendCommandBufferRequest(commandBuffer, forceDefaultQueue);
-    }
+    bool sendCommandBufferRequest(commandbuffers::TrCommandBufferBase &commandBuffer, bool followsFlush = false);
 
     /**
      * It receives a command buffer response from the client context.
@@ -581,17 +578,11 @@ namespace client_graphics
       return dynamic_cast<R *>(response);
     }
 
+    bool sendFlushCommand(std::shared_ptr<client_xr::XRSession> session);
     /**
      * It sends a fcp metrics command buffer request to print the real fcp value.
      */
-    inline void sendFirstContentfulPaintMetrics()
-    {
-      if (isFirstContentfulPaintReported_)
-        return;
-      commandbuffers::PaintingMetricsCommandBufferRequest req(commandbuffers::MetricsCategory::FirstContentfulPaint);
-      sendCommandBufferRequest(req);
-      isFirstContentfulPaintReported_ = true;
-    }
+    void sendFirstContentfulPaintMetrics();
 
     /**
      * It unpacks the pixels from the source buffer to the destination buffer.
@@ -721,7 +712,10 @@ namespace client_graphics
      *
      * @returns the current connected WebXR session, or `nullptr` if it is not connected.
      */
-    inline std::shared_ptr<client_xr::XRSession> connectedXRSession() { return connectedXRSession_.lock(); }
+    inline std::shared_ptr<client_xr::XRSession> connectedXRSession()
+    {
+      return isXRCompatible() ? connectedXRSession_.lock() : nullptr;
+    }
     /**
      * It connects the current WebGL context to a WebXR session.
      *
@@ -733,7 +727,7 @@ namespace client_graphics
     }
 
   public:
-    uint32_t id;
+    uint8_t id;
     ContextAttributes contextAttributes;
     int maxCombinedTextureImageUnits;
     int maxCubeMapTextureSize;

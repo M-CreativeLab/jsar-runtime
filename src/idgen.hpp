@@ -53,7 +53,7 @@ public:
    * @param initialId The initial id to start with, and the default value is 0.
    * @param maxId The maximum id value, and the default value is `UINT32_MAX`.
    */
-  TrIdGeneratorBase(IdType initialId = 0, IdType maxId = UINT32_MAX)
+  TrIdGeneratorBase(IdType initialId = 0, IdType maxId = TrIdTraits<IdType>::MaxId)
       : counter(initialId),
         initialId(initialId),
         maxId(maxId)

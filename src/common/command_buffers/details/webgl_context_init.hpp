@@ -11,15 +11,6 @@ namespace commandbuffers
   {
   public:
     using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
-
-    CreateWebGLContextRequest(uint32_t contextId)
-        : TrCommandBufferSimpleRequest(),
-          contextId(contextId)
-    {
-    }
-
-  public:
-    uint32_t contextId;
   };
 
   class WebGL1ContextInitCommandBufferRequest final

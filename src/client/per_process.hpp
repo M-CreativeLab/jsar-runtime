@@ -266,12 +266,7 @@ public: // commandbuffer methods
   TrCommandBufferResponse *recvCommandBufferResponse(int timeout);
 
 public: // WebXR methods
-  bool startXrFrame(xr::TrXRFrameRequest *frameRequest);
-  bool flushXrFrame();
-  bool finishXrFrame(xr::TrXRFrameRequest *frameRequest);
   inline shared_ptr<client_xr::XRDeviceClient> getXRDeviceClient() { return xrDeviceClient; }
-  inline bool isInXrFrame() { return currentXrFrameRequest != nullptr; }
-  inline xr::TrXRFrameRequest *getCurrentXRFrameRequest() { return currentXrFrameRequest; }
   xr::TrXRDeviceContextZone *getXRDeviceContextZone() { return xrDeviceContextZoneClient.get(); }
   xr::TrXRInputSourcesZone *getXRInputSourcesZone() { return xrInputSourcesZoneClient.get(); }
 
@@ -306,14 +301,10 @@ public: // WebXR methods
   template <typename CommandType>
   bool sendXrCommand(xr::TrXRCommandBase<CommandType> &xrCommand)
   {
-    if (!xrCommandChanSender)
-      return false;
-    if (currentXrFrameRequest != nullptr)
+    if (TR_UNLIKELY(!xrCommandChanSender))
     {
-      xrCommand.stereoId = currentXrFrameRequest->stereoId;
-      xrCommand.stereoTimestamp = currentXrFrameRequest->stereoTimestamp;
-      auto now = chrono::time_point_cast<chrono::milliseconds>(chrono::steady_clock::now());
-      xrCommand.sentAtTimestamp = now.time_since_epoch().count();
+      std::cerr << "Skipping sending an XR command because the channel is not ready." << std::endl;
+      return false;
     }
     return xrCommandChanSender->sendCommand(xrCommand);
   }
@@ -406,7 +397,6 @@ private: // xr fields
   TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;
   xr::TrXRCommandSender *xrCommandChanSender = nullptr;
   xr::TrXRCommandReceiver *xrCommandChanReceiver = nullptr;
-  xr::TrXRFrameRequest *currentXrFrameRequest = nullptr;
   unique_ptr<xr::TrXRDeviceContextZone> xrDeviceContextZoneClient;
   unique_ptr<xr::TrXRInputSourcesZone> xrInputSourcesZoneClient;
   int framebufferWidth = 0;

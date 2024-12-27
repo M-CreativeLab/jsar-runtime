@@ -5,9 +5,39 @@
 
 namespace commandbuffers
 {
+  /**
+   * MCI: The Minimum Context Id.
+   *
+   * Every commandbuffer request or response should have a context Id, which is used to identify the context of the command
+   * buffer in a same content process.
+   *
+   * Invalid context Id is less than this value, and the default context Id is this value, that indicates this context is the
+   * first created commandbuffers context in the content process.
+   */
+  constexpr uint8_t MinimumContextId = 0xd;
+
+  /**
+   * The maximum count of contexts to be created per content process.
+   *
+   * TODO: This value should be configurable?
+   */
+  constexpr uint32_t MaxinumContextsCountPerContent = 5;
+
+  /**
+   * The base struct/class to represent the exchange-able command buffer.
+   */
   class TrCommandBufferBase : public ipc::TrIpcSerializableBase<TrCommandBufferMessage, CommandBufferType>
   {
+#define INVALID_CONTEXT_ID (MinimumContextId - 1)
+
   public:
+    /**
+     * Create a command buffer from an `TrCommandBufferMessage` instance.
+     *
+     * @tparam T The command buffer type of the instance to be created.
+     * @param message The message to create the command buffer instance.
+     * @returns The created command buffer instance.
+     */
     template <typename T>
     static T *CreateFromMessage(TrCommandBufferMessage &message)
     {
@@ -21,35 +51,54 @@ namespace commandbuffers
     TrCommandBufferBase(CommandBufferType type, size_t size) : TrIpcSerializableBase(type, size) {}
 
   public:
+    /**
+     * The Id of the command buffer.
+     *
+     * Every command buffer should have a unique Id to identify the command buffer which is generated once the command buffer
+     * is created at both the client or server side.
+     */
     uint32_t id = commandBufferIdGen.get();
+    /**
+     * The context Id of the command buffer, that is used to identify the context of the command buffer in a same content
+     * process.
+     *
+     * This field is initialized to be `MinimumContextId - 1` by default, which indicates this context is invalid. The sender
+     * in the client side or server side should set this field to the correct context Id before sending the command buffer.
+     */
+    uint8_t contextId = INVALID_CONTEXT_ID; // Mark this to be invalid by default.
+    /**
+     * The WebXR rendering information of this command buffer, which is used to identify if this command buffer is belongs to
+     * a WebXR frame rendering or not.
+     */
     xr::TrXRFrameRenderingInfo renderingInfo;
+#undef INVALID_CONTEXT_ID
   };
 
   class TrCommandBufferRequest : public TrCommandBufferBase
   {
   public:
+    TrCommandBufferRequest(CommandBufferType type, size_t size)
+        : TrCommandBufferBase(type, size)
+    {
+    }
     TrCommandBufferRequest(TrCommandBufferRequest &that)
         : TrCommandBufferBase(that.type, that.size)
     {
       renderingInfo = that.renderingInfo;
-    }
-    TrCommandBufferRequest(CommandBufferType type, size_t size)
-        : TrCommandBufferBase(type, size)
-    {
     }
   };
 
   class TrCommandBufferResponse : public TrCommandBufferBase
   {
   public:
-    TrCommandBufferResponse(TrCommandBufferResponse &that)
-        : TrCommandBufferBase(that.type, that.size),
-          requestId(that.requestId)
-    {
-    }
     TrCommandBufferResponse(CommandBufferType type, size_t size, TrCommandBufferRequest *req)
         : TrCommandBufferBase(type, size),
           requestId(req->id)
+    {
+    }
+    TrCommandBufferResponse(TrCommandBufferResponse &that)
+        : TrCommandBufferBase(that.type, that.size),
+          requestId(that.requestId)
     {
     }
 

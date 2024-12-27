@@ -78,14 +78,33 @@ namespace client_xr
     return requestSession(mode, features, init);
   }
 
-  bool XRDeviceClient::startFrame(xr::TrXRFrameRequest *frameRequest)
+  bool XRDeviceClient::startFrame(std::shared_ptr<XRSession> session, xr::TrXRFrameRequest *frameRequest)
   {
-    return clientContext_->startXrFrame(frameRequest);
+    assert(session != nullptr);
+    session->markCurrentFrameStarted(frameRequest);
+
+    auto glContext = session->glContext();
+    if (TR_UNLIKELY(glContext == nullptr))
+    {
+      auto msg = "WebGLContext is not connected with the XRSession(" + std::to_string(session->id) + ").";
+      throw std::runtime_error(msg);
+    }
+    auto req = session->createStartFrameCommand();
+    return clientContext_->sendCommandBufferRequest(req);
   }
 
-  bool XRDeviceClient::endFrame(xr::TrXRFrameRequest *frameRequest)
+  bool XRDeviceClient::endFrame(std::shared_ptr<XRSession> session, xr::TrXRFrameRequest *frameRequest)
   {
-    return clientContext_->finishXrFrame(frameRequest);
+    assert(session != nullptr);
+    session->markCurrentFrameEnded();
+    auto glContext = session->glContext();
+    if (TR_UNLIKELY(glContext == nullptr))
+    {
+      auto msg = "WebGLContext is not connected with the XRSession(" + std::to_string(session->id) + ").";
+      throw std::runtime_error(msg);
+    }
+    auto req = session->createEndFrameCommand(frameRequest);
+    return clientContext_->sendCommandBufferRequest(req);
   }
 
   TrViewport XRDeviceClient::getViewport(uint32_t viewIndex)

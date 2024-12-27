@@ -191,7 +191,14 @@ namespace webgl
     }
 
     WebGLProgram *program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
-    glContext_->linkProgram(program->handle());
+    try
+    {
+      glContext_->linkProgram(program->handle());
+    }
+    catch (const std::exception &e)
+    {
+      Napi::TypeError::New(env, e.what()).ThrowAsJavaScriptException();
+    }
     return env.Undefined();
   }
 

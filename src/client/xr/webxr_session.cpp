@@ -429,4 +429,34 @@ namespace client_xr
   {
     viewSpaces_.push_back(XRViewSpace::Make(type));
   }
+
+  void XRSession::appendRenderingInfoToCommandBuffer(commandbuffers::TrCommandBufferBase &commandBuffer)
+  {
+    int viewIndex = 0;
+    auto &deviceInit = device()->getDeviceInit();
+    if (deviceInit.renderedAsMultipass()) // If the device is rendered as multipass, the viewIndex should read from the frame request.
+      viewIndex = currentFrameRequestData_->viewIndex;
+    commandBuffer.renderingInfo = currentFrameRequestData_->createRenderingInfo(viewIndex);
+  }
+
+  std::optional<commandbuffers::XRFrameFlushCommandBufferRequest> XRSession::createFlushFrameCommand()
+  {
+    if (!runsInFrame())
+      return std::nullopt;
+    auto stereoId = currentFrameRequestData_->stereoId;
+    auto viewIndex = currentFrameRequestData_->viewIndex;
+    XRFrameFlushCommandBufferRequest req(stereoId, viewIndex);
+    return req;
+  }
+
+  commandbuffers::XRFrameStartCommandBufferRequest XRSession::createStartFrameCommand()
+  {
+    return XRFrameStartCommandBufferRequest(currentFrameRequestData_->stereoId,
+                                            currentFrameRequestData_->viewIndex);
+  }
+
+  commandbuffers::XRFrameEndCommandBufferRequest XRSession::createEndFrameCommand(xr::TrXRFrameRequest *requestData)
+  {
+    return XRFrameEndCommandBufferRequest(requestData->stereoId, requestData->viewIndex);
+  }
 }

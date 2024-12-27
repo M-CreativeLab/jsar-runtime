@@ -46,7 +46,7 @@ namespace client_xr
     )
       isNewStereoFrame = true;
 
-    device_->startFrame(frameRequestData_);
+    device_->startFrame(session_, frameRequestData_);
     session_->updateFrameTime(isNewStereoFrame);
     startTime_ = session_->frameTime();
   }
@@ -54,7 +54,7 @@ namespace client_xr
   void XRFrame::endFrame()
   {
     active_ = false;
-    device_->endFrame(frameRequestData_);
+    device_->endFrame(session_, frameRequestData_);
     endTime_ = steady_clock::now();
 
     auto isMultipass = device_->getDeviceInit().renderedAsMultipass();

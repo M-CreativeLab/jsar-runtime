@@ -1,6 +1,7 @@
 #include <string>
 #include <idgen.hpp>
 #include <crates/jsar_jsbindings.h>
+#include <client/xr/webxr_session.hpp>
 
 #include "./webgl_context.hpp"
 #include "./webgl_active_info.hpp"
@@ -46,10 +47,12 @@ namespace client_graphics
     clientContext_ = TrClientContextPerProcess::Get();
     assert(clientContext_ != nullptr);
 
-    static TrIdGenerator idGen(1);
+    static TrIdGeneratorBase<uint8_t> idGen(commandbuffers::MinimumContextId);
     id = idGen.get();
+    if (id >= commandbuffers::MinimumContextId + commandbuffers::MaxinumContextsCountPerContent)
+      throw std::runtime_error("Too many contexts created in the content process.");
 
-    auto createReq = CreateWebGLContextRequest(id);
+    auto createReq = CreateWebGLContextRequest();
     sendCommandBufferRequest(createReq, true);
 
     auto sentAt = std::chrono::system_clock::now();
@@ -96,25 +99,38 @@ namespace client_graphics
     program->markDeleted();
   }
 
+  class LinkProgramException : public std::runtime_error
+  {
+  public:
+    LinkProgramException(WebGLProgram &program, const std::string &detail)
+        : std::runtime_error(getMessage(program, detail)) {}
+
+  private:
+    std::string getMessage(WebGLProgram &program, const std::string &detail)
+    {
+      return "Failed to link program(" + std::to_string(program.id) + "): " + detail;
+    }
+  };
+
   void WebGLContext::linkProgram(std::shared_ptr<WebGLProgram> program)
   {
     if (program == nullptr || !program->isValid())
       return;
 
     auto req = LinkProgramCommandBufferRequest(program->id);
-    sendCommandBufferRequest(req, true);
+    if (!sendCommandBufferRequest(req, true))
+      throw LinkProgramException(*program, "Failed to send the command buffer.");
 
     auto resp = recvCommandBufferResponse<LinkProgramCommandBufferResponse>(COMMAND_BUFFER_LINK_PROGRAM_RES);
     if (resp == nullptr)
     {
       string msg = "Failed to link program(" + to_string(program->id) + "): timeout.";
-      throw std::runtime_error(msg);
+      throw LinkProgramException(*program, "Timeout.");
     }
     if (!resp->success)
     {
       delete resp;
-      string msg = "Failed to link program(" + to_string(program->id) + "): not successful.";
-      throw std::runtime_error(msg);
+      throw LinkProgramException(*program, "Not successful.");
     }
 
     /**
@@ -923,7 +939,14 @@ namespace client_graphics
   {
     UniformMatrix4fvCommandBufferRequest req(location.index, transpose);
     auto locationName = location.name;
-    if (clientContext_->isInXrFrame() &&
+    bool runsInXRFrame = false;
+    {
+      auto session = connectedXRSession();
+      if (session != nullptr)
+        runsInXRFrame = session->runsInFrame();
+    }
+
+    if (runsInXRFrame &&
         (
             /**
              * Match for three.js matrix uniforms
@@ -1389,6 +1412,48 @@ namespace client_graphics
   {
     contextAttributes.xrCompatible = true;
     return true;
+  }
+
+  bool WebGLContext::sendCommandBufferRequest(commandbuffers::TrCommandBufferBase &commandBuffer, bool followsFlush)
+  {
+    // Update the context Id before sending the command buffer
+    commandBuffer.contextId = id;
+
+    // Check if the command buffer is running in a WebXR frame and has a connected session
+    bool runsInXRFrame = false;
+    auto connectedSession = connectedXRSession();
+    if (connectedSession != nullptr)
+      runsInXRFrame = connectedSession->runsInFrame();
+
+    if (runsInXRFrame)
+    {
+      assert(connectedSession != nullptr);
+      connectedSession->appendRenderingInfoToCommandBuffer(commandBuffer);
+    }
+    bool success = clientContext_->sendCommandBufferRequest(commandBuffer, followsFlush);
+    if (!runsInXRFrame || !followsFlush) // Directly returns success if not a XRFrame or not follow flush command buffer
+      return success;
+    else
+      return success ? sendFlushCommand(connectedSession) : false;
+  }
+
+  bool WebGLContext::sendFlushCommand(std::shared_ptr<client_xr::XRSession> session)
+  {
+    assert(session != nullptr);
+    auto flushReq = session->createFlushFrameCommand();
+    if (flushReq.has_value())
+      return clientContext_->sendCommandBufferRequest(flushReq.value(), true);
+    else
+      return false;
+  }
+
+  void WebGLContext::sendFirstContentfulPaintMetrics()
+  {
+    if (isFirstContentfulPaintReported_)
+      return;
+    commandbuffers::PaintingMetricsCommandBufferRequest req(commandbuffers::MetricsCategory::FirstContentfulPaint);
+    clientContext_->sendCommandBufferRequest(req);
+    isFirstContentfulPaintReported_ = true;
   }
 
   WebGL2Context::WebGL2Context(ContextAttributes &attrs)

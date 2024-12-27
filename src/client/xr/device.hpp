@@ -102,17 +102,19 @@ namespace client_xr
     /**
      * Starts a new WebXR frame.
      *
+     * @param session The session to start the frame.
      * @param frameRequest The frame request to start.
      * @returns `true` if the frame is started successfully.
      */
-    bool startFrame(xr::TrXRFrameRequest *frameRequest);
+    bool startFrame(std::shared_ptr<XRSession> session, xr::TrXRFrameRequest *frameRequest);
     /**
      * Ends the current WebXR frame.
      *
+     * @param session The session to start the frame.
      * @param frameRequest The frame request to end.
      * @returns `true` if the frame is ended successfully.
      */
-    bool endFrame(xr::TrXRFrameRequest *frameRequest);
+    bool endFrame(std::shared_ptr<XRSession> session, xr::TrXRFrameRequest *frameRequest);
     /**
      * Get the viewport for the specified view index.
      *

@@ -350,12 +350,12 @@ constexpr int SIGNALS[] = {
 void ENABLE_BACKTRACE()
 {
   /**
-   * `TR_SIGNAL_ONSTACK` is to enable signal handling on a new alternate stack, which is useful
+   * `TR_ENABLE_SIGNALS_ONSTACK` is to enable signal handling on a new alternate stack, which is useful
    * when the stack is corrupted such as stack overflow or underflow.
    * 
    * If you met the backtrace not printing, you can try to enable this macro.
    */
-#ifdef TR_SIGNAL_ONSTACK
+#ifdef TR_ENABLE_SIGNALS_ONSTACK
 #define STACK_SIZE (SIGSTKSZ)
   stack_t ss;
   struct sigaction sa;
