@@ -50,24 +50,29 @@ namespace renderer
   {
     lastFrameHasOutOfMemoryError = false;
     lastFrameErrorsCount = 0;
-    getContent()->onCommandBuffersExecuting();
+    
+    auto contentRef = getContent();
+    if (contentRef != nullptr)
+      contentRef->onCommandBuffersExecuting();
   }
 
   void TrContentRenderer::onCommandBuffersExecuted()
   {
-    auto mContent = getContent();
-    mContent->onCommandBuffersExecuted();
+    auto contentRef = getContent();
+    contentRef->onCommandBuffersExecuted();
     if (lastFrameHasOutOfMemoryError || lastFrameErrorsCount > 20)
     {
       DEBUG(LOG_TAG_ERROR, "Disposing the content(%d) due to the frame OOM or occurred errors(%d) > 10",
-            mContent->id, lastFrameErrorsCount);
-      mContent->dispose();
+            contentRef->id, lastFrameErrorsCount);
+      contentRef->dispose();
     }
   }
 
   bool TrContentRenderer::sendCommandBufferResponse(TrCommandBufferResponse &res)
   {
-    return getContent()->sendCommandBufferResponse(res);
+    auto contentRef = getContent();
+    assert(contentRef != nullptr);
+    return contentRef->sendCommandBufferResponse(res);
   }
 
   OpenGLAppContextStorage *TrContentRenderer::getOpenGLContext()
@@ -77,7 +82,10 @@ namespace renderer
 
   pid_t TrContentRenderer::getContentPid()
   {
-    return getContent()->pid;
+    auto contentRef = getContent();
+    return contentRef == nullptr
+               ? INVALID_PID
+               : contentRef->pid.load();
   }
 
   void TrContentRenderer::onCommandBufferRequestReceived(TrCommandBufferBase *req)

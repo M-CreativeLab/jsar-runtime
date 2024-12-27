@@ -79,8 +79,16 @@ namespace renderer
     {
       for (auto contentRenderer : contentRenderers)
       {
-        if (contentRenderer->getContent()->disableRendering) // Skip the content renderer if this is disabled at content.
+        auto content = contentRenderer->getContent();
+        if (content == nullptr || content->disableRendering)
+        {
+          /**
+           * Skip the content rendering if the following conditions are met:
+           * 1. The content has been removed.
+           * 2. The content rendering is disabled.
+           */
           continue;
+        }
         contentRenderer->onHostFrame(tickingTimepoint);
         totalDrawCalls += contentRenderer->drawCallsPerFrame;
         totalDrawCallsCount += contentRenderer->drawCallsCountPerFrame;
@@ -178,6 +186,9 @@ namespace renderer
 
   shared_ptr<TrContentRenderer> TrRenderer::findContentRenderer(std::shared_ptr<TrContentRuntime> content)
   {
+    if (content == nullptr)
+      return nullptr;
+
     for (auto contentRenderer : contentRenderers)
     {
       if (contentRenderer->getContent() == content)
@@ -191,7 +202,8 @@ namespace renderer
     shared_lock<shared_mutex> lock(contentRendererMutex);
     for (auto contentRenderer : contentRenderers)
     {
-      if (contentRenderer->getContent()->id == contentId)
+      auto content = contentRenderer->getContent();
+      if (content != nullptr && content->id == contentId)
         return contentRenderer;
     }
     return nullptr;
@@ -225,7 +237,7 @@ namespace renderer
     }
   }
 
-  void TrRenderer::removeContentRenderer(TrContentRuntime& content)
+  void TrRenderer::removeContentRenderer(TrContentRuntime &content)
   {
     removeContentRenderer(content.id);
   }

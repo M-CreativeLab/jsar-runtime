@@ -350,7 +350,7 @@ private: // XR fields
    * and when this session is ended via (e.g. `end()` method), it will be popped from the stack, and the previous session will be
    * activated.
    */
-  vector<xr::TrXRSession *> xrSessionsStack;
+  std::vector<xr::TrXRSession *> xrSessionsStack;
 
 private:
   std::mutex commandBufferRequestsMutex;
