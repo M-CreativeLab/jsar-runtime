@@ -445,7 +445,6 @@ void TrContentManager::startHived()
   {
     // Configure the hived
     hived->eventChanPort = eventChanServer->getPort();
-    hived->frameChanPort = constellation->renderer->getAnimationFrameChanPort();
     hived->mediaChanPort = constellation->mediaManager->chanPort();
     hived->commandBufferChanPort = constellation->renderer->getCommandBufferChanPort();
   }

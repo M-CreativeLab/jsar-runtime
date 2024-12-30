@@ -125,8 +125,6 @@ public: // reference methods
   xr::Device *getXrDevice();
 
 public: // command buffer methods
-  void setCommandBufferRequestHandler(std::function<void(TrCommandBufferBase *)> handler);
-  void resetCommandBufferRequestHandler();
   void setupWithCommandBufferClient(ipc::TrOneShotClient<TrCommandBufferMessage> *client);
   bool sendCommandBufferResponse(TrCommandBufferResponse &res);
 
@@ -323,7 +321,6 @@ private:
   std::unique_ptr<TrCommandBufferSender> commandBufferChanSender = nullptr;
   ipc::TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
   std::unique_ptr<WorkerThread> commandBuffersRecvWorker;
-  std::function<void(TrCommandBufferBase *)> onCommandBufferRequestReceived;
 
 private: // XR fields
   ipc::TrOneShotClient<xr::TrXRCommandMessage> *xrCommandChanClient = nullptr;

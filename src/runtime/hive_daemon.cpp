@@ -29,7 +29,6 @@ void TrHiveDaemon::start()
   commandChanServer = make_unique<TrOneShotServer<hive_comm::TrHiveCommandMessage>>("HiveCommandChan");
   assert(commandChanServer != nullptr);
   assert(eventChanPort != 0);
-  assert(frameChanPort != 0);
   assert(mediaChanPort != 0);
   assert(commandBufferChanPort != 0);
 
@@ -134,7 +133,6 @@ void TrHiveDaemon::onDeamonProcess()
   auto &allocator = hiveConfig.GetAllocator();
   hiveConfig.AddMember("hiveChanPort", commandChanServer->getPort(), allocator);
   hiveConfig.AddMember("eventChanPort", eventChanPort, allocator);
-  hiveConfig.AddMember("frameChanPort", frameChanPort, allocator);
   hiveConfig.AddMember("mediaChanPort", mediaChanPort, allocator);
   hiveConfig.AddMember("commandBufferChanPort", commandBufferChanPort, allocator);
 

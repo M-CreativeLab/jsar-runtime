@@ -29,7 +29,6 @@ void TrContentRuntime::preStart()
   commandBuffersRecvWorker = make_unique<WorkerThread>("TrCBWorker", [this](WorkerThread &worker)
                                                        { recvCommandBuffers(worker, 100); });
   auto renderer = contentManager->constellation->renderer;
-  renderer->addContentRenderer(shared_from_this());
 
   // Send the create process request to the hive daemon.
   TrDocumentRequestInit init;
@@ -108,16 +107,6 @@ TrConstellation *TrContentRuntime::getConstellation()
 xr::Device *TrContentRuntime::getXrDevice()
 {
   return contentManager->constellation->xrDevice.get();
-}
-
-void TrContentRuntime::setCommandBufferRequestHandler(function<void(TrCommandBufferBase *)> handler)
-{
-  onCommandBufferRequestReceived = handler;
-}
-
-void TrContentRuntime::resetCommandBufferRequestHandler()
-{
-  onCommandBufferRequestReceived = nullptr;
 }
 
 void TrContentRuntime::setupWithCommandBufferClient(TrOneShotClient<TrCommandBufferMessage> *client)
@@ -248,12 +237,29 @@ void TrContentRuntime::recvCommandBuffers(WorkerThread &worker, uint32_t timeout
   auto commandBuffer = commandBufferChanReceiver->recvCommandBufferRequest(timeout);
   if (commandBuffer != nullptr)
   {
-    // TODO: Support context creation and contextual dispatching.
     lock_guard<mutex> lock(commandBufferRequestsMutex);
-    if (onCommandBufferRequestReceived)
-      onCommandBufferRequestReceived(commandBuffer);
-    else
-      DEBUG(LOG_TAG_CONTENT, "No command buffer request handler for the content(%d)", id);
+    auto renderer = contentManager->constellation->renderer;
+    auto contextId = commandBuffer->contextId;
+
+    if (commandBuffer->type == CommandBufferType::COMMAND_BUFFER_CREATE_WEBGL_CONTEXT_REQ)
+    {
+      renderer->addContentRenderer(shared_from_this(), contextId);
+      return;
+    }
+    else if (commandBuffer->type == CommandBufferType::COMMAND_BUFFER_REMOVE_WEBGL_CONTEXT_REQ)
+    {
+      renderer->removeContentRenderer(id, contextId);
+      return;
+    }
+
+    auto contentRenderer = renderer->getContentRenderer(id, contextId);
+    if (TR_UNLIKELY(contentRenderer == nullptr))
+    {
+      DEBUG(LOG_TAG_ERROR, "There is no available ContentRenderer for the content(%d) with context(%d)",
+            id, static_cast<int>(contextId));
+      return;
+    }
+    contentRenderer->dispatchCommandBufferRequest(commandBuffer);
   }
 }
 
@@ -360,7 +366,7 @@ void TrContentRuntime::release()
   auto renderer = constellation->renderer;
   if (renderer != nullptr)
   {
-    renderer->removeContentRenderer(id);
+    renderer->removeContentRenderers(id);
     renderer->removeCommandBufferChanClient(commandBufferChanClient);
   }
 

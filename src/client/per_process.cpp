@@ -325,11 +325,6 @@ TrClientContextPerProcess::~TrClientContextPerProcess()
     delete eventChanReceiver;
     eventChanReceiver = nullptr;
   }
-  if (frameChanReceiver != nullptr)
-  {
-    delete frameChanReceiver;
-    frameChanReceiver = nullptr;
-  }
 
   // Clear for XR
   if (xrCommandChanSender != nullptr)
@@ -360,8 +355,6 @@ void TrClientContextPerProcess::start()
   // Required channels
   eventChanClient = ipc::TrOneShotClient<TrNativeEventMessage>::MakeAndConnect(eventChanPort, false, id);
   assert(eventChanClient != nullptr);
-  frameChanClient = ipc::TrOneShotClient<TrFrameRequestMessage>::MakeAndConnect(frameChanPort, false, id);
-  assert(frameChanClient != nullptr);
   mediaChanClient = ipc::TrOneShotClient<TrMediaCommandMessage>::MakeAndConnect(mediaChanPort, false, id);
   assert(mediaChanClient != nullptr);
   commandBufferChanClient = ipc::TrOneShotClient<TrCommandBufferMessage>::MakeAndConnect(commandBufferChanPort, false, id);
@@ -369,8 +362,7 @@ void TrClientContextPerProcess::start()
 
   if (
       !eventChanClient->isConnected() ||
-      !mediaChanClient->isConnected() ||
-      !frameChanClient->isConnected())
+      !mediaChanClient->isConnected())
   {
     DEBUG(LOG_TAG_CLIENT_ENTRY, "ClientContext(%d) failed to connect to the channels: event, media or frame", id);
     return;
@@ -380,10 +372,6 @@ void TrClientContextPerProcess::start()
     // Create sender & receiver for event chan.
     eventChanSender = new TrNativeEventSender(eventChanClient);
     eventChanReceiver = new TrNativeEventReceiver(eventChanClient);
-  }
-  {
-    // Create receiver for frame chan.
-    frameChanReceiver = new TrChannelReceiver<TrFrameRequestMessage>(frameChanClient);
   }
   {
     // Create sender & receiver for media chan.
@@ -447,7 +435,6 @@ void TrClientContextPerProcess::print()
   fprintf(stdout, "ClientContext(%d) httpsProxyServer=%s\n", id, httpsProxyServer.c_str());
   fprintf(stdout, "ClientContext(%d) eventChanPort=%d\n", id, eventChanPort);
   fprintf(stdout, "ClientContext(%d) mediaChanPort=%d\n", id, mediaChanPort);
-  fprintf(stdout, "ClientContext(%d) frameChanPort=%d\n", id, frameChanPort);
   fprintf(stdout, "ClientContext(%d) commandBufferChanPort=%d\n", id, commandBufferChanPort);
 
   if (xrDeviceInit.enabled == true)
@@ -543,7 +530,6 @@ TrCommandBufferResponse *TrClientContextPerProcess::recvCommandBufferResponse(in
 {
   return commandBufferChanReceiver->recvCommandBufferResponse(timeout);
 }
-
 
 void TrClientContextPerProcess::onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage)
 {

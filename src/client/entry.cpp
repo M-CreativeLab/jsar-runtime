@@ -44,11 +44,6 @@ bool TrClientEntry::parseConfig(string &configJson)
     DEBUG(LOG_TAG_CLIENT_ENTRY, "Exited, reason: `eventChanPort` is missing or not a number from context json.");
     return false;
   }
-  if (!document.HasMember("frameChanPort") || !document["frameChanPort"].IsUint())
-  {
-    DEBUG(LOG_TAG_CLIENT_ENTRY, "Exited, reason: `frameChanPort` is missing or not a number from context json.");
-    return false;
-  }
   if (!document.HasMember("commandBufferChanPort") || !document["commandBufferChanPort"].IsUint())
   {
     DEBUG(LOG_TAG_CLIENT_ENTRY, "Exited, reason: `commandBufferChanPort` is missing or not a number from context json.");
@@ -61,7 +56,6 @@ bool TrClientEntry::parseConfig(string &configJson)
 
   // Ports
   clientContext->eventChanPort = document["eventChanPort"].GetUint();
-  clientContext->frameChanPort = document["frameChanPort"].GetUint();
   clientContext->mediaChanPort = document["mediaChanPort"].GetUint();
   clientContext->commandBufferChanPort = document["commandBufferChanPort"].GetUint();
 

@@ -10,17 +10,11 @@
 namespace renderer
 {
   using namespace std;
-
-  static uint32_t MIN_FRAME_RATE = 60;
-  static uint32_t MAX_FRAME_RATE = 90;
-
-  using FrameRequestChanServer = ipc::TrOneShotServer<TrFrameRequestMessage>;
   using CommandBufferChanServer = ipc::TrOneShotServer<TrCommandBufferMessage>;
 
   TrRenderer::TrRenderer(TrConstellation *constellation)
       : constellation(constellation),
         api(nullptr),
-        frameRequestChanServer(std::make_unique<FrameRequestChanServer>("frameRequestChan")),
         commandBufferChanServer(std::make_unique<CommandBufferChanServer>("commandBufferChan"))
   {
   }
@@ -50,7 +44,6 @@ namespace renderer
     glHostContext = new OpenGLHostContextStorage();
 
     assert(watcherRunning == false);
-    assert(chanSendersWatcher == nullptr);
     startWatchers();
   }
 
@@ -112,45 +105,6 @@ namespace renderer
     // TODO
   }
 
-  void TrRenderer::enableTracing() { isTracingEnabled = true; }
-  void TrRenderer::enableHostContextSummary() { isHostContextSummaryEnabled = true; }
-  void TrRenderer::enableAppContextSummary() { isAppContextSummaryEnabled = true; }
-
-  void TrRenderer::configureClientFrameRate(uint32_t value)
-  {
-    if (value >= MIN_FRAME_RATE && value <= MAX_FRAME_RATE)
-      clientDefaultFrameRate = value;
-  }
-
-  uint32_t TrRenderer::getFps()
-  {
-    // When someone wants to get fps, it means that fps calculation is enabled.
-    if (!enableFpsCalc)
-      enableFpsCalc = true;
-    return fps;
-  }
-
-  uint32_t TrRenderer::getUptime()
-  {
-    auto now = chrono::steady_clock::now();
-    return chrono::duration_cast<chrono::seconds>(now - startTimepoint).count();
-  }
-
-  uint32_t TrRenderer::getAnimationFrameChanPort()
-  {
-    return frameRequestChanServer->getPort();
-  }
-
-  uint32_t TrRenderer::getCommandBufferChanPort()
-  {
-    return commandBufferChanServer->getPort();
-  }
-
-  void TrRenderer::removeCommandBufferChanClient(TrOneShotClient<TrCommandBufferMessage> *client)
-  {
-    commandBufferChanServer->removeClient(client);
-  }
-
   void TrRenderer::setApi(RenderAPI *api)
   {
     if (api != nullptr)
@@ -166,80 +120,129 @@ namespace renderer
     return api;
   }
 
-  OpenGLHostContextStorage *TrRenderer::getOpenGLContext()
+  bool TrRenderer::addContentRenderer(std::shared_ptr<TrContentRuntime> content, uint8_t contextId)
   {
-    return glHostContext;
-  }
+    if (TR_UNLIKELY(api == nullptr))
+      return false;
 
-  void TrRenderer::addContentRenderer(std::shared_ptr<TrContentRuntime> content)
-  {
-    if (api == nullptr)
-      return;
-    if (content == nullptr || findContentRenderer(content->id) != nullptr)
-      return;
-    removeContentRenderer(content->id); // Remove the old content renderer if it exists.
+    // Remove the existing content renderer if it has been added again.
+    if (TR_UNLIKELY(removeContentRenderer(content->id, contextId)))
+    {
+      DEBUG(LOG_TAG_ERROR, "Detected the ContentRenderer(%d, %d) has been added multiple times, so it will be replaced.",
+            content->id, static_cast<int>(contextId));
+    }
+
+    // Create a new content renderer and add it to the renderer.
     {
       unique_lock<shared_mutex> lock(contentRendererMutex);
-      contentRenderers.push_back(TrContentRenderer::Make(content, constellation));
+      contentRenderers.push_back(TrContentRenderer::Make(content, contextId, constellation));
     }
+    return true;
   }
 
-  shared_ptr<TrContentRenderer> TrRenderer::findContentRenderer(std::shared_ptr<TrContentRuntime> content)
-  {
-    if (content == nullptr)
-      return nullptr;
-
-    for (auto contentRenderer : contentRenderers)
-    {
-      if (contentRenderer->getContent() == content)
-        return contentRenderer;
-    }
-    return nullptr;
-  }
-
-  shared_ptr<TrContentRenderer> TrRenderer::findContentRenderer(uint32_t contentId)
+  TrRenderer::ContentRendererReference TrRenderer::getContentRenderer(uint32_t contentId, uint8_t contextId)
   {
     shared_lock<shared_mutex> lock(contentRendererMutex);
     for (auto contentRenderer : contentRenderers)
     {
       auto content = contentRenderer->getContent();
-      if (content != nullptr && content->id == contentId)
+      if ((content != nullptr && content->id == contentId) &&
+          contentRenderer->contextId == contextId)
         return contentRenderer;
     }
     return nullptr;
   }
 
-  shared_ptr<TrContentRenderer> TrRenderer::findContentRendererByPid(pid_t contentPid)
+  TrRenderer::ContentRenderersList TrRenderer::queryContentRenderers(std::shared_ptr<TrContentRuntime> content)
   {
-    shared_lock<shared_mutex> lock(contentRendererMutex);
-    for (auto contentRenderer : contentRenderers)
+    TrRenderer::ContentRenderersList list;
+    if (TR_UNLIKELY(content == nullptr))
+      return list;
+
     {
-      if (contentRenderer->getContentPid() == contentPid)
-        return contentRenderer;
+      shared_lock<shared_mutex> lock(contentRendererMutex);
+      for (auto contentRenderer : contentRenderers)
+      {
+        if (contentRenderer->getContent() == content)
+          list.push_back(contentRenderer);
+      }
     }
-    return nullptr;
+    return list;
   }
 
-  void TrRenderer::removeContentRenderer(uint32_t contentId)
+  TrRenderer::ContentRenderersList TrRenderer::queryContentRenderers(uint32_t contentId)
+  {
+    TrRenderer::ContentRenderersList list;
+    {
+      shared_lock<shared_mutex> lock(contentRendererMutex);
+      for (auto contentRenderer : contentRenderers)
+      {
+        auto content = contentRenderer->getContent();
+        if (content != nullptr && content->id == contentId)
+          list.push_back(contentRenderer);
+      }
+    }
+    return list;
+  }
+
+  TrRenderer::ContentRenderersList TrRenderer::queryContentRenderersByPid(pid_t contentPid)
+  {
+    TrRenderer::ContentRenderersList list;
+    {
+      shared_lock<shared_mutex> lock(contentRendererMutex);
+      for (auto contentRenderer : contentRenderers)
+      {
+        if (contentRenderer->getContentPid() == contentPid)
+          list.push_back(contentRenderer);
+      }
+    }
+    return list;
+  }
+
+  bool TrRenderer::removeContentRenderer(uint32_t contentId, uint8_t contextId)
   {
     unique_lock<shared_mutex> lock(contentRendererMutex);
     if (contentRenderers.size() == 0)
-      return;
+      return false;
 
+    for (auto it = contentRenderers.begin(); it != contentRenderers.end(); it++)
+    {
+      auto contentRenderer = *it;
+      auto content = contentRenderer->getContent();
+
+      if (
+          (content != nullptr && content->id == contentId) &&
+          contentRenderer->contextId == contextId)
+      {
+        contentRenderers.erase(it);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  size_t TrRenderer::removeContentRenderers(uint32_t contentId)
+  {
+    unique_lock<shared_mutex> lock(contentRendererMutex);
+    if (contentRenderers.size() == 0)
+      return 0;
+
+    size_t removed = 0;
     for (auto it = contentRenderers.begin(); it != contentRenderers.end(); it++)
     {
       auto content = (*it)->getContent();
       if (content != nullptr && content->id == contentId)
       {
         contentRenderers.erase(it);
-        break;
+        removed += 1;
       }
     }
+    return removed;
   }
 
-  void TrRenderer::removeContentRenderer(TrContentRuntime &content)
+  size_t TrRenderer::removeContentRenderers(TrContentRuntime &content)
   {
-    removeContentRenderer(content.id);
+    return removeContentRenderers(content.id);
   }
 
   void TrRenderer::setDrawingViewport(TrViewport viewport)
@@ -265,23 +268,6 @@ namespace renderer
   void TrRenderer::startWatchers()
   {
     watcherRunning = true;
-    chanSendersWatcher = std::make_unique<thread>([this]()
-                                                  {
-      SET_THREAD_NAME("TrFrameRequestWatcher");
-      while (watcherRunning)
-      {
-        frameRequestChanServer->tryAccept([this](TrOneShotClient<TrFrameRequestMessage> &newClient) {
-          auto peerId = newClient.getCustomId();
-          auto contentRenderer = findContentRenderer(peerId);
-          if (contentRenderer != nullptr)
-            contentRenderer->resetFrameRequestChanSenderWith(&newClient);
-          else
-          {
-            DEBUG(LOG_TAG_ERROR, "Failed to accept new frame request client: could not find #%d from contents.", peerId);
-            frameRequestChanServer->removeClient(&newClient);
-          }
-        }, 100);
-      } });
     commandBufferClientWatcher = std::make_unique<thread>([this]()
                                                           {
       SET_THREAD_NAME("TrCBWatcher");
@@ -304,8 +290,6 @@ namespace renderer
   void TrRenderer::stopWatchers()
   {
     watcherRunning = false;
-    if (chanSendersWatcher != nullptr)
-      chanSendersWatcher->join();
     if (commandBufferClientWatcher != nullptr)
       commandBufferClientWatcher->join();
     DEBUG(LOG_TAG_RENDERER, "Renderer watchers has been stopped.");

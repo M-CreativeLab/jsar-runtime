@@ -14,7 +14,6 @@
 
 using namespace std;
 using namespace commandbuffers;
-using namespace frame_request;
 
 namespace renderer
 {
@@ -41,6 +40,7 @@ namespace renderer
 
   class TrContentRenderer final
   {
+    friend class TrContentRuntime;
     friend class TrBackupGLContextScope;
     friend class TrRenderer;
     friend class xr::TrXRSession;
@@ -50,17 +50,20 @@ namespace renderer
      * Create a new content renderer with the content and constellation.
      *
      * @param content The content to be rendered.
+     * @param contextId The context id to specify the content renderer.
      * @param constellation The constellation that the content belongs to.
      * @return The created content renderer.
      */
-    static inline std::shared_ptr<TrContentRenderer> Make(std::shared_ptr<TrContentRuntime> content,
+    static inline std::shared_ptr<TrContentRenderer> Make(std::shared_ptr<TrContentRuntime> content, uint8_t contextId,
                                                           TrConstellation *constellation)
     {
-      return std::make_shared<TrContentRenderer>(content, constellation);
+      assert(content != nullptr);
+      assert(contextId >= commandbuffers::MinimumContextId);
+      return std::make_shared<TrContentRenderer>(content, contextId, constellation);
     }
 
   public:
-    TrContentRenderer(std::shared_ptr<TrContentRuntime> content, TrConstellation *constellation);
+    TrContentRenderer(std::shared_ptr<TrContentRuntime> content, uint8_t contextId, TrConstellation *constellation);
     ~TrContentRenderer();
 
   public: // public lifecycle
@@ -74,9 +77,26 @@ namespace renderer
     pid_t getContentPid();
 
   public:
-    void markOccurOutOfMemoryError() { lastFrameHasOutOfMemoryError = true; }
-    void increaseFrameErrorsCount() { lastFrameErrorsCount++; }
-    void increaseDrawCallsCount(int count = 1)
+    /**
+     * Dispatch a command buffer request.
+     * 
+     * @param req The command buffer request to be dispatched.
+     */
+    inline void dispatchCommandBufferRequest(TrCommandBufferBase *req) { onCommandBufferRequestReceived(req); }
+    /**
+     * Mark the last frame has OOM error.
+     */
+    inline void markOccurOutOfMemoryError() { lastFrameHasOutOfMemoryError = true; }
+    /**
+     * Increase the frame errors count.
+     */
+    inline void increaseFrameErrorsCount() { lastFrameErrorsCount++; }
+    /**
+     * Increase the draw calls count.
+     * 
+     * @param count The count to be increased.
+     */
+    inline void increaseDrawCallsCount(int count = 1)
     {
       drawCallsPerFrame += 1;
       drawCallsCountPerFrame += count;
@@ -95,6 +115,13 @@ namespace renderer
 
   private:
     /**
+     * Initialize the graphics contexts.
+     * 
+     * This method will use the graphics APIs to initialize the graphics contexts, the caller should make sure this method
+     * is called in the render thread which is allowed to use the graphics APIs.
+     */
+    void initializeGraphicsContextsOnce();
+    /**
      * Execute command buffers from content's list.
      *
      * @param asXRFrame If the frame execution intent is for XR rendering, yes means only the command buffers in XR frame
@@ -105,17 +132,15 @@ namespace renderer
     bool executeStereoFrame(int viewIndex, std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec);
     size_t getPendingStereoFramesCount();
 
-  private:
-    void resetFrameRequestChanSenderWith(ipc::TrOneShotClient<TrFrameRequestMessage> *client);
-
   public:
-    uint32_t id;
+    uint8_t contextId;
 
   private:
     std::weak_ptr<TrContentRuntime> content;
     TrConstellation *constellation = nullptr;
-    OpenGLAppContextStorage glContext;
-    OpenGLAppContextStorage glContextForBackup;
+    std::unique_ptr<OpenGLAppContextStorage> glContext;
+    std::unique_ptr<OpenGLAppContextStorage> glContextForBackup;
+    bool isGraphicsContextsInitialized = false;
     bool usingBackupContext = false;
     xr::Device *xrDevice = nullptr;
 
@@ -143,8 +168,5 @@ namespace renderer
 
   private: // frame rate control
     uint32_t targetFrameRate;
-
-  private:
-    frame_request::TrFrameRequestSender *frameRequestChanSender = nullptr;
   };
 }

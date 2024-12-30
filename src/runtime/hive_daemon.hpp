@@ -110,9 +110,17 @@ public:
   std::string lastOutput;
 
 public: // fields to share for hived
+  /**
+   * The channel port for the `Event` channel.
+   */
   int eventChanPort;
-  int frameChanPort;
+  /**
+   * The channel port for the `Media` channel.
+   */
   int mediaChanPort;
+  /**
+   * The channel port for the `CommandBuffer` channel.
+   */
   int commandBufferChanPort;
 
 private:

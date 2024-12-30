@@ -360,7 +360,6 @@ public:
   bool enableV8Profiling = false;
   uint32_t webglVersion = 2; // webgl2 by default
   uint32_t eventChanPort;
-  uint32_t frameChanPort;
   uint32_t mediaChanPort;
   uint32_t commandBufferChanPort;
   xr::TrDeviceInit xrDeviceInit;
@@ -374,10 +373,6 @@ private: // event fields
   TrOneShotClient<events_comm::TrNativeEventMessage> *eventChanClient = nullptr;
   events_comm::TrNativeEventSender *eventChanSender = nullptr;
   events_comm::TrNativeEventReceiver *eventChanReceiver = nullptr;
-
-private: // frame fields
-  TrOneShotClient<TrFrameRequestMessage> *frameChanClient = nullptr;
-  TrChannelReceiver<TrFrameRequestMessage> *frameChanReceiver = nullptr;
 
 private: // media fields
   TrOneShotClient<TrMediaCommandMessage> *mediaChanClient = nullptr;

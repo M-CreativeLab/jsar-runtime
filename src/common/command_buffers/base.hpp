@@ -96,6 +96,7 @@ namespace commandbuffers
         : TrCommandBufferBase(type, size),
           requestId(req->id)
     {
+      contextId = req->contextId;
     }
     TrCommandBufferResponse(TrCommandBufferResponse &that)
         : TrCommandBufferBase(that.type, that.size),

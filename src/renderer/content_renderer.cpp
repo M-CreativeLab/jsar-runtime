@@ -7,11 +7,24 @@
 
 namespace renderer
 {
+  using namespace std;
+
+  inline std::string GetContentRendererId(shared_ptr<TrContentRuntime> content, uint8_t contextId,
+                                          std::optional<std::string> suffix = std::nullopt)
+  {
+    auto id = "content_renderer#" +
+              std::to_string(content->id) + "." + std::to_string(contextId) +
+              (suffix.has_value() ? suffix.value() : "");
+    return id;
+  }
+
   TrBackupGLContextScope::TrBackupGLContextScope(TrContentRenderer *contentRenderer)
       : contentRenderer(contentRenderer)
   {
-    string name = contentRenderer->glContext.GetName();
-    contentRenderer->glContextForBackup = OpenGLAppContextStorage(name, &contentRenderer->glContext);
+    assert(contentRenderer != nullptr && contentRenderer->glContext != nullptr);
+    string contextName = contentRenderer->glContext->GetName();
+    contentRenderer->glContextForBackup = std::make_unique<OpenGLAppContextStorage>(contextName + "~backup",
+                                                                                    contentRenderer->glContext.get());
     contentRenderer->usingBackupContext = true;
   }
 
@@ -20,29 +33,22 @@ namespace renderer
     contentRenderer->usingBackupContext = false;
   }
 
-  TrContentRenderer::TrContentRenderer(shared_ptr<TrContentRuntime> content, TrConstellation *constellation)
+  TrContentRenderer::TrContentRenderer(shared_ptr<TrContentRuntime> content, uint8_t contextId, TrConstellation *constellation)
       : content(weak_ptr<TrContentRuntime>(content)),
+        contextId(contextId),
         constellation(constellation),
         xrDevice(constellation->xrDevice.get()),
         targetFrameRate(constellation->renderer->clientDefaultFrameRate),
-        glContext("content_renderer#" + std::to_string(content->id)),
-        glContextForBackup("content_renderer#" + std::to_string(content->id) + "_backup"),
+        glContext(nullptr),
+        glContextForBackup(nullptr),
         usingBackupContext(false)
   {
     assert(xrDevice != nullptr);
     stereoFrameForBackup = new xr::StereoRenderingFrame(true, 0xf);
-
-    // Register the command buffer request handler when creating the content renderer.
-    content->setCommandBufferRequestHandler([this](TrCommandBufferBase *req)
-                                            { this->onCommandBufferRequestReceived(req); });
   }
 
   TrContentRenderer::~TrContentRenderer()
   {
-    // frameDispatcherThread->stop();
-    auto contentRef = getContent();
-    if (contentRef != nullptr)
-      contentRef->resetCommandBufferRequestHandler();
     xrDevice = nullptr;
   }
 
@@ -50,7 +56,7 @@ namespace renderer
   {
     lastFrameHasOutOfMemoryError = false;
     lastFrameErrorsCount = 0;
-    
+
     auto contentRef = getContent();
     if (contentRef != nullptr)
       contentRef->onCommandBuffersExecuting();
@@ -77,7 +83,7 @@ namespace renderer
 
   OpenGLAppContextStorage *TrContentRenderer::getOpenGLContext()
   {
-    return usingBackupContext ? &glContextForBackup : &glContext;
+    return usingBackupContext ? glContextForBackup.get() : glContext.get();
   }
 
   pid_t TrContentRenderer::getContentPid()
@@ -179,6 +185,9 @@ namespace renderer
 
   void TrContentRenderer::onHostFrame(chrono::time_point<chrono::high_resolution_clock> time)
   {
+    // Check and initialize the graphics contexts on host frame.
+    initializeGraphicsContextsOnce();
+
     /**
      * Update the pending stereo frames count for each WebXR session if the WebXR device is enabled.
      */
@@ -229,9 +238,9 @@ namespace renderer
 
   void TrContentRenderer::onStartFrame()
   {
-    glContext.Restore();
+    glContext->Restore();
     if (constellation->renderer->isAppContextSummaryEnabled)
-      glContext.Print();
+      glContext->Print();
 
     // Reset frame states
     drawCallsPerFrame = 0;
@@ -240,6 +249,17 @@ namespace renderer
 
   void TrContentRenderer::onEndFrame()
   {
+  }
+
+  void TrContentRenderer::initializeGraphicsContextsOnce()
+  {
+    if (TR_LIKELY(isGraphicsContextsInitialized))
+      return;
+
+    auto idStrBase = GetContentRendererId(getContent(), contextId);
+    glContext = std::make_unique<OpenGLAppContextStorage>(idStrBase);
+    glContextForBackup = std::make_unique<OpenGLAppContextStorage>(idStrBase + "~backup");
+    isGraphicsContextsInitialized = true;
   }
 
   void TrContentRenderer::executeCommandBuffers(bool asXRFrame, int viewIndex)
@@ -379,14 +399,5 @@ namespace renderer
         count++;
     }
     return count;
-  }
-
-  void TrContentRenderer::resetFrameRequestChanSenderWith(ipc::TrOneShotClient<TrFrameRequestMessage> *client)
-  {
-    if (client == nullptr)
-      return;
-    if (frameRequestChanSender != nullptr)
-      delete frameRequestChanSender;
-    frameRequestChanSender = new frame_request::TrFrameRequestSender(client);
   }
 }
