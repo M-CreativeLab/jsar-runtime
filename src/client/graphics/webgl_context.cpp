@@ -1416,9 +1416,6 @@ namespace client_graphics
 
   bool WebGLContext::sendCommandBufferRequest(commandbuffers::TrCommandBufferBase &commandBuffer, bool followsFlush)
   {
-    // Update the context Id before sending the command buffer
-    commandBuffer.contextId = id;
-
     // Check if the command buffer is running in a WebXR frame and has a connected session
     bool runsInXRFrame = false;
     auto connectedSession = connectedXRSession();
@@ -1430,7 +1427,7 @@ namespace client_graphics
       assert(connectedSession != nullptr);
       connectedSession->appendRenderingInfoToCommandBuffer(commandBuffer);
     }
-    bool success = clientContext_->sendCommandBufferRequest(commandBuffer, followsFlush);
+    bool success = sendCommandBufferRequestDirectly(commandBuffer, followsFlush);
     if (!runsInXRFrame || !followsFlush) // Directly returns success if not a XRFrame or not follow flush command buffer
       return success;
     else
@@ -1442,7 +1439,7 @@ namespace client_graphics
     assert(session != nullptr);
     auto flushReq = session->createFlushFrameCommand();
     if (flushReq.has_value())
-      return clientContext_->sendCommandBufferRequest(flushReq.value(), true);
+      return sendCommandBufferRequestDirectly(flushReq.value(), true);
     else
       return false;
   }
@@ -1452,7 +1449,7 @@ namespace client_graphics
     if (isFirstContentfulPaintReported_)
       return;
     commandbuffers::PaintingMetricsCommandBufferRequest req(commandbuffers::MetricsCategory::FirstContentfulPaint);
-    clientContext_->sendCommandBufferRequest(req);
+    sendCommandBufferRequestDirectly(req);
     isFirstContentfulPaintReported_ = true;
   }
 

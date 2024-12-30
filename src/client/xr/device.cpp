@@ -90,7 +90,7 @@ namespace client_xr
       throw std::runtime_error(msg);
     }
     auto req = session->createStartFrameCommand();
-    return clientContext_->sendCommandBufferRequest(req);
+    return glContext->sendCommandBufferRequestDirectly(req);
   }
 
   bool XRDeviceClient::endFrame(std::shared_ptr<XRSession> session, xr::TrXRFrameRequest *frameRequest)
@@ -104,7 +104,7 @@ namespace client_xr
       throw std::runtime_error(msg);
     }
     auto req = session->createEndFrameCommand(frameRequest);
-    return clientContext_->sendCommandBufferRequest(req);
+    return glContext->sendCommandBufferRequestDirectly(req);
   }
 
   TrViewport XRDeviceClient::getViewport(uint32_t viewIndex)

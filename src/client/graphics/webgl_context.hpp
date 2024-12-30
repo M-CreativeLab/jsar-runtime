@@ -558,10 +558,25 @@ namespace client_graphics
 
   protected:
     /**
+     * It sends a command buffer request directly to the client context, it only updates the command buffer's context id before
+     * sending.
+     *
+     * @param commandBuffer
+     * @param followsFlush - if true, the command buffer will be executed in the default queue.
+     * @returns if the command buffer request is sent successfully.
+     */
+    inline bool sendCommandBufferRequestDirectly(commandbuffers::TrCommandBufferBase &commandBuffer, bool followsFlush = false)
+    {
+      commandBuffer.contextId = id;
+      return clientContext_->sendCommandBufferRequest(commandBuffer, followsFlush);
+    }
+
+    /**
      * It sends a command buffer request to the server.
      *
      * @param commandBuffer
      * @param followsFlush - if true, the command buffer will be executed in the default queue.
+     * @returns if the command buffer request is sent successfully.
      */
     bool sendCommandBufferRequest(commandbuffers::TrCommandBufferBase &commandBuffer, bool followsFlush = false);
 
