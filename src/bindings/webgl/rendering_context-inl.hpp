@@ -24,13 +24,6 @@ using namespace canvasbinding;
 
 namespace webgl
 {
-  enum class WebGLRenderingContextSourceType : uint32_t
-  {
-    kHost = 0x0109,
-    kCanvas,
-    kOffscreenCanvas = 1,
-  };
-
   template <typename ObjectType, typename ContextType>
   Napi::Object WebGLBaseRenderingContext<ObjectType, ContextType>::MakeFromHost(Napi::Env env)
   {
@@ -71,8 +64,9 @@ namespace webgl
     {
       auto clientContext = TrClientContextPerProcess::Get();
       assert(clientContext != nullptr);
-      glContext_ = clientContext->getHostWebGLContext();
+      glContext_ = clientContext->createHostWebGLContext();
       assert(glContext_ != nullptr);
+      sourceType_ = WebGLRenderingContextSourceType::kHost;
 
       /**
        * Write _screenCanvas(ReadOnlyScreenCanvas) property
@@ -98,6 +92,17 @@ namespace webgl
     {
       Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
       return;
+    }
+  }
+
+  template <typename ObjectType, typename ContextType>
+  WebGLBaseRenderingContext<ObjectType, ContextType>::~WebGLBaseRenderingContext()
+  {
+    if (sourceType_ == WebGLRenderingContextSourceType::kHost)
+    {
+      auto clientContext = TrClientContextPerProcess::Get();
+      assert(clientContext != nullptr);
+      clientContext->removeHostWebGLContext(glContext_->id);  // Remove the host context from the client context
     }
   }
 

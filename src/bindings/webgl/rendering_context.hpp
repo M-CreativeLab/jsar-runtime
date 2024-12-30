@@ -37,6 +37,13 @@ namespace webgl
     string message(const std::string method) { return method + "() " + what(); }
   };
 
+  enum class WebGLRenderingContextSourceType : uint32_t
+  {
+    kHost = 0x0109,
+    kCanvas,
+    kOffscreenCanvas = 1,
+  };
+
   template <typename ObjectType, typename ContextType>
   class WebGLBaseRenderingContext : public Napi::ObjectWrap<ObjectType>
   {
@@ -52,6 +59,7 @@ namespace webgl
 
   public:
     WebGLBaseRenderingContext(const Napi::CallbackInfo &info);
+    ~WebGLBaseRenderingContext();
 
   public:
     Napi::Value MakeXRCompatible(const Napi::CallbackInfo &info);
@@ -175,6 +183,7 @@ namespace webgl
 
   protected:
     std::shared_ptr<ContextType> glContext_;
+    WebGLRenderingContextSourceType sourceType_ = WebGLRenderingContextSourceType::kCanvas;
   };
 
   class WebGLRenderingContext : public WebGLBaseRenderingContext<WebGLRenderingContext, client_graphics::WebGLContext>
@@ -185,7 +194,7 @@ namespace webgl
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
     /**
      * Check if the given value is an instance of `WebGLRenderingContext`.
-     * 
+     *
      * @param value the value to check.
      * @returns `true` if the value is an instance of `WebGLRenderingContext`, `false` otherwise.
      */
@@ -220,7 +229,7 @@ namespace webgl
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
     /**
      * Check if the given value is an instance of `WebGL2RenderingContext`.
-     * 
+     *
      * @param value the value to check.
      * @returns `true` if the value is an instance of `WebGL2RenderingContext`, `false` otherwise.
      */

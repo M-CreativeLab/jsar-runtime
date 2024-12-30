@@ -74,7 +74,18 @@ namespace builtin_scene
     void renderMesh3d(std::shared_ptr<Mesh3d> mesh, std::shared_ptr<MeshMaterial3d> material)
     {
       assert(mesh != nullptr && material != nullptr);
-        // TODO: Call the draw function
+      glContext_->useProgram(material->program());
+      {
+        glContext_->bindVertexArray(mesh->vertexArrayObject());
+        {
+          // glContext_->drawElements(client_graphics::WebGLDrawMode::kTriangles,
+          //                          mesh->indices().size(),
+          //                          client_graphics::WebGLIndexType::kUnsignedInt,
+          //                          0);
+        }
+        glContext_->bindVertexArray(nullptr);
+      }
+      glContext_->useProgram(nullptr);
     }
 
   private:

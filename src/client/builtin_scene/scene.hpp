@@ -64,28 +64,25 @@ namespace builtin_scene
     /**
      * Create a new instance of the Scene.
      *
-     * @param glContext The WebGL2 context to use.
-     * @param xrDeviceClient The XR device client to use.
+     * @param clientContext The client context to use.
      * @returns The new instance of the Scene.
      */
-    static std::shared_ptr<Scene> Make(std::shared_ptr<client_graphics::WebGL2Context> glContext,
-                                       std::shared_ptr<client_xr::XRDeviceClient> xrDeviceClient)
+    static std::shared_ptr<Scene> Make(TrClientContextPerProcess *clientContext)
     {
-      return std::make_shared<Scene>(glContext, xrDeviceClient);
+      if (TR_UNLIKELY(clientContext == nullptr))
+        clientContext = TrClientContextPerProcess::Get();
+      assert(clientContext != nullptr);
+      return std::make_shared<Scene>(clientContext);
     }
 
   public:
-    Scene(std::shared_ptr<client_graphics::WebGL2Context> glContext,
-          std::shared_ptr<client_xr::XRDeviceClient> xrDeviceClient)
+    Scene(TrClientContextPerProcess *clientContext)
         : ecs::App(),
-          glContext_(glContext),
-          xrDeviceClient_(xrDeviceClient)
+          glContext_(clientContext->createHostWebGLContext()),
+          xrDeviceClient_(clientContext->getXRDeviceClient())
     {
       assert(glContext_ != nullptr);
       assert(xrDeviceClient_ != nullptr);
-
-      auto clientContext = TrClientContextPerProcess::Get();
-      assert(clientContext != nullptr);
 
       frameCallback_ = [this](uint32_t time, std::shared_ptr<client_xr::XRFrame> frame, void *env_)
       {

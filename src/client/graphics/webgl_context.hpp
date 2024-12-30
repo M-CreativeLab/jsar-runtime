@@ -215,7 +215,7 @@ namespace client_graphics
     bool failIfMajorPerformanceCaveat = false;
     bool premultipliedAlpha = false;
     bool preserveDrawingBuffer = false;
-    bool xrCompatible = true;
+    bool xrCompatible = false;
     std::string powerPreference = "default";
   };
 
@@ -256,6 +256,7 @@ namespace client_graphics
 
   public:
     WebGLContext(ContextAttributes &attrs, bool isWebGL2 = false);
+    ~WebGLContext();
 
   public: // graphics methods
     /**

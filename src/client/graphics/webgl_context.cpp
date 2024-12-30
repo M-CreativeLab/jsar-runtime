@@ -53,7 +53,7 @@ namespace client_graphics
       throw std::runtime_error("Too many contexts created in the content process.");
 
     auto createReq = CreateWebGLContextRequest();
-    sendCommandBufferRequest(createReq, true);
+    sendCommandBufferRequestDirectly(createReq, true);
 
     auto sentAt = std::chrono::system_clock::now();
     auto initCommandBuffer = WebGL1ContextInitCommandBufferRequest();
@@ -80,6 +80,12 @@ namespace client_graphics
     version = resp->version;
     renderer = resp->renderer;
     delete resp;
+  }
+
+  WebGLContext::~WebGLContext()
+  {
+    auto req = RemoveWebGLContextRequest();
+    sendCommandBufferRequestDirectly(req, true);
   }
 
   std::shared_ptr<WebGLProgram> WebGLContext::createProgram()

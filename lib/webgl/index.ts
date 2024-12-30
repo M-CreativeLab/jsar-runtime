@@ -27,8 +27,6 @@ export function getHostWebGLContext(isWebGL2: boolean, nativeGl: RenderingContex
   const wrapped = isWebGL2 ?
     wrapWebGL2RenderingContext(nativeGl as WebGL2RenderingContext) :
     wrapWebGLRenderingContext(nativeGl as WebGLRenderingContext);
-
-  console.info('getHostWebGLContext', wrapped);
   return wrapped;
 }
 

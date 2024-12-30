@@ -134,6 +134,10 @@ enum class TrClientContextEventType
  */
 class TrClientContextPerProcess final : public TrEventTarget<TrClientContextEventType>
 {
+private:
+  using WebGLContextReference = std::shared_ptr<client_graphics::WebGL2Context>;
+  using WebGLContextsList = std::vector<WebGLContextReference>;
+
 public:
   /**
    * Create the client context instance, and throws an exception if the instance already exists.
@@ -246,9 +250,28 @@ public: // media methods
 
 public: // commandbuffer methods
   /**
-   * @returns the host WebGL context.
+   * Create a new host `WebGL2Context` instance for the client.
+   *
+   * The host `WebGL2Context` is a special XR-compatible context that is used to render content with the host graphics engine, such as Unity,
+   * Unreal Engine, etc.
+   * 
+   * @returns The created host `WebGL2Context` instance.
    */
-  inline shared_ptr<client_graphics::WebGL2Context> getHostWebGLContext() { return hostWebGLContext; }
+  WebGLContextReference createHostWebGLContext();
+  /**
+   * Get the host `WebGL2Context` instance by the context id.
+   * 
+   * @param contextId The context id to get.
+   * @returns The host `WebGL2Context` instance, or nullptr if not found.
+   */
+  WebGLContextReference getHostWebGLContext(uint32_t contextId);
+  /**
+   * Remove the host `WebGL2Context` instance by the context id.
+   * 
+   * @param contextId The context id to remove.
+   * @returns true if the host `WebGL2Context` instance is removed successfully.
+   */
+  bool removeHostWebGLContext(uint32_t contextId);
   /**
    * Send a command buffer request to the command buffer channel.
    *
@@ -365,6 +388,10 @@ public:
   xr::TrDeviceInit xrDeviceInit;
   uint64_t startedAt;
   /**
+   * The host `WebGL2Context` instances list for the client.
+   */
+  WebGLContextsList hostWebGLContexts;
+  /**
    * The built-in scene for the DOM rendering.
    */
   std::shared_ptr<builtin_scene::Scene> builtinScene;
@@ -382,7 +409,6 @@ private: // media fields
   vector<shared_ptr<media_client::MediaPlayer>> mediaPlayers;
 
 private: // command buffer fields
-  shared_ptr<client_graphics::WebGL2Context> hostWebGLContext = nullptr;
   TrOneShotClient<TrCommandBufferMessage> *commandBufferChanClient = nullptr;
   TrCommandBufferSender *commandBufferChanSender = nullptr;
   TrCommandBufferReceiver *commandBufferChanReceiver = nullptr;

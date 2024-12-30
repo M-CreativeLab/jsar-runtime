@@ -13,6 +13,13 @@ namespace commandbuffers
     using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
   };
 
+  class RemoveWebGLContextRequest final
+      : public TrCommandBufferSimpleRequest<RemoveWebGLContextRequest, COMMAND_BUFFER_REMOVE_WEBGL_CONTEXT_REQ>
+  {
+  public:
+    using TrCommandBufferSimpleRequest::TrCommandBufferSimpleRequest;
+  };
+
   class WebGL1ContextInitCommandBufferRequest final
       : public TrCommandBufferSimpleRequest<WebGL1ContextInitCommandBufferRequest,
                                             COMMAND_BUFFER_WEBGL_CONTEXT_INIT_REQ>

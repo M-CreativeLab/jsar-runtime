@@ -2,6 +2,7 @@
 
 #define TR_COMMAND_BUFFER_REQUESTS_MAP(XX)                                                 \
   XX(CREATE_WEBGL_CONTEXT, CreateWebGLContextRequest)                                      \
+  XX(REMOVE_WEBGL_CONTEXT, RemoveWebGLContextRequest)                                      \
   XX(WEBGL_CONTEXT_INIT, WebGL1ContextInitCommandBufferRequest)                            \
   XX(WEBGL2_CONTEXT_INIT, WebGL2ContextInitCommandBufferRequest)                           \
   XX(CREATE_PROGRAM, CreateProgramCommandBufferRequest)                                    \

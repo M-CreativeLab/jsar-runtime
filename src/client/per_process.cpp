@@ -389,10 +389,6 @@ void TrClientContextPerProcess::start()
     // Create sender & receiver for commandbuffer chan.
     commandBufferChanSender = new TrCommandBufferSender(commandBufferChanClient);
     commandBufferChanReceiver = new TrCommandBufferReceiver(commandBufferChanClient);
-
-    // Create graphics apis
-    client_graphics::ContextAttributes contextAttrs;
-    hostWebGLContext = client_graphics::WebGL2Context::Make(contextAttrs);
   }
 
   // XR device initialization
@@ -409,7 +405,7 @@ void TrClientContextPerProcess::start()
   }
 
   // Initialize the built-in scene
-  // builtinScene = builtin_scene::Scene::Make(hostWebGLContext, xrDeviceClient);
+  builtinScene = builtin_scene::Scene::Make(this);
 
   // Start the service alive listener
   serviceAliveListener = new thread([]()
@@ -519,6 +515,48 @@ shared_ptr<media_client::AudioPlayer> TrClientContextPerProcess::createAudioPlay
   auto player = make_shared<media_client::AudioPlayer>();
   mediaPlayers.push_back(dynamic_pointer_cast<media_client::MediaPlayer>(player));
   return player;
+}
+
+TrClientContextPerProcess::WebGLContextReference TrClientContextPerProcess::createHostWebGLContext()
+{
+  client_graphics::ContextAttributes contextAttrs;
+  contextAttrs.xrCompatible = true;
+  auto newContext = client_graphics::WebGL2Context::Make(contextAttrs);
+  assert(newContext != nullptr && newContext->isXRCompatible());
+
+  // Only valid context id is allowed.
+  if (newContext->id >= commandbuffers::MinimumContextId)
+  {
+    hostWebGLContexts.push_back(newContext);
+    return newContext;
+  }
+  else
+  {
+    return nullptr;
+  }
+}
+
+TrClientContextPerProcess::WebGLContextReference TrClientContextPerProcess::getHostWebGLContext(uint32_t contextId)
+{
+  for (auto &context : hostWebGLContexts)
+  {
+    if (context->id == contextId)
+      return context;
+  }
+  return nullptr;
+}
+
+bool TrClientContextPerProcess::removeHostWebGLContext(uint32_t contextId)
+{
+  for (auto it = hostWebGLContexts.begin(); it != hostWebGLContexts.end(); it++)
+  {
+    if ((*it)->id == contextId)
+    {
+      hostWebGLContexts.erase(it);
+      return true;
+    }
+  }
+  return false;
 }
 
 bool TrClientContextPerProcess::sendCommandBufferRequest(TrCommandBufferBase &commandBuffer, bool followsFlush)
