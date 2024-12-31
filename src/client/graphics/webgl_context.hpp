@@ -251,6 +251,7 @@ namespace client_graphics
    */
   class WebGLContext
   {
+    friend class WebGLProgramScope;
     friend class client_xr::XRSession;      // Allow XRSession to call `connectXRSession()`.
     friend class client_xr::XRDeviceClient; // Allow XRDeviceClient to call `sendCommandBuffer()`.
 
@@ -1205,5 +1206,67 @@ namespace client_graphics
 
   public: // Extension properties
     int32_t OVR_maxViews;
+  };
+
+  template <typename ContextType, typename ObjectType>
+    requires std::derived_from<ContextType, WebGLContext> && std::derived_from<ObjectType, WebGLObject>
+  class WebGLObjectScope
+  {
+  public:
+    WebGLObjectScope(std::shared_ptr<ContextType> glContext, std::shared_ptr<ObjectType> object)
+        : glContext_(glContext),
+          glObject_(object)
+    {
+    }
+
+  protected:
+    inline bool isObjectInContextChanged() const { return objectInContextChanged_; }
+    inline void markObjectInContextChanged() { objectInContextChanged_ = true; }
+
+  protected:
+    std::shared_ptr<ContextType> glContext_;
+    std::shared_ptr<ObjectType> glObject_;
+
+  private:
+    bool objectInContextChanged_ = false;
+  };
+
+  class WebGLProgramScope final : public WebGLObjectScope<WebGLContext, WebGLProgram>
+  {
+  public:
+    WebGLProgramScope(std::shared_ptr<WebGLContext> glContext, std::shared_ptr<WebGLProgram> program)
+        : WebGLObjectScope(glContext, program)
+    {
+      assert(glContext != nullptr);
+      assert(program != nullptr);
+
+      auto &clientState = glContext->clientState();
+      if (clientState.program != nullptr && clientState.program == program)
+        return; // Skip if the program is already in use.
+      glContext_->useProgram(program);
+      markObjectInContextChanged();
+    }
+    ~WebGLProgramScope()
+    {
+      if (isObjectInContextChanged())
+        glContext_->useProgram(nullptr);
+    }
+
+  public:
+    inline std::shared_ptr<client_graphics::WebGLProgram> program() const { return glObject_; }
+  };
+
+  class WebGLVertexArrayScope final : public WebGLObjectScope<WebGL2Context, WebGLVertexArray>
+  {
+  public:
+    WebGLVertexArrayScope(std::shared_ptr<WebGL2Context> glContext, std::shared_ptr<WebGLVertexArray> glObject)
+        : WebGLObjectScope(glContext, glObject)
+    {
+      glContext_->bindVertexArray(glObject);
+    }
+    ~WebGLVertexArrayScope()
+    {
+      glContext_->bindVertexArray(nullptr);
+    }
   };
 }

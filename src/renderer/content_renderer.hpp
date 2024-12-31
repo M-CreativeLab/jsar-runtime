@@ -2,14 +2,16 @@
 
 #include <vector>
 #include <shared_mutex>
-#include "common/classes.hpp"
-#include "common/ipc.hpp"
-#include "common/scoped_thread.hpp"
-#include "common/command_buffers/shared.hpp"
-#include "common/frame_request/types.hpp"
-#include "common/frame_request/sender.hpp"
-#include "common/xr/types.hpp"
-#include "xr/device.hpp"
+#include <common/classes.hpp>
+#include <common/ipc.hpp>
+#include <common/scoped_thread.hpp>
+#include <common/command_buffers/shared.hpp>
+#include <common/frame_request/types.hpp>
+#include <common/frame_request/sender.hpp>
+#include <common/xr/types.hpp>
+#include <runtime/macros.h>
+#include <xr/device.hpp>
+
 #include "./gles/context_storage.hpp"
 
 using namespace std;

@@ -44,6 +44,10 @@ namespace builtin_scene
   {
   public:
     using std::vector<T>::vector;
+
+  public:
+    inline size_t dataSize() { return this->size() * sizeof(T); }
+    inline void* dataBuffer() { return this->data(); }
   };
 
   typedef uint64_t MeshVertexAttributeId;
@@ -74,6 +78,7 @@ namespace builtin_scene
   public:
     static const VertexFormat format = VertexFormat::kUnknown;
     static const int formatType = 0;
+    static const size_t dataSize = 0;
     using V = void;
   };
 
@@ -83,6 +88,7 @@ namespace builtin_scene
   public:
     static const VertexFormat format = VertexFormat::kFloat32x2;
     static const int formatType = WEBGL_FLOAT;
+    static const size_t dataSize = sizeof(float) * 2;
     using V = glm::vec2;
   };
 
@@ -92,6 +98,7 @@ namespace builtin_scene
   public:
     static const VertexFormat format = VertexFormat::kFloat32x3;
     static const int formatType = WEBGL_FLOAT;
+    static const size_t dataSize = sizeof(float) * 3;
     using V = glm::vec3;
   };
 
@@ -101,6 +108,7 @@ namespace builtin_scene
   public:
     static const VertexFormat format = VertexFormat::kFloat32x4;
     static const int formatType = WEBGL_FLOAT;
+    static const size_t dataSize = sizeof(float) * 4;
     using V = glm::vec4;
   };
 
@@ -110,6 +118,7 @@ namespace builtin_scene
   public:
     static const VertexFormat format = VertexFormat::kUint16x2;
     static const int formatType = WEBGL_UNSIGNED_INT;
+    static const size_t dataSize = sizeof(uint16_t) * 2;
     using V = glm::u16vec2;
   };
 
@@ -119,6 +128,7 @@ namespace builtin_scene
   public:
     static const VertexFormat format = VertexFormat::kUint16x4;
     static const int formatType = WEBGL_UNSIGNED_INT;
+    static const size_t dataSize = sizeof(uint16_t) * 4;
     using V = glm::u16vec4;
   };
 
@@ -167,12 +177,27 @@ namespace builtin_scene
     virtual ~IMeshVertexAttributeData() = default;
 
   public:
+    /**
+     * The vertex format.
+     */
     virtual VertexFormat format() = 0;
+    /**
+     * the number of components per generic vertex attribute. Must be 1, 2, 3, 4. The initial value is 4.
+     */
     virtual size_t formatSize() = 0;
+    /**
+     * the data type of each component in the array, such as `WEBGL_FLOAT`, `WEBGL_UNSIGNED_INT`, etc.
+     */
     virtual int formatType() = 0;
+    /**
+     * Whether fixed-point data values should be normalized (`WEBGL_TRUE`) or converted directly as fixed-point values
+     * (`WEBGL_FALSE`) when they are accessed.
+     */
     virtual bool normalized() = 0;
     virtual size_t stride() = 0;
     virtual size_t offset() = 0;
+    virtual void *dataBuffer() = 0;
+    virtual size_t dataSize() = 0;
   };
 
   /**
@@ -235,31 +260,16 @@ namespace builtin_scene
     void setValues(std::vector<ValueType> values) { this->values = values; }
 
   public:
-    /**
-     * The vertex format.
-     */
     VertexFormat format() override { return Traits::format; }
-    /**
-     * the number of components per generic vertex attribute. Must be 1, 2, 3, 4. The initial value is 4.
-     */
     size_t formatSize() override { return N; }
-    /**
-     * the data type of each component in the array, such as `WEBGL_FLOAT`, `WEBGL_UNSIGNED_INT`, etc.
-     */
     int formatType() override { return Traits::formatType; }
-    /**
-     * Whether fixed-point data values should be normalized (`WEBGL_TRUE`) or converted directly as fixed-point values
-     * (`WEBGL_FALSE`) when they are accessed.
-     */
     bool normalized() override { return false; }
-    /**
-     * The byte offset between consecutive generic vertex attributes.
-     */
-    size_t stride() override { return sizeof(ValueType); }
-    /**
-     * A pointer to the first generic vertex attribute in the array.
-     */
+    // Stride must be 0, because the data is tightly packed.
+    size_t stride() override { return 0; }
+    // VBO is used, so the offset is 0.
     size_t offset() override { return 0; }
+    void* dataBuffer() override { return values.data(); }
+    size_t dataSize() override { return values.size() * Traits::dataSize; }
 
   public:
     /**
@@ -269,6 +279,66 @@ namespace builtin_scene
 
   private:
     MeshVertexAttribute<Format, N> attribute_;
+  };
+
+  class MeshVertexBuffer
+  {
+  public:
+    MeshVertexBuffer()
+    {
+    }
+    ~MeshVertexBuffer()
+    {
+      if (cachedData_ != nullptr)
+      {
+        free(cachedData_);
+        cachedData_ = nullptr;
+      }
+    }
+
+  public:
+    template <typename Format, size_t N>
+    void insertAttributeData(std::shared_ptr<MeshVertexAttributeData<Format, N>> data)
+    {
+      assert(data != nullptr);
+      attributes_.push_back(data);
+    }
+    inline size_t dataSize()
+    {
+      if (cachedSize_ <= 0)
+      {
+        size_t totalSize = 0;
+        for (auto &attribute : attributes_)
+          totalSize += attribute->dataSize();
+        cachedSize_ = totalSize;
+      }
+      return cachedSize_;
+    }
+    inline void *dataBuffer()
+    {
+      if (cachedData_ == nullptr)
+      {
+        size_t size = dataSize();
+        if (size <= 0)
+          return nullptr;
+
+        cachedData_ = malloc(size);
+        void *pCurrAttrib = cachedData_;
+        for (auto &attribute : attributes_)
+        {
+          auto data = attribute->dataBuffer();
+          auto dataSize = attribute->dataSize();
+          memcpy(pCurrAttrib, data, dataSize);
+          pCurrAttrib = (void *)((size_t)pCurrAttrib + dataSize);
+        }
+      }
+      return cachedData_;
+    }
+
+  private:
+    std::vector<std::shared_ptr<IMeshVertexAttributeData>> attributes_{};
+    void *cachedData_ = nullptr;
+    size_t cachedSize_ = 0;
   };
 
   class Mesh : public Measured3d
@@ -346,6 +416,7 @@ namespace builtin_scene
       if (data == nullptr)
         throw std::runtime_error("Invalid vertex attribute data.");
       attributes_[data->attributeId()] = data;
+      vertexBuffer_.insertAttributeData(data);
     }
     /**
      * Insert a new vertex attribute data.
@@ -369,7 +440,11 @@ namespace builtin_scene
     /**
      * @returns The mesh indices.
      */
-    inline Indices<uint32_t> indices() { return indices_; }
+    inline Indices<uint32_t> &indices() { return indices_; }
+    /**
+     * @returns The mesh vertex buffer with all attributes.
+     */
+    inline MeshVertexBuffer &vertexBuffer() { return vertexBuffer_; }
     /**
      * @returns The mesh vertex attributes.
      */
@@ -387,6 +462,7 @@ namespace builtin_scene
 
   protected:
     Indices<uint32_t> indices_{};
+    MeshVertexBuffer vertexBuffer_;
     std::unordered_map<MeshVertexAttributeId, std::shared_ptr<IMeshVertexAttributeData>> attributes_{};
   };
 

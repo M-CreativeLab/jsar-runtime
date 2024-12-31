@@ -1,9 +1,9 @@
 #include <chrono>
-#include "content_renderer.hpp"
-#include "runtime/content.hpp"
-#include "runtime/constellation.hpp"
-#include "xr/device.hpp"
-#include "xr/session.hpp"
+#include <runtime/content.hpp>
+#include <runtime/constellation.hpp>
+#include <xr/device.hpp>
+#include <xr/session.hpp>
+#include "./content_renderer.hpp"
 
 namespace renderer
 {
@@ -297,6 +297,9 @@ namespace renderer
           !frame->available() /** Remove this frame when frame is still inavialble when executing */
       )
       {
+#ifdef TR_RENDERER_ENABLE_VERBOSE
+        DEBUG(LOG_TAG_RENDERER, "The stereo frame(%d) is to be removed due to it's unavailable.", frame->getId());
+#endif
         it = stereoFramesList.erase(it);
         delete frame;
         continue;
@@ -318,11 +321,18 @@ namespace renderer
           }
         }
         it++;
+
+#ifdef TR_RENDERER_ENABLE_VERBOSE
+        DEBUG(LOG_TAG_RENDERER, "Skipping the stereo frame(%d) due to it's not ended.", frame->getId());
+#endif
         continue;
       }
       /** If an ended frame is empty, it's needed to be removed here. */
       if (frame->empty())
       {
+#ifdef TR_RENDERER_ENABLE_VERBOSE
+        DEBUG(LOG_TAG_RENDERER, "The stereo frame(%d) is to be removed due to it's empty.", frame->getId());
+#endif
         it = stereoFramesList.erase(it);
         delete frame;
         continue;
@@ -336,6 +346,10 @@ namespace renderer
       if (viewIndex == 1 && !frame->finished(0))
       {
         it++;
+
+#ifdef TR_RENDERER_ENABLE_VERBOSE
+        DEBUG(LOG_TAG_RENDERER, "The stereo frame(%d) is not finished for the left eye, it's skipped.", frame->getId());
+#endif
         continue;
       }
 
@@ -348,9 +362,19 @@ namespace renderer
       if (viewIndex == 1)
       {
         if (frame->idempotent())
+        {
           stereoFrameForBackup->copyCommandBuffers(frame);
+#ifdef TR_RENDERER_ENABLE_VERBOSE
+          DEBUG(LOG_TAG_RENDERER, "The stereo frame(%d) is idempotent, the backup frame is copied.", id);
+#endif
+        }
         else
+        {
           stereoFrameForBackup->clearCommandBuffers();
+#ifdef TR_RENDERER_ENABLE_VERBOSE
+          DEBUG(LOG_TAG_RENDERER, "The stereo frame(%d) is not idempotent, the backup frame is cleared.", id);
+#endif
+        }
       }
 
       /**

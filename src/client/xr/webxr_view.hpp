@@ -52,10 +52,10 @@ namespace client_xr
      * The `XRView` interface's read-only `viewport` property is an `XRViewport` object which describes the size and position
      * of the view within the overall XR display. The viewport is specified in pixels, with the origin at the top-left corner
      * of the display.
-     * 
+     *
      * @returns An `XRViewport` object.
      */
-    inline XRViewport viewport() const { return viewport_; }
+    inline XRViewport &viewport() { return viewport_; }
     /**
      * The `XRView` interface's read-only `projectionMatrix` property specifies the projection matrix to apply to the underlying
      * view. This should be used to integrate perspective to everything in the scene, in order to ensure the result is consistent

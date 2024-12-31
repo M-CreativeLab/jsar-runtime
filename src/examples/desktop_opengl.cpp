@@ -136,6 +136,14 @@ public:
     const char *enableTracing = getenv("JSAR_ENABLE_RENDERER_TRACING");
     if (enableTracing != nullptr && strcmp(enableTracing, "1") == 0)
       renderer->enableTracing();
+
+    const char *enableHostTracing = getenv("JSAR_ENABLE_RENDERER_HOST_TRACING");
+    if (enableHostTracing != nullptr && strcmp(enableHostTracing, "1") == 0)
+      renderer->enableHostContextSummary();
+
+    const char *enableAppTracking = getenv("JSAR_ENABLE_RENDERER_APP_TRACKING");
+    if (enableAppTracking != nullptr && strcmp(enableAppTracking, "1") == 0)
+      renderer->enableAppContextSummary();
   }
 
 public:

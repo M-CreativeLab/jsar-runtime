@@ -517,21 +517,62 @@ bool OpenGLAppContextStorage::IsDirty()
 bool OpenGLAppContextStorage::IsChanged(OpenGLAppContextStorage *other)
 {
   if (m_Programs.IsChanged(&other->m_Programs))
+  {
+#ifdef TR_RENDERER_ENABLE_VERBOSE
+    DEBUG(LOG_TAG_RENDERER, "Programs are changed in %s", GetName());
+#endif
     return true;
+  }
   if (m_Shaders.IsChanged(&other->m_Shaders))
+  {
+#ifdef TR_RENDERER_ENABLE_VERBOSE
+    DEBUG(LOG_TAG_RENDERER, "Shaders are changed in %s", GetName());
+#endif
     return true;
+  }
   if (m_Buffers.IsChanged(&other->m_Buffers))
+  {
+#ifdef TR_RENDERER_ENABLE_VERBOSE
+    DEBUG(LOG_TAG_RENDERER, "Buffers are changed in %s", GetName());
+#endif
     return true;
+  }
   if (m_Framebuffers.IsChanged(&other->m_Framebuffers))
+  {
+#ifdef TR_RENDERER_ENABLE_VERBOSE
+    DEBUG(LOG_TAG_RENDERER, "Framebuffers are changed in %s", GetName());
+#endif
     return true;
+  }
   if (m_Renderbuffers.IsChanged(&other->m_Renderbuffers))
+  {
+#ifdef TR_RENDERER_ENABLE_VERBOSE
+    DEBUG(LOG_TAG_RENDERER, "Renderbuffers are changed in %s", GetName());
+#endif
     return true;
+  }
   if (m_VertexArrayObjects.IsChanged(&other->m_VertexArrayObjects))
+  {
+#ifdef TR_RENDERER_ENABLE_VERBOSE
+    DEBUG(LOG_TAG_RENDERER, "Vertex array objects are changed in %s", GetName());
+#endif
     return true;
+  }
   if (m_Textures.IsChanged(&other->m_Textures))
+  {
+#ifdef TR_RENDERER_ENABLE_VERBOSE
+    DEBUG(LOG_TAG_RENDERER, "Textures are changed in %s", GetName());
+#endif
     return true;
+  }
   if (m_Samplers.IsChanged(&other->m_Samplers))
+  {
+#ifdef TR_RENDERER_ENABLE_VERBOSE
+    DEBUG(LOG_TAG_RENDERER, "Samplers are changed in %s", GetName());
+#endif
     return true;
+  }
 
+  // No changes
   return false;
 }

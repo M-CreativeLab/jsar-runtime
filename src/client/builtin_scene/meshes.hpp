@@ -61,7 +61,11 @@ namespace builtin_scene
     /**
      * @returns The indices of the mesh.
      */
-    inline Indices<uint32_t> indices() { return handle_->indices(); }
+    inline Indices<uint32_t> &indices() { return handle_->indices(); }
+    /**
+     * @returns The vertex buffer of the mesh.
+     */
+    inline MeshVertexBuffer &vertexBuffer() { return handle_->vertexBuffer(); }
     /**
      * @returns The vertex attributes of the mesh.
      */
@@ -107,6 +111,17 @@ namespace builtin_scene
     static inline std::shared_ptr<meshes::Cube> CreateCube(float size)
     {
       return CreateAndBuild<meshes::Cube>(size);
+    }
+    /**
+     * Create a plane mesh with the given normal and half size.
+     *
+     * @param normal The normal of the plane.
+     * @param halfSize The half size of the plane.
+     * @return The created plane mesh.
+     */
+    static inline std::shared_ptr<meshes::Plane> CreatePlane(math::Dir3 normal, glm::vec2 halfSize)
+    {
+      return CreateAndBuild<meshes::Plane>(normal, halfSize);
     }
     /**
      * Create a (UV) sphere mesh with the given parameters.

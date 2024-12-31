@@ -10,6 +10,7 @@
 #include "./meshes.hpp"
 #include "./materials.hpp"
 #include "./client_renderer.hpp"
+#include "./xr.hpp"
 
 #include "../graphics/webgl_context.hpp"
 #include "../xr/device.hpp"
@@ -87,7 +88,7 @@ namespace builtin_scene
       frameCallback_ = [this](uint32_t time, std::shared_ptr<client_xr::XRFrame> frame, void *env_)
       {
         assert(xrSession_ != nullptr); // ensure the WebXR session is ready.
-        update(time, *frame);
+        update(time, frame);
         xrSession_->requestAnimationFrame(frameCallback_);
       };
 
@@ -97,9 +98,9 @@ namespace builtin_scene
         xrSession_ = xrSystem->requestSession();
 
         // Update the render state
-        client_xr::XRRenderState renderState;
-        renderState.baseLayer = client_xr::XRWebGLLayer::Make(xrSession_, glContext_);
-        xrSession_->updateRenderState(renderState);
+        client_xr::XRRenderState newRenderState;
+        newRenderState.baseLayer = client_xr::XRWebGLLayer::Make(xrSession_, glContext_);
+        xrSession_->updateRenderState(newRenderState);
 
         bootstrap();
         xrSession_->requestAnimationFrame(frameCallback_);
@@ -127,24 +128,42 @@ namespace builtin_scene
     void bootstrap()
     {
       addPlugin<DefaultPlugin>();
+      addPlugin<WebXRPlugin>();
       ecs::App::startup();
 
       // Add renderer
       addResource(ecs::Resource::Make<Renderer>(glContext_));
 
+      // Update WebXR session resource
+      {
+        auto xrExperience = getResource<WebXRExperience>();
+        assert(xrExperience != nullptr);
+        xrExperience->updateReferenceSpace(
+            xrSession_->requestReferenceSpace(client_xr::XRReferenceSpaceType::kLocal));
+      }
+
       // Get the meshes and materials resources
       auto meshes = getResource<Meshes>();
       auto materials = getResource<Materials>();
 
+      // Spawn the camera entity
+      spawn(Camera(), Transform());
+
       // Spawn the default mesh
-      auto colorMaterial = Material::Make<materials::ColorMaterial>(1.0f, 0.0f, 0.0f);
-      spawn(
-          Mesh3d(meshes->add(MeshBuilder::CreateSphere(0.5f))),
-          MeshMaterial3d(materials->add(colorMaterial)),
-          Transform());
+      // auto colorMaterial = Material::Make<materials::ColorMaterial>(1.0f, 0.0f, 0.0f);
+      // spawn(
+      //     Mesh3d(meshes->add(MeshBuilder::CreateBox(0.25f, 0.20f, 0.05f))),
+      //     MeshMaterial3d(materials->add(colorMaterial)),
+      //     Transform());
     }
-    void update(uint32_t time, client_xr::XRFrame &frame)
+    void update(uint32_t time, std::shared_ptr<client_xr::XRFrame> frame)
     {
+      // Update the time and frame to the WebXRSession resource.
+      auto xrExperience = getResource<WebXRExperience>();
+      assert(xrExperience != nullptr);
+      xrExperience->updateCurrentFrame(time, frame);
+
+      // Trigger the ECS update().
       ecs::App::update();
     }
 

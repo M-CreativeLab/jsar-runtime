@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <common/viewport.hpp>
 #include "./ecs.hpp"
+#include "./xr.hpp"
 
 namespace builtin_scene
 {

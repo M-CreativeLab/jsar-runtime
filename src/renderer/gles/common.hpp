@@ -1,7 +1,8 @@
 #pragma once
 
 #include <assert.h>
-#include "runtime/platform_base.hpp"
+#include <runtime/macros.h>
+#include <runtime/platform_base.hpp>
 #include "debug.hpp"
 
 #if SUPPORT_OPENGL_UNIFIED

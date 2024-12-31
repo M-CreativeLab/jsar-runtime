@@ -80,11 +80,6 @@ namespace client_xr
         pendingRenderState_ = make_unique<XRRenderState>();
     }
     pendingRenderState_->update(newState);
-
-    // connect the session to the base layer
-    auto baseRenderingContext = glContext();
-    if (baseRenderingContext != nullptr)
-      baseRenderingContext->connectXRSession(shared_from_this());
   }
 
   void XRSession::updateTargetFrameRate(float target)
@@ -352,7 +347,9 @@ namespace client_xr
       // Report to the device since it'll need to handle the layer for rendering.
       if (activeRenderState_->baseLayer != nullptr)
       {
-        // device->setActiveLayer(activeRenderState->baseLayer);
+        auto baseRenderingContext = activeRenderState_->baseLayer->glContext();
+        assert(baseRenderingContext != nullptr);
+        baseRenderingContext->connectXRSession(shared_from_this());
       }
     }
 
