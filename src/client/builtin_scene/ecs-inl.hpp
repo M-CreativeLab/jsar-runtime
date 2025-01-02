@@ -182,6 +182,8 @@ namespace builtin_scene::ecs
   template <typename... ComponentTypeList>
   EntityId App::spawn(ComponentTypeList... components)
   {
+    std::unique_lock<std::shared_mutex> lock(mutexForEntities_);
+
     auto newEntity = std::make_shared<Entity>();
     EntityId entityId = newEntity->id();
     entities_.push_back(std::make_pair(entityId, newEntity));
@@ -194,6 +196,7 @@ namespace builtin_scene::ecs
   template <typename ComponentType>
   std::vector<EntityId> App::queryEntities()
   {
+    std::shared_lock<std::shared_mutex> lock(mutexForEntities_);
     std::vector<EntityId> result;
     auto componentSet = componentsMgr_.getComponentSet<ComponentType>();
     for (auto &pair : entities_)
@@ -208,6 +211,7 @@ namespace builtin_scene::ecs
   template <typename QueryComponentType, typename IncludeComponentType>
   std::vector<IncludeComponentType> App::queryEntitiesWithComponent()
   {
+    std::shared_lock<std::shared_mutex> lock(mutexForEntities_);
     std::vector<IncludeComponentType> result;
     auto queryComponentSet = componentsMgr_.getComponentSet<QueryComponentType>();
     auto includeComponentSet = componentsMgr_.getComponentSet<IncludeComponentType>();
@@ -226,6 +230,7 @@ namespace builtin_scene::ecs
   template <typename ComponentType>
   std::optional<EntityId> App::firstEntity()
   {
+    std::shared_lock<std::shared_mutex> lock(mutexForEntities_);
     std::optional<EntityId> result = std::nullopt;
     auto componentSet = componentsMgr_.getComponentSet<ComponentType>();
     for (auto &pair : entities_)
@@ -243,6 +248,7 @@ namespace builtin_scene::ecs
   template <typename QueryComponentType, typename IncludeComponentType>
   std::optional<IncludeComponentType> App::firstEntityWithComponent()
   {
+    std::shared_lock<std::shared_mutex> lock(mutexForEntities_);
     std::optional<IncludeComponentType> result = std::nullopt;
     auto queryComponentSet = componentsMgr_.getComponentSet<QueryComponentType>();
     auto includeComponentSet = componentsMgr_.getComponentSet<IncludeComponentType>();
@@ -270,6 +276,7 @@ namespace builtin_scene::ecs
     if (system == nullptr)
       throw std::runtime_error("System is null.");
 
+    std::unique_lock<std::shared_mutex> lock(mutexForSystems_);
     if (systemSets_.find(label) == systemSets_.end())
       systemSets_[label] = std::make_shared<LabeledSystemSet<SchedulerLabel>>();
     auto systemSet = std::static_pointer_cast<LabeledSystemSet<SchedulerLabel>>(systemSets_[label]);
@@ -280,6 +287,7 @@ namespace builtin_scene::ecs
 
   void App::removeSystem(SystemId id)
   {
+    std::unique_lock<std::shared_mutex> lock(mutexForSystems_);
     for (auto &pair : systemSets_)
     {
       auto systemSet = pair.second;
@@ -310,6 +318,7 @@ namespace builtin_scene::ecs
 
   void App::runSystems(SchedulerLabel label)
   {
+    std::shared_lock<std::shared_mutex> lock(mutexForSystems_);
     if (systemSets_.find(label) == systemSets_.end())
       return;
     auto systemSet = systemSets_[label];

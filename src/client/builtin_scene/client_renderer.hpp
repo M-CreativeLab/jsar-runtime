@@ -218,13 +218,13 @@ namespace builtin_scene
     std::shared_ptr<client_graphics::WebGL2Context> glContext_;
   };
 
-  class RenderSystem : public ecs::System
+  class RenderSystem final : public ecs::System
   {
   public:
     using ecs::System::System;
 
   public:
-    void onExecute()
+    void onExecute() override
     {
       auto renderer = getResource<Renderer>();
       assert(renderer != nullptr);
@@ -238,14 +238,29 @@ namespace builtin_scene
         {
           auto &views = xrViewerPose->views();
           for (auto view : views)
-            renderMeshes(meshes, *renderer, view);
+            render(meshes, *renderer, view);
           return;
         }
       }
-      renderMeshes(meshes, *renderer);
+      render(meshes, *renderer);
     }
 
   private:
+    /**
+     * Render the meshes with the given renderer.
+     *
+     * @param meshes The list of mesh entities to render.
+     * @param renderer The renderer to use.
+     * @param view The XR view to render the meshes with.
+     */
+    void render(std::vector<builtin_scene::ecs::EntityId> &meshes,
+                builtin_scene::Renderer &renderer,
+                std::shared_ptr<client_xr::XRView> view = nullptr)
+    {
+      if (view != nullptr)
+        renderer.setViewport(view->viewport());
+      renderMeshes(meshes, renderer, view);
+    }
     /**
      * Render the meshes with the given renderer.
      *
@@ -257,8 +272,6 @@ namespace builtin_scene
                       builtin_scene::Renderer &renderer,
                       std::shared_ptr<client_xr::XRView> view = nullptr)
     {
-      if (view != nullptr)
-        renderer.setViewport(view->viewport());
       for (auto &mesh : meshes)
         renderMesh(mesh, renderer, view);
     }

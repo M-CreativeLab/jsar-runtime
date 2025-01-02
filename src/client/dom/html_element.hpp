@@ -26,6 +26,9 @@ namespace dom
     void focus();
 
   public:
+    void connectedCallback() override;
+
+  public:
     HTMLElementDirection dir = HTMLElementDirection::LTR;
     bool draggable = false;
     string innerText;

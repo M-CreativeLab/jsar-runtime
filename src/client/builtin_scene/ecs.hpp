@@ -625,6 +625,9 @@ namespace builtin_scene::ecs
     ComponentsManager componentsMgr_;
     std::vector<std::pair<EntityId, std::shared_ptr<Entity>>> entities_;
     std::unordered_map<SchedulerLabel, std::shared_ptr<ISystemSet>> systemSets_{};
+    // mutexes to make the ECS thread-safe.
+    std::shared_mutex mutexForEntities_;
+    std::shared_mutex mutexForSystems_;
   };
 
   /**

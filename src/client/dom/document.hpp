@@ -3,11 +3,12 @@
 #include <functional>
 #include <memory>
 #include <map>
+#include <pugixml/pugixml.hpp>
+
 #include "./node.hpp"
 #include "./element.hpp"
 #include "./html_head_element.hpp"
 #include "./html_body_element.hpp"
-#include "pugixml/pugixml.hpp"
 
 using namespace std;
 using namespace pugi;

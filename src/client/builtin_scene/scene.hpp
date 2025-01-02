@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <shared_mutex>
+
 #include "./ecs-inl.hpp"
 #include "./asset.hpp"
 #include "./timer.hpp"
@@ -115,7 +117,7 @@ namespace builtin_scene
      *
      * @param name The tag name of the element.
      */
-    ecs::EntityId createElementEntity(std::string name)
+    ecs::EntityId createElement(std::string name)
     {
       return spawn(
           hierarchy::Element(name),
@@ -142,18 +144,15 @@ namespace builtin_scene
             xrSession_->requestReferenceSpace(client_xr::XRReferenceSpaceType::kLocal));
       }
 
-      // Get the meshes and materials resources
-      auto meshes = getResource<Meshes>();
-      auto materials = getResource<Materials>();
-
-      // Spawn the camera entity
-      spawn(Camera(), Transform());
-
       // Spawn the default mesh
-      // spawn(
-      //     Mesh3d(meshes->add(MeshBuilder::CreateBox(0.25f, 0.20f, 0.05f))),
-      //     MeshMaterial3d(materials->add(Material::Make<materials::NormalMaterial>())),
-      //     Transform::FromScale(0.7f).withTranslation(0.0f, 0.0f, 0.1f));
+      // {
+      //   auto meshes = getResource<Meshes>();
+      //   auto materials = getResource<Materials>();
+      //   spawn(
+      //       Mesh3d(meshes->add(MeshBuilder::CreateBox(0.25f, 0.20f, 0.05f))),
+      //       MeshMaterial3d(materials->add(Material::Make<materials::NormalMaterial>())),
+      //       Transform::FromScale(0.7f).withTranslation(0.0f, 0.0f, 0.1f));
+      // }
     }
     void update(uint32_t time, std::shared_ptr<client_xr::XRFrame> frame)
     {

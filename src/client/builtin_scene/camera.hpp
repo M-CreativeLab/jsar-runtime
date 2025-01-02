@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <common/viewport.hpp>
 #include "./ecs.hpp"
+#include "./transform.hpp"
 #include "./xr.hpp"
 
 namespace builtin_scene
@@ -30,7 +31,7 @@ namespace builtin_scene
     void onExecute()
     {
       // Create the camera for rendering.
-      spawn(Camera());
+      spawn(Camera(), Transform());
     }
   };
 
