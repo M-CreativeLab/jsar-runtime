@@ -12,7 +12,21 @@ try {
 }
 
 const args = minimist(process.argv.slice(2));
+
+if (args.help) {
+  console.log(`
+Usage: node publish-webapis.cjs [options]
+
+Options:
+  --release   Use the base version from package.json
+  --publish   Publish the package to the npm registry
+  --help      Show this help message
+`);
+  process.exit(0);
+}
+
 const isRelease = args.release;
+const shouldPublish = args.publish;
 
 const packageJson = require('../package.json');
 const version = packageJson.version;
@@ -27,7 +41,8 @@ const webApisPackageJson = {
   types: 'index.d.ts',
   files: ['index.d.ts', 'transmute-private.d.ts'],
   publishConfig: {
-    access: 'public'
+    access: 'public',
+    registry: 'https://registry.npmjs.org/'
   }
 };
 
@@ -73,4 +88,8 @@ To use the types provided by this package, configure the types package in your p
 const readmePath = path.join(webApisDir, 'README.md');
 fs.writeFileSync(readmePath, readmeContent);
 
-execSync('npm publish', { cwd: webApisDir, stdio: 'inherit' });
+if (shouldPublish) {
+  execSync('npm publish', { cwd: webApisDir, stdio: 'inherit' });
+} else {
+  execSync('npm pack', { cwd: webApisDir, stdio: 'inherit' });
+}
