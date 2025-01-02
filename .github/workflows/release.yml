@@ -182,6 +182,8 @@ jobs:
             jsar-runtime-release.tar.gz
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ github.event.inputs.tag_name }}
+      - name: Publish web-apis package
+        run: npm run publish:webapis
 
   dispatch-loaders-build:
     needs: [release]
