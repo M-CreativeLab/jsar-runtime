@@ -3,7 +3,10 @@
 #include <array>
 #include <string>
 #include <memory>
+#include <optional>
+
 #include <glm/glm.hpp>
+#include <common/utility.hpp>
 #include <common/command_buffers/webgl_constants.hpp>
 #include <client/xr/common.hpp>
 
@@ -1209,7 +1212,8 @@ namespace client_graphics
   };
 
   template <typename ContextType, typename ObjectType>
-    requires std::derived_from<ContextType, WebGLContext> && std::derived_from<ObjectType, WebGLObject>
+    requires transmute::common::derived_from<ContextType, WebGLContext> &&
+             transmute::common::derived_from<ObjectType, WebGLObject>
   class WebGLObjectScope
   {
   public:

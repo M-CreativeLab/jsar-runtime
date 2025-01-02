@@ -304,8 +304,10 @@ TrClientContextPerProcess *TrClientContextPerProcess::Create()
   s_Instance = new TrClientContextPerProcess();
   return s_Instance;
 }
+
 TrClientContextPerProcess *TrClientContextPerProcess::Get()
 {
+  assert(s_Instance != nullptr);
   return s_Instance;
 }
 

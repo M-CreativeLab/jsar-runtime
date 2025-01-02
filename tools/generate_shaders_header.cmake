@@ -23,7 +23,7 @@ function(tr_generate_shader_header OUTPUT SOURCE_DIR)
         # Escape quotes in shader content to properly include in the C++ string literal
         string(REPLACE "\"" "\\\"" shader_content "${shader_content}")
         set(header_content
-            "${header_content}\nconst char* ${sub_path}_shader = R\"#TR(\n${shader_content})#TR\";\n"
+            "${header_content}\nstatic const char* ${sub_path}_shader = R\"#TR(\n${shader_content})#TR\";\n"
         )
     endforeach()
 

@@ -27,9 +27,9 @@ TEST_CASE("Matrix Creation", "[matrix]")
 
 TEST_CASE("Quaternion Operations", "[quat]")
 {
-  Quat identity = Quat::Identity;
-  Quat zero = Quat::Zero;
-  Quat nan = Quat::Nan;
+  Quat identity = Quat::Identity();
+  Quat zero = Quat::Zero();
+  Quat nan = Quat::Nan();
 
   REQUIRE(identity == glm::quat(1, 0, 0, 0));
   REQUIRE(zero == glm::quat(0, 0, 0, 0));
@@ -51,8 +51,8 @@ TEST_CASE("Quaternion Operations", "[quat]")
 
 TEST_CASE("Vector Operations", "[vectors]")
 {
-  Vec3 identity = Vec3::Identity;
-  Vec3 one = Vec3::One;
+  Vec3 identity = Vec3::Identity();
+  Vec3 one = Vec3::One();
 
   REQUIRE(identity.x == 0.0f);
   REQUIRE(identity.y == 0.0f);

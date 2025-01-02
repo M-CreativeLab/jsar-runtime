@@ -16,7 +16,7 @@ namespace builtin_scene
     /**
      * The identity transform.
      */
-    static const Transform Identity;
+    static const Transform Identity() { return Transform(); }
 
   public:
     /**
@@ -103,7 +103,7 @@ namespace builtin_scene
     inline math::Vec3 scale() { return scale_; }
     /**
      * Get the matrix representation of the transform and clear the dirty flag.
-     * 
+     *
      * @returns The matrix representation of the transform.
      */
     inline glm::mat4 matrix()
@@ -115,8 +115,19 @@ namespace builtin_scene
       return mat;
     }
     /**
+     * Get the matrix representation of the transform without clearing the dirty flag.
+     *
+     * @returns The matrix representation of the transform.
+     */
+    inline glm::mat4 matrix() const
+    {
+      return glm::translate(glm::mat4(1.0f), translation_) *
+             glm::mat4_cast(rotation_) *
+             glm::scale(glm::mat4(1.0f), scale_);
+    }
+    /**
      * Set the translation.
-     * 
+     *
      * @param translation The new translation.
      */
     inline void setTranslation(math::Vec3 translation)
@@ -126,7 +137,7 @@ namespace builtin_scene
     }
     /**
      * Set the rotation.
-     * 
+     *
      * @param rotation The new rotation.
      */
     inline void setRotation(math::Quat rotation)
@@ -136,7 +147,7 @@ namespace builtin_scene
     }
     /**
      * Set the scale.
-     * 
+     *
      * @param scale The new scale.
      */
     inline void setScale(math::Vec3 scale)
@@ -157,7 +168,7 @@ namespace builtin_scene
     }
     /**
      * Get a new transform with a given translation (x, y, z).
-     * 
+     *
      * @param x The x component of the translation.
      * @param y The y component of the translation.
      * @param z The z component of the translation.
@@ -192,10 +203,8 @@ namespace builtin_scene
 
   private:
     bool isDirty_ = true;
-    math::Vec3 translation_ = math::Vec3::Identity;
-    math::Quat rotation_ = math::Quat::Identity;
-    math::Vec3 scale_ = math::Vec3::One;
+    math::Vec3 translation_ = math::Vec3::Identity();
+    math::Quat rotation_ = math::Quat::Identity();
+    math::Vec3 scale_ = math::Vec3::One();
   };
-
-  const Transform Transform::Identity = Transform();
 }

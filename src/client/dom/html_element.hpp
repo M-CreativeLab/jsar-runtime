@@ -1,9 +1,10 @@
 #pragma once
 
 #include <string>
+#include <optional>
+#include <client/builtin_scene/ecs-inl.hpp>
+#include <client/builtin_scene/scene.hpp>
 #include "./element.hpp"
-
-using namespace std;
 
 namespace dom
 {
@@ -31,11 +32,15 @@ namespace dom
   public:
     HTMLElementDirection dir = HTMLElementDirection::LTR;
     bool draggable = false;
-    string innerText;
-    string lang;
-    string nonce;
-    string outerText;
-    string title;
-    string translate;
+    std::string innerText;
+    std::string lang;
+    std::string nonce;
+    std::string outerText;
+    std::string title;
+    std::string translate;
+
+  protected:
+    std::shared_ptr<builtin_scene::Scene> builtinScene_ = nullptr;
+    std::optional<builtin_scene::ecs::EntityId> entity_ = std::nullopt;
   };
 }

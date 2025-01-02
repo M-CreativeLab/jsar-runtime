@@ -12,5 +12,8 @@ namespace dom
     HTMLDivElement(weak_ptr<Document> ownerDocument) : HTMLElement("DIV", ownerDocument)
     {
     }
+
+  public:
+    void connectedCallback() override;
   };
 }

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <string>
+#include <concepts>
 #include <unistd.h>
 
 #ifndef TR_UNLIKELY
@@ -73,7 +74,7 @@ public:
   /**
    * Reference this object to the specified value, you must ensure that this object is not referenced to another object before calling this
    * method.
-   * 
+   *
    * @param value The value to reference.
    */
   inline void ref(T *value)
@@ -117,4 +118,18 @@ inline std::string ToUpperCase(const std::string &str)
   std::string result = str;
   std::transform(result.begin(), result.end(), result.begin(), ::toupper);
   return result;
+}
+
+namespace transmute::common
+{
+#ifdef ANDROID
+  // Android NDK does not support the `std::derived_from` concept.
+  // We have to define the `derived_from` concept manually.
+  template <class Derived, class Base>
+  concept derived_from = std::is_base_of_v<Base, Derived> &&
+                         std::is_convertible_v<const volatile Derived *, const volatile Base *>;
+#else
+  template <class Derived, class Base>
+  concept derived_from = std::derived_from<Derived, Base>;
+#endif
 }

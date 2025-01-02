@@ -198,15 +198,10 @@ namespace builtin_scene
         if (transform != nullptr)
           matToUpdate = transform->matrix();
         else
-        {
-          auto identity = Transform::Identity;
-          matToUpdate = identity.matrix();
-        }
+          matToUpdate = Transform::Identity().matrix();
       }
       else
-      {
         matToUpdate = transform->matrix();
-      }
 
       auto loc = glContext_->getUniformLocation(program, "modelMatrix");
       if (!loc.has_value())

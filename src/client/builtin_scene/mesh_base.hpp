@@ -47,7 +47,7 @@ namespace builtin_scene
 
   public:
     inline size_t dataSize() { return this->size() * sizeof(T); }
-    inline void* dataBuffer() { return this->data(); }
+    inline void *dataBuffer() { return this->data(); }
   };
 
   typedef uint64_t MeshVertexAttributeId;
@@ -268,7 +268,7 @@ namespace builtin_scene
     size_t stride() override { return 0; }
     // VBO is used, so the offset is 0.
     size_t offset() override { return 0; }
-    void* dataBuffer() override { return values.data(); }
+    void *dataBuffer() override { return values.data(); }
     size_t dataSize() override { return values.size() * Traits::dataSize; }
 
   public:
@@ -347,39 +347,48 @@ namespace builtin_scene
     /**
      * Where the vertex is located in space.
      */
-    static MeshVertexAttribute<float, 3> ATTRIBUTE_POSITION;
+    inline static auto ATTRIBUTE_POSITION = MeshVertexAttribute<float, 3>("Vertex_Position", 0,
+                                                                          VertexFormat::kFloat32x3);
     /**
      * The direction the vertex normal is facing in.
      */
-    static MeshVertexAttribute<float, 3> ATTRIBUTE_NORMAL;
+    inline static auto ATTRIBUTE_NORMAL = MeshVertexAttribute<float, 3>("Vertex_Normal", 1,
+                                                                        VertexFormat::kFloat32x3);
     /**
      * Texture coordinates for the vertex.
      *
      * Generally `[0.,0.]` is mapped to the top left of the texture, and `[1.,1.]` to the bottom-right.
      */
-    static MeshVertexAttribute<float, 2> ATTRIBUTE_UV0;
+    inline static auto ATTRIBUTE_UV0 = MeshVertexAttribute<float, 2>("Vertex_UV0", 2,
+                                                                     VertexFormat::kFloat32x2);
     /**
      * Alternate texture coordinates for the vertex.
      *
      * Typically, these are used for lightmaps, textures that provide precomputed illumination.
      */
-    static MeshVertexAttribute<float, 2> ATTRIBUTE_UV1;
+    inline static auto ATTRIBUTE_UV1 = MeshVertexAttribute<float, 2>("Vertex_UV1", 3,
+                                                                     VertexFormat::kFloat32x2);
     /**
      * The direction of the vertex tangent. Used for normal mapping.
      */
-    static MeshVertexAttribute<float, 4> ATTRIBUTE_TANGENT;
+    inline static auto ATTRIBUTE_TANGENT = MeshVertexAttribute<float, 4>("Vertex_Tangent", 4,
+
+                                                                         VertexFormat::kFloat32x4);
     /**
      * Per vertex coloring.
      */
-    static MeshVertexAttribute<float, 4> ATTRIBUTE_COLOR;
+    inline static auto ATTRIBUTE_COLOR = MeshVertexAttribute<float, 4>("Vertex_Color", 5,
+                                                                       VertexFormat::kFloat32x4);
     /**
      * Per vertex joint transform matrix weight.
      */
-    static MeshVertexAttribute<float, 4> ATTRIBUTE_JOINT_WEIGHTS;
+    inline static auto ATTRIBUTE_JOINT_WEIGHTS = MeshVertexAttribute<float, 4>("Vertex_JointWeights", 6,
+                                                                               VertexFormat::kFloat32x4);
     /**
      * Per vertex joint transform matrix index.
      */
-    static MeshVertexAttribute<uint16_t, 4> ATTRIBUTE_JOINT_INDEX;
+    inline static auto ATTRIBUTE_JOINT_INDEX = MeshVertexAttribute<uint16_t, 4>("Vertex_JointIndex", 7,
+                                                                                VertexFormat::kUint16x4);
 
   public:
     /**
@@ -448,7 +457,10 @@ namespace builtin_scene
     /**
      * @returns The mesh vertex attributes.
      */
-    inline std::unordered_map<MeshVertexAttributeId, std::shared_ptr<IMeshVertexAttributeData>> &attributes() { return attributes_; }
+    inline std::unordered_map<MeshVertexAttributeId, std::shared_ptr<IMeshVertexAttributeData>> &attributes()
+    {
+      return attributes_;
+    }
 
   public:
     /**
@@ -465,13 +477,4 @@ namespace builtin_scene
     MeshVertexBuffer vertexBuffer_;
     std::unordered_map<MeshVertexAttributeId, std::shared_ptr<IMeshVertexAttributeData>> attributes_{};
   };
-
-  MeshVertexAttribute<float, 3> Mesh::ATTRIBUTE_POSITION("Vertex_Position", 0, VertexFormat::kFloat32x3);
-  MeshVertexAttribute<float, 3> Mesh::ATTRIBUTE_NORMAL("Vertex_Normal", 1, VertexFormat::kFloat32x3);
-  MeshVertexAttribute<float, 2> Mesh::ATTRIBUTE_UV0("Vertex_UV0", 2, VertexFormat::kFloat32x2);
-  MeshVertexAttribute<float, 2> Mesh::ATTRIBUTE_UV1("Vertex_UV1", 3, VertexFormat::kFloat32x2);
-  MeshVertexAttribute<float, 4> Mesh::ATTRIBUTE_TANGENT("Vertex_Tangent", 4, VertexFormat::kFloat32x3);
-  MeshVertexAttribute<float, 4> Mesh::ATTRIBUTE_COLOR("Vertex_Color", 5, VertexFormat::kFloat32x3);
-  MeshVertexAttribute<float, 4> Mesh::ATTRIBUTE_JOINT_WEIGHTS("Vertex_JointWeights", 6, VertexFormat::kFloat32x4);
-  MeshVertexAttribute<uint16_t, 4> Mesh::ATTRIBUTE_JOINT_INDEX("Vertex_JointIndex", 7, VertexFormat::kFloat32x4);
 }

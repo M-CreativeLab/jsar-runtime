@@ -11,6 +11,8 @@
 #include <array>
 #include <memory>
 #include <vector>
+#include <unordered_map>
+#include <shared_mutex>
 #include <idgen.hpp>
 
 namespace builtin_scene::ecs
@@ -124,7 +126,14 @@ namespace builtin_scene::ecs
      *
      * @param app The ECS app to register the components and systems to.
      */
-    void build(App &app);
+    inline void build(App &app)
+    {
+      for (auto &pair : plugins_)
+      {
+        auto plugin = pair.second;
+        plugin->build(app);
+      }
+    }
 
   private:
     std::unordered_map<PluginName, uint8_t> pluginIds_{};
@@ -216,7 +225,7 @@ namespace builtin_scene::ecs
     EntityId id_;
 
   private:
-    static thread_local TrIdGenerator idGen_;
+    inline static thread_local TrIdGenerator idGen_ = TrIdGenerator(0, MAX_ENTITY_ID);
   };
 
   /**
@@ -295,7 +304,7 @@ namespace builtin_scene::ecs
     std::shared_ptr<T> insert(EntityId entity, std::shared_ptr<T> component);
     /**
      * Insert a new component with the given arguments to construct the component, then attach it to the entity.
-     * 
+     *
      * @tparam InitialzingArgs The types of the arguments to construct the component.
      * @param entity The entity to attach the component to.
      * @param args The arguments to construct the component.
@@ -382,7 +391,7 @@ namespace builtin_scene::ecs
 
     /**
      * Add the component of the given type to the given entity, with the provided arguments to construct the component.
-     * 
+     *
      * @tparam ComponentType The type of the component.
      * @tparam InitialzingArgs The types of the arguments to construct the component.
      * @param entity The entity to add the component to.
@@ -425,7 +434,14 @@ namespace builtin_scene::ecs
      *
      * @param entity The Id of the entity that has been destroyed.
      */
-    void onEntityDestroyed(EntityId entity);
+    inline void onEntityDestroyed(EntityId entity)
+    {
+      for (auto &pair : componentSets_)
+      {
+        auto componentSet = pair.second;
+        componentSet->onEntityDestroyed(entity);
+      }
+    }
 
     /**
      * Get the `ComponentSet` for the given component type.
@@ -454,8 +470,25 @@ namespace builtin_scene::ecs
     virtual ~ISystemSet() = default;
 
   public:
+    /**
+     * Add a new system to the set.
+     *
+     * @param system The system to add.
+     * @returns `true` if the system is added, `false` otherwise.
+     */
     bool addSystem(std::shared_ptr<System> system);
+    /**
+     * Remove the system of the given Id from the set.
+     *
+     * @param id The Id of the system to remove.
+     * @returns `true` if the system is removed, `false` otherwise.
+     */
     bool removeSystem(SystemId id);
+    /**
+     * Run all systems in the set once.
+     *
+     * This method should be called in the main loop of the app.
+     */
     void run();
 
   protected:
@@ -475,9 +508,7 @@ namespace builtin_scene::ecs
   class App : public std::enable_shared_from_this<App>
   {
   public:
-    App()
-    {
-    }
+    App() {}
 
   public:
     /**
@@ -531,6 +562,15 @@ namespace builtin_scene::ecs
      */
     template <typename ComponentType>
     std::shared_ptr<ComponentType> getComponent(EntityId entity);
+    /**
+     * Add component(s) to the entity.
+     * 
+     * @tparam ComponentTypeList The types of the components to add.
+     * @param entity The entity to add the components to.
+     * @param components The components to add.
+     */
+    template <typename... ComponentTypeList>
+    void addComponent(EntityId entity, ComponentTypeList... components);
     /**
      * Register a new component type to use in the app.
      *
@@ -750,7 +790,22 @@ namespace builtin_scene::ecs
      * @returns The component of the given type for the given entity or nullptr if not found.
      */
     template <typename ComponentType>
-    inline std::shared_ptr<ComponentType> getComponent(EntityId entity) { return connectedApp_->getComponent<ComponentType>(entity); }
+    inline std::shared_ptr<ComponentType> getComponent(EntityId entity)
+    {
+      return connectedApp_->getComponent<ComponentType>(entity);
+    }
+    /**
+     * Add component(s) to the entity.
+     * 
+     * @tparam ComponentTypeList The types of the components to add.
+     * @param entity The entity to add the components to.
+     * @param components The components to add.
+     */
+    template <typename... ComponentTypeList>
+    inline void addComponent(EntityId entity, ComponentTypeList... components)
+    {
+      (connectedApp_->addComponent(components), ...);
+    }
     /**
      * Get the resource of the given type.
      *
@@ -775,6 +830,6 @@ namespace builtin_scene::ecs
     std::shared_ptr<System> next_ = nullptr;
 
   private:
-    static thread_local TrIdGenerator idGen_;
+    inline static thread_local TrIdGenerator idGen_ = TrIdGenerator(0, MAX_SYSTEM_ID);
   };
 }

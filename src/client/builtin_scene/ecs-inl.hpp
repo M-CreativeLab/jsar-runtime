@@ -4,9 +4,6 @@
 
 namespace builtin_scene::ecs
 {
-  thread_local TrIdGenerator Entity::idGen_ = TrIdGenerator(0, MAX_ENTITY_ID);
-  thread_local TrIdGenerator System::idGen_ = TrIdGenerator(0, MAX_SYSTEM_ID);
-
   template <typename T>
   void PluginsManager::registerPlugin()
   {
@@ -34,15 +31,6 @@ namespace builtin_scene::ecs
     if (plugins_.find(name) == plugins_.end())
       throw std::runtime_error("Plugin(" + std::string(name) + ") not found.");
     return std::dynamic_pointer_cast<T>(plugins_[name]);
-  }
-
-  void PluginsManager::build(App &app)
-  {
-    for (auto &pair : plugins_)
-    {
-      auto plugin = pair.second;
-      plugin->build(app);
-    }
   }
 
   template <typename ResourceType>
@@ -148,37 +136,6 @@ namespace builtin_scene::ecs
     return componentIds_[name];
   }
 
-  void ComponentsManager::onEntityDestroyed(EntityId entity)
-  {
-    for (auto &pair : componentSets_)
-      pair.second->onEntityDestroyed(entity);
-  }
-
-  bool ISystemSet::addSystem(std::shared_ptr<System> system)
-  {
-    systems_.push_back(system);
-    return true;
-  }
-
-  bool ISystemSet::removeSystem(SystemId id)
-  {
-    for (auto it = systems_.begin(); it != systems_.end(); ++it)
-    {
-      if ((*it)->id() == id)
-      {
-        systems_.erase(it);
-        return true;
-      }
-    }
-    return false;
-  }
-
-  void ISystemSet::run()
-  {
-    for (auto &system : systems_)
-      system->runOnce();
-  }
-
   template <typename... ComponentTypeList>
   EntityId App::spawn(ComponentTypeList... components)
   {
@@ -268,60 +225,14 @@ namespace builtin_scene::ecs
   template <typename ComponentType>
   std::shared_ptr<ComponentType> App::getComponent(EntityId entity)
   {
+    std::shared_lock<std::shared_mutex> lock(mutexForEntities_);
     return componentsMgr_.getComponent<ComponentType>(entity);
   }
 
-  SystemId App::addSystem(SchedulerLabel label, std::shared_ptr<System> system)
+  template <typename... ComponentTypeList>
+  void App::addComponent(EntityId entity, ComponentTypeList... components)
   {
-    if (system == nullptr)
-      throw std::runtime_error("System is null.");
-
-    std::unique_lock<std::shared_mutex> lock(mutexForSystems_);
-    if (systemSets_.find(label) == systemSets_.end())
-      systemSets_[label] = std::make_shared<LabeledSystemSet<SchedulerLabel>>();
-    auto systemSet = std::static_pointer_cast<LabeledSystemSet<SchedulerLabel>>(systemSets_[label]);
-    systemSet->addSystem(system);
-    system->connect(shared_from_this());
-    return system->id();
-  }
-
-  void App::removeSystem(SystemId id)
-  {
-    std::unique_lock<std::shared_mutex> lock(mutexForSystems_);
-    for (auto &pair : systemSets_)
-    {
-      auto systemSet = pair.second;
-      systemSet->removeSystem(id);
-    }
-  }
-
-  void App::startup()
-  {
-    // Build the plugins.
-    pluginsMgr_.build(*this);
-
-    // Schedule the "startup" systems.
-    runSystems(SchedulerLabel::kPreStartup);
-    runSystems(SchedulerLabel::kStartup);
-    runSystems(SchedulerLabel::kPostStartup);
-  }
-
-  void App::update()
-  {
-    runSystems(SchedulerLabel::kFirst);
-    runSystems(SchedulerLabel::kPreUpdate);
-    runSystems(SchedulerLabel::kStateTransition);
-    runSystems(SchedulerLabel::kUpdate);
-    runSystems(SchedulerLabel::kPostUpdate);
-    runSystems(SchedulerLabel::kLast);
-  }
-
-  void App::runSystems(SchedulerLabel label)
-  {
-    std::shared_lock<std::shared_mutex> lock(mutexForSystems_);
-    if (systemSets_.find(label) == systemSets_.end())
-      return;
-    auto systemSet = systemSets_[label];
-    systemSet->run();
+    std::unique_lock<std::shared_mutex> lock(mutexForEntities_);
+    (componentsMgr_.addComponent(entity, components), ...);
   }
 }

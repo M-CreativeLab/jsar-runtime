@@ -9,9 +9,9 @@ namespace math
   class Quat : public glm::quat
   {
   public:
-    static Quat Identity;
-    static Quat Zero;
-    static Quat Nan;
+    static Quat Identity() { return Quat::FromXYZW(0, 0, 0, 1); }
+    static Quat Zero() { return Quat(0, 0, 0, 0); }
+    static Quat Nan() { return Quat(NAN, NAN, NAN, NAN); }
 
   public:
     /**
@@ -65,7 +65,7 @@ namespace math
       float dot = fromNorm.dot(toNorm);
       if (dot > ONE_MINUS_EPS)
       {
-        return Quat::Identity;
+        return Quat::Identity();
       }
       else if (dot < -ONE_MINUS_EPS)
       {
@@ -100,8 +100,4 @@ namespace math
       return !(*this == rhs);
     }
   };
-
-  Quat Quat::Identity(1, 0, 0, 0);
-  Quat Quat::Zero(0, 0, 0, 0);
-  Quat Quat::Nan(NAN, NAN, NAN, NAN);
 }

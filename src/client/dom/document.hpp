@@ -52,16 +52,16 @@ namespace dom
     string contentType = "text/html";
 
   public:
-    shared_ptr<BrowsingContext> browsingContext;
-    shared_ptr<Element> documentElement;
+    std::shared_ptr<BrowsingContext> browsingContext;
+    std::shared_ptr<Element> documentElement;
 
   protected:
     bool autoConnect;
-    shared_ptr<pugi::xml_document> docInternal;
-    shared_ptr<HTMLHeadElement> headElement;
-    shared_ptr<HTMLBodyElement> bodyElement;
-    std::vector<shared_ptr<Element>> allElementsList;
-    std::map<string, shared_ptr<Element>> elementMapById;
+    std::shared_ptr<pugi::xml_document> docInternal;
+    std::shared_ptr<HTMLHeadElement> headElement;
+    std::shared_ptr<HTMLBodyElement> bodyElement;
+    std::vector<std::shared_ptr<Element>> allElementsList;
+    std::map<string, std::shared_ptr<Element>> elementMapById;
 
   private:
     bool isSourceLoaded = false;

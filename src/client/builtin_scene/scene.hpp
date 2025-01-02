@@ -123,7 +123,7 @@ namespace builtin_scene
           hierarchy::Element(name),
           hierarchy::Children(),
           hierarchy::Parent(),
-          Transform());
+          Transform::FromXYZ(0.0f, 0.0f, 0.0f));
     }
 
   private:
@@ -143,16 +143,6 @@ namespace builtin_scene
         xrExperience->updateReferenceSpace(
             xrSession_->requestReferenceSpace(client_xr::XRReferenceSpaceType::kLocal));
       }
-
-      // Spawn the default mesh
-      // {
-      //   auto meshes = getResource<Meshes>();
-      //   auto materials = getResource<Materials>();
-      //   spawn(
-      //       Mesh3d(meshes->add(MeshBuilder::CreateBox(0.25f, 0.20f, 0.05f))),
-      //       MeshMaterial3d(materials->add(Material::Make<materials::NormalMaterial>())),
-      //       Transform::FromScale(0.7f).withTranslation(0.0f, 0.0f, 0.1f));
-      // }
     }
     void update(uint32_t time, std::shared_ptr<client_xr::XRFrame> frame)
     {
