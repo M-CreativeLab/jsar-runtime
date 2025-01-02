@@ -5,6 +5,7 @@
 #include <client/graphics/webgl_context.hpp>
 #include "./ecs-inl.hpp"
 #include "./mesh_material.hpp"
+#include "./transform.hpp"
 #include "./xr.hpp"
 
 namespace builtin_scene
@@ -21,14 +22,28 @@ namespace builtin_scene
     }
 
   public:
+    /**
+     * @returns The WebGL context of the renderer.
+     */
     std::shared_ptr<client_graphics::WebGL2Context> glContext() const
     {
       return glContext_;
     }
+    /**
+     * Set the viewport of the renderer.
+     *
+     * @param viewport The viewport to set.
+     */
     void setViewport(client_xr::XRViewport &viewport)
     {
       glContext_->viewport(viewport.x, viewport.y, viewport.width, viewport.height);
     }
+    /**
+     * Initialize the mesh with the given WebGL context, it will create the vertex array object,
+     * vertex buffer object, and element buffer object, and upload the data to the GPU.
+     *
+     * @param mesh3d The mesh to initialize.
+     */
     void initializeMesh3d(std::shared_ptr<Mesh3d> mesh3d)
     {
       // client_graphics::WebGLState clientState = glContext_->clientState();
@@ -68,6 +83,16 @@ namespace builtin_scene
       }
       mesh3d->initialize(vao);
     }
+    /**
+     * Initialize the mesh material with the given WebGL context, it will create the program, shaders
+     * and link the program.
+     *
+     * It will also initialize the `MeshMaterial3d` instance after the program is created, it will
+     * set the initial transformation matrix to the program, set the default uniform values of the
+     * related fragment shader.
+     *
+     * @param meshMaterial3d The mesh material to initialize.
+     */
     void initializeMeshMaterial3d(std::shared_ptr<MeshMaterial3d> meshMaterial3d)
     {
       auto program = glContext_->createProgram();
@@ -83,26 +108,21 @@ namespace builtin_scene
 
       {
         client_graphics::WebGLProgramScope programScope(glContext_, program);
-        auto viewProjectionLoc = glContext_->getUniformLocation(program, "viewProjection");
-        auto modelMatrixLoc = glContext_->getUniformLocation(program, "modelMatrix");
-        {
-          glm::mat4 identity(1.0f);
-          std::vector<float> modelMatrix;
-          for (int i = 0; i < 16; i++)
-            modelMatrix.push_back(identity[i / 4][i % 4]);
-
-          MatrixComputationGraph viewProjectionCG(WebGLMatrixPlaceholderId::ViewProjectionMatrix, MatrixHandedness::MATRIX_RIGHT_HANDED);
-          glContext_->uniformMatrix4fv(viewProjectionLoc.value(), false, viewProjectionCG);
-          glContext_->uniformMatrix4fv(modelMatrixLoc.value(), false, modelMatrix);
-
-          auto surfaceColorLoc = glContext_->getUniformLocation(program, "surfaceColor");
-          glm::vec4 surfaceColor(1.0f, 1.0f, 1.0f, 1.0f);
-          glContext_->uniform4f(surfaceColorLoc.value(), surfaceColor.r, surfaceColor.g, surfaceColor.b, surfaceColor.a);
-        }
+        updateTransformationMatrix(program, nullptr, true); // forcily update the transformation matrix.
+        meshMaterial3d->initialize(glContext_, program);
       }
-      meshMaterial3d->initialize(program);
     }
-    void renderMesh3d(std::shared_ptr<Mesh3d> mesh, std::shared_ptr<MeshMaterial3d> material, std::shared_ptr<client_xr::XRView> xrView)
+    /**
+     * Draw the `Mesh3d` with the given `MeshMaterial3d` and `XRView`.
+     *
+     * @param mesh The mesh to draw.
+     * @param material The material to draw the mesh with.
+     * @param transform The transform of the mesh.
+     * @param xrView The XR view to draw the mesh with.
+     */
+    void drawMesh3d(std::shared_ptr<Mesh3d> mesh, std::shared_ptr<MeshMaterial3d> material,
+                    std::shared_ptr<Transform> transform,
+                    std::shared_ptr<client_xr::XRView> xrView)
     {
       glContext_->enable(WEBGL_DEPTH_TEST);
       glContext_->depthMask(true);
@@ -110,17 +130,9 @@ namespace builtin_scene
       assert(mesh != nullptr && material != nullptr);
       client_graphics::WebGLProgramScope programScope(glContext_, material->program());
 
-      auto viewProjectionLoc = glContext_->getUniformLocation(programScope.program(), "viewProjection");
-      if (xrView != nullptr && xrView->eye() == client_xr::XREye::kRight)
-      {
-        MatrixComputationGraph viewProjectionCG(WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye, MatrixHandedness::MATRIX_RIGHT_HANDED);
-        glContext_->uniformMatrix4fv(viewProjectionLoc.value(), false, viewProjectionCG);
-      }
-      else
-      {
-        MatrixComputationGraph viewProjectionCG(WebGLMatrixPlaceholderId::ViewProjectionMatrix, MatrixHandedness::MATRIX_RIGHT_HANDED);
-        glContext_->uniformMatrix4fv(viewProjectionLoc.value(), false, viewProjectionCG);
-      }
+      // Update matrices
+      updateViewProjectionMatrix(programScope.program(), xrView);
+      updateTransformationMatrix(programScope.program(), transform);
 
       // Draw the mesh
       {
@@ -130,6 +142,74 @@ namespace builtin_scene
                                  WEBGL_UNSIGNED_INT,
                                  0);
       }
+    }
+    /**
+     * Update the view projection matrix.
+     *
+     * @param program The WebGL program to update the view projection matrix with.
+     * @param xrView The XR view to update the view projection matrix with.
+     */
+    void updateViewProjectionMatrix(std::shared_ptr<client_graphics::WebGLProgram> program,
+                                    std::shared_ptr<client_xr::XRView> xrView)
+    {
+      assert(program != nullptr);
+
+      auto viewProjectionLoc = glContext_->getUniformLocation(program, "viewProjection");
+      if (!viewProjectionLoc.has_value())
+        throw std::runtime_error("The viewProjection uniform location is not found.");
+
+      auto handedness = MatrixHandedness::MATRIX_RIGHT_HANDED;
+      if (xrView != nullptr && xrView->eye() == client_xr::XREye::kRight)
+      {
+        MatrixComputationGraph viewProjectionCG(WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye, handedness);
+        glContext_->uniformMatrix4fv(viewProjectionLoc.value(), false, viewProjectionCG);
+      }
+      else
+      {
+        MatrixComputationGraph viewProjectionCG(WebGLMatrixPlaceholderId::ViewProjectionMatrix, handedness);
+        glContext_->uniformMatrix4fv(viewProjectionLoc.value(), false, viewProjectionCG);
+      }
+    }
+    /**
+     * Update the transformation matrix for the given program and mesh.
+     *
+     * If the `forceUpdate` is `false`, this method will only update the transformation matrix if the
+     * transform is dirty to avoid unnecessary updates. Otherwise, it will always update the transformation
+     * matrix.
+     *
+     * @param program The WebGL program to update the transformation matrix with.
+     * @param transform The transform to update the transformation matrix with, `nullptr` for the identity matrix.
+     * @param forceUpdate Whether to force update the transformation matrix.
+     */
+    void updateTransformationMatrix(std::shared_ptr<client_graphics::WebGLProgram> program,
+                                    std::shared_ptr<Transform> transform,
+                                    bool forceUpdate = false)
+    {
+      assert(program != nullptr);
+
+      glm::mat4 matToUpdate;
+      if (transform == nullptr || !transform->isDirty())
+      {
+        if (!forceUpdate)
+          return;
+
+        if (transform != nullptr)
+          matToUpdate = transform->matrix();
+        else
+        {
+          auto identity = Transform::Identity;
+          matToUpdate = identity.matrix();
+        }
+      }
+      else
+      {
+        matToUpdate = transform->matrix();
+      }
+
+      auto loc = glContext_->getUniformLocation(program, "modelMatrix");
+      if (!loc.has_value())
+        throw std::runtime_error("The modelMatrix uniform location is not found.");
+      glContext_->uniformMatrix4fv(loc.value(), false, matToUpdate);
     }
 
   private:
@@ -200,7 +280,10 @@ namespace builtin_scene
         renderer.initializeMesh3d(meshComponent);
       if (!materialComponent->initialized())
         renderer.initializeMeshMaterial3d(materialComponent);
-      renderer.renderMesh3d(meshComponent, materialComponent, view);
+      renderer.drawMesh3d(meshComponent,
+                          materialComponent,
+                          getComponent<Transform>(mesh),
+                          view);
     }
   };
 }

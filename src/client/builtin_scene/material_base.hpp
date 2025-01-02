@@ -2,6 +2,8 @@
 
 #include "./asset.hpp"
 #include "./shader_base.hpp"
+#include <client/graphics/webgl_context.hpp>
+#include <client/graphics/webgl_program.hpp>
 
 namespace builtin_scene
 {
@@ -41,6 +43,18 @@ namespace builtin_scene
     virtual ShaderRef fragmentShader()
     {
       return ShaderRef("materials/default.frag");
+    }
+    /**
+     * Initialize the material with the given program.
+     *
+     * @param glContext The WebGL context to initialize the material with.
+     * @param program The WebGL program to initialize the material with.
+     * @returns Whether the material is initialized successfully.
+     */
+    virtual bool initialize(std::shared_ptr<client_graphics::WebGL2Context> glContext,
+                            std::shared_ptr<client_graphics::WebGLProgram> program)
+    {
+      return true;
     }
   };
 }

@@ -25,13 +25,23 @@ namespace builtin_scene
     {
       return program_;
     }
-    inline void initialize(std::shared_ptr<client_graphics::WebGLProgram> program)
+    /**
+     * Initialize the `MeshMaterial3d` instance with the given WebGL context and program.
+     *
+     * @param glContext The WebGL context to use.
+     * @param program The WebGL program to use.
+     */
+    inline void initialize(std::shared_ptr<client_graphics::WebGL2Context> glContext,
+                           std::shared_ptr<client_graphics::WebGLProgram> program)
     {
       if (program == nullptr)
         throw std::runtime_error("The program is not initialized.");
 
-      program_ = program;
-      initialized_ = true;
+      if (handle_->initialize(glContext, program))
+      {
+        program_ = program;
+        initialized_ = true;
+      }
     }
     inline bool initialized() { return initialized_; }
     inline ShaderRef vertexShader() const
