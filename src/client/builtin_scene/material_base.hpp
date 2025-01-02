@@ -1,9 +1,12 @@
 #pragma once
 
-#include "./asset.hpp"
-#include "./shader_base.hpp"
+#include <memory>
+#include <vector>
+#include <string>
 #include <client/graphics/webgl_context.hpp>
 #include <client/graphics/webgl_program.hpp>
+#include "./asset.hpp"
+#include "./shader_base.hpp"
 
 namespace builtin_scene
 {
@@ -30,6 +33,13 @@ namespace builtin_scene
     virtual ~Material() = default;
 
   public:
+    /**
+     * @returns The list of defines for the material.
+     */
+    virtual const std::vector<std::string> defines() const
+    {
+      return {};
+    }
     /**
      * @returns The vertex shader for the material.
      */

@@ -98,8 +98,10 @@ namespace builtin_scene
       auto program = glContext_->createProgram();
       auto vertexShader = glContext_->createShader(client_graphics::WebGLShaderType::kVertex);
       auto fragmentShader = glContext_->createShader(client_graphics::WebGLShaderType::kFragment);
-      glContext_->shaderSource(vertexShader, meshMaterial3d->vertexShader().shader().source);
-      glContext_->shaderSource(fragmentShader, meshMaterial3d->fragmentShader().shader().source);
+      glContext_->shaderSource(vertexShader,
+                               meshMaterial3d->getShaderSource(client_graphics::WebGLShaderType::kVertex));
+      glContext_->shaderSource(fragmentShader,
+                               meshMaterial3d->getShaderSource(client_graphics::WebGLShaderType::kFragment));
       glContext_->compileShader(vertexShader);
       glContext_->compileShader(fragmentShader);
       glContext_->attachShader(program, vertexShader);

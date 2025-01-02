@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <string>
 #include "./shaders_store.gen.hpp"
 
@@ -13,14 +14,21 @@ namespace builtin_scene
   public:
     /**
      * Preprocess the source code of a shader.
-     * 
+     *
      * @param source The source code of the shader.
+     * @param defines The list of defines to add to the shader.
      * @return The preprocessed source code of the shader.
      */
-    static std::string PreprocessSource(std::string source)
+    static std::string PreprocessSource(std::string source, const std::vector<std::string> &defines)
     {
       // Add WebGL 2.0 version: #version 300 es
       source = "#version 300 es\n" + source;
+
+      // Add the defines
+      for (const auto &define : defines)
+        source = "#define " + define + "\n" + source;
+
+      // Return the preprocessed source
       return source;
     }
 
@@ -34,8 +42,8 @@ namespace builtin_scene
   class ShaderSource
   {
   public:
-    ShaderSource(std::string name, std::string source)
-        : name(name), source(ShaderPreprocessor::PreprocessSource(source))
+    ShaderSource(std::string name, std::string source, const std::vector<std::string> &defines)
+        : name(name), source(ShaderPreprocessor::PreprocessSource(source, defines))
     {
     }
 
@@ -52,7 +60,7 @@ namespace builtin_scene
   public:
     /**
      * Construct a `ShaderRef` object with the given name.
-     * 
+     *
      * @param name The relative path of the builtin shader, such as "materials/color.frag".
      */
     ShaderRef(std::string name) : name(name)
@@ -61,11 +69,14 @@ namespace builtin_scene
 
   public:
     /**
-     * @returns The `ShaderSource` object of the shader.
+     * Get the `ShaderSource` object of the shader.
+     *
+     * @param defines The list of defines to add to the shader.
+     * @returns The `ShaderSource` object.
      */
-    ShaderSource shader() const
+    ShaderSource shader(const std::vector<std::string> &defines = {}) const
     {
-      return ShaderSource(name, shaders::SHADERS_STORE.at(name));
+      return ShaderSource(name, shaders::SHADERS_STORE.at(name), defines);
     }
 
   public:

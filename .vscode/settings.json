@@ -95,7 +95,8 @@
     "forward_list": "cpp",
     "list": "cpp",
     "memory_resource": "cpp",
-    "__availability": "cpp"
+    "__availability": "cpp",
+    "span": "cpp"
   },
   "cmake.buildDirectory": "${workspaceFolder}/build/targets/darwin",
   "C_Cpp.default.cppStandard": "c++17",

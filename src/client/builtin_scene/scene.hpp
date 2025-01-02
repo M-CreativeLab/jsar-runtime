@@ -152,7 +152,7 @@ namespace builtin_scene
       // Spawn the default mesh
       // spawn(
       //     Mesh3d(meshes->add(MeshBuilder::CreateBox(0.25f, 0.20f, 0.05f))),
-      //     MeshMaterial3d(materials->add(materials::ColorMaterial::Blue())),
+      //     MeshMaterial3d(materials->add(Material::Make<materials::NormalMaterial>())),
       //     Transform::FromScale(0.7f).withTranslation(0.0f, 0.0f, 0.1f));
     }
     void update(uint32_t time, std::shared_ptr<client_xr::XRFrame> frame)

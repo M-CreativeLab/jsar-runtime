@@ -21,7 +21,7 @@ namespace builtin_scene
     }
 
   public:
-    inline std::shared_ptr<client_graphics::WebGLProgram> program()
+    inline std::shared_ptr<client_graphics::WebGLProgram> program() const
     {
       return program_;
     }
@@ -43,14 +43,26 @@ namespace builtin_scene
         initialized_ = true;
       }
     }
-    inline bool initialized() { return initialized_; }
-    inline ShaderRef vertexShader() const
+    /**
+     * @returns Whether the material is initialized.
+     */
+    inline bool initialized() const { return initialized_; }
+    /**
+     * Get the shader source of this material.
+     * 
+     * @param type The type of the shader, either vertex or fragment.
+     * @returns The shader source.
+     * @throws std::runtime_error If the shader type is not vertex or fragment.
+     */
+    inline std::string getShaderSource(client_graphics::WebGLShaderType type) const
     {
-      return handle_->vertexShader();
-    }
-    inline ShaderRef fragmentShader() const
-    {
-      return handle_->fragmentShader();
+      const auto& defines = handle_->defines();
+      if (type == client_graphics::WebGLShaderType::kVertex)
+        return handle_->vertexShader().shader(defines).source;
+      else if (type == client_graphics::WebGLShaderType::kFragment)
+        return handle_->fragmentShader().shader(defines).source;
+      else
+        throw std::runtime_error("The shader type is not supported.");
     }
 
   private:
