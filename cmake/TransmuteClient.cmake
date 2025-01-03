@@ -12,6 +12,7 @@ file(GLOB TR_CLIENT_SOURCE
     "src/bindings/webxr/*.cpp"
     "src/client/*.cpp"
     "src/client/**/*.cpp"
+    "src/client/**/**/*.cpp"
     "src/pugixml/*.cpp"
 )
 
