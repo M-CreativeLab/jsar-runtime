@@ -1,5 +1,5 @@
 #include "./html_element.hpp"
-#include "./document.hpp"
+#include "./document-inl.hpp"
 
 namespace dom
 {
@@ -12,9 +12,18 @@ namespace dom
 
   void HTMLElement::connectedCallback()
   {
+    // 1. Create the rendering entity.
     auto sceneRef = scene();
     if (sceneRef != nullptr)
       entity_ = sceneRef->createElement(tagName);
+
+    // 2. Create the layout node.
+    auto layoutAllocator = documentLayoutAllocator();
+    if (layoutAllocator != nullptr)
+    {
+      layoutNode_ = std::make_shared<crates::jsar::layout::Node>(*layoutAllocator);
+      // TODO: Append this node to the parent layout node.
+    }
   }
 
   void HTMLElement::renderElement(builtin_scene::Scene &scene)
@@ -30,5 +39,13 @@ namespace dom
     return ownerDocumentRef == nullptr
                ? nullptr
                : ownerDocumentRef->scene;
+  }
+
+  std::shared_ptr<crates::jsar::layout::Allocator> HTMLElement::documentLayoutAllocator()
+  {
+    auto documentRef = Document::As<HTMLDocument>(ownerDocument->lock());
+    return documentRef == nullptr
+               ? nullptr
+               : documentRef->layoutAllocator();
   }
 }

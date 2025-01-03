@@ -20,11 +20,31 @@ namespace dom
     LIMITED_QUIRKS,
   };
 
+  enum class DocumentType
+  {
+    kHTML,
+    kXML,
+  };
+
   class BrowsingContext;
   class Document : public Node
   {
   public:
-    Document(std::string contentType, std::shared_ptr<BrowsingContext> browsingContext, bool autoConnect = false);
+    /**
+     * Cast the document to a specific document type.
+     *
+     * @tparam T The document type to cast to, must be a subclass of `Document`.
+     * @param document The document to cast.
+     * @returns The casted document.
+     */
+    template <typename T>
+      requires std::is_base_of_v<Document, T>
+    static std::shared_ptr<T> As(std::shared_ptr<Document> document);
+
+  public:
+    Document(std::string contentType, DocumentType documentType,
+             std::shared_ptr<BrowsingContext> browsingContext,
+             bool autoConnect = false);
     Document(Document &other);
     virtual ~Document() = default;
 
@@ -47,6 +67,7 @@ namespace dom
 
   public:
     DocumentCompatMode compatMode = DocumentCompatMode::NO_QUIRKS;
+    DocumentType documentType = DocumentType::kHTML;
     std::string contentType = "text/html";
 
   public:
@@ -73,12 +94,18 @@ namespace dom
   class XMLDocument : public Document
   {
   public:
+    inline static const DocumentType kDocumentType = DocumentType::kXML;
+
+  public:
     XMLDocument(std::shared_ptr<BrowsingContext> browsingContext, bool autoConnect);
     ~XMLDocument() = default;
   };
 
   class HTMLDocument : public Document
   {
+  public:
+    inline static const DocumentType kDocumentType = DocumentType::kHTML;
+
   public:
     /**
      * Create a new HTMLDocument from a string source.
@@ -88,5 +115,19 @@ namespace dom
      */
     HTMLDocument(std::shared_ptr<BrowsingContext> browsingContext, bool autoConnect);
     ~HTMLDocument() = default;
+
+  public:
+    /**
+     * Get the layout allocator for the document.
+     * 
+     * @returns The layout allocator.
+     */
+    inline std::shared_ptr<crates::jsar::layout::Allocator> layoutAllocator() const
+    {
+      return layoutAllocator_;
+    }
+
+  private:
+    std::shared_ptr<crates::jsar::layout::Allocator> layoutAllocator_;
   };
 }

@@ -4,7 +4,7 @@
 #include <client/builtin_scene/ecs-inl.hpp>
 
 #include "./element.hpp"
-#include "./document.hpp"
+#include "./document-inl.hpp"
 #include "./browsing_context.hpp"
 
 namespace dom
@@ -12,9 +12,12 @@ namespace dom
   using namespace std;
   using namespace pugi;
 
-  Document::Document(string contentType, shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
+  Document::Document(string contentType, DocumentType documentType,
+                     shared_ptr<BrowsingContext> browsingContext,
+                     bool autoConnect)
       : Node(NodeType::DOCUMENT_NODE, "#document", std::nullopt),
         contentType(contentType),
+        documentType(documentType),
         scene(TrClientContextPerProcess::Get()->builtinScene),
         browsingContext(browsingContext),
         autoConnect(autoConnect)
@@ -28,6 +31,7 @@ namespace dom
       : Node(other),
         compatMode(other.compatMode),
         contentType(other.contentType),
+        documentType(other.documentType),
         scene(other.scene),
         browsingContext(other.browsingContext),
         documentElement(other.documentElement),
@@ -197,7 +201,7 @@ namespace dom
   }
 
   XMLDocument::XMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
-      : Document("text/xml", browsingContext, autoConnect)
+      : Document("text/xml", DocumentType::kXML, browsingContext, autoConnect)
   {
   }
 
@@ -207,8 +211,7 @@ namespace dom
   public:
     RenderHTMLDocument(HTMLDocument *document)
         : builtin_scene::ecs::System(),
-          document_(document),
-          layoutAllocator_(std::make_unique<crates::jsar::layout::Allocator>())
+          document_(document)
     {
     }
 
@@ -223,13 +226,14 @@ namespace dom
 
       // Step 1: Compute the elements' styles.
       iterateElementWithChildren(body, [](shared_ptr<HTMLElement> element)
-                                 {
-                             // Compute the style of the element.
-                             // TODO: use computeStyle() method to compute the style.
-                             element->adoptedStyle_ = element->style; });
+                                 { element->adoptedStyle_ = element->style; });
 
       // Step 2: Compute the layout of all the elements.
-      // TODO
+      if (body->layoutNode_ != nullptr)
+      {
+        body->layoutNode_->computeLayout(1024.0f, 1024.0f);
+        // TODO: iterate the layout tree to update the position of each element.
+      }
 
       // Step 3: Call the renderElement method of each element to draw the element.
       iterateElementWithChildren(body, [scene](shared_ptr<HTMLElement> element)
@@ -239,7 +243,7 @@ namespace dom
   private:
     void iterateElementWithChildren(shared_ptr<HTMLElement> element, std::function<void(shared_ptr<HTMLElement>)> callback)
     {
-      if (element == nullptr)
+      if (TR_UNLIKELY(element == nullptr))
         return;
 
       for (auto childNode : element->childNodes)
@@ -255,11 +259,11 @@ namespace dom
 
   private:
     HTMLDocument *document_ = nullptr;
-    std::unique_ptr<crates::jsar::layout::Allocator> layoutAllocator_;
   };
 
   HTMLDocument::HTMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
-      : Document("text/html", browsingContext, autoConnect)
+      : Document("text/html", DocumentType::kHTML, browsingContext, autoConnect),
+        layoutAllocator_(std::make_shared<crates::jsar::layout::Allocator>())
   {
     {
       // Configure the built-in scene for the HTML rendering.
