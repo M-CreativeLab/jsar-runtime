@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string>
+#include <iostream>
 
 extern "C"
 {
@@ -113,6 +114,70 @@ extern "C"
    * @param output The transpiled TypeScript output to release.
    */
   extern void release_transpiled_typescript_output(TranspiledTypeScriptOutput output);
+
+  // Layout structs
+  typedef void *TaffyTree;
+  typedef void *TaffyNode;
+  enum class TaffyDisplay : int32_t
+  {
+    kBlock = 0,
+    kFlex,
+    kGrid,
+    kNone,
+  };
+  enum class TaffyPosition : int32_t
+  {
+    kRelative = 0,
+    kAbsolute,
+  };
+  enum class TaffyDimension : int32_t
+  {
+    kLength = 0,
+    kPercent,
+    kAuto,
+  };
+  struct TaffyStyle
+  {
+    TaffyDisplay display;
+    TaffyPosition position;
+    TaffyDimension width;
+    TaffyDimension height;
+    float width_value;
+    float height_value;
+    float flex_grow;
+    float flex_shrink;
+  };
+  struct TaffyLayoutOutput
+  {
+    float width;
+    float height;
+    float x;
+    float y;
+    float border_top;
+    float border_right;
+    float border_bottom;
+    float border_left;
+    float padding_top;
+    float padding_right;
+    float padding_bottom;
+    float padding_left;
+  };
+
+  // Layout functions
+  extern TaffyTree *taffy_tree_new();
+  extern void taffy_tree_free(TaffyTree *tree);
+  extern TaffyNode *taffy_node_new(TaffyTree *tree);
+  extern void taffy_node_free(TaffyNode *node);
+  extern void taffy_node_add_child(TaffyNode *parent, TaffyNode *child);
+  extern void taffy_node_remove_child(TaffyNode *parent, TaffyNode *child);
+  extern TaffyStyle taffy_node_get_style(TaffyNode *node);
+  extern void taffy_node_set_style(TaffyNode *node, TaffyStyle style);
+  extern void taffy_node_mark_dirty(TaffyNode *node);
+  extern bool taffy_node_is_dirty(TaffyNode *node);
+  extern bool taffy_node_is_childless(TaffyNode *node);
+  extern size_t taffy_node_get_child_count(TaffyNode *node);
+  extern void taffy_node_compute_layout(TaffyNode *node, float parent_width, float parent_height);
+  extern TaffyLayoutOutput taffy_node_get_layout(TaffyNode *node);
 } // extern "C"
 
 namespace crates
@@ -333,6 +398,120 @@ namespace crates
           release_rust_cstring(patchedSourceStr);
           return patchedSource;
         }
+      };
+    }
+
+    namespace layout
+    {
+      class Allocator
+      {
+        friend class Node;
+
+      public:
+        Allocator()
+        {
+          tree_ = taffy_tree_new();
+        }
+
+        ~Allocator()
+        {
+          taffy_tree_free(tree_);
+        }
+
+      private:
+        TaffyTree *tree_;
+      };
+
+      template <typename T>
+      class Rect
+      {
+      public:
+        Rect(T top, T right, T bottom, T left)
+            : top_(top), right_(right), bottom_(bottom), left_(left) {}
+
+      public:
+        T top() { return top_; }
+        T right() { return right_; }
+        T bottom() { return bottom_; }
+        T left() { return left_; }
+
+      private:
+        T top_;
+        T right_;
+        T bottom_;
+        T left_;
+      };
+
+      class Layout
+      {
+      public:
+        Layout(TaffyLayoutOutput output) : data_(output) {}
+
+      public:
+        inline float width() const { return data_.width; }
+        inline float height() const { return data_.height; }
+        inline float x() const { return data_.x; }
+        inline float y() const { return data_.y; }
+        inline Rect<float> border() const
+        {
+          return Rect<float>(data_.border_top,
+                             data_.border_right,
+                             data_.border_bottom,
+                             data_.border_left);
+        }
+        inline Rect<float> padding() const
+        {
+          return Rect<float>(data_.padding_top,
+                             data_.padding_right,
+                             data_.padding_bottom,
+                             data_.padding_left);
+        }
+
+      public:
+        // custom std >> operator
+        friend std::ostream &operator<<(std::ostream &os, const Layout &layout)
+        {
+          os << "Layout {";
+          os << " width: " << layout.width() << ",";
+          os << " height: " << layout.height() << ",";
+          os << " x: " << layout.x() << ",";
+          os << " y: " << layout.y() << " }";
+          os << std::endl;
+          return os;
+        }
+
+      private:
+        TaffyLayoutOutput data_;
+      };
+
+      class Node
+      {
+      public:
+        Node(Allocator &allocator)
+        {
+          node_ = taffy_node_new(allocator.tree_);
+        }
+        ~Node()
+        {
+          taffy_node_free(node_);
+        }
+
+      public:
+        inline void addChild(Node &child) { taffy_node_add_child(node_, child.node_); }
+        inline void removeChild(Node &child) { taffy_node_remove_child(node_, child.node_); }
+        inline size_t childCount() { return taffy_node_get_child_count(node_); }
+        inline TaffyStyle style() { return taffy_node_get_style(node_); }
+        inline void setStyle(TaffyStyle style) { taffy_node_set_style(node_, style); }
+        inline void markDirty() { taffy_node_mark_dirty(node_); }
+        inline bool isDirty() { return taffy_node_is_dirty(node_); }
+        inline void computeLayout(float width, float height)
+        {
+          taffy_node_compute_layout(node_, width, height);
+        }
+        inline Layout layout() { return Layout(taffy_node_get_layout(node_)); }
+
+      private:
+        TaffyNode *node_;
       };
     }
   }

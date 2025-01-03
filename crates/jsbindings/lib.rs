@@ -17,6 +17,7 @@ use style::values::specified::color::Color;
 use style_traits::ParsingMode;
 use url::Url;
 
+mod layout;
 mod glsl_transpiler;
 mod typescript_transpiler;
 

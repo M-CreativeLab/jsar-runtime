@@ -1,4 +1,5 @@
 #include <iostream>
+#include <crates/jsar_jsbindings.h>
 #include <client/per_process.hpp>
 #include <client/builtin_scene/ecs-inl.hpp>
 
@@ -206,7 +207,8 @@ namespace dom
   public:
     RenderHTMLDocument(HTMLDocument *document)
         : builtin_scene::ecs::System(),
-          document_(document)
+          document_(document),
+          layoutAllocator_(std::make_unique<crates::jsar::layout::Allocator>())
     {
     }
 
@@ -253,6 +255,7 @@ namespace dom
 
   private:
     HTMLDocument *document_ = nullptr;
+    std::unique_ptr<crates::jsar::layout::Allocator> layoutAllocator_;
   };
 
   HTMLDocument::HTMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
