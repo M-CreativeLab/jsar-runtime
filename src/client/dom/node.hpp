@@ -3,9 +3,10 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "pugixml/pugixml.hpp"
-#include "common/utility.hpp"
-#include "common/events_v2/event_target.hpp"
+#include <pugixml/pugixml.hpp>
+#include <common/utility.hpp>
+#include <common/events_v2/event_target.hpp>
+#include <client/macros.h>
 #include "./dom_event_target.hpp"
 
 using namespace std;

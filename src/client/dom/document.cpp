@@ -213,8 +213,42 @@ namespace dom
   public:
     void onExecute()
     {
-      // TODO: Implement the HTML rendering system.
-      // std::cout << "HTMLRenderSystem::onExecute" << std::endl;
+      assert(document_ != nullptr);
+      auto body = document_->body();
+      auto scene = document_->scene;
+      if (scene == nullptr)
+        return;
+
+      // Step 1: Compute the elements' styles.
+      iterateElementWithChildren(body, [](shared_ptr<HTMLElement> element)
+                                 {
+                             // Compute the style of the element.
+                             // TODO: use computeStyle() method to compute the style.
+                             element->adoptedStyle_ = element->style; });
+
+      // Step 2: Compute the layout of all the elements.
+      // TODO
+
+      // Step 3: Call the renderElement method of each element to draw the element.
+      iterateElementWithChildren(body, [scene](shared_ptr<HTMLElement> element)
+                                 { element->renderElement(*scene); });
+    }
+
+  private:
+    void iterateElementWithChildren(shared_ptr<HTMLElement> element, std::function<void(shared_ptr<HTMLElement>)> callback)
+    {
+      if (element == nullptr)
+        return;
+
+      for (auto childNode : element->childNodes)
+      {
+        if (childNode->nodeType == NodeType::ELEMENT_NODE)
+        {
+          auto childElement = std::dynamic_pointer_cast<HTMLElement>(childNode);
+          iterateElementWithChildren(childElement, callback);
+        }
+      }
+      callback(element);
     }
 
   private:

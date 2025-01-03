@@ -21,6 +21,8 @@ namespace dom
 
   class HTMLElement : public Element
   {
+    friend class RenderHTMLDocument;
+
   public:
     using Element::Element;
 
@@ -33,6 +35,12 @@ namespace dom
     void connectedCallback() override;
 
   protected:
+    /**
+     * Render the element to the scene.
+     * 
+     * @param scene The scene to render the element.
+     */
+    virtual void renderElement(builtin_scene::Scene &scene);
     /**
      * Get the scene of this document to draw the element.
      */

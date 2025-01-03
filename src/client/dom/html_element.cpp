@@ -17,6 +17,13 @@ namespace dom
       entity_ = sceneRef->createElement(tagName);
   }
 
+  void HTMLElement::renderElement(builtin_scene::Scene &scene)
+  {
+#ifdef TR_CLIENT_DOM_VERBOSE
+    std::cout << "Rendering element: " << tagName << std::endl;
+#endif
+  }
+
   std::shared_ptr<builtin_scene::Scene> HTMLElement::scene()
   {
     auto ownerDocumentRef = ownerDocument->lock();
