@@ -1,4 +1,3 @@
-#include <client/per_process.hpp>
 #include "./html_element.hpp"
 #include "./document.hpp"
 
@@ -6,18 +5,23 @@ namespace dom
 {
   using namespace std;
 
-  void HTMLElement::focus()
-  {
-    // TODO: implement focus
-  }
+  // TODO: Implement the following methods.
+  void HTMLElement::blur() {}
+  void HTMLElement::focus() {}
+  void HTMLElement::click() {}
 
   void HTMLElement::connectedCallback()
   {
-    auto builtinScene = TrClientContextPerProcess::Get()->builtinScene;
-    if (builtinScene != nullptr)
-    {
-      builtinScene_ = builtinScene;
-      entity_ = builtinScene->createElement(tagName);
-    }
+    auto sceneRef = scene();
+    if (sceneRef != nullptr)
+      entity_ = sceneRef->createElement(tagName);
+  }
+
+  std::shared_ptr<builtin_scene::Scene> HTMLElement::scene()
+  {
+    auto ownerDocumentRef = ownerDocument->lock();
+    return ownerDocumentRef == nullptr
+               ? nullptr
+               : ownerDocumentRef->scene;
   }
 }

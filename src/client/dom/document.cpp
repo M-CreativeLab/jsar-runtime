@@ -1,22 +1,36 @@
 #include <iostream>
+#include <client/per_process.hpp>
+#include <client/builtin_scene/ecs-inl.hpp>
+
 #include "./element.hpp"
 #include "./document.hpp"
 #include "./browsing_context.hpp"
 
 namespace dom
 {
+  using namespace std;
+  using namespace pugi;
+
   Document::Document(string contentType, shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
       : Node(NodeType::DOCUMENT_NODE, "#document", std::nullopt),
         contentType(contentType),
+        scene(TrClientContextPerProcess::Get()->builtinScene),
         browsingContext(browsingContext),
         autoConnect(autoConnect)
   {
+    assert(scene != nullptr);
+    assert(browsingContext != nullptr);
     docInternal = std::make_shared<pugi::xml_document>();
   }
 
   Document::Document(Document &other)
       : Node(other),
+        compatMode(other.compatMode),
         contentType(other.contentType),
+        scene(other.scene),
+        browsingContext(other.browsingContext),
+        documentElement(other.documentElement),
+        autoConnect(other.autoConnect),
         docInternal(other.docInternal)
   {
   }
@@ -186,8 +200,34 @@ namespace dom
   {
   }
 
+  // The HTML rendering ECS system, which is used to render the HTML document.
+  class RenderHTMLDocument : public builtin_scene::ecs::System
+  {
+  public:
+    RenderHTMLDocument(HTMLDocument *document)
+        : builtin_scene::ecs::System(),
+          document_(document)
+    {
+    }
+
+  public:
+    void onExecute()
+    {
+      // TODO: Implement the HTML rendering system.
+      // std::cout << "HTMLRenderSystem::onExecute" << std::endl;
+    }
+
+  private:
+    HTMLDocument *document_ = nullptr;
+  };
+
   HTMLDocument::HTMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
       : Document("text/html", browsingContext, autoConnect)
   {
+    {
+      // Configure the built-in scene for the HTML rendering.
+      using namespace builtin_scene::ecs;
+      scene->addSystem(SchedulerLabel::kPreUpdate, System::Make<RenderHTMLDocument>(this));
+    }
   }
 }

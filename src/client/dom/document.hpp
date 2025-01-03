@@ -4,14 +4,12 @@
 #include <memory>
 #include <map>
 #include <pugixml/pugixml.hpp>
+#include <client/builtin_scene/scene.hpp>
 
 #include "./node.hpp"
 #include "./element.hpp"
 #include "./html_head_element.hpp"
 #include "./html_body_element.hpp"
-
-using namespace std;
-using namespace pugi;
 
 namespace dom
 {
@@ -26,7 +24,7 @@ namespace dom
   class Document : public Node
   {
   public:
-    Document(string contentType, shared_ptr<BrowsingContext> browsingContext, bool autoConnect = false);
+    Document(std::string contentType, std::shared_ptr<BrowsingContext> browsingContext, bool autoConnect = false);
     Document(Document &other);
     virtual ~Document() = default;
 
@@ -34,12 +32,12 @@ namespace dom
     void setUrl(const string &url);
     void setSource(const string &source);
     void open();
-    shared_ptr<Element> getElementById(const string &id);
-    std::vector<shared_ptr<Element>> getElementsByClassName(const string &className);
-    std::vector<shared_ptr<Element>> getElementsByName(const string &name);
-    std::vector<shared_ptr<Element>> getElementsByTagName(const string &tagName);
-    shared_ptr<HTMLHeadElement> head();
-    shared_ptr<HTMLBodyElement> body();
+    std::shared_ptr<Element> getElementById(const std::string &id);
+    std::vector<shared_ptr<Element>> getElementsByClassName(const std::string &className);
+    std::vector<shared_ptr<Element>> getElementsByName(const std::string &name);
+    std::vector<shared_ptr<Element>> getElementsByTagName(const std::string &tagName);
+    std::shared_ptr<HTMLHeadElement> head();
+    std::shared_ptr<HTMLBodyElement> body();
 
   protected:
     void onInternalUpdated() override;
@@ -49,9 +47,13 @@ namespace dom
 
   public:
     DocumentCompatMode compatMode = DocumentCompatMode::NO_QUIRKS;
-    string contentType = "text/html";
+    std::string contentType = "text/html";
 
   public:
+    /**
+     * The scene to draw contents of the document.
+     */
+    std::shared_ptr<builtin_scene::Scene> scene;
     std::shared_ptr<BrowsingContext> browsingContext;
     std::shared_ptr<Element> documentElement;
 
@@ -71,7 +73,7 @@ namespace dom
   class XMLDocument : public Document
   {
   public:
-    XMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect);
+    XMLDocument(std::shared_ptr<BrowsingContext> browsingContext, bool autoConnect);
     ~XMLDocument() = default;
   };
 
@@ -84,7 +86,7 @@ namespace dom
      * @param browsingContext The browsing context that the document belongs to.
      * @param autoConnect If true, the document will be automatically to be connected as the DOM root.
      */
-    HTMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect);
+    HTMLDocument(std::shared_ptr<BrowsingContext> browsingContext, bool autoConnect);
     ~HTMLDocument() = default;
   };
 }

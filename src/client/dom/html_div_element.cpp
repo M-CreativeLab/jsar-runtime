@@ -12,11 +12,12 @@ namespace dom
     {
       using namespace builtin_scene;
 
-      auto meshes = builtinScene_->getResource<Meshes>();
-      auto materials = builtinScene_->getResource<Materials>();
-      builtinScene_->addComponent(entity_.value(),
-                                  Mesh3d(meshes->add(MeshBuilder::CreateBox(0.25f, 0.25f, 0.01f))),
-                                  MeshMaterial3d(materials->add(Material::Make<materials::NormalMaterial>())));
+      auto sceneRef = scene();
+      auto meshes = sceneRef->getResource<Meshes>();
+      auto materials = sceneRef->getResource<Materials>();
+      sceneRef->addComponent(entity_.value(),
+                             Mesh3d(meshes->add(MeshBuilder::CreateBox(0.25f, 0.25f, 0.01f))),
+                             MeshMaterial3d(materials->add(Material::Make<materials::NormalMaterial>())));
     }
   }
 }
