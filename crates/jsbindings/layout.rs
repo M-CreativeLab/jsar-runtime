@@ -92,6 +92,34 @@ impl Display {
 
 #[repr(C)]
 #[derive(Clone)]
+pub enum Overflow {
+  Visible = 0,
+  Clip,
+  Hidden,
+  Scroll,
+}
+
+impl Overflow {
+  pub fn from_taffy(overflow: taffy::style::Overflow) -> Self {
+    match overflow {
+      taffy::style::Overflow::Visible => Overflow::Visible,
+      taffy::style::Overflow::Clip => Overflow::Clip,
+      taffy::style::Overflow::Hidden => Overflow::Hidden,
+      taffy::style::Overflow::Scroll => Overflow::Scroll,
+    }
+  }
+  pub fn to_taffy(&self) -> taffy::style::Overflow {
+    match self {
+      Overflow::Visible => taffy::style::Overflow::Visible,
+      Overflow::Clip => taffy::style::Overflow::Clip,
+      Overflow::Hidden => taffy::style::Overflow::Hidden,
+      Overflow::Scroll => taffy::style::Overflow::Scroll,
+    }
+  }
+}
+
+#[repr(C)]
+#[derive(Clone)]
 pub enum Position {
   Relative = 0,
   Absolute = 1,
@@ -151,6 +179,9 @@ impl Dimension {
 #[derive(Clone)]
 pub struct Style {
   pub display: Display,
+  pub overflow_x: Overflow,
+  pub overflow_y: Overflow,
+  pub scrollbar_width: f32,
   pub position: Position,
   pub width: Dimension,
   pub height: Dimension,
@@ -164,6 +195,9 @@ impl Style {
   pub fn from_taffy(style: taffy::style::Style) -> Self {
     Self {
       display: Display::from_taffy(style.display),
+      overflow_x: Overflow::from_taffy(style.overflow.x),
+      overflow_y: Overflow::from_taffy(style.overflow.y),
+      scrollbar_width: style.scrollbar_width,
       position: Position::from_taffy(style.position),
       width: Dimension::from_taffy(style.size.width),
       height: Dimension::from_taffy(style.size.height),
@@ -176,6 +210,11 @@ impl Style {
   pub fn to_taffy(&self) -> taffy::style::Style {
     taffy::style::Style {
       display: self.display.to_taffy(),
+      overflow: taffy::geometry::Point {
+        x: self.overflow_x.to_taffy(),
+        y: self.overflow_y.to_taffy(),
+      },
+      scrollbar_width: self.scrollbar_width,
       position: self.position.to_taffy(),
       flex_grow: self.flex_grow,
       flex_shrink: self.flex_shrink,

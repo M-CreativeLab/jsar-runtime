@@ -125,6 +125,13 @@ extern "C"
     kGrid,
     kNone,
   };
+  enum class TaffyOverflow : int32_t
+  {
+    kVisible = 0,
+    kClip,
+    kHidden,
+    kScroll,
+  };
   enum class TaffyPosition : int32_t
   {
     kRelative = 0,
@@ -139,6 +146,9 @@ extern "C"
   struct TaffyStyle
   {
     TaffyDisplay display;
+    TaffyOverflow overflow_x;
+    TaffyOverflow overflow_y;
+    float scrollbar_width;
     TaffyPosition position;
     TaffyDimension width;
     TaffyDimension height;
