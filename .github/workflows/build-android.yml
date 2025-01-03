@@ -20,9 +20,6 @@ jobs:
     - name: Install Rust targets
       run: |
         rustup target add aarch64-linux-android
-        rustup target add aarch64-apple-darwin
-        rustup target add x86_64-apple-darwin
-        rustup target add x86_64-pc-windows-msvc
     - name: Set up Java
       uses: actions/setup-java@v2
       with:
@@ -32,10 +29,6 @@ jobs:
       uses: nttld/setup-ndk@v1
       with:
         ndk-version: 'r17'
-    - name: Set up Protoc
-      uses: arduino/setup-protoc@v2
-      with:
-        version: "21.x"
     - uses: actions/setup-node@v4.0.0
       with:
         node-version: 18.16.0
@@ -46,7 +39,4 @@ jobs:
         make jsbundle
     - name: Build library for Android
       run: |
-        protoc --version
-        make android
-      env:
-        USE_SYSTEM_PROTOC: "true"
+        make android clean=yes
