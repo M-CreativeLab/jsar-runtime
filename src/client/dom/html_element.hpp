@@ -77,6 +77,7 @@ namespace dom
   protected:
     std::optional<builtin_scene::ecs::EntityId> entity_ = std::nullopt;
     std::shared_ptr<crates::jsar::layout::Node> layoutNode_ = nullptr;
+    client_cssom::CSSStyleDeclaration defaultStyle_;
     // The adopted style of the element, which is used to apply the CSS styles.
     client_cssom::CSSStyleDeclaration adoptedStyle_;
   };

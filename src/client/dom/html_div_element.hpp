@@ -14,7 +14,6 @@ namespace dom
     }
 
   public:
-    void createdCallback() override;
     void connectedCallback() override;
   };
 }

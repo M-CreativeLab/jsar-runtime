@@ -3,14 +3,6 @@
 
 namespace dom
 {
-  void HTMLDivElement::createdCallback()
-  {
-    HTMLElement::createdCallback();
-
-    style.setPropertyIfNotPresent("width", "auto");
-    style.setPropertyIfNotPresent("height", "auto");
-  }
-
   void HTMLDivElement::connectedCallback()
   {
     HTMLElement::connectedCallback();

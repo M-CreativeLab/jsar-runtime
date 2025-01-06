@@ -15,8 +15,13 @@ namespace dom
   {
     Element::createdCallback();
 
-    style = client_cssom::CSSStyleDeclaration(getAttribute("style"));
-    style.setPropertyIfNotPresent("display", "block");
+    defaultStyle_.setPropertyIfNotPresent("display", "block");
+    defaultStyle_.setPropertyIfNotPresent("width", "auto");
+    defaultStyle_.setPropertyIfNotPresent("height", "auto");
+
+    // Create style declaration from the default style & the style attribute.
+    std::string concatedCssText = defaultStyle_.cssText() + ";" + getAttribute("style");
+    style = client_cssom::CSSStyleDeclaration(concatedCssText);
   }
 
   void HTMLElement::connectedCallback()

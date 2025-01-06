@@ -16,12 +16,12 @@ namespace dom
   public:
     void createdCallback() override
     {
-      HTMLElement::createdCallback();
+      defaultStyle_.setProperty("width", "100%");
+      defaultStyle_.setProperty("height", "100%");
+      defaultStyle_.setProperty("margin", "2px");
+      defaultStyle_.setProperty("padding", "2px");
 
-      style.setProperty("width", "100%");
-      style.setProperty("height", "100%");
-      style.setProperty("margin", "2px");
-      style.setProperty("padding", "2px");
+      HTMLElement::createdCallback();
     }
   };
 }
