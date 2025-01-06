@@ -53,8 +53,6 @@ namespace client_cssom
       auto displayStr = properties_.at("display").value;
       if (displayStr == "block")
         layoutStyle.display = Display::kBlock;
-      else if (displayStr == "inline")
-        layoutStyle.display = Display::kNone;
       else if (displayStr == "none")
         layoutStyle.display = Display::kNone;
     }

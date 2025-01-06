@@ -51,6 +51,20 @@ namespace dom
     std::cout << "Rendering element: " << tagName << std::endl;
     std::cout << "  " << "Layout: " << layoutRes << std::endl;
 #endif
+
+    if (entity_.has_value())
+    {
+      using namespace builtin_scene;
+
+      auto &entity = entity_.value();
+      auto transform = scene.getComponent<Transform>(entity);
+      if (transform != nullptr)
+      {
+        auto actualWidth = client_cssom::pixelToMeter(layoutRes.width());
+        auto actualHeight = client_cssom::pixelToMeter(layoutRes.height());
+        transform->setScale({actualWidth, actualHeight, 1.0f});
+      }
+    }
   }
 
   std::shared_ptr<builtin_scene::Scene> HTMLElement::scene()

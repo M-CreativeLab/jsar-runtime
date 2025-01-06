@@ -14,14 +14,7 @@ namespace dom
     }
 
   public:
-    void createdCallback() override
-    {
-      HTMLElement::createdCallback();
-
-      style.setProperty("width", "auto");
-      style.setProperty("height", "auto");
-
-    }
+    void createdCallback() override;
     void connectedCallback() override;
   };
 }

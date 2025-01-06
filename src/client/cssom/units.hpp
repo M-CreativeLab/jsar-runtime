@@ -10,7 +10,7 @@ namespace client_cssom
 
   /**
    * Convert the pixel value to the centimeter value.
-   * 
+   *
    * @param pixel The pixel value to convert.
    * @returns The centimeter value.
    */
@@ -20,8 +20,11 @@ namespace client_cssom
   }
 
   /**
-   * Convert the pixel value to the meter value.
-   * 
+   * Convert the pixel value to the meter value, the formula is: `pixelToMeter(pixel) = 
+   * (pixel / PPI * 2.54f) / 100.0f`.
+   *
+   * Where PPI is the Pixel Per Inch constant, which is 96.
+   *
    * @param pixel The pixel value to convert.
    * @returns The meter value.
    */

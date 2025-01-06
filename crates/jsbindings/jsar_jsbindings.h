@@ -533,7 +533,7 @@ namespace crates
           /**
            * Create a new layout style.
            */
-          LayoutStyle() : display(display)
+          LayoutStyle()
           {
           }
           /**

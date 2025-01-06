@@ -3,6 +3,14 @@
 
 namespace dom
 {
+  void HTMLDivElement::createdCallback()
+  {
+    HTMLElement::createdCallback();
+
+    style.setProperty("width", "auto");
+    style.setProperty("height", "auto");
+  }
+
   void HTMLDivElement::connectedCallback()
   {
     HTMLElement::connectedCallback();
@@ -16,7 +24,7 @@ namespace dom
       auto meshes = sceneRef->getResource<Meshes>();
       auto materials = sceneRef->getResource<Materials>();
       sceneRef->addComponent(entity_.value(),
-                             Mesh3d(meshes->add(MeshBuilder::CreateBox(0.25f, 0.25f, 0.01f))),
+                             Mesh3d(meshes->add(MeshBuilder::CreateBox(1.0f, 1.0f, 0.01f))),
                              MeshMaterial3d(materials->add(Material::Make<materials::NormalMaterial>())));
     }
   }
