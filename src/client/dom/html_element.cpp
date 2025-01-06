@@ -16,9 +16,7 @@ namespace dom
     Element::createdCallback();
 
     style = client_cssom::CSSStyleDeclaration(getAttribute("style"));
-    // TODO: the following line will reset the style attributee, this is not correct.
-    //       we need a way to construct the style object with an initial properties.
-    style.setProperty("display", "block");
+    style.setPropertyIfNotPresent("display", "block");
   }
 
   void HTMLElement::connectedCallback()

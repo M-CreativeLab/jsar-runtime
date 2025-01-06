@@ -111,6 +111,19 @@ namespace client_cssom
       pdb_->setProperty(propertyName, value, priority == CSSPropertyPriority::Important);
     }
     /**
+     * Set a property value and priority within the declaration block if the property is not already set.
+     * 
+     * @param propertyName The name of the CSS property.
+     * @param value The new value of the property.
+     * @param priority The optional priority, "important".
+     */
+    inline void setPropertyIfNotPresent(const std::string &propertyName, const std::string &value,
+                                        CSSPropertyPriority priority = CSSPropertyPriority::Normal)
+    {
+      if (!hasProperty(propertyName))
+        setProperty(propertyName, value, priority);
+    }
+    /**
      * Remove a property from the declaration block.
      *
      * @param propertyName The name of the CSS property.

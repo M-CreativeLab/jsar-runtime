@@ -5,10 +5,10 @@ namespace dom
 {
   void HTMLDivElement::createdCallback()
   {
-    style.setProperty("width", "auto");
-    style.setProperty("height", "auto");
-
     HTMLElement::createdCallback();
+
+    style.setPropertyIfNotPresent("width", "auto");
+    style.setPropertyIfNotPresent("height", "auto");
   }
 
   void HTMLDivElement::connectedCallback()
