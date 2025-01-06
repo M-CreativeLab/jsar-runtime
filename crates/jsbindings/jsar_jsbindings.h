@@ -413,25 +413,215 @@ namespace crates
 
     namespace layout
     {
+      namespace style
+      {
+        using Display = TaffyDisplay;
+        using Overflow = TaffyOverflow;
+        using Position = TaffyPosition;
+
+        inline std::ostream &operator<<(std::ostream &os, Display display)
+        {
+          switch (display)
+          {
+          case Display::kBlock:
+            os << "Block";
+            break;
+          case Display::kFlex:
+            os << "Flex";
+            break;
+          case Display::kGrid:
+            os << "Grid";
+            break;
+          case Display::kNone:
+            os << "None";
+            break;
+          }
+          return os;
+        }
+
+        inline std::ostream &operator<<(std::ostream &os, Overflow overflow)
+        {
+          switch (overflow)
+          {
+          case Overflow::kVisible:
+            os << "Visible";
+            break;
+          case Overflow::kClip:
+            os << "Clip";
+            break;
+          case Overflow::kHidden:
+            os << "Hidden";
+            break;
+          case Overflow::kScroll:
+            os << "Scroll";
+            break;
+          }
+          return os;
+        }
+
+        inline std::ostream &operator<<(std::ostream &os, Position position)
+        {
+          switch (position)
+          {
+          case Position::kRelative:
+            os << "Relative";
+            break;
+          case Position::kAbsolute:
+            os << "Absolute";
+            break;
+          }
+          return os;
+        }
+
+        class Dimension
+        {
+          friend class LayoutStyle;
+
+        public:
+          /**
+           * A length dimension.
+           *
+           * @param value The length value.
+           * @returns The length dimension.
+           */
+          inline static Dimension Length(float value) { return Dimension(TaffyDimension::kLength, value); }
+          /**
+           * A percent dimension.
+           *
+           * @param value The percent value between 0 and 1.
+           * @returns The percent dimension.
+           */
+          inline static Dimension Percent(float value) { return Dimension(TaffyDimension::kPercent, value); }
+          /**
+           * An auto dimension without value.
+           *
+           * @returns The auto dimension.
+           */
+          inline static Dimension Auto() { return Dimension(TaffyDimension::kAuto, 0); }
+
+        public:
+          Dimension(TaffyDimension type, float value) : type_(type), value_(value) {}
+
+        public:
+          inline bool isLength() { return type_ == TaffyDimension::kLength; }
+          inline bool isPercent() { return type_ == TaffyDimension::kPercent; }
+          inline bool isAuto() { return type_ == TaffyDimension::kAuto; }
+
+        public:
+          friend std::ostream &operator<<(std::ostream &os, const Dimension &dimension)
+          {
+            if (dimension.type_ == TaffyDimension::kLength)
+              os << "Length(" << dimension.value_ << ")";
+            else if (dimension.type_ == TaffyDimension::kPercent)
+              os << "Percent(" << dimension.value_ << ")";
+            else if (dimension.type_ == TaffyDimension::kAuto)
+              os << "Auto()";
+            return os;
+          }
+
+        private:
+          TaffyDimension type_;
+          float value_;
+        };
+
+        /**
+         * The layout style to apply to a layout node.
+         */
+        class LayoutStyle
+        {
+        public:
+          /**
+           * Create a new layout style.
+           */
+          LayoutStyle() : display(display)
+          {
+          }
+          /**
+           * Create a new layout style from a `TaffyStyle`.
+           *
+           * @param sourceStyle The source style to copy.
+           */
+          LayoutStyle(TaffyStyle sourceStyle)
+              : display(sourceStyle.display),
+                overflowX(sourceStyle.overflow_x),
+                overflowY(sourceStyle.overflow_y),
+                scrollbarWidth(sourceStyle.scrollbar_width),
+                position(sourceStyle.position),
+                width(Dimension(sourceStyle.width, sourceStyle.width_value)),
+                height(Dimension(sourceStyle.height, sourceStyle.height_value)),
+                flexGrow(sourceStyle.flex_grow),
+                flexShrink(sourceStyle.flex_shrink)
+          {
+          }
+
+        public:
+          friend std::ostream &operator<<(std::ostream &os, const LayoutStyle &style)
+          {
+            os << "LayoutStyle {" << std::endl;
+            os << " display: " << style.display << "," << std::endl;
+            os << " overflowX: " << style.overflowX << "," << std::endl;
+            os << " overflowY: " << style.overflowY << "," << std::endl;
+            os << " scrollbarWidth: " << style.scrollbarWidth << "," << std::endl;
+            os << " position: " << style.position << "," << std::endl;
+            os << " width: " << style.width << "," << std::endl;
+            os << " height: " << style.height << "," << std::endl;
+            os << " flexGrow: " << style.flexGrow << "," << std::endl;
+            os << " flexShrink: " << style.flexShrink << " }" << std::endl;
+            return os;
+          }
+          operator TaffyStyle()
+          {
+            TaffyStyle style;
+            style.display = display;
+            style.overflow_x = overflowX;
+            style.overflow_y = overflowY;
+            style.scrollbar_width = scrollbarWidth;
+            style.position = position;
+            style.width = width.type_;
+            style.height = height.type_;
+            style.width_value = width.value_;
+            style.height_value = height.value_;
+            style.flex_grow = flexGrow;
+            style.flex_shrink = flexShrink;
+            return style;
+          }
+
+        public:
+          Display display = Display::kBlock;
+          Overflow overflowX = Overflow::kVisible;
+          Overflow overflowY = Overflow::kVisible;
+          float scrollbarWidth = 2.0f;
+          Position position = Position::kRelative;
+          Dimension width = Dimension::Auto();
+          Dimension height = Dimension::Auto();
+          float flexGrow = 0.0f;
+          float flexShrink = 1.0f;
+        };
+      }
+
+      /**
+       * The layout allocator to create layout nodes.
+       *
+       * An allocator is used to store the layout tree and nodes, please make sure it's created before any layout
+       * nodes.
+       */
       class Allocator
       {
         friend class Node;
 
       public:
-        Allocator()
-        {
-          tree_ = taffy_tree_new();
-        }
-
-        ~Allocator()
-        {
-          taffy_tree_free(tree_);
-        }
+        Allocator() { tree_ = taffy_tree_new(); }
+        ~Allocator() { taffy_tree_free(tree_); }
 
       private:
         TaffyTree *tree_;
       };
 
+      /**
+       * A rectangle with top, right, bottom, and left values.
+       * 
+       * @tparam T The type of the rectangle values.
+       */
       template <typename T>
       class Rect
       {
@@ -452,16 +642,36 @@ namespace crates
         T left_;
       };
 
+      /**
+       * The layout result of a given node.
+       */
       class Layout
       {
-      public:
+        friend class Node;
+
+      private:
         Layout(TaffyLayoutOutput output) : data_(output) {}
 
       public:
+        /**
+         * @returns The node width.
+         */
         inline float width() const { return data_.width; }
+        /**
+         * @returns The node height.
+         */
         inline float height() const { return data_.height; }
+        /**
+         * @returns The node x position.
+         */
         inline float x() const { return data_.x; }
+        /**
+         * @returns The node y position.
+         */
         inline float y() const { return data_.y; }
+        /**
+         * @returns The node border.
+         */
         inline Rect<float> border() const
         {
           return Rect<float>(data_.border_top,
@@ -469,6 +679,9 @@ namespace crates
                              data_.border_bottom,
                              data_.border_left);
         }
+        /**
+         * @returns The node padding.
+         */
         inline Rect<float> padding() const
         {
           return Rect<float>(data_.padding_top,
@@ -478,13 +691,12 @@ namespace crates
         }
 
       public:
-        // custom std >> operator
         friend std::ostream &operator<<(std::ostream &os, const Layout &layout)
         {
-          os << "Layout {";
-          os << " width: " << layout.width() << ",";
-          os << " height: " << layout.height() << ",";
-          os << " x: " << layout.x() << ",";
+          os << "Layout {" << std::endl;
+          os << " width: " << layout.width() << "," << std::endl;
+          os << " height: " << layout.height() << "," << std::endl;
+          os << " x: " << layout.x() << "," << std::endl;
           os << " y: " << layout.y() << " }";
           os << std::endl;
           return os;
@@ -494,9 +706,17 @@ namespace crates
         TaffyLayoutOutput data_;
       };
 
+      /**
+       * The layout node to compute the layout.
+       */
       class Node
       {
       public:
+        /**
+         * Create a new layout node with the specified allocator.
+         *
+         * @param allocator The layout allocator to use.
+         */
         Node(Allocator &allocator)
         {
           node_ = taffy_node_new(allocator.tree_);
@@ -507,17 +727,59 @@ namespace crates
         }
 
       public:
+        /**
+         * Add a child node to this layout node.
+         *
+         * @param child The child node to add.
+         */
         inline void addChild(Node &child) { taffy_node_add_child(node_, child.node_); }
+        /**
+         * Remove a child node from this layout node.
+         *
+         * @param child The child node to remove.
+         */
         inline void removeChild(Node &child) { taffy_node_remove_child(node_, child.node_); }
+        /**
+         * @returns The child count of this layout node.
+         */
         inline size_t childCount() { return taffy_node_get_child_count(node_); }
-        inline TaffyStyle style() { return taffy_node_get_style(node_); }
-        inline void setStyle(TaffyStyle style) { taffy_node_set_style(node_, style); }
+        /**
+         * @returns The layout style of this node.
+         */
+        inline style::LayoutStyle style() { return taffy_node_get_style(node_); }
+        /**
+         * Set the layout style of this node.
+         *
+         * @param style The layout style to set.
+         */
+        inline void setStyle(style::LayoutStyle style)
+        {
+          taffy_node_set_style(node_, style);
+        }
+        /**
+         * Manually mark this node as dirty to recompute the layout.
+         */
         inline void markDirty() { taffy_node_mark_dirty(node_); }
+        /**
+         * Get whether this node is dirty and need to recompute the layout.
+         *
+         * @returns Whether this node is dirty.
+         */
         inline bool isDirty() { return taffy_node_is_dirty(node_); }
+        /**
+         * Compute the layout of this node (and its children) with the specified parent width and height. Call this
+         * method will mark all nodes as not dirty.
+         *
+         * @param width The parent width.
+         * @param height The parent height.
+         */
         inline void computeLayout(float width, float height)
         {
           taffy_node_compute_layout(node_, width, height);
         }
+        /**
+         * @returns The layout output of this node.
+         */
         inline Layout layout() { return Layout(taffy_node_get_layout(node_)); }
 
       private:

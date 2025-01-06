@@ -27,13 +27,13 @@ namespace dom
 
   shared_ptr<Element> Element::CreateElement(string namespaceURI, string tagName, weak_ptr<Document> ownerDocument)
   {
-#define XX(tagNameStr, className)                                        \
-  if (tagName == tagNameStr)                                             \
-  {                                                                      \
-    shared_ptr<Element> element = make_shared<className>(ownerDocument); \
-    element->namespaceURI = namespaceURI;                                \
-    element->createdCallback();                                          \
-    return element;                                                      \
+#define XX(tagNameStr, className)                                                 \
+  if (tagName == tagNameStr)                                                      \
+  {                                                                               \
+    shared_ptr<Element> element = make_shared<className>(tagName, ownerDocument); \
+    element->namespaceURI = namespaceURI;                                         \
+    element->createdCallback();                                                   \
+    return element;                                                               \
   }
     TYPED_ELEMENT_MAP(XX)
 #undef XX
@@ -47,7 +47,6 @@ namespace dom
   Element::Element(string tagName, optional<weak_ptr<Document>> ownerDocument)
       : Node(NodeType::ELEMENT_NODE, tagName, ownerDocument), tagName(ToUpperCase(tagName))
   {
-    createdCallback();
   }
 
   Element::Element(pugi::xml_node node, weak_ptr<Document> ownerDocument) : Node(node, ownerDocument)

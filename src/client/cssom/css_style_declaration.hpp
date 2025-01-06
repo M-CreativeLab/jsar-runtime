@@ -2,6 +2,8 @@
 
 #include <string>
 #include <unordered_map>
+#include <ostream>
+#include <crates/jsar_jsbindings.h>
 
 namespace client_cssom
 {
@@ -26,6 +28,10 @@ namespace client_cssom
   {
   public:
     CSSStyleDeclaration() = default;
+    CSSStyleDeclaration(CSSStyleDeclaration &other)
+        : cssText_(other.cssText_), properties_(other.properties_)
+    {
+    }
 
   public:
     /**
@@ -44,6 +50,27 @@ namespace client_cssom
     size_t length() const
     {
       return properties_.size();
+    }
+
+  public:
+    /**
+     * Custom the conversion to `LayoutStyle`.
+     */
+    operator crates::jsar::layout::style::LayoutStyle() const;
+    friend std::ostream &operator<<(std::ostream &os, const CSSStyleDeclaration &style)
+    {
+      os << "CSSStyleDeclaration {" << std::endl;
+      for (const auto &item : style.properties_)
+      {
+        const auto &name = item.first;
+        const auto &property = item.second;
+        os << " " << name << ": " << property.value;
+        if (property.priority == CSSPropertyPriority::Important)
+          os << " !important";
+        os << ";" << std::endl;
+      }
+      os << "}";
+      return os;
     }
 
   public:

@@ -9,8 +9,6 @@
 #include <client/macros.h>
 #include "./dom_event_target.hpp"
 
-using namespace std;
-
 namespace dom
 {
   enum class NodeType
@@ -38,26 +36,70 @@ namespace dom
     /**
      * Create a new `Node` object from a `pugi::xml_node`.
      */
-    static shared_ptr<Node> CreateNode(pugi::xml_node node, weak_ptr<Document> ownerDocument);
+    static std::shared_ptr<Node> CreateNode(pugi::xml_node node, std::weak_ptr<Document> ownerDocument);
 
   public:
     /**
      * Create an empty `Node` object.
      */
-    Node(NodeType nodeType, string nodeName, optional<weak_ptr<Document>> ownerDocument);
+    Node(NodeType nodeType, std::string nodeName, std::optional<std::weak_ptr<Document>> ownerDocument);
     /**
      * Create a new `Node` object from a `pugi::xml_node`.
      */
-    Node(pugi::xml_node node, weak_ptr<Document> ownerDocument);
+    Node(pugi::xml_node node, std::weak_ptr<Document> ownerDocument);
     virtual ~Node() = default;
 
   public:
-    shared_ptr<Node> appendChild(shared_ptr<Node> aChild);
-    inline vector<shared_ptr<Node>> getChildNodes() { return childNodes; }
-    inline shared_ptr<Node> getFirstChild() { return firstChild; }
-    inline shared_ptr<Node> getLastChild() { return lastChild; }
-    inline shared_ptr<Node> getParentNode() { return parentNode; }
-    string getTextContent();
+    /**
+     * Append a child node to the current node.
+     * 
+     * @param aChild The child node to append.
+     * @returns The appended child node.
+     */
+    std::shared_ptr<Node> appendChild(std::shared_ptr<Node> aChild);
+    /**
+     * Get the child nodes of the current node.
+     * 
+     * @returns a vector of the child nodes.
+     */
+    inline std::vector<std::shared_ptr<Node>> getChildNodes() { return childNodes; }
+    /**
+     * Get the first child node of the current node.
+     * 
+     * @returns a shared pointer to the first child node.
+     */
+    inline std::shared_ptr<Node> getFirstChild() { return firstChild.lock(); }
+    /**
+     * Get the last child node of the current node.
+     * 
+     * @returns a shared pointer to the last child node.
+     */
+    inline std::shared_ptr<Node> getLastChild() { return lastChild.lock(); }
+    /**
+     * Get the parent node of the current node.
+     * 
+     * @returns a shared pointer to the parent node.
+     */
+    inline std::shared_ptr<Node> getParentNode() { return parentNode.lock(); }
+    /**
+     * @returns The text content of the node and its descendants.
+     */
+    std::string getTextContent();
+    /**
+     * Get the parent node as a specific node type.
+     * 
+     * @tparam T The specific node type, such as `Element`, `Text`, etc.
+     * @returns The parent node as the specific node type, or nullptr if the parent node is not the specific node type.
+     */
+    template <typename T>
+      requires std::is_base_of_v<Node, T>
+    std::shared_ptr<T> getParentNodeAs()
+    {
+      auto _parentNode = getParentNode();
+      return _parentNode == nullptr
+                 ? nullptr
+                 : std::dynamic_pointer_cast<T>(_parentNode);
+    }
 
   public:
     /**
@@ -72,7 +114,7 @@ namespace dom
      * Get the shared pointer of the current `Node` object.
      */
     template <typename T = Node>
-    inline shared_ptr<T> getPtr()
+    inline std::shared_ptr<T> getPtr()
     {
       return dynamic_pointer_cast<T>(this->shared_from_this());
     }
@@ -80,17 +122,17 @@ namespace dom
      * Get the weak pointer of the current `Node` object.
      */
     template <typename T = Node>
-    inline weak_ptr<T> getWeakPtr()
+    inline std::weak_ptr<T> getWeakPtr()
     {
       return dynamic_pointer_cast<T>(this->shared_from_this());
     }
-    void resetFrom(shared_ptr<pugi::xml_node> node, weak_ptr<Document> ownerDocument);
+    void resetFrom(std::shared_ptr<pugi::xml_node> node, std::weak_ptr<Document> ownerDocument);
     /**
      * Iterate all the child nodes of the current node including the child nodes of the child nodes.
      *
      * @param callback The callback function that will be called for each child node, return false to stop the iteration.
      */
-    void iterateChildNodes(function<bool(shared_ptr<Node>)> callback)
+    void iterateChildNodes(std::function<bool(std::shared_ptr<Node>)> callback)
     {
       for (auto childNode : childNodes)
       {
@@ -118,15 +160,18 @@ namespace dom
     virtual void onInternalUpdated() {}
 
   private:
-    void updateFromDocument(optional<weak_ptr<Document>> document);
-    void updateFromInternal();
-    void updateTreeFromInternal();
+    // Update the fields from the document, such as the base URI, owner document, etc.
+    void updateFieldsFromDocument(std::optional<std::weak_ptr<Document>> document);
+    // Update the fields from the internal `pugi::xml_node` object, such as the node type, node name, etc.
+    void updateFieldsFromInternal();
+    // Update the tree fields, such as the child nodes, first child, last child, etc.
+    void updateTree();
 
   public:
     /**
      * The Node's document base URI.
      */
-    string baseURI;
+    std::string baseURI;
     /**
      * A boolean value that is true if the node is connected to its relevant context object, and false if not.
      */
@@ -134,7 +179,7 @@ namespace dom
     /**
      * A string containing the name of the `Node`.
      */
-    string nodeName;
+    std::string nodeName;
     /**
      * An `unsigned short` representing the type of the node.
      */
@@ -142,23 +187,29 @@ namespace dom
     /**
      * Returns the `Document` that this node belongs to. If the node is itself a document, returns null.
      */
-    optional<weak_ptr<Document>> ownerDocument = nullopt;
+    std::optional<std::weak_ptr<Document>> ownerDocument = nullopt;
     /**
      * Returns or sets the textual content of an element and all its descendants.
      */
-    string textContent;
+    std::string textContent;
     /**
-     * The first child of the node.
+     * The weak reference to the first child of this node, if you need to get the shared pointer, use `getFirstChild()`.
      */
-    shared_ptr<Node> firstChild;
+    std::weak_ptr<Node> firstChild;
     /**
-     * The last child of the node.
+     * The weak reference to the last child of this node, if you need to get the shared pointer, use `getLastChild()`.
      */
-    shared_ptr<Node> lastChild;
-    shared_ptr<Node> parentNode;
-    vector<shared_ptr<Node>> childNodes;
+    std::weak_ptr<Node> lastChild;
+    /**
+     * The weak reference to the parent node of this node, if you need to get the shared pointer, use `getParentNode()`.
+     */
+    std::weak_ptr<Node> parentNode;
+    /**
+     * The child nodes of this node.
+     */
+    std::vector<std::shared_ptr<Node>> childNodes;
 
   protected:
-    shared_ptr<pugi::xml_node> internal;
+    std::shared_ptr<pugi::xml_node> internal;
   };
 }

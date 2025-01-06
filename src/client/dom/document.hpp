@@ -60,7 +60,7 @@ namespace dom
     std::shared_ptr<HTMLBodyElement> body();
 
   protected:
-    void onInternalUpdated() override;
+    void connect() override final;
 
   private:
     void openInternal();

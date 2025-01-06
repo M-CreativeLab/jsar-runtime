@@ -1,3 +1,4 @@
+#include <client/cssom/units.hpp>
 #include "./html_element.hpp"
 #include "./document-inl.hpp"
 
@@ -10,6 +11,14 @@ namespace dom
   void HTMLElement::focus() {}
   void HTMLElement::click() {}
 
+  void HTMLElement::createdCallback()
+  {
+    Element::createdCallback();
+
+    // Set the default style for the element.
+    style.setProperty("display", "block");
+  }
+
   void HTMLElement::connectedCallback()
   {
     // 1. Create the rendering entity.
@@ -21,15 +30,26 @@ namespace dom
     auto layoutAllocator = documentLayoutAllocator();
     if (layoutAllocator != nullptr)
     {
-      layoutNode_ = std::make_shared<crates::jsar::layout::Node>(*layoutAllocator);
+      layoutNode_ = make_shared<crates::jsar::layout::Node>(*layoutAllocator);
+      layoutNode_->setStyle(adoptedStyle_);
+
       // TODO: Append this node to the parent layout node.
+      auto parentElement = getParentNodeAs<HTMLElement>();
+      if (parentElement != nullptr)
+      {
+        assert(parentElement->layoutNode_ != nullptr);
+        parentElement->layoutNode_->addChild(*layoutNode_);
+      }
     }
   }
 
   void HTMLElement::renderElement(builtin_scene::Scene &scene)
   {
+    auto layoutRes = layoutNode_->layout();
+
 #ifdef TR_CLIENT_DOM_VERBOSE
     std::cout << "Rendering element: " << tagName << std::endl;
+    std::cout << "  " << "Layout: " << layoutRes << std::endl;
 #endif
   }
 
@@ -47,5 +67,21 @@ namespace dom
     return documentRef == nullptr
                ? nullptr
                : documentRef->layoutAllocator();
+  }
+
+  bool HTMLElement::adoptStyle(client_cssom::CSSStyleDeclaration &style)
+  {
+    adoptedStyle_ = style;
+
+    // Update the layout node style.
+    if (layoutNode_ != nullptr)
+    {
+      layoutNode_->setStyle(adoptedStyle_);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
   }
 }

@@ -146,8 +146,14 @@ namespace dom
     return bodyElement;
   }
 
-  void Document::onInternalUpdated()
+  void Document::connect()
   {
+    Node::connect();
+
+    // When the document is connected, we need:
+    // 1. Set the document element, head element, and body element.
+    // 2. Update the element list and maps.
+
     for (auto childNode : childNodes)
     {
       if (childNode->nodeType == NodeType::ELEMENT_NODE)
@@ -213,6 +219,7 @@ namespace dom
         : builtin_scene::ecs::System(),
           document_(document)
     {
+      assert(document_ != nullptr);
     }
 
   public:
@@ -225,15 +232,13 @@ namespace dom
         return;
 
       // Step 1: Compute the elements' styles.
+      // TODO: use `computeStyle` for stylesheets.
       iterateElementWithChildren(body, [](shared_ptr<HTMLElement> element)
-                                 { element->adoptedStyle_ = element->style; });
+                                 { element->adoptStyle(element->style); });
 
-      // Step 2: Compute the layout of all the elements.
-      if (body->layoutNode_ != nullptr)
-      {
-        body->layoutNode_->computeLayout(1024.0f, 1024.0f);
-        // TODO: iterate the layout tree to update the position of each element.
-      }
+      // Step 2: Compute the layout of all the elements only if the layout is dirty.
+      if (body->layoutNode_ != nullptr && body->layoutNode_->isDirty())
+        body->layoutNode_->computeLayout(targetWidth_, targetHeight_);
 
       // Step 3: Call the renderElement method of each element to draw the element.
       iterateElementWithChildren(body, [scene](shared_ptr<HTMLElement> element)
@@ -251,7 +256,8 @@ namespace dom
         if (childNode->nodeType == NodeType::ELEMENT_NODE)
         {
           auto childElement = std::dynamic_pointer_cast<HTMLElement>(childNode);
-          iterateElementWithChildren(childElement, callback);
+          if (childElement != nullptr)
+            iterateElementWithChildren(childElement, callback);
         }
       }
       callback(element);
@@ -259,6 +265,9 @@ namespace dom
 
   private:
     HTMLDocument *document_ = nullptr;
+    // TODO: support configurable target width and height.
+    float targetWidth_ = 1440.0f;
+    float targetHeight_ = 900.0f;
   };
 
   HTMLDocument::HTMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)

@@ -5,7 +5,7 @@
 
 namespace dom
 {
-  class HTMLDivElement : public HTMLElement
+  class HTMLDivElement final : public HTMLElement
   {
   public:
     using HTMLElement::HTMLElement;
@@ -14,6 +14,14 @@ namespace dom
     }
 
   public:
+    void createdCallback() override
+    {
+      HTMLElement::createdCallback();
+
+      style.setProperty("width", "auto");
+      style.setProperty("height", "auto");
+
+    }
     void connectedCallback() override;
   };
 }

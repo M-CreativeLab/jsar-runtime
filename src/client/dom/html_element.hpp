@@ -33,6 +33,7 @@ namespace dom
     void click();
 
   public:
+    void createdCallback() override;
     void connectedCallback() override;
 
   protected:
@@ -50,6 +51,16 @@ namespace dom
      * Get the layout allocator of the document.
      */
     std::shared_ptr<crates::jsar::layout::Allocator> documentLayoutAllocator();
+
+  private:
+    /**
+     * Adopt the specified style to the element, it will copy the style properties to the element's
+     * adopted style, and update the layout node's style.
+     *
+     * @param style The style to adopt.
+     * @returns Whether the layout style is updated successfully.
+     */
+    bool adoptStyle(client_cssom::CSSStyleDeclaration &style);
 
   public:
     HTMLElementDirection dir = HTMLElementDirection::LTR;
