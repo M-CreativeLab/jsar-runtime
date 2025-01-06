@@ -48,9 +48,9 @@ namespace client_cssom
     LayoutStyle layoutStyle;
 
     // Set display
-    if (properties_.find("display") != properties_.end())
+    if (hasProperty("display"))
     {
-      auto displayStr = properties_.at("display").value;
+      auto displayStr = getPropertyValue("display");
       if (displayStr == "block")
         layoutStyle.display = Display::kBlock;
       else if (displayStr == "none")
@@ -58,9 +58,9 @@ namespace client_cssom
     }
 
     // Set position
-    if (properties_.find("position") != properties_.end())
+    if (hasProperty("position"))
     {
-      auto positionStr = properties_.at("position").value;
+      auto positionStr = getPropertyValue("position");
       if (positionStr == "absolute")
         layoutStyle.position = Position::kAbsolute;
       else if (positionStr == "relative")
@@ -68,51 +68,51 @@ namespace client_cssom
     }
 
     // Set width
-    if (properties_.find("width") != properties_.end())
+    if (hasProperty("width"))
     {
-      auto widthDimension = GetDimension(properties_.at("width").value);
+      auto widthDimension = GetDimension(getPropertyValue("width"));
       if (widthDimension.has_value())
         layoutStyle.width = widthDimension.value();
     }
 
     // Set height
-    if (properties_.find("height") != properties_.end())
+    if (hasProperty("height"))
     {
-      auto heightDimension = GetDimension(properties_.at("height").value);
+      auto heightDimension = GetDimension(getPropertyValue("height"));
       if (heightDimension.has_value())
         layoutStyle.height = heightDimension.value();
     }
 
     // Set overflow(x, y)
-    if (properties_.find("overflow") != properties_.end())
+    if (hasProperty("overflow"))
     {
-      auto overflow = GetOverflow(properties_.at("overflow").value);
+      auto overflow = GetOverflow(getPropertyValue("overflow"));
       if (overflow.has_value())
       {
         layoutStyle.overflowX = overflow.value();
         layoutStyle.overflowY = overflow.value();
       }
     }
-    if (properties_.find("overflow-x") != properties_.end())
+    if (hasProperty("overflow-x"))
     {
-      auto overflowX = GetOverflow(properties_.at("overflow-x").value);
+      auto overflowX = GetOverflow(getPropertyValue("overflow-x"));
       if (overflowX.has_value())
         layoutStyle.overflowX = overflowX.value();
     }
-    if (properties_.find("overflow-y") != properties_.end())
+    if (hasProperty("overflow-y"))
     {
-      auto overflowY = GetOverflow(properties_.at("overflow-y").value);
+      auto overflowY = GetOverflow(getPropertyValue("overflow-y"));
       if (overflowY.has_value())
         layoutStyle.overflowY = overflowY.value();
     }
 
     // Set flex-grow
-    if (properties_.find("flex-grow") != properties_.end())
-      layoutStyle.flexGrow = std::stof(properties_.at("flex-grow").value);
+    if (hasProperty("flex-grow"))
+      layoutStyle.flexGrow = std::stof(getPropertyValue("flex-grow"));
 
     // Set flex-shrink
-    if (properties_.find("flex-shrink") != properties_.end())
-      layoutStyle.flexShrink = std::stof(properties_.at("flex-shrink").value);
+    if (hasProperty("flex-shrink"))
+      layoutStyle.flexShrink = std::stof(getPropertyValue("flex-shrink"));
 
     // Return the layout style
     return layoutStyle;

@@ -2,8 +2,10 @@
 
 #include <stdint.h>
 #include <stddef.h>
+
 #include <string>
 #include <iostream>
+#include <memory>
 
 extern "C"
 {
@@ -20,6 +22,7 @@ extern "C"
   extern void release_rust_cstring(char *s);
 
   // CSS parsing functions
+  typedef struct _CSSPropertyDeclarationBlock _CSSPropertyDeclarationBlock;
   typedef struct
   {
     uint32_t r;
@@ -28,13 +31,17 @@ extern "C"
     uint32_t a;
   } RGBAColor;
 
-  /**
-   * Parse a CSS color string into a RGBAColor struct.
-   *
-   * @param color_str The CSS color string to parse: "rgb(255, 0, 0)", "rgba(255, 0, 0, 0.5)", "#ff0000", "red", etc.
-   */
   extern RGBAColor parse_csscolor(const char *color_str);
+  extern _CSSPropertyDeclarationBlock *parse_style_declaration(const char *style_str);
+  extern void css_property_declaration_block_free(_CSSPropertyDeclarationBlock *pdb);
+  extern size_t css_property_declaration_block_len(_CSSPropertyDeclarationBlock *pdb);
+  extern const char *css_property_declaration_block_get_property(_CSSPropertyDeclarationBlock *pdb, const char *property_name);
+  extern void css_property_declaration_block_set_property(_CSSPropertyDeclarationBlock *pdb, const char *property_name, const char *value, bool important);
+  extern const char *css_property_declaration_block_remove_property(_CSSPropertyDeclarationBlock *pdb, const char *property_name);
+  extern bool css_property_declaration_block_is_important(_CSSPropertyDeclarationBlock *pdb, const char *property_name);
+  extern const char *css_property_declaration_block_to_css_string(_CSSPropertyDeclarationBlock *pdb);
 
+  // URL functions
   typedef struct
   {
     const char *host;
@@ -387,6 +394,111 @@ namespace crates
       }
     };
 
+    namespace css
+    {
+      /**
+       * The CSS property declaration block to parse CSS style declarations.
+       */
+      class CSSPropertyDeclarationBlock
+      {
+      public:
+        /**
+         * Parse a CSS style declaration string into a CSS property declaration block.
+         *
+         * @param styleStr The CSS style declaration string.
+         * @returns The CSS property declaration block.
+         */
+        static inline std::shared_ptr<CSSPropertyDeclarationBlock> ParseStyleDeclaration(const std::string &styleStr)
+        {
+          return std::make_shared<CSSPropertyDeclarationBlock>(parse_style_declaration(styleStr.c_str()));
+        }
+
+      public:
+        CSSPropertyDeclarationBlock(_CSSPropertyDeclarationBlock *handle) : handle_(handle) {}
+        ~CSSPropertyDeclarationBlock()
+        {
+          css_property_declaration_block_free(handle_);
+        }
+
+      public:
+        /**
+         * Get the CSS text of the property declaration block.
+         *
+         * @returns The CSS text.
+         */
+        std::string cssText() const
+        {
+          const char *str = css_property_declaration_block_to_css_string(handle_);
+          std::string cssText(str);
+          release_rust_cstring((char *)str);
+          return cssText;
+        }
+        /**
+         * @returns The length of the property declaration block.
+         */
+        size_t size() const
+        {
+          return css_property_declaration_block_len(handle_);
+        }
+        /**
+         * Check if a property is important.
+         *
+         * @param propertyName The property name.
+         * @returns Whether the property is important.
+         */
+        bool isPropertyImportant(const std::string &propertyName)
+        {
+          return css_property_declaration_block_is_important(handle_, propertyName.c_str());
+        }
+        /**
+         * Get the property value.
+         *
+         * @param propertyName The property name.
+         * @returns The property value in string.
+         */
+        std::string getProperty(const std::string &propertyName)
+        {
+          const char *value = css_property_declaration_block_get_property(handle_, propertyName.c_str());
+          if (value == nullptr)
+            return "";
+
+          std::string valueStr(value);
+          release_rust_cstring((char *)value);
+          return valueStr;
+        }
+        /**
+         * Set a property value.
+         *
+         * @param propertyName The property name.
+         * @param value The property value.
+         * @param important Whether the property is important.
+         */
+        void setProperty(const std::string &propertyName, const std::string &value, bool important = false)
+        {
+          css_property_declaration_block_set_property(handle_, propertyName.c_str(), value.c_str(), important);
+        }
+        /**
+         * Remove a property from the declaration block.
+         *
+         * @param propertyName The property name.
+         * @returns The removed property value.
+         */
+        std::string removeProperty(const std::string &propertyName)
+        {
+          const char *value = css_property_declaration_block_remove_property(handle_, propertyName.c_str());
+          if (value == nullptr)
+            return "";
+
+          std::string valueStr(value);
+          release_rust_cstring((char *)value);
+          return valueStr;
+        }
+
+      private:
+        _CSSPropertyDeclarationBlock *handle_;
+      };
+    }
+
     namespace webgl
     {
       /**
@@ -619,7 +731,7 @@ namespace crates
 
       /**
        * A rectangle with top, right, bottom, and left values.
-       * 
+       *
        * @tparam T The type of the rectangle values.
        */
       template <typename T>

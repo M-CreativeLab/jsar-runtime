@@ -6,20 +6,15 @@ extern crate ctor;
 extern crate jsar_jsbinding_macro;
 extern crate log;
 
-use cssparser::{Parser, ParserInput};
-use std::ffi::CString;
-use std::os::raw::c_char;
-use std::path::Path;
-use style::context::QuirksMode;
-use style::parser::ParserContext;
-use style::stylesheets::{CssRuleType, Origin};
-use style::values::specified::color::Color;
-use style_traits::ParsingMode;
-use url::Url;
-
+mod css_parser;
 mod layout;
 mod glsl_transpiler;
 mod typescript_transpiler;
+
+use std::ffi::CString;
+use std::os::raw::c_char;
+use std::path::Path;
+use url::Url;
 
 use glsl_lang::ast;
 use glsl_lang::visitor::{HostMut, Visit, VisitorMut};
@@ -49,52 +44,6 @@ extern "C" fn release_rust_cstring(s: *mut c_char) {
       return;
     }
     let _ = CString::from_raw(s);
-  }
-}
-
-#[repr(C)]
-pub struct RGBAColor {
-  r: u32,
-  g: u32,
-  b: u32,
-  a: u32,
-}
-
-impl RGBAColor {
-  fn new(r: u32, g: u32, b: u32, a: u32) -> Self {
-    Self { r, g, b, a }
-  }
-}
-
-#[no_mangle]
-extern "C" fn parse_csscolor(color_str: *const c_char) -> RGBAColor {
-  let color_string: &str = unsafe { std::ffi::CStr::from_ptr(color_str) }
-    .to_str()
-    .expect("Failed to convert C string to Rust string");
-  let mut input = ParserInput::new(color_string);
-  let mut parser = Parser::new(&mut input);
-  let url = Url::parse("about:blank").unwrap().into();
-  let context = ParserContext::new(
-    Origin::Author,
-    &url,
-    Some(CssRuleType::Style),
-    ParsingMode::DEFAULT,
-    QuirksMode::NoQuirks,
-    Default::default(),
-    None,
-    None,
-  );
-  match Color::parse_and_compute(&context, &mut parser, None) {
-    Some(color) => {
-      let rgba = color.as_absolute().unwrap().into_srgb_legacy();
-      RGBAColor::new(
-        (rgba.components.0 * 255.0) as u32,
-        (rgba.components.1 * 255.0) as u32,
-        (rgba.components.2 * 255.0) as u32,
-        (rgba.alpha * 255.0) as u32,
-      )
-    }
-    None => RGBAColor::new(0, 0, 0, 1),
   }
 }
 
@@ -472,16 +421,6 @@ extern "C" fn release_transpiled_typescript_output(output: TranspiledTypeScriptO
 mod tests {
   use super::*;
   use std::ffi::CString;
-
-  #[test]
-  fn test_parse_csscolor() {
-    let color_str = CString::new("rgba(255, 0, 0, 0.5)").unwrap();
-    let color = parse_csscolor(color_str.as_ptr());
-    assert_eq!(color.r, 255);
-    assert_eq!(color.g, 0);
-    assert_eq!(color.b, 0);
-    assert_eq!(color.a, 127);
-  }
 
   #[test]
   fn test_parse_whatwg_url() {

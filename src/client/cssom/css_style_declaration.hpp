@@ -27,9 +27,16 @@ namespace client_cssom
   class CSSStyleDeclaration
   {
   public:
-    CSSStyleDeclaration() = default;
-    CSSStyleDeclaration(CSSStyleDeclaration &other)
-        : cssText_(other.cssText_), properties_(other.properties_)
+    CSSStyleDeclaration()
+        : pdb_(crates::jsar::css::CSSPropertyDeclarationBlock::ParseStyleDeclaration(""))
+    {
+    }
+    CSSStyleDeclaration(const std::string &cssText)
+        : pdb_(crates::jsar::css::CSSPropertyDeclarationBlock::ParseStyleDeclaration(cssText))
+    {
+    }
+    // Reconstruct a new CSSStyleDeclaration from another one's cssText to avoid the `pdb_` being shared.
+    CSSStyleDeclaration(CSSStyleDeclaration &other) : CSSStyleDeclaration(other.cssText())
     {
     }
 
@@ -40,17 +47,11 @@ namespace client_cssom
      *
      * @returns The textual representation of the declaration block.
      */
-    std::string cssText() const
-    {
-      return cssText_;
-    }
+    inline std::string cssText() const { return pdb_->cssText(); }
     /**
      * @returns The number of properties.
      */
-    size_t length() const
-    {
-      return properties_.size();
-    }
+    size_t length() const { return pdb_->size(); }
 
   public:
     /**
@@ -59,17 +60,7 @@ namespace client_cssom
     operator crates::jsar::layout::style::LayoutStyle() const;
     friend std::ostream &operator<<(std::ostream &os, const CSSStyleDeclaration &style)
     {
-      os << "CSSStyleDeclaration {" << std::endl;
-      for (const auto &item : style.properties_)
-      {
-        const auto &name = item.first;
-        const auto &property = item.second;
-        os << " " << name << ": " << property.value;
-        if (property.priority == CSSPropertyPriority::Important)
-          os << " !important";
-        os << ";" << std::endl;
-      }
-      os << "}";
+      os << "CSSStyleDeclaration {" << style.cssText() << "}" << std::endl;
       return os;
     }
 
@@ -80,11 +71,10 @@ namespace client_cssom
      * @param propertyName The name of the CSS property.
      * @returns The optional priority, "important".
      */
-    CSSPropertyPriority getPropertyPriority(const std::string &propertyName) const
+    inline CSSPropertyPriority getPropertyPriority(const std::string &propertyName) const
     {
-      auto it = properties_.find(propertyName);
-      if (it != properties_.end())
-        return it->second.priority;
+      if (pdb_->isPropertyImportant(propertyName))
+        return CSSPropertyPriority::Important;
       else
         return CSSPropertyPriority::Normal;
     }
@@ -94,13 +84,19 @@ namespace client_cssom
      * @param propertyName The name of the CSS property.
      * @returns The property value.
      */
-    std::string getPropertyValue(const std::string &propertyName) const
+    inline std::string getPropertyValue(const std::string &propertyName) const
     {
-      auto it = properties_.find(propertyName);
-      if (it != properties_.end())
-        return it->second.value;
-      else
-        return "";
+      return pdb_->getProperty(propertyName);
+    }
+    /**
+     * Check if a property is set.
+     * 
+     * @param propertyName The name of the CSS property.
+     * @returns Whether the property is set.
+     */
+    inline bool hasProperty(const std::string &propertyName) const
+    {
+      return pdb_->getProperty(propertyName) != "";
     }
     /**
      * Set a property value and priority within the declaration block.
@@ -109,27 +105,23 @@ namespace client_cssom
      * @param value The new value of the property.
      * @param priority The optional priority, "important".
      */
-    void setProperty(const std::string &propertyName, const std::string &value,
-                     CSSPropertyPriority priority = CSSPropertyPriority::Normal)
+    inline void setProperty(const std::string &propertyName, const std::string &value,
+                            CSSPropertyPriority priority = CSSPropertyPriority::Normal)
     {
-      CSSProperty cssProperty;
-      cssProperty.name = propertyName;
-      cssProperty.value = value;
-      cssProperty.priority = priority;
-      properties_[propertyName] = cssProperty;
+      pdb_->setProperty(propertyName, value, priority == CSSPropertyPriority::Important);
     }
     /**
      * Remove a property from the declaration block.
      *
      * @param propertyName The name of the CSS property.
+     * @returns The removed property value.
      */
-    void removeProperty(const std::string &propertyName)
+    std::string removeProperty(const std::string &propertyName)
     {
-      properties_.erase(propertyName);
+      return pdb_->removeProperty(propertyName);
     }
 
   private:
-    std::string cssText_;
-    std::unordered_map<std::string, CSSProperty> properties_;
+    std::shared_ptr<crates::jsar::css::CSSPropertyDeclarationBlock> pdb_;
   };
 }

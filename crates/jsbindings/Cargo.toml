@@ -28,6 +28,7 @@ gl = { version = "0.14.0" }
 glsl-lang = { workspace = true }
 glsl-lang-pp = { workspace = true }
 jsar_jsbinding_macro = { path = "../jsbinding_macro" }
+smallvec = { version = "1.13.2" }
 style = { workspace = true }
 style_traits = { workspace = true }
 swc_common = "0.40.2"

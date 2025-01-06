@@ -1162,6 +1162,7 @@ dependencies = [
  "lazy_static",
  "log",
  "once_cell",
+ "smallvec",
  "style",
  "style_traits",
  "surfman",
