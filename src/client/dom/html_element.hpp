@@ -2,7 +2,7 @@
 
 #include <string>
 #include <optional>
-#include <crates/jsar_jsbindings.h>
+#include <crates/bindings.hpp>
 #include <client/builtin_scene/ecs-inl.hpp>
 #include <client/builtin_scene/scene.hpp>
 #include <client/cssom/css_style_declaration.hpp>
@@ -50,7 +50,7 @@ namespace dom
     /**
      * Get the layout allocator of the document.
      */
-    std::shared_ptr<crates::jsar::layout::Allocator> documentLayoutAllocator();
+    std::shared_ptr<crates::layout::Allocator> documentLayoutAllocator();
 
   private:
     /**
@@ -76,7 +76,7 @@ namespace dom
 
   protected:
     std::optional<builtin_scene::ecs::EntityId> entity_ = std::nullopt;
-    std::shared_ptr<crates::jsar::layout::Node> layoutNode_ = nullptr;
+    std::shared_ptr<crates::layout::Node> layoutNode_ = nullptr;
     client_cssom::CSSStyleDeclaration defaultStyle_;
     // The adopted style of the element, which is used to apply the CSS styles.
     client_cssom::CSSStyleDeclaration adoptedStyle_;

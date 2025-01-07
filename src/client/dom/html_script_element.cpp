@@ -1,13 +1,16 @@
 #include <algorithm>
 #include <iostream>
+#include <crates/bindings.hpp>
 
-#include "crates/jsar_jsbindings.h"
 #include "./html_script_element.hpp"
 #include "./document.hpp"
 #include "./browsing_context.hpp"
 
 namespace dom
 {
+  using namespace std;
+  using namespace crates;
+
   void HTMLScriptElement::createdCallback()
   {
     if (hasAttribute("src"))
@@ -31,7 +34,7 @@ namespace dom
          *
          * See: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap#exceptions
          */
-        std::cerr << "Failed to parse the import map: " << textContent << std::endl;
+        cerr << "Failed to parse the import map: " << textContent << endl;
       }
     }
     else
@@ -58,18 +61,18 @@ namespace dom
     {
       auto browsingContext = ownerDocument->lock()->browsingContext;
       {
-        auto resourceUrl = crates::jsar::UrlHelper::CreateUrlStringWithPath(baseURI, src);
+        auto resourceUrl = UrlHelper::CreateUrlStringWithPath(baseURI, src);
         if (resourceUrl == "")
         {
-          std::cerr << "Failed to parse the URL: " << src << std::endl;
+          cerr << "Failed to parse the URL: " << src << endl;
         }
         else
         {
-          auto resourceExt = crates::jsar::UrlHelper::ParseUrlToModuleExtension(resourceUrl);
+          auto resourceExt = UrlHelper::ParseUrlToModuleExtension(resourceUrl);
           assert(resourceExt.isTextSourceModule());
           bool isTypeScript = resourceExt.isTypeScript();
 
-          browsingContext->fetchTextSourceResource(resourceUrl, [this, isTypeScript](const std::string &source)
+          browsingContext->fetchTextSourceResource(resourceUrl, [this, isTypeScript](const string &source)
                                                    { compileScript(source, isTypeScript); });
         }
       }

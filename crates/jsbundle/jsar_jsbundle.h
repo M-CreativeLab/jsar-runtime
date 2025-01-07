@@ -1,6 +1,10 @@
 #pragma once
 
+#include <assert.h>
+#include <stdio.h>
 #include <stdint.h>
+#include <string_view>
+#include <memory>
 
 extern "C"
 {
@@ -12,6 +16,11 @@ extern "C"
   uintptr_t get_jsbootstrap_size(int jsframework_name);
   const uint8_t *get_jsbundle_ptr(int id);
   uintptr_t get_jsbundle_size(int id);
+  int32_t carbonite_decompress_binary(const uint8_t *input_ptr,
+                                      size_t input_len,
+                                      uint8_t **output_ptr,
+                                      size_t *output_len);
+  void carbonite_release_memory(uint8_t *ptr, size_t len);
 }
 
 /**
@@ -75,3 +84,47 @@ public:
     return get_jsbundle_size(static_cast<int>(id));
   }
 };
+
+namespace carbonite
+{
+  class StringReference
+  {
+  public:
+    StringReference(const unsigned char *ptr, size_t len)
+        : ptr_(const_cast<unsigned char *>(ptr)),
+          len_(len)
+    {
+    }
+    StringReference(const StringReference &) = default;
+
+  public:
+    StringReference &operator=(const StringReference &) = default;
+
+  public:
+    inline unsigned char *data() { return ptr_; }
+    inline const unsigned char *data() const { return ptr_; }
+    inline size_t size() const { return len_; }
+
+  private:
+    unsigned char *ptr_;
+    size_t len_;
+  };
+
+  static inline std::shared_ptr<StringReference> decompressBinary(const unsigned char *binaryPtr, size_t binaryLen)
+  {
+    uint8_t *outputPtr = nullptr;
+    size_t outputLen = 0;
+    if (carbonite_decompress_binary(binaryPtr, binaryLen, &outputPtr, &outputLen) != 0)
+      return nullptr;
+
+    StringReference result(reinterpret_cast<unsigned char *>(outputPtr), outputLen);
+    auto deleter = [outputPtr, outputLen](StringReference *ref)
+    {
+      assert(ref->data() == outputPtr);
+      assert(ref->size() == outputLen);
+      carbonite_release_memory(reinterpret_cast<uint8_t *>(ref->data()), ref->size());
+      delete ref;
+    };
+    return std::shared_ptr<StringReference>(new StringReference(result), deleter);
+  }
+}

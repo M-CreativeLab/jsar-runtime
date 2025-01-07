@@ -150,16 +150,16 @@ namespace commandbuffers
   {
   public:
     DepthRangeCommandBufferRequest() = delete;
-    DepthRangeCommandBufferRequest(float near, float far)
+    DepthRangeCommandBufferRequest(float n, float f)
         : TrCommandBufferSimpleRequest(),
-          near(near),
-          far(far)
+          n(n),
+          f(f)
     {
     }
 
   public:
-    float near;
-    float far;
+    float n;
+    float f;
   };
 
   class StencilFuncCommandBufferRequest final

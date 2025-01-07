@@ -5,8 +5,8 @@
 
 #include <unistd.h>
 #include <sys/resource.h>
+#include <crates/bindings.hpp>
 
-#include "crates/jsar_jsbindings.h"
 #include "./per_process.hpp"
 #include "./builtin_scene/scene.hpp"
 #include "./dom/dom_scripting.hpp"

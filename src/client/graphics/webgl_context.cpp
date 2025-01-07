@@ -1,6 +1,6 @@
 #include <string>
 #include <idgen.hpp>
-#include <crates/jsar_jsbindings.h>
+#include <crates/bindings.hpp>
 #include <client/xr/webxr_session.hpp>
 
 #include "./webgl_context.hpp"
@@ -9,6 +9,8 @@
 
 namespace client_graphics
 {
+  using namespace std;
+  using namespace crates::webgl;
 
 #ifndef TR_WEBGL_STRICT
 #define NOT_IMPLEMENTED() throw std::runtime_error("Not implemented")
@@ -24,7 +26,7 @@ namespace client_graphics
     throw std::runtime_error(msg);                                                                          \
   }
 
-  void WebGLState::Restore(WebGLState &state, std::shared_ptr<WebGL2Context> context)
+  void WebGLState::Restore(WebGLState &state, shared_ptr<WebGL2Context> context)
   {
     context->useProgram(state.program.value_or(nullptr));
     if (state.vertexBuffer.has_value())
@@ -295,8 +297,7 @@ namespace client_graphics
 
   void WebGLContext::shaderSource(std::shared_ptr<WebGLShader> shader, const std::string &source)
   {
-    auto req = ShaderSourceCommandBufferRequest(shader->id,
-                                                crates::jsar::webgl::GLSLSourcePatcher::GetPatchedSource(source));
+    auto req = ShaderSourceCommandBufferRequest(shader->id, GLSLSourcePatcher::GetPatchedSource(source));
     sendCommandBufferRequest(req);
   }
 

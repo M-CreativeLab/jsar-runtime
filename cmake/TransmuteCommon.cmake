@@ -58,6 +58,13 @@ elseif (WIN32)
 endif()
 message(STATUS "Transmute crates target name: ${TR_CRATE_TARGET}")
 
+# Set the Rust build directory
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(TR_CRATE_BUILD_DIR "debug")
+else()
+    set(TR_CRATE_BUILD_DIR "release")
+endif()
+
 # Set the thirdparty library path
 if (APPLE)
     set(TR_THIRDPARTY_PATH ${CMAKE_SOURCE_DIR}/thirdparty/libs/${CMAKE_SYSTEM_NAME})

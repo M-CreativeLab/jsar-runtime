@@ -5,8 +5,8 @@
 #include <memory>
 #include <assert.h>
 #include <v8.h>
+#include <crates/bindings.hpp>
 
-#include "crates/jsar_jsbindings.h"
 #include "./dom_scripting.hpp"
 #include "./runtime_context.hpp"
 
@@ -31,7 +31,7 @@ namespace dom
       scriptStarted = true;
 
       script = scriptingContext->create(getSharedPtr(), baseURI, sourceType);
-      auto requestUrl = crates::jsar::UrlHelper::CreateUrlStringWithPath(baseURI, url);
+      auto requestUrl = crates::UrlHelper::CreateUrlStringWithPath(baseURI, url);
       fetchTextSourceResource(requestUrl, [this](const std::string &source)
                               {
         scriptingContext->compile(script, source);

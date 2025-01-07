@@ -1,6 +1,10 @@
+use std::boxed::Box;
+use std::io::Read;
+use std::ptr;
+use std::slice;
+
 use flate2::read::GzDecoder;
 use lazy_static::lazy_static;
-use std::io::Read;
 
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 mod platform {
@@ -105,5 +109,79 @@ extern "C" fn get_jsbundle_size(id: i32) -> usize {
     JSBUNDLE_WEBWORKERS_ENTRY_SRC.len()
   } else {
     unreachable!()
+  }
+}
+
+#[no_mangle]
+extern "C" fn carbonite_decompress_binary(
+  input_ptr: *const u8,
+  input_len: usize,
+  output_ptr: *mut *mut u8,
+  output_len: *mut usize,
+) -> usize {
+  if input_ptr.is_null() {
+    return 1; // Error: invalid input
+  }
+
+  let input_slice = unsafe { slice::from_raw_parts(input_ptr, input_len) };
+  let mut decoder = GzDecoder::new(input_slice);
+  let mut decompressed_data = Vec::new();
+
+  // Decompress the data to the end
+  match decoder.read_to_end(&mut decompressed_data) {
+    Ok(_) => {
+      let decompressed_len = decompressed_data.len();
+
+      // 将 Vec 转换为原始指针并转移所有权
+      let boxed_slice = decompressed_data.into_boxed_slice();
+      let raw_ptr = Box::into_raw(boxed_slice) as *mut u8;
+
+      // 返回分配的内存地址和长度
+      unsafe {
+        *output_ptr = raw_ptr;
+        *output_len = decompressed_len;
+      }
+      0 // Success
+    }
+    Err(_) => {
+      return 3; // Error: failed to decompress
+    }
+  }
+}
+
+#[no_mangle]
+extern "C" fn carbonite_release_memory(ptr: *mut u8, len: usize) {
+  if ptr.is_null() {
+    return;
+  }
+
+  unsafe {
+    let _ = Box::from_raw(ptr::slice_from_raw_parts_mut(ptr, len));
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_decompress_js_source() {
+    let js = include_bytes!("jsar-bootstrap-babylon.js.gz");
+    let decompressed_js = decompress_js_source(js);
+    assert_eq!(decompressed_js.len() > 0, true);
+  }
+
+  #[test]
+  fn test_decompress_binary() {
+    let js = include_bytes!("jsar-bootstrap-babylon.js.gz");
+    let mut output_ptr: *mut u8 = ptr::null_mut();
+    let mut output_len: usize = 0;
+    let result =
+      carbonite_decompress_binary(js.as_ptr(), js.len(), &mut output_ptr, &mut output_len);
+    assert_eq!(result, 0);
+    assert_eq!(output_len, 5024048);
+    println!("output: {:?}", output_ptr);
+
+    carbonite_release_memory(output_ptr, output_len);
   }
 }

@@ -14,7 +14,7 @@ if ! command -v xxd >/dev/null; then
 fi
 
 # Generate binary header with xxd
-xxd -n "$NAME" -i "$INPUT_FILE" >"$OUTPUT_HEADER"
+gzip -c "$INPUT_FILE" | xxd -n "$NAME" -i - >"$OUTPUT_HEADER"
 
 # Detect the operating system and compute MD5 checksum
 if command -v md5sum >/dev/null; then

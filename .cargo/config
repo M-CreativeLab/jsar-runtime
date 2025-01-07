@@ -5,9 +5,11 @@ target-dir = "build/output/crates"
 MACOSX_DEPLOYMENT_TARGET = "11.0"
 
 [profile.dev]
+incremental = true
 opt-level = 0
 
 [profile.release]
+incremental = false
 opt-level = "s"
 strip = true
 lto = "fat"

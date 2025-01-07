@@ -5,6 +5,8 @@
 namespace dom
 {
   using namespace std;
+  using LayoutAllocator = crates::layout::Allocator;
+  using LayoutNode = crates::layout::Node;
 
   // TODO: Implement the following methods.
   void HTMLElement::blur() {}
@@ -35,7 +37,7 @@ namespace dom
     auto layoutAllocator = documentLayoutAllocator();
     if (layoutAllocator != nullptr)
     {
-      layoutNode_ = make_shared<crates::jsar::layout::Node>(*layoutAllocator);
+      layoutNode_ = make_shared<LayoutNode>(*layoutAllocator);
       layoutNode_->setStyle(adoptedStyle_);
 
       // TODO: Append this node to the parent layout node.
@@ -51,10 +53,8 @@ namespace dom
   void HTMLElement::renderElement(builtin_scene::Scene &scene)
   {
     auto layoutRes = layoutNode_->layout();
-
 #ifdef TR_CLIENT_DOM_VERBOSE
-    std::cout << "Rendering element: " << tagName << std::endl;
-    std::cout << "  " << "Layout: " << layoutRes << std::endl;
+    std::cout << "Rendering HTMLElement(" << tagName << "): " << layoutRes << std::endl;
 #endif
 
     if (entity_.has_value())
@@ -80,7 +80,7 @@ namespace dom
                : ownerDocumentRef->scene;
   }
 
-  std::shared_ptr<crates::jsar::layout::Allocator> HTMLElement::documentLayoutAllocator()
+  std::shared_ptr<LayoutAllocator> HTMLElement::documentLayoutAllocator()
   {
     auto documentRef = Document::As<HTMLDocument>(ownerDocument->lock());
     return documentRef == nullptr

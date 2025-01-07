@@ -19,24 +19,6 @@ use url::Url;
 use glsl_lang::ast;
 use glsl_lang::visitor::{HostMut, Visit, VisitorMut};
 
-#[cfg(target_os = "android")]
-use std::ffi::c_void;
-
-extern "C" {
-  #[cfg(target_os = "android")]
-  fn eglGetProcAddress(procname: *const c_char) -> *const c_void;
-}
-
-#[no_mangle]
-pub extern "C" fn jsar_load_gl() {
-  // Load the OpenGL function pointers for the rust environment in native thread.
-  #[cfg(target_os = "android")]
-  gl::load_with(|symbol| unsafe {
-    let symbol_cstr = std::ffi::CString::new(symbol).expect("Failed to convert string to C string");
-    eglGetProcAddress(symbol_cstr.as_ptr()) as *const _
-  });
-}
-
 #[no_mangle]
 extern "C" fn release_rust_cstring(s: *mut c_char) {
   unsafe {

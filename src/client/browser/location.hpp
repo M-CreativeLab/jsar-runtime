@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <string>
-#include <crates/jsar_jsbindings.h>
+#include <crates/bindings.hpp>
 
 namespace browser
 {
@@ -12,7 +12,7 @@ namespace browser
     Location() = default;
     Location(std::string input)
     {
-      auto urlObject = crates::jsar::Url::Parse(input);
+      auto urlObject = crates::Url::Parse(input);
       host = urlObject.host;
       hostname = urlObject.hostname;
       href = urlObject.href;

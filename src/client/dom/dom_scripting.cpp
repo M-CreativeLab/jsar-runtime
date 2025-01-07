@@ -1,8 +1,8 @@
 #include <assert.h>
 #include <rapidjson/document.h>
+#include <idgen.hpp>
+#include <crates/bindings.hpp>
 
-#include "crates/jsar_jsbindings.h"
-#include "idgen.hpp"
 #include "./dom_scripting.hpp"
 #include "./runtime_context.hpp"
 
@@ -723,7 +723,7 @@ namespace dom
       auto module = dynamic_pointer_cast<DOMModule>(script);
       module->registerLinkedCallback(loadedCallback, false /** Do not check for linked */);
 
-      auto extension = crates::jsar::UrlHelper::ParseUrlToModuleExtension(module->url);
+      auto extension = crates::UrlHelper::ParseUrlToModuleExtension(module->url);
       if (extension.isTextSourceModule())
       {
         string source(static_cast<const char *>(sourceData), sourceByteLength);
@@ -887,7 +887,7 @@ namespace dom
     {
       try
       {
-        scriptSourceString = crates::jsar::TypeScriptTranspiler::Transpile(sourceStr);
+        scriptSourceString = crates::TypeScriptTranspiler::Transpile(sourceStr);
       }
       catch (const std::exception &e)
       {
@@ -1055,7 +1055,7 @@ namespace dom
     {
       try
       {
-        scriptSourceString = crates::jsar::TypeScriptTranspiler::Transpile(sourceStr);
+        scriptSourceString = crates::TypeScriptTranspiler::Transpile(sourceStr);
       }
       catch (const std::exception &e)
       {
@@ -1193,7 +1193,7 @@ namespace dom
 
     if (nextSpecifier.empty())
       nextSpecifier = specifier;
-    return crates::jsar::UrlHelper::CreateUrlStringWithPath(url, nextSpecifier);
+    return crates::UrlHelper::CreateUrlStringWithPath(url, nextSpecifier);
   }
 
   void DOMModule::registerLinkedCallback(ModuleLinkedCallback callback, bool checkLinked)

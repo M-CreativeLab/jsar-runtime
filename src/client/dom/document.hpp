@@ -5,6 +5,7 @@
 #include <map>
 #include <pugixml/pugixml.hpp>
 #include <client/builtin_scene/scene.hpp>
+#include <crates/bindings.hpp>
 
 #include "./node.hpp"
 #include "./element.hpp"
@@ -122,12 +123,12 @@ namespace dom
      * 
      * @returns The layout allocator.
      */
-    inline std::shared_ptr<crates::jsar::layout::Allocator> layoutAllocator() const
+    inline std::shared_ptr<crates::layout::Allocator> layoutAllocator() const
     {
       return layoutAllocator_;
     }
 
   private:
-    std::shared_ptr<crates::jsar::layout::Allocator> layoutAllocator_;
+    std::shared_ptr<crates::layout::Allocator> layoutAllocator_;
   };
 }

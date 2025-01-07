@@ -10,7 +10,6 @@
 #include "gles/context_storage.hpp"
 #include "gles/object_manager.hpp"
 
-#include "crates/jsar_jsbindings.h"
 #include "math/matrix.hpp"
 #include "runtime/content.hpp"
 #include "xr/device.hpp"
@@ -1772,9 +1771,9 @@ private:
 	}
 	TR_OPENGL_FUNC void OnDepthRange(DepthRangeCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		glDepthRangef(req->near, req->far);
+		glDepthRangef(req->n, req->f);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::DepthRange(%f, %f)", options.isDefaultQueue, req->near, req->far);
+			DEBUG(DEBUG_TAG, "[%d] GL::DepthRange(%f, %f)", options.isDefaultQueue, req->n, req->f);
 	}
 	TR_OPENGL_FUNC void OnStencilFunc(StencilFuncCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{

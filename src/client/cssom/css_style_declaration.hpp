@@ -3,7 +3,8 @@
 #include <string>
 #include <unordered_map>
 #include <ostream>
-#include <crates/jsar_jsbindings.h>
+#include <common/utility.hpp>
+#include <crates/bindings.hpp>
 
 namespace client_cssom
 {
@@ -28,11 +29,11 @@ namespace client_cssom
   {
   public:
     CSSStyleDeclaration()
-        : pdb_(crates::jsar::css::CSSPropertyDeclarationBlock::ParseStyleDeclaration(""))
+        : pdb_(crates::css::CSSPropertyDeclarationBlock::ParseStyleDeclaration(""))
     {
     }
     CSSStyleDeclaration(const std::string &cssText)
-        : pdb_(crates::jsar::css::CSSPropertyDeclarationBlock::ParseStyleDeclaration(cssText))
+        : pdb_(crates::css::CSSPropertyDeclarationBlock::ParseStyleDeclaration(cssText))
     {
     }
     // Reconstruct a new CSSStyleDeclaration from another one's cssText to avoid the `pdb_` being shared.
@@ -57,7 +58,7 @@ namespace client_cssom
     /**
      * Custom the conversion to `LayoutStyle`.
      */
-    operator crates::jsar::layout::style::LayoutStyle() const;
+    operator crates::layout::style::LayoutStyle() const;
     friend std::ostream &operator<<(std::ostream &os, const CSSStyleDeclaration &style)
     {
       os << "CSSStyleDeclaration {" << style.cssText() << "}" << std::endl;
@@ -89,8 +90,67 @@ namespace client_cssom
       return pdb_->getProperty(propertyName);
     }
     /**
+     * Get the property value as a specific type given a property name.
+     *
+     * @param propertyName The name of the CSS property.
+     * @returns The property value as a specific type such as `Dimension`.
+     */
+    template <typename T>
+      requires(std::is_same_v<T, float> ||
+               std::is_integral_v<T> ||
+               std::is_same_v<T, crates::layout::style::Display> ||
+               std::is_same_v<T, crates::layout::style::Position> ||
+               std::is_same_v<T, crates::layout::style::Overflow> ||
+               std::is_same_v<T, crates::layout::style::Dimension>)
+    inline T getPropertyValueAs(const std::string &propertyName) const
+    {
+      using namespace crates::layout::style;
+
+      const auto &value = getPropertyValue(propertyName);
+      if constexpr (std::is_same_v<T, float>)
+        return std::stof(value);
+      if constexpr (std::is_integral_v<T>)
+        return std::stoi(value);
+
+      if constexpr (std::is_same_v<T, crates::layout::style::Display>)
+      {
+        if (value == "block")
+          return Display::Block;
+        else if (value == "flex")
+          return Display::Flex;
+        else if (value == "grid")
+          return Display::Grid;
+        else if (value == "none")
+          return Display::None;
+        else
+          return Display::Block;
+      }
+
+      if constexpr (std::is_same_v<T, crates::layout::style::Position>)
+        return value == "absolute" ? Position::Absolute : Position::Relative;
+
+      if constexpr (std::is_same_v<T, crates::layout::style::Overflow>)
+      {
+        if (value == "hidden")
+          return Overflow::Hidden;
+        else if (value == "scroll")
+          return Overflow::Scroll;
+        else if (value == "clip")
+          return Overflow::Clip;
+        else
+          return Overflow::Visible;
+      }
+
+      if constexpr (std::is_same_v<T, crates::layout::style::Dimension>)
+        return T(value);
+
+      // NOTE: unreachable
+      assert(false);
+      return T();
+    }
+    /**
      * Check if a property is set.
-     * 
+     *
      * @param propertyName The name of the CSS property.
      * @returns Whether the property is set.
      */
@@ -112,7 +172,7 @@ namespace client_cssom
     }
     /**
      * Set a property value and priority within the declaration block if the property is not already set.
-     * 
+     *
      * @param propertyName The name of the CSS property.
      * @param value The new value of the property.
      * @param priority The optional priority, "important".
@@ -135,6 +195,6 @@ namespace client_cssom
     }
 
   private:
-    std::shared_ptr<crates::jsar::css::CSSPropertyDeclarationBlock> pdb_;
+    std::shared_ptr<crates::css::CSSPropertyDeclarationBlock> pdb_;
   };
 }

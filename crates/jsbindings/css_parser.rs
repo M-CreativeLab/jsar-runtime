@@ -59,6 +59,7 @@ extern "C" fn parse_csscolor(color_str: *const c_char) -> RGBAColor {
   }
 }
 
+/// cbindgen:ignore
 #[repr(C)]
 #[derive(Clone)]
 pub struct CSSPropertyDeclarationBlock {

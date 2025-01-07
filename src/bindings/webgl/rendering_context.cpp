@@ -1,6 +1,6 @@
-#include "idgen.hpp"
-#include "client/canvas/image_source.hpp"
-#include "crates/jsar_jsbindings.h"
+#include <idgen.hpp>
+#include <client/canvas/image_source.hpp>
+#include <crates/bindings.hpp>
 
 #include "./rendering_context-inl.hpp"
 #include "./vertex_array.hpp"

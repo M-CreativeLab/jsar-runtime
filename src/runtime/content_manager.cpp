@@ -292,7 +292,6 @@ static void InstallExecutable(string runtimeDir, string executableName, string e
         if (string(md5) != executableMd5)
         {
           shouldInstall = true;
-          DEBUG(LOG_TAG_CONTENT, "The MD5 hash of the executable is different, re-install it.");
         }
       }
       else
@@ -334,6 +333,8 @@ static void InstallExecutable(string runtimeDir, string executableName, string e
    */
   if (shouldInstall)
   {
+    DEBUG(LOG_TAG_CONTENT, "Installing the executable file: %s", execPath.c_str());
+
     // Write the file content.
     FILE *fp = fopen(execPath.c_str(), "wb");
     if (fp != nullptr)
@@ -391,11 +392,26 @@ void TrContentManager::installExecutable()
   InstallNodejsLibrary(executableTargetDir);
 
   // Install the TransmuteClient executable.
-  InstallExecutable(executableTargetDir,
-                    "TransmuteClient",
-                    string(transmute_client_binary_md5),
-                    [](FILE *fp)
-                    { fwrite(transmute_client_binary, 1, transmute_client_binary_len, fp); });
+  {
+    auto writeFile = [](FILE *fp)
+    {
+      shared_ptr<carbonite::StringReference> contents = carbonite::decompressBinary(transmute_client_binary,
+                                                                                    transmute_client_binary_len);
+      if (contents != nullptr)
+      {
+        fwrite(contents->data(), 1, contents->size(), fp);
+        contents.reset();
+      }
+      else
+      {
+        throw runtime_error("Failed to decompress the TransmuteClient binary");
+      }
+    };
+    InstallExecutable(executableTargetDir,
+                      "TransmuteClient",
+                      string(transmute_client_binary_md5),
+                      writeFile);
+  }
 }
 
 void TrContentManager::installScripts()

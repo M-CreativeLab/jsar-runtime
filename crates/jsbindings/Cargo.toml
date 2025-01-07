@@ -36,5 +36,8 @@ swc_error_reporters = { version = "1.0.0" }
 swc_fast_ts_strip = { version = "0.12.0" }
 url = { workspace = true }
 
+[build-dependencies]
+cbindgen = "0.27.0"
+
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = "0.13.3"

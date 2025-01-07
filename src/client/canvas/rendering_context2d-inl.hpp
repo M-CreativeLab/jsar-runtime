@@ -2,8 +2,9 @@
 #include <skia/include/core/SkColorSpace.h>
 #include <skia/include/effects/SkDashPathEffect.h>
 
-#include "crates/jsar_jsbindings.h"
-#include "common/font/parser.hpp"
+#include <crates/bindings.hpp>
+#include <common/font/parser.hpp>
+
 #include "./rendering_context2d.hpp"
 #include "./path2d.hpp"
 #include "../per_process.hpp"
@@ -35,7 +36,7 @@ namespace canvas
   template <typename CanvasType>
   bool CanvasRenderingContext2D<CanvasType>::setFillStyle(const std::string &style)
   {
-    auto color = parse_csscolor(style.c_str());
+    auto color = crates::css::parseColor(style);
     fillStyle = SkColorSetARGB(color.a, color.r, color.g, color.b);
     return true;
   }
@@ -43,7 +44,7 @@ namespace canvas
   template <typename CanvasType>
   bool CanvasRenderingContext2D<CanvasType>::setStrokeStyle(const std::string &style)
   {
-    auto color = parse_csscolor(style.c_str());
+    auto color = crates::css::parseColor(style);
     strokeStyle = SkColorSetARGB(color.a, color.r, color.g, color.b);
     return true;
   }

@@ -1,5 +1,4 @@
 #include <iostream>
-#include <crates/jsar_jsbindings.h>
 #include <client/per_process.hpp>
 #include <client/builtin_scene/ecs-inl.hpp>
 
@@ -15,7 +14,7 @@ namespace dom
   Document::Document(string contentType, DocumentType documentType,
                      shared_ptr<BrowsingContext> browsingContext,
                      bool autoConnect)
-      : Node(NodeType::DOCUMENT_NODE, "#document", std::nullopt),
+      : Node(NodeType::DOCUMENT_NODE, "#document", nullopt),
         contentType(contentType),
         documentType(documentType),
         scene(TrClientContextPerProcess::Get()->builtinScene),
@@ -24,7 +23,7 @@ namespace dom
   {
     assert(scene != nullptr);
     assert(browsingContext != nullptr);
-    docInternal = std::make_shared<pugi::xml_document>();
+    docInternal = make_shared<pugi::xml_document>();
   }
 
   Document::Document(Document &other)
@@ -272,7 +271,7 @@ namespace dom
 
   HTMLDocument::HTMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
       : Document("text/html", DocumentType::kHTML, browsingContext, autoConnect),
-        layoutAllocator_(std::make_shared<crates::jsar::layout::Allocator>())
+        layoutAllocator_(make_shared<crates::layout::Allocator>())
   {
     {
       // Configure the built-in scene for the HTML rendering.

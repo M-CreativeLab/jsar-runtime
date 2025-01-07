@@ -1,25 +1,36 @@
 JOBS ?= 1
+CLEAN ?= no
+RELEASE ?= no
 
 define CLEAN_AND_RECONFIGURE
-	rm -rf targets/$1
-	sh ./configure-$1.sh
+	rm -rf targets/$1; \
+		if [ "$(RELEASE)" = "yes" ]; then \
+			./configure-$1.sh --release; \
+		else \
+			./configure-$1.sh --debug; \
+		fi
 endef
 
 define BUILD_INSTALL
-	make -C targets/$1 -j${JOBS} install
+	@make -C targets/$1 -j${JOBS} install
+endef
+
+# This macro defines the BUILD_ON process.
+# It first checks if the CLEAN variable is defined.
+# If CLEAN is defined, it calls the CLEAN_AND_RECONFIGURE function with the given argument ($1).
+# Regardless of the CLEAN variable, it then calls the BUILD_INSTALL function with the given argument ($1).
+define BUILD_ON
+	@if [ "$(CLEAN)" = "yes" ]; then \
+		$(call CLEAN_AND_RECONFIGURE,$1); \
+	fi
+	$(call BUILD_INSTALL,$1)
 endef
 
 darwin:
-ifdef clean
-	$(call CLEAN_AND_RECONFIGURE,darwin)
-endif
-	$(call BUILD_INSTALL,darwin)
+	$(call BUILD_ON,darwin)
 
 android:
-ifdef clean
-	$(call CLEAN_AND_RECONFIGURE,android)
-endif
-	$(call BUILD_INSTALL,android)
+	$(call BUILD_ON,android)
 
 windows:
 	cmake -DCMAKE_BUILD_TYPE=Release -B targets/windows ..
