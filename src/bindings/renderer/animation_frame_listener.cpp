@@ -64,11 +64,12 @@ namespace bindings
     onframeTsfn = Napi::ThreadSafeFunction::New(env, callback, "onframe", 0, 2);
     connected = true; // mark the `connected` to be true before `requestFrame()`.
 
-    uv_timer_start(&tickHandle, [](uv_timer_t *handle)
-                  {
+    auto timerTick = [](uv_timer_t *handle)
+    {
       auto self = static_cast<AnimationFrameListener *>(handle->data);
       self->tick();
-                  }, 0, 1);
+    };
+    uv_timer_start(&tickHandle, timerTick, 0, 1);
     return env.Undefined();
   }
 

@@ -3,7 +3,7 @@ CLEAN ?= no
 RELEASE ?= no
 
 define CLEAN_AND_RECONFIGURE
-	@rm -rf targets/$1; \
+	rm -rf targets/$1; \
 		if [ "$(RELEASE)" = "yes" ]; then \
 			./configure-$1.sh --release; \
 		else \

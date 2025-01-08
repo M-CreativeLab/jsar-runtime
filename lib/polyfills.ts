@@ -28,6 +28,7 @@ export function loadPolyfills() {
   process._linkedBinding('transmute:browser');
   process._linkedBinding('transmute:dom');
   process._linkedBinding('transmute:canvas');
+  process._linkedBinding('transmute:cssom');
 
   globalThis.WebSocket = undici.WebSocket as unknown as typeof WebSocket;
   globalThis.XMLHttpRequest = XMLHttpRequestImpl;

@@ -72,7 +72,7 @@ namespace dom
     std::string outerText;
     std::string title;
     std::string translate;
-    client_cssom::CSSStyleDeclaration style;
+    std::shared_ptr<client_cssom::CSSStyleDeclaration> style;
 
   protected:
     std::optional<builtin_scene::ecs::EntityId> entity_ = std::nullopt;

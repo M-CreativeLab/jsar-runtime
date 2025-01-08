@@ -1,10 +1,10 @@
 file(GLOB TR_CLIENT_SOURCE
     "src/bindings/browser/*.cpp"
     "src/bindings/canvas/*.cpp"
+    "src/bindings/cssom/*.cpp"
     "src/bindings/dom/*.cpp"
     "src/bindings/dom/**/*.cpp"
     "src/bindings/env/*.cpp"
-    "src/bindings/logger/*.cpp"
     "src/bindings/math3d/*.cpp"
     "src/bindings/messaging/*.cpp"
     "src/bindings/renderer/*.cpp"

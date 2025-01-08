@@ -45,6 +45,7 @@ declare namespace NodeJS {
       OffscreenCanvas: typeof OffscreenCanvas;
       createImageBitmap: (image: ImageData | ImageBitmap) => Promise<ImageBitmap>;
     };
+    _linkedBinding(module: 'transmute:cssom'): {};
     /**
      * It loads the transmute's native webgl module, which contains the implementation of WebGL APIs.
      */

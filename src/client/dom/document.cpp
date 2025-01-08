@@ -233,7 +233,7 @@ namespace dom
       // Step 1: Compute the elements' styles.
       // TODO: use `computeStyle` for stylesheets.
       iterateElementWithChildren(body, [](shared_ptr<HTMLElement> element)
-                                 { element->adoptStyle(element->style); });
+                                 { element->adoptStyle(*element->style); });
 
       // Step 2: Compute the layout of all the elements only if the layout is dirty.
       if (body->layoutNode_ != nullptr && body->layoutNode_->isDirty())

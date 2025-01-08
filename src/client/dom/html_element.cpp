@@ -23,7 +23,7 @@ namespace dom
 
     // Create style declaration from the default style & the style attribute.
     std::string concatedCssText = defaultStyle_.cssText() + ";" + getAttribute("style");
-    style = client_cssom::CSSStyleDeclaration(concatedCssText);
+    style = make_shared<client_cssom::CSSStyleDeclaration>(concatedCssText);
   }
 
   void HTMLElement::connectedCallback()

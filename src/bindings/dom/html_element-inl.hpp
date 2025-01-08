@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./html_element.hpp"
+#include "../cssom/css_style_declaration.hpp"
 
 namespace dombinding
 {
@@ -22,6 +23,6 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return Napi::Object::New(env);
+    return cssombinding::CSSStyleDeclaration::NewInstance(env, this->node->style);
   }
 }
