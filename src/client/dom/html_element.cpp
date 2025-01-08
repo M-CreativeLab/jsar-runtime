@@ -76,6 +76,20 @@ namespace dom
         auto actualZ = client_cssom::pixelToMeter(adoptedStyle_.getPropertyValueAs<float>("z-index"));
         transform->setTranslation({actualX, actualY, actualZ});
       }
+
+      auto material3d = scene.getComponent<MeshMaterial3d>(entity);
+      if (material3d != nullptr)
+      {
+        auto colorMaterial = dynamic_pointer_cast<materials::ColorMaterial>(material3d->material());
+        if (colorMaterial != nullptr)
+        {
+          if (adoptedStyle_.hasProperty("background-color"))
+          {
+            // auto backgroundColor = adoptedStyle_.getPropertyValue("background-color");
+            colorMaterial->surfaceColor = {1.0f, 0.0f, 0.0f, 1.0f};
+          }
+        }
+      }
     }
   }
 

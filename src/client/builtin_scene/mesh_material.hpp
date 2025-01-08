@@ -25,6 +25,7 @@ namespace builtin_scene
     {
       return program_;
     }
+    inline std::shared_ptr<Material> material() const { return handle_; }
     /**
      * Initialize the `MeshMaterial3d` instance with the given WebGL context and program.
      *

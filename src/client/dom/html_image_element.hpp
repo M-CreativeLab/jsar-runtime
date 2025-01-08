@@ -3,18 +3,18 @@
 #include <string>
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkBitmap.h>
-#include "./html_element.hpp"
+#include "./html_plane_element.hpp"
 #include "../canvas/image_source.hpp"
 
 namespace dom
 {
-  class HTMLImageElement : public HTMLElement,
+  class HTMLImageElement : public HTMLPlaneElement,
                            public canvas::ImageSource
   {
   public:
-    using HTMLElement::HTMLElement;
+    using HTMLPlaneElement::HTMLPlaneElement;
     HTMLImageElement(weak_ptr<Document> ownerDocument)
-        : HTMLElement("IMG", ownerDocument),
+        : HTMLPlaneElement("IMG", ownerDocument),
           canvas::ImageSource(),
           skBitmap(std::make_shared<SkBitmap>())
     {

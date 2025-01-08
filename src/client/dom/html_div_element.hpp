@@ -1,19 +1,16 @@
 #pragma once
 
 #include <string>
-#include "./html_element.hpp"
+#include "./html_plane_element.hpp"
 
 namespace dom
 {
-  class HTMLDivElement final : public HTMLElement
+  class HTMLDivElement final : public HTMLPlaneElement
   {
   public:
-    using HTMLElement::HTMLElement;
-    HTMLDivElement(weak_ptr<Document> ownerDocument) : HTMLElement("DIV", ownerDocument)
+    using HTMLPlaneElement::HTMLPlaneElement;
+    HTMLDivElement(weak_ptr<Document> ownerDocument) : HTMLPlaneElement("DIV", ownerDocument)
     {
     }
-
-  public:
-    void connectedCallback() override;
   };
 }

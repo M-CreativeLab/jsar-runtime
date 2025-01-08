@@ -1,15 +1,15 @@
 #pragma once
 
 #include <string>
-#include "./html_element.hpp"
+#include "./html_plane_element.hpp"
 
 namespace dom
 {
-  class HTMLParagraphElement : public HTMLElement
+  class HTMLParagraphElement : public HTMLPlaneElement
   {
   public:
-    using HTMLElement::HTMLElement;
-    HTMLParagraphElement(weak_ptr<Document> ownerDocument) : HTMLElement("P", ownerDocument)
+    using HTMLPlaneElement::HTMLPlaneElement;
+    HTMLParagraphElement(weak_ptr<Document> ownerDocument) : HTMLPlaneElement("P", ownerDocument)
     {
     }
   };
