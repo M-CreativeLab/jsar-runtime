@@ -39,6 +39,26 @@ namespace client_cssom
     if (hasProperty("overflow-y"))
       layoutStyle.setOverflowY(getPropertyValueAs<Overflow>("overflow-y"));
 
+    // Set margin(top, right, bottom, left)
+    if (hasProperty("margin-top"))
+      layoutStyle.setMarginTop(getPropertyValueAs<LengthPercentageAuto>("margin-top"));
+    if (hasProperty("margin-right"))
+      layoutStyle.setMarginRight(getPropertyValueAs<LengthPercentageAuto>("margin-right"));
+    if (hasProperty("margin-bottom"))
+      layoutStyle.setMarginBottom(getPropertyValueAs<LengthPercentageAuto>("margin-bottom"));
+    if (hasProperty("margin-left"))
+      layoutStyle.setMarginLeft(getPropertyValueAs<LengthPercentageAuto>("margin-left"));
+
+    // Set padding(top, right, bottom, left)
+    if (hasProperty("padding-top"))
+      layoutStyle.setPaddingTop(getPropertyValueAs<LengthPercentage>("padding-top"));
+    if (hasProperty("padding-right"))
+      layoutStyle.setPaddingRight(getPropertyValueAs<LengthPercentage>("padding-right"));
+    if (hasProperty("padding-bottom"))
+      layoutStyle.setPaddingBottom(getPropertyValueAs<LengthPercentage>("padding-bottom"));
+    if (hasProperty("padding-left"))
+      layoutStyle.setPaddingLeft(getPropertyValueAs<LengthPercentage>("padding-left"));
+
     // Set flex-grow
     if (hasProperty("flex-grow"))
       layoutStyle.setFlexGrow(getPropertyValueAs<float>("flex-grow"));

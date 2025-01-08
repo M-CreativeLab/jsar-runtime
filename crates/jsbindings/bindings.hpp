@@ -589,6 +589,23 @@ namespace crates
         static inline LengthPercentage Percent(float value) { return LengthPercentage(_LengthPercentage::Percent(value)); }
 
       public:
+        LengthPercentage(const std::string &input = "")
+        {
+          if (input.ends_with("%"))
+          {
+            auto value = std::stof(input.substr(0, input.size() - 1)) / 100.0f;
+            handle_ = _LengthPercentage::Percent(value);
+          }
+          else if (input.ends_with("px"))
+          {
+            auto value = std::stof(input.substr(0, input.size() - 2));
+            handle_ = _LengthPercentage::Length(value);
+          }
+          else
+          {
+            handle_ = _LengthPercentage::Length(0.0f);
+          }
+        }
         LengthPercentage(_LengthPercentage handle) : handle_(handle) {}
 
       public:

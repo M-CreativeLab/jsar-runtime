@@ -131,12 +131,10 @@ extern "C" fn carbonite_decompress_binary(
   match decoder.read_to_end(&mut decompressed_data) {
     Ok(_) => {
       let decompressed_len = decompressed_data.len();
-
-      // 将 Vec 转换为原始指针并转移所有权
       let boxed_slice = decompressed_data.into_boxed_slice();
       let raw_ptr = Box::into_raw(boxed_slice) as *mut u8;
 
-      // 返回分配的内存地址和长度
+      // Update the output pointers.
       unsafe {
         *output_ptr = raw_ptr;
         *output_len = decompressed_len;

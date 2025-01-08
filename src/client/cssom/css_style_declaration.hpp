@@ -59,6 +59,9 @@ namespace client_cssom
      * Custom the conversion to `LayoutStyle`.
      */
     operator crates::layout::style::LayoutStyle() const;
+    /**
+     * Custom the conversion to `std::string`.
+     */
     friend std::ostream &operator<<(std::ostream &os, const CSSStyleDeclaration &style)
     {
       os << "CSSStyleDeclaration {" << style.cssText() << "}" << std::endl;
@@ -101,7 +104,9 @@ namespace client_cssom
                std::is_same_v<T, crates::layout::style::Display> ||
                std::is_same_v<T, crates::layout::style::Position> ||
                std::is_same_v<T, crates::layout::style::Overflow> ||
-               std::is_same_v<T, crates::layout::style::Dimension>)
+               std::is_same_v<T, crates::layout::style::Dimension> ||
+               std::is_same_v<T, crates::layout::style::LengthPercentageAuto> ||
+               std::is_same_v<T, crates::layout::style::LengthPercentage>)
     inline T getPropertyValueAs(const std::string &propertyName) const
     {
       using namespace crates::layout::style;
@@ -141,7 +146,9 @@ namespace client_cssom
           return Overflow::Visible;
       }
 
-      if constexpr (std::is_same_v<T, crates::layout::style::Dimension>)
+      if constexpr (std::is_same_v<T, crates::layout::style::Dimension> ||
+                    std::is_same_v<T, crates::layout::style::LengthPercentageAuto> ||
+                    std::is_same_v<T, crates::layout::style::LengthPercentage>)
         return T(value);
 
       // NOTE: unreachable

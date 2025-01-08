@@ -68,6 +68,10 @@ namespace dom
         auto actualWidth = client_cssom::pixelToMeter(layoutRes.width());
         auto actualHeight = client_cssom::pixelToMeter(layoutRes.height());
         transform->setScale({actualWidth, actualHeight, 1.0f});
+
+        auto actualX = client_cssom::pixelToMeter(layoutRes.x());
+        auto actualY = client_cssom::pixelToMeter(layoutRes.y());
+        transform->setTranslation({actualX, actualY, 0.0f});
       }
     }
   }
@@ -95,6 +99,9 @@ namespace dom
     // Update the layout node style.
     if (layoutNode_ != nullptr)
     {
+#ifdef TR_CLIENT_DOM_VERBOSE
+      std::cout << "Adopting style for HTMLElement(" << tagName << "): " << adoptedStyle_ << std::endl;
+#endif
       layoutNode_->setStyle(adoptedStyle_);
       return true;
     }

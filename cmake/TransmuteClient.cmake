@@ -20,10 +20,20 @@ file(GLOB TR_CLIENT_SOURCE
 set(TR_SHADERS_SOURCE "${CMAKE_SOURCE_DIR}/src/client/builtin_scene/")
 set(TR_SHADERS_HEADER "${CMAKE_SOURCE_DIR}/src/client/builtin_scene/shaders_store.gen.hpp")
 set(TR_SHADERS_HEADER_GENERATOR "${CMAKE_SOURCE_DIR}/tools/generate_shaders_header.cmake")
-add_custom_target(TransmuteClientShadersHeader
-    ALL
+file(GLOB_RECURSE TR_SHADERS_SOURCE_FILES
+    "${CMAKE_SOURCE_DIR}/src/client/builtin_scene/*.vert"
+    "${CMAKE_SOURCE_DIR}/src/client/builtin_scene/*.frag"
+)
+message(STATUS "Shaders source files: ${TR_SHADERS_SOURCE_FILES}")
+add_custom_command(
+    OUTPUT ${TR_SHADERS_HEADER}
     COMMAND ${CMAKE_COMMAND} -DHEADER_OUTPUT=${TR_SHADERS_HEADER} -DSHADERS_DIR=${TR_SHADERS_SOURCE} -P ${TR_SHADERS_HEADER_GENERATOR}
     COMMENT "[target] Generating the shaders header"
+    DEPENDS ${TR_SHADERS_SOURCE_FILES}
+    COMMENT "Generating shaders header: ${TR_SHADERS_HEADER}"
+)
+add_custom_target(TransmuteClientShadersHeader ALL
+    DEPENDS ${TR_SHADERS_HEADER}
 )
 
 # Add executable target
