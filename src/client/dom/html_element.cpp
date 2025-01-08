@@ -71,7 +71,10 @@ namespace dom
 
         auto actualX = client_cssom::pixelToMeter(layoutRes.x());
         auto actualY = client_cssom::pixelToMeter(layoutRes.y());
-        transform->setTranslation({actualX, actualY, 0.0f});
+        // Treat the z-index as the z-axis translation in pixels for now.
+        // TODO: Support the z-index in the layout system, and convert it to meters.
+        auto actualZ = client_cssom::pixelToMeter(adoptedStyle_.getPropertyValueAs<float>("z-index"));
+        transform->setTranslation({actualX, actualY, actualZ});
       }
     }
   }

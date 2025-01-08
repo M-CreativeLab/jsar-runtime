@@ -113,9 +113,9 @@ namespace client_cssom
 
       const auto &value = getPropertyValue(propertyName);
       if constexpr (std::is_same_v<T, float>)
-        return std::stof(value);
+        return value != "" ? std::stof(value) : 0.0f;
       if constexpr (std::is_integral_v<T>)
-        return std::stoi(value);
+        return value != "" ? std::stoi(value) : 0;
 
       if constexpr (std::is_same_v<T, crates::layout::style::Display>)
       {
