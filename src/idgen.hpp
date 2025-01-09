@@ -93,9 +93,9 @@ public:
   [[nodiscard]] IdType max() const noexcept { return maxId_; }
 
 private:
-  IdType counter_;    // Current counter value
-  IdType initialId_;  // Initial ID value
-  IdType maxId_;      // Maximum ID value
+  IdType counter_;   // Current counter value
+  IdType initialId_; // Initial ID value
+  IdType maxId_;     // Maximum ID value
 };
 
 using TrIdGenerator = TrIdGeneratorBase<uint32_t>;

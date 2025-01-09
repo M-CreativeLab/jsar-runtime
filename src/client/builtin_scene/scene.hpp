@@ -5,6 +5,7 @@
 
 #include "./ecs-inl.hpp"
 #include "./asset.hpp"
+#include "./text.hpp"
 #include "./timer.hpp"
 #include "./camera.hpp"
 #include "./hierarchy.hpp"
@@ -12,6 +13,7 @@
 #include "./meshes.hpp"
 #include "./materials.hpp"
 #include "./client_renderer.hpp"
+#include "./web_content.hpp"
 #include "./xr.hpp"
 
 #include "../graphics/webgl_context.hpp"
@@ -21,43 +23,6 @@
 
 namespace builtin_scene
 {
-  /**
-   * The `DefaultPlugin` loads the default components and systems for the builtin scene.
-   */
-  class DefaultPlugin : public ecs::Plugin
-  {
-  public:
-    using ecs::Plugin::Plugin;
-
-  protected:
-    void build(ecs::App &app) override
-    {
-      using namespace ecs;
-
-      // Resources
-      app.addResource(Resource::Make<Timer>(16));
-      app.addResource(Resource::Make<Meshes>());
-      app.addResource(Resource::Make<Materials>());
-
-      // Components
-      app.registerComponent<hierarchy::Element>();
-      app.registerComponent<hierarchy::Children>();
-      app.registerComponent<hierarchy::Parent>();
-      app.registerComponent<Transform>();
-      app.registerComponent<Camera>();
-      app.registerComponent<Mesh3d>();
-      app.registerComponent<MeshMaterial3d>();
-
-      // Systems
-      app.addSystem(SchedulerLabel::kStartup, System::Make<CameraStartupSystem>());
-      app.addSystem(SchedulerLabel::kPreUpdate, System::Make<TimerSystem>());
-
-      auto updateChain = System::Make<CameraUpdateSystem>()
-                             ->chain(System::Make<RenderSystem>());
-      app.addSystem(SchedulerLabel::kUpdate, updateChain);
-    }
-  };
-
   /**
    * The main class for the builtin scene which inherits from the `ecs::App`.
    */
@@ -79,36 +44,7 @@ namespace builtin_scene
     }
 
   public:
-    Scene(TrClientContextPerProcess *clientContext)
-        : ecs::App(),
-          glContext_(clientContext->createHostWebGLContext()),
-          xrDeviceClient_(clientContext->getXRDeviceClient())
-    {
-      assert(glContext_ != nullptr);
-      assert(xrDeviceClient_ != nullptr);
-
-      frameCallback_ = [this](uint32_t time, std::shared_ptr<client_xr::XRFrame> frame, void *env_)
-      {
-        assert(xrSession_ != nullptr); // ensure the WebXR session is ready.
-        update(time, frame);
-        xrSession_->requestAnimationFrame(frameCallback_);
-      };
-
-      auto setupXRSession = [this, clientContext](auto type, auto event)
-      {
-        auto xrSystem = xrDeviceClient_->getXRSystem(clientContext->getScriptingEventLoop());
-        xrSession_ = xrSystem->requestSession();
-
-        // Update the render state
-        client_xr::XRRenderState newRenderState;
-        newRenderState.baseLayer = client_xr::XRWebGLLayer::Make(xrSession_, glContext_);
-        xrSession_->updateRenderState(newRenderState);
-
-        bootstrap();
-        xrSession_->requestAnimationFrame(frameCallback_);
-      };
-      clientContext->addEventListener(TrClientContextEventType::ScriptingEventLoopReady, setupXRSession);
-    }
+    Scene(TrClientContextPerProcess *clientContext);
     ~Scene() = default;
 
   public:
@@ -117,43 +53,11 @@ namespace builtin_scene
      *
      * @param name The tag name of the element.
      */
-    ecs::EntityId createElement(std::string name)
-    {
-      return spawn(
-          hierarchy::Element(name),
-          hierarchy::Children(),
-          hierarchy::Parent(),
-          Transform::FromXYZ(0.0f, 0.0f, 0.0f));
-    }
+    ecs::EntityId createElement(std::string name);
 
   private:
-    void bootstrap()
-    {
-      addPlugin<DefaultPlugin>();
-      addPlugin<WebXRPlugin>();
-      ecs::App::startup();
-
-      // Add renderer
-      addResource(ecs::Resource::Make<Renderer>(glContext_));
-
-      // Update WebXR session resource
-      {
-        auto xrExperience = getResource<WebXRExperience>();
-        assert(xrExperience != nullptr);
-        xrExperience->updateReferenceSpace(
-            xrSession_->requestReferenceSpace(client_xr::XRReferenceSpaceType::kLocal));
-      }
-    }
-    void update(uint32_t time, std::shared_ptr<client_xr::XRFrame> frame)
-    {
-      // Update the time and frame to the WebXRSession resource.
-      auto xrExperience = getResource<WebXRExperience>();
-      assert(xrExperience != nullptr);
-      xrExperience->updateCurrentFrame(time, frame);
-
-      // Trigger the ECS update().
-      ecs::App::update();
-    }
+    void bootstrap();
+    void update(uint32_t time, std::shared_ptr<client_xr::XRFrame> frame);
 
   private:
     std::shared_ptr<client_graphics::WebGL2Context> glContext_;
