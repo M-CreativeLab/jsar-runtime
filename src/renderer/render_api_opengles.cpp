@@ -2031,12 +2031,12 @@ bool RenderAPI_OpenGLCoreES::SupportsWebGL2()
 
 int RenderAPI_OpenGLCoreES::GetDrawingBufferWidth()
 {
-	return GetRenderer()->getOpenGLContext()->GetViewport().width;
+	return GetRenderer()->getOpenGLContext()->GetViewport().width();
 }
 
 int RenderAPI_OpenGLCoreES::GetDrawingBufferHeight()
 {
-	return GetRenderer()->getOpenGLContext()->GetViewport().height;
+	return GetRenderer()->getOpenGLContext()->GetViewport().height();
 }
 
 #ifdef ANDROID

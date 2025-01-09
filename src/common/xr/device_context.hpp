@@ -166,8 +166,8 @@ namespace xr
     void updateViewFramebuffer(int viewIndex, int framebufferId, TrViewport viewport, bool useDoubleWide)
     {
       assert(viewIndex >= 0 && viewIndex < 2);
-      data->framebufferConf.height = viewport.height;
-      data->framebufferConf.width = viewport.width;
+      data->framebufferConf.height = viewport.height();
+      data->framebufferConf.width = viewport.width();
       data->framebufferConf.useDoubleWide = useDoubleWide;
       auto &view = data->stereoFrame.getView(viewIndex);
       view.viewFramebuffer = framebufferId;

@@ -1271,18 +1271,18 @@ namespace client_graphics
     if (pname == WebGLFloatArrayParameterName::kViewport)
     {
       return {
-          static_cast<float>(viewport_.x),
-          static_cast<float>(viewport_.y),
-          static_cast<float>(viewport_.width),
-          static_cast<float>(viewport_.height)};
+          static_cast<float>(viewport_.x()),
+          static_cast<float>(viewport_.y()),
+          static_cast<float>(viewport_.width()),
+          static_cast<float>(viewport_.height())};
     }
     else if (pname == WebGLFloatArrayParameterName::kScissorBox)
     {
       return {
           static_cast<float>(0),
           static_cast<float>(0),
-          static_cast<float>(viewport_.width),
-          static_cast<float>(viewport_.height)};
+          static_cast<float>(viewport_.width()),
+          static_cast<float>(viewport_.height())};
     }
     assert(false);
   }

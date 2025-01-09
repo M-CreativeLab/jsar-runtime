@@ -511,7 +511,7 @@ namespace client_graphics
      */
     inline int drawingBufferWidth()
     {
-      return viewport_.width;
+      return viewport_.width();
     }
 
     /**
@@ -519,7 +519,7 @@ namespace client_graphics
      */
     inline int drawingBufferHeight()
     {
-      return viewport_.height;
+      return viewport_.height();
     }
 
     /**

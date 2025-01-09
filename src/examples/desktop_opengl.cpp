@@ -312,7 +312,7 @@ public:
   void initGLProgram()
   {
     auto drawingViewport = windowCtx->drawingViewport();
-    glViewport(0, 0, drawingViewport.width, drawingViewport.height);
+    glViewport(0, 0, drawingViewport.width(), drawingViewport.height());
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
@@ -383,7 +383,7 @@ public:
   void render()
   {
     auto drawingViewport = windowCtx->drawingViewport();
-    glViewport(0, 0, drawingViewport.width, drawingViewport.height);
+    glViewport(0, 0, drawingViewport.width(), drawingViewport.height());
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -698,13 +698,13 @@ int main(int argc, char **argv)
     {
       for (int viewIndex = 0; viewIndex < 2; viewIndex++)
       {
-        uint32_t w = drawingViewport.width / viewsCount;
-        uint32_t h = drawingViewport.height;
+        uint32_t w = drawingViewport.width() / viewsCount;
+        uint32_t h = drawingViewport.height();
         uint32_t x = viewIndex * w;
         uint32_t y = 0;
 
         TrViewport eyeViewport(w, h, x, y);
-        glViewport(eyeViewport.x, eyeViewport.y, eyeViewport.width, eyeViewport.height);
+        glViewport(eyeViewport.x(), eyeViewport.y(), eyeViewport.width(), eyeViewport.height());
 
         // render JSAR content
         {
@@ -731,7 +731,7 @@ int main(int argc, char **argv)
     }
     else
     {
-      glViewport(0, 0, drawingViewport.width, drawingViewport.height);
+      glViewport(0, 0, drawingViewport.width(), drawingViewport.height());
       {
         glGetError(); // Clear the error
         if (xrEnabled)
