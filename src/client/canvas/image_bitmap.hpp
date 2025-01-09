@@ -25,9 +25,9 @@ namespace canvas
     ImageBitmap(std::shared_ptr<ImageSource> image, float sx, float sy, float sw, float sh);
 
   public:
-    size_t width() override { return skBitmap->width(); }
-    size_t height() override { return skBitmap->height(); }
-    bool readPixels(SkPixmap &dst) override { return skBitmap->readPixels(dst); }
+    size_t width() const override { return skBitmap->width(); }
+    size_t height() const override { return skBitmap->height(); }
+    bool readPixels(SkPixmap &dst) const override { return skBitmap->readPixels(dst); }
 
   public:
     void close();

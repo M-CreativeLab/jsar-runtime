@@ -1,11 +1,10 @@
+#include <memory>
 #include "./canvas.hpp"
-
-using namespace std;
 
 namespace canvas
 {
   template <typename T>
-  shared_ptr<RenderingContextBase<T>> CanvasBase<T>::getContext(RenderingContextType type)
+  std::shared_ptr<RenderingContextBase<T>> CanvasBase<T>::getContext(RenderingContextType type)
   {
     if (renderingContext == nullptr)
     {
@@ -13,7 +12,7 @@ namespace canvas
       switch (type)
       {
       case RenderingContextType::RenderingContext2D:
-        renderingContext = make_shared<CanvasRenderingContext2D<T>>(getPtr());
+        renderingContext = std::make_shared<CanvasRenderingContext2D<T>>(getPtr());
         break;
       default:
         break;

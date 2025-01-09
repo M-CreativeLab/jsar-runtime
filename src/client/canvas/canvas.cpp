@@ -4,7 +4,7 @@ using namespace std;
 
 namespace canvas
 {
-  std::string Canvas::toDataURL(std::string type, double encoderOptions)
+  std::string Canvas::toDataURL(const std::string &type, double encoderOptions)
   {
     return "data:";
   }

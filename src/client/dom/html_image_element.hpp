@@ -21,9 +21,9 @@ namespace dom
     }
 
   public:
-    size_t width() override { return skBitmap->width(); }
-    size_t height() override { return skBitmap->height(); }
-    bool readPixels(SkPixmap &dst) override
+    size_t width() const override { return skBitmap->width(); }
+    size_t height() const override { return skBitmap->height(); }
+    bool readPixels(SkPixmap &dst) const override
     {
       dst.reset(skBitmap->info(),
                 skBitmap->getPixels(),

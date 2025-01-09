@@ -22,9 +22,9 @@ namespace dom
     }
 
   public:
-    size_t width() override { return canvasImpl_->width(); }
-    size_t height() override { return canvasImpl_->height(); }
-    bool readPixels(SkPixmap &dst) override { return canvasImpl_->readPixels(dst); }
+    size_t width() const override { return canvasImpl_->width(); }
+    size_t height() const override { return canvasImpl_->height(); }
+    bool readPixels(SkPixmap &dst) const override { return canvasImpl_->readPixels(dst); }
 
   public:
     /**

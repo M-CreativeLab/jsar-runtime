@@ -25,12 +25,12 @@ namespace canvas
     /**
      * Returns the width of this image.
      */
-    virtual size_t width() = 0;
+    virtual size_t width() const = 0;
 
     /**
      * Returns the height of this image.
      */
-    virtual size_t height() = 0;
+    virtual size_t height() const = 0;
 
     /**
      * Read the image pixels to the given `SkPixmap`.
@@ -38,7 +38,7 @@ namespace canvas
      * @param dst The SkPixmap to receive the data.
      * @returns true if the read is finished, otherwise false.
      */
-    virtual bool readPixels(SkPixmap &dst) = 0;
+    virtual bool readPixels(SkPixmap &dst) const = 0;
 
     /**
      * Create a new `SkImage` from this image source.

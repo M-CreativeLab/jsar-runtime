@@ -18,9 +18,9 @@ namespace canvas
     ~ImageData();
 
   public:
-    size_t width() override { return pixmap.width(); }
-    size_t height() override { return pixmap.height(); }
-    bool readPixels(SkPixmap &dst) override { return pixmap.readPixels(dst, 0, 0); }
+    size_t width() const override { return pixmap.width(); }
+    size_t height() const override { return pixmap.height(); }
+    bool readPixels(SkPixmap &dst) const override { return pixmap.readPixels(dst, 0, 0); }
 
   public:
     inline SkColorSpace *colorSpace() { return pixmap.colorSpace(); }
