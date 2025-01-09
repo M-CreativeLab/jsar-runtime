@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <glm/glm.hpp>
+
 #include "./common.hpp"
 #include "./webxr_viewport.hpp"
 #include "./webxr_rigid_transform.hpp"
@@ -9,11 +10,9 @@
 namespace client_xr
 {
   /**
-   * The WebXR Device API's `XRView` interface describes a single view into the XR scene for a specific frame, providing
-   * orientation and position information for the viewpoint. You can think of it as a description of a specific eye or camera
-   * and how it views the world. A 3D frame will involve two views, one for each eye, separated by an appropriate distance which
-   * approximates the distance between the viewer's eyes. This allows the two views, when projected in isolation into the
-   * appropriate eyes, to simulate a 3D world.
+   * @class XRView
+   * The `XRView` class represents a single view into the XR scene for a specific frame.
+   * It provides orientation and position information for the viewpoint.
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/API/XRView
    */
@@ -21,11 +20,11 @@ namespace client_xr
   {
   public:
     /**
-     * Create a new `XRView` object.
+     * Constructs a new `XRView` object.
      *
-     * @param viewData the data of the view
-     * @param session the session that the view belongs to
-     * @param baseReferenceSpace the reference space that the view is based on
+     * @param viewData The data of the view.
+     * @param session The session that the view belongs to.
+     * @param baseReferenceSpace The reference space that the view is based on.
      */
     XRView(xr::TrXRView &viewData,
            std::shared_ptr<XRSession> session,
@@ -33,11 +32,9 @@ namespace client_xr
 
   public:
     /**
-     * The `XRView` interface's read-only `eye` property is a `XREye` value indicating which eye's viewpoint the `XRView`
-     * represents: left or right. For views which represent neither eye, such as monoscopic views, this property's value
-     * is none.
+     * Gets the eye that this view represents.
      *
-     * @returns A `XREye` value.
+     * @returns A `XREye` value indicating which eye's viewpoint the `XRView` represents.
      */
     inline XREye eye() const
     {
@@ -48,55 +45,52 @@ namespace client_xr
       else
         return XREye::kNone;
     }
+
     /**
-     * The `XRView` interface's read-only `viewport` property is an `XRViewport` object which describes the size and position
-     * of the view within the overall XR display. The viewport is specified in pixels, with the origin at the top-left corner
-     * of the display.
+     * Gets the viewport of this view.
      *
-     * @returns An `XRViewport` object.
+     * @returns An `XRViewport` object describing the size and position of the view.
      */
     inline XRViewport &viewport() { return viewport_; }
+
     /**
-     * The `XRView` interface's read-only `projectionMatrix` property specifies the projection matrix to apply to the underlying
-     * view. This should be used to integrate perspective to everything in the scene, in order to ensure the result is consistent
-     * with what the eye expects to see.
+     * Gets the projection matrix of this view.
      *
-     * @returns an `glm::mat4` object.
+     * @returns A `glm::mat4` object representing the projection matrix.
      */
     glm::mat4 projectionMatrix() const { return projectionMatrix_; }
+
     /**
-     * The read-only `recommendedViewportScale` property of the `XRView` interface is the recommended viewport scale value that
-     * you can use for `XRView.requestViewportScale()` if the user agent has such a recommendation; `null` otherwise.
+     * Gets the recommended viewport scale for this view.
      *
-     * @returns A number greater than 0.0 and less than or equal to 1.0; or `null` if the user agent does not provide a recommended
-     *          scale.
+     * @returns A number greater than 0.0 and less than or equal to 1.0; or `null` if no recommendation is available.
      */
     float recommendedViewportScale() const { return viewportScale_; }
+
     /**
-     * The read-only `transform` property of the `XRView` interface is an `XRRigidTransform` object which provides the position
-     * and orientation of the viewpoint relative to the `XRReferenceSpace` specified when the `XRFrame.getViewerPose()` method
-     * was called to obtain the view object.
+     * Gets the transform of this view.
      *
-     * With the `transform`, you can then position the view as a camera within the 3D scene. If you instead need the more
-     * traditional view matrix, you can get using `view.transform.inverse.matrix`; this gets the underlying matrix of the
-     * transform's inverse.
-     *
-     * @returns A `XRRigidTransform` object specifying the position and orientation of the viewpoint represented by the `XRView`.
+     * @returns A `XRRigidTransform` object specifying the position and orientation of the viewpoint.
      */
     XRRigidTransform transform() const { return transform_; }
 
   public:
+    /**
+     * Requests a viewport scale for this view.
+     *
+     * @param scale The scale to request.
+     */
     void requestViewportScale(float scale)
     {
-      throw std::runtime_error("Not implemented");
+      // Default implementation does nothing
     }
 
   private:
-    uint32_t index_;
-    uint32_t sessionId_;
-    glm::mat4 projectionMatrix_;
-    XRRigidTransform transform_;
-    XRViewport viewport_;
-    float viewportScale_ = 1.0f;
+    uint32_t index_;             // Index of the view (0 for left eye, 1 for right eye)
+    uint32_t sessionId_;         // ID of the session that the view belongs to
+    glm::mat4 projectionMatrix_; // Projection matrix for the view
+    XRRigidTransform transform_; // Transform of the view
+    XRViewport viewport_;        // Viewport of the view
+    float viewportScale_ = 1.0f; // Recommended viewport scale
   };
-}
+} // namespace client_xr

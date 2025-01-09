@@ -4,13 +4,19 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "common/utility.hpp"
-#include "common/events_v2/event_target.hpp"
+#include <stdexcept>
+#include <common/utility.hpp>
+#include <common/events_v2/event_target.hpp>
+
 #include "../per_process.hpp"
 #include "../dom/dom_event_target.hpp"
 
 namespace browser
 {
+  /**
+   * @enum WindowTarget
+   * The `WindowTarget` enum represents the target browsing context for opening a URL.
+   */
   enum class WindowTarget
   {
     /**
@@ -40,6 +46,7 @@ namespace browser
    *
    * @param target The window target.
    * @returns The string representation of the window target.
+   * @throws std::invalid_argument if the target is invalid.
    */
   inline std::string to_string(WindowTarget target)
   {
@@ -60,22 +67,30 @@ namespace browser
     }
   }
 
+  /**
+   * @class WindowFeatures
+   * The `WindowFeatures` class represents the features of a new window.
+   */
   class WindowFeatures final
   {
   public:
     WindowFeatures() = default;
 
   public:
-    bool popup = false;
-    bool noopener = false;
-    bool noreferrer = false;
-    std::optional<uint32_t> width = std::nullopt;
-    std::optional<uint32_t> height = std::nullopt;
-    std::optional<uint32_t> depth = std::nullopt;
-    std::optional<uint32_t> left = std::nullopt;
-    std::optional<uint32_t> top = std::nullopt;
+    bool popup = false;             // Whether the window should be opened as a popup
+    bool noopener = false;          // Whether the opener should be set to null
+    bool noreferrer = false;        // Whether the referrer should be omitted
+    std::optional<uint32_t> width;  // The width of the window
+    std::optional<uint32_t> height; // The height of the window
+    std::optional<uint32_t> depth;  // The depth of the window
+    std::optional<uint32_t> left;   // The left position of the window
+    std::optional<uint32_t> top;    // The top position of the window
   };
 
+  /**
+   * @class Window
+   * The `Window` class represents a browser window and provides methods to interact with it.
+   */
   class Window : public dom::DOMEventTarget
   {
   public:
@@ -85,24 +100,49 @@ namespace browser
     }
 
   public:
-    inline void alert(string message)
+    /**
+     * Displays an alert dialog with the specified message.
+     *
+     * @param message The message to display.
+     */
+    inline void alert(const std::string &message)
     {
       clientContext->makeRpcCall("window.alert", {message});
     }
+
+    /**
+     * Closes the current window.
+     */
     inline void close()
     {
       clientContext->makeRpcCall("window.close", {});
     }
-    inline void open(string url, WindowTarget target, WindowFeatures features = WindowFeatures())
+
+    /**
+     * Opens a new window with the specified URL and target.
+     *
+     * @param url The URL to open.
+     * @param target The target browsing context.
+     * @param features The features of the new window.
+     */
+    inline void open(const std::string &url, WindowTarget target,
+                     const WindowFeatures &features = WindowFeatures())
     {
       clientContext->makeRpcCall("window.open", {url, to_string(target)});
     }
-    inline void prompt(string message, string defaultValue)
+
+    /**
+     * Displays a prompt dialog with the specified message and default value.
+     *
+     * @param message The message to display.
+     * @param defaultValue The default value for the input field.
+     */
+    inline void prompt(const std::string &message, const std::string &defaultValue)
     {
       clientContext->makeRpcCall("window.prompt", {message, defaultValue});
     }
 
   private:
-    TrClientContextPerProcess *clientContext;
+    TrClientContextPerProcess *clientContext; // The client context for making RPC calls
   };
-}
+} // namespace browser

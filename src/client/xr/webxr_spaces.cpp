@@ -30,14 +30,13 @@ namespace client_xr
     if (type_ == XRViewSpaceType::kNone)
       return; // No need to update the pose if the type is none.
 
-    if (type_ != frameRequest.viewIndex)
+    // TODO: check if a device
+    auto &view = frameRequest.views[frameRequest.viewIndex];
+    if (view.viewIndex != frameRequest.viewIndex)
     {
       std::cerr << "failed to update pose for XRViewSpace: viewIndex mismatch" << std::endl;
       return;
     }
-
-    // TODO: check if a device
-    auto &view = frameRequest.views[frameRequest.viewIndex];
     baseMatrix_ = inverse(view.getViewMatrix());
     projectionMatrix_ = view.getProjectionMatrix();
     XRSpace::onPoseUpdate(session, frameRequest);

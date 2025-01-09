@@ -10,13 +10,16 @@ namespace client_xr
                  std::shared_ptr<XRSession> session,
                  std::shared_ptr<XRReferenceSpace> baseReferenceSpace)
       : index_(viewData.viewIndex),
-        sessionId_(session->id),
+        sessionId_(session ? session->id : throw std::invalid_argument("Session cannot be null")),
         projectionMatrix_(viewData.getProjectionMatrix())
   {
+    if (!baseReferenceSpace)
+      throw std::invalid_argument("Base reference space cannot be null");
+
     auto viewport = session->device()->getViewport(index_);
     viewport_ = XRViewport(viewport);
 
     auto viewBaseMatrix = baseReferenceSpace->inverseBaseMatrix() * glm::inverse(viewData.getViewMatrix());
     transform_ = XRRigidTransform(viewBaseMatrix);
   }
-}
+} // namespace client_xr

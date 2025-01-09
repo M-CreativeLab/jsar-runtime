@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <chrono>
 #include <glm/glm.hpp>
 
@@ -12,20 +13,30 @@
 
 namespace client_xr
 {
-  static const char *LOG_TAG = "jsar.xr";
+  static constexpr const char *LOG_TAG = "jsar.xr";
 
   using XRSessionMode = xr::TrXRSessionMode;
   using XRJointIndex = xr::TrXRJointIndex;
   using XRHandedness = xr::TrHandness;
   using XRTargetRayMode = xr::TrXRTargetRayMode;
 
+  /**
+   * @enum XREnvironmentBlendMode
+   * The `XREnvironmentBlendMode` enum represents the environment blend mode in XR.
+   */
   enum class XREnvironmentBlendMode
   {
-    kOpaque = 0,
-    kAdditive,
-    kAlphaBlend,
+    kOpaque = 0, // Opaque environment blend mode
+    kAdditive,   // Additive environment blend mode
+    kAlphaBlend, // Alpha blend environment blend mode
   };
 
+  /**
+   * Converts the environment blend mode to a string.
+   *
+   * @param blendMode The environment blend mode.
+   * @returns The string representation of the environment blend mode.
+   */
   inline std::string to_string(XREnvironmentBlendMode blendMode)
   {
     switch (blendMode)
@@ -41,13 +52,23 @@ namespace client_xr
     }
   }
 
+  /**
+   * @enum XRSpaceSubType
+   * The `XRSpaceSubType` enum represents the subtype of an XR space.
+   */
   enum class XRSpaceSubType
   {
-    kUnset = -1,
-    kGrip = 0,
-    kTargetRay,
+    kUnset = -1, // Unset space subtype
+    kGrip = 0,   // Grip space subtype
+    kTargetRay,  // Target ray space subtype
   };
 
+  /**
+   * Converts the space subtype to a string.
+   *
+   * @param spaceSubType The space subtype.
+   * @returns The string representation of the space subtype.
+   */
   inline std::string to_string(XRSpaceSubType spaceSubType)
   {
     switch (spaceSubType)
@@ -62,22 +83,25 @@ namespace client_xr
   }
 
   /**
-   * The type of the reference space in XR.
-   *
-   * The application developer can request different types of reference spaces to render the spatial content in different
-   * ways. The reference space type is used to determine the origin of the coordinate system and the orientation of the
-   * content.
+   * @enum XRReferenceSpaceType
+   * The `XRReferenceSpaceType` enum represents the type of the reference space in XR.
    */
   enum class XRReferenceSpaceType
   {
-    kViewer = 0,
-    kLocal,
-    kLocalFloor,
-    kBoundedFloor,
-    kUnbounded,
-    kUnknown,
+    kViewer = 0,   // Viewer reference space
+    kLocal,        // Local reference space
+    kLocalFloor,   // Local floor reference space
+    kBoundedFloor, // Bounded floor reference space
+    kUnbounded,    // Unbounded reference space
+    kUnknown,      // Unknown reference space
   };
 
+  /**
+   * Converts the reference space type to a string.
+   *
+   * @param referenceSpaceType The reference space type.
+   * @returns The string representation of the reference space type.
+   */
   inline std::string to_string(XRReferenceSpaceType referenceSpaceType)
   {
     switch (referenceSpaceType)
@@ -97,14 +121,19 @@ namespace client_xr
     }
   }
 
-  enum XREye
+  /**
+   * @enum XREye
+   * The `XREye` enum represents the eye in XR.
+   */
+  enum class XREye
   {
-    kLeft = 0,
-    kRight = 1,
-    kNone = 2,
+    kLeft = 0,  // Left eye
+    kRight = 1, // Right eye
+    kNone = 2,  // No eye
   };
   using XRViewSpaceType = XREye;
 
+  // Forward declarations
   class XRDeviceClient;
   class XRSystem;
   class XRSession;
@@ -123,13 +152,17 @@ namespace client_xr
   class XRInputSourceArray;
 
   /**
+   * @class XRSessionRequestInit
    * The `XRSessionRequestInit` class represents the options for requesting a new WebXR session.
-   *
-   * see https://developer.mozilla.org/en-US/docs/Web/API/XRSystem/requestSession#options
    */
   class XRSessionRequestInit
   {
   public:
+    /**
+     * Creates a default `XRSessionRequestInit` instance.
+     *
+     * @returns A default `XRSessionRequestInit` instance.
+     */
     static XRSessionRequestInit Default()
     {
       XRSessionRequestInit init;
@@ -140,29 +173,23 @@ namespace client_xr
     }
 
   public:
-    XRSessionRequestInit() {}
+    XRSessionRequestInit() = default;
 
   public:
-    /**
-     * An array of values which the returned XRSession must support.
-     */
-    std::vector<xr::TrXRFeature> requiredFeatures;
-    /**
-     * An array of values identifying features which the returned XRSession may optionally support.
-     */
-    std::vector<xr::TrXRFeature> optionalFeatures;
-    // TODO: more options
+    std::vector<xr::TrXRFeature> requiredFeatures; // Required features for the session
+    std::vector<xr::TrXRFeature> optionalFeatures; // Optional features for the session
+    // TODO: Add more options
   };
 
   /**
-   * The `XRSessionConfiguration` class represents the configuration of a new WebXR session. It is returned by the
-   * XR device server after the request of a new WebXR session.
+   * @class XRSessionConfiguration
+   * The `XRSessionConfiguration` class represents the configuration of a new WebXR session.
    */
   class XRSessionConfiguration
   {
   public:
     /**
-     * Create a new `XRSessionConfiguration` instance.
+     * Constructs a new `XRSessionConfiguration` instance.
      *
      * @param response The session response from the XR device server.
      * @param mode The session mode.
@@ -182,10 +209,10 @@ namespace client_xr
     }
 
   public:
-    int id;
-    XRSessionMode mode;
-    XRSessionRequestInit requestInit;
-    float recommendedContentSize;
-    std::vector<xr::TrXRFeature> enabledFeatures;
+    int id;                                       // Session ID
+    XRSessionMode mode;                           // Session mode
+    XRSessionRequestInit requestInit;             // Initial request options
+    float recommendedContentSize;                 // Recommended content size
+    std::vector<xr::TrXRFeature> enabledFeatures; // Enabled features
   };
-}
+} // namespace client_xr

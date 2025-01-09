@@ -1,7 +1,17 @@
 #include <sys/wait.h>
-#include "common/hive/message.hpp"
-#include "common/hive/sender.hpp"
-#include "common/hive/receiver.hpp"
+#include <poll.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <cstring>
+#include <memory>
+#include <vector>
+#include <functional>
+#include <string>
+
+#include <common/hive/message.hpp>
+#include <common/hive/sender.hpp>
+#include <common/hive/receiver.hpp>
+
 #include "./hive_server.hpp"
 #include "./entry.hpp"
 
@@ -9,16 +19,15 @@ TrHiveChildProcess::TrHiveChildProcess(uint32_t documentId) : documentId(documen
 {
   if (pipe(childPipes) == -1)
   {
-    fprintf(stderr, "Failed to create child pipes for hive daemon.");
+    fprintf(stderr, "Failed to create child pipes for hive daemon: %s\n", strerror(errno));
+    return;
   }
-  else
+
+  int flags = fcntl(childPipes[0], F_GETFL, 0);
+  if (flags != -1)
   {
-    int flags = fcntl(childPipes[0], F_GETFL, 0);
-    if (flags != -1)
-    {
-      flags |= O_NONBLOCK;
-      fcntl(childPipes[0], F_SETFL, flags);
-    }
+    flags |= O_NONBLOCK;
+    fcntl(childPipes[0], F_SETFL, flags);
   }
 
   pid = ::fork();
@@ -33,9 +42,13 @@ TrHiveChildProcess::TrHiveChildProcess(uint32_t documentId) : documentId(documen
   {
     close(childPipes[1]);
   }
+  else
+  {
+    fprintf(stderr, "Failed to fork child process: %s\n", strerror(errno));
+  }
 }
 
-void TrHiveChildProcess::recvOutput(std::function<void(const string &)> lineCallback)
+void TrHiveChildProcess::recvOutput(const std::function<void(const string &)> &lineCallback)
 {
   struct pollfd fds[1];
   fds[0].fd = childPipes[0];

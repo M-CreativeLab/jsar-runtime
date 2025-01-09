@@ -3,7 +3,6 @@
 
 namespace media_client
 {
-  TrIdGenerator MediaPlayer::clientIdGen = TrIdGenerator(0x1f);
   MediaPlayer::MediaPlayer(MediaContentType contentType)
       : events_comm::TrEventTarget<media_comm::TrMediaEventType>(),
         clientContext(TrClientContextPerProcess::Get()), contentType(contentType)
@@ -63,7 +62,7 @@ namespace media_client
     clientContext->sendMediaRequest(request);
   }
 
-  bool MediaPlayer::setSrc(void *buffer, size_t length)
+  bool MediaPlayer::setSrc(const void *buffer, size_t length)
   {
     if (buffer == nullptr || length == 0)
       return false;

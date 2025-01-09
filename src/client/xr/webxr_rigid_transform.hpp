@@ -6,84 +6,92 @@
 namespace client_xr
 {
   /**
-   * The `XRRigidTransform` is a WebXR API interface that represents the 3D geometric transform described by a position and
-   * orientation.
+   * @class XRRigidTransform
+   * The `XRRigidTransform` class represents a 3D geometric transform described by a position and orientation.
    *
-   * `XRRigidTransform` is used to specify transforms throughout the WebXR APIs, including:
-   * - The offset and orientation relative to the parent reference space to use when creating a new reference space with
-   *   `getOffsetReferenceSpace()`.
+   * It is used to specify transforms throughout the WebXR APIs, including:
+   * - The offset and orientation relative to the parent reference space.
    * - The transform of an `XRView`.
    * - The transform of an `XRPose`.
-   * - The `XRReferenceSpaceEvent` event's transform property, as found in the reset event received by an `XRReferenceSpace`.
+   * - The `XRReferenceSpaceEvent` event's transform property.
    *
-   * Using `XRRigidTransform` in these places rather than bare arrays that provide the matrix data has an advantage. It
-   * automatically computes the inverse of the transform and even caches it making subsequent requests significantly faster.
-   * 
    * @see https://developer.mozilla.org/en-US/docs/Web/API/XRRigidTransform
    */
   class XRRigidTransform
   {
   public:
-    XRRigidTransform()
+    /**
+     * Default constructor for `XRRigidTransform`.
+     */
+    XRRigidTransform() noexcept
         : position_(glm::vec3(0.0f)),
           orientation_(glm::quat(1.0f, 0.0f, 0.0f, 0.0f)),
           matrix_(glm::mat4(1.0f))
     {
     }
-    XRRigidTransform(glm::vec3 position, glm::quat orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
+
+    /**
+     * Constructs a new `XRRigidTransform` with the specified position and orientation.
+     *
+     * @param position The position of the transform.
+     * @param orientation The orientation of the transform (default: identity quaternion).
+     */
+    XRRigidTransform(glm::vec3 position,
+                     glm::quat orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f)) noexcept
         : position_(position),
           orientation_(orientation),
           matrix_(glm::mat4_cast(orientation))
     {
       matrix_[3] = glm::vec4(position, 1.0f);
     }
-    XRRigidTransform(glm::mat4 matrix)
-        : matrix_(matrix)
+
+    /**
+     * Constructs a new `XRRigidTransform` from a transformation matrix.
+     *
+     * @param matrix The transformation matrix.
+     */
+    explicit XRRigidTransform(glm::mat4 matrix) noexcept
+        : matrix_(matrix),
+          position_(glm::vec3(matrix[3])),
+          orientation_(glm::quat_cast(matrix))
     {
-      position_ = glm::vec3(matrix[3]);
-      orientation_ = glm::quat_cast(matrix);
     }
 
   public:
     /**
-     * The read-only `inverse` property of the `XRRigidTransform` interface returns another `XRRigidTransform` object which
-     * is the inverse of its owning transform.
+     * Gets the inverse of this transform.
      *
-     * @returns an `XRRigidTransform` which contains the inverse of the `XRRigidTransform` on which it's accessed.
+     * @returns An `XRRigidTransform` representing the inverse of this transform.
      */
-    XRRigidTransform inverse()
+    XRRigidTransform inverse() const noexcept
     {
-      glm::mat4 inverseMatrix = glm::inverse(matrix_);
-      return XRRigidTransform(inverseMatrix);
+      return XRRigidTransform(glm::inverse(matrix_));
     }
+
     /**
-     * The read-only `XRRigidTransform` property matrix returns the transform matrix represented by the object. The returned
-     * matrix can then be premultiplied with a column vector to rotate the vector by the 3D rotation specified by the orientation,
-     * then translate it by the position.
+     * Gets the transformation matrix of this transform.
      *
-     * @returns a `glm::mat4` which represents the 4x4 transform matrix described by the position and orientation properties.
+     * @returns A `glm::mat4` representing the transformation matrix.
      */
-    glm::mat4 &matrix() { return matrix_; }
+    const glm::mat4 &matrix() const noexcept { return matrix_; }
+
     /**
-     * The read-only `XRRigidTransform` property orientation is a `glm::quat` containing a normalized quaternion (also called a
-     * unit quaternion or versor) specifying the rotational component of the transform represented by the object. If you specify
-     * a quaternion whose length is not exactly 1.0 meters, it will be normalized for you.
+     * Gets the orientation of this transform.
      *
-     * @returns a `glm::quat` object which contains a unit quaternion providing the orientation component of the transform. As a
-     *          unit quaternion, the length of the returned quaternion is always 1.0 meters.
+     * @returns A `glm::quat` representing the orientation.
      */
-    glm::quat &orientation() { return orientation_; }
+    const glm::quat &orientation() const noexcept { return orientation_; }
+
     /**
-     * The read-only `XRRigidTransform` property position is a `glm::vec3` object which provides the 3D point, specified in meters,
-     * describing the translation component of the transform.
+     * Gets the position of this transform.
      *
-     * @returns A `glm::vec3` indicating the 3D position component of the transform matrix. The units are meters.
+     * @returns A `glm::vec3` representing the position.
      */
-    glm::vec3 &position() { return position_; }
+    const glm::vec3 &position() const noexcept { return position_; }
 
   private:
-    glm::vec3 position_;
-    glm::quat orientation_;
-    glm::mat4 matrix_;
+    glm::vec3 position_;    // The position component of the transform
+    glm::quat orientation_; // The orientation component of the transform
+    glm::mat4 matrix_;      // The transformation matrix
   };
-}
+} // namespace client_xr
