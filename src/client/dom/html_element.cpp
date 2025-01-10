@@ -22,16 +22,15 @@ namespace dom
     defaultStyle_.setPropertyIfNotPresent("height", "auto");
 
     // Create style declaration from the default style & the style attribute.
-    std::string concatedCssText = defaultStyle_.cssText() + ";" + getAttribute("style");
+    string concatedCssText = defaultStyle_.cssText() + ";" + getAttribute("style");
     style = make_shared<client_cssom::CSSStyleDeclaration>(concatedCssText);
   }
 
   void HTMLElement::connectedCallback()
   {
     // 1. Create the rendering entity.
-    auto sceneRef = scene();
-    if (sceneRef != nullptr)
-      entity_ = sceneRef->createElement(tagName);
+    useScene([this](builtin_scene::Scene &scene)
+             { entity_ = scene.createElement(tagName); });
 
     // 2. Create the layout node.
     auto layoutAllocator = documentLayoutAllocator();
@@ -52,9 +51,9 @@ namespace dom
 
   void HTMLElement::renderElement(builtin_scene::Scene &scene)
   {
-    auto layoutRes = layoutNode_->layout();
+    auto layoutRes = getLayoutResult(); // This will dispatch the onLayoutSizeChanged internally.
 #ifdef TR_CLIENT_DOM_VERBOSE
-    std::cout << "Rendering HTMLElement(" << tagName << "): " << layoutRes << std::endl;
+    cout << "Rendering HTMLElement(" << tagName << "): " << layoutRes << endl;
 #endif
 
     if (entity_.has_value())
@@ -93,15 +92,14 @@ namespace dom
     }
   }
 
-  std::shared_ptr<builtin_scene::Scene> HTMLElement::scene()
+  void HTMLElement::useScene(const function<void(builtin_scene::Scene &)> &callback)
   {
     auto ownerDocumentRef = ownerDocument->lock();
-    return ownerDocumentRef == nullptr
-               ? nullptr
-               : ownerDocumentRef->scene;
+    if (ownerDocumentRef != nullptr && ownerDocumentRef->scene != nullptr)
+      callback(*ownerDocumentRef->scene);
   }
 
-  std::shared_ptr<LayoutAllocator> HTMLElement::documentLayoutAllocator()
+  shared_ptr<LayoutAllocator> HTMLElement::documentLayoutAllocator()
   {
     auto documentRef = Document::As<HTMLDocument>(ownerDocument->lock());
     return documentRef == nullptr
@@ -109,15 +107,30 @@ namespace dom
                : documentRef->layoutAllocator();
   }
 
+  crates::layout::Layout HTMLElement::getLayoutResult()
+  {
+    auto layoutRes = layoutNode_->layout();
+    if (layoutRes.width() != offsetWidth_ ||
+        layoutRes.height() != offsetHeight_)
+    {
+      offsetWidth_ = layoutRes.width();
+      offsetHeight_ = layoutRes.width();
+      onLayoutSizeChanged();
+    }
+    // TODO: support offsetTop, offsetLeft, offsetParent, etc.
+    return layoutRes;
+  }
+
   bool HTMLElement::adoptStyle(client_cssom::CSSStyleDeclaration &style)
   {
     adoptedStyle_ = style;
+    onAdoptedStyleChanged();
 
     // Update the layout node style.
     if (layoutNode_ != nullptr)
     {
 #ifdef TR_CLIENT_DOM_VERBOSE
-      std::cout << "Adopting style for HTMLElement(" << tagName << "): " << adoptedStyle_ << std::endl;
+      cout << "Adopting style for HTMLElement(" << tagName << "): " << adoptedStyle_ << endl;
 #endif
       layoutNode_->setStyle(adoptedStyle_);
       return true;

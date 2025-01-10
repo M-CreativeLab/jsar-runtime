@@ -33,6 +33,10 @@ namespace dom
     void click();
 
   public:
+    inline float offsetWidth() const { return offsetWidth_; }
+    inline float offsetHeight() const { return offsetHeight_; }
+
+  public:
     void createdCallback() override;
     void connectedCallback() override;
 
@@ -44,15 +48,34 @@ namespace dom
      */
     virtual void renderElement(builtin_scene::Scene &scene);
     /**
-     * Get the scene of this document to draw the element.
+     * When the layout size is changed.
      */
-    std::shared_ptr<builtin_scene::Scene> scene();
+    virtual void onLayoutSizeChanged() {}
+    /**
+     * When the adopted style is changed.
+     */
+    virtual void onAdoptedStyleChanged() {}
+    /**
+     * Use the scene.
+     *
+     * @param callback The callback to use the scene.
+     */
+    void useScene(const std::function<void(builtin_scene::Scene &)> &callback);
     /**
      * Get the layout allocator of the document.
      */
     std::shared_ptr<crates::layout::Allocator> documentLayoutAllocator();
 
   private:
+    /**
+     * Get the element's layout result, and update the offset members, such as `offsetWidth_` and
+     * `offsetHeight_`.
+     * 
+     * It also dispatches the `onLayoutSizeChanged` method when the layout size is changed.
+     *
+     * @returns The layout result.
+     */
+    crates::layout::Layout getLayoutResult();
     /**
      * Adopt the specified style to the element, it will copy the style properties to the element's
      * adopted style, and update the layout node's style.
@@ -80,5 +103,9 @@ namespace dom
     client_cssom::CSSStyleDeclaration defaultStyle_;
     // The adopted style of the element, which is used to apply the CSS styles.
     client_cssom::CSSStyleDeclaration adoptedStyle_;
+
+  private:
+    float offsetWidth_ = 0.0f;
+    float offsetHeight_ = 0.0f;
   };
 }

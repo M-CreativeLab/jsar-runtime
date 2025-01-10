@@ -53,7 +53,7 @@ namespace builtin_scene
      *
      * @param name The tag name of the element.
      */
-    ecs::EntityId createElement(std::string name);
+    [[nodiscard]] ecs::EntityId createElement(std::string name);
 
   private:
     void bootstrap();

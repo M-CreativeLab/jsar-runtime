@@ -50,6 +50,10 @@ target_include_directories(TransmuteClient PRIVATE ${NODE_ADDON_API_HEADERS_PATH
 tr_target_link_library(TransmuteClient ${CMAKE_SOURCE_DIR}/build/output/crates/${TR_CRATE_TARGET}/${TR_CRATE_BUILD_DIR} jsar_jsbindings STATIC)
 tr_target_link_thirdparty_library(TransmuteClient node)
 tr_target_link_thirdparty_library(TransmuteClient skia)
+tr_target_link_thirdparty_library(TransmuteClient skparagraph)
+tr_target_link_thirdparty_library(TransmuteClient skshaper)
+tr_target_link_thirdparty_library(TransmuteClient skunicode_core)
+tr_target_link_thirdparty_library(TransmuteClient skunicode_icu)
 
 if(APPLE)
     target_link_libraries(TransmuteClient PRIVATE "-framework CoreFoundation")

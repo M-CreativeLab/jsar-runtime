@@ -247,11 +247,13 @@ namespace dom
   private:
     void iterateElementWithChildren(shared_ptr<HTMLElement> element, std::function<void(shared_ptr<HTMLElement>)> callback)
     {
-      if (TR_UNLIKELY(element == nullptr))
+      if (TR_UNLIKELY(element == nullptr) || !element->connected)
         return;
 
       for (auto childNode : element->childNodes)
       {
+        if (!childNode->connected) // Skip if the node is not connected.
+          continue;
         if (childNode->nodeType == NodeType::ELEMENT_NODE)
         {
           auto childElement = std::dynamic_pointer_cast<HTMLElement>(childNode);

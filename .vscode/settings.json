@@ -101,6 +101,5 @@
   "cmake.buildDirectory": "${workspaceFolder}/build/targets/darwin",
   "C_Cpp.default.cppStandard": "c++17",
   "C_Cpp.default.cStandard": "c17",
-  "C_Cpp.default.compileCommands": "${workspaceFolder}/build/targets/darwin/compile_commands.json",
   "C_Cpp.errorSquiggles": "enabledIfIncludesResolve"
 }
