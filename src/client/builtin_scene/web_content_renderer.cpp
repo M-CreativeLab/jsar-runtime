@@ -56,8 +56,7 @@ namespace builtin_scene::web_renderer
     if (style.hasProperty("background-color"))
     {
       SkPaint fillPaint;
-      string backgroundColorStr = style.getPropertyValue("background-color");
-      fillPaint.setColor(SkColorSetARGB(255, 0, 0, 255));
+      fillPaint.setColor(style.getPropertyValueAs<client_cssom::Color>("background-color"));
       fillPaint.setAntiAlias(true);
       fillPaint.setStyle(SkPaint::kFill_Style);
       canvas->drawRRect(roundedRect, fillPaint);
@@ -71,25 +70,25 @@ namespace builtin_scene::web_renderer
       // Support for border color, border-width, border-style for top, right, bottom, left.
       if (style.hasProperty("border-top-color"))
       {
-        borderPaint.setColor(SK_ColorWHITE);
+        borderPaint.setColor(style.getPropertyValueAs<client_cssom::Color>("border-top-color"));
         borderPaint.setStrokeWidth(style.getPropertyValueAs<float>("border-top-width"));
         canvas->drawLine(rect.fLeft, rect.fTop, rect.fRight, rect.fTop, borderPaint);
       }
       if (style.hasProperty("border-right-color"))
       {
-        borderPaint.setColor(SK_ColorWHITE);
+        borderPaint.setColor(style.getPropertyValueAs<client_cssom::Color>("border-right-color"));
         borderPaint.setStrokeWidth(style.getPropertyValueAs<float>("border-right-width"));
         canvas->drawLine(rect.fRight, rect.fTop, rect.fRight, rect.fBottom, borderPaint);
       }
       if (style.hasProperty("border-bottom-color"))
       {
-        borderPaint.setColor(SK_ColorWHITE);
+        borderPaint.setColor(style.getPropertyValueAs<client_cssom::Color>("border-bottom-color"));
         borderPaint.setStrokeWidth(style.getPropertyValueAs<float>("border-bottom-width"));
         canvas->drawLine(rect.fRight, rect.fBottom, rect.fLeft, rect.fBottom, borderPaint);
       }
       if (style.hasProperty("border-left-color"))
       {
-        borderPaint.setColor(SK_ColorWHITE);
+        borderPaint.setColor(style.getPropertyValueAs<client_cssom::Color>("border-left-color"));
         borderPaint.setStrokeWidth(style.getPropertyValueAs<float>("border-left-width"));
         canvas->drawLine(rect.fLeft, rect.fBottom, rect.fLeft, rect.fTop, borderPaint);
       }

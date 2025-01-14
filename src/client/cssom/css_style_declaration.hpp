@@ -5,6 +5,7 @@
 #include <ostream>
 #include <common/utility.hpp>
 #include <crates/bindings.hpp>
+#include "./color.hpp"
 
 namespace client_cssom
 {
@@ -101,6 +102,7 @@ namespace client_cssom
     template <typename T>
       requires(std::is_same_v<T, float> ||
                std::is_integral_v<T> ||
+               std::is_same_v<T, Color> ||
                std::is_same_v<T, crates::layout::style::Display> ||
                std::is_same_v<T, crates::layout::style::Position> ||
                std::is_same_v<T, crates::layout::style::Overflow> ||
@@ -146,7 +148,8 @@ namespace client_cssom
           return Overflow::Visible;
       }
 
-      if constexpr (std::is_same_v<T, crates::layout::style::Dimension> ||
+      if constexpr (std::is_same_v<T, Color> ||
+                    std::is_same_v<T, crates::layout::style::Dimension> ||
                     std::is_same_v<T, crates::layout::style::LengthPercentageAuto> ||
                     std::is_same_v<T, crates::layout::style::LengthPercentage>)
         return T(value);
