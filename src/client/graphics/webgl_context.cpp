@@ -777,9 +777,12 @@ namespace client_graphics
       return std::nullopt;
   }
 
-  int WebGLContext::getAttribLocation(std::shared_ptr<WebGLProgram> program, const std::string &name)
+  std::optional<int> WebGLContext::getAttribLocation(std::shared_ptr<WebGLProgram> program, const std::string &name)
   {
-    return program->hasAttribLocation(name) ? program->getAttribLocation(name) : -1;
+    if (program->hasAttribLocation(name))
+      return program->getAttribLocation(name);
+    else
+      return std::nullopt;
   }
 
   std::optional<WebGLUniformLocation> WebGLContext::getUniformLocation(std::shared_ptr<WebGLProgram> program,

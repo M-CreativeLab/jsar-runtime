@@ -8,11 +8,17 @@ using namespace builtin_scene::ecs;
 class TestComponent : public Component
 {
 public:
+  TestComponent(int value) : value(value) {}
+
+public:
   int value;
 };
 
 class TestComponent2 : public Component
 {
+public:
+  TestComponent2(float value) : value(value) {}
+
 public:
   float value;
 };
@@ -21,13 +27,20 @@ class TestSystem : public System
 {
 public:
   using System::System;
+  TestSystem(int id) : id(id) {}
 
+  const std::string name() const override
+  {
+    return "TestSystem";
+  }
   void onExecute() override
   {
     executed = true;
+    std::cout << "TestSystem(" << id << ") executed." << std::endl;
   }
 
   bool executed = false;
+  int id = 0;
 };
 
 class TestResource : public Resource
@@ -64,19 +77,31 @@ TEST_CASE("Component management", "[ecs]")
   REQUIRE(component != nullptr);
   REQUIRE(component->value == 42);
 
-  app->componentsMgr_.removeComponent<TestComponent>(entity);
+  app->removeComponent<TestComponent>(entity);
   component = app->getComponent<TestComponent>(entity);
 
   REQUIRE(component == nullptr);
 }
 
+class Example : public App
+{
+public:
+  using App::App;
+
+public:
+  inline void start()
+  {
+    update();
+  }
+};
+
 TEST_CASE("System execution", "[ecs]")
 {
-  auto app = std::make_shared<App>();
+  auto app = std::make_shared<Example>();
   auto system = System::Make<TestSystem>();
 
   app->addSystem(SchedulerLabel::kUpdate, system);
-  app->update();
+  app->start();
 
   REQUIRE(system->executed);
 }
@@ -121,7 +146,7 @@ TEST_CASE("Add components dynamically via addComponent", "[ecs]")
 
 TEST_CASE("Test more system labels", "[ecs]")
 {
-  auto app = std::make_shared<App>();
+  auto app = std::make_shared<Example>();
   auto systemFirst = System::Make<TestSystem>();
   auto systemPreUpdate = System::Make<TestSystem>();
   auto systemStateTransition = System::Make<TestSystem>();
@@ -134,11 +159,27 @@ TEST_CASE("Test more system labels", "[ecs]")
   app->addSystem(SchedulerLabel::kPostUpdate, systemPostUpdate);
   app->addSystem(SchedulerLabel::kLast, systemLast);
 
-  app->update();
+  app->start();
 
   REQUIRE(systemFirst->executed);
   REQUIRE(systemPreUpdate->executed);
   REQUIRE(systemStateTransition->executed);
   REQUIRE(systemPostUpdate->executed);
   REQUIRE(systemLast->executed);
+}
+
+TEST_CASE("Test chaining systems", "[ecs]")
+{
+  auto app = std::make_shared<Example>();
+  auto systemFirst = System::Make<TestSystem>(10);
+  auto systemSecond = System::Make<TestSystem>(11);
+  auto systemThird = System::Make<TestSystem>(12);
+
+  systemFirst->chain(systemSecond)->chain(systemThird);
+  app->addSystem(SchedulerLabel::kUpdate, systemFirst);
+  app->start();
+
+  REQUIRE(systemFirst->executed);
+  REQUIRE(systemSecond->executed);
+  REQUIRE(systemThird->executed);
 }

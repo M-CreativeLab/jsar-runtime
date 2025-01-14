@@ -10,6 +10,7 @@
 
 namespace builtin_scene
 {
+  class Mesh3d;
   class Material
   {
   public:
@@ -33,6 +34,13 @@ namespace builtin_scene
     virtual ~Material() = default;
 
   public:
+    /**
+     * @returns The name of the material.
+     */
+    virtual const std::string name() const
+    {
+      return "Material";
+    }
     /**
      * @returns The list of defines for the material.
      */
@@ -64,7 +72,18 @@ namespace builtin_scene
     virtual bool initialize(std::shared_ptr<client_graphics::WebGL2Context> glContext,
                             std::shared_ptr<client_graphics::WebGLProgram> program)
     {
+      if (TR_UNLIKELY(glContext == nullptr || program == nullptr))
+        return false;
+      glContext_ = glContext;
       return true;
     }
+    /**
+     * Called before drawing the mesh with the material.
+     */
+    virtual void onBeforeDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program, std::shared_ptr<Mesh3d> mesh) {}
+    virtual void onAfterDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program, std::shared_ptr<Mesh3d> mesh) {}
+
+  protected:
+    std::weak_ptr<client_graphics::WebGL2Context> glContext_;
   };
 }

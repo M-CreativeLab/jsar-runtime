@@ -1,6 +1,7 @@
 #include <skia/include/core/SkImageInfo.h>
 #include <client/builtin_scene/ecs-inl.hpp>
 #include <client/builtin_scene/web_content.hpp>
+#include <client/builtin_scene/materials/web_content.hpp>
 #include "./html_div_element.hpp"
 
 namespace dom
@@ -13,6 +14,15 @@ namespace dom
     assert(entity_.has_value());
     {
       using namespace builtin_scene;
+
+      auto resetMaterial = [this](Scene &scene)
+      {
+        auto materials = scene.getResource<Materials>();
+        scene.replaceComponent(entity_.value(),
+                               MeshMaterial3d(materials->add(
+                                   Material::Make<materials::WebContentMaterial>())));
+      };
+      useScene(resetMaterial);
 
       auto initCanvas = [this](Scene &scene)
       {
@@ -41,7 +51,16 @@ namespace dom
         auto content = scene.getComponent<WebContent>(entity_.value());
         assert(content != nullptr);
         if (TR_LIKELY(surface != nullptr))
+        {
           content->setCanvas(surface->getCanvas());
+
+          auto meshMaterial3d = scene.getComponent<MeshMaterial3d>(entity_.value());
+          if (TR_UNLIKELY(meshMaterial3d == nullptr))
+            return;
+          auto material = meshMaterial3d->material<materials::WebContentMaterial>();
+          if (TR_LIKELY(material != nullptr))
+            material->updateTexture(*content); // Resize the material with the resized content.
+        }
       };
       useScene(resizeCanvas);
     }

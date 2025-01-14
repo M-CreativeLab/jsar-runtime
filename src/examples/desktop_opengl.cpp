@@ -600,6 +600,7 @@ int main(int argc, char **argv)
   }
 
   glfwMakeContextCurrent(windowCtx.window);
+  glEnable(GL_MULTISAMPLE);
 
   unsigned int vertexShader;
   vertexShader = glCreateShader(GL_VERTEX_SHADER);

@@ -55,14 +55,11 @@ namespace builtin_scene::ecs
   std::shared_ptr<ResourceType> ResourcesManager::getResource()
   {
     if (resources_.empty())
-      throw std::runtime_error("No resources available.");
+      return nullptr;
 
     ResourceName name = typeid(ResourceType).name();
     if (resources_.find(name) == resources_.end())
-    {
-      auto msg = "Resource(" + std::string(name) + ") not found";
-      throw std::runtime_error(msg);
-    }
+      return nullptr;
     return std::dynamic_pointer_cast<ResourceType>(resources_[name]);
   }
 
@@ -234,5 +231,19 @@ namespace builtin_scene::ecs
   {
     std::unique_lock<std::shared_mutex> lock(mutexForEntities_);
     (componentsMgr_.addComponent(entity, components), ...);
+  }
+
+  template <typename ComponentType>
+  void App::removeComponent(EntityId entity)
+  {
+    std::unique_lock<std::shared_mutex> lock(mutexForEntities_);
+    componentsMgr_.removeComponent<ComponentType>(entity);
+  }
+
+  template <typename ComponentType>
+  std::shared_ptr<ComponentType> App::replaceComponent(EntityId entity, ComponentType component)
+  {
+    std::unique_lock<std::shared_mutex> lock(mutexForEntities_);
+    return componentsMgr_.replaceComponent(entity, component);
   }
 }

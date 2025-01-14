@@ -84,9 +84,6 @@ namespace builtin_scene
         auto stackStep = glm::pi<float>() / stacks;
 
         size_t vertexCount = stacks * sectors;
-        std::vector<glm::vec3> positions(vertexCount);
-        std::vector<glm::vec3> normals(vertexCount);
-        std::vector<glm::vec2> uvs(vertexCount);
         Indices<uint32_t> indices(vertexCount * 2 * 3);
 
         for (uint32_t i = 0; i <= stacks; i++)
@@ -102,12 +99,9 @@ namespace builtin_scene
             float y = xy * std::sin(sectorAngle);
 
             auto pos = glm::vec3(x, y, z);
-            positions.push_back(glm::vec3(x, y, z));
-            normals.push_back(pos * invLength);
-
             auto u = static_cast<float>(j) / sectors;
             auto v = static_cast<float>(i) / stacks;
-            uvs.push_back(glm::vec2(u, v));
+            insertVertex(pos, pos * invLength, glm::vec2(u, v));
           }
         }
 
@@ -140,9 +134,9 @@ namespace builtin_scene
         }
 
         updateIndices(indices);
-        insertAttribute(MeshVertexAttributeData<float, 3>::Make(Mesh::ATTRIBUTE_POSITION, positions));
-        insertAttribute(MeshVertexAttributeData<float, 3>::Make(Mesh::ATTRIBUTE_NORMAL, normals));
-        insertAttribute(MeshVertexAttributeData<float, 2>::Make(Mesh::ATTRIBUTE_UV0, uvs));
+        enableAttribute(Vertex::ATTRIBUTE_POSITION);
+        enableAttribute(Vertex::ATTRIBUTE_NORMAL);
+        enableAttribute(Vertex::ATTRIBUTE_UV0);
       }
 
     private:

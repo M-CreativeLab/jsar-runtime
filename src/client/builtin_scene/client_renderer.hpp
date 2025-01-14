@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <memory>
 #include <span>
 #include <client/graphics/webgl_context.hpp>
@@ -52,36 +53,12 @@ namespace builtin_scene
       auto ebo = glContext_->createBuffer();
 
       {
+        // Bind the vertex array object, vertex buffer object, and element buffer object.
         client_graphics::WebGLVertexArrayScope vaoScope(glContext_, vao);
-
-        // Configure the vertex buffer object
         glContext_->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, vbo);
-        for (auto &[attributeId, attributeData] : mesh3d->attributes())
-        {
-          glContext_->vertexAttribPointer(attributeId,
-                                          attributeData->formatSize(),
-                                          attributeData->formatType(),
-                                          attributeData->normalized(),
-                                          attributeData->stride(),
-                                          attributeData->offset());
-          glContext_->enableVertexAttribArray(attributeId);
-        }
-
-        auto &vertexBuffer = mesh3d->vertexBuffer();
-        glContext_->bufferData(client_graphics::WebGLBufferBindingTarget::kArrayBuffer,
-                               vertexBuffer.dataSize(),
-                               vertexBuffer.dataBuffer(),
-                               client_graphics::WebGLBufferUsage::kStaticDraw);
-
-        // Configure the element buffer object
         glContext_->bindBuffer(client_graphics::WebGLBufferBindingTarget::kElementArrayBuffer, ebo);
-        auto indices = mesh3d->indices();
-        glContext_->bufferData(client_graphics::WebGLBufferBindingTarget::kElementArrayBuffer,
-                               indices.dataSize(),
-                               indices.dataBuffer(),
-                               client_graphics::WebGLBufferUsage::kStaticDraw);
       }
-      mesh3d->initialize(vao);
+      mesh3d->initialize(glContext_, vao);
     }
     /**
      * Initialize the mesh material with the given WebGL context, it will create the program, shaders
@@ -93,7 +70,7 @@ namespace builtin_scene
      *
      * @param meshMaterial3d The mesh material to initialize.
      */
-    void initializeMeshMaterial3d(std::shared_ptr<MeshMaterial3d> meshMaterial3d)
+    void initializeMeshMaterial3d(std::shared_ptr<Mesh3d> mesh3d, std::shared_ptr<MeshMaterial3d> meshMaterial3d)
     {
       auto program = glContext_->createProgram();
       auto vertexShader = glContext_->createShader(client_graphics::WebGLShaderType::kVertex);
@@ -108,10 +85,46 @@ namespace builtin_scene
       glContext_->attachShader(program, fragmentShader);
       glContext_->linkProgram(program);
 
+      // Configure the vertex data: vertex array object, vertex buffer object, and element buffer object.
+      // Configure the vertex attributes and the vertex buffer data.
+      {
+        auto vao = mesh3d->vertexArrayObject();
+        client_graphics::WebGLVertexArrayScope vaoScope(glContext_, vao);
+
+        // Configure the vertex attributes
+        auto configureAttribute = [this](const IVertexAttribute &attrib, int index, size_t stride, size_t offset)
+        {
+          glContext_->vertexAttribPointer(index,
+                                          attrib.size(),
+                                          attrib.type(),
+                                          attrib.normalized(),
+                                          stride,
+                                          offset);
+          glContext_->enableVertexAttribArray(index);
+        };
+        mesh3d->iterateEnabledAttributes(program, configureAttribute);
+
+        // Configure the vertex buffer data
+        auto &vertexBufferData = mesh3d->vertexBuffer().data();
+        glContext_->bufferData(client_graphics::WebGLBufferBindingTarget::kArrayBuffer,
+                               vertexBufferData.size(),
+                               const_cast<uint8_t *>(vertexBufferData.data()),
+                               client_graphics::WebGLBufferUsage::kStaticDraw);
+
+        // Configure the element buffer object
+        auto indices = mesh3d->indices();
+        glContext_->bufferData(client_graphics::WebGLBufferBindingTarget::kElementArrayBuffer,
+                               indices.dataSize(),
+                               indices.dataBuffer(),
+                               client_graphics::WebGLBufferUsage::kStaticDraw);
+      }
+
+      // Configure the initial uniform values
       {
         client_graphics::WebGLProgramScope programScope(glContext_, program);
         updateTransformationMatrix(program, nullptr, true); // forcily update the transformation matrix.
-        meshMaterial3d->initialize(glContext_, program);
+
+        meshMaterial3d->initialize(glContext_, program, mesh3d);
       }
     }
     /**
@@ -130,7 +143,12 @@ namespace builtin_scene
       glContext_->depthMask(true);
 
       assert(mesh != nullptr && material != nullptr);
+      assert(mesh->initialized());
+      assert(material->initialized());
       client_graphics::WebGLProgramScope programScope(glContext_, material->program());
+
+      // Call lifecycle methods
+      material->onBeforeDrawMesh(mesh);
 
       // Update matrices
       updateViewProjectionMatrix(programScope.program(), xrView);
@@ -139,11 +157,15 @@ namespace builtin_scene
       // Draw the mesh
       {
         client_graphics::WebGLVertexArrayScope vaoScope(glContext_, mesh->vertexArrayObject());
+        // TODO: support other primitive topologies?
         glContext_->drawElements(client_graphics::WebGLDrawMode::kTriangles,
                                  mesh->indices().size(),
                                  WEBGL_UNSIGNED_INT,
                                  0);
       }
+
+      // Call lifecycle methods
+      material->onAfterDrawMesh(mesh);
     }
     /**
      * Update the view projection matrix.
@@ -219,6 +241,7 @@ namespace builtin_scene
     using ecs::System::System;
 
   public:
+    const std::string name() const override { return "RenderSystem"; }
     void onExecute() override
     {
       auto renderer = getResource<Renderer>();
@@ -289,7 +312,7 @@ namespace builtin_scene
       if (!meshComponent->initialized())
         renderer.initializeMesh3d(meshComponent);
       if (!materialComponent->initialized())
-        renderer.initializeMeshMaterial3d(materialComponent);
+        renderer.initializeMeshMaterial3d(meshComponent, materialComponent);
       renderer.drawMesh3d(meshComponent,
                           materialComponent,
                           getComponent<Transform>(mesh),

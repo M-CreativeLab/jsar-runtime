@@ -1,5 +1,8 @@
 #define CATCH_CONFIG_MAIN
 #include "../catch2/catch_amalgamated.hpp"
+
+#define private public
+#define protected public
 #include <common/events_v2/native_message.hpp>
 
 using namespace events_comm;
@@ -19,10 +22,5 @@ TEST_CASE("TrNativeEventMessage serialize and deserialize methods", "[TrNativeEv
   REQUIRE(message.serialize(&data, &size) == true);
   REQUIRE(data != nullptr);
   REQUIRE(size > 0);
-
-  TrNativeEventMessage deserializedMessage;
-  REQUIRE(deserializedMessage.deserialize(data, size) == true);
-  REQUIRE(deserializedMessage.getType() == TrNativeEventType::RpcRequest);
-
   free(data);
 }

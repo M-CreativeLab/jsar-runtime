@@ -222,12 +222,13 @@ namespace dom
     }
 
   public:
-    void onExecute()
+    const std::string name() const override { return "dom.RenderHTMLDocument"; }
+    void onExecute() override
     {
       assert(document_ != nullptr);
       auto body = document_->body();
       auto scene = document_->scene;
-      if (scene == nullptr)
+      if (scene == nullptr || body == nullptr)
         return;
 
       // Step 1: Compute the elements' styles.

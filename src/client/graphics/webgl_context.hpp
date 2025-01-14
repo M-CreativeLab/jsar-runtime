@@ -400,7 +400,7 @@ namespace client_graphics
     void vertexAttribPointer(unsigned int index, size_t size, int type, bool normalized, size_t stride, int offset);
     std::optional<WebGLActiveInfo> getActiveAttrib(std::shared_ptr<WebGLProgram> program, unsigned int index);
     std::optional<WebGLActiveInfo> getActiveUniform(std::shared_ptr<WebGLProgram> program, unsigned int index);
-    int getAttribLocation(std::shared_ptr<WebGLProgram> program, const std::string &name);
+    std::optional<int> getAttribLocation(std::shared_ptr<WebGLProgram> program, const std::string &name);
     std::optional<WebGLUniformLocation> getUniformLocation(std::shared_ptr<WebGLProgram> program, const std::string &name);
     void uniform1f(WebGLUniformLocation location, float v0);
     void uniform1fv(WebGLUniformLocation location, const std::vector<float> value);

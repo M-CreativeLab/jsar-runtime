@@ -43,7 +43,8 @@ namespace builtin_scene
     using ecs::System::System;
 
   public:
-    void onExecute()
+    const std::string name() const override { return "TimerSystem"; }
+    void onExecute() override
     {
       auto timer = getResource<Timer>();
       if (timer)

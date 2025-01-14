@@ -335,6 +335,23 @@ namespace builtin_scene::ecs
      * @returns `true` if the component set contains the component of the given entity, `false` otherwise.
      */
     inline bool contains(EntityId entity) { return entityToIndexMap_.find(entity) != entityToIndexMap_.end(); }
+    /**
+     * Replace the component of the given entity with the new component.
+     * 
+     * If the component already exists, it will be removed and replaced with the new component.
+     * 
+     * @param entity The entity to replace the component for.
+     * @param newComponent The new component to replace.
+     * @returns The replaced component.
+     */
+    inline std::shared_ptr<T> replace(EntityId entity, std::shared_ptr<T> newComponent)
+    {
+      if (newComponent == nullptr)
+        throw std::runtime_error("The component to add is null.");
+      if (contains(entity))
+        remove(entity);
+      return insert(entity, newComponent);
+    }
 
   private:
     void onEntityDestroyed(EntityId entity) override;
@@ -427,6 +444,22 @@ namespace builtin_scene::ecs
     inline std::shared_ptr<ComponentType> getComponent(EntityId entity)
     {
       return getComponentSet<ComponentType>()->get(entity);
+    }
+
+    /**
+     * Replace the component of the given type for the given entity.
+     * 
+     * If the component already exists, it will be removed and replaced with the new component.
+     * 
+     * @tparam ComponentType The type of the component.
+     * @param entity The entity to replace the component for.
+     * @param component The component to replace.
+     * @returns The replaced component.
+     */
+    template <typename ComponentType>
+    inline std::shared_ptr<ComponentType> replaceComponent(EntityId entity, ComponentType component)
+    {
+      return getComponentSet<ComponentType>()->replace(entity, std::make_shared<ComponentType>(component));
     }
 
     /**
@@ -526,7 +559,7 @@ namespace builtin_scene::ecs
      * @returns The list of entity Ids with the given component type.
      */
     template <typename ComponentType>
-    std::vector<EntityId> queryEntities();
+    [[nodiscard]] std::vector<EntityId> queryEntities();
     /**
      * Query all entities with the given query component type and include the include component type.
      *
@@ -535,7 +568,7 @@ namespace builtin_scene::ecs
      * @returns The list of components of the given type.
      */
     template <typename QueryComponentType, typename IncludeComponentType>
-    std::vector<IncludeComponentType> queryEntitiesWithComponent();
+    [[nodiscard]] std::vector<IncludeComponentType> queryEntitiesWithComponent();
     /**
      * Get the first entity with the given component type, or an empty optional if not found.
      *
@@ -543,7 +576,7 @@ namespace builtin_scene::ecs
      * @returns The Id of the first entity with the given component type.
      */
     template <typename ComponentType>
-    std::optional<EntityId> firstEntity();
+    [[nodiscard]] std::optional<EntityId> firstEntity();
     /**
      * Get the first entity with the given component type, or an empty optional if not found.
      *
@@ -552,7 +585,7 @@ namespace builtin_scene::ecs
      * @returns The include component of the first entity with the query component type.
      */
     template <typename QueryComponentType, typename IncludeComponentType>
-    std::optional<IncludeComponentType> firstEntityWithComponent();
+    [[nodiscard]] std::optional<IncludeComponentType> firstEntityWithComponent();
     /**
      * Get the component of the given entity.
      *
@@ -561,16 +594,35 @@ namespace builtin_scene::ecs
      * @returns The component of the given type for the given entity or an empty optional if not found.
      */
     template <typename ComponentType>
-    std::shared_ptr<ComponentType> getComponent(EntityId entity);
+    [[nodiscard]] std::shared_ptr<ComponentType> getComponent(EntityId entity);
     /**
      * Add component(s) to the entity.
-     * 
+     *
      * @tparam ComponentTypeList The types of the components to add.
      * @param entity The entity to add the components to.
      * @param components The components to add.
      */
     template <typename... ComponentTypeList>
     void addComponent(EntityId entity, ComponentTypeList... components);
+    /**
+     * Remove the components of the entity.
+     *
+     * @tparam ComponentType The type of the component.
+     * @param entity The entity to remove the component from.
+     * @returns The number of components removed.
+     */
+    template <typename ComponentType>
+    void removeComponent(EntityId entity);
+    /**
+     * Replace the current component of the entity with the new one.
+     *
+     * @tparam ComponentType The type of the component.
+     * @param entity The entity to replace the component for.
+     * @param component The new component to replace with.
+     * @returns The replaced component.
+     */
+    template <typename ComponentType>
+    std::shared_ptr<ComponentType> replaceComponent(EntityId entity, ComponentType component);
     /**
      * Register a new component type to use in the app.
      *
@@ -698,6 +750,10 @@ namespace builtin_scene::ecs
 
   public:
     /**
+     * @returns The name of the system.
+     */
+    virtual const std::string name() const = 0;
+    /**
      * This method should be implemented by the derived class to execute the system.
      */
     virtual void onExecute() = 0;
@@ -796,7 +852,7 @@ namespace builtin_scene::ecs
     }
     /**
      * Add component(s) to the entity.
-     * 
+     *
      * @tparam ComponentTypeList The types of the components to add.
      * @param entity The entity to add the components to.
      * @param components The components to add.
@@ -805,6 +861,32 @@ namespace builtin_scene::ecs
     inline void addComponent(EntityId entity, ComponentTypeList... components)
     {
       (connectedApp_->addComponent(components), ...);
+    }
+    /**
+     * Remove the components of the entity.
+     * 
+     * @tparam ComponentType The type of the component.
+     * @param entity The entity to remove the component from.
+     */
+    template <typename ComponentType>
+    inline void removeComponent(EntityId entity)
+    {
+      connectedApp_->removeComponent<ComponentType>(entity);
+    }
+    /**
+     * Replace the current component of the entity with the new one.
+     * 
+     * If the component already exists, it will be removed and replaced with the new component.
+     * 
+     * @tparam ComponentType The type of the component.
+     * @param entity The entity to replace the component for.
+     * @param component The new component to replace with.
+     * @returns The replaced component.
+     */
+    template <typename ComponentType>
+    inline std::shared_ptr<ComponentType> replaceComponent(EntityId entity, ComponentType component)
+    {
+      return connectedApp_->replaceComponent<ComponentType>(entity, component);
     }
     /**
      * Get the resource of the given type.
@@ -822,6 +904,8 @@ namespace builtin_scene::ecs
     void connect(std::shared_ptr<App> app)
     {
       connectedApp_ = app;
+      if (next_ != nullptr)
+        next_->connect(app);
     }
 
   private:

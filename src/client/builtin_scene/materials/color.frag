@@ -5,15 +5,28 @@ uniform sampler2D tex;
 uniform mat3 textureTransformation;
 #endif
 
+#ifdef USE_UVS
+in vec2 uvs;
+#endif
+
 in vec4 col;
 layout(location = 0) out vec4 outColor;
 
 void main() {
-  outColor = surfaceColor * col;
+  // Set background color
+  outColor = surfaceColor;
+
+  // Multiply by color
+  outColor *= col;
 
 #ifdef USE_TEXTURE
-  outColor *= texture(tex, (textureTransformation * vec3(uvs, 1.0)).xy);
+  // Sample texture
+  vec4 textureColor = texture(tex, (textureTransformation * vec3(uvs, 1.0)).xy);
+  outColor = mix(outColor, textureColor,
+                 textureColor.a); // Use texture alpha as blend factor
 #endif
 
-  outColor.rgb = pow(outColor.rgb, vec3(1.0 / 2.2));
+#ifdef DEBUG_UV0
+  outColor = vec4((textureTransformation * vec3(uvs, 1.0)).xy, 0.0, 1.0); // Debug texture coordinates
+#endif
 }

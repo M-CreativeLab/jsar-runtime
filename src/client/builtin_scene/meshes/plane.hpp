@@ -32,11 +32,6 @@ namespace builtin_scene::meshes
       auto vertexCount = zVertexCount * xVertexCount;
       auto indicesCount = (zVertexCount - 1) * (xVertexCount - 1) * 6;
 
-      std::vector<glm::vec3> positions = std::vector<glm::vec3>(vertexCount);
-      std::vector<glm::vec3> normals = std::vector<glm::vec3>(vertexCount);
-      std::vector<glm::vec2> uvs = std::vector<glm::vec2>(vertexCount);
-      Indices<uint32_t> indices(indicesCount);
-
       auto rotation = math::Quat::FromRotationArc(math::Dir3::Y(), normal());
       auto size = halfSize() * 2.0f;
 
@@ -47,12 +42,11 @@ namespace builtin_scene::meshes
           auto tx = static_cast<float>(x) / static_cast<float>(xVertexCount - 1);
           auto tz = static_cast<float>(z) / static_cast<float>(zVertexCount - 1);
           glm::vec3 pos = rotation * math::Vec3((-0.5f + tx) * size.x, 0.0f, (-0.5f + tz) * size.y);
-          positions.push_back(pos);
-          normals.push_back(normal());
-          uvs.push_back(glm::vec2(tx, tz));
+          insertVertex(pos, normal(), glm::vec2(tx, tz));
         }
       }
 
+      Indices<uint32_t> indices(indicesCount);
       for (uint32_t z = 0; z < zVertexCount - 1; z++)
       {
         for (uint32_t x = 0; x < xVertexCount - 1; x++)
@@ -68,9 +62,9 @@ namespace builtin_scene::meshes
       }
 
       updateIndices(indices);
-      insertAttribute(MeshVertexAttributeData<float, 3>::Make(Mesh::ATTRIBUTE_POSITION, positions));
-      insertAttribute(MeshVertexAttributeData<float, 3>::Make(Mesh::ATTRIBUTE_NORMAL, normals));
-      insertAttribute(MeshVertexAttributeData<float, 2>::Make(Mesh::ATTRIBUTE_UV0, uvs));
+      enableAttribute(Vertex::ATTRIBUTE_POSITION);
+      enableAttribute(Vertex::ATTRIBUTE_NORMAL);
+      enableAttribute(Vertex::ATTRIBUTE_UV0);
     }
 
   private:

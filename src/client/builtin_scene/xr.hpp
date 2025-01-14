@@ -53,7 +53,8 @@ namespace builtin_scene
     using ecs::System::System;
 
   public:
-    void onExecute()
+    const std::string name() const override { return "WebXRExperienceStartupSystem"; }
+    void onExecute() override
     {
     }
   };
@@ -64,7 +65,8 @@ namespace builtin_scene
     using ecs::System::System;
 
   public:
-    void onExecute()
+    const std::string name() const override { return "WebXRExperienceUpdateSystem"; }
+    void onExecute() override
     {
       auto xrExperience = getResource<WebXRExperience>();
       assert(xrExperience != nullptr);

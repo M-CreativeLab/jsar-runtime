@@ -1541,8 +1541,11 @@ namespace webgl
 
     auto program = Napi::ObjectWrap<WebGLProgram>::Unwrap(info[0].As<Napi::Object>());
     std::string name = info[1].As<Napi::String>().Utf8Value();
-    return Napi::Number::New(env,
-                             glContext_->getAttribLocation(program->handle(), name));
+    auto loc = glContext_->getAttribLocation(program->handle(), name);
+    if (loc.has_value())
+      return Napi::Number::New(env, loc.value());
+    else
+      return Napi::Number::New(env, -1);
   }
 
   template <typename ObjectType, typename ContextType>

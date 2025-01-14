@@ -79,15 +79,7 @@ namespace dom
       auto material3d = scene.getComponent<MeshMaterial3d>(entity);
       if (material3d != nullptr)
       {
-        auto colorMaterial = dynamic_pointer_cast<materials::ColorMaterial>(material3d->material());
-        if (colorMaterial != nullptr)
-        {
-          if (adoptedStyle_.hasProperty("background-color"))
-          {
-            // auto backgroundColor = adoptedStyle_.getPropertyValue("background-color");
-            colorMaterial->surfaceColor = {1.0f, 0.0f, 0.0f, 1.0f};
-          }
-        }
+        // TODO: update material properties?
       }
     }
   }
@@ -114,7 +106,7 @@ namespace dom
         layoutRes.height() != offsetHeight_)
     {
       offsetWidth_ = layoutRes.width();
-      offsetHeight_ = layoutRes.width();
+      offsetHeight_ = layoutRes.height();
       onLayoutSizeChanged();
     }
     // TODO: support offsetTop, offsetLeft, offsetParent, etc.

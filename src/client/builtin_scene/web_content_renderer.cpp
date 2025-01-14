@@ -1,10 +1,19 @@
 #include <assert.h>
 #include <skia/include/core/SkCanvas.h>
+#include <skia/include/core/SkPaint.h>
+#include <skia/include/core/SkRRect.h>
+#include <skia/include/core/SkRect.h>
+#include <skia/include/core/SkColor.h>
+
+#include "./mesh_material.hpp"
+#include "./materials/web_content.hpp"
 #include "./web_content.hpp"
 #include "./text.hpp"
 
 namespace builtin_scene::web_renderer
 {
+  using namespace skia::textlayout;
+
   void RenderBaseSystem::onExecute()
   {
     auto entities = queryEntities<WebContent>();
@@ -21,32 +30,94 @@ namespace builtin_scene::web_renderer
 
   void RenderBackgroundSystem::render(ecs::EntityId entity, WebContent &content)
   {
+    const auto &style = content.style();
     auto canvas = content.canvas();
+    float top = 5.0f;
+    float left = 5.0f;
 
-    // Draw the background.
-    canvas->clear(SK_ColorWHITE);
+    SkRect rect = SkRect::MakeXYWH(left, top,
+                                   content.width() - 2 * left,
+                                   content.height() - 2 * top);
+    SkRRect roundedRect;
+    {
+      // Set the radius for all four corners.
+      float borderTopLeftRadius = style.getPropertyValueAs<float>("border-top-left-radius");
+      float borderTopRightRadius = style.getPropertyValueAs<float>("border-top-right-radius");
+      float borderBottomRightRadius = style.getPropertyValueAs<float>("border-bottom-right-radius");
+      float borderBottomLeftRadius = style.getPropertyValueAs<float>("border-bottom-left-radius");
+      SkVector radii[4] = {
+          {borderTopLeftRadius, borderTopLeftRadius},
+          {borderTopRightRadius, borderTopRightRadius},
+          {borderBottomRightRadius, borderBottomRightRadius},
+          {borderBottomLeftRadius, borderBottomLeftRadius}};
+      roundedRect.setRectRadii(rect, radii);
+    }
 
-    // Draw the border.
-    SkPaint paint;
-    paint.setColor(SK_ColorBLACK);
-    paint.setStyle(SkPaint::kStroke_Style);
-    paint.setStrokeWidth(1.0f);
-    canvas->drawRect(SkRect::MakeWH(300.0f, 300.0f), paint);
+    if (style.hasProperty("background-color"))
+    {
+      SkPaint fillPaint;
+      string backgroundColorStr = style.getPropertyValue("background-color");
+      fillPaint.setColor(SkColorSetARGB(255, 0, 0, 255));
+      fillPaint.setAntiAlias(true);
+      fillPaint.setStyle(SkPaint::kFill_Style);
+      canvas->drawRRect(roundedRect, fillPaint);
+    }
+
+    SkPaint borderPaint;
+    {
+      borderPaint.setAntiAlias(true);
+      borderPaint.setStyle(SkPaint::kStroke_Style);
+
+      // Support for border color, border-width, border-style for top, right, bottom, left.
+      if (style.hasProperty("border-top-color"))
+      {
+        borderPaint.setColor(SK_ColorWHITE);
+        borderPaint.setStrokeWidth(style.getPropertyValueAs<float>("border-top-width"));
+        canvas->drawLine(rect.fLeft, rect.fTop, rect.fRight, rect.fTop, borderPaint);
+      }
+      if (style.hasProperty("border-right-color"))
+      {
+        borderPaint.setColor(SK_ColorWHITE);
+        borderPaint.setStrokeWidth(style.getPropertyValueAs<float>("border-right-width"));
+        canvas->drawLine(rect.fRight, rect.fTop, rect.fRight, rect.fBottom, borderPaint);
+      }
+      if (style.hasProperty("border-bottom-color"))
+      {
+        borderPaint.setColor(SK_ColorWHITE);
+        borderPaint.setStrokeWidth(style.getPropertyValueAs<float>("border-bottom-width"));
+        canvas->drawLine(rect.fRight, rect.fBottom, rect.fLeft, rect.fBottom, borderPaint);
+      }
+      if (style.hasProperty("border-left-color"))
+      {
+        borderPaint.setColor(SK_ColorWHITE);
+        borderPaint.setStrokeWidth(style.getPropertyValueAs<float>("border-left-width"));
+        canvas->drawLine(rect.fLeft, rect.fBottom, rect.fLeft, rect.fTop, borderPaint);
+      }
+    }
   }
 
   void RenderTextSystem::render(ecs::EntityId entity, WebContent &content)
   {
-    using namespace skia::textlayout;
+    // auto fontCollection = sk_make_sp<FontCollection>();
+    // auto paragraphBuilder = ParagraphBuilder::make(content.paragraphStyle, fontCollection);
 
-    auto fontCollection = sk_make_sp<FontCollection>();
-    auto paragraphBuilder = ParagraphBuilder::make(content.paragraphStyle, fontCollection);
+    // paragraphBuilder->pushStyle(content.textStyle);
+    // paragraphBuilder->addText("Hello, world!");
+    // paragraphBuilder->pop();
 
-    paragraphBuilder->pushStyle(content.textStyle);
-    paragraphBuilder->addText("Hello, world!");
-    paragraphBuilder->pop();
+    // auto paragraph = paragraphBuilder->Build();
+    // paragraph->layout(300.0f);
+    // paragraph->paint(content.canvas(), 0.0f, 0.0f);
+  }
 
-    auto paragraph = paragraphBuilder->Build();
-    paragraph->layout(300.0f);
-    paragraph->paint(content.canvas(), 0.0f, 0.0f);
+  void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)
+  {
+    auto material3d = getComponent<MeshMaterial3d>(entity);
+    if (material3d == nullptr)
+      return;
+
+    auto webContentMaterial = material3d->material<materials::WebContentMaterial>();
+    if (webContentMaterial != nullptr)
+      webContentMaterial->updateTexture(content);
   }
 }

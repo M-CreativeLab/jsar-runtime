@@ -1,6 +1,9 @@
 uniform mat4 viewProjection;
 uniform mat4 modelMatrix;
+
 in vec3 position;
+in vec3 normal;
+in vec2 texCoord;
 
 #ifdef PARTICLES
 in vec3 start_position;
@@ -9,21 +12,10 @@ uniform vec3 acceleration;
 uniform float time;
 #endif
 
-#ifdef USE_INSTANCE_TRANSLATIONS
-in vec3 instance_translation;
-#endif
-
-#ifdef USE_INSTANCE_TRANSFORMS
-in vec4 row1;
-in vec4 row2;
-in vec4 row3;
-#endif
-
 out vec3 pos;
 
 #ifdef USE_NORMALS
 uniform mat4 normalMatrix;
-in vec3 normal;
 out vec3 nor;
 
 #ifdef USE_TANGENTS
@@ -31,15 +23,9 @@ in vec4 tangent;
 out vec3 tang;
 out vec3 bitang;
 #endif
-
 #endif
 
 #ifdef USE_UVS
-#ifdef USE_INSTANCE_TEXTURE_TRANSFORMATION
-in vec3 tex_transform_row1;
-in vec3 tex_transform_row2;
-#endif
-in vec2 uv_coordinates;
 out vec2 uvs;
 #endif
 
@@ -97,15 +83,7 @@ void main() {
 
   // *** UV ***
 #ifdef USE_UVS
-#ifdef USE_INSTANCE_TEXTURE_TRANSFORMATION
-  mat3 texTransform;
-  texTransform[0] = vec3(tex_transform_row1.x, tex_transform_row2.x, 0.0);
-  texTransform[1] = vec3(tex_transform_row1.y, tex_transform_row2.y, 0.0);
-  texTransform[2] = vec3(tex_transform_row1.z, tex_transform_row2.z, 1.0);
-  uvs = (texTransform * vec3(uv_coordinates, 1.0)).xy;
-#else
-  uvs = uv_coordinates;
-#endif
+  uvs = texCoord;
 #endif
 
   // *** COLOR ***

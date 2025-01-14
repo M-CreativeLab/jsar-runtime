@@ -1,5 +1,8 @@
 #define CATCH_CONFIG_MAIN
 #include "../catch2/catch_amalgamated.hpp"
+
+#define private public
+#define protected public
 #include <common/events_v2/native_event.hpp>
 
 using namespace events_comm;
@@ -61,7 +64,14 @@ TEST_CASE("TrRpcResponse class", "[TrRpcResponse]") {
 }
 
 TEST_CASE("TrDocumentRequest class", "[TrDocumentRequest]") {
-  TrDocumentRequestInit init = {1, "url", true, false, TrScriptRunMode::Dangerously};
+  TrDocumentRequestInit init;
+  {
+    init.id = 1;
+    init.url = "url";
+    init.disableCache = true;
+    init.isPreview = false;
+    init.runScripts = TrScriptRunMode::Dangerously;
+  }
   TrDocumentRequest request(init);
   REQUIRE(request.documentId == 1);
   REQUIRE(request.url == "url");

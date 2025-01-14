@@ -28,7 +28,8 @@ namespace builtin_scene
     using ecs::System::System;
 
   public:
-    void onExecute()
+    const std::string name() const override { return "CameraStartupSystem"; }
+    void onExecute() override
     {
       // Create the camera for rendering.
       spawn(Camera(), Transform());
@@ -41,7 +42,8 @@ namespace builtin_scene
     using ecs::System::System;
 
   public:
-    void onExecute()
+    const std::string name() const override { return "CameraUpdateSystem"; }
+    void onExecute() override
     {
       auto cameraEntity = firstEntity<Camera>();
       if (!cameraEntity.has_value())

@@ -175,11 +175,9 @@ void TrHiveDaemon::onDeamonProcess()
       const_cast<char *>(hiveConfigBuffer.GetString()),
       nullptr};
 
+  cout << "Starting hive process on \"" << clientPath.c_str() << "\"" << endl;
   if (execvp(clientPath.c_str(), hiveArgs) == -1)
-  {
-    fprintf(stderr, "Failed to start hive process on \"%s\": %s\n",
-            clientPath.c_str(), strerror(errno));
-  }
+    cerr << "Failed to start hive process on \"" << clientPath.c_str() << "\": " << strerror(errno) << endl;
 
   /**
    * NOTE: The following code will not be executed if `execvp()` is successful, thus the `exit()` does guarantee the child process

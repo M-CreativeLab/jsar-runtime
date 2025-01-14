@@ -52,6 +52,26 @@ namespace builtin_scene
     {
       style_ = style;
     }
+    /**
+     * This function provides access to the width and height of the SkCanvas object.
+     *
+     * @returns float The width of the SkCanvas object.
+     */
+    inline float width() const
+    {
+      assert(canvas_ != nullptr);
+      return canvas_->imageInfo().width();
+    }
+    /**
+     * This function provides access to the width and height of the SkCanvas object.
+     *
+     * @returns float The height of the SkCanvas object.
+     */
+    inline float height() const
+    {
+      assert(canvas_ != nullptr);
+      return canvas_->imageInfo().height();
+    }
 
   public:
     skia::textlayout::ParagraphStyle paragraphStyle;
@@ -91,6 +111,9 @@ namespace builtin_scene
     public:
       using RenderBaseSystem::RenderBaseSystem;
 
+    public:
+      const std::string name() const override { return "web_render.RenderBackgroundSystem"; }
+
     private:
       void render(ecs::EntityId entity, WebContent &content) override;
     };
@@ -107,8 +130,23 @@ namespace builtin_scene
     public:
       using RenderBaseSystem::RenderBaseSystem;
 
+    public:
+      const std::string name() const override { return "web_render.RenderTextSystem"; }
+
     private:
-      void render(ecs::EntityId entity, WebContent &content);
+      void render(ecs::EntityId entity, WebContent &content) override;
+    };
+
+    class UpdateTextureSystem final : public RenderBaseSystem
+    {
+    public:
+      using RenderBaseSystem::RenderBaseSystem;
+
+    public:
+      const std::string name() const override { return "web_render.UpdateTextureSystem"; }
+
+    public:
+      void render(ecs::EntityId entity, WebContent &content) override;
     };
   }
 
@@ -128,9 +166,12 @@ namespace builtin_scene
 
       app.registerComponent<WebContent>();
 
-      auto renderChain = System::Make<RenderBackgroundSystem>()
-                             ->chain(System::Make<RenderTextSystem>());
-      app.addSystem(SchedulerLabel::kUpdate, renderChain);
+      auto renderBackground = System::Make<RenderBackgroundSystem>();
+      auto renderText = System::Make<RenderTextSystem>();
+      auto updateTexture = System::Make<UpdateTextureSystem>();
+
+      renderBackground->chain(renderText)->chain(updateTexture);
+      app.addSystem(SchedulerLabel::kUpdate, renderBackground);
     }
   };
 }

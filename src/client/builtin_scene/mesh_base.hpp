@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <variant>
 #include <glm/glm.hpp>
 #include "./asset.hpp"
 
@@ -29,14 +30,14 @@ namespace builtin_scene
     virtual float volume() = 0;
   };
 
-  enum class PrimitiveTopology
+  enum class PrimitiveTopology : int
   {
-    kPointList,
-    kLineList,
-    kLineStrip,
-    kTriangleList,
-    kTriangleStrip,
-    kTriangleFan,
+    kPointList = WEBGL_POINTS,
+    kLineList = WEBGL_LINES,
+    kLineStrip = WEBGL_LINE_STRIP,
+    kTriangleList = WEBGL_TRIANGLES,
+    kTriangleStrip = WEBGL_TRIANGLE_STRIP,
+    kTriangleFan = WEBGL_TRIANGLE_FAN,
   };
 
   template <typename T>
@@ -67,78 +68,111 @@ namespace builtin_scene
   };
 
   /**
+   * The interface for a vertex attribute.
+   */
+  class IVertexAttribute
+  {
+  public:
+    virtual ~IVertexAttribute() = default;
+
+  public:
+    /**
+     * Get the id of the vertex attribute.
+     */
+    virtual MeshVertexAttributeId id() const = 0;
+    /**
+     * Get the name of the vertex attribute.
+     */
+    virtual const std::string name() const = 0;
+    /**
+     * Get the vertex format: float32x2, float32x3, float32x4, uint16x2, uint16x4.
+     */
+    virtual VertexFormat format() const = 0;
+    /**
+     * Get the number of components per generic vertex attribute. Must be 1, 2, 3, 4. The initial value is 4.
+     */
+    virtual size_t size() const = 0;
+    /**
+     * Get the data type of each component in the array.
+     */
+    virtual int type() const = 0;
+    /**
+     * Get whether integer data values should be normalized.
+     *
+     * For `glVertexAttribPointer`, specifies whether fixed-point data values should be normalized (`GL_TRUE`) or converted directly as
+     * fixed-point values (`GL_FALSE`) when they are accessed. This parameter is ignored if type is `GL_FIXED`.
+     */
+    virtual bool normalized() const = 0;
+    /**
+     * Get the byte length of this vertex attribute, it's useful to calculate the stride of the vertex buffer.
+     */
+    virtual size_t byteLength() const = 0;
+
+  public:
+    bool is(const IVertexAttribute &attribute) const { return id() == attribute.id(); }
+  };
+
+  /**
    * Traits for vertex attributes, which expose:
    *
    * - `format`: The vertex format.
-   * - typename `V`: The type of the vertex attribute value.
+   * - `type`: The WebGL type of the vertex attribute.
    */
   template <typename Format, size_t N>
-  class MeshVertexAttributeTraits
+  class VertexAttributeTraits
   {
   public:
     static const VertexFormat format = VertexFormat::kUnknown;
-    static const int formatType = 0;
-    static const size_t dataSize = 0;
-    using V = void;
+    static const int type = 0;
   };
 
   template <>
-  class MeshVertexAttributeTraits<float, 2>
+  class VertexAttributeTraits<float, 2>
   {
   public:
     static const VertexFormat format = VertexFormat::kFloat32x2;
-    static const int formatType = WEBGL_FLOAT;
-    static const size_t dataSize = sizeof(float) * 2;
-    using V = glm::vec2;
+    static const int type = WEBGL_FLOAT;
   };
 
   template <>
-  class MeshVertexAttributeTraits<float, 3>
+  class VertexAttributeTraits<float, 3>
   {
   public:
     static const VertexFormat format = VertexFormat::kFloat32x3;
-    static const int formatType = WEBGL_FLOAT;
-    static const size_t dataSize = sizeof(float) * 3;
-    using V = glm::vec3;
+    static const int type = WEBGL_FLOAT;
   };
 
   template <>
-  class MeshVertexAttributeTraits<float, 4>
+  class VertexAttributeTraits<float, 4>
   {
   public:
     static const VertexFormat format = VertexFormat::kFloat32x4;
-    static const int formatType = WEBGL_FLOAT;
-    static const size_t dataSize = sizeof(float) * 4;
-    using V = glm::vec4;
+    static const int type = WEBGL_FLOAT;
   };
 
   template <>
-  class MeshVertexAttributeTraits<uint16_t, 2>
+  class VertexAttributeTraits<uint16_t, 2>
   {
   public:
     static const VertexFormat format = VertexFormat::kUint16x2;
-    static const int formatType = WEBGL_UNSIGNED_INT;
-    static const size_t dataSize = sizeof(uint16_t) * 2;
-    using V = glm::u16vec2;
+    static const int type = WEBGL_UNSIGNED_INT;
   };
 
   template <>
-  class MeshVertexAttributeTraits<uint16_t, 4>
+  class VertexAttributeTraits<uint16_t, 4>
   {
   public:
     static const VertexFormat format = VertexFormat::kUint16x4;
-    static const int formatType = WEBGL_UNSIGNED_INT;
-    static const size_t dataSize = sizeof(uint16_t) * 4;
-    using V = glm::u16vec4;
+    static const int type = WEBGL_UNSIGNED_INT;
   };
 
   /**
    * The vertex attribute, it contains name, id and format.
    */
   template <typename Format, size_t N>
-  class MeshVertexAttribute
+  class VertexAttribute : public IVertexAttribute
   {
-    using Traits = MeshVertexAttributeTraits<Format, N>;
+    using Traits = VertexAttributeTraits<Format, N>;
 
   public:
     /**
@@ -148,248 +182,229 @@ namespace builtin_scene
      * @param id The id of the vertex attribute.
      * @param format The vertex format.
      */
-    MeshVertexAttribute(std::string name, uint64_t id, VertexFormat format)
-        : name(name), id(id), format(format)
+    VertexAttribute(std::string name, uint64_t id, VertexFormat format)
+        : name_(name), id_(id), format_(format)
     {
     }
 
   public:
+    MeshVertexAttributeId id() const override { return id_; }
+    const std::string name() const override { return name_; }
+    VertexFormat format() const override { return format_; }
+    size_t size() const override { return N; }
+    int type() const override { return Traits::type; }
+    bool normalized() const override { return false; }
+    size_t byteLength() const override { return N * sizeof(Format); }
+
+  private:
     /**
      * The name of the vertex attribute.
      */
-    std::string name;
+    std::string name_;
     /**
      * The id of the vertex attribute.
      */
-    MeshVertexAttributeId id;
+    MeshVertexAttributeId id_;
     /**
      * The vertex format.
      */
-    VertexFormat format = Traits::format;
+    VertexFormat format_ = Traits::format;
   };
 
-  /**
-   * The interface of mesh vertex attribute data.
-   */
-  class IMeshVertexAttributeData
+  using MeshVertexAttribute = std::variant<VertexAttribute<float, 2>,
+                                           VertexAttribute<float, 3>,
+                                           VertexAttribute<float, 4>,
+                                           VertexAttribute<uint16_t, 4>>;
+
+  // Custom comparison operator for `MeshVertexAttribute`.
+  inline bool operator==(const MeshVertexAttribute &lhs, const MeshVertexAttribute &rhs)
   {
-  public:
-    virtual ~IMeshVertexAttributeData() = default;
+    return std::visit([&](auto &&attrib)
+                      { return std::visit([&](auto &&attrib2)
+                                          { return attrib.id() == attrib2.id(); }, rhs); }, lhs);
+  }
 
-  public:
-    /**
-     * The vertex format.
-     */
-    virtual VertexFormat format() = 0;
-    /**
-     * the number of components per generic vertex attribute. Must be 1, 2, 3, 4. The initial value is 4.
-     */
-    virtual size_t formatSize() = 0;
-    /**
-     * the data type of each component in the array, such as `WEBGL_FLOAT`, `WEBGL_UNSIGNED_INT`, etc.
-     */
-    virtual int formatType() = 0;
-    /**
-     * Whether fixed-point data values should be normalized (`WEBGL_TRUE`) or converted directly as fixed-point values
-     * (`WEBGL_FALSE`) when they are accessed.
-     */
-    virtual bool normalized() = 0;
-    virtual size_t stride() = 0;
-    virtual size_t offset() = 0;
-    virtual void *dataBuffer() = 0;
-    virtual size_t dataSize() = 0;
-  };
-
-  /**
-   * The mesh vertex attribute data, it contains the attribute and values.
-   */
-  template <typename Format, size_t N>
-  class MeshVertexAttributeData : public IMeshVertexAttributeData
+  class Vertex
   {
-    using Traits = MeshVertexAttributeTraits<Format, N>;
-    using ValueType = typename Traits::V;
+    friend class MeshVertexBuffer;
 
   public:
-    /**
-     * Create a new mesh vertex attribute data.
-     *
-     * @param attribute The mesh vertex attribute.
-     * @param values The values of the vertex attribute.
-     * @returns The created mesh vertex attribute data.
-     */
-    static std::shared_ptr<MeshVertexAttributeData<Format, N>> Make(
-        MeshVertexAttribute<Format, N> attribute,
-        std::vector<ValueType> &values)
-    {
-      auto instance = std::make_shared<MeshVertexAttributeData<Format, N>>(attribute);
-      instance->setValues(values);
-      return instance;
-    }
+    inline static auto ATTRIBUTE_POSITION = VertexAttribute<float, 3>("position", 0, VertexFormat::kFloat32x3);
+    inline static auto ATTRIBUTE_NORMAL = VertexAttribute<float, 3>("normal", 1, VertexFormat::kFloat32x3);
+    inline static auto ATTRIBUTE_UV0 = VertexAttribute<float, 2>("texCoord", 2, VertexFormat::kFloat32x2);
+    inline static auto ATTRIBUTE_UV1 = VertexAttribute<float, 2>("texCoord1", 3, VertexFormat::kFloat32x2);
+    inline static auto ATTRIBUTE_TANGENT = VertexAttribute<float, 4>("tangent", 4, VertexFormat::kFloat32x4);
+    inline static auto ATTRIBUTE_COLOR = VertexAttribute<float, 4>("color", 5, VertexFormat::kFloat32x4);
+    inline static auto ATTRIBUTE_JOINT_WEIGHTS = VertexAttribute<float, 4>("jointWeights", 6, VertexFormat::kFloat32x4);
+    inline static auto ATTRIBUTE_JOINT_INDEX = VertexAttribute<uint16_t, 4>("jointIndex", 7, VertexFormat::kUint16x4);
 
   public:
-    /**
-     * Create a new mesh vertex attribute data.
-     *
-     * @param attribute The mesh vertex attribute.
-     */
-    MeshVertexAttributeData(MeshVertexAttribute<Format, N> attribute)
-        : attribute_(attribute)
-    {
-    }
-    MeshVertexAttributeData(MeshVertexAttributeData<Format, N> &other)
-        : attribute_(other.attribute_), values(other.values)
+    Vertex() = default;
+    Vertex(glm::vec3 position, glm::vec3 normal, glm::vec2 uv)
+        : position(position), normal(normal), uv0(uv)
     {
     }
 
   public:
-    /**
-     * @returns The attribute id.
-     */
-    inline MeshVertexAttributeId attributeId() { return attribute_.id; }
-    /**
-     * @returns The attribute name.
-     */
-    inline std::string attributeName() { return attribute_.name; }
-
-  public:
-    /**
-     * Set the values of the vertex attribute.
-     *
-     * @param values The values of the vertex attribute.
-     */
-    void setValues(std::vector<ValueType> values) { this->values = values; }
-
-  public:
-    VertexFormat format() override { return Traits::format; }
-    size_t formatSize() override { return N; }
-    int formatType() override { return Traits::formatType; }
-    bool normalized() override { return false; }
-    // Stride must be 0, because the data is tightly packed.
-    size_t stride() override { return 0; }
-    // VBO is used, so the offset is 0.
-    size_t offset() override { return 0; }
-    void *dataBuffer() override { return values.data(); }
-    size_t dataSize() override { return values.size() * Traits::dataSize; }
-
-  public:
-    /**
-     * The values of the vertex attribute.
-     */
-    std::vector<ValueType> values{};
+    size_t size() const { return compactData_.size(); }
+    const void *data() const { return compactData_.data(); }
 
   private:
-    MeshVertexAttribute<Format, N> attribute_;
+    void insertAttributeToCompactData(const IVertexAttribute &attribute)
+    {
+      if (attribute.is(ATTRIBUTE_POSITION))
+        compactData_.insert(compactData_.end(),
+                            reinterpret_cast<const uint8_t *>(&position),
+                            reinterpret_cast<const uint8_t *>(&position) + sizeof(position));
+      else if (attribute.is(ATTRIBUTE_NORMAL))
+        compactData_.insert(compactData_.end(),
+                            reinterpret_cast<const uint8_t *>(&normal),
+                            reinterpret_cast<const uint8_t *>(&normal) + sizeof(normal));
+      else if (attribute.is(ATTRIBUTE_UV0))
+        compactData_.insert(compactData_.end(),
+                            reinterpret_cast<const uint8_t *>(&uv0),
+                            reinterpret_cast<const uint8_t *>(&uv0) + sizeof(uv0));
+      else if (attribute.is(ATTRIBUTE_UV1))
+        compactData_.insert(compactData_.end(),
+                            reinterpret_cast<const uint8_t *>(&uv1),
+                            reinterpret_cast<const uint8_t *>(&uv1) + sizeof(uv1));
+      else if (attribute.is(ATTRIBUTE_TANGENT))
+        compactData_.insert(compactData_.end(),
+                            reinterpret_cast<const uint8_t *>(&tangent),
+                            reinterpret_cast<const uint8_t *>(&tangent) + sizeof(tangent));
+      else if (attribute.is(ATTRIBUTE_COLOR))
+        compactData_.insert(compactData_.end(),
+                            reinterpret_cast<const uint8_t *>(&color),
+                            reinterpret_cast<const uint8_t *>(&color) + sizeof(color));
+      else if (attribute.is(ATTRIBUTE_JOINT_WEIGHTS))
+        compactData_.insert(compactData_.end(),
+                            reinterpret_cast<const uint8_t *>(&jointWeights),
+                            reinterpret_cast<const uint8_t *>(&jointWeights) + sizeof(jointWeights));
+      else if (attribute.is(ATTRIBUTE_JOINT_INDEX))
+        compactData_.insert(compactData_.end(),
+                            reinterpret_cast<const uint8_t *>(&jointIndex),
+                            reinterpret_cast<const uint8_t *>(&jointIndex) + sizeof(jointIndex));
+    }
+    void update(const std::vector<MeshVertexAttribute> &enabledAttributes)
+    {
+      compactData_.clear();
+      for (auto &item : enabledAttributes)
+      {
+        std::visit([this](auto &&attrib)
+                   { this->insertAttributeToCompactData(attrib); }, item);
+      }
+    }
+
+  public:
+    glm::vec3 position;
+    glm::vec3 normal;
+    glm::vec2 uv0;
+    glm::vec2 uv1;
+    glm::vec4 tangent;
+    glm::vec4 color;
+    glm::vec4 jointWeights;
+    glm::u16vec4 jointIndex;
+    // TODO: support custom attributes?
+
+  private:
+    std::vector<uint8_t> compactData_;
   };
 
   class MeshVertexBuffer
   {
   public:
-    MeshVertexBuffer()
-    {
-    }
-    ~MeshVertexBuffer()
-    {
-      if (cachedData_ != nullptr)
-      {
-        free(cachedData_);
-        cachedData_ = nullptr;
-      }
-    }
+    MeshVertexBuffer() = default;
+    MeshVertexBuffer(const MeshVertexBuffer &) = delete;
 
   public:
-    template <typename Format, size_t N>
-    void insertAttributeData(std::shared_ptr<MeshVertexAttributeData<Format, N>> data)
+    /**
+     * Inserts a vertex to the buffer.
+     *
+     * @param vertex The vertex data to add.
+     */
+    void insertVertex(Vertex &vertex)
     {
-      assert(data != nullptr);
-      attributes_.push_back(data);
+      vertices_.push_back(vertex);
+      isDirty_ = true;
     }
-    inline size_t dataSize()
-    {
-      if (cachedSize_ <= 0)
-      {
-        size_t totalSize = 0;
-        for (auto &attribute : attributes_)
-          totalSize += attribute->dataSize();
-        cachedSize_ = totalSize;
-      }
-      return cachedSize_;
-    }
-    inline void *dataBuffer()
-    {
-      if (cachedData_ == nullptr)
-      {
-        size_t size = dataSize();
-        if (size <= 0)
-          return nullptr;
 
-        cachedData_ = malloc(size);
-        void *pCurrAttrib = cachedData_;
-        for (auto &attribute : attributes_)
-        {
-          auto data = attribute->dataBuffer();
-          auto dataSize = attribute->dataSize();
-          memcpy(pCurrAttrib, data, dataSize);
-          pCurrAttrib = (void *)((size_t)pCurrAttrib + dataSize);
-        }
+    /**
+     * Enable a vertex attribute.
+     */
+    void enableAttribute(const MeshVertexAttribute &attribute)
+    {
+      enabledAttributes_.push_back(attribute);
+      // Set the stride when enabling the attribute.
+      stride_ += std::visit([](auto &&item)
+                            { return item.byteLength(); }, attribute);
+      isDirty_ = true;
+    }
+
+    /**
+     * Disable a vertex attribute.
+     */
+    void disableAttribute(const MeshVertexAttribute &attribute)
+    {
+      auto it = std::remove_if(enabledAttributes_.begin(), enabledAttributes_.end(),
+                               [&attribute](const MeshVertexAttribute &item)
+                               { return item == attribute; });
+      enabledAttributes_.erase(it, enabledAttributes_.end());
+
+      // Set the stride when disabling the attribute.
+      stride_ -= std::visit([](auto &&item)
+                            { return item.byteLength(); }, attribute);
+      isDirty_ = true;
+    }
+
+    /**
+     * Get the enabled vertex attributes.
+     */
+    inline const std::vector<MeshVertexAttribute> &attributes() const { return enabledAttributes_; }
+
+    /**
+     * Get the number of vertices in the buffer.
+     */
+    inline size_t vertexCount() const { return vertices_.size(); }
+
+    /**
+     * Get the stride of the vertex buffer.
+     */
+    inline size_t stride() const { return stride_; }
+
+    /**
+     * Get a pointer to the interleaved vertex data.
+     *
+     * @return A pointer to the vertex data.
+     */
+    const std::vector<uint8_t> &data()
+    {
+      if (!isDirty_ && cachedData_.size() > 0)
+        return cachedData_;
+
+      auto &enabledAttribs = attributes();
+      std::vector<uint8_t> data;
+      for (auto &vertex : vertices_)
+      {
+        vertex.update(enabledAttribs); // Update the vertex based on the enabled attributes.
+
+        const uint8_t *vertexData = reinterpret_cast<const uint8_t *>(vertex.data());
+        data.insert(data.end(), vertexData, vertexData + vertex.size());
       }
+      cachedData_ = data;
+      isDirty_ = false;
       return cachedData_;
     }
 
   private:
-    std::vector<std::shared_ptr<IMeshVertexAttributeData>> attributes_{};
-    void *cachedData_ = nullptr;
-    size_t cachedSize_ = 0;
+    std::vector<Vertex> vertices_;                       // Container to store vertices
+    std::vector<MeshVertexAttribute> enabledAttributes_; // Enabled vertex attributes
+    std::vector<uint8_t> cachedData_;                    // Cached interleaved vertex data
+    bool isDirty_ = true;                                // Whether the buffer is dirty
+    size_t stride_ = 0;                                  // The stride of the vertex buffer
   };
 
   class Mesh : public Measured3d
   {
-  public:
-    /**
-     * Where the vertex is located in space.
-     */
-    inline static auto ATTRIBUTE_POSITION = MeshVertexAttribute<float, 3>("Vertex_Position", 0,
-                                                                          VertexFormat::kFloat32x3);
-    /**
-     * The direction the vertex normal is facing in.
-     */
-    inline static auto ATTRIBUTE_NORMAL = MeshVertexAttribute<float, 3>("Vertex_Normal", 1,
-                                                                        VertexFormat::kFloat32x3);
-    /**
-     * Texture coordinates for the vertex.
-     *
-     * Generally `[0.,0.]` is mapped to the top left of the texture, and `[1.,1.]` to the bottom-right.
-     */
-    inline static auto ATTRIBUTE_UV0 = MeshVertexAttribute<float, 2>("Vertex_UV0", 2,
-                                                                     VertexFormat::kFloat32x2);
-    /**
-     * Alternate texture coordinates for the vertex.
-     *
-     * Typically, these are used for lightmaps, textures that provide precomputed illumination.
-     */
-    inline static auto ATTRIBUTE_UV1 = MeshVertexAttribute<float, 2>("Vertex_UV1", 3,
-                                                                     VertexFormat::kFloat32x2);
-    /**
-     * The direction of the vertex tangent. Used for normal mapping.
-     */
-    inline static auto ATTRIBUTE_TANGENT = MeshVertexAttribute<float, 4>("Vertex_Tangent", 4,
-
-                                                                         VertexFormat::kFloat32x4);
-    /**
-     * Per vertex coloring.
-     */
-    inline static auto ATTRIBUTE_COLOR = MeshVertexAttribute<float, 4>("Vertex_Color", 5,
-                                                                       VertexFormat::kFloat32x4);
-    /**
-     * Per vertex joint transform matrix weight.
-     */
-    inline static auto ATTRIBUTE_JOINT_WEIGHTS = MeshVertexAttribute<float, 4>("Vertex_JointWeights", 6,
-                                                                               VertexFormat::kFloat32x4);
-    /**
-     * Per vertex joint transform matrix index.
-     */
-    inline static auto ATTRIBUTE_JOINT_INDEX = MeshVertexAttribute<uint16_t, 4>("Vertex_JointIndex", 7,
-                                                                                VertexFormat::kUint16x4);
-
   public:
     /**
      * Create a new mesh.
@@ -414,52 +429,75 @@ namespace builtin_scene
       indices_ = indices;
     }
     /**
-     * Insert a new vertex attribute data directly.
+     * Insert the vertex to the mesh.
      *
-     * @param data The mesh vertex attribute data.
-     * @throws std::runtime_error If data is `nullptr`.
+     * @param vertex The vertex to insert.
      */
-    template <typename Format, size_t N>
-    inline void insertAttribute(std::shared_ptr<MeshVertexAttributeData<Format, N>> data)
+    inline void insertVertex(Vertex &vertex)
     {
-      if (data == nullptr)
-        throw std::runtime_error("Invalid vertex attribute data.");
-      attributes_[data->attributeId()] = data;
-      vertexBuffer_.insertAttributeData(data);
+      vertexBuffer_.insertVertex(vertex);
     }
     /**
-     * Insert a new vertex attribute data.
+     * Insert a new vertex from the given position, normal, and uv.
      *
-     * @param attribute The mesh vertex attribute to insert data.
-     * @param data The mesh vertex attribute data.
-     * @throws std::runtime_error If data is `nullptr`.
-     * @throws std::runtime_error If the vertex attribute data format is invalid.
+     * @param position The position of the vertex.
+     * @param normal The normal of the vertex.
+     * @param uv The uv of the vertex.
      */
-    template <typename Format, size_t N>
-    void insertAttribute(MeshVertexAttribute<Format, N> attribute, std::shared_ptr<MeshVertexAttributeData<Format, N>> data)
+    inline void insertVertex(glm::vec3 position, glm::vec3 normal, glm::vec2 uv)
     {
-      if (data == nullptr)
-        throw std::runtime_error("Invalid vertex attribute data.");
-      if (attribute.format != data->format())
-        throw std::runtime_error("Invalid vertex attribute data format.");
-      insertAttribute(data);
+      Vertex vertex(position, normal, uv);
+      insertVertex(vertex);
     }
+    /**
+     * Enable a vertex attribute.
+     *
+     * @param attribute The vertex attribute to enable.
+     */
+    inline void enableAttribute(const MeshVertexAttribute &attribute)
+    {
+      vertexBuffer_.enableAttribute(attribute);
+    }
+    /**
+     * Disable a vertex attribute.
+     *
+     * @param attribute The vertex attribute to disable.
+     */
+    inline void disableAttribute(const MeshVertexAttribute &attribute)
+    {
+      vertexBuffer_.disableAttribute(attribute);
+    }
+    /**
+     * The attributes stride is the sum of all enabled attributes byte length, that's used by the 
+     * graphics API to get the correct attribute data.
+     */
+    inline size_t attributesStride() const { return vertexBuffer_.stride(); }
 
   public:
     /**
      * @returns The mesh indices.
      */
-    inline Indices<uint32_t> &indices() { return indices_; }
+    inline const Indices<uint32_t> &indices() const { return indices_; }
     /**
      * @returns The mesh vertex buffer with all attributes.
      */
     inline MeshVertexBuffer &vertexBuffer() { return vertexBuffer_; }
     /**
-     * @returns The mesh vertex attributes.
+     * Iterate the enabled attributes of the mesh.
+     *
+     * @param callback The callback to call for each attribute.
+     * @returns The number of enabled attributes.
      */
-    inline std::unordered_map<MeshVertexAttributeId, std::shared_ptr<IMeshVertexAttributeData>> &attributes()
+    inline size_t iterateEnabledAttributes(std::function<void(const IVertexAttribute &)> callback)
     {
-      return attributes_;
+      size_t attribsCount = 0;
+      for (auto &item : vertexBuffer_.attributes())
+      {
+        std::visit([&callback](auto &&attrib)
+                   { callback(attrib); }, item);
+        attribsCount += 1;
+      }
+      return attribsCount;
     }
 
   public:
@@ -475,6 +513,5 @@ namespace builtin_scene
   protected:
     Indices<uint32_t> indices_{};
     MeshVertexBuffer vertexBuffer_;
-    std::unordered_map<MeshVertexAttributeId, std::shared_ptr<IMeshVertexAttributeData>> attributes_{};
   };
 }

@@ -12,6 +12,7 @@ namespace dom
     auto initMeshAndMaterial = [this](builtin_scene::Scene &scene)
     {
       using namespace builtin_scene;
+
       auto meshes = scene.getResource<Meshes>();
       auto materials = scene.getResource<Materials>();
 

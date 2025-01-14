@@ -40,14 +40,17 @@ namespace builtin_scene
     /**
      * Set if the mesh3d is initialized.
      *
+     * @param glContext The WebGL context.
      * @param vao The vertex array object.
      */
-    inline void initialize(std::shared_ptr<client_graphics::WebGLVertexArray> vao)
+    inline void initialize(std::shared_ptr<client_graphics::WebGL2Context> glContext,
+                           std::shared_ptr<client_graphics::WebGLVertexArray> vao)
     {
       if (vao == nullptr)
         throw std::runtime_error("The vertex array object is not initialized.");
 
       vao_ = vao;
+      glContext_ = glContext;
       initialized_ = true;
     }
     /**
@@ -61,19 +64,40 @@ namespace builtin_scene
     /**
      * @returns The indices of the mesh.
      */
-    inline Indices<uint32_t> &indices() { return handle_->indices(); }
+    inline const Indices<uint32_t> &indices() const { return handle_->indices(); }
     /**
      * @returns The vertex buffer of the mesh.
      */
     inline MeshVertexBuffer &vertexBuffer() { return handle_->vertexBuffer(); }
     /**
-     * @returns The vertex attributes of the mesh.
+     * Iterate the enabled attributes of the mesh.
+     *
+     * @param callback The callback to call for each attribute.
+     * @returns The number of enabled attributes.
      */
-    inline std::unordered_map<MeshVertexAttributeId, std::shared_ptr<IMeshVertexAttributeData>> &attributes() { return handle_->attributes(); }
+    inline size_t iterateEnabledAttributes(std::shared_ptr<client_graphics::WebGLProgram> program,
+                                           std::function<void(const IVertexAttribute &, int, size_t, size_t)> callback)
+    {
+      auto glContext = glContext_.lock();
+      assert(glContext != nullptr);
+      size_t stride = handle_->attributesStride();
+      size_t offset = 0;
+
+      auto configureAttrib = [callback, glContext, program,
+                              stride, &offset](const IVertexAttribute &attrib)
+      {
+        auto loc = glContext->getAttribLocation(program, attrib.name());
+        if (loc.has_value())
+          callback(attrib, loc.value(), stride, offset);
+        offset += attrib.byteLength();
+      };
+      return handle_->iterateEnabledAttributes(configureAttrib);
+    }
 
   private:
     std::shared_ptr<Mesh> handle_ = nullptr;
     std::shared_ptr<client_graphics::WebGLVertexArray> vao_;
+    std::weak_ptr<client_graphics::WebGL2Context> glContext_;
     bool initialized_ = false;
   };
 

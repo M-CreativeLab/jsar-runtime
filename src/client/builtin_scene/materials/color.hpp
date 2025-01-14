@@ -6,7 +6,7 @@
 
 namespace builtin_scene::materials
 {
-  class ColorMaterial final : public Material
+  class ColorMaterial : public Material
   {
     using ColorMaterialReference = std::shared_ptr<ColorMaterial>;
 
@@ -49,6 +49,7 @@ namespace builtin_scene::materials
         : surfaceColor(red, green, blue, alpha) {}
 
   public:
+    const std::string name() const override { return "ColorMaterial"; }
     ShaderRef fragmentShader() override
     {
       return ShaderRef("materials/color.frag");
@@ -56,9 +57,15 @@ namespace builtin_scene::materials
     bool initialize(std::shared_ptr<client_graphics::WebGL2Context> glContext,
                     std::shared_ptr<client_graphics::WebGLProgram> program) override
     {
-      auto surfaceColorLoc = glContext->getUniformLocation(program, "surfaceColor");
-      if (!surfaceColorLoc.has_value())
+      if (TR_UNLIKELY(!Material::initialize(glContext, program)))
         return false;
+
+      auto surfaceColorLoc = glContext->getUniformLocation(program, "surfaceColor");
+      if (TR_UNLIKELY(!surfaceColorLoc.has_value()))
+      {
+        std::cerr << name() << ": The surfaceColor uniform location is not found." << std::endl;
+        return false;
+      }
 
       glContext->uniform4f(surfaceColorLoc.value(),
                            surfaceColor.r, surfaceColor.g, surfaceColor.b, surfaceColor.a);
