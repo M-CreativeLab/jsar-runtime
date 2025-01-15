@@ -38,6 +38,13 @@ namespace builtin_scene::materials
       return false;
     }
 
+    // Set the texture to be flipped by the Y-axis.
+    // 
+    // WebGL uses the bottom-left corner as the origin, while Skia or Web uses the top-left, so flip the texture by
+    // the Y-axis to make it consistent.
+    flipTextureByY(true);
+
+    // Create the texture and configure parameters.
     texture_ = glContext->createTexture();
     glContext->activeTexture(WebGLTextureUnit::kTexture0);
     glContext->bindTexture(WebGLTextureTarget::kTexture2D, texture_);
@@ -71,14 +78,10 @@ namespace builtin_scene::materials
       assert(textureLoc.has_value());
       glContext->uniform1i(textureLoc.value(), 0);
 
-      float tx = 0.0f;
-      float ty = 0.0f;
-      float sx = 1.0f;
-      float sy = 1.0f;
       glm::mat3 textureTransform = glm::mat3(
-          sx, 0.0f, 0.0f,
-          0.0f, sy, 0.0f,
-          tx, ty, 1.0f);
+          textureScale_.x, 0.0f, 0.0f,
+          0.0f, textureScale_.y, 0.0f,
+          textureOffset_.x, textureOffset_.y, 1.0f);
       glContext->uniformMatrix3fv(glContext->getUniformLocation(program, "textureTransformation").value(),
                                   false,
                                   textureTransform);
@@ -90,6 +93,20 @@ namespace builtin_scene::materials
     auto glContext = glContext_.lock();
     assert(glContext != nullptr);
     glContext->bindTexture(WebGLTextureTarget::kTexture2D, nullptr);
+  }
+
+  void WebContentMaterial::flipTextureByY(bool flip)
+  {
+    if (flip)
+    {
+      textureOffset_ = glm::vec2(0.0f, 1.0f);
+      textureScale_ = glm::vec2(1.0f, -1.0f);
+    }
+    else
+    {
+      textureOffset_ = glm::vec2(0.0f, 0.0f);
+      textureScale_ = glm::vec2(1.0f, 1.0f);
+    }
   }
 
   void WebContentMaterial::updateTexture(WebContent &content)
@@ -124,7 +141,6 @@ namespace builtin_scene::materials
             {
               SkFILEWStream fs(".WEBCONTENTS_DEBUG.png");
               SkPngEncoder::Encode(&fs, pixmap, SkPngEncoder::Options());
-              needsWrite = false;
             }
           }
 #endif

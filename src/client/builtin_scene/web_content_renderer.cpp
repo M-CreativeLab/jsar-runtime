@@ -238,18 +238,28 @@ namespace builtin_scene::web_renderer
     drawBorders(canvas, roundedRect, layout.value(), style);
   }
 
+  RenderTextSystem::RenderTextSystem()
+      : RenderBaseSystem(),
+        clientContext_(TrClientContextPerProcess::Get()),
+        fontCollection_(clientContext_->getFontCacheManager()),
+        paragraphBuilder_(nullptr)
+  {
+  }
+
   void RenderTextSystem::render(ecs::EntityId entity, WebContent &content)
   {
-    // auto fontCollection = sk_make_sp<FontCollection>();
-    // auto paragraphBuilder = ParagraphBuilder::make(content.paragraphStyle, fontCollection);
+    const auto &layout = content.layout();
+    if (!layout.has_value()) // No layout, no rendering.
+      return;
 
-    // paragraphBuilder->pushStyle(content.textStyle);
-    // paragraphBuilder->addText("Hello, world!");
-    // paragraphBuilder->pop();
+    auto paragraphBuilder = ParagraphBuilder::make(content.paragraphStyle, fontCollection_);
+    paragraphBuilder->pushStyle(content.textStyle);
+    paragraphBuilder->addText("Hello, world!");
+    paragraphBuilder->pop();
 
-    // auto paragraph = paragraphBuilder->Build();
-    // paragraph->layout(300.0f);
-    // paragraph->paint(content.canvas(), 0.0f, 0.0f);
+    auto paragraph = paragraphBuilder->Build();
+    paragraph->layout(layout.value().width());
+    paragraph->paint(content.canvas(), 0.0f, 0.0f);
   }
 
   void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)

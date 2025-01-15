@@ -25,7 +25,7 @@ namespace builtin_scene::materials
     }
     const std::vector<std::string> defines() const override
     {
-      return {"USE_UVS", "USE_TEXTURE"};
+      return mixDefines(ColorMaterial::defines(), {"USE_UVS", "USE_TEXTURE"});
     }
     ShaderRef fragmentShader() override
     {
@@ -40,6 +40,10 @@ namespace builtin_scene::materials
 
   public:
     /**
+     * Flip the texture by the Y-axis.
+     */
+    void flipTextureByY(bool flip);
+    /**
      * Update the texture from the given WebContent.
      *
      * @param content The WebContent to update the material with.
@@ -53,6 +57,8 @@ namespace builtin_scene::materials
   private:
     float width_;
     float height_;
+    glm::vec2 textureOffset_ = glm::vec2(0.0f, 0.0f);
+    glm::vec2 textureScale_ = glm::vec2(1.0f, 1.0f);
     std::shared_ptr<client_graphics::WebGLTexture> texture_;
   };
 }

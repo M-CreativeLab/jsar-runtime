@@ -7,6 +7,7 @@
 #include <skia/modules/skparagraph/include/ParagraphBuilder.h>
 #include <skia/modules/skparagraph/include/TextStyle.h>
 #include <client/cssom/css_style_declaration.hpp>
+#include <client/per_process.hpp>
 #include "./ecs-inl.hpp"
 
 namespace builtin_scene
@@ -17,11 +18,27 @@ namespace builtin_scene
     WebContent(SkCanvas *canvas, client_cssom::CSSStyleDeclaration &style)
         : canvas_(canvas), style_(style), lastLayout_(std::nullopt)
     {
-      // Initialize the paragraph style and text style.
+      SkPaint transparent;
+      transparent.setColor(SK_ColorTRANSPARENT);
+
+      SkPaint textPaint;
+      textPaint.setAntiAlias(true);
+      textPaint.setColor(SK_ColorRED);
+
+      // Init text style
+      textStyle.setColor(SK_ColorBLACK);
+      textStyle.setBackgroundColor(transparent);
+      textStyle.setForegroundColor(textPaint);
+      textStyle.setFontSize(30.0f);
+      textStyle.setHeight(1.0f);
+      textStyle.setFontFamilies({SkString("PingFang SC"),
+                                 SkString("Arial"),
+                                 SkString("sans-serif")});
+
+      // Init paragraph style
       paragraphStyle.setTextAlign(skia::textlayout::TextAlign::kLeft);
       paragraphStyle.setTextDirection(skia::textlayout::TextDirection::kLtr);
-      textStyle.setColor(SK_ColorBLACK);
-      textStyle.setFontSize(14.0f);
+      paragraphStyle.setTextStyle(textStyle);
     }
 
   public:
@@ -140,10 +157,18 @@ namespace builtin_scene
       using RenderBaseSystem::RenderBaseSystem;
 
     public:
+      RenderTextSystem();
+
+    public:
       const std::string name() const override { return "web_render.RenderTextSystem"; }
 
     private:
       void render(ecs::EntityId entity, WebContent &content) override;
+
+    private:
+      TrClientContextPerProcess *clientContext_;
+      sk_sp<skia::textlayout::FontCollection> fontCollection_;
+      std::unique_ptr<skia::textlayout::ParagraphBuilder> paragraphBuilder_;
     };
 
     class UpdateTextureSystem final : public RenderBaseSystem

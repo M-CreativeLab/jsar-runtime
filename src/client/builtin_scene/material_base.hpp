@@ -84,6 +84,27 @@ namespace builtin_scene
     virtual void onAfterDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program, std::shared_ptr<Mesh3d> mesh) {}
 
   protected:
+    /**
+     * Mix the defines with the base defines of the material.
+     *
+     * @param baseDefines The base defines of the material.
+     * @param definesToAdd The list of defines to add to the base defines.
+     * @returns The mixed defines.
+     */
+    const std::vector<std::string> mixDefines(const std::vector<std::string> &baseDefines,
+                                              const std::vector<std::string> &definesToAdd) const
+    {
+      std::vector<std::string> result = definesToAdd;
+      // Ignore duplicates.
+      for (const auto &define : definesToAdd)
+      {
+        if (std::find(baseDefines.begin(), baseDefines.end(), define) == baseDefines.end())
+          result.push_back(define);
+      }
+      return result;
+    }
+
+  protected:
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;
   };
 }

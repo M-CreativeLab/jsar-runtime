@@ -110,7 +110,7 @@ function(tr_add_example EXECUTABLE_NAME SOURCE_FILE)
     target_link_libraries(${EXECUTABLE_NAME} PRIVATE ZLIB::ZLIB)
     target_link_libraries(${EXECUTABLE_NAME} PRIVATE TransmuteCore)
     tr_target_link_thirdparty_library(${EXECUTABLE_NAME} glfw3)
-    tr_target_link_thirdparty_library(${EXECUTABLE_NAME} skia)
+    tr_target_link_skia_library(${EXECUTABLE_NAME})
 
     if (APPLE)
         target_link_libraries(${EXECUTABLE_NAME} PRIVATE "-framework Cocoa")
