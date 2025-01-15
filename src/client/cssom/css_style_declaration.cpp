@@ -15,6 +15,10 @@ namespace client_cssom
     if (hasProperty("display"))
       layoutStyle.setDisplay(getPropertyValueAs<Display>("display"));
 
+    // Set box-sizing
+    if (hasProperty("box-sizing"))
+      layoutStyle.setBoxSizing(getPropertyValueAs<BoxSizing>("box-sizing"));
+
     // Set position
     if (hasProperty("position"))
       layoutStyle.setPosition(getPropertyValueAs<Position>("position"));
@@ -58,6 +62,16 @@ namespace client_cssom
       layoutStyle.setPaddingBottom(getPropertyValueAs<LengthPercentage>("padding-bottom"));
     if (hasProperty("padding-left"))
       layoutStyle.setPaddingLeft(getPropertyValueAs<LengthPercentage>("padding-left"));
+
+    // Set border(top, right, bottom, left)
+    if (hasProperty("border-top-width"))
+      layoutStyle.setBorderTop(getPropertyValueAs<LengthPercentage>("border-top-width"));
+    if (hasProperty("border-right-width"))
+      layoutStyle.setBorderRight(getPropertyValueAs<LengthPercentage>("border-right-width"));
+    if (hasProperty("border-bottom-width"))
+      layoutStyle.setBorderBottom(getPropertyValueAs<LengthPercentage>("border-bottom-width"));
+    if (hasProperty("border-left-width"))
+      layoutStyle.setBorderLeft(getPropertyValueAs<LengthPercentage>("border-left-width"));
 
     // Set flex-grow
     if (hasProperty("flex-grow"))

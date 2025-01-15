@@ -81,6 +81,10 @@ namespace dom
       {
         // TODO: update material properties?
       }
+
+      auto webContent = scene.getComponent<WebContent>(entity);
+      if (webContent != nullptr)
+        webContent->setLayout(layoutRes); // Update the layout result into the `WebContent` component.
     }
   }
 

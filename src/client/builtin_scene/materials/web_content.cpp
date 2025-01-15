@@ -6,6 +6,7 @@
 #include <skia/include/core/SkStream.h>
 #include <skia/include/encode/SkPngEncoder.h>
 #include <glm/glm.hpp>
+#include <client/macros.h>
 #include "./web_content.hpp"
 
 namespace builtin_scene::materials
@@ -116,6 +117,17 @@ namespace builtin_scene::materials
         if (surface->peekPixels(&pixmap))
         {
           pixels = (unsigned char *)pixmap.addr();
+#ifdef TR_CLIENT_WEB_CONTENT_DEBUG
+          {
+            static bool needsWrite = true;
+            if (needsWrite)
+            {
+              SkFILEWStream fs(".WEBCONTENTS_DEBUG.png");
+              SkPngEncoder::Encode(&fs, pixmap, SkPngEncoder::Options());
+              needsWrite = false;
+            }
+          }
+#endif
 
           // Update the texture format based on the Skia surface color type.
           SkColorType colorType = surface->imageInfo().colorType();

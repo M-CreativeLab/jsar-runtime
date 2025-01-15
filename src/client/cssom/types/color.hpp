@@ -4,7 +4,7 @@
 #include <skia/include/core/SkColor.h>
 #include <crates/bindings.hpp>
 
-namespace client_cssom
+namespace client_cssom::types
 {
   class Color
   {

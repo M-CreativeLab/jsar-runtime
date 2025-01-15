@@ -96,6 +96,31 @@ impl From<Display> for taffy::Display {
 
 #[repr(u8)]
 #[derive(Clone, Copy, PartialEq, Debug)]
+pub enum BoxSizing {
+  ContentBox = 0,
+  BorderBox,
+}
+
+impl From<taffy::BoxSizing> for BoxSizing {
+  fn from(box_sizing: taffy::BoxSizing) -> Self {
+    match box_sizing {
+      taffy::BoxSizing::ContentBox => BoxSizing::ContentBox,
+      taffy::BoxSizing::BorderBox => BoxSizing::BorderBox,
+    }
+  }
+}
+
+impl From<BoxSizing> for taffy::BoxSizing {
+  fn from(box_sizing: BoxSizing) -> Self {
+    match box_sizing {
+      BoxSizing::ContentBox => taffy::BoxSizing::ContentBox,
+      BoxSizing::BorderBox => taffy::BoxSizing::BorderBox,
+    }
+  }
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Overflow {
   Visible = 0,
   Clip,
@@ -250,6 +275,7 @@ impl From<LengthPercentage> for taffy::LengthPercentage {
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct LayoutStyle {
   pub display: Display,
+  pub box_sizing: BoxSizing,
   pub overflow_x: Overflow,
   pub overflow_y: Overflow,
   pub scrollbar_width: f32,
@@ -266,6 +292,10 @@ pub struct LayoutStyle {
   pub padding_right: LengthPercentage,
   pub padding_bottom: LengthPercentage,
   pub padding_left: LengthPercentage,
+  pub border_top: LengthPercentage,
+  pub border_right: LengthPercentage,
+  pub border_bottom: LengthPercentage,
+  pub border_left: LengthPercentage,
 
   // Flex Properties
   pub flex_grow: f32,
@@ -276,6 +306,7 @@ impl From<taffy::Style> for LayoutStyle {
   fn from(value: taffy::Style) -> Self {
     Self {
       display: value.display.into(),
+      box_sizing: value.box_sizing.into(),
       overflow_x: value.overflow.x.into(),
       overflow_y: value.overflow.y.into(),
       scrollbar_width: value.scrollbar_width,
@@ -290,6 +321,10 @@ impl From<taffy::Style> for LayoutStyle {
       padding_right: value.padding.right.into(),
       padding_bottom: value.padding.bottom.into(),
       padding_left: value.padding.left.into(),
+      border_top: value.border.top.into(),
+      border_right: value.border.right.into(),
+      border_bottom: value.border.bottom.into(),
+      border_left: value.border.left.into(),
       flex_grow: value.flex_grow,
       flex_shrink: value.flex_shrink,
     }
@@ -300,6 +335,7 @@ impl From<LayoutStyle> for taffy::Style {
   fn from(value: LayoutStyle) -> Self {
     taffy::Style {
       display: value.display.into(),
+      box_sizing: value.box_sizing.into(),
       overflow: taffy::geometry::Point {
         x: value.overflow_x.into(),
         y: value.overflow_y.into(),
@@ -321,6 +357,12 @@ impl From<LayoutStyle> for taffy::Style {
         right: value.padding_right.into(),
         bottom: value.padding_bottom.into(),
         left: value.padding_left.into(),
+      },
+      border: taffy::geometry::Rect {
+        top: value.border_top.into(),
+        right: value.border_right.into(),
+        bottom: value.border_bottom.into(),
+        left: value.border_left.into(),
       },
       flex_grow: value.flex_grow,
       flex_shrink: value.flex_shrink,

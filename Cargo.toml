@@ -86,7 +86,7 @@ syn = { version = "2", default-features = false, features = [
   "derive",
   "parsing",
 ] }
-taffy = { version = "0.5.1" }
+taffy = { version = "0.7.5" }
 time = "0.1.41"
 to_shmem = { git = "https://github.com/servo/stylo", rev = "10767f4" }
 tokio = "1"

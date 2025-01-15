@@ -5,7 +5,11 @@
 #include <ostream>
 #include <common/utility.hpp>
 #include <crates/bindings.hpp>
-#include "./color.hpp"
+
+#include "./types/color.hpp"
+#include "./types/length.hpp"
+#include "./types/length_keywords.hpp"
+#include "./types/keyword.hpp"
 
 namespace client_cssom
 {
@@ -102,8 +106,12 @@ namespace client_cssom
     template <typename T>
       requires(std::is_same_v<T, float> ||
                std::is_integral_v<T> ||
-               std::is_same_v<T, Color> ||
+               std::is_same_v<T, types::Color> ||
+               std::is_same_v<T, types::Length> ||
+               std::is_same_v<T, types::LineWidth> ||
+               std::is_same_v<T, types::BorderStyleKeyword> ||
                std::is_same_v<T, crates::layout::style::Display> ||
+               std::is_same_v<T, crates::layout::style::BoxSizing> ||
                std::is_same_v<T, crates::layout::style::Position> ||
                std::is_same_v<T, crates::layout::style::Overflow> ||
                std::is_same_v<T, crates::layout::style::Dimension> ||
@@ -113,11 +121,16 @@ namespace client_cssom
     {
       using namespace crates::layout::style;
 
+      // float, int, etc.
       const auto &value = getPropertyValue(propertyName);
       if constexpr (std::is_same_v<T, float>)
         return value != "" ? std::stof(value) : 0.0f;
       if constexpr (std::is_integral_v<T>)
         return value != "" ? std::stoi(value) : 0;
+
+      // keywords or other enums
+      if constexpr (std::is_same_v<T, types::BorderStyleKeyword>)
+        return client_cssom::types::parseKeyword<T>(value).value_or(T::kNone);
 
       if constexpr (std::is_same_v<T, crates::layout::style::Display>)
       {
@@ -132,6 +145,9 @@ namespace client_cssom
         else
           return Display::Block;
       }
+
+      if constexpr (std::is_same_v<T, crates::layout::style::BoxSizing>)
+        return value == "border-box" ? BoxSizing::BorderBox : BoxSizing::ContentBox;
 
       if constexpr (std::is_same_v<T, crates::layout::style::Position>)
         return value == "absolute" ? Position::Absolute : Position::Relative;
@@ -148,7 +164,9 @@ namespace client_cssom
           return Overflow::Visible;
       }
 
-      if constexpr (std::is_same_v<T, Color> ||
+      if constexpr (std::is_same_v<T, types::Color> ||
+                    std::is_same_v<T, types::Length> ||
+                    std::is_same_v<T, types::LineWidth> ||
                     std::is_same_v<T, crates::layout::style::Dimension> ||
                     std::is_same_v<T, crates::layout::style::LengthPercentageAuto> ||
                     std::is_same_v<T, crates::layout::style::LengthPercentage>)

@@ -15,7 +15,7 @@ namespace builtin_scene
   {
   public:
     WebContent(SkCanvas *canvas, client_cssom::CSSStyleDeclaration &style)
-        : canvas_(canvas), style_(style)
+        : canvas_(canvas), style_(style), lastLayout_(std::nullopt)
     {
       // Initialize the paragraph style and text style.
       paragraphStyle.setTextAlign(skia::textlayout::TextAlign::kLeft);
@@ -53,6 +53,14 @@ namespace builtin_scene
       style_ = style;
     }
     /**
+     * @returns A constant reference to the Layout object in the last re-layout.
+     */
+    inline const std::optional<crates::layout::Layout> &layout() const { return lastLayout_; }
+    /**
+     * Set the layout object in the last re-layout.
+     */
+    inline void setLayout(const crates::layout::Layout &layout) { lastLayout_ = layout; }
+    /**
      * This function provides access to the width and height of the SkCanvas object.
      *
      * @returns float The width of the SkCanvas object.
@@ -80,6 +88,7 @@ namespace builtin_scene
   private:
     SkCanvas *canvas_;
     client_cssom::CSSStyleDeclaration style_;
+    std::optional<crates::layout::Layout> lastLayout_;
   };
 
   /**

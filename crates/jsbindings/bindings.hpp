@@ -404,6 +404,7 @@ namespace crates
     namespace style
     {
       using Display = _Display;
+      using BoxSizing = _BoxSizing;
       using Overflow = _Overflow;
       using Position = _Position;
 
@@ -422,6 +423,20 @@ namespace crates
           break;
         case Display::None:
           os << "None";
+          break;
+        }
+        return os;
+      }
+
+      inline std::ostream &operator<<(std::ostream &os, BoxSizing boxSizing)
+      {
+        switch (boxSizing)
+        {
+        case BoxSizing::ContentBox:
+          os << "ContentBox";
+          break;
+        case BoxSizing::BorderBox:
+          os << "BorderBox";
           break;
         }
         return os;
@@ -634,6 +649,7 @@ namespace crates
         LayoutStyle()
             : style_({
                   _Display::Block,                     // display
+                  _BoxSizing::ContentBox,              // box_sizing
                   _Overflow::Visible,                  // overflow_x
                   _Overflow::Visible,                  // overflow_y
                   2.0f,                                // scrollbar_width
@@ -648,6 +664,10 @@ namespace crates
                   _LengthPercentage::Length(0.0f),     // padding_right
                   _LengthPercentage::Length(0.0f),     // padding_bottom
                   _LengthPercentage::Length(0.0f),     // padding_left
+                  _LengthPercentage::Length(0.0f),     // border_top
+                  _LengthPercentage::Length(0.0f),     // border_right
+                  _LengthPercentage::Length(0.0f),     // border_bottom
+                  _LengthPercentage::Length(0.0f),     // border_left
                   0.0f,                                // flex_grow
                   1.0f                                 // flex_shrink
               })
@@ -668,6 +688,7 @@ namespace crates
         {
           os << "LayoutStyle {" << std::endl;
           os << " display: " << style.display() << "," << std::endl;
+          os << " boxSizing: " << style.boxSizing() << "," << std::endl;
           os << " overflowX: " << style.overflow().x() << "," << std::endl;
           os << " overflowY: " << style.overflow().y() << "," << std::endl;
           os << " scrollbarWidth: " << style.scrollbarWidth() << "," << std::endl;
@@ -689,6 +710,9 @@ namespace crates
         // Display property
         Display display() const { return style_.display; }
         void setDisplay(Display value) { style_.display = value; }
+        // BoxSizing property
+        BoxSizing boxSizing() const { return style_.box_sizing; }
+        void setBoxSizing(BoxSizing value) { style_.box_sizing = value; }
         // Overflow property
         const Point<Overflow> overflow() const { return Point<Overflow>(style_.overflow_x, style_.overflow_y); }
         void setOverflowX(Overflow value) { style_.overflow_x = value; }
@@ -727,6 +751,17 @@ namespace crates
         void setPaddingRight(LengthPercentage value) { style_.padding_right = value.handle_; }
         void setPaddingBottom(LengthPercentage value) { style_.padding_bottom = value.handle_; }
         void setPaddingLeft(LengthPercentage value) { style_.padding_left = value.handle_; }
+        const Rect<LengthPercentage> border() const
+        {
+          return Rect<LengthPercentage>(LengthPercentage(style_.border_top),
+                                        LengthPercentage(style_.border_right),
+                                        LengthPercentage(style_.border_bottom),
+                                        LengthPercentage(style_.border_left));
+        }
+        void setBorderTop(LengthPercentage value) { style_.border_top = value.handle_; }
+        void setBorderRight(LengthPercentage value) { style_.border_right = value.handle_; }
+        void setBorderBottom(LengthPercentage value) { style_.border_bottom = value.handle_; }
+        void setBorderLeft(LengthPercentage value) { style_.border_left = value.handle_; }
         // Flex properties
         const float flexGrow() const { return style_.flex_grow; }
         void setFlexGrow(float value) { style_.flex_grow = value; }
