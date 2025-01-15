@@ -9,7 +9,9 @@ namespace dom
   {
   public:
     using HTMLContentElement::HTMLContentElement;
-    HTMLDivElement(weak_ptr<Document> ownerDocument)
+
+  public:
+    HTMLDivElement(std::shared_ptr<Document> ownerDocument)
         : HTMLContentElement("DIV", ownerDocument)
     {
     }

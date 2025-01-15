@@ -9,7 +9,10 @@ namespace dom
   {
   public:
     using HTMLPlaneElement::HTMLPlaneElement;
-    HTMLParagraphElement(weak_ptr<Document> ownerDocument) : HTMLPlaneElement("P", ownerDocument)
+
+  public:
+    HTMLParagraphElement(std::shared_ptr<Document> ownerDocument)
+        : HTMLPlaneElement("P", ownerDocument)
     {
     }
   };

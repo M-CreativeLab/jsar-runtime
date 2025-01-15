@@ -9,7 +9,7 @@ namespace dom
   {
   public:
     using HTMLElement::HTMLElement;
-    HTMLHtmlElement(weak_ptr<Document> ownerDocument) : HTMLElement("HTML", ownerDocument)
+    HTMLHtmlElement(std::shared_ptr<Document> ownerDocument) : HTMLElement("HTML", ownerDocument)
     {
     }
   };

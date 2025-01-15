@@ -13,7 +13,9 @@ namespace dom
   {
   public:
     using HTMLPlaneElement::HTMLPlaneElement;
-    HTMLImageElement(weak_ptr<Document> ownerDocument)
+
+  public:
+    HTMLImageElement(std::shared_ptr<Document> ownerDocument)
         : HTMLPlaneElement("IMG", ownerDocument),
           canvas::ImageSource(),
           skBitmap(std::make_shared<SkBitmap>())

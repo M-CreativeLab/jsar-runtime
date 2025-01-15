@@ -6,6 +6,8 @@
 
 namespace dombinding
 {
+  using namespace std;
+
   thread_local Napi::FunctionReference *Element::constructor;
   void Element::Init(Napi::Env env)
   {
@@ -28,7 +30,7 @@ namespace dombinding
   }
 
   template <typename ObjectType = HTMLElement, typename ElementType = dom::HTMLElement>
-  inline Napi::Object CreateElementFromNew(Napi::Env env, string namespaceURI, string tagName, weak_ptr<dom::Document> ownerDocument)
+  inline Napi::Object CreateElementFromNew(Napi::Env env, string namespaceURI, string tagName, shared_ptr<dom::Document> ownerDocument)
   {
     Napi::EscapableHandleScope scope(env);
     shared_ptr<ElementType> typedElement = dynamic_pointer_cast<ElementType>(dom::Element::CreateElement(namespaceURI, tagName, ownerDocument));
@@ -53,12 +55,14 @@ namespace dombinding
     return CreateElementFromImpl(env, element);
   }
 
-  Napi::Object Element::NewInstance(Napi::Env env, string namespaceURI, string tagName, weak_ptr<dom::Document> ownerDocument)
+  Napi::Object Element::NewInstance(Napi::Env env, string namespaceURI, string tagName,
+                                    shared_ptr<dom::Document> ownerDocument)
   {
-#define XX(tagNameStr, className)                                                                      \
-  if (tagName == tagNameStr)                                                                           \
-  {                                                                                                    \
-    return CreateElementFromNew<className, dom::className>(env, namespaceURI, tagName, ownerDocument); \
+#define XX(tagNameStr, className)                           \
+  if (tagName == tagNameStr)                                \
+  {                                                         \
+    return CreateElementFromNew<className, dom::className>( \
+        env, namespaceURI, tagName, ownerDocument);         \
   }
     TYPED_ELEMENT_MAP(XX)
 #undef XX

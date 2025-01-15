@@ -14,7 +14,7 @@ namespace dom
   {
   public:
     using HTMLElement::HTMLElement;
-    HTMLCanvasElement(weak_ptr<Document> ownerDocument)
+    HTMLCanvasElement(std::shared_ptr<Document> ownerDocument)
         : HTMLElement("CANVAS", ownerDocument),
           canvas::ImageSource(),
           canvasImpl_(std::make_shared<canvas::Canvas>())

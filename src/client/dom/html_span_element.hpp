@@ -9,7 +9,10 @@ namespace dom
   {
   public:
     using HTMLPlaneElement::HTMLPlaneElement;
-    HTMLSpanElement(weak_ptr<Document> ownerDocument) : HTMLPlaneElement("SPAN", ownerDocument)
+
+  public:
+    HTMLSpanElement(std::shared_ptr<Document> ownerDocument)
+        : HTMLPlaneElement("SPAN", ownerDocument)
     {
     }
   };

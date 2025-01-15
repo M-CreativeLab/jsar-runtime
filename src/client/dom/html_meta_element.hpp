@@ -9,7 +9,7 @@ namespace dom
   {
   public:
     using HTMLElement::HTMLElement;
-    HTMLMetaElement(weak_ptr<Document> ownerDocument) : HTMLElement("META", ownerDocument)
+    HTMLMetaElement(std::shared_ptr<Document> ownerDocument) : HTMLElement("META", ownerDocument)
     {
     }
 

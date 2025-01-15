@@ -11,7 +11,9 @@ namespace dom
   {
   public:
     using HTMLPlaneElement::HTMLPlaneElement;
-    HTMLContentElement(std::string tagName, weak_ptr<Document> ownerDocument)
+
+  public:
+    HTMLContentElement(std::string tagName, std::shared_ptr<Document> ownerDocument)
         : HTMLPlaneElement(tagName, ownerDocument)
     {
     }

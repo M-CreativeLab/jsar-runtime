@@ -27,14 +27,15 @@ namespace dom
     auto browsingContext = ownerDocument->lock()->browsingContext;
     if (isImportMap())
     {
-      if (!browsingContext->updateImportMap(textContent))
+      auto sourceText = this->textContent();
+      if (!browsingContext->updateImportMap(sourceText))
       {
         /**
          * TODO: Follow the spec to handle the error.
          *
          * See: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap#exceptions
          */
-        cerr << "Failed to parse the import map: " << textContent << endl;
+        cerr << "Failed to parse the import map: " << sourceText << endl;
       }
     }
     else
@@ -54,7 +55,7 @@ namespace dom
   {
     if (src == "" || src.empty())
     {
-      compileScript(textContent, false);
+      compileScript(textContent(), false);
       return;
     }
     else

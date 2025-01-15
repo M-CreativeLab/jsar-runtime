@@ -23,7 +23,8 @@ namespace dom
   {
   public:
     using HTMLElement::HTMLElement;
-    HTMLScriptElement(weak_ptr<Document> ownerDocument) : HTMLElement("SCRIPT", ownerDocument)
+    HTMLScriptElement(std::shared_ptr<Document> ownerDocument)
+        : HTMLElement("SCRIPT", ownerDocument)
     {
     }
 

@@ -10,10 +10,14 @@ namespace dom
   {
   public:
     using HTMLElement::HTMLElement;
-    HTMLPlaneElement(weak_ptr<Document> ownerDocument) : HTMLElement("PLANE", ownerDocument)
+
+  public:
+    HTMLPlaneElement(std::shared_ptr<Document> ownerDocument)
+        : HTMLElement("PLANE", ownerDocument)
     {
     }
-    HTMLPlaneElement(std::string tagName, weak_ptr<Document> ownerDocument) : HTMLElement(tagName, ownerDocument)
+    HTMLPlaneElement(std::string tagName, std::shared_ptr<Document> ownerDocument)
+        : HTMLElement(tagName, ownerDocument)
     {
     }
 

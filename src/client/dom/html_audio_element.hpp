@@ -9,7 +9,9 @@ namespace dom
   {
   public:
     using HTMLMediaElement::HTMLMediaElement;
-    HTMLAudioElement(weak_ptr<Document> ownerDocument)
+
+  public:
+    HTMLAudioElement(std::shared_ptr<Document> ownerDocument)
         : HTMLMediaElement("AUDIO", media_comm::MediaContentType::Audio, ownerDocument)
     {
     }

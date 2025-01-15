@@ -7,7 +7,9 @@
 
 namespace dom
 {
-  shared_ptr<Element> Element::CreateElement(pugi::xml_node node, weak_ptr<Document> ownerDocument)
+  using namespace std;
+
+  shared_ptr<Element> Element::CreateElement(pugi::xml_node node, shared_ptr<Document> ownerDocument)
   {
     string nodeName = node.name();
 #define XX(tagName, className)                                                 \
@@ -25,7 +27,7 @@ namespace dom
     return dynamic_pointer_cast<Element>(element);
   }
 
-  shared_ptr<Element> Element::CreateElement(string namespaceURI, string tagName, weak_ptr<Document> ownerDocument)
+  shared_ptr<Element> Element::CreateElement(string namespaceURI, string tagName, shared_ptr<Document> ownerDocument)
   {
 #define XX(tagNameStr, className)                                                 \
   if (tagName == tagNameStr)                                                      \
@@ -44,12 +46,12 @@ namespace dom
     return dynamic_pointer_cast<Element>(element);
   }
 
-  Element::Element(string tagName, optional<weak_ptr<Document>> ownerDocument)
+  Element::Element(string tagName, optional<shared_ptr<Document>> ownerDocument)
       : Node(NodeType::ELEMENT_NODE, tagName, ownerDocument), tagName(ToUpperCase(tagName))
   {
   }
 
-  Element::Element(pugi::xml_node node, weak_ptr<Document> ownerDocument) : Node(node, ownerDocument)
+  Element::Element(pugi::xml_node node, shared_ptr<Document> ownerDocument) : Node(node, ownerDocument)
   {
     auto idAttr = this->internal->attribute("id");
     if (!idAttr.empty())

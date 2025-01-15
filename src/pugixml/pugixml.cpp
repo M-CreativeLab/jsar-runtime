@@ -5597,6 +5597,14 @@ namespace pugi
 	{
 	}
 
+	PUGI_IMPL_FN xml_node::xml_node(xml_node_type type, xml_document* doc)
+	{
+		impl::xml_allocator& alloc = impl::get_allocator(doc->_root);
+		if (!alloc.reserve()) return;
+
+		operator=(xml_node(impl::allocate_node(alloc, type)));
+	}
+
 	PUGI_IMPL_FN static void unspecified_bool_xml_node(xml_node***)
 	{
 	}

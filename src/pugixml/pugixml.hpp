@@ -293,6 +293,8 @@ namespace pugi
 
 	struct xml_parse_result;
 
+	class xml_document;
+
 	class xml_node;
 
 	class xml_text;
@@ -492,6 +494,9 @@ namespace pugi
 
 		// Constructs node from internal pointer
 		explicit xml_node(xml_node_struct* p);
+
+		// Constructs node from type
+		explicit xml_node(xml_node_type type, xml_document* doc);
 
 		// Safe bool conversion operator
 		operator unspecified_bool_type() const;

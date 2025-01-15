@@ -23,7 +23,7 @@ namespace dom
     using HTMLElement::HTMLElement;
     HTMLMediaElement(std::string tagName,
                      media_comm::MediaContentType contentType,
-                     weak_ptr<Document> ownerDocument)
+                     std::shared_ptr<Document> ownerDocument)
         : HTMLElement(tagName, ownerDocument),
           clientContext(TrClientContextPerProcess::Get()),
           player_(clientContext->createMediaPlayer(contentType))

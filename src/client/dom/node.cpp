@@ -3,18 +3,22 @@
 #include "./dom_parser.hpp"
 #include "./document.hpp"
 #include "./element.hpp"
+#include "./text.hpp"
 
 namespace dom
 {
   using namespace std;
 
-  shared_ptr<Node> Node::CreateNode(pugi::xml_node node, weak_ptr<Document> ownerDocument)
+  shared_ptr<Node> Node::CreateNode(pugi::xml_node node, shared_ptr<Document> ownerDocument)
   {
     shared_ptr<Node> newNode = nullptr;
     switch (node.type())
     {
     case pugi::xml_node_type::node_element:
       newNode = dynamic_pointer_cast<Node>(Element::CreateElement(node, ownerDocument));
+      break;
+    case pugi::xml_node_type::node_pcdata:
+      newNode = dynamic_pointer_cast<Node>(Text::CreateText(node, ownerDocument));
       break;
     case pugi::xml_node_type::node_null:
     case pugi::xml_node_type::node_document:
@@ -32,7 +36,7 @@ namespace dom
     return newNode;
   }
 
-  Node::Node(NodeType nodeType, string nodeName, optional<weak_ptr<Document>> ownerDocument)
+  Node::Node(NodeType nodeType, string nodeName, optional<shared_ptr<Document>> ownerDocument)
       : DOMEventTarget(),
         internal(make_shared<pugi::xml_node>()),
         connected(false),
@@ -42,7 +46,7 @@ namespace dom
     updateFieldsFromDocument(ownerDocument);
   }
 
-  Node::Node(pugi::xml_node node, weak_ptr<Document> ownerDocument)
+  Node::Node(pugi::xml_node node, shared_ptr<Document> ownerDocument)
       : DOMEventTarget(),
         internal(make_shared<pugi::xml_node>(node)), connected(false)
   {
@@ -63,13 +67,48 @@ namespace dom
     return aChild;
   }
 
-  string Node::getTextContent()
+  // textContent() returns the text content of the node and its descendants.
+  const std::string Node::textContent() const
   {
-    auto text = internal->text();
-    return text.as_string();
+    if (internal->type() == pugi::xml_node_type::node_pcdata)
+      return std::string(internal->value());
+    if (internal->type() == pugi::xml_node_type::node_cdata)
+      return std::string(internal->child_value());
+
+    string resultStr;
+    for (auto child : childNodes)
+    {
+      if (child->nodeType == NodeType::TEXT_NODE)
+        resultStr += child->textContent();
+    }
+    return resultStr;
   }
 
-  void Node::resetFrom(shared_ptr<pugi::xml_node> node, weak_ptr<Document> ownerDocument)
+  // TODO: Implement the set text content method.
+  void Node::textContent(const std::string &value)
+  {
+    throw std::runtime_error("The textContent property writable is not implemented yet.");
+  }
+
+  std::shared_ptr<Document> Node::getOwnerDocumentReference(bool force)
+  {
+    std::shared_ptr<dom::Document> ref = nullptr;
+    if (ownerDocument.has_value())
+      ref = ownerDocument.value().lock();
+
+    if (ref == nullptr)
+    {
+      if (force)
+        throw std::runtime_error("The owner document is not found.");
+      return nullptr;
+    }
+    else
+    {
+      return ref;
+    }
+  }
+
+  void Node::resetFrom(shared_ptr<pugi::xml_node> node, shared_ptr<Document> ownerDocument)
   {
     internal = node;
     updateFieldsFromInternal();
@@ -104,16 +143,16 @@ namespace dom
       child->load();
   }
 
-  void Node::updateFieldsFromDocument(optional<weak_ptr<Document>> maybeDocument)
+  void Node::updateFieldsFromDocument(optional<shared_ptr<Document>> maybeDocument)
   {
     if (TR_UNLIKELY(!maybeDocument.has_value()))
       return;
 
     auto document = maybeDocument.value();
-    if (TR_UNLIKELY(document.expired()))
+    if (TR_UNLIKELY(document == nullptr))
       return;
 
-    baseURI = document.lock()->baseURI;
+    baseURI = document->baseURI;
     if (nodeType != NodeType::DOCUMENT_NODE)
       ownerDocument = document;
     else
@@ -160,9 +199,6 @@ namespace dom
       break;
     }
 
-    if (!internal->text().empty())
-      textContent = internal->text().as_string();
-
     // Trigger the internal updated event
     onInternalUpdated();
   }
@@ -170,9 +206,11 @@ namespace dom
   void Node::updateTree()
   {
     childNodes.clear();
-    weak_ptr<Document> childOwnerDocument = (nodeType != NodeType::DOCUMENT_NODE && ownerDocument.has_value())
-                                                ? ownerDocument.value()
-                                                : getWeakPtr<Document>();
+    shared_ptr<Document> childOwnerDocument = (nodeType != NodeType::DOCUMENT_NODE && ownerDocument.has_value())
+                                                  ? ownerDocument.value().lock()
+                                                  : getPtr<Document>();
+    assert(childOwnerDocument != nullptr && "The owner document is not set.");
+
     for (auto child : internal->children())
     {
       auto childNode = CreateNode(child, childOwnerDocument);

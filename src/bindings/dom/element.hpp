@@ -188,7 +188,8 @@ namespace dombinding
      * @param tagName The tag name of the element.
      * @param ownerDocument The owner document of the element.
      */
-    static Napi::Object NewInstance(Napi::Env env, string namespaceURI, string tagName, weak_ptr<dom::Document> ownerDocument);
+    static Napi::Object NewInstance(Napi::Env env, string namespaceURI, string tagName,
+                                    std::shared_ptr<dom::Document> ownerDocument);
 
   public:
     static thread_local Napi::FunctionReference *constructor;

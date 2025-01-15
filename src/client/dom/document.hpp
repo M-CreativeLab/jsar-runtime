@@ -30,6 +30,11 @@ namespace dom
   class BrowsingContext;
   class Document : public Node
   {
+    friend class Node;
+    friend class CharacterData;
+    friend class Text;
+    friend class Element;
+
   public:
     /**
      * Cast the document to a specific document type.

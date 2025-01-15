@@ -32,21 +32,23 @@ namespace dom
   class Node : public DOMEventTarget,
                public enable_shared_from_this<Node>
   {
+    friend class Attr;
+
   public:
     /**
      * Create a new `Node` object from a `pugi::xml_node`.
      */
-    static std::shared_ptr<Node> CreateNode(pugi::xml_node node, std::weak_ptr<Document> ownerDocument);
+    static std::shared_ptr<Node> CreateNode(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
 
   public:
     /**
      * Create an empty `Node` object.
      */
-    Node(NodeType nodeType, std::string nodeName, std::optional<std::weak_ptr<Document>> ownerDocument);
+    Node(NodeType nodeType, std::string nodeName, std::optional<std::shared_ptr<Document>> ownerDocument);
     /**
      * Create a new `Node` object from a `pugi::xml_node`.
      */
-    Node(pugi::xml_node node, std::weak_ptr<Document> ownerDocument);
+    Node(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
     virtual ~Node() = default;
 
   public:
@@ -84,7 +86,13 @@ namespace dom
     /**
      * @returns The text content of the node and its descendants.
      */
-    std::string getTextContent();
+    const std::string textContent() const;
+    /**
+     * Set the text content of the node and its descendants, it will remove all the child nodes and replace them with a single text node.
+     * 
+     * @param value The text content to set.
+     */
+    void textContent(const std::string &value);
     /**
      * Get the parent node as a specific node type.
      * 
@@ -126,7 +134,14 @@ namespace dom
     {
       return dynamic_pointer_cast<T>(this->shared_from_this());
     }
-    void resetFrom(std::shared_ptr<pugi::xml_node> node, std::weak_ptr<Document> ownerDocument);
+    /**
+     * Get the owner document reference.
+     * 
+     * @param force If true, the owner document will be forced to get, otherwise it will return the cached owner document.
+     * @returns The owner document reference.
+     */
+    std::shared_ptr<Document> getOwnerDocumentReference(bool force = true);
+    void resetFrom(std::shared_ptr<pugi::xml_node> node, std::shared_ptr<Document> ownerDocument);
     /**
      * Iterate all the child nodes of the current node including the child nodes of the child nodes.
      *
@@ -161,7 +176,7 @@ namespace dom
 
   private:
     // Update the fields from the document, such as the base URI, owner document, etc.
-    void updateFieldsFromDocument(std::optional<std::weak_ptr<Document>> document);
+    void updateFieldsFromDocument(std::optional<std::shared_ptr<Document>> document);
     // Update the fields from the internal `pugi::xml_node` object, such as the node type, node name, etc.
     void updateFieldsFromInternal();
     // Update the tree fields, such as the child nodes, first child, last child, etc.
@@ -188,10 +203,6 @@ namespace dom
      * Returns the `Document` that this node belongs to. If the node is itself a document, returns null.
      */
     std::optional<std::weak_ptr<Document>> ownerDocument = nullopt;
-    /**
-     * Returns or sets the textual content of an element and all its descendants.
-     */
-    std::string textContent;
     /**
      * The weak reference to the first child of this node, if you need to get the shared pointer, use `getFirstChild()`.
      */
