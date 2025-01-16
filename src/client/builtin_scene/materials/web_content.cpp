@@ -65,9 +65,10 @@ namespace builtin_scene::materials
     auto glContext = glContext_.lock();
     assert(glContext != nullptr);
     {
-      // Update the blend mode.
+      // Mark the WebContent material as transparent and not writing to the depth buffer.
       glContext->enable(WEBGL_BLEND);
       glContext->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
+      glContext->depthMask(false);
 
       glContext->activeTexture(WebGLTextureUnit::kTexture0);
       glContext->bindTexture(WebGLTextureTarget::kTexture2D, texture_);

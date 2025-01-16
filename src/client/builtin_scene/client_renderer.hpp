@@ -35,9 +35,26 @@ namespace builtin_scene
      *
      * @param viewport The viewport to set.
      */
-    void setViewport(client_xr::XRViewport &viewport)
+    inline void setViewport(client_xr::XRViewport &viewport)
     {
       glContext_->viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+    }
+    /**
+     * Set polygon offset enabled or disabled.
+     *
+     * @param enabled Whether to enable the stencil write mask.
+     */
+    void setPolygonOffset(bool enabled = true)
+    {
+      if (enabled)
+      {
+        glContext_->enable(WEBGL_POLYGON_OFFSET_FILL);
+        glContext_->polygonOffset(-1.0f, -1.0f);
+      }
+      else
+      {
+        glContext_->disable(WEBGL_POLYGON_OFFSET_FILL);
+      }
     }
     /**
      * Initialize the mesh with the given WebGL context, it will create the vertex array object,
@@ -245,10 +262,10 @@ namespace builtin_scene
     void onExecute() override
     {
       auto renderer = getResource<Renderer>();
-      assert(renderer != nullptr);  // The renderer must be valid.
+      assert(renderer != nullptr); // The renderer must be valid.
 
       auto xrExperience = getResource<WebXRExperience>();
-      if (xrExperience != nullptr)  // XR rendering
+      if (xrExperience != nullptr) // XR rendering
       {
         auto xrViewerPose = xrExperience->viewerPose();
         if (xrViewerPose != nullptr)
@@ -274,7 +291,7 @@ namespace builtin_scene
     void render(Renderer &renderer, std::shared_ptr<client_xr::XRView> view = nullptr)
     {
       auto roots = queryEntities<hierarchy::Root>();
-      if (roots.size() <= 0)  // No root entities to render
+      if (roots.size() <= 0) // No root entities to render
         return;
 
       if (view != nullptr)
@@ -284,29 +301,40 @@ namespace builtin_scene
     }
     /**
      * Traverse the entity hierarchy and render the mesh with the given renderer in post-order.
-     * 
+     *
      * This method ensures that the child entities are rendered before the parent entity.
-     * 
+     *
      * @param entity The entity to traverse and render.
      * @param renderer The renderer to use.
      * @param view The XR view to render the entity with.
+     * @param isPostOrder Whether to render the entity in post-order, namely, render the child entities first.
      */
     void traverseAndRender(ecs::EntityId entity, Renderer &renderer,
-                           std::shared_ptr<client_xr::XRView> view = nullptr)
+                           std::shared_ptr<client_xr::XRView> view = nullptr,
+                           bool isPostOrder = false)
     {
+      auto renderEntity = [this, &renderer, view](ecs::EntityId entity)
+      {
+        // Render the mesh if it exists
+        auto mesh = getComponent<Mesh3d>(entity);
+        if (mesh != nullptr)
+          renderMesh(entity, mesh, renderer, view);
+
+        // TODO: support other renderable components (e.g., particles, etc.)
+      };
+
+      if (!isPostOrder) // Pre-order rendering
+        renderEntity(entity);
+
       auto children = getComponent<hierarchy::Children>(entity);
       if (children != nullptr)
       {
         for (auto child : children->children())
-          traverseAndRender(child, renderer, view);
+          traverseAndRender(child, renderer, view, isPostOrder);
       }
 
-      // Render the mesh if it exists
-      auto mesh = getComponent<Mesh3d>(entity);
-      if (mesh != nullptr)
-        renderMesh(entity, mesh, renderer, view);
-
-      // TODO: support other renderable components (e.g., particles, etc.)
+      if (isPostOrder) // Post-order rendering
+        renderEntity(entity);
     }
     /**
      * Render the mesh with the given renderer.

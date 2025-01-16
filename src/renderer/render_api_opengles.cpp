@@ -1717,7 +1717,7 @@ private:
 	{
 		glPolygonOffset(req->factor, req->units);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::PolygonOffset(%d, %d)", options.isDefaultQueue, req->factor, req->units);
+			DEBUG(DEBUG_TAG, "[%d] GL::PolygonOffset(%f, %f)", options.isDefaultQueue, req->factor, req->units);
 	}
 	TR_OPENGL_FUNC void OnSetViewport(SetViewportCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
