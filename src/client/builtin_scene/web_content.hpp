@@ -15,22 +15,23 @@ namespace builtin_scene
   class WebContent : public ecs::Component
   {
   public:
-    WebContent(SkCanvas *canvas, client_cssom::CSSStyleDeclaration &style)
-        : canvas_(canvas), style_(style), lastLayout_(std::nullopt)
+    WebContent(SkCanvas *canvas, std::string name, client_cssom::CSSStyleDeclaration &style)
+        : canvas_(canvas),
+          name_(name),
+          style_(style),
+          lastLayout_(std::nullopt)
     {
       SkPaint transparent;
       transparent.setColor(SK_ColorTRANSPARENT);
 
       SkPaint textPaint;
       textPaint.setAntiAlias(true);
-      textPaint.setColor(SK_ColorRED);
+      textPaint.setColor(SK_ColorWHITE);
 
       // Init text style
-      textStyle.setColor(SK_ColorBLACK);
       textStyle.setBackgroundColor(transparent);
       textStyle.setForegroundColor(textPaint);
       textStyle.setFontSize(30.0f);
-      textStyle.setHeight(1.0f);
       textStyle.setFontFamilies({SkString("PingFang SC"),
                                  SkString("Arial"),
                                  SkString("sans-serif")});
@@ -49,11 +50,18 @@ namespace builtin_scene
      */
     inline SkCanvas *canvas() const { return canvas_; }
     /**
+     * The content name.
+     */
+    inline const std::string &name() const { return name_; }
+    /**
      * This function assigns the provided SkCanvas pointer to the internal `canvas_` member.
      *
      * @param canvas A pointer to an SkCanvas object to be set.
      */
-    inline void setCanvas(SkCanvas *canvas) { canvas_ = canvas; }
+    inline void setCanvas(SkCanvas *canvas)
+    {
+      canvas_ = canvas;
+    }
     /**
      * This function provides access to the CSS style declaration associated with the object.
      *
@@ -84,7 +92,8 @@ namespace builtin_scene
      */
     inline float width() const
     {
-      assert(canvas_ != nullptr);
+      if (canvas_ == nullptr)
+        return 0.0f;
       return canvas_->imageInfo().width();
     }
     /**
@@ -94,7 +103,8 @@ namespace builtin_scene
      */
     inline float height() const
     {
-      assert(canvas_ != nullptr);
+      if (canvas_ == nullptr)
+        return 0.0f;
       return canvas_->imageInfo().height();
     }
 
@@ -104,6 +114,7 @@ namespace builtin_scene
 
   private:
     SkCanvas *canvas_;
+    std::string name_;
     client_cssom::CSSStyleDeclaration style_;
     std::optional<crates::layout::Layout> lastLayout_;
   };
@@ -122,7 +133,7 @@ namespace builtin_scene
       void onExecute() override final;
 
     protected:
-      virtual void render(ecs::EntityId entity, WebContent &content) = 0;
+      virtual void render(ecs::EntityId entity, const WebContent &content) = 0;
     };
 
     /**
@@ -141,7 +152,7 @@ namespace builtin_scene
       const std::string name() const override { return "web_render.RenderBackgroundSystem"; }
 
     private:
-      void render(ecs::EntityId entity, WebContent &content) override;
+      void render(ecs::EntityId entity, const WebContent &content) override;
     };
 
     /**
@@ -163,7 +174,7 @@ namespace builtin_scene
       const std::string name() const override { return "web_render.RenderTextSystem"; }
 
     private:
-      void render(ecs::EntityId entity, WebContent &content) override;
+      void render(ecs::EntityId entity, const WebContent &content) override;
 
     private:
       TrClientContextPerProcess *clientContext_;
@@ -180,7 +191,7 @@ namespace builtin_scene
       const std::string name() const override { return "web_render.UpdateTextureSystem"; }
 
     public:
-      void render(ecs::EntityId entity, WebContent &content) override;
+      void render(ecs::EntityId entity, const WebContent &content) override;
     };
   }
 

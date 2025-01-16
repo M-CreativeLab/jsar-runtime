@@ -1,18 +1,18 @@
 #pragma once
 
 #include <string>
-#include "./html_content_element.hpp"
+#include "./html_content2d_element.hpp"
 
 namespace dom
 {
-  class HTMLDivElement final : public HTMLContentElement
+  class HTMLDivElement final : public HTMLContent2dElement
   {
   public:
-    using HTMLContentElement::HTMLContentElement;
+    using HTMLContent2dElement::HTMLContent2dElement;
 
   public:
     HTMLDivElement(std::shared_ptr<Document> ownerDocument)
-        : HTMLContentElement("DIV", ownerDocument)
+        : HTMLContent2dElement("DIV", ownerDocument)
     {
     }
   };

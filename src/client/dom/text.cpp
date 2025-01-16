@@ -1,3 +1,4 @@
+#include <memory>
 #include "./text.hpp"
 #include "./document.hpp"
 
@@ -5,6 +6,7 @@ namespace dom
 {
   using namespace std;
   using namespace pugi;
+  using namespace builtin_scene;
 
   // Create a text node from a document and a value.
   xml_node createTextNode(shared_ptr<xml_document> doc, const string &value = "")
@@ -16,8 +18,14 @@ namespace dom
   }
 
   Text::Text(xml_node node, shared_ptr<Document> ownerDocument)
-      : CharacterData(node, ownerDocument)
+      : CharacterData(node, ownerDocument),
+        SceneObject(getOwnerDocumentReferenceAs<HTMLDocument>(), nodeName),
+        content2d_(nullptr)
   {
+    client_cssom::CSSStyleDeclaration defaultStyle;
+    defaultStyle.setProperty("width", "100%");
+    defaultStyle.setProperty("height", "100%");
+    style_ = make_shared<client_cssom::CSSStyleDeclaration>(defaultStyle.cssText());
   }
 
   Text::Text(shared_ptr<Document> ownerDocument)
@@ -30,8 +38,11 @@ namespace dom
   {
   }
 
-  Text::Text(CharacterData &other)
-      : CharacterData(other)
+  Text::Text(Text &other)
+      : CharacterData(other),
+        SceneObject(other),
+        content2d_(std::move(other.content2d_)),
+        style_(other.style_)
   {
   }
 
@@ -50,5 +61,32 @@ namespace dom
 
     data_ = first; // Update the current text node's data
     return make_unique<Text>(second, getOwnerDocumentReference());
+  }
+
+  void Text::connect()
+  {
+    CharacterData::connect();
+    SceneObject::connectedCallback(*this); // Create the entity
+
+    // Initialize the mesh
+    auto initTextMesh = [this](Scene &scene)
+    {
+      auto meshes = scene.getResource<Meshes>();
+      scene.addComponent(entity_.value(),
+                         Mesh3d(meshes->add(MeshBuilder::CreateBox(1.0f, 1.0f, 0.001f))));
+    };
+    useScene(initTextMesh);
+
+    // Initialize the Content2d and connect it.
+    content2d_ = make_unique<Content2d>(shared_from_this());
+    content2d_->onNodeConnected();
+
+    // Append the text
+    auto appendText = [this](Scene &scene)
+    {
+      assert(entity_.has_value());
+      scene.addComponent(entity_.value(), Text2d(data()));
+    };
+    useScene(appendText);
   }
 }

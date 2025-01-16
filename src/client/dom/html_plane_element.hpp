@@ -3,25 +3,22 @@
 #include <string>
 #include <optional>
 #include "./html_element.hpp"
+#include "./scene_object.hpp"
 
 namespace dom
 {
-  class HTMLPlaneElement : public HTMLElement
+  class HTMLPlaneElement : public HTMLElement,
+                           public SceneObject
   {
   public:
-    using HTMLElement::HTMLElement;
-
-  public:
-    HTMLPlaneElement(std::shared_ptr<Document> ownerDocument)
-        : HTMLElement("PLANE", ownerDocument)
-    {
-    }
-    HTMLPlaneElement(std::string tagName, std::shared_ptr<Document> ownerDocument)
-        : HTMLElement(tagName, ownerDocument)
-    {
-    }
+    HTMLPlaneElement(std::shared_ptr<Document> ownerDocument);
+    HTMLPlaneElement(std::string tagName, std::shared_ptr<Document> ownerDocument);
+    HTMLPlaneElement(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
+    HTMLPlaneElement(HTMLPlaneElement &that);
 
   public:
     void connectedCallback() override;
+    void renderElement(builtin_scene::Scene &scene) override;
+    bool adoptStyle(client_cssom::CSSStyleDeclaration &style) override;
   };
 }

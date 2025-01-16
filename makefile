@@ -88,7 +88,7 @@ darwin:
 	@$(call build_crates,x86_64-apple-darwin)
 	@$(call create_universal_apple_binary)
 ifeq ($(CRATES_ONLY), no)
-	$(MAKE) -C ./build darwin
+	$(MAKE) -C ./build darwin -j$(JOBS)
 endif
 
 android:

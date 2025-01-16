@@ -5,10 +5,10 @@
 
 namespace builtin_scene
 {
-  class Text : public ecs::Component
+  class Text2d : public ecs::Component
   {
   public:
-    Text(std::string content) : content(content) {}
+    Text2d(std::string content) : content(content) {}
 
   public:
     std::string content;

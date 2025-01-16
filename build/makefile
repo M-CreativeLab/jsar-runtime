@@ -1,4 +1,3 @@
-JOBS ?= 1
 CLEAN ?= no
 RELEASE ?= no
 
@@ -12,7 +11,7 @@ define CLEAN_AND_RECONFIGURE
 endef
 
 define BUILD_INSTALL
-	@make -C targets/$1 -j${JOBS} install
+	${MAKE} -C targets/$1 install
 endef
 
 # This macro defines the BUILD_ON process.

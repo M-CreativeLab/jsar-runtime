@@ -205,7 +205,7 @@ namespace builtin_scene::web_renderer
     }
   }
 
-  void RenderBackgroundSystem::render(ecs::EntityId entity, WebContent &content)
+  void RenderBackgroundSystem::render(ecs::EntityId entity, const WebContent &content)
   {
     const auto &style = content.style();
     const auto &layout = content.layout();
@@ -246,23 +246,29 @@ namespace builtin_scene::web_renderer
   {
   }
 
-  void RenderTextSystem::render(ecs::EntityId entity, WebContent &content)
+  void RenderTextSystem::render(ecs::EntityId entity, const WebContent &content)
   {
+    auto textComponent = getComponent<Text2d>(entity);
+    if (textComponent == nullptr)
+      return;
+
     const auto &layout = content.layout();
     if (!layout.has_value()) // No layout, no rendering.
       return;
 
+    string &text = textComponent->content;
     auto paragraphBuilder = ParagraphBuilder::make(content.paragraphStyle, fontCollection_);
     paragraphBuilder->pushStyle(content.textStyle);
-    paragraphBuilder->addText("Hello, world!");
+    paragraphBuilder->addText(text.c_str(), text.size());
     paragraphBuilder->pop();
 
+    auto containerWidth = layout.value().width();
     auto paragraph = paragraphBuilder->Build();
-    paragraph->layout(layout.value().width());
+    paragraph->layout(containerWidth);
     paragraph->paint(content.canvas(), 0.0f, 0.0f);
   }
 
-  void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)
+  void UpdateTextureSystem::render(ecs::EntityId entity, const WebContent &content)
   {
     auto material3d = getComponent<MeshMaterial3d>(entity);
     if (material3d == nullptr)

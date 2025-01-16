@@ -48,7 +48,7 @@ namespace builtin_scene::materials
      *
      * @param content The WebContent to update the material with.
      */
-    void updateTexture(WebContent &content);
+    void updateTexture(const WebContent &content);
 
   public:
     float width() const { return width_; }

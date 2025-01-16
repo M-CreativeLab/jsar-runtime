@@ -6,6 +6,7 @@
 #include <client/builtin_scene/ecs-inl.hpp>
 #include <client/builtin_scene/scene.hpp>
 #include <client/cssom/css_style_declaration.hpp>
+#include <client/cssom/box_offset.hpp>
 #include "./element.hpp"
 
 namespace dom
@@ -20,7 +21,8 @@ namespace dom
     Auto
   };
 
-  class HTMLElement : public Element
+  class HTMLElement : public Element,
+                      virtual public client_cssom::BoxOffset
   {
     friend class RenderHTMLDocument;
 
@@ -33,8 +35,10 @@ namespace dom
     void click();
 
   public:
-    inline float offsetWidth() const { return offsetWidth_; }
-    inline float offsetHeight() const { return offsetHeight_; }
+    inline float offsetWidth() const override { return offsetWidth_; }
+    inline float &offsetWidth() override { return offsetWidth_; }
+    inline float offsetHeight() const override { return offsetHeight_; }
+    inline float &offsetHeight() override { return offsetHeight_; }
 
   public:
     void createdCallback() override;
@@ -46,36 +50,7 @@ namespace dom
      *
      * @param scene The scene to render the element.
      */
-    virtual void renderElement(builtin_scene::Scene &scene);
-    /**
-     * When the layout size is changed.
-     */
-    virtual void onLayoutSizeChanged() {}
-    /**
-     * When the adopted style is changed.
-     */
-    virtual void onAdoptedStyleChanged() {}
-    /**
-     * Use the scene.
-     *
-     * @param callback The callback to use the scene.
-     */
-    void useScene(const std::function<void(builtin_scene::Scene &)> &callback);
-    /**
-     * Get the layout allocator of the document.
-     */
-    std::shared_ptr<crates::layout::Allocator> documentLayoutAllocator();
-
-  private:
-    /**
-     * Get the element's layout result, and update the offset members, such as `offsetWidth_` and
-     * `offsetHeight_`.
-     * 
-     * It also dispatches the `onLayoutSizeChanged` method when the layout size is changed.
-     *
-     * @returns The layout result.
-     */
-    crates::layout::Layout getLayoutResult();
+    virtual void renderElement(builtin_scene::Scene &scene) {};
     /**
      * Adopt the specified style to the element, it will copy the style properties to the element's
      * adopted style, and update the layout node's style.
@@ -83,7 +58,7 @@ namespace dom
      * @param style The style to adopt.
      * @returns Whether the layout style is updated successfully.
      */
-    bool adoptStyle(client_cssom::CSSStyleDeclaration &style);
+    virtual bool adoptStyle(client_cssom::CSSStyleDeclaration &style);
 
   public:
     HTMLElementDirection dir = HTMLElementDirection::LTR;
@@ -98,11 +73,7 @@ namespace dom
     std::shared_ptr<client_cssom::CSSStyleDeclaration> style;
 
   protected:
-    std::optional<builtin_scene::ecs::EntityId> entity_ = std::nullopt;
-    std::shared_ptr<crates::layout::Node> layoutNode_ = nullptr;
     client_cssom::CSSStyleDeclaration defaultStyle_;
-    // The adopted style of the element, which is used to apply the CSS styles.
-    client_cssom::CSSStyleDeclaration adoptedStyle_;
 
   private:
     float offsetWidth_ = 0.0f;

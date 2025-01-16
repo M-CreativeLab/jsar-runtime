@@ -1,18 +1,18 @@
 #pragma once
 
 #include <string>
-#include "./html_element.hpp"
+#include "./html_content2d_element.hpp"
 
 namespace dom
 {
-  class HTMLBodyElement final : public HTMLElement
+  class HTMLBodyElement final : public HTMLContent2dElement
   {
   public:
-    using HTMLElement::HTMLElement;
+    using HTMLContent2dElement::HTMLContent2dElement;
 
   public:
     HTMLBodyElement(std::shared_ptr<Document> ownerDocument)
-        : HTMLElement("BODY", ownerDocument)
+        : HTMLContent2dElement("BODY", ownerDocument)
     {
     }
 
@@ -24,7 +24,7 @@ namespace dom
       defaultStyle_.setProperty("margin", "2px");
       defaultStyle_.setProperty("padding", "2px");
 
-      HTMLElement::createdCallback();
+      HTMLContent2dElement::createdCallback();
     }
   };
 }

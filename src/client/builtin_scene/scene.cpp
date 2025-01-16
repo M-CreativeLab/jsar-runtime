@@ -30,7 +30,7 @@ namespace builtin_scene
       app.registerComponent<Camera>();
       app.registerComponent<Mesh3d>();
       app.registerComponent<MeshMaterial3d>();
-      app.registerComponent<Text>();
+      app.registerComponent<Text2d>();
 
       // Systems
       app.addSystem(SchedulerLabel::kStartup, System::Make<CameraStartupSystem>());

@@ -3,6 +3,7 @@
 #include <client/builtin_scene/ecs-inl.hpp>
 
 #include "./element.hpp"
+#include "./text.hpp"
 #include "./document-inl.hpp"
 #include "./browsing_context.hpp"
 
@@ -233,36 +234,62 @@ namespace dom
 
       // Step 1: Compute the elements' styles.
       // TODO: use `computeStyle` for stylesheets.
-      iterateElementWithChildren(body, [](shared_ptr<HTMLElement> element)
-                                 { element->adoptStyle(*element->style); });
+      {
+        auto adoptStyleForElement = [](shared_ptr<HTMLElement> element)
+        { element->adoptStyle(*element->style); };
+        auto adoptStyleForText = [](shared_ptr<Text> textNode)
+        { textNode->adoptStyle(*textNode->style_); };
+        traverseElementOrTextNode(body, adoptStyleForElement, adoptStyleForText);
+      }
 
       // Step 2: Compute the layout of all the elements only if the layout is dirty.
-      if (body->layoutNode_ != nullptr && body->layoutNode_->isDirty())
-        body->layoutNode_->computeLayout(targetWidth_, targetHeight_);
+      auto rootLayoutNode = body->layoutNode();
+      if (rootLayoutNode != nullptr && rootLayoutNode->isDirty())
+        rootLayoutNode->computeLayout(targetWidth_, targetHeight_);
 
       // Step 3: Call the renderElement method of each element to draw the element.
-      iterateElementWithChildren(body, [scene](shared_ptr<HTMLElement> element)
-                                 { element->renderElement(*scene); });
+      {
+        auto renderElement = [scene](shared_ptr<HTMLElement> element)
+        { element->renderElement(*scene); };
+        auto renderText = [scene](shared_ptr<Text> textNode)
+        { textNode->renderText(*scene); };
+        traverseElementOrTextNode(body, renderElement, renderText);
+      }
     }
 
   private:
-    void iterateElementWithChildren(shared_ptr<HTMLElement> element, std::function<void(shared_ptr<HTMLElement>)> callback)
+    /**
+     * Traverse `HTMLElement` or `Text` children from a root node in post-order, namely, the children are visited first.
+     *
+     * @param elementOrTextNode The root element or text node.
+     * @param elementCallback The callback function for the element node.
+     * @param textNodeCallback The callback function for the text node.
+     */
+    void traverseElementOrTextNode(shared_ptr<Node> elementOrTextNode,
+                                   function<void(shared_ptr<HTMLElement>)> elementCallback,
+                                   function<void(shared_ptr<Text>)> textNodeCallback)
     {
-      if (TR_UNLIKELY(element == nullptr) || !element->connected)
+      if (TR_UNLIKELY(elementOrTextNode == nullptr) || !elementOrTextNode->connected)
         return;
 
-      for (auto childNode : element->childNodes)
+      if (elementOrTextNode->nodeType == NodeType::TEXT_NODE)
       {
-        if (!childNode->connected) // Skip if the node is not connected.
-          continue;
-        if (childNode->nodeType == NodeType::ELEMENT_NODE)
-        {
-          auto childElement = std::dynamic_pointer_cast<HTMLElement>(childNode);
-          if (childElement != nullptr)
-            iterateElementWithChildren(childElement, callback);
-        }
+        auto textNode = dynamic_pointer_cast<Text>(elementOrTextNode);
+        if (textNode != nullptr)
+          textNodeCallback(textNode);
+        return;
       }
-      callback(element);
+
+      if (elementOrTextNode->nodeType == NodeType::ELEMENT_NODE)
+      {
+        auto element = dynamic_pointer_cast<HTMLElement>(elementOrTextNode);
+        if (element == nullptr)
+          return;
+
+        for (auto childNode : element->childNodes)
+          traverseElementOrTextNode(childNode, elementCallback, textNodeCallback);
+        elementCallback(element);
+      }
     }
 
   private:

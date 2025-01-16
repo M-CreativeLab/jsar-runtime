@@ -18,8 +18,6 @@ namespace builtin_scene::materials
   bool WebContentMaterial::initialize(shared_ptr<WebGL2Context> glContext,
                                       shared_ptr<WebGLProgram> program)
   {
-    using namespace client_graphics;
-
     if (TR_UNLIKELY(!ColorMaterial::initialize(glContext, program)))
       return false;
 
@@ -39,7 +37,7 @@ namespace builtin_scene::materials
     }
 
     // Set the texture to be flipped by the Y-axis.
-    // 
+    //
     // WebGL uses the bottom-left corner as the origin, while Skia or Web uses the top-left, so flip the texture by
     // the Y-axis to make it consistent.
     flipTextureByY(true);
@@ -109,88 +107,88 @@ namespace builtin_scene::materials
     }
   }
 
-  void WebContentMaterial::updateTexture(WebContent &content)
+  void WebContentMaterial::updateTexture(const WebContent &content)
   {
     width_ = content.width();
     height_ = content.height();
+    if (width_ <= 0 || height_ <= 0 || texture_ == nullptr)
+      return;
 
-    if (texture_ != nullptr) // If the texture_ has been initialized, update it.
+    auto glContext = glContext_.lock();
+    assert(glContext != nullptr);
+    glContext->bindTexture(WebGLTextureTarget::kTexture2D, texture_);
+
+    unsigned char *pixels = nullptr;
+    int internalformat = WEBGL2_RGBA8;
+    WebGLTextureFormat format = WebGLTextureFormat::kRGBA;
+    WebGLPixelType pixelType = WebGLPixelType::kUnsignedByte;
+    SkCanvas *canvas = content.canvas();
+    SkSurface *surface = canvas->getSurface();
+
+    if (surface != nullptr)
     {
-      auto glContext = glContext_.lock();
-      assert(glContext != nullptr);
-      glContext->bindTexture(WebGLTextureTarget::kTexture2D, texture_);
-
-      unsigned char *pixels = nullptr;
-      int internalformat = WEBGL2_RGBA8;
-      WebGLTextureFormat format = WebGLTextureFormat::kRGBA;
-      WebGLPixelType pixelType = WebGLPixelType::kUnsignedByte;
-      SkCanvas *canvas = content.canvas();
-      SkSurface *surface = canvas->getSurface();
-
-      if (surface != nullptr)
+      SkImageInfo info = surface->imageInfo();
+      SkPixmap pixmap;
+      if (surface->peekPixels(&pixmap))
       {
-        SkImageInfo info = surface->imageInfo();
-        SkPixmap pixmap;
-        if (surface->peekPixels(&pixmap))
-        {
-          pixels = (unsigned char *)pixmap.addr();
+        pixels = (unsigned char *)pixmap.addr();
 #ifdef TR_CLIENT_WEB_CONTENT_DEBUG
+        {
+          static unordered_map<string, bool> writtenMap;
+          string dstName = ".WEBCONTENTS_DEBUG_" + content.name() + ".png";
+          if (writtenMap.find(content.name()) == writtenMap.end() ||
+              writtenMap[content.name()] == false)
           {
-            static bool needsWrite = true;
-            if (needsWrite)
-            {
-              SkFILEWStream fs(".WEBCONTENTS_DEBUG.png");
-              SkPngEncoder::Encode(&fs, pixmap, SkPngEncoder::Options());
-            }
+            SkFILEWStream fs(dstName.c_str());
+            SkPngEncoder::Encode(&fs, pixmap, SkPngEncoder::Options());
+            writtenMap[content.name()] = true;
           }
+        }
 #endif
 
-          // Update the texture format based on the Skia surface color type.
-          SkColorType colorType = surface->imageInfo().colorType();
-          switch (colorType)
-          {
-          case kRGBA_8888_SkColorType:
-            // Keep the default values.
-            break;
-          case kRGB_888x_SkColorType:
-            format = WebGLTextureFormat::kRGB;
-            internalformat = WEBGL2_RGB8;
-            break;
-          case kRGBA_F16_SkColorType:
-            pixelType = WebGLPixelType::kHalfFloat;
-            internalformat = WEBGL2_RGBA16F;
-            break;
-          case kRGBA_F32_SkColorType:
-            pixelType = WebGLPixelType::kFloat;
-            internalformat = WEBGL2_RGBA32F;
-            break;
-          case kBGRA_8888_SkColorType:
-            cerr << name() << ": The BGRA_8888 color type is not supported." << endl;
-            break;
-          default:
-            cerr << name() << ": The color type is not supported." << endl;
-            break;
-          };
-        }
-        else
+        // Update the texture format based on the Skia surface color type.
+        SkColorType colorType = surface->imageInfo().colorType();
+        switch (colorType)
         {
-          cerr << name() << ": The pixels are not readable." << endl;
-        }
+        case kRGBA_8888_SkColorType:
+          // Keep the default values.
+          break;
+        case kRGB_888x_SkColorType:
+          format = WebGLTextureFormat::kRGB;
+          internalformat = WEBGL2_RGB8;
+          break;
+        case kRGBA_F16_SkColorType:
+          pixelType = WebGLPixelType::kHalfFloat;
+          internalformat = WEBGL2_RGBA16F;
+          break;
+        case kRGBA_F32_SkColorType:
+          pixelType = WebGLPixelType::kFloat;
+          internalformat = WEBGL2_RGBA32F;
+          break;
+        case kBGRA_8888_SkColorType:
+          cerr << name() << ": The BGRA_8888 color type is not supported." << endl;
+          break;
+        default:
+          cerr << name() << ": The color type is not supported." << endl;
+          break;
+        };
       }
-
-      // Update the texture with the new pixels or the default values.
-      // cout << "Updating texture with width: " << width_ << ", height: " << height_ << endl;
-      // cout << " pixels: " << (void *)pixels << endl;
-      glContext->texImage2D(WebGLTexture2DTarget::kTexture2D, 0, internalformat, width_, height_, 0,
-                            format, pixelType, pixels);
-      glContext->generateMipmap(WebGLTextureTarget::kTexture2D);
+      else
       {
-        glContext->texParameteri(WebGLTextureTarget::kTexture2D,
-                                 WebGLTextureParameterName::kTextureMinFilter, WEBGL_LINEAR_MIPMAP_LINEAR);
-        glContext->texParameteri(WebGLTextureTarget::kTexture2D,
-                                 WebGLTextureParameterName::kTextureMagFilter, WEBGL_LINEAR);
+        cerr << name() << ": The pixels are not readable." << endl;
       }
-      glContext->bindTexture(WebGLTextureTarget::kTexture2D, nullptr);
     }
+
+    // Update the texture with the new pixels or the default values.
+    glContext->texImage2D(WebGLTexture2DTarget::kTexture2D, 0, internalformat, width_, height_, 0,
+                          format, pixelType, pixels);
+    glContext->generateMipmap(WebGLTextureTarget::kTexture2D);
+    {
+      glContext->texParameteri(WebGLTextureTarget::kTexture2D,
+                               WebGLTextureParameterName::kTextureMinFilter, WEBGL_LINEAR_MIPMAP_LINEAR);
+      glContext->texParameteri(WebGLTextureTarget::kTexture2D,
+                               WebGLTextureParameterName::kTextureMagFilter, WEBGL_LINEAR);
+    }
+    glContext->bindTexture(WebGLTextureTarget::kTexture2D, nullptr);
   }
 } // namespace builtin_scene::materials

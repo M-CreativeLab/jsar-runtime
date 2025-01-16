@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <string>
 #include <vector>
 #include <memory>
@@ -28,7 +29,9 @@ namespace dom
     NOTATION_NODE,
   };
 
+  class SceneObject;
   class Document;
+
   class Node : public DOMEventTarget,
                public enable_shared_from_this<Node>
   {
@@ -54,54 +57,54 @@ namespace dom
   public:
     /**
      * Append a child node to the current node.
-     * 
+     *
      * @param aChild The child node to append.
      * @returns The appended child node.
      */
     std::shared_ptr<Node> appendChild(std::shared_ptr<Node> aChild);
     /**
      * Get the child nodes of the current node.
-     * 
+     *
      * @returns a vector of the child nodes.
      */
     inline std::vector<std::shared_ptr<Node>> getChildNodes() { return childNodes; }
     /**
      * Get the first child node of the current node.
-     * 
+     *
      * @returns a shared pointer to the first child node.
      */
-    inline std::shared_ptr<Node> getFirstChild() { return firstChild.lock(); }
+    inline std::shared_ptr<Node> getFirstChild() const { return firstChild.lock(); }
     /**
      * Get the last child node of the current node.
-     * 
+     *
      * @returns a shared pointer to the last child node.
      */
-    inline std::shared_ptr<Node> getLastChild() { return lastChild.lock(); }
+    inline std::shared_ptr<Node> getLastChild() const { return lastChild.lock(); }
     /**
      * Get the parent node of the current node.
-     * 
+     *
      * @returns a shared pointer to the parent node.
      */
-    inline std::shared_ptr<Node> getParentNode() { return parentNode.lock(); }
+    inline std::shared_ptr<Node> getParentNode() const { return parentNode.lock(); }
     /**
      * @returns The text content of the node and its descendants.
      */
     const std::string textContent() const;
     /**
      * Set the text content of the node and its descendants, it will remove all the child nodes and replace them with a single text node.
-     * 
+     *
      * @param value The text content to set.
      */
     void textContent(const std::string &value);
     /**
      * Get the parent node as a specific node type.
-     * 
+     *
      * @tparam T The specific node type, such as `Element`, `Text`, etc.
      * @returns The parent node as the specific node type, or nullptr if the parent node is not the specific node type.
      */
     template <typename T>
-      requires std::is_base_of_v<Node, T>
-    std::shared_ptr<T> getParentNodeAs()
+      requires std::is_base_of_v<Node, T> || std::is_same_v<T, SceneObject>
+    std::shared_ptr<T> getParentNodeAs() const
     {
       auto _parentNode = getParentNode();
       return _parentNode == nullptr
@@ -136,11 +139,27 @@ namespace dom
     }
     /**
      * Get the owner document reference.
-     * 
+     *
      * @param force If true, the owner document will be forced to get, otherwise it will return the cached owner document.
      * @returns The owner document reference.
      */
     std::shared_ptr<Document> getOwnerDocumentReference(bool force = true);
+    /**
+     * Get the owner document reference as a specific document type.
+     *
+     * @tparam DocumentType The specific document type, such as `Document`, `HTMLDocument`, etc.
+     * @param force If true, the owner document will be forced to get, otherwise it will return the cached owner document.
+     * @returns The owner document reference as the specific document type.
+     */
+    template <typename DocumentType>
+      requires std::is_base_of_v<Document, DocumentType>
+    std::shared_ptr<DocumentType> getOwnerDocumentReferenceAs(bool force = true)
+    {
+      auto ref = std::dynamic_pointer_cast<DocumentType>(getOwnerDocumentReference(force));
+      if (force && ref == nullptr)
+        throw std::runtime_error("The owner document is not found.");
+      return ref;
+    }
     void resetFrom(std::shared_ptr<pugi::xml_node> node, std::shared_ptr<Document> ownerDocument);
     /**
      * Iterate all the child nodes of the current node including the child nodes of the child nodes.
