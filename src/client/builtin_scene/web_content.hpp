@@ -76,6 +76,28 @@ namespace builtin_scene
     inline void setStyle(const client_cssom::CSSStyleDeclaration &style)
     {
       style_ = style;
+
+      // Update the text style
+      bool isTextStyleChanged = false;
+      if (style_.hasProperty("font-size"))
+      {
+        textStyle.setFontSize(style_.getPropertyValueAs<float>("font-size"));
+        isTextStyleChanged = true;
+      }
+      if (style_.hasProperty("font-family"))
+      {
+        // TODO: Parse the font family.
+      }
+      if (style_.hasProperty("color"))
+      {
+        SkPaint textPaint;
+        textPaint.setAntiAlias(true);
+        textPaint.setColor(style_.getPropertyValueAs<client_cssom::types::Color>("color"));
+        textStyle.setForegroundColor(textPaint);
+        isTextStyleChanged = true;
+      }
+      if (isTextStyleChanged)
+        paragraphStyle.setTextStyle(textStyle);
     }
     /**
      * @returns A constant reference to the Layout object in the last re-layout.

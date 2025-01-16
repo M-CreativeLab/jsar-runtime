@@ -4,6 +4,7 @@
 #include <client/builtin_scene/scene.hpp>
 #include <client/cssom/css_style_declaration.hpp>
 
+#include "./html_element.hpp"
 #include "./character_data.hpp"
 #include "./scene_object.hpp"
 #include "./content2d.hpp"
@@ -56,8 +57,26 @@ namespace dom
 
   private:
     // Adopt the specified style to the element.
-    inline bool adoptStyle(client_cssom::CSSStyleDeclaration &style)
+    bool adoptStyle(client_cssom::CSSStyleDeclaration &style)
     {
+      auto parentElement = getParentNodeAs<HTMLElement>();
+      if (parentElement != nullptr)
+      {
+        // Inherit the parent's style.
+        auto parentStyle = parentElement->style;
+        if (parentStyle->hasProperty("font-size"))
+          style.setProperty("font-size", parentStyle->getPropertyValue("font-size"));
+        if (parentStyle->hasProperty("font-family"))
+          style.setProperty("font-family", parentStyle->getPropertyValue("font-family"));
+        if (parentStyle->hasProperty("line-height"))
+          style.setProperty("line-height", parentStyle->getPropertyValue("line-height"));
+        if (parentStyle->hasProperty("color"))
+          style.setProperty("color", parentStyle->getPropertyValue("color"));
+        if (parentStyle->hasProperty("text-align"))
+          style.setProperty("text-align", parentStyle->getPropertyValue("text-align"));
+        if (parentStyle->hasProperty("text-indent"))
+          style.setProperty("text-indent", parentStyle->getPropertyValue("text-indent"));
+      }
       return SceneObject::adoptStyleOn(*this, style);
     }
     // Render the text node.
