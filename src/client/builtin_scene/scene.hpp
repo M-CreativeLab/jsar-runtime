@@ -52,8 +52,10 @@ namespace builtin_scene
      * Create a new element to the scene for rendering.
      *
      * @param name The tag name of the element.
+     * @param parent The parent element of the new element.
      */
-    [[nodiscard]] ecs::EntityId createElement(std::string name);
+    [[nodiscard]] ecs::EntityId createElement(std::string name,
+                                              std::optional<ecs::EntityId> parent = std::nullopt);
 
   private:
     void bootstrap();

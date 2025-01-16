@@ -98,10 +98,16 @@ namespace dom
 
   void SceneObject::connectedCallback(const Node &node)
   {
+    auto parent = node.getParentNodeAs<SceneObject>();
+
     // Create the entity
-    useScene([this, &node](builtin_scene::Scene &scene)
-             { entity_ = scene.createElement(node.nodeName); });
-    assert(entity_.has_value());
+    auto createEntity = [this, &node, parent](Scene &scene)
+    {
+      entity_ = scene.createElement(node.nodeName,
+                                    parent == nullptr ? nullopt : parent->entity_);
+      assert(entity_.has_value());
+    };
+    useScene(createEntity);
 
     // Layout
     {
@@ -109,7 +115,6 @@ namespace dom
       layoutNode_->setStyle(adoptedStyle_);
 
       // Append this node to the parent layout node.
-      auto parent = node.getParentNodeAs<SceneObject>();
       if (parent != nullptr)
       {
         assert(parent->layoutNode_ != nullptr);

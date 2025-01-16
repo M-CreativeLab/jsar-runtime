@@ -10,7 +10,10 @@ namespace builtin_scene::hierarchy
     using ecs::Component::Component;
 
   public:
-    ecs::EntityId &parent() { return parent_; }
+    Parent(ecs::EntityId parent) : parent_(parent) {}
+
+  public:
+    const ecs::EntityId &parent() const { return parent_; }
 
   private:
     ecs::EntityId parent_;

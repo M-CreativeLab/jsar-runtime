@@ -26,6 +26,7 @@ namespace builtin_scene
       app.registerComponent<hierarchy::Element>();
       app.registerComponent<hierarchy::Children>();
       app.registerComponent<hierarchy::Parent>();
+      app.registerComponent<hierarchy::Root>();
       app.registerComponent<Transform>();
       app.registerComponent<Camera>();
       app.registerComponent<Mesh3d>();
@@ -73,13 +74,32 @@ namespace builtin_scene
     clientContext->addEventListener(TrClientContextEventType::ScriptingEventLoopReady, setupXRSession);
   }
 
-  ecs::EntityId Scene::createElement(string name)
+  ecs::EntityId Scene::createElement(string name, std::optional<ecs::EntityId> parent)
   {
-    return spawn(
-        hierarchy::Element(name),
-        hierarchy::Children(),
-        hierarchy::Parent(),
-        Transform::FromXYZ(0.0f, 0.0f, 0.0f));
+    Transform defaultTransform = Transform::FromXYZ(0.0f, 0.0f, 0.0f);
+    if (!parent.has_value())
+    {
+      return spawn(
+          hierarchy::Element(name),
+          hierarchy::Children(),
+          hierarchy::Root(),
+          defaultTransform);
+    }
+    else
+    {
+      auto parentEntity = parent.value();
+      auto newEntity = spawn(
+          hierarchy::Element(name),
+          hierarchy::Children(),
+          hierarchy::Parent(parentEntity),
+          defaultTransform);
+
+      // Update the parent's children
+      auto children = getComponent<hierarchy::Children>(parentEntity);
+      if (children != nullptr)
+        children->addChild(newEntity);
+      return newEntity;
+    }
   }
 
   void Scene::bootstrap()

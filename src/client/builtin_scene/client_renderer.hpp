@@ -245,53 +245,68 @@ namespace builtin_scene
     void onExecute() override
     {
       auto renderer = getResource<Renderer>();
-      assert(renderer != nullptr);
+      assert(renderer != nullptr);  // The renderer must be valid.
 
-      auto meshes = queryEntities<Mesh3d>();
       auto xrExperience = getResource<WebXRExperience>();
-      if (xrExperience != nullptr)
+      if (xrExperience != nullptr)  // XR rendering
       {
         auto xrViewerPose = xrExperience->viewerPose();
         if (xrViewerPose != nullptr)
         {
           auto &views = xrViewerPose->views();
           for (auto view : views)
-            render(meshes, *renderer, view);
+            render(*renderer, view);
           return;
         }
       }
-      render(meshes, *renderer);
+
+      // Fallback to the default rendering
+      render(*renderer);
     }
 
   private:
     /**
-     * Render the meshes with the given renderer.
+     * Render the scene with the given renderer.
      *
-     * @param meshes The list of mesh entities to render.
      * @param renderer The renderer to use.
-     * @param view The XR view to render the meshes with.
+     * @param view The XR view to render the scene with.
      */
-    void render(std::vector<builtin_scene::ecs::EntityId> &meshes,
-                builtin_scene::Renderer &renderer,
-                std::shared_ptr<client_xr::XRView> view = nullptr)
+    void render(Renderer &renderer, std::shared_ptr<client_xr::XRView> view = nullptr)
     {
+      auto roots = queryEntities<hierarchy::Root>();
+      if (roots.size() <= 0)  // No root entities to render
+        return;
+
       if (view != nullptr)
         renderer.setViewport(view->viewport());
-      renderMeshes(meshes, renderer, view);
+      for (auto root : roots)
+        traverseAndRender(root, renderer, view);
     }
     /**
-     * Render the meshes with the given renderer.
-     *
-     * @param meshes The list of mesh entities to render.
+     * Traverse the entity hierarchy and render the mesh with the given renderer in post-order.
+     * 
+     * This method ensures that the child entities are rendered before the parent entity.
+     * 
+     * @param entity The entity to traverse and render.
      * @param renderer The renderer to use.
-     * @param view The XR view to render the meshes with.
+     * @param view The XR view to render the entity with.
      */
-    void renderMeshes(std::vector<builtin_scene::ecs::EntityId> &meshes,
-                      builtin_scene::Renderer &renderer,
-                      std::shared_ptr<client_xr::XRView> view = nullptr)
+    void traverseAndRender(ecs::EntityId entity, Renderer &renderer,
+                           std::shared_ptr<client_xr::XRView> view = nullptr)
     {
-      for (auto &mesh : meshes)
-        renderMesh(mesh, renderer, view);
+      auto children = getComponent<hierarchy::Children>(entity);
+      if (children != nullptr)
+      {
+        for (auto child : children->children())
+          traverseAndRender(child, renderer, view);
+      }
+
+      // Render the mesh if it exists
+      auto mesh = getComponent<Mesh3d>(entity);
+      if (mesh != nullptr)
+        renderMesh(entity, mesh, renderer, view);
+
+      // TODO: support other renderable components (e.g., particles, etc.)
     }
     /**
      * Render the mesh with the given renderer.
@@ -300,13 +315,11 @@ namespace builtin_scene
      * @param renderer The renderer to use.
      * @param view The XR view to render the mesh with.
      */
-    void renderMesh(builtin_scene::ecs::EntityId &mesh,
-                    builtin_scene::Renderer &renderer,
+    void renderMesh(ecs::EntityId &entity, std::shared_ptr<Mesh3d> meshComponent, Renderer &renderer,
                     std::shared_ptr<client_xr::XRView> view)
     {
-      auto meshComponent = getComponent<Mesh3d>(mesh);
-      auto materialComponent = getComponent<MeshMaterial3d>(mesh);
-      if (meshComponent == nullptr || materialComponent == nullptr)
+      auto materialComponent = getComponent<MeshMaterial3d>(entity);
+      if (materialComponent == nullptr)
         return;
 
       if (!meshComponent->initialized())
@@ -315,7 +328,7 @@ namespace builtin_scene
         renderer.initializeMeshMaterial3d(meshComponent, materialComponent);
       renderer.drawMesh3d(meshComponent,
                           materialComponent,
-                          getComponent<Transform>(mesh),
+                          getComponent<Transform>(entity),
                           view);
     }
   };
