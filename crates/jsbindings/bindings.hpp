@@ -323,7 +323,7 @@ namespace crates
 
     /**
      * Parse a font family string into a vector of font families.
-     * 
+     *
      * @param inputStr The font family string.
      * @returns The vector of font families.
      */
@@ -814,8 +814,31 @@ namespace crates
     {
       friend class Node;
 
+    public:
+      Layout()
+          : width_(0.0f),
+            height_(0.0f),
+            x_(0.0f),
+            y_(0.0f),
+            border_(0.0f, 0.0f, 0.0f, 0.0f),
+            padding_(0.0f, 0.0f, 0.0f, 0.0f)
+      {
+      }
+
     private:
-      Layout(_LayoutOutput output) : data_(output)
+      Layout(_LayoutOutput output)
+          : width_(output.width),
+            height_(output.height),
+            x_(output.x),
+            y_(output.y),
+            border_(output.border_top,
+                    output.border_right,
+                    output.border_bottom,
+                    output.border_left),
+            padding_(output.padding_top,
+                     output.padding_right,
+                     output.padding_bottom,
+                     output.padding_left)
       {
       }
 
@@ -823,39 +846,27 @@ namespace crates
       /**
        * @returns The node width.
        */
-      inline float width() const { return data_.width; }
+      inline float width() const { return width_; }
       /**
        * @returns The node height.
        */
-      inline float height() const { return data_.height; }
+      inline float height() const { return height_; }
       /**
        * @returns The node x position.
        */
-      inline float x() const { return data_.x; }
+      inline float left() const { return x_; }
       /**
        * @returns The node y position.
        */
-      inline float y() const { return data_.y; }
+      inline float top() const { return y_; }
       /**
        * @returns The node border.
        */
-      inline Rect<float> border() const
-      {
-        return Rect<float>(data_.border_top,
-                           data_.border_right,
-                           data_.border_bottom,
-                           data_.border_left);
-      }
+      inline Rect<float> border() const { return border_; }
       /**
        * @returns The node padding.
        */
-      inline Rect<float> padding() const
-      {
-        return Rect<float>(data_.padding_top,
-                           data_.padding_right,
-                           data_.padding_bottom,
-                           data_.padding_left);
-      }
+      inline Rect<float> padding() const { return padding_; }
 
     public:
       friend std::ostream &operator<<(std::ostream &os, const Layout &layout)
@@ -863,16 +874,21 @@ namespace crates
         os << "Layout {" << std::endl;
         os << " width: " << layout.width() << "," << std::endl;
         os << " height: " << layout.height() << "," << std::endl;
-        os << " x: " << layout.x() << "," << std::endl;
-        os << " y: " << layout.y() << ", " << std::endl;
+        os << " left: " << layout.left() << "," << std::endl;
+        os << " top: " << layout.top() << ", " << std::endl;
         os << " border: " << layout.border() << "," << std::endl;
         os << " padding: " << layout.padding() << "}" << std::endl;
         os << std::endl;
         return os;
       }
 
-    private:
-      _LayoutOutput data_;
+    protected:
+      float width_;
+      float height_;
+      float x_;
+      float y_;
+      Rect<float> border_;
+      Rect<float> padding_;
     };
 
     /**

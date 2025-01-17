@@ -51,7 +51,7 @@ namespace dom
      * 
      * @returns Whether the scene object is rendered successfully.
      */
-    bool render();
+    bool render(Node &node);
     void renderObject(builtin_scene::Scene &scene, const client_cssom::Layout &layout);
     void connectedCallback(const Node &node);
 
@@ -64,7 +64,7 @@ namespace dom
      *
      * @returns The layout result.
      */
-    [[nodiscard]] client_cssom::Layout fetchLayoutAndDispatchChangeEvent();
+    [[nodiscard]] client_cssom::Layout fetchLayoutAndDispatchChangeEvent(Node &node);
     /**
      * Adopt the specified style to the element, it will copy the style properties to the element's
      * adopted style, and update the layout node's style.
@@ -79,6 +79,7 @@ namespace dom
     std::optional<builtin_scene::ecs::EntityId> entity_ = std::nullopt;
     std::shared_ptr<crates::layout::Allocator> layoutAllocator_ = nullptr;
     std::shared_ptr<crates::layout::Node> layoutNode_ = nullptr;
+    std::optional<client_cssom::Layout> computedLayout_ = std::nullopt;
     client_cssom::CSSStyleDeclaration adoptedStyle_;
 
   private:

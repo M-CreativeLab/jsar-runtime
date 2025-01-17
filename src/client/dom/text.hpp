@@ -61,7 +61,7 @@ namespace dom
     // Render the text node.
     inline bool renderText(builtin_scene::Scene &scene)
     {
-      return SceneObject::render();
+      return SceneObject::render(*this);
     }
     // Get the content2d and expect it to be valid.
     inline Content2d &content2d()

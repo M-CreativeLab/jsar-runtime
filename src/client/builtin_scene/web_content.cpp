@@ -1,4 +1,5 @@
 #include <vector>
+#include <client/macros.h>
 #include "./web_content.hpp"
 
 namespace builtin_scene
@@ -10,7 +11,11 @@ namespace builtin_scene
         lastLayout_(std::nullopt)
   {
     SkPaint transparent;
+#ifdef TR_CLIENT_WEB_CONTENT_DEBUG_TEXT
+    transparent.setColor(SK_ColorGRAY);
+#else
     transparent.setColor(SK_ColorTRANSPARENT);
+#endif
 
     SkPaint textPaint;
     textPaint.setAntiAlias(true);
@@ -19,7 +24,7 @@ namespace builtin_scene
     // Init text style
     textStyle.setBackgroundColor(transparent);
     textStyle.setForegroundColor(textPaint);
-    textStyle.setFontSize(30.0f);
+    textStyle.setFontSize(20.0f);
     textStyle.setFontFamilies({SkString("PingFang SC"),
                                SkString("Arial"),
                                SkString("sans-serif")});

@@ -12,6 +12,12 @@ namespace dom
   using namespace std;
   using namespace pugi;
 
+  enum class TreverseOrder
+  {
+    PreOrder, // Pre-order traversal: root -> left -> right
+    PostOrder // Post-order traversal: left -> right -> root
+  };
+
   Document::Document(string contentType, DocumentType documentType,
                      shared_ptr<BrowsingContext> browsingContext,
                      bool autoConnect)
@@ -257,7 +263,7 @@ namespace dom
         { element->adoptStyle(*element->style); };
         auto adoptStyleForText = [](shared_ptr<Text> textNode)
         { textNode->adoptStyle(*textNode->style_); };
-        traverseElementOrTextNode(body, adoptStyleForElement, adoptStyleForText);
+        traverseElementOrTextNode(body, adoptStyleForElement, adoptStyleForText, TreverseOrder::PreOrder);
       }
 
       // Step 2: Compute the layout of all the elements only if the layout is dirty.
@@ -271,21 +277,23 @@ namespace dom
         { element->renderElement(*scene); };
         auto renderText = [scene](shared_ptr<Text> textNode)
         { textNode->renderText(*scene); };
-        traverseElementOrTextNode(body, renderElement, renderText);
+        traverseElementOrTextNode(body, renderElement, renderText, TreverseOrder::PreOrder);
       }
     }
 
   private:
     /**
-     * Traverse `HTMLElement` or `Text` children from a root node in post-order, namely, the children are visited first.
+     * Traverse `HTMLElement` or `Text` children from a root node.
      *
      * @param elementOrTextNode The root element or text node.
      * @param elementCallback The callback function for the element node.
      * @param textNodeCallback The callback function for the text node.
+     * @param order The traverse order.
      */
     void traverseElementOrTextNode(shared_ptr<Node> elementOrTextNode,
                                    function<void(shared_ptr<HTMLElement>)> elementCallback,
-                                   function<void(shared_ptr<Text>)> textNodeCallback)
+                                   function<void(shared_ptr<Text>)> textNodeCallback,
+                                   TreverseOrder order)
     {
       if (TR_UNLIKELY(elementOrTextNode == nullptr) || !elementOrTextNode->connected)
         return;
@@ -304,9 +312,14 @@ namespace dom
         if (element == nullptr)
           return;
 
+        if (order == TreverseOrder::PreOrder)
+          elementCallback(element);
+
         for (auto childNode : element->childNodes)
-          traverseElementOrTextNode(childNode, elementCallback, textNodeCallback);
-        elementCallback(element);
+          traverseElementOrTextNode(childNode, elementCallback, textNodeCallback, order);
+
+        if (order == TreverseOrder::PostOrder)
+          elementCallback(element);
       }
     }
     // The target width to render the document.

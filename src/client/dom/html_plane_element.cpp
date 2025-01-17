@@ -54,7 +54,7 @@ namespace dom
   void HTMLPlaneElement::renderElement(Scene &scene)
   {
     HTMLElement::renderElement(scene);
-    SceneObject::render();
+    SceneObject::render(*this);
   }
 
   bool HTMLPlaneElement::adoptStyle(client_cssom::CSSStyleDeclaration &style)

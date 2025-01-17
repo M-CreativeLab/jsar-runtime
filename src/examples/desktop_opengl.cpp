@@ -54,9 +54,9 @@ public:
   XRStereoscopicRenderer(float aspect) : aspect(aspect)
   {
     float eyeOffset = XR_EYE_SPAN / 2;
-    viewerPosition = glm::vec3(0.0f, 0.3f, 1.0f);
+    viewerPosition = glm::vec3(0.0f, 0.0f, 0.7f);
     {
-      glm::vec3 viewerForward(0.1f, 0.1f, -1.0f);
+      glm::vec3 viewerForward(0.0f, 0.0f, -1.0f);
       viewerOrientation = glm::quatLookAt(glm::normalize(viewerForward), glm::vec3(0, 1, 0));
     }
     eyePosition[0] = glm::vec3(viewerPosition.x - eyeOffset, viewerPosition.y, viewerPosition.z);

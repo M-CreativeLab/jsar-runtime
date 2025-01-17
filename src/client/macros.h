@@ -18,3 +18,9 @@
  */
 #define TR_CLIENT_WEB_CONTENT_DEBUG
 #undef TR_CLIENT_WEB_CONTENT_DEBUG
+
+/**
+ * Uncomment this line to enable debugging WebContent text rendering.
+ */
+#define TR_CLIENT_WEB_CONTENT_DEBUG_TEXT
+#undef TR_CLIENT_WEB_CONTENT_DEBUG_TEXT

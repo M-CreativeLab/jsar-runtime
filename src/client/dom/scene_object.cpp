@@ -39,9 +39,9 @@ namespace dom
       callback(*sceneRef);
   }
 
-  bool SceneObject::render()
+  bool SceneObject::render(Node &node)
   {
-    auto layout = fetchLayoutAndDispatchChangeEvent();
+    auto layout = fetchLayoutAndDispatchChangeEvent(node);
 #ifdef TR_CLIENT_DOM_VERBOSE
     cout << "Rendering SceneObject(" << name_ << "): " << layout << endl;
 #endif
@@ -83,8 +83,8 @@ namespace dom
                                client_cssom::pixelToMeter(boundingBox->height()),
                                1.0f});
 
-          float left = layout.x(); // Get the left position.
-          float top = layout.y();  // Get the top position.
+          float left = layout.left(); // Get the left position.
+          float top = layout.top();   // Get the top position.
           auto isRootEntity = scene.hasComponent<hierarchy::Root>(entity);
           if (!isRootEntity)
           {
@@ -94,28 +94,28 @@ namespace dom
             {
               /**
                * Transform the xyz() in LTW space to the left-handed world space.
-               * 
+               *
                * First, calculate the distance from the root bounding box to the current bounding box:
-               * 
+               *
                * ```
                * var distance = (root - box) / 2
                * ```
-               * 
+               *
                * Then move the origin to the left-top-center of the root bounding box:
-               * 
+               *
                * ```
                * var origin = distance * (-1, 1, 1)
                * ```
-               * 
-               * 3D space uses right(+x) and up(+y), thus if we wanna move the origin to the left and top, we need to multiply the 
+               *
+               * 3D space uses right(+x) and up(+y), thus if we wanna move the origin to the left and top, we need to multiply the
                * y-axis by -1 only.
-               * 
+               *
                * Finally, calculate the offset in world space to make the final translation:
-               * 
+               *
                * ```
                * var offset = origin + layout.xyz() * (1, -1, 1)
                * ```
-               * 
+               *
                * Note that there is a transformation are required to convert the layout space, namely right(+x) and up(-y), to the
                * world space, namely right(+x) and up(+y).
                */
@@ -166,14 +166,21 @@ namespace dom
     }
   }
 
-  client_cssom::Layout SceneObject::fetchLayoutAndDispatchChangeEvent()
+  client_cssom::Layout SceneObject::fetchLayoutAndDispatchChangeEvent(Node &node)
   {
-    client_cssom::Layout layout = layoutNode_->layout();
+    client_cssom::Layout layout;
+    auto parent = node.getParentNodeAs<SceneObject>();
+    if (parent == nullptr)
+      layout = layoutNode_->layout();
+    else
+      layout = client_cssom::Layout::Merge(parent->computedLayout_, layoutNode_->layout());
+
     if (layout.width() != offsetWidth() ||
-        layout.height() != offsetHeight())
+        layout.height() != offsetHeight())  // Check the layout size is changed.
     {
       offsetWidth() = layout.width();
       offsetHeight() = layout.height();
+      computedLayout_ = layout;
       onLayoutChanged();
     }
     // TODO: support offsetTop, offsetLeft, offsetParent, etc.
