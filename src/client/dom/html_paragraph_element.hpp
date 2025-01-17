@@ -1,19 +1,28 @@
 #pragma once
 
 #include <string>
-#include "./html_plane_element.hpp"
+#include "./html_content2d_element.hpp"
 
 namespace dom
 {
-  class HTMLParagraphElement : public HTMLPlaneElement
+  class HTMLParagraphElement : public HTMLContent2dElement
   {
   public:
-    using HTMLPlaneElement::HTMLPlaneElement;
+    using HTMLContent2dElement::HTMLContent2dElement;
 
   public:
     HTMLParagraphElement(std::shared_ptr<Document> ownerDocument)
-        : HTMLPlaneElement("P", ownerDocument)
+        : HTMLContent2dElement("P", ownerDocument)
     {
+    }
+
+  public:
+    void createdCallback() override
+    {
+      defaultStyle_.setProperty("display", "block");
+      defaultStyle_.setProperty("margin", "10px 0");
+
+      HTMLContent2dElement::createdCallback();
     }
   };
 }

@@ -21,7 +21,7 @@ namespace dom
     {
       defaultStyle_.setProperty("display", "inline");
       defaultStyle_.setProperty("height", "auto");
-      defaultStyle_.setProperty("margin", "auto");
+      defaultStyle_.setProperty("width", "auto");
 
       HTMLContent2dElement::createdCallback();
     }
