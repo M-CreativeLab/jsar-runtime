@@ -58,33 +58,76 @@ namespace dom
     }
   }
 
-  void SceneObject::renderObject(Scene &scene, const crates::layout::Layout &layout)
+  void SceneObject::renderObject(Scene &scene, const client_cssom::Layout &layout)
   {
     if (entity_.has_value())
     {
       auto &entity = entity_.value();
-      {
-        // Update the layout into the `WebContent` component.
-        auto webContent = scene.getComponent<WebContent>(entity);
-        if (webContent != nullptr)
-          webContent->setLayout(layout); // Update the layout result into the `WebContent` component.
-      }
+
+      // Update the layout into the `WebContent` component.
+      auto webContent = scene.getComponent<WebContent>(entity);
+      if (webContent != nullptr)
+        webContent->setLayout(layout); // Update the layout result into the `WebContent` component.
+
+      // Update bouding box
+      auto boundingBox = scene.getComponent<BoundingBox>(entity);
+      if (boundingBox != nullptr)
+        boundingBox->updateSize(layout.width(), layout.height(), layout.depth());
 
       {
         // Update transform by the layout.
         auto transform = scene.getComponent<Transform>(entity);
         if (transform != nullptr)
         {
-          auto actualWidth = client_cssom::pixelToMeter(layout.width());
-          auto actualHeight = client_cssom::pixelToMeter(layout.height());
-          transform->setScale({actualWidth, actualHeight, 1.0f});
+          transform->setScale({client_cssom::pixelToMeter(boundingBox->width()),
+                               client_cssom::pixelToMeter(boundingBox->height()),
+                               1.0f});
 
-          auto actualX = client_cssom::pixelToMeter(layout.x());
-          auto actualY = client_cssom::pixelToMeter(layout.y());
-          // Treat the z-index as the z-axis translation in pixels for now.
-          // TODO: Support the z-index in the layout system, and convert it to meters.
-          // auto actualZ = client_cssom::pixelToMeter(adoptedStyle_.getPropertyValueAs<float>("z-index"));
-          transform->setTranslation({actualX, actualY, 0.0f});
+          float left = layout.x(); // Get the left position.
+          float top = layout.y();  // Get the top position.
+          auto isRootEntity = scene.hasComponent<hierarchy::Root>(entity);
+          if (!isRootEntity)
+          {
+            auto &parentComponent = scene.getComponentChecked<hierarchy::Parent>(entity);
+            auto rootBoundingBox = scene.getComponent<BoundingBox>(parentComponent.root());
+            if (TR_LIKELY(rootBoundingBox != nullptr))
+            {
+              /**
+               * Transform the xyz() in LTW space to the left-handed world space.
+               * 
+               * First, calculate the distance from the root bounding box to the current bounding box:
+               * 
+               * ```
+               * var distance = (root - box) / 2
+               * ```
+               * 
+               * Then move the origin to the left-top-center of the root bounding box:
+               * 
+               * ```
+               * var origin = distance * (-1, 1, 1)
+               * ```
+               * 
+               * 3D space uses right(+x) and up(+y), thus if we wanna move the origin to the left and top, we need to multiply the 
+               * y-axis by -1 only.
+               * 
+               * Finally, calculate the offset in world space to make the final translation:
+               * 
+               * ```
+               * var offset = origin + layout.xyz() * (1, -1, 1)
+               * ```
+               * 
+               * Note that there is a transformation are required to convert the layout space, namely right(+x) and up(-y), to the
+               * world space, namely right(+x) and up(+y).
+               */
+              auto origin = (*rootBoundingBox - *boundingBox) / 2.0f * glm::vec3(-1.0f, 1.0f, 1.0f);
+              auto offset = origin + layout.xyz() * glm::vec3(1.0f, -1.0f, 1.0f);
+              left = offset.x;
+              top = offset.y;
+            }
+          }
+          transform->setTranslation({client_cssom::pixelToMeter(left),
+                                     client_cssom::pixelToMeter(top),
+                                     layout.depth()});
         }
       }
 
@@ -123,9 +166,9 @@ namespace dom
     }
   }
 
-  crates::layout::Layout SceneObject::fetchLayoutAndDispatchChangeEvent()
+  client_cssom::Layout SceneObject::fetchLayoutAndDispatchChangeEvent()
   {
-    auto layout = layoutNode_->layout();
+    client_cssom::Layout layout = layoutNode_->layout();
     if (layout.width() != offsetWidth() ||
         layout.height() != offsetHeight())
     {

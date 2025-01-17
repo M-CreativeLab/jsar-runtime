@@ -395,6 +395,10 @@ public:
    * The built-in scene for the DOM rendering.
    */
   std::shared_ptr<builtin_scene::Scene> builtinScene;
+  /**
+   * The `Window` instance for the client process.
+   */
+  std::shared_ptr<browser::Window> window;
 
 private: // event fields
   TrOneShotClient<events_comm::TrNativeEventMessage> *eventChanClient = nullptr;

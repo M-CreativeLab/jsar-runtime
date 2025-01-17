@@ -8,6 +8,7 @@
 #include <crates/bindings.hpp>
 
 #include "./per_process.hpp"
+#include "./browser/window.hpp"
 #include "./builtin_scene/scene.hpp"
 #include "./dom/dom_scripting.hpp"
 #include "./graphics/webgl_context.hpp"
@@ -408,6 +409,9 @@ void TrClientContextPerProcess::start()
 
   // Initialize the built-in scene
   builtinScene = builtin_scene::Scene::Make(this);
+
+  // Create the window instance
+  window = make_shared<::browser::Window>(this);
 
   // Start the service alive listener
   serviceAliveListener = new thread([]()

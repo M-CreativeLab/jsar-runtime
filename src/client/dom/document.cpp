@@ -20,10 +20,12 @@ namespace dom
         documentType(documentType),
         scene(TrClientContextPerProcess::Get()->builtinScene),
         browsingContext(browsingContext),
-        autoConnect(autoConnect)
+        autoConnect(autoConnect),
+        defaultView_(TrClientContextPerProcess::Get()->window)
   {
     assert(scene != nullptr);
     assert(browsingContext != nullptr);
+    assert(defaultView_.lock() != nullptr);
     docInternal = make_shared<pugi::xml_document>();
   }
 
@@ -84,6 +86,13 @@ namespace dom
     shouldOpen = true;
     if (isSourceLoaded)
       openInternal();
+  }
+
+  std::shared_ptr<browser::Window> Document::defaultView()
+  {
+    auto ref = defaultView_.lock();
+    assert(ref != nullptr);
+    return ref;
   }
 
   shared_ptr<Element> Document::getElementById(const string &id)
@@ -199,6 +208,15 @@ namespace dom
 
   void Document::openInternal()
   {
+    // Connect the window and document before opening this document.
+    {
+      auto window = TrClientContextPerProcess::Get()->window;
+      assert(window != nullptr);
+      window->configureDocument(getPtr<Document>());
+      defaultView_ = window;
+    }
+
+    // Start connecting the document's children automatically if the flag is set.
     if (autoConnect)
     {
       connect();
@@ -245,7 +263,7 @@ namespace dom
       // Step 2: Compute the layout of all the elements only if the layout is dirty.
       auto rootLayoutNode = body->layoutNode();
       if (rootLayoutNode != nullptr && rootLayoutNode->isDirty())
-        rootLayoutNode->computeLayout(targetWidth_, targetHeight_);
+        rootLayoutNode->computeLayout(targetWidth(), targetHeight());
 
       // Step 3: Call the renderElement method of each element to draw the element.
       {
@@ -291,12 +309,23 @@ namespace dom
         elementCallback(element);
       }
     }
+    // The target width to render the document.
+    inline float targetWidth() const
+    {
+      std::shared_ptr<browser::Window> window = document_->defaultView();
+      assert(window != nullptr);
+      return window->innerWidth();
+    }
+    // The target height to render the document.
+    inline float targetHeight() const
+    {
+      std::shared_ptr<browser::Window> window = document_->defaultView();
+      assert(window != nullptr);
+      return window->innerHeight();
+    }
 
   private:
     HTMLDocument *document_ = nullptr;
-    // TODO: support configurable target width and height.
-    float targetWidth_ = 1440.0f;
-    float targetHeight_ = 900.0f;
   };
 
   HTMLDocument::HTMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)

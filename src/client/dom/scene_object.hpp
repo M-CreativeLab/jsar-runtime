@@ -7,6 +7,7 @@
 #include <client/builtin_scene/scene.hpp>
 #include <client/builtin_scene/ecs-inl.hpp>
 #include <client/cssom/css_style_declaration.hpp>
+#include <client/cssom/layout.hpp>
 #include <client/cssom/box_offset.hpp>
 #include "./node.hpp"
 
@@ -51,7 +52,7 @@ namespace dom
      * @returns Whether the scene object is rendered successfully.
      */
     bool render();
-    void renderObject(builtin_scene::Scene &scene, const crates::layout::Layout &layout);
+    void renderObject(builtin_scene::Scene &scene, const client_cssom::Layout &layout);
     void connectedCallback(const Node &node);
 
   protected: // Layout methods
@@ -63,7 +64,7 @@ namespace dom
      *
      * @returns The layout result.
      */
-    [[nodiscard]] crates::layout::Layout fetchLayoutAndDispatchChangeEvent();
+    [[nodiscard]] client_cssom::Layout fetchLayoutAndDispatchChangeEvent();
     /**
      * Adopt the specified style to the element, it will copy the style properties to the element's
      * adopted style, and update the layout node's style.

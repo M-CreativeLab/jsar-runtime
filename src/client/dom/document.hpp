@@ -4,6 +4,7 @@
 #include <memory>
 #include <map>
 #include <pugixml/pugixml.hpp>
+#include <client/browser/window.hpp>
 #include <client/builtin_scene/scene.hpp>
 #include <crates/bindings.hpp>
 
@@ -58,6 +59,7 @@ namespace dom
     void setUrl(const string &url);
     void setSource(const string &source);
     void open();
+    std::shared_ptr<browser::Window> defaultView();
     std::shared_ptr<Element> getElementById(const std::string &id);
     std::vector<shared_ptr<Element>> getElementsByClassName(const std::string &className);
     std::vector<shared_ptr<Element>> getElementsByName(const std::string &name);
@@ -86,6 +88,7 @@ namespace dom
 
   protected:
     bool autoConnect;
+    std::weak_ptr<browser::Window> defaultView_;
     std::shared_ptr<pugi::xml_document> docInternal;
     std::shared_ptr<HTMLHeadElement> headElement;
     std::shared_ptr<HTMLBodyElement> bodyElement;

@@ -337,9 +337,9 @@ namespace builtin_scene::ecs
     inline bool contains(EntityId entity) { return entityToIndexMap_.find(entity) != entityToIndexMap_.end(); }
     /**
      * Replace the component of the given entity with the new component.
-     * 
+     *
      * If the component already exists, it will be removed and replaced with the new component.
-     * 
+     *
      * @param entity The entity to replace the component for.
      * @param newComponent The new component to replace.
      * @returns The replaced component.
@@ -448,9 +448,9 @@ namespace builtin_scene::ecs
 
     /**
      * Replace the component of the given type for the given entity.
-     * 
+     *
      * If the component already exists, it will be removed and replaced with the new component.
-     * 
+     *
      * @tparam ComponentType The type of the component.
      * @param entity The entity to replace the component for.
      * @param component The component to replace.
@@ -587,6 +587,15 @@ namespace builtin_scene::ecs
     template <typename QueryComponentType, typename IncludeComponentType>
     [[nodiscard]] std::optional<IncludeComponentType> firstEntityWithComponent();
     /**
+     * Check if the entity has the component of the given type.
+     *
+     * @tparam ComponentType The type of the component.
+     * @param entity The entity to get the component for.
+     * @returns `true` if the entity has the component of the given type, `false` otherwise.
+     */
+    template <typename ComponentType>
+    [[nodiscard]] inline bool hasComponent(EntityId entity) { return getComponent<ComponentType>(entity) != nullptr; }
+    /**
      * Get the component of the given entity.
      *
      * @tparam ComponentType The type of the component.
@@ -595,6 +604,21 @@ namespace builtin_scene::ecs
      */
     template <typename ComponentType>
     [[nodiscard]] std::shared_ptr<ComponentType> getComponent(EntityId entity);
+    /**
+     * Get the component reference of the given entity, it will expect the entity to have the component. If you are not sure
+     * if the entity has the component, use `getComponent<T>` instead.
+     * 
+     * @tparam ComponentType The type of the component.
+     * @param entity The entity to get the component for.
+     * @returns The component reference of the given entity.
+     */
+    template <typename ComponentType>
+    [[nodiscard]] const ComponentType& getComponentChecked(EntityId entity)
+    {
+      auto componentRef = getComponent<ComponentType>(entity);
+      assert(componentRef != nullptr && "The entity does not have the component.");
+      return *componentRef;
+    }
     /**
      * Add component(s) to the entity.
      *
@@ -864,7 +888,7 @@ namespace builtin_scene::ecs
     }
     /**
      * Remove the components of the entity.
-     * 
+     *
      * @tparam ComponentType The type of the component.
      * @param entity The entity to remove the component from.
      */
@@ -875,9 +899,9 @@ namespace builtin_scene::ecs
     }
     /**
      * Replace the current component of the entity with the new one.
-     * 
+     *
      * If the component already exists, it will be removed and replaced with the new component.
-     * 
+     *
      * @tparam ComponentType The type of the component.
      * @param entity The entity to replace the component for.
      * @param component The new component to replace with.

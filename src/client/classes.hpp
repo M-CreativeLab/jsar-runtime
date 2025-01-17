@@ -1,6 +1,16 @@
 #pragma once
 
 /**
+ * @namespace browser
+ * The `browser` namespace contains classes related to the browser window,
+ */
+namespace browser
+{
+  class Location; // Represents the location (URL) of a browser window
+  class Window;   // Represents a browser window
+}
+
+/**
  * @namespace dom
  * The `dom` namespace contains classes related to the Document Object Model (DOM),
  * such as `Document` and `Element`.

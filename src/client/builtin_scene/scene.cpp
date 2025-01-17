@@ -28,6 +28,7 @@ namespace builtin_scene
       app.registerComponent<hierarchy::Parent>();
       app.registerComponent<hierarchy::Root>();
       app.registerComponent<Transform>();
+      app.registerComponent<BoundingBox>();
       app.registerComponent<Camera>();
       app.registerComponent<Mesh3d>();
       app.registerComponent<MeshMaterial3d>();
@@ -37,9 +38,10 @@ namespace builtin_scene
       app.addSystem(SchedulerLabel::kStartup, System::Make<CameraStartupSystem>());
       app.addSystem(SchedulerLabel::kPreUpdate, System::Make<TimerSystem>());
 
-      auto updateChain = System::Make<CameraUpdateSystem>()
-                             ->chain(System::Make<RenderSystem>());
-      app.addSystem(SchedulerLabel::kUpdate, updateChain);
+      auto updateCamera = System::Make<CameraUpdateSystem>();
+      auto renderScene = System::Make<RenderSystem>();
+      updateCamera->chain(renderScene);
+      app.addSystem(SchedulerLabel::kUpdate, updateCamera);
     }
   };
 
@@ -77,21 +79,38 @@ namespace builtin_scene
   ecs::EntityId Scene::createElement(string name, std::optional<ecs::EntityId> parent)
   {
     Transform defaultTransform = Transform::FromXYZ(0.0f, 0.0f, 0.0f);
+    BoundingBox defaultBoundingBox = BoundingBox();
+
     if (!parent.has_value())
     {
       return spawn(
           hierarchy::Element(name),
           hierarchy::Children(),
           hierarchy::Root(),
+          BoundingBox(),
           defaultTransform);
     }
     else
     {
-      auto parentEntity = parent.value();
+      ecs::EntityId rootEntity;
+      ecs::EntityId parentEntity = parent.value();
+      auto parentRoot = getComponent<hierarchy::Root>(parentEntity);
+      if (parentRoot != nullptr)
+      {
+        rootEntity = parentEntity;
+      }
+      else
+      {
+        auto parentParent = getComponent<hierarchy::Parent>(parentEntity);
+        assert(parentParent != nullptr && "Parent entity must have a parent component");
+        rootEntity = parentParent->root();
+      }
+
       auto newEntity = spawn(
           hierarchy::Element(name),
           hierarchy::Children(),
-          hierarchy::Parent(parentEntity),
+          hierarchy::Parent(parentEntity, rootEntity),
+          BoundingBox(),
           defaultTransform);
 
       // Update the parent's children

@@ -9,6 +9,7 @@
 #include <common/events_v2/event_target.hpp>
 
 #include "../per_process.hpp"
+#include "../classes.hpp"
 #include "../dom/dom_event_target.hpp"
 
 namespace browser
@@ -91,13 +92,75 @@ namespace browser
    * @class Window
    * The `Window` class represents a browser window and provides methods to interact with it.
    */
-  class Window : public dom::DOMEventTarget
+  class Window : public dom::DOMEventTarget,
+                 public std::enable_shared_from_this<Window>
   {
+    friend class dom::Document;
+
   public:
-    Window() : dom::DOMEventTarget(),
-               clientContext(TrClientContextPerProcess::Get())
-    {
-    }
+    Window(TrClientContextPerProcess *clientContext = TrClientContextPerProcess::Get());
+
+  public:
+    /**
+     * @returns the name of the window.
+     */
+    inline const std::string &name() const { return name_; }
+
+    /**
+     * @returns the origin of the window.
+     */
+    inline const std::string &origin() const { return origin_; }
+
+    /**
+     * @returns true if the window is in fullscreen mode.
+     */
+    inline bool fullscreen() const { return fullscreen_; }
+
+    /**
+     * @returns the inner width of the window.
+     */
+    inline float innerWidth() const { return innerWidth_; }
+
+    /**
+     * @returns the inner height of the window.
+     */
+    inline float innerHeight() const { return innerHeight_; }
+
+    /**
+     * @returns the outer width of the window.
+     */
+    inline float outerWidth() const { return outerWidth_; }
+
+    /**
+     * @returns the outer height of the window.
+     */
+    inline float outerHeight() const { return outerHeight_; }
+
+    /**
+     * @returns the horizontal scroll position of the window.
+     */
+    inline float scrollX() const { return scrollX_; }
+
+    /**
+     * @returns the vertical scroll position of the window.
+     */
+    inline float scrollY() const { return scrollY_; }
+
+    /**
+     * @returns the device pixel ratio of the window.
+     */
+    inline float devicePixelRatio() const { return devicePixelRatio_; }
+    inline float &devicePixelRatio() { return devicePixelRatio_; }
+
+    /**
+     * @returns the shared pointer to the window.
+     */
+    inline std::shared_ptr<Window> self() { return shared_from_this(); }
+
+    /**
+     * @returns the document of the window.
+     */
+    inline std::shared_ptr<dom::Document> document() const { return document_; }
 
   public:
     /**
@@ -107,7 +170,7 @@ namespace browser
      */
     inline void alert(const std::string &message)
     {
-      clientContext->makeRpcCall("window.alert", {message});
+      clientContext_->makeRpcCall("window.alert", {message});
     }
 
     /**
@@ -115,7 +178,7 @@ namespace browser
      */
     inline void close()
     {
-      clientContext->makeRpcCall("window.close", {});
+      clientContext_->makeRpcCall("window.close", {});
     }
 
     /**
@@ -128,7 +191,7 @@ namespace browser
     inline void open(const std::string &url, WindowTarget target,
                      const WindowFeatures &features = WindowFeatures())
     {
-      clientContext->makeRpcCall("window.open", {url, to_string(target)});
+      clientContext_->makeRpcCall("window.open", {url, to_string(target)});
     }
 
     /**
@@ -139,10 +202,33 @@ namespace browser
      */
     inline void prompt(const std::string &message, const std::string &defaultValue)
     {
-      clientContext->makeRpcCall("window.prompt", {message, defaultValue});
+      clientContext_->makeRpcCall("window.prompt", {message, defaultValue});
     }
 
   private:
-    TrClientContextPerProcess *clientContext; // The client context for making RPC calls
+    // Configure the document to the window.
+    void configureDocument(std::shared_ptr<dom::Document> document)
+    {
+      assert(isDocumentConfigured_ == false);
+      document_ = document;
+      isDocumentConfigured_ = true;
+    }
+
+  private: // Window properties
+    std::string name_ = "";
+    std::string origin_ = "";
+    bool fullscreen_ = false;
+    float innerWidth_ = 1440.0f;
+    float innerHeight_ = 960.0f;
+    float outerWidth_ = 1440.0f;
+    float outerHeight_ = 960.0f;
+    float scrollX_ = 0.0f;
+    float scrollY_ = 0.0f;
+    float devicePixelRatio_ = 1.0f;
+    std::shared_ptr<dom::Document> document_;
+
+  private:
+    TrClientContextPerProcess *clientContext_; // The client context for making RPC calls
+    bool isDocumentConfigured_ = false;
   };
 } // namespace browser

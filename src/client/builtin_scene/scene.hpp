@@ -10,6 +10,7 @@
 #include "./camera.hpp"
 #include "./hierarchy.hpp"
 #include "./transform.hpp"
+#include "./bounding_box.hpp"
 #include "./meshes.hpp"
 #include "./materials.hpp"
 #include "./client_renderer.hpp"
