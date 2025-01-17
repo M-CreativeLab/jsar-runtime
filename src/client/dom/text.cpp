@@ -90,16 +90,21 @@ namespace dom
     useScene(appendText);
   }
 
-  bool Text::adoptStyle(client_cssom::CSSStyleDeclaration &style)
+  bool Text::adoptStyle(const client_cssom::CSSStyleDeclaration &style)
   {
     auto parentElement = getParentNodeAs<HTMLElement>();
     if (parentElement != nullptr)
     {
       auto parentStyle = parentElement->style;
+      std::shared_ptr<client_cssom::CSSStyleDeclaration> textStyle = nullptr;
 
-#define USE_PARENT_STYLE(property) \
-  if (parentStyle->hasProperty(property)) \
-    style.setProperty(property, parentStyle->getPropertyValue(property))
+#define USE_PARENT_STYLE(property)                                             \
+  if (parentStyle->hasProperty(property))                                      \
+  {                                                                            \
+    if (textStyle == nullptr)                                                  \
+      textStyle = make_shared<client_cssom::CSSStyleDeclaration>(style);       \
+    textStyle->setProperty(property, parentStyle->getPropertyValue(property)); \
+  }
 
       // Font styles
       USE_PARENT_STYLE("font-family");
@@ -121,7 +126,12 @@ namespace dom
       USE_PARENT_STYLE("direction");
       USE_PARENT_STYLE("unicode-bidi");
 #undef USE_PARENT_STYLE
+
+      if (textStyle != nullptr)
+        return SceneObject::adoptStyleOn(*this, *textStyle);
     }
+
+    // By default, just bypass the style to the scene object.
     return SceneObject::adoptStyleOn(*this, style);
   }
 }

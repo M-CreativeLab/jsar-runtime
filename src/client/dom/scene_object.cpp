@@ -187,8 +187,11 @@ namespace dom
     return layout;
   }
 
-  bool SceneObject::adoptStyleOn(Node &node, client_cssom::CSSStyleDeclaration &style)
+  bool SceneObject::adoptStyleOn(Node &node, const client_cssom::CSSStyleDeclaration &style)
   {
+    if (adoptedStyle_.equals(style))  // Skip if the style is the same.
+      return false;
+
     adoptedStyle_ = style;
     onAdoptedStyleChanged();
 

@@ -51,15 +51,17 @@ namespace client_cssom
   {
   public:
     CSSStyleDeclaration()
-        : pdb_(crates::css::CSSPropertyDeclarationBlock::ParseStyleDeclaration(""))
+        : pdb_(crates::css::CSSPropertyDeclarationBlock::ParseStyleDeclaration("")),
+          cachedCssText_(std::nullopt)
     {
     }
     CSSStyleDeclaration(const std::string &cssText)
-        : pdb_(crates::css::CSSPropertyDeclarationBlock::ParseStyleDeclaration(cssText))
+        : pdb_(crates::css::CSSPropertyDeclarationBlock::ParseStyleDeclaration(cssText)),
+          cachedCssText_(std::nullopt)
     {
     }
     // Reconstruct a new CSSStyleDeclaration from another one's cssText to avoid the `pdb_` being shared.
-    CSSStyleDeclaration(CSSStyleDeclaration &other) : CSSStyleDeclaration(other.cssText())
+    CSSStyleDeclaration(const CSSStyleDeclaration &other) : CSSStyleDeclaration(other.cssText())
     {
     }
 
@@ -70,7 +72,12 @@ namespace client_cssom
      *
      * @returns The textual representation of the declaration block.
      */
-    inline std::string cssText() const { return pdb_->cssText(); }
+    inline std::string cssText() const
+    {
+      if (!cachedCssText_.has_value())
+        cachedCssText_ = pdb_->cssText();
+      return cachedCssText_.value();
+    }
     /**
      * @returns The number of properties.
      */
@@ -81,6 +88,8 @@ namespace client_cssom
      * Custom the conversion to `LayoutStyle`.
      */
     operator crates::layout::style::LayoutStyle() const;
+    bool operator==(const CSSStyleDeclaration &other) const { return equals(other); }
+    bool operator!=(const CSSStyleDeclaration &other) const { return !equals(other); }
     /**
      * Custom the conversion to `std::string`.
      */
@@ -91,6 +100,13 @@ namespace client_cssom
     }
 
   public:
+    /**
+     * Check if the declaration block is equal to another one.
+     *
+     * @param other The other CSSStyleDeclaration to compare.
+     * @returns Whether the declaration block is equal to the other one.
+     */
+    bool equals(const CSSStyleDeclaration &other) const;
     /**
      * Get the optional priority, "important".
      *
@@ -129,7 +145,7 @@ namespace client_cssom
                std::is_same_v<T, crates::layout::style::BoxSizing> ||
                std::is_same_v<T, crates::layout::style::Position> ||
                std::is_same_v<T, crates::layout::style::Overflow>
-    inline T getPropertyValueAs(const std::string &propertyName) const
+    T getPropertyValueAs(const std::string &propertyName) const
     {
       using namespace crates::layout::style;
 
@@ -204,6 +220,7 @@ namespace client_cssom
                             CSSPropertyPriority priority = CSSPropertyPriority::Normal)
     {
       pdb_->setProperty(propertyName, value, priority == CSSPropertyPriority::Important);
+      cachedCssText_ = std::nullopt;
     }
     /**
      * Set a property value and priority within the declaration block if the property is not already set.
@@ -226,10 +243,13 @@ namespace client_cssom
      */
     std::string removeProperty(const std::string &propertyName)
     {
-      return pdb_->removeProperty(propertyName);
+      auto value = pdb_->removeProperty(propertyName);
+      cachedCssText_ = std::nullopt;
+      return value;
     }
 
   private:
     std::shared_ptr<crates::css::CSSPropertyDeclarationBlock> pdb_;
+    mutable std::optional<std::string> cachedCssText_ = std::nullopt;
   };
 }

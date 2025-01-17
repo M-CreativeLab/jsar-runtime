@@ -38,6 +38,7 @@ namespace builtin_scene
   void WebContent::setStyle(const client_cssom::CSSStyleDeclaration &style)
   {
     style_ = style;
+    setDirty(true); // Mark the content as dirty if setting a new style.
 
     // Update the text style
     bool isTextStyleChanged = false;

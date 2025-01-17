@@ -30,7 +30,7 @@ namespace dom
   {
   }
 
-  bool HTMLElement::adoptStyle(client_cssom::CSSStyleDeclaration &style)
+  bool HTMLElement::adoptStyle(const client_cssom::CSSStyleDeclaration &style)
   {
     // Do nothing
     return true;

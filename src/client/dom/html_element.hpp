@@ -58,7 +58,7 @@ namespace dom
      * @param style The style to adopt.
      * @returns Whether the layout style is updated successfully.
      */
-    virtual bool adoptStyle(client_cssom::CSSStyleDeclaration &style);
+    virtual bool adoptStyle(const client_cssom::CSSStyleDeclaration &style);
 
   public:
     HTMLElementDirection dir = HTMLElementDirection::LTR;

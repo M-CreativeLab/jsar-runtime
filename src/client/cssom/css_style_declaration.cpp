@@ -84,4 +84,11 @@ namespace client_cssom
     // Return the layout style
     return layoutStyle;
   }
+
+  bool CSSStyleDeclaration::equals(const CSSStyleDeclaration &other) const
+  {
+    if (length() != other.length()) // quick check if the length is different
+      return false;
+    return cssText() == other.cssText(); // TODO: support more quick check?
+  }
 }

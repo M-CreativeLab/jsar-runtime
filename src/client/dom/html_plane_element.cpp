@@ -57,7 +57,7 @@ namespace dom
     SceneObject::render(*this);
   }
 
-  bool HTMLPlaneElement::adoptStyle(client_cssom::CSSStyleDeclaration &style)
+  bool HTMLPlaneElement::adoptStyle(const client_cssom::CSSStyleDeclaration &style)
   {
     if (!HTMLElement::adoptStyle(style))
       return false;

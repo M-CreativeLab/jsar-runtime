@@ -47,8 +47,9 @@ namespace builtin_scene::materials
      * Update the texture from the given WebContent.
      *
      * @param content The WebContent to update the material with.
+     * @returns Whether the texture is updated successfully.
      */
-    void updateTexture(const WebContent &content);
+    bool updateTexture(const WebContent &content);
 
   public:
     float width() const { return width_; }

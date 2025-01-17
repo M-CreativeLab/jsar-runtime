@@ -12,8 +12,18 @@
 
 namespace builtin_scene
 {
+  namespace web_renderer
+  {
+    class RenderBaseSystem;
+    class RenderBackgroundSystem;
+    class RenderTextSystem;
+    class UpdateTextureSystem;
+  }
+
   class WebContent : public ecs::Component
   {
+    friend class web_renderer::UpdateTextureSystem;
+
   public:
     WebContent(SkCanvas *canvas, std::string name, client_cssom::CSSStyleDeclaration &style);
 
@@ -79,6 +89,13 @@ namespace builtin_scene
         return 0.0f;
       return canvas_->imageInfo().height();
     }
+    /**
+     * @returns Whether the content is dirty, namely needs to be re-rendered.
+     */
+    inline bool isDirty() const { return isDirty_; }
+
+  private:
+    void setDirty(bool dirty) { isDirty_ = dirty; }
 
   public:
     skia::textlayout::ParagraphStyle paragraphStyle;
@@ -89,6 +106,7 @@ namespace builtin_scene
     std::string name_;
     client_cssom::CSSStyleDeclaration style_;
     std::optional<crates::layout::Layout> lastLayout_;
+    bool isDirty_ = true;
   };
 
   /**
@@ -105,7 +123,7 @@ namespace builtin_scene
       void onExecute() override final;
 
     protected:
-      virtual void render(ecs::EntityId entity, const WebContent &content) = 0;
+      virtual void render(ecs::EntityId entity, WebContent &content) = 0;
     };
 
     /**
@@ -124,7 +142,7 @@ namespace builtin_scene
       const std::string name() const override { return "web_render.RenderBackgroundSystem"; }
 
     private:
-      void render(ecs::EntityId entity, const WebContent &content) override;
+      void render(ecs::EntityId entity, WebContent &content) override;
     };
 
     /**
@@ -146,7 +164,7 @@ namespace builtin_scene
       const std::string name() const override { return "web_render.RenderTextSystem"; }
 
     private:
-      void render(ecs::EntityId entity, const WebContent &content) override;
+      void render(ecs::EntityId entity, WebContent &content) override;
 
     private:
       TrClientContextPerProcess *clientContext_;
@@ -163,7 +181,7 @@ namespace builtin_scene
       const std::string name() const override { return "web_render.UpdateTextureSystem"; }
 
     public:
-      void render(ecs::EntityId entity, const WebContent &content) override;
+      void render(ecs::EntityId entity, WebContent &content) override;
     };
   }
 

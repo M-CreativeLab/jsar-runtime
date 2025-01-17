@@ -72,7 +72,7 @@ namespace dom
      * @param style The style to adopt.
      * @returns Whether the layout style is updated successfully.
      */
-    bool adoptStyleOn(Node &node, client_cssom::CSSStyleDeclaration &style);
+    bool adoptStyleOn(Node &node, const client_cssom::CSSStyleDeclaration &style);
 
   protected:
     std::weak_ptr<builtin_scene::Scene> scene_;

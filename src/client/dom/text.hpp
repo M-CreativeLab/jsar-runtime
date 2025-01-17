@@ -57,7 +57,7 @@ namespace dom
 
   private:
     // Adopt the specified style to the element.
-    bool adoptStyle(client_cssom::CSSStyleDeclaration &style);
+    bool adoptStyle(const client_cssom::CSSStyleDeclaration &style);
     // Render the text node.
     inline bool renderText(builtin_scene::Scene &scene)
     {

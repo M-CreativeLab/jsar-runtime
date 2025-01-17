@@ -27,7 +27,8 @@ namespace builtin_scene::web_renderer
     {
       auto content = getComponent<WebContent>(entity);
       assert(content != nullptr);
-      render(entity, *content);
+      if (content->isDirty()) // Skip rendering if the content is not dirty.
+        render(entity, *content);
     }
   }
 
@@ -205,7 +206,7 @@ namespace builtin_scene::web_renderer
     }
   }
 
-  void RenderBackgroundSystem::render(ecs::EntityId entity, const WebContent &content)
+  void RenderBackgroundSystem::render(ecs::EntityId entity, WebContent &content)
   {
     const auto &style = content.style();
     const auto &layout = content.layout();
@@ -246,7 +247,7 @@ namespace builtin_scene::web_renderer
   {
   }
 
-  void RenderTextSystem::render(ecs::EntityId entity, const WebContent &content)
+  void RenderTextSystem::render(ecs::EntityId entity, WebContent &content)
   {
     auto textComponent = getComponent<Text2d>(entity);
     if (textComponent == nullptr)
@@ -268,14 +269,14 @@ namespace builtin_scene::web_renderer
     paragraph->paint(content.canvas(), 0.0f, 0.0f);
   }
 
-  void UpdateTextureSystem::render(ecs::EntityId entity, const WebContent &content)
+  void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)
   {
     auto material3d = getComponent<MeshMaterial3d>(entity);
     if (material3d == nullptr)
       return;
 
     auto webContentMaterial = material3d->material<materials::WebContentMaterial>();
-    if (webContentMaterial != nullptr)
-      webContentMaterial->updateTexture(content);
+    if (webContentMaterial != nullptr && webContentMaterial->updateTexture(content))
+      content.setDirty(false); // Mark the content as clean if the texture is updated successfully.
   }
 }

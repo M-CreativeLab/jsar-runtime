@@ -108,12 +108,12 @@ namespace builtin_scene::materials
     }
   }
 
-  void WebContentMaterial::updateTexture(const WebContent &content)
+  bool WebContentMaterial::updateTexture(const WebContent &content)
   {
     width_ = content.width();
     height_ = content.height();
     if (width_ <= 0 || height_ <= 0 || texture_ == nullptr)
-      return;
+      return false;
 
     auto glContext = glContext_.lock();
     assert(glContext != nullptr);
@@ -191,5 +191,8 @@ namespace builtin_scene::materials
                                WebGLTextureParameterName::kTextureMagFilter, WEBGL_LINEAR);
     }
     glContext->bindTexture(WebGLTextureTarget::kTexture2D, nullptr);
+
+    // Update an non-empty texture means the texture is updated successfully.
+    return pixels != nullptr;
   }
 } // namespace builtin_scene::materials
