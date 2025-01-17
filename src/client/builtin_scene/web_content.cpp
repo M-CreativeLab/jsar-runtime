@@ -36,14 +36,28 @@ namespace builtin_scene
     // Update the text style
     bool isTextStyleChanged = false;
     {
+      if (style_.hasProperty("font-family"))
+      {
+        // TODO: Parse the font family.
+      }
       if (style_.hasProperty("font-size"))
       {
         textStyle.setFontSize(style_.getPropertyValueAs<float>("font-size"));
         isTextStyleChanged = true;
       }
-      if (style_.hasProperty("font-family"))
+      if (style_.hasProperty("font-weight"))
       {
-        // TODO: Parse the font family.
+        SkFontStyle fontStyle = textStyle.getFontStyle();
+        auto fontWeight = style_.getPropertyValueAs<client_cssom::types::FontWeight>("font-weight");
+        textStyle.setFontStyle(SkFontStyle(fontWeight.value(), fontStyle.width(), fontStyle.slant()));
+        isTextStyleChanged = true;
+      }
+      if (style_.hasProperty("font-style"))
+      {
+        SkFontStyle fontStyle = textStyle.getFontStyle();
+        auto fontSlant = style_.getPropertyValueAs<client_cssom::types::FontStyle>("font-style");
+        textStyle.setFontStyle(SkFontStyle(fontStyle.weight(), fontStyle.width(), fontSlant));
+        isTextStyleChanged = true;
       }
     }
 

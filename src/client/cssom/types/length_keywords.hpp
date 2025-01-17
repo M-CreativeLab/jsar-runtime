@@ -28,7 +28,6 @@ namespace client_cssom::types
   // See https://developer.mozilla.org/en-US/docs/Web/CSS/border-width#line-width
   class LineWidth : public LengthKeyword<LineWidthKeyword>
   {
-  public:
     using LengthKeyword::LengthKeyword;
 
   public:

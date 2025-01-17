@@ -28,10 +28,24 @@ namespace client_cssom::types
   XX("ltr", kLtr)            \
   XX("rtl", kRtl)
 
+#define FONT_STYLE_KEYWORDS_MAP(XX) \
+  XX("normal", kNormal)             \
+  XX("italic", kItalic)             \
+  XX("oblique", kOblique)
+
+#define FONT_WEIGHT_KEYWORDS_MAP(XX) \
+  XX("normal", kNormal)              \
+  XX("bold", kBold)                  \
+  XX("bolder", kBolder)              \
+  XX("lighter", kLighter)
+
 #define TEXT_ALIGN_KEYWORDS_MAP(XX) \
   XX("left", kLeft)                 \
   XX("right", kRight)               \
-  XX("center", kCenter)
+  XX("center", kCenter)             \
+  XX("justify", kJustify)           \
+  XX("start", kStart)               \
+  XX("end", kEnd)
 
   enum class LineWidthKeyword
   {
@@ -51,6 +65,20 @@ namespace client_cssom::types
   {
 #define XX(_, KEY) KEY,
     DIR_KEYWORDS_MAP(XX)
+#undef XX
+  };
+
+  enum class FontStyleKeyword
+  {
+#define XX(_, KEY) KEY,
+    FONT_STYLE_KEYWORDS_MAP(XX)
+#undef XX
+  };
+
+  enum class FontWeightKeyword
+  {
+#define XX(_, KEY) KEY,
+    FONT_WEIGHT_KEYWORDS_MAP(XX)
 #undef XX
   };
 
@@ -74,6 +102,14 @@ namespace client_cssom::types
   {                                                         \
     DIR_KEYWORDS_MAP(XX)                                    \
   }                                                         \
+  else if constexpr (std::is_same_v<T, FontStyleKeyword>)   \
+  {                                                         \
+    FONT_STYLE_KEYWORDS_MAP(XX)                             \
+  }                                                         \
+  else if constexpr (std::is_same_v<T, FontWeightKeyword>)  \
+  {                                                         \
+    FONT_WEIGHT_KEYWORDS_MAP(XX)                            \
+  }                                                         \
   else if constexpr (std::is_same_v<T, TextAlignKeyword>)   \
   {                                                         \
     TEXT_ALIGN_KEYWORDS_MAP(XX)                             \
@@ -83,6 +119,8 @@ namespace client_cssom::types
   concept is_keyword = std::is_same_v<T, LineWidthKeyword> ||
                        std::is_same_v<T, BorderStyleKeyword> ||
                        std::is_same_v<T, DirectionKeyword> ||
+                       std::is_same_v<T, FontStyleKeyword> ||
+                       std::is_same_v<T, FontWeightKeyword> ||
                        std::is_same_v<T, TextAlignKeyword>;
 
   template <typename T>

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <string>
 #include <unordered_map>
 #include <ostream>
@@ -8,13 +9,27 @@
 
 #include "./types/color.hpp"
 #include "./types/direction.hpp"
+#include "./types/font_style.hpp"
 #include "./types/length.hpp"
 #include "./types/length_keywords.hpp"
+#include "./types/number_keywords.hpp"
 #include "./types/text_align.hpp"
 #include "./types/keyword.hpp"
 
 namespace client_cssom
 {
+  template <typename T>
+  concept is_property_value = std::is_same_v<T, types::Color> ||
+                              std::is_same_v<T, types::Direction> ||
+                              std::is_same_v<T, types::FontStyle> ||
+                              std::is_same_v<T, types::FontWeight> ||
+                              std::is_same_v<T, types::Length> ||
+                              std::is_same_v<T, types::LineWidth> ||
+                              std::is_same_v<T, types::TextAlign> ||
+                              std::is_same_v<T, crates::layout::style::Dimension> ||
+                              std::is_same_v<T, crates::layout::style::LengthPercentageAuto> ||
+                              std::is_same_v<T, crates::layout::style::LengthPercentage>;
+
   enum class CSSPropertyPriority
   {
     Normal,
@@ -106,21 +121,14 @@ namespace client_cssom
      * @returns The property value as a specific type such as `Dimension`.
      */
     template <typename T>
-      requires(std::is_same_v<T, float> ||
+      requires is_property_value<T> ||
+               std::is_same_v<T, float> ||
                std::is_integral_v<T> ||
-               std::is_same_v<T, types::Color> ||
-               std::is_same_v<T, types::Direction> ||
-               std::is_same_v<T, types::Length> ||
-               std::is_same_v<T, types::LineWidth> ||
                std::is_same_v<T, types::BorderStyleKeyword> ||
-               std::is_same_v<T, types::TextAlign> ||
                std::is_same_v<T, crates::layout::style::Display> ||
                std::is_same_v<T, crates::layout::style::BoxSizing> ||
                std::is_same_v<T, crates::layout::style::Position> ||
-               std::is_same_v<T, crates::layout::style::Overflow> ||
-               std::is_same_v<T, crates::layout::style::Dimension> ||
-               std::is_same_v<T, crates::layout::style::LengthPercentageAuto> ||
-               std::is_same_v<T, crates::layout::style::LengthPercentage>)
+               std::is_same_v<T, crates::layout::style::Overflow>
     inline T getPropertyValueAs(const std::string &propertyName) const
     {
       using namespace crates::layout::style;
@@ -168,14 +176,7 @@ namespace client_cssom
           return Overflow::Visible;
       }
 
-      if constexpr (std::is_same_v<T, types::Color> ||
-                    std::is_same_v<T, types::Direction> ||
-                    std::is_same_v<T, types::Length> ||
-                    std::is_same_v<T, types::LineWidth> ||
-                    std::is_same_v<T, types::TextAlign> ||
-                    std::is_same_v<T, crates::layout::style::Dimension> ||
-                    std::is_same_v<T, crates::layout::style::LengthPercentageAuto> ||
-                    std::is_same_v<T, crates::layout::style::LengthPercentage>)
+      if constexpr (is_property_value<T>)
         return T(value);
 
       // NOTE: unreachable
