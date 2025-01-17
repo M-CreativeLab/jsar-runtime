@@ -89,4 +89,39 @@ namespace dom
     };
     useScene(appendText);
   }
+
+  bool Text::adoptStyle(client_cssom::CSSStyleDeclaration &style)
+  {
+    auto parentElement = getParentNodeAs<HTMLElement>();
+    if (parentElement != nullptr)
+    {
+      auto parentStyle = parentElement->style;
+
+#define USE_PARENT_STYLE(property) \
+  if (parentStyle->hasProperty(property)) \
+    style.setProperty(property, parentStyle->getPropertyValue(property))
+
+      // Font styles
+      USE_PARENT_STYLE("font-family");
+      USE_PARENT_STYLE("font-size");
+      USE_PARENT_STYLE("font-weight");
+      USE_PARENT_STYLE("font-style");
+      USE_PARENT_STYLE("font-variant");
+      USE_PARENT_STYLE("line-height");
+
+      // Text styles
+      USE_PARENT_STYLE("color");
+      USE_PARENT_STYLE("text-align");
+      USE_PARENT_STYLE("text-indent");
+      USE_PARENT_STYLE("text-transform");
+      USE_PARENT_STYLE("text-decoration");
+      USE_PARENT_STYLE("letter-spacing");
+      USE_PARENT_STYLE("word-spacing");
+      USE_PARENT_STYLE("white-space");
+      USE_PARENT_STYLE("direction");
+      USE_PARENT_STYLE("unicode-bidi");
+#undef USE_PARENT_STYLE
+    }
+    return SceneObject::adoptStyleOn(*this, style);
+  }
 }

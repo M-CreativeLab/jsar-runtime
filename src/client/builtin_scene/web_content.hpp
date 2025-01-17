@@ -15,32 +15,7 @@ namespace builtin_scene
   class WebContent : public ecs::Component
   {
   public:
-    WebContent(SkCanvas *canvas, std::string name, client_cssom::CSSStyleDeclaration &style)
-        : canvas_(canvas),
-          name_(name),
-          style_(style),
-          lastLayout_(std::nullopt)
-    {
-      SkPaint transparent;
-      transparent.setColor(SK_ColorTRANSPARENT);
-
-      SkPaint textPaint;
-      textPaint.setAntiAlias(true);
-      textPaint.setColor(SK_ColorWHITE);
-
-      // Init text style
-      textStyle.setBackgroundColor(transparent);
-      textStyle.setForegroundColor(textPaint);
-      textStyle.setFontSize(30.0f);
-      textStyle.setFontFamilies({SkString("PingFang SC"),
-                                 SkString("Arial"),
-                                 SkString("sans-serif")});
-
-      // Init paragraph style
-      paragraphStyle.setTextAlign(skia::textlayout::TextAlign::kLeft);
-      paragraphStyle.setTextDirection(skia::textlayout::TextDirection::kLtr);
-      paragraphStyle.setTextStyle(textStyle);
-    }
+    WebContent(SkCanvas *canvas, std::string name, client_cssom::CSSStyleDeclaration &style);
 
   public:
     /**
@@ -73,32 +48,7 @@ namespace builtin_scene
      *
      * @param style A CSSStyleDeclaration object to be set.
      */
-    inline void setStyle(const client_cssom::CSSStyleDeclaration &style)
-    {
-      style_ = style;
-
-      // Update the text style
-      bool isTextStyleChanged = false;
-      if (style_.hasProperty("font-size"))
-      {
-        textStyle.setFontSize(style_.getPropertyValueAs<float>("font-size"));
-        isTextStyleChanged = true;
-      }
-      if (style_.hasProperty("font-family"))
-      {
-        // TODO: Parse the font family.
-      }
-      if (style_.hasProperty("color"))
-      {
-        SkPaint textPaint;
-        textPaint.setAntiAlias(true);
-        textPaint.setColor(style_.getPropertyValueAs<client_cssom::types::Color>("color"));
-        textStyle.setForegroundColor(textPaint);
-        isTextStyleChanged = true;
-      }
-      if (isTextStyleChanged)
-        paragraphStyle.setTextStyle(textStyle);
-    }
+    void setStyle(const client_cssom::CSSStyleDeclaration &style);
     /**
      * @returns A constant reference to the Layout object in the last re-layout.
      */

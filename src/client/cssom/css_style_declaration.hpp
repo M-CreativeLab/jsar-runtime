@@ -7,8 +7,10 @@
 #include <crates/bindings.hpp>
 
 #include "./types/color.hpp"
+#include "./types/direction.hpp"
 #include "./types/length.hpp"
 #include "./types/length_keywords.hpp"
+#include "./types/text_align.hpp"
 #include "./types/keyword.hpp"
 
 namespace client_cssom
@@ -107,9 +109,11 @@ namespace client_cssom
       requires(std::is_same_v<T, float> ||
                std::is_integral_v<T> ||
                std::is_same_v<T, types::Color> ||
+               std::is_same_v<T, types::Direction> ||
                std::is_same_v<T, types::Length> ||
                std::is_same_v<T, types::LineWidth> ||
                std::is_same_v<T, types::BorderStyleKeyword> ||
+               std::is_same_v<T, types::TextAlign> ||
                std::is_same_v<T, crates::layout::style::Display> ||
                std::is_same_v<T, crates::layout::style::BoxSizing> ||
                std::is_same_v<T, crates::layout::style::Position> ||
@@ -165,8 +169,10 @@ namespace client_cssom
       }
 
       if constexpr (std::is_same_v<T, types::Color> ||
+                    std::is_same_v<T, types::Direction> ||
                     std::is_same_v<T, types::Length> ||
                     std::is_same_v<T, types::LineWidth> ||
+                    std::is_same_v<T, types::TextAlign> ||
                     std::is_same_v<T, crates::layout::style::Dimension> ||
                     std::is_same_v<T, crates::layout::style::LengthPercentageAuto> ||
                     std::is_same_v<T, crates::layout::style::LengthPercentage>)

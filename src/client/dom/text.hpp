@@ -57,28 +57,7 @@ namespace dom
 
   private:
     // Adopt the specified style to the element.
-    bool adoptStyle(client_cssom::CSSStyleDeclaration &style)
-    {
-      auto parentElement = getParentNodeAs<HTMLElement>();
-      if (parentElement != nullptr)
-      {
-        // Inherit the parent's style.
-        auto parentStyle = parentElement->style;
-        if (parentStyle->hasProperty("font-size"))
-          style.setProperty("font-size", parentStyle->getPropertyValue("font-size"));
-        if (parentStyle->hasProperty("font-family"))
-          style.setProperty("font-family", parentStyle->getPropertyValue("font-family"));
-        if (parentStyle->hasProperty("line-height"))
-          style.setProperty("line-height", parentStyle->getPropertyValue("line-height"));
-        if (parentStyle->hasProperty("color"))
-          style.setProperty("color", parentStyle->getPropertyValue("color"));
-        if (parentStyle->hasProperty("text-align"))
-          style.setProperty("text-align", parentStyle->getPropertyValue("text-align"));
-        if (parentStyle->hasProperty("text-indent"))
-          style.setProperty("text-indent", parentStyle->getPropertyValue("text-indent"));
-      }
-      return SceneObject::adoptStyleOn(*this, style);
-    }
+    bool adoptStyle(client_cssom::CSSStyleDeclaration &style);
     // Render the text node.
     inline bool renderText(builtin_scene::Scene &scene)
     {
