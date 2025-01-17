@@ -41,21 +41,28 @@ namespace dom
 
   bool SceneObject::render(Node &node)
   {
+    auto sceneRef = scene_.lock();
+    if (TR_UNLIKELY(sceneRef == nullptr) || !entity_.has_value())
+      return false;
+
+    auto mesh = sceneRef->getComponent<Mesh3d>(entity_.value());
+    if (skipRender())
+    {
+      mesh->disableRendering(); // Disable rendering if the object is skipped.
+      return false;
+    }
+    else
+    {
+      mesh->resumeRendering(); // Resume rendering if the object is not skipped.
+    }
+
     auto layout = fetchLayoutAndDispatchChangeEvent(node);
 #ifdef TR_CLIENT_DOM_VERBOSE
     cout << "Rendering SceneObject(" << name_ << "): " << layout << endl;
 #endif
 
-    auto sceneRef = scene_.lock();
-    if (sceneRef != nullptr)
-    {
-      renderObject(*sceneRef, layout);
-      return true;
-    }
-    else
-    {
-      return false;
-    }
+    renderObject(*sceneRef, layout);
+    return true;
   }
 
   void SceneObject::renderObject(Scene &scene, const client_cssom::Layout &layout)
@@ -176,7 +183,7 @@ namespace dom
       layout = client_cssom::Layout::Merge(parent->computedLayout_, layoutNode_->layout());
 
     if (layout.width() != offsetWidth() ||
-        layout.height() != offsetHeight())  // Check the layout size is changed.
+        layout.height() != offsetHeight()) // Check the layout size is changed.
     {
       offsetWidth() = layout.width();
       offsetHeight() = layout.height();
@@ -189,7 +196,7 @@ namespace dom
 
   bool SceneObject::adoptStyleOn(Node &node, const client_cssom::CSSStyleDeclaration &style)
   {
-    if (adoptedStyle_.equals(style))  // Skip if the style is the same.
+    if (adoptedStyle_.equals(style)) // Skip if the style is the same.
       return false;
 
     adoptedStyle_ = style;
@@ -208,5 +215,15 @@ namespace dom
     {
       return false;
     }
+  }
+
+  bool SceneObject::skipRender() const
+  {
+    if (!adoptedStyle_.hasProperty("display"))
+      return false;
+
+    using namespace crates::layout::style;
+    auto display = adoptedStyle_.getPropertyValueAs<Display>("display");
+    return display == Display::None;
   }
 }

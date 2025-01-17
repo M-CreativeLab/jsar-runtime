@@ -50,7 +50,7 @@ namespace dom
      *
      * @param scene The scene to render the element.
      */
-    virtual void renderElement(builtin_scene::Scene &scene) {};
+    virtual bool renderElement(builtin_scene::Scene &scene) { return true; };
     /**
      * Adopt the specified style to the element, it will copy the style properties to the element's
      * adopted style, and update the layout node's style.
@@ -58,7 +58,7 @@ namespace dom
      * @param style The style to adopt.
      * @returns Whether the layout style is updated successfully.
      */
-    virtual bool adoptStyle(const client_cssom::CSSStyleDeclaration &style);
+    virtual bool adoptStyle(const client_cssom::CSSStyleDeclaration &style) { return true; };
 
   public:
     HTMLElementDirection dir = HTMLElementDirection::LTR;

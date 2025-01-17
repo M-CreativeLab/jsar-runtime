@@ -42,13 +42,13 @@ namespace dom
   protected:
     /**
      * A utility method to use the scene weak reference safely.
-     * 
+     *
      * @param callback The callback function to use the scene.
      */
     void useScene(const std::function<void(builtin_scene::Scene &)> &callback);
     /**
      * Render the scene object.
-     * 
+     *
      * @returns Whether the scene object is rendered successfully.
      */
     bool render(Node &node);
@@ -73,6 +73,10 @@ namespace dom
      * @returns Whether the layout style is updated successfully.
      */
     bool adoptStyleOn(Node &node, const client_cssom::CSSStyleDeclaration &style);
+
+  private:
+    // Check if the scene object should be rendered.
+    [[nodiscard]] bool skipRender() const;
 
   protected:
     std::weak_ptr<builtin_scene::Scene> scene_;

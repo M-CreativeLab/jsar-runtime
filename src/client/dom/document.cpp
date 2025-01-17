@@ -260,7 +260,10 @@ namespace dom
       // TODO: use `computeStyle` for stylesheets.
       {
         auto adoptStyleForElement = [](shared_ptr<HTMLElement> element)
-        { element->adoptStyle(*element->style); };
+        {
+          element->adoptStyle(*element->style);
+          return true;
+        };
         auto adoptStyleForText = [](shared_ptr<Text> textNode)
         { textNode->adoptStyle(*textNode->style_); };
         traverseElementOrTextNode(body, adoptStyleForElement, adoptStyleForText, TreverseOrder::PreOrder);
@@ -274,7 +277,7 @@ namespace dom
       // Step 3: Call the renderElement method of each element to draw the element.
       {
         auto renderElement = [scene](shared_ptr<HTMLElement> element)
-        { element->renderElement(*scene); };
+        { return element->renderElement(*scene); };
         auto renderText = [scene](shared_ptr<Text> textNode)
         { textNode->renderText(*scene); };
         traverseElementOrTextNode(body, renderElement, renderText, TreverseOrder::PreOrder);
@@ -291,7 +294,7 @@ namespace dom
      * @param order The traverse order.
      */
     void traverseElementOrTextNode(shared_ptr<Node> elementOrTextNode,
-                                   function<void(shared_ptr<HTMLElement>)> elementCallback,
+                                   function<bool(shared_ptr<HTMLElement>)> elementCallback,
                                    function<void(shared_ptr<Text>)> textNodeCallback,
                                    TreverseOrder order)
     {
@@ -312,14 +315,20 @@ namespace dom
         if (element == nullptr)
           return;
 
+        bool shouldContinue = true;
         if (order == TreverseOrder::PreOrder)
-          elementCallback(element);
+        {
+          if (!elementCallback(element)) // If the element callback returns false, stop traversing in pre-order.
+            shouldContinue = false;
+        }
 
-        for (auto childNode : element->childNodes)
-          traverseElementOrTextNode(childNode, elementCallback, textNodeCallback, order);
-
-        if (order == TreverseOrder::PostOrder)
-          elementCallback(element);
+        if (shouldContinue)
+        {
+          for (auto childNode : element->childNodes)
+            traverseElementOrTextNode(childNode, elementCallback, textNodeCallback, order);
+          if (order == TreverseOrder::PostOrder)
+            elementCallback(element);
+        }
       }
     }
     // The target width to render the document.

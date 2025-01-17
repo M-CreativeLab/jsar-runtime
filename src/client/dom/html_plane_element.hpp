@@ -18,7 +18,7 @@ namespace dom
 
   public:
     void connectedCallback() override;
-    void renderElement(builtin_scene::Scene &scene) override;
+    bool renderElement(builtin_scene::Scene &scene) override;
     bool adoptStyle(const client_cssom::CSSStyleDeclaration &style) override;
   };
 }

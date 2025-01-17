@@ -58,6 +58,18 @@ namespace builtin_scene
      */
     inline bool initialized() { return initialized_; }
     /**
+     * @returns If the mesh3d is disabled for rendering.
+     */
+    inline bool isRenderingDisabled() { return disableRendering_; }
+    /**
+     * Disable rendering of the mesh, it causes the mesh not to be rendered.
+     */
+    inline void disableRendering() { disableRendering_ = true; }
+    /**
+     * Resume rendering of the mesh.
+     */
+    inline void resumeRendering() { disableRendering_ = false; }
+    /**
      * @returns The primitive topology of the mesh.
      */
     inline PrimitiveTopology primitiveTopology() const { return handle_->primitiveTopology; }
@@ -99,6 +111,7 @@ namespace builtin_scene
     std::shared_ptr<client_graphics::WebGLVertexArray> vao_;
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;
     bool initialized_ = false;
+    bool disableRendering_ = false;
   };
 
   class MeshBuilder

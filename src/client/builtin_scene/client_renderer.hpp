@@ -317,7 +317,7 @@ namespace builtin_scene
       {
         // Render the mesh if it exists
         auto mesh = getComponent<Mesh3d>(entity);
-        if (mesh != nullptr)
+        if (mesh != nullptr && !mesh->isRenderingDisabled())
           renderMesh(entity, mesh, renderer, view);
 
         // TODO: support other renderable components (e.g., particles, etc.)

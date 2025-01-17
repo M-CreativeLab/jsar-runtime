@@ -51,10 +51,11 @@ namespace dom
     useScene(initMeshAndMaterial);
   }
 
-  void HTMLPlaneElement::renderElement(Scene &scene)
+  bool HTMLPlaneElement::renderElement(Scene &scene)
   {
-    HTMLElement::renderElement(scene);
-    SceneObject::render(*this);
+    if (!HTMLElement::renderElement(scene))
+      return false;
+    return SceneObject::render(*this);
   }
 
   bool HTMLPlaneElement::adoptStyle(const client_cssom::CSSStyleDeclaration &style)

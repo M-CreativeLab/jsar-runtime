@@ -29,10 +29,4 @@ namespace dom
   void HTMLElement::connectedCallback()
   {
   }
-
-  bool HTMLElement::adoptStyle(const client_cssom::CSSStyleDeclaration &style)
-  {
-    // Do nothing
-    return true;
-  }
 }
