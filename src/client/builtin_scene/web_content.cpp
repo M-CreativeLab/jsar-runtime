@@ -1,3 +1,4 @@
+#include <vector>
 #include "./web_content.hpp"
 
 namespace builtin_scene
@@ -38,7 +39,15 @@ namespace builtin_scene
     {
       if (style_.hasProperty("font-family"))
       {
-        // TODO: Parse the font family.
+        auto fonts = crates::css::parseFontFamily(style_.getPropertyValue("font-family"));
+        if (fonts.size() >= 1)
+        {
+          vector<SkString> skFonts;
+          for (auto &font : fonts)
+            skFonts.push_back(SkString(font));
+          textStyle.setFontFamilies(skFonts);
+          isTextStyleChanged = true;
+        }
       }
       if (style_.hasProperty("font-size"))
       {

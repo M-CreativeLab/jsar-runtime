@@ -7,8 +7,8 @@ extern crate jsar_jsbinding_macro;
 extern crate log;
 
 mod css_parser;
-mod layout;
 mod glsl_transpiler;
+mod layout;
 mod typescript_transpiler;
 
 use std::ffi::CString;
@@ -26,6 +26,22 @@ extern "C" fn release_rust_cstring(s: *mut c_char) {
       return;
     }
     let _ = CString::from_raw(s);
+  }
+}
+
+#[no_mangle]
+extern "C" fn release_rust_cstrings(list: *mut *mut c_char) {
+  if list.is_null() {
+    return;
+  }
+  unsafe {
+    let mut i = 0;
+    while !(*list.offset(i)).is_null() {
+      let _ = CString::from_raw(*list.offset(i));
+      i += 1;
+    }
+    let len: usize = i.try_into().unwrap();
+    Vec::from_raw_parts(list, len, len);
   }
 }
 

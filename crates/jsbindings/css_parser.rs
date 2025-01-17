@@ -1,15 +1,18 @@
+use std::ffi::CString;
 use std::os::raw::c_char;
 use std::{cell::RefCell, rc::Rc};
 
 use cssparser::{Parser, ParserInput};
 use style::context::QuirksMode;
-use style::parser::ParserContext;
+use style::parser::{Parse, ParserContext};
 use style::properties::{
   parse_one_declaration_into, parse_style_attribute, Importance, PropertyDeclarationBlock,
   PropertyId, SourcePropertyDeclaration,
 };
 use style::stylesheets::{CssRuleType, Origin};
+use style::values::computed::font::{GenericFontFamily, SingleFontFamily};
 use style::values::specified::color::Color;
+use style::values::specified::font::FontFamily;
 use style_traits::ParsingMode;
 use url::Url;
 
@@ -57,6 +60,83 @@ extern "C" fn parse_csscolor(color_str: *const c_char) -> RGBAColor {
     }
     None => RGBAColor::new(0, 0, 0, 1),
   }
+}
+
+#[no_mangle]
+extern "C" fn parse_font_family(input_str: *const c_char) -> *mut *mut c_char {
+  let font_family_str: &str = unsafe { std::ffi::CStr::from_ptr(input_str) }
+    .to_str()
+    .expect("Failed to convert C string to Rust string");
+  let mut input = ParserInput::new(font_family_str);
+  let mut parser = Parser::new(&mut input);
+  let url = Url::parse("about:blank").unwrap().into();
+  let context = ParserContext::new(
+    Origin::Author,
+    &url,
+    Some(CssRuleType::Style),
+    ParsingMode::DEFAULT,
+    QuirksMode::NoQuirks,
+    Default::default(),
+    None,
+    None,
+  );
+
+  let mut fonts: Vec<String> = Vec::new();
+  FontFamily::parse(&context, &mut parser)
+    .map(|font_family| match font_family {
+      FontFamily::System(family_name) => {
+        // Do nothing
+      }
+      FontFamily::Values(list) => {
+        for font in list.iter() {
+          match font {
+            SingleFontFamily::FamilyName(family_name) => {
+              fonts.push(family_name.name.to_string());
+            }
+            SingleFontFamily::Generic(generic) => match generic {
+              GenericFontFamily::None => {
+                fonts.push("none".to_string());
+              }
+              GenericFontFamily::Serif => {
+                fonts.push("serif".to_string());
+              }
+              GenericFontFamily::SansSerif => {
+                fonts.push("sans-serif".to_string());
+              }
+              GenericFontFamily::Monospace => {
+                fonts.push("monospace".to_string());
+              }
+              GenericFontFamily::Cursive => {
+                fonts.push("cursive".to_string());
+              }
+              GenericFontFamily::Fantasy => {
+                fonts.push("fantasy".to_string());
+              }
+              GenericFontFamily::SystemUi => {
+                fonts.push("system-ui".to_string());
+              }
+            },
+          }
+        }
+      }
+    })
+    .unwrap_or_default();
+
+  // Convert the fonts to C strings
+  let mut c_strings: Vec<CString> = fonts
+    .into_iter()
+    .map(|s| CString::new(s).unwrap())
+    .collect();
+
+  let mut c_array: Vec<*mut c_char> = c_strings
+    .into_iter()
+    .map(|cs| cs.into_raw())
+    .collect();
+  c_array.push(std::ptr::null_mut());
+  
+  let res = c_array.as_mut_ptr();
+  std::mem::forget(c_array);
+  res
 }
 
 /// cbindgen:ignore
@@ -300,6 +380,12 @@ mod tests {
     assert_eq!(color.g, 0);
     assert_eq!(color.b, 0);
     assert_eq!(color.a, 127);
+  }
+
+  #[test]
+  fn test_parse_font_family() {
+    let font_family_str = CString::new("Arial, \"PingFang SC\", sans-serif").unwrap();
+    let _ = parse_font_family(font_family_str.as_ptr());
   }
 
   #[test]

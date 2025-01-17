@@ -320,6 +320,22 @@ namespace crates
     {
       return parse_csscolor(colorStr.c_str());
     }
+
+    /**
+     * Parse a font family string into a vector of font families.
+     * 
+     * @param inputStr The font family string.
+     * @returns The vector of font families.
+     */
+    inline std::vector<std::string> parseFontFamily(const std::string &inputStr)
+    {
+      char **fontFamilies = parse_font_family(inputStr.c_str());
+      std::vector<std::string> families;
+      for (size_t i = 0; fontFamilies[i] != nullptr; i++)
+        families.push_back(fontFamilies[i]);
+      release_rust_cstrings(fontFamilies);
+      return families;
+    }
   }
 
   namespace webgl
