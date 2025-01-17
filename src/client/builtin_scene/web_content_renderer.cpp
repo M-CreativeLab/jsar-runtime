@@ -27,6 +27,8 @@ namespace builtin_scene::web_renderer
     {
       auto content = getComponent<WebContent>(entity);
       assert(content != nullptr);
+      if (content->canvas() == nullptr) // Skip rendering if the canvas is not initialized.
+        continue;
       if (content->isDirty()) // Skip rendering if the content is not dirty.
         render(entity, *content);
     }
