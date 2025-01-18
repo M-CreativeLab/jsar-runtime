@@ -46,7 +46,7 @@ const char *fragmentShaderSource = R"(
   }
 )";
 
-#define XR_EYE_SPAN 0.2f /** The length between 2 eyes */
+#define XR_EYE_SPAN 0.08f /** The length between 2 eyes */
 
 class XRStereoscopicRenderer
 {
@@ -61,8 +61,14 @@ public:
     }
     eyePosition[0] = glm::vec3(viewerPosition.x - eyeOffset, viewerPosition.y, viewerPosition.z);
     eyePosition[1] = glm::vec3(viewerPosition.x + eyeOffset, viewerPosition.y, viewerPosition.z);
-    eyeOrientation[0] = viewerOrientation;
-    eyeOrientation[1] = viewerOrientation;
+    {
+      glm::vec3 eyeForward(0.01f, 0.0f, -1.0f);
+      eyeOrientation[0] = glm::quatLookAt(glm::normalize(eyeForward), glm::vec3(0, 1, 0));
+    }
+    {
+      glm::vec3 eyeForward(-0.01f, 0.0f, -1.0f);
+      eyeOrientation[1] = glm::quatLookAt(glm::normalize(eyeForward), glm::vec3(0, 1, 0));
+    }
   }
   ~XRStereoscopicRenderer()
   {
