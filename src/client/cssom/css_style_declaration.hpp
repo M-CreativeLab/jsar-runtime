@@ -26,9 +26,21 @@ namespace client_cssom
                               std::is_same_v<T, types::Length> ||
                               std::is_same_v<T, types::LineWidth> ||
                               std::is_same_v<T, types::TextAlign> ||
+                              std::is_same_v<T, crates::layout::style::BoxSizing> ||
+                              std::is_same_v<T, crates::layout::style::Display> ||
                               std::is_same_v<T, crates::layout::style::Dimension> ||
                               std::is_same_v<T, crates::layout::style::LengthPercentageAuto> ||
-                              std::is_same_v<T, crates::layout::style::LengthPercentage>;
+                              std::is_same_v<T, crates::layout::style::LengthPercentage> ||
+                              std::is_same_v<T, crates::layout::style::Overflow> ||
+                              std::is_same_v<T, crates::layout::style::Position> ||
+                              std::is_same_v<T, crates::layout::style::AlignItems> ||
+                              std::is_same_v<T, crates::layout::style::AlignSelf> ||
+                              std::is_same_v<T, crates::layout::style::AlignContent> ||
+                              std::is_same_v<T, crates::layout::style::JustifyItems> ||
+                              std::is_same_v<T, crates::layout::style::JustifySelf> ||
+                              std::is_same_v<T, crates::layout::style::JustifyContent> ||
+                              std::is_same_v<T, crates::layout::style::FlexDirection> ||
+                              std::is_same_v<T, crates::layout::style::FlexWrap>;
 
   enum class CSSPropertyPriority
   {
@@ -140,11 +152,7 @@ namespace client_cssom
       requires is_property_value<T> ||
                std::is_same_v<T, float> ||
                std::is_integral_v<T> ||
-               std::is_same_v<T, types::BorderStyleKeyword> ||
-               std::is_same_v<T, crates::layout::style::Display> ||
-               std::is_same_v<T, crates::layout::style::BoxSizing> ||
-               std::is_same_v<T, crates::layout::style::Position> ||
-               std::is_same_v<T, crates::layout::style::Overflow>
+               std::is_same_v<T, types::BorderStyleKeyword>
     T getPropertyValueAs(const std::string &propertyName) const
     {
       using namespace crates::layout::style;
@@ -160,38 +168,7 @@ namespace client_cssom
       if constexpr (std::is_same_v<T, types::BorderStyleKeyword>)
         return client_cssom::types::parseKeyword<T>(value).value_or(T::kNone);
 
-      if constexpr (std::is_same_v<T, crates::layout::style::Display>)
-      {
-        if (value == "block")
-          return Display::Block;
-        else if (value == "flex")
-          return Display::Flex;
-        else if (value == "grid")
-          return Display::Grid;
-        else if (value == "none")
-          return Display::None;
-        else
-          return Display::Block;
-      }
-
-      if constexpr (std::is_same_v<T, crates::layout::style::BoxSizing>)
-        return value == "border-box" ? BoxSizing::BorderBox : BoxSizing::ContentBox;
-
-      if constexpr (std::is_same_v<T, crates::layout::style::Position>)
-        return value == "absolute" ? Position::Absolute : Position::Relative;
-
-      if constexpr (std::is_same_v<T, crates::layout::style::Overflow>)
-      {
-        if (value == "hidden")
-          return Overflow::Hidden;
-        else if (value == "scroll")
-          return Overflow::Scroll;
-        else if (value == "clip")
-          return Overflow::Clip;
-        else
-          return Overflow::Visible;
-      }
-
+      // CSSOM types
       if constexpr (is_property_value<T>)
         return T(value);
 

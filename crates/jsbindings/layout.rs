@@ -175,6 +175,157 @@ impl From<Position> for taffy::Position {
   }
 }
 
+#[repr(u8)]
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum AlignItems {
+  Start,
+  End,
+  FlexStart,
+  FlexEnd,
+  Center,
+  Baseline,
+  Stretch,
+}
+
+impl From<taffy::AlignItems> for AlignItems {
+  fn from(align_items: taffy::AlignItems) -> Self {
+    match align_items {
+      taffy::AlignItems::Start => AlignItems::Start,
+      taffy::AlignItems::End => AlignItems::End,
+      taffy::AlignItems::FlexStart => AlignItems::FlexStart,
+      taffy::AlignItems::FlexEnd => AlignItems::FlexEnd,
+      taffy::AlignItems::Center => AlignItems::Center,
+      taffy::AlignItems::Baseline => AlignItems::Baseline,
+      taffy::AlignItems::Stretch => AlignItems::Stretch,
+    }
+  }
+}
+
+impl From<AlignItems> for taffy::AlignItems {
+  fn from(align_items: AlignItems) -> Self {
+    match align_items {
+      AlignItems::Start => taffy::AlignItems::Start,
+      AlignItems::End => taffy::AlignItems::End,
+      AlignItems::FlexStart => taffy::AlignItems::FlexStart,
+      AlignItems::FlexEnd => taffy::AlignItems::FlexEnd,
+      AlignItems::Center => taffy::AlignItems::Center,
+      AlignItems::Baseline => taffy::AlignItems::Baseline,
+      AlignItems::Stretch => taffy::AlignItems::Stretch,
+    }
+  }
+}
+
+type JustifyItems = AlignItems;
+type AlignSelf = AlignItems;
+type JustifySelf = AlignItems;
+
+#[repr(u8)]
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum AlignContent {
+  Start,
+  End,
+  FlexStart,
+  FlexEnd,
+  Center,
+  Stretch,
+  SpaceBetween,
+  SpaceEvenly,
+  SpaceAround,
+}
+
+impl From<taffy::AlignContent> for AlignContent {
+  fn from(align_content: taffy::AlignContent) -> Self {
+    match align_content {
+      taffy::AlignContent::Start => AlignContent::Start,
+      taffy::AlignContent::End => AlignContent::End,
+      taffy::AlignContent::FlexStart => AlignContent::FlexStart,
+      taffy::AlignContent::FlexEnd => AlignContent::FlexEnd,
+      taffy::AlignContent::Center => AlignContent::Center,
+      taffy::AlignContent::Stretch => AlignContent::Stretch,
+      taffy::AlignContent::SpaceBetween => AlignContent::SpaceBetween,
+      taffy::AlignContent::SpaceEvenly => AlignContent::SpaceEvenly,
+      taffy::AlignContent::SpaceAround => AlignContent::SpaceAround,
+    }
+  }
+}
+
+impl From<AlignContent> for taffy::AlignContent {
+  fn from(align_content: AlignContent) -> Self {
+    match align_content {
+      AlignContent::Start => taffy::AlignContent::Start,
+      AlignContent::End => taffy::AlignContent::End,
+      AlignContent::FlexStart => taffy::AlignContent::FlexStart,
+      AlignContent::FlexEnd => taffy::AlignContent::FlexEnd,
+      AlignContent::Center => taffy::AlignContent::Center,
+      AlignContent::Stretch => taffy::AlignContent::Stretch,
+      AlignContent::SpaceBetween => taffy::AlignContent::SpaceBetween,
+      AlignContent::SpaceEvenly => taffy::AlignContent::SpaceEvenly,
+      AlignContent::SpaceAround => taffy::AlignContent::SpaceAround,
+    }
+  }
+}
+
+type JustifyContent = AlignContent;
+
+#[repr(u8)]
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum FlexDirection {
+  Row,
+  Column,
+  RowReverse,
+  ColumnReverse,
+}
+
+impl From<taffy::FlexDirection> for FlexDirection {
+  fn from(flex_direction: taffy::FlexDirection) -> Self {
+    match flex_direction {
+      taffy::FlexDirection::Row => FlexDirection::Row,
+      taffy::FlexDirection::Column => FlexDirection::Column,
+      taffy::FlexDirection::RowReverse => FlexDirection::RowReverse,
+      taffy::FlexDirection::ColumnReverse => FlexDirection::ColumnReverse,
+    }
+  }
+}
+
+impl From<FlexDirection> for taffy::FlexDirection {
+  fn from(flex_direction: FlexDirection) -> Self {
+    match flex_direction {
+      FlexDirection::Row => taffy::FlexDirection::Row,
+      FlexDirection::Column => taffy::FlexDirection::Column,
+      FlexDirection::RowReverse => taffy::FlexDirection::RowReverse,
+      FlexDirection::ColumnReverse => taffy::FlexDirection::ColumnReverse,
+    }
+  }
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum FlexWrap {
+  NoWrap,
+  Wrap,
+  WrapReverse,
+}
+
+impl From<taffy::FlexWrap> for FlexWrap {
+  fn from(flex_wrap: taffy::FlexWrap) -> Self {
+    match flex_wrap {
+      taffy::FlexWrap::NoWrap => FlexWrap::NoWrap,
+      taffy::FlexWrap::Wrap => FlexWrap::Wrap,
+      taffy::FlexWrap::WrapReverse => FlexWrap::WrapReverse,
+    }
+  }
+}
+
+impl From<FlexWrap> for taffy::FlexWrap {
+  fn from(flex_wrap: FlexWrap) -> Self {
+    match flex_wrap {
+      FlexWrap::NoWrap => taffy::FlexWrap::NoWrap,
+      FlexWrap::Wrap => taffy::FlexWrap::Wrap,
+      FlexWrap::WrapReverse => taffy::FlexWrap::WrapReverse,
+    }
+  }
+}
+
 /// cbindgen:derive-helper-methods
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -282,6 +433,10 @@ pub struct LayoutStyle {
   pub position: Position,
   pub width: Dimension,
   pub height: Dimension,
+  pub min_width: Dimension,
+  pub min_height: Dimension,
+  pub max_width: Dimension,
+  pub max_height: Dimension,
 
   // Spacing Properties
   pub margin_top: LengthPercentageAuto,
@@ -298,6 +453,17 @@ pub struct LayoutStyle {
   pub border_left: LengthPercentage,
 
   // Flex Properties
+  pub align_items: AlignItems,
+  pub align_self: AlignSelf,
+  pub justify_items: JustifyItems,
+  pub justify_self: JustifySelf,
+  pub align_content: AlignContent,
+  pub justify_content: JustifyContent,
+  pub gap_x: LengthPercentage,
+  pub gap_y: LengthPercentage,
+  pub flex_direction: FlexDirection,
+  pub flex_wrap: FlexWrap,
+  pub flex_basis: Dimension,
   pub flex_grow: f32,
   pub flex_shrink: f32,
 }
@@ -313,6 +479,10 @@ impl From<taffy::Style> for LayoutStyle {
       position: value.position.into(),
       width: value.size.width.into(),
       height: value.size.height.into(),
+      min_width: value.min_size.width.into(),
+      min_height: value.min_size.height.into(),
+      max_width: value.max_size.width.into(),
+      max_height: value.max_size.height.into(),
       margin_top: value.margin.top.into(),
       margin_right: value.margin.right.into(),
       margin_bottom: value.margin.bottom.into(),
@@ -325,6 +495,35 @@ impl From<taffy::Style> for LayoutStyle {
       border_right: value.border.right.into(),
       border_bottom: value.border.bottom.into(),
       border_left: value.border.left.into(),
+      align_items: value
+        .align_items
+        .map(|align_items| align_items.into())
+        .unwrap_or(AlignItems::Stretch),
+      align_self: value
+        .align_self
+        .map(|align_self| align_self.into())
+        .unwrap_or(AlignSelf::Stretch),
+      justify_items: value
+        .justify_items
+        .map(|justify_items| justify_items.into())
+        .unwrap_or(JustifyItems::Stretch),
+      justify_self: value
+        .justify_self
+        .map(|justify_self| justify_self.into())
+        .unwrap_or(JustifySelf::Stretch),
+      align_content: value
+        .align_content
+        .map(|align_content| align_content.into())
+        .unwrap_or(AlignContent::Stretch),
+      justify_content: value
+        .justify_content
+        .map(|justify_content| justify_content.into())
+        .unwrap_or(JustifyContent::Stretch),
+      gap_x: value.gap.width.into(),
+      gap_y: value.gap.height.into(),
+      flex_direction: value.flex_direction.into(),
+      flex_wrap: value.flex_wrap.into(),
+      flex_basis: value.flex_basis.into(),
       flex_grow: value.flex_grow,
       flex_shrink: value.flex_shrink,
     }
@@ -346,6 +545,14 @@ impl From<LayoutStyle> for taffy::Style {
         width: value.width.into(),
         height: value.height.into(),
       },
+      min_size: taffy::Size {
+        width: value.min_width.into(),
+        height: value.min_height.into(),
+      },
+      max_size: taffy::Size {
+        width: value.max_width.into(),
+        height: value.max_height.into(),
+      },
       margin: taffy::geometry::Rect {
         top: value.margin_top.into(),
         right: value.margin_right.into(),
@@ -364,6 +571,19 @@ impl From<LayoutStyle> for taffy::Style {
         bottom: value.border_bottom.into(),
         left: value.border_left.into(),
       },
+      align_items: Some(value.align_items.into()),
+      align_self: Some(value.align_self.into()),
+      justify_items: Some(value.justify_items.into()),
+      justify_self: Some(value.justify_self.into()),
+      align_content: Some(value.align_content.into()),
+      justify_content: Some(value.justify_content.into()),
+      gap: taffy::Size {
+        width: value.gap_x.into(),
+        height: value.gap_y.into(),
+      },
+      flex_direction: value.flex_direction.into(),
+      flex_wrap: value.flex_wrap.into(),
+      flex_basis: value.flex_basis.into(),
       flex_grow: value.flex_grow,
       flex_shrink: value.flex_shrink,
       ..Default::default()

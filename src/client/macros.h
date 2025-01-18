@@ -1,6 +1,12 @@
 #pragma once
 
 /**
+ * Uncomment this line to enable verbose mode for the client/cssom.
+ */
+#define TR_CLIENT_CSSOM_VERBOSE
+#undef TR_CLIENT_CSSOM_VERBOSE
+
+/**
  * Uncomment this line to enable verbose mode for the client/dom.
  */
 #define TR_CLIENT_DOM_VERBOSE

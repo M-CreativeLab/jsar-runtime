@@ -123,17 +123,14 @@ extern "C" fn parse_font_family(input_str: *const c_char) -> *mut *mut c_char {
     .unwrap_or_default();
 
   // Convert the fonts to C strings
-  let mut c_strings: Vec<CString> = fonts
+  let c_strings: Vec<CString> = fonts
     .into_iter()
     .map(|s| CString::new(s).unwrap())
     .collect();
 
-  let mut c_array: Vec<*mut c_char> = c_strings
-    .into_iter()
-    .map(|cs| cs.into_raw())
-    .collect();
+  let mut c_array: Vec<*mut c_char> = c_strings.into_iter().map(|cs| cs.into_raw()).collect();
   c_array.push(std::ptr::null_mut());
-  
+
   let res = c_array.as_mut_ptr();
   std::mem::forget(c_array);
   res
@@ -158,6 +155,9 @@ fn remove_property(decls: &mut PropertyDeclarationBlock, id: &PropertyId) -> boo
 
 impl CSSPropertyDeclarationBlock {
   pub fn from_str(declaration: &str) -> Self {
+    style_config::set_bool("layout.flexbox.enabled", true);
+    style_config::set_bool("layout.grid.enabled", true);
+
     let url = Url::parse("about:blank").unwrap().into();
     let block = parse_style_attribute(
       declaration,
@@ -391,13 +391,15 @@ mod tests {
   #[test]
   fn test_parse_style_declaration() {
     let mut pdb = CSSPropertyDeclarationBlock::from_str(
-      "color: rgba(255,0,0,0.5);height:20px;width:100% !important;",
+      "display:flex;color:rgba(255,0,0,0.5);height:20px;width:100% !important;",
     );
+    let display_str = pdb.get_property("display");
     let color_str = pdb.get_property("color");
     let height_str = pdb.get_property("height");
     let width_str = pdb.get_property("width");
 
-    assert_eq!(pdb.len(), 3);
+    assert_eq!(pdb.len(), 4);
+    assert_eq!(display_str, "flex".to_string());
     assert_eq!(color_str, "rgba(255, 0, 0, 0.5)".to_string());
     assert_eq!(height_str, "20px".to_string());
     assert_eq!(width_str, "100%".to_string());
@@ -417,13 +419,13 @@ mod tests {
       "url(https://foobar)",
       Importance::Normal,
     );
-    assert_eq!(pdb.len(), 4);
+    assert_eq!(pdb.len(), 5);
 
     // Test remove property
     let removed = pdb.remove_property("height");
     assert_eq!(removed, "20px".to_string());
     assert_eq!(pdb.get_property("height"), "");
-    assert_eq!(pdb.len(), 3);
+    assert_eq!(pdb.len(), 4);
 
     let css_str = pdb.to_css_string();
     println!("cssText: {:?}", css_str);

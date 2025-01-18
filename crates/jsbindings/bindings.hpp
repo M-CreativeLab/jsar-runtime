@@ -419,78 +419,443 @@ namespace crates
 
     namespace style
     {
-      using Display = _Display;
-      using BoxSizing = _BoxSizing;
-      using Overflow = _Overflow;
-      using Position = _Position;
-
-      inline std::ostream &operator<<(std::ostream &os, Display display)
+      template <typename T, T defaultValue>
+        requires std::is_enum_v<T>
+      class KeywordWrap
       {
-        switch (display)
-        {
-        case Display::Block:
-          os << "Block";
-          break;
-        case Display::Flex:
-          os << "Flex";
-          break;
-        case Display::Grid:
-          os << "Grid";
-          break;
-        case Display::None:
-          os << "None";
-          break;
-        }
-        return os;
-      }
+        friend class LayoutStyle;
 
-      inline std::ostream &operator<<(std::ostream &os, BoxSizing boxSizing)
-      {
-        switch (boxSizing)
+      public:
+        KeywordWrap(T handle = defaultValue) : handle_(handle)
         {
-        case BoxSizing::ContentBox:
-          os << "ContentBox";
-          break;
-        case BoxSizing::BorderBox:
-          os << "BorderBox";
-          break;
         }
-        return os;
-      }
+        ~KeywordWrap() = default;
 
-      inline std::ostream &operator<<(std::ostream &os, Overflow overflow)
-      {
-        switch (overflow)
-        {
-        case Overflow::Visible:
-          os << "Visible";
-          break;
-        case Overflow::Clip:
-          os << "Clip";
-          break;
-        case Overflow::Hidden:
-          os << "Hidden";
-          break;
-        case Overflow::Scroll:
-          os << "Scroll";
-          break;
-        }
-        return os;
-      }
+      public:
+        operator T() const { return handle_; }
 
-      inline std::ostream &operator<<(std::ostream &os, Position position)
+      protected:
+        virtual std::optional<T> parse(const std::string &input) = 0;
+
+      protected:
+        T handle_;
+      };
+
+#define DISPLAY_MAP(XX) \
+  XX(Block, "block")    \
+  XX(Flex, "flex")      \
+  XX(Grid, "grid")      \
+  XX(None, "none")
+
+#define BOX_SIZING_MAP(XX)      \
+  XX(ContentBox, "content-box") \
+  XX(BorderBox, "border-box")
+
+#define OVERFLOW_MAP(XX) \
+  XX(Visible, "visible") \
+  XX(Hidden, "hidden")   \
+  XX(Scroll, "scroll")   \
+  XX(Clip, "clip")
+
+#define POSITION_MAP(XX)   \
+  XX(Relative, "relative") \
+  XX(Absolute, "absolute")
+
+#define ALIGN_ITEMS_MAP(XX)   \
+  XX(Start, "start")          \
+  XX(End, "end")              \
+  XX(FlexStart, "flex-start") \
+  XX(FlexEnd, "flex-end")     \
+  XX(Center, "center")        \
+  XX(Baseline, "baseline")    \
+  XX(Stretch, "stretch")
+
+#define ALIGN_SELF_MAP(XX) \
+  ALIGN_ITEMS_MAP(XX)
+
+#define JUSTIFY_ITEMS_MAP(XX) \
+  ALIGN_ITEMS_MAP(XX)
+
+#define JUSTIFY_SELF_MAP(XX) \
+  ALIGN_ITEMS_MAP(XX)
+
+#define ALIGN_CONTENT_MAP(XX)       \
+  XX(Start, "start")                \
+  XX(End, "end")                    \
+  XX(FlexStart, "flex-start")       \
+  XX(FlexEnd, "flex-end")           \
+  XX(Center, "center")              \
+  XX(Stretch, "stretch")            \
+  XX(SpaceBetween, "space-between") \
+  XX(SpaceEvenly, "space-evenly")   \
+  XX(SpaceAround, "space-around")
+
+#define JUSTIFY_CONTENT_MAP(XX) \
+  ALIGN_CONTENT_MAP(XX)
+
+#define FLEX_DIRECTION_MAP(XX)  \
+  XX(Row, "row")                \
+  XX(Column, "column")          \
+  XX(RowReverse, "row-reverse") \
+  XX(ColumnReverse, "column-reverse")
+
+#define FLEX_WRAP_MAP(XX) \
+  XX(NoWrap, "nowrap")    \
+  XX(Wrap, "wrap")        \
+  XX(WrapReverse, "wrap-reverse")
+
+      class Display : public KeywordWrap<_Display, _Display::Block>
       {
-        switch (position)
+        using KeywordWrap::KeywordWrap;
+
+      public:
+        static Display Block() { return Display(_Display::Block); }
+        static Display Flex() { return Display(_Display::Flex); }
+        static Display Grid() { return Display(_Display::Grid); }
+        static Display None() { return Display(_Display::None); }
+
+      public:
+        Display(const std::string &input)
         {
-        case Position::Relative:
-          os << "Relative";
-          break;
-        case Position::Absolute:
-          os << "Absolute";
-          break;
+          handle_ = parse(input).value_or(_Display::Block);
         }
-        return os;
-      }
+
+      private:
+        std::optional<_Display> parse(const std::string &input) override
+        {
+#define XX(tag, str) \
+  if (input == str)  \
+    return _Display::tag;
+          DISPLAY_MAP(XX)
+#undef XX
+          return std::nullopt;
+        }
+
+      public:
+        friend std::ostream &operator<<(std::ostream &os, const Display &value)
+        {
+          switch (value.handle_)
+          {
+#define XX(tag, str)  \
+  case _Display::tag: \
+    os << str;        \
+    break;
+            DISPLAY_MAP(XX)
+#undef XX
+          }
+          return os;
+        }
+      };
+
+      class BoxSizing : public KeywordWrap<_BoxSizing, _BoxSizing::ContentBox>
+      {
+        using KeywordWrap::KeywordWrap;
+
+      public:
+        static BoxSizing ContentBox() { return BoxSizing(_BoxSizing::ContentBox); }
+        static BoxSizing BorderBox() { return BoxSizing(_BoxSizing::BorderBox); }
+
+      public:
+        BoxSizing(const std::string &input)
+        {
+          handle_ = parse(input).value_or(_BoxSizing::ContentBox);
+        }
+
+      private:
+        std::optional<_BoxSizing> parse(const std::string &input) override
+        {
+#define XX(tag, str) \
+  if (input == str)  \
+    return _BoxSizing::tag;
+          BOX_SIZING_MAP(XX)
+#undef XX
+          return std::nullopt;
+        }
+
+      public:
+        friend std::ostream &operator<<(std::ostream &os, const BoxSizing &value)
+        {
+          switch (value.handle_)
+          {
+#define XX(tag, str)    \
+  case _BoxSizing::tag: \
+    os << str;          \
+    break;
+            BOX_SIZING_MAP(XX)
+#undef XX
+          }
+          return os;
+        }
+      };
+
+      class Overflow : public KeywordWrap<_Overflow, _Overflow::Visible>
+      {
+        using KeywordWrap::KeywordWrap;
+
+      public:
+        static Overflow Visible() { return Overflow(_Overflow::Visible); }
+        static Overflow Hidden() { return Overflow(_Overflow::Hidden); }
+        static Overflow Scroll() { return Overflow(_Overflow::Scroll); }
+        static Overflow Clip() { return Overflow(_Overflow::Clip); }
+
+      public:
+        Overflow(const std::string &input)
+        {
+          handle_ = parse(input).value_or(_Overflow::Visible);
+        }
+
+      private:
+        std::optional<_Overflow> parse(const std::string &input) override
+        {
+#define XX(tag, str) \
+  if (input == str)  \
+    return _Overflow::tag;
+          OVERFLOW_MAP(XX)
+#undef XX
+          return std::nullopt;
+        }
+
+      public:
+        friend std::ostream &operator<<(std::ostream &os, const Overflow &value)
+        {
+          switch (value.handle_)
+          {
+#define XX(tag, str)   \
+  case _Overflow::tag: \
+    os << str;         \
+    break;
+            OVERFLOW_MAP(XX)
+#undef XX
+          }
+          return os;
+        }
+      };
+
+      class Position : public KeywordWrap<_Position, _Position::Relative>
+      {
+        using KeywordWrap::KeywordWrap;
+
+      public:
+        static Position Relative() { return Position(_Position::Relative); }
+        static Position Absolute() { return Position(_Position::Absolute); }
+
+      public:
+        Position(const std::string &input)
+        {
+          handle_ = parse(input).value_or(_Position::Relative);
+        }
+
+      private:
+        std::optional<_Position> parse(const std::string &input) override
+        {
+#define XX(tag, str) \
+  if (input == str)  \
+    return _Position::tag;
+          POSITION_MAP(XX)
+#undef XX
+          return std::nullopt;
+        }
+
+      public:
+        friend std::ostream &operator<<(std::ostream &os, const Position &value)
+        {
+          switch (value.handle_)
+          {
+#define XX(tag, str)   \
+  case _Position::tag: \
+    os << str;         \
+    break;
+            POSITION_MAP(XX)
+#undef XX
+          }
+          return os;
+        }
+      };
+
+      class AlignItems : public KeywordWrap<_AlignItems, _AlignItems::Stretch>
+      {
+        using KeywordWrap::KeywordWrap;
+
+      public:
+        static AlignItems Start() { return AlignItems(_AlignItems::Start); }
+        static AlignItems End() { return AlignItems(_AlignItems::End); }
+        static AlignItems FlexStart() { return AlignItems(_AlignItems::FlexStart); }
+        static AlignItems FlexEnd() { return AlignItems(_AlignItems::FlexEnd); }
+        static AlignItems Center() { return AlignItems(_AlignItems::Center); }
+        static AlignItems Baseline() { return AlignItems(_AlignItems::Baseline); }
+        static AlignItems Stretch() { return AlignItems(_AlignItems::Stretch); }
+
+      public:
+        AlignItems(const std::string &input)
+        {
+          handle_ = parse(input).value_or(_AlignItems::Stretch);
+        }
+
+      private:
+        std::optional<_AlignItems> parse(const std::string &input) override
+        {
+#define XX(tag, str) \
+  if (input == str)  \
+    return _AlignItems::tag;
+          ALIGN_ITEMS_MAP(XX)
+#undef XX
+          return std::nullopt;
+        }
+
+      public:
+        friend std::ostream &operator<<(std::ostream &os, const AlignItems &value)
+        {
+          switch (value.handle_)
+          {
+#define XX(tag, str)     \
+  case _AlignItems::tag: \
+    os << str;           \
+    break;
+            ALIGN_ITEMS_MAP(XX)
+#undef XX
+          }
+          return os;
+        }
+      };
+
+      using AlignSelf = AlignItems;
+      using JustifyItems = AlignItems;
+      using JustifySelf = AlignItems;
+
+      class AlignContent : public KeywordWrap<_AlignContent, _AlignContent::Stretch>
+      {
+        using KeywordWrap::KeywordWrap;
+
+      public:
+        static AlignContent Start() { return AlignContent(_AlignContent::Start); }
+        static AlignContent End() { return AlignContent(_AlignContent::End); }
+        static AlignContent FlexStart() { return AlignContent(_AlignContent::FlexStart); }
+        static AlignContent FlexEnd() { return AlignContent(_AlignContent::FlexEnd); }
+        static AlignContent Center() { return AlignContent(_AlignContent::Center); }
+        static AlignContent Stretch() { return AlignContent(_AlignContent::Stretch); }
+        static AlignContent SpaceBetween() { return AlignContent(_AlignContent::SpaceBetween); }
+        static AlignContent SpaceEvenly() { return AlignContent(_AlignContent::SpaceEvenly); }
+        static AlignContent SpaceAround() { return AlignContent(_AlignContent::SpaceAround); }
+
+      public:
+        AlignContent(const std::string &input)
+        {
+          handle_ = parse(input).value_or(_AlignContent::Stretch);
+        }
+
+      private:
+        std::optional<_AlignContent> parse(const std::string &input) override
+        {
+#define XX(tag, str) \
+  if (input == str)  \
+    return _AlignContent::tag;
+          ALIGN_CONTENT_MAP(XX)
+#undef XX
+          return std::nullopt;
+        }
+
+      public:
+        friend std::ostream &operator<<(std::ostream &os, const AlignContent &value)
+        {
+          switch (value.handle_)
+          {
+#define XX(tag, str)       \
+  case _AlignContent::tag: \
+    os << str;             \
+    break;
+            ALIGN_CONTENT_MAP(XX)
+#undef XX
+          }
+          return os;
+        }
+      };
+
+      using JustifyContent = AlignContent;
+
+      class FlexDirection : public KeywordWrap<_FlexDirection, _FlexDirection::Row>
+      {
+        using KeywordWrap::KeywordWrap;
+
+      public:
+        static FlexDirection Row() { return FlexDirection(_FlexDirection::Row); }
+        static FlexDirection Column() { return FlexDirection(_FlexDirection::Column); }
+        static FlexDirection RowReverse() { return FlexDirection(_FlexDirection::RowReverse); }
+        static FlexDirection ColumnReverse() { return FlexDirection(_FlexDirection::ColumnReverse); }
+
+      public:
+        FlexDirection(const std::string &input)
+        {
+          handle_ = parse(input).value_or(_FlexDirection::Row);
+        }
+
+      private:
+        std::optional<_FlexDirection> parse(const std::string &input) override
+        {
+#define XX(tag, str) \
+  if (input == str)  \
+    return _FlexDirection::tag;
+          FLEX_DIRECTION_MAP(XX)
+#undef XX
+          return std::nullopt;
+        }
+
+      public:
+        friend std::ostream &operator<<(std::ostream &os, const FlexDirection &value)
+        {
+          switch (value.handle_)
+          {
+#define XX(tag, str)        \
+  case _FlexDirection::tag: \
+    os << str;              \
+    break;
+            FLEX_DIRECTION_MAP(XX)
+#undef XX
+          }
+          return os;
+        }
+      };
+
+      class FlexWrap : public KeywordWrap<_FlexWrap, _FlexWrap::NoWrap>
+      {
+        using KeywordWrap::KeywordWrap;
+
+      public:
+        static FlexWrap NoWrap() { return FlexWrap(_FlexWrap::NoWrap); }
+        static FlexWrap Wrap() { return FlexWrap(_FlexWrap::Wrap); }
+        static FlexWrap WrapReverse() { return FlexWrap(_FlexWrap::WrapReverse); }
+
+      public:
+        FlexWrap(const std::string &input)
+        {
+          handle_ = parse(input).value_or(_FlexWrap::NoWrap);
+        }
+
+      private:
+        std::optional<_FlexWrap> parse(const std::string &input) override
+        {
+#define XX(tag, str) \
+  if (input == str)  \
+    return _FlexWrap::tag;
+          FLEX_WRAP_MAP(XX)
+#undef XX
+          return std::nullopt;
+        }
+
+      public:
+        friend std::ostream &operator<<(std::ostream &os, const FlexWrap &value)
+        {
+          switch (value.handle_)
+          {
+#define XX(tag, str)   \
+  case _FlexWrap::tag: \
+    os << str;         \
+    break;
+            FLEX_WRAP_MAP(XX)
+#undef XX
+          }
+          return os;
+        }
+      };
 
       template <typename T, typename InnerType>
       class DimensionOrLengthPercentageAuto
@@ -672,6 +1037,10 @@ namespace crates
                   _Position::Relative,                 // position
                   _Dimension::Auto(),                  // width
                   _Dimension::Auto(),                  // height
+                  _Dimension::Auto(),                  // min_width
+                  _Dimension::Auto(),                  // min_height
+                  _Dimension::Auto(),                  // max_width
+                  _Dimension::Auto(),                  // max_height
                   _LengthPercentageAuto::Length(0.0f), // margin_top
                   _LengthPercentageAuto::Length(0.0f), // margin_right
                   _LengthPercentageAuto::Length(0.0f), // margin_bottom
@@ -684,6 +1053,17 @@ namespace crates
                   _LengthPercentage::Length(0.0f),     // border_right
                   _LengthPercentage::Length(0.0f),     // border_bottom
                   _LengthPercentage::Length(0.0f),     // border_left
+                  _AlignItems::Stretch,                // align_items
+                  _AlignSelf::Stretch,                 // align_self
+                  _JustifyItems::Stretch,              // justify_items
+                  _JustifySelf::Stretch,               // justify_self
+                  _AlignContent::Stretch,              // align_content
+                  _JustifyContent::Stretch,            // justify_content
+                  _LengthPercentage::Length(0.0f),     // gap_x
+                  _LengthPercentage::Length(0.0f),     // gap_y
+                  _FlexDirection::Row,                 // flex_direction
+                  _FlexWrap::Wrap,                     // flex_wrap
+                  _Dimension::Auto(),                  // flex_basis
                   0.0f,                                // flex_grow
                   1.0f                                 // flex_shrink
               })
@@ -703,47 +1083,59 @@ namespace crates
         friend std::ostream &operator<<(std::ostream &os, const LayoutStyle &style)
         {
           os << "LayoutStyle {" << std::endl;
-          os << " display: " << style.display() << "," << std::endl;
-          os << " boxSizing: " << style.boxSizing() << "," << std::endl;
-          os << " overflowX: " << style.overflow().x() << "," << std::endl;
-          os << " overflowY: " << style.overflow().y() << "," << std::endl;
-          os << " scrollbarWidth: " << style.scrollbarWidth() << "," << std::endl;
-          os << " position: " << style.position() << "," << std::endl;
-          os << " width: " << style.width() << "," << std::endl;
-          os << " height: " << style.height() << "," << std::endl;
-          os << " margin: " << style.margin() << "," << std::endl;
-          os << " padding: " << style.padding() << "," << std::endl;
-          os << " flexGrow: " << style.flexGrow() << "," << std::endl;
-          os << " flexShrink: " << style.flexShrink() << " }" << std::endl;
+          os << "    display: " << style.display() << "," << std::endl;
+          os << "  boxSizing: " << style.boxSizing() << "," << std::endl;
+          os << "  overflowX: " << style.overflow().x() << "," << std::endl;
+          os << "  overflowY: " << style.overflow().y() << "," << std::endl;
+          os << "   position: " << style.position() << "," << std::endl;
+          os << "       size: " << "(" << style.width() << ", " << style.height() << ")," << std::endl;
+          os << "  [min]size: " << "(" << style.minWidth() << ", " << style.minHeight() << ")," << std::endl;
+          os << "  [max]size: " << "(" << style.maxWidth() << ", " << style.maxHeight() << ")," << std::endl;
+          os << "     margin: " << style.margin() << "," << std::endl;
+          os << "    padding: " << style.padding() << "," << std::endl;
+          os << "}";
           return os;
         }
-        operator _LayoutStyle()
-        {
-          return style_;
-        }
+        operator _LayoutStyle() { return style_; }
 
       public:
         // Display property
         Display display() const { return style_.display; }
         void setDisplay(Display value) { style_.display = value; }
+
         // BoxSizing property
         BoxSizing boxSizing() const { return style_.box_sizing; }
         void setBoxSizing(BoxSizing value) { style_.box_sizing = value; }
+
         // Overflow property
         const Point<Overflow> overflow() const { return Point<Overflow>(style_.overflow_x, style_.overflow_y); }
         void setOverflowX(Overflow value) { style_.overflow_x = value; }
         void setOverflowY(Overflow value) { style_.overflow_y = value; }
+
         // Scrollbar width property
         float scrollbarWidth() const { return style_.scrollbar_width; }
         void setScrollbarWidth(float value) { style_.scrollbar_width = value; }
+
         // Position property
         Position position() const { return style_.position; }
         void setPosition(Position value) { style_.position = value; }
-        // Width and height properties
+
+        // Width & height properties
         const Dimension width() const { return Dimension(style_.width); }
         void setWidth(Dimension value) { style_.width = value.handle_; }
         Dimension height() const { return Dimension(style_.height); }
         void setHeight(Dimension value) { style_.height = value.handle_; }
+
+        // Min/Max width & height
+        const Dimension minWidth() const { return Dimension(style_.min_width); }
+        void setMinWidth(Dimension value) { style_.min_width = value.handle_; }
+        const Dimension minHeight() const { return Dimension(style_.min_height); }
+        void setMinHeight(Dimension value) { style_.min_height = value.handle_; }
+        const Dimension maxWidth() const { return Dimension(style_.max_width); }
+        void setMaxWidth(Dimension value) { style_.max_width = value.handle_; }
+        const Dimension maxHeight() const { return Dimension(style_.max_height); }
+        void setMaxHeight(Dimension value) { style_.max_height = value.handle_; }
+
         // Spacing properties
         const Rect<LengthPercentageAuto> margin() const
         {
@@ -778,7 +1170,30 @@ namespace crates
         void setBorderRight(LengthPercentage value) { style_.border_right = value.handle_; }
         void setBorderBottom(LengthPercentage value) { style_.border_bottom = value.handle_; }
         void setBorderLeft(LengthPercentage value) { style_.border_left = value.handle_; }
+
         // Flex properties
+        AlignItems alignItems() const { return style_.align_items; }
+        void setAlignItems(AlignItems value) { style_.align_items = value; }
+        AlignSelf alignSelf() const { return style_.align_self; }
+        void setAlignSelf(AlignSelf value) { style_.align_self = value; }
+        JustifyItems justifyItems() const { return style_.justify_items; }
+        void setJustifyItems(JustifyItems value) { style_.justify_items = value; }
+        JustifySelf justifySelf() const { return style_.justify_self; }
+        void setJustifySelf(JustifySelf value) { style_.justify_self = value; }
+        AlignContent alignContent() const { return style_.align_content; }
+        void setAlignContent(AlignContent value) { style_.align_content = value; }
+        JustifyContent justifyContent() const { return style_.justify_content; }
+        void setJustifyContent(JustifyContent value) { style_.justify_content = value; }
+        LengthPercentage rowGap() const { return LengthPercentage(style_.gap_x); }
+        void setRowGap(LengthPercentage value) { style_.gap_x = value.handle_; }
+        LengthPercentage columnGap() const { return LengthPercentage(style_.gap_y); }
+        void setColumnGap(LengthPercentage value) { style_.gap_y = value.handle_; }
+        FlexDirection flexDirection() const { return style_.flex_direction; }
+        void setFlexDirection(FlexDirection value) { style_.flex_direction = value; }
+        FlexWrap flexWrap() const { return style_.flex_wrap; }
+        void setFlexWrap(FlexWrap value) { style_.flex_wrap = value; }
+        const Dimension flexBasis() const { return Dimension(style_.flex_basis); }
+        void setFlexBasis(Dimension value) { style_.flex_basis = value.handle_; }
         const float flexGrow() const { return style_.flex_grow; }
         void setFlexGrow(float value) { style_.flex_grow = value; }
         const float flexShrink() const { return style_.flex_shrink; }

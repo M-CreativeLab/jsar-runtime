@@ -1,4 +1,5 @@
 #include <optional>
+#include <client/macros.h>
 #include "./css_style_declaration.hpp"
 
 namespace client_cssom
@@ -11,25 +12,25 @@ namespace client_cssom
   {
     LayoutStyle layoutStyle;
 
+#define LAYOUT_USE_PROPERTY_WITH_TYPE(PROP, NAME, T) \
+  if (hasProperty(PROP))                             \
+    layoutStyle.set##NAME(getPropertyValueAs<T>(PROP));
+
+#define LAYOUT_USE_PROPERTY(PROP, NAME) \
+  LAYOUT_USE_PROPERTY_WITH_TYPE(PROP, NAME, NAME)
+
     // Set display
-    if (hasProperty("display"))
-      layoutStyle.setDisplay(getPropertyValueAs<Display>("display"));
+    LAYOUT_USE_PROPERTY("display", Display)
+    LAYOUT_USE_PROPERTY("box-sizing", BoxSizing)
+    LAYOUT_USE_PROPERTY("position", Position)
 
-    // Set box-sizing
-    if (hasProperty("box-sizing"))
-      layoutStyle.setBoxSizing(getPropertyValueAs<BoxSizing>("box-sizing"));
-
-    // Set position
-    if (hasProperty("position"))
-      layoutStyle.setPosition(getPropertyValueAs<Position>("position"));
-
-    // Set width
-    if (hasProperty("width"))
-      layoutStyle.setWidth(getPropertyValueAs<Dimension>("width"));
-
-    // Set height
-    if (hasProperty("height"))
-      layoutStyle.setHeight(getPropertyValueAs<Dimension>("height"));
+    // Set width & height
+    LAYOUT_USE_PROPERTY_WITH_TYPE("width", Width, Dimension)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("height", Height, Dimension)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("min-width", MinWidth, Dimension)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("min-height", MinHeight, Dimension)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("max-width", MaxWidth, Dimension)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("max-height", MaxHeight, Dimension)
 
     // Set overflow(x, y)
     if (hasProperty("overflow"))
@@ -38,49 +39,48 @@ namespace client_cssom
       layoutStyle.setOverflowX(overflow);
       layoutStyle.setOverflowY(overflow);
     }
-    if (hasProperty("overflow-x"))
-      layoutStyle.setOverflowX(getPropertyValueAs<Overflow>("overflow-x"));
-    if (hasProperty("overflow-y"))
-      layoutStyle.setOverflowY(getPropertyValueAs<Overflow>("overflow-y"));
+    LAYOUT_USE_PROPERTY_WITH_TYPE("overflow-x", OverflowX, Overflow)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("overflow-y", OverflowY, Overflow)
 
     // Set margin(top, right, bottom, left)
-    if (hasProperty("margin-top"))
-      layoutStyle.setMarginTop(getPropertyValueAs<LengthPercentageAuto>("margin-top"));
-    if (hasProperty("margin-right"))
-      layoutStyle.setMarginRight(getPropertyValueAs<LengthPercentageAuto>("margin-right"));
-    if (hasProperty("margin-bottom"))
-      layoutStyle.setMarginBottom(getPropertyValueAs<LengthPercentageAuto>("margin-bottom"));
-    if (hasProperty("margin-left"))
-      layoutStyle.setMarginLeft(getPropertyValueAs<LengthPercentageAuto>("margin-left"));
+    LAYOUT_USE_PROPERTY_WITH_TYPE("margin-top", MarginTop, LengthPercentageAuto)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("margin-right", MarginRight, LengthPercentageAuto)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("margin-bottom", MarginBottom, LengthPercentageAuto)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("margin-left", MarginLeft, LengthPercentageAuto)
 
     // Set padding(top, right, bottom, left)
-    if (hasProperty("padding-top"))
-      layoutStyle.setPaddingTop(getPropertyValueAs<LengthPercentage>("padding-top"));
-    if (hasProperty("padding-right"))
-      layoutStyle.setPaddingRight(getPropertyValueAs<LengthPercentage>("padding-right"));
-    if (hasProperty("padding-bottom"))
-      layoutStyle.setPaddingBottom(getPropertyValueAs<LengthPercentage>("padding-bottom"));
-    if (hasProperty("padding-left"))
-      layoutStyle.setPaddingLeft(getPropertyValueAs<LengthPercentage>("padding-left"));
+    LAYOUT_USE_PROPERTY_WITH_TYPE("padding-top", PaddingTop, LengthPercentage)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("padding-right", PaddingRight, LengthPercentage)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("padding-bottom", PaddingBottom, LengthPercentage)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("padding-left", PaddingLeft, LengthPercentage)
 
     // Set border(top, right, bottom, left)
-    if (hasProperty("border-top-width"))
-      layoutStyle.setBorderTop(getPropertyValueAs<LengthPercentage>("border-top-width"));
-    if (hasProperty("border-right-width"))
-      layoutStyle.setBorderRight(getPropertyValueAs<LengthPercentage>("border-right-width"));
-    if (hasProperty("border-bottom-width"))
-      layoutStyle.setBorderBottom(getPropertyValueAs<LengthPercentage>("border-bottom-width"));
-    if (hasProperty("border-left-width"))
-      layoutStyle.setBorderLeft(getPropertyValueAs<LengthPercentage>("border-left-width"));
+    LAYOUT_USE_PROPERTY_WITH_TYPE("border-top-width", BorderTop, LengthPercentage)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("border-right-width", BorderRight, LengthPercentage)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("border-bottom-width", BorderBottom, LengthPercentage)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("border-left-width", BorderLeft, LengthPercentage)
 
-    // Set flex-grow
-    if (hasProperty("flex-grow"))
-      layoutStyle.setFlexGrow(getPropertyValueAs<float>("flex-grow"));
+    // Set flex properties
+    LAYOUT_USE_PROPERTY("align-items", AlignItems)
+    LAYOUT_USE_PROPERTY("align-self", AlignSelf)
+    LAYOUT_USE_PROPERTY("justify-items", JustifyItems)
+    LAYOUT_USE_PROPERTY("justify-self", JustifySelf)
+    LAYOUT_USE_PROPERTY("align-content", AlignContent)
+    LAYOUT_USE_PROPERTY("justify-content", JustifyContent)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("row-gap", RowGap, LengthPercentage)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("column-gap", ColumnGap, LengthPercentage)
+    LAYOUT_USE_PROPERTY("flex-direction", FlexDirection)
+    LAYOUT_USE_PROPERTY("flex-wrap", FlexWrap)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("flex-grow", FlexGrow, float)
+    LAYOUT_USE_PROPERTY_WITH_TYPE("flex-shrink", FlexShrink, float)
 
-    // Set flex-shrink
-    if (hasProperty("flex-shrink"))
-      layoutStyle.setFlexShrink(getPropertyValueAs<float>("flex-shrink"));
+#undef LAYOUT_USE_PROPERTY
+#undef LAYOUT_USE_PROPERTY_WITH_TYPE
 
+#ifdef TR_CLIENT_CSSOM_VERBOSE
+    cout << "toLayoutStyle => " << layoutStyle << endl;
+    cout << "source css: " << cssText() << endl;
+#endif
     // Return the layout style
     return layoutStyle;
   }

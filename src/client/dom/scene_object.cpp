@@ -224,6 +224,6 @@ namespace dom
 
     using namespace crates::layout::style;
     auto display = adoptedStyle_.getPropertyValueAs<Display>("display");
-    return display == Display::None;
+    return display == Display::None();
   }
 }
