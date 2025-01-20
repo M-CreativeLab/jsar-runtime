@@ -70,7 +70,7 @@ namespace dom
     return make_unique<Text>(second, getOwnerDocumentReference());
   }
 
-  geometry::DOMRect Text::getTextClientRect() const
+  geometry::DOMRect Text::getTextClientRect(float maxWidth) const
   {
     if (!hasSceneComponent<WebContent>() || !hasSceneComponent<Text2d>())
       return geometry::DOMRect();
@@ -86,7 +86,9 @@ namespace dom
     paragraphBuilder->pop();
 
     auto paragraph = paragraphBuilder->Build();
-    paragraph->layout(numeric_limits<float>::infinity());
+    paragraph->layout(maxWidth > 0
+                          ? maxWidth
+                          : numeric_limits<float>::infinity());
 
     geometry::DOMRect textRect;
     textRect.width() = paragraph->getLongestLine();
@@ -129,12 +131,26 @@ namespace dom
       auto parentStyle = parentElement->style;
       std::shared_ptr<client_cssom::CSSStyleDeclaration> textStyle = nullptr;
 
+#define _MAKE_TEXT_STYLE_IF_NOT_EXIST() \
+  if (textStyle == nullptr)             \
+    textStyle = make_shared<client_cssom::CSSStyleDeclaration>(style);
+
 #define USE_PARENT_STYLE(property)                                             \
   if (parentStyle->hasProperty(property))                                      \
   {                                                                            \
-    if (textStyle == nullptr)                                                  \
-      textStyle = make_shared<client_cssom::CSSStyleDeclaration>(style);       \
+    _MAKE_TEXT_STYLE_IF_NOT_EXIST()                                            \
     textStyle->setProperty(property, parentStyle->getPropertyValue(property)); \
+  }
+
+#define USE_PARENT_SIZE(property)                                                                 \
+  if (parentStyle->hasProperty(property))                                                         \
+  {                                                                                               \
+    _MAKE_TEXT_STYLE_IF_NOT_EXIST()                                                               \
+    auto dimension = parentStyle->getPropertyValueAs<crates::layout::style::Dimension>(property); \
+    if (dimension.isLength() || dimension.isPercent())                                            \
+      textStyle->setProperty(property, "100%");                                                   \
+    else                                                                                          \
+      textStyle->setProperty(property, "auto");                                                   \
   }
 
       // Font styles
@@ -156,8 +172,16 @@ namespace dom
       USE_PARENT_STYLE("white-space");
       USE_PARENT_STYLE("direction");
       USE_PARENT_STYLE("unicode-bidi");
-#undef USE_PARENT_STYLE
 
+      // Controls the text rect
+      USE_PARENT_SIZE("width");
+      USE_PARENT_SIZE("height");
+
+#undef USE_PARENT_SIZE
+#undef USE_PARENT_STYLE
+#undef _MAKE_TEXT_STYLE_IF_NOT_EXIST
+
+      // Adopt the text style if it is not empty.
       if (textStyle != nullptr)
         return SceneObject::adoptStyleOn(*this, *textStyle);
     }

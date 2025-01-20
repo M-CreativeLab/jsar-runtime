@@ -21,6 +21,8 @@ namespace dom
     {
       defaultStyle_.setProperty("display", "block");
       defaultStyle_.setProperty("margin", "10px 0");
+      defaultStyle_.setProperty("height", "auto");
+      defaultStyle_.setProperty("width", "auto");
 
       HTMLContent2dElement::createdCallback();
     }

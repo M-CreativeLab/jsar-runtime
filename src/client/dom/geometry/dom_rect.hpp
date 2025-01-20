@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 namespace dom::geometry
 {
   struct DOMRectInit
@@ -29,6 +31,18 @@ namespace dom::geometry
     float y() const { return y_; }
     float width() const { return width_; }
     float height() const { return height_; }
+
+  public:
+    friend std::ostream &operator<<(std::ostream &os, const DOMRectReadOnly &rect)
+    {
+      os << "{" << std::endl;
+      os << "  x: " << rect.x() << "," << std::endl;
+      os << "  y: " << rect.y() << "," << std::endl;
+      os << "  width: " << rect.width() << "," << std::endl;
+      os << "  height: " << rect.height() << std::endl;
+      os << "}";
+      return os;
+    }
 
   protected:
     float x_ = 0.0f;

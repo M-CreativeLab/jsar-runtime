@@ -164,7 +164,7 @@ namespace dom
     // Layout
     {
       layoutNode_ = make_shared<LayoutNode>(*layoutAllocator_);
-      setLayoutStyle(name_, *node, adoptedStyle_);
+      setLayoutStyle(*node, adoptedStyle_);
 
       // Append this node to the parent layout node.
       if (parent != nullptr)
@@ -199,6 +199,7 @@ namespace dom
     {
       offsetWidth() = layout.width();
       offsetHeight() = layout.height();
+      setLayoutStyle(node, adoptedStyle_);  // Update the layout style if the size is changed.
       onLayoutChanged();
     }
 
@@ -217,7 +218,7 @@ namespace dom
     // Update the layout node style.
     if (layoutNode_ != nullptr)
     {
-      auto layoutStyle = setLayoutStyle(name_, node, adoptedStyle_);
+      auto layoutStyle = setLayoutStyle(node, adoptedStyle_);
 #ifdef TR_CLIENT_DOM_VERBOSE
       cout << "Updated layout style for SceneObject(" << name_ << "): " << layoutStyle << endl;
       cout << "source style: " << style << endl;
@@ -240,18 +241,27 @@ namespace dom
     return display == Display::None();
   }
 
-  LayoutStyle SceneObject::setLayoutStyle(const string &name, const Node &node, LayoutStyle style)
+  LayoutStyle SceneObject::setLayoutStyle(const Node &node, LayoutStyle style)
   {
     if (node.nodeType == NodeType::TEXT_NODE)
     {
       try
       {
         auto &text = dynamic_cast<const Text &>(node);
-        auto textRect = text.getTextClientRect();
+        dom::geometry::DOMRect textRect;
+
+        // Check if the width is auto, then calculate the width from the text.
+        if (style.width().isAuto())
+        {
+          textRect = text.getTextClientRect();  // Use inf if the width is auto.
+          style.setWidth(Dimension::Length(textRect.width()));
+        }
+        else
+          textRect = text.getTextClientRect(offsetWidth());
+
+        // Check if the height is auto, then use the calculated height.
         if (style.height().isAuto())
           style.setHeight(Dimension::Length(textRect.height()));
-        if (style.width().isAuto())
-          style.setWidth(Dimension::Length(textRect.width()));
       }
       catch (const std::bad_cast &e)
       {

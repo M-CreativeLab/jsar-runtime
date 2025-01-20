@@ -110,7 +110,7 @@ namespace dom
     // Check if the scene object should be rendered.
     [[nodiscard]] bool skipRender() const;
     // Set the layout style with the name, node, and style.
-    crates::layout::style::LayoutStyle setLayoutStyle(const std::string &name, const Node &node,
+    crates::layout::style::LayoutStyle setLayoutStyle(const Node &node,
                                                       crates::layout::style::LayoutStyle style);
 
   protected:
