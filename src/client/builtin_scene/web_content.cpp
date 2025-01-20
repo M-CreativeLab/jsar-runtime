@@ -19,7 +19,7 @@ namespace builtin_scene
 
     SkPaint textPaint;
     textPaint.setAntiAlias(true);
-    textPaint.setColor(SK_ColorWHITE);
+    textPaint.setColor(SK_ColorBLACK);
 
     // Init text style
     textStyle.setBackgroundColor(transparent);

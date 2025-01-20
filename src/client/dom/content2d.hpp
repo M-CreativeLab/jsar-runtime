@@ -21,6 +21,9 @@ namespace dom
     Content2d(Content2d &that);
     virtual ~Content2d() = default;
 
+  public:
+    float devicePixelRatio() const { return devicePixelRatio_; }
+
   protected:
     void onNodeConnected();
     void onLayoutSizeChanged();
@@ -34,5 +37,6 @@ namespace dom
   private:
     std::shared_ptr<SceneObject> sceneObject_;
     sk_sp<SkSurface> contentSurface_;
+    float devicePixelRatio_ = 1.0f;
   };
 }

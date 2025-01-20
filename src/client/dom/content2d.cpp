@@ -13,7 +13,8 @@ namespace dom
   using LayoutNode = crates::layout::Node;
 
   Content2d::Content2d(shared_ptr<Node> sceneObjectNode)
-      : sceneObject_(dynamic_pointer_cast<SceneObject>(sceneObjectNode))
+      : sceneObject_(dynamic_pointer_cast<SceneObject>(sceneObjectNode)),
+        devicePixelRatio_(1.5f) // Default to 1.5x for medium density displays.
   {
     assert(sceneObject_ != nullptr && "The node must be a `SceneObject`.");
   }
@@ -59,13 +60,19 @@ namespace dom
       auto &entity = sceneObject_->entity_.value();
 
       // Resize the surface for the content.
-      auto resizeCanvas = [entity, surface](Scene &scene)
+      auto resizeCanvas = [this, entity, surface](Scene &scene)
       {
         auto content = scene.getComponent<WebContent>(entity);
         assert(content != nullptr);
         if (TR_LIKELY(surface != nullptr))
         {
-          content->setCanvas(surface->getCanvas());
+          SkCanvas *canvas = surface->getCanvas();
+          if (canvas != nullptr)
+          {
+            if (devicePixelRatio_ != 1.0f)
+              canvas->scale(devicePixelRatio_, devicePixelRatio_);
+            content->setCanvas(canvas);
+          }
 
           auto meshMaterial3d = scene.getComponent<MeshMaterial3d>(entity);
           if (TR_UNLIKELY(meshMaterial3d == nullptr))
@@ -111,7 +118,8 @@ namespace dom
       return nullptr;
 
     // TODO: use Skia Genesh(GPU) to increase the performance.
-    SkImageInfo imageInfo = SkImageInfo::MakeN32Premul(width, height);
+    SkImageInfo imageInfo = SkImageInfo::MakeN32Premul(width * devicePixelRatio_,
+                                                       height * devicePixelRatio_);
     if (contentSurface_ == nullptr)
       contentSurface_ = SkSurfaces::Raster(imageInfo);
     else
