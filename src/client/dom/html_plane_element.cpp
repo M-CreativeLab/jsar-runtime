@@ -34,7 +34,7 @@ namespace dom
   void HTMLPlaneElement::connectedCallback()
   {
     HTMLElement::connectedCallback();
-    SceneObject::connectedCallback(*this);
+    SceneObject::connectedCallback(shared_from_this());
 
     // Implement connectedCallback for HTMLPlaneElement
     assert(entity_.has_value());

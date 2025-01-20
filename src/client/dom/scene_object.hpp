@@ -9,12 +9,14 @@
 #include <client/cssom/css_style_declaration.hpp>
 #include <client/cssom/layout.hpp>
 #include <client/cssom/box_offset.hpp>
+#include <client/cssom/box_bounding.hpp>
 #include "./node.hpp"
 
 namespace dom
 {
   class HTMLDocument;
-  class SceneObject : virtual public client_cssom::BoxOffset
+  class SceneObject : virtual public client_cssom::BoxOffset,
+                      virtual public client_cssom::BoxBounding
   {
     friend class Content2d;
 
@@ -37,9 +39,39 @@ namespace dom
     /**
      * Get the layout node reference of the element.
      */
-    std::shared_ptr<crates::layout::Node> layoutNode();
+    [[nodiscard]] std::shared_ptr<crates::layout::Node> layoutNode();
 
   protected:
+    template <typename T>
+    bool hasSceneComponent() const
+    {
+      auto sceneRef = scene_.lock();
+      if (TR_UNLIKELY(sceneRef == nullptr) || !entity_.has_value())
+        return false;
+      return sceneRef->hasComponent<T>(entity_.value());
+    }
+    /**
+     * Get the scene's component of the given component type.
+     */
+    template <typename T>
+    std::shared_ptr<T> getSceneComponent() const
+    {
+      auto sceneRef = scene_.lock();
+      if (TR_UNLIKELY(sceneRef == nullptr) || !entity_.has_value())
+        return nullptr;
+      return sceneRef->getComponent<T>(entity_.value());
+    }
+    /**
+     * Get the scene's component of the given component type, and assert if the component is not found.
+     */
+    template <typename T>
+    T &getSceneComponentChecked() const
+    {
+      auto sceneRef = scene_.lock();
+      assert(sceneRef != nullptr && "The scene must be valid.");
+      assert(entity_.has_value() && "The entity must be valid.");
+      return sceneRef->getComponentChecked<T>(entity_.value());
+    }
     /**
      * A utility method to use the scene weak reference safely.
      *
@@ -53,7 +85,7 @@ namespace dom
      */
     bool render(Node &node);
     void renderObject(builtin_scene::Scene &scene, const client_cssom::Layout &layout);
-    void connectedCallback(const Node &node);
+    void connectedCallback(std::shared_ptr<Node> node);
 
   protected: // Layout methods
     /**
@@ -77,6 +109,9 @@ namespace dom
   private:
     // Check if the scene object should be rendered.
     [[nodiscard]] bool skipRender() const;
+    // Set the layout style with the name, node, and style.
+    void setLayoutStyle(const std::string &name, const Node &node,
+                        crates::layout::style::LayoutStyle style);
 
   protected:
     std::weak_ptr<builtin_scene::Scene> scene_;

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <shared_mutex>
+#include <client/dom/node.hpp>
 
 #include "./ecs-inl.hpp"
 #include "./asset.hpp"
@@ -13,7 +14,6 @@
 #include "./bounding_box.hpp"
 #include "./meshes.hpp"
 #include "./materials.hpp"
-#include "./client_renderer.hpp"
 #include "./web_content.hpp"
 #include "./xr.hpp"
 
@@ -53,9 +53,11 @@ namespace builtin_scene
      * Create a new element to the scene for rendering.
      *
      * @param name The tag name of the element.
+     * @param node The element's node instance.
      * @param parent The parent element of the new element.
      */
     [[nodiscard]] ecs::EntityId createElement(std::string name,
+                                              std::shared_ptr<dom::Node> node,
                                               std::optional<ecs::EntityId> parent = std::nullopt);
 
   private:

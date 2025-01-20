@@ -1,4 +1,10 @@
 #include <memory>
+#include <skia/modules/skparagraph/include/Paragraph.h>
+#include <skia/modules/skparagraph/include/ParagraphBuilder.h>
+#include <client/per_process.hpp>
+#include <client/builtin_scene/web_content.hpp>
+#include <client/builtin_scene/text.hpp>
+
 #include "./text.hpp"
 #include "./document.hpp"
 
@@ -7,6 +13,7 @@ namespace dom
   using namespace std;
   using namespace pugi;
   using namespace builtin_scene;
+  using namespace skia::textlayout;
 
   // Create a text node from a document and a value.
   xml_node createTextNode(shared_ptr<xml_document> doc, const string &value = "")
@@ -23,8 +30,8 @@ namespace dom
         content2d_(nullptr)
   {
     client_cssom::CSSStyleDeclaration defaultStyle;
-    defaultStyle.setProperty("width", "100%");
-    defaultStyle.setProperty("height", "100%");
+    defaultStyle.setProperty("width", "auto");
+    defaultStyle.setProperty("height", "auto");
     style_ = make_shared<client_cssom::CSSStyleDeclaration>(defaultStyle.cssText());
   }
 
@@ -63,10 +70,34 @@ namespace dom
     return make_unique<Text>(second, getOwnerDocumentReference());
   }
 
+  geometry::DOMRect Text::getTextClientRect() const
+  {
+    if (!hasSceneComponent<WebContent>() || !hasSceneComponent<Text2d>())
+      return geometry::DOMRect();
+
+    const auto &webContentComponent = getSceneComponentChecked<WebContent>();
+    const auto &textComponent = getSceneComponentChecked<Text2d>();
+
+    string text = textComponent.content;
+    auto paragraphBuilder = ParagraphBuilder::make(webContentComponent.paragraphStyle,
+                                                   TrClientContextPerProcess::Get()->getFontCacheManager());
+    paragraphBuilder->pushStyle(webContentComponent.textStyle);
+    paragraphBuilder->addText(text.c_str(), text.size());
+    paragraphBuilder->pop();
+
+    auto paragraph = paragraphBuilder->Build();
+    paragraph->layout(numeric_limits<float>::infinity());
+
+    geometry::DOMRect textRect;
+    textRect.width() = paragraph->getLongestLine();
+    textRect.height() = paragraph->getHeight();
+    return textRect;
+  }
+
   void Text::connect()
   {
     CharacterData::connect();
-    SceneObject::connectedCallback(*this); // Create the entity
+    SceneObject::connectedCallback(shared_from_this()); // Create the entity
 
     // Initialize the mesh
     auto initTextMesh = [this](Scene &scene)

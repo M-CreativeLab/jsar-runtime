@@ -167,6 +167,9 @@ namespace builtin_scene
       void render(ecs::EntityId entity, WebContent &content) override;
 
     private:
+      float getLayoutWidthForText(WebContent &content);
+
+    private:
       TrClientContextPerProcess *clientContext_;
       sk_sp<skia::textlayout::FontCollection> fontCollection_;
       std::unique_ptr<skia::textlayout::ParagraphBuilder> paragraphBuilder_;

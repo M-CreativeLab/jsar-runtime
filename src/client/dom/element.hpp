@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <client/cssom/box_bounding.hpp>
 #include "./node.hpp"
 
 #define TYPED_ELEMENT_MAP(XX)     \
@@ -21,7 +22,8 @@ namespace dom
 {
   class Attr;
   class Document;
-  class Element : public Node
+  class Element : public Node,
+                  virtual public client_cssom::BoxBounding
   {
   public:
     /**

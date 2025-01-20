@@ -909,10 +909,10 @@ namespace crates
         }
 
       public:
-        inline bool isLength() { return handle_.IsLength(); }
-        inline bool isPercent() { return handle_.IsPercent(); }
-        inline bool isAuto() { return handle_.IsAuto(); }
-        inline float value()
+        inline bool isLength() const { return handle_.IsLength(); }
+        inline bool isPercent() const { return handle_.IsPercent(); }
+        inline bool isAuto() const { return handle_.IsAuto(); }
+        inline float value() const
         {
           if (isLength())
             return handle_.length._0;
@@ -1121,23 +1121,23 @@ namespace crates
         void setPosition(Position value) { style_.position = value; }
 
         // Width & height properties
-        const Dimension width() const { return Dimension(style_.width); }
-        void setWidth(Dimension value) { style_.width = value.handle_; }
+        Dimension width() const { return Dimension(style_.width); }
+        void setWidth(const Dimension value) { style_.width = value.handle_; }
         Dimension height() const { return Dimension(style_.height); }
-        void setHeight(Dimension value) { style_.height = value.handle_; }
+        void setHeight(const Dimension value) { style_.height = value.handle_; }
 
         // Min/Max width & height
-        const Dimension minWidth() const { return Dimension(style_.min_width); }
-        void setMinWidth(Dimension value) { style_.min_width = value.handle_; }
-        const Dimension minHeight() const { return Dimension(style_.min_height); }
-        void setMinHeight(Dimension value) { style_.min_height = value.handle_; }
-        const Dimension maxWidth() const { return Dimension(style_.max_width); }
-        void setMaxWidth(Dimension value) { style_.max_width = value.handle_; }
-        const Dimension maxHeight() const { return Dimension(style_.max_height); }
-        void setMaxHeight(Dimension value) { style_.max_height = value.handle_; }
+        Dimension minWidth() const { return Dimension(style_.min_width); }
+        void setMinWidth(const Dimension value) { style_.min_width = value.handle_; }
+        Dimension minHeight() const { return Dimension(style_.min_height); }
+        void setMinHeight(const Dimension value) { style_.min_height = value.handle_; }
+        Dimension maxWidth() const { return Dimension(style_.max_width); }
+        void setMaxWidth(const Dimension value) { style_.max_width = value.handle_; }
+        Dimension maxHeight() const { return Dimension(style_.max_height); }
+        void setMaxHeight(const Dimension value) { style_.max_height = value.handle_; }
 
         // Spacing properties
-        const Rect<LengthPercentageAuto> margin() const
+        Rect<LengthPercentageAuto> margin() const
         {
           return Rect<LengthPercentageAuto>(LengthPercentageAuto(style_.margin_top),
                                             LengthPercentageAuto(style_.margin_right),
@@ -1148,7 +1148,7 @@ namespace crates
         void setMarginRight(LengthPercentageAuto value) { style_.margin_right = value.handle_; }
         void setMarginBottom(LengthPercentageAuto value) { style_.margin_bottom = value.handle_; }
         void setMarginLeft(LengthPercentageAuto value) { style_.margin_left = value.handle_; }
-        const Rect<LengthPercentage> padding() const
+        Rect<LengthPercentage> padding() const
         {
           return Rect<LengthPercentage>(LengthPercentage(style_.padding_top),
                                         LengthPercentage(style_.padding_right),
@@ -1159,7 +1159,7 @@ namespace crates
         void setPaddingRight(LengthPercentage value) { style_.padding_right = value.handle_; }
         void setPaddingBottom(LengthPercentage value) { style_.padding_bottom = value.handle_; }
         void setPaddingLeft(LengthPercentage value) { style_.padding_left = value.handle_; }
-        const Rect<LengthPercentage> border() const
+        Rect<LengthPercentage> border() const
         {
           return Rect<LengthPercentage>(LengthPercentage(style_.border_top),
                                         LengthPercentage(style_.border_right),

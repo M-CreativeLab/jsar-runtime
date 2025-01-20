@@ -1,11 +1,13 @@
 #include <client/cssom/units.hpp>
 #include "./scene_object.hpp"
 #include "./document.hpp"
+#include "./text.hpp"
 
 namespace dom
 {
   using namespace std;
   using namespace builtin_scene;
+  using namespace crates::layout::style;
   using LayoutNode = crates::layout::Node;
 
   SceneObject::SceneObject(shared_ptr<HTMLDocument> htmlDocument, string name)
@@ -45,15 +47,15 @@ namespace dom
     if (TR_UNLIKELY(sceneRef == nullptr) || !entity_.has_value())
       return false;
 
-    auto mesh = sceneRef->getComponent<Mesh3d>(entity_.value());
+    auto &meshComponent = getSceneComponentChecked<Mesh3d>();
     if (skipRender())
     {
-      mesh->disableRendering(); // Disable rendering if the object is skipped.
+      meshComponent.disableRendering(); // Disable rendering if the object is skipped.
       return false;
     }
     else
     {
-      mesh->resumeRendering(); // Resume rendering if the object is not skipped.
+      meshComponent.resumeRendering(); // Resume rendering if the object is not skipped.
     }
 
     auto layout = fetchLayoutAndDispatchChangeEvent(node);
@@ -72,18 +74,18 @@ namespace dom
       auto &entity = entity_.value();
 
       // Update the layout into the `WebContent` component.
-      auto webContent = scene.getComponent<WebContent>(entity);
+      auto webContent = getSceneComponent<WebContent>();
       if (webContent != nullptr)
         webContent->setLayout(layout); // Update the layout result into the `WebContent` component.
 
       // Update bouding box
-      auto boundingBox = scene.getComponent<BoundingBox>(entity);
+      auto boundingBox = getSceneComponent<BoundingBox>();
       if (boundingBox != nullptr)
         boundingBox->updateSize(layout.width(), layout.height(), layout.depth());
 
       {
         // Update transform by the layout.
-        auto transform = scene.getComponent<Transform>(entity);
+        auto transform = getSceneComponent<Transform>();
         if (transform != nullptr)
         {
           transform->setScale({client_cssom::pixelToMeter(boundingBox->width()),
@@ -92,10 +94,10 @@ namespace dom
 
           float left = layout.left(); // Get the left position.
           float top = layout.top();   // Get the top position.
-          auto isRootEntity = scene.hasComponent<hierarchy::Root>(entity);
+          auto isRootEntity = hasSceneComponent<hierarchy::Root>();
           if (!isRootEntity)
           {
-            auto &parentComponent = scene.getComponentChecked<hierarchy::Parent>(entity);
+            auto &parentComponent = getSceneComponentChecked<hierarchy::Parent>();
             auto rootBoundingBox = scene.getComponent<BoundingBox>(parentComponent.root());
             if (TR_LIKELY(rootBoundingBox != nullptr))
             {
@@ -138,7 +140,7 @@ namespace dom
         }
       }
 
-      auto material3d = scene.getComponent<MeshMaterial3d>(entity);
+      auto material3d = getSceneComponent<MeshMaterial3d>();
       if (material3d != nullptr)
       {
         // TODO: update material properties?
@@ -146,14 +148,14 @@ namespace dom
     }
   }
 
-  void SceneObject::connectedCallback(const Node &node)
+  void SceneObject::connectedCallback(shared_ptr<Node> node)
   {
-    auto parent = node.getParentNodeAs<SceneObject>();
+    auto parent = node->getParentNodeAs<SceneObject>();
 
     // Create the entity
     auto createEntity = [this, &node, parent](Scene &scene)
     {
-      entity_ = scene.createElement(node.nodeName,
+      entity_ = scene.createElement(node->nodeName, node,
                                     parent == nullptr ? nullopt : parent->entity_);
       assert(entity_.has_value());
     };
@@ -162,7 +164,7 @@ namespace dom
     // Layout
     {
       layoutNode_ = make_shared<LayoutNode>(*layoutAllocator_);
-      layoutNode_->setStyle(adoptedStyle_);
+      setLayoutStyle(name_, *node, adoptedStyle_);
 
       // Append this node to the parent layout node.
       if (parent != nullptr)
@@ -208,7 +210,7 @@ namespace dom
 #ifdef TR_CLIENT_DOM_VERBOSE
       cout << "Adopting style for SceneObject(): " << adoptedStyle_ << endl;
 #endif
-      layoutNode_->setStyle(adoptedStyle_);
+      setLayoutStyle(name_, node, adoptedStyle_);
       return true;
     }
     else
@@ -225,5 +227,26 @@ namespace dom
     using namespace crates::layout::style;
     auto display = adoptedStyle_.getPropertyValueAs<Display>("display");
     return display == Display::None();
+  }
+
+  void SceneObject::setLayoutStyle(const string &name, const Node &node, LayoutStyle style)
+  {
+    if (node.nodeType == NodeType::TEXT_NODE)
+    {
+      try
+      {
+        auto &text = dynamic_cast<const Text &>(node);
+        auto textRect = text.getTextClientRect();
+        if (style.height().isAuto())
+          style.setHeight(Dimension::Length(textRect.height()));
+        if (style.width().isAuto())
+          style.setWidth(Dimension::Length(textRect.width()));
+      }
+      catch (const std::bad_cast &e)
+      {
+        // Ignore the exception.
+      }
+    }
+    layoutNode_->setStyle(style);
   }
 }

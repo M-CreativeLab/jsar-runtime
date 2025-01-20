@@ -607,13 +607,13 @@ namespace builtin_scene::ecs
     /**
      * Get the component reference of the given entity, it will expect the entity to have the component. If you are not sure
      * if the entity has the component, use `getComponent<T>` instead.
-     * 
+     *
      * @tparam ComponentType The type of the component.
      * @param entity The entity to get the component for.
      * @returns The component reference of the given entity.
      */
     template <typename ComponentType>
-    [[nodiscard]] const ComponentType& getComponentChecked(EntityId entity)
+    [[nodiscard]] ComponentType &getComponentChecked(EntityId entity)
     {
       auto componentRef = getComponent<ComponentType>(entity);
       assert(componentRef != nullptr && "The entity does not have the component.");
@@ -863,6 +863,18 @@ namespace builtin_scene::ecs
       return connectedApp_->firstEntityWithComponent<QueryComponentType, IncludeComponentType>();
     }
     /**
+     * Check if the entity has the component of the given type.
+     *
+     * @tparam ComponentType The type of the component.
+     * @param entity The entity to get the component for.
+     * @returns `true` if the entity has the component of the given type, `false` otherwise.
+     */
+    template <typename ComponentType>
+    [[nodiscard]] inline bool hasComponent(EntityId entity)
+    {
+      return connectedApp_->hasComponent<ComponentType>(entity);
+    }
+    /**
      * Get the component of the given entity.
      *
      * @tparam ComponentType The type of the component.
@@ -870,9 +882,22 @@ namespace builtin_scene::ecs
      * @returns The component of the given type for the given entity or nullptr if not found.
      */
     template <typename ComponentType>
-    inline std::shared_ptr<ComponentType> getComponent(EntityId entity)
+    [[nodiscard]] inline std::shared_ptr<ComponentType> getComponent(EntityId entity)
     {
       return connectedApp_->getComponent<ComponentType>(entity);
+    }
+    /**
+     * Get the component reference of the given entity, it will expect the entity to have the component. If you are not sure
+     * if the entity has the component, use `getComponent<T>` instead.
+     *
+     * @tparam ComponentType The type of the component.
+     * @param entity The entity to get the component for.
+     * @returns The component reference of the given entity.
+     */
+    template <typename ComponentType>
+    [[nodiscard]] const ComponentType &getComponentChecked(EntityId entity)
+    {
+      return connectedApp_->getComponentChecked<ComponentType>(entity);
     }
     /**
      * Add component(s) to the entity.

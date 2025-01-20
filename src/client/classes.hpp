@@ -17,8 +17,11 @@ namespace browser
  */
 namespace dom
 {
-  class Document; // Represents an HTML or XML document
-  class Element;  // Represents an element in the DOM tree
+  class Document;    // Represents an HTML or XML document
+  class Element;     // Represents an element in the DOM tree
+  class SceneObject; // Represents a scene object in the DOM tree
+  class Node;        // Represents a node in the DOM tree
+  class Text;        // Represents a text node in the DOM tree
 }
 
 /**

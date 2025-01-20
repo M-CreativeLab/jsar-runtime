@@ -8,6 +8,7 @@
 #include "./character_data.hpp"
 #include "./scene_object.hpp"
 #include "./content2d.hpp"
+#include "./geometry/dom_rect.hpp"
 
 namespace dom
 {
@@ -44,7 +45,8 @@ namespace dom
     const std::string &wholeText() const;
 
   public:
-    std::unique_ptr<Text> splitText(size_t offset);
+    [[nodiscard]] std::unique_ptr<Text> splitText(size_t offset);
+    [[nodiscard]] geometry::DOMRect getTextClientRect() const;
 
   private:
     inline float offsetWidth() const override { return offsetWidth_; }

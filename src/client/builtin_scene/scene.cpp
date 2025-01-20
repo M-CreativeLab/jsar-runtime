@@ -1,4 +1,5 @@
 #include "./scene.hpp"
+#include "./client_renderer.hpp"
 
 namespace builtin_scene
 {
@@ -76,7 +77,8 @@ namespace builtin_scene
     clientContext->addEventListener(TrClientContextEventType::ScriptingEventLoopReady, setupXRSession);
   }
 
-  ecs::EntityId Scene::createElement(string name, std::optional<ecs::EntityId> parent)
+  ecs::EntityId Scene::createElement(string name, shared_ptr<dom::Node> node,
+                                     std::optional<ecs::EntityId> parent)
   {
     Transform defaultTransform = Transform::FromXYZ(0.0f, 0.0f, 0.0f);
     BoundingBox defaultBoundingBox = BoundingBox();
@@ -84,7 +86,7 @@ namespace builtin_scene
     if (!parent.has_value())
     {
       return spawn(
-          hierarchy::Element(name),
+          hierarchy::Element(name, node),
           hierarchy::Children(),
           hierarchy::Root(),
           BoundingBox(),
@@ -107,7 +109,7 @@ namespace builtin_scene
       }
 
       auto newEntity = spawn(
-          hierarchy::Element(name),
+          hierarchy::Element(name, node),
           hierarchy::Children(),
           hierarchy::Parent(parentEntity, rootEntity),
           BoundingBox(),

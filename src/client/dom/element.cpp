@@ -1,9 +1,10 @@
 #include <algorithm>
+#include <common/utility.hpp>
+
 #include "./element.hpp"
 #include "./html_element.hpp"
 #include "./attr.hpp"
 #include "./all_html_elements.hpp"
-#include "common/utility.hpp"
 
 namespace dom
 {

@@ -53,7 +53,6 @@ namespace dom
   void Content2d::onLayoutSizeChanged()
   {
     auto surface = createOrGetSurface();
-    std::cout << "Resize layout " << sceneObject_->name_ << ": " << surface << std::endl;
     if (surface != nullptr)
     {
       assert(sceneObject_->entity_.has_value());

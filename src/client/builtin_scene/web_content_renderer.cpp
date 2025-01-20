@@ -8,6 +8,7 @@
 #include <skia/include/core/SkPathEffect.h>
 #include <skia/include/effects/SkDashPathEffect.h>
 
+#include "./hierarchy.hpp"
 #include "./mesh_material.hpp"
 #include "./materials/web_content.hpp"
 #include "./web_content.hpp"
@@ -265,10 +266,15 @@ namespace builtin_scene::web_renderer
     paragraphBuilder->addText(text.c_str(), text.size());
     paragraphBuilder->pop();
 
-    auto containerWidth = layout.value().width();
     auto paragraph = paragraphBuilder->Build();
-    paragraph->layout(containerWidth);
+    paragraph->layout(getLayoutWidthForText(content));
     paragraph->paint(content.canvas(), 0.0f, 0.0f);
+  }
+
+  float RenderTextSystem::getLayoutWidthForText(WebContent &content)
+  {
+    const auto &layout = content.layout();
+    return layout.value().width();
   }
 
   void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)
