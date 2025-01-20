@@ -261,8 +261,9 @@ namespace builtin_scene::web_renderer
       return;
 
     string &text = textComponent->content;
-    auto paragraphBuilder = ParagraphBuilder::make(content.paragraphStyle, fontCollection_);
-    paragraphBuilder->pushStyle(content.textStyle);
+    auto paragraphStyle = content.paragraphStyle();
+    auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle, fontCollection_);
+    paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
     paragraphBuilder->addText(text.c_str(), text.size());
     paragraphBuilder->pop();
 

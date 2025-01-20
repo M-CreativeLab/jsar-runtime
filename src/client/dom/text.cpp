@@ -79,9 +79,10 @@ namespace dom
     const auto &textComponent = getSceneComponentChecked<Text2d>();
 
     string text = textComponent.content;
-    auto paragraphBuilder = ParagraphBuilder::make(webContentComponent.paragraphStyle,
+    auto paragraphStyle = webContentComponent.paragraphStyle();
+    auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle,
                                                    TrClientContextPerProcess::Get()->getFontCacheManager());
-    paragraphBuilder->pushStyle(webContentComponent.textStyle);
+    paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
     paragraphBuilder->addText(text.c_str(), text.size());
     paragraphBuilder->pop();
 

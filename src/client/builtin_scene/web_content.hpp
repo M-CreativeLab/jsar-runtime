@@ -20,6 +20,53 @@ namespace builtin_scene
     class UpdateTextureSystem;
   }
 
+  struct WebContentFontStyle
+  {
+    SkFontStyle::Slant slant;
+    SkFontStyle::Weight weight;
+    SkFontStyle::Width width;
+  };
+
+  class WebContentTextStyle
+  {
+  public:
+    WebContentTextStyle();
+
+  public:
+    SkColor color;
+    std::optional<SkColor> foregroundColor;
+    std::optional<SkColor> backgroundColor;
+    uint8_t decoration;
+    SkScalar decorationThickness;
+    SkColor decorationColor;
+    WebContentFontStyle fontStyle;
+    std::vector<SkString> fontFamilies;
+    SkScalar fontSize;
+    std::optional<SkScalar> letterSpacing;
+    std::optional<SkScalar> wordSpacing;
+  };
+
+  class WebContentStyle
+  {
+  public:
+    WebContentStyle();
+
+  public:
+    bool disableHinting;
+    size_t maxLines;
+    skia::textlayout::TextAlign textAlign;
+    skia::textlayout::TextDirection textDirection;
+    skia::textlayout::TextHeightBehavior textHeightBehavior;
+    WebContentTextStyle textStyle;
+    SkScalar lineHeight;
+    bool useFixedLineHeight;
+    bool halfLeading;
+    SkScalar leading;
+    bool strutEnabled;
+    bool forceStrutHeight;
+    bool applyRoundingHack;
+  };
+
   class WebContent : public ecs::Component
   {
     friend class web_renderer::UpdateTextureSystem;
@@ -98,14 +145,16 @@ namespace builtin_scene
     void setDirty(bool dirty) { isDirty_ = dirty; }
 
   public:
-    skia::textlayout::ParagraphStyle paragraphStyle;
-    skia::textlayout::TextStyle textStyle;
+    skia::textlayout::TextStyle textStyle() const;
+    skia::textlayout::StrutStyle structStyle() const;
+    skia::textlayout::ParagraphStyle paragraphStyle() const;
 
   private:
     SkCanvas *canvas_;
     std::string name_;
     client_cssom::CSSStyleDeclaration style_;
     std::optional<crates::layout::Layout> lastLayout_;
+    WebContentStyle contentStyle_;
     bool isDirty_ = true;
   };
 

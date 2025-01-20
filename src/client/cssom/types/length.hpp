@@ -121,4 +121,89 @@ namespace client_cssom::types
   };
 
 #undef CSS_UNITS_MAP
+
+  class LengthPercentage : public Length
+  {
+  private:
+    enum class _ValueType
+    {
+      kLength,
+      kPercentage,
+    };
+
+  public:
+    /**
+     * Constructs a percentage value.
+     *
+     * @param percentage The percentage value between 0 and 100.
+     */
+    static LengthPercentage Percentage(float percentage)
+    {
+      assert(percentage >= 0 && percentage <= 100);
+      LengthPercentage value;
+      value.percentage_ = percentage;
+      return value;
+    }
+
+  public:
+    LengthPercentage()
+        : Length(),
+          percentage_(std::nullopt)
+    {
+    }
+    LengthPercentage(float value, Unit unit)
+        : Length(value, unit),
+          percentage_(std::nullopt)
+    {
+    }
+    LengthPercentage(const std::string &input)
+    {
+      bool needsParseLength = true;
+      if (input.ends_with("%"))
+      {
+        try
+        {
+          percentage_ = std::stof(input.substr(0, input.size() - 1));
+          needsParseLength = false;
+        }
+        catch (const std::invalid_argument &e)
+        {
+          std::cerr << "Failed to parse percentage: " << input << std::endl;
+          std::cerr << "  " << e.what() << std::endl;
+        }
+      }
+
+      // If the input doesn't end with '%' or failed to parse percentage, try to parse length.
+      if (needsParseLength)
+      {
+        percentage_ = std::nullopt;
+        Length::operator=(Length(input));
+      }
+    }
+
+  public:
+    friend std::ostream &operator<<(std::ostream &os,
+                                    const LengthPercentage &value)
+    {
+      if (value.isPercentage())
+        os << value.percentage() << "%";
+      else
+        os << static_cast<const Length &>(value);
+      return os;
+    }
+
+  public:
+    bool isPercentage() const { return percentage_.has_value(); }
+    /**
+     * @returns The percentage value between 0 and 100.
+     */
+    float percentage() const
+    {
+      assert(percentage_.has_value());
+      return percentage_.value();
+    }
+
+  protected:
+    std::optional<float> percentage_ = std::nullopt;
+  };
 }

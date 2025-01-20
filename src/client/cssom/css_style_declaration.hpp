@@ -10,9 +10,10 @@
 #include "./types/color.hpp"
 #include "./types/direction.hpp"
 #include "./types/font_style.hpp"
-#include "./types/length.hpp"
 #include "./types/length_keywords.hpp"
+#include "./types/length.hpp"
 #include "./types/number_keywords.hpp"
+#include "./types/number.hpp"
 #include "./types/text_align.hpp"
 #include "./types/keyword.hpp"
 
@@ -24,7 +25,9 @@ namespace client_cssom
                               std::is_same_v<T, types::FontStyle> ||
                               std::is_same_v<T, types::FontWeight> ||
                               std::is_same_v<T, types::Length> ||
+                              std::is_same_v<T, types::LengthPercentage> ||
                               std::is_same_v<T, types::LineWidth> ||
+                              std::is_same_v<T, types::NumberLengthPercentage> ||
                               std::is_same_v<T, types::TextAlign> ||
                               std::is_same_v<T, crates::layout::style::BoxSizing> ||
                               std::is_same_v<T, crates::layout::style::Display> ||
