@@ -676,7 +676,8 @@ impl TaffyNode {
   }
 
   pub fn compute_layout(&mut self, width: f32, height: f32) {
-    let _ = self.tree.handle.borrow_mut().compute_layout(
+    let mut tree= self.tree.handle.borrow_mut();
+    let _ = tree.compute_layout(
       self.node,
       taffy::geometry::Size {
         width: taffy::style::AvailableSpace::Definite(width),

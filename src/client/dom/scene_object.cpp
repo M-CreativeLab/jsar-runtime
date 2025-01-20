@@ -180,20 +180,30 @@ namespace dom
     client_cssom::Layout layout;
     auto parent = node.getParentNodeAs<SceneObject>();
     if (parent == nullptr)
+    {
+      // If the parent is not found or not a SceneObject, use the layout directly.
       layout = layoutNode_->layout();
+    }
     else
+    {
+      // Otherwise, merge the layout with the parent layout.
       layout = client_cssom::Layout::Merge(parent->computedLayout_, layoutNode_->layout());
+    }
 
-    if (layout.width() != offsetWidth() ||
-        layout.height() != offsetHeight()) // Check the layout size is changed.
+    // Update the `computedLayout_` value
+    computedLayout_ = layout;
+    assert(computedLayout_.has_value());
+
+    // Dispatch the `onLayoutChanged` if the layout size is changed.
+    if (computedLayout_->needsResize(offsetWidth(), offsetHeight()))
     {
       offsetWidth() = layout.width();
       offsetHeight() = layout.height();
-      computedLayout_ = layout;
       onLayoutChanged();
     }
+
     // TODO: support offsetTop, offsetLeft, offsetParent, etc.
-    return layout;
+    return computedLayout_.value();
   }
 
   bool SceneObject::adoptStyleOn(Node &node, const client_cssom::CSSStyleDeclaration &style)
@@ -207,10 +217,11 @@ namespace dom
     // Update the layout node style.
     if (layoutNode_ != nullptr)
     {
+      auto layoutStyle = setLayoutStyle(name_, node, adoptedStyle_);
 #ifdef TR_CLIENT_DOM_VERBOSE
-      cout << "Adopting style for SceneObject(): " << adoptedStyle_ << endl;
+      cout << "Updated layout style for SceneObject(" << name_ << "): " << layoutStyle << endl;
+      cout << "source style: " << style << endl;
 #endif
-      setLayoutStyle(name_, node, adoptedStyle_);
       return true;
     }
     else
@@ -229,7 +240,7 @@ namespace dom
     return display == Display::None();
   }
 
-  void SceneObject::setLayoutStyle(const string &name, const Node &node, LayoutStyle style)
+  LayoutStyle SceneObject::setLayoutStyle(const string &name, const Node &node, LayoutStyle style)
   {
     if (node.nodeType == NodeType::TEXT_NODE)
     {
@@ -248,5 +259,6 @@ namespace dom
       }
     }
     layoutNode_->setStyle(style);
+    return style;
   }
 }

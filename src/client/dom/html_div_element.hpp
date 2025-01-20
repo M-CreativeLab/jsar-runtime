@@ -15,5 +15,12 @@ namespace dom
         : HTMLContent2dElement("DIV", ownerDocument)
     {
     }
+
+  private:
+    void createdCallback() override
+    {
+      defaultStyle_.setProperty("display", "block");
+      HTMLContent2dElement::createdCallback();
+    }
   };
 }

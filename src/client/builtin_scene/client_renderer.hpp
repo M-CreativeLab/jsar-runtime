@@ -300,9 +300,7 @@ namespace builtin_scene
         traverseAndRender(root, renderer, view);
     }
     /**
-     * Traverse the entity hierarchy and render the mesh with the given renderer in post-order.
-     *
-     * This method ensures that the child entities are rendered before the parent entity.
+     * Traverse the entity hierarchy and render the mesh with the given renderer in pre-order.
      *
      * @param entity The entity to traverse and render.
      * @param renderer The renderer to use.
@@ -310,31 +308,33 @@ namespace builtin_scene
      * @param isPostOrder Whether to render the entity in post-order, namely, render the child entities first.
      */
     void traverseAndRender(ecs::EntityId entity, Renderer &renderer,
-                           std::shared_ptr<client_xr::XRView> view = nullptr,
-                           bool isPostOrder = false)
+                           std::shared_ptr<client_xr::XRView> view = nullptr)
     {
-      auto renderEntity = [this, &renderer, view](ecs::EntityId entity)
+      auto renderEntity = [this, &renderer, view](ecs::EntityId entity) -> bool
       {
         // Render the mesh if it exists
         auto mesh = getComponent<Mesh3d>(entity);
-        if (mesh != nullptr && !mesh->isRenderingDisabled())
+        if (mesh != nullptr)
+        {
+          // If the mesh exists but rendering is disabled, we need to skip its rendering and its children.
+          if (mesh->isRenderingDisabled())
+            return false;
           renderMesh(entity, mesh, renderer, view);
+        }
 
         // TODO: support other renderable components (e.g., particles, etc.)
+        return true;
       };
 
-      if (!isPostOrder) // Pre-order rendering
-        renderEntity(entity);
+      if (!renderEntity(entity))
+        return;
 
       auto children = getComponent<hierarchy::Children>(entity);
       if (children != nullptr)
       {
         for (auto child : children->children())
-          traverseAndRender(child, renderer, view, isPostOrder);
+          traverseAndRender(child, renderer, view);
       }
-
-      if (isPostOrder) // Post-order rendering
-        renderEntity(entity);
     }
     /**
      * Render the mesh with the given renderer.

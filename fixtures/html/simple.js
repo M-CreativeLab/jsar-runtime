@@ -17,3 +17,7 @@ const div = document.getElementsByTagName('div')[0];
 //   const b = Math.floor(Math.random() * 256);
 //   div.style.setProperty('background-color', `rgb(${r}, ${g}, ${b})`);
 // }, 1000);
+
+// setTimeout(() => {
+//   div.style.setProperty('display', 'none');
+// }, 1000);

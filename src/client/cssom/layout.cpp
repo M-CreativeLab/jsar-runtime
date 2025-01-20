@@ -13,4 +13,9 @@ namespace client_cssom
     y_ += layout.y_;
     depth_ += layout.depth_;
   }
+
+  bool Layout::needsResize(float width, float height) const
+  {
+    return width_ != width || height_ != height;
+  }
 }

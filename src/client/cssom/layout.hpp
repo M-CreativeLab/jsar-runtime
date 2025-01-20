@@ -43,6 +43,7 @@ namespace client_cssom
 
   public:
     void merge(const Layout &layout);
+    bool needsResize(float width, float height) const;
 
   private:
     float depth_ = 0.0f;
