@@ -1,3 +1,4 @@
+#include <client/dom/element.hpp>
 #include "./scene.hpp"
 #include "./client_renderer.hpp"
 
@@ -85,10 +86,14 @@ namespace builtin_scene
 
     if (!parent.has_value())
     {
+      bool isRootRenderable = false;
+      auto elementNode = dynamic_pointer_cast<dom::Element>(node);
+      if (elementNode != nullptr && elementNode->is("body"))
+        isRootRenderable = true;  // Only the body element as Root is renderable by default.
       return spawn(
           hierarchy::Element(name, node),
           hierarchy::Children(),
-          hierarchy::Root(),
+          hierarchy::Root(isRootRenderable),
           BoundingBox(),
           defaultTransform);
     }

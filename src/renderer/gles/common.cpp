@@ -403,6 +403,7 @@ namespace gles
     switch (format)
     {
       // Texture Internal Formats
+      CASE(GL_ALPHA);
       CASE(GL_R8);
       CASE(GL_R8_SNORM);
       CASE(GL_RG8);
@@ -469,6 +470,7 @@ namespace gles
     switch (format)
     {
       // Texture Formats
+      CASE(GL_ALPHA);
       CASE(GL_RED);
       CASE(GL_RG);
       CASE(GL_RGB);

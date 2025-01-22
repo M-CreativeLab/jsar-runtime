@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <common/utility.hpp>
 #include <common/events_v2/event_target.hpp>
+#include <client/cssom/units.hpp>
 
 #include "../per_process.hpp"
 #include "../classes.hpp"
@@ -218,13 +219,13 @@ namespace browser
     std::string name_ = "";
     std::string origin_ = "";
     bool fullscreen_ = false;
-    float innerWidth_ = 1440.0f;
-    float innerHeight_ = 960.0f;
-    float outerWidth_ = 1440.0f;
-    float outerHeight_ = 960.0f;
+    float innerWidth_ = client_cssom::ScreenWidth;
+    float innerHeight_ = client_cssom::ScreenHeight;
+    float outerWidth_ = client_cssom::ScreenWidth;
+    float outerHeight_ = client_cssom::ScreenHeight;
     float scrollX_ = 0.0f;
     float scrollY_ = 0.0f;
-    float devicePixelRatio_ = 1.0f;
+    float devicePixelRatio_ = 1.5f;
     std::shared_ptr<dom::Document> document_;
 
   private:

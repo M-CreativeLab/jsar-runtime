@@ -1055,9 +1055,13 @@ private:
 			DEBUG(DEBUG_TAG, "[%d] GL::TexImage2D(%s [%d,%d]) => texture(%d)",
 						options.isDefaultQueue, gles::glEnumToString(target).c_str(), width, height, currentTexture);
 			DEBUG(DEBUG_TAG, "             level: %d", level);
-			DEBUG(DEBUG_TAG, "              type: %s", gles::glEnumToString(type).c_str());
 			DEBUG(DEBUG_TAG, "    internalformat: %s", gles::glTextureInternalFormatToString(internalformat).c_str());
+			DEBUG(DEBUG_TAG, "             width: %d", width);
+			DEBUG(DEBUG_TAG, "            height: %d", height);
+			DEBUG(DEBUG_TAG, "            border: %d", border);
 			DEBUG(DEBUG_TAG, "            format: %s", gles::glTextureFormatToString(format).c_str());
+			DEBUG(DEBUG_TAG, "              type: %s", gles::glEnumToString(type).c_str());
+			DEBUG(DEBUG_TAG, "              data: %p", req->pixels);
 		}
 	}
 	TR_OPENGL_FUNC void OnTexSubImage2D(TextureSubImage2DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)

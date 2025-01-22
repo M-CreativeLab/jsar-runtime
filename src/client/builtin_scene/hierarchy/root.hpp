@@ -7,6 +7,12 @@ namespace builtin_scene::hierarchy
   class Root : public ecs::Component
   {
   public:
-    using ecs::Component::Component;
+    Root(bool renderable = false) : renderable(renderable)
+    {
+    }
+
+  public:
+    // If the root entity can be renderer.
+    bool renderable;
   };
 }

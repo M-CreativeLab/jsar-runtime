@@ -111,6 +111,29 @@ namespace dom
                  ? nullptr
                  : std::dynamic_pointer_cast<T>(_parentNode);
     }
+    /**
+     * Get the owner document reference.
+     *
+     * @param force If true, the owner document will be forced to get, otherwise it will return the cached owner document.
+     * @returns The owner document reference.
+     */
+    std::shared_ptr<Document> getOwnerDocumentReference(bool force = true);
+    /**
+     * Get the owner document reference as a specific document type.
+     *
+     * @tparam DocumentType The specific document type, such as `Document`, `HTMLDocument`, etc.
+     * @param force If true, the owner document will be forced to get, otherwise it will return the cached owner document.
+     * @returns The owner document reference as the specific document type.
+     */
+    template <typename DocumentType>
+      requires std::is_base_of_v<Document, DocumentType>
+    std::shared_ptr<DocumentType> getOwnerDocumentReferenceAs(bool force = true)
+    {
+      auto ref = std::dynamic_pointer_cast<DocumentType>(getOwnerDocumentReference(force));
+      if (force && ref == nullptr)
+        throw std::runtime_error("The owner document is not found.");
+      return ref;
+    }
 
   public:
     /**
@@ -136,29 +159,6 @@ namespace dom
     inline std::weak_ptr<T> getWeakPtr()
     {
       return dynamic_pointer_cast<T>(this->shared_from_this());
-    }
-    /**
-     * Get the owner document reference.
-     *
-     * @param force If true, the owner document will be forced to get, otherwise it will return the cached owner document.
-     * @returns The owner document reference.
-     */
-    std::shared_ptr<Document> getOwnerDocumentReference(bool force = true);
-    /**
-     * Get the owner document reference as a specific document type.
-     *
-     * @tparam DocumentType The specific document type, such as `Document`, `HTMLDocument`, etc.
-     * @param force If true, the owner document will be forced to get, otherwise it will return the cached owner document.
-     * @returns The owner document reference as the specific document type.
-     */
-    template <typename DocumentType>
-      requires std::is_base_of_v<Document, DocumentType>
-    std::shared_ptr<DocumentType> getOwnerDocumentReferenceAs(bool force = true)
-    {
-      auto ref = std::dynamic_pointer_cast<DocumentType>(getOwnerDocumentReference(force));
-      if (force && ref == nullptr)
-        throw std::runtime_error("The owner document is not found.");
-      return ref;
     }
     void resetFrom(std::shared_ptr<pugi::xml_node> node, std::shared_ptr<Document> ownerDocument);
     /**

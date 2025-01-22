@@ -297,7 +297,10 @@ namespace builtin_scene
       if (view != nullptr)
         renderer.setViewport(view->viewport());
       for (auto root : roots)
-        traverseAndRender(root, renderer, view);
+      {
+        if (getComponentChecked<hierarchy::Root>(root).renderable == true)
+          traverseAndRender(root, renderer, view);
+      }
     }
     /**
      * Traverse the entity hierarchy and render the mesh with the given renderer in pre-order.

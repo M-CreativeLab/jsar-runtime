@@ -54,10 +54,13 @@ namespace builtin_scene::materials
   public:
     float width() const { return width_; }
     float height() const { return height_; }
+    float globalAspectRatio() const { return globalAspectRatio_; }
+    void setGlobalAspectRatio(float aspectRatio) { globalAspectRatio_ = aspectRatio; }
 
   private:
     float width_;
     float height_;
+    float globalAspectRatio_ = 1.0f;
     glm::vec2 textureOffset_ = glm::vec2(0.0f, 0.0f);
     glm::vec2 textureScale_ = glm::vec2(1.0f, 1.0f);
     std::shared_ptr<client_graphics::WebGLTexture> texture_;

@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <client/cssom/units.hpp>
 #include <skia/include/core/SkImageInfo.h>
 
 #include "./content2d.hpp"
@@ -14,7 +15,7 @@ namespace dom
 
   Content2d::Content2d(shared_ptr<Node> sceneObjectNode)
       : sceneObject_(dynamic_pointer_cast<SceneObject>(sceneObjectNode)),
-        devicePixelRatio_(1.5f) // Default to 1.5x for medium density displays.
+        devicePixelRatio_(client_cssom::DevicePixelRatio)
   {
     assert(sceneObject_ != nullptr && "The node must be a `SceneObject`.");
   }
@@ -32,10 +33,17 @@ namespace dom
     // Reset the material to `WebContentMaterial`.
     auto resetMaterial = [this](Scene &scene)
     {
-      auto materials = scene.getResource<Materials>();
+      auto material = Material::Make<materials::WebContentMaterial>();
+      {
+        // Fetch and set the global aspect ratio.
+        auto bindingNode = dynamic_pointer_cast<dom::Node>(sceneObject_);
+        assert(bindingNode != nullptr);
+        auto window = bindingNode->getOwnerDocumentReferenceAs<HTMLDocument>()->defaultView();
+        assert(window != nullptr);
+        material->setGlobalAspectRatio(window->innerWidth() / window->innerHeight());
+      }
       scene.replaceComponent(entity(),
-                             MeshMaterial3d(materials->add(
-                                 Material::Make<materials::WebContentMaterial>())));
+                             MeshMaterial3d(scene.getResource<Materials>()->add(material)));
     };
     sceneObject_->useScene(resetMaterial);
 
