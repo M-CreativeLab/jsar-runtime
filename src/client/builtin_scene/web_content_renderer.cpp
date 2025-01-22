@@ -224,7 +224,7 @@ namespace builtin_scene::web_renderer
     SkRect rect = SkRect::MakeXYWH(left, top,
                                    content.width() - 2 * left,
                                    content.height() - 2 * top);
-    SkRRect& roundedRect = content.roundedRect_;
+    SkRRect &roundedRect = content.roundedRect_;
     {
       // Set the radius for all four corners.
       float borderTopLeftRadius = style.getPropertyValueAs<float>("border-top-left-radius");
@@ -252,9 +252,15 @@ namespace builtin_scene::web_renderer
     auto canvas = content.canvas();
     canvas->save();
     {
-      SkRRect& roundedRect = content.roundedRect_;
+      SkRRect &roundedRect = content.roundedRect_;
       canvas->clipRRect(roundedRect, true);
-      canvas->drawImage(imageComponent->image(), 0.0f, 0.0f);
+
+      sk_sp<SkImage> image = imageComponent->image();
+      SkRect srcRect = SkRect::MakeWH(image->width(), image->height());
+      SkRect dstRect = SkRect::MakeWH(content.width(), content.height());
+      canvas->drawImageRect(image, srcRect, dstRect,
+                            SkSamplingOptions(), nullptr,
+                            SkCanvas::kStrict_SrcRectConstraint);
     }
     canvas->restore();
   }
