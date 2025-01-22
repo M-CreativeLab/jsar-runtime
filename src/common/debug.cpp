@@ -1,7 +1,10 @@
 #include <stdarg.h>
+#include <cxxabi.h>
 #include <ctime>
 #include <chrono>
 #include <string>
+#include <memory>
+#include <regex>
 #include "debug.hpp"
 
 #ifdef _WIN32
@@ -271,7 +274,38 @@ _Unwind_Reason_Code android_unwind_callback(struct _Unwind_Context *ctx, void *a
 }
 #endif
 
-void PrintsStacktraceOnSignal(int signal)
+// Demangle the symbol name and return the demangled name.
+std::string _DemangleSymbol(const std::string &symbol)
+{
+  int status;
+  std::unique_ptr<char, void (*)(void *)> result(
+      abi::__cxa_demangle(symbol.c_str(), nullptr, nullptr, &status),
+      std::free);
+  return (status == 0) ? result.get() : symbol;
+}
+
+// Process the symbol line which replaces the mangled symbol with demangled symbol.
+std::string _ProcessSymbolLine(const char *line)
+{
+  static std::regex regex(R"(\b(_Z[\w\d]+)\b)");  // Search for mangled symbols
+
+  std::string result = line;
+  std::sregex_iterator it(result.begin(), result.end(), regex);
+  std::sregex_iterator end;
+
+  while (it != end)
+  {
+    std::smatch match = *it;
+    std::string mangled = match[1].str();
+    std::string demangled = _DemangleSymbol(mangled);
+    size_t pos = match.position(1);
+    result.replace(pos, mangled.length(), demangled);
+    it = std::sregex_iterator(result.begin() + pos + demangled.length(), result.end(), regex);
+  }
+  return result;
+}
+
+void _PrintsStacktraceOnSignal(int signal)
 {
   DEBUG(LOG_TAG_ERROR, "Received SIGNAL (%d), printing backtrace:", signal);
 #ifdef __APPLE__
@@ -286,7 +320,7 @@ void PrintsStacktraceOnSignal(int signal)
   else
   {
     for (int i = 0; i < numFrames; ++i)
-      fprintf(stderr, "%s\n", symbols[i]);
+      fprintf(stderr, "%s\n", _ProcessSymbolLine(symbols[i]).c_str());
     free(symbols);
   }
 #elif __ANDROID__
@@ -352,7 +386,7 @@ void ENABLE_BACKTRACE()
   /**
    * `TR_ENABLE_SIGNALS_ONSTACK` is to enable signal handling on a new alternate stack, which is useful
    * when the stack is corrupted such as stack overflow or underflow.
-   * 
+   *
    * If you met the backtrace not printing, you can try to enable this macro.
    */
 #ifdef TR_ENABLE_SIGNALS_ONSTACK
@@ -377,9 +411,9 @@ void ENABLE_BACKTRACE()
 
   sa.sa_flags = SA_ONSTACK;
 #ifdef __APPLE__
-  sa.__sigaction_u.__sa_handler = PrintsStacktraceOnSignal;
+  sa.__sigaction_u.__sa_handler = _PrintsStacktraceOnSignal;
 #else
-  sa.sa_handler = PrintsStacktraceOnSignal;
+  sa.sa_handler = _PrintsStacktraceOnSignal;
 #endif
   sigemptyset(&sa.sa_mask);
 
@@ -390,6 +424,6 @@ void ENABLE_BACKTRACE()
   }
 #else
   for (int id : SIGNALS)
-    signal(id, PrintsStacktraceOnSignal);
+    signal(id, _PrintsStacktraceOnSignal);
 #endif
 }
