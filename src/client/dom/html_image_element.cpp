@@ -3,6 +3,8 @@
 #include <skia/include/codec/SkCodec.h>
 #include <skia/include/codec/SkPngDecoder.h>
 #include <skia/include/codec/SkJpegDecoder.h>
+#include <skia/include/codec/SkWebpDecoder.h>
+#include <skia/include/codec/SkGifDecoder.h>
 #include <crates/bindings.hpp>
 
 #include "./geometry/dom_rect.hpp"
@@ -106,7 +108,8 @@ namespace dom
     static constexpr const SkCodecs::Decoder decoders[] = {
         SkPngDecoder::Decoder(),
         SkJpegDecoder::Decoder(),
-    };
+        SkWebpDecoder::Decoder(),
+        SkGifDecoder::Decoder()};
 
     // Mark the image as loaded.
     isSrcImageLoaded_ = true;
@@ -156,6 +159,7 @@ namespace dom
     }
     else
     {
+      std::cerr << "Failed to decode the image: " << getSrc() << std::endl;
       dispatchEvent(DOMEventType::Error);
     }
   }
