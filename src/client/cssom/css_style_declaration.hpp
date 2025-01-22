@@ -123,6 +123,27 @@ namespace client_cssom
      */
     bool equals(const CSSStyleDeclaration &other) const;
     /**
+     * Update the declaration block with another one.
+     * 
+     * If the second argument `omitIfPresent` is set to `true`, it means that only these properties will be updated if they
+     * are not existent in the declaration block.
+     * 
+     * @param other The other CSSStyleDeclaration to update.
+     * @param omitIfPresent Whether to omit the property if it is already present.
+     * @returns Whether the declaration block is updated.
+     */
+    bool update(const CSSStyleDeclaration &other, bool omitIfPresent = false);
+    /**
+     * Get the property name at the given index.
+     *
+     * @param index The index of the CSS property.
+     * @returns The property name.
+     */
+    inline std::string item(size_t index) const
+    {
+      return pdb_->item(index);
+    }
+    /**
      * Get the optional priority, "important".
      *
      * @param propertyName The name of the CSS property.

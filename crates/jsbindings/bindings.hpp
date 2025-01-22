@@ -253,6 +253,16 @@ namespace crates
         return css_property_declaration_block_len(handle_);
       }
       /**
+       * @returns The property name at the given index.
+       */
+      std::string item(size_t index) const
+      {
+        const char *str = css_property_declaration_block_item(handle_, index);
+        std::string itemStr(str);
+        release_rust_cstring((char *)str);
+        return itemStr;
+      }
+      /**
        * Check if a property is important.
        *
        * @param propertyName The property name.
@@ -925,13 +935,35 @@ namespace crates
       public:
         friend std::ostream &operator<<(std::ostream &os, const T &value)
         {
-          if (value.handle_.IsLength())
-            os << "Length(" << value.handle_.length._0 << ")";
-          else if (value.handle_.IsPercent())
-            os << "Percent(" << value.handle_.percent._0 << ")";
-          else
-            os << "Auto()";
+          os << static_cast<std::string>(value);
           return os;
+        }
+        operator std::string() const
+        {
+          if (isLength())
+            return std::to_string(handle_.length._0) + "px";
+          else if (isPercent())
+            return std::to_string(handle_.percent._0 * 100.0f) + "%";
+          else
+            return "auto";
+        }
+        T operator/(float value) const
+        {
+          if (isLength())
+            return Length(handle_.length._0 / value);
+          else if (isPercent())
+            return Percent(handle_.percent._0 / value);
+          else
+            return Auto();
+        }
+        T operator*(float value) const
+        {
+          if (isLength())
+            return Length(handle_.length._0 * value);
+          else if (isPercent())
+            return Percent(handle_.percent._0 * value);
+          else
+            return Auto();
         }
 
       private:

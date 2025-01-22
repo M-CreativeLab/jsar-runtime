@@ -3,6 +3,7 @@
 #include <string>
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkBitmap.h>
+#include "./geometry/dom_rect.hpp"
 #include "./html_content2d_element.hpp"
 #include "../canvas/image_source.hpp"
 
@@ -25,8 +26,12 @@ namespace dom
     void connectedCallback() override;
 
   public:
-    size_t width() const override { return skBitmap_->width(); }
-    size_t height() const override { return skBitmap_->height(); }
+    inline size_t width() const override { return skBitmap_->width(); }
+    inline size_t height() const override { return skBitmap_->height(); }
+    inline geometry::DOMRect getImageClientRect() const
+    {
+      return geometry::DOMRect(0, 0, skBitmap_->width(), skBitmap_->height());
+    }
     bool readPixels(SkPixmap &dst) const override
     {
       dst.reset(skBitmap_->info(),

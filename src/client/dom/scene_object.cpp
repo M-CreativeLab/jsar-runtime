@@ -2,6 +2,7 @@
 #include "./scene_object.hpp"
 #include "./document.hpp"
 #include "./text.hpp"
+#include "./html_image_element.hpp"
 
 namespace dom
 {
@@ -17,6 +18,10 @@ namespace dom
   {
     assert(scene_.lock() != nullptr && "The scene must be valid.");
     assert(layoutAllocator_ != nullptr && "The layout allocator must be valid.");
+
+    defaultStyle_.setProperty("display", "block");
+    defaultStyle_.setProperty("width", "auto");
+    defaultStyle_.setProperty("height", "auto");
   }
 
   SceneObject::SceneObject(SceneObject &that)
@@ -25,6 +30,7 @@ namespace dom
         layoutAllocator_(that.layoutAllocator_),
         layoutNode_(that.layoutNode_),
         adoptedStyle_(that.adoptedStyle_),
+        defaultStyle_(that.defaultStyle_),
         name_(that.name_)
   {
   }
@@ -199,7 +205,7 @@ namespace dom
     {
       offsetWidth() = layout.width();
       offsetHeight() = layout.height();
-      setLayoutStyle(node, adoptedStyle_);  // Update the layout style if the size is changed.
+      setLayoutStyle(node, adoptedStyle_); // Update the layout style if the size is changed.
       onLayoutChanged();
     }
 
@@ -209,10 +215,13 @@ namespace dom
 
   bool SceneObject::adoptStyleOn(Node &node, const client_cssom::CSSStyleDeclaration &style)
   {
-    if (adoptedStyle_.equals(style)) // Skip if the style is the same.
+    client_cssom::CSSStyleDeclaration newStyle = style;
+    newStyle.update(defaultStyle_, true); // Update the default style if these properties are not present.
+
+    if (adoptedStyle_.equals(newStyle)) // Skip if the style is the same.
       return false;
 
-    adoptedStyle_ = style;
+    adoptedStyle_ = newStyle;
     onAdoptedStyleChanged();
 
     // Update the layout node style.
@@ -253,7 +262,7 @@ namespace dom
         // Check if the width is auto, then calculate the width from the text.
         if (style.width().isAuto())
         {
-          textRect = text.getTextClientRect();  // Use inf if the width is auto.
+          textRect = text.getTextClientRect(); // Use inf if the width is auto.
           style.setWidth(Dimension::Length(textRect.width()));
         }
         else

@@ -105,13 +105,13 @@ namespace dom
      * @returns Whether the layout style is updated successfully.
      */
     bool adoptStyleOn(Node &node, const client_cssom::CSSStyleDeclaration &style);
+    // Set the layout style with the name, node, and style.
+    crates::layout::style::LayoutStyle setLayoutStyle(const Node &node,
+                                                      crates::layout::style::LayoutStyle style);
 
   private:
     // Check if the scene object should be rendered.
     [[nodiscard]] bool skipRender() const;
-    // Set the layout style with the name, node, and style.
-    crates::layout::style::LayoutStyle setLayoutStyle(const Node &node,
-                                                      crates::layout::style::LayoutStyle style);
 
   protected:
     std::weak_ptr<builtin_scene::Scene> scene_;
@@ -119,6 +119,7 @@ namespace dom
     std::shared_ptr<crates::layout::Allocator> layoutAllocator_ = nullptr;
     std::shared_ptr<crates::layout::Node> layoutNode_ = nullptr;
     std::optional<client_cssom::Layout> computedLayout_ = std::nullopt;
+    client_cssom::CSSStyleDeclaration defaultStyle_;
     client_cssom::CSSStyleDeclaration adoptedStyle_;
 
   private:

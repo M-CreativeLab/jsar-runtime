@@ -91,4 +91,31 @@ namespace client_cssom
       return false;
     return cssText() == other.cssText(); // TODO: support more quick check?
   }
+
+  bool CSSStyleDeclaration::update(const CSSStyleDeclaration &other, bool omitIfPresent)
+  {
+    bool isChanged = false;
+    for (size_t i = 0; i < other.length(); i++)
+    {
+      auto name = other.item(i);
+      if (hasProperty(name))
+      {
+        if (omitIfPresent)  // Omit this property if it is already present
+          continue;
+
+        auto value = other.getPropertyValue(name);
+        if (getPropertyValue(name) != value)
+        {
+          setProperty(name, value);
+          isChanged = true;
+        }
+      }
+      else
+      {
+        setProperty(name, other.getPropertyValue(name));
+        isChanged = true;
+      }
+    }
+    return isChanged;
+  }
 }

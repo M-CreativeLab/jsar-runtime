@@ -193,8 +193,12 @@ namespace client_cssom::types
   public:
     friend std::ostream &operator<<(std::ostream &os, const Length &length)
     {
-      os << length.value_ << to_string(length.unit_);
+      os << static_cast<std::string>(length);
       return os;
+    }
+    operator std::string() const
+    {
+      return std::to_string(value_) + to_string(unit_);
     }
 
   public:

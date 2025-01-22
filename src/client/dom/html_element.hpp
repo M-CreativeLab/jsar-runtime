@@ -72,9 +72,6 @@ namespace dom
     std::string translate;
     std::shared_ptr<client_cssom::CSSStyleDeclaration> style;
 
-  protected:
-    client_cssom::CSSStyleDeclaration defaultStyle_;
-
   private:
     float offsetWidth_ = 0.0f;
     float offsetHeight_ = 0.0f;

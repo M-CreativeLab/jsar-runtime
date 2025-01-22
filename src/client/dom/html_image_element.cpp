@@ -1,14 +1,20 @@
 #include <iostream>
+#include <optional>
 #include <skia/include/codec/SkCodec.h>
 #include <skia/include/codec/SkPngDecoder.h>
 #include <skia/include/codec/SkJpegDecoder.h>
+#include <crates/bindings.hpp>
+
+#include "./geometry/dom_rect.hpp"
 #include "./html_image_element.hpp"
 #include "./document.hpp"
 #include "./browsing_context.hpp"
 
 namespace dom
 {
+  using namespace std;
   using namespace builtin_scene;
+  using namespace crates::layout::style;
 
   void HTMLImageElement::connectedCallback()
   {
@@ -39,6 +45,62 @@ namespace dom
                                         { onImageLoaded(imageData, imageByteLength); });
   }
 
+  bool adjustImageSize(const client_cssom::CSSStyleDeclaration &adoptedStyle,
+                       geometry::DOMRect srcImageRect,
+                       optional<client_cssom::Layout> &lastComputedLayout,
+                       function<void(Dimension)> widthSetter,
+                       function<void(Dimension)> heightSetter)
+  {
+    optional<Dimension> adoptedWidth = nullopt;
+    optional<Dimension> adoptedHeight = nullopt;
+
+    if (adoptedStyle.hasProperty("width"))
+    {
+      auto widthDimension = adoptedStyle.getPropertyValueAs<Dimension>("width");
+      if (!widthDimension.isAuto() &&
+          lastComputedLayout.has_value() &&
+          lastComputedLayout->width() > 0)
+        adoptedWidth = widthDimension;
+    }
+    if (adoptedStyle.hasProperty("height"))
+    {
+      auto heightDimension = adoptedStyle.getPropertyValueAs<Dimension>("height");
+      if (!heightDimension.isAuto() &&
+          lastComputedLayout.has_value() &&
+          lastComputedLayout->height() > 0)
+        adoptedHeight = heightDimension;
+    }
+
+    // If both width and height are specified, then use them.
+    if (adoptedWidth.has_value() && adoptedHeight.has_value())
+      return false;
+
+    // If both width and height are auto, then use the image's size.
+    if (!adoptedWidth.has_value() && !adoptedHeight.has_value())
+    {
+      widthSetter(Dimension::Length(srcImageRect.width()));
+      heightSetter(Dimension::Length(srcImageRect.height()));
+      return true;
+    }
+
+    const float aspectRatio = srcImageRect.width() / srcImageRect.height();
+    if (adoptedWidth.has_value() && !adoptedHeight.has_value())
+    {
+      // Calculate the height = width / aspectRatio.
+      heightSetter(Dimension::Length(lastComputedLayout->width() / aspectRatio));
+      return true;
+    }
+    else if (!adoptedWidth.has_value() && adoptedHeight.has_value())
+    {
+      // Calculate the width = height * aspectRatio.
+      widthSetter(Dimension::Length(lastComputedLayout->height() * aspectRatio));
+      return true;
+    }
+
+    assert(false && "Unreachable");
+    return false;
+  }
+
   void HTMLImageElement::onImageLoaded(const void *imageData, size_t imageByteLength)
   {
     static constexpr const SkCodecs::Decoder decoders[] = {
@@ -65,17 +127,32 @@ namespace dom
       complete = true;
       dispatchEvent(DOMEventType::Load);
 
-      // Update the Image2d component and mark the content as dirty to update the texture.
+      // Update the `Image2d` component and mark the content as dirty to update the texture.
       auto updateImageBitmap = [this](Scene &scene)
       {
         auto entity = entity_.value();
-        Image2d& imageComponent = scene.getComponentChecked<Image2d>(entity);
+        Image2d &imageComponent = scene.getComponentChecked<Image2d>(entity);
         imageComponent.bitmap = skBitmap_;
 
-        WebContent& webContent = scene.getComponentChecked<WebContent>(entity);
-        webContent.setDirty(true);  // Mark the content as dirty to update the texture.
+        WebContent &webContent = scene.getComponentChecked<WebContent>(entity);
+        webContent.setDirty(true); // Mark the content as dirty to update the texture.
       };
       useScene(updateImageBitmap);
+
+      // Update the width and height of the image.
+      {
+        auto setWidth = [this](Dimension width)
+        {
+          defaultStyle_.setProperty("width", width);
+        };
+        auto setHeight = [this](Dimension height)
+        {
+          defaultStyle_.setProperty("height", height);
+        };
+        adjustImageSize(adoptedStyle_, getImageClientRect(), computedLayout_,
+                        setWidth,
+                        setHeight);
+      }
     }
     else
     {

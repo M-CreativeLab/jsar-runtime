@@ -176,6 +176,15 @@ impl CSSPropertyDeclarationBlock {
     pdb.len()
   }
 
+  pub fn item(&self, index: usize) -> String {
+    let pdb = self.handle.borrow();
+    pdb
+      .declarations()
+      .get(index)
+      .map(|decl| decl.id().name().to_string())
+      .unwrap_or_else(|| String::new())
+  }
+
   pub fn get_property(&mut self, property: &str) -> String {
     let id = match PropertyId::parse_enabled_for_all_content(&property) {
       Ok(id) => id,
@@ -287,6 +296,17 @@ pub extern "C" fn css_property_declaration_block_free(ptr: *mut CSSPropertyDecla
 extern "C" fn css_property_declaration_block_len(ptr: *mut CSSPropertyDeclarationBlock) -> usize {
   let block = unsafe { &mut *ptr };
   block.len()
+}
+
+#[no_mangle]
+extern "C" fn css_property_declaration_block_item(
+  ptr: *mut CSSPropertyDeclarationBlock,
+  index: usize,
+) -> *mut c_char {
+  let block = unsafe { &mut *ptr };
+  let item = block.item(index);
+  let c_str = std::ffi::CString::new(item).unwrap();
+  c_str.into_raw()
 }
 
 #[no_mangle]
@@ -403,6 +423,11 @@ mod tests {
     assert_eq!(color_str, "rgba(255, 0, 0, 0.5)".to_string());
     assert_eq!(height_str, "20px".to_string());
     assert_eq!(width_str, "100%".to_string());
+    assert_eq!(pdb.item(0), "display");
+    assert_eq!(pdb.item(1), "color");
+    assert_eq!(pdb.item(2), "height");
+    assert_eq!(pdb.item(3), "width");
+    assert_eq!(pdb.item(4), "");  // Returns empty string for out of bounds index
 
     // Test importance
     assert_eq!(pdb.get_importance("color"), Importance::Normal);
