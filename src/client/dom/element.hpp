@@ -13,6 +13,12 @@
   XX("html", HTMLHtmlElement)     \
   XX("img", HTMLImageElement)     \
   XX("meta", HTMLMetaElement)     \
+  XX("h1", HTMLHeadingElement)    \
+  XX("h2", HTMLHeadingElement)    \
+  XX("h3", HTMLHeadingElement)    \
+  XX("h4", HTMLHeadingElement)    \
+  XX("h5", HTMLHeadingElement)    \
+  XX("h6", HTMLHeadingElement)    \
   XX("p", HTMLParagraphElement)   \
   XX("script", HTMLScriptElement) \
   XX("span", HTMLSpanElement)     \

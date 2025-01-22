@@ -104,8 +104,9 @@ namespace builtin_scene
      * This function assigns the provided CSSStyleDeclaration object to the internal `style_` member.
      *
      * @param style A CSSStyleDeclaration object to be set.
+     * @param parent The parent WebContent object.
      */
-    void setStyle(const client_cssom::CSSStyleDeclaration &style);
+    void setStyle(const client_cssom::CSSStyleDeclaration &style, std::shared_ptr<WebContent> parent = nullptr);
     /**
      * @returns A constant reference to the Layout object in the last re-layout.
      */

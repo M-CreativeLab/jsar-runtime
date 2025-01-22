@@ -51,7 +51,7 @@ namespace builtin_scene
   {
   }
 
-  void WebContent::setStyle(const client_cssom::CSSStyleDeclaration &style)
+  void WebContent::setStyle(const client_cssom::CSSStyleDeclaration &style, std::shared_ptr<WebContent> parent)
   {
     style_ = style;
     setDirty(true); // Mark the content as dirty if setting a new style.
@@ -70,7 +70,24 @@ namespace builtin_scene
         }
       }
       if (style_.hasProperty("font-size"))
-        contentStyle_.textStyle.fontSize = style_.getPropertyValueAs<float>("font-size");
+      {
+        auto length = style_.getPropertyValueAs<client_cssom::types::Length>("font-size");
+        if (length.isAbsoluteLength())
+          contentStyle_.textStyle.fontSize = length.computeAbsoluteLengthInPixels();
+        else if (length.isElementBasedRelativeLength())
+        {
+          WebContentStyle parentContentStyle;
+          if (parent != nullptr)
+            parentContentStyle = parent->contentStyle_;
+
+          client_cssom::types::FontBasedComputationContext context(parentContentStyle.textStyle.fontSize);
+          contentStyle_.textStyle.fontSize = length.computeElementBasedLengthInPixels(context);
+        }
+        else
+        {
+          // TODO: support root-based and viewport-based relative length
+        }
+      }
       if (style_.hasProperty("font-weight"))
       {
         auto fontWeight = style_.getPropertyValueAs<client_cssom::types::FontWeight>("font-weight");
@@ -99,7 +116,7 @@ namespace builtin_scene
         if (lineHeight.isLength())
         {
           contentStyle_.useFixedLineHeight = true;
-          contentStyle_.lineHeight = lineHeight.getValueAsPixels();
+          contentStyle_.lineHeight = lineHeight.computeAbsoluteLengthInPixels();
         }
         else if (lineHeight.isPercentage())
         {

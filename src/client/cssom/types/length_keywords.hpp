@@ -37,15 +37,15 @@ namespace client_cssom::types
       {
       case LineWidthKeyword::kThin:
         value() = 1.0f;
-        unit() = Unit::kPx;
+        unit() = Unit::kPX;
         break;
       case LineWidthKeyword::kMedium:
         value() = 3.0f;
-        unit() = Unit::kPx;
+        unit() = Unit::kPX;
         break;
       case LineWidthKeyword::kThick:
         value() = 5.0f;
-        unit() = Unit::kPx;
+        unit() = Unit::kPX;
         break;
       }
     }

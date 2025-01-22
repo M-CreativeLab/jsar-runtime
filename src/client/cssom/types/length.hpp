@@ -4,75 +4,187 @@
 
 namespace client_cssom::types
 {
-#define CSS_UNITS_MAP(XX) \
-  XX(Cap)                 \
-  XX(Ch)                  \
-  XX(Em)                  \
-  XX(Ex)                  \
-  XX(Ic)                  \
-  XX(Rem)                 \
-  XX(Rex)                 \
-  XX(Vh)                  \
-  XX(Vw)                  \
-  XX(Vmin)                \
-  XX(Vmax)                \
-  XX(Px)                  \
-  XX(Cm)                  \
-  XX(Mm)                  \
-  XX(Q)                   \
-  XX(In)                  \
-  XX(Pc)                  \
-  XX(Pt)
+#define CSS_RELATIVE_UNITS_ON_ELEMENT_MAP(XX) \
+  XX(CAP, "cap")                              \
+  XX(CH, "ch")                                \
+  XX(EM, "em")                                \
+  XX(EX, "ex")                                \
+  XX(IC, "ic")                                \
+  XX(LH, "lh")
+
+#define CSS_RELATIVE_UNITS_ON_ROOT_MAP(XX) \
+  XX(RCAP, "rcap")                         \
+  XX(RCH, "rch")                           \
+  XX(REM, "rem")                           \
+  XX(REX, "rex")                           \
+  XX(RIC, "ric")                           \
+  XX(RLH, "rlh")
+
+#define CSS_RELATIVE_UNITS_ON_VIEWPORT_MAP(XX) \
+  XX(VH, "vh")                                 \
+  XX(VW, "vw")                                 \
+  XX(VMIN_, "vmin")                            \
+  XX(VMAX_, "vmax")                            \
+  XX(VB, "vb")                                 \
+  XX(VI, "vi")
+
+#define CSS_ABSOLUTE_UNITS_MAP(XX) \
+  XX(PX, "px")                     \
+  XX(CM, "cm")                     \
+  XX(MM, "mm")                     \
+  XX(Q, "q")                       \
+  XX(IN, "in")                     \
+  XX(PC, "pc")                     \
+  XX(PT, "pt")
+
+#define CSS_UNITS_MAP(XX)                \
+  CSS_RELATIVE_UNITS_ON_ELEMENT_MAP(XX)  \
+  CSS_RELATIVE_UNITS_ON_ROOT_MAP(XX)     \
+  CSS_RELATIVE_UNITS_ON_VIEWPORT_MAP(XX) \
+  CSS_ABSOLUTE_UNITS_MAP(XX)
 
   enum class Unit
   {
-#define XX(unit) k##unit,
+#define XX(UNIT, _) k##UNIT,
     CSS_UNITS_MAP(XX)
 #undef XX
   };
 
   inline std::string to_string(Unit unit)
   {
-#define XX(unit)      \
-  case Unit::k##unit: \
-    return ToLowerCase(#unit);
+#define XX(UNIT, STR) \
+  case Unit::k##UNIT: \
+    return STR;
 
     switch (unit)
     {
       CSS_UNITS_MAP(XX)
     default:
-      return "Unknown";
+      assert(false && "Invalid unit");
     }
 #undef XX
+  }
+
+  inline bool isAbsoluteUnit(Unit unit)
+  {
+    switch (unit)
+    {
+#define XX(UNIT, _)   \
+  case Unit::k##UNIT: \
+    return true;
+      CSS_ABSOLUTE_UNITS_MAP(XX)
+#undef XX
+    default:
+      return false;
+    }
+  }
+
+  inline bool isElementBasedRelativeUnit(Unit unit)
+  {
+    switch (unit)
+    {
+#define XX(UNIT, _)   \
+  case Unit::k##UNIT: \
+    return true;
+      CSS_RELATIVE_UNITS_ON_ELEMENT_MAP(XX)
+#undef XX
+    default:
+      return false;
+    }
+  }
+
+  inline bool isRootBasedRelativeUnit(Unit unit)
+  {
+    switch (unit)
+    {
+#define XX(UNIT, _)   \
+  case Unit::k##UNIT: \
+    return true;
+      CSS_RELATIVE_UNITS_ON_ROOT_MAP(XX)
+#undef XX
+    default:
+      return false;
+    }
+  }
+
+  inline bool isViewportBasedRelativeUnit(Unit unit)
+  {
+    switch (unit)
+    {
+#define XX(UNIT, _)   \
+  case Unit::k##UNIT: \
+    return true;
+      CSS_RELATIVE_UNITS_ON_VIEWPORT_MAP(XX)
+#undef XX
+    default:
+      return false;
+    }
+  }
+
+  class FontBasedComputationContext
+  {
+  public:
+    FontBasedComputationContext(float fontSize)
+        : fontSize(fontSize)
+    {
+    }
+
+  public:
+    float fontSize;
+    float lineHeight;
+  };
+
+  inline float computeFontBasedRelativeLengthInPixels(Unit unit, float value,
+                                                      const FontBasedComputationContext &context)
+  {
+    assert(isElementBasedRelativeUnit(unit)); // Must be a relative unit.
+
+    switch (unit)
+    {
+    case Unit::kEM:
+      return value * context.fontSize;
+    case Unit::kEX:
+      return value * context.fontSize * 0.5f;
+    case Unit::kCAP:
+      return value * context.fontSize * 0.7f;
+    case Unit::kCH:
+      return value * context.fontSize * 0.5f;
+    case Unit::kIC:
+      return value * context.fontSize * 0.5f;
+    case Unit::kLH:
+      return value * context.lineHeight;
+    default:
+      assert(false && "Invalid relative unit");
+    }
   }
 
   class Length
   {
   public:
-    Length() : value_(0), unit_(Unit::kPx) {}
-    Length(float value, Unit unit = Unit::kPx) : value_(value), unit_(unit) {}
+    Length() : value_(0), unit_(Unit::kPX) {}
+    Length(float value, Unit unit = Unit::kPX) : value_(value), unit_(unit) {}
     Length(const std::string &input)
     {
-#define PARSE(unit)                                                                      \
-  if (input.ends_with(ToLowerCase(std::string(#unit))))                                  \
+#define PARSE(UNIT, STR)                                                                 \
+  if (input.ends_with(STR))                                                              \
   {                                                                                      \
-    std::string valueStr = input.substr(0, input.size() - strlen(#unit));                \
+    std::string valueStr = input.substr(0, input.size() - strlen(STR));                  \
     try                                                                                  \
     {                                                                                    \
       value_ = std::stof(valueStr);                                                      \
-      unit_ = Unit::k##unit;                                                             \
+      unit_ = Unit::k##UNIT;                                                             \
     }                                                                                    \
     catch (const std::invalid_argument &e)                                               \
     {                                                                                    \
       value_ = 0;                                                                        \
-      unit_ = Unit::kPx;                                                                 \
+      unit_ = Unit::kPX;                                                                 \
       std::cerr << "Failed to parse length(" << valueStr << "): " << input << std::endl; \
       std::cerr << "  " << e.what() << std::endl;                                        \
     }                                                                                    \
     return;                                                                              \
   }
 
-#define XX(unit) PARSE(unit)
+#define XX(UNIT, STR) PARSE(UNIT, STR)
       CSS_UNITS_MAP(XX)
 #undef XX
 #undef PARSE
@@ -92,27 +204,65 @@ namespace client_cssom::types
     inline Unit &unit() { return unit_; }
 
   public:
-    float getValueAsPixels() const
+    /**
+     * @returns `true` if the length is an absolute unit, such as px, cm, mm, in, pc, or pt.
+     */
+    bool isAbsoluteLength() const { return isAbsoluteUnit(unit_); }
+    /**
+     * @returns `true` if the length is a relative unit based on the element's font size, such
+     *          as em, ex, cap, ch, ic, or lh.
+     */
+    bool isElementBasedRelativeLength() const { return isElementBasedRelativeUnit(unit_); }
+    /**
+     * @returns `true` if the length is a relative unit based on the root element's font size, such
+     *          as rem, rch, rcap, rex, ric, or rlh.
+     */
+    bool isRootBasedRelativeLength() const { return isRootBasedRelativeUnit(unit_); }
+    /**
+     * @returns `true` if the length is a relative unit based on the viewport size, such as vh, vw,
+     *          vmin, vmax, vb, or vi.
+     */
+    bool isViewportBasedRelativeLength() const { return isViewportBasedRelativeUnit(unit_); }
+    /**
+     * It computes the absolute length in pixels, this function should be called only when the length is
+     * an absolute unit.
+     *
+     * @returns The absolute length in pixels.
+     */
+    float computeAbsoluteLengthInPixels() const
     {
+      assert(isAbsoluteLength()); // Must be an absolute unit.
+
       switch (unit_)
       {
-      case Unit::kPx:
+      case Unit::kPX:
         return value_;
-      case Unit::kPt:
+      case Unit::kPT:
         return value_ * 96.0f / 72.0f;
-      case Unit::kPc:
+      case Unit::kPC:
         return value_ * 16.0f;
-      case Unit::kIn:
+      case Unit::kIN:
         return value_ * 96.0f;
-      case Unit::kCm:
+      case Unit::kCM:
         return value_ * 96.0f / 2.54f;
-      case Unit::kMm:
+      case Unit::kMM:
         return value_ * 96.0f / 25.4f;
       case Unit::kQ:
         return value_ * 96.0f / 25.4f / 40.0f;
       default:
         return 0.0f;
       }
+    }
+    /**
+     * It computes the relative length in pixels, this function should be called only when the length is
+     * a relative unit based on the element's font size.
+     *
+     * @param context The context for the font-based computation.
+     * @returns The absolute value in pixels.
+     */
+    float computeElementBasedLengthInPixels(const FontBasedComputationContext &context) const
+    {
+      return computeFontBasedRelativeLengthInPixels(unit_, value_, context);
     }
 
   private:
