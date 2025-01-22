@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <skia/include/core/SkCanvas.h>
+#include <skia/include/core/SkRRect.h>
 #include <skia/modules/skparagraph/include/FontCollection.h>
 #include <skia/modules/skparagraph/include/Paragraph.h>
 #include <skia/modules/skparagraph/include/ParagraphBuilder.h>
@@ -16,6 +17,7 @@ namespace builtin_scene
   {
     class RenderBaseSystem;
     class RenderBackgroundSystem;
+    class RenderImageSystem;
     class RenderTextSystem;
     class UpdateTextureSystem;
   }
@@ -69,6 +71,9 @@ namespace builtin_scene
 
   class WebContent : public ecs::Component
   {
+    friend class web_renderer::RenderBackgroundSystem;
+    friend class web_renderer::RenderImageSystem;
+    friend class web_renderer::RenderTextSystem;
     friend class web_renderer::UpdateTextureSystem;
 
   public:
@@ -141,9 +146,12 @@ namespace builtin_scene
      * @returns Whether the content is dirty, namely needs to be re-rendered.
      */
     inline bool isDirty() const { return isDirty_; }
-
-  private:
-    void setDirty(bool dirty) { isDirty_ = dirty; }
+    /**
+     * Mark the content as dirty or not.
+     * 
+     * @param dirty Whether the content is dirty.
+     */
+    inline void setDirty(bool dirty) { isDirty_ = dirty; }
 
   public:
     skia::textlayout::TextStyle textStyle() const;
@@ -156,6 +164,7 @@ namespace builtin_scene
     client_cssom::CSSStyleDeclaration style_;
     std::optional<crates::layout::Layout> lastLayout_;
     WebContentStyle contentStyle_;
+    SkRRect roundedRect_;
     bool isDirty_ = true;
   };
 
@@ -190,6 +199,18 @@ namespace builtin_scene
 
     public:
       const std::string name() const override { return "web_render.RenderBackgroundSystem"; }
+
+    private:
+      void render(ecs::EntityId entity, WebContent &content) override;
+    };
+
+    class RenderImageSystem final : public RenderBaseSystem
+    {
+    public:
+      using RenderBaseSystem::RenderBaseSystem;
+
+    public:
+      const std::string name() const override { return "web_render.RenderImageSystem"; }
 
     private:
       void render(ecs::EntityId entity, WebContent &content) override;
@@ -255,10 +276,14 @@ namespace builtin_scene
       app.registerComponent<WebContent>();
 
       auto renderBackground = System::Make<RenderBackgroundSystem>();
+      auto renderImage = System::Make<RenderImageSystem>();
       auto renderText = System::Make<RenderTextSystem>();
       auto updateTexture = System::Make<UpdateTextureSystem>();
 
-      renderBackground->chain(renderText)->chain(updateTexture);
+      renderBackground
+          ->chain(renderImage)
+          ->chain(renderText)
+          ->chain(updateTexture);
       app.addSystem(SchedulerLabel::kUpdate, renderBackground);
     }
   };

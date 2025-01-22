@@ -3,34 +3,36 @@
 #include <string>
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkBitmap.h>
-#include "./html_plane_element.hpp"
+#include "./html_content2d_element.hpp"
 #include "../canvas/image_source.hpp"
 
 namespace dom
 {
-  class HTMLImageElement : public HTMLPlaneElement,
+  class HTMLImageElement : public HTMLContent2dElement,
                            public canvas::ImageSource
   {
   public:
-    using HTMLPlaneElement::HTMLPlaneElement;
+    using HTMLContent2dElement::HTMLContent2dElement;
 
   public:
     HTMLImageElement(std::shared_ptr<Document> ownerDocument)
-        : HTMLPlaneElement("IMG", ownerDocument),
-          canvas::ImageSource(),
-          skBitmap(std::make_shared<SkBitmap>())
+        : HTMLContent2dElement("IMG", ownerDocument),
+          canvas::ImageSource()
     {
     }
 
   public:
-    size_t width() const override { return skBitmap->width(); }
-    size_t height() const override { return skBitmap->height(); }
+    void connectedCallback() override;
+
+  public:
+    size_t width() const override { return skBitmap_->width(); }
+    size_t height() const override { return skBitmap_->height(); }
     bool readPixels(SkPixmap &dst) const override
     {
-      dst.reset(skBitmap->info(),
-                skBitmap->getPixels(),
-                skBitmap->rowBytes());
-      return skBitmap->readPixels(dst);
+      dst.reset(skBitmap_->info(),
+                skBitmap_->getPixels(),
+                skBitmap_->rowBytes());
+      return skBitmap_->readPixels(dst);
     }
 
   public:
@@ -83,6 +85,7 @@ namespace dom
     std::string currentSrc;
 
   private:
-    std::shared_ptr<SkBitmap> skBitmap;
+    std::shared_ptr<SkBitmap> skBitmap_;
+    bool isSrcImageLoaded_ = false;
   };
 }

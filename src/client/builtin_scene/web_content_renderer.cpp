@@ -13,6 +13,7 @@
 #include "./materials/web_content.hpp"
 #include "./web_content.hpp"
 #include "./text.hpp"
+#include "./image.hpp"
 
 namespace builtin_scene::web_renderer
 {
@@ -223,7 +224,7 @@ namespace builtin_scene::web_renderer
     SkRect rect = SkRect::MakeXYWH(left, top,
                                    content.width() - 2 * left,
                                    content.height() - 2 * top);
-    SkRRect roundedRect;
+    SkRRect& roundedRect = content.roundedRect_;
     {
       // Set the radius for all four corners.
       float borderTopLeftRadius = style.getPropertyValueAs<float>("border-top-left-radius");
@@ -240,6 +241,22 @@ namespace builtin_scene::web_renderer
 
     drawBackground(canvas, roundedRect, layout.value(), style);
     drawBorders(canvas, roundedRect, layout.value(), style);
+  }
+
+  void RenderImageSystem::render(ecs::EntityId entity, WebContent &content)
+  {
+    auto imageComponent = getComponent<Image2d>(entity);
+    if (imageComponent == nullptr || !imageComponent->hasImageData())
+      return;
+
+    auto canvas = content.canvas();
+    canvas->save();
+    {
+      SkRRect& roundedRect = content.roundedRect_;
+      canvas->clipRRect(roundedRect, true);
+      canvas->drawImage(imageComponent->image(), 0.0f, 0.0f);
+    }
+    canvas->restore();
   }
 
   RenderTextSystem::RenderTextSystem()

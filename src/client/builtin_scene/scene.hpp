@@ -6,6 +6,7 @@
 
 #include "./ecs-inl.hpp"
 #include "./asset.hpp"
+#include "./image.hpp"
 #include "./text.hpp"
 #include "./timer.hpp"
 #include "./camera.hpp"
