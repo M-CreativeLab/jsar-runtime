@@ -6,6 +6,7 @@
 #include <pugixml/pugixml.hpp>
 #include <client/browser/window.hpp>
 #include <client/builtin_scene/scene.hpp>
+#include <client/cssom/css_stylesheet.hpp>
 #include <crates/bindings.hpp>
 
 #include "./node.hpp"
@@ -77,6 +78,15 @@ namespace dom
     DocumentCompatMode compatMode = DocumentCompatMode::NO_QUIRKS;
     DocumentType documentType = DocumentType::kHTML;
     std::string contentType = "text/html";
+    /**
+     * Get a list of `CSSStyleSheet` objects, for stylesheets explicitly linked into or embedded in a document.
+     * 
+     * @returns The list of `CSSStyleSheet` objects.
+     */
+    inline const std::vector<std::shared_ptr<client_cssom::CSSStyleSheet>> &styleSheets() const
+    {
+      return styleSheets_;
+    }
 
   public:
     /**
@@ -98,6 +108,7 @@ namespace dom
   private:
     bool isSourceLoaded = false;
     bool shouldOpen = false;
+    std::vector<std::shared_ptr<client_cssom::CSSStyleSheet>> styleSheets_;
   };
 
   class XMLDocument : public Document
