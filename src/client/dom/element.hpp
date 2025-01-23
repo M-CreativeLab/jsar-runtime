@@ -22,6 +22,7 @@
   XX("p", HTMLParagraphElement)   \
   XX("script", HTMLScriptElement) \
   XX("span", HTMLSpanElement)     \
+  XX("style", HTMLStyleElement)   \
   XX("video", HTMLVideoElement)
 
 namespace dom

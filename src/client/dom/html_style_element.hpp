@@ -22,8 +22,8 @@ namespace dom
     void connectedCallback() override;
 
   public:
-    bool blocking;
-    bool disabled;
+    bool blocking = true;
+    bool disabled = false;
     inline const client_cssom::StyleSheet &sheet() const { return *sheet_; }
 
   private:

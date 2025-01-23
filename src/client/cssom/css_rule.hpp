@@ -8,6 +8,9 @@ namespace client_cssom
   // Forward declarations
   class CSSStyleSheet;
 
+  // Typedefs
+  using CSSRuleIndex = size_t;
+
   enum class CSSRuleType
   {
     kUnknownRule = 0x00,
@@ -47,6 +50,8 @@ namespace client_cssom
 
   class CSSRuleList : std::vector<CSSRule>
   {
+    friend class CSSStyleSheet;
+
   public:
     CSSRuleList() = default;
 
