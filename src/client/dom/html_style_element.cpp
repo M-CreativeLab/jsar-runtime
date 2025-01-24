@@ -1,4 +1,5 @@
 #include <client/cssom/css_stylesheet.hpp>
+#include <client/dom/document.hpp>
 #include "./html_style_element.hpp"
 
 namespace dom
@@ -16,7 +17,7 @@ namespace dom
   void HTMLStyleElement::connectedCallback()
   {
     client_cssom::CSSStyleSheetInit init{baseURI, disabled};
-    auto sheet = make_unique<client_cssom::CSSStyleSheet>(init);
+    auto sheet = make_shared<client_cssom::CSSStyleSheet>(init);
     string cssText = textContent();
     if (!cssText.empty())
     {
@@ -27,6 +28,7 @@ namespace dom
     }
 
     // Update the sheet
-    sheet_ = move(sheet);
+    sheet_ = sheet;
+    getOwnerDocumentChecked().styleSheets_.push_back(sheet);
   }
 }

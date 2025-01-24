@@ -113,6 +113,12 @@ namespace dom
     }
     /**
      * Get the owner document reference.
+     * 
+     * @returns The owner document reference.
+     */
+    Document& getOwnerDocumentChecked();
+    /**
+     * Get the owner document reference.
      *
      * @param force If true, the owner document will be forced to get, otherwise it will return the cached owner document.
      * @returns The owner document reference.

@@ -90,6 +90,12 @@ namespace dom
     throw std::runtime_error("The textContent property writable is not implemented yet.");
   }
 
+  Document &Node::getOwnerDocumentChecked()
+  {
+    assert(ownerDocument.has_value() && "The owner document is not found.");
+    return *ownerDocument.value().lock();
+  }
+
   std::shared_ptr<Document> Node::getOwnerDocumentReference(bool force)
   {
     std::shared_ptr<dom::Document> ref = nullptr;

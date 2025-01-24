@@ -1,5 +1,6 @@
 #include <client/dom/element.hpp>
 #include <client/dom/html_element.hpp>
+#include <client/dom/document.hpp>
 #include "./window.hpp"
 
 namespace browser
@@ -21,6 +22,7 @@ namespace browser
     if (htmlElement == nullptr)
       return CSSStyleDeclaration();
 
+    // const auto& stylesheets = htmlElement->getOwnerDocumentChecked().styleSheets();
     // TODO: Implement the computed style.
     return *htmlElement->style;
   }

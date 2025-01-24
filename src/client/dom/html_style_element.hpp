@@ -27,6 +27,6 @@ namespace dom
     inline const client_cssom::StyleSheet &sheet() const { return *sheet_; }
 
   private:
-    std::unique_ptr<client_cssom::StyleSheet> sheet_;
+    std::shared_ptr<client_cssom::StyleSheet> sheet_;
   };
 }

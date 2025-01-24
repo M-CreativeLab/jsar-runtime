@@ -36,6 +36,7 @@ namespace dom
     friend class CharacterData;
     friend class Text;
     friend class Element;
+    friend class HTMLStyleElement;
 
   public:
     /**
