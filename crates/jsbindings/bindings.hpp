@@ -227,6 +227,7 @@ namespace crates
 
     public:
       CSSPropertyDeclarationBlock(_CSSPropertyDeclarationBlock *handle) : handle_(handle) {}
+      CSSPropertyDeclarationBlock(const CSSPropertyDeclarationBlock &) = delete; // avoid copy to prevent the double free for the handle
       ~CSSPropertyDeclarationBlock()
       {
         css_property_declaration_block_free(handle_);
@@ -318,6 +319,268 @@ namespace crates
 
     private:
       _CSSPropertyDeclarationBlock *handle_;
+    };
+
+    using CSSSelectorCombinator = _CombinatorSelectorComponent;
+    inline std::string to_string(const CSSSelectorCombinator &combinator)
+    {
+      switch (combinator)
+      {
+      case _CombinatorSelectorComponent::Descendant:
+        return " ";
+      case _CombinatorSelectorComponent::Child:
+        return " > ";
+      case _CombinatorSelectorComponent::NextSibling:
+        return " + ";
+      case _CombinatorSelectorComponent::LaterSibling:
+        return " ~ ";
+      case _CombinatorSelectorComponent::PseudoElement:
+        return "::";
+      case _CombinatorSelectorComponent::SlotAssignment:
+        return " / ";
+      default:
+        return " ? "; // Represents an unknown combinator
+      }
+    }
+    inline std::ostream &operator<<(std::ostream &os, const CSSSelectorCombinator &combinator)
+    {
+      os << to_string(combinator);
+      return os;
+    }
+
+    class CSSSelectorComponent
+    {
+    public:
+      CSSSelectorComponent(_SelectorComponentInner &handle)
+          : componentType_(handle.tag),
+            combinator_(handle.combinator._0)
+      {
+        _NamedSelectorComponent* namedComponent = nullptr;
+        switch (handle.tag)
+        {
+        case _SelectorComponentInner::Tag::LocalName:
+          namedComponent = &handle.local_name._0;
+          break;
+        case _SelectorComponentInner::Tag::Id:
+          namedComponent = &handle.id._0;
+          break;
+        case _SelectorComponentInner::Tag::Class:
+          namedComponent = &handle.class_._0;
+          break;
+        default:
+          break;
+        }
+
+        if (namedComponent != nullptr && namedComponent->name != nullptr)
+        {
+          name_ = std::string(namedComponent->name);
+          release_rust_cstring(namedComponent->name);
+          namedComponent->name = nullptr; // avoid double free
+        }
+      }
+      ~CSSSelectorComponent() = default;
+
+    public:
+      inline bool isLocalName() const { return componentType_ == _SelectorComponentInner::Tag::LocalName; }
+      inline bool isId() const { return componentType_ == _SelectorComponentInner::Tag::Id; }
+      inline bool isClass() const { return componentType_ == _SelectorComponentInner::Tag::Class; }
+      inline bool isRoot() const { return componentType_ == _SelectorComponentInner::Tag::Root; }
+      inline bool isEmpty() const { return componentType_ == _SelectorComponentInner::Tag::Empty; }
+      inline bool isHost() const { return componentType_ == _SelectorComponentInner::Tag::Host; }
+      inline bool isCombinator() const { return componentType_ == _SelectorComponentInner::Tag::Combinator; }
+      inline CSSSelectorCombinator combinator() const { return combinator_; }
+      inline std::string name() const { return name_; }
+
+    public:
+      operator std::string() const
+      {
+        std::string str;
+        switch (componentType_)
+        {
+        case _SelectorComponentInner::Tag::LocalName:
+          str = name();
+          break;
+        case _SelectorComponentInner::Tag::Id:
+          str = "#" + name();
+          break;
+        case _SelectorComponentInner::Tag::Class:
+          str = "." + name();
+          break;
+        case _SelectorComponentInner::Tag::Root:
+          str = ":root";
+          break;
+        case _SelectorComponentInner::Tag::Empty:
+          str = ":empty";
+          break;
+        case _SelectorComponentInner::Tag::Host:
+          str = ":host";
+          break;
+        case _SelectorComponentInner::Tag::Combinator:
+          str = to_string(combinator());
+          break;
+        default:
+          break;
+        }
+        return str;
+      }
+      friend std::ostream &operator<<(std::ostream &os, const CSSSelectorComponent &component)
+      {
+        return os << static_cast<std::string>(component);
+      }
+
+    private:
+      _SelectorComponentInner::Tag componentType_;
+      std::string name_;                 // for LocalName, Id, Class
+      CSSSelectorCombinator combinator_; // for Combinator
+    };
+
+    class CSSSelector
+    {
+    public:
+      CSSSelector(const _SelectorInner &handle)
+      {
+        _SelectorComponentInner **pComponents = handle.components;
+        for (size_t i = 0; pComponents[i] != nullptr; i++)
+        {
+          _SelectorComponentInner *component = pComponents[i];
+          components_.push_back(CSSSelectorComponent(*component));
+        }
+        assert(handle.size == components_.size());
+      }
+
+    public:
+      operator std::string() const
+      {
+        std::string str;
+        for (auto it = components_.rbegin(); it != components_.rend(); it++)
+          str += static_cast<std::string>(*it);
+        return str;
+      }
+      friend std::ostream &operator<<(std::ostream &os, const CSSSelector &selector)
+      {
+        return os << static_cast<std::string>(selector);
+      }
+
+    private:
+      std::vector<CSSSelectorComponent> components_;
+    };
+
+    class CSSSelectorList : std::vector<CSSSelector>
+    {
+    public:
+      CSSSelectorList(_SelectorInner **list)
+      {
+        for (size_t i = 0; list[i] != nullptr; i++)
+          push_back(CSSSelector(*list[i]));
+        css_selectors_array_free(list);
+      }
+
+    public:
+      operator std::string() const
+      {
+        std::string str;
+        for (auto it = begin(); it != end(); it++)
+        {
+          if (it != begin())
+            str += ", ";
+          str += static_cast<std::string>(*it);
+        }
+        return str;
+      }
+      friend std::ostream &operator<<(std::ostream &os, const CSSSelectorList &list)
+      {
+        return os << static_cast<std::string>(list);
+      }
+    };
+
+    using CSSRuleType = _CSSRuleInner::Tag;
+    class CSSRuleInner
+    {
+    public:
+      static inline std::shared_ptr<CSSRuleInner> Make(const _CSSRuleInner &inner);
+
+    protected:
+      CSSRuleInner(CSSRuleType type) : type_(type) {}
+
+    public:
+      virtual ~CSSRuleInner() = default;
+
+    public:
+      CSSRuleType type() const { return type_; }
+
+    private:
+      CSSRuleType type_;
+    };
+
+    class CSSStyleRuleInner : public CSSRuleInner
+    {
+    public:
+      CSSStyleRuleInner(CSSRuleType ruleType, const _CSSStyleRule &handle)
+          : CSSRuleInner(ruleType),
+            block_(nullptr),
+            selectors_(handle.selectors)
+      {
+        if (handle.block != nullptr)
+          block_ = std::make_unique<CSSPropertyDeclarationBlock>(handle.block);
+      }
+
+    public:
+      const CSSSelectorList &selectors() const { return selectors_; }
+      const CSSPropertyDeclarationBlock &block() const { return *block_; }
+      std::unique_ptr<CSSPropertyDeclarationBlock> takeBlock() { return std::move(block_); }
+
+    private:
+      CSSSelectorList selectors_;
+      std::unique_ptr<CSSPropertyDeclarationBlock> block_;
+    };
+
+    class CSSMediaRuleInner : public CSSRuleInner
+    {
+    public:
+      CSSMediaRuleInner(CSSRuleType ruleType, _CSSMediaRule handle)
+          : CSSRuleInner(ruleType)
+      {
+      }
+    };
+
+    std::shared_ptr<CSSRuleInner> CSSRuleInner::Make(const _CSSRuleInner &inner)
+    {
+      switch (inner.tag)
+      {
+      case _CSSRuleInner::Tag::Style:
+        return std::make_shared<CSSStyleRuleInner>(inner.tag, inner.style._0);
+      case _CSSRuleInner::Tag::Media:
+        return std::make_shared<CSSMediaRuleInner>(inner.tag, inner.media._0);
+      default:
+        throw std::runtime_error("Unsupported CSS rule type.");
+      }
+    }
+
+    class CSSStylesheetInner
+    {
+    public:
+      static inline std::shared_ptr<CSSStylesheetInner> Parse(const std::string &cssText, const std::string &mediaQuery = "")
+      {
+        return std::make_shared<CSSStylesheetInner>(parse_css_stylesheet(cssText.c_str(), mediaQuery.c_str()));
+      }
+
+    public:
+      CSSStylesheetInner(_CSSStylesheetInner *handle)
+      {
+        size_t rulesLen = css_stylesheet_rules_len(handle);
+        for (size_t i = 0; i < rulesLen; i++)
+        {
+          auto rule = css_stylesheet_get_rule(handle, i);
+          cssRules_.push_back(CSSRuleInner::Make(rule));
+        }
+        css_stylesheet_free(handle);
+      }
+
+    public:
+      const std::vector<std::shared_ptr<CSSRuleInner>> &cssRules() const { return cssRules_; }
+
+    private:
+      std::vector<std::shared_ptr<CSSRuleInner>> cssRules_;
     };
 
     /**

@@ -75,6 +75,11 @@ namespace client_cssom
           cachedCssText_(std::nullopt)
     {
     }
+    CSSStyleDeclaration(std::unique_ptr<crates::css::CSSPropertyDeclarationBlock> pdb)
+        : pdb_(std::move(pdb)),
+          cachedCssText_(std::nullopt)
+    {
+    }
     // Reconstruct a new CSSStyleDeclaration from another one's cssText to avoid the `pdb_` being shared.
     CSSStyleDeclaration(const CSSStyleDeclaration &other) : CSSStyleDeclaration(other.cssText())
     {

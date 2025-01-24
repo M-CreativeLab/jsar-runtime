@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <memory>
+#include <crates/bindings.hpp>
 
 namespace client_cssom
 {
@@ -48,7 +49,7 @@ namespace client_cssom
     std::weak_ptr<CSSStyleSheet> parentStyleSheet_;
   };
 
-  class CSSRuleList : std::vector<CSSRule>
+  class CSSRuleList : std::vector<std::shared_ptr<CSSRule>>
   {
     friend class CSSStyleSheet;
 
@@ -59,6 +60,9 @@ namespace client_cssom
     size_t length() const { return size(); }
 
   public:
-    CSSRule &item(size_t index) { return at(index); }
+    CSSRule &item(CSSRuleIndex index) const { return *at(index); }
+
+  private:
+    CSSRuleIndex insert(crates::css::CSSRuleInner& inner);
   };
 }

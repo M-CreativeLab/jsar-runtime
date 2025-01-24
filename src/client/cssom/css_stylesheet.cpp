@@ -1,8 +1,10 @@
+#include <crates/bindings.hpp>
 #include "./css_stylesheet.hpp"
 
 namespace client_cssom
 {
   using namespace std;
+  using namespace crates::css;
 
   CSSStyleSheet::CSSStyleSheet(optional<CSSStyleSheetInit> init)
       : StyleSheet(),
@@ -28,6 +30,9 @@ namespace client_cssom
 
   void CSSStyleSheet::replaceSync(const string &cssText)
   {
-    cout << "Parsing CSS text: " << cssText << endl;
+    auto stylesheet = CSSStylesheetInner::Parse(cssText, "");
+    const auto &cssRules = stylesheet->cssRules();
+    for (auto cssRule : cssRules)
+      cssRules_->insert(*cssRule);
   }
 }

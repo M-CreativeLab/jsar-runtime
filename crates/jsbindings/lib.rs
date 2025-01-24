@@ -19,8 +19,7 @@ use url::Url;
 use glsl_lang::ast;
 use glsl_lang::visitor::{HostMut, Visit, VisitorMut};
 
-#[no_mangle]
-extern "C" fn release_rust_cstring(s: *mut c_char) {
+pub(crate) fn release_cstring(s: *mut c_char) {
   unsafe {
     if s.is_null() {
       return;
@@ -29,8 +28,7 @@ extern "C" fn release_rust_cstring(s: *mut c_char) {
   }
 }
 
-#[no_mangle]
-extern "C" fn release_rust_cstrings(list: *mut *mut c_char) {
+pub(crate) fn release_cstring_vec(list: *mut *mut c_char) {
   if list.is_null() {
     return;
   }
@@ -43,6 +41,16 @@ extern "C" fn release_rust_cstrings(list: *mut *mut c_char) {
     let len: usize = i.try_into().unwrap();
     Vec::from_raw_parts(list, len, len);
   }
+}
+
+#[no_mangle]
+extern "C" fn release_rust_cstring(s: *mut c_char) {
+  release_cstring(s)
+}
+
+#[no_mangle]
+extern "C" fn release_rust_cstrings(list: *mut *mut c_char) {
+  release_cstring_vec(list)
 }
 
 #[repr(C)]
