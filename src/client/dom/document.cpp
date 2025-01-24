@@ -259,13 +259,16 @@ namespace dom
       // Step 1: Compute the elements' styles.
       // TODO: use `computeStyle` for stylesheets.
       {
-        auto adoptStyleForElement = [](shared_ptr<HTMLElement> element)
+        auto adoptStyleForElement = [this](shared_ptr<HTMLElement> element)
         {
-          element->adoptStyle(*element->style);
+          const auto computedStyle = document_->defaultView()->getComputedStyle(element);
+          element->adoptStyle(computedStyle);
           return true;
         };
         auto adoptStyleForText = [](shared_ptr<Text> textNode)
-        { textNode->adoptStyle(*textNode->style_); };
+        {
+          textNode->adoptStyle(*textNode->style_);
+        };
         traverseElementOrTextNode(body, adoptStyleForElement, adoptStyleForText, TreverseOrder::PreOrder);
       }
 

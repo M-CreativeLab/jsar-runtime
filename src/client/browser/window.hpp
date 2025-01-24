@@ -7,11 +7,11 @@
 #include <stdexcept>
 #include <common/utility.hpp>
 #include <common/events_v2/event_target.hpp>
+#include <client/classes.hpp>
+#include <client/per_process.hpp>
 #include <client/cssom/units.hpp>
-
-#include "../per_process.hpp"
-#include "../classes.hpp"
-#include "../dom/dom_event_target.hpp"
+#include <client/cssom/css_style_declaration.hpp>
+#include <client/dom/dom_event_target.hpp>
 
 namespace browser
 {
@@ -205,6 +205,16 @@ namespace browser
     {
       clientContext_->makeRpcCall("window.prompt", {message, defaultValue});
     }
+
+    /**
+     * Gets an object containing the values of all CSS properties of an element, after applying active stylesheets and resolving any basic
+     * computation those values may contain.
+     *
+     * @param element The element to get the computed style.
+     * @param pseudoElt The optional pseudo-element to get the computed style.
+     */
+    const client_cssom::CSSStyleDeclaration getComputedStyle(std::shared_ptr<dom::Element> element,
+                                                             std::optional<std::string> pseudoElt = std::nullopt) const;
 
   private:
     // Configure the document to the window.
