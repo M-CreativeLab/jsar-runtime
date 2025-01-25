@@ -23,6 +23,7 @@ namespace client_cssom::rules
     }
 
   public:
+    const crates::css::CSSSelectorList& selectors() const { return selectors_; }
     std::string selectorText() const { return static_cast<std::string>(selectors_); }
     const CSSStyleDeclaration &style() const { return style_; }
 

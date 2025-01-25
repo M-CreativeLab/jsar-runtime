@@ -61,6 +61,10 @@ namespace client_cssom
 
   public:
     CSSRule &item(CSSRuleIndex index) const { return *at(index); }
+    auto begin() { return std::vector<std::shared_ptr<CSSRule>>::begin(); }
+    auto end() { return std::vector<std::shared_ptr<CSSRule>>::end(); }
+    auto begin() const { return std::vector<std::shared_ptr<CSSRule>>::begin(); }
+    auto end() const { return std::vector<std::shared_ptr<CSSRule>>::end(); }
 
   private:
     CSSRuleIndex insert(crates::css::CSSRuleInner& inner);
