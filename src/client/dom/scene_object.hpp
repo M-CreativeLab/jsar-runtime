@@ -10,6 +10,8 @@
 #include <client/cssom/layout.hpp>
 #include <client/cssom/box_offset.hpp>
 #include <client/cssom/box_bounding.hpp>
+
+#include "./geometry/dom_box.hpp"
 #include "./node.hpp"
 
 namespace dom
@@ -18,6 +20,7 @@ namespace dom
   class SceneObject : virtual public client_cssom::BoxOffset,
                       virtual public client_cssom::BoxBounding
   {
+    friend class Text;
     friend class Content2d;
 
   public:
@@ -106,8 +109,7 @@ namespace dom
      */
     bool adoptStyleOn(Node &node, const client_cssom::CSSStyleDeclaration &style);
     // Set the layout style with the name, node, and style.
-    crates::layout::style::LayoutStyle setLayoutStyle(const Node &node,
-                                                      crates::layout::style::LayoutStyle style);
+    bool setLayoutStyle(const Node &node, const client_cssom::CSSStyleDeclaration &style);
 
   private:
     // Check if the scene object should be rendered.

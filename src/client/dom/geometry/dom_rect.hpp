@@ -53,14 +53,13 @@ namespace dom::geometry
 
   class DOMRect : public DOMRectReadOnly
   {
+    using DOMRectReadOnly::DOMRectReadOnly;
+
   public:
     inline static DOMRect FromRect(const DOMRectInit init)
     {
       return DOMRect(init.x, init.y, init.width, init.height);
     }
-
-  public:
-    using DOMRectReadOnly::DOMRectReadOnly;
 
   public:
     float &x() { return x_; }

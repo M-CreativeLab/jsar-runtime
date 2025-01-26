@@ -34,8 +34,7 @@ namespace browser
         auto styleRule = dynamic_pointer_cast<CSSStyleRule>(rule);
         if (styleRule != nullptr)
         {
-          // TODO: match the selector with the element.
-          if (selectors::matchesSelector(styleRule->selectors(), htmlElement))
+          if (selectors::matchesSelectorList(styleRule->selectors(), htmlElement))
             computedStyle.update(styleRule->style(), true);
         }
       }

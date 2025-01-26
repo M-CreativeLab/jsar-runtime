@@ -100,7 +100,13 @@ namespace client_cssom
       auto name = other.item(i);
       if (hasProperty(name))
       {
-        if (omitIfPresent)  // Omit this property if it is already present
+        bool isSelfPropImportant = getPropertyPriority(name) == CSSPropertyPriority::Important;
+        bool isOtherPropImportant = other.getPropertyPriority(name) == CSSPropertyPriority::Important;
+        if (isSelfPropImportant && isOtherPropImportant)
+          isOtherPropImportant = false; // If both are important, then the other one is not important
+
+        // Omit this property if it is already present and the other one is not important
+        if (!isOtherPropImportant && omitIfPresent)
           continue;
 
         auto value = other.getPropertyValue(name);

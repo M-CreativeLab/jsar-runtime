@@ -97,7 +97,7 @@ namespace dom
     /**
      * When the element is created.
      */
-    virtual void createdCallback() {};
+    virtual void createdCallback();
     /**
      * When the element is connected to DOM.
      */

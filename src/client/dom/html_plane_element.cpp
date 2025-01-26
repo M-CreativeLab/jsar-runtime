@@ -64,4 +64,9 @@ namespace dom
       return false;
     return adoptStyleOn(*this, style);
   }
+
+  bool HTMLPlaneElement::updateLayoutStyle()
+  {
+    return setLayoutStyle(*this, adoptedStyle_);
+  }
 }

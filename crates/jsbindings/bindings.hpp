@@ -355,7 +355,7 @@ namespace crates
           : componentType_(handle.tag),
             combinator_(handle.combinator._0)
       {
-        _NamedSelectorComponent* namedComponent = nullptr;
+        _NamedSelectorComponent *namedComponent = nullptr;
         switch (handle.tag)
         {
         case _SelectorComponentInner::Tag::LocalName:
@@ -389,7 +389,17 @@ namespace crates
       inline bool isHost() const { return componentType_ == _SelectorComponentInner::Tag::Host; }
       inline bool isCombinator() const { return componentType_ == _SelectorComponentInner::Tag::Combinator; }
       inline CSSSelectorCombinator combinator() const { return combinator_; }
-      inline std::string name() const { return name_; }
+      inline const std::string &name() const { return name_; }
+      inline const std::string &id() const
+      {
+        assert(isId());
+        return name_;
+      }
+      inline const std::string &className() const
+      {
+        assert(isClass());
+        return name_;
+      }
 
     public:
       operator std::string() const
@@ -449,6 +459,9 @@ namespace crates
       }
 
     public:
+      const std::vector<CSSSelectorComponent> &components() const { return components_; }
+
+    public:
       operator std::string() const
       {
         std::string str;
@@ -476,6 +489,10 @@ namespace crates
       }
 
     public:
+      auto begin() { return std::vector<CSSSelector>::begin(); }
+      auto end() { return std::vector<CSSSelector>::end(); }
+      auto begin() const { return std::vector<CSSSelector>::begin(); }
+      auto end() const { return std::vector<CSSSelector>::end(); }
       operator std::string() const
       {
         std::string str;

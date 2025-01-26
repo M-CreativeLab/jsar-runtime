@@ -43,6 +43,13 @@ namespace client_cssom
 
   public:
     void merge(const Layout &layout);
+    /**
+     * Check if the layout needs to be resized with the specified width and height.
+     * 
+     * @param width The width to check.
+     * @param height The height to check.
+     * @returns Whether the layout needs to be resized.
+     */
     bool needsResize(float width, float height) const;
 
   private:

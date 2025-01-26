@@ -18,40 +18,12 @@ namespace dom
   using namespace builtin_scene;
   using namespace crates::layout::style;
 
-  void HTMLImageElement::connectedCallback()
-  {
-    HTMLContent2dElement::connectedCallback();
-    skBitmap_ = std::make_shared<SkBitmap>();
-
-    // Add the Image2d component to the entity.
-    assert(entity_.has_value());
-    auto addImageComponent = [this](Scene &scene)
-    {
-      scene.addComponent(entity_.value(),
-                         Image2d(getSrc(), nullptr));
-    };
-    useScene(addImageComponent);
-
-    // Load the image from the src attribute.
-    auto src = getSrc();
-    if (!src.empty())
-      loadImage(src);
-  }
-
-  void HTMLImageElement::loadImage(const std::string &src)
-  {
-    if (isSrcImageLoaded_)
-      return;
-    auto browsingContext = ownerDocument->lock()->browsingContext;
-    browsingContext->fetchImageResource(src, [this](const void *imageData, size_t imageByteLength)
-                                        { onImageLoaded(imageData, imageByteLength); });
-  }
-
+  // Adjust the image size based on the adopted style.
   bool adjustImageSize(const client_cssom::CSSStyleDeclaration &adoptedStyle,
                        geometry::DOMRect srcImageRect,
                        optional<client_cssom::Layout> &lastComputedLayout,
-                       function<void(Dimension)> widthSetter,
-                       function<void(Dimension)> heightSetter)
+                       function<void(float)> widthSetter,
+                       function<void(float)> heightSetter)
   {
     optional<Dimension> adoptedWidth = nullopt;
     optional<Dimension> adoptedHeight = nullopt;
@@ -80,8 +52,8 @@ namespace dom
     // If both width and height are auto, then use the image's size.
     if (!adoptedWidth.has_value() && !adoptedHeight.has_value())
     {
-      widthSetter(Dimension::Length(srcImageRect.width()));
-      heightSetter(Dimension::Length(srcImageRect.height()));
+      widthSetter(srcImageRect.width());
+      heightSetter(srcImageRect.height());
       return true;
     }
 
@@ -89,18 +61,67 @@ namespace dom
     if (adoptedWidth.has_value() && !adoptedHeight.has_value())
     {
       // Calculate the height = width / aspectRatio.
-      heightSetter(Dimension::Length(lastComputedLayout->width() / aspectRatio));
+      heightSetter(lastComputedLayout->width() / aspectRatio);
       return true;
     }
     else if (!adoptedWidth.has_value() && adoptedHeight.has_value())
     {
       // Calculate the width = height * aspectRatio.
-      widthSetter(Dimension::Length(lastComputedLayout->height() * aspectRatio));
+      widthSetter(lastComputedLayout->height() * aspectRatio);
       return true;
     }
 
     assert(false && "Unreachable");
     return false;
+  }
+
+  void HTMLImageElement::connectedCallback()
+  {
+    HTMLContent2dElement::connectedCallback();
+    skBitmap_ = std::make_shared<SkBitmap>();
+
+    // Add the Image2d component to the entity.
+    assert(entity_.has_value());
+    auto addImageComponent = [this](Scene &scene)
+    {
+      scene.addComponent(entity_.value(),
+                         Image2d(getSrc(), nullptr));
+    };
+    useScene(addImageComponent);
+
+    // Load the image from the src attribute.
+    auto src = getSrc();
+    if (!src.empty())
+      loadImage(src);
+  }
+
+  void HTMLImageElement::onLayoutChanged()
+  {
+    HTMLContent2dElement::onLayoutChanged();
+
+    // Adjust the image size if the layout is to be changed.
+    if (isSrcImageLoaded_)
+    {
+      auto setWidth = [this](float width)
+      { defaultBoundingBox_.width = width; };
+      auto setHeight = [this](float height)
+      { defaultBoundingBox_.height = height; };
+      if (adjustImageSize(
+              adoptedStyle_, getImageClientRect(), computedLayout_, setWidth, setHeight))
+      {
+        // Update the layout style if the size is changed.
+        updateLayoutStyle();
+      }
+    }
+  }
+
+  void HTMLImageElement::loadImage(const std::string &src)
+  {
+    if (isSrcImageLoaded_)
+      return;
+    auto browsingContext = ownerDocument->lock()->browsingContext;
+    browsingContext->fetchImageResource(src, [this](const void *imageData, size_t imageByteLength)
+                                        { onImageLoaded(imageData, imageByteLength); });
   }
 
   void HTMLImageElement::onImageLoaded(const void *imageData, size_t imageByteLength)
@@ -130,6 +151,20 @@ namespace dom
       complete = true;
       dispatchEvent(DOMEventType::Load);
 
+      // Adjust the image size and update the layout style if the image is loaded.
+      {
+        auto setWidth = [this](float width)
+        { defaultBoundingBox_.width = width; };
+        auto setHeight = [this](float height)
+        { defaultBoundingBox_.height = height; };
+        if (adjustImageSize(
+                adoptedStyle_, getImageClientRect(), computedLayout_, setWidth, setHeight))
+        {
+          // Update the layout style if the size is changed.
+          updateLayoutStyle();
+        }
+      }
+
       // Update the `Image2d` component and mark the content as dirty to update the texture.
       auto updateImageBitmap = [this](Scene &scene)
       {
@@ -141,21 +176,6 @@ namespace dom
         webContent.setDirty(true); // Mark the content as dirty to update the texture.
       };
       useScene(updateImageBitmap);
-
-      // Update the width and height of the image.
-      {
-        auto setWidth = [this](Dimension width)
-        {
-          defaultStyle_.setProperty("width", width);
-        };
-        auto setHeight = [this](Dimension height)
-        {
-          defaultStyle_.setProperty("height", height);
-        };
-        adjustImageSize(adoptedStyle_, getImageClientRect(), computedLayout_,
-                        setWidth,
-                        setHeight);
-      }
     }
     else
     {

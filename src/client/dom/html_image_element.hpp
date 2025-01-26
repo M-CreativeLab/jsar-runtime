@@ -9,8 +9,8 @@
 
 namespace dom
 {
-  class HTMLImageElement : public HTMLContent2dElement,
-                           public canvas::ImageSource
+  class HTMLImageElement final : public HTMLContent2dElement,
+                                 public canvas::ImageSource
   {
   public:
     using HTMLContent2dElement::HTMLContent2dElement;
@@ -24,6 +24,7 @@ namespace dom
 
   public:
     void connectedCallback() override;
+    void onLayoutChanged() override;
 
   public:
     inline size_t width() const override { return skBitmap_->width(); }

@@ -54,6 +54,21 @@ namespace dom
 
   Element::Element(pugi::xml_node node, shared_ptr<Document> ownerDocument) : Node(node, ownerDocument)
   {
+  }
+
+  Element::Element(Element &other)
+      : Node(other),
+        id(other.id),
+        namespaceURI(other.namespaceURI),
+        tagName(other.tagName),
+        localName(other.localName),
+        className(other.className),
+        prefix(other.prefix)
+  {
+  }
+
+  void Element::createdCallback()
+  {
     auto idAttr = this->internal->attribute("id");
     if (!idAttr.empty())
       id = idAttr.as_string();
@@ -89,17 +104,6 @@ namespace dom
         // TODO: implement classList
       }
     }
-  }
-
-  Element::Element(Element &other)
-      : Node(other),
-        id(other.id),
-        namespaceURI(other.namespaceURI),
-        tagName(other.tagName),
-        localName(other.localName),
-        className(other.className),
-        prefix(other.prefix)
-  {
   }
 
   string Element::getAttribute(const string &name)

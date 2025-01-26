@@ -54,7 +54,6 @@ namespace builtin_scene
   void WebContent::setStyle(const client_cssom::CSSStyleDeclaration &style, std::shared_ptr<WebContent> parent)
   {
     style_ = style;
-    setDirty(true); // Mark the content as dirty if setting a new style.
 
     // Update the text style
     {
@@ -73,7 +72,9 @@ namespace builtin_scene
       {
         auto length = style_.getPropertyValueAs<client_cssom::types::Length>("font-size");
         if (length.isAbsoluteLength())
+        {
           contentStyle_.textStyle.fontSize = length.computeAbsoluteLengthInPixels();
+        }
         else if (length.isElementBasedRelativeLength())
         {
           WebContentStyle parentContentStyle;
@@ -130,6 +131,9 @@ namespace builtin_scene
         }
       }
     }
+
+    // Mark the content as dirty if setting a new style.
+    setDirty(true);
   }
 
   skia::textlayout::TextStyle WebContent::textStyle() const

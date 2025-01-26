@@ -225,19 +225,7 @@ namespace dom
     onAdoptedStyleChanged();
 
     // Update the layout node style.
-    if (layoutNode_ != nullptr)
-    {
-      auto layoutStyle = setLayoutStyle(node, adoptedStyle_);
-#ifdef TR_CLIENT_DOM_VERBOSE
-      cout << "Updated layout style for SceneObject(" << name_ << "): " << layoutStyle << endl;
-      cout << "source style: " << style << endl;
-#endif
-      return true;
-    }
-    else
-    {
-      return false;
-    }
+    return setLayoutStyle(node, adoptedStyle_);
   }
 
   bool SceneObject::skipRender() const
@@ -250,8 +238,14 @@ namespace dom
     return display == Display::None();
   }
 
-  LayoutStyle SceneObject::setLayoutStyle(const Node &node, LayoutStyle style)
+  bool SceneObject::setLayoutStyle(const Node &node, const client_cssom::CSSStyleDeclaration &style)
   {
+    if (layoutNode_ == nullptr)
+      return false;
+
+    LayoutStyle layoutStyle(style); // Create the layout style from the CSS style.
+
+    // Update the layout style for Text node.
     if (node.nodeType == NodeType::TEXT_NODE)
     {
       try
@@ -260,24 +254,36 @@ namespace dom
         dom::geometry::DOMRect textRect;
 
         // Check if the width is auto, then calculate the width from the text.
-        if (style.width().isAuto())
+        if (layoutStyle.width().isAuto())
         {
           textRect = text.getTextClientRect(); // Use inf if the width is auto.
-          style.setWidth(Dimension::Length(textRect.width()));
+          layoutStyle.setWidth(Dimension::Length(textRect.width()));
         }
         else
           textRect = text.getTextClientRect(offsetWidth());
 
         // Check if the height is auto, then use the calculated height.
-        if (style.height().isAuto())
-          style.setHeight(Dimension::Length(textRect.height()));
+        if (layoutStyle.height().isAuto())
+          layoutStyle.setHeight(Dimension::Length(textRect.height()));
       }
       catch (const std::bad_cast &e)
       {
         // Ignore the exception.
       }
     }
-    layoutNode_->setStyle(style);
-    return style;
+    else if (node.nodeType == NodeType::ELEMENT_NODE)
+    {
+      if (layoutStyle.width().isAuto() && defaultBoundingBox_.width.has_value())
+        layoutStyle.setWidth(Dimension::Length(defaultBoundingBox_.width.value()));
+      if (layoutStyle.height().isAuto() && defaultBoundingBox_.height.has_value())
+        layoutStyle.setHeight(Dimension::Length(defaultBoundingBox_.height.value()));
+    }
+
+    layoutNode_->setStyle(layoutStyle);
+#ifdef TR_CLIENT_DOM_VERBOSE
+    cout << "Updated layout style for SceneObject(" << name_ << "): " << layoutStyle << endl;
+    cout << "source style: " << style << endl;
+#endif
+    return true;
   }
 }

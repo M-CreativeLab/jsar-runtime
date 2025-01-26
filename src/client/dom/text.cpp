@@ -7,6 +7,7 @@
 
 #include "./text.hpp"
 #include "./document.hpp"
+#include "./scene_object.hpp"
 
 namespace dom
 {
@@ -126,32 +127,32 @@ namespace dom
 
   bool Text::adoptStyle(const client_cssom::CSSStyleDeclaration &style)
   {
-    auto parentElement = getParentNodeAs<HTMLElement>();
-    if (parentElement != nullptr)
+    auto parentNode = getParentNodeAs<SceneObject>();
+    if (parentNode != nullptr)
     {
-      auto parentStyle = parentElement->style;
+      auto &parentStyle = parentNode->adoptedStyle_;
       std::shared_ptr<client_cssom::CSSStyleDeclaration> textStyle = nullptr;
 
 #define _MAKE_TEXT_STYLE_IF_NOT_EXIST() \
   if (textStyle == nullptr)             \
     textStyle = make_shared<client_cssom::CSSStyleDeclaration>(style);
 
-#define USE_PARENT_STYLE(property)                                             \
-  if (parentStyle->hasProperty(property))                                      \
-  {                                                                            \
-    _MAKE_TEXT_STYLE_IF_NOT_EXIST()                                            \
-    textStyle->setProperty(property, parentStyle->getPropertyValue(property)); \
+#define USE_PARENT_STYLE(property)                                            \
+  if (parentStyle.hasProperty(property))                                      \
+  {                                                                           \
+    _MAKE_TEXT_STYLE_IF_NOT_EXIST()                                           \
+    textStyle->setProperty(property, parentStyle.getPropertyValue(property)); \
   }
 
-#define USE_PARENT_SIZE(property)                                                                 \
-  if (parentStyle->hasProperty(property))                                                         \
-  {                                                                                               \
-    _MAKE_TEXT_STYLE_IF_NOT_EXIST()                                                               \
-    auto dimension = parentStyle->getPropertyValueAs<crates::layout::style::Dimension>(property); \
-    if (dimension.isLength() || dimension.isPercent())                                            \
-      textStyle->setProperty(property, "100%");                                                   \
-    else                                                                                          \
-      textStyle->setProperty(property, "auto");                                                   \
+#define USE_PARENT_SIZE(property)                                                                \
+  if (parentStyle.hasProperty(property))                                                         \
+  {                                                                                              \
+    _MAKE_TEXT_STYLE_IF_NOT_EXIST()                                                              \
+    auto dimension = parentStyle.getPropertyValueAs<crates::layout::style::Dimension>(property); \
+    if (dimension.isLength() || dimension.isPercent())                                           \
+      textStyle->setProperty(property, "100%");                                                  \
+    else                                                                                         \
+      textStyle->setProperty(property, "auto");                                                  \
   }
 
       // Font styles

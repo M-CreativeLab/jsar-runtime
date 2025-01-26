@@ -16,8 +16,8 @@ namespace dom
   public:
     void createdCallback() override;
     void connectedCallback() override;
-    void onLayoutChanged() override final;
-    void onAdoptedStyleChanged() override final;
+    void onLayoutChanged() override;
+    void onAdoptedStyleChanged() override;
 
   private:
     // Get the content2d and expect it to be valid.
