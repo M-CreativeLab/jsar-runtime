@@ -444,6 +444,7 @@ pub enum SelectorComponentInner {
   Class(NamedSelectorComponent),
   Root,
   Empty,
+  Scope,
   Host,
   Combinator(CombinatorSelectorComponent),
 }
@@ -472,6 +473,7 @@ impl SelectorInner {
         }
         Component::Root => SelectorComponentInner::Root,
         Component::Empty => SelectorComponentInner::Empty,
+        Component::Scope => SelectorComponentInner::Scope,
         Component::Host(_) => SelectorComponentInner::Host,
         Component::Combinator(combinator) => SelectorComponentInner::Combinator(match combinator {
           selectors::parser::Combinator::Child => CombinatorSelectorComponent::Child,
@@ -486,7 +488,9 @@ impl SelectorInner {
           }
           selectors::parser::Combinator::Part => CombinatorSelectorComponent::Part,
         }),
-        _ => panic!("Unsupported selector component type"),
+        _ => {
+          panic!("Unsupported selector component: {:?}", component);
+        },
       })
       .collect();
 
