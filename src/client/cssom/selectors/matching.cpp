@@ -9,46 +9,51 @@ namespace client_cssom::selectors
 
   bool matchesSelectorList(const CSSSelectorList &selectors, const shared_ptr<HTMLElement> element)
   {
+    MatchingContext context;
     for (const auto &selector : selectors)
     {
-      if (matchesSelector(selector, element))
+      if (matchesSelector(selector, element, context))
         return true;
     }
     return false;
   }
 
-  bool matchesSelector(const CSSSelector &selector, const shared_ptr<HTMLElement> element)
+  bool matchesSelector(const CSSSelector &selector, const shared_ptr<HTMLElement> element, MatchingContext &context)
   {
     assert(!selector.components().empty());
     auto it = selector.components().begin();
-    return matchesSelectorComponent(selector, it, element);
+    return matchesSelectorComponent(selector, it, element, context);
+  }
+
+  // Check if the element matches the specified selector component.
+  // NOTE: The component should not be a combinator.
+  bool matchesSelectorComponentNonCombinator(const crates::css::CSSSelectorComponent &component,
+                                             const shared_ptr<HTMLElement> element, MatchingContext &context)
+  {
+    assert(!component.isCombinator());
+
+    if (component.isLocalName())
+      return strcasecmp(element->tagName.c_str(), component.name().c_str()) == 0;
+    else if (component.isId())
+      return element->id == component.id();
+    else if (component.isClass())
+      return element->classList().contains(component.name());
+    else
+      return false;
   }
 
   bool matchesSelectorComponent(const CSSSelector &selector, std::vector<CSSSelectorComponent>::const_iterator &it,
-                                const shared_ptr<HTMLElement> element)
+                                const shared_ptr<HTMLElement> element,
+                                MatchingContext &context)
   {
     // If we reached the end of the selector, it means that the element matches all the components.
     if (it == selector.components().end())
       return true;
 
-    shared_ptr<HTMLElement> nextElement = element;
+    shared_ptr<HTMLElement> nextElement = element; // The next element to check
     const auto &component = *it;
-    if (component.isLocalName())
-    {
-      if (strcasecmp(element->tagName.c_str(), component.name().c_str()) != 0)
-        return false;
-    }
-    else if (component.isId())
-    {
-      if (element->id != component.id())
-        return false;
-    }
-    else if (component.isClass())
-    {
-      if (!element->classList().contains(component.name()))
-        return false;
-    }
-    else if (component.isCombinator())
+
+    if (component.isCombinator())
     {
       switch (component.combinator())
       {
@@ -58,6 +63,28 @@ namespace client_cssom::selectors
         nextElement = element->getParentNodeAs<HTMLElement>();
         break;
       case CSSSelectorCombinator::Descendant:
+        if (!element->hasTypedParentNode<HTMLElement>())
+          return false;
+        else
+        {
+          const CSSSelectorComponent &ancestorComponent = *(++it);
+          std::shared_ptr<HTMLElement> maybeAncestorElement = element->getParentNodeAs<HTMLElement>();
+          while (true)
+          {
+            // If we reached the root element, we can stop.
+            if (maybeAncestorElement == nullptr)
+              return false;
+
+            // If the ancestor element matches the ancestor component, we can go to the next component.
+            if (matchesSelectorComponentNonCombinator(ancestorComponent, maybeAncestorElement, context))
+            {
+              nextElement = maybeAncestorElement;
+              break;
+            }
+            maybeAncestorElement = maybeAncestorElement->getParentNodeAs<HTMLElement>();
+          }
+        }
+        break;
       case CSSSelectorCombinator::NextSibling:
       case CSSSelectorCombinator::LaterSibling:
       case CSSSelectorCombinator::PseudoElement:
@@ -67,6 +94,19 @@ namespace client_cssom::selectors
         break;
       }
     }
-    return matchesSelectorComponent(selector, ++it, nextElement);
+    else
+    {
+      // Non-combinator component, we need to check if the element matches the component.
+      // - If the element matches the component, we can go to the next component to check until the end of the selector.
+      // - If the element does not match the component, we can stop and return false.
+      if (!matchesSelectorComponentNonCombinator(component, element, context))
+        return false;
+    }
+
+    // Go to the next component
+    return matchesSelectorComponent(selector,
+                                    ++it,
+                                    nextElement,
+                                    context);
   }
 }

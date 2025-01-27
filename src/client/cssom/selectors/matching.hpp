@@ -7,6 +7,12 @@
 
 namespace client_cssom::selectors
 {
+  class MatchingContext
+  {
+  public:
+    MatchingContext() = default;
+  };
+
   /**
    * Check if the element matches the specified selectors.
    *
@@ -25,7 +31,8 @@ namespace client_cssom::selectors
    * @returns Whether the element matches the selector.
    */
   bool matchesSelector(const crates::css::CSSSelector &selector,
-                       const std::shared_ptr<dom::HTMLElement> element);
+                       const std::shared_ptr<dom::HTMLElement> element,
+                       MatchingContext &context);
 
   /**
    * Check if the element matches the specified selector component.
@@ -37,5 +44,6 @@ namespace client_cssom::selectors
    */
   bool matchesSelectorComponent(const crates::css::CSSSelector &selector,
                                 std::vector<crates::css::CSSSelectorComponent>::const_iterator &it,
-                                const shared_ptr<dom::HTMLElement> element);
+                                const shared_ptr<dom::HTMLElement> element,
+                                MatchingContext &context);
 }
