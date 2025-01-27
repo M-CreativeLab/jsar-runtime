@@ -159,7 +159,33 @@ namespace dom
      *
      * @returns True if the node has child nodes, otherwise false.
      */
-    inline bool hasChildNodes() { return childNodes.size() > 0; }
+    inline bool hasChildNodes() const { return childNodes.size() > 0; }
+    /**
+     * The `isEqualNode()` method of the `Node` interface tests whether two nodes are equal. Two nodes are equal when they have the
+     * same type, defining characteristics (for elements, this would be their ID, number of children, and so forth), its attributes
+     * match, and so on. The specific set of data points that must match varies depending on the types of the nodes.
+     *
+     * @param other The node to compare.
+     * @returns `true` if the nodes are equal, otherwise `false`.
+     */
+    inline bool isEqualNode(const Node &other) const
+    {
+      // TODO: Implement the `isEqualNode` method.
+      return isSameNode(other);
+    }
+    /**
+     * It tests whether two nodes are the same (in other words, whether they reference the same object).
+     *
+     * @param other The node to compare.
+     * @returns `true` if the nodes are the same, otherwise `false`.
+     */
+    inline bool isSameNode(const Node &other) const
+    {
+      return this->uid == other.uid;
+    }
+
+  public:
+    bool operator==(const Node &other) const { return isEqualNode(other); }
 
   protected:
     /**
