@@ -6,10 +6,10 @@
 #include "./dom_scripting.hpp"
 #include "./runtime_context.hpp"
 
-using namespace std;
-
 namespace dom
 {
+  using namespace std;
+
   int const ContextEmbedderTag::kMyContextTag = 0x8e8f99;
   void *const ContextEmbedderTag::kMyContextTagPtr = const_cast<void *>(
       static_cast<const void *>(&ContextEmbedderTag::kMyContextTag));

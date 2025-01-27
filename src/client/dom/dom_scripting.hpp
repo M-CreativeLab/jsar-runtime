@@ -9,8 +9,6 @@
 #include <node/node.h>
 #include "common/utility.hpp"
 
-using namespace std;
-
 template <typename T>
 inline void USE(T &&) {}
 
@@ -144,7 +142,7 @@ namespace dom
                                                                        v8::Local<v8::FixedArray> importAssertions);
 
   public:
-    DOMScriptingContext(shared_ptr<RuntimeContext> runtimeContext);
+    DOMScriptingContext(std::shared_ptr<RuntimeContext> runtimeContext);
 
   public:
     /**
@@ -179,7 +177,8 @@ namespace dom
      * @param type The type of the script: classic or module.
      * @returns The new DOM script object.
      */
-    shared_ptr<DOMScript> create(shared_ptr<RuntimeContext> runtimeContext, const string &url, SourceTextType type);
+    std::shared_ptr<DOMScript> create(std::shared_ptr<RuntimeContext> runtimeContext, const std::string &url,
+                                      SourceTextType type);
 
     /**
      * Compile the given script.
@@ -189,7 +188,7 @@ namespace dom
      * @param isTypeScript Whether the script is a TypeScript.
      * @returns Whether the script is compiled successfully.
      */
-    bool compile(shared_ptr<DOMScript> script, const std::string &source, bool isTypeScript = false);
+    bool compile(std::shared_ptr<DOMScript> script, const std::string &source, bool isTypeScript = false);
 
     /**
      * Compile the given script as a synthetic module.
@@ -198,14 +197,16 @@ namespace dom
      * @param sourceData The source data of the script.
      * @param sourceLength The length of the source data.
      */
-    bool compileAsSyntheticModule(shared_ptr<DOMModule> scriptModule, SyntheticModuleType type, const void *sourceData, size_t sourceLength);
+    bool compileAsSyntheticModule(std::shared_ptr<DOMModule> scriptModule, SyntheticModuleType type,
+                                  const void *sourceData,
+                                  size_t sourceLength);
 
     /**
      * Evaluate the given script.
      *
      * @param script The script to evaluate.
      */
-    void evaluate(shared_ptr<DOMScript> script);
+    void evaluate(std::shared_ptr<DOMScript> script);
 
     /**
      * Get the `DOMModule` object from the given v8 module.
@@ -213,7 +214,7 @@ namespace dom
      * @param v8module The v8 module object.
      * @returns The module object if found, otherwise nullptr.
      */
-    shared_ptr<DOMModule> getModuleFromV8(v8::Local<v8::Module> v8module);
+    std::shared_ptr<DOMModule> getModuleFromV8(v8::Local<v8::Module> v8module);
 
     /**
      * Get the `DOMModule` object from the given URL, it's used to check whether the URL is already loaded.
@@ -221,7 +222,7 @@ namespace dom
      * @param url The URL of the module.
      * @returns The module object if found, otherwise nullptr.
      */
-    shared_ptr<DOMModule> getModuleFromUrl(const string &url);
+    std::shared_ptr<DOMModule> getModuleFromUrl(const std::string &url);
 
     /**
      * Update the import map from the given JSON string.
@@ -229,7 +230,7 @@ namespace dom
      * @param json The JSON string of the import map.
      * @returns Whether the input json is valid.
      */
-    bool updateImportMapFromJSON(const string &json);
+    bool updateImportMapFromJSON(const std::string &json);
 
     /**
      * Do the exact match import map for the given specifier, such as "three" -> "https://cdn.skypack.dev/three".
@@ -238,7 +239,7 @@ namespace dom
      * @returns The matched URL string if found, otherwise nullopt.
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap#bare_modules
      */
-    optional<string> exactMatchImportMap(const string &specifier);
+    std::optional<std::string> exactMatchImportMap(const std::string &specifier);
 
     /**
      * Do the prefix match import map for the given specifier, such as "three/foo" -> "https://cdn.skypack.dev/three/foo".
@@ -247,7 +248,7 @@ namespace dom
      * @returns The matched prefix URL string if found, otherwise nullopt.
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap#mapping_path_prefixes
      */
-    optional<string> prefixMatchImportMap(const string &specifier);
+    std::optional<std::string> prefixMatchImportMap(const std::string &specifier);
 
     /**
      * Try to import a module from the given URL.
@@ -257,7 +258,7 @@ namespace dom
      * @param loadedCallback The callback to call when the module is loaded.
      */
     void tryImportModule(const std::string &url, const bool disableCache,
-                         std::function<void(shared_ptr<DOMModule>)> loadedCallback,
+                         std::function<void(std::shared_ptr<DOMModule>)> loadedCallback,
                          std::function<void(const std::string &)> errorCallback = nullptr);
 
     /**
@@ -287,23 +288,23 @@ namespace dom
   private:
     v8::Isolate *isolate;
     v8::Global<v8::Context> v8ContextStore;
-    shared_ptr<RuntimeContext> runtimeContext;
-    unordered_map<int, shared_ptr<DOMModule>> hashToModuleMap;
-    unordered_map<uint32_t, shared_ptr<DOMClassicScript>> idToScriptMap;
-    unordered_map<uint32_t, shared_ptr<DOMModule>> idToModuleMap;
-    unordered_map<string, shared_ptr<DOMModule>> urlToModuleMap;
-    map<string, string> importExactMap;
-    map<string, string> importPrefixMap;
+    std::shared_ptr<RuntimeContext> runtimeContext;
+    std::unordered_map<int, std::shared_ptr<DOMModule>> hashToModuleMap;
+    std::unordered_map<uint32_t, std::shared_ptr<DOMClassicScript>> idToScriptMap;
+    std::unordered_map<uint32_t, std::shared_ptr<DOMModule>> idToModuleMap;
+    std::unordered_map<std::string, std::shared_ptr<DOMModule>> urlToModuleMap;
+    std::map<std::string, std::string> importExactMap;
+    std::map<std::string, std::string> importPrefixMap;
     bool isContextInitialized = false;
   };
 
   /**
    * The virtual class for DOM script including the classic script and ECMAScript module.
    */
-  class DOMScript : public enable_shared_from_this<DOMScript>
+  class DOMScript : public std::enable_shared_from_this<DOMScript>
   {
   protected:
-    DOMScript(SourceTextType sourceTextType, shared_ptr<RuntimeContext> runtimeContext);
+    DOMScript(SourceTextType sourceTextType, std::shared_ptr<RuntimeContext> runtimeContext);
     virtual ~DOMScript() = default;
 
   public:
@@ -314,7 +315,7 @@ namespace dom
      * @param source The source code of the script.
      * @param isTypeScript Whether the script is a TypeScript.
      */
-    virtual bool compile(v8::Isolate *isolate, const string &source, bool isTypeScript) = 0;
+    virtual bool compile(v8::Isolate *isolate, const std::string &source, bool isTypeScript) = 0;
     /**
      * Evaluate the script.
      *
@@ -325,21 +326,21 @@ namespace dom
   public:
     SourceTextType sourceTextType;
     uint32_t id;
-    string url;
+    std::string url;
     bool crossOrigin = false;
 
   protected:
-    weak_ptr<RuntimeContext> runtimeContext;
+    std::weak_ptr<RuntimeContext> runtimeContext;
   };
 
   class DOMClassicScript : public DOMScript
   {
   public:
-    DOMClassicScript(shared_ptr<RuntimeContext> runtimeContext);
+    DOMClassicScript(std::shared_ptr<RuntimeContext> runtimeContext);
     ~DOMClassicScript() override;
 
   public:
-    bool compile(v8::Isolate *isolate, const string &sourceStr, bool isTypeScript) override;
+    bool compile(v8::Isolate *isolate, const std::string &sourceStr, bool isTypeScript) override;
     void evaluate(v8::Isolate *isolate) override;
 
   private:
@@ -354,8 +355,8 @@ namespace dom
 
     struct ModuleRequestInfo
     {
-      string specifier;
-      string url;
+      std::string specifier;
+      std::string url;
     };
 
   private:
@@ -367,11 +368,11 @@ namespace dom
                                                                             v8::Local<v8::Module> module);
 
   public:
-    DOMModule(shared_ptr<RuntimeContext> runtimeContext);
+    DOMModule(std::shared_ptr<RuntimeContext> runtimeContext);
     ~DOMModule() override;
 
   public:
-    bool compile(v8::Isolate *isolate, const string &sourceStr, bool isTypeScript) override;
+    bool compile(v8::Isolate *isolate, const std::string &sourceStr, bool isTypeScript) override;
     bool compileAsSyntheticModule(v8::Isolate *isolate, SyntheticModuleType type, const void *sourceData, size_t sourceByteLength);
     void evaluate(v8::Isolate *isolate) override;
     int getModuleHash();
@@ -380,7 +381,7 @@ namespace dom
      *
      * @returns The module URL string to be fetched.
      */
-    string getUrlBySpecifier(const string &specifier);
+    std::string getUrlBySpecifier(const std::string &specifier);
     /**
      * Register a callback to be called once when the module is linked or directly call the callback if the module is already linked.
      *
@@ -393,7 +394,7 @@ namespace dom
     v8::Local<v8::Value> getExports(v8::Isolate *isolate);
     void link(v8::Isolate *isolate);
     bool instantiate(v8::Isolate *isolate);
-    void handleModuleLoaded(const string &specifier, shared_ptr<DOMModule> module);
+    void handleModuleLoaded(const std::string &specifier, std::shared_ptr<DOMModule> module);
     void checkLinkFinished();
     void onLinkFinished();
     void doEvaluate(v8::Isolate *isolate);
@@ -401,10 +402,10 @@ namespace dom
   private:
     v8::Global<v8::Module> moduleStore;
     v8::Global<v8::Value> syntheticModuleNamespaceStore;
-    unordered_map<string, shared_ptr<DOMModule>> resolveCache;
+    std::unordered_map<std::string, std::shared_ptr<DOMModule>> resolveCache;
     bool linked = false;
     size_t validModuleRequestsCount;
-    vector<ModuleLinkedCallback> linkedCallbacks;
+    std::vector<ModuleLinkedCallback> linkedCallbacks;
     bool evaluatedOnce = false;
     bool evaluationScheduled = false;
   };
