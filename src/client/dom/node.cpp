@@ -1,5 +1,6 @@
 #include <iostream>
-#include "common/utility.hpp"
+#include <common/utility.hpp>
+
 #include "./dom_parser.hpp"
 #include "./document.hpp"
 #include "./element.hpp"
@@ -38,6 +39,7 @@ namespace dom
 
   Node::Node(NodeType nodeType, string nodeName, optional<shared_ptr<Document>> ownerDocument)
       : DOMEventTarget(),
+        uid(NodeIdGenerator.get()),
         internal(make_shared<pugi::xml_node>()),
         connected(false),
         nodeType(nodeType),
@@ -48,6 +50,7 @@ namespace dom
 
   Node::Node(pugi::xml_node node, shared_ptr<Document> ownerDocument)
       : DOMEventTarget(),
+        uid(NodeIdGenerator.get()),
         internal(make_shared<pugi::xml_node>(node)), connected(false)
   {
     updateFieldsFromInternal();

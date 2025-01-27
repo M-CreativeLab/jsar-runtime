@@ -7,6 +7,7 @@
 #include <client/browser/window.hpp>
 #include <client/builtin_scene/scene.hpp>
 #include <client/cssom/css_stylesheet.hpp>
+#include <client/cssom/style_cache.hpp>
 #include <crates/bindings.hpp>
 
 #include "./node.hpp"
@@ -81,12 +82,21 @@ namespace dom
     std::string contentType = "text/html";
     /**
      * Get a list of `CSSStyleSheet` objects, for stylesheets explicitly linked into or embedded in a document.
-     * 
+     *
      * @returns The list of `CSSStyleSheet` objects.
      */
     inline const std::vector<std::shared_ptr<client_cssom::CSSStyleSheet>> &styleSheets() const
     {
       return styleSheets_;
+    }
+    /**
+     * Get the style cache for the document.
+     * 
+     * TODO: Will be moved to the `DocumentOrShadowRoot` interface.
+     */
+    inline client_cssom::StyleCache &styleCache()
+    {
+      return styleCache_;
     }
 
   public:
@@ -110,6 +120,7 @@ namespace dom
     bool isSourceLoaded = false;
     bool shouldOpen = false;
     std::vector<std::shared_ptr<client_cssom::CSSStyleSheet>> styleSheets_;
+    client_cssom::StyleCache styleCache_;
   };
 
   class XMLDocument : public Document
@@ -140,7 +151,7 @@ namespace dom
   public:
     /**
      * Get the layout allocator for the document.
-     * 
+     *
      * @returns The layout allocator.
      */
     inline std::shared_ptr<crates::layout::Allocator> layoutAllocator() const

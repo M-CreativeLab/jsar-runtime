@@ -18,15 +18,19 @@ namespace browser
     assert(clientContext_ != nullptr);
   }
 
-  const CSSStyleDeclaration Window::getComputedStyle(shared_ptr<dom::Element> element,
-                                                     optional<string> pseudoElt) const
+  const CSSStyleDeclaration &Window::getComputedStyle(shared_ptr<dom::Element> element,
+                                                      optional<string> pseudoElt) const
   {
     auto htmlElement = dynamic_pointer_cast<dom::HTMLElement>(element);
-    if (htmlElement == nullptr)
-      return CSSStyleDeclaration();
+    if (TR_UNLIKELY(htmlElement == nullptr))
+      throw invalid_argument("The element must be an HTMLElement");
 
-    CSSStyleDeclaration computedStyle(*htmlElement->style);
-    const auto& stylesheets = htmlElement->getOwnerDocumentChecked().styleSheets();
+    auto computedStyle = document_->styleCache().findStyle(htmlElement);
+    if (computedStyle != nullptr)
+      return *computedStyle;
+
+    computedStyle = document_->styleCache().createStyle(htmlElement);
+    const auto &stylesheets = htmlElement->getOwnerDocumentChecked().styleSheets();
     for (auto stylesheet : stylesheets)
     {
       for (auto rule : stylesheet->cssRules())
@@ -35,10 +39,10 @@ namespace browser
         if (styleRule != nullptr)
         {
           if (selectors::matchesSelectorList(styleRule->selectors(), htmlElement))
-            computedStyle.update(styleRule->style(), true);
+            computedStyle->update(styleRule->style(), true);
         }
       }
     }
-    return computedStyle;
+    return *computedStyle;
   }
 }

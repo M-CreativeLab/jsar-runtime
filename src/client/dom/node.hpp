@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <pugixml/pugixml.hpp>
+#include <idgen.hpp>
 #include <common/utility.hpp>
 #include <common/events_v2/event_target.hpp>
 #include <client/macros.h>
@@ -29,6 +30,7 @@ namespace dom
     NOTATION_NODE,
   };
 
+  // Forward declarations
   class SceneObject;
   class Document;
 
@@ -209,6 +211,10 @@ namespace dom
 
   public:
     /**
+     * The unique identifier of the `Node`.
+     */
+    uint32_t uid;
+    /**
      * The Node's document base URI.
      */
     std::string baseURI;
@@ -247,5 +253,8 @@ namespace dom
 
   protected:
     std::shared_ptr<pugi::xml_node> internal;
+
+  private:
+    inline static TrIdGenerator NodeIdGenerator = TrIdGenerator(0x1a);
   };
 }

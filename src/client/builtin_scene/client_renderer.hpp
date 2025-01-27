@@ -5,6 +5,7 @@
 #include <span>
 #include <client/graphics/webgl_context.hpp>
 #include "./ecs-inl.hpp"
+#include "./meshes.hpp"
 #include "./mesh_material.hpp"
 #include "./transform.hpp"
 #include "./xr.hpp"
@@ -62,21 +63,7 @@ namespace builtin_scene
      *
      * @param mesh3d The mesh to initialize.
      */
-    void initializeMesh3d(std::shared_ptr<Mesh3d> mesh3d)
-    {
-      // client_graphics::WebGLState clientState = glContext_->clientState();
-      auto vao = glContext_->createVertexArray();
-      auto vbo = glContext_->createBuffer();
-      auto ebo = glContext_->createBuffer();
-
-      {
-        // Bind the vertex array object, vertex buffer object, and element buffer object.
-        client_graphics::WebGLVertexArrayScope vaoScope(glContext_, vao);
-        glContext_->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, vbo);
-        glContext_->bindBuffer(client_graphics::WebGLBufferBindingTarget::kElementArrayBuffer, ebo);
-      }
-      mesh3d->initialize(glContext_, vao);
-    }
+    void initializeMesh3d(std::shared_ptr<Mesh3d> mesh3d);
     /**
      * Initialize the mesh material with the given WebGL context, it will create the program, shaders
      * and link the program.
@@ -87,63 +74,7 @@ namespace builtin_scene
      *
      * @param meshMaterial3d The mesh material to initialize.
      */
-    void initializeMeshMaterial3d(std::shared_ptr<Mesh3d> mesh3d, std::shared_ptr<MeshMaterial3d> meshMaterial3d)
-    {
-      auto program = glContext_->createProgram();
-      auto vertexShader = glContext_->createShader(client_graphics::WebGLShaderType::kVertex);
-      auto fragmentShader = glContext_->createShader(client_graphics::WebGLShaderType::kFragment);
-      glContext_->shaderSource(vertexShader,
-                               meshMaterial3d->getShaderSource(client_graphics::WebGLShaderType::kVertex));
-      glContext_->shaderSource(fragmentShader,
-                               meshMaterial3d->getShaderSource(client_graphics::WebGLShaderType::kFragment));
-      glContext_->compileShader(vertexShader);
-      glContext_->compileShader(fragmentShader);
-      glContext_->attachShader(program, vertexShader);
-      glContext_->attachShader(program, fragmentShader);
-      glContext_->linkProgram(program);
-
-      // Configure the vertex data: vertex array object, vertex buffer object, and element buffer object.
-      // Configure the vertex attributes and the vertex buffer data.
-      {
-        auto vao = mesh3d->vertexArrayObject();
-        client_graphics::WebGLVertexArrayScope vaoScope(glContext_, vao);
-
-        // Configure the vertex attributes
-        auto configureAttribute = [this](const IVertexAttribute &attrib, int index, size_t stride, size_t offset)
-        {
-          glContext_->vertexAttribPointer(index,
-                                          attrib.size(),
-                                          attrib.type(),
-                                          attrib.normalized(),
-                                          stride,
-                                          offset);
-          glContext_->enableVertexAttribArray(index);
-        };
-        mesh3d->iterateEnabledAttributes(program, configureAttribute);
-
-        // Configure the vertex buffer data
-        auto &vertexBufferData = mesh3d->vertexBuffer().data();
-        glContext_->bufferData(client_graphics::WebGLBufferBindingTarget::kArrayBuffer,
-                               vertexBufferData.size(),
-                               const_cast<uint8_t *>(vertexBufferData.data()),
-                               client_graphics::WebGLBufferUsage::kStaticDraw);
-
-        // Configure the element buffer object
-        auto indices = mesh3d->indices();
-        glContext_->bufferData(client_graphics::WebGLBufferBindingTarget::kElementArrayBuffer,
-                               indices.dataSize(),
-                               indices.dataBuffer(),
-                               client_graphics::WebGLBufferUsage::kStaticDraw);
-      }
-
-      // Configure the initial uniform values
-      {
-        client_graphics::WebGLProgramScope programScope(glContext_, program);
-        updateTransformationMatrix(program, nullptr, true); // forcily update the transformation matrix.
-
-        meshMaterial3d->initialize(glContext_, program, mesh3d);
-      }
-    }
+    void initializeMeshMaterial3d(std::shared_ptr<Mesh3d> mesh3d, std::shared_ptr<MeshMaterial3d> meshMaterial3d);
     /**
      * Draw the `Mesh3d` with the given `MeshMaterial3d` and `XRView`.
      *
@@ -154,36 +85,7 @@ namespace builtin_scene
      */
     void drawMesh3d(std::shared_ptr<Mesh3d> mesh, std::shared_ptr<MeshMaterial3d> material,
                     std::shared_ptr<Transform> transform,
-                    std::shared_ptr<client_xr::XRView> xrView)
-    {
-      glContext_->enable(WEBGL_DEPTH_TEST);
-      glContext_->depthMask(true);
-
-      assert(mesh != nullptr && material != nullptr);
-      assert(mesh->initialized());
-      assert(material->initialized());
-      client_graphics::WebGLProgramScope programScope(glContext_, material->program());
-
-      // Call lifecycle methods
-      material->onBeforeDrawMesh(mesh);
-
-      // Update matrices
-      updateViewProjectionMatrix(programScope.program(), xrView);
-      updateTransformationMatrix(programScope.program(), transform);
-
-      // Draw the mesh
-      {
-        client_graphics::WebGLVertexArrayScope vaoScope(glContext_, mesh->vertexArrayObject());
-        // TODO: support other primitive topologies?
-        glContext_->drawElements(client_graphics::WebGLDrawMode::kTriangles,
-                                 mesh->indices().size(),
-                                 WEBGL_UNSIGNED_INT,
-                                 0);
-      }
-
-      // Call lifecycle methods
-      material->onAfterDrawMesh(mesh);
-    }
+                    std::shared_ptr<client_xr::XRView> xrView);
     /**
      * Update the view projection matrix.
      *
@@ -191,26 +93,7 @@ namespace builtin_scene
      * @param xrView The XR view to update the view projection matrix with.
      */
     void updateViewProjectionMatrix(std::shared_ptr<client_graphics::WebGLProgram> program,
-                                    std::shared_ptr<client_xr::XRView> xrView)
-    {
-      assert(program != nullptr);
-
-      auto viewProjectionLoc = glContext_->getUniformLocation(program, "viewProjection");
-      if (!viewProjectionLoc.has_value())
-        throw std::runtime_error("The viewProjection uniform location is not found.");
-
-      auto handedness = MatrixHandedness::MATRIX_RIGHT_HANDED;
-      if (xrView != nullptr && xrView->eye() == client_xr::XREye::kRight)
-      {
-        MatrixComputationGraph viewProjectionCG(WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye, handedness);
-        glContext_->uniformMatrix4fv(viewProjectionLoc.value(), false, viewProjectionCG);
-      }
-      else
-      {
-        MatrixComputationGraph viewProjectionCG(WebGLMatrixPlaceholderId::ViewProjectionMatrix, handedness);
-        glContext_->uniformMatrix4fv(viewProjectionLoc.value(), false, viewProjectionCG);
-      }
-    }
+                                    std::shared_ptr<client_xr::XRView> xrView);
     /**
      * Update the transformation matrix for the given program and mesh.
      *
@@ -224,29 +107,7 @@ namespace builtin_scene
      */
     void updateTransformationMatrix(std::shared_ptr<client_graphics::WebGLProgram> program,
                                     std::shared_ptr<Transform> transform,
-                                    bool forceUpdate = false)
-    {
-      assert(program != nullptr);
-
-      glm::mat4 matToUpdate;
-      if (transform == nullptr || !transform->isDirty())
-      {
-        if (!forceUpdate)
-          return;
-
-        if (transform != nullptr)
-          matToUpdate = transform->matrix();
-        else
-          matToUpdate = Transform::Identity().matrix();
-      }
-      else
-        matToUpdate = transform->matrix();
-
-      auto loc = glContext_->getUniformLocation(program, "modelMatrix");
-      if (!loc.has_value())
-        throw std::runtime_error("The modelMatrix uniform location is not found.");
-      glContext_->uniformMatrix4fv(loc.value(), false, matToUpdate);
-    }
+                                    bool forceUpdate = false);
 
   private:
     std::shared_ptr<client_graphics::WebGL2Context> glContext_;
@@ -259,27 +120,7 @@ namespace builtin_scene
 
   public:
     const std::string name() const override { return "RenderSystem"; }
-    void onExecute() override
-    {
-      auto renderer = getResource<Renderer>();
-      assert(renderer != nullptr); // The renderer must be valid.
-
-      auto xrExperience = getResource<WebXRExperience>();
-      if (xrExperience != nullptr) // XR rendering
-      {
-        auto xrViewerPose = xrExperience->viewerPose();
-        if (xrViewerPose != nullptr)
-        {
-          auto &views = xrViewerPose->views();
-          for (auto view : views)
-            render(*renderer, view);
-          return;
-        }
-      }
-
-      // Fallback to the default rendering
-      render(*renderer);
-    }
+    void onExecute() override;
 
   private:
     /**
@@ -288,20 +129,7 @@ namespace builtin_scene
      * @param renderer The renderer to use.
      * @param view The XR view to render the scene with.
      */
-    void render(Renderer &renderer, std::shared_ptr<client_xr::XRView> view = nullptr)
-    {
-      auto roots = queryEntities<hierarchy::Root>();
-      if (roots.size() <= 0) // No root entities to render
-        return;
-
-      if (view != nullptr)
-        renderer.setViewport(view->viewport());
-      for (auto root : roots)
-      {
-        if (getComponentChecked<hierarchy::Root>(root).renderable == true)
-          traverseAndRender(root, renderer, view);
-      }
-    }
+    void render(Renderer &renderer, std::shared_ptr<client_xr::XRView> view = nullptr);
     /**
      * Traverse the entity hierarchy and render the mesh with the given renderer in pre-order.
      *
@@ -311,34 +139,7 @@ namespace builtin_scene
      * @param isPostOrder Whether to render the entity in post-order, namely, render the child entities first.
      */
     void traverseAndRender(ecs::EntityId entity, Renderer &renderer,
-                           std::shared_ptr<client_xr::XRView> view = nullptr)
-    {
-      auto renderEntity = [this, &renderer, view](ecs::EntityId entity) -> bool
-      {
-        // Render the mesh if it exists
-        auto mesh = getComponent<Mesh3d>(entity);
-        if (mesh != nullptr)
-        {
-          // If the mesh exists but rendering is disabled, we need to skip its rendering and its children.
-          if (mesh->isRenderingDisabled())
-            return false;
-          renderMesh(entity, mesh, renderer, view);
-        }
-
-        // TODO: support other renderable components (e.g., particles, etc.)
-        return true;
-      };
-
-      if (!renderEntity(entity))
-        return;
-
-      auto children = getComponent<hierarchy::Children>(entity);
-      if (children != nullptr)
-      {
-        for (auto child : children->children())
-          traverseAndRender(child, renderer, view);
-      }
-    }
+                           std::shared_ptr<client_xr::XRView> view = nullptr);
     /**
      * Render the mesh with the given renderer.
      *
@@ -347,20 +148,6 @@ namespace builtin_scene
      * @param view The XR view to render the mesh with.
      */
     void renderMesh(ecs::EntityId &entity, std::shared_ptr<Mesh3d> meshComponent, Renderer &renderer,
-                    std::shared_ptr<client_xr::XRView> view)
-    {
-      auto materialComponent = getComponent<MeshMaterial3d>(entity);
-      if (materialComponent == nullptr)
-        return;
-
-      if (!meshComponent->initialized())
-        renderer.initializeMesh3d(meshComponent);
-      if (!materialComponent->initialized())
-        renderer.initializeMeshMaterial3d(meshComponent, materialComponent);
-      renderer.drawMesh3d(meshComponent,
-                          materialComponent,
-                          getComponent<Transform>(entity),
-                          view);
-    }
+                    std::shared_ptr<client_xr::XRView> view);
   };
 }

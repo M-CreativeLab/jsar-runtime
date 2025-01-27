@@ -256,12 +256,11 @@ namespace dom
       if (scene == nullptr || body == nullptr)
         return;
 
-      // Step 1: Compute the elements' styles.
-      // TODO: use `computeStyle` for stylesheets.
+      // Step 1: Compute each element's styles.
       {
         auto adoptStyleForElement = [this](shared_ptr<HTMLElement> element)
         {
-          const auto computedStyle = document_->defaultView()->getComputedStyle(element);
+          const auto &computedStyle = document_->defaultView()->getComputedStyle(element);
           element->adoptStyle(computedStyle);
           return true;
         };

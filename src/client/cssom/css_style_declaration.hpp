@@ -66,7 +66,7 @@ namespace client_cssom
   {
   public:
     CSSStyleDeclaration()
-        : pdb_(crates::css::CSSPropertyDeclarationBlock::ParseStyleDeclaration("")),
+        : pdb_(std::make_shared<crates::css::CSSPropertyDeclarationBlock>()),
           cachedCssText_(std::nullopt)
     {
     }
@@ -80,8 +80,9 @@ namespace client_cssom
           cachedCssText_(std::nullopt)
     {
     }
-    // Reconstruct a new CSSStyleDeclaration from another one's cssText to avoid the `pdb_` being shared.
-    CSSStyleDeclaration(const CSSStyleDeclaration &other) : CSSStyleDeclaration(other.cssText())
+    CSSStyleDeclaration(const CSSStyleDeclaration &other) :
+        pdb_(other.pdb_),
+        cachedCssText_(std::nullopt)
     {
     }
 

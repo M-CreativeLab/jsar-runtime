@@ -18,7 +18,7 @@ namespace dom
     Element::createdCallback();
 
     // Create style declaration from the default style & the style attribute.
-    style = make_shared<client_cssom::CSSStyleDeclaration>(getAttribute("style"));
+    style_ = make_shared<client_cssom::CSSStyleDeclaration>(getAttribute("style"));
   }
 
   void HTMLElement::connectedCallback()

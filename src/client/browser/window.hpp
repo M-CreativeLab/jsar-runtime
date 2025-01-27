@@ -213,8 +213,8 @@ namespace browser
      * @param element The element to get the computed style.
      * @param pseudoElt The optional pseudo-element to get the computed style.
      */
-    const client_cssom::CSSStyleDeclaration getComputedStyle(std::shared_ptr<dom::Element> element,
-                                                             std::optional<std::string> pseudoElt = std::nullopt) const;
+    const client_cssom::CSSStyleDeclaration &getComputedStyle(std::shared_ptr<dom::Element> element,
+                                                              std::optional<std::string> pseudoElt = std::nullopt) const;
 
   private:
     // Configure the document to the window.

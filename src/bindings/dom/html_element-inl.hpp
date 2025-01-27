@@ -23,6 +23,6 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    return cssombinding::CSSStyleDeclaration::NewInstance(env, this->node->style);
+    return cssombinding::CSSStyleDeclaration::NewInstance(env, this->node->styleRef());
   }
 }

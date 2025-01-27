@@ -70,10 +70,16 @@ namespace dom
     std::string outerText;
     std::string title;
     std::string translate;
-    std::shared_ptr<client_cssom::CSSStyleDeclaration> style;
+    // The style attribute.
+    const client_cssom::CSSStyleDeclaration &style() const { return *style_; }
+    // The style attribute reference.
+    std::shared_ptr<client_cssom::CSSStyleDeclaration> styleRef() { return style_; }
 
   private:
     float offsetWidth_ = 0.0f;
     float offsetHeight_ = 0.0f;
+
+  private:
+    std::shared_ptr<client_cssom::CSSStyleDeclaration> style_;
   };
 }

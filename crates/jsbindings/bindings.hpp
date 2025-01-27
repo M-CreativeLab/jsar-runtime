@@ -3,9 +3,13 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include <atomic>
+#include <mutex>
 #include <string>
 #include <iostream>
 #include <memory>
+#include <vector>
+#include <unordered_map>
 
 #include "./bindings.autogen.h"
 
@@ -213,6 +217,13 @@ namespace crates
      */
     class CSSPropertyDeclarationBlock
     {
+    private:
+      struct PropertyValue
+      {
+        std::string value;
+        bool important;
+      };
+
     public:
       /**
        * Parse a CSS style declaration string into a CSS property declaration block.
@@ -226,12 +237,30 @@ namespace crates
       }
 
     public:
-      CSSPropertyDeclarationBlock(_CSSPropertyDeclarationBlock *handle) : handle_(handle) {}
-      CSSPropertyDeclarationBlock(const CSSPropertyDeclarationBlock &) = delete; // avoid copy to prevent the double free for the handle
-      ~CSSPropertyDeclarationBlock()
+      CSSPropertyDeclarationBlock()
       {
-        css_property_declaration_block_free(handle_);
       }
+      CSSPropertyDeclarationBlock(_CSSPropertyDeclarationBlock *handle)
+      {
+        for (size_t i = 0; i < css_property_declaration_block_len(handle); i++)
+        {
+          std::string propertyName = css_property_declaration_block_item(handle, i);
+          std::string propertyValue = css_property_declaration_block_get_property(handle, propertyName.c_str());
+          bool important = css_property_declaration_block_is_important(handle, propertyName.c_str());
+          {
+            std::lock_guard<std::mutex> lock(mutex_);
+            properties_[propertyName] = {propertyValue, important};
+            propertyIndices_.push_back(propertyName);
+          }
+        }
+        css_property_declaration_block_free(handle);
+      }
+      CSSPropertyDeclarationBlock(const CSSPropertyDeclarationBlock &other)
+          : properties_(other.properties_),
+            propertyIndices_(other.propertyIndices_)
+      {
+      }
+      ~CSSPropertyDeclarationBlock() = default;
 
     public:
       /**
@@ -241,27 +270,39 @@ namespace crates
        */
       std::string cssText() const
       {
-        const char *str = css_property_declaration_block_to_css_string(handle_);
-        std::string cssText(str);
-        release_rust_cstring((char *)str);
-        return cssText;
+        if (isCssTextExpired_)
+        {
+          std::string cssText;
+          for (size_t i = 0; i < size(); i++)
+          {
+            std::string propertyName = item(i);
+            std::string propertyValue = getProperty(propertyName);
+            bool important = isPropertyImportant(propertyName);
+            if (i == 0)
+              cssText = propertyName + ": " + propertyValue + (important ? " !important" : "");
+            else
+              cssText += "; " + propertyName + ": " + propertyValue + (important ? " !important" : "");
+          }
+          cssText_ = cssText;
+          isCssTextExpired_ = false;
+        }
+        return cssText_;
       }
       /**
        * @returns The length of the property declaration block.
        */
       size_t size() const
       {
-        return css_property_declaration_block_len(handle_);
+        return propertyIndices_.size();
       }
       /**
        * @returns The property name at the given index.
        */
       std::string item(size_t index) const
       {
-        const char *str = css_property_declaration_block_item(handle_, index);
-        std::string itemStr(str);
-        release_rust_cstring((char *)str);
-        return itemStr;
+        if (index >= size())
+          return "";
+        return propertyIndices_[index];
       }
       /**
        * Check if a property is important.
@@ -269,9 +310,12 @@ namespace crates
        * @param propertyName The property name.
        * @returns Whether the property is important.
        */
-      bool isPropertyImportant(const std::string &propertyName)
+      bool isPropertyImportant(const std::string &propertyName) const
       {
-        return css_property_declaration_block_is_important(handle_, propertyName.c_str());
+        auto property = properties_.find(propertyName);
+        if (property == properties_.end())
+          return false;
+        return property->second.important;
       }
       /**
        * Get the property value.
@@ -279,15 +323,12 @@ namespace crates
        * @param propertyName The property name.
        * @returns The property value in string.
        */
-      std::string getProperty(const std::string &propertyName)
+      std::string getProperty(const std::string &propertyName) const
       {
-        const char *value = css_property_declaration_block_get_property(handle_, propertyName.c_str());
-        if (value == nullptr)
+        auto property = properties_.find(propertyName);
+        if (property == properties_.end())
           return "";
-
-        std::string valueStr(value);
-        release_rust_cstring((char *)value);
-        return valueStr;
+        return property->second.value;
       }
       /**
        * Set a property value.
@@ -298,7 +339,20 @@ namespace crates
        */
       void setProperty(const std::string &propertyName, const std::string &value, bool important = false)
       {
-        css_property_declaration_block_set_property(handle_, propertyName.c_str(), value.c_str(), important);
+        auto it = properties_.find(propertyName);
+        if (it != properties_.end())
+        {
+          auto &prop = it->second;
+          prop.value = value;
+          prop.important = important;
+        }
+        else
+        {
+          std::lock_guard<std::mutex> lock(mutex_);
+          properties_[propertyName] = {value, important};
+          propertyIndices_.push_back(propertyName);
+        }
+        isCssTextExpired_.store(true);
       }
       /**
        * Remove a property from the declaration block.
@@ -308,17 +362,24 @@ namespace crates
        */
       std::string removeProperty(const std::string &propertyName)
       {
-        const char *value = css_property_declaration_block_remove_property(handle_, propertyName.c_str());
-        if (value == nullptr)
+        auto it = properties_.find(propertyName);
+        if (it == properties_.end())
           return "";
 
-        std::string valueStr(value);
-        release_rust_cstring((char *)value);
-        return valueStr;
+        std::string value = it->second.value;
+        properties_.erase(it);
+        propertyIndices_.erase(std::remove(propertyIndices_.begin(), propertyIndices_.end(), propertyName),
+                               propertyIndices_.end());
+        isCssTextExpired_.store(true);
+        return value;
       }
 
     private:
-      _CSSPropertyDeclarationBlock *handle_;
+      std::unordered_map<std::string, PropertyValue> properties_;
+      std::vector<std::string> propertyIndices_;
+      mutable std::string cssText_;
+      mutable std::atomic<bool> isCssTextExpired_ = true;
+      mutable std::mutex mutex_;
     };
 
     using CSSSelectorCombinator = _CombinatorSelectorComponent;
