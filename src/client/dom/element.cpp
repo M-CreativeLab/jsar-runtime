@@ -48,11 +48,13 @@ namespace dom
   }
 
   Element::Element(string tagName, optional<shared_ptr<Document>> ownerDocument)
-      : Node(NodeType::ELEMENT_NODE, tagName, ownerDocument), tagName(ToUpperCase(tagName))
+      : Node(NodeType::ELEMENT_NODE, tagName, ownerDocument),
+        tagName(ToUpperCase(tagName))
   {
   }
 
-  Element::Element(pugi::xml_node node, shared_ptr<Document> ownerDocument) : Node(node, ownerDocument)
+  Element::Element(pugi::xml_node node, shared_ptr<Document> ownerDocument)
+      : Node(node, ownerDocument)
   {
   }
 
@@ -62,8 +64,8 @@ namespace dom
         namespaceURI(other.namespaceURI),
         tagName(other.tagName),
         localName(other.localName),
-        className(other.className),
-        prefix(other.prefix)
+        prefix(other.prefix),
+        classList_(other.classList_)
   {
   }
 
@@ -95,14 +97,15 @@ namespace dom
 
     {
       /**
-       * Parse the `class` attribute.
+       * `class` attribute.
        */
       auto classAttr = this->internal->attribute("class");
       if (!classAttr.empty())
-      {
-        className = classAttr.as_string();
-        // TODO: implement classList
-      }
+        classList_ = DOMTokenList(classAttr.as_string(), {}, [](const DOMTokenList &list)
+                                  {
+                                    // update the `class` attribute
+                                    // TODO: update the attribute value
+                                  });
     }
   }
 
@@ -196,16 +199,6 @@ namespace dom
 
     if (idAttr.set_value(idValue.c_str()))
       id = idValue;
-  }
-
-  void Element::setClassName(const string &classNameValue)
-  {
-    auto classAttr = this->internal->attribute("class");
-    if (classAttr.empty())
-      classAttr = this->internal->append_attribute("class");
-
-    if (classAttr.set_value(classNameValue.c_str()))
-      className = classNameValue;
   }
 
   std::string Element::getInnerHTML()

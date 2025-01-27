@@ -2,7 +2,9 @@
 
 #include <string>
 #include <client/cssom/box_bounding.hpp>
+
 #include "./node.hpp"
+#include "./dom_token_list.hpp"
 
 #define TYPED_ELEMENT_MAP(XX)     \
   XX("audio", HTMLAudioElement)   \
@@ -76,7 +78,6 @@ namespace dom
      */
     bool is(const std::string expectedTagName);
     void setId(const std::string &id);
-    void setClassName(const std::string &className);
     std::string getInnerHTML();
     void setInnerHTML(const std::string &html);
     std::string getOuterHTML();
@@ -132,7 +133,15 @@ namespace dom
     std::string namespaceURI;
     std::string tagName;
     std::string localName;
-    std::string className;
     std::string prefix;
+    inline const std::string &className() const { return classList_.value(); }
+    inline void setClassName(const std::string &className)
+    {
+      classList_ = DOMTokenList(classList_, className);
+    }
+    inline DOMTokenList &classList() { return classList_; }
+
+  private:
+    DOMTokenList classList_;
   };
 }

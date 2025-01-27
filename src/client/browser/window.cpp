@@ -29,7 +29,7 @@ namespace browser
     if (computedStyle != nullptr)
       return *computedStyle;
 
-    computedStyle = document_->styleCache().createStyle(htmlElement);
+    computedStyle = document_->styleCache().createStyle(htmlElement, false);
     const auto &stylesheets = htmlElement->getOwnerDocumentChecked().styleSheets();
     for (auto stylesheet : stylesheets)
     {
@@ -39,10 +39,12 @@ namespace browser
         if (styleRule != nullptr)
         {
           if (selectors::matchesSelectorList(styleRule->selectors(), htmlElement))
-            computedStyle->update(styleRule->style(), true);
+            computedStyle->update(styleRule->style());
         }
+        // TODO: handle other types of rules, such as `CSSImportRule`, `CSSMediaRule`, etc.
       }
     }
+    computedStyle->update(htmlElement->style());  // Override the style from the element's.
     return *computedStyle;
   }
 }

@@ -15,22 +15,27 @@ namespace dom
      * @param input The initial value of the list.
      * @param supportedTokens The list of supported tokens.
      */
-    DOMTokenList(std::string input = "", std::vector<std::string> supportedTokens = {})
-        : supportedTokens_(supportedTokens)
+    DOMTokenList(std::string input = "",
+                 std::vector<std::string> supportedTokens = {},
+                 std::function<void(const DOMTokenList &)> updateCallback = nullptr)
+        : std::vector<std::string>(),
+          supportedTokens_(supportedTokens),
+          updateCallback_(updateCallback)
     {
-      if (!input.empty())
-      {
-        size_t start = 0;
-        size_t end = 0;
-        while (end < input.length())
-        {
-          end = input.find(SEP, start);
-          if (end == std::string::npos)
-            end = input.length();
-          push_back(input.substr(start, end - start));
-          start = end + 1;
-        }
-      }
+      resetFrom(input);
+    }
+    /**
+     * Constructs a new DOMTokenList from another DOMTokenList and an initial value.
+     *
+     * @param other The other DOMTokenList to copy from.
+     * @param input The initial value of the list.
+     */
+    DOMTokenList(DOMTokenList &other, std::string input)
+        : std::vector<std::string>(),
+          supportedTokens_(other.supportedTokens_),
+          updateCallback_(other.updateCallback_)
+    {
+      resetFrom(input);
     }
 
   public:
@@ -43,22 +48,27 @@ namespace dom
      *
      * @returns The number of tokens in the list.
      */
-    size_t length() const { return size(); }
+    inline size_t length() const { return size(); }
     /**
      * A stringifier property that returns the value of the list as a string.
      *
      * @returns The value of the list as a string.
      */
-    std::string value() const
+    inline const std::string &value() const
     {
-      std::string result;
-      for (size_t i = 0; i < size(); i++)
+      if (isDirty_ == true) // Update the value if it is dirty
       {
-        if (i > 0)
-          result += std::string(DOMTokenList::SEP);
-        result += at(i);
+        std::string result;
+        for (size_t i = 0; i < size(); i++)
+        {
+          if (i > 0)
+            result += std::string(DOMTokenList::SEP);
+          result += at(i);
+        }
+        value_ = result;
+        isDirty_ = false;
       }
-      return result;
+      return value_;
     }
 
   public:
@@ -97,6 +107,7 @@ namespace dom
       if (!contains(token))
       {
         push_back(token);
+        markAsDirty();
       }
     }
     /**
@@ -110,6 +121,7 @@ namespace dom
       if (it != end())
       {
         erase(it);
+        markAsDirty();
       }
     }
     /**
@@ -125,6 +137,7 @@ namespace dom
       if (it != end())
       {
         *it = newToken;
+        markAsDirty();
         return true;
       }
       return false;
@@ -193,9 +206,42 @@ namespace dom
     }
 
   private:
-    std::vector<std::string> supportedTokens_;
+    void resetFrom(const std::string &input)
+    {
+      if (size() > 0)
+        clear();
+
+      if (!input.empty())
+      {
+        size_t start = 0;
+        size_t end = 0;
+        while (end < input.length())
+        {
+          end = input.find(SEP, start);
+          if (end == std::string::npos)
+            end = input.length();
+          push_back(input.substr(start, end - start));
+          start = end + 1;
+        }
+      }
+
+      value_ = input;
+      isDirty_ = false;
+    }
+    void markAsDirty()
+    {
+      isDirty_ = true;
+      if (updateCallback_)
+        updateCallback_(*this);
+    }
 
   private:
-    static constexpr char *SEP = " ";
+    std::vector<std::string> supportedTokens_;
+    std::function<void(const DOMTokenList &)> updateCallback_;
+    mutable std::string value_;
+    mutable bool isDirty_;
+
+  private:
+    static constexpr const char *const SEP = " ";
   };
 }

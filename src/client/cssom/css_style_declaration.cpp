@@ -103,22 +103,32 @@ namespace client_cssom
         bool isSelfPropImportant = getPropertyPriority(name) == CSSPropertyPriority::Important;
         bool isOtherPropImportant = other.getPropertyPriority(name) == CSSPropertyPriority::Important;
         if (isSelfPropImportant && isOtherPropImportant)
-          isOtherPropImportant = false; // If both are important, then the other one is not important
+        {
+          isSelfPropImportant = false;
+          isOtherPropImportant = true;
+        }
 
-        // Omit this property if it is already present and the other one is not important
-        if (!isOtherPropImportant && omitIfPresent)
+        // Omit this property if it is already present, or if the other one is not important
+        if (omitIfPresent && !isOtherPropImportant)
+          continue;
+
+        // Skip the property if the self one is important
+        if (isSelfPropImportant)
           continue;
 
         auto value = other.getPropertyValue(name);
         if (getPropertyValue(name) != value)
         {
-          setProperty(name, value);
+          setProperty(name, value,
+                      isOtherPropImportant
+                          ? CSSPropertyPriority::Important
+                          : CSSPropertyPriority::Normal);
           isChanged = true;
         }
       }
       else
       {
-        setProperty(name, other.getPropertyValue(name));
+        setProperty(name, other.getPropertyValue(name), other.getPropertyPriority(name));
         isChanged = true;
       }
     }

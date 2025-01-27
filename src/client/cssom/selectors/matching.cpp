@@ -33,8 +33,8 @@ namespace client_cssom::selectors
       }
       else if (component.isClass())
       {
-        // TODO
-        return false;
+        if (!element->classList().contains(component.name()))
+          return false;
       }
       else if (component.isCombinator())
       {

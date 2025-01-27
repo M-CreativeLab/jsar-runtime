@@ -23,11 +23,23 @@ namespace client_cssom
         return it->second;
       return nullptr;
     }
-    std::shared_ptr<CSSStyleDeclaration> createStyle(std::shared_ptr<dom::HTMLElement> element)
+    /**
+     * Creates a new style for the given element.
+     * 
+     * @param element The element to create the style for.
+     * @param useElementStyle Whether to use the element's style as a base for the new style.
+     * @returns The new style.
+     */
+    std::shared_ptr<CSSStyleDeclaration> createStyle(std::shared_ptr<dom::HTMLElement> element, bool useElementStyle = true)
     {
       assert(element != nullptr);
 
-      auto newStyle = std::make_shared<CSSStyleDeclaration>(element->style());
+      std::shared_ptr<CSSStyleDeclaration> newStyle = nullptr;
+      if (useElementStyle)
+        newStyle = std::make_shared<CSSStyleDeclaration>(element->style());
+      else
+        newStyle = std::make_shared<CSSStyleDeclaration>();
+
       assert(newStyle != nullptr);
       insert({element->uid, newStyle});
       return newStyle;

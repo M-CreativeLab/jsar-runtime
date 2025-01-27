@@ -54,7 +54,7 @@ namespace dombinding
     Napi::Value ClassNameGetter(const Napi::CallbackInfo &info)
     {
       Napi::Env env = info.Env();
-      return Napi::String::New(env, this->node->className);
+      return Napi::String::New(env, this->node->className());
     }
     void ClassNameSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
     {
