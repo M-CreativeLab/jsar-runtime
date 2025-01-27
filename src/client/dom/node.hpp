@@ -99,6 +99,16 @@ namespace dom
      */
     void textContent(const std::string &value);
     /**
+     * Check if the current node has a specific type of parent node.
+     */
+    template <typename T>
+      requires std::is_base_of_v<Node, T> || std::is_same_v<T, SceneObject>
+    inline bool hasTypedParentNode() const
+    {
+      auto _parentNode = getParentNode();
+      return _parentNode != nullptr && std::dynamic_pointer_cast<T>(_parentNode) != nullptr;
+    }
+    /**
      * Get the parent node as a specific node type.
      *
      * @tparam T The specific node type, such as `Element`, `Text`, etc.
@@ -115,10 +125,10 @@ namespace dom
     }
     /**
      * Get the owner document reference.
-     * 
+     *
      * @returns The owner document reference.
      */
-    Document& getOwnerDocumentChecked();
+    Document &getOwnerDocumentChecked();
     /**
      * Get the owner document reference.
      *

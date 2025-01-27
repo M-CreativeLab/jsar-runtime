@@ -19,39 +19,54 @@ namespace client_cssom::selectors
 
   bool matchesSelector(const CSSSelector &selector, const shared_ptr<HTMLElement> element)
   {
-    for (const auto &component : selector.components())
+    assert(!selector.components().empty());
+    auto it = selector.components().begin();
+    return matchesSelectorComponent(selector, it, element);
+  }
+
+  bool matchesSelectorComponent(const CSSSelector &selector, std::vector<CSSSelectorComponent>::const_iterator &it,
+                                const shared_ptr<HTMLElement> element)
+  {
+    // If we reached the end of the selector, it means that the element matches all the components.
+    if (it == selector.components().end())
+      return true;
+
+    shared_ptr<HTMLElement> nextElement = element;
+    const auto &component = *it;
+    if (component.isLocalName())
     {
-      if (component.isLocalName())
+      if (strcasecmp(element->tagName.c_str(), component.name().c_str()) != 0)
+        return false;
+    }
+    else if (component.isId())
+    {
+      if (element->id != component.id())
+        return false;
+    }
+    else if (component.isClass())
+    {
+      if (!element->classList().contains(component.name()))
+        return false;
+    }
+    else if (component.isCombinator())
+    {
+      switch (component.combinator())
       {
-        if (strcasecmp(element->tagName.c_str(), component.name().c_str()) != 0)
+      case CSSSelectorCombinator::Child:
+        if (!element->hasTypedParentNode<HTMLElement>())
           return false;
-      }
-      else if (component.isId())
-      {
-        if (element->id != component.id())
-          return false;
-      }
-      else if (component.isClass())
-      {
-        if (!element->classList().contains(component.name()))
-          return false;
-      }
-      else if (component.isCombinator())
-      {
-        switch (component.combinator())
-        {
-        case CSSSelectorCombinator::Child:
-        case CSSSelectorCombinator::Descendant:
-        case CSSSelectorCombinator::NextSibling:
-        case CSSSelectorCombinator::LaterSibling:
-        case CSSSelectorCombinator::PseudoElement:
-        case CSSSelectorCombinator::SlotAssignment:
-        case CSSSelectorCombinator::Part:
-          // TODO
-          break;
-        }
+        nextElement = element->getParentNodeAs<HTMLElement>();
+        break;
+      case CSSSelectorCombinator::Descendant:
+      case CSSSelectorCombinator::NextSibling:
+      case CSSSelectorCombinator::LaterSibling:
+      case CSSSelectorCombinator::PseudoElement:
+      case CSSSelectorCombinator::SlotAssignment:
+      case CSSSelectorCombinator::Part:
+        // TODO
+        break;
       }
     }
-    return true;
+    return matchesSelectorComponent(selector, ++it, nextElement);
   }
 }
