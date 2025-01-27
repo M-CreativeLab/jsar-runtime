@@ -3,15 +3,16 @@
 
 namespace dom
 {
-  Attr::Attr(pugi::xml_attribute attr, shared_ptr<Element> ownerElement)
-      : Node(NodeType::ATTRIBUTE_NODE, attr.name(), ownerElement->getOwnerDocumentReference()),
-        name(attr.name()),
-        value(attr.value()),
+  using namespace std;
+
+  Attr::Attr(std::string name, std::string initialValue, shared_ptr<Element> ownerElement)
+      : Node(NodeType::ATTRIBUTE_NODE, name, ownerElement->getOwnerDocumentReference()),
+        name(name),
+        value(initialValue),
         specified(true),
-        ownerElement(ownerElement),
-        attrInternal(make_shared<pugi::xml_attribute>(attr))
+        ownerElement(ownerElement)
   {
-    string nameSource = attr.name();
+    string nameSource = name;
 
     // parse name into `prefix` and `localName`
     size_t colonPos = nameSource.find(':');
@@ -26,6 +27,11 @@ namespace dom
     }
   }
 
+  Attr::Attr(pugi::xml_attribute attr, shared_ptr<Element> ownerElement)
+      : Attr(attr.name(), attr.value(), ownerElement)
+  {
+  }
+
   Attr::Attr(Attr &other)
       : Node(other),
         localName(other.localName),
@@ -34,8 +40,7 @@ namespace dom
         prefix(other.prefix),
         specified(other.specified),
         value(other.value),
-        ownerElement(other.ownerElement),
-        attrInternal(other.attrInternal)
+        ownerElement(other.ownerElement)
   {
   }
 }

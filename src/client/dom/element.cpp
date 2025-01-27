@@ -71,10 +71,9 @@ namespace dom
 
   void Element::createdCallback()
   {
-    auto idAttr = this->internal->attribute("id");
-    if (!idAttr.empty())
-      id = idAttr.as_string();
-
+    /**
+     * Name && namespace.
+     */
     {
       string nameSource = this->internal->name();
 
@@ -95,13 +94,26 @@ namespace dom
       }
     }
 
+    /**
+     * Attributes.
+     */
+    for (auto &item : this->internal->attributes())
+      attributeNodes_[item.name()] = Attr::Make(getPtr<Element>(), item);
+
+    /**
+     * `id` attribute.
+     */
+    auto idAttr = getAttributeNode("id");
+    if (idAttr != nullptr)
+      id = idAttr->value;
+
     {
       /**
        * `class` attribute.
        */
-      auto classAttr = this->internal->attribute("class");
-      if (!classAttr.empty())
-        classList_ = DOMTokenList(classAttr.as_string(), {}, [](const DOMTokenList &list)
+      auto classAttr = getAttributeNode("class");
+      if (classAttr != nullptr)
+        classList_ = DOMTokenList(classAttr->value, {}, [](const DOMTokenList &list)
                                   {
                                     // update the `class` attribute
                                     // TODO: update the attribute value
@@ -109,50 +121,58 @@ namespace dom
     }
   }
 
-  string Element::getAttribute(const string &name)
+  string Element::getAttribute(const string &name) const
   {
-    auto attr = this->internal->attribute(name.c_str());
-    if (!attr.empty())
-      return attr.as_string();
+    auto it = attributeNodes_.find(name);
+    if (it != attributeNodes_.end())
+      return it->second->value;
     else
       return "";
   }
 
-  vector<string> Element::getAttributeNames()
+  vector<string> Element::getAttributeNames() const
   {
     vector<string> names;
-    for (auto attr : this->internal->attributes())
-      names.push_back(attr.name());
+    for (auto &attrNode : attributeNodes_)
+      names.push_back(attrNode.first);
     return names;
   }
 
-  shared_ptr<Attr> Element::getAttributeNode(const string &name)
+  shared_ptr<Attr> Element::getAttributeNode(const string &name) const
   {
-    auto attr = this->internal->attribute(name.c_str());
-    if (!attr.empty())
-      return make_shared<Attr>(attr, getPtr<Element>());
+    auto it = attributeNodes_.find(name);
+    if (it != attributeNodes_.end())
+      return it->second;
     else
       return nullptr;
   }
 
-  bool Element::hasAttribute(const std::string &name)
+  Attr &Element::getAttributeNodeChecked(const string &name) const
   {
-    return !this->internal->attribute(name.c_str()).empty();
+    auto it = attributeNodes_.find(name);
+    assert(it != attributeNodes_.end() && "The attribute node is not found.");
+    return *it->second;
   }
 
-  bool Element::hasAttributes()
+  bool Element::hasAttribute(const std::string &name) const
   {
-    return this->internal->attributes_begin() != this->internal->attributes_end();
+    return attributeNodes_.find(name) != attributeNodes_.end();
+  }
+
+  bool Element::hasAttributes() const
+  {
+    return !attributeNodes_.empty();
   }
 
   void Element::setAttribute(const string &name, const string &newValue)
   {
-    auto attr = this->internal->attribute(name.c_str());
-    if (attr.empty())
-      attr = this->internal->append_attribute(name.c_str());
+    auto attrNode = getAttributeNode(name);
+    if (attrNode == nullptr)
+      attrNode = Attr::Make(getPtr<Element>(), name, newValue);
 
-    string oldValue = attr.value();
-    attr.set_value(newValue.c_str());
+    string oldValue = attrNode->value;
+    attrNode->value = newValue;
+    // FIXME: attributeChangedCallback() should be called for creating a new attribute?
     attributeChangedCallback(name, oldValue, newValue);
   }
 
@@ -162,23 +182,23 @@ namespace dom
     string oldValue;
     string newValue = attr->value;
 
-    auto attrNode = this->internal->attribute(attrName.c_str());
-    if (!attrNode.empty()) // Remmove the existing attribute
+    auto attrNode = getAttributeNode(attrName);
+    if (attrNode != nullptr) // Remmove the existing attribute
     {
-      oldValue = attrNode.value();
-      this->internal->remove_attribute(attrName.c_str());
+      oldValue = attrNode->value;
+      attributeNodes_.erase(attrName);
     }
-    this->internal->append_attribute(attrName.c_str()).set_value(newValue.c_str());
+    attributeNodes_[attrName] = attr;
     attributeChangedCallback(attrName, oldValue, newValue);
   }
 
   void Element::removeAttribute(const string &name)
   {
-    auto attr = this->internal->attribute(name.c_str());
-    if (!attr.empty())
+    auto attr = getAttributeNode(name);
+    if (attr != nullptr)
     {
-      string oldValue = attr.value();
-      this->internal->remove_attribute(name.c_str());
+      string oldValue = attr->value;
+      attributeNodes_.erase(name);
       attributeChangedCallback(name, oldValue, "");
     }
   }

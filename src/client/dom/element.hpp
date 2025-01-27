@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 #include <client/cssom/box_bounding.hpp>
 
 #include "./node.hpp"
@@ -60,11 +61,12 @@ namespace dom
     ~Element() = default;
 
   public:
-    std::string getAttribute(const std::string &name);
-    std::vector<std::string> getAttributeNames();
-    std::shared_ptr<Attr> getAttributeNode(const std::string &name);
-    bool hasAttribute(const std::string &name);
-    bool hasAttributes();
+    std::string getAttribute(const std::string &name) const;
+    std::vector<std::string> getAttributeNames() const;
+    std::shared_ptr<Attr> getAttributeNode(const std::string &name) const;
+    Attr &getAttributeNodeChecked(const std::string &name) const;
+    bool hasAttribute(const std::string &name) const;
+    bool hasAttributes() const;
     void setAttribute(const std::string &name, const std::string &value);
     void setAttributeNode(std::shared_ptr<Attr> attr);
     void removeAttribute(const std::string &name);
@@ -143,5 +145,6 @@ namespace dom
 
   private:
     DOMTokenList classList_;
+    std::unordered_map<std::string, std::shared_ptr<Attr>> attributeNodes_;
   };
 }

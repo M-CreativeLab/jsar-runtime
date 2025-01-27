@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <memory>
+
 #include "./node.hpp"
 #include "./element.hpp"
 
@@ -12,6 +14,17 @@ namespace dom
   class Attr : public Node
   {
   public:
+    inline static shared_ptr<Attr> Make(shared_ptr<Element> ownerElement, std::string name, std::string initialValue)
+    {
+      return make_shared<Attr>(name, initialValue, ownerElement);
+    }
+    inline static shared_ptr<Attr> Make(shared_ptr<Element> ownerElement, pugi::xml_attribute attr)
+    {
+      return make_shared<Attr>(attr, ownerElement);
+    }
+
+  public:
+    Attr(std::string name, std::string initialValue, shared_ptr<Element> ownerElement);
     Attr(pugi::xml_attribute attr, shared_ptr<Element> ownerElement);
     Attr(Attr &other);
     ~Attr() = default;
@@ -24,8 +37,5 @@ namespace dom
     bool specified;
     string value;
     shared_ptr<Element> ownerElement;
-
-  private:
-    shared_ptr<pugi::xml_attribute> attrInternal;
   };
 }
