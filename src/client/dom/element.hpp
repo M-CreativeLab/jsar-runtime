@@ -67,7 +67,14 @@ namespace dom
     Attr &getAttributeNodeChecked(const std::string &name) const;
     bool hasAttribute(const std::string &name) const;
     bool hasAttributes() const;
-    void setAttribute(const std::string &name, const std::string &value);
+    /**
+     * Sets the attribute value of the element.
+     * 
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     * @param notify Whether to notify the attribute change.
+     */
+    void setAttribute(const std::string &name, const std::string &value, bool notify = true);
     void setAttributeNode(std::shared_ptr<Attr> attr);
     void removeAttribute(const std::string &name);
 

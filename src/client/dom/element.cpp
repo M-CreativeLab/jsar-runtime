@@ -107,17 +107,14 @@ namespace dom
     if (idAttr != nullptr)
       id = idAttr->value;
 
+    /**
+     * `class` attribute.
+     */
     {
-      /**
-       * `class` attribute.
-       */
       auto classAttr = getAttributeNode("class");
       if (classAttr != nullptr)
-        classList_ = DOMTokenList(classAttr->value, {}, [](const DOMTokenList &list)
-                                  {
-                                    // update the `class` attribute
-                                    // TODO: update the attribute value
-                                  });
+        classList_ = DOMTokenList(classAttr->value, {}, [this](const DOMTokenList &list)
+                                  { setAttribute("class", list.value(), false /* mute */); });
     }
   }
 
@@ -164,7 +161,7 @@ namespace dom
     return !attributeNodes_.empty();
   }
 
-  void Element::setAttribute(const string &name, const string &newValue)
+  void Element::setAttribute(const string &name, const string &newValue, bool notify)
   {
     auto attrNode = getAttributeNode(name);
     if (attrNode == nullptr)
@@ -172,8 +169,12 @@ namespace dom
 
     string oldValue = attrNode->value;
     attrNode->value = newValue;
-    // FIXME: attributeChangedCallback() should be called for creating a new attribute?
-    attributeChangedCallback(name, oldValue, newValue);
+
+    if (notify)
+    {
+      // FIXME: attributeChangedCallback() should be called for creating a new attribute?
+      attributeChangedCallback(name, oldValue, newValue);
+    }
   }
 
   void Element::setAttributeNode(shared_ptr<Attr> attr)
