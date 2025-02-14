@@ -120,16 +120,6 @@ fn patch_glsl_source_from_str(s: &str) -> String {
   s
 }
 
-#[no_mangle]
-extern "C" fn patch_glsl_source(source_str: *const c_char) -> *mut c_char {
-  let source_string: &str = unsafe { std::ffi::CStr::from_ptr(source_str) }
-    .to_str()
-    .expect("Failed to read GLSL source string");
-  let patched_source_str = CString::new(patch_glsl_source_from_str(source_string))
-    .expect("Failed to create GLSL source CString");
-  patched_source_str.into_raw()
-}
-
 #[cxx::bridge(namespace = "holocron::webgl")]
 mod ffi {
   extern "Rust" {
