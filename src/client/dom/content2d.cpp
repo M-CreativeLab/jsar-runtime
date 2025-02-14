@@ -11,7 +11,7 @@ namespace dom
 {
   using namespace std;
   using namespace builtin_scene;
-  using LayoutNode = crates::layout::Node;
+  using LayoutNode = crates::layout2::Node;
 
   Content2d::Content2d(shared_ptr<Node> sceneObjectNode)
       : sceneObject_(dynamic_pointer_cast<SceneObject>(sceneObjectNode)),

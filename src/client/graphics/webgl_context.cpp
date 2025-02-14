@@ -297,7 +297,7 @@ namespace client_graphics
 
   void WebGLContext::shaderSource(std::shared_ptr<WebGLShader> shader, const std::string &source)
   {
-    auto req = ShaderSourceCommandBufferRequest(shader->id, GLSLSourcePatcher::GetPatchedSource(source));
+    auto req = ShaderSourceCommandBufferRequest(shader->id, GLSLSourcePatcher2::GetPatchedSource(source));
     sendCommandBufferRequest(req);
   }
 

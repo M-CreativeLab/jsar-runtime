@@ -154,12 +154,12 @@ namespace dom
      *
      * @returns The layout allocator.
      */
-    inline std::shared_ptr<crates::layout::Allocator> layoutAllocator() const
+    inline std::shared_ptr<crates::layout2::Allocator> layoutAllocator() const
     {
       return layoutAllocator_;
     }
 
   private:
-    std::shared_ptr<crates::layout::Allocator> layoutAllocator_;
+    std::shared_ptr<crates::layout2::Allocator> layoutAllocator_;
   };
 }

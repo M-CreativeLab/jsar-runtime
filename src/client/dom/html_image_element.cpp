@@ -16,7 +16,7 @@ namespace dom
 {
   using namespace std;
   using namespace builtin_scene;
-  using namespace crates::layout::style;
+  using namespace crates::layout2::styles;
 
   // Adjust the image size based on the adopted style.
   bool adjustImageSize(const client_cssom::CSSStyleDeclaration &adoptedStyle,

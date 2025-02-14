@@ -16,7 +16,7 @@ namespace client_cssom::rules
     using CSSConditionRule::CSSConditionRule;
 
   public:
-    CSSMediaRule(crates::css::CSSMediaRuleInner &inner)
+    CSSMediaRule(crates::css2::stylesheets::MediaRule &inner)
         : CSSConditionRule()
     {
     }

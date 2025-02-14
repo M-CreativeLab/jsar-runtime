@@ -36,16 +36,16 @@ namespace canvas
   template <typename CanvasType>
   bool CanvasRenderingContext2D<CanvasType>::setFillStyle(const std::string &style)
   {
-    auto color = crates::css::parseColor(style);
-    fillStyle = SkColorSetARGB(color.a, color.r, color.g, color.b);
+    auto color = crates::css2::parsing::parseColor(style);
+    fillStyle = SkColorSetARGB(color.a(), color.r(), color.g(), color.b());
     return true;
   }
 
   template <typename CanvasType>
   bool CanvasRenderingContext2D<CanvasType>::setStrokeStyle(const std::string &style)
   {
-    auto color = crates::css::parseColor(style);
-    strokeStyle = SkColorSetARGB(color.a, color.r, color.g, color.b);
+    auto color = crates::css2::parsing::parseColor(style);
+    strokeStyle = SkColorSetARGB(color.a(), color.r(), color.g(), color.b());
     return true;
   }
 

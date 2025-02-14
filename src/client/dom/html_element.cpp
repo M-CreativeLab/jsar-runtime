@@ -5,8 +5,8 @@
 namespace dom
 {
   using namespace std;
-  using LayoutAllocator = crates::layout::Allocator;
-  using LayoutNode = crates::layout::Node;
+  using LayoutAllocator = crates::layout2::Allocator;
+  using LayoutNode = crates::layout2::Node;
 
   // TODO: Implement the following methods.
   void HTMLElement::blur() {}

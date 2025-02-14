@@ -13,6 +13,8 @@ namespace dom
 
   void HTMLScriptElement::createdCallback()
   {
+    HTMLElement::createdCallback();
+
     if (hasAttribute("src"))
       src = getAttribute("src");
     if (hasAttribute("type"))
@@ -24,6 +26,8 @@ namespace dom
 
   void HTMLScriptElement::connectedCallback()
   {
+    HTMLElement::connectedCallback();
+
     auto browsingContext = ownerDocument->lock()->browsingContext;
     if (isImportMap())
     {

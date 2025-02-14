@@ -30,8 +30,8 @@ namespace client_cssom
 
   void CSSStyleSheet::replaceSync(const string &cssText)
   {
-    auto stylesheet = CSSStylesheetInner::Parse(cssText, "");
-    const auto &cssRules = stylesheet->cssRules();
+    auto stylesheet = crates::css2::parsing::CSSParser().parseStylesheet(cssText, "");
+    auto& cssRules = stylesheet.rules();
     for (auto cssRule : cssRules)
       cssRules_->insert(*cssRule);
   }

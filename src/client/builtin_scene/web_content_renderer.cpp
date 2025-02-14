@@ -37,7 +37,7 @@ namespace builtin_scene::web_renderer
   }
 
   void drawBackground(SkCanvas *canvas, SkRRect &originalRRect,
-                      const crates::layout::Layout &layout,
+                      const crates::layout2::Layout &layout,
                       const client_cssom::CSSStyleDeclaration &style)
   {
     if (style.hasProperty("background-color"))
@@ -110,7 +110,7 @@ namespace builtin_scene::web_renderer
   }
 
   void drawBorders(SkCanvas *canvas, SkRRect &roundedRect,
-                   const crates::layout::Layout &layout,
+                   const crates::layout2::Layout &layout,
                    const client_cssom::CSSStyleDeclaration &style)
   {
     using namespace client_cssom::types;

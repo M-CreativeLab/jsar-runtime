@@ -144,15 +144,15 @@ namespace dom
     textStyle->setProperty(property, parentStyle.getPropertyValue(property)); \
   }
 
-#define USE_PARENT_SIZE(property)                                                                \
-  if (parentStyle.hasProperty(property))                                                         \
-  {                                                                                              \
-    _MAKE_TEXT_STYLE_IF_NOT_EXIST()                                                              \
-    auto dimension = parentStyle.getPropertyValueAs<crates::layout::style::Dimension>(property); \
-    if (dimension.isLength() || dimension.isPercent())                                           \
-      textStyle->setProperty(property, "100%");                                                  \
-    else                                                                                         \
-      textStyle->setProperty(property, "auto");                                                  \
+#define USE_PARENT_SIZE(property)                                                                  \
+  if (parentStyle.hasProperty(property))                                                           \
+  {                                                                                                \
+    _MAKE_TEXT_STYLE_IF_NOT_EXIST()                                                                \
+    auto dimension = parentStyle.getPropertyValueAs<crates::layout2::styles::Dimension>(property); \
+    if (dimension.isLength() || dimension.isPercent())                                             \
+      textStyle->setProperty(property, "100%");                                                    \
+    else                                                                                           \
+      textStyle->setProperty(property, "auto");                                                    \
   }
 
       // Font styles

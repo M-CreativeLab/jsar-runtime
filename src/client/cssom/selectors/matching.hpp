@@ -20,7 +20,7 @@ namespace client_cssom::selectors
    * @param element The element to check.
    * @returns Whether the element matches the selectors.
    */
-  bool matchesSelectorList(const crates::css::CSSSelectorList &selectors,
+  bool matchesSelectorList(const crates::css2::selectors::SelectorList &selectors,
                            const std::shared_ptr<dom::HTMLElement> element);
 
   /**
@@ -30,7 +30,7 @@ namespace client_cssom::selectors
    * @param element The element to check.
    * @returns Whether the element matches the selector.
    */
-  bool matchesSelector(const crates::css::CSSSelector &selector,
+  bool matchesSelector(const crates::css2::selectors::Selector &selector,
                        const std::shared_ptr<dom::HTMLElement> element,
                        MatchingContext &context);
 
@@ -42,8 +42,8 @@ namespace client_cssom::selectors
    * @param element The element to check.
    * @returns Whether the element matches the selector component.
    */
-  bool matchesSelectorComponent(const crates::css::CSSSelector &selector,
-                                std::vector<crates::css::CSSSelectorComponent>::const_iterator &it,
+  bool matchesSelectorComponent(const crates::css2::selectors::Selector &selector,
+                                std::vector<crates::css2::selectors::Component>::const_iterator &it,
                                 const shared_ptr<dom::HTMLElement> element,
                                 MatchingContext &context);
 }

@@ -1,3 +1,4 @@
+use paste::paste;
 use std::{cell::RefCell, rc::Rc};
 use taffy::TraversePartialTree;
 
@@ -21,574 +22,8 @@ impl TaffyTree {
 #[repr(C)]
 #[derive(Clone)]
 pub struct TaffyNode {
-  tree: TaffyTree,
-  node: taffy::NodeId,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
-pub struct LayoutOutput {
-  pub width: f32,
-  pub height: f32,
-  pub x: f32,
-  pub y: f32,
-  pub border_top: f32,
-  pub border_right: f32,
-  pub border_bottom: f32,
-  pub border_left: f32,
-  pub padding_top: f32,
-  pub padding_right: f32,
-  pub padding_bottom: f32,
-  pub padding_left: f32,
-}
-
-impl LayoutOutput {
-  pub fn new(tree: &TaffyTree, node: taffy::NodeId) -> Self {
-    let taffy = tree.handle.borrow();
-    let layout = taffy.layout(node).expect("Failed to get layout");
-    Self {
-      width: layout.size.width,
-      height: layout.size.height,
-      x: layout.location.x,
-      y: layout.location.y,
-      border_top: layout.border.top,
-      border_right: layout.border.right,
-      border_bottom: layout.border.bottom,
-      border_left: layout.border.left,
-      padding_top: layout.padding.top,
-      padding_right: layout.padding.right,
-      padding_bottom: layout.padding.bottom,
-      padding_left: layout.padding.left,
-    }
-  }
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum Display {
-  Block = 0,
-  Flex = 1,
-  Grid = 2,
-  None = 3,
-}
-
-impl From<taffy::Display> for Display {
-  fn from(display: taffy::Display) -> Self {
-    match display {
-      taffy::Display::Block => Display::Block,
-      taffy::Display::Flex => Display::Flex,
-      taffy::Display::Grid => Display::Grid,
-      taffy::Display::None => Display::None,
-    }
-  }
-}
-
-impl From<Display> for taffy::Display {
-  fn from(display: Display) -> Self {
-    match display {
-      Display::Block => taffy::Display::Block,
-      Display::Flex => taffy::Display::Flex,
-      Display::Grid => taffy::Display::Grid,
-      Display::None => taffy::Display::None,
-    }
-  }
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum BoxSizing {
-  ContentBox = 0,
-  BorderBox,
-}
-
-impl From<taffy::BoxSizing> for BoxSizing {
-  fn from(box_sizing: taffy::BoxSizing) -> Self {
-    match box_sizing {
-      taffy::BoxSizing::ContentBox => BoxSizing::ContentBox,
-      taffy::BoxSizing::BorderBox => BoxSizing::BorderBox,
-    }
-  }
-}
-
-impl From<BoxSizing> for taffy::BoxSizing {
-  fn from(box_sizing: BoxSizing) -> Self {
-    match box_sizing {
-      BoxSizing::ContentBox => taffy::BoxSizing::ContentBox,
-      BoxSizing::BorderBox => taffy::BoxSizing::BorderBox,
-    }
-  }
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum Overflow {
-  Visible = 0,
-  Clip,
-  Hidden,
-  Scroll,
-}
-
-impl From<taffy::Overflow> for Overflow {
-  fn from(overflow: taffy::Overflow) -> Self {
-    match overflow {
-      taffy::Overflow::Visible => Overflow::Visible,
-      taffy::Overflow::Clip => Overflow::Clip,
-      taffy::Overflow::Hidden => Overflow::Hidden,
-      taffy::Overflow::Scroll => Overflow::Scroll,
-    }
-  }
-}
-
-impl From<Overflow> for taffy::Overflow {
-  fn from(overflow: Overflow) -> Self {
-    match overflow {
-      Overflow::Visible => taffy::Overflow::Visible,
-      Overflow::Clip => taffy::Overflow::Clip,
-      Overflow::Hidden => taffy::Overflow::Hidden,
-      Overflow::Scroll => taffy::Overflow::Scroll,
-    }
-  }
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum Position {
-  Relative = 0,
-  Absolute = 1,
-}
-
-impl From<taffy::Position> for Position {
-  fn from(position: taffy::Position) -> Self {
-    match position {
-      taffy::Position::Relative => Position::Relative,
-      taffy::Position::Absolute => Position::Absolute,
-    }
-  }
-}
-
-impl From<Position> for taffy::Position {
-  fn from(position: Position) -> Self {
-    match position {
-      Position::Relative => taffy::Position::Relative,
-      Position::Absolute => taffy::Position::Absolute,
-    }
-  }
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum AlignItems {
-  Start,
-  End,
-  FlexStart,
-  FlexEnd,
-  Center,
-  Baseline,
-  Stretch,
-}
-
-impl From<taffy::AlignItems> for AlignItems {
-  fn from(align_items: taffy::AlignItems) -> Self {
-    match align_items {
-      taffy::AlignItems::Start => AlignItems::Start,
-      taffy::AlignItems::End => AlignItems::End,
-      taffy::AlignItems::FlexStart => AlignItems::FlexStart,
-      taffy::AlignItems::FlexEnd => AlignItems::FlexEnd,
-      taffy::AlignItems::Center => AlignItems::Center,
-      taffy::AlignItems::Baseline => AlignItems::Baseline,
-      taffy::AlignItems::Stretch => AlignItems::Stretch,
-    }
-  }
-}
-
-impl From<AlignItems> for taffy::AlignItems {
-  fn from(align_items: AlignItems) -> Self {
-    match align_items {
-      AlignItems::Start => taffy::AlignItems::Start,
-      AlignItems::End => taffy::AlignItems::End,
-      AlignItems::FlexStart => taffy::AlignItems::FlexStart,
-      AlignItems::FlexEnd => taffy::AlignItems::FlexEnd,
-      AlignItems::Center => taffy::AlignItems::Center,
-      AlignItems::Baseline => taffy::AlignItems::Baseline,
-      AlignItems::Stretch => taffy::AlignItems::Stretch,
-    }
-  }
-}
-
-type JustifyItems = AlignItems;
-type AlignSelf = AlignItems;
-type JustifySelf = AlignItems;
-
-#[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum AlignContent {
-  Start,
-  End,
-  FlexStart,
-  FlexEnd,
-  Center,
-  Stretch,
-  SpaceBetween,
-  SpaceEvenly,
-  SpaceAround,
-}
-
-impl From<taffy::AlignContent> for AlignContent {
-  fn from(align_content: taffy::AlignContent) -> Self {
-    match align_content {
-      taffy::AlignContent::Start => AlignContent::Start,
-      taffy::AlignContent::End => AlignContent::End,
-      taffy::AlignContent::FlexStart => AlignContent::FlexStart,
-      taffy::AlignContent::FlexEnd => AlignContent::FlexEnd,
-      taffy::AlignContent::Center => AlignContent::Center,
-      taffy::AlignContent::Stretch => AlignContent::Stretch,
-      taffy::AlignContent::SpaceBetween => AlignContent::SpaceBetween,
-      taffy::AlignContent::SpaceEvenly => AlignContent::SpaceEvenly,
-      taffy::AlignContent::SpaceAround => AlignContent::SpaceAround,
-    }
-  }
-}
-
-impl From<AlignContent> for taffy::AlignContent {
-  fn from(align_content: AlignContent) -> Self {
-    match align_content {
-      AlignContent::Start => taffy::AlignContent::Start,
-      AlignContent::End => taffy::AlignContent::End,
-      AlignContent::FlexStart => taffy::AlignContent::FlexStart,
-      AlignContent::FlexEnd => taffy::AlignContent::FlexEnd,
-      AlignContent::Center => taffy::AlignContent::Center,
-      AlignContent::Stretch => taffy::AlignContent::Stretch,
-      AlignContent::SpaceBetween => taffy::AlignContent::SpaceBetween,
-      AlignContent::SpaceEvenly => taffy::AlignContent::SpaceEvenly,
-      AlignContent::SpaceAround => taffy::AlignContent::SpaceAround,
-    }
-  }
-}
-
-type JustifyContent = AlignContent;
-
-#[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum FlexDirection {
-  Row,
-  Column,
-  RowReverse,
-  ColumnReverse,
-}
-
-impl From<taffy::FlexDirection> for FlexDirection {
-  fn from(flex_direction: taffy::FlexDirection) -> Self {
-    match flex_direction {
-      taffy::FlexDirection::Row => FlexDirection::Row,
-      taffy::FlexDirection::Column => FlexDirection::Column,
-      taffy::FlexDirection::RowReverse => FlexDirection::RowReverse,
-      taffy::FlexDirection::ColumnReverse => FlexDirection::ColumnReverse,
-    }
-  }
-}
-
-impl From<FlexDirection> for taffy::FlexDirection {
-  fn from(flex_direction: FlexDirection) -> Self {
-    match flex_direction {
-      FlexDirection::Row => taffy::FlexDirection::Row,
-      FlexDirection::Column => taffy::FlexDirection::Column,
-      FlexDirection::RowReverse => taffy::FlexDirection::RowReverse,
-      FlexDirection::ColumnReverse => taffy::FlexDirection::ColumnReverse,
-    }
-  }
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum FlexWrap {
-  NoWrap,
-  Wrap,
-  WrapReverse,
-}
-
-impl From<taffy::FlexWrap> for FlexWrap {
-  fn from(flex_wrap: taffy::FlexWrap) -> Self {
-    match flex_wrap {
-      taffy::FlexWrap::NoWrap => FlexWrap::NoWrap,
-      taffy::FlexWrap::Wrap => FlexWrap::Wrap,
-      taffy::FlexWrap::WrapReverse => FlexWrap::WrapReverse,
-    }
-  }
-}
-
-impl From<FlexWrap> for taffy::FlexWrap {
-  fn from(flex_wrap: FlexWrap) -> Self {
-    match flex_wrap {
-      FlexWrap::NoWrap => taffy::FlexWrap::NoWrap,
-      FlexWrap::Wrap => taffy::FlexWrap::Wrap,
-      FlexWrap::WrapReverse => taffy::FlexWrap::WrapReverse,
-    }
-  }
-}
-
-/// cbindgen:derive-helper-methods
-#[repr(C)]
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum Dimension {
-  /// An absolute length in some abstract units. Users of Taffy may define what they correspond
-  /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
-  Length(f32),
-  /// The dimension is stored in percentage relative to the parent item.
-  Percent(f32),
-  /// The dimension should be automatically computed
-  Auto,
-}
-
-impl From<taffy::Dimension> for Dimension {
-  fn from(dimension: taffy::Dimension) -> Self {
-    println!("Dimension: {:?}", dimension);
-    match dimension {
-      taffy::Dimension::Length(length) => Dimension::Length(length),
-      taffy::Dimension::Percent(percent) => Dimension::Percent(percent),
-      taffy::Dimension::Auto => Dimension::Auto,
-    }
-  }
-}
-
-impl From<Dimension> for taffy::Dimension {
-  fn from(dimension: Dimension) -> Self {
-    match dimension {
-      Dimension::Length(length) => taffy::Dimension::Length(length),
-      Dimension::Percent(percent) => taffy::Dimension::Percent(percent),
-      Dimension::Auto => taffy::Dimension::Auto,
-    }
-  }
-}
-
-/// cbindgen:derive-helper-methods
-#[repr(C)]
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum LengthPercentageAuto {
-  /// An absolute length in some abstract units. Users of Taffy may define what they correspond
-  /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
-  Length(f32),
-  /// The dimension is stored in percentage relative to the parent item.
-  Percent(f32),
-  /// The dimension should be automatically computed
-  Auto,
-}
-
-impl From<taffy::LengthPercentageAuto> for LengthPercentageAuto {
-  fn from(length_percentage_auto: taffy::LengthPercentageAuto) -> Self {
-    match length_percentage_auto {
-      taffy::LengthPercentageAuto::Length(length) => LengthPercentageAuto::Length(length),
-      taffy::LengthPercentageAuto::Percent(percent) => LengthPercentageAuto::Percent(percent),
-      taffy::LengthPercentageAuto::Auto => LengthPercentageAuto::Auto,
-    }
-  }
-}
-
-impl From<LengthPercentageAuto> for taffy::LengthPercentageAuto {
-  fn from(length_percentage_auto: LengthPercentageAuto) -> Self {
-    match length_percentage_auto {
-      LengthPercentageAuto::Length(length) => taffy::LengthPercentageAuto::Length(length),
-      LengthPercentageAuto::Percent(percent) => taffy::LengthPercentageAuto::Percent(percent),
-      LengthPercentageAuto::Auto => taffy::LengthPercentageAuto::Auto,
-    }
-  }
-}
-
-/// cbindgen:derive-helper-methods
-#[repr(C)]
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum LengthPercentage {
-  /// An absolute length in some abstract units. Users of Taffy may define what they correspond
-  /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
-  Length(f32),
-  /// The dimension is stored in percentage relative to the parent item.
-  Percent(f32),
-}
-
-impl From<taffy::LengthPercentage> for LengthPercentage {
-  fn from(length_percentage: taffy::LengthPercentage) -> Self {
-    match length_percentage {
-      taffy::LengthPercentage::Length(length) => LengthPercentage::Length(length),
-      taffy::LengthPercentage::Percent(percent) => LengthPercentage::Percent(percent),
-    }
-  }
-}
-
-impl From<LengthPercentage> for taffy::LengthPercentage {
-  fn from(length_percentage: LengthPercentage) -> Self {
-    match length_percentage {
-      LengthPercentage::Length(length) => taffy::LengthPercentage::Length(length),
-      LengthPercentage::Percent(percent) => taffy::LengthPercentage::Percent(percent),
-    }
-  }
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub struct LayoutStyle {
-  pub display: Display,
-  pub box_sizing: BoxSizing,
-  pub overflow_x: Overflow,
-  pub overflow_y: Overflow,
-  pub scrollbar_width: f32,
-  pub position: Position,
-  pub width: Dimension,
-  pub height: Dimension,
-  pub min_width: Dimension,
-  pub min_height: Dimension,
-  pub max_width: Dimension,
-  pub max_height: Dimension,
-
-  // Spacing Properties
-  pub margin_top: LengthPercentageAuto,
-  pub margin_right: LengthPercentageAuto,
-  pub margin_bottom: LengthPercentageAuto,
-  pub margin_left: LengthPercentageAuto,
-  pub padding_top: LengthPercentage,
-  pub padding_right: LengthPercentage,
-  pub padding_bottom: LengthPercentage,
-  pub padding_left: LengthPercentage,
-  pub border_top: LengthPercentage,
-  pub border_right: LengthPercentage,
-  pub border_bottom: LengthPercentage,
-  pub border_left: LengthPercentage,
-
-  // Flex Properties
-  pub align_items: AlignItems,
-  pub align_self: AlignSelf,
-  pub justify_items: JustifyItems,
-  pub justify_self: JustifySelf,
-  pub align_content: AlignContent,
-  pub justify_content: JustifyContent,
-  pub gap_x: LengthPercentage,
-  pub gap_y: LengthPercentage,
-  pub flex_direction: FlexDirection,
-  pub flex_wrap: FlexWrap,
-  pub flex_basis: Dimension,
-  pub flex_grow: f32,
-  pub flex_shrink: f32,
-}
-
-impl From<taffy::Style> for LayoutStyle {
-  fn from(value: taffy::Style) -> Self {
-    Self {
-      display: value.display.into(),
-      box_sizing: value.box_sizing.into(),
-      overflow_x: value.overflow.x.into(),
-      overflow_y: value.overflow.y.into(),
-      scrollbar_width: value.scrollbar_width,
-      position: value.position.into(),
-      width: value.size.width.into(),
-      height: value.size.height.into(),
-      min_width: value.min_size.width.into(),
-      min_height: value.min_size.height.into(),
-      max_width: value.max_size.width.into(),
-      max_height: value.max_size.height.into(),
-      margin_top: value.margin.top.into(),
-      margin_right: value.margin.right.into(),
-      margin_bottom: value.margin.bottom.into(),
-      margin_left: value.margin.left.into(),
-      padding_top: value.padding.top.into(),
-      padding_right: value.padding.right.into(),
-      padding_bottom: value.padding.bottom.into(),
-      padding_left: value.padding.left.into(),
-      border_top: value.border.top.into(),
-      border_right: value.border.right.into(),
-      border_bottom: value.border.bottom.into(),
-      border_left: value.border.left.into(),
-      align_items: value
-        .align_items
-        .map(|align_items| align_items.into())
-        .unwrap_or(AlignItems::Stretch),
-      align_self: value
-        .align_self
-        .map(|align_self| align_self.into())
-        .unwrap_or(AlignSelf::Stretch),
-      justify_items: value
-        .justify_items
-        .map(|justify_items| justify_items.into())
-        .unwrap_or(JustifyItems::Stretch),
-      justify_self: value
-        .justify_self
-        .map(|justify_self| justify_self.into())
-        .unwrap_or(JustifySelf::Stretch),
-      align_content: value
-        .align_content
-        .map(|align_content| align_content.into())
-        .unwrap_or(AlignContent::Stretch),
-      justify_content: value
-        .justify_content
-        .map(|justify_content| justify_content.into())
-        .unwrap_or(JustifyContent::Stretch),
-      gap_x: value.gap.width.into(),
-      gap_y: value.gap.height.into(),
-      flex_direction: value.flex_direction.into(),
-      flex_wrap: value.flex_wrap.into(),
-      flex_basis: value.flex_basis.into(),
-      flex_grow: value.flex_grow,
-      flex_shrink: value.flex_shrink,
-    }
-  }
-}
-
-impl From<LayoutStyle> for taffy::Style {
-  fn from(value: LayoutStyle) -> Self {
-    taffy::Style {
-      display: value.display.into(),
-      box_sizing: value.box_sizing.into(),
-      overflow: taffy::geometry::Point {
-        x: value.overflow_x.into(),
-        y: value.overflow_y.into(),
-      },
-      scrollbar_width: value.scrollbar_width,
-      position: value.position.into(),
-      size: taffy::Size {
-        width: value.width.into(),
-        height: value.height.into(),
-      },
-      min_size: taffy::Size {
-        width: value.min_width.into(),
-        height: value.min_height.into(),
-      },
-      max_size: taffy::Size {
-        width: value.max_width.into(),
-        height: value.max_height.into(),
-      },
-      margin: taffy::geometry::Rect {
-        top: value.margin_top.into(),
-        right: value.margin_right.into(),
-        bottom: value.margin_bottom.into(),
-        left: value.margin_left.into(),
-      },
-      padding: taffy::geometry::Rect {
-        top: value.padding_top.into(),
-        right: value.padding_right.into(),
-        bottom: value.padding_bottom.into(),
-        left: value.padding_left.into(),
-      },
-      border: taffy::geometry::Rect {
-        top: value.border_top.into(),
-        right: value.border_right.into(),
-        bottom: value.border_bottom.into(),
-        left: value.border_left.into(),
-      },
-      align_items: Some(value.align_items.into()),
-      align_self: Some(value.align_self.into()),
-      justify_items: Some(value.justify_items.into()),
-      justify_self: Some(value.justify_self.into()),
-      align_content: Some(value.align_content.into()),
-      justify_content: Some(value.justify_content.into()),
-      gap: taffy::Size {
-        width: value.gap_x.into(),
-        height: value.gap_y.into(),
-      },
-      flex_direction: value.flex_direction.into(),
-      flex_wrap: value.flex_wrap.into(),
-      flex_basis: value.flex_basis.into(),
-      flex_grow: value.flex_grow,
-      flex_shrink: value.flex_shrink,
-      ..Default::default()
-    }
-  }
+  pub tree: TaffyTree,
+  pub node: taffy::NodeId,
 }
 
 impl TaffyNode {
@@ -635,25 +70,6 @@ impl TaffyNode {
       .remove_child_at_index(self.node, index);
   }
 
-  pub fn get_style(&self) -> LayoutStyle {
-    self
-      .tree
-      .handle
-      .borrow()
-      .style(self.node)
-      .expect("Failed to get style")
-      .clone()
-      .into()
-  }
-
-  pub fn set_style(&mut self, style: LayoutStyle) {
-    let _ = self
-      .tree
-      .handle
-      .borrow_mut()
-      .set_style(self.node, style.into());
-  }
-
   pub fn mark_dirty(&mut self) {
     let _ = self.tree.handle.borrow_mut().mark_dirty(self.node);
   }
@@ -676,7 +92,7 @@ impl TaffyNode {
   }
 
   pub fn compute_layout(&mut self, width: f32, height: f32) {
-    let mut tree= self.tree.handle.borrow_mut();
+    let mut tree = self.tree.handle.borrow_mut();
     let _ = tree.compute_layout(
       self.node,
       taffy::geometry::Size {
@@ -685,112 +101,840 @@ impl TaffyNode {
       },
     );
   }
+}
 
-  pub fn get_layout(&self) -> LayoutOutput {
-    LayoutOutput::new(&self.tree, self.node)
+#[cxx::bridge(namespace = "holocron::layout")]
+mod ffi {
+  #[repr(u8)]
+  #[derive(Clone, Copy, Debug)]
+  enum Display {
+    Block,
+    Flex,
+    Grid,
+    None,
+  }
+
+  #[repr(u8)]
+  #[derive(Clone, Copy, Debug)]
+  enum BoxSizing {
+    ContentBox,
+    BorderBox,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  enum Overflow {
+    Visible = 0,
+    Clip,
+    Hidden,
+    Scroll,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  enum Position {
+    Relative = 0,
+    Absolute,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  enum AlignItems {
+    Start,
+    End,
+    FlexStart,
+    FlexEnd,
+    Center,
+    Baseline,
+    Stretch,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  enum AlignSelf {
+    Start,
+    End,
+    FlexStart,
+    FlexEnd,
+    Center,
+    Baseline,
+    Stretch,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  enum AlignContent {
+    Start,
+    End,
+    FlexStart,
+    FlexEnd,
+    Center,
+    Stretch,
+    SpaceBetween,
+    SpaceEvenly,
+    SpaceAround,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  enum JustifyItems {
+    Start,
+    End,
+    FlexStart,
+    FlexEnd,
+    Center,
+    Baseline,
+    Stretch,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  enum JustifySelf {
+    Start,
+    End,
+    FlexStart,
+    FlexEnd,
+    Center,
+    Baseline,
+    Stretch,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  enum JustifyContent {
+    Start,
+    End,
+    FlexStart,
+    FlexEnd,
+    Center,
+    Stretch,
+    SpaceBetween,
+    SpaceEvenly,
+    SpaceAround,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  enum FlexDirection {
+    Row,
+    Column,
+    RowReverse,
+    ColumnReverse,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  pub enum FlexWrap {
+    NoWrap,
+    Wrap,
+    WrapReverse,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  struct CSSPixelLength {
+    pub value: f32,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  struct Percentage {
+    pub percent: f32,
+  }
+
+  #[repr(u8)]
+  #[derive(Clone, Copy, Debug)]
+  enum DimensionTag {
+    Length,
+    Percentage,
+    Auto,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  struct Dimension {
+    pub tag: DimensionTag,
+    pub length: CSSPixelLength,
+    pub percentage: Percentage,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  enum LengthPercentageTag {
+    Length,
+    Percentage,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  struct LengthPercentage {
+    pub tag: LengthPercentageTag,
+    pub length: CSSPixelLength,
+    pub percentage: Percentage,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  enum LengthPercentageAutoTag {
+    Length,
+    Percentage,
+    Auto,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  struct LengthPercentageAuto {
+    pub tag: LengthPercentageAutoTag,
+    pub length: CSSPixelLength,
+    pub percentage: Percentage,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  struct OverflowXY {
+    pub x: Overflow,
+    pub y: Overflow,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  struct DimensionRange {
+    pub min: Dimension,
+    pub max: Dimension,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  struct LengthPercentageXY {
+    pub x: LengthPercentage,
+    pub y: LengthPercentage,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  struct LengthPercentageRect {
+    pub top: LengthPercentage,
+    pub right: LengthPercentage,
+    pub bottom: LengthPercentage,
+    pub left: LengthPercentage,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  struct LengthPercentageAutoRect {
+    pub top: LengthPercentageAuto,
+    pub right: LengthPercentageAuto,
+    pub bottom: LengthPercentageAuto,
+    pub left: LengthPercentageAuto,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  struct Style {
+    pub display: Display,
+    #[cxx_name = "boxSizing"]
+    pub box_sizing: BoxSizing,
+    pub overflow: OverflowXY,
+    #[cxx_name = "scrollbarWidth"]
+    pub scrollbar_width: f32,
+    pub position: Position,
+    pub width: Dimension,
+    pub height: Dimension,
+    #[cxx_name = "widthRange"]
+    pub width_range: DimensionRange,
+    #[cxx_name = "heightRange"]
+    pub height_range: DimensionRange,
+
+    // Spacing Properties
+    pub margin: LengthPercentageAutoRect,
+    pub padding: LengthPercentageRect,
+    pub border: LengthPercentageRect,
+
+    // Flex Properties
+    #[cxx_name = "alignItems"]
+    pub align_items: AlignItems,
+    #[cxx_name = "alignSelf"]
+    pub align_self: AlignSelf,
+    #[cxx_name = "alignContent"]
+    pub align_content: AlignContent,
+    #[cxx_name = "justifyItems"]
+    pub justify_items: JustifyItems,
+    #[cxx_name = "justifySelf"]
+    pub justify_self: JustifySelf,
+    #[cxx_name = "justifyContent"]
+    pub justify_content: JustifyContent,
+    pub gap: LengthPercentageXY,
+    #[cxx_name = "flexDirection"]
+    pub flex_direction: FlexDirection,
+    #[cxx_name = "flexWrap"]
+    pub flex_wrap: FlexWrap,
+    #[cxx_name = "flexBasis"]
+    pub flex_basis: Dimension,
+    #[cxx_name = "flexGrow"]
+    pub flex_grow: f32,
+    #[cxx_name = "flexShrink"]
+    pub flex_shrink: f32,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  struct NumberRect {
+    pub top: f32,
+    pub right: f32,
+    pub bottom: f32,
+    pub left: f32,
+  }
+
+  #[derive(Clone, Copy, Debug)]
+  struct LayoutOutput {
+    pub width: f32,
+    pub height: f32,
+    pub x: f32,
+    pub y: f32,
+    pub border: NumberRect,
+    pub padding: NumberRect,
+  }
+
+  extern "Rust" {
+    type TaffyTree;
+    type TaffyNode;
+
+    #[cxx_name = "createAllocator"]
+    fn create_allocator() -> Box<TaffyTree>;
+
+    #[cxx_name = "createNode"]
+    fn create_node(tree: &TaffyTree) -> Box<TaffyNode>;
+
+    #[cxx_name = "addChild"]
+    fn add_child(parent: &mut TaffyNode, child: &TaffyNode);
+
+    #[cxx_name = "removeChild"]
+    fn remove_child(parent: &mut TaffyNode, child: &TaffyNode);
+
+    #[cxx_name = "removeChildAtIndex"]
+    fn remove_child_at_index(parent: &mut TaffyNode, index: usize);
+
+    #[cxx_name = "replaceChildAtIndex"]
+    fn replace_child_at_index(parent: &mut TaffyNode, index: usize, child: &TaffyNode);
+
+    #[cxx_name = "markNodeDirty"]
+    fn mark_node_dirty(node: &mut TaffyNode);
+
+    #[cxx_name = "isNodeDirty"]
+    fn is_node_dirty(node: &TaffyNode) -> bool;
+
+    #[cxx_name = "isNodeChildless"]
+    fn is_node_childless(node: &TaffyNode) -> bool;
+
+    #[cxx_name = "getChildCount"]
+    fn get_child_count(node: &TaffyNode) -> usize;
+
+    #[cxx_name = "getNodeStyle"]
+    fn get_node_style(node: &TaffyNode) -> Style;
+
+    #[cxx_name = "setNodeStyle"]
+    fn set_node_style(node: &mut TaffyNode, style: Style);
+
+    #[cxx_name = "getLayoutOutput"]
+    fn get_layout_output(node: &TaffyNode) -> LayoutOutput;
+
+    #[cxx_name = "computeLayout"]
+    fn compute_layout(node: &mut TaffyNode, width: f32, height: f32);
   }
 }
 
-#[no_mangle]
-pub extern "C" fn taffy_tree_new() -> *mut TaffyTree {
-  Box::into_raw(Box::new(TaffyTree::new()))
+macro_rules! impl_default_for {
+  ($name:ident, $default:ident) => {
+    impl Default for ffi::$name {
+      fn default() -> Self {
+        ffi::$name::$default
+      }
+    }
+  };
 }
 
-#[no_mangle]
-pub extern "C" fn taffy_tree_free(ptr: *mut TaffyTree) {
-  unsafe {
-    let _ = Box::from_raw(ptr);
+macro_rules! impl_from {
+  ($dst:ty, $src:ty, {$($variant:ident),+}, $default:ident) => {
+    #[allow(unreachable_patterns)]
+    impl From<$src> for $dst {
+      fn from(value: $src) -> Self {
+        match value {
+          $(<$src>::$variant => Self::$variant,)+
+          _ => Self::$default,
+        }
+      }
+    }
+  };
+}
+
+macro_rules! impl_type_casting {
+  ($first:ty, $second:ty, {$($variant:ident),+}, $default:ident) => {
+    impl_from!($first, $second, {$($variant),+}, $default);
+    impl_from!($second, $first, {$($variant),+}, $default);
+  };
+}
+
+macro_rules! impl_type_casting_simple {
+  ($name:ident, {$($variant:ident),+}, $default:ident) => {
+    impl_type_casting!(ffi::$name, taffy::$name, {$($variant),+}, $default);
+  };
+}
+
+impl From<taffy::Rect<f32>> for ffi::NumberRect {
+  fn from(rect: taffy::Rect<f32>) -> Self {
+    Self {
+      top: rect.top,
+      right: rect.right,
+      bottom: rect.bottom,
+      left: rect.left,
+    }
   }
 }
 
-#[no_mangle]
-pub extern "C" fn taffy_node_new(tree: *const TaffyTree) -> *mut TaffyNode {
-  let tree = unsafe { &*tree };
-  Box::into_raw(Box::new(TaffyNode::new(tree)))
+impl_type_casting_simple!(Display, { Block, Flex, Grid, None }, Block);
+impl_type_casting_simple!(BoxSizing, { ContentBox, BorderBox }, ContentBox);
+impl_type_casting_simple!(Overflow, { Visible, Clip, Hidden, Scroll }, Visible);
+impl_type_casting_simple!(Position, { Relative, Absolute }, Relative);
+
+impl_default_for!(Display, Block);
+impl_default_for!(BoxSizing, ContentBox);
+impl_default_for!(Overflow, Visible);
+impl_default_for!(Position, Relative);
+
+macro_rules! impl_xy_casting {
+  ($name:ident, $container:ty) => {
+    paste! {
+      impl From<$container<taffy::$name>> for ffi::[< $name XY >] {
+        fn from(value: $container<taffy::$name>) -> Self {
+          Self {
+            x: value.x.into(),
+            y: value.y.into(),
+          }
+        }
+      }
+      impl From<ffi::[< $name XY >]> for $container<taffy::$name> {
+        fn from(value: ffi::[< $name XY >]) -> Self {
+          $container {
+            x: value.x.into(),
+            y: value.y.into(),
+          }
+        }
+      }
+    }
+  };
 }
 
-#[no_mangle]
-pub extern "C" fn taffy_node_free(ptr: *mut TaffyNode) {
-  unsafe {
-    let _ = Box::from_raw(ptr);
+impl_xy_casting!(Overflow, taffy::Point);
+
+impl Default for ffi::CSSPixelLength {
+  fn default() -> Self {
+    Self { value: 0.0 }
   }
 }
 
-#[no_mangle]
-pub extern "C" fn taffy_node_add_child(parent: *mut TaffyNode, child: *const TaffyNode) {
-  let parent = unsafe { &mut *parent };
-  let child = unsafe { &*child };
+impl Default for ffi::Percentage {
+  fn default() -> Self {
+    Self { percent: 0.0 }
+  }
+}
+
+impl ffi::LengthPercentage {
+  pub fn length(value: f32) -> Self {
+    Self {
+      tag: ffi::LengthPercentageTag::Length,
+      length: ffi::CSSPixelLength { value },
+      percentage: ffi::Percentage::default(),
+    }
+  }
+  pub fn percentage(percent: f32) -> Self {
+    Self {
+      tag: ffi::LengthPercentageTag::Percentage,
+      percentage: ffi::Percentage { percent },
+      length: ffi::CSSPixelLength::default(),
+    }
+  }
+}
+
+impl ffi::LengthPercentageAuto {
+  pub fn length(value: f32) -> Self {
+    Self {
+      tag: ffi::LengthPercentageAutoTag::Length,
+      length: ffi::CSSPixelLength { value },
+      percentage: ffi::Percentage::default(),
+    }
+  }
+  pub fn percentage(percent: f32) -> Self {
+    Self {
+      tag: ffi::LengthPercentageAutoTag::Percentage,
+      percentage: ffi::Percentage { percent },
+      length: ffi::CSSPixelLength::default(),
+    }
+  }
+  pub fn auto() -> Self {
+    Self {
+      tag: ffi::LengthPercentageAutoTag::Auto,
+      percentage: ffi::Percentage::default(),
+      length: ffi::CSSPixelLength::default(),
+    }
+  }
+}
+
+impl ffi::Dimension {
+  pub fn length(value: f32) -> Self {
+    Self {
+      tag: ffi::DimensionTag::Length,
+      length: ffi::CSSPixelLength { value },
+      percentage: ffi::Percentage::default(),
+    }
+  }
+  pub fn percentage(percent: f32) -> Self {
+    Self {
+      tag: ffi::DimensionTag::Percentage,
+      percentage: ffi::Percentage { percent },
+      length: ffi::CSSPixelLength::default(),
+    }
+  }
+  pub fn auto() -> Self {
+    Self {
+      tag: ffi::DimensionTag::Auto,
+      length: ffi::CSSPixelLength::default(),
+      percentage: ffi::Percentage::default(),
+    }
+  }
+}
+
+impl From<taffy::LengthPercentage> for ffi::LengthPercentage {
+  fn from(value: taffy::LengthPercentage) -> Self {
+    match value {
+      taffy::LengthPercentage::Length(length) => Self::length(length),
+      taffy::LengthPercentage::Percent(percent) => Self::percentage(percent),
+    }
+  }
+}
+
+impl From<ffi::LengthPercentage> for taffy::LengthPercentage {
+  fn from(value: ffi::LengthPercentage) -> Self {
+    match value.tag {
+      ffi::LengthPercentageTag::Length => taffy::LengthPercentage::Length(value.length.value),
+      ffi::LengthPercentageTag::Percentage => {
+        taffy::LengthPercentage::Percent(value.percentage.percent)
+      }
+      _ => unreachable!(),
+    }
+  }
+}
+
+impl From<taffy::LengthPercentageAuto> for ffi::LengthPercentageAuto {
+  fn from(value: taffy::LengthPercentageAuto) -> Self {
+    match value {
+      taffy::LengthPercentageAuto::Length(length) => Self::length(length),
+      taffy::LengthPercentageAuto::Percent(percent) => Self::percentage(percent),
+      taffy::LengthPercentageAuto::Auto => Self::auto(),
+    }
+  }
+}
+
+impl From<ffi::LengthPercentageAuto> for taffy::LengthPercentageAuto {
+  fn from(value: ffi::LengthPercentageAuto) -> Self {
+    match value.tag {
+      ffi::LengthPercentageAutoTag::Length => {
+        taffy::LengthPercentageAuto::Length(value.length.value)
+      }
+      ffi::LengthPercentageAutoTag::Percentage => {
+        taffy::LengthPercentageAuto::Percent(value.percentage.percent)
+      }
+      ffi::LengthPercentageAutoTag::Auto => taffy::LengthPercentageAuto::Auto,
+      _ => unreachable!(),
+    }
+  }
+}
+
+impl From<taffy::Dimension> for ffi::Dimension {
+  fn from(value: taffy::Dimension) -> Self {
+    match value {
+      taffy::Dimension::Length(length) => Self::length(length),
+      taffy::Dimension::Percent(percent) => Self::percentage(percent),
+      taffy::Dimension::Auto => Self::auto(),
+    }
+  }
+}
+
+impl From<ffi::Dimension> for taffy::Dimension {
+  fn from(value: ffi::Dimension) -> Self {
+    match value.tag {
+      ffi::DimensionTag::Length => taffy::Dimension::Length(value.length.value),
+      ffi::DimensionTag::Percentage => taffy::Dimension::Percent(value.percentage.percent),
+      ffi::DimensionTag::Auto => taffy::Dimension::Auto,
+      _ => {
+        println!("Invalid dimension tag: {:?}", value.tag);
+        unreachable!()
+      }
+    }
+  }
+}
+
+impl ffi::DimensionRange {
+  pub fn new(min: taffy::Dimension, max: taffy::Dimension) -> Self {
+    Self {
+      min: min.into(),
+      max: max.into(),
+    }
+  }
+}
+
+macro_rules! impl_rect_casting {
+  ($name:ident) => {
+    paste! {
+      impl From<taffy::Rect<taffy::$name>> for ffi::[<$name Rect>] {
+        fn from(rect: taffy::Rect<taffy::$name>) -> Self {
+          Self {
+            top: rect.top.into(),
+            right: rect.right.into(),
+            bottom: rect.bottom.into(),
+            left: rect.left.into(),
+          }
+        }
+      }
+      impl From<ffi::[<$name Rect>]> for taffy::Rect<taffy::$name> {
+        fn from(rect: ffi::[<$name Rect>]) -> Self {
+          Self {
+            top: rect.top.into(),
+            right: rect.right.into(),
+            bottom: rect.bottom.into(),
+            left: rect.left.into(),
+          }
+        }
+      }
+    }
+  };
+}
+
+impl_rect_casting!(LengthPercentage);
+impl_rect_casting!(LengthPercentageAuto);
+
+macro_rules! impl_align_items_like_from_taffy {
+  ($name:ident) => {
+    impl_type_casting!(ffi::$name, taffy::AlignItems, {
+      Start, End, FlexStart, FlexEnd, Center, Baseline, Stretch
+    }, Stretch);
+  };
+}
+
+macro_rules! impl_justify_items_like_from_taffy {
+  ($name:ident) => {
+    impl_type_casting!(ffi::$name, taffy::JustifyItems, {
+      Start, End, FlexStart, FlexEnd, Center, Baseline, Stretch
+    }, Stretch);
+  };
+}
+
+macro_rules! impl_align_or_justify_content_from_taffy {
+  ($name:ident) => {
+    impl_type_casting!(ffi::$name, taffy::AlignContent, {
+      Start, End, FlexStart, FlexEnd, Center, Stretch, SpaceBetween, SpaceEvenly, SpaceAround
+    }, Stretch);
+  };
+}
+
+impl_align_items_like_from_taffy!(AlignItems);
+impl_align_items_like_from_taffy!(AlignSelf);
+impl_align_or_justify_content_from_taffy!(AlignContent);
+impl_justify_items_like_from_taffy!(JustifyItems);
+impl_justify_items_like_from_taffy!(JustifySelf);
+impl_align_or_justify_content_from_taffy!(JustifyContent);
+
+impl_default_for!(AlignItems, Stretch);
+impl_default_for!(AlignSelf, Stretch);
+impl_default_for!(AlignContent, Stretch);
+impl_default_for!(JustifyItems, Stretch);
+impl_default_for!(JustifySelf, Stretch);
+impl_default_for!(JustifyContent, Stretch);
+
+impl From<taffy::Size<taffy::LengthPercentage>> for ffi::LengthPercentageXY {
+  fn from(value: taffy::Size<taffy::LengthPercentage>) -> Self {
+    Self {
+      x: value.width.into(),
+      y: value.height.into(),
+    }
+  }
+}
+
+impl From<ffi::LengthPercentageXY> for taffy::Size<taffy::LengthPercentage> {
+  fn from(value: ffi::LengthPercentageXY) -> Self {
+    Self {
+      width: value.x.into(),
+      height: value.y.into(),
+    }
+  }
+}
+
+impl From<taffy::Point<taffy::LengthPercentage>> for ffi::LengthPercentageXY {
+  fn from(value: taffy::Point<taffy::LengthPercentage>) -> Self {
+    Self {
+      x: value.x.into(),
+      y: value.y.into(),
+    }
+  }
+}
+
+impl From<ffi::LengthPercentageXY> for taffy::Point<taffy::LengthPercentage> {
+  fn from(value: ffi::LengthPercentageXY) -> Self {
+    Self {
+      x: value.x.into(),
+      y: value.y.into(),
+    }
+  }
+}
+
+impl_type_casting_simple!(FlexDirection, { Row, Column, RowReverse, ColumnReverse }, Row);
+impl_type_casting_simple!(FlexWrap, { NoWrap, Wrap, WrapReverse}, NoWrap);
+
+impl From<taffy::Style> for ffi::Style {
+  fn from(style: taffy::Style) -> Self {
+    ffi::Style {
+      display: style.display.into(),
+      box_sizing: style.box_sizing.into(),
+      overflow: style.overflow.into(),
+      scrollbar_width: style.scrollbar_width,
+      position: style.position.into(),
+      width: style.size.width.into(),
+      height: style.size.height.into(),
+      width_range: ffi::DimensionRange::new(style.min_size.width, style.max_size.width),
+      height_range: ffi::DimensionRange::new(style.min_size.height, style.max_size.height),
+      margin: style.margin.into(),
+      padding: style.padding.into(),
+      border: style.border.into(),
+      align_items: style
+        .align_items
+        .unwrap_or(taffy::AlignItems::Stretch)
+        .into(),
+      align_self: style.align_self.unwrap_or(taffy::AlignSelf::Stretch).into(),
+      align_content: style
+        .align_content
+        .unwrap_or(taffy::AlignContent::Stretch)
+        .into(),
+      justify_items: style
+        .justify_items
+        .unwrap_or(taffy::JustifyItems::Stretch)
+        .into(),
+      justify_self: style
+        .justify_self
+        .unwrap_or(taffy::JustifySelf::Stretch)
+        .into(),
+      justify_content: style
+        .justify_content
+        .unwrap_or(taffy::JustifyContent::Stretch)
+        .into(),
+      gap: style.gap.into(),
+      flex_direction: style.flex_direction.into(),
+      flex_wrap: style.flex_wrap.into(),
+      flex_basis: style.flex_basis.into(),
+      flex_grow: style.flex_grow,
+      flex_shrink: style.flex_shrink,
+    }
+  }
+}
+
+impl From<ffi::Style> for taffy::Style {
+  fn from(value: ffi::Style) -> Self {
+    taffy::Style {
+      display: value.display.into(),
+      box_sizing: value.box_sizing.into(),
+      overflow: value.overflow.into(),
+      scrollbar_width: value.scrollbar_width,
+      position: value.position.into(),
+      size: taffy::Size {
+        width: value.width.into(),
+        height: value.height.into(),
+      },
+      min_size: taffy::Size {
+        width: value.width_range.min.into(),
+        height: value.height_range.min.into(),
+      },
+      max_size: taffy::Size {
+        width: value.width_range.max.into(),
+        height: value.height_range.max.into(),
+      },
+      margin: value.margin.into(),
+      padding: value.padding.into(),
+      border: value.border.into(),
+      align_items: Some(value.align_items.into()),
+      align_self: Some(value.align_self.into()),
+      align_content: Some(value.align_content.into()),
+      justify_items: Some(value.justify_items.into()),
+      justify_self: Some(value.justify_self.into()),
+      justify_content: Some(value.justify_content.into()),
+      gap: value.gap.into(),
+      flex_direction: value.flex_direction.into(),
+      flex_wrap: value.flex_wrap.into(),
+      flex_basis: value.flex_basis.into(),
+      flex_grow: value.flex_grow,
+      flex_shrink: value.flex_shrink,
+      ..Default::default()
+    }
+  }
+}
+
+impl ffi::LayoutOutput {
+  pub fn new(tree: &TaffyTree, node: taffy::NodeId) -> Self {
+    let taffy = tree.handle.borrow();
+    let layout = taffy.layout(node).expect("Failed to get layout");
+    layout.clone().into()
+  }
+}
+
+impl From<taffy::Layout> for ffi::LayoutOutput {
+  fn from(layout: taffy::Layout) -> Self {
+    Self {
+      width: layout.size.width,
+      height: layout.size.height,
+      x: layout.location.x,
+      y: layout.location.y,
+      border: layout.border.into(),
+      padding: layout.padding.into(),
+    }
+  }
+}
+
+fn create_allocator() -> Box<TaffyTree> {
+  Box::new(TaffyTree::new())
+}
+
+fn create_node(tree: &TaffyTree) -> Box<TaffyNode> {
+  Box::new(TaffyNode::new(tree))
+}
+
+fn add_child(parent: &mut TaffyNode, child: &TaffyNode) {
   parent.add_child(child);
 }
 
-#[no_mangle]
-pub extern "C" fn taffy_node_remove_child(parent: *mut TaffyNode, child: *const TaffyNode) {
-  let parent = unsafe { &mut *parent };
-  let child = unsafe { &*child };
+fn remove_child(parent: &mut TaffyNode, child: &TaffyNode) {
   parent.remove_child(child);
 }
 
-#[no_mangle]
-pub extern "C" fn taffy_node_replace_child_at_index(
-  parent: *mut TaffyNode,
-  index: usize,
-  child: *const TaffyNode,
-) {
-  let parent = unsafe { &mut *parent };
-  let child = unsafe { &*child };
-  parent.replace_child_at_index(index, child);
-}
-
-#[no_mangle]
-pub extern "C" fn taffy_node_remove_child_at_index(parent: *mut TaffyNode, index: usize) {
-  let parent = unsafe { &mut *parent };
+fn remove_child_at_index(parent: &mut TaffyNode, index: usize) {
   parent.remove_child_at_index(index);
 }
 
-#[no_mangle]
-pub extern "C" fn taffy_node_get_style(node: *const TaffyNode) -> LayoutStyle {
-  let node = unsafe { &*node };
-  node.get_style()
+fn replace_child_at_index(parent: &mut TaffyNode, index: usize, child: &TaffyNode) {
+  parent.replace_child_at_index(index, child);
 }
 
-#[no_mangle]
-pub extern "C" fn taffy_node_set_style(node: *mut TaffyNode, style: LayoutStyle) {
-  let node = unsafe { &mut *node };
-  node.set_style(style);
-}
-
-#[no_mangle]
-pub extern "C" fn taffy_node_mark_dirty(node: *mut TaffyNode) {
-  let node = unsafe { &mut *node };
+fn mark_node_dirty(node: &mut TaffyNode) {
   node.mark_dirty();
 }
 
-#[no_mangle]
-pub extern "C" fn taffy_node_is_dirty(node: *const TaffyNode) -> bool {
-  let node = unsafe { &*node };
+fn is_node_dirty(node: &TaffyNode) -> bool {
   node.is_dirty()
 }
 
-#[no_mangle]
-pub extern "C" fn taffy_node_is_childless(node: *const TaffyNode) -> bool {
-  let node = unsafe { &*node };
+fn is_node_childless(node: &TaffyNode) -> bool {
   node.is_childless()
 }
 
-#[no_mangle]
-pub extern "C" fn taffy_node_get_child_count(node: *const TaffyNode) -> usize {
-  let node = unsafe { &*node };
+fn get_child_count(node: &TaffyNode) -> usize {
   node.child_count()
 }
 
-#[no_mangle]
-pub extern "C" fn taffy_node_compute_layout(node: *mut TaffyNode, width: f32, height: f32) {
-  let node = unsafe { &mut *node };
-  node.compute_layout(width, height);
+fn get_node_style(node: &TaffyNode) -> ffi::Style {
+  node
+    .tree
+    .handle
+    .borrow()
+    .style(node.node)
+    .expect("Failed to get style")
+    .clone()
+    .into()
 }
 
-#[no_mangle]
-pub extern "C" fn taffy_node_get_layout(node: *const TaffyNode) -> LayoutOutput {
-  let node = unsafe { &*node };
-  node.get_layout()
+fn set_node_style(node: &mut TaffyNode, style: ffi::Style) {
+  let _ = node
+    .tree
+    .handle
+    .borrow_mut()
+    .set_style(node.node, style.into());
+}
+
+fn get_layout_output(node: &TaffyNode) -> ffi::LayoutOutput {
+  ffi::LayoutOutput::new(&node.tree, node.node)
+}
+
+fn compute_layout(node: &mut TaffyNode, width: f32, height: f32) {
+  node.compute_layout(width, height);
 }
