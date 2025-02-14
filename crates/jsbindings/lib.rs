@@ -1,23 +1,24 @@
 #![allow(unused_variables)]
 #![allow(clippy::uninlined_format_args)]
 #![allow(deprecated)]
+#![feature(concat_idents)]
 
 extern crate ctor;
 extern crate jsar_jsbinding_macro;
 extern crate log;
 
+mod css;
 mod css_parser;
 mod glsl_transpiler;
 mod layout;
 mod typescript_transpiler;
+mod webgl;
 
+use cxx;
 use std::ffi::CString;
 use std::os::raw::c_char;
 use std::path::Path;
 use url::Url;
-
-use glsl_lang::ast;
-use glsl_lang::visitor::{HostMut, Visit, VisitorMut};
 
 pub(crate) fn release_cstring(s: *mut c_char) {
   unsafe {
@@ -185,201 +186,6 @@ extern "C" fn create_url_with_path(
   }
 }
 
-#[derive(PartialEq)]
-#[repr(i32)]
-enum ModuleExtensionIndex {
-  None = 0,
-  JavaScript,
-  TypeScript,
-  JSON,
-  Bin,
-  Data,
-  WebAssembly,
-  PNG,
-  JPEG,
-  GIF,
-  SVG,
-  MP3,
-  WAV,
-  OGG,
-}
-
-impl std::fmt::Debug for ModuleExtensionIndex {
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    match self {
-      ModuleExtensionIndex::None => write!(f, "None"),
-      ModuleExtensionIndex::JavaScript => write!(f, "JavaScript"),
-      ModuleExtensionIndex::TypeScript => write!(f, "TypeScript"),
-      ModuleExtensionIndex::JSON => write!(f, "JSON"),
-      ModuleExtensionIndex::Bin => write!(f, "Bin"),
-      ModuleExtensionIndex::Data => write!(f, "Data"),
-      ModuleExtensionIndex::WebAssembly => write!(f, "WebAssembly"),
-      ModuleExtensionIndex::PNG => write!(f, "PNG"),
-      ModuleExtensionIndex::JPEG => write!(f, "JPEG"),
-      ModuleExtensionIndex::GIF => write!(f, "GIF"),
-      ModuleExtensionIndex::SVG => write!(f, "SVG"),
-      ModuleExtensionIndex::MP3 => write!(f, "MP3"),
-      ModuleExtensionIndex::WAV => write!(f, "WAV"),
-      ModuleExtensionIndex::OGG => write!(f, "OGG"),
-    }
-  }
-}
-
-#[no_mangle]
-extern "C" fn parse_url_to_module_extension(url_str: *const c_char) -> ModuleExtensionIndex {
-  let url_string: &str = unsafe { std::ffi::CStr::from_ptr(url_str) }
-    .to_str()
-    .expect("Failed to convert C string to Rust string");
-
-  let url = Url::parse(url_string).unwrap();
-
-  // Check if the URL path ends with a file extension like .html, .css, etc.
-  if let Some(file_extension) = url.path().rsplit('.').next() {
-    match file_extension {
-      "js" | "mjs" => ModuleExtensionIndex::JavaScript,
-      "ts" => ModuleExtensionIndex::TypeScript,
-      "json" => ModuleExtensionIndex::JSON,
-      "bin" => ModuleExtensionIndex::Bin,
-      "data" => ModuleExtensionIndex::Data,
-      "wasm" => ModuleExtensionIndex::WebAssembly,
-      "png" => ModuleExtensionIndex::PNG,
-      "jpg" | "jpeg" => ModuleExtensionIndex::JPEG,
-      "gif" => ModuleExtensionIndex::GIF,
-      "svg" => ModuleExtensionIndex::SVG,
-      "mp3" => ModuleExtensionIndex::MP3,
-      "wav" => ModuleExtensionIndex::WAV,
-      "ogg" => ModuleExtensionIndex::OGG,
-      _ => ModuleExtensionIndex::None,
-    }
-  } else {
-    ModuleExtensionIndex::None
-  }
-}
-
-struct MyGLSLPatcher {}
-
-impl MyGLSLPatcher {
-  fn create_model_view_matrix_expr(&self) -> ast::Expr {
-    let new_lhs: ast::Expr =
-      ast::ExprData::Variable(ast::IdentifierData(ast::SmolStr::new_inline("viewMatrix")).into())
-        .into();
-    let new_rhs: ast::Expr =
-      ast::ExprData::Variable(ast::IdentifierData(ast::SmolStr::new_inline("modelMatrix")).into())
-        .into();
-    let new_binary_expr: ast::Expr = ast::ExprData::Binary(
-      ast::BinaryOpData::Mult.into(),
-      Box::new(new_lhs),
-      Box::new(new_rhs),
-    )
-    .into();
-    new_binary_expr
-  }
-
-  fn handle_expr(&self, expr: &mut ast::Expr) -> bool {
-    match &mut expr.content {
-      ast::ExprData::Variable(identifier) => {
-        if identifier.content.0 == "modelViewMatrix" {
-          *expr = self.create_model_view_matrix_expr();
-          true
-        } else {
-          false
-        }
-      }
-      ast::ExprData::Unary(_, operand) => self.handle_expr(operand),
-      ast::ExprData::Binary(_, lhs, rhs) => {
-        let r1 = self.handle_expr(lhs);
-        let r2 = self.handle_expr(rhs);
-        r1 || r2
-      }
-      ast::ExprData::Assignment(_, _, rhs) => self.handle_expr(rhs),
-      ast::ExprData::FunCall(_, args) => {
-        let mut changed = false;
-        for arg in args {
-          changed |= self.handle_expr(arg);
-        }
-        changed
-      }
-      _ => false,
-    }
-  }
-}
-
-impl VisitorMut for MyGLSLPatcher {
-  fn visit_expr(&mut self, expr: &mut ast::Expr) -> Visit {
-    if self.handle_expr(expr) {
-      Visit::Parent
-    } else {
-      Visit::Children
-    }
-  }
-}
-
-fn patch_glsl_source_from_str(s: &str) -> String {
-  use glsl_lang::{
-    ast::TranslationUnit, lexer::v2_full::fs::PreprocessorExt, parse::IntoParseBuilderExt,
-  };
-
-  let mut processor = glsl_lang_pp::processor::fs::StdProcessor::new();
-  let mut tu: TranslationUnit = processor
-    .open_source(s, Path::new("."))
-    .builder()
-    .parse()
-    .map(|(mut tu, _, iter)| {
-      iter.into_directives().inject(&mut tu);
-      tu
-    })
-    .expect(format!("Failed to parse GLSL source: \n{}\n", s).as_str());
-
-  let mut my_glsl_patcher = MyGLSLPatcher {};
-  tu.visit_mut(&mut my_glsl_patcher);
-
-  {
-    /*
-     * This reorders the preprocessor directives in the GLSL source code.
-     *
-     * 1. Move the #version directive to the top.
-     * 2. Move the #extension directives to the top after the #version directive if exists.
-     */
-    let mut versions_list = Vec::new();
-    let mut extensions_list = Vec::new();
-    tu.0.retain(|decl| match &decl.content {
-      ast::ExternalDeclarationData::Preprocessor(processor) => match processor.content {
-        ast::PreprocessorData::Version(_) => {
-          versions_list.push(decl.clone());
-          false
-        }
-        ast::PreprocessorData::Extension(_) => {
-          extensions_list.push(decl.clone());
-          false
-        }
-        _ => true,
-      },
-      _ => true,
-    });
-    tu.0.splice(0..0, extensions_list);
-    tu.0.splice(0..0, versions_list);
-  }
-
-  let mut s = String::new();
-  glsl_transpiler::glsl::show_translation_unit(
-    &mut s,
-    &tu,
-    glsl_transpiler::glsl::FormattingState::default(),
-  )
-  .expect("Failed to show GLSL");
-  s
-}
-
-#[no_mangle]
-extern "C" fn patch_glsl_source(source_str: *const c_char) -> *mut c_char {
-  let source_string: &str = unsafe { std::ffi::CStr::from_ptr(source_str) }
-    .to_str()
-    .expect("Failed to read GLSL source string");
-  let patched_source_str = CString::new(patch_glsl_source_from_str(source_string))
-    .expect("Failed to create GLSL source CString");
-  patched_source_str.into_raw()
-}
-
 #[repr(C)]
 pub struct TranspiledTypeScriptOutput {
   code: *mut c_char,
@@ -420,6 +226,93 @@ extern "C" fn release_transpiled_typescript_output(output: TranspiledTypeScriptO
     if !output.error_message.is_null() {
       let _ = CString::from_raw(output.error_message);
     }
+  }
+}
+
+#[cxx::bridge(namespace = "holocron")]
+mod ffi {
+  enum ModuleExtensionIndex {
+    #[cxx_name = "kNone"]
+    None = 0,
+    #[cxx_name = "kJavaScript"]
+    JavaScript,
+    #[cxx_name = "kTypeScript"]
+    TypeScript,
+    #[cxx_name = "kJSON"]
+    JSON,
+    #[cxx_name = "kBin"]
+    Bin,
+    #[cxx_name = "kData"]
+    Data,
+    #[cxx_name = "kWebAssembly"]
+    WebAssembly,
+    #[cxx_name = "kPNG"]
+    PNG,
+    #[cxx_name = "kJPEG"]
+    JPEG,
+    #[cxx_name = "kGIF"]
+    GIF,
+    #[cxx_name = "kSVG"]
+    SVG,
+    #[cxx_name = "kMP3"]
+    MP3,
+    #[cxx_name = "kWAV"]
+    WAV,
+    #[cxx_name = "kOGG"]
+    OGG,
+  }
+
+  extern "Rust" {
+    #[cxx_name = "parseURLToModuleExtension"]
+    fn parse_url_to_module_extension(url: &str) -> ModuleExtensionIndex;
+  }
+}
+
+impl std::fmt::Debug for ffi::ModuleExtensionIndex {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match *self {
+      ffi::ModuleExtensionIndex::None => write!(f, "None"),
+      ffi::ModuleExtensionIndex::JavaScript => write!(f, "JavaScript"),
+      ffi::ModuleExtensionIndex::TypeScript => write!(f, "TypeScript"),
+      ffi::ModuleExtensionIndex::JSON => write!(f, "JSON"),
+      ffi::ModuleExtensionIndex::Bin => write!(f, "Bin"),
+      ffi::ModuleExtensionIndex::Data => write!(f, "Data"),
+      ffi::ModuleExtensionIndex::WebAssembly => write!(f, "WebAssembly"),
+      ffi::ModuleExtensionIndex::PNG => write!(f, "PNG"),
+      ffi::ModuleExtensionIndex::JPEG => write!(f, "JPEG"),
+      ffi::ModuleExtensionIndex::GIF => write!(f, "GIF"),
+      ffi::ModuleExtensionIndex::SVG => write!(f, "SVG"),
+      ffi::ModuleExtensionIndex::MP3 => write!(f, "MP3"),
+      ffi::ModuleExtensionIndex::WAV => write!(f, "WAV"),
+      ffi::ModuleExtensionIndex::OGG => write!(f, "OGG"),
+      _ => write!(f, "None"),
+    }
+  }
+}
+
+fn parse_url_to_module_extension(url_str: &str) -> ffi::ModuleExtensionIndex {
+  let url = Url::parse(url_str).unwrap();
+
+  // Check if the URL path ends with a file extension like .html, .css, etc.
+  if let Some(file_extension) = url.path().rsplit('.').next() {
+    match file_extension {
+      "js" | "mjs" => ffi::ModuleExtensionIndex::JavaScript,
+      "ts" => ffi::ModuleExtensionIndex::TypeScript,
+      "json" => ffi::ModuleExtensionIndex::JSON,
+      "bin" => ffi::ModuleExtensionIndex::Bin,
+      "data" => ffi::ModuleExtensionIndex::Data,
+      "wasm" => ffi::ModuleExtensionIndex::WebAssembly,
+      "png" => ffi::ModuleExtensionIndex::PNG,
+      "jpg" | "jpeg" => ffi::ModuleExtensionIndex::JPEG,
+      "gif" => ffi::ModuleExtensionIndex::GIF,
+      "svg" => ffi::ModuleExtensionIndex::SVG,
+      "mp3" => ffi::ModuleExtensionIndex::MP3,
+      "wav" => ffi::ModuleExtensionIndex::WAV,
+      "ogg" => ffi::ModuleExtensionIndex::OGG,
+      _ => ffi::ModuleExtensionIndex::None,
+    }
+  } else {
+    ffi::ModuleExtensionIndex::None
   }
 }
 
@@ -477,133 +370,46 @@ mod tests {
 
   #[test]
   fn test_parse_url_to_module_extension() {
-    let url_str = CString::new("https://example.com/index.js").unwrap();
-    let extension = parse_url_to_module_extension(url_str.as_ptr());
-    assert_eq!(extension, ModuleExtensionIndex::JavaScript);
+    let extension = parse_url_to_module_extension("https://example.com/index.js");
+    assert_eq!(extension, ffi::ModuleExtensionIndex::JavaScript);
 
-    let url_str = CString::new("https://example.com/index.ts").unwrap();
-    let extension = parse_url_to_module_extension(url_str.as_ptr());
-    assert_eq!(extension, ModuleExtensionIndex::TypeScript);
+    let extension = parse_url_to_module_extension("https://example.com/index.ts");
+    assert_eq!(extension, ffi::ModuleExtensionIndex::TypeScript);
 
-    let url_str = CString::new("https://example.com/data.json").unwrap();
-    let extension = parse_url_to_module_extension(url_str.as_ptr());
-    assert_eq!(extension, ModuleExtensionIndex::JSON);
+    let extension = parse_url_to_module_extension("https://example.com/data.json");
+    assert_eq!(extension, ffi::ModuleExtensionIndex::JSON);
 
-    let url_str = CString::new("https://example.com/file.bin").unwrap();
-    let extension = parse_url_to_module_extension(url_str.as_ptr());
-    assert_eq!(extension, ModuleExtensionIndex::Bin);
+    let extension = parse_url_to_module_extension("https://example.com/file.bin");
+    assert_eq!(extension, ffi::ModuleExtensionIndex::Bin);
 
-    let url_str = CString::new("https://example.com/file.data").unwrap();
-    let extension = parse_url_to_module_extension(url_str.as_ptr());
-    assert_eq!(extension, ModuleExtensionIndex::Data);
+    let extension = parse_url_to_module_extension("https://example.com/file.data");
+    assert_eq!(extension, ffi::ModuleExtensionIndex::Data);
 
-    let url_str = CString::new("https://example.com/file.wasm").unwrap();
-    let extension = parse_url_to_module_extension(url_str.as_ptr());
-    assert_eq!(extension, ModuleExtensionIndex::WebAssembly);
+    let extension = parse_url_to_module_extension("https://example.com/file.wasm");
+    assert_eq!(extension, ffi::ModuleExtensionIndex::WebAssembly);
 
-    let url_str = CString::new("https://example.com/image.png").unwrap();
-    let extension = parse_url_to_module_extension(url_str.as_ptr());
-    assert_eq!(extension, ModuleExtensionIndex::PNG);
+    let extension = parse_url_to_module_extension("https://example.com/image.png");
+    assert_eq!(extension, ffi::ModuleExtensionIndex::PNG);
 
-    let url_str = CString::new("https://example.com/image.jpg").unwrap();
-    let extension = parse_url_to_module_extension(url_str.as_ptr());
-    assert_eq!(extension, ModuleExtensionIndex::JPEG);
+    let extension = parse_url_to_module_extension("https://example.com/image.jpg");
+    assert_eq!(extension, ffi::ModuleExtensionIndex::JPEG);
 
-    let url_str = CString::new("https://example.com/image.gif").unwrap();
-    let extension = parse_url_to_module_extension(url_str.as_ptr());
-    assert_eq!(extension, ModuleExtensionIndex::GIF);
+    let extension = parse_url_to_module_extension("https://example.com/image.gif");
+    assert_eq!(extension, ffi::ModuleExtensionIndex::GIF);
 
-    let url_str = CString::new("https://example.com/image.svg").unwrap();
-    let extension = parse_url_to_module_extension(url_str.as_ptr());
-    assert_eq!(extension, ModuleExtensionIndex::SVG);
+    let extension = parse_url_to_module_extension("https://example.com/image.svg");
+    assert_eq!(extension, ffi::ModuleExtensionIndex::SVG);
 
-    let url_str = CString::new("https://example.com/audio.mp3").unwrap();
-    let extension = parse_url_to_module_extension(url_str.as_ptr());
-    assert_eq!(extension, ModuleExtensionIndex::MP3);
+    let extension = parse_url_to_module_extension("https://example.com/audio.mp3");
+    assert_eq!(extension, ffi::ModuleExtensionIndex::MP3);
 
-    let url_str = CString::new("https://example.com/audio.wav").unwrap();
-    let extension = parse_url_to_module_extension(url_str.as_ptr());
-    assert_eq!(extension, ModuleExtensionIndex::WAV);
+    let extension = parse_url_to_module_extension("https://example.com/audio.wav");
+    assert_eq!(extension, ffi::ModuleExtensionIndex::WAV);
 
-    let url_str = CString::new("https://example.com/audio.ogg").unwrap();
-    let extension = parse_url_to_module_extension(url_str.as_ptr());
-    assert_eq!(extension, ModuleExtensionIndex::OGG);
+    let extension = parse_url_to_module_extension("https://example.com/audio.ogg");
+    assert_eq!(extension, ffi::ModuleExtensionIndex::OGG);
 
-    let url_str = CString::new("https://example.com/unknown").unwrap();
-    let extension = parse_url_to_module_extension(url_str.as_ptr());
-    assert_eq!(extension, ModuleExtensionIndex::None);
-  }
-
-  #[test]
-  fn test_patch_glsl_source() {
-    let source_str = r#"
-#extension GL_OVR_multiview2 : enable
-layout(num_views = 2) in;
-
-#version 300 es
-precision highp float;
-highp float a = 1.0;
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aNormal;
-layout (location = 0) out highp vec4 glFragColor;
-#extension GL_OES_standard_derivatives : enable
-
-void main() { 
-  gl_FragColor = vec4(1, 1, 1, 1); 
-}"#;
-    let patched_source_str = patch_glsl_source_from_str(source_str);
-    assert_eq!(
-      patched_source_str,
-      r#"#version 300 es
-#extension GL_OVR_multiview2 : enable
-#extension GL_OES_standard_derivatives : enable
-layout(num_views = 2) in;
-precision highp float;
-highp float a = 1.;
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec3 aNormal;
-layout(location = 0) out highp vec4 glFragColor;
-void main() {
-    gl_FragColor = vec4(1, 1, 1, 1);
-}
-"#
-    )
-  }
-
-  #[test]
-  fn test_patch_glsl_source_threejs() {
-    let source_str = r#"
-#version 300 es
-#extension GL_OVR_multiview2 : enable
-layout(num_views = 2) in;
-#define VIEW_ID gl_ViewID_OVR
-
-uniform mat4 modelMatrix;
-uniform mat4 viewMatrices[2];
-uniform mat4 modelViewMatrices[2];
-
-#define viewMatrix viewMatrices[VIEW_ID]
-#define modelViewMatrix modelMatrix * viewMatrix
-
-in vec3 position;
-void main() {
-  gl_Position = modelViewMatrix * vec4(position, 1.0);
-}
-  "#;
-    let patched_source_str = patch_glsl_source_from_str(source_str);
-    assert_eq!(
-      patched_source_str,
-      r#"#version 300 es
-#extension GL_OVR_multiview2 : enable
-layout(num_views = 2) in;
-uniform mat4 modelMatrix;
-uniform mat4 viewMatrices[2];
-uniform mat4 modelViewMatrices[2];
-in vec3 position;
-void main() {
-    gl_Position = modelMatrix * viewMatrices[gl_ViewID_OVR] * vec4(position, 1.);
-}
-"#
-    )
+    let extension = parse_url_to_module_extension("https://example.com/unknown");
+    assert_eq!(extension, ffi::ModuleExtensionIndex::None);
   }
 }

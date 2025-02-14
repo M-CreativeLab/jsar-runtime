@@ -13,8 +13,8 @@ namespace client_cssom::types
     Color(uint32_t r, uint32_t g, uint32_t b, uint32_t a = 255) : color_(r, g, b, a) {}
     Color(const std::string &colorStr) : colorStr_(colorStr)
     {
-      auto rgba = crates::css::parseColor(colorStr);
-      color_ = glm::u32vec4(rgba.r, rgba.g, rgba.b, rgba.a);
+      auto rgba = crates::css2::parsing::parseColor(colorStr);
+      color_ = glm::u32vec4(rgba.r(), rgba.g(), rgba.b(), rgba.a());
     }
 
   public:

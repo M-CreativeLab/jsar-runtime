@@ -609,7 +609,7 @@ impl Default for FormattingState<'static> {
   }
 }
 
-use crate::ast;
+use glsl_lang::ast;
 
 /// Precedence information for transpiling parentheses properly
 trait HasPrecedence {

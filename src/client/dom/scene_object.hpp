@@ -42,7 +42,7 @@ namespace dom
     /**
      * Get the layout node reference of the element.
      */
-    [[nodiscard]] std::shared_ptr<crates::layout::Node> layoutNode();
+    [[nodiscard]] std::shared_ptr<crates::layout2::Node> layoutNode();
 
   protected:
     template <typename T>
@@ -118,8 +118,8 @@ namespace dom
   protected:
     std::weak_ptr<builtin_scene::Scene> scene_;
     std::optional<builtin_scene::ecs::EntityId> entity_ = std::nullopt;
-    std::shared_ptr<crates::layout::Allocator> layoutAllocator_ = nullptr;
-    std::shared_ptr<crates::layout::Node> layoutNode_ = nullptr;
+    std::shared_ptr<crates::layout2::Allocator> layoutAllocator_ = nullptr;
+    std::shared_ptr<crates::layout2::Node> layoutNode_ = nullptr;
     std::optional<client_cssom::Layout> computedLayout_ = std::nullopt;
     client_cssom::CSSStyleDeclaration defaultStyle_;
     client_cssom::CSSStyleDeclaration adoptedStyle_;

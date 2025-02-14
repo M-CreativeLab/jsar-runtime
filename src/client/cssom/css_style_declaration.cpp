@@ -5,8 +5,8 @@
 namespace client_cssom
 {
   using namespace std;
-  using namespace crates::layout;
-  using namespace crates::layout::style;
+  using namespace crates::layout2;
+  using namespace crates::layout2::styles;
 
   CSSStyleDeclaration::operator LayoutStyle() const
   {

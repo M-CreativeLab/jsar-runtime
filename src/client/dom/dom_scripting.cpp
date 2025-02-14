@@ -917,7 +917,10 @@ namespace dom
     else
     {
       std::cerr << "Failed to compile script" << std::endl;
-      return false;
+      std::cerr << "  URL: " << url << std::endl;
+      std::cerr << "  Source: " << std::endl;
+      std::cerr << scriptSourceString << std::endl;
+      throw std::runtime_error("Failed to compile script(" + url + ")");
     }
   }
 

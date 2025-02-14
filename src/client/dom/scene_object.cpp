@@ -8,8 +8,9 @@ namespace dom
 {
   using namespace std;
   using namespace builtin_scene;
-  using namespace crates::layout::style;
-  using LayoutNode = crates::layout::Node;
+  using namespace crates::layout2::styles;
+  using LayoutNode = crates::layout2::Node;
+  using LayoutStyle = crates::layout2::LayoutStyle;
 
   SceneObject::SceneObject(shared_ptr<HTMLDocument> htmlDocument, string name)
       : scene_(htmlDocument->scene),
@@ -35,7 +36,7 @@ namespace dom
   {
   }
 
-  std::shared_ptr<crates::layout::Node> SceneObject::layoutNode()
+  std::shared_ptr<LayoutNode> SceneObject::layoutNode()
   {
     return layoutNode_;
   }
@@ -143,6 +144,17 @@ namespace dom
           transform->setTranslation({client_cssom::pixelToMeter(left),
                                      client_cssom::pixelToMeter(top),
                                      layout.depth()});
+
+          // Check if the object has a transform CSS property.
+          auto transformStyle = adoptedStyle_.getPropertyValue("transform");
+          if (transformStyle != "")
+          {
+            auto transform = crates::css2::parsing::parseTransform(transformStyle);
+            for (auto &func : transform.operations())
+            {
+              std::cout << "Transform operation: " << func << std::endl;
+            }
+          }
         }
       }
 
@@ -233,7 +245,7 @@ namespace dom
     if (!adoptedStyle_.hasProperty("display"))
       return false;
 
-    using namespace crates::layout::style;
+    using namespace crates::layout2::styles;
     auto display = adoptedStyle_.getPropertyValueAs<Display>("display");
     return display == Display::None();
   }

@@ -115,11 +115,11 @@ namespace builtin_scene
     /**
      * @returns A constant reference to the Layout object in the last re-layout.
      */
-    inline const std::optional<crates::layout::Layout> &layout() const { return lastLayout_; }
+    inline const std::optional<crates::layout2::Layout> &layout() const { return lastLayout_; }
     /**
      * Set the layout object in the last re-layout.
      */
-    inline void setLayout(const crates::layout::Layout &layout) { lastLayout_ = layout; }
+    inline void setLayout(const crates::layout2::Layout &layout) { lastLayout_ = layout; }
     /**
      * This function provides access to the width and height of the SkCanvas object.
      *
@@ -162,7 +162,7 @@ namespace builtin_scene
     SkCanvas *canvas_;
     std::string name_;
     client_cssom::CSSStyleDeclaration style_;
-    std::optional<crates::layout::Layout> lastLayout_;
+    std::optional<crates::layout2::Layout> lastLayout_;
     WebContentStyle contentStyle_;
     SkRRect roundedRect_;
     bool isDirty_ = true;

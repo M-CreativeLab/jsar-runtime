@@ -29,21 +29,21 @@ namespace client_cssom
                               std::is_same_v<T, types::LineWidth> ||
                               std::is_same_v<T, types::NumberLengthPercentage> ||
                               std::is_same_v<T, types::TextAlign> ||
-                              std::is_same_v<T, crates::layout::style::BoxSizing> ||
-                              std::is_same_v<T, crates::layout::style::Display> ||
-                              std::is_same_v<T, crates::layout::style::Dimension> ||
-                              std::is_same_v<T, crates::layout::style::LengthPercentageAuto> ||
-                              std::is_same_v<T, crates::layout::style::LengthPercentage> ||
-                              std::is_same_v<T, crates::layout::style::Overflow> ||
-                              std::is_same_v<T, crates::layout::style::Position> ||
-                              std::is_same_v<T, crates::layout::style::AlignItems> ||
-                              std::is_same_v<T, crates::layout::style::AlignSelf> ||
-                              std::is_same_v<T, crates::layout::style::AlignContent> ||
-                              std::is_same_v<T, crates::layout::style::JustifyItems> ||
-                              std::is_same_v<T, crates::layout::style::JustifySelf> ||
-                              std::is_same_v<T, crates::layout::style::JustifyContent> ||
-                              std::is_same_v<T, crates::layout::style::FlexDirection> ||
-                              std::is_same_v<T, crates::layout::style::FlexWrap>;
+                              std::is_same_v<T, crates::layout2::styles::BoxSizing> ||
+                              std::is_same_v<T, crates::layout2::styles::Display> ||
+                              std::is_same_v<T, crates::layout2::styles::Dimension> ||
+                              std::is_same_v<T, crates::layout2::styles::LengthPercentageAuto> ||
+                              std::is_same_v<T, crates::layout2::styles::LengthPercentage> ||
+                              std::is_same_v<T, crates::layout2::styles::Overflow> ||
+                              std::is_same_v<T, crates::layout2::styles::Position> ||
+                              std::is_same_v<T, crates::layout2::styles::AlignItems> ||
+                              std::is_same_v<T, crates::layout2::styles::AlignSelf> ||
+                              std::is_same_v<T, crates::layout2::styles::AlignContent> ||
+                              std::is_same_v<T, crates::layout2::styles::JustifyItems> ||
+                              std::is_same_v<T, crates::layout2::styles::JustifySelf> ||
+                              std::is_same_v<T, crates::layout2::styles::JustifyContent> ||
+                              std::is_same_v<T, crates::layout2::styles::FlexDirection> ||
+                              std::is_same_v<T, crates::layout2::styles::FlexWrap>;
 
   enum class CSSPropertyPriority
   {
@@ -64,25 +64,26 @@ namespace client_cssom
    */
   class CSSStyleDeclaration
   {
+    using PropertyDeclarationBlock = crates::css2::properties::PropertyDeclarationBlock;
+
   public:
     CSSStyleDeclaration()
-        : pdb_(std::make_shared<crates::css::CSSPropertyDeclarationBlock>()),
+        : pdb_(std::make_shared<PropertyDeclarationBlock>()),
           cachedCssText_(std::nullopt)
     {
     }
     CSSStyleDeclaration(const std::string &cssText)
-        : pdb_(crates::css::CSSPropertyDeclarationBlock::ParseStyleDeclaration(cssText)),
+        : pdb_(PropertyDeclarationBlock::ParseStyleDeclaration(cssText)),
           cachedCssText_(std::nullopt)
     {
     }
-    CSSStyleDeclaration(std::unique_ptr<crates::css::CSSPropertyDeclarationBlock> pdb)
+    CSSStyleDeclaration(std::unique_ptr<PropertyDeclarationBlock> pdb)
         : pdb_(std::move(pdb)),
           cachedCssText_(std::nullopt)
     {
     }
-    CSSStyleDeclaration(const CSSStyleDeclaration &other) :
-        pdb_(other.pdb_),
-        cachedCssText_(std::nullopt)
+    CSSStyleDeclaration(const CSSStyleDeclaration &other) : pdb_(other.pdb_),
+                                                            cachedCssText_(std::nullopt)
     {
     }
 
@@ -108,7 +109,7 @@ namespace client_cssom
     /**
      * Custom the conversion to `LayoutStyle`.
      */
-    operator crates::layout::style::LayoutStyle() const;
+    operator crates::layout2::LayoutStyle() const;
     bool operator==(const CSSStyleDeclaration &other) const { return equals(other); }
     bool operator!=(const CSSStyleDeclaration &other) const { return !equals(other); }
     /**
@@ -130,10 +131,10 @@ namespace client_cssom
     bool equals(const CSSStyleDeclaration &other) const;
     /**
      * Update the declaration block with another one.
-     * 
+     *
      * If the second argument `omitIfPresent` is set to `true`, it means that only these properties will be updated if they
      * are not existent in the declaration block.
-     * 
+     *
      * @param other The other CSSStyleDeclaration to update.
      * @param omitIfPresent Whether to omit the property if it is already present.
      * @returns Whether the declaration block is updated.
@@ -185,7 +186,7 @@ namespace client_cssom
                std::is_same_v<T, types::BorderStyleKeyword>
     T getPropertyValueAs(const std::string &propertyName) const
     {
-      using namespace crates::layout::style;
+      using namespace crates::layout2::styles;
 
       // float, int, etc.
       const auto &value = getPropertyValue(propertyName);
@@ -256,7 +257,7 @@ namespace client_cssom
     }
 
   private:
-    std::shared_ptr<crates::css::CSSPropertyDeclarationBlock> pdb_;
+    std::shared_ptr<PropertyDeclarationBlock> pdb_;
     mutable std::optional<std::string> cachedCssText_ = std::nullopt;
   };
 }

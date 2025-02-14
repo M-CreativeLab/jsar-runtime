@@ -7,12 +7,12 @@ app_units = "0.7"
 backtrace = "0.3"
 base64 = "0.21.7"
 bitflags = "2.5"
-byteorder = "1.5"
 cfg-if = "1.0.0"
 content-security-policy = { version = "0.5", features = ["serde"] }
 cookie = "0.12"
-crossbeam-channel = "0.5"
 cssparser = { version = "0.34", features = ["serde"] }
+cxx = { version = "1.0" }
+cxx-build = { version = "1.0" }
 data-url = "0.3.1"
 euclid = "0.22"
 fnv = "1.0"
@@ -21,8 +21,6 @@ gleam = "0.15"
 glsl-lang = { path = "../glsl-lang/lang", features = ["lexer-v2-full"] }
 glsl-lang-pp = { path = "../glsl-lang/lang-pp", features = ["full"] }
 headers = "0.3"
-html5ever = "0.27"
-http = "0.2"
 hyper = "0.14"
 hyper-rustls = { version = "0.24", default-features = false, features = [
   "acceptor",
@@ -32,19 +30,12 @@ hyper-rustls = { version = "0.24", default-features = false, features = [
   "tls12",
   "webpki-tokio",
 ] }
-imsz = "0.2"
-ipc-channel = "0.18"
-itertools = "0.12"
 jemallocator = "0.5.4"
 jemalloc-sys = "0.5.4"
 keyboard-types = "0.6"
 lazy_static = "1.4"
 libc = "0.2"
 log = "0.4"
-malloc_size_of = { git = "https://github.com/servo/stylo", branch = "2024-03-01", features = [
-  "servo",
-] }
-malloc_size_of_derive = "0.1"
 mime = "0.3.13"
 mime_guess = "2.0.3"
 num_cpus = "1.1.0"
@@ -53,33 +44,22 @@ parking_lot = "0.12"
 percent-encoding = "2.3"
 proc-macro2 = "1"
 quote = "1"
-rayon = "1"
-rand = "0.8"
-rand_core = "0.6"
-rand_isaac = "0.3"
-regex = "1.10"
-reqwest = { version = "=0.12.8" }
-rustls = { version = "0.21.10", features = ["dangerous_configuration"] }
-rustls-pemfile = "1.0.4"
-script_traits = { path = "crates/servo_shared/script" }
 serde = "1.0.198"
 serde_bytes = "0.11"
 serde_json = "1.0"
-servo_arc = { git = "https://github.com/servo/stylo", rev = "10767f4" }
-servo_atoms = { git = "https://github.com/servo/stylo", rev = "10767f4" }
-size_of_test = { git = "https://github.com/servo/stylo", rev = "10767f4" }
+servo_arc = { git = "https://github.com/servo/stylo", branch = "2024-12-04" }
+servo_atoms = { git = "https://github.com/servo/stylo", branch = "2024-12-04" }
 slab = "0.4.9"
 smallvec = "1.13"
-sparkle = "0.1.26"
 string_cache = "0.8.7"
-style = { git = "https://github.com/servo/stylo", rev = "10767f4", features = [
+style = { git = "https://github.com/servo/stylo", branch = "2024-12-04", features = [
   "servo",
 ] }
-style_config = { git = "https://github.com/servo/stylo", rev = "10767f4" }
-style_traits = { git = "https://github.com/servo/stylo", rev = "10767f4", features = [
+style_config = { git = "https://github.com/servo/stylo", branch = "2024-12-04" }
+style_traits = { git = "https://github.com/servo/stylo", branch = "2024-12-04", features = [
   "servo",
 ] }
-selectors = { git = "https://github.com/servo/stylo", rev = "10767f4" }
+selectors = { git = "https://github.com/servo/stylo", branch = "2024-12-04" }
 surfman = "0.9.2"
 syn = { version = "2", default-features = false, features = [
   "clone-impls",
@@ -88,20 +68,5 @@ syn = { version = "2", default-features = false, features = [
 ] }
 taffy = { version = "0.7.5" }
 time = "0.1.41"
-to_shmem = { git = "https://github.com/servo/stylo", rev = "10767f4" }
-tokio = "1"
-tokio-rustls = "0.24"
-tungstenite = "0.20"
-unicode-bidi = "0.3.15"
-unicode-script = "0.5"
 url = "2.5"
 uuid = { version = "1.8.0", features = ["v4"] }
-webpki = "0.22"
-webpki-roots = "0.25"
-webrender = { git = "https://github.com/servo/webrender", branch = "0.64", features = [
-  "capture",
-] }
-webrender_api = { git = "https://github.com/servo/webrender", branch = "0.64" }
-webrender_traits = { path = "crates/servo_shared/webrender" }
-winapi = "0.3"
-xi-unicode = "0.1.0"

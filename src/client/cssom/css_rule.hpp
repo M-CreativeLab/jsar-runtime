@@ -67,6 +67,6 @@ namespace client_cssom
     auto end() const { return std::vector<std::shared_ptr<CSSRule>>::end(); }
 
   private:
-    CSSRuleIndex insert(crates::css::CSSRuleInner& inner);
+    CSSRuleIndex insert(crates::css2::stylesheets::CssRule& inner);
   };
 }

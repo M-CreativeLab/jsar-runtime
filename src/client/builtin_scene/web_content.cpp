@@ -59,7 +59,7 @@ namespace builtin_scene
     {
       if (style_.hasProperty("font-family"))
       {
-        auto fonts = crates::css::parseFontFamily(style_.getPropertyValue("font-family"));
+        auto fonts = crates::css2::parsing::parseFontFamily(style_.getPropertyValue("font-family"));
         if (fonts.size() >= 1)
         {
           vector<SkString> skFonts;

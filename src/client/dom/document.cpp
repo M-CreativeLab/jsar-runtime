@@ -354,7 +354,7 @@ namespace dom
 
   HTMLDocument::HTMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
       : Document("text/html", DocumentType::kHTML, browsingContext, autoConnect),
-        layoutAllocator_(make_shared<crates::layout::Allocator>())
+        layoutAllocator_(make_shared<crates::layout2::Allocator>())
   {
     {
       // Configure the built-in scene for the HTML rendering.

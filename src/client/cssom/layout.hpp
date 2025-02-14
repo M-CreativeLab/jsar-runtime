@@ -6,9 +6,9 @@
 
 namespace client_cssom
 {
-  class Layout : public crates::layout::Layout
+  class Layout : public crates::layout2::Layout
   {
-    using crates::layout::Layout::Layout;
+    using crates::layout2::Layout::Layout;
 
   public:
     static Layout Merge(const std::optional<Layout> &parent, const Layout &child)
@@ -24,9 +24,9 @@ namespace client_cssom
     }
 
   public:
-    Layout() : crates::layout::Layout(), depth_(0.0f) {};
-    Layout(crates::layout::Layout &&layout, float depth = 0.0f)
-        : crates::layout::Layout(layout), depth_(depth)
+    Layout() : crates::layout2::Layout(), depth_(0.0f) {};
+    Layout(crates::layout2::Layout &&layout, float depth = 0.0f)
+        : crates::layout2::Layout(layout), depth_(depth)
     {
     }
 

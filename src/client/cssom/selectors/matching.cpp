@@ -5,9 +5,9 @@ namespace client_cssom::selectors
 {
   using namespace std;
   using namespace dom;
-  using namespace crates::css;
+  using namespace crates;
 
-  bool matchesSelectorList(const CSSSelectorList &selectors, const shared_ptr<HTMLElement> element)
+  bool matchesSelectorList(const css2::selectors::SelectorList &selectors, const shared_ptr<HTMLElement> element)
   {
     MatchingContext context;
     for (const auto &selector : selectors)
@@ -18,7 +18,7 @@ namespace client_cssom::selectors
     return false;
   }
 
-  bool matchesSelector(const CSSSelector &selector, const shared_ptr<HTMLElement> element, MatchingContext &context)
+  bool matchesSelector(const css2::selectors::Selector &selector, const shared_ptr<HTMLElement> element, MatchingContext &context)
   {
     assert(!selector.components().empty());
     auto it = selector.components().begin();
@@ -27,7 +27,7 @@ namespace client_cssom::selectors
 
   // Check if the element matches the specified selector component.
   // NOTE: The component should not be a combinator.
-  bool matchesSelectorComponentNonCombinator(const crates::css::CSSSelectorComponent &component,
+  bool matchesSelectorComponentNonCombinator(const css2::selectors::Component &component,
                                              const shared_ptr<HTMLElement> element, MatchingContext &context)
   {
     assert(!component.isCombinator());
@@ -42,7 +42,7 @@ namespace client_cssom::selectors
       return false;
   }
 
-  bool matchesSelectorComponent(const CSSSelector &selector, std::vector<CSSSelectorComponent>::const_iterator &it,
+  bool matchesSelectorComponent(const css2::selectors::Selector &selector, std::vector<css2::selectors::Component>::const_iterator &it,
                                 const shared_ptr<HTMLElement> element,
                                 MatchingContext &context)
   {
@@ -55,19 +55,19 @@ namespace client_cssom::selectors
 
     if (component.isCombinator())
     {
-      switch (component.combinator())
+      switch (component.combinator)
       {
-      case CSSSelectorCombinator::Child:
+      case css2::selectors::Combinator::kChild:
         if (!element->hasTypedParentNode<HTMLElement>())
           return false;
         nextElement = element->getParentNodeAs<HTMLElement>();
         break;
-      case CSSSelectorCombinator::Descendant:
+      case css2::selectors::Combinator::kDescendant:
         if (!element->hasTypedParentNode<HTMLElement>())
           return false;
         else
         {
-          const CSSSelectorComponent &ancestorComponent = *(++it);
+          const css2::selectors::Component &ancestorComponent = *(++it);
           std::shared_ptr<HTMLElement> maybeAncestorElement = element->getParentNodeAs<HTMLElement>();
           while (true)
           {
@@ -85,11 +85,12 @@ namespace client_cssom::selectors
           }
         }
         break;
-      case CSSSelectorCombinator::NextSibling:
-      case CSSSelectorCombinator::LaterSibling:
-      case CSSSelectorCombinator::PseudoElement:
-      case CSSSelectorCombinator::SlotAssignment:
-      case CSSSelectorCombinator::Part:
+      case css2::selectors::Combinator::kNextSibling:
+      case css2::selectors::Combinator::kLaterSibling:
+      case css2::selectors::Combinator::kPseudoElement:
+      case css2::selectors::Combinator::kSlotAssignment:
+      case css2::selectors::Combinator::kPart:
+      case css2::selectors::Combinator::kUnknown:
         // TODO
         break;
       }
