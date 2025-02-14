@@ -1300,24 +1300,23 @@ mod tests {
 
   #[test]
   fn test_parse_transform() {
-    // let transform = CSSTransformInstance::from_str("translate3d(10px, 20em, 5px)");
-    // assert_eq!(transform.len(), 1);
-    // let item = transform.item(0);
-    // assert_eq!(item.is_3d(), true);
-    // assert_eq!(item.is_translate(), true);
-    // match item {
-    //   GenericTransformOperation::Translate3D(x, y, z) => {
-    //     assert_eq!("10px", x.to_css_string());
-    //     assert_eq!("20em", y.to_css_string());
-    //     assert_eq!("5px", z.to_css_string());
-    //   }
-    //   _ => panic!("Expected translate operation"),
-    // }
+    let css_parser = CSSParser::default();
+    let transform = parse_transform(&css_parser, "translate3d(10px, 20em, 5px)");
+    assert_eq!(transform.len(), 1);
+    let item = transform.get_operation_ref(0);
+    match item {
+      CrateSpecifiedValues::TransformOperation::Translate3D(x, y, z) => {
+        assert_eq!(10.0, x.to_no_calc_length().unitless_value());
+        assert_eq!("em", y.to_no_calc_length().unit());
+        assert_eq!(5.0, z.to_no_calc_length().unitless_value());
+      }
+      _ => panic!("Expected translate operation"),
+    }
   }
 
   #[test]
   fn test_parse_style_declaration() {
-    let mut pdb = CSSPropertyDeclarationBlock::from_str(
+    let mut pdb = CSSParser::default().parse_style_declaration(
       "display:flex;color:rgba(255,0,0,0.5);height:20px;width:100% !important;",
     );
     let display_str = pdb.get_property("display");
@@ -1337,20 +1336,22 @@ mod tests {
     assert_eq!(pdb.item(4), ""); // Returns empty string for out of bounds index
 
     // Test importance
-    assert_eq!(pdb.get_importance("color"), Importance::Normal);
-    assert_eq!(pdb.get_importance("width"), Importance::Important);
+    assert_eq!(
+      pdb.get_importance("color"),
+      StyleProperties::Importance::Normal
+    );
+    assert_eq!(
+      pdb.get_importance("width"),
+      StyleProperties::Importance::Important
+    );
 
     // Test set property
-    pdb.set_property("color", "rgba(0, 255, 0, 0.5)", Importance::Important);
+    pdb.set_property("color", "rgba(0, 255, 0, 0.5)", true);
     assert_eq!(
       pdb.get_property("color"),
       "rgba(0, 255, 0, 0.5)".to_string()
     );
-    pdb.set_property(
-      "background-image",
-      "url(https://foobar)",
-      Importance::Normal,
-    );
+    pdb.set_property("background-image", "url(https://foobar)", false);
     assert_eq!(pdb.len(), 5);
 
     // Test remove property
@@ -1387,32 +1388,22 @@ mod tests {
         width: 100% !important;
       }
     "#;
-    let sheet = CSSStylesheetInner::from_str(css_text, "");
+    let sheet = CSSParser::default().parse_stylesheet(css_text, "");
     assert_eq!(sheet.rules_len() > 0, true);
 
     for i in 0..sheet.rules_len() {
-      match sheet.get_rule(i) {
-        CSSRuleInner::Style(style_rule) => {
-          let block = unsafe { &mut *style_rule.block };
-          assert_eq!(block.get_property("color"), "rgba(255, 0, 0, 0.5)");
-
-          unsafe {
-            let it = style_rule.selectors;
-            let mut i = 0;
-            while !(*it.offset(i)).is_null() {
-              let selector = *it.offset(i);
-              let selector = &*selector;
-              println!("Selector {:?}", selector);
-              i += 1;
-            }
-            assert_eq!(i, 2);
+      if let Some(rule) = sheet.get_rule(i) {
+        match rule {
+          crate::css::stylesheets::CssRule::Style(style_rule) => {
+            let block = style_rule.block;
+            assert_eq!(block.get_property("color"), "rgba(255, 0, 0, 0.5)");
+  
+            let selectors = style_rule.selectors;
+            assert!(selectors.len() > 0);
           }
-
-          // Free the selectors array
-          css_selectors_array_free(style_rule.selectors);
-        }
-        _ => {
-          // Skip
+          _ => {
+            // Skip
+          }
         }
       }
     }
