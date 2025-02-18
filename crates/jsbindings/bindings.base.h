@@ -2,12 +2,6 @@
 
 namespace holocron
 {
-  typedef void *_TaffyTree;
-  typedef void *_TaffyNode;
-  typedef struct _CSSTransformInstance _CSSTransformInstance;
-  typedef struct _CSSPropertyDeclarationBlock _CSSPropertyDeclarationBlock;
-  typedef struct _CSSStylesheetInner _CSSStylesheetInner;
-
 /** DEFINES */
 #define CBINDGEN_IS_SERVO
 #if defined(_WIN32) || defined(_WIN64)

@@ -41,7 +41,6 @@ swc_fast_ts_strip = { version = "0.12.0" }
 url = { workspace = true }
 
 [build-dependencies]
-cbindgen = { git = "https://github.com/M-CreativeLab/cbindgen", branch = "master" }
 cxx-build = { workspace = true }
 env_logger = "0.10.0"
 log = "0.4.25"
