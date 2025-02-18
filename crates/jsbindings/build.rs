@@ -4,7 +4,6 @@ use std::io::Error;
 use std::path::Path;
 use std::path::PathBuf;
 
-extern crate cbindgen;
 extern crate env_logger;
 extern crate log;
 
@@ -19,7 +18,6 @@ fn main() {
   println!("cargo:rerun-if-changed=glsl_transpiler/");
   // Tell cargo to re-run when the bindings changed.
   println!("cargo:rerun-if-changed=cbindgen.toml");
-  println!("cargo:rerun-if-changed=bindings.autogen.h");
   println!("cargo:rerun-if-changed=bindings.base.h");
   println!("cargo:rerun-if-changed=bindings.hpp");
   println!("cargo:rerun-if-changed=bindings.css.hpp");
@@ -30,33 +28,15 @@ fn main() {
   env_logger::init();
 
   // Generate C bindings
-  generate_cbinding();
   generate_holocron();
 
   // Install headers
   install_header("bindings.base.h");
-  install_header("bindings.autogen.h");
   install_header("bindings.hpp");
   install_header("bindings.css.hpp");
   install_header("bindings.css-inl.hpp");
   install_header("bindings.layout.hpp");
   install_header("bindings.webgl.hpp");
-}
-
-fn generate_cbinding() {
-  let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-  cbindgen::Builder::new()
-    .with_config(cbindgen::Config::from_file("cbindgen.toml").unwrap())
-    .with_crate(crate_dir)
-    .generate()
-    .map_or_else(
-      |error| match error {
-        e => panic!("{:?}", e),
-      },
-      |bindings| {
-        bindings.write_to_file("bindings.autogen.h");
-      },
-    );
 }
 
 fn generate_holocron_module(source: &str, name: &str, std: &str) {

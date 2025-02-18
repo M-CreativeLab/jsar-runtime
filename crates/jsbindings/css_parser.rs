@@ -23,12 +23,9 @@ use style::{
 use style_traits::{ParsingMode, ToCss};
 use url::Url;
 
-use super::{
-  css::{
-    properties as CrateProperties, selectors as CrateSelectors, stylesheets as CrateStylesheets,
-    values::specified as CrateSpecifiedValues,
-  },
-  release_cstring,
+use super::css::{
+  properties as CrateProperties, selectors as CrateSelectors, stylesheets as CrateStylesheets,
+  values::specified as CrateSpecifiedValues,
 };
 
 #[no_mangle]
@@ -1397,7 +1394,7 @@ mod tests {
           crate::css::stylesheets::CssRule::Style(style_rule) => {
             let block = style_rule.block;
             assert_eq!(block.get_property("color"), "rgba(255, 0, 0, 0.5)");
-  
+
             let selectors = style_rule.selectors;
             assert!(selectors.len() > 0);
           }

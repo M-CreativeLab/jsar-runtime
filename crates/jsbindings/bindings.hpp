@@ -11,7 +11,6 @@
 #include <vector>
 #include <unordered_map>
 
-#include "./bindings.autogen.h"
 #include "./holocron.autogen.hpp"
 #include "./holocron_layout.autogen.hpp"
 
@@ -113,17 +112,16 @@ namespace crates
     {
       std::string errorMessage;
       std::string transpiledCode;
-      _TranspiledTypeScriptOutput out = transpile_typescript_to_js(input.c_str());
-      if (out.code == nullptr)
-        errorMessage = out.error_message == nullptr ? "Failed to transpile TypeScript to JavaScript." : out.error_message;
-      else
-        transpiledCode = out.code;
 
-      release_transpiled_typescript_output(out);
+      holocron::TranspiledScriptSource out = holocron::transpileTypeScript(input);
+      if (out.error != "")
+        errorMessage = std::string(out.error);
+      else
+        transpiledCode = std::string(out.code);
+
       if (!errorMessage.empty())
         throw std::runtime_error(errorMessage);
-      else
-        return transpiledCode;
+      return transpiledCode;
     }
   };
 
@@ -138,23 +136,22 @@ namespace crates
      */
     static inline Url Parse(const std::string &url)
     {
-      return Url(parse_whatwg_url(url.c_str()));
+      return Url(holocron::parseWHATWGUrl(url));
     }
 
   private:
-    Url(_WHATWGUrl whatwgUrl) : host(whatwgUrl.host),
-                                hostname(whatwgUrl.hostname),
-                                href(whatwgUrl.href),
-                                origin(whatwgUrl.origin),
-                                password(whatwgUrl.password),
-                                pathname(whatwgUrl.pathname),
-                                port(whatwgUrl.port),
-                                protocol(whatwgUrl.protocol),
-                                search(whatwgUrl.search),
-                                username(whatwgUrl.username),
-                                hash(whatwgUrl.hash)
+    Url(holocron::WHATWGUrl whatwgUrl) : host(whatwgUrl.host),
+                                         hostname(whatwgUrl.hostname),
+                                         href(whatwgUrl.href),
+                                         origin(whatwgUrl.origin),
+                                         password(whatwgUrl.password),
+                                         pathname(whatwgUrl.pathname),
+                                         port(whatwgUrl.port),
+                                         protocol(whatwgUrl.protocol),
+                                         search(whatwgUrl.search),
+                                         username(whatwgUrl.username),
+                                         hash(whatwgUrl.hash)
     {
-      release_whatwg_url(whatwgUrl);
     }
 
   public:
@@ -179,14 +176,11 @@ namespace crates
      *
      * @param baseUrl The base URL to use.
      * @param subPath The sub path to append to the base URL.
-     * @param urlMaxLength The maximum length of the output URL string.
      * @returns The new URL string.
      */
-    static inline std::string CreateUrlStringWithPath(const std::string &baseUrl, const std::string &subPath, size_t urlMaxLength = 512)
+    static inline std::string CreateUrlStringWithPath(const std::string &baseUrl, const std::string &subPath)
     {
-      char newUrl[urlMaxLength];
-      size_t len = create_url_with_path(baseUrl.c_str(), subPath.c_str(), (char **)&newUrl, sizeof(newUrl));
-      return len == 0 ? "" : std::string(newUrl, len);
+      return std::string(holocron::createUrlWithPath(baseUrl, subPath));
     }
 
     /**
@@ -198,7 +192,6 @@ namespace crates
     static inline ModuleExtension ParseUrlToModuleExtension(const std::string &url)
     {
       auto index = holocron::parseURLToModuleExtension(url.c_str());
-      std::cout << "ParseUrlToModuleExtension(" << url << "): " << static_cast<int>(index) << std::endl;
       return ModuleExtension(index);
     }
   };

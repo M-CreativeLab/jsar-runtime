@@ -144,17 +144,6 @@ namespace dom
           transform->setTranslation({client_cssom::pixelToMeter(left),
                                      client_cssom::pixelToMeter(top),
                                      layout.depth()});
-
-          // Check if the object has a transform CSS property.
-          auto transformStyle = adoptedStyle_.getPropertyValue("transform");
-          if (transformStyle != "")
-          {
-            auto transform = crates::css2::parsing::parseTransform(transformStyle);
-            for (auto &func : transform.operations())
-            {
-              std::cout << "Transform operation: " << func << std::endl;
-            }
-          }
         }
       }
 
