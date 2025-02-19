@@ -21,6 +21,7 @@ namespace builtin_scene
     Renderer(std::shared_ptr<client_graphics::WebGL2Context> glContext)
         : glContext_(glContext)
     {
+      glContext_->enable(WEBGL_CULL_FACE);
     }
 
   public:
