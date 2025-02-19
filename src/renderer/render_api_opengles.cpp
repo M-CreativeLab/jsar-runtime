@@ -1757,45 +1757,78 @@ private:
 	}
 	TR_OPENGL_FUNC void OnStencilFunc(StencilFuncCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		glStencilFunc(req->func, req->ref, req->mask);
+		GLenum func = req->func;
+		GLint ref = req->ref;
+		GLuint mask = req->mask;
+
+		glStencilFunc(func, ref, mask);
+		reqContentRenderer->getOpenGLContext()->RecordStencilFunc(GL_FRONT_AND_BACK, func, ref, mask);
+
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::StencilFunc(%d, %d, %d)", options.isDefaultQueue, req->func, req->ref, req->mask);
+			DEBUG(DEBUG_TAG, "[%d] GL::StencilFunc(%d, %d, %d)", options.isDefaultQueue, func, ref, mask);
 	}
 	TR_OPENGL_FUNC void OnStencilFuncSeparate(StencilFuncSeparateCommandBufferRequest *req,
 																						renderer::TrContentRenderer *reqContentRenderer,
 																						ApiCallOptions &options)
 	{
-		glStencilFuncSeparate(req->face, req->func, req->ref, req->mask);
+		GLenum face = req->face;
+		GLenum func = req->func;
+		GLint ref = req->ref;
+		GLuint mask = req->mask;
+
+		glStencilFuncSeparate(face, func, ref, mask);
+		reqContentRenderer->getOpenGLContext()->RecordStencilFunc(face, func, ref, mask);
+
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::StencilFuncSeparate: %d", options.isDefaultQueue, req->func);
+			DEBUG(DEBUG_TAG, "[%d] GL::StencilFuncSeparate: %d", options.isDefaultQueue, func);
 	}
 	TR_OPENGL_FUNC void OnStencilMask(StencilMaskCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		glStencilMask(req->mask);
+		GLuint mask = req->mask;
+		glStencilMask(mask);
+		reqContentRenderer->getOpenGLContext()->RecordStencilMask(GL_FRONT_AND_BACK, mask);
+
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::StencilMask(%d)", options.isDefaultQueue, req->mask);
+			DEBUG(DEBUG_TAG, "[%d] GL::StencilMask(%d)", options.isDefaultQueue, mask);
 	}
 	TR_OPENGL_FUNC void OnStencilMaskSeparate(StencilMaskSeparateCommandBufferRequest *req,
 																						renderer::TrContentRenderer *reqContentRenderer,
 																						ApiCallOptions &options)
 	{
-		glStencilMaskSeparate(req->face, req->mask);
+		GLenum face = req->face;
+		GLuint mask = req->mask;
+		glStencilMaskSeparate(face, mask);
+		reqContentRenderer->getOpenGLContext()->RecordStencilMask(face, mask);
+
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::StencilMaskSeparate(%d)", options.isDefaultQueue, req->mask);
+			DEBUG(DEBUG_TAG, "[%d] GL::StencilMaskSeparate(%d)", options.isDefaultQueue, mask);
 	}
 	TR_OPENGL_FUNC void OnStencilOp(StencilOpCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		glStencilOp(req->fail, req->zfail, req->zpass);
+		GLenum fail = req->fail;
+		GLenum zfail = req->zfail;
+		GLenum zpass = req->zpass;
+
+		glStencilOp(fail, zfail, zpass);
+		reqContentRenderer->getOpenGLContext()->RecordStencilOp(GL_FRONT_AND_BACK, fail, zfail, zpass);
+
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::StencilOp(%d, %d, %d)", options.isDefaultQueue, req->fail, req->zfail, req->zpass);
+			DEBUG(DEBUG_TAG, "[%d] GL::StencilOp(%d, %d, %d)", options.isDefaultQueue, fail, zfail, zpass);
 	}
 	TR_OPENGL_FUNC void OnStencilOpSeparate(StencilOpSeparateCommandBufferRequest *req,
 																					renderer::TrContentRenderer *reqContentRenderer,
 																					ApiCallOptions &options)
 	{
-		glStencilOpSeparate(req->face, req->fail, req->zfail, req->zpass);
+		GLenum face = req->face;
+		GLenum fail = req->fail;
+		GLenum zfail = req->zfail;
+		GLenum zpass = req->zpass;
+
+		glStencilOpSeparate(face, fail, zfail, zpass);
+		reqContentRenderer->getOpenGLContext()->RecordStencilOp(face, fail, zfail, zpass);
+
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
-			DEBUG(DEBUG_TAG, "[%d] GL::StencilOpSeparate(%d)", options.isDefaultQueue, req->fail);
+			DEBUG(DEBUG_TAG, "[%d] GL::StencilOpSeparate(%d)", options.isDefaultQueue, fail);
 	}
 	TR_OPENGL_FUNC void OnBlendColor(BlendColorCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
