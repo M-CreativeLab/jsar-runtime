@@ -10,12 +10,29 @@ void OpenGLContextStorage::RecordViewport(int x, int y, int w, int h)
 
 void OpenGLContextStorage::RecordCapability(GLenum cap, bool enabled)
 {
-  if (cap == GL_CULL_FACE)
-    m_CullFaceEnabled = enabled;
-  else if (cap == GL_DEPTH_TEST)
-    m_DepthTestEnabled = enabled;
-  else if (cap == GL_BLEND)
+  switch (cap)
+  {
+  case GL_BLEND:
     m_BlendEnabled = enabled;
+    break;
+  case GL_DITHER:
+    m_DitherEnabled = enabled;
+    break;
+  case GL_CULL_FACE:
+    m_CullFaceEnabled = enabled;
+    break;
+  case GL_DEPTH_TEST:
+    m_DepthTestEnabled = enabled;
+    break;
+  case GL_STENCIL_TEST:
+    m_StencilTestEnabled = enabled;
+    break;
+  case GL_SCISSOR_TEST:
+    m_ScissorTestEnabled = enabled;
+    break;
+  default:
+    break;
+  }
 }
 
 void OpenGLContextStorage::RecordCullFace(GLenum mode)
@@ -41,6 +58,46 @@ void OpenGLContextStorage::RecordBlendFunc(GLenum sfactor, GLenum dfactor)
 void OpenGLContextStorage::RecordBlendFuncSeparate(GLenum srcRgb, GLenum dstRgb, GLenum srcAlpha, GLenum dstAlpha)
 {
   m_BlendFunc.Reset(srcRgb, dstRgb, srcAlpha, dstAlpha);
+}
+
+void OpenGLContextStorage::RecordStencilMask(GLenum face, GLuint mask)
+{
+  if (face == GL_FRONT_AND_BACK || face == GL_FRONT)
+    m_StencilMask = mask;
+  if (face == GL_FRONT_AND_BACK || face == GL_BACK)
+    m_StencilMaskBack = mask;
+}
+
+void OpenGLContextStorage::RecordStencilFunc(GLenum face, GLenum func, GLint ref, GLuint mask)
+{
+  if (face == GL_FRONT_AND_BACK || face == GL_FRONT)
+  {
+    m_StencilFunc.func = func;
+    m_StencilFunc.ref = ref;
+    m_StencilFunc.mask = mask;
+  }
+  if (face == GL_FRONT_AND_BACK || face == GL_BACK)
+  {
+    m_StencilFuncBack.func = func;
+    m_StencilFuncBack.ref = ref;
+    m_StencilFuncBack.mask = mask;
+  }
+}
+
+void OpenGLContextStorage::RecordStencilOp(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass)
+{
+  if (face == GL_FRONT_AND_BACK || face == GL_FRONT)
+  {
+    m_StencilOp.sfail = sfail;
+    m_StencilOp.dpfail = dpfail;
+    m_StencilOp.dppass = dppass;
+  }
+  if (face == GL_FRONT_AND_BACK || face == GL_BACK)
+  {
+    m_StencilOpBack.sfail = sfail;
+    m_StencilOpBack.dpfail = dpfail;
+    m_StencilOpBack.dppass = dppass;
+  }
 }
 
 void OpenGLContextStorage::RecordProgram(int program)
@@ -143,6 +200,29 @@ void OpenGLContextStorage::Restore()
   // Depth state restore
   glDepthMask(m_DepthMask);
   glDepthFunc(m_DepthFunc); // TODO: valid depth func enum?
+  glDepthRangef(m_DepthRange[0], m_DepthRange[1]);
+
+  // Stencil state restore
+  {
+    glStencilMask(m_StencilMask);
+    if (m_StencilMask != m_StencilMaskBack)
+      glStencilMaskSeparate(GL_BACK, m_StencilMaskBack);
+    glStencilFunc(m_StencilFunc.func, m_StencilFunc.ref, m_StencilFunc.mask);
+    if (m_StencilFunc != m_StencilFuncBack)
+      glStencilFuncSeparate(GL_BACK, m_StencilFuncBack.func, m_StencilFuncBack.ref, m_StencilFuncBack.mask);
+    glStencilOp(m_StencilOp.sfail, m_StencilOp.dpfail, m_StencilOp.dppass);
+    if (m_StencilOp != m_StencilOpBack)
+      glStencilOpSeparate(GL_BACK, m_StencilOpBack.sfail, m_StencilOpBack.dpfail, m_StencilOpBack.dppass);
+  }
+
+  // Scissor state restore
+  glScissor(m_ScissorBox.x, m_ScissorBox.y, m_ScissorBox.width, m_ScissorBox.height);
+
+  // Restoring other states
+  {
+    glLineWidth(m_LineWidth);
+    glPolygonOffset(m_PolygonOffset.factor, m_PolygonOffset.units);
+  }
 
   // Restore the program, buffers, framebuffer, renderbuffer, vertex array object, and active texture unit
   if (m_ProgramId >= 0)
@@ -266,12 +346,48 @@ void OpenGLHostContextStorage::Record()
   m_StencilTestEnabled = glIsEnabled(GL_STENCIL_TEST);
   m_ScissorTestEnabled = glIsEnabled(GL_SCISSOR_TEST);
 
-  // States
+  // Global States
   glGetIntegerv(GL_CULL_FACE_MODE, (GLint *)&m_CullFace);
   glGetIntegerv(GL_FRONT_FACE, (GLint *)&m_FrontFace);
-  glGetBooleanv(GL_COLOR_WRITEMASK, (GLboolean*)&m_ColorMask);
-  glGetIntegerv(GL_DEPTH_FUNC, (GLint *)&m_DepthFunc);
-  glGetBooleanv(GL_DEPTH_WRITEMASK, &m_DepthMask);
+  glGetBooleanv(GL_COLOR_WRITEMASK, (GLboolean *)&m_ColorMask);
+  /**
+   * Recording the depth parameters.
+   */
+  {
+    glGetBooleanv(GL_DEPTH_WRITEMASK, &m_DepthMask);
+    glGetIntegerv(GL_DEPTH_FUNC, (GLint *)&m_DepthFunc);
+    glGetFloatv(GL_DEPTH_RANGE, m_DepthRange);
+  }
+  /**
+   * Recording the stencil parameters.
+   */
+  {
+    // glStencilMask(mask)
+    glGetIntegerv(GL_STENCIL_WRITEMASK, (GLint *)&m_StencilMask);
+    glGetIntegerv(GL_STENCIL_BACK_WRITEMASK, (GLint *)&m_StencilMaskBack);
+    // glStencilFunc(func, ref, mask)
+    glGetIntegerv(GL_STENCIL_FUNC, (GLint *)&m_StencilFunc.func);
+    glGetIntegerv(GL_STENCIL_REF, (GLint *)&m_StencilFunc.ref);
+    glGetIntegerv(GL_STENCIL_VALUE_MASK, (GLint *)&m_StencilFunc.mask);
+    glGetIntegerv(GL_STENCIL_BACK_FUNC, (GLint *)&m_StencilFuncBack.func);
+    glGetIntegerv(GL_STENCIL_BACK_REF, (GLint *)&m_StencilFuncBack.ref);
+    glGetIntegerv(GL_STENCIL_BACK_VALUE_MASK, (GLint *)&m_StencilFuncBack.mask);
+    // glStencilOp(sfail, dpfail, dppass)
+    glGetIntegerv(GL_STENCIL_FAIL, (GLint *)&m_StencilOp.sfail);
+    glGetIntegerv(GL_STENCIL_PASS_DEPTH_FAIL, (GLint *)&m_StencilOp.dpfail);
+    glGetIntegerv(GL_STENCIL_PASS_DEPTH_PASS, (GLint *)&m_StencilOp.dppass);
+    glGetIntegerv(GL_STENCIL_BACK_FAIL, (GLint *)&m_StencilOpBack.sfail);
+    glGetIntegerv(GL_STENCIL_BACK_PASS_DEPTH_FAIL, (GLint *)&m_StencilOpBack.dpfail);
+    glGetIntegerv(GL_STENCIL_BACK_PASS_DEPTH_PASS, (GLint *)&m_StencilOpBack.dppass);
+  }
+  /**
+   * Recording the scissors.
+   */
+  {
+    GLint scissorBox[4];
+    glGetIntegerv(GL_SCISSOR_BOX, scissorBox);
+    m_ScissorBox = {scissorBox[0], scissorBox[1], scissorBox[2], scissorBox[3]};
+  }
 
   // Blend funcs
   {
@@ -279,6 +395,13 @@ void OpenGLHostContextStorage::Record()
     glGetIntegerv(GL_BLEND_SRC_RGB, (GLint *)&sfactor);
     glGetIntegerv(GL_BLEND_DST_RGB, (GLint *)&dfactor);
     m_BlendFunc.Reset(sfactor, dfactor);
+  }
+
+  // Others
+  {
+    glGetFloatv(GL_LINE_WIDTH, &m_LineWidth);
+    glGetFloatv(GL_POLYGON_OFFSET_FACTOR, &m_PolygonOffset.factor);
+    glGetFloatv(GL_POLYGON_OFFSET_UNITS, &m_PolygonOffset.units);
   }
 
   // Check for errors
@@ -324,13 +447,41 @@ OpenGLAppContextStorage::OpenGLAppContextStorage(std::string name)
   /**
    * Initial values for WebGL or OpenGLES.
    */
-  m_CullFaceEnabled = true;
+  m_CullFaceEnabled = GL_FALSE;
   m_CullFace = GL_BACK;
   m_FrontFace = GL_CCW;
-  m_DepthTestEnabled = true;
-  m_DitherEnabled = true;
-  m_StencilTestEnabled = false;
-  m_ScissorTestEnabled = false;
+
+  // Depth
+  {
+    m_DepthTestEnabled = GL_FALSE;
+    m_DepthMask = GL_TRUE;
+    m_DepthFunc = GL_LESS;
+  }
+
+  // Dither
+  m_DitherEnabled = GL_TRUE;
+
+  // Blending
+  {
+    m_BlendEnabled = GL_FALSE;
+    m_BlendFunc.Reset(GL_ONE, GL_ZERO);
+  }
+
+  // Stencil
+  {
+    m_StencilTestEnabled = GL_FALSE;
+    m_StencilMask = 0x01;
+    m_StencilMaskBack = 0x01;
+  }
+
+  // Scissor
+  {
+    m_ScissorTestEnabled = GL_FALSE;
+    // Use viewport's size as the default scissor box
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    m_ScissorBox = {0, 0, viewport[2], viewport[3]};
+  }
 }
 
 OpenGLAppContextStorage::OpenGLAppContextStorage(std::string name, OpenGLAppContextStorage *from)

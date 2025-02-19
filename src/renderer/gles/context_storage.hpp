@@ -103,6 +103,49 @@ private:
 
 class OpenGLContextStorage
 {
+  struct Rect
+  {
+    GLint x = 0;
+    GLint y = 0;
+    GLsizei width = 0;
+    GLsizei height = 0;
+  };
+  struct StencilFuncParameters
+  {
+    GLenum func = GL_ALWAYS;
+    GLint ref = 0;
+    GLuint mask = 1;
+
+    bool operator==(const StencilFuncParameters &other) const
+    {
+      return (func == other.func) && (ref == other.ref) && (mask == other.mask);
+    }
+    bool operator!=(const StencilFuncParameters &other) const
+    {
+      return !(*this == other);
+    }
+  };
+  struct StencilOpParameters
+  {
+    GLenum sfail = GL_KEEP;
+    GLenum dpfail = GL_KEEP;
+    GLenum dppass = GL_KEEP;
+
+    bool operator==(const StencilOpParameters &other) const
+    {
+      return (sfail == other.sfail) && (dpfail == other.dpfail) && (dppass == other.dppass);
+    }
+    bool operator!=(const StencilOpParameters &other) const
+    {
+      return !(*this == other);
+    }
+  };
+  struct PolygonOffsetParameters
+  {
+    GLfloat factor = 0.0f;
+    GLfloat units = 0.0f;
+  };
+
 public:
   OpenGLContextStorage(std::string name) : m_Name(name)
   {
@@ -117,10 +160,13 @@ public:
   }
   OpenGLContextStorage(std::string name, OpenGLContextStorage *from) : m_Name(name)
   {
+    // Viewport
     m_Viewport[0] = from->m_Viewport[0];
     m_Viewport[1] = from->m_Viewport[1];
     m_Viewport[2] = from->m_Viewport[2];
     m_Viewport[3] = from->m_Viewport[3];
+
+    // States
     m_CullFaceEnabled = from->m_CullFaceEnabled;
     {
       m_ColorMask[0] = from->m_ColorMask[0];
@@ -130,6 +176,25 @@ public:
     }
     m_DepthTestEnabled = from->m_DepthTestEnabled;
     m_DepthMask = from->m_DepthMask;
+    m_DepthFunc = from->m_DepthFunc;
+    m_DepthRange[0] = from->m_DepthRange[0];
+    m_DepthRange[1] = from->m_DepthRange[1];
+    m_DitherEnabled = from->m_DitherEnabled;
+    m_BlendEnabled = from->m_BlendEnabled;
+    m_BlendFunc = OpenGLBlendingFunc(&from->m_BlendFunc);
+    m_StencilTestEnabled = from->m_StencilTestEnabled;
+    m_StencilMask = from->m_StencilMask;
+    m_StencilMaskBack = from->m_StencilMaskBack;
+    m_StencilFunc = from->m_StencilFunc;
+    m_StencilFuncBack = from->m_StencilFuncBack;
+    m_StencilOp = from->m_StencilOp;
+    m_StencilOpBack = from->m_StencilOpBack;
+    m_ScissorTestEnabled = from->m_ScissorTestEnabled;
+    m_ScissorBox = from->m_ScissorBox;
+    m_LineWidth = from->m_LineWidth;
+    m_PolygonOffset = from->m_PolygonOffset;
+
+    // Objects
     m_ProgramId = from->m_ProgramId;
     m_ArrayBufferId = from->m_ArrayBufferId;
     m_ElementArrayBufferId = from->m_ElementArrayBufferId;
@@ -151,6 +216,9 @@ public:
   void RecordDepthMask(bool enabled);
   void RecordBlendFunc(GLenum sfactor, GLenum dfactor);
   void RecordBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha);
+  void RecordStencilMask(GLenum face, GLuint mask);
+  void RecordStencilFunc(GLenum face, GLenum func, GLint ref, GLuint mask);
+  void RecordStencilOp(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass);
   void RecordProgram(int program);
   void RecordArrayBuffer(int buffer);
   void RecordElementArrayBuffer(int buffer);
@@ -180,7 +248,7 @@ protected:
   GLint m_Viewport[4] = {-1, -1, -1, -1};
   bool m_ForceChanged = false;
 
-protected:  /** Global States */
+protected: /** Global States */
   // Culling & face
   GLboolean m_CullFaceEnabled;
   GLenum m_CullFace;
@@ -191,6 +259,7 @@ protected:  /** Global States */
   GLboolean m_DepthTestEnabled;
   GLboolean m_DepthMask; // If depth buffer writing is enabled
   GLenum m_DepthFunc = GL_LEQUAL;
+  GLfloat m_DepthRange[2] = {0.0f, 1.0f};
   // Dither
   GLboolean m_DitherEnabled;
   // Blending
@@ -198,10 +267,20 @@ protected:  /** Global States */
   OpenGLBlendingFunc m_BlendFunc;
   // Stencil
   GLboolean m_StencilTestEnabled;
+  GLuint m_StencilMask;
+  GLuint m_StencilMaskBack;
+  StencilFuncParameters m_StencilFunc;
+  StencilFuncParameters m_StencilFuncBack;
+  StencilOpParameters m_StencilOp;
+  StencilOpParameters m_StencilOpBack;
   // Scissor
   GLboolean m_ScissorTestEnabled;
+  Rect m_ScissorBox;
+  // Others
+  GLfloat m_LineWidth = 1.0f;
+  PolygonOffsetParameters m_PolygonOffset;
 
-protected:  /** OpenGLES objects */
+protected: /** OpenGLES objects */
   GLint m_ProgramId = 0;
   GLint m_ArrayBufferId = 0;
   GLint m_ElementArrayBufferId = 0;
