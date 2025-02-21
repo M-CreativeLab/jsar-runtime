@@ -18,8 +18,8 @@ euclid = "0.22"
 fnv = "1.0"
 getopts = "0.2.11"
 gleam = "0.15"
-glsl-lang = { path = "../glsl-lang/lang", features = ["lexer-v2-full"] }
-glsl-lang-pp = { path = "../glsl-lang/lang-pp", features = ["full"] }
+glsl-lang = { version = "0.7.2", features = ["lexer-v2-full"] }
+glsl-lang-pp = { version = "0.7.2", features = ["full"] }
 headers = "0.3"
 hyper = "0.14"
 hyper-rustls = { version = "0.24", default-features = false, features = [
