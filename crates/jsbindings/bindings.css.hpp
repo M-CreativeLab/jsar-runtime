@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <memory>
 #include <vector>
+#include <variant>
 #include <string>
 #include <shared_mutex>
 #include <atomic>

@@ -908,7 +908,9 @@ dependencies = [
 
 [[package]]
 name = "glsl-lang"
-version = "0.6.1"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ba2cedf511d6caa4957bc875b30f00bc06f6c8a82bd63dba6fe0caff432ab65"
 dependencies = [
  "glsl-lang-lexer",
  "glsl-lang-types",
@@ -916,23 +918,27 @@ dependencies = [
  "lalrpop-util",
  "lang-util",
  "once_cell",
- "thiserror",
+ "thiserror 2.0.11",
 ]
 
 [[package]]
 name = "glsl-lang-lexer"
-version = "0.6.1"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "969d5a8a00546e91c4545dce3e4746c43957ca76d793b232d17b2617e87c6ada"
 dependencies = [
  "glsl-lang-pp",
  "glsl-lang-types",
  "lalrpop-util",
  "lang-util",
- "thiserror",
+ "thiserror 2.0.11",
 ]
 
 [[package]]
 name = "glsl-lang-pp"
-version = "0.6.1"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c47a3e9273bf24cdc3b79b83ffbcd670198c460eb267573708810b05621660a8"
 dependencies = [
  "arrayvec",
  "bimap",
@@ -945,15 +951,17 @@ dependencies = [
  "static_assertions",
  "string_cache",
  "string_cache_codegen",
- "thiserror",
+ "thiserror 2.0.11",
 ]
 
 [[package]]
 name = "glsl-lang-types"
-version = "0.6.1"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b499cdb44bfebb9a8565ebdc9f72a77f1e2d18951d8b1f0a003b85ab4604ab1"
 dependencies = [
  "lang-util",
- "thiserror",
+ "thiserror 2.0.11",
 ]
 
 [[package]]
@@ -1350,7 +1358,9 @@ dependencies = [
 
 [[package]]
 name = "lang-util"
-version = "0.6.1"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56696a120465502161fe2c62cd784ee4a338f2460019339a504a0862ab31475a"
 dependencies = [
  "derive_more 1.0.0",
  "lalrpop-util",
@@ -1362,7 +1372,9 @@ dependencies = [
 
 [[package]]
 name = "lang-util-derive"
-version = "0.6.1"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77522b4885ddae41b7c4134a2c33e22a7b09be0bd4c4ce1bee125a372f2f6984"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -1572,7 +1584,7 @@ dependencies = [
  "miette-derive",
  "owo-colors",
  "textwrap",
- "thiserror",
+ "thiserror 1.0.69",
  "unicode-width",
 ]
 
@@ -1990,7 +2002,7 @@ checksum = "ba009ff324d1fc1b900bd1fdb31564febe58a8ccc8a6fdbb93b543d33b13ca43"
 dependencies = [
  "getrandom",
  "libredox",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -2169,7 +2181,7 @@ dependencies = [
  "foreign-types 0.3.2",
  "objc",
  "objc-foundation",
- "thiserror",
+ "thiserror 1.0.69",
  "time-point",
 ]
 
@@ -2939,7 +2951,16 @@ version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52"
 dependencies = [
- "thiserror-impl",
+ "thiserror-impl 1.0.69",
+]
+
+[[package]]
+name = "thiserror"
+version = "2.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d452f284b73e6d76dd36758a0c8684b1d5be31f92b89d07fd5822175732206fc"
+dependencies = [
+ "thiserror-impl 2.0.11",
 ]
 
 [[package]]
@@ -2947,6 +2968,17 @@ name = "thiserror-impl"
 version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.95",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "2.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26afc1baea8a989337eeb52b6e72a039780ce45c3edfcc9c5b9d112feeb173c2"
 dependencies = [
  "proc-macro2",
  "quote",
