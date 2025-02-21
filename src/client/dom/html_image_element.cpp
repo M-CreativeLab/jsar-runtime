@@ -124,7 +124,8 @@ namespace dom
                                         { onImageLoaded(imageData, imageByteLength); });
   }
 
-  void HTMLImageElement::onImageLoaded(const void *imageData, size_t imageByteLength)
+  // Decode the image data to the output `SkBitmap`.
+  inline bool DecodeImage(const void *imageData, size_t imageByteLength, SkBitmap &bitmap)
   {
     static constexpr const SkCodecs::Decoder decoders[] = {
         SkPngDecoder::Decoder(),
@@ -132,6 +133,30 @@ namespace dom
         SkWebpDecoder::Decoder(),
         SkGifDecoder::Decoder()};
 
+    unique_ptr<SkCodec> codec = SkCodec::MakeFromData(SkData::MakeWithoutCopy(imageData, imageByteLength), decoders);
+    if (codec)
+    {
+      try
+      {
+        SkImageInfo info = codec->getInfo().makeColorType(kN32_SkColorType);
+        bitmap.allocPixels(info);
+        codec->getPixels(info, bitmap.getPixels(), bitmap.rowBytes());
+        return true;
+      }
+      catch (const std::exception &e)
+      {
+        std::cerr << "Failed to decode the image: " << e.what() << std::endl;
+        return false;
+      }
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  void HTMLImageElement::onImageLoaded(const void *imageData, size_t imageByteLength)
+  {
     // Mark the image as loaded.
     isSrcImageLoaded_ = true;
 
@@ -142,40 +167,52 @@ namespace dom
       return;
     }
 
-    auto codec = SkCodec::MakeFromData(SkData::MakeWithoutCopy(imageData, imageByteLength), decoders);
-    if (codec)
+    // Instantiate the `SkBitmap` if it is not created.
+    //
+    // ```js
+    // const image = new Image('...');
+    // image.onload = () => { ... };
+    // ```
+    //
+    // The above code snippet creates a new `Image` object without connecting it to the DOM, and it's allowed to load
+    // the image data without the `connectedCallback` being called. In this case, the `skBitmap_` is not created yet.
+    if (skBitmap_ == nullptr)
+      skBitmap_ = std::make_shared<SkBitmap>();
+
+    if (DecodeImage(imageData, imageByteLength, *skBitmap_))
     {
-      SkImageInfo info = codec->getInfo().makeColorType(kN32_SkColorType);
-      skBitmap_->allocPixels(info);
-      codec->getPixels(info, skBitmap_->getPixels(), skBitmap_->rowBytes());
       complete = true;
       dispatchEvent(DOMEventType::Load);
 
-      // Adjust the image size and update the layout style if the image is loaded.
+      // When the image is connected to the DOM, update the layout style and builtin scene states.
+      if (connected)
       {
-        auto setWidth = [this](float width)
-        { defaultBoundingBox_.width = width; };
-        auto setHeight = [this](float height)
-        { defaultBoundingBox_.height = height; };
-        if (adjustImageSize(
-                adoptedStyle_, getImageClientRect(), computedLayout_, setWidth, setHeight))
+        // Adjust the image size and update the layout style if the image is loaded.
         {
-          // Update the layout style if the size is changed.
-          updateLayoutStyle();
+          auto setWidth = [this](float width)
+          { defaultBoundingBox_.width = width; };
+          auto setHeight = [this](float height)
+          { defaultBoundingBox_.height = height; };
+          if (adjustImageSize(
+                  adoptedStyle_, getImageClientRect(), computedLayout_, setWidth, setHeight))
+          {
+            // Update the layout style if the size is changed.
+            updateLayoutStyle();
+          }
         }
+
+        // Update the `Image2d` component and mark the content as dirty to update the texture.
+        auto updateImageBitmap = [this](Scene &scene)
+        {
+          auto entity = entity_.value();
+          Image2d &imageComponent = scene.getComponentChecked<Image2d>(entity);
+          imageComponent.bitmap = skBitmap_;
+
+          WebContent &webContent = scene.getComponentChecked<WebContent>(entity);
+          webContent.setDirty(true); // Mark the content as dirty to update the texture.
+        };
+        useScene(updateImageBitmap);
       }
-
-      // Update the `Image2d` component and mark the content as dirty to update the texture.
-      auto updateImageBitmap = [this](Scene &scene)
-      {
-        auto entity = entity_.value();
-        Image2d &imageComponent = scene.getComponentChecked<Image2d>(entity);
-        imageComponent.bitmap = skBitmap_;
-
-        WebContent &webContent = scene.getComponentChecked<WebContent>(entity);
-        webContent.setDirty(true); // Mark the content as dirty to update the texture.
-      };
-      useScene(updateImageBitmap);
     }
     else
     {
