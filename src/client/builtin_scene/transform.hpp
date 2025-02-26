@@ -88,7 +88,12 @@ namespace builtin_scene
     /**
      * @returns If the transform is dirty, meaning it needs to be updated.
      */
-    inline bool isDirty() const { return isDirty_; }
+    inline bool isDirty() const 
+    {
+      if (postTransform_ != nullptr && postTransform_->isDirty())
+        return true;
+      return isDirty_;
+    }
     /**
      * The translation of the transform.
      */
