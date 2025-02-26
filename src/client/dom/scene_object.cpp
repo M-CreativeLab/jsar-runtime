@@ -90,8 +90,8 @@ namespace dom
       if (boundingBox != nullptr)
         boundingBox->updateSize(layout.width(), layout.height(), layout.depth());
 
+      // Update transform by the layout.
       {
-        // Update transform by the layout.
         auto transform = getSceneComponent<Transform>();
         if (transform != nullptr)
         {
@@ -221,6 +221,33 @@ namespace dom
 
     if (adoptedStyle_.equals(newStyle)) // Skip if the style is the same.
       return false;
+
+    // Update the post-transform if the transform property is provided.
+    if (style.hasProperty("transform"))
+    {
+      auto transformComponent = getSceneComponent<Transform>();
+      if (transformComponent != nullptr)
+      {
+        auto &postTransform = transformComponent->getOrInitPostTransform();
+        auto transformProperty = crates::css2::parsing::parseTransform(style.getPropertyValue("transform"));
+        for (auto transformOperation : transformProperty.operations())
+        {
+          using namespace crates::css2::values::specified::transform;
+          switch (transformOperation.type())
+          {
+          case TransformOperationType::kTranslate3D:
+          {
+            Translate3D translation3d = transformOperation.getImplAs<Translate3D>();
+            postTransform.setTranslation(0, 0,
+                                         client_cssom::pixelToMeter(translation3d.z.numberValue()));
+            break;
+          }
+          default:
+            break;
+          }
+        }
+      }
+    }
 
     adoptedStyle_ = newStyle;
     onAdoptedStyleChanged();

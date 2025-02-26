@@ -119,6 +119,41 @@ namespace webgl
   }
 
   template <typename ObjectType, typename ContextType>
+  Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::SetDefaultCoordHandedness(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "setDefaultCoordHandedness() takes 1 argument.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    if (!info[0].IsString())
+    {
+      Napi::TypeError::New(env, "setDefaultCoordHandedness() 1st argument must be a string.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto handednessStr = info[0].As<Napi::String>().Utf8Value();
+    if (handednessStr == "left")
+    {
+      glContext_->defaultCoordHandedness = commandbuffers::MatrixHandedness::MATRIX_LEFT_HANDED;
+    }
+    else if (handednessStr == "right")
+    {
+      glContext_->defaultCoordHandedness = commandbuffers::MatrixHandedness::MATRIX_RIGHT_HANDED;
+    }
+    else
+    {
+      Napi::TypeError::New(env, "setDefaultCoordHandedness() 1st argument must be 'left' or 'right'.")
+          .ThrowAsJavaScriptException();
+    }
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ContextType>
   Napi::Value WebGLBaseRenderingContext<ObjectType, ContextType>::IsContextLost(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();

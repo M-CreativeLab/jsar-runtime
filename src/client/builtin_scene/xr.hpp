@@ -29,6 +29,7 @@ namespace builtin_scene
         return nullptr;
       return currentFrame_->getViewerPose(referenceSpace_);
     }
+    inline bool multiviewEnabled() { return multiviewEnabled_; }
 
   private:
     void updateReferenceSpace(std::shared_ptr<client_xr::XRReferenceSpace> space)
@@ -40,11 +41,16 @@ namespace builtin_scene
       currentTime_ = time;
       currentFrame_ = frame;
     }
+    void enableMultiview(bool enabled)
+    {
+      multiviewEnabled_ = enabled;
+    }
 
-  public:
+  private:
     std::shared_ptr<client_xr::XRReferenceSpace> referenceSpace_;
     std::shared_ptr<client_xr::XRFrame> currentFrame_;
     uint32_t currentTime_;
+    bool multiviewEnabled_;
   };
 
   class WebXRExperienceStartupSystem : public ecs::System

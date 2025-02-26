@@ -14,8 +14,13 @@
     import 'babylonjs';
 
     async function createScene(engine) {
+      const gl = engine._gl;
       const scene = new BABYLON.Scene(engine);
-      scene.useRightHandedSystem = false;
+      scene.useRightHandedSystem = false; /** Babylon.js uses a left-handed coordinate system by default. */
+      if (typeof gl.setDefaultCoordHandedness === 'function') {
+        gl.setDefaultCoordHandedness('left'); // Update the handedness of the WebGL context
+      }
+
       scene.autoClear = false;
       scene.autoClearDepthAndStencil = false;
       scene.blockMaterialDirtyMechanism = true;

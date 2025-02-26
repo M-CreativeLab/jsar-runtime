@@ -29,7 +29,6 @@ namespace dom
         autoConnect(autoConnect),
         defaultView_(TrClientContextPerProcess::Get()->window)
   {
-    assert(scene != nullptr);
     assert(browsingContext != nullptr);
     assert(defaultView_.lock() != nullptr);
     docInternal = make_shared<pugi::xml_document>();
@@ -356,6 +355,7 @@ namespace dom
       : Document("text/html", DocumentType::kHTML, browsingContext, autoConnect),
         layoutAllocator_(make_shared<crates::layout2::Allocator>())
   {
+    if (scene != nullptr)
     {
       // Configure the built-in scene for the HTML rendering.
       using namespace builtin_scene::ecs;

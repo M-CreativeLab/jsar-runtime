@@ -145,6 +145,14 @@ namespace builtin_scene
       assert(xrExperience != nullptr);
       xrExperience->updateReferenceSpace(
           xrSession_->requestReferenceSpace(client_xr::XRReferenceSpaceType::kLocal));
+
+      // Update the multiview flag if required
+      if (xrSession_->device()->getDeviceInit().multiviewRequired())
+      {
+        xrExperience->enableMultiview(true);
+        Material::SetGlobalDefines("MULTIVIEW");
+        Material::SetMultiviewRequired(true);
+      }
     }
   }
 

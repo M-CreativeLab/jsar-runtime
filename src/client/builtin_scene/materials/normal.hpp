@@ -18,7 +18,7 @@ namespace builtin_scene::materials
     }
     ShaderRef fragmentShader() override
     {
-      return ShaderRef("materials/normal.frag");
+      return ShaderRef(ShaderType::kFragment, "materials/normal.frag");
     }
     bool initialize(std::shared_ptr<client_graphics::WebGL2Context> glContext,
                     std::shared_ptr<client_graphics::WebGLProgram> program) override

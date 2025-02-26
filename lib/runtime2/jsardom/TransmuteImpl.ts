@@ -167,6 +167,7 @@ export class NativeDocumentOnTransmute extends EventTarget implements JSARNative
     const scene = this._scene = new BABYLON.Scene(this.engine);
     scene.useRightHandedSystem = false; /** use left-handed system */
     scene.skipFrustumClipping = false;
+    glContext.setDefaultCoordHandedness('left');
 
     // Performance optimization
     scene.autoClear = false;

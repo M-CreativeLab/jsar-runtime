@@ -85,7 +85,7 @@ namespace builtin_scene
      */
     inline std::string getShaderSource(client_graphics::WebGLShaderType type) const
     {
-      const auto &defines = material_->defines();
+      const auto &defines = material_->getDefinesWithGlobals();
       if (type == client_graphics::WebGLShaderType::kVertex)
         return material_->vertexShader().shader(defines).source;
       else if (type == client_graphics::WebGLShaderType::kFragment)

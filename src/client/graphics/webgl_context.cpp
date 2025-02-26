@@ -1008,7 +1008,7 @@ namespace client_graphics
         placeholderId = WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye;
       }
 
-      MatrixComputationGraph computationGraph(placeholderId, MatrixHandedness::MATRIX_RIGHT_HANDED);
+      MatrixComputationGraph computationGraph(placeholderId, defaultCoordHandedness);
       computationGraph.inverseMatrix = false;
       computationGraph.multiview = forMultiview;
       req.computationGraph4values = computationGraph;

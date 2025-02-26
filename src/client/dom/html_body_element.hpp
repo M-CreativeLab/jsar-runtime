@@ -23,7 +23,7 @@ namespace dom
       defaultStyle_.setProperty("height", "100%");
       defaultStyle_.setProperty("margin", "2px");
       defaultStyle_.setProperty("padding", "2px");
-      defaultStyle_.setProperty("background-color", "#F0F0F0");
+      defaultStyle_.setProperty("background-color", "transparent");
 
       HTMLContent2dElement::createdCallback();
     }

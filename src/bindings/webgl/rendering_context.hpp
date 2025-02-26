@@ -63,6 +63,7 @@ namespace webgl
 
   public:
     Napi::Value MakeXRCompatible(const Napi::CallbackInfo &info);
+    Napi::Value SetDefaultCoordHandedness(const Napi::CallbackInfo &info);
     Napi::Value IsContextLost(const Napi::CallbackInfo &info);
     Napi::Value GetContextAttributes(const Napi::CallbackInfo &info);
     Napi::Value CreateProgram(const Napi::CallbackInfo &info);

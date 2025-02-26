@@ -36,6 +36,22 @@ interface WebGLUniformLocation {
   readonly name?: string;
 }
 
+interface WebGLRenderingContextBase {
+  /**
+   * Set the default coordinate handedness for the WebGL rendering context. This value is used with the `XRWebGLLayer` to determine the correct
+   * coordinate system.
+   * 
+   * At JSAR's __Defferred Composition__, we will auto detect the view or projection matrix updates and adjust the value with the WebXR session's
+   * matricies, this method is used to set the coordinate handedness to compute the final view or projection matrix at renderer backend.
+   * 
+   * The default handedness is 'right' that follows the WebGL and WebXR's default coordinate system, thus if you are using the 'left' handedness
+   * engine such as Babylon.js, you should call this method before the rendering loop.
+   * 
+   * @param handedness 'left' | 'right'
+   */
+  setDefaultCoordHandedness?(handedness: 'left' | 'right'): void;
+}
+
 interface XRSession {
   /**
    * In JSAR's __Defferred Composition__, we leverage the hit testing to host to decrease the latency when user interacts with the virtual objects 

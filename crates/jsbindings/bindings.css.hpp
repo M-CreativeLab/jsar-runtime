@@ -437,6 +437,12 @@ namespace crates::css2
 
       public:
         bool isCalc() const { return isCalc_; }
+        float numberValue()
+        {
+          if (isCalc_)
+            return 0;
+          return std::get<NoCalcLength>(value_).value;
+        }
 
       private:
         bool isCalc_;
@@ -531,6 +537,8 @@ namespace crates::css2
 
       namespace transform
       {
+        using TransformOperationType = holocron::css::values::specified::TransformOperationTag;
+
         class Translate
         {
         public:
@@ -690,7 +698,7 @@ namespace crates::css2
           }
 
         public:
-          const holocron::css::values::specified::TransformOperationTag type() const { return type_; }
+          const TransformOperationType type() const { return type_; }
 
           /**
            * Get the operation implementation as a specific type.
@@ -703,7 +711,7 @@ namespace crates::css2
           }
 
         private:
-          holocron::css::values::specified::TransformOperationTag type_;
+          TransformOperationType type_;
           OperationImpl impl_;
         };
 

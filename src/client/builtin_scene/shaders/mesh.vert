@@ -1,4 +1,7 @@
 uniform mat4 viewProjection;
+#ifdef MULTIVIEW
+uniform mat4 viewProjectionR;
+#endif
 uniform mat4 modelMatrix;
 
 in vec3 position;
@@ -61,7 +64,16 @@ void main() {
 #ifdef USE_INSTANCE_TRANSLATIONS
   worldPosition.xyz += instance_translation;
 #endif
+
+#ifdef MULTIVIEW
+  if (VIEW_ID == 0u) {
+    gl_Position = viewProjection * worldPosition;
+  } else {
+    gl_Position = viewProjectionR * worldPosition;
+  }
+#else
   gl_Position = viewProjection * worldPosition;
+#endif
 
   pos = worldPosition.xyz;
 

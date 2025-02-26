@@ -5,6 +5,8 @@
 #include <string>
 #include <client/graphics/webgl_context.hpp>
 #include <client/graphics/webgl_program.hpp>
+#include <client/graphics/webgl_shader.hpp>
+
 #include "./asset.hpp"
 #include "./shader_base.hpp"
 
@@ -14,6 +16,37 @@ namespace builtin_scene
   class Material
   {
   public:
+    static inline std::vector<std::string> GlobalDefines = {};
+    /* The define to require multiview */
+    static constexpr const char *kRequireMultiviewDefine = "REQUIRE_MULTIVIEW";
+
+  public:
+    /**
+     * Set the global defines for all materials later created.
+     *
+     * @param define The define to set.
+     */
+    static void SetGlobalDefines(const std::string &define);
+
+    /**
+     * Unset the global defines for all materials later created.
+     *
+     * @param define The define to unset.
+     */
+    static void UnsetGlobalDefines(const std::string &define);
+
+    /**
+     * Set the multiview is required for all materials later created.
+     *
+     * @param required Whether the multiview is required.
+     */
+    static inline void SetMultiviewRequired(bool required)
+    {
+      required
+          ? SetGlobalDefines(kRequireMultiviewDefine)
+          : UnsetGlobalDefines(kRequireMultiviewDefine);
+    }
+
     /**
      * Create a new instance of the material.
      *
@@ -53,14 +86,14 @@ namespace builtin_scene
      */
     virtual ShaderRef vertexShader()
     {
-      return ShaderRef("shaders/mesh.vert");
+      return ShaderRef(client_graphics::WebGLShaderType::kVertex, "shaders/mesh.vert");
     }
     /**
      * @returns The fragment shader for the material.
      */
     virtual ShaderRef fragmentShader()
     {
-      return ShaderRef("materials/default.frag");
+      return ShaderRef(client_graphics::WebGLShaderType::kFragment, "materials/default.frag");
     }
     /**
      * Initialize the material with the given program.
@@ -83,6 +116,15 @@ namespace builtin_scene
     virtual void onBeforeDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program, std::shared_ptr<Mesh3d> mesh) {}
     virtual void onAfterDrawMesh(std::shared_ptr<client_graphics::WebGLProgram> program, std::shared_ptr<Mesh3d> mesh) {}
 
+  public:
+    /**
+     * @returns The list of defines for the material, which includes the global defines.
+     */
+    const std::vector<std::string> getDefinesWithGlobals() const
+    {
+      return mixDefines(defines(), GlobalDefines);
+    }
+
   protected:
     /**
      * Mix the defines with the base defines of the material.
@@ -92,17 +134,7 @@ namespace builtin_scene
      * @returns The mixed defines.
      */
     const std::vector<std::string> mixDefines(const std::vector<std::string> &baseDefines,
-                                              const std::vector<std::string> &definesToAdd) const
-    {
-      std::vector<std::string> result = definesToAdd;
-      // Ignore duplicates.
-      for (const auto &define : definesToAdd)
-      {
-        if (std::find(baseDefines.begin(), baseDefines.end(), define) == baseDefines.end())
-          result.push_back(define);
-      }
-      return result;
-    }
+                                              const std::vector<std::string> &definesToAdd) const;
 
   protected:
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;

@@ -762,6 +762,10 @@ namespace client_graphics
     std::string vendor;
     std::string version;
     std::string renderer;
+    /**
+     * The default handedness of the coordinate system to use.
+     */
+    commandbuffers::MatrixHandedness defaultCoordHandedness = commandbuffers::MatrixHandedness::MATRIX_RIGHT_HANDED;
 
   protected:
     TrClientContextPerProcess *clientContext_;

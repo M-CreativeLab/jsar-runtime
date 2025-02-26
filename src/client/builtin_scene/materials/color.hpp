@@ -52,7 +52,7 @@ namespace builtin_scene::materials
     const std::string name() const override { return "ColorMaterial"; }
     ShaderRef fragmentShader() override
     {
-      return ShaderRef("materials/color.frag");
+      return ShaderRef(ShaderType::kFragment, "materials/color.frag");
     }
     bool initialize(std::shared_ptr<client_graphics::WebGL2Context> glContext,
                     std::shared_ptr<client_graphics::WebGLProgram> program) override

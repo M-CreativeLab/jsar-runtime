@@ -126,6 +126,16 @@ namespace builtin_scene
              glm::scale(glm::mat4(1.0f), scale_);
     }
     /**
+     * Get the matrix representation of the transform with the post transform and clear the dirty flag.
+     */
+    inline glm::mat4 matrixWithPostTransform() const
+    {
+      glm::mat4 mat = matrix();
+      if (postTransform_ != nullptr)
+        mat = mat * postTransform_->matrix();
+      return mat;
+    }
+    /**
      * Set the translation.
      *
      * @param translation The new translation.
@@ -134,6 +144,17 @@ namespace builtin_scene
     {
       translation_ = translation;
       isDirty_ = true;
+    }
+    /**
+     * Set the translation (x, y, z).
+     * 
+     * @param x The x component of the translation.
+     * @param y The y component of the translation.
+     * @param z The z component of the translation.
+     */
+    inline void setTranslation(float x, float y, float z)
+    {
+      setTranslation(math::Vec3(x, y, z));
     }
     /**
      * Set the rotation.
@@ -200,11 +221,23 @@ namespace builtin_scene
       scale_ = scale;
       return *this;
     }
+    /**
+     * Get the post transform reference to update, and initialize if it is not initialized.
+     * 
+     * @returns The post transform reference.
+     */
+    Transform &getOrInitPostTransform()
+    {
+      if (postTransform_ == nullptr)
+        postTransform_ = std::make_shared<Transform>();
+      return *postTransform_;
+    }
 
   private:
     bool isDirty_ = true;
     math::Vec3 translation_ = math::Vec3::Identity();
     math::Quat rotation_ = math::Quat::Identity();
     math::Vec3 scale_ = math::Vec3::One();
+    std::shared_ptr<Transform> postTransform_ = nullptr; // The transform to apply after this transform.
   };
 }

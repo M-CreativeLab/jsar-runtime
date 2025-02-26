@@ -29,9 +29,12 @@ add_library(TransmuteCore SHARED
 set(TRANSMUTE_CLIENT_BINARY_FILE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/TransmuteClient")
 set(TRANSMUTE_CLIENT_BINARY_HEADER "${CMAKE_SOURCE_DIR}/src/runtime/res/client.bin.h")
 set(TR_BINARY_GENERATOR "${CMAKE_SOURCE_DIR}/tools/generate_binary_header.sh")
+if(ANDROID)
+    set(TR_BINARY_GENERATOR_PLATFORM "android")
+endif()
 add_custom_command(
     OUTPUT ${TRANSMUTE_CLIENT_BINARY_HEADER}
-    COMMAND ${TR_BINARY_GENERATOR} transmute_client_binary ${TRANSMUTE_CLIENT_BINARY_FILE} ${TRANSMUTE_CLIENT_BINARY_HEADER}
+    COMMAND ${TR_BINARY_GENERATOR} transmute_client_binary ${TRANSMUTE_CLIENT_BINARY_FILE} ${TRANSMUTE_CLIENT_BINARY_HEADER} --platform=${TR_BINARY_GENERATOR_PLATFORM}
     DEPENDS TransmuteClient
     COMMENT "Generating client binary header"
 )

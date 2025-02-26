@@ -16,6 +16,7 @@ add_definitions(-DTR_LOGGING_SIMPLE_TAG=1)
 
 # Set the common libraries to be linked by client, common and other tools
 if (ANDROID)
+    add_link_options(-Wl,--no-eh-frame-hdr) # Disable the generation of .eh_frame_hdr section
     link_libraries(log)
 elseif (LINUX)
     link_libraries(X11 pthread)

@@ -16,9 +16,15 @@ namespace dom
     using HTMLElement::HTMLElement;
     HTMLCanvasElement(std::shared_ptr<Document> ownerDocument)
         : HTMLElement("CANVAS", ownerDocument),
-          canvas::ImageSource(),
-          canvasImpl_(std::make_shared<canvas::Canvas>())
+          canvas::ImageSource()
     {
+    }
+
+  public:
+    void createdCallback() override
+    {
+      HTMLElement::createdCallback();
+      canvasImpl_ = std::make_shared<canvas::Canvas>();
     }
 
   public:

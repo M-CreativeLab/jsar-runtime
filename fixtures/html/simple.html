@@ -4,10 +4,13 @@
   <meta charset="utf-8" />
   <title>Simple HTML</title>
   <style>
+    body {
+      background-color: #fff;
+    }
     img {
       border-bottom-right-radius: 50px;
-      height: 100px;
-      transform: matrix(1, 2, -1, 1, 80, 80);
+      height: 300px;
+      transform: translate3d(0, 0, 35px);
     }
 
     #header {
@@ -18,16 +21,19 @@
       font-weight: bolder;
       margin: 20px;
       padding: 0;
+      transform: translate3d(0, 0, 15px);
     }
 
     p {
       width: 100%;
       font-size: 30px;
       font-weight: bold;
+      padding: 20px;
+      box-sizing: border-box;
     }
 
     p.main {
-      color: #18227a;
+      color: #0514a2;
       background-color: #fff !important;
       line-height: 1.5;
     }
@@ -37,8 +43,12 @@
     }
 
     span {
-      background-color: rgb(46, 43, 43);
+      background-color: rgb(110, 37, 37);
       padding: 20px;
+      color: rgb(231, 231, 231);
+      font-weight: bold;
+      font-size: 30px;
+      transform: translate3d(0, 0, 50px);
     }
   </style>
   <script>

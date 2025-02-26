@@ -17,6 +17,57 @@ namespace builtin_scene
     friend class RendererScope;
     friend class RenderSystem;
 
+  private:
+    /**
+     * The WebXR render target for the renderer, which stores the view or views to render.
+     */
+    class XRRenderTarget
+    {
+    public:
+      /**
+       * Construct the render target for the single view.
+       *
+       * @param view The view to render.
+       */
+      XRRenderTarget(std::shared_ptr<client_xr::XRView> view)
+          : multiview_(false), view_(view)
+      {
+      }
+      /**
+       * Construct the render target for the multiple views.
+       *
+       * @param views The views to render.
+       */
+      XRRenderTarget(const std::vector<std::shared_ptr<client_xr::XRView>> &views)
+          : multiview_(true), views_(&views)
+      {
+      }
+
+    public:
+      /**
+       * @returns Whether the render target is multiview.
+       */
+      inline bool isMultiview() const { return multiview_; }
+      /**
+       * @returns The view to render, it is `nullptr` if the render target is multiview.
+       */
+      inline std::shared_ptr<client_xr::XRView> view() const { return view_; }
+      /**
+       * @returns The views to render, and it will throw an exception if the render target is not multiview.
+       */
+      inline const std::vector<std::shared_ptr<client_xr::XRView>> &views() const
+      {
+        if (views_ == nullptr)
+          throw std::runtime_error("The render target is not multiview.");
+        return *views_;
+      }
+
+    private:
+      bool multiview_ = false;
+      std::shared_ptr<client_xr::XRView> view_ = nullptr;
+      const std::vector<std::shared_ptr<client_xr::XRView>> *views_ = nullptr;
+    };
+
   public:
     Renderer(std::shared_ptr<client_graphics::WebGL2Context> glContext)
         : glContext_(glContext)
@@ -82,19 +133,19 @@ namespace builtin_scene
      * @param mesh The mesh to draw.
      * @param material The material to draw the mesh with.
      * @param transform The transform of the mesh.
-     * @param xrView The XR view to draw the mesh with.
+     * @param renderTarget The XR render target to draw the mesh with.
      */
     void drawMesh3d(std::shared_ptr<Mesh3d> mesh, std::shared_ptr<MeshMaterial3d> material,
                     std::shared_ptr<Transform> transform,
-                    std::shared_ptr<client_xr::XRView> xrView);
+                    std::optional<XRRenderTarget> renderTarget = std::nullopt);
     /**
      * Update the view projection matrix.
      *
      * @param program The WebGL program to update the view projection matrix with.
-     * @param xrView The XR view to update the view projection matrix with.
+     * @param renderTarget The XR render target to update the view projection matrix with.
      */
     void updateViewProjectionMatrix(std::shared_ptr<client_graphics::WebGLProgram> program,
-                                    std::shared_ptr<client_xr::XRView> xrView);
+                                    std::optional<XRRenderTarget> renderTarget);
     /**
      * Update the transformation matrix for the given program and mesh.
      *
@@ -128,27 +179,27 @@ namespace builtin_scene
      * Render the scene with the given renderer.
      *
      * @param renderer The renderer to use.
-     * @param view The XR view to render the scene with.
+     * @param renderTarget The XR render target.
      */
-    void render(Renderer &renderer, std::shared_ptr<client_xr::XRView> view = nullptr);
+    void render(Renderer &renderer, std::optional<Renderer::XRRenderTarget> renderTarget = std::nullopt);
     /**
      * Traverse the entity hierarchy and render the mesh with the given renderer in pre-order.
      *
      * @param entity The entity to traverse and render.
      * @param renderer The renderer to use.
-     * @param view The XR view to render the entity with.
-     * @param isPostOrder Whether to render the entity in post-order, namely, render the child entities first.
+     * @param renderTarget The XR render target.
      */
     void traverseAndRender(ecs::EntityId entity, Renderer &renderer,
-                           std::shared_ptr<client_xr::XRView> view = nullptr);
+                           std::optional<Renderer::XRRenderTarget> renderTarget = std::nullopt);
     /**
      * Render the mesh with the given renderer.
      *
-     * @param mesh The mesh entity to render.
+     * @param entity The entity to render.
+     * @param meshComponent The mesh component to render.
      * @param renderer The renderer to use.
-     * @param view The XR view to render the mesh with.
+     * @param renderTarget The XR render target.
      */
     void renderMesh(ecs::EntityId &entity, std::shared_ptr<Mesh3d> meshComponent, Renderer &renderer,
-                    std::shared_ptr<client_xr::XRView> view);
+                    std::optional<Renderer::XRRenderTarget> renderTarget);
   };
 }

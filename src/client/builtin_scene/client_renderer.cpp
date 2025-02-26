@@ -82,7 +82,7 @@ namespace builtin_scene
 
   void Renderer::drawMesh3d(shared_ptr<Mesh3d> mesh, shared_ptr<MeshMaterial3d> material,
                             shared_ptr<Transform> transform,
-                            shared_ptr<client_xr::XRView> xrView)
+                            std::optional<XRRenderTarget> renderTarget)
   {
     glContext_->enable(WEBGL_DEPTH_TEST);
     glContext_->depthMask(true);
@@ -96,7 +96,7 @@ namespace builtin_scene
     material->onBeforeDrawMesh(mesh);
 
     // Update matrices
-    updateViewProjectionMatrix(programScope.program(), xrView);
+    updateViewProjectionMatrix(programScope.program(), renderTarget);
     updateTransformationMatrix(programScope.program(), transform);
 
     // Draw the mesh
@@ -114,24 +114,51 @@ namespace builtin_scene
   }
 
   void Renderer::updateViewProjectionMatrix(shared_ptr<client_graphics::WebGLProgram> program,
-                                            shared_ptr<client_xr::XRView> xrView)
+                                            std::optional<XRRenderTarget> renderTarget)
   {
     assert(program != nullptr);
 
-    auto viewProjectionLoc = glContext_->getUniformLocation(program, "viewProjection");
-    if (!viewProjectionLoc.has_value())
+    auto viewProjection = glContext_->getUniformLocation(program, "viewProjection");
+    if (!viewProjection.has_value())
       throw runtime_error("The viewProjection uniform location is not found.");
 
-    auto handedness = MatrixHandedness::MATRIX_RIGHT_HANDED;
-    if (xrView != nullptr && xrView->eye() == client_xr::XREye::kRight)
+    auto handedness = MatrixHandedness::MATRIX_RIGHT_HANDED; // focily set to right-handed.
+    if (renderTarget != std::nullopt)
     {
-      MatrixComputationGraph viewProjectionCG(WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye, handedness);
-      glContext_->uniformMatrix4fv(viewProjectionLoc.value(), false, viewProjectionCG);
+      if (renderTarget->isMultiview())
+      {
+        auto viewProjectionR = glContext_->getUniformLocation(program, "viewProjectionR");
+        if (!viewProjectionR.has_value())
+          throw runtime_error("The viewProjectionR uniform location is not found in multiview mode.");
+
+        {
+          MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ViewProjectionMatrix, handedness);
+          glContext_->uniformMatrix4fv(viewProjection.value(), false, graph);
+        }
+        {
+          MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye, handedness);
+          glContext_->uniformMatrix4fv(viewProjectionR.value(), false, graph);
+        }
+        return;
+      }
+      else
+      {
+        auto view = renderTarget->view();
+        assert(view != nullptr);
+
+        if (view->eye() == client_xr::XREye::kRight)
+        {
+          MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ViewProjectionMatrixForRightEye, handedness);
+          glContext_->uniformMatrix4fv(viewProjection.value(), false, graph);
+          return;
+        }
+      }
     }
-    else
+
+    // Default view projection matrix
     {
-      MatrixComputationGraph viewProjectionCG(WebGLMatrixPlaceholderId::ViewProjectionMatrix, handedness);
-      glContext_->uniformMatrix4fv(viewProjectionLoc.value(), false, viewProjectionCG);
+      MatrixComputationGraph graph(WebGLMatrixPlaceholderId::ViewProjectionMatrix, handedness);
+      glContext_->uniformMatrix4fv(viewProjection.value(), false, graph);
     }
   }
 
@@ -148,12 +175,12 @@ namespace builtin_scene
         return;
 
       if (transform != nullptr)
-        matToUpdate = transform->matrix();
+        matToUpdate = transform->matrixWithPostTransform();
       else
         matToUpdate = Transform::Identity().matrix();
     }
     else
-      matToUpdate = transform->matrix();
+      matToUpdate = transform->matrixWithPostTransform();
 
     auto loc = glContext_->getUniformLocation(program, "modelMatrix");
     if (!loc.has_value())
@@ -173,35 +200,46 @@ namespace builtin_scene
       if (xrViewerPose != nullptr)
       {
         auto &views = xrViewerPose->views();
-        for (auto view : views)
-          render(*renderer, view);
+        if (!xrExperience->multiviewEnabled())
+        {
+          for (auto view : views)
+            render(*renderer, Renderer::XRRenderTarget(view));
+        }
+        else
+        {
+          render(*renderer, Renderer::XRRenderTarget(views));
+        }
         return;
       }
     }
 
     // Fallback to the default rendering
-    render(*renderer);
+    render(*renderer, std::nullopt);
   }
 
-  void RenderSystem::render(Renderer &renderer, shared_ptr<client_xr::XRView> view)
+  void RenderSystem::render(Renderer &renderer, std::optional<Renderer::XRRenderTarget> renderTarget)
   {
     auto roots = queryEntities<hierarchy::Root>();
     if (roots.size() <= 0) // No root entities to render
       return;
 
-    if (view != nullptr)
-      renderer.setViewport(view->viewport());
+    if (renderTarget != std::nullopt)
+    {
+      if (!renderTarget->isMultiview())
+        renderer.setViewport(renderTarget->view()->viewport());
+    }
+
     for (auto root : roots)
     {
       if (getComponentChecked<hierarchy::Root>(root).renderable == true)
-        traverseAndRender(root, renderer, view);
+        traverseAndRender(root, renderer, renderTarget);
     }
   }
 
   void RenderSystem::traverseAndRender(ecs::EntityId entity, Renderer &renderer,
-                                       shared_ptr<client_xr::XRView> view)
+                                       std::optional<Renderer::XRRenderTarget> renderTarget)
   {
-    auto renderEntity = [this, &renderer, view](ecs::EntityId entity) -> bool
+    auto renderEntity = [this, &renderer, renderTarget](ecs::EntityId entity) -> bool
     {
       // Render the mesh if it exists
       auto mesh = getComponent<Mesh3d>(entity);
@@ -210,7 +248,7 @@ namespace builtin_scene
         // If the mesh exists but rendering is disabled, we need to skip its rendering and its children.
         if (mesh->isRenderingDisabled())
           return false;
-        renderMesh(entity, mesh, renderer, view);
+        renderMesh(entity, mesh, renderer, renderTarget);
       }
 
       // TODO: support other renderable components (e.g., particles, etc.)
@@ -224,12 +262,12 @@ namespace builtin_scene
     if (children != nullptr)
     {
       for (auto child : children->children())
-        traverseAndRender(child, renderer, view);
+        traverseAndRender(child, renderer, renderTarget);
     }
   }
 
   void RenderSystem::renderMesh(ecs::EntityId &entity, shared_ptr<Mesh3d> meshComponent, Renderer &renderer,
-                                shared_ptr<client_xr::XRView> view)
+                                std::optional<Renderer::XRRenderTarget> renderTarget)
   {
     auto materialComponent = getComponent<MeshMaterial3d>(entity);
     if (materialComponent == nullptr)
@@ -242,6 +280,6 @@ namespace builtin_scene
     renderer.drawMesh3d(meshComponent,
                         materialComponent,
                         getComponent<Transform>(entity),
-                        view);
+                        renderTarget);
   }
 }

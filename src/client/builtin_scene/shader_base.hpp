@@ -2,10 +2,13 @@
 
 #include <vector>
 #include <string>
+#include <client/graphics/webgl_shader.hpp>
 #include "./shaders_store.gen.hpp"
 
 namespace builtin_scene
 {
+  using ShaderType = client_graphics::WebGLShaderType;
+
   /**
    * The preprocessor for shaders, such as adding #version, #extension, etc.
    */
@@ -17,20 +20,20 @@ namespace builtin_scene
      *
      * @param source The source code of the shader.
      * @param defines The list of defines to add to the shader.
+     * @param shaderType The type of the shader, such as vertex or fragment shader.
      * @return The preprocessed source code of the shader.
      */
-    static std::string PreprocessSource(std::string source, const std::vector<std::string> &defines)
-    {
-      // Add WebGL 2.0 version: #version 300 es
-      source = "#version 300 es\n" + source;
+    static std::string PreprocessSource(std::string source, const std::vector<std::string> &defines,
+                                        client_graphics::WebGLShaderType shaderType);
 
-      // Add the defines
-      for (const auto &define : defines)
-        source = "#define " + define + "\n" + source;
-
-      // Return the preprocessed source
-      return source;
-    }
+    /**
+     * Concatenate the source code with the given lines.
+     *
+     * @param source The source code to concatenate.
+     * @param lines The list of lines to concatenate.
+     * @return The concatenated source code.
+     */
+    static std::string ConcatSource(const std::string &source, const std::vector<std::string> &lines);
 
   public:
     ShaderPreprocessor() = delete;
@@ -42,8 +45,9 @@ namespace builtin_scene
   class ShaderSource
   {
   public:
-    ShaderSource(std::string name, std::string source, const std::vector<std::string> &defines)
-        : name(name), source(ShaderPreprocessor::PreprocessSource(source, defines))
+    ShaderSource(std::string name, std::string source, const std::vector<std::string> &defines,
+                 client_graphics::WebGLShaderType shaderType)
+        : name(name), source(ShaderPreprocessor::PreprocessSource(source, defines, shaderType))
     {
     }
 
@@ -63,7 +67,7 @@ namespace builtin_scene
      *
      * @param name The relative path of the builtin shader, such as "materials/color.frag".
      */
-    ShaderRef(std::string name) : name(name)
+    ShaderRef(client_graphics::WebGLShaderType type, std::string name) : type(type), name(name)
     {
     }
 
@@ -76,10 +80,14 @@ namespace builtin_scene
      */
     ShaderSource shader(const std::vector<std::string> &defines = {}) const
     {
-      return ShaderSource(name, shaders::SHADERS_STORE.at(name), defines);
+      return ShaderSource(name, shaders::SHADERS_STORE.at(name), defines, type);
     }
 
   public:
+    /**
+     * The shader type, such as vertex or fragment shader.
+     */
+    client_graphics::WebGLShaderType type;
     /**
      * The relative path of the builtin shader, such as "materials/color.frag".
      */
