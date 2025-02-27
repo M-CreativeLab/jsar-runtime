@@ -74,7 +74,7 @@ namespace builtin_scene
     // Configure the initial uniform values
     {
       client_graphics::WebGLProgramScope programScope(glContext_, program);
-      updateTransformationMatrix(program, nullptr, true); // forcily update the transformation matrix.
+      updateTransformationMatrix(program, nullptr, nullptr, true); // forcily update the transformation matrix.
 
       meshMaterial3d->initialize(glContext_, program, mesh3d);
     }
@@ -82,6 +82,7 @@ namespace builtin_scene
 
   void Renderer::drawMesh3d(shared_ptr<Mesh3d> mesh, shared_ptr<MeshMaterial3d> material,
                             shared_ptr<Transform> transform,
+                            shared_ptr<Transform> parentTransform,
                             std::optional<XRRenderTarget> renderTarget)
   {
     glContext_->enable(WEBGL_DEPTH_TEST);
@@ -97,7 +98,7 @@ namespace builtin_scene
 
     // Update matrices
     updateViewProjectionMatrix(programScope.program(), renderTarget);
-    updateTransformationMatrix(programScope.program(), transform);
+    updateTransformationMatrix(programScope.program(), transform, parentTransform);
 
     // Draw the mesh
     {
@@ -164,6 +165,7 @@ namespace builtin_scene
 
   void Renderer::updateTransformationMatrix(shared_ptr<client_graphics::WebGLProgram> program,
                                             shared_ptr<Transform> transform,
+                                            shared_ptr<Transform> parentTransform,
                                             bool forceUpdate)
   {
     assert(program != nullptr);
@@ -175,12 +177,27 @@ namespace builtin_scene
         return;
 
       if (transform != nullptr)
-        matToUpdate = transform->matrixWithPostTransform();
+        matToUpdate = transform->matrix();
       else
         matToUpdate = Transform::Identity().matrix();
     }
     else
-      matToUpdate = transform->matrixWithPostTransform();
+      matToUpdate = transform->matrix();
+
+    // Handle the post transform
+    glm::mat4 postMat = glm::mat4(1.0f);
+    if (parentTransform != nullptr && parentTransform->hasPostTransform())
+    {
+      auto& parentPostTransform = parentTransform->getOrInitPostTransform();
+      postMat = parentPostTransform.accumulatedMatrix();
+    }
+    if (transform != nullptr && transform->hasPostTransform())
+    {
+      auto& postTransform = transform->getOrInitPostTransform();
+      postMat = postTransform.matrix() * postMat;
+      postTransform.setAccumulatedMatrix(postMat);
+    }
+    matToUpdate = postMat * matToUpdate;
 
     auto loc = glContext_->getUniformLocation(program, "modelMatrix");
     if (!loc.has_value())
@@ -277,9 +294,15 @@ namespace builtin_scene
       renderer.initializeMesh3d(meshComponent);
     if (!materialComponent->initialized())
       renderer.initializeMeshMaterial3d(meshComponent, materialComponent);
+
+    std::shared_ptr<Transform> parentTransform = nullptr;
+    auto parentComponent = getComponent<hierarchy::Parent>(entity);
+    if (parentComponent != nullptr)
+      parentTransform = getComponent<Transform>(parentComponent->parent());
     renderer.drawMesh3d(meshComponent,
                         materialComponent,
                         getComponent<Transform>(entity),
+                        parentTransform,
                         renderTarget);
   }
 }

@@ -16,7 +16,13 @@ namespace builtin_scene::hierarchy
     }
 
   public:
+    /**
+     * @returns The parent entity ID.
+     */
     const ecs::EntityId &parent() const { return parent_; }
+    /**
+     * @returns The root entity ID.
+     */
     const ecs::EntityId &root() const { return root_; }
 
   private:

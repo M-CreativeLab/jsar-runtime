@@ -8,7 +8,7 @@
 namespace builtin_scene
 {
   /**
-   * The transform component represents the translation, rotation, and scale of an entity.
+   * This component is a representation of a transformation in space.
    */
   class Transform : public ecs::Component
   {
@@ -17,8 +17,6 @@ namespace builtin_scene
      * The identity transform.
      */
     static const Transform Identity() { return Transform(); }
-
-  public:
     /**
      * Creates a new transform from the given translation.
      *
@@ -88,7 +86,7 @@ namespace builtin_scene
     /**
      * @returns If the transform is dirty, meaning it needs to be updated.
      */
-    inline bool isDirty() const 
+    inline bool isDirty() const
     {
       if (postTransform_ != nullptr && postTransform_->isDirty())
         return true;
@@ -141,6 +139,18 @@ namespace builtin_scene
       return mat;
     }
     /**
+     * Set the matrix representation of the transform.
+     *
+     * @param mat The matrix representation of the transform.
+     */
+    inline void setMatrix(glm::mat4 mat)
+    {
+      translation_ = math::Vec3(mat[3]);
+      rotation_ = math::Quat(mat);
+      scale_ = math::Vec3(mat[0][0], mat[1][1], mat[2][2]);
+      isDirty_ = false;
+    }
+    /**
      * Set the translation.
      *
      * @param translation The new translation.
@@ -152,7 +162,7 @@ namespace builtin_scene
     }
     /**
      * Set the translation (x, y, z).
-     * 
+     *
      * @param x The x component of the translation.
      * @param y The y component of the translation.
      * @param z The z component of the translation.
@@ -161,6 +171,24 @@ namespace builtin_scene
     {
       setTranslation(math::Vec3(x, y, z));
     }
+    /**
+     * Set the x component of the translation.
+     * 
+     * @param x The x component of the translation.
+     */
+    inline void setX(float x) { setTranslation(x, translation_.y, translation_.z); }
+    /**
+     * Set the y component of the translation.
+     * 
+     * @param y The y component of the translation.
+     */
+    inline void setY(float y) { setTranslation(translation_.x, y, translation_.z); }
+    /**
+     * Set the z component of the translation.
+     * 
+     * @param z The z component of the translation.
+     */
+    inline void setZ(float z) { setTranslation(translation_.x, translation_.y, z); }
     /**
      * Set the rotation.
      *
@@ -227,13 +255,34 @@ namespace builtin_scene
       return *this;
     }
     /**
-     * Get the post transform reference to update, and initialize if it is not initialized.
+     * Get a readonly `glm::matrix` reference to represent the accumulated matrix.
      * 
+     * The __Accumulated Matrix__ in `Transform` is to store the accumulated transformation matrix in the hierarchy, for example, when
+     * the `Transform` is to represent a relative transformation, using the accumulated matrix can reduce the calculation of the final
+     * transformation matrix.
+     * 
+     * @returns The accumulated matrix.
+     */
+    inline const glm::mat4 &accumulatedMatrix() const { return accumulatedMatrix_; }
+    /**
+     * Set the accumulated matrix.
+     * 
+     * @param mat The accumulated matrix.
+     * @see accumulatedMatrix() to learn more about the accumulated matrix.
+     */
+    inline void setAccumulatedMatrix(glm::mat4 mat) { accumulatedMatrix_ = mat; }
+    /**
+     * @returns If the post transform is initialized.
+     */
+    inline bool hasPostTransform() const { return postTransform_ != nullptr; }
+    /**
+     * Get the post transform reference to update, and initialize if it is not initialized.
+     *
      * @returns The post transform reference.
      */
     Transform &getOrInitPostTransform()
     {
-      if (postTransform_ == nullptr)
+      if (!hasPostTransform())
         postTransform_ = std::make_shared<Transform>();
       return *postTransform_;
     }
@@ -243,6 +292,7 @@ namespace builtin_scene
     math::Vec3 translation_ = math::Vec3::Identity();
     math::Quat rotation_ = math::Quat::Identity();
     math::Vec3 scale_ = math::Vec3::One();
+    glm::mat4 accumulatedMatrix_ = glm::mat4(1.0f);
     std::shared_ptr<Transform> postTransform_ = nullptr; // The transform to apply after this transform.
   };
 }

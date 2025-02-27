@@ -302,6 +302,46 @@ namespace crates::css2
                     << matrix.m43 << ", "
                     << matrix.m44 << ")";
         }
+        T operator[](size_t index) const
+        {
+          switch (index)
+          {
+          case 0:
+            return m11;
+          case 1:
+            return m12;
+          case 2:
+            return m13;
+          case 3:
+            return m14;
+          case 4:
+            return m21;
+          case 5:
+            return m22;
+          case 6:
+            return m23;
+          case 7:
+            return m24;
+          case 8:
+            return m31;
+          case 9:
+            return m32;
+          case 10:
+            return m33;
+          case 11:
+            return m34;
+          case 12:
+            return m41;
+          case 13:
+            return m42;
+          case 14:
+            return m43;
+          case 15:
+            return m44;
+          default:
+            return 0;
+          }
+        }
 
       public:
         T m11;
@@ -339,6 +379,7 @@ namespace crates::css2
         {
           return os << number.value;
         }
+        operator float() const { return value; }
 
       public:
         float value;
@@ -437,7 +478,7 @@ namespace crates::css2
 
       public:
         bool isCalc() const { return isCalc_; }
-        float numberValue()
+        float numberValue() const
         {
           if (isCalc_)
             return 0;
@@ -481,6 +522,15 @@ namespace crates::css2
             return os << std::get<Percentage>(length.value_);
           else
             return os << "Calc()";
+        }
+
+      public:
+        /** TODO: Support percentage */
+        float numberValue() const
+        {
+          if (std::holds_alternative<NoCalcLength>(value_))
+            return std::get<NoCalcLength>(value_).value;
+          return 0;
         }
 
       private:

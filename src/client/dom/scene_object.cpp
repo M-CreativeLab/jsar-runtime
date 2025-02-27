@@ -1,4 +1,6 @@
 #include <client/cssom/units.hpp>
+#include <client/cssom/types/transform.hpp>
+
 #include "./scene_object.hpp"
 #include "./document.hpp"
 #include "./text.hpp"
@@ -229,22 +231,12 @@ namespace dom
       if (transformComponent != nullptr)
       {
         auto &postTransform = transformComponent->getOrInitPostTransform();
-        auto transformProperty = crates::css2::parsing::parseTransform(style.getPropertyValue("transform"));
-        for (auto transformOperation : transformProperty.operations())
+        auto transformProperty = client_cssom::types::transform::Transform::Parse(style.getPropertyValue("transform"));
+        if (transformProperty.size() > 0)
         {
-          using namespace crates::css2::values::specified::transform;
-          switch (transformOperation.type())
-          {
-          case TransformOperationType::kTranslate3D:
-          {
-            Translate3D translation3d = transformOperation.getImplAs<Translate3D>();
-            postTransform.setTranslation(0, 0,
-                                         client_cssom::pixelToMeter(translation3d.z.numberValue()));
-            break;
-          }
-          default:
-            break;
-          }
+          glm::mat4 mat(1.0f);
+          if (transformProperty.applyMatrixTo(mat) > 0)
+            postTransform.setMatrix(mat);
         }
       }
     }

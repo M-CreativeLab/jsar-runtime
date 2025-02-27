@@ -133,10 +133,12 @@ namespace builtin_scene
      * @param mesh The mesh to draw.
      * @param material The material to draw the mesh with.
      * @param transform The transform of the mesh.
+     * @param parentTransform The parent transform of the mesh, `nullptr` for the root transform.
      * @param renderTarget The XR render target to draw the mesh with.
      */
     void drawMesh3d(std::shared_ptr<Mesh3d> mesh, std::shared_ptr<MeshMaterial3d> material,
                     std::shared_ptr<Transform> transform,
+                    std::shared_ptr<Transform> parentTransform = nullptr,
                     std::optional<XRRenderTarget> renderTarget = std::nullopt);
     /**
      * Update the view projection matrix.
@@ -159,6 +161,7 @@ namespace builtin_scene
      */
     void updateTransformationMatrix(std::shared_ptr<client_graphics::WebGLProgram> program,
                                     std::shared_ptr<Transform> transform,
+                                    std::shared_ptr<Transform> parentTransform = nullptr,
                                     bool forceUpdate = false);
 
   private:
