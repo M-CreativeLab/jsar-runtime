@@ -1903,11 +1903,14 @@ private:
 	}
 	TR_OPENGL_FUNC void OnColorMask(ColorMaskCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		auto r = req->red;
-		auto g = req->green;
-		auto b = req->blue;
-		auto a = req->alpha;
+		GLboolean r = req->red;
+		GLboolean g = req->green;
+		GLboolean b = req->blue;
+		GLboolean a = req->alpha;
+
 		glColorMask(r, g, b, a);
+		reqContentRenderer->getOpenGLContext()->RecordColorMask(r, g, b, a);
+
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
 			DEBUG(DEBUG_TAG, "[%d] GL::ColorMask(%d, %d, %d, %d)", options.isDefaultQueue, r, g, b, a);
 	}

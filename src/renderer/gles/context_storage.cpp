@@ -45,7 +45,15 @@ void OpenGLContextStorage::RecordFrontFace(GLenum mode)
   m_FrontFace = mode;
 }
 
-void OpenGLContextStorage::RecordDepthMask(bool enabled)
+void OpenGLContextStorage::RecordColorMask(GLboolean r, GLboolean g, GLboolean b, GLboolean a)
+{
+  m_ColorMask[0] = r;
+  m_ColorMask[1] = g;
+  m_ColorMask[2] = b;
+  m_ColorMask[3] = a;
+}
+
+void OpenGLContextStorage::RecordDepthMask(GLboolean enabled)
 {
   m_DepthMask = enabled;
 }
@@ -450,6 +458,14 @@ OpenGLAppContextStorage::OpenGLAppContextStorage(std::string name)
   m_CullFaceEnabled = GL_FALSE;
   m_CullFace = GL_BACK;
   m_FrontFace = GL_CCW;
+
+  // Color mask
+  {
+    m_ColorMask[0] = GL_TRUE;
+    m_ColorMask[1] = GL_TRUE;
+    m_ColorMask[2] = GL_TRUE;
+    m_ColorMask[3] = GL_TRUE;
+  }
 
   // Depth
   {

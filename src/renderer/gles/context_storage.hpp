@@ -151,12 +151,6 @@ public:
   {
     glGetBooleanv(GL_CULL_FACE, &m_CullFaceEnabled);
     glGetBooleanv(GL_DEPTH_TEST, &m_DepthTestEnabled);
-    {
-      m_ColorMask[0] = GL_TRUE;
-      m_ColorMask[1] = GL_TRUE;
-      m_ColorMask[2] = GL_TRUE;
-      m_ColorMask[3] = GL_TRUE;
-    }
   }
   OpenGLContextStorage(std::string name, OpenGLContextStorage *from) : m_Name(name)
   {
@@ -213,7 +207,8 @@ public:
   void RecordCapability(GLenum cap, bool enabled);
   void RecordCullFace(GLenum mode);
   void RecordFrontFace(GLenum mode);
-  void RecordDepthMask(bool enabled);
+  void RecordColorMask(GLboolean r, GLboolean g, GLboolean b, GLboolean a);
+  void RecordDepthMask(GLboolean enabled);
   void RecordBlendFunc(GLenum sfactor, GLenum dfactor);
   void RecordBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha);
   void RecordStencilMask(GLenum face, GLuint mask);
