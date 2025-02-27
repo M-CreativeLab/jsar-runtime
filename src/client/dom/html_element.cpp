@@ -17,8 +17,16 @@ namespace dom
   {
     Element::createdCallback();
 
+    auto onPropertyChanged = [this](const string &name)
+    {
+      // reset the style cache
+      auto document = getOwnerDocumentReference();
+      if (document != nullptr)
+        document->styleCache().resetStyle(getPtr<HTMLElement>());
+    };
     // Create style declaration from the default style & the style attribute.
     style_ = make_shared<client_cssom::CSSStyleDeclaration>(getAttribute("style"));
+    style_->setPropertyChangedCallback(onPropertyChanged);
   }
 
   void HTMLElement::connectedCallback()

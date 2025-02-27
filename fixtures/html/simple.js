@@ -12,13 +12,9 @@ console.info(div);
 // }, 16);
 
 setInterval(() => {
-  // generate random color
-  // const r = Math.floor(Math.random() * 256);
-  // const g = Math.floor(Math.random() * 256);
-  // const b = Math.floor(Math.random() * 256);
-  // div.style.setProperty('background-color', `rgb(${r}, ${g}, ${b})`);
-  div.style.setProperty('transform', 'translate3d(0, 0, 0)');
-}, 1000);
+  const zAxis = Math.floor(15 + Math.sin(Date.now() / 500) * 10);
+  div.style.setProperty('transform', `translate3d(0, 0, ${zAxis}px)`);
+}, 16);
 
 // setTimeout(() => {
 //   div.style.setProperty('display', 'none');

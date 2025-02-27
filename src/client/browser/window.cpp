@@ -44,7 +44,9 @@ namespace browser
         // TODO: handle other types of rules, such as `CSSImportRule`, `CSSMediaRule`, etc.
       }
     }
-    computedStyle->update(htmlElement->style());  // Override the style from the element's.
+
+    auto inlineStyle = htmlElement->style();
+    computedStyle->update(inlineStyle); // Override the style from the element's.
     return *computedStyle;
   }
 }

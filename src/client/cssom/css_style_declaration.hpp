@@ -229,6 +229,8 @@ namespace client_cssom
     {
       pdb_->setProperty(propertyName, value, priority == CSSPropertyPriority::Important);
       cachedCssText_ = std::nullopt;
+      if (propertyChangedCallback_ != nullptr)
+        propertyChangedCallback_(propertyName);
     }
     /**
      * Set a property value and priority within the declaration block if the property is not already set.
@@ -253,11 +255,23 @@ namespace client_cssom
     {
       auto value = pdb_->removeProperty(propertyName);
       cachedCssText_ = std::nullopt;
+      if (propertyChangedCallback_ != nullptr)
+        propertyChangedCallback_(propertyName);
       return value;
+    }
+    /**
+     * Set the callback function when a property is changed.
+     *
+     * @param callback The callback function when a property is changed.
+     */
+    inline void setPropertyChangedCallback(const std::function<void(const std::string &)> &callback)
+    {
+      propertyChangedCallback_ = callback;
     }
 
   private:
     std::shared_ptr<PropertyDeclarationBlock> pdb_;
+    std::function<void(const std::string &)> propertyChangedCallback_ = nullptr;
     mutable std::optional<std::string> cachedCssText_ = std::nullopt;
   };
 }
