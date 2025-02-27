@@ -102,7 +102,7 @@ uint32_t TrConstellation::open(string url, optional<TrDocumentRequestInit> init)
   auto content = contentManager->makeContent();
   if (content == nullptr)
   {
-    DEBUG(LOG_TAG_CONSTELLATION, "Failed to create a new content");
+    DEBUG(LOG_TAG_ERROR, "Failed to create a new content: %s", url.c_str());
     return 0;
   }
 
