@@ -1,9 +1,14 @@
 #include <rapidjson/document.h>
-#include "constellation.hpp"
-#include "idgen.hpp"
+#include <idgen.hpp>
+
+#include "./constellation.hpp"
 #include "./content_manager.hpp"
 #include "./media_manager.hpp"
 #include "./embedder.hpp"
+
+#ifdef TR_ENABLE_INSPECTOR
+#include "./inspector.hpp"
+#endif
 
 using namespace std;
 using namespace std::filesystem;
@@ -26,6 +31,10 @@ TrConstellation::TrConstellation(TrEmbedder *embedder)
   mediaManager = std::make_shared<TrMediaManager>(this);
   renderer = TrRenderer::Make(this);
   xrDevice = xr::Device::Make(this);
+
+#ifdef TR_ENABLE_INSPECTOR
+  inspector = std::make_shared<TrInspector>(this);
+#endif
 }
 
 TrConstellation::~TrConstellation()
@@ -53,11 +62,17 @@ bool TrConstellation::configure(TrConstellationInit &init)
 bool TrConstellation::initialize()
 {
   disableTicking = false;
-  contentManager->initialize();
-  mediaManager->initialize();
-  renderer->initialize();
-  xrDevice->initialize();
-  perfFs = std::make_shared<TrHostPerformanceFileSystem>(options);
+  {
+    contentManager->initialize();
+    mediaManager->initialize();
+    renderer->initialize();
+    xrDevice->initialize();
+    perfFs = std::make_shared<TrHostPerformanceFileSystem>(options);
+
+#ifdef TR_ENABLE_INSPECTOR
+    inspector->initialize();
+#endif
+  }
   initialized = true;
 
   // Start the hived when all the components are ready.
@@ -90,6 +105,10 @@ void TrConstellation::tick(analytics::PerformanceCounter &perfCounter)
     xrDevice->tick();
     perfCounter.record("finishInputSourcesSync");
   }
+
+#ifdef TR_ENABLE_INSPECTOR
+  inspector->tick();
+#endif
 }
 
 TrEmbedder *TrConstellation::getEmbedder()

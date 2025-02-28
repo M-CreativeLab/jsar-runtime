@@ -3,11 +3,16 @@ RELEASE ?= no
 
 define CLEAN_AND_RECONFIGURE
 	rm -rf targets/$1; \
+		CONFIGURE_ARGS=; \
 		if [ "$(RELEASE)" = "yes" ]; then \
-			./configure-$1.sh --release; \
+			CONFIGURE_ARGS="--release"; \
 		else \
-			./configure-$1.sh --debug; \
-		fi
+			CONFIGURE_ARGS="--debug"; \
+		fi; \
+		if [ "$(INSPECTOR)" = "yes" ]; then \
+			CONFIGURE_ARGS="$$CONFIGURE_ARGS --build-inspector"; \
+		fi; \
+		./configure.sh $1 $$CONFIGURE_ARGS
 endef
 
 define BUILD_INSTALL

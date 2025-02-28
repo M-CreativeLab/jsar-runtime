@@ -19,6 +19,9 @@ class TrEmbedder;
 class TrContentRuntime;
 class TrContentManager;
 class TrMediaManager;
+#ifdef TR_ENABLE_INSPECTOR
+class TrInspector;
+#endif
 
 /**
  * The constellation initialization options.
@@ -263,6 +266,13 @@ public:
    * The performance file system for the host.
    */
   std::shared_ptr<TrHostPerformanceFileSystem> perfFs;
+
+#ifdef TR_ENABLE_INSPECTOR
+  /**
+   * The smart pointer to the inspector.
+   */
+  std::shared_ptr<TrInspector> inspector;
+#endif
 
 private:
   TrEmbedder *embedder = nullptr;

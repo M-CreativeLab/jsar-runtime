@@ -57,6 +57,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option(USE_LLD "Use lld (from llvm) linker" OFF)
 option(USE_MOLD "Use mold (A Modern Linker)" OFF)
+option(TR_ENABLE_INSPECTOR "Enable Inspector" OFF)
 
 if(LINUX OR APPLE)
     if (NOT IOS)
@@ -121,6 +122,7 @@ endif()
 include(cmake/TransmuteCXXFlags.cmake)
 include(cmake/TransmuteCommon.cmake)
 include(cmake/TransmuteCore.cmake)
+include(cmake/TransmuteHTTPParser.cmake)
 include(cmake/TransmuteClient.cmake)
 include(cmake/TransmuteTests.cmake)
 

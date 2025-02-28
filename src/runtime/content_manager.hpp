@@ -12,6 +12,7 @@ class TrContentManager final
   friend class TrContentRuntime;
   friend class TrConstellation;
   friend class TrRenderer;
+  friend class TrInspector;
 
 public:
   TrContentManager(TrConstellation *constellation);

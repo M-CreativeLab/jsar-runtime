@@ -21,6 +21,9 @@ CRATES_ONLY ?= no
 # Define the CRATES_FORCE_REBUILD flag (default is no) that will force the crates to be rebuilt
 CRATES_FORCE_REBUILD ?= no
 
+# Define the INSPECTOR flag (default is no) that will build the inspector
+INSPECTOR ?= no
+
 # Update the flags if RELEASE is set to yes
 ifeq ($(RELEASE), yes)
 	CLEAN := yes

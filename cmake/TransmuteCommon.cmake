@@ -13,6 +13,9 @@ include_directories(
 
 # Set the common definitions for all targets
 add_definitions(-DTR_LOGGING_SIMPLE_TAG=1)
+if (TR_ENABLE_INSPECTOR)
+    add_definitions(-DTR_ENABLE_INSPECTOR)
+endif()
 
 # Set the common libraries to be linked by client, common and other tools
 if (ANDROID)

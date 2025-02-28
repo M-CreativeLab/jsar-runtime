@@ -45,6 +45,7 @@ class TrContentRuntime final : public std::enable_shared_from_this<TrContentRunt
 {
   friend class TrContentManager;
   friend class TrHiveDaemon;
+  friend class TrInspector;
   friend class renderer::TrRenderer;
   friend class renderer::TrContentRenderer;
 

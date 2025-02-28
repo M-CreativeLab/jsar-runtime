@@ -6,6 +6,12 @@ file(GLOB TR_CORE_SOURCE
     "src/renderer/gles/*.cpp"
     "src/xr/*.cpp"
 )
+
+if(NOT TR_ENABLE_INSPECTOR)
+    list(FILTER TR_CORE_SOURCE EXCLUDE REGEX ".*/src/runtime/inspector\\.cpp$")
+    list(FILTER TR_CORE_SOURCE EXCLUDE REGEX ".*/src/runtime/inspector_[^/]*\\.cpp$")
+endif()
+
 if(APPLE)
     file(GLOB TR_CORE_SOURCE_MM "src/renderer/*.mm")
     list(APPEND TR_CORE_SOURCE ${TR_CORE_SOURCE_MM})
@@ -40,6 +46,11 @@ add_custom_command(
 )
 add_custom_target(TransmuteClientBinaryHeader DEPENDS ${TRANSMUTE_CLIENT_BINARY_HEADER})
 add_dependencies(TransmuteCore TransmuteClientBinaryHeader) # Ensure the header is generated before building the core library.
+
+# Link the libraries for the inspector
+if(TR_ENABLE_INSPECTOR)
+    target_link_libraries(TransmuteCore PRIVATE llhttp::llhttp)
+endif()
 
 if(APPLE)
     set(APPLE_RENDERER_DEPS

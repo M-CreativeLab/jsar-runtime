@@ -27,19 +27,21 @@ IUnityLog *GET_UNITY_LOG_HANDLE();
 #endif
 
 #define LOG_TAG_UNITY "Unity"
+#define LOG_TAG_JSAR "jsar"
 #define LOG_TAG_ERROR "jsar.error"
 #define LOG_TAG_XR "jsar.xr"
 #define LOG_TAG_FONT "jsar.font"
 #define LOG_TAG_METRICS "jsar.metrics"
+#define LOG_TAG_INSPECTOR "jsar.inspector"
 
-#define LOG_TAG_IPC "jsar"
-#define LOG_TAG_CONSTELLATION "jsar"
-#define LOG_TAG_CONTENT "jsar"
-#define LOG_TAG_SCRIPT "jsar"
-#define LOG_TAG_RENDERER "jsar"
-#define LOG_TAG_MEDIA "jsar"
-#define LOG_TAG_CLIENT_ENTRY "jsar"
-#define LOG_TAG_CLIENT_CANVAS "jsar"
+#define LOG_TAG_IPC LOG_TAG_JSAR
+#define LOG_TAG_CONSTELLATION LOG_TAG_JSAR
+#define LOG_TAG_CONTENT LOG_TAG_JSAR
+#define LOG_TAG_SCRIPT LOG_TAG_JSAR
+#define LOG_TAG_RENDERER LOG_TAG_JSAR
+#define LOG_TAG_MEDIA LOG_TAG_JSAR
+#define LOG_TAG_CLIENT_ENTRY LOG_TAG_JSAR
+#define LOG_TAG_CLIENT_CANVAS LOG_TAG_JSAR
 
 #ifndef TR_LOGGING_SIMPLE_TAG
 // Non-simple logging
