@@ -45,14 +45,9 @@ node_modules
 !/thirdparty/**/*.dll
 !/thirdparty/**/*.lib
 !/thirdparty/**/*.exe
-/build/
-!/build/patches
-!/build/targets
-!/build/minimist.cjs
-!/build/build-*.cjs
-!/build/configure-*.sh
-!/build/configure.sh
-!/build/makefile
+/build/output
+/build/external
+/build/targets/*
 /src/proto/*
 !/src/proto/*.proto
 *.apk
