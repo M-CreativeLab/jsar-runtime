@@ -106,7 +106,7 @@ export class TransmuteRuntime2 extends EventTarget {
     }
 
     let urlObj: URL = null;
-    let loadAsHTML = false; /** If load the content as HTML */
+    let loadAsHTML = true; /** If load the content as HTML */
 
     /**
      * If the input is a path, convert it to a URL.
@@ -141,19 +141,14 @@ export class TransmuteRuntime2 extends EventTarget {
       case '.gltf':
         codeOrUrl = createModel3dViewer(codeOrUrl, { playAnimation: true });
         urlBase = urlObj.href;
+        loadAsHTML = false;
         break;
       case '.png':
       case '.jpg':
       case '.jpeg':
         codeOrUrl = createImage2dViewer(codeOrUrl);
         urlBase = urlObj.href;
-        break;
-      case '.splinecode':
-        const sourceBlob = new Blob([createSplineDesignViewer(codeOrUrl)], { type: 'text/plain' });
-        codeOrUrl = URL.createObjectURL(sourceBlob);
-      /** Continue to html rendering */
-      case '.html':
-        loadAsHTML = true;
+        loadAsHTML = false;
         break;
       /**
        * TODO: support the following format viewers.
@@ -164,6 +159,13 @@ export class TransmuteRuntime2 extends EventTarget {
       case '.pdf':
       case '.epub':
         throw new Error(`the format is not supported yet: ${urlExt}`);
+      case '.xsml':
+        loadAsHTML = false;
+        break;
+      case '.splinecode':
+        const sourceBlob = new Blob([createSplineDesignViewer(codeOrUrl)], { type: 'text/plain' });
+        codeOrUrl = URL.createObjectURL(sourceBlob);
+        break;
       default:
         break;
     }

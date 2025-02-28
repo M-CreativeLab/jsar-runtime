@@ -317,6 +317,10 @@ namespace client_xr
      */
     XRSessionRequestInit requestInit;
     /**
+     * Recommended content size for fitting the session.
+     */
+    float recommendedContentSize;
+    /**
      * If the session is started.
      */
     bool started;

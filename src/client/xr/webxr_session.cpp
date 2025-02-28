@@ -19,6 +19,7 @@ namespace client_xr
         id(config.id),
         mode(config.mode),
         requestInit(config.requestInit),
+        recommendedContentSize(config.recommendedContentSize),
         enabledFeatures(config.enabledFeatures),
         started(false),
         ended(false),

@@ -80,8 +80,12 @@ namespace bindings
 
     // Define JS properties
     auto jsThis = info.This().ToObject();
-    // jsThis.DefineProperty(Napi::PropertyDescriptor::Value("recommendedContentSize", nativeSessionObject.Get("recommendedContentSize"), napi_enumerable));
-    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("enabledFeatures", enabledFeaturesRef_.Value(), napi_enumerable));
+    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("recommendedContentSize",
+                                                          Napi::Number::New(env, handle_->recommendedContentSize),
+                                                          napi_enumerable));
+    jsThis.DefineProperty(Napi::PropertyDescriptor::Value("enabledFeatures",
+                                                          enabledFeaturesRef_.Value(),
+                                                          napi_enumerable));
 
     Ref();              // Ref the WebXR session object to keep it alive until the `end()` method is called.
     handle_->ref(this); // Ref the handle object to allow this object to be accessed from the handle object.
