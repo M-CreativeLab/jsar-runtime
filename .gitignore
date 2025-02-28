@@ -51,6 +51,7 @@ node_modules
 !/build/minimist.cjs
 !/build/build-*.cjs
 !/build/configure-*.sh
+!/build/configure.sh
 !/build/makefile
 /src/proto/*
 !/src/proto/*.proto
