@@ -23,7 +23,7 @@ namespace client_xr
 
   class XRWebGLLayer : public XRLayer,
                        public xr::WebGLLayer,
-                       public WeakReference<bindings::XRWebGLLayer>
+                       public JSObjectHolder<bindings::XRWebGLLayer>
   {
   public:
     /**

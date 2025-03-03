@@ -68,11 +68,17 @@ namespace canvas
         skFont->setSize(descriptor.sizeInPx);
         skFont->setTypeface(typeface);
         fontStr = str;
+        return true;
       }
-      return true;
+      else
+      {
+        std::cerr << "Failed to find typeface for font: " << str << std::endl;
+        return false;
+      }
     }
     else
     {
+      std::cerr << "Failed to parse font descriptor: " << str << std::endl;
       return false;
     }
   }

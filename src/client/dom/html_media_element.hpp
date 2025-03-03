@@ -25,16 +25,17 @@ namespace dom
                      media_comm::MediaContentType contentType,
                      std::shared_ptr<Document> ownerDocument)
         : HTMLElement(tagName, ownerDocument),
-          clientContext(TrClientContextPerProcess::Get()),
-          player_(clientContext->createMediaPlayer(contentType))
+          contentType_(contentType)
     {
-      player_->resetGlobalEventListener([this](auto eventType, auto event)
-                                        { onMediaEvent(eventType, event); });
     }
     virtual ~HTMLMediaElement()
     {
-      player_->resetGlobalEventListener();
+      if (player_ != nullptr)
+        player_->resetGlobalEventListener();
     }
+
+  public:
+    void createdCallback() override;
 
   public:
     /**
@@ -127,7 +128,7 @@ namespace dom
      * Resets the media element to its initial state and begins the process of selecting a media source and loading the
      * media in preparation for playback to begin at the beginning.
      */
-    inline void load()
+    inline void startLoading()
     {
       readyState = MediaReadyState::HAVE_NOTHING;
       player_->load();
@@ -221,7 +222,8 @@ namespace dom
     MediaReadyState readyState = MediaReadyState::HAVE_NOTHING;
 
   private:
-    TrClientContextPerProcess *clientContext;
+    TrClientContextPerProcess *clientContext = TrClientContextPerProcess::Get();
+    media_comm::MediaContentType contentType_ = media_comm::MediaContentType::Audio;
     std::shared_ptr<media_client::MediaPlayer> player_;
     std::string currentSrc_ = "";
     std::function<void(media_comm::TrMediaEventType, std::shared_ptr<media_client::MediaEvent>)> eventCallback_;

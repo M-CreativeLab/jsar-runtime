@@ -39,23 +39,38 @@ public:
 };
 
 /**
- * Weak reference is a template base class that holds the weak pointer, this class is useful to connect the reference object to a JavaScript
- * object.
+ * JavaScript Object Holder is a template base class that holds the weak pointer to JavaScript object, this class is useful to connect 
+ * the reference object to a JavaScript object.
  *
  * @tparam T The type of the object that the weak reference holds.
  */
 template <typename T>
-class WeakReference
+class JSObjectHolder
 {
 public:
-  WeakReference() : value_(nullptr) {}
-  WeakReference(WeakReference &that) : value_(that.value_) {}
+  JSObjectHolder() : value_(nullptr) {}
+  JSObjectHolder(JSObjectHolder &that) : value_(that.value_) {}
 
 public:
   /**
+   * @returns `true` if this holder has a JavaScript object value, `false` otherwise.
+   */
+  inline bool isJSObject() const
+  {
+    return value_ != nullptr;
+  }
+  /**
+   * @returns The JavaScript object value.
+   */
+  inline T& getJSObject()
+  {
+    assert(isJSObject());
+    return *value_;
+  }
+  /**
    * @returns The instance reference.
    */
-  T *getReference()
+  inline T *getReference()
   {
     return value_;
   }
@@ -64,10 +79,10 @@ public:
    *
    * @param instance The new value to set, or `nullptr` to set the reference value.
    */
-  void setReference(T *value = nullptr)
+  inline void setReference(T *value = nullptr)
   {
     if (value != nullptr && value_ != nullptr)
-      throw std::runtime_error("Weak reference must be reset a nullptr before setting a new instance.");
+      throw std::runtime_error("JavaScript holder's value must be reset a nullptr before setting a new instance.");
     value_ = value;
   }
 

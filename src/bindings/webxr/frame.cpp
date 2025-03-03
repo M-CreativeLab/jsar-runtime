@@ -58,6 +58,13 @@ namespace bindings
     jsThis.DefineProperty(Napi::PropertyDescriptor::Value("_stereoId",
                                                           Napi::Number::New(env, handle_->stereoId()),
                                                           napi_enumerable));
+
+    handle_->ref(this);
+  }
+
+  XRFrame::~XRFrame()
+  {
+    handle_->unref();
   }
 
 #define NOT_IMPLEMENTED_YET(method)                                                                    \

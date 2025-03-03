@@ -68,7 +68,7 @@ namespace client_xr
   };
 
   class XRFrame : public std::enable_shared_from_this<XRFrame>,
-                  public WeakReference<bindings::XRFrame>
+                  public JSObjectHolder<bindings::XRFrame>
   {
     friend class XRSession;
     friend class XRPose;

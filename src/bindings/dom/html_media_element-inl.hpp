@@ -260,7 +260,7 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    this->node->load();
+    this->node->startLoading();
     return env.Undefined();
   }
 

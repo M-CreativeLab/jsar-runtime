@@ -101,17 +101,17 @@ namespace dom
   XX(WebGLContextLost, "webglcontextlost")                   \
   XX(WebGLContextRestored, "webglcontextrestored")
 
-#define WEBXR_EVENT_TYPES_MAP(XX)                   \
-  XX(XRDeviceChange, "devicechange")                \
-  XX(XRSessionEnd, "end")                           \
-  XX(XRSessionSelect, "select")                     \
-  XX(XRSessionSelectEnd, "selectend")               \
-  XX(XRSessionSelectStart, "selectstart")           \
-  XX(XRSessionSqueeze, "squeeze")                   \
-  XX(XRSessionSqueezeEnd, "squeezeend")             \
-  XX(XRSessionSqueezeStart, "squeezestart")         \
-  XX(XRSessionVisibilityChange, "visibilitychange") \
-  XX(XRInputSourcesChange, "inputsourceschange")
+#define WEBXR_EVENT_TYPES_MAP(XX)                             \
+  XX(XRDeviceChange, "devicechange")                          \
+  XX(XRSessionEnd, "XRSession.end")                           \
+  XX(XRSessionSelect, "XRSession.select")                     \
+  XX(XRSessionSelectEnd, "XRSession.selectend")               \
+  XX(XRSessionSelectStart, "XRSession.selectstart")           \
+  XX(XRSessionSqueeze, "XRSession.squeeze")                   \
+  XX(XRSessionSqueezeEnd, "XRSession.squeezeend")             \
+  XX(XRSessionSqueezeStart, "XRSession.squeezestart")         \
+  XX(XRSessionVisibilityChange, "XRSession.visibilitychange") \
+  XX(XRInputSourcesChange, "XRSession.inputsourceschange")
 
 #define DOM_EVENT_TYPES_MAP(XX)        \
   NODE_EVENT_TYPES_MAP(XX)             \
@@ -134,12 +134,17 @@ namespace dom
    * Convert the event type string such as "click" to the `DOMEventType` enum.
    *
    * @param typeStr The event type string.
+   * @param jsConstructorName The JavaScript constructor name of the event target object to compose the complete event type.
    * @returns The `DOMEventType` enum.
    */
-  inline DOMEventType StringToEventType(std::string typeStr)
+  inline DOMEventType StringToEventType(std::string typeStr, std::optional<std::string> jsConstructorName)
   {
-#define XX(eventType, eventName)         \
-  if (ToLowerCase(typeStr) == eventName) \
+    std::string eventFullName = ToLowerCase(typeStr);
+    if (jsConstructorName.has_value() && jsConstructorName != "")
+      eventFullName = jsConstructorName.value() + "." + eventFullName;
+
+#define XX(eventType, eventName)  \
+  if (eventFullName == eventName) \
     return DOMEventType::eventType;
 
     DOM_EVENT_TYPES_MAP(XX)
@@ -255,7 +260,7 @@ namespace dom
     inline bool composed() { return composed_; }
     /**
      * The type read-only property of the Event interface returns a string representing the type of the event.
-     * 
+     *
      * @returns The event type string, such as "click", "keydown", etc.
      */
     inline std::string typeStr() { return EventTypeToString(type); }

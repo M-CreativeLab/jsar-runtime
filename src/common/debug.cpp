@@ -287,7 +287,7 @@ std::string _DemangleSymbol(const std::string &symbol)
 // Process the symbol line which replaces the mangled symbol with demangled symbol.
 std::string _ProcessSymbolLine(const char *line)
 {
-  static std::regex regex(R"(\b(_Z[\w\d]+)\b)");  // Search for mangled symbols
+  static std::regex regex(R"(\b(_Z[\w\d]+)\b)"); // Search for mangled symbols
 
   std::string result = line;
   std::sregex_iterator it(result.begin(), result.end(), regex);
@@ -307,7 +307,9 @@ std::string _ProcessSymbolLine(const char *line)
 
 void _PrintsStacktraceOnSignal(int signal)
 {
-  DEBUG(LOG_TAG_ERROR, "Received SIGNAL (%d), printing backtrace:", signal);
+  std::cerr << "===================== Transmute Crash Report ===================" << std::endl;
+  std::cerr << "Received SIGNAL(" << signal << ")" << std::endl;
+
 #ifdef __APPLE__
   const int maxFrames = 20;
   void *stackTrace[maxFrames];
@@ -315,7 +317,7 @@ void _PrintsStacktraceOnSignal(int signal)
   char **symbols = backtrace_symbols(stackTrace, numFrames);
   if (symbols == nullptr)
   {
-    fprintf(stderr, "Failed to obtain backtrace symbols");
+    fprintf(stderr, "[darwin]: Failed to obtain backtrace symbols");
   }
   else
   {
@@ -334,7 +336,7 @@ void _PrintsStacktraceOnSignal(int signal)
   int backtraceCount = (int)(state.current - buffer);
   if (backtraceCount == 0)
   {
-    std::cout << "Failed to obtain backtrace symbols" << std::endl;
+    std::cerr << "[android]: failed to unwind backtrace symbols." << std::endl;
   }
   else
   {
@@ -361,11 +363,17 @@ void _PrintsStacktraceOnSignal(int signal)
 #endif
 
   if (signal == SIGSEGV || signal == SIGBUS || signal == SIGFPE || signal == SIGABRT)
+  {
+    std::cerr << "Exiting(1) due to signal(" << signal << ")" << std::endl;
     return exit(1);
+  }
 
 #ifndef _WIN32
   if (signal == SIGQUIT)
+  {
+    std::cerr << "Exiting(0) due to signal(" << signal << ")" << std::endl;
     return exit(0);
+  }
 #endif
 }
 

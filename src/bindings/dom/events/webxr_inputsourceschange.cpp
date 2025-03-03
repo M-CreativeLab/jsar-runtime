@@ -46,7 +46,7 @@ namespace dombinding::events
     {
       uint32_t index = 0;
       for (auto &inputSource : handle_->added())
-        added.Set(index++, bindings::XRInputSource::NewInstance(env, inputSource));
+        added.Set(index++, bindings::XRInputSource::GetOrNewInstance(env, inputSource));
       jsThis.Set("added", added);
     }
 
@@ -54,7 +54,7 @@ namespace dombinding::events
     {
       uint32_t index = 0;
       for (auto &inputSource : handle_->removed())
-        removed.Set(index++, bindings::XRInputSource::NewInstance(env, inputSource));
+        removed.Set(index++, bindings::XRInputSource::GetOrNewInstance(env, inputSource));
       jsThis.Set("removed", removed);
     }
   }

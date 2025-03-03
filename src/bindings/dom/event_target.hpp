@@ -40,14 +40,16 @@ namespace dombinding
      * Set the native event target object to initialize this class.
      * 
      * @param eventTarget The native event target object.
+     * @param jsConstructorName The JavaScript constructor name of the event target object to compose the complete event type.
      */
-    void setEventTarget(std::shared_ptr<EventTargetType> eventTarget);
+    void setEventTarget(std::shared_ptr<EventTargetType> eventTarget, std::optional<std::string> jsConstructorName = std::nullopt);
 
   protected:
     std::shared_ptr<EventTargetType> eventTarget = nullptr;
 
   private:
     std::thread::id jsThreadId;
+    std::optional<std::string> jsConstructorName = std::nullopt;
     std::unordered_map<std::shared_ptr<Napi::FunctionReference>, uint32_t> listenerRefToNativeIdMap;
     Napi::FunctionReference globalListenerCallback;
     Napi::FunctionReference listenerCallback;

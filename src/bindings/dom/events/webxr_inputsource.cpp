@@ -38,7 +38,12 @@ namespace dombinding::events
     HandleScope scope(env);
 
     auto jsThis = info.This().As<Object>();
-    // jsThis.Set("frame", bindings::XRFrame::NewInstance(env, handle_->frame()));
-    // TODO
+    auto currentFrame = handle_->frame();
+    if (currentFrame != nullptr && currentFrame->isJSObject())
+      jsThis.Set("frame", currentFrame->getJSObject().Value());
+    
+    auto currentInputSource = handle_->inputSource();
+    if (currentInputSource != nullptr && currentInputSource->isJSObject())
+      jsThis.Set("inputSource", currentInputSource->getJSObject().Value());
   }
 }

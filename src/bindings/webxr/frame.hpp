@@ -35,6 +35,7 @@ namespace bindings
 
   public:
     XRFrame(const Napi::CallbackInfo &info);
+    ~XRFrame();
 
   private:
     Napi::Value CreateAnchor(const Napi::CallbackInfo &info);

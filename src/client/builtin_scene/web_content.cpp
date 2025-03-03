@@ -6,7 +6,6 @@ namespace builtin_scene
 {
   WebContentTextStyle::WebContentTextStyle()
       : color(SK_ColorBLACK),
-        foregroundColor(SK_ColorBLACK),
 #ifdef TR_CLIENT_WEB_CONTENT_DEBUG_TEXT
         backgroundColor(SK_ColorGRAY),
 #else
@@ -16,9 +15,7 @@ namespace builtin_scene
         decorationThickness(0.0f),
         decorationColor(SK_ColorBLACK),
         fontStyle({SkFontStyle::kUpright_Slant, SkFontStyle::kNormal_Weight, SkFontStyle::kNormal_Width}),
-        fontFamilies({SkString("PingFang SC"),
-                      SkString("Arial"),
-                      SkString("sans-serif")}),
+        fontFamilies({SkString("sans-serif")}),
         fontSize(20.0f),
         letterSpacing(std::nullopt),
         wordSpacing(std::nullopt)
@@ -141,6 +138,7 @@ namespace builtin_scene
     const WebContentTextStyle &sourceTextStyle = contentStyle_.textStyle;
     skia::textlayout::TextStyle newTextStyle;
 
+    newTextStyle.setColor(sourceTextStyle.color);
     if (sourceTextStyle.foregroundColor.has_value())
     {
       SkPaint foregroundPaint;

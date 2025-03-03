@@ -2,6 +2,7 @@
 
 #include <string>
 #include <map>
+#include <iostream>
 #include <unordered_map>
 #include <filesystem>
 #include <assert.h>
@@ -17,125 +18,65 @@
 #include "debug.hpp"
 #include "./parser.hpp"
 
+#ifdef __ANDROID__
+#include <skia/include/ports/SkFontMgr_android.h>
+#endif
+
 using namespace std;
 
 namespace font
 {
-  namespace generics
-  {
-#define GENERIC_FONT_FAMILY_MAP(XX) \
-  XX(Serif, "serif")                \
-  XX(SansSerif, "sans-serif")       \
-  XX(Monospace, "monospace")
-
-    enum class GenericFontFamily
-    {
-#define XX(type, name) type,
-      GENERIC_FONT_FAMILY_MAP(XX)
-#undef XX
-          None,
-    };
-
-    static const unordered_map<string, int> SERIF_FONTS_LIST = {
-        {"Arial", 1},
-#ifdef __ANDROID__
-        {"Noto Serif", 1},
-        {"Noto Serif CJK SC", 1},
-#endif
-    };
-    static const unordered_map<string, int> SANS_SERIF_FONTS_LIST = {
-        {"PingFang SC", 1},
-        {"Alibaba PuHuiTi 3.0", 1},
-#ifdef __ANDROID__
-        {"Noto Sans CJK SC", 2},
-        {"DroidSans", 3},
-#endif
-    };
-    static const unordered_map<string, int> MONOSPACE_FONTS_LIST = {
-        {"Consolas", 1},
-        {"Monaco", 1},
-#ifdef __ANDROID__
-        {"Noto Sans Mono CJK SC", 2},
-        {"Droid Sans Mono", 3},
-#endif
-    };
-    // TODO: add more generic font families
-
-    inline string idToGenericName(GenericFontFamily id)
-    {
-      switch (id)
-      {
-#define XX(type, name)          \
-  case GenericFontFamily::type: \
-    return name;
-        GENERIC_FONT_FAMILY_MAP(XX)
-#undef XX
-      default:
-        return "";
-      }
-    }
-
-    inline GenericFontFamily genericNameToId(const string &name2)
-    {
-#define XX(type, name) \
-  if (name == name2)   \
-    return GenericFontFamily::type;
-      GENERIC_FONT_FAMILY_MAP(XX)
-#undef XX
-      return GenericFontFamily::None;
-    }
-  }
-
   class FontCacheManager;
-  class TrFontStyleSet : public SkFontStyleSet
+  class TrSimpleFontStyleSet : public SkFontStyleSet
   {
   public:
-    explicit TrFontStyleSet(string name) : familyName(name)
+    explicit TrSimpleFontStyleSet(sk_sp<SkTypeface> defaultTypeface)
     {
+      typefaces_.emplace_back(std::move(defaultTypeface));
     }
 
   public:
     void appendTypeface(sk_sp<SkTypeface> typeface)
     {
-      typefaces.emplace_back(move(typeface));
+      typefaces_.emplace_back(std::move(typeface));
     }
     int count() override
     {
-      return typefaces.size();
+      return typefaces_.size();
     }
     void getStyle(int index, SkFontStyle *style, SkString *styleName) override
     {
-      assert(index < typefaces.size());
+      assert(index < typefaces_.size());
       if (style)
-        *style = typefaces[index]->fontStyle();
+        *style = typefaces_[index]->fontStyle();
       if (styleName)
         styleName->reset();
     }
     sk_sp<SkTypeface> createTypeface(int index) override
     {
-      assert(index < typefaces.size());
-      return typefaces[index];
+      assert(index < typefaces_.size());
+      return typefaces_[index];
     }
     sk_sp<SkTypeface> matchStyle(const SkFontStyle &pattern) override
     {
       return matchStyleCSS3(pattern);
     }
-    string &getFamilyName()
-    {
-      return familyName;
-    }
 
   private:
-    string familyName;
-    vector<sk_sp<SkTypeface>> typefaces;
-
-    friend class FontCacheManager;
+    std::vector<sk_sp<SkTypeface>> typefaces_;
   };
 
   class MutipleDirectoriesFontMgr : public SkFontMgr
   {
   public:
-    MutipleDirectoriesFontMgr() = default;
+    MutipleDirectoriesFontMgr()
+    {
+#ifdef __ANDROID__
+      systemFontMgr_ = SkFontMgr_New_Android(nullptr);
+#endif
+      if (systemFontMgr_ != nullptr)
+        std::cout << "System fonts: " << systemFontMgr_->countFamilies() << std::endl;
+    }
 
   public:
     bool addFontsAt(std::string path)
@@ -171,6 +112,10 @@ namespace font
         }
         index -= count;
       }
+
+      // fallback to system font manager
+      if (systemFontMgr_ != nullptr)
+        systemFontMgr_->getFamilyName(index, familyName);
     }
     sk_sp<SkFontStyleSet> onCreateStyleSet(int index) const override
     {
@@ -182,10 +127,21 @@ namespace font
           return mgr->createStyleSet(index);
         index -= families;
       }
+
+      // fallback to system font manager
+      if (systemFontMgr_ != nullptr)
+        return systemFontMgr_->createStyleSet(index);
       return nullptr;
     }
     sk_sp<SkFontStyleSet> onMatchFamily(const char familyName[]) const override
     {
+      if (systemFontMgr_ != nullptr)
+      {
+        sk_sp<SkFontStyleSet> systemStyleSet = systemFontMgr_->matchFamily(familyName);
+        if (systemStyleSet)
+          return systemStyleSet;
+      }
+
       for (const auto &pair : fontMgrsByPath_)
       {
         auto styleSet = pair.second->matchFamily(familyName);
@@ -196,6 +152,13 @@ namespace font
     }
     sk_sp<SkTypeface> onMatchFamilyStyle(const char familyName[], const SkFontStyle &style) const override
     {
+      if (systemFontMgr_ != nullptr)
+      {
+        sk_sp<SkTypeface> systemTypeface = systemFontMgr_->matchFamilyStyle(familyName, style);
+        if (systemTypeface)
+          return systemTypeface;
+      }
+
       for (const auto &pair : fontMgrsByPath_)
       {
         auto typeface = pair.second->matchFamilyStyle(familyName, style);
@@ -208,7 +171,14 @@ namespace font
                                                   const char *bcp47[], int bcp47Count,
                                                   SkUnichar character) const override
     {
-      for (const auto &pair : fontMgrsByPath_)
+      if (systemFontMgr_ != nullptr)
+      {
+        sk_sp<SkTypeface> systemTypeface = systemFontMgr_->matchFamilyStyleCharacter(familyName, style, bcp47, bcp47Count, character);
+        if (systemTypeface)
+          return systemTypeface;
+      }
+
+      for (const auto &pair : fontMgrsByPath_) // check custom font managers
       {
         auto typeface = pair.second->matchFamilyStyleCharacter(familyName, style, bcp47, bcp47Count, character);
         if (typeface)
@@ -218,6 +188,13 @@ namespace font
     }
     sk_sp<SkTypeface> onMakeFromData(sk_sp<SkData> data, int ttcIndex) const override
     {
+      if (systemFontMgr_ != nullptr)
+      {
+        sk_sp<SkTypeface> systemTypeface = systemFontMgr_->makeFromData(data, ttcIndex);
+        if (systemTypeface)
+          return systemTypeface;
+      }
+
       for (auto &pair : fontMgrsByPath_)
       {
         auto typeface = pair.second->makeFromData(data, ttcIndex);
@@ -228,6 +205,13 @@ namespace font
     }
     sk_sp<SkTypeface> onMakeFromStreamIndex(std::unique_ptr<SkStreamAsset> stream, int ttcIndex) const override
     {
+      if (systemFontMgr_ != nullptr)
+      {
+        sk_sp<SkTypeface> systemTypeface = systemFontMgr_->makeFromStream(std::move(stream), ttcIndex);
+        if (systemTypeface)
+          return systemTypeface;
+      }
+
       for (auto &pair : fontMgrsByPath_)
       {
         auto typeface = pair.second->makeFromStream(std::move(stream), ttcIndex);
@@ -238,6 +222,13 @@ namespace font
     }
     sk_sp<SkTypeface> onMakeFromStreamArgs(std::unique_ptr<SkStreamAsset> stream, const SkFontArguments &args) const override
     {
+      if (systemFontMgr_ != nullptr)
+      {
+        sk_sp<SkTypeface> systemTypeface = systemFontMgr_->makeFromStream(std::move(stream), args);
+        if (systemTypeface)
+          return systemTypeface;
+      }
+
       for (auto &pair : fontMgrsByPath_)
       {
         auto typeface = pair.second->makeFromStream(std::move(stream), args);
@@ -248,6 +239,13 @@ namespace font
     }
     sk_sp<SkTypeface> onMakeFromFile(const char path[], int ttcIndex) const override
     {
+      if (systemFontMgr_ != nullptr)
+      {
+        sk_sp<SkTypeface> systemTypeface = systemFontMgr_->makeFromFile(path, ttcIndex);
+        if (systemTypeface)
+          return systemTypeface;
+      }
+
       for (auto &pair : fontMgrsByPath_)
       {
         auto typeface = pair.second->makeFromFile(path, ttcIndex);
@@ -258,6 +256,13 @@ namespace font
     }
     sk_sp<SkTypeface> onLegacyMakeTypeface(const char familyName[], SkFontStyle style) const override
     {
+      if (systemFontMgr_ != nullptr)
+      {
+        sk_sp<SkTypeface> systemTypeface = systemFontMgr_->legacyMakeTypeface(familyName, style);
+        if (systemTypeface)
+          return systemTypeface;
+      }
+
       for (auto &pair : fontMgrsByPath_)
       {
         auto typeface = pair.second->legacyMakeTypeface(familyName, style);
@@ -268,6 +273,7 @@ namespace font
     }
 
   private:
+    sk_sp<SkFontMgr> systemFontMgr_ = nullptr;
     std::unordered_map<std::string, sk_sp<SkFontMgr>> fontMgrsByPath_;
   };
 
@@ -283,8 +289,6 @@ namespace font
       addFontsAt("/System/Library/Fonts");
 #elif __ANDROID__
       addFontsAt("/system/fonts");
-      addFontsAt("/usr/share/fonts");
-      addFontsAt("/usr/local/share/fonts");
 #endif
       fontCollection_->setDefaultFontManager(fontMgr_);
       printSummary();
@@ -300,7 +304,7 @@ namespace font
     }
     /**
      * Get the typeface for the given family name and style.
-     * 
+     *
      * @param familyName the family name
      * @param fontStyle the font style
      * @returns the typeface
@@ -311,7 +315,7 @@ namespace font
     }
     /**
      * Get the typeface for the given font shorthand descriptor.
-     * 
+     *
      * @param descriptor the font shorthand descriptor
      * @returns the typeface
      */
@@ -330,7 +334,7 @@ namespace font
     void addFontsAt(std::string root)
     {
       if (!fontMgr_->addFontsAt(root))
-        return;
+        DEBUG(LOG_TAG_FONT, "Failed to load fonts from: %s", root.c_str());
     }
     void printSummary()
     {

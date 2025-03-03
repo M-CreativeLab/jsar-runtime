@@ -8,15 +8,26 @@ namespace dom
 {
   using namespace std;
 
+  void HTMLMediaElement::createdCallback()
+  {
+    HTMLElement::createdCallback();
+
+    assert(clientContext != nullptr && "The client context is not initialized.");
+    player_ = clientContext->createMediaPlayer(contentType_);
+    player_->resetGlobalEventListener([this](auto eventType, auto event)
+                                      { onMediaEvent(eventType, event); });
+  }
+
   void HTMLMediaElement::loadMedia(const string &src)
   {
     auto browsingContext = ownerDocument->lock()->browsingContext;
     browsingContext->fetchImageResource(src, [this](const void *data, size_t byteLength)
-                                         { onMediaLoaded(data, byteLength); });
+                                        { onMediaLoaded(data, byteLength); });
   }
 
   void HTMLMediaElement::onMediaLoaded(const void *mediaData, size_t mediaByteLength)
   {
+    assert(player_ != nullptr && "The media player is not initialized.");
     player_->setSrc((void *)mediaData, mediaByteLength);
     player_->load();
   }

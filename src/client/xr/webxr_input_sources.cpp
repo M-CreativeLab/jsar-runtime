@@ -179,36 +179,36 @@ namespace client_xr
       clear();
       for (auto &inputSource : tmpArray)
         push_back(inputSource);
+    }
 
-      /**
-       * 6. Process the added input sources.
-       *
-       * NOTE: We don't create any new input source objects here, just use instances in the above step.
-       */
-      if (addedInputSourceIds.size() > 0)
+    /**
+     * 6. Process the added input sources.
+     *
+     * NOTE: We don't create any new input source objects here, just use instances in the above step.
+     */
+    if (addedInputSourceIds.size() > 0)
+    {
+      vector<shared_ptr<XRInputSource>> added;
+      for (auto id : addedInputSourceIds)
       {
-        vector<shared_ptr<XRInputSource>> added;
-        for (auto id : addedInputSourceIds)
-        {
-          auto inputSource = getInputSourceById(id);
-          if (inputSource != nullptr)
-            added.push_back(inputSource);
-        }
-        if (added.size() > 0)
-          onChangedCallback(added, {});
-      }
-
-      /**
-       * 7. Dispatch `select` and `squeeze` events for all existed input sources.
-       */
-      for (uint32_t i = 0; i < size(); i++)
-      {
-        auto inputSource = at(i);
+        auto inputSource = getInputSourceById(id);
         if (inputSource != nullptr)
-          inputSource->dispatchSelectOrSqueezeEvents(frame);
-        else
-          std::cerr << "failed to dispatch events on XRInputSource(" << i << "): value is not an object." << std::endl;
+          added.push_back(inputSource);
       }
+      if (added.size() > 0)
+        onChangedCallback(added, {});
+    }
+
+    /**
+     * 7. Dispatch `select` and `squeeze` events for all existed input sources.
+     */
+    for (uint32_t i = 0; i < size(); i++)
+    {
+      auto inputSource = at(i);
+      if (inputSource != nullptr)
+        inputSource->dispatchSelectOrSqueezeEvents(frame);
+      else
+        std::cerr << "failed to dispatch events on XRInputSource(" << i << "): value is not an object." << std::endl;
     }
   }
 }

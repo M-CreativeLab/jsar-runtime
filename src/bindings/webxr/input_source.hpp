@@ -26,9 +26,18 @@ namespace bindings
      * @param env The `Napi::Env` to add the class to.
      */
     static void Init(Napi::Env env);
-    static Napi::Object NewInstance(Napi::Env env, shared_ptr<client_xr::XRInputSource> handle);
+    /**
+     * Get the `XRInputSource` instance from the provided `handle`, or create a new one if not exists.
+     * 
+     * @param env The `Napi::Env` to create the instance.
+     * @param handle The `client_xr::XRInputSource` to get or create the instance.
+     * @returns The `XRInputSource` instance.
+     */
+    static Napi::Object GetOrNewInstance(Napi::Env env, shared_ptr<client_xr::XRInputSource> handle);
+
+  public:
     XRInputSource(const Napi::CallbackInfo &info);
-    ~XRInputSource() = default;
+    ~XRInputSource();
 
   private:
     Napi::Value GamepadGetter(const Napi::CallbackInfo &info);

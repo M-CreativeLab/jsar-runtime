@@ -31,9 +31,12 @@ namespace bindings
   }
 
   // static
-  Object XRInputSource::NewInstance(Napi::Env env, shared_ptr<client_xr::XRInputSource> handle)
+  Object XRInputSource::GetOrNewInstance(Napi::Env env, shared_ptr<client_xr::XRInputSource> handle)
   {
-    return XRHandleWrap<XRInputSource, client_xr::XRInputSource>::NewInstance(env, handle);
+    if (handle && handle->isJSObject())
+      return handle->getJSObject().Value();
+    else
+      return XRHandleWrap<XRInputSource, client_xr::XRInputSource>::NewInstance(env, handle);
   }
 
   XRInputSource::XRInputSource(const Napi::CallbackInfo &info)
@@ -51,6 +54,13 @@ namespace bindings
         Napi::PropertyDescriptor::Value("targetRayMode", TargetRayModeGetter(info), napi_enumerable));
     thisObject.DefineProperty(
         Napi::PropertyDescriptor::Value("targetRaySpace", TargetRaySpaceGetter(info), napi_enumerable));
+
+    handle_->ref(this);
+  }
+
+  XRInputSource::~XRInputSource()
+  {
+    handle_->unref();
   }
 
   Napi::Value XRInputSource::GamepadGetter(const Napi::CallbackInfo &info)
@@ -137,6 +147,6 @@ namespace bindings
 
     // Update the elements from the input sources
     for (size_t i = 0; i < inputSources.size(); i++)
-      Set(i, XRInputSource::NewInstance(env, inputSources[i]));
+      Set(i, XRInputSource::GetOrNewInstance(env, inputSources[i]));
   }
 }
