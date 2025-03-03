@@ -48,6 +48,10 @@ namespace builtin_scene
      */
     inline std::shared_ptr<client_graphics::WebGLProgram> program() const { return program_; }
     /**
+     * @returns Whether the material is opaque.
+     */
+    inline bool isOpaque() const { return material_->isOpaque(); }
+    /**
      * Initialize the `MeshMaterial3d` instance with the given WebGL context and program.
      *
      * @param glContext The WebGL context to use.

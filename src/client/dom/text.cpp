@@ -33,6 +33,7 @@ namespace dom
     client_cssom::CSSStyleDeclaration defaultStyle;
     defaultStyle.setProperty("width", "auto");
     defaultStyle.setProperty("height", "auto");
+    defaultStyle.setProperty("transform", "translateZ(5px)");
     style_ = make_shared<client_cssom::CSSStyleDeclaration>(defaultStyle.cssText());
   }
 

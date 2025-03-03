@@ -124,6 +124,13 @@ namespace builtin_scene
     {
       return mixDefines(defines(), GlobalDefines);
     }
+    /**
+     * @returns Whether the material is opaque.
+     */
+    inline bool isOpaque() const
+    {
+      return isOpaque_;
+    }
 
   protected:
     /**
@@ -138,5 +145,6 @@ namespace builtin_scene
 
   protected:
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;
+    bool isOpaque_ = true;
   };
 }

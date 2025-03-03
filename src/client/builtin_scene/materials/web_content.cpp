@@ -65,10 +65,17 @@ namespace builtin_scene::materials
     auto glContext = glContext_.lock();
     assert(glContext != nullptr);
     {
-      // Mark the WebContent material as transparent and not writing to the depth buffer.
-      glContext->enable(WEBGL_BLEND);
-      glContext->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
-      glContext->depthMask(false);
+      if (isOpaque())
+      {
+        glContext->disable(WEBGL_BLEND);
+        glContext->depthMask(true);
+      }
+      else
+      {
+        glContext->enable(WEBGL_BLEND);
+        glContext->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
+        glContext->depthMask(false);
+      }
 
       glContext->activeTexture(WebGLTextureUnit::kTexture0);
       glContext->bindTexture(WebGLTextureTarget::kTexture2D, texture_);
@@ -133,6 +140,8 @@ namespace builtin_scene::materials
       if (surface->peekPixels(&pixmap))
       {
         pixels = (unsigned char *)pixmap.addr();
+        isOpaque_ = pixmap.computeIsOpaque();
+
 #ifdef TR_CLIENT_WEB_CONTENT_DEBUG
         {
           static unordered_map<string, bool> writtenMap;
