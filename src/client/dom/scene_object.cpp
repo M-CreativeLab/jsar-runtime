@@ -56,15 +56,15 @@ namespace dom
     if (TR_UNLIKELY(sceneRef == nullptr) || !entity_.has_value())
       return false;
 
-    auto &meshComponent = getSceneComponentChecked<Mesh3d>();
-    if (skipRender())
+    auto meshComponent = getSceneComponent<Mesh3d>();
+    if (meshComponent != nullptr)
     {
-      meshComponent.disableRendering(); // Disable rendering if the object is skipped.
-      return false;
-    }
-    else
-    {
-      meshComponent.resumeRendering(); // Resume rendering if the object is not skipped.
+      if (skipRender())
+      {
+        meshComponent->disableRendering(); // Disable rendering if the object is skipped.
+        return false;
+      }
+      meshComponent->resumeRendering(); // Resume rendering if the object is not skipped.
     }
 
     auto layout = fetchLayoutAndDispatchChangeEvent(node);

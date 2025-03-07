@@ -1,33 +1,37 @@
 #pragma once
 
 #include <memory>
+#include <glm/glm.hpp>
 
 #include "../meshes.hpp"
 #include "../material_base.hpp"
+#include "../texture_altas.hpp"
 #include "../web_content.hpp"
 #include "./color.hpp"
 
 namespace builtin_scene::materials
 {
-  class WebContentMaterial final : public ColorMaterial
+  class WebContentInstancedMaterial final : public ColorMaterial
   {
   public:
-    WebContentMaterial() = default;
-    WebContentMaterial(float width, float height)
-        : ColorMaterial(),
-          width_(width),
-          height_(height)
-    {
-    }
+    WebContentInstancedMaterial();
 
   public:
     const std::string name() const override
     {
-      return "WebContentMaterial";
+      return "WebContentInstancedMaterial";
     }
     const std::vector<std::string> defines() const override
     {
-      return mixDefines(ColorMaterial::defines(), {"USE_UVS", "USE_TEXTURE"});
+      return mixDefines(ColorMaterial::defines(),
+                        {
+                            "USE_UVS",
+                            //  "USE_TEXTURE",
+                            "USE_INSTANCE_TRANSFORMS",
+                            "USE_INSTANCE_COLORS",
+                            "USE_INSTANCE_TEXTURE"
+                            // End
+                        });
     }
     ShaderRef fragmentShader() override
     {
@@ -51,7 +55,7 @@ namespace builtin_scene::materials
      * @param content The WebContent to update the material with.
      * @returns Whether the texture is updated successfully.
      */
-    bool updateTexture(const WebContent &content);
+    bool updateTexture(WebContent &content);
 
   public:
     float width() const { return width_; }
@@ -65,6 +69,6 @@ namespace builtin_scene::materials
     float globalAspectRatio_ = 1.0f;
     glm::vec2 textureOffset_ = glm::vec2(0.0f, 0.0f);
     glm::vec2 textureScale_ = glm::vec2(1.0f, 1.0f);
-    std::shared_ptr<client_graphics::WebGLTexture> texture_;
+    std::unique_ptr<TextureAtlas> textureAtlas_;
   };
 }

@@ -32,4 +32,8 @@ namespace dom
   void HTMLElement::connectedCallback()
   {
   }
+
+  void HTMLElement::afterConnectedCallback()
+  {
+  }
 }

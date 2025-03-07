@@ -124,6 +124,16 @@ namespace dom
       scene.addComponent(entity_.value(), Text2d(data()));
     };
     useScene(appendText);
+
+    // Mark the text mesh available
+    auto markMeshAvailable = [this](Scene &scene)
+    {
+      assert(entity_.has_value());
+      auto meshComponent = scene.getComponent<Mesh3d>(entity_.value());
+      if (meshComponent != nullptr)
+        meshComponent->resumeRendering();
+    };
+    useScene(markMeshAvailable);
   }
 
   bool Text::adoptStyle(const client_cssom::CSSStyleDeclaration &style)

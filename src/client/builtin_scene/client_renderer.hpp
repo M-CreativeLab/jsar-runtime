@@ -117,6 +117,15 @@ namespace builtin_scene
      */
     void initializeMesh3d(std::shared_ptr<Mesh3d> mesh3d);
     /**
+     * Configure the mesh vertex data with the given WebGL context, it will upload the dirty vertex data
+     * to the GPU.
+     *
+     * @param mesh3d The mesh to configure the vertex data.
+     * @param program The WebGL program to configure the vertex data with.
+     */
+    void configureMeshVertexData(std::shared_ptr<Mesh3d> mesh3d, std::shared_ptr<client_graphics::WebGLProgram> program);
+    void updateMeshVertexData(std::shared_ptr<Mesh3d> mesh3d, std::shared_ptr<client_graphics::WebGLProgram> program);
+    /**
      * Initialize the mesh material with the given WebGL context, it will create the program, shaders
      * and link the program.
      *
@@ -128,6 +137,13 @@ namespace builtin_scene
      */
     void initializeMeshMaterial3d(std::shared_ptr<Mesh3d> mesh3d, std::shared_ptr<MeshMaterial3d> meshMaterial3d);
     /**
+     * Try to update the mesh material:
+     *
+     * 1. update the mesh vertext data if it's dirty.
+     * 2. update the instanced data like color, texture or other attributes.
+     */
+    void tryUpdateMeshMaterial3d(std::shared_ptr<Mesh3d> mesh3d, std::shared_ptr<MeshMaterial3d> meshMaterial3d);
+    /**
      * Draw the `Mesh3d` with the given `MeshMaterial3d` and `XRView`.
      *
      * @param mesh The mesh to draw.
@@ -136,7 +152,7 @@ namespace builtin_scene
      * @param parentTransform The parent transform of the mesh, `nullptr` for the root transform.
      * @param renderTarget The XR render target to draw the mesh with.
      */
-    void drawMesh3d(std::shared_ptr<Mesh3d> mesh, std::shared_ptr<MeshMaterial3d> material,
+    void drawMesh3d(const ecs::EntityId &entity, std::shared_ptr<Mesh3d> mesh, std::shared_ptr<MeshMaterial3d> material,
                     std::shared_ptr<Transform> transform,
                     std::shared_ptr<Transform> parentTransform = nullptr,
                     std::optional<XRRenderTarget> renderTarget = std::nullopt);
@@ -159,10 +175,10 @@ namespace builtin_scene
      * @param transform The transform to update the transformation matrix with, `nullptr` for the identity matrix.
      * @param forceUpdate Whether to force update the transformation matrix.
      */
-    void updateTransformationMatrix(std::shared_ptr<client_graphics::WebGLProgram> program,
-                                    std::shared_ptr<Transform> transform,
-                                    std::shared_ptr<Transform> parentTransform = nullptr,
-                                    bool forceUpdate = false);
+    std::optional<glm::mat4> updateTransformationMatrix(std::shared_ptr<client_graphics::WebGLProgram> program,
+                                                        std::shared_ptr<Transform> transform,
+                                                        std::shared_ptr<Transform> parentTransform = nullptr,
+                                                        bool forceUpdate = false);
 
   private:
     std::shared_ptr<client_graphics::WebGL2Context> glContext_;

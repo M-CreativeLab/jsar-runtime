@@ -1,6 +1,7 @@
 #include <chrono>
 #include "./client_renderer.hpp"
 #include "./hierarchy.hpp"
+#include "./web_content.hpp"
 
 namespace builtin_scene
 {
@@ -8,7 +9,6 @@ namespace builtin_scene
 
   void Renderer::initializeMesh3d(shared_ptr<Mesh3d> mesh3d)
   {
-    // client_graphics::WebGLState clientState = glContext_->clientState();
     auto vao = glContext_->createVertexArray();
     auto vbo = glContext_->createBuffer();
     auto ebo = glContext_->createBuffer();
@@ -20,6 +20,75 @@ namespace builtin_scene
       glContext_->bindBuffer(client_graphics::WebGLBufferBindingTarget::kElementArrayBuffer, ebo);
     }
     mesh3d->initialize(glContext_, vao);
+
+    // Create the instanced vbo for the instanced mesh.
+    if (mesh3d->isInstancedMesh())
+      mesh3d->getHandleCheckedAsRef<InstancedMeshBase>()
+          .setup(glContext_, glContext_->createBuffer());
+  }
+
+  void Renderer::configureMeshVertexData(std::shared_ptr<Mesh3d> mesh3d, std::shared_ptr<client_graphics::WebGLProgram> program)
+  {
+    auto vao = mesh3d->vertexArrayObject();
+    client_graphics::WebGLVertexArrayScope vaoScope(glContext_, vao);
+
+    // Configure the vertex attributes
+    auto configureAttribute = [this](const IVertexAttribute &attrib, int index, size_t stride, size_t offset)
+    {
+      glContext_->vertexAttribPointer(index,
+                                      attrib.size(),
+                                      attrib.type(),
+                                      attrib.normalized(),
+                                      stride,
+                                      offset);
+      glContext_->enableVertexAttribArray(index);
+    };
+    mesh3d->iterateEnabledAttributes(program, configureAttribute);
+
+    // Configure the vertex buffer data
+    auto &vertexBufferData = mesh3d->vertexBuffer().data();
+    glContext_->bufferData(client_graphics::WebGLBufferBindingTarget::kArrayBuffer,
+                           vertexBufferData.size(),
+                           const_cast<uint8_t *>(vertexBufferData.data()),
+                           client_graphics::WebGLBufferUsage::kStaticDraw);
+
+    // Configure the element buffer object
+    auto indices = mesh3d->indices();
+    glContext_->bufferData(client_graphics::WebGLBufferBindingTarget::kElementArrayBuffer,
+                           indices.dataSize(),
+                           indices.dataBuffer(),
+                           client_graphics::WebGLBufferUsage::kStaticDraw);
+
+    // Configure the instance vbo and related attributes if it's an instanced mesh.
+    if (mesh3d->isInstancedMesh())
+    {
+      auto &instancedMesh = mesh3d->getHandleCheckedAsRef<InstancedMeshBase>();
+      glContext_->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, instancedMesh.instanceVbo_);
+      glContext_->bufferData(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, 0, nullptr,
+                             client_graphics::WebGLBufferUsage::kDynamicDraw);
+
+      auto configureInstanceAttribute = [this](const IVertexAttribute &attrib, int index, size_t stride, size_t offset)
+      {
+        glContext_->enableVertexAttribArray(index);
+        glContext_->vertexAttribPointer(index,
+                                        attrib.size(),
+                                        attrib.type(),
+                                        attrib.normalized(),
+                                        stride,
+                                        offset);
+        glContext_->vertexAttribDivisor(index, 1);
+      };
+      instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
+    }
+  }
+
+  void Renderer::updateMeshVertexData(std::shared_ptr<Mesh3d> mesh3d, std::shared_ptr<client_graphics::WebGLProgram> program)
+  {
+    if (mesh3d->isInstancedMesh())
+    {
+      auto &instancedMesh = mesh3d->getHandleCheckedAsRef<InstancedMeshBase>();
+      instancedMesh.uploadInstanceData();
+    }
   }
 
   void Renderer::initializeMeshMaterial3d(shared_ptr<Mesh3d> mesh3d, shared_ptr<MeshMaterial3d> meshMaterial3d)
@@ -39,37 +108,7 @@ namespace builtin_scene
 
     // Configure the vertex data: vertex array object, vertex buffer object, and element buffer object.
     // Configure the vertex attributes and the vertex buffer data.
-    {
-      auto vao = mesh3d->vertexArrayObject();
-      client_graphics::WebGLVertexArrayScope vaoScope(glContext_, vao);
-
-      // Configure the vertex attributes
-      auto configureAttribute = [this](const IVertexAttribute &attrib, int index, size_t stride, size_t offset)
-      {
-        glContext_->vertexAttribPointer(index,
-                                        attrib.size(),
-                                        attrib.type(),
-                                        attrib.normalized(),
-                                        stride,
-                                        offset);
-        glContext_->enableVertexAttribArray(index);
-      };
-      mesh3d->iterateEnabledAttributes(program, configureAttribute);
-
-      // Configure the vertex buffer data
-      auto &vertexBufferData = mesh3d->vertexBuffer().data();
-      glContext_->bufferData(client_graphics::WebGLBufferBindingTarget::kArrayBuffer,
-                             vertexBufferData.size(),
-                             const_cast<uint8_t *>(vertexBufferData.data()),
-                             client_graphics::WebGLBufferUsage::kStaticDraw);
-
-      // Configure the element buffer object
-      auto indices = mesh3d->indices();
-      glContext_->bufferData(client_graphics::WebGLBufferBindingTarget::kElementArrayBuffer,
-                             indices.dataSize(),
-                             indices.dataBuffer(),
-                             client_graphics::WebGLBufferUsage::kStaticDraw);
-    }
+    configureMeshVertexData(mesh3d, program);
 
     // Configure the initial uniform values
     {
@@ -80,7 +119,18 @@ namespace builtin_scene
     }
   }
 
-  void Renderer::drawMesh3d(shared_ptr<Mesh3d> mesh, shared_ptr<MeshMaterial3d> material,
+  void Renderer::tryUpdateMeshMaterial3d(std::shared_ptr<Mesh3d> mesh3d, std::shared_ptr<MeshMaterial3d> meshMaterial3d)
+  {
+    auto program = meshMaterial3d->program();
+    if (TR_UNLIKELY(program == nullptr))
+      return;
+
+    // Update the vertex data if it's dirty
+    updateMeshVertexData(mesh3d, program);
+    // TODO: update the instance data
+  }
+
+  void Renderer::drawMesh3d(const ecs::EntityId &entity, shared_ptr<Mesh3d> mesh, shared_ptr<MeshMaterial3d> material,
                             shared_ptr<Transform> transform,
                             shared_ptr<Transform> parentTransform,
                             std::optional<XRRenderTarget> renderTarget)
@@ -98,16 +148,30 @@ namespace builtin_scene
 
     // Update matrices
     updateViewProjectionMatrix(programScope.program(), renderTarget);
-    updateTransformationMatrix(programScope.program(), transform, parentTransform);
+    auto newMatrix = updateTransformationMatrix(programScope.program(), transform, parentTransform);
 
     // Draw the mesh
     {
       client_graphics::WebGLVertexArrayScope vaoScope(glContext_, mesh->vertexArrayObject());
-      // TODO: support other primitive topologies?
-      glContext_->drawElements(client_graphics::WebGLDrawMode::kTriangles,
-                               mesh->indices().size(),
-                               WEBGL_UNSIGNED_INT,
-                               0);
+      if (mesh->isInstancedMesh())
+      {
+        auto &instancedMesh = mesh->getHandleCheckedAsRef<InstancedMeshBase>();
+        if (instancedMesh.instanceCount() > 0)
+        {
+          glContext_->drawElementsInstanced(mesh->primitiveTopology(),
+                                            mesh->indices().size(),
+                                            WEBGL_UNSIGNED_INT,
+                                            0,
+                                            instancedMesh.instanceCount());
+        }
+      }
+      else
+      {
+        glContext_->drawElements(mesh->primitiveTopology(),
+                                 mesh->indices().size(),
+                                 WEBGL_UNSIGNED_INT,
+                                 0);
+      }
     }
 
     // Call lifecycle methods
@@ -163,10 +227,11 @@ namespace builtin_scene
     }
   }
 
-  void Renderer::updateTransformationMatrix(shared_ptr<client_graphics::WebGLProgram> program,
-                                            shared_ptr<Transform> transform,
-                                            shared_ptr<Transform> parentTransform,
-                                            bool forceUpdate)
+  optional<glm::mat4> Renderer::updateTransformationMatrix(
+      shared_ptr<client_graphics::WebGLProgram> program,
+      shared_ptr<Transform> transform,
+      shared_ptr<Transform> parentTransform,
+      bool forceUpdate)
   {
     assert(program != nullptr);
 
@@ -174,7 +239,7 @@ namespace builtin_scene
     if (transform == nullptr || !transform->isDirty())
     {
       if (!forceUpdate)
-        return;
+        return nullopt;
 
       if (transform != nullptr)
         matToUpdate = transform->matrix();
@@ -188,12 +253,12 @@ namespace builtin_scene
     glm::mat4 postMat = glm::mat4(1.0f);
     if (parentTransform != nullptr && parentTransform->hasPostTransform())
     {
-      auto& parentPostTransform = parentTransform->getOrInitPostTransform();
+      auto &parentPostTransform = parentTransform->getOrInitPostTransform();
       postMat = parentPostTransform.accumulatedMatrix();
     }
     if (transform != nullptr && transform->hasPostTransform())
     {
-      auto& postTransform = transform->getOrInitPostTransform();
+      auto &postTransform = transform->getOrInitPostTransform();
       postMat = postTransform.matrix() * postMat;
       postTransform.setAccumulatedMatrix(postMat);
     }
@@ -203,6 +268,7 @@ namespace builtin_scene
     if (!loc.has_value())
       throw runtime_error("The modelMatrix uniform location is not found.");
     glContext_->uniformMatrix4fv(loc.value(), false, matToUpdate);
+    return matToUpdate;
   }
 
   void RenderSystem::onExecute()
@@ -288,18 +354,46 @@ namespace builtin_scene
   {
     auto materialComponent = getComponent<MeshMaterial3d>(entity);
     if (materialComponent == nullptr)
+    {
+      assert(false && "The material component must be valid.");
       return;
+    }
 
     if (!meshComponent->initialized())
       renderer.initializeMesh3d(meshComponent);
     if (!materialComponent->initialized())
       renderer.initializeMeshMaterial3d(meshComponent, materialComponent);
 
+    // Update the mesh3d and material if needed
+    renderer.tryUpdateMeshMaterial3d(meshComponent, materialComponent);
+
+    // Update the instance transformation matrix if it's an instanced mesh
+    if (meshComponent->isInstancedMesh())
+    {
+      auto &instancedMesh = meshComponent->getHandleCheckedAsRef<InstancedMeshBase>();
+      auto updateTransform = [this](ecs::EntityId id, Instance &instance) -> bool
+      {
+        auto transform = getComponent<Transform>(id);
+        if (transform != nullptr)
+        {
+          instance.setTransform(transform->matrix());
+          return true;
+        }
+        else
+        {
+          return false;
+        }
+      };
+      instancedMesh.iterateInstances(updateTransform);
+    }
+
+    // Draw
     std::shared_ptr<Transform> parentTransform = nullptr;
     auto parentComponent = getComponent<hierarchy::Parent>(entity);
     if (parentComponent != nullptr)
       parentTransform = getComponent<Transform>(parentComponent->parent());
-    renderer.drawMesh3d(meshComponent,
+    renderer.drawMesh3d(entity,
+                        meshComponent,
                         materialComponent,
                         getComponent<Transform>(entity),
                         parentTransform,

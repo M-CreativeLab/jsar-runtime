@@ -1993,12 +1993,19 @@ namespace client_graphics
       WebGLPixelType type,
       unsigned char *pixels)
   {
-    auto commandBuffer = TextureSubImage3DCommandBufferRequest(static_cast<uint32_t>(target),
-                                                               level, xoffset, yoffset, zoffset, width, height, depth,
-                                                               static_cast<uint32_t>(format),
-                                                               static_cast<uint32_t>(type),
-                                                               pixels);
-    sendCommandBufferRequest(commandBuffer);
+    TextureSubImage3DCommandBufferRequest req;
+    req.target = static_cast<uint32_t>(target);
+    req.level = level;
+    req.xoffset = xoffset;
+    req.yoffset = yoffset;
+    req.zoffset = zoffset;
+    req.width = width;
+    req.height = height;
+    req.depth = depth;
+    req.format = static_cast<uint32_t>(format);
+    req.pixelType = static_cast<uint32_t>(type);
+    req.setPixels(pixels);
+    sendCommandBufferRequest(req);
   }
 
   void WebGL2Context::uniformBlockBinding(std::shared_ptr<WebGLProgram> program,

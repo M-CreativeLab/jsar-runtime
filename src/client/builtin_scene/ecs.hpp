@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <assert.h>
 #include <array>
 #include <memory>
 #include <vector>
@@ -426,11 +427,17 @@ namespace builtin_scene::ecs
      *
      * @tparam ComponentType The type of the component.
      * @param entity The entity to remove the component from.
+     * @param ignoreIfNotExists If `true`, it will ignore if the component does not exist, otherwise it will throw an error.
      */
     template <typename ComponentType>
-    inline void removeComponent(EntityId entity)
+    inline void removeComponent(EntityId entity, bool ignoreIfNotExists = false)
     {
-      getComponentSet<ComponentType>()->remove(entity);
+      auto componentSet = getComponentSet<ComponentType>();
+      assert(componentSet != nullptr);
+
+      if (ignoreIfNotExists == true && !componentSet->contains(entity))
+        return;
+      componentSet->remove(entity);
     }
 
     /**
@@ -633,10 +640,11 @@ namespace builtin_scene::ecs
      *
      * @tparam ComponentType The type of the component.
      * @param entity The entity to remove the component from.
+     * @param ignoreIfNotExists If `true`, it will ignore if the component does not exist, otherwise it will throw an error.
      * @returns The number of components removed.
      */
     template <typename ComponentType>
-    void removeComponent(EntityId entity);
+    void removeComponent(EntityId entity, bool ignoreIfNotExists = false);
     /**
      * Replace the current component of the entity with the new one.
      *

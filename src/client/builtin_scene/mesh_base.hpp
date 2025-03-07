@@ -4,6 +4,8 @@
 #include <string>
 #include <variant>
 #include <glm/glm.hpp>
+#include <common/command_buffers/webgl_constants.hpp>
+#include <client/graphics/webgl_context.hpp>
 #include "./asset.hpp"
 
 namespace builtin_scene
@@ -30,15 +32,7 @@ namespace builtin_scene
     virtual float volume() = 0;
   };
 
-  enum class PrimitiveTopology : int
-  {
-    kPointList = WEBGL_POINTS,
-    kLineList = WEBGL_LINES,
-    kLineStrip = WEBGL_LINE_STRIP,
-    kTriangleList = WEBGL_TRIANGLES,
-    kTriangleStrip = WEBGL_TRIANGLE_STRIP,
-    kTriangleFan = WEBGL_TRIANGLE_FAN,
-  };
+  using PrimitiveTopology = client_graphics::WebGLDrawMode;
 
   template <typename T>
   class Indices : public std::vector<T>
@@ -47,6 +41,7 @@ namespace builtin_scene
     using std::vector<T>::vector;
 
   public:
+    inline void insertIndices(const Indices &indices) { this->insert(this->end(), indices.begin(), indices.end()); }
     inline size_t dataSize() { return this->size() * sizeof(T); }
     inline void *dataBuffer() { return this->data(); }
   };
@@ -64,6 +59,7 @@ namespace builtin_scene
     kFloat32x4,
     kUint16x2,
     kUint16x4,
+    kUint32,
     // More formats?
   };
 
@@ -163,6 +159,14 @@ namespace builtin_scene
   {
   public:
     static const VertexFormat format = VertexFormat::kUint16x4;
+    static const int type = WEBGL_UNSIGNED_INT;
+  };
+
+  template <>
+  class VertexAttributeTraits<uint32_t, 1>
+  {
+  public:
+    static const VertexFormat format = VertexFormat::kUint32;
     static const int type = WEBGL_UNSIGNED_INT;
   };
 
@@ -329,6 +333,25 @@ namespace builtin_scene
     }
 
     /**
+     * Inserts vertices from another buffer.
+     *
+     * @param buffer The buffer to insert vertices from.
+     * @param updateAttributes Whether to update the attributes configuration.
+     */
+    void insertVertices(const MeshVertexBuffer &buffer, bool updateAttributes)
+    {
+      for (auto &vertex : buffer.vertices_)
+        vertices_.push_back(vertex);
+
+      if (updateAttributes)
+      {
+        enabledAttributes_ = buffer.enabledAttributes_;
+        stride_ = buffer.stride_;
+        isDirty_ = true;
+      }
+    }
+
+    /**
      * Enable a vertex attribute.
      */
     void enableAttribute(const MeshVertexAttribute &attribute)
@@ -370,6 +393,18 @@ namespace builtin_scene
      * Get the stride of the vertex buffer.
      */
     inline size_t stride() const { return stride_; }
+
+    /**
+     * Clear the vertex buffer.
+     */
+    inline void clear()
+    {
+      vertices_.clear();
+      enabledAttributes_.clear();
+      cachedData_.clear();
+      isDirty_ = true;
+      stride_ = 0;
+    }
 
     /**
      * Get a pointer to the interleaved vertex data.
@@ -468,7 +503,7 @@ namespace builtin_scene
       vertexBuffer_.disableAttribute(attribute);
     }
     /**
-     * The attributes stride is the sum of all enabled attributes byte length, that's used by the 
+     * The attributes stride is the sum of all enabled attributes byte length, that's used by the
      * graphics API to get the correct attribute data.
      */
     inline size_t attributesStride() const { return vertexBuffer_.stride(); }
@@ -499,6 +534,14 @@ namespace builtin_scene
       }
       return attribsCount;
     }
+    /**
+     * @returns Whether the mesh is dirty to update the vertex buffer data.
+     */
+    inline bool isDirty() const { return isDirty_; }
+    /**
+     * Set the mesh dirty flag: `true` to update the vertex buffer data, `false` otherwise.
+     */
+    inline void setDirty(bool dirty) { isDirty_ = dirty; }
 
   public:
     /**
@@ -513,5 +556,6 @@ namespace builtin_scene
   protected:
     Indices<uint32_t> indices_{};
     MeshVertexBuffer vertexBuffer_;
+    bool isDirty_ = true;
   };
 }

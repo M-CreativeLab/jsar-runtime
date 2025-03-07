@@ -11,7 +11,7 @@ namespace builtin_scene::meshes
   {
   public:
     Box(float width, float height, float depth)
-        : Mesh("Box", PrimitiveTopology::kTriangleList),
+        : Mesh("Box", PrimitiveTopology::kTriangles),
           width_(width),
           height_(height),
           depth_(depth)
@@ -29,7 +29,7 @@ namespace builtin_scene::meshes
   public:
     float area() override { return 2.0f * (width_ * height_ + width_ * depth_ + height_ * depth_); }
     float volume() override { return width_ * height_ * depth_; }
-    void build() override final
+    void build() override
     {
       glm::vec3 max = glm::vec3(width_ / 2.0f, height_ / 2.0f, depth_ / 2.0f);
       glm::vec3 min = -max;
@@ -96,7 +96,7 @@ namespace builtin_scene::meshes
 
       updateIndices(indices);
       enableAttribute(Vertex::ATTRIBUTE_POSITION);
-      enableAttribute(Vertex::ATTRIBUTE_NORMAL);
+      // enableAttribute(Vertex::ATTRIBUTE_NORMAL);
       enableAttribute(Vertex::ATTRIBUTE_UV0);
     }
 

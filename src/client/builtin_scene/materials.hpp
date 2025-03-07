@@ -6,6 +6,7 @@
 #include "./materials/color.hpp"
 #include "./materials/normal.hpp"
 #include "./materials/web_content.hpp"
+#include "./materials/web_content_instanced.hpp"
 
 namespace builtin_scene
 {

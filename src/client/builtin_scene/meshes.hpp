@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <memory>
 #include <client/graphics/webgl_context.hpp>
 
@@ -7,6 +8,7 @@
 #include "./ecs.hpp"
 #include "./mesh_base.hpp"
 #include "./mesh_material.hpp"
+#include "./instanced_mesh.hpp"
 #include "./meshes/builder.hpp"
 #include "./meshes/box.hpp"
 #include "./meshes/plane.hpp"
@@ -26,13 +28,74 @@ namespace builtin_scene
     using ecs::Component::Component;
 
   public:
-    Mesh3d(std::shared_ptr<Mesh> handle)
+    /**
+     * Construct a mesh3d with the given mesh handle.
+     *
+     * @param handle The mesh handle.
+     * @param disableRendering Whether to disable rendering of the mesh, by default it's disabled.
+     */
+    Mesh3d(std::shared_ptr<Mesh> handle, bool disableRendering = true)
         : ecs::Component(),
-          handle_(handle)
+          handle_(handle),
+          disableRendering_(disableRendering)
     {
     }
 
   public:
+    /**
+     * Get if the mesh's handle is the given type.
+     *
+     * @tparam MeshType The type of the mesh to check.
+     * @returns If the mesh's handle is the given type.
+     */
+    template <typename MeshType>
+      requires std::is_base_of<Mesh, MeshType>::value
+    inline bool is() const
+    {
+      return std::dynamic_pointer_cast<MeshType>(handle_) != nullptr;
+    }
+    /**
+     * Get if the mesh's handle is an instanced mesh.
+     */
+    inline bool isInstancedMesh() const
+    {
+      return std::dynamic_pointer_cast<InstancedMeshBase>(handle_) != nullptr;
+    }
+    /**
+     * Get the handle of the mesh as the given type.
+     *
+     * @tparam MeshType The type of the mesh to get the handle as.
+     * @returns The handle of the mesh as the given type.
+     */
+    template <typename MeshType = Mesh>
+      requires std::is_same<InstancedMeshBase, MeshType>::value ||
+               std::is_same<Mesh, MeshType>::value ||
+               std::is_base_of<Mesh, MeshType>::value
+    inline std::shared_ptr<MeshType> getHandleAs()
+    {
+      if constexpr (std::is_same<MeshType, Mesh>::value)
+        return handle_;
+      else
+        return std::dynamic_pointer_cast<MeshType>(handle_);
+    }
+    /**
+     * Get the handle reference of the mesh as the given type, it will returns the object reference to the mesh, and
+     * throws an exception if the mesh is not valid.
+     *
+     * @tparam MeshType The type of the mesh to get the handle as.
+     * @returns The handle of the mesh as the given type.
+     */
+    template <typename MeshType = Mesh>
+      requires std::is_same<InstancedMeshBase, MeshType>::value ||
+               std::is_same<Mesh, MeshType>::value ||
+               std::is_base_of<Mesh, MeshType>::value
+    MeshType &getHandleCheckedAsRef()
+    {
+      auto mesh = getHandleAs<MeshType>();
+      if (mesh == nullptr)
+        throw std::runtime_error("The mesh is not valid.");
+      return *mesh;
+    }
     /**
      * @returns The vertex array object.
      */
@@ -57,6 +120,10 @@ namespace builtin_scene
      * @returns If the mesh3d is initialized.
      */
     inline bool initialized() { return initialized_; }
+    /**
+     * @returns If the mesh3d needs to update the underlying vertex buffer data.
+     */
+    inline bool needsUpdate() const { return handle_->isDirty(); }
     /**
      * @returns If the mesh3d is disabled for rendering.
      */
@@ -111,12 +178,28 @@ namespace builtin_scene
     std::shared_ptr<client_graphics::WebGLVertexArray> vao_;
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;
     bool initialized_ = false;
-    bool disableRendering_ = false;
+    bool disableRendering_ = true;
   };
 
   class MeshBuilder
   {
   public:
+    /**
+     * Create an instanced mesh with the given name.
+     *
+     * @tparam MeshType The type of the mesh to create.
+     * @tparam Args The types of the arguments to pass to the mesh
+     *
+     * @param name The name of the instanced mesh.
+     * @param args The arguments to pass to the mesh
+     * @returns The created instanced mesh.
+     */
+    template <typename MeshType, typename... Args>
+      requires std::is_base_of<Mesh, MeshType>::value
+    static inline std::shared_ptr<InstancedMesh<MeshType>> CreateInstancedMesh(const std::string &name, Args &&...args)
+    {
+      return CreateAndBuild<InstancedMesh<MeshType>>(name, std::forward<Args>(args)...);
+    }
     /**
      * Create a box mesh with the given width, height, and depth.
      *

@@ -51,6 +51,22 @@ namespace dom
     useScene(initMeshAndMaterial);
   }
 
+  void HTMLPlaneElement::afterConnectedCallback()
+  {
+    {
+      assert(entity_.has_value());
+      auto markMeshAvailable = [this](Scene &scene)
+      {
+        auto entity = entity_.value();
+        auto meshComponent = scene.getComponent<Mesh3d>(entity);
+        if (meshComponent != nullptr && scene.hasComponent<MeshMaterial3d>(entity))
+          meshComponent->resumeRendering();
+      };
+      useScene(markMeshAvailable);
+    }
+    HTMLElement::afterConnectedCallback();
+  }
+
   bool HTMLPlaneElement::renderElement(Scene &scene)
   {
     if (!HTMLElement::renderElement(scene))

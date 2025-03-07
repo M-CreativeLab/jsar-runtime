@@ -9,12 +9,15 @@
 #include <skia/modules/skparagraph/include/TextStyle.h>
 #include <client/cssom/css_style_declaration.hpp>
 #include <client/per_process.hpp>
+
 #include "./ecs-inl.hpp"
+#include "./texture_altas.hpp"
 
 namespace builtin_scene
 {
   namespace web_renderer
   {
+    class InitSystem;
     class RenderBaseSystem;
     class RenderBackgroundSystem;
     class RenderImageSystem;
@@ -143,12 +146,31 @@ namespace builtin_scene
       return canvas_->imageInfo().height();
     }
     /**
+     * Init or resize the texture.
+     *
+     * @param textureAtlas The texture atlas to create or resize the texture.
+     * @returns The texture.
+     */
+    inline std::shared_ptr<Texture> resizeOrInitTexture(TextureAtlas &textureAtlas)
+    {
+      float w = width();
+      float h = height();
+
+      if (texture_ == nullptr)
+        texture_ = textureAtlas.addTexture(w, h, true);
+      else
+        texture_ = textureAtlas.resizeTexture(texture_, w, h, true);
+
+      assert(texture_ != nullptr && "The texture must be valid.");
+      return texture_;
+    }
+    /**
      * @returns Whether the content is dirty, namely needs to be re-rendered.
      */
     inline bool isDirty() const { return isDirty_; }
     /**
      * Mark the content as dirty or not.
-     * 
+     *
      * @param dirty Whether the content is dirty.
      */
     inline void setDirty(bool dirty) { isDirty_ = dirty; }
@@ -165,7 +187,19 @@ namespace builtin_scene
     std::optional<crates::layout2::Layout> lastLayout_;
     WebContentStyle contentStyle_;
     SkRRect roundedRect_;
+    std::shared_ptr<Texture> texture_;
     bool isDirty_ = true;
+  };
+
+  class WebContentContext : public ecs::Resource
+  {
+    friend class web_renderer::InitSystem;
+
+  public:
+    ecs::EntityId instancedMeshEntity() const { return instancedMeshEntity_; }
+
+  private:
+    ecs::EntityId instancedMeshEntity_;
   };
 
   /**
@@ -173,6 +207,16 @@ namespace builtin_scene
    */
   namespace web_renderer
   {
+    class InitSystem final : public ecs::System
+    {
+    public:
+      using ecs::System::System;
+
+    public:
+      const std::string name() const override { return "web_render.InitSystem"; }
+      void onExecute() override;
+    };
+
     class RenderBaseSystem : public ecs::System
     {
     public:
@@ -183,6 +227,40 @@ namespace builtin_scene
 
     protected:
       virtual void render(ecs::EntityId entity, WebContent &content) = 0;
+
+    protected:
+      /**
+       * Get the instanced mesh component.
+       * 
+       * @tparam ComponentType The type of the component.
+       * @returns The instanced mesh component.
+       */
+      template <typename ComponentType>
+      std::shared_ptr<ComponentType> getInstancedMeshComponent()
+      {
+        if (webContentCtx_ == nullptr)
+          webContentCtx_ = getResource<WebContentContext>();
+        assert(webContentCtx_ != nullptr && "The WebContentContext must be valid.");
+
+        auto entity = webContentCtx_->instancedMeshEntity();
+        return getComponent<ComponentType>(entity);
+      }
+      /**
+       * Get the object reference to the instanced mesh's component, it will expect the component to be valid.
+       * 
+       * @tparam ComponentType The type of the component.
+       * @returns The object reference to the instanced mesh's component.
+       */
+      template <typename ComponentType>
+      ComponentType& getInstancedMeshComponentChecked()
+      {
+        auto component = getInstancedMeshComponent<ComponentType>();
+        assert(component != nullptr && "The instanced mesh component must be valid.");
+        return *component;
+      }
+
+    private:
+      std::shared_ptr<WebContentContext> webContentCtx_;
     };
 
     /**
@@ -273,7 +351,11 @@ namespace builtin_scene
       using namespace ecs;
       using namespace web_renderer;
 
+      app.addResource(Resource::Make<WebContentContext>());
       app.registerComponent<WebContent>();
+
+      auto initWebContent = System::Make<InitSystem>();
+      app.addSystem(SchedulerLabel::kPostStartup, initWebContent);
 
       auto renderBackground = System::Make<RenderBackgroundSystem>();
       auto renderImage = System::Make<RenderImageSystem>();

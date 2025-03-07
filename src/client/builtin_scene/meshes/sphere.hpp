@@ -17,7 +17,7 @@ namespace builtin_scene
 
     public:
       Sphere(float radius)
-          : Mesh("Sphere", PrimitiveTopology::kTriangleList),
+          : Mesh("Sphere", PrimitiveTopology::kTriangles),
             radius_(radius)
       {
       }

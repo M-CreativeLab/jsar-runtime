@@ -30,20 +30,35 @@ namespace dom
   {
     assert(sceneObject_ != nullptr && "The scene object must be valid.");
 
+    // Append the content2d's entity to the WebContent's instanced mesh
+    auto addToInstancedMesh = [this](Scene &scene)
+    {
+      auto webContextCtx = scene.getResource<WebContentContext>();
+      assert(webContextCtx != nullptr);
+      scene.getComponentChecked<Mesh3d>(webContextCtx->instancedMeshEntity())
+          .getHandleCheckedAsRef<InstancedMeshBase>()
+          .addInstance(entity());
+    };
+    sceneObject_->useScene(addToInstancedMesh);
+
     // Reset the material to `WebContentMaterial`.
     auto resetMaterial = [this](Scene &scene)
     {
-      auto material = Material::Make<materials::WebContentMaterial>();
-      {
-        // Fetch and set the global aspect ratio.
-        auto bindingNode = dynamic_pointer_cast<dom::Node>(sceneObject_);
-        assert(bindingNode != nullptr);
-        auto window = bindingNode->getOwnerDocumentReferenceAs<HTMLDocument>()->defaultView();
-        assert(window != nullptr);
-        material->setGlobalAspectRatio(window->innerWidth() / window->innerHeight());
-      }
-      scene.replaceComponent(entity(),
-                             MeshMaterial3d(scene.getResource<Materials>()->add(material)));
+      // auto material = Material::Make<materials::WebContentMaterial>();
+      // {
+      //   // Fetch and set the global aspect ratio.
+      //   auto bindingNode = dynamic_pointer_cast<dom::Node>(sceneObject_);
+      //   assert(bindingNode != nullptr);
+      //   auto window = bindingNode->getOwnerDocumentReferenceAs<HTMLDocument>()->defaultView();
+      //   assert(window != nullptr);
+      //   material->setGlobalAspectRatio(window->innerWidth() / window->innerHeight());
+      // }
+      // scene.replaceComponent(entity(),
+      //                        MeshMaterial3d(scene.getResource<Materials>()->add(material)));
+
+      auto id = entity();
+      scene.removeComponent<Mesh3d>(id, true);
+      scene.removeComponent<MeshMaterial3d>(id, true);
     };
     sceneObject_->useScene(resetMaterial);
 

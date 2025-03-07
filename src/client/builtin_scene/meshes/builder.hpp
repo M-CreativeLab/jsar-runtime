@@ -7,6 +7,7 @@ namespace builtin_scene::meshes
   class MeshBuilder
   {
   public:
+    MeshBuilder() = default;
     virtual ~MeshBuilder() = default;
 
   public:

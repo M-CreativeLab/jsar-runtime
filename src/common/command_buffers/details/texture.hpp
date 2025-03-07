@@ -116,6 +116,7 @@ namespace commandbuffers
      */
     void setPixels(void *srcPixels, bool copyPixels = true)
     {
+      std::cout << "TextureImageND::setPixels => (" << srcPixels << ", " << copyPixels << ")" << std::endl;
       if (srcPixels == nullptr)
       {
         resetPixels();
@@ -414,62 +415,27 @@ namespace commandbuffers
   };
 
   class TextureSubImage3DCommandBufferRequest final
-      : public TrCommandBufferSimpleRequest<TextureSubImage3DCommandBufferRequest, COMMAND_BUFFER_TEXTURE_SUB_IMAGE_3D_REQ>
+      : public TextureImageNDCommandBufferRequest<TextureSubImage3DCommandBufferRequest>
   {
   public:
-    TextureSubImage3DCommandBufferRequest(
-        uint32_t target,
-        uint32_t level,
-        uint32_t xoffset,
-        uint32_t yoffset,
-        uint32_t zoffset,
-        uint32_t width,
-        uint32_t height,
-        uint32_t depth,
-        uint32_t format,
-        uint32_t type,
-        void *pixels)
-        : TrCommandBufferSimpleRequest(),
-          target(target),
-          level(level),
-          xoffset(xoffset),
-          yoffset(yoffset),
-          zoffset(zoffset),
-          width(width),
-          height(height),
-          depth(depth),
-          format(format),
-          pixelType(type)
+    TextureSubImage3DCommandBufferRequest()
+        : TextureImageNDCommandBufferRequest(COMMAND_BUFFER_TEXTURE_SUB_IMAGE_3D_REQ)
     {
-      if (pixels != nullptr)
-      {
-        // TODO
-      }
     }
 
   public:
-    TrCommandBufferMessage *serialize() override
+    size_t computePixelsByteLength() override
     {
-      return new TrCommandBufferMessage(type, size, this);
-    }
-    void deserialize(TrCommandBufferMessage &message) override
-    {
-      // TODO
+      return width * height * depth * getPixelSize();
     }
 
   public:
-    int target;
-    int level;
     int xoffset;
     int yoffset;
     int zoffset;
     int width;
     int height;
     int depth;
-    int format;
-    int pixelType;
-    void *pixels = nullptr;
-    size_t pixelsBufferSize = 0;
   };
 
   template <typename Derived, CommandBufferType Type>

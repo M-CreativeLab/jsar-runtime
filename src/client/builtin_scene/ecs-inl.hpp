@@ -234,10 +234,10 @@ namespace builtin_scene::ecs
   }
 
   template <typename ComponentType>
-  void App::removeComponent(EntityId entity)
+  void App::removeComponent(EntityId entity, bool ignoreIfNotExists)
   {
     std::unique_lock<std::shared_mutex> lock(mutexForEntities_);
-    componentsMgr_.removeComponent<ComponentType>(entity);
+    componentsMgr_.removeComponent<ComponentType>(entity, ignoreIfNotExists);
   }
 
   template <typename ComponentType>

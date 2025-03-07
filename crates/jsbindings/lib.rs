@@ -11,6 +11,7 @@ mod css;
 mod css_parser;
 mod glsl_transpiler;
 mod layout;
+mod texture_atlas;
 mod typescript_transpiler;
 mod webgl;
 
