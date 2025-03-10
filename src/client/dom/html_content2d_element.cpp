@@ -1,7 +1,6 @@
 #include <skia/include/core/SkImageInfo.h>
 #include <client/builtin_scene/ecs-inl.hpp>
 #include <client/builtin_scene/web_content.hpp>
-#include <client/builtin_scene/materials/web_content.hpp>
 
 #include "./html_content2d_element.hpp"
 #include "./document.hpp"

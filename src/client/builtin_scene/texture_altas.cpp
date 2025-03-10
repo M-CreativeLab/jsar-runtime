@@ -61,11 +61,27 @@ namespace builtin_scene
   {
     if (autoDownscale)
     {
-      if (width > this->width_)
-        width = this->width_;
-      if (height > this->height_)
-        height = this->height_;
+      const float widthRatio = static_cast<float>(width_) / width;
+      const float heightRatio = static_cast<float>(height_) / height;
+      const float scale = fmin(widthRatio, heightRatio);
+      if (scale < 1.0f)
+      {
+        int scaledWidth = static_cast<int>(floor(width * scale));
+        int scaledHeight = static_cast<int>(floor(height * scale));
+
+        scaledWidth = scaledWidth > width_ ? width_ : scaledWidth;
+        scaledHeight = scaledHeight > height_ ? height_ : scaledHeight;
+
+        if (scaledWidth <= 0 || scaledHeight <= 0)
+          throw runtime_error("Invalid texture size");
+
+        width = scaledWidth;
+        height = scaledHeight;
+      }
     }
+
+    if (width > width_ || height > height_)
+      throw runtime_error("Invalid texture size");
     return handle_->addTexture(width, height);
   }
 
