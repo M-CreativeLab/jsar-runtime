@@ -80,6 +80,8 @@ namespace builtin_scene
      */
     ShaderSource shader(const std::vector<std::string> &defines = {}) const
     {
+      if (shaders::SHADERS_STORE.find(name) == shaders::SHADERS_STORE.end())
+        throw std::runtime_error("The shader is not found: " + name);
       return ShaderSource(name, shaders::SHADERS_STORE.at(name), defines, type);
     }
 

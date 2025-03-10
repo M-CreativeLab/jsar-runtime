@@ -102,28 +102,24 @@ namespace dom
   void Text::connect()
   {
     CharacterData::connect();
-    SceneObject::connectedCallback(shared_from_this()); // Create the entity
 
-    // Initialize the mesh
-    auto initTextMesh = [this](Scene &scene)
+    if (renderable)
     {
-      auto meshes = scene.getResource<Meshes>();
-      scene.addComponent(entity_.value(),
-                         Mesh3d(meshes->add(MeshBuilder::CreateBox(1.0f, 1.0f, 0.001f))));
-    };
-    useScene(initTextMesh);
+      SceneObject::connectedCallback(shared_from_this()); // Create the entity
 
-    // Initialize the Content2d and connect it.
-    content2d_ = make_unique<Content2d>(shared_from_this());
-    content2d_->onNodeConnected();
+      // Initialize the Content2d and connect it.
+      if (content2d_ == nullptr)
+        content2d_ = make_unique<Content2d>(shared_from_this());
+      content2d_->onNodeConnected();
 
-    // Append the text
-    auto appendText = [this](Scene &scene)
-    {
-      assert(entity_.has_value());
-      scene.addComponent(entity_.value(), Text2d(data()));
-    };
-    useScene(appendText);
+      // Append the text
+      auto appendText = [this](Scene &scene)
+      {
+        assert(entity_.has_value());
+        scene.addComponent(entity_.value(), Text2d(data()));
+      };
+      useScene(appendText);
+    }
   }
 
   bool Text::adoptStyle(const client_cssom::CSSStyleDeclaration &style)

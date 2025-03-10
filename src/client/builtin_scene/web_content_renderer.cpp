@@ -9,8 +9,11 @@
 #include <skia/include/effects/SkDashPathEffect.h>
 
 #include "./hierarchy.hpp"
+#include "./transform.hpp"
+#include "./instanced_mesh.hpp"
 #include "./mesh_material.hpp"
-#include "./materials/web_content.hpp"
+#include "./meshes.hpp"
+#include "./materials.hpp"
 #include "./web_content.hpp"
 #include "./text.hpp"
 #include "./image.hpp"
@@ -18,6 +21,24 @@
 namespace builtin_scene::web_renderer
 {
   using namespace skia::textlayout;
+
+  void InitSystem::onExecute()
+  {
+    auto webContentCtx = getResource<WebContentContext>();
+    auto meshes = getResource<Meshes>();
+    auto materials = getResource<Materials>();
+    assert(webContentCtx != nullptr &&
+           meshes != nullptr &&
+           materials != nullptr);
+
+    auto material = Material::Make<materials::WebContentInstancedMaterial>();
+    webContentCtx->instancedMeshEntity_ = spawn(
+        hierarchy::Root(true),
+        Mesh3d(meshes->add(MeshBuilder::CreateInstancedMesh<meshes::Box>("HTMLClassicMeshes", 1.0f, 1.0f, 0.001f)),
+               false),
+        MeshMaterial3d(materials->add(material)),
+        Transform::FromXYZ(0.0f, 0.0f, 0.0f));
+  }
 
   void RenderBaseSystem::onExecute()
   {
@@ -303,12 +324,13 @@ namespace builtin_scene::web_renderer
 
   void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)
   {
-    auto material3d = getComponent<MeshMaterial3d>(entity);
-    if (material3d == nullptr)
+    auto material3d = getInstancedMeshComponent<MeshMaterial3d>();
+    if (TR_UNLIKELY(material3d == nullptr))
       return;
 
-    auto webContentMaterial = material3d->material<materials::WebContentMaterial>();
-    if (webContentMaterial != nullptr && webContentMaterial->updateTexture(content))
+    auto webContentMaterial = material3d->material<materials::WebContentInstancedMaterial>();
+    if (webContentMaterial != nullptr &&
+        webContentMaterial->updateTexture(content))
       content.setDirty(false); // Mark the content as clean if the texture is updated successfully.
   }
 }

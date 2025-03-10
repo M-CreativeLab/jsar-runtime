@@ -24,6 +24,7 @@ namespace dom
       defaultStyle_.setProperty("margin", "2px");
       defaultStyle_.setProperty("padding", "2px");
       defaultStyle_.setProperty("background-color", "transparent");
+      renderable = true;
 
       HTMLContent2dElement::createdCallback();
     }

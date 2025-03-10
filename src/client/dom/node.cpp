@@ -142,8 +142,33 @@ namespace dom
   void Node::connect()
   {
     connected = true;
+    {
+      // Update the depth value when connected.
+      auto parent = parentNode.lock();
+      if (parent != nullptr)
+      {
+        depthInTree = parent->depthInTree.value_or(0) + 1;
+        if (parent->renderable == true)
+          renderable = true;
+      }
+      else
+        depthInTree = 0;
+    }
+
+    // Connect the children from the parent.
     for (auto child : childNodes)
       child->connect();
+  }
+
+  void Node::disconnect()
+  {
+    // Disconnect from the leaf nodes first
+    for (auto child : childNodes)
+      child->disconnect();
+
+    connected = false;
+    depthInTree = nullopt;
+    renderable = false;
   }
 
   void Node::load()

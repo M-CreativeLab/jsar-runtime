@@ -93,11 +93,18 @@ namespace dom
     void setOuterHTML(const std::string &html);
 
   protected: // Element lifecycle callbacks
+    /**
+     * Connect the element to the live document.
+     */
     virtual void connect() override
     {
       connectedCallback();
       Node::connect();
+      afterConnectedCallback();
     }
+    /**
+     * Load the element.
+     */
     virtual void load() override
     {
       beforeLoadedCallback();
@@ -105,15 +112,24 @@ namespace dom
       afterLoadedCallback();
     }
     /**
-     * When the element is created.
+     * An `Element` instance can be created via multiple ways, such as HTML parsing, `document.createElement`, etc. This callback is always called
+     * when the specific `Element` instance is created.
      */
     virtual void createdCallback();
     /**
-     * When the element is connected to DOM.
+     * An `Element` instance can be connected to the live document after it is created. Such as `document.body.appendChild(element)`, etc. That means
+     * the element will be rendered to the space. This callback is to be used to declare the element's behavior when it is connected to the live 
+     * document, for example, to define how a `span` element should be rendered.
      */
     virtual void connectedCallback() {};
     /**
-     * When the element is disconnected from DOM.
+     * This callback is called when the element's `connectedCallback()` chain has been completed, and used to define the behavior after the element is
+     * connected to the live document.
+     */
+    virtual void afterConnectedCallback() {};
+    /**
+     * When a connected `Element` instance is disconnected from the live document, this callback is called. For example, when the element is removed
+     * from the live document, or the document is closed, etc.
      */
     virtual void disconnectedCallback() {};
     /**

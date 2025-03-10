@@ -285,7 +285,22 @@ private:
 		res.version = string((const char *)glGetString(GL_VERSION));
 		res.renderer = string((const char *)glGetString(GL_RENDERER));
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+		{
 			DEBUG(DEBUG_TAG, "[%d] GL::ContextInit()", options.isDefaultQueue);
+			DEBUG(DEBUG_TAG, "    MAX_COMBINED_TEXTURE_IMAGE_UNITS = %d", res.maxCombinedTextureImageUnits);
+			DEBUG(DEBUG_TAG, "    MAX_CUBE_MAP_TEXTURE_SIZE = %d", res.maxCubeMapTextureSize);
+			DEBUG(DEBUG_TAG, "    MAX_FRAGMENT_UNIFORM_VECTORS = %d", res.maxFragmentUniformVectors);
+			DEBUG(DEBUG_TAG, "    MAX_RENDERBUFFER_SIZE = %d", res.maxRenderbufferSize);
+			DEBUG(DEBUG_TAG, "    MAX_TEXTURE_IMAGE_UNITS = %d", res.maxTextureImageUnits);
+			DEBUG(DEBUG_TAG, "    MAX_TEXTURE_SIZE = %d", res.maxTextureSize);
+			DEBUG(DEBUG_TAG, "    MAX_VARYING_VECTORS = %d", res.maxVaryingVectors);
+			DEBUG(DEBUG_TAG, "    MAX_VERTEX_ATTRIBS = %d", res.maxVertexAttribs);
+			DEBUG(DEBUG_TAG, "    MAX_VERTEX_TEXTURE_IMAGE_UNITS = %d", res.maxVertexTextureImageUnits);
+			DEBUG(DEBUG_TAG, "    MAX_VERTEX_UNIFORM_VECTORS = %d", res.maxVertexUniformVectors);
+			DEBUG(DEBUG_TAG, "    VENDOR = %s", res.vendor.c_str());
+			DEBUG(DEBUG_TAG, "    VERSION = %s", res.version.c_str());
+			DEBUG(DEBUG_TAG, "    RENDERER = %s", res.renderer.c_str());
+		}
 		reqContentRenderer->sendCommandBufferResponse(res);
 	}
 	TR_OPENGL_FUNC void OnContext2Init(WebGL2ContextInitCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
@@ -325,6 +340,16 @@ private:
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
 		{
 			DEBUG(DEBUG_TAG, "[%d] GL::Context2Init()", options.isDefaultQueue);
+			DEBUG(DEBUG_TAG, "    GL_MAX_3D_TEXTURE_SIZE = %d", res.max3DTextureSize);
+			DEBUG(DEBUG_TAG, "    GL_MAX_ARRAY_TEXTURE_LAYERS = %d", res.maxArrayTextureLayers);
+			DEBUG(DEBUG_TAG, "    GL_MAX_COLOR_ATTACHMENTS = %d", res.maxColorAttachments);
+			DEBUG(DEBUG_TAG, "    GL_MAX_COMBINED_UNIFORM_BLOCKS = %d", res.maxCombinedUniformBlocks);
+			DEBUG(DEBUG_TAG, "    GL_MAX_DRAW_BUFFERS = %d", res.maxDrawBuffers);
+			DEBUG(DEBUG_TAG, "    GL_MAX_ELEMENTS_INDICES = %d", res.maxElementsIndices);
+			DEBUG(DEBUG_TAG, "    GL_MAX_ELEMENTS_VERTICES = %d", res.maxElementsVertices);
+			DEBUG(DEBUG_TAG, "    GL_MAX_FRAGMENT_INPUT_COMPONENTS = %d", res.maxFragmentInputComponents);
+			DEBUG(DEBUG_TAG, "    GL_MAX_FRAGMENT_UNIFORM_BLOCKS = %d", res.maxFragmentUniformBlocks);
+			DEBUG(DEBUG_TAG, "    GL_MAX_FRAGMENT_UNIFORM_COMPONENTS = %d", res.maxFragmentUniformComponents);
 			DEBUG(DEBUG_TAG, "    OVR_multiview.MAX_VIEWS_OVR = %d", res.OVR_maxViews);
 		}
 		reqContentRenderer->sendCommandBufferResponse(res);
@@ -1320,7 +1345,11 @@ private:
 	{
 		glUniform1f(req->location, req->v0);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+		{
+			auto glContext = reqContentRenderer->getOpenGLContext();
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform1f(%d, %f)", options.isDefaultQueue, req->location, req->v0);
+			DEBUG(DEBUG_TAG, "    Program: %d", glContext->GetProgram());
+		}
 	}
 	TR_OPENGL_FUNC void OnUniform1fv(Uniform1fvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{

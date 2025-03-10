@@ -13,7 +13,7 @@ namespace builtin_scene::meshes
   {
   public:
     Plane(math::Dir3 normal, glm::vec2 halfSize)
-        : Mesh("Plane", PrimitiveTopology::kTriangleList),
+        : Mesh("Plane", PrimitiveTopology::kTriangles),
           normal_(normal),
           halfSize_(halfSize) {};
 
@@ -63,7 +63,7 @@ namespace builtin_scene::meshes
 
       updateIndices(indices);
       enableAttribute(Vertex::ATTRIBUTE_POSITION);
-      enableAttribute(Vertex::ATTRIBUTE_NORMAL);
+      // enableAttribute(Vertex::ATTRIBUTE_NORMAL);
       enableAttribute(Vertex::ATTRIBUTE_UV0);
     }
 

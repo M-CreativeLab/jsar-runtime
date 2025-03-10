@@ -17,6 +17,7 @@
 // Modules
 #include "./bindings.css-inl.hpp"
 #include "./bindings.layout.hpp"
+#include "./bindings.texture_atlas.hpp"
 #include "./bindings.webgl.hpp"
 
 namespace crates

@@ -12,6 +12,10 @@ namespace builtin_scene::materials
 
   public:
     /**
+     * @returns The transparent color material.
+     */
+    static inline ColorMaterialReference Transparent() { return std::make_shared<ColorMaterial>(); }
+    /**
      * @returns The white color material.
      */
     static inline ColorMaterialReference White() { return std::make_shared<ColorMaterial>(1.0f, 1.0f, 1.0f); }

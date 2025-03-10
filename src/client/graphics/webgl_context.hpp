@@ -1277,4 +1277,24 @@ namespace client_graphics
       glContext_->bindVertexArray(nullptr);
     }
   };
+
+  class WebGLVertexBufferScope final : public WebGLObjectScope<WebGL2Context, WebGLBuffer>
+  {
+  public:
+    WebGLVertexBufferScope(std::shared_ptr<WebGL2Context> glContext,
+                           std::shared_ptr<WebGLBuffer> glObject,
+                           WebGLBufferBindingTarget bindingTarget)
+        : WebGLObjectScope(glContext, glObject),
+          bindingTarget_(bindingTarget)
+    {
+      glContext_->bindBuffer(bindingTarget_, glObject);
+    }
+    ~WebGLVertexBufferScope()
+    {
+      glContext_->bindBuffer(bindingTarget_, nullptr);
+    }
+
+  private:
+    WebGLBufferBindingTarget bindingTarget_;
+  };
 }

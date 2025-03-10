@@ -1,35 +1,41 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
+#include <glm/glm.hpp>
 
 #include "../meshes.hpp"
 #include "../material_base.hpp"
+#include "../texture_altas.hpp"
 #include "../web_content.hpp"
 #include "./color.hpp"
 
 namespace builtin_scene::materials
 {
-  class WebContentMaterial final : public ColorMaterial
+  class WebContentInstancedMaterial final : public Material
   {
   public:
-    WebContentMaterial() = default;
-    WebContentMaterial(float width, float height)
-        : ColorMaterial(), width_(width), height_(height)
-    {
-    }
+    WebContentInstancedMaterial();
 
   public:
     const std::string name() const override
     {
-      return "WebContentMaterial";
+      return "WebContentInstancedMaterial";
     }
     const std::vector<std::string> defines() const override
     {
-      return mixDefines(ColorMaterial::defines(), {"USE_UVS", "USE_TEXTURE"});
+      return mixDefines(Material::defines(),
+                        {
+                            "USE_UVS",
+                            "USE_INSTANCE_TRANSFORMS",
+                            "USE_INSTANCE_COLORS",
+                            "USE_INSTANCE_TEXTURE"
+                            // End
+                        });
     }
     ShaderRef fragmentShader() override
     {
-      return ShaderRef(ShaderType::kFragment, "materials/color.frag");
+      return ShaderRef(ShaderType::kFragment, "materials/web_content.frag");
     }
     bool initialize(std::shared_ptr<client_graphics::WebGL2Context> glContext,
                     std::shared_ptr<client_graphics::WebGLProgram> program) override;
@@ -49,20 +55,27 @@ namespace builtin_scene::materials
      * @param content The WebContent to update the material with.
      * @returns Whether the texture is updated successfully.
      */
-    bool updateTexture(const WebContent &content);
+    bool updateTexture(WebContent &content);
 
   public:
     float width() const { return width_; }
     float height() const { return height_; }
-    float globalAspectRatio() const { return globalAspectRatio_; }
-    void setGlobalAspectRatio(float aspectRatio) { globalAspectRatio_ = aspectRatio; }
+
+  private:
+    inline client_graphics::WebGLUniformLocation uniform(const std::string &name) const
+    {
+      auto it = uniforms_.find(name);
+      if (it == uniforms_.end())
+        throw std::runtime_error("The uniform " + name + " is not found.");
+      return it->second;
+    }
 
   private:
     float width_;
     float height_;
-    float globalAspectRatio_ = 1.0f;
     glm::vec2 textureOffset_ = glm::vec2(0.0f, 0.0f);
     glm::vec2 textureScale_ = glm::vec2(1.0f, 1.0f);
-    std::shared_ptr<client_graphics::WebGLTexture> texture_;
+    std::unordered_map<std::string, client_graphics::WebGLUniformLocation> uniforms_;
+    std::unique_ptr<TextureAtlas> textureAtlas_;
   };
 }

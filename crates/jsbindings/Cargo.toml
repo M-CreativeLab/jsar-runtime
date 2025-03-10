@@ -28,6 +28,7 @@ taffy = { workspace = true, features = ["default"] }
 gl = { version = "0.14.0" }
 glsl-lang = { workspace = true }
 glsl-lang-pp = { workspace = true }
+guillotiere = { version = "0.6.2" }
 jsar_jsbinding_macro = { path = "../jsbinding_macro" }
 paste = { version = "1.0.15" }
 smallvec = { version = "1.13.2" }

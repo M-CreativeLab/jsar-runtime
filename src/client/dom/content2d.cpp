@@ -30,20 +30,35 @@ namespace dom
   {
     assert(sceneObject_ != nullptr && "The scene object must be valid.");
 
+    // Append the content2d's entity to the WebContent's instanced mesh
+    auto addToInstancedMesh = [this](Scene &scene)
+    {
+      auto webContextCtx = scene.getResource<WebContentContext>();
+      assert(webContextCtx != nullptr);
+      scene.getComponentChecked<Mesh3d>(webContextCtx->instancedMeshEntity())
+          .getHandleCheckedAsRef<InstancedMeshBase>()
+          .addInstance(entity());
+    };
+    sceneObject_->useScene(addToInstancedMesh);
+
     // Reset the material to `WebContentMaterial`.
     auto resetMaterial = [this](Scene &scene)
     {
-      auto material = Material::Make<materials::WebContentMaterial>();
-      {
-        // Fetch and set the global aspect ratio.
-        auto bindingNode = dynamic_pointer_cast<dom::Node>(sceneObject_);
-        assert(bindingNode != nullptr);
-        auto window = bindingNode->getOwnerDocumentReferenceAs<HTMLDocument>()->defaultView();
-        assert(window != nullptr);
-        material->setGlobalAspectRatio(window->innerWidth() / window->innerHeight());
-      }
-      scene.replaceComponent(entity(),
-                             MeshMaterial3d(scene.getResource<Materials>()->add(material)));
+      // auto material = Material::Make<materials::WebContentMaterial>();
+      // {
+      //   // Fetch and set the global aspect ratio.
+      //   auto bindingNode = dynamic_pointer_cast<dom::Node>(sceneObject_);
+      //   assert(bindingNode != nullptr);
+      //   auto window = bindingNode->getOwnerDocumentReferenceAs<HTMLDocument>()->defaultView();
+      //   assert(window != nullptr);
+      //   material->setGlobalAspectRatio(window->innerWidth() / window->innerHeight());
+      // }
+      // scene.replaceComponent(entity(),
+      //                        MeshMaterial3d(scene.getResource<Materials>()->add(material)));
+
+      auto id = entity();
+      scene.removeComponent<Mesh3d>(id, true);
+      scene.removeComponent<MeshMaterial3d>(id, true);
     };
     sceneObject_->useScene(resetMaterial);
 
@@ -72,22 +87,14 @@ namespace dom
       {
         auto content = scene.getComponent<WebContent>(entity);
         assert(content != nullptr);
-        if (TR_LIKELY(surface != nullptr))
-        {
-          SkCanvas *canvas = surface->getCanvas();
-          if (canvas != nullptr)
-          {
-            if (devicePixelRatio_ != 1.0f)
-              canvas->scale(devicePixelRatio_, devicePixelRatio_);
-            content->setCanvas(canvas);
-          }
+        assert(surface != nullptr);
 
-          auto meshMaterial3d = scene.getComponent<MeshMaterial3d>(entity);
-          if (TR_UNLIKELY(meshMaterial3d == nullptr))
-            return;
-          auto material = meshMaterial3d->material<materials::WebContentMaterial>();
-          if (TR_LIKELY(material != nullptr))
-            material->updateTexture(*content); // Resize the material with the resized content.
+        SkCanvas *canvas = surface->getCanvas();
+        if (TR_LIKELY(canvas != nullptr))
+        {
+          if (devicePixelRatio_ != 1.0f)
+            canvas->scale(devicePixelRatio_, devicePixelRatio_);
+          content->setCanvas(canvas);
         }
       };
       sceneObject_->useScene(resizeCanvas);
@@ -129,9 +136,15 @@ namespace dom
     SkImageInfo imageInfo = SkImageInfo::MakeN32Premul(width * devicePixelRatio_,
                                                        height * devicePixelRatio_);
     if (contentSurface_ == nullptr)
+    {
       contentSurface_ = SkSurfaces::Raster(imageInfo);
+    }
     else
-      contentSurface_ = contentSurface_->makeSurface(imageInfo);
+    {
+      auto newSurface = contentSurface_->makeSurface(imageInfo);
+      contentSurface_.reset();
+      contentSurface_ = newSurface;
+    }
     return contentSurface_;
   }
 }
