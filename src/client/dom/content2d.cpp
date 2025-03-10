@@ -87,22 +87,14 @@ namespace dom
       {
         auto content = scene.getComponent<WebContent>(entity);
         assert(content != nullptr);
-        if (TR_LIKELY(surface != nullptr))
-        {
-          SkCanvas *canvas = surface->getCanvas();
-          if (canvas != nullptr)
-          {
-            if (devicePixelRatio_ != 1.0f)
-              canvas->scale(devicePixelRatio_, devicePixelRatio_);
-            content->setCanvas(canvas);
-          }
+        assert(surface != nullptr);
 
-          auto meshMaterial3d = scene.getComponent<MeshMaterial3d>(entity);
-          if (TR_UNLIKELY(meshMaterial3d == nullptr))
-            return;
-          auto material = meshMaterial3d->material<materials::WebContentMaterial>();
-          if (TR_LIKELY(material != nullptr))
-            material->updateTexture(*content); // Resize the material with the resized content.
+        SkCanvas *canvas = surface->getCanvas();
+        if (TR_LIKELY(canvas != nullptr))
+        {
+          if (devicePixelRatio_ != 1.0f)
+            canvas->scale(devicePixelRatio_, devicePixelRatio_);
+          content->setCanvas(canvas);
         }
       };
       sceneObject_->useScene(resizeCanvas);
@@ -144,9 +136,15 @@ namespace dom
     SkImageInfo imageInfo = SkImageInfo::MakeN32Premul(width * devicePixelRatio_,
                                                        height * devicePixelRatio_);
     if (contentSurface_ == nullptr)
+    {
       contentSurface_ = SkSurfaces::Raster(imageInfo);
+    }
     else
-      contentSurface_ = contentSurface_->makeSurface(imageInfo);
+    {
+      auto newSurface = contentSurface_->makeSurface(imageInfo);
+      contentSurface_.reset();
+      contentSurface_ = newSurface;
+    }
     return contentSurface_;
   }
 }

@@ -21,7 +21,6 @@ namespace builtin_scene
     glContext->activeTexture(unit_);
     glContext->bindTexture(WebGLTextureTarget::kTexture2DArray, glTexture_);
     {
-
       glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
                                WebGLTextureParameterName::kTextureMinFilter,
                                WEBGL_LINEAR_MIPMAP_LINEAR);
@@ -35,16 +34,7 @@ namespace builtin_scene
                                WebGLTextureParameterName::kTextureWrapT,
                                WEBGL_CLAMP_TO_EDGE);
 
-      // Allocate the texture storage.
-      // glContext->texStorage3D(WebGLTexture3DTarget::kTexture2DArray,
-      //                         1,
-      //                         WEBGL2_RGBA8,
-      //                         width,
-      //                         height,
-      //                         kMaxLayerCount);
-
-      // Fill the texture with the default color.
-      vector<unsigned char> pixels(width * height * kMaxLayerCount * sizeof(unsigned char) * 4, 255 / 3);
+      // Initialize the texture atlas with the default values.
       glContext->texImage3D(WebGLTexture3DTarget::kTexture2DArray,
                             0,
                             WEBGL2_RGBA8,
@@ -54,7 +44,7 @@ namespace builtin_scene
                             0,
                             WebGLTextureFormat::kRGBA,
                             WebGLPixelType::kUnsignedByte,
-                            pixels.data());
+                            nullptr);
       glContext->generateMipmap(WebGLTextureTarget::kTexture2DArray);
     }
     glContext->bindTexture(WebGLTextureTarget::kTexture2DArray, nullptr);
@@ -82,7 +72,8 @@ namespace builtin_scene
   std::shared_ptr<Texture> TextureAtlas::resizeTexture(std::shared_ptr<Texture> texture, int width, int height, bool autoDownscale)
   {
     assert(texture != nullptr);
-    if (texture->width == width && texture->height == height)
+    if (texture->width == width &&
+        texture->height == height)
       return texture;
 
     removeTexture(*texture);
@@ -94,24 +85,29 @@ namespace builtin_scene
     handle_->removeTexture(texture);
   }
 
-  void TextureAtlas::updateTexture(const Texture &texture, const unsigned char *pixels)
+  void TextureAtlas::updateTexture(const Texture &texture, const unsigned char *pixels,
+                                   WebGLTextureFormat format,
+                                   WebGLPixelType pixelType)
   {
     auto glContext = glContext_.lock();
     assert(glContext != nullptr);
+
     glContext->bindTexture(WebGLTextureTarget::kTexture2DArray, glTexture_);
     // Update the texture with the new pixels or the default values.
     glContext->texSubImage3D(WebGLTexture3DTarget::kTexture2DArray, 0,
                              texture.x, texture.y, texture.layer,
                              texture.width, texture.height, 1,
-                             WebGLTextureFormat::kRGBA, WebGLPixelType::kUnsignedByte,
+                             format, pixelType,
                              const_cast<unsigned char *>(pixels));
     glContext->generateMipmap(WebGLTextureTarget::kTexture2DArray);
-    // {
-    //   glContext->texParameteri(WebGLTextureTarget::kTexture2D,
-    //                            WebGLTextureParameterName::kTextureMinFilter, WEBGL_LINEAR_MIPMAP_LINEAR);
-    //   glContext->texParameteri(WebGLTextureTarget::kTexture2D,
-    //                            WebGLTextureParameterName::kTextureMagFilter, WEBGL_LINEAR);
-    // }
+    glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
+                             WebGLTextureParameterName::kTextureMinFilter, WEBGL_LINEAR_MIPMAP_LINEAR);
+    glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
+                             WebGLTextureParameterName::kTextureMagFilter, WEBGL_LINEAR);
+    glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
+                             WebGLTextureParameterName::kTextureWrapS, WEBGL_CLAMP_TO_EDGE);
+    glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
+                             WebGLTextureParameterName::kTextureWrapT, WEBGL_CLAMP_TO_EDGE);
     glContext->bindTexture(WebGLTextureTarget::kTexture2DArray, nullptr);
   }
 

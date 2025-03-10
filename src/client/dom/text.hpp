@@ -53,8 +53,16 @@ namespace dom
     inline float &offsetWidth() override { return offsetWidth_; }
     inline float offsetHeight() const override { return offsetHeight_; }
     inline float &offsetHeight() override { return offsetHeight_; }
-    inline void onLayoutChanged() override { content2d().onLayoutSizeChanged(); }
-    inline void onAdoptedStyleChanged() override { content2d().onAdoptedStyleChanged(); }
+    inline void onLayoutChanged() override
+    {
+      if (content2d_ != nullptr)
+        content2d_->onLayoutSizeChanged();
+    }
+    inline void onAdoptedStyleChanged() override
+    {
+      if (content2d_ != nullptr)
+        content2d_->onAdoptedStyleChanged();
+    }
     void connect() override;
 
   private:

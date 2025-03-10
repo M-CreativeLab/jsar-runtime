@@ -5,16 +5,8 @@ uniform sampler2D tex;
 uniform mat3 textureTransformation;
 #endif
 
-#ifdef USE_INSTANCE_TEXTURE
-uniform sampler2DArray instanceTexAltas;
-in float vInstanceLayerIndex;
-#endif
-
 #ifdef USE_UVS
 in vec2 uvs;
-#ifdef USE_INSTANCE_TEXTURE
-in vec2 instanceTexUv;
-#endif
 #endif
 
 in vec4 col;
@@ -30,13 +22,6 @@ void main() {
 #ifdef USE_TEXTURE
   vec4 textureColor = texture(tex, (textureTransformation * vec3(uvs, 1.0)).xy);
   outColor = mix(outColor, textureColor, textureColor.a);
-#endif
-
-#ifdef USE_INSTANCE_TEXTURE
-  vec4 textureColor =
-      texture(instanceTexAltas, vec3(instanceTexUv, vInstanceLayerIndex));
-  // outColor = mix(outColor, textureColor, textureColor.a);
-  outColor = textureColor;
 #endif
 
 #ifdef DEBUG_UV0

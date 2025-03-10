@@ -100,6 +100,7 @@ namespace dom
     {
       connectedCallback();
       Node::connect();
+      afterConnectedCallback();
     }
     /**
      * Load the element.

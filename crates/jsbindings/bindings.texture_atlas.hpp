@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <iostream>
 #include <unordered_map>
 #include "./holocron_texture_atlas.autogen.hpp"
@@ -8,16 +9,19 @@ namespace crates::texture_atlas
 {
   using namespace ::rust;
 
+  class TextureAtlasLayout;
   class TextureLayout
   {
   public:
-    TextureLayout(const holocron::texture_atlas::TextureLayout &layout)
+    TextureLayout(const holocron::texture_atlas::TextureLayout &layout, int atlasWidth, int atlasHeight)
         : id(layout.id),
           width(layout.w),
           height(layout.h),
           x(layout.x),
           y(layout.y),
-          layer(layout.layer)
+          layer(layout.layer),
+          atlasWidth_(atlasWidth),
+          atlasHeight_(atlasHeight)
     {
     }
 
@@ -34,12 +38,28 @@ namespace crates::texture_atlas
     }
 
   public:
+    inline std::array<float, 2> getUvOffset() const
+    {
+      return {static_cast<float>(x) / atlasWidth_,
+              (static_cast<float>(y)) / atlasHeight_};
+    }
+    inline std::array<float, 2> getUvScale() const
+    {
+      return {static_cast<float>(width) / atlasWidth_,
+              static_cast<float>(height) / atlasHeight_};
+    }
+
+  public:
     uint32_t id;
     int width;
     int height;
     int x;
     int y;
     int layer;
+
+  private:
+    int atlasWidth_;
+    int atlasHeight_;
   };
 
   /**
@@ -57,22 +77,19 @@ namespace crates::texture_atlas
     }
 
   public:
-    inline size_t size() const
-    {
-      return textures_.size();
-    }
+    inline size_t size() const { return textures_.size(); }
     inline bool shouldDownscale(int width, int height) const
     {
       return holocron::texture_atlas::shouldDownscaleTexture(*allocator_, width, height);
     }
-    std::shared_ptr<TextureLayout> addTexture(int width, int height)
+    inline std::shared_ptr<TextureLayout> addTexture(int width, int height)
     {
       using namespace holocron::texture_atlas;
 
       auto layout = addTextureToAtlas(*allocator_, width, height);
       if (layout.valid)
       {
-        auto texture = std::make_shared<TextureLayout>(layout);
+        auto texture = std::make_shared<TextureLayout>(layout, this->width_, this->height_);
         textures_[texture->id] = texture;
         return texture;
       }
@@ -81,7 +98,7 @@ namespace crates::texture_atlas
         return nullptr;
       }
     }
-    void removeTexture(const TextureLayout &texture)
+    inline void removeTexture(const TextureLayout &texture)
     {
       using namespace holocron::texture_atlas;
 

@@ -116,7 +116,6 @@ namespace commandbuffers
      */
     void setPixels(void *srcPixels, bool copyPixels = true)
     {
-      std::cout << "TextureImageND::setPixels => (" << srcPixels << ", " << copyPixels << ")" << std::endl;
       if (srcPixels == nullptr)
       {
         resetPixels();

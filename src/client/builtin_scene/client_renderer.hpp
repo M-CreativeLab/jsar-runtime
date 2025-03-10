@@ -195,6 +195,12 @@ namespace builtin_scene
 
   private:
     /**
+     * Get the transformation matrix of the entity.
+     * 
+     * @returns The transformation matrix of the entity.
+     */
+    glm::mat4 getTransformationMatrix(ecs::EntityId id);
+    /**
      * Render the scene with the given renderer.
      *
      * @param renderer The renderer to use.
@@ -220,5 +226,6 @@ namespace builtin_scene
      */
     void renderMesh(ecs::EntityId &entity, std::shared_ptr<Mesh3d> meshComponent, Renderer &renderer,
                     std::optional<Renderer::XRRenderTarget> renderTarget);
+
   };
 }

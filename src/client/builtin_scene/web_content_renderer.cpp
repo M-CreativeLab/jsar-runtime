@@ -329,7 +329,8 @@ namespace builtin_scene::web_renderer
       return;
 
     auto webContentMaterial = material3d->material<materials::WebContentInstancedMaterial>();
-    if (webContentMaterial != nullptr && webContentMaterial->updateTexture(content))
+    if (webContentMaterial != nullptr &&
+        webContentMaterial->updateTexture(content))
       content.setDirty(false); // Mark the content as clean if the texture is updated successfully.
   }
 }

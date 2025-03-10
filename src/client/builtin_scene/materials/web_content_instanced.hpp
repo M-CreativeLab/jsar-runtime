@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 #include <glm/glm.hpp>
 
 #include "../meshes.hpp"
@@ -11,7 +12,7 @@
 
 namespace builtin_scene::materials
 {
-  class WebContentInstancedMaterial final : public ColorMaterial
+  class WebContentInstancedMaterial final : public Material
   {
   public:
     WebContentInstancedMaterial();
@@ -23,10 +24,9 @@ namespace builtin_scene::materials
     }
     const std::vector<std::string> defines() const override
     {
-      return mixDefines(ColorMaterial::defines(),
+      return mixDefines(Material::defines(),
                         {
                             "USE_UVS",
-                            //  "USE_TEXTURE",
                             "USE_INSTANCE_TRANSFORMS",
                             "USE_INSTANCE_COLORS",
                             "USE_INSTANCE_TEXTURE"
@@ -35,7 +35,7 @@ namespace builtin_scene::materials
     }
     ShaderRef fragmentShader() override
     {
-      return ShaderRef(ShaderType::kFragment, "materials/color.frag");
+      return ShaderRef(ShaderType::kFragment, "materials/web_content.frag");
     }
     bool initialize(std::shared_ptr<client_graphics::WebGL2Context> glContext,
                     std::shared_ptr<client_graphics::WebGLProgram> program) override;
@@ -60,15 +60,22 @@ namespace builtin_scene::materials
   public:
     float width() const { return width_; }
     float height() const { return height_; }
-    float globalAspectRatio() const { return globalAspectRatio_; }
-    void setGlobalAspectRatio(float aspectRatio) { globalAspectRatio_ = aspectRatio; }
+
+  private:
+    inline client_graphics::WebGLUniformLocation uniform(const std::string &name) const
+    {
+      auto it = uniforms_.find(name);
+      if (it == uniforms_.end())
+        throw std::runtime_error("The uniform " + name + " is not found.");
+      return it->second;
+    }
 
   private:
     float width_;
     float height_;
-    float globalAspectRatio_ = 1.0f;
     glm::vec2 textureOffset_ = glm::vec2(0.0f, 0.0f);
     glm::vec2 textureScale_ = glm::vec2(1.0f, 1.0f);
+    std::unordered_map<std::string, client_graphics::WebGLUniformLocation> uniforms_;
     std::unique_ptr<TextureAtlas> textureAtlas_;
   };
 }

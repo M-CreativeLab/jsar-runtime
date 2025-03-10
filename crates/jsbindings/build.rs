@@ -9,21 +9,22 @@ extern crate log;
 
 fn main() {
   // Tell cargo to re-run this script if the env FORCE_REBUILD is set.
-  println!("cargo:rerun-if-env-changed=FORCE_REBUILD");
+  // println!("cargo:rerun-if-env-changed=FORCE_REBUILD");
   // Tell cargo to re-run this script if the Rust files have changed.
   println!("cargo:rerun-if-changed=lib.rs");
   println!("cargo:rerun-if-changed=css_parser.rs");
   println!("cargo:rerun-if-changed=layout.rs");
   println!("cargo:rerun-if-changed=texture_atlas.rs");
   println!("cargo:rerun-if-changed=typescript_transpiler.rs");
+  println!("cargo:rerun-if-changed=css/");
   println!("cargo:rerun-if-changed=glsl_transpiler/");
   // Tell cargo to re-run when the bindings changed.
-  println!("cargo:rerun-if-changed=cbindgen.toml");
-  println!("cargo:rerun-if-changed=bindings.base.h");
   println!("cargo:rerun-if-changed=bindings.hpp");
-  println!("cargo:rerun-if-changed=bindings.css.hpp");
+  println!("cargo:rerun-if-changed=bindings.base.h");
   println!("cargo:rerun-if-changed=bindings.css-inl.hpp");
+  println!("cargo:rerun-if-changed=bindings.css.hpp");
   println!("cargo:rerun-if-changed=bindings.layout.hpp");
+  println!("cargo:rerun-if-changed=bindings.texture_atlas.hpp");
   println!("cargo:rerun-if-changed=bindings.webgl.hpp");
 
   env_logger::init();

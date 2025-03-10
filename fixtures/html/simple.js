@@ -11,10 +11,10 @@ console.info(div);
 //   div.style.setProperty('width', `${width}%`);
 // }, 16);
 
-// setInterval(() => {
-//   const zAxis = Math.floor(15 + Math.sin(Date.now() / 500) * 10);
-//   div.style.setProperty('transform', `translate3d(0, 0, ${zAxis}px)`);
-// }, 16);
+setInterval(() => {
+  const zAxis = Math.floor(15 + Math.sin(Date.now() / 500) * 10);
+  div.style.setProperty('transform', `translate3d(0, 0, ${zAxis}px)`);
+}, 16);
 
 // setTimeout(() => {
 //   div.style.setProperty('display', 'none');

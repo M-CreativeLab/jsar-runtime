@@ -183,6 +183,13 @@ namespace dom
     {
       return this->uid == other.uid;
     }
+    /**
+     * @returns The node's depth in the tree.
+     */
+    uint32_t depth() const
+    {
+      return depthInTree.value_or(0);
+    }
 
   public:
     bool operator==(const Node &other) const { return isEqualNode(other); }
@@ -224,10 +231,16 @@ namespace dom
      * @param showTree If true, the tree will be printed.
      */
     void print(bool showTree = true);
+
+  public:
     /**
      * Connect the node to the relevant context object.
      */
     virtual void connect();
+    /**
+     * Disconnect the node from the relevant context object.
+     */
+    virtual void disconnect();
     /**
      * Load the specific node, the stage "load" will be called after all the nodes in the DOM tree are connected.
      */
@@ -289,6 +302,9 @@ namespace dom
 
   protected:
     std::shared_ptr<pugi::xml_node> internal;
+    std::optional<uint32_t> depthInTree = std::nullopt;
+    // If this node could be rendered, `false` by default.
+    bool renderable = false;
 
   private:
     inline static TrIdGenerator NodeIdGenerator = TrIdGenerator(0x1a);

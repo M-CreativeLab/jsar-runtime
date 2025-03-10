@@ -101,6 +101,7 @@ namespace builtin_scene
     inline void setCanvas(SkCanvas *canvas)
     {
       canvas_ = canvas;
+      setDirty(true);
     }
     /**
      * This function provides access to the CSS style declaration associated with the object.
@@ -145,6 +146,7 @@ namespace builtin_scene
         return 0.0f;
       return canvas_->imageInfo().height();
     }
+    inline std::shared_ptr<Texture> textureRect() const { return texture_; }
     /**
      * Init or resize the texture.
      *
@@ -164,6 +166,9 @@ namespace builtin_scene
       assert(texture_ != nullptr && "The texture must be valid.");
       return texture_;
     }
+    inline bool isOpaque() const { return isOpaque_; }
+    inline bool isTransparent() const { return !isOpaque_; }
+    inline void setOpaque(bool isOpaque) { isOpaque_ = isOpaque; }
     /**
      * @returns Whether the content is dirty, namely needs to be re-rendered.
      */
@@ -173,7 +178,10 @@ namespace builtin_scene
      *
      * @param dirty Whether the content is dirty.
      */
-    inline void setDirty(bool dirty) { isDirty_ = dirty; }
+    inline void setDirty(bool dirty)
+    {
+      isDirty_ = dirty;
+    }
 
   public:
     skia::textlayout::TextStyle textStyle() const;
@@ -188,6 +196,7 @@ namespace builtin_scene
     WebContentStyle contentStyle_;
     SkRRect roundedRect_;
     std::shared_ptr<Texture> texture_;
+    bool isOpaque_ = false;
     bool isDirty_ = true;
   };
 
@@ -231,7 +240,7 @@ namespace builtin_scene
     protected:
       /**
        * Get the instanced mesh component.
-       * 
+       *
        * @tparam ComponentType The type of the component.
        * @returns The instanced mesh component.
        */
@@ -247,12 +256,12 @@ namespace builtin_scene
       }
       /**
        * Get the object reference to the instanced mesh's component, it will expect the component to be valid.
-       * 
+       *
        * @tparam ComponentType The type of the component.
        * @returns The object reference to the instanced mesh's component.
        */
       template <typename ComponentType>
-      ComponentType& getInstancedMeshComponentChecked()
+      ComponentType &getInstancedMeshComponentChecked()
       {
         auto component = getInstancedMeshComponent<ComponentType>();
         assert(component != nullptr && "The instanced mesh component must be valid.");

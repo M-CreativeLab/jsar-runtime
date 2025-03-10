@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <shared_mutex>
 #include <glm/glm.hpp>
+#include <glm/gtc/random.hpp>
 #include <client/graphics/webgl_context.hpp>
 
 #include "./ecs.hpp"
@@ -12,55 +13,152 @@
 
 namespace builtin_scene
 {
+  // Forward declarations
   class Mesh3d;
+  class RenderableInstancesList;
 
-  struct Instance
+  struct InstanceData
   {
-    Instance()
-        : row1(1.0f, 0.0f, 0.0f, 0.0f),
-          row2(0.0f, 1.0f, 0.0f, 0.0f),
-          row3(0.0f, 0.0f, 1.0f, 0.0f),
-          row4(0.0f, 0.0f, 0.0f, 1.0f),
-          color(1.0f, 1.0f, 1.0f, 1.0f),
+    InstanceData()
+        : transform(1.0f),
+          color(1.0f, 1.0f, 1.0f, 0.0f),
           texUvOffset(0.0f, 0.0f),
           texUvScale(1.0f, 1.0f),
           texLayerIndex(0)
     {
     }
-
-    void translate(float tx, float ty, float tz)
-    {
-      row4.x += tx;
-      row4.y += ty;
-      row4.z += tz;
-    }
-    void scale(float sx, float sy, float sz)
-    {
-      row1.x *= sx;
-      row2.y *= sy;
-      row3.z *= sz;
-    }
-    void setTransform(const glm::mat4 &transformationMatrix)
-    {
-      row1 = transformationMatrix[0];
-      row2 = transformationMatrix[1];
-      row3 = transformationMatrix[2];
-      row4 = transformationMatrix[3];
-    }
-
-    glm::vec4 row1;        /** 4 */
-    glm::vec4 row2;        /** 8 */
-    glm::vec4 row3;        /** 12 */
-    glm::vec4 row4;        /** 16 */
+    glm::mat4 transform;   /** 16 */
     glm::vec4 color;       /** 20 */
     glm::vec2 texUvOffset; /** 22 */
     glm::vec2 texUvScale;  /** 24 */
     uint32_t texLayerIndex;
   };
 
+  class Instance
+  {
+    friend class InstancedMeshBase;
+    friend class RenderableInstancesList;
+
+  public:
+    Instance() = default;
+
+  public:
+    void randomColor();
+    void translate(float tx, float ty, float tz);
+    void scale(float sx, float sy, float sz);
+    void setTransform(const glm::mat4 &transformationMatrix);
+    void setTexture(std::array<float, 2> uvOffset,
+                    std::array<float, 2> uvScale,
+                    uint32_t layerIndex);
+
+#define IMPL_SETTER(NAME, PRIV_FIELD, TYPE) \
+  inline bool set##NAME(TYPE value)         \
+  {                                         \
+    if (PRIV_FIELD != value)                \
+    {                                       \
+      PRIV_FIELD = value;                   \
+      notifyHolders();                      \
+      return true;                          \
+    }                                       \
+    else                                    \
+      return false;                         \
+  }
+#define IMPL_BOOL_SETTER(NAME, PRIV_FIELD) \
+  IMPL_SETTER(NAME, PRIV_FIELD, bool)
+
+    IMPL_BOOL_SETTER(Enabled, enabled_)
+    IMPL_BOOL_SETTER(Opaque, isOpaque_)
+    IMPL_SETTER(ZIndex, zIndex_, uint32_t)
+#undef IMPL_BOOL_SETTER
+#undef IMPL_SETTER
+
+  private:
+    // Add a holder to the instance.
+    void addHolder(std::shared_ptr<RenderableInstancesList> holder);
+    // Remove a holder from the instance.
+    void removeHolder(std::shared_ptr<RenderableInstancesList> holder);
+    // Notify the holders that the instance data is updated.
+    void notifyHolders();
+
+  private:
+    InstanceData data_;
+    bool enabled_ = false;
+    bool isOpaque_ = false;
+    uint32_t zIndex_ = 0;
+
+  private:
+    std::vector<std::weak_ptr<RenderableInstancesList>> holders_;
+  };
+
+  enum class InstanceFilter
+  {
+    kAll,
+    kOpaque,
+    kTransparent
+  };
+
+  using InstanceMap = std::unordered_map<ecs::EntityId, std::shared_ptr<Instance>>;
+  class RenderableInstancesList : public std::enable_shared_from_this<RenderableInstancesList>
+  {
+    friend class Instance;
+
+  public:
+    /**
+     * The sorting order of the instances.
+     */
+    enum SortingOrder
+    {
+      kNone,
+      kFrontToBack,
+      kBackToFront
+    };
+
+  public:
+    RenderableInstancesList(InstanceFilter filter,
+                            std::shared_ptr<client_graphics::WebGLVertexArray> vao,
+                            std::shared_ptr<client_graphics::WebGLBuffer> instanceVbo);
+
+  public:
+    inline size_t count() const { return list_.size(); }
+    inline bool isDirty() const { return isDirty_; }
+    /**
+     * Update the renderable instances list with the given instances.
+     *
+     * @param instances The instances to update.
+     * @param sortingOrder The sorting order of the instances.
+     */
+    void update(const InstanceMap &instances, SortingOrder sortingOrder = SortingOrder::kNone);
+    size_t copyToArrayData(vector<InstanceData> &dst);
+    /**
+     * Called before the instanced draw.
+     */
+    void beforeInstancedDraw(client_graphics::WebGL2Context &glContext);
+    /**
+     * Called after the instanced draw.
+     */
+    void afterInstancedDraw(client_graphics::WebGL2Context &glContext);
+
+  private:
+    // Clear the instances.
+    void clearInstances();
+    // Add an instance to the list.
+    void addInstance(std::shared_ptr<Instance> instance);
+    inline void markAsDirty() { isDirty_ = true; }
+
+  public:
+    InstanceFilter filter;
+    std::shared_ptr<client_graphics::WebGLVertexArray> vao;
+    std::shared_ptr<client_graphics::WebGLBuffer> instanceVbo;
+
+  private:
+    std::vector<std::weak_ptr<Instance>> list_;
+    bool isDirty_ = true;
+  };
+
   class InstancedMeshBase
   {
     friend class Renderer;
+    friend class RenderSystem;
 
   public:
     static constexpr size_t STRIDE = sizeof(float) * 24 + sizeof(uint32_t) * 1;
@@ -119,38 +217,36 @@ namespace builtin_scene
      * Remove the instance with the given entity id.
      */
     bool removeInstance(ecs::EntityId id);
-    /**
-     * Set the transformation matrix of the instance with the given entity id.
-     */
-    inline void setInstanceTransform(ecs::EntityId id, const glm::mat4 &transformationMatrix)
-    {
-      getInstance(id).setTransform(transformationMatrix);
-    }
+    inline RenderableInstancesList &getOpaqueInstancesList() const { return *opaqueInstances_; }
+    inline RenderableInstancesList &getTransparentInstancesList() const { return *transparentInstances_; }
 
   protected:
     /**
      * Setup the instanced mesh with the given instance VBO.
      *
      * @param glContext The WebGL2 context to setup.
-     * @param instanceVbo The instance VBO to setup.
+     * @param opaqueVao The instance VBO to setup.
      */
     void setup(std::shared_ptr<client_graphics::WebGL2Context> glContext,
-               std::shared_ptr<client_graphics::WebGLBuffer> instanceVbo);
-    std::vector<Instance> instancesArray() const;
+               std::shared_ptr<client_graphics::WebGLVertexArray> opaqueVao,
+               std::shared_ptr<client_graphics::WebGLBuffer> opaqueInstanceVbo,
+               std::shared_ptr<client_graphics::WebGLVertexArray> transparentVao,
+               std::shared_ptr<client_graphics::WebGLBuffer> transparentInstanceVao);
     /**
-     * Upload the instance data to the instance VBO if there are any changes.
+     * Update the internal `idToInstanceMap_` into the opaque and transparent `RenderableInstancesList` the queues.
      *
-     * @returns Whether the instance data is uploaded.
+     * @param ignoreDirty Whether to ignore the dirty flag, `true` means force update.
      */
-    bool uploadInstanceData();
+    void updateRenderQueues(bool ignoreDirty = false);
 
   private:
     inline void markAsDirty() { isDirty_ = true; }
 
   protected:
     mutable std::shared_mutex mutex_;
-    std::shared_ptr<client_graphics::WebGLBuffer> instanceVbo_;
-    std::unordered_map<ecs::EntityId, Instance> idToInstanceMap_;
+    InstanceMap idToInstanceMap_;
+    std::shared_ptr<RenderableInstancesList> opaqueInstances_;
+    std::shared_ptr<RenderableInstancesList> transparentInstances_;
 
   private:
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;

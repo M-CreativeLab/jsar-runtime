@@ -7,14 +7,6 @@ uniform mat4 modelMatrix;
 in vec3 position;
 in vec3 normal;
 in vec2 texCoord;
-
-#ifdef PARTICLES
-in vec3 start_position;
-in vec3 start_velocity;
-uniform vec3 acceleration;
-uniform float time;
-#endif
-
 out vec3 pos;
 
 #ifdef USE_NORMALS
@@ -29,6 +21,7 @@ out vec3 bitang;
 #endif
 
 #ifdef USE_UVS
+uniform mat3 textureTransformation;
 out vec2 uvs;
 #endif
 
@@ -49,8 +42,8 @@ in vec4 instanceColor;
 in vec2 instanceTexUvOffset;
 in vec2 instanceTexUvScale;
 in uint instanceLayerIndex;
-out vec2 instanceTexUv;
 out float vInstanceLayerIndex;
+out float vInstanceTextureEnabled;
 #endif
 #endif
 
@@ -104,12 +97,15 @@ void main() {
 
   // UV
 #ifdef USE_UVS
-  uvs = texCoord;
+  vec3 transformedUv = textureTransformation * vec3(texCoord, 1.0);
+  uvs = transformedUv.xy;
 
   // Instance Texture
 #ifdef USE_INSTANCE_TEXTURE
-  instanceTexUv = instanceTexUvOffset + instanceTexUvScale * texCoord;
+  uvs = instanceTexUvOffset + instanceTexUvScale * uvs;
   vInstanceLayerIndex = float(instanceLayerIndex);
+  vInstanceTextureEnabled =
+      step(0.0, instanceTexUvScale.x) * step(0.0, instanceTexUvScale.y);
 #endif
 #endif
 

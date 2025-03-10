@@ -99,20 +99,27 @@ namespace builtin_scene
     /**
      * @returns The vertex array object.
      */
-    std::shared_ptr<client_graphics::WebGLVertexArray> vertexArrayObject() { return vao_; }
+    inline std::shared_ptr<client_graphics::WebGLVertexArray> vertexArrayObject() { return vao_; }
+    /**
+     * @returns The vertex buffer object.
+     */
+    inline std::shared_ptr<client_graphics::WebGLBuffer> vertexBufferObject() { return vbo_; }
     /**
      * Set if the mesh3d is initialized.
      *
      * @param glContext The WebGL context.
      * @param vao The vertex array object.
+     * @param vbo The vertex buffer object.
      */
     inline void initialize(std::shared_ptr<client_graphics::WebGL2Context> glContext,
-                           std::shared_ptr<client_graphics::WebGLVertexArray> vao)
+                           std::shared_ptr<client_graphics::WebGLVertexArray> vao,
+                           std::shared_ptr<client_graphics::WebGLBuffer> vbo)
     {
       if (vao == nullptr)
         throw std::runtime_error("The vertex array object is not initialized.");
 
       vao_ = vao;
+      vbo_ = vbo;
       glContext_ = glContext;
       initialized_ = true;
     }
@@ -176,6 +183,7 @@ namespace builtin_scene
   private:
     std::shared_ptr<Mesh> handle_ = nullptr;
     std::shared_ptr<client_graphics::WebGLVertexArray> vao_;
+    std::shared_ptr<client_graphics::WebGLBuffer> vbo_;
     std::weak_ptr<client_graphics::WebGL2Context> glContext_;
     bool initialized_ = false;
     bool disableRendering_ = true;

@@ -53,6 +53,7 @@ namespace dom
 
   void HTMLPlaneElement::afterConnectedCallback()
   {
+    HTMLElement::afterConnectedCallback();
     {
       assert(entity_.has_value());
       auto markMeshAvailable = [this](Scene &scene)
@@ -64,7 +65,6 @@ namespace dom
       };
       useScene(markMeshAvailable);
     }
-    HTMLElement::afterConnectedCallback();
   }
 
   bool HTMLPlaneElement::renderElement(Scene &scene)

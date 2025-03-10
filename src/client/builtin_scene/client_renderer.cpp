@@ -1,4 +1,7 @@
+#include <array>
 #include <chrono>
+#include <client/dom/node.hpp>
+
 #include "./client_renderer.hpp"
 #include "./hierarchy.hpp"
 #include "./web_content.hpp"
@@ -6,6 +9,7 @@
 namespace builtin_scene
 {
   using namespace std;
+  using namespace client_graphics;
 
   void Renderer::initializeMesh3d(shared_ptr<Mesh3d> mesh3d)
   {
@@ -15,24 +19,36 @@ namespace builtin_scene
 
     {
       // Bind the vertex array object, vertex buffer object, and element buffer object.
-      client_graphics::WebGLVertexArrayScope vaoScope(glContext_, vao);
-      glContext_->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, vbo);
-      glContext_->bindBuffer(client_graphics::WebGLBufferBindingTarget::kElementArrayBuffer, ebo);
+      WebGLVertexArrayScope vaoScope(glContext_, vao);
+      glContext_->bindBuffer(WebGLBufferBindingTarget::kElementArrayBuffer, ebo);
     }
-    mesh3d->initialize(glContext_, vao);
+    mesh3d->initialize(glContext_, vao, vbo);
 
-    // Create the instanced vbo for the instanced mesh.
+    /**
+     * If a mesh is instanced, we will use:
+     *
+     * - vao as the opaque mesh vertex array object.
+     * - creating a new VAO as the transparent mesh vertex array object.
+     */
     if (mesh3d->isInstancedMesh())
-      mesh3d->getHandleCheckedAsRef<InstancedMeshBase>()
-          .setup(glContext_, glContext_->createBuffer());
+    {
+      auto &instancedMesh = mesh3d->getHandleCheckedAsRef<InstancedMeshBase>();
+      auto transparentVao = glContext_->createVertexArray();
+      {
+        WebGLVertexArrayScope vaoScope(glContext_, transparentVao);
+        glContext_->bindBuffer(WebGLBufferBindingTarget::kElementArrayBuffer, ebo);
+      }
+      instancedMesh.setup(glContext_,
+                          vao, glContext_->createBuffer(),
+                          transparentVao, glContext_->createBuffer());
+    }
   }
 
-  void Renderer::configureMeshVertexData(std::shared_ptr<Mesh3d> mesh3d, std::shared_ptr<client_graphics::WebGLProgram> program)
+  void Renderer::configureMeshVertexData(shared_ptr<Mesh3d> mesh3d, shared_ptr<WebGLProgram> program)
   {
-    auto vao = mesh3d->vertexArrayObject();
-    client_graphics::WebGLVertexArrayScope vaoScope(glContext_, vao);
-
-    // Configure the vertex attributes
+    /**
+     * Configure the vertext attributes.
+     */
     auto configureAttribute = [this](const IVertexAttribute &attrib, int index, size_t stride, size_t offset)
     {
       glContext_->vertexAttribPointer(index,
@@ -43,30 +59,37 @@ namespace builtin_scene
                                       offset);
       glContext_->enableVertexAttribArray(index);
     };
-    mesh3d->iterateEnabledAttributes(program, configureAttribute);
 
-    // Configure the vertex buffer data
-    auto &vertexBufferData = mesh3d->vertexBuffer().data();
-    glContext_->bufferData(client_graphics::WebGLBufferBindingTarget::kArrayBuffer,
-                           vertexBufferData.size(),
-                           const_cast<uint8_t *>(vertexBufferData.data()),
-                           client_graphics::WebGLBufferUsage::kStaticDraw);
+    auto vao = mesh3d->vertexArrayObject();
+    {
+      WebGLVertexArrayScope vaoScope(glContext_, vao);
 
-    // Configure the element buffer object
-    auto indices = mesh3d->indices();
-    glContext_->bufferData(client_graphics::WebGLBufferBindingTarget::kElementArrayBuffer,
-                           indices.dataSize(),
-                           indices.dataBuffer(),
-                           client_graphics::WebGLBufferUsage::kStaticDraw);
+      // Configure the vertex attributes
+      glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, mesh3d->vertexBufferObject());
+      mesh3d->iterateEnabledAttributes(program, configureAttribute);
+
+      // Configure the vertex buffer data
+      auto &vertexBufferData = mesh3d->vertexBuffer().data();
+      glContext_->bufferData(WebGLBufferBindingTarget::kArrayBuffer,
+                             vertexBufferData.size(),
+                             const_cast<uint8_t *>(vertexBufferData.data()),
+                             WebGLBufferUsage::kStaticDraw);
+
+      // Configure the element buffer object
+      auto indices = mesh3d->indices();
+      glContext_->bufferData(WebGLBufferBindingTarget::kElementArrayBuffer,
+                             indices.dataSize(),
+                             indices.dataBuffer(),
+                             WebGLBufferUsage::kStaticDraw);
+    }
 
     // Configure the instance vbo and related attributes if it's an instanced mesh.
     if (mesh3d->isInstancedMesh())
     {
       auto &instancedMesh = mesh3d->getHandleCheckedAsRef<InstancedMeshBase>();
-      glContext_->bindBuffer(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, instancedMesh.instanceVbo_);
-      glContext_->bufferData(client_graphics::WebGLBufferBindingTarget::kArrayBuffer, 0, nullptr,
-                             client_graphics::WebGLBufferUsage::kDynamicDraw);
-
+      /**
+       * Configure the instance attributes.
+       */
       auto configureInstanceAttribute = [this](const IVertexAttribute &attrib, int index, size_t stride, size_t offset)
       {
         glContext_->enableVertexAttribArray(index);
@@ -78,28 +101,43 @@ namespace builtin_scene
                                         offset);
         glContext_->vertexAttribDivisor(index, 1);
       };
-      instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
+
+      // Configure for the opaque instances.
+      {
+        auto &opaqueInstancesList = instancedMesh.getOpaqueInstancesList();
+        WebGLVertexArrayScope vaoScope(glContext_, opaqueInstancesList.vao);
+
+        glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, opaqueInstancesList.instanceVbo);
+        instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
+      }
+
+      // Configure for the transparent instances.
+      {
+        auto &transparentInstancesList = instancedMesh.getTransparentInstancesList();
+        WebGLVertexArrayScope vaoScope(glContext_, transparentInstancesList.vao);
+
+        glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, mesh3d->vertexBufferObject());
+        mesh3d->iterateEnabledAttributes(program, configureAttribute);
+
+        glContext_->bindBuffer(WebGLBufferBindingTarget::kArrayBuffer, transparentInstancesList.instanceVbo);
+        instancedMesh.iterateInstanceAttributes(program, configureInstanceAttribute);
+      }
     }
   }
 
-  void Renderer::updateMeshVertexData(std::shared_ptr<Mesh3d> mesh3d, std::shared_ptr<client_graphics::WebGLProgram> program)
+  void Renderer::updateMeshVertexData(shared_ptr<Mesh3d> mesh3d, shared_ptr<WebGLProgram> program)
   {
-    if (mesh3d->isInstancedMesh())
-    {
-      auto &instancedMesh = mesh3d->getHandleCheckedAsRef<InstancedMeshBase>();
-      instancedMesh.uploadInstanceData();
-    }
   }
 
   void Renderer::initializeMeshMaterial3d(shared_ptr<Mesh3d> mesh3d, shared_ptr<MeshMaterial3d> meshMaterial3d)
   {
     auto program = glContext_->createProgram();
-    auto vertexShader = glContext_->createShader(client_graphics::WebGLShaderType::kVertex);
-    auto fragmentShader = glContext_->createShader(client_graphics::WebGLShaderType::kFragment);
+    auto vertexShader = glContext_->createShader(WebGLShaderType::kVertex);
+    auto fragmentShader = glContext_->createShader(WebGLShaderType::kFragment);
     glContext_->shaderSource(vertexShader,
-                             meshMaterial3d->getShaderSource(client_graphics::WebGLShaderType::kVertex));
+                             meshMaterial3d->getShaderSource(WebGLShaderType::kVertex));
     glContext_->shaderSource(fragmentShader,
-                             meshMaterial3d->getShaderSource(client_graphics::WebGLShaderType::kFragment));
+                             meshMaterial3d->getShaderSource(WebGLShaderType::kFragment));
     glContext_->compileShader(vertexShader);
     glContext_->compileShader(fragmentShader);
     glContext_->attachShader(program, vertexShader);
@@ -112,14 +150,14 @@ namespace builtin_scene
 
     // Configure the initial uniform values
     {
-      client_graphics::WebGLProgramScope programScope(glContext_, program);
+      WebGLProgramScope programScope(glContext_, program);
       updateTransformationMatrix(program, nullptr, nullptr, true); // forcily update the transformation matrix.
 
       meshMaterial3d->initialize(glContext_, program, mesh3d);
     }
   }
 
-  void Renderer::tryUpdateMeshMaterial3d(std::shared_ptr<Mesh3d> mesh3d, std::shared_ptr<MeshMaterial3d> meshMaterial3d)
+  void Renderer::tryUpdateMeshMaterial3d(shared_ptr<Mesh3d> mesh3d, shared_ptr<MeshMaterial3d> meshMaterial3d)
   {
     auto program = meshMaterial3d->program();
     if (TR_UNLIKELY(program == nullptr))
@@ -133,7 +171,7 @@ namespace builtin_scene
   void Renderer::drawMesh3d(const ecs::EntityId &entity, shared_ptr<Mesh3d> mesh, shared_ptr<MeshMaterial3d> material,
                             shared_ptr<Transform> transform,
                             shared_ptr<Transform> parentTransform,
-                            std::optional<XRRenderTarget> renderTarget)
+                            optional<XRRenderTarget> renderTarget)
   {
     glContext_->enable(WEBGL_DEPTH_TEST);
     glContext_->depthMask(true);
@@ -141,28 +179,70 @@ namespace builtin_scene
     assert(mesh != nullptr && material != nullptr);
     assert(mesh->initialized());
     assert(material->initialized());
-    client_graphics::WebGLProgramScope programScope(glContext_, material->program());
+    WebGLProgramScope programScope(glContext_, material->program());
 
     // Call lifecycle methods
     material->onBeforeDrawMesh(mesh);
 
     // Update matrices
     updateViewProjectionMatrix(programScope.program(), renderTarget);
-    auto newMatrix = updateTransformationMatrix(programScope.program(), transform, parentTransform);
+    updateTransformationMatrix(programScope.program(), transform, parentTransform);
 
     // Draw the mesh
     {
-      client_graphics::WebGLVertexArrayScope vaoScope(glContext_, mesh->vertexArrayObject());
+      WebGLVertexArrayScope vaoScope(glContext_, mesh->vertexArrayObject());
       if (mesh->isInstancedMesh())
       {
         auto &instancedMesh = mesh->getHandleCheckedAsRef<InstancedMeshBase>();
         if (instancedMesh.instanceCount() > 0)
         {
-          glContext_->drawElementsInstanced(mesh->primitiveTopology(),
-                                            mesh->indices().size(),
+          WebGL2Context &glContext = *glContext_;
+          instancedMesh.updateRenderQueues(); // Update the render queues for opaque and transparent instances.
+
+          auto meshIndicesCount = mesh->indices().size();
+          auto opaqueInstances = instancedMesh.getOpaqueInstancesList();
+          if (opaqueInstances.count() > 0)
+          {
+            glContext.depthMask(true);
+            glContext.disable(WEBGL_BLEND);
+
+            auto loc = glContext.getUniformLocation(programScope.program(), "modelMatrix");
+            glContext.uniformMatrix4fv(loc.value(), false, glm::mat4(1.0f));
+
+            opaqueInstances.beforeInstancedDraw(glContext);
+            glContext.drawElementsInstanced(mesh->primitiveTopology(),
+                                            meshIndicesCount,
                                             WEBGL_UNSIGNED_INT,
                                             0,
-                                            instancedMesh.instanceCount());
+                                            opaqueInstances.count());
+            opaqueInstances.afterInstancedDraw(glContext);
+          }
+
+          /**
+           * TODO: does this need to be moved global transparent rendering queue?
+           */
+          auto transparentInstances = instancedMesh.getTransparentInstancesList();
+          if (transparentInstances.count() > 0)
+          {
+            WebGLVertexArrayScope vaoScope(glContext_, transparentInstances.vao);
+            glContext.depthMask(false);
+            glContext.enable(WEBGL_BLEND);
+            glContext.blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
+
+            // Set the base matrix, move the transparent objects +z 0.001
+            auto loc = glContext.getUniformLocation(programScope.program(), "modelMatrix");
+            glm::mat4 matToUpdate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.001f));
+            glContext.uniformMatrix4fv(loc.value(), false, matToUpdate);
+
+            // Draw
+            transparentInstances.beforeInstancedDraw(glContext);
+            glContext.drawElementsInstanced(mesh->primitiveTopology(),
+                                            meshIndicesCount,
+                                            WEBGL_UNSIGNED_INT,
+                                            0,
+                                            transparentInstances.count());
+            transparentInstances.afterInstancedDraw(glContext);
+          }
         }
       }
       else
@@ -178,8 +258,8 @@ namespace builtin_scene
     material->onAfterDrawMesh(mesh);
   }
 
-  void Renderer::updateViewProjectionMatrix(shared_ptr<client_graphics::WebGLProgram> program,
-                                            std::optional<XRRenderTarget> renderTarget)
+  void Renderer::updateViewProjectionMatrix(shared_ptr<WebGLProgram> program,
+                                            optional<XRRenderTarget> renderTarget)
   {
     assert(program != nullptr);
 
@@ -188,7 +268,7 @@ namespace builtin_scene
       throw runtime_error("The viewProjection uniform location is not found.");
 
     auto handedness = MatrixHandedness::MATRIX_RIGHT_HANDED; // focily set to right-handed.
-    if (renderTarget != std::nullopt)
+    if (renderTarget != nullopt)
     {
       if (renderTarget->isMultiview())
       {
@@ -228,7 +308,7 @@ namespace builtin_scene
   }
 
   optional<glm::mat4> Renderer::updateTransformationMatrix(
-      shared_ptr<client_graphics::WebGLProgram> program,
+      shared_ptr<WebGLProgram> program,
       shared_ptr<Transform> transform,
       shared_ptr<Transform> parentTransform,
       bool forceUpdate)
@@ -297,16 +377,45 @@ namespace builtin_scene
     }
 
     // Fallback to the default rendering
-    render(*renderer, std::nullopt);
+    render(*renderer, nullopt);
   }
 
-  void RenderSystem::render(Renderer &renderer, std::optional<Renderer::XRRenderTarget> renderTarget)
+  glm::mat4 RenderSystem::getTransformationMatrix(ecs::EntityId id)
+  {
+    Transform transform = getComponentChecked<Transform>(id);
+    shared_ptr<Transform> parentTransform = nullptr;
+    if (hasComponent<hierarchy::Parent>(id))
+    {
+      auto parentComponent = getComponentChecked<hierarchy::Parent>(id);
+      parentTransform = getComponent<Transform>(parentComponent.parent());
+    }
+
+    glm::mat4 matToUpdate = transform.matrix();
+
+    // Handle the post transform
+    glm::mat4 postMat = glm::mat4(1.0f);
+    if (parentTransform != nullptr && parentTransform->hasPostTransform())
+    {
+      auto &parentPostTransform = parentTransform->getOrInitPostTransform();
+      postMat = parentPostTransform.accumulatedMatrix();
+    }
+    if (transform.hasPostTransform())
+    {
+      auto &postTransform = transform.getOrInitPostTransform();
+      postMat = postTransform.matrix() * postMat;
+      postTransform.setAccumulatedMatrix(postMat);
+    }
+    matToUpdate = postMat * matToUpdate;
+    return matToUpdate;
+  }
+
+  void RenderSystem::render(Renderer &renderer, optional<Renderer::XRRenderTarget> renderTarget)
   {
     auto roots = queryEntities<hierarchy::Root>();
     if (roots.size() <= 0) // No root entities to render
       return;
 
-    if (renderTarget != std::nullopt)
+    if (renderTarget != nullopt)
     {
       if (!renderTarget->isMultiview())
         renderer.setViewport(renderTarget->view()->viewport());
@@ -320,7 +429,7 @@ namespace builtin_scene
   }
 
   void RenderSystem::traverseAndRender(ecs::EntityId entity, Renderer &renderer,
-                                       std::optional<Renderer::XRRenderTarget> renderTarget)
+                                       optional<Renderer::XRRenderTarget> renderTarget)
   {
     auto renderEntity = [this, &renderer, renderTarget](ecs::EntityId entity) -> bool
     {
@@ -350,7 +459,7 @@ namespace builtin_scene
   }
 
   void RenderSystem::renderMesh(ecs::EntityId &entity, shared_ptr<Mesh3d> meshComponent, Renderer &renderer,
-                                std::optional<Renderer::XRRenderTarget> renderTarget)
+                                optional<Renderer::XRRenderTarget> renderTarget)
   {
     auto materialComponent = getComponent<MeshMaterial3d>(entity);
     if (materialComponent == nullptr)
@@ -371,24 +480,47 @@ namespace builtin_scene
     if (meshComponent->isInstancedMesh())
     {
       auto &instancedMesh = meshComponent->getHandleCheckedAsRef<InstancedMeshBase>();
-      auto updateTransform = [this](ecs::EntityId id, Instance &instance) -> bool
+      auto updateInstanceData = [this](ecs::EntityId id, Instance &instance) -> bool
       {
-        auto transform = getComponent<Transform>(id);
-        if (transform != nullptr)
+        bool hasChanged = false;
+        if (hasComponent<Transform>(id))
         {
-          instance.setTransform(transform->matrix());
-          return true;
+          instance.setTransform(getTransformationMatrix(id));
+          hasChanged = true;
         }
-        else
+        if (hasComponent<WebContent>(id))
         {
-          return false;
+          auto &webContent = getComponentChecked<WebContent>(id);
+          if (instance.setEnabled(true))
+            hasChanged = true;
+          if (instance.setOpaque(webContent.isOpaque()))
+            hasChanged = true;
+
+          // Only transparent content needs to update it's z-index
+          if (webContent.isTransparent() && hasComponent<hierarchy::Element>(id))
+          {
+            auto element = getComponentChecked<hierarchy::Element>(id);
+            auto index = element.node->depth(); // FIXME: using the node depth as the z-index currently.
+            if (instance.setZIndex(index))
+              hasChanged = true;
+          }
+
+          auto textureRect = webContent.textureRect();
+          if (textureRect != nullptr)
+          {
+            instance.setTexture(textureRect->getUvOffset(),
+                                textureRect->getUvScale(),
+                                textureRect->layer);
+            hasChanged = true;
+          }
         }
+        return hasChanged;
       };
-      instancedMesh.iterateInstances(updateTransform);
+      instancedMesh.iterateInstances(updateInstanceData);
     }
 
     // Draw
-    std::shared_ptr<Transform> parentTransform = nullptr;
+    shared_ptr<Transform> parentTransform = nullptr;
     auto parentComponent = getComponent<hierarchy::Parent>(entity);
     if (parentComponent != nullptr)
       parentTransform = getComponent<Transform>(parentComponent->parent());

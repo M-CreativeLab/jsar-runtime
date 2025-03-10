@@ -17,84 +17,62 @@ namespace builtin_scene::materials
   using namespace client_graphics;
 
   WebContentInstancedMaterial::WebContentInstancedMaterial()
-      : ColorMaterial(),
-        textureAtlas_(nullptr)
+      : Material(),
+        width_(0.0f),
+        height_(0.0f),
+        textureAtlas_(nullptr),
+        textureOffset_(0.0f, 0.0f),
+        textureScale_(1.0f, 1.0f)
   {
+    this->isOpaque_ = true;
   }
 
   bool WebContentInstancedMaterial::initialize(shared_ptr<WebGL2Context> glContext,
                                                shared_ptr<WebGLProgram> program)
   {
-    if (TR_UNLIKELY(!ColorMaterial::initialize(glContext, program)))
+    if (TR_UNLIKELY(!Material::initialize(glContext, program)))
       return false;
 
-    auto texAtlasLoc = glContext->getUniformLocation(program, "instanceTexAltas");
-    assert(texAtlasLoc.has_value() && "The instanceTexAltas uniform location is not found.");
-    glContext->uniform1i(texAtlasLoc.value(), 0);
+#define LOAD_UNIFORM_LOCATION(name)                                               \
+  {                                                                               \
+    auto loc = glContext->getUniformLocation(program, name);                      \
+    assert(loc.has_value() && "The \"" name "\" uniform location is not found."); \
+    uniforms_.emplace(name, loc.value());                                         \
+  }
 
-    assert(textureAtlas_ == nullptr);
+    LOAD_UNIFORM_LOCATION("instanceTexAltas");
+    LOAD_UNIFORM_LOCATION("textureTransformation");
+#undef LOAD_UNIFORM_LOCATION
+    glContext->uniform1f(uniform("instanceTexAltas"), 0);
+
+    // Set the texture to be flipped by the Y-axis.
+    //
+    // WebGL uses the bottom-left corner as the origin, while Skia or Web uses the top-left, so flip the texture by
+    // the Y-axis to make it consistent.
+    flipTextureByY(true);
+
+    // Initialize the texture atlas.
+    assert(textureAtlas_ == nullptr && "The texture atlas is already initialized.");
     textureAtlas_ = make_unique<TextureAtlas>(glContext, client_graphics::WebGLTextureUnit::kTexture0);
-    assert(textureAtlas_ != nullptr);
-
-    // auto textureLoc = glContext->getUniformLocation(program, "tex");
-    // if (TR_UNLIKELY(!textureLoc.has_value()))
-    // {
-    //   cerr << name() << ": The tex uniform location is not found." << endl;
-    //   return false;
-    // }
-    // glContext->uniform1i(textureLoc.value(), 0);
-
-    // auto textureTransformLoc = glContext->getUniformLocation(program, "textureTransformation");
-    // if (TR_UNLIKELY(!textureTransformLoc.has_value()))
-    // {
-    //   cerr << name() << ": The textureTransformation uniform location is not found." << endl;
-    //   return false;
-    // }
-
-    // // Set the texture to be flipped by the Y-axis.
-    // //
-    // // WebGL uses the bottom-left corner as the origin, while Skia or Web uses the top-left, so flip the texture by
-    // // the Y-axis to make it consistent.
-    // flipTextureByY(true);
-
-    // // Create the texture and configure parameters.
-    // texture_ = glContext->createTexture();
-    // glContext->activeTexture(WebGLTextureUnit::kTexture0);
-    // glContext->bindTexture(WebGLTextureTarget::kTexture2D, texture_);
-    // glContext->texImage2D(WebGLTexture2DTarget::kTexture2D, 0, WEBGL2_RGBA8, width_, height_, 0,
-    //                       WebGLTextureFormat::kRGBA, WebGLPixelType::kUnsignedByte, nullptr);
-    // glContext->texParameteri(
-    //     WebGLTextureTarget::kTexture2D, WebGLTextureParameterName::kTextureMinFilter, WEBGL_LINEAR);
-    // glContext->texParameteri(
-    //     WebGLTextureTarget::kTexture2D, WebGLTextureParameterName::kTextureMagFilter, WEBGL_LINEAR);
-    // glContext->texParameteri(
-    //     WebGLTextureTarget::kTexture2D, WebGLTextureParameterName::kTextureWrapS, WEBGL_CLAMP_TO_EDGE);
-    // glContext->texParameteri(
-    //     WebGLTextureTarget::kTexture2D, WebGLTextureParameterName::kTextureWrapT, WEBGL_CLAMP_TO_EDGE);
-    // glContext->bindTexture(WebGLTextureTarget::kTexture2D, nullptr);
-    return true;
+    return textureAtlas_ != nullptr; // Tells the caller whether the initialization is successful.
   }
 
   void WebContentInstancedMaterial::onBeforeDrawMesh(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh)
   {
     auto glContext = glContext_.lock();
     assert(glContext != nullptr);
-    {
-      // if (isOpaque())
-      // {
-      //   glContext->disable(WEBGL_BLEND);
-      //   glContext->depthMask(true);
-      // }
-      // else
-      // {
-      //   glContext->enable(WEBGL_BLEND);
-      //   glContext->blendFunc(WEBGL_SRC_ALPHA, WEBGL_ONE_MINUS_SRC_ALPHA);
-      //   glContext->depthMask(false);
-      // }
 
-      assert(textureAtlas_ != nullptr);
-      textureAtlas_->onBeforeDraw();
-    }
+    // Update the uniforms
+    glContext->uniform1i(uniform("instanceTexAltas"), 0);
+    glContext->uniformMatrix3fv(uniform("textureTransformation"), false,
+                                glm::mat3(
+                                    textureScale_.x, 0.0f, 0.0f,
+                                    0.0f, textureScale_.y, 0.0f,
+                                    textureOffset_.x, textureOffset_.y, 1.0f));
+
+    // Bind the texture atlas.
+    assert(textureAtlas_ != nullptr);
+    textureAtlas_->onBeforeDraw();
   }
 
   void WebContentInstancedMaterial::onAfterDrawMesh(shared_ptr<WebGLProgram> program, shared_ptr<Mesh3d> mesh)
@@ -129,9 +107,9 @@ namespace builtin_scene::materials
     int internalformat = WEBGL2_RGBA8;
     WebGLTextureFormat format = WebGLTextureFormat::kRGBA;
     WebGLPixelType pixelType = WebGLPixelType::kUnsignedByte;
+
     SkCanvas *canvas = content.canvas();
     SkSurface *surface = canvas->getSurface();
-
     if (surface != nullptr)
     {
       SkImageInfo info = surface->imageInfo();
@@ -139,7 +117,7 @@ namespace builtin_scene::materials
       if (surface->peekPixels(&pixmap))
       {
         pixels = (unsigned char *)pixmap.addr();
-        // isOpaque_ = pixmap.computeIsOpaque();
+        content.setOpaque(pixmap.computeIsOpaque());
 
         // Update the texture format based on the Skia surface color type.
         SkColorType colorType = surface->imageInfo().colorType();
@@ -175,7 +153,7 @@ namespace builtin_scene::materials
     }
 
     // Update the texture with the new pixels or the default values.
-    textureAtlas_->updateTexture(*textureRect, pixels);
+    textureAtlas_->updateTexture(*textureRect, pixels, format, pixelType);
 
     // Update an non-empty texture means the texture is updated successfully.
     return pixels != nullptr;

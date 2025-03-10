@@ -1345,7 +1345,11 @@ private:
 	{
 		glUniform1f(req->location, req->v0);
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
+		{
+			auto glContext = reqContentRenderer->getOpenGLContext();
 			DEBUG(DEBUG_TAG, "[%d] GL::Uniform1f(%d, %f)", options.isDefaultQueue, req->location, req->v0);
+			DEBUG(DEBUG_TAG, "    Program: %d", glContext->GetProgram());
+		}
 	}
 	TR_OPENGL_FUNC void OnUniform1fv(Uniform1fvCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
