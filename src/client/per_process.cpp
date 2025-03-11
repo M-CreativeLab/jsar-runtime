@@ -409,6 +409,8 @@ void TrClientContextPerProcess::start()
 
   // Initialize the built-in scene
   builtinScene = builtin_scene::Scene::Make(this);
+  if (builtinScene != nullptr)
+    builtinScene->bootstrap();
 
   // Create the window instance
   window = make_shared<::browser::Window>(this);

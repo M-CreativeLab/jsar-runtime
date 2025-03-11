@@ -72,6 +72,7 @@ namespace dom
 
   protected:
     void connect() override final;
+    virtual void onDocumentOpened() {};
 
   private:
     void openInternal();
@@ -91,7 +92,7 @@ namespace dom
     }
     /**
      * Get the style cache for the document.
-     * 
+     *
      * TODO: Will be moved to the `DocumentOrShadowRoot` interface.
      */
     inline client_cssom::StyleCache &styleCache()
@@ -158,6 +159,9 @@ namespace dom
     {
       return layoutAllocator_;
     }
+
+  private:
+    void onDocumentOpened() override;
 
   private:
     std::shared_ptr<crates::layout2::Allocator> layoutAllocator_;

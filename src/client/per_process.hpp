@@ -354,14 +354,15 @@ public:
   /**
    * @returns the scripting thread's event loop.
    */
-  uv_loop_t *getScriptingEventLoop() { return scriptingEventLoop; }
-  void setScriptingEventLoop(napi_env env)
+  inline uv_loop_t *getScriptingEventLoop() { return scriptingEventLoop; }
+  inline bool isScriptingEventLoopReady() { return scriptingEventLoop != nullptr; }
+  inline void setScriptingEventLoop(napi_env env)
   {
     napi_get_uv_event_loop(env, &scriptingEventLoop);
     dispatchEvent(TrClientContextEventType::ScriptingEventLoopReady);
   }
-  font::FontCacheManager &getFontCacheManager() { return *fontCacheManager; }
-  TrClientPerformanceFileSystem &getPerfFs() { return *perfFs; }
+  inline font::FontCacheManager &getFontCacheManager() { return *fontCacheManager; }
+  inline TrClientPerformanceFileSystem &getPerfFs() { return *perfFs; }
 
 private:
   void onListenMediaEvent(media_comm::TrMediaCommandMessage &eventMessage);

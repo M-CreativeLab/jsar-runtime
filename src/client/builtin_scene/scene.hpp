@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <shared_mutex>
 #include <client/dom/node.hpp>
@@ -51,6 +52,22 @@ namespace builtin_scene
 
   public:
     /**
+     * Bootstrap the scene, it should be called after you created the scene instance.
+     */
+    void bootstrap();
+    /**
+     * Start the scene rendering.
+     */
+    void start();
+    /**
+     * Pause the scene rendering.
+     */
+    void pause();
+    /**
+     * Resuming the scene rendering.
+     */
+    void resume();
+    /**
      * Create a new element to the scene for rendering.
      *
      * @param name The tag name of the element.
@@ -62,13 +79,16 @@ namespace builtin_scene
                                               std::optional<ecs::EntityId> parent = std::nullopt);
 
   private:
-    void bootstrap();
     void update(uint32_t time, std::shared_ptr<client_xr::XRFrame> frame);
+    void setupXRSession();
 
   private:
+    TrClientContextPerProcess *clientContext_ = nullptr;
     std::shared_ptr<client_graphics::WebGL2Context> glContext_;
     std::shared_ptr<client_xr::XRDeviceClient> xrDeviceClient_;
     std::shared_ptr<client_xr::XRSession> xrSession_;
     client_xr::XRFrameCallback frameCallback_;
+    bool started_ = false;
+    atomic<bool> paused_ = false;
   };
 }

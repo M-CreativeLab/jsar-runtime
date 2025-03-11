@@ -219,6 +219,7 @@ namespace dom
       assert(window != nullptr);
       window->configureDocument(getPtr<Document>());
       defaultView_ = window;
+      onDocumentOpened();
     }
 
     // Start connecting the document's children automatically if the flag is set.
@@ -361,5 +362,12 @@ namespace dom
       using namespace builtin_scene::ecs;
       scene->addSystem(SchedulerLabel::kPreUpdate, System::Make<RenderHTMLDocument>(this));
     }
+  }
+
+  void HTMLDocument::onDocumentOpened()
+  {
+    auto scene = TrClientContextPerProcess::Get()->builtinScene;
+    if (scene != nullptr)
+      scene->start();
   }
 }

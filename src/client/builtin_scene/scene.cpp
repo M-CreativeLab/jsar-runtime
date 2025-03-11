@@ -50,6 +50,7 @@ namespace builtin_scene
 
   Scene::Scene(TrClientContextPerProcess *clientContext)
       : ecs::App(),
+        clientContext_(clientContext),
         glContext_(clientContext->createHostWebGLContext()),
         xrDeviceClient_(clientContext->getXRDeviceClient())
   {
@@ -58,29 +59,63 @@ namespace builtin_scene
 
     frameCallback_ = [this](uint32_t time, shared_ptr<client_xr::XRFrame> frame, void *env_)
     {
+      if (paused_)
+        return;
       assert(xrSession_ != nullptr); // ensure the WebXR session is ready.
       update(time, frame);
       xrSession_->requestAnimationFrame(frameCallback_);
     };
 
-    auto setupXRSession = [this, clientContext](auto type, auto event)
+    addPlugin<DefaultPlugin>();
+    addPlugin<WebContentPlugin>();
+    addPlugin<WebXRPlugin>();
+    addResource(ecs::Resource::Make<Renderer>(glContext_));
+  }
+
+  void Scene::bootstrap()
+  {
+    ecs::App::startup();
+  }
+
+  void Scene::start()
+  {
+    if (started_)
     {
-      auto xrSystem = xrDeviceClient_->getXRSystem(clientContext->getScriptingEventLoop());
-      xrSession_ = xrSystem->requestSession();
+      resume();
+    }
+    else
+    {
+      // auto setupXRSession = [this](auto type, auto event)
 
-      // Update the render state
-      client_xr::XRRenderState newRenderState;
-      newRenderState.baseLayer = client_xr::XRWebGLLayer::Make(xrSession_, glContext_);
-      xrSession_->updateRenderState(newRenderState);
+      started_ = true;
+      if (clientContext_->isScriptingEventLoopReady())
+      {
+        setupXRSession();
+      }
+      else
+      {
+        clientContext_->addEventListener(
+            TrClientContextEventType::ScriptingEventLoopReady, [this](auto _type, auto _event)
+            { setupXRSession(); });
+      }
+    }
+  }
 
-      bootstrap();
-      xrSession_->requestAnimationFrame(frameCallback_);
-    };
-    clientContext->addEventListener(TrClientContextEventType::ScriptingEventLoopReady, setupXRSession);
+  void Scene::pause()
+  {
+    paused_ = true;
+  }
+
+  void Scene::resume()
+  {
+    if (!started_)
+      throw runtime_error("Scene is not started yet");
+    paused_ = false;
+    xrSession_->requestAnimationFrame(frameCallback_);
   }
 
   ecs::EntityId Scene::createElement(string name, shared_ptr<dom::Node> node,
-                                     std::optional<ecs::EntityId> parent)
+                                     optional<ecs::EntityId> parent)
   {
     Transform defaultTransform = Transform::FromXYZ(0.0f, 0.0f, 0.0f);
     BoundingBox defaultBoundingBox = BoundingBox();
@@ -90,7 +125,7 @@ namespace builtin_scene
       bool isRootRenderable = false;
       auto elementNode = dynamic_pointer_cast<dom::Element>(node);
       if (elementNode != nullptr && elementNode->is("body"))
-        isRootRenderable = true;  // Only the body element as Root is renderable by default.
+        isRootRenderable = true; // Only the body element as Root is renderable by default.
       return spawn(
           hierarchy::Element(name, node),
           hierarchy::Children(),
@@ -129,17 +164,28 @@ namespace builtin_scene
     }
   }
 
-  void Scene::bootstrap()
+  void Scene::update(uint32_t time, shared_ptr<client_xr::XRFrame> frame)
   {
-    addPlugin<DefaultPlugin>();
-    addPlugin<WebContentPlugin>();
-    addPlugin<WebXRPlugin>();
-    ecs::App::startup();
+    // Update the time and frame to the WebXRSession resource.
+    auto xrExperience = getResource<WebXRExperience>();
+    assert(xrExperience != nullptr);
+    xrExperience->updateCurrentFrame(time, frame);
 
-    // Add renderer
-    addResource(ecs::Resource::Make<Renderer>(glContext_));
+    // Trigger the ECS update().
+    ecs::App::update();
+  }
 
-    // Update WebXR session resource
+  void Scene::setupXRSession()
+  {
+    auto xrSystem = xrDeviceClient_->getXRSystem(clientContext_->getScriptingEventLoop());
+    xrSession_ = xrSystem->requestSession();
+
+    // Update the render state
+    client_xr::XRRenderState newRenderState;
+    newRenderState.baseLayer = client_xr::XRWebGLLayer::Make(xrSession_, glContext_);
+    xrSession_->updateRenderState(newRenderState);
+
+    // Initialize the WebXR experience
     {
       auto xrExperience = getResource<WebXRExperience>();
       assert(xrExperience != nullptr);
@@ -154,16 +200,6 @@ namespace builtin_scene
         Material::SetMultiviewRequired(true);
       }
     }
-  }
-
-  void Scene::update(uint32_t time, shared_ptr<client_xr::XRFrame> frame)
-  {
-    // Update the time and frame to the WebXRSession resource.
-    auto xrExperience = getResource<WebXRExperience>();
-    assert(xrExperience != nullptr);
-    xrExperience->updateCurrentFrame(time, frame);
-
-    // Trigger the ECS update().
-    ecs::App::update();
+    resume();
   }
 }
