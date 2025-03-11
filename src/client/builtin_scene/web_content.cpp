@@ -15,7 +15,13 @@ namespace builtin_scene
         decorationThickness(0.0f),
         decorationColor(SK_ColorBLACK),
         fontStyle({SkFontStyle::kUpright_Slant, SkFontStyle::kNormal_Weight, SkFontStyle::kNormal_Width}),
+#ifdef __APPLE__
+        fontFamilies({SkString("PingFang SC"), SkString("sans-serif")}),
+#elif __ANDROID__
+        fontFamilies({SkString("Noto Sans"), SkString("sans-serif")}),
+#else
         fontFamilies({SkString("sans-serif")}),
+#endif
         fontSize(20.0f),
         letterSpacing(std::nullopt),
         wordSpacing(std::nullopt)

@@ -66,6 +66,12 @@ namespace crates::layout2
     return Rect<float>(rect.top, rect.right, rect.bottom, rect.left);
   }
 
+  /**
+   * A template class represents CSS keyword.
+   *
+   * @tparam T The type of the CSS keyword.
+   * @tparam defaultValue The default value of the CSS keyword.
+   */
   template <typename T, T defaultValue>
     requires std::is_enum_v<T>
   class CSSKeyword
@@ -83,6 +89,7 @@ namespace crates::layout2
 
   protected:
     virtual std::optional<T> parse(const std::string &input) = 0;
+    virtual std::string stringify() { return ""; }
 
   protected:
     T handle_;
@@ -402,10 +409,10 @@ namespace crates::layout2
       }
     };
 
-    template <typename T, typename I>
-    class BoxAlignmentProperty : public CSSKeyword<I, I::Stretch>
+    template <typename T, typename I, I defaultValue = I::Stretch>
+    class BoxAlignmentProperty : public CSSKeyword<I, defaultValue>
     {
-      using CSSKeyword<I, I::Stretch>::CSSKeyword;
+      using CSSKeyword<I, defaultValue>::CSSKeyword;
 
     public:
 #define XX(tag, _) \
@@ -416,10 +423,10 @@ namespace crates::layout2
     public:
       BoxAlignmentProperty(const std::string &input)
       {
-        this->handle_ = parse(input).value_or(I::Stretch);
+        this->handle_ = parse(input).value_or(defaultValue);
       }
 
-    private:
+    protected:
       std::optional<I> parse(const std::string &input) override
       {
 #define XX(tag, str) \
@@ -429,20 +436,24 @@ namespace crates::layout2
 #undef XX
         return std::nullopt;
       }
+      std::string stringify() override
+      {
+        switch (this->handle_)
+        {
+#define XX(tag, str) \
+  case I::tag:       \
+    return str;
+          BOX_ALIGNMENT_MAP(XX)
+#undef XX
+        default:
+          return "";
+        }
+      }
 
     public:
       friend std::ostream &operator<<(std::ostream &os, const T &value)
       {
-        switch (value.handle_)
-        {
-#define XX(tag, str) \
-  case I::tag:       \
-    os << str;       \
-    break;
-          BOX_ALIGNMENT_MAP(XX)
-#undef XX
-        }
-        return os;
+        return os << value.stringify();
       }
     };
 
@@ -451,9 +462,26 @@ namespace crates::layout2
       using BoxAlignmentProperty::BoxAlignmentProperty;
     };
 
-    class AlignSelf : public BoxAlignmentProperty<AlignSelf, holocron::layout::AlignSelf>
+    class AlignSelf : public BoxAlignmentProperty<AlignSelf, holocron::layout::AlignSelf, holocron::layout::AlignSelf::Auto>
     {
       using BoxAlignmentProperty::BoxAlignmentProperty;
+
+    public:
+      static AlignSelf Auto() { return AlignSelf(holocron::layout::AlignSelf::Auto); }
+
+    protected:
+      std::optional<holocron::layout::AlignSelf> parse(const std::string &input) override
+      {
+        if (input == "auto")
+          return holocron::layout::AlignSelf::Auto;
+        return BoxAlignmentProperty::parse(input);
+      }
+      std::string stringify() override
+      {
+        if (handle_ == holocron::layout::AlignSelf::Auto)
+          return "auto";
+        return BoxAlignmentProperty::stringify();
+      }
     };
 
     class JustifyItems : public BoxAlignmentProperty<JustifyItems, holocron::layout::JustifyItems>
@@ -784,11 +812,11 @@ namespace crates::layout2
                   },
                   // alignment and spacing
                   styles::AlignItems::Stretch(),
-                  styles::AlignSelf::Stretch(),
+                  styles::AlignSelf::Auto(),
                   styles::AlignContent::Stretch(),
                   styles::JustifyItems::Stretch(),
                   styles::JustifySelf::Stretch(),
-                  styles::JustifyContent::Stretch(),
+                  styles::JustifyContent::FlexStart(),
                   // gap
                   holocron::layout::LengthPercentageXY{
                       .x = styles::LengthPercentage::Length(0.0f),
@@ -796,7 +824,7 @@ namespace crates::layout2
                   },
                   // flex properties
                   styles::FlexDirection::Row(),
-                  styles::FlexWrap::Wrap(),
+                  styles::FlexWrap::NoWrap(),
                   // flex basis
                   styles::Dimension::Auto(),
                   // flex grow

@@ -148,6 +148,7 @@ mod ffi {
 
   #[derive(Clone, Copy, Debug)]
   enum AlignSelf {
+    Auto,
     Start,
     End,
     FlexStart,
@@ -430,13 +431,13 @@ macro_rules! impl_default_for {
 }
 
 macro_rules! impl_from {
-  ($dst:ty, $src:ty, {$($variant:ident),+}, $default:ident) => {
+  ($dst:ty, $src:ty, {$($variant:ident),+}, $default:expr) => {
     #[allow(unreachable_patterns)]
     impl From<$src> for $dst {
       fn from(value: $src) -> Self {
         match value {
           $(<$src>::$variant => Self::$variant,)+
-          _ => Self::$default,
+          _ => $default,
         }
       }
     }
@@ -445,8 +446,8 @@ macro_rules! impl_from {
 
 macro_rules! impl_type_casting {
   ($first:ty, $second:ty, {$($variant:ident),+}, $default:ident) => {
-    impl_from!($first, $second, {$($variant),+}, $default);
-    impl_from!($second, $first, {$($variant),+}, $default);
+    impl_from!($first, $second, {$($variant),+}, Self::$default);
+    impl_from!($second, $first, {$($variant),+}, Self::$default);
   };
 }
 
@@ -720,11 +721,31 @@ impl_justify_items_like_from_taffy!(JustifySelf);
 impl_align_or_justify_content_from_taffy!(JustifyContent);
 
 impl_default_for!(AlignItems, Stretch);
-impl_default_for!(AlignSelf, Stretch);
+impl_default_for!(AlignSelf, Auto);
 impl_default_for!(AlignContent, Stretch);
 impl_default_for!(JustifyItems, Stretch);
 impl_default_for!(JustifySelf, Stretch);
 impl_default_for!(JustifyContent, Stretch);
+
+// Option from
+
+impl From<Option<taffy::AlignSelf>> for ffi::AlignSelf {
+  fn from(value: Option<taffy::AlignSelf>) -> Self {
+    match value {
+      Some(value) => value.into(),
+      None => ffi::AlignSelf::Auto,
+    }
+  }
+}
+
+impl From<ffi::AlignSelf> for Option<taffy::AlignSelf> {
+  fn from(value: ffi::AlignSelf) -> Self {
+    match value {
+      ffi::AlignSelf::Auto => None,
+      _ => Some(value.into()),
+    }
+  }
+}
 
 impl From<taffy::Size<taffy::LengthPercentage>> for ffi::LengthPercentageXY {
   fn from(value: taffy::Size<taffy::LengthPercentage>) -> Self {
@@ -784,7 +805,7 @@ impl From<taffy::Style> for ffi::Style {
         .align_items
         .unwrap_or(taffy::AlignItems::Stretch)
         .into(),
-      align_self: style.align_self.unwrap_or(taffy::AlignSelf::Stretch).into(),
+      align_self: style.align_self.into(),
       align_content: style
         .align_content
         .unwrap_or(taffy::AlignContent::Stretch)
@@ -835,7 +856,7 @@ impl From<ffi::Style> for taffy::Style {
       padding: value.padding.into(),
       border: value.border.into(),
       align_items: Some(value.align_items.into()),
-      align_self: Some(value.align_self.into()),
+      align_self: value.align_self.into(),
       align_content: Some(value.align_content.into()),
       justify_items: Some(value.justify_items.into()),
       justify_self: Some(value.justify_self.into()),
