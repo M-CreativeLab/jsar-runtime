@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOMContentLoaded not working</title>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOMContentLoaded');
+    });
+    document.addEventListener('load', () => {
+      console.info('loaded');
+    });
+    document.onload = function () {
+      console.info('loaded from global onload');
+    };
+  </script>
+</head>
+
+<body>
+  <div class="container">
+  </div>
+</body>
+
+</html>

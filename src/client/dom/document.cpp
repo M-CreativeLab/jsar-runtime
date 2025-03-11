@@ -364,6 +364,16 @@ namespace dom
     }
   }
 
+  void HTMLDocument::load()
+  {
+    Document::load();
+
+    // Dispatch the load event.
+    dispatchEvent(DOMEventType::DOMContentLoaded);
+    // TODO(Yorkie): wait for the pending resources to be loaded.
+    dispatchEvent(DOMEventType::Load);
+  }
+
   void HTMLDocument::onDocumentOpened()
   {
     auto scene = TrClientContextPerProcess::Get()->builtinScene;

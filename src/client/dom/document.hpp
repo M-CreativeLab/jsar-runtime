@@ -160,6 +160,9 @@ namespace dom
       return layoutAllocator_;
     }
 
+  public:
+    void load() override;
+
   private:
     void onDocumentOpened() override;
 
