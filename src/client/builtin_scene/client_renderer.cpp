@@ -409,6 +409,57 @@ namespace builtin_scene
     return matToUpdate;
   }
 
+  void RenderSystem::tryUpdateInstanceDataForInstancedMesh(const Mesh3d &meshComponent)
+  {
+    if (!meshComponent.isInstancedMesh())
+      return;
+
+    auto &instancedMesh = meshComponent.getHandleCheckedAsRef<InstancedMeshBase>();
+    auto updateInstanceData = [this](ecs::EntityId id, Instance &instance) -> bool
+    {
+      bool hasChanged = false;
+      if (hasComponent<Transform>(id))
+      {
+        instance.setTransform(getTransformationMatrix(id));
+        hasChanged = true;
+      }
+      if (hasComponent<WebContent>(id))
+      {
+        auto &webContent = getComponentChecked<WebContent>(id);
+        if (instance.setEnabled(true))
+          hasChanged = true;
+        if (instance.setOpaque(webContent.isOpaque()))
+          hasChanged = true;
+
+        // Only transparent content needs to update it's z-index
+        if (webContent.isTransparent() && hasComponent<hierarchy::Element>(id))
+        {
+          auto element = getComponentChecked<hierarchy::Element>(id);
+          auto index = element.node->depth(); // FIXME: using the node depth as the z-index currently.
+          if (instance.setZIndex(index))
+            hasChanged = true;
+        }
+
+        auto textureRect = webContent.textureRect();
+        if (textureRect != nullptr)
+        {
+          instance.setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), hasChanged);
+          instance.setTexture(textureRect->getUvOffset(),
+                              textureRect->getUvScale(),
+                              textureRect->layer,
+                              hasChanged);
+        }
+        else
+        {
+          instance.setColor(webContent.backgroundColor(), hasChanged);
+          instance.disableTexture(hasChanged);
+        }
+      }
+      return hasChanged;
+    };
+    instancedMesh.iterateInstances(updateInstanceData);
+  }
+
   void RenderSystem::render(Renderer &renderer, optional<Renderer::XRRenderTarget> renderTarget)
   {
     auto roots = queryEntities<hierarchy::Root>();
@@ -477,47 +528,7 @@ namespace builtin_scene
     renderer.tryUpdateMeshMaterial3d(meshComponent, materialComponent);
 
     // Update the instance transformation matrix if it's an instanced mesh
-    if (meshComponent->isInstancedMesh())
-    {
-      auto &instancedMesh = meshComponent->getHandleCheckedAsRef<InstancedMeshBase>();
-      auto updateInstanceData = [this](ecs::EntityId id, Instance &instance) -> bool
-      {
-        bool hasChanged = false;
-        if (hasComponent<Transform>(id))
-        {
-          instance.setTransform(getTransformationMatrix(id));
-          hasChanged = true;
-        }
-        if (hasComponent<WebContent>(id))
-        {
-          auto &webContent = getComponentChecked<WebContent>(id);
-          if (instance.setEnabled(true))
-            hasChanged = true;
-          if (instance.setOpaque(webContent.isOpaque()))
-            hasChanged = true;
-
-          // Only transparent content needs to update it's z-index
-          if (webContent.isTransparent() && hasComponent<hierarchy::Element>(id))
-          {
-            auto element = getComponentChecked<hierarchy::Element>(id);
-            auto index = element.node->depth(); // FIXME: using the node depth as the z-index currently.
-            if (instance.setZIndex(index))
-              hasChanged = true;
-          }
-
-          auto textureRect = webContent.textureRect();
-          if (textureRect != nullptr)
-          {
-            instance.setTexture(textureRect->getUvOffset(),
-                                textureRect->getUvScale(),
-                                textureRect->layer);
-            hasChanged = true;
-          }
-        }
-        return hasChanged;
-      };
-      instancedMesh.iterateInstances(updateInstanceData);
-    }
+    tryUpdateInstanceDataForInstancedMesh(*meshComponent);
 
     // Draw
     shared_ptr<Transform> parentTransform = nullptr;

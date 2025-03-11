@@ -196,10 +196,16 @@ namespace builtin_scene
   private:
     /**
      * Get the transformation matrix of the entity.
-     * 
+     *
      * @returns The transformation matrix of the entity.
      */
     glm::mat4 getTransformationMatrix(ecs::EntityId id);
+    /**
+     * Update the instance data for the mesh if it's an instanced mesh.
+     * 
+     * @param meshComponent The mesh component to update the instance data with.
+     */
+    void tryUpdateInstanceDataForInstancedMesh(const Mesh3d &meshComponent);
     /**
      * Render the scene with the given renderer.
      *
@@ -226,6 +232,5 @@ namespace builtin_scene
      */
     void renderMesh(ecs::EntityId &entity, std::shared_ptr<Mesh3d> meshComponent, Renderer &renderer,
                     std::optional<Renderer::XRRenderTarget> renderTarget);
-
   };
 }

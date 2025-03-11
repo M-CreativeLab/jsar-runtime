@@ -50,7 +50,8 @@ namespace builtin_scene
         name_(name),
         style_(style),
         lastLayout_(std::nullopt),
-        contentStyle_()
+        contentStyle_(),
+        backgroundColor_(1.0f, 1.0f, 1.0f, 0.0f)
   {
   }
 

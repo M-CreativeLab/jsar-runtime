@@ -20,6 +20,7 @@
 
 namespace builtin_scene::web_renderer
 {
+  using namespace std;
   using namespace skia::textlayout;
 
   void InitSystem::onExecute()
@@ -57,9 +58,9 @@ namespace builtin_scene::web_renderer
     }
   }
 
-  void drawBackground(SkCanvas *canvas, SkRRect &originalRRect,
-                      const crates::layout2::Layout &layout,
-                      const client_cssom::CSSStyleDeclaration &style)
+  optional<SkPaint> drawBackground(SkCanvas *canvas, SkRRect &originalRRect,
+                                   const crates::layout2::Layout &layout,
+                                   const client_cssom::CSSStyleDeclaration &style)
   {
     if (style.hasProperty("background-color"))
     {
@@ -85,6 +86,11 @@ namespace builtin_scene::web_renderer
         roundedRect.setRectRadii(rect, radii);
         canvas->drawRRect(roundedRect, fillPaint);
       }
+      return fillPaint;
+    }
+    else
+    {
+      return nullopt;
     }
   }
 
@@ -130,12 +136,13 @@ namespace builtin_scene::web_renderer
     }
   }
 
-  void drawBorders(SkCanvas *canvas, SkRRect &roundedRect,
+  bool drawBorders(SkCanvas *canvas, SkRRect &roundedRect,
                    const crates::layout2::Layout &layout,
                    const client_cssom::CSSStyleDeclaration &style)
   {
     using namespace client_cssom::types;
 
+    bool hasBorders = false;
     SkPaint paint;
     paint.setStyle(SkPaint::kStroke_Style);
     paint.setAntiAlias(true);
@@ -166,6 +173,7 @@ namespace builtin_scene::web_renderer
                                   roundedRect.radii(SkRRect::kUpperRight_Corner).y() * 2),
                  270.0f, 90.0f, false);
       canvas->drawPath(path, paint);
+      hasBorders = true;
     }
     if (style.hasProperty("border-right-width"))
     {
@@ -184,6 +192,7 @@ namespace builtin_scene::web_renderer
       path.lineTo(rect.fRight - halfBorderWidth,
                   rect.fBottom - roundedRect.radii(SkRRect::kLowerRight_Corner).y() - halfBorderWidth);
       canvas->drawPath(path, paint);
+      hasBorders = true;
     }
     if (style.hasProperty("border-bottom-width"))
     {
@@ -210,6 +219,7 @@ namespace builtin_scene::web_renderer
                                   roundedRect.radii(SkRRect::kLowerLeft_Corner).y() * 2),
                  90.0f, 90.0f, false);
       canvas->drawPath(path, paint);
+      hasBorders = true;
     }
     if (style.hasProperty("border-left-width"))
     {
@@ -228,7 +238,9 @@ namespace builtin_scene::web_renderer
       path.lineTo(rect.fLeft + halfBorderWidth,
                   rect.fTop + roundedRect.radii(SkRRect::kUpperLeft_Corner).y() + halfBorderWidth);
       canvas->drawPath(path, paint);
+      hasBorders = true;
     }
+    return hasBorders;
   }
 
   void RenderBackgroundSystem::render(ecs::EntityId entity, WebContent &content)
@@ -260,8 +272,20 @@ namespace builtin_scene::web_renderer
       roundedRect.setRectRadii(rect, radii);
     }
 
-    drawBackground(canvas, roundedRect, layout.value(), style);
-    drawBorders(canvas, roundedRect, layout.value(), style);
+    auto backgroundPaint = drawBackground(canvas, roundedRect, layout.value(), style);
+    if (backgroundPaint.has_value())
+    {
+      auto fillPaint = backgroundPaint.value();
+      if (fillPaint.getStyle() != SkPaint::kFill_Style)
+        content.setTextureUsing(true);
+      else
+      {
+        auto fillColor = fillPaint.getColor4f();
+        content.setBackgroundColor(fillColor.fR, fillColor.fG, fillColor.fB, fillColor.fA);
+      }
+    }
+    if (drawBorders(canvas, roundedRect, layout.value(), style))
+      content.setTextureUsing(true); // enable texture when there are borders.
   }
 
   void RenderImageSystem::render(ecs::EntityId entity, WebContent &content)
@@ -284,6 +308,7 @@ namespace builtin_scene::web_renderer
                             SkCanvas::kStrict_SrcRectConstraint);
     }
     canvas->restore();
+    content.setTextureUsing(true);
   }
 
   RenderTextSystem::RenderTextSystem()
@@ -314,6 +339,7 @@ namespace builtin_scene::web_renderer
     auto paragraph = paragraphBuilder->Build();
     paragraph->layout(getLayoutWidthForText(content));
     paragraph->paint(content.canvas(), 0.0f, 0.0f);
+    content.setTextureUsing(true);
   }
 
   float RenderTextSystem::getLayoutWidthForText(WebContent &content)

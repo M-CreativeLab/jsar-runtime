@@ -15,6 +15,20 @@ namespace builtin_scene
     notifyHolders();
   }
 
+  bool Instance::setColor(const glm::vec4 &color, bool &hasChanged)
+  {
+    if (data_.color.r == color.r &&
+        data_.color.g == color.g &&
+        data_.color.b == color.b &&
+        data_.color.a == color.a)
+      return false;
+
+    data_.color = color;
+    notifyHolders();
+    hasChanged = true;
+    return true;
+  }
+
   void Instance::translate(float tx, float ty, float tz)
   {
     auto &transform = data_.transform;
@@ -38,12 +52,26 @@ namespace builtin_scene
 
   void Instance::setTexture(array<float, 2> uvOffset,
                             array<float, 2> uvScale,
-                            uint32_t layerIndex)
+                            uint32_t layerIndex,
+                            bool &hasChanged)
   {
+    if (data_.texUvOffset.x == uvOffset[0] &&
+        data_.texUvOffset.y == uvOffset[1] &&
+        data_.texUvScale.x == uvScale[0] &&
+        data_.texUvScale.y == uvScale[1] &&
+        data_.texLayerIndex == layerIndex)
+      return; // Skip if there is no change.
+
     data_.texUvOffset = glm::vec2(uvOffset[0], uvOffset[1]);
     data_.texUvScale = glm::vec2(uvScale[0], uvScale[1]);
     data_.texLayerIndex = layerIndex;
     notifyHolders();
+    hasChanged = true;
+  }
+
+  void Instance::disableTexture(bool &hasChanged)
+  {
+    setTexture({0.0f, 0.0f}, {0.0f, 0.0f}, 0, hasChanged);
   }
 
   void Instance::addHolder(std::shared_ptr<RenderableInstancesList> holder)

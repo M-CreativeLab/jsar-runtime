@@ -71,7 +71,7 @@ namespace builtin_scene
       requires std::is_same<InstancedMeshBase, MeshType>::value ||
                std::is_same<Mesh, MeshType>::value ||
                std::is_base_of<Mesh, MeshType>::value
-    inline std::shared_ptr<MeshType> getHandleAs()
+    inline std::shared_ptr<MeshType> getHandleAs() const
     {
       if constexpr (std::is_same<MeshType, Mesh>::value)
         return handle_;
@@ -89,7 +89,7 @@ namespace builtin_scene
       requires std::is_same<InstancedMeshBase, MeshType>::value ||
                std::is_same<Mesh, MeshType>::value ||
                std::is_base_of<Mesh, MeshType>::value
-    MeshType &getHandleCheckedAsRef()
+    MeshType &getHandleCheckedAsRef() const
     {
       auto mesh = getHandleAs<MeshType>();
       if (mesh == nullptr)
@@ -99,11 +99,11 @@ namespace builtin_scene
     /**
      * @returns The vertex array object.
      */
-    inline std::shared_ptr<client_graphics::WebGLVertexArray> vertexArrayObject() { return vao_; }
+    inline std::shared_ptr<client_graphics::WebGLVertexArray> vertexArrayObject() const { return vao_; }
     /**
      * @returns The vertex buffer object.
      */
-    inline std::shared_ptr<client_graphics::WebGLBuffer> vertexBufferObject() { return vbo_; }
+    inline std::shared_ptr<client_graphics::WebGLBuffer> vertexBufferObject() const { return vbo_; }
     /**
      * Set if the mesh3d is initialized.
      *

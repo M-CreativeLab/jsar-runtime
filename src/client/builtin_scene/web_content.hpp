@@ -146,6 +146,11 @@ namespace builtin_scene
         return 0.0f;
       return canvas_->imageInfo().height();
     }
+    inline glm::vec4 backgroundColor() const { return backgroundColor_; }
+    inline void setBackgroundColor(float r, float g, float b, float a)
+    {
+      backgroundColor_ = glm::vec4(r, g, b, a);
+    }
     inline std::shared_ptr<Texture> textureRect() const { return texture_; }
     /**
      * Init or resize the texture.
@@ -155,6 +160,17 @@ namespace builtin_scene
      */
     inline std::shared_ptr<Texture> resizeOrInitTexture(TextureAtlas &textureAtlas)
     {
+      if (!isTextureUsing_)
+      {
+        // Remove the texture from atlas if it's not used.
+        if (texture_ != nullptr)
+        {
+          textureAtlas.removeTexture(*texture_);
+          texture_ = nullptr;
+        }
+        return nullptr;
+      }
+
       float w = width();
       float h = height();
 
@@ -166,6 +182,15 @@ namespace builtin_scene
       assert(texture_ != nullptr && "The texture must be valid.");
       return texture_;
     }
+    /**
+     * Set the web content to use the texture or not.
+     *
+     * To reduce the texture memory usage, we will leverage simple rendering in GPU directly in some cases, such as: background
+     * color without border and radius.
+     *
+     * @param value Whether to use the texture.
+     */
+    inline void setTextureUsing(bool value) { isTextureUsing_ = value; }
     inline bool isOpaque() const { return isOpaque_; }
     inline bool isTransparent() const { return !isOpaque_; }
     inline void setOpaque(bool isOpaque) { isOpaque_ = isOpaque; }
@@ -195,7 +220,9 @@ namespace builtin_scene
     std::optional<crates::layout2::Layout> lastLayout_;
     WebContentStyle contentStyle_;
     SkRRect roundedRect_;
+    glm::vec4 backgroundColor_;
     std::shared_ptr<Texture> texture_;
+    bool isTextureUsing_ = false;
     bool isOpaque_ = false;
     bool isDirty_ = true;
   };

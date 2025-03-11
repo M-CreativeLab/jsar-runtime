@@ -44,12 +44,15 @@ namespace builtin_scene
 
   public:
     void randomColor();
+    bool setColor(const glm::vec4 &color, bool &hasChanged);
     void translate(float tx, float ty, float tz);
     void scale(float sx, float sy, float sz);
     void setTransform(const glm::mat4 &transformationMatrix);
     void setTexture(std::array<float, 2> uvOffset,
                     std::array<float, 2> uvScale,
-                    uint32_t layerIndex);
+                    uint32_t layerIndex,
+                    bool &hasChanged);
+    void disableTexture(bool &hasChanged);
 
 #define IMPL_SETTER(NAME, PRIV_FIELD, TYPE) \
   inline bool set##NAME(TYPE value)         \

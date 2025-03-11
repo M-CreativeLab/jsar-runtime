@@ -104,8 +104,10 @@ void main() {
 #ifdef USE_INSTANCE_TEXTURE
   uvs = instanceTexUvOffset + instanceTexUvScale * uvs;
   vInstanceLayerIndex = float(instanceLayerIndex);
-  vInstanceTextureEnabled =
-      step(0.0, instanceTexUvScale.x) * step(0.0, instanceTexUvScale.y);
+
+  float threshold = 1e-5;
+  vInstanceTextureEnabled = step(threshold, abs(instanceTexUvScale.x)) *
+                            step(threshold, abs(instanceTexUvScale.y));
 #endif
 #endif
 
