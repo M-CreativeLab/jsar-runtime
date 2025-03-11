@@ -68,7 +68,13 @@
       // Append glTF model to scene.
       BABYLON.SceneLoader.Append("https://ar.rokidcdn.com/web-assets/pages/models/", "floating_fox.glb", scene, () => {
         // Loaded
-        console.info('Model loaded', scene.meshes);
+        console.info('Model loaded');
+      }, () => {
+        // Progress
+        console.info('Model loading...');
+      }, (error) => {
+        // Error
+        console.error('Model loading error:', error);
       });
     }).catch(err => {
       console.error(err);

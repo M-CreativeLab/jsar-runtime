@@ -142,9 +142,9 @@ namespace builtin_scene::web_renderer
 
     if (style.hasProperty("border-top-width"))
     {
-      auto borderWidth = layout.border().top();
+      auto borderWidth = style.getPropertyValueAs<LengthPercentage>("border-top-width");
       auto borderColor = style.getPropertyValueAs<Color>("border-top-color");
-      float halfBorderWidth = borderWidth / 2.0f;
+      float halfBorderWidth = borderWidth.computeAbsoluteLengthInPixels() / 2.0f;
 
       paint.setColor(borderColor);
       setBorderPaintEffect(paint, style.getPropertyValueAs<BorderStyleKeyword>("border-top-style"),
@@ -169,9 +169,9 @@ namespace builtin_scene::web_renderer
     }
     if (style.hasProperty("border-right-width"))
     {
-      auto borderWidth = layout.border().right();
+      auto borderWidth = style.getPropertyValueAs<LengthPercentage>("border-right-width");
       auto borderColor = style.getPropertyValueAs<Color>("border-right-color");
-      float halfBorderWidth = borderWidth / 2.0f;
+      float halfBorderWidth = borderWidth.computeAbsoluteLengthInPixels() / 2.0f;
 
       paint.setColor(borderColor);
       setBorderPaintEffect(paint, style.getPropertyValueAs<BorderStyleKeyword>("border-right-style"),
@@ -187,9 +187,9 @@ namespace builtin_scene::web_renderer
     }
     if (style.hasProperty("border-bottom-width"))
     {
-      auto borderWidth = layout.border().bottom();
+      auto borderWidth = style.getPropertyValueAs<LengthPercentage>("border-bottom-width");
       auto borderColor = style.getPropertyValueAs<client_cssom::types::Color>("border-bottom-color");
-      float halfBorderWidth = borderWidth / 2.0f;
+      float halfBorderWidth = borderWidth.computeAbsoluteLengthInPixels() / 2.0f;
 
       paint.setColor(borderColor);
       setBorderPaintEffect(paint, style.getPropertyValueAs<BorderStyleKeyword>("border-bottom-style"),
@@ -213,9 +213,9 @@ namespace builtin_scene::web_renderer
     }
     if (style.hasProperty("border-left-width"))
     {
-      auto borderWidth = layout.border().left();
+      auto borderWidth = style.getPropertyValueAs<LengthPercentage>("border-left-width");
       auto borderColor = style.getPropertyValueAs<client_cssom::types::Color>("border-left-color");
-      float halfBorderWidth = borderWidth / 2.0f;
+      float halfBorderWidth = borderWidth.computeAbsoluteLengthInPixels() / 2.0f;
 
       paint.setColor(borderColor);
       setBorderPaintEffect(paint, style.getPropertyValueAs<BorderStyleKeyword>("border-left-style"),
