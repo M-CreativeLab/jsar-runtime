@@ -75,7 +75,7 @@ namespace dom
      * Name && namespace.
      */
     {
-      string nameSource = this->internal->name();
+      string nameSource = this->nodeName;
 
       // update the `tagName` to be the uppercase version of the `name`
       tagName.resize(nameSource.size());
@@ -151,7 +151,7 @@ namespace dom
     return *it->second;
   }
 
-  bool Element::hasAttribute(const std::string &name) const
+  bool Element::hasAttribute(const string &name) const
   {
     return attributeNodes_.find(name) != attributeNodes_.end();
   }
@@ -222,21 +222,22 @@ namespace dom
       id = idValue;
   }
 
-  std::string Element::getInnerHTML()
+  string Element::getInnerHTML()
+  {
+    return dom::SerializeFragment(getPtr<Element>(), false);
+  }
+
+  void Element::setInnerHTML(const string &html)
+  {
+    cout << "Element::setInnerHTML() is not implemented yet." << endl;
+  }
+
+  string Element::getOuterHTML()
   {
     return "";
   }
 
-  void Element::setInnerHTML(const std::string &html)
-  {
-  }
-
-  std::string Element::getOuterHTML()
-  {
-    return "";
-  }
-
-  void Element::setOuterHTML(const std::string &html)
+  void Element::setOuterHTML(const string &html)
   {
   }
 }

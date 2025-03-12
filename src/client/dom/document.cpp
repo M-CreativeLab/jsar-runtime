@@ -230,6 +230,12 @@ namespace dom
     }
   }
 
+  string XMLDocument::SerializeFragment(const shared_ptr<Node> node, bool wellFormed)
+  {
+    // TODO
+    return "";
+  }
+
   XMLDocument::XMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
       : Document("text/xml", DocumentType::kXML, browsingContext, autoConnect)
   {
@@ -351,6 +357,128 @@ namespace dom
   private:
     HTMLDocument *document_ = nullptr;
   };
+
+  // This follows the fragment serializing algorithm steps.
+  //
+  // See https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#fragment-serializing-algorithm-steps
+  string HTMLDocument::SerializeFragment(const shared_ptr<Node> node, bool serializableShadowRoots)
+  {
+    // 1. If the node serializes as void, then return the empty string.
+    if (node == nullptr)
+      return "";
+
+    // 2. Let `s` be a string, and initialize it to the empty string.
+    string s("");
+
+    // 3. If the node is a template element, then let the node instead be the template element's template contents (a DocumentFragment node).
+    // TODO: <template> not supported yet.
+
+    // 4. If current node is a shadow host?
+    // TODO: Shadow DOM not supported yet.
+
+    // 5. For each child node of the node, in tree order, run the following steps:
+    {
+      // Convert the node's depth to spaces.
+      auto depthToSpaces = [](int depth) -> string
+      {
+        // Fast path for the common cases.
+        if (depth <= 0)
+          return "";
+        if (depth == 1)
+          return " ";
+        if (depth == 2)
+          return "  ";
+
+        string spaces;
+        for (int i = 0; i < depth; i++)
+          spaces.append("  ");
+        return spaces;
+      };
+
+      // Serialize the node(Element, Text, Comment, ProcessingInstruction, DocumentType).
+      auto serializeNode = [&depthToSpaces](string &s, const shared_ptr<Node> node, bool &isElementNode)
+      {
+        if (TR_UNLIKELY(node == nullptr))
+          return;
+
+        // Append the prefix spaces via the depth of the node.
+        s.append("\n");
+        s.append(depthToSpaces(node->depth()));
+
+        if (Node::Is<Element>(node))
+        {
+          auto &element = Node::AsChecked<Element>(node);
+          s.append("<");
+          s.append(element.localName);
+
+          for (auto &attr : element.getAttributeNames())
+          {
+            string attrValue = element.getAttribute(attr);
+            s.append(" ");
+            s.append(attr);
+            s.append("=\"");
+            s.append(attrValue);
+            s.append("\"");
+          }
+          isElementNode = true;
+          return;
+        }
+
+        if (Node::Is<Text>(node))
+        {
+          auto &text = Node::AsChecked<Text>(node);
+          s.append(text.data());
+          isElementNode = false;
+          return;
+        }
+
+        // TODO: Support Comment, ProcessingInstruction and DocumentType.
+        isElementNode = false;
+      };
+
+      // Serialize the children of the node.
+      function<void(string &, const shared_ptr<Node>)> serializeChildren =
+          [&depthToSpaces, &serializeChildren, &serializeNode](string &s, const shared_ptr<Node> node)
+      {
+        for (auto childNode : node->childNodes)
+        {
+          bool isElementNode = false;
+          serializeNode(s, childNode, isElementNode);
+
+          if (childNode->hasChildNodes())
+          {
+            if (isElementNode)
+              s.append(">");
+
+            // Serialize the children of the child node.
+            serializeChildren(s, childNode);
+
+            // Close the element tag if it's an element node.
+            if (isElementNode)
+            {
+              auto &element = Node::AsChecked<Element>(childNode);
+              s.append("\n");
+              s.append(depthToSpaces(element.depth()));
+              s.append("</");
+              s.append(element.localName);
+              s.append(">");
+            }
+          }
+          else
+          {
+            if (isElementNode)
+              s.append(" />");
+          }
+        }
+      };
+
+      if (node->hasChildNodes())
+        serializeChildren(s, node);
+    }
+
+    // 6. Return `s`.
+    return s;
+  }
 
   HTMLDocument::HTMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
       : Document("text/html", DocumentType::kHTML, browsingContext, autoConnect),

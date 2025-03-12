@@ -28,3 +28,8 @@ setTimeout(() => {
   some.style.setProperty('background-color', 'red');
   document.body.appendChild(some);
 }, 1000);
+
+setTimeout(() => {
+  console.info('body html:', document.body.innerHTML);
+  document.body.innerHTML = '<div style="width: 100px; height: 100px; background-color: blue;">foobar</div>';
+}, 3000);

@@ -269,4 +269,30 @@ namespace dom
       lastChild = childNodes[childCount - 1];
     }
   }
+
+  string SerializeFragment(const shared_ptr<Node> &node, bool wellFormed)
+  {
+    if (TR_UNLIKELY(node == nullptr))
+      return "";
+
+    // 1. Let context document be node's node document.
+    shared_ptr<Document> contextDocument;
+    if (Node::Is<Document>(node))
+      contextDocument = dynamic_pointer_cast<Document>(node);
+    else
+    {
+      if (!node->ownerDocument.has_value())
+        return "";
+      contextDocument = node->ownerDocument.value().lock();
+      assert(contextDocument != nullptr && "The context document is not set.");
+    }
+
+    // 2. If context document is an HTML document, return the result of HTML fragment serialization algorithm with node,
+    //    `false`, and « ».
+    if (Node::Is<HTMLDocument>(contextDocument))
+      return HTMLDocument::SerializeFragment(node, false);
+
+    // 3. Return the XML serialization of node given require well-formed.
+    return XMLDocument::SerializeFragment(node, wellFormed);
+  }
 }

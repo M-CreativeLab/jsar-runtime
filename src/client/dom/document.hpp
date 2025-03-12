@@ -130,6 +130,16 @@ namespace dom
     inline static const DocumentType kDocumentType = DocumentType::kXML;
 
   public:
+    /**
+     * This produces an XML serialization of a `Node` node given a flag require well-formed,
+     * 
+     * @param node The node to serialize.
+     * @param wellFormed If true, the serialization will be well-formed.
+     * @returns The XML serialization of the node.
+     */
+    static std::string SerializeFragment(const std::shared_ptr<Node> node, bool wellFormed);
+
+  public:
     XMLDocument(std::shared_ptr<BrowsingContext> browsingContext, bool autoConnect);
     ~XMLDocument() = default;
   };
@@ -138,6 +148,20 @@ namespace dom
   {
   public:
     inline static const DocumentType kDocumentType = DocumentType::kHTML;
+  
+  public:
+    /**
+     * This serializes the children of the node being serialized, not the node itself.
+     * 
+     * See https://html.spec.whatwg.org/multipage/parsing.html#serialising-html-fragments
+     * 
+     * @param node The node to serialize.
+     * @param serializableShadowRoots If true, the `ShadowRoot` object will be serialized.
+     * @param shadowRoots The list of `ShadowRoot` objects.
+     * 
+     * @todo supports serializing the `ShadowRoot` object.
+     */
+    static std::string SerializeFragment(const std::shared_ptr<Node> node, bool serializableShadowRoots = false);
 
   public:
     /**

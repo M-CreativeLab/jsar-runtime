@@ -33,6 +33,7 @@ namespace dom
   // Forward declarations
   class SceneObject;
   class Document;
+  class DocumentFragment;
 
   class Node : public DOMEventTarget,
                public enable_shared_from_this<Node>
@@ -40,6 +41,52 @@ namespace dom
     friend class Attr;
 
   public:
+    /**
+     * Check if the given node is a specific type of node.
+     *
+     * @tparam T The specific node type, such as `Element`, `Text`, etc.
+     *
+     * @param node The node to check.
+     * @returns `true` if the node is the specific type, otherwise `false`.
+     */
+    template <typename T>
+      requires std::is_base_of_v<Node, T> || std::is_same_v<T, Node>
+    static inline bool Is(std::shared_ptr<Node> node)
+    {
+      assert(node != nullptr && "The node is null.");
+      return dynamic_pointer_cast<T>(node) != nullptr;
+    }
+    /**
+     * Get the given node as a specific type of node.
+     * 
+     * @tparam T The specific node type, such as `Element`, `Text`, etc.
+     * 
+     * @param node The node to get.
+     * @returns The node as the specific type, or nullptr if the node is not the specific type.
+     */
+    template <typename T>
+      requires std::is_base_of_v<Node, T>
+    static inline std::shared_ptr<T> As(std::shared_ptr<Node> node)
+    {
+      assert(node != nullptr && "The node is null.");
+      return dynamic_pointer_cast<T>(node);
+    }
+    /**
+     * Get the given node reference as a specific type of node, it will fail if the node is not the specific type.
+     * 
+     * @tparam T The specific node type, such as `Element`, `Text`, etc.
+     * 
+     * @param node The node to get.
+     * @returns The node reference as the specific type.
+     */
+    template <typename T>
+      requires std::is_base_of_v<Node, T>
+    static inline T& AsChecked(std::shared_ptr<Node> node)
+    {
+      auto ptr = As<T>(node);
+      assert(ptr != nullptr && "The node is not the specific type.");
+      return *ptr;
+    }
     /**
      * Create a new `Node` object from a `pugi::xml_node`.
      */
@@ -309,4 +356,14 @@ namespace dom
   private:
     inline static TrIdGenerator NodeIdGenerator = TrIdGenerator(0x1a);
   };
+
+  /**
+   * Serialize an `Element`, `Document` or `DocumentFragment` object to a string.
+   *
+   * This implements fragment serializing algorithm steps.
+   *
+   * see https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#fragment-serializing-algorithm-steps
+   */
+  std::string SerializeFragment(const std::shared_ptr<Node> &node, bool wellFormed);
+  // TODO: Implement the parsing algorithm.
 }

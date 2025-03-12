@@ -19,6 +19,8 @@ namespace dombinding
           {
               T::InstanceAccessor("className", &T::ClassNameGetter, &T::ClassNameSetter),
               T::InstanceAccessor("id", &T::IdGetter, &T::IdSetter),
+              T::InstanceAccessor("innerHTML", &T::InnerHTMLGetter, &T::InnerHTMLSetter),
+              T::InstanceAccessor("outerHTML", &T::InnerHTMLGetter, &T::InnerHTMLSetter),
               T::InstanceMethod("after", &T::After),
               T::InstanceMethod("animate", &T::Animate),
               T::InstanceMethod("append", &T::Append),
@@ -70,6 +72,26 @@ namespace dombinding
     {
       Napi::Env env = info.Env();
       this->node->setId(value.As<Napi::String>().Utf8Value());
+    }
+    Napi::Value InnerHTMLGetter(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      return Napi::String::New(env, this->node->getInnerHTML());
+    }
+    void InnerHTMLSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+    {
+      Napi::Env env = info.Env();
+      this->node->setInnerHTML(value.As<Napi::String>().Utf8Value());
+    }
+    Napi::Value OuterHTMLGetter(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      return Napi::String::New(env, this->node->getOuterHTML());
+    }
+    void OuterHTMLSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+    {
+      Napi::Env env = info.Env();
+      this->node->setOuterHTML(value.As<Napi::String>().Utf8Value());
     }
 
   private:
