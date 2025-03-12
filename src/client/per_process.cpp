@@ -192,7 +192,7 @@ void TrScriptRuntimePerProcess::start(vector<string> &scriptArgs)
   assert(clientContext != nullptr);
 
   string scriptsDir = clientContext->applicationCacheDirectory + "/scripts";
-  ScriptEnvironment scriptEnv(clientContext->id, scriptsDir);
+  ScriptEnvironment &scriptEnv = clientContext->createScriptingEnv(clientContext->id, scriptsDir);
   if (clientContext->enableV8Profiling)
   {
     string logfile = clientContext->applicationCacheDirectory + "/v8.log"; // TODO: support multiple apps

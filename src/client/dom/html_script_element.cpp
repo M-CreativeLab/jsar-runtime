@@ -77,8 +77,10 @@ namespace dom
           assert(resourceExt.isTextSourceModule());
           bool isTypeScript = resourceExt.isTypeScript();
 
+          // TODO: support blocking script loading
+          //       requires custom http client implementation
           browsingContext->fetchTextSourceResource(resourceUrl, [this, isTypeScript](const string &source)
-                                                   { compileScript(source, isTypeScript); });
+                                                     { compileScript(source, isTypeScript); });
         }
       }
     }
