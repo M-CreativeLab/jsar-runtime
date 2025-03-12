@@ -19,3 +19,12 @@ setInterval(() => {
 // setTimeout(() => {
 //   div.style.setProperty('display', 'none');
 // }, 1000);
+
+// Append a new element to the body
+setTimeout(() => {
+  const some = document.createElement('div');
+  some.style.setProperty('width', '100px');
+  some.style.setProperty('height', '100px');
+  some.style.setProperty('background-color', 'red');
+  document.body.appendChild(some);
+}, 1000);
