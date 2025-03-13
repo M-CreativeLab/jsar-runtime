@@ -98,7 +98,9 @@ namespace dom
     {
       *it = newChild;
       newChild->parentNode = shared_from_this();
-      oldChild->parentNode = weak_ptr<Node>();
+
+      // Disconnect the old child node
+      oldChild->parentNode.reset();
       oldChild->disconnect();
 
       // Connect the child node if the parent node is connected

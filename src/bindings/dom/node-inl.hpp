@@ -150,6 +150,42 @@ namespace dombinding
   }
 
   template <typename ObjectType, typename NodeType>
+  Napi::Value NodeBase<ObjectType, NodeType>::ReplaceChild(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2 ||
+        !info[0].IsObject() ||
+        !IsNodeInstance(info[0].ToObject()) ||
+        !info[1].IsObject() ||
+        !IsNodeInstance(info[1].ToObject()))
+    {
+      Napi::TypeError::New(env, "Illegal arguments").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto jsNewChildNodeImplExternal = info[0]
+                                          .ToObject()
+                                          .Get(NODE_IMPL_FIELD)
+                                          .As<Napi::External<NodeContainer<dom::Node>>>();
+    auto newChildNodeImpl = jsNewChildNodeImplExternal.Data()->node;
+
+    auto jsOldChildNodeImplExternal = info[1]
+                                          .ToObject()
+                                          .Get(NODE_IMPL_FIELD)
+                                          .As<Napi::External<NodeContainer<dom::Node>>>();
+    auto oldChildNodeImpl = jsOldChildNodeImplExternal.Data()->node;
+
+    if (node->replaceChild(newChildNodeImpl, oldChildNodeImpl) == nullptr)
+    {
+      Napi::TypeError::New(env, "Not found the old child node").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    return info[1].ToObject();
+  }
+
+  template <typename ObjectType, typename NodeType>
   Napi::Value NodeBase<ObjectType, NodeType>::CloneNode(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();

@@ -20,23 +20,32 @@ setInterval(() => {
 //   div.style.setProperty('display', 'none');
 // }, 1000);
 
-// Append a new element to the body
-setTimeout(() => {
+async function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+(async () => {
+  await sleep(1000);
   const some = document.createElement('div');
   some.style.setProperty('width', '100px');
   some.style.setProperty('height', '100px');
   some.style.setProperty('background-color', 'red');
   document.body.appendChild(some);
-  setTimeout(() => {
-    try {
-      document.body.removeChild(some);
-    } catch (err) {
-      console.info('removeChild error:', err);
-    }
-  }, 1000);
-}, 1000);
 
-setTimeout(() => {
+  await sleep(1000);
+  const bar = document.createElement('div');
+  bar.style.setProperty('width', '100px');
+  bar.style.setProperty('height', '100px');
+  bar.style.setProperty('background-color', 'green');
+  document.body.replaceChild(bar, some);
+
+  await sleep(1000);
+  document.body.removeChild(bar);
+
+  await sleep(1000);
   console.info('body html:', document.body.innerHTML);
-  document.body.innerHTML = '<div style="width: 100px; height: 100px; background-color: blue;font-size:30px;color:#fff">foobar</div>';
-}, 3000);
+  document.body.innerHTML =
+    '<div style="width:100px;height:100px;background-color:blue;font-size:30px;color:#fff">'
+    + 'foobar'
+    + '</div>';
+})();
