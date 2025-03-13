@@ -63,6 +63,7 @@ namespace dombinding
               T::InstanceAccessor("lastChild", &T::LastChildGetter, nullptr, napi_default_jsproperty),
               // Methods
               T::InstanceMethod("appendChild", &T::AppendChild),
+              T::InstanceMethod("removeChild", &T::RemoveChild),
               T::InstanceMethod("cloneNode", &T::CloneNode),
               T::InstanceMethod("compareDocumentPosition", &T::CompareDocumentPosition),
               T::InstanceMethod("contains", &T::Contains),
@@ -88,6 +89,7 @@ namespace dombinding
 
   protected: // Methods
     Napi::Value AppendChild(const Napi::CallbackInfo &info);
+    Napi::Value RemoveChild(const Napi::CallbackInfo &info);
     Napi::Value CloneNode(const Napi::CallbackInfo &info);
     Napi::Value CompareDocumentPosition(const Napi::CallbackInfo &info);
     Napi::Value Contains(const Napi::CallbackInfo &info);

@@ -117,10 +117,36 @@ namespace dombinding
       return env.Undefined();
     }
 
-    auto jsChildNodeImplExternal = info[0].ToObject().Get(NODE_IMPL_FIELD).As<Napi::External<NodeContainer<dom::Node>>>();
+    auto jsChildNodeImplExternal = info[0]
+                                       .ToObject()
+                                       .Get(NODE_IMPL_FIELD)
+                                       .As<Napi::External<NodeContainer<dom::Node>>>();
     auto childNodeImpl = jsChildNodeImplExternal.Data()->node;
     node->appendChild(childNodeImpl);
     return info[0].ToObject();
+  }
+
+  template <typename ObjectType, typename NodeType>
+  Napi::Value NodeBase<ObjectType, NodeType>::RemoveChild(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1 ||
+        !info[0].IsObject() ||
+        !IsNodeInstance(info[0].ToObject()))
+    {
+      Napi::TypeError::New(env, "Illegal arguments").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto jsChildNodeImplExternal = info[0]
+                                       .ToObject()
+                                       .Get(NODE_IMPL_FIELD)
+                                       .As<Napi::External<NodeContainer<dom::Node>>>();
+    auto childNodeImpl = jsChildNodeImplExternal.Data()->node;
+    node->removeChild(childNodeImpl);
+    return env.Undefined();
   }
 
   template <typename ObjectType, typename NodeType>

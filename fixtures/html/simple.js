@@ -22,11 +22,18 @@ setInterval(() => {
 
 // Append a new element to the body
 setTimeout(() => {
-  const some = window['__test'] = document.createElement('div');
+  const some = document.createElement('div');
   some.style.setProperty('width', '100px');
   some.style.setProperty('height', '100px');
   some.style.setProperty('background-color', 'red');
   document.body.appendChild(some);
+  setTimeout(() => {
+    try {
+      document.body.removeChild(some);
+    } catch (err) {
+      console.info('removeChild error:', err);
+    }
+  }, 1000);
 }, 1000);
 
 setTimeout(() => {
