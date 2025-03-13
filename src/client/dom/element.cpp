@@ -182,6 +182,7 @@ namespace dom
 
     string oldValue = attrNode->value;
     attrNode->value = newValue;
+    attributeNodes_[name] = attrNode;
 
     if (notify)
     {

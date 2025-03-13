@@ -123,7 +123,7 @@ namespace dom
     }
     inline DOMTokenList &classList() { return classList_; }
 
-  private:
+  protected:
     DOMTokenList classList_;
     std::unordered_map<std::string, std::shared_ptr<Attr>> attributeNodes_;
   };

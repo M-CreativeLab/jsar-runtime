@@ -1,0 +1,24 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Attributes Dataset</title>
+</head>
+
+<body>
+  <div id="foo" data-bar="baz"></div>
+</body>
+
+<script>
+  const bar = document.getElementById('foo');
+  console.info(bar.getAttribute('data-bar'));
+  console.info(bar.dataset['bar']);
+  bar.dataset.foo = 'qux';
+  console.info(bar.dataset.foo);
+  console.info(document.body.innerHTML);
+
+  delete bar.dataset.foo;
+  console.info(document.body.innerHTML);
+</script>
+
+</html>

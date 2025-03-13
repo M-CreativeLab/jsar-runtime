@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <napi.h>
-#include "client/dom/element.hpp"
+#include <client/dom/element.hpp>
 #include "./node.hpp"
 
 namespace dombinding

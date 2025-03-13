@@ -12,10 +12,20 @@ namespace dombinding
     auto props = ElementBase<ObjectType, HTMLElementType>::GetClassProperties();
     auto added = vector<Napi::ClassPropertyDescriptor<ObjectType>>(
         {
+            T::InstanceAccessor("dataset", &T::DatasetGetter, nullptr),
             T::InstanceAccessor("style", &T::StyleGetter, nullptr),
         });
     props.insert(props.end(), added.begin(), added.end());
     return props;
+  }
+
+  template <typename ObjectType, typename HTMLElementType>
+  Napi::Value HTMLElementBase<ObjectType, HTMLElementType>::DatasetGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    auto htmlElement = dynamic_pointer_cast<dom::HTMLElement>(this->node);
+    assert(htmlElement != nullptr && "The node is not an HTMLElement.");
+    return HTMLElementDataset::NewInstance(env, htmlElement);
   }
 
   template <typename ObjectType, typename HTMLElementType>

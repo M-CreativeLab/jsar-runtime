@@ -33,6 +33,9 @@ namespace dom
     void blur();
     void focus();
     void click();
+    std::optional<std::string> getDataset(const std::string &key);
+    void setDataset(const std::string &key, const std::string &value);
+    void removeDataset(const std::string &key);
 
   public:
     inline float offsetWidth() const override { return offsetWidth_; }
@@ -79,6 +82,7 @@ namespace dom
     float offsetHeight_ = 0.0f;
 
   private:
+    std::unordered_map<std::string, std::string> dataset_;
     std::shared_ptr<client_cssom::CSSStyleDeclaration> style_;
   };
 }
