@@ -16,6 +16,7 @@ namespace dom
   public:
     void createdCallback() override;
     void connectedCallback() override;
+    void disconnectedCallback() override;
     void onLayoutChanged() override;
     void onAdoptedStyleChanged() override;
 

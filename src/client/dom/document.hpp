@@ -50,8 +50,22 @@ namespace dom
     template <typename T>
       requires std::is_base_of_v<Document, T>
     static std::shared_ptr<T> As(std::shared_ptr<Document> document);
+    /**
+     * Create a new document.
+     *
+     * @param contentType The content type of the document.
+     * @param documentType The document type.
+     * @param browsingContext The browsing context that the document belongs to.
+     * @param autoConnect If true, the document will be automatically to be connected as the DOM root.
+     */
+    static std::shared_ptr<Document> Make(std::string contentType, DocumentType documentType,
+                                          std::shared_ptr<BrowsingContext> browsingContext,
+                                          bool autoConnect = false);
 
   public:
+    /**
+     * Don't use this constructor directly, use `Document::Make` instead.
+     */
     Document(std::string contentType, DocumentType documentType,
              std::shared_ptr<BrowsingContext> browsingContext,
              bool autoConnect = false);
@@ -71,7 +85,6 @@ namespace dom
     std::shared_ptr<HTMLBodyElement> body();
 
   protected:
-    void connect() override final;
     virtual void onDocumentOpened() {};
 
   private:
@@ -106,7 +119,23 @@ namespace dom
      */
     std::shared_ptr<builtin_scene::Scene> scene;
     std::shared_ptr<BrowsingContext> browsingContext;
-    std::shared_ptr<Element> documentElement;
+    /**
+     * The `documentElement` read-only property of the `Document` interface returns the Element that is the root element of the document
+     * (for example, the <html> element for HTML documents).
+     */
+    inline std::shared_ptr<Element> documentElement() const { return firstElementChild(); }
+    /**
+     * The `Document.firstElementChild` read-only property returns the document's first child Element, or `null` if there are no child 
+     * elements.
+     */
+    inline std::shared_ptr<Element> firstElementChild() const
+    {
+      auto firstChild = getFirstChild();
+      if (firstChild != nullptr)
+        return std::dynamic_pointer_cast<Element>(firstChild);
+      else
+        return nullptr;
+    }
 
   protected:
     bool autoConnect;
@@ -132,12 +161,23 @@ namespace dom
   public:
     /**
      * This produces an XML serialization of a `Node` node given a flag require well-formed,
-     * 
+     *
      * @param node The node to serialize.
      * @param wellFormed If true, the serialization will be well-formed.
      * @returns The XML serialization of the node.
      */
     static std::string SerializeFragment(const std::shared_ptr<Node> node, bool wellFormed);
+    /**
+     * This parses the given markup string and returns a list of nodes.
+     *
+     * See https://html.spec.whatwg.org/multipage/parsing.html#parsing-html-fragments
+     *
+     * @param contextElement The context element to parse the markup.
+     * @param input The markup string to parse.
+     * @returns The list of nodes.
+     */
+    static std::vector<std::shared_ptr<Node>> ParseFragment(const std::shared_ptr<Element> contextElement,
+                                                            const std::string &input);
 
   public:
     XMLDocument(std::shared_ptr<BrowsingContext> browsingContext, bool autoConnect);
@@ -148,20 +188,33 @@ namespace dom
   {
   public:
     inline static const DocumentType kDocumentType = DocumentType::kHTML;
-  
+
   public:
     /**
      * This serializes the children of the node being serialized, not the node itself.
-     * 
+     *
      * See https://html.spec.whatwg.org/multipage/parsing.html#serialising-html-fragments
-     * 
+     *
      * @param node The node to serialize.
      * @param serializableShadowRoots If true, the `ShadowRoot` object will be serialized.
      * @param shadowRoots The list of `ShadowRoot` objects.
-     * 
+     *
      * @todo supports serializing the `ShadowRoot` object.
      */
     static std::string SerializeFragment(const std::shared_ptr<Node> node, bool serializableShadowRoots = false);
+    /**
+     * This parses the given markup string and returns a list of nodes.
+     *
+     * See https://html.spec.whatwg.org/multipage/parsing.html#parsing-html-fragments
+     *
+     * @param contextElement The context element to parse the markup.
+     * @param input The markup string to parse.
+     * @param allowDeclarativeShadowRoots If true, the declarative shadow roots will be allowed.
+     * @returns The list of nodes.
+     */
+    static std::vector<std::shared_ptr<Node>> ParseFragment(const std::shared_ptr<Element> contextElement,
+                                                            const std::string &input,
+                                                            bool allowDeclarativeShadowRoots = false);
 
   public:
     /**
@@ -185,7 +238,7 @@ namespace dom
     }
 
   public:
-    void load() override;
+    void afterLoadedCallback() override;
 
   private:
     void onDocumentOpened() override;

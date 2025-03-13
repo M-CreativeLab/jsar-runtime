@@ -42,8 +42,6 @@ namespace dom
 
   public:
     void createdCallback() override;
-    void connectedCallback() override;
-    void afterConnectedCallback() override;
 
   protected:
     /**

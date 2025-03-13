@@ -560,6 +560,13 @@ namespace builtin_scene::ecs
     template <typename... ComponentTypeList>
     EntityId spawn(ComponentTypeList... components);
     /**
+     * Remove the entity from the ECS.
+     * 
+     * @param entity The entity to remove.
+     * @returns `true` if the entity is removed, `false` otherwise.
+     */
+    bool removeEntity(EntityId entity);
+    /**
      * Query all entities with the given component type.
      *
      * @tparam ComponentType The type of the component.

@@ -15,12 +15,10 @@ namespace dom
   using LayoutStyle = crates::layout2::LayoutStyle;
 
   SceneObject::SceneObject(shared_ptr<HTMLDocument> htmlDocument, string name)
-      : scene_(htmlDocument->scene),
-        layoutAllocator_(htmlDocument->layoutAllocator()),
-        name_(name)
+      : name_(name)
   {
-    assert(scene_.lock() != nullptr && "The scene must be valid.");
-    assert(layoutAllocator_ != nullptr && "The layout allocator must be valid.");
+    if (htmlDocument != nullptr)
+      initialize(*htmlDocument);
 
     defaultStyle_.setProperty("display", "block");
     defaultStyle_.setProperty("width", "auto");
@@ -160,6 +158,11 @@ namespace dom
   void SceneObject::connectedCallback(shared_ptr<Node> node)
   {
     auto parent = node->getParentNodeAs<SceneObject>();
+    if (!initialized_)
+    {
+      auto ownerDocument = node->getOwnerDocumentReferenceAs<HTMLDocument>(true);
+      initialize(*ownerDocument);
+    }
 
     // Create the entity
     auto createEntity = [this, &node, parent](Scene &scene)
@@ -171,6 +174,7 @@ namespace dom
     useScene(createEntity);
 
     // Layout
+    if (layoutAllocator_ != nullptr)
     {
       layoutNode_ = make_shared<LayoutNode>(*layoutAllocator_);
       setLayoutStyle(*node, adoptedStyle_);
@@ -182,6 +186,23 @@ namespace dom
         parent->layoutNode_->addChild(*layoutNode_);
       }
     }
+  }
+
+  void SceneObject::disconnectedCallback()
+  {
+    auto removeEntity = [this](Scene &scene)
+    {
+      if (entity_.has_value())
+      {
+        scene.removeElement(entity_.value());
+        entity_ = nullopt;
+      }
+    };
+    useScene(removeEntity);
+
+    // Destroy the layout node
+    if (layoutNode_ != nullptr)
+      layoutNode_.reset();
   }
 
   client_cssom::Layout SceneObject::fetchLayoutAndDispatchChangeEvent(Node &node)
@@ -246,6 +267,17 @@ namespace dom
 
     // Update the layout node style.
     return setLayoutStyle(node, adoptedStyle_);
+  }
+
+  void SceneObject::initialize(const HTMLDocument &htmlDocument)
+  {
+    if (initialized_)
+      return;
+    scene_ = htmlDocument.scene;
+    layoutAllocator_ = htmlDocument.layoutAllocator();
+    assert(scene_.lock() != nullptr && "The scene must be valid.");
+    assert(layoutAllocator_ != nullptr && "The layout allocator must be valid.");
+    initialized_ = true;
   }
 
   bool SceneObject::skipRender() const

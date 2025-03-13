@@ -3,8 +3,10 @@
 
 #include "./dom_parser.hpp"
 #include "./document.hpp"
+#include "./document_fragment.hpp"
 #include "./element.hpp"
 #include "./text.hpp"
+#include "./scene_object.hpp"
 
 namespace dom
 {
@@ -12,6 +14,8 @@ namespace dom
 
   shared_ptr<Node> Node::CreateNode(pugi::xml_node node, shared_ptr<Document> ownerDocument)
   {
+    assert(ownerDocument != nullptr && "The owner document is not set when creating a node.");
+
     shared_ptr<Node> newNode = nullptr;
     switch (node.type())
     {
@@ -61,6 +65,7 @@ namespace dom
   {
     if (aChild == nullptr)
       return nullptr;
+
     childNodes.push_back(aChild);
     aChild->parentNode = shared_from_this();
 
@@ -70,13 +75,84 @@ namespace dom
     return aChild;
   }
 
+  void Node::removeChild(shared_ptr<Node> aChild)
+  {
+    if (aChild == nullptr)
+      throw runtime_error("Failed to remove the child node: the node to remove is null.");
+
+    auto it = find(childNodes.begin(), childNodes.end(), aChild);
+    if (it != childNodes.end())
+    {
+      childNodes.erase(it);
+      aChild->disconnect();
+    }
+  }
+
+  shared_ptr<Node> Node::replaceChild(shared_ptr<Node> newChild, shared_ptr<Node> oldChild)
+  {
+    if (newChild == nullptr || oldChild == nullptr)
+      return nullptr;
+
+    auto it = find(childNodes.begin(), childNodes.end(), oldChild);
+    if (it != childNodes.end())
+    {
+      *it = newChild;
+      newChild->parentNode = shared_from_this();
+      oldChild->parentNode = weak_ptr<Node>();
+      oldChild->disconnect();
+
+      // Connect the child node if the parent node is connected
+      if (connected && !newChild->connected)
+        newChild->connect();
+    }
+    return oldChild;
+  }
+
+  void Node::removeChildren()
+  {
+    for (auto it = childNodes.begin(); it != childNodes.end();)
+    {
+      auto child = *it;
+      it = childNodes.erase(it);
+      child->disconnect();
+    }
+    childNodes.clear();
+  }
+
+  void Node::replaceAll(shared_ptr<Node> newChild)
+  {
+    // Remove all the child nodes
+    removeChildren();
+
+    // If the new child is null, just remove all the child nodes.
+    if (newChild == nullptr)
+      return;
+
+    if (Node::Is<DocumentFragment>(newChild))
+    {
+      // Append all the child nodes if the node is a `DocumentFragment`.
+      auto fragment = Node::As<DocumentFragment>(newChild);
+      for (auto child : fragment->childNodes)
+        appendChild(child);
+    }
+    else if (Node::Is<Element>(newChild) ||
+             Node::Is<Text>(newChild))
+    {
+      appendChild(newChild);
+    }
+    else
+    {
+      throw runtime_error("Failed to replace all the child nodes: the new child node is not a valid type.");
+    }
+  }
+
   // textContent() returns the text content of the node and its descendants.
-  const std::string Node::textContent() const
+  const string Node::textContent() const
   {
     if (internal->type() == pugi::xml_node_type::node_pcdata)
-      return std::string(internal->value());
+      return string(internal->value());
     if (internal->type() == pugi::xml_node_type::node_cdata)
-      return std::string(internal->child_value());
+      return string(internal->child_value());
 
     string resultStr;
     for (auto child : childNodes)
@@ -88,9 +164,9 @@ namespace dom
   }
 
   // TODO: Implement the set text content method.
-  void Node::textContent(const std::string &value)
+  void Node::textContent(const string &value)
   {
-    throw std::runtime_error("The textContent property writable is not implemented yet.");
+    throw runtime_error("The textContent property writable is not implemented yet.");
   }
 
   Document &Node::getOwnerDocumentChecked()
@@ -99,22 +175,12 @@ namespace dom
     return *ownerDocument.value().lock();
   }
 
-  std::shared_ptr<Document> Node::getOwnerDocumentReference(bool force)
+  shared_ptr<Document> Node::getOwnerDocumentReference()
   {
-    std::shared_ptr<dom::Document> ref = nullptr;
+    shared_ptr<dom::Document> ref = nullptr;
     if (ownerDocument.has_value())
       ref = ownerDocument.value().lock();
-
-    if (ref == nullptr)
-    {
-      if (force)
-        throw std::runtime_error("The owner document is not found.");
-      return nullptr;
-    }
-    else
-    {
-      return ref;
-    }
+    return ref;
   }
 
   void Node::resetFrom(shared_ptr<pugi::xml_node> node, shared_ptr<Document> ownerDocument)
@@ -142,22 +208,13 @@ namespace dom
   void Node::connect()
   {
     connected = true;
-    {
-      // Update the depth value when connected.
-      auto parent = parentNode.lock();
-      if (parent != nullptr)
-      {
-        depthInTree = parent->depthInTree.value_or(0) + 1;
-        if (parent->renderable == true)
-          renderable = true;
-      }
-      else
-        depthInTree = 0;
-    }
+    connectedCallback();
 
     // Connect the children from the parent.
     for (auto child : childNodes)
       child->connect();
+
+    afterConnectedCallback();
   }
 
   void Node::disconnect()
@@ -166,15 +223,71 @@ namespace dom
     for (auto child : childNodes)
       child->disconnect();
 
+    // Disconnect the node
     connected = false;
-    depthInTree = nullopt;
-    renderable = false;
+    disconnectedCallback();
   }
 
   void Node::load()
   {
+    beforeLoadedCallback();
+
     for (auto child : childNodes)
       child->load();
+
+    afterLoadedCallback();
+  }
+
+  void Node::connectedCallback()
+  {
+    assert(connected == true && "The node is not connected.");
+
+    // Update the depth value when connected.
+    auto parent = parentNode.lock();
+    if (parent != nullptr)
+    {
+      depthInTree = parent->depthInTree.value_or(0) + 1;
+      if (parent->renderable == true)
+        renderable = true;
+    }
+    else
+      depthInTree = 0;
+
+    // Update the owner document
+    if (parent != nullptr)
+    {
+      auto parentOwnerDocument = parent->getOwnerDocumentReference();
+      if (parentOwnerDocument != nullptr)
+        updateFieldsFromDocument(parentOwnerDocument);
+    }
+  }
+
+  void Node::afterConnectedCallback()
+  {
+    // The default implementation does nothing.
+  }
+
+  void Node::disconnectedCallback()
+  {
+    assert(connected == false && "The node is connected.");
+    depthInTree = nullopt;
+    renderable = false;
+    parentNode.reset();
+  }
+
+  void Node::beforeLoadedCallback()
+  {
+    // The default implementation does nothing.
+  }
+
+  void Node::afterLoadedCallback()
+  {
+    // The default implementation does nothing.
+  }
+
+  void Node::onInternalUpdated()
+  {
+    // The default implementation does nothing.
   }
 
   void Node::updateFieldsFromDocument(optional<shared_ptr<Document>> maybeDocument)
@@ -182,7 +295,7 @@ namespace dom
     if (TR_UNLIKELY(!maybeDocument.has_value()))
       return;
 
-    auto document = maybeDocument.value();
+    shared_ptr<Document> document = maybeDocument.value();
     if (TR_UNLIKELY(document == nullptr))
       return;
 
@@ -248,8 +361,15 @@ namespace dom
     for (auto child : internal->children())
     {
       auto childNode = CreateNode(child, childOwnerDocument);
-      childNodes.push_back(childNode);
-      childNode->parentNode = shared_from_this();
+      if (childNode != nullptr)
+      {
+        childNodes.push_back(childNode);
+        childNode->parentNode = shared_from_this();
+      }
+      else
+      {
+        cerr << "Failed to create node: " << child.name() << endl;
+      }
     }
 
     size_t childCount = childNodes.size();
@@ -270,7 +390,7 @@ namespace dom
     }
   }
 
-  string SerializeFragment(const shared_ptr<Node> &node, bool wellFormed)
+  string SerializeFragment(shared_ptr<Node> node, bool wellFormed)
   {
     if (TR_UNLIKELY(node == nullptr))
       return "";
@@ -294,5 +414,35 @@ namespace dom
 
     // 3. Return the XML serialization of node given require well-formed.
     return XMLDocument::SerializeFragment(node, wellFormed);
+  }
+
+  shared_ptr<DocumentFragment> ParseFragment(shared_ptr<Element> contextElement, const string &markup)
+  {
+    if (TR_UNLIKELY(contextElement == nullptr))
+      return nullptr;
+
+    // 1. Let context document be node's node document.
+    shared_ptr<Document> contextDocument;
+    if (Node::Is<Document>(contextElement))
+      contextDocument = dynamic_pointer_cast<Document>(contextElement);
+    else
+    {
+      if (!contextElement->ownerDocument.has_value())
+        return nullptr;
+      contextDocument = contextElement->ownerDocument.value().lock();
+      assert(contextDocument != nullptr && "The context document is not set.");
+    }
+
+    vector<shared_ptr<Node>> newChildNodes;
+    if (Node::Is<HTMLDocument>(contextDocument))
+      newChildNodes = HTMLDocument::ParseFragment(contextElement, markup, false);
+    else
+      newChildNodes = XMLDocument::ParseFragment(contextElement, markup);
+
+    // Append the new child nodes to a document fragment
+    auto fragment = make_shared<DocumentFragment>(contextDocument);
+    for (auto child : newChildNodes)
+      fragment->appendChild(child);
+    return fragment;
   }
 }

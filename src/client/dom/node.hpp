@@ -32,6 +32,7 @@ namespace dom
 
   // Forward declarations
   class SceneObject;
+  class Element;
   class Document;
   class DocumentFragment;
 
@@ -58,9 +59,9 @@ namespace dom
     }
     /**
      * Get the given node as a specific type of node.
-     * 
+     *
      * @tparam T The specific node type, such as `Element`, `Text`, etc.
-     * 
+     *
      * @param node The node to get.
      * @returns The node as the specific type, or nullptr if the node is not the specific type.
      */
@@ -73,15 +74,15 @@ namespace dom
     }
     /**
      * Get the given node reference as a specific type of node, it will fail if the node is not the specific type.
-     * 
+     *
      * @tparam T The specific node type, such as `Element`, `Text`, etc.
-     * 
+     *
      * @param node The node to get.
      * @returns The node reference as the specific type.
      */
     template <typename T>
       requires std::is_base_of_v<Node, T>
-    static inline T& AsChecked(std::shared_ptr<Node> node)
+    static inline T &AsChecked(std::shared_ptr<Node> node)
     {
       auto ptr = As<T>(node);
       assert(ptr != nullptr && "The node is not the specific type.");
@@ -111,6 +112,31 @@ namespace dom
      * @returns The appended child node.
      */
     std::shared_ptr<Node> appendChild(std::shared_ptr<Node> aChild);
+    /**
+     * Remove a child node from the current node.
+     *
+     * @param aChild The child node to remove.
+     * @returns The removed child node.
+     */
+    void removeChild(std::shared_ptr<Node> aChild);
+    /**
+     * Replace a child node with a new child node.
+     *
+     * @param newChild The new child node to replace.
+     * @param oldChild The old child node to replace.
+     * @returns The replaced child node.
+     */
+    std::shared_ptr<Node> replaceChild(std::shared_ptr<Node> newChild, std::shared_ptr<Node> oldChild);
+    /**
+     * Remove all the child nodes from the current node.
+     */
+    void removeChildren();
+    /**
+     * Replace all the child nodes with a new child node.
+     *
+     * @param newChild The new child node to replace.
+     */
+    void replaceAll(std::shared_ptr<Node> newChild);
     /**
      * Get the child nodes of the current node.
      *
@@ -182,7 +208,7 @@ namespace dom
      * @param force If true, the owner document will be forced to get, otherwise it will return the cached owner document.
      * @returns The owner document reference.
      */
-    std::shared_ptr<Document> getOwnerDocumentReference(bool force = true);
+    std::shared_ptr<Document> getOwnerDocumentReference();
     /**
      * Get the owner document reference as a specific document type.
      *
@@ -194,9 +220,9 @@ namespace dom
       requires std::is_base_of_v<Document, DocumentType>
     std::shared_ptr<DocumentType> getOwnerDocumentReferenceAs(bool force = true)
     {
-      auto ref = std::dynamic_pointer_cast<DocumentType>(getOwnerDocumentReference(force));
+      auto ref = std::dynamic_pointer_cast<DocumentType>(getOwnerDocumentReference());
       if (force && ref == nullptr)
-        throw std::runtime_error("The owner document is not found.");
+        throw std::runtime_error("Could not cast this node's owner document to the specific document type.");
       return ref;
     }
 
@@ -283,19 +309,44 @@ namespace dom
     /**
      * Connect the node to the relevant context object.
      */
-    virtual void connect();
+    void connect();
     /**
      * Disconnect the node from the relevant context object.
      */
-    virtual void disconnect();
+    void disconnect();
     /**
      * Load the specific node, the stage "load" will be called after all the nodes in the DOM tree are connected.
      */
-    virtual void load();
+    void load();
+
+  public: // Node lifecycle callbacks
+    /**
+     * Get called each time the node is added to the document. The specification recommends that, as far as possible,
+     * developers should implement custom element setup in this callback rather than the constructor.
+     */
+    virtual void connectedCallback();
+    /**
+     * Get called when the node has been connected to the document and all the inherited connected callbacks have been
+     * called, this callback is useful for the node to do some post-connection work, that depends on the connected
+     * state.
+     */
+    virtual void afterConnectedCallback();
+    /**
+     * Get called each time the element is removed from the document.
+     */
+    virtual void disconnectedCallback();
+    /**
+     * Get called each time before the node is to be loaded.
+     */
+    virtual void beforeLoadedCallback();
+    /**
+     * Get called each time after the node is loaded.
+     */
+    virtual void afterLoadedCallback();
     /**
      * This method is called when the internal `pugi::xml_node` object is updated.
      */
-    virtual void onInternalUpdated() {}
+    virtual void onInternalUpdated();
 
   private:
     // Update the fields from the document, such as the base URI, owner document, etc.
@@ -364,6 +415,16 @@ namespace dom
    *
    * see https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#fragment-serializing-algorithm-steps
    */
-  std::string SerializeFragment(const std::shared_ptr<Node> &node, bool wellFormed);
-  // TODO: Implement the parsing algorithm.
+  std::string SerializeFragment(std::shared_ptr<Node> node, bool wellFormed);
+
+  /**
+   * Parse the given markup string and return a `DocumentFragment` object.
+   *
+   * see https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#fragment-parsing-algorithm-steps
+   *
+   * @param contextElement The context element to parse the markup.
+   * @param markup The markup string to parse.
+   * @returns The parsed `DocumentFragment` object.
+   */
+  std::shared_ptr<DocumentFragment> ParseFragment(std::shared_ptr<Element> contextElement, const std::string &markup);
 }

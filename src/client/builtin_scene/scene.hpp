@@ -77,6 +77,13 @@ namespace builtin_scene
     [[nodiscard]] ecs::EntityId createElement(std::string name,
                                               std::shared_ptr<dom::Node> node,
                                               std::optional<ecs::EntityId> parent = std::nullopt);
+    /**
+     * Remove the element from the scene.
+     * 
+     * @param entity The entity to remove.
+     * @returns Whether the element is removed successfully.
+     */
+    bool removeElement(ecs::EntityId entity);
 
   private:
     void update(uint32_t time, std::shared_ptr<client_xr::XRFrame> frame);

@@ -88,62 +88,19 @@ namespace dom
     bool is(const std::string expectedTagName);
     void setId(const std::string &id);
     std::string getInnerHTML();
-    void setInnerHTML(const std::string &html);
+    void setInnerHTML(const std::string &markup);
     std::string getOuterHTML();
-    void setOuterHTML(const std::string &html);
+    void setOuterHTML(const std::string &markup);
 
   protected: // Element lifecycle callbacks
     /**
-     * Connect the element to the live document.
-     */
-    virtual void connect() override
-    {
-      connectedCallback();
-      Node::connect();
-      afterConnectedCallback();
-    }
-    /**
-     * Load the element.
-     */
-    virtual void load() override
-    {
-      beforeLoadedCallback();
-      Node::load();
-      afterLoadedCallback();
-    }
-    /**
-     * An `Element` instance can be created via multiple ways, such as HTML parsing, `document.createElement`, etc. This callback is always called
-     * when the specific `Element` instance is created.
+     * When the element is created each time.
      */
     virtual void createdCallback();
     /**
-     * An `Element` instance can be connected to the live document after it is created. Such as `document.body.appendChild(element)`, etc. That means
-     * the element will be rendered to the space. This callback is to be used to declare the element's behavior when it is connected to the live 
-     * document, for example, to define how a `span` element should be rendered.
-     */
-    virtual void connectedCallback() {};
-    /**
-     * This callback is called when the element's `connectedCallback()` chain has been completed, and used to define the behavior after the element is
-     * connected to the live document.
-     */
-    virtual void afterConnectedCallback() {};
-    /**
-     * When a connected `Element` instance is disconnected from the live document, this callback is called. For example, when the element is removed
-     * from the live document, or the document is closed, etc.
-     */
-    virtual void disconnectedCallback() {};
-    /**
      * When the element is moved to a new document each time.
      */
-    virtual void adoptedCallback() {};
-    /**
-     * Before the element is loaded.
-     */
-    virtual void beforeLoadedCallback() {};
-    /**
-     * After the element is loaded.
-     */
-    virtual void afterLoadedCallback() {};
+    virtual void adoptedCallback();
     /**
      * When the element's attribute is changed.
      *
@@ -151,7 +108,7 @@ namespace dom
      * @param oldValue The old value of the attribute.
      * @param newValue The new value of the attribute.
      */
-    virtual void attributeChangedCallback(const string &name, const string &oldValue, const string &newValue) {};
+    virtual void attributeChangedCallback(const string &name, const string &oldValue, const string &newValue);
 
   public:
     std::string id;

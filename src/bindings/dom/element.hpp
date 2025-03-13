@@ -20,7 +20,7 @@ namespace dombinding
               T::InstanceAccessor("className", &T::ClassNameGetter, &T::ClassNameSetter),
               T::InstanceAccessor("id", &T::IdGetter, &T::IdSetter),
               T::InstanceAccessor("innerHTML", &T::InnerHTMLGetter, &T::InnerHTMLSetter),
-              T::InstanceAccessor("outerHTML", &T::InnerHTMLGetter, &T::InnerHTMLSetter),
+              T::InstanceAccessor("outerHTML", &T::OuterHTMLGetter, &T::OuterHTMLSetter),
               T::InstanceMethod("after", &T::After),
               T::InstanceMethod("animate", &T::Animate),
               T::InstanceMethod("append", &T::Append),

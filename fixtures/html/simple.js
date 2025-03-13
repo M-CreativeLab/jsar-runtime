@@ -22,7 +22,7 @@ setInterval(() => {
 
 // Append a new element to the body
 setTimeout(() => {
-  const some = document.createElement('div');
+  const some = window['__test'] = document.createElement('div');
   some.style.setProperty('width', '100px');
   some.style.setProperty('height', '100px');
   some.style.setProperty('background-color', 'red');
@@ -31,5 +31,5 @@ setTimeout(() => {
 
 setTimeout(() => {
   console.info('body html:', document.body.innerHTML);
-  document.body.innerHTML = '<div style="width: 100px; height: 100px; background-color: blue;">foobar</div>';
+  document.body.innerHTML = '<div style="width: 100px; height: 100px; background-color: blue;font-size:30px;color:#fff">foobar</div>';
 }, 3000);

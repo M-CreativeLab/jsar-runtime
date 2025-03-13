@@ -10,24 +10,25 @@ namespace dom
 
   HTMLPlaneElement::HTMLPlaneElement(shared_ptr<Document> ownerDocument)
       : HTMLElement("PLANE", ownerDocument),
-        SceneObject(getOwnerDocumentReferenceAs<HTMLDocument>(), nodeName)
+        SceneObject(getOwnerDocumentReferenceAs<HTMLDocument>(false), nodeName)
   {
   }
 
   HTMLPlaneElement::HTMLPlaneElement(string tagName, shared_ptr<Document> ownerDocument)
       : HTMLElement(tagName, ownerDocument),
-        SceneObject(getOwnerDocumentReferenceAs<HTMLDocument>(), nodeName)
+        SceneObject(getOwnerDocumentReferenceAs<HTMLDocument>(false), nodeName)
   {
   }
 
   HTMLPlaneElement::HTMLPlaneElement(xml_node node, shared_ptr<Document> ownerDocument)
       : HTMLElement(node, ownerDocument),
-        SceneObject(getOwnerDocumentReferenceAs<HTMLDocument>(), nodeName)
+        SceneObject(getOwnerDocumentReferenceAs<HTMLDocument>(false), nodeName)
   {
   }
 
   HTMLPlaneElement::HTMLPlaneElement(HTMLPlaneElement &that)
-      : HTMLElement(that), SceneObject(that)
+      : HTMLElement(that),
+        SceneObject(that)
   {
   }
 
@@ -65,6 +66,12 @@ namespace dom
       };
       useScene(markMeshAvailable);
     }
+  }
+
+  void HTMLPlaneElement::disconnectedCallback()
+  {
+    HTMLElement::disconnectedCallback();
+    SceneObject::disconnectedCallback();
   }
 
   bool HTMLPlaneElement::renderElement(Scene &scene)

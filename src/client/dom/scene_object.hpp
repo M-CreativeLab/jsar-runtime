@@ -20,6 +20,7 @@ namespace dom
   class SceneObject : virtual public client_cssom::BoxOffset,
                       virtual public client_cssom::BoxBounding
   {
+    friend class Node;
     friend class Text;
     friend class Content2d;
 
@@ -89,6 +90,7 @@ namespace dom
     bool render(Node &node);
     void renderObject(builtin_scene::Scene &scene, const client_cssom::Layout &layout);
     void connectedCallback(std::shared_ptr<Node> node);
+    void disconnectedCallback();
 
   protected: // Layout methods
     /**
@@ -112,10 +114,13 @@ namespace dom
     bool setLayoutStyle(const Node &node, const client_cssom::CSSStyleDeclaration &style);
 
   private:
+    // Initialize the scene object with the HTML document.
+    void initialize(const HTMLDocument& htmlDocument);
     // Check if the scene object should be rendered.
     [[nodiscard]] bool skipRender() const;
 
   protected:
+    bool initialized_ = false;
     std::weak_ptr<builtin_scene::Scene> scene_;
     std::optional<builtin_scene::ecs::EntityId> entity_ = std::nullopt;
     std::shared_ptr<crates::layout2::Allocator> layoutAllocator_ = nullptr;

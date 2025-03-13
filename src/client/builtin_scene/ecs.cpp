@@ -2,6 +2,8 @@
 
 namespace builtin_scene::ecs
 {
+  using namespace std;
+
   bool ISystemSet::addSystem(std::shared_ptr<System> system)
   {
     systems_.push_back(system);
@@ -25,6 +27,20 @@ namespace builtin_scene::ecs
   {
     for (auto &system : systems_)
       system->runOnce();
+  }
+
+  bool App::removeEntity(EntityId entity)
+  {
+    unique_lock<shared_mutex> lock(mutexForEntities_);
+
+    auto it = find_if(entities_.begin(), entities_.end(), [entity](const auto &pair)
+                      { return pair.first == entity; });
+    if (it == entities_.end())
+      return false;
+
+    componentsMgr_.onEntityDestroyed(entity);
+    entities_.erase(it);
+    return true;
   }
 
   SystemId App::addSystem(SchedulerLabel label, std::shared_ptr<System> system)
@@ -74,7 +90,7 @@ namespace builtin_scene::ecs
 
   void App::runSystems(SchedulerLabel label)
   {
-    std::shared_lock<std::shared_mutex> lock(mutexForSystems_);
+    shared_lock<shared_mutex> lock(mutexForSystems_);
     if (systemSets_.find(label) == systemSets_.end())
       return;
     auto systemSet = systemSets_[label];

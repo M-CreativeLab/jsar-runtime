@@ -27,7 +27,7 @@ namespace dom
 
   Text::Text(xml_node node, shared_ptr<Document> ownerDocument)
       : CharacterData(node, ownerDocument),
-        SceneObject(getOwnerDocumentReferenceAs<HTMLDocument>(), nodeName),
+        SceneObject(getOwnerDocumentReferenceAs<HTMLDocument>(false), nodeName),
         content2d_(nullptr)
   {
     client_cssom::CSSStyleDeclaration defaultStyle;
@@ -99,9 +99,9 @@ namespace dom
     return textRect;
   }
 
-  void Text::connect()
+  void Text::connectedCallback()
   {
-    CharacterData::connect();
+    CharacterData::connectedCallback();
 
     if (renderable)
     {
@@ -119,6 +119,28 @@ namespace dom
         scene.addComponent(entity_.value(), Text2d(data()));
       };
       useScene(appendText);
+    }
+  }
+
+  void Text::disconnectedCallback()
+  {
+    CharacterData::disconnectedCallback();
+
+    if (renderable)
+    {
+      // Disconnect the Content2d
+      if (content2d_ != nullptr)
+        content2d_->onNodeDisconnected();
+
+      // Remove the text
+      auto removeText = [this](Scene &scene)
+      {
+        assert(entity_.has_value());
+        scene.removeComponent<Text2d>(entity_.value());
+      };
+      useScene(removeText);
+
+      SceneObject::disconnectedCallback();
     }
   }
 

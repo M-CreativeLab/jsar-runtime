@@ -18,6 +18,13 @@ namespace dom
     PostOrder // Post-order traversal: left -> right -> root
   };
 
+  shared_ptr<Document> Document::Make(string contentType, DocumentType documentType,
+                                      shared_ptr<BrowsingContext> browsingContext,
+                                      bool autoConnect)
+  {
+    return make_shared<Document>(contentType, documentType, browsingContext, autoConnect);
+  }
+
   Document::Document(string contentType, DocumentType documentType,
                      shared_ptr<BrowsingContext> browsingContext,
                      bool autoConnect)
@@ -41,7 +48,6 @@ namespace dom
         documentType(other.documentType),
         scene(other.scene),
         browsingContext(other.browsingContext),
-        documentElement(other.documentElement),
         autoConnect(other.autoConnect),
         docInternal(other.docInternal)
   {
@@ -77,10 +83,42 @@ namespace dom
   {
     auto r = docInternal->load_string(source.c_str());
     if (r.status != pugi::xml_parse_status::status_ok)
-      throw std::runtime_error("Failed to parse XML document: " + std::string(r.description()));
+      throw runtime_error("Failed to parse XML document: " + std::string(r.description()));
 
     resetFrom(docInternal, getPtr<Document>());
     isSourceLoaded = true;
+
+    //
+    // Update fields after the document are parsed.
+    //
+
+    // Find the head and body elements.
+    for (auto childNode : documentElement()->childNodes)
+    {
+      if (childNode->nodeType == NodeType::ELEMENT_NODE)
+      {
+        if (childNode->nodeName == "head")
+          headElement = dynamic_pointer_cast<HTMLHeadElement>(childNode);
+        else if (childNode->nodeName == "body")
+          bodyElement = dynamic_pointer_cast<HTMLBodyElement>(childNode);
+      }
+    }
+
+    // Update the element list and maps.
+    auto updateElementListAndMaps = [this](shared_ptr<Node> childNode)
+    {
+      if (childNode->nodeType == NodeType::ELEMENT_NODE)
+      {
+        auto element = std::dynamic_pointer_cast<Element>(childNode);
+        allElementsList.push_back(element);
+        if (!element->id.empty())
+          elementMapById[element->id] = element;
+      }
+      return true;
+    };
+    allElementsList.clear();
+    elementMapById.clear();
+    iterateChildNodes(updateElementListAndMaps);
 
     if (shouldOpen)
       openInternal();
@@ -160,57 +198,6 @@ namespace dom
     return bodyElement;
   }
 
-  void Document::connect()
-  {
-    Node::connect();
-
-    // When the document is connected, we need:
-    // 1. Set the document element, head element, and body element.
-    // 2. Update the element list and maps.
-
-    for (auto childNode : childNodes)
-    {
-      if (childNode->nodeType == NodeType::ELEMENT_NODE)
-      {
-        documentElement = std::dynamic_pointer_cast<Element>(childNode);
-        break;
-      }
-    }
-
-    if (documentElement != nullptr)
-    {
-      for (auto childNode : documentElement->childNodes)
-      {
-        if (childNode->nodeType == NodeType::ELEMENT_NODE)
-        {
-          if (childNode->nodeName == "head")
-            headElement = std::dynamic_pointer_cast<HTMLHeadElement>(childNode);
-          else if (childNode->nodeName == "body")
-            bodyElement = std::dynamic_pointer_cast<HTMLBodyElement>(childNode);
-        }
-      }
-
-      /**
-       * Iterate all the child nodes of the document and update the element maps.
-       */
-      auto updateElementListAndMaps = [this](shared_ptr<Node> childNode)
-      {
-        if (childNode->nodeType == NodeType::ELEMENT_NODE)
-        {
-          auto element = std::dynamic_pointer_cast<Element>(childNode);
-          allElementsList.push_back(element);
-          if (!element->id.empty())
-            elementMapById[element->id] = element;
-        }
-        return true;
-      };
-
-      allElementsList.clear();
-      elementMapById.clear();
-      iterateChildNodes(updateElementListAndMaps);
-    }
-  }
-
   void Document::openInternal()
   {
     // Connect the window and document before opening this document.
@@ -234,6 +221,12 @@ namespace dom
   {
     // TODO
     return "";
+  }
+
+  vector<shared_ptr<Node>> XMLDocument::ParseFragment(const shared_ptr<Element> contextElement,
+                                                      const string &input)
+  {
+    throw runtime_error("The XMLDocument::ParseFragment method is not implemented yet.");
   }
 
   XMLDocument::XMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
@@ -480,6 +473,22 @@ namespace dom
     return s;
   }
 
+  vector<shared_ptr<Node>> HTMLDocument::ParseFragment(const shared_ptr<Element> contextElement,
+                                                       const string &input,
+                                                       bool _allowDeclarativeShadowRoots)
+  {
+    auto contextDocument = contextElement->getOwnerDocumentReference();
+    assert(contextDocument != nullptr);
+
+    shared_ptr<Document> document = Document::Make(
+        "text/html", DocumentType::kHTML, contextDocument->browsingContext, false);
+    document->setSource("<html>" + input + "</html>");
+
+    auto htmlElement = document->documentElement();
+    assert(htmlElement != nullptr && "The `documentElement` is not found.");
+    return htmlElement->childNodes;
+  }
+
   HTMLDocument::HTMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
       : Document("text/html", DocumentType::kHTML, browsingContext, autoConnect),
         layoutAllocator_(make_shared<crates::layout2::Allocator>())
@@ -492,9 +501,9 @@ namespace dom
     }
   }
 
-  void HTMLDocument::load()
+  void HTMLDocument::afterLoadedCallback()
   {
-    Document::load();
+    Document::afterLoadedCallback();
 
     // Dispatch the load event.
     dispatchEvent(DOMEventType::DOMContentLoaded);

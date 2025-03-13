@@ -26,6 +26,7 @@ namespace dom
 
   protected:
     void onNodeConnected();
+    void onNodeDisconnected();
     void onLayoutSizeChanged();
     void onAdoptedStyleChanged();
 

@@ -63,7 +63,8 @@ namespace dom
       if (content2d_ != nullptr)
         content2d_->onAdoptedStyleChanged();
     }
-    void connect() override;
+    void connectedCallback() override;
+    void disconnectedCallback() override;
 
   private:
     // Adopt the specified style to the element.

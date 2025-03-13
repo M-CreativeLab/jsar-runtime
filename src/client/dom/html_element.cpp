@@ -28,12 +28,4 @@ namespace dom
     style_ = make_shared<client_cssom::CSSStyleDeclaration>(getAttribute("style"));
     style_->setPropertyChangedCallback(onPropertyChanged);
   }
-
-  void HTMLElement::connectedCallback()
-  {
-  }
-
-  void HTMLElement::afterConnectedCallback()
-  {
-  }
 }

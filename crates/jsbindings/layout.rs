@@ -38,6 +38,15 @@ impl TaffyNode {
     }
   }
 
+  pub fn remove(&mut self) {
+    let _ = self
+      .tree
+      .handle
+      .borrow_mut()
+      .remove(self.node)
+      .expect("Failed to remove node");
+  }
+
   pub fn add_child(&mut self, child: &TaffyNode) {
     let _ = self
       .tree
@@ -381,6 +390,9 @@ mod ffi {
 
     #[cxx_name = "createNode"]
     fn create_node(tree: &TaffyTree) -> Box<TaffyNode>;
+
+    #[cxx_name = "removeNode"]
+    fn remove_node(node: &mut TaffyNode);
 
     #[cxx_name = "addChild"]
     fn add_child(parent: &mut TaffyNode, child: &TaffyNode);
@@ -899,6 +911,10 @@ fn create_allocator() -> Box<TaffyTree> {
 
 fn create_node(tree: &TaffyTree) -> Box<TaffyNode> {
   Box::new(TaffyNode::new(tree))
+}
+
+fn remove_node(node: &mut TaffyNode) {
+  node.remove();
 }
 
 fn add_child(parent: &mut TaffyNode, child: &TaffyNode) {

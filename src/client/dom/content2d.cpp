@@ -44,18 +44,6 @@ namespace dom
     // Reset the material to `WebContentMaterial`.
     auto resetMaterial = [this](Scene &scene)
     {
-      // auto material = Material::Make<materials::WebContentMaterial>();
-      // {
-      //   // Fetch and set the global aspect ratio.
-      //   auto bindingNode = dynamic_pointer_cast<dom::Node>(sceneObject_);
-      //   assert(bindingNode != nullptr);
-      //   auto window = bindingNode->getOwnerDocumentReferenceAs<HTMLDocument>()->defaultView();
-      //   assert(window != nullptr);
-      //   material->setGlobalAspectRatio(window->innerWidth() / window->innerHeight());
-      // }
-      // scene.replaceComponent(entity(),
-      //                        MeshMaterial3d(scene.getResource<Materials>()->add(material)));
-
       auto id = entity();
       scene.removeComponent<Mesh3d>(id, true);
       scene.removeComponent<MeshMaterial3d>(id, true);
@@ -72,6 +60,25 @@ namespace dom
                                               sceneObject_->adoptedStyle_));
     };
     sceneObject_->useScene(initCanvas);
+  }
+
+  void Content2d::onNodeDisconnected()
+  {
+    auto removeFromInstancedMesh = [this](Scene &scene)
+    {
+      auto webContextCtx = scene.getResource<WebContentContext>();
+      assert(webContextCtx != nullptr);
+      scene.getComponentChecked<Mesh3d>(webContextCtx->instancedMeshEntity())
+          .getHandleCheckedAsRef<InstancedMeshBase>()
+          .removeInstance(entity());
+    };
+    sceneObject_->useScene(removeFromInstancedMesh);
+
+    auto removeWebContent = [this](Scene &scene)
+    {
+      scene.removeComponent<WebContent>(entity());
+    };
+    sceneObject_->useScene(removeWebContent);
   }
 
   void Content2d::onLayoutSizeChanged()

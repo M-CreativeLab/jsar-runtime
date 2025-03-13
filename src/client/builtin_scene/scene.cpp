@@ -164,6 +164,11 @@ namespace builtin_scene
     }
   }
 
+  bool Scene::removeElement(ecs::EntityId entity)
+  {
+    return removeEntity(entity);
+  }
+
   void Scene::update(uint32_t time, shared_ptr<client_xr::XRFrame> frame)
   {
     // Update the time and frame to the WebXRSession resource.

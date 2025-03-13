@@ -22,6 +22,12 @@ namespace dom
     content2d().onNodeConnected();
   }
 
+  void HTMLContent2dElement::disconnectedCallback()
+  {
+    content2d().onNodeDisconnected(); // Disconnect the Content2d first
+    HTMLPlaneElement::disconnectedCallback();
+  }
+
   void HTMLContent2dElement::onLayoutChanged()
   {
     HTMLPlaneElement::onLayoutChanged();

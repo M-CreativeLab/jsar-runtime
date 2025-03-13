@@ -2,6 +2,7 @@
 #include <common/utility.hpp>
 
 #include "./element.hpp"
+#include "./document_fragment.hpp"
 #include "./html_element.hpp"
 #include "./attr.hpp"
 #include "./all_html_elements.hpp"
@@ -12,6 +13,8 @@ namespace dom
 
   shared_ptr<Element> Element::CreateElement(pugi::xml_node node, shared_ptr<Document> ownerDocument)
   {
+    assert(ownerDocument != nullptr && "The owner document is not set when creating an element.");
+
     string nodeName = node.name();
 #define XX(tagName, className)                                                 \
   if (nodeName == tagName)                                                     \
@@ -116,6 +119,16 @@ namespace dom
         classList_ = DOMTokenList(classAttr->value, {}, [this](const DOMTokenList &list)
                                   { setAttribute("class", list.value(), false /* mute */); });
     }
+  }
+
+  void Element::adoptedCallback()
+  {
+    // TODO: Implement adoptedCallback() for Element
+  }
+
+  void Element::attributeChangedCallback(const string &name, const string &oldValue, const string &newValue)
+  {
+    // TODO: Implement attributeChangedCallback() for Element
   }
 
   string Element::getAttribute(const string &name) const
@@ -227,9 +240,11 @@ namespace dom
     return dom::SerializeFragment(getPtr<Element>(), false);
   }
 
-  void Element::setInnerHTML(const string &html)
+  void Element::setInnerHTML(const string &markup)
   {
-    cout << "Element::setInnerHTML() is not implemented yet." << endl;
+    auto fragment = dom::ParseFragment(getPtr<Element>(), markup);
+    if (fragment != nullptr)
+      replaceAll(fragment);
   }
 
   string Element::getOuterHTML()

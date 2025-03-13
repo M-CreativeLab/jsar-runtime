@@ -1076,6 +1076,10 @@ namespace crates::layout2
         : node_(createNode(*allocator.handle))
     {
     }
+    ~Node()
+    {
+      holocron::layout::removeNode(*node_);
+    }
 
   public:
     /**
@@ -1083,13 +1087,19 @@ namespace crates::layout2
      *
      * @param child The child node to add.
      */
-    inline void addChild(Node &child) { holocron::layout::addChild(*node_, *child.node_); }
+    inline void addChild(Node &child)
+    {
+      holocron::layout::addChild(*node_, *child.node_);
+    }
     /**
      * Remove a child node from this layout node.
      *
      * @param child The child node to remove.
      */
-    inline void removeChild(Node &child) { holocron::layout::removeChild(*node_, *child.node_); }
+    inline void removeChild(Node &child)
+    {
+      holocron::layout::removeChild(*node_, *child.node_);
+    }
     /**
      * @returns The child count of this layout node.
      */
