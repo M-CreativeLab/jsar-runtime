@@ -153,6 +153,38 @@ impl CSSParser {
     )
   }
 
+  pub fn parse_selectors(&self, input_str: &str) -> Option<PrismSelectorList> {
+    let mut input = cssparser::ParserInput::new(input_str);
+    let mut parser = cssparser::Parser::new(&mut input);
+    let context = StyleParserContext::new(
+      Origin::Author,
+      &self.url_data,
+      Some(CssRuleType::Style),
+      ParsingMode::DEFAULT,
+      QuirksMode::NoQuirks,
+      Default::default(),
+      None,
+      None,
+    );
+
+    let selector_parser = style::selector_parser::SelectorParser {
+      stylesheet_origin: Origin::Author,
+      namespaces: &Default::default(),
+      url_data: &self.url_data,
+      for_supports_rule: false,
+    };
+
+    if let Ok(mut s) = selectors::parser::SelectorList::parse(
+      &selector_parser,
+      &mut parser,
+      selectors::parser::ParseRelative::No,
+    ) {
+      Some(PrismSelectorList::new(&s))
+    } else {
+      None
+    }
+  }
+
   pub fn parse_style_declaration(
     &self,
     input_str: &str,
@@ -295,7 +327,6 @@ type SpecifiedTransformOperation = CrateSpecifiedValues::TransformOperation;
 
 #[cxx::bridge(namespace = "holocron::css")]
 pub(crate) mod ffi {
-
   #[derive(Clone, Debug)]
   #[namespace = "holocron::css::values"]
   struct Color {
@@ -793,6 +824,10 @@ pub(crate) mod ffi {
       media_query: &str,
     ) -> Box<CrateStylesheet>;
 
+    /// Parses the given selectors input.
+    #[cxx_name = "parseSelectors"]
+    fn parse_selectors(parser: &CSSParser, input: &str) -> Result<Box<PrismSelectorList>>;
+
     /// Parses the given style attribute.
     #[cxx_name = "parseStyleDeclaration"]
     fn parse_style_declaration2(parser: &CSSParser, input: &str) -> Box<PropertyDeclarationBlock>;
@@ -1236,6 +1271,13 @@ fn parse_stylesheet(parser: &CSSParser, css_text: &str, media_query: &str) -> Bo
   Box::new(parser.parse_stylesheet(css_text, media_query))
 }
 
+fn parse_selectors(parser: &CSSParser, input: &str) -> Result<Box<PrismSelectorList>, String> {
+  match parser.parse_selectors(input) {
+    Some(selectors) => Ok(Box::new(selectors)),
+    None => Err("Failed to parse selectors".into()),
+  }
+}
+
 fn parse_style_declaration2(parser: &CSSParser, input: &str) -> Box<PropertyDeclarationBlock> {
   Box::new(parser.parse_style_declaration(input))
 }
@@ -1404,5 +1446,17 @@ mod tests {
         }
       }
     }
+  }
+
+  #[test]
+  fn test_parse_selectors() {
+    let parser = CSSParser::default();
+    let s = parser.parse_selectors("body, .foo > div#bar");
+    assert!(s.is_some());
+    assert_eq!(s.unwrap().len(), 2);
+
+    let s = parser.parse_selectors("body > div");
+    assert!(s.is_some());
+    assert_eq!(s.unwrap().len(), 1);
   }
 }

@@ -11,6 +11,7 @@
 #include <crates/bindings.hpp>
 
 #include "./node.hpp"
+#include "./node_list.hpp"
 #include "./element.hpp"
 #include "./html_head_element.hpp"
 #include "./html_body_element.hpp"
@@ -81,8 +82,8 @@ namespace dom
     std::vector<shared_ptr<Element>> getElementsByClassName(const std::string &className);
     std::vector<shared_ptr<Element>> getElementsByName(const std::string &name);
     std::vector<shared_ptr<Element>> getElementsByTagName(const std::string &tagName);
-    std::shared_ptr<HTMLHeadElement> head();
-    std::shared_ptr<HTMLBodyElement> body();
+    std::shared_ptr<Element> querySelector(const std::string &selectors);
+    NodeList<Element> querySelectorAll(const std::string &selectors);
 
   protected:
     virtual void onDocumentOpened() {};
@@ -119,6 +120,8 @@ namespace dom
      */
     std::shared_ptr<builtin_scene::Scene> scene;
     std::shared_ptr<BrowsingContext> browsingContext;
+    inline std::shared_ptr<HTMLHeadElement> head() const { return headElement; }
+    inline std::shared_ptr<HTMLBodyElement> body() const { return bodyElement; }
     /**
      * The `documentElement` read-only property of the `Document` interface returns the Element that is the root element of the document
      * (for example, the <html> element for HTML documents).

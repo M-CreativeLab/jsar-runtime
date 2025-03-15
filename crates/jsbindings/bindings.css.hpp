@@ -4,6 +4,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <memory>
+#include <optional>
 #include <vector>
 #include <variant>
 #include <string>
@@ -1082,6 +1083,10 @@ namespace crates::css2
       {
         return stylesheets::Stylesheet(*holocron::css::parsing::parseStylesheet(*inner_, cssText, media));
       }
+      selectors::SelectorList parseSelectors(const std::string selectors) const
+      {
+        return selectors::SelectorList(*holocron::css::parsing::parseSelectors(*inner_, selectors));
+      }
       properties::PropertyDeclarationBlock parseStyleDeclaration(const std::string str) const
       {
         return properties::PropertyDeclarationBlock(*holocron::css::parsing::parseStyleDeclaration(*inner_, str));
@@ -1102,6 +1107,18 @@ namespace crates::css2
     private:
       Box<holocron::css::parsing::CSSParser> inner_;
     };
+
+    inline std::optional<const selectors::SelectorList> parseSelectors(const std::string selectors)
+    {
+      try
+      {
+        return CSSParser().parseSelectors(selectors);
+      }
+      catch (...)
+      {
+        return std::nullopt;
+      }
+    }
 
     inline const values::specified::Color parseColor(const std::string str)
     {

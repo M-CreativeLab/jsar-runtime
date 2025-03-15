@@ -1,11 +1,13 @@
 #include <iostream>
 #include <client/per_process.hpp>
 #include <client/builtin_scene/ecs-inl.hpp>
+#include <crates/bindings.hpp>
 
 #include "./element.hpp"
 #include "./text.hpp"
 #include "./document-inl.hpp"
 #include "./browsing_context.hpp"
+#include "../cssom/selectors/matching.hpp"
 
 namespace dom
 {
@@ -188,14 +190,39 @@ namespace dom
     return elements;
   }
 
-  shared_ptr<HTMLHeadElement> Document::head()
+  shared_ptr<Element> Document::querySelector(const string &selectors)
   {
-    return headElement;
+    auto s = crates::css2::parsing::parseSelectors(selectors);
+    if (s == nullopt)
+      throw runtime_error("Failed to parse the CSS selectors: " + selectors);
+
+    auto selectorList = s.value();
+    for (auto element : allElementsList)
+    {
+      if (!Node::Is<HTMLElement>(element))
+        continue;
+      if (client_cssom::selectors::matchesSelectorList(selectorList, Node::As<HTMLElement>(element)))
+        return element;
+    }
+    return nullptr;
   }
 
-  shared_ptr<HTMLBodyElement> Document::body()
+  NodeList<Element> Document::querySelectorAll(const string &selectors)
   {
-    return bodyElement;
+    auto s = crates::css2::parsing::parseSelectors(selectors);
+    if (s == nullopt)
+      throw runtime_error("Failed to parse the CSS selectors: " + selectors);
+
+    NodeList<Element> elements(false);
+    auto selectorList = s.value();
+    for (auto element : allElementsList)
+    {
+      if (!Node::Is<HTMLElement>(element))
+        continue;
+      if (client_cssom::selectors::matchesSelectorList(selectorList, Node::As<HTMLElement>(element)))
+        elements.push_back(element);
+    }
+    return elements;
   }
 
   void Document::openInternal()

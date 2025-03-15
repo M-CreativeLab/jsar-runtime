@@ -16,6 +16,15 @@ setInterval(() => {
   div.style.setProperty('transform', `translate3d(0, 0, ${zAxis}px)`);
 }, 16);
 
+console.info('querySelector() =>', document.querySelector('.first'));
+{
+  const elements = document.querySelectorAll('p');
+  let index = 0;
+  for (const element of elements) {
+    console.info(`p[${index++}]`, element);
+  }
+}
+
 // setTimeout(() => {
 //   div.style.setProperty('display', 'none');
 // }, 1000);

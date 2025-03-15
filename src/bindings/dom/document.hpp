@@ -2,9 +2,14 @@
 
 #include <memory>
 #include <napi.h>
-#include "common/utility.hpp"
-#include "client/dom/document.hpp"
+#include <common/utility.hpp>
+#include <client/scripting_base/v8_object_wrap.hpp>
+#include <client/dom/document.hpp>
+#include <client/dom/element.hpp>
+#include <client/dom/node_list.hpp>
+
 #include "./node.hpp"
+#include "./node_list-inl.hpp"
 #include "./element.hpp"
 
 using namespace std;
@@ -31,13 +36,22 @@ namespace dombinding
               ObjectType::InstanceMethod("createAttributeNS", &ObjectType::CreateAttributeNS, napi_default_method),
               ObjectType::InstanceMethod("createCDATASection", &ObjectType::CreateCDATASection, napi_default_method),
               ObjectType::InstanceMethod("createComment", &ObjectType::CreateComment, napi_default_method),
-              ObjectType::InstanceMethod("createDocumentFragment", &ObjectType::CreateDocumentFragment, napi_default_method),
-              ObjectType::InstanceMethod("createElement", &ObjectType::CreateElement, napi_default_method),
-              ObjectType::InstanceMethod("createElementNS", &ObjectType::CreateElementNS, napi_default_method),
-              ObjectType::InstanceMethod("getElementById", &ObjectType::GetElementById, napi_default_method),
-              ObjectType::InstanceMethod("getElementsByClassName", &ObjectType::GetElementsByClassName, napi_default_method),
-              ObjectType::InstanceMethod("getElementsByName", &ObjectType::GetElementsByName, napi_default_method),
-              ObjectType::InstanceMethod("getElementsByTagName", &ObjectType::GetElementsByTagName, napi_default_method),
+              ObjectType::InstanceMethod("createDocumentFragment",
+                                         &ObjectType::CreateDocumentFragment, napi_default_method),
+              ObjectType::InstanceMethod("createElement",
+                                         &ObjectType::CreateElement, napi_default_method),
+              ObjectType::InstanceMethod("createElementNS",
+                                         &ObjectType::CreateElementNS, napi_default_method),
+              ObjectType::InstanceMethod("getElementById",
+                                         &ObjectType::GetElementById, napi_default_method),
+              ObjectType::InstanceMethod("getElementsByClassName",
+                                         &ObjectType::GetElementsByClassName, napi_default_method),
+              ObjectType::InstanceMethod("getElementsByName",
+                                         &ObjectType::GetElementsByName, napi_default_method),
+              ObjectType::InstanceMethod("getElementsByTagName",
+                                         &ObjectType::GetElementsByTagName, napi_default_method),
+              ObjectType::InstanceMethod("querySelector", &ObjectType::QuerySelector, napi_default_method),
+              ObjectType::InstanceMethod("querySelectorAll", &ObjectType::QuerySelectorAll, napi_default_method),
           });
       props.insert(props.end(), documentProps.begin(), documentProps.end());
       return props;
@@ -260,6 +274,60 @@ namespace dombinding
         arr.Set(i, Element::NewInstance(env, elements[i]));
       return arr;
     }
+    Napi::Value QuerySelector(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      if (info.Length() < 1)
+      {
+        Napi::TypeError::New(
+            env, "Failed to execute 'querySelector' on 'Document': 1 argument required, but only 0 present.")
+            .ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+
+      auto selectors = info[0].ToString().Utf8Value();
+      try
+      {
+        std::shared_ptr<dom::Element> element = this->node->querySelector(selectors);
+        return element == nullptr ? env.Null() : Element::NewInstance(env, element);
+      }
+      catch (const std::exception &e)
+      {
+        // TODO: use SyntaxError
+        auto msg = "Failed to execute 'querySelector' on 'Document': '" + selectors + "' is not a valid selector.";
+        Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+    }
+    Napi::Value QuerySelectorAll(const Napi::CallbackInfo &info)
+    {
+      Napi::Env env = info.Env();
+      Napi::HandleScope scope(env);
+
+      if (info.Length() < 1)
+      {
+        Napi::TypeError::New(
+            env, "Failed to execute 'querySelector' on 'Document': 1 argument required, but only 0 present.")
+            .ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+
+      auto selectors = info[0].ToString().Utf8Value();
+      try
+      {
+        auto list = this->node->querySelectorAll(selectors);
+        return NodeList<dom::Element>::NewInstance(env, list);
+      }
+      catch (const std::exception &e)
+      {
+        // TODO: use SyntaxError
+        auto msg = "Failed to execute 'querySelector' on 'Document': '" + selectors + "' is not a valid selector.";
+        Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+    }
 
   private:
     std::unique_ptr<Napi::ObjectReference> headElement = nullptr;
@@ -270,7 +338,7 @@ namespace dombinding
   {
   public:
     static void Init(Napi::Env env, Napi::Object exports);
-    static Document* GetCurrent(Napi::Env env);
+    static Document *GetCurrent(Napi::Env env);
 
   public:
     Document(const Napi::CallbackInfo &info);
