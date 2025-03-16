@@ -77,7 +77,6 @@ namespace dom
     void setUrl(const string &url);
     void setSource(const string &source);
     void open();
-    std::shared_ptr<browser::Window> defaultView();
     std::shared_ptr<Element> getElementById(const std::string &id);
     std::vector<shared_ptr<Element>> getElementsByClassName(const std::string &className);
     std::vector<shared_ptr<Element>> getElementsByName(const std::string &name);
@@ -95,6 +94,16 @@ namespace dom
     DocumentCompatMode compatMode = DocumentCompatMode::NO_QUIRKS;
     DocumentType documentType = DocumentType::kHTML;
     std::string contentType = "text/html";
+    /**
+     * The `defaultView` read-only property of the `Document` interface returns the window object associated with a
+     * document, or `null` if none is available.
+     */
+    inline std::shared_ptr<browser::Window> defaultView()
+    {
+      auto ref = defaultView_.lock();
+      assert(ref != nullptr && "The default view is not set.");
+      return ref;
+    }
     /**
      * Get a list of `CSSStyleSheet` objects, for stylesheets explicitly linked into or embedded in a document.
      *
@@ -123,13 +132,13 @@ namespace dom
     inline std::shared_ptr<HTMLHeadElement> head() const { return headElement; }
     inline std::shared_ptr<HTMLBodyElement> body() const { return bodyElement; }
     /**
-     * The `documentElement` read-only property of the `Document` interface returns the Element that is the root element of the document
-     * (for example, the <html> element for HTML documents).
+     * The `documentElement` read-only property of the `Document` interface returns the Element that is the root element
+     *  of the document (for example, the <html> element for HTML documents).
      */
     inline std::shared_ptr<Element> documentElement() const { return firstElementChild(); }
     /**
-     * The `Document.firstElementChild` read-only property returns the document's first child Element, or `null` if there are no child 
-     * elements.
+     * The `Document.firstElementChild` read-only property returns the document's first child Element, or `null` if 
+     * there are no child elements.
      */
     inline std::shared_ptr<Element> firstElementChild() const
     {

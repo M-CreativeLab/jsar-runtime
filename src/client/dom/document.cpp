@@ -133,13 +133,6 @@ namespace dom
       openInternal();
   }
 
-  std::shared_ptr<browser::Window> Document::defaultView()
-  {
-    auto ref = defaultView_.lock();
-    assert(ref != nullptr);
-    return ref;
-  }
-
   shared_ptr<Element> Document::getElementById(const string &id)
   {
     auto it = elementMapById.find(id);
