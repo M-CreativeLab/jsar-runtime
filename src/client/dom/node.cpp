@@ -4,6 +4,7 @@
 #include "./dom_parser.hpp"
 #include "./document.hpp"
 #include "./document_fragment.hpp"
+#include "./mutation_observer.hpp"
 #include "./element.hpp"
 #include "./text.hpp"
 #include "./scene_object.hpp"
@@ -67,11 +68,7 @@ namespace dom
       return nullptr;
 
     childNodes.push_back(aChild);
-    aChild->parentNode = shared_from_this();
-
-    // Connect the child node if the parent node is connected
-    if (connected && !aChild->connected)
-      aChild->connect();
+    childAddedCallback(aChild);
     return aChild;
   }
 
@@ -84,7 +81,7 @@ namespace dom
     if (it != childNodes.end())
     {
       childNodes.erase(it);
-      aChild->disconnect();
+      childRemovedCallback(aChild);
     }
   }
 
@@ -97,7 +94,7 @@ namespace dom
     if (it != childNodes.end())
     {
       *it = newChild;
-      newChild->parentNode = shared_from_this();
+      childReplacedCallback(newChild, oldChild);
 
       // Disconnect the old child node
       oldChild->parentNode.reset();
@@ -116,7 +113,7 @@ namespace dom
     {
       auto child = *it;
       it = childNodes.erase(it);
-      child->disconnect();
+      childRemovedCallback(child);
     }
     childNodes.clear();
   }
@@ -146,6 +143,22 @@ namespace dom
     {
       throw runtime_error("Failed to replace all the child nodes: the new child node is not a valid type.");
     }
+  }
+
+  NodeList<const Node> Node::getAncestors(bool inclusiveSelf, function<bool(const Node &)> ancestorsFilter) const
+  {
+    NodeList<const Node> ancestors;
+    if (inclusiveSelf == true)
+      ancestors.push_back(shared_from_this());
+
+    shared_ptr<const Node> parent = getParentNode();
+    while (parent != nullptr)
+    {
+      if (ancestorsFilter == nullptr || ancestorsFilter(*parent))
+        ancestors.push_back(parent);
+      parent = parent->getParentNode();
+    }
+    return ancestors;
   }
 
   // textContent() returns the text content of the node and its descendants.
@@ -238,6 +251,131 @@ namespace dom
       child->load();
 
     afterLoadedCallback();
+  }
+
+  bool Node::addMutationObserver(shared_ptr<MutationObserver> observer)
+  {
+    if (TR_UNLIKELY(observer == nullptr))
+      return false;
+
+    auto it = find(mutationObservers.begin(), mutationObservers.end(), observer);
+    if (it == mutationObservers.end())
+    {
+      mutationObservers.push_back(observer);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  bool Node::removeMutationObserver(shared_ptr<MutationObserver> observer)
+  {
+    if (TR_UNLIKELY(observer == nullptr))
+      return false;
+
+    auto it = find(mutationObservers.begin(), mutationObservers.end(), observer);
+    if (it != mutationObservers.end())
+    {
+      mutationObservers.erase(it);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  bool Node::hasMutationObserver(std::function<bool(const MutationObserver &observer)> filter) const
+  {
+    if (mutationObservers.size() == 0)
+      return false;
+
+    bool hasObserver = false;
+    for (auto observer : mutationObservers)
+    {
+      if (filter == nullptr || filter(*observer))
+      {
+        hasObserver = true;
+        break;
+      }
+    }
+    return hasObserver;
+  }
+
+  size_t Node::notifyMutationObservers(MutationRecord record)
+  {
+    auto isInterestedAncestors = [](const MutationObserver &observer) -> bool
+    {
+      // Fast filter the interested mutation observers to avoid the unnecessary checking.
+      // Complete checking the interested mutation observers will be in the `queueRecord` method.
+      return observer.isSubtreeObserved();
+    };
+    NodeList<const Node> inclusiveAncestors = getAncestors(true, [&isInterestedAncestors](const Node &node)
+                                                           { return node.hasMutationObserver(isInterestedAncestors); });
+
+    // Get the interested mutation observers from the ancestors
+    vector<shared_ptr<MutationObserver>> interestedObservers;
+    for (auto ancestor : inclusiveAncestors)
+    {
+      for (auto observer : ancestor->mutationObservers)
+        interestedObservers.push_back(observer);
+    }
+
+    // Notify the mutation observers
+
+    if (interestedObservers.empty())
+      return 0;
+
+    size_t notifiedCount = 0;
+    for (auto observer : interestedObservers)
+    {
+      if (observer->queueRecord(record))
+      {
+        notifiedCount++;
+      }
+      else
+      {
+        cerr << "Failed to queue a new record" << endl;
+        cerr << " record: " << record << endl;
+      }
+    }
+    return notifiedCount;
+  }
+
+  void Node::childAddedCallback(shared_ptr<Node> child)
+  {
+    auto self = shared_from_this();
+    child->parentNode = self;
+    notifyMutationObservers(MutationRecord::OnAddChild(self, child));
+
+    // If the parent node is connected, connect the child node as well.
+    if (connected && !child->connected)
+      child->connect();
+  }
+
+  void Node::childRemovedCallback(shared_ptr<Node> child)
+  {
+    auto self = shared_from_this();
+    child->parentNode.reset();
+    notifyMutationObservers(MutationRecord::OnRemoveChild(self, child));
+
+    // Disconnect a child node no matter what the parent node is connected or not.
+    child->disconnect();
+  }
+
+  void Node::childReplacedCallback(shared_ptr<Node> newChild, shared_ptr<Node> oldChild)
+  {
+    auto self = shared_from_this();
+    newChild->parentNode = self;
+    oldChild->parentNode.reset();
+    notifyMutationObservers(MutationRecord::OnReplaceChild(self, newChild, oldChild));
+
+    // Disconnect the old child node and connect the new child node if the parent node is connected.
+    oldChild->disconnect();
+    if (connected && !newChild->connected)
+      newChild->connect();
   }
 
   void Node::connectedCallback()

@@ -9,6 +9,8 @@
 #include "./dom_parser.hpp"
 #include "./browsing_context.hpp"
 #include "./worker_context.hpp"
+#include "./mutation_record.hpp"
+#include "./mutation_observer.hpp"
 
 namespace bindings
 {
@@ -33,6 +35,10 @@ namespace bindings
       // Add documents
       dombinding::Document::Init(env, exports);
       dombinding::XMLDocument::Init(env, exports);
+
+      // Add Web APIs
+      dombinding::MutationRecord::Init(env);
+      dombinding::MutationObserver::Init(env);
 
       // Add others
       dombinding::DOMParser::Init(env);

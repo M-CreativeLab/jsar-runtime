@@ -9,7 +9,9 @@
 #include <common/utility.hpp>
 #include <common/events_v2/event_target.hpp>
 #include <client/macros.h>
+
 #include "./dom_event_target.hpp"
+#include "./node_list.hpp"
 
 namespace dom
 {
@@ -35,6 +37,8 @@ namespace dom
   class Element;
   class Document;
   class DocumentFragment;
+  class MutationRecord;
+  class MutationObserver;
 
   class Node : public DOMEventTarget,
                public enable_shared_from_this<Node>
@@ -161,6 +165,15 @@ namespace dom
      * @returns a shared pointer to the parent node.
      */
     inline std::shared_ptr<Node> getParentNode() const { return parentNode.lock(); }
+    /**
+     * Get the ancestors of the current node.
+     *
+     * @param inclusiveSelf If true, the current node will be included in the ancestors.
+     * @param ancestorsFilter The filter function to filter the node.
+     * @returns a `NodeList` that contains the result ancestors.
+     */
+    NodeList<const Node> getAncestors(bool inclusiveSelf,
+                                      std::function<bool(const Node &)> ancestorsFilter = nullptr) const;
     /**
      * @returns The text content of the node and its descendants.
      */
@@ -319,7 +332,57 @@ namespace dom
      */
     void load();
 
+  public: // Internal public methods
+    /**
+     * Add a mutation observer to the node.
+     *
+     * @param observer The mutation observer to add.
+     * @returns `true` if the mutation observer is added, otherwise `false`.
+     */
+    bool addMutationObserver(std::shared_ptr<MutationObserver> observer);
+    /**
+     * Remove a mutation observer from the node.
+     *
+     * @param observer The mutation observer to remove.
+     * @returns `true` if the mutation observer is removed, otherwise `false`.
+     */
+    bool removeMutationObserver(std::shared_ptr<MutationObserver> observer);
+    /**
+     * Check if the node has mutation observers with the given options, this is used to get the how many mutation
+     * observers are observing the node.
+     *
+     * @param filter The filter function to filter the mutation observer.
+     * @returns `true` if the node has mutation observers, otherwise `false`.
+     */
+    bool hasMutationObserver(std::function<bool(const MutationObserver &observer)> filter = nullptr) const;
+    /**
+     * Notify a mutation record to the mutation observers, and return the number of notified mutation observers.
+     *
+     * @param record The mutation record to notify.
+     * @returns The number of notified mutation observers.
+     */
+    size_t notifyMutationObservers(MutationRecord record);
+
   public: // Node lifecycle callbacks
+    /**
+     * Get called each time a child node is added.
+     *
+     * @param child The child node that is added.
+     */
+    virtual void childAddedCallback(std::shared_ptr<Node> child);
+    /**
+     * Get called each time a child node is removed.
+     *
+     * @param child The child node that is removed.
+     */
+    virtual void childRemovedCallback(std::shared_ptr<Node> child);
+    /**
+     * Get called each time a child node is replaced.
+     *
+     * @param newChild The new child node that is replaced.
+     * @param oldChild The old child node that is replaced.
+     */
+    virtual void childReplacedCallback(std::shared_ptr<Node> newChild, std::shared_ptr<Node> oldChild);
     /**
      * Get called each time the node is added to the document. The specification recommends that, as far as possible,
      * developers should implement custom element setup in this callback rather than the constructor.
@@ -403,6 +466,8 @@ namespace dom
     std::optional<uint32_t> depthInTree = std::nullopt;
     // If this node could be rendered, `false` by default.
     bool renderable = false;
+    // The mutation observers of this node.
+    std::vector<std::shared_ptr<MutationObserver>> mutationObservers;
 
   private:
     inline static TrIdGenerator NodeIdGenerator = TrIdGenerator(0x1a);

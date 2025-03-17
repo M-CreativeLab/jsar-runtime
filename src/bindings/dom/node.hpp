@@ -40,26 +40,36 @@ namespace dombinding
   public:
     /**
      * Check if the given object is an instance of `Node`.
-     * 
+     *
      * @returns True if the object is an instance of `Node`, otherwise false.
      */
     static bool IsNodeInstance(Napi::Object object);
 
     /**
      * Get the class properties of `Node`.
-     * 
+     *
      * @returns The class properties of `Node`.
      */
     static std::vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties();
 
     /**
-     * Create a new instance of typed `Node` from it's underlying node-implementation object.
-     * 
+     * Create a new instance of `Node` object from a specific `NodeType` type. If you are to create a JavaScript object
+     * from a `NodeType` instance and expect the created object to be the corresponding class of the `NodeType`, you
+     * should use `Node::NewInstance` instead, which will automatically determine the class by the node type.
+     *
      * @param env The N-API environment
      * @param node The node-implementation object
      * @returns The JavaScript object that wraps the given node-implementation object.
      */
     static Napi::Value FromImpl(Napi::Env env, shared_ptr<NodeType> node);
+
+    /**
+     * Get the underlying node-implementation object from the given JavaScript object.
+     *
+     * @param value The JavaScript value
+     * @returns The underlying node-implementation object or `nullptr` if the object is not a `Node` instance.
+     */
+    static std::shared_ptr<NodeType> GetImpl(Napi::Value value);
 
   public:
     NodeBase(const Napi::CallbackInfo &info);
@@ -100,7 +110,9 @@ namespace dombinding
     static void Init(Napi::Env env);
 
     /**
-     * Create a new instance of `Node` in JavaScript from a node-implementation object.
+     * Create a new instance of `Node` in JavaScript, this will automatically create the corresponding class by the node
+     * type. Such as `dom::HTMLDivElement` will be created as `HTMLDivElement`, `dom::Text` will be created as `Text`,
+     * etc.
      *
      * @param env The N-API environment
      * @param node The node-implementation object

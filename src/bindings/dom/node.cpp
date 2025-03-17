@@ -1,5 +1,6 @@
 #include "./node-inl.hpp"
-#include "./element.hpp"
+#include "./text.hpp"
+#include "./element-inl.hpp"
 
 namespace dombinding
 {
@@ -15,18 +16,13 @@ namespace dombinding
 
   Napi::Object Node::NewInstance(Napi::Env env, std::shared_ptr<dom::Node> node)
   {
-    Napi::EscapableHandleScope scope(env);
-    Napi::Object obj;
+    if (node->nodeType == dom::NodeType::TEXT_NODE)
+      return Text::NewInstance(env, node).ToObject();
     if (node->nodeType == dom::NodeType::ELEMENT_NODE)
-    {
-      obj = Element::NewInstance(env, node);
-    }
-    else
-    {
-      NodeContainer nodeContainer(node);
-      auto external = Napi::External<NodeContainer<dom::Node>>::New(env, &nodeContainer);
-      obj = Node::constructor->New({external});
-    }
-    return scope.Escape(obj).ToObject();
+      return Element::NewInstance(env, node).ToObject();
+
+    // TODO: support other types of nodes, such as `Document`, `DocumentFragment`, etc.
+    // Fallback to the `Node` instance
+    return Node::FromImpl(env, node).ToObject();
   }
 }

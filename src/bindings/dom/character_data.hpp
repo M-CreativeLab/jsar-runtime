@@ -59,6 +59,7 @@ namespace dombinding
   class CharacterData : public CharacterDataBase<CharacterData, dom::CharacterData>
   {
     using CharacterDataBase::CharacterDataBase;
+    friend class NodeBase<CharacterData, dom::CharacterData>;
 
   public:
     static void Init(Napi::Env env);

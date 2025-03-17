@@ -51,6 +51,22 @@ namespace dombinding
   }
 
   template <typename ObjectType, typename NodeType>
+  std::shared_ptr<NodeType> NodeBase<ObjectType, NodeType>::GetImpl(Napi::Value value)
+  {
+    if (!value.IsObject())
+      return nullptr;
+
+    auto valueObject = value.As<Napi::Object>();
+    if (!NodeBase::IsNodeInstance(valueObject))
+      return nullptr;
+
+    auto nodeImplExternal = valueObject
+                                .Get(NODE_IMPL_FIELD)
+                                .As<Napi::External<NodeContainer<dom::Node>>>();
+    return nodeImplExternal.Data()->node;
+  }
+
+  template <typename ObjectType, typename NodeType>
   NodeBase<ObjectType, NodeType>::NodeBase(const Napi::CallbackInfo &info)
       : EventTargetWrap<ObjectType, NodeType>(info)
   {

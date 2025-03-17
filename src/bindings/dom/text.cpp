@@ -1,4 +1,5 @@
 #include "./text.hpp"
+#include "./character_data.hpp"
 
 namespace dombinding
 {
@@ -27,6 +28,20 @@ namespace dombinding
         });
     props.insert(props.end(), added.begin(), added.end());
     return props;
+  }
+
+  Napi::Value Text::NewInstance(Napi::Env env, std::shared_ptr<dom::Node> nodeImpl)
+  {
+    auto textImpl = dynamic_pointer_cast<dom::Text>(nodeImpl);
+    if (textImpl != nullptr)
+      return Text::FromImpl(env, textImpl);
+
+    auto characterDataImpl = dynamic_pointer_cast<dom::CharacterData>(nodeImpl);
+    if (characterDataImpl != nullptr)
+      return CharacterData::FromImpl(env, characterDataImpl);
+
+    // Fallback to the `Null` if the TEXT_NODE failed to create in the above cases.
+    return env.Null();
   }
 
   Text::Text(const Napi::CallbackInfo &info)
