@@ -1,5 +1,5 @@
 #include "./browsing_context.hpp"
-#include "./document.hpp"
+#include "./document-inl.hpp"
 #include "../browser/window.hpp"
 
 namespace dombinding

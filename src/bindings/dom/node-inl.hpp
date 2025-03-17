@@ -13,6 +13,44 @@ namespace dombinding
   }
 
   template <typename ObjectType, typename NodeType>
+  std::vector<Napi::ClassPropertyDescriptor<ObjectType>> NodeBase<ObjectType, NodeType>::GetClassProperties()
+  {
+    using T = NodeBase<ObjectType, NodeType>;
+    auto props = EventTargetWrap<ObjectType, NodeType>::GetClassProperties();
+    auto added = vector<Napi::ClassPropertyDescriptor<ObjectType>>(
+        {
+            // Getters & Setters
+            T::InstanceAccessor(NODE_IMPL_FIELD, &T::NodeImplGetter, nullptr, napi_default),
+            T::InstanceAccessor("isConnected", &T::IsConnectedGetter, nullptr, napi_default_jsproperty),
+            T::InstanceAccessor("childNodes", &T::ChildNodesGetter, nullptr, napi_default_jsproperty),
+            T::InstanceAccessor("firstChild", &T::FirstChildGetter, nullptr, napi_default_jsproperty),
+            T::InstanceAccessor("lastChild", &T::LastChildGetter, nullptr, napi_default_jsproperty),
+            // Methods
+            T::InstanceMethod("appendChild", &T::AppendChild),
+            T::InstanceMethod("removeChild", &T::RemoveChild),
+            T::InstanceMethod("replaceChild", &T::ReplaceChild),
+            T::InstanceMethod("cloneNode", &T::CloneNode),
+            T::InstanceMethod("compareDocumentPosition", &T::CompareDocumentPosition),
+            T::InstanceMethod("contains", &T::Contains),
+            T::InstanceMethod("getRootNode", &T::GetRootNode),
+            T::InstanceMethod("hasChildNodes", &T::HasChildNodes),
+            T::InstanceMethod("insertBefore", &T::InsertBefore),
+        });
+    props.insert(props.end(), added.begin(), added.end());
+    return props;
+  }
+
+  template <typename ObjectType, typename NodeType>
+  Napi::Value NodeBase<ObjectType, NodeType>::FromImpl(Napi::Env env, shared_ptr<NodeType> node)
+  {
+    Napi::EscapableHandleScope scope(env);
+    NodeContainer<NodeType> nodeContainer(node);
+    auto external = Napi::External<NodeContainer<NodeType>>::New(env, &nodeContainer);
+    auto instance = ObjectType::constructor->New({external});
+    return scope.Escape(instance).ToObject();
+  }
+
+  template <typename ObjectType, typename NodeType>
   NodeBase<ObjectType, NodeType>::NodeBase(const Napi::CallbackInfo &info)
       : EventTargetWrap<ObjectType, NodeType>(info)
   {

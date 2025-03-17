@@ -133,6 +133,11 @@ namespace dom
       openInternal();
   }
 
+  std::shared_ptr<Text> Document::createTextNode(const string &data)
+  {
+    return make_shared<Text>(data, getPtr<Document>());
+  }
+
   shared_ptr<Element> Document::getElementById(const string &id)
   {
     auto it = elementMapById.find(id);

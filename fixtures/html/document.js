@@ -1,0 +1,1 @@
+console.info('load from document.html');

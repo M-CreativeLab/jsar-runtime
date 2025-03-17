@@ -1,6 +1,6 @@
 #include <assert.h>
 #include "./html_image_element.hpp"
-#include "./document.hpp"
+#include "./document-inl.hpp"
 
 using namespace std;
 

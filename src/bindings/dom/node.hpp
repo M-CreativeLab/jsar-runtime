@@ -5,8 +5,9 @@
 #include <unordered_map>
 #include <thread>
 #include <napi.h>
-#include "common/utility.hpp"
-#include "client/dom/node.hpp"
+#include <common/utility.hpp>
+#include <client/dom/node.hpp>
+
 #include "./event_target-inl.hpp"
 
 using namespace std;
@@ -30,7 +31,7 @@ namespace dombinding
     NodeContainer(shared_ptr<NodeType> node) : node(node) {}
 
   public:
-    shared_ptr<NodeType> node;
+    std::shared_ptr<NodeType> node;
   };
 
   template <typename ObjectType, typename NodeType>
@@ -49,32 +50,16 @@ namespace dombinding
      * 
      * @returns The class properties of `Node`.
      */
-    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties()
-    {
-      using T = NodeBase<ObjectType, NodeType>;
-      auto props = EventTargetWrap<ObjectType, NodeType>::GetClassProperties();
-      auto added = vector<Napi::ClassPropertyDescriptor<ObjectType>>(
-          {
-              // Getters & Setters
-              T::InstanceAccessor(NODE_IMPL_FIELD, &T::NodeImplGetter, nullptr, napi_default),
-              T::InstanceAccessor("isConnected", &T::IsConnectedGetter, nullptr, napi_default_jsproperty),
-              T::InstanceAccessor("childNodes", &T::ChildNodesGetter, nullptr, napi_default_jsproperty),
-              T::InstanceAccessor("firstChild", &T::FirstChildGetter, nullptr, napi_default_jsproperty),
-              T::InstanceAccessor("lastChild", &T::LastChildGetter, nullptr, napi_default_jsproperty),
-              // Methods
-              T::InstanceMethod("appendChild", &T::AppendChild),
-              T::InstanceMethod("removeChild", &T::RemoveChild),
-              T::InstanceMethod("replaceChild", &T::ReplaceChild),
-              T::InstanceMethod("cloneNode", &T::CloneNode),
-              T::InstanceMethod("compareDocumentPosition", &T::CompareDocumentPosition),
-              T::InstanceMethod("contains", &T::Contains),
-              T::InstanceMethod("getRootNode", &T::GetRootNode),
-              T::InstanceMethod("hasChildNodes", &T::HasChildNodes),
-              T::InstanceMethod("insertBefore", &T::InsertBefore),
-          });
-      props.insert(props.end(), added.begin(), added.end());
-      return props;
-    }
+    static std::vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties();
+
+    /**
+     * Create a new instance of typed `Node` from it's underlying node-implementation object.
+     * 
+     * @param env The N-API environment
+     * @param node The node-implementation object
+     * @returns The JavaScript object that wraps the given node-implementation object.
+     */
+    static Napi::Value FromImpl(Napi::Env env, shared_ptr<NodeType> node);
 
   public:
     NodeBase(const Napi::CallbackInfo &info);

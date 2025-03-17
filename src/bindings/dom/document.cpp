@@ -1,4 +1,4 @@
-#include "./document.hpp"
+#include "./document-inl.hpp"
 
 namespace dombinding
 {

@@ -1,9 +1,11 @@
 #include "binding.hpp"
 #include "./event.hpp"
-#include "./node.hpp"
-#include "./element.hpp"
+#include "./node-inl.hpp"
+#include "./character_data-inl.hpp"
+#include "./text.hpp"
+#include "./element-inl.hpp"
 #include "./all_html_elements.hpp"
-#include "./document.hpp"
+#include "./document-inl.hpp"
 #include "./dom_parser.hpp"
 #include "./browsing_context.hpp"
 #include "./worker_context.hpp"
@@ -25,6 +27,8 @@ namespace bindings
 #define XX(tagNameStr, className) dombinding::className::Init(env);
       TYPED_ELEMENT_MAP(XX)
 #undef XX
+      dombinding::CharacterData::Init(env);
+      dombinding::Text::Init(env);
 
       // Add documents
       dombinding::Document::Init(env, exports);

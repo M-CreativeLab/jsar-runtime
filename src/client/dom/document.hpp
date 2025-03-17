@@ -13,6 +13,7 @@
 #include "./node.hpp"
 #include "./node_list.hpp"
 #include "./element.hpp"
+#include "./text.hpp"
 #include "./html_head_element.hpp"
 #include "./html_body_element.hpp"
 
@@ -77,6 +78,7 @@ namespace dom
     void setUrl(const string &url);
     void setSource(const string &source);
     void open();
+    std::shared_ptr<Text> createTextNode(const std::string &data);
     std::shared_ptr<Element> getElementById(const std::string &id);
     std::vector<shared_ptr<Element>> getElementsByClassName(const std::string &className);
     std::vector<shared_ptr<Element>> getElementsByName(const std::string &name);
