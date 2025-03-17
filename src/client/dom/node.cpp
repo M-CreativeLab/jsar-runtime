@@ -95,14 +95,6 @@ namespace dom
     {
       *it = newChild;
       childReplacedCallback(newChild, oldChild);
-
-      // Disconnect the old child node
-      oldChild->parentNode.reset();
-      oldChild->disconnect();
-
-      // Connect the child node if the parent node is connected
-      if (connected && !newChild->connected)
-        newChild->connect();
     }
     return oldChild;
   }
