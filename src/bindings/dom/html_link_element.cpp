@@ -7,7 +7,7 @@ namespace dombinding
   void HTMLLinkElement::Init(Napi::Env env)
   {
 #define MODULE_NAME "HTMLLinkElement"
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     Napi::Function func = DefineClass(env, MODULE_NAME, props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);

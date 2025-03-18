@@ -19,7 +19,7 @@ namespace dombinding::events
   Object XRInputSourcesChangeEvent::Init(Napi::Env env)
   {
     EscapableHandleScope scope(env);
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     auto added = {
         InstanceValue("session", env.Null(), napi_default_jsproperty),
         InstanceValue("added", env.Null(), napi_default_jsproperty),

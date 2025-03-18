@@ -52,7 +52,7 @@ namespace dombinding
   class HTMLElementBase : public ElementBase<ObjectType, HTMLElementType>
   {
   public:
-    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties();
+    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties(Napi::Env env);
 
   public:
     using ElementBase<ObjectType, HTMLElementType>::ElementBase;

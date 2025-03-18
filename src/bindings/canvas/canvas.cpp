@@ -92,7 +92,7 @@ namespace canvasbinding
   thread_local Napi::FunctionReference *ReadOnlyScreenCanvas::constructor;
   void ReadOnlyScreenCanvas::Init(Napi::Env env, Napi::Object exports)
   {
-    auto props = EventTargetWrap<ReadOnlyScreenCanvas, dom::DOMEventTarget>::GetClassProperties();
+    auto props = EventTargetWrap<ReadOnlyScreenCanvas, dom::DOMEventTarget>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<ReadOnlyScreenCanvas>>(
         {InstanceAccessor("width", &ReadOnlyScreenCanvas::WidthGetter, nullptr),
          InstanceAccessor("height", &ReadOnlyScreenCanvas::HeightGetter, nullptr)});

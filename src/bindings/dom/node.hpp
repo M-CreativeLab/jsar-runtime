@@ -48,9 +48,10 @@ namespace dombinding
     /**
      * Get the class properties of `Node`.
      *
+     * @param env The N-API environment
      * @returns The class properties of `Node`.
      */
-    static std::vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties();
+    static std::vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties(Napi::Env env);
 
     /**
      * Create a new instance of `Node` object from a specific `NodeType` type. If you are to create a JavaScript object
@@ -77,11 +78,22 @@ namespace dombinding
 
   protected: // Getters & Setters
     Napi::Value NodeImplGetter(const Napi::CallbackInfo &info);
+    Napi::Value NodeNameGetter(const Napi::CallbackInfo &info);
+    Napi::Value NodeTypeGetter(const Napi::CallbackInfo &info);
+    Napi::Value NodeValueGetter(const Napi::CallbackInfo &info);
+    void NodeValueSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value BaseURIGetter(const Napi::CallbackInfo &info);
     Napi::Value IsConnectedGetter(const Napi::CallbackInfo &info);
     Napi::Value ChildNodesGetter(const Napi::CallbackInfo &info);
     Napi::Value FirstChildGetter(const Napi::CallbackInfo &info);
     Napi::Value LastChildGetter(const Napi::CallbackInfo &info);
+    Napi::Value OwnerDocumentGetter(const Napi::CallbackInfo &info);
+    Napi::Value ParentNodeGetter(const Napi::CallbackInfo &info);
+    Napi::Value ParentElementGetter(const Napi::CallbackInfo &info);
+    Napi::Value PreviousSiblingGetter(const Napi::CallbackInfo &info);
+    Napi::Value NextSiblingGetter(const Napi::CallbackInfo &info);
     Napi::Value TextContentGetter(const Napi::CallbackInfo &info);
+    void TextContentSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
 
   protected: // Methods
     Napi::Value AppendChild(const Napi::CallbackInfo &info);
@@ -124,5 +136,3 @@ namespace dombinding
     static thread_local Napi::FunctionReference *constructor;
   };
 }
-
-#include "./node-inl.hpp"

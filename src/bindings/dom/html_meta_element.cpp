@@ -3,10 +3,12 @@
 
 namespace dombinding
 {
-  vector<Napi::ClassPropertyDescriptor<HTMLMetaElement>> HTMLMetaElement::GetClassProperties()
+  using namespace std;
+
+  vector<Napi::ClassPropertyDescriptor<HTMLMetaElement>> HTMLMetaElement::GetClassProperties(Napi::Env env)
   {
     using T = HTMLMetaElement;
-    auto props = HTMLElementBase<HTMLMetaElement, dom::HTMLMetaElement>::GetClassProperties();
+    auto props = HTMLElementBase<HTMLMetaElement, dom::HTMLMetaElement>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<HTMLMetaElement>>(
         {
             T::InstanceAccessor("content", &T::ContentGetter, &T::ContentSetter),
@@ -21,7 +23,7 @@ namespace dombinding
   thread_local Napi::FunctionReference *HTMLMetaElement::constructor;
   void HTMLMetaElement::Init(Napi::Env env)
   {
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     Napi::Function func = DefineClass(env, "HTMLMetaElement", props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);

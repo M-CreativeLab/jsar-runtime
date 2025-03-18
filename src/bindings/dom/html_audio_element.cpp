@@ -5,9 +5,9 @@
 namespace dombinding
 {
   thread_local Napi::FunctionReference *HTMLAudioElement::constructor;
-  vector<Napi::ClassPropertyDescriptor<HTMLAudioElement>> HTMLAudioElement::GetClassProperties()
+  vector<Napi::ClassPropertyDescriptor<HTMLAudioElement>> HTMLAudioElement::GetClassProperties(Napi::Env env)
   {
-    auto props = HTMLMediaElementBase<HTMLAudioElement, dom::HTMLAudioElement>::GetClassProperties();
+    auto props = HTMLMediaElementBase<HTMLAudioElement, dom::HTMLAudioElement>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<HTMLAudioElement>>(
         {
             // Audio Properties
@@ -18,7 +18,7 @@ namespace dombinding
 
   void HTMLAudioElement::Init(Napi::Env env)
   {
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     Napi::Function func = DefineClass(env, "HTMLAudioElement", props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);

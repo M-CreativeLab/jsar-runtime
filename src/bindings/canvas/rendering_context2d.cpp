@@ -5,7 +5,7 @@ namespace canvasbinding
   thread_local Napi::FunctionReference *CanvasRenderingContext2D::constructor;
   void CanvasRenderingContext2D::Init(Napi::Env env)
   {
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     Napi::Function func = DefineClass(env, "CanvasRenderingContext2D", props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
@@ -19,10 +19,10 @@ namespace canvasbinding
     return CanvasRenderingContext2DBase<CanvasRenderingContext2D, canvas::Canvas>::NewInstance(env, contextImpl, canvasValue);
   }
 
-  std::vector<Napi::ClassPropertyDescriptor<OffscreenCanvasRenderingContext2D>> OffscreenCanvasRenderingContext2D::GetClassProperties()
+  std::vector<Napi::ClassPropertyDescriptor<OffscreenCanvasRenderingContext2D>> OffscreenCanvasRenderingContext2D::GetClassProperties(Napi::Env env)
   {
     using T = OffscreenCanvasRenderingContext2D;
-    auto props = CanvasRenderingContext2DBase<OffscreenCanvasRenderingContext2D, canvas::OffscreenCanvas>::GetClassProperties();
+    auto props = CanvasRenderingContext2DBase<OffscreenCanvasRenderingContext2D, canvas::OffscreenCanvas>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<OffscreenCanvasRenderingContext2D>>(
         {
             T::InstanceMethod("commit", &T::Commit),
@@ -41,7 +41,7 @@ namespace canvasbinding
   thread_local Napi::FunctionReference *OffscreenCanvasRenderingContext2D::constructor;
   void OffscreenCanvasRenderingContext2D::Init(Napi::Env env)
   {
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     Napi::Function func = DefineClass(env, "OffscreenCanvasRenderingContext2D", props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);

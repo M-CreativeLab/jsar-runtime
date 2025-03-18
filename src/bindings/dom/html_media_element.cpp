@@ -6,7 +6,7 @@ namespace dombinding
   thread_local Napi::FunctionReference *HTMLMediaElement::constructor;
   void HTMLMediaElement::Init(Napi::Env env)
   {
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     Napi::Function func = DefineClass(env, "HTMLMediaElement", props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);

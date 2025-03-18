@@ -6,10 +6,10 @@
 namespace dombinding
 {
   template <typename ObjectType, typename HTMLElementType>
-  vector<Napi::ClassPropertyDescriptor<ObjectType>> HTMLElementBase<ObjectType, HTMLElementType>::GetClassProperties()
+  vector<Napi::ClassPropertyDescriptor<ObjectType>> HTMLElementBase<ObjectType, HTMLElementType>::GetClassProperties(Napi::Env env)
   {
     using T = HTMLElementBase<ObjectType, HTMLElementType>;
-    auto props = ElementBase<ObjectType, HTMLElementType>::GetClassProperties();
+    auto props = ElementBase<ObjectType, HTMLElementType>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<ObjectType>>(
         {
             T::InstanceAccessor("dataset", &T::DatasetGetter, nullptr),

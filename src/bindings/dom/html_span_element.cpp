@@ -6,7 +6,7 @@ namespace dombinding
   thread_local Napi::FunctionReference *HTMLSpanElement::constructor;
   void HTMLSpanElement::Init(Napi::Env env)
   {
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     Napi::Function func = DefineClass(env, "HTMLSpanElement", props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);

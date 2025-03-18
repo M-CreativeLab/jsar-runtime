@@ -3,6 +3,8 @@
 #include <napi.h>
 #include "common/utility.hpp"
 #include "./node.hpp"
+#include "./element.hpp"
+#include "./document.hpp"
 
 namespace dombinding
 {
@@ -13,18 +15,50 @@ namespace dombinding
   }
 
   template <typename ObjectType, typename NodeType>
-  std::vector<Napi::ClassPropertyDescriptor<ObjectType>> NodeBase<ObjectType, NodeType>::GetClassProperties()
+  std::vector<Napi::ClassPropertyDescriptor<ObjectType>> NodeBase<ObjectType, NodeType>::GetClassProperties(Napi::Env env)
   {
     using T = NodeBase<ObjectType, NodeType>;
-    auto props = EventTargetWrap<ObjectType, NodeType>::GetClassProperties();
+
+    auto props = EventTargetWrap<ObjectType, NodeType>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<ObjectType>>(
         {
+#define _NODE_TYPE_MAP(XX)        \
+  XX(ATTRIBUTE_NODE)              \
+  XX(CDATA_SECTION_NODE)          \
+  XX(COMMENT_NODE)                \
+  XX(DOCUMENT_FRAGMENT_NODE)      \
+  XX(DOCUMENT_NODE)               \
+  XX(DOCUMENT_TYPE_NODE)          \
+  XX(ELEMENT_NODE)                \
+  XX(ENTITY_NODE)                 \
+  XX(ENTITY_REFERENCE_NODE)       \
+  XX(NOTATION_NODE)               \
+  XX(PROCESSING_INSTRUCTION_NODE) \
+  XX(TEXT_NODE)
+
+#define XX(TYPE) T::StaticValue(#TYPE, Napi::Number::New(env, static_cast<int>(dom::NodeType::TYPE))), \
+                 T::InstanceValue(#TYPE, Napi::Number::New(env, static_cast<int>(dom::NodeType::TYPE))),
+            _NODE_TYPE_MAP(XX)
+#undef XX
+#undef _NODE_TYPE_MAP
+
             // Getters & Setters
             T::InstanceAccessor(NODE_IMPL_FIELD, &T::NodeImplGetter, nullptr, napi_default),
+            T::InstanceAccessor("nodeName", &T::NodeNameGetter, nullptr, napi_default_jsproperty),
+            T::InstanceAccessor("nodeType", &T::NodeTypeGetter, nullptr, napi_default_jsproperty),
+            T::InstanceAccessor("nodeValue", &T::NodeValueGetter, &T::NodeValueSetter, napi_default_jsproperty),
+            T::InstanceAccessor("baseURI", &T::BaseURIGetter, nullptr, napi_default_jsproperty),
             T::InstanceAccessor("isConnected", &T::IsConnectedGetter, nullptr, napi_default_jsproperty),
             T::InstanceAccessor("childNodes", &T::ChildNodesGetter, nullptr, napi_default_jsproperty),
             T::InstanceAccessor("firstChild", &T::FirstChildGetter, nullptr, napi_default_jsproperty),
             T::InstanceAccessor("lastChild", &T::LastChildGetter, nullptr, napi_default_jsproperty),
+            T::InstanceAccessor("ownerDocument", &T::OwnerDocumentGetter, nullptr, napi_default_jsproperty),
+            T::InstanceAccessor("parentNode", &T::ParentNodeGetter, nullptr, napi_default_jsproperty),
+            T::InstanceAccessor("parentElement", &T::ParentElementGetter, nullptr, napi_default_jsproperty),
+            T::InstanceAccessor("previousSibling", &T::PreviousSiblingGetter, nullptr, napi_default_jsproperty),
+            T::InstanceAccessor("nextSibling", &T::NextSiblingGetter, nullptr, napi_default_jsproperty),
+            T::InstanceAccessor("textContent", &T::TextContentGetter, &T::TextContentSetter, napi_default_jsproperty),
+
             // Methods
             T::InstanceMethod("appendChild", &T::AppendChild),
             T::InstanceMethod("removeChild", &T::RemoveChild),
@@ -99,6 +133,49 @@ namespace dombinding
   }
 
   template <typename ObjectType, typename NodeType>
+  Napi::Value NodeBase<ObjectType, NodeType>::NodeNameGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::String::New(env, node->nodeName);
+  }
+
+  template <typename ObjectType, typename NodeType>
+  Napi::Value NodeBase<ObjectType, NodeType>::NodeTypeGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::Number::New(env, static_cast<int>(node->nodeType));
+  }
+
+  template <typename ObjectType, typename NodeType>
+  Napi::Value NodeBase<ObjectType, NodeType>::NodeValueGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    // TODO: implement the getter
+    Napi::TypeError::New(env, "Failed to get 'nodeValue' property: not implemented").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename NodeType>
+  void NodeBase<ObjectType, NodeType>::NodeValueSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    // TODO: implement the setter
+    Napi::TypeError::New(env, "Failed to set 'nodeValue' property: not implemented").ThrowAsJavaScriptException();
+  }
+
+  template <typename ObjectType, typename NodeType>
+  Napi::Value NodeBase<ObjectType, NodeType>::BaseURIGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    return Napi::String::New(env, node->baseURI);
+  }
+
+  template <typename ObjectType, typename NodeType>
   Napi::Value NodeBase<ObjectType, NodeType>::IsConnectedGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -146,6 +223,67 @@ namespace dombinding
   }
 
   template <typename ObjectType, typename NodeType>
+  Napi::Value NodeBase<ObjectType, NodeType>::OwnerDocumentGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    auto ownerDocument = node->getOwnerDocumentReference();
+    if (ownerDocument != nullptr)
+      return Document::NewInstance(env, ownerDocument);
+    else
+      return env.Null();
+  }
+
+  template <typename ObjectType, typename NodeType>
+  Napi::Value NodeBase<ObjectType, NodeType>::ParentNodeGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    std::shared_ptr<dom::Node> parentNode = node->getParentNode();
+    if (parentNode != nullptr)
+      return Node::NewInstance(env, parentNode);
+    else
+      return env.Null();
+  }
+
+  template <typename ObjectType, typename NodeType>
+  Napi::Value NodeBase<ObjectType, NodeType>::ParentElementGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    std::shared_ptr<dom::Element> parentElement = node->getParentElement();
+    if (parentElement != nullptr)
+      return Element::NewInstance(env, parentElement);
+    else
+      return env.Null();
+  }
+
+  template <typename ObjectType, typename NodeType>
+  Napi::Value NodeBase<ObjectType, NodeType>::PreviousSiblingGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    // TODO: implement the getter
+    Napi::TypeError::New(env, "Failed to get 'previousSibling' property: not implemented")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename NodeType>
+  Napi::Value NodeBase<ObjectType, NodeType>::NextSiblingGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    // TODO: implement the getter
+    Napi::TypeError::New(env, "Failed to get 'nextSibling' property: not implemented")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename NodeType>
   Napi::Value NodeBase<ObjectType, NodeType>::TextContentGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
@@ -154,7 +292,23 @@ namespace dombinding
     if (node->nodeType == dom::NodeType::DOCUMENT_NODE || node->nodeType == dom::NodeType::DOCUMENT_TYPE_NODE)
       return env.Null();
     else
-      return Napi::String::New(env, node->getTextContent());
+      return Napi::String::New(env, node->textContent());
+  }
+
+  template <typename ObjectType, typename NodeType>
+  void NodeBase<ObjectType, NodeType>::TextContentSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (node->nodeType == dom::NodeType::DOCUMENT_NODE ||
+        node->nodeType == dom::NodeType::DOCUMENT_TYPE_NODE)
+      return;
+
+    else if (value.IsString())
+      node->textContent(value.As<Napi::String>());
+    else
+      node->textContent("");
   }
 
   template <typename ObjectType, typename NodeType>

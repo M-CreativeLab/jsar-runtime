@@ -1,8 +1,11 @@
 #pragma once
 
 #include <napi.h>
+
 #include "./document.hpp"
 #include "./text.hpp"
+#include "./node-inl.hpp"
+#include "./node_list-inl.hpp"
 
 namespace dombinding
 {

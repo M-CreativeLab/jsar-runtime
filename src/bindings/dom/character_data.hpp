@@ -12,10 +12,10 @@ namespace dombinding
   class CharacterDataBase : public NodeBase<ObjectType, NodeType>
   {
   public:
-    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties()
+    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties(Napi::Env env)
     {
       using T = CharacterDataBase<ObjectType, NodeType>;
-      auto props = NodeBase<ObjectType, NodeType>::GetClassProperties();
+      auto props = NodeBase<ObjectType, NodeType>::GetClassProperties(env);
       auto added = std::vector<Napi::ClassPropertyDescriptor<ObjectType>>(
           {
               T::InstanceAccessor("data", &T::DataGetter, &T::DataSetter),

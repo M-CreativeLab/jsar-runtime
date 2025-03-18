@@ -941,9 +941,11 @@ namespace dom
     v8::MaybeLocal<v8::Value> result = script->Run(context);
     if (result.IsEmpty())
     {
-      std::cerr << "#" << std::endl;
-      std::cerr << "# Failed to execute script" << std::endl;
-      std::cerr << "# URL: " << url << std::endl;
+      cerr << "#" << endl;
+      cerr << "# Failed to execute script" << endl;
+      cerr << "# URL: " << url << endl;
+      cerr << "#" << endl;
+
       if (tryCatch.HasCaught())
       {
         auto stackTrace = tryCatch.StackTrace(context).ToLocalChecked();

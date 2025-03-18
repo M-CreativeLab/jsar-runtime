@@ -8,8 +8,8 @@
 #include <client/dom/element.hpp>
 #include <client/dom/node_list.hpp>
 
-#include "./node-inl.hpp"
-#include "./node_list-inl.hpp"
+#include "./node.hpp"
+#include "./node_list.hpp"
 #include "./element.hpp"
 
 using namespace std;
@@ -20,9 +20,9 @@ namespace dombinding
   class DocumentBase : public NodeBase<ObjectType, DocumentType>
   {
   public:
-    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties()
+    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties(Napi::Env env)
     {
-      auto props = NodeBase<ObjectType, DocumentType>::GetClassProperties();
+      auto props = NodeBase<ObjectType, DocumentType>::GetClassProperties(env);
       auto documentProps = vector<Napi::ClassPropertyDescriptor<ObjectType>>(
           {
               // Properties
@@ -58,7 +58,7 @@ namespace dombinding
     static void Init(Napi::Env env, const std::string &name)
     {
       Napi::HandleScope scope(env);
-      auto props = GetClassProperties();
+      auto props = GetClassProperties(env);
       Napi::Function func = ObjectType::DefineClass(env, name.c_str(), props);
       ObjectType::constructor = new Napi::FunctionReference();
       *ObjectType::constructor = Napi::Persistent(func);
@@ -141,6 +141,7 @@ namespace dombinding
   public:
     static void Init(Napi::Env env, Napi::Object exports);
     static Document *GetCurrent(Napi::Env env);
+    static Napi::Value NewInstance(Napi::Env env, shared_ptr<dom::Node> node);
 
   public:
     Document(const Napi::CallbackInfo &info);

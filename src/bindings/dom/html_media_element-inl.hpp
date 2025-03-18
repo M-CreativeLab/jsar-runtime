@@ -6,10 +6,10 @@
 namespace dombinding
 {
   template <typename ObjectType, typename HTMLMediaElementType>
-  vector<Napi::ClassPropertyDescriptor<ObjectType>> HTMLMediaElementBase<ObjectType, HTMLMediaElementType>::GetClassProperties()
+  vector<Napi::ClassPropertyDescriptor<ObjectType>> HTMLMediaElementBase<ObjectType, HTMLMediaElementType>::GetClassProperties(Napi::Env env)
   {
     using T = HTMLMediaElementBase<ObjectType, HTMLMediaElementType>;
-    auto props = HTMLElementBase<ObjectType, HTMLMediaElementType>::GetClassProperties();
+    auto props = HTMLElementBase<ObjectType, HTMLMediaElementType>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<ObjectType>>(
         {
             T::InstanceAccessor("autoplay", &T::AutoPlayGetter, &T::AutoPlaySetter),

@@ -13,7 +13,7 @@ namespace dombinding
   thread_local FunctionReference *Element::constructor;
   void Element::Init(Napi::Env env)
   {
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     Napi::Function func = DefineClass(env, "Element", props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);

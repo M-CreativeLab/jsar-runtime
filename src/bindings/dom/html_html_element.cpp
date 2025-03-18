@@ -6,7 +6,7 @@ namespace dombinding
   thread_local Napi::FunctionReference *HTMLHtmlElement::constructor;
   void HTMLHtmlElement::Init(Napi::Env env)
   {
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     Napi::Function func = DefineClass(env, "HTMLHtmlElement", props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);

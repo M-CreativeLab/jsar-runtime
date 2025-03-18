@@ -6,7 +6,7 @@ namespace dombinding
   void CharacterData::Init(Napi::Env env)
   {
 #define MODULE_NAME "CharacterData"
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     Napi::Function func = DefineClass(env, MODULE_NAME, props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);

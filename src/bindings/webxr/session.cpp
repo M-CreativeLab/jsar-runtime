@@ -24,7 +24,7 @@ namespace bindings
   void XRSession::Init(Napi::Env env)
   {
 #define MODULE_NAME "XRSession"
-    auto props = dombinding::EventTargetWrap<XRSession, client_xr::XRSession>::GetClassProperties();
+    auto props = dombinding::EventTargetWrap<XRSession, client_xr::XRSession>::GetClassProperties(env);
     auto added = vector<ClassPropertyDescriptor<XRSession>>(
         {InstanceAccessor("inputSources", &XRSession::InputSourcesGetter, nullptr, napi_default_jsproperty),
          InstanceAccessor("renderState", &XRSession::RenderStateGetter, nullptr, napi_default_jsproperty),

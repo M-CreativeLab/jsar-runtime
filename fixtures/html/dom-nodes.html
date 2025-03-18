@@ -1,0 +1,44 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Nodes</title>
+</head>
+
+<body>
+</body>
+
+<script>
+  console.info('Node()', typeof Node);
+  console.info('Node.ATTRIBUTE_NODE', Node.ATTRIBUTE_NODE, Node.prototype.ATTRIBUTE_NODE);
+  console.info('Node.ELEMENT_NODE', Node.ELEMENT_NODE, Node.prototype.ELEMENT_NODE);
+  console.info('Node.TEXT_NODE', Node.TEXT_NODE);
+  console.info('Node.COMMENT_NODE', Node.COMMENT_NODE);
+  console.info('Node.DOCUMENT_NODE', Node.DOCUMENT_NODE);
+  console.info('Node.DOCUMENT_TYPE_NODE', Node.DOCUMENT_TYPE_NODE);
+  console.info('Node.DOCUMENT_FRAGMENT_NODE', Node.DOCUMENT_FRAGMENT_NODE);
+
+  console.info(Node.prototype);
+  console.info(Object.getOwnPropertyDescriptors(Node.prototype));
+
+  function assertProperty(obj, prop) {
+    const descriptor = Object.getOwnPropertyDescriptor(obj, prop);
+    console.info(`[${descriptor == undefined ? 'fail' : 'pass'}] "${prop}":`, descriptor);
+  }
+  assertProperty(Node.prototype, 'baseURI');
+  assertProperty(Node.prototype, 'childNodes');
+  assertProperty(Node.prototype, 'firstChild');
+  assertProperty(Node.prototype, 'isConnected');
+  assertProperty(Node.prototype, 'lastChild');
+  assertProperty(Node.prototype, 'nextSibling');
+  assertProperty(Node.prototype, 'nodeName');
+  assertProperty(Node.prototype, 'nodeType');
+  assertProperty(Node.prototype, 'nodeValue');
+  assertProperty(Node.prototype, 'ownerDocument');
+  assertProperty(Node.prototype, 'parentNode');
+  assertProperty(Node.prototype, 'parentElement');
+  assertProperty(Node.prototype, 'previousSibling');
+  assertProperty(Node.prototype, 'textContent');
+</script>
+
+</html>

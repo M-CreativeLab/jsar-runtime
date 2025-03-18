@@ -11,7 +11,7 @@ namespace dombinding
     using HTMLMediaElementBase::HTMLMediaElementBase;
 
   public:
-    static vector<Napi::ClassPropertyDescriptor<HTMLVideoElement>> GetClassProperties();
+    static vector<Napi::ClassPropertyDescriptor<HTMLVideoElement>> GetClassProperties(Napi::Env env);
     static void Init(Napi::Env env);
 
   public:

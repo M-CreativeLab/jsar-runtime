@@ -137,6 +137,18 @@ namespace dom
     }
   }
 
+  shared_ptr<Element> Node::getParentElement() const
+  {
+    shared_ptr<Node> parentNode = getParentNode();
+    if (parentNode == nullptr)
+      return nullptr;
+
+    if (Node::Is<Element>(parentNode))
+      return Node::As<Element>(parentNode);
+    else
+      return nullptr;
+  }
+
   NodeList<const Node> Node::getAncestors(bool inclusiveSelf, function<bool(const Node &)> ancestorsFilter) const
   {
     NodeList<const Node> ancestors;

@@ -1,14 +1,15 @@
 #pragma once
 
 #include "./element.hpp"
+#include "./node-inl.hpp"
 
 namespace dombinding
 {
   template <typename ObjectType, typename ElementType>
-  std::vector<Napi::ClassPropertyDescriptor<ObjectType>> ElementBase<ObjectType, ElementType>::GetClassProperties()
+  std::vector<Napi::ClassPropertyDescriptor<ObjectType>> ElementBase<ObjectType, ElementType>::GetClassProperties(Napi::Env env)
   {
     using T = ElementBase<ObjectType, ElementType>;
-    auto props = NodeBase<ObjectType, ElementType>::GetClassProperties();
+    auto props = NodeBase<ObjectType, ElementType>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<ObjectType>>(
         {
             T::InstanceAccessor("className", &T::ClassNameGetter, &T::ClassNameSetter),

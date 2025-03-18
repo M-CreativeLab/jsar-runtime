@@ -9,7 +9,7 @@ namespace dombinding
   void Text::Init(Napi::Env env)
   {
 #define MODULE_NAME "Text"
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     Napi::Function func = DefineClass(env, MODULE_NAME, props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
@@ -17,9 +17,9 @@ namespace dombinding
 #undef MODULE_NAME
   }
 
-  vector<Napi::ClassPropertyDescriptor<Text>> Text::GetClassProperties()
+  vector<Napi::ClassPropertyDescriptor<Text>> Text::GetClassProperties(Napi::Env env)
   {
-    auto props = NodeBase<Text, dom::Text>::GetClassProperties();
+    auto props = NodeBase<Text, dom::Text>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<Text>>(
         {
             InstanceAccessor("assignedSlot", &Text::AssignedSlotGetter, nullptr),

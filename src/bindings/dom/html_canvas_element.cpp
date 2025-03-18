@@ -3,10 +3,10 @@
 
 namespace dombinding
 {
-  vector<Napi::ClassPropertyDescriptor<HTMLCanvasElement>> HTMLCanvasElement::GetClassProperties()
+  vector<Napi::ClassPropertyDescriptor<HTMLCanvasElement>> HTMLCanvasElement::GetClassProperties(Napi::Env env)
   {
     using T = HTMLCanvasElement;
-    auto props = HTMLElementBase<HTMLCanvasElement, dom::HTMLCanvasElement>::GetClassProperties();
+    auto props = HTMLElementBase<HTMLCanvasElement, dom::HTMLCanvasElement>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<HTMLCanvasElement>>(
         {
             T::InstanceAccessor("width", &T::WidthGetter, &T::WidthSetter),
@@ -21,7 +21,7 @@ namespace dombinding
   thread_local Napi::FunctionReference *HTMLCanvasElement::constructor;
   void HTMLCanvasElement::Init(Napi::Env env)
   {
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     Napi::Function func = DefineClass(env, "HTMLCanvasElement", props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);

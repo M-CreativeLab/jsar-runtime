@@ -3,7 +3,7 @@
 #include <memory>
 #include <napi.h>
 #include <client/dom/element.hpp>
-#include "./node-inl.hpp"
+#include "./node.hpp"
 
 namespace dombinding
 {
@@ -11,7 +11,7 @@ namespace dombinding
   class ElementBase : public NodeBase<ObjectType, ElementType>
   {
   public:
-    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties();
+    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties(Napi::Env env);
 
   public:
     ElementBase(const Napi::CallbackInfo &info) : NodeBase<ObjectType, ElementType>(info)

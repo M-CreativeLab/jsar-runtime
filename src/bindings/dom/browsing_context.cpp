@@ -7,7 +7,7 @@ namespace dombinding
   thread_local Napi::FunctionReference *BrowsingContext::constructor;
   void BrowsingContext::Init(Napi::Env env, Napi::Object exports)
   {
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     {
       auto newProps = vector<Napi::ClassPropertyDescriptor<BrowsingContext>>({
           InstanceMethod("start", &BrowsingContext::Start),

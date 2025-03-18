@@ -166,6 +166,13 @@ namespace dom
      */
     inline std::shared_ptr<Node> getParentNode() const { return parentNode.lock(); }
     /**
+     * Get the parent `Element` node of the current node, if the node has no parent, or if that parent is not an
+     * `Element`, this property returns `null`.
+     * 
+     * @returns The parent `Element` node or `null`.
+     */
+    std::shared_ptr<Element> getParentElement() const;
+    /**
      * Get the ancestors of the current node.
      *
      * @param inclusiveSelf If true, the current node will be included in the ancestors.

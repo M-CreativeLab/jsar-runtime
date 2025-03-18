@@ -2,7 +2,7 @@
 
 #include "./mutation_observer.hpp"
 #include "./mutation_record.hpp"
-#include "./node.hpp"
+#include "./node-inl.hpp"
 
 namespace dombinding
 {
