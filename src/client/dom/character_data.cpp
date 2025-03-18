@@ -58,11 +58,6 @@ namespace dom
   {
   }
 
-  const size_t CharacterData::length() const
-  {
-    return data_.length();
-  }
-
   shared_ptr<Element> CharacterData::nextElementSibling()
   {
     return nullptr;

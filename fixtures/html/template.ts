@@ -11,7 +11,7 @@ setTimeout(() => {
   const container = document.querySelector('#container');
   const header = template(`
     <main>
-      <h1>Header</h1>
+      <h1 class="header">Header</h1>
       <p>Some text</p>
       <!>
     </main>

@@ -336,8 +336,9 @@ namespace builtin_scene::web_renderer
     paragraphBuilder->addText(text.c_str(), text.size());
     paragraphBuilder->pop();
 
+    auto layoutWidth = round(getLayoutWidthForText(content)) + 1.0f;
     auto paragraph = paragraphBuilder->Build();
-    paragraph->layout(getLayoutWidthForText(content));
+    paragraph->layout(layoutWidth);
     paragraph->paint(content.canvas(), 0.0f, 0.0f);
     content.setTextureUsing(true);
   }
