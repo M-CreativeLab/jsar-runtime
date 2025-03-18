@@ -333,6 +333,8 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(HTMLIFrameElement);
         V8_SET_GLOBAL_FROM_MAIN(HTMLImageElement);
         V8_SET_GLOBAL_FROM_MAIN(HTMLInputElement);
+        V8_SET_GLOBAL_FROM_MAIN(CharacterData);
+        V8_SET_GLOBAL_FROM_MAIN(Text);
 
         // DOM APIs
         V8_SET_GLOBAL_FROM_MAIN(MutationRecord);
