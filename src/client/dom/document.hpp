@@ -94,6 +94,8 @@ namespace dom
 
   private:
     void openInternal();
+    // Fix the source string to replace invalid tags.
+    std::string &fixSource(std::string &source);
 
   public:
     DocumentCompatMode compatMode = DocumentCompatMode::NO_QUIRKS;
@@ -142,7 +144,7 @@ namespace dom
      */
     inline std::shared_ptr<Element> documentElement() const { return firstElementChild(); }
     /**
-     * The `Document.firstElementChild` read-only property returns the document's first child Element, or `null` if 
+     * The `Document.firstElementChild` read-only property returns the document's first child Element, or `null` if
      * there are no child elements.
      */
     inline std::shared_ptr<Element> firstElementChild() const

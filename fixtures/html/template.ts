@@ -13,6 +13,7 @@ setTimeout(() => {
     <main>
       <h1>Header</h1>
       <p>Some text</p>
+      <!>
     </main>
   `);
   container?.appendChild(header());

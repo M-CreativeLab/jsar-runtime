@@ -83,7 +83,11 @@ namespace dom
 
   void Document::setSource(const string &source)
   {
-    auto r = docInternal->load_string(source.c_str());
+    string inputText(source);
+    if (documentType == DocumentType::kHTML)
+      fixSource(inputText); // Fix the source string if it's an HTML document.
+
+    auto r = docInternal->load_string(inputText.c_str());
     if (r.status != pugi::xml_parse_status::status_ok)
       throw runtime_error("Failed to parse XML document: " + std::string(r.description()));
 
@@ -167,9 +171,9 @@ namespace dom
     return elements;
   }
 
-  std::vector<shared_ptr<Element>> Document::getElementsByName(const string &name)
+  vector<shared_ptr<Element>> Document::getElementsByName(const string &name)
   {
-    std::vector<shared_ptr<Element>> elements;
+    vector<shared_ptr<Element>> elements;
     for (auto element : allElementsList)
     {
       if (element->hasAttribute("name"))
@@ -182,9 +186,9 @@ namespace dom
     return elements;
   }
 
-  std::vector<shared_ptr<Element>> Document::getElementsByTagName(const string &tagName)
+  vector<shared_ptr<Element>> Document::getElementsByTagName(const string &tagName)
   {
-    std::vector<shared_ptr<Element>> elements;
+    vector<shared_ptr<Element>> elements;
     for (auto element : allElementsList)
     {
       if (element->is(tagName))
@@ -245,6 +249,20 @@ namespace dom
       connect();
       load();
     }
+  }
+
+  string &Document::fixSource(string &source)
+  {
+    string invalidComment = "<!>";
+    string defaultComment = "<!---->"; // replace the invalid comment with the default comment.
+
+    size_t pos = 0;
+    while ((pos = source.find(invalidComment, pos)) != std::string::npos)
+    {
+      source.replace(pos, invalidComment.size(), defaultComment);
+      pos += defaultComment.length();
+    }
+    return source;
   }
 
   string XMLDocument::SerializeFragment(const shared_ptr<Node> node, bool wellFormed)
