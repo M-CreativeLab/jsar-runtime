@@ -27,7 +27,10 @@ namespace dombinding
     EscapableHandleScope scope(env);
     shared_ptr<ElementType> typedElement = dynamic_pointer_cast<ElementType>(element);
     if (typedElement == nullptr)
-      throw runtime_error("Invalid element type");
+    {
+      const type_info &elementType = typeid(ElementType);
+      throw runtime_error("Invalid element type: " + string(elementType.name()));
+    }
 
     Value value = NodeBase<ObjectType, ElementType>::FromImpl(env, typedElement);
     return scope.Escape(value).ToObject();
@@ -53,8 +56,9 @@ namespace dombinding
 
   Object Element::NewInstance(Napi::Env env, shared_ptr<dom::Node> elementNode)
   {
-    assert(elementNode->nodeType == dom::NodeType::ELEMENT_NODE);
+    assert(elementNode->nodeType == dom::NodeType::ELEMENT_NODE && "The node type must be ELEMENT_NODE");
     auto element = dynamic_pointer_cast<dom::Element>(elementNode);
+    assert(element != nullptr && "The `ELEMENT_NODE` type must be an `Element` node");
 
 #define XX(tagNameStr, className)                                 \
   if (element->is(tagNameStr))                                    \

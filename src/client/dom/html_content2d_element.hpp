@@ -10,8 +10,14 @@ namespace dom
 {
   class HTMLContent2dElement : public HTMLPlaneElement
   {
-  public:
     using HTMLPlaneElement::HTMLPlaneElement;
+
+  public:
+    HTMLContent2dElement(const HTMLContent2dElement &other)
+        : HTMLPlaneElement(other),
+          content2d_(nullptr) // ignore the content2d_ from the other
+    {
+    }
 
   public:
     void createdCallback() override;

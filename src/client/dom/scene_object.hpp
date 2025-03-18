@@ -26,7 +26,7 @@ namespace dom
 
   public:
     SceneObject(std::shared_ptr<HTMLDocument> htmlDocument, std::string name);
-    SceneObject(SceneObject &that);
+    SceneObject(const SceneObject &that);
     virtual ~SceneObject() = default;
 
   public:

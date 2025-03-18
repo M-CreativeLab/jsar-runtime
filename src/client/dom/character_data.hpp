@@ -12,12 +12,12 @@ namespace dom
   {
   public:
     CharacterData(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
-    CharacterData(CharacterData &other);
+    CharacterData(const CharacterData &other);
     ~CharacterData() = default;
 
   public:
-    std::string &data();
-    const size_t length() const;
+    std::string &data() { return data_; }
+    const size_t length() const { return data_.length(); }
     std::shared_ptr<Element> nextElementSibling();
     std::shared_ptr<Element> previousElementSibling();
 

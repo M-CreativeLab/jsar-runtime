@@ -10,6 +10,11 @@ namespace dom
   {
   }
 
+  DocumentFragment::DocumentFragment(const DocumentFragment &other)
+      : Node(other)
+  {
+  }
+
   size_t DocumentFragment::childElementCount() const
   {
     size_t count = 0;

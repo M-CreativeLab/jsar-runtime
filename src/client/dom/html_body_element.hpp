@@ -7,7 +7,6 @@ namespace dom
 {
   class HTMLBodyElement final : public HTMLContent2dElement
   {
-  public:
     using HTMLContent2dElement::HTMLContent2dElement;
 
   public:

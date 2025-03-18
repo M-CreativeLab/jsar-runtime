@@ -62,6 +62,19 @@ namespace dom
     updateFieldsFromDocument(ownerDocument);
   }
 
+  Node::Node(const Node &other)
+      : DOMEventTarget(),
+        uid(NodeIdGenerator.get()),
+        internal(other.internal),
+        baseURI(other.baseURI),
+        connected(false),
+        nodeName(other.nodeName),
+        nodeType(other.nodeType),
+        ownerDocument(other.ownerDocument),
+        renderable(other.renderable)
+  {
+  }
+
   shared_ptr<Node> Node::appendChild(shared_ptr<Node> aChild)
   {
     if (aChild == nullptr)
@@ -130,6 +143,32 @@ namespace dom
   {
     removeChildren();
     appendChild(newChild);
+  }
+
+  std::shared_ptr<Node> Node::cloneNode(bool deep)
+  {
+    if (nodeType == NodeType::DOCUMENT_NODE)
+      return nullptr;
+
+    std::shared_ptr<dom::Node> cloned = nullptr;
+    // TODO: support the other node types
+    if (nodeType == NodeType::ELEMENT_NODE)
+      cloned = Element::CloneElement(shared_from_this());
+    else if (nodeType == NodeType::TEXT_NODE)
+      cloned = Text::CloneText(shared_from_this());
+    else
+      cloned = make_shared<Node>(*this);
+
+    // Each branch should have the cloned node
+    assert(cloned != nullptr && "Failed to clone the node.");
+
+    // Clone the children if deep is true
+    if (deep)
+    {
+      for (auto child : childNodes)
+        cloned->appendChild(child->cloneNode(true));
+    }
+    return cloned;
   }
 
   shared_ptr<Element> Node::getParentElement() const

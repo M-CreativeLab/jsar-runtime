@@ -50,6 +50,25 @@ namespace dom
     return dynamic_pointer_cast<Element>(element);
   }
 
+  shared_ptr<Node> Element::CloneElement(shared_ptr<Node> srcNode)
+  {
+    auto srcElement = dynamic_pointer_cast<Element>(srcNode);
+    assert(srcElement != nullptr && "The source node is not an element.");
+
+#define XX(TAGNAME_STR, CLASS_NAME)                                                        \
+  if (srcElement->is(TAGNAME_STR))                                                         \
+  {                                                                                        \
+    shared_ptr<CLASS_NAME> typedSrcElement = dynamic_pointer_cast<CLASS_NAME>(srcElement); \
+    assert(typedSrcElement != nullptr && "The source element is not the specific type.");  \
+    return make_shared<CLASS_NAME>(*typedSrcElement);                                      \
+  }
+    TYPED_ELEMENT_MAP(XX)
+#undef XX
+
+    // Return null if the source element is not a specific type.
+    return nullptr;
+  }
+
   Element::Element(string tagName, optional<shared_ptr<Document>> ownerDocument)
       : Node(NodeType::ELEMENT_NODE, tagName, ownerDocument),
         tagName(ToUpperCase(tagName))
@@ -61,7 +80,7 @@ namespace dom
   {
   }
 
-  Element::Element(Element &other)
+  Element::Element(const Element &other)
       : Node(other),
         id(other.id),
         namespaceURI(other.namespaceURI),

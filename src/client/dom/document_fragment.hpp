@@ -11,6 +11,7 @@ namespace dom
   {
   public:
     DocumentFragment(std::shared_ptr<Document> ownerDocument);
+    DocumentFragment(const DocumentFragment &other);
     ~DocumentFragment() = default;
 
   public:

@@ -25,6 +25,24 @@ namespace dom
     return textNode;
   }
 
+  std::shared_ptr<Text> Text::CreateText(pugi::xml_node node, shared_ptr<Document> ownerDocument)
+  {
+    return make_shared<Text>(node, ownerDocument);
+  }
+
+  std::shared_ptr<Node> Text::CloneText(shared_ptr<Node> srcText)
+  {
+    auto textNode = dynamic_pointer_cast<Text>(srcText);
+    if (textNode != nullptr)
+      return make_shared<Text>(*textNode);
+
+    auto characterDataNode = dynamic_pointer_cast<CharacterData>(srcText);
+    if (characterDataNode != nullptr)
+      return make_shared<CharacterData>(*characterDataNode);
+
+    return nullptr;
+  }
+
   Text::Text(xml_node node, shared_ptr<Document> ownerDocument)
       : CharacterData(node, ownerDocument),
         SceneObject(getOwnerDocumentReferenceAs<HTMLDocument>(false), nodeName),
@@ -47,10 +65,9 @@ namespace dom
   {
   }
 
-  Text::Text(Text &other)
+  Text::Text(const Text &other)
       : CharacterData(other),
         SceneObject(other),
-        content2d_(std::move(other.content2d_)),
         style_(other.style_)
   {
   }

@@ -100,12 +100,25 @@ namespace dom
   public:
     /**
      * Create an empty `Node` object.
+     * 
+     * @param nodeType The type of the node.
+     * @param nodeName The name of the node.
+     * @param ownerDocument The owner document of the node.
      */
     Node(NodeType nodeType, std::string nodeName, std::optional<std::shared_ptr<Document>> ownerDocument);
     /**
      * Create a new `Node` object from a `pugi::xml_node`.
+     * 
+     * @param node The `pugi::xml_node` object to create the node.
+     * @param ownerDocument The owner document of the node.
      */
     Node(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
+    /**
+     * Copy constructor to use for cloning the node.
+     * 
+     * @param other The node to copy.
+     */
+    Node(const Node &other);
     virtual ~Node() = default;
 
   public:
@@ -141,6 +154,12 @@ namespace dom
      * @param newChild The new child node to replace.
      */
     void replaceAll(std::shared_ptr<Node> newChild);
+    /**
+     * Clone the current node.
+     * 
+     * @returns a duplicate of the node on which this method was called.
+     */
+    std::shared_ptr<Node> cloneNode(bool deep);
     /**
      * Get the child nodes of the current node.
      *

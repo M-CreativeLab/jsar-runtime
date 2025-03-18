@@ -26,7 +26,7 @@ namespace dom
   {
   }
 
-  HTMLPlaneElement::HTMLPlaneElement(HTMLPlaneElement &that)
+  HTMLPlaneElement::HTMLPlaneElement(const HTMLPlaneElement &that)
       : HTMLElement(that),
         SceneObject(that)
   {

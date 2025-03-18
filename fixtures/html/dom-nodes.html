@@ -6,6 +6,7 @@
 </head>
 
 <body>
+  <div id="foo"></div>
 </body>
 
 <script>
@@ -39,6 +40,10 @@
   assertProperty(Node.prototype, 'parentElement');
   assertProperty(Node.prototype, 'previousSibling');
   assertProperty(Node.prototype, 'textContent');
+
+  const foo = document.getElementById('foo');
+  console.info('foo:', foo);
+  console.info('cloneNode:', foo.cloneNode());
 </script>
 
 </html>

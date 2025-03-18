@@ -14,7 +14,7 @@ namespace dom
     HTMLPlaneElement(std::shared_ptr<Document> ownerDocument);
     HTMLPlaneElement(std::string tagName, std::shared_ptr<Document> ownerDocument);
     HTMLPlaneElement(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
-    HTMLPlaneElement(HTMLPlaneElement &that);
+    HTMLPlaneElement(const HTMLPlaneElement &that);
 
   public:
     void connectedCallback() override;

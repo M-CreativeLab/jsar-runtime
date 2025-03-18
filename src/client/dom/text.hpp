@@ -12,6 +12,7 @@
 
 namespace dom
 {
+  class Node;
   class Element;
   class Document;
 
@@ -28,17 +29,20 @@ namespace dom
      * @param ownerDocument The owner document.
      * @returns The created text node.
      */
-    inline static std::shared_ptr<Text> CreateText(pugi::xml_node node,
-                                                   std::shared_ptr<Document> ownerDocument)
-    {
-      return std::make_shared<Text>(node, ownerDocument);
-    }
+    static std::shared_ptr<Text> CreateText(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
+    /**
+     * Clone the text node.
+     * 
+     * @param srcText The source text node to clone.
+     * @returns The cloned text node.
+     */
+    static std::shared_ptr<Node> CloneText(shared_ptr<Node> srcText);
 
   public:
     Text(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
     Text(std::shared_ptr<Document> ownerDocument);
     Text(const std::string value, std::shared_ptr<Document> ownerDocument);
-    Text(Text &other);
+    Text(const Text &other);
     ~Text() = default;
 
   public:

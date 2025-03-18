@@ -43,27 +43,38 @@ namespace dom
   {
   public:
     /**
-     * Create a new `Element` object from a `pugi::xml_node`, which is used to create and initialize an element from the XML parser.
+     * Create a new `Element` object from a `pugi::xml_node`, which is used to create and initialize an element from the
+     *  XML parser.
      *
      * @param node The `pugi::xml_node` object.
      * @param ownerDocument The owner document of the element.
      * @returns The created `Element` object.
      */
-    static shared_ptr<Element> CreateElement(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
+    static std::shared_ptr<Element> CreateElement(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
 
     /**
-     * Create a new `Element` object from a tag name, which is used to create an element from scripts such as: `document.createElement('div')`.
+     * Create a new `Element` object from a tag name, which is used to create an element from scripts such as:
+     * `document.createElement('div')`.
      *
      * @param tagName The tag name of the element.
      * @param ownerDocument The owner document of the element.
      * @returns The created `Element` object.
      */
-    static shared_ptr<Element> CreateElement(std::string namespaceURI, std::string tagName, std::shared_ptr<Document> ownerDocument);
+    static std::shared_ptr<Element> CreateElement(std::string namespaceURI, std::string tagName,
+                                                  std::shared_ptr<Document> ownerDocument);
+
+    /**
+     * Clone the given element and return a new element with the same properties.
+     *
+     * @param srcElement The element to clone.
+     * @returns The cloned element in `std::shared_ptr<Node>`.
+     */
+    static std::shared_ptr<Node> CloneElement(std::shared_ptr<Node> srcElement);
 
   public:
     Element(std::string tagName, std::optional<std::shared_ptr<Document>> ownerDocument);
     Element(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
-    Element(Element &other);
+    Element(const Element &other);
     ~Element() = default;
 
   public:

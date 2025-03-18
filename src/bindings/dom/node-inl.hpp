@@ -397,7 +397,14 @@ namespace dombinding
   Napi::Value NodeBase<ObjectType, NodeType>::CloneNode(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
-    return env.Undefined();
+    Napi::HandleScope scope(env);
+
+    bool deep = false;
+    if (info.Length() >= 1 && info[0].IsBoolean())
+      deep = info[0].As<Napi::Boolean>();
+    
+    auto clonedNode = node->cloneNode(deep);
+    return Node::NewInstance(env, clonedNode);
   }
 
   template <typename ObjectType, typename NodeType>

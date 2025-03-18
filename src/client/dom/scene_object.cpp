@@ -25,11 +25,11 @@ namespace dom
     defaultStyle_.setProperty("height", "auto");
   }
 
-  SceneObject::SceneObject(SceneObject &that)
+  SceneObject::SceneObject(const SceneObject &that)
       : scene_(that.scene_),
-        entity_(that.entity_),
-        layoutAllocator_(that.layoutAllocator_),
-        layoutNode_(that.layoutNode_),
+        entity_(nullopt),
+        layoutAllocator_(nullptr),
+        layoutNode_(nullptr),
         adoptedStyle_(that.adoptedStyle_),
         defaultStyle_(that.defaultStyle_),
         name_(that.name_)

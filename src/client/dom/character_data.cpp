@@ -50,14 +50,12 @@ namespace dom
       throw invalid_argument("The node type is not a character data node.");
   }
 
-  CharacterData::CharacterData(CharacterData &other)
-      : Node(other), data_(other.data_)
+  CharacterData::CharacterData(const CharacterData &other)
+      : Node(other),
+        data_(other.data_),
+        nextElementSibling_(other.nextElementSibling_),
+        previousElementSibling_(other.previousElementSibling_)
   {
-  }
-
-  string &CharacterData::data()
-  {
-    return data_;
   }
 
   const size_t CharacterData::length() const
