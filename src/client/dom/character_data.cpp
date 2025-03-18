@@ -8,6 +8,9 @@ namespace dom
 
   string replaceAll(const string &str, const string &from, const string &to)
   {
+    if (str.empty() || str.size() < from.size())
+      return str;
+
     string result = str;
     size_t start_pos = 0;
     while ((start_pos = result.find(from, start_pos)) != string::npos)
@@ -18,9 +21,12 @@ namespace dom
     return result;
   }
 
-  string processTextContent(const string &text)
+  string processTextContent(const char *text)
   {
-    string result = text;
+    if (text == nullptr || strlen(text) == 0)
+      return "";
+
+    string result(text);
     // Remove the new line characters
     result = replaceAll(result, "\n", "");
     result = replaceAll(result, "\r", "");

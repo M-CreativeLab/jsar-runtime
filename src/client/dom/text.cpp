@@ -20,7 +20,7 @@ namespace dom
   xml_node createTextNode(shared_ptr<xml_document> doc, const string &value = "")
   {
     xml_node textNode(node_pcdata, doc.get());
-    if (value != "" && !textNode.set_value(value.c_str()))
+    if (!textNode.set_value(value.c_str()))
       return xml_node();
     return textNode;
   }
