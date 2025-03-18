@@ -307,6 +307,8 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(Worker);
 
         // DOM nodes
+        V8_SET_GLOBAL_FROM_MAIN(Node);
+        V8_SET_GLOBAL_FROM_MAIN(Element);
         V8_SET_GLOBAL_FROM_MAIN(HTMLAnchorElement);
         V8_SET_GLOBAL_FROM_MAIN(HTMLAreaElement);
         V8_SET_GLOBAL_FROM_MAIN(HTMLAudioElement);
