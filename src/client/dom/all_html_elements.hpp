@@ -11,6 +11,7 @@
 #include "./html_meta_element.hpp"
 #include "./html_paragraph_element.hpp"
 #include "./html_script_element.hpp"
+#include "./html_section_element.hpp"
 #include "./html_span_element.hpp"
 #include "./html_style_element.hpp"
 #include "./html_template_element.hpp"

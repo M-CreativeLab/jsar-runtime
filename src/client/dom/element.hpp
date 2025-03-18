@@ -28,6 +28,10 @@
   XX("span", HTMLSpanElement)         \
   XX("style", HTMLStyleElement)       \
   XX("template", HTMLTemplateElement) \
+  XX("main", HTMLSectionElement)      \
+  XX("section", HTMLSectionElement)   \
+  XX("header", HTMLSectionElement)    \
+  XX("footer", HTMLSectionElement)    \
   XX("video", HTMLVideoElement)
 
 namespace dom

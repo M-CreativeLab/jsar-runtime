@@ -10,8 +10,10 @@ function template(htmlText: string) {
 setTimeout(() => {
   const container = document.querySelector('#container');
   const header = template(`
-    <h1>Header</h1>
-    <p>Some text</p>  
+    <main>
+      <h1>Header</h1>
+      <p>Some text</p>
+    </main>
   `);
   container?.appendChild(header());
 }, 1000);
