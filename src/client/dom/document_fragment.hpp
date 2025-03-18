@@ -12,5 +12,8 @@ namespace dom
   public:
     DocumentFragment(std::shared_ptr<Document> ownerDocument);
     ~DocumentFragment() = default;
+
+  public:
+    size_t childElementCount() const;
   };
 }

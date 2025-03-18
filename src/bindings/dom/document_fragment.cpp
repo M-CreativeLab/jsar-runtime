@@ -45,9 +45,7 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    Napi::TypeError::New(env, "Failed to get 'childElementCount' property: not implemented")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
+    return Napi::Number::New(env, this->node->childElementCount());
   }
 
   Napi::Value DocumentFragment::ChildrenGetter(const Napi::CallbackInfo &info)

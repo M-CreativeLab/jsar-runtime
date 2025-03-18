@@ -309,6 +309,7 @@ namespace dom
         // DOM nodes
         V8_SET_GLOBAL_FROM_MAIN(Node);
         V8_SET_GLOBAL_FROM_MAIN(Element);
+        V8_SET_GLOBAL_FROM_MAIN(DocumentFragment);
         V8_SET_GLOBAL_FROM_MAIN(HTMLAnchorElement);
         V8_SET_GLOBAL_FROM_MAIN(HTMLAreaElement);
         V8_SET_GLOBAL_FROM_MAIN(HTMLAudioElement);
@@ -333,6 +334,8 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(HTMLIFrameElement);
         V8_SET_GLOBAL_FROM_MAIN(HTMLImageElement);
         V8_SET_GLOBAL_FROM_MAIN(HTMLInputElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLStyleElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLTemplateElement);
         V8_SET_GLOBAL_FROM_MAIN(CharacterData);
         V8_SET_GLOBAL_FROM_MAIN(Text);
 
