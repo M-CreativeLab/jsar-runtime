@@ -16,6 +16,7 @@
 #include "./text.hpp"
 #include "./html_head_element.hpp"
 #include "./html_body_element.hpp"
+#include "./document_fragment.hpp"
 
 namespace dom
 {
@@ -79,6 +80,7 @@ namespace dom
     void setUrl(const string &url);
     void setSource(const string &source);
     void open();
+    std::shared_ptr<DocumentFragment> createDocumentFragment();
     std::shared_ptr<Text> createTextNode(const std::string &data);
     std::shared_ptr<Element> getElementById(const std::string &id);
     std::vector<shared_ptr<Element>> getElementsByClassName(const std::string &className);

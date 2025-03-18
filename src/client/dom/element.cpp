@@ -243,9 +243,21 @@ namespace dom
 
   void Element::setInnerHTML(const string &markup)
   {
-    auto fragment = dom::ParseFragment(getPtr<Element>(), markup);
+    auto self = getPtr<Element>();
+    auto fragment = dom::ParseFragment(self, markup);
     if (fragment != nullptr)
-      replaceAll(fragment);
+    {
+      if (Node::Is<HTMLTemplateElement>(self))
+      {
+        auto &templateElement = Node::AsChecked<HTMLTemplateElement>(self);
+        auto contents = templateElement.getContent();
+        contents->replaceAll(fragment);
+      }
+      else
+      {
+        replaceAll(fragment);
+      }
+    }
   }
 
   string Element::getOuterHTML()

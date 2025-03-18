@@ -3,10 +3,10 @@
 #include <memory>
 
 #include "./node.hpp"
-#include "./document.hpp"
 
 namespace dom
 {
+  class Document;
   class DocumentFragment : public Node
   {
   public:

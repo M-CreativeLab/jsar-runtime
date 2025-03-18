@@ -13,4 +13,5 @@
 #include "./html_script_element.hpp"
 #include "./html_span_element.hpp"
 #include "./html_style_element.hpp"
+#include "./html_template_element.hpp"
 #include "./html_video_element.hpp"

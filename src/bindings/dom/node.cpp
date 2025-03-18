@@ -2,6 +2,7 @@
 #include "./text.hpp"
 #include "./element-inl.hpp"
 #include "./document-inl.hpp"
+#include "./document_fragment.hpp"
 
 namespace dombinding
 {
@@ -21,6 +22,8 @@ namespace dombinding
   {
     if (node->nodeType == dom::NodeType::DOCUMENT_NODE)
       return Document::NewInstance(env, node).ToObject();
+    if (node->nodeType == dom::NodeType::DOCUMENT_FRAGMENT_NODE)
+      return DocumentFragment::NewInstance(env, node).ToObject();
     if (node->nodeType == dom::NodeType::TEXT_NODE)
       return Text::NewInstance(env, node).ToObject();
     if (node->nodeType == dom::NodeType::ELEMENT_NODE)

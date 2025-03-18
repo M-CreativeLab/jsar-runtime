@@ -6,6 +6,7 @@
 #include "./element-inl.hpp"
 #include "./all_html_elements.hpp"
 #include "./document-inl.hpp"
+#include "./document_fragment.hpp"
 #include "./dom_parser.hpp"
 #include "./browsing_context.hpp"
 #include "./worker_context.hpp"
@@ -31,6 +32,7 @@ namespace bindings
 #undef XX
       dombinding::CharacterData::Init(env);
       dombinding::Text::Init(env);
+      dombinding::DocumentFragment::Init(env);
 
       // Add documents
       dombinding::Document::Init(env, exports);

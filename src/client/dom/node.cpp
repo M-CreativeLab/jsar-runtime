@@ -67,9 +67,25 @@ namespace dom
     if (aChild == nullptr)
       return nullptr;
 
-    childNodes.push_back(aChild);
-    childAddedCallback(aChild);
-    return aChild;
+    if (Node::Is<DocumentFragment>(aChild))
+    {
+      // Append all the child nodes if the node is a `DocumentFragment`.
+      auto fragment = Node::As<DocumentFragment>(aChild);
+      for (auto child : fragment->childNodes)
+        appendChild(child);
+      return getOwnerDocumentChecked().createDocumentFragment();
+    }
+    else if (Node::Is<Element>(aChild) ||
+             Node::Is<Text>(aChild))
+    {
+      childNodes.push_back(aChild);
+      childAddedCallback(aChild);
+      return aChild;
+    }
+    else
+    {
+      throw runtime_error("Failed to append the child: the new child node is not a DocumentFragment, Text or Element.");
+    }
   }
 
   void Node::removeChild(shared_ptr<Node> aChild)
@@ -112,29 +128,8 @@ namespace dom
 
   void Node::replaceAll(shared_ptr<Node> newChild)
   {
-    // Remove all the child nodes
     removeChildren();
-
-    // If the new child is null, just remove all the child nodes.
-    if (newChild == nullptr)
-      return;
-
-    if (Node::Is<DocumentFragment>(newChild))
-    {
-      // Append all the child nodes if the node is a `DocumentFragment`.
-      auto fragment = Node::As<DocumentFragment>(newChild);
-      for (auto child : fragment->childNodes)
-        appendChild(child);
-    }
-    else if (Node::Is<Element>(newChild) ||
-             Node::Is<Text>(newChild))
-    {
-      appendChild(newChild);
-    }
-    else
-    {
-      throw runtime_error("Failed to replace all the child nodes: the new child node is not a valid type.");
-    }
+    appendChild(newChild);
   }
 
   shared_ptr<Element> Node::getParentElement() const
@@ -584,7 +579,7 @@ namespace dom
       newChildNodes = XMLDocument::ParseFragment(contextElement, markup);
 
     // Append the new child nodes to a document fragment
-    auto fragment = make_shared<DocumentFragment>(contextDocument);
+    auto fragment = contextDocument->createDocumentFragment();
     for (auto child : newChildNodes)
       fragment->appendChild(child);
     return fragment;

@@ -7,26 +7,27 @@
 #include "./node.hpp"
 #include "./dom_token_list.hpp"
 
-#define TYPED_ELEMENT_MAP(XX)     \
-  XX("audio", HTMLAudioElement)   \
-  XX("body", HTMLBodyElement)     \
-  XX("canvas", HTMLCanvasElement) \
-  XX("div", HTMLDivElement)       \
-  XX("head", HTMLHeadElement)     \
-  XX("html", HTMLHtmlElement)     \
-  XX("img", HTMLImageElement)     \
-  XX("link", HTMLLinkElement)     \
-  XX("meta", HTMLMetaElement)     \
-  XX("h1", HTMLHeadingElement)    \
-  XX("h2", HTMLHeadingElement)    \
-  XX("h3", HTMLHeadingElement)    \
-  XX("h4", HTMLHeadingElement)    \
-  XX("h5", HTMLHeadingElement)    \
-  XX("h6", HTMLHeadingElement)    \
-  XX("p", HTMLParagraphElement)   \
-  XX("script", HTMLScriptElement) \
-  XX("span", HTMLSpanElement)     \
-  XX("style", HTMLStyleElement)   \
+#define TYPED_ELEMENT_MAP(XX)         \
+  XX("audio", HTMLAudioElement)       \
+  XX("body", HTMLBodyElement)         \
+  XX("canvas", HTMLCanvasElement)     \
+  XX("div", HTMLDivElement)           \
+  XX("head", HTMLHeadElement)         \
+  XX("html", HTMLHtmlElement)         \
+  XX("img", HTMLImageElement)         \
+  XX("link", HTMLLinkElement)         \
+  XX("meta", HTMLMetaElement)         \
+  XX("h1", HTMLHeadingElement)        \
+  XX("h2", HTMLHeadingElement)        \
+  XX("h3", HTMLHeadingElement)        \
+  XX("h4", HTMLHeadingElement)        \
+  XX("h5", HTMLHeadingElement)        \
+  XX("h6", HTMLHeadingElement)        \
+  XX("p", HTMLParagraphElement)       \
+  XX("script", HTMLScriptElement)     \
+  XX("span", HTMLSpanElement)         \
+  XX("style", HTMLStyleElement)       \
+  XX("template", HTMLTemplateElement) \
   XX("video", HTMLVideoElement)
 
 namespace dom
@@ -70,7 +71,7 @@ namespace dom
     bool hasAttributes() const;
     /**
      * Sets the attribute value of the element.
-     * 
+     *
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      * @param notify Whether to notify the attribute change.

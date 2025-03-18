@@ -133,6 +133,11 @@ namespace dom
       openInternal();
   }
 
+  std::shared_ptr<DocumentFragment> Document::createDocumentFragment()
+  {
+    return make_shared<DocumentFragment>(getPtr<Document>());
+  }
+
   std::shared_ptr<Text> Document::createTextNode(const string &data)
   {
     return make_shared<Text>(data, getPtr<Document>());

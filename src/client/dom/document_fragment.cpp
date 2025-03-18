@@ -1,4 +1,5 @@
 #include "./document_fragment.hpp"
+#include "./document.hpp"
 
 namespace dom
 {
