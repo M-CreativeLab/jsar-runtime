@@ -196,7 +196,7 @@ $ make windows # for Windows x86_64 library
 If you want to do a clean build, you can run:
 
 ```sh
-$ make darwin clean=yes
+$ make darwin CLEAN=yes
 ```
 
 ## Loaders
