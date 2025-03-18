@@ -15,6 +15,7 @@
   XX("head", HTMLHeadElement)     \
   XX("html", HTMLHtmlElement)     \
   XX("img", HTMLImageElement)     \
+  XX("link", HTMLLinkElement)     \
   XX("meta", HTMLMetaElement)     \
   XX("h1", HTMLHeadingElement)    \
   XX("h2", HTMLHeadingElement)    \
