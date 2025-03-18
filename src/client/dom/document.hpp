@@ -40,6 +40,7 @@ namespace dom
     friend class Text;
     friend class Element;
     friend class HTMLStyleElement;
+    friend class HTMLLinkElement;
 
   public:
     /**

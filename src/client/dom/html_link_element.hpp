@@ -1,11 +1,13 @@
 #pragma once
 
 #include <string>
+#include <client/cssom/stylesheet.hpp>
+
 #include "./html_element.hpp"
 
 namespace dom
 {
-  class HTMLLinkElement : public HTMLElement
+  class HTMLLinkElement final : public HTMLElement
   {
     using HTMLElement::HTMLElement;
 
@@ -151,11 +153,19 @@ namespace dom
 
   private:
     void createdCallback() override;
+    void connectedCallback() override;
+    void disconnectedCallback() override;
+
+  private:
+    bool getBoolAttribute(const std::string &name);
+    void onResourceLoaded(const std::string &source);
+    void loadStyleSheet(const std::string &cssText);
 
   private:
     ContentType asType_;
     RelType relType_;
     bool blocking_;
     bool disabled_;
+    std::shared_ptr<client_cssom::StyleSheet> styleSheet_ = nullptr;
   };
 } // namespace dom
