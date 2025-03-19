@@ -30,6 +30,10 @@ namespace dombinding
             T::InstanceMethod("hasAttributes", &T::HasAttributes),
             T::InstanceMethod("remove", &T::Remove),
             T::InstanceMethod("removeAttribute", &T::RemoveAttribute),
+            T::InstanceMethod("setAttribute", &T::SetAttribute),
+            T::InstanceMethod("setAttributeNode", &T::SetAttributeNode),
+            T::InstanceMethod("setAttributeNodeNS", &T::SetAttributeNodeNS),
+            T::InstanceMethod("setAttributeNS", &T::SetAttributeNS),
         });
     props.insert(props.end(), added.begin(), added.end());
     return props;
@@ -296,6 +300,54 @@ namespace dombinding
 
     auto attrName = info[0].ToString().Utf8Value();
     this->node->removeAttribute(attrName);
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ElementType>
+  Napi::Value ElementBase<ObjectType, ElementType>::SetAttribute(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2)
+    {
+      Napi::TypeError::New(env, "2 arguments required, but only 0 present.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto attrName = info[0].ToString().Utf8Value();
+    auto attrValue = info[1].ToString().Utf8Value();
+    this->node->setAttribute(attrName, attrValue);
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ElementType>
+  Napi::Value ElementBase<ObjectType, ElementType>::SetAttributeNode(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    Napi::TypeError::New(env, "Failed to call 'setAttributeNode' method: not implemented")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ElementType>
+  Napi::Value ElementBase<ObjectType, ElementType>::SetAttributeNodeNS(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    Napi::TypeError::New(env, "Failed to call 'setAttributeNodeNS' method: not implemented")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ElementType>
+  Napi::Value ElementBase<ObjectType, ElementType>::SetAttributeNS(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+    Napi::TypeError::New(env, "Failed to call 'setAttributeNS' method: not implemented")
+        .ThrowAsJavaScriptException();
     return env.Undefined();
   }
 }

@@ -90,7 +90,8 @@ namespace dom
         tagName(other.tagName),
         localName(other.localName),
         prefix(other.prefix),
-        classList_(other.classList_)
+        classList_(other.classList_),
+        attributeNodes_(other.attributeNodes_)
   {
   }
 
@@ -120,26 +121,18 @@ namespace dom
     }
 
     /**
-     * Attributes.
+     * Update the attributes if the internal node is not `nullptr`.
      */
-    for (auto &item : this->internal->attributes())
-      attributeNodes_[item.name()] = Attr::Make(getPtr<Element>(), item);
-
-    /**
-     * `id` attribute.
-     */
-    auto idAttr = getAttributeNode("id");
-    if (idAttr != nullptr)
-      id = idAttr->value;
-
-    /**
-     * `class` attribute.
-     */
+    if (this->internal != nullptr)
     {
-      auto classAttr = getAttributeNode("class");
-      if (classAttr != nullptr)
-        classList_ = DOMTokenList(classAttr->value, {}, [this](const DOMTokenList &list)
-                                  { setAttribute("class", list.value(), false /* mute */); });
+      for (auto &item : this->internal->attributes())
+      {
+        if (item.name() == nullptr) // Skip if the name is `nullptr`
+          continue;
+        if (item.value() == nullptr) // Reset the value if the value is `nullptr`
+          item.set_value("");
+        setAttribute(item.name(), item.value());
+      }
     }
   }
 
@@ -150,7 +143,11 @@ namespace dom
 
   void Element::attributeChangedCallback(const string &name, const string &oldValue, const string &newValue)
   {
-    // TODO: Implement attributeChangedCallback() for Element
+    if (name == "id")
+      id = newValue;
+    else if (name == "class")
+      classList_ = DOMTokenList(newValue, {}, [this](const DOMTokenList &list)
+                                { setAttribute("class", list.value(), false /* mute */); });
   }
 
   void Element::before(std::vector<std::shared_ptr<Node>> nodes)
@@ -302,12 +299,7 @@ namespace dom
 
   void Element::setId(const string &idValue)
   {
-    auto idAttr = this->internal->attribute("id");
-    if (idAttr.empty())
-      idAttr = this->internal->append_attribute("id");
-
-    if (idAttr.set_value(idValue.c_str()))
-      id = idValue;
+    setAttribute("id", idValue);
   }
 
   string Element::getInnerHTML()

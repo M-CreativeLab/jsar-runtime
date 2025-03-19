@@ -268,10 +268,9 @@ namespace dombinding
     Napi::HandleScope scope(env);
 
     auto previousSiblingNode = this->node->previousSibling();
-    if (previousSiblingNode == nullptr)
-      return env.Null();
-    else
-      return Node::NewInstance(env, previousSiblingNode);
+    return previousSiblingNode == nullptr
+               ? env.Null()
+               : Node::NewInstance(env, previousSiblingNode);
   }
 
   template <typename ObjectType, typename NodeType>
@@ -281,10 +280,9 @@ namespace dombinding
     Napi::HandleScope scope(env);
 
     auto nextSiblingNode = this->node->nextSibling();
-    if (nextSiblingNode == nullptr)
-      return env.Null();
-    else
-      return Node::NewInstance(env, nextSiblingNode);
+    return nextSiblingNode == nullptr
+               ? env.Null()
+               : Node::NewInstance(env, nextSiblingNode);
   }
 
   template <typename ObjectType, typename NodeType>

@@ -7,7 +7,7 @@
 
 <body>
   <div id="d1" data-foobar="a"></div>
-  <div id="d2"></div>
+  <div id="d2" class="foo"></div>
 </body>
 
 <script>
@@ -20,6 +20,13 @@
 
   const divs = document.getElementsByTagName('div');
   console.info(divs);
+
+  const d2 = document.getElementById('d2');
+  console.info('d2 id=', d2.id);
+  console.info('d2 class=', d2.className);
+  console.info('d2 classList=', d2.classList);
+  d2.classList.add('bar');
+  console.info('d2', d2.innerHTML);
 </script>
 
 </html>

@@ -306,11 +306,16 @@ namespace dom
   protected:
     /**
      * Get the shared pointer of the current `Node` object.
+     * 
+     * @param assertNotNull If true, it will throw an exception if the shared pointer is null.
      */
     template <typename T = Node>
-    inline std::shared_ptr<T> getPtr()
+    inline std::shared_ptr<T> getPtr(bool assertNotNull = false)
     {
-      return dynamic_pointer_cast<T>(this->shared_from_this());
+      auto ptr = dynamic_pointer_cast<T>(this->shared_from_this());
+      if (assertNotNull)
+        assert(ptr != nullptr && "The shared pointer is null.");
+      return ptr;
     }
     /**
      * Get the weak pointer of the current `Node` object.
@@ -495,6 +500,7 @@ namespace dom
   protected:
     std::shared_ptr<pugi::xml_node> internal;
     std::optional<uint32_t> depthInTree = std::nullopt;
+    std::string textContent_;
     // If this node could be rendered, `false` by default.
     bool renderable = false;
     // The mutation observers of this node.

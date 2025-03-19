@@ -1,9 +1,9 @@
 function template(htmlText: string) {
-  return () => {
+  return (): HTMLElement => {
     const elem = document.createElement('template');
-    console.info('created template element', elem);
     elem.innerHTML = htmlText;
-    return elem.content;
+    const node = elem.content.firstChild as Node;
+    return document.importNode(node, true) as HTMLElement;
   };
 }
 

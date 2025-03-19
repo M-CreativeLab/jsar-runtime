@@ -65,12 +65,14 @@ namespace dom
   Node::Node(const Node &other)
       : DOMEventTarget(),
         uid(NodeIdGenerator.get()),
-        internal(other.internal),
+        internal(nullptr), // Not copy the internal node
         baseURI(other.baseURI),
         connected(false),
         nodeName(other.nodeName),
         nodeType(other.nodeType),
         ownerDocument(other.ownerDocument),
+        parentNode(weak_ptr<Node>()),
+        childNodes({}),
         renderable(other.renderable)
   {
   }
@@ -223,10 +225,9 @@ namespace dom
   // textContent() returns the text content of the node and its descendants.
   const string Node::textContent() const
   {
-    if (internal->type() == pugi::xml_node_type::node_pcdata)
-      return string(internal->value());
-    if (internal->type() == pugi::xml_node_type::node_cdata)
-      return string(internal->child_value());
+    if (nodeType == NodeType::TEXT_NODE ||
+        nodeType == NodeType::CDATA_SECTION_NODE)
+      return textContent_;
 
     string resultStr;
     for (auto child : childNodes)
@@ -407,6 +408,7 @@ namespace dom
   {
     auto self = shared_from_this();
     child->parentNode = self;
+    child->updateFieldsFromDocument(getOwnerDocumentReference()); // Update the owner document once the child is added.
     notifyMutationObservers(MutationRecord::OnAddChild(self, child));
 
     // If the parent node is connected, connect the child node as well.
@@ -427,8 +429,9 @@ namespace dom
   void Node::childReplacedCallback(shared_ptr<Node> newChild, shared_ptr<Node> oldChild)
   {
     auto self = shared_from_this();
-    newChild->parentNode = self;
     oldChild->parentNode.reset();
+    newChild->parentNode = self;
+    newChild->updateFieldsFromDocument(getOwnerDocumentReference()); // Update the owner document once the child is added.
     notifyMutationObservers(MutationRecord::OnReplaceChild(self, newChild, oldChild));
 
     // Disconnect the old child node and connect the new child node if the parent node is connected.
@@ -544,6 +547,12 @@ namespace dom
       nodeType = NodeType::NULL_NODE;
       break;
     }
+
+    // Update text content
+    if (internalType == pugi::xml_node_type::node_pcdata)
+      textContent_ = string(internal->value());
+    else if (internalType == pugi::xml_node_type::node_cdata)
+      textContent_ = string(internal->child_value());
 
     // Trigger the internal updated event
     onInternalUpdated();

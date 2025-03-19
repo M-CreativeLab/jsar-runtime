@@ -52,6 +52,10 @@ namespace dombinding
     Napi::Value HasAttributes(const Napi::CallbackInfo &info);
     Napi::Value Remove(const Napi::CallbackInfo &info);
     Napi::Value RemoveAttribute(const Napi::CallbackInfo &info);
+    Napi::Value SetAttribute(const Napi::CallbackInfo &info);
+    Napi::Value SetAttributeNode(const Napi::CallbackInfo &info);
+    Napi::Value SetAttributeNodeNS(const Napi::CallbackInfo &info);
+    Napi::Value SetAttributeNS(const Napi::CallbackInfo &info);
   };
 
   class Element : public ElementBase<Element, dom::Element>
