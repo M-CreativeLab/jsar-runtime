@@ -487,6 +487,14 @@ namespace dom
      * The child nodes of this node.
      */
     std::vector<std::shared_ptr<Node>> childNodes;
+    /**
+     * The `Node` immediately preceding the specified one in its parent's childNodes list.
+     */
+    std::shared_ptr<Node> previousSibling() const;
+    /**
+     * The `Node` immediately following the specified one in its parent's childNodes list.
+     */
+    std::shared_ptr<Node> nextSibling() const;
 
   protected:
     std::shared_ptr<pugi::xml_node> internal;

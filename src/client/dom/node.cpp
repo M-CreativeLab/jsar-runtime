@@ -567,6 +567,45 @@ namespace dom
     }
   }
 
+  shared_ptr<Node> Node::previousSibling() const
+  {
+    if (parentNode.expired())
+      return nullptr;
+
+    auto parent = parentNode.lock();
+    if (parent == nullptr)
+      return nullptr;
+
+    shared_ptr<Node> previous = nullptr;
+    for (auto child : parent->childNodes)
+    {
+      if (child == shared_from_this())
+        break;
+      previous = child;
+    }
+    return previous;
+  }
+
+  shared_ptr<Node> Node::nextSibling() const
+  {
+    if (parentNode.expired())
+      return nullptr;
+
+    auto parent = parentNode.lock();
+    if (parent == nullptr)
+      return nullptr;
+
+    bool found = false;
+    for (auto child : parent->childNodes)
+    {
+      if (found)
+        return child;
+      if (child == shared_from_this())
+        found = true;
+    }
+    return nullptr;
+  }
+
   string SerializeFragment(shared_ptr<Node> node, bool wellFormed)
   {
     if (TR_UNLIKELY(node == nullptr))

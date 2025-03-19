@@ -3,10 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <title>Nodes</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <style>
+    p {
+      font-size: 100px;
+    }
+  </style>
 </head>
 
 <body>
+  <p>prev</p>
   <div id="foo"></div>
+  <p>next</p>
 </body>
 
 <script>
@@ -44,6 +52,14 @@
   const foo = document.getElementById('foo');
   console.info('foo:', foo);
   console.info('cloneNode:', foo.cloneNode());
+
+  {
+    // get sibling nodes
+    const prev = foo.previousSibling;
+    const next = foo.nextSibling;
+    console.info('prev:', prev.textContent);
+    console.info('next:', next.textContent);
+  }
 </script>
 
 </html>

@@ -266,10 +266,12 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    // TODO: implement the getter
-    Napi::TypeError::New(env, "Failed to get 'previousSibling' property: not implemented")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
+
+    auto previousSiblingNode = this->node->previousSibling();
+    if (previousSiblingNode == nullptr)
+      return env.Null();
+    else
+      return Node::NewInstance(env, previousSiblingNode);
   }
 
   template <typename ObjectType, typename NodeType>
@@ -277,10 +279,12 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    // TODO: implement the getter
-    Napi::TypeError::New(env, "Failed to get 'nextSibling' property: not implemented")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
+    
+    auto nextSiblingNode = this->node->nextSibling();
+    if (nextSiblingNode == nullptr)
+      return env.Null();
+    else
+      return Node::NewInstance(env, nextSiblingNode);
   }
 
   template <typename ObjectType, typename NodeType>
@@ -402,7 +406,7 @@ namespace dombinding
     bool deep = false;
     if (info.Length() >= 1 && info[0].IsBoolean())
       deep = info[0].As<Napi::Boolean>();
-    
+
     auto clonedNode = node->cloneNode(deep);
     return Node::NewInstance(env, clonedNode);
   }
