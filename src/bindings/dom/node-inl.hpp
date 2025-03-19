@@ -279,7 +279,7 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    
+
     auto nextSiblingNode = this->node->nextSibling();
     if (nextSiblingNode == nullptr)
       return env.Null();
@@ -443,7 +443,30 @@ namespace dombinding
   Napi::Value NodeBase<ObjectType, NodeType>::InsertBefore(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
-    return env.Undefined();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 2 ||
+        !info[0].IsObject() ||
+        !IsNodeInstance(info[0].ToObject()) ||
+        !info[1].IsObject() ||
+        !IsNodeInstance(info[1].ToObject()))
+    {
+      Napi::TypeError::New(env, "Illegal arguments").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto newChildNodeImpl = Node::GetImpl(info[0]);
+    auto refChildNodeImpl = Node::GetImpl(info[1]);
+    if (newChildNodeImpl == nullptr || refChildNodeImpl == nullptr)
+    {
+      Napi::TypeError::New(env, "Illegal arguments").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto insertedNode = this->node->insertBefore(newChildNodeImpl, refChildNodeImpl);
+    return insertedNode == nullptr
+               ? env.Undefined()
+               : Node::NewInstance(env, insertedNode);
   }
 
   template <typename ObjectType, typename NodeType>

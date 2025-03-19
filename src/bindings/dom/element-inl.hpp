@@ -101,6 +101,38 @@ namespace dombinding
   Napi::Value ElementBase<ObjectType, ElementType>::After(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "Failed to call 'after' method: 1 argument required, but only 0 present.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    // After should insert from the end to the beginning.
+    for (size_t i = info.Length(); i > 0; i--)
+    {
+      auto nodeValue = info[i - 1];
+      if (nodeValue.IsString())
+      {
+        std::string text = nodeValue.As<Napi::String>().Utf8Value();
+        this->node->after(text);
+      }
+      else
+      {
+        auto node = Node::GetImpl(nodeValue);
+        if (node != nullptr)
+        {
+          this->node->after(node);
+        }
+        else
+        {
+          Napi::TypeError::New(env, "Failed to call 'after' method: invalid argument").ThrowAsJavaScriptException();
+          return env.Undefined();
+        }
+      }
+    }
     return env.Undefined();
   }
 
@@ -129,6 +161,37 @@ namespace dombinding
   Napi::Value ElementBase<ObjectType, ElementType>::Before(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "Failed to call 'before' method: 1 argument required, but only 0 present.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    for (size_t i = 0; i < info.Length(); i++)
+    {
+      auto nodeValue = info[i];
+      if (nodeValue.IsString())
+      {
+        std::string text = nodeValue.As<Napi::String>().Utf8Value();
+        this->node->before(text);
+      }
+      else
+      {
+        auto node = Node::GetImpl(nodeValue);
+        if (node != nullptr)
+        {
+          this->node->before(node);
+        }
+        else
+        {
+          Napi::TypeError::New(env, "Failed to call 'before' method: invalid argument").ThrowAsJavaScriptException();
+          return env.Undefined();
+        }
+      }
+    }
     return env.Undefined();
   }
 

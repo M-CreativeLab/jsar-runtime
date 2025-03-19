@@ -190,6 +190,14 @@ namespace dom
     NodeList<const Node> getAncestors(bool inclusiveSelf,
                                       std::function<bool(const Node &)> ancestorsFilter = nullptr) const;
     /**
+     * Insert a child node before a specific child node.
+     * 
+     * @param newChild The new child node to insert.
+     * @param refChild The reference child node to insert before.
+     * @returns The inserted child node.
+     */
+    std::shared_ptr<Node> insertBefore(std::shared_ptr<Node> newChild, std::shared_ptr<Node> refChild);
+    /**
      * @returns The text content of the node and its descendants.
      */
     const std::string textContent() const;
@@ -287,7 +295,7 @@ namespace dom
     /**
      * @returns The node's depth in the tree.
      */
-    uint32_t depth() const
+    inline uint32_t depth() const
     {
       return depthInTree.value_or(0);
     }

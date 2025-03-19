@@ -78,6 +78,12 @@ namespace dom
     ~Element() = default;
 
   public:
+    void before(std::vector<std::shared_ptr<Node>> nodes);
+    void before(std::string text);
+    inline void before(std::shared_ptr<Node> node) { before(std::vector<std::shared_ptr<Node>>{node}); }
+    void after(std::vector<std::shared_ptr<Node>> nodes);
+    void after(std::string text);
+    inline void after(std::shared_ptr<Node> node) { after(std::vector<std::shared_ptr<Node>>{node}); }
     std::string getAttribute(const std::string &name) const;
     std::vector<std::string> getAttributeNames() const;
     std::shared_ptr<Attr> getAttributeNode(const std::string &name) const;

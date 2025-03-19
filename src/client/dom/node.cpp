@@ -198,6 +198,28 @@ namespace dom
     return ancestors;
   }
 
+  std::shared_ptr<Node> Node::insertBefore(std::shared_ptr<Node> newChild, std::shared_ptr<Node> refChild)
+  {
+    if (newChild == nullptr)
+      return nullptr;
+
+    // If this is `null`, then `newChild` is inserted at the end of node's child nodes.
+    if (refChild == nullptr)
+    {
+      appendChild(newChild);
+      return newChild;
+    }
+
+    auto it = find(childNodes.begin(), childNodes.end(), refChild);
+    if (it != childNodes.end())
+    {
+      childNodes.insert(it, newChild);
+      childAddedCallback(newChild);
+      return newChild;
+    }
+    return nullptr;
+  }
+
   // textContent() returns the text content of the node and its descendants.
   const string Node::textContent() const
   {

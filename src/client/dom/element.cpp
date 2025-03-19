@@ -2,6 +2,7 @@
 #include <common/utility.hpp>
 
 #include "./element.hpp"
+#include "./document.hpp"
 #include "./document_fragment.hpp"
 #include "./html_element.hpp"
 #include "./attr.hpp"
@@ -148,6 +149,46 @@ namespace dom
   void Element::attributeChangedCallback(const string &name, const string &oldValue, const string &newValue)
   {
     // TODO: Implement attributeChangedCallback() for Element
+  }
+
+  void Element::before(std::vector<std::shared_ptr<Node>> nodes)
+  {
+    auto parent = parentNode.lock();
+    if (parent == nullptr || nodes.size() == 0)
+      return;
+
+    for (auto &node : nodes)
+    {
+      if (node == nullptr)
+        continue;
+      parent->insertBefore(node, getPtr<Element>());
+    }
+  }
+
+  void Element::before(string text)
+  {
+    before(getOwnerDocumentChecked().createTextNode(text));
+  }
+
+  void Element::after(vector<shared_ptr<Node>> nodes)
+  {
+    auto parent = parentNode.lock();
+    if (parent == nullptr || nodes.size() == 0)
+      return;
+
+    auto next = nextSibling();
+    for (auto &node : nodes)
+    {
+      if (node == nullptr)
+        continue;
+
+      parent->insertBefore(node, next);
+    }
+  }
+
+  void Element::after(string text)
+  {
+    after(getOwnerDocumentChecked().createTextNode(text));
   }
 
   string Element::getAttribute(const string &name) const
