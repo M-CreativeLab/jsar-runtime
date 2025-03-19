@@ -59,15 +59,36 @@ namespace jsar::example
     return new StatPanel(this);
   }
 
+  inline WindowContext *GetContextAndExecute(GLFWwindow *window,
+                                             std::function<void(WindowContext *)> callback = nullptr)
+  {
+    WindowContext *ctx = reinterpret_cast<WindowContext *>(glfwGetWindowUserPointer(window));
+    assert(ctx != nullptr);
+    if (callback)
+      callback(ctx);
+    return ctx;
+  }
+
   XRStereoscopicRenderer *WindowContext::createXrRenderer()
   {
-    assert(window != nullptr);
+    assert(window != nullptr && "Window is not initialized.");
     xrRenderer = new XRStereoscopicRenderer(this);
+    glfwSetCursorEnterCallback(window, [](GLFWwindow *window, int entered)
+                               { GetContextAndExecute(window, [entered](WindowContext *ctx)
+                                                      { ctx->isCursorEntered = entered; }); });
+
+    auto onCursorPosUpdate = [](GLFWwindow *window, double xpos, double ypos)
+    {
+      auto handleCursorMove = [xpos, ypos](WindowContext *ctx)
+      {
+        if (ctx->isCursorEntered)
+          ctx->handleCursorMove(xpos, ypos);
+      };
+      GetContextAndExecute(window, handleCursorMove);
+    };
+    glfwSetCursorPosCallback(window, onCursorPosUpdate);
     glfwSetScrollCallback(window, [](GLFWwindow *window, double xoffset, double yoffset)
-                          {
-                            auto ctx = reinterpret_cast<WindowContext *>(glfwGetWindowUserPointer(window));
-                            assert(ctx != nullptr);
-                            ctx->handleScroll(xoffset, yoffset); });
+                          { GetContextAndExecute(window)->handleScroll(xoffset, yoffset); });
     return xrRenderer;
   }
 
@@ -78,6 +99,19 @@ namespace jsar::example
       xrRenderer->moveViewerForward(yoffset * 0.1);
     if (xoffset != 0)
       xrRenderer->rotateViewerByAxisY(xoffset * 0.1);
+  }
+
+  void WindowContext::handleCursorMove(double xoffset, double yoffset)
+  {
+    if (xrRenderer != nullptr)
+    {
+      xoffset /= 2;
+
+      // Update the main input source's target ray
+      glm::vec3 origin = glm::vec3(xoffset / width, -yoffset / height, 0);
+      glm::vec3 direction = glm::vec3(0, 0, -1);
+      xrRenderer->updateMainInputSourceTargetRay(origin, direction);
+    }
   }
 
   void WindowContext::terminate()

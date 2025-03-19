@@ -222,6 +222,13 @@ namespace jsar::example
         fprintf(stderr, "Failed to start the embedder\n");
         return false;
       }
+      
+      if (xrEnabled)
+      {
+        auto xrRenderer = windowCtx_->xrRenderer;
+        assert(xrRenderer != nullptr);
+        xrRenderer->initialize(embedder_->constellation->xrDevice);
+      }
 
       glfwMakeContextCurrent(windowCtx_->window);
       glEnable(GL_MULTISAMPLE);
@@ -269,6 +276,10 @@ namespace jsar::example
 
         if (xrEnabled && multiPass)
         {
+          auto xrRenderer = windowCtx_->xrRenderer;
+          assert(xrRenderer != nullptr);
+          xrRenderer->writeInputSources();
+
           for (int viewIndex = 0; viewIndex < 2; viewIndex++)
           {
             uint32_t w = drawingViewport.width() / viewsCount;
@@ -286,8 +297,6 @@ namespace jsar::example
               /**
                * Configure XR frame data.
                */
-              auto xrRenderer = windowCtx_->xrRenderer;
-              assert(xrRenderer != nullptr);
               auto xrDevice = embedder_->constellation->xrDevice;
               assert(xrDevice != nullptr);
 

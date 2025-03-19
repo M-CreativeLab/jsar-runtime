@@ -28,6 +28,7 @@ namespace jsar::example
     StatPanel *createStatPanel();
     XRStereoscopicRenderer *createXrRenderer();
     void handleScroll(double xoffset, double yoffset);
+    void handleCursorMove(double xoffset, double yoffset);
 
   private:
     void terminate();
@@ -44,5 +45,6 @@ namespace jsar::example
 
   private:
     bool terminated = false;
+    bool isCursorEntered = false;
   };
 }
