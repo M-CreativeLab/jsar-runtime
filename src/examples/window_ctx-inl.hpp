@@ -89,6 +89,8 @@ namespace jsar::example
     glfwSetCursorPosCallback(window, onCursorPosUpdate);
     glfwSetScrollCallback(window, [](GLFWwindow *window, double xoffset, double yoffset)
                           { GetContextAndExecute(window)->handleScroll(xoffset, yoffset); });
+    glfwSetMouseButtonCallback(window, [](GLFWwindow *window, int button, int action, int mods)
+                               { GetContextAndExecute(window)->handleMouseButton(button, action, mods); });
     return xrRenderer;
   }
 
@@ -103,15 +105,23 @@ namespace jsar::example
 
   void WindowContext::handleCursorMove(double xoffset, double yoffset)
   {
-    if (xrRenderer != nullptr)
-    {
-      xoffset /= 2;
+    if (xrRenderer == nullptr)
+      return;
 
-      // Update the main input source's target ray
-      glm::vec3 origin = glm::vec3(xoffset / width, -yoffset / height, 0);
-      glm::vec3 direction = glm::vec3(0, 0, -1);
-      xrRenderer->updateMainInputSourceTargetRay(origin, direction);
-    }
+    xoffset /= 2;
+    // Update the main input source's target ray
+    glm::vec3 origin = glm::vec3(xoffset / width, -yoffset / height, 0);
+    glm::vec3 direction = glm::vec3(0, 0, -1);
+    xrRenderer->updateMainInputSourceTargetRay(origin, direction);
+  }
+
+  void WindowContext::handleMouseButton(int button, int action, int mods)
+  {
+    if (xrRenderer == nullptr)
+      return;
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT)
+      xrRenderer->updateMainInputSourcePrimaryAction(action == GLFW_PRESS);
   }
 
   void WindowContext::terminate()

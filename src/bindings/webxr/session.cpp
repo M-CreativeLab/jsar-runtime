@@ -149,7 +149,7 @@ namespace bindings
       Napi::HandleScope scope(env);
 
       frameCallbackRef->Call({Number::New(env, time),
-                              XRFrame::NewInstance(env, this, frame)});
+                              XRFrame::GetOrNewInstance(env, this, frame)});
       frameCallbackRef->Reset();
       delete frameCallbackRef;
     };

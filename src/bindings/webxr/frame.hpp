@@ -21,16 +21,20 @@ namespace bindings
   public:
     static void Init(Napi::Env env);
     /**
-     * Create a new WebXR frame instance.
-     * 
+     * Create a new `XRFrame` object, or return the existing one.
+     *
      * @param env the N-API environment.
      * @param session the WebXR session.
      * @param frame the WebXR frame.
      * @returns a new WebXR frame instance.
      */
-    static inline Napi::Object NewInstance(Napi::Env env, XRSession *session, std::shared_ptr<client_xr::XRFrame> frame)
+    static inline Napi::Object GetOrNewInstance(Napi::Env env, XRSession *session, std::shared_ptr<client_xr::XRFrame> frame)
     {
-      return XRHandleWrap<XRFrame, client_xr::XRFrame>::NewInstance(env, frame, session->Value());
+      assert(frame != nullptr && "Invalid frame");
+      if (frame->hasJSObject())
+        return frame->getJSObject().Value();
+      else
+        return XRHandleWrap<XRFrame, client_xr::XRFrame>::NewInstance(env, frame, session->Value());
     }
 
   public:

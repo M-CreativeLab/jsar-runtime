@@ -39,7 +39,7 @@ public:
 };
 
 /**
- * JavaScript Object Holder is a template base class that holds the weak pointer to JavaScript object, this class is useful to connect 
+ * JavaScript Object Holder is a template base class that holds the weak pointer to JavaScript object, this class is useful to connect
  * the reference object to a JavaScript object.
  *
  * @tparam T The type of the object that the weak reference holds.
@@ -54,15 +54,17 @@ public:
 public:
   /**
    * @returns `true` if this holder has a JavaScript object value, `false` otherwise.
+   * @deprecated Use `hasJSObject` instead.
    */
-  inline bool isJSObject() const
-  {
-    return value_ != nullptr;
-  }
+  inline bool isJSObject() const { return value_ != nullptr; }
+  /**
+   * @returns `true` if this holds a JavaScript object value, `false` otherwise.
+   */
+  inline bool hasJSObject() const { return isJSObject(); }
   /**
    * @returns The JavaScript object value.
    */
-  inline T& getJSObject()
+  inline T &getJSObject()
   {
     assert(isJSObject());
     return *value_;

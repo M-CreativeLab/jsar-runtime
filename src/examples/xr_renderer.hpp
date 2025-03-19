@@ -36,6 +36,9 @@ namespace jsar::example
   public:
     void initialize(std::shared_ptr<xr::Device> xrDevice)
     {
+      assert(xrDevice != nullptr && "XR device is not initialized.");
+      this->xrDevice = xrDevice;
+
       auto mainController = xrDevice->getMainControllerInputSource();
       if (mainController != nullptr)
       {
@@ -102,9 +105,16 @@ namespace jsar::example
       glm::mat4 translation = glm::translate(glm::mat4(1.0f), origin);
       mainControllerTargetRay = translation * rotation;
     }
+    void updateMainInputSourcePrimaryAction(bool pressed)
+    {
+      assert(xrDevice != nullptr);
+      auto mainController = xrDevice->getMainControllerInputSource();
+      if (mainController != nullptr)
+        mainController->primaryActionPressed = pressed;
+    }
     void writeInputSources()
     {
-      assert(xrDevice != nullptr && "XR device is not initialized.");
+      assert(xrDevice != nullptr);
       auto mainController = xrDevice->getMainControllerInputSource();
       if (mainController != nullptr)
         mainController->setTargetRayBaseMatrix(mainControllerTargetRay);
