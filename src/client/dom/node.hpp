@@ -156,6 +156,14 @@ namespace dom
      */
     void replaceAll(std::shared_ptr<Node> newChild);
     /**
+     * Insert a child node before a specific child node.
+     * 
+     * @param newChild The new child node to insert.
+     * @param refChild The reference child node to insert before.
+     * @returns The inserted child node.
+     */
+    std::shared_ptr<Node> insertBefore(std::shared_ptr<Node> newChild, std::shared_ptr<Node> refChild);
+    /**
      * Clone the current node.
      * 
      * @returns a duplicate of the node on which this method was called.
@@ -189,14 +197,6 @@ namespace dom
      */
     NodeList<const Node> getAncestors(bool inclusiveSelf,
                                       std::function<bool(const Node &)> ancestorsFilter = nullptr) const;
-    /**
-     * Insert a child node before a specific child node.
-     * 
-     * @param newChild The new child node to insert.
-     * @param refChild The reference child node to insert before.
-     * @returns The inserted child node.
-     */
-    std::shared_ptr<Node> insertBefore(std::shared_ptr<Node> newChild, std::shared_ptr<Node> refChild);
     /**
      * @returns The text content of the node and its descendants.
      */

@@ -21,6 +21,20 @@ namespace dom
     std::shared_ptr<Element> nextElementSibling();
     std::shared_ptr<Element> previousElementSibling();
 
+  public:
+    void remove();
+    void appendData(const std::string &data);
+    void deleteData(size_t offset, size_t count);
+    void insertData(size_t offset, const std::string &data);
+    void replaceData(size_t offset, size_t count, const std::string &data);
+    std::string substringData(size_t offset, size_t count);
+    void before(std::vector<std::shared_ptr<Node>> nodes);
+    void before(std::string text);
+    inline void before(std::shared_ptr<Node> node) { before(std::vector<std::shared_ptr<Node>>{node}); }
+    void after(std::vector<std::shared_ptr<Node>> nodes);
+    void after(std::string text);
+    inline void after(std::shared_ptr<Node> node) { after(std::vector<std::shared_ptr<Node>>{node}); }
+
   protected:
     std::string data_;
     std::weak_ptr<Element> nextElementSibling_;

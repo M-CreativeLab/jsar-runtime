@@ -18,8 +18,8 @@ namespace dombinding
       auto props = NodeBase<ObjectType, NodeType>::GetClassProperties(env);
       auto added = std::vector<Napi::ClassPropertyDescriptor<ObjectType>>(
           {
-              T::InstanceAccessor("data", &T::DataGetter, &T::DataSetter),
-              T::InstanceAccessor("length", &T::LengthGetter, &T::LengthSetter),
+              T::InstanceAccessor("data", &T::DataGetter, &T::DataSetter, napi_default_jsproperty),
+              T::InstanceAccessor("length", &T::LengthGetter, nullptr, napi_default_jsproperty),
               T::InstanceMethod("after", &T::After),
               T::InstanceMethod("appendData", &T::AppendData),
               T::InstanceMethod("before", &T::Before),
@@ -44,7 +44,6 @@ namespace dombinding
     Napi::Value DataGetter(const Napi::CallbackInfo &info);
     void DataSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value LengthGetter(const Napi::CallbackInfo &info);
-    void LengthSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value After(const Napi::CallbackInfo &info);
     Napi::Value AppendData(const Napi::CallbackInfo &info);
     Napi::Value Before(const Napi::CallbackInfo &info);

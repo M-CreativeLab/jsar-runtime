@@ -61,7 +61,9 @@ namespace dom
   {                                                                                        \
     shared_ptr<CLASS_NAME> typedSrcElement = dynamic_pointer_cast<CLASS_NAME>(srcElement); \
     assert(typedSrcElement != nullptr && "The source element is not the specific type.");  \
-    return make_shared<CLASS_NAME>(*typedSrcElement);                                      \
+    shared_ptr<Element> clonedElement = make_shared<CLASS_NAME>(*typedSrcElement);         \
+    clonedElement->createdCallback();                                                      \
+    return clonedElement;                                                                  \
   }
     TYPED_ELEMENT_MAP(XX)
 #undef XX

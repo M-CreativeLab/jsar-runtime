@@ -30,7 +30,11 @@ namespace dom
     // Get the content2d and expect it to be valid.
     inline Content2d &content2d()
     {
-      assert(content2d_ != nullptr);
+      if (TR_UNLIKELY(content2d_ == nullptr))
+      {
+        std::string msg = "Failed to get the `Content2d` on <" + tagName + ">: the content2d is not created yet.";
+        throw std::runtime_error(msg);
+      }
       return *content2d_;
     }
 

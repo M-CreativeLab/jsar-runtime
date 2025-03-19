@@ -4,6 +4,7 @@
 namespace dombinding
 {
   using namespace std;
+  using namespace Napi;
 
   thread_local Napi::FunctionReference *Text::constructor;
   void Text::Init(Napi::Env env)
@@ -19,7 +20,7 @@ namespace dombinding
 
   vector<Napi::ClassPropertyDescriptor<Text>> Text::GetClassProperties(Napi::Env env)
   {
-    auto props = NodeBase<Text, dom::Text>::GetClassProperties(env);
+    auto props = CharacterDataBase<Text, dom::Text>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<Text>>(
         {
             InstanceAccessor("assignedSlot", &Text::AssignedSlotGetter, nullptr),
