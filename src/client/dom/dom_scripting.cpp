@@ -376,6 +376,7 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(clearInterval);
         V8_SET_GLOBAL_FROM_MAIN(requestAnimationFrame);
         V8_SET_GLOBAL_FROM_MAIN(cancelAnimationFrame);
+        V8_SET_GLOBAL_FROM_MAIN(queueMicrotask);
 
         // Fetch API related objects
         V8_SET_GLOBAL_FROM_MAIN(Headers);

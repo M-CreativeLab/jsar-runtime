@@ -54,7 +54,7 @@ namespace dom
     if (styleSheet_ && ownerDocument != nullptr)
     {
       auto &styleSheets = ownerDocument->styleSheets_;
-      styleSheets.erase(remove(styleSheets.begin(), styleSheets.end(), styleSheet_), styleSheets.end());
+      styleSheets.erase(std::remove(styleSheets.begin(), styleSheets.end(), styleSheet_), styleSheets.end());
       styleSheet_.reset();
 
       // Invalidate the cache after removing the stylesheet

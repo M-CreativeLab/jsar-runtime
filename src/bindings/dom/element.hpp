@@ -50,6 +50,8 @@ namespace dombinding
     Napi::Value GetBoundingClientRect(const Napi::CallbackInfo &info);
     Napi::Value HasAttribute(const Napi::CallbackInfo &info);
     Napi::Value HasAttributes(const Napi::CallbackInfo &info);
+    Napi::Value Remove(const Napi::CallbackInfo &info);
+    Napi::Value RemoveAttribute(const Napi::CallbackInfo &info);
   };
 
   class Element : public ElementBase<Element, dom::Element>

@@ -28,6 +28,8 @@ namespace dombinding
             T::InstanceMethod("getBoundingClientRect", &T::GetBoundingClientRect),
             T::InstanceMethod("hasAttribute", &T::HasAttribute),
             T::InstanceMethod("hasAttributes", &T::HasAttributes),
+            T::InstanceMethod("remove", &T::Remove),
+            T::InstanceMethod("removeAttribute", &T::RemoveAttribute),
         });
     props.insert(props.end(), added.begin(), added.end());
     return props;
@@ -205,5 +207,32 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     return Napi::Boolean::New(env, this->node->hasAttributes());
+  }
+
+  template <typename ObjectType, typename ElementType>
+  Napi::Value ElementBase<ObjectType, ElementType>::Remove(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    this->node->remove(); // Just remove the underlying node but not the JS object.
+    return env.Undefined();
+  }
+
+  template <typename ObjectType, typename ElementType>
+  Napi::Value ElementBase<ObjectType, ElementType>::RemoveAttribute(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env, "1 argument required, but only 0 present.").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto attrName = info[0].ToString().Utf8Value();
+    this->node->removeAttribute(attrName);
+    return env.Undefined();
   }
 }

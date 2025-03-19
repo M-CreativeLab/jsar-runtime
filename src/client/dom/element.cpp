@@ -226,6 +226,18 @@ namespace dom
     attributeChangedCallback(attrName, oldValue, newValue);
   }
 
+  void Element::remove()
+  {
+    if (parentNode.expired())
+      return;
+
+    auto parent = parentNode.lock();
+    if (parent == nullptr)
+      return;
+
+    parent->removeChild(getPtr<Element>());
+  }
+
   void Element::removeAttribute(const string &name)
   {
     auto attr = getAttributeNode(name);

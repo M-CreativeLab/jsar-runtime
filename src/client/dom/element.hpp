@@ -93,6 +93,7 @@ namespace dom
      */
     void setAttribute(const std::string &name, const std::string &value, bool notify = true);
     void setAttributeNode(std::shared_ptr<Attr> attr);
+    void remove();
     void removeAttribute(const std::string &name);
 
   public:
