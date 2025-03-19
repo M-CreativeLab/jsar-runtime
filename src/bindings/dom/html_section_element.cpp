@@ -7,9 +7,8 @@ namespace dombinding
   void HTMLSectionElement::Init(Napi::Env env)
   {
     auto props = GetClassProperties(env);
-    Napi::Function func = DefineClass(env, "HTMLSectionElement", props);
+    Napi::Function func = DefineClass(env, "HTMLElement", props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
-    env.Global().Set("HTMLSectionElement", func);
   }
 }

@@ -78,7 +78,7 @@ namespace dom
 
   public:
     void setUrl(const string &url);
-    void setSource(const string &source);
+    void setSource(const string &source, bool isFragment = false);
     void open();
     std::shared_ptr<DocumentFragment> createDocumentFragment();
     std::shared_ptr<Text> createTextNode(const std::string &data);
@@ -148,14 +148,7 @@ namespace dom
      * The `Document.firstElementChild` read-only property returns the document's first child Element, or `null` if
      * there are no child elements.
      */
-    inline std::shared_ptr<Element> firstElementChild() const
-    {
-      auto firstChildNode = firstChild();
-      if (firstChildNode != nullptr)
-        return std::dynamic_pointer_cast<Element>(firstChildNode);
-      else
-        return nullptr;
-    }
+    std::shared_ptr<Element> firstElementChild() const;
 
   protected:
     bool autoConnect;

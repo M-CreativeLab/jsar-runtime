@@ -50,7 +50,7 @@ namespace dom
 
   public:
     [[nodiscard]] std::unique_ptr<Text> splitText(size_t offset);
-    [[nodiscard]] geometry::DOMRect getTextClientRect(float maxWidth = numeric_limits<float>::infinity()) const;
+    [[nodiscard]] const geometry::DOMRect getTextClientRect(float maxWidth = numeric_limits<float>::infinity()) const;
 
   private:
     inline float offsetWidth() const override { return offsetWidth_; }

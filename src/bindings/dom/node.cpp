@@ -1,4 +1,5 @@
 #include "./node-inl.hpp"
+#include "./comment.hpp"
 #include "./text.hpp"
 #include "./element-inl.hpp"
 #include "./document-inl.hpp"
@@ -24,6 +25,8 @@ namespace dombinding
       return Document::NewInstance(env, node).ToObject();
     if (node->nodeType == dom::NodeType::DOCUMENT_FRAGMENT_NODE)
       return DocumentFragment::NewInstance(env, node).ToObject();
+    if (node->nodeType == dom::NodeType::COMMENT_NODE)
+      return Comment::NewInstance(env, node).ToObject();
     if (node->nodeType == dom::NodeType::TEXT_NODE)
       return Text::NewInstance(env, node).ToObject();
     if (node->nodeType == dom::NodeType::ELEMENT_NODE)

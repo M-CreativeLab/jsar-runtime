@@ -2,7 +2,7 @@ function template(htmlText: string) {
   return (): HTMLElement => {
     const elem = document.createElement('template');
     elem.innerHTML = htmlText;
-    const node = elem.content.firstChild as Node;
+    const node = elem.content.firstElementChild as Element;
     return document.importNode(node, true) as HTMLElement;
   };
 }
@@ -22,5 +22,6 @@ setTimeout(() => {
   console.info('lastChild', node.firstChild?.lastChild);
   console.info('firstElementChild', node.firstElementChild);
   console.info('lastElementChild', node.lastElementChild);
+  console.info('comment node:', node.nodeName);
   container?.appendChild(node);
 }, 1000);

@@ -14,6 +14,8 @@ namespace dombinding
         {
             T::InstanceAccessor("className", &T::ClassNameGetter, &T::ClassNameSetter),
             T::InstanceAccessor("id", &T::IdGetter, &T::IdSetter),
+            T::InstanceAccessor("firstElementChild", &T::FirstElementChildGetter, nullptr),
+            T::InstanceAccessor("lastElementChild", &T::LastElementChildGetter, nullptr),
             T::InstanceAccessor("innerHTML", &T::InnerHTMLGetter, &T::InnerHTMLSetter),
             T::InstanceAccessor("outerHTML", &T::OuterHTMLGetter, &T::OuterHTMLSetter),
             T::InstanceMethod("after", &T::After),
@@ -67,6 +69,30 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     this->node->setId(value.As<Napi::String>().Utf8Value());
+  }
+
+  template <typename ObjectType, typename ElementType>
+  Napi::Value ElementBase<ObjectType, ElementType>::FirstElementChildGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    auto childElement = this->node->firstElementChild();
+    return childElement == nullptr
+               ? env.Null()
+               : Node::NewInstance(env, childElement);
+  }
+
+  template <typename ObjectType, typename ElementType>
+  Napi::Value ElementBase<ObjectType, ElementType>::LastElementChildGetter(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    auto childElement = this->node->lastElementChild();
+    return childElement == nullptr
+               ? env.Null()
+               : Node::NewInstance(env, childElement);
   }
 
   template <typename ObjectType, typename ElementType>

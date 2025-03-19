@@ -308,19 +308,26 @@ namespace dom
         // Check if the width is auto, then calculate the width from the text.
         if (layoutStyle.width().isAuto())
         {
-          textRect = text.getTextClientRect(); // Use inf if the width is auto.
+          float maxWidth = numeric_limits<float>::infinity();
+          shared_ptr<SceneObject> parent = node.getParentNodeAs<SceneObject>();
+          if (parent != nullptr)
+            maxWidth = parent->offsetWidth(); // Use the parent's width as the max width.
+          textRect = text.getTextClientRect(maxWidth); // Use inf if the width is auto.
           layoutStyle.setWidth(Dimension::Length(textRect.width()));
         }
         else
+        {
           textRect = text.getTextClientRect(offsetWidth());
+        }
 
         // Check if the height is auto, then use the calculated height.
         if (layoutStyle.height().isAuto())
           layoutStyle.setHeight(Dimension::Length(textRect.height()));
       }
-      catch (const std::bad_cast &e)
+      catch (const std::exception &e)
       {
         // Ignore the exception.
+        cerr << "Failed to update the layout style for the text node: " << e.what() << endl;
       }
     }
     else if (node.nodeType == NodeType::ELEMENT_NODE)

@@ -337,6 +337,7 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(HTMLStyleElement);
         V8_SET_GLOBAL_FROM_MAIN(HTMLTemplateElement);
         V8_SET_GLOBAL_FROM_MAIN(CharacterData);
+        V8_SET_GLOBAL_FROM_MAIN(Comment);
         V8_SET_GLOBAL_FROM_MAIN(Text);
 
         // DOM APIs

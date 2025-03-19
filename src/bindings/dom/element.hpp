@@ -32,6 +32,8 @@ namespace dombinding
     void ClassNameSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value IdGetter(const Napi::CallbackInfo &info);
     void IdSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value FirstElementChildGetter(const Napi::CallbackInfo &info);
+    Napi::Value LastElementChildGetter(const Napi::CallbackInfo &info);
     Napi::Value InnerHTMLGetter(const Napi::CallbackInfo &info);
     void InnerHTMLSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value OuterHTMLGetter(const Napi::CallbackInfo &info);

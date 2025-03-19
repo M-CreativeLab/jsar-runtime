@@ -153,9 +153,11 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    // TODO: implement the getter
-    Napi::TypeError::New(env, "Failed to get 'nodeValue' property: not implemented").ThrowAsJavaScriptException();
-    return env.Undefined();
+
+    std::optional<std::string> nodeValue = this->node->nodeValue();
+    return nodeValue.has_value()
+               ? env.Null()
+               : Napi::String::New(env, nodeValue.value());
   }
 
   template <typename ObjectType, typename NodeType>
@@ -163,8 +165,9 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    // TODO: implement the setter
-    Napi::TypeError::New(env, "Failed to set 'nodeValue' property: not implemented").ThrowAsJavaScriptException();
+
+    std::string valueString = value.As<Napi::String>().Utf8Value();
+    this->node->nodeValue(valueString);
   }
 
   template <typename ObjectType, typename NodeType>

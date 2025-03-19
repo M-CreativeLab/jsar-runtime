@@ -81,13 +81,18 @@ namespace dom
       setSource("<html><head></head><body></body></html>");
   }
 
-  void Document::setSource(const string &source)
+  void Document::setSource(const string &source, bool isFragment)
   {
     string inputText(source);
     if (documentType == DocumentType::kHTML)
       fixSource(inputText); // Fix the source string if it's an HTML document.
 
-    auto r = docInternal->load_string(inputText.c_str());
+    // Parse the XML document.
+    auto flag = pugi::parse_default | pugi::parse_ws_pcdata | pugi::parse_comments;
+    if (isFragment)
+      flag |= pugi::parse_fragment;
+
+    auto r = docInternal->load_string(inputText.c_str(), flag);
     if (r.status != pugi::xml_parse_status::status_ok)
       throw runtime_error("Failed to parse XML document: " + std::string(r.description()));
 
@@ -267,12 +272,22 @@ namespace dom
     string defaultComment = "<!---->"; // replace the invalid comment with the default comment.
 
     size_t pos = 0;
-    while ((pos = source.find(invalidComment, pos)) != std::string::npos)
+    while ((pos = source.find(invalidComment, pos)) != string::npos)
     {
       source.replace(pos, invalidComment.size(), defaultComment);
       pos += defaultComment.length();
     }
     return source;
+  }
+
+  shared_ptr<Element> Document::firstElementChild() const
+  {
+    for (auto childNode : childNodes)
+    {
+      if (childNode->nodeType == NodeType::ELEMENT_NODE)
+        return Node::As<Element>(childNode);
+    }
+    return nullptr;
   }
 
   string XMLDocument::SerializeFragment(const shared_ptr<Node> node, bool wellFormed)
@@ -540,7 +555,7 @@ namespace dom
 
     shared_ptr<Document> document = Document::Make(
         "text/html", DocumentType::kHTML, contextDocument->browsingContext, false);
-    document->setSource("<html>" + input + "</html>");
+    document->setSource("<html>" + input + "</html>", true);
 
     auto htmlElement = document->documentElement();
     assert(htmlElement != nullptr && "The `documentElement` is not found.");

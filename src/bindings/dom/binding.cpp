@@ -2,6 +2,7 @@
 #include "./event.hpp"
 #include "./node-inl.hpp"
 #include "./character_data-inl.hpp"
+#include "./comment.hpp"
 #include "./text.hpp"
 #include "./element-inl.hpp"
 #include "./all_html_elements.hpp"
@@ -31,6 +32,7 @@ namespace bindings
       TYPED_ELEMENT_MAP(XX)
 #undef XX
       dombinding::CharacterData::Init(env);
+      dombinding::Comment::Init(env);
       dombinding::Text::Init(env);
       dombinding::DocumentFragment::Init(env);
 

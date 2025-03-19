@@ -1,5 +1,6 @@
 console.info('hello script!');
 
+console.info(document.body.childNodes);
 console.info(document.createElement('div'));
 console.info(document.createElement('span'));
 console.info(document.createElement('p'));
@@ -24,6 +25,9 @@ console.info('querySelector() =>', document.querySelector('.first'));
     console.info(`p[${index++}]`, element);
   }
 }
+
+const main = document.querySelector('main');
+console.info('main.lastChild should be comment node', main.lastElementChild);
 
 // setTimeout(() => {
 //   div.style.setProperty('display', 'none');

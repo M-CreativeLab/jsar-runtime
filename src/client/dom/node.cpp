@@ -7,6 +7,7 @@
 #include "./mutation_observer.hpp"
 #include "./element.hpp"
 #include "./text.hpp"
+#include "./comment.hpp"
 #include "./scene_object.hpp"
 
 namespace dom
@@ -25,6 +26,9 @@ namespace dom
       break;
     case pugi::xml_node_type::node_pcdata:
       newNode = dynamic_pointer_cast<Node>(Text::CreateText(node, ownerDocument));
+      break;
+    case pugi::xml_node_type::node_comment:
+      newNode = dynamic_pointer_cast<Node>(Comment::CreateComment(node, ownerDocument));
       break;
     case pugi::xml_node_type::node_null:
     case pugi::xml_node_type::node_document:
@@ -91,7 +95,8 @@ namespace dom
       return getOwnerDocumentChecked().createDocumentFragment();
     }
     else if (Node::Is<Element>(aChild) ||
-             Node::Is<Text>(aChild))
+             Node::Is<Text>(aChild) ||
+             Node::Is<Comment>(aChild))
     {
       childNodes.push_back(aChild);
       childAddedCallback(aChild);
@@ -99,7 +104,9 @@ namespace dom
     }
     else
     {
-      throw runtime_error("Failed to append the child: the new child node is not a DocumentFragment, Text or Element.");
+      string msg = "Failed to append the child: "
+                   "the new child node is not a DocumentFragment, Text, Comment or Element.";
+      throw runtime_error(msg);
     }
   }
 
@@ -177,6 +184,8 @@ namespace dom
     // TODO: support the other node types
     if (nodeType == NodeType::ELEMENT_NODE)
       cloned = Element::CloneElement(shared_from_this());
+    else if (nodeType == NodeType::COMMENT_NODE)
+      cloned = Comment::CloneComment(shared_from_this());
     else if (nodeType == NodeType::TEXT_NODE)
       cloned = Text::CloneText(shared_from_this());
     else
@@ -227,7 +236,7 @@ namespace dom
   {
     if (nodeType == NodeType::TEXT_NODE ||
         nodeType == NodeType::CDATA_SECTION_NODE)
-      return textContent_;
+      return nodeValue_;
 
     string resultStr;
     for (auto child : childNodes)
@@ -549,10 +558,13 @@ namespace dom
     }
 
     // Update text content
-    if (internalType == pugi::xml_node_type::node_pcdata)
-      textContent_ = string(internal->value());
+    if (internalType == pugi::xml_node_type::node_pcdata ||
+        internalType == pugi::xml_node_type::node_comment)
+      nodeValue_ = string(internal->value());
     else if (internalType == pugi::xml_node_type::node_cdata)
-      textContent_ = string(internal->child_value());
+      nodeValue_ = string(internal->child_value());
+    else
+      nodeValue_ = "";
 
     // Trigger the internal updated event
     onInternalUpdated();

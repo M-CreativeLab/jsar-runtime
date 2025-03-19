@@ -27,17 +27,36 @@ namespace dom
       return "";
 
     string result(text);
-    // Remove the new line characters
-    result = replaceAll(result, "\n", "");
-    result = replaceAll(result, "\r", "");
-    // Replace the special characters
-    result = replaceAll(result, "&lt;", "<");
-    result = replaceAll(result, "&gt;", ">");
-    result = replaceAll(result, "&amp;", "&");
-    result = replaceAll(result, "&quot;", "\"");
-    result = replaceAll(result, "&apos;", "'");
-    // Trim the beginning and ending spaces
-    result = result.substr(result.find_first_not_of(" \t\n\r"), result.find_last_not_of(" \t\n\r") + 1);
+    try
+    {
+      // Remove the new line characters
+      result = replaceAll(result, "\n", "");
+      result = replaceAll(result, "\r", "");
+
+      // Replace the special characters
+      result = replaceAll(result, "&lt;", "<");
+      result = replaceAll(result, "&gt;", ">");
+      result = replaceAll(result, "&amp;", "&");
+      result = replaceAll(result, "&quot;", "\"");
+      result = replaceAll(result, "&apos;", "'");
+
+      // Trim the beginning and ending spaces
+      {
+        size_t start = result.find_first_not_of(" \t\n\r");
+        if (start == string::npos || start >= result.length())
+          start = 0;
+        size_t end = result.find_last_not_of(" \t\n\r");
+        if (end == string::npos || end >= result.length())
+          end = result.length();
+        result = result.substr(start, end - start + 1);
+      }
+    }
+    catch (const std::exception &e)
+    {
+      cerr << "Failed to process the text content: " << e.what() << endl;
+      cerr << "                        input text: (" << text << ")" << endl;
+      result = "";
+    }
     return result;
   }
 
@@ -46,8 +65,13 @@ namespace dom
   {
     if (node.type() == pugi::xml_node_type::node_pcdata)
       data_ = processTextContent(node.value());
-    else
-      throw invalid_argument("The node type is not a character data node.");
+  }
+
+  CharacterData::CharacterData(NodeType nodeType, std::string nodeName, const string &data,
+                               shared_ptr<Document> ownerDocument)
+      : Node(nodeType, nodeName, ownerDocument),
+        data_(data)
+  {
   }
 
   CharacterData::CharacterData(const CharacterData &other)

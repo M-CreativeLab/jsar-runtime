@@ -146,6 +146,8 @@ namespace dom
       classList_ = DOMTokenList(classList_, className);
     }
     inline DOMTokenList &classList() { return classList_; }
+    std::shared_ptr<Element> firstElementChild() const;
+    std::shared_ptr<Element> lastElementChild() const;
 
   protected:
     DOMTokenList classList_;

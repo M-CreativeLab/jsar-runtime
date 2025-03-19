@@ -12,6 +12,8 @@ namespace dom
   {
   public:
     CharacterData(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
+    CharacterData(NodeType nodeType, std::string nodeName, const std::string &data,
+                  std::shared_ptr<Document> ownerDocument);
     CharacterData(const CharacterData &other);
     ~CharacterData() = default;
 

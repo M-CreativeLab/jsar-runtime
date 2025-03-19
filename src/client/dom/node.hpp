@@ -101,7 +101,7 @@ namespace dom
   public:
     /**
      * Create an empty `Node` object.
-     * 
+     *
      * @param nodeType The type of the node.
      * @param nodeName The name of the node.
      * @param ownerDocument The owner document of the node.
@@ -109,14 +109,14 @@ namespace dom
     Node(NodeType nodeType, std::string nodeName, std::optional<std::shared_ptr<Document>> ownerDocument);
     /**
      * Create a new `Node` object from a `pugi::xml_node`.
-     * 
+     *
      * @param node The `pugi::xml_node` object to create the node.
      * @param ownerDocument The owner document of the node.
      */
     Node(pugi::xml_node node, std::shared_ptr<Document> ownerDocument);
     /**
      * Copy constructor to use for cloning the node.
-     * 
+     *
      * @param other The node to copy.
      */
     Node(const Node &other);
@@ -157,7 +157,7 @@ namespace dom
     void replaceAll(std::shared_ptr<Node> newChild);
     /**
      * Insert a child node before a specific child node.
-     * 
+     *
      * @param newChild The new child node to insert.
      * @param refChild The reference child node to insert before.
      * @returns The inserted child node.
@@ -165,7 +165,7 @@ namespace dom
     std::shared_ptr<Node> insertBefore(std::shared_ptr<Node> newChild, std::shared_ptr<Node> refChild);
     /**
      * Clone the current node.
-     * 
+     *
      * @returns a duplicate of the node on which this method was called.
      */
     std::shared_ptr<Node> cloneNode(bool deep);
@@ -184,7 +184,7 @@ namespace dom
     /**
      * Get the parent `Element` node of the current node, if the node has no parent, or if that parent is not an
      * `Element`, this property returns `null`.
-     * 
+     *
      * @returns The parent `Element` node or `null`.
      */
     std::shared_ptr<Element> getParentElement() const;
@@ -306,7 +306,7 @@ namespace dom
   protected:
     /**
      * Get the shared pointer of the current `Node` object.
-     * 
+     *
      * @param assertNotNull If true, it will throw an exception if the shared pointer is null.
      */
     template <typename T = Node>
@@ -469,6 +469,34 @@ namespace dom
      */
     NodeType nodeType;
     /**
+     * A string containing the value of the current node.
+     */
+    inline std::optional<std::string> nodeValue() const
+    {
+      switch (nodeType)
+      {
+      case NodeType::CDATA_SECTION_NODE:
+      case NodeType::COMMENT_NODE:
+      case NodeType::TEXT_NODE:
+        return nodeValue_;
+      default:
+        return std::nullopt;
+      }
+    }
+    inline void nodeValue(std::string newValue)
+    {
+      switch (nodeType)
+      {
+      case NodeType::CDATA_SECTION_NODE:
+      case NodeType::COMMENT_NODE:
+      case NodeType::TEXT_NODE:
+        nodeValue_ = newValue;
+        break;
+      default:
+        break;
+      }
+    }
+    /**
      * Returns the `Document` that this node belongs to. If the node is itself a document, returns null.
      */
     std::optional<std::weak_ptr<Document>> ownerDocument = nullopt;
@@ -500,7 +528,7 @@ namespace dom
   protected:
     std::shared_ptr<pugi::xml_node> internal;
     std::optional<uint32_t> depthInTree = std::nullopt;
-    std::string textContent_;
+    std::string nodeValue_;
     // If this node could be rendered, `false` by default.
     bool renderable = false;
     // The mutation observers of this node.

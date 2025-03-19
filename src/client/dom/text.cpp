@@ -25,6 +25,19 @@ namespace dom
     return textNode;
   }
 
+  // Remove the leading and trailing whitespaces, and \n, \r, \t characters.
+  string processTextContent(const string &text)
+  {
+    string result(text);
+    size_t start = result.find_first_not_of(" \t\n\r");
+    if (start == string::npos || start >= result.length())
+      start = 0;
+    size_t end = result.find_last_not_of(" \t\n\r");
+    if (end == string::npos || end >= result.length())
+      end = result.length();
+    return result.substr(start, end - start + 1);
+  }
+
   std::shared_ptr<Text> Text::CreateText(pugi::xml_node node, shared_ptr<Document> ownerDocument)
   {
     return make_shared<Text>(node, ownerDocument);
@@ -89,7 +102,7 @@ namespace dom
     return make_unique<Text>(second, getOwnerDocumentReference());
   }
 
-  geometry::DOMRect Text::getTextClientRect(float maxWidth) const
+  const geometry::DOMRect Text::getTextClientRect(float maxWidth) const
   {
     if (!hasSceneComponent<WebContent>() || !hasSceneComponent<Text2d>())
       return geometry::DOMRect();
@@ -98,6 +111,9 @@ namespace dom
     const auto &textComponent = getSceneComponentChecked<Text2d>();
 
     string text = textComponent.content;
+    if (text.size() == 0)
+      return geometry::DOMRect();
+
     auto paragraphStyle = webContentComponent.paragraphStyle();
     auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle,
                                                    TrClientContextPerProcess::Get()->getFontCacheManager());
@@ -133,7 +149,10 @@ namespace dom
       auto appendText = [this](Scene &scene)
       {
         assert(entity_.has_value());
-        scene.addComponent(entity_.value(), Text2d(data()));
+        string textContent = data();
+        // Remove the leading and trailing whitespaces, and \n, \r, \t characters.
+        textContent = processTextContent(textContent);
+        scene.addComponent(entity_.value(), Text2d(textContent));
       };
       useScene(appendText);
     }
@@ -180,17 +199,6 @@ namespace dom
     textStyle->setProperty(property, parentStyle.getPropertyValue(property)); \
   }
 
-#define USE_PARENT_SIZE(property)                                                                  \
-  if (parentStyle.hasProperty(property))                                                           \
-  {                                                                                                \
-    _MAKE_TEXT_STYLE_IF_NOT_EXIST()                                                                \
-    auto dimension = parentStyle.getPropertyValueAs<crates::layout2::styles::Dimension>(property); \
-    if (dimension.isLength() || dimension.isPercent())                                             \
-      textStyle->setProperty(property, "100%");                                                    \
-    else                                                                                           \
-      textStyle->setProperty(property, "auto");                                                    \
-  }
-
       // Font styles
       USE_PARENT_STYLE("font-family");
       USE_PARENT_STYLE("font-size");
@@ -211,11 +219,6 @@ namespace dom
       USE_PARENT_STYLE("direction");
       USE_PARENT_STYLE("unicode-bidi");
 
-      // Controls the text rect
-      USE_PARENT_SIZE("width");
-      USE_PARENT_SIZE("height");
-
-#undef USE_PARENT_SIZE
 #undef USE_PARENT_STYLE
 #undef _MAKE_TEXT_STYLE_IF_NOT_EXIST
 

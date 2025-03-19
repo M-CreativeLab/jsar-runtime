@@ -68,8 +68,14 @@ namespace dom
     TYPED_ELEMENT_MAP(XX)
 #undef XX
 
-    // Return null if the source element is not a specific type.
-    return nullptr;
+    // Just clone as `HTMLElement` if the source element is not supported yet.
+    shared_ptr<HTMLElement> clonedElement;
+    {
+      auto typedSrcElement = dynamic_pointer_cast<HTMLElement>(srcElement);
+      clonedElement = make_shared<HTMLElement>(*typedSrcElement);
+      clonedElement->createdCallback();
+    }
+    return dynamic_pointer_cast<Element>(clonedElement);
   }
 
   Element::Element(string tagName, optional<shared_ptr<Document>> ownerDocument)
@@ -333,5 +339,26 @@ namespace dom
 
   void Element::setOuterHTML(const string &html)
   {
+  }
+
+  std::shared_ptr<Element> Element::firstElementChild() const
+  {
+    for (auto childNode : childNodes)
+    {
+      if (childNode->nodeType == NodeType::ELEMENT_NODE)
+        return Node::As<Element>(childNode);
+    }
+    return nullptr;
+  }
+
+  std::shared_ptr<Element> Element::lastElementChild() const
+  {
+    for (auto it = childNodes.rbegin(); it != childNodes.rend(); it++)
+    {
+      shared_ptr<Node> childNode = *it;
+      if (childNode->nodeType == NodeType::ELEMENT_NODE)
+        return Node::As<Element>(childNode);
+    }
+    return nullptr;
   }
 }
