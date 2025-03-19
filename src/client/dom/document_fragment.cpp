@@ -25,4 +25,25 @@ namespace dom
     }
     return count;
   }
+
+  shared_ptr<Element> DocumentFragment::firstElementChild() const
+  {
+    for (auto childNode : childNodes)
+    {
+      if (childNode->nodeType == NodeType::ELEMENT_NODE)
+        return Node::As<Element>(childNode);
+    }
+    return nullptr;
+  }
+
+  shared_ptr<Element> DocumentFragment::lastElementChild() const
+  {
+    for (auto it = childNodes.rbegin(); it != childNodes.rend(); it++)
+    {
+      shared_ptr<Node> childNode = *it;
+      if (childNode->nodeType == NodeType::ELEMENT_NODE)
+        return Node::As<Element>(childNode);
+    }
+    return nullptr;
+  }
 }

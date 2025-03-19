@@ -61,17 +61,21 @@ namespace dombinding
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    Napi::TypeError::New(env, "Failed to get 'firstElementChild' property: not implemented")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
+
+    auto element = this->node->firstElementChild();
+    return element != nullptr
+               ? Element::NewInstance(env, element)
+               : env.Null();
   }
 
   Napi::Value DocumentFragment::LastElementChildGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
-    Napi::TypeError::New(env, "Failed to get 'lastElementChild' property: not implemented")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
+
+    auto element = this->node->lastElementChild();
+    return element != nullptr
+               ? Element::NewInstance(env, element)
+               : env.Null();
   }
 }

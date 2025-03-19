@@ -18,7 +18,9 @@ setTimeout(() => {
   `);
 
   const node = header();
-  console.info(node.firstChild);
-  console.info(node.firstChild?.lastChild);
+  console.info('firstChild', node.firstChild);
+  console.info('lastChild', node.firstChild?.lastChild);
+  console.info('firstElementChild', node.firstElementChild);
+  console.info('lastElementChild', node.lastElementChild);
   container?.appendChild(node);
 }, 1000);

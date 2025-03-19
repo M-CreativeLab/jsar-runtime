@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "./node.hpp"
+#include "./element.hpp"
 
 namespace dom
 {
@@ -16,5 +17,7 @@ namespace dom
 
   public:
     size_t childElementCount() const;
+    std::shared_ptr<Element> firstElementChild() const;
+    std::shared_ptr<Element> lastElementChild() const;
   };
 }
