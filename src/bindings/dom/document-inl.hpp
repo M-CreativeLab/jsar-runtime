@@ -145,6 +145,35 @@ namespace dombinding
   }
 
   template <typename ObjectType, typename DocumentType>
+  Napi::Value DocumentBase<ObjectType, DocumentType>::ImportNode(const Napi::CallbackInfo &info)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() < 1)
+    {
+      Napi::TypeError::New(env,
+                           "Failed to execute 'importNode' on 'Document': 1 argument required, but only 0 present.")
+          .ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    auto node = info[0].As<Napi::Object>();
+    bool deep = info.Length() > 1 ? info[1].ToBoolean() : false;
+
+    auto nodeImpl = Node::GetImpl(node);
+    if (nodeImpl == nullptr)
+    {
+      std::string msg = "Failed to execute 'importNode' on 'Document': "
+                        "The node to be imported is not a valid Node object.";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+    auto importedNode = this->node->importNode(nodeImpl, deep);
+    return Node::NewInstance(env, importedNode);
+  }
+
+  template <typename ObjectType, typename DocumentType>
   Napi::Value DocumentBase<ObjectType, DocumentType>::GetElementById(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();

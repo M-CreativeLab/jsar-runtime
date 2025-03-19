@@ -147,6 +147,16 @@ namespace dom
     return make_shared<Text>(data, getPtr<Document>());
   }
 
+  std::shared_ptr<Node> Document::importNode(const std::shared_ptr<Node> node, bool deep)
+  {
+    if (Node::Is<Document>(node))
+      throw runtime_error("The node is a document node, which cannot be imported.");
+
+    auto importedNode = node->cloneNode(deep);
+    importedNode->updateFieldsFromDocument(getPtr<Document>());
+    return importedNode;
+  }
+
   shared_ptr<Element> Document::getElementById(const string &id)
   {
     auto it = elementMapById.find(id);

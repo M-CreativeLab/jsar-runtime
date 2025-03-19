@@ -41,6 +41,7 @@ namespace dombinding
               ObjectType::InstanceMethod("createElement", &ObjectType::CreateElement, napi_default_method),
               ObjectType::InstanceMethod("createElementNS", &ObjectType::CreateElementNS, napi_default_method),
               ObjectType::InstanceMethod("createTextNode", &ObjectType::CreateTextNode, napi_default_method),
+              ObjectType::InstanceMethod("importNode", &ObjectType::ImportNode, napi_default_method),
               ObjectType::InstanceMethod("getElementById",
                                          &ObjectType::GetElementById, napi_default_method),
               ObjectType::InstanceMethod("getElementsByClassName",
@@ -124,6 +125,7 @@ namespace dombinding
     Napi::Value CreateElement(const Napi::CallbackInfo &info);
     Napi::Value CreateElementNS(const Napi::CallbackInfo &info);
     Napi::Value CreateTextNode(const Napi::CallbackInfo &info);
+    Napi::Value ImportNode(const Napi::CallbackInfo &info);
     Napi::Value GetElementById(const Napi::CallbackInfo &info);
     Napi::Value GetElementsByClassName(const Napi::CallbackInfo &info);
     Napi::Value GetElementsByName(const Napi::CallbackInfo &info);

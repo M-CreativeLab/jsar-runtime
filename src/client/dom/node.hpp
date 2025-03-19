@@ -43,6 +43,7 @@ namespace dom
   class Node : public DOMEventTarget,
                public enable_shared_from_this<Node>
   {
+    friend class Document;
     friend class Attr;
 
   public:

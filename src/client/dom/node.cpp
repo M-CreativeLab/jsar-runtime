@@ -147,8 +147,7 @@ namespace dom
 
   std::shared_ptr<Node> Node::cloneNode(bool deep)
   {
-    if (nodeType == NodeType::DOCUMENT_NODE)
-      return nullptr;
+    assert(nodeType != NodeType::DOCUMENT_NODE && "The document node cannot be cloned.");
 
     std::shared_ptr<dom::Node> cloned = nullptr;
     // TODO: support the other node types
