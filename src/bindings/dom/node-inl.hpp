@@ -202,7 +202,7 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    shared_ptr<dom::Node> firstChildNode = node->getFirstChild();
+    shared_ptr<dom::Node> firstChildNode = node->firstChild();
     if (firstChildNode != nullptr)
       return Node::NewInstance(env, firstChildNode);
     else
@@ -215,7 +215,7 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    shared_ptr<dom::Node> lastChildNode = node->getLastChild();
+    shared_ptr<dom::Node> lastChildNode = node->lastChild();
     if (lastChildNode != nullptr)
       return Node::NewInstance(env, lastChildNode);
     else

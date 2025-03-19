@@ -150,9 +150,9 @@ namespace dom
      */
     inline std::shared_ptr<Element> firstElementChild() const
     {
-      auto firstChild = getFirstChild();
-      if (firstChild != nullptr)
-        return std::dynamic_pointer_cast<Element>(firstChild);
+      auto firstChildNode = firstChild();
+      if (firstChildNode != nullptr)
+        return std::dynamic_pointer_cast<Element>(firstChildNode);
       else
         return nullptr;
     }

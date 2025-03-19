@@ -168,18 +168,6 @@ namespace dom
      */
     inline std::vector<std::shared_ptr<Node>> getChildNodes() { return childNodes; }
     /**
-     * Get the first child node of the current node.
-     *
-     * @returns a shared pointer to the first child node.
-     */
-    inline std::shared_ptr<Node> getFirstChild() const { return firstChild.lock(); }
-    /**
-     * Get the last child node of the current node.
-     *
-     * @returns a shared pointer to the last child node.
-     */
-    inline std::shared_ptr<Node> getLastChild() const { return lastChild.lock(); }
-    /**
      * Get the parent node of the current node.
      *
      * @returns a shared pointer to the parent node.
@@ -472,13 +460,13 @@ namespace dom
      */
     std::optional<std::weak_ptr<Document>> ownerDocument = nullopt;
     /**
-     * The weak reference to the first child of this node, if you need to get the shared pointer, use `getFirstChild()`.
+     * The `Node` is the first child of the current node.
      */
-    std::weak_ptr<Node> firstChild;
+    std::shared_ptr<Node> firstChild() const;
     /**
-     * The weak reference to the last child of this node, if you need to get the shared pointer, use `getLastChild()`.
+     * The `Node` is the last child of the current node.
      */
-    std::weak_ptr<Node> lastChild;
+    std::shared_ptr<Node> lastChild() const;
     /**
      * The weak reference to the parent node of this node, if you need to get the shared pointer, use `getParentNode()`.
      */

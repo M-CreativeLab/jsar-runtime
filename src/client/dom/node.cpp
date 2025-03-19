@@ -548,23 +548,20 @@ namespace dom
         cerr << "Failed to create node: " << child.name() << endl;
       }
     }
+  }
 
-    size_t childCount = childNodes.size();
-    if (childCount == 1)
-    {
-      firstChild = childNodes[0];
-      lastChild = childNodes[0];
-    }
-    else if (childCount == 2)
-    {
-      firstChild = childNodes[0];
-      lastChild = childNodes[1];
-    }
-    else if (childCount > 2)
-    {
-      firstChild = childNodes[0];
-      lastChild = childNodes[childCount - 1];
-    }
+  shared_ptr<Node> Node::firstChild() const
+  {
+    if (childNodes.empty())
+      return nullptr;
+    return childNodes.front();
+  }
+
+  shared_ptr<Node> Node::lastChild() const
+  {
+    if (childNodes.empty())
+      return nullptr;
+    return childNodes.back();
   }
 
   shared_ptr<Node> Node::previousSibling() const

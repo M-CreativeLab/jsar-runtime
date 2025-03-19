@@ -16,5 +16,9 @@ setTimeout(() => {
       <!>
     </main>
   `);
-  container?.appendChild(header());
+
+  const node = header();
+  console.info(node.firstChild);
+  console.info(node.firstChild?.lastChild);
+  container?.appendChild(node);
 }, 1000);
