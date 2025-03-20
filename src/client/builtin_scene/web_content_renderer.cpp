@@ -43,12 +43,8 @@ namespace builtin_scene::web_renderer
 
   void RenderBaseSystem::onExecute()
   {
-    auto selectContent = [](shared_ptr<WebContent> content)
-    {
-      // Valid content should have a canvas and be dirty.
-      return content->canvas() != nullptr && content->isDirty();
-    };
-    auto list = queryEntitiesWithComponent<WebContent>(selectContent);
+    auto list = queryEntitiesWithComponent<WebContent>([](const WebContent &content) -> bool
+                                                       { return content.canvas() != nullptr && content.isDirty(); });
     if (list.size() == 0)
       return;
 

@@ -43,11 +43,15 @@ namespace builtin_scene
     notifyHolders();
   }
 
-  void Instance::setTransform(const glm::mat4 &transformationMatrix)
+  void Instance::setTransform(const glm::mat4 &transformationMatrix, bool &hasChanged)
   {
     auto &transform = data_.transform;
+    if (transform == transformationMatrix)
+      return; // Skip if there is no change.
+
     transform = transformationMatrix;
     notifyHolders();
+    hasChanged = true;
   }
 
   void Instance::setTexture(array<float, 2> uvOffset,

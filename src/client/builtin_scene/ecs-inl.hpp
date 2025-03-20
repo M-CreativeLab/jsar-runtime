@@ -93,16 +93,23 @@ namespace builtin_scene::ecs
 
     entityToIndexMap_.erase(entity);
     indexToEntityMap_.erase(lastIndex);
+    entityToComponentCache_.erase(entity);
     size_ -= 1;
   }
 
   template <typename T>
   std::shared_ptr<T> ComponentSet<T>::get(EntityId entity)
   {
-    if (entityToIndexMap_.find(entity) != entityToIndexMap_.end())
-      return components_[entityToIndexMap_[entity]];
-    else
+    auto cachedComponent = entityToComponentCache_[entity];
+    if (!cachedComponent.expired())
+      return cachedComponent.lock();
+
+    if (entityToIndexMap_.find(entity) == entityToIndexMap_.end())
       return nullptr;
+
+    std::shared_ptr<T> component = components_[entityToIndexMap_[entity]];
+    entityToComponentCache_[entity] = component; // TODO: support LRU cache.
+    return component;
   }
 
   template <typename T>
@@ -148,7 +155,7 @@ namespace builtin_scene::ecs
   }
 
   template <typename ComponentType>
-  std::vector<EntityId> App::queryEntities()
+  std::vector<EntityId> App::queryEntities(std::function<bool(const ComponentType &)> filter)
   {
     std::shared_lock<std::shared_mutex> lock(mutexForEntities_);
     std::vector<EntityId> result;
@@ -157,14 +164,23 @@ namespace builtin_scene::ecs
     {
       EntityId entityId = pair.first;
       if (componentSet->contains(entityId))
+      {
+        if (filter != nullptr)
+        {
+          std::shared_ptr<ComponentType> component = componentSet->get(entityId);
+          assert(component != nullptr);
+          if (filter(*component) == false)
+            continue;
+        }
         result.push_back(entityId);
+      }
     }
     return result;
   }
 
   template <typename QueryComponentType, typename IncludeComponentType>
   std::vector<std::pair<EntityId, std::shared_ptr<IncludeComponentType>>> App::queryEntitiesWithComponent(
-      std::function<bool(std::shared_ptr<QueryComponentType>)> filter)
+      std::function<bool(const QueryComponentType &)> filter)
   {
     std::shared_lock<std::shared_mutex> lock(mutexForEntities_);
     std::vector<std::pair<EntityId, std::shared_ptr<IncludeComponentType>>> result;
@@ -180,12 +196,12 @@ namespace builtin_scene::ecs
 
         std::shared_ptr<IncludeComponentType> includeComponent;
         if constexpr (std::is_same<QueryComponentType, IncludeComponentType>::value)
-          includeComponent = queryComponent;  // If the types are the same, use the query component.
+          includeComponent = queryComponent; // If the types are the same, use the query component.
         else
           includeComponent = includeComponentSet->get(entityId);
 
         // Check if the entity should be included.
-        if (filter == nullptr || filter(queryComponent))
+        if (filter == nullptr || filter(*queryComponent) == true)
           result.push_back(std::make_pair(entityId, includeComponent));
       }
     }

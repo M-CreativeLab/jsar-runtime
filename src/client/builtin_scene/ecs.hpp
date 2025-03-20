@@ -368,6 +368,7 @@ namespace builtin_scene::ecs
     std::array<std::shared_ptr<T>, MAX_ENTITY_ID> components_;
     std::unordered_map<EntityId, size_t> entityToIndexMap_;
     std::unordered_map<size_t, EntityId> indexToEntityMap_;
+    std::unordered_map<EntityId, std::weak_ptr<T>> entityToComponentCache_;
     size_t size_ = 0;
   };
 
@@ -577,22 +578,25 @@ namespace builtin_scene::ecs
      * Query all entities with the given component type.
      *
      * @tparam ComponentType The type of the component.
+     *
+     * @param filter The filter to apply to the component.
      * @returns The list of entity Ids with the given component type.
      */
     template <typename ComponentType>
-    [[nodiscard]] std::vector<EntityId> queryEntities();
+    [[nodiscard]] std::vector<EntityId> queryEntities(
+        std::function<bool(const ComponentType &)> filter = nullptr);
     /**
      * Query all entities with the given query component type and include the include component type.
      *
      * @tparam QueryComponentType The component type to query.
      * @tparam IncludeComponentType The component type to be included as the result.
-     * 
+     *
      * @param filter The filter to apply to the query component.
      * @returns The list of components of the given type.
      */
     template <typename QueryComponentType, typename IncludeComponentType>
     [[nodiscard]] std::vector<std::pair<EntityId, std::shared_ptr<IncludeComponentType>>> queryEntitiesWithComponent(
-        std::function<bool(std::shared_ptr<QueryComponentType>)> filter = nullptr);
+        std::function<bool(const QueryComponentType &)> filter = nullptr);
     /**
      * Get the first entity with the given component type, or an empty optional if not found.
      *
@@ -846,22 +850,27 @@ namespace builtin_scene::ecs
      * Query all entities with the given component type.
      *
      * @tparam ComponentType The type of the component.
+     *
+     * @param filter The filter to apply to the query.
      * @returns The list of entity Ids with the given component type.
      */
     template <typename ComponentType>
-    inline std::vector<EntityId> queryEntities() { return connectedApp_->queryEntities<ComponentType>(); }
+    inline std::vector<EntityId> queryEntities(std::function<bool(const ComponentType &)> filter = nullptr)
+    {
+      return connectedApp_->queryEntities<ComponentType>(filter);
+    }
     /**
      * Query all entities with the given query component type and include the include component type.
      *
      * @tparam QueryComponentType The component type to query.
      * @tparam IncludeComponentType The component type to be included as the result.
-     * 
+     *
      * @param filter The filter to apply to the query component.
      * @returns The list of components of the given type.
      */
     template <typename QueryComponentType, typename IncludeComponentType = QueryComponentType>
     inline std::vector<std::pair<EntityId, std::shared_ptr<IncludeComponentType>>> queryEntitiesWithComponent(
-        std::function<bool(std::shared_ptr<QueryComponentType>)> filter = nullptr)
+        std::function<bool(const QueryComponentType &)> filter = nullptr)
     {
       return connectedApp_->queryEntitiesWithComponent<QueryComponentType, IncludeComponentType>(filter);
     }

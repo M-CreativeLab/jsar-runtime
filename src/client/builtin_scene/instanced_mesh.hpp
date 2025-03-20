@@ -47,7 +47,7 @@ namespace builtin_scene
     bool setColor(const glm::vec4 &color, bool &hasChanged);
     void translate(float tx, float ty, float tz);
     void scale(float sx, float sy, float sz);
-    void setTransform(const glm::mat4 &transformationMatrix);
+    void setTransform(const glm::mat4 &transformationMatrix, bool &hasChanged);
     void setTexture(std::array<float, 2> uvOffset,
                     std::array<float, 2> uvScale,
                     uint32_t layerIndex,

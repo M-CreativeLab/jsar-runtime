@@ -10,8 +10,10 @@ namespace builtin_scene
   /**
    * This component is a representation of a transformation in space.
    */
-  class Transform : public ecs::Component
+  class Transform final : public ecs::Component
   {
+    using ecs::Component::Component;
+
   public:
     /**
      * The identity transform.
@@ -80,9 +82,6 @@ namespace builtin_scene
     }
 
   public:
-    using ecs::Component::Component;
-
-  public:
     /**
      * @returns If the transform is dirty, meaning it needs to be updated.
      */
@@ -105,28 +104,20 @@ namespace builtin_scene
      */
     inline math::Vec3 scale() { return scale_; }
     /**
-     * Get the matrix representation of the transform and clear the dirty flag.
-     *
-     * @returns The matrix representation of the transform.
-     */
-    inline glm::mat4 matrix()
-    {
-      glm::mat4 mat = glm::translate(glm::mat4(1.0f), translation_) *
-                      glm::mat4_cast(rotation_) *
-                      glm::scale(glm::mat4(1.0f), scale_);
-      isDirty_ = false;
-      return mat;
-    }
-    /**
      * Get the matrix representation of the transform without clearing the dirty flag.
      *
      * @returns The matrix representation of the transform.
      */
-    inline glm::mat4 matrix() const
+    inline const glm::mat4 &matrix() const
     {
-      return glm::translate(glm::mat4(1.0f), translation_) *
-             glm::mat4_cast(rotation_) *
-             glm::scale(glm::mat4(1.0f), scale_);
+      if (isDirty_ == true)
+      {
+        lastMatrix_ = glm::translate(glm::mat4(1.0f), translation_) *
+                      glm::mat4_cast(rotation_) *
+                      glm::scale(glm::mat4(1.0f), scale_);
+        isDirty_ = false;
+      }
+      return lastMatrix_;
     }
     /**
      * Get the matrix representation of the transform with the post transform and clear the dirty flag.
@@ -145,6 +136,9 @@ namespace builtin_scene
      */
     inline void setMatrix(glm::mat4 mat)
     {
+      if (mat == lastMatrix_)
+        return;
+      lastMatrix_ = mat;
       translation_ = math::Vec3(mat[3]);
       rotation_ = math::Quat(mat);
       scale_ = math::Vec3(mat[0][0], mat[1][1], mat[2][2]);
@@ -157,8 +151,11 @@ namespace builtin_scene
      */
     inline void setTranslation(math::Vec3 translation)
     {
-      translation_ = translation;
-      isDirty_ = true;
+      if (translation_ != translation)
+      {
+        translation_ = translation;
+        isDirty_ = true;
+      }
     }
     /**
      * Set the translation (x, y, z).
@@ -173,19 +170,19 @@ namespace builtin_scene
     }
     /**
      * Set the x component of the translation.
-     * 
+     *
      * @param x The x component of the translation.
      */
     inline void setX(float x) { setTranslation(x, translation_.y, translation_.z); }
     /**
      * Set the y component of the translation.
-     * 
+     *
      * @param y The y component of the translation.
      */
     inline void setY(float y) { setTranslation(translation_.x, y, translation_.z); }
     /**
      * Set the z component of the translation.
-     * 
+     *
      * @param z The z component of the translation.
      */
     inline void setZ(float z) { setTranslation(translation_.x, translation_.y, z); }
@@ -196,8 +193,11 @@ namespace builtin_scene
      */
     inline void setRotation(math::Quat rotation)
     {
-      rotation_ = rotation;
-      isDirty_ = true;
+      if (rotation_ != rotation)
+      {
+        rotation_ = rotation;
+        isDirty_ = true;
+      }
     }
     /**
      * Set the scale.
@@ -206,8 +206,11 @@ namespace builtin_scene
      */
     inline void setScale(math::Vec3 scale)
     {
-      scale_ = scale;
-      isDirty_ = true;
+      if (scale_ != scale)
+      {
+        scale_ = scale;
+        isDirty_ = true;
+      }
     }
     /**
      * Get a new transform with a given translation.
@@ -256,17 +259,17 @@ namespace builtin_scene
     }
     /**
      * Get a readonly `glm::matrix` reference to represent the accumulated matrix.
-     * 
+     *
      * The __Accumulated Matrix__ in `Transform` is to store the accumulated transformation matrix in the hierarchy, for example, when
      * the `Transform` is to represent a relative transformation, using the accumulated matrix can reduce the calculation of the final
      * transformation matrix.
-     * 
+     *
      * @returns The accumulated matrix.
      */
     inline const glm::mat4 &accumulatedMatrix() const { return accumulatedMatrix_; }
     /**
      * Set the accumulated matrix.
-     * 
+     *
      * @param mat The accumulated matrix.
      * @see accumulatedMatrix() to learn more about the accumulated matrix.
      */
@@ -288,11 +291,12 @@ namespace builtin_scene
     }
 
   private:
-    bool isDirty_ = true;
     math::Vec3 translation_ = math::Vec3::Identity();
     math::Quat rotation_ = math::Quat::Identity();
     math::Vec3 scale_ = math::Vec3::One();
-    glm::mat4 accumulatedMatrix_ = glm::mat4(1.0f);
+    mutable bool isDirty_ = true;
+    mutable glm::mat4 lastMatrix_ = glm::mat4(1.0f);
+    mutable glm::mat4 accumulatedMatrix_ = glm::mat4(1.0f);
     std::shared_ptr<Transform> postTransform_ = nullptr; // The transform to apply after this transform.
   };
 }

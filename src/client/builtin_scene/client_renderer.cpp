@@ -382,13 +382,11 @@ namespace builtin_scene
 
   glm::mat4 RenderSystem::getTransformationMatrix(ecs::EntityId id)
   {
-    Transform transform = getComponentChecked<Transform>(id);
+    Transform &transform = const_cast<Transform &>(getComponentChecked<Transform>(id));
     shared_ptr<Transform> parentTransform = nullptr;
-    if (hasComponent<hierarchy::Parent>(id))
-    {
-      auto parentComponent = getComponentChecked<hierarchy::Parent>(id);
-      parentTransform = getComponent<Transform>(parentComponent.parent());
-    }
+    shared_ptr<hierarchy::Parent> parentComponent = getComponent<hierarchy::Parent>(id);
+    if (parentComponent != nullptr)
+      parentTransform = getComponent<Transform>(parentComponent->parent());
 
     glm::mat4 matToUpdate = transform.matrix();
 
@@ -420,8 +418,8 @@ namespace builtin_scene
       bool hasChanged = false;
       if (hasComponent<Transform>(id))
       {
-        instance.setTransform(getTransformationMatrix(id));
-        hasChanged = true;
+        auto currentMatrix = getTransformationMatrix(id);
+        instance.setTransform(currentMatrix, hasChanged);
       }
       if (hasComponent<WebContent>(id))
       {
@@ -434,7 +432,7 @@ namespace builtin_scene
         // Only transparent content needs to update it's z-index
         if (webContent.isTransparent() && hasComponent<hierarchy::Element>(id))
         {
-          auto element = getComponentChecked<hierarchy::Element>(id);
+          auto& element = getComponentChecked<hierarchy::Element>(id);
           auto index = element.node->depth(); // FIXME: using the node depth as the z-index currently.
           if (instance.setZIndex(index))
             hasChanged = true;
@@ -462,7 +460,8 @@ namespace builtin_scene
 
   void RenderSystem::render(Renderer &renderer, optional<Renderer::XRRenderTarget> renderTarget)
   {
-    auto roots = queryEntities<hierarchy::Root>();
+    auto roots = queryEntities<hierarchy::Root>([](const hierarchy::Root &root) -> bool
+                                                { return root.renderable == true; });
     if (roots.size() <= 0) // No root entities to render
       return;
 
@@ -473,10 +472,7 @@ namespace builtin_scene
     }
 
     for (auto root : roots)
-    {
-      if (getComponentChecked<hierarchy::Root>(root).renderable == true)
-        traverseAndRender(root, renderer, renderTarget);
-    }
+      traverseAndRender(root, renderer, renderTarget);
   }
 
   void RenderSystem::traverseAndRender(ecs::EntityId entity, Renderer &renderer,
@@ -513,7 +509,7 @@ namespace builtin_scene
                                 optional<Renderer::XRRenderTarget> renderTarget)
   {
     auto materialComponent = getComponent<MeshMaterial3d>(entity);
-    if (materialComponent == nullptr)
+    if (TR_UNLIKELY(materialComponent == nullptr))
     {
       assert(false && "The material component must be valid.");
       return;
