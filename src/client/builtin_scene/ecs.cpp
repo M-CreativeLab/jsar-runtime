@@ -1,8 +1,15 @@
 #include "./ecs-inl.hpp"
 
+#ifdef TR_ECS_ENABLE_TIME_PROFILING
+#include <chrono>
+#endif
+
 namespace builtin_scene::ecs
 {
   using namespace std;
+#ifdef TR_ECS_ENABLE_TIME_PROFILING
+  using namespace std::chrono;
+#endif
 
   bool ISystemSet::addSystem(std::shared_ptr<System> system)
   {
@@ -95,5 +102,29 @@ namespace builtin_scene::ecs
       return;
     auto systemSet = systemSets_[label];
     systemSet->run();
+  }
+
+  void System::runOnce()
+  {
+#ifdef TR_ECS_ENABLE_TIME_PROFILING
+    steady_clock::time_point started = chrono::high_resolution_clock::now();
+#endif
+    onExecute();
+
+#ifdef TR_ECS_ENABLE_TIME_PROFILING
+    steady_clock::time_point ended = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::microseconds>(ended - started);
+    std::cout << "System(" << name() << ") took " << duration.count() << " microseconds." << std::endl;
+#endif
+
+    if (next_ != nullptr)
+      next_->runOnce();
+  }
+
+  void System::connect(shared_ptr<App> app)
+  {
+    connectedApp_ = app;
+    if (next_ != nullptr)
+      next_->connect(app);
   }
 }

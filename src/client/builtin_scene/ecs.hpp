@@ -16,6 +16,13 @@
 #include <shared_mutex>
 #include <idgen.hpp>
 
+/**
+ * Enable the time profiling for the ECS.
+ */
+#define TR_ECS_ENABLE_TIME_PROFILING
+// Uncomment the following line to disable the time profiling for the ECS.
+#undef TR_ECS_ENABLE_TIME_PROFILING
+
 namespace builtin_scene::ecs
 {
   /**
@@ -561,7 +568,7 @@ namespace builtin_scene::ecs
     EntityId spawn(ComponentTypeList... components);
     /**
      * Remove the entity from the ECS.
-     * 
+     *
      * @param entity The entity to remove.
      * @returns `true` if the entity is removed, `false` otherwise.
      */
@@ -579,10 +586,13 @@ namespace builtin_scene::ecs
      *
      * @tparam QueryComponentType The component type to query.
      * @tparam IncludeComponentType The component type to be included as the result.
+     * 
+     * @param filter The filter to apply to the query component.
      * @returns The list of components of the given type.
      */
     template <typename QueryComponentType, typename IncludeComponentType>
-    [[nodiscard]] std::vector<IncludeComponentType> queryEntitiesWithComponent();
+    [[nodiscard]] std::vector<std::pair<EntityId, std::shared_ptr<IncludeComponentType>>> queryEntitiesWithComponent(
+        std::function<bool(std::shared_ptr<QueryComponentType>)> filter = nullptr);
     /**
      * Get the first entity with the given component type, or an empty optional if not found.
      *
@@ -807,19 +817,14 @@ namespace builtin_scene::ecs
     /**
      * Run the system once, it also runs the next system in the chain if it's configured.
      */
-    void runOnce()
-    {
-      onExecute();
-      if (next_ != nullptr)
-        next_->runOnce();
-    }
+    void runOnce();
     /**
      * Add a system to the chain of this system, the former will be executed after the latter.
      *
      * @param next The next system to run.
      * @returns The next system.
      */
-    std::shared_ptr<System> chain(std::shared_ptr<System> next)
+    inline std::shared_ptr<System> chain(std::shared_ptr<System> next)
     {
       next_ = next;
       return next;
@@ -850,12 +855,15 @@ namespace builtin_scene::ecs
      *
      * @tparam QueryComponentType The component type to query.
      * @tparam IncludeComponentType The component type to be included as the result.
+     * 
+     * @param filter The filter to apply to the query component.
      * @returns The list of components of the given type.
      */
-    template <typename QueryComponentType, typename IncludeComponentType>
-    inline std::vector<IncludeComponentType> queryEntitiesWithComponent()
+    template <typename QueryComponentType, typename IncludeComponentType = QueryComponentType>
+    inline std::vector<std::pair<EntityId, std::shared_ptr<IncludeComponentType>>> queryEntitiesWithComponent(
+        std::function<bool(std::shared_ptr<QueryComponentType>)> filter = nullptr)
     {
-      return connectedApp_->queryEntitiesWithComponent<QueryComponentType, IncludeComponentType>();
+      return connectedApp_->queryEntitiesWithComponent<QueryComponentType, IncludeComponentType>(filter);
     }
     /**
      * Get the first entity with the given component type, or an empty optional if not found.
@@ -965,12 +973,7 @@ namespace builtin_scene::ecs
     }
 
   private:
-    void connect(std::shared_ptr<App> app)
-    {
-      connectedApp_ = app;
-      if (next_ != nullptr)
-        next_->connect(app);
-    }
+    void connect(std::shared_ptr<App> app);
 
   private:
     SystemId id_;

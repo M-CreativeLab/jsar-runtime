@@ -156,7 +156,7 @@ namespace builtin_scene
      * Init or resize the texture.
      *
      * @param textureAtlas The texture atlas to create or resize the texture.
-     * @returns The texture.
+     * @returns The texture or `nullptr` if the texture is not used.
      */
     inline std::shared_ptr<Texture> resizeOrInitTexture(TextureAtlas &textureAtlas)
     {

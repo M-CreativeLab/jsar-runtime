@@ -94,14 +94,14 @@ namespace builtin_scene::materials
     }
   }
 
-  bool WebContentInstancedMaterial::updateTexture(WebContent &content)
+  WebContentInstancedMaterial::TextureUpdateStatus WebContentInstancedMaterial::updateTexture(WebContent &content)
   {
     if (textureAtlas_ == nullptr)
-      return false; // Just skip the update when the texture atlas is not ready.
+      return TextureUpdateStatus::kFailed; // Just skip the update when the texture atlas is not ready.
 
     auto textureRect = content.resizeOrInitTexture(*textureAtlas_);
     if (textureRect == nullptr)
-      return false; // Just skip when the texture creation is failed.
+      return TextureUpdateStatus::kSkipped; // Just skip when the texture creation is failed.
 
     unsigned char *pixels = nullptr;
     int internalformat = WEBGL2_RGBA8;
@@ -155,7 +155,7 @@ namespace builtin_scene::materials
     // Update the texture with the new pixels or the default values.
     textureAtlas_->updateTexture(*textureRect, pixels, format, pixelType);
 
-    // Update an non-empty texture means the texture is updated successfully.
-    return pixels != nullptr;
+    // No matter the texture update is successful or not, we will return the status.
+    return TextureUpdateStatus::kSuccess;
   }
 } // namespace builtin_scene::materials

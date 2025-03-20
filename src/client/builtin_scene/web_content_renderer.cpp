@@ -43,19 +43,17 @@ namespace builtin_scene::web_renderer
 
   void RenderBaseSystem::onExecute()
   {
-    auto entities = queryEntities<WebContent>();
-    if (entities.size() == 0)
+    auto selectContent = [](shared_ptr<WebContent> content)
+    {
+      // Valid content should have a canvas and be dirty.
+      return content->canvas() != nullptr && content->isDirty();
+    };
+    auto list = queryEntitiesWithComponent<WebContent>(selectContent);
+    if (list.size() == 0)
       return;
 
-    for (auto &entity : entities)
-    {
-      auto content = getComponent<WebContent>(entity);
-      assert(content != nullptr);
-      if (content->canvas() == nullptr) // Skip rendering if the canvas is not initialized.
-        continue;
-      if (content->isDirty()) // Skip rendering if the content is not dirty.
-        render(entity, *content);
-    }
+    for (auto &item : list)
+      render(item.first, *item.second);
   }
 
   optional<SkPaint> drawBackground(SkCanvas *canvas, SkRRect &originalRRect,
@@ -352,12 +350,15 @@ namespace builtin_scene::web_renderer
   void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)
   {
     auto material3d = getInstancedMeshComponent<MeshMaterial3d>();
-    if (TR_UNLIKELY(material3d == nullptr))
-      return;
+    assert(material3d != nullptr);
 
     auto webContentMaterial = material3d->material<materials::WebContentInstancedMaterial>();
-    if (webContentMaterial != nullptr &&
-        webContentMaterial->updateTexture(content))
-      content.setDirty(false); // Mark the content as clean if the texture is updated successfully.
+    if (webContentMaterial)
+    {
+      auto status = webContentMaterial->updateTexture(content);
+      // Mark the content as clean if the texture is no need to update or updated successfully.
+      if (status != materials::WebContentInstancedMaterial::TextureUpdateStatus::kFailed)
+        content.setDirty(false);
+    }
   }
 }

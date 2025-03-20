@@ -163,10 +163,11 @@ namespace builtin_scene::ecs
   }
 
   template <typename QueryComponentType, typename IncludeComponentType>
-  std::vector<IncludeComponentType> App::queryEntitiesWithComponent()
+  std::vector<std::pair<EntityId, std::shared_ptr<IncludeComponentType>>> App::queryEntitiesWithComponent(
+      std::function<bool(std::shared_ptr<QueryComponentType>)> filter)
   {
     std::shared_lock<std::shared_mutex> lock(mutexForEntities_);
-    std::vector<IncludeComponentType> result;
+    std::vector<std::pair<EntityId, std::shared_ptr<IncludeComponentType>>> result;
     auto queryComponentSet = componentsMgr_.getComponentSet<QueryComponentType>();
     auto includeComponentSet = componentsMgr_.getComponentSet<IncludeComponentType>();
     for (auto &pair : entities_)
@@ -174,8 +175,18 @@ namespace builtin_scene::ecs
       EntityId entityId = pair.first;
       if (queryComponentSet->contains(entityId))
       {
-        IncludeComponentType includeComponent = includeComponentSet->get(entityId);
-        result.push_back(includeComponent);
+        std::shared_ptr<QueryComponentType> queryComponent = queryComponentSet->get(entityId);
+        assert(queryComponent != nullptr);
+
+        std::shared_ptr<IncludeComponentType> includeComponent;
+        if constexpr (std::is_same<QueryComponentType, IncludeComponentType>::value)
+          includeComponent = queryComponent;  // If the types are the same, use the query component.
+        else
+          includeComponent = includeComponentSet->get(entityId);
+
+        // Check if the entity should be included.
+        if (filter == nullptr || filter(queryComponent))
+          result.push_back(std::make_pair(entityId, includeComponent));
       }
     }
     return result;
