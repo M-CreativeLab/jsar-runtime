@@ -1,5 +1,6 @@
 #pragma once
 
+#include <OpenGL/gl3.h>
 #include "./window_ctx.hpp"
 #include "./stat_panel.hpp"
 #include "./xr_renderer.hpp"
@@ -73,20 +74,9 @@ namespace jsar::example
   {
     assert(window != nullptr && "Window is not initialized.");
     xrRenderer = new XRStereoscopicRenderer(this);
-    glfwSetCursorEnterCallback(window, [](GLFWwindow *window, int entered)
-                               { GetContextAndExecute(window, [entered](WindowContext *ctx)
-                                                      { ctx->isCursorEntered = entered; }); });
 
-    auto onCursorPosUpdate = [](GLFWwindow *window, double xpos, double ypos)
-    {
-      auto handleCursorMove = [xpos, ypos](WindowContext *ctx)
-      {
-        if (ctx->isCursorEntered)
-          ctx->handleCursorMove(xpos, ypos);
-      };
-      GetContextAndExecute(window, handleCursorMove);
-    };
-    glfwSetCursorPosCallback(window, onCursorPosUpdate);
+    glfwSetCursorPosCallback(window, [](GLFWwindow *window, double xpos, double ypos)
+                             { GetContextAndExecute(window)->handleCursorMove(xpos, ypos); });
     glfwSetScrollCallback(window, [](GLFWwindow *window, double xoffset, double yoffset)
                           { GetContextAndExecute(window)->handleScroll(xoffset, yoffset); });
     glfwSetMouseButtonCallback(window, [](GLFWwindow *window, int button, int action, int mods)
@@ -105,13 +95,30 @@ namespace jsar::example
 
   void WindowContext::handleCursorMove(double xoffset, double yoffset)
   {
+    if (xoffset < 0 || yoffset < 0 || xoffset > width || yoffset > height)
+      return;
     if (xrRenderer == nullptr)
       return;
 
-    xoffset /= 2;
+    auto halfWidth = width / 2;
+    if (xoffset > halfWidth)
+      xoffset -= halfWidth;
+
+    glm::vec4 viewport(0, 0, halfWidth, height);
+    glm::vec3 screenCoord(xoffset, viewport.w - yoffset, 0.2f);
+
+    GLfloat depth;
+    glReadPixels(screenCoord.x, screenCoord.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+    screenCoord.z = depth;
+
+    glm::vec3 xyz = glm::unProject(screenCoord,
+                                   xrRenderer->getViewMatrixForEye(0),
+                                   xrRenderer->getProjectionMatrix(),
+                                   viewport);
+
     // Update the main input source's target ray
-    glm::vec3 origin = glm::vec3(xoffset / width, -yoffset / height, 0);
-    glm::vec3 direction = glm::vec3(0, 0, -1);
+    glm::vec3 origin = glm::vec3(0, 0, 1);
+    glm::vec3 direction = glm::normalize(xyz - origin);
     xrRenderer->updateMainInputSourceTargetRay(origin, direction);
   }
 

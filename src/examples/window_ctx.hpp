@@ -46,6 +46,5 @@ namespace jsar::example
 
   private:
     bool terminated = false;
-    bool isCursorEntered = false;
   };
 }

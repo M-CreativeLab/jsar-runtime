@@ -76,34 +76,19 @@ namespace jsar::example
       eyeOrientation[0] = rotation * eyeOrientation[0];
       eyeOrientation[1] = rotation * eyeOrientation[1];
     }
-    void updateMainInputSourceTargetRay(const glm::vec3& origin, const glm::vec3& direction)
+    void updateMainInputSourceTargetRay(const glm::vec3 &origin, const glm::vec3 &dir)
     {
-      // Normalize the direction
-      glm::vec3 dir = glm::normalize(direction);
-
-      // Constuct the base coordinate system
-      glm::vec3 forward = -dir;
+      glm::vec3 forward = dir;
       glm::vec3 up = glm::vec3(0, 1, 0);
-      glm::vec3 right = glm::normalize(glm::cross(forward, up));
+      glm::vec3 right = glm::cross(forward, up);
+      up = glm::cross(right, forward);
 
-      // Handle the case when the forward and up are parallel
-      if (glm::length(right) < 0.001f)
-      {
-        up = glm::vec3(0, 0, 1);
-        right = glm::normalize(glm::cross(forward, up));
-      }
-
-      // Re-calculate the up vector
-      up = glm::normalize(glm::cross(right, forward));
-
-      // Construct the rotation matrix
-      glm::mat4 rotation = glm::mat4(1.0f);
-      rotation[0] = glm::vec4(right, 0);
-      rotation[1] = glm::vec4(up, 0);
-      rotation[2] = glm::vec4(forward, 0);
-
-      glm::mat4 translation = glm::translate(glm::mat4(1.0f), origin);
-      mainControllerTargetRay = translation * rotation;
+      glm::mat4 baseMatrix = glm::mat4(1.0f);
+      baseMatrix[0] = glm::vec4(right, 0);
+      baseMatrix[1] = glm::vec4(up, 0);
+      baseMatrix[2] = glm::vec4(-forward, 0);
+      baseMatrix[3] = glm::vec4(origin, 1);
+      mainControllerTargetRay = baseMatrix;
     }
     void updateMainInputSourcePrimaryAction(bool pressed)
     {
