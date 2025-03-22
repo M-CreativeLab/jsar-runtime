@@ -10,6 +10,7 @@
 
 #include <array>
 #include <memory>
+#include <functional>
 #include <vector>
 #include <unordered_map>
 #include <shared_mutex>
