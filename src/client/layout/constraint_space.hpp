@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include "./fragment.hpp"
 
 namespace client_layout
 {
@@ -9,6 +10,10 @@ namespace client_layout
   public:
     ConstraintSpace(float width, float height)
         : size_(width, height)
+    {
+    }
+    ConstraintSpace(const Fragment &fragment)
+        : size_(fragment.width(), fragment.height())
     {
     }
 

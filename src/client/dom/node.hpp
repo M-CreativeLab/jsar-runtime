@@ -265,6 +265,7 @@ namespace dom
     virtual bool isElement() const { return false; }
     virtual bool isHTMLElement() const { return false; }
     virtual bool isDocument() const { return false; }
+    virtual bool isDocumentFragment() const { return false; }
     virtual bool isCharacterData() const { return false; }
     virtual bool isText() const { return false; }
     virtual bool isHTMLMeshElement() const { return false; }

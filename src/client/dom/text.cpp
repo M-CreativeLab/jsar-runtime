@@ -134,7 +134,17 @@ namespace dom
   void Text::connectedCallback()
   {
     CharacterData::connectedCallback();
+    initCSSBoxes();
+  }
 
+  void Text::disconnectedCallback()
+  {
+    CharacterData::disconnectedCallback();
+    resetCSSBoxes();
+  }
+
+  void Text::initCSSBoxes()
+  {
     auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
     if (ownerDocument != nullptr && renderable)
     {
@@ -146,105 +156,80 @@ namespace dom
           parentBox = dynamic_pointer_cast<client_layout::LayoutBox>(parentElement->principalBox());
       }
       textBoxes_ = {layoutView.createText(getPtr<Text>(), parentBox)};
-
-      //   SceneObject::connectedCallback(shared_from_this()); // Create the entity
-
-      //   // Initialize the Content2d and connect it.
-      //   if (content2d_ == nullptr)
-      //     content2d_ = make_unique<Content2d>(shared_from_this());
-      //   content2d_->onNodeConnected();
-
-      //   // Append the text
-      //   auto appendText = [this](Scene &scene)
-      //   {
-      //     assert(entity_.has_value());
-      //     string textContent = data();
-      //     // Remove the leading and trailing whitespaces, and \n, \r, \t characters.
-      //     textContent = processTextContent(textContent);
-      //     scene.addComponent(entity_.value(), Text2d(textContent));
-      //   };
-      //   useScene(appendText);
     }
   }
 
-  void Text::disconnectedCallback()
+  void Text::resetCSSBoxes(bool skipCheck)
   {
-    CharacterData::disconnectedCallback();
+    if (textBoxes_.empty())
+      return;
 
-    auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
-    if (ownerDocument != nullptr && renderable)
-    {
-      for (auto &box : textBoxes_)
-        ownerDocument->layoutView()->removeObject(box);
-    }
+    shared_ptr<HTMLDocument> ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
+    if (!skipCheck &&
+        (TR_UNLIKELY(ownerDocument == nullptr) || renderable == false))
+      return;
 
-    // if (renderable)
-    // {
-    //   // Disconnect the Content2d
-    //   if (content2d_ != nullptr)
-    //     content2d_->onNodeDisconnected();
-
-    //   // Remove the text
-    //   auto removeText = [this](Scene &scene)
-    //   {
-    //     assert(entity_.has_value());
-    //     scene.removeComponent<Text2d>(entity_.value());
-    //   };
-    //   useScene(removeText);
-
-    //   SceneObject::disconnectedCallback();
-    // }
+    assert(ownerDocument != nullptr && "The owner document is not set when resetting CSS boxes.");
+    auto &layoutView = ownerDocument->layoutViewRef();
+    for (auto &box : textBoxes_)
+      layoutView.removeObject(box);
+    textBoxes_.clear();
   }
 
   bool Text::adoptStyle(const client_cssom::CSSStyleDeclaration &style)
   {
-    //     auto parentNode = getParentNodeAs<SceneObject>();
-    //     if (parentNode != nullptr)
-    //     {
-    //       auto &parentStyle = parentNode->adoptedStyle_;
-    //       std::shared_ptr<client_cssom::CSSStyleDeclaration> textStyle = nullptr;
+    client_cssom::CSSStyleDeclaration newStyle = style;
 
-    // #define _MAKE_TEXT_STYLE_IF_NOT_EXIST() \
-//   if (textStyle == nullptr)             \
-//     textStyle = make_shared<client_cssom::CSSStyleDeclaration>(style);
+    // Inherit the style from the parent node if it is not set.
+    auto parentNode = getParentNodeAs<Element>();
+    if (parentNode != nullptr)
+    {
+      const auto &parentStyle = parentNode->adoptedStyle();
 
-    // #define USE_PARENT_STYLE(property)                                            \
-//   if (parentStyle.hasProperty(property))                                      \
-//   {                                                                           \
-//     _MAKE_TEXT_STYLE_IF_NOT_EXIST()                                           \
-//     textStyle->setProperty(property, parentStyle.getPropertyValue(property)); \
-//   }
+#define USE_PARENT_STYLE(property)                                          \
+  if (parentStyle.hasProperty(property))                                    \
+  {                                                                         \
+    newStyle.setProperty(property, parentStyle.getPropertyValue(property)); \
+  }
 
-    //       // Font styles
-    //       USE_PARENT_STYLE("font-family");
-    //       USE_PARENT_STYLE("font-size");
-    //       USE_PARENT_STYLE("font-weight");
-    //       USE_PARENT_STYLE("font-style");
-    //       USE_PARENT_STYLE("font-variant");
-    //       USE_PARENT_STYLE("line-height");
+      // Font styles
+      USE_PARENT_STYLE("font-family");
+      USE_PARENT_STYLE("font-size");
+      USE_PARENT_STYLE("font-weight");
+      USE_PARENT_STYLE("font-style");
+      USE_PARENT_STYLE("font-variant");
+      USE_PARENT_STYLE("line-height");
 
-    //       // Text styles
-    //       USE_PARENT_STYLE("color");
-    //       USE_PARENT_STYLE("text-align");
-    //       USE_PARENT_STYLE("text-indent");
-    //       USE_PARENT_STYLE("text-transform");
-    //       USE_PARENT_STYLE("text-decoration");
-    //       USE_PARENT_STYLE("letter-spacing");
-    //       USE_PARENT_STYLE("word-spacing");
-    //       USE_PARENT_STYLE("white-space");
-    //       USE_PARENT_STYLE("direction");
-    //       USE_PARENT_STYLE("unicode-bidi");
+      // Text styles
+      USE_PARENT_STYLE("color");
+      USE_PARENT_STYLE("text-align");
+      USE_PARENT_STYLE("text-indent");
+      USE_PARENT_STYLE("text-transform");
+      USE_PARENT_STYLE("text-decoration");
+      USE_PARENT_STYLE("letter-spacing");
+      USE_PARENT_STYLE("word-spacing");
+      USE_PARENT_STYLE("white-space");
+      USE_PARENT_STYLE("direction");
+      USE_PARENT_STYLE("unicode-bidi");
 
-    // #undef USE_PARENT_STYLE
-    // #undef _MAKE_TEXT_STYLE_IF_NOT_EXIST
+#undef USE_PARENT_STYLE
+#undef _MAKE_TEXT_STYLE_IF_NOT_EXIST
+    }
 
-    // Adopt the text style if it is not empty.
-    // if (textStyle != nullptr)
-    //   return SceneObject::adoptStyleOn(*this, *textStyle);
-    // }
+    // Update the  style if these properties are not present.
+    newStyle.update(defaultStyle_, true);
+    if (adoptedStyle_.equals(newStyle)) // Skip if the style is the same.
+      return false;
 
-    // By default, just bypass the style to the scene object.
-    // return SceneObject::adoptStyleOn(*this, style);
-    return true;
+    adoptedStyle_ = newStyle;
+
+    // Update the layout node style.
+    bool updated = false;
+    for (auto box : textBoxes_)
+    {
+      if (box->setStyle(adoptedStyle_))
+        updated = true;
+    }
+    return updated;
   }
 }

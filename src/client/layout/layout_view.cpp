@@ -1,5 +1,6 @@
 #include <client/dom/document-inl.hpp>
 #include <client/dom/all_html_elements.hpp>
+#include <client/cssom/css_style_declaration.hpp>
 
 #include "./layout_view.hpp"
 #include "./layout_object.hpp"
@@ -21,6 +22,11 @@ namespace client_layout
 
     view->setDisplay(DisplayType::Block());
     view->createEntity();
+
+    client_cssom::CSSStyleDeclaration initialStyle;
+    initialStyle.setProperty("width", "100%");
+    initialStyle.setProperty("height", "100%");
+    view->setStyle(initialStyle);
     return view;
   }
 
@@ -33,6 +39,30 @@ namespace client_layout
   size_t LayoutView::computeMinimumWidth()
   {
     return 0;
+  }
+
+  bool LayoutView::computeLayout(const ConstraintSpace &avilableSpace)
+  {
+    function<bool(LayoutObject &)> computeChildNode = [&computeChildNode](LayoutObject &child)
+    {
+      if (child.isNone())
+        return true;
+      if (child.isInline() || child.isText()) // Use custom layout for inline or text elements.
+        return child.computeLayout(child.fragment());
+
+      if (child.isLayoutBlock())
+      {
+        auto block = static_pointer_cast<LayoutBlock>(child.shared_from_this());
+        for (auto &child : block->childrenRef())
+          computeChildNode(child); // Just traverse the block's children but don't compute layout.
+      }
+      return true;
+    };
+
+    bool r = LayoutBlockFlow::computeLayout(avilableSpace);
+    for (auto &child : childrenRef())
+      computeChildNode(child);
+    return r;
   }
 
   void LayoutView::debugPrint(const string &message, LayoutView::DebugOptions options) const
@@ -135,6 +165,7 @@ namespace client_layout
     assert(object->parent() != nullptr && "The object to be removed must have a parent.");
     auto parent = object->parent();
     parent->removeChild(object);
+    object->destroyEntity();
   }
 
   shared_ptr<LayoutBoxModelObject> LayoutView::makeBox(const string &displayStr, shared_ptr<dom::Element> element)

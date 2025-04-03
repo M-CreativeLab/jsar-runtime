@@ -31,6 +31,23 @@ namespace client_layout
   {
   }
 
+  Fragment TaffyBasedFormattingContext::liveFragment() const
+  {
+    assert(node_ != nullptr && "The Taffy node must be initialized.");
+
+    crates::layout2::Layout layout = node_->layout();
+    dom::geometry::DOMRect rect;
+    rect.x() = layout.left();
+    rect.y() = layout.top();
+    rect.width() = layout.width();
+    rect.height() = layout.height();
+
+    Fragment fragment(rect);
+    fragment.setBorder(layout.border());
+    fragment.setPadding(layout.padding());
+    return fragment;
+  }
+
   void TaffyBasedFormattingContext::onAdded(const FormattingContext &parent)
   {
     if (!parent.isBlock()) // Skip if the parent is not a block.
@@ -69,7 +86,8 @@ namespace client_layout
   unique_ptr<const LayoutResult> TaffyBasedFormattingContext::computeLayout(const ConstraintSpace &space)
   {
     assert(node_ != nullptr && "The Taffy node must be initialized.");
-    node_->computeLayout(space.width(), space.height());
+    if (node_->isDirty())
+      node_->computeLayout(space.width(), space.height());
 
     crates::layout2::Layout layout = node_->layout();
     dom::geometry::DOMRect rect;
@@ -83,9 +101,7 @@ namespace client_layout
     result->fragment().setPadding(layout.padding());
 
     // Set the status by the layout result.
-    if (result->needsResize(resultingFragment_))
-      result->status() = LayoutResult::kResizeRequired;
-    else if (result->needsRelayout(resultingFragment_))
+    if (result->needsRelayout(resultingFragment_))
       result->status() = LayoutResult::kRelayoutRequired;
     else
       result->status() = LayoutResult::kSuccess;
@@ -101,19 +117,24 @@ namespace client_layout
     node_->debugPrint();
   }
 
+  Fragment InlineFormattingContext::liveFragment() const
+  {
+    // FIXME(yorkie): use resultingFragment_ as the live fragment.
+    return resultingFragment_;
+  }
+
   void InlineFormattingContext::onAdded(const FormattingContext &parent)
   {
-    // TODO(yorkie): implement this method.
   }
 
   void InlineFormattingContext::onRemoved(const FormattingContext &parent)
   {
-    // TODO(yorkie): implement this method.
+    // FIXME(yorkie): implement this method.
   }
 
   void InlineFormattingContext::onReplaced(const FormattingContext &parent, const FormattingContext &old)
   {
-    // TODO(yorkie): implement this method.
+    // FIXME(yorkie): implement this method.
   }
 
   bool InlineFormattingContext::setLayoutStyle(const crates::layout2::LayoutStyle &style)
@@ -125,6 +146,8 @@ namespace client_layout
   {
     auto defaultResult = make_unique<LayoutResult>(dom::geometry::DOMRect(0, 0, space.width(), space.height()));
     defaultResult->status() = LayoutResult::kSuccess;
+
+    resultingFragment_ = defaultResult->fragment();
     return defaultResult;
   }
 

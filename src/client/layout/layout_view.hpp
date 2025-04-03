@@ -30,6 +30,7 @@ namespace client_layout
 
     crates::layout2::Allocator &taffyNodeAllocatorRef() const { return *taffyNodeAllocator_; }
     size_t computeMinimumWidth();
+    bool computeLayout(const ConstraintSpace &avilableSpace) override final;
 
     // The options for `debugPrint()`.
     struct DebugOptions

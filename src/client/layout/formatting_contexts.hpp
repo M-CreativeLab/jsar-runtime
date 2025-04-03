@@ -33,7 +33,8 @@ namespace client_layout
     virtual bool isGrid() const { return false; }
 
     // `computeLayout` updates this fragment with the resulting geometry information.
-    const Fragment &resultingFragment() { return resultingFragment_; }
+    const Fragment &resultingFragment() const { return resultingFragment_; }
+    virtual Fragment liveFragment() const = 0;
 
     // Should call this method when the node is added to a parent context.
     virtual void onAdded(const FormattingContext &parent) = 0;
@@ -60,6 +61,8 @@ namespace client_layout
     TaffyBasedFormattingContext(const DisplayType type, std::shared_ptr<LayoutView> view);
 
   protected:
+    Fragment liveFragment() const override;
+
     void onAdded(const FormattingContext &) override final;
     void onRemoved(const FormattingContext &) override final;
     void onReplaced(const FormattingContext &, const FormattingContext &) override final;
@@ -130,6 +133,7 @@ namespace client_layout
     }
 
   public:
+    Fragment liveFragment() const override;
     void onAdded(const FormattingContext &) override final;
     void onRemoved(const FormattingContext &) override final;
     void onReplaced(const FormattingContext &, const FormattingContext &) override final;
@@ -144,5 +148,6 @@ namespace client_layout
 
   private:
     // TODO: Implement the inline formatting context.
+    FormattingContext *parent_ = nullptr;
   };
 }

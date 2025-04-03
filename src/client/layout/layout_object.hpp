@@ -89,7 +89,7 @@ namespace client_layout
     inline bool hasEntity() const { return entity_.has_value(); }
     builtin_scene::ecs::EntityId entity() const { return entity_.value(); }
     void createEntity();
-    void releaseEntity();
+    void destroyEntity();
     // Use the entity from the other layout object, this is useful when replacing the layout object.
     void useEntity(std::shared_ptr<LayoutObject> other);
 
@@ -100,10 +100,10 @@ namespace client_layout
       return *style_;
     }
 
-    const Fragment &fragment() const
+    const Fragment fragment() const
     {
       assert(formattingContext_ != nullptr);
-      return formattingContext_->resultingFragment();
+      return formattingContext_->liveFragment();
     }
 
     std::shared_ptr<LayoutObject> parent() const { return parent_.lock(); }
@@ -173,7 +173,7 @@ namespace client_layout
 
     /**
      * This checks if there is a need to adjust the size of this object, and if so, it will adjust the size.
-     * 
+     *
      * @returns Whether the size is adjusted.
      */
     bool maybeAdjustSize();
@@ -238,8 +238,12 @@ namespace client_layout
     std::shared_ptr<LayoutBlock> containingBlockForAbsolutePosition() const;
 
   protected:
+    virtual void entityDidCreated(builtin_scene::ecs::EntityId entity);
+    virtual void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity);
+
     virtual void styleWillChange(const client_cssom::CSSStyleDeclaration &newStyle);
     virtual void styleDidChanged(const client_cssom::CSSStyleDeclaration &oldStyle);
+
     virtual void sizeWillChange(const Fragment &newSize);
     virtual void sizeDidChanged();
 
@@ -264,7 +268,6 @@ namespace client_layout
     std::shared_ptr<client_cssom::CSSStyleDeclaration> style_;
     std::optional<builtin_scene::ecs::EntityId> entity_;
     // TODO(yorkie): support fragments
-    bool resizeRequired_ = false;
 
   private: // Hierarchy fields
     /**

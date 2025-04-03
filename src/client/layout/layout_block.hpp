@@ -35,8 +35,6 @@ namespace client_layout
     void slowFirstChild() const = delete;
     void slowLastChild() const = delete;
 
-    bool computeLayout(const ConstraintSpace &avilableSpace) override final;
-
   private:
     // This uses the given's old block's children and moves them to this block.
     inline void useChildrenFrom(std::shared_ptr<LayoutBlock> other)

@@ -6,8 +6,6 @@
 namespace dom
 {
   using namespace std;
-  using LayoutAllocator = crates::layout2::Allocator;
-  using LayoutNode = crates::layout2::Node;
 
   string DashStyleToCamelCase(const string &dashStyle)
   {

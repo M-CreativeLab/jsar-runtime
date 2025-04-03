@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <client/builtin_scene/ecs.hpp>
 #include <client/dom/types.hpp>
 
 #include "./layout_object.hpp"
@@ -24,5 +25,11 @@ namespace client_layout
 
     std::shared_ptr<dom::Text> textNode() const;
     virtual std::string plainText() const;
+
+    bool computeLayout(const ConstraintSpace &avilableSpace) override final;
+
+  private:
+    void entityDidCreated(builtin_scene::ecs::EntityId entity) override;
+    void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
   };
 }

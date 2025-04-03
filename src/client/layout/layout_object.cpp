@@ -112,58 +112,23 @@ namespace client_layout
       entity_ = scene.createElement(node()->nodeName, node(),
                                     parent() == nullptr ? nullopt : parent()->entity_);
     };
+
     useSceneWithCallback(createEntity);
-
-    // 2. Configure the entity by the node props
-    auto configEntity = [this](Scene &scene)
-    {
-      if (node()->enableCustomGeometry())
-      {
-        // TODO: Support the mesh element rendering, add Mesh3d, MeshMaterial3d, etc.
-        assert(false && "The mesh element rendering is not supported yet.");
-      }
-      else
-      {
-        auto webContextCtx = scene.getResource<WebContentContext>();
-        assert(webContextCtx != nullptr && "The web content context must be set.");
-        scene.getComponentChecked<Mesh3d>(webContextCtx->instancedMeshEntity())
-            .getHandleCheckedAsRef<InstancedMeshBase>()
-            .addInstance(entity()); // Add the entity to the instanced mesh.
-
-        // Add `WebContent` component to the entity.
-        auto fragment = this->fragment();
-        scene.addComponent(entity(), WebContent(string(this->name()),
-                                                fragment.width(),
-                                                fragment.height()));
-      }
-    };
-    useSceneWithCallback(configEntity);
+    entityDidCreated(entity_.value());
   }
 
-  void LayoutObject::releaseEntity()
+  void LayoutObject::destroyEntity()
   {
     if (TR_UNLIKELY(!hasEntity()))
       return;
 
     auto removeEntity = [this](Scene &scene)
     {
-      if (node()->enableCustomGeometry())
-      {
-        // TODO: Support the mesh element rendering, add Mesh3d, MeshMaterial3d, etc.
-        assert(false && "The mesh element rendering is not supported yet.");
-      }
-      else
-      {
-        auto webContextCtx = scene.getResource<WebContentContext>();
-        assert(webContextCtx != nullptr);
-        scene.getComponentChecked<Mesh3d>(webContextCtx->instancedMeshEntity())
-            .getHandleCheckedAsRef<InstancedMeshBase>()
-            .removeInstance(entity()); // Remove the entity from the instanced mesh.
-      }
-
       scene.removeElement(entity_.value());
       entity_ = nullopt;
     };
+
+    entityWillBeDestroyed(entity_.value());
     useSceneWithCallback(removeEntity);
   }
 
@@ -300,15 +265,8 @@ namespace client_layout
 
   bool LayoutObject::maybeAdjustSize()
   {
-    if (!resizeRequired_)
-      return false;
-
-    if (!resize(fragment()))
-      return false;
-
-    // Only reset the flag if the resize is successful, it means the resize will be executed util it's successful.
-    resizeRequired_ = false;
-    return true;
+    // The method `resize` will check if the size is changed.
+    return resize(fragment());
   }
 
   bool LayoutObject::resize(const Fragment &newSize)
@@ -351,9 +309,6 @@ namespace client_layout
 
     if (result->status() == LayoutResult::kRelayoutRequired)
       return computeLayout(avilableSpace);
-    if (result->status() == LayoutResult::kResizeRequired)
-      resizeRequired_ = true; // Only dispatch the resize which will be achieved at rendering time.
-
     return result->status() == LayoutResult::kSuccess;
   }
 
@@ -440,6 +395,49 @@ namespace client_layout
   {
     // TODO: implement this method.
     return nullptr;
+  }
+
+  void LayoutObject::entityDidCreated(builtin_scene::ecs::EntityId entity)
+  {
+    auto configEntity = [this, &entity](Scene &scene)
+    {
+      if (node()->enableCustomGeometry())
+      {
+        // TODO: Support the mesh element rendering, add Mesh3d, MeshMaterial3d, etc.
+        assert(false && "The mesh element rendering is not supported yet.");
+      }
+      else
+      {
+        auto webContextCtx = scene.getResource<WebContentContext>();
+        assert(webContextCtx != nullptr && "The web content context must be set.");
+        scene.getComponentChecked<Mesh3d>(webContextCtx->instancedMeshEntity())
+            .getHandleCheckedAsRef<InstancedMeshBase>()
+            .addInstance(entity); // Add the entity to the instanced mesh.
+
+        // Add `WebContent` component to the entity.
+        auto fragment = this->fragment();
+        scene.addComponent(entity, WebContent(string(this->name()),
+                                              fragment.width(),
+                                              fragment.height()));
+      }
+    };
+    useSceneWithCallback(configEntity);
+  }
+
+  void LayoutObject::entityWillBeDestroyed(builtin_scene::ecs::EntityId entity)
+  {
+    auto removeInstance = [this, &entity](Scene &scene)
+    {
+      if (!node()->enableCustomGeometry())
+      {
+        auto webContextCtx = scene.getResource<WebContentContext>();
+        assert(webContextCtx != nullptr);
+        scene.getComponentChecked<Mesh3d>(webContextCtx->instancedMeshEntity())
+            .getHandleCheckedAsRef<InstancedMeshBase>()
+            .removeInstance(entity); // Remove the entity from the instanced mesh.
+      }
+    };
+    useSceneWithCallback(removeInstance);
   }
 
   void LayoutObject::styleWillChange(const client_cssom::CSSStyleDeclaration &newStyle)

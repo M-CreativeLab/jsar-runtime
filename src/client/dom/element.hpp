@@ -140,6 +140,7 @@ namespace dom
      */
     [[nodiscard]] bool checkVisibility(CheckVisibilityOptions options) const;
 
+    const client_cssom::CSSStyleDeclaration& adoptedStyle() const { return adoptedStyle_; }
     std::shared_ptr<const client_layout::LayoutBoxModelObject> principalBox() const { return principalBox_; }
     std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox() { return principalBox_; }
 

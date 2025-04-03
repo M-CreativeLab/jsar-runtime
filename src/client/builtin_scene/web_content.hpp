@@ -124,17 +124,17 @@ namespace builtin_scene
     inline const std::optional<client_layout::Fragment> &fragment() const { return lastFragment_; }
     inline void setFragment(const client_layout::Fragment &fragment) { lastFragment_ = fragment; }
 
-    inline float width() const
+    inline float width() const { return surface_ == nullptr ? 0.0f : surface_->width(); }
+    inline float height() const { return surface_ == nullptr ? 0.0f : surface_->height(); }
+
+    // Check if the surface needs to be resized.
+    // TODO(yorkie): consider the change of the device pixel ratio.
+    inline bool needsResize(float w, float h) const
     {
+      assert(w > 0 && h > 0);
       if (surface_ == nullptr)
-        return 0.0f;
-      return surface_->width();
-    }
-    inline float height() const
-    {
-      if (surface_ == nullptr)
-        return 0.0f;
-      return surface_->height();
+        return true;
+      return surface_->width() != w || surface_->height() != h;
     }
 
     inline glm::vec4 backgroundColor() const { return backgroundColor_; }

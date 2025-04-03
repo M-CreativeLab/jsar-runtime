@@ -60,6 +60,8 @@ namespace builtin_scene
   {
     if (TR_UNLIKELY(w <= 0 || h <= 0)) // Skip if size is invalid.
       return false;
+    if (!needsResize(w, h)) // Skip if size is unchanged.
+      return false;
 
     // TODO: use Skia Genesh(GPU) to increase the performance.
     SkImageInfo imageInfo = SkImageInfo::MakeN32Premul(w * devicePixelRatio_,

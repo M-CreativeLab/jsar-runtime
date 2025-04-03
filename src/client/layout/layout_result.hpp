@@ -22,7 +22,6 @@ namespace client_layout
     enum EStatus : uint8_t
     {
       kSuccess = 0,
-      kResizeRequired,
       kRelayoutRequired,
     };
 

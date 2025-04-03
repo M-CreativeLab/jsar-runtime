@@ -23,12 +23,4 @@ namespace client_layout
     assert(children() == virtualChildren());
     return children()->lastChild();
   }
-
-  bool LayoutBlock::computeLayout(const ConstraintSpace &avilableSpace)
-  {
-    bool success = LayoutBox::computeLayout(avilableSpace);
-    for (auto &child : childrenRef())
-      child.computeLayout(avilableSpace);
-    return success;
-  }
 }

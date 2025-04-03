@@ -43,7 +43,7 @@ namespace dom
     layoutView->computeLayout(targetSpace());
     layoutView->debugPrint("After layout", client_layout::LayoutView::DebugOptions::Default()
                                                .withDisabled(true)
-                                               .withFormattingContext(false));
+                                               .withFormattingContext(true));
 
     // Step 3: Visit the layout view to render CSS boxes.
     client_layout::LayoutViewVisitor::visit(*layoutView);
