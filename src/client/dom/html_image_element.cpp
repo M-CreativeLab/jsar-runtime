@@ -6,6 +6,7 @@
 #include <skia/include/codec/SkWebpDecoder.h>
 #include <skia/include/codec/SkGifDecoder.h>
 #include <crates/bindings.hpp>
+#include <client/cssom/layout.hpp>
 
 #include "./geometry/dom_rect.hpp"
 #include "./html_image_element.hpp"
@@ -81,39 +82,39 @@ namespace dom
     skBitmap_ = std::make_shared<SkBitmap>();
 
     // Add the Image2d component to the entity.
-    assert(entity_.has_value());
-    auto addImageComponent = [this](Scene &scene)
-    {
-      scene.addComponent(entity_.value(),
-                         Image2d(getSrc(), nullptr));
-    };
-    useScene(addImageComponent);
+    // assert(entity_.has_value());
+    // auto addImageComponent = [this](Scene &scene)
+    // {
+    //   scene.addComponent(entity_.value(),
+    //                      Image2d(getSrc(), nullptr));
+    // };
+    // useScene(addImageComponent);
 
-    // Load the image from the src attribute.
-    auto src = getSrc();
-    if (!src.empty())
-      loadImage(src);
+    // // Load the image from the src attribute.
+    // auto src = getSrc();
+    // if (!src.empty())
+    //   loadImage(src);
   }
 
-  void HTMLImageElement::onLayoutChanged()
-  {
-    HTMLContent2dElement::onLayoutChanged();
+  // void HTMLImageElement::onLayoutChanged()
+  // {
+  //   HTMLContent2dElement::onLayoutChanged();
 
-    // Adjust the image size if the layout is to be changed.
-    if (isSrcImageLoaded_)
-    {
-      auto setWidth = [this](float width)
-      { defaultBoundingBox_.width = width; };
-      auto setHeight = [this](float height)
-      { defaultBoundingBox_.height = height; };
-      if (adjustImageSize(
-              adoptedStyle_, getImageClientRect(), computedLayout_, setWidth, setHeight))
-      {
-        // Update the layout style if the size is changed.
-        updateLayoutStyle();
-      }
-    }
-  }
+  //   // Adjust the image size if the layout is to be changed.
+  //   if (isSrcImageLoaded_)
+  //   {
+  //     auto setWidth = [this](float width)
+  //     { defaultBoundingBox_.width = width; };
+  //     auto setHeight = [this](float height)
+  //     { defaultBoundingBox_.height = height; };
+  //     if (adjustImageSize(
+  //             adoptedStyle_, getImageClientRect(), computedLayout_, setWidth, setHeight))
+  //     {
+  //       // Update the layout style if the size is changed.
+  //       updateLayoutStyle();
+  //     }
+  //   }
+  // }
 
   void HTMLImageElement::loadImage(const std::string &src)
   {
@@ -189,29 +190,29 @@ namespace dom
       {
         // Adjust the image size and update the layout style if the image is loaded.
         {
-          auto setWidth = [this](float width)
-          { defaultBoundingBox_.width = width; };
-          auto setHeight = [this](float height)
-          { defaultBoundingBox_.height = height; };
-          if (adjustImageSize(
-                  adoptedStyle_, getImageClientRect(), computedLayout_, setWidth, setHeight))
-          {
-            // Update the layout style if the size is changed.
-            updateLayoutStyle();
-          }
+          // auto setWidth = [this](float width)
+          // { defaultBoundingBox_.width = width; };
+          // auto setHeight = [this](float height)
+          // { defaultBoundingBox_.height = height; };
+          // if (adjustImageSize(
+          //         adoptedStyle_, getImageClientRect(), computedLayout_, setWidth, setHeight))
+          // {
+          //   // Update the layout style if the size is changed.
+          //   updateLayoutStyle();
+          // }
         }
 
         // Update the `Image2d` component and mark the content as dirty to update the texture.
-        auto updateImageBitmap = [this](Scene &scene)
-        {
-          auto entity = entity_.value();
-          Image2d &imageComponent = scene.getComponentChecked<Image2d>(entity);
-          imageComponent.bitmap = skBitmap_;
+        // auto updateImageBitmap = [this](Scene &scene)
+        // {
+        //   auto entity = entity_.value();
+        //   Image2d &imageComponent = scene.getComponentChecked<Image2d>(entity);
+        //   imageComponent.bitmap = skBitmap_;
 
-          WebContent &webContent = scene.getComponentChecked<WebContent>(entity);
-          webContent.setDirty(true); // Mark the content as dirty to update the texture.
-        };
-        useScene(updateImageBitmap);
+        //   WebContent &webContent = scene.getComponentChecked<WebContent>(entity);
+        //   webContent.setDirty(true); // Mark the content as dirty to update the texture.
+        // };
+        // useScene(updateImageBitmap);
       }
     }
     else

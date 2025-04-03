@@ -24,7 +24,7 @@ namespace dom
 
   public:
     void connectedCallback() override;
-    void onLayoutChanged() override;
+    // void onLayoutChanged() override;
 
   public:
     inline size_t width() const override { return skBitmap_->width(); }

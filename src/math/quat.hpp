@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "./vectors.hpp"
@@ -8,6 +9,8 @@ namespace math
 {
   class Quat : public glm::quat
   {
+    using glm::quat::quat;
+
   public:
     static Quat Identity() { return Quat::FromXYZW(0, 0, 0, 1); }
     static Quat Zero() { return Quat(0, 0, 0, 0); }
@@ -79,9 +82,6 @@ namespace math
     }
 
   public:
-    using glm::quat::quat;
-
-  public:
     /**
      * @returns The normalized vector.
      */
@@ -98,6 +98,11 @@ namespace math
     inline bool operator!=(const Quat &rhs) const
     {
       return !(*this == rhs);
+    }
+    friend std::ostream &operator<<(std::ostream &os, const Quat &quat)
+    {
+      os << "quat(" << quat.x << ", " << quat.y << ", " << quat.z << ", " << quat.w << ")";
+      return os;
     }
   };
 }

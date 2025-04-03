@@ -39,6 +39,7 @@ namespace builtin_scene
 
       // Systems
       app.addSystem(SchedulerLabel::kStartup, System::Make<CameraStartupSystem>());
+      app.addSystem(SchedulerLabel::kStartup, System::Make<RenderStartupSystem>());
       app.addSystem(SchedulerLabel::kPreUpdate, System::Make<TimerSystem>());
 
       auto updateCamera = System::Make<CameraUpdateSystem>();
@@ -69,7 +70,7 @@ namespace builtin_scene
     addPlugin<DefaultPlugin>();
     addPlugin<WebContentPlugin>();
     addPlugin<WebXRPlugin>();
-    addResource(ecs::Resource::Make<Renderer>(glContext_));
+    addResource(ecs::Resource::Make<Renderer>(glContext_, volumeSize_));
   }
 
   void Scene::bootstrap()
@@ -77,7 +78,7 @@ namespace builtin_scene
     ecs::App::startup();
   }
 
-  void Scene::start()
+  void Scene::start(optional<math::Size3> volumeSize)
   {
     if (started_)
     {
@@ -85,9 +86,9 @@ namespace builtin_scene
     }
     else
     {
-      // auto setupXRSession = [this](auto type, auto event)
-
       started_ = true;
+      setVolumeSize(volumeSize);
+
       if (clientContext_->isScriptingEventLoopReady())
       {
         setupXRSession();

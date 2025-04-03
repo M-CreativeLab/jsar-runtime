@@ -63,6 +63,63 @@ impl TaffyNode {
       .remove_child(self.node, child.node);
   }
 
+  /// Replaces the old child with the new child. If `copy_children` is true, the children of the old child will be
+  /// copied to the new child.
+  ///
+  /// # Arguments
+  ///
+  /// * `old_child` - The child to replace.
+  /// * `new_child` - The new child to replace the old child with.
+  /// * `copy_children` - If true, the children of the old child will be copied to the new child.
+  ///
+  /// # Panics
+  ///
+  /// Panics if the old child is not a child of the node.
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use holocron::layout::{TaffyTree, TaffyNode};
+  ///
+  /// let tree = TaffyTree::new();
+  /// let mut parent = TaffyNode::new(&tree);
+  /// let mut old_child = TaffyNode::new(&tree);
+  /// let mut new_child = TaffyNode::new(&tree);
+  /// parent.add_child(&old_child);
+  /// parent.replace_child(&old_child, &new_child, true);
+  ///
+  /// assert_eq!(parent.child_count(), 1);
+  /// ```
+  ///
+  pub fn replace_child(
+    &mut self,
+    old_child: &TaffyNode,
+    new_child: &TaffyNode,
+    copy_children: bool,
+  ) {
+    let mut tree_handle = self.tree.handle.borrow_mut();
+    let index = tree_handle
+      .children(self.node)
+      .unwrap()
+      .iter()
+      .position(|&n| n == old_child.node)
+      .unwrap();
+    let old_child = tree_handle
+      .replace_child_at_index(self.node, index, new_child.node)
+      .unwrap();
+
+    if copy_children {
+      tree_handle
+        .children(old_child)
+        .map(|children| {
+          tree_handle
+            .set_children(new_child.node, &children)
+            .expect("Failed to set children")
+        })
+        .expect("Failed to get children");
+    }
+  }
+
   pub fn replace_child_at_index(&mut self, index: usize, child: &TaffyNode) {
     let _ = self
       .tree
@@ -109,6 +166,10 @@ impl TaffyNode {
         height: taffy::style::AvailableSpace::Definite(height),
       },
     );
+  }
+
+  pub fn print(&mut self) {
+    self.tree.handle.borrow_mut().print_tree(self.node)
   }
 }
 
@@ -403,6 +464,9 @@ mod ffi {
     #[cxx_name = "removeChildAtIndex"]
     fn remove_child_at_index(parent: &mut TaffyNode, index: usize);
 
+    #[cxx_name = "replaceChild"]
+    fn replace_child(parent: &mut TaffyNode, old_child: &TaffyNode, new_child: &TaffyNode, copy_children: bool);
+
     #[cxx_name = "replaceChildAtIndex"]
     fn replace_child_at_index(parent: &mut TaffyNode, index: usize, child: &TaffyNode);
 
@@ -429,6 +493,9 @@ mod ffi {
 
     #[cxx_name = "computeLayout"]
     fn compute_layout(node: &mut TaffyNode, width: f32, height: f32);
+
+    #[cxx_name = "printNode"]
+    fn print_node(node: &mut TaffyNode);
   }
 }
 
@@ -929,6 +996,10 @@ fn remove_child_at_index(parent: &mut TaffyNode, index: usize) {
   parent.remove_child_at_index(index);
 }
 
+fn replace_child(parent: &mut TaffyNode, old_child: &TaffyNode, new_child: &TaffyNode, copy_children: bool) {
+  parent.replace_child(old_child, new_child, copy_children);
+}
+
 fn replace_child_at_index(parent: &mut TaffyNode, index: usize, child: &TaffyNode) {
   parent.replace_child_at_index(index, child);
 }
@@ -974,4 +1045,8 @@ fn get_layout_output(node: &TaffyNode) -> ffi::LayoutOutput {
 
 fn compute_layout(node: &mut TaffyNode, width: f32, height: f32) {
   node.compute_layout(width, height);
+}
+
+fn print_node(node: &mut TaffyNode) {
+  node.print();
 }

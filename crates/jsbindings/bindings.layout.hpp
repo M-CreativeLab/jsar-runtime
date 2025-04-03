@@ -1101,6 +1101,20 @@ namespace crates::layout2
       holocron::layout::removeChild(*node_, *child.node_);
     }
     /**
+     * Replace a child node with a new child node.
+     * 
+     * The old child node is not going to be deleted in this method, the destructor of the old child node will be
+     * guaranteed to be this.
+     * 
+     * @param oldChild The old child node to replace.
+     * @param newChild The new child node to replace with.
+     * @param copyChildren Whether to copy the children of the old child node to the new child node.
+     */
+    inline void replaceChild(Node &oldChild, Node &newChild, bool copyChildren)
+    {
+      holocron::layout::replaceChild(*node_, *oldChild.node_, *newChild.node_, copyChildren);
+    }
+    /**
      * @returns The child count of this layout node.
      */
     inline size_t childCount() { return holocron::layout::getChildCount(*node_); }
@@ -1137,6 +1151,14 @@ namespace crates::layout2
     inline void computeLayout(float width, float height)
     {
       holocron::layout::computeLayout(*node_, width, height);
+    }
+    /**
+     * Print this node for debugging.
+     */
+    inline void debugPrint()
+    {
+      std::cout << "Node (children=" << childCount() << ")" << std::endl;
+      holocron::layout::printNode(*node_);
     }
     /**
      * @returns The layout output of this node.

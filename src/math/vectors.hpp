@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <ostream>
 #include <glm/glm.hpp>
 
 namespace math
@@ -13,7 +14,6 @@ namespace math
 
   class Vec3 : public glm::vec3
   {
-  public:
     using glm::vec3::vec3;
 
   public:
@@ -23,7 +23,7 @@ namespace math
   public:
     /**
      * Appends the vector to the given data.
-     * 
+     *
      * @param data The data to append to.
      */
     void appendTo(std::vector<float> &data) const
@@ -81,7 +81,7 @@ namespace math
     }
     /**
      * Computes the dot product of `this` and `rhs`.
-     * 
+     *
      * @param rhs The other vector.
      * @returns The dot product.
      */
@@ -91,7 +91,7 @@ namespace math
     }
     /**
      * Computes the cross product of `this` and `rhs`.
-     * 
+     *
      * @param rhs The other vector.
      * @returns The cross product.
      */
@@ -100,6 +100,13 @@ namespace math
       auto cross = glm::cross(static_cast<glm::vec3>(*this), static_cast<glm::vec3>(rhs));
       return Vec3(cross.x, cross.y, cross.z);
     }
+
+  public:
+    friend std::ostream &operator<<(std::ostream &os, const Vec3 &vec)
+    {
+      os << "vec3(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
+      return os;
+    }
   };
 
   /**
@@ -107,6 +114,8 @@ namespace math
    */
   class Dir3 final : public Vec3
   {
+    using Vec3::Vec3;
+
   public:
     /**
      * @returns The forward direction.
@@ -124,8 +133,18 @@ namespace math
      * @returns The +X direction.
      */
     static inline Dir3 X() { return Right(); }
+  };
+
+  /**
+   * The size in 3D.
+   */
+  class Size3 final : public Vec3
+  {
+    using Vec3::Vec3;
 
   public:
-    using Vec3::Vec3;
+    size_t width() const { return x; }
+    size_t height() const { return y; }
+    size_t depth() const { return z; }
   };
 }

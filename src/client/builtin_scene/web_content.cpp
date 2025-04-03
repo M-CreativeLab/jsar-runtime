@@ -1,5 +1,7 @@
 #include <vector>
+#include <skia/include/core/SkImageInfo.h>
 #include <client/macros.h>
+
 #include "./web_content.hpp"
 
 namespace builtin_scene
@@ -45,14 +47,35 @@ namespace builtin_scene
   {
   }
 
-  WebContent::WebContent(SkCanvas *canvas, std::string name, client_cssom::CSSStyleDeclaration &style)
-      : canvas_(canvas),
-        name_(name),
-        style_(style),
-        lastLayout_(std::nullopt),
+  WebContent::WebContent(std::string name, float initialWidth, float initialHeight)
+      : name_(name),
+        lastFragment_(std::nullopt),
         contentStyle_(),
         backgroundColor_(1.0f, 1.0f, 1.0f, 0.0f)
   {
+    resetSkSurface(initialWidth, initialHeight);
+  }
+
+  bool WebContent::resetSkSurface(float w, float h)
+  {
+    if (TR_UNLIKELY(w <= 0 || h <= 0)) // Skip if size is invalid.
+      return false;
+
+    // TODO: use Skia Genesh(GPU) to increase the performance.
+    SkImageInfo imageInfo = SkImageInfo::MakeN32Premul(w * devicePixelRatio_,
+                                                       h * devicePixelRatio_);
+    if (surface_ == nullptr)
+    {
+      surface_ = SkSurfaces::Raster(imageInfo);
+    }
+    else
+    {
+      auto newSurface = surface_->makeSurface(imageInfo);
+      surface_.reset();
+      surface_ = newSurface;
+    }
+    setDirty(true);
+    return true;
   }
 
   void WebContent::setStyle(const client_cssom::CSSStyleDeclaration &style, std::shared_ptr<WebContent> parent)
@@ -138,6 +161,31 @@ namespace builtin_scene
 
     // Mark the content as dirty if setting a new style.
     setDirty(true);
+  }
+
+  shared_ptr<Texture> WebContent::resizeOrInitTexture(TextureAtlas &textureAtlas)
+  {
+    if (!isTextureUsing_)
+    {
+      // Remove the texture from atlas if it's not used.
+      if (texture_ != nullptr)
+      {
+        textureAtlas.removeTexture(*texture_);
+        texture_ = nullptr;
+      }
+      return nullptr;
+    }
+
+    float w = width();
+    float h = height();
+
+    if (texture_ == nullptr)
+      texture_ = textureAtlas.addTexture(w, h, true);
+    else
+      texture_ = textureAtlas.resizeTexture(texture_, w, h, true);
+
+    assert(texture_ != nullptr && "The texture must be valid.");
+    return texture_;
   }
 
   skia::textlayout::TextStyle WebContent::textStyle() const

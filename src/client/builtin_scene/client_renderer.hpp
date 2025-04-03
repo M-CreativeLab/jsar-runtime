@@ -3,7 +3,9 @@
 #include <iostream>
 #include <memory>
 #include <span>
+#include <math/vectors.hpp>
 #include <client/graphics/webgl_context.hpp>
+
 #include "./ecs-inl.hpp"
 #include "./meshes.hpp"
 #include "./mesh_material.hpp"
@@ -69,8 +71,9 @@ namespace builtin_scene
     };
 
   public:
-    Renderer(std::shared_ptr<client_graphics::WebGL2Context> glContext)
-        : glContext_(glContext)
+    Renderer(std::shared_ptr<client_graphics::WebGL2Context> glContext, math::Size3 volumeSize)
+        : glContext_(glContext),
+          volumeSize_(volumeSize)
     {
       glContext_->enable(WEBGL_CULL_FACE);
     }
@@ -79,7 +82,7 @@ namespace builtin_scene
     /**
      * @returns The WebGL context of the renderer.
      */
-    std::shared_ptr<client_graphics::WebGL2Context> glContext() const
+    inline std::shared_ptr<client_graphics::WebGL2Context> glContext() const
     {
       return glContext_;
     }
@@ -97,7 +100,7 @@ namespace builtin_scene
      *
      * @param enabled Whether to enable the stencil write mask.
      */
-    void setPolygonOffset(bool enabled = true)
+    inline void setPolygonOffset(bool enabled = true)
     {
       if (enabled)
       {
@@ -108,6 +111,38 @@ namespace builtin_scene
       {
         glContext_->disable(WEBGL_POLYGON_OFFSET_FILL);
       }
+    }
+    /**
+     * @returns Whether the volume mask is enabled.
+     */
+    inline bool isVolumeMaskEnabled() const
+    {
+      return volumeMask_.has_value();
+    }
+    /**
+     * @returns The volume size of the renderer.
+     */
+    inline math::Size3 volumeSize() const { return volumeSize_; }
+    /**
+     * Set the volume size of the renderer.
+     *
+     * @param newSize The volume size to set.
+     */
+    inline void setVolumeSize(const math::Size3 &newSize)
+    {
+      volumeSize_ = newSize;
+    }
+    /**
+     * Set the volume mask which is used to mask the volume of the renderer.
+     *
+     * @param volumeMask The volume mask to set.
+     */
+    inline void setVolumeMask(const ecs::EntityId &volumeMask)
+    {
+      volumeMask_ = volumeMask;
+      // Set the stencil reference value to a random value from 100 to 255 to avoid conflicts.
+      // TODO: is there a better way to avoid conflicts?
+      volumeMaskStencilRef_ = 100 + rand() % 156;
     }
     /**
      * Initialize the mesh with the given WebGL context, it will create the vertex array object,
@@ -179,14 +214,43 @@ namespace builtin_scene
                                                         std::shared_ptr<Transform> transform,
                                                         std::shared_ptr<Transform> parentTransform = nullptr,
                                                         bool forceUpdate = false);
+    /**
+     * Add the volume mask with the given draw mask geometry function.
+     *
+     * @param drawMaskGeometry The draw mask geometry function to enable the volume mask.
+     */
+    void addVolumeMask(std::function<void(ecs::EntityId, Renderer &)> drawMaskGeometry);
+    /**
+     * Remove the volume mask.
+     */
+    void removeVolumeMask();
+    /**
+     * Enable the volume mask, this will enable the stencil test and set the stencil function and op.
+     */
+    void enableVolumeMask();
+    /**
+     * Disable the volume mask, this will disable the stencil test.
+     */
+    void disableVolumeMask();
 
   private:
     std::shared_ptr<client_graphics::WebGL2Context> glContext_;
+    math::Size3 volumeSize_;
+    std::optional<ecs::EntityId> volumeMask_;
+    int volumeMaskStencilRef_ = 1;
+  };
+
+  class RenderStartupSystem final : public ecs::System
+  {
+    using ecs::System::System;
+
+  public:
+    const std::string name() const override { return "RenderStartupSystem"; }
+    void onExecute() override;
   };
 
   class RenderSystem final : public ecs::System
   {
-  public:
     using ecs::System::System;
 
   public:
@@ -202,7 +266,7 @@ namespace builtin_scene
     glm::mat4 getTransformationMatrix(ecs::EntityId id);
     /**
      * Update the instance data for the mesh if it's an instanced mesh.
-     * 
+     *
      * @param meshComponent The mesh component to update the instance data with.
      */
     void tryUpdateInstanceDataForInstancedMesh(const Mesh3d &meshComponent);
@@ -213,6 +277,27 @@ namespace builtin_scene
      * @param renderTarget The XR render target.
      */
     void render(Renderer &renderer, std::optional<Renderer::XRRenderTarget> renderTarget = std::nullopt);
+    /**
+     * Render the volume mask with the given renderer.
+     *
+     * @param renderer The renderer to use.
+     * @param renderTarget The XR render target.
+     */
+    void renderVolumeMask(Renderer &renderer, std::optional<Renderer::XRRenderTarget> renderTarget);
+    /**
+     * Execute this before rendering the scene.
+     *
+     * @param renderer The renderer to use.
+     * @param renderTarget The XR render target.
+     */
+    void onBeforeRender(Renderer &renderer, std::optional<Renderer::XRRenderTarget> renderTarget);
+    /**
+     * Execute this after rendering the scene.
+     *
+     * @param renderer The renderer to use.
+     * @param renderTarget The XR render target.
+     */
+    void onAfterRender(Renderer &renderer, std::optional<Renderer::XRRenderTarget> renderTarget);
     /**
      * Traverse the entity hierarchy and render the mesh with the given renderer in pre-order.
      *

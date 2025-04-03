@@ -6,6 +6,7 @@
 #include <memory>
 #include <stdexcept>
 #include <common/utility.hpp>
+#include <common/viewport.hpp>
 #include <common/events_v2/event_target.hpp>
 #include <client/classes.hpp>
 #include <client/per_process.hpp>
@@ -152,6 +153,14 @@ namespace browser
      */
     inline float devicePixelRatio() const { return devicePixelRatio_; }
     inline float &devicePixelRatio() { return devicePixelRatio_; }
+
+    /**
+     * @returns the viewport of the window.
+     */
+    inline TrViewport viewport() const
+    {
+      return TrViewport(innerWidth_, innerHeight_, 0, 0);
+    }
 
     /**
      * @returns the shared pointer to the window.

@@ -8,6 +8,7 @@
 #include <client/builtin_scene/scene.hpp>
 #include <client/cssom/css_stylesheet.hpp>
 #include <client/cssom/style_cache.hpp>
+#include <client/layout/layout_view.hpp>
 #include <crates/bindings.hpp>
 
 #include "./node.hpp"
@@ -94,6 +95,7 @@ namespace dom
     virtual void onDocumentOpened() {};
 
   private:
+    bool isDocument() const override final { return true; }
     void openInternal();
     // Fix the source string to replace invalid tags.
     std::string &fixSource(std::string &source);
@@ -240,10 +242,16 @@ namespace dom
     ~HTMLDocument() = default;
 
   public:
+    inline std::shared_ptr<client_layout::LayoutView> layoutView() { return layoutView_; }
+    inline std::shared_ptr<const client_layout::LayoutView> layoutView() const { return layoutView_; }
+    inline client_layout::LayoutView &layoutViewRef() { return *layoutView_; }
+    inline const client_layout::LayoutView &layoutViewRef() const { return *layoutView_; }
+
     /**
      * Get the layout allocator for the document.
      *
      * @returns The layout allocator.
+     * @deprecated
      */
     inline std::shared_ptr<crates::layout2::Allocator> layoutAllocator() const
     {
@@ -257,6 +265,7 @@ namespace dom
     void onDocumentOpened() override;
 
   private:
+    std::shared_ptr<client_layout::LayoutView> layoutView_;
     std::shared_ptr<crates::layout2::Allocator> layoutAllocator_;
   };
 }

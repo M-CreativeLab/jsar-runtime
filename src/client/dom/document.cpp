@@ -6,6 +6,7 @@
 #include "./element.hpp"
 #include "./text.hpp"
 #include "./document-inl.hpp"
+#include "./document_renderer.hpp"
 #include "./browsing_context.hpp"
 #include "../cssom/selectors/matching.hpp"
 
@@ -13,12 +14,6 @@ namespace dom
 {
   using namespace std;
   using namespace pugi;
-
-  enum class TreverseOrder
-  {
-    PreOrder, // Pre-order traversal: root -> left -> right
-    PostOrder // Post-order traversal: left -> right -> root
-  };
 
   shared_ptr<Document> Document::Make(string contentType, DocumentType documentType,
                                       shared_ptr<BrowsingContext> browsingContext,
@@ -219,7 +214,7 @@ namespace dom
       throw runtime_error("Failed to parse the CSS selectors: " + selectors);
 
     auto selectorList = s.value();
-    for (auto element : allElementsList)
+    for (shared_ptr<Element> element : allElementsList)
     {
       if (!Node::Is<HTMLElement>(element))
         continue;
@@ -306,123 +301,6 @@ namespace dom
       : Document("text/xml", DocumentType::kXML, browsingContext, autoConnect)
   {
   }
-
-  // The HTML rendering ECS system, which is used to render the HTML document.
-  class RenderHTMLDocument : public builtin_scene::ecs::System
-  {
-  public:
-    RenderHTMLDocument(HTMLDocument *document)
-        : builtin_scene::ecs::System(),
-          document_(document)
-    {
-      assert(document_ != nullptr);
-    }
-
-  public:
-    const std::string name() const override { return "dom.RenderHTMLDocument"; }
-    void onExecute() override
-    {
-      assert(document_ != nullptr);
-      auto body = document_->body();
-      auto scene = document_->scene;
-      if (scene == nullptr || body == nullptr)
-        return;
-
-      // Step 1: Compute each element's styles.
-      {
-        auto adoptStyleForElement = [this](shared_ptr<HTMLElement> element)
-        {
-          const auto &computedStyle = document_->defaultView()->getComputedStyle(element);
-          element->adoptStyle(computedStyle);
-          return true;
-        };
-        auto adoptStyleForText = [](shared_ptr<Text> textNode)
-        {
-          textNode->adoptStyle(*textNode->style_);
-        };
-        traverseElementOrTextNode(body, adoptStyleForElement, adoptStyleForText, TreverseOrder::PreOrder);
-      }
-
-      // Step 2: Compute the layout of all the elements only if the layout is dirty.
-      auto rootLayoutNode = body->layoutNode();
-      if (rootLayoutNode != nullptr && rootLayoutNode->isDirty())
-        rootLayoutNode->computeLayout(targetWidth(), targetHeight());
-
-      // Step 3: Call the renderElement method of each element to draw the element.
-      {
-        auto renderElement = [scene](shared_ptr<HTMLElement> element)
-        { return element->renderElement(*scene); };
-        auto renderText = [scene](shared_ptr<Text> textNode)
-        { textNode->renderText(*scene); };
-        traverseElementOrTextNode(body, renderElement, renderText, TreverseOrder::PreOrder);
-      }
-    }
-
-  private:
-    /**
-     * Traverse `HTMLElement` or `Text` children from a root node.
-     *
-     * @param elementOrTextNode The root element or text node.
-     * @param elementCallback The callback function for the element node.
-     * @param textNodeCallback The callback function for the text node.
-     * @param order The traverse order.
-     */
-    void traverseElementOrTextNode(shared_ptr<Node> elementOrTextNode,
-                                   function<bool(shared_ptr<HTMLElement>)> elementCallback,
-                                   function<void(shared_ptr<Text>)> textNodeCallback,
-                                   TreverseOrder order)
-    {
-      if (TR_UNLIKELY(elementOrTextNode == nullptr) || !elementOrTextNode->connected)
-        return;
-
-      if (elementOrTextNode->nodeType == NodeType::TEXT_NODE)
-      {
-        auto textNode = dynamic_pointer_cast<Text>(elementOrTextNode);
-        if (textNode != nullptr)
-          textNodeCallback(textNode);
-        return;
-      }
-
-      if (elementOrTextNode->nodeType == NodeType::ELEMENT_NODE)
-      {
-        auto element = dynamic_pointer_cast<HTMLElement>(elementOrTextNode);
-        if (element == nullptr)
-          return;
-
-        bool shouldContinue = true;
-        if (order == TreverseOrder::PreOrder)
-        {
-          if (!elementCallback(element)) // If the element callback returns false, stop traversing in pre-order.
-            shouldContinue = false;
-        }
-
-        if (shouldContinue)
-        {
-          for (auto childNode : element->childNodes)
-            traverseElementOrTextNode(childNode, elementCallback, textNodeCallback, order);
-          if (order == TreverseOrder::PostOrder)
-            elementCallback(element);
-        }
-      }
-    }
-    // The target width to render the document.
-    inline float targetWidth() const
-    {
-      std::shared_ptr<browser::Window> window = document_->defaultView();
-      assert(window != nullptr);
-      return window->innerWidth();
-    }
-    // The target height to render the document.
-    inline float targetHeight() const
-    {
-      std::shared_ptr<browser::Window> window = document_->defaultView();
-      assert(window != nullptr);
-      return window->innerHeight();
-    }
-
-  private:
-    HTMLDocument *document_ = nullptr;
-  };
 
   // This follows the fragment serializing algorithm steps.
   //
@@ -564,14 +442,9 @@ namespace dom
 
   HTMLDocument::HTMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
       : Document("text/html", DocumentType::kHTML, browsingContext, autoConnect),
+        layoutView_(nullptr),
         layoutAllocator_(make_shared<crates::layout2::Allocator>())
   {
-    if (scene != nullptr)
-    {
-      // Configure the built-in scene for the HTML rendering.
-      using namespace builtin_scene::ecs;
-      scene->addSystem(SchedulerLabel::kPreUpdate, System::Make<RenderHTMLDocument>(this));
-    }
   }
 
   void HTMLDocument::afterLoadedCallback()
@@ -586,8 +459,18 @@ namespace dom
 
   void HTMLDocument::onDocumentOpened()
   {
+    auto selfDocument = getPtr<HTMLDocument>();
     auto scene = TrClientContextPerProcess::Get()->builtinScene;
     if (scene != nullptr)
+    {
+      // Create the layout view before starting the scene.
+      layoutView_ = client_layout::LayoutView::Make(selfDocument);
+
+      // TODO: support resize the document scene.
+      using namespace builtin_scene::ecs;
+      // Configure the built-in scene for the HTML rendering before starting the scene.
+      scene->addSystem(SchedulerLabel::kPreUpdate, System::Make<RenderHTMLDocument>(this));
       scene->start();
+    }
   }
 }

@@ -34,18 +34,27 @@ namespace client_cssom
     inline float depth() const { return depth_; }
     inline glm::vec2 xy() const
     {
-      return {left(), top()};
+      return {left() + offsetX_,
+              top() + offsetY_};
     }
     inline glm::vec3 xyz() const
     {
-      return {left(), top(), depth_};
+      return {left() + offsetX_,
+              top() + offsetY_,
+              depth_};
+    }
+    inline void setOffset(float x, float y, float z = 0.0f)
+    {
+      offsetX_ = x;
+      offsetY_ = y;
+      offsetZ_ = z;
     }
 
   public:
     void merge(const Layout &layout);
     /**
      * Check if the layout needs to be resized with the specified width and height.
-     * 
+     *
      * @param width The width to check.
      * @param height The height to check.
      * @returns Whether the layout needs to be resized.
@@ -54,5 +63,8 @@ namespace client_cssom
 
   private:
     float depth_ = 0.0f;
+    float offsetX_ = 0.0f;
+    float offsetY_ = 0.0f;
+    float offsetZ_ = 0.0f;
   };
 }

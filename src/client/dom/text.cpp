@@ -7,7 +7,7 @@
 
 #include "./text.hpp"
 #include "./document.hpp"
-#include "./scene_object.hpp"
+#include "./element.hpp"
 
 namespace dom
 {
@@ -57,9 +57,7 @@ namespace dom
   }
 
   Text::Text(xml_node node, shared_ptr<Document> ownerDocument)
-      : CharacterData(node, ownerDocument),
-        SceneObject(getOwnerDocumentReferenceAs<HTMLDocument>(false), nodeName),
-        content2d_(nullptr)
+      : CharacterData(node, ownerDocument)
   {
     client_cssom::CSSStyleDeclaration defaultStyle;
     defaultStyle.setProperty("width", "auto");
@@ -80,7 +78,6 @@ namespace dom
 
   Text::Text(const Text &other)
       : CharacterData(other),
-        SceneObject(other),
         style_(other.style_)
   {
   }
@@ -104,57 +101,69 @@ namespace dom
 
   const geometry::DOMRect Text::getTextClientRect(float maxWidth) const
   {
-    if (!hasSceneComponent<WebContent>() || !hasSceneComponent<Text2d>())
-      return geometry::DOMRect();
+    // if (!hasSceneComponent<WebContent>() || !hasSceneComponent<Text2d>())
+    //   return geometry::DOMRect();
 
-    const auto &webContentComponent = getSceneComponentChecked<WebContent>();
-    const auto &textComponent = getSceneComponentChecked<Text2d>();
+    // const auto &webContentComponent = getSceneComponentChecked<WebContent>();
+    // const auto &textComponent = getSceneComponentChecked<Text2d>();
 
-    string text = textComponent.content;
-    if (text.size() == 0)
-      return geometry::DOMRect();
+    // string text = textComponent.content;
+    // if (text.size() == 0)
+    //   return geometry::DOMRect();
 
-    auto paragraphStyle = webContentComponent.paragraphStyle();
-    auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle,
-                                                   TrClientContextPerProcess::Get()->getFontCacheManager());
-    paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
-    paragraphBuilder->addText(text.c_str(), text.size());
-    paragraphBuilder->pop();
+    // auto paragraphStyle = webContentComponent.paragraphStyle();
+    // auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle,
+    //                                                TrClientContextPerProcess::Get()->getFontCacheManager());
+    // paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
+    // paragraphBuilder->addText(text.c_str(), text.size());
+    // paragraphBuilder->pop();
 
-    auto paragraph = paragraphBuilder->Build();
-    paragraph->layout(maxWidth > 0
-                          ? maxWidth
-                          : numeric_limits<float>::infinity());
+    // auto paragraph = paragraphBuilder->Build();
+    // paragraph->layout(maxWidth > 0
+    //                       ? maxWidth
+    //                       : numeric_limits<float>::infinity());
 
-    geometry::DOMRect textRect;
-    textRect.width() = paragraph->getLongestLine();
-    textRect.height() = paragraph->getHeight();
-    return textRect;
+    // geometry::DOMRect textRect;
+    // textRect.width() = paragraph->getLongestLine();
+    // textRect.height() = paragraph->getHeight();
+    // return textRect;
+
+    return geometry::DOMRect();
   }
 
   void Text::connectedCallback()
   {
     CharacterData::connectedCallback();
 
-    if (renderable)
+    auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
+    if (ownerDocument != nullptr && renderable)
     {
-      SceneObject::connectedCallback(shared_from_this()); // Create the entity
-
-      // Initialize the Content2d and connect it.
-      if (content2d_ == nullptr)
-        content2d_ = make_unique<Content2d>(shared_from_this());
-      content2d_->onNodeConnected();
-
-      // Append the text
-      auto appendText = [this](Scene &scene)
+      auto &layoutView = ownerDocument->layoutViewRef();
+      shared_ptr<client_layout::LayoutBox> parentBox = nullptr;
       {
-        assert(entity_.has_value());
-        string textContent = data();
-        // Remove the leading and trailing whitespaces, and \n, \r, \t characters.
-        textContent = processTextContent(textContent);
-        scene.addComponent(entity_.value(), Text2d(textContent));
-      };
-      useScene(appendText);
+        auto parentElement = getParentElement();
+        if (parentElement != nullptr)
+          parentBox = dynamic_pointer_cast<client_layout::LayoutBox>(parentElement->principalBox());
+      }
+      textBoxes_ = {layoutView.createText(getPtr<Text>(), parentBox)};
+
+      //   SceneObject::connectedCallback(shared_from_this()); // Create the entity
+
+      //   // Initialize the Content2d and connect it.
+      //   if (content2d_ == nullptr)
+      //     content2d_ = make_unique<Content2d>(shared_from_this());
+      //   content2d_->onNodeConnected();
+
+      //   // Append the text
+      //   auto appendText = [this](Scene &scene)
+      //   {
+      //     assert(entity_.has_value());
+      //     string textContent = data();
+      //     // Remove the leading and trailing whitespaces, and \n, \r, \t characters.
+      //     textContent = processTextContent(textContent);
+      //     scene.addComponent(entity_.value(), Text2d(textContent));
+      //   };
+      //   useScene(appendText);
     }
   }
 
@@ -162,72 +171,80 @@ namespace dom
   {
     CharacterData::disconnectedCallback();
 
-    if (renderable)
+    auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
+    if (ownerDocument != nullptr && renderable)
     {
-      // Disconnect the Content2d
-      if (content2d_ != nullptr)
-        content2d_->onNodeDisconnected();
-
-      // Remove the text
-      auto removeText = [this](Scene &scene)
-      {
-        assert(entity_.has_value());
-        scene.removeComponent<Text2d>(entity_.value());
-      };
-      useScene(removeText);
-
-      SceneObject::disconnectedCallback();
+      for (auto &box : textBoxes_)
+        ownerDocument->layoutView()->removeObject(box);
     }
+
+    // if (renderable)
+    // {
+    //   // Disconnect the Content2d
+    //   if (content2d_ != nullptr)
+    //     content2d_->onNodeDisconnected();
+
+    //   // Remove the text
+    //   auto removeText = [this](Scene &scene)
+    //   {
+    //     assert(entity_.has_value());
+    //     scene.removeComponent<Text2d>(entity_.value());
+    //   };
+    //   useScene(removeText);
+
+    //   SceneObject::disconnectedCallback();
+    // }
   }
 
   bool Text::adoptStyle(const client_cssom::CSSStyleDeclaration &style)
   {
-    auto parentNode = getParentNodeAs<SceneObject>();
-    if (parentNode != nullptr)
-    {
-      auto &parentStyle = parentNode->adoptedStyle_;
-      std::shared_ptr<client_cssom::CSSStyleDeclaration> textStyle = nullptr;
+    //     auto parentNode = getParentNodeAs<SceneObject>();
+    //     if (parentNode != nullptr)
+    //     {
+    //       auto &parentStyle = parentNode->adoptedStyle_;
+    //       std::shared_ptr<client_cssom::CSSStyleDeclaration> textStyle = nullptr;
 
-#define _MAKE_TEXT_STYLE_IF_NOT_EXIST() \
-  if (textStyle == nullptr)             \
-    textStyle = make_shared<client_cssom::CSSStyleDeclaration>(style);
+    // #define _MAKE_TEXT_STYLE_IF_NOT_EXIST() \
+//   if (textStyle == nullptr)             \
+//     textStyle = make_shared<client_cssom::CSSStyleDeclaration>(style);
 
-#define USE_PARENT_STYLE(property)                                            \
-  if (parentStyle.hasProperty(property))                                      \
-  {                                                                           \
-    _MAKE_TEXT_STYLE_IF_NOT_EXIST()                                           \
-    textStyle->setProperty(property, parentStyle.getPropertyValue(property)); \
-  }
+    // #define USE_PARENT_STYLE(property)                                            \
+//   if (parentStyle.hasProperty(property))                                      \
+//   {                                                                           \
+//     _MAKE_TEXT_STYLE_IF_NOT_EXIST()                                           \
+//     textStyle->setProperty(property, parentStyle.getPropertyValue(property)); \
+//   }
 
-      // Font styles
-      USE_PARENT_STYLE("font-family");
-      USE_PARENT_STYLE("font-size");
-      USE_PARENT_STYLE("font-weight");
-      USE_PARENT_STYLE("font-style");
-      USE_PARENT_STYLE("font-variant");
-      USE_PARENT_STYLE("line-height");
+    //       // Font styles
+    //       USE_PARENT_STYLE("font-family");
+    //       USE_PARENT_STYLE("font-size");
+    //       USE_PARENT_STYLE("font-weight");
+    //       USE_PARENT_STYLE("font-style");
+    //       USE_PARENT_STYLE("font-variant");
+    //       USE_PARENT_STYLE("line-height");
 
-      // Text styles
-      USE_PARENT_STYLE("color");
-      USE_PARENT_STYLE("text-align");
-      USE_PARENT_STYLE("text-indent");
-      USE_PARENT_STYLE("text-transform");
-      USE_PARENT_STYLE("text-decoration");
-      USE_PARENT_STYLE("letter-spacing");
-      USE_PARENT_STYLE("word-spacing");
-      USE_PARENT_STYLE("white-space");
-      USE_PARENT_STYLE("direction");
-      USE_PARENT_STYLE("unicode-bidi");
+    //       // Text styles
+    //       USE_PARENT_STYLE("color");
+    //       USE_PARENT_STYLE("text-align");
+    //       USE_PARENT_STYLE("text-indent");
+    //       USE_PARENT_STYLE("text-transform");
+    //       USE_PARENT_STYLE("text-decoration");
+    //       USE_PARENT_STYLE("letter-spacing");
+    //       USE_PARENT_STYLE("word-spacing");
+    //       USE_PARENT_STYLE("white-space");
+    //       USE_PARENT_STYLE("direction");
+    //       USE_PARENT_STYLE("unicode-bidi");
 
-#undef USE_PARENT_STYLE
-#undef _MAKE_TEXT_STYLE_IF_NOT_EXIST
+    // #undef USE_PARENT_STYLE
+    // #undef _MAKE_TEXT_STYLE_IF_NOT_EXIST
 
-      // Adopt the text style if it is not empty.
-      if (textStyle != nullptr)
-        return SceneObject::adoptStyleOn(*this, *textStyle);
-    }
+    // Adopt the text style if it is not empty.
+    // if (textStyle != nullptr)
+    //   return SceneObject::adoptStyleOn(*this, *textStyle);
+    // }
 
     // By default, just bypass the style to the scene object.
-    return SceneObject::adoptStyleOn(*this, style);
+    // return SceneObject::adoptStyleOn(*this, style);
+    return true;
   }
 }

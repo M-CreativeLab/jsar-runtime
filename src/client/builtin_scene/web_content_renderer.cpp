@@ -7,6 +7,7 @@
 #include <skia/include/core/SkColor.h>
 #include <skia/include/core/SkPathEffect.h>
 #include <skia/include/effects/SkDashPathEffect.h>
+#include <client/layout/fragment.hpp>
 
 #include "./hierarchy.hpp"
 #include "./transform.hpp"
@@ -53,7 +54,7 @@ namespace builtin_scene::web_renderer
   }
 
   optional<SkPaint> drawBackground(SkCanvas *canvas, SkRRect &originalRRect,
-                                   const crates::layout2::Layout &layout,
+                                   const client_layout::Fragment &fragment,
                                    const client_cssom::CSSStyleDeclaration &style)
   {
     if (style.hasProperty("background-color"))
@@ -64,10 +65,10 @@ namespace builtin_scene::web_renderer
       fillPaint.setStyle(SkPaint::kFill_Style);
       {
         const SkRect &originalRect = originalRRect.rect();
-        float insetTop = layout.border().top();
-        float insetRight = layout.border().right();
-        float insetBottom = layout.border().bottom();
-        float insetLeft = layout.border().left();
+        float insetTop = fragment.border().top();
+        float insetRight = fragment.border().right();
+        float insetBottom = fragment.border().bottom();
+        float insetLeft = fragment.border().left();
 
         SkRect rect = SkRect::MakeXYWH(originalRect.fLeft + insetLeft,
                                        originalRect.fTop + insetTop,
@@ -131,7 +132,7 @@ namespace builtin_scene::web_renderer
   }
 
   bool drawBorders(SkCanvas *canvas, SkRRect &roundedRect,
-                   const crates::layout2::Layout &layout,
+                   const client_layout::Fragment &fragment,
                    const client_cssom::CSSStyleDeclaration &style)
   {
     using namespace client_cssom::types;
@@ -240,8 +241,8 @@ namespace builtin_scene::web_renderer
   void RenderBackgroundSystem::render(ecs::EntityId entity, WebContent &content)
   {
     const auto &style = content.style();
-    const auto &layout = content.layout();
-    if (!layout.has_value()) // No layout, no rendering.
+    const auto &fragment = content.fragment();
+    if (!fragment.has_value()) // No layout, no rendering.
       return;
 
     auto canvas = content.canvas();
@@ -266,7 +267,7 @@ namespace builtin_scene::web_renderer
       roundedRect.setRectRadii(rect, radii);
     }
 
-    auto backgroundPaint = drawBackground(canvas, roundedRect, layout.value(), style);
+    auto backgroundPaint = drawBackground(canvas, roundedRect, fragment.value(), style);
     if (backgroundPaint.has_value())
     {
       auto fillPaint = backgroundPaint.value();
@@ -278,7 +279,7 @@ namespace builtin_scene::web_renderer
         content.setBackgroundColor(fillColor.fR, fillColor.fG, fillColor.fB, fillColor.fA);
       }
     }
-    if (drawBorders(canvas, roundedRect, layout.value(), style))
+    if (drawBorders(canvas, roundedRect, fragment.value(), style))
       content.setTextureUsing(true); // enable texture when there are borders.
   }
 
@@ -319,10 +320,6 @@ namespace builtin_scene::web_renderer
     if (textComponent == nullptr)
       return;
 
-    const auto &layout = content.layout();
-    if (!layout.has_value()) // No layout, no rendering.
-      return;
-
     string &text = textComponent->content;
     auto paragraphStyle = content.paragraphStyle();
     auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle, fontCollection_);
@@ -339,8 +336,8 @@ namespace builtin_scene::web_renderer
 
   float RenderTextSystem::getLayoutWidthForText(WebContent &content)
   {
-    const auto &layout = content.layout();
-    return layout.value().width();
+    const auto &fragment = content.fragment();
+    return fragment.value().width();
   }
 
   void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)

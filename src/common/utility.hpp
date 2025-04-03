@@ -21,6 +21,13 @@
 #endif
 #endif
 
+#define TR_DISALLOW_NEW()                                         \
+public:                                                           \
+  void *operator new(size_t, void *location) { return location; } \
+                                                                  \
+private:                                                          \
+  void *operator new(size_t) = delete
+
 /**
  * Shared reference is a template class that holds the shared pointer of a type.
  *

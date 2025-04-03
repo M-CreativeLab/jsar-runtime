@@ -3,12 +3,10 @@
 #include <string>
 #include <optional>
 #include "./html_element.hpp"
-#include "./scene_object.hpp"
 
 namespace dom
 {
-  class HTMLPlaneElement : public HTMLElement,
-                           public SceneObject
+  class HTMLPlaneElement : public HTMLElement
   {
   public:
     HTMLPlaneElement(std::shared_ptr<Document> ownerDocument);
@@ -20,8 +18,8 @@ namespace dom
     void connectedCallback() override;
     void afterConnectedCallback() override;
     void disconnectedCallback() override;
-    bool renderElement(builtin_scene::Scene &scene) override;
-    bool adoptStyle(const client_cssom::CSSStyleDeclaration &style) override;
+    // bool renderElement(builtin_scene::Scene &scene) override;
+    // bool adoptStyle(const client_cssom::CSSStyleDeclaration &style) override;
 
   protected:
     /**

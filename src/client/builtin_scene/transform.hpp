@@ -290,6 +290,17 @@ namespace builtin_scene
       return *postTransform_;
     }
 
+  public:
+    friend std::ostream &operator<<(std::ostream &os, const Transform &transform)
+    {
+      os << "Transform(";
+      os << "translation=" << transform.translation_ << ", ";
+      os << "rotation=" << transform.rotation_ << ", ";
+      os << "scale=" << transform.scale_;
+      os << ")";
+      return os;
+    }
+
   private:
     math::Vec3 translation_ = math::Vec3::Identity();
     math::Quat rotation_ = math::Quat::Identity();
