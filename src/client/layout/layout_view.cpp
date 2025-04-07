@@ -43,25 +43,26 @@ namespace client_layout
 
   bool LayoutView::computeLayout(const ConstraintSpace &avilableSpace)
   {
-    function<bool(LayoutObject &)> computeChildNode = [&computeChildNode](LayoutObject &child)
+    function<bool(LayoutObject &, const LayoutBlock &)> computeChildNode =
+        [&computeChildNode](LayoutObject &object, const LayoutBlock &parent)
     {
-      if (child.isNone())
+      if (object.isNone())
         return true;
-      if (child.isInline() || child.isText()) // Use custom layout for inline or text elements.
-        return child.computeLayout(child.fragment());
+      if (object.isInline() || object.isText()) // Use custom layout for inline or text elements.
+        return object.computeLayout(parent.fragment());
 
-      if (child.isLayoutBlock())
+      if (object.isLayoutBlock())
       {
-        auto block = static_pointer_cast<LayoutBlock>(child.shared_from_this());
+        auto block = static_pointer_cast<LayoutBlock>(object.shared_from_this());
         for (auto &child : block->childrenRef())
-          computeChildNode(child); // Just traverse the block's children but don't compute layout.
+          computeChildNode(child, *block); // Just traverse the block's children but don't compute layout.
       }
       return true;
     };
 
     bool r = LayoutBlockFlow::computeLayout(avilableSpace);
     for (auto &child : childrenRef())
-      computeChildNode(child);
+      computeChildNode(child, *this);
     return r;
   }
 
@@ -114,11 +115,12 @@ namespace client_layout
   }
 
   shared_ptr<LayoutBoxModelObject> LayoutView::createBox(const string &displayStr, shared_ptr<dom::Element> element,
-                                                         shared_ptr<LayoutBlock> parentBlock)
+                                                         shared_ptr<LayoutBlock> parentBlock,
+                                                         shared_ptr<LayoutObject> beforeObject)
   {
     shared_ptr<LayoutBoxModelObject> boxObject = makeBox(displayStr, element);
     if (parentBlock != nullptr)
-      parentBlock->addChild(boxObject);
+      parentBlock->addChild(boxObject, beforeObject);
     else
       addChild(boxObject);
 
@@ -139,30 +141,10 @@ namespace client_layout
     return textObject;
   }
 
-  shared_ptr<LayoutBoxModelObject> LayoutView::replaceBox(shared_ptr<LayoutBoxModelObject> oldBox,
-                                                          const string &newDisplayStr)
-  {
-    auto element = dom::Node::As<dom::Element>(oldBox->node());
-    auto newBox = makeBox(newDisplayStr, element);
-
-    // Move the children from the old box to the new box.
-    if (newBox->isLayoutBlock() && oldBox->isLayoutBlock())
-    {
-      auto newBlock = dynamic_pointer_cast<LayoutBlock>(newBox);
-      auto oldBlock = dynamic_pointer_cast<LayoutBlock>(oldBox);
-      assert(newBlock != nullptr && oldBlock != nullptr && "The new and old boxes must be block boxes.");
-      newBlock->useChildrenFrom(oldBlock);
-    }
-
-    auto parent = oldBox->parent();
-    parent->replaceChild(newBox, oldBox);
-    newBox->useEntity(oldBox);
-    return newBox;
-  }
-
   void LayoutView::removeObject(shared_ptr<LayoutObject> object)
   {
-    assert(object->parent() != nullptr && "The object to be removed must have a parent.");
+    if (object == nullptr || object->parent() == nullptr)
+      return;
     auto parent = object->parent();
     parent->removeChild(object);
     object->destroyEntity();

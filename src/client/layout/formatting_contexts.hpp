@@ -2,6 +2,7 @@
 
 #include <concepts>
 #include <memory>
+#include <glm/glm.hpp>
 #include <crates/bindings.hpp>
 
 #include "./display_type.hpp"
@@ -37,11 +38,21 @@ namespace client_layout
     virtual Fragment liveFragment() const = 0;
 
     // Should call this method when the node is added to a parent context.
-    virtual void onAdded(const FormattingContext &parent) = 0;
+    virtual void onAdded(const FormattingContext &parent,
+                         std::shared_ptr<LayoutObject> beforeChild = nullptr) = 0;
     // Should call this method when the node is removed from a parent context.
     virtual void onRemoved(const FormattingContext &parent) = 0;
     // Should call this method when the node is replaced by a new node.
     virtual void onReplaced(const FormattingContext &parent, const FormattingContext &old) = 0;
+
+    // Set the content size of the formatting context.
+    inline void setContentSize(const glm::vec3 &size) { contentSize_ = size; }
+    // Set the content size with width and height.
+    inline void setContentSize(float width, float height)
+    {
+      setContentSize(glm::vec3(width, height, 0));
+    }
+    inline void resetContentSize() { contentSize_ = std::nullopt; }
 
     virtual bool setLayoutStyle(const crates::layout2::LayoutStyle &style) = 0;
     virtual std::unique_ptr<const LayoutResult> computeLayout(const ConstraintSpace &) = 0;
@@ -52,6 +63,7 @@ namespace client_layout
 
   protected:
     std::weak_ptr<LayoutView> view_;
+    std::optional<glm::vec3> contentSize_ = std::nullopt;
     Fragment resultingFragment_;
   };
 
@@ -63,7 +75,7 @@ namespace client_layout
   protected:
     Fragment liveFragment() const override;
 
-    void onAdded(const FormattingContext &) override final;
+    void onAdded(const FormattingContext &, std::shared_ptr<LayoutObject>) override final;
     void onRemoved(const FormattingContext &) override final;
     void onReplaced(const FormattingContext &, const FormattingContext &) override final;
 
@@ -134,7 +146,7 @@ namespace client_layout
 
   public:
     Fragment liveFragment() const override;
-    void onAdded(const FormattingContext &) override final;
+    void onAdded(const FormattingContext &, std::shared_ptr<LayoutObject>) override final;
     void onRemoved(const FormattingContext &) override final;
     void onReplaced(const FormattingContext &, const FormattingContext &) override final;
 

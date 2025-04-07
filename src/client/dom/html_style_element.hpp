@@ -21,6 +21,9 @@ namespace dom
     void createdCallback() override;
     void connectedCallback() override;
 
+  private:
+    bool isRenderable() const override final { return false; }
+
   public:
     bool blocking = true;
     bool disabled = false;

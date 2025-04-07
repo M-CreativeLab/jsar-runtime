@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 #include <glm/glm.hpp>
 #include "./fragment.hpp"
 
@@ -20,6 +21,13 @@ namespace client_layout
   public:
     float width() const { return size_.x; }
     float height() const { return size_.y; }
+
+  public:
+    friend std::ostream &operator<<(std::ostream &os, const ConstraintSpace &space)
+    {
+      os << "ConstraintSpace(" << space.width() << ", " << space.height() << ")";
+      return os;
+    }
 
   private:
     glm::vec2 size_;

@@ -187,7 +187,7 @@ namespace dom
       if (newDisplay != currentDisplayStr_)
       {
         currentDisplayStr_ = newDisplay;
-        setCSSBoxesFromCurrentDisplay();
+        reinitCSSBoxes();
       }
     }
   }
@@ -211,18 +211,60 @@ namespace dom
     }
   }
 
-  void Element::setCSSBoxesFromCurrentDisplay()
+  void Element::reinitCSSBoxes()
   {
     assert(principalBox_ != nullptr &&
-           "The principal box is not set when setting CSS boxes from the current display.");
+           "The principal box should not be null when reinitializing CSS boxes.");
     assert(renderable == true &&
-           "The element is not renderable when setting CSS boxes from the current display.");
+           "The element should be renderable when reinitializing CSS boxes.");
 
-    auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>();
-    auto &layoutView = ownerDocument->layoutViewRef();
+    auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
+    assert(ownerDocument != nullptr && renderable == true &&
+           "The owner document is not set when reinitializing CSS boxes.");
+    {
+      auto &layoutView = ownerDocument->layoutViewRef();
+      shared_ptr<client_layout::LayoutBlock> parentBlock = nullptr;
+      auto parentElement = getParentElement();
+      if (parentElement != nullptr)
+        parentBlock = dynamic_pointer_cast<client_layout::LayoutBlock>(parentElement->principalBox_);
 
-    principalBox_ = layoutView.replaceBox(principalBox_, currentDisplayStr_);
-    boxes_ = {principalBox_};
+      cout << "Reinitializing CSS boxes for element: " << nodeName << endl;
+      auto newPrincipalBox = layoutView.createBox(currentDisplayStr_, getPtr<Element>(),
+                                                  parentBlock,
+                                                  principalBox_->nextSibling());
+
+      layoutView.removeObject(principalBox_); // Remove the old box.
+      principalBox_ = newPrincipalBox;
+      boxes_ = {principalBox_};
+    }
+    assert(principalBox_ != nullptr &&
+           "The principal box is not set when reinitializing CSS boxes.");
+
+    // Recursively initialize the CSS boxes of the child nodes.
+    function<void(shared_ptr<Node>)> initBox = [&initBox](shared_ptr<Node> node)
+    {
+      if (Node::Is<Text>(node))
+      {
+        auto &textNode = Node::AsChecked<Text>(node);
+        textNode.resetCSSBoxes();
+        textNode.initCSSBoxes();
+        return;
+      }
+      if (Node::Is<Element>(node))
+      {
+        Node::AsChecked<Element>(node).initCSSBoxes();
+        for (auto childNode : node->childNodes)
+          initBox(childNode);
+        return;
+      }
+
+      // Skip if the node is not an element or text node.
+      // FIXME(yorkie): do nothing when the node is not an element or text node, such as comment node.
+    };
+
+    // Iterate the child nodes recursively and initialize the CSS boxes.
+    for (auto childNode : childNodes)
+      initBox(childNode);
   }
 
   void Element::resetCSSBoxes(bool skipCheck)

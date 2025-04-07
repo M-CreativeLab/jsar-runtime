@@ -52,7 +52,8 @@ impl TaffyNode {
       .tree
       .handle
       .borrow_mut()
-      .add_child(self.node, child.node);
+      .add_child(self.node, child.node)
+      .expect("Failed to add child");
   }
 
   pub fn remove_child(&mut self, child: &TaffyNode) {
@@ -60,7 +61,37 @@ impl TaffyNode {
       .tree
       .handle
       .borrow_mut()
-      .remove_child(self.node, child.node);
+      .remove_child(self.node, child.node)
+      .expect("Failed to remove child");
+  }
+
+  /// Inserts a child before the specified child.
+  ///
+  /// # Arguments
+  ///
+  /// * `child` - The child to insert.
+  /// * `before_child` - The child to insert before.
+  ///
+  pub fn insert_child(&mut self, child: &TaffyNode, before_child: &TaffyNode) {
+    let mut tree_handle = self.tree.handle.borrow_mut();
+    match tree_handle
+      .children(self.node)
+      .unwrap()
+      .iter()
+      .position(|&n| n == before_child.node)
+    {
+      Some(index) => {
+        tree_handle
+          .insert_child_at_index(self.node, index, child.node)
+          .expect("Failed to insert child.");
+      }
+      None => {
+        // FIXME(yorkie): append the child to the end of the list if the before_child is not found.
+        tree_handle
+          .add_child(self.node, child.node)
+          .expect("Failed to add child.");
+      }
+    }
   }
 
   /// Replaces the old child with the new child. If `copy_children` is true, the children of the old child will be
@@ -464,8 +495,16 @@ mod ffi {
     #[cxx_name = "removeChildAtIndex"]
     fn remove_child_at_index(parent: &mut TaffyNode, index: usize);
 
+    #[cxx_name = "insertChild"]
+    fn insert_child(parent: &mut TaffyNode, child: &TaffyNode, before_child: &TaffyNode);
+
     #[cxx_name = "replaceChild"]
-    fn replace_child(parent: &mut TaffyNode, old_child: &TaffyNode, new_child: &TaffyNode, copy_children: bool);
+    fn replace_child(
+      parent: &mut TaffyNode,
+      old_child: &TaffyNode,
+      new_child: &TaffyNode,
+      copy_children: bool,
+    );
 
     #[cxx_name = "replaceChildAtIndex"]
     fn replace_child_at_index(parent: &mut TaffyNode, index: usize, child: &TaffyNode);
@@ -996,7 +1035,16 @@ fn remove_child_at_index(parent: &mut TaffyNode, index: usize) {
   parent.remove_child_at_index(index);
 }
 
-fn replace_child(parent: &mut TaffyNode, old_child: &TaffyNode, new_child: &TaffyNode, copy_children: bool) {
+fn insert_child(parent: &mut TaffyNode, child: &TaffyNode, before_child: &TaffyNode) {
+  parent.insert_child(child, before_child);
+}
+
+fn replace_child(
+  parent: &mut TaffyNode,
+  old_child: &TaffyNode,
+  new_child: &TaffyNode,
+  copy_children: bool,
+) {
   parent.replace_child(old_child, new_child, copy_children);
 }
 

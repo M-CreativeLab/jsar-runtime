@@ -1101,11 +1101,21 @@ namespace crates::layout2
       holocron::layout::removeChild(*node_, *child.node_);
     }
     /**
-     * Replace a child node with a new child node.
+     * Insert a child node before another child node.
      * 
+     * @param child The child node to insert.
+     * @param beforeChild The child node to insert before.
+     */
+    inline void insertChild(Node &child, Node &beforeChild)
+    {
+      holocron::layout::insertChild(*node_, *child.node_, *beforeChild.node_);
+    }
+    /**
+     * Replace a child node with a new child node.
+     *
      * The old child node is not going to be deleted in this method, the destructor of the old child node will be
      * guaranteed to be this.
-     * 
+     *
      * @param oldChild The old child node to replace.
      * @param newChild The new child node to replace with.
      * @param copyChildren Whether to copy the children of the old child node to the new child node.

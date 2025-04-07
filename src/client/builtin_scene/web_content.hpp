@@ -128,14 +128,7 @@ namespace builtin_scene
     inline float height() const { return surface_ == nullptr ? 0.0f : surface_->height(); }
 
     // Check if the surface needs to be resized.
-    // TODO(yorkie): consider the change of the device pixel ratio.
-    inline bool needsResize(float w, float h) const
-    {
-      assert(w > 0 && h > 0);
-      if (surface_ == nullptr)
-        return true;
-      return surface_->width() != w || surface_->height() != h;
-    }
+    bool needsResize(float w, float h) const;
 
     inline glm::vec4 backgroundColor() const { return backgroundColor_; }
     inline void setBackgroundColor(float r, float g, float b, float a)

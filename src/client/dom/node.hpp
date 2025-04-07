@@ -271,6 +271,9 @@ namespace dom
     virtual bool isHTMLMeshElement() const { return false; }
     bool isElementOrText() const { return isElement() || isText(); }
 
+    // If this node can be rendered.
+    virtual bool isRenderable() const { return renderable; }
+
     /**
      * A `Node` can be enabled to use a custom geometry for rendering, such as a custom shader program.
      *

@@ -42,7 +42,7 @@ namespace dom
     auto layoutView = document_->layoutView();
     layoutView->computeLayout(targetSpace());
     layoutView->debugPrint("After layout", client_layout::LayoutView::DebugOptions::Default()
-                                               .withDisabled(true)
+                                               .withDisabled(false)
                                                .withFormattingContext(true));
 
     // Step 3: Visit the layout view to render CSS boxes.
@@ -61,13 +61,17 @@ namespace dom
   void RenderHTMLDocument::onVisitBox(const client_layout::LayoutBox &box, int depth)
   {
     if (TR_LIKELY(box.hasEntity()))
+    {
       renderEntity(box.entity(), box.fragment());
+    }
   }
 
   void RenderHTMLDocument::onVisitText(const client_layout::LayoutText &text, int depth)
   {
     if (TR_LIKELY(text.hasEntity()))
+    {
       renderEntity(text.entity(), text.fragment());
+    }
   }
 
   void RenderHTMLDocument::renderEntity(const ecs::EntityId &entity, const client_layout::Fragment &fragment)

@@ -138,6 +138,16 @@ namespace client_layout
     // TODO: update the Element
   }
 
+  const Fragment LayoutObject::fragment() const
+  {
+    assert(formattingContext_ != nullptr && "Formatting context must be set.");
+    if (parent() == nullptr)
+      return formattingContext_->liveFragment();
+
+    Fragment baseFragment = parent()->fragment();
+    return baseFragment.position(formattingContext_->liveFragment());
+  }
+
   bool LayoutObject::isDescendantOf(shared_ptr<LayoutObject> object) const
   {
     auto r = parent();
@@ -166,14 +176,14 @@ namespace client_layout
     return nullptr;
   }
 
-  void LayoutObject::onChildAdded(shared_ptr<LayoutObject> newChild)
+  void LayoutObject::onChildAdded(shared_ptr<LayoutObject> newChild, shared_ptr<LayoutObject> beforeChild)
   {
     assert(newChild != nullptr && "The new child must be set.");
     assert(newChild->formattingContext_ != nullptr && "The formatting context must be set for the new child.");
     assert(formattingContext_ != nullptr && "The formatting context must be set for the parent.");
 
     auto &parentCtx = *formattingContext_;
-    newChild->formattingContext_->onAdded(parentCtx);
+    newChild->formattingContext_->onAdded(parentCtx, beforeChild);
   }
 
   void LayoutObject::onChildRemoved(shared_ptr<LayoutObject> oldChild)
@@ -195,7 +205,7 @@ namespace client_layout
 
     // TODO: special handling for the first child.
     children->insertChildNode(shared_from_this(), newChild, beforeChild);
-    onChildAdded(newChild);
+    onChildAdded(newChild, beforeChild);
   }
 
   void LayoutObject::removeChild(shared_ptr<LayoutObject> oldChild)
@@ -454,5 +464,6 @@ namespace client_layout
 
   void LayoutObject::sizeDidChanged()
   {
+    cout << "LayoutObject::sizeDidChanged() " << debugName() << endl;
   }
 }

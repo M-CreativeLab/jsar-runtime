@@ -1,3 +1,4 @@
+#include <cmath>
 #include <vector>
 #include <skia/include/core/SkImageInfo.h>
 #include <client/macros.h>
@@ -6,6 +7,8 @@
 
 namespace builtin_scene
 {
+  using namespace std;
+
   WebContentTextStyle::WebContentTextStyle()
       : color(SK_ColorBLACK),
 #ifdef TR_CLIENT_WEB_CONTENT_DEBUG_TEXT
@@ -56,6 +59,13 @@ namespace builtin_scene
     resetSkSurface(initialWidth, initialHeight);
   }
 
+  // Compute the size in pixels by the given size and device pixel ratio. This function also rounds the size to the 
+  // nearest integer to avoid the floating point precision issue.
+  inline int computeSize(float size, float devicePixelRatio)
+  {
+    return static_cast<int>(round(size * devicePixelRatio));
+  }
+
   bool WebContent::resetSkSurface(float w, float h)
   {
     if (TR_UNLIKELY(w <= 0 || h <= 0)) // Skip if size is invalid.
@@ -64,8 +74,8 @@ namespace builtin_scene
       return false;
 
     // TODO: use Skia Genesh(GPU) to increase the performance.
-    SkImageInfo imageInfo = SkImageInfo::MakeN32Premul(w * devicePixelRatio_,
-                                                       h * devicePixelRatio_);
+    SkImageInfo imageInfo = SkImageInfo::MakeN32Premul(computeSize(w, devicePixelRatio_),
+                                                       computeSize(h, devicePixelRatio_));
     if (surface_ == nullptr)
     {
       surface_ = SkSurfaces::Raster(imageInfo);
@@ -163,6 +173,16 @@ namespace builtin_scene
 
     // Mark the content as dirty if setting a new style.
     setDirty(true);
+  }
+
+  // TODO(yorkie): consider the change of the device pixel ratio.
+  bool WebContent::needsResize(float w, float h) const
+  {
+    assert(w > 0 && h > 0);
+    if (surface_ == nullptr)
+      return true;
+    return surface_->width() != computeSize(w, devicePixelRatio_) ||
+           surface_->height() != computeSize(h, devicePixelRatio_);
   }
 
   shared_ptr<Texture> WebContent::resizeOrInitTexture(TextureAtlas &textureAtlas)

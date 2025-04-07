@@ -149,11 +149,14 @@ namespace dom
     if (ownerDocument != nullptr && renderable)
     {
       auto &layoutView = ownerDocument->layoutViewRef();
-      shared_ptr<client_layout::LayoutBox> parentBox = nullptr;
+      shared_ptr<client_layout::LayoutBoxModelObject> parentBox = nullptr;
       {
         auto parentElement = getParentElement();
-        if (parentElement != nullptr)
-          parentBox = dynamic_pointer_cast<client_layout::LayoutBox>(parentElement->principalBox());
+        assert(parentElement != nullptr &&
+               "The parent element must not be null in a TextNode().");
+        parentBox = dynamic_pointer_cast<client_layout::LayoutBoxModelObject>(parentElement->principalBox());
+        assert(parentBox != nullptr &&
+               "The parent box must not be null in a TextNode().");
       }
       textBoxes_ = {layoutView.createText(getPtr<Text>(), parentBox)};
     }

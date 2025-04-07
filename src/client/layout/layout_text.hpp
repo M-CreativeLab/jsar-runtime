@@ -26,6 +26,8 @@ namespace client_layout
     std::shared_ptr<dom::Text> textNode() const;
     virtual std::string plainText() const;
 
+    // Adjust the input `ConstraintSpace` by the text and returns the adjusted space.
+    const ConstraintSpace adjustSpace(const ConstraintSpace &inputSpace) const;
     bool computeLayout(const ConstraintSpace &avilableSpace) override final;
 
   private:

@@ -21,6 +21,7 @@ namespace client_layout
   class LayoutObject : public std::enable_shared_from_this<LayoutObject>
   {
     friend class LayoutObjectChildList;
+    friend class TaffyBasedFormattingContext;
 
   protected:
     LayoutObject(std::shared_ptr<dom::Node> node);
@@ -100,11 +101,8 @@ namespace client_layout
       return *style_;
     }
 
-    const Fragment fragment() const
-    {
-      assert(formattingContext_ != nullptr);
-      return formattingContext_->liveFragment();
-    }
+    // Returns the current layout object's fragment.
+    const Fragment fragment() const;
 
     std::shared_ptr<LayoutObject> parent() const { return parent_.lock(); }
     std::shared_ptr<LayoutObject> prevSibling() const { return previous_.lock(); }
@@ -114,7 +112,7 @@ namespace client_layout
     std::shared_ptr<LayoutObject> slowFirstChild() const;
     std::shared_ptr<LayoutObject> slowLastChild() const;
 
-    virtual void onChildAdded(std::shared_ptr<LayoutObject> newChild);
+    virtual void onChildAdded(std::shared_ptr<LayoutObject> newChild, std::shared_ptr<LayoutObject> beforeChild);
     virtual void onChildRemoved(std::shared_ptr<LayoutObject> oldChild);
     virtual void onChildReplaced(std::shared_ptr<LayoutObject> newChild, std::shared_ptr<LayoutObject> oldChild);
 
@@ -238,6 +236,8 @@ namespace client_layout
     std::shared_ptr<LayoutBlock> containingBlockForAbsolutePosition() const;
 
   protected:
+    FormattingContext &formattingContext() const { return *formattingContext_; }
+
     virtual void entityDidCreated(builtin_scene::ecs::EntityId entity);
     virtual void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity);
 
@@ -261,7 +261,7 @@ namespace client_layout
     bool resize(const Fragment &newSize);
 
   private:
-    std::unique_ptr<FormattingContext> formattingContext_;
+    std::shared_ptr<FormattingContext> formattingContext_;
     std::weak_ptr<dom::Node> node_;
     std::weak_ptr<builtin_scene::Scene> scene_;
     // TODO(yorkie): will be replaced by the computed style type.

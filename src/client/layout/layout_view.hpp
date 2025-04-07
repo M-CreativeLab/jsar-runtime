@@ -115,10 +115,12 @@ namespace client_layout
      * @param display The display type to create the box.
      * @param element The element to create the box.
      * @param parentBlock The parent block to add the box.
+     * @param beforeObject The reference box to insert the new box before.
      * @returns The new box.
      */
     std::shared_ptr<LayoutBoxModelObject> createBox(const std::string &display, std::shared_ptr<dom::Element> element,
-                                                    std::shared_ptr<LayoutBlock> parentBlock);
+                                                    std::shared_ptr<LayoutBlock> parentBlock,
+                                                    std::shared_ptr<LayoutObject> beforeObject = nullptr);
 
     /**
      * Create a new layout text object.
@@ -129,16 +131,6 @@ namespace client_layout
      */
     std::shared_ptr<LayoutText> createText(std::shared_ptr<dom::Text> textNode,
                                            std::shared_ptr<LayoutBoxModelObject> parentBox);
-
-    /**
-     * Replace the box with the new display type.
-     *
-     * @param oldBox The old box to replace.
-     * @param newDisplay The new display type to replace.
-     * @returns The new box.
-     */
-    std::shared_ptr<LayoutBoxModelObject> replaceBox(std::shared_ptr<LayoutBoxModelObject> oldBox,
-                                                     const std::string &newDisplay);
 
     /**
      * Remove the child layout object.

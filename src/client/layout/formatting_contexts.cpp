@@ -48,12 +48,40 @@ namespace client_layout
     return fragment;
   }
 
-  void TaffyBasedFormattingContext::onAdded(const FormattingContext &parent)
+  void TaffyBasedFormattingContext::onAdded(const FormattingContext &parent,
+                                            shared_ptr<LayoutObject> beforeChild)
   {
     if (!parent.isBlock()) // Skip if the parent is not a block.
       return;
 
     auto &taffyParent = dynamic_cast<const TaffyBasedFormattingContext &>(parent);
+    if (beforeChild != nullptr)
+    {
+      // Search for the before child util we find a Taffy node.
+      bool isInserted = false;
+      shared_ptr<LayoutObject> currentObject = beforeChild;
+
+      while (currentObject != nullptr)
+      {
+        auto formattingCtx = dynamic_pointer_cast<TaffyBasedFormattingContext>(currentObject->formattingContext_);
+        if (formattingCtx != nullptr)
+        {
+          taffyParent.node_->insertChild(*node_, *formattingCtx->node_);
+          isInserted = true;
+          break;
+        }
+        else
+        {
+          // If the current object is not a Taffy node, move to the next sibling.
+          currentObject = currentObject->nextSibling();
+        }
+      }
+
+      if (isInserted)
+        return; // Successfully inserted before the child.
+    }
+
+    // Add the child to the end of the parent's children by default.
     taffyParent.node_->addChild(*node_);
   }
 
@@ -79,6 +107,14 @@ namespace client_layout
   bool TaffyBasedFormattingContext::setLayoutStyle(const crates::layout2::LayoutStyle &style)
   {
     assert(node_ != nullptr && "The Taffy node must be initialized.");
+
+    if (contentSize_.has_value())
+    {
+      if (style.width().isAuto())
+        style.width() = crates::layout2::styles::Dimension::Length(contentSize_->x);
+      if (style.height().isAuto())
+        style.height() = crates::layout2::styles::Dimension::Length(contentSize_->y);
+    }
     node_->setStyle(style);
     return true;
   }
@@ -123,7 +159,8 @@ namespace client_layout
     return resultingFragment_;
   }
 
-  void InlineFormattingContext::onAdded(const FormattingContext &parent)
+  void InlineFormattingContext::onAdded(const FormattingContext &parent,
+                                        shared_ptr<LayoutObject> beforeChild)
   {
   }
 

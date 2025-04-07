@@ -18,6 +18,7 @@ namespace dom
   class Text final : public CharacterData
   {
     friend class RenderHTMLDocument;
+    friend class Element;
 
   public:
     /**

@@ -190,7 +190,7 @@ namespace dom
     // Initialize the CSS boxes of the element.
     void initCSSBoxes();
     // Set the CSS boxes of the element from the current display style.
-    void setCSSBoxesFromCurrentDisplay();
+    void reinitCSSBoxes();
     // Clear all the CSS boxes of the element.
     void resetCSSBoxes(bool skipCheck = false);
 

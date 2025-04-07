@@ -27,7 +27,10 @@ namespace client_layout
 
         depth++;
         for (auto &child : block.childrenRef())
+        {
+          assert(child.parent() != nullptr && "The child must have a parent.");
           visitObject(child);
+        }
         depth--;
       }
     };

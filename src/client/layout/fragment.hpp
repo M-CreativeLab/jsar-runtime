@@ -28,19 +28,26 @@ namespace client_layout
     const dom::geometry::DOMRect &rect() const { return rect_; }
 
     // Position
-    glm::vec3 xyz() const { return glm::vec3(rect_.x(), rect_.y(), 0); }
-    float left() const { return rect_.x(); }
-    float top() const { return rect_.y(); }
-    float z() const { return z_; }
+    inline glm::vec3 xyz() const { return glm::vec3(rect_.x(), rect_.y(), 0); }
+    inline float left() const { return rect_.x(); }
+    inline float top() const { return rect_.y(); }
+    inline float z() const { return z_; }
+
+    // Returns a new `Fragment` object which moves the child fragment based on current fragment.
+    // Such as a parent `Fragment(20, 0, 100, 100)`, moves the child `Fragment(10, 10, 50, 50)`, it will produce a new
+    // `Fragment(30, 10, 50, 50)`.
+    //
+    // This method is used to calculate the position of the child fragment based on the parent fragment.
+    const Fragment position(const Fragment &childFragment) const;
 
     // Size
-    float width() const { return rect_.width(); }
-    float height() const { return rect_.height(); }
-    float depth() const { return depth_; }
+    inline float width() const { return rect_.width(); }
+    inline float height() const { return rect_.height(); }
+    inline float depth() const { return depth_; }
 
     // Border
-    const geometry::Rect<float> &border() const { return border_; }
-    const geometry::Rect<float> &padding() const { return padding_; }
+    inline const geometry::Rect<float> &border() const { return border_; }
+    inline const geometry::Rect<float> &padding() const { return padding_; }
 
   private:
     inline void setBorder(float top, float right, float bottom, float left)
