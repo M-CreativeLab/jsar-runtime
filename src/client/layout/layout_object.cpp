@@ -464,6 +464,13 @@ namespace client_layout
 
   void LayoutObject::sizeDidChanged()
   {
-    cout << "LayoutObject::sizeDidChanged() " << debugName() << endl;
+  }
+
+  void LayoutObject::willComputeLayout(const ConstraintSpace &avilableSpace)
+  {
+  }
+
+  void LayoutObject::didComputeLayoutOnce(const ConstraintSpace &avilableSpace)
+  {
   }
 }

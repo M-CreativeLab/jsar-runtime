@@ -43,26 +43,39 @@ namespace client_layout
 
   bool LayoutView::computeLayout(const ConstraintSpace &avilableSpace)
   {
-    function<bool(LayoutObject &, const LayoutBlock &)> computeChildNode =
-        [&computeChildNode](LayoutObject &object, const LayoutBlock &parent)
+    function<void(LayoutObject &, const LayoutObject &)> traverseChildNode =
+        [&traverseChildNode](LayoutObject &object, const LayoutObject &parent)
     {
       if (object.isNone())
-        return true;
-      if (object.isInline() || object.isText()) // Use custom layout for inline or text elements.
-        return object.computeLayout(parent.fragment());
+        return;
+      object.didComputeLayoutOnce(parent.fragment());
 
+      // traverse the children of the block or inline object.
       if (object.isLayoutBlock())
       {
         auto block = static_pointer_cast<LayoutBlock>(object.shared_from_this());
         for (auto &child : block->childrenRef())
-          computeChildNode(child, *block); // Just traverse the block's children but don't compute layout.
+          traverseChildNode(child, *block); // Just traverse the block's children but don't compute layout.
       }
-      return true;
+      else if (object.isLayoutInline())
+      {
+        auto inlineObject = static_pointer_cast<LayoutInline>(object.shared_from_this());
+        for (auto &child : inlineObject->childrenRef())
+          traverseChildNode(child, *inlineObject); // Just traverse the inline's children but don't compute layout.
+      }
     };
 
+    // TODO(yorkie): support the lifecycle `willComputeLayout`?
+
+    // Use taffy to compute the layout.
     bool r = LayoutBlockFlow::computeLayout(avilableSpace);
+
+    // Traverse the children of the view and call `didComputeLayout` for each child.
+    // This lifecycle `didComputeLayout` is used to setup for the next layout computation such as setting the content
+    // size for text and replaced elements.
     for (auto &child : childrenRef())
-      computeChildNode(child, *this);
+      traverseChildNode(child, *this);
+
     return r;
   }
 
@@ -94,14 +107,31 @@ namespace client_layout
 
         if (options.showTextContent)
           cout << prefixSpaces << "  text run: " << debugText << endl;
+        return;
       }
-      else if (object.isLayoutBlock() && options.showBlockRecursively)
+
+      if (options.showBlockRecursively)
       {
-        auto &block = dynamic_cast<const LayoutBlock &>(object);
-        depth++;
-        for (const auto &child : block.childrenRef())
-          printObject(child);
-        depth--;
+        shared_ptr<client_layout::LayoutObjectChildList> children = nullptr;
+        if (object.isLayoutBlock())
+        {
+          auto &block = dynamic_cast<const LayoutBlock &>(object);
+          children = block.children();
+        }
+        else if (object.isLayoutInline())
+        {
+          auto &inlineObject = dynamic_cast<const LayoutInline &>(object);
+          children = inlineObject.children();
+        }
+
+        if (children != nullptr)
+        {
+          const auto &childrenRef = *children;
+          depth++;
+          for (const auto &child : childrenRef)
+            printObject(child);
+          depth--;
+        }
       }
     };
 

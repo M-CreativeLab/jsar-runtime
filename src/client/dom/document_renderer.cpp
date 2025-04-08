@@ -58,7 +58,7 @@ namespace dom
     return true;
   }
 
-  void RenderHTMLDocument::onVisitBox(const client_layout::LayoutBox &box, int depth)
+  void RenderHTMLDocument::onVisitBox(const client_layout::LayoutBoxModelObject &box, int depth)
   {
     if (TR_LIKELY(box.hasEntity()))
     {

@@ -6,6 +6,7 @@
 namespace client_layout
 {
   using namespace std;
+  using namespace crates::layout2::styles;
 
   unique_ptr<FormattingContext> FormattingContext::Make(DisplayType display, shared_ptr<LayoutView> view)
   {
@@ -25,6 +26,11 @@ namespace client_layout
   {
   }
 
+  void FormattingContext::setContentSize(const glm::vec3 &size)
+  {
+    contentSize_ = size;
+  }
+
   TaffyBasedFormattingContext::TaffyBasedFormattingContext(const DisplayType type, shared_ptr<LayoutView> view)
       : FormattingContext(type, view),
         node_(make_unique<crates::layout2::Node>(view->taffyNodeAllocatorRef()))
@@ -35,7 +41,7 @@ namespace client_layout
   {
     assert(node_ != nullptr && "The Taffy node must be initialized.");
 
-    crates::layout2::Layout layout = node_->layout();
+    auto layout = node_->layout();
     dom::geometry::DOMRect rect;
     rect.x() = layout.left();
     rect.y() = layout.top();
@@ -51,9 +57,6 @@ namespace client_layout
   void TaffyBasedFormattingContext::onAdded(const FormattingContext &parent,
                                             shared_ptr<LayoutObject> beforeChild)
   {
-    if (!parent.isBlock()) // Skip if the parent is not a block.
-      return;
-
     auto &taffyParent = dynamic_cast<const TaffyBasedFormattingContext &>(parent);
     if (beforeChild != nullptr)
     {
@@ -87,35 +90,37 @@ namespace client_layout
 
   void TaffyBasedFormattingContext::onRemoved(const FormattingContext &parent)
   {
-    if (!parent.isBlock()) // Skip if the parent is not a block.
-      return;
-
     auto &taffyParent = dynamic_cast<const TaffyBasedFormattingContext &>(parent);
     taffyParent.node_->removeChild(*node_);
   }
 
   void TaffyBasedFormattingContext::onReplaced(const FormattingContext &parent, const FormattingContext &old)
   {
-    if (!parent.isBlock()) // Skip if the parent is not a block.
-      return;
-
     auto &taffyParent = dynamic_cast<const TaffyBasedFormattingContext &>(parent);
     auto &taffyOld = dynamic_cast<const TaffyBasedFormattingContext &>(old);
     taffyParent.node_->replaceChild(*taffyOld.node_, *node_, true);
   }
 
+  void TaffyBasedFormattingContext::setContentSize(const glm::vec3 &size)
+  {
+    FormattingContext::setContentSize(size);
+    assert(contentSize_.has_value() &&
+           "Content size must be set before layout.");
+
+    auto nodeStyle = node_->style();
+    if (nodeStyle.width().isAuto())
+      nodeStyle.setWidth(Dimension::Length(contentSize_->x));
+    if (nodeStyle.height().isAuto())
+      nodeStyle.setHeight(Dimension::Length(contentSize_->y));
+    node_->setStyle(nodeStyle);
+    node_->markDirty();
+  }
+
   bool TaffyBasedFormattingContext::setLayoutStyle(const crates::layout2::LayoutStyle &style)
   {
     assert(node_ != nullptr && "The Taffy node must be initialized.");
-
-    if (contentSize_.has_value())
-    {
-      if (style.width().isAuto())
-        style.width() = crates::layout2::styles::Dimension::Length(contentSize_->x);
-      if (style.height().isAuto())
-        style.height() = crates::layout2::styles::Dimension::Length(contentSize_->y);
-    }
     node_->setStyle(style);
+    node_->markDirty();
     return true;
   }
 
@@ -151,45 +156,5 @@ namespace client_layout
   {
     assert(node_ != nullptr && "The Taffy node must be initialized.");
     node_->debugPrint();
-  }
-
-  Fragment InlineFormattingContext::liveFragment() const
-  {
-    // FIXME(yorkie): use resultingFragment_ as the live fragment.
-    return resultingFragment_;
-  }
-
-  void InlineFormattingContext::onAdded(const FormattingContext &parent,
-                                        shared_ptr<LayoutObject> beforeChild)
-  {
-  }
-
-  void InlineFormattingContext::onRemoved(const FormattingContext &parent)
-  {
-    // FIXME(yorkie): implement this method.
-  }
-
-  void InlineFormattingContext::onReplaced(const FormattingContext &parent, const FormattingContext &old)
-  {
-    // FIXME(yorkie): implement this method.
-  }
-
-  bool InlineFormattingContext::setLayoutStyle(const crates::layout2::LayoutStyle &style)
-  {
-    return true;
-  }
-
-  unique_ptr<const LayoutResult> InlineFormattingContext::computeLayout(const ConstraintSpace &space)
-  {
-    auto defaultResult = make_unique<LayoutResult>(dom::geometry::DOMRect(0, 0, space.width(), space.height()));
-    defaultResult->status() = LayoutResult::kSuccess;
-
-    resultingFragment_ = defaultResult->fragment();
-    return defaultResult;
-  }
-
-  void InlineFormattingContext::debugPrint() const
-  {
-    // TODO(yorkie): implement this method.
   }
 }

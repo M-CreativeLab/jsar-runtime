@@ -28,10 +28,10 @@ namespace client_layout
 
     // Adjust the input `ConstraintSpace` by the text and returns the adjusted space.
     const ConstraintSpace adjustSpace(const ConstraintSpace &inputSpace) const;
-    bool computeLayout(const ConstraintSpace &avilableSpace) override final;
 
   private:
     void entityDidCreated(builtin_scene::ecs::EntityId entity) override;
     void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
+    void didComputeLayoutOnce(const ConstraintSpace &avilableSpace) override final;
   };
 }

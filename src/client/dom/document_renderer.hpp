@@ -30,7 +30,7 @@ namespace dom
 
   private:
     bool onVisitObject(client_layout::LayoutObject &object, int depth) override;
-    void onVisitBox(const client_layout::LayoutBox &box, int depth) override;
+    void onVisitBox(const client_layout::LayoutBoxModelObject &box, int depth) override;
     void onVisitText(const client_layout::LayoutText &text, int depth) override;
     void renderEntity(const builtin_scene::ecs::EntityId &entity, const client_layout::Fragment &fragment);
 

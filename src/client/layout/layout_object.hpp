@@ -20,6 +20,7 @@ namespace client_layout
    */
   class LayoutObject : public std::enable_shared_from_this<LayoutObject>
   {
+    friend class LayoutView;
     friend class LayoutObjectChildList;
     friend class TaffyBasedFormattingContext;
 
@@ -246,6 +247,9 @@ namespace client_layout
 
     virtual void sizeWillChange(const Fragment &newSize);
     virtual void sizeDidChanged();
+
+    virtual void willComputeLayout(const ConstraintSpace &);
+    virtual void didComputeLayoutOnce(const ConstraintSpace &);
 
   private:
     void setParent(std::shared_ptr<LayoutObject> parent) { parent_ = parent; }

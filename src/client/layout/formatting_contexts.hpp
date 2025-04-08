@@ -14,6 +14,7 @@ namespace client_layout
 {
   class LayoutView;
   class LayoutObject;
+  class FormattingContextsChildList;
 
   class FormattingContext
   {
@@ -46,7 +47,7 @@ namespace client_layout
     virtual void onReplaced(const FormattingContext &parent, const FormattingContext &old) = 0;
 
     // Set the content size of the formatting context.
-    inline void setContentSize(const glm::vec3 &size) { contentSize_ = size; }
+    virtual void setContentSize(const glm::vec3 &size);
     // Set the content size with width and height.
     inline void setContentSize(float width, float height)
     {
@@ -56,6 +57,8 @@ namespace client_layout
 
     virtual bool setLayoutStyle(const crates::layout2::LayoutStyle &style) = 0;
     virtual std::unique_ptr<const LayoutResult> computeLayout(const ConstraintSpace &) = 0;
+
+    // Print the debug information of the formatting context.
     virtual void debugPrint() const = 0;
 
   public:
@@ -79,6 +82,7 @@ namespace client_layout
     void onRemoved(const FormattingContext &) override final;
     void onReplaced(const FormattingContext &, const FormattingContext &) override final;
 
+    void setContentSize(const glm::vec3 &size) override final;
     bool setLayoutStyle(const crates::layout2::LayoutStyle &style) override;
     std::unique_ptr<const LayoutResult> computeLayout(const ConstraintSpace &) override;
     void debugPrint() const override final;
@@ -136,30 +140,17 @@ namespace client_layout
     bool isGrid() const override final { return true; }
   };
 
-  class InlineFormattingContext : public FormattingContext
+  // TODO(yorkie): support inline layout, temporarily use taffy's block layout.
+  class InlineFormattingContext : public TaffyBasedFormattingContext
   {
   public:
     InlineFormattingContext(std::shared_ptr<LayoutView> view)
-        : FormattingContext(DisplayType::Inline(), view)
+        : TaffyBasedFormattingContext(DisplayType::Inline(), view)
     {
     }
-
-  public:
-    Fragment liveFragment() const override;
-    void onAdded(const FormattingContext &, std::shared_ptr<LayoutObject>) override final;
-    void onRemoved(const FormattingContext &) override final;
-    void onReplaced(const FormattingContext &, const FormattingContext &) override final;
-
-    bool setLayoutStyle(const crates::layout2::LayoutStyle &style) override;
-    std::unique_ptr<const LayoutResult> computeLayout(const ConstraintSpace &) override;
-    void debugPrint() const override final;
 
   private:
     bool isInline() const override final { return true; }
     bool isFlow() const override final { return true; }
-
-  private:
-    // TODO: Implement the inline formatting context.
-    FormattingContext *parent_ = nullptr;
   };
 }

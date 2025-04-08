@@ -228,7 +228,6 @@ namespace dom
       if (parentElement != nullptr)
         parentBlock = dynamic_pointer_cast<client_layout::LayoutBlock>(parentElement->principalBox_);
 
-      cout << "Reinitializing CSS boxes for element: " << nodeName << endl;
       auto newPrincipalBox = layoutView.createBox(currentDisplayStr_, getPtr<Element>(),
                                                   parentBlock,
                                                   principalBox_->nextSibling());

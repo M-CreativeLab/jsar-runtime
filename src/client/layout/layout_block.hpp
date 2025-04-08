@@ -36,13 +36,6 @@ namespace client_layout
     void slowLastChild() const = delete;
 
   private:
-    // This uses the given's old block's children and moves them to this block.
-    inline void useChildrenFrom(std::shared_ptr<LayoutBlock> other)
-    {
-      // TODO(yorkie): use move semantics?
-      children_ = other->children_;
-      other->children_ = nullptr;
-    }
     std::shared_ptr<LayoutObjectChildList> virtualChildren() const override final { return children(); }
     std::shared_ptr<LayoutObjectChildList> virtualChildren() override final { return children(); }
 

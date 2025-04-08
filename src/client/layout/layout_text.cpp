@@ -62,19 +62,6 @@ namespace client_layout
                            paragraph->getHeight());
   }
 
-  bool LayoutText::computeLayout(const ConstraintSpace &avilableSpace)
-  {
-    // adjust the space size by the text content.
-    ConstraintSpace adjustedSpace = adjustSpace(avilableSpace);
-
-    // Update the layout size.
-    formattingContext().setContentSize(adjustedSpace.width(),
-                                       adjustedSpace.height());
-
-    // Execute the layout computation.
-    return LayoutObject::computeLayout(adjustedSpace);
-  }
-
   // Remove the leading and trailing whitespaces, and \n, \r, \t characters.
   string processTextContent(const string &text)
   {
@@ -111,5 +98,15 @@ namespace client_layout
     useSceneWithCallback(removeText);
 
     LayoutObject::entityWillBeDestroyed(entity);
+  }
+
+  void LayoutText::didComputeLayoutOnce(const ConstraintSpace &avilableSpace)
+  {
+    // adjust the space size by the text content.
+    ConstraintSpace adjustedSpace = adjustSpace(avilableSpace);
+
+    // Update the content size of the formatting context.
+    formattingContext().setContentSize(adjustedSpace.width(),
+                                       adjustedSpace.height());
   }
 }

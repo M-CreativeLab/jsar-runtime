@@ -40,6 +40,9 @@ namespace client_layout
     void setDisplay(const DisplayType &display);
 
   private:
+    bool isBoxModelObject() const override final { return true; }
+
+  private:
     DisplayType display_;
   };
 }
