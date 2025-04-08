@@ -30,7 +30,7 @@ namespace client_layout
     LayoutObject &operator=(const LayoutObject &) = delete;
 
   public:
-    virtual ~LayoutObject() = default;
+    virtual ~LayoutObject();
 
   public:
     virtual const char *name() const = 0;
@@ -94,6 +94,7 @@ namespace client_layout
     void destroyEntity();
     // Use the entity from the other layout object, this is useful when replacing the layout object.
     void useEntity(std::shared_ptr<LayoutObject> other);
+    void destroy();
 
     std::shared_ptr<client_cssom::CSSStyleDeclaration> style() const { return style_; }
     const client_cssom::CSSStyleDeclaration &styleRef() const
@@ -115,12 +116,10 @@ namespace client_layout
 
     virtual void onChildAdded(std::shared_ptr<LayoutObject> newChild, std::shared_ptr<LayoutObject> beforeChild);
     virtual void onChildRemoved(std::shared_ptr<LayoutObject> oldChild);
-    virtual void onChildReplaced(std::shared_ptr<LayoutObject> newChild, std::shared_ptr<LayoutObject> oldChild);
 
     virtual void addChild(std::shared_ptr<LayoutObject> newChild,
                           std::shared_ptr<LayoutObject> beforeChild = nullptr);
     virtual void removeChild(std::shared_ptr<LayoutObject> oldChild);
-    virtual void replaceChild(std::shared_ptr<LayoutObject> newChild, std::shared_ptr<LayoutObject> oldChild);
 
     virtual std::shared_ptr<LayoutObjectChildList> virtualChildren() { return nullptr; }
     virtual std::shared_ptr<LayoutObjectChildList> virtualChildren() const { return nullptr; }

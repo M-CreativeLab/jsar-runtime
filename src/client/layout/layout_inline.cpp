@@ -1,4 +1,5 @@
 #include "./layout_inline.hpp"
+#include "./layout_view.hpp"
 
 namespace client_layout
 {

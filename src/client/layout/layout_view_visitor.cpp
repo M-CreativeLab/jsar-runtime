@@ -39,10 +39,11 @@ namespace client_layout
       {
         client_layout::LayoutObjectChildList &childrenRef = *children;
         depth++;
-        for (auto &child : childrenRef)
+        for (auto child : childrenRef)
         {
-          assert(child.parent() != nullptr && "The child must have a parent.");
-          visitObject(child);
+          assert(child != nullptr && child->parent() != nullptr &&
+                 "The child must have a parent.");
+          visitObject(*child);
         }
         depth--;
       }

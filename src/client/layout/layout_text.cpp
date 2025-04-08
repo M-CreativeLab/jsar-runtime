@@ -24,10 +24,28 @@ namespace client_layout
     return static_pointer_cast<dom::Text>(node());
   }
 
+  // Remove the leading and trailing whitespaces, and \n, \r, \t characters.
+  string formatText(const string &text)
+  {
+    if (text.empty())
+      return ""; // Early exit for empty string
+
+    size_t start = text.find_first_not_of(" \t\n\r");
+    if (start == string::npos)
+    {
+      return ""; // Entire string is whitespace
+    }
+
+    size_t end = text.find_last_not_of(" \t\n\r");
+    // Since we already checked `start`, `end` cannot be npos here
+    return text.substr(start, end - start + 1);
+  }
+
   string LayoutText::plainText() const
   {
     // TODO(yorkie): support offset such as <div>foo<b>!</b>bar</div>, it should created as 2 `LayoutText` objects.
-    return textNode()->data();
+    // TODO(yorkie): support caching for `formatText` to avoid the repeated formatting.
+    return formatText(textNode()->data());
   }
 
   const ConstraintSpace LayoutText::adjustSpace(const ConstraintSpace &inputSpace) const
@@ -43,7 +61,7 @@ namespace client_layout
     assert(webContentComponent != nullptr && "The web content must be set.");
 
     if (textContent.size() == 0)
-      return inputSpace;
+      return ConstraintSpace::Zero();
 
     auto paragraphStyle = webContentComponent->paragraphStyle();
     auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle,
@@ -62,29 +80,13 @@ namespace client_layout
                            paragraph->getHeight());
   }
 
-  // Remove the leading and trailing whitespaces, and \n, \r, \t characters.
-  string processTextContent(const string &text)
-  {
-    string result(text);
-    size_t start = result.find_first_not_of(" \t\n\r");
-    if (start == string::npos || start >= result.length())
-      start = 0;
-    size_t end = result.find_last_not_of(" \t\n\r");
-    if (end == string::npos || end >= result.length())
-      end = result.length();
-    return result.substr(start, end - start + 1);
-  }
-
   void LayoutText::entityDidCreated(ecs::EntityId entity)
   {
     LayoutObject::entityDidCreated(entity);
 
     auto appendText = [this, &entity](Scene &scene)
     {
-      string textContent = plainText();
-      // Remove the leading and trailing whitespaces, and \n, \r, \t characters.
-      textContent = processTextContent(textContent);
-      scene.addComponent(entity, Text2d(textContent));
+      scene.addComponent(entity, Text2d(plainText()));
     };
     useSceneWithCallback(appendText);
   }

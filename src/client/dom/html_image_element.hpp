@@ -4,27 +4,26 @@
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkBitmap.h>
 #include "./geometry/dom_rect.hpp"
-#include "./html_content2d_element.hpp"
+#include "./html_element.hpp"
 #include "../canvas/image_source.hpp"
 
 namespace dom
 {
-  class HTMLImageElement final : public HTMLContent2dElement,
+  class HTMLImageElement final : public HTMLElement,
                                  public canvas::ImageSource
   {
   public:
-    using HTMLContent2dElement::HTMLContent2dElement;
+    using HTMLElement::HTMLElement;
 
   public:
     HTMLImageElement(std::shared_ptr<Document> ownerDocument)
-        : HTMLContent2dElement("IMG", ownerDocument),
+        : HTMLElement("IMG", ownerDocument),
           canvas::ImageSource()
     {
     }
 
   public:
     void connectedCallback() override;
-    // void onLayoutChanged() override;
 
   public:
     inline size_t width() const override { return skBitmap_->width(); }

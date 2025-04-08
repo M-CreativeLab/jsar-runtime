@@ -142,9 +142,9 @@ namespace client_layout
   private:
     bool isLayoutView() const final override { return true; }
 
-    std::shared_ptr<LayoutBoxModelObject> makeBox(const std::string &displayStr,
+    std::unique_ptr<LayoutBoxModelObject> makeBox(const std::string &displayStr,
                                                   std::shared_ptr<dom::Element> element);
-    std::shared_ptr<LayoutText> makeText(std::shared_ptr<dom::Text> textNode);
+    std::unique_ptr<LayoutText> makeText(std::shared_ptr<dom::Text> textNode);
 
   private:
     // JSAR uses taffy for block, flex and grid layout, this allocator is used to create the taffy nodes.

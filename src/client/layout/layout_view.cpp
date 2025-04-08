@@ -54,14 +54,14 @@ namespace client_layout
       if (object.isLayoutBlock())
       {
         auto block = static_pointer_cast<LayoutBlock>(object.shared_from_this());
-        for (auto &child : block->childrenRef())
-          traverseChildNode(child, *block); // Just traverse the block's children but don't compute layout.
+        for (shared_ptr<LayoutObject> child : block->childrenRef())
+          traverseChildNode(*child, *block); // Just traverse the block's children but don't compute layout.
       }
       else if (object.isLayoutInline())
       {
         auto inlineObject = static_pointer_cast<LayoutInline>(object.shared_from_this());
-        for (auto &child : inlineObject->childrenRef())
-          traverseChildNode(child, *inlineObject); // Just traverse the inline's children but don't compute layout.
+        for (shared_ptr<LayoutObject> child : inlineObject->childrenRef())
+          traverseChildNode(*child, *inlineObject); // Just traverse the inline's children but don't compute layout.
       }
     };
 
@@ -73,15 +73,15 @@ namespace client_layout
     // Traverse the children of the view and call `didComputeLayout` for each child.
     // This lifecycle `didComputeLayout` is used to setup for the next layout computation such as setting the content
     // size for text and replaced elements.
-    for (auto &child : childrenRef())
-      traverseChildNode(child, *this);
+    for (shared_ptr<LayoutObject> child : childrenRef())
+      traverseChildNode(*child, *this);
 
     return r;
   }
 
   void LayoutView::debugPrint(const string &message, LayoutView::DebugOptions options) const
   {
-    if (TR_UNLIKELY(options.disabled))
+    if (TR_LIKELY(options.disabled))
       return;
 
     int depth = 1;
@@ -128,8 +128,8 @@ namespace client_layout
         {
           const auto &childrenRef = *children;
           depth++;
-          for (const auto &child : childrenRef)
-            printObject(child);
+          for (shared_ptr<const LayoutObject> child : childrenRef)
+            printObject(*child);
           depth--;
         }
       }
@@ -137,8 +137,8 @@ namespace client_layout
 
     // Print the view tree.
     cout << "LayoutView (" << message << ")" << endl;
-    for (const auto &child : childrenRef())
-      printObject(child);
+    for (shared_ptr<const LayoutObject> child : childrenRef())
+      printObject(*child);
 
     if (options.printFormattingContext)
       debugPrintFormattingContext();
@@ -163,7 +163,7 @@ namespace client_layout
                                                 shared_ptr<LayoutBoxModelObject> parentBox)
   {
     assert(parentBox != nullptr && "The parent box must be set for the text object.");
-    auto textObject = makeText(textNode);
+    shared_ptr<LayoutText> textObject = makeText(textNode);
     parentBox->addChild(textObject);
 
     assert(textObject->parent() != nullptr && "Inserted text object must have a parent box.");
@@ -177,22 +177,21 @@ namespace client_layout
       return;
     auto parent = object->parent();
     parent->removeChild(object);
-    object->destroyEntity();
   }
 
-  shared_ptr<LayoutBoxModelObject> LayoutView::makeBox(const string &displayStr, shared_ptr<dom::Element> element)
+  unique_ptr<LayoutBoxModelObject> LayoutView::makeBox(const string &displayStr, shared_ptr<dom::Element> element)
   {
-    shared_ptr<LayoutBoxModelObject> boxObject = nullptr;
+    unique_ptr<LayoutBoxModelObject> boxObject = nullptr;
     DisplayType display = DisplayType::Make(displayStr);
 
     // Create LayoutImage for the cases: <img>, <picture> and content: url().
     // TODO(yorkie): support <picture> element and content case.
     if (dom::Node::Is<dom::HTMLImageElement>(element))
-      boxObject = make_shared<LayoutImage>(element);
+      boxObject = make_unique<LayoutImage>(element);
 
     // Skip the box creation for the display type of "none".
     if (display.isNone())
-      boxObject = make_shared<LayoutNone>(element);
+      boxObject = make_unique<LayoutNone>(element);
 
     // Create a box object via the display type for non-replaced elements.
     if (boxObject == nullptr)
@@ -202,15 +201,15 @@ namespace client_layout
       {
         if (display.inside == DisplayInside::kFlow ||
             display.inside == DisplayInside::kFlowRoot)
-          boxObject = make_shared<LayoutBlockFlow>(element);
+          boxObject = make_unique<LayoutBlockFlow>(element);
         else if (display.inside == DisplayInside::kFlex)
-          boxObject = make_shared<LayoutFlexibleBox>(element);
+          boxObject = make_unique<LayoutFlexibleBox>(element);
         else if (display.inside == DisplayInside::kGrid)
-          boxObject = make_shared<LayoutGrid>(element);
+          boxObject = make_unique<LayoutGrid>(element);
       }
       else if (display.outside == DisplayOutside::kInline)
       {
-        boxObject = make_shared<LayoutInline>(element);
+        boxObject = make_unique<LayoutInline>(element);
       }
       else
       {
@@ -223,9 +222,9 @@ namespace client_layout
     return boxObject;
   }
 
-  shared_ptr<LayoutText> LayoutView::makeText(shared_ptr<dom::Text> textNode)
+  unique_ptr<LayoutText> LayoutView::makeText(shared_ptr<dom::Text> textNode)
   {
-    auto textObject = make_shared<LayoutText>(textNode);
+    auto textObject = make_unique<LayoutText>(textNode);
     textObject->setFormattingContext(DisplayType::Inline());
     return textObject;
   }

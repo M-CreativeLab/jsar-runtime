@@ -239,6 +239,10 @@ namespace dom
     assert(principalBox_ != nullptr &&
            "The principal box is not set when reinitializing CSS boxes.");
 
+    // Skip the following steps to create child boxes if the principal box is a none box.
+    if (principalBox_->isNone())
+      return;
+
     // Recursively initialize the CSS boxes of the child nodes.
     function<void(shared_ptr<Node>)> initBox = [&initBox](shared_ptr<Node> node)
     {

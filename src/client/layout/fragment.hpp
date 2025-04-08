@@ -14,6 +14,10 @@ namespace client_layout
     friend class InlineFormattingContext;
 
   public:
+    // Create a none fragment which has a size of 0x0.
+    static Fragment None() { return Fragment(dom::geometry::DOMRect(0, 0, 0, 0)); }
+
+  public:
     Fragment() = default;
     Fragment(const dom::geometry::DOMRect &rect)
         : rect_(rect),

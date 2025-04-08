@@ -54,6 +54,14 @@ namespace client_layout
       setContentSize(glm::vec3(width, height, 0));
     }
     inline void resetContentSize() { contentSize_ = std::nullopt; }
+    inline void setContentWidth(float width)
+    {
+      setContentSize(width, contentSize_.has_value() ? contentSize_->y : 0);
+    }
+    inline void setContentHeight(float height)
+    {
+      setContentSize(contentSize_.has_value() ? contentSize_->x : 0, height);
+    }
 
     virtual bool setLayoutStyle(const crates::layout2::LayoutStyle &style) = 0;
     virtual std::unique_ptr<const LayoutResult> computeLayout(const ConstraintSpace &) = 0;

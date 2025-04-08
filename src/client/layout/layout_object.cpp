@@ -1,3 +1,4 @@
+#include <vector>
 #include <client/cssom/types/transform.hpp>
 #include <client/dom/node.hpp>
 #include <client/dom/all_html_elements.hpp>
@@ -21,6 +22,10 @@ namespace client_layout
       scene_ = dom::Node::As<dom::Document>(node)->scene;
     else
       scene_ = node->getOwnerDocumentReference()->scene;
+  }
+
+  LayoutObject::~LayoutObject()
+  {
   }
 
   string LayoutObject::toString() const
@@ -138,14 +143,46 @@ namespace client_layout
     // TODO: update the Element
   }
 
+  void LayoutObject::destroy()
+  {
+    destroyEntity();
+
+    auto children = virtualChildren();
+    if (children != nullptr)
+    {
+      vector<shared_ptr<LayoutObject>> listToReset; // List to be reset.
+      for (auto child : *children)
+      {
+        child->destroy();
+        listToReset.push_back(child); // Push the child to the list which will be reset later.
+      }
+
+      // Reset all the children after `destroy()` to avoid the dangling pointer.
+      for (auto item : listToReset)
+      {
+        item->setParent(nullptr);
+        item->setPrevSibling(nullptr);
+        item->setNextSibling(nullptr);
+      }
+    }
+  }
+
   const Fragment LayoutObject::fragment() const
   {
+    Fragment nodeFragment = formattingContext_->liveFragment();
+    if (isText())
+    {
+      auto layoutText = dynamic_pointer_cast<const LayoutText>(shared_from_this());
+      if (layoutText != nullptr && layoutText->plainTextLength() == 0)
+        nodeFragment = Fragment::None(); // Set the fragment to none if a text and empty content.
+    }
+
     assert(formattingContext_ != nullptr && "Formatting context must be set.");
     if (parent() == nullptr)
-      return formattingContext_->liveFragment();
+      return nodeFragment;
 
     Fragment baseFragment = parent()->fragment();
-    return baseFragment.position(formattingContext_->liveFragment());
+    return baseFragment.position(nodeFragment);
   }
 
   bool LayoutObject::isDescendantOf(shared_ptr<LayoutObject> object) const
@@ -189,12 +226,7 @@ namespace client_layout
   void LayoutObject::onChildRemoved(shared_ptr<LayoutObject> oldChild)
   {
     oldChild->formattingContext_->onRemoved(*formattingContext_);
-  }
-
-  void LayoutObject::onChildReplaced(shared_ptr<LayoutObject> newChild, shared_ptr<LayoutObject> oldChild)
-  {
-    newChild->formattingContext_->onReplaced(*formattingContext_,
-                                             *oldChild->formattingContext_);
+    oldChild->destroy();
   }
 
   void LayoutObject::addChild(shared_ptr<LayoutObject> newChild, shared_ptr<LayoutObject> beforeChild)
@@ -216,17 +248,6 @@ namespace client_layout
 
     children->removeChildNode(shared_from_this(), oldChild);
     onChildRemoved(oldChild);
-  }
-
-  void LayoutObject::replaceChild(shared_ptr<LayoutObject> newChild, shared_ptr<LayoutObject> oldChild)
-  {
-    auto children = virtualChildren();
-    if (!children)
-      return;
-
-    auto replaced = children->replaceChildNode(shared_from_this(), newChild, oldChild);
-    assert(replaced == oldChild && "Failed to replace the old child with the new child.");
-    onChildReplaced(newChild, oldChild);
   }
 
   void LayoutObject::setFormattingContext(DisplayType display)

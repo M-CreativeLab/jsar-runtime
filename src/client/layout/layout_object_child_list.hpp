@@ -20,7 +20,7 @@ namespace client_layout
       {
       }
 
-      LayoutObject &operator*() const { return *current_; }
+      std::shared_ptr<LayoutObject> operator*() const { return current_; }
       iterator &operator++();
       iterator operator++(int);
       friend bool operator==(const iterator &lhs, const iterator &rhs)
@@ -41,7 +41,7 @@ namespace client_layout
       {
       }
 
-      const LayoutObject &operator*() const { return *current_; }
+      std::shared_ptr<const LayoutObject> operator*() const { return current_; }
       const_iterator &operator++();
       const_iterator operator++(int);
       friend bool operator==(const const_iterator &lhs, const const_iterator &rhs)

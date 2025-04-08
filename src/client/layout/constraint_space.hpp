@@ -9,6 +9,10 @@ namespace client_layout
   class ConstraintSpace
   {
   public:
+    // Zero space: 0 x 0
+    static ConstraintSpace Zero() { return ConstraintSpace(0, 0); }
+
+  public:
     ConstraintSpace(float width, float height)
         : size_(width, height)
     {

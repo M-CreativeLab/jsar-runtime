@@ -24,7 +24,8 @@ namespace client_layout
     bool isText() const override final { return true; }
 
     std::shared_ptr<dom::Text> textNode() const;
-    virtual std::string plainText() const;
+    std::string plainText() const;
+    inline size_t plainTextLength() const { return plainText().length(); }
 
     // Adjust the input `ConstraintSpace` by the text and returns the adjusted space.
     const ConstraintSpace adjustSpace(const ConstraintSpace &inputSpace) const;
