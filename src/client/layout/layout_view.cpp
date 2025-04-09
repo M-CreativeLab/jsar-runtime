@@ -32,13 +32,11 @@ namespace client_layout
 
   LayoutView::LayoutView(shared_ptr<dom::Document> document)
       : LayoutBlockFlow(document),
-        taffyNodeAllocator_(make_shared<crates::layout2::Allocator>())
+        taffy_node_allocator_(make_shared<crates::layout2::Allocator>()),
+        hit_test_count_(0),
+        hit_test_cache_hits_(0),
+        hit_test_cache_(make_unique<HitTestCache>())
   {
-  }
-
-  size_t LayoutView::computeMinimumWidth()
-  {
-    return 0;
   }
 
   bool LayoutView::computeLayout(const ConstraintSpace &avilableSpace)
@@ -77,6 +75,29 @@ namespace client_layout
       traverseChildNode(*child, *this);
 
     return r;
+  }
+
+  bool LayoutView::hitTest(const HitTestRay &hitTestRay, HitTestResult &result)
+  {
+    // TODO(yorkie): support the hit test for the view.
+    return false;
+  }
+
+  bool LayoutView::hitTestNoLifecycleUpdate(const HitTestRay &hitTestRay, HitTestResult &result)
+  {
+    // TODO(yorkie): support the hit test for the view.
+    return false;
+  }
+
+  void LayoutView::clearHitTestCache()
+  {
+    hit_test_cache_->clear();
+  }
+
+  size_t LayoutView::computeMinimumWidth()
+  {
+    // TODO(yorkie): support the minimum width for the view.
+    return 0;
   }
 
   void LayoutView::debugPrint(const string &message, LayoutView::DebugOptions options) const

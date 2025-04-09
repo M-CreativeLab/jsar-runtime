@@ -202,6 +202,42 @@ namespace client_layout
     }
   }
 
+  optional<client_cssom::CSSStyleDeclaration> LayoutObject::style() const
+  {
+    if (TR_UNLIKELY(!node()->isElementOrText()))
+      return nullopt;
+
+    if (node()->isElement())
+    {
+      auto element = dom::Node::As<dom::Element>(node());
+      if (element != nullptr)
+        return element->adoptedStyle();
+    }
+    else if (node()->isText())
+    {
+      auto textNode = dom::Node::As<dom::Text>(node());
+      if (textNode != nullptr)
+        return textNode->adoptedStyle();
+    }
+    return nullopt;
+  }
+
+  const client_cssom::CSSStyleDeclaration &LayoutObject::styleRef() const
+  {
+    assert(node()->isElementOrText() && "The node must be an element or text node.");
+    if (node()->isElement())
+    {
+      auto element = dom::Node::As<dom::Element>(node());
+      return element->adoptedStyle();
+    }
+    else if (node()->isText())
+    {
+      auto textNode = dom::Node::As<dom::Text>(node());
+      return textNode->adoptedStyle();
+    }
+    assert(false && "Unrachable");
+  }
+
   const Fragment LayoutObject::fragment() const
   {
     Fragment nodeFragment = formattingContext_->liveFragment();
@@ -376,9 +412,9 @@ namespace client_layout
     if (isTextOrSVGChild())
       return parent();
 
-    if (style_->hasProperty("position"))
+    if (styleRef().hasProperty("position"))
     {
-      auto position = style_->getPropertyValue("position");
+      auto position = styleRef().getPropertyValue("position");
       if (position == "fixed")
         return containerForFixedPosition();
       else if (position == "absolute")
@@ -417,9 +453,9 @@ namespace client_layout
   {
     if (!isTextOrSVGChild())
     {
-      if (style_->hasProperty("position"))
+      if (styleRef().hasProperty("position"))
       {
-        auto position = style_->getPropertyValue("position");
+        auto position = styleRef().getPropertyValue("position");
         if (position == "fixed")
           return containingBlockForFixedPosition();
         else if (position == "absolute")
@@ -448,6 +484,77 @@ namespace client_layout
   {
     // TODO: implement this method.
     return nullptr;
+  }
+
+  bool LayoutObject::visibleToHitTestRequest(const HitTestRequest &request) const
+  {
+    auto &style = styleRef();
+    return style.getPropertyValue("visibility", "visible") == "visible" &&
+           (request.ignorePointerEventsNone() ||
+            style.getPropertyValue("pointer-events") != "none");
+  }
+
+  bool LayoutObject::visibleToHitTesting() const
+  {
+    auto &style = styleRef();
+    return style.getPropertyValue("visibility", "visible") == "visible" &&
+           style.getPropertyValue("pointer-events") != "none";
+  }
+
+  bool LayoutObject::hitTestAllPhases(HitTestResult &result,
+                                      const HitTestRay &hitTestRay,
+                                      const glm::vec3 &accumulatedOffset)
+  {
+    if (nodeAtPoint(result, hitTestRay, accumulatedOffset,
+                    HitTestPhase::kForeground))
+    {
+      return true;
+    }
+    if (nodeAtPoint(result, hitTestRay, accumulatedOffset,
+                    HitTestPhase::kFloat))
+    {
+      return true;
+    }
+    if (nodeAtPoint(result, hitTestRay, accumulatedOffset,
+                    HitTestPhase::kDescendantBlockBackgrounds))
+    {
+      return true;
+    }
+    if (nodeAtPoint(result, hitTestRay, accumulatedOffset,
+                    HitTestPhase::kSelfBlockBackground))
+    {
+      return true;
+    }
+    return false;
+  }
+
+  shared_ptr<dom::Node> LayoutObject::nodeForHitTest() const
+  {
+    if (node() != nullptr)
+      return node();
+
+    if (parent() != nullptr)
+    {
+      // TODO: check if the parent is a layout object.
+    }
+    return nullptr;
+  }
+
+  void LayoutObject::updateHitTestResult(HitTestResult &result, const glm::vec3 &point) const
+  {
+    if (result.innerNode())
+      return;
+
+    if (auto n = nodeForHitTest())
+      result.setNodeAndPosition(n, point);
+  }
+
+  bool LayoutObject::nodeAtPoint(HitTestResult &,
+                                 const HitTestRay &hitTestRay,
+                                 const glm::vec3 &accumulatedOffset,
+                                 HitTestPhase phase)
+  {
+    return false;
   }
 
   void LayoutObject::entityDidCreate(builtin_scene::ecs::EntityId entity)

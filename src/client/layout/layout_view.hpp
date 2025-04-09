@@ -7,6 +7,9 @@
 #include "./layout_block_flow.hpp"
 #include "./layout_box_model_object.hpp"
 #include "./layout_text.hpp"
+#include "./hit_test_cache.hpp"
+#include "./hit_test_ray.hpp"
+#include "./hit_test_result.hpp"
 
 namespace client_layout
 {
@@ -27,10 +30,19 @@ namespace client_layout
 
   public:
     const char *name() const final override { return "LayoutView"; }
+    bool isLayoutView() const final override { return true; }
 
-    crates::layout2::Allocator &taffyNodeAllocatorRef() const { return *taffyNodeAllocator_; }
-    size_t computeMinimumWidth();
+    crates::layout2::Allocator &taffyNodeAllocatorRef() const { return *taffy_node_allocator_; }
     bool computeLayout(const ConstraintSpace &avilableSpace) override final;
+
+    bool hitTest(const HitTestRay &, HitTestResult &);
+    bool hitTestNoLifecycleUpdate(const HitTestRay &, HitTestResult &);
+
+    size_t hitTestCount() const { return hit_test_count_; }
+    size_t hitTestCacheHits() const { return hit_test_cache_hits_; }
+    void clearHitTestCache();
+
+    size_t computeMinimumWidth();
 
     // The options for `debugPrint()`.
     struct DebugOptions
@@ -140,14 +152,16 @@ namespace client_layout
     void removeObject(std::shared_ptr<LayoutObject> object);
 
   private:
-    bool isLayoutView() const final override { return true; }
-
     std::unique_ptr<LayoutBoxModelObject> makeBox(const std::string &displayStr,
                                                   std::shared_ptr<dom::Element> element);
     std::unique_ptr<LayoutText> makeText(std::shared_ptr<dom::Text> textNode);
 
   private:
     // JSAR uses taffy for block, flex and grid layout, this allocator is used to create the taffy nodes.
-    std::shared_ptr<crates::layout2::Allocator> taffyNodeAllocator_;
+    std::shared_ptr<crates::layout2::Allocator> taffy_node_allocator_;
+
+    size_t hit_test_count_;
+    size_t hit_test_cache_hits_;
+    std::unique_ptr<HitTestCache> hit_test_cache_;
   };
 }
