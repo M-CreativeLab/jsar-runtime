@@ -214,7 +214,7 @@ namespace dom
       throw runtime_error("Failed to parse the CSS selectors: " + selectors);
 
     auto selectorList = s.value();
-    for (shared_ptr<Element> element : allElementsList)
+    for (const auto &element : allElementsList)
     {
       if (!Node::Is<HTMLElement>(element))
         continue;
