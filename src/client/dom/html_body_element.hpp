@@ -1,17 +1,17 @@
 #pragma once
 
 #include <string>
-#include "./html_content2d_element.hpp"
+#include "./html_element.hpp"
 
 namespace dom
 {
-  class HTMLBodyElement final : public HTMLContent2dElement
+  class HTMLBodyElement final : public HTMLElement
   {
-    using HTMLContent2dElement::HTMLContent2dElement;
+    using HTMLElement::HTMLElement;
 
   public:
     HTMLBodyElement(std::shared_ptr<Document> ownerDocument)
-        : HTMLContent2dElement("BODY", ownerDocument)
+        : HTMLElement("BODY", ownerDocument)
     {
     }
 
@@ -25,7 +25,7 @@ namespace dom
       defaultStyle_.setProperty("background-color", "transparent");
       renderable = true;
 
-      HTMLContent2dElement::createdCallback();
+      HTMLElement::createdCallback();
     }
   };
 }

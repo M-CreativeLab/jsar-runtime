@@ -1,14 +1,14 @@
 #pragma once
 
 #include <string>
-#include "./html_content2d_element.hpp"
+#include "./html_element.hpp"
 
 namespace dom
 {
-  class HTMLSectionElement final : public HTMLContent2dElement
+  class HTMLSectionElement final : public HTMLElement
   {
   public:
-    using HTMLContent2dElement::HTMLContent2dElement;
+    using HTMLElement::HTMLElement;
 
   private:
     void createdCallback() override;
