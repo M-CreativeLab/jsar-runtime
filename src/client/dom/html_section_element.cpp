@@ -6,6 +6,6 @@ namespace dom
   void HTMLSectionElement::createdCallback()
   {
     defaultStyle_.setProperty("display", "block");
-    HTMLContent2dElement::createdCallback();
+    HTMLElement::createdCallback();
   }
 }

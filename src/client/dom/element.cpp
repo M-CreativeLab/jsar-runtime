@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <common/utility.hpp>
+#include <client/browser/window.hpp>
+#include <client/builtin_scene/ecs-inl.hpp>
 
 #include "./element.hpp"
 #include "./document.hpp"
@@ -11,6 +13,7 @@
 namespace dom
 {
   using namespace std;
+  using namespace builtin_scene;
 
   shared_ptr<Element> Element::CreateElement(pugi::xml_node node, shared_ptr<Document> ownerDocument)
   {
@@ -101,6 +104,18 @@ namespace dom
   {
   }
 
+  void Element::connectedCallback()
+  {
+    Node::connectedCallback();
+    initCSSBoxes();
+  }
+
+  void Element::disconnectedCallback()
+  {
+    resetCSSBoxes();
+    Node::disconnectedCallback();
+  }
+
   void Element::createdCallback()
   {
     /**
@@ -140,6 +155,13 @@ namespace dom
         setAttribute(item.name(), item.value());
       }
     }
+
+    /**
+     * Update the scene object.
+     */
+    auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
+    if (ownerDocument != nullptr)
+      scene_ = ownerDocument->scene;
   }
 
   void Element::adoptedCallback()
@@ -154,6 +176,144 @@ namespace dom
     else if (name == "class")
       classList_ = DOMTokenList(newValue, {}, [this](const DOMTokenList &list)
                                 { setAttribute("class", list.value(), false /* mute */); });
+  }
+
+  void Element::styleAdoptedCallback()
+  {
+    auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(true);
+    if (ownerDocument != nullptr && adoptedStyle_.hasProperty("display"))
+    {
+      auto newDisplay = adoptedStyle_.getPropertyValue("display");
+      if (newDisplay != currentDisplayStr_)
+      {
+        currentDisplayStr_ = newDisplay;
+        reinitCSSBoxes();
+      }
+    }
+  }
+
+  void Element::initCSSBoxes()
+  {
+    auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
+    if (ownerDocument != nullptr && renderable == true)
+    {
+      resetCSSBoxes(true); // Clear the existing boxes.
+
+      auto &layoutView = ownerDocument->layoutViewRef();
+      shared_ptr<client_layout::LayoutBlock> parentBlock = nullptr;
+      {
+        auto parentElement = getParentElement();
+        if (parentElement != nullptr)
+          parentBlock = dynamic_pointer_cast<client_layout::LayoutBlock>(parentElement->principalBox_);
+      }
+      principalBox_ = layoutView.createBox(currentDisplayStr_, getPtr<Element>(), parentBlock);
+      boxes_ = {principalBox_};
+    }
+  }
+
+  void Element::reinitCSSBoxes()
+  {
+    assert(principalBox_ != nullptr &&
+           "The principal box should not be null when reinitializing CSS boxes.");
+    assert(renderable == true &&
+           "The element should be renderable when reinitializing CSS boxes.");
+
+    auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
+    assert(ownerDocument != nullptr && renderable == true &&
+           "The owner document is not set when reinitializing CSS boxes.");
+    {
+      auto &layoutView = ownerDocument->layoutViewRef();
+      shared_ptr<client_layout::LayoutBlock> parentBlock = nullptr;
+      auto parentElement = getParentElement();
+      if (parentElement != nullptr)
+        parentBlock = dynamic_pointer_cast<client_layout::LayoutBlock>(parentElement->principalBox_);
+
+      auto newPrincipalBox = layoutView.createBox(currentDisplayStr_, getPtr<Element>(),
+                                                  parentBlock,
+                                                  principalBox_->nextSibling());
+
+      layoutView.removeObject(principalBox_); // Remove the old box.
+      principalBox_ = newPrincipalBox;
+      boxes_ = {principalBox_};
+    }
+    assert(principalBox_ != nullptr &&
+           "The principal box is not set when reinitializing CSS boxes.");
+
+    // Skip the following steps to create child boxes if the principal box is a none box.
+    if (principalBox_->isNone())
+      return;
+
+    // Recursively initialize the CSS boxes of the child nodes.
+    function<void(shared_ptr<Node>)> initBox = [&initBox](shared_ptr<Node> node)
+    {
+      if (Node::Is<Text>(node))
+      {
+        auto &textNode = Node::AsChecked<Text>(node);
+        textNode.resetCSSBoxes();
+        textNode.initCSSBoxes();
+        return;
+      }
+      if (Node::Is<Element>(node))
+      {
+        Node::AsChecked<Element>(node).initCSSBoxes();
+        for (auto childNode : node->childNodes)
+          initBox(childNode);
+        return;
+      }
+
+      // Skip if the node is not an element or text node.
+      // FIXME(yorkie): do nothing when the node is not an element or text node, such as comment node.
+    };
+
+    // Iterate the child nodes recursively and initialize the CSS boxes.
+    for (auto childNode : childNodes)
+      initBox(childNode);
+  }
+
+  void Element::resetCSSBoxes(bool skipCheck)
+  {
+    if (principalBox_ == nullptr || boxes_.empty())
+      return;
+
+    shared_ptr<HTMLDocument> ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
+    if (!skipCheck &&
+        (TR_UNLIKELY(ownerDocument == nullptr) || renderable == false))
+      return;
+
+    assert(ownerDocument != nullptr && "The owner document is not set when resetting CSS boxes.");
+    auto &layoutView = ownerDocument->layoutViewRef();
+    for (auto &box : boxes_)
+      layoutView.removeObject(box);
+    principalBox_.reset();
+    boxes_.clear();
+  }
+
+  bool Element::adoptStyle(const client_cssom::CSSStyleDeclaration &style)
+  {
+    client_cssom::CSSStyleDeclaration newStyle = style;
+    newStyle.update(defaultStyle_, true); // Update the default style if these properties are not present.
+
+    if (adoptedStyle_.equals(newStyle)) // Skip if the style is the same.
+      return false;
+
+    adoptedStyle_ = newStyle;
+    styleAdoptedCallback();
+
+    // Update the layout node style.
+    bool updated = false;
+    for (auto box : boxes_)
+    {
+      if (box->setStyle(adoptedStyle_))
+        updated = true;
+    }
+    return updated;
+  }
+
+  void Element::useSceneWithCallback(const function<void(builtin_scene::Scene &)> &callback)
+  {
+    auto sceneRef = scene_.lock();
+    if (sceneRef != nullptr)
+      callback(*sceneRef);
   }
 
   void Element::before(std::vector<std::shared_ptr<Node>> nodes)
@@ -295,6 +455,60 @@ namespace dom
     }
   }
 
+  geometry::DOMRect Element::getBoundingClientRect() const
+  {
+    auto clientRects = getClientRects();
+    if (clientRects.empty())
+      return dom::geometry::DOMRect();
+    if (clientRects.size() == 1)
+      return clientRects[0];
+
+    // Merge the client rects into a single bounding box.
+    dom::geometry::DOMRect boundingRect(0, 0, 0, 0);
+    for (auto &rect : clientRects)
+    {
+      boundingRect.x() = std::min(boundingRect.x(), rect.x());
+      boundingRect.y() = std::min(boundingRect.y(), rect.y());
+      boundingRect.width() = std::max(boundingRect.width(), rect.width());
+      boundingRect.height() = std::max(boundingRect.height(), rect.height());
+    }
+    return boundingRect;
+  }
+
+  vector<geometry::DOMRect> Element::getClientRects() const
+  {
+    vector<geometry::DOMRect> clientRects = getLayoutRects();
+    if (clientRects.empty())
+      return clientRects;
+
+    shared_ptr<browser::Window> window = getOwnerDocumentChecked().defaultView();
+    // glm::vec2 accumulatedScrollOffset(window->scrollX(), window->scrollY());
+    // auto ancestors = getAncestors(false);
+    // for (auto ancestor : ancestors)
+    // {
+    //   shared_ptr<Node> node = const_pointer_cast<Node>(ancestor);
+    //   if (Node::Is<const Element>(node))
+    //   {
+    //     const auto &element = Node::AsChecked<const Element>(node);
+    //     accumulatedScrollOffset.x += element.scrollLeft;
+    //     accumulatedScrollOffset.y += element.scrollTop;
+    //   }
+    // }
+
+    // for (auto &rect : clientRects)
+    // {
+    //   rect.x() += accumulatedScrollOffset.x;
+    //   rect.y() += accumulatedScrollOffset.y;
+    // }
+    return clientRects;
+  }
+
+  bool Element::checkVisibility(CheckVisibilityOptions options) const
+  {
+    // TODO: Implement checkVisibility() for Element
+    return true;
+  }
+
   bool Element::is(const string expectedTagName)
   {
     string expectedTagNameUpper;
@@ -321,7 +535,7 @@ namespace dom
     {
       if (Node::Is<HTMLTemplateElement>(self))
       {
-        auto &templateElement = Node::AsChecked<HTMLTemplateElement>(self);
+        auto &templateElement = Node::AsChecked<HTMLTemplateElement>(shared_from_this());
         auto contents = templateElement.getContent();
         contents->replaceAll(fragment);
       }
@@ -334,11 +548,13 @@ namespace dom
 
   string Element::getOuterHTML()
   {
+    // TODO: Implement getOuterHTML() for Element
     return "";
   }
 
   void Element::setOuterHTML(const string &html)
   {
+    // TODO: Implement setOuterHTML() for Element
   }
 
   std::shared_ptr<Element> Element::firstElementChild() const

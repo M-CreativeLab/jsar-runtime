@@ -6,11 +6,13 @@
   <style>
     body {
       background-color: #fff;
+      padding: 20px;
+      margin: 10px;
     }
 
     img {
       border-bottom-right-radius: 50px;
-      height: 200px;
+      height: 300px;
       transform: translate3d(0, 0, 35px);
     }
 
@@ -25,6 +27,11 @@
       transform: translate3d(0, 0, 15px);
     }
 
+    main {
+      display: flex;
+      flex-direction: column;
+    }
+
     p {
       width: 100%;
       font-size: 30px;
@@ -33,19 +40,19 @@
       box-sizing: border-box;
     }
 
-    p.main {
+    p.primary {
       color: #0514a2;
       line-height: 1.5;
     }
 
     span {
-      background-color: rgb(110, 37, 37);
+      font-family: monospace;
       padding: 20px;
+      background-color: rgb(110, 37, 37);
       color: rgb(231, 231, 231);
       font-weight: bold;
-      font-size: 30px;
+      font-size: 40px;
       transform: translate3d(0, 0, 50px);
-      border-radius: 10%;
     }
   </style>
   <script>
@@ -59,10 +66,10 @@
 
 <body>
   <img src="https://www.gstatic.com/webp/gallery/1.webp" alt="A cute kitten" />
-  <div id="header">Hello World, JSAR 你好 远远 😯</div>
-  <span>No text.</span>
+  <div id="header">Hello World, JSAR 你好 😯</div>
+  <span>Inline text</span>
   <main>
-    <p class="main first">
+    <p class="primary first">
       A range of organizations join the World Wide Web Consortium as Members to work with us to drive the direction of
       core web technologies and exchange ideas with industry and research leaders. We rotate randomly a few of our Member
       organizations' logos underneath.
@@ -74,6 +81,7 @@
     </p>
     <!--foobar-->
   </main>
+  <div>foobar</div>
 </body>
 
 </html>

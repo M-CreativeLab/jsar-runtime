@@ -16,6 +16,7 @@ namespace dom
     ~DocumentFragment() = default;
 
   public:
+    bool isDocumentFragment() const override { return true; }
     size_t childElementCount() const;
     std::shared_ptr<Element> firstElementChild() const;
     std::shared_ptr<Element> lastElementChild() const;

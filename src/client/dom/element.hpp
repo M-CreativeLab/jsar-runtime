@@ -1,11 +1,16 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <unordered_map>
+#include <client/builtin_scene/scene.hpp>
+#include <client/builtin_scene/ecs.hpp>
 #include <client/cssom/box_bounding.hpp>
+#include <client/layout/layout_box.hpp>
 
 #include "./node.hpp"
 #include "./dom_token_list.hpp"
+#include "./geometry/dom_rect.hpp"
 
 #define TYPED_ELEMENT_MAP(XX)         \
   XX("audio", HTMLAudioElement)       \
@@ -36,11 +41,22 @@
 
 namespace dom
 {
+  struct CheckVisibilityOptions
+  {
+    bool checkOpacity = false;
+    bool checkVisibilityCSS = false;
+    bool contentVisibilityAuto = false;
+    bool opacityProperty = false;
+    bool visibilityProperty = false;
+  };
+
   class Attr;
   class Document;
   class Element : public Node,
                   virtual public client_cssom::BoxBounding
   {
+    friend class RenderHTMLDocument;
+
   public:
     /**
      * Create a new `Element` object from a `pugi::xml_node`, which is used to create and initialize an element from the
@@ -101,8 +117,36 @@ namespace dom
     void setAttributeNode(std::shared_ptr<Attr> attr);
     void remove();
     void removeAttribute(const std::string &name);
+    /**
+     * The method returns a `DOMRect` object providing information about the size of an element and its position
+     * relative to the viewport.
+     *
+     * @returns The `DOMRect` object which is the smallest rectangle which contains the entire element, including
+     *          its padding and border-width.
+     */
+    [[nodiscard]] geometry::DOMRect getBoundingClientRect() const;
+    /**
+     * The `getClientRects()` method returns a collection of `DOMRect` objects that indicate the bounding rectangles
+     * for each CSS border box in a client.
+     *
+     * @returns a collection of `DOMRect` objects, one for each CSS border box associated with the element.
+     */
+    [[nodiscard]] std::vector<geometry::DOMRect> getClientRects() const;
+    /**
+     * It checks whether the element is visible.
+     *
+     * @param options The options to check the visibility.
+     * @returns `true` if the element is visible, otherwise `false`.
+     */
+    [[nodiscard]] bool checkVisibility(CheckVisibilityOptions options) const;
+
+    const client_cssom::CSSStyleDeclaration& adoptedStyle() const { return adoptedStyle_; }
+    std::shared_ptr<const client_layout::LayoutBoxModelObject> principalBox() const { return principalBox_; }
+    std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox() { return principalBox_; }
 
   public:
+    bool isElement() const override final { return true; }
+
     /**
      * Returns true if the element's tag name is the same as the given tag name ignoring case.
      *
@@ -115,6 +159,10 @@ namespace dom
     void setInnerHTML(const std::string &markup);
     std::string getOuterHTML();
     void setOuterHTML(const std::string &markup);
+
+  protected: // Node lifecycle callbacks
+    void connectedCallback() override;
+    void disconnectedCallback() override;
 
   protected: // Element lifecycle callbacks
     /**
@@ -133,6 +181,29 @@ namespace dom
      * @param newValue The new value of the attribute.
      */
     virtual void attributeChangedCallback(const string &name, const string &oldValue, const string &newValue);
+    /**
+     * When the element's adopted style is updated.
+     */
+    virtual void styleAdoptedCallback();
+
+  protected:
+    // Initialize the CSS boxes of the element.
+    void initCSSBoxes();
+    // Set the CSS boxes of the element from the current display style.
+    void reinitCSSBoxes();
+    // Clear all the CSS boxes of the element.
+    void resetCSSBoxes(bool skipCheck = false);
+
+    // Adopt the specified style to the element, it will copy the style properties to the element's adopted style, and
+    // update the layout node's style.
+    bool adoptStyle(const client_cssom::CSSStyleDeclaration &newStyle);
+
+    /**
+     * A utility method to use the scene weak reference safely.
+     *
+     * @param callback The callback function to use the scene.
+     */
+    void useSceneWithCallback(const std::function<void(builtin_scene::Scene &)> &callback);
 
   public:
     std::string id;
@@ -152,5 +223,13 @@ namespace dom
   protected:
     DOMTokenList classList_;
     std::unordered_map<std::string, std::shared_ptr<Attr>> attributeNodes_;
+    client_cssom::CSSStyleDeclaration defaultStyle_;
+
+  private:
+    client_cssom::CSSStyleDeclaration adoptedStyle_;
+    std::weak_ptr<builtin_scene::Scene> scene_;
+    std::vector<std::shared_ptr<client_layout::LayoutBoxModelObject>> boxes_;
+    std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox_;
+    std::string currentDisplayStr_ = "block";
   };
 }

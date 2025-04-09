@@ -1,18 +1,18 @@
 #pragma once
 
 #include <string>
-#include "./html_content2d_element.hpp"
+#include "./html_element.hpp"
 
 namespace dom
 {
-  class HTMLParagraphElement : public HTMLContent2dElement
+  class HTMLParagraphElement : public HTMLElement
   {
   public:
-    using HTMLContent2dElement::HTMLContent2dElement;
+    using HTMLElement::HTMLElement;
 
   public:
     HTMLParagraphElement(std::shared_ptr<Document> ownerDocument)
-        : HTMLContent2dElement("P", ownerDocument)
+        : HTMLElement("P", ownerDocument)
     {
     }
 
@@ -24,7 +24,7 @@ namespace dom
       defaultStyle_.setProperty("height", "auto");
       defaultStyle_.setProperty("width", "auto");
 
-      HTMLContent2dElement::createdCallback();
+      HTMLElement::createdCallback();
     }
   };
 }

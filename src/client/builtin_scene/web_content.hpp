@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <skia/include/core/SkSurface.h>
 #include <skia/include/core/SkCanvas.h>
 #include <skia/include/core/SkRRect.h>
 #include <skia/modules/skparagraph/include/FontCollection.h>
@@ -8,6 +9,7 @@
 #include <skia/modules/skparagraph/include/ParagraphBuilder.h>
 #include <skia/modules/skparagraph/include/TextStyle.h>
 #include <client/cssom/css_style_declaration.hpp>
+#include <client/layout/fragment.hpp>
 #include <client/per_process.hpp>
 
 #include "./ecs-inl.hpp"
@@ -80,35 +82,37 @@ namespace builtin_scene
     friend class web_renderer::UpdateTextureSystem;
 
   public:
-    WebContent(SkCanvas *canvas, std::string name, client_cssom::CSSStyleDeclaration &style);
+    /**
+     * Construct a new `WebContent` object for rendering the classic web content.
+     *
+     * @param name The content name.
+     * @param initialWidth The initial width of the content.
+     * @param initialHeight The initial height of the content.
+     */
+    WebContent(std::string name, float initialWidth, float initialHeight);
 
   public:
-    /**
-     * This inline function provides access to the SkCanvas object associated with the current instance.
-     *
-     * @returns SkCanvas* Pointer to the SkCanvas object.
-     */
-    inline SkCanvas *canvas() const { return canvas_; }
     /**
      * The content name.
      */
     inline const std::string &name() const { return name_; }
-    /**
-     * This function assigns the provided SkCanvas pointer to the internal `canvas_` member.
-     *
-     * @param canvas A pointer to an SkCanvas object to be set.
-     */
-    inline void setCanvas(SkCanvas *canvas)
+
+    // Returns if the surface is valid.
+    bool resetSkSurface(float width, float height);
+    inline SkCanvas *canvas() const
     {
-      canvas_ = canvas;
-      setDirty(true);
+      if (surface_ == nullptr)
+        return nullptr;
+      return surface_->getCanvas();
     }
+
     /**
      * This function provides access to the CSS style declaration associated with the object.
      *
      * @returns A constant reference to the CSSStyleDeclaration object.
      */
     inline const client_cssom::CSSStyleDeclaration &style() const { return style_; }
+
     /**
      * This function assigns the provided CSSStyleDeclaration object to the internal `style_` member.
      *
@@ -116,36 +120,16 @@ namespace builtin_scene
      * @param parent The parent WebContent object.
      */
     void setStyle(const client_cssom::CSSStyleDeclaration &style, std::shared_ptr<WebContent> parent = nullptr);
-    /**
-     * @returns A constant reference to the Layout object in the last re-layout.
-     */
-    inline const std::optional<crates::layout2::Layout> &layout() const { return lastLayout_; }
-    /**
-     * Set the layout object in the last re-layout.
-     */
-    inline void setLayout(const crates::layout2::Layout &layout) { lastLayout_ = layout; }
-    /**
-     * This function provides access to the width and height of the SkCanvas object.
-     *
-     * @returns float The width of the SkCanvas object.
-     */
-    inline float width() const
-    {
-      if (canvas_ == nullptr)
-        return 0.0f;
-      return canvas_->imageInfo().width();
-    }
-    /**
-     * This function provides access to the width and height of the SkCanvas object.
-     *
-     * @returns float The height of the SkCanvas object.
-     */
-    inline float height() const
-    {
-      if (canvas_ == nullptr)
-        return 0.0f;
-      return canvas_->imageInfo().height();
-    }
+
+    inline const std::optional<client_layout::Fragment> &fragment() const { return lastFragment_; }
+    inline void setFragment(const client_layout::Fragment &fragment) { lastFragment_ = fragment; }
+
+    inline float width() const { return surface_ == nullptr ? 0.0f : surface_->width(); }
+    inline float height() const { return surface_ == nullptr ? 0.0f : surface_->height(); }
+
+    // Check if the surface needs to be resized.
+    bool needsResize(float w, float h) const;
+
     inline glm::vec4 backgroundColor() const { return backgroundColor_; }
     inline void setBackgroundColor(float r, float g, float b, float a)
     {
@@ -158,30 +142,9 @@ namespace builtin_scene
      * @param textureAtlas The texture atlas to create or resize the texture.
      * @returns The texture or `nullptr` if the texture is not used.
      */
-    inline std::shared_ptr<Texture> resizeOrInitTexture(TextureAtlas &textureAtlas)
-    {
-      if (!isTextureUsing_)
-      {
-        // Remove the texture from atlas if it's not used.
-        if (texture_ != nullptr)
-        {
-          textureAtlas.removeTexture(*texture_);
-          texture_ = nullptr;
-        }
-        return nullptr;
-      }
-
-      float w = width();
-      float h = height();
-
-      if (texture_ == nullptr)
-        texture_ = textureAtlas.addTexture(w, h, true);
-      else
-        texture_ = textureAtlas.resizeTexture(texture_, w, h, true);
-
-      assert(texture_ != nullptr && "The texture must be valid.");
-      return texture_;
-    }
+    std::shared_ptr<Texture> resizeOrInitTexture(TextureAtlas &textureAtlas);
+    inline void setEnabled(bool enabled) { enabled_ = enabled; }
+    inline bool isEnabled() const { return enabled_; }
     /**
      * Set the web content to use the texture or not.
      *
@@ -214,16 +177,19 @@ namespace builtin_scene
     skia::textlayout::ParagraphStyle paragraphStyle() const;
 
   private:
-    SkCanvas *canvas_;
+    sk_sp<SkSurface> surface_;
     std::string name_;
     client_cssom::CSSStyleDeclaration style_;
-    std::optional<crates::layout2::Layout> lastLayout_;
+    std::optional<client_layout::Fragment> lastFragment_;
     WebContentStyle contentStyle_;
     SkRRect roundedRect_;
     glm::vec4 backgroundColor_;
     std::shared_ptr<Texture> texture_;
+    float devicePixelRatio_ = 1.0f;
+    bool enabled_ = true;
     bool isTextureUsing_ = false;
     bool isOpaque_ = false;
+    bool isVisible_ = true;
     bool isDirty_ = true;
   };
 

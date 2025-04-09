@@ -8,7 +8,6 @@
 #include "./element.hpp"
 #include "./text.hpp"
 #include "./comment.hpp"
-#include "./scene_object.hpp"
 
 namespace dom
 {
@@ -253,13 +252,13 @@ namespace dom
     throw runtime_error("The textContent property writable is not implemented yet.");
   }
 
-  Document &Node::getOwnerDocumentChecked()
+  Document &Node::getOwnerDocumentChecked() const
   {
     assert(ownerDocument.has_value() && "The owner document is not found.");
     return *ownerDocument.value().lock();
   }
 
-  shared_ptr<Document> Node::getOwnerDocumentReference()
+  shared_ptr<Document> Node::getOwnerDocumentReference() const
   {
     shared_ptr<dom::Document> ref = nullptr;
     if (ownerDocument.has_value())
@@ -320,6 +319,11 @@ namespace dom
       child->load();
 
     afterLoadedCallback();
+  }
+
+  string Node::toString() const
+  {
+    return "<" + nodeName + ">";
   }
 
   bool Node::addMutationObserver(shared_ptr<MutationObserver> observer)

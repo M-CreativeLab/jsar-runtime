@@ -1,10 +1,12 @@
 #include <array>
 #include <chrono>
 #include <client/dom/node.hpp>
+#include <client/cssom/units.hpp>
 
 #include "./client_renderer.hpp"
 #include "./hierarchy.hpp"
 #include "./web_content.hpp"
+#include "./materials.hpp"
 
 namespace builtin_scene
 {
@@ -173,9 +175,6 @@ namespace builtin_scene
                             shared_ptr<Transform> parentTransform,
                             optional<XRRenderTarget> renderTarget)
   {
-    glContext_->enable(WEBGL_DEPTH_TEST);
-    glContext_->depthMask(true);
-
     assert(mesh != nullptr && material != nullptr);
     assert(mesh->initialized());
     assert(material->initialized());
@@ -324,7 +323,7 @@ namespace builtin_scene
       if (transform != nullptr)
         matToUpdate = transform->matrix();
       else
-        matToUpdate = Transform::Identity().matrix();
+        matToUpdate = glm::mat4(1.0f);
     }
     else
       matToUpdate = transform->matrix();
@@ -349,6 +348,63 @@ namespace builtin_scene
       throw runtime_error("The modelMatrix uniform location is not found.");
     glContext_->uniformMatrix4fv(loc.value(), false, matToUpdate);
     return matToUpdate;
+  }
+
+  void Renderer::addVolumeMask(std::function<void(ecs::EntityId, Renderer &)> drawMaskGeometry)
+  {
+    assert(drawMaskGeometry != nullptr);
+    assert(volumeMask_.has_value());
+
+    glContext_->enable(WEBGL_DEPTH_TEST);
+    glContext_->colorMask(false, false, false, false);
+    glContext_->depthMask(false);
+
+    glContext_->enable(WEBGL_STENCIL_TEST);
+    glContext_->stencilFunc(WEBGL_ALWAYS, volumeMaskStencilRef_, 0xff);
+    glContext_->stencilOp(WEBGL_KEEP,
+                          WEBGL_KEEP,
+                          WEBGL_REPLACE);
+    glContext_->stencilMask(0xff);
+    {
+      drawMaskGeometry(volumeMask_.value(), *this);
+    }
+    glContext_->colorMask(true, true, true, true);
+    glContext_->depthMask(true);
+    glContext_->disable(WEBGL_STENCIL_TEST);
+  }
+
+  void Renderer::removeVolumeMask()
+  {
+    assert(volumeMask_.has_value());
+    glContext_->stencilMask(0x00);
+  }
+
+  void Renderer::enableVolumeMask()
+  {
+    glContext_->enable(WEBGL_STENCIL_TEST);
+    glContext_->stencilFunc(WEBGL_EQUAL, volumeMaskStencilRef_, 0xff);
+    glContext_->stencilOp(WEBGL_KEEP, WEBGL_KEEP, WEBGL_KEEP);
+    glContext_->stencilMask(0x00);
+  }
+
+  void Renderer::disableVolumeMask()
+  {
+    glContext_->disable(WEBGL_STENCIL_TEST);
+  }
+
+  void RenderStartupSystem::onExecute()
+  {
+    auto meshes = getResource<Meshes>();
+    auto materials = getResource<Materials>();
+    auto renderer = getResource<Renderer>();
+
+    // Create a mesh for the volume mask
+    auto entity = spawn(
+        Mesh3d(meshes->add(MeshBuilder::CreateBox(1.0f, 1.0f, 1.0f))),
+        MeshMaterial3d(materials->add(materials::ColorMaterial::Red())),
+        Transform::FromXYZ(0.0f, 0.0f, 0.0f)
+            .FromScale(client_cssom::pixelToMeter(renderer->volumeSize())));
+    renderer->setVolumeMask(entity);
   }
 
   void RenderSystem::onExecute()
@@ -432,7 +488,7 @@ namespace builtin_scene
         // Only transparent content needs to update it's z-index
         if (webContent.isTransparent() && hasComponent<hierarchy::Element>(id))
         {
-          auto& element = getComponentChecked<hierarchy::Element>(id);
+          auto &element = getComponentChecked<hierarchy::Element>(id);
           auto index = element.node->depth(); // FIXME: using the node depth as the z-index currently.
           if (instance.setZIndex(index))
             hasChanged = true;
@@ -471,8 +527,32 @@ namespace builtin_scene
         renderer.setViewport(renderTarget->view()->viewport());
     }
 
+    renderVolumeMask(renderer, renderTarget);
+    onBeforeRender(renderer, renderTarget);
     for (auto root : roots)
       traverseAndRender(root, renderer, renderTarget);
+    onAfterRender(renderer, renderTarget);
+  }
+
+  void RenderSystem::renderVolumeMask(Renderer &renderer, std::optional<Renderer::XRRenderTarget> renderTarget)
+  {
+    if (renderer.isVolumeMaskEnabled())
+    {
+      renderer.addVolumeMask([this, &renderTarget](ecs::EntityId entity, Renderer &renderer)
+                             { renderMesh(entity, getComponent<Mesh3d>(entity), renderer, renderTarget); });
+    }
+  }
+
+  void RenderSystem::onBeforeRender(Renderer &renderer, std::optional<Renderer::XRRenderTarget> renderTarget)
+  {
+    if (renderer.isVolumeMaskEnabled())
+      renderer.enableVolumeMask();
+  }
+
+  void RenderSystem::onAfterRender(Renderer &renderer, std::optional<Renderer::XRRenderTarget> renderTarget)
+  {
+    if (renderer.isVolumeMaskEnabled())
+      renderer.disableVolumeMask();
   }
 
   void RenderSystem::traverseAndRender(ecs::EntityId entity, Renderer &renderer,

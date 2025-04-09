@@ -33,7 +33,6 @@ namespace dom
   };
 
   // Forward declarations
-  class SceneObject;
   class Element;
   class Document;
   class DocumentFragment;
@@ -211,7 +210,7 @@ namespace dom
      * Check if the current node has a specific type of parent node.
      */
     template <typename T>
-      requires std::is_base_of_v<Node, T> || std::is_same_v<T, SceneObject>
+      requires std::is_base_of_v<Node, T>
     inline bool hasTypedParentNode() const
     {
       auto _parentNode = getParentNode();
@@ -224,7 +223,7 @@ namespace dom
      * @returns The parent node as the specific node type, or nullptr if the parent node is not the specific node type.
      */
     template <typename T>
-      requires std::is_base_of_v<Node, T> || std::is_same_v<T, SceneObject>
+      requires std::is_base_of_v<Node, T>
     std::shared_ptr<T> getParentNodeAs() const
     {
       auto _parentNode = getParentNode();
@@ -237,14 +236,14 @@ namespace dom
      *
      * @returns The owner document reference.
      */
-    Document &getOwnerDocumentChecked();
+    Document &getOwnerDocumentChecked() const;
     /**
      * Get the owner document reference.
      *
      * @param force If true, the owner document will be forced to get, otherwise it will return the cached owner document.
      * @returns The owner document reference.
      */
-    std::shared_ptr<Document> getOwnerDocumentReference();
+    std::shared_ptr<Document> getOwnerDocumentReference() const;
     /**
      * Get the owner document reference as a specific document type.
      *
@@ -263,6 +262,32 @@ namespace dom
     }
 
   public:
+    virtual bool isElement() const { return false; }
+    virtual bool isHTMLElement() const { return false; }
+    virtual bool isDocument() const { return false; }
+    virtual bool isDocumentFragment() const { return false; }
+    virtual bool isCharacterData() const { return false; }
+    virtual bool isText() const { return false; }
+    virtual bool isHTMLMeshElement() const { return false; }
+    bool isElementOrText() const { return isElement() || isText(); }
+
+    // If this node can be rendered.
+    virtual bool isRenderable() const { return renderable; }
+
+    /**
+     * A `Node` can be enabled to use a custom geometry for rendering, such as a custom shader program.
+     *
+     * A type of this node will use different rendering strategies, such as using the custom shader program instead
+     * of the default instanced rendering, but both of them are sharing the same layout system.
+     * 
+     * @returns `true` if this node should use a custom geometry, otherwise `false`.
+     */
+    virtual bool enableCustomGeometry() const
+    {
+      // TODO: Implement custom geometry node, such as `HTMLCubeElement`, `HTMLPlaneElement`, etc.
+      return isHTMLMeshElement();
+    }
+
     /**
      * Returns if this node has any child nodes.
      *
@@ -359,6 +384,12 @@ namespace dom
      * Load the specific node, the stage "load" will be called after all the nodes in the DOM tree are connected.
      */
     void load();
+    /**
+     * Serialize the node to a `std::string`.
+     *
+     * @returns The serialized string of the node.
+     */
+    std::string toString() const;
 
   public: // Internal public methods
     /**

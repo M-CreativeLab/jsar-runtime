@@ -52,6 +52,7 @@ namespace dom
     void beforeLoadedCallback() override;
 
   private:
+    bool isRenderable() const override final { return false; }
     void loadSource();
     void compileScript(const string &source, bool isTypeScript);
     void scheduleScriptExecution();

@@ -37,6 +37,9 @@ namespace dom
     void after(std::string text);
     inline void after(std::shared_ptr<Node> node) { after(std::vector<std::shared_ptr<Node>>{node}); }
 
+  private:
+    bool isCharacterData() const override final { return true; }
+
   protected:
     std::string data_;
     std::weak_ptr<Element> nextElementSibling_;

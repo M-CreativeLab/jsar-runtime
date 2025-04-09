@@ -62,6 +62,11 @@ namespace dom::geometry
     }
 
   public:
+    float x() const { return DOMRectReadOnly::x(); }
+    float y() const { return DOMRectReadOnly::y(); }
+    float width() const { return DOMRectReadOnly::width(); }
+    float height() const { return DOMRectReadOnly::height(); }
+
     float &x() { return x_; }
     float &y() { return y_; }
     float &width() { return width_; }
