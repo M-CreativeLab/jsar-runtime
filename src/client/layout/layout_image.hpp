@@ -26,8 +26,8 @@ namespace client_layout
     void setImageBitmap(std::shared_ptr<SkBitmap> srcBitmap);
 
   private:
-    void entityDidCreated(builtin_scene::ecs::EntityId entity) override;
+    void entityDidCreate(builtin_scene::ecs::EntityId entity) override;
     void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
-    void sizeDidChanged() override;
+    void sizeDidChange() override;
   };
 }

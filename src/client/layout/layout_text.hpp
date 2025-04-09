@@ -35,7 +35,7 @@ namespace client_layout
     const ConstraintSpace adjustSpace(const ConstraintSpace &inputSpace) const;
 
   private:
-    void entityDidCreated(builtin_scene::ecs::EntityId entity) override;
+    void entityDidCreate(builtin_scene::ecs::EntityId entity) override;
     void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
     void styleWillChange(const client_cssom::CSSStyleDeclaration &newStyle) override;
     void didComputeLayoutOnce(const ConstraintSpace &avilableSpace) override final;

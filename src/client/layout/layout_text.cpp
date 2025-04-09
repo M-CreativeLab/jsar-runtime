@@ -81,9 +81,9 @@ namespace client_layout
                            paragraph->getHeight());
   }
 
-  void LayoutText::entityDidCreated(ecs::EntityId entity)
+  void LayoutText::entityDidCreate(ecs::EntityId entity)
   {
-    LayoutObject::entityDidCreated(entity);
+    LayoutObject::entityDidCreate(entity);
 
     auto appendText = [this, &entity](Scene &scene)
     {

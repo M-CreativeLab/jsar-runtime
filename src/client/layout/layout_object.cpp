@@ -154,7 +154,7 @@ namespace client_layout
     };
 
     useSceneWithCallback(createEntity);
-    entityDidCreated(entity_.value());
+    entityDidCreate(entity_.value());
   }
 
   void LayoutObject::destroyEntity()
@@ -312,7 +312,7 @@ namespace client_layout
                        ? false
                        : formattingContext_->setLayoutStyle(style);
 
-    styleDidChanged();
+    styleDidChange();
     return success;
   }
 
@@ -347,7 +347,7 @@ namespace client_layout
     useSceneWithCallback(resizeEntity);
 
     if (resized == true)
-      sizeDidChanged();
+      sizeDidChange();
     return resized;
   }
 
@@ -450,7 +450,7 @@ namespace client_layout
     return nullptr;
   }
 
-  void LayoutObject::entityDidCreated(builtin_scene::ecs::EntityId entity)
+  void LayoutObject::entityDidCreate(builtin_scene::ecs::EntityId entity)
   {
     auto configEntity = [this, &entity](Scene &scene)
     {
@@ -514,7 +514,7 @@ namespace client_layout
     }
   }
 
-  void LayoutObject::styleDidChanged()
+  void LayoutObject::styleDidChange()
   {
   }
 
@@ -522,7 +522,7 @@ namespace client_layout
   {
   }
 
-  void LayoutObject::sizeDidChanged()
+  void LayoutObject::sizeDidChange()
   {
   }
 
