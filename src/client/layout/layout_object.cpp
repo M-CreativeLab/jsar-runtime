@@ -61,6 +61,41 @@ namespace client_layout
     return node() != nullptr && dom::Node::Is<dom::HTMLBodyElement>(node());
   }
 
+  bool LayoutObject::hasClip() const
+  {
+    auto element = dom::Node::As<dom::Element>(node());
+    if (element == nullptr)
+      return false;
+
+    auto elementStyle = element->adoptedStyle();
+    if (elementStyle.hasProperty("clip"))
+    {
+      auto clip = elementStyle.getPropertyValue("clip");
+      if (clip != "auto")
+        return true;
+    }
+    return false;
+  }
+
+  bool LayoutObject::isScrollContainer() const
+  {
+    // Replaced elements don't support scrolling.
+    if (isLayoutReplaced())
+      return false;
+
+    auto element = dom::Node::As<dom::Element>(node());
+    if (element == nullptr)
+      return false;
+
+    auto elementStyle = element->adoptedStyle();
+    if (elementStyle.hasProperty("overflow-x"))
+    {
+      auto overflowX = elementStyle.getPropertyValue("overflow-x");
+      return overflowX != "visible" && overflowX != "clip";
+    }
+    return false;
+  }
+
   shared_ptr<dom::HTMLDocument> LayoutObject::document() const
   {
     assert(node() != nullptr || parent() != nullptr);

@@ -20,4 +20,9 @@ namespace client_layout
     display_ = display;
     setFormattingContext(display_);
   }
+
+  std::shared_ptr<client_scroll::ScrollableArea> LayoutBoxModelObject::getScrollableArea() const
+  {
+    return nullptr;
+  }
 }

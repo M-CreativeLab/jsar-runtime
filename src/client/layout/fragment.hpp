@@ -44,7 +44,16 @@ namespace client_layout
     // This method is used to calculate the position of the child fragment based on the parent fragment.
     const Fragment position(const Fragment &childFragment) const;
 
+    // Move the fragment by the given x, y, z values.
+    void moveBy(float x, float y, float z = 0.0f);
+
     // Size
+    inline glm::vec3 size() const
+    {
+      return glm::vec3(width(),
+                       height(),
+                       depth());
+    }
     inline float width() const { return rect_.width(); }
     inline float height() const { return rect_.height(); }
     inline float depth() const { return depth_; }

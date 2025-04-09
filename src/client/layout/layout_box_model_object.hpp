@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <client/dom/types.hpp>
+#include <client/scroll/scrollable_area.hpp>
 
 #include "./display_type.hpp"
 #include "./layout_object.hpp"
@@ -38,6 +39,23 @@ namespace client_layout
      */
     void setDisplay(const std::string &displayStr);
     void setDisplay(const DisplayType &display);
+
+    std::shared_ptr<client_scroll::ScrollableArea> getScrollableArea() const;
+
+    // TODO(yorkie): implement padding values
+    virtual float paddingTop() const { return 0; }
+    virtual float paddingBottom() const { return 0; }
+    virtual float paddingLeft() const { return 0; }
+    virtual float paddingRight() const { return 0; }
+
+    // TODO(yorkie): implement border values
+    virtual float borderTop() const { return 0; }
+    virtual float borderBottom() const { return 0; }
+    virtual float borderLeft() const { return 0; }
+    virtual float borderRight() const { return 0; }
+
+    float borderWidth() const { return borderLeft() + borderRight(); }
+    float borderHeight() const { return borderTop() + borderBottom(); }
 
   private:
     bool isBoxModelObject() const override final { return true; }

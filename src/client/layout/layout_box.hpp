@@ -3,8 +3,10 @@
 #include <memory>
 #include <client/dom/types.hpp>
 
+#include "./geometry/rect.hpp"
 #include "./display_type.hpp"
 #include "./layout_box_model_object.hpp"
+#include "./overflow_model.hpp"
 
 namespace client_layout
 {
@@ -75,5 +77,60 @@ namespace client_layout
     std::shared_ptr<LayoutBox> nextSiblingBox() const;
     std::shared_ptr<LayoutBox> previousSiblingBox() const;
     std::shared_ptr<LayoutBox> parentBox() const;
+
+    virtual glm::vec3 size() const;
+
+    geometry::Rect<float> physicalPaddingBoxRect() const
+    {
+      return geometry::Rect<float>(clientLeft(),
+                                   clientTop(),
+                                   clientWidth(),
+                                   clientHeight());
+    }
+
+    geometry::Rect<float> noOverflowRect() const { return physicalPaddingBoxRect(); }
+    geometry::Rect<float> scrollableOverflowRect() const;
+
+    // These methods don't mean the box *actually* has top/left overflow. They mean that *if* the box overflows, it will
+    // overflow to the top/left rather than the bottom/right. This happens when child content is laid out right-to-left
+    // (e.g. direction:rtl) or or bottom-to-top (e.g. direction:rtl writing-mode:vertical-rl).
+    virtual bool hasTopOverflow() const;
+    virtual bool hasLeftOverflow() const;
+
+    // Sets the scrollable-overflow from the current set of layout-results.
+    void setScrollableOverflowFromLayoutResults();
+
+    float clientLeft() const;
+    float clientTop() const;
+    float clientWidth() const;
+    float clientHeight() const;
+
+    virtual float scrollWidth() const;
+    virtual float scrollHeight() const;
+
+    bool isUserScrollable() const { return hasScrollableOverflowX() || hasScrollableOverflowY(); }
+    virtual void autoScroll(const glm::vec3 &offset);
+    bool scrollsOverflow() const;
+
+    bool hasScrollableOverflowX() const { return scrollsOverflowX() && scrollWidth() != clientWidth(); }
+    bool hasScrollableOverflowY() const { return scrollsOverflowY() && scrollHeight() != clientHeight(); }
+    bool scrollsOverflowX() const;
+    bool scrollsOverflowY() const;
+
+    glm::vec3 scrollOrigin() const;
+    glm::vec3 scrolledContentOffset() const;
+
+  private:
+    inline bool scrollableOverflowIsSet() const { return overflow_ != nullptr && overflow_->scrollableOverflow; }
+    inline bool visualOverflowIsSet() const { return overflow_ != nullptr && overflow_->visualOverflow; }
+
+    glm::vec3 computeSize() const;
+    void invalidateCachedGeometry();
+
+  protected:
+    glm::vec3 frame_size_;
+
+  private:
+    std::shared_ptr<BoxOverflowModel> overflow_;
   };
 }

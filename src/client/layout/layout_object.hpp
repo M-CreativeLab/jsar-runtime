@@ -76,6 +76,9 @@ namespace client_layout
     bool isInline() const { return false; }
     bool isAtomicInlineLevel() const { return false; }
 
+    bool hasClip() const;
+    bool isScrollContainer() const;
+
     inline std::shared_ptr<dom::Node> node() const { return node_.lock(); }
     inline dom::Node &nodeRef() const { return *node(); }
 
@@ -235,6 +238,14 @@ namespace client_layout
     std::shared_ptr<LayoutBlock> containingBlockForFixedPosition() const;
     std::shared_ptr<LayoutBlock> containingBlockForAbsolutePosition() const;
 
+    bool isHorizontalWritingMode() const { return bitfields_.HorizontalWritingMode(); }
+    bool hasNonVisibleOverflow() const { return bitfields_.HasNonVisibleOverflow(); }
+    bool hasValidCachedGeometry() const { return bitfields_.HasValidCachedGeometry(); }
+
+    void setHorizontalWritingMode(bool b) { bitfields_.SetHorizontalWritingMode(b); }
+    void setHasNonVisibleOverflow(bool b) { bitfields_.SetHasNonVisibleOverflow(b); }
+    void setHasValidCachedGeometry(bool b) { bitfields_.SetHasValidCachedGeometry(b); }
+
   protected:
     FormattingContext &formattingContext() const { return *formattingContext_; }
 
@@ -279,5 +290,41 @@ namespace client_layout
     std::weak_ptr<LayoutObject> parent_;
     std::weak_ptr<LayoutObject> previous_;
     std::weak_ptr<LayoutObject> next_;
+
+  private: // LayoutObjectBitfields: holds all the boolean values for `LayoutObject`.
+#define ADD_BOOLEAN_BITFIELD(field_name_, MethodNameBase)               \
+public:                                                                 \
+  bool MethodNameBase() const { return field_name_; }                   \
+  void Set##MethodNameBase(bool new_value) { field_name_ = new_value; } \
+                                                                        \
+private:                                                                \
+  unsigned field_name_ : 1
+
+    class LayoutObjectBitfields
+    {
+    public:
+      explicit LayoutObjectBitfields()
+          : floating_(false),
+            horizontal_writing_mode_(true),
+            has_non_visible_overflow_(false),
+            has_valid_cached_geometry_(false)
+      {
+      }
+
+      ADD_BOOLEAN_BITFIELD(floating_, Floating);
+      ADD_BOOLEAN_BITFIELD(horizontal_writing_mode_, HorizontalWritingMode);
+
+      // This boolean is set if overflow != 'visible'.
+      // This means that this object may need an overflow clip to be applied at paint time to its visual overflow (see
+      // `OverflowModel` for more details). Only set for LayoutBoxes and descendants.
+      ADD_BOOLEAN_BITFIELD(has_non_visible_overflow_, HasNonVisibleOverflow);
+
+      // `true` if `LayoutBox::frame_size_` has the latest value computed from its physical fragments.
+      // This is set to false when `LayoutBox::layout_results_` is updated.
+      ADD_BOOLEAN_BITFIELD(has_valid_cached_geometry_, HasValidCachedGeometry);
+    };
+#undef ADD_BOOLEAN_BITFIELD
+
+    LayoutObjectBitfields bitfields_;
   };
 }

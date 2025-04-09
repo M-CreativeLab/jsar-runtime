@@ -55,9 +55,9 @@ async function sleep(ms) {
   await sleep(1000);
   document.body.removeChild(bar);
 
-  await sleep(1000);
-  const main = document.querySelector('main');
-  main.style.setProperty('display', 'none');
+  // await sleep(1000);
+  // const main = document.querySelector('main');
+  // main.style.setProperty('display', 'none');
 
   // await sleep(1000);
   // console.info('body html:', document.body.innerHTML);

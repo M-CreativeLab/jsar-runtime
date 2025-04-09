@@ -14,4 +14,13 @@ namespace client_layout
     // Returns a new fragment.
     return Fragment(newRect);
   }
+
+  void Fragment::moveBy(float x, float y, float z)
+  {
+    rect_ = dom::geometry::DOMRect(rect_.x() + x,
+                                   rect_.y() + y,
+                                   rect_.width(),
+                                   rect_.height());
+    z_ += z;
+  }
 }

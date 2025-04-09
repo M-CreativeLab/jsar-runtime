@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <glm/glm.hpp>
 
 namespace client_layout::geometry
 {
@@ -13,6 +14,7 @@ namespace client_layout::geometry
   class Rect
   {
   public:
+    Rect() = default;
     Rect(T top, T right, T bottom, T left)
         : top_(top), right_(right), bottom_(bottom), left_(left) {}
 
@@ -25,6 +27,15 @@ namespace client_layout::geometry
     T bottom() const { return bottom_; }
     T &left() { return left_; }
     T left() const { return left_; }
+
+    // Move the rectangle by the given offset.
+    void move(const glm::vec<2, T, glm::packed_highp> offset)
+    {
+      top_ += offset.y;
+      right_ += offset.x;
+      bottom_ += offset.y;
+      left_ += offset.x;
+    }
 
   public:
     friend std::ostream &operator<<(std::ostream &os, const Rect<T> &style)
