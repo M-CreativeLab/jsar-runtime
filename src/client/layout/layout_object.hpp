@@ -253,7 +253,7 @@ namespace client_layout
     virtual void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity);
 
     virtual void styleWillChange(const client_cssom::CSSStyleDeclaration &newStyle);
-    virtual void styleDidChanged(const client_cssom::CSSStyleDeclaration &oldStyle);
+    virtual void styleDidChanged();
 
     virtual void sizeWillChange(const Fragment &newSize);
     virtual void sizeDidChanged();

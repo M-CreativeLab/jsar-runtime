@@ -8,6 +8,10 @@
 
 namespace client_layout
 {
+  constexpr char16_t kBulletCharacter = 0x2022;
+  constexpr char16_t kBlackSquareCharacter = 0x25A0;
+  constexpr char16_t kWhiteBulletCharacter = 0x25E6;
+
   class LayoutText final : public LayoutObject
   {
   public:
@@ -33,6 +37,9 @@ namespace client_layout
   private:
     void entityDidCreated(builtin_scene::ecs::EntityId entity) override;
     void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
+    void styleWillChange(const client_cssom::CSSStyleDeclaration &newStyle) override;
     void didComputeLayoutOnce(const ConstraintSpace &avilableSpace) override final;
+
+    std::string transformAndSecureText(const std::string &original) const;
   };
 }

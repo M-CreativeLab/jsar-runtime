@@ -292,23 +292,7 @@ namespace client_layout
 
   bool LayoutObject::setStyle(const CSSStyleDeclaration &style)
   {
-    // Update the transform's post-transform matrix if the "transform" property is provided.
-    if (style.hasProperty("transform"))
-    {
-      auto transformComponent = getSceneComponent<Transform>();
-      if (transformComponent != nullptr)
-      {
-        auto &postTransform = transformComponent->getOrInitPostTransform();
-        // TODO: how to avoid duplicated parsing?
-        auto transformProperty = types::transform::Transform::Parse(style.getPropertyValue("transform"));
-        if (transformProperty.size() > 0)
-        {
-          glm::mat4 mat(1.0f);
-          if (transformProperty.applyMatrixTo(mat) > 0)
-            postTransform.setMatrix(mat);
-        }
-      }
-    }
+    styleWillChange(style);
 
     // Update the `WebContent` style.
     if (hasEntity())
@@ -324,9 +308,12 @@ namespace client_layout
     }
 
     // Update the layout style in formatting context.
-    return formattingContext_ == nullptr
-               ? false
-               : formattingContext_->setLayoutStyle(style);
+    bool success = formattingContext_ == nullptr
+                       ? false
+                       : formattingContext_->setLayoutStyle(style);
+
+    styleDidChanged();
+    return success;
   }
 
   bool LayoutObject::maybeAdjustSize()
@@ -508,9 +495,26 @@ namespace client_layout
 
   void LayoutObject::styleWillChange(const client_cssom::CSSStyleDeclaration &newStyle)
   {
+    // Update the transform's post-transform matrix if the "transform" property is provided.
+    if (newStyle.hasProperty("transform"))
+    {
+      auto transformComponent = getSceneComponent<Transform>();
+      if (transformComponent != nullptr)
+      {
+        auto &postTransform = transformComponent->getOrInitPostTransform();
+        // TODO: how to avoid duplicated parsing?
+        auto transformProperty = types::transform::Transform::Parse(newStyle.getPropertyValue("transform"));
+        if (transformProperty.size() > 0)
+        {
+          glm::mat4 mat(1.0f);
+          if (transformProperty.applyMatrixTo(mat) > 0)
+            postTransform.setMatrix(mat);
+        }
+      }
+    }
   }
 
-  void LayoutObject::styleDidChanged(const client_cssom::CSSStyleDeclaration &oldStyle)
+  void LayoutObject::styleDidChanged()
   {
   }
 

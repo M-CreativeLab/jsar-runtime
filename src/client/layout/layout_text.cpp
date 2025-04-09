@@ -1,5 +1,6 @@
 #include <skia/modules/skparagraph/include/Paragraph.h>
 #include <skia/modules/skparagraph/include/ParagraphBuilder.h>
+#include <common/utility.hpp>
 #include <client/per_process.hpp>
 #include <client/builtin_scene/scene.hpp>
 #include <client/builtin_scene/text.hpp>
@@ -56,7 +57,7 @@ namespace client_layout
     if (TR_UNLIKELY(!hasSceneComponent<WebContent>()))
       return inputSpace;
 
-    string textContent = plainText();
+    string textContent = transformAndSecureText(plainText());
     shared_ptr<WebContent> webContentComponent = getSceneComponent<WebContent>();
     assert(webContentComponent != nullptr && "The web content must be set.");
 
@@ -86,7 +87,8 @@ namespace client_layout
 
     auto appendText = [this, &entity](Scene &scene)
     {
-      scene.addComponent(entity, Text2d(plainText()));
+      auto textContent = transformAndSecureText(plainText());
+      scene.addComponent(entity, Text2d(textContent));
     };
     useSceneWithCallback(appendText);
   }
@@ -102,6 +104,20 @@ namespace client_layout
     LayoutObject::entityWillBeDestroyed(entity);
   }
 
+  void LayoutText::styleWillChange(const client_cssom::CSSStyleDeclaration &newStyle)
+  {
+    LayoutObject::styleWillChange(newStyle);
+
+    // TODO(yorkie): implement StyleDifference to check the changed properties to avoid the repeated update.
+    if (newStyle.hasProperty("text-transform") ||
+        newStyle.hasProperty("-webkit-text-security"))
+    {
+      auto textComponent = getSceneComponent<Text2d>();
+      if (textComponent != nullptr)
+          textComponent->content = transformAndSecureText(plainText());
+    }
+  }
+
   void LayoutText::didComputeLayoutOnce(const ConstraintSpace &avilableSpace)
   {
     // adjust the space size by the text content.
@@ -110,5 +126,41 @@ namespace client_layout
     // Update the content size of the formatting context.
     formattingContext().setContentSize(adjustedSpace.width(),
                                        adjustedSpace.height());
+  }
+
+  // TODO(yorkie): support offset mapping for the secure text.
+  string secureText(const string &plain, char16_t mask)
+  {
+    string secured = plain;
+    for (auto &c : secured)
+      c = mask;
+    return secured;
+  }
+
+  string LayoutText::transformAndSecureText(const string &original) const
+  {
+    auto &textStyle = dom::Node::As<dom::Text>(node())->adoptedStyle();
+    if (textStyle.hasProperty("-webkit-text-security"))
+    {
+      auto textSecurity = textStyle.getPropertyValue("-webkit-text-security");
+      if (textSecurity == "disc")
+        return secureText(original, kBulletCharacter);
+      else if (textSecurity == "circle")
+        return secureText(original, kWhiteBulletCharacter);
+      else if (textSecurity == "square")
+        return secureText(original, kBlackSquareCharacter);
+    }
+
+    if (textStyle.hasProperty("text-transform"))
+    {
+      auto textTransform = textStyle.getPropertyValue("text-transform");
+      if (textTransform == "uppercase")
+        return ToUpperCase(original);
+      else if (textTransform == "lowercase")
+        return ToLowerCase(original);
+      else if (textTransform == "capitalize")
+        return ToCapitalize(original);
+    }
+    return original;
   }
 }
