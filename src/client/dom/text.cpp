@@ -208,6 +208,7 @@ namespace dom
       USE_PARENT_STYLE("text-align");
       USE_PARENT_STYLE("text-indent");
       USE_PARENT_STYLE("text-transform");
+      USE_PARENT_STYLE("-webkit-text-security");
       USE_PARENT_STYLE("text-decoration");
       USE_PARENT_STYLE("letter-spacing");
       USE_PARENT_STYLE("word-spacing");

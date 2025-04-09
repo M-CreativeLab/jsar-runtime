@@ -249,14 +249,14 @@ namespace client_layout
   protected:
     FormattingContext &formattingContext() const { return *formattingContext_; }
 
-    virtual void entityDidCreated(builtin_scene::ecs::EntityId entity);
+    virtual void entityDidCreate(builtin_scene::ecs::EntityId entity);
     virtual void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity);
 
     virtual void styleWillChange(const client_cssom::CSSStyleDeclaration &newStyle);
-    virtual void styleDidChanged(const client_cssom::CSSStyleDeclaration &oldStyle);
+    virtual void styleDidChange();
 
     virtual void sizeWillChange(const Fragment &newSize);
-    virtual void sizeDidChanged();
+    virtual void sizeDidChange();
 
     virtual void willComputeLayout(const ConstraintSpace &);
     virtual void didComputeLayoutOnce(const ConstraintSpace &);

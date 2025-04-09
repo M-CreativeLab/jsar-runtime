@@ -144,6 +144,37 @@ inline std::string ToUpperCase(const std::string &str)
   return result;
 }
 
+/**
+ * Create a new string with the first character in uppercase and the rest in lowercase.
+ *
+ * @param str The source string to convert to capitalize.
+ * @returns The new string with the first character in uppercase and the rest in lowercase.
+ */
+inline std::string ToCapitalize(std::string str)
+{
+  if (str.empty())
+    return str;
+
+  bool newWord = true;
+  for (char &c : str)
+  {
+    if (newWord && std::isalpha(c))
+    {
+      c = std::toupper(c);
+      newWord = false;
+    }
+    else if (std::isspace(c))
+    {
+      newWord = true;
+    }
+    else
+    {
+      c = std::tolower(c);
+    }
+  }
+  return str;
+}
+
 namespace transmute::common
 {
 #ifdef ANDROID

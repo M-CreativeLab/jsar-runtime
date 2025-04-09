@@ -81,9 +81,9 @@ namespace client_layout
     useSceneWithCallback(setBitmap);
   }
 
-  void LayoutImage::entityDidCreated(ecs::EntityId entity)
+  void LayoutImage::entityDidCreate(ecs::EntityId entity)
   {
-    LayoutReplaced::entityDidCreated(entity);
+    LayoutReplaced::entityDidCreate(entity);
 
     auto addImageComponent = [this, &entity](Scene &scene)
     {
@@ -105,9 +105,9 @@ namespace client_layout
     LayoutReplaced::entityWillBeDestroyed(entity);
   }
 
-  void LayoutImage::sizeDidChanged()
+  void LayoutImage::sizeDidChange()
   {
-    LayoutReplaced::sizeDidChanged();
+    LayoutReplaced::sizeDidChange();
 
     adjustImageSize();
   }
