@@ -1,14 +1,25 @@
 #pragma once
 
-#include <unordered_map>
+#include <array>
 
 #include "./hit_test_ray.hpp"
 #include "./hit_test_result.hpp"
 
 namespace client_layout
 {
+  struct HitTestCacheItem
+  {
+    HitTestRay ray;
+    HitTestResult result;
+
+    void cacheValues(const HitTestCacheItem &other);
+  };
+
   class HitTestCache
   {
+  private:
+    static constexpr size_t kMaxCacheSize = 2;
+
   public:
     HitTestCache()
         : update_index_(0)
@@ -25,6 +36,6 @@ namespace client_layout
 
   private:
     unsigned update_index_;
-    std::unordered_map<int, HitTestResult> items_;
+    std::vector<HitTestCacheItem> items_;
   };
 }

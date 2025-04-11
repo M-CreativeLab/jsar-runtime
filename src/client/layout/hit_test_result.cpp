@@ -8,7 +8,7 @@ namespace client_layout
   using namespace std;
 
   HitTestResult::HitTestResult()
-      : request_(HitTestRequest::kReadOnly | HitTestRequest::kActive, nullptr),
+      : request_(HitTestRequest::kReadOnly | HitTestRequest::kActive | HitTestRequest::kAvoidCache, nullptr),
         cacheable_(true)
   {
   }
@@ -23,18 +23,15 @@ namespace client_layout
 
   HitTestResult::~HitTestResult() = default;
 
-  shared_ptr<dom::Node> HitTestResult::innerNode() const
+  ostream &operator<<(ostream &os, const HitTestResult &r)
   {
-    return inner_node_.lock();
-  }
-
-  shared_ptr<dom::Element> HitTestResult::innerElement() const
-  {
-    return inner_element_.lock();
-  }
-
-  void HitTestResult::setInnerNode(shared_ptr<dom::Node> node)
-  {
-    inner_node_ = node;
+    auto innerNode = r.innerNode();
+    auto hitPoint = r.hitPoint();
+    os << "HitTestResult {" << endl
+       << "  innerNode: " << (innerNode ? innerNode->toString() : "null") << endl
+       << "   hitPoint: [" << hitPoint.x << ", " << hitPoint.y << ", " << hitPoint.z << "]" << endl
+       << "  cacheable: " << (r.cacheable_ ? "true" : "false") << endl
+       << "}";
+    return os;
   }
 }

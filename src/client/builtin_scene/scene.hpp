@@ -4,6 +4,7 @@
 #include <memory>
 #include <shared_mutex>
 #include <math/vectors.hpp>
+#include <common/collision/ray.hpp>
 #include <client/cssom/units.hpp>
 #include <client/dom/node.hpp>
 
@@ -22,7 +23,6 @@
 #include "./xr.hpp"
 
 #include "../graphics/webgl_context.hpp"
-#include "../xr/device.hpp"
 #include "../xr/webxr_session.hpp"
 #include "../per_process.hpp"
 
@@ -105,6 +105,11 @@ namespace builtin_scene
         volumeSize_ = newSize.value();
     }
 
+    /**
+     * Select a ray for hit testing.
+     */
+    std::optional<collision::TrRay> selectRayForHitTesting();
+
   private:
     void update(uint32_t time, std::shared_ptr<client_xr::XRFrame> frame);
     void setupXRSession();
@@ -112,7 +117,6 @@ namespace builtin_scene
   private:
     TrClientContextPerProcess *clientContext_ = nullptr;
     std::shared_ptr<client_graphics::WebGL2Context> glContext_;
-    std::shared_ptr<client_xr::XRDeviceClient> xrDeviceClient_;
     std::shared_ptr<client_xr::XRSession> xrSession_;
     client_xr::XRFrameCallback frameCallback_;
     math::Size3 volumeSize_ = math::Size3(client_cssom::ScreenWidth,

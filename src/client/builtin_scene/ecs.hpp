@@ -928,7 +928,7 @@ namespace builtin_scene::ecs
      * @returns The component reference of the given entity.
      */
     template <typename ComponentType>
-    [[nodiscard]] const ComponentType &getComponentChecked(EntityId entity)
+    [[nodiscard]] ComponentType &getComponentChecked(EntityId entity)
     {
       return connectedApp_->getComponentChecked<ComponentType>(entity);
     }

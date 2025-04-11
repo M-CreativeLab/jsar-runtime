@@ -35,6 +35,13 @@ namespace dom
     void renderEntity(const builtin_scene::ecs::EntityId &entity, const client_layout::Fragment &fragment);
 
     /**
+     * Achieve the hit test and dispatch the hit events.
+     * 
+     * @returns `true` if the hit test and dispatch events are successful, otherwise `false`.
+     */
+    bool hitTestAndDispatchEvents();
+
+    /**
      * Traverse `HTMLElement` or `Text` children from a root node.
      *
      * @param elementOrTextNode The root element or text node.

@@ -1,4 +1,6 @@
 #include <client/builtin_scene/scene.hpp>
+#include <client/layout/hit_test_ray.hpp>
+#include <client/layout/hit_test_result.hpp>
 
 #include "./document-inl.hpp"
 #include "./document_renderer.hpp"
@@ -47,6 +49,9 @@ namespace dom
 
     // Step 3: Visit the layout view to render CSS boxes.
     client_layout::LayoutViewVisitor::visit(*layoutView);
+
+    // Step 4: Do hit test and dispatch the related events.
+    hitTestAndDispatchEvents();
   }
 
   bool RenderHTMLDocument::onVisitObject(client_layout::LayoutObject &object, int depth)
@@ -143,6 +148,29 @@ namespace dom
 
     // Update custom material?
     // TODO(yorkie): support custom material.
+  }
+
+  bool RenderHTMLDocument::hitTestAndDispatchEvents()
+  {
+    auto ray = document_->scene->selectRayForHitTesting();
+    if (!ray.has_value())
+      return false;
+
+    client_layout::HitTestResult r;
+    client_layout::HitTestRay hitTestRay(ray.value());
+
+    if (document_->layoutView()->hitTest(hitTestRay, r) &&
+        r.innerNode() != nullptr)
+    {
+      if (r.innerNode()->isElement())
+      {
+        auto &hitElement = Node::AsChecked<Element>(r.innerNode());
+        hitElement.setAttribute("style", "background-color: red;");
+        // TODO(yorkie): dispatch the hit events.
+      }
+      return true;
+    }
+    return false;
   }
 
   void RenderHTMLDocument::traverseElementOrTextNode(shared_ptr<Node> elementOrTextNode,

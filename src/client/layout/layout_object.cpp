@@ -549,14 +549,6 @@ namespace client_layout
       result.setNodeAndPosition(n, point);
   }
 
-  bool LayoutObject::nodeAtPoint(HitTestResult &,
-                                 const HitTestRay &hitTestRay,
-                                 const glm::vec3 &accumulatedOffset,
-                                 HitTestPhase phase)
-  {
-    return false;
-  }
-
   void LayoutObject::entityDidCreate(builtin_scene::ecs::EntityId entity)
   {
     auto configEntity = [this, &entity](Scene &scene)

@@ -71,6 +71,9 @@ namespace client_layout
       return isAnonymous() && isLayoutBlock();
     }
 
+    // Returns `true` if this is a `LayoutBox` without physical fragments.
+    virtual bool isFragmentLessBox() const { return false; }
+
     // Absolute or fixed positioning
     bool isRelativelyPositioned() const { return false; }
     bool isStickyPositioned() const { return false; }
@@ -256,7 +259,7 @@ namespace client_layout
     virtual std::shared_ptr<dom::Node> nodeForHitTest() const;
     virtual void updateHitTestResult(HitTestResult &, const glm::vec3 &point) const;
     virtual bool nodeAtPoint(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset,
-                             HitTestPhase);
+                             HitTestPhase) { return false; }
 
   protected:
     FormattingContext &formattingContext() const { return *formattingContext_; }
@@ -324,6 +327,9 @@ private:                                                                \
 
       ADD_BOOLEAN_BITFIELD(floating_, Floating);
       ADD_BOOLEAN_BITFIELD(horizontal_writing_mode_, HorizontalWritingMode);
+
+      // This boolean is set if this object is a root scroller.
+      ADD_BOOLEAN_BITFIELD(is_global_root_scroller_, IsGlobalRootScroller);
 
       // This boolean is set if overflow != 'visible'.
       // This means that this object may need an overflow clip to be applied at paint time to its visual overflow (see

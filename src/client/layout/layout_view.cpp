@@ -77,16 +77,30 @@ namespace client_layout
     return r;
   }
 
-  bool LayoutView::hitTest(const HitTestRay &hitTestRay, HitTestResult &result)
+  bool LayoutView::hitTest(const HitTestRay &ray, HitTestResult &r)
   {
-    // TODO(yorkie): support the hit test for the view.
-    return false;
+    // TODO(yorkie): support the update of the lifecycle, style and layout for the hit test.
+    return hitTestNoLifecycleUpdate(ray, r);
   }
 
-  bool LayoutView::hitTestNoLifecycleUpdate(const HitTestRay &hitTestRay, HitTestResult &result)
+  bool LayoutView::hitTestNoLifecycleUpdate(const HitTestRay &hitTestRay, HitTestResult &r)
   {
-    // TODO(yorkie): support the hit test for the view.
-    return false;
+    hit_test_count_ += 1;
+
+    bool hit = false;
+    HitTestResult cachedResult = r;
+    if (hit_test_cache_->lookupCachedResult(hitTestRay, cachedResult))
+    {
+      hit_test_cache_hits_ += 1;
+      r = cachedResult;
+    }
+    else
+    {
+      hit = hitTestAllPhases(r, hitTestRay, glm::vec3(0.0f));
+      if (hit)
+        hit_test_cache_->addCachedResult(hitTestRay, r);
+    }
+    return hit;
   }
 
   void LayoutView::clearHitTestCache()

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <common/collision/ray.hpp>
+
 namespace client_layout
 {
   /**
@@ -12,12 +14,18 @@ namespace client_layout
    * - Y-axis: Up (-Y)
    * - Z-axis: Depth (+Z)
    */
-  class HitTestRay
+  class HitTestRay : public collision::TrRay
   {
-  public:
-    HitTestRay();
+    using collision::TrRay::TrRay;
 
-  private:
-    // TODO
+  public:
+    HitTestRay(const collision::TrRay &ray);
+
+  public:
+    bool operator==(const HitTestRay &other) const;
+    bool operator!=(const HitTestRay &other) const
+    {
+      return !(*this == other);
+    }
   };
 }

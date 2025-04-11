@@ -35,6 +35,11 @@ namespace client_layout
     const ConstraintSpace adjustSpace(const ConstraintSpace &inputSpace) const;
 
   private:
+    bool nodeAtPoint(HitTestResult &, const HitTestRay &, const glm::vec3 &, HitTestPhase) override final
+    {
+      assert(false && "Unreachable.");
+    }
+
     void entityDidCreate(builtin_scene::ecs::EntityId entity) override;
     void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
     void styleWillChange(const client_cssom::CSSStyleDeclaration &newStyle) override;
