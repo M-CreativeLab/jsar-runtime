@@ -10,6 +10,7 @@
 
 #include "./node.hpp"
 #include "./dom_token_list.hpp"
+#include "./events/mouse_event.hpp"
 #include "./geometry/dom_rect.hpp"
 
 #define TYPED_ELEMENT_MAP(XX)         \
@@ -140,7 +141,7 @@ namespace dom
      */
     [[nodiscard]] bool checkVisibility(CheckVisibilityOptions options) const;
 
-    const client_cssom::CSSStyleDeclaration& adoptedStyle() const { return adoptedStyle_; }
+    const client_cssom::CSSStyleDeclaration &adoptedStyle() const { return adoptedStyle_; }
     std::shared_ptr<const client_layout::LayoutBoxModelObject> principalBox() const { return principalBox_; }
     std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox() { return principalBox_; }
 
@@ -204,6 +205,13 @@ namespace dom
      * @param callback The callback function to use the scene.
      */
     void useSceneWithCallback(const std::function<void(builtin_scene::Scene &)> &callback);
+
+    // Dispatch the event to the element, it will do bubbles and capture phase dispatching.
+    void dispatchEventInternal(std::shared_ptr<dom::Event>);
+
+  private:
+    void simulateMouseDown(const glm::vec3 &hitPointInWorld);
+    void simulateMouseUp(const glm::vec3 &hitPointInWorld);
 
   public:
     std::string id;

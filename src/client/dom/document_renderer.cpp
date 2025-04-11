@@ -172,8 +172,7 @@ namespace dom
       if (node != nullptr && node->isElement())
       {
         auto &element = Node::AsChecked<HTMLElement>(node);
-        cout << "Down on " << element.tagName << endl;
-        // TODO(yorkie): dispatch the element mousedown event.
+        element.simulateMouseDown(result.hitPoint());
       }
     }
   }
@@ -186,8 +185,7 @@ namespace dom
       if (node != nullptr && node->isElement())
       {
         auto &element = Node::AsChecked<HTMLElement>(node);
-        cout << "Up on " << element.tagName << endl;
-        // TODO(yorkie): dispatch the element mouseup event.
+        element.simulateMouseUp(result.hitPoint());
       }
     }
   }

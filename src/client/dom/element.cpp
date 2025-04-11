@@ -557,6 +557,33 @@ namespace dom
     // TODO: Implement setOuterHTML() for Element
   }
 
+  void Element::dispatchEventInternal(std::shared_ptr<dom::Event> event)
+  {
+    dispatchEvent(event);
+
+    // If the event bubbles, dispatch it to the parent element.
+    if (event->bubbles())
+    {
+      auto parentElement = getParentElement();
+      if (parentElement != nullptr)
+        parentElement->dispatchEventInternal(event);
+    }
+  }
+
+  void Element::simulateMouseDown(const glm::vec3 &hitPointInWorld)
+  {
+    auto event = make_shared<events::MouseEvent>(dom::DOMEventConstructorType::kMouseEvent,
+                                                 dom::DOMEventType::MouseDown);
+    dispatchEventInternal(event);
+  }
+
+  void Element::simulateMouseUp(const glm::vec3 &hitPointInWorld)
+  {
+    auto event = make_shared<events::MouseEvent>(dom::DOMEventConstructorType::kMouseEvent,
+                                                 dom::DOMEventType::MouseUp);
+    dispatchEventInternal(event);
+  }
+
   std::shared_ptr<Element> Element::firstElementChild() const
   {
     for (auto childNode : childNodes)
