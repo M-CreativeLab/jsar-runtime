@@ -1,11 +1,13 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 #include <client/builtin_scene/ecs-inl.hpp>
 #include <client/layout/constraint_space.hpp>
 #include <client/layout/layout_view_visitor.hpp>
 #include <client/layout/layout_object.hpp>
 #include <client/layout/layout_text.hpp>
+#include <client/xr/webxr_session_events.hpp>
 
 #include "./document.hpp"
 
@@ -23,6 +25,7 @@ namespace dom
   {
   public:
     RenderHTMLDocument(HTMLDocument *document);
+    ~RenderHTMLDocument();
 
   public:
     const std::string name() const override { return "dom.RenderHTMLDocument"; }
@@ -33,6 +36,9 @@ namespace dom
     void onVisitBox(const client_layout::LayoutBoxModelObject &box, int depth) override;
     void onVisitText(const client_layout::LayoutText &text, int depth) override;
     void renderEntity(const builtin_scene::ecs::EntityId &entity, const client_layout::Fragment &fragment);
+
+    void onSceneSelectStart(client_xr::XRInputSourceEvent &);
+    void onSceneSelectEnd(client_xr::XRInputSourceEvent &);
 
     /**
      * Achieve the hit test and dispatch the hit events.
@@ -80,5 +86,6 @@ namespace dom
 
   private:
     HTMLDocument *document_ = nullptr;
+    std::vector<client_layout::HitTestResult> hit_test_results_;
   };
 }

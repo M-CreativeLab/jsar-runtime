@@ -1,3 +1,6 @@
+#include <client/dom/dom_event_target.hpp>
+#include <client/xr/webxr_session_events.hpp>
+
 #include "./ecs-inl.hpp"
 #include "./xr.hpp"
 
@@ -16,6 +19,17 @@ namespace builtin_scene
     assert(client_ != nullptr && "WebXRExperience: XRDeviceClient is null");
   }
 
+  WebXRExperience::~WebXRExperience()
+  {
+    if (session_ != nullptr)
+    {
+      session_->removeEventListener(dom::DOMEventType::XRSessionSelectStart);
+      session_->removeEventListener(dom::DOMEventType::XRSessionSelectEnd);
+      session_->end();
+      session_ = nullptr;
+    }
+  }
+
   bool WebXRExperience::multiviewRequired() const
   {
     assert(session_ != nullptr && "requestSession() must be called before.");
@@ -29,6 +43,25 @@ namespace builtin_scene
     auto eventloop = TrClientContextPerProcess::Get()->getScriptingEventLoop();
     auto xrSystem = client_->getXRSystem(eventloop);
     session_ = xrSystem->requestSession();
+
+    // Add event listeners for actions
+    auto callback = [this](dom::DOMEventType type, shared_ptr<dom::Event> event)
+    {
+      if (type == dom::DOMEventType::XRSessionSelectStart)
+      {
+        if (select_start_handler_ == nullptr)
+          return;
+        select_start_handler_(*dynamic_pointer_cast<XRInputSourceEvent>(event));
+      }
+      else if (type == dom::DOMEventType::XRSessionSelectEnd)
+      {
+        if (select_end_handler_ == nullptr)
+          return;
+        select_end_handler_(*dynamic_pointer_cast<XRInputSourceEvent>(event));
+      }
+    };
+    session_->addEventListener(dom::DOMEventType::XRSessionSelectStart, callback);
+    session_->addEventListener(dom::DOMEventType::XRSessionSelectEnd, callback);
     return session_;
   }
 

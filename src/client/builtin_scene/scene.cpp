@@ -169,11 +169,26 @@ namespace builtin_scene
     return removeEntity(entity);
   }
 
+  std::shared_ptr<WebXRExperience> Scene::getWebXRExperience()
+  {
+    return getResource<WebXRExperience>();
+  }
+
   optional<collision::TrRay> Scene::selectRayForHitTesting()
   {
     auto xrExperience = getResource<WebXRExperience>();
     assert(xrExperience != nullptr);
     return xrExperience->selectRayForHitTesting();
+  }
+
+  void Scene::onSelectStart(SelectEventHandler handler)
+  {
+    getResource<WebXRExperience>()->resetSelectStartHandler(handler);
+  }
+
+  void Scene::onSelectEnd(SelectEventHandler handler)
+  {
+    getResource<WebXRExperience>()->resetSelectEndHandler(handler);
   }
 
   void Scene::update(uint32_t time, shared_ptr<client_xr::XRFrame> frame)

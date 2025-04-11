@@ -26,6 +26,7 @@
     const geometry = new THREE.TorusKnotGeometry(0.2, 0.05, 50, 16);
     const material = new THREE.MeshLambertMaterial({ color: defaultColor, wireframe: false });
     const obj = new THREE.Mesh(geometry, material);
+    obj.scale.set(0.5, 0.5, 0.5);
     scene.add(obj);
 
     const gl = navigator.gl;
@@ -67,7 +68,7 @@
       session.requestReferenceSpace('local').then((localSpace) => {
         const raycaster = new THREE.Raycaster();
         const hitGeometry = new THREE.SphereGeometry(0.005);
-        const hitMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const hitMaterial = new THREE.MeshBasicMaterial({ color: 0xff00ff });
         const hitMesh = new THREE.Mesh(hitGeometry, hitMaterial);
         scene.add(hitMesh);
 

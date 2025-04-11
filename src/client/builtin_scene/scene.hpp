@@ -60,7 +60,7 @@ namespace builtin_scene
 
     /**
      * Start the scene rendering.
-     * 
+     *
      * @param newSize The new size of the scene.
      */
     void start(std::optional<math::Size3> volumeSize = std::nullopt);
@@ -106,9 +106,22 @@ namespace builtin_scene
     }
 
     /**
+     * Get the WebXR experience instance to use.
+     *
+     * @returns The WebXR experience instance or `nullptr` if not available such as not in XR mode.
+     */
+    std::shared_ptr<WebXRExperience> getWebXRExperience();
+
+    /**
      * Select a ray for hit testing.
      */
     std::optional<collision::TrRay> selectRayForHitTesting();
+
+    // Events
+
+    typedef std::function<void(client_xr::XRInputSourceEvent &)> SelectEventHandler;
+    void onSelectStart(SelectEventHandler);
+    void onSelectEnd(SelectEventHandler);
 
   private:
     void update(uint32_t time, std::shared_ptr<client_xr::XRFrame> frame);

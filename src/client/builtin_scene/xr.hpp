@@ -22,6 +22,7 @@ namespace builtin_scene
 
   public:
     WebXRExperience();
+    ~WebXRExperience();
 
   public:
     std::shared_ptr<client_xr::XRSession> session() { return session_; }
@@ -43,6 +44,15 @@ namespace builtin_scene
 
     bool multiviewEnabled() const { return multiview_enabled_; }
     bool multiviewRequired() const;
+
+    void resetSelectStartHandler(std::function<void(client_xr::XRInputSourceEvent&)> handler)
+    {
+      select_start_handler_ = handler;
+    }
+    void resetSelectEndHandler(std::function<void(client_xr::XRInputSourceEvent&)> handler)
+    {
+      select_end_handler_ = handler;
+    }
 
     // Request a session
     std::shared_ptr<client_xr::XRSession> requestSession();
@@ -72,6 +82,9 @@ namespace builtin_scene
     std::shared_ptr<client_xr::XRFrame> current_frame_;
     uint32_t current_time_;
     bool multiview_enabled_;
+
+    std::function<void(client_xr::XRInputSourceEvent&)> select_start_handler_;
+    std::function<void(client_xr::XRInputSourceEvent&)> select_end_handler_;
   };
 
   class WebXRExperienceStartupSystem : public ecs::System

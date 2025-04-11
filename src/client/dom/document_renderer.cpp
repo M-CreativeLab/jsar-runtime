@@ -1,3 +1,4 @@
+#include <functional>
 #include <client/builtin_scene/scene.hpp>
 #include <client/layout/hit_test_ray.hpp>
 #include <client/layout/hit_test_result.hpp>
@@ -8,6 +9,7 @@
 namespace dom
 {
   using namespace std;
+  using namespace std::placeholders;
   using namespace builtin_scene;
 
   RenderHTMLDocument::RenderHTMLDocument(HTMLDocument *document)
@@ -15,6 +17,18 @@ namespace dom
         document_(document)
   {
     assert(document_ != nullptr);
+
+    document_->scene->onSelectStart(bind(&RenderHTMLDocument::onSceneSelectStart, this, _1));
+    document_->scene->onSelectEnd(bind(&RenderHTMLDocument::onSceneSelectEnd, this, _1));
+  }
+
+  RenderHTMLDocument::~RenderHTMLDocument()
+  {
+    if (document_ != nullptr)
+    {
+      document_->scene->onSelectStart(nullptr);
+      document_->scene->onSelectEnd(nullptr);
+    }
   }
 
   void RenderHTMLDocument::onExecute()
@@ -150,11 +164,42 @@ namespace dom
     // TODO(yorkie): support custom material.
   }
 
+  void RenderHTMLDocument::onSceneSelectStart(client_xr::XRInputSourceEvent &event)
+  {
+    for (auto &result : hit_test_results_)
+    {
+      auto node = result.innerNode();
+      if (node != nullptr && node->isElement())
+      {
+        auto &element = Node::AsChecked<HTMLElement>(node);
+        cout << "Down on " << element.tagName << endl;
+        // TODO(yorkie): dispatch the element mousedown event.
+      }
+    }
+  }
+
+  void RenderHTMLDocument::onSceneSelectEnd(client_xr::XRInputSourceEvent &)
+  {
+    for (auto &result : hit_test_results_)
+    {
+      auto node = result.innerNode();
+      if (node != nullptr && node->isElement())
+      {
+        auto &element = Node::AsChecked<HTMLElement>(node);
+        cout << "Up on " << element.tagName << endl;
+        // TODO(yorkie): dispatch the element mouseup event.
+      }
+    }
+  }
+
   bool RenderHTMLDocument::hitTestAndDispatchEvents()
   {
     auto ray = document_->scene->selectRayForHitTesting();
     if (!ray.has_value())
+    {
+      hit_test_results_.clear();
       return false;
+    }
 
     client_layout::HitTestResult r;
     client_layout::HitTestRay hitTestRay(ray.value());
@@ -162,14 +207,17 @@ namespace dom
     if (document_->layoutView()->hitTest(hitTestRay, r) &&
         r.innerNode() != nullptr)
     {
+      // TODO(yorkie): support multiple HTRs such as hit testing from multiple input sources.
+      hit_test_results_ = {r};
       if (r.innerNode()->isElement())
       {
         auto &hitElement = Node::AsChecked<Element>(r.innerNode());
-        hitElement.setAttribute("style", "background-color: red;");
         // TODO(yorkie): dispatch the hit events.
       }
       return true;
     }
+
+    hit_test_results_.clear();
     return false;
   }
 

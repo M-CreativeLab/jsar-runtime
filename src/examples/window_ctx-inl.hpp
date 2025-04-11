@@ -100,9 +100,13 @@ namespace jsar::example
     if (xrRenderer == nullptr)
       return;
 
+    int viewIndex = 0;
     auto halfWidth = width / 2;
     if (xoffset > halfWidth)
+    {
       xoffset -= halfWidth;
+      // viewIndex = 1;
+    }
 
     glm::vec4 viewport(0, 0, halfWidth, height);
     glm::vec3 screenCoord(xoffset, viewport.w - yoffset, 0.2f);
@@ -112,12 +116,12 @@ namespace jsar::example
     screenCoord.z = depth;
 
     glm::vec3 xyz = glm::unProject(screenCoord,
-                                   xrRenderer->getViewMatrixForEye(0),
+                                   xrRenderer->getViewMatrixForEye(viewIndex),
                                    xrRenderer->getProjectionMatrix(),
                                    viewport);
 
     // Update the main input source's target ray
-    glm::vec3 origin = glm::vec3(0, 0, 1);
+    glm::vec3 origin = xrRenderer->viewerPosition();
     glm::vec3 direction = glm::normalize(xyz - origin);
     xrRenderer->updateMainInputSourceTargetRay(origin, direction);
   }
