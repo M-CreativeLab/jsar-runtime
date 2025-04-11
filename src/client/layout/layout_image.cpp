@@ -13,10 +13,14 @@ namespace client_layout
 
   bool LayoutImage::adjustImageSize()
   {
-    auto imageElement = dom::Node::AsChecked<dom::HTMLImageElement>(node());
+    auto &imageElement = dom::Node::AsChecked<dom::HTMLImageElement>(node());
     auto &adoptedStyle = imageElement.adoptedStyle();
     auto srcImageRect = imageElement.getImageClientRect();
     auto lastFragment = fragment();
+
+    // Not adjusting the size if the image source is not loaded yet.
+    if (srcImageRect.width() <= 0 || srcImageRect.height() <= 0)
+      return false;
 
     optional<Dimension> adoptedWidth = nullopt;
     optional<Dimension> adoptedHeight = nullopt;
@@ -52,13 +56,15 @@ namespace client_layout
     if (adoptedWidth.has_value() && !adoptedHeight.has_value())
     {
       // Calculate the height = width / aspectRatio.
-      formattingContext().setContentHeight(lastFragment.width() / aspectRatio);
+      float adjustedHeight = lastFragment.width() / aspectRatio;
+      formattingContext().setContentSize(lastFragment.width(), adjustedHeight);
       return true;
     }
     else if (!adoptedWidth.has_value() && adoptedHeight.has_value())
     {
       // Calculate the width = height * aspectRatio.
-      formattingContext().setContentWidth(lastFragment.height() * aspectRatio);
+      float adjustedWidth = lastFragment.height() * aspectRatio;
+      formattingContext().setContentSize(adjustedWidth, lastFragment.height());
       return true;
     }
 
