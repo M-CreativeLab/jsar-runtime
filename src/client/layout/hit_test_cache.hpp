@@ -1,6 +1,6 @@
 #pragma once
 
-#include <array>
+#include <vector>
 
 #include "./hit_test_ray.hpp"
 #include "./hit_test_result.hpp"
