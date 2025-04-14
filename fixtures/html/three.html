@@ -26,6 +26,7 @@
     const geometry = new THREE.TorusKnotGeometry(0.2, 0.05, 50, 16);
     const material = new THREE.MeshLambertMaterial({ color: defaultColor, wireframe: false });
     const obj = new THREE.Mesh(geometry, material);
+    obj.scale.set(0.5, 0.5, 0.5);
     scene.add(obj);
 
     const gl = navigator.gl;
@@ -67,7 +68,7 @@
       session.requestReferenceSpace('local').then((localSpace) => {
         const raycaster = new THREE.Raycaster();
         const hitGeometry = new THREE.SphereGeometry(0.005);
-        const hitMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const hitMaterial = new THREE.MeshBasicMaterial({ color: 0xff00ff });
         const hitMesh = new THREE.Mesh(hitGeometry, hitMaterial);
         scene.add(hitMesh);
 
@@ -99,6 +100,36 @@
     });
     console.info('navigator.xr', navigator.xr);
   </script>
+  <style>
+    h1 {
+      height: auto;
+      width: 100%;
+      font-size: 80px;
+      text-transform: uppercase;
+      color: rgb(150, 197, 224);
+      font-weight: bolder;
+      margin: 20px;
+      padding: 0;
+      transform: translate3d(0, 0, 15px);
+    }
+
+    p {
+      font-size: 50px;
+      font-weight: bold;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    span {
+      font-family: monospace;
+      padding: 20px;
+      background-color: rgb(110, 37, 37);
+      color: rgb(231, 231, 231);
+      font-weight: bold;
+      font-size: 40px;
+      transform: translate3d(0, 0, 50px);
+    }
+  </style>
 </head>
 
 <body style="background-color: #fff;">

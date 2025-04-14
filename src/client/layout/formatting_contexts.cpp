@@ -28,7 +28,11 @@ namespace client_layout
 
   void FormattingContext::setContentSize(const glm::vec3 &size)
   {
-    contentSize_ = size;
+    if (!contentSize_.has_value() || contentSize_ != size)
+    {
+      contentSize_ = size;
+      contentSizeDidChange(contentSize_.value());
+    }
   }
 
   TaffyBasedFormattingContext::TaffyBasedFormattingContext(const DisplayType type, shared_ptr<LayoutView> view)
@@ -101,17 +105,14 @@ namespace client_layout
     taffyParent.node_->replaceChild(*taffyOld.node_, *node_, true);
   }
 
-  void TaffyBasedFormattingContext::setContentSize(const glm::vec3 &size)
+  void TaffyBasedFormattingContext::contentSizeDidChange(const glm::vec3 &size)
   {
-    FormattingContext::setContentSize(size);
-    assert(contentSize_.has_value() &&
-           "Content size must be set before layout.");
-
     auto nodeStyle = node_->style();
-    if (nodeStyle.width().isAuto())
+    if (nodeStyle.width().isAuto() && !std::isnan(contentSize_->x))
       nodeStyle.setWidth(Dimension::Length(contentSize_->x));
-    if (nodeStyle.height().isAuto())
+    if (nodeStyle.height().isAuto() && !std::isnan(contentSize_->y))
       nodeStyle.setHeight(Dimension::Length(contentSize_->y));
+
     node_->setStyle(nodeStyle);
     node_->markDirty();
   }

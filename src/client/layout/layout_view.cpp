@@ -32,13 +32,11 @@ namespace client_layout
 
   LayoutView::LayoutView(shared_ptr<dom::Document> document)
       : LayoutBlockFlow(document),
-        taffyNodeAllocator_(make_shared<crates::layout2::Allocator>())
+        taffy_node_allocator_(make_shared<crates::layout2::Allocator>()),
+        hit_test_count_(0),
+        hit_test_cache_hits_(0),
+        hit_test_cache_(make_unique<HitTestCache>())
   {
-  }
-
-  size_t LayoutView::computeMinimumWidth()
-  {
-    return 0;
   }
 
   bool LayoutView::computeLayout(const ConstraintSpace &avilableSpace)
@@ -77,6 +75,43 @@ namespace client_layout
       traverseChildNode(*child, *this);
 
     return r;
+  }
+
+  bool LayoutView::hitTest(const HitTestRay &ray, HitTestResult &r)
+  {
+    // TODO(yorkie): support the update of the lifecycle, style and layout for the hit test.
+    return hitTestNoLifecycleUpdate(ray, r);
+  }
+
+  bool LayoutView::hitTestNoLifecycleUpdate(const HitTestRay &hitTestRay, HitTestResult &r)
+  {
+    hit_test_count_ += 1;
+
+    bool hit = false;
+    HitTestResult cachedResult = r;
+    if (hit_test_cache_->lookupCachedResult(hitTestRay, cachedResult))
+    {
+      hit_test_cache_hits_ += 1;
+      r = cachedResult;
+    }
+    else
+    {
+      hit = hitTestAllPhases(r, hitTestRay, glm::vec3(0.0f));
+      if (hit)
+        hit_test_cache_->addCachedResult(hitTestRay, r);
+    }
+    return hit;
+  }
+
+  void LayoutView::clearHitTestCache()
+  {
+    hit_test_cache_->clear();
+  }
+
+  size_t LayoutView::computeMinimumWidth()
+  {
+    // TODO(yorkie): support the minimum width for the view.
+    return 0;
   }
 
   void LayoutView::debugPrint(const string &message, LayoutView::DebugOptions options) const

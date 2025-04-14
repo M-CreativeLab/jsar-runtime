@@ -10,6 +10,7 @@
 
 #include "./node.hpp"
 #include "./dom_token_list.hpp"
+#include "./events/mouse_event.hpp"
 #include "./geometry/dom_rect.hpp"
 
 #define TYPED_ELEMENT_MAP(XX)         \
@@ -55,6 +56,7 @@ namespace dom
   class Element : public Node,
                   virtual public client_cssom::BoxBounding
   {
+    friend class DocumentEventDispatcher;
     friend class RenderHTMLDocument;
 
   public:
@@ -140,7 +142,27 @@ namespace dom
      */
     [[nodiscard]] bool checkVisibility(CheckVisibilityOptions options) const;
 
-    const client_cssom::CSSStyleDeclaration& adoptedStyle() const { return adoptedStyle_; }
+    enum ScrollBehavior
+    {
+      kScrollBehaviorAuto,
+      kScrollBehaviorSmooth,
+      kScrollBehaviorInstant
+    };
+    struct ScrollOptions
+    {
+      float top = 0;
+      float left = 0;
+      ScrollBehavior behavior = kScrollBehaviorAuto;
+    };
+
+    // Scrolls the element to the given position.
+    inline void scroll(const ScrollOptions &opts) { scrollTo(opts); }
+    // Scrolls an element to the given position.
+    void scrollTo(const ScrollOptions &);
+    // Scrolls an element by the given amount.
+    void scrollBy(const ScrollOptions &);
+
+    const client_cssom::CSSStyleDeclaration &adoptedStyle() const { return adoptedStyle_; }
     std::shared_ptr<const client_layout::LayoutBoxModelObject> principalBox() const { return principalBox_; }
     std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox() { return principalBox_; }
 
@@ -205,6 +227,18 @@ namespace dom
      */
     void useSceneWithCallback(const std::function<void(builtin_scene::Scene &)> &callback);
 
+    // Dispatch the event to the element, it will do bubbles and capture phase dispatching.
+    void dispatchEventInternal(std::shared_ptr<dom::Event>);
+    void simulateMouseDown(const glm::vec3 &hitPointInWorld);
+    void simulateMouseUp(const glm::vec3 &hitPointInWorld);
+    void simulateMouseMove(const glm::vec3 &hitPointInWorld);
+    void simulateMouseOut(const glm::vec3 &hitPointInWorld);
+    void simulateMouseOver(const glm::vec3 &hitPointInWorld);
+    void simulateMouseEnter(const glm::vec3 &hitPointInWorld);
+    void simulateMouseLeave(const glm::vec3 &hitPointInWorld);
+    void simulateClick(const glm::vec3 &hitPointInWorld);
+    void simulateScrollWithOffset(float offsetX, float offsetY);
+
   public:
     std::string id;
     std::string namespaceURI;
@@ -231,5 +265,6 @@ namespace dom
     std::vector<std::shared_ptr<client_layout::LayoutBoxModelObject>> boxes_;
     std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox_;
     std::string currentDisplayStr_ = "block";
+    bool is_entered_ = false;
   };
 }

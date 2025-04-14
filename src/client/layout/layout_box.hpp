@@ -1,8 +1,10 @@
 #pragma once
 
 #include <memory>
+#include <common/math3d/plane.hpp>
 #include <client/dom/types.hpp>
 
+#include "./geometry/bounding_box.hpp"
 #include "./geometry/rect.hpp"
 #include "./display_type.hpp"
 #include "./layout_box_model_object.hpp"
@@ -80,6 +82,9 @@ namespace client_layout
 
     virtual glm::vec3 size() const;
 
+    // Returns the front face plane of the box in world space.
+    math3d::TrPlane physicalBorderBoxFront() const;
+    geometry::BoundingBox physicalBorderBoxRect() const;
     geometry::Rect<float> physicalPaddingBoxRect() const
     {
       return geometry::Rect<float>(clientLeft(),
@@ -110,6 +115,8 @@ namespace client_layout
 
     bool isUserScrollable() const { return hasScrollableOverflowX() || hasScrollableOverflowY(); }
     virtual void autoScroll(const glm::vec3 &offset);
+    void scrollTo(const glm::vec3 &offset);
+    void scrollBy(const glm::vec3 &offset);
     bool scrollsOverflow() const;
 
     bool hasScrollableOverflowX() const { return scrollsOverflowX() && scrollWidth() != clientWidth(); }
@@ -119,6 +126,19 @@ namespace client_layout
 
     glm::vec3 scrollOrigin() const;
     glm::vec3 scrolledContentOffset() const;
+
+    bool nodeAtPoint(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset,
+                     HitTestPhase) override;
+    // Returns if this box has overflow that is hit-testable.
+    bool hasHitTestableOverflow() const;
+    // Fast check if `NodeAtPoint` may find a hit based on the bounding box intersection.
+    bool mayIntersect(const HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset) const;
+
+  protected:
+    virtual bool hitTestChildren(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset,
+                                 HitTestPhase);
+
+    void updateFromStyle() override;
 
   private:
     inline bool scrollableOverflowIsSet() const { return overflow_ != nullptr && overflow_->scrollableOverflow; }

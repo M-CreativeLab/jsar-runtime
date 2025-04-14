@@ -275,8 +275,11 @@ namespace builtin_scene::web_renderer
         content.setTextureUsing(true);
       else
       {
+        content.setTextureUsing(false); // Disable using texture to decrease the texture memory usage.
+
         auto fillColor = fillPaint.getColor4f();
         content.setBackgroundColor(fillColor.fR, fillColor.fG, fillColor.fB, fillColor.fA);
+        content.setOpaque(fillColor.fA == 1.0f);
       }
     }
     if (drawBorders(canvas, roundedRect, fragment.value(), style))

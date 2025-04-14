@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <concepts>
 #include <memory>
 #include <glm/glm.hpp>
@@ -47,21 +48,14 @@ namespace client_layout
     virtual void onReplaced(const FormattingContext &parent, const FormattingContext &old) = 0;
 
     // Set the content size of the formatting context.
-    virtual void setContentSize(const glm::vec3 &size);
+    void setContentSize(const glm::vec3 &size);
     // Set the content size with width and height.
     inline void setContentSize(float width, float height)
     {
       setContentSize(glm::vec3(width, height, 0));
     }
     inline void resetContentSize() { contentSize_ = std::nullopt; }
-    inline void setContentWidth(float width)
-    {
-      setContentSize(width, contentSize_.has_value() ? contentSize_->y : 0);
-    }
-    inline void setContentHeight(float height)
-    {
-      setContentSize(contentSize_.has_value() ? contentSize_->x : 0, height);
-    }
+    virtual void contentSizeDidChange(const glm::vec3 &contentSize) {};
 
     virtual bool setLayoutStyle(const crates::layout2::LayoutStyle &style) = 0;
     virtual std::unique_ptr<const LayoutResult> computeLayout(const ConstraintSpace &) = 0;
@@ -90,7 +84,7 @@ namespace client_layout
     void onRemoved(const FormattingContext &) override final;
     void onReplaced(const FormattingContext &, const FormattingContext &) override final;
 
-    void setContentSize(const glm::vec3 &size) override final;
+    void contentSizeDidChange(const glm::vec3 &contentSize) override final;
     bool setLayoutStyle(const crates::layout2::LayoutStyle &style) override;
     std::unique_ptr<const LayoutResult> computeLayout(const ConstraintSpace &) override;
     void debugPrint() const override final;

@@ -92,6 +92,13 @@ namespace builtin_scene
       return isDirty_;
     }
     /**
+     * Mark the transform as dirty or clean, meaning it needs to be updated.
+     */
+    inline void setDirty(bool b = true) const
+    {
+      isDirty_ = b;
+    }
+    /**
      * The translation of the transform.
      */
     inline math::Vec3 translation() { return translation_; }
@@ -115,7 +122,7 @@ namespace builtin_scene
         lastMatrix_ = glm::translate(glm::mat4(1.0f), translation_) *
                       glm::mat4_cast(rotation_) *
                       glm::scale(glm::mat4(1.0f), scale_);
-        isDirty_ = false;
+        setDirty(false);
       }
       return lastMatrix_;
     }
@@ -142,7 +149,7 @@ namespace builtin_scene
       translation_ = math::Vec3(mat[3]);
       rotation_ = math::Quat(mat);
       scale_ = math::Vec3(mat[0][0], mat[1][1], mat[2][2]);
-      isDirty_ = false;
+      setDirty(false);
     }
     /**
      * Set the translation.
@@ -154,7 +161,7 @@ namespace builtin_scene
       if (translation_ != translation)
       {
         translation_ = translation;
-        isDirty_ = true;
+        setDirty();
       }
     }
     /**
@@ -196,7 +203,7 @@ namespace builtin_scene
       if (rotation_ != rotation)
       {
         rotation_ = rotation;
-        isDirty_ = true;
+        setDirty();
       }
     }
     /**
@@ -209,7 +216,7 @@ namespace builtin_scene
       if (scale_ != scale)
       {
         scale_ = scale;
-        isDirty_ = true;
+        setDirty();
       }
     }
     /**
@@ -289,6 +296,22 @@ namespace builtin_scene
         postTransform_ = std::make_shared<Transform>();
       return *postTransform_;
     }
+    /**
+     * @returns The last computed matrix to upload to the GPU.
+     */
+    const glm::mat4& lastComputedMatrix() const
+    {
+      return lastMatrix_;
+    }
+    /**
+     * Set the computed matrix, this could be used by the renderer to cache the computed matrix for rendering.
+     * 
+     * @param mat The computed matrix.
+     */
+    void setComputedMatrix(glm::mat4 mat)
+    {
+      computedMatrix_ = mat;
+    }
 
   public:
     friend std::ostream &operator<<(std::ostream &os, const Transform &transform)
@@ -308,6 +331,7 @@ namespace builtin_scene
     mutable bool isDirty_ = true;
     mutable glm::mat4 lastMatrix_ = glm::mat4(1.0f);
     mutable glm::mat4 accumulatedMatrix_ = glm::mat4(1.0f);
-    std::shared_ptr<Transform> postTransform_ = nullptr; // The transform to apply after this transform.
+    std::optional<glm::mat4> computedMatrix_ = std::nullopt; // The latest computed matrix to be used for rendering.
+    std::shared_ptr<Transform> postTransform_ = nullptr;     // The transform to apply after this transform.
   };
 }

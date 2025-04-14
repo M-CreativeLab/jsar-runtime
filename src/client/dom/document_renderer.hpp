@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 #include <client/builtin_scene/ecs-inl.hpp>
 #include <client/layout/constraint_space.hpp>
 #include <client/layout/layout_view_visitor.hpp>
@@ -8,6 +9,7 @@
 #include <client/layout/layout_text.hpp>
 
 #include "./document.hpp"
+#include "./document_event_dispatcher.hpp"
 
 namespace dom
 {
@@ -19,10 +21,12 @@ namespace dom
 
   // The HTML rendering ECS system, which is used to render the HTML document.
   class RenderHTMLDocument final : public builtin_scene::ecs::System,
-                                   public client_layout::LayoutViewVisitor
+                                   public client_layout::LayoutViewVisitor,
+                                   DocumentEventDispatcher
   {
   public:
     RenderHTMLDocument(HTMLDocument *document);
+    ~RenderHTMLDocument();
 
   public:
     const std::string name() const override { return "dom.RenderHTMLDocument"; }

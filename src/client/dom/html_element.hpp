@@ -42,6 +42,8 @@ namespace dom
 
   public:
     void createdCallback() override;
+    void attributeChangedCallback(const std::string &name,
+                                  const std::string &oldValue, const std::string &newValue) override;
 
   private:
     bool isHTMLElement() const override final { return true; }

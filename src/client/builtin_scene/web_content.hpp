@@ -156,7 +156,7 @@ namespace builtin_scene
     inline void setTextureUsing(bool value) { isTextureUsing_ = value; }
     inline bool isOpaque() const { return isOpaque_; }
     inline bool isTransparent() const { return !isOpaque_; }
-    inline void setOpaque(bool isOpaque) { isOpaque_ = isOpaque; }
+    inline void setOpaque(bool b) { isOpaque_ = b; }
     /**
      * @returns Whether the content is dirty, namely needs to be re-rendered.
      */

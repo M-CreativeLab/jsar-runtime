@@ -167,11 +167,13 @@ namespace client_cssom
      * Get the property value given a property name.
      *
      * @param propertyName The name of the CSS property.
+     * @param defaultValue The default value to return if the property is not set.
      * @returns The property value.
      */
-    inline std::string getPropertyValue(const std::string &propertyName) const
+    inline std::string getPropertyValue(const std::string &propertyName, std::string defaultValue = "") const
     {
-      return pdb_->getProperty(propertyName);
+      auto value = pdb_->getProperty(propertyName);
+      return value != "" ? value : defaultValue;
     }
     /**
      * Get the property value as a specific type given a property name.

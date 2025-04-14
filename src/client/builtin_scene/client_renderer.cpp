@@ -476,6 +476,7 @@ namespace builtin_scene
       {
         auto currentMatrix = getTransformationMatrix(id);
         instance.setTransform(currentMatrix, hasChanged);
+        getComponentChecked<Transform>(id).setComputedMatrix(currentMatrix);
       }
       if (hasComponent<WebContent>(id))
       {

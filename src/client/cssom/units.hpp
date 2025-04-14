@@ -54,4 +54,9 @@ namespace client_cssom
                        pixelToMeter(sizeInPx.height()),
                        pixelToMeter(sizeInPx.depth()));
   }
+
+  inline float meterToPixel(float meter)
+  {
+    return meter * 100.0f * PPI / 2.54f;
+  }
 }

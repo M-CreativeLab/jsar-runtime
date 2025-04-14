@@ -178,6 +178,8 @@ namespace dom
   enum class DOMEventConstructorType
   {
     kEvent = 0x0,
+    kMouseEvent,
+    kPointerEvent,
     kXRSessionEvent,
     kXRInputSourceEvent,
     kXRInputSourcesChangeEvent,
@@ -189,8 +191,8 @@ namespace dom
     static DOMEventInit Default()
     {
       return DOMEventInit{
-          .bubbles = false,
-          .cancelable = false,
+          .bubbles = true,
+          .cancelable = true,
           .composed = false,
       };
     }
@@ -199,11 +201,11 @@ namespace dom
     /**
      * A boolean value indicating whether the event bubbles. The default is `false`.
      */
-    bool bubbles = false;
+    bool bubbles = true;
     /**
      * A boolean value indicating whether the event can be cancelled. The default is `false`.
      */
-    bool cancelable = false;
+    bool cancelable = true;
     /**
      * A boolean value indicating whether the event will trigger listeners outside of a shadow root. The default is `false`.
      */
@@ -265,11 +267,24 @@ namespace dom
      */
     inline std::string typeStr() { return EventTypeToString(type); }
 
+  public:
+    void preventDefault()
+    {
+      if (cancelable_)
+        default_prevented_ = true;
+    }
+    void stopPropagation()
+    {
+      if (bubbles_)
+        bubbles_ = false;
+    }
+
   private:
     DOMEventConstructorType constructor_ = DOMEventConstructorType::kEvent;
-    bool bubbles_ = false;
-    bool cancelable_ = false;
-    bool composed_ = false;
+    bool bubbles_;
+    bool cancelable_;
+    bool composed_;
+    bool default_prevented_ = false;
   };
 
   class EventListener : public events_comm::TrEventListener<DOMEventType, Event>

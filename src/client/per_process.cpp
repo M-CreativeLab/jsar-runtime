@@ -308,7 +308,7 @@ TrClientContextPerProcess *TrClientContextPerProcess::Create()
 
 TrClientContextPerProcess *TrClientContextPerProcess::Get()
 {
-  assert(s_Instance != nullptr);
+  assert(s_Instance != nullptr && "Fatel Error: TrClientContextPerProcess is not created.");
   return s_Instance;
 }
 

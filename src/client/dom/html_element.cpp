@@ -55,7 +55,11 @@ namespace dom
   // TODO: Implement the following methods.
   void HTMLElement::blur() {}
   void HTMLElement::focus() {}
-  void HTMLElement::click() {}
+  void HTMLElement::click()
+  {
+    // TODO(yorkie): support disabled state.
+    simulateClick(glm::vec3(0.0f, 0.0f, 0.0f));
+  }
 
   optional<string> HTMLElement::getDataset(const string &key)
   {
@@ -103,5 +107,37 @@ namespace dom
     // Create style declaration from the default style & the style attribute.
     style_ = make_shared<client_cssom::CSSStyleDeclaration>(getAttribute("style"));
     style_->setPropertyChangedCallback(onPropertyChanged);
+  }
+
+  void HTMLElement::attributeChangedCallback(const std::string &name,
+                                             const std::string &oldValue,
+                                             const std::string &newValue)
+  {
+    Element::attributeChangedCallback(name, oldValue, newValue);
+
+    // Update the style property if the attribute is changed.
+    if (name == "style")
+    {
+      // Update the style property.
+      style_ = make_shared<client_cssom::CSSStyleDeclaration>(newValue);
+      // Reset the style cache.
+      auto document = getOwnerDocumentReference();
+      if (document != nullptr)
+        document->styleCache().resetStyle(getPtr<HTMLElement>());
+    }
+
+    // Update the dataset if the attribute is changed.
+    if (name.substr(0, 5) == "data-")
+    {
+      string key = DashStyleToCamelCase(name.substr(5));
+      if (newValue.empty())
+      {
+        dataset_.erase(key);
+      }
+      else
+      {
+        dataset_[key] = newValue;
+      }
+    }
   }
 }

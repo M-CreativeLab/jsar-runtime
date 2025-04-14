@@ -1,6 +1,8 @@
 #include <client/dom/node.hpp>
 #include <client/dom/element.hpp>
+#include <common/collision/ray.hpp>
 
+#include "./geometry/bounding_box.hpp"
 #include "./layout_box.hpp"
 #include "./layout_text.hpp"
 
@@ -46,6 +48,32 @@ namespace client_layout
       const_cast<LayoutBox *>(this)->frame_size_ = computeSize();
     }
     return frame_size_;
+  }
+
+  math3d::TrPlane LayoutBox::physicalBorderBoxFront() const
+  {
+    auto transformComponent = getSceneComponent<builtin_scene::Transform>();
+    auto latestMatrix = transformComponent->lastComputedMatrix();
+
+    glm::vec4 originalNormal(0, 0, 1, 0);
+    glm::vec4 originalPoint(0, 0, 0, 1);
+
+    glm::vec3 normal = glm::normalize(glm::vec3(
+        glm::inverse(glm::transpose(latestMatrix)) * originalNormal));
+
+    glm::vec3 point = glm::vec3(latestMatrix * originalPoint);
+    float distance = -glm::dot(normal, point);
+
+    math3d::TrPlane plane(normal, distance);
+    return plane;
+  }
+
+  geometry::BoundingBox LayoutBox::physicalBorderBoxRect() const
+  {
+    auto transformComponent = getSceneComponent<builtin_scene::Transform>();
+    auto min = glm::vec3(-0.5, -0.5, -0.001f / 2.0f);
+    auto max = min * -1.0f;
+    return geometry::BoundingBox(min, max, transformComponent->lastComputedMatrix());
   }
 
   geometry::Rect<float> LayoutBox::scrollableOverflowRect() const
@@ -157,7 +185,21 @@ namespace client_layout
 
   void LayoutBox::autoScroll(const glm::vec3 &offset)
   {
-    // TODO(yorkie): implement this.
+    // TODO(yorkie): implement the autoscroll
+  }
+
+  void LayoutBox::scrollTo(const glm::vec3 &offset)
+  {
+    if (TR_UNLIKELY(!isScrollContainer()))
+      return;
+    getScrollableArea()->scrollTo(offset);
+  }
+
+  void LayoutBox::scrollBy(const glm::vec3 &offset)
+  {
+    if (TR_UNLIKELY(!isScrollContainer()))
+      return;
+    getScrollableArea()->scrollBy(offset);
   }
 
   bool LayoutBox::scrollsOverflow() const
@@ -220,6 +262,95 @@ namespace client_layout
     assert(isScrollContainer());
     assert(getScrollableArea() != nullptr);
     return getScrollableArea()->getScrollOffset();
+  }
+
+  bool LayoutBox::nodeAtPoint(HitTestResult &r, const HitTestRay &ray,
+                              const glm::vec3 &accumulatedOffset,
+                              HitTestPhase phase)
+  {
+    if (!mayIntersect(r, ray, accumulatedOffset))
+      return false;
+
+    bool skipChildren = false;
+    // TODO(yorkie): support set `skipChildren` from the hit test request.
+    if (!skipChildren && hitTestChildren(r, ray, accumulatedOffset, phase))
+      return true;
+
+    auto hitDistance = ray.intersectsPlane(physicalBorderBoxFront());
+    if (!hitDistance.has_value())
+      return false;
+
+    // TODO(yorkie): implement the more accurate hit test? Such as testing for the radius of the box, or other shapes.
+    if (node()->isElement())
+    {
+      glm::vec3 hitPoint = ray.origin + ray.direction * hitDistance.value();
+      r.setNodeAndPosition(node(), hitPoint);
+    }
+    return true;
+  }
+
+  bool LayoutBox::hasHitTestableOverflow() const
+  {
+    return false;
+  }
+
+  bool LayoutBox::mayIntersect(const HitTestResult &r, const HitTestRay &ray,
+                               const glm::vec3 &accumulatedOffset) const
+  {
+    optional<geometry::BoundingBox> overflowBox = nullopt;
+    if (hasHitTestableOverflow())
+    {
+      // TODO(yorkie): handle the hit test for the box with overflow.
+    }
+    else
+    {
+      overflowBox = physicalBorderBoxRect();
+    }
+
+    if (overflowBox.has_value())
+    {
+      overflowBox->move(accumulatedOffset);
+
+      auto min = overflowBox->minimumWorld;
+      auto max = overflowBox->maximumWorld;
+      return ray.intersectsBoxMinMax(min, max);
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  bool LayoutBox::hitTestChildren(HitTestResult &r, const HitTestRay &ray, const glm::vec3 &accumulatedOffset,
+                                  HitTestPhase phase)
+  {
+    for (auto child = slowLastChild(); child;
+         child = child->prevSibling())
+    {
+      if (child->isText()) // Text nodes are not hit-testable.
+        continue;
+
+      glm::vec3 childAccumulatedOffset = accumulatedOffset;
+      if (child->isBox())
+      {
+        // TODO(yorkie): append the child offset
+      }
+
+      if (child->nodeAtPoint(r, ray, childAccumulatedOffset, phase))
+        return true;
+    }
+    return false;
+  }
+
+  void LayoutBox::updateFromStyle()
+  {
+    LayoutBoxModelObject::updateFromStyle();
+
+    auto m_style = style();
+    if (!m_style.has_value())
+      return;
+    setHasNonVisibleOverflow(m_style->getPropertyValue("overflow-x") != "visible" ||
+                             m_style->getPropertyValue("overflow-y") != "visible");
   }
 
   glm::vec3 LayoutBox::computeSize() const

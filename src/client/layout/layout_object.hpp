@@ -9,6 +9,10 @@
 #include "./formatting_contexts.hpp"
 #include "./fragment.hpp"
 #include "./layout_object_child_list.hpp"
+#include "./hit_test_phase.hpp"
+#include "./hit_test_ray.hpp"
+#include "./hit_test_request.hpp"
+#include "./hit_test_result.hpp"
 
 namespace client_layout
 {
@@ -67,6 +71,9 @@ namespace client_layout
       return isAnonymous() && isLayoutBlock();
     }
 
+    // Returns `true` if this is a `LayoutBox` without physical fragments.
+    virtual bool isFragmentLessBox() const { return false; }
+
     // Absolute or fixed positioning
     bool isRelativelyPositioned() const { return false; }
     bool isStickyPositioned() const { return false; }
@@ -99,12 +106,8 @@ namespace client_layout
     void useEntity(std::shared_ptr<LayoutObject> other);
     void destroy();
 
-    std::shared_ptr<client_cssom::CSSStyleDeclaration> style() const { return style_; }
-    const client_cssom::CSSStyleDeclaration &styleRef() const
-    {
-      assert(style_ != nullptr);
-      return *style_;
-    }
+    std::optional<client_cssom::CSSStyleDeclaration> style() const;
+    const client_cssom::CSSStyleDeclaration &styleRef() const;
 
     // Returns the current layout object's fragment.
     const Fragment fragment() const;
@@ -238,6 +241,8 @@ namespace client_layout
     std::shared_ptr<LayoutBlock> containingBlockForFixedPosition() const;
     std::shared_ptr<LayoutBlock> containingBlockForAbsolutePosition() const;
 
+    std::shared_ptr<const LayoutBlock> containingScrollContainer() const;
+
     bool isHorizontalWritingMode() const { return bitfields_.HorizontalWritingMode(); }
     bool hasNonVisibleOverflow() const { return bitfields_.HasNonVisibleOverflow(); }
     bool hasValidCachedGeometry() const { return bitfields_.HasValidCachedGeometry(); }
@@ -245,6 +250,18 @@ namespace client_layout
     void setHorizontalWritingMode(bool b) { bitfields_.SetHorizontalWritingMode(b); }
     void setHasNonVisibleOverflow(bool b) { bitfields_.SetHasNonVisibleOverflow(b); }
     void setHasValidCachedGeometry(bool b) { bitfields_.SetHasValidCachedGeometry(b); }
+
+    bool visibleToHitTestRequest(const HitTestRequest &) const;
+    bool visibleToHitTesting() const;
+
+    virtual bool hitTestAllPhases(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset);
+    // Returns the node that is ultimately added to the hit test result. Some objects report a hit testing node that is
+    // not their own (such as continuations and some psuedo elements) and it is important that the node be consistent
+    // between point- and list-based hit test results.
+    virtual std::shared_ptr<dom::Node> nodeForHitTest() const;
+    virtual void updateHitTestResult(HitTestResult &, const glm::vec3 &point) const;
+    virtual bool nodeAtPoint(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset,
+                             HitTestPhase) { return false; }
 
   protected:
     FormattingContext &formattingContext() const { return *formattingContext_; }
@@ -279,7 +296,6 @@ namespace client_layout
     std::weak_ptr<dom::Node> node_;
     std::weak_ptr<builtin_scene::Scene> scene_;
     // TODO(yorkie): will be replaced by the computed style type.
-    std::shared_ptr<client_cssom::CSSStyleDeclaration> style_;
     std::optional<builtin_scene::ecs::EntityId> entity_;
     // TODO(yorkie): support fragments
 
@@ -313,6 +329,9 @@ private:                                                                \
 
       ADD_BOOLEAN_BITFIELD(floating_, Floating);
       ADD_BOOLEAN_BITFIELD(horizontal_writing_mode_, HorizontalWritingMode);
+
+      // This boolean is set if this object is a root scroller.
+      ADD_BOOLEAN_BITFIELD(is_global_root_scroller_, IsGlobalRootScroller);
 
       // This boolean is set if overflow != 'visible'.
       // This means that this object may need an overflow clip to be applied at paint time to its visual overflow (see

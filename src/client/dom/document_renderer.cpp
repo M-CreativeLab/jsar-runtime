@@ -1,3 +1,4 @@
+#include <functional>
 #include <client/builtin_scene/scene.hpp>
 
 #include "./document-inl.hpp"
@@ -6,14 +7,18 @@
 namespace dom
 {
   using namespace std;
+  using namespace std::placeholders;
   using namespace builtin_scene;
 
   RenderHTMLDocument::RenderHTMLDocument(HTMLDocument *document)
       : ecs::System(),
+        DocumentEventDispatcher(document),
         document_(document)
   {
     assert(document_ != nullptr);
   }
+
+  RenderHTMLDocument::~RenderHTMLDocument() = default;
 
   void RenderHTMLDocument::onExecute()
   {
@@ -47,6 +52,9 @@ namespace dom
 
     // Step 3: Visit the layout view to render CSS boxes.
     client_layout::LayoutViewVisitor::visit(*layoutView);
+
+    // Step 4: Do hit test and dispatch the related events.
+    DocumentEventDispatcher::hitTestAndDispatchEvents();
   }
 
   bool RenderHTMLDocument::onVisitObject(client_layout::LayoutObject &object, int depth)

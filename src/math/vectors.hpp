@@ -21,6 +21,12 @@ namespace math
     static const Vec3 One() { return Vec3(1.0f, 1.0f, 1.0f); }
 
   public:
+    Vec3(const glm::vec3 &vec)
+        : glm::vec3(vec)
+    {
+    }
+
+  public:
     /**
      * Appends the vector to the given data.
      *

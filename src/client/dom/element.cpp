@@ -3,6 +3,8 @@
 #include <client/browser/window.hpp>
 #include <client/builtin_scene/ecs-inl.hpp>
 
+#include "./events/mouse_event.hpp"
+#include "./events/pointer_event.hpp"
 #include "./element.hpp"
 #include "./document.hpp"
 #include "./document_fragment.hpp"
@@ -509,6 +511,34 @@ namespace dom
     return true;
   }
 
+  void Element::scrollTo(const ScrollOptions &options)
+  {
+    auto layoutBox = principalBox();
+    if (layoutBox == nullptr || !layoutBox->isBox())
+      return;
+
+    glm::vec3 offset = glm::vec3(options.left, options.top, 0);
+    dynamic_pointer_cast<client_layout::LayoutBox>(layoutBox)->scrollTo(offset);
+    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+
+    // TODO(yorkie): dispatching this event when the scroll is finished.
+    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
+  }
+
+  void Element::scrollBy(const ScrollOptions &options)
+  {
+    auto layoutBox = principalBox();
+    if (layoutBox == nullptr || !layoutBox->isBox())
+      return;
+
+    glm::vec3 offset = glm::vec3(options.left, options.top, 0);
+    dynamic_pointer_cast<client_layout::LayoutBox>(layoutBox)->scrollBy(offset);
+    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+
+    // TODO(yorkie): dispatching this event when the scroll is finished.
+    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
+  }
+
   bool Element::is(const string expectedTagName)
   {
     string expectedTagNameUpper;
@@ -555,6 +585,94 @@ namespace dom
   void Element::setOuterHTML(const string &html)
   {
     // TODO: Implement setOuterHTML() for Element
+  }
+
+  void Element::dispatchEventInternal(std::shared_ptr<dom::Event> event)
+  {
+    dispatchEvent(event);
+
+    // If the event bubbles, dispatch it to the parent element.
+    if (event->bubbles())
+    {
+      auto parentElement = getParentElement();
+      if (parentElement != nullptr)
+        parentElement->dispatchEventInternal(event);
+    }
+  }
+
+  void Element::simulateMouseDown(const glm::vec3 &hitPointInWorld)
+  {
+    dispatchEventInternal(events::MouseEvent::MouseDown());
+    dispatchEventInternal(events::PointerEvent::PointerDown());
+  }
+
+  void Element::simulateMouseUp(const glm::vec3 &hitPointInWorld)
+  {
+    dispatchEventInternal(events::MouseEvent::MouseUp());
+    dispatchEventInternal(events::PointerEvent::PointerUp());
+  }
+
+  void Element::simulateMouseMove(const glm::vec3 &hitPointInWorld)
+  {
+    dispatchEventInternal(events::MouseEvent::MouseMove());
+    dispatchEventInternal(events::PointerEvent::PointerMove());
+  }
+
+  void Element::simulateMouseOut(const glm::vec3 &hitPointInWorld)
+  {
+    dispatchEventInternal(events::MouseEvent::MouseOut());
+    dispatchEventInternal(events::PointerEvent::PointerOut());
+  }
+
+  void Element::simulateMouseOver(const glm::vec3 &hitPointInWorld)
+  {
+    dispatchEventInternal(events::MouseEvent::MouseOver());
+    dispatchEventInternal(events::PointerEvent::PointerOver());
+  }
+
+  void Element::simulateMouseEnter(const glm::vec3 &hitPointInWorld)
+  {
+    if (is_entered_)
+      return;
+
+    is_entered_ = true;
+    dispatchEventInternal(events::MouseEvent::MouseEnter());
+    dispatchEventInternal(events::PointerEvent::PointerEnter());
+  }
+
+  void Element::simulateMouseLeave(const glm::vec3 &hitPointInWorld)
+  {
+    if (!is_entered_)
+      return;
+
+    is_entered_ = false;
+    dispatchEventInternal(events::MouseEvent::MouseLeave());
+    dispatchEventInternal(events::PointerEvent::PointerLeave());
+  }
+
+  void Element::simulateClick(const glm::vec3 &hitPointInWorld)
+  {
+    dispatchEventInternal(events::PointerEvent::Click());
+  }
+
+  void Element::simulateScrollWithOffset(float offsetX, float offsetY)
+  {
+    auto layoutBox = dynamic_pointer_cast<client_layout::LayoutBox>(principalBox());
+    if (layoutBox == nullptr)
+      return;
+    assert(layoutBox->isBox() && "The layout box is not a box.");
+
+    glm::vec3 offset;
+    if (layoutBox->scrollsOverflowX())
+      offset.x = offsetX;
+    if (layoutBox->scrollsOverflowY())
+      offset.y = offsetY;
+
+    if (offset.x == 0 && offset.y == 0)
+      return;
+
+    layoutBox->scrollBy(offset);
+    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
   }
 
   std::shared_ptr<Element> Element::firstElementChild() const

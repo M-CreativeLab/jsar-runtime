@@ -87,13 +87,29 @@ namespace client_layout
     if (element == nullptr)
       return false;
 
+    if (!hasNonVisibleOverflow())
+      return false;
+
     auto elementStyle = element->adoptedStyle();
+
+    // An overflow value of `visible` or `clip` means that the element is a scroll container, all other values result
+    // in a scrollable container. Also note that if `visible` or `clip` is set on one axis, then the other axis must be
+    // set to `visible` or `clip` as well.
+    bool isScrollableInX = false;
+    bool isScrollableInY = false;
     if (elementStyle.hasProperty("overflow-x"))
     {
       auto overflowX = elementStyle.getPropertyValue("overflow-x");
-      return overflowX != "visible" && overflowX != "clip";
+      if (overflowX != "visible" && overflowX != "clip")
+        isScrollableInX = true;
     }
-    return false;
+    if (elementStyle.hasProperty("overflow-y"))
+    {
+      auto overflowY = elementStyle.getPropertyValue("overflow-y");
+      if (overflowY != "visible" && overflowY != "clip")
+        isScrollableInY = true;
+    }
+    return isScrollableInX || isScrollableInY;
   }
 
   shared_ptr<dom::HTMLDocument> LayoutObject::document() const
@@ -202,6 +218,42 @@ namespace client_layout
     }
   }
 
+  optional<client_cssom::CSSStyleDeclaration> LayoutObject::style() const
+  {
+    if (TR_UNLIKELY(!node()->isElementOrText()))
+      return nullopt;
+
+    if (node()->isElement())
+    {
+      auto element = dom::Node::As<dom::Element>(node());
+      if (element != nullptr)
+        return element->adoptedStyle();
+    }
+    else if (node()->isText())
+    {
+      auto textNode = dom::Node::As<dom::Text>(node());
+      if (textNode != nullptr)
+        return textNode->adoptedStyle();
+    }
+    return nullopt;
+  }
+
+  const client_cssom::CSSStyleDeclaration &LayoutObject::styleRef() const
+  {
+    assert(node()->isElementOrText() && "The node must be an element or text node.");
+    if (node()->isElement())
+    {
+      auto element = dom::Node::As<dom::Element>(node());
+      return element->adoptedStyle();
+    }
+    else if (node()->isText())
+    {
+      auto textNode = dom::Node::As<dom::Text>(node());
+      return textNode->adoptedStyle();
+    }
+    assert(false && "Unrachable");
+  }
+
   const Fragment LayoutObject::fragment() const
   {
     Fragment nodeFragment = formattingContext_->liveFragment();
@@ -212,12 +264,22 @@ namespace client_layout
         nodeFragment = Fragment::None(); // Set the fragment to none if a text and empty content.
     }
 
+    // Move the fragment by the scroll offset if the object is a scroll container.
+    if (isBox() && isScrollContainer())
+    {
+      auto scrollableArea = dynamic_pointer_cast<const LayoutBox>(shared_from_this())->getScrollableArea();
+      if (scrollableArea != nullptr)
+      {
+        auto offset = scrollableArea->getScrollOffset();
+        nodeFragment.moveBy(offset.x, offset.y, offset.z);
+      }
+    }
+
     assert(formattingContext_ != nullptr && "Formatting context must be set.");
     if (parent() == nullptr)
       return nodeFragment;
-
-    Fragment baseFragment = parent()->fragment();
-    return baseFragment.position(nodeFragment);
+    else
+      return parent()->fragment().position(nodeFragment);
   }
 
   bool LayoutObject::isDescendantOf(shared_ptr<LayoutObject> object) const
@@ -376,9 +438,9 @@ namespace client_layout
     if (isTextOrSVGChild())
       return parent();
 
-    if (style_->hasProperty("position"))
+    if (styleRef().hasProperty("position"))
     {
-      auto position = style_->getPropertyValue("position");
+      auto position = styleRef().getPropertyValue("position");
       if (position == "fixed")
         return containerForFixedPosition();
       else if (position == "absolute")
@@ -417,9 +479,9 @@ namespace client_layout
   {
     if (!isTextOrSVGChild())
     {
-      if (style_->hasProperty("position"))
+      if (styleRef().hasProperty("position"))
       {
-        auto position = style_->getPropertyValue("position");
+        auto position = styleRef().getPropertyValue("position");
         if (position == "fixed")
           return containingBlockForFixedPosition();
         else if (position == "absolute")
@@ -448,6 +510,81 @@ namespace client_layout
   {
     // TODO: implement this method.
     return nullptr;
+  }
+
+  shared_ptr<const LayoutBlock> LayoutObject::containingScrollContainer() const
+  {
+    auto object = parent();
+    while (object != nullptr)
+    {
+      if (object->isScrollContainer())
+        return dynamic_pointer_cast<const LayoutBlock>(object);
+      object = object->parent();
+    }
+    return nullptr;
+  }
+
+  bool LayoutObject::visibleToHitTestRequest(const HitTestRequest &request) const
+  {
+    auto &style = styleRef();
+    return style.getPropertyValue("visibility", "visible") == "visible" &&
+           (request.ignorePointerEventsNone() ||
+            style.getPropertyValue("pointer-events") != "none");
+  }
+
+  bool LayoutObject::visibleToHitTesting() const
+  {
+    auto &style = styleRef();
+    return style.getPropertyValue("visibility", "visible") == "visible" &&
+           style.getPropertyValue("pointer-events") != "none";
+  }
+
+  bool LayoutObject::hitTestAllPhases(HitTestResult &result,
+                                      const HitTestRay &hitTestRay,
+                                      const glm::vec3 &accumulatedOffset)
+  {
+    if (nodeAtPoint(result, hitTestRay, accumulatedOffset,
+                    HitTestPhase::kForeground))
+    {
+      return true;
+    }
+    if (nodeAtPoint(result, hitTestRay, accumulatedOffset,
+                    HitTestPhase::kFloat))
+    {
+      return true;
+    }
+    if (nodeAtPoint(result, hitTestRay, accumulatedOffset,
+                    HitTestPhase::kDescendantBlockBackgrounds))
+    {
+      return true;
+    }
+    if (nodeAtPoint(result, hitTestRay, accumulatedOffset,
+                    HitTestPhase::kSelfBlockBackground))
+    {
+      return true;
+    }
+    return false;
+  }
+
+  shared_ptr<dom::Node> LayoutObject::nodeForHitTest() const
+  {
+    if (node() != nullptr)
+      return node();
+
+    if (parent() != nullptr)
+    {
+      // TODO: check if the parent is a layout object.
+    }
+    return nullptr;
+  }
+
+  void LayoutObject::updateHitTestResult(HitTestResult &result, const glm::vec3 &point) const
+  {
+    if (result.innerNode())
+      return;
+
+    if (auto n = nodeForHitTest())
+      result.setNodeAndPosition(n, point);
   }
 
   void LayoutObject::entityDidCreate(builtin_scene::ecs::EntityId entity)

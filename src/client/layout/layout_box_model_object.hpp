@@ -42,6 +42,8 @@ namespace client_layout
 
     std::shared_ptr<client_scroll::ScrollableArea> getScrollableArea() const;
 
+    virtual void updateFromStyle();
+
     // TODO(yorkie): implement padding values
     virtual float paddingTop() const { return 0; }
     virtual float paddingBottom() const { return 0; }
@@ -60,7 +62,10 @@ namespace client_layout
   private:
     bool isBoxModelObject() const override final { return true; }
 
+    void styleDidChange() override;
+
   private:
     DisplayType display_;
+    std::shared_ptr<client_scroll::ScrollableArea> scrollable_area_;
   };
 }
