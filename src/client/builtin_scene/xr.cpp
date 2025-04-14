@@ -51,13 +51,13 @@ namespace builtin_scene
       {
         if (select_start_handler_ == nullptr)
           return;
-        select_start_handler_(*dynamic_pointer_cast<XRInputSourceEvent>(event));
+        select_start_handler_(*static_pointer_cast<XRInputSourceEvent>(event));
       }
       else if (type == dom::DOMEventType::XRSessionSelectEnd)
       {
         if (select_end_handler_ == nullptr)
           return;
-        select_end_handler_(*dynamic_pointer_cast<XRInputSourceEvent>(event));
+        select_end_handler_(*static_pointer_cast<XRInputSourceEvent>(event));
       }
     };
     session_->addEventListener(dom::DOMEventType::XRSessionSelectStart, callback);
