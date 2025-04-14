@@ -115,6 +115,8 @@ namespace client_layout
 
     bool isUserScrollable() const { return hasScrollableOverflowX() || hasScrollableOverflowY(); }
     virtual void autoScroll(const glm::vec3 &offset);
+    void scrollTo(const glm::vec3 &offset);
+    void scrollBy(const glm::vec3 &offset);
     bool scrollsOverflow() const;
 
     bool hasScrollableOverflowX() const { return scrollsOverflowX() && scrollWidth() != clientWidth(); }
@@ -135,6 +137,8 @@ namespace client_layout
   protected:
     virtual bool hitTestChildren(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset,
                                  HitTestPhase);
+
+    void updateFromStyle() override;
 
   private:
     inline bool scrollableOverflowIsSet() const { return overflow_ != nullptr && overflow_->scrollableOverflow; }

@@ -6,7 +6,8 @@ namespace client_layout
   using namespace std;
 
   LayoutBoxModelObject::LayoutBoxModelObject(shared_ptr<dom::Node> node)
-      : LayoutObject(node)
+      : LayoutObject(node),
+        scrollable_area_(make_shared<client_scroll::ScrollableArea>())
   {
   }
 
@@ -21,8 +22,20 @@ namespace client_layout
     setFormattingContext(display_);
   }
 
-  std::shared_ptr<client_scroll::ScrollableArea> LayoutBoxModelObject::getScrollableArea() const
+  shared_ptr<client_scroll::ScrollableArea> LayoutBoxModelObject::getScrollableArea() const
   {
-    return nullptr;
+    return scrollable_area_;
+  }
+
+  void LayoutBoxModelObject::updateFromStyle()
+  {
+    // TODO(yorkie): implement updateFromStyle() in LayoutBoxModelObject.
+  }
+
+  void LayoutBoxModelObject::styleDidChange()
+  {
+    LayoutObject::styleDidChange();
+
+    updateFromStyle();
   }
 }

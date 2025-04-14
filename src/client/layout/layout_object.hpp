@@ -241,6 +241,8 @@ namespace client_layout
     std::shared_ptr<LayoutBlock> containingBlockForFixedPosition() const;
     std::shared_ptr<LayoutBlock> containingBlockForAbsolutePosition() const;
 
+    std::shared_ptr<const LayoutBlock> containingScrollContainer() const;
+
     bool isHorizontalWritingMode() const { return bitfields_.HorizontalWritingMode(); }
     bool hasNonVisibleOverflow() const { return bitfields_.HasNonVisibleOverflow(); }
     bool hasValidCachedGeometry() const { return bitfields_.HasValidCachedGeometry(); }

@@ -21,8 +21,7 @@ namespace client_layout
     std::shared_ptr<dom::Element> innerElement() const { return inner_element_.lock(); }
     glm::vec3 hitPoint() const { return hit_point_; }
 
-    void setNodeAndPosition(std::shared_ptr<dom::Node> node,
-                            const glm::vec3 &p)
+    void setNodeAndPosition(std::shared_ptr<dom::Node> node, const glm::vec3 &p)
     {
       hit_point_ = p;
       setInnerNode(node);

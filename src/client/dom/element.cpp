@@ -511,6 +511,34 @@ namespace dom
     return true;
   }
 
+  void Element::scrollTo(const ScrollOptions &options)
+  {
+    auto layoutBox = principalBox();
+    if (layoutBox == nullptr || !layoutBox->isBox())
+      return;
+
+    glm::vec3 offset = glm::vec3(options.left, options.top, 0);
+    dynamic_pointer_cast<client_layout::LayoutBox>(layoutBox)->scrollTo(offset);
+    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+
+    // TODO(yorkie): dispatching this event when the scroll is finished.
+    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
+  }
+
+  void Element::scrollBy(const ScrollOptions &options)
+  {
+    auto layoutBox = principalBox();
+    if (layoutBox == nullptr || !layoutBox->isBox())
+      return;
+
+    glm::vec3 offset = glm::vec3(options.left, options.top, 0);
+    dynamic_pointer_cast<client_layout::LayoutBox>(layoutBox)->scrollBy(offset);
+    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+
+    // TODO(yorkie): dispatching this event when the scroll is finished.
+    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
+  }
+
   bool Element::is(const string expectedTagName)
   {
     string expectedTagNameUpper;
@@ -625,6 +653,26 @@ namespace dom
   void Element::simulateClick(const glm::vec3 &hitPointInWorld)
   {
     dispatchEventInternal(events::PointerEvent::Click());
+  }
+
+  void Element::simulateScrollWithOffset(float offsetX, float offsetY)
+  {
+    auto layoutBox = dynamic_pointer_cast<client_layout::LayoutBox>(principalBox());
+    if (layoutBox == nullptr)
+      return;
+    assert(layoutBox->isBox() && "The layout box is not a box.");
+
+    glm::vec3 offset;
+    if (layoutBox->scrollsOverflowX())
+      offset.x = offsetX;
+    if (layoutBox->scrollsOverflowY())
+      offset.y = offsetY;
+
+    if (offset.x == 0 && offset.y == 0)
+      return;
+
+    layoutBox->scrollBy(offset);
+    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
   }
 
   std::shared_ptr<Element> Element::firstElementChild() const

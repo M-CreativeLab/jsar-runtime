@@ -185,7 +185,21 @@ namespace client_layout
 
   void LayoutBox::autoScroll(const glm::vec3 &offset)
   {
-    // TODO(yorkie): implement this.
+    // TODO(yorkie): implement the autoscroll
+  }
+
+  void LayoutBox::scrollTo(const glm::vec3 &offset)
+  {
+    if (TR_UNLIKELY(!isScrollContainer()))
+      return;
+    getScrollableArea()->scrollTo(offset);
+  }
+
+  void LayoutBox::scrollBy(const glm::vec3 &offset)
+  {
+    if (TR_UNLIKELY(!isScrollContainer()))
+      return;
+    getScrollableArea()->scrollBy(offset);
   }
 
   bool LayoutBox::scrollsOverflow() const
@@ -326,6 +340,17 @@ namespace client_layout
         return true;
     }
     return false;
+  }
+
+  void LayoutBox::updateFromStyle()
+  {
+    LayoutBoxModelObject::updateFromStyle();
+
+    auto m_style = style();
+    if (!m_style.has_value())
+      return;
+    setHasNonVisibleOverflow(m_style->getPropertyValue("overflow-x") != "visible" ||
+                             m_style->getPropertyValue("overflow-y") != "visible");
   }
 
   glm::vec3 LayoutBox::computeSize() const

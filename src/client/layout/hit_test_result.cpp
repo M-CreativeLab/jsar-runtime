@@ -17,7 +17,8 @@ namespace client_layout
       : request_(other.request_),
         cacheable_(other.cacheable_),
         inner_node_(other.inner_node_),
-        inner_element_(other.inner_element_)
+        inner_element_(other.inner_element_),
+        hit_point_(other.hit_point_)
   {
   }
 

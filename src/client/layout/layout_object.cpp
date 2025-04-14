@@ -87,13 +87,29 @@ namespace client_layout
     if (element == nullptr)
       return false;
 
+    if (!hasNonVisibleOverflow())
+      return false;
+
     auto elementStyle = element->adoptedStyle();
+
+    // An overflow value of `visible` or `clip` means that the element is a scroll container, all other values result
+    // in a scrollable container. Also note that if `visible` or `clip` is set on one axis, then the other axis must be
+    // set to `visible` or `clip` as well.
+    bool isScrollableInX = false;
+    bool isScrollableInY = false;
     if (elementStyle.hasProperty("overflow-x"))
     {
       auto overflowX = elementStyle.getPropertyValue("overflow-x");
-      return overflowX != "visible" && overflowX != "clip";
+      if (overflowX != "visible" && overflowX != "clip")
+        isScrollableInX = true;
     }
-    return false;
+    if (elementStyle.hasProperty("overflow-y"))
+    {
+      auto overflowY = elementStyle.getPropertyValue("overflow-y");
+      if (overflowY != "visible" && overflowY != "clip")
+        isScrollableInY = true;
+    }
+    return isScrollableInX || isScrollableInY;
   }
 
   shared_ptr<dom::HTMLDocument> LayoutObject::document() const
@@ -248,12 +264,22 @@ namespace client_layout
         nodeFragment = Fragment::None(); // Set the fragment to none if a text and empty content.
     }
 
+    // Move the fragment by the scroll offset if the object is a scroll container.
+    if (isBox() && isScrollContainer())
+    {
+      auto scrollableArea = dynamic_pointer_cast<const LayoutBox>(shared_from_this())->getScrollableArea();
+      if (scrollableArea != nullptr)
+      {
+        auto offset = scrollableArea->getScrollOffset();
+        nodeFragment.moveBy(offset.x, offset.y, offset.z);
+      }
+    }
+
     assert(formattingContext_ != nullptr && "Formatting context must be set.");
     if (parent() == nullptr)
       return nodeFragment;
-
-    Fragment baseFragment = parent()->fragment();
-    return baseFragment.position(nodeFragment);
+    else
+      return parent()->fragment().position(nodeFragment);
   }
 
   bool LayoutObject::isDescendantOf(shared_ptr<LayoutObject> object) const
@@ -483,6 +509,18 @@ namespace client_layout
   shared_ptr<LayoutBlock> LayoutObject::containingBlockForAbsolutePosition() const
   {
     // TODO: implement this method.
+    return nullptr;
+  }
+
+  shared_ptr<const LayoutBlock> LayoutObject::containingScrollContainer() const
+  {
+    auto object = parent();
+    while (object != nullptr)
+    {
+      if (object->isScrollContainer())
+        return dynamic_pointer_cast<const LayoutBlock>(object);
+      object = object->parent();
+    }
     return nullptr;
   }
 

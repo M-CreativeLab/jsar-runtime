@@ -142,6 +142,26 @@ namespace dom
      */
     [[nodiscard]] bool checkVisibility(CheckVisibilityOptions options) const;
 
+    enum ScrollBehavior
+    {
+      kScrollBehaviorAuto,
+      kScrollBehaviorSmooth,
+      kScrollBehaviorInstant
+    };
+    struct ScrollOptions
+    {
+      float top = 0;
+      float left = 0;
+      ScrollBehavior behavior = kScrollBehaviorAuto;
+    };
+
+    // Scrolls the element to the given position.
+    inline void scroll(const ScrollOptions &opts) { scrollTo(opts); }
+    // Scrolls an element to the given position.
+    void scrollTo(const ScrollOptions &);
+    // Scrolls an element by the given amount.
+    void scrollBy(const ScrollOptions &);
+
     const client_cssom::CSSStyleDeclaration &adoptedStyle() const { return adoptedStyle_; }
     std::shared_ptr<const client_layout::LayoutBoxModelObject> principalBox() const { return principalBox_; }
     std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox() { return principalBox_; }
@@ -217,6 +237,7 @@ namespace dom
     void simulateMouseEnter(const glm::vec3 &hitPointInWorld);
     void simulateMouseLeave(const glm::vec3 &hitPointInWorld);
     void simulateClick(const glm::vec3 &hitPointInWorld);
+    void simulateScrollWithOffset(float offsetX, float offsetY);
 
   public:
     std::string id;

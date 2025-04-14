@@ -1,8 +1,15 @@
+#include <iostream>
 #include "./scrollable_area.hpp"
 
 namespace client_scroll
 {
   using namespace std;
+
+  ScrollableArea::ScrollableArea()
+      : scroll_origin_(0.0f, 0.0f, 0.0f),
+        scroll_offset_(0.0f, 0.0f, 0.0f)
+  {
+  }
 
   glm::vec3 ScrollableArea::scrollOrigin() const
   {
@@ -21,6 +28,16 @@ namespace client_scroll
 
   glm::vec3 ScrollableArea::getScrollOffset() const
   {
-    return glm::vec3(0, 0, 0);
+    return scroll_offset_;
+  }
+
+  void ScrollableArea::scrollBy(const glm::vec3 &offset)
+  {
+    scroll_offset_ += offset;
+  }
+
+  void ScrollableArea::scrollTo(const glm::vec3 &offset)
+  {
+    scroll_offset_ = offset;
   }
 }

@@ -42,6 +42,7 @@ namespace dom
         current_mousedown_target_ = target;
         current_mousedown_hit_point_ = hitPoint;
         is_click_in_progress_ = true;
+        is_scroll_in_progress_ = prepareSetupForScroll(*target, hitPoint);
       }
     }
   }
@@ -71,6 +72,65 @@ namespace dom
     current_mousedown_target_.reset();
     current_mousedown_hit_point_ = glm::vec3(0.0f, 0.0f, 0.0f);
     is_click_in_progress_ = false;
+    endScroll();
+  }
+
+  bool DocumentEventDispatcher::prepareSetupForScroll(Element &innerTarget, const glm::vec3 &p)
+  {
+    if (is_scroll_in_progress_) // Ignore if the scroll is already in progress.
+      return is_scroll_in_progress_;
+
+    auto layoutBox = innerTarget.principalBox();
+    if (layoutBox == nullptr)
+      return false;
+
+    auto scrollContainer = !layoutBox->isScrollContainer()
+                               ? layoutBox->containingScrollContainer()
+                               : const_pointer_cast<const client_layout::LayoutBoxModelObject>(layoutBox);
+    if (scrollContainer != nullptr)
+    {
+      current_scroll_target_ = Node::As<Element>(scrollContainer->node());
+      current_scroll_start_point_ = p;
+      current_scroll_end_point_ = p;
+      return current_scroll_target_.lock() != nullptr;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  void DocumentEventDispatcher::onScroll(const glm::vec3 &p)
+  {
+    assert(is_scroll_in_progress_ && "The scroll is not in progress.");
+    assert(current_scroll_target_.expired() == false && "The scroll target is expired.");
+
+    glm::vec3 physicalMovement = p - current_scroll_end_point_;
+    float movementInX = client_cssom::meterToPixel(physicalMovement.x);
+    float movementInY = client_cssom::meterToPixel(physicalMovement.y);
+    if (abs(movementInX) > 0 || abs(movementInY) > 0)
+    {
+      current_scroll_end_point_ = p;
+      auto target = current_scroll_target_.lock();
+      auto scrollTarget = Node::As<Element>(target);
+      assert(scrollTarget != nullptr && "The scroll target is not an element.");
+
+      scrollTarget->simulateScrollWithOffset(movementInX, -movementInY);
+    }
+  }
+
+  void DocumentEventDispatcher::endScroll()
+  {
+    if (!is_scroll_in_progress_ || current_scroll_target_.expired())
+      return;
+
+    is_scroll_in_progress_ = false;
+    current_scroll_target_.lock()->dispatchEvent(
+        make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
+
+    current_scroll_start_point_ = glm::vec3(0.0f, 0.0f, 0.0f);
+    current_scroll_end_point_ = glm::vec3(0.0f, 0.0f, 0.0f);
+    current_scroll_target_.reset();
   }
 
   bool DocumentEventDispatcher::hitTestAndDispatchEvents()
@@ -109,6 +169,10 @@ namespace dom
 
         // Dispatch mouse move event to the target.
         target->simulateMouseMove(hitPoint);
+
+        // Try dispatching the scroll event if the scroll is in progress.
+        if (is_scroll_in_progress_)
+          onScroll(hitPoint);
       }
       return true;
     }
