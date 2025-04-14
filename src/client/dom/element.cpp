@@ -3,6 +3,8 @@
 #include <client/browser/window.hpp>
 #include <client/builtin_scene/ecs-inl.hpp>
 
+#include "./events/mouse_event.hpp"
+#include "./events/pointer_event.hpp"
 #include "./element.hpp"
 #include "./document.hpp"
 #include "./document_fragment.hpp"
@@ -572,16 +574,57 @@ namespace dom
 
   void Element::simulateMouseDown(const glm::vec3 &hitPointInWorld)
   {
-    auto event = make_shared<events::MouseEvent>(dom::DOMEventConstructorType::kMouseEvent,
-                                                 dom::DOMEventType::MouseDown);
-    dispatchEventInternal(event);
+    dispatchEventInternal(events::MouseEvent::MouseDown());
+    dispatchEventInternal(events::PointerEvent::PointerDown());
   }
 
   void Element::simulateMouseUp(const glm::vec3 &hitPointInWorld)
   {
-    auto event = make_shared<events::MouseEvent>(dom::DOMEventConstructorType::kMouseEvent,
-                                                 dom::DOMEventType::MouseUp);
-    dispatchEventInternal(event);
+    dispatchEventInternal(events::MouseEvent::MouseUp());
+    dispatchEventInternal(events::PointerEvent::PointerUp());
+  }
+
+  void Element::simulateMouseMove(const glm::vec3 &hitPointInWorld)
+  {
+    dispatchEventInternal(events::MouseEvent::MouseMove());
+    dispatchEventInternal(events::PointerEvent::PointerMove());
+  }
+
+  void Element::simulateMouseOut(const glm::vec3 &hitPointInWorld)
+  {
+    dispatchEventInternal(events::MouseEvent::MouseOut());
+    dispatchEventInternal(events::PointerEvent::PointerOut());
+  }
+
+  void Element::simulateMouseOver(const glm::vec3 &hitPointInWorld)
+  {
+    dispatchEventInternal(events::MouseEvent::MouseOver());
+    dispatchEventInternal(events::PointerEvent::PointerOver());
+  }
+
+  void Element::simulateMouseEnter(const glm::vec3 &hitPointInWorld)
+  {
+    if (is_entered_)
+      return;
+
+    is_entered_ = true;
+    dispatchEventInternal(events::MouseEvent::MouseEnter());
+    dispatchEventInternal(events::PointerEvent::PointerEnter());
+  }
+
+  void Element::simulateMouseLeave(const glm::vec3 &hitPointInWorld)
+  {
+    if (!is_entered_)
+      return;
+
+    is_entered_ = false;
+    dispatchEventInternal(events::MouseEvent::MouseLeave());
+    dispatchEventInternal(events::PointerEvent::PointerLeave());
+  }
+
+  void Element::simulateClick(const glm::vec3 &hitPointInWorld)
+  {
+    dispatchEventInternal(events::PointerEvent::Click());
   }
 
   std::shared_ptr<Element> Element::firstElementChild() const

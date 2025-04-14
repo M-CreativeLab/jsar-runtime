@@ -179,6 +179,7 @@ namespace dom
   {
     kEvent = 0x0,
     kMouseEvent,
+    kPointerEvent,
     kXRSessionEvent,
     kXRInputSourceEvent,
     kXRInputSourcesChangeEvent,

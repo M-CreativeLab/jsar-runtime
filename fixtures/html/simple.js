@@ -28,10 +28,9 @@ console.info('querySelector() =>', document.querySelector('.first'));
 
 const main = document.querySelector('main');
 console.info('main.lastChild should be comment node', main.lastElementChild);
-
-// setTimeout(() => {
-//   div.style.setProperty('display', 'none');
-// }, 1000);
+main.addEventListener('mouseover', (event) => {
+  console.info('main mouseover', event);
+});
 
 async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));

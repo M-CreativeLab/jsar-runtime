@@ -7,9 +7,9 @@
 #include <client/layout/layout_view_visitor.hpp>
 #include <client/layout/layout_object.hpp>
 #include <client/layout/layout_text.hpp>
-#include <client/xr/webxr_session_events.hpp>
 
 #include "./document.hpp"
+#include "./document_event_dispatcher.hpp"
 
 namespace dom
 {
@@ -21,7 +21,8 @@ namespace dom
 
   // The HTML rendering ECS system, which is used to render the HTML document.
   class RenderHTMLDocument final : public builtin_scene::ecs::System,
-                                   public client_layout::LayoutViewVisitor
+                                   public client_layout::LayoutViewVisitor,
+                                   DocumentEventDispatcher
   {
   public:
     RenderHTMLDocument(HTMLDocument *document);
@@ -36,16 +37,6 @@ namespace dom
     void onVisitBox(const client_layout::LayoutBoxModelObject &box, int depth) override;
     void onVisitText(const client_layout::LayoutText &text, int depth) override;
     void renderEntity(const builtin_scene::ecs::EntityId &entity, const client_layout::Fragment &fragment);
-
-    void onSceneSelectStart(client_xr::XRInputSourceEvent &);
-    void onSceneSelectEnd(client_xr::XRInputSourceEvent &);
-
-    /**
-     * Achieve the hit test and dispatch the hit events.
-     * 
-     * @returns `true` if the hit test and dispatch events are successful, otherwise `false`.
-     */
-    bool hitTestAndDispatchEvents();
 
     /**
      * Traverse `HTMLElement` or `Text` children from a root node.
@@ -86,6 +77,5 @@ namespace dom
 
   private:
     HTMLDocument *document_ = nullptr;
-    std::vector<client_layout::HitTestResult> hit_test_results_;
   };
 }

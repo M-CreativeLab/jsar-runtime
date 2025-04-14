@@ -56,6 +56,7 @@ namespace dom
   class Element : public Node,
                   virtual public client_cssom::BoxBounding
   {
+    friend class DocumentEventDispatcher;
     friend class RenderHTMLDocument;
 
   public:
@@ -208,10 +209,14 @@ namespace dom
 
     // Dispatch the event to the element, it will do bubbles and capture phase dispatching.
     void dispatchEventInternal(std::shared_ptr<dom::Event>);
-
-  private:
     void simulateMouseDown(const glm::vec3 &hitPointInWorld);
     void simulateMouseUp(const glm::vec3 &hitPointInWorld);
+    void simulateMouseMove(const glm::vec3 &hitPointInWorld);
+    void simulateMouseOut(const glm::vec3 &hitPointInWorld);
+    void simulateMouseOver(const glm::vec3 &hitPointInWorld);
+    void simulateMouseEnter(const glm::vec3 &hitPointInWorld);
+    void simulateMouseLeave(const glm::vec3 &hitPointInWorld);
+    void simulateClick(const glm::vec3 &hitPointInWorld);
 
   public:
     std::string id;
@@ -239,5 +244,6 @@ namespace dom
     std::vector<std::shared_ptr<client_layout::LayoutBoxModelObject>> boxes_;
     std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox_;
     std::string currentDisplayStr_ = "block";
+    bool is_entered_ = false;
   };
 }

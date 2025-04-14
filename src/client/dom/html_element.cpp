@@ -55,7 +55,11 @@ namespace dom
   // TODO: Implement the following methods.
   void HTMLElement::blur() {}
   void HTMLElement::focus() {}
-  void HTMLElement::click() {}
+  void HTMLElement::click()
+  {
+    // TODO(yorkie): support disabled state.
+    simulateClick(glm::vec3(0.0f, 0.0f, 0.0f));
+  }
 
   optional<string> HTMLElement::getDataset(const string &key)
   {

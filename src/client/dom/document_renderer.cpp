@@ -1,7 +1,5 @@
 #include <functional>
 #include <client/builtin_scene/scene.hpp>
-#include <client/layout/hit_test_ray.hpp>
-#include <client/layout/hit_test_result.hpp>
 
 #include "./document-inl.hpp"
 #include "./document_renderer.hpp"
@@ -14,22 +12,13 @@ namespace dom
 
   RenderHTMLDocument::RenderHTMLDocument(HTMLDocument *document)
       : ecs::System(),
+        DocumentEventDispatcher(document),
         document_(document)
   {
     assert(document_ != nullptr);
-
-    document_->scene->onSelectStart(bind(&RenderHTMLDocument::onSceneSelectStart, this, _1));
-    document_->scene->onSelectEnd(bind(&RenderHTMLDocument::onSceneSelectEnd, this, _1));
   }
 
-  RenderHTMLDocument::~RenderHTMLDocument()
-  {
-    if (document_ != nullptr)
-    {
-      document_->scene->onSelectStart(nullptr);
-      document_->scene->onSelectEnd(nullptr);
-    }
-  }
+  RenderHTMLDocument::~RenderHTMLDocument() = default;
 
   void RenderHTMLDocument::onExecute()
   {
@@ -65,7 +54,7 @@ namespace dom
     client_layout::LayoutViewVisitor::visit(*layoutView);
 
     // Step 4: Do hit test and dispatch the related events.
-    hitTestAndDispatchEvents();
+    DocumentEventDispatcher::hitTestAndDispatchEvents();
   }
 
   bool RenderHTMLDocument::onVisitObject(client_layout::LayoutObject &object, int depth)
@@ -162,61 +151,6 @@ namespace dom
 
     // Update custom material?
     // TODO(yorkie): support custom material.
-  }
-
-  void RenderHTMLDocument::onSceneSelectStart(client_xr::XRInputSourceEvent &event)
-  {
-    for (auto &result : hit_test_results_)
-    {
-      auto node = result.innerNode();
-      if (node != nullptr && node->isElement())
-      {
-        auto &element = Node::AsChecked<HTMLElement>(node);
-        element.simulateMouseDown(result.hitPoint());
-      }
-    }
-  }
-
-  void RenderHTMLDocument::onSceneSelectEnd(client_xr::XRInputSourceEvent &)
-  {
-    for (auto &result : hit_test_results_)
-    {
-      auto node = result.innerNode();
-      if (node != nullptr && node->isElement())
-      {
-        auto &element = Node::AsChecked<HTMLElement>(node);
-        element.simulateMouseUp(result.hitPoint());
-      }
-    }
-  }
-
-  bool RenderHTMLDocument::hitTestAndDispatchEvents()
-  {
-    auto ray = document_->scene->selectRayForHitTesting();
-    if (!ray.has_value())
-    {
-      hit_test_results_.clear();
-      return false;
-    }
-
-    client_layout::HitTestResult r;
-    client_layout::HitTestRay hitTestRay(ray.value());
-
-    if (document_->layoutView()->hitTest(hitTestRay, r) &&
-        r.innerNode() != nullptr)
-    {
-      // TODO(yorkie): support multiple HTRs such as hit testing from multiple input sources.
-      hit_test_results_ = {r};
-      if (r.innerNode()->isElement())
-      {
-        auto &hitElement = Node::AsChecked<Element>(r.innerNode());
-        // TODO(yorkie): dispatch the hit events.
-      }
-      return true;
-    }
-
-    hit_test_results_.clear();
-    return false;
   }
 
   void RenderHTMLDocument::traverseElementOrTextNode(shared_ptr<Node> elementOrTextNode,

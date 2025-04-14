@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <glm/glm.hpp>
 
 #include "./ui_event.hpp"
@@ -21,6 +22,59 @@ namespace dom::events
       kDragLeave,
     };
 
+    static std::unique_ptr<MouseEvent> MouseDown()
+    {
+      return std::make_unique<MouseEvent>(DOMEventConstructorType::kMouseEvent,
+                                          DOMEventType::MouseDown);
+    }
+
+    static std::unique_ptr<MouseEvent> MouseUp()
+    {
+      return std::make_unique<MouseEvent>(DOMEventConstructorType::kMouseEvent,
+                                          DOMEventType::MouseUp);
+    }
+
+    static std::unique_ptr<MouseEvent> MouseMove()
+    {
+      return std::make_unique<MouseEvent>(DOMEventConstructorType::kMouseEvent,
+                                          DOMEventType::MouseMove);
+    }
+
+    static std::unique_ptr<MouseEvent> MouseOver()
+    {
+      return std::make_unique<MouseEvent>(DOMEventConstructorType::kMouseEvent,
+                                          DOMEventType::MouseOver);
+    }
+
+    static std::unique_ptr<MouseEvent> MouseOut()
+    {
+      return std::make_unique<MouseEvent>(DOMEventConstructorType::kMouseEvent,
+                                          DOMEventType::MouseOut);
+    }
+
+    static std::unique_ptr<MouseEvent> MouseEnter()
+    {
+      return std::make_unique<MouseEvent>(DOMEventConstructorType::kMouseEvent,
+                                          DOMEventType::MouseEnter,
+                                          dom::DOMEventInit{
+                                              .bubbles = false,
+                                              .cancelable = false,
+                                              .composed = false,
+                                          });
+    }
+
+    static std::unique_ptr<MouseEvent> MouseLeave()
+    {
+      return std::make_unique<MouseEvent>(DOMEventConstructorType::kMouseEvent,
+                                          DOMEventType::MouseLeave,
+                                          dom::DOMEventInit{
+                                              .bubbles = false,
+                                              .cancelable = false,
+                                              .composed = false,
+                                          });
+    }
+
+  public:
     EventTarget relatedTarget() const { return related_target_; }
     int button() const { return button_; }
     int buttons() const { return buttons_; }
