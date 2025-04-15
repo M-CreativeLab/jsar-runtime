@@ -1,73 +1,73 @@
 <html>
 
 <head>
-    <meta charset="utf-8" />
-    <title>session addEventListener </title>
-    <script type="importmap">
+  <meta charset="utf-8" />
+  <title>session addEventListener </title>
+  <script type="importmap">
     {
       "imports": {
         "three": "https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/build/three.module.js"
       }
     }
   </script>
-    <script type="module">
-        import * as THREE from 'three';
+  <script type="module">
+    import * as THREE from 'three';
 
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
 
-        // Create lights
-        const light = new THREE.DirectionalLight(0xffffff, 0.5);
-        light.position.set(0, 1, 1);
-        scene.add(light);
+    // Create lights
+    const light = new THREE.DirectionalLight(0xffffff, 0.5);
+    light.position.set(0, 1, 1);
+    scene.add(light);
 
-        const gl = navigator.gl;
-        navigator.xr.requestSession('immersive-ar').then((session) => {
-            if (gl) {
-                const baseLayer = new XRWebGLLayer(session, gl);
-                session.updateRenderState({ baseLayer });
-            }
-            const renderer = new THREE.WebGLRenderer({
-                canvas: {
-                    addEventListener() { },
-                },
-                context: gl,
-            });
-
-            renderer.xr.enabled = true;
-            renderer.xr.setReferenceSpaceType('local');
-            const useLayers = typeof XRWebGLBinding !== 'undefined' && 'createProjectionLayer' in XRWebGLBinding.prototype;
-            console.info('useLayers', useLayers);
-
-            console.info('Started...');
-            session.addEventListener('selectstart', evt => {
-                console.log('selectstart');
-            });
-            console.log("create session start ");
-
-            renderer.xr.setSession(session).then(() => {
-                console.log("create session end ");
-                session.addEventListener('select', evt => {
-                    console.log('select');
-                });
-            })
-            session.addEventListener('selectend', evt => {
-                console.log('selectend');
-            });
-
-            function animate() {
-                renderer.render(scene, camera);
-            }
-
-            camera.position.z = 5;
-            renderer.setAnimationLoop(animate);
+    const gl = navigator.gl;
+    navigator.xr.requestSession('immersive-ar').then((session) => {
+      if (gl) {
+        const baseLayer = new XRWebGLLayer(session, gl);
+        session.updateRenderState({ baseLayer });
+      }
+      const renderer = new THREE.WebGLRenderer({
+        canvas: {
+          addEventListener() { },
         },
-            (err) => {
-                console.warn('Failed to start XR session:', err);
-            }
-        );
-        console.info('navigator.xr', navigator.xr);
-    </script>
+        context: gl,
+      });
+
+      renderer.xr.enabled = true;
+      renderer.xr.setReferenceSpaceType('local');
+      const useLayers = typeof XRWebGLBinding !== 'undefined' && 'createProjectionLayer' in XRWebGLBinding.prototype;
+      console.info('useLayers', useLayers);
+
+      console.info('Started...');
+      session.addEventListener('selectstart', evt => {
+        console.log('selectstart');
+      });
+      console.log("create session start ");
+
+      renderer.xr.setSession(session).then(() => {
+        console.log("create session end ");
+        session.addEventListener('select', evt => {
+          console.log('select');
+        });
+      })
+      session.addEventListener('selectend', evt => {
+        console.log('selectend');
+      });
+
+      function animate() {
+        renderer.render(scene, camera);
+      }
+
+      camera.position.z = 5;
+      renderer.setAnimationLoop(animate);
+    },
+      (err) => {
+        console.warn('Failed to start XR session:', err);
+      }
+    );
+    console.info('navigator.xr', navigator.xr);
+  </script>
 </head>
 
 <body>
