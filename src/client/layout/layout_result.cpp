@@ -11,8 +11,8 @@ namespace client_layout
 
   bool LayoutResult::needsResize(const Fragment &lastFragment) const
   {
-    return fragment_.width() != lastFragment.width() ||
-           fragment_.height() != lastFragment.height();
+    return fragment_.contentWidth() != lastFragment.contentWidth() ||
+           fragment_.contentHeight() != lastFragment.contentHeight();
   }
 
   bool LayoutResult::needsRelayout(const Fragment &lastFragment) const

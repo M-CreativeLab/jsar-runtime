@@ -442,9 +442,17 @@ namespace dom
 
   HTMLDocument::HTMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
       : Document("text/html", DocumentType::kHTML, browsingContext, autoConnect),
-        layoutView_(nullptr),
-        layoutAllocator_(make_shared<crates::layout2::Allocator>())
+        layout_view_(nullptr),
+        layout_allocator_(make_shared<crates::layout2::Allocator>()),
+        visual_bounding_box_(nullopt)
   {
+    auto window = defaultView_.lock();
+    if (window != nullptr)
+    {
+      visual_bounding_box_ = builtin_scene::BoundingBox(window->innerWidth(),
+                                                        window->innerHeight(),
+                                                        window->innerDepth());
+    }
   }
 
   void HTMLDocument::afterLoadedCallback()
@@ -464,7 +472,7 @@ namespace dom
     if (scene != nullptr)
     {
       // Create the layout view before starting the scene.
-      layoutView_ = client_layout::LayoutView::Make(selfDocument);
+      layout_view_ = client_layout::LayoutView::Make(selfDocument);
 
       // TODO: support resize the document scene.
       using namespace builtin_scene::ecs;

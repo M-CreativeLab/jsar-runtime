@@ -29,14 +29,14 @@ namespace client_layout
     {
       auto widthDimension = adoptedStyle.getPropertyValueAs<Dimension>("width");
       if (!widthDimension.isAuto() &&
-          lastFragment.width() > 0)
+          lastFragment.contentWidth() > 0)
         adoptedWidth = widthDimension;
     }
     if (adoptedStyle.hasProperty("height"))
     {
       auto heightDimension = adoptedStyle.getPropertyValueAs<Dimension>("height");
       if (!heightDimension.isAuto() &&
-          lastFragment.height() > 0)
+          lastFragment.contentHeight() > 0)
         adoptedHeight = heightDimension;
     }
 
@@ -56,15 +56,15 @@ namespace client_layout
     if (adoptedWidth.has_value() && !adoptedHeight.has_value())
     {
       // Calculate the height = width / aspectRatio.
-      float adjustedHeight = lastFragment.width() / aspectRatio;
-      formattingContext().setContentSize(lastFragment.width(), adjustedHeight);
+      float adjustedHeight = lastFragment.contentWidth() / aspectRatio;
+      formattingContext().setContentSize(lastFragment.contentWidth(), adjustedHeight);
       return true;
     }
     else if (!adoptedWidth.has_value() && adoptedHeight.has_value())
     {
       // Calculate the width = height * aspectRatio.
-      float adjustedWidth = lastFragment.height() * aspectRatio;
-      formattingContext().setContentSize(adjustedWidth, lastFragment.height());
+      float adjustedWidth = lastFragment.contentHeight() * aspectRatio;
+      formattingContext().setContentSize(adjustedWidth, lastFragment.contentHeight());
       return true;
     }
 

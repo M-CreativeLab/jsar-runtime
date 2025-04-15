@@ -18,7 +18,7 @@ namespace client_layout
     {
     }
     ConstraintSpace(const Fragment &fragment)
-        : size_(fragment.width(), fragment.height())
+        : size_(fragment.contentWidth(), fragment.contentHeight())
     {
     }
 

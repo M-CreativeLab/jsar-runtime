@@ -390,7 +390,7 @@ namespace client_layout
       if (layoutText != nullptr && layoutText->plainTextLength() == 0)
         nodeFragment = Fragment::None(); // Set the fragment to none if a text and empty content.
     }
-    return nodeFragment.size();
+    return nodeFragment.contentSize();
   }
 
   void LayoutBox::invalidateCachedGeometry()

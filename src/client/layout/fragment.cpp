@@ -6,7 +6,7 @@ namespace client_layout
 
   Fragment::Fragment(const dom::geometry::DOMRect &rect)
       : size_(rect.width(), rect.height(), 1.0f),
-        content_size_(0.0f, 0.0f, 0.0f),
+        content_size_(std::nullopt),
         position_(rect.x(), rect.y(), 0.0f),
         border_(0.0f, 0.0f, 0.0f, 0.0f),
         padding_(0.0f, 0.0f, 0.0f, 0.0f)
@@ -15,9 +15,18 @@ namespace client_layout
 
   Fragment::Fragment(const crates::layout2::Layout &nativeLayout)
       : size_(nativeLayout.width(), nativeLayout.height(), 1.0f),
-        content_size_(nativeLayout.contentWidth(), nativeLayout.contentHeight(), 0.0f),
         position_(nativeLayout.left(), nativeLayout.top(), 0.0f)
   {
+    if (nativeLayout.contentWidth() == 0 && nativeLayout.contentHeight() == 0)
+    {
+      content_size_ = std::nullopt;
+    }
+    else
+    {
+      content_size_ = glm::vec3(nativeLayout.contentWidth(),
+                                nativeLayout.contentHeight(),
+                                1.0f);
+    }
     setBorder(nativeLayout.border());
     setPadding(nativeLayout.padding());
   }
@@ -43,8 +52,8 @@ namespace client_layout
   ostream &operator<<(ostream &os, const Fragment &fragment)
   {
     os << "Fragment {" << endl
-       << "    size: (" << fragment.width() << ", " << fragment.height() << endl
-       << " content: (" << fragment.contentWidth() << ", " << fragment.contentHeight() << ")" << endl
+       << "    size: (" << fragment.size_.x << ", " << fragment.size_.y << endl
+       << " content: (" << fragment.content_size_->x << ", " << fragment.content_size_->y << ")" << endl
        << "  border: " << fragment.border_ << endl
        << " padding: " << fragment.padding_ << endl
        << "}";

@@ -48,7 +48,7 @@ namespace dom
     layoutView->computeLayout(targetSpace());
     layoutView->debugPrint("After layout", client_layout::LayoutView::DebugOptions::Default()
                                                .withFormattingContext(true)
-                                               .withDisabled(true));
+                                               .withDisabled());
 
     // Step 3: Visit the layout view to render CSS boxes.
     client_layout::LayoutViewVisitor::visit(*layoutView);
@@ -93,7 +93,7 @@ namespace dom
 
     auto boundingBox = scene->getComponent<BoundingBox>(entity);
     if (boundingBox != nullptr)
-      boundingBox->updateSize(fragment.width(), fragment.height(), fragment.depth());
+      boundingBox->updateSize(fragment.contentSize());
 
     // Update transform
     auto transform = scene->getComponent<Transform>(entity);
@@ -108,8 +108,8 @@ namespace dom
       if (!scene->hasComponent<hierarchy::Root>(entity))
       {
         auto parentComponent = scene->getComponent<hierarchy::Parent>(entity);
-        auto rootBoundingBox = scene->getComponent<BoundingBox>(parentComponent->root());
-        if (TR_LIKELY(rootBoundingBox != nullptr))
+        auto rootBoundingBox = document_->visualBoundingBox();
+        if (TR_LIKELY(rootBoundingBox.has_value()))
         {
           /**
            * Transform the xyz() in LTW(Left-Top) space to the left-handed world space.

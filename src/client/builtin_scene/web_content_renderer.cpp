@@ -340,7 +340,7 @@ namespace builtin_scene::web_renderer
   float RenderTextSystem::getLayoutWidthForText(WebContent &content)
   {
     const auto &fragment = content.fragment();
-    return fragment.value().width();
+    return fragment->contentWidth();
   }
 
   void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)

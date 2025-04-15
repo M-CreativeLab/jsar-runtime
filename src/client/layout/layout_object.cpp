@@ -413,7 +413,7 @@ namespace client_layout
         else
         {
           auto &webContent = scene.getComponentChecked<WebContent>(entity_.value());
-          resized = webContent.resetSkSurface(newSize.width(), newSize.height());
+          resized = webContent.resetSkSurface(newSize.contentWidth(), newSize.contentHeight());
         }
       }
     };
@@ -618,8 +618,8 @@ namespace client_layout
         // Add `WebContent` component to the entity.
         auto fragment = this->fragment();
         scene.addComponent(entity, WebContent(string(this->name()),
-                                              fragment.width(),
-                                              fragment.height()));
+                                              fragment.contentWidth(),
+                                              fragment.contentHeight()));
       }
     };
     useSceneWithCallback(configEntity);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <glm/glm.hpp>
 #include <crates/bindings.layout.hpp>
 #include <client/dom/geometry/dom_rect.hpp>
@@ -63,9 +64,9 @@ namespace client_layout
                        contentHeight(),
                        contentDepth());
     }
-    inline float contentWidth() const { return content_size_.x; }
-    inline float contentHeight() const { return content_size_.y; }
-    inline float contentDepth() const { return content_size_.z; }
+    inline float contentWidth() const { return content_size_.has_value() ? content_size_->x : size_.x; }
+    inline float contentHeight() const { return content_size_.has_value() ? content_size_->y : size_.y; }
+    inline float contentDepth() const { return content_size_.has_value() ? content_size_->z : size_.z; }
 
     // Border
     inline const geometry::Rect<float> &border() const { return border_; }
@@ -99,7 +100,7 @@ namespace client_layout
 
   private:
     glm::vec3 size_ = {0.0f, 0.0f, 1.0f};
-    glm::vec3 content_size_ = {0.0f, 0.0f, 0.0f};
+    std::optional<glm::vec3> content_size_ = std::nullopt;
     glm::vec3 position_ = {0.0f, 0.0f, 0.0f};
     geometry::Rect<float> border_ = {0.0f, 0.0f, 0.0f, 0.0f};
     geometry::Rect<float> padding_ = {0.0f, 0.0f, 0.0f, 0.0f};

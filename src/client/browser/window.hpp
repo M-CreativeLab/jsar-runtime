@@ -129,6 +129,11 @@ namespace browser
     inline float innerHeight() const { return innerHeight_; }
 
     /**
+     * @returns the inner depth of the window.
+     */
+    inline float innerDepth() const { return innerDepth_; }
+
+    /**
      * @returns the outer width of the window.
      */
     inline float outerWidth() const { return outerWidth_; }
@@ -137,6 +142,11 @@ namespace browser
      * @returns the outer height of the window.
      */
     inline float outerHeight() const { return outerHeight_; }
+
+    /**
+     * @returns the outer depth of the window.
+     */
+    inline float outerDepth() const { return outerDepth_; }
 
     /**
      * @returns the horizontal scroll position of the window.
@@ -240,8 +250,10 @@ namespace browser
     bool fullscreen_ = false;
     float innerWidth_ = client_cssom::ScreenWidth;
     float innerHeight_ = client_cssom::ScreenHeight;
+    float innerDepth_ = client_cssom::VolumeDepth;
     float outerWidth_ = client_cssom::ScreenWidth;
     float outerHeight_ = client_cssom::ScreenHeight;
+    float outerDepth_ = client_cssom::VolumeDepth;
     float scrollX_ = 0.0f;
     float scrollY_ = 0.0f;
     float devicePixelRatio_ = 1.5f;

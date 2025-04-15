@@ -18,10 +18,8 @@ namespace dom
   public:
     void createdCallback() override
     {
-      defaultStyle_.setProperty("width", "100%");
-      defaultStyle_.setProperty("height", "100%");
-      defaultStyle_.setProperty("margin", "2px");
-      defaultStyle_.setProperty("padding", "2px");
+      defaultStyle_.setProperty("width", "auto");
+      defaultStyle_.setProperty("height", "auto");
       defaultStyle_.setProperty("background-color", "transparent");
       renderable = true;
 

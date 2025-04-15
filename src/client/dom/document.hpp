@@ -244,10 +244,15 @@ namespace dom
     ~HTMLDocument() = default;
 
   public:
-    inline std::shared_ptr<client_layout::LayoutView> layoutView() { return layoutView_; }
-    inline std::shared_ptr<const client_layout::LayoutView> layoutView() const { return layoutView_; }
-    inline client_layout::LayoutView &layoutViewRef() { return *layoutView_; }
-    inline const client_layout::LayoutView &layoutViewRef() const { return *layoutView_; }
+    inline std::shared_ptr<client_layout::LayoutView> layoutView() { return layout_view_; }
+    inline std::shared_ptr<const client_layout::LayoutView> layoutView() const { return layout_view_; }
+    inline client_layout::LayoutView &layoutViewRef() { return *layout_view_; }
+    inline const client_layout::LayoutView &layoutViewRef() const { return *layout_view_; }
+
+    inline std::optional<builtin_scene::BoundingBox> visualBoundingBox() const
+    {
+      return visual_bounding_box_;
+    }
 
     /**
      * Get the layout allocator for the document.
@@ -257,7 +262,7 @@ namespace dom
      */
     inline std::shared_ptr<crates::layout2::Allocator> layoutAllocator() const
     {
-      return layoutAllocator_;
+      return layout_allocator_;
     }
 
   public:
@@ -270,7 +275,8 @@ namespace dom
     void simulateScrollWithOffset(float offsetX, float offsetY);
 
   private:
-    std::shared_ptr<client_layout::LayoutView> layoutView_;
-    std::shared_ptr<crates::layout2::Allocator> layoutAllocator_;
+    std::shared_ptr<client_layout::LayoutView> layout_view_;
+    std::shared_ptr<crates::layout2::Allocator> layout_allocator_;
+    std::optional<builtin_scene::BoundingBox> visual_bounding_box_;
   };
 }
