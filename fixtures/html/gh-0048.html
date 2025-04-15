@@ -2,7 +2,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Simple HTML</title>
+    <title>session addEventListener </title>
     <script type="importmap">
     {
       "imports": {
@@ -33,7 +33,7 @@
                 },
                 context: gl,
             });
-            
+
             renderer.xr.enabled = true;
             renderer.xr.setReferenceSpaceType('local');
             const useLayers = typeof XRWebGLBinding !== 'undefined' && 'createProjectionLayer' in XRWebGLBinding.prototype;
@@ -70,9 +70,7 @@
     </script>
 </head>
 
-<body style="background-color: #fff;">
-    <h1>Simple HTML</h1>
-    <p>Some text</p>
+<body>
 </body>
 
 </html>
