@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <common/math_utils.hpp>
 #include <common/math3d/plane.hpp>
 #include <client/dom/types.hpp>
 
@@ -102,13 +103,55 @@ namespace client_layout
     virtual bool hasTopOverflow() const;
     virtual bool hasLeftOverflow() const;
 
+    virtual void updateAfterLayout();
+
     // Sets the scrollable-overflow from the current set of layout-results.
     void setScrollableOverflowFromLayoutResults();
 
+    float contentLeft() const { return clientLeft() + borderLeft(); }
+    float contentTop() const { return clientTop() + borderTop(); }
+    float contentWidth() const
+    {
+      return transmute::common::math_utils::ClampNegativeToZero(clientWidth() - paddingLeft() - paddingRight());
+    }
+    float contentHeight() const
+    {
+      return transmute::common::math_utils::ClampNegativeToZero(clientHeight() - paddingTop() - paddingBottom());
+    }
+    glm::vec3 contentSize() const
+    {
+      return glm::vec3(contentWidth(), contentHeight(), 0.0f);
+    }
+    float contentLogicalWidth() const
+    {
+      return isHorizontalWritingMode()
+                 ? contentWidth()
+                 : contentHeight();
+    }
+    float contentLogicalHeight() const
+    {
+      return isHorizontalWritingMode()
+                 ? contentHeight()
+                 : contentWidth();
+    }
+
     float clientLeft() const;
     float clientTop() const;
+
     float clientWidth() const;
     float clientHeight() const;
+    float clientLogicalWidth() const
+    {
+      return isHorizontalWritingMode()
+                 ? clientWidth()
+                 : clientHeight();
+    }
+    float clientLogicalHeight() const
+    {
+      return isHorizontalWritingMode()
+                 ? clientHeight()
+                 : clientWidth();
+    }
 
     virtual float scrollWidth() const;
     virtual float scrollHeight() const;
@@ -138,9 +181,12 @@ namespace client_layout
     virtual bool hitTestChildren(HitTestResult &, const HitTestRay &, const glm::vec3 &accumulatedOffset,
                                  HitTestPhase);
 
+    bool computeLayout(const ConstraintSpace &) override;
     void updateFromStyle() override;
 
   private:
+    bool isHorizontalWritingMode() const;
+
     inline bool scrollableOverflowIsSet() const { return overflow_ != nullptr && overflow_->scrollableOverflow; }
     inline bool visualOverflowIsSet() const { return overflow_ != nullptr && overflow_->visualOverflow; }
 

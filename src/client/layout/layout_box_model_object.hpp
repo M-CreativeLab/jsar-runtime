@@ -44,23 +44,24 @@ namespace client_layout
 
     virtual void updateFromStyle();
 
-    // TODO(yorkie): implement padding values
-    virtual float paddingTop() const { return 0; }
-    virtual float paddingBottom() const { return 0; }
-    virtual float paddingLeft() const { return 0; }
-    virtual float paddingRight() const { return 0; }
+    virtual float paddingTop() const { return getComputedLengthValue("padding-top"); }
+    virtual float paddingBottom() const { return getComputedLengthValue("padding-bottom"); }
+    virtual float paddingLeft() const { return getComputedLengthValue("padding-left"); }
+    virtual float paddingRight() const { return getComputedLengthValue("padding-right"); }
 
-    // TODO(yorkie): implement border values
-    virtual float borderTop() const { return 0; }
-    virtual float borderBottom() const { return 0; }
-    virtual float borderLeft() const { return 0; }
-    virtual float borderRight() const { return 0; }
+    virtual float borderTop() const { return getComputedLengthValue("border-top-width"); }
+    virtual float borderBottom() const { return getComputedLengthValue("border-bottom-width"); }
+    virtual float borderLeft() const { return getComputedLengthValue("border-left-width"); }
+    virtual float borderRight() const { return getComputedLengthValue("border-right-width"); }
 
     float borderWidth() const { return borderLeft() + borderRight(); }
     float borderHeight() const { return borderTop() + borderBottom(); }
 
   private:
     bool isBoxModelObject() const override final { return true; }
+
+    // Returns the computed length value of the specified property.
+    float getComputedLengthValue(const std::string &propertyName) const;
 
     void styleDidChange() override;
 

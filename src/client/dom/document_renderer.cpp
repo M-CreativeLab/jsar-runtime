@@ -48,7 +48,7 @@ namespace dom
     layoutView->computeLayout(targetSpace());
     layoutView->debugPrint("After layout", client_layout::LayoutView::DebugOptions::Default()
                                                .withFormattingContext(true)
-                                               .withDisabled());
+                                               .withDisabled(true));
 
     // Step 3: Visit the layout view to render CSS boxes.
     client_layout::LayoutViewVisitor::visit(*layoutView);
@@ -112,7 +112,7 @@ namespace dom
         if (TR_LIKELY(rootBoundingBox != nullptr))
         {
           /**
-           * Transform the xyz() in LTW space to the left-handed world space.
+           * Transform the xyz() in LTW(Left-Top) space to the left-handed world space.
            *
            * First, calculate the distance from the root bounding box to the current bounding box:
            *

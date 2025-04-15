@@ -89,7 +89,7 @@ namespace dom
                                : const_pointer_cast<const client_layout::LayoutBoxModelObject>(layoutBox);
     if (scrollContainer != nullptr)
     {
-      current_scroll_target_ = Node::As<Element>(scrollContainer->node());
+      current_scroll_target_ = scrollContainer->node();
       current_scroll_start_point_ = p;
       current_scroll_end_point_ = p;
       return current_scroll_target_.lock() != nullptr;
@@ -107,15 +107,17 @@ namespace dom
 
     glm::vec3 physicalMovement = p - current_scroll_end_point_;
     float movementInX = client_cssom::meterToPixel(physicalMovement.x);
-    float movementInY = client_cssom::meterToPixel(physicalMovement.y);
+    float movementInY = client_cssom::meterToPixel(-physicalMovement.y);
     if (abs(movementInX) > 0 || abs(movementInY) > 0)
     {
       current_scroll_end_point_ = p;
       auto target = current_scroll_target_.lock();
-      auto scrollTarget = Node::As<Element>(target);
-      assert(scrollTarget != nullptr && "The scroll target is not an element.");
+      assert(target != nullptr && "The scroll target is expired.");
 
-      scrollTarget->simulateScrollWithOffset(movementInX, -movementInY);
+      if (target->isElement())
+        Node::As<Element>(target)->simulateScrollWithOffset(movementInX, movementInY);
+      else if (target->isHTMLDocument())
+        Node::As<HTMLDocument>(target)->simulateScrollWithOffset(movementInX, movementInY);
     }
   }
 

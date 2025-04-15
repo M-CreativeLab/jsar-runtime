@@ -83,6 +83,10 @@ namespace client_layout
     if (isLayoutReplaced())
       return false;
 
+    // LayoutView is always a scroll container.
+    if (isLayoutView())
+      return true;
+
     auto element = dom::Node::As<dom::Element>(node());
     if (element == nullptr)
       return false;
@@ -264,22 +268,29 @@ namespace client_layout
         nodeFragment = Fragment::None(); // Set the fragment to none if a text and empty content.
     }
 
-    // Move the fragment by the scroll offset if the object is a scroll container.
-    if (isBox() && isScrollContainer())
-    {
-      auto scrollableArea = dynamic_pointer_cast<const LayoutBox>(shared_from_this())->getScrollableArea();
-      if (scrollableArea != nullptr)
-      {
-        auto offset = scrollableArea->getScrollOffset();
-        nodeFragment.moveBy(offset.x, offset.y, offset.z);
-      }
-    }
-
     assert(formattingContext_ != nullptr && "Formatting context must be set.");
     if (parent() == nullptr)
+    {
       return nodeFragment;
+    }
     else
-      return parent()->fragment().position(nodeFragment);
+    {
+      Fragment baseFragment = parent()->fragment();
+
+      // Move the fragment by the scroll offset if the object is a scroll container.
+      if (parent()->isBox() && parent()->isScrollContainer())
+      {
+        auto scrollableArea = dynamic_pointer_cast<const LayoutBox>(parent())->getScrollableArea();
+        if (scrollableArea != nullptr)
+        {
+          auto offset = scrollableArea->getScrollOffset();
+          baseFragment.moveBy(offset.x, offset.y, offset.z);
+        }
+      }
+
+      // Returns the fragment with the parent's offset.
+      return baseFragment.position(nodeFragment);
+    }
   }
 
   bool LayoutObject::isDescendantOf(shared_ptr<LayoutObject> object) const

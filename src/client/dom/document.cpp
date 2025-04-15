@@ -473,4 +473,17 @@ namespace dom
       scene->start();
     }
   }
+
+  void HTMLDocument::simulateScrollWithOffset(float offsetX, float offsetY)
+  {
+    auto layoutBox = layoutView();
+    assert(layoutBox != nullptr && "The layout box is not set.");
+
+    glm::vec3 offset(offsetX, offsetY, 0);
+    if (offset.x == 0 && offset.y == 0)
+      return;
+
+    layoutBox->scrollBy(offset);
+    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+  }
 }

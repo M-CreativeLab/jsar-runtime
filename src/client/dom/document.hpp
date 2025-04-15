@@ -201,6 +201,8 @@ namespace dom
 
   class HTMLDocument : public Document
   {
+    friend class DocumentEventDispatcher;
+
   public:
     inline static const DocumentType kDocumentType = DocumentType::kHTML;
 
@@ -262,7 +264,10 @@ namespace dom
     void afterLoadedCallback() override;
 
   private:
+    bool isHTMLDocument() const override final { return true; }
     void onDocumentOpened() override;
+
+    void simulateScrollWithOffset(float offsetX, float offsetY);
 
   private:
     std::shared_ptr<client_layout::LayoutView> layoutView_;

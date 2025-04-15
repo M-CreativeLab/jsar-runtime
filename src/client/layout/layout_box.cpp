@@ -132,6 +132,15 @@ namespace client_layout
       return false;
   }
 
+  void LayoutBox::updateAfterLayout()
+  {
+    setScrollableOverflowFromLayoutResults();
+
+    if (isScrollContainer())
+      getScrollableArea()
+          ->updateAfterLayout(formattingContext().liveFragment());
+  }
+
   void LayoutBox::setScrollableOverflowFromLayoutResults()
   {
     if (overflow_)
@@ -145,11 +154,13 @@ namespace client_layout
 
   float LayoutBox::clientLeft() const
   {
+    // TODO(yorkie): consider the scrollbars' width?
     return borderLeft();
   }
 
   float LayoutBox::clientTop() const
   {
+    // TODO(yorkie): consider the scrollbars' width?
     return borderTop();
   }
 
@@ -342,6 +353,14 @@ namespace client_layout
     return false;
   }
 
+  bool LayoutBox::computeLayout(const ConstraintSpace &availableSpace)
+  {
+    auto success = LayoutBoxModelObject::computeLayout(availableSpace);
+    if (success)
+      updateAfterLayout();
+    return success;
+  }
+
   void LayoutBox::updateFromStyle()
   {
     LayoutBoxModelObject::updateFromStyle();
@@ -351,6 +370,15 @@ namespace client_layout
       return;
     setHasNonVisibleOverflow(m_style->getPropertyValue("overflow-x") != "visible" ||
                              m_style->getPropertyValue("overflow-y") != "visible");
+  }
+
+  bool LayoutBox::isHorizontalWritingMode() const
+  {
+    auto nodeStyle = styleRef();
+    string writingMode = nodeStyle.hasProperty("writing-mode")
+                             ? nodeStyle.getPropertyValue("writing-mode")
+                             : "horizontal-tb";
+    return writingMode == "horizontal-tb" || writingMode == "sideways-lr";
   }
 
   glm::vec3 LayoutBox::computeSize() const

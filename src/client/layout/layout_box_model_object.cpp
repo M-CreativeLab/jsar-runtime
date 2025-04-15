@@ -1,9 +1,12 @@
 #include <client/dom/node.hpp>
+#include <client/cssom/types/length.hpp>
+
 #include "./layout_box_model_object.hpp"
 
 namespace client_layout
 {
   using namespace std;
+  using namespace client_cssom::types;
 
   LayoutBoxModelObject::LayoutBoxModelObject(shared_ptr<dom::Node> node)
       : LayoutObject(node),
@@ -30,6 +33,16 @@ namespace client_layout
   void LayoutBoxModelObject::updateFromStyle()
   {
     // TODO(yorkie): implement updateFromStyle() in LayoutBoxModelObject.
+  }
+
+  float LayoutBoxModelObject::getComputedLengthValue(const std::string &propertyName) const
+  {
+    auto nodeStyle = style();
+    if (!nodeStyle.has_value() || !nodeStyle->hasProperty(propertyName))
+      return 0.0f;
+    else
+      return nodeStyle->getPropertyValueAs<Length>(propertyName)
+          .computeAbsoluteLengthInPixels();
   }
 
   void LayoutBoxModelObject::styleDidChange()

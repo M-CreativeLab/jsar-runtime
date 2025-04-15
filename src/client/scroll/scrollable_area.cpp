@@ -1,9 +1,13 @@
 #include <iostream>
+#include <common/math_utils.hpp>
+
 #include "./scrollable_area.hpp"
 
 namespace client_scroll
 {
   using namespace std;
+  using namespace transmute::common;
+  using namespace client_layout;
 
   ScrollableArea::ScrollableArea()
       : scroll_origin_(0.0f, 0.0f, 0.0f),
@@ -18,12 +22,12 @@ namespace client_scroll
 
   float ScrollableArea::scrollWidth() const
   {
-    return 0;
+    return overflow_rect_ ? overflow_rect_->x : 0;
   }
 
   float ScrollableArea::scrollHeight() const
   {
-    return 0;
+    return overflow_rect_ ? overflow_rect_->y : 0;
   }
 
   glm::vec3 ScrollableArea::getScrollOffset() const
@@ -31,13 +35,28 @@ namespace client_scroll
     return scroll_offset_;
   }
 
-  void ScrollableArea::scrollBy(const glm::vec3 &offset)
-  {
-    scroll_offset_ += offset;
-  }
-
   void ScrollableArea::scrollTo(const glm::vec3 &offset)
   {
-    scroll_offset_ = offset;
+    if (!overflow_rect_.has_value())
+      return;
+
+    if (overflow_rect_->x > scroll_origin_.x)
+    {
+      float xOffset = offset.x;
+      if (xOffset > 0 && scroll_origin_.x + xOffset <= overflow_rect_->x)
+        scroll_offset_.x = xOffset;
+    }
+    if (overflow_rect_->y > scroll_origin_.y)
+    {
+      float yOffset = offset.y;
+      if (yOffset < 0 && scroll_origin_.y - yOffset <= overflow_rect_->y)
+        scroll_offset_.y = yOffset;
+    }
+  }
+
+  void ScrollableArea::updateAfterLayout(const Fragment &fragment)
+  {
+    scroll_origin_ = fragment.size();
+    overflow_rect_ = fragment.contentSize();
   }
 }

@@ -19,23 +19,22 @@ namespace client_layout
 
   public:
     Fragment() = default;
-    Fragment(const dom::geometry::DOMRect &rect)
-        : rect_(rect),
-          z_(0.0f),
-          depth_(1.0f),
-          border_(0.0f, 0.0f, 0.0f, 0.0f),
-          padding_(0.0f, 0.0f, 0.0f, 0.0f)
-    {
-    }
+    Fragment(const dom::geometry::DOMRect &);
+    // Construct a fragment from the native layout output.
+    Fragment(const crates::layout2::Layout &);
 
   public:
-    const dom::geometry::DOMRect &rect() const { return rect_; }
+    // Returns the 2d rectangle of the fragment, using the style size.
+    inline dom::geometry::DOMRect getRect() const
+    {
+      return dom::geometry::DOMRect(position_.x, position_.y, size_.x, size_.y);
+    }
 
     // Position
-    inline glm::vec3 xyz() const { return glm::vec3(rect_.x(), rect_.y(), 0); }
-    inline float left() const { return rect_.x(); }
-    inline float top() const { return rect_.y(); }
-    inline float z() const { return z_; }
+    inline glm::vec3 xyz() const { return position_; }
+    inline float left() const { return position_.x; }
+    inline float top() const { return position_.y; }
+    inline float z() const { return position_.z; }
 
     // Returns a new `Fragment` object which moves the child fragment based on current fragment.
     // Such as a parent `Fragment(20, 0, 100, 100)`, moves the child `Fragment(10, 10, 50, 50)`, it will produce a new
@@ -54,9 +53,19 @@ namespace client_layout
                        height(),
                        depth());
     }
-    inline float width() const { return rect_.width(); }
-    inline float height() const { return rect_.height(); }
-    inline float depth() const { return depth_; }
+    inline float width() const { return size_.x; }
+    inline float height() const { return size_.y; }
+    inline float depth() const { return size_.z; }
+
+    inline glm::vec3 contentSize() const
+    {
+      return glm::vec3(contentWidth(),
+                       contentHeight(),
+                       contentDepth());
+    }
+    inline float contentWidth() const { return content_size_.x; }
+    inline float contentHeight() const { return content_size_.y; }
+    inline float contentDepth() const { return content_size_.z; }
 
     // Border
     inline const geometry::Rect<float> &border() const { return border_; }
@@ -86,17 +95,12 @@ namespace client_layout
                  padding.left());
     }
 
-    friend std::ostream &operator<<(std::ostream &os, const Fragment &fragment)
-    {
-      os << "Fragment(" << fragment.rect_.x() << ", " << fragment.rect_.y() << ", "
-         << fragment.rect_.width() << ", " << fragment.rect_.height() << ")";
-      return os;
-    }
+    friend std::ostream &operator<<(std::ostream &os, const Fragment &fragment);
 
   private:
-    dom::geometry::DOMRect rect_;
-    float z_ = 0.0f;
-    float depth_ = 1.0f;
+    glm::vec3 size_ = {0.0f, 0.0f, 1.0f};
+    glm::vec3 content_size_ = {0.0f, 0.0f, 0.0f};
+    glm::vec3 position_ = {0.0f, 0.0f, 0.0f};
     geometry::Rect<float> border_ = {0.0f, 0.0f, 0.0f, 0.0f};
     geometry::Rect<float> padding_ = {0.0f, 0.0f, 0.0f, 0.0f};
   };

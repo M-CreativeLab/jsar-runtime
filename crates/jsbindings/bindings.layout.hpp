@@ -994,6 +994,8 @@ namespace crates::layout2
     Layout()
         : width_(0.0f),
           height_(0.0f),
+          content_width_(0.0f),
+          content_height_(0.0f),
           x_(0.0f),
           y_(0.0f),
           border_(0.0f, 0.0f, 0.0f, 0.0f),
@@ -1005,6 +1007,8 @@ namespace crates::layout2
     Layout(holocron::layout::LayoutOutput output)
         : width_(output.width),
           height_(output.height),
+          content_width_(output.contentWidth),
+          content_height_(output.contentHeight),
           x_(output.x),
           y_(output.y),
           border_(NumberRect(output.border)),
@@ -1014,25 +1018,48 @@ namespace crates::layout2
 
   public:
     /**
-     * @returns The node width.
+     * The computed width in pixels from the node's style.
+     *
+     * @returns The style width in pixels.
      */
     inline float width() const { return width_; }
+
     /**
-     * @returns The node height.
+     * The computed height in pixels from the node's style.
+     *
+     * @returns The style height in pixels.
      */
     inline float height() const { return height_; }
+
+    /**
+     * The actual width in pixels after layout, which is computed by its children.
+     *
+     * @returns The content width in pixels.
+     */
+    inline float contentWidth() const { return content_width_; }
+
+    /**
+     * The actual height in pixels after layout, which is computed by its children.
+     *
+     * @returns The content height in pixels.
+     */
+    inline float contentHeight() const { return content_height_; }
+
     /**
      * @returns The node x position.
      */
     inline float left() const { return x_; }
+
     /**
      * @returns The node y position.
      */
     inline float top() const { return y_; }
+
     /**
      * @returns The node border.
      */
     inline Rect<float> border() const { return border_; }
+
     /**
      * @returns The node padding.
      */
@@ -1041,20 +1068,22 @@ namespace crates::layout2
   public:
     friend std::ostream &operator<<(std::ostream &os, const Layout &layout)
     {
-      os << "Layout {" << std::endl;
-      os << " width: " << layout.width() << "," << std::endl;
-      os << " height: " << layout.height() << "," << std::endl;
-      os << " left: " << layout.left() << "," << std::endl;
-      os << " top: " << layout.top() << ", " << std::endl;
-      os << " border: " << layout.border() << "," << std::endl;
-      os << " padding: " << layout.padding() << "}" << std::endl;
-      os << std::endl;
+      os << "Layout {" << std::endl
+         << "      size: [" << layout.width() << "," << layout.height() << "]" << std::endl
+         << "   content: [" << layout.contentWidth() << "," << layout.contentHeight() << "]" << std::endl
+         << "      left: " << layout.left() << std::endl
+         << "       top: " << layout.top() << std::endl
+         << "    border: " << layout.border() << std::endl
+         << "   padding: " << layout.padding() << std::endl
+         << "}" << std::endl;
       return os;
     }
 
   protected:
     float width_;
     float height_;
+    float content_width_;
+    float content_height_;
     float x_;
     float y_;
     Rect<float> border_;
@@ -1102,7 +1131,7 @@ namespace crates::layout2
     }
     /**
      * Insert a child node before another child node.
-     * 
+     *
      * @param child The child node to insert.
      * @param beforeChild The child node to insert before.
      */

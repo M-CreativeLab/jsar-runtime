@@ -37,7 +37,7 @@ namespace dom
     glm::vec3 current_mousedown_hit_point_;
     bool is_click_in_progress_ = false;
 
-    std::weak_ptr<Element> current_scroll_target_;
+    std::weak_ptr<Node> current_scroll_target_;
     glm::vec3 current_scroll_start_point_;
     glm::vec3 current_scroll_end_point_;
     bool is_scroll_in_progress_ = false;

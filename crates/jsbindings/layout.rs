@@ -467,6 +467,10 @@ mod ffi {
   struct LayoutOutput {
     pub width: f32,
     pub height: f32,
+    #[cxx_name = "contentWidth"]
+    pub content_width: f32,
+    #[cxx_name = "contentHeight"]
+    pub content_height: f32,
     pub x: f32,
     pub y: f32,
     pub border: NumberRect,
@@ -1003,6 +1007,8 @@ impl From<taffy::Layout> for ffi::LayoutOutput {
     Self {
       width: layout.size.width,
       height: layout.size.height,
+      content_width: layout.content_size.width,
+      content_height: layout.content_size.height,
       x: layout.location.x,
       y: layout.location.y,
       border: layout.border.into(),

@@ -44,18 +44,7 @@ namespace client_layout
   Fragment TaffyBasedFormattingContext::liveFragment() const
   {
     assert(node_ != nullptr && "The Taffy node must be initialized.");
-
-    auto layout = node_->layout();
-    dom::geometry::DOMRect rect;
-    rect.x() = layout.left();
-    rect.y() = layout.top();
-    rect.width() = layout.width();
-    rect.height() = layout.height();
-
-    Fragment fragment(rect);
-    fragment.setBorder(layout.border());
-    fragment.setPadding(layout.padding());
-    return fragment;
+    return Fragment(node_->layout());
   }
 
   void TaffyBasedFormattingContext::onAdded(const FormattingContext &parent,
