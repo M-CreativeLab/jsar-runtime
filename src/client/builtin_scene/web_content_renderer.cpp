@@ -289,8 +289,13 @@ namespace builtin_scene::web_renderer
   void RenderImageSystem::render(ecs::EntityId entity, WebContent &content)
   {
     auto imageComponent = getComponent<Image2d>(entity);
-    if (imageComponent == nullptr || !imageComponent->hasImageData())
+    if (imageComponent == nullptr ||
+        !imageComponent->hasImageData() ||
+        !imageComponent->visible())
+    {
+      content.setTextureUsing(false); // Disable using texture if the image has no data or is not visible.
       return;
+    }
 
     auto canvas = content.canvas();
     canvas->save();

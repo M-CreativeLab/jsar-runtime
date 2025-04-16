@@ -39,15 +39,20 @@ namespace dom
   {
     if (is_src_image_loaded_)
       return;
+
+    is_src_image_loading = true;
     fetchImage(getSrc());
   }
 
   void HTMLImageElement::loadImageAsync()
   {
-    if (is_src_image_loaded_ || load_async_handle_.data != this)
+    if (is_src_image_loading ||
+        is_src_image_loaded_ ||
+        load_async_handle_.data != this)
       return;
 
     // Schedule the image loading on the scripting thread.
+    is_src_image_loading = true;
     uv_async_send(&load_async_handle_);
   }
 
@@ -102,6 +107,7 @@ namespace dom
   void HTMLImageElement::onImageDataReady()
   {
     // Mark the image as loaded.
+    is_src_image_loading = false;
     is_src_image_loaded_ = true;
 
     // Dispatch the error event if the image data is null.

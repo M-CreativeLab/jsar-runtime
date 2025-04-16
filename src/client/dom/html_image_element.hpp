@@ -152,6 +152,7 @@ namespace dom
 
     std::optional<std::vector<char>> image_data_ = std::nullopt;
     std::shared_ptr<SkBitmap> sk_bitmap_;
+    bool is_src_image_loading = false;
     bool is_src_image_loaded_ = false;
     bool is_src_image_decoded_ = false;
 

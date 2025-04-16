@@ -153,7 +153,11 @@ namespace builtin_scene
      *
      * @param value Whether to use the texture.
      */
-    inline void setTextureUsing(bool value) { isTextureUsing_ = value; }
+    inline void setTextureUsing(bool value)
+    {
+      if (isTextureUsing_ != value)
+        isTextureUsing_ = value;
+    }
     inline bool isOpaque() const { return isOpaque_; }
     inline bool isTransparent() const { return !isOpaque_; }
     inline void setOpaque(bool b) { isOpaque_ = b; }

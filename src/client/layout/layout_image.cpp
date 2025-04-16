@@ -115,11 +115,20 @@ namespace client_layout
 
   void LayoutImage::didComputeLayoutOnce(const ConstraintSpace &avilableSpace)
   {
+    LayoutReplaced::didComputeLayoutOnce(avilableSpace);
+
+    Fragment fragment = this->fragment();
     if (!is_layout_ready_)
     {
-      layoutDidFirstReady(fragment());
+      layoutDidFirstReady(fragment);
       is_layout_ready_ = true;
     }
+
+    bool shouldVisible = fragment.visibleInViewport(viewRef().viewport);
+    if (shouldVisible)
+      Node::AsChecked<dom::HTMLImageElement>(node()).loadImageAsync();
+
+    setVisible(shouldVisible);
   }
 
   void LayoutImage::sizeDidChange()
@@ -131,7 +140,29 @@ namespace client_layout
 
   void LayoutImage::layoutDidFirstReady(const Fragment &fragment)
   {
-    if (fragment.visibleInViewport(viewRef().viewport))
-      Node::AsChecked<dom::HTMLImageElement>(node()).loadImageAsync();
+  }
+
+  void LayoutImage::setVisible(bool b)
+  {
+    auto setVisible = [this, &b](Scene &scene)
+    {
+      Image2d &imageComponent = scene.getComponentChecked<Image2d>(entity());
+      imageComponent.setVisible(b);
+    };
+    useSceneWithCallback(setVisible);
+
+    // When the visibility is changed, we need to mark the content as dirty to update the texture altas.
+    // This optimization is to remove the textures which are invisible from the texture atlas, it keeps the consistent
+    // size of the texture atlas.
+    if (!last_visible_.has_value() || last_visible_.value() != b)
+    {
+      auto markContentDirty = [this](Scene &scene)
+      {
+        WebContent &webContent = scene.getComponentChecked<WebContent>(entity());
+        webContent.setDirty(true);
+      };
+      useSceneWithCallback(markContentDirty);
+    }
+    last_visible_ = b;
   }
 }

@@ -20,8 +20,14 @@ namespace builtin_scene
     inline sk_sp<SkImage> image() const { return bitmap->asImage(); }
     inline bool hasImageData() const { return bitmap != nullptr; }
 
+    inline bool visible() const { return visible_; }
+    inline void setVisible(bool b) { visible_ = b; }
+
   public:
     std::string src;
     std::shared_ptr<SkBitmap> bitmap;
+  
+  private:
+    bool visible_ = true;
   };
 }

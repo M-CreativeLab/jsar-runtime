@@ -33,8 +33,12 @@ namespace client_layout
 
     void layoutDidFirstReady(const Fragment &);
 
+    // Set if the image should be visible or not in drawing.
+    void setVisible(bool);
+
   private:
     // Whether the layout is computed, it means the loading can be started when the layout is computed.
     bool is_layout_ready_ = false;
+    std::optional<bool> last_visible_ = std::nullopt;
   };
 }
