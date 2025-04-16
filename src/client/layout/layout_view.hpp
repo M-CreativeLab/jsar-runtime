@@ -3,7 +3,10 @@
 #include <memory>
 #include <string>
 #include <crates/bindings.hpp>
+#include <client/browser/types.hpp>
+#include <client/dom/types.hpp>
 
+#include "./geometry/viewport3d.hpp"
 #include "./layout_block_flow.hpp"
 #include "./layout_box_model_object.hpp"
 #include "./layout_text.hpp"
@@ -20,13 +23,13 @@ namespace client_layout
   {
   public:
     // Construct a new `LayoutView` instance.
-    static std::shared_ptr<LayoutView> Make(std::shared_ptr<dom::Document> document);
+    static std::shared_ptr<LayoutView> Make(std::shared_ptr<dom::Document>, const browser::Window &);
 
   public:
     /**
      * @deprecated Use `LayoutView::Make` instead.
      */
-    LayoutView(std::shared_ptr<dom::Document> document);
+    LayoutView(std::shared_ptr<dom::Document>, const browser::Window &);
 
   public:
     const char *name() const final override { return "LayoutView"; }
@@ -155,6 +158,9 @@ namespace client_layout
     std::unique_ptr<LayoutBoxModelObject> makeBox(const std::string &displayStr,
                                                   std::shared_ptr<dom::Element> element);
     std::unique_ptr<LayoutText> makeText(std::shared_ptr<dom::Text> textNode);
+
+  public:
+    geometry::Viewport3d viewport;
 
   private:
     // JSAR uses taffy for block, flex and grid layout, this allocator is used to create the taffy nodes.

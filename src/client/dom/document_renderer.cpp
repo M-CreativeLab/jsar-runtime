@@ -69,20 +69,17 @@ namespace dom
   void RenderHTMLDocument::onVisitBox(const client_layout::LayoutBoxModelObject &box, int depth)
   {
     if (TR_LIKELY(box.hasEntity()))
-    {
       renderEntity(box.entity(), box.fragment());
-    }
   }
 
   void RenderHTMLDocument::onVisitText(const client_layout::LayoutText &text, int depth)
   {
     if (TR_LIKELY(text.hasEntity()))
-    {
       renderEntity(text.entity(), text.fragment());
-    }
   }
 
-  void RenderHTMLDocument::renderEntity(const ecs::EntityId &entity, const client_layout::Fragment &fragment)
+  void RenderHTMLDocument::renderEntity(const ecs::EntityId &entity,
+                                        const client_layout::Fragment &fragment)
   {
     auto scene = document_->scene;
     assert(scene != nullptr && "The scene is not set when rendering the entity.");

@@ -249,10 +249,7 @@ namespace dom
     inline client_layout::LayoutView &layoutViewRef() { return *layout_view_; }
     inline const client_layout::LayoutView &layoutViewRef() const { return *layout_view_; }
 
-    inline std::optional<builtin_scene::BoundingBox> visualBoundingBox() const
-    {
-      return visual_bounding_box_;
-    }
+    std::optional<builtin_scene::BoundingBox> visualBoundingBox() const;
 
     /**
      * Get the layout allocator for the document.
@@ -277,6 +274,5 @@ namespace dom
   private:
     std::shared_ptr<client_layout::LayoutView> layout_view_;
     std::shared_ptr<crates::layout2::Allocator> layout_allocator_;
-    std::optional<builtin_scene::BoundingBox> visual_bounding_box_;
   };
 }

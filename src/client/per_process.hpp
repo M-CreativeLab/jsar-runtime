@@ -358,6 +358,7 @@ public:
   inline bool isScriptingEventLoopReady() { return scriptingEventLoop != nullptr; }
   inline void setScriptingEventLoop(napi_env env)
   {
+    scriptingThreadId = std::this_thread::get_id();
     napi_get_uv_event_loop(env, &scriptingEventLoop);
     dispatchEvent(TrClientContextEventType::ScriptingEventLoopReady);
   }
@@ -367,6 +368,12 @@ public:
     assert(scriptingEnv == nullptr);
     scriptingEnv = std::make_shared<ScriptEnvironment>(id, scriptsDir);
     return *scriptingEnv;
+  }
+  // Check if the current thread is the scripting thread.
+  inline bool isInScriptingThread() const
+  {
+    assert(scriptingThreadId != std::nullopt && "The scripting thread is not set.");
+    return std::this_thread::get_id() == scriptingThreadId.value();
   }
   inline font::FontCacheManager &getFontCacheManager() { return *fontCacheManager; }
   inline TrClientPerformanceFileSystem &getPerfFs() { return *perfFs; }
@@ -446,6 +453,7 @@ private: // service & script alive checking fields
 private: // other fields
   uv_loop_t *scriptingEventLoop = nullptr;
   std::shared_ptr<ScriptEnvironment> scriptingEnv = nullptr;
+  std::optional<std::thread::id> scriptingThreadId = std::nullopt;
   unique_ptr<font::FontCacheManager> fontCacheManager = nullptr;
   unique_ptr<TrClientPerformanceFileSystem> perfFs = nullptr;
 

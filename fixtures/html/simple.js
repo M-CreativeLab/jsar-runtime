@@ -51,8 +51,9 @@ async function sleep(ms) {
   bar.style.setProperty('background-color', 'green');
   document.body.replaceChild(bar, some);
 
-  // await sleep(1000);
-  // document.body.removeChild(bar);
+  bar.addEventListener('click', (event) => {
+    document.body.removeChild(bar);
+  });
 
   // await sleep(1000);
   // const main = document.querySelector('main');

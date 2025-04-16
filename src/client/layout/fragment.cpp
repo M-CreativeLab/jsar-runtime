@@ -49,10 +49,20 @@ namespace client_layout
     position_ += glm::vec3(x, y, z);
   }
 
+  bool Fragment::visibleInViewport(const geometry::Viewport3d &viewport) const
+  {
+    // Check if the fragment is within the viewport bounds.
+    return left() < viewport.right() &&
+           right() > viewport.left() &&
+           top() < viewport.bottom() &&
+           bottom() > viewport.top();
+  }
+
   ostream &operator<<(ostream &os, const Fragment &fragment)
   {
     os << "Fragment {" << endl
-       << "    size: (" << fragment.size_.x << ", " << fragment.size_.y << endl
+       << "position: (" << fragment.position_.x << ", " << fragment.position_.y << ")" << endl
+       << "    size: (" << fragment.size_.x << ", " << fragment.size_.y << ")" << endl
        << " content: (" << fragment.content_size_->x << ", " << fragment.content_size_->y << ")" << endl
        << "  border: " << fragment.border_ << endl
        << " padding: " << fragment.padding_ << endl

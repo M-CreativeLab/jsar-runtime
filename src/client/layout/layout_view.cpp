@@ -1,3 +1,4 @@
+#include <client/browser/window.hpp>
 #include <client/dom/document-inl.hpp>
 #include <client/dom/all_html_elements.hpp>
 #include <client/cssom/css_style_declaration.hpp>
@@ -14,10 +15,11 @@
 namespace client_layout
 {
   using namespace std;
+  using namespace browser;
 
-  shared_ptr<LayoutView> LayoutView::Make(shared_ptr<dom::Document> document)
+  shared_ptr<LayoutView> LayoutView::Make(shared_ptr<dom::Document> document, const Window &window)
   {
-    auto view = make_shared<LayoutView>(document);
+    auto view = make_shared<LayoutView>(document, window);
     assert(view != nullptr && "Failed to create the LayoutView for the document.");
 
     view->setDisplay(DisplayType::Block());
@@ -30,8 +32,9 @@ namespace client_layout
     return view;
   }
 
-  LayoutView::LayoutView(shared_ptr<dom::Document> document)
+  LayoutView::LayoutView(shared_ptr<dom::Document> document, const Window &window)
       : LayoutBlockFlow(document),
+        viewport(window.innerWidth(), window.innerHeight(), window.innerDepth()),
         taffy_node_allocator_(make_shared<crates::layout2::Allocator>()),
         hit_test_count_(0),
         hit_test_cache_hits_(0),

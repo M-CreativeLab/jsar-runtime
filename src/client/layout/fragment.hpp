@@ -6,6 +6,7 @@
 #include <client/dom/geometry/dom_rect.hpp>
 
 #include "./geometry/rect.hpp"
+#include "./geometry/viewport3d.hpp"
 
 namespace client_layout
 {
@@ -34,7 +35,9 @@ namespace client_layout
     // Position
     inline glm::vec3 xyz() const { return position_; }
     inline float left() const { return position_.x; }
+    inline float right() const { return position_.x + size_.x; }
     inline float top() const { return position_.y; }
+    inline float bottom() const { return position_.y + size_.y; }
     inline float z() const { return position_.z; }
 
     // Returns a new `Fragment` object which moves the child fragment based on current fragment.
@@ -72,7 +75,17 @@ namespace client_layout
     inline const geometry::Rect<float> &border() const { return border_; }
     inline const geometry::Rect<float> &padding() const { return padding_; }
 
+    bool visibleInViewport(const geometry::Viewport3d &) const;
+
   private:
+    inline void setSize(float width, float height, float depth)
+    {
+      size_ = glm::vec3(width, height, depth);
+    }
+    inline void setWidth(float width) { size_.x = width; }
+    inline void setHeight(float height) { size_.y = height; }
+    inline void setDepth(float depth) { size_.z = depth; }
+
     inline void setBorder(float top, float right, float bottom, float left)
     {
       border_ = geometry::Rect<float>(top, right, bottom, left);

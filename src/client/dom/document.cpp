@@ -443,16 +443,21 @@ namespace dom
   HTMLDocument::HTMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
       : Document("text/html", DocumentType::kHTML, browsingContext, autoConnect),
         layout_view_(nullptr),
-        layout_allocator_(make_shared<crates::layout2::Allocator>()),
-        visual_bounding_box_(nullopt)
+        layout_allocator_(make_shared<crates::layout2::Allocator>())
   {
-    auto window = defaultView_.lock();
-    if (window != nullptr)
-    {
-      visual_bounding_box_ = builtin_scene::BoundingBox(window->innerWidth(),
-                                                        window->innerHeight(),
-                                                        window->innerDepth());
-    }
+  }
+
+  std::optional<builtin_scene::BoundingBox> HTMLDocument::visualBoundingBox() const
+  {
+    auto layoutBox = layoutView();
+    if (layoutBox == nullptr)
+      return nullopt;
+
+    auto& viewport = layoutBox->viewport;
+    builtin_scene::BoundingBox boundingBox(viewport.width(),
+                                           viewport.height(),
+                                           viewport.depth());
+    return boundingBox;
   }
 
   void HTMLDocument::afterLoadedCallback()
@@ -468,11 +473,12 @@ namespace dom
   void HTMLDocument::onDocumentOpened()
   {
     auto selfDocument = getPtr<HTMLDocument>();
+    auto window = defaultView_.lock();
     auto scene = TrClientContextPerProcess::Get()->builtinScene;
-    if (scene != nullptr)
+    if (scene != nullptr && window != nullptr)
     {
       // Create the layout view before starting the scene.
-      layout_view_ = client_layout::LayoutView::Make(selfDocument);
+      layout_view_ = client_layout::LayoutView::Make(selfDocument, *window);
 
       // TODO: support resize the document scene.
       using namespace builtin_scene::ecs;

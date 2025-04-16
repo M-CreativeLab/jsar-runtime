@@ -41,6 +41,7 @@ namespace builtin_scene
     inline glm::vec3 min() const { return glm::vec3(-width_ / 2.0f, -height_ / 2.0f, -depth_ / 2.0f); }
     // The max point of the bounding box.
     inline glm::vec3 max() const { return glm::vec3(width_ / 2.0f, height_ / 2.0f, depth_ / 2.0f); }
+
     /**
      * Update the size of the bounding box.
      *

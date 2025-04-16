@@ -28,6 +28,13 @@ namespace client_layout
   private:
     void entityDidCreate(builtin_scene::ecs::EntityId entity) override;
     void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
+    void didComputeLayoutOnce(const ConstraintSpace &avilableSpace) override;
     void sizeDidChange() override;
+
+    void layoutDidFirstReady(const Fragment &);
+
+  private:
+    // Whether the layout is computed, it means the loading can be started when the layout is computed.
+    bool is_layout_ready_ = false;
   };
 }

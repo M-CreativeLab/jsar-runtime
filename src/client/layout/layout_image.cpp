@@ -4,10 +4,12 @@
 #include <client/dom/html_image_element.hpp>
 
 #include "./layout_image.hpp"
+#include "./layout_view.hpp"
 
 namespace client_layout
 {
   using namespace std;
+  using namespace dom;
   using namespace builtin_scene;
   using namespace crates::layout2::styles;
 
@@ -111,10 +113,25 @@ namespace client_layout
     LayoutReplaced::entityWillBeDestroyed(entity);
   }
 
+  void LayoutImage::didComputeLayoutOnce(const ConstraintSpace &avilableSpace)
+  {
+    if (!is_layout_ready_)
+    {
+      layoutDidFirstReady(fragment());
+      is_layout_ready_ = true;
+    }
+  }
+
   void LayoutImage::sizeDidChange()
   {
     LayoutReplaced::sizeDidChange();
 
     adjustImageSize();
+  }
+
+  void LayoutImage::layoutDidFirstReady(const Fragment &fragment)
+  {
+    if (fragment.visibleInViewport(viewRef().viewport))
+      Node::AsChecked<dom::HTMLImageElement>(node()).loadImageAsync();
   }
 }

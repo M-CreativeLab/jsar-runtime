@@ -28,6 +28,9 @@ namespace client_layout::geometry
     T &left() { return left_; }
     T left() const { return left_; }
 
+    T width() const { return right_ - left_; }
+    T height() const { return bottom_ - top_; }
+
     // Move the rectangle by the given offset.
     void move(const glm::vec<2, T, glm::packed_highp> offset)
     {

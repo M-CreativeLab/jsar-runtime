@@ -3,12 +3,14 @@
 
 namespace dom
 {
+  using namespace std;
+
   void RuntimeContext::initialize()
   {
     scriptingContext = make_shared<DOMScriptingContext>(getSharedPtr());
   }
 
-  void RuntimeContext::setBaseURI(const std::string newBaseURI)
+  void RuntimeContext::setBaseURI(const string newBaseURI)
   {
     baseURI = newBaseURI;
   }
@@ -37,14 +39,14 @@ namespace dom
     }
   }
 
-  void RuntimeContext::fetchResource(const std::string &url, const std::string &responseType,
+  void RuntimeContext::fetchResource(const string &url, const string &responseType,
                                      const FunctionCallback &responseCallback,
-                                     const std::optional<FunctionCallback> errorCallback)
+                                     const optional<FunctionCallback> errorCallback)
   {
-    auto context = isolate->GetCurrentContext();
     v8::Isolate::Scope isolateScope(isolate);
-    v8::Context::Scope contextScope(context);
     v8::HandleScope handleScope(isolate);
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+    v8::Context::Scope contextScope(context);
 
     v8::Local<v8::Value> promiseValue = fetchResourceInternal(url, responseType);
     if (!promiseValue->IsPromise())
@@ -69,15 +71,15 @@ namespace dom
     }
   }
 
-  v8::Local<v8::Value> RuntimeContext::fetchResourceSync(const std::string &url, const std::string &responseType)
+  v8::Local<v8::Value> RuntimeContext::fetchResourceSync(const string &url, const string &responseType)
   {
     assert(false && "fetchResourceSync is not implemented");
     return v8::Local<v8::Value>();
   }
 
-  void RuntimeContext::fetchTextSourceResource(const std::string &url,
+  void RuntimeContext::fetchTextSourceResource(const string &url,
                                                const StringResponseCallback &responseCallback,
-                                               const std::optional<ErrorCallback> errorCallback)
+                                               const optional<ErrorCallback> errorCallback)
   {
     fetchResource(url, "string", [responseCallback](const v8::FunctionCallbackInfo<v8::Value> &info)
                   {
@@ -91,7 +93,7 @@ namespace dom
         } });
   }
 
-  std::string RuntimeContext::fetchTextSourceResourceSync(const std::string &url, bool ignoreErrors)
+  string RuntimeContext::fetchTextSourceResourceSync(const string &url, bool ignoreErrors)
   {
     try
     {
@@ -99,7 +101,7 @@ namespace dom
       v8::String::Utf8Value result_utf8(isolate, result.As<v8::String>());
       return string(*result_utf8, result_utf8.length());
     }
-    catch (const std::exception &e)
+    catch (const exception &e)
     {
       if (!ignoreErrors)
         throw e;
@@ -108,9 +110,9 @@ namespace dom
     }
   }
 
-  void RuntimeContext::fetchArrayBufferLikeResource(const std::string &url,
+  void RuntimeContext::fetchArrayBufferLikeResource(const string &url,
                                                     const BufferResponseCallback &responseCallback,
-                                                    const std::optional<ErrorCallback> errorCallback)
+                                                    const optional<ErrorCallback> errorCallback)
   {
     auto onResponse = [responseCallback](const v8::FunctionCallbackInfo<v8::Value> &info)
     {
@@ -145,12 +147,12 @@ namespace dom
       {
         v8::Local<v8::Value> error = info[0];
         v8::String::Utf8Value error_utf8(isolate, error);
-        std::string errorStr(*error_utf8, error_utf8.length());
+        string errorStr(*error_utf8, error_utf8.length());
 
         if (errorCallback.has_value())
           errorCallback.value()(errorStr);
         else
-          std::cerr << "Uncaught Fetch Error: " << errorStr << std::endl;
+          cerr << "Uncaught Fetch Error: " << errorStr << endl;
       }
     };
     fetchResource(url, "arraybuffer", onResponse, onError);
@@ -166,7 +168,7 @@ namespace dom
     v8::EscapableHandleScope handleScope(isolate);
 
     if (resourceLoaderValue.IsEmpty())
-      throw std::runtime_error("ResourceLoader not set");
+      throw runtime_error("ResourceLoader not set");
 
     auto keyString = v8::String::NewFromUtf8(isolate, "createWHATWGFetchImpl").ToLocalChecked();
     v8::Local<v8::Object> resourceLoaderObject = v8::Local<v8::Object>::New(isolate, resourceLoaderValue);
@@ -177,11 +179,11 @@ namespace dom
 
     v8::Local<v8::Value> creatingFetchResult;
     if (!createFetchFunction->Call(context, resourceLoaderObject, 1, args).ToLocal(&creatingFetchResult) || !creatingFetchResult->IsFunction())
-      throw std::runtime_error("createWHATWGFetchImpl() must return a new function.");
+      throw runtime_error("createWHATWGFetchImpl() must return a new function.");
     return handleScope.Escape(creatingFetchResult);
   }
 
-  v8::Local<v8::Value> RuntimeContext::fetchResourceInternal(const std::string &url, const std::string &responseType)
+  v8::Local<v8::Value> RuntimeContext::fetchResourceInternal(const string &url, const string &responseType)
   {
     auto context = isolate->GetCurrentContext();
     v8::Isolate::Scope isolateScope(isolate);
