@@ -73,7 +73,16 @@ namespace dom
       browsingContext->fetchTextSourceResource(url, [this](const string &source)
                                                { setSource(source); });
     else
-      setSource("<html><head></head><body></body></html>");
+    {
+      if (url.empty())
+      {
+        setSource("<html><head></head><body></body></html>");
+      }
+      else
+      {
+        setSource(url);
+      }
+    }
   }
 
   void Document::setSource(const string &source, bool isFragment)
