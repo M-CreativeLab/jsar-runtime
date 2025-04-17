@@ -1,5 +1,6 @@
 #include <bindings/webxr/frame.hpp>
 #include <bindings/webxr/input_source.hpp>
+#include <bindings/webxr/session.hpp>
 #include "./webxr_inputsource.hpp"
 
 namespace dombinding::events
@@ -39,9 +40,13 @@ namespace dombinding::events
 
     auto jsThis = info.This().As<Object>();
     auto currentFrame = handle_->frame();
-    if (currentFrame != nullptr && currentFrame->isJSObject())
-      jsThis.Set("frame", currentFrame->getJSObject().Value());
-    
+    if (currentFrame != nullptr)
+    {
+      auto session = currentFrame->session();
+      assert(session != nullptr && "session must be existed when constructing XRInputSourceEvent");
+      jsThis.Set("frame", bindings::XRFrame::GetOrNewInstance(env, &session->getJSObject(), currentFrame));
+    }
+
     auto currentInputSource = handle_->inputSource();
     if (currentInputSource != nullptr && currentInputSource->isJSObject())
       jsThis.Set("inputSource", currentInputSource->getJSObject().Value());
