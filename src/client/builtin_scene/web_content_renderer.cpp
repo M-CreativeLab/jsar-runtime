@@ -131,6 +131,37 @@ namespace builtin_scene::web_renderer
     }
   }
 
+  // Should draw the border edge, and return the computed border width.
+  inline bool shouldDrawBorderEdge(const client_cssom::CSSStyleDeclaration &style,
+                                   const string &edgeName,
+                                   float &computedBorderWidth)
+  {
+    auto borderWidth = style.getPropertyValue("border-" + edgeName + "-width");
+    auto borderStyle = style.getPropertyValue("border-" + edgeName + "-style");
+
+    // Fast check for border style and width.
+    if (borderStyle == "" ||
+        borderStyle == "none" ||
+        borderWidth == "" ||
+        borderWidth == "0")
+      return false;
+
+    if (borderWidth == "thin")
+      computedBorderWidth = 1.0f;
+    else if (borderWidth == "medium")
+      computedBorderWidth = 3.0f;
+    else if (borderWidth == "thick")
+      computedBorderWidth = 5.0f;
+    else
+    {
+      client_cssom::types::LengthPercentage resolvedWidth(borderWidth);
+      computedBorderWidth = resolvedWidth.computeAbsoluteLengthInPixels();
+      if (computedBorderWidth <= 0.0f)
+        return false;
+    }
+    return true;
+  }
+
   bool drawBorders(SkCanvas *canvas, SkRRect &roundedRect,
                    const client_layout::Fragment &fragment,
                    const client_cssom::CSSStyleDeclaration &style)
@@ -142,11 +173,11 @@ namespace builtin_scene::web_renderer
     paint.setStyle(SkPaint::kStroke_Style);
     paint.setAntiAlias(true);
 
-    if (style.hasProperty("border-top-width"))
+    float computedBorderWidth = 0.0f;
+    if (shouldDrawBorderEdge(style, "top", computedBorderWidth))
     {
-      auto borderWidth = style.getPropertyValueAs<LengthPercentage>("border-top-width");
       auto borderColor = style.getPropertyValueAs<Color>("border-top-color");
-      float halfBorderWidth = borderWidth.computeAbsoluteLengthInPixels() / 2.0f;
+      float halfBorderWidth = computedBorderWidth / 2.0f;
 
       paint.setColor(borderColor);
       setBorderPaintEffect(paint, style.getPropertyValueAs<BorderStyleKeyword>("border-top-style"),
@@ -170,11 +201,10 @@ namespace builtin_scene::web_renderer
       canvas->drawPath(path, paint);
       hasBorders = true;
     }
-    if (style.hasProperty("border-right-width"))
+    if (shouldDrawBorderEdge(style, "right", computedBorderWidth))
     {
-      auto borderWidth = style.getPropertyValueAs<LengthPercentage>("border-right-width");
       auto borderColor = style.getPropertyValueAs<Color>("border-right-color");
-      float halfBorderWidth = borderWidth.computeAbsoluteLengthInPixels() / 2.0f;
+      float halfBorderWidth = computedBorderWidth / 2.0f;
 
       paint.setColor(borderColor);
       setBorderPaintEffect(paint, style.getPropertyValueAs<BorderStyleKeyword>("border-right-style"),
@@ -189,11 +219,10 @@ namespace builtin_scene::web_renderer
       canvas->drawPath(path, paint);
       hasBorders = true;
     }
-    if (style.hasProperty("border-bottom-width"))
+    if (shouldDrawBorderEdge(style, "bottom", computedBorderWidth))
     {
-      auto borderWidth = style.getPropertyValueAs<LengthPercentage>("border-bottom-width");
       auto borderColor = style.getPropertyValueAs<client_cssom::types::Color>("border-bottom-color");
-      float halfBorderWidth = borderWidth.computeAbsoluteLengthInPixels() / 2.0f;
+      float halfBorderWidth = computedBorderWidth / 2.0f;
 
       paint.setColor(borderColor);
       setBorderPaintEffect(paint, style.getPropertyValueAs<BorderStyleKeyword>("border-bottom-style"),
@@ -216,11 +245,10 @@ namespace builtin_scene::web_renderer
       canvas->drawPath(path, paint);
       hasBorders = true;
     }
-    if (style.hasProperty("border-left-width"))
+    if (shouldDrawBorderEdge(style, "left", computedBorderWidth))
     {
-      auto borderWidth = style.getPropertyValueAs<LengthPercentage>("border-left-width");
       auto borderColor = style.getPropertyValueAs<client_cssom::types::Color>("border-left-color");
-      float halfBorderWidth = borderWidth.computeAbsoluteLengthInPixels() / 2.0f;
+      float halfBorderWidth = computedBorderWidth / 2.0f;
 
       paint.setColor(borderColor);
       setBorderPaintEffect(paint, style.getPropertyValueAs<BorderStyleKeyword>("border-left-style"),
