@@ -95,6 +95,11 @@ namespace builtin_scene
     bool removeElement(ecs::EntityId entity);
 
     /**
+     * @returns The volume size of this scene.
+     */
+    math::Size3 volumeSize() const { return volumeSize_; }
+
+    /**
      * Update the volume size of the scene.
      *
      * @param size The new volume size.

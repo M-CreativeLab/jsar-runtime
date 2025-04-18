@@ -98,7 +98,7 @@ namespace dom
     {
       transform->setScale({client_cssom::pixelToMeter(boundingBox->width()),
                            client_cssom::pixelToMeter(boundingBox->height()),
-                           1.0f});
+                           0.001f});
 
       float left = fragment.left(); // Get the left position.
       float top = fragment.top();   // Get the top position.

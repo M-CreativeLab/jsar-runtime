@@ -558,6 +558,7 @@ namespace builtin_scene::ecs
   {
   public:
     App() {}
+    virtual ~App() = default;
 
   public:
     /**
@@ -980,6 +981,17 @@ namespace builtin_scene::ecs
     inline std::shared_ptr<ResourceType> getResource()
     {
       return connectedApp_->getResource<ResourceType>();
+    }
+    /**
+     * Get the application that this system is connected to.
+     * 
+     * @tparam ApplicationType The type of the application.
+     * @returns The application that this system is connected to.
+     */
+    template <typename ApplicationType = App>
+    std::shared_ptr<ApplicationType> getApplication()
+    {
+      return dynamic_pointer_cast<ApplicationType>(connectedApp_);
     }
 
   private:

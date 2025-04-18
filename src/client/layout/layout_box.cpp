@@ -71,7 +71,7 @@ namespace client_layout
   geometry::BoundingBox LayoutBox::physicalBorderBoxRect() const
   {
     auto transformComponent = getSceneComponent<builtin_scene::Transform>();
-    auto min = glm::vec3(-0.5, -0.5, -0.001f / 2.0f);
+    auto min = glm::vec3(-0.5, -0.5, -0.5);
     auto max = min * -1.0f;
     return geometry::BoundingBox(min, max, transformComponent->lastComputedMatrix());
   }

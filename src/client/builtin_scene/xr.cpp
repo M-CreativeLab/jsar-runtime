@@ -1,9 +1,12 @@
+#include <client/cssom/units.hpp>
 #include <client/dom/dom_event_target.hpp>
 #include <client/xr/webxr_session_events.hpp>
 
 #include "./ecs-inl.hpp"
-#include "./transform.hpp"
 #include "./hierarchy/element.hpp"
+#include "./transform.hpp"
+#include "./web_content.hpp"
+#include "./scene.hpp"
 #include "./xr.hpp"
 
 namespace builtin_scene
@@ -109,41 +112,18 @@ namespace builtin_scene
 
   void WebXRCollisionBoxSystem::onExecute()
   {
-    glm::vec3 globalMin(std::numeric_limits<float>::max());
-    glm::vec3 globalMax(std::numeric_limits<float>::lowest());
+    auto scene = getApplication<Scene>();
+    assert(scene != nullptr);
 
-    const glm::vec3 localMin = glm::vec3(-1.0f, -1.0f, -1.0f);
-    const glm::vec3 localMax = glm::vec3(1.0f, 1.0f, 1.0f);
-    const std::vector<glm::vec3> localCorners = {
-        glm::vec3(localMin.x, localMin.y, localMin.z),
-        glm::vec3(localMin.x, localMin.y, localMax.z),
-        glm::vec3(localMin.x, localMax.y, localMin.z),
-        glm::vec3(localMin.x, localMax.y, localMax.z),
-        glm::vec3(localMax.x, localMin.y, localMin.z),
-        glm::vec3(localMax.x, localMin.y, localMax.z),
-        glm::vec3(localMax.x, localMax.y, localMin.z),
-        glm::vec3(localMax.x, localMax.y, localMax.z)};
-
-    for (auto &entity : queryEntities<hierarchy::Element>())
+    auto xrExperience = getResource<WebXRExperience>();
+    if (xrExperience != nullptr)
     {
-      auto &elementComponent = getComponentChecked<hierarchy::Element>(entity);
-      auto transformComponent = getComponent<Transform>(entity);
-      if (transformComponent == nullptr)
-        continue;
-
-      auto matrix = transformComponent->lastComputedMatrix();
-      for (const glm::vec3& corner : localCorners)
-      {
-        glm::vec4 transformedCorner = matrix * glm::vec4(corner, 1.0f);
-        glm::vec3 worldPos = glm::vec3(transformedCorner) / transformedCorner.w;
-
-        globalMin = glm::min(globalMin, worldPos);
-        globalMax = glm::max(globalMax, worldPos);
-      }
+      float width = client_cssom::pixelToMeter(scene->volumeSize().width());
+      float height = client_cssom::pixelToMeter(scene->volumeSize().height());
+      glm::vec3 min(-width / 2, -height / 2, -0.001f);
+      glm::vec3 max(width / 2, height / 2, 0.001f);
+      xrExperience->sessionRef().updateCollisionBox(min, max);
     }
-
-    cout << "Global Min: " << globalMin.x << ", " << globalMin.y << ", " << globalMin.z << endl;
-    cout << "Global Max: " << globalMax.x << ", " << globalMax.y << ", " << globalMax.z << endl;
   }
 
   void WebXRPlugin::build(ecs::App &app)
@@ -156,6 +136,6 @@ namespace builtin_scene
     // Systems
     app.addSystem(SchedulerLabel::kStartup, System::Make<WebXRExperienceStartupSystem>());
     app.addSystem(SchedulerLabel::kPreUpdate, System::Make<WebXRExperienceUpdateSystem>());
-    // app.addSystem(SchedulerLabel::kPostUpdate, System::Make<WebXRCollisionBoxSystem>());
+    app.addSystem(SchedulerLabel::kPostUpdate, System::Make<WebXRCollisionBoxSystem>());
   }
 }

@@ -36,7 +36,7 @@ namespace builtin_scene::web_renderer
     auto material = Material::Make<materials::WebContentInstancedMaterial>();
     webContentCtx->instancedMeshEntity_ = spawn(
         hierarchy::Root(true),
-        Mesh3d(meshes->add(MeshBuilder::CreateInstancedMesh<meshes::Box>("HTMLClassicMeshes", 1.0f, 1.0f, 0.001f)),
+        Mesh3d(meshes->add(MeshBuilder::CreateInstancedMesh<meshes::Box>("HTMLClassicMeshes", 1.0f, 1.0f, 1.0f)),
                false),
         MeshMaterial3d(materials->add(material)),
         Transform::FromXYZ(0.0f, 0.0f, 0.0f));
