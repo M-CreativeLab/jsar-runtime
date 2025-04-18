@@ -73,7 +73,17 @@ namespace dom
       browsingContext->fetchTextSourceResource(url, [this](const string &source)
                                                { setSource(source); });
     else
-      setSource("<html><head></head><body></body></html>");
+    {
+      if (url.empty())
+      {
+
+        setSource("<html><head></head><body></body></html>");
+      }
+      else
+      {
+        setSource(url);
+      }
+    }
   }
 
   void Document::setSource(const string &source, bool isFragment)
@@ -453,7 +463,7 @@ namespace dom
     if (layoutBox == nullptr)
       return nullopt;
 
-    auto& viewport = layoutBox->viewport;
+    auto &viewport = layoutBox->viewport;
     builtin_scene::BoundingBox boundingBox(viewport.width(),
                                            viewport.height(),
                                            viewport.depth());
