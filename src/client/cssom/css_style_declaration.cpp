@@ -12,6 +12,10 @@ namespace client_cssom
   {
     LayoutStyle layoutStyle;
 
+#define LAYOUT_USE_PROPERTY_STRING(PROP, NAME) \
+  if (hasProperty(PROP))                       \
+    layoutStyle.set##NAME(getPropertyValue(PROP));
+
 #define LAYOUT_USE_PROPERTY_WITH_TYPE(PROP, NAME, T) \
   if (hasProperty(PROP))                             \
     layoutStyle.set##NAME(getPropertyValueAs<T>(PROP));
@@ -74,11 +78,24 @@ namespace client_cssom
     LAYOUT_USE_PROPERTY_WITH_TYPE("flex-grow", FlexGrow, float)
     LAYOUT_USE_PROPERTY_WITH_TYPE("flex-shrink", FlexShrink, float)
 
+    // Set grid properties
+    LAYOUT_USE_PROPERTY_STRING("grid-template-rows", GridTemplateRows)
+    LAYOUT_USE_PROPERTY_STRING("grid-template-columns", GridTemplateColumns)
+    LAYOUT_USE_PROPERTY_STRING("grid-auto-rows", GridAutoRows)
+    LAYOUT_USE_PROPERTY_STRING("grid-auto-columns", GridAutoColumns)
+    LAYOUT_USE_PROPERTY_STRING("grid-auto-flow", GridAutoFlow)
+    LAYOUT_USE_PROPERTY_STRING("grid-row-start", GridRowStart)
+    LAYOUT_USE_PROPERTY_STRING("grid-row-end", GridRowEnd)
+    LAYOUT_USE_PROPERTY_STRING("grid-column-start", GridColumnStart)
+    LAYOUT_USE_PROPERTY_STRING("grid-column-end", GridColumnEnd)
+
 #undef LAYOUT_USE_PROPERTY
 #undef LAYOUT_USE_PROPERTY_WITH_TYPE
+#undef LAYOUT_USE_PROPERTY_STRING
 
 #ifdef TR_CLIENT_CSSOM_VERBOSE
-    cout << "toLayoutStyle => " << layoutStyle << endl;
+    cout
+        << "toLayoutStyle => " << layoutStyle << endl;
     cout << "source css: " << cssText() << endl;
 #endif
     // Return the layout style

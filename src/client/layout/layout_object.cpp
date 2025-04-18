@@ -331,10 +331,13 @@ namespace client_layout
     newChild->formattingContext_->onAdded(parentCtx, beforeChild);
   }
 
-  void LayoutObject::onChildRemoved(shared_ptr<LayoutObject> oldChild)
+  void LayoutObject::onChildRemoved(shared_ptr<LayoutObject> child)
   {
-    oldChild->formattingContext_->onRemoved(*formattingContext_);
-    oldChild->destroy();
+    assert(child != nullptr && "The child must be set.");
+    assert(child->formattingContext_ != nullptr && "The formatting context must be set for the child.");
+
+    child->formattingContext_->onRemoved(*formattingContext_);
+    child->destroy();
   }
 
   void LayoutObject::addChild(shared_ptr<LayoutObject> newChild, shared_ptr<LayoutObject> beforeChild)
@@ -363,7 +366,7 @@ namespace client_layout
     formattingContext_ = FormattingContext::Make(display, view());
   }
 
-  bool LayoutObject::setStyle(const CSSStyleDeclaration &style)
+  bool LayoutObject::setStyle(CSSStyleDeclaration style)
   {
     styleWillChange(style);
 
@@ -641,7 +644,7 @@ namespace client_layout
     useSceneWithCallback(removeInstance);
   }
 
-  void LayoutObject::styleWillChange(const client_cssom::CSSStyleDeclaration &newStyle)
+  void LayoutObject::styleWillChange(client_cssom::CSSStyleDeclaration &newStyle)
   {
     // Update the transform's post-transform matrix if the "transform" property is provided.
     if (newStyle.hasProperty("transform"))

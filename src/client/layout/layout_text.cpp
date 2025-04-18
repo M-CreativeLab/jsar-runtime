@@ -104,7 +104,7 @@ namespace client_layout
     LayoutObject::entityWillBeDestroyed(entity);
   }
 
-  void LayoutText::styleWillChange(const client_cssom::CSSStyleDeclaration &newStyle)
+  void LayoutText::styleWillChange(client_cssom::CSSStyleDeclaration &newStyle)
   {
     LayoutObject::styleWillChange(newStyle);
 
@@ -116,6 +116,10 @@ namespace client_layout
       if (textComponent != nullptr)
           textComponent->content = transformAndSecureText(plainText());
     }
+
+    // Ignore the `LayoutText` in layout tree if the text content is empty.
+    if (isEmptyText())
+      newStyle.setProperty("display", "none");
   }
 
   void LayoutText::didComputeLayoutOnce(const ConstraintSpace &avilableSpace)

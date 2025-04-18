@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <concepts>
+
+#include "./bindings.css-inl.hpp"
 #include "./holocron_layout.autogen.hpp"
 
 namespace crates::layout2
@@ -762,75 +764,87 @@ namespace crates::layout2
   {
   public:
     LayoutStyle()
-        : style_({// display
-                  styles::Display::Block(),
-                  // box sizing
-                  styles::BoxSizing::ContentBox(),
-                  // overflow
-                  holocron::layout::OverflowXY{
-                      .x = holocron::layout::Overflow::Visible,
-                      .y = holocron::layout::Overflow::Visible,
-                  },
-                  // scrollbar_width
-                  2.0f,
-                  // position
-                  styles::Position::Relative(),
-                  // width
-                  styles::Dimension::Auto(),
-                  // height
-                  styles::Dimension::Auto(),
-                  // width range
-                  holocron::layout::DimensionRange{
-                      .min = styles::Dimension::Auto(),
-                      .max = styles::Dimension::Auto(),
-                  },
-                  // height range
-                  holocron::layout::DimensionRange{
-                      .min = styles::Dimension::Auto(),
-                      .max = styles::Dimension::Auto(),
-                  },
-                  // margin
-                  holocron::layout::LengthPercentageAutoRect{
-                      .top = styles::LengthPercentageAuto::Length(0.0f),
-                      .right = styles::LengthPercentageAuto::Length(0.0f),
-                      .bottom = styles::LengthPercentageAuto::Length(0.0f),
-                      .left = styles::LengthPercentageAuto::Length(0.0f),
-                  },
-                  // padding
-                  holocron::layout::LengthPercentageRect{
-                      .top = styles::LengthPercentage::Length(0.0f),
-                      .right = styles::LengthPercentage::Length(0.0f),
-                      .bottom = styles::LengthPercentage::Length(0.0f),
-                      .left = styles::LengthPercentage::Length(0.0f),
-                  },
-                  // border
-                  holocron::layout::LengthPercentageRect{
-                      .top = styles::LengthPercentage::Length(0.0f),
-                      .right = styles::LengthPercentage::Length(0.0f),
-                      .bottom = styles::LengthPercentage::Length(0.0f),
-                      .left = styles::LengthPercentage::Length(0.0f),
-                  },
-                  // alignment and spacing
-                  styles::AlignItems::Stretch(),
-                  styles::AlignSelf::Auto(),
-                  styles::AlignContent::Stretch(),
-                  styles::JustifyItems::Stretch(),
-                  styles::JustifySelf::Stretch(),
-                  styles::JustifyContent::FlexStart(),
-                  // gap
-                  holocron::layout::LengthPercentageXY{
-                      .x = styles::LengthPercentage::Length(0.0f),
-                      .y = styles::LengthPercentage::Length(0.0f),
-                  },
-                  // flex properties
-                  styles::FlexDirection::Row(),
-                  styles::FlexWrap::NoWrap(),
-                  // flex basis
-                  styles::Dimension::Auto(),
-                  // flex grow
-                  0.0f,
-                  // flex shrink
-                  1.0f})
+        : style_({
+              // display
+              styles::Display::Block(),
+              // box sizing
+              styles::BoxSizing::ContentBox(),
+              // overflow
+              holocron::layout::OverflowXY{
+                  .x = holocron::layout::Overflow::Visible,
+                  .y = holocron::layout::Overflow::Visible,
+              },
+              // scrollbar_width
+              2.0f,
+              // position
+              styles::Position::Relative(),
+              // width
+              styles::Dimension::Auto(),
+              // height
+              styles::Dimension::Auto(),
+              // width range
+              holocron::layout::DimensionRange{
+                  .min = styles::Dimension::Auto(),
+                  .max = styles::Dimension::Auto(),
+              },
+              // height range
+              holocron::layout::DimensionRange{
+                  .min = styles::Dimension::Auto(),
+                  .max = styles::Dimension::Auto(),
+              },
+              // margin
+              holocron::layout::LengthPercentageAutoRect{
+                  .top = styles::LengthPercentageAuto::Length(0.0f),
+                  .right = styles::LengthPercentageAuto::Length(0.0f),
+                  .bottom = styles::LengthPercentageAuto::Length(0.0f),
+                  .left = styles::LengthPercentageAuto::Length(0.0f),
+              },
+              // padding
+              holocron::layout::LengthPercentageRect{
+                  .top = styles::LengthPercentage::Length(0.0f),
+                  .right = styles::LengthPercentage::Length(0.0f),
+                  .bottom = styles::LengthPercentage::Length(0.0f),
+                  .left = styles::LengthPercentage::Length(0.0f),
+              },
+              // border
+              holocron::layout::LengthPercentageRect{
+                  .top = styles::LengthPercentage::Length(0.0f),
+                  .right = styles::LengthPercentage::Length(0.0f),
+                  .bottom = styles::LengthPercentage::Length(0.0f),
+                  .left = styles::LengthPercentage::Length(0.0f),
+              },
+              // alignment and spacing
+              styles::AlignItems::Stretch(),
+              styles::AlignSelf::Auto(),
+              styles::AlignContent::Stretch(),
+              styles::JustifyItems::Stretch(),
+              styles::JustifySelf::Stretch(),
+              styles::JustifyContent::FlexStart(),
+              // gap
+              holocron::layout::LengthPercentageXY{
+                  .x = styles::LengthPercentage::Length(0.0f),
+                  .y = styles::LengthPercentage::Length(0.0f),
+              },
+              // flex properties
+              styles::FlexDirection::Row(),
+              styles::FlexWrap::NoWrap(),
+              // flex basis
+              styles::Dimension::Auto(),
+              // flex grow
+              0.0f,
+              // flex shrink
+              1.0f,
+              // grid properties
+              "none", // grid-template-rows
+              "none", // grid-template-columns
+              "auto", // grid-auto-rows
+              "auto", // grid-auto-columns
+              "row",  // grid-auto-flow
+              "auto", // grid-row-start
+              "auto", // grid-row-end
+              "auto", // grid-column-start
+              "auto", // grid-column-end
+          })
     {
     }
     LayoutStyle(holocron::layout::Style style) : style_(style)
@@ -943,6 +957,16 @@ namespace crates::layout2
     void setFlexGrow(float value) { style_.flexGrow = value; }
     const float flexShrink() const { return style_.flexShrink; }
     void setFlexShrink(float value) { style_.flexShrink = value; }
+
+    void setGridTemplateRows(const std::string &value) { style_.gridTemplateRows = value; }
+    void setGridTemplateColumns(const std::string &value) { style_.gridTemplateColumns = value; }
+    void setGridAutoRows(const std::string &value) { style_.gridAutoRows = value; }
+    void setGridAutoColumns(const std::string &value) { style_.gridAutoColumns = value; }
+    void setGridAutoFlow(const std::string &value) { style_.gridAutoFlow = value; }
+    void setGridRowStart(const std::string &value) { style_.gridRowStart = value; }
+    void setGridRowEnd(const std::string &value) { style_.gridRowEnd = value; }
+    void setGridColumnStart(const std::string &value) { style_.gridColumnStart = value; }
+    void setGridColumnEnd(const std::string &value) { style_.gridColumnEnd = value; }
 
   public:
     friend std::ostream &operator<<(std::ostream &os, const LayoutStyle &style)

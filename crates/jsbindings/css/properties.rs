@@ -4,9 +4,8 @@ use style::{
   context::QuirksMode,
   properties::{self as StyleProperties},
   stylesheets::{CssRuleType, Origin},
-  values::{generics as StyleGenericsValues, specified as StyleSpecifiedValues},
 };
-use style_traits::{ParsingMode, ToCss};
+use style_traits::ParsingMode;
 use url::Url;
 
 use StyleProperties::{Importance, PropertyId, SourcePropertyDeclaration};
@@ -128,6 +127,8 @@ impl PropertyDeclarationBlock {
     self.handle.borrow().property_priority(&id).important()
   }
 
+  #[allow(unused)]
+  #[inline]
   pub fn get_importance(&self, property: &str) -> Importance {
     if self.is_property_important(property) {
       Importance::Important

@@ -26,6 +26,7 @@ namespace client_layout
   public:
     const char *name() const override { return "LayoutText"; }
     bool isText() const override final { return true; }
+    bool isEmptyText() const override final { return plainTextLength() == 0; }
 
     std::shared_ptr<dom::Text> textNode() const;
     std::string plainText() const;
@@ -42,7 +43,7 @@ namespace client_layout
 
     void entityDidCreate(builtin_scene::ecs::EntityId entity) override;
     void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
-    void styleWillChange(const client_cssom::CSSStyleDeclaration &newStyle) override;
+    void styleWillChange(client_cssom::CSSStyleDeclaration &newStyle) override;
     void didComputeLayoutOnce(const ConstraintSpace &avilableSpace) override final;
 
     std::string transformAndSecureText(const std::string &original) const;
