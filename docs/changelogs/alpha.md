@@ -2,6 +2,65 @@
 
 The alpha version of JSAR is the first version of the project.
 
+## v0.7.1
+
+### ​​New Features & Improvements​​
+
+#### ​​Layout System Overhaul​​
+
+- ​**​Refactored layout system**​​ to align with the standard **​​CSS Box Model​​**.
+  - Added ​**​scrolling and overflow** support​.
+  - Introduced ​​**CSS Grid Layout**​​ support.
+
+#### New DOM APIs
+
+- **Node Manipulation**
+  - `Node.previousSibling`
+  - `Node.replaceChild()`
+  - `Node.removeChild()`
+  - `Node.cloneNode()`
+  - `Node.nextSibling`
+  - `Node.insertBefore()`
+- ​**​Element Properties & Methods**
+  - `Element.innerHTML` (getter & setter)
+  - `Element.before()` & `Element.after()`
+- **Element Events**
+  - click – Fired when the primary button is clicked.
+  - mousedown – Fired when the primary button is pressed.
+  - mouseup – Fired when the primary button is released.
+  - mousemove – Fired when the mouse moves over the element.
+  - mouseover – Fired when the mouse enters the element.
+  - mouseout – Fired when the mouse leaves the element.
+- **​​Document APIs**
+  - `Document.querySelector()` & `Document.querySelectorAll()`.
+  - `Document.createTextNode()`.
+  - Added `DocumentFragment` support.
+
+#### ​​HTML & CSS Enhancements​​
+
+- ​**​Dataset Support​**​ – Added `data-*` attribute handling for HTML elements.
+- **​​MutationObserver**​​ – Now supports observing DOM tree changes.
+- ​**​New HTML Elements**
+  - `<link>` (`HTMLLinkElement`) – Supports loading external CSS via href.
+  - `<template>` (`HTMLTemplateElement`)
+  - ​​**Semantic Elements**:​​ `<header>`, `<footer>`, `<main>`, `<section>`.
+- **CSS Properties**
+  - `text-transform` – Supports uppercase, lowercase, and capitalize.
+
+#### ​​Performance Optimizations​​
+
+- **​​ECS (Entity-Component-System):​​**
+  - Optimized queryEntities() with a ​​new caching system​​.
+- **Rendering**
+  - Improved efficiency by **​​skipping rendering of overflow images​​**.
+
+## v0.7.0
+
+- Supports the rendering for HTML elements with high performance, both elements rendering in the two draw calls.
+- Supports update the elements in 3D via the CSS transform functions such as `translate`, `rotate`, and `scale`.
+- Open as HTML document by default.
+- Add inspector support to debug the rendering backend issues.
+
 ## v0.6.0
 
 - HTML is introduced as the main entry point to start an application.
