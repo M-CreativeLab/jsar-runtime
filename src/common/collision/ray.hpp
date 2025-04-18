@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <array>
 #include <ostream>
 #include <glm/glm.hpp>

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <vector>
 #include <ostream>
 #include <glm/glm.hpp>
 
