@@ -32,7 +32,7 @@ export default function getTemplate(modelUrl, options: Model3dViewerOptions = {}
     light.position.set(0, 1, 1);
     scene.add(light);
 
-    // 全局变量
+    // Global variables
     const xrControl = {
       selectedObject: null,
       selectingController: null,
@@ -41,7 +41,7 @@ export default function getTemplate(modelUrl, options: Model3dViewerOptions = {}
       initialControllerQuaternion: new THREE.Quaternion(),
       initialObjectQuaternion: new THREE.Quaternion(),
       raycaster: new THREE.Raycaster(),
-      // 添加可重用对象
+      // Reusable objects
       _deltaPosition: new THREE.Vector3(),
       _quaternionX: new THREE.Quaternion(),
       _quaternionY: new THREE.Quaternion(),
@@ -50,7 +50,7 @@ export default function getTemplate(modelUrl, options: Model3dViewerOptions = {}
       _initialEuler: new THREE.Euler(),
     };
 
-    // 动画相关变量
+    // Animation related variables
     const animationControl = {
       mixer: null,
       animations: [],
@@ -59,7 +59,7 @@ export default function getTemplate(modelUrl, options: Model3dViewerOptions = {}
       isPlaying: false
     };
 
-    // 可选择物体
+    // Selectable objects group
     const group = new THREE.Group();
     scene.add(group);
 
@@ -95,30 +95,28 @@ export default function getTemplate(modelUrl, options: Model3dViewerOptions = {}
           }
         }
 
-        // 计算包围盒并创建碰撞盒
+        // Calculate bounding box and create collision box
         let box = new THREE.Box3().setFromObject(model);
         let size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
-        model.position.sub(center); // 将模型移到以几何中心为原点
+        model.position.sub(center); // Move model to center at origin
 
-        // 创建可交互的碰撞盒几何体
+        // Create interactive collision box geometry
         const boxGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
         const boxMaterial = new THREE.MeshBasicMaterial({
           color: 0xffff00,
           visible: false
         });
         const collisionBox = new THREE.Mesh(boxGeometry, boxMaterial);
-        // collisionBox.position.copy(center);
 
-        // 将碰撞盒和原始模型添加到父容器
+        // Add collision box and original model to parent container
         parentGroup.add(collisionBox);
 
-        // 设置父容器位置
+        // Set parent container position
         const scaleFactor = 1.0 / (Math.max(size.x, size.y, size.z) * 5);
         parentGroup.scale.set(scaleFactor, scaleFactor, scaleFactor);
-        // parentGroup.scale.set(1 / size.x, 1 / size.y, 1 / size.z);
 
-        // 添加交互属性（重要！）
+        // Add interactive properties (Important!)
         collisionBox.userData.isInteractive = true;
         parentGroup.userData.isInteractive = true;
 
@@ -129,12 +127,12 @@ export default function getTemplate(modelUrl, options: Model3dViewerOptions = {}
         // group.add(collisionBox);
       }
       const onProgress = ({ loaded, total }) => {
-        console.log('加载进度:', loaded / total * 100 + '%');
+        console.log('Loading progress:', loaded / total * 100 + '%');
       };
       const onError = (error) => {
-        console.error('加载失败:', error);
+        console.error('Loading failed:', error);
         if (error instanceof Error) {
-          console.error('错误详情:', error.message);
+          console.error('Error details:', error.message);
         }
       }
       const loader = new GLTFLoader();
@@ -330,7 +328,7 @@ export default function getTemplate(modelUrl, options: Model3dViewerOptions = {}
       }
 
 
-      // 添加清理函数
+      // Add cleanup function
       function cleanup() {
         renderer.setAnimationLoop(null);
         scene.traverse(object => {
