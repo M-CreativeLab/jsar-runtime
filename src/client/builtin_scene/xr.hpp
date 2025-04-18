@@ -89,7 +89,6 @@ namespace builtin_scene
 
   class WebXRExperienceStartupSystem : public ecs::System
   {
-  public:
     using ecs::System::System;
 
   public:
@@ -99,11 +98,19 @@ namespace builtin_scene
 
   class WebXRExperienceUpdateSystem : public ecs::System
   {
-  public:
     using ecs::System::System;
 
   public:
     const std::string name() const override { return "WebXRExperienceUpdateSystem"; }
+    void onExecute() override;
+  };
+
+  class WebXRCollisionBoxSystem : public ecs::System
+  {
+    using ecs::System::System;
+
+  public:
+    const std::string name() const override { return "WebXRCollisionBoxSystem"; }
     void onExecute() override;
   };
 
