@@ -11,10 +11,18 @@
 #include <assert.h>
 #include <array>
 #include <memory>
+#include <functional>
 #include <vector>
 #include <unordered_map>
 #include <shared_mutex>
 #include <idgen.hpp>
+
+/**
+ * Enable the time profiling for the ECS.
+ */
+#define TR_ECS_ENABLE_TIME_PROFILING
+// Uncomment the following line to disable the time profiling for the ECS.
+#undef TR_ECS_ENABLE_TIME_PROFILING
 
 namespace builtin_scene::ecs
 {
@@ -361,6 +369,7 @@ namespace builtin_scene::ecs
     std::array<std::shared_ptr<T>, MAX_ENTITY_ID> components_;
     std::unordered_map<EntityId, size_t> entityToIndexMap_;
     std::unordered_map<size_t, EntityId> indexToEntityMap_;
+    std::unordered_map<EntityId, std::weak_ptr<T>> entityToComponentCache_;
     size_t size_ = 0;
   };
 
@@ -549,6 +558,7 @@ namespace builtin_scene::ecs
   {
   public:
     App() {}
+    virtual ~App() = default;
 
   public:
     /**
@@ -560,22 +570,35 @@ namespace builtin_scene::ecs
     template <typename... ComponentTypeList>
     EntityId spawn(ComponentTypeList... components);
     /**
+     * Remove the entity from the ECS.
+     *
+     * @param entity The entity to remove.
+     * @returns `true` if the entity is removed, `false` otherwise.
+     */
+    bool removeEntity(EntityId entity);
+    /**
      * Query all entities with the given component type.
      *
      * @tparam ComponentType The type of the component.
+     *
+     * @param filter The filter to apply to the component.
      * @returns The list of entity Ids with the given component type.
      */
     template <typename ComponentType>
-    [[nodiscard]] std::vector<EntityId> queryEntities();
+    [[nodiscard]] std::vector<EntityId> queryEntities(
+        std::function<bool(const ComponentType &)> filter = nullptr);
     /**
      * Query all entities with the given query component type and include the include component type.
      *
      * @tparam QueryComponentType The component type to query.
      * @tparam IncludeComponentType The component type to be included as the result.
+     *
+     * @param filter The filter to apply to the query component.
      * @returns The list of components of the given type.
      */
     template <typename QueryComponentType, typename IncludeComponentType>
-    [[nodiscard]] std::vector<IncludeComponentType> queryEntitiesWithComponent();
+    [[nodiscard]] std::vector<std::pair<EntityId, std::shared_ptr<IncludeComponentType>>> queryEntitiesWithComponent(
+        std::function<bool(const QueryComponentType &)> filter = nullptr);
     /**
      * Get the first entity with the given component type, or an empty optional if not found.
      *
@@ -800,19 +823,14 @@ namespace builtin_scene::ecs
     /**
      * Run the system once, it also runs the next system in the chain if it's configured.
      */
-    void runOnce()
-    {
-      onExecute();
-      if (next_ != nullptr)
-        next_->runOnce();
-    }
+    void runOnce();
     /**
      * Add a system to the chain of this system, the former will be executed after the latter.
      *
      * @param next The next system to run.
      * @returns The next system.
      */
-    std::shared_ptr<System> chain(std::shared_ptr<System> next)
+    inline std::shared_ptr<System> chain(std::shared_ptr<System> next)
     {
       next_ = next;
       return next;
@@ -834,21 +852,29 @@ namespace builtin_scene::ecs
      * Query all entities with the given component type.
      *
      * @tparam ComponentType The type of the component.
+     *
+     * @param filter The filter to apply to the query.
      * @returns The list of entity Ids with the given component type.
      */
     template <typename ComponentType>
-    inline std::vector<EntityId> queryEntities() { return connectedApp_->queryEntities<ComponentType>(); }
+    inline std::vector<EntityId> queryEntities(std::function<bool(const ComponentType &)> filter = nullptr)
+    {
+      return connectedApp_->queryEntities<ComponentType>(filter);
+    }
     /**
      * Query all entities with the given query component type and include the include component type.
      *
      * @tparam QueryComponentType The component type to query.
      * @tparam IncludeComponentType The component type to be included as the result.
+     *
+     * @param filter The filter to apply to the query component.
      * @returns The list of components of the given type.
      */
-    template <typename QueryComponentType, typename IncludeComponentType>
-    inline std::vector<IncludeComponentType> queryEntitiesWithComponent()
+    template <typename QueryComponentType, typename IncludeComponentType = QueryComponentType>
+    inline std::vector<std::pair<EntityId, std::shared_ptr<IncludeComponentType>>> queryEntitiesWithComponent(
+        std::function<bool(const QueryComponentType &)> filter = nullptr)
     {
-      return connectedApp_->queryEntitiesWithComponent<QueryComponentType, IncludeComponentType>();
+      return connectedApp_->queryEntitiesWithComponent<QueryComponentType, IncludeComponentType>(filter);
     }
     /**
      * Get the first entity with the given component type, or an empty optional if not found.
@@ -903,7 +929,7 @@ namespace builtin_scene::ecs
      * @returns The component reference of the given entity.
      */
     template <typename ComponentType>
-    [[nodiscard]] const ComponentType &getComponentChecked(EntityId entity)
+    [[nodiscard]] ComponentType &getComponentChecked(EntityId entity)
     {
       return connectedApp_->getComponentChecked<ComponentType>(entity);
     }
@@ -956,14 +982,20 @@ namespace builtin_scene::ecs
     {
       return connectedApp_->getResource<ResourceType>();
     }
+    /**
+     * Get the application that this system is connected to.
+     * 
+     * @tparam ApplicationType The type of the application.
+     * @returns The application that this system is connected to.
+     */
+    template <typename ApplicationType = App>
+    std::shared_ptr<ApplicationType> getApplication()
+    {
+      return dynamic_pointer_cast<ApplicationType>(connectedApp_);
+    }
 
   private:
-    void connect(std::shared_ptr<App> app)
-    {
-      connectedApp_ = app;
-      if (next_ != nullptr)
-        next_->connect(app);
-    }
+    void connect(std::shared_ptr<App> app);
 
   private:
     SystemId id_;

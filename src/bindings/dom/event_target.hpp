@@ -12,7 +12,7 @@ namespace dombinding
   class EventTargetWrap : public Napi::ObjectWrap<ObjectType>
   {
   public:
-    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties()
+    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties(Napi::Env env)
     {
       using T = EventTargetWrap<ObjectType, EventTargetType>;
       return {

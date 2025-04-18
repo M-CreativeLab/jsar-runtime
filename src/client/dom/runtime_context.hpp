@@ -56,6 +56,15 @@ namespace dom
                        const std::optional<FunctionCallback> errorCallback = std::nullopt);
 
     /**
+     * Fetch the resource from the given URL synchronously.
+     * 
+     * @param url The URL of the resource to fetch.
+     * @param responseType The type of the response to expect: "string", "arraybuffer" or "json".
+     * @returns The fetched resource.
+     */
+    v8::Local<v8::Value> fetchResourceSync(const std::string &url, const std::string &responseType);
+
+    /**
      * Fetch the text source type of the resource from the given URL.
      *
      * @param url The URL of the resource to fetch.
@@ -65,6 +74,15 @@ namespace dom
     void fetchTextSourceResource(const std::string &url,
                                  const StringResponseCallback &responseCallback,
                                  const std::optional<ErrorCallback> errorCallback = std::nullopt);
+
+    /**
+     * Fetch the text source type of the resource from the given URL synchronously.
+     * 
+     * @param url The URL of the resource to fetch.
+     * @param ignoreErrors Whether to ignore errors during fetching the resource.
+     * @returns The fetched resource.
+     */
+    std::string fetchTextSourceResourceSync(const std::string &url, bool ignoreErrors = false);
 
     /**
      * Fetch the arraybuffer-like resource from the given URL.
@@ -109,6 +127,10 @@ namespace dom
     {
       return dynamic_pointer_cast<T>(shared_from_this());
     }
+
+  private:
+    // Fetch the resource from the given URL, and return a promise.
+    v8::Local<v8::Value> fetchResourceInternal(const std::string &url, const std::string &responseType);
 
   public:
     std::string baseURI;

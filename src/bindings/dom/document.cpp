@@ -1,4 +1,4 @@
-#include "./document.hpp"
+#include "./document-inl.hpp"
 
 namespace dombinding
 {
@@ -25,6 +25,31 @@ namespace dombinding
       }
     }
     return nullptr;
+  }
+
+  Napi::Value Document::NewInstance(Napi::Env env, shared_ptr<dom::Node> node)
+  {
+    if (node == nullptr)
+      return env.Null();
+
+    auto document = dynamic_pointer_cast<dom::Document>(node);
+    assert(document != nullptr && "invalid Document.");
+
+    if (document->documentType == dom::DocumentType::kHTML)
+    {
+      auto htmlDocument = dynamic_pointer_cast<dom::HTMLDocument>(document);
+      assert(htmlDocument != nullptr && "invalid HTMLDocument.");
+      return DocumentBase<Document, dom::HTMLDocument>::NewInstance(env, htmlDocument);
+    }
+    else if (document->documentType == dom::DocumentType::kXML)
+    {
+      auto xmlDocument = dynamic_pointer_cast<dom::XMLDocument>(document);
+      assert(xmlDocument != nullptr && "invalid XMLDocument.");
+      return XMLDocument::NewInstance(env, xmlDocument);
+    }
+
+    // Unreachable
+    assert(false && "invalid document type.");
   }
 
   Document::Document(const Napi::CallbackInfo &info) : DocumentBase<Document, dom::HTMLDocument>(info)

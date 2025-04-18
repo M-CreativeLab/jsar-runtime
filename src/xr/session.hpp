@@ -27,7 +27,8 @@ namespace xr
      * @param init The requested session initialization info.
      * @returns The new `xr::TrXRSession` instance.
      */
-    static inline std::shared_ptr<TrXRSession> Make(uint32_t sessionId, Device *device, std::shared_ptr<TrContentRuntime> content,
+    static inline std::shared_ptr<TrXRSession> Make(uint32_t sessionId, Device *device,
+                                                    std::shared_ptr<TrContentRuntime> content,
                                                     TrXRSessionMode mode,
                                                     TrXRSessionInit &init)
     {
@@ -35,7 +36,9 @@ namespace xr
     }
 
   public:
-    TrXRSession(uint32_t id, Device *device, std::shared_ptr<TrContentRuntime> content, TrXRSessionMode mode, TrXRSessionInit &init);
+    TrXRSession(uint32_t id, Device *device, std::shared_ptr<TrContentRuntime> content,
+                TrXRSessionMode mode,
+                TrXRSessionInit &init);
     ~TrXRSession();
 
   public:

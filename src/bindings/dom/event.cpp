@@ -57,7 +57,7 @@ namespace dombinding
   Napi::Object Event::Init(Napi::Env env)
   {
     EscapableHandleScope scope(env);
-    Function func = DefineClass(env, "Event", GetClassProperties());
+    Function func = DefineClass(env, "Event", GetClassProperties(env));
     constructor = new FunctionReference();
     *constructor = Persistent(func);
     return scope.Escape(func).ToObject();

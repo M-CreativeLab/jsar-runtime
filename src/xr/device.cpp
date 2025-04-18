@@ -354,32 +354,26 @@ namespace xr
 
   bool Device::getCollisionBoxByDocumentId(int id, float *outMin, float *outMax)
   {
-    std::shared_lock<std::shared_mutex> lock(m_MutexForSessions);
+    shared_lock<std::shared_mutex> lock(m_MutexForSessions);
     auto content = m_Constellation->contentManager->getContent(id);
     if (TR_UNLIKELY(content == nullptr))
       return false;
 
-    bool updated = false;
-    float inf = std::numeric_limits<float>::infinity();
-    float min[3] = {-inf, -inf, -inf};
-    float max[3] = {inf, inf, inf};
+    auto contentSessions = content->getXRSessions();
+    if (TR_UNLIKELY(contentSessions.size() == 0))
+      return false;
 
-    for (auto session : content->getXRSessions())
+    float inf = std::numeric_limits<float>::infinity();
+    float boxMin[3] = {-inf, -inf, -inf};
+    float boxMax[3] = {inf, inf, inf};
     {
-      if (session != nullptr)
-      {
-        float boxMin[3];
-        float boxMax[3];
-        session->getCollisionBox(boxMin, boxMax);
-        min[0] = std::min(min[0], boxMin[0]);
-        min[1] = std::min(min[1], boxMin[1]);
-        min[2] = std::min(min[2], boxMin[2]);
-      }
+      // Only update the collision box for the first session, namely the HTML session.
+      contentSessions.front()->getCollisionBox(boxMin, boxMax);
     }
 
-    memcpy(outMin, min, sizeof(float) * 3);
-    memcpy(outMax, max, sizeof(float) * 3);
-    return updated;
+    memcpy(outMin, boxMin, sizeof(float) * 3);
+    memcpy(outMax, boxMax, sizeof(float) * 3);
+    return true;
   }
 
   // InputSource

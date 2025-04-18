@@ -31,6 +31,25 @@ TEST_CASE("TrEventTarget dispatchEvent method", "[TrEventTarget]") {
   REQUIRE(callbackInvoked);
 }
 
+TEST_CASE("TrEventTarget dispatchEvent with multiple listeners", "[TrEventTarget]") {
+  TrEventTarget<TestEventType, TestEvent> target;
+  int callbackCount = 0;
+
+  auto callback1 = [&](TestEventType type, std::shared_ptr<TestEvent> event) {
+    callbackCount++;
+  };
+
+  auto callback2 = [&](TestEventType type, std::shared_ptr<TestEvent> event) {
+    callbackCount++;
+  };
+
+  target.addEventListener(TestEventType::EventType1, callback1);
+  target.addEventListener(TestEventType::EventType1, callback2);
+  target.dispatchEvent(TestEventType::EventType1);
+
+  REQUIRE(callbackCount == 2);
+}
+
 TEST_CASE("TrEventTarget addEventListener and removeEventListener methods", "[TrEventTarget]") {
   TrEventTarget<TestEventType, TestEvent> target;
   bool callbackInvoked = false;

@@ -15,6 +15,14 @@ namespace builtin_scene::materials
   class WebContentInstancedMaterial final : public Material
   {
   public:
+    enum class TextureUpdateStatus : uint8_t
+    {
+      kSkipped,
+      kSuccess,
+      kFailed
+    };
+
+  public:
     WebContentInstancedMaterial();
 
   public:
@@ -49,13 +57,14 @@ namespace builtin_scene::materials
      * Flip the texture by the Y-axis.
      */
     void flipTextureByY(bool flip);
+
     /**
      * Update the texture from the given WebContent.
      *
      * @param content The WebContent to update the material with.
-     * @returns Whether the texture is updated successfully.
+     * @returns The status of the texture update.
      */
-    bool updateTexture(WebContent &content);
+    TextureUpdateStatus updateTexture(WebContent &content);
 
   public:
     float width() const { return width_; }

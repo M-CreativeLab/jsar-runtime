@@ -401,6 +401,7 @@ pub(crate) enum TransformOperation {
   // TODO: Add more operations
 }
 
+#[allow(unused)]
 impl TransformOperation {
   pub fn new(handle: &StyleSpecifiedValues::transform::TransformOperation) -> Self {
     match handle {
@@ -558,3 +559,30 @@ impl Transform {
     &self.operations[index]
   }
 }
+
+#[derive(Clone, Debug)]
+pub(crate) struct SpecifiedProperty<T> {
+  handle: T,
+}
+
+impl<T> SpecifiedProperty<T>
+where
+  T: ToCss,
+{
+  pub fn from(handle: T) -> Self {
+    Self { handle }
+  }
+
+  pub fn as_handle(&self) -> &T {
+    &self.handle
+  }
+
+  #[allow(unused)]
+  pub fn to_css(&self) -> String {
+    self.handle.to_css_string()
+  }
+}
+
+pub(crate) type GridTemplateComponent =
+  SpecifiedProperty<StyleSpecifiedValues::GridTemplateComponent>;
+pub(crate) type GridLine = SpecifiedProperty<StyleSpecifiedValues::GridLine>;

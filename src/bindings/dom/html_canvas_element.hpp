@@ -18,7 +18,7 @@ namespace dombinding
     HTMLCanvasElement(const Napi::CallbackInfo &info);
 
   public:
-    static vector<Napi::ClassPropertyDescriptor<HTMLCanvasElement>> GetClassProperties();
+    static vector<Napi::ClassPropertyDescriptor<HTMLCanvasElement>> GetClassProperties(Napi::Env env);
     static void Init(Napi::Env env);
 
   private:

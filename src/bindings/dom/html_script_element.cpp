@@ -3,10 +3,10 @@
 namespace dombinding
 {
   thread_local Napi::FunctionReference *HTMLScriptElement::constructor;
-  vector<Napi::ClassPropertyDescriptor<HTMLScriptElement>> HTMLScriptElement::GetClassProperties()
+  vector<Napi::ClassPropertyDescriptor<HTMLScriptElement>> HTMLScriptElement::GetClassProperties(Napi::Env env)
   {
     using T = HTMLScriptElement;
-    auto props = HTMLElementBase<HTMLScriptElement, dom::HTMLScriptElement>::GetClassProperties();
+    auto props = HTMLElementBase<HTMLScriptElement, dom::HTMLScriptElement>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<HTMLScriptElement>>(
         {
             T::InstanceAccessor("async", &T::AsyncGetter, &T::AsyncSetter, napi_default_jsproperty),
@@ -18,7 +18,7 @@ namespace dombinding
 
   void HTMLScriptElement::Init(Napi::Env env)
   {
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     Napi::Function func = DefineClass(env, "HTMLScriptElement", props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);

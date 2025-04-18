@@ -24,10 +24,7 @@ namespace events_comm
   {
   public:
     TrEventTarget() = default;
-    TrEventTarget(const TrEventTarget &other) : eventToListenersMap(other.eventToListenersMap)
-    {
-      // Copy will ignore the global listener
-    };
+    TrEventTarget(const TrEventTarget &other) : eventToListenersMap(other.eventToListenersMap) {};
     virtual ~TrEventTarget() = default;
 
   public:
@@ -41,7 +38,7 @@ namespace events_comm
       auto it = eventToListenersMap.find(event->type);
       if (it != eventToListenersMap.end())
       {
-        auto listeners = it->second;
+        auto &listeners = it->second;
         for (auto listenerPtr : listeners)
         {
           auto listener = *listenerPtr;
@@ -80,7 +77,7 @@ namespace events_comm
     }
     /**
      * Add an event listener to the event target.
-     * 
+     *
      * @param type The event type
      * @param listenerCallback The event listener callback
      */
@@ -94,14 +91,14 @@ namespace events_comm
       }
       else
       {
-        auto listeners = it->second;
+        auto &listeners = it->second;
         listeners.push_back(newListener);
       }
       return newListener;
     }
     /**
      * Remove an event listener from the event target.
-     * 
+     *
      * @param type The event type
      * @param listener The event listener to remove
      */
@@ -113,7 +110,7 @@ namespace events_comm
       auto it = eventToListenersMap.find(type);
       if (it != eventToListenersMap.end())
       {
-        auto& listeners = it->second;
+        auto &listeners = it->second;
         for (auto childIt = listeners.begin(); childIt != listeners.end();)
         {
           if (listener->equals(**childIt))
@@ -130,7 +127,7 @@ namespace events_comm
     }
     /**
      * Remove an event listener from the event target by the listener id.
-     * 
+     *
      * @param type The event type
      * @param listenerId The id of the event listener to remove
      */
@@ -139,7 +136,7 @@ namespace events_comm
       auto it = eventToListenersMap.find(type);
       if (it != eventToListenersMap.end())
       {
-        auto& listeners = it->second;
+        auto &listeners = it->second;
         for (auto childIt = listeners.begin(); childIt != listeners.end();)
         {
           auto listener = *childIt;
@@ -157,7 +154,7 @@ namespace events_comm
     }
     /**
      * Remove all event listeners of the specified type from the event target.
-     * 
+     *
      * @param type The event type
      */
     void removeEventListener(EventType type)

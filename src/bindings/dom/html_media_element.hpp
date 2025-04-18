@@ -11,7 +11,7 @@ namespace dombinding
   class HTMLMediaElementBase : public HTMLElementBase<ObjectType, HTMLMediaElementType>
   {
   public:
-    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties();
+    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties(Napi::Env env);
 
   public:
     using HTMLElementBase<ObjectType, HTMLMediaElementType>::HTMLElementBase;

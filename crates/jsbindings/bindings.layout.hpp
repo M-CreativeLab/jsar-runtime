@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <concepts>
+
+#include "./bindings.css-inl.hpp"
 #include "./holocron_layout.autogen.hpp"
 
 namespace crates::layout2
@@ -762,75 +764,87 @@ namespace crates::layout2
   {
   public:
     LayoutStyle()
-        : style_({// display
-                  styles::Display::Block(),
-                  // box sizing
-                  styles::BoxSizing::ContentBox(),
-                  // overflow
-                  holocron::layout::OverflowXY{
-                      .x = holocron::layout::Overflow::Visible,
-                      .y = holocron::layout::Overflow::Visible,
-                  },
-                  // scrollbar_width
-                  2.0f,
-                  // position
-                  styles::Position::Relative(),
-                  // width
-                  styles::Dimension::Auto(),
-                  // height
-                  styles::Dimension::Auto(),
-                  // width range
-                  holocron::layout::DimensionRange{
-                      .min = styles::Dimension::Auto(),
-                      .max = styles::Dimension::Auto(),
-                  },
-                  // height range
-                  holocron::layout::DimensionRange{
-                      .min = styles::Dimension::Auto(),
-                      .max = styles::Dimension::Auto(),
-                  },
-                  // margin
-                  holocron::layout::LengthPercentageAutoRect{
-                      .top = styles::LengthPercentageAuto::Length(0.0f),
-                      .right = styles::LengthPercentageAuto::Length(0.0f),
-                      .bottom = styles::LengthPercentageAuto::Length(0.0f),
-                      .left = styles::LengthPercentageAuto::Length(0.0f),
-                  },
-                  // padding
-                  holocron::layout::LengthPercentageRect{
-                      .top = styles::LengthPercentage::Length(0.0f),
-                      .right = styles::LengthPercentage::Length(0.0f),
-                      .bottom = styles::LengthPercentage::Length(0.0f),
-                      .left = styles::LengthPercentage::Length(0.0f),
-                  },
-                  // border
-                  holocron::layout::LengthPercentageRect{
-                      .top = styles::LengthPercentage::Length(0.0f),
-                      .right = styles::LengthPercentage::Length(0.0f),
-                      .bottom = styles::LengthPercentage::Length(0.0f),
-                      .left = styles::LengthPercentage::Length(0.0f),
-                  },
-                  // alignment and spacing
-                  styles::AlignItems::Stretch(),
-                  styles::AlignSelf::Auto(),
-                  styles::AlignContent::Stretch(),
-                  styles::JustifyItems::Stretch(),
-                  styles::JustifySelf::Stretch(),
-                  styles::JustifyContent::FlexStart(),
-                  // gap
-                  holocron::layout::LengthPercentageXY{
-                      .x = styles::LengthPercentage::Length(0.0f),
-                      .y = styles::LengthPercentage::Length(0.0f),
-                  },
-                  // flex properties
-                  styles::FlexDirection::Row(),
-                  styles::FlexWrap::NoWrap(),
-                  // flex basis
-                  styles::Dimension::Auto(),
-                  // flex grow
-                  0.0f,
-                  // flex shrink
-                  1.0f})
+        : style_({
+              // display
+              styles::Display::Block(),
+              // box sizing
+              styles::BoxSizing::ContentBox(),
+              // overflow
+              holocron::layout::OverflowXY{
+                  .x = holocron::layout::Overflow::Visible,
+                  .y = holocron::layout::Overflow::Visible,
+              },
+              // scrollbar_width
+              2.0f,
+              // position
+              styles::Position::Relative(),
+              // width
+              styles::Dimension::Auto(),
+              // height
+              styles::Dimension::Auto(),
+              // width range
+              holocron::layout::DimensionRange{
+                  .min = styles::Dimension::Auto(),
+                  .max = styles::Dimension::Auto(),
+              },
+              // height range
+              holocron::layout::DimensionRange{
+                  .min = styles::Dimension::Auto(),
+                  .max = styles::Dimension::Auto(),
+              },
+              // margin
+              holocron::layout::LengthPercentageAutoRect{
+                  .top = styles::LengthPercentageAuto::Length(0.0f),
+                  .right = styles::LengthPercentageAuto::Length(0.0f),
+                  .bottom = styles::LengthPercentageAuto::Length(0.0f),
+                  .left = styles::LengthPercentageAuto::Length(0.0f),
+              },
+              // padding
+              holocron::layout::LengthPercentageRect{
+                  .top = styles::LengthPercentage::Length(0.0f),
+                  .right = styles::LengthPercentage::Length(0.0f),
+                  .bottom = styles::LengthPercentage::Length(0.0f),
+                  .left = styles::LengthPercentage::Length(0.0f),
+              },
+              // border
+              holocron::layout::LengthPercentageRect{
+                  .top = styles::LengthPercentage::Length(0.0f),
+                  .right = styles::LengthPercentage::Length(0.0f),
+                  .bottom = styles::LengthPercentage::Length(0.0f),
+                  .left = styles::LengthPercentage::Length(0.0f),
+              },
+              // alignment and spacing
+              styles::AlignItems::Stretch(),
+              styles::AlignSelf::Auto(),
+              styles::AlignContent::Stretch(),
+              styles::JustifyItems::Stretch(),
+              styles::JustifySelf::Stretch(),
+              styles::JustifyContent::FlexStart(),
+              // gap
+              holocron::layout::LengthPercentageXY{
+                  .x = styles::LengthPercentage::Length(0.0f),
+                  .y = styles::LengthPercentage::Length(0.0f),
+              },
+              // flex properties
+              styles::FlexDirection::Row(),
+              styles::FlexWrap::NoWrap(),
+              // flex basis
+              styles::Dimension::Auto(),
+              // flex grow
+              0.0f,
+              // flex shrink
+              1.0f,
+              // grid properties
+              "none", // grid-template-rows
+              "none", // grid-template-columns
+              "auto", // grid-auto-rows
+              "auto", // grid-auto-columns
+              "row",  // grid-auto-flow
+              "auto", // grid-row-start
+              "auto", // grid-row-end
+              "auto", // grid-column-start
+              "auto", // grid-column-end
+          })
     {
     }
     LayoutStyle(holocron::layout::Style style) : style_(style)
@@ -944,6 +958,16 @@ namespace crates::layout2
     const float flexShrink() const { return style_.flexShrink; }
     void setFlexShrink(float value) { style_.flexShrink = value; }
 
+    void setGridTemplateRows(const std::string &value) { style_.gridTemplateRows = value; }
+    void setGridTemplateColumns(const std::string &value) { style_.gridTemplateColumns = value; }
+    void setGridAutoRows(const std::string &value) { style_.gridAutoRows = value; }
+    void setGridAutoColumns(const std::string &value) { style_.gridAutoColumns = value; }
+    void setGridAutoFlow(const std::string &value) { style_.gridAutoFlow = value; }
+    void setGridRowStart(const std::string &value) { style_.gridRowStart = value; }
+    void setGridRowEnd(const std::string &value) { style_.gridRowEnd = value; }
+    void setGridColumnStart(const std::string &value) { style_.gridColumnStart = value; }
+    void setGridColumnEnd(const std::string &value) { style_.gridColumnEnd = value; }
+
   public:
     friend std::ostream &operator<<(std::ostream &os, const LayoutStyle &style)
     {
@@ -994,6 +1018,8 @@ namespace crates::layout2
     Layout()
         : width_(0.0f),
           height_(0.0f),
+          content_width_(0.0f),
+          content_height_(0.0f),
           x_(0.0f),
           y_(0.0f),
           border_(0.0f, 0.0f, 0.0f, 0.0f),
@@ -1005,6 +1031,8 @@ namespace crates::layout2
     Layout(holocron::layout::LayoutOutput output)
         : width_(output.width),
           height_(output.height),
+          content_width_(output.contentWidth),
+          content_height_(output.contentHeight),
           x_(output.x),
           y_(output.y),
           border_(NumberRect(output.border)),
@@ -1014,25 +1042,48 @@ namespace crates::layout2
 
   public:
     /**
-     * @returns The node width.
+     * The computed width in pixels from the node's style.
+     *
+     * @returns The style width in pixels.
      */
     inline float width() const { return width_; }
+
     /**
-     * @returns The node height.
+     * The computed height in pixels from the node's style.
+     *
+     * @returns The style height in pixels.
      */
     inline float height() const { return height_; }
+
+    /**
+     * The actual width in pixels after layout, which is computed by its children.
+     *
+     * @returns The content width in pixels.
+     */
+    inline float contentWidth() const { return content_width_; }
+
+    /**
+     * The actual height in pixels after layout, which is computed by its children.
+     *
+     * @returns The content height in pixels.
+     */
+    inline float contentHeight() const { return content_height_; }
+
     /**
      * @returns The node x position.
      */
     inline float left() const { return x_; }
+
     /**
      * @returns The node y position.
      */
     inline float top() const { return y_; }
+
     /**
      * @returns The node border.
      */
     inline Rect<float> border() const { return border_; }
+
     /**
      * @returns The node padding.
      */
@@ -1041,20 +1092,22 @@ namespace crates::layout2
   public:
     friend std::ostream &operator<<(std::ostream &os, const Layout &layout)
     {
-      os << "Layout {" << std::endl;
-      os << " width: " << layout.width() << "," << std::endl;
-      os << " height: " << layout.height() << "," << std::endl;
-      os << " left: " << layout.left() << "," << std::endl;
-      os << " top: " << layout.top() << ", " << std::endl;
-      os << " border: " << layout.border() << "," << std::endl;
-      os << " padding: " << layout.padding() << "}" << std::endl;
-      os << std::endl;
+      os << "Layout {" << std::endl
+         << "      size: [" << layout.width() << "," << layout.height() << "]" << std::endl
+         << "   content: [" << layout.contentWidth() << "," << layout.contentHeight() << "]" << std::endl
+         << "      left: " << layout.left() << std::endl
+         << "       top: " << layout.top() << std::endl
+         << "    border: " << layout.border() << std::endl
+         << "   padding: " << layout.padding() << std::endl
+         << "}" << std::endl;
       return os;
     }
 
   protected:
     float width_;
     float height_;
+    float content_width_;
+    float content_height_;
     float x_;
     float y_;
     Rect<float> border_;
@@ -1076,6 +1129,10 @@ namespace crates::layout2
         : node_(createNode(*allocator.handle))
     {
     }
+    ~Node()
+    {
+      holocron::layout::removeNode(*node_);
+    }
 
   public:
     /**
@@ -1083,13 +1140,43 @@ namespace crates::layout2
      *
      * @param child The child node to add.
      */
-    inline void addChild(Node &child) { holocron::layout::addChild(*node_, *child.node_); }
+    inline void addChild(Node &child)
+    {
+      holocron::layout::addChild(*node_, *child.node_);
+    }
     /**
      * Remove a child node from this layout node.
      *
      * @param child The child node to remove.
      */
-    inline void removeChild(Node &child) { holocron::layout::removeChild(*node_, *child.node_); }
+    inline void removeChild(Node &child)
+    {
+      holocron::layout::removeChild(*node_, *child.node_);
+    }
+    /**
+     * Insert a child node before another child node.
+     *
+     * @param child The child node to insert.
+     * @param beforeChild The child node to insert before.
+     */
+    inline void insertChild(Node &child, Node &beforeChild)
+    {
+      holocron::layout::insertChild(*node_, *child.node_, *beforeChild.node_);
+    }
+    /**
+     * Replace a child node with a new child node.
+     *
+     * The old child node is not going to be deleted in this method, the destructor of the old child node will be
+     * guaranteed to be this.
+     *
+     * @param oldChild The old child node to replace.
+     * @param newChild The new child node to replace with.
+     * @param copyChildren Whether to copy the children of the old child node to the new child node.
+     */
+    inline void replaceChild(Node &oldChild, Node &newChild, bool copyChildren)
+    {
+      holocron::layout::replaceChild(*node_, *oldChild.node_, *newChild.node_, copyChildren);
+    }
     /**
      * @returns The child count of this layout node.
      */
@@ -1127,6 +1214,14 @@ namespace crates::layout2
     inline void computeLayout(float width, float height)
     {
       holocron::layout::computeLayout(*node_, width, height);
+    }
+    /**
+     * Print this node for debugging.
+     */
+    inline void debugPrint()
+    {
+      std::cout << "Node (children=" << childCount() << ")" << std::endl;
+      holocron::layout::printNode(*node_);
     }
     /**
      * @returns The layout output of this node.

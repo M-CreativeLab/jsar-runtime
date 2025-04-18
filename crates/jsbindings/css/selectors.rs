@@ -1,6 +1,3 @@
-use std::borrow::Borrow;
-use std::slice;
-
 use style::servo::selector_parser::SelectorImpl;
 use style_traits::ToCss;
 

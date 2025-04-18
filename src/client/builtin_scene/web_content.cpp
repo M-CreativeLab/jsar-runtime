@@ -1,9 +1,14 @@
+#include <cmath>
 #include <vector>
+#include <skia/include/core/SkImageInfo.h>
 #include <client/macros.h>
+
 #include "./web_content.hpp"
 
 namespace builtin_scene
 {
+  using namespace std;
+
   WebContentTextStyle::WebContentTextStyle()
       : color(SK_ColorBLACK),
 #ifdef TR_CLIENT_WEB_CONTENT_DEBUG_TEXT
@@ -45,14 +50,44 @@ namespace builtin_scene
   {
   }
 
-  WebContent::WebContent(SkCanvas *canvas, std::string name, client_cssom::CSSStyleDeclaration &style)
-      : canvas_(canvas),
-        name_(name),
-        style_(style),
-        lastLayout_(std::nullopt),
+  WebContent::WebContent(std::string name, float initialWidth, float initialHeight)
+      : name_(name),
+        lastFragment_(std::nullopt),
         contentStyle_(),
         backgroundColor_(1.0f, 1.0f, 1.0f, 0.0f)
   {
+    resetSkSurface(initialWidth, initialHeight);
+  }
+
+  // Compute the size in pixels by the given size and device pixel ratio. This function also rounds the size to the 
+  // nearest integer to avoid the floating point precision issue.
+  inline int computeSize(float size, float devicePixelRatio)
+  {
+    return static_cast<int>(round(size * devicePixelRatio));
+  }
+
+  bool WebContent::resetSkSurface(float w, float h)
+  {
+    if (TR_UNLIKELY(w <= 0 || h <= 0)) // Skip if size is invalid.
+      return false;
+    if (!needsResize(w, h)) // Skip if size is unchanged.
+      return false;
+
+    // TODO: use Skia Genesh(GPU) to increase the performance.
+    SkImageInfo imageInfo = SkImageInfo::MakeN32Premul(computeSize(w, devicePixelRatio_),
+                                                       computeSize(h, devicePixelRatio_));
+    if (surface_ == nullptr)
+    {
+      surface_ = SkSurfaces::Raster(imageInfo);
+    }
+    else
+    {
+      auto newSurface = surface_->makeSurface(imageInfo);
+      surface_.reset();
+      surface_ = newSurface;
+    }
+    setDirty(true);
+    return true;
   }
 
   void WebContent::setStyle(const client_cssom::CSSStyleDeclaration &style, std::shared_ptr<WebContent> parent)
@@ -138,6 +173,41 @@ namespace builtin_scene
 
     // Mark the content as dirty if setting a new style.
     setDirty(true);
+  }
+
+  // TODO(yorkie): consider the change of the device pixel ratio.
+  bool WebContent::needsResize(float w, float h) const
+  {
+    assert(w > 0 && h > 0);
+    if (surface_ == nullptr)
+      return true;
+    return surface_->width() != computeSize(w, devicePixelRatio_) ||
+           surface_->height() != computeSize(h, devicePixelRatio_);
+  }
+
+  shared_ptr<Texture> WebContent::resizeOrInitTexture(TextureAtlas &textureAtlas)
+  {
+    if (!isTextureUsing_)
+    {
+      // Remove the texture from atlas if it's not used.
+      if (texture_ != nullptr)
+      {
+        textureAtlas.removeTexture(*texture_);
+        texture_ = nullptr;
+      }
+      return nullptr;
+    }
+
+    float w = width();
+    float h = height();
+
+    if (texture_ == nullptr)
+      texture_ = textureAtlas.addTexture(w, h, true);
+    else
+      texture_ = textureAtlas.resizeTexture(texture_, w, h, true);
+
+    assert(texture_ != nullptr && "The texture must be valid.");
+    return texture_;
   }
 
   skia::textlayout::TextStyle WebContent::textStyle() const

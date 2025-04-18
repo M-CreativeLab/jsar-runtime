@@ -1,5 +1,29 @@
 # 开发文档
 
+## 编译
+
+当前开发仅支持使用 macOS 开发，编译到 macOS 和 Android 平台。
+
+### macOS
+
+```
+$ make darwin CLEAN=yes
+```
+
+### Android
+
+编译 Android 平台需要下载 NDK，下载完成后，新开一个终端配置参数：
+
+```sh
+$ sh ./build/configure.sh android --print-toolchain
+```
+
+将输出的命令设置到当前终端，然后执行：
+
+```sh
+$ make android CLEAN=yes RELEASE=yes
+```
+
 ## 日志
 
 通过 `adb logcat -s jsar -s DEBUG` 可以查看 JSAR 运行时的日志，可用的通道：

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <OpenGL/gl3.h>
 #include "./window_ctx.hpp"
 #include "./stat_panel.hpp"
 #include "./xr_renderer.hpp"
@@ -59,15 +60,27 @@ namespace jsar::example
     return new StatPanel(this);
   }
 
+  inline WindowContext *GetContextAndExecute(GLFWwindow *window,
+                                             std::function<void(WindowContext *)> callback = nullptr)
+  {
+    WindowContext *ctx = reinterpret_cast<WindowContext *>(glfwGetWindowUserPointer(window));
+    assert(ctx != nullptr);
+    if (callback)
+      callback(ctx);
+    return ctx;
+  }
+
   XRStereoscopicRenderer *WindowContext::createXrRenderer()
   {
-    assert(window != nullptr);
+    assert(window != nullptr && "Window is not initialized.");
     xrRenderer = new XRStereoscopicRenderer(this);
+
+    glfwSetCursorPosCallback(window, [](GLFWwindow *window, double xpos, double ypos)
+                             { GetContextAndExecute(window)->handleCursorMove(xpos, ypos); });
     glfwSetScrollCallback(window, [](GLFWwindow *window, double xoffset, double yoffset)
-                          {
-                            auto ctx = reinterpret_cast<WindowContext *>(glfwGetWindowUserPointer(window));
-                            assert(ctx != nullptr);
-                            ctx->handleScroll(xoffset, yoffset); });
+                          { GetContextAndExecute(window)->handleScroll(xoffset, yoffset); });
+    glfwSetMouseButtonCallback(window, [](GLFWwindow *window, int button, int action, int mods)
+                               { GetContextAndExecute(window)->handleMouseButton(button, action, mods); });
     return xrRenderer;
   }
 
@@ -78,6 +91,48 @@ namespace jsar::example
       xrRenderer->moveViewerForward(yoffset * 0.1);
     if (xoffset != 0)
       xrRenderer->rotateViewerByAxisY(xoffset * 0.1);
+  }
+
+  void WindowContext::handleCursorMove(double xoffset, double yoffset)
+  {
+    if (xoffset < 0 || yoffset < 0 || xoffset > width || yoffset > height)
+      return;
+    if (xrRenderer == nullptr)
+      return;
+
+    int viewIndex = 0;
+    auto halfWidth = width / 2;
+    if (xoffset > halfWidth)
+    {
+      xoffset -= halfWidth;
+      // viewIndex = 1;
+    }
+
+    glm::vec4 viewport(0, 0, halfWidth, height);
+    glm::vec3 screenCoord(xoffset, viewport.w - yoffset, 0.2f);
+
+    GLfloat depth;
+    glReadPixels(screenCoord.x, screenCoord.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+    screenCoord.z = depth;
+
+    glm::vec3 xyz = glm::unProject(screenCoord,
+                                   xrRenderer->getViewMatrixForEye(viewIndex),
+                                   xrRenderer->getProjectionMatrix(),
+                                   viewport);
+
+    // Update the main input source's target ray
+    glm::vec3 origin = xrRenderer->viewerPosition();
+    glm::vec3 direction = glm::normalize(xyz - origin);
+    xrRenderer->updateMainInputSourceTargetRay(origin, direction);
+  }
+
+  void WindowContext::handleMouseButton(int button, int action, int mods)
+  {
+    if (xrRenderer == nullptr)
+      return;
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT)
+      xrRenderer->updateMainInputSourcePrimaryAction(action == GLFW_PRESS);
   }
 
   void WindowContext::terminate()

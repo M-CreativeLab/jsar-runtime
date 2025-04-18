@@ -28,6 +28,8 @@ namespace jsar::example
     StatPanel *createStatPanel();
     XRStereoscopicRenderer *createXrRenderer();
     void handleScroll(double xoffset, double yoffset);
+    void handleCursorMove(double xoffset, double yoffset);
+    void handleMouseButton(int button, int action, int mods);
 
   private:
     void terminate();

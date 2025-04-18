@@ -6,8 +6,7 @@
   <script type="importmap">
     {
       "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/"
+        "three": "https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/build/three.module.js"
       }
     }
   </script>
@@ -23,9 +22,11 @@
     scene.add(light);
 
     // Create meshes
+    const defaultColor = 0x00ffff;
     const geometry = new THREE.TorusKnotGeometry(0.2, 0.05, 50, 16);
-    const material = new THREE.MeshLambertMaterial({ color: 0x00ffff, wireframe: false });
+    const material = new THREE.MeshLambertMaterial({ color: defaultColor, wireframe: false });
     const obj = new THREE.Mesh(geometry, material);
+    obj.scale.set(0.5, 0.5, 0.5);
     scene.add(obj);
 
     const gl = navigator.gl;
@@ -44,22 +45,94 @@
       renderer.xr.setSession(session);
 
       function animate() {
-        obj.rotation.x += 0.01;
-        obj.rotation.y += 0.01;
+        // obj.rotation.x += 0.01;
+        // obj.rotation.y += 0.01;
         renderer.render(scene, camera);
       }
 
       camera.position.z = 5;
       renderer.setAnimationLoop(animate);
       console.info('Started...');
+
+      let mainInputSource = null;
+      function initInputSources() {
+        if (mainInputSource == null) {
+          for (let inputSource of session.inputSources) {
+            if (inputSource.targetRayMode === 'tracked-pointer') {
+              mainInputSource = inputSource;
+              break;
+            }
+          }
+        }
+      }
+      session.requestReferenceSpace('local').then((localSpace) => {
+        const raycaster = new THREE.Raycaster();
+        const hitGeometry = new THREE.SphereGeometry(0.005);
+        const hitMaterial = new THREE.MeshBasicMaterial({ color: 0xff00ff });
+        const hitMesh = new THREE.Mesh(hitGeometry, hitMaterial);
+        scene.add(hitMesh);
+
+        session.requestAnimationFrame(frameCallback);
+        function frameCallback(time, frame) {
+          initInputSources();
+          const targetRayPose = frame.getPose(mainInputSource.targetRaySpace, localSpace);
+          const position = targetRayPose.transform.position;
+          const orientation = targetRayPose.transform.orientation;
+          const matrix = targetRayPose.transform.matrix;
+
+          const origin = new THREE.Vector3(position.x, position.y, position.z);
+          const direction = new THREE.Vector3(-matrix[8], -matrix[9], -matrix[10]);
+          raycaster.set(origin, direction);
+
+          const intersects = raycaster.intersectObjects([obj]);
+          if (intersects.length > 0) {
+            hitMesh.position.copy(intersects[0].point);
+            obj.material.color.set(0xff0000);
+          } else {
+            obj.material.color.set(defaultColor);
+            hitMesh.position.set(0, 0, -100);
+          }
+          session.requestAnimationFrame(frameCallback);
+        }
+      });
     }, (err) => {
       console.warn('Failed to start XR session:', err);
     });
     console.info('navigator.xr', navigator.xr);
   </script>
+  <style>
+    h1 {
+      height: auto;
+      width: 100%;
+      font-size: 80px;
+      text-transform: uppercase;
+      color: rgb(150, 197, 224);
+      font-weight: bolder;
+      margin: 20px;
+      padding: 0;
+      transform: translate3d(0, 0, 15px);
+    }
+
+    p {
+      font-size: 50px;
+      font-weight: bold;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    span {
+      font-family: monospace;
+      padding: 20px;
+      background-color: rgb(110, 37, 37);
+      color: rgb(231, 231, 231);
+      font-weight: bold;
+      font-size: 40px;
+      transform: translate3d(0, 0, 50px);
+    }
+  </style>
 </head>
 
-<body>
+<body style="background-color: #fff;">
   <h1>Simple HTML</h1>
   <p>Some text</p>
 </body>

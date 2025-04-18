@@ -8,7 +8,7 @@ namespace dombinding
   thread_local Napi::FunctionReference *WorkerContext::constructor;
   void WorkerContext::Init(Napi::Env env, Napi::Object exports)
   {
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     {
       auto newProps = vector<Napi::ClassPropertyDescriptor<WorkerContext>>({
           InstanceMethod("start", &WorkerContext::Start),

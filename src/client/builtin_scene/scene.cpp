@@ -1,4 +1,5 @@
 #include <client/dom/element.hpp>
+
 #include "./scene.hpp"
 #include "./client_renderer.hpp"
 
@@ -39,6 +40,7 @@ namespace builtin_scene
 
       // Systems
       app.addSystem(SchedulerLabel::kStartup, System::Make<CameraStartupSystem>());
+      app.addSystem(SchedulerLabel::kStartup, System::Make<RenderStartupSystem>());
       app.addSystem(SchedulerLabel::kPreUpdate, System::Make<TimerSystem>());
 
       auto updateCamera = System::Make<CameraUpdateSystem>();
@@ -51,11 +53,9 @@ namespace builtin_scene
   Scene::Scene(TrClientContextPerProcess *clientContext)
       : ecs::App(),
         clientContext_(clientContext),
-        glContext_(clientContext->createHostWebGLContext()),
-        xrDeviceClient_(clientContext->getXRDeviceClient())
+        glContext_(clientContext->createHostWebGLContext())
   {
     assert(glContext_ != nullptr);
-    assert(xrDeviceClient_ != nullptr);
 
     frameCallback_ = [this](uint32_t time, shared_ptr<client_xr::XRFrame> frame, void *env_)
     {
@@ -69,7 +69,7 @@ namespace builtin_scene
     addPlugin<DefaultPlugin>();
     addPlugin<WebContentPlugin>();
     addPlugin<WebXRPlugin>();
-    addResource(ecs::Resource::Make<Renderer>(glContext_));
+    addResource(ecs::Resource::Make<Renderer>(glContext_, volumeSize_));
   }
 
   void Scene::bootstrap()
@@ -77,7 +77,7 @@ namespace builtin_scene
     ecs::App::startup();
   }
 
-  void Scene::start()
+  void Scene::start(optional<math::Size3> volumeSize)
   {
     if (started_)
     {
@@ -85,9 +85,9 @@ namespace builtin_scene
     }
     else
     {
-      // auto setupXRSession = [this](auto type, auto event)
-
       started_ = true;
+      setVolumeSize(volumeSize);
+
       if (clientContext_->isScriptingEventLoopReady())
       {
         setupXRSession();
@@ -164,6 +164,33 @@ namespace builtin_scene
     }
   }
 
+  bool Scene::removeElement(ecs::EntityId entity)
+  {
+    return removeEntity(entity);
+  }
+
+  std::shared_ptr<WebXRExperience> Scene::getWebXRExperience()
+  {
+    return getResource<WebXRExperience>();
+  }
+
+  optional<collision::TrRay> Scene::selectRayForHitTesting()
+  {
+    auto xrExperience = getResource<WebXRExperience>();
+    assert(xrExperience != nullptr);
+    return xrExperience->selectRayForHitTesting();
+  }
+
+  void Scene::onSelectStart(SelectEventHandler handler)
+  {
+    getResource<WebXRExperience>()->resetSelectStartHandler(handler);
+  }
+
+  void Scene::onSelectEnd(SelectEventHandler handler)
+  {
+    getResource<WebXRExperience>()->resetSelectEndHandler(handler);
+  }
+
   void Scene::update(uint32_t time, shared_ptr<client_xr::XRFrame> frame)
   {
     // Update the time and frame to the WebXRSession resource.
@@ -177,8 +204,9 @@ namespace builtin_scene
 
   void Scene::setupXRSession()
   {
-    auto xrSystem = xrDeviceClient_->getXRSystem(clientContext_->getScriptingEventLoop());
-    xrSession_ = xrSystem->requestSession();
+    shared_ptr<WebXRExperience> xrExperience = getResource<WebXRExperience>();
+    assert(xrExperience != nullptr);
+    xrSession_ = xrExperience->requestSession();
 
     // Update the render state
     client_xr::XRRenderState newRenderState;
@@ -187,13 +215,11 @@ namespace builtin_scene
 
     // Initialize the WebXR experience
     {
-      auto xrExperience = getResource<WebXRExperience>();
-      assert(xrExperience != nullptr);
       xrExperience->updateReferenceSpace(
           xrSession_->requestReferenceSpace(client_xr::XRReferenceSpaceType::kLocal));
 
       // Update the multiview flag if required
-      if (xrSession_->device()->getDeviceInit().multiviewRequired())
+      if (xrExperience->multiviewRequired())
       {
         xrExperience->enableMultiview(true);
         Material::SetGlobalDefines("MULTIVIEW");

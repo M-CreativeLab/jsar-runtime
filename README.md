@@ -1,6 +1,6 @@
 # JSAR Runtime
 
-The JSAR is a library for embedding [WebXR][], [WebGL][] and classic Web applications into [Unity][], [UnrealEngine][], RealityKit and standalone.
+The JSAR is a **Browser Engine** library for embedding [WebXR][], [WebGL][] and classic Web applications into [Unity][], [UnrealEngine][], RealityKit and standalone.
 
 > Standalone means you could also use JSAR to pack your WebXR application as a standalone application.
 
@@ -143,12 +143,12 @@ In Web multimedia, there are the following APIs that JSAR would support:
 
 ### Classic Rendering
 
-| API               | Status           | Test Suite |
-| ----------------- | ---------------- | ---------- |
-| [DOM API][]       | Work in progress | -          |
-| [HTML5][]         | Not started      | -          |
-| [CSS3][]          | Not started      | -          |
-| [Web Component][] | Not started      | -          |
+| API               | Status      | Test Suite |
+| ----------------- | ----------- | ---------- |
+| [DOM API][]       | Partially   | -          |
+| [HTML5][]         | Partially   | -          |
+| [CSS3][]          | Partially   | -          |
+| [Web Component][] | Not started | -          |
 
 [DOM API]: https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model
 [HTML5]: https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5
@@ -196,7 +196,7 @@ $ make windows # for Windows x86_64 library
 If you want to do a clean build, you can run:
 
 ```sh
-$ make darwin clean=yes
+$ make darwin CLEAN=yes
 ```
 
 ## Loaders

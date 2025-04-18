@@ -6,7 +6,7 @@ namespace dombinding
   thread_local Napi::FunctionReference *HTMLBodyElement::constructor;
   void HTMLBodyElement::Init(Napi::Env env)
   {
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     Napi::Function func = DefineClass(env, "HTMLBodyElement", props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);

@@ -1,21 +1,14 @@
-use std::{cell::RefCell, rc::Rc};
 use std::{ffi::*, mem, os::raw::c_char, ptr};
 
-use cxx::{CxxString, CxxVector};
-use selectors::parser::Selector;
+use cxx::CxxString;
 use style::{
   context::QuirksMode,
   media_queries::MediaList,
   parser::{Parse, ParserContext as StyleParserContext},
-  properties::{self as StyleProperties, parse_one_declaration_into, parse_style_attribute},
-  selector_parser::SelectorImpl,
+  properties::parse_style_attribute,
   servo_arc::Arc as StyleArc,
-  shared_lock::{
-    SharedRwLock as StyleSharedRwLock, SharedRwLockReadGuard as StyleSharedRwLockReadGuard,
-  },
-  stylesheets::{
-    AllowImportRules, CssRule, CssRuleType, Origin, Stylesheet, StylesheetInDocument, UrlExtraData,
-  },
+  shared_lock::SharedRwLock as StyleSharedRwLock,
+  stylesheets::{AllowImportRules, CssRuleType, Origin, Stylesheet, UrlExtraData},
   values::computed as StyleComputedValues,
   values::generics as StyleGenericsValues,
   values::specified as StyleSpecifiedValues,
@@ -27,6 +20,36 @@ use super::css::{
   properties as CrateProperties, selectors as CrateSelectors, stylesheets as CrateStylesheets,
   values::specified as CrateSpecifiedValues,
 };
+
+// Specified base types
+type SpecifiedNumberValue = CrateSpecifiedValues::Number;
+type SpecifiedAngleValue = CrateSpecifiedValues::Angle;
+type SpecifiedPercentageValue = CrateSpecifiedValues::Percentage;
+type SpecifiedNoCalcLength = CrateSpecifiedValues::NoCalcLength;
+type SpecifiedLength = CrateSpecifiedValues::Length;
+type SpecifiedLengthPercentage = CrateSpecifiedValues::LengthPercentage;
+
+// Specified matrix types
+type SpecifiedNumberMatrix = CrateSpecifiedValues::NumberMatrix;
+type SpecifiedNumberMatrix3D = CrateSpecifiedValues::NumberMatrix3D;
+
+// Selector types
+type PrismComponent = CrateSelectors::Component;
+type PrismComponentList = CrateSelectors::ComponentList;
+type PrismSelector = CrateSelectors::Selector;
+type PrismSelectorList = CrateSelectors::SelectorList;
+
+// Stylesheet types
+type CrateStylesheet = CrateStylesheets::Stylesheet;
+type CrateCssRule = CrateStylesheets::CssRule;
+type CrateStyleRule = CrateStylesheets::StyleRule;
+type CrateMediaRule = CrateStylesheets::MediaRule;
+
+// Style property types
+type PropertyDeclarationBlock = CrateProperties::PropertyDeclarationBlock;
+type SpecifiedTransformValue = CrateSpecifiedValues::Transform;
+type SpecifiedTransformOperation = CrateSpecifiedValues::TransformOperation;
+type SpecifiedGridTemplateComponent = CrateSpecifiedValues::GridTemplateComponent;
 
 #[no_mangle]
 extern "C" fn parse_font_family(input_str: *const c_char) -> *mut *mut c_char {
@@ -105,11 +128,15 @@ extern "C" fn parse_font_family(input_str: *const c_char) -> *mut *mut c_char {
   res
 }
 
-pub struct CSSParser {
+pub(crate) struct CSSParser {
   url_data: UrlExtraData,
 }
 
 impl CSSParser {
+  pub fn default() -> Self {
+    Self::new_from_url("about:blank")
+  }
+
   pub fn new_from_url(document_url: &str) -> Self {
     style_config::set_bool("layout.flexbox.enabled", true);
     style_config::set_bool("layout.grid.enabled", true);
@@ -118,6 +145,18 @@ impl CSSParser {
     Self { url_data }
   }
 
+  ///
+  /// Parses a CSS stylesheet from a string and a media query.
+  ///
+  /// ### Arguments
+  ///
+  /// * `css_text` - The CSS text to parse.
+  /// * `media_query` - The media query string.
+  ///
+  /// ### Returns
+  ///
+  /// * A `CrateStylesheet` object representing the parsed stylesheet.
+  ///
   pub fn parse_stylesheet(&self, css_text: &str, media_query: &str) -> CrateStylesheet {
     let context = StyleParserContext::new(
       Origin::Author,
@@ -151,6 +190,49 @@ impl CSSParser {
       ),
       shared_lock,
     )
+  }
+
+  ///
+  /// Parses a CSS selector list from a string.
+  ///
+  /// ### Arguments
+  ///
+  /// * `input_str` - The CSS selector string to parse.
+  ///
+  /// ### Returns
+  ///
+  /// * An `Option<PrismSelectorList>` representing the parsed selector list.
+  ///
+  pub fn parse_selectors(&self, input_str: &str) -> Option<PrismSelectorList> {
+    let mut input = cssparser::ParserInput::new(input_str);
+    let mut parser = cssparser::Parser::new(&mut input);
+    let context = StyleParserContext::new(
+      Origin::Author,
+      &self.url_data,
+      Some(CssRuleType::Style),
+      ParsingMode::DEFAULT,
+      QuirksMode::NoQuirks,
+      Default::default(),
+      None,
+      None,
+    );
+
+    let selector_parser = style::selector_parser::SelectorParser {
+      stylesheet_origin: Origin::Author,
+      namespaces: &Default::default(),
+      url_data: &self.url_data,
+      for_supports_rule: false,
+    };
+
+    if let Ok(s) = selectors::parser::SelectorList::parse(
+      &selector_parser,
+      &mut parser,
+      selectors::parser::ParseRelative::No,
+    ) {
+      Some(PrismSelectorList::new(&s))
+    } else {
+      None
+    }
   }
 
   pub fn parse_style_declaration(
@@ -197,7 +279,7 @@ impl CSSParser {
   }
 
   pub fn parse_fontfamily(&self, input: &str) -> Vec<String> {
-    use StyleComputedValues::font::{GenericFontFamily, SingleFontFamily};
+    use StyleComputedValues::font::SingleFontFamily;
     use StyleSpecifiedValues::font::FontFamily;
 
     let mut input = cssparser::ParserInput::new(&input);
@@ -236,6 +318,107 @@ impl CSSParser {
 
     fonts
   }
+
+  /// Parses a grid template string, the format is:
+  ///
+  /// `none | <track-list> | <auto-track-list> | subgrid <line-name-list>?`
+  ///
+  /// ### Arguments
+  ///
+  /// * `input` - The grid template string to parse.
+  ///
+  /// ### Returns
+  ///
+  /// * A `GridTemplateComponent` representing the parsed grid template.
+  ///
+  pub fn parse_grid_template_component(
+    &self,
+    input: &str,
+  ) -> anyhow::Result<Box<SpecifiedGridTemplateComponent>> {
+    use StyleSpecifiedValues::GridTemplateComponent;
+
+    let mut input = cssparser::ParserInput::new(input);
+    let mut parser = cssparser::Parser::new(&mut input);
+    let context = StyleParserContext::new(
+      Origin::Author,
+      &self.url_data,
+      Some(CssRuleType::Style),
+      ParsingMode::DEFAULT,
+      QuirksMode::NoQuirks,
+      Default::default(),
+      None,
+      None,
+    );
+
+    GridTemplateComponent::parse(&context, &mut parser)
+      .map(|grid_template| Box::new(SpecifiedGridTemplateComponent::from(grid_template)))
+      .map_err(|e| anyhow::anyhow!("Failed to parse grid template: {:?}", e))
+  }
+
+  pub fn parse_grid_implicit_tracks(
+    &self,
+    input: &str,
+  ) -> anyhow::Result<StyleSpecifiedValues::ImplicitGridTracks> {
+    use StyleGenericsValues::grid::{GenericTrackBreadth, GenericTrackSize};
+    use StyleSpecifiedValues::ImplicitGridTracks;
+
+    let mut input = cssparser::ParserInput::new(input);
+    let mut parser = cssparser::Parser::new(&mut input);
+    let context = StyleParserContext::new(
+      Origin::Author,
+      &self.url_data,
+      Some(CssRuleType::Style),
+      ParsingMode::DEFAULT,
+      QuirksMode::NoQuirks,
+      Default::default(),
+      None,
+      None,
+    );
+
+    ImplicitGridTracks::parse(&context, &mut parser)
+      .map(|list| list)
+      .map_err(|e| anyhow::anyhow!("Failed to parse grid implicit tracks: {:?}", e))
+  }
+
+  pub fn parse_grid_auto_flow(&self, input: &str) -> StyleSpecifiedValues::GridAutoFlow {
+    use StyleSpecifiedValues::GridAutoFlow;
+
+    let mut input = cssparser::ParserInput::new(input);
+    let mut parser = cssparser::Parser::new(&mut input);
+    let context = StyleParserContext::new(
+      Origin::Author,
+      &self.url_data,
+      Some(CssRuleType::Style),
+      ParsingMode::DEFAULT,
+      QuirksMode::NoQuirks,
+      Default::default(),
+      None,
+      None,
+    );
+
+    GridAutoFlow::parse(&context, &mut parser)
+      .map(|flow| flow)
+      .unwrap_or(GridAutoFlow::ROW)
+  }
+
+  pub fn parse_grid_line(&self, input: &str) -> anyhow::Result<CrateSpecifiedValues::GridLine> {
+    let mut input = cssparser::ParserInput::new(input);
+    let mut parser = cssparser::Parser::new(&mut input);
+    let context = StyleParserContext::new(
+      Origin::Author,
+      &self.url_data,
+      Some(CssRuleType::Style),
+      ParsingMode::DEFAULT,
+      QuirksMode::NoQuirks,
+      Default::default(),
+      None,
+      None,
+    );
+
+    StyleSpecifiedValues::GridLine::parse(&context, &mut parser)
+      .map(|grid_line| CrateSpecifiedValues::GridLine::from(grid_line))
+      .map_err(|e| anyhow::anyhow!("Failed to parse grid line: {:?}", e))
+  }
 }
 
 impl Default for CSSParser {
@@ -264,38 +447,8 @@ impl SpecifiedFontFamilyValue {
   }
 }
 
-// Specified base types
-type SpecifiedNumberValue = CrateSpecifiedValues::Number;
-type SpecifiedAngleValue = CrateSpecifiedValues::Angle;
-type SpecifiedPercentageValue = CrateSpecifiedValues::Percentage;
-type SpecifiedNoCalcLength = CrateSpecifiedValues::NoCalcLength;
-type SpecifiedLength = CrateSpecifiedValues::Length;
-type SpecifiedLengthPercentage = CrateSpecifiedValues::LengthPercentage;
-
-// Specified matrix types
-type SpecifiedNumberMatrix = CrateSpecifiedValues::NumberMatrix;
-type SpecifiedNumberMatrix3D = CrateSpecifiedValues::NumberMatrix3D;
-
-// Selector types
-type PrismComponent = CrateSelectors::Component;
-type PrismComponentList = CrateSelectors::ComponentList;
-type PrismSelector = CrateSelectors::Selector;
-type PrismSelectorList = CrateSelectors::SelectorList;
-
-// Stylesheet types
-type CrateStylesheet = CrateStylesheets::Stylesheet;
-type CrateCssRule = CrateStylesheets::CssRule;
-type CrateStyleRule = CrateStylesheets::StyleRule;
-type CrateMediaRule = CrateStylesheets::MediaRule;
-
-// Style property types
-type PropertyDeclarationBlock = CrateProperties::PropertyDeclarationBlock;
-type SpecifiedTransformValue = CrateSpecifiedValues::Transform;
-type SpecifiedTransformOperation = CrateSpecifiedValues::TransformOperation;
-
 #[cxx::bridge(namespace = "holocron::css")]
 pub(crate) mod ffi {
-
   #[derive(Clone, Debug)]
   #[namespace = "holocron::css::values"]
   struct Color {
@@ -617,6 +770,8 @@ pub(crate) mod ffi {
     type SpecifiedTransformValue;
     #[cxx_name = "TransformOperation"]
     type SpecifiedTransformOperation;
+    #[cxx_name = "GridTemplateComponent"]
+    type SpecifiedGridTemplateComponent;
 
     #[cxx_name = "getNumberMatrixItem"]
     fn get_number_matrix_item(
@@ -783,31 +938,45 @@ pub(crate) mod ffi {
 
     /// Creates a new CSS parser from the given document URL.
     #[cxx_name = "createCSSParser"]
-    fn create_css_parser(document_url: &str) -> Box<CSSParser>;
+    unsafe fn create_css_parser(document_url: &str) -> Box<CSSParser>;
 
     /// Parses the given CSS text and media query.
     #[cxx_name = "parseStylesheet"]
-    fn parse_stylesheet(
+    unsafe fn parse_stylesheet(
       parser: &CSSParser,
       css_text: &str,
       media_query: &str,
     ) -> Box<CrateStylesheet>;
 
+    /// Parses the given selectors input.
+    #[cxx_name = "parseSelectors"]
+    unsafe fn parse_selectors(parser: &CSSParser, input: &str) -> Result<Box<PrismSelectorList>>;
+
     /// Parses the given style attribute.
     #[cxx_name = "parseStyleDeclaration"]
-    fn parse_style_declaration2(parser: &CSSParser, input: &str) -> Box<PropertyDeclarationBlock>;
+    unsafe fn parse_style_declaration2(
+      parser: &CSSParser,
+      input: &str,
+    ) -> Box<PropertyDeclarationBlock>;
 
     /// Parses the given color value.
     #[cxx_name = "parseColor"]
-    fn parse_color(parser: &CSSParser, input: &str) -> Color;
+    unsafe fn parse_color(parser: &CSSParser, input: &str) -> Color;
 
     /// Parses the given font family value.
     #[cxx_name = "parseFontFamily"]
-    fn parse_fontfamily(parser: &CSSParser, input: &str) -> Box<SpecifiedFontFamilyValue>;
+    unsafe fn parse_fontfamily(parser: &CSSParser, input: &str) -> Box<SpecifiedFontFamilyValue>;
 
     /// Parses the given transform value.
     #[cxx_name = "parseTransform"]
-    fn parse_transform(parser: &CSSParser, input: &str) -> Box<SpecifiedTransformValue>;
+    unsafe fn parse_transform(parser: &CSSParser, input: &str) -> Box<SpecifiedTransformValue>;
+
+    /// Parses the given grid template value.
+    #[cxx_name = "parseGridTemplate"]
+    unsafe fn parse_grid_template_component(
+      parser: &CSSParser,
+      input: &str,
+    ) -> Result<Box<SpecifiedGridTemplateComponent>>;
   }
 }
 
@@ -892,7 +1061,6 @@ impl From<&CrateCssRule> for ffi::CssRuleType {
     match value {
       CrateCssRule::Style(..) => ffi::CssRuleType::Style,
       CrateCssRule::Media(..) => ffi::CssRuleType::Media,
-      _ => ffi::CssRuleType::Unsupported,
     }
   }
 }
@@ -1236,6 +1404,13 @@ fn parse_stylesheet(parser: &CSSParser, css_text: &str, media_query: &str) -> Bo
   Box::new(parser.parse_stylesheet(css_text, media_query))
 }
 
+fn parse_selectors(parser: &CSSParser, input: &str) -> Result<Box<PrismSelectorList>, String> {
+  match parser.parse_selectors(input) {
+    Some(selectors) => Ok(Box::new(selectors)),
+    None => Err("Failed to parse selectors".into()),
+  }
+}
+
 fn parse_style_declaration2(parser: &CSSParser, input: &str) -> Box<PropertyDeclarationBlock> {
   Box::new(parser.parse_style_declaration(input))
 }
@@ -1270,10 +1445,16 @@ fn parse_transform(parser: &CSSParser, input_str: &str) -> Box<SpecifiedTransfor
   Box::new(SpecifiedTransformValue::new(transform))
 }
 
+fn parse_grid_template_component(
+  parser: &CSSParser,
+  input_str: &str,
+) -> anyhow::Result<Box<SpecifiedGridTemplateComponent>> {
+  parser.parse_grid_template_component(input_str)
+}
+
 mod tests {
   #[allow(unused_imports)]
   use super::*;
-  use StyleGenericsValues::transform::ToMatrix;
 
   #[test]
   fn test_parse_color() {
@@ -1404,5 +1585,17 @@ mod tests {
         }
       }
     }
+  }
+
+  #[test]
+  fn test_parse_selectors() {
+    let parser = CSSParser::default();
+    let s = parser.parse_selectors("body, .foo > div#bar");
+    assert!(s.is_some());
+    assert_eq!(s.unwrap().len(), 2);
+
+    let s = parser.parse_selectors("body > div");
+    assert!(s.is_some());
+    assert_eq!(s.unwrap().len(), 1);
   }
 }

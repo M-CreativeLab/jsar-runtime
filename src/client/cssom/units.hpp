@@ -2,6 +2,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <math/vectors.hpp>
 
 namespace client_cssom
 {
@@ -14,6 +15,7 @@ namespace client_cssom
   // The screen width and height.
   constexpr const int ScreenWidth = 1920;
   constexpr const int ScreenHeight = 1080;
+  constexpr const int VolumeDepth = 400;
 
   /**
    * Convert the pixel value to the centimeter value.
@@ -38,5 +40,23 @@ namespace client_cssom
   inline float pixelToMeter(float pixel)
   {
     return pixelToCm(pixel) / 100.0f;
+  }
+
+  /**
+   * Convert a `Size3` value from pixel to a new `Size3` value in meter.
+   * 
+   * @param sizeInPx The size in pixel to convert.
+   * @returns The new size in meter.
+   */
+  inline math::Size3 pixelToMeter(math::Size3 sizeInPx)
+  {
+    return math::Size3(pixelToMeter(sizeInPx.width()),
+                       pixelToMeter(sizeInPx.height()),
+                       pixelToMeter(sizeInPx.depth()));
+  }
+
+  inline float meterToPixel(float meter)
+  {
+    return meter * 100.0f * PPI / 2.54f;
   }
 }

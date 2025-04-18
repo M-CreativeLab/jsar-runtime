@@ -11,7 +11,7 @@ namespace dombinding
     using HTMLMediaElementBase::HTMLMediaElementBase;
 
   public:
-    static vector<Napi::ClassPropertyDescriptor<HTMLAudioElement>> GetClassProperties();
+    static vector<Napi::ClassPropertyDescriptor<HTMLAudioElement>> GetClassProperties(Napi::Env env);
     static void Init(Napi::Env env);
     static Napi::Value AudioConstructor(const Napi::CallbackInfo &info);
 

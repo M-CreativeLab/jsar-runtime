@@ -54,11 +54,12 @@ fn generate_holocron_module(source: &str, name: &str, std: &str) {
 }
 
 fn generate_holocron() {
-  generate_holocron_module("lib.rs", "holocron", "c++20");
-  generate_holocron_module("css_parser.rs", "holocron_css_parser", "c++20");
-  generate_holocron_module("layout.rs", "holocron_layout", "c++20");
-  generate_holocron_module("texture_atlas.rs", "holocron_texture_atlas", "c++20");
-  generate_holocron_module("webgl.rs", "holocron_webgl", "c++20");
+  let std = "c++17";
+  generate_holocron_module("lib.rs", "holocron", std);
+  generate_holocron_module("css_parser.rs", "holocron_css_parser", std);
+  generate_holocron_module("layout.rs", "holocron_layout", std);
+  generate_holocron_module("texture_atlas.rs", "holocron_texture_atlas", std);
+  generate_holocron_module("webgl.rs", "holocron_webgl", std);
 }
 
 fn install_header(file_name: &str) {

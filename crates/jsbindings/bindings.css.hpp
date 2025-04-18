@@ -4,6 +4,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <memory>
+#include <optional>
 #include <vector>
 #include <variant>
 #include <string>
@@ -784,6 +785,21 @@ namespace crates::css2
           std::vector<TransformOperation> operations_;
         };
       }
+
+      namespace grid
+      {
+        class GridTemplateComponent
+        {
+        public:
+          GridTemplateComponent(Box<holocron::css::values::specified::GridTemplateComponent> inner)
+              : inner_(std::move(inner))
+          {
+          }
+
+        private:
+          Box<holocron::css::values::specified::GridTemplateComponent> inner_;
+        };
+      }
     }
 
   }
@@ -1072,6 +1088,13 @@ namespace crates::css2
     class CSSParser
     {
     public:
+      static CSSParser &Default()
+      {
+        static CSSParser default_parser("about:blank");
+        return default_parser;
+      }
+
+    public:
       CSSParser(const std::string url = "about:blank")
           : inner_(holocron::css::parsing::createCSSParser(url))
       {
@@ -1081,6 +1104,10 @@ namespace crates::css2
       stylesheets::Stylesheet parseStylesheet(const std::string cssText, const std::string media = "") const
       {
         return stylesheets::Stylesheet(*holocron::css::parsing::parseStylesheet(*inner_, cssText, media));
+      }
+      selectors::SelectorList parseSelectors(const std::string selectors) const
+      {
+        return selectors::SelectorList(*holocron::css::parsing::parseSelectors(*inner_, selectors));
       }
       properties::PropertyDeclarationBlock parseStyleDeclaration(const std::string str) const
       {
@@ -1092,30 +1119,49 @@ namespace crates::css2
       }
       const values::specified::FontFamily parseFontFamily(const std::string str) const
       {
-        return values::specified::FontFamily(*holocron::css::parsing::parseFontFamily(*inner_, str));
+        return values::specified::FontFamily(
+            *holocron::css::parsing::parseFontFamily(*inner_, str));
       }
       const values::specified::transform::Transform parseTransform(const std::string str) const
       {
-        return values::specified::transform::Transform(*holocron::css::parsing::parseTransform(*inner_, str));
+        return values::specified::transform::Transform(
+            *holocron::css::parsing::parseTransform(*inner_, str));
+      }
+      const values::specified::grid::GridTemplateComponent parseGridTemplateComponent(const std::string str) const
+      {
+        return values::specified::grid::GridTemplateComponent(
+            holocron::css::parsing::parseGridTemplate(*inner_, str));
       }
 
     private:
       Box<holocron::css::parsing::CSSParser> inner_;
     };
 
+    inline std::optional<const selectors::SelectorList> parseSelectors(const std::string selectors)
+    {
+      try
+      {
+        return CSSParser::Default().parseSelectors(selectors);
+      }
+      catch (...)
+      {
+        return std::nullopt;
+      }
+    }
+
     inline const values::specified::Color parseColor(const std::string str)
     {
-      return CSSParser().parseColor(str);
+      return CSSParser::Default().parseColor(str);
     }
 
     inline const std::vector<std::string> parseFontFamily(const std::string str)
     {
-      return CSSParser().parseFontFamily(str).fonts();
+      return CSSParser::Default().parseFontFamily(str).fonts();
     }
 
     inline const values::specified::transform::Transform parseTransform(const std::string str)
     {
-      return CSSParser().parseTransform(str);
+      return CSSParser::Default().parseTransform(str);
     }
   }
 }

@@ -2,8 +2,10 @@
 
 #include <array>
 #include <cmath>
+#include <ostream>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+
 #include "./utils.hpp"
 
 namespace math3d
@@ -49,6 +51,15 @@ namespace math3d
     [[nodiscard]] float dotCoordinate(const glm::vec3 &point) const
     {
       return ((((normal.x * point.x) + (normal.y * point.y)) + (normal.z * point.z)) + d);
+    }
+
+    friend std::ostream &operator<<(std::ostream &os, const TrPlane &plane)
+    {
+      os << "Plane("
+         << "(" << plane.normal.x << ", " << plane.normal.y << ", " << plane.normal.z << "), "
+         << "distance=" << plane.d
+         << ")";
+      return os;
     }
 
   public:

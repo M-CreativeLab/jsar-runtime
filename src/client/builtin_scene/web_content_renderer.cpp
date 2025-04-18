@@ -7,6 +7,7 @@
 #include <skia/include/core/SkColor.h>
 #include <skia/include/core/SkPathEffect.h>
 #include <skia/include/effects/SkDashPathEffect.h>
+#include <client/layout/fragment.hpp>
 
 #include "./hierarchy.hpp"
 #include "./transform.hpp"
@@ -35,7 +36,7 @@ namespace builtin_scene::web_renderer
     auto material = Material::Make<materials::WebContentInstancedMaterial>();
     webContentCtx->instancedMeshEntity_ = spawn(
         hierarchy::Root(true),
-        Mesh3d(meshes->add(MeshBuilder::CreateInstancedMesh<meshes::Box>("HTMLClassicMeshes", 1.0f, 1.0f, 0.001f)),
+        Mesh3d(meshes->add(MeshBuilder::CreateInstancedMesh<meshes::Box>("HTMLClassicMeshes", 1.0f, 1.0f, 1.0f)),
                false),
         MeshMaterial3d(materials->add(material)),
         Transform::FromXYZ(0.0f, 0.0f, 0.0f));
@@ -43,23 +44,17 @@ namespace builtin_scene::web_renderer
 
   void RenderBaseSystem::onExecute()
   {
-    auto entities = queryEntities<WebContent>();
-    if (entities.size() == 0)
+    auto list = queryEntitiesWithComponent<WebContent>([](const WebContent &content) -> bool
+                                                       { return content.canvas() != nullptr && content.isDirty(); });
+    if (list.size() == 0)
       return;
 
-    for (auto &entity : entities)
-    {
-      auto content = getComponent<WebContent>(entity);
-      assert(content != nullptr);
-      if (content->canvas() == nullptr) // Skip rendering if the canvas is not initialized.
-        continue;
-      if (content->isDirty()) // Skip rendering if the content is not dirty.
-        render(entity, *content);
-    }
+    for (auto &item : list)
+      render(item.first, *item.second);
   }
 
   optional<SkPaint> drawBackground(SkCanvas *canvas, SkRRect &originalRRect,
-                                   const crates::layout2::Layout &layout,
+                                   const client_layout::Fragment &fragment,
                                    const client_cssom::CSSStyleDeclaration &style)
   {
     if (style.hasProperty("background-color"))
@@ -70,10 +65,10 @@ namespace builtin_scene::web_renderer
       fillPaint.setStyle(SkPaint::kFill_Style);
       {
         const SkRect &originalRect = originalRRect.rect();
-        float insetTop = layout.border().top();
-        float insetRight = layout.border().right();
-        float insetBottom = layout.border().bottom();
-        float insetLeft = layout.border().left();
+        float insetTop = fragment.border().top();
+        float insetRight = fragment.border().right();
+        float insetBottom = fragment.border().bottom();
+        float insetLeft = fragment.border().left();
 
         SkRect rect = SkRect::MakeXYWH(originalRect.fLeft + insetLeft,
                                        originalRect.fTop + insetTop,
@@ -136,8 +131,39 @@ namespace builtin_scene::web_renderer
     }
   }
 
+  // Should draw the border edge, and return the computed border width.
+  inline bool shouldDrawBorderEdge(const client_cssom::CSSStyleDeclaration &style,
+                                   const string &edgeName,
+                                   float &computedBorderWidth)
+  {
+    auto borderWidth = style.getPropertyValue("border-" + edgeName + "-width");
+    auto borderStyle = style.getPropertyValue("border-" + edgeName + "-style");
+
+    // Fast check for border style and width.
+    if (borderStyle == "" ||
+        borderStyle == "none" ||
+        borderWidth == "" ||
+        borderWidth == "0")
+      return false;
+
+    if (borderWidth == "thin")
+      computedBorderWidth = 1.0f;
+    else if (borderWidth == "medium")
+      computedBorderWidth = 3.0f;
+    else if (borderWidth == "thick")
+      computedBorderWidth = 5.0f;
+    else
+    {
+      client_cssom::types::LengthPercentage resolvedWidth(borderWidth);
+      computedBorderWidth = resolvedWidth.computeAbsoluteLengthInPixels();
+      if (computedBorderWidth <= 0.0f)
+        return false;
+    }
+    return true;
+  }
+
   bool drawBorders(SkCanvas *canvas, SkRRect &roundedRect,
-                   const crates::layout2::Layout &layout,
+                   const client_layout::Fragment &fragment,
                    const client_cssom::CSSStyleDeclaration &style)
   {
     using namespace client_cssom::types;
@@ -147,11 +173,11 @@ namespace builtin_scene::web_renderer
     paint.setStyle(SkPaint::kStroke_Style);
     paint.setAntiAlias(true);
 
-    if (style.hasProperty("border-top-width"))
+    float computedBorderWidth = 0.0f;
+    if (shouldDrawBorderEdge(style, "top", computedBorderWidth))
     {
-      auto borderWidth = style.getPropertyValueAs<LengthPercentage>("border-top-width");
       auto borderColor = style.getPropertyValueAs<Color>("border-top-color");
-      float halfBorderWidth = borderWidth.computeAbsoluteLengthInPixels() / 2.0f;
+      float halfBorderWidth = computedBorderWidth / 2.0f;
 
       paint.setColor(borderColor);
       setBorderPaintEffect(paint, style.getPropertyValueAs<BorderStyleKeyword>("border-top-style"),
@@ -175,11 +201,10 @@ namespace builtin_scene::web_renderer
       canvas->drawPath(path, paint);
       hasBorders = true;
     }
-    if (style.hasProperty("border-right-width"))
+    if (shouldDrawBorderEdge(style, "right", computedBorderWidth))
     {
-      auto borderWidth = style.getPropertyValueAs<LengthPercentage>("border-right-width");
       auto borderColor = style.getPropertyValueAs<Color>("border-right-color");
-      float halfBorderWidth = borderWidth.computeAbsoluteLengthInPixels() / 2.0f;
+      float halfBorderWidth = computedBorderWidth / 2.0f;
 
       paint.setColor(borderColor);
       setBorderPaintEffect(paint, style.getPropertyValueAs<BorderStyleKeyword>("border-right-style"),
@@ -194,11 +219,10 @@ namespace builtin_scene::web_renderer
       canvas->drawPath(path, paint);
       hasBorders = true;
     }
-    if (style.hasProperty("border-bottom-width"))
+    if (shouldDrawBorderEdge(style, "bottom", computedBorderWidth))
     {
-      auto borderWidth = style.getPropertyValueAs<LengthPercentage>("border-bottom-width");
       auto borderColor = style.getPropertyValueAs<client_cssom::types::Color>("border-bottom-color");
-      float halfBorderWidth = borderWidth.computeAbsoluteLengthInPixels() / 2.0f;
+      float halfBorderWidth = computedBorderWidth / 2.0f;
 
       paint.setColor(borderColor);
       setBorderPaintEffect(paint, style.getPropertyValueAs<BorderStyleKeyword>("border-bottom-style"),
@@ -221,11 +245,10 @@ namespace builtin_scene::web_renderer
       canvas->drawPath(path, paint);
       hasBorders = true;
     }
-    if (style.hasProperty("border-left-width"))
+    if (shouldDrawBorderEdge(style, "left", computedBorderWidth))
     {
-      auto borderWidth = style.getPropertyValueAs<LengthPercentage>("border-left-width");
       auto borderColor = style.getPropertyValueAs<client_cssom::types::Color>("border-left-color");
-      float halfBorderWidth = borderWidth.computeAbsoluteLengthInPixels() / 2.0f;
+      float halfBorderWidth = computedBorderWidth / 2.0f;
 
       paint.setColor(borderColor);
       setBorderPaintEffect(paint, style.getPropertyValueAs<BorderStyleKeyword>("border-left-style"),
@@ -246,8 +269,8 @@ namespace builtin_scene::web_renderer
   void RenderBackgroundSystem::render(ecs::EntityId entity, WebContent &content)
   {
     const auto &style = content.style();
-    const auto &layout = content.layout();
-    if (!layout.has_value()) // No layout, no rendering.
+    const auto &fragment = content.fragment();
+    if (!fragment.has_value()) // No layout, no rendering.
       return;
 
     auto canvas = content.canvas();
@@ -272,7 +295,7 @@ namespace builtin_scene::web_renderer
       roundedRect.setRectRadii(rect, radii);
     }
 
-    auto backgroundPaint = drawBackground(canvas, roundedRect, layout.value(), style);
+    auto backgroundPaint = drawBackground(canvas, roundedRect, fragment.value(), style);
     if (backgroundPaint.has_value())
     {
       auto fillPaint = backgroundPaint.value();
@@ -280,19 +303,27 @@ namespace builtin_scene::web_renderer
         content.setTextureUsing(true);
       else
       {
+        content.setTextureUsing(false); // Disable using texture to decrease the texture memory usage.
+
         auto fillColor = fillPaint.getColor4f();
         content.setBackgroundColor(fillColor.fR, fillColor.fG, fillColor.fB, fillColor.fA);
+        content.setOpaque(fillColor.fA == 1.0f);
       }
     }
-    if (drawBorders(canvas, roundedRect, layout.value(), style))
+    if (drawBorders(canvas, roundedRect, fragment.value(), style))
       content.setTextureUsing(true); // enable texture when there are borders.
   }
 
   void RenderImageSystem::render(ecs::EntityId entity, WebContent &content)
   {
     auto imageComponent = getComponent<Image2d>(entity);
-    if (imageComponent == nullptr || !imageComponent->hasImageData())
+    if (imageComponent == nullptr ||
+        !imageComponent->hasImageData() ||
+        !imageComponent->visible())
+    {
+      content.setTextureUsing(false); // Disable using texture if the image has no data or is not visible.
       return;
+    }
 
     auto canvas = content.canvas();
     canvas->save();
@@ -325,10 +356,6 @@ namespace builtin_scene::web_renderer
     if (textComponent == nullptr)
       return;
 
-    const auto &layout = content.layout();
-    if (!layout.has_value()) // No layout, no rendering.
-      return;
-
     string &text = textComponent->content;
     auto paragraphStyle = content.paragraphStyle();
     auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle, fontCollection_);
@@ -336,27 +363,31 @@ namespace builtin_scene::web_renderer
     paragraphBuilder->addText(text.c_str(), text.size());
     paragraphBuilder->pop();
 
+    auto layoutWidth = round(getLayoutWidthForText(content)) + 1.0f;
     auto paragraph = paragraphBuilder->Build();
-    paragraph->layout(getLayoutWidthForText(content));
+    paragraph->layout(layoutWidth);
     paragraph->paint(content.canvas(), 0.0f, 0.0f);
     content.setTextureUsing(true);
   }
 
   float RenderTextSystem::getLayoutWidthForText(WebContent &content)
   {
-    const auto &layout = content.layout();
-    return layout.value().width();
+    const auto &fragment = content.fragment();
+    return fragment->contentWidth();
   }
 
   void UpdateTextureSystem::render(ecs::EntityId entity, WebContent &content)
   {
     auto material3d = getInstancedMeshComponent<MeshMaterial3d>();
-    if (TR_UNLIKELY(material3d == nullptr))
-      return;
+    assert(material3d != nullptr);
 
     auto webContentMaterial = material3d->material<materials::WebContentInstancedMaterial>();
-    if (webContentMaterial != nullptr &&
-        webContentMaterial->updateTexture(content))
-      content.setDirty(false); // Mark the content as clean if the texture is updated successfully.
+    if (webContentMaterial)
+    {
+      auto status = webContentMaterial->updateTexture(content);
+      // Mark the content as clean if the texture is no need to update or updated successfully.
+      if (status != materials::WebContentInstancedMaterial::TextureUpdateStatus::kFailed)
+        content.setDirty(false);
+    }
   }
 }

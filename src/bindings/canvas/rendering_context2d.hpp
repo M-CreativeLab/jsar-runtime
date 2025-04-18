@@ -28,7 +28,7 @@ namespace canvasbinding
      * @returns The new instance of `CanvasRenderingContext2D`.
      */
     static Napi::Object NewInstance(Napi::Env env, std::shared_ptr<canvas::RenderingContextBase<CanvasType>> contextImpl, Napi::Value canvasValue);
-    static std::vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties();
+    static std::vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties(Napi::Env env);
     CanvasRenderingContext2DBase(const Napi::CallbackInfo &info);
 
   private:
@@ -124,9 +124,10 @@ namespace canvasbinding
 
   class OffscreenCanvasRenderingContext2D : public CanvasRenderingContext2DBase<OffscreenCanvasRenderingContext2D, canvas::OffscreenCanvas>
   {
-  public:
     using CanvasRenderingContext2DBase::CanvasRenderingContext2DBase;
-    static std::vector<Napi::ClassPropertyDescriptor<OffscreenCanvasRenderingContext2D>> GetClassProperties();
+
+  public:
+    static std::vector<Napi::ClassPropertyDescriptor<OffscreenCanvasRenderingContext2D>> GetClassProperties(Napi::Env env);
     static void Init(Napi::Env env);
 
     /**

@@ -1,22 +1,26 @@
 #include <iostream>
 #include <client/per_process.hpp>
 #include <client/builtin_scene/ecs-inl.hpp>
+#include <crates/bindings.hpp>
 
 #include "./element.hpp"
 #include "./text.hpp"
 #include "./document-inl.hpp"
+#include "./document_renderer.hpp"
 #include "./browsing_context.hpp"
+#include "../cssom/selectors/matching.hpp"
 
 namespace dom
 {
   using namespace std;
   using namespace pugi;
 
-  enum class TreverseOrder
+  shared_ptr<Document> Document::Make(string contentType, DocumentType documentType,
+                                      shared_ptr<BrowsingContext> browsingContext,
+                                      bool autoConnect)
   {
-    PreOrder, // Pre-order traversal: root -> left -> right
-    PostOrder // Post-order traversal: left -> right -> root
-  };
+    return make_shared<Document>(contentType, documentType, browsingContext, autoConnect);
+  }
 
   Document::Document(string contentType, DocumentType documentType,
                      shared_ptr<BrowsingContext> browsingContext,
@@ -41,7 +45,6 @@ namespace dom
         documentType(other.documentType),
         scene(other.scene),
         browsingContext(other.browsingContext),
-        documentElement(other.documentElement),
         autoConnect(other.autoConnect),
         docInternal(other.docInternal)
   {
@@ -73,14 +76,55 @@ namespace dom
       setSource("<html><head></head><body></body></html>");
   }
 
-  void Document::setSource(const string &source)
+  void Document::setSource(const string &source, bool isFragment)
   {
-    auto r = docInternal->load_string(source.c_str());
+    string inputText(source);
+    if (documentType == DocumentType::kHTML)
+      fixSource(inputText); // Fix the source string if it's an HTML document.
+
+    // Parse the XML document.
+    auto flag = pugi::parse_default | pugi::parse_ws_pcdata | pugi::parse_comments;
+    if (isFragment)
+      flag |= pugi::parse_fragment;
+
+    auto r = docInternal->load_string(inputText.c_str(), flag);
     if (r.status != pugi::xml_parse_status::status_ok)
-      throw std::runtime_error("Failed to parse XML document: " + std::string(r.description()));
+      throw runtime_error("Failed to parse XML document: " + std::string(r.description()));
 
     resetFrom(docInternal, getPtr<Document>());
     isSourceLoaded = true;
+
+    //
+    // Update fields after the document are parsed.
+    //
+
+    // Find the head and body elements.
+    for (auto childNode : documentElement()->childNodes)
+    {
+      if (childNode->nodeType == NodeType::ELEMENT_NODE)
+      {
+        if (childNode->nodeName == "head")
+          headElement = dynamic_pointer_cast<HTMLHeadElement>(childNode);
+        else if (childNode->nodeName == "body")
+          bodyElement = dynamic_pointer_cast<HTMLBodyElement>(childNode);
+      }
+    }
+
+    // Update the element list and maps.
+    auto updateElementListAndMaps = [this](shared_ptr<Node> childNode)
+    {
+      if (childNode->nodeType == NodeType::ELEMENT_NODE)
+      {
+        auto element = std::dynamic_pointer_cast<Element>(childNode);
+        allElementsList.push_back(element);
+        if (!element->id.empty())
+          elementMapById[element->id] = element;
+      }
+      return true;
+    };
+    allElementsList.clear();
+    elementMapById.clear();
+    iterateChildNodes(updateElementListAndMaps);
 
     if (shouldOpen)
       openInternal();
@@ -93,11 +137,24 @@ namespace dom
       openInternal();
   }
 
-  std::shared_ptr<browser::Window> Document::defaultView()
+  std::shared_ptr<DocumentFragment> Document::createDocumentFragment()
   {
-    auto ref = defaultView_.lock();
-    assert(ref != nullptr);
-    return ref;
+    return make_shared<DocumentFragment>(getPtr<Document>());
+  }
+
+  std::shared_ptr<Text> Document::createTextNode(const string &data)
+  {
+    return make_shared<Text>(data, getPtr<Document>());
+  }
+
+  std::shared_ptr<Node> Document::importNode(const std::shared_ptr<Node> node, bool deep)
+  {
+    if (Node::Is<Document>(node))
+      throw runtime_error("The node is a document node, which cannot be imported.");
+
+    auto importedNode = node->cloneNode(deep);
+    importedNode->updateFieldsFromDocument(getPtr<Document>());
+    return importedNode;
   }
 
   shared_ptr<Element> Document::getElementById(const string &id)
@@ -124,9 +181,9 @@ namespace dom
     return elements;
   }
 
-  std::vector<shared_ptr<Element>> Document::getElementsByName(const string &name)
+  vector<shared_ptr<Element>> Document::getElementsByName(const string &name)
   {
-    std::vector<shared_ptr<Element>> elements;
+    vector<shared_ptr<Element>> elements;
     for (auto element : allElementsList)
     {
       if (element->hasAttribute("name"))
@@ -139,9 +196,9 @@ namespace dom
     return elements;
   }
 
-  std::vector<shared_ptr<Element>> Document::getElementsByTagName(const string &tagName)
+  vector<shared_ptr<Element>> Document::getElementsByTagName(const string &tagName)
   {
-    std::vector<shared_ptr<Element>> elements;
+    vector<shared_ptr<Element>> elements;
     for (auto element : allElementsList)
     {
       if (element->is(tagName))
@@ -150,65 +207,39 @@ namespace dom
     return elements;
   }
 
-  shared_ptr<HTMLHeadElement> Document::head()
+  shared_ptr<Element> Document::querySelector(const string &selectors)
   {
-    return headElement;
+    auto s = crates::css2::parsing::parseSelectors(selectors);
+    if (s == nullopt)
+      throw runtime_error("Failed to parse the CSS selectors: " + selectors);
+
+    auto selectorList = s.value();
+    for (const auto &element : allElementsList)
+    {
+      if (!Node::Is<HTMLElement>(element))
+        continue;
+      if (client_cssom::selectors::matchesSelectorList(selectorList, Node::As<HTMLElement>(element)))
+        return element;
+    }
+    return nullptr;
   }
 
-  shared_ptr<HTMLBodyElement> Document::body()
+  NodeList<Element> Document::querySelectorAll(const string &selectors)
   {
-    return bodyElement;
-  }
+    auto s = crates::css2::parsing::parseSelectors(selectors);
+    if (s == nullopt)
+      throw runtime_error("Failed to parse the CSS selectors: " + selectors);
 
-  void Document::connect()
-  {
-    Node::connect();
-
-    // When the document is connected, we need:
-    // 1. Set the document element, head element, and body element.
-    // 2. Update the element list and maps.
-
-    for (auto childNode : childNodes)
+    NodeList<Element> elements(false);
+    auto selectorList = s.value();
+    for (auto element : allElementsList)
     {
-      if (childNode->nodeType == NodeType::ELEMENT_NODE)
-      {
-        documentElement = std::dynamic_pointer_cast<Element>(childNode);
-        break;
-      }
+      if (!Node::Is<HTMLElement>(element))
+        continue;
+      if (client_cssom::selectors::matchesSelectorList(selectorList, Node::As<HTMLElement>(element)))
+        elements.push_back(element);
     }
-
-    if (documentElement != nullptr)
-    {
-      for (auto childNode : documentElement->childNodes)
-      {
-        if (childNode->nodeType == NodeType::ELEMENT_NODE)
-        {
-          if (childNode->nodeName == "head")
-            headElement = std::dynamic_pointer_cast<HTMLHeadElement>(childNode);
-          else if (childNode->nodeName == "body")
-            bodyElement = std::dynamic_pointer_cast<HTMLBodyElement>(childNode);
-        }
-      }
-
-      /**
-       * Iterate all the child nodes of the document and update the element maps.
-       */
-      auto updateElementListAndMaps = [this](shared_ptr<Node> childNode)
-      {
-        if (childNode->nodeType == NodeType::ELEMENT_NODE)
-        {
-          auto element = std::dynamic_pointer_cast<Element>(childNode);
-          allElementsList.push_back(element);
-          if (!element->id.empty())
-            elementMapById[element->id] = element;
-        }
-        return true;
-      };
-
-      allElementsList.clear();
-      elementMapById.clear();
-      iterateChildNodes(updateElementListAndMaps);
-    }
+    return elements;
   }
 
   void Document::openInternal()
@@ -230,143 +261,208 @@ namespace dom
     }
   }
 
+  string &Document::fixSource(string &source)
+  {
+    string invalidComment = "<!>";
+    string defaultComment = "<!---->"; // replace the invalid comment with the default comment.
+
+    size_t pos = 0;
+    while ((pos = source.find(invalidComment, pos)) != string::npos)
+    {
+      source.replace(pos, invalidComment.size(), defaultComment);
+      pos += defaultComment.length();
+    }
+    return source;
+  }
+
+  shared_ptr<Element> Document::firstElementChild() const
+  {
+    for (auto childNode : childNodes)
+    {
+      if (childNode->nodeType == NodeType::ELEMENT_NODE)
+        return Node::As<Element>(childNode);
+    }
+    return nullptr;
+  }
+
+  string XMLDocument::SerializeFragment(const shared_ptr<Node> node, bool wellFormed)
+  {
+    // TODO
+    return "";
+  }
+
+  vector<shared_ptr<Node>> XMLDocument::ParseFragment(const shared_ptr<Element> contextElement,
+                                                      const string &input)
+  {
+    throw runtime_error("The XMLDocument::ParseFragment method is not implemented yet.");
+  }
+
   XMLDocument::XMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
       : Document("text/xml", DocumentType::kXML, browsingContext, autoConnect)
   {
   }
 
-  // The HTML rendering ECS system, which is used to render the HTML document.
-  class RenderHTMLDocument : public builtin_scene::ecs::System
+  // This follows the fragment serializing algorithm steps.
+  //
+  // See https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#fragment-serializing-algorithm-steps
+  string HTMLDocument::SerializeFragment(const shared_ptr<Node> node, bool serializableShadowRoots)
   {
-  public:
-    RenderHTMLDocument(HTMLDocument *document)
-        : builtin_scene::ecs::System(),
-          document_(document)
+    // 1. If the node serializes as void, then return the empty string.
+    if (node == nullptr)
+      return "";
+
+    // 2. Let `s` be a string, and initialize it to the empty string.
+    string s("");
+
+    // 3. If the node is a template element, then let the node instead be the template element's template contents (a DocumentFragment node).
+    // TODO: <template> not supported yet.
+
+    // 4. If current node is a shadow host?
+    // TODO: Shadow DOM not supported yet.
+
+    // 5. For each child node of the node, in tree order, run the following steps:
     {
-      assert(document_ != nullptr);
-    }
-
-  public:
-    const std::string name() const override { return "dom.RenderHTMLDocument"; }
-    void onExecute() override
-    {
-      assert(document_ != nullptr);
-      auto body = document_->body();
-      auto scene = document_->scene;
-      if (scene == nullptr || body == nullptr)
-        return;
-
-      // Step 1: Compute each element's styles.
+      // Convert the node's depth to spaces.
+      auto depthToSpaces = [](int depth) -> string
       {
-        auto adoptStyleForElement = [this](shared_ptr<HTMLElement> element)
-        {
-          const auto &computedStyle = document_->defaultView()->getComputedStyle(element);
-          element->adoptStyle(computedStyle);
-          return true;
-        };
-        auto adoptStyleForText = [](shared_ptr<Text> textNode)
-        {
-          textNode->adoptStyle(*textNode->style_);
-        };
-        traverseElementOrTextNode(body, adoptStyleForElement, adoptStyleForText, TreverseOrder::PreOrder);
-      }
+        // Fast path for the common cases.
+        if (depth <= 0)
+          return "";
+        if (depth == 1)
+          return " ";
+        if (depth == 2)
+          return "  ";
 
-      // Step 2: Compute the layout of all the elements only if the layout is dirty.
-      auto rootLayoutNode = body->layoutNode();
-      if (rootLayoutNode != nullptr && rootLayoutNode->isDirty())
-        rootLayoutNode->computeLayout(targetWidth(), targetHeight());
+        string spaces;
+        for (int i = 0; i < depth; i++)
+          spaces.append("  ");
+        return spaces;
+      };
 
-      // Step 3: Call the renderElement method of each element to draw the element.
+      // Serialize the node(Element, Text, Comment, ProcessingInstruction, DocumentType).
+      auto serializeNode = [&depthToSpaces](string &s, const shared_ptr<Node> node, bool &isElementNode)
       {
-        auto renderElement = [scene](shared_ptr<HTMLElement> element)
-        { return element->renderElement(*scene); };
-        auto renderText = [scene](shared_ptr<Text> textNode)
-        { textNode->renderText(*scene); };
-        traverseElementOrTextNode(body, renderElement, renderText, TreverseOrder::PreOrder);
-      }
-    }
-
-  private:
-    /**
-     * Traverse `HTMLElement` or `Text` children from a root node.
-     *
-     * @param elementOrTextNode The root element or text node.
-     * @param elementCallback The callback function for the element node.
-     * @param textNodeCallback The callback function for the text node.
-     * @param order The traverse order.
-     */
-    void traverseElementOrTextNode(shared_ptr<Node> elementOrTextNode,
-                                   function<bool(shared_ptr<HTMLElement>)> elementCallback,
-                                   function<void(shared_ptr<Text>)> textNodeCallback,
-                                   TreverseOrder order)
-    {
-      if (TR_UNLIKELY(elementOrTextNode == nullptr) || !elementOrTextNode->connected)
-        return;
-
-      if (elementOrTextNode->nodeType == NodeType::TEXT_NODE)
-      {
-        auto textNode = dynamic_pointer_cast<Text>(elementOrTextNode);
-        if (textNode != nullptr)
-          textNodeCallback(textNode);
-        return;
-      }
-
-      if (elementOrTextNode->nodeType == NodeType::ELEMENT_NODE)
-      {
-        auto element = dynamic_pointer_cast<HTMLElement>(elementOrTextNode);
-        if (element == nullptr)
+        if (TR_UNLIKELY(node == nullptr))
           return;
 
-        bool shouldContinue = true;
-        if (order == TreverseOrder::PreOrder)
+        // Append the prefix spaces via the depth of the node.
+        s.append("\n");
+        s.append(depthToSpaces(node->depth()));
+
+        if (Node::Is<Element>(node))
         {
-          if (!elementCallback(element)) // If the element callback returns false, stop traversing in pre-order.
-            shouldContinue = false;
+          auto &element = Node::AsChecked<Element>(node);
+          s.append("<");
+          s.append(element.localName);
+
+          for (auto &attr : element.getAttributeNames())
+          {
+            string attrValue = element.getAttribute(attr);
+            s.append(" ");
+            s.append(attr);
+            s.append("=\"");
+            s.append(attrValue);
+            s.append("\"");
+          }
+          isElementNode = true;
+          return;
         }
 
-        if (shouldContinue)
+        if (Node::Is<Text>(node))
         {
-          for (auto childNode : element->childNodes)
-            traverseElementOrTextNode(childNode, elementCallback, textNodeCallback, order);
-          if (order == TreverseOrder::PostOrder)
-            elementCallback(element);
+          auto &text = Node::AsChecked<Text>(node);
+          s.append(text.data());
+          isElementNode = false;
+          return;
         }
-      }
-    }
-    // The target width to render the document.
-    inline float targetWidth() const
-    {
-      std::shared_ptr<browser::Window> window = document_->defaultView();
-      assert(window != nullptr);
-      return window->innerWidth();
-    }
-    // The target height to render the document.
-    inline float targetHeight() const
-    {
-      std::shared_ptr<browser::Window> window = document_->defaultView();
-      assert(window != nullptr);
-      return window->innerHeight();
+
+        // TODO: Support Comment, ProcessingInstruction and DocumentType.
+        isElementNode = false;
+      };
+
+      // Serialize the children of the node.
+      function<void(string &, const shared_ptr<Node>)> serializeChildren =
+          [&depthToSpaces, &serializeChildren, &serializeNode](string &s, const shared_ptr<Node> node)
+      {
+        for (auto childNode : node->childNodes)
+        {
+          bool isElementNode = false;
+          serializeNode(s, childNode, isElementNode);
+
+          if (childNode->hasChildNodes())
+          {
+            if (isElementNode)
+              s.append(">");
+
+            // Serialize the children of the child node.
+            serializeChildren(s, childNode);
+
+            // Close the element tag if it's an element node.
+            if (isElementNode)
+            {
+              auto &element = Node::AsChecked<Element>(childNode);
+              s.append("\n");
+              s.append(depthToSpaces(element.depth()));
+              s.append("</");
+              s.append(element.localName);
+              s.append(">");
+            }
+          }
+          else
+          {
+            if (isElementNode)
+              s.append(" />");
+          }
+        }
+      };
+
+      if (node->hasChildNodes())
+        serializeChildren(s, node);
     }
 
-  private:
-    HTMLDocument *document_ = nullptr;
-  };
+    // 6. Return `s`.
+    return s;
+  }
+
+  vector<shared_ptr<Node>> HTMLDocument::ParseFragment(const shared_ptr<Element> contextElement,
+                                                       const string &input,
+                                                       bool _allowDeclarativeShadowRoots)
+  {
+    auto contextDocument = contextElement->getOwnerDocumentReference();
+    assert(contextDocument != nullptr);
+
+    shared_ptr<Document> document = Document::Make(
+        "text/html", DocumentType::kHTML, contextDocument->browsingContext, false);
+    document->setSource("<html>" + input + "</html>", true);
+
+    auto htmlElement = document->documentElement();
+    assert(htmlElement != nullptr && "The `documentElement` is not found.");
+    return htmlElement->childNodes;
+  }
 
   HTMLDocument::HTMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
       : Document("text/html", DocumentType::kHTML, browsingContext, autoConnect),
-        layoutAllocator_(make_shared<crates::layout2::Allocator>())
+        layout_view_(nullptr),
+        layout_allocator_(make_shared<crates::layout2::Allocator>())
   {
-    if (scene != nullptr)
-    {
-      // Configure the built-in scene for the HTML rendering.
-      using namespace builtin_scene::ecs;
-      scene->addSystem(SchedulerLabel::kPreUpdate, System::Make<RenderHTMLDocument>(this));
-    }
   }
 
-  void HTMLDocument::load()
+  std::optional<builtin_scene::BoundingBox> HTMLDocument::visualBoundingBox() const
   {
-    Document::load();
+    auto layoutBox = layoutView();
+    if (layoutBox == nullptr)
+      return nullopt;
+
+    auto& viewport = layoutBox->viewport;
+    builtin_scene::BoundingBox boundingBox(viewport.width(),
+                                           viewport.height(),
+                                           viewport.depth());
+    return boundingBox;
+  }
+
+  void HTMLDocument::afterLoadedCallback()
+  {
+    Document::afterLoadedCallback();
 
     // Dispatch the load event.
     dispatchEvent(DOMEventType::DOMContentLoaded);
@@ -376,8 +472,32 @@ namespace dom
 
   void HTMLDocument::onDocumentOpened()
   {
+    auto selfDocument = getPtr<HTMLDocument>();
+    auto window = defaultView_.lock();
     auto scene = TrClientContextPerProcess::Get()->builtinScene;
-    if (scene != nullptr)
+    if (scene != nullptr && window != nullptr)
+    {
+      // Create the layout view before starting the scene.
+      layout_view_ = client_layout::LayoutView::Make(selfDocument, *window);
+
+      // TODO: support resize the document scene.
+      using namespace builtin_scene::ecs;
+      // Configure the built-in scene for the HTML rendering before starting the scene.
+      scene->addSystem(SchedulerLabel::kPreUpdate, System::Make<RenderHTMLDocument>(this));
       scene->start();
+    }
+  }
+
+  void HTMLDocument::simulateScrollWithOffset(float offsetX, float offsetY)
+  {
+    auto layoutBox = layoutView();
+    assert(layoutBox != nullptr && "The layout box is not set.");
+
+    glm::vec3 offset(offsetX, offsetY, 0);
+    if (offset.x == 0 && offset.y == 0)
+      return;
+
+    layoutBox->scrollBy(offset);
+    dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
   }
 }

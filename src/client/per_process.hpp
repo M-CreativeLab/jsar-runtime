@@ -62,7 +62,7 @@ typedef function<void(TrAnimationFrameRequest &)> AnimationFrameRequestCallback;
  * Each `ScriptEnvironment` instance corresponds to a separate script execution context, allowing for isolated and
  * controlled script execution within the application.
  */
-class ScriptEnvironment
+class ScriptEnvironment final
 {
 public:
   ScriptEnvironment(int id, string &scriptsDir);
@@ -254,20 +254,20 @@ public: // commandbuffer methods
    *
    * The host `WebGL2Context` is a special XR-compatible context that is used to render content with the host graphics engine, such as Unity,
    * Unreal Engine, etc.
-   * 
+   *
    * @returns The created host `WebGL2Context` instance.
    */
   WebGLContextReference createHostWebGLContext();
   /**
    * Get the host `WebGL2Context` instance by the context id.
-   * 
+   *
    * @param contextId The context id to get.
    * @returns The host `WebGL2Context` instance, or nullptr if not found.
    */
   WebGLContextReference getHostWebGLContext(uint32_t contextId);
   /**
    * Remove the host `WebGL2Context` instance by the context id.
-   * 
+   *
    * @param contextId The context id to remove.
    * @returns true if the host `WebGL2Context` instance is removed successfully.
    */
@@ -358,8 +358,22 @@ public:
   inline bool isScriptingEventLoopReady() { return scriptingEventLoop != nullptr; }
   inline void setScriptingEventLoop(napi_env env)
   {
+    scriptingThreadId = std::this_thread::get_id();
     napi_get_uv_event_loop(env, &scriptingEventLoop);
     dispatchEvent(TrClientContextEventType::ScriptingEventLoopReady);
+  }
+  inline std::shared_ptr<ScriptEnvironment> getScriptingEnvironment() { return scriptingEnv; }
+  inline ScriptEnvironment &createScriptingEnv(int id, string &scriptsDir)
+  {
+    assert(scriptingEnv == nullptr);
+    scriptingEnv = std::make_shared<ScriptEnvironment>(id, scriptsDir);
+    return *scriptingEnv;
+  }
+  // Check if the current thread is the scripting thread.
+  inline bool isInScriptingThread() const
+  {
+    assert(scriptingThreadId != std::nullopt && "The scripting thread is not set.");
+    return std::this_thread::get_id() == scriptingThreadId.value();
   }
   inline font::FontCacheManager &getFontCacheManager() { return *fontCacheManager; }
   inline TrClientPerformanceFileSystem &getPerfFs() { return *perfFs; }
@@ -438,6 +452,8 @@ private: // service & script alive checking fields
 
 private: // other fields
   uv_loop_t *scriptingEventLoop = nullptr;
+  std::shared_ptr<ScriptEnvironment> scriptingEnv = nullptr;
+  std::optional<std::thread::id> scriptingThreadId = std::nullopt;
   unique_ptr<font::FontCacheManager> fontCacheManager = nullptr;
   unique_ptr<TrClientPerformanceFileSystem> perfFs = nullptr;
 

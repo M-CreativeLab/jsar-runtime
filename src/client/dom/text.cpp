@@ -7,7 +7,7 @@
 
 #include "./text.hpp"
 #include "./document.hpp"
-#include "./scene_object.hpp"
+#include "./element.hpp"
 
 namespace dom
 {
@@ -20,15 +20,44 @@ namespace dom
   xml_node createTextNode(shared_ptr<xml_document> doc, const string &value = "")
   {
     xml_node textNode(node_pcdata, doc.get());
-    if (value != "" && !textNode.set_value(value.c_str()))
+    if (!textNode.set_value(value.c_str()))
       return xml_node();
     return textNode;
   }
 
+  // Remove the leading and trailing whitespaces, and \n, \r, \t characters.
+  string processTextContent(const string &text)
+  {
+    string result(text);
+    size_t start = result.find_first_not_of(" \t\n\r");
+    if (start == string::npos || start >= result.length())
+      start = 0;
+    size_t end = result.find_last_not_of(" \t\n\r");
+    if (end == string::npos || end >= result.length())
+      end = result.length();
+    return result.substr(start, end - start + 1);
+  }
+
+  std::shared_ptr<Text> Text::CreateText(pugi::xml_node node, shared_ptr<Document> ownerDocument)
+  {
+    return make_shared<Text>(node, ownerDocument);
+  }
+
+  std::shared_ptr<Node> Text::CloneText(shared_ptr<Node> srcText)
+  {
+    auto textNode = dynamic_pointer_cast<Text>(srcText);
+    if (textNode != nullptr)
+      return make_shared<Text>(*textNode);
+
+    auto characterDataNode = dynamic_pointer_cast<CharacterData>(srcText);
+    if (characterDataNode != nullptr)
+      return make_shared<CharacterData>(*characterDataNode);
+
+    return nullptr;
+  }
+
   Text::Text(xml_node node, shared_ptr<Document> ownerDocument)
-      : CharacterData(node, ownerDocument),
-        SceneObject(getOwnerDocumentReferenceAs<HTMLDocument>(), nodeName),
-        content2d_(nullptr)
+      : CharacterData(node, ownerDocument)
   {
     client_cssom::CSSStyleDeclaration defaultStyle;
     defaultStyle.setProperty("width", "auto");
@@ -47,10 +76,8 @@ namespace dom
   {
   }
 
-  Text::Text(Text &other)
+  Text::Text(const Text &other)
       : CharacterData(other),
-        SceneObject(other),
-        content2d_(std::move(other.content2d_)),
         style_(other.style_)
   {
   }
@@ -72,84 +99,100 @@ namespace dom
     return make_unique<Text>(second, getOwnerDocumentReference());
   }
 
-  geometry::DOMRect Text::getTextClientRect(float maxWidth) const
+  const geometry::DOMRect Text::getTextClientRect(float maxWidth) const
   {
-    if (!hasSceneComponent<WebContent>() || !hasSceneComponent<Text2d>())
-      return geometry::DOMRect();
+    // if (!hasSceneComponent<WebContent>() || !hasSceneComponent<Text2d>())
+    //   return geometry::DOMRect();
 
-    const auto &webContentComponent = getSceneComponentChecked<WebContent>();
-    const auto &textComponent = getSceneComponentChecked<Text2d>();
+    // const auto &webContentComponent = getSceneComponentChecked<WebContent>();
+    // const auto &textComponent = getSceneComponentChecked<Text2d>();
 
-    string text = textComponent.content;
-    auto paragraphStyle = webContentComponent.paragraphStyle();
-    auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle,
-                                                   TrClientContextPerProcess::Get()->getFontCacheManager());
-    paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
-    paragraphBuilder->addText(text.c_str(), text.size());
-    paragraphBuilder->pop();
+    // string text = textComponent.content;
+    // if (text.size() == 0)
+    //   return geometry::DOMRect();
 
-    auto paragraph = paragraphBuilder->Build();
-    paragraph->layout(maxWidth > 0
-                          ? maxWidth
-                          : numeric_limits<float>::infinity());
+    // auto paragraphStyle = webContentComponent.paragraphStyle();
+    // auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle,
+    //                                                TrClientContextPerProcess::Get()->getFontCacheManager());
+    // paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
+    // paragraphBuilder->addText(text.c_str(), text.size());
+    // paragraphBuilder->pop();
 
-    geometry::DOMRect textRect;
-    textRect.width() = paragraph->getLongestLine();
-    textRect.height() = paragraph->getHeight();
-    return textRect;
+    // auto paragraph = paragraphBuilder->Build();
+    // paragraph->layout(maxWidth > 0
+    //                       ? maxWidth
+    //                       : numeric_limits<float>::infinity());
+
+    // geometry::DOMRect textRect;
+    // textRect.width() = paragraph->getLongestLine();
+    // textRect.height() = paragraph->getHeight();
+    // return textRect;
+
+    return geometry::DOMRect();
   }
 
-  void Text::connect()
+  void Text::connectedCallback()
   {
-    CharacterData::connect();
+    CharacterData::connectedCallback();
+    initCSSBoxes();
+  }
 
-    if (renderable)
+  void Text::disconnectedCallback()
+  {
+    CharacterData::disconnectedCallback();
+    resetCSSBoxes();
+  }
+
+  void Text::initCSSBoxes()
+  {
+    auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
+    if (ownerDocument != nullptr && renderable)
     {
-      SceneObject::connectedCallback(shared_from_this()); // Create the entity
-
-      // Initialize the Content2d and connect it.
-      if (content2d_ == nullptr)
-        content2d_ = make_unique<Content2d>(shared_from_this());
-      content2d_->onNodeConnected();
-
-      // Append the text
-      auto appendText = [this](Scene &scene)
+      auto &layoutView = ownerDocument->layoutViewRef();
+      shared_ptr<client_layout::LayoutBoxModelObject> parentBox = nullptr;
       {
-        assert(entity_.has_value());
-        scene.addComponent(entity_.value(), Text2d(data()));
-      };
-      useScene(appendText);
+        auto parentElement = getParentElement();
+        assert(parentElement != nullptr &&
+               "The parent element must not be null in a TextNode().");
+        parentBox = dynamic_pointer_cast<client_layout::LayoutBoxModelObject>(parentElement->principalBox());
+        assert(parentBox != nullptr &&
+               "The parent box must not be null in a TextNode().");
+      }
+      textBoxes_ = {layoutView.createText(getPtr<Text>(), parentBox)};
     }
+  }
+
+  void Text::resetCSSBoxes(bool skipCheck)
+  {
+    if (textBoxes_.empty())
+      return;
+
+    shared_ptr<HTMLDocument> ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
+    if (!skipCheck &&
+        (TR_UNLIKELY(ownerDocument == nullptr) || renderable == false))
+      return;
+
+    assert(ownerDocument != nullptr && "The owner document is not set when resetting CSS boxes.");
+    auto &layoutView = ownerDocument->layoutViewRef();
+    for (auto &box : textBoxes_)
+      layoutView.removeObject(box);
+    textBoxes_.clear();
   }
 
   bool Text::adoptStyle(const client_cssom::CSSStyleDeclaration &style)
   {
-    auto parentNode = getParentNodeAs<SceneObject>();
+    client_cssom::CSSStyleDeclaration newStyle = style;
+
+    // Inherit the style from the parent node if it is not set.
+    auto parentNode = getParentNodeAs<Element>();
     if (parentNode != nullptr)
     {
-      auto &parentStyle = parentNode->adoptedStyle_;
-      std::shared_ptr<client_cssom::CSSStyleDeclaration> textStyle = nullptr;
+      const auto &parentStyle = parentNode->adoptedStyle();
 
-#define _MAKE_TEXT_STYLE_IF_NOT_EXIST() \
-  if (textStyle == nullptr)             \
-    textStyle = make_shared<client_cssom::CSSStyleDeclaration>(style);
-
-#define USE_PARENT_STYLE(property)                                            \
-  if (parentStyle.hasProperty(property))                                      \
-  {                                                                           \
-    _MAKE_TEXT_STYLE_IF_NOT_EXIST()                                           \
-    textStyle->setProperty(property, parentStyle.getPropertyValue(property)); \
-  }
-
-#define USE_PARENT_SIZE(property)                                                                  \
-  if (parentStyle.hasProperty(property))                                                           \
-  {                                                                                                \
-    _MAKE_TEXT_STYLE_IF_NOT_EXIST()                                                                \
-    auto dimension = parentStyle.getPropertyValueAs<crates::layout2::styles::Dimension>(property); \
-    if (dimension.isLength() || dimension.isPercent())                                             \
-      textStyle->setProperty(property, "100%");                                                    \
-    else                                                                                           \
-      textStyle->setProperty(property, "auto");                                                    \
+#define USE_PARENT_STYLE(property)                                          \
+  if (parentStyle.hasProperty(property))                                    \
+  {                                                                         \
+    newStyle.setProperty(property, parentStyle.getPropertyValue(property)); \
   }
 
       // Font styles
@@ -165,6 +208,7 @@ namespace dom
       USE_PARENT_STYLE("text-align");
       USE_PARENT_STYLE("text-indent");
       USE_PARENT_STYLE("text-transform");
+      USE_PARENT_STYLE("-webkit-text-security");
       USE_PARENT_STYLE("text-decoration");
       USE_PARENT_STYLE("letter-spacing");
       USE_PARENT_STYLE("word-spacing");
@@ -172,20 +216,24 @@ namespace dom
       USE_PARENT_STYLE("direction");
       USE_PARENT_STYLE("unicode-bidi");
 
-      // Controls the text rect
-      USE_PARENT_SIZE("width");
-      USE_PARENT_SIZE("height");
-
-#undef USE_PARENT_SIZE
 #undef USE_PARENT_STYLE
 #undef _MAKE_TEXT_STYLE_IF_NOT_EXIST
-
-      // Adopt the text style if it is not empty.
-      if (textStyle != nullptr)
-        return SceneObject::adoptStyleOn(*this, *textStyle);
     }
 
-    // By default, just bypass the style to the scene object.
-    return SceneObject::adoptStyleOn(*this, style);
+    // Update the  style if these properties are not present.
+    newStyle.update(defaultStyle_, true);
+    if (adoptedStyle_.equals(newStyle)) // Skip if the style is the same.
+      return false;
+
+    adoptedStyle_ = newStyle;
+
+    // Update the layout node style.
+    bool updated = false;
+    for (auto box : textBoxes_)
+    {
+      if (box->setStyle(adoptedStyle_))
+        updated = true;
+    }
+    return updated;
   }
 }

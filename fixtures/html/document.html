@@ -5,7 +5,10 @@
   <title>Document</title>
 </head>
 
-<body>
+<body style="background-color: #fff; padding: 50px;">
+  <h1>Document</h1>
+  <p>Document content:</p>
+  <div id="list"></div>
 </body>
 
 <script>
@@ -16,14 +19,20 @@
   console.info(document.head.isConnected);
 
   const script = document.createElement('script');
-  script.src = './simple.js';
+  script.src = './document.js';
   script.addEventListener('load', () => {
     console.info('load event listener');
   });
-  script.onload = function() {
+  script.onload = function () {
     console.info('onload');
   };
   document.head.appendChild(script);
+
+  const listContainer = document.querySelector('#list');
+  const textNode = document.createTextNode('text node');
+  listContainer.appendChild(textNode);
+
+  console.info('empty text node:', document.createTextNode(''));
 </script>
 
 </html>

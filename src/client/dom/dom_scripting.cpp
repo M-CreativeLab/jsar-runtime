@@ -307,6 +307,9 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(Worker);
 
         // DOM nodes
+        V8_SET_GLOBAL_FROM_MAIN(Node);
+        V8_SET_GLOBAL_FROM_MAIN(Element);
+        V8_SET_GLOBAL_FROM_MAIN(DocumentFragment);
         V8_SET_GLOBAL_FROM_MAIN(HTMLAnchorElement);
         V8_SET_GLOBAL_FROM_MAIN(HTMLAreaElement);
         V8_SET_GLOBAL_FROM_MAIN(HTMLAudioElement);
@@ -331,6 +334,15 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(HTMLIFrameElement);
         V8_SET_GLOBAL_FROM_MAIN(HTMLImageElement);
         V8_SET_GLOBAL_FROM_MAIN(HTMLInputElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLStyleElement);
+        V8_SET_GLOBAL_FROM_MAIN(HTMLTemplateElement);
+        V8_SET_GLOBAL_FROM_MAIN(CharacterData);
+        V8_SET_GLOBAL_FROM_MAIN(Comment);
+        V8_SET_GLOBAL_FROM_MAIN(Text);
+
+        // DOM APIs
+        V8_SET_GLOBAL_FROM_MAIN(MutationRecord);
+        V8_SET_GLOBAL_FROM_MAIN(MutationObserver);
 
         // Events
         V8_SET_GLOBAL_FROM_MAIN(Event);
@@ -365,6 +377,7 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(clearInterval);
         V8_SET_GLOBAL_FROM_MAIN(requestAnimationFrame);
         V8_SET_GLOBAL_FROM_MAIN(cancelAnimationFrame);
+        V8_SET_GLOBAL_FROM_MAIN(queueMicrotask);
 
         // Fetch API related objects
         V8_SET_GLOBAL_FROM_MAIN(Headers);
@@ -935,9 +948,11 @@ namespace dom
     v8::MaybeLocal<v8::Value> result = script->Run(context);
     if (result.IsEmpty())
     {
-      std::cerr << "#" << std::endl;
-      std::cerr << "# Failed to execute script" << std::endl;
-      std::cerr << "# URL: " << url << std::endl;
+      cerr << "#" << endl;
+      cerr << "# Failed to execute script" << endl;
+      cerr << "# URL: " << url << endl;
+      cerr << "#" << endl;
+
       if (tryCatch.HasCaught())
       {
         auto stackTrace = tryCatch.StackTrace(context).ToLocalChecked();

@@ -20,7 +20,7 @@ namespace dombinding
     using HandleReference = SharedReference<HandleType>;
 
   protected:
-    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties()
+    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties(Napi::Env env)
     {
       using T = EventWrap<ObjectType, HandleType>;
       return {

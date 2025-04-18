@@ -21,6 +21,13 @@
 #endif
 #endif
 
+#define TR_DISALLOW_NEW()                                         \
+public:                                                           \
+  void *operator new(size_t, void *location) { return location; } \
+                                                                  \
+private:                                                          \
+  void *operator new(size_t) = delete
+
 /**
  * Shared reference is a template class that holds the shared pointer of a type.
  *
@@ -39,7 +46,7 @@ public:
 };
 
 /**
- * JavaScript Object Holder is a template base class that holds the weak pointer to JavaScript object, this class is useful to connect 
+ * JavaScript Object Holder is a template base class that holds the weak pointer to JavaScript object, this class is useful to connect
  * the reference object to a JavaScript object.
  *
  * @tparam T The type of the object that the weak reference holds.
@@ -54,15 +61,17 @@ public:
 public:
   /**
    * @returns `true` if this holder has a JavaScript object value, `false` otherwise.
+   * @deprecated Use `hasJSObject` instead.
    */
-  inline bool isJSObject() const
-  {
-    return value_ != nullptr;
-  }
+  inline bool isJSObject() const { return value_ != nullptr; }
+  /**
+   * @returns `true` if this holds a JavaScript object value, `false` otherwise.
+   */
+  inline bool hasJSObject() const { return isJSObject(); }
   /**
    * @returns The JavaScript object value.
    */
-  inline T& getJSObject()
+  inline T &getJSObject()
   {
     assert(isJSObject());
     return *value_;
@@ -133,6 +142,37 @@ inline std::string ToUpperCase(const std::string &str)
   std::string result = str;
   std::transform(result.begin(), result.end(), result.begin(), ::toupper);
   return result;
+}
+
+/**
+ * Create a new string with the first character in uppercase and the rest in lowercase.
+ *
+ * @param str The source string to convert to capitalize.
+ * @returns The new string with the first character in uppercase and the rest in lowercase.
+ */
+inline std::string ToCapitalize(std::string str)
+{
+  if (str.empty())
+    return str;
+
+  bool newWord = true;
+  for (char &c : str)
+  {
+    if (newWord && std::isalpha(c))
+    {
+      c = std::toupper(c);
+      newWord = false;
+    }
+    else if (std::isspace(c))
+    {
+      newWord = true;
+    }
+    else
+    {
+      c = std::tolower(c);
+    }
+  }
+  return str;
 }
 
 namespace transmute::common

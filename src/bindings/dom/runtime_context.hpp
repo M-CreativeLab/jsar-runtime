@@ -18,7 +18,7 @@ namespace dombinding
   class RuntimeContextBase : public Napi::ObjectWrap<ObjectType>
   {
   public:
-    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties()
+    static vector<Napi::ClassPropertyDescriptor<ObjectType>> GetClassProperties(Napi::Env env)
     {
       using T = RuntimeContextBase<ObjectType, ContextType>;
       return {

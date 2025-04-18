@@ -1,10 +1,14 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <array>
+#include <ostream>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
-#include "common/math3d/utils.hpp"
+
+#include "../math3d/utils.hpp"
+#include "../math3d/plane.hpp"
 #include "./culling/bounding_box.hpp"
 #include "./culling/bounding_sphere.hpp"
 
@@ -15,11 +19,62 @@ namespace collision
   public:
     TrRay() : origin(glm::vec3{}), direction(glm::vec3{}), length(0.f) {}
     TrRay(const glm::vec3 &origin, const glm::vec3 &direction, float length = 0.f)
-        : origin(origin), direction(direction), length(length) {}
+        : origin(origin),
+          direction(direction),
+          length(length)
+    {
+    }
+    TrRay(const TrRay &ray) = default;
     ~TrRay() = default;
 
   public:
-    bool intersectsBoxMinMax(const glm::vec3 &minimum, const glm::vec3 &maximum, float intersectionTreshold = 0.f) const
+    /**
+     * Calculate the intercept of a ray on a given axis.
+     * 
+     * @param axis to check 'x' | 'y' | 'z'
+     * @param offset from axis interception (i.e. an offset of 1y is intercepted above ground)
+     * @returns a vector containing the coordinates where 'axis' is equal to zero (else offset), or null if there is no
+     *          intercept.
+     */
+    std::optional<glm::vec3> intersectsAxis(const std::string &axis, float offset)
+    {
+      if (axis == "y")
+      {
+        const auto t = (origin.y - offset) / direction.y;
+        if (t > 0.f)
+          return std::nullopt;
+        return glm::vec3(origin.x + direction.x * -t, offset, origin.z + direction.z * -t);
+      }
+      if (axis == "x")
+      {
+        const auto t = (origin.x - offset) / direction.x;
+        if (t > 0.f)
+          return std::nullopt;
+        return glm::vec3(offset, origin.y + direction.y * -t, origin.z + direction.z * -t);
+      }
+      if (axis == "z")
+      {
+        const auto t = (origin.z - offset) / direction.z;
+        if (t > 0.f)
+          return std::nullopt;
+        return glm::vec3(origin.x + direction.x * -t, origin.y + direction.y * -t, offset);
+      }
+      else
+      {
+        return std::nullopt;
+      }
+    }
+
+    /**
+     * Checks if the ray intersects a box This does not account for the ray length by design to improve perfs.
+     *
+     * @param minimum the minimum point of the box
+     * @param maximum the maximum point of the box
+     * @param intersectionTreshold extra extend to be added to the BoundingBox in all direction.
+     * @returns if the box was hit.
+     */
+    bool intersectsBoxMinMax(const glm::vec3 &minimum, const glm::vec3 &maximum,
+                             float intersectionTreshold = 0.f) const
     {
       const auto newMinimum = glm::vec3(minimum.x - intersectionTreshold,
                                         minimum.y - intersectionTreshold,
@@ -104,10 +159,26 @@ namespace collision
       }
       return true;
     }
-    bool intersectsBox(const culling::TrBoundingBox &box, float intersectionTreshold = 0.f) const
+
+    /**
+     * Checks if the ray intersects a box This does not account for the ray lenght by design to improve perfs.
+     *
+     * @param box the bounding box to check
+     * @param intersectionTreshold extra extend to be added to the BoundingBox in all direction.
+     * @returns if the box was hit
+     */
+    inline bool intersectsBox(const culling::TrBoundingBox &box, float intersectionTreshold = 0.f) const
     {
       return intersectsBoxMinMax(box.minimum, box.maximum, intersectionTreshold);
     }
+
+    /**
+     * If the ray hits a sphere.
+     *
+     * @param sphere The bounding sphere to check against.
+     * @param intersectionTreshold extra extend to be added to the BoundingSphere in all direction.
+     * @returns `true` if the ray intersects the sphere, otherwise `false`.
+     */
     bool intersectsSphere(const culling::TrBoundingSphere &sphere, float intersectionTreshold) const
     {
       const auto x = sphere.center.x - origin.x;
@@ -127,7 +198,43 @@ namespace collision
       const auto temp = pyth - dot * dot;
       return temp <= rr;
     }
-    void update(const glm::vec3& origin, const glm::vec3& direction, float length = 1.f)
+
+    /**
+     * Checks if ray intersects a plane.
+     *
+     * @param plane The plane to check against.
+     * @returns the distance away it was hit.
+     */
+    std::optional<float> intersectsPlane(const math3d::TrPlane &plane) const
+    {
+      auto distance = 0.f;
+      auto result1 = glm::dot(plane.normal, direction);
+
+      if (std::abs(result1) < 9.99999997475243e-7f)
+      {
+        return std::nullopt;
+      }
+      else
+      {
+        const auto result2 = glm::dot(plane.normal, origin);
+        distance = (-plane.d - result2) / result1;
+        if (distance < 0.f)
+        {
+          if (distance < -9.99999997475243e-7)
+          {
+            return std::nullopt;
+          }
+          else
+          {
+            return 0.f;
+          }
+        }
+
+        return distance;
+      }
+    }
+
+    void update(const glm::vec3 &origin, const glm::vec3 &direction, float length = 1.f)
     {
       this->origin = origin;
       this->direction = direction;
@@ -140,7 +247,15 @@ namespace collision
     glm::vec3 direction;
     float length;
 
-  private:
-    std::unique_ptr<TrRay> tmpRay = nullptr;
+  public:
+    friend std::ostream &operator<<(std::ostream &os, const TrRay &ray)
+    {
+      os << "Ray("
+         << "origin=[" << ray.origin.x << ", " << ray.origin.y << ", " << ray.origin.z << "], "
+         << "dir=[" << ray.direction.x << ", " << ray.direction.y << ", " << ray.direction.z << "], "
+         << "length=" << ray.length
+         << ")";
+      return os;
+    }
   };
 }

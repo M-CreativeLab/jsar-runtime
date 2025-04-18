@@ -1,0 +1,687 @@
+#include <vector>
+#include <client/cssom/types/transform.hpp>
+#include <client/dom/node.hpp>
+#include <client/dom/all_html_elements.hpp>
+#include <client/dom/document-inl.hpp>
+
+#include "./layout_object.hpp"
+#include "./layout_block.hpp"
+#include "./layout_view.hpp"
+
+namespace client_layout
+{
+  using namespace std;
+  using namespace builtin_scene;
+  using namespace client_cssom;
+
+  LayoutObject::LayoutObject(shared_ptr<dom::Node> node)
+      : node_(node),
+        formattingContext_(nullptr)
+  {
+    if (dom::Node::Is<dom::Document>(node))
+      scene_ = dom::Node::As<dom::Document>(node)->scene;
+    else
+      scene_ = node->getOwnerDocumentReference()->scene;
+  }
+
+  LayoutObject::~LayoutObject()
+  {
+  }
+
+  string LayoutObject::toString() const
+  {
+    return node() != nullptr ? node()->toString() : "(anonymous)";
+  }
+
+  string LayoutObject::debugName() const
+  {
+    stringstream ss;
+    ss << name() << " ";
+    if (node() != nullptr)
+    {
+      ss << "{";
+      if (dom::Node::Is<dom::Element>(node())) // Use the `tagName` for the element node.
+        ss << dom::Node::AsChecked<dom::Element>(node()).tagName;
+      else
+        ss << node()->nodeName;
+      ss << "}";
+    }
+    else
+      ss << "(anonymous)";
+    return ss.str();
+  }
+
+  bool LayoutObject::isDocumentElement() const
+  {
+    return document()->documentElement() == node();
+  }
+
+  bool LayoutObject::isBody() const
+  {
+    return node() != nullptr && dom::Node::Is<dom::HTMLBodyElement>(node());
+  }
+
+  bool LayoutObject::hasClip() const
+  {
+    auto element = dom::Node::As<dom::Element>(node());
+    if (element == nullptr)
+      return false;
+
+    auto elementStyle = element->adoptedStyle();
+    if (elementStyle.hasProperty("clip"))
+    {
+      auto clip = elementStyle.getPropertyValue("clip");
+      if (clip != "auto")
+        return true;
+    }
+    return false;
+  }
+
+  bool LayoutObject::isScrollContainer() const
+  {
+    // Replaced elements don't support scrolling.
+    if (isLayoutReplaced())
+      return false;
+
+    // LayoutView is always a scroll container.
+    if (isLayoutView())
+      return true;
+
+    auto element = dom::Node::As<dom::Element>(node());
+    if (element == nullptr)
+      return false;
+
+    if (!hasNonVisibleOverflow())
+      return false;
+
+    auto elementStyle = element->adoptedStyle();
+
+    // An overflow value of `visible` or `clip` means that the element is a scroll container, all other values result
+    // in a scrollable container. Also note that if `visible` or `clip` is set on one axis, then the other axis must be
+    // set to `visible` or `clip` as well.
+    bool isScrollableInX = false;
+    bool isScrollableInY = false;
+    if (elementStyle.hasProperty("overflow-x"))
+    {
+      auto overflowX = elementStyle.getPropertyValue("overflow-x");
+      if (overflowX != "visible" && overflowX != "clip")
+        isScrollableInX = true;
+    }
+    if (elementStyle.hasProperty("overflow-y"))
+    {
+      auto overflowY = elementStyle.getPropertyValue("overflow-y");
+      if (overflowY != "visible" && overflowY != "clip")
+        isScrollableInY = true;
+    }
+    return isScrollableInX || isScrollableInY;
+  }
+
+  shared_ptr<dom::HTMLDocument> LayoutObject::document() const
+  {
+    assert(node() != nullptr || parent() != nullptr);
+    if (node() == nullptr)
+      return parent()->document();
+
+    if (dom::Node::Is<dom::Document>(node())) // Document will be the document itself.
+      return dom::Node::As<dom::HTMLDocument>(node());
+    else
+      return node()->getOwnerDocumentReferenceAs<dom::HTMLDocument>();
+  }
+
+  shared_ptr<LayoutView> LayoutObject::view()
+  {
+    if (isLayoutView())
+      return dynamic_pointer_cast<LayoutView>(shared_from_this());
+    else
+      return document()->layoutView();
+  }
+
+  LayoutView &LayoutObject::viewRef()
+  {
+    return document()->layoutViewRef();
+  }
+
+  shared_ptr<const LayoutView> LayoutObject::view() const
+  {
+    return document()->layoutView();
+  }
+
+  const LayoutView &LayoutObject::viewRef() const
+  {
+    return document()->layoutViewRef();
+  }
+
+  void LayoutObject::useSceneWithCallback(const function<void(builtin_scene::Scene &)> &callback)
+  {
+    auto sceneRef = scene_.lock();
+    if (sceneRef != nullptr)
+      callback(*sceneRef);
+  }
+
+  void LayoutObject::createEntity()
+  {
+    if (TR_UNLIKELY(!node()->isElementOrText() && !node()->isDocument()))
+    {
+      assert(false && "The node in `LayoutObject` must be an element or text node.");
+      return;
+    }
+
+    // 1. Create the entity
+    auto createEntity = [this](Scene &scene)
+    {
+      entity_ = scene.createElement(node()->nodeName, node(),
+                                    parent() == nullptr ? nullopt : parent()->entity_);
+    };
+
+    useSceneWithCallback(createEntity);
+    entityDidCreate(entity_.value());
+  }
+
+  void LayoutObject::destroyEntity()
+  {
+    if (TR_UNLIKELY(!hasEntity()))
+      return;
+
+    auto removeEntity = [this](Scene &scene)
+    {
+      scene.removeElement(entity_.value());
+      entity_ = nullopt;
+    };
+
+    entityWillBeDestroyed(entity_.value());
+    useSceneWithCallback(removeEntity);
+  }
+
+  void LayoutObject::useEntity(shared_ptr<LayoutObject> other)
+  {
+    entity_ = other->entity_;
+    // TODO: update the Element
+  }
+
+  void LayoutObject::destroy()
+  {
+    destroyEntity();
+
+    auto children = virtualChildren();
+    if (children != nullptr)
+    {
+      vector<shared_ptr<LayoutObject>> listToReset; // List to be reset.
+      for (auto child : *children)
+      {
+        child->destroy();
+        listToReset.push_back(child); // Push the child to the list which will be reset later.
+      }
+
+      // Reset all the children after `destroy()` to avoid the dangling pointer.
+      for (auto item : listToReset)
+      {
+        item->setParent(nullptr);
+        item->setPrevSibling(nullptr);
+        item->setNextSibling(nullptr);
+      }
+    }
+  }
+
+  optional<client_cssom::CSSStyleDeclaration> LayoutObject::style() const
+  {
+    if (TR_UNLIKELY(!node()->isElementOrText()))
+      return nullopt;
+
+    if (node()->isElement())
+    {
+      auto element = dom::Node::As<dom::Element>(node());
+      if (element != nullptr)
+        return element->adoptedStyle();
+    }
+    else if (node()->isText())
+    {
+      auto textNode = dom::Node::As<dom::Text>(node());
+      if (textNode != nullptr)
+        return textNode->adoptedStyle();
+    }
+    return nullopt;
+  }
+
+  const client_cssom::CSSStyleDeclaration &LayoutObject::styleRef() const
+  {
+    assert(node()->isElementOrText() && "The node must be an element or text node.");
+    if (node()->isElement())
+    {
+      auto element = dom::Node::As<dom::Element>(node());
+      return element->adoptedStyle();
+    }
+    else if (node()->isText())
+    {
+      auto textNode = dom::Node::As<dom::Text>(node());
+      return textNode->adoptedStyle();
+    }
+    assert(false && "Unrachable");
+  }
+
+  const Fragment LayoutObject::fragment() const
+  {
+    Fragment nodeFragment = formattingContext_->liveFragment();
+    if (isText())
+    {
+      auto layoutText = dynamic_pointer_cast<const LayoutText>(shared_from_this());
+      if (layoutText != nullptr && layoutText->plainTextLength() == 0)
+        nodeFragment = Fragment::None(); // Set the fragment to none if a text and empty content.
+    }
+
+    assert(formattingContext_ != nullptr && "Formatting context must be set.");
+    if (parent() == nullptr)
+    {
+      return nodeFragment;
+    }
+    else
+    {
+      Fragment baseFragment = parent()->fragment();
+
+      // Move the fragment by the scroll offset if the object is a scroll container.
+      if (parent()->isBox() && parent()->isScrollContainer())
+      {
+        auto scrollableArea = dynamic_pointer_cast<const LayoutBox>(parent())->getScrollableArea();
+        if (scrollableArea != nullptr)
+        {
+          auto offset = scrollableArea->getScrollOffset();
+          baseFragment.moveBy(offset.x, offset.y, offset.z);
+        }
+      }
+
+      // Returns the fragment with the parent's offset.
+      return baseFragment.position(nodeFragment);
+    }
+  }
+
+  bool LayoutObject::isDescendantOf(shared_ptr<LayoutObject> object) const
+  {
+    auto r = parent();
+    while (r != nullptr)
+    {
+      if (r == object)
+        return true;
+      r = r->parent();
+    }
+    return false;
+  }
+
+  shared_ptr<LayoutObject> LayoutObject::slowFirstChild() const
+  {
+    const auto children = virtualChildren();
+    if (children != nullptr)
+      return children->firstChild();
+    return nullptr;
+  }
+
+  shared_ptr<LayoutObject> LayoutObject::slowLastChild() const
+  {
+    const auto children = virtualChildren();
+    if (children != nullptr)
+      return children->lastChild();
+    return nullptr;
+  }
+
+  void LayoutObject::onChildAdded(shared_ptr<LayoutObject> newChild, shared_ptr<LayoutObject> beforeChild)
+  {
+    assert(newChild != nullptr && "The new child must be set.");
+    assert(newChild->formattingContext_ != nullptr && "The formatting context must be set for the new child.");
+    assert(formattingContext_ != nullptr && "The formatting context must be set for the parent.");
+
+    auto &parentCtx = *formattingContext_;
+    newChild->formattingContext_->onAdded(parentCtx, beforeChild);
+  }
+
+  void LayoutObject::onChildRemoved(shared_ptr<LayoutObject> child)
+  {
+    assert(child != nullptr && "The child must be set.");
+    assert(child->formattingContext_ != nullptr && "The formatting context must be set for the child.");
+
+    child->formattingContext_->onRemoved(*formattingContext_);
+    child->destroy();
+  }
+
+  void LayoutObject::addChild(shared_ptr<LayoutObject> newChild, shared_ptr<LayoutObject> beforeChild)
+  {
+    auto children = virtualChildren();
+    if (!children)
+      return;
+
+    // TODO: special handling for the first child.
+    children->insertChildNode(shared_from_this(), newChild, beforeChild);
+    onChildAdded(newChild, beforeChild);
+  }
+
+  void LayoutObject::removeChild(shared_ptr<LayoutObject> oldChild)
+  {
+    auto children = virtualChildren();
+    if (!children)
+      return;
+
+    children->removeChildNode(shared_from_this(), oldChild);
+    onChildRemoved(oldChild);
+  }
+
+  void LayoutObject::setFormattingContext(DisplayType display)
+  {
+    formattingContext_ = FormattingContext::Make(display, view());
+  }
+
+  bool LayoutObject::setStyle(CSSStyleDeclaration style)
+  {
+    styleWillChange(style);
+
+    // Update the `WebContent` style.
+    if (hasEntity())
+    {
+      auto webContent = getSceneComponent<WebContent>();
+      if (webContent != nullptr)
+      {
+        shared_ptr<WebContent> parentContent = nullptr;
+        if (parent() != nullptr)
+          parentContent = parent()->getSceneComponent<WebContent>();
+        webContent->setStyle(style, parentContent);
+      }
+    }
+
+    // Update the layout style in formatting context.
+    bool success = formattingContext_ == nullptr
+                       ? false
+                       : formattingContext_->setLayoutStyle(style);
+
+    styleDidChange();
+    return success;
+  }
+
+  bool LayoutObject::maybeAdjustSize()
+  {
+    // The method `resize` will check if the size is changed.
+    return resize(fragment());
+  }
+
+  bool LayoutObject::resize(const Fragment &newSize)
+  {
+    sizeWillChange(newSize);
+
+    bool resized = false;
+    auto resizeEntity = [this, &resized, &newSize](Scene &scene)
+    {
+      if (TR_LIKELY(hasEntity()))
+      {
+        if (node()->enableCustomGeometry())
+        {
+          // TODO: Skip the resizing for the mesh element.
+          cerr << "The custom geometry node resizing is not supported yet." << endl;
+          resized = true;
+        }
+        else
+        {
+          auto &webContent = scene.getComponentChecked<WebContent>(entity_.value());
+          resized = webContent.resetSkSurface(newSize.contentWidth(), newSize.contentHeight());
+        }
+      }
+    };
+    useSceneWithCallback(resizeEntity);
+
+    if (resized == true)
+      sizeDidChange();
+    return resized;
+  }
+
+  bool LayoutObject::computeLayout(const ConstraintSpace &avilableSpace)
+  {
+    if (TR_UNLIKELY(formattingContext_ == nullptr))
+      return false;
+
+    unique_ptr<const LayoutResult> result = formattingContext_->computeLayout(avilableSpace);
+    if (TR_UNLIKELY(result == nullptr))
+      return false;
+
+    if (result->status() == LayoutResult::kRelayoutRequired)
+      return computeLayout(avilableSpace);
+    return result->status() == LayoutResult::kSuccess;
+  }
+
+  void LayoutObject::debugPrintFormattingContext() const
+  {
+    if (formattingContext_ != nullptr)
+      formattingContext_->debugPrint();
+  }
+
+  shared_ptr<LayoutObject> LayoutObject::container() const
+  {
+    if (isTextOrSVGChild())
+      return parent();
+
+    if (styleRef().hasProperty("position"))
+    {
+      auto position = styleRef().getPropertyValue("position");
+      if (position == "fixed")
+        return containerForFixedPosition();
+      else if (position == "absolute")
+        return containerForAbsolutePosition();
+    }
+
+    // Returns the parent directly by default.
+    return parent();
+  }
+
+  shared_ptr<LayoutObject> LayoutObject::containerForFixedPosition() const
+  {
+    // TODO: implement this method.
+    return nullptr;
+  }
+
+  shared_ptr<LayoutObject> LayoutObject::containerForAbsolutePosition() const
+  {
+    // TODO: implement this method.
+    return nullptr;
+  }
+
+  bool LayoutObject::computeIsFixedContainer(const client_cssom::CSSStyleDeclaration &style) const
+  {
+    // TODO: implement this method.
+    return false;
+  }
+
+  bool LayoutObject::computeIsAbsoluteContainer(const client_cssom::CSSStyleDeclaration &style) const
+  {
+    // TODO: implement this method.
+    return false;
+  }
+
+  shared_ptr<LayoutBlock> LayoutObject::containingBlock() const
+  {
+    if (!isTextOrSVGChild())
+    {
+      if (styleRef().hasProperty("position"))
+      {
+        auto position = styleRef().getPropertyValue("position");
+        if (position == "fixed")
+          return containingBlockForFixedPosition();
+        else if (position == "absolute")
+          return containingBlockForAbsolutePosition();
+      }
+    }
+
+    shared_ptr<LayoutObject> object;
+    object = parent();
+
+    while (object != nullptr && ((object->isInline() && !object->isAtomicInlineLevel()) ||
+                                 !object->isLayoutBlock()))
+    {
+      object = object->parent();
+    }
+    return dynamic_pointer_cast<LayoutBlock>(object);
+  }
+
+  shared_ptr<LayoutBlock> LayoutObject::containingBlockForFixedPosition() const
+  {
+    // TODO: implement this method.
+    return nullptr;
+  }
+
+  shared_ptr<LayoutBlock> LayoutObject::containingBlockForAbsolutePosition() const
+  {
+    // TODO: implement this method.
+    return nullptr;
+  }
+
+  shared_ptr<const LayoutBlock> LayoutObject::containingScrollContainer() const
+  {
+    auto object = parent();
+    while (object != nullptr)
+    {
+      if (object->isScrollContainer())
+        return dynamic_pointer_cast<const LayoutBlock>(object);
+      object = object->parent();
+    }
+    return nullptr;
+  }
+
+  bool LayoutObject::visibleToHitTestRequest(const HitTestRequest &request) const
+  {
+    auto &style = styleRef();
+    return style.getPropertyValue("visibility", "visible") == "visible" &&
+           (request.ignorePointerEventsNone() ||
+            style.getPropertyValue("pointer-events") != "none");
+  }
+
+  bool LayoutObject::visibleToHitTesting() const
+  {
+    auto &style = styleRef();
+    return style.getPropertyValue("visibility", "visible") == "visible" &&
+           style.getPropertyValue("pointer-events") != "none";
+  }
+
+  bool LayoutObject::hitTestAllPhases(HitTestResult &result,
+                                      const HitTestRay &hitTestRay,
+                                      const glm::vec3 &accumulatedOffset)
+  {
+    if (nodeAtPoint(result, hitTestRay, accumulatedOffset,
+                    HitTestPhase::kForeground))
+    {
+      return true;
+    }
+    if (nodeAtPoint(result, hitTestRay, accumulatedOffset,
+                    HitTestPhase::kFloat))
+    {
+      return true;
+    }
+    if (nodeAtPoint(result, hitTestRay, accumulatedOffset,
+                    HitTestPhase::kDescendantBlockBackgrounds))
+    {
+      return true;
+    }
+    if (nodeAtPoint(result, hitTestRay, accumulatedOffset,
+                    HitTestPhase::kSelfBlockBackground))
+    {
+      return true;
+    }
+    return false;
+  }
+
+  shared_ptr<dom::Node> LayoutObject::nodeForHitTest() const
+  {
+    if (node() != nullptr)
+      return node();
+
+    if (parent() != nullptr)
+    {
+      // TODO: check if the parent is a layout object.
+    }
+    return nullptr;
+  }
+
+  void LayoutObject::updateHitTestResult(HitTestResult &result, const glm::vec3 &point) const
+  {
+    if (result.innerNode())
+      return;
+
+    if (auto n = nodeForHitTest())
+      result.setNodeAndPosition(n, point);
+  }
+
+  void LayoutObject::entityDidCreate(builtin_scene::ecs::EntityId entity)
+  {
+    auto configEntity = [this, &entity](Scene &scene)
+    {
+      if (node()->enableCustomGeometry())
+      {
+        // TODO: Support the mesh element rendering, add Mesh3d, MeshMaterial3d, etc.
+        assert(false && "The mesh element rendering is not supported yet.");
+      }
+      else
+      {
+        auto webContextCtx = scene.getResource<WebContentContext>();
+        assert(webContextCtx != nullptr && "The web content context must be set.");
+        scene.getComponentChecked<Mesh3d>(webContextCtx->instancedMeshEntity())
+            .getHandleCheckedAsRef<InstancedMeshBase>()
+            .addInstance(entity); // Add the entity to the instanced mesh.
+
+        // Add `WebContent` component to the entity.
+        auto fragment = this->fragment();
+        scene.addComponent(entity, WebContent(string(this->name()),
+                                              fragment.contentWidth(),
+                                              fragment.contentHeight()));
+      }
+    };
+    useSceneWithCallback(configEntity);
+  }
+
+  void LayoutObject::entityWillBeDestroyed(builtin_scene::ecs::EntityId entity)
+  {
+    auto removeInstance = [this, &entity](Scene &scene)
+    {
+      if (!node()->enableCustomGeometry())
+      {
+        auto webContextCtx = scene.getResource<WebContentContext>();
+        assert(webContextCtx != nullptr);
+        scene.getComponentChecked<Mesh3d>(webContextCtx->instancedMeshEntity())
+            .getHandleCheckedAsRef<InstancedMeshBase>()
+            .removeInstance(entity); // Remove the entity from the instanced mesh.
+      }
+    };
+    useSceneWithCallback(removeInstance);
+  }
+
+  void LayoutObject::styleWillChange(client_cssom::CSSStyleDeclaration &newStyle)
+  {
+    // Update the transform's post-transform matrix if the "transform" property is provided.
+    if (newStyle.hasProperty("transform"))
+    {
+      auto transformComponent = getSceneComponent<Transform>();
+      if (transformComponent != nullptr)
+      {
+        auto &postTransform = transformComponent->getOrInitPostTransform();
+        // TODO: how to avoid duplicated parsing?
+        auto transformProperty = types::transform::Transform::Parse(newStyle.getPropertyValue("transform"));
+        if (transformProperty.size() > 0)
+        {
+          glm::mat4 mat(1.0f);
+          if (transformProperty.applyMatrixTo(mat) > 0)
+            postTransform.setMatrix(mat);
+        }
+      }
+    }
+  }
+
+  void LayoutObject::styleDidChange()
+  {
+  }
+
+  void LayoutObject::sizeWillChange(const Fragment &newSize)
+  {
+  }
+
+  void LayoutObject::sizeDidChange()
+  {
+  }
+
+  void LayoutObject::willComputeLayout(const ConstraintSpace &avilableSpace)
+  {
+  }
+
+  void LayoutObject::didComputeLayoutOnce(const ConstraintSpace &avilableSpace)
+  {
+  }
+}

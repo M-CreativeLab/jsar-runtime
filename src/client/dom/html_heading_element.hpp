@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "./html_content2d_element.hpp"
+#include "./html_element.hpp"
 
 namespace dom
 {
@@ -35,8 +35,8 @@ namespace dom
 
   inline HeadingLevel from_string(const std::string &input)
   {
-#define XX(LEVEL, TAG_NAME)      \
-  if (input == #TAG_NAME) \
+#define XX(LEVEL, TAG_NAME) \
+  if (input == #TAG_NAME)   \
     return HeadingLevel::LEVEL;
 
     HEADING_LEVEL_MAP(XX)
@@ -45,14 +45,14 @@ namespace dom
     assert(false && "Invalid heading level string");
   }
 
-  class HTMLHeadingElement : public HTMLContent2dElement
+  class HTMLHeadingElement : public HTMLElement
   {
   public:
-    using HTMLContent2dElement::HTMLContent2dElement;
+    using HTMLElement::HTMLElement;
 
   public:
     HTMLHeadingElement(HeadingLevel level, std::shared_ptr<Document> ownerDocument)
-        : HTMLContent2dElement(to_string(level), ownerDocument),
+        : HTMLElement(to_string(level), ownerDocument),
           level_(level)
     {
     }
@@ -94,7 +94,7 @@ namespace dom
         break;
       }
 
-      HTMLContent2dElement::createdCallback();
+      HTMLElement::createdCallback();
     }
 
   private:

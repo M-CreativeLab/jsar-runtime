@@ -223,6 +223,13 @@ namespace jsar::example
         return false;
       }
 
+      if (xrEnabled)
+      {
+        auto xrRenderer = windowCtx_->xrRenderer;
+        assert(xrRenderer != nullptr);
+        xrRenderer->initialize(embedder_->constellation->xrDevice);
+      }
+
       glfwMakeContextCurrent(windowCtx_->window);
       glEnable(GL_MULTISAMPLE);
       return true;
@@ -267,70 +274,76 @@ namespace jsar::example
         if (embedder_ == nullptr)
           continue; // Skip the rendering if the embedder is not ready.
 
-        if (xrEnabled && multiPass)
+        if (xrEnabled)
         {
-          for (int viewIndex = 0; viewIndex < 2; viewIndex++)
+          auto xrRenderer = windowCtx_->xrRenderer;
+          assert(xrRenderer != nullptr);
+          xrRenderer->writeInputSources();
+
+          if (multiPass)
           {
-            uint32_t w = drawingViewport.width() / viewsCount;
-            uint32_t h = drawingViewport.height();
-            uint32_t x = viewIndex * w;
-            uint32_t y = 0;
-
-            TrViewport eyeViewport(w, h, x, y);
-            glViewport(eyeViewport.x(), eyeViewport.y(), eyeViewport.width(), eyeViewport.height());
-
-            // render JSAR content
+            for (int viewIndex = 0; viewIndex < 2; viewIndex++)
             {
-              glGetError(); // Clear the error
+              uint32_t w = drawingViewport.width() / viewsCount;
+              uint32_t h = drawingViewport.height();
+              uint32_t x = viewIndex * w;
+              uint32_t y = 0;
 
-              /**
-               * Configure XR frame data.
-               */
-              auto xrRenderer = windowCtx_->xrRenderer;
-              assert(xrRenderer != nullptr);
-              auto xrDevice = embedder_->constellation->xrDevice;
-              assert(xrDevice != nullptr);
+              TrViewport eyeViewport(w, h, x, y);
+              glViewport(eyeViewport.x(), eyeViewport.y(), eyeViewport.width(), eyeViewport.height());
 
-              auto viewMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewMatrixForEye(viewIndex)));
-              auto projectionMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getProjectionMatrix()));
-              xrDevice->updateViewMatrix(viewIndex, viewMatrix);
-              xrDevice->updateProjectionMatrix(viewIndex, projectionMatrix);
-
-              auto viewerBaseMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewerBaseMatrix()));
-              xrDevice->updateViewerBaseMatrix(viewerBaseMatrix);
-              embedder_->onFrame();
-            }
-          }
-        }
-        else
-        {
-          glViewport(0, 0, drawingViewport.width(), drawingViewport.height());
-          {
-            glGetError(); // Clear the error
-            if (xrEnabled)
-            {
-              /**
-               * Configure XR frame data.
-               */
-              auto xrRenderer = windowCtx_->xrRenderer;
-              assert(xrRenderer != nullptr);
-              auto xrDevice = embedder_->constellation->xrDevice;
-              assert(xrDevice != nullptr);
-
-              auto viewerBaseMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewerBaseMatrix()));
-              xrDevice->updateViewerBaseMatrix(viewerBaseMatrix);
-
-              for (int viewIndex = 0; viewIndex < 2; viewIndex++)
+              // render JSAR content
               {
+                glGetError(); // Clear the error
+
+                /**
+                 * Configure XR frame data.
+                 */
+                auto xrDevice = embedder_->constellation->xrDevice;
+                assert(xrDevice != nullptr);
+
                 auto viewMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewMatrixForEye(viewIndex)));
                 auto projectionMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getProjectionMatrix()));
                 xrDevice->updateViewMatrix(viewIndex, viewMatrix);
                 xrDevice->updateProjectionMatrix(viewIndex, projectionMatrix);
+
+                auto viewerBaseMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewerBaseMatrix()));
+                xrDevice->updateViewerBaseMatrix(viewerBaseMatrix);
+                embedder_->onFrame();
               }
             }
-            // render JSAR content
+          }
+          else // Singlepass
+          {
+            glViewport(0, 0, drawingViewport.width(), drawingViewport.height());
+            glGetError(); // Clear the error
+
+            /**
+             * Configure XR frame data.
+             */
+            auto xrRenderer = windowCtx_->xrRenderer;
+            assert(xrRenderer != nullptr);
+            auto xrDevice = embedder_->constellation->xrDevice;
+            assert(xrDevice != nullptr);
+
+            auto viewerBaseMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewerBaseMatrix()));
+            xrDevice->updateViewerBaseMatrix(viewerBaseMatrix);
+
+            for (int viewIndex = 0; viewIndex < 2; viewIndex++)
+            {
+              auto viewMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getViewMatrixForEye(viewIndex)));
+              auto projectionMatrix = const_cast<float *>(glm::value_ptr(xrRenderer->getProjectionMatrix()));
+              xrDevice->updateViewMatrix(viewIndex, viewMatrix);
+              xrDevice->updateProjectionMatrix(viewIndex, projectionMatrix);
+            }
             embedder_->onFrame();
           }
+        }
+        else // Non-XR rendering
+        {
+          glViewport(0, 0, drawingViewport.width(), drawingViewport.height());
+          glGetError(); // Clear the error
+          embedder_->onFrame();
         }
 
         // render screen-space panel

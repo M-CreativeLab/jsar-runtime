@@ -63,6 +63,7 @@ namespace collision
         worldBaseMatrix = worldMatrix;
         _update(worldBaseMatrix);
       }
+
       TrBoundingBox &scale(float factor)
       {
         auto diff = maximum - minimum;
@@ -77,6 +78,21 @@ namespace collision
         reConstruct(min, max, worldBaseMatrix);
         return *this;
       }
+
+      TrBoundingBox &translate(float tx, float ty, float tz)
+      {
+        auto translation = glm::vec3(tx, ty, tz);
+        minimum += translation;
+        maximum += translation;
+        center += translation;
+
+        for (auto index = 0u; index < 8; ++index)
+          vectors[index] += translation;
+
+        reConstruct(minimum, maximum, worldBaseMatrix);
+        return *this;
+      }
+      
       glm::mat4 &getWorldMatrix()
       {
         return worldBaseMatrix;

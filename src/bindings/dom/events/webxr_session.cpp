@@ -18,7 +18,7 @@ namespace dombinding::events
   Object XRSessionEvent::Init(Napi::Env env)
   {
     EscapableHandleScope scope(env);
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     auto added = {
         InstanceValue("session", env.Null(), napi_default_jsproperty),
     };

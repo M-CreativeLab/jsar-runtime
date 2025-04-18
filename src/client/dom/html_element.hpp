@@ -24,15 +24,15 @@ namespace dom
   class HTMLElement : public Element,
                       virtual public client_cssom::BoxOffset
   {
-    friend class RenderHTMLDocument;
-
-  public:
     using Element::Element;
 
   public:
     void blur();
     void focus();
     void click();
+    std::optional<std::string> getDataset(const std::string &key);
+    void setDataset(const std::string &key, const std::string &value);
+    void removeDataset(const std::string &key);
 
   public:
     inline float offsetWidth() const override { return offsetWidth_; }
@@ -42,24 +42,11 @@ namespace dom
 
   public:
     void createdCallback() override;
-    void connectedCallback() override;
-    void afterConnectedCallback() override;
+    void attributeChangedCallback(const std::string &name,
+                                  const std::string &oldValue, const std::string &newValue) override;
 
-  protected:
-    /**
-     * Render the element to the scene.
-     *
-     * @param scene The scene to render the element.
-     */
-    virtual bool renderElement(builtin_scene::Scene &scene) { return true; };
-    /**
-     * Adopt the specified style to the element, it will copy the style properties to the element's
-     * adopted style, and update the layout node's style.
-     *
-     * @param style The style to adopt.
-     * @returns Whether the layout style is updated successfully.
-     */
-    virtual bool adoptStyle(const client_cssom::CSSStyleDeclaration &style) { return true; };
+  private:
+    bool isHTMLElement() const override final { return true; }
 
   public:
     HTMLElementDirection dir = HTMLElementDirection::LTR;
@@ -81,6 +68,7 @@ namespace dom
     float offsetHeight_ = 0.0f;
 
   private:
+    std::unordered_map<std::string, std::string> dataset_;
     std::shared_ptr<client_cssom::CSSStyleDeclaration> style_;
   };
 }

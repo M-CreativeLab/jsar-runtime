@@ -24,7 +24,7 @@ namespace canvasbinding
   }
 
   template <typename ObjectType, typename CanvasType>
-  std::vector<Napi::ClassPropertyDescriptor<ObjectType>> CanvasRenderingContext2DBase<ObjectType, CanvasType>::GetClassProperties()
+  std::vector<Napi::ClassPropertyDescriptor<ObjectType>> CanvasRenderingContext2DBase<ObjectType, CanvasType>::GetClassProperties(Napi::Env env)
   {
     using T = CanvasRenderingContext2DBase<ObjectType, CanvasType>;
     return {

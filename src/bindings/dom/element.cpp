@@ -1,71 +1,86 @@
 #include <iostream>
 #include <assert.h>
-#include "./element.hpp"
+
+#include "./element-inl.hpp"
 #include "./html_element-inl.hpp"
 #include "./all_html_elements.hpp"
 
 namespace dombinding
 {
   using namespace std;
+  using namespace Napi;
 
-  thread_local Napi::FunctionReference *Element::constructor;
+  thread_local FunctionReference *Element::constructor;
   void Element::Init(Napi::Env env)
   {
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     Napi::Function func = DefineClass(env, "Element", props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
     env.Global().Set("Element", func);
   }
 
+  // Create a new instance of `Element` in JavaScript from a node-implementation object.
   template <typename ObjectType = HTMLElement, typename ElementType = dom::HTMLElement>
-  inline Napi::Object CreateElementFromImpl(Napi::Env env, shared_ptr<dom::Element> element)
+  inline Object MakeFromImpl(Napi::Env env, shared_ptr<dom::Element> element)
   {
-    Napi::EscapableHandleScope scope(env);
+    EscapableHandleScope scope(env);
     shared_ptr<ElementType> typedElement = dynamic_pointer_cast<ElementType>(element);
-    NodeContainer<ElementType> elementContainer(typedElement);
-    auto external = Napi::External<NodeContainer<ElementType>>::New(env, &elementContainer);
-    auto instance = ObjectType::constructor->New({external});
-    return scope.Escape(instance).ToObject();
+    if (typedElement == nullptr)
+    {
+      const type_info &elementType = typeid(ElementType);
+      throw runtime_error("Invalid element type: " + string(elementType.name()));
+    }
+
+    Value value = NodeBase<ObjectType, ElementType>::FromImpl(env, typedElement);
+    return scope.Escape(value).ToObject();
   }
 
+  struct ElementInit
+  {
+    string namespaceURI;
+    string tagName;
+    shared_ptr<dom::Document> ownerDocument;
+  };
+
+  // Create a new instance of `Element` in JavaScript from the init object.
   template <typename ObjectType = HTMLElement, typename ElementType = dom::HTMLElement>
-  inline Napi::Object CreateElementFromNew(Napi::Env env, string namespaceURI, string tagName, shared_ptr<dom::Document> ownerDocument)
+  inline Object MakeFromInit(Napi::Env env, const ElementInit &init)
   {
-    Napi::EscapableHandleScope scope(env);
-    shared_ptr<ElementType> typedElement = dynamic_pointer_cast<ElementType>(dom::Element::CreateElement(namespaceURI, tagName, ownerDocument));
-    NodeContainer<ElementType> elementContainer(typedElement);
-    auto external = Napi::External<NodeContainer<ElementType>>::New(env, &elementContainer);
-    auto instance = ObjectType::constructor->New({external});
-    return scope.Escape(napi_value(instance)).ToObject();
+    assert(init.ownerDocument != nullptr && "ownerDocument is required");
+    shared_ptr<dom::Element> element = dom::Element::CreateElement(init.namespaceURI,
+                                                                   init.tagName,
+                                                                   init.ownerDocument);
+    return MakeFromImpl<ObjectType, ElementType>(env, element);
   }
 
-  Napi::Object Element::NewInstance(Napi::Env env, shared_ptr<dom::Node> elementNode)
+  Object Element::NewInstance(Napi::Env env, shared_ptr<dom::Node> elementNode)
   {
-    assert(elementNode->nodeType == dom::NodeType::ELEMENT_NODE);
+    assert(elementNode->nodeType == dom::NodeType::ELEMENT_NODE && "The node type must be ELEMENT_NODE");
     auto element = dynamic_pointer_cast<dom::Element>(elementNode);
+    assert(element != nullptr && "The `ELEMENT_NODE` type must be an `Element` node");
 
-#define XX(tagNameStr, className)                                          \
-  if (element->is(tagNameStr))                                             \
-  {                                                                        \
-    return CreateElementFromImpl<className, dom::className>(env, element); \
+#define XX(tagNameStr, className)                                 \
+  if (element->is(tagNameStr))                                    \
+  {                                                               \
+    return MakeFromImpl<className, dom::className>(env, element); \
   }
     TYPED_ELEMENT_MAP(XX)
 #undef XX
-    return CreateElementFromImpl(env, element);
+    return MakeFromImpl(env, element).ToObject();
   }
 
-  Napi::Object Element::NewInstance(Napi::Env env, string namespaceURI, string tagName,
-                                    shared_ptr<dom::Document> ownerDocument)
+  Object Element::NewInstance(Napi::Env env, string namespaceURI, string tagName,
+                              shared_ptr<dom::Document> ownerDocument)
   {
-#define XX(tagNameStr, className)                           \
-  if (tagName == tagNameStr)                                \
-  {                                                         \
-    return CreateElementFromNew<className, dom::className>( \
-        env, namespaceURI, tagName, ownerDocument);         \
+    const ElementInit init = {namespaceURI, tagName, ownerDocument};
+#define XX(tagNameStr, className)                              \
+  if (tagName == tagNameStr)                                   \
+  {                                                            \
+    return MakeFromInit<className, dom::className>(env, init); \
   }
     TYPED_ELEMENT_MAP(XX)
 #undef XX
-    return CreateElementFromNew(env, namespaceURI, tagName, ownerDocument);
+    return MakeFromInit(env, init);
   }
 }

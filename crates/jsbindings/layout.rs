@@ -1,5 +1,11 @@
+use std::{cell::RefCell, ops::BitOr, rc::Rc};
+
 use paste::paste;
-use std::{cell::RefCell, rc::Rc};
+use style::values::{
+  generics::{self as StyloGenericsValues},
+  specified as StyloSpecifiedValues,
+};
+use taffy::prelude::{FromFr, FromLength, FromPercent, TaffyFitContent};
 use taffy::TraversePartialTree;
 
 /// cbindgen:ignore
@@ -38,12 +44,22 @@ impl TaffyNode {
     }
   }
 
+  pub fn remove(&mut self) {
+    let _ = self
+      .tree
+      .handle
+      .borrow_mut()
+      .remove(self.node)
+      .expect("Failed to remove node");
+  }
+
   pub fn add_child(&mut self, child: &TaffyNode) {
     let _ = self
       .tree
       .handle
       .borrow_mut()
-      .add_child(self.node, child.node);
+      .add_child(self.node, child.node)
+      .expect("Failed to add child");
   }
 
   pub fn remove_child(&mut self, child: &TaffyNode) {
@@ -51,7 +67,94 @@ impl TaffyNode {
       .tree
       .handle
       .borrow_mut()
-      .remove_child(self.node, child.node);
+      .remove_child(self.node, child.node)
+      .expect("Failed to remove child");
+  }
+
+  /// Inserts a child before the specified child.
+  ///
+  /// # Arguments
+  ///
+  /// * `child` - The child to insert.
+  /// * `before_child` - The child to insert before.
+  ///
+  pub fn insert_child(&mut self, child: &TaffyNode, before_child: &TaffyNode) {
+    let mut tree_handle = self.tree.handle.borrow_mut();
+    match tree_handle
+      .children(self.node)
+      .unwrap()
+      .iter()
+      .position(|&n| n == before_child.node)
+    {
+      Some(index) => {
+        tree_handle
+          .insert_child_at_index(self.node, index, child.node)
+          .expect("Failed to insert child.");
+      }
+      None => {
+        // FIXME(yorkie): append the child to the end of the list if the before_child is not found.
+        tree_handle
+          .add_child(self.node, child.node)
+          .expect("Failed to add child.");
+      }
+    }
+  }
+
+  /// Replaces the old child with the new child. If `copy_children` is true, the children of the old child will be
+  /// copied to the new child.
+  ///
+  /// # Arguments
+  ///
+  /// * `old_child` - The child to replace.
+  /// * `new_child` - The new child to replace the old child with.
+  /// * `copy_children` - If true, the children of the old child will be copied to the new child.
+  ///
+  /// # Panics
+  ///
+  /// Panics if the old child is not a child of the node.
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use holocron::layout::{TaffyTree, TaffyNode};
+  ///
+  /// let tree = TaffyTree::new();
+  /// let mut parent = TaffyNode::new(&tree);
+  /// let mut old_child = TaffyNode::new(&tree);
+  /// let mut new_child = TaffyNode::new(&tree);
+  /// parent.add_child(&old_child);
+  /// parent.replace_child(&old_child, &new_child, true);
+  ///
+  /// assert_eq!(parent.child_count(), 1);
+  /// ```
+  ///
+  pub fn replace_child(
+    &mut self,
+    old_child: &TaffyNode,
+    new_child: &TaffyNode,
+    copy_children: bool,
+  ) {
+    let mut tree_handle = self.tree.handle.borrow_mut();
+    let index = tree_handle
+      .children(self.node)
+      .unwrap()
+      .iter()
+      .position(|&n| n == old_child.node)
+      .unwrap();
+    let old_child = tree_handle
+      .replace_child_at_index(self.node, index, new_child.node)
+      .unwrap();
+
+    if copy_children {
+      tree_handle
+        .children(old_child)
+        .map(|children| {
+          tree_handle
+            .set_children(new_child.node, &children)
+            .expect("Failed to set children")
+        })
+        .expect("Failed to get children");
+    }
   }
 
   pub fn replace_child_at_index(&mut self, index: usize, child: &TaffyNode) {
@@ -84,7 +187,12 @@ impl TaffyNode {
   }
 
   pub fn child_count(&self) -> usize {
-    self.tree.handle.borrow().child_count(self.node)
+    self
+      .tree
+      .handle
+      .try_borrow()
+      .map(|tree| tree.child_count(self.node))
+      .unwrap_or(0)
   }
 
   pub fn is_childless(&self) -> bool {
@@ -92,14 +200,34 @@ impl TaffyNode {
   }
 
   pub fn compute_layout(&mut self, width: f32, height: f32) {
-    let mut tree = self.tree.handle.borrow_mut();
-    let _ = tree.compute_layout(
-      self.node,
-      taffy::geometry::Size {
-        width: taffy::style::AvailableSpace::Definite(width),
-        height: taffy::style::AvailableSpace::Definite(height),
-      },
-    );
+    use taffy::{geometry::Size, style::AvailableSpace};
+
+    let mut tree = self
+      .tree
+      .handle
+      .try_borrow_mut()
+      .expect("Failed to borrow tree");
+
+    let _ = tree
+      .compute_layout(
+        self.node,
+        Size {
+          width: AvailableSpace::Definite(width),
+          height: AvailableSpace::Definite(height),
+        },
+      )
+      .map_err(|e| {
+        panic!("Failed to compute layout: {:?}", e);
+      });
+  }
+
+  pub fn print(&mut self) -> Result<(), String> {
+    let mut tree_handle = match self.tree.handle.try_borrow_mut() {
+      Ok(handle) => handle,
+      Err(_) => return Err("Cannot borrow tree handle: already borrowed".to_string()),
+    };
+    tree_handle.print_tree(self.node);
+    Ok(())
   }
 }
 
@@ -307,7 +435,7 @@ mod ffi {
     pub left: LengthPercentageAuto,
   }
 
-  #[derive(Clone, Copy, Debug)]
+  #[derive(Clone, Debug)]
   struct Style {
     pub display: Display,
     #[cxx_name = "boxSizing"]
@@ -352,6 +480,26 @@ mod ffi {
     pub flex_grow: f32,
     #[cxx_name = "flexShrink"]
     pub flex_shrink: f32,
+
+    // Grid Properties
+    #[cxx_name = "gridTemplateRows"]
+    pub grid_template_rows: String,
+    #[cxx_name = "gridTemplateColumns"]
+    pub grid_template_columns: String,
+    #[cxx_name = "gridAutoRows"]
+    pub grid_auto_rows: String,
+    #[cxx_name = "gridAutoColumns"]
+    pub grid_auto_columns: String,
+    #[cxx_name = "gridAutoFlow"]
+    pub grid_auto_flow: String,
+    #[cxx_name = "gridRowStart"]
+    pub grid_row_start: String,
+    #[cxx_name = "gridRowEnd"]
+    pub grid_row_end: String,
+    #[cxx_name = "gridColumnStart"]
+    pub grid_column_start: String,
+    #[cxx_name = "gridColumnEnd"]
+    pub grid_column_end: String,
   }
 
   #[derive(Clone, Copy, Debug)]
@@ -366,6 +514,10 @@ mod ffi {
   struct LayoutOutput {
     pub width: f32,
     pub height: f32,
+    #[cxx_name = "contentWidth"]
+    pub content_width: f32,
+    #[cxx_name = "contentHeight"]
+    pub content_height: f32,
     pub x: f32,
     pub y: f32,
     pub border: NumberRect,
@@ -382,6 +534,9 @@ mod ffi {
     #[cxx_name = "createNode"]
     fn create_node(tree: &TaffyTree) -> Box<TaffyNode>;
 
+    #[cxx_name = "removeNode"]
+    fn remove_node(node: &mut TaffyNode);
+
     #[cxx_name = "addChild"]
     fn add_child(parent: &mut TaffyNode, child: &TaffyNode);
 
@@ -390,6 +545,17 @@ mod ffi {
 
     #[cxx_name = "removeChildAtIndex"]
     fn remove_child_at_index(parent: &mut TaffyNode, index: usize);
+
+    #[cxx_name = "insertChild"]
+    fn insert_child(parent: &mut TaffyNode, child: &TaffyNode, before_child: &TaffyNode);
+
+    #[cxx_name = "replaceChild"]
+    fn replace_child(
+      parent: &mut TaffyNode,
+      old_child: &TaffyNode,
+      new_child: &TaffyNode,
+      copy_children: bool,
+    );
 
     #[cxx_name = "replaceChildAtIndex"]
     fn replace_child_at_index(parent: &mut TaffyNode, index: usize, child: &TaffyNode);
@@ -417,6 +583,9 @@ mod ffi {
 
     #[cxx_name = "computeLayout"]
     fn compute_layout(node: &mut TaffyNode, width: f32, height: f32);
+
+    #[cxx_name = "printNode"]
+    fn print_node(node: &mut TaffyNode);
   }
 }
 
@@ -582,9 +751,15 @@ impl ffi::Dimension {
 
 impl From<taffy::LengthPercentage> for ffi::LengthPercentage {
   fn from(value: taffy::LengthPercentage) -> Self {
-    match value {
-      taffy::LengthPercentage::Length(length) => Self::length(length),
-      taffy::LengthPercentage::Percent(percent) => Self::percentage(percent),
+    let value = value.into_raw();
+    if value.is_length_or_percentage() {
+      match value.tag() {
+        taffy::CompactLength::LENGTH_TAG => Self::length(value.value()),
+        taffy::CompactLength::PERCENT_TAG => Self::percentage(value.value()),
+        _ => unreachable!(),
+      }
+    } else {
+      unreachable!()
     }
   }
 }
@@ -592,9 +767,9 @@ impl From<taffy::LengthPercentage> for ffi::LengthPercentage {
 impl From<ffi::LengthPercentage> for taffy::LengthPercentage {
   fn from(value: ffi::LengthPercentage) -> Self {
     match value.tag {
-      ffi::LengthPercentageTag::Length => taffy::LengthPercentage::Length(value.length.value),
+      ffi::LengthPercentageTag::Length => taffy::LengthPercentage::from_length(value.length.value),
       ffi::LengthPercentageTag::Percentage => {
-        taffy::LengthPercentage::Percent(value.percentage.percent)
+        taffy::LengthPercentage::from_percent(value.percentage.percent)
       }
       _ => unreachable!(),
     }
@@ -603,10 +778,17 @@ impl From<ffi::LengthPercentage> for taffy::LengthPercentage {
 
 impl From<taffy::LengthPercentageAuto> for ffi::LengthPercentageAuto {
   fn from(value: taffy::LengthPercentageAuto) -> Self {
-    match value {
-      taffy::LengthPercentageAuto::Length(length) => Self::length(length),
-      taffy::LengthPercentageAuto::Percent(percent) => Self::percentage(percent),
-      taffy::LengthPercentageAuto::Auto => Self::auto(),
+    let value = value.into_raw();
+    if value.is_auto() {
+      Self::auto()
+    } else if value.is_length_or_percentage() {
+      match value.tag() {
+        taffy::CompactLength::LENGTH_TAG => Self::length(value.value()),
+        taffy::CompactLength::PERCENT_TAG => Self::percentage(value.value()),
+        _ => unreachable!(),
+      }
+    } else {
+      unreachable!()
     }
   }
 }
@@ -615,12 +797,12 @@ impl From<ffi::LengthPercentageAuto> for taffy::LengthPercentageAuto {
   fn from(value: ffi::LengthPercentageAuto) -> Self {
     match value.tag {
       ffi::LengthPercentageAutoTag::Length => {
-        taffy::LengthPercentageAuto::Length(value.length.value)
+        taffy::LengthPercentageAuto::from_length(value.length.value)
       }
       ffi::LengthPercentageAutoTag::Percentage => {
-        taffy::LengthPercentageAuto::Percent(value.percentage.percent)
+        taffy::LengthPercentageAuto::from_percent(value.percentage.percent)
       }
-      ffi::LengthPercentageAutoTag::Auto => taffy::LengthPercentageAuto::Auto,
+      ffi::LengthPercentageAutoTag::Auto => taffy::LengthPercentageAuto::auto(),
       _ => unreachable!(),
     }
   }
@@ -628,10 +810,17 @@ impl From<ffi::LengthPercentageAuto> for taffy::LengthPercentageAuto {
 
 impl From<taffy::Dimension> for ffi::Dimension {
   fn from(value: taffy::Dimension) -> Self {
-    match value {
-      taffy::Dimension::Length(length) => Self::length(length),
-      taffy::Dimension::Percent(percent) => Self::percentage(percent),
-      taffy::Dimension::Auto => Self::auto(),
+    let value = value.into_raw();
+    if value.is_auto() {
+      Self::auto()
+    } else if value.is_length_or_percentage() {
+      match value.tag() {
+        taffy::CompactLength::LENGTH_TAG => Self::length(value.value()),
+        taffy::CompactLength::PERCENT_TAG => Self::percentage(value.value()),
+        _ => unreachable!(),
+      }
+    } else {
+      unreachable!()
     }
   }
 }
@@ -639,9 +828,9 @@ impl From<taffy::Dimension> for ffi::Dimension {
 impl From<ffi::Dimension> for taffy::Dimension {
   fn from(value: ffi::Dimension) -> Self {
     match value.tag {
-      ffi::DimensionTag::Length => taffy::Dimension::Length(value.length.value),
-      ffi::DimensionTag::Percentage => taffy::Dimension::Percent(value.percentage.percent),
-      ffi::DimensionTag::Auto => taffy::Dimension::Auto,
+      ffi::DimensionTag::Length => taffy::Dimension::from_length(value.length.value),
+      ffi::DimensionTag::Percentage => taffy::Dimension::from_percent(value.percentage.percent),
+      ffi::DimensionTag::Auto => taffy::Dimension::auto(),
       _ => {
         println!("Invalid dimension tag: {:?}", value.tag);
         unreachable!()
@@ -823,13 +1012,197 @@ impl From<taffy::Style> for ffi::Style {
         .unwrap_or(taffy::JustifyContent::Stretch)
         .into(),
       gap: style.gap.into(),
+
       flex_direction: style.flex_direction.into(),
       flex_wrap: style.flex_wrap.into(),
       flex_basis: style.flex_basis.into(),
       flex_grow: style.flex_grow,
       flex_shrink: style.flex_shrink,
+
+      grid_template_rows: "".to_string(),
+      grid_template_columns: "".to_string(),
+      grid_auto_rows: "".to_string(),
+      grid_auto_columns: "".to_string(),
+      grid_auto_flow: "".to_string(),
+      grid_row_start: "".to_string(),
+      grid_row_end: "".to_string(),
+      grid_column_start: "".to_string(),
+      grid_column_end: "".to_string(),
     }
   }
+}
+
+#[inline]
+pub fn length_percentage(val: &StyloSpecifiedValues::LengthPercentage) -> taffy::LengthPercentage {
+  match val {
+    StyloSpecifiedValues::LengthPercentage::Length(length) => {
+      taffy::LengthPercentage::from_length(length.unitless_value())
+    }
+    StyloSpecifiedValues::LengthPercentage::Percentage(percent) => {
+      taffy::LengthPercentage::from_percent(percent.0)
+    }
+    _ => {
+      // TODO(yorkie): support calc
+      taffy::LengthPercentage::from_percent(0.0)
+    }
+  }
+}
+
+#[inline]
+fn min_track(input: &StyloSpecifiedValues::TrackBreadth) -> taffy::MinTrackSizingFunction {
+  use StyloSpecifiedValues::length::LengthPercentage;
+
+  match input {
+    StyloSpecifiedValues::TrackBreadth::Breadth(lp) => match lp {
+      LengthPercentage::Length(l) => taffy::MinTrackSizingFunction::from_length(l.unitless_value()),
+      LengthPercentage::Percentage(p) => taffy::MinTrackSizingFunction::from_percent(p.0),
+      LengthPercentage::Calc(_) => {
+        // TODO(yorkie): support calc
+        taffy::MinTrackSizingFunction::auto()
+      }
+    },
+    StyloSpecifiedValues::TrackBreadth::Fr(_) => taffy::MinTrackSizingFunction::auto(),
+    StyloSpecifiedValues::TrackBreadth::Auto => taffy::MinTrackSizingFunction::auto(),
+    StyloSpecifiedValues::TrackBreadth::MaxContent => taffy::MinTrackSizingFunction::max_content(),
+    StyloSpecifiedValues::TrackBreadth::MinContent => taffy::MinTrackSizingFunction::min_content(),
+  }
+}
+
+#[inline]
+fn max_track(input: &StyloSpecifiedValues::TrackBreadth) -> taffy::MaxTrackSizingFunction {
+  use StyloSpecifiedValues::length::LengthPercentage;
+
+  match input {
+    StyloSpecifiedValues::TrackBreadth::Breadth(lp) => match lp {
+      LengthPercentage::Length(l) => taffy::MaxTrackSizingFunction::from_length(l.unitless_value()),
+      LengthPercentage::Percentage(p) => taffy::MaxTrackSizingFunction::from_percent(p.0),
+      LengthPercentage::Calc(_) => {
+        // TODO(yorkie): support calc
+        taffy::MaxTrackSizingFunction::auto()
+      }
+    },
+    StyloSpecifiedValues::TrackBreadth::Fr(v) => taffy::MaxTrackSizingFunction::from_fr(v.clone()),
+    StyloSpecifiedValues::TrackBreadth::Auto => taffy::MaxTrackSizingFunction::auto(),
+    StyloSpecifiedValues::TrackBreadth::MaxContent => taffy::MaxTrackSizingFunction::max_content(),
+    StyloSpecifiedValues::TrackBreadth::MinContent => taffy::MaxTrackSizingFunction::min_content(),
+  }
+}
+
+#[inline]
+fn track_size(input: &StyloSpecifiedValues::TrackSize) -> taffy::NonRepeatedTrackSizingFunction {
+  match input {
+    StyloSpecifiedValues::TrackSize::Breadth(breadth) => taffy::MinMax {
+      min: min_track(breadth),
+      max: max_track(breadth),
+    },
+    StyloSpecifiedValues::TrackSize::Minmax(min, max) => taffy::MinMax {
+      min: min_track(min),
+      max: max_track(max),
+    },
+    StyloSpecifiedValues::TrackSize::FitContent(limit) => taffy::MinMax {
+      min: taffy::MinTrackSizingFunction::auto(),
+      max: taffy::MaxTrackSizingFunction::fit_content(match limit {
+        StyloSpecifiedValues::TrackBreadth::Breadth(lp) => length_percentage(lp),
+
+        StyloSpecifiedValues::TrackBreadth::Fr(_) => unreachable!(),
+        StyloSpecifiedValues::TrackBreadth::Auto => unreachable!(),
+        StyloSpecifiedValues::TrackBreadth::MaxContent => unreachable!(),
+        StyloSpecifiedValues::TrackBreadth::MinContent => unreachable!(),
+      }),
+    },
+  }
+}
+
+#[inline]
+fn track_repeat(
+  count: &StyloGenericsValues::grid::RepeatCount<StyloSpecifiedValues::Integer>,
+) -> taffy::GridTrackRepetition {
+  match count {
+    StyloGenericsValues::grid::RepeatCount::Number(v) => {
+      taffy::GridTrackRepetition::Count(v.value().try_into().unwrap())
+    }
+    StyloGenericsValues::grid::RepeatCount::AutoFill => taffy::GridTrackRepetition::AutoFill,
+    StyloGenericsValues::grid::RepeatCount::AutoFit => taffy::GridTrackRepetition::AutoFit,
+  }
+}
+
+#[inline]
+fn grid_template_tracks(input_str: &str) -> Vec<taffy::TrackSizingFunction> {
+  use style::values::generics::grid::GenericTrackListValue;
+  use style::values::specified::GridTemplateComponent;
+
+  let parser = crate::css_parser::CSSParser::default();
+  parser
+    .parse_grid_template_component(input_str)
+    .map(|input| match input.as_handle() {
+      GridTemplateComponent::None => vec![],
+      GridTemplateComponent::TrackList(list) => list
+        .values
+        .iter()
+        .map(|track| match track {
+          GenericTrackListValue::TrackSize(size) => {
+            taffy::TrackSizingFunction::Single(track_size(size))
+          }
+          GenericTrackListValue::TrackRepeat(repeat) => taffy::TrackSizingFunction::Repeat(
+            track_repeat(&repeat.count),
+            repeat.track_sizes.iter().map(track_size).collect(),
+          ),
+        })
+        .collect(),
+      GridTemplateComponent::Subgrid(_) => vec![],
+      GridTemplateComponent::Masonry => vec![],
+    })
+    .unwrap_or(vec![])
+}
+
+#[inline]
+fn grid_auto_tracks(input_str: &str) -> Vec<taffy::NonRepeatedTrackSizingFunction> {
+  crate::css_parser::CSSParser::default()
+    .parse_grid_implicit_tracks(input_str)
+    .map(|list| list.0.iter().map(track_size).collect())
+    .unwrap_or(vec![])
+}
+
+#[inline]
+fn grid_auto_flow(input_str: &str) -> taffy::GridAutoFlow {
+  use StyloSpecifiedValues::GridAutoFlow as StyloGridAutoFlow;
+
+  match crate::css_parser::CSSParser::default()
+    .parse_grid_auto_flow(input_str)
+    .bits()
+  {
+    x if x == StyloGridAutoFlow::ROW.bits() => taffy::GridAutoFlow::Row,
+    x if x == StyloGridAutoFlow::COLUMN.bits() => taffy::GridAutoFlow::Column,
+    x if x == (StyloGridAutoFlow::ROW | StyloGridAutoFlow::DENSE).bits() => {
+      taffy::GridAutoFlow::RowDense
+    }
+    x if x == (StyloGridAutoFlow::COLUMN | StyloGridAutoFlow::DENSE).bits() => {
+      taffy::GridAutoFlow::ColumnDense
+    }
+    _ => taffy::GridAutoFlow::Row,
+  }
+}
+
+#[inline]
+fn grid_line(input_str: &str) -> taffy::GridPlacement {
+  use style::Zero;
+
+  let parser = crate::css_parser::CSSParser::default();
+  parser
+    .parse_grid_line(input_str)
+    .map(|input| {
+      let input = input.as_handle();
+      if input.is_auto() {
+        taffy::GridPlacement::Auto
+      } else if input.is_span {
+        taffy::GridPlacement::Span(input.line_num.value().try_into().unwrap())
+      } else if input.line_num.is_zero() {
+        taffy::GridPlacement::Auto
+      } else {
+        taffy::style_helpers::line(input.line_num.value().try_into().unwrap())
+      }
+    })
+    .unwrap_or(taffy::GridPlacement::Auto)
 }
 
 impl From<ffi::Style> for taffy::Style {
@@ -867,6 +1240,21 @@ impl From<ffi::Style> for taffy::Style {
       flex_basis: value.flex_basis.into(),
       flex_grow: value.flex_grow,
       flex_shrink: value.flex_shrink,
+
+      grid_template_rows: grid_template_tracks(&value.grid_template_rows),
+      grid_template_columns: grid_template_tracks(&value.grid_template_columns),
+      grid_auto_columns: grid_auto_tracks(&value.grid_auto_columns),
+      grid_auto_rows: grid_auto_tracks(&value.grid_auto_rows),
+      grid_auto_flow: grid_auto_flow(&value.grid_auto_flow),
+      grid_row: taffy::Line {
+        start: grid_line(&value.grid_row_start),
+        end: grid_line(&value.grid_row_end),
+      },
+      grid_column: taffy::Line {
+        start: grid_line(&value.grid_column_start),
+        end: grid_line(&value.grid_column_end),
+      },
+
       ..Default::default()
     }
   }
@@ -885,6 +1273,8 @@ impl From<taffy::Layout> for ffi::LayoutOutput {
     Self {
       width: layout.size.width,
       height: layout.size.height,
+      content_width: layout.content_size.width,
+      content_height: layout.content_size.height,
       x: layout.location.x,
       y: layout.location.y,
       border: layout.border.into(),
@@ -901,6 +1291,10 @@ fn create_node(tree: &TaffyTree) -> Box<TaffyNode> {
   Box::new(TaffyNode::new(tree))
 }
 
+fn remove_node(node: &mut TaffyNode) {
+  node.remove();
+}
+
 fn add_child(parent: &mut TaffyNode, child: &TaffyNode) {
   parent.add_child(child);
 }
@@ -911,6 +1305,19 @@ fn remove_child(parent: &mut TaffyNode, child: &TaffyNode) {
 
 fn remove_child_at_index(parent: &mut TaffyNode, index: usize) {
   parent.remove_child_at_index(index);
+}
+
+fn insert_child(parent: &mut TaffyNode, child: &TaffyNode, before_child: &TaffyNode) {
+  parent.insert_child(child, before_child);
+}
+
+fn replace_child(
+  parent: &mut TaffyNode,
+  old_child: &TaffyNode,
+  new_child: &TaffyNode,
+  copy_children: bool,
+) {
+  parent.replace_child(old_child, new_child, copy_children);
 }
 
 fn replace_child_at_index(parent: &mut TaffyNode, index: usize, child: &TaffyNode) {
@@ -945,11 +1352,8 @@ fn get_node_style(node: &TaffyNode) -> ffi::Style {
 }
 
 fn set_node_style(node: &mut TaffyNode, style: ffi::Style) {
-  let _ = node
-    .tree
-    .handle
-    .borrow_mut()
-    .set_style(node.node, style.into());
+  let mut tree_handle = node.tree.handle.borrow_mut();
+  let _ = tree_handle.set_style(node.node, style.into());
 }
 
 fn get_layout_output(node: &TaffyNode) -> ffi::LayoutOutput {
@@ -958,4 +1362,13 @@ fn get_layout_output(node: &TaffyNode) -> ffi::LayoutOutput {
 
 fn compute_layout(node: &mut TaffyNode, width: f32, height: f32) {
   node.compute_layout(width, height);
+}
+
+fn print_node(node: &mut TaffyNode) {
+  node
+    .print()
+    .map_err(|e| {
+      eprintln!("Failed to print node: {:?}", e);
+    })
+    .ok();
 }

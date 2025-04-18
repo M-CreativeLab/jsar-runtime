@@ -11,7 +11,7 @@ namespace dombinding
     using HTMLElementBase::HTMLElementBase;
 
   public:
-    static vector<Napi::ClassPropertyDescriptor<HTMLMetaElement>> GetClassProperties();
+    static vector<Napi::ClassPropertyDescriptor<HTMLMetaElement>> GetClassProperties(Napi::Env env);
     static void Init(Napi::Env env);
 
   private:

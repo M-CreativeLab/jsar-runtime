@@ -1,32 +1,29 @@
 #pragma once
 
 #include <string>
-#include "./html_content2d_element.hpp"
+#include "./html_element.hpp"
 
 namespace dom
 {
-  class HTMLBodyElement final : public HTMLContent2dElement
+  class HTMLBodyElement final : public HTMLElement
   {
-  public:
-    using HTMLContent2dElement::HTMLContent2dElement;
+    using HTMLElement::HTMLElement;
 
   public:
     HTMLBodyElement(std::shared_ptr<Document> ownerDocument)
-        : HTMLContent2dElement("BODY", ownerDocument)
+        : HTMLElement("BODY", ownerDocument)
     {
     }
 
   public:
     void createdCallback() override
     {
-      defaultStyle_.setProperty("width", "100%");
-      defaultStyle_.setProperty("height", "100%");
-      defaultStyle_.setProperty("margin", "2px");
-      defaultStyle_.setProperty("padding", "2px");
+      defaultStyle_.setProperty("width", "auto");
+      defaultStyle_.setProperty("height", "auto");
       defaultStyle_.setProperty("background-color", "transparent");
       renderable = true;
 
-      HTMLContent2dElement::createdCallback();
+      HTMLElement::createdCallback();
     }
   };
 }

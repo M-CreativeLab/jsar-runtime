@@ -1,15 +1,15 @@
 #include <assert.h>
 #include "./html_image_element.hpp"
-#include "./document.hpp"
+#include "./document-inl.hpp"
 
 using namespace std;
 
 namespace dombinding
 {
-  vector<Napi::ClassPropertyDescriptor<HTMLImageElement>> HTMLImageElement::GetClassProperties()
+  vector<Napi::ClassPropertyDescriptor<HTMLImageElement>> HTMLImageElement::GetClassProperties(Napi::Env env)
   {
     using T = HTMLImageElement;
-    auto props = HTMLElementBase<HTMLImageElement, dom::HTMLImageElement>::GetClassProperties();
+    auto props = HTMLElementBase<HTMLImageElement, dom::HTMLImageElement>::GetClassProperties(env);
     auto added = vector<Napi::ClassPropertyDescriptor<HTMLImageElement>>(
         {
             T::InstanceAccessor("currentSrc", &T::CurrentSrcGetter, nullptr),
@@ -27,7 +27,7 @@ namespace dombinding
   void HTMLImageElement::Init(Napi::Env env)
   {
     Napi::HandleScope scope(env);
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     Napi::Function func = DefineClass(env, "HTMLImageElement", props);
     constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);

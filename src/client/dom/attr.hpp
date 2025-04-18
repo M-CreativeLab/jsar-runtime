@@ -20,6 +20,8 @@ namespace dom
     }
     inline static shared_ptr<Attr> Make(shared_ptr<Element> ownerElement, pugi::xml_attribute attr)
     {
+      assert(attr.name() != nullptr && "The attribute name is null.");
+      assert(attr.value() != nullptr && "The attribute value is null.");
       return make_shared<Attr>(attr, ownerElement);
     }
 

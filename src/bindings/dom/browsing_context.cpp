@@ -1,5 +1,5 @@
 #include "./browsing_context.hpp"
-#include "./document.hpp"
+#include "./document-inl.hpp"
 #include "../browser/window.hpp"
 
 namespace dombinding
@@ -7,7 +7,7 @@ namespace dombinding
   thread_local Napi::FunctionReference *BrowsingContext::constructor;
   void BrowsingContext::Init(Napi::Env env, Napi::Object exports)
   {
-    auto props = GetClassProperties();
+    auto props = GetClassProperties(env);
     {
       auto newProps = vector<Napi::ClassPropertyDescriptor<BrowsingContext>>({
           InstanceMethod("start", &BrowsingContext::Start),
