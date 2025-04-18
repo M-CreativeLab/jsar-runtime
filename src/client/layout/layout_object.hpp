@@ -44,6 +44,7 @@ namespace client_layout
     virtual bool isBoxModelObject() const { return false; }
     virtual bool isBox() const { return false; }
     virtual bool isText() const { return false; }
+    virtual bool isEmptyText() const { return false; }
     virtual bool isNone() const { return false; }
     virtual bool isFlexibleBox() const { return false; }
     virtual bool isLayoutGrid() const { return false; }
@@ -173,7 +174,7 @@ namespace client_layout
      * @param style The new style to update.
      * @returns `true` if the style is updated, otherwise `false`.
      */
-    bool setStyle(const client_cssom::CSSStyleDeclaration &style);
+    bool setStyle(client_cssom::CSSStyleDeclaration style);
 
     /**
      * This checks if there is a need to adjust the size of this object, and if so, it will adjust the size.
@@ -269,7 +270,7 @@ namespace client_layout
     virtual void entityDidCreate(builtin_scene::ecs::EntityId entity);
     virtual void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity);
 
-    virtual void styleWillChange(const client_cssom::CSSStyleDeclaration &newStyle);
+    virtual void styleWillChange(client_cssom::CSSStyleDeclaration &newStyle);
     virtual void styleDidChange();
 
     virtual void sizeWillChange(const Fragment &newSize);

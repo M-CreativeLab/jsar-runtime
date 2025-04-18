@@ -1,7 +1,5 @@
 use glsl_lang::ast;
 use glsl_lang::visitor::{HostMut, Visit, VisitorMut};
-use std::ffi::CString;
-use std::os::raw::c_char;
 use std::path::Path;
 
 use crate::glsl_transpiler;

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>CSS Grid Layout Example</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    h1 {
+      font-size: 58px;
+      font-weight: bold;
+      color: #fff;
+    }
+    h2, h3 {
+      font-size: 45px;
+      font-weight: bold;
+      color: #c9d4df;
+    }
+    p {
+      font-size: 30px;
+      color: #fff;
+    }
+
+    /* Grid Container */
+    .grid-container {
+      display: grid;
+      background-color: #c9d4df30;
+      grid-template-columns: repeat(auto-fit, minmax(30%, 1fr));
+      gap: 20px;
+      padding: 20px 0;
+      width: 100%;
+    }
+
+    /* Grid Items */
+    .grid-item {
+      background: rgba(0, 81, 255, 0.727);
+      border-radius: 20px;
+      padding: 50px;
+      margin: 20px;
+    }
+
+    /* .grid-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    } */
+
+    /* Header and Footer */
+    header,
+    footer {
+      background: rgba(100, 5, 5, 0.706);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      grid-column: 1 / -1;
+    }
+  </style>
+</head>
+
+<body style="background-color: #fff;">
+  <header>
+    <h1>Grid Layout Example</h1>
+  </header>
+
+  <div class="grid-container">
+    <div class="grid-item">
+      <h3>Grid Item 0</h3>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+    </div>
+
+    <div class="grid-item">
+      <h3>Grid Item 1</h3>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+    </div>
+
+    <div class="grid-item">
+      <h3>Grid Item 2</h3>
+      <p>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+    </div>
+
+    <div class="grid-item">
+      <h3>Grid Item 3</h3>
+      <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco.</p>
+    </div>
+
+    <div class="grid-item">
+      <h3>Grid Item 4</h3>
+      <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum.</p>
+    </div>
+
+    <div class="grid-item">
+      <h3>Grid Item 5</h3>
+      <p>Excepteur sint occaecat cupidatat non proident.</p>
+    </div>
+
+    <div class="grid-item">
+      <h3>Grid Item 6</h3>
+      <p>Excepteur sint occaecat cupidatat non proident.</p>
+    </div>
+
+    <div class="grid-item">
+      <h3>Grid Item 7</h3>
+      <p>Excepteur sint occaecat cupidatat non proident.</p>
+    </div>
+
+    <div class="grid-item">
+      <h3>Grid Item 8</h3>
+      <p>Excepteur sint occaecat cupidatat non proident.</p>
+    </div>
+
+    <div class="grid-item">
+      <h3>Grid Item 9</h3>
+      <p>Excepteur sint occaecat cupidatat non proident.</p>
+    </div>
+  </div>
+</body>
+
+</html>
