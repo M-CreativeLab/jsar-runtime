@@ -344,6 +344,16 @@ namespace dom
         V8_SET_GLOBAL_FROM_MAIN(MutationRecord);
         V8_SET_GLOBAL_FROM_MAIN(MutationObserver);
 
+        // CSSOM APIs
+        V8_SET_GLOBAL_FROM_MAIN(CSS);
+        V8_SET_GLOBAL_FROM_MAIN(CSSRule);
+        V8_SET_GLOBAL_FROM_MAIN(CSSRuleList);
+        V8_SET_GLOBAL_FROM_MAIN(CSSStyleDeclaration);
+        V8_SET_GLOBAL_FROM_MAIN(CSSStyleSheet);
+        V8_SET_GLOBAL_FROM_MAIN(CSSStyleRule);
+        V8_SET_GLOBAL_FROM_MAIN(StyleSheet);
+        V8_SET_GLOBAL_FROM_MAIN(StyleSheetList);
+
         // Events
         V8_SET_GLOBAL_FROM_MAIN(Event);
         V8_SET_GLOBAL_FROM_MAIN(EventTarget);

@@ -295,8 +295,8 @@ namespace dombinding
     auto selectors = info[0].ToString().Utf8Value();
     try
     {
-      auto list = this->node->querySelectorAll(selectors);
-      return NodeList<dom::Element>::NewInstance(env, list);
+      auto list = std::make_unique<dom::NodeList<dom::Element>>(this->node->querySelectorAll(selectors));
+      return NodeList::NewInstance(env, std::move(list));
     }
     catch (const std::exception &e)
     {

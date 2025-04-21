@@ -1,149 +1,480 @@
+#include <assert.h>
+#include <client/scripting_base/v8_utils.hpp>
+
 #include "./css_style_declaration.hpp"
 
 namespace cssombinding
 {
   using namespace std;
+  using namespace v8;
+
+  string kebab_to_camel_case(const string &kebabStr)
+  {
+    string camelStr;
+    bool capitalizeNext = false;
+
+    for (char c : kebabStr)
+    {
+      if (c == '-')
+      {
+        capitalizeNext = true;
+      }
+      else
+      {
+        if (capitalizeNext)
+        {
+          camelStr += static_cast<char>(std::toupper(c));
+          capitalizeNext = false;
+        }
+        else
+        {
+          camelStr += c;
+        }
+      }
+    }
+
+    return camelStr;
+  }
+
+  string camel_to_kebab_case(const string &camelStr)
+  {
+    string kebabStr;
+    for (char c : camelStr)
+    {
+      if (std::isupper(c))
+      {
+        if (!kebabStr.empty())
+        {
+          kebabStr += '-';
+        }
+        kebabStr += static_cast<char>(std::tolower(c));
+      }
+      else
+      {
+        kebabStr += c;
+      }
+    }
+    return kebabStr;
+  }
 
   void CSSStyleDeclaration::Init(Napi::Env env)
   {
-#define MODULE_NAME "CSSStyleDeclaration"
-    auto props = {
-        InstanceAccessor("cssText", &CSSStyleDeclaration::CssTextGetter, &CSSStyleDeclaration::CssTextSetter),
-        InstanceAccessor("length", &CSSStyleDeclaration::LengthGetter, nullptr),
-        InstanceMethod("getPropertyPriority", &CSSStyleDeclaration::GetPropertyPriority),
-        InstanceMethod("getPropertyValue", &CSSStyleDeclaration::GetPropertyValue),
-        InstanceMethod("item", &CSSStyleDeclaration::Item),
-        InstanceMethod("removeProperty", &CSSStyleDeclaration::RemoveProperty),
-        InstanceMethod("setProperty", &CSSStyleDeclaration::SetProperty),
-        InstanceMethod("toString", &CSSStyleDeclaration::ToString),
-    };
-    Napi::Function func = DefineClass(env, MODULE_NAME, props);
-    constructor = new Napi::FunctionReference();
-    *constructor = Napi::Persistent(func);
-    env.Global().Set(MODULE_NAME, func);
-#undef MODULE_NAME
+    Napi::HandleScope scope(env);
+    v8::Local<v8::Function> constructor = Base::Initialize(v8::Isolate::GetCurrent());
+
+    env.Global().Set(
+        Napi::String::New(env, "CSSStyleDeclaration"),
+        scripting_base::Value(constructor));
   }
 
-  Napi::Object CSSStyleDeclaration::NewInstance(Napi::Env env, shared_ptr<client_cssom::CSSStyleDeclaration> handle)
+  Napi::Value CSSStyleDeclaration::NewInstance(Napi::Env env, shared_ptr<client_cssom::CSSStyleDeclaration> inner)
   {
     Napi::EscapableHandleScope scope(env);
-    SharedReference<client_cssom::CSSStyleDeclaration> sharedHandle(handle);
-    auto external = Napi::External<SharedReference<client_cssom::CSSStyleDeclaration>>::New(env, &sharedHandle);
-    Napi::Object obj = constructor->New({external});
-    return scope.Escape(obj).ToObject();
+    v8::Local<v8::Value> jsValue = Base::NewInstance(env, inner);
+
+    // Convert the v8::Value to a Napi::Value
+    napi_value value;
+    memcpy(&value, &jsValue, sizeof(jsValue));
+    return scope.Escape(value);
   }
 
-  CSSStyleDeclaration::CSSStyleDeclaration(const Napi::CallbackInfo &info) : Napi::ObjectWrap<CSSStyleDeclaration>(info)
+  void CSSStyleDeclaration::GetPropertyPriority(const v8::FunctionCallbackInfo<v8::Value> &args)
   {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+    v8::Isolate *isolate = args.GetIsolate();
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+    v8::HandleScope scope(isolate);
 
-    if (info.Length() != 1 || !info[0].IsExternal())
+    if (args.Length() < 1 || !args[0]->IsString())
     {
-      Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
+      isolate->ThrowException(v8::String::NewFromUtf8(isolate, "Invalid arguments").ToLocalChecked());
       return;
     }
 
-    auto external = info[0].As<Napi::External<SharedReference<client_cssom::CSSStyleDeclaration>>>();
-    auto handleRef = external.Data();
-    if (handleRef == nullptr)
+    v8::Local<v8::String> property = args[0].As<v8::String>();
+    v8::String::Utf8Value propertyName(isolate, property);
+
+    auto instance = Unwrap(args.Holder());
+    assert(instance != nullptr && "CSSStyleDeclaration::GetPropertyPriority: instance is null");
+
+    auto priority = instance->inner()->getPropertyPriority(*propertyName);
+    if (priority == client_cssom::CSSPropertyPriority::Important)
     {
-      Napi::TypeError::New(env, "Illegal constructor").ThrowAsJavaScriptException();
-      return;
+      args.GetReturnValue()
+          .Set(v8::String::NewFromUtf8(isolate, "important").ToLocalChecked());
     }
-    handle_ = handleRef->value;
-  }
-
-  Napi::Value CSSStyleDeclaration::CssTextGetter(const Napi::CallbackInfo &info)
-  {
-    auto cssText = useHandle<string>([](client_cssom::CSSStyleDeclaration &handle)
-                                     { return handle.cssText(); }, "");
-    return Napi::String::New(info.Env(), cssText);
-  }
-
-  void CSSStyleDeclaration::CssTextSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
-  {
-    // TODO: Implement setter
-  }
-
-  Napi::Value CSSStyleDeclaration::LengthGetter(const Napi::CallbackInfo &info)
-  {
-    auto length = useHandle<size_t>([](client_cssom::CSSStyleDeclaration &handle)
-                                    { return handle.length(); }, 0);
-    return Napi::Number::New(info.Env(), length);
-  }
-
-  Napi::Value CSSStyleDeclaration::GetPropertyPriority(const Napi::CallbackInfo &info)
-  {
-    if (info.Length() != 1 || !info[0].IsString())
+    else
     {
-      Napi::TypeError::New(info.Env(), "Invalid arguments").ThrowAsJavaScriptException();
-      return info.Env().Undefined();
+      args.GetReturnValue().Set(v8::String::Empty(isolate));
     }
-
-    auto propertyName = info[0].As<Napi::String>().Utf8Value();
-    auto priority = useHandle<client_cssom::CSSPropertyPriority>([&propertyName](client_cssom::CSSStyleDeclaration &handle)
-                                                                 { return handle.getPropertyPriority(propertyName); }, client_cssom::CSSPropertyPriority::Normal);
-    return Napi::Number::New(info.Env(), static_cast<int>(priority));
   }
 
-  Napi::Value CSSStyleDeclaration::GetPropertyValue(const Napi::CallbackInfo &info)
+  void CSSStyleDeclaration::GetPropertyValue(const v8::FunctionCallbackInfo<v8::Value> &args)
   {
-    if (info.Length() != 1 || !info[0].IsString())
+    v8::Isolate *isolate = args.GetIsolate();
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+    v8::HandleScope scope(isolate);
+
+    if (args.Length() < 1 || !args[0]->IsString())
     {
-      Napi::TypeError::New(info.Env(), "Invalid arguments").ThrowAsJavaScriptException();
-      return info.Env().Undefined();
-    }
-
-    auto propertyName = info[0].As<Napi::String>().Utf8Value();
-    auto value = useHandle<string>([&propertyName](client_cssom::CSSStyleDeclaration &handle)
-                                   { return handle.getPropertyValue(propertyName); }, "");
-    return Napi::String::New(info.Env(), value);
-  }
-
-  Napi::Value CSSStyleDeclaration::Item(const Napi::CallbackInfo &info)
-  {
-    if (info.Length() != 1 || !info[0].IsNumber())
-    {
-      Napi::TypeError::New(info.Env(), "Invalid arguments").ThrowAsJavaScriptException();
-      return info.Env().Undefined();
-    }
-
-    // TODO: Implement item().
-    return info.Env().Undefined();
-  }
-
-  void CSSStyleDeclaration::RemoveProperty(const Napi::CallbackInfo &info)
-  {
-    if (info.Length() != 1 || !info[0].IsString())
-    {
-      Napi::TypeError::New(info.Env(), "Invalid arguments").ThrowAsJavaScriptException();
+      isolate->ThrowException(v8::String::NewFromUtf8(isolate, "Invalid arguments").ToLocalChecked());
       return;
     }
 
-    auto propertyName = info[0].As<Napi::String>().Utf8Value();
-    useHandle([&propertyName](client_cssom::CSSStyleDeclaration &handle)
-              { handle.removeProperty(propertyName); });
+    v8::Local<v8::String> property = args[0].As<v8::String>();
+    v8::String::Utf8Value propertyName(isolate, property);
+
+    auto instance = Unwrap(args.Holder());
+    assert(instance != nullptr && "CSSStyleDeclaration::GetPropertyValue: instance is null");
+
+    auto value = instance->inner()->getPropertyValue(*propertyName);
+    if (value.empty())
+    {
+      args.GetReturnValue()
+          .Set(v8::String::Empty(isolate));
+    }
+    else
+    {
+      args.GetReturnValue()
+          .Set(v8::String::NewFromUtf8(isolate, value.c_str()).ToLocalChecked());
+    }
   }
 
-  void CSSStyleDeclaration::SetProperty(const Napi::CallbackInfo &info)
+  void CSSStyleDeclaration::Item(const v8::FunctionCallbackInfo<v8::Value> &args)
   {
-    if (info.Length() != 2 || !info[0].IsString() || !info[1].IsString())
+    v8::Isolate *isolate = args.GetIsolate();
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+    v8::HandleScope scope(isolate);
+
+    if (args.Length() < 1 || !args[0]->IsNumber())
     {
-      Napi::TypeError::New(info.Env(), "Invalid arguments").ThrowAsJavaScriptException();
+      isolate->ThrowException(v8::String::NewFromUtf8(isolate, "Invalid arguments").ToLocalChecked());
       return;
     }
 
-    auto propertyName = info[0].As<Napi::String>().Utf8Value();
-    auto value = info[1].As<Napi::String>().Utf8Value();
-    useHandle([&propertyName, &value](client_cssom::CSSStyleDeclaration &handle)
-              { handle.setProperty(propertyName, value); });
+    auto index = args[0].As<v8::Number>()->Value();
+    auto instance = Unwrap(args.Holder());
+    assert(instance != nullptr && "CSSStyleDeclaration::Item: instance is null");
+
+    auto value = instance->inner()->item(index);
+    args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, value.c_str()).ToLocalChecked());
   }
 
-  Napi::Value CSSStyleDeclaration::ToString(const Napi::CallbackInfo &info)
+  void CSSStyleDeclaration::RemoveProperty(const v8::FunctionCallbackInfo<v8::Value> &args)
   {
-    auto str = useHandle<string>([](client_cssom::CSSStyleDeclaration &handle)
-                                 { return handle.cssText(); }, "");
-    return Napi::String::New(info.Env(), str);
+    v8::Isolate *isolate = args.GetIsolate();
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+    v8::HandleScope scope(isolate);
+
+    if (args.Length() != 1 || !args[0]->IsString())
+    {
+      isolate->ThrowException(v8::String::NewFromUtf8(isolate, "Invalid arguments").ToLocalChecked());
+      return;
+    }
+
+    auto property = args[0].As<v8::String>();
+    v8::String::Utf8Value propertyName(isolate, property);
+
+    auto instance = Unwrap(args.Holder());
+    assert(instance != nullptr && "CSSStyleDeclaration::RemoveProperty: instance is null");
+
+    auto result = instance->inner()->removeProperty(*propertyName);
+    if (result.empty())
+    {
+      args.GetReturnValue().Set(v8::Undefined(isolate));
+    }
+    else
+    {
+      args.GetReturnValue()
+          .Set(v8::String::NewFromUtf8(isolate, result.c_str()).ToLocalChecked());
+    }
+  }
+
+  void CSSStyleDeclaration::SetProperty(const v8::FunctionCallbackInfo<v8::Value> &args)
+  {
+    v8::Isolate *isolate = args.GetIsolate();
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+    v8::HandleScope scope(isolate);
+
+    if (args.Length() < 1 || !args[0]->IsString())
+    {
+      isolate->ThrowException(v8::String::NewFromUtf8(isolate, "Invalid arguments").ToLocalChecked());
+      return;
+    }
+
+    v8::Local<v8::String> property = args[0].As<v8::String>();
+    v8::Local<v8::String> value;
+    if (args.Length() >= 2 && args[1]->IsString())
+      value = args[1].As<v8::String>();
+    else
+      value = v8::String::Empty(isolate);
+
+    client_cssom::CSSPropertyPriority priority = client_cssom::CSSPropertyPriority::Normal;
+    if (args.Length() >= 3)
+    {
+      if (args[2]->IsString())
+      {
+        v8::String::Utf8Value priorityValue(isolate, args[2]);
+        if (strcmp(*priorityValue, "important") == 0)
+          priority = client_cssom::CSSPropertyPriority::Important;
+      }
+    }
+
+    v8::String::Utf8Value propertyName(isolate, property);
+    v8::String::Utf8Value propertyValue(isolate, value);
+
+    auto instance = Unwrap(args.Holder());
+    assert(instance != nullptr && "CSSStyleDeclaration::SetProperty: instance is null");
+
+    instance->inner()->setProperty(*propertyName, *propertyValue, priority);
+    args.GetReturnValue().Set(v8::Undefined(isolate));
+  }
+
+  void CSSStyleDeclaration::ToString(const v8::FunctionCallbackInfo<v8::Value> &args)
+  {
+    v8::Isolate *isolate = args.GetIsolate();
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+    v8::HandleScope scope(isolate);
+
+    auto instance = Unwrap(args.Holder());
+    assert(instance != nullptr && "CSSStyleDeclaration::ToString: instance is null");
+
+    auto cssText = instance->inner()->cssText();
+    args.GetReturnValue()
+        .Set(v8::String::NewFromUtf8(isolate, cssText.c_str()).ToLocalChecked());
+  }
+
+  void CSSStyleDeclaration::ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl)
+  {
+    Base::ConfigureFunctionTemplate(isolate, tpl);
+
+    tpl->InstanceTemplate()->SetHandler(v8::NamedPropertyHandlerConfiguration(
+        PropertyGetter,         // Getter
+        PropertySetter,         // Setter
+        nullptr,                // Query
+        PropertyDeleter,        // Deleter
+        PropertyEnumerator,     // Enumerator
+        nullptr,                // Definer
+        nullptr,                // Descriptor
+        v8::Local<v8::Value>(), // Data
+        v8::PropertyHandlerFlags::kNone));
+  }
+
+  void CSSStyleDeclaration::PropertyGetter(v8::Local<v8::Name> property,
+                                           const v8::PropertyCallbackInfo<v8::Value> &info)
+  {
+    v8::Isolate *isolate = info.GetIsolate();
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+
+    CSSStyleDeclaration *instance = Unwrap(info.Holder());
+    assert(instance != nullptr && "CSSStyleDeclaration::PropertyGetter: instance is null");
+
+    // scripting_base::console::Log(context, property.As<v8::Value>());
+    if (property->IsSymbol())
+    {
+      // TODO(yorkie): Handle symbol property, such as `Symbol.toStringTag`.
+      info.GetReturnValue().Set(v8::Undefined(isolate));
+      return;
+    }
+    assert(property->IsString());
+
+    // .constructor
+    if (property->StrictEquals(v8::String::NewFromUtf8(isolate, "constructor").ToLocalChecked()))
+    {
+      info.GetReturnValue().Set(Base::ConstructorFunction(isolate));
+      return;
+    }
+
+    // .cssText
+    if (property->StrictEquals(v8::String::NewFromUtf8(isolate, "cssText").ToLocalChecked()))
+    {
+      auto cssText = instance->inner()->cssText();
+      info.GetReturnValue()
+          .Set(v8::String::NewFromUtf8(isolate, cssText.c_str()).ToLocalChecked());
+      return;
+    }
+
+    // .length
+    if (property->StrictEquals(v8::String::NewFromUtf8(isolate, "length").ToLocalChecked()))
+    {
+      auto length = instance->inner()->length();
+      info.GetReturnValue().Set(v8::Number::New(isolate, length));
+      return;
+    }
+
+    // .item(index)
+    if (property->StrictEquals(v8::String::NewFromUtf8(isolate, "item").ToLocalChecked()))
+    {
+      info.GetReturnValue()
+          .Set(v8::FunctionTemplate::New(isolate, &CSSStyleDeclaration::Item)
+                   ->GetFunction(context)
+                   .ToLocalChecked());
+      return;
+    }
+
+    // .getPropertyValue(property)
+    if (property->StrictEquals(v8::String::NewFromUtf8(isolate, "getPropertyValue").ToLocalChecked()))
+    {
+      info.GetReturnValue()
+          .Set(v8::FunctionTemplate::New(isolate, &CSSStyleDeclaration::GetPropertyValue)
+                   ->GetFunction(context)
+                   .ToLocalChecked());
+      return;
+    }
+
+    // .getPropertyPriority(property)
+    if (property->StrictEquals(v8::String::NewFromUtf8(isolate, "getPropertyPriority").ToLocalChecked()))
+    {
+      info.GetReturnValue()
+          .Set(v8::FunctionTemplate::New(isolate, &CSSStyleDeclaration::GetPropertyPriority)
+                   ->GetFunction(context)
+                   .ToLocalChecked());
+      return;
+    }
+
+    // .removeProperty(property)
+    if (property->StrictEquals(v8::String::NewFromUtf8(isolate, "removeProperty").ToLocalChecked()))
+    {
+      info.GetReturnValue()
+          .Set(v8::FunctionTemplate::New(isolate, &CSSStyleDeclaration::RemoveProperty)
+                   ->GetFunction(context)
+                   .ToLocalChecked());
+      return;
+    }
+
+    // .setProperty(property, value)
+    if (property->StrictEquals(v8::String::NewFromUtf8(isolate, "setProperty").ToLocalChecked()))
+    {
+      info.GetReturnValue()
+          .Set(v8::FunctionTemplate::New(isolate, &CSSStyleDeclaration::SetProperty)
+                   ->GetFunction(context)
+                   .ToLocalChecked());
+      return;
+    }
+
+    // .cssFloat: alias for .float
+    if (property->StrictEquals(v8::String::NewFromUtf8(isolate, "cssFloat").ToLocalChecked()))
+    {
+      auto floatValue = instance->inner()->getPropertyValue("float");
+      if (floatValue.empty())
+      {
+        info.GetReturnValue()
+            .Set(v8::Undefined(isolate));
+        return;
+      }
+      else
+      {
+        info.GetReturnValue()
+            .Set(v8::String::NewFromUtf8(isolate, floatValue.c_str()).ToLocalChecked());
+        return;
+      }
+    }
+
+    // Dynamic property getter for CSS properties
+    v8::String::Utf8Value propertyName(isolate, property);
+    string propertyNameStr(*propertyName, propertyName.length());
+    // Convert camel-case to kebab-case if there is no hyphen
+    if (propertyNameStr.find('-') == string::npos)
+      propertyNameStr = camel_to_kebab_case(propertyNameStr);
+
+    auto value = instance->inner()->getPropertyValue(propertyNameStr);
+    if (value.empty())
+    {
+      info.GetReturnValue()
+          .Set(v8::Undefined(isolate));
+    }
+    else
+    {
+      info.GetReturnValue()
+          .Set(v8::String::NewFromUtf8(isolate, value.c_str()).ToLocalChecked());
+    }
+  }
+
+  void CSSStyleDeclaration::PropertySetter(v8::Local<v8::Name> property, v8::Local<v8::Value> value,
+                                           const v8::PropertyCallbackInfo<v8::Value> &info)
+  {
+    v8::Isolate *isolate = info.GetIsolate();
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+
+    CSSStyleDeclaration *instance = Unwrap(info.Holder());
+    assert(instance != nullptr && "CSSStyleDeclaration::PropertyGetter: instance is null");
+
+    // scripting_base::console::Log(context, property.As<v8::Value>());
+    if (property->IsSymbol())
+    {
+      // TODO(yorkie): Handle symbol property, such as `Symbol.toStringTag`.
+      info.GetReturnValue().Set(v8::Undefined(isolate));
+      return;
+    }
+    assert(property->IsString());
+
+    // Dynamic property getter for CSS properties
+    v8::String::Utf8Value propertyName(isolate, property);
+    string propertyNameStr(*propertyName, propertyName.length());
+    // Convert camel-case to kebab-case if there is no hyphen
+    if (propertyNameStr.find('-') == string::npos)
+      propertyNameStr = camel_to_kebab_case(propertyNameStr);
+
+    v8::String::Utf8Value propertyValue(isolate, value);
+    instance->inner()->setProperty(propertyNameStr, *propertyValue);
+    info.GetReturnValue().Set(v8::Undefined(isolate));
+  }
+
+  void CSSStyleDeclaration::PropertyDeleter(v8::Local<v8::Name> property,
+                                            const v8::PropertyCallbackInfo<v8::Boolean> &info)
+  {
+    v8::Isolate *isolate = info.GetIsolate();
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+
+    CSSStyleDeclaration *instance = Unwrap(info.Holder());
+    assert(instance != nullptr && "CSSStyleDeclaration::PropertyGetter: instance is null");
+
+    // scripting_base::console::Log(context, property.As<v8::Value>());
+    if (property->IsSymbol())
+    {
+      // TODO(yorkie): Handle symbol property, such as `Symbol.toStringTag`.
+      info.GetReturnValue().Set(v8::Boolean::New(isolate, false));
+      return;
+    }
+    assert(property->IsString());
+
+    // Dynamic property getter for CSS properties
+    v8::String::Utf8Value propertyName(isolate, property);
+    string propertyNameStr(*propertyName, propertyName.length());
+    // Convert camel-case to kebab-case if there is no hyphen
+    if (propertyNameStr.find('-') == string::npos)
+      propertyNameStr = camel_to_kebab_case(propertyNameStr);
+
+    auto removedName = instance->inner()->removeProperty(propertyNameStr);
+    info.GetReturnValue().Set(v8::Boolean::New(isolate, !removedName.empty()));
+  }
+
+  void CSSStyleDeclaration::PropertyEnumerator(const v8::PropertyCallbackInfo<v8::Array> &info)
+  {
+    v8::Isolate *isolate = info.GetIsolate();
+    v8::Local<v8::Context> context = isolate->GetCurrentContext();
+
+    v8::Local<v8::Array> keys = v8::Array::New(isolate, 0);
+    CSSStyleDeclaration *instance = Unwrap(info.Holder());
+    if (instance != nullptr)
+    {
+      auto decls = instance->inner();
+      for (size_t index = 0; index < decls->length(); index++)
+      {
+        auto key = v8::String::NewFromUtf8(isolate,
+                                           kebab_to_camel_case(decls->item(index)).c_str())
+                       .ToLocalChecked();
+        keys->Set(context, index, key).FromJust();
+      }
+    }
+
+    // Append accessors
+    keys->Set(context, keys->Length(), v8::String::NewFromUtf8(isolate, "cssFloat").ToLocalChecked())
+        .FromJust();
+    keys->Set(context, keys->Length(), v8::String::NewFromUtf8(isolate, "cssText").ToLocalChecked())
+        .FromJust();
+    keys->Set(context, keys->Length(), v8::String::NewFromUtf8(isolate, "length").ToLocalChecked())
+        .FromJust();
+
+    info.GetReturnValue().Set(keys);
   }
 }

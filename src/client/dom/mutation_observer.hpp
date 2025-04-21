@@ -8,7 +8,7 @@
 #include <shared_mutex>
 
 #include "./node.hpp"
-#include "./node_list.hpp"
+#include "./node_list-inl.hpp"
 
 namespace dom
 {

@@ -3,6 +3,7 @@
 #include <client/builtin_scene/ecs-inl.hpp>
 #include <crates/bindings.hpp>
 
+#include "./node_list-inl.hpp"
 #include "./element.hpp"
 #include "./text.hpp"
 #include "./document-inl.hpp"

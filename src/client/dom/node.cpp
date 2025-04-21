@@ -1,6 +1,7 @@
 #include <iostream>
 #include <common/utility.hpp>
 
+#include "./node_list-inl.hpp"
 #include "./dom_parser.hpp"
 #include "./document.hpp"
 #include "./document_fragment.hpp"
