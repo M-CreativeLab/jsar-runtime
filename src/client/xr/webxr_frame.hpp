@@ -98,6 +98,7 @@ namespace client_xr
     inline bool animationFrame() { return animationFrame_; }
 
   public:
+    std::shared_ptr<XRSession> session() { return session_; }
     void startFrame();
     void endFrame();
 

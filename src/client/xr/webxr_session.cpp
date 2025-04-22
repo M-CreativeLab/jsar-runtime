@@ -382,7 +382,8 @@ namespace client_xr
 
     frame->startFrame();
     {
-
+      // Update the input sources if changed
+      updateInputSourcesIfChanged(frame);
       // Call all the frame callbacks
       for (auto &it : currentFrameCallbacks_)
       {
@@ -399,8 +400,6 @@ namespace client_xr
           }
         }
       }
-      // Update the input sources if changed
-      updateInputSourcesIfChanged(frame);
       currentFrameCallbacks_.clear();
     }
     frame->endFrame();
