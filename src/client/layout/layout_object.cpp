@@ -130,25 +130,30 @@ namespace client_layout
 
   shared_ptr<LayoutView> LayoutObject::view()
   {
-    if (isLayoutView())
-      return dynamic_pointer_cast<LayoutView>(shared_from_this());
-    else
-      return document()->layoutView();
+    return isLayoutView()
+               ? dynamic_pointer_cast<LayoutView>(shared_from_this())
+               : document()->layoutView();
   }
 
   LayoutView &LayoutObject::viewRef()
   {
-    return document()->layoutViewRef();
+    return isLayoutView()
+               ? dynamic_cast<LayoutView &>(*this)
+               : document()->layoutViewRef();
   }
 
   shared_ptr<const LayoutView> LayoutObject::view() const
   {
-    return document()->layoutView();
+    return isLayoutView()
+               ? dynamic_pointer_cast<const LayoutView>(shared_from_this())
+               : document()->layoutView();
   }
 
   const LayoutView &LayoutObject::viewRef() const
   {
-    return document()->layoutViewRef();
+    return isLayoutView()
+               ? dynamic_cast<const LayoutView &>(*this)
+               : document()->layoutViewRef();
   }
 
   void LayoutObject::useSceneWithCallback(const function<void(builtin_scene::Scene &)> &callback)
@@ -663,6 +668,28 @@ namespace client_layout
         }
       }
     }
+
+    // Preprocess the length properties to convert the viewport-based relative length to pixels.
+    // Such as "width: 50vw", "height: 50vh", etc.
+    glm::vec3 viewport = viewRef().viewport.xyz();
+#define PREPROCESS_LENGTH(NAME)                                                   \
+  if (newStyle.hasProperty(NAME))                                                 \
+  {                                                                               \
+    auto length = newStyle.getPropertyValueAs<client_cssom::types::Length>(NAME); \
+    if (length.isViewportBasedRelativeLength())                                   \
+    {                                                                             \
+      auto lengthInPixels = length.computeViewportBasedLengthInPixels(viewport);  \
+      newStyle.setProperty(NAME, to_string(lengthInPixels) + "px");               \
+    }                                                                             \
+  }
+    PREPROCESS_LENGTH("width")
+    PREPROCESS_LENGTH("height")
+    PREPROCESS_LENGTH("min-width")
+    PREPROCESS_LENGTH("min-height")
+    PREPROCESS_LENGTH("max-width")
+    PREPROCESS_LENGTH("max-height")
+
+#undef PREPROCESS_LENGTH
   }
 
   void LayoutObject::styleDidChange()

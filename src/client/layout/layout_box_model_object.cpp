@@ -1,7 +1,9 @@
+#include <glm/glm.hpp>
 #include <client/dom/node.hpp>
 #include <client/cssom/types/length.hpp>
 
 #include "./layout_box_model_object.hpp"
+#include "./layout_view.hpp"
 
 namespace client_layout
 {
@@ -41,8 +43,17 @@ namespace client_layout
     if (!nodeStyle.has_value() || !nodeStyle->hasProperty(propertyName))
       return 0.0f;
     else
-      return nodeStyle->getPropertyValueAs<Length>(propertyName)
-          .computeAbsoluteLengthInPixels();
+    {
+      auto length = nodeStyle->getPropertyValueAs<Length>(propertyName);
+      if (length.isAbsoluteLength())
+        return length.computeAbsoluteLengthInPixels();
+      else if (length.isViewportBasedRelativeLength())
+        return length.computeViewportBasedLengthInPixels(viewRef().viewport.xyz());
+      else
+      {
+        assert(false && "Unsupported length type.");
+      }
+    }
   }
 
   void LayoutBoxModelObject::styleDidChange()

@@ -6,7 +6,7 @@
 namespace client_layout::geometry
 {
   /**
-   * The viewport extents to 3 dimensions. It's used to restrict the objects to be visible in a viewport describing 
+   * The viewport extents to 3 dimensions. It's used to restrict the objects to be visible in a viewport describing
    * bounding box.
    */
   class Viewport3d : glm::uvec3
@@ -28,6 +28,8 @@ namespace client_layout::geometry
     inline uint32_t bottom() const { return top() + height(); }
     inline uint32_t front() const { return depth() / 2; }
     inline uint32_t back() const { return -front(); }
+
+    inline glm::uvec3 xyz() const { return glm::uvec3(x, y, z); }
 
     friend std::ostream &operator<<(std::ostream &os, const Viewport3d &viewport)
     {
