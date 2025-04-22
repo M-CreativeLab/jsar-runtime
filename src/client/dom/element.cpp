@@ -174,10 +174,24 @@ namespace dom
   void Element::attributeChangedCallback(const string &name, const string &oldValue, const string &newValue)
   {
     if (name == "id")
+    {
       id = newValue;
-    else if (name == "class")
-      classList_ = DOMTokenList(newValue, {}, [this](const DOMTokenList &list)
-                                { setAttribute("class", list.value(), false /* mute */); });
+      return;
+    }
+
+    if (name == "class")
+    {
+      auto onClassListChanged = [this](const DOMTokenList &list)
+      {
+        setAttribute("class", list.value(), false /* mute */);
+        classListChangedCallback(list);
+      };
+      classList_ = DOMTokenList(newValue, {}, onClassListChanged);
+    }
+  }
+
+  void Element::classListChangedCallback(const DOMTokenList &newClassList)
+  {
   }
 
   void Element::styleAdoptedCallback()

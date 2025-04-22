@@ -204,6 +204,12 @@ namespace dom
      */
     virtual void attributeChangedCallback(const string &name, const string &oldValue, const string &newValue);
     /**
+     * When the element's `classList` is changed.
+     *
+     * @param newClassList The new class list of the element.
+     */
+    virtual void classListChangedCallback(const DOMTokenList &newClassList);
+    /**
      * When the element's adopted style is updated.
      */
     virtual void styleAdoptedCallback();
@@ -245,12 +251,15 @@ namespace dom
     std::string tagName;
     std::string localName;
     std::string prefix;
+
     inline const std::string &className() const { return classList_.value(); }
     inline void setClassName(const std::string &className)
     {
-      classList_ = DOMTokenList(classList_, className);
+      setAttribute("class", className);
     }
+    inline const DOMTokenList &classList() const { return classList_; }
     inline DOMTokenList &classList() { return classList_; }
+
     std::shared_ptr<Element> firstElementChild() const;
     std::shared_ptr<Element> lastElementChild() const;
 

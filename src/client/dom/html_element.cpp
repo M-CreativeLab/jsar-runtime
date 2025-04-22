@@ -120,10 +120,6 @@ namespace dom
     {
       // Update the style property.
       style_ = make_shared<client_cssom::CSSStyleDeclaration>(newValue);
-      // Reset the style cache.
-      auto document = getOwnerDocumentReference();
-      if (document != nullptr)
-        document->styleCache().resetStyle(getPtr<HTMLElement>());
     }
 
     // Update the dataset if the attribute is changed.
@@ -139,5 +135,21 @@ namespace dom
         dataset_[key] = newValue;
       }
     }
+
+    // Reset the style cache if the attribute is changed.
+    // Attribute changes may affect the selectors.
+    auto document = getOwnerDocumentReference();
+    if (document != nullptr)
+      document->styleCache().resetStyle(getPtr<HTMLElement>());
+  }
+
+  void HTMLElement::classListChangedCallback(const DOMTokenList &newClassList)
+  {
+    Element::classListChangedCallback(newClassList);
+
+    // Reset the style cache if the class list is changed.
+    auto document = getOwnerDocumentReference();
+    if (document != nullptr)
+      document->styleCache().resetStyle(getPtr<HTMLElement>());
   }
 }
