@@ -35,7 +35,7 @@ namespace client_xr
   public:
     /**
      * Create a new `xr::TrXRFrameRequest` object for the specified view index.
-     * 
+     *
      * @param viewIndex the view index.
      * @returns a new `xr::TrXRFrameRequest` object.
      */
@@ -77,7 +77,7 @@ namespace client_xr
   public:
     /**
      * Create a new `XRFrame` object.
-     * 
+     *
      * @param frameRequest the frame request data.
      * @param session the `XRSession` object.
      * @returns a new `XRFrame` object.
@@ -96,9 +96,9 @@ namespace client_xr
     inline uint32_t stereoId() { return stereoId_; }
     inline bool active() { return active_; }
     inline bool animationFrame() { return animationFrame_; }
+    inline std::shared_ptr<XRSession> session() { return session_; }
 
   public:
-    std::shared_ptr<XRSession> session() { return session_; }
     void startFrame();
     void endFrame();
 

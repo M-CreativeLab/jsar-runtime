@@ -1,7 +1,6 @@
 #include <bindings/webxr/frame.hpp>
 #include <bindings/webxr/input_source.hpp>
 #include "./webxr_inputsource.hpp"
-#include "../../webxr/frame.hpp"
 
 namespace dombinding::events
 {
@@ -42,14 +41,7 @@ namespace dombinding::events
     auto currentFrame = handle_->frame();
     if (currentFrame != nullptr)
     {
-      if (!currentFrame->isJSObject())
-      {
-        jsThis.Set("frame", bindings::XRFrame::GetOrNewInstance(env, currentFrame->session(), currentFrame));
-      }
-      else
-      {
-        jsThis.Set("frame", currentFrame->getJSObject().Value());
-      }
+      jsThis.Set("frame", bindings::XRFrame::GetOrNewInstance(env, currentFrame->session(), currentFrame));
     }
 
     auto currentInputSource = handle_->inputSource();
