@@ -272,7 +272,7 @@ namespace client_cssom::types
     /**
      * It computes the viewport-based length in pixels, this function should be called only when the length is
      * a relative unit based on the viewport size.
-     * 
+     *
      * @param viewport The viewport size in pixels.
      * @returns The computed value in pixels.
      */
@@ -373,7 +373,10 @@ namespace client_cssom::types
     }
 
   public:
-    bool isPercentage() const { return percentage_.has_value(); }
+    /**
+     * @returns `true` if the value is a percentage.
+     */
+    inline bool isPercentage() const { return percentage_.has_value(); }
     /**
      * @returns The percentage value between 0 and 100.
      */
@@ -381,6 +384,16 @@ namespace client_cssom::types
     {
       assert(percentage_.has_value());
       return percentage_.value();
+    }
+    /**
+     * Computes the percentage value to a pixels value based on the given base value.
+     *
+     * @param base The base value to compute the percentage from.
+     */
+    float computePercentageToPixels(float base) const
+    {
+      assert(isPercentage());
+      return percentage_.value() * base / 100.0f;
     }
 
   protected:
