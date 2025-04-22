@@ -35,6 +35,9 @@ namespace client_layout
     // Adjust the input `ConstraintSpace` by the text and returns the adjusted space.
     const ConstraintSpace adjustSpace(const ConstraintSpace &inputSpace) const;
 
+    // Called when the text content is changed, it internally updates the text for layout and rendering.
+    void textDidChange();
+
   private:
     bool nodeAtPoint(HitTestResult &, const HitTestRay &, const glm::vec3 &, HitTestPhase) override final
     {

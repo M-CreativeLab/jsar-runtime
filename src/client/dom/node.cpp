@@ -267,6 +267,24 @@ namespace dom
     return ref;
   }
 
+  void Node::setNodeValue(std::string newValue)
+  {
+    switch (nodeType)
+    {
+    case NodeType::CDATA_SECTION_NODE:
+    case NodeType::COMMENT_NODE:
+    case NodeType::TEXT_NODE:
+      if (nodeValue_ != newValue)
+      {
+        nodeValue_ = newValue;
+        nodeValueChangedCallback(nodeValue_);
+      }
+      break;
+    default:
+      break;
+    }
+  }
+
   void Node::resetFrom(shared_ptr<pugi::xml_node> node, shared_ptr<Document> ownerDocument)
   {
     internal = node;
@@ -497,6 +515,11 @@ namespace dom
   }
 
   void Node::afterLoadedCallback()
+  {
+    // The default implementation does nothing.
+  }
+
+  void Node::nodeValueChangedCallback(const string &newValue)
   {
     // The default implementation does nothing.
   }

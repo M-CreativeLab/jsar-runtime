@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text</title>
+  <style>
+    main {
+      padding: 30px;
+    }
+
+    p {
+      font-size: 100px;
+    }
+  </style>
+  <script>
+    const p = document.querySelector('p');
+    console.info(p.firstChild);
+    setInterval(() => {
+      const now = new Date();
+      p.firstChild.nodeValue = `${now.getSeconds()}`
+    }, 1000);
+  </script>
+</head>
+
+<body style="background-color: #fff;">
+  <main>
+    <p>
+    </p>
+  </main>
+</body>
+
+</html>

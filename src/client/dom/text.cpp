@@ -143,6 +143,19 @@ namespace dom
     resetCSSBoxes();
   }
 
+  void Text::nodeValueChangedCallback(const std::string &newValue)
+  {
+    CharacterData::data() = newValue;
+
+    if (textBoxes_.size() >= 1)
+    {
+      auto textBox = dynamic_pointer_cast<client_layout::LayoutText>(textBoxes_.front());
+      assert(textBox != nullptr &&
+             "The text box must not be null in a TextNode().");
+      textBox->textDidChange();
+    }
+  }
+
   void Text::initCSSBoxes()
   {
     auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);

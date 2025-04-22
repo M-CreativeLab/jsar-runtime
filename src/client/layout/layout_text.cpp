@@ -81,6 +81,28 @@ namespace client_layout
                            paragraph->getHeight());
   }
 
+  void LayoutText::textDidChange()
+  {
+    auto updateText = [this](Scene &scene)
+    {
+      bool shouldUpdateContent = false;
+      auto textComponent = scene.getComponent<Text2d>(entity());
+      if (textComponent != nullptr)
+      {
+        textComponent->content = transformAndSecureText(plainText());
+        shouldUpdateContent = true;
+      }
+
+      if (shouldUpdateContent)
+      {
+        auto webContentComponent = scene.getComponent<WebContent>(entity());
+        if (webContentComponent != nullptr)
+          webContentComponent->setDirty(true);
+      }
+    };
+    useSceneWithCallback(updateText);
+  }
+
   void LayoutText::entityDidCreate(ecs::EntityId entity)
   {
     LayoutObject::entityDidCreate(entity);
@@ -114,7 +136,7 @@ namespace client_layout
     {
       auto textComponent = getSceneComponent<Text2d>();
       if (textComponent != nullptr)
-          textComponent->content = transformAndSecureText(plainText());
+        textComponent->content = transformAndSecureText(plainText());
     }
 
     // Ignore the `LayoutText` in layout tree if the text content is empty.

@@ -276,6 +276,16 @@ namespace dom
     virtual bool isRenderable() const { return renderable; }
 
     /**
+     * Set the node value.
+     *
+     * `Comment`: set the content of the comment.
+     * `Text`: set the content of the text node.
+     *
+     * @param newValue The new value to set.
+     */
+    void setNodeValue(std::string newValue);
+
+    /**
      * A `Node` can be enabled to use a custom geometry for rendering, such as a custom shader program.
      *
      * A type of this node will use different rendering strategies, such as using the custom shader program instead
@@ -295,6 +305,7 @@ namespace dom
      * @returns True if the node has child nodes, otherwise false.
      */
     inline bool hasChildNodes() const { return childNodes.size() > 0; }
+
     /**
      * The `isEqualNode()` method of the `Node` interface tests whether two nodes are equal. Two nodes are equal when they have the
      * same type, defining characteristics (for elements, this would be their ID, number of children, and so forth), its attributes
@@ -308,6 +319,7 @@ namespace dom
       // TODO: Implement the `isEqualNode` method.
       return isSameNode(other);
     }
+
     /**
      * It tests whether two nodes are the same (in other words, whether they reference the same object).
      *
@@ -318,6 +330,7 @@ namespace dom
     {
       return this->uid == other.uid;
     }
+
     /**
      * @returns The node's depth in the tree.
      */
@@ -467,6 +480,12 @@ namespace dom
      */
     virtual void afterLoadedCallback();
     /**
+     * Get called each time the `nodeValue` is changed.
+     *
+     * @param newValue The new value of the node.
+     */
+    virtual void nodeValueChangedCallback(const std::string &newValue);
+    /**
      * This method is called when the internal `pugi::xml_node` object is updated.
      */
     virtual void onInternalUpdated();
@@ -513,19 +532,6 @@ namespace dom
         return nodeValue_;
       default:
         return std::nullopt;
-      }
-    }
-    inline void nodeValue(std::string newValue)
-    {
-      switch (nodeType)
-      {
-      case NodeType::CDATA_SECTION_NODE:
-      case NodeType::COMMENT_NODE:
-      case NodeType::TEXT_NODE:
-        nodeValue_ = newValue;
-        break;
-      default:
-        break;
       }
     }
     /**

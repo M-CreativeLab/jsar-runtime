@@ -60,6 +60,7 @@ namespace dom
     // inline float &offsetHeight() override { return offsetHeight_; }
     void connectedCallback() override;
     void disconnectedCallback() override;
+    void nodeValueChangedCallback(const std::string &newValue) override;
 
   private:
     // Initialize the CSS boxes of the element.
