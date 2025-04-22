@@ -28,13 +28,13 @@ namespace bindings
      * @param frame the WebXR frame.
      * @returns a new WebXR frame instance.
      */
-    static inline Napi::Object GetOrNewInstance(Napi::Env env, std::shared_ptr<client_xr::XRSession> session, std::shared_ptr<client_xr::XRFrame> frame)
+    static inline Napi::Object GetOrNewInstance(Napi::Env env, XRSession *session, std::shared_ptr<client_xr::XRFrame> frame)
     {
       assert(frame != nullptr && "Invalid frame");
       if (frame->hasJSObject())
         return frame->getJSObject().Value();
       else
-        return XRHandleWrap<XRFrame, client_xr::XRFrame>::NewInstance(env, frame, session->getReference()->Value());
+        return XRHandleWrap<XRFrame, client_xr::XRFrame>::NewInstance(env, frame, session->Value());
     }
 
   public:

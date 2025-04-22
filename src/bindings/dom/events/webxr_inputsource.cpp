@@ -39,10 +39,9 @@ namespace dombinding::events
 
     auto jsThis = info.This().As<Object>();
     auto currentFrame = handle_->frame();
-    if (currentFrame != nullptr)
-    {
-      jsThis.Set("frame", bindings::XRFrame::GetOrNewInstance(env, currentFrame->session(), currentFrame));
-    }
+    auto session = currentFrame->session()->getReference();
+    if (currentFrame != nullptr && session != nullptr)
+      jsThis.Set("frame", bindings::XRFrame::GetOrNewInstance(env, session, currentFrame));
 
     auto currentInputSource = handle_->inputSource();
     if (currentInputSource != nullptr && currentInputSource->isJSObject())
