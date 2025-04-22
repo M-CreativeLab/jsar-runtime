@@ -124,13 +124,9 @@ namespace jsar::example
       if (!glfwInit())
         return false;
 
-      glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-      glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-      glfwWindowHint(GLFW_SAMPLES, 4);
-      glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+      int samples = 4;
       int opt;
-      while ((opt = getopt(argc, argv, "w:h:x:mn:")) != -1)
+      while ((opt = getopt(argc, argv, "w:h:x:mn:s:")) != -1)
       {
         switch (opt)
         {
@@ -152,11 +148,21 @@ namespace jsar::example
           if (nApps < 0)
             nApps = 1;
           break;
+        case 's':
+          samples = atoi(optarg);
+          if (samples < 0 || samples > 16)
+            samples = 4;
+          break;
         default:
           help();
           break;
         }
       }
+
+      glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+      glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+      glfwWindowHint(GLFW_SAMPLES, samples);
+      glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
       if (width == -1 || height == -1)
       {

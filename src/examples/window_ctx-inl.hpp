@@ -10,7 +10,11 @@ namespace jsar::example
   void onFramebufferSizeChanged(GLFWwindow *window, int width, int height)
   {
     WindowContext *ctx = reinterpret_cast<WindowContext *>(glfwGetWindowUserPointer(window));
-    glfwGetWindowContentScale(window, &ctx->contentScaling[0], &ctx->contentScaling[1]);
+
+    float xScale, yScale;
+    glfwGetWindowContentScale(window, &xScale, &yScale);
+    ctx->contentScaling[0] = xScale;
+    ctx->contentScaling[1] = yScale;
     ctx->width = width / ctx->contentScaling[0];
     ctx->height = height / ctx->contentScaling[1];
     ctx->aspect = (float)width / (float)height;
