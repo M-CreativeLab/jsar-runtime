@@ -1,4 +1,5 @@
 #include <client/builtin_scene/ecs-inl.hpp>
+#include <client/dom/element.hpp>
 #include <client/dom/html_element.hpp>
 #include <client/layout/hit_test_ray.hpp>
 #include <client/layout/hit_test_result.hpp>
@@ -161,11 +162,30 @@ namespace dom
         assert(target != nullptr && "The target is not an element.");
         auto hitPoint = r.hitPoint();
 
+        if (lastTarget != nullptr && lastTarget != target)
+        {
+          lastTarget->simulateMouseOut(hitPoint);
+
+          // Dispatch mouseleave event to the last target's DOM path.
+          for (auto &leaveTarget : lastTarget->getAncestors(true))
+          {
+            if (leaveTarget->isElement())
+              Node::As<Element>(leaveTarget)->simulateMouseLeave(hitPoint);
+          }
+        }
+
         if (lastTarget != target)
         {
-          if (lastTarget != nullptr)
-            lastTarget->simulateMouseOut(hitPoint);
           target->simulateMouseOver(hitPoint);
+
+          // Dispatch mouseenter event to the target's DOM path.
+          for (auto &enterTarget : target->getAncestors(true))
+          {
+            if (enterTarget->isElement())
+              Node::As<Element>(enterTarget)->simulateMouseEnter(hitPoint);
+          }
+
+          // Update the current mouse move target.
           current_mousemove_target_ = target;
         }
 

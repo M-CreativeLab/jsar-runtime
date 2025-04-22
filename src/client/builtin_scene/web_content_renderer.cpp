@@ -59,8 +59,10 @@ namespace builtin_scene::web_renderer
   {
     if (style.hasProperty("background-color"))
     {
+      auto color = style.getPropertyValueAs<client_cssom::types::Color>("background-color");
+
       SkPaint fillPaint;
-      fillPaint.setColor(style.getPropertyValueAs<client_cssom::types::Color>("background-color"));
+      fillPaint.setColor(color);
       fillPaint.setAntiAlias(true);
       fillPaint.setStyle(SkPaint::kFill_Style);
       {
@@ -361,6 +363,8 @@ namespace builtin_scene::web_renderer
       return;
 
     auto canvas = content.canvas();
+    canvas->clear(SK_ColorTRANSPARENT);
+
     float top = 0.0f;
     float left = 0.0f;
 

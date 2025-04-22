@@ -194,6 +194,10 @@ namespace dom
   {
   }
 
+  void Element::actionStateChangedCallback()
+  {
+  }
+
   void Element::styleAdoptedCallback()
   {
     auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(true);
@@ -640,26 +644,27 @@ namespace dom
 
   void Element::simulateMouseOver(const glm::vec3 &hitPointInWorld)
   {
+    setActionState(is_hovered_, true);
     dispatchEventInternal(events::MouseEvent::MouseOver());
     dispatchEventInternal(events::PointerEvent::PointerOver());
   }
 
   void Element::simulateMouseEnter(const glm::vec3 &hitPointInWorld)
   {
-    if (is_entered_)
+    if (is_hovered_)
       return;
+    setActionState(is_hovered_, true);
 
-    is_entered_ = true;
     dispatchEventInternal(events::MouseEvent::MouseEnter());
     dispatchEventInternal(events::PointerEvent::PointerEnter());
   }
 
   void Element::simulateMouseLeave(const glm::vec3 &hitPointInWorld)
   {
-    if (!is_entered_)
+    if (!is_hovered_)
       return;
+    setActionState(is_hovered_, false);
 
-    is_entered_ = false;
     dispatchEventInternal(events::MouseEvent::MouseLeave());
     dispatchEventInternal(events::PointerEvent::PointerLeave());
   }
@@ -687,6 +692,20 @@ namespace dom
 
     layoutBox->scrollBy(offset);
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+  }
+
+  bool Element::setActionState(bool &state, bool value)
+  {
+    if (state != value)
+    {
+      state = value;
+      actionStateChangedCallback();
+      return true;
+    }
+    else
+    {
+      return false;
+    }
   }
 
   std::shared_ptr<Element> Element::firstElementChild() const

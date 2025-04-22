@@ -808,6 +808,7 @@ namespace crates::css2
   {
     using Combinator = holocron::css::selectors::Combinator;
     using ComponentType = holocron::css::selectors::ComponentType;
+    using PseudoClassType = holocron::css::selectors::PseudoClassType;
 
     inline std::string to_string(const Combinator &combinator)
     {
@@ -830,6 +831,25 @@ namespace crates::css2
       }
     }
 
+    inline std::string to_string(const PseudoClassType &pseudo_class_type)
+    {
+      switch (pseudo_class_type)
+      {
+      case PseudoClassType::kHover:
+        return ":hover";
+      case PseudoClassType::kActive:
+        return ":active";
+      case PseudoClassType::kFocus:
+        return ":focus";
+      case PseudoClassType::kFocusVisible:
+        return ":focus-visible";
+      case PseudoClassType::kFocusWithin:
+        return ":focus-within";
+      default:
+        return "";
+      }
+    }
+
     inline std::ostream &operator<<(std::ostream &os, const Combinator &combinator)
     {
       os << to_string(combinator);
@@ -842,7 +862,8 @@ namespace crates::css2
       Component(const holocron::css::selectors::Component &inner)
           : type(holocron::css::selectors::getComponentType(inner)),
             combinator(holocron::css::selectors::getComponentCombinator(inner)),
-            name_(holocron::css::selectors::tryGetComponentName(inner))
+            name_(holocron::css::selectors::tryGetComponentName(inner)),
+            pseudo_class_type(holocron::css::selectors::getComponentPseudoClassType(inner))
       {
       }
 
@@ -870,6 +891,12 @@ namespace crates::css2
         case ComponentType::kHost:
           str = ":host";
           break;
+        case ComponentType::kPseudoElement:
+          str = "::" + name();
+          break;
+        case ComponentType::kPseudoClass:
+          str = to_string(pseudo_class_type);
+          break;
         case ComponentType::kCombinator:
           str = to_string(combinator);
           break;
@@ -890,7 +917,10 @@ namespace crates::css2
       inline bool isRoot() const { return type == ComponentType::kRoot; }
       inline bool isEmpty() const { return type == ComponentType::kEmpty; }
       inline bool isHost() const { return type == ComponentType::kHost; }
+      inline bool isPseudoElement() const { return type == ComponentType::kPseudoElement; }
+      inline bool isPseudoClass() const { return type == ComponentType::kPseudoClass; }
       inline bool isCombinator() const { return type == ComponentType::kCombinator; }
+
       inline const std::string &name() const { return name_; }
       inline const std::string &id() const
       {
@@ -903,12 +933,18 @@ namespace crates::css2
         return name_;
       }
 
+      // Pseudo-class subtype check
+      inline bool isHover() const { return isPseudoClass() && pseudo_class_type == PseudoClassType::kHover; }
+      inline bool isActive() const { return isPseudoClass() && pseudo_class_type == PseudoClassType::kActive; }
+      inline bool isFocus() const { return isPseudoClass() && pseudo_class_type == PseudoClassType::kFocus; }
+
     public:
       const ComponentType type;
       const Combinator combinator;
 
     private:
       std::string name_;
+      PseudoClassType pseudo_class_type = PseudoClassType::kUnknown;
     };
 
     class Selector

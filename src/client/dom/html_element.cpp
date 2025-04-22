@@ -138,16 +138,23 @@ namespace dom
 
     // Reset the style cache if the attribute is changed.
     // Attribute changes may affect the selectors.
-    auto document = getOwnerDocumentReference();
-    if (document != nullptr)
-      document->styleCache().resetStyle(getPtr<HTMLElement>());
+    invalidateStyleCache();
   }
 
   void HTMLElement::classListChangedCallback(const DOMTokenList &newClassList)
   {
     Element::classListChangedCallback(newClassList);
+    invalidateStyleCache();
+  }
 
-    // Reset the style cache if the class list is changed.
+  void HTMLElement::actionStateChangedCallback()
+  {
+    Element::actionStateChangedCallback();
+    invalidateStyleCache();
+  }
+
+  void HTMLElement::invalidateStyleCache()
+  {
     auto document = getOwnerDocumentReference();
     if (document != nullptr)
       document->styleCache().resetStyle(getPtr<HTMLElement>());

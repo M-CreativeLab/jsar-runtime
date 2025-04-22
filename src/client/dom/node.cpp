@@ -215,13 +215,13 @@ namespace dom
       return nullptr;
   }
 
-  NodeList<const Node> Node::getAncestors(bool inclusiveSelf, function<bool(const Node &)> ancestorsFilter) const
+  NodeList<Node> Node::getAncestors(bool inclusiveSelf, function<bool(const Node &)> ancestorsFilter)
   {
-    NodeList<const Node> ancestors;
+    NodeList<Node> ancestors;
     if (inclusiveSelf == true)
       ancestors.push_back(shared_from_this());
 
-    shared_ptr<const Node> parent = getParentNode();
+    shared_ptr<Node> parent = getParentNode();
     while (parent != nullptr)
     {
       if (ancestorsFilter == nullptr || ancestorsFilter(*parent))
@@ -386,8 +386,8 @@ namespace dom
       // Complete checking the interested mutation observers will be in the `queueRecord` method.
       return observer.isSubtreeObserved();
     };
-    NodeList<const Node> inclusiveAncestors = getAncestors(true, [&isInterestedAncestors](const Node &node)
-                                                           { return node.hasMutationObserver(isInterestedAncestors); });
+    auto inclusiveAncestors = getAncestors(true, [&isInterestedAncestors](const Node &node)
+                                           { return node.hasMutationObserver(isInterestedAncestors); });
 
     // Get the interested mutation observers from the ancestors
     vector<shared_ptr<MutationObserver>> interestedObservers;

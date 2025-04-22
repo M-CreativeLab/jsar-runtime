@@ -169,6 +169,9 @@ namespace dom
   public:
     bool isElement() const override final { return true; }
 
+    bool isHovered() const { return is_hovered_; }
+    bool isFocused() const { return is_focused_; }
+
     /**
      * Returns true if the element's tag name is the same as the given tag name ignoring case.
      *
@@ -210,6 +213,10 @@ namespace dom
      */
     virtual void classListChangedCallback(const DOMTokenList &newClassList);
     /**
+     * When the element action state is changed, such as `:hover`, `:active`, `:focus`, etc.
+     */
+    virtual void actionStateChangedCallback();
+    /**
      * When the element's adopted style is updated.
      */
     virtual void styleAdoptedCallback();
@@ -245,6 +252,9 @@ namespace dom
     void simulateClick(const glm::vec3 &hitPointInWorld);
     void simulateScrollWithOffset(float offsetX, float offsetY);
 
+  private:
+    bool setActionState(bool &state, bool value);
+
   public:
     std::string id;
     std::string namespaceURI;
@@ -274,6 +284,8 @@ namespace dom
     std::vector<std::shared_ptr<client_layout::LayoutBoxModelObject>> boxes_;
     std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox_;
     std::string currentDisplayStr_ = "block";
-    bool is_entered_ = false;
+    bool is_hovered_ = false;
+    bool is_focused_ = false;
+    bool is_active_ = false;
   };
 }

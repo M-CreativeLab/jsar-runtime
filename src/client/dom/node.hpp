@@ -194,8 +194,8 @@ namespace dom
      * @param ancestorsFilter The filter function to filter the node.
      * @returns a `NodeList` that contains the result ancestors.
      */
-    NodeList<const Node> getAncestors(bool inclusiveSelf,
-                                      std::function<bool(const Node &)> ancestorsFilter = nullptr) const;
+    NodeList<Node> getAncestors(bool inclusiveSelf,
+                                std::function<bool(const Node &)> ancestorsFilter = nullptr);
     /**
      * @returns The text content of the node and its descendants.
      */
@@ -280,7 +280,7 @@ namespace dom
      *
      * A type of this node will use different rendering strategies, such as using the custom shader program instead
      * of the default instanced rendering, but both of them are sharing the same layout system.
-     * 
+     *
      * @returns `true` if this node should use a custom geometry, otherwise `false`.
      */
     virtual bool enableCustomGeometry() const
