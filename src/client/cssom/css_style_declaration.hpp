@@ -129,6 +129,7 @@ namespace client_cssom
      * @returns Whether the declaration block is equal to the other one.
      */
     bool equals(const CSSStyleDeclaration &other) const;
+
     /**
      * Update the declaration block with another one.
      *
@@ -140,6 +141,15 @@ namespace client_cssom
      * @returns Whether the declaration block is updated.
      */
     bool update(const CSSStyleDeclaration &other, bool omitIfPresent = false);
+
+    /**
+     * Set the CSS text of this block.
+     *
+     * @param cssText The CSS text to set.
+     * @returns Whether the CSS text is set successfully.
+     */
+    bool setCssText(const std::string &cssText);
+
     /**
      * Get the property name at the given index.
      *
@@ -150,6 +160,7 @@ namespace client_cssom
     {
       return pdb_->item(index);
     }
+
     /**
      * Get the optional priority, "important".
      *
@@ -163,6 +174,7 @@ namespace client_cssom
       else
         return CSSPropertyPriority::Normal;
     }
+
     /**
      * Get the property value given a property name.
      *
@@ -175,6 +187,7 @@ namespace client_cssom
       auto value = pdb_->getProperty(propertyName);
       return value != "" ? value : defaultValue;
     }
+
     /**
      * Get the property value as a specific type given a property name.
      *
@@ -209,6 +222,7 @@ namespace client_cssom
       assert(false);
       return T();
     }
+
     /**
      * Check if a property is set.
      *
@@ -219,6 +233,7 @@ namespace client_cssom
     {
       return pdb_->getProperty(propertyName) != "";
     }
+
     /**
      * Set a property value and priority within the declaration block.
      *
@@ -234,6 +249,7 @@ namespace client_cssom
       if (propertyChangedCallback_ != nullptr)
         propertyChangedCallback_(propertyName);
     }
+
     /**
      * Set a property value and priority within the declaration block if the property is not already set.
      *
@@ -247,6 +263,7 @@ namespace client_cssom
       if (!hasProperty(propertyName))
         setProperty(propertyName, value, priority);
     }
+
     /**
      * Remove a property from the declaration block.
      *
@@ -261,6 +278,7 @@ namespace client_cssom
         propertyChangedCallback_(propertyName);
       return value;
     }
+
     /**
      * Set the callback function when a property is changed.
      *

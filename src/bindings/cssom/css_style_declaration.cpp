@@ -407,6 +407,24 @@ namespace cssombinding
     }
     assert(property->IsString());
 
+    // .cssFloat
+    if (property->StrictEquals(v8::String::NewFromUtf8(isolate, "cssFloat").ToLocalChecked()))
+    {
+      v8::String::Utf8Value propertyValue(isolate, value);
+      instance->inner()->setProperty("float", *propertyValue);
+      info.GetReturnValue().Set(v8::Undefined(isolate));
+      return;
+    }
+
+    // .cssText
+    if (property->StrictEquals(v8::String::NewFromUtf8(isolate, "cssText").ToLocalChecked()))
+    {
+      v8::String::Utf8Value cssTextValue(isolate, value);
+      instance->inner()->setCssText(*cssTextValue);
+      info.GetReturnValue().Set(v8::Undefined(isolate));
+      return;
+    }
+
     // Dynamic property getter for CSS properties
     v8::String::Utf8Value propertyName(isolate, property);
     string propertyNameStr(*propertyName, propertyName.length());

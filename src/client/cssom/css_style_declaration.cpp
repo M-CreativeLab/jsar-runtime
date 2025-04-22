@@ -151,4 +151,18 @@ namespace client_cssom
     }
     return isChanged;
   }
+
+  bool CSSStyleDeclaration::setCssText(const std::string &cssText)
+  {
+    auto pdb = PropertyDeclarationBlock::ParseStyleDeclaration(cssText);
+    if (pdb == nullptr)
+      return false;
+    pdb_ = std::move(pdb);
+    cachedCssText_ = pdb_->cssText();
+
+    // Notify the property changed callback if it is set
+    if (propertyChangedCallback_)
+      propertyChangedCallback_(cachedCssText_.value());
+    return true;
+  }
 }
