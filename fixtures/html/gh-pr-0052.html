@@ -1,0 +1,71 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title> input source event missing frame obj </title>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/three/build/three.module.js"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
+
+    // Create lights
+    const light = new THREE.DirectionalLight(0xffffff, 0.5);
+    light.position.set(0, 1, 1);
+    scene.add(light);
+
+    const gl = navigator.gl;
+    navigator.xr.requestSession('immersive-ar').then((session) => {
+      if (gl) {
+        const baseLayer = new XRWebGLLayer(session, gl);
+        session.updateRenderState({ baseLayer });
+      }
+      const renderer = gl ? new THREE.WebGLRenderer({
+        canvas: {
+          addEventListener() { },
+        },
+        context: gl,
+      }) : new THREE.WebGLRenderer({ antialias: true });
+
+      renderer.xr.enabled = true;
+      renderer.xr.setReferenceSpaceType('local');
+      const useLayers = typeof XRWebGLBinding !== 'undefined' && 'createProjectionLayer' in XRWebGLBinding.prototype;
+
+      console.info('Started...');
+
+      renderer.xr.setSession(session);
+
+      const controller = renderer.xr.getController(1);
+
+      controller.addEventListener('selectstart', (event) => {
+        console.log('selectstart');
+      })
+
+      renderer.xr.setReferenceSpaceType('local');
+
+      function animate() {
+        renderer.render(scene, camera);
+      }
+
+      camera.position.z = 5;
+      renderer.setAnimationLoop(animate);
+    },
+      (err) => {
+        console.warn('Failed to start XR session:', err);
+      }
+    );
+    console.info('navigator.xr', navigator.xr);
+  </script>
+</head>
+
+<body>
+</body>
+
+</html>

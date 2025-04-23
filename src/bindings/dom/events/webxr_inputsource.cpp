@@ -45,7 +45,6 @@ namespace dombinding::events
       auto session = currentFrame->session();
       assert(session != nullptr && "session must be existed when constructing XRInputSourceEvent");
       jsThis.Set("frame", bindings::XRFrame::GetOrNewInstance(env, &session->getJSObject(), currentFrame));
-      // jsThis.Set("frame", bindings::XRFrame::GetOrNewInstance(env, session, currentFrame));
     }
 
     auto currentInputSource = handle_->inputSource();
