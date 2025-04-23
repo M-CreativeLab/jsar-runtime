@@ -384,7 +384,7 @@ namespace client_xr
     {
       // Update the input sources if changed
       updateInputSourcesIfChanged(frame);
-      
+
       // Call all the frame callbacks
       for (auto &it : currentFrameCallbacks_)
       {
