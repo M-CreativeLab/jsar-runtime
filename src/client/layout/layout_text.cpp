@@ -16,7 +16,9 @@ namespace client_layout
   using namespace skia::textlayout;
 
   LayoutText::LayoutText(shared_ptr<dom::Text> textNode)
-      : LayoutObject(textNode)
+      : LayoutObject(textNode),
+        plain_text_(nullopt),
+        transformed_text_(nullopt)
   {
   }
 
@@ -44,9 +46,16 @@ namespace client_layout
 
   string LayoutText::plainText() const
   {
-    // TODO(yorkie): support offset such as <div>foo<b>!</b>bar</div>, it should created as 2 `LayoutText` objects.
-    // TODO(yorkie): support caching for `formatText` to avoid the repeated formatting.
-    return formatText(textNode()->data());
+    if (!plain_text_.has_value())
+      plain_text_ = formatText(textNode()->data());
+    return plain_text_.value_or("");
+  }
+
+  string LayoutText::transformedText() const
+  {
+    if (!transformed_text_.has_value())
+      transformed_text_ = transformAndSecureText(plainText());
+    return transformed_text_.value_or("");
   }
 
   const ConstraintSpace LayoutText::adjustSpace(const ConstraintSpace &inputSpace) const
@@ -57,7 +66,7 @@ namespace client_layout
     if (TR_UNLIKELY(!hasSceneComponent<WebContent>()))
       return inputSpace;
 
-    string textContent = transformAndSecureText(plainText());
+    string textContent = transformedText();
     shared_ptr<WebContent> webContentComponent = getSceneComponent<WebContent>();
     assert(webContentComponent != nullptr && "The web content must be set.");
 
@@ -83,21 +92,27 @@ namespace client_layout
 
   void LayoutText::textDidChange()
   {
+    plain_text_ = formatText(textNode()->data());
+    transformed_text_ = transformAndSecureText(plainText());
+    is_text_content_dirty_ = true;
+
+    formattingContext().setIsEmpty(isEmptyText());
+    adjustTextContentSize(parent()->fragment());
+
     auto updateText = [this](Scene &scene)
     {
       bool shouldUpdateContent = false;
       auto textComponent = scene.getComponent<Text2d>(entity());
       if (textComponent != nullptr)
       {
-        textComponent->content = transformAndSecureText(plainText());
+        textComponent->content = transformedText();
         shouldUpdateContent = true;
       }
 
       if (shouldUpdateContent)
       {
-        auto webContentComponent = scene.getComponent<WebContent>(entity());
-        if (webContentComponent != nullptr)
-          webContentComponent->setDirty(true);
+        auto &webContentComponent = scene.getComponentChecked<WebContent>(entity());
+        webContentComponent.setDirty(true);
       }
     };
     useSceneWithCallback(updateText);
@@ -107,10 +122,14 @@ namespace client_layout
   {
     LayoutObject::entityDidCreate(entity);
 
+    plain_text_ = formatText(textNode()->data());
+    transformed_text_ = transformAndSecureText(plainText());
+    is_text_content_dirty_ = true;
+
     auto appendText = [this, &entity](Scene &scene)
     {
-      auto textContent = transformAndSecureText(plainText());
-      scene.addComponent(entity, Text2d(textContent));
+      scene.addComponent(entity, Text2d(transformedText()));
+      formattingContext().setIsEmpty(isEmptyText());
     };
     useSceneWithCallback(appendText);
   }
@@ -134,24 +153,32 @@ namespace client_layout
     if (newStyle.hasProperty("text-transform") ||
         newStyle.hasProperty("-webkit-text-security"))
     {
+      transformed_text_ = transformAndSecureText(plainText());
+      is_text_content_dirty_ = true;
+
       auto textComponent = getSceneComponent<Text2d>();
       if (textComponent != nullptr)
-        textComponent->content = transformAndSecureText(plainText());
+        textComponent->content = transformedText();
     }
 
-    // Ignore the `LayoutText` in layout tree if the text content is empty.
-    if (isEmptyText())
-      newStyle.setProperty("display", "none");
+    // Update the text content if the text is empty.
+    formattingContext().setIsEmpty(isEmptyText());
   }
 
   void LayoutText::didComputeLayoutOnce(const ConstraintSpace &avilableSpace)
   {
-    // adjust the space size by the text content.
-    ConstraintSpace adjustedSpace = adjustSpace(avilableSpace);
+    adjustTextContentSize(avilableSpace);
+  }
 
-    // Update the content size of the formatting context.
+  void LayoutText::adjustTextContentSize(const ConstraintSpace &space)
+  {
+    if (!is_text_content_dirty_)
+      return;
+
+    ConstraintSpace adjustedSpace = adjustSpace(space);
     formattingContext().setContentSize(adjustedSpace.width(),
                                        adjustedSpace.height());
+    is_text_content_dirty_ = false;
   }
 
   // TODO(yorkie): support offset mapping for the secure text.

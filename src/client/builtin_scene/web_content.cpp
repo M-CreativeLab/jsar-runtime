@@ -59,7 +59,7 @@ namespace builtin_scene
     resetSkSurface(initialWidth, initialHeight);
   }
 
-  // Compute the size in pixels by the given size and device pixel ratio. This function also rounds the size to the 
+  // Compute the size in pixels by the given size and device pixel ratio. This function also rounds the size to the
   // nearest integer to avoid the floating point precision issue.
   inline int computeSize(float size, float devicePixelRatio)
   {
@@ -76,16 +76,22 @@ namespace builtin_scene
     // TODO: use Skia Genesh(GPU) to increase the performance.
     SkImageInfo imageInfo = SkImageInfo::MakeN32Premul(computeSize(w, devicePixelRatio_),
                                                        computeSize(h, devicePixelRatio_));
-    if (surface_ == nullptr)
-    {
-      surface_ = SkSurfaces::Raster(imageInfo);
-    }
-    else
+    if (surface_ != nullptr)
     {
       auto newSurface = surface_->makeSurface(imageInfo);
       surface_.reset();
       surface_ = newSurface;
     }
+    else
+    {
+      surface_ = SkSurfaces::Raster(imageInfo);
+    }
+
+    assert(surface_ != nullptr && "The new surface must be valid.");
+    assert(surface_->width() == imageInfo.width() &&
+           surface_->height() == imageInfo.height() &&
+           "The surface size must be valid.");
+
     setDirty(true);
     return true;
   }

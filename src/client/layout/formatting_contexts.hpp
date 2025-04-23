@@ -36,7 +36,7 @@ namespace client_layout
     virtual bool isGrid() const { return false; }
 
     // `computeLayout` updates this fragment with the resulting geometry information.
-    const Fragment &resultingFragment() const { return resultingFragment_; }
+    const Fragment &resultingFragment() const { return resulting_fragment_; }
     virtual Fragment liveFragment() const = 0;
 
     // Should call this method when the node is added to a parent context.
@@ -54,10 +54,12 @@ namespace client_layout
     {
       setContentSize(glm::vec3(width, height, 0));
     }
-    inline void resetContentSize() { contentSize_ = std::nullopt; }
+    inline void resetContentSize() { content_size_ = std::nullopt; }
     virtual void contentSizeDidChange(const glm::vec3 &contentSize) {};
 
-    virtual bool setLayoutStyle(const crates::layout2::LayoutStyle &style) = 0;
+    // Set if the formatting context node is empty, which will be ignored in the layout.
+    virtual void setIsEmpty(bool b);
+    virtual bool setLayoutStyle(const crates::layout2::LayoutStyle &style);
     virtual std::unique_ptr<const LayoutResult> computeLayout(const ConstraintSpace &) = 0;
 
     // Print the debug information of the formatting context.
@@ -68,8 +70,13 @@ namespace client_layout
 
   protected:
     std::weak_ptr<LayoutView> view_;
-    std::optional<glm::vec3> contentSize_ = std::nullopt;
-    Fragment resultingFragment_;
+    std::optional<glm::vec3> content_size_ = std::nullopt;
+    Fragment resulting_fragment_;
+    bool is_empty_ = false;
+
+    // flags to indicate if this node should update the layout size when the content size is changed.
+    bool use_content_x_ = false;
+    bool use_content_y_ = false;
   };
 
   class TaffyBasedFormattingContext : public FormattingContext
@@ -85,6 +92,7 @@ namespace client_layout
     void onReplaced(const FormattingContext &, const FormattingContext &) override final;
 
     void contentSizeDidChange(const glm::vec3 &contentSize) override final;
+    void setIsEmpty(bool b) override final;
     bool setLayoutStyle(const crates::layout2::LayoutStyle &style) override;
     std::unique_ptr<const LayoutResult> computeLayout(const ConstraintSpace &) override;
     void debugPrint() const override final;

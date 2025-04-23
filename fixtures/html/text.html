@@ -9,25 +9,28 @@
     main {
       padding: 30px;
     }
-
-    p {
+    h1, p {
       font-size: 100px;
     }
   </style>
   <script>
+    const h1 = document.querySelector('h1');
     const p = document.querySelector('p');
-    console.info(p.firstChild);
+    const text = document.createTextNode('');
+    p.appendChild(text);
+    h1.firstChild.nodeValue += 'Timer';
+
     setInterval(() => {
       const now = new Date();
-      p.firstChild.nodeValue = `${now.getSeconds()}`
+      text.nodeValue = `${now.getSeconds()}`
     }, 1000);
   </script>
 </head>
 
 <body style="background-color: #fff;">
   <main>
-    <p>
-    </p>
+    <h1>Tool: </h1>
+    <p></p>
   </main>
 </body>
 

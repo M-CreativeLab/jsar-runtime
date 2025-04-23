@@ -30,6 +30,7 @@ namespace client_layout
 
     std::shared_ptr<dom::Text> textNode() const;
     std::string plainText() const;
+    std::string transformedText() const;
     inline size_t plainTextLength() const { return plainText().length(); }
 
     // Adjust the input `ConstraintSpace` by the text and returns the adjusted space.
@@ -49,6 +50,13 @@ namespace client_layout
     void styleWillChange(client_cssom::CSSStyleDeclaration &newStyle) override;
     void didComputeLayoutOnce(const ConstraintSpace &avilableSpace) override final;
 
+    // Adjust the text's internal content size, call this when the text content is changed.
+    void adjustTextContentSize(const ConstraintSpace &);
     std::string transformAndSecureText(const std::string &original) const;
+
+  private:
+    mutable std::optional<std::string> plain_text_;
+    mutable std::optional<std::string> transformed_text_;
+    mutable bool is_text_content_dirty_ = true;
   };
 }

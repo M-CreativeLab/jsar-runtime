@@ -155,7 +155,7 @@ namespace dombinding
     Napi::HandleScope scope(env);
 
     std::optional<std::string> nodeValue = this->node->nodeValue();
-    return nodeValue.has_value()
+    return !nodeValue.has_value()
                ? env.Null()
                : Napi::String::New(env, nodeValue.value());
   }

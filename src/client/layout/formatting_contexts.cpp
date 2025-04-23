@@ -28,11 +28,25 @@ namespace client_layout
 
   void FormattingContext::setContentSize(const glm::vec3 &size)
   {
-    if (!contentSize_.has_value() || contentSize_ != size)
+    if (!content_size_.has_value() || content_size_ != size)
     {
-      contentSize_ = size;
-      contentSizeDidChange(contentSize_.value());
+      content_size_ = size;
+      contentSizeDidChange(content_size_.value());
     }
+  }
+
+  void FormattingContext::setIsEmpty(bool b)
+  {
+    is_empty_ = b;
+  }
+
+  bool FormattingContext::setLayoutStyle(const crates::layout2::LayoutStyle &style)
+  {
+    // When the incoming style is "auto", it indicates that the content size should be used.
+    use_content_x_ = style.width().isAuto();
+    use_content_y_ = style.height().isAuto();
+
+    return true;
   }
 
   TaffyBasedFormattingContext::TaffyBasedFormattingContext(const DisplayType type, shared_ptr<LayoutView> view)
@@ -96,18 +110,34 @@ namespace client_layout
 
   void TaffyBasedFormattingContext::contentSizeDidChange(const glm::vec3 &size)
   {
+    FormattingContext::contentSizeDidChange(size);
+
+    // Skip update style based on the new content size if the following flags are not set.
+    if (!use_content_x_ && !use_content_y_)
+      return;
+
     auto nodeStyle = node_->style();
-    if (nodeStyle.width().isAuto() && !std::isnan(contentSize_->x))
-      nodeStyle.setWidth(Dimension::Length(contentSize_->x));
-    if (nodeStyle.height().isAuto() && !std::isnan(contentSize_->y))
-      nodeStyle.setHeight(Dimension::Length(contentSize_->y));
+    if (use_content_x_ && !std::isnan(content_size_->x))
+      nodeStyle.setWidth(Dimension::Length(content_size_->x));
+    if (use_content_y_ && !std::isnan(content_size_->y))
+      nodeStyle.setHeight(Dimension::Length(content_size_->y));
 
     node_->setStyle(nodeStyle);
     node_->markDirty();
   }
 
+  void TaffyBasedFormattingContext::setIsEmpty(bool b)
+  {
+    FormattingContext::setIsEmpty(b);
+
+    auto lastStyle = node_->style();
+    lastStyle.setDisplay(b ? Display::None() : type);
+  }
+
   bool TaffyBasedFormattingContext::setLayoutStyle(const crates::layout2::LayoutStyle &style)
   {
+    FormattingContext::setLayoutStyle(style);
+
     assert(node_ != nullptr && "The Taffy node must be initialized.");
     node_->setStyle(style);
     node_->markDirty();
@@ -132,13 +162,13 @@ namespace client_layout
     result->fragment().setPadding(layout.padding());
 
     // Set the status by the layout result.
-    if (result->needsRelayout(resultingFragment_))
+    if (result->needsRelayout(resulting_fragment_))
       result->status() = LayoutResult::kRelayoutRequired;
     else
       result->status() = LayoutResult::kSuccess;
 
     // Update the resulting fragment.
-    resultingFragment_ = result->fragment();
+    resulting_fragment_ = result->fragment();
     return result;
   }
 

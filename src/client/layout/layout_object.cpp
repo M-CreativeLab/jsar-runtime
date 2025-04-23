@@ -269,7 +269,8 @@ namespace client_layout
     if (isText())
     {
       auto layoutText = dynamic_pointer_cast<const LayoutText>(shared_from_this());
-      if (layoutText != nullptr && layoutText->plainTextLength() == 0)
+      assert(layoutText != nullptr && "Text node must be a LayoutText.");
+      if (layoutText->isEmptyText())
         nodeFragment = Fragment::None(); // Set the fragment to none if a text and empty content.
     }
 
