@@ -156,10 +156,11 @@ namespace builtin_scene::web_renderer
         borderBottomRightRadius == nullopt &&
         borderBottomLeftRadius == nullopt)
     {
+      roundedRect.setRect(rect);
       return false;
     }
 
-    SkVector defaultRadius = {0.0f, 0.0f};
+    static SkVector defaultRadius = {0.0f, 0.0f};
     SkVector radii[4] = {
         borderTopLeftRadius.value_or(defaultRadius),
         borderTopRightRadius.value_or(defaultRadius),
