@@ -40,7 +40,7 @@ namespace client_layout
     is_empty_ = b;
   }
 
-  bool FormattingContext::setLayoutStyle(const crates::layout2::LayoutStyle &style)
+  bool FormattingContext::setLayoutStyle(crates::layout2::LayoutStyle& style)
   {
     // When the incoming style is "auto", it indicates that the content size should be used.
     use_content_x_ = style.width().isAuto();
@@ -134,8 +134,9 @@ namespace client_layout
     lastStyle.setDisplay(b ? Display::None() : type);
   }
 
-  bool TaffyBasedFormattingContext::setLayoutStyle(const crates::layout2::LayoutStyle &style)
+  bool TaffyBasedFormattingContext::setLayoutStyle(crates::layout2::LayoutStyle &style)
   {
+    style.setDisplay(is_empty_ ? Display::None() : type);
     FormattingContext::setLayoutStyle(style);
 
     assert(node_ != nullptr && "The Taffy node must be initialized.");

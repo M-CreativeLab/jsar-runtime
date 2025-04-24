@@ -58,8 +58,8 @@ namespace client_layout
     virtual void contentSizeDidChange(const glm::vec3 &contentSize) {};
 
     // Set if the formatting context node is empty, which will be ignored in the layout.
-    virtual void setIsEmpty(bool b);
-    virtual bool setLayoutStyle(const crates::layout2::LayoutStyle &style);
+    virtual void setIsEmpty(bool);
+    virtual bool setLayoutStyle(crates::layout2::LayoutStyle &);
     virtual std::unique_ptr<const LayoutResult> computeLayout(const ConstraintSpace &) = 0;
 
     // Print the debug information of the formatting context.
@@ -92,8 +92,8 @@ namespace client_layout
     void onReplaced(const FormattingContext &, const FormattingContext &) override final;
 
     void contentSizeDidChange(const glm::vec3 &contentSize) override final;
-    void setIsEmpty(bool b) override final;
-    bool setLayoutStyle(const crates::layout2::LayoutStyle &style) override;
+    void setIsEmpty(bool) override final;
+    bool setLayoutStyle(crates::layout2::LayoutStyle &) override;
     std::unique_ptr<const LayoutResult> computeLayout(const ConstraintSpace &) override;
     void debugPrint() const override final;
 

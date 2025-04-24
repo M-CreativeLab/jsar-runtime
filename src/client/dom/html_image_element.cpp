@@ -151,12 +151,15 @@ namespace dom
       }
       catch (const exception &e)
       {
-        cerr << "Failed to decode the image: " << e.what() << endl;
+        cerr << "Failed to decode the image: " << e.what() << endl
+             << "    size: " << image_data_->size() << endl
+             << "    data: " << (image_data_->data() != nullptr ? "valid" : "(empty)") << endl;
         return false;
       }
     }
     else
     {
+      cerr << "Failed to create the image codec, url: " << getSrc() << endl;
       return false;
     }
   }
@@ -196,7 +199,6 @@ namespace dom
     }
     else
     {
-      cerr << "Failed to decode the image: " << getSrc() << endl;
       dispatchEvent(DOMEventType::Error);
 
       // TODO(yorkie): paint a placeholder image.
