@@ -67,7 +67,7 @@ namespace client_layout
     if (element == nullptr)
       return false;
 
-    auto elementStyle = element->adoptedStyle();
+    const auto &elementStyle = element->adoptedStyleRef();
     if (elementStyle.hasProperty("clip"))
     {
       auto clip = elementStyle.getPropertyValue("clip");
@@ -94,7 +94,7 @@ namespace client_layout
     if (!hasNonVisibleOverflow())
       return false;
 
-    auto elementStyle = element->adoptedStyle();
+    const auto &elementStyle = element->adoptedStyleRef();
 
     // An overflow value of `visible` or `clip` means that the element is a scroll container, all other values result
     // in a scrollable container. Also note that if `visible` or `clip` is set on one axis, then the other axis must be
@@ -236,13 +236,13 @@ namespace client_layout
     {
       auto element = dom::Node::As<dom::Element>(node());
       if (element != nullptr)
-        return element->adoptedStyle();
+        return element->adoptedStyleRef();
     }
     else if (node()->isText())
     {
       auto textNode = dom::Node::As<dom::Text>(node());
       if (textNode != nullptr)
-        return textNode->adoptedStyle();
+        return textNode->adoptedStyleRef();
     }
     return nullopt;
   }
@@ -253,12 +253,12 @@ namespace client_layout
     if (node()->isElement())
     {
       auto element = dom::Node::As<dom::Element>(node());
-      return element->adoptedStyle();
+      return element->adoptedStyleRef();
     }
     else if (node()->isText())
     {
       auto textNode = dom::Node::As<dom::Text>(node());
-      return textNode->adoptedStyle();
+      return textNode->adoptedStyleRef();
     }
     assert(false && "Unrachable");
   }

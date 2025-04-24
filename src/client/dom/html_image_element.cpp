@@ -21,6 +21,16 @@ namespace dom
   using namespace builtin_scene;
   using namespace crates::layout2::styles;
 
+  void HTMLImageElement::createdCallback()
+  {
+    HTMLElement::createdCallback();
+
+    if (hasAttribute("width"))
+      width_ = stoi(getAttribute("width"));
+    if (hasAttribute("height"))
+      height_ = stoi(getAttribute("height"));
+  }
+
   void HTMLImageElement::connectedCallback()
   {
     HTMLElement::connectedCallback();
@@ -33,6 +43,52 @@ namespace dom
                     auto imageElement = static_cast<HTMLImageElement *>(handle->data);
                     imageElement->loadImage();
                   });
+  }
+
+  void HTMLImageElement::attributeChangedCallback(const string &name, const string &oldValue, const string &newValue)
+  {
+    HTMLElement::attributeChangedCallback(name, oldValue, newValue);
+
+    if (name == "src")
+    {
+      setSrc(newValue);
+    }
+    else if (name == "width")
+    {
+      newValue.empty() ? width_ = 0 : width_ = stoi(newValue);
+      onSizeDidChange();
+    }
+    else if (name == "height")
+    {
+      newValue.empty() ? height_ = 0 : height_ = stoi(newValue);
+      onSizeDidChange();
+    }
+    else if (name == "loading")
+    {
+      if (newValue == "lazy")
+        loading_ = LoadingType::kLoadingLazy;
+      else if (newValue == "eager")
+        loading_ = LoadingType::kLoadingEager;
+      else
+        loading_ = LoadingType::kLoadingEager;
+    }
+    else if (name == "decoding")
+    {
+      if (newValue == "async")
+        decoding_ = DecodingType::kDecodingAsync;
+      else if (newValue == "sync")
+        decoding_ = DecodingType::kDecodingSync;
+      else
+        decoding_ = DecodingType::kDecodingAuto;
+    }
+    else if (name == "ismap")
+    {
+      is_map_ = true;
+    }
+    else if (name == "usemap")
+    {
+      use_map_ = newValue;
+    }
   }
 
   void HTMLImageElement::loadImage()
@@ -111,7 +167,7 @@ namespace dom
     is_src_image_loaded_ = true;
 
     // Dispatch the error event if the image data is null.
-    if (image_data_ == nullopt)
+    if (TR_UNLIKELY(image_data_ == nullopt))
     {
       dispatchEvent(DOMEventType::Error);
       return;
@@ -148,11 +204,38 @@ namespace dom
 
   void HTMLImageElement::onImageDecoded(const SkBitmap &bitmap)
   {
+    // Use natural width and height if the width and height are not set.
+    if (!width_.has_value())
+      width_ = bitmap.width();
+    if (!height_.has_value())
+      height_ = bitmap.height();
+
     if (!connected)
       return;
 
     auto imageBox = dynamic_pointer_cast<client_layout::LayoutImage>(principalBox());
     assert(imageBox != nullptr && "The image box is not created yet.");
     imageBox->setImageBitmap(sk_bitmap_);
+  }
+
+  void HTMLImageElement::onSizeDidChange()
+  {
+    if (sk_bitmap_ == nullptr && validateSizeToMakeBitmap())
+    {
+      auto imageInfo = SkImageInfo::MakeN32Premul(width_.value(),
+                                                  height_.value());
+      // Create a new bitmap with the specified width and height.
+      sk_bitmap_ = make_shared<SkBitmap>();
+      sk_bitmap_->allocPixels(imageInfo);
+    }
+  }
+
+  bool HTMLImageElement::validateSizeToMakeBitmap()
+  {
+    if (!width_.has_value() || !height_.has_value())
+      return false;
+    if (width_.value() <= 0 || height_.value() <= 0)
+      return false;
+    return true;
   }
 }

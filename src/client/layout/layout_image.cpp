@@ -15,10 +15,10 @@ namespace client_layout
 
   bool LayoutImage::adjustImageSize()
   {
-    auto &imageElement = dom::Node::AsChecked<dom::HTMLImageElement>(node());
-    auto &adoptedStyle = imageElement.adoptedStyle();
-    auto srcImageRect = imageElement.getImageClientRect();
-    auto lastFragment = fragment();
+    const auto &imageElement = dom::Node::AsChecked<const dom::HTMLImageElement>(node());
+    const auto &adoptedStyle = imageElement.adoptedStyleRef();
+    const auto srcImageRect = imageElement.getImageClientRect();
+    const auto lastFragment = fragment();
 
     // Not adjusting the size if the image source is not loaded yet.
     if (srcImageRect.width() <= 0 || srcImageRect.height() <= 0)

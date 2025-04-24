@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <optional>
 #include <client/builtin_scene/scene.hpp>
 #include <client/builtin_scene/ecs.hpp>
 #include <client/cssom/box_bounding.hpp>
@@ -162,7 +163,13 @@ namespace dom
     // Scrolls an element by the given amount.
     void scrollBy(const ScrollOptions &);
 
-    const client_cssom::CSSStyleDeclaration &adoptedStyle() const { return adoptedStyle_; }
+    inline bool hasAdoptedStyle() const { return adoptedStyle_ != nullptr; }
+    const client_cssom::CSSStyleDeclaration &adoptedStyleRef() const
+    {
+      assert(adoptedStyle_ != nullptr && "The adopted style should not be null.");
+      return *adoptedStyle_;
+    }
+
     std::shared_ptr<const client_layout::LayoutBoxModelObject> principalBox() const { return principalBox_; }
     std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox() { return principalBox_; }
 
@@ -253,6 +260,7 @@ namespace dom
     void simulateScrollWithOffset(float offsetX, float offsetY);
 
   private:
+    bool adoptStyleDirectly(const client_cssom::CSSStyleDeclaration &newStyle);
     bool setActionState(bool &state, bool value);
 
   public:
@@ -279,7 +287,7 @@ namespace dom
     client_cssom::CSSStyleDeclaration defaultStyle_;
 
   private:
-    client_cssom::CSSStyleDeclaration adoptedStyle_;
+    std::unique_ptr<client_cssom::CSSStyleDeclaration> adoptedStyle_;
     std::weak_ptr<builtin_scene::Scene> scene_;
     std::vector<std::shared_ptr<client_layout::LayoutBoxModelObject>> boxes_;
     std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox_;

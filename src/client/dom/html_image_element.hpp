@@ -47,7 +47,10 @@ namespace dom
     }
 
   public:
+    void createdCallback() override;
     void connectedCallback() override;
+    void attributeChangedCallback(const std::string &name,
+                                  const std::string &oldValue, const std::string &newValue) override;
 
     inline geometry::DOMRect getImageClientRect() const
     {
@@ -71,7 +74,7 @@ namespace dom
       is_src_image_loaded_ = false;
       is_src_image_decoded_ = false;
 
-      setAttribute("src", src);
+      setAttribute("src", src, false);
       loadImage();
     }
 
@@ -102,6 +105,10 @@ namespace dom
 
     void onImageDataReady();
     void onImageDecoded(const SkBitmap &bitmap);
+    void onSizeDidChange();
+
+    // Validate if the current size is valid to create bitmap.
+    bool validateSizeToMakeBitmap();
 
   public:
     /**
@@ -119,8 +126,18 @@ namespace dom
      */
     std::string alt;
 
-    inline size_t width() const override { return sk_bitmap_->width(); }
-    inline size_t height() const override { return sk_bitmap_->height(); }
+    inline size_t width() const override { return width_.value_or(0); }
+    inline size_t height() const override { return height_.value_or(0); }
+    inline void setWidth(size_t width)
+    {
+      width_ = width;
+      onSizeDidChange();
+    }
+    inline void setHeight(size_t height)
+    {
+      height_ = height;
+      onSizeDidChange();
+    }
 
     inline LoadingType loading() const { return loading_; }
     inline DecodingType decoding() const { return decoding_; }
@@ -149,6 +166,9 @@ namespace dom
 
   private:
     uv_async_t load_async_handle_;
+
+    std::optional<int> width_ = 0;
+    std::optional<int> height_ = 0;
 
     std::optional<std::vector<char>> image_data_ = std::nullopt;
     std::shared_ptr<SkBitmap> sk_bitmap_;

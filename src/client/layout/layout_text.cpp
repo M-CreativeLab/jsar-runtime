@@ -192,27 +192,31 @@ namespace client_layout
 
   string LayoutText::transformAndSecureText(const string &original) const
   {
-    auto &textStyle = dom::Node::As<dom::Text>(node())->adoptedStyle();
-    if (textStyle.hasProperty("-webkit-text-security"))
+    const auto &textNode = dom::Node::AsChecked<const dom::Text>(node());
+    if (textNode.hasAdoptedStyle())
     {
-      auto textSecurity = textStyle.getPropertyValue("-webkit-text-security");
-      if (textSecurity == "disc")
-        return secureText(original, kBulletCharacter);
-      else if (textSecurity == "circle")
-        return secureText(original, kWhiteBulletCharacter);
-      else if (textSecurity == "square")
-        return secureText(original, kBlackSquareCharacter);
-    }
+      const auto &textStyle = textNode.adoptedStyleRef();
 
-    if (textStyle.hasProperty("text-transform"))
-    {
-      auto textTransform = textStyle.getPropertyValue("text-transform");
-      if (textTransform == "uppercase")
-        return ToUpperCase(original);
-      else if (textTransform == "lowercase")
-        return ToLowerCase(original);
-      else if (textTransform == "capitalize")
-        return ToCapitalize(original);
+      if (textStyle.hasProperty("-webkit-text-security"))
+      {
+        auto textSecurity = textStyle.getPropertyValue("-webkit-text-security");
+        if (textSecurity == "disc")
+          return secureText(original, kBulletCharacter);
+        else if (textSecurity == "circle")
+          return secureText(original, kWhiteBulletCharacter);
+        else if (textSecurity == "square")
+          return secureText(original, kBlackSquareCharacter);
+      }
+      if (textStyle.hasProperty("text-transform"))
+      {
+        auto textTransform = textStyle.getPropertyValue("text-transform");
+        if (textTransform == "uppercase")
+          return ToUpperCase(original);
+        else if (textTransform == "lowercase")
+          return ToLowerCase(original);
+        else if (textTransform == "capitalize")
+          return ToCapitalize(original);
+      }
     }
     return original;
   }

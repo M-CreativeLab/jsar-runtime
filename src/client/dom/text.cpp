@@ -62,7 +62,7 @@ namespace dom
     client_cssom::CSSStyleDeclaration defaultStyle;
     defaultStyle.setProperty("width", "auto");
     defaultStyle.setProperty("height", "auto");
-    defaultStyle.setProperty("transform", "translateZ(5px)");
+    defaultStyle.setProperty("transform", "translateZ(5px)"); // Avoid the z-fighting issue.
     style_ = make_shared<client_cssom::CSSStyleDeclaration>(defaultStyle.cssText());
   }
 
@@ -99,42 +99,12 @@ namespace dom
     return make_unique<Text>(second, getOwnerDocumentReference());
   }
 
-  const geometry::DOMRect Text::getTextClientRect(float maxWidth) const
-  {
-    // if (!hasSceneComponent<WebContent>() || !hasSceneComponent<Text2d>())
-    //   return geometry::DOMRect();
-
-    // const auto &webContentComponent = getSceneComponentChecked<WebContent>();
-    // const auto &textComponent = getSceneComponentChecked<Text2d>();
-
-    // string text = textComponent.content;
-    // if (text.size() == 0)
-    //   return geometry::DOMRect();
-
-    // auto paragraphStyle = webContentComponent.paragraphStyle();
-    // auto paragraphBuilder = ParagraphBuilder::make(paragraphStyle,
-    //                                                TrClientContextPerProcess::Get()->getFontCacheManager());
-    // paragraphBuilder->pushStyle(paragraphStyle.getTextStyle());
-    // paragraphBuilder->addText(text.c_str(), text.size());
-    // paragraphBuilder->pop();
-
-    // auto paragraph = paragraphBuilder->Build();
-    // paragraph->layout(maxWidth > 0
-    //                       ? maxWidth
-    //                       : numeric_limits<float>::infinity());
-
-    // geometry::DOMRect textRect;
-    // textRect.width() = paragraph->getLongestLine();
-    // textRect.height() = paragraph->getHeight();
-    // return textRect;
-
-    return geometry::DOMRect();
-  }
-
   void Text::connectedCallback()
   {
     CharacterData::connectedCallback();
+    
     initCSSBoxes();
+    adoptStyleDirectly(defaultStyle_);
   }
 
   void Text::disconnectedCallback()
@@ -200,7 +170,7 @@ namespace dom
     auto parentNode = getParentNodeAs<Element>();
     if (parentNode != nullptr)
     {
-      const auto &parentStyle = parentNode->adoptedStyle();
+      const auto &parentStyle = parentNode->adoptedStyleRef();
 
 #define USE_PARENT_STYLE(property)                                          \
   if (parentStyle.hasProperty(property))                                    \
@@ -235,16 +205,20 @@ namespace dom
 
     // Update the  style if these properties are not present.
     newStyle.update(defaultStyle_, true);
-    if (adoptedStyle_.equals(newStyle)) // Skip if the style is the same.
+    if (hasAdoptedStyle() && adoptedStyle_->equals(newStyle)) // Skip if the style is the same.
       return false;
+    return adoptStyleDirectly(newStyle);
+  }
 
-    adoptedStyle_ = newStyle;
+  bool Text::adoptStyleDirectly(const client_cssom::CSSStyleDeclaration &newStyle)
+  {
+    adoptedStyle_ = make_unique<client_cssom::CSSStyleDeclaration>(newStyle);
 
     // Update the layout node style.
     bool updated = false;
     for (auto box : textBoxes_)
     {
-      if (box->setStyle(adoptedStyle_))
+      if (box->setStyle(adoptedStyleRef()))
         updated = true;
     }
     return updated;

@@ -109,7 +109,9 @@ namespace dom
   void Element::connectedCallback()
   {
     Node::connectedCallback();
+
     initCSSBoxes();
+    adoptStyleDirectly(defaultStyle_);
   }
 
   void Element::disconnectedCallback()
@@ -201,9 +203,9 @@ namespace dom
   void Element::styleAdoptedCallback()
   {
     auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(true);
-    if (ownerDocument != nullptr && adoptedStyle_.hasProperty("display"))
+    if (ownerDocument != nullptr && adoptedStyle_->hasProperty("display"))
     {
-      auto newDisplay = adoptedStyle_.getPropertyValue("display");
+      auto newDisplay = adoptedStyle_->getPropertyValue("display");
       if (newDisplay != currentDisplayStr_)
       {
         currentDisplayStr_ = newDisplay;
@@ -313,20 +315,11 @@ namespace dom
     client_cssom::CSSStyleDeclaration newStyle = style;
     newStyle.update(defaultStyle_, true); // Update the default style if these properties are not present.
 
-    if (adoptedStyle_.equals(newStyle)) // Skip if the style is the same.
+    if (adoptedStyle_ != nullptr &&      // Pass if `adoptedStyle_` is not set.
+        adoptedStyle_->equals(newStyle)) // Skip if the style is the same.
       return false;
 
-    adoptedStyle_ = newStyle;
-    styleAdoptedCallback();
-
-    // Update the layout node style.
-    bool updated = false;
-    for (auto box : boxes_)
-    {
-      if (box->setStyle(adoptedStyle_))
-        updated = true;
-    }
-    return updated;
+    return adoptStyleDirectly(newStyle);
   }
 
   void Element::useSceneWithCallback(const function<void(builtin_scene::Scene &)> &callback)
@@ -706,6 +699,21 @@ namespace dom
     {
       return false;
     }
+  }
+
+  bool Element::adoptStyleDirectly(const client_cssom::CSSStyleDeclaration &newStyle)
+  {
+    adoptedStyle_ = make_unique<client_cssom::CSSStyleDeclaration>(newStyle);
+    styleAdoptedCallback();
+
+    // Update the layout node style.
+    bool updated = false;
+    for (auto box : boxes_)
+    {
+      if (box->setStyle(*adoptedStyle_))
+        updated = true;
+    }
+    return updated;
   }
 
   std::shared_ptr<Element> Element::firstElementChild() const
