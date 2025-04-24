@@ -114,6 +114,12 @@ namespace dom
 
   void HTMLImageElement::fetchImage(const string &src)
   {
+    if (src.empty())
+    {
+      is_src_image_loading = false;
+      return;
+    }
+
     assert(ownerDocument->expired() == false && "The owner document is expired.");
     auto browsingContext = ownerDocument->lock()->browsingContext;
     auto responseCallback = [this](const void *imageData, size_t imageByteLength)
