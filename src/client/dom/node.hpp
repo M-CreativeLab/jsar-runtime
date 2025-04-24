@@ -492,7 +492,7 @@ namespace dom
 
   private:
     // Update the fields from the document, such as the base URI, owner document, etc.
-    void updateFieldsFromDocument(std::optional<std::shared_ptr<Document>> document);
+    void updateFieldsFromDocument(std::optional<std::shared_ptr<Document>> document, bool updateChildren = false);
     // Update the fields from the internal `pugi::xml_node` object, such as the node type, node name, etc.
     void updateFieldsFromInternal();
     // Update the tree fields, such as the child nodes, first child, last child, etc.

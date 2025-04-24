@@ -18,10 +18,25 @@ setTimeout(() => {
   `);
 
   const node = header();
-  console.info('firstChild', node.firstChild);
-  console.info('lastChild', node.firstChild?.lastChild);
-  console.info('firstElementChild', node.firstElementChild);
-  console.info('lastElementChild', node.lastElementChild);
-  console.info('comment node:', node.nodeName);
+  {
+    const printNode = (tag: string, elem: Element | null) => {
+      console.info(tag, {
+        localName: elem?.localName,
+        connected: elem?.isConnected,
+        ownerDocument: elem?.ownerDocument,
+      });
+    }
+
+    const h1 = node.firstElementChild;
+    printNode('h1', h1);
+    const p = node.lastElementChild;
+    printNode('p', p);
+
+    const textInParagraph = p?.firstChild;
+    console.info('textInParagraph', textInParagraph?.ownerDocument);
+
+    const commentNode = node.lastChild;
+    console.info('commentNode', commentNode);
+  }
   container?.appendChild(node);
 }, 1000);

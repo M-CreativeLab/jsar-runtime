@@ -440,7 +440,8 @@ namespace dom
   {
     auto self = shared_from_this();
     child->parentNode = self;
-    child->updateFieldsFromDocument(getOwnerDocumentReference()); // Update the owner document once the child is added.
+    // Update all the child nodes' owner document when a new child is added.
+    child->updateFieldsFromDocument(getOwnerDocumentReference(), true);
     notifyMutationObservers(MutationRecord::OnAddChild(self, child));
 
     // If the parent node is connected, connect the child node as well.
@@ -529,7 +530,7 @@ namespace dom
     // The default implementation does nothing.
   }
 
-  void Node::updateFieldsFromDocument(optional<shared_ptr<Document>> maybeDocument)
+  void Node::updateFieldsFromDocument(optional<shared_ptr<Document>> maybeDocument, bool updateChildren)
   {
     if (TR_UNLIKELY(!maybeDocument.has_value()))
       return;
@@ -543,6 +544,12 @@ namespace dom
       ownerDocument = document;
     else
       ownerDocument = nullopt;
+
+    if (updateChildren && !childNodes.empty())
+    {
+      for (auto child : childNodes)
+        child->updateFieldsFromDocument(document, true);
+    }
   }
 
   void Node::updateFieldsFromInternal()
