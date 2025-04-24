@@ -40,7 +40,7 @@ namespace client_layout
     is_empty_ = b;
   }
 
-  bool FormattingContext::setLayoutStyle(crates::layout2::LayoutStyle& style)
+  bool FormattingContext::setLayoutStyle(crates::layout2::LayoutStyle &style)
   {
     // When the incoming style is "auto", it indicates that the content size should be used.
     use_content_x_ = style.width().isAuto();

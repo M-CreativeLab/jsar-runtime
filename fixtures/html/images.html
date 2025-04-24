@@ -7,7 +7,8 @@
 
 <body style="background-color: #fff;">
   <h1>Images:</h1>
-  <img src="images/jsar-logo-00.png" style="transform:translateZ(10px);" />
+  <img src="images/jsar-logo-00.png" style="transform:translateZ(10px);height:300px;" />
+  <img id="placeholder" />
 </body>
 
 <script>
@@ -52,6 +53,13 @@
     });
     image3.src = image.src;
   }
+
+  setTimeout(() => {
+    const placeholder = document.getElementById('placeholder');
+    console.info('placeholder:', placeholder);
+    placeholder.setAttribute('src', 'https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg');
+    console.info('placeholder.src:', placeholder.src);
+  }, 1000);
 </script>
 
 </html>

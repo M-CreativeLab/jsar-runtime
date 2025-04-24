@@ -390,16 +390,8 @@ namespace client_layout
     }
 
     // Update the layout style in formatting context.
-    bool success;
-    if (formattingContext_ == nullptr)
-    {
-      success = false;
-    }
-    else
-    {
-      crates::layout2::LayoutStyle layoutStyle = style;
-      success = formattingContext_->setLayoutStyle(layoutStyle);
-    }
+    crates::layout2::LayoutStyle layoutStyle = style;
+    bool success = formattingContext_->setLayoutStyle(layoutStyle);
 
     styleDidChange();
     return success;

@@ -60,10 +60,11 @@ namespace client_layout
 
   ostream &operator<<(ostream &os, const Fragment &fragment)
   {
+    auto contentSize = fragment.content_size_.value_or(glm::vec3(0.0f));
     os << "Fragment {" << endl
        << "position: (" << fragment.position_.x << ", " << fragment.position_.y << ")" << endl
        << "    size: (" << fragment.size_.x << ", " << fragment.size_.y << ")" << endl
-       << " content: (" << fragment.content_size_->x << ", " << fragment.content_size_->y << ")" << endl
+       << " content: (" << contentSize.x << ", " << contentSize.y << ")" << endl
        << "  border: " << fragment.border_ << endl
        << " padding: " << fragment.padding_ << endl
        << "}";
