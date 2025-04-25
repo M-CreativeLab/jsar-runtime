@@ -258,5 +258,8 @@ mod tests {
 
     let extension = parse_url_to_module_extension("https://example.com/unknown");
     assert_eq!(extension, ffi::ModuleExtensionIndex::None);
+
+    let extension = parse_url_to_module_extension("https://example.com/index.js?foo");
+    assert_eq!(extension, ffi::ModuleExtensionIndex::JavaScript);
   }
 }

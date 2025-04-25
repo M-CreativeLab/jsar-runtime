@@ -1106,8 +1106,15 @@ namespace crates::css2
         auto len = getRulesLengthFromStylesheet(inner);
         for (size_t index = 0; index < len; index++)
         {
-          auto rule = getCssRuleFromStylesheet(inner, index);
-          rules_.push_back(MakeCssRule(*rule));
+          try
+          {
+            auto rule = getCssRuleFromStylesheet(inner, index);
+            rules_.push_back(MakeCssRule(*rule));
+          }
+          catch (const std::exception &e)
+          {
+            std::cerr << "Failed to add CssRule: " << e.what() << std::endl;
+          }
         }
       }
 
