@@ -445,7 +445,7 @@ namespace builtin_scene
       parentTransform = getComponent<Transform>(parentComponent->parent());
 
     // The world-space transformation matrix for this entity.
-    glm::mat4 matToUpdate = transform.matrix();
+    glm::mat4 baseMatrixInWorldSpace = transform.matrix();
 
     // Compute the final post transform.
     //
@@ -461,8 +461,7 @@ namespace builtin_scene
     }
 
     // Returns the transformation matrix is the world-space base matrix with the post transformation.
-    matToUpdate = postMat * matToUpdate;
-    return matToUpdate;
+    return postMat * baseMatrixInWorldSpace;
   }
 
   void RenderSystem::tryUpdateInstanceDataForInstancedMesh(const Mesh3d &meshComponent)
