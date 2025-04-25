@@ -277,16 +277,18 @@ namespace client_layout
     assert(formattingContext_ != nullptr && "Formatting context must be set.");
     if (parent() == nullptr)
     {
-      return nodeFragment;
+      accumulated_fragment_ = nodeFragment;
+      return accumulated_fragment_.value();
     }
     else
     {
-      Fragment baseFragment = parent()->fragment();
+      auto parentBox = parent();
+      Fragment baseFragment = parentBox->accumulatedFragment();
 
       // Move the fragment by the scroll offset if the object is a scroll container.
-      if (parent()->isBox() && parent()->isScrollContainer())
+      if (parentBox->isBox() && parentBox->isScrollContainer())
       {
-        auto scrollableArea = dynamic_pointer_cast<const LayoutBox>(parent())->getScrollableArea();
+        auto scrollableArea = dynamic_pointer_cast<const LayoutBox>(parentBox)->getScrollableArea();
         if (scrollableArea != nullptr)
         {
           auto offset = scrollableArea->getScrollOffset();
@@ -295,7 +297,8 @@ namespace client_layout
       }
 
       // Returns the fragment with the parent's offset.
-      return baseFragment.position(nodeFragment);
+      accumulated_fragment_ = baseFragment.position(nodeFragment);
+      return accumulated_fragment_.value();
     }
   }
 

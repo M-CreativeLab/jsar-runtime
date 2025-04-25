@@ -112,6 +112,12 @@ namespace client_layout
 
     // Returns the current layout object's fragment.
     const Fragment fragment() const;
+    const Fragment &accumulatedFragment() const
+    {
+      if (!accumulated_fragment_.has_value())
+        accumulated_fragment_ = fragment();
+      return accumulated_fragment_.value();
+    }
 
     std::shared_ptr<LayoutObject> parent() const { return parent_.lock(); }
     std::shared_ptr<LayoutObject> prevSibling() const { return previous_.lock(); }
@@ -298,6 +304,7 @@ namespace client_layout
     std::weak_ptr<builtin_scene::Scene> scene_;
     // TODO(yorkie): will be replaced by the computed style type.
     std::optional<builtin_scene::ecs::EntityId> entity_;
+    mutable std::optional<Fragment> accumulated_fragment_;
     // TODO(yorkie): support fragments
 
   private: // Hierarchy fields
