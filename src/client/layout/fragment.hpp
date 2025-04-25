@@ -25,12 +25,27 @@ namespace client_layout
     // Construct a fragment from the native layout output.
     Fragment(const crates::layout2::Layout &);
 
+    bool operator==(const Fragment &other) const
+    {
+      return position_ == other.position_ &&
+             size_ == other.size_ &&
+             content_size_ == other.content_size_ &&
+             border_ == other.border_ &&
+             padding_ == other.padding_;
+    }
+    bool operator!=(const Fragment &other) const
+    {
+      return !(*this == other);
+    }
+
   public:
     // Returns the 2d rectangle of the fragment, using the style size.
     inline dom::geometry::DOMRect getRect() const
     {
       return dom::geometry::DOMRect(position_.x, position_.y, size_.x, size_.y);
     }
+
+    inline bool isNone() const { return size_.x == 0.0f && size_.y == 0.0f; }
 
     // Position
     inline glm::vec3 xyz() const { return position_; }

@@ -110,7 +110,27 @@ namespace client_layout
     std::optional<client_cssom::CSSStyleDeclaration> style() const;
     const client_cssom::CSSStyleDeclaration &styleRef() const;
 
-    // Returns the current layout object's fragment.
+    // The struct to represent if two fragments has differences.
+    struct FragmentDifference
+    {
+      // Returns a `FragmentDifference` object which disables the differences computating.
+      static FragmentDifference Disabled() { return FragmentDifference(false, false); }
+      static FragmentDifference Default() { return FragmentDifference(); }
+
+      bool enabled;
+      bool changed;
+
+      FragmentDifference(bool enabled = true, bool changed = false)
+          : enabled(enabled), changed(changed)
+      {
+      }
+
+      // Returns if the fragment difference has changed.
+      inline bool isChanged() const { return enabled && changed; }
+    };
+
+    // Compute the current fragment result.
+    const Fragment computeOrGetFragment(FragmentDifference &) const;
     const Fragment fragment() const;
     const Fragment &accumulatedFragment() const
     {
@@ -297,6 +317,8 @@ namespace client_layout
 
     // Resize the layout object with the given size.
     bool resize(const Fragment &newSize);
+    // Returns if the accumulated fragment is changed
+    bool mutateAccumulatedFragment(const Fragment &f) const;
 
   private:
     std::shared_ptr<FormattingContext> formattingContext_;

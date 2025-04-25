@@ -18,6 +18,18 @@ namespace client_layout::geometry
     Rect(T top, T right, T bottom, T left)
         : top_(top), right_(right), bottom_(bottom), left_(left) {}
 
+    bool operator==(const Rect<T> &other) const
+    {
+      return top_ == other.top_ &&
+             right_ == other.right_ &&
+             bottom_ == other.bottom_ &&
+             left_ == other.left_;
+    }
+    bool operator!=(const Rect<T> &other) const
+    {
+      return !(*this == other);
+    }
+
   public:
     T &top() { return top_; }
     T top() const { return top_; }

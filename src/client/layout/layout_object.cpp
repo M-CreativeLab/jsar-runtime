@@ -263,7 +263,7 @@ namespace client_layout
     assert(false && "Unrachable");
   }
 
-  const Fragment LayoutObject::fragment() const
+  const Fragment LayoutObject::computeOrGetFragment(FragmentDifference &diff) const
   {
     Fragment nodeFragment = formattingContext_->liveFragment();
     if (isText())
@@ -277,8 +277,13 @@ namespace client_layout
     assert(formattingContext_ != nullptr && "Formatting context must be set.");
     if (parent() == nullptr)
     {
-      accumulated_fragment_ = nodeFragment;
-      return accumulated_fragment_.value();
+      if (diff.enabled)
+      {
+        diff.changed = mutateAccumulatedFragment(nodeFragment);
+        return accumulated_fragment_.value();
+      }
+      else
+        return nodeFragment;
     }
     else
     {
@@ -297,9 +302,23 @@ namespace client_layout
       }
 
       // Returns the fragment with the parent's offset.
-      accumulated_fragment_ = baseFragment.position(nodeFragment);
-      return accumulated_fragment_.value();
+      auto &finalFragment = baseFragment.position(nodeFragment);
+      if (diff.enabled)
+      {
+        diff.changed = mutateAccumulatedFragment(finalFragment);
+        return accumulated_fragment_.value();
+      }
+      else
+      {
+        return finalFragment;
+      }
     }
+  }
+
+  const Fragment LayoutObject::fragment() const
+  {
+    auto _ = FragmentDifference::Disabled();
+    return computeOrGetFragment(_);
   }
 
   bool LayoutObject::isDescendantOf(shared_ptr<LayoutObject> object) const
@@ -433,6 +452,19 @@ namespace client_layout
     if (resized == true)
       sizeDidChange();
     return resized;
+  }
+
+  bool LayoutObject::mutateAccumulatedFragment(const Fragment &f) const
+  {
+    if (TR_UNLIKELY(!accumulated_fragment_.has_value()))
+    {
+      accumulated_fragment_ = f;
+      return true;
+    }
+
+    bool isChanged = accumulated_fragment_.value() != f;
+    accumulated_fragment_ = f;
+    return isChanged;
   }
 
   bool LayoutObject::computeLayout(const ConstraintSpace &avilableSpace)
