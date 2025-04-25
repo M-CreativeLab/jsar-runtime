@@ -444,21 +444,23 @@ namespace builtin_scene
     if (parentComponent != nullptr)
       parentTransform = getComponent<Transform>(parentComponent->parent());
 
+    // The world-space transformation matrix for this entity.
     glm::mat4 matToUpdate = transform.matrix();
 
-    // Handle the post transform
+    // Compute the final post transform.
+    //
+    // The post transform is updated by the CSS `transform` project, it's stored as reference-space. The following block
+    // is used to compute the final post transform in the node chain from the current node.
     glm::mat4 postMat = glm::mat4(1.0f);
-    if (parentTransform != nullptr && parentTransform->hasPostTransform())
     {
-      auto &parentPostTransform = parentTransform->getOrInitPostTransform();
-      postMat = parentPostTransform.accumulatedMatrix();
-    }
-    if (transform.hasPostTransform())
-    {
+      if (parentTransform != nullptr)
+        postMat = parentTransform->getOrInitPostTransform().accumulatedMatrix();
       auto &postTransform = transform.getOrInitPostTransform();
       postMat = postTransform.matrix() * postMat;
       postTransform.setAccumulatedMatrix(postMat);
     }
+
+    // Returns the transformation matrix is the world-space base matrix with the post transformation.
     matToUpdate = postMat * matToUpdate;
     return matToUpdate;
   }
