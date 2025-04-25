@@ -87,7 +87,7 @@ namespace dom
 
     // Update the sheet
     styleSheet_ = sheet;
-    auto& document = getOwnerDocumentChecked();
+    auto &document = getOwnerDocumentChecked();
     document.styleSheets_.push_back(sheet);
     document.styleCache_.invalidateCache();
   }
