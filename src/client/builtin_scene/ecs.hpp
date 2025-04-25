@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <shared_mutex>
 #include <idgen.hpp>
+#include <common/utility.hpp>
 
 /**
  * Enable the time profiling for the ECS.
@@ -502,9 +503,9 @@ namespace builtin_scene::ecs
     std::shared_ptr<ComponentSet<ComponentType>> getComponentSet()
     {
       ComponentName name = typeid(ComponentType).name();
-      if (componentSets_.find(name) == componentSets_.end())
+      if (TR_UNLIKELY(componentSets_.find(name) == componentSets_.end()))
         throw std::runtime_error("ComponentSet(" + std::string(name) + ") not found.");
-      return std::dynamic_pointer_cast<ComponentSet<ComponentType>>(componentSets_[name]);
+      return std::static_pointer_cast<ComponentSet<ComponentType>>(componentSets_[name]);
     }
 
   private:

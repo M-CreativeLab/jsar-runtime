@@ -2,6 +2,7 @@
 
 #ifdef TR_ECS_ENABLE_TIME_PROFILING
 #include <chrono>
+#include <iomanip>
 #endif
 
 namespace builtin_scene::ecs
@@ -114,7 +115,11 @@ namespace builtin_scene::ecs
 #ifdef TR_ECS_ENABLE_TIME_PROFILING
     steady_clock::time_point ended = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::microseconds>(ended - started);
-    std::cout << "System(" << name() << ") took " << duration.count() << " microseconds." << std::endl;
+    cout << fixed << setprecision(3);
+    cout << "System(" << name() << ") took " << (duration.count() / 1000.0f) << "ms." << endl;
+
+    // reset the format
+    cout.unsetf(ios::fixed);
 #endif
 
     if (next_ != nullptr)
