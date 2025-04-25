@@ -97,6 +97,9 @@ namespace client_layout
     std::unique_ptr<const LayoutResult> computeLayout(const ConstraintSpace &) override;
     void debugPrint() const override final;
 
+  private:
+    void updateNodeStyle(const crates::layout2::LayoutStyle &style);
+
   protected:
     // taffy binding will remove the node itself from taffy tree when it's destructed.
     std::unique_ptr<crates::layout2::Node> node_;

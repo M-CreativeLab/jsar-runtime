@@ -122,16 +122,17 @@ namespace client_layout
     if (use_content_y_ && !std::isnan(content_size_->y))
       nodeStyle.setHeight(Dimension::Length(content_size_->y));
 
-    node_->setStyle(nodeStyle);
-    node_->markDirty();
+    updateNodeStyle(nodeStyle);
   }
 
   void TaffyBasedFormattingContext::setIsEmpty(bool b)
   {
     FormattingContext::setIsEmpty(b);
 
-    auto lastStyle = node_->style();
-    lastStyle.setDisplay(b ? Display::None() : type);
+    auto nodeStyle = node_->style();
+    nodeStyle.setDisplay(b ? Display::None() : type);
+
+    updateNodeStyle(nodeStyle);
   }
 
   bool TaffyBasedFormattingContext::setLayoutStyle(crates::layout2::LayoutStyle &style)
@@ -139,9 +140,7 @@ namespace client_layout
     style.setDisplay(is_empty_ ? Display::None() : type);
     FormattingContext::setLayoutStyle(style);
 
-    assert(node_ != nullptr && "The Taffy node must be initialized.");
-    node_->setStyle(style);
-    node_->markDirty();
+    updateNodeStyle(style);
     return true;
   }
 
@@ -177,5 +176,12 @@ namespace client_layout
   {
     assert(node_ != nullptr && "The Taffy node must be initialized.");
     node_->debugPrint();
+  }
+
+  void TaffyBasedFormattingContext::updateNodeStyle(const crates::layout2::LayoutStyle &style)
+  {
+    assert(node_ != nullptr && "The Taffy node must be initialized.");
+    node_->setStyle(style);
+    node_->markDirty();
   }
 }

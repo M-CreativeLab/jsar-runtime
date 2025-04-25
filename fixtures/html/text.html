@@ -22,7 +22,8 @@
 
     setInterval(() => {
       const now = new Date();
-      text.nodeValue = `${now.getSeconds()}`
+      text.nodeValue = `${now.getSeconds()}`;
+      console.info(`Timer: ${now.getSeconds()}`);
     }, 1000);
   </script>
 </head>
