@@ -15,6 +15,7 @@
 #include <vector>
 #include <unordered_map>
 #include <shared_mutex>
+#include <typeindex>
 #include <idgen.hpp>
 #include <common/utility.hpp>
 
@@ -61,9 +62,9 @@ namespace builtin_scene::ecs
   typedef uint32_t EntityId;
   typedef uint32_t ComponentId;
   typedef uint32_t SystemId;
-  typedef const char *ComponentName;
-  typedef const char *PluginName;
-  typedef const char *ResourceName;
+  typedef std::type_index ComponentName;
+  typedef std::type_index PluginName;
+  typedef std::type_index ResourceName;
 
   constexpr EntityId MAX_ENTITY_ID = 10 * 10000;
   constexpr SystemId MAX_SYSTEM_ID = 1000;
@@ -502,10 +503,11 @@ namespace builtin_scene::ecs
     template <typename ComponentType>
     std::shared_ptr<ComponentSet<ComponentType>> getComponentSet()
     {
-      ComponentName name = typeid(ComponentType).name();
-      if (TR_UNLIKELY(componentSets_.find(name) == componentSets_.end()))
-        throw std::runtime_error("ComponentSet(" + std::string(name) + ") not found.");
-      return std::static_pointer_cast<ComponentSet<ComponentType>>(componentSets_[name]);
+      static const ComponentName name = typeid(ComponentType);
+      auto it = componentSets_.find(name);
+      if (TR_UNLIKELY(it == componentSets_.end()))
+        throw std::runtime_error("ComponentSet(" + std::string(name.name()) + ") not found.");
+      return std::static_pointer_cast<ComponentSet<ComponentType>>(it->second);
     }
 
   private:
@@ -985,7 +987,7 @@ namespace builtin_scene::ecs
     }
     /**
      * Get the application that this system is connected to.
-     * 
+     *
      * @tparam ApplicationType The type of the application.
      * @returns The application that this system is connected to.
      */

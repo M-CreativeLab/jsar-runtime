@@ -169,17 +169,17 @@ namespace dom
     if (TR_UNLIKELY(elementOrTextNode == nullptr) || !elementOrTextNode->connected)
       return;
 
-    if (elementOrTextNode->nodeType == NodeType::TEXT_NODE)
+    if (elementOrTextNode->isText())
     {
-      auto textNode = dynamic_pointer_cast<Text>(elementOrTextNode);
+      auto textNode = static_pointer_cast<Text>(elementOrTextNode);
       if (textNode != nullptr)
         textNodeCallback(textNode);
       return;
     }
 
-    if (elementOrTextNode->nodeType == NodeType::ELEMENT_NODE)
+    if (elementOrTextNode->isHTMLElement())
     {
-      auto element = dynamic_pointer_cast<HTMLElement>(elementOrTextNode);
+      auto element = static_pointer_cast<HTMLElement>(elementOrTextNode);
       if (element == nullptr)
         return;
 
