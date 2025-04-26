@@ -93,9 +93,14 @@ bool TrInspector::getContents(rapidjson::Document &json)
   {
     auto &requestInit = content->requestInit;
     string id = to_string(content->id);
-    string title = "JSAR[" + id + "]";
+    string title = "jsar[" + id + "]";
+    string url = requestInit.url;
     string devtoolsFrontendUrl = "devtools://devtools/inspector/devtools.html?ws=localhost:{port}/" + id;
     string debuggerUrl = "ws://localhost:9423/devtools/inspector/" + id;
+
+    // Make sure the URL is a valid file URL if it's an absolute path
+    if (url.starts_with("/"))
+      url = "file://" + url;
 
     rapidjson::Value contentJson;
     contentJson.SetObject();
@@ -114,8 +119,7 @@ bool TrInspector::getContents(rapidjson::Document &json)
     contentJson.AddMember("id", rapidjson::Value().SetString(id.c_str(), allocator), allocator);
     contentJson.AddMember("title", rapidjson::Value().SetString(title.c_str(), allocator), allocator);
     contentJson.AddMember("type", rapidjson::Value().SetString("page", allocator), allocator);
-    contentJson.AddMember("url",
-                          rapidjson::Value().SetString(requestInit.url.c_str(), allocator), allocator);
+    contentJson.AddMember("url", rapidjson::Value().SetString(url.c_str(), allocator), allocator);
     contentJson.AddMember("webSocketDebuggerUrl",
                           rapidjson::Value().SetString(debuggerUrl.c_str(), allocator), allocator);
 
