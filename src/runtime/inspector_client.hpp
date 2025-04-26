@@ -10,6 +10,17 @@ class TrInspectorClient
 {
   friend class TrInspectorServer;
 
+  enum HTTPMethod
+  {
+    GET,
+    POST,
+    PUT,
+    DELETE,
+    PATCH,
+    OPTIONS,
+    HEAD,
+  };
+
 public:
   TrInspectorClient(int fd, std::shared_ptr<TrInspector> inspector);
   ~TrInspectorClient();
@@ -32,6 +43,8 @@ private:
 
 private:
   void onUrl(const char *at, size_t length);
+  void onMethod(const char *at, size_t length);
+  void onMethodComplete();
   void onHeaderField(const char *at, size_t length);
   void onHeaderFieldComplete();
   void onHeaderValue(const char *at, size_t length);
@@ -44,6 +57,8 @@ private:
   bool shouldClose_ = false;
   std::vector<char> buffer_;
   std::string url_;
+  std::string methodStr_;
+  HTTPMethod method_;
   std::string currentHeaderField_;
   std::string currentHeaderValue_;
   http::HeaderFields headers_;
