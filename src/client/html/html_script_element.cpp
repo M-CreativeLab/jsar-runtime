@@ -14,6 +14,7 @@ namespace dom
   void HTMLScriptElement::createdCallback()
   {
     HTMLElement::createdCallback();
+    renderable = false;
 
     if (hasAttribute("src"))
       src = getAttribute("src");

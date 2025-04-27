@@ -13,6 +13,7 @@ namespace dom
   void HTMLLinkElement::createdCallback()
   {
     HTMLElement::createdCallback();
+    renderable = false;
 
     if (hasAttribute("as"))
       asType_ = HTMLLinkElement::InitContentType(getAttribute("as"));

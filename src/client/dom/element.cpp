@@ -217,7 +217,7 @@ namespace dom
   void Element::initCSSBoxes()
   {
     auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
-    if (ownerDocument != nullptr && renderable == true)
+    if (ownerDocument != nullptr && isRenderable())
     {
       resetCSSBoxes(true); // Clear the existing boxes.
 
@@ -237,11 +237,11 @@ namespace dom
   {
     assert(principalBox_ != nullptr &&
            "The principal box should not be null when reinitializing CSS boxes.");
-    assert(renderable == true &&
+    assert(isRenderable() &&
            "The element should be renderable when reinitializing CSS boxes.");
 
     auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
-    assert(ownerDocument != nullptr && renderable == true &&
+    assert(ownerDocument != nullptr && isRenderable() &&
            "The owner document is not set when reinitializing CSS boxes.");
     {
       auto &layoutView = ownerDocument->layoutViewRef();
@@ -299,7 +299,7 @@ namespace dom
 
     shared_ptr<HTMLDocument> ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
     if (!skipCheck &&
-        (TR_UNLIKELY(ownerDocument == nullptr) || renderable == false))
+        (TR_UNLIKELY(ownerDocument == nullptr) || !isRenderable()))
       return;
 
     assert(ownerDocument != nullptr && "The owner document is not set when resetting CSS boxes.");

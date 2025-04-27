@@ -129,7 +129,7 @@ namespace dom
   void Text::initCSSBoxes()
   {
     auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
-    if (ownerDocument != nullptr && renderable)
+    if (ownerDocument != nullptr && isRenderable())
     {
       auto &layoutView = ownerDocument->layoutViewRef();
       shared_ptr<client_layout::LayoutBoxModelObject> parentBox = nullptr;
@@ -152,7 +152,7 @@ namespace dom
 
     shared_ptr<HTMLDocument> ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
     if (!skipCheck &&
-        (TR_UNLIKELY(ownerDocument == nullptr) || renderable == false))
+        (TR_UNLIKELY(ownerDocument == nullptr) || !isRenderable()))
       return;
 
     assert(ownerDocument != nullptr && "The owner document is not set when resetting CSS boxes.");

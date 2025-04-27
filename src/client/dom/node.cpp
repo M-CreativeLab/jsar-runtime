@@ -482,8 +482,10 @@ namespace dom
     if (parent != nullptr)
     {
       depthInTree = parent->depthInTree.value_or(0) + 1;
-      if (parent->renderable == true)
-        renderable = true;
+
+      // Use the parent `renderable` if not set
+      if (!renderable.has_value())
+        renderable = parent->isRenderable();
     }
     else
       depthInTree = 0;
@@ -506,7 +508,7 @@ namespace dom
   {
     assert(connected == false && "The node is connected.");
     depthInTree = nullopt;
-    renderable = false;
+    renderable = nullopt;
     parentNode.reset();
   }
 

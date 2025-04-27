@@ -273,7 +273,7 @@ namespace dom
     bool isElementOrText() const { return isElement() || isText(); }
 
     // If this node can be rendered.
-    virtual bool isRenderable() const { return renderable; }
+    virtual bool isRenderable() const { return renderable.value_or(false); }
 
     /**
      * Set the node value.
@@ -568,7 +568,7 @@ namespace dom
     std::optional<uint32_t> depthInTree = std::nullopt;
     std::string nodeValue_;
     // If this node could be rendered, `false` by default.
-    bool renderable = false;
+    std::optional<bool> renderable = std::nullopt;
     // The mutation observers of this node.
     std::vector<std::shared_ptr<MutationObserver>> mutationObservers;
 
