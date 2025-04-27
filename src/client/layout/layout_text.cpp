@@ -61,7 +61,7 @@ namespace client_layout
   const ConstraintSpace LayoutText::adjustSpace(const ConstraintSpace &inputSpace) const
   {
     float maxWidth = inputSpace.width();
-    if (TR_UNLIKELY(maxWidth <= 0))
+    if (TR_UNLIKELY(maxWidth < 0))
       return inputSpace;
     if (TR_UNLIKELY(!hasSceneComponent<WebContent>()))
       return inputSpace;

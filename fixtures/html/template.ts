@@ -12,6 +12,7 @@ setTimeout(() => {
   const header = template(`
     <main>
       <h1 class="header">Header</h1>
+      <span id="slot"> </span>
       <p>Some text</p>
       <!>
     </main>
@@ -37,6 +38,12 @@ setTimeout(() => {
 
     const commentNode = node.lastChild;
     console.info('commentNode', commentNode);
+
+    const slot = h1?.nextSibling?.nextSibling;
+    const text = slot?.firstChild;
+    if (text) {
+      text.nodeValue = 'Hello world';
+    }
   }
   container?.appendChild(node);
 }, 1000);
