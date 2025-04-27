@@ -1,6 +1,7 @@
 #include "binding.hpp"
 #include "./event.hpp"
 #include "./node-inl.hpp"
+#include "./node_list-inl.hpp"
 #include "./character_data-inl.hpp"
 #include "./comment.hpp"
 #include "./text.hpp"
@@ -25,6 +26,7 @@ namespace bindings
 
       // Add nodes & elements
       dombinding::Node::Init(env);
+      dombinding::NodeList::Init(env);
       dombinding::Element::Init(env);
       dombinding::HTMLElement::Init(env);
       dombinding::HTMLMediaElement::Init(env);

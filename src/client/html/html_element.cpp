@@ -1,7 +1,8 @@
 #include <client/cssom/units.hpp>
-#include "./attr.hpp"
+#include <client/dom/document-inl.hpp>
+#include <client/dom/attr.hpp>
+
 #include "./html_element.hpp"
-#include "./document-inl.hpp"
 
 namespace dom
 {
@@ -120,10 +121,6 @@ namespace dom
     {
       // Update the style property.
       style_ = make_shared<client_cssom::CSSStyleDeclaration>(newValue);
-      // Reset the style cache.
-      auto document = getOwnerDocumentReference();
-      if (document != nullptr)
-        document->styleCache().resetStyle(getPtr<HTMLElement>());
     }
 
     // Update the dataset if the attribute is changed.
@@ -139,5 +136,28 @@ namespace dom
         dataset_[key] = newValue;
       }
     }
+
+    // Reset the style cache if the attribute is changed.
+    // Attribute changes may affect the selectors.
+    invalidateStyleCache();
+  }
+
+  void HTMLElement::classListChangedCallback(const DOMTokenList &newClassList)
+  {
+    Element::classListChangedCallback(newClassList);
+    invalidateStyleCache();
+  }
+
+  void HTMLElement::actionStateChangedCallback()
+  {
+    Element::actionStateChangedCallback();
+    invalidateStyleCache();
+  }
+
+  void HTMLElement::invalidateStyleCache()
+  {
+    auto document = getOwnerDocumentReference();
+    if (document != nullptr)
+      document->styleCache().resetStyle(getPtr<HTMLElement>());
   }
 }

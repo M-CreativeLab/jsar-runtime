@@ -1,6 +1,6 @@
 #pragma once
 
-#include "client/dom/html_script_element.hpp"
+#include <client/html/html_script_element.hpp>
 #include "./html_element-inl.hpp"
 
 namespace dombinding

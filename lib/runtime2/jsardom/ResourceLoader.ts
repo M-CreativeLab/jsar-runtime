@@ -124,11 +124,15 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     }
 
     /**
-     * Resolve the relative URL.
+     * Resolve the relative URL when the URL is not starting with `http:`, `https:` or `file:`.
      */
     if (
-      (url.startsWith('./') || url.startsWith('../')) &&
-      typeof globalThis.document !== 'undefined'
+      typeof globalThis.document !== 'undefined' &&
+      (
+        !url.startsWith('http:') &&
+        !url.startsWith('https:') &&
+        !url.startsWith('file:')
+      )
     ) {
       url = new URL(url, globalThis.document.baseURI).href;
     }

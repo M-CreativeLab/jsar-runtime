@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <span>
+#include <ostream>
 #include <common/debug.hpp>
 
 #include <sys/socket.h>
@@ -19,6 +20,13 @@ using namespace std;
 TrInspectorClient::TrInspectorClient(int fd, shared_ptr<TrInspector> inspector)
     : fd_(fd), inspector_(inspector)
 {
+  struct linger lingerOpt = {1, 1};
+  if (setsockopt(fd_, SOL_SOCKET, SO_LINGER, &lingerOpt, sizeof(lingerOpt)) == -1)
+  {
+    DEBUG(LOG_TAG_ERROR, "Failed to set the linger option: %s", strerror(errno));
+    throw runtime_error("Failed to set the linger option");
+  }
+
   if (setNonBlocking() == false)
     throw runtime_error("Failed to set the socket to non-blocking mode");
 
@@ -29,6 +37,10 @@ TrInspectorClient::TrInspectorClient(int fd, shared_ptr<TrInspector> inspector)
 
   parsingSettings_.on_url = [](llhttp_t *parser, const char *at, size_t length) -> int
   { _INSTANCE_CALL(onUrl, at, length); };
+  parsingSettings_.on_method = [](llhttp_t *parser, const char *at, size_t length) -> int
+  { _INSTANCE_CALL(onMethod, at, length); };
+  parsingSettings_.on_method_complete = [](llhttp_t *parser) -> int
+  { _INSTANCE_CALL(onMethodComplete); };
   parsingSettings_.on_header_field = [](llhttp_t *parser, const char *at, size_t length) -> int
   { _INSTANCE_CALL(onHeaderField, at, length); };
   parsingSettings_.on_header_field_complete = [](llhttp_t *parser) -> int
@@ -58,15 +70,18 @@ void TrInspectorClient::tick()
   auto err = llhttp_execute(&httpParser_, buffer_.data(), buffer_.size());
   if (err != HPE_OK)
   {
-    DEBUG(LOG_TAG_ERROR, "Failed to parse the HTTP message: %s", llhttp_errno_name(err));
+    string incomingText(buffer_.begin(), buffer_.end());
+    DEBUG(LOG_TAG_ERROR, "Failed to parse the HTTP message, the error is: %s, and the message: %s\n",
+          llhttp_errno_name(err), incomingText.c_str());
     shouldClose_ = true;
   }
 }
 
 void TrInspectorClient::respond(http::Response response)
 {
-  static string crlf = "\r\n";
-  string data = "HTTP/1.1 " + to_string(response.status.code) + " " + response.status.reason + crlf;
+  static string CRLF = "\r\n";
+  stringstream bufferToSend;
+  bufferToSend << "HTTP/1.1 " << response.status.code << " " << response.status.reason << CRLF;
 
   auto &headerFields = response.headerFields;
   headerFields.push_back(http::HeaderField{"Server", "JSAR Inspector Server"});
@@ -79,17 +94,17 @@ void TrInspectorClient::respond(http::Response response)
   }
 
   for (const auto &header : headerFields)
-    data += header.first + ": " + header.second + "\n";
+    bufferToSend << header.first << ": " << header.second << CRLF;
+  bufferToSend << CRLF;
 
-  data += crlf;
   if (response.body.size() > 0)
-    data += string(response.body.begin(), response.body.end());
-
-  // append the end of the response
-  data += crlf;
+  {
+    const vector<unsigned char> &body = response.body;
+    bufferToSend.write(reinterpret_cast<const char *>(body.data()), body.size());
+  }
 
   // send the response and close the connection
-  send(data);
+  send(bufferToSend.str());
   end();
 }
 
@@ -113,10 +128,11 @@ void TrInspectorClient::respond(uint32_t code, const rapidjson::Document &json)
   http::Response res;
   res.status.code = code;
   res.status.reason = "OK";
-  res.headerFields.push_back({"Content-Type", "application/json"});
+  res.headerFields.push_back({"Cache-Control", "no-cache"});
+  res.headerFields.push_back({"Content-Type", "application/json; charset=UTF-8"});
   res.headerFields.push_back({"Content-Length", to_string(buffer.GetSize())});
-  
-  std::span<char> body(const_cast<char*>(buffer.GetString()), buffer.GetSize());
+
+  std::span<char> body(const_cast<char *>(buffer.GetString()), buffer.GetSize());
   res.body.assign(body.begin(), body.end());
   respond(res);
 }
@@ -180,6 +196,31 @@ void TrInspectorClient::end()
 void TrInspectorClient::onUrl(const char *at, size_t length)
 {
   url_.append(at, length);
+}
+
+void TrInspectorClient::onMethod(const char *at, size_t length)
+{
+  methodStr_.append(at, length);
+}
+
+void TrInspectorClient::onMethodComplete()
+{
+  if (methodStr_ == "GET")
+    method_ = GET;
+  else if (methodStr_ == "POST")
+    method_ = POST;
+  else if (methodStr_ == "PUT")
+    method_ = PUT;
+  else if (methodStr_ == "DELETE")
+    method_ = DELETE;
+  else if (methodStr_ == "PATCH")
+    method_ = PATCH;
+  else if (methodStr_ == "OPTIONS")
+    method_ = OPTIONS;
+  else if (methodStr_ == "HEAD")
+    method_ = HEAD;
+  else
+    method_ = GET; // default to GET
 }
 
 void TrInspectorClient::onHeaderField(const char *at, size_t length)

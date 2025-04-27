@@ -7,7 +7,7 @@
 #include <client/builtin_scene/scene.hpp>
 #include <client/cssom/css_style_declaration.hpp>
 #include <client/cssom/box_offset.hpp>
-#include "./element.hpp"
+#include <client/dom/element.hpp>
 
 namespace dom
 {
@@ -44,9 +44,12 @@ namespace dom
     void createdCallback() override;
     void attributeChangedCallback(const std::string &name,
                                   const std::string &oldValue, const std::string &newValue) override;
+    void classListChangedCallback(const DOMTokenList &newClassList) override;
+    void actionStateChangedCallback() override;
 
   private:
     bool isHTMLElement() const override final { return true; }
+    void invalidateStyleCache();
 
   public:
     HTMLElementDirection dir = HTMLElementDirection::LTR;

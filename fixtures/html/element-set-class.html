@@ -1,0 +1,37 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Element: Set classes</title>
+  <style>
+    #d2 {
+      width: 100px;
+      height: 100px;
+      margin: 10px;
+      border: 1px solid #000;
+      transform: translateZ(10px);
+    }
+    .foo {
+      background-color: #f00;
+    }
+    .bar {
+      background-color: #0f0;
+    }
+  </style>
+</head>
+
+<body style="background-color: #fff;">
+  <div id="d2" class="foo"></div>
+</body>
+
+<script>
+  const d2 = document.getElementById('d2');
+  console.info('d2 className:', d2.className);
+
+  setTimeout(() => {
+    d2.className = 'bar';
+    console.info('d2 className:', d2.className);
+  }, 500);
+</script>
+
+</html>

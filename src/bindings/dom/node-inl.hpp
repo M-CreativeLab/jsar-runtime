@@ -155,7 +155,7 @@ namespace dombinding
     Napi::HandleScope scope(env);
 
     std::optional<std::string> nodeValue = this->node->nodeValue();
-    return nodeValue.has_value()
+    return !nodeValue.has_value()
                ? env.Null()
                : Napi::String::New(env, nodeValue.value());
   }
@@ -167,7 +167,7 @@ namespace dombinding
     Napi::HandleScope scope(env);
 
     std::string valueString = value.As<Napi::String>().Utf8Value();
-    this->node->nodeValue(valueString);
+    this->node->setNodeValue(valueString);
   }
 
   template <typename ObjectType, typename NodeType>

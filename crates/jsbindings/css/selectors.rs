@@ -1,3 +1,4 @@
+use style::servo::selector_parser::NonTSPseudoClass;
 use style::servo::selector_parser::SelectorImpl;
 use style_traits::ToCss;
 
@@ -9,10 +10,12 @@ pub(crate) struct Component {
   pub tag: crate::css_parser::ffi::SelectorComponentType,
   pub combinator: Option<crate::css_parser::ffi::SelectorComponentCombinator>,
   pub name: Option<String>,
+  pub pseudo_class_type: Option<crate::css_parser::ffi::PseudoClassType>,
 }
 
 impl Component {
   pub fn new(handle: &ComponentImpl) -> Self {
+    use crate::css_parser::ffi::PseudoClassType;
     use crate::css_parser::ffi::SelectorComponentType;
 
     Self {
@@ -24,6 +27,8 @@ impl Component {
         ComponentImpl::Empty => SelectorComponentType::Empty,
         ComponentImpl::Scope => SelectorComponentType::Scope,
         ComponentImpl::Host(_) => SelectorComponentType::Host,
+        ComponentImpl::PseudoElement(_) => SelectorComponentType::PseudoElement,
+        ComponentImpl::NonTSPseudoClass(_) => SelectorComponentType::PseudoClass,
         _ => SelectorComponentType::Unsupported,
       },
       combinator: match handle {
@@ -34,6 +39,18 @@ impl Component {
         ComponentImpl::LocalName(local_name) => Some(local_name.name.to_css_string()),
         ComponentImpl::ID(id) => Some(id.to_css_string()),
         ComponentImpl::Class(class) => Some(class.to_css_string()),
+        _ => None,
+      },
+
+      pseudo_class_type: match handle {
+        ComponentImpl::NonTSPseudoClass(pseudo_class) => Some(match pseudo_class {
+          NonTSPseudoClass::Hover => PseudoClassType::Hover,
+          NonTSPseudoClass::Active => PseudoClassType::Active,
+          NonTSPseudoClass::Focus => PseudoClassType::Focus,
+          NonTSPseudoClass::FocusVisible => PseudoClassType::FocusVisible,
+          NonTSPseudoClass::FocusWithin => PseudoClassType::FocusWithin,
+          _ => PseudoClassType::Unknown,
+        }),
         _ => None,
       },
     }

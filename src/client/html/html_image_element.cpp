@@ -8,18 +8,28 @@
 #include <crates/bindings.hpp>
 #include <client/per_process.hpp>
 #include <client/cssom/layout.hpp>
+#include <client/dom/browsing_context.hpp>
+#include <client/dom/document.hpp>
+#include <client/dom/geometry/dom_rect.hpp>
 #include <client/layout/layout_image.hpp>
 
-#include "./geometry/dom_rect.hpp"
 #include "./html_image_element.hpp"
-#include "./document.hpp"
-#include "./browsing_context.hpp"
 
 namespace dom
 {
   using namespace std;
   using namespace builtin_scene;
   using namespace crates::layout2::styles;
+
+  void HTMLImageElement::createdCallback()
+  {
+    HTMLElement::createdCallback();
+
+    if (hasAttribute("width"))
+      width_ = stoi(getAttribute("width"));
+    if (hasAttribute("height"))
+      height_ = stoi(getAttribute("height"));
+  }
 
   void HTMLImageElement::connectedCallback()
   {
@@ -35,9 +45,55 @@ namespace dom
                   });
   }
 
+  void HTMLImageElement::attributeChangedCallback(const string &name, const string &oldValue, const string &newValue)
+  {
+    HTMLElement::attributeChangedCallback(name, oldValue, newValue);
+
+    if (name == "src")
+    {
+      setSrc(newValue);
+    }
+    else if (name == "width")
+    {
+      newValue.empty() ? width_ = 0 : width_ = stoi(newValue);
+      onSizeDidChange();
+    }
+    else if (name == "height")
+    {
+      newValue.empty() ? height_ = 0 : height_ = stoi(newValue);
+      onSizeDidChange();
+    }
+    else if (name == "loading")
+    {
+      if (newValue == "lazy")
+        loading_ = LoadingType::kLoadingLazy;
+      else if (newValue == "eager")
+        loading_ = LoadingType::kLoadingEager;
+      else
+        loading_ = LoadingType::kLoadingEager;
+    }
+    else if (name == "decoding")
+    {
+      if (newValue == "async")
+        decoding_ = DecodingType::kDecodingAsync;
+      else if (newValue == "sync")
+        decoding_ = DecodingType::kDecodingSync;
+      else
+        decoding_ = DecodingType::kDecodingAuto;
+    }
+    else if (name == "ismap")
+    {
+      is_map_ = true;
+    }
+    else if (name == "usemap")
+    {
+      use_map_ = newValue;
+    }
+  }
+
   void HTMLImageElement::loadImage()
   {
-    if (is_src_image_loaded_)
+    if (is_src_image_loading || is_src_image_loaded_)
       return;
 
     is_src_image_loading = true;
@@ -48,7 +104,7 @@ namespace dom
   {
     if (is_src_image_loading ||
         is_src_image_loaded_ ||
-        load_async_handle_.data != this)
+        TR_UNLIKELY(load_async_handle_.data != this))
       return;
 
     // Schedule the image loading on the scripting thread.
@@ -58,6 +114,13 @@ namespace dom
 
   void HTMLImageElement::fetchImage(const string &src)
   {
+    if (src.empty())
+    {
+      is_src_image_loading = false;
+      return;
+    }
+
+    assert(ownerDocument->expired() == false && "The owner document is expired.");
     auto browsingContext = ownerDocument->lock()->browsingContext;
     auto responseCallback = [this](const void *imageData, size_t imageByteLength)
     {
@@ -94,12 +157,15 @@ namespace dom
       }
       catch (const exception &e)
       {
-        cerr << "Failed to decode the image: " << e.what() << endl;
+        cerr << "Failed to decode the image: " << e.what() << endl
+             << "    size: " << image_data_->size() << endl
+             << "    data: " << (image_data_->data() != nullptr ? "valid" : "(empty)") << endl;
         return false;
       }
     }
     else
     {
+      cerr << "Failed to create the image codec, url: " << getSrc() << endl;
       return false;
     }
   }
@@ -111,7 +177,7 @@ namespace dom
     is_src_image_loaded_ = true;
 
     // Dispatch the error event if the image data is null.
-    if (image_data_ == nullopt)
+    if (TR_UNLIKELY(image_data_ == nullopt))
     {
       dispatchEvent(DOMEventType::Error);
       return;
@@ -139,7 +205,6 @@ namespace dom
     }
     else
     {
-      cerr << "Failed to decode the image: " << getSrc() << endl;
       dispatchEvent(DOMEventType::Error);
 
       // TODO(yorkie): paint a placeholder image.
@@ -148,11 +213,38 @@ namespace dom
 
   void HTMLImageElement::onImageDecoded(const SkBitmap &bitmap)
   {
+    // Use natural width and height if the width and height are not set.
+    if (!width_.has_value())
+      width_ = bitmap.width();
+    if (!height_.has_value())
+      height_ = bitmap.height();
+
     if (!connected)
       return;
 
     auto imageBox = dynamic_pointer_cast<client_layout::LayoutImage>(principalBox());
     assert(imageBox != nullptr && "The image box is not created yet.");
     imageBox->setImageBitmap(sk_bitmap_);
+  }
+
+  void HTMLImageElement::onSizeDidChange()
+  {
+    if (sk_bitmap_ == nullptr && validateSizeToMakeBitmap())
+    {
+      auto imageInfo = SkImageInfo::MakeN32Premul(width_.value(),
+                                                  height_.value());
+      // Create a new bitmap with the specified width and height.
+      sk_bitmap_ = make_shared<SkBitmap>();
+      sk_bitmap_->allocPixels(imageInfo);
+    }
+  }
+
+  bool HTMLImageElement::validateSizeToMakeBitmap()
+  {
+    if (!width_.has_value() || !height_.has_value())
+      return false;
+    if (width_.value() <= 0 || height_.value() <= 0)
+      return false;
+    return true;
   }
 }

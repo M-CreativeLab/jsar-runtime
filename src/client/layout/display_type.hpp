@@ -3,6 +3,7 @@
 #include <optional>
 #include <string>
 #include <ostream>
+#include <crates/bindings.hpp>
 
 namespace client_layout
 {
@@ -86,5 +87,21 @@ namespace client_layout
     }
     static DisplayType Flex() { return DisplayType(DisplayOutside::kBlock, DisplayInside::kFlex); }
     static DisplayType Grid() { return DisplayType(DisplayOutside::kBlock, DisplayInside::kGrid); }
+
+    operator crates::layout2::styles::Display() const
+    {
+      using LayoutDisplay = crates::layout2::styles::Display;
+
+      if (isNone())
+        return LayoutDisplay::None();
+      if (isFlex())
+        return LayoutDisplay::Flex();
+      if (isGrid())
+        return LayoutDisplay::Grid();
+
+      // TODO: support other display types.
+      // Default to block display type.
+      return LayoutDisplay::Block();
+    }
   };
 }

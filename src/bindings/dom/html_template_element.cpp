@@ -1,4 +1,4 @@
-#include <client/dom/html_template_element.hpp>
+#include <client/html/html_template_element.hpp>
 #include <client/dom/document_fragment.hpp>
 
 #include "./html_template_element.hpp"

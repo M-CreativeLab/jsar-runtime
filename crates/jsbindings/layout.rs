@@ -39,7 +39,10 @@ impl TaffyNode {
       node: tree
         .handle
         .borrow_mut()
-        .new_leaf(taffy::Style::default())
+        .new_leaf(taffy::Style {
+          display: taffy::Display::Block,
+          ..Default::default()
+        })
         .expect("Failed to create new node"),
     }
   }

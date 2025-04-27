@@ -34,6 +34,11 @@ namespace crates
 
   public:
     /**
+     * Returns if this module has no extension.
+     */
+    inline bool isNone() { return index == holocron::ModuleExtensionIndex::kNone; }
+
+    /**
      * Returns if this module is a text source module.
      */
     inline bool isTextSourceModule()

@@ -59,8 +59,10 @@ namespace builtin_scene::web_renderer
   {
     if (style.hasProperty("background-color"))
     {
+      auto color = style.getPropertyValueAs<client_cssom::types::Color>("background-color");
+
       SkPaint fillPaint;
-      fillPaint.setColor(style.getPropertyValueAs<client_cssom::types::Color>("background-color"));
+      fillPaint.setColor(color);
       fillPaint.setAntiAlias(true);
       fillPaint.setStyle(SkPaint::kFill_Style);
       {
@@ -87,6 +89,94 @@ namespace builtin_scene::web_renderer
     {
       return nullopt;
     }
+  }
+
+  enum class BorderCorner
+  {
+    kTopLeft,
+    kTopRight,
+    kBottomRight,
+    kBottomLeft
+  };
+
+  string to_string(const BorderCorner &corner)
+  {
+    switch (corner)
+    {
+    case BorderCorner::kTopLeft:
+      return "border-top-left-radius";
+    case BorderCorner::kTopRight:
+      return "border-top-right-radius";
+    case BorderCorner::kBottomRight:
+      return "border-bottom-right-radius";
+    case BorderCorner::kBottomLeft:
+      return "border-bottom-left-radius";
+    default:
+      return "";
+    }
+  }
+
+  // Compute the radius for a specific corner of the rounded rectangle.
+  optional<SkVector> computeRoundedRectRadius(const SkRect &rect, const client_cssom::CSSStyleDeclaration &style,
+                                              const BorderCorner &corner)
+  {
+    string name = to_string(corner);
+    if (!style.hasProperty(name))
+      return nullopt;
+
+    auto cornerRadius = style.getPropertyValueAs<client_cssom::types::LengthPercentage>(name);
+    if (cornerRadius.isPercentage())
+    {
+      return SkVector({cornerRadius.computePercentageToPixels(rect.width()),
+                       cornerRadius.computePercentageToPixels(rect.height())});
+    }
+    else if (cornerRadius.isAbsoluteLength())
+    {
+      auto computedPixels = cornerRadius.computeAbsoluteLengthInPixels();
+      return SkVector({computedPixels, computedPixels});
+    }
+    else
+    {
+      return nullopt;
+    }
+  }
+
+  bool shouldDrawRoundedRect(SkRRect &roundedRect, SkRect &rect,
+                             const client_cssom::CSSStyleDeclaration &style)
+  {
+    // Set the radius for all four corners.
+    auto borderTopLeftRadius = computeRoundedRectRadius(rect, style, BorderCorner::kTopLeft);
+    auto borderTopRightRadius = computeRoundedRectRadius(rect, style, BorderCorner::kTopRight);
+    auto borderBottomRightRadius = computeRoundedRectRadius(rect, style, BorderCorner::kBottomRight);
+    auto borderBottomLeftRadius = computeRoundedRectRadius(rect, style, BorderCorner::kBottomLeft);
+
+    // Fast check for all zero radii.
+    if (borderTopLeftRadius == nullopt &&
+        borderTopRightRadius == nullopt &&
+        borderBottomRightRadius == nullopt &&
+        borderBottomLeftRadius == nullopt)
+    {
+      roundedRect.setRect(rect);
+      return false;
+    }
+
+    static SkVector defaultRadius = {0.0f, 0.0f};
+    SkVector radii[4] = {
+        borderTopLeftRadius.value_or(defaultRadius),
+        borderTopRightRadius.value_or(defaultRadius),
+        borderBottomRightRadius.value_or(defaultRadius),
+        borderBottomLeftRadius.value_or(defaultRadius)};
+    roundedRect.setRectRadii(rect, radii);
+
+    // Check if the radii are all zero.
+    for (int i = 0; i < 4; i++)
+    {
+      if (radii[i].x() != 0.0f || radii[i].y() != 0.0f)
+        return true;
+    }
+
+    // All corners have zero radius, so no need to draw rounded rectangle.
+    return false;
   }
 
   void setBorderPaintEffect(SkPaint &paint, std::optional<client_cssom::types::BorderStyleKeyword> borderStyle,
@@ -274,6 +364,8 @@ namespace builtin_scene::web_renderer
       return;
 
     auto canvas = content.canvas();
+    canvas->clear(SK_ColorTRANSPARENT);
+
     float top = 0.0f;
     float left = 0.0f;
 
@@ -281,33 +373,24 @@ namespace builtin_scene::web_renderer
                                    content.width() - 2 * left,
                                    content.height() - 2 * top);
     SkRRect &roundedRect = content.roundedRect_;
-    {
-      // Set the radius for all four corners.
-      float borderTopLeftRadius = style.getPropertyValueAs<float>("border-top-left-radius");
-      float borderTopRightRadius = style.getPropertyValueAs<float>("border-top-right-radius");
-      float borderBottomRightRadius = style.getPropertyValueAs<float>("border-bottom-right-radius");
-      float borderBottomLeftRadius = style.getPropertyValueAs<float>("border-bottom-left-radius");
-      SkVector radii[4] = {
-          {borderTopLeftRadius, borderTopLeftRadius},
-          {borderTopRightRadius, borderTopRightRadius},
-          {borderBottomRightRadius, borderBottomRightRadius},
-          {borderBottomLeftRadius, borderBottomLeftRadius}};
-      roundedRect.setRectRadii(rect, radii);
-    }
+    bool drawRoundedRect = shouldDrawRoundedRect(roundedRect, rect, style);
 
     auto backgroundPaint = drawBackground(canvas, roundedRect, fragment.value(), style);
     if (backgroundPaint.has_value())
     {
       auto fillPaint = backgroundPaint.value();
-      if (fillPaint.getStyle() != SkPaint::kFill_Style)
-        content.setTextureUsing(true);
-      else
+      if (fillPaint.getStyle() == SkPaint::kFill_Style &&
+          !drawRoundedRect) // Disable using texture if the background is not rounded.
       {
         content.setTextureUsing(false); // Disable using texture to decrease the texture memory usage.
 
         auto fillColor = fillPaint.getColor4f();
         content.setBackgroundColor(fillColor.fR, fillColor.fG, fillColor.fB, fillColor.fA);
         content.setOpaque(fillColor.fA == 1.0f);
+      }
+      else
+      {
+        content.setTextureUsing(true);
       }
     }
     if (drawBorders(canvas, roundedRect, fragment.value(), style))
@@ -318,10 +401,13 @@ namespace builtin_scene::web_renderer
   {
     auto imageComponent = getComponent<Image2d>(entity);
     if (imageComponent == nullptr ||
-        !imageComponent->hasImageData() ||
-        !imageComponent->visible())
+        !imageComponent->hasImageData())
+      return;
+
+    // Disable using texture if the image is not visible.
+    if (!imageComponent->visible())
     {
-      content.setTextureUsing(false); // Disable using texture if the image has no data or is not visible.
+      content.setTextureUsing(false);
       return;
     }
 

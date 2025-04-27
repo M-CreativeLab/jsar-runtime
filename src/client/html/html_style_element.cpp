@@ -8,6 +8,9 @@ namespace dom
 
   void HTMLStyleElement::createdCallback()
   {
+    HTMLElement::createdCallback();
+    renderable = false;
+
     if (hasAttribute("blocking"))
       blocking = getAttribute("blocking") != "false";
     if (hasAttribute("disabled"))

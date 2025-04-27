@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <title>Images</title>
-
 </head>
 
-<body>
+<body style="background-color: #fff;">
   <h1>Images:</h1>
-  <img src="https://placekitten.com/200/300" alt="A cute kitten" />
+  <img src="images/jsar-logo-00.png" style="transform:translateZ(10px);height:300px;" />
+  <img id="placeholder" />
 </body>
 
 <script>
@@ -37,22 +37,29 @@
   }
   image.addEventListener('load', onImageLoad, false);
   image.addEventListener('error', onImageError, false);
-  image.src = 'https://t4.ftcdn.net/jpg/06/00/90/17/360_F_600901739_93i8HBQhHjqXyvNBrHWEiJOveQYdMe6m.jpg';
-  console.info(image);
+  image.src = 'https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg';
+  console.info(image.src);
 
   {
-    // Create image via Image constructor
-    const image = new Image();
-    console.info('new Image():', image, image.width, image.height);
+    //Create image via Image constructor
+    const image1 = new Image();
+    console.info('new Image():', image1, image1.width, image1.height);
     const image2 = new Image(100);
-    console.info('new Image(100):', image2, image2.width, image.height);
+    console.info('new Image(100):', image2, image2.width, image2.height);
     const image3 = new Image(100, 200);
     console.info('new Image(100, 200):', image3, image3.width, image3.height);
     image3.addEventListener('load', function() {
-      console.info('new Image(100, 200)', image3.width, image3.height);
+      console.info('[load] new Image(100, 200)', image3.width, image3.height);
     });
-    image3.src = 'https://t4.ftcdn.net/jpg/06/00/90/17/360_F_600901739_93i8HBQhHjqXyvNBrHWEiJOveQYdMe6m.jpg';
+    image3.src = image.src;
   }
+
+  setTimeout(() => {
+    const placeholder = document.getElementById('placeholder');
+    console.info('placeholder:', placeholder);
+    placeholder.setAttribute('src', 'https://ar.rokidcdn.com/web-assets/yodaos-jsar/dist/images/a.jpg');
+    console.info('placeholder.src:', placeholder.src);
+  }, 1000);
 </script>
 
 </html>

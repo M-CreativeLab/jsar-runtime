@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <optional>
 #include <client/builtin_scene/scene.hpp>
 #include <client/builtin_scene/ecs.hpp>
 #include <client/cssom/box_bounding.hpp>
@@ -162,12 +163,21 @@ namespace dom
     // Scrolls an element by the given amount.
     void scrollBy(const ScrollOptions &);
 
-    const client_cssom::CSSStyleDeclaration &adoptedStyle() const { return adoptedStyle_; }
+    inline bool hasAdoptedStyle() const { return adoptedStyle_ != nullptr; }
+    const client_cssom::CSSStyleDeclaration &adoptedStyleRef() const
+    {
+      assert(adoptedStyle_ != nullptr && "The adopted style should not be null.");
+      return *adoptedStyle_;
+    }
+
     std::shared_ptr<const client_layout::LayoutBoxModelObject> principalBox() const { return principalBox_; }
     std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox() { return principalBox_; }
 
   public:
     bool isElement() const override final { return true; }
+
+    bool isHovered() const { return is_hovered_; }
+    bool isFocused() const { return is_focused_; }
 
     /**
      * Returns true if the element's tag name is the same as the given tag name ignoring case.
@@ -204,6 +214,16 @@ namespace dom
      */
     virtual void attributeChangedCallback(const string &name, const string &oldValue, const string &newValue);
     /**
+     * When the element's `classList` is changed.
+     *
+     * @param newClassList The new class list of the element.
+     */
+    virtual void classListChangedCallback(const DOMTokenList &newClassList);
+    /**
+     * When the element action state is changed, such as `:hover`, `:active`, `:focus`, etc.
+     */
+    virtual void actionStateChangedCallback();
+    /**
      * When the element's adopted style is updated.
      */
     virtual void styleAdoptedCallback();
@@ -239,18 +259,25 @@ namespace dom
     void simulateClick(const glm::vec3 &hitPointInWorld);
     void simulateScrollWithOffset(float offsetX, float offsetY);
 
+  private:
+    bool adoptStyleDirectly(const client_cssom::CSSStyleDeclaration &newStyle);
+    bool setActionState(bool &state, bool value);
+
   public:
     std::string id;
     std::string namespaceURI;
     std::string tagName;
     std::string localName;
     std::string prefix;
+
     inline const std::string &className() const { return classList_.value(); }
     inline void setClassName(const std::string &className)
     {
-      classList_ = DOMTokenList(classList_, className);
+      setAttribute("class", className);
     }
+    inline const DOMTokenList &classList() const { return classList_; }
     inline DOMTokenList &classList() { return classList_; }
+
     std::shared_ptr<Element> firstElementChild() const;
     std::shared_ptr<Element> lastElementChild() const;
 
@@ -260,11 +287,13 @@ namespace dom
     client_cssom::CSSStyleDeclaration defaultStyle_;
 
   private:
-    client_cssom::CSSStyleDeclaration adoptedStyle_;
+    std::unique_ptr<client_cssom::CSSStyleDeclaration> adoptedStyle_;
     std::weak_ptr<builtin_scene::Scene> scene_;
     std::vector<std::shared_ptr<client_layout::LayoutBoxModelObject>> boxes_;
     std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox_;
     std::string currentDisplayStr_ = "block";
-    bool is_entered_ = false;
+    bool is_hovered_ = false;
+    bool is_focused_ = false;
+    bool is_active_ = false;
   };
 }

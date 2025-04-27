@@ -20,6 +20,8 @@ namespace dom
     {
       defaultStyle_.setProperty("width", "auto");
       defaultStyle_.setProperty("height", "auto");
+      defaultStyle_.setProperty("min-width", "100vw");
+      defaultStyle_.setProperty("min-height", "100vh");
       defaultStyle_.setProperty("background-color", "transparent");
       renderable = true;
 

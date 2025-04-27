@@ -1,8 +1,9 @@
 #include <client/dom/element.hpp>
-#include <client/dom/html_element.hpp>
 #include <client/dom/document.hpp>
 #include <client/cssom/rules/css_style_rule.hpp>
 #include <client/cssom/selectors/matching.hpp>
+#include <client/html/html_element.hpp>
+
 #include "./window.hpp"
 
 namespace browser

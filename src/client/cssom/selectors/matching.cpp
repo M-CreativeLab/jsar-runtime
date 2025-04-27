@@ -34,12 +34,21 @@ namespace client_cssom::selectors
 
     if (component.isLocalName())
       return strcasecmp(element->tagName.c_str(), component.name().c_str()) == 0;
-    else if (component.isId())
+    if (component.isId())
       return element->id == component.id();
-    else if (component.isClass())
+    if (component.isClass())
       return element->classList().contains(component.name());
-    else
-      return false;
+
+    if (component.isPseudoClass())
+    {
+      if (component.isHover())
+        return element->isHovered();
+      if (component.isFocus())
+        return element->isFocused();
+    }
+
+    // Returns false if the above checks did not match.
+    return false;
   }
 
   bool matchesSelectorComponent(const css2::selectors::Selector &selector, std::vector<css2::selectors::Component>::const_iterator &it,

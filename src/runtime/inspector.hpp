@@ -2,6 +2,8 @@
 
 #include <memory>
 #include <iostream>
+#include <string>
+#include <functional>
 
 #include "./constellation.hpp"
 #include "./inspector_server.hpp"
@@ -23,7 +25,13 @@ public:
   void tick();
 
 private:
-  void onRequest(TrInspectorClient &requestClient);
+  void onRequest(TrInspectorClient &);
+  void handleRequest(std::function<bool(rapidjson::Document &)> handler, TrInspectorClient &);
+
+  // handlers
+  bool getVersion(rapidjson::Document &);
+  bool getContents(rapidjson::Document &);
+  bool getProtocol(rapidjson::Document &);
 
 public:
   TrConstellation *constellation = nullptr;

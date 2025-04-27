@@ -1,8 +1,9 @@
 #include <iostream>
-#include "common/media/message.hpp"
+#include <common/media/message.hpp>
+#include <client/dom/document.hpp>
+#include <client/dom/browsing_context.hpp>
+
 #include "./html_media_element.hpp"
-#include "./document.hpp"
-#include "./browsing_context.hpp"
 
 namespace dom
 {

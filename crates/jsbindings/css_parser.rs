@@ -577,10 +577,37 @@ pub(crate) mod ffi {
     Scope,
     #[cxx_name = "kHost"]
     Host,
+    #[cxx_name = "kPseudoElement"]
+    PseudoElement,
+    #[cxx_name = "kPseudoClass"]
+    PseudoClass,
     #[cxx_name = "kCombinator"]
     Combinator,
     #[cxx_name = "kUnsupported"]
     Unsupported,
+  }
+
+  #[repr(u8)]
+  #[derive(Clone, Debug)]
+  #[namespace = "holocron::css::selectors"]
+  #[cxx_name = "PseudoClassType"]
+  enum PseudoClassType {
+    #[cxx_name = "kHover"]
+    Hover,
+    #[cxx_name = "kActive"]
+    Active,
+    #[cxx_name = "kFocus"]
+    Focus,
+    #[cxx_name = "kFocusVisible"]
+    FocusVisible,
+    #[cxx_name = "kFocusWithin"]
+    FocusWithin,
+    #[cxx_name = "kTargetCurrent"]
+    TargetCurrent,
+    #[cxx_name = "kUnknown"]
+    Unknown,
+    #[cxx_name = "kUnset"]
+    Unset,
   }
 
   /// The combinator type in a selector, such as:
@@ -867,6 +894,10 @@ pub(crate) mod ffi {
     /// Returns the name of the component.
     #[cxx_name = "tryGetComponentName"]
     fn try_get_component_name(component: &PrismComponent) -> String;
+
+    /// Returns the pseudo class type of the component.
+    #[cxx_name = "getComponentPseudoClassType"]
+    fn get_component_pseudo_class_type(component: &PrismComponent) -> PseudoClassType;
 
     /// Returns the component list length.
     #[cxx_name = "getComponentListLength"]
@@ -1320,6 +1351,14 @@ fn try_get_component_name(component: &PrismComponent) -> String {
   }
 }
 
+fn get_component_pseudo_class_type(component: &PrismComponent) -> ffi::PseudoClassType {
+  if let Some(pseudo_class_type) = component.pseudo_class_type {
+    pseudo_class_type
+  } else {
+    ffi::PseudoClassType::Unset
+  }
+}
+
 fn get_component_list_len(list: &PrismComponentList) -> usize {
   list.len()
 }
@@ -1455,6 +1494,7 @@ fn parse_grid_template_component(
 mod tests {
   #[allow(unused_imports)]
   use super::*;
+  use style::properties as StyloProperties;
 
   #[test]
   fn test_parse_color() {
@@ -1516,11 +1556,11 @@ mod tests {
     // Test importance
     assert_eq!(
       pdb.get_importance("color"),
-      StyleProperties::Importance::Normal
+      StyloProperties::Importance::Normal
     );
     assert_eq!(
       pdb.get_importance("width"),
-      StyleProperties::Importance::Important
+      StyloProperties::Importance::Important
     );
 
     // Test set property
@@ -1597,5 +1637,29 @@ mod tests {
     let s = parser.parse_selectors("body > div");
     assert!(s.is_some());
     assert_eq!(s.unwrap().len(), 1);
+
+    // Test pesudo-classes
+    {
+      // Tree-structual pesudo-classes
+      let s = parser.parse_selectors("div:root");
+      assert!(s.is_some());
+
+      let s = parser.parse_selectors("div:empty");
+      assert!(s.is_some());
+      println!("div:empty: {:?}", s.unwrap());
+
+      let s = parser.parse_selectors("div:first-child");
+      assert!(s.is_some());
+      println!("div:first-child: {:?}", s.unwrap());
+
+      // User action
+      let s = parser.parse_selectors("div:hover");
+      assert!(s.is_some());
+      println!("div:hover: {:?}", s.unwrap());
+
+      let s = parser.parse_selectors("div:active");
+      assert!(s.is_some());
+      println!("div:active: {:?}", s.unwrap());
+    }
   }
 }

@@ -89,7 +89,7 @@ namespace client_layout
       return false;
 
     // TODO(yorkie): implement ComputedStyle to improve the performance.
-    auto elementStyle = dom::Node::As<dom::Element>(node())->adoptedStyle();
+    const auto &elementStyle = dom::Node::As<dom::Element>(node())->adoptedStyleRef();
     string direction = elementStyle.hasProperty("direction")
                            ? elementStyle.getPropertyValue("direction")
                            : "ltr";
@@ -111,7 +111,7 @@ namespace client_layout
   bool LayoutBox::hasLeftOverflow() const
   {
     // TODO(yorkie): implement ComputedStyle to improve the performance.
-    auto elementStyle = dom::Node::As<dom::Element>(node())->adoptedStyle();
+    const auto &elementStyle = dom::Node::As<dom::Element>(node())->adoptedStyleRef();
     string direction = elementStyle.hasProperty("direction")
                            ? elementStyle.getPropertyValue("direction")
                            : "ltr";
@@ -217,7 +217,7 @@ namespace client_layout
   {
     if (hasNonVisibleOverflow())
     {
-      auto elementStyle = dom::Node::As<dom::Element>(node())->adoptedStyle();
+      const auto &elementStyle = dom::Node::As<dom::Element>(node())->adoptedStyleRef();
       string overflowXY = elementStyle.hasProperty("overflow")
                               ? elementStyle.getPropertyValue("overflow")
                               : "visible";
@@ -233,7 +233,7 @@ namespace client_layout
   {
     if (hasNonVisibleOverflow())
     {
-      auto elementStyle = dom::Node::As<dom::Element>(node())->adoptedStyle();
+      const auto &elementStyle = dom::Node::As<dom::Element>(node())->adoptedStyleRef();
       string overflowX = elementStyle.hasProperty("overflow-x")
                              ? elementStyle.getPropertyValue("overflow-x")
                              : "visible";
@@ -249,7 +249,7 @@ namespace client_layout
   {
     if (hasNonVisibleOverflow())
     {
-      auto elementStyle = dom::Node::As<dom::Element>(node())->adoptedStyle();
+      const auto &elementStyle = dom::Node::As<dom::Element>(node())->adoptedStyleRef();
       string overflowY = elementStyle.hasProperty("overflow-y")
                              ? elementStyle.getPropertyValue("overflow-y")
                              : "visible";

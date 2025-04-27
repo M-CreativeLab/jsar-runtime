@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <node/v8.h>
 #include <node/node_api.h>
 #include <napi.h>
@@ -10,60 +11,40 @@
 
 namespace dombinding
 {
-  template <typename TNode>
-  concept is_node_type = std::is_same_v<dom::Node, TNode> || std::is_base_of_v<dom::Node, TNode>;
-
-  template <typename TNode>
-    requires is_node_type<TNode>
-  class ArrayIterator : public scripting_base::Iterable<ArrayIterator<TNode>, TNode>
+  /**
+   * A wrapper around the `NodeListApi` class.
+   */
+  class NodeList final : public scripting_base::ObjectWrap<NodeList, dom::NodeListApi>
   {
-  public:
-    ArrayIterator(v8::Isolate *isolate, napi_env napiEnv, const dom::NodeList<TNode> &list)
-        : scripting_base::Iterable<ArrayIterator<TNode>, TNode>(isolate, list),
-          napiEnv_(napiEnv)
-    {
-      assert(napiEnv_ != nullptr && "napi_env must not be null");
-    }
-
-  public:
-    v8::Local<v8::Value> createNextValue(v8::Isolate *isolate, const std::shared_ptr<TNode> value) override;
+    using Base = scripting_base::ObjectWrap<NodeList, dom::NodeListApi>;
 
   private:
-    napi_env napiEnv_;
-  };
+    class NodeListIterator : public scripting_base::Iterable<NodeListIterator, dom::Node>
+    {
+      using scripting_base::Iterable<NodeListIterator, dom::Node>::Iterable;
 
-  /**
-   * A wrapper around the `NodeList` class.
-   *
-   * @tparam TNode The type of the node implementation that must be a subclass of `dom::Node`
-   */
-  template <typename TNode>
-    requires is_node_type<TNode>
-  class NodeList final : public scripting_base::ObjectWrap<NodeList<TNode>>
-  {
-    using T = NodeList<TNode>;
+    public:
+      v8::Local<v8::Value> createNextValue(v8::Isolate *isolate, const std::shared_ptr<dom::Node> value) override;
+    };
 
   public:
-    static Napi::Value NewInstance(Napi::Env env, dom::NodeList<TNode> &list);
-    static inline T *Unwrap(v8::Local<v8::Object> object)
+    static std::string Name()
     {
-      return scripting_base::ObjectWrap<NodeList<TNode>>::Unwrap(object);
+      return "NodeList";
     }
+
+    static void Init(Napi::Env);
+    static Napi::Value NewInstance(Napi::Env, std::shared_ptr<dom::NodeListApi>);
+    static NodeList *Unwrap(v8::Local<v8::Object> object) { return Base::Unwrap(object); }
     static void ConfigureFunctionTemplate(v8::Isolate *isolate, v8::Local<v8::FunctionTemplate> tpl);
 
   public:
-    /**
-     * Creates a new instance of the NodeList class.
-     *
-     * @param isolate The V8 isolate
-     * @param napiEnv The N-API environment that is used to using N-API based functions
-     * @param list The NodeList instance
-     */
-    NodeList(v8::Isolate *isolate, napi_env napiEnv, dom::NodeList<TNode> &list)
-        : scripting_base::ObjectWrap<T>(isolate, "NodeList"),
-          napiEnv_(napiEnv),
-          list_(list)
+    NodeList(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &info,
+             std::shared_ptr<dom::NodeListApi> list)
+        : scripting_base::ObjectWrap<NodeList, dom::NodeListApi>(isolate, info, list)
     {
+      if (!list->isLive())
+        static_list_ = list; // add the reference to the static list to keep it alive
     }
 
   private:
@@ -83,13 +64,23 @@ namespace dombinding
     // Returns the values of the NodeList that follows the iterator protocol.
     inline v8::Local<v8::Value> values() const
     {
-      return scripting_base::ObjectWrap<ArrayIterator<TNode>>::NewInstance(this->currentIsolate_,
-                                                                           napiEnv_,
-                                                                           list_);
+      return NodeListIterator::NewInstance(napi_env_, *this->inner());
+    }
+
+    inline bool hasList() const
+    {
+      auto list = this->inner_handle_.lock();
+      return list != nullptr;
+    }
+
+    inline dom::NodeListApi &listRef() const
+    {
+      auto list = this->inner_handle_.lock();
+      assert(list != nullptr && "list must not be null.");
+      return *list;
     }
 
   private:
-    napi_env napiEnv_;
-    dom::NodeList<TNode> list_;
+    std::shared_ptr<dom::NodeListApi> static_list_ = nullptr;
   };
 }

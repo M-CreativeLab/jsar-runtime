@@ -1,6 +1,7 @@
 #include <iostream>
 #include <common/utility.hpp>
 
+#include "./node_list-inl.hpp"
 #include "./dom_parser.hpp"
 #include "./document.hpp"
 #include "./document_fragment.hpp"
@@ -214,13 +215,13 @@ namespace dom
       return nullptr;
   }
 
-  NodeList<const Node> Node::getAncestors(bool inclusiveSelf, function<bool(const Node &)> ancestorsFilter) const
+  NodeList<Node> Node::getAncestors(bool inclusiveSelf, function<bool(const Node &)> ancestorsFilter)
   {
-    NodeList<const Node> ancestors;
+    NodeList<Node> ancestors;
     if (inclusiveSelf == true)
       ancestors.push_back(shared_from_this());
 
-    shared_ptr<const Node> parent = getParentNode();
+    shared_ptr<Node> parent = getParentNode();
     while (parent != nullptr)
     {
       if (ancestorsFilter == nullptr || ancestorsFilter(*parent))
@@ -264,6 +265,24 @@ namespace dom
     if (ownerDocument.has_value())
       ref = ownerDocument.value().lock();
     return ref;
+  }
+
+  void Node::setNodeValue(std::string newValue)
+  {
+    switch (nodeType)
+    {
+    case NodeType::CDATA_SECTION_NODE:
+    case NodeType::COMMENT_NODE:
+    case NodeType::TEXT_NODE:
+      if (nodeValue_ != newValue)
+      {
+        nodeValue_ = newValue;
+        nodeValueChangedCallback(nodeValue_);
+      }
+      break;
+    default:
+      break;
+    }
   }
 
   void Node::resetFrom(shared_ptr<pugi::xml_node> node, shared_ptr<Document> ownerDocument)
@@ -385,8 +404,8 @@ namespace dom
       // Complete checking the interested mutation observers will be in the `queueRecord` method.
       return observer.isSubtreeObserved();
     };
-    NodeList<const Node> inclusiveAncestors = getAncestors(true, [&isInterestedAncestors](const Node &node)
-                                                           { return node.hasMutationObserver(isInterestedAncestors); });
+    auto inclusiveAncestors = getAncestors(true, [&isInterestedAncestors](const Node &node)
+                                           { return node.hasMutationObserver(isInterestedAncestors); });
 
     // Get the interested mutation observers from the ancestors
     vector<shared_ptr<MutationObserver>> interestedObservers;
@@ -421,7 +440,8 @@ namespace dom
   {
     auto self = shared_from_this();
     child->parentNode = self;
-    child->updateFieldsFromDocument(getOwnerDocumentReference()); // Update the owner document once the child is added.
+    // Update all the child nodes' owner document when a new child is added.
+    child->updateFieldsFromDocument(getOwnerDocumentReference(), true);
     notifyMutationObservers(MutationRecord::OnAddChild(self, child));
 
     // If the parent node is connected, connect the child node as well.
@@ -462,8 +482,10 @@ namespace dom
     if (parent != nullptr)
     {
       depthInTree = parent->depthInTree.value_or(0) + 1;
-      if (parent->renderable == true)
-        renderable = true;
+
+      // Use the parent `renderable` if not set
+      if (!renderable.has_value())
+        renderable = parent->isRenderable();
     }
     else
       depthInTree = 0;
@@ -486,7 +508,7 @@ namespace dom
   {
     assert(connected == false && "The node is connected.");
     depthInTree = nullopt;
-    renderable = false;
+    renderable = nullopt;
     parentNode.reset();
   }
 
@@ -500,12 +522,17 @@ namespace dom
     // The default implementation does nothing.
   }
 
+  void Node::nodeValueChangedCallback(const string &newValue)
+  {
+    // The default implementation does nothing.
+  }
+
   void Node::onInternalUpdated()
   {
     // The default implementation does nothing.
   }
 
-  void Node::updateFieldsFromDocument(optional<shared_ptr<Document>> maybeDocument)
+  void Node::updateFieldsFromDocument(optional<shared_ptr<Document>> maybeDocument, bool updateChildren)
   {
     if (TR_UNLIKELY(!maybeDocument.has_value()))
       return;
@@ -519,6 +546,12 @@ namespace dom
       ownerDocument = document;
     else
       ownerDocument = nullopt;
+
+    if (updateChildren && !childNodes.empty())
+    {
+      for (auto child : childNodes)
+        child->updateFieldsFromDocument(document, true);
+    }
   }
 
   void Node::updateFieldsFromInternal()

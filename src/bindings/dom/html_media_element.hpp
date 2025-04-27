@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <napi.h>
-#include "client/dom/html_media_element.hpp"
+#include <client/html/html_media_element.hpp>
 #include "./html_element-inl.hpp"
 
 namespace dombinding

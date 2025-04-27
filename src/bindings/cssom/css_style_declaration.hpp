@@ -4,65 +4,45 @@
 #include <napi.h>
 #include <common/utility.hpp>
 #include <client/cssom/css_style_declaration.hpp>
+#include <client/scripting_base/v8_object_wrap.hpp>
 
 namespace cssombinding
 {
-  class CSSStyleDeclaration : public Napi::ObjectWrap<CSSStyleDeclaration>
+  class CSSStyleDeclaration : public scripting_base::ObjectWrap<CSSStyleDeclaration,
+                                                                client_cssom::CSSStyleDeclaration>
   {
-  public:
-    static void Init(Napi::Env env);
-    static Napi::Object NewInstance(Napi::Env env, std::shared_ptr<client_cssom::CSSStyleDeclaration> handle);
+    using Base = scripting_base::ObjectWrap<CSSStyleDeclaration, client_cssom::CSSStyleDeclaration>;
+    using Base::ObjectWrap;
 
   public:
-    CSSStyleDeclaration(const Napi::CallbackInfo &info);
-
-  private: // Accessors
-    Napi::Value CssTextGetter(const Napi::CallbackInfo &info);
-    void CssTextSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
-    Napi::Value LengthGetter(const Napi::CallbackInfo &info);
-
-  private: // Methods
-    Napi::Value GetPropertyPriority(const Napi::CallbackInfo &info);
-    Napi::Value GetPropertyValue(const Napi::CallbackInfo &info);
-    Napi::Value Item(const Napi::CallbackInfo &info);
-    void RemoveProperty(const Napi::CallbackInfo &info);
-    void SetProperty(const Napi::CallbackInfo &info);
-    Napi::Value ToString(const Napi::CallbackInfo &info);
-
-  private:
-    /**
-     * Use the handle if it is not expired.
-     *
-     * @tparam R The return type of the function.
-     * @param fn The function to use the handle.
-     * @param defaultValue The default value to return if the handle is expired.
-     * @returns The result of the function.
-     */
-    template <typename R>
-    R useHandle(const std::function<R(client_cssom::CSSStyleDeclaration &)> &fn, const R &defaultValue)
+    static std::string Name()
     {
-      auto handle = handle_.lock();
-      if (handle == nullptr)
-        return defaultValue;
-      return fn(*handle);
-    }
-    /**
-     * Use the handle without return value if it is not expired.
-     *
-     * @param fn The function to use the handle.
-     */
-    void useHandle(const std::function<void(client_cssom::CSSStyleDeclaration &)> &fn)
-    {
-      auto handle = handle_.lock();
-      if (handle == nullptr)
-        return;
-      fn(*handle);
+      return "CSSStyleDeclaration";
     }
 
-  private:
-    std::weak_ptr<client_cssom::CSSStyleDeclaration> handle_;
+    static void Init(Napi::Env);
+    static Napi::Value NewInstance(Napi::Env, std::shared_ptr<client_cssom::CSSStyleDeclaration>);
+    static inline CSSStyleDeclaration *Unwrap(v8::Local<v8::Object> object)
+    {
+      return scripting_base::ObjectWrap<CSSStyleDeclaration>::Unwrap(object);
+    }
+    static void ConfigureFunctionTemplate(v8::Isolate *, v8::Local<v8::FunctionTemplate>);
 
   private:
-    inline static thread_local Napi::FunctionReference *constructor = nullptr;
+    static void GetPropertyPriority(const v8::FunctionCallbackInfo<v8::Value> &args);
+    static void GetPropertyValue(const v8::FunctionCallbackInfo<v8::Value> &args);
+    static void Item(const v8::FunctionCallbackInfo<v8::Value> &args);
+    static void RemoveProperty(const v8::FunctionCallbackInfo<v8::Value> &args);
+    static void SetProperty(const v8::FunctionCallbackInfo<v8::Value> &args);
+    static void ToString(const v8::FunctionCallbackInfo<v8::Value> &args);
+
+    static void PropertyGetter(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value> &info);
+    static void PropertySetter(v8::Local<v8::Name> property, v8::Local<v8::Value> value,
+                               const v8::PropertyCallbackInfo<v8::Value> &info);
+    static void PropertyDeleter(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Boolean> &info);
+    static void PropertyEnumerator(const v8::PropertyCallbackInfo<v8::Array> &info);
+
+  private:
+    napi_env napi_env_;
   };
 }

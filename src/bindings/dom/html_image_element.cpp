@@ -16,8 +16,8 @@ namespace dombinding
             T::InstanceAccessor("src", &T::SrcGetter, &T::SrcSetter),
             T::InstanceAccessor("naturalWidth", &T::NaturalWidthGetter, nullptr),
             T::InstanceAccessor("naturalHeight", &T::NaturalHeightGetter, nullptr),
-            T::InstanceAccessor("width", &T::WidthGetter, nullptr),
-            T::InstanceAccessor("height", &T::HeightGetter, nullptr),
+            T::InstanceAccessor("width", &T::WidthGetter, &T::WidthSetter),
+            T::InstanceAccessor("height", &T::HeightGetter, &T::HeightSetter),
         });
     props.insert(props.end(), added.begin(), added.end());
     return props;
@@ -130,10 +130,50 @@ namespace dombinding
     return Napi::Number::New(info.Env(), node->width());
   }
 
+  void HTMLImageElement::WidthSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (value.IsNumber())
+    {
+      int newWidth = value.As<Napi::Number>().Int32Value();
+      node->setWidth(newWidth);
+    }
+    else if (value.IsNull())
+    {
+      node->setWidth(0);
+    }
+    else
+    {
+      Napi::TypeError::New(env, "The value must be a number or null.").ThrowAsJavaScriptException();
+    }
+  }
+
   Napi::Value HTMLImageElement::HeightGetter(const Napi::CallbackInfo &info)
   {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     return Napi::Number::New(info.Env(), node->height());
+  }
+
+  void HTMLImageElement::HeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
+  {
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (value.IsNumber())
+    {
+      int newHeight = value.As<Napi::Number>().Int32Value();
+      node->setHeight(newHeight);
+    }
+    else if (value.IsNull())
+    {
+      node->setHeight(0);
+    }
+    else
+    {
+      Napi::TypeError::New(env, "The value must be a number or null.").ThrowAsJavaScriptException();
+    }
   }
 }

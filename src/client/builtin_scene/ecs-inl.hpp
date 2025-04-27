@@ -7,9 +7,9 @@ namespace builtin_scene::ecs
   template <typename T>
   void PluginsManager::registerPlugin()
   {
-    PluginName name = typeid(T).name();
+    static const PluginName name = typeid(T);
     if (pluginIds_.find(name) != pluginIds_.end())
-      throw std::runtime_error("Plugin(" + std::string(name) + ") already registered.");
+      throw std::runtime_error("Plugin(" + std::string(name.name()) + ") already registered.");
     pluginIds_.insert({name, nextPluginId_});
     plugins_.insert({name, std::make_shared<T>()});
     nextPluginId_ += 1;
@@ -18,49 +18,49 @@ namespace builtin_scene::ecs
   template <typename T>
   uint32_t PluginsManager::getPluginId()
   {
-    PluginName name = typeid(T).name();
-    if (pluginIds_.find(name) == pluginIds_.end())
-      throw std::runtime_error("Plugin(" + std::string(name) + ") not found.");
-    return pluginIds_[name];
+    static const PluginName name = typeid(T);
+    auto it = pluginIds_.find(name);
+    if (TR_UNLIKELY(it == pluginIds_.end()))
+      throw std::runtime_error("Plugin(" + std::string(name.name()) + ") not found.");
+    return it->second;
   }
 
   template <typename T>
   std::shared_ptr<T> PluginsManager::getPlugin()
   {
-    PluginName name = typeid(T).name();
-    if (plugins_.find(name) == plugins_.end())
-      throw std::runtime_error("Plugin(" + std::string(name) + ") not found.");
-    return std::dynamic_pointer_cast<T>(plugins_[name]);
+    static const PluginName name = typeid(T);
+    auto it = plugins_.find(name);
+    if (TR_UNLIKELY(it == plugins_.end()))
+      throw std::runtime_error("Plugin(" + std::string(name.name()) + ") not found.");
+    return std::static_pointer_cast<T>(it->second);
   }
 
   template <typename ResourceType>
   void ResourcesManager::addResource(std::shared_ptr<ResourceType> resource)
   {
-    ResourceName name = typeid(ResourceType).name();
+    static const ResourceName name = typeid(ResourceType);
     if (resources_.find(name) != resources_.end())
-      throw std::runtime_error("Resource(" + std::string(name) + ") already registered.");
+      throw std::runtime_error("Resource(" + std::string(name.name()) + ") already registered.");
     resources_.insert({name, resource});
   }
 
   template <typename ResourceType>
   void ResourcesManager::removeResource()
   {
-    ResourceName name = typeid(ResourceType).name();
+    static const ResourceName name = typeid(ResourceType);
     if (resources_.find(name) == resources_.end())
-      throw std::runtime_error("Resource(" + std::string(name) + ") not found.");
+      throw std::runtime_error("Resource(" + std::string(name.name()) + ") not found.");
     resources_.erase(name);
   }
 
   template <typename ResourceType>
   std::shared_ptr<ResourceType> ResourcesManager::getResource()
   {
-    if (resources_.empty())
+    static const ResourceName name = typeid(ResourceType);
+    auto it = resources_.find(name);
+    if (TR_UNLIKELY(it == resources_.end()))
       return nullptr;
-
-    ResourceName name = typeid(ResourceType).name();
-    if (resources_.find(name) == resources_.end())
-      return nullptr;
-    return std::dynamic_pointer_cast<ResourceType>(resources_[name]);
+    return std::static_pointer_cast<ResourceType>(it->second);
   }
 
   template <typename T>
@@ -122,9 +122,9 @@ namespace builtin_scene::ecs
   template <typename ComponentType>
   void ComponentsManager::registerComponent()
   {
-    ComponentName name = typeid(ComponentType).name();
+    static const ComponentName name = typeid(ComponentType);
     if (componentIds_.find(name) != componentIds_.end())
-      throw std::runtime_error("Component(" + std::string(name) + ") already registered.");
+      throw std::runtime_error("Component(" + std::string(name.name()) + ") already registered.");
 
     componentIds_.insert({name, nextComponentId_});
     componentSets_.insert({name, ComponentSet<ComponentType>::Make()});
@@ -134,10 +134,11 @@ namespace builtin_scene::ecs
   template <typename ComponentType>
   ComponentId ComponentsManager::getComponentId()
   {
-    ComponentName name = typeid(ComponentType).name();
-    if (componentIds_.find(name) == componentIds_.end())
-      throw std::runtime_error("Component(" + std::string(name) + ") not found.");
-    return componentIds_[name];
+    static const ComponentName name = typeid(ComponentType);
+    auto it = componentIds_.find(name);
+    if (it == componentIds_.end())
+      throw std::runtime_error("Component(" + std::string(name.name()) + ") not found.");
+    return it->second;
   }
 
   template <typename... ComponentTypeList>

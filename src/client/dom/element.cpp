@@ -2,15 +2,15 @@
 #include <common/utility.hpp>
 #include <client/browser/window.hpp>
 #include <client/builtin_scene/ecs-inl.hpp>
+#include <client/html/html_element.hpp>
+#include <client/html/all_html_elements.hpp>
 
 #include "./events/mouse_event.hpp"
 #include "./events/pointer_event.hpp"
 #include "./element.hpp"
 #include "./document.hpp"
 #include "./document_fragment.hpp"
-#include "./html_element.hpp"
 #include "./attr.hpp"
-#include "./all_html_elements.hpp"
 
 namespace dom
 {
@@ -109,7 +109,9 @@ namespace dom
   void Element::connectedCallback()
   {
     Node::connectedCallback();
+
     initCSSBoxes();
+    adoptStyleDirectly(defaultStyle_);
   }
 
   void Element::disconnectedCallback()
@@ -174,18 +176,36 @@ namespace dom
   void Element::attributeChangedCallback(const string &name, const string &oldValue, const string &newValue)
   {
     if (name == "id")
+    {
       id = newValue;
-    else if (name == "class")
-      classList_ = DOMTokenList(newValue, {}, [this](const DOMTokenList &list)
-                                { setAttribute("class", list.value(), false /* mute */); });
+      return;
+    }
+
+    if (name == "class")
+    {
+      auto onClassListChanged = [this](const DOMTokenList &list)
+      {
+        setAttribute("class", list.value(), false /* mute */);
+        classListChangedCallback(list);
+      };
+      classList_ = DOMTokenList(newValue, {}, onClassListChanged);
+    }
+  }
+
+  void Element::classListChangedCallback(const DOMTokenList &newClassList)
+  {
+  }
+
+  void Element::actionStateChangedCallback()
+  {
   }
 
   void Element::styleAdoptedCallback()
   {
     auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(true);
-    if (ownerDocument != nullptr && adoptedStyle_.hasProperty("display"))
+    if (ownerDocument != nullptr && adoptedStyle_->hasProperty("display"))
     {
-      auto newDisplay = adoptedStyle_.getPropertyValue("display");
+      auto newDisplay = adoptedStyle_->getPropertyValue("display");
       if (newDisplay != currentDisplayStr_)
       {
         currentDisplayStr_ = newDisplay;
@@ -197,7 +217,7 @@ namespace dom
   void Element::initCSSBoxes()
   {
     auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
-    if (ownerDocument != nullptr && renderable == true)
+    if (ownerDocument != nullptr && isRenderable())
     {
       resetCSSBoxes(true); // Clear the existing boxes.
 
@@ -217,11 +237,11 @@ namespace dom
   {
     assert(principalBox_ != nullptr &&
            "The principal box should not be null when reinitializing CSS boxes.");
-    assert(renderable == true &&
+    assert(isRenderable() &&
            "The element should be renderable when reinitializing CSS boxes.");
 
     auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
-    assert(ownerDocument != nullptr && renderable == true &&
+    assert(ownerDocument != nullptr && isRenderable() &&
            "The owner document is not set when reinitializing CSS boxes.");
     {
       auto &layoutView = ownerDocument->layoutViewRef();
@@ -279,7 +299,7 @@ namespace dom
 
     shared_ptr<HTMLDocument> ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
     if (!skipCheck &&
-        (TR_UNLIKELY(ownerDocument == nullptr) || renderable == false))
+        (TR_UNLIKELY(ownerDocument == nullptr) || !isRenderable()))
       return;
 
     assert(ownerDocument != nullptr && "The owner document is not set when resetting CSS boxes.");
@@ -295,20 +315,11 @@ namespace dom
     client_cssom::CSSStyleDeclaration newStyle = style;
     newStyle.update(defaultStyle_, true); // Update the default style if these properties are not present.
 
-    if (adoptedStyle_.equals(newStyle)) // Skip if the style is the same.
+    if (adoptedStyle_ != nullptr &&      // Pass if `adoptedStyle_` is not set.
+        adoptedStyle_->equals(newStyle)) // Skip if the style is the same.
       return false;
 
-    adoptedStyle_ = newStyle;
-    styleAdoptedCallback();
-
-    // Update the layout node style.
-    bool updated = false;
-    for (auto box : boxes_)
-    {
-      if (box->setStyle(adoptedStyle_))
-        updated = true;
-    }
-    return updated;
+    return adoptStyleDirectly(newStyle);
   }
 
   void Element::useSceneWithCallback(const function<void(builtin_scene::Scene &)> &callback)
@@ -626,26 +637,27 @@ namespace dom
 
   void Element::simulateMouseOver(const glm::vec3 &hitPointInWorld)
   {
+    setActionState(is_hovered_, true);
     dispatchEventInternal(events::MouseEvent::MouseOver());
     dispatchEventInternal(events::PointerEvent::PointerOver());
   }
 
   void Element::simulateMouseEnter(const glm::vec3 &hitPointInWorld)
   {
-    if (is_entered_)
+    if (is_hovered_)
       return;
+    setActionState(is_hovered_, true);
 
-    is_entered_ = true;
     dispatchEventInternal(events::MouseEvent::MouseEnter());
     dispatchEventInternal(events::PointerEvent::PointerEnter());
   }
 
   void Element::simulateMouseLeave(const glm::vec3 &hitPointInWorld)
   {
-    if (!is_entered_)
+    if (!is_hovered_)
       return;
+    setActionState(is_hovered_, false);
 
-    is_entered_ = false;
     dispatchEventInternal(events::MouseEvent::MouseLeave());
     dispatchEventInternal(events::PointerEvent::PointerLeave());
   }
@@ -673,6 +685,35 @@ namespace dom
 
     layoutBox->scrollBy(offset);
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::Scroll));
+  }
+
+  bool Element::setActionState(bool &state, bool value)
+  {
+    if (state != value)
+    {
+      state = value;
+      actionStateChangedCallback();
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  bool Element::adoptStyleDirectly(const client_cssom::CSSStyleDeclaration &newStyle)
+  {
+    adoptedStyle_ = make_unique<client_cssom::CSSStyleDeclaration>(newStyle);
+    styleAdoptedCallback();
+
+    // Update the layout node style.
+    bool updated = false;
+    for (auto box : boxes_)
+    {
+      if (box->setStyle(*adoptedStyle_))
+        updated = true;
+    }
+    return updated;
   }
 
   std::shared_ptr<Element> Element::firstElementChild() const

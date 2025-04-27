@@ -194,8 +194,8 @@ namespace dom
      * @param ancestorsFilter The filter function to filter the node.
      * @returns a `NodeList` that contains the result ancestors.
      */
-    NodeList<const Node> getAncestors(bool inclusiveSelf,
-                                      std::function<bool(const Node &)> ancestorsFilter = nullptr) const;
+    NodeList<Node> getAncestors(bool inclusiveSelf,
+                                std::function<bool(const Node &)> ancestorsFilter = nullptr);
     /**
      * @returns The text content of the node and its descendants.
      */
@@ -273,14 +273,24 @@ namespace dom
     bool isElementOrText() const { return isElement() || isText(); }
 
     // If this node can be rendered.
-    virtual bool isRenderable() const { return renderable; }
+    virtual bool isRenderable() const { return renderable.value_or(false); }
+
+    /**
+     * Set the node value.
+     *
+     * `Comment`: set the content of the comment.
+     * `Text`: set the content of the text node.
+     *
+     * @param newValue The new value to set.
+     */
+    void setNodeValue(std::string newValue);
 
     /**
      * A `Node` can be enabled to use a custom geometry for rendering, such as a custom shader program.
      *
      * A type of this node will use different rendering strategies, such as using the custom shader program instead
      * of the default instanced rendering, but both of them are sharing the same layout system.
-     * 
+     *
      * @returns `true` if this node should use a custom geometry, otherwise `false`.
      */
     virtual bool enableCustomGeometry() const
@@ -295,6 +305,7 @@ namespace dom
      * @returns True if the node has child nodes, otherwise false.
      */
     inline bool hasChildNodes() const { return childNodes.size() > 0; }
+
     /**
      * The `isEqualNode()` method of the `Node` interface tests whether two nodes are equal. Two nodes are equal when they have the
      * same type, defining characteristics (for elements, this would be their ID, number of children, and so forth), its attributes
@@ -308,6 +319,7 @@ namespace dom
       // TODO: Implement the `isEqualNode` method.
       return isSameNode(other);
     }
+
     /**
      * It tests whether two nodes are the same (in other words, whether they reference the same object).
      *
@@ -318,6 +330,7 @@ namespace dom
     {
       return this->uid == other.uid;
     }
+
     /**
      * @returns The node's depth in the tree.
      */
@@ -467,13 +480,19 @@ namespace dom
      */
     virtual void afterLoadedCallback();
     /**
+     * Get called each time the `nodeValue` is changed.
+     *
+     * @param newValue The new value of the node.
+     */
+    virtual void nodeValueChangedCallback(const std::string &newValue);
+    /**
      * This method is called when the internal `pugi::xml_node` object is updated.
      */
     virtual void onInternalUpdated();
 
   private:
     // Update the fields from the document, such as the base URI, owner document, etc.
-    void updateFieldsFromDocument(std::optional<std::shared_ptr<Document>> document);
+    void updateFieldsFromDocument(std::optional<std::shared_ptr<Document>> document, bool updateChildren = false);
     // Update the fields from the internal `pugi::xml_node` object, such as the node type, node name, etc.
     void updateFieldsFromInternal();
     // Update the tree fields, such as the child nodes, first child, last child, etc.
@@ -515,19 +534,6 @@ namespace dom
         return std::nullopt;
       }
     }
-    inline void nodeValue(std::string newValue)
-    {
-      switch (nodeType)
-      {
-      case NodeType::CDATA_SECTION_NODE:
-      case NodeType::COMMENT_NODE:
-      case NodeType::TEXT_NODE:
-        nodeValue_ = newValue;
-        break;
-      default:
-        break;
-      }
-    }
     /**
      * Returns the `Document` that this node belongs to. If the node is itself a document, returns null.
      */
@@ -562,7 +568,7 @@ namespace dom
     std::optional<uint32_t> depthInTree = std::nullopt;
     std::string nodeValue_;
     // If this node could be rendered, `false` by default.
-    bool renderable = false;
+    std::optional<bool> renderable = std::nullopt;
     // The mutation observers of this node.
     std::vector<std::shared_ptr<MutationObserver>> mutationObservers;
 

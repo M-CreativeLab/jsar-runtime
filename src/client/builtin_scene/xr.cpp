@@ -75,9 +75,11 @@ namespace builtin_scene
     if (!sessionRef().inputSources.has_value())
       return nullopt;
 
-    for (auto &inputSource : sessionRef().inputSources.value())
+    const auto &inputSources = sessionRef().inputSources.value();
+    for (const auto &inputSource : inputSources)
     {
-      if (inputSource->targetRayMode() == XRTargetRayMode::TrackedPointer)
+      auto mode = inputSource->targetRayMode();
+      if (mode == XRTargetRayMode::TrackedPointer || mode == XRTargetRayMode::Screen)
       {
         shared_ptr<XRTargetRayOrGripSpace> raySpace = inputSource->targetRaySpace();
         XRRigidTransform rayTransform = current_frame_->getPose(raySpace, reference_space_)->transform;

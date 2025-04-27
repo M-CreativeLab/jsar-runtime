@@ -444,23 +444,24 @@ namespace builtin_scene
     if (parentComponent != nullptr)
       parentTransform = getComponent<Transform>(parentComponent->parent());
 
-    glm::mat4 matToUpdate = transform.matrix();
+    // The world-space transformation matrix for this entity.
+    glm::mat4 baseMatrixInWorldSpace = transform.matrix();
 
-    // Handle the post transform
+    // Compute the final post transform.
+    //
+    // The post transform is updated by the CSS `transform` project, it's stored as reference-space. The following block
+    // is used to compute the final post transform in the node chain from the current node.
     glm::mat4 postMat = glm::mat4(1.0f);
-    if (parentTransform != nullptr && parentTransform->hasPostTransform())
     {
-      auto &parentPostTransform = parentTransform->getOrInitPostTransform();
-      postMat = parentPostTransform.accumulatedMatrix();
-    }
-    if (transform.hasPostTransform())
-    {
+      if (parentTransform != nullptr)
+        postMat = parentTransform->getOrInitPostTransform().accumulatedMatrix();
       auto &postTransform = transform.getOrInitPostTransform();
       postMat = postTransform.matrix() * postMat;
       postTransform.setAccumulatedMatrix(postMat);
     }
-    matToUpdate = postMat * matToUpdate;
-    return matToUpdate;
+
+    // Returns the transformation matrix is the world-space base matrix with the post transformation.
+    return postMat * baseMatrixInWorldSpace;
   }
 
   void RenderSystem::tryUpdateInstanceDataForInstancedMesh(const Mesh3d &meshComponent)
@@ -468,34 +469,36 @@ namespace builtin_scene
     if (!meshComponent.isInstancedMesh())
       return;
 
-    auto &instancedMesh = meshComponent.getHandleCheckedAsRef<InstancedMeshBase>();
+    InstancedMeshBase &instancedMesh = meshComponent.getHandleCheckedAsRef<InstancedMeshBase>();
     auto updateInstanceData = [this](ecs::EntityId id, Instance &instance) -> bool
     {
       bool hasChanged = false;
-      if (hasComponent<Transform>(id))
+      auto transformComponent = getComponent<Transform>(id);
+      auto webContentComponent = getComponent<WebContent>(id);
+
+      if (TR_LIKELY(transformComponent != nullptr))
       {
         auto currentMatrix = getTransformationMatrix(id);
         instance.setTransform(currentMatrix, hasChanged);
-        getComponentChecked<Transform>(id).setComputedMatrix(currentMatrix);
+        transformComponent->setComputedMatrix(currentMatrix);
       }
-      if (hasComponent<WebContent>(id))
+      if (TR_LIKELY(webContentComponent != nullptr))
       {
-        auto &webContent = getComponentChecked<WebContent>(id);
         if (instance.setEnabled(true))
           hasChanged = true;
-        if (instance.setOpaque(webContent.isOpaque()))
+        if (instance.setOpaque(webContentComponent->isOpaque()))
           hasChanged = true;
 
+        auto elementComponent = getComponent<hierarchy::Element>(id);
         // Only transparent content needs to update it's z-index
-        if (webContent.isTransparent() && hasComponent<hierarchy::Element>(id))
+        if (webContentComponent->isTransparent() && elementComponent != nullptr)
         {
-          auto &element = getComponentChecked<hierarchy::Element>(id);
-          auto index = element.node->depth(); // FIXME: using the node depth as the z-index currently.
+          auto index = elementComponent->node->depth(); // FIXME: using the node depth as the z-index currently.
           if (instance.setZIndex(index))
             hasChanged = true;
         }
 
-        auto textureRect = webContent.textureRect();
+        auto textureRect = webContentComponent->textureRect();
         if (textureRect != nullptr)
         {
           instance.setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), hasChanged);
@@ -506,7 +509,7 @@ namespace builtin_scene
         }
         else
         {
-          instance.setColor(webContent.backgroundColor(), hasChanged);
+          instance.setColor(webContentComponent->backgroundColor(), hasChanged);
           instance.disableTexture(hasChanged);
         }
       }
@@ -530,7 +533,7 @@ namespace builtin_scene
 
     renderVolumeMask(renderer, renderTarget);
     onBeforeRender(renderer, renderTarget);
-    for (auto root : roots)
+    for (const auto &root : roots)
       traverseAndRender(root, renderer, renderTarget);
     onAfterRender(renderer, renderTarget);
   }
@@ -581,7 +584,7 @@ namespace builtin_scene
     auto children = getComponent<hierarchy::Children>(entity);
     if (children != nullptr)
     {
-      for (auto child : children->children())
+      for (const auto &child : children->children())
         traverseAndRender(child, renderer, renderTarget);
     }
   }

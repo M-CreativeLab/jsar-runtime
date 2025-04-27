@@ -69,12 +69,18 @@ namespace dombinding
       jsThis.Set("target", Node::NewInstance(env, targetNode));
 
     if (!record->addedNodes.empty())
-      jsThis.Set("addedNodes", NodeList<dom::Node>::NewInstance(env, record->addedNodes));
+    {
+      auto nodes = make_unique<dom::NodeList<dom::Node>>(record->addedNodes);
+      jsThis.Set("addedNodes", NodeList::NewInstance(env, move(nodes)));
+    }
     else
       jsThis.Set("addedNodes", env.Null());
 
     if (!record->removedNodes.empty())
-      jsThis.Set("removedNodes", NodeList<dom::Node>::NewInstance(env, record->removedNodes));
+    {
+      auto nodes = make_unique<dom::NodeList<dom::Node>>(record->removedNodes);
+      jsThis.Set("removedNodes", NodeList::NewInstance(env, move(nodes)));
+    }
     else
       jsThis.Set("removedNodes", env.Null());
 

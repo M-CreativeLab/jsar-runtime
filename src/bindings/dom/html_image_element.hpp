@@ -1,6 +1,7 @@
 #pragma once
 
-#include "client/dom/html_image_element.hpp"
+#include <client/html/html_image_element.hpp>
+
 #include "./html_element-inl.hpp"
 #include "../canvas/image_source.hpp"
 
@@ -25,7 +26,9 @@ namespace dombinding
     Napi::Value NaturalWidthGetter(const Napi::CallbackInfo &info);
     Napi::Value NaturalHeightGetter(const Napi::CallbackInfo &info);
     Napi::Value WidthGetter(const Napi::CallbackInfo &info);
+    void WidthSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value HeightGetter(const Napi::CallbackInfo &info);
+    void HeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value);
 
   public:
     static thread_local Napi::FunctionReference *constructor;

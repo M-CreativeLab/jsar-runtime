@@ -1,8 +1,8 @@
 #include <vector>
 #include <client/cssom/types/transform.hpp>
 #include <client/dom/node.hpp>
-#include <client/dom/all_html_elements.hpp>
 #include <client/dom/document-inl.hpp>
+#include <client/html/all_html_elements.hpp>
 
 #include "./layout_object.hpp"
 #include "./layout_block.hpp"
@@ -67,7 +67,7 @@ namespace client_layout
     if (element == nullptr)
       return false;
 
-    auto elementStyle = element->adoptedStyle();
+    const auto &elementStyle = element->adoptedStyleRef();
     if (elementStyle.hasProperty("clip"))
     {
       auto clip = elementStyle.getPropertyValue("clip");
@@ -94,7 +94,7 @@ namespace client_layout
     if (!hasNonVisibleOverflow())
       return false;
 
-    auto elementStyle = element->adoptedStyle();
+    const auto &elementStyle = element->adoptedStyleRef();
 
     // An overflow value of `visible` or `clip` means that the element is a scroll container, all other values result
     // in a scrollable container. Also note that if `visible` or `clip` is set on one axis, then the other axis must be
@@ -130,25 +130,30 @@ namespace client_layout
 
   shared_ptr<LayoutView> LayoutObject::view()
   {
-    if (isLayoutView())
-      return dynamic_pointer_cast<LayoutView>(shared_from_this());
-    else
-      return document()->layoutView();
+    return isLayoutView()
+               ? dynamic_pointer_cast<LayoutView>(shared_from_this())
+               : document()->layoutView();
   }
 
   LayoutView &LayoutObject::viewRef()
   {
-    return document()->layoutViewRef();
+    return isLayoutView()
+               ? dynamic_cast<LayoutView &>(*this)
+               : document()->layoutViewRef();
   }
 
   shared_ptr<const LayoutView> LayoutObject::view() const
   {
-    return document()->layoutView();
+    return isLayoutView()
+               ? dynamic_pointer_cast<const LayoutView>(shared_from_this())
+               : document()->layoutView();
   }
 
   const LayoutView &LayoutObject::viewRef() const
   {
-    return document()->layoutViewRef();
+    return isLayoutView()
+               ? dynamic_cast<const LayoutView &>(*this)
+               : document()->layoutViewRef();
   }
 
   void LayoutObject::useSceneWithCallback(const function<void(builtin_scene::Scene &)> &callback)
@@ -231,13 +236,13 @@ namespace client_layout
     {
       auto element = dom::Node::As<dom::Element>(node());
       if (element != nullptr)
-        return element->adoptedStyle();
+        return element->adoptedStyleRef();
     }
     else if (node()->isText())
     {
       auto textNode = dom::Node::As<dom::Text>(node());
       if (textNode != nullptr)
-        return textNode->adoptedStyle();
+        return textNode->adoptedStyleRef();
     }
     return nullopt;
   }
@@ -248,39 +253,47 @@ namespace client_layout
     if (node()->isElement())
     {
       auto element = dom::Node::As<dom::Element>(node());
-      return element->adoptedStyle();
+      return element->adoptedStyleRef();
     }
     else if (node()->isText())
     {
       auto textNode = dom::Node::As<dom::Text>(node());
-      return textNode->adoptedStyle();
+      return textNode->adoptedStyleRef();
     }
     assert(false && "Unrachable");
   }
 
-  const Fragment LayoutObject::fragment() const
+  const Fragment LayoutObject::computeOrGetFragment(FragmentDifference &diff) const
   {
     Fragment nodeFragment = formattingContext_->liveFragment();
     if (isText())
     {
       auto layoutText = dynamic_pointer_cast<const LayoutText>(shared_from_this());
-      if (layoutText != nullptr && layoutText->plainTextLength() == 0)
+      assert(layoutText != nullptr && "Text node must be a LayoutText.");
+      if (layoutText->isEmptyText())
         nodeFragment = Fragment::None(); // Set the fragment to none if a text and empty content.
     }
 
     assert(formattingContext_ != nullptr && "Formatting context must be set.");
     if (parent() == nullptr)
     {
-      return nodeFragment;
+      if (diff.enabled)
+      {
+        diff.changed = mutateAccumulatedFragment(nodeFragment);
+        return accumulated_fragment_.value();
+      }
+      else
+        return nodeFragment;
     }
     else
     {
-      Fragment baseFragment = parent()->fragment();
+      auto parentBox = parent();
+      Fragment baseFragment = parentBox->accumulatedFragment();
 
       // Move the fragment by the scroll offset if the object is a scroll container.
-      if (parent()->isBox() && parent()->isScrollContainer())
+      if (parentBox->isBox() && parentBox->isScrollContainer())
       {
-        auto scrollableArea = dynamic_pointer_cast<const LayoutBox>(parent())->getScrollableArea();
+        auto scrollableArea = dynamic_pointer_cast<const LayoutBox>(parentBox)->getScrollableArea();
         if (scrollableArea != nullptr)
         {
           auto offset = scrollableArea->getScrollOffset();
@@ -289,8 +302,23 @@ namespace client_layout
       }
 
       // Returns the fragment with the parent's offset.
-      return baseFragment.position(nodeFragment);
+      auto &finalFragment = baseFragment.position(nodeFragment);
+      if (diff.enabled)
+      {
+        diff.changed = mutateAccumulatedFragment(finalFragment);
+        return accumulated_fragment_.value();
+      }
+      else
+      {
+        return finalFragment;
+      }
     }
+  }
+
+  const Fragment LayoutObject::fragment() const
+  {
+    auto _ = FragmentDifference::Disabled();
+    return computeOrGetFragment(_);
   }
 
   bool LayoutObject::isDescendantOf(shared_ptr<LayoutObject> object) const
@@ -384,9 +412,8 @@ namespace client_layout
     }
 
     // Update the layout style in formatting context.
-    bool success = formattingContext_ == nullptr
-                       ? false
-                       : formattingContext_->setLayoutStyle(style);
+    crates::layout2::LayoutStyle layoutStyle = style;
+    bool success = formattingContext_->setLayoutStyle(layoutStyle);
 
     styleDidChange();
     return success;
@@ -425,6 +452,19 @@ namespace client_layout
     if (resized == true)
       sizeDidChange();
     return resized;
+  }
+
+  bool LayoutObject::mutateAccumulatedFragment(const Fragment &f) const
+  {
+    if (TR_UNLIKELY(!accumulated_fragment_.has_value()))
+    {
+      accumulated_fragment_ = f;
+      return true;
+    }
+
+    bool isChanged = accumulated_fragment_.value() != f;
+    accumulated_fragment_ = f;
+    return isChanged;
   }
 
   bool LayoutObject::computeLayout(const ConstraintSpace &avilableSpace)
@@ -620,7 +660,7 @@ namespace client_layout
 
         // Add `WebContent` component to the entity.
         auto fragment = this->fragment();
-        scene.addComponent(entity, WebContent(string(this->name()),
+        scene.addComponent(entity, WebContent(string(this->debugName()),
                                               fragment.contentWidth(),
                                               fragment.contentHeight()));
       }
@@ -663,6 +703,28 @@ namespace client_layout
         }
       }
     }
+
+    // Preprocess the length properties to convert the viewport-based relative length to pixels.
+    // Such as "width: 50vw", "height: 50vh", etc.
+    glm::vec3 viewport = viewRef().viewport.xyz();
+#define PREPROCESS_LENGTH(NAME)                                                   \
+  if (newStyle.hasProperty(NAME))                                                 \
+  {                                                                               \
+    auto length = newStyle.getPropertyValueAs<client_cssom::types::Length>(NAME); \
+    if (length.isViewportBasedRelativeLength())                                   \
+    {                                                                             \
+      auto lengthInPixels = length.computeViewportBasedLengthInPixels(viewport);  \
+      newStyle.setProperty(NAME, to_string(lengthInPixels) + "px");               \
+    }                                                                             \
+  }
+    PREPROCESS_LENGTH("width")
+    PREPROCESS_LENGTH("height")
+    PREPROCESS_LENGTH("min-width")
+    PREPROCESS_LENGTH("min-height")
+    PREPROCESS_LENGTH("max-width")
+    PREPROCESS_LENGTH("max-height")
+
+#undef PREPROCESS_LENGTH
   }
 
   void LayoutObject::styleDidChange()

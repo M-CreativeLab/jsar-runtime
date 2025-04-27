@@ -9,6 +9,7 @@ namespace dom
   using namespace std;
   using namespace std::placeholders;
   using namespace builtin_scene;
+  using namespace client_layout;
 
   RenderHTMLDocument::RenderHTMLDocument(HTMLDocument *document)
       : ecs::System(),
@@ -46,18 +47,18 @@ namespace dom
     // Step 2: Compute the layout from the root element.
     auto layoutView = document_->layoutView();
     layoutView->computeLayout(targetSpace());
-    layoutView->debugPrint("After layout", client_layout::LayoutView::DebugOptions::Default()
-                                               .withFormattingContext(false)
-                                               .withDisabled());
+    layoutView->debugPrint("After layout", LayoutView::DebugOptions::Default()
+                                               .withFormattingContext(true)
+                                               .withDisabled(true));
 
     // Step 3: Visit the layout view to render CSS boxes.
-    client_layout::LayoutViewVisitor::visit(*layoutView);
+    LayoutViewVisitor::visit(*layoutView);
 
     // Step 4: Do hit test and dispatch the related events.
     DocumentEventDispatcher::hitTestAndDispatchEvents();
   }
 
-  bool RenderHTMLDocument::onVisitObject(client_layout::LayoutObject &object, int depth)
+  bool RenderHTMLDocument::onVisitObject(LayoutObject &object, int depth)
   {
     if (object.isNone()) // Skip the object for "display: none".
       return false;
@@ -66,20 +67,30 @@ namespace dom
     return true;
   }
 
-  void RenderHTMLDocument::onVisitBox(const client_layout::LayoutBoxModelObject &box, int depth)
+  void RenderHTMLDocument::onVisitBox(const LayoutBoxModelObject &box, int depth)
   {
     if (TR_LIKELY(box.hasEntity()))
-      renderEntity(box.entity(), box.fragment());
+    {
+      LayoutObject::FragmentDifference diff;
+      auto &fragment = box.computeOrGetFragment(diff);
+      if (diff.isChanged())
+        renderEntity(box.entity(), fragment);
+    }
   }
 
-  void RenderHTMLDocument::onVisitText(const client_layout::LayoutText &text, int depth)
+  void RenderHTMLDocument::onVisitText(const LayoutText &text, int depth)
   {
     if (TR_LIKELY(text.hasEntity()))
-      renderEntity(text.entity(), text.fragment());
+    {
+      LayoutObject::FragmentDifference diff;
+      auto &fragment = text.computeOrGetFragment(diff);
+      if (diff.isChanged())
+        renderEntity(text.entity(), fragment);
+    }
   }
 
   void RenderHTMLDocument::renderEntity(const ecs::EntityId &entity,
-                                        const client_layout::Fragment &fragment)
+                                        const Fragment &fragment)
   {
     auto scene = document_->scene;
     assert(scene != nullptr && "The scene is not set when rendering the entity.");
@@ -158,17 +169,17 @@ namespace dom
     if (TR_UNLIKELY(elementOrTextNode == nullptr) || !elementOrTextNode->connected)
       return;
 
-    if (elementOrTextNode->nodeType == NodeType::TEXT_NODE)
+    if (elementOrTextNode->isText())
     {
-      auto textNode = dynamic_pointer_cast<Text>(elementOrTextNode);
+      auto textNode = static_pointer_cast<Text>(elementOrTextNode);
       if (textNode != nullptr)
         textNodeCallback(textNode);
       return;
     }
 
-    if (elementOrTextNode->nodeType == NodeType::ELEMENT_NODE)
+    if (elementOrTextNode->isHTMLElement())
     {
-      auto element = dynamic_pointer_cast<HTMLElement>(elementOrTextNode);
+      auto element = static_pointer_cast<HTMLElement>(elementOrTextNode);
       if (element == nullptr)
         return;
 

@@ -3,9 +3,9 @@
 #include <string>
 #include <client/builtin_scene/scene.hpp>
 #include <client/cssom/css_style_declaration.hpp>
+#include <client/html/html_element.hpp>
 #include <client/layout/layout_text.hpp>
 
-#include "./html_element.hpp"
 #include "./character_data.hpp"
 #include "./geometry/dom_rect.hpp"
 
@@ -49,29 +49,27 @@ namespace dom
 
   public:
     [[nodiscard]] std::unique_ptr<Text> splitText(size_t offset);
-    [[nodiscard]] const geometry::DOMRect getTextClientRect(float maxWidth = numeric_limits<float>::infinity()) const;
-    const client_cssom::CSSStyleDeclaration& adoptedStyle() const { return adoptedStyle_; }
+
+    inline bool hasAdoptedStyle() const { return adoptedStyle_ != nullptr; }
+    inline const client_cssom::CSSStyleDeclaration &adoptedStyleRef() const { return *adoptedStyle_; }
 
   private:
     bool isText() const override final { return true; }
-    // inline float offsetWidth() const override { return offsetWidth_; }
-    // inline float &offsetWidth() override { return offsetWidth_; }
-    // inline float offsetHeight() const override { return offsetHeight_; }
-    // inline float &offsetHeight() override { return offsetHeight_; }
+
     void connectedCallback() override;
     void disconnectedCallback() override;
+    void nodeValueChangedCallback(const std::string &newValue) override;
 
   private:
-    // Initialize the CSS boxes of the element.
     void initCSSBoxes();
-    // Clear all the CSS boxes of the element.
     void resetCSSBoxes(bool skipCheck = false);
-    // Adopt the specified style to the element.
-    bool adoptStyle(const client_cssom::CSSStyleDeclaration &style);
-  
+
+    bool adoptStyle(const client_cssom::CSSStyleDeclaration &);
+    bool adoptStyleDirectly(const client_cssom::CSSStyleDeclaration &);
+
   private:
     client_cssom::CSSStyleDeclaration defaultStyle_;
-    client_cssom::CSSStyleDeclaration adoptedStyle_;
+    std::unique_ptr<client_cssom::CSSStyleDeclaration> adoptedStyle_;
     std::vector<std::shared_ptr<client_layout::LayoutText>> textBoxes_;
     std::shared_ptr<client_cssom::CSSStyleDeclaration> style_;
     float offsetWidth_ = 0.0f;

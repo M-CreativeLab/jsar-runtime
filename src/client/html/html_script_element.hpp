@@ -1,8 +1,9 @@
 #pragma once
 
 #include <string>
+#include <client/dom/dom_scripting.hpp>
+
 #include "./html_element.hpp"
-#include "./dom_scripting.hpp"
 
 namespace dom
 {
@@ -29,7 +30,13 @@ namespace dom
     }
 
   public:
-    inline bool isClassicScript() { return type.empty() || type == "text/javascript" || type == "application/javascript"; }
+    // Attribute is not set (default), an empty string, or a JavaScript MIME type indicates a "classic script".
+    inline bool isClassicScript()
+    {
+      return type.empty() ||
+             type == "text/javascript" ||
+             type == "application/javascript";
+    }
     inline bool isModuleScript() { return type == "module"; }
     inline bool isImportMap() { return type == "importmap"; }
     inline void setAsync(bool value)

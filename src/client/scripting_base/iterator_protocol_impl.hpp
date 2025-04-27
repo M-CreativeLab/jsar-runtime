@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+#include <string>
 #include <node/v8.h>
 
 #include "./v8_object_wrap.hpp"
@@ -18,13 +19,35 @@ namespace scripting_base
   class Iterator : public ObjectWrap<T>
   {
   public:
-    Iterator(v8::Isolate *isolate, const std::vector<std::shared_ptr<ValueType>> &dataSource)
-        : ObjectWrap<T>(isolate, "Object"),
-          dataSource_(dataSource)
+    static std::string Name()
+    {
+      return "Iterator";
+    }
+
+    // Creates a new instance of the Iterator class, with a vector of data source.
+    static v8::Local<v8::Value> NewInstance(napi_env napiEnv,
+                                            const std::vector<std::shared_ptr<ValueType>> &dataSource)
+    {
+      v8::Isolate *isolate = v8::Isolate::GetCurrent();
+      v8::EscapableHandleScope scope(isolate);
+      v8::Local<v8::Context> context = isolate->GetCurrentContext();
+
+      v8::Local<v8::Value> jsValue = ObjectWrap<T>::NewInstance(napiEnv);
+      v8::Local<v8::Object> jsObject = jsValue->ToObject(context).ToLocalChecked();
+      T *instance = ObjectWrap<T>::Unwrap(jsObject);
+      assert(instance != nullptr && "instance must not be null");
+
+      instance->dataSource_ = dataSource;
+      return scope.Escape(jsValue);
+    }
+
+  public:
+    Iterator(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &info)
+        : ObjectWrap<T>(isolate, info)
     {
       v8::HandleScope scope(isolate);
       auto context = isolate->GetCurrentContext();
-      auto jsObject = this->value()->ToObject(context).ToLocalChecked();
+      auto jsObject = info.This();
 
       // Configure the Iterator Protocol
       jsObject->Set(context,
@@ -136,14 +159,14 @@ namespace scripting_base
      * Creates a new instance of the Iterable class.
      *
      * @param isolate The V8 isolate
-     * @param dataSource The data source
+     * @param info The callback info
      */
-    Iterable(v8::Isolate *isolate, const std::vector<std::shared_ptr<ValueType>> &dataSource)
-        : Iterator<T, ValueType>(isolate, dataSource)
+    Iterable(v8::Isolate *isolate, const v8::FunctionCallbackInfo<v8::Value> &info)
+        : Iterator<T, ValueType>(isolate, info)
     {
       v8::HandleScope scope(isolate);
       auto context = isolate->GetCurrentContext();
-      auto jsObject = this->value()->ToObject(context).ToLocalChecked();
+      auto jsObject = info.This();
 
       // Get the Symbol.iterator value
       jsObject->Set(context,

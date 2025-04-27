@@ -164,8 +164,8 @@ namespace dom
   private:
     ContentType asType_;
     RelType relType_;
-    bool blocking_;
-    bool disabled_;
+    bool blocking_ = true;
+    bool disabled_ = false;
     std::shared_ptr<client_cssom::StyleSheet> styleSheet_ = nullptr;
   };
 } // namespace dom
