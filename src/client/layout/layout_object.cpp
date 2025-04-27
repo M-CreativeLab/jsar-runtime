@@ -660,7 +660,7 @@ namespace client_layout
 
         // Add `WebContent` component to the entity.
         auto fragment = this->fragment();
-        scene.addComponent(entity, WebContent(string(this->name()),
+        scene.addComponent(entity, WebContent(string(this->debugName()),
                                               fragment.contentWidth(),
                                               fragment.contentHeight()));
       }
