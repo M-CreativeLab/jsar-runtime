@@ -1,5 +1,5 @@
+#include <client/dom/document.hpp>
 #include "./html_template_element.hpp"
-#include "./document.hpp"
 
 namespace dom
 {

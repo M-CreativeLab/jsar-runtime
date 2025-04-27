@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <unordered_map>
-#include <client/dom/html_element.hpp>
+#include <client/html/html_element.hpp>
 #include "./css_style_declaration.hpp"
 
 namespace client_cssom

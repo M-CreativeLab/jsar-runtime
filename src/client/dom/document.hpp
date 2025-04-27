@@ -4,19 +4,19 @@
 #include <memory>
 #include <map>
 #include <pugixml/pugixml.hpp>
+#include <crates/bindings.hpp>
 #include <client/browser/window.hpp>
 #include <client/builtin_scene/scene.hpp>
 #include <client/cssom/css_stylesheet.hpp>
 #include <client/cssom/style_cache.hpp>
 #include <client/layout/layout_view.hpp>
-#include <crates/bindings.hpp>
+#include <client/html/html_head_element.hpp>
+#include <client/html/html_body_element.hpp>
 
 #include "./node.hpp"
 #include "./node_list.hpp"
 #include "./element.hpp"
 #include "./text.hpp"
-#include "./html_head_element.hpp"
-#include "./html_body_element.hpp"
 #include "./document_fragment.hpp"
 
 namespace dom

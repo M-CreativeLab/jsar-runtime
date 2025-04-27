@@ -7,7 +7,7 @@
 #include <client/builtin_scene/scene.hpp>
 #include <client/cssom/css_style_declaration.hpp>
 #include <client/cssom/box_offset.hpp>
-#include "./element.hpp"
+#include <client/dom/element.hpp>
 
 namespace dom
 {

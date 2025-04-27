@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <napi.h>
-#include <client/dom/html_element.hpp>
+#include <client/html/html_element.hpp>
 
 #include "./element-inl.hpp"
 #include "./dom_string_map.hpp"

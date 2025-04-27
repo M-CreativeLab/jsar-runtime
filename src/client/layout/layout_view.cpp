@@ -1,7 +1,7 @@
 #include <client/browser/window.hpp>
 #include <client/dom/document-inl.hpp>
-#include <client/dom/all_html_elements.hpp>
 #include <client/cssom/css_style_declaration.hpp>
+#include <client/html/all_html_elements.hpp>
 
 #include "./layout_view.hpp"
 #include "./layout_object.hpp"

@@ -1,8 +1,9 @@
 #pragma once
 
 #include <string>
+#include <client/dom/dom_scripting.hpp>
+
 #include "./html_element.hpp"
-#include "./dom_scripting.hpp"
 
 namespace dom
 {

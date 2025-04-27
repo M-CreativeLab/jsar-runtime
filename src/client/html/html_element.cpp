@@ -1,7 +1,8 @@
 #include <client/cssom/units.hpp>
-#include "./attr.hpp"
+#include <client/dom/document-inl.hpp>
+#include <client/dom/attr.hpp>
+
 #include "./html_element.hpp"
-#include "./document-inl.hpp"
 
 namespace dom
 {

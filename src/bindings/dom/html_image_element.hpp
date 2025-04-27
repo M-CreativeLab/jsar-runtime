@@ -1,6 +1,7 @@
 #pragma once
 
-#include "client/dom/html_image_element.hpp"
+#include <client/html/html_image_element.hpp>
+
 #include "./html_element-inl.hpp"
 #include "../canvas/image_source.hpp"
 

@@ -2,8 +2,9 @@
 
 #include <string>
 #include <memory>
+#include <client/canvas/canvas.hpp>
+
 #include "./html_element.hpp"
-#include "../canvas/canvas.hpp"
 
 namespace dom
 {

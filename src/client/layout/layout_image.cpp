@@ -1,7 +1,7 @@
 #include <optional>
 #include <client/builtin_scene/scene.hpp>
 #include <client/dom/node.hpp>
-#include <client/dom/html_image_element.hpp>
+#include <client/html/html_image_element.hpp>
 
 #include "./layout_image.hpp"
 #include "./layout_view.hpp"

@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 #include <crates/bindings.hpp>
-#include <client/dom/html_element.hpp>
+#include <client/html/html_element.hpp>
 
 namespace client_cssom::selectors
 {

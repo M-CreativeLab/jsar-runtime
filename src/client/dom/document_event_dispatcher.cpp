@@ -1,6 +1,6 @@
 #include <client/builtin_scene/ecs-inl.hpp>
 #include <client/dom/element.hpp>
-#include <client/dom/html_element.hpp>
+#include <client/html/html_element.hpp>
 #include <client/layout/hit_test_ray.hpp>
 #include <client/layout/hit_test_result.hpp>
 

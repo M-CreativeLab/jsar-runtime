@@ -1,8 +1,8 @@
 #include <vector>
 #include <client/cssom/types/transform.hpp>
 #include <client/dom/node.hpp>
-#include <client/dom/all_html_elements.hpp>
 #include <client/dom/document-inl.hpp>
+#include <client/html/all_html_elements.hpp>
 
 #include "./layout_object.hpp"
 #include "./layout_block.hpp"

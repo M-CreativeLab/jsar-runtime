@@ -1,6 +1,6 @@
 #pragma once
 
-#include "client/dom/html_audio_element.hpp"
+#include <client/html/html_audio_element.hpp>
 #include "./html_media_element-inl.hpp"
 
 namespace dombinding

@@ -1,9 +1,9 @@
 #include <crates/bindings.hpp>
 #include <client/cssom/css_stylesheet.hpp>
+#include <client/dom/document.hpp>
+#include <client/dom/browsing_context.hpp>
 
 #include "./html_link_element.hpp"
-#include "./document.hpp"
-#include "./browsing_context.hpp"
 
 namespace dom
 {

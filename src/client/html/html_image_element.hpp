@@ -4,8 +4,8 @@
 #include <skia/include/core/SkImage.h>
 #include <skia/include/core/SkBitmap.h>
 #include <node/uv.h>
+#include <client/dom/geometry/dom_rect.hpp>
 
-#include "./geometry/dom_rect.hpp"
 #include "./html_element.hpp"
 #include "../canvas/image_source.hpp"
 

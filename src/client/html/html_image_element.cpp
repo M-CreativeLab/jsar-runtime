@@ -8,12 +8,12 @@
 #include <crates/bindings.hpp>
 #include <client/per_process.hpp>
 #include <client/cssom/layout.hpp>
+#include <client/dom/browsing_context.hpp>
+#include <client/dom/document.hpp>
+#include <client/dom/geometry/dom_rect.hpp>
 #include <client/layout/layout_image.hpp>
 
-#include "./geometry/dom_rect.hpp"
 #include "./html_image_element.hpp"
-#include "./document.hpp"
-#include "./browsing_context.hpp"
 
 namespace dom
 {
@@ -93,7 +93,7 @@ namespace dom
 
   void HTMLImageElement::loadImage()
   {
-    if (is_src_image_loaded_)
+    if (is_src_image_loading || is_src_image_loaded_)
       return;
 
     is_src_image_loading = true;
@@ -104,7 +104,7 @@ namespace dom
   {
     if (is_src_image_loading ||
         is_src_image_loaded_ ||
-        load_async_handle_.data != this)
+        TR_UNLIKELY(load_async_handle_.data != this))
       return;
 
     // Schedule the image loading on the scripting thread.

@@ -2,15 +2,15 @@
 #include <common/utility.hpp>
 #include <client/browser/window.hpp>
 #include <client/builtin_scene/ecs-inl.hpp>
+#include <client/html/html_element.hpp>
+#include <client/html/all_html_elements.hpp>
 
 #include "./events/mouse_event.hpp"
 #include "./events/pointer_event.hpp"
 #include "./element.hpp"
 #include "./document.hpp"
 #include "./document_fragment.hpp"
-#include "./html_element.hpp"
 #include "./attr.hpp"
-#include "./all_html_elements.hpp"
 
 namespace dom
 {
