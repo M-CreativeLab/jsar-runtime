@@ -102,7 +102,7 @@ namespace dom
   void Text::connectedCallback()
   {
     CharacterData::connectedCallback();
-    
+
     initCSSBoxes();
     adoptStyleDirectly(defaultStyle_);
   }
@@ -116,6 +116,7 @@ namespace dom
   void Text::nodeValueChangedCallback(const std::string &newValue)
   {
     CharacterData::data() = newValue;
+    Node::markAsDirty();
 
     if (textBoxes_.size() >= 1)
     {

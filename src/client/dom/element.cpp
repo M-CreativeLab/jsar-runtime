@@ -175,6 +175,8 @@ namespace dom
 
   void Element::attributeChangedCallback(const string &name, const string &oldValue, const string &newValue)
   {
+    markAsDirty();
+
     if (name == "id")
     {
       id = newValue;
@@ -194,10 +196,12 @@ namespace dom
 
   void Element::classListChangedCallback(const DOMTokenList &newClassList)
   {
+    markAsDirty();
   }
 
   void Element::actionStateChangedCallback()
   {
+    markAsDirty();
   }
 
   void Element::styleAdoptedCallback()

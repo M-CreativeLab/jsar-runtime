@@ -243,6 +243,13 @@ namespace dom
     return elements;
   }
 
+  void Document::appendStyleSheet(shared_ptr<client_cssom::CSSStyleSheet> sheet)
+  {
+    styleSheets_.push_back(sheet);
+    styleCache_.invalidateCache();
+    onStyleSheetsDidChange();
+  }
+
   void Document::openInternal()
   {
     // Connect the window and document before opening this document.
@@ -443,8 +450,7 @@ namespace dom
 
   HTMLDocument::HTMLDocument(shared_ptr<BrowsingContext> browsingContext, bool autoConnect)
       : Document("text/html", DocumentType::kHTML, browsingContext, autoConnect),
-        layout_view_(nullptr),
-        layout_allocator_(make_shared<crates::layout2::Allocator>())
+        layout_view_(nullptr)
   {
   }
 
@@ -454,7 +460,7 @@ namespace dom
     if (layoutBox == nullptr)
       return nullopt;
 
-    auto& viewport = layoutBox->viewport;
+    auto &viewport = layoutBox->viewport;
     builtin_scene::BoundingBox boundingBox(viewport.width(),
                                            viewport.height(),
                                            viewport.depth());
@@ -475,6 +481,10 @@ namespace dom
   {
     auto selfDocument = getPtr<HTMLDocument>();
     auto window = defaultView_.lock();
+
+    // Set the document cache to be invalid once the document is opened.
+    invalidateDocumentCache();
+
     auto scene = TrClientContextPerProcess::Get()->builtinScene;
     if (scene != nullptr && window != nullptr)
     {
@@ -487,6 +497,11 @@ namespace dom
       scene->addSystem(SchedulerLabel::kPreUpdate, System::Make<RenderHTMLDocument>(this));
       scene->start();
     }
+  }
+
+  void HTMLDocument::onStyleSheetsDidChange()
+  {
+    invalidateDocumentCache();
   }
 
   void HTMLDocument::simulateScrollWithOffset(float offsetX, float offsetY)

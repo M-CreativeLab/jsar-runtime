@@ -24,13 +24,15 @@ namespace dom
   void RenderHTMLDocument::onExecute()
   {
     assert(document_ != nullptr);
-    auto body = document_->body();
+    auto root = document_->getDirtyRootTextOrElement();
     auto scene = document_->scene;
-    if (scene == nullptr || body == nullptr)
+    if (TR_UNLIKELY(scene == nullptr))
       return;
 
-    // Step 1: Compute each element's styles.
+    auto layoutView = document_->layoutView();
+    if (root != nullptr)
     {
+      // Compute each element's styles.
       auto adoptStyleForElement = [this](shared_ptr<HTMLElement> element)
       {
         const auto &computedStyle = document_->defaultView()->getComputedStyle(element);
@@ -41,20 +43,24 @@ namespace dom
       {
         textNode->adoptStyle(*textNode->style_);
       };
-      traverseElementOrTextNode(body, adoptStyleForElement, adoptStyleForText, TreverseOrder::PreOrder);
+      traverseElementOrTextNode(root, adoptStyleForElement, adoptStyleForText, TreverseOrder::PreOrder);
+
+      // Compute the layout from the root element.
+      // TODO(yorkie): compute the layout from the root?
+      layoutView->computeLayout(targetSpace());
+      layoutView->debugPrint("After layout", LayoutView::DebugOptions::Default()
+                                                 .withFormattingContext(true)
+                                                 .withDisabled(true));
     }
 
-    // Step 2: Compute the layout from the root element.
-    auto layoutView = document_->layoutView();
-    layoutView->computeLayout(targetSpace());
-    layoutView->debugPrint("After layout", LayoutView::DebugOptions::Default()
-                                               .withFormattingContext(true)
-                                               .withDisabled(true));
+    // Visit the layout view to render CSS boxes.
+    if (root != nullptr || isScrolling())
+    {
+      // TODO(yorkie): visit the tree from the root?
+      LayoutViewVisitor::visit(*layoutView);
+    }
 
-    // Step 3: Visit the layout view to render CSS boxes.
-    LayoutViewVisitor::visit(*layoutView);
-
-    // Step 4: Do hit test and dispatch the related events.
+    // Do hit test and dispatch the related events.
     DocumentEventDispatcher::hitTestAndDispatchEvents();
   }
 

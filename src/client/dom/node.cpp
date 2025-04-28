@@ -442,6 +442,8 @@ namespace dom
     child->parentNode = self;
     // Update all the child nodes' owner document when a new child is added.
     child->updateFieldsFromDocument(getOwnerDocumentReference(), true);
+
+    markAsDirty();
     notifyMutationObservers(MutationRecord::OnAddChild(self, child));
 
     // If the parent node is connected, connect the child node as well.
@@ -453,6 +455,8 @@ namespace dom
   {
     auto self = shared_from_this();
     child->parentNode.reset();
+
+    markAsDirty();
     notifyMutationObservers(MutationRecord::OnRemoveChild(self, child));
 
     // Disconnect a child node no matter what the parent node is connected or not.
@@ -465,6 +469,8 @@ namespace dom
     oldChild->parentNode.reset();
     newChild->parentNode = self;
     newChild->updateFieldsFromDocument(getOwnerDocumentReference()); // Update the owner document once the child is added.
+
+    markAsDirty();
     notifyMutationObservers(MutationRecord::OnReplaceChild(self, newChild, oldChild));
 
     // Disconnect the old child node and connect the new child node if the parent node is connected.
@@ -530,6 +536,16 @@ namespace dom
   void Node::onInternalUpdated()
   {
     // The default implementation does nothing.
+  }
+
+  void Node::markAsDirty()
+  {
+    if (!connected)
+      return;
+
+    auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
+    if (ownerDocument != nullptr)
+      ownerDocument->checkAndSetDirtyRootTextOrElement(shared_from_this());
   }
 
   void Node::updateFieldsFromDocument(optional<shared_ptr<Document>> maybeDocument, bool updateChildren)

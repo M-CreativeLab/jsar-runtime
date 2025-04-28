@@ -19,6 +19,9 @@ namespace dom
   protected:
     bool hitTestAndDispatchEvents();
 
+    // Returns if the user is scrolling the scrollable element.
+    bool isScrolling() const { return is_scroll_in_progress_; }
+
   private:
     void onSelectStart(client_xr::XRInputSourceEvent &);
     void onSelectEnd(client_xr::XRInputSourceEvent &);

@@ -91,8 +91,12 @@ namespace dom
     std::shared_ptr<Element> querySelector(const std::string &selectors);
     NodeList<Element> querySelectorAll(const std::string &selectors);
 
+    // Append the stylesheet
+    void appendStyleSheet(std::shared_ptr<client_cssom::CSSStyleSheet>);
+
   protected:
     virtual void onDocumentOpened() {};
+    virtual void onStyleSheetsDidChange() {};
 
   private:
     bool isDocument() const override final { return true; }
@@ -128,10 +132,7 @@ namespace dom
      *
      * TODO: Will be moved to the `DocumentOrShadowRoot` interface.
      */
-    inline client_cssom::StyleCache &styleCache()
-    {
-      return styleCache_;
-    }
+    inline client_cssom::StyleCache &styleCache() { return styleCache_; }
 
   public:
     /**
@@ -249,18 +250,39 @@ namespace dom
     inline client_layout::LayoutView &layoutViewRef() { return *layout_view_; }
     inline const client_layout::LayoutView &layoutViewRef() const { return *layout_view_; }
 
-    std::optional<builtin_scene::BoundingBox> visualBoundingBox() const;
-
-    /**
-     * Get the layout allocator for the document.
-     *
-     * @returns The layout allocator.
-     * @deprecated
-     */
-    inline std::shared_ptr<crates::layout2::Allocator> layoutAllocator() const
+    // Returns the current root of text node or element that is dirty, the renderer will draw from this node.
+    // Call this function will reset the cached text or element.
+    [[nodiscard]] inline std::shared_ptr<Node> getDirtyRootTextOrElement() const
     {
-      return layout_allocator_;
+      auto node = dirty_root_text_or_element_.lock();
+      dirty_root_text_or_element_.reset();
+      return node;
     }
+    inline void checkAndSetDirtyRootTextOrElement(std::shared_ptr<Node> node)
+    {
+      if (node == nullptr)
+      {
+        dirty_root_text_or_element_.reset();
+        return;
+      }
+      if (dirty_root_text_or_element_.expired())
+      {
+        dirty_root_text_or_element_ = node;
+        return;
+      }
+
+      if (node->depth() < dirty_root_text_or_element_.lock()->depth())
+      {
+        dirty_root_text_or_element_ = node;
+      }
+    }
+    // Mark the document cache as dirty, the renderer will draw from the body element.
+    inline void invalidateDocumentCache()
+    {
+      dirty_root_text_or_element_ = body();
+    }
+
+    std::optional<builtin_scene::BoundingBox> visualBoundingBox() const;
 
   public:
     void afterLoadedCallback() override;
@@ -268,11 +290,12 @@ namespace dom
   private:
     bool isHTMLDocument() const override final { return true; }
     void onDocumentOpened() override;
+    void onStyleSheetsDidChange() override;
 
     void simulateScrollWithOffset(float offsetX, float offsetY);
 
   private:
     std::shared_ptr<client_layout::LayoutView> layout_view_;
-    std::shared_ptr<crates::layout2::Allocator> layout_allocator_;
+    mutable std::weak_ptr<Node> dirty_root_text_or_element_;
   };
 }

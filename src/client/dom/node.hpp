@@ -490,6 +490,10 @@ namespace dom
      */
     virtual void onInternalUpdated();
 
+  protected:
+    // Mark this node as dirty to be rendered, such as: tree structure, attributes, and style changes.
+    virtual void markAsDirty();
+
   private:
     // Update the fields from the document, such as the base URI, owner document, etc.
     void updateFieldsFromDocument(std::optional<std::shared_ptr<Document>> document, bool updateChildren = false);

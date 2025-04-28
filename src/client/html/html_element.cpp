@@ -100,10 +100,7 @@ namespace dom
     // Configure the style property change callback.
     auto onPropertyChanged = [this](const string &name)
     {
-      // reset the style cache
-      auto document = getOwnerDocumentReference();
-      if (document != nullptr)
-        document->styleCache().resetStyle(getPtr<HTMLElement>());
+      markAsDirty();
     };
     // Create style declaration from the default style & the style attribute.
     style_ = make_shared<client_cssom::CSSStyleDeclaration>(getAttribute("style"));
@@ -136,21 +133,11 @@ namespace dom
         dataset_[key] = newValue;
       }
     }
-
-    // Reset the style cache if the attribute is changed.
-    // Attribute changes may affect the selectors.
-    invalidateStyleCache();
   }
 
-  void HTMLElement::classListChangedCallback(const DOMTokenList &newClassList)
+  void HTMLElement::markAsDirty()
   {
-    Element::classListChangedCallback(newClassList);
-    invalidateStyleCache();
-  }
-
-  void HTMLElement::actionStateChangedCallback()
-  {
-    Element::actionStateChangedCallback();
+    Element::markAsDirty();
     invalidateStyleCache();
   }
 
