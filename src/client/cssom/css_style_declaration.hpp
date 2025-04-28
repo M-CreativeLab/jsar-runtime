@@ -82,8 +82,9 @@ namespace client_cssom
           cachedCssText_(std::nullopt)
     {
     }
-    CSSStyleDeclaration(const CSSStyleDeclaration &other) : pdb_(other.pdb_),
-                                                            cachedCssText_(std::nullopt)
+    CSSStyleDeclaration(const CSSStyleDeclaration &other)
+        : pdb_(other.pdb_),
+          cachedCssText_(other.cachedCssText_)
     {
     }
 

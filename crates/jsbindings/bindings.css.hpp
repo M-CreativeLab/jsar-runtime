@@ -79,8 +79,12 @@ namespace crates::css2
           for (size_t i = 0; i < size(); i++)
           {
             std::string propertyName = item(i);
-            std::string propertyValue = getProperty(propertyName);
-            bool important = isPropertyImportant(propertyName);
+            std::optional<PropertyValue> propertyObject = getPropertyObject(propertyName);
+            if (!propertyObject.has_value())
+              continue;
+
+            std::string propertyValue = propertyObject->value;
+            bool important = propertyObject->important;
             if (i == 0)
               cssText = propertyName + ": " + propertyValue + (important ? " !important" : "");
             else
@@ -94,7 +98,7 @@ namespace crates::css2
       /**
        * @returns The length of the property declaration block.
        */
-      size_t size() const
+      inline size_t size() const
       {
         return propertyIndices_.size();
       }
@@ -115,10 +119,8 @@ namespace crates::css2
        */
       bool isPropertyImportant(const std::string &propertyName) const
       {
-        auto property = properties_.find(propertyName);
-        if (property == properties_.end())
-          return false;
-        return property->second.important;
+        auto property = getPropertyObject(propertyName);
+        return property.has_value() ? property->important : false;
       }
       /**
        * Get the property value.
@@ -128,10 +130,21 @@ namespace crates::css2
        */
       std::string getProperty(const std::string &propertyName) const
       {
-        auto property = properties_.find(propertyName);
-        if (property == properties_.end())
-          return "";
-        return property->second.value;
+        auto property = getPropertyObject(propertyName);
+        return property.has_value() ? property->value : "";
+      }
+      /**
+       * Get the property object.
+       * 
+       * @param propertyName The property name.
+       * @returns The property object.
+       */
+      const std::optional<PropertyValue> getPropertyObject(const std::string &propertyName) const
+      {
+        auto it = properties_.find(propertyName);
+        if (it != properties_.end())
+          return it->second;
+        return std::nullopt;
       }
       /**
        * Set a property value.
