@@ -4,6 +4,9 @@
 #include <vector>
 #include <unordered_map>
 #include <optional>
+#include <client/animation/animation.hpp>
+#include <client/animation/animation_timeline.hpp>
+#include <client/animation/keyframes.hpp>
 #include <client/builtin_scene/scene.hpp>
 #include <client/builtin_scene/ecs.hpp>
 #include <client/cssom/box_bounding.hpp>
@@ -163,6 +166,16 @@ namespace dom
     // Scrolls an element by the given amount.
     void scrollBy(const ScrollOptions &);
 
+    struct AnimateOptions
+    {
+      std::string id;
+      std::string startName;
+      std::string endName;
+      AnimationTimeline timeline;
+    };
+    std::shared_ptr<Animation> animate(Keyframes &, AnimateOptions);
+    std::vector<std::shared_ptr<Animation>> getAnimations(bool subtree = false);
+
     inline bool hasAdoptedStyle() const { return adoptedStyle_ != nullptr; }
     const client_cssom::CSSStyleDeclaration &adoptedStyleRef() const
     {
@@ -289,6 +302,7 @@ namespace dom
   private:
     std::unique_ptr<client_cssom::CSSStyleDeclaration> adoptedStyle_;
     std::weak_ptr<builtin_scene::Scene> scene_;
+    std::vector<std::shared_ptr<Animation>> animations_;
     std::vector<std::shared_ptr<client_layout::LayoutBoxModelObject>> boxes_;
     std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox_;
     std::string currentDisplayStr_ = "block";

@@ -554,6 +554,17 @@ namespace dom
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
   }
 
+  shared_ptr<Animation> Element::animate(Keyframes &keyframes, AnimateOptions options)
+  {
+    return nullptr;
+  }
+
+  vector<shared_ptr<Animation>> Element::getAnimations(bool subtree)
+  {
+    // TODO(yorkie): support `subtree`?
+    return animations_;
+  }
+
   bool Element::is(const string expectedTagName)
   {
     string expectedTagNameUpper;

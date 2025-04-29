@@ -686,24 +686,6 @@ namespace client_layout
 
   void LayoutObject::styleWillChange(client_cssom::CSSStyleDeclaration &newStyle)
   {
-    // Update the transform's post-transform matrix if the "transform" property is provided.
-    if (newStyle.hasProperty("transform"))
-    {
-      auto transformComponent = getSceneComponent<Transform>();
-      if (transformComponent != nullptr)
-      {
-        auto &postTransform = transformComponent->getOrInitPostTransform();
-        // TODO: how to avoid duplicated parsing?
-        auto transformProperty = types::transform::Transform::Parse(newStyle.getPropertyValue("transform"));
-        if (transformProperty.size() > 0)
-        {
-          glm::mat4 mat(1.0f);
-          if (transformProperty.applyMatrixTo(mat) > 0)
-            postTransform.setMatrix(mat);
-        }
-      }
-    }
-
     // Preprocess the length properties to convert the viewport-based relative length to pixels.
     // Such as "width: 50vw", "height: 50vh", etc.
     glm::vec3 viewport = viewRef().viewport.xyz();
@@ -725,6 +707,24 @@ namespace client_layout
     PREPROCESS_LENGTH("max-height")
 
 #undef PREPROCESS_LENGTH
+
+    // Update the transform's post-transform matrix if the "transform" property is provided.
+    if (newStyle.hasProperty("transform"))
+    {
+      auto transformComponent = getSceneComponent<Transform>();
+      if (transformComponent != nullptr)
+      {
+        auto &postTransform = transformComponent->getOrInitPostTransform();
+        // TODO: how to avoid duplicated parsing?
+        auto transformProperty = types::transform::Transform::Parse(newStyle.getPropertyValue("transform"));
+        if (transformProperty.size() > 0)
+        {
+          glm::mat4 mat(1.0f);
+          if (transformProperty.applyMatrixTo(mat) > 0)
+            postTransform.setMatrix(mat);
+        }
+      }
+    }
   }
 
   void LayoutObject::styleDidChange()
