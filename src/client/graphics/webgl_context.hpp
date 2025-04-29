@@ -775,7 +775,6 @@ namespace client_graphics
     std::optional<std::vector<std::string>> supportedExtensions_ = std::nullopt;
     bool isWebGL2_ = false;
     bool isContextLost_ = false;
-    bool isFirstContentfulPaintReported_ = false;
     bool unpackFlipY_ = false;
     bool unpackPremultiplyAlpha_ = false;
     glm::vec4 clearColor_ = {0.0f, 0.0f, 0.0f, 1.0f};

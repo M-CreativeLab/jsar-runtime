@@ -1456,11 +1456,15 @@ namespace client_graphics
 
   void WebGLContext::sendFirstContentfulPaintMetrics()
   {
-    if (isFirstContentfulPaintReported_)
+    // FCP should reported once for one process.
+    // TODO(yorkie): store this state in the document or browsing context?
+    static bool reported = false;
+    if (TR_LIKELY(reported))
       return;
+
     commandbuffers::PaintingMetricsCommandBufferRequest req(commandbuffers::MetricsCategory::FirstContentfulPaint);
     sendCommandBufferRequestDirectly(req);
-    isFirstContentfulPaintReported_ = true;
+    reported = true;
   }
 
   WebGL2Context::WebGL2Context(ContextAttributes &attrs)
