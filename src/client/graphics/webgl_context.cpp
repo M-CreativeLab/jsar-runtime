@@ -1391,7 +1391,7 @@ namespace client_graphics
     return res;
   }
 
-  std::vector<std::string> WebGLContext::getSupportedExtensions()
+  std::vector<std::string> &WebGLContext::getSupportedExtensions()
   {
     if (supportedExtensions_.has_value())
       return supportedExtensions_.value();
@@ -1416,6 +1416,17 @@ namespace client_graphics
     delete resp;
     supportedExtensions_ = extensionsList;
     return supportedExtensions_.value();
+  }
+
+  bool WebGLContext::supportsExtension(const std::string &extension)
+  {
+    const auto &extensions = getSupportedExtensions();
+    for (const auto &ext : extensions)
+    {
+      if (ext == extension)
+        return true;
+    }
+    return false;
   }
 
   bool WebGLContext::makeXRCompatible()
@@ -1506,7 +1517,11 @@ namespace client_graphics
     maxServerWaitTimeout = resp->maxServerWaitTimeout;
     maxUniformBlockSize = resp->maxUniformBlockSize;
     maxTextureLODBias = resp->maxTextureLODBias;
+
+    // Extensions
     OVR_maxViews = resp->OVR_maxViews;
+    maxTextureMaxAnisotropy = resp->maxTextureMaxAnisotropy;
+
     delete resp;
   }
 

@@ -502,7 +502,8 @@ namespace client_graphics
     std::string getParameter(WebGLStringParameterName pname);
     WebGLShaderPrecisionFormat getShaderPrecisionFormat(int shadertype, int precisiontype);
     int getError();
-    std::vector<std::string> getSupportedExtensions();
+    std::vector<std::string> &getSupportedExtensions();
+    bool supportsExtension(const std::string &extension);
     bool makeXRCompatible();
 
   public:
@@ -1212,6 +1213,7 @@ namespace client_graphics
 
   public: // Extension properties
     int32_t OVR_maxViews;
+    float maxTextureMaxAnisotropy;
   };
 
   template <typename ContextType, typename ObjectType>

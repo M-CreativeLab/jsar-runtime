@@ -115,7 +115,7 @@ namespace builtin_scene
                              texture.width, texture.height, 1,
                              format, pixelType,
                              const_cast<unsigned char *>(pixels));
-    glContext->generateMipmap(WebGLTextureTarget::kTexture2DArray);
+
     glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
                              WebGLTextureParameterName::kTextureMinFilter, WEBGL_LINEAR_MIPMAP_LINEAR);
     glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
@@ -124,6 +124,15 @@ namespace builtin_scene
                              WebGLTextureParameterName::kTextureWrapS, WEBGL_CLAMP_TO_EDGE);
     glContext->texParameteri(WebGLTextureTarget::kTexture2DArray,
                              WebGLTextureParameterName::kTextureWrapT, WEBGL_CLAMP_TO_EDGE);
+
+    if (glContext->supportsExtension("EXT_texture_filter_anisotropic"))
+    {
+      glContext->texParameterf(WebGLTextureTarget::kTexture2DArray,
+                               WebGLTextureParameterName::kTextureMaxAnisotropyEXT,
+                               glContext->maxTextureMaxAnisotropy);
+    }
+
+    glContext->generateMipmap(WebGLTextureTarget::kTexture2DArray);
     glContext->bindTexture(WebGLTextureTarget::kTexture2DArray, nullptr);
   }
 

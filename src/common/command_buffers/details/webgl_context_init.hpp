@@ -138,5 +138,6 @@ namespace commandbuffers
 
   public: // Extensions
     int32_t OVR_maxViews;
+    float maxTextureMaxAnisotropy;
   };
 }

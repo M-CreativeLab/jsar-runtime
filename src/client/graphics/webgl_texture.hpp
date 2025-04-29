@@ -122,6 +122,9 @@ namespace client_graphics
     kTextureWrapS = WEBGL_TEXTURE_WRAP_S,
     kTextureWrapT = WEBGL_TEXTURE_WRAP_T,
     kTextureWrapR = WEBGL2_TEXTURE_WRAP_R,
+
+    // Extensions
+    kTextureMaxAnisotropyEXT = WEBGL2_TEXTURE_MAX_ANISOTROPY_EXT,
   };
 
   class WebGLTexture : public WebGLObject
