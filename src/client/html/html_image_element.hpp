@@ -167,8 +167,8 @@ namespace dom
   private:
     uv_async_t load_async_handle_;
 
-    std::optional<int> width_ ;
-    std::optional<int> height_ ;
+    std::optional<int> width_;
+    std::optional<int> height_;
 
     std::optional<std::vector<char>> image_data_ = std::nullopt;
     std::shared_ptr<SkBitmap> sk_bitmap_;
