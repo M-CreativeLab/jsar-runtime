@@ -41,7 +41,10 @@
 
       console.info('Started...');
       session.addEventListener('selectstart', evt => {
-        console.log('selectstart', evt.frame);
+        console.info('selectstart event', {
+          type: evt.type,
+          frame: evt.frame,
+        });
       });
       console.log("create session start ");
 

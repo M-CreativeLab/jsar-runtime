@@ -64,6 +64,9 @@ namespace bindings
     XRSession(const Napi::CallbackInfo &info);
     ~XRSession();
 
+  public:
+    dom::DOMEventTargetType eventTargetType() const override final { return dom::DOMEventTargetType::kXRSession; }
+
   private:
     Napi::Value InputSourcesGetter(const Napi::CallbackInfo &info);
     Napi::Value RenderStateGetter(const Napi::CallbackInfo &info);

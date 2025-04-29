@@ -53,7 +53,7 @@ namespace bindings
     HandleScope scope(env);
 
     // Update the `handle_` to event target
-    setEventTarget(handle_, "XRSession");
+    setEventTarget(handle_);
 
     // Initialize the frame dispatcher
     frameDispatcherTsfn_ = ThreadSafeFunction::New(

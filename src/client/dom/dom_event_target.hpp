@@ -7,6 +7,89 @@
 
 namespace dom
 {
+  /// Event Constructors
+
+#define DOM_EVENT_CONSTRUCTOR_TYPE_MAP(XX) \
+  XX(Event)                                \
+  XX(MouseEvent)                           \
+  XX(PointerEvent)                         \
+  XX(XRSessionEvent)                       \
+  XX(XRInputSourceEvent)                   \
+  XX(XRInputSourcesChangeEvent)
+
+  enum class DOMEventConstructorType
+  {
+#define XX(CONSTRUCTOR_TYPE) k##CONSTRUCTOR_TYPE,
+    DOM_EVENT_CONSTRUCTOR_TYPE_MAP(XX)
+#undef XX
+  };
+
+  // Convert constructor type to the string such as "MouseEvent".
+  inline std::string to_string(const DOMEventConstructorType constructorType)
+  {
+    switch (constructorType)
+    {
+#define XX(CONSTRUCTOR_TYPE)                         \
+  case DOMEventConstructorType::k##CONSTRUCTOR_TYPE: \
+    return #CONSTRUCTOR_TYPE;
+
+      DOM_EVENT_CONSTRUCTOR_TYPE_MAP(XX)
+#undef XX
+
+    default:
+      throw std::invalid_argument("Invalid event type: " + std::to_string(static_cast<int>(constructorType)));
+    }
+  }
+
+  // Parse a string to the DOMEventConstructorType.
+  inline DOMEventConstructorType from(const std::string &str)
+  {
+#define XX(CONSTRUCTOR_TYPE)    \
+  if (str == #CONSTRUCTOR_TYPE) \
+    return DOMEventConstructorType::k##CONSTRUCTOR_TYPE;
+
+    DOM_EVENT_CONSTRUCTOR_TYPE_MAP(XX)
+#undef XX
+    throw std::invalid_argument("Invalid event type: " + str);
+  }
+
+#undef DOM_EVENT_CONSTRUCTOR_TYPE_MAP
+
+  /// DOM `EventTarget` objects
+  /// used to compose the complete event name.
+
+#define DOM_EVENT_TARGET_TYPE_MAP(XX) \
+  XX(XRSession)
+
+  enum class DOMEventTargetType
+  {
+    kEventTarget = 0x0,
+#define XX(DOMEventTargetType) k##DOMEventTargetType,
+    DOM_EVENT_TARGET_TYPE_MAP(XX)
+#undef XX
+  };
+
+  /**
+   * Convert event target type to the string such as "XRSession".
+   */
+  inline std::string to_string(const DOMEventTargetType type)
+  {
+    switch (type)
+    {
+#define XX(EVENT_TARGET_TYPE)                    \
+  case DOMEventTargetType::k##EVENT_TARGET_TYPE: \
+    return #EVENT_TARGET_TYPE;
+
+      DOM_EVENT_TARGET_TYPE_MAP(XX)
+#undef XX
+
+    default:
+      throw std::invalid_argument("Invalid event type: " + std::to_string(static_cast<int>(type)));
+    }
+  }
+
+#undef DOM_EVENT_TARGET_TYPE_MAP
+
 #define NODE_EVENT_TYPES_MAP(XX) \
   XX(SelectStart, "selectstart")
 
@@ -134,14 +217,14 @@ namespace dom
    * Convert the event type string such as "click" to the `DOMEventType` enum.
    *
    * @param typeStr The event type string.
-   * @param jsConstructorName The JavaScript constructor name of the event target object to compose the complete event type.
+   * @param fromEventTarget The event target type that the event is from.
    * @returns The `DOMEventType` enum.
    */
-  inline DOMEventType StringToEventType(std::string typeStr, std::optional<std::string> jsConstructorName)
+  inline DOMEventType StringToEventType(std::string typeStr, DOMEventTargetType fromEventTarget)
   {
     std::string eventFullName = ToLowerCase(typeStr);
-    if (jsConstructorName.has_value() && jsConstructorName != "")
-      eventFullName = jsConstructorName.value() + "." + eventFullName;
+    if (fromEventTarget != DOMEventTargetType::kEventTarget)
+      eventFullName = to_string(fromEventTarget) + "." + eventFullName;
 
 #define XX(eventType, eventName)  \
   if (eventFullName == eventName) \
@@ -157,15 +240,18 @@ namespace dom
    * Convert the `DOMEventType` enum to the event type string such as "click".
    *
    * @param eventType The `DOMEventType` enum.
+   * @param removePrefix Should remove the event prefix.
    * @returns The event type string.
    */
-  inline std::string EventTypeToString(DOMEventType eventType)
+  inline std::string EventTypeToString(DOMEventType eventType, bool removePrefix = false)
   {
+    std::string eventName;
     switch (eventType)
     {
-#define XX(eventType, eventName) \
-  case DOMEventType::eventType:  \
-    return eventName;
+#define XX(TYPE, NAME)     \
+  case DOMEventType::TYPE: \
+    eventName = NAME;      \
+    break;
 
       DOM_EVENT_TYPES_MAP(XX)
 #undef XX
@@ -173,17 +259,15 @@ namespace dom
     default:
       throw std::invalid_argument("Invalid event type: " + std::to_string(static_cast<int>(eventType)));
     }
-  }
 
-  enum class DOMEventConstructorType
-  {
-    kEvent = 0x0,
-    kMouseEvent,
-    kPointerEvent,
-    kXRSessionEvent,
-    kXRInputSourceEvent,
-    kXRInputSourcesChangeEvent,
-  };
+    if (removePrefix)
+    {
+      size_t pos = eventName.find('.');
+      if (pos != std::string::npos)
+        eventName.erase(0, pos + 1);
+    }
+    return eventName;
+  }
 
   class DOMEventInit
   {
@@ -265,7 +349,7 @@ namespace dom
      *
      * @returns The event type string, such as "click", "keydown", etc.
      */
-    inline std::string typeStr() { return EventTypeToString(type); }
+    inline std::string typeStr() { return EventTypeToString(type, true); }
 
   public:
     void preventDefault()

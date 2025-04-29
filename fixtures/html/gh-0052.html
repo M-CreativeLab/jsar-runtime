@@ -45,7 +45,7 @@
 
       const controller = renderer.xr.getController(1);
       controller.addEventListener('selectstart', (event) => {
-        console.log('selectstart', event.frame);
+        console.log('selectstart', event);
       });
       console.info(controller);
       function animate() {

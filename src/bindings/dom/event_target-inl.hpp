@@ -167,7 +167,7 @@ namespace dombinding
     dom::DOMEventType eventType;
     try
     {
-      eventType = dom::StringToEventType(typeString, jsConstructorName);
+      eventType = dom::StringToEventType(typeString, eventTargetType());
     }
     catch (const invalid_argument &e)
     {
@@ -269,7 +269,7 @@ namespace dombinding
     dom::DOMEventType eventType;
     try
     {
-      eventType = dom::StringToEventType(typeString, jsConstructorName);
+      eventType = dom::StringToEventType(typeString, eventTargetType());
     }
     catch (const invalid_argument &e)
     {
@@ -331,7 +331,7 @@ namespace dombinding
     dom::DOMEventType eventType;
     try
     {
-      eventType = dom::StringToEventType(eventTypeString, jsConstructorName);
+      eventType = dom::StringToEventType(eventTypeString, eventTargetType());
     }
     catch (const invalid_argument &e)
     {
@@ -345,8 +345,7 @@ namespace dombinding
   }
 
   template <typename ObjectType, typename EventTargetType>
-  void EventTargetWrap<ObjectType, EventTargetType>::setEventTarget(std::shared_ptr<EventTargetType> eventTarget,
-                                                                    std::optional<std::string> jsConstructorName)
+  void EventTargetWrap<ObjectType, EventTargetType>::setEventTarget(std::shared_ptr<EventTargetType> eventTarget)
   {
     auto listenerCallback = [this](dom::DOMEventType type, std::shared_ptr<dom::Event> event)
     {
@@ -374,8 +373,5 @@ namespace dombinding
     assert(this->eventTarget == nullptr);
     this->eventTarget = eventTarget;
     this->eventTarget->resetGlobalEventListener(listenerCallback);
-
-    if (jsConstructorName.has_value())
-      this->jsConstructorName = jsConstructorName;
   }
 }
