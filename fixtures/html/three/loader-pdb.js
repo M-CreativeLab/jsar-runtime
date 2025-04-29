@@ -9,7 +9,8 @@ const light = new THREE.DirectionalLight(0xffffff, 0.5);
 light.position.set(0, 1, 1);
 scene.add(light);
 
-let root;
+let root = new THREE.Group();
+root.position.add(new THREE.Vector3(0.1, 0, 0));
 // Mesh
 {
   const MOLECULES = {
@@ -33,20 +34,35 @@ let root;
   };
 
   const params = {
-    molecule: 'caffeine.pdb'
+    molecule: 'lycopene.pdb'
   };
   const loader = new PDBLoader();
   const offset = new THREE.Vector3();
 
   (function init() {
-    root = new THREE.Group();
     scene.add(root);
     loadMolecule(params.molecule);
+
+    const buttons = document.querySelectorAll('.btn');
+    const select = (target) => {
+      for (const btn of buttons) {
+        btn.setAttribute('class', 'btn');
+      }
+      target.setAttribute('class', 'btn selected');
+    };
+
+    for (const btn of buttons) {
+      btn.addEventListener('click', () => {
+        loadMolecule(btn.getAttribute('data-name') + '.pdb');
+        select(btn);
+      });
+    }
   })();
 
   function fitTo(targetSize = 1) {
     const box = new THREE.Box3();
-    scene.traverse(object => {
+    root.scale.set(1, 1, 1);
+    root.traverse(object => {
       if (object instanceof THREE.Mesh || object instanceof THREE.Group) {
         box.expandByObject(object);
       }
@@ -54,7 +70,7 @@ let root;
     const size = box.getSize(new THREE.Vector3());
     const scale = targetSize / Math.max(size.x, size.y, size.z);
     console.info('Scaling scene by', scale);
-    scene.scale.set(scale, scale, scale);
+    root.scale.set(scale, scale, scale);
   }
 
   function loadMolecule(model) {
@@ -65,7 +81,6 @@ let root;
     }
 
     loader.load(url, function (pdb) {
-      console.info('Loaded', pdb);
       const geometryAtoms = pdb.geometryAtoms;
       const geometryBonds = pdb.geometryBonds;
 

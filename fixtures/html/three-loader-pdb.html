@@ -12,9 +12,39 @@
     }
   </script>
   <script type="module" src="./three/loader-pdb.js"></script>
+  <style>
+    main {
+      display: flex;
+      flex-direction: column;
+      width: 30vw;
+      column-gap: 20px;
+    }
+    div {
+      width: 100%;
+      background-color: #ffffffdc;
+      border-radius: 20px;
+      font-size: 80px;
+      font-weight: bold;
+      padding: 0 50px;
+      transform: translateZ(0);
+    }
+    div.selected {
+      background-color: antiquewhite !important;
+    }
+    div:hover {
+      background-color: rgba(170, 170, 237, 0.831);
+      transform: translateZ(15px);
+    }
+  </style>
 </head>
 
 <body>
+  <main>
+    <div class="btn" data-name="ethanol">Ethanol</div>
+    <div class="btn" data-name="aspirin">Aspirin</div>
+    <div class="btn" data-name="caffeine">Caffeine</div>
+    <div class="btn" data-name="nicotine">Nicotine</div>
+  </main>
 </body>
 
 </html>

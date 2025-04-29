@@ -271,9 +271,17 @@ namespace dom
         return;
       }
 
-      if (node->depth() < dirty_root_text_or_element_.lock()->depth())
+      auto current_node = dirty_root_text_or_element_.lock();
+      if (node != current_node)
       {
-        dirty_root_text_or_element_ = node;
+        if (node->depth() < current_node->depth())
+        {
+          dirty_root_text_or_element_ = node;
+        }
+        else if (node->depth() == current_node->depth())
+        {
+          dirty_root_text_or_element_ = node->parentNode.lock();
+        }
       }
     }
     // Mark the document cache as dirty, the renderer will draw from the body element.
