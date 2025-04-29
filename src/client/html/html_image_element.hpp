@@ -102,6 +102,7 @@ namespace dom
   private:
     void fetchImage(const std::string &src);
     bool decodeImage(SkBitmap &);
+    void decodeImageAsync(const SkBitmap &bitmap);
 
     void onImageDataReady();
     void onImageDecoded(const SkBitmap &bitmap);
@@ -166,6 +167,7 @@ namespace dom
 
   private:
     uv_async_t load_async_handle_;
+    uv_work_t decode_work_handle_;
 
     std::optional<int> width_ = 0;
     std::optional<int> height_ = 0;

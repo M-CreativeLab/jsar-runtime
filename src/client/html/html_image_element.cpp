@@ -170,6 +170,47 @@ namespace dom
     }
   }
 
+  void HTMLImageElement::decodeImageAsync(const SkBitmap &bitmap)
+  {
+    auto work = [](uv_work_t *handle)
+    {
+      if (handle != nullptr && handle->data != nullptr)
+      {
+        auto imageElement = static_cast<HTMLImageElement *>(handle->data);
+        imageElement->decodeImage(*imageElement->sk_bitmap_);
+      }
+    };
+    auto afterWork = [](uv_work_t *handle, int status)
+    {
+      if (handle != nullptr && handle->data != nullptr)
+      {
+        auto imageElement = static_cast<HTMLImageElement *>(handle->data);
+        if (imageElement->is_src_image_decoded_)
+        {
+          imageElement->onImageDecoded(*imageElement->sk_bitmap_);
+
+          // Mark the image is completed.
+          imageElement->complete = true;
+          imageElement->dispatchEvent(DOMEventType::Load);
+        }
+        else
+        {
+          imageElement->dispatchEvent(DOMEventType::Error);
+          // TODO(yorkie): paint a placeholder image.
+        }
+      }
+      else
+      {
+        assert(false);
+      }
+    };
+
+    // Schedule the image decoding on the scripting thread.
+    decode_work_handle_.data = this;
+    uv_queue_work(TrClientContextPerProcess::Get()->getScriptingEventLoop(),
+                  &decode_work_handle_, work, afterWork);
+  }
+
   void HTMLImageElement::onImageDataReady()
   {
     // Mark the image as loaded.
@@ -196,19 +237,7 @@ namespace dom
       sk_bitmap_ = make_shared<SkBitmap>();
     assert(sk_bitmap_ != nullptr && "The image bitmap is not created yet.");
 
-    if (decodeImage(*sk_bitmap_))
-    {
-      onImageDecoded(*sk_bitmap_);
-
-      complete = true;
-      dispatchEvent(DOMEventType::Load);
-    }
-    else
-    {
-      dispatchEvent(DOMEventType::Error);
-
-      // TODO(yorkie): paint a placeholder image.
-    }
+    decodeImageAsync(*sk_bitmap_);
   }
 
   void HTMLImageElement::onImageDecoded(const SkBitmap &bitmap)
