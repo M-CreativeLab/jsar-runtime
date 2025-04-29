@@ -153,21 +153,25 @@ namespace dom
         bitmap.allocPixels(info);
         codec->getPixels(info, bitmap.getPixels(), bitmap.rowBytes());
         is_src_image_decoded_ = true;
-        return true;
       }
       catch (const exception &e)
       {
         cerr << "Failed to decode the image: " << e.what() << endl
              << "    size: " << image_data_->size() << endl
              << "    data: " << (image_data_->data() != nullptr ? "valid" : "(empty)") << endl;
-        return false;
+        is_src_image_decoded_ = false;
       }
     }
     else
     {
       cerr << "Failed to create the image codec, url: " << getSrc() << endl;
-      return false;
+      is_src_image_decoded_ = false;
     }
+
+    // Release the image data when the decoding has completed or errored.
+    image_data_->clear();
+    image_data_.reset();
+    return is_src_image_decoded_;
   }
 
   void HTMLImageElement::decodeImageAsync(const SkBitmap &bitmap)
