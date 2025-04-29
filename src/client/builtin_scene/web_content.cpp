@@ -54,7 +54,8 @@ namespace builtin_scene
       : name_(name),
         lastFragment_(std::nullopt),
         contentStyle_(),
-        backgroundColor_(1.0f, 1.0f, 1.0f, 0.0f)
+        backgroundColor_(1.0f, 1.0f, 1.0f, 0.0f),
+        devicePixelRatio_(1.0f)
   {
     resetSkSurface(initialWidth, initialHeight);
   }
@@ -68,6 +69,8 @@ namespace builtin_scene
 
   bool WebContent::resetSkSurface(float w, float h)
   {
+    assert(devicePixelRatio_ > 0 && "The device pixel ratio must be valid.");
+
     if (TR_UNLIKELY(w <= 0 || h <= 0)) // Skip if size is invalid.
       return false;
     if (!needsResize(w, h)) // Skip if size is unchanged.
@@ -185,8 +188,9 @@ namespace builtin_scene
   bool WebContent::needsResize(float w, float h) const
   {
     assert(w > 0 && h > 0);
-    if (surface_ == nullptr)
+    if (TR_UNLIKELY(surface_ == nullptr))
       return true;
+
     return surface_->width() != computeSize(w, devicePixelRatio_) ||
            surface_->height() != computeSize(h, devicePixelRatio_);
   }
@@ -204,8 +208,8 @@ namespace builtin_scene
       return nullptr;
     }
 
-    float w = width();
-    float h = height();
+    float w = physicalWidth();
+    float h = physicalHeight();
 
     if (texture_ == nullptr)
       texture_ = textureAtlas.addTexture(w, h, true);

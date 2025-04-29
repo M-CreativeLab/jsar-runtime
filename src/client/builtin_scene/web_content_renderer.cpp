@@ -370,8 +370,8 @@ namespace builtin_scene::web_renderer
     float left = 0.0f;
 
     SkRect rect = SkRect::MakeXYWH(left, top,
-                                   content.width() - 2 * left,
-                                   content.height() - 2 * top);
+                                   content.logicalWidth() - 2 * left,
+                                   content.logicalHeight() - 2 * top);
     SkRRect &roundedRect = content.roundedRect_;
     bool drawRoundedRect = shouldDrawRoundedRect(roundedRect, rect, style);
 
@@ -419,7 +419,7 @@ namespace builtin_scene::web_renderer
 
       sk_sp<SkImage> image = imageComponent->image();
       SkRect srcRect = SkRect::MakeWH(image->width(), image->height());
-      SkRect dstRect = SkRect::MakeWH(content.width(), content.height());
+      SkRect dstRect = SkRect::MakeWH(content.logicalWidth(), content.logicalHeight());
       canvas->drawImageRect(image, srcRect, dstRect,
                             SkSamplingOptions(), nullptr,
                             SkCanvas::kStrict_SrcRectConstraint);

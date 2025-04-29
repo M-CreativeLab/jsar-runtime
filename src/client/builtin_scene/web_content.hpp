@@ -101,9 +101,12 @@ namespace builtin_scene
     bool resetSkSurface(float width, float height);
     inline SkCanvas *canvas() const
     {
-      if (surface_ == nullptr)
+      if (TR_UNLIKELY(surface_ == nullptr))
         return nullptr;
-      return surface_->getCanvas();
+
+      SkCanvas *canvas = surface_->getCanvas();
+      // TODO(yorkie): support scaling the canvas.
+      return canvas;
     }
 
     /**
@@ -124,8 +127,10 @@ namespace builtin_scene
     inline const std::optional<client_layout::Fragment> &fragment() const { return lastFragment_; }
     inline void setFragment(const client_layout::Fragment &fragment) { lastFragment_ = fragment; }
 
-    inline float width() const { return surface_ == nullptr ? 0.0f : surface_->width(); }
-    inline float height() const { return surface_ == nullptr ? 0.0f : surface_->height(); }
+    inline float physicalWidth() const { return surface_ == nullptr ? 0.0f : surface_->width(); }
+    inline float physicalHeight() const { return surface_ == nullptr ? 0.0f : surface_->height(); }
+    inline float logicalWidth() const { return physicalWidth() / devicePixelRatio_; }
+    inline float logicalHeight() const { return physicalHeight() / devicePixelRatio_; }
 
     // Check if the surface needs to be resized.
     bool needsResize(float w, float h) const;
