@@ -2946,14 +2946,26 @@ PUGI_IMPL_NS_BEGIN
 		return result;
 	}
 
-	inline bool is_tag_autoclose(char_t* name)
-	{
-		/**
-		 * TODO: improve the performance to compare
-		 */
-		return strcmp(name, "meta") == 0 || 
-					 strcmp(name, "link") == 0 ||
-					 strcmp(name, "img") == 0;
+	inline bool is_void_tag(const char* name) {
+		size_t len = strlen(name);
+		switch (len) {
+		case 2:  // "br" or "hr"
+			return (name[0] == 'b' && name[1] == 'r') || 
+						 (name[0] == 'h' && name[1] == 'r');
+		case 3:  // "img"
+			return name[0] == 'i' && name[1] == 'm' && name[2] == 'g';
+		case 4:  // "base", "link", "meta"
+			return (name[0] == 'b' && memcmp(name, "base", 4) == 0) ||
+						 (name[0] == 'l' && memcmp(name, "link", 4) == 0) ||
+						 (name[0] == 'm' && memcmp(name, "meta", 4) == 0);
+		case 5:  // "embed"
+			return memcmp(name, "embed", 5) == 0;
+		case 6:  // "source", "track"
+			return (name[0] == 's' && memcmp(name, "source", 6) == 0) ||
+						 (name[0] == 't' && memcmp(name, "track", 6) == 0);
+		default:
+			return false;
+    }
 	}
 
 	struct xml_parser
@@ -3312,12 +3324,6 @@ PUGI_IMPL_NS_BEGIN
 				LOC_TAG:
 					if (PUGI_IMPL_IS_CHARTYPE(*s, ct_start_symbol)) // '<#...'
 					{
-						// Pop(Close) the last element for the following elements
-						if (cursor->name != nullptr)
-						{
-							if (is_tag_autoclose(cursor->name))
-								PUGI_IMPL_POPNODE();
-						}
 						PUGI_IMPL_PUSHNODE(node_element); // Append a new node to the tree.
 
 						cursor->name = s;
@@ -3405,6 +3411,11 @@ PUGI_IMPL_NS_BEGIN
 								{
 									++s;
 
+									if (is_void_tag(cursor->name))
+									{
+										PUGI_IMPL_POPNODE();
+										s++;
+									}
 									break;
 								}
 								else if (*s == 0 && endch == '>')
@@ -3449,28 +3460,15 @@ PUGI_IMPL_NS_BEGIN
 
 						if (!tag_mismatch && *name)
 						{
-							if (*s == 0 && name[0] == endch && name[1] == 0)
-							{
-								PUGI_IMPL_THROW_ERROR(status_bad_end_element, s);
-							}
-							else
-							{
-								tag_mismatch = true;
-							}
+							if (*s == 0 && name[0] == endch && name[1] == 0) PUGI_IMPL_THROW_ERROR(status_bad_end_element, s);
+ 							else tag_mismatch = true;
 						}
 
 						if (tag_mismatch)
 						{
-							char_t* c_name = cursor->name;
-							if (is_tag_autoclose(cursor->name))
-							{
-								PUGI_IMPL_POPNODE();
-								name = cursor->name;
-							}
-							else
-							{
-								PUGI_IMPL_THROW_ERROR(status_end_element_mismatch, mark);
-							}
+							// HTML ignores any mismatch end tag error
+							++s;
+							continue;
 						}
 
 						PUGI_IMPL_POPNODE(); // Pop.
