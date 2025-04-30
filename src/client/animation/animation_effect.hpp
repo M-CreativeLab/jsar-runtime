@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include "./timing_function.hpp"
 
 namespace dom

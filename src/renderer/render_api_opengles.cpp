@@ -336,7 +336,7 @@ private:
 		// Check for extensions
 		{
 			glGetIntegerv(WEBGL2_EXT_MAX_VIEWS_OVR, &res.OVR_maxViews);
-			glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &res.maxTextureMaxAnisotropy);
+			glGetFloatv(WEBGL2_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &res.maxTextureMaxAnisotropy);
 		}
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
 		{
