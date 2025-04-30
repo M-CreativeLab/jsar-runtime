@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <iostream>
+#include <sstream>
 #include <unordered_map>
 #include <memory>
 #include <optional>
@@ -883,40 +884,40 @@ namespace crates::css2
     public:
       operator std::string() const
       {
-        std::string str;
+        std::stringstream ss;
         switch (type)
         {
         case ComponentType::kLocalName:
-          str = name();
+          ss << name();
           break;
         case ComponentType::kID:
-          str = "#" + name();
+          ss << "#" << name();
           break;
         case ComponentType::kClass:
-          str = "." + name();
+          ss << "." << name();
           break;
         case ComponentType::kRoot:
-          str = ":root";
+          ss << ":root";
           break;
         case ComponentType::kEmpty:
-          str = ":empty";
+          ss << ":empty";
           break;
         case ComponentType::kHost:
-          str = ":host";
+          ss << ":host";
           break;
         case ComponentType::kPseudoElement:
-          str = "::" + name();
+          ss << "::" + name();
           break;
         case ComponentType::kPseudoClass:
-          str = to_string(pseudo_class_type);
+          ss << to_string(pseudo_class_type);
           break;
         case ComponentType::kCombinator:
-          str = to_string(combinator);
+          ss << to_string(combinator);
           break;
         default:
           break;
         }
-        return str;
+        return ss.str();
       }
       friend std::ostream &operator<<(std::ostream &os, const Component &component)
       {
@@ -982,10 +983,10 @@ namespace crates::css2
     public:
       operator std::string() const
       {
-        std::string str;
+        std::stringstream ss;
         for (auto it = components_.rbegin(); it != components_.rend(); it++)
-          str += static_cast<std::string>(*it);
-        return str;
+          ss << static_cast<std::string>(*it);
+        return ss.str();
       }
       friend std::ostream &operator<<(std::ostream &os, const Selector &selector)
       {

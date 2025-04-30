@@ -29,6 +29,7 @@ impl Component {
         ComponentImpl::Host(_) => SelectorComponentType::Host,
         ComponentImpl::PseudoElement(_) => SelectorComponentType::PseudoElement,
         ComponentImpl::NonTSPseudoClass(_) => SelectorComponentType::PseudoClass,
+        ComponentImpl::Combinator(_) => SelectorComponentType::Combinator,
         _ => SelectorComponentType::Unsupported,
       },
       combinator: match handle {
