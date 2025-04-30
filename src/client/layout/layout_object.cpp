@@ -416,8 +416,6 @@ namespace client_layout
 
     // Update the layout style in formatting context.
     crates::layout2::LayoutStyle layoutStyle = style;
-    cout << "Set layout style for: " << debugName() << endl
-         << layoutStyle << endl;
     bool success = formattingContext_->setLayoutStyle(layoutStyle);
 
     styleDidChange();

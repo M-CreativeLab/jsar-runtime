@@ -198,9 +198,27 @@ namespace dom
       }
       return true;
     }
+    else
+    {
+      // If the hit test fails, we need to dispatch the mouse out event to the last target.
+      if (!current_mousemove_target_.expired())
+      {
+        glm::vec3 hitPoint(0.0f, 0.0f, 0.0f);
+        auto lastTarget = current_mousemove_target_.lock();
+        lastTarget->simulateMouseOut(hitPoint);
 
-    hit_test_results_.clear();
-    current_mousemove_target_.reset();
-    return false;
+        // Dispatch mouseleave event to the last target's DOM path.
+        for (auto &leaveTarget : lastTarget->getAncestors(true))
+        {
+          if (leaveTarget->isElement())
+            Node::As<Element>(leaveTarget)->simulateMouseLeave(hitPoint);
+        }
+      }
+
+      // Clear the current mouse move target.
+      hit_test_results_.clear();
+      current_mousemove_target_.reset();
+      return false;
+    }
   }
 }
