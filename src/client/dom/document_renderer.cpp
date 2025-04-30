@@ -24,6 +24,8 @@ namespace dom
   void RenderHTMLDocument::onExecute()
   {
     assert(document_ != nullptr);
+    document_->timeline().updateCurrentTime();
+
     auto root = document_->getDirtyRootTextOrElement();
     auto scene = document_->scene;
     if (TR_UNLIKELY(scene == nullptr))

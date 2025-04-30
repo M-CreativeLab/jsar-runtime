@@ -12,7 +12,7 @@ namespace dom
   {
   public:
     Animation() = default;
-    Animation(const AnimationEffect &, std::shared_ptr<AnimationTimeline>);
+    Animation(std::unique_ptr<AnimationEffect>, std::shared_ptr<AnimationTimeline>);
 
   public:
     void cancel();
@@ -25,7 +25,19 @@ namespace dom
     void updatePlaybackRate(float);
 
   public:
-    float currentTime() const { return current_time_; }
+    std::optional<float> currentTime() const
+    {
+      if (!played() ||
+          timeline_.expired() ||
+          !timeline_.lock()->isActive())
+        return std::nullopt;
+      else
+        return current_time_;
+    }
+    void setCurrentTime(float time)
+    {
+      current_time_ = time;
+    }
 
     const AnimationEffect &effect() const { return *effect_; }
     AnimationEffect &effect() { return *effect_; }
@@ -41,6 +53,11 @@ namespace dom
       kPlayStateFinished,
     };
     bool pending() const { return pending_; }
+    bool played() const
+    {
+      return play_state_ == kPlayStateRunning ||
+             play_state_ == kPlayStatePaused;
+    }
     PlayState playState() const { return play_state_; }
 
     enum ReplaceState
@@ -54,12 +71,12 @@ namespace dom
   public:
     float playbackRate;
     float startTime;
-    std::weak_ptr<AnimationTimeline> timeline;
 
   private:
     std::string id_;
     float current_time_ = 0;
     std::unique_ptr<AnimationEffect> effect_;
+    std::weak_ptr<AnimationTimeline> timeline_;
     bool ready_ = false;
     bool pending_ = false;
     PlayState play_state_ = kPlayStateIdle;

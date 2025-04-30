@@ -5,6 +5,7 @@
 #include <map>
 #include <pugixml/pugixml.hpp>
 #include <crates/bindings.hpp>
+#include <client/animation/document_timeline.hpp>
 #include <client/browser/window.hpp>
 #include <client/builtin_scene/scene.hpp>
 #include <client/cssom/css_stylesheet.hpp>
@@ -118,6 +119,10 @@ namespace dom
       assert(ref != nullptr && "The default view is not set.");
       return ref;
     }
+
+    const DocumentTimeline &timeline() const { return timeline_; }
+    DocumentTimeline &timeline() { return timeline_; }
+
     /**
      * Get a list of `CSSStyleSheet` objects, for stylesheets explicitly linked into or embedded in a document.
      *
@@ -165,6 +170,8 @@ namespace dom
   private:
     bool isSourceLoaded = false;
     bool shouldOpen = false;
+
+    DocumentTimeline timeline_;
     std::vector<std::shared_ptr<client_cssom::CSSStyleSheet>> styleSheets_;
     client_cssom::StyleCache styleCache_;
   };

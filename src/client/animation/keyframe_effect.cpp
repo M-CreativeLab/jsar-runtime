@@ -5,27 +5,28 @@ namespace dom
 {
   using namespace std;
 
-  KeyframeEffect::KeyframeEffect(std::shared_ptr<dom::Element> target,
-                                 const Keyframes &keyframes,
-                                 const KeyframeEffectOptions)
-  {
-  }
-
-  KeyframeEffect::KeyframeEffect(const KeyframeEffect &other)
-      : AnimationEffect(other),
-        composite_(other.composite_),
-        iteration_composite_(other.iteration_composite_),
-        target_(other.target_),
-        pseudo_element_str_(other.pseudo_element_str_)
+  KeyframeEffect::KeyframeEffect(shared_ptr<dom::Element> target,
+                                 optional<Keyframes> keyframes,
+                                 const KeyframeEffectOptions options)
+      : AnimationEffect(),
+        target_(target),
+        keyframes_(make_unique<Keyframes>(*keyframes)),
+        composite_(options.composite.value_or(CompositeReplace)),
+        iteration_composite_(options.iterationComposite.value_or(CompositeReplace)),
+        pseudo_element_str_(options.pseudoElement)
   {
   }
 
   Keyframes KeyframeEffect::getKeyframes() const
   {
-    return {};
+    return *keyframes_;
   }
 
-  void KeyframeEffect::setKeyframes(const Keyframes &keyframes)
+  void KeyframeEffect::setKeyframes(optional<Keyframes> keyframes)
   {
+    if (keyframes.has_value())
+      keyframes_ = make_unique<Keyframes>(*keyframes);
+    else
+      keyframes_->empty();
   }
 }

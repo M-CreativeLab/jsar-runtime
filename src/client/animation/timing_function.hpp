@@ -23,6 +23,7 @@ namespace dom
 
   public:
     virtual ~TimingFunction() = default;
+    std::unique_ptr<TimingFunction> clone() const;
 
   public:
     virtual std::string toString() const = 0;
