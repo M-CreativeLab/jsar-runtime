@@ -113,6 +113,15 @@ namespace client_layout
     LayoutReplaced::entityWillBeDestroyed(entity);
   }
 
+  void LayoutImage::styleWillChange(client_cssom::CSSStyleDeclaration &newStyle)
+  {
+    LayoutReplaced::styleWillChange(newStyle);
+
+    // The image size may be changed, so we need to adjust the size.
+    if (newStyle.hasProperty("width") || newStyle.hasProperty("height"))
+      adjustImageSize();
+  }
+
   void LayoutImage::didComputeLayoutOnce(const ConstraintSpace &avilableSpace)
   {
     LayoutReplaced::didComputeLayoutOnce(avilableSpace);

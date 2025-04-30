@@ -54,6 +54,8 @@ namespace client_layout
     {
       setContentSize(glm::vec3(width, height, 0));
     }
+    // Enable or disable the content size, only the replaced element needs to use content size.
+    inline void setContentSizeEnabled(bool b) { is_content_size_enabled_ = b; }
     inline void resetContentSize() { content_size_ = std::nullopt; }
     virtual void contentSizeDidChange(const glm::vec3 &contentSize) {};
 
@@ -77,6 +79,7 @@ namespace client_layout
     // flags to indicate if this node should update the layout size when the content size is changed.
     bool use_content_x_ = false;
     bool use_content_y_ = false;
+    bool is_content_size_enabled_ = false;
   };
 
   class TaffyBasedFormattingContext : public FormattingContext

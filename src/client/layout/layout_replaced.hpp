@@ -11,5 +11,7 @@ namespace client_layout
   public:
     const char *name() const override { return "LayoutReplaced"; }
     bool isLayoutReplaced() const override final { return true; }
+
+    void formattingContextDidSet(FormattingContext &) override final;
   };
 }

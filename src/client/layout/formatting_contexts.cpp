@@ -42,10 +42,12 @@ namespace client_layout
 
   bool FormattingContext::setLayoutStyle(crates::layout2::LayoutStyle &style)
   {
-    // When the incoming style is "auto", it indicates that the content size should be used.
-    use_content_x_ = style.width().isAuto();
-    use_content_y_ = style.height().isAuto();
-
+    if (is_content_size_enabled_)
+    {
+      // When the incoming style is "auto", it indicates that the content size should be used.
+      use_content_x_ = style.width().isAuto();
+      use_content_y_ = style.height().isAuto();
+    }
     return true;
   }
 
@@ -117,9 +119,9 @@ namespace client_layout
       return;
 
     auto nodeStyle = node_->style();
-    if (use_content_x_ && !std::isnan(content_size_->x))
+    if (use_content_x_ && !isnan(content_size_->x))
       nodeStyle.setWidth(Dimension::Length(content_size_->x));
-    if (use_content_y_ && !std::isnan(content_size_->y))
+    if (use_content_y_ && !isnan(content_size_->y))
       nodeStyle.setHeight(Dimension::Length(content_size_->y));
 
     updateNodeStyle(nodeStyle);
@@ -140,7 +142,19 @@ namespace client_layout
     style.setDisplay(is_empty_ ? Display::None() : type);
     FormattingContext::setLayoutStyle(style);
 
-    updateNodeStyle(style);
+    if (use_content_x_ || use_content_y_)
+    {
+      auto newStyle = style;
+      if (use_content_x_ && !isnan(content_size_->x))
+        newStyle.setWidth(Dimension::Length(content_size_->x));
+      if (use_content_y_ && !isnan(content_size_->y))
+        newStyle.setHeight(Dimension::Length(content_size_->y));
+      updateNodeStyle(newStyle);
+    }
+    else
+    {
+      updateNodeStyle(style);
+    }
     return true;
   }
 

@@ -145,6 +145,12 @@ namespace client_layout
     LayoutObject::entityWillBeDestroyed(entity);
   }
 
+  void LayoutText::formattingContextDidSet(FormattingContext &context)
+  {
+    LayoutObject::formattingContextDidSet(context);
+    context.setContentSizeEnabled(true);
+  }
+
   void LayoutText::styleWillChange(client_cssom::CSSStyleDeclaration &newStyle)
   {
     LayoutObject::styleWillChange(newStyle);

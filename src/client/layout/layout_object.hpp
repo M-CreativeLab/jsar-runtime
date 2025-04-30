@@ -296,6 +296,9 @@ namespace client_layout
     virtual void entityDidCreate(builtin_scene::ecs::EntityId entity);
     virtual void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity);
 
+    virtual void formattingContextWillSet(DisplayType);
+    virtual void formattingContextDidSet(FormattingContext &);
+
     virtual void styleWillChange(client_cssom::CSSStyleDeclaration &newStyle);
     virtual void styleDidChange();
 

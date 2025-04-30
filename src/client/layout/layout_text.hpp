@@ -47,6 +47,7 @@ namespace client_layout
 
     void entityDidCreate(builtin_scene::ecs::EntityId entity) override;
     void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
+    void formattingContextDidSet(FormattingContext &) override;
     void styleWillChange(client_cssom::CSSStyleDeclaration &newStyle) override;
     void didComputeLayoutOnce(const ConstraintSpace &avilableSpace) override final;
 

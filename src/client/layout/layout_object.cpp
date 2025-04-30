@@ -391,7 +391,10 @@ namespace client_layout
 
   void LayoutObject::setFormattingContext(DisplayType display)
   {
+    formattingContextWillSet(display);
     formattingContext_ = FormattingContext::Make(display, view());
+    if (formattingContext_ != nullptr)
+      formattingContextDidSet(*formattingContext_);
   }
 
   bool LayoutObject::setStyle(CSSStyleDeclaration style)
@@ -413,6 +416,8 @@ namespace client_layout
 
     // Update the layout style in formatting context.
     crates::layout2::LayoutStyle layoutStyle = style;
+    cout << "Set layout style for: " << debugName() << endl
+         << layoutStyle << endl;
     bool success = formattingContext_->setLayoutStyle(layoutStyle);
 
     styleDidChange();
@@ -682,6 +687,14 @@ namespace client_layout
       }
     };
     useSceneWithCallback(removeInstance);
+  }
+
+  void LayoutObject::formattingContextWillSet(DisplayType)
+  {
+  }
+
+  void LayoutObject::formattingContextDidSet(FormattingContext &)
+  {
   }
 
   void LayoutObject::styleWillChange(client_cssom::CSSStyleDeclaration &newStyle)

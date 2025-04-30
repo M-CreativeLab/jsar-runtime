@@ -46,9 +46,9 @@ async function sleep(ms) {
 
   await sleep(1000);
   const bar = document.createElement('div');
-  bar.style.setProperty('width', '100px');
-  bar.style.setProperty('height', '100px');
-  bar.style.setProperty('background-color', 'green');
+  bar.style.width = '100px';
+  bar.style.height = '100px';
+  bar.style.backgroundColor = 'green';
   document.body.replaceChild(bar, some);
 
   bar.addEventListener('click', (event) => {
