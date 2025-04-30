@@ -352,7 +352,7 @@ private:
 			DEBUG(DEBUG_TAG, "    GL_MAX_FRAGMENT_UNIFORM_BLOCKS = %d", res.maxFragmentUniformBlocks);
 			DEBUG(DEBUG_TAG, "    GL_MAX_FRAGMENT_UNIFORM_COMPONENTS = %d", res.maxFragmentUniformComponents);
 			DEBUG(DEBUG_TAG, "    EXT_OVR_multiview.MAX_VIEWS_OVR = %d", res.OVR_maxViews);
-			DEBUG(DEBUG_TAG, "		EXT_texture_filter_anisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT = %f",
+			DEBUG(DEBUG_TAG, "    EXT_texture_filter_anisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT = %f",
 						res.maxTextureMaxAnisotropy);
 		}
 		reqContentRenderer->sendCommandBufferResponse(res);
