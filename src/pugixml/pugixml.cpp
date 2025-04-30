@@ -3162,7 +3162,14 @@ PUGI_IMPL_NS_BEGIN
 				}
 				else PUGI_IMPL_THROW_ERROR(status_bad_cdata, s);
 			}
-			else if (s[0] == 'D' && s[1] == 'O' && s[2] == 'C' && s[3] == 'T' && s[4] == 'Y' && s[5] == 'P' && PUGI_IMPL_ENDSWITH(s[6], 'E'))
+			else if (
+				(s[0] == 'D' || s[0] == 'd') &&
+				(s[1] == 'O' || s[1] == 'o') && 
+				(s[2] == 'C' || s[2] == 'c') && 
+				(s[3] == 'T' || s[3] == 't') && 
+				(s[4] == 'Y' || s[4] == 'y') && 
+				(s[5] == 'P' || s[5] == 'p') && 
+				(PUGI_IMPL_ENDSWITH(s[6], 'E') || PUGI_IMPL_ENDSWITH(s[6], 'e')))
 			{
 				s -= 2;
 
