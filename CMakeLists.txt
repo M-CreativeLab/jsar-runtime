@@ -67,9 +67,10 @@ if(LINUX OR APPLE)
     endif()
 endif()
 
-# Disable unused variable warnings
+# Configure the default compiler options
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU")
     add_compile_options(-Wno-unused-variable)
+    add_compile_options(-Wno-vla)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_compile_options(/W4 /WX)
     add_compile_options(/wd4101)
