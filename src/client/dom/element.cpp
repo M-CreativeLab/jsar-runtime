@@ -106,6 +106,11 @@ namespace dom
   {
   }
 
+  std::shared_ptr<Element> Element::getAnimationTarget()
+  {
+    return getPtr<Element>();
+  }
+
   void Element::connectedCallback()
   {
     Node::connectedCallback();
@@ -552,17 +557,6 @@ namespace dom
 
     // TODO(yorkie): dispatching this event when the scroll is finished.
     dispatchEvent(make_shared<dom::Event>(DOMEventConstructorType::kEvent, DOMEventType::ScrollEnd));
-  }
-
-  shared_ptr<Animation> Element::animate(Keyframes &keyframes, AnimateOptions options)
-  {
-    return nullptr;
-  }
-
-  vector<shared_ptr<Animation>> Element::getAnimations(bool subtree)
-  {
-    // TODO(yorkie): support `subtree`?
-    return animations_;
   }
 
   bool Element::is(const string expectedTagName)

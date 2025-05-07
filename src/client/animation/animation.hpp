@@ -15,6 +15,9 @@ namespace dom
     Animation(std::unique_ptr<AnimationEffect>, std::shared_ptr<AnimationTimeline>);
 
   public:
+    virtual bool isCSSAnimation() const { return false; }
+    virtual bool isCSSTransition() const { return false; }
+
     void cancel();
     void commitStyles();
     void finish();
