@@ -12,6 +12,7 @@
 #include <client/per_process.hpp>
 #include <client/cssom/units.hpp>
 #include <client/cssom/css_style_declaration.hpp>
+#include <client/cssom/computed_style.hpp>
 #include <client/dom/dom_event_target.hpp>
 
 namespace browser
@@ -232,8 +233,8 @@ namespace browser
      * @param element The element to get the computed style.
      * @param pseudoElt The optional pseudo-element to get the computed style.
      */
-    const client_cssom::CSSStyleDeclaration &getComputedStyle(std::shared_ptr<dom::Element> element,
-                                                              std::optional<std::string> pseudoElt = std::nullopt) const;
+    const client_cssom::ComputedStyle &getComputedStyle(std::shared_ptr<dom::Element> element,
+                                                        std::optional<std::string> pseudoElt = std::nullopt) const;
 
   private:
     // Configure the document to the window.

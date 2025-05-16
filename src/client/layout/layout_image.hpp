@@ -28,8 +28,8 @@ namespace client_layout
   private:
     void entityDidCreate(builtin_scene::ecs::EntityId entity) override;
     void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
-    void styleWillChange(client_cssom::CSSStyleDeclaration &newStyle) override;
-    void didComputeLayoutOnce(const ConstraintSpace &avilableSpace) override;
+    void styleWillChange(client_cssom::ComputedStyle &new_style) override;
+    void didComputeLayoutOnce(const ConstraintSpace &) override;
     void sizeDidChange() override;
 
     void layoutDidFirstReady(const Fragment &);

@@ -1,22 +1,172 @@
+#include <crates/bindings.hpp>
+
 #include "./computed_style.hpp"
+#include "./style_traits.hpp"
+#include "./values/specified/border.hpp"
+#include "./values/specified/font.hpp"
+#include "./values/specified/color.hpp"
 
 namespace client_cssom
 {
-  ComputedStyle::ComputedStyle(const CSSStyleDeclaration &style)
-      : std::unordered_map<std::string, std::string>()
+  using namespace std;
+
+  ComputedStyle::Difference ComputedStyle::ComputeDifference(const ComputedStyle *old_style,
+                                                             const ComputedStyle *new_style)
   {
-    resolve(style);
+    if (old_style == new_style)
+      return kEqual;
+
+    if (!old_style || !new_style)
+      return kInherited;
+
+    if (old_style->size() != new_style->size())
+      return kIndependentInherited;
+
+    // TODO(yorkie): implement the complete difference algorithm.
+    return kNonInherited;
   }
 
-  void ComputedStyle::resolve(const CSSStyleDeclaration &style)
+  ComputedStyle::ComputedStyle(const CSSStyleDeclaration &style)
+      : std::unordered_map<std::string, std::string>()
   {
     for (int index = 0; index < style.length(); index++)
     {
       auto propertyName = style.item(index);
       auto value = style.getPropertyValue(propertyName);
-      insert({propertyName, value});
-
-      // TODO: resolve the property value
+      setPropertyInternal(propertyName, value);
     }
+  }
+
+  ComputedStyle::operator crates::layout2::LayoutStyle() const
+  {
+    using namespace crates::layout2;
+    LayoutStyle layoutStyle;
+
+    layoutStyle.setDisplay(display_.toLayoutValue());
+    layoutStyle.setBoxSizing(box_sizing_.toLayoutValue());
+    layoutStyle.setPosition(position_type_.toLayoutValue());
+    layoutStyle.setOverflowX(overflow_x_.toLayoutValue());
+    layoutStyle.setOverflowY(overflow_y_.toLayoutValue());
+
+    // Sizes
+    layoutStyle.setWidth(width_.toLayoutValue());
+    layoutStyle.setHeight(height_.toLayoutValue());
+    layoutStyle.setMinWidth(min_width_.toLayoutValue());
+    layoutStyle.setMinHeight(min_height_.toLayoutValue());
+    layoutStyle.setMaxWidth(max_width_.toLayoutValue());
+    layoutStyle.setMaxHeight(max_height_.toLayoutValue());
+
+    // Margin
+    layoutStyle.setMarginTop(margin_.top().toLayoutValue());
+    layoutStyle.setMarginRight(margin_.right().toLayoutValue());
+    layoutStyle.setMarginBottom(margin_.bottom().toLayoutValue());
+    layoutStyle.setMarginLeft(margin_.left().toLayoutValue());
+
+    // Padding
+    layoutStyle.setPaddingTop(padding_.top().toLayoutValue());
+    layoutStyle.setPaddingRight(padding_.right().toLayoutValue());
+    layoutStyle.setPaddingBottom(padding_.bottom().toLayoutValue());
+    layoutStyle.setPaddingLeft(padding_.left().toLayoutValue());
+
+    // Border
+    layoutStyle.setBorderTop(border_width_.top().toLayoutValue());
+    layoutStyle.setBorderRight(border_width_.right().toLayoutValue());
+    layoutStyle.setBorderBottom(border_width_.bottom().toLayoutValue());
+    layoutStyle.setBorderLeft(border_width_.left().toLayoutValue());
+
+    // Flexbox
+    layoutStyle.setAlignItems(align_items_.toLayoutValue());
+    layoutStyle.setAlignSelf(align_self_.toLayoutValue());
+    layoutStyle.setAlignContent(align_content_.toLayoutValue());
+    layoutStyle.setJustifyContent(justify_content_.toLayoutValue());
+    layoutStyle.setJustifySelf(justify_self_.toLayoutValue());
+    layoutStyle.setJustifyItems(justify_items_.toLayoutValue());
+    layoutStyle.setRowGap(row_gap_.toLayoutValue());
+    layoutStyle.setColumnGap(column_gap_.toLayoutValue());
+    layoutStyle.setFlexDirection(flex_direction_.toLayoutValue());
+    layoutStyle.setFlexWrap(flex_wrap_.toLayoutValue());
+    layoutStyle.setFlexGrow(flex_grow_.value);
+    layoutStyle.setFlexShrink(flex_shrink_.value);
+
+    // Grid
+#define LAYOUT_USE_PROPERTY_STRING(PROP, NAME) \
+  if (hasProperty(PROP))                       \
+    layoutStyle.set##NAME(getPropertyValue(PROP));
+
+    LAYOUT_USE_PROPERTY_STRING("grid-template-rows", GridTemplateRows)
+    LAYOUT_USE_PROPERTY_STRING("grid-template-columns", GridTemplateColumns)
+    LAYOUT_USE_PROPERTY_STRING("grid-auto-rows", GridAutoRows)
+    LAYOUT_USE_PROPERTY_STRING("grid-auto-columns", GridAutoColumns)
+    LAYOUT_USE_PROPERTY_STRING("grid-auto-flow", GridAutoFlow)
+    LAYOUT_USE_PROPERTY_STRING("grid-row-start", GridRowStart)
+    LAYOUT_USE_PROPERTY_STRING("grid-row-end", GridRowEnd)
+    LAYOUT_USE_PROPERTY_STRING("grid-column-start", GridColumnStart)
+    LAYOUT_USE_PROPERTY_STRING("grid-column-end", GridColumnEnd)
+#undef LAYOUT_USE_PROPERTY_STRING
+
+    return layoutStyle;
+  }
+
+  bool ComputedStyle::update(const CSSStyleDeclaration &other)
+  {
+    ComputedStyle resolvedStyle(other);
+    for (const auto &[propertyName, value] : resolvedStyle)
+    {
+      auto it = find(propertyName);
+      if (it != end())
+      {
+        if (it->second != value)
+        {
+          it->second = value;
+          return true;
+        }
+      }
+      else
+      {
+        setPropertyInternal(propertyName, value);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void ComputedStyle::setPropertyInternal(const std::string &name, const std::string &value)
+  {
+    using namespace crates::css2;
+
+    insert({name, value});
+
+    // Box model properties
+    if (name == "display")
+      display_ = Parse::ParseSingleValue<values::computed::Display>(value);
+    else if (name == "box-sizing")
+      box_sizing_ = Parse::ParseSingleValue<values::computed::BoxSizing>(value);
+
+    // Font properties
+    if (name == "font-family")
+      fonts_ = parsing::parseFontFamily(value);
+    else if (name == "font-size")
+      font_size_ = Parse::ParseSingleValue<values::specified::FontSize>(value).toComputedValue(context_);
+    else if (name == "font-weight")
+      font_weight_ = Parse::ParseSingleValue<values::specified::FontWeight>(value).toComputedValue(context_);
+    else if (name == "font-style")
+      font_style_ = Parse::ParseSingleValue<values::specified::FontStyle>(value).toComputedValue(context_);
+    else if (name == "line-height")
+      line_height_ = Parse::ParseSingleValue<values::specified::LineHeight>(value).toComputedValue(context_);
+
+    // Visibility properties
+    // TODO: implement visibility properties
+
+    // Text properties
+    else if (name == "text-align")
+      text_align_ = Parse::ParseSingleValue<values::computed::TextAlign>(value);
+    else if (name == "direction")
+      text_direction_ = Parse::ParseSingleValue<values::computed::Direction>(value);
+
+    // Color properties
+    else if (name == "color")
+      color_ = Parse::ParseSingleValue<values::specified::Color>(value).toComputedValue(context_);
+    else if (name == "background-color")
+      background_color_ = Parse::ParseSingleValue<values::specified::Color>(value).toComputedValue(context_);
   }
 }

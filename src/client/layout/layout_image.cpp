@@ -29,17 +29,17 @@ namespace client_layout
 
     if (adoptedStyle.hasProperty("width"))
     {
-      auto widthDimension = adoptedStyle.getPropertyValueAs<Dimension>("width");
-      if (!widthDimension.isAuto() &&
+      auto width = adoptedStyle.width();
+      if (!width.isAuto() &&
           lastFragment.contentWidth() > 0)
-        adoptedWidth = widthDimension;
+        adoptedWidth = width.toLayoutValue();
     }
     if (adoptedStyle.hasProperty("height"))
     {
-      auto heightDimension = adoptedStyle.getPropertyValueAs<Dimension>("height");
-      if (!heightDimension.isAuto() &&
+      auto height = adoptedStyle.height();
+      if (!height.isAuto() &&
           lastFragment.contentHeight() > 0)
-        adoptedHeight = heightDimension;
+        adoptedHeight = height.toLayoutValue();
     }
 
     // If both width and height are specified, then use them.
@@ -113,18 +113,18 @@ namespace client_layout
     LayoutReplaced::entityWillBeDestroyed(entity);
   }
 
-  void LayoutImage::styleWillChange(client_cssom::CSSStyleDeclaration &newStyle)
+  void LayoutImage::styleWillChange(client_cssom::ComputedStyle &new_style)
   {
-    LayoutReplaced::styleWillChange(newStyle);
+    LayoutReplaced::styleWillChange(new_style);
 
     // The image size may be changed, so we need to adjust the size.
-    if (newStyle.hasProperty("width") || newStyle.hasProperty("height"))
+    if (new_style.hasProperty("width") || new_style.hasProperty("height"))
       adjustImageSize();
   }
 
-  void LayoutImage::didComputeLayoutOnce(const ConstraintSpace &avilableSpace)
+  void LayoutImage::didComputeLayoutOnce(const ConstraintSpace &avilable_space)
   {
-    LayoutReplaced::didComputeLayoutOnce(avilableSpace);
+    LayoutReplaced::didComputeLayoutOnce(avilable_space);
 
     Fragment fragment = this->fragment();
     if (!is_layout_ready_)
