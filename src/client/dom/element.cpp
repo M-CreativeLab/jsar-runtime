@@ -16,6 +16,7 @@ namespace dom
 {
   using namespace std;
   using namespace builtin_scene;
+  using namespace client_cssom;
 
   shared_ptr<Element> Element::CreateElement(pugi::xml_node node, shared_ptr<Document> ownerDocument)
   {
@@ -319,16 +320,12 @@ namespace dom
     boxes_.clear();
   }
 
-  bool Element::adoptStyle(const client_cssom::CSSStyleDeclaration &style)
+  bool Element::adoptStyle(const ComputedStyle &new_style)
   {
-    client_cssom::CSSStyleDeclaration newStyle = style;
-    newStyle.update(defaultStyle_, true); // Update the default style if these properties are not present.
-
-    if (adoptedStyle_ != nullptr &&      // Pass if `adoptedStyle_` is not set.
-        adoptedStyle_->equals(newStyle)) // Skip if the style is the same.
+    if (adoptedStyle_ != nullptr && // Pass if `adoptedStyle_` is not set.
+        ComputedStyle::ComputeDifference(&new_style, adoptedStyle_.get()) == ComputedStyle::kEqual)
       return false;
-
-    return adoptStyleDirectly(newStyle);
+    return adoptStyleDirectly(new_style);
   }
 
   void Element::useSceneWithCallback(const function<void(builtin_scene::Scene &)> &callback)
@@ -710,9 +707,9 @@ namespace dom
     }
   }
 
-  bool Element::adoptStyleDirectly(const client_cssom::CSSStyleDeclaration &newStyle)
+  bool Element::adoptStyleDirectly(const client_cssom::ComputedStyle &new_style)
   {
-    adoptedStyle_ = make_unique<client_cssom::CSSStyleDeclaration>(newStyle);
+    adoptedStyle_ = make_unique<client_cssom::ComputedStyle>(new_style);
     styleAdoptedCallback();
 
     // Update the layout node style.

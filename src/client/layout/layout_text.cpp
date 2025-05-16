@@ -151,13 +151,13 @@ namespace client_layout
     context.setContentSizeEnabled(true);
   }
 
-  void LayoutText::styleWillChange(client_cssom::CSSStyleDeclaration &newStyle)
+  void LayoutText::styleWillChange(client_cssom::ComputedStyle &new_style)
   {
-    LayoutObject::styleWillChange(newStyle);
+    LayoutObject::styleWillChange(new_style);
 
     // TODO(yorkie): implement StyleDifference to check the changed properties to avoid the repeated update.
-    if (newStyle.hasProperty("text-transform") ||
-        newStyle.hasProperty("-webkit-text-security"))
+    if (new_style.hasProperty("text-transform") ||
+        new_style.hasProperty("-webkit-text-security"))
     {
       transformed_text_ = transformAndSecureText(plainText());
       is_text_content_dirty_ = true;

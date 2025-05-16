@@ -8,7 +8,7 @@
 #include <skia/modules/skparagraph/include/Paragraph.h>
 #include <skia/modules/skparagraph/include/ParagraphBuilder.h>
 #include <skia/modules/skparagraph/include/TextStyle.h>
-#include <client/cssom/css_style_declaration.hpp>
+#include <client/cssom/computed_style.hpp>
 #include <client/layout/fragment.hpp>
 #include <client/per_process.hpp>
 
@@ -109,20 +109,8 @@ namespace builtin_scene
       return canvas;
     }
 
-    /**
-     * This function provides access to the CSS style declaration associated with the object.
-     *
-     * @returns A constant reference to the CSSStyleDeclaration object.
-     */
-    inline const client_cssom::CSSStyleDeclaration &style() const { return style_; }
-
-    /**
-     * This function assigns the provided CSSStyleDeclaration object to the internal `style_` member.
-     *
-     * @param style A CSSStyleDeclaration object to be set.
-     * @param parent The parent WebContent object.
-     */
-    void setStyle(const client_cssom::CSSStyleDeclaration &style, std::shared_ptr<WebContent> parent = nullptr);
+    inline const client_cssom::ComputedStyle &style() const { return style_; }
+    void setStyle(const client_cssom::ComputedStyle &style, std::shared_ptr<WebContent> parent = nullptr);
 
     inline const std::optional<client_layout::Fragment> &fragment() const { return lastFragment_; }
     inline void setFragment(const client_layout::Fragment &fragment) { lastFragment_ = fragment; }
@@ -188,7 +176,7 @@ namespace builtin_scene
   private:
     sk_sp<SkSurface> surface_;
     std::string name_;
-    client_cssom::CSSStyleDeclaration style_;
+    client_cssom::ComputedStyle style_;
     std::optional<client_layout::Fragment> lastFragment_;
     WebContentStyle contentStyle_;
     SkRRect roundedRect_;

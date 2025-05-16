@@ -110,7 +110,6 @@ namespace client_cssom
     /**
      * Custom the conversion to `LayoutStyle`.
      */
-    operator crates::layout2::LayoutStyle() const;
     bool operator==(const CSSStyleDeclaration &other) const { return equals(other); }
     bool operator!=(const CSSStyleDeclaration &other) const { return !equals(other); }
     /**

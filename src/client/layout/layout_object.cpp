@@ -227,7 +227,7 @@ namespace client_layout
     }
   }
 
-  optional<client_cssom::CSSStyleDeclaration> LayoutObject::style() const
+  optional<client_cssom::ComputedStyle> LayoutObject::style() const
   {
     if (TR_UNLIKELY(!node()->isElementOrText()))
       return nullopt;
@@ -247,7 +247,7 @@ namespace client_layout
     return nullopt;
   }
 
-  const client_cssom::CSSStyleDeclaration &LayoutObject::styleRef() const
+  const client_cssom::ComputedStyle &LayoutObject::styleRef() const
   {
     assert(node()->isElementOrText() && "The node must be an element or text node.");
     if (node()->isElement())
@@ -397,7 +397,7 @@ namespace client_layout
       formattingContextDidSet(*formattingContext_);
   }
 
-  bool LayoutObject::setStyle(CSSStyleDeclaration style)
+  bool LayoutObject::setStyle(ComputedStyle style)
   {
     styleWillChange(style);
 
@@ -520,13 +520,13 @@ namespace client_layout
     return nullptr;
   }
 
-  bool LayoutObject::computeIsFixedContainer(const client_cssom::CSSStyleDeclaration &style) const
+  bool LayoutObject::computeIsFixedContainer(const client_cssom::ComputedStyle &style) const
   {
     // TODO: implement this method.
     return false;
   }
 
-  bool LayoutObject::computeIsAbsoluteContainer(const client_cssom::CSSStyleDeclaration &style) const
+  bool LayoutObject::computeIsAbsoluteContainer(const client_cssom::ComputedStyle &style) const
   {
     // TODO: implement this method.
     return false;
@@ -584,16 +584,14 @@ namespace client_layout
   bool LayoutObject::visibleToHitTestRequest(const HitTestRequest &request) const
   {
     auto &style = styleRef();
-    return style.getPropertyValue("visibility", "visible") == "visible" &&
+    return style.visibility() == client_cssom::Visibility::kVisible &&
            (request.ignorePointerEventsNone() ||
-            style.getPropertyValue("pointer-events") != "none");
+            style.pointerEvents() != client_cssom::PointerEvents::kNone);
   }
 
   bool LayoutObject::visibleToHitTesting() const
   {
-    auto &style = styleRef();
-    return style.getPropertyValue("visibility", "visible") == "visible" &&
-           style.getPropertyValue("pointer-events") != "none";
+    return styleRef().visibleToHitTesting();
   }
 
   bool LayoutObject::hitTestAllPhases(HitTestResult &result,
@@ -695,39 +693,17 @@ namespace client_layout
   {
   }
 
-  void LayoutObject::styleWillChange(client_cssom::CSSStyleDeclaration &newStyle)
+  void LayoutObject::styleWillChange(client_cssom::ComputedStyle &new_style)
   {
-    // Preprocess the length properties to convert the viewport-based relative length to pixels.
-    // Such as "width: 50vw", "height: 50vh", etc.
-    glm::vec3 viewport = viewRef().viewport.xyz();
-#define PREPROCESS_LENGTH(NAME)                                                   \
-  if (newStyle.hasProperty(NAME))                                                 \
-  {                                                                               \
-    auto length = newStyle.getPropertyValueAs<client_cssom::types::Length>(NAME); \
-    if (length.isViewportBasedRelativeLength())                                   \
-    {                                                                             \
-      auto lengthInPixels = length.computeViewportBasedLengthInPixels(viewport);  \
-      newStyle.setProperty(NAME, to_string(lengthInPixels) + "px");               \
-    }                                                                             \
-  }
-    PREPROCESS_LENGTH("width")
-    PREPROCESS_LENGTH("height")
-    PREPROCESS_LENGTH("min-width")
-    PREPROCESS_LENGTH("min-height")
-    PREPROCESS_LENGTH("max-width")
-    PREPROCESS_LENGTH("max-height")
-
-#undef PREPROCESS_LENGTH
-
     // Update the transform's post-transform matrix if the "transform" property is provided.
-    if (newStyle.hasProperty("transform"))
+    if (new_style.hasProperty("transform"))
     {
       auto transformComponent = getSceneComponent<Transform>();
       if (transformComponent != nullptr)
       {
         auto &postTransform = transformComponent->getOrInitPostTransform();
-        // TODO: how to avoid duplicated parsing?
-        auto transformProperty = types::transform::Transform::Parse(newStyle.getPropertyValue("transform"));
+        // TODO(yorkie): how to avoid duplicated parsing?
+        auto transformProperty = types::transform::Transform::Parse(new_style.getPropertyValue("transform"));
         if (transformProperty.size() > 0)
         {
           glm::mat4 mat(1.0f);

@@ -3,6 +3,7 @@
 #include <string>
 #include <client/builtin_scene/scene.hpp>
 #include <client/cssom/css_style_declaration.hpp>
+#include <client/cssom/computed_style.hpp>
 #include <client/html/html_element.hpp>
 #include <client/layout/layout_text.hpp>
 
@@ -51,7 +52,7 @@ namespace dom
     [[nodiscard]] std::unique_ptr<Text> splitText(size_t offset);
 
     inline bool hasAdoptedStyle() const { return adoptedStyle_ != nullptr; }
-    inline const client_cssom::CSSStyleDeclaration &adoptedStyleRef() const { return *adoptedStyle_; }
+    inline const client_cssom::ComputedStyle &adoptedStyleRef() const { return *adoptedStyle_; }
 
   private:
     bool isText() const override final { return true; }
@@ -64,12 +65,12 @@ namespace dom
     void initCSSBoxes();
     void resetCSSBoxes(bool skipCheck = false);
 
-    bool adoptStyle(const client_cssom::CSSStyleDeclaration &);
-    bool adoptStyleDirectly(const client_cssom::CSSStyleDeclaration &);
+    bool adoptStyle(const client_cssom::ComputedStyle &);
+    bool adoptStyleDirectly(const client_cssom::ComputedStyle &);
 
   private:
     client_cssom::CSSStyleDeclaration defaultStyle_;
-    std::unique_ptr<client_cssom::CSSStyleDeclaration> adoptedStyle_;
+    std::unique_ptr<client_cssom::ComputedStyle> adoptedStyle_;
     std::vector<std::shared_ptr<client_layout::LayoutText>> textBoxes_;
     std::shared_ptr<client_cssom::CSSStyleDeclaration> style_;
     float offsetWidth_ = 0.0f;

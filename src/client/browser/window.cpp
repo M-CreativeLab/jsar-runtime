@@ -19,18 +19,22 @@ namespace browser
     assert(clientContext_ != nullptr);
   }
 
-  const CSSStyleDeclaration &Window::getComputedStyle(shared_ptr<dom::Element> element,
-                                                      optional<string> pseudoElt) const
+  const ComputedStyle &Window::getComputedStyle(shared_ptr<dom::Element> element, optional<string> pseudoElt) const
   {
     auto htmlElement = dynamic_pointer_cast<dom::HTMLElement>(element);
     if (TR_UNLIKELY(htmlElement == nullptr))
       throw invalid_argument("The element must be an HTMLElement");
 
-    auto computedStyle = document_->styleCache().findStyle(htmlElement);
+    shared_ptr<ComputedStyle> computedStyle = document_->styleCache().findStyle(htmlElement);
     if (computedStyle != nullptr)
       return *computedStyle;
 
     computedStyle = document_->styleCache().createStyle(htmlElement, false);
+
+    // Initial the style from the element's default style.
+    computedStyle->update(htmlElement->defaultStyleRef());
+
+    // Update the style from the stylesheets.
     const auto &stylesheets = htmlElement->getOwnerDocumentChecked().styleSheets();
     for (auto stylesheet : stylesheets)
     {
@@ -46,8 +50,9 @@ namespace browser
       }
     }
 
-    auto inlineStyle = htmlElement->style();
-    computedStyle->update(inlineStyle); // Override the style from the element's.
+    // Update the style from the element's inline style.
+    auto elementStyle = htmlElement->style();
+    computedStyle->update(elementStyle); // Override the style from the element's.
     return *computedStyle;
   }
 }

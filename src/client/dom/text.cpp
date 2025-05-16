@@ -14,6 +14,7 @@ namespace dom
   using namespace std;
   using namespace pugi;
   using namespace builtin_scene;
+  using namespace client_cssom;
   using namespace skia::textlayout;
 
   // Create a text node from a document and a value.
@@ -163,57 +164,17 @@ namespace dom
     textBoxes_.clear();
   }
 
-  bool Text::adoptStyle(const client_cssom::CSSStyleDeclaration &style)
+  bool Text::adoptStyle(const client_cssom::ComputedStyle &new_style)
   {
-    client_cssom::CSSStyleDeclaration newStyle = style;
-
-    // Inherit the style from the parent node if it is not set.
-    auto parentNode = getParentNodeAs<Element>();
-    if (parentNode != nullptr)
-    {
-      const auto &parentStyle = parentNode->adoptedStyleRef();
-
-#define USE_PARENT_STYLE(property)                                          \
-  if (parentStyle.hasProperty(property))                                    \
-  {                                                                         \
-    newStyle.setProperty(property, parentStyle.getPropertyValue(property)); \
-  }
-
-      // Font styles
-      USE_PARENT_STYLE("font-family");
-      USE_PARENT_STYLE("font-size");
-      USE_PARENT_STYLE("font-weight");
-      USE_PARENT_STYLE("font-style");
-      USE_PARENT_STYLE("font-variant");
-      USE_PARENT_STYLE("line-height");
-
-      // Text styles
-      USE_PARENT_STYLE("color");
-      USE_PARENT_STYLE("text-align");
-      USE_PARENT_STYLE("text-indent");
-      USE_PARENT_STYLE("text-transform");
-      USE_PARENT_STYLE("-webkit-text-security");
-      USE_PARENT_STYLE("text-decoration");
-      USE_PARENT_STYLE("letter-spacing");
-      USE_PARENT_STYLE("word-spacing");
-      USE_PARENT_STYLE("white-space");
-      USE_PARENT_STYLE("direction");
-      USE_PARENT_STYLE("unicode-bidi");
-
-#undef USE_PARENT_STYLE
-#undef _MAKE_TEXT_STYLE_IF_NOT_EXIST
-    }
-
-    // Update the  style if these properties are not present.
-    newStyle.update(defaultStyle_, true);
-    if (hasAdoptedStyle() && adoptedStyle_->equals(newStyle)) // Skip if the style is the same.
+    if (adoptedStyle_ != nullptr && // Pass if `adoptedStyle_` is not set.
+        ComputedStyle::ComputeDifference(&new_style, adoptedStyle_.get()) == ComputedStyle::kEqual)
       return false;
-    return adoptStyleDirectly(newStyle);
+    return adoptStyleDirectly(new_style);
   }
 
-  bool Text::adoptStyleDirectly(const client_cssom::CSSStyleDeclaration &newStyle)
+  bool Text::adoptStyleDirectly(const client_cssom::ComputedStyle &new_style)
   {
-    adoptedStyle_ = make_unique<client_cssom::CSSStyleDeclaration>(newStyle);
+    adoptedStyle_ = make_unique<client_cssom::ComputedStyle>(new_style);
 
     // Update the layout node style.
     bool updated = false;

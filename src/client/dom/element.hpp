@@ -12,6 +12,8 @@
 #include <client/builtin_scene/scene.hpp>
 #include <client/builtin_scene/ecs.hpp>
 #include <client/cssom/box_bounding.hpp>
+#include <client/cssom/computed_style.hpp>
+#include <client/cssom/css_style_declaration.hpp>
 #include <client/layout/layout_box.hpp>
 
 #include "./node.hpp"
@@ -178,11 +180,12 @@ namespace dom
     }
 
     inline bool hasAdoptedStyle() const { return adoptedStyle_ != nullptr; }
-    const client_cssom::CSSStyleDeclaration &adoptedStyleRef() const
+    const client_cssom::ComputedStyle &adoptedStyleRef() const
     {
       assert(adoptedStyle_ != nullptr && "The adopted style should not be null.");
       return *adoptedStyle_;
     }
+    const client_cssom::CSSStyleDeclaration &defaultStyleRef() const { return defaultStyle_; }
 
     std::shared_ptr<const client_layout::LayoutBoxModelObject> principalBox() const { return principalBox_; }
     std::shared_ptr<client_layout::LayoutBoxModelObject> principalBox() { return principalBox_; }
@@ -252,7 +255,7 @@ namespace dom
 
     // Adopt the specified style to the element, it will copy the style properties to the element's adopted style, and
     // update the layout node's style.
-    bool adoptStyle(const client_cssom::CSSStyleDeclaration &newStyle);
+    bool adoptStyle(const client_cssom::ComputedStyle &newStyle);
 
     /**
      * A utility method to use the scene weak reference safely.
@@ -274,7 +277,7 @@ namespace dom
     void simulateScrollWithOffset(float offsetX, float offsetY);
 
   private:
-    bool adoptStyleDirectly(const client_cssom::CSSStyleDeclaration &newStyle);
+    bool adoptStyleDirectly(const client_cssom::ComputedStyle &newStyle);
     bool setActionState(bool &state, bool value);
 
   public:
@@ -301,7 +304,7 @@ namespace dom
     client_cssom::CSSStyleDeclaration defaultStyle_;
 
   private:
-    std::unique_ptr<client_cssom::CSSStyleDeclaration> adoptedStyle_;
+    std::unique_ptr<client_cssom::ComputedStyle> adoptedStyle_;
     std::weak_ptr<builtin_scene::Scene> scene_;
     std::shared_ptr<ElementAnimations> element_animations_;
     std::vector<std::shared_ptr<client_layout::LayoutBoxModelObject>> boxes_;
