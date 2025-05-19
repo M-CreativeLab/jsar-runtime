@@ -13,3 +13,9 @@
 #include "./percentage.hpp"
 #include "./position.hpp"
 #include "./text.hpp"
+
+// Forward declarations that not included to avoid circular dependencies
+namespace client_cssom::values::computed
+{
+  class Context;
+}

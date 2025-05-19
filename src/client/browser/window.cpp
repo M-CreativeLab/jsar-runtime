@@ -2,6 +2,7 @@
 #include <client/dom/document.hpp>
 #include <client/cssom/rules/css_style_rule.hpp>
 #include <client/cssom/selectors/matching.hpp>
+#include <client/cssom/values/computed/context.hpp>
 #include <client/html/html_element.hpp>
 
 #include "./window.hpp"
@@ -11,6 +12,7 @@ namespace browser
   using namespace std;
   using namespace client_cssom;
   using namespace client_cssom::rules;
+  using namespace client_cssom::values;
 
   Window::Window(TrClientContextPerProcess *clientContext)
       : dom::DOMEventTarget(),
@@ -29,10 +31,11 @@ namespace browser
     if (computedStyle != nullptr)
       return *computedStyle;
 
+    computed::Context context = computed::Context::From(*htmlElement);
     computedStyle = document_->styleCache().createStyle(htmlElement, false);
 
     // Initial the style from the element's default style.
-    computedStyle->update(htmlElement->defaultStyleRef());
+    computedStyle->update(htmlElement->defaultStyleRef(), context);
 
     // Update the style from the stylesheets.
     const auto &stylesheets = htmlElement->getOwnerDocumentChecked().styleSheets();
@@ -44,7 +47,7 @@ namespace browser
         if (styleRule != nullptr)
         {
           if (selectors::matchesSelectorList(styleRule->selectors(), htmlElement))
-            computedStyle->update(styleRule->style());
+            computedStyle->update(styleRule->style(), context);
         }
         // TODO: handle other types of rules, such as `CSSImportRule`, `CSSMediaRule`, etc.
       }
@@ -52,7 +55,7 @@ namespace browser
 
     // Update the style from the element's inline style.
     auto elementStyle = htmlElement->style();
-    computedStyle->update(elementStyle); // Override the style from the element's.
+    computedStyle->update(elementStyle, context); // Override the style from the element's.
     return *computedStyle;
   }
 }

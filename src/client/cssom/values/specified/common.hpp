@@ -5,6 +5,7 @@
 #include <client/cssom/style_traits.hpp>
 #include <client/cssom/values/common.hpp>
 #include <client/cssom/values/generics/common.hpp>
+#include <client/cssom/values/computed/context.hpp>
 
 namespace client_cssom::values::specified
 {
