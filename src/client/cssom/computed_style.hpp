@@ -55,7 +55,8 @@ namespace client_cssom
         return it->second;
       return "";
     }
-    bool update(const CSSStyleDeclaration &other);
+    // Update the computed style from the given `CSSStyleDeclaration`, and a context to compute the values.
+    bool update(const CSSStyleDeclaration &, values::computed::Context &);
 
     // Properties
     const values::computed::Display &display() const { return display_; }
@@ -103,10 +104,10 @@ namespace client_cssom
 
   private:
     void setPropertyInternal(const std::string &name, const std::string &value);
+    void computeProperty(const std::string &name, const std::string &value, values::computed::Context &);
+    void computeShorthandProperties(values::computed::Context &);
 
   private:
-    values::computed::Context context_;
-
     // Box model
     values::computed::Display display_ = values::computed::Display::None();
     values::computed::BoxSizing box_sizing_ = values::computed::BoxSizing::ContentBox();

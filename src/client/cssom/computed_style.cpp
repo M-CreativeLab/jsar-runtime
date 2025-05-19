@@ -2,6 +2,7 @@
 
 #include "./computed_style.hpp"
 #include "./style_traits.hpp"
+#include "./values/computed/context.hpp"
 #include "./values/specified/border.hpp"
 #include "./values/specified/font.hpp"
 #include "./values/specified/color.hpp"
@@ -107,34 +108,45 @@ namespace client_cssom
     return layoutStyle;
   }
 
-  bool ComputedStyle::update(const CSSStyleDeclaration &other)
+  bool ComputedStyle::update(const CSSStyleDeclaration &from, values::computed::Context &context)
   {
-    ComputedStyle resolvedStyle(other);
+    ComputedStyle resolvedStyle(from);
     for (const auto &[propertyName, value] : resolvedStyle)
     {
+      bool shouldComputeNewValue = false;
       auto it = find(propertyName);
       if (it != end())
       {
         if (it->second != value)
         {
           it->second = value;
-          return true;
+          shouldComputeNewValue = true;
         }
       }
       else
       {
         setPropertyInternal(propertyName, value);
-        return true;
+        shouldComputeNewValue = true;
       }
+
+      if (shouldComputeNewValue)
+        computeProperty(propertyName, value, context);
     }
-    return false;
+
+    // Compute shorthand properties such as `margin`, `padding`, `border`, etc.
+    computeShorthandProperties(context);
+    return true;
   }
 
   void ComputedStyle::setPropertyInternal(const std::string &name, const std::string &value)
   {
-    using namespace crates::css2;
-
     insert({name, value});
+  }
+
+  void ComputedStyle::computeProperty(const std::string &name, const std::string &value,
+                                      values::computed::Context &context)
+  {
+    using namespace crates::css2;
 
     // Box model properties
     if (name == "display")
@@ -146,13 +158,13 @@ namespace client_cssom
     if (name == "font-family")
       fonts_ = parsing::parseFontFamily(value);
     else if (name == "font-size")
-      font_size_ = Parse::ParseSingleValue<values::specified::FontSize>(value).toComputedValue(context_);
+      font_size_ = Parse::ParseSingleValue<values::specified::FontSize>(value).toComputedValue(context);
     else if (name == "font-weight")
-      font_weight_ = Parse::ParseSingleValue<values::specified::FontWeight>(value).toComputedValue(context_);
+      font_weight_ = Parse::ParseSingleValue<values::specified::FontWeight>(value).toComputedValue(context);
     else if (name == "font-style")
-      font_style_ = Parse::ParseSingleValue<values::specified::FontStyle>(value).toComputedValue(context_);
+      font_style_ = Parse::ParseSingleValue<values::specified::FontStyle>(value).toComputedValue(context);
     else if (name == "line-height")
-      line_height_ = Parse::ParseSingleValue<values::specified::LineHeight>(value).toComputedValue(context_);
+      line_height_ = Parse::ParseSingleValue<values::specified::LineHeight>(value).toComputedValue(context);
 
     // Visibility properties
     // TODO: implement visibility properties
@@ -165,8 +177,13 @@ namespace client_cssom
 
     // Color properties
     else if (name == "color")
-      color_ = Parse::ParseSingleValue<values::specified::Color>(value).toComputedValue(context_);
+      color_ = Parse::ParseSingleValue<values::specified::Color>(value).toComputedValue(context);
     else if (name == "background-color")
-      background_color_ = Parse::ParseSingleValue<values::specified::Color>(value).toComputedValue(context_);
+      background_color_ = Parse::ParseSingleValue<values::specified::Color>(value).toComputedValue(context);
+  }
+
+  void ComputedStyle::computeShorthandProperties(values::computed::Context &context)
+  {
+    // TODO: implement shorthand properties
   }
 }
