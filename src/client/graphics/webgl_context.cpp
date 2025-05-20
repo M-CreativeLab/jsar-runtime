@@ -1,5 +1,6 @@
 #include <string>
 #include <idgen.hpp>
+#include <common/image/image_processor.hpp>
 #include <crates/bindings.hpp>
 #include <client/xr/webxr_session.hpp>
 
@@ -601,23 +602,37 @@ namespace client_graphics
     req.format = static_cast<uint32_t>(format);
     req.pixelType = static_cast<uint32_t>(type);
 
-    unsigned char *unpacked = nullptr;
-    if (
-        pixels != nullptr &&
-        (unpackFlipY_ || unpackPremultiplyAlpha_))
+    if (pixels == nullptr)
     {
-      unpacked = unpackPixels(type,
-                              format,
-                              width,
-                              height,
-                              pixels);
-      if (TR_UNLIKELY(unpacked == nullptr))
-        throw std::runtime_error("Failed to unpack pixels, the source data is null.");
-      req.setPixels(unpacked, false);
+      req.setPixels(nullptr, true);
     }
     else
     {
-      req.setPixels(pixels, false);
+      unsigned char *pixelsToUse = nullptr;
+      int max_size = std::max(width, height);
+      if (max_size > transmute::ImageProcessor::DEFAULT_MAX_TEXTURE_SIZE)
+      {
+        const auto &downsampled = transmute::ImageProcessor::GetDownsampledImage(pixels, width, height);
+        req.width = downsampled.width;
+        req.height = downsampled.height;
+        pixelsToUse = const_cast<unsigned char *>(downsampled.pixels.data());
+      }
+      else
+      {
+        pixelsToUse = pixels;
+      }
+
+      if (unpackFlipY_ || unpackAlignment_)
+      {
+        unsigned char *unpacked = unpackPixels(type, format, req.width, req.height, pixelsToUse);
+        if (TR_UNLIKELY(unpacked == nullptr))
+          throw std::runtime_error("Failed to unpack pixels, the source data is null.");
+        req.setPixels(unpacked, false);
+      }
+      else
+      {
+        req.setPixels(pixelsToUse, false);
+      }
     }
     sendCommandBufferRequest(req);
   }

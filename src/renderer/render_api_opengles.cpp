@@ -5,6 +5,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include <common/image/image_processor.hpp>
 
 #include "gles/common.hpp"
 #include "gles/context_storage.hpp"
@@ -1065,16 +1066,39 @@ private:
 	}
 	TR_OPENGL_FUNC void OnTexImage2D(TextureImage2DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
 	{
-		auto target = req->target;
-		auto level = req->level;
-		auto internalformat = req->internalformat;
-		auto width = req->width;
-		auto height = req->height;
-		auto border = req->border;
-		auto format = req->format;
-		auto type = req->pixelType;
+		GLenum target = req->target;
+		GLint level = req->level;
+		GLint internalformat = req->internalformat;
 
-		glTexImage2D(target, level, internalformat, width, height, border, format, type, req->pixels);
+		GLsizei width = req->width;
+		GLsizei height = req->height;
+		GLint border = req->border;
+		GLenum format = req->format;
+		GLenum type = req->pixelType;
+		const GLvoid *pixels = nullptr;
+
+		if (req->pixels == nullptr)
+		{
+			glTexImage2D(target, level, internalformat, width, height, border, format, type, nullptr);
+		}
+		else
+		{
+			int max_size = std::max(width, height);
+			if (max_size > transmute::ImageProcessor::DEFAULT_MAX_TEXTURE_SIZE)
+			{
+				// Downsample the image to avoid GPU OOM if the image is over the limit size.
+				const auto &downsampled = transmute::ImageProcessor::GetDownsampledImage(req->pixels, width, height);
+				width = downsampled.width;
+				height = downsampled.height;
+				pixels = downsampled.pixels.data();
+			}
+			else
+			{
+				pixels = req->pixels;
+			}
+			glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+		}
+
 		if (TR_UNLIKELY(CheckError(req, reqContentRenderer) != GL_NO_ERROR || options.printsCall))
 		{
 			GLint currentTexture;
@@ -1089,7 +1113,7 @@ private:
 			DEBUG(DEBUG_TAG, "            border: %d", border);
 			DEBUG(DEBUG_TAG, "            format: %s", gles::glTextureFormatToString(format).c_str());
 			DEBUG(DEBUG_TAG, "              type: %s", gles::glEnumToString(type).c_str());
-			DEBUG(DEBUG_TAG, "              data: %p", req->pixels);
+			DEBUG(DEBUG_TAG, "              data: %p", pixels);
 		}
 	}
 	TR_OPENGL_FUNC void OnTexSubImage2D(TextureSubImage2DCommandBufferRequest *req, renderer::TrContentRenderer *reqContentRenderer, ApiCallOptions &options)
