@@ -163,6 +163,18 @@ void TrContentManager::disposeContent(shared_ptr<TrContentRuntime> content)
     contents.erase(it);
 }
 
+void TrContentManager::disposeAll()
+{
+  unique_lock<shared_mutex> lock(contentsMutex);
+  for (auto it = contents.begin(); it != contents.end(); ++it)
+  {
+    auto content = *it;
+    // Only dispose the content that is used.
+    if (content->used)
+      content->dispose();
+  }
+}
+
 void TrContentManager::onNewClientOnEventChan(TrOneShotClient<events_comm::TrNativeEventMessage> &client)
 {
   auto peerId = client.getCustomId();

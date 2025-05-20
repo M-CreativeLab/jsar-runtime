@@ -356,10 +356,11 @@ public:
   bool IsChanged(OpenGLAppContextStorage *other);
 
 public:
-  std::shared_ptr<gles::GLObjectManager> m_GLObjectManager;
+  gles::GLObjectManager &ObjectManagerRef() { return *m_GLObjectManager; }
 
 private:
   bool m_Dirty = false;
+  std::shared_ptr<gles::GLObjectManager> m_GLObjectManager;
   OpenGLNamesStorage m_Programs;
   OpenGLNamesStorage m_Shaders;
   OpenGLNamesStorage m_Buffers;

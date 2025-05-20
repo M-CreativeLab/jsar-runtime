@@ -225,16 +225,23 @@ namespace renderer
   {
     unique_lock<shared_mutex> lock(contentRendererMutex);
     if (contentRenderers.size() == 0)
+    {
+      DEBUG(LOG_TAG_RENDERER, "There is no content renderer to be removed.");
       return 0;
+    }
 
     size_t removed = 0;
-    for (auto it = contentRenderers.begin(); it != contentRenderers.end(); it++)
+    for (auto it = contentRenderers.begin(); it != contentRenderers.end();)
     {
-      auto content = (*it)->getContent();
-      if (content != nullptr && content->id == contentId)
+      shared_ptr<TrContentRenderer> contentRenderer = *it;
+      if (contentRenderer->contentId == contentId)
       {
-        contentRenderers.erase(it);
+        it = contentRenderers.erase(it);
         removed += 1;
+      }
+      else
+      {
+        it++;
       }
     }
     return removed;

@@ -1,5 +1,7 @@
 #include "context_storage.hpp"
 
+using namespace std;
+
 void OpenGLContextStorage::RecordViewport(int x, int y, int w, int h)
 {
   m_Viewport[0] = x;
@@ -150,7 +152,7 @@ void OpenGLContextStorage::RecordTextureBindingWithUnit(GLenum target, GLuint te
 
   auto &binding = m_TextureBindingsWithUnit[activeUnit];
   if (binding == nullptr)
-    m_TextureBindingsWithUnit[activeUnit] = std::make_shared<OpenGLTextureBinding>(target, texture);
+    m_TextureBindingsWithUnit[activeUnit] = make_shared<OpenGLTextureBinding>(target, texture);
   else
     binding->Reset(target, texture);
 }
@@ -342,7 +344,7 @@ void OpenGLHostContextStorage::Record()
 
     // TODO: how to support other texture targets?
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &texture);
-    m_TextureBindingsWithUnit[i] = std::make_shared<OpenGLTextureBinding>(GL_TEXTURE_2D, texture);
+    m_TextureBindingsWithUnit[i] = make_shared<OpenGLTextureBinding>(GL_TEXTURE_2D, texture);
   }
   glActiveTexture(m_LastActiveTextureUnit);
 
@@ -433,7 +435,7 @@ void OpenGLHostContextStorage::RecordTextureBindingFromHost()
     glActiveTexture(m_LastActiveTextureUnit);
 
   glGetIntegerv(GL_TEXTURE_BINDING_2D, (GLint *)&texture);
-  m_TextureBindingsWithUnit[m_LastActiveTextureUnit] = std::make_shared<OpenGLTextureBinding>(GL_TEXTURE_2D, texture);
+  m_TextureBindingsWithUnit[m_LastActiveTextureUnit] = make_shared<OpenGLTextureBinding>(GL_TEXTURE_2D, texture);
 
   if (isActiveNotMatched)
     glActiveTexture(beforeActiveUnit);
@@ -448,9 +450,9 @@ void OpenGLHostContextStorage::RestoreFramebuffer()
 {
 }
 
-OpenGLAppContextStorage::OpenGLAppContextStorage(std::string name)
+OpenGLAppContextStorage::OpenGLAppContextStorage(string name)
     : OpenGLContextStorage(name),
-      m_GLObjectManager(std::make_shared<gles::GLObjectManager>())
+      m_GLObjectManager(make_unique<gles::GLObjectManager>(name))
 {
   /**
    * Initial values for WebGL or OpenGLES.
@@ -500,7 +502,7 @@ OpenGLAppContextStorage::OpenGLAppContextStorage(std::string name)
   }
 }
 
-OpenGLAppContextStorage::OpenGLAppContextStorage(std::string name, OpenGLAppContextStorage *from)
+OpenGLAppContextStorage::OpenGLAppContextStorage(string name, OpenGLAppContextStorage *from)
     : OpenGLContextStorage(name, from),
       m_GLObjectManager(from->m_GLObjectManager)
 {
@@ -530,7 +532,7 @@ void OpenGLAppContextStorage::RecordProgramOnCreated(GLuint program)
     return;
   if (m_Programs.find(program) != m_Programs.end())
     return; // Already recorded
-  m_Programs.insert(std::pair<GLuint, bool>(program, true));
+  m_Programs.insert(pair<GLuint, bool>(program, true));
 }
 
 void OpenGLAppContextStorage::RecordProgramOnDeleted(GLuint program)
@@ -549,7 +551,7 @@ void OpenGLAppContextStorage::RecordShaderOnCreated(GLuint shader)
     return;
   if (m_Shaders.find(shader) != m_Shaders.end())
     return; // Already recorded
-  m_Shaders.insert(std::pair<GLuint, bool>(shader, true));
+  m_Shaders.insert(pair<GLuint, bool>(shader, true));
 }
 
 void OpenGLAppContextStorage::RecordShaderOnDeleted(GLuint shader)
@@ -567,7 +569,7 @@ void OpenGLAppContextStorage::RecordBufferOnCreated(GLuint buffer)
     return;
   if (m_Buffers.find(buffer) != m_Buffers.end())
     return; // Already recorded
-  m_Buffers.insert(std::pair<GLuint, bool>(buffer, true));
+  m_Buffers.insert(pair<GLuint, bool>(buffer, true));
 }
 
 void OpenGLAppContextStorage::RecordBufferOnDeleted(GLuint buffer)
@@ -585,7 +587,7 @@ void OpenGLAppContextStorage::RecordFramebufferOnCreated(GLuint buffer)
     return;
   if (m_Framebuffers.find(buffer) != m_Framebuffers.end())
     return; // Already recorded
-  m_Framebuffers.insert(std::pair<GLuint, bool>(buffer, true));
+  m_Framebuffers.insert(pair<GLuint, bool>(buffer, true));
 }
 
 void OpenGLAppContextStorage::RecordFramebufferOnDeleted(GLuint buffer)
@@ -603,7 +605,7 @@ void OpenGLAppContextStorage::RecordRenderbufferOnCreated(GLuint buffer)
     return;
   if (m_Renderbuffers.find(buffer) != m_Renderbuffers.end())
     return; // Already recorded
-  m_Renderbuffers.insert(std::pair<GLuint, bool>(buffer, true));
+  m_Renderbuffers.insert(pair<GLuint, bool>(buffer, true));
 }
 
 void OpenGLAppContextStorage::RecordRenderbufferOnDeleted(GLuint buffer)
@@ -621,7 +623,7 @@ void OpenGLAppContextStorage::RecordVertexArrayObjectOnCreated(GLuint vao)
     return;
   if (m_VertexArrayObjects.find(vao) != m_VertexArrayObjects.end())
     return; // Already recorded
-  m_VertexArrayObjects.insert(std::pair<GLuint, bool>(vao, true));
+  m_VertexArrayObjects.insert(pair<GLuint, bool>(vao, true));
 }
 
 void OpenGLAppContextStorage::RecordVertexArrayObjectOnDeleted(GLuint vao)
@@ -639,7 +641,7 @@ void OpenGLAppContextStorage::RecordTextureOnCreated(GLuint texture)
     return;
   if (m_Textures.find(texture) != m_Textures.end())
     return; // Already recorded
-  m_Textures.insert(std::pair<GLuint, bool>(texture, true));
+  m_Textures.insert(pair<GLuint, bool>(texture, true));
 }
 
 void OpenGLAppContextStorage::RecordTextureOnDeleted(GLuint texture)
@@ -657,7 +659,7 @@ void OpenGLAppContextStorage::RecordSamplerOnCreated(GLuint sampler)
     return;
   if (m_Samplers.find(sampler) != m_Samplers.end())
     return; // Already recorded
-  m_Samplers.insert(std::pair<GLuint, bool>(sampler, true));
+  m_Samplers.insert(pair<GLuint, bool>(sampler, true));
 }
 
 void OpenGLAppContextStorage::RecordSamplerOnDeleted(GLuint sampler)

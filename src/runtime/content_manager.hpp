@@ -51,6 +51,10 @@ public:
    * @param content The content instance to dispose.
    */
   void disposeContent(shared_ptr<TrContentRuntime> content);
+  /**
+   * Dispose all the content instances.
+   */
+  void disposeAll();
 
 private:
   void onNewClientOnEventChan(TrOneShotClient<events_comm::TrNativeEventMessage> &client);

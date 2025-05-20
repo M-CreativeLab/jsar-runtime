@@ -12,8 +12,11 @@ namespace commandbuffers
     ~TrCommandBufferReceiver() {}
 
   public:
-    TrCommandBufferBase *recvCommandBufferRequest(int timeout = 0);
-    TrCommandBufferResponse *recvCommandBufferResponse(int timeout = 0);
+    // Receive a new command buffer request or response.
+    //
+    // It will return an allocated command buffer request object, the caller must manage its lifetime.
+    [[nodiscard]] TrCommandBufferBase *recvCommandBufferRequest(int timeout = 0);
+    [[nodiscard]] TrCommandBufferResponse *recvCommandBufferResponse(int timeout = 0);
 
     friend class TrCommandBufferMessage;
   };

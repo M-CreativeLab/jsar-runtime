@@ -24,7 +24,7 @@ namespace xr
   public:
     /**
      * Constructor.
-     * 
+     *
      * @param sessionId The session id.
      */
     FrameContextBySessionId(int sessionId);
@@ -50,9 +50,9 @@ namespace xr
   };
 
   /**
-   * The abstract class to represent a device-specific frame. The `DeviceFrame` manages the frame context for each session, 
+   * The abstract class to represent a device-specific frame. The `DeviceFrame` manages the frame context for each session,
    * and provides its stereo-related information including:
-   * 
+   *
    * - Rendering mode (single-pass or multi-pass)
    * - Viewer transform
    * - Local transform for each session
@@ -63,7 +63,7 @@ namespace xr
   public:
     /**
      * Construct a `DeviceFrame` with a specific XR device.
-     * 
+     *
      * @param device The XR device.
      */
     DeviceFrame(xr::Device *device) : m_XrDevice(device) {}
@@ -97,7 +97,7 @@ namespace xr
     glm::mat4 getLocalTransform(int sessionId);
     /**
      * Add a session to the device frame's sessions.
-     * 
+     *
      * @param sessionId The session id.
      * @returns The `FrameContextBySessionId` for the session.
      */
@@ -109,7 +109,7 @@ namespace xr
     FrameContextBySessionId *getSession(int sessionId);
     /**
      * Iterate all sessions in the device frame.
-     * 
+     *
      * @param callback The callback function to be called for each session.
      */
     void iterateSessions(std::function<void(int, FrameContextBySessionId *)> callback);
@@ -140,7 +140,7 @@ namespace xr
   public:
     /**
      * It computes the matrix by the given computation graph, every device frame implementation should implement this method.
-     * 
+     *
      * @param computationGraph The computation graph.
      * @param sessionId The session id.
      * @param viewIndex The view index.
@@ -165,7 +165,7 @@ namespace xr
   public:
     /**
      * Construct a `MultiPassFrame` with a specific XR device and stereo id.
-     * 
+     *
      * @param device The XR device.
      * @param stereoId The stereo id.
      */
@@ -207,7 +207,7 @@ namespace xr
 
   private:
     int m_ActiveEyeId = -1;
-    float m_ViewerViewMatrix[16]; // The viewer's view matrix for the active eye in current pass.
+    float m_ViewerViewMatrix[16];       // The viewer's view matrix for the active eye in current pass.
     float m_ViewerProjectionMatrix[16]; // The viewer's projection matrix for the active eye in current pass.
   };
 
@@ -219,7 +219,7 @@ namespace xr
   public:
     /**
      * Construct a `SinglePassFrame` with a specific XR device and stereo id.
-     * 
+     *
      * @param device The XR device.
      * @param stereoId The stereo id.
      */
@@ -256,8 +256,12 @@ namespace xr
     FrameActionResult flushFrame(int passIndex = 0);
     FrameActionResult endFrame(int passIndex = 0);
     commandbuffers::TrCommandBufferBase *cloneCommandBuffer(commandbuffers::TrCommandBufferBase *src);
-    void copyCommandBuffers(StereoRenderingFrame *frame);
-    void copyCommandBuffers(vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, int passIndex = 0);
+    inline void moveCommandBuffersTo(StereoRenderingFrame &dst)
+    {
+      moveCommandBuffersTo(dst, 0);
+      moveCommandBuffersTo(dst, 1);
+    }
+    void moveCommandBuffersTo(StereoRenderingFrame &dst, int passIndex);
     void addCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer, int passIndex = 0);
     vector<commandbuffers::TrCommandBufferBase *> &getCommandBuffers(int passIndex = 0);
     bool started();
@@ -270,18 +274,41 @@ namespace xr
      * In a single frame, we may have multiple flush commands, this method is used to reset the flush flag.
      */
     void resetFlush(int passIndex);
-    int getId();
-    bool addedOnce();
-    bool empty();
-    bool available();
-    void available(bool v);
-    bool expired(int timeout); // returns if this frame is expired after `timeout` milliseconds.
+    inline int getId() { return m_StereoId; }
+    inline bool addedOnce() { return m_IsAddedOnce; }
+    inline bool empty()
+    {
+      if (m_IsMultiPass)
+        return m_CommandBuffersInPass.empty() && m_CommandBuffersInPass2.empty();
+      else
+        return m_CommandBuffersInPass.empty();
+    }
+    inline bool available() { return m_Available; }
+    inline void available(bool v) { m_Available = v; }
+    // returns if this frame is expired after `timeout` milliseconds.
+    inline bool expired(int timeout) { return duration<chrono::milliseconds>().count() > timeout; }
     bool idempotent();
     void idempotent(int passIndex, bool value);
-    void finishPass(int passIndex);
-    bool finished(int passIndex);
-    size_t byteLength();
-    size_t byteLength(int passIndex);
+    inline void finishPass(int passIndex)
+    {
+      assert(passIndex == 0 || passIndex == 1);
+      m_Finished[passIndex] = true;
+    }
+    inline bool finished(int passIndex) { return passIndex < 0 || passIndex > 1 ? false : m_Finished[passIndex]; }
+
+    inline size_t count() { return m_CommandBuffersInPass.size() + m_CommandBuffersInPass2.size(); }
+    inline size_t count(int passIndex)
+    {
+      return passIndex == 0 ? m_CommandBuffersInPass.size() : m_CommandBuffersInPass2.size();
+    }
+    inline size_t byteLength()
+    {
+      size_t len = byteLength(0);
+      if (m_IsMultiPass)
+        len += byteLength(1);
+      return len;
+    }
+    inline size_t byteLength(int passIndex) { return m_CommandBuffersByteLength[passIndex]; }
     string toString();
 
   public:
@@ -293,7 +320,11 @@ namespace xr
     }
 
   private:
-    void clearCommandBuffers();
+    inline void clearCommandBuffers()
+    {
+      clearCommandBuffers(0);
+      clearCommandBuffers(1);
+    }
     void clearCommandBuffers(int passIndex);
 
   private:

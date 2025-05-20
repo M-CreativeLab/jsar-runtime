@@ -35,6 +35,7 @@ namespace renderer
 
   TrContentRenderer::TrContentRenderer(shared_ptr<TrContentRuntime> content, uint8_t contextId, TrConstellation *constellation)
       : content(weak_ptr<TrContentRuntime>(content)),
+        contentId(content->id),
         contextId(contextId),
         constellation(constellation),
         xrDevice(constellation->xrDevice.get()),
@@ -44,12 +45,33 @@ namespace renderer
         usingBackupContext(false)
   {
     assert(xrDevice != nullptr);
-    stereoFrameForBackup = new xr::StereoRenderingFrame(true, 0xf);
+    stereoFrameForBackup = make_unique<xr::StereoRenderingFrame>(true, 0xf);
   }
 
   TrContentRenderer::~TrContentRenderer()
   {
     xrDevice = nullptr;
+
+    {
+      unique_lock<shared_mutex> lock(commandBufferRequestsMutex);
+
+      // Clear the `defaultCommandBufferRequests`.
+      for (auto commandBufferReq : defaultCommandBufferRequests)
+      {
+        if (commandBufferReq != nullptr)
+          delete commandBufferReq;
+      }
+      defaultCommandBufferRequests.clear();
+
+      // Clear the stereo frames list
+      // TODO(yorkie): use smart pointer to manage the stereo frames list?
+      for (auto it = stereoFramesList.begin(); it != stereoFramesList.end();)
+      {
+        auto frame = *it;
+        it = stereoFramesList.erase(it);
+        delete frame;
+      }
+    }
   }
 
   void TrContentRenderer::onCommandBuffersExecuting()
@@ -94,6 +116,8 @@ namespace renderer
                : contentRef->pid.load();
   }
 
+  // The `req` argument is a pointer to `TrCommandBufferBase` in the heap, it will be stored in the corresponding queues
+  // such as `defaultCommandBufferRequests` or `stereoFramesList`, otherwise it will be deleted in this function.
   void TrContentRenderer::onCommandBufferRequestReceived(TrCommandBufferBase *req)
   {
     if (!req->renderingInfo.isValid() && !commandbuffers::isXRFrameControlCommandType(req->type))
@@ -276,8 +300,8 @@ namespace renderer
         defaultCommandBufferRequests.clear();
       }
       constellation->renderer->executeCommandBuffers(commandBufferRequests, this);
-      for (auto commandBufferReq : commandBufferRequests)
-        delete commandBufferReq;
+      for (auto req : commandBufferRequests)
+        delete req;
     }
     else
     {
@@ -363,7 +387,8 @@ namespace renderer
       {
         if (frame->idempotent())
         {
-          stereoFrameForBackup->copyCommandBuffers(frame);
+          // FIXME(yorkie): this will move the command buffers to the backup frame.
+          frame->moveCommandBuffersTo(*stereoFrameForBackup);
 #ifdef TR_RENDERER_ENABLE_VERBOSE
           DEBUG(LOG_TAG_RENDERER, "The stereo frame(%d) is idempotent, the backup frame is copied.", id);
 #endif
@@ -398,19 +423,21 @@ namespace renderer
       break;
     }
 
-    /**
-     * When the `called` is false, it means the current frames are not ended, so we need to render by the last frame.
-     */
+    // When the `called` is false, it means the current frames are not ended, so we need to render by the last frame.
     if (called == false)
-    {
-      auto &commandBufferInLastFrame = stereoFrameForBackup->getCommandBuffers(viewIndex);
-      if (commandBufferInLastFrame.size() > 0)
-      {
-        TrBackupGLContextScope contextScopeForBackup(this);
-        exec(stereoFrameForBackup->getId(), commandBufferInLastFrame);
-      }
-    }
+      executeBackupFrame(viewIndex, exec);
     return called;
+  }
+
+  void TrContentRenderer::executeBackupFrame(int viewIndex,
+                                             std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec)
+  {
+    auto &commandBufferInLastFrame = stereoFrameForBackup->getCommandBuffers(viewIndex);
+    if (commandBufferInLastFrame.size() > 0)
+    {
+      TrBackupGLContextScope contextScopeForBackup(this);
+      exec(stereoFrameForBackup->getId(), commandBufferInLastFrame);
+    }
   }
 
   size_t TrContentRenderer::getPendingStereoFramesCount()

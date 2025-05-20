@@ -104,7 +104,7 @@ namespace jsar::example
     if (isKeySpacePressed && glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
     {
       isKeySpacePressed = false;
-      embedder.constellation->open("http://localhost:3000/html-in-spatial/paragraph.xsml");
+      embedder.constellation->resetContents();
     }
   }
 

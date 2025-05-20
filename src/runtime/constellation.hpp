@@ -221,6 +221,17 @@ public:
    */
   uint32_t open(string url, optional<TrDocumentRequestInit> init = nullopt);
   /**
+   * Close the document with the given document id.
+   * 
+   * @param id The document/content id to be closed.
+   * @returns If the document is closed successfully.
+   */
+  bool close(uint32_t documentId);
+  /**
+   * Reset all the contents, this will remove all the contents and free the resources.
+   */
+  void resetContents();
+  /**
    * Dispatch an event to the specified content.
    *
    * @param event The native event to be dispatched.

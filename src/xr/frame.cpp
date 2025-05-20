@@ -255,6 +255,7 @@ namespace xr
     m_StereoId = id;
     m_CreatedTime = std::chrono::high_resolution_clock::now();
   }
+
   StereoRenderingFrame::~StereoRenderingFrame()
   {
     clearCommandBuffers();
@@ -288,10 +289,24 @@ namespace xr
     return FRAME_OK;
   }
 
-  void StereoRenderingFrame::copyCommandBuffers(StereoRenderingFrame *frame)
+  void StereoRenderingFrame::moveCommandBuffersTo(StereoRenderingFrame &dst, int passIndex)
   {
-    copyCommandBuffers(frame->getCommandBuffers(0), 0);
-    copyCommandBuffers(frame->getCommandBuffers(1), 1);
+    assert(passIndex == 0 || passIndex == 1);
+    dst.clearCommandBuffers(passIndex); // Clear the indexed command buffers before moving new command buffers.
+
+    auto &srcList = passIndex == 0 ? m_CommandBuffersInPass : m_CommandBuffersInPass2;
+    auto &dstList = passIndex == 0 ? dst.m_CommandBuffersInPass : dst.m_CommandBuffersInPass2;
+
+    for (auto req : srcList)
+    {
+      if (TR_LIKELY(req != nullptr))
+      {
+        dstList.push_back(req);
+        dst.m_CommandBuffersByteLength[passIndex] += req->size;
+      }
+    }
+    srcList.clear();
+    m_CommandBuffersByteLength[passIndex] = 0;
   }
 
   commandbuffers::TrCommandBufferBase *StereoRenderingFrame::cloneCommandBuffer(commandbuffers::TrCommandBufferBase *srcReq)
@@ -312,24 +327,6 @@ namespace xr
       break;
     }
     return newReq;
-  }
-
-  void StereoRenderingFrame::copyCommandBuffers(std::vector<commandbuffers::TrCommandBufferBase *> &commandBuffers, int passIndex)
-  {
-    assert(passIndex == 0 || passIndex == 1);
-
-    clearCommandBuffers(passIndex);
-    vector<commandbuffers::TrCommandBufferBase *> &targetList = passIndex == 0 ? m_CommandBuffersInPass : m_CommandBuffersInPass2;
-
-    for (auto srcCommandBuffer : commandBuffers)
-    {
-      auto newReq = cloneCommandBuffer(srcCommandBuffer);
-      if (newReq != nullptr)
-      {
-        targetList.push_back(newReq);
-        m_CommandBuffersByteLength[passIndex] += newReq->size;
-      }
-    }
   }
 
   void StereoRenderingFrame::addCommandBuffer(commandbuffers::TrCommandBufferBase *commandBuffer, int passIndex)
@@ -440,27 +437,6 @@ namespace xr
     m_ToFlush[passIndex] = false;
   }
 
-  int StereoRenderingFrame::getId() { return m_StereoId; }
-  bool StereoRenderingFrame::addedOnce() { return m_IsAddedOnce; }
-  bool StereoRenderingFrame::empty()
-  {
-    if (m_IsMultiPass)
-      return m_CommandBuffersInPass.empty() && m_CommandBuffersInPass2.empty();
-    else
-      return m_CommandBuffersInPass.empty();
-  }
-  bool StereoRenderingFrame::available()
-  {
-    return m_Available;
-  }
-  void StereoRenderingFrame::available(bool v)
-  {
-    m_Available = v;
-  }
-  bool StereoRenderingFrame::expired(int timeout)
-  {
-    return duration<chrono::milliseconds>().count() > timeout;
-  }
   bool StereoRenderingFrame::idempotent()
   {
     if (m_Idempotentable == false)
@@ -470,35 +446,14 @@ namespace xr
     else
       return m_Idempotent[0];
   }
+
   void StereoRenderingFrame::idempotent(int passIndex, bool value)
   {
     if (passIndex > 1 || passIndex < 0)
       return;
     m_Idempotent[passIndex] = value;
   }
-  void StereoRenderingFrame::finishPass(int passIndex)
-  {
-    if (passIndex > 1 || passIndex < 0)
-      return;
-    m_Finished[passIndex] = true;
-  }
-  bool StereoRenderingFrame::finished(int passIndex)
-  {
-    if (passIndex > 1 || passIndex < 0)
-      return false;
-    return m_Finished[passIndex];
-  }
-  size_t StereoRenderingFrame::byteLength()
-  {
-    size_t len = byteLength(0);
-    if (m_IsMultiPass)
-      len += byteLength(1);
-    return len;
-  }
-  size_t StereoRenderingFrame::byteLength(int passIndex)
-  {
-    return m_CommandBuffersByteLength[passIndex];
-  }
+
   string StereoRenderingFrame::toString()
   {
     string frameDescription = "StereoFrame(" + std::to_string(m_StereoId) + "):";
@@ -510,18 +465,15 @@ namespace xr
     return frameDescription;
   }
 
-  void StereoRenderingFrame::clearCommandBuffers()
-  {
-    m_CommandBuffersInPass.clear();
-    m_CommandBuffersInPass2.clear();
-  }
-
   void StereoRenderingFrame::clearCommandBuffers(int passIndex)
   {
     assert(passIndex == 0 || passIndex == 1);
     auto &targetList = passIndex == 0 ? m_CommandBuffersInPass : m_CommandBuffersInPass2;
     for (auto commandBuffer : targetList)
-      delete commandBuffer;
+    {
+      if (commandBuffer != nullptr)
+        delete commandBuffer;
+    }
     targetList.clear();
     m_CommandBuffersByteLength[passIndex] = 0;
   }

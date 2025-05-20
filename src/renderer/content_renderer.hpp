@@ -132,9 +132,11 @@ namespace renderer
      */
     void executeCommandBuffers(bool asXRFrame, int viewIndex = 0);
     bool executeStereoFrame(int viewIndex, std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec);
+    void executeBackupFrame(int viewIndex, std::function<bool(int, std::vector<TrCommandBufferBase *> &)> exec);
     size_t getPendingStereoFramesCount();
 
   public:
+    int contentId;
     uint8_t contextId;
 
   private:
@@ -150,7 +152,7 @@ namespace renderer
     std::shared_mutex commandBufferRequestsMutex;
     std::vector<TrCommandBufferBase *> defaultCommandBufferRequests;
     std::vector<xr::StereoRenderingFrame *> stereoFramesList;
-    xr::StereoRenderingFrame *stereoFrameForBackup = nullptr;
+    std::unique_ptr<xr::StereoRenderingFrame> stereoFrameForBackup = nullptr;
     /**
      * The last frame has OOM error or not.
      */

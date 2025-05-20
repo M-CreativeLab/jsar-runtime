@@ -234,7 +234,7 @@ void TrContentRuntime::recvCommandBuffers(WorkerThread &worker, uint32_t timeout
   }
 
   // Do the command buffer receving work.
-  auto commandBuffer = commandBufferChanReceiver->recvCommandBufferRequest(timeout);
+  commandbuffers::TrCommandBufferBase *commandBuffer = commandBufferChanReceiver->recvCommandBufferRequest(timeout);
   if (commandBuffer != nullptr)
   {
     lock_guard<mutex> lock(commandBufferRequestsMutex);
@@ -244,11 +244,13 @@ void TrContentRuntime::recvCommandBuffers(WorkerThread &worker, uint32_t timeout
     if (commandBuffer->type == CommandBufferType::COMMAND_BUFFER_CREATE_WEBGL_CONTEXT_REQ)
     {
       renderer->addContentRenderer(shared_from_this(), contextId);
+      delete commandBuffer;
       return;
     }
     else if (commandBuffer->type == CommandBufferType::COMMAND_BUFFER_REMOVE_WEBGL_CONTEXT_REQ)
     {
       renderer->removeContentRenderer(id, contextId);
+      delete commandBuffer;
       return;
     }
 
@@ -257,6 +259,7 @@ void TrContentRuntime::recvCommandBuffers(WorkerThread &worker, uint32_t timeout
     {
       DEBUG(LOG_TAG_ERROR, "There is no available ContentRenderer for the content(%d) with context(%d)",
             id, static_cast<int>(contextId));
+      delete commandBuffer;
       return;
     }
     contentRenderer->dispatchCommandBufferRequest(commandBuffer);
@@ -366,7 +369,9 @@ void TrContentRuntime::release()
   auto renderer = constellation->renderer;
   if (renderer != nullptr)
   {
-    renderer->removeContentRenderers(id);
+    size_t removedRenderers = renderer->removeContentRenderers(id);
+    DEBUG(LOG_TAG_CONTENT, "Removed %zu content renderers for the content(%d)", removedRenderers, id);
+
     renderer->removeCommandBufferChanClient(commandBufferChanClient);
   }
 

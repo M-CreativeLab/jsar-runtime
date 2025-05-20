@@ -135,6 +135,23 @@ uint32_t TrConstellation::open(string url, optional<TrDocumentRequestInit> init)
   return content->id;
 }
 
+bool TrConstellation::close(uint32_t id)
+{
+  auto content = contentManager->getContent(id, false);
+  if (content == nullptr)
+  {
+    DEBUG(LOG_TAG_UNITY, "Could not find the content with id: %d", id);
+    return false;
+  }
+  content->dispose(false);
+  return true;
+}
+
+void TrConstellation::resetContents()
+{
+  contentManager->disposeAll();
+}
+
 bool TrConstellation::dispatchNativeEvent(events_comm::TrNativeEvent &event, shared_ptr<TrContentRuntime> content)
 {
   assert(embedder != nullptr);

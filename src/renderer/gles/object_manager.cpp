@@ -2,9 +2,7 @@
 
 namespace gles
 {
-  GLObjectManager::GLObjectManager()
-  {
-  }
+  using namespace std;
 
   GLObjectManager::~GLObjectManager()
   {
@@ -64,15 +62,20 @@ namespace gles
     programs.erase(clientId);
   }
 
-  void GLObjectManager::ClearPrograms()
+  size_t GLObjectManager::ClearPrograms()
   {
+    size_t removed = 0;
     for (auto it = programs.begin(); it != programs.end(); ++it)
     {
       GLuint program = it->second;
       if (program > 0)
+      {
         glDeleteProgram(program);
+        removed++;
+      }
     }
     programs.clear();
+    return removed;
   }
 
   GLuint GLObjectManager::CreateShader(uint32_t clientId, GLenum type)
@@ -96,14 +99,17 @@ namespace gles
     shaders.erase(clientId);
   }
 
-  void GLObjectManager::ClearShaders()
+  size_t GLObjectManager::ClearShaders()
   {
+    size_t removed = 0;
     for (auto it = shaders.begin(); it != shaders.end(); ++it)
     {
       GLuint shader = it->second;
       glDeleteShader(shader);
+      removed++;
     }
     shaders.clear();
+    return removed;
   }
 
 #define DEFINE_CREATE_OBJECT(TYPE, NAME)                                     \
@@ -116,7 +122,7 @@ namespace gles
       return 0;                                                              \
     }                                                                        \
     glGen##TYPE##s(1, p##NAME);                                              \
-    NAME##s[clientId] = p##NAME;                                             \
+    NAME##s.insert({clientId, p##NAME});                                     \
     return *p##NAME;                                                         \
   }
 
@@ -140,16 +146,19 @@ namespace gles
     NAME##s.erase(clientId);                                      \
   }
 
-#define DEFINE_CLEAR_OBJECTS(TYPE, NAME)                           \
-  void GLObjectManager::Clear##TYPE##s()                           \
-  {                                                                \
-    for (auto it = NAME##s.begin(); it != NAME##s.end(); ++it)     \
-    {                                                              \
-      auto p##NAME = it->second;                                   \
-      glDelete##TYPE##s(1, p##NAME);                               \
-      delete p##NAME;                                              \
-    }                                                              \
-    NAME##s.clear();                                               \
+#define DEFINE_CLEAR_OBJECTS(TYPE, NAME)                       \
+  size_t GLObjectManager::Clear##TYPE##s()                     \
+  {                                                            \
+    size_t removed = 0;                                        \
+    for (auto it = NAME##s.begin(); it != NAME##s.end(); ++it) \
+    {                                                          \
+      auto p##NAME = it->second;                               \
+      glDelete##TYPE##s(1, p##NAME);                           \
+      delete p##NAME;                                          \
+      removed++;                                               \
+    }                                                          \
+    NAME##s.clear();                                           \
+    return removed;                                            \
   }
 
 #define DEFINE_OBJECT_METHODS(TYPE, NAME) \
