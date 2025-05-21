@@ -5,6 +5,7 @@
 #include <skia/include/codec/SkJpegDecoder.h>
 #include <skia/include/codec/SkWebpDecoder.h>
 #include <skia/include/codec/SkGifDecoder.h>
+#include <common/image/image_processor.hpp>
 #include <crates/bindings.hpp>
 #include <client/per_process.hpp>
 #include <client/cssom/layout.hpp>
@@ -150,6 +151,25 @@ namespace dom
       try
       {
         SkImageInfo info = codec->getInfo().makeColorType(kN32_SkColorType);
+        int max_size = std::max(info.width(), info.height());
+        if (max_size > transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE)
+        {
+          // We need to constrain the image size to avoid the huge memory usage, for example, if there are 20 images,
+          // each image is 4096x4096, the total size will be 20 * 4096 * 4096 * 4 = 20 * 64MB ~ 1.28GB, which is too
+          // much for a single application.
+          //
+          // In Web standard, no guarantee that the image size is less than a certain size, in JSAR, we do downsample
+          // the oversized image to fit the maximum allowed size to avoid the huge memory usage for the
+          // back-compatibility.
+          //
+          // TODO(yorkie): support tweaking or disabling for different platforms?
+          float scale = std::min(static_cast<float>(transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE) / info.width(),
+                                 static_cast<float>(transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE) / info.height());
+          int scaled_width = static_cast<int>(info.width() * scale);
+          int scaled_height = static_cast<int>(info.height() * scale);
+          info = info.makeWH(scaled_width, scaled_height);
+        }
+
         bitmap.allocPixels(info);
         codec->getPixels(info, bitmap.getPixels(), bitmap.rowBytes());
         is_src_image_decoded_ = true;

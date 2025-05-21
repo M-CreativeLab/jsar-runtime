@@ -10,6 +10,7 @@ namespace transmute
     /**
      * The maximum texture size for downsampling to avoid the GPU texture size limit.
      */
+    static constexpr int DEFAULT_MAX_IMAGE_SIZE = 1024;
     static constexpr int DEFAULT_MAX_TEXTURE_SIZE = 1024;
 
     /**
