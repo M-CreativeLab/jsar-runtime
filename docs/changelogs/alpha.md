@@ -8,10 +8,6 @@ The alpha version of JSAR is the first version of the project.
 
 #### Rendering Enhancements
 
-- CSS Animation Support:
-  - Introduced support for CSS Animations and Transitions.
-  - Added `Animation`, `KeyframeEffect`, and `AnimationTimeline` implementations.
-  - Support for `Element.animate()` and `getAnimations()` methods.
 - WebGL Improvements:
   - Optimized WebGL texture handling with anisotropic filtering.
   - Improved support for the `EXT_texture_filter_anisotropic` extension.
@@ -50,6 +46,9 @@ The alpha version of JSAR is the first version of the project.
 - Fixed issues with `CSSStyleDeclaration` caching to ensure seamless style updates.
 - Resolved memory leaks in image decoding processes.
 - Addressed rendering bugs for logical dimensions in `WebContent`.
+- Fixed service memory leaks in destroying content processes.
+- Added maximum size for the image and texture at client-side and server-side to prevent out of memory issues.
+- Fixed the resource caching issues, now the caching follows the standard HTTP caching rules.
 
 ## v0.7.1
 
