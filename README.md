@@ -1,4 +1,4 @@
-# 🚀 JSAR Runtime - The AI-Native Browser Engine for Metaverse
+# 🚀 JSAR
 
 ## ✨ Bringing Web Technologies to Life in 3D Worlds
 
