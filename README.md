@@ -1,12 +1,20 @@
-# JSAR Runtime
+# 🚀 JSAR Runtime - The AI-Native Browser Engine for Metaverse
 
-The JSAR is a **Browser Engine** library for embedding [WebXR][], [WebGL][] and classic Web applications into [Unity][], [UnrealEngine][], RealityKit and standalone.
+## ✨ Bringing Web Technologies to Life in 3D Worlds
 
-> Standalone means you could also use JSAR to pack your WebXR application as a standalone application.
+JSAR Runtime is a revolutionary **browser engine library** designed for the spatial computing era. It enables you to 
+create immersive Web applications using the Web technologies (HTML, CSS, JavaScript) and seamlessly integrate them into 
+mainstream 3D engines like [Unity][], [UnrealEngine][], and RealityKit.
+
+## 🌟 Why Choose JSAR?
+
+- 🎯 **3D-First Design** - Unlike traditional browsers, JSAR is optimized from the ground up for 3D and spatial computing
+- 🔧 **Easy Integration** - Supports multiple rendering backends and platform integrations
+- 📱 **Cross-Platform Compatible** - Supports both Android and macOS platforms
+- ⚡ **High Performance** - Built with Rust for exceptional performance
+- 🌐 **Web Standards Compliant** - Supports WebXR, WebGL, Web APIs, and other modern web standards
 
 ## Overview
-
-JSAR is a 3d-first Web rendering engine, that is easily to *embed* and use. Developers are able to use the parts of Web APIs to build the spatial computing applications still.
 
 ### Rendering Backends
 
@@ -155,10 +163,6 @@ In Web multimedia, there are the following APIs that JSAR would support:
 [CSS3]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS3
 [Web Component]: https://developer.mozilla.org/en-US/docs/Web/Web_Components
 
-## Getting Started
-
-> TODO
-
 ## Contributing
 
 To contribute to the project, you need to follow the steps below to build this project from source.
@@ -188,9 +192,8 @@ $ npm install && make jsbundle
 Then you can build the runtime library:
 
 ```sh
-$ make darwin # for macOS universal library
-$ make android # for Android aarch64 library
-$ make windows # for Windows x86_64 library
+$ make darwin    # for macOS universal library
+$ make android   # for Android-aarch64 library
 ```
 
 If you want to do a clean build, you can run:
@@ -198,6 +201,12 @@ If you want to do a clean build, you can run:
 ```sh
 $ make darwin CLEAN=yes
 ```
+
+Supported parameters:
+
+- `CLEAN`: Clean the build directory before building.
+- `RELEASE`: Build the release version of the library.
+- `INSPECTOR`: Enable the inspector.
 
 ## Loaders
 
