@@ -2949,18 +2949,20 @@ PUGI_IMPL_NS_BEGIN
 	inline bool is_void_tag(const char* name) {
 		size_t len = strlen(name);
 		switch (len) {
-		case 2:  // "br" or "hr"
+		case 2:  // <br>, <hr>
 			return (name[0] == 'b' && name[1] == 'r') || 
 						 (name[0] == 'h' && name[1] == 'r');
-		case 3:  // "img"
+		case 3:  // <img>
 			return name[0] == 'i' && name[1] == 'm' && name[2] == 'g';
-		case 4:  // "base", "link", "meta"
-			return (name[0] == 'b' && memcmp(name, "base", 4) == 0) ||
+		case 4:  // <area>, <base>, <link>, <meta>
+			return (name[0] == 'a' && memcmp(name, "area", 4) == 0) ||
+						 (name[0] == 'b' && memcmp(name, "base", 4) == 0) ||
 						 (name[0] == 'l' && memcmp(name, "link", 4) == 0) ||
 						 (name[0] == 'm' && memcmp(name, "meta", 4) == 0);
-		case 5:  // "embed"
-			return memcmp(name, "embed", 5) == 0;
-		case 6:  // "source", "track"
+		case 5:  // <embed>, <input>
+			return (name[0] == 'e' && memcmp(name, "embed", 5) == 0) ||
+						 (name[0] == 'i' && memcmp(name, "input", 5) == 0);
+		case 6:  // <source>, <track>
 			return (name[0] == 's' && memcmp(name, "source", 6) == 0) ||
 						 (name[0] == 't' && memcmp(name, "track", 6) == 0);
 		default:
@@ -3333,6 +3335,12 @@ PUGI_IMPL_NS_BEGIN
 
 						if (ch == '>')
 						{
+							// A tag with no spaces or attributes: <img>, <input>...
+							if (is_void_tag(cursor->name))
+							{
+								PUGI_IMPL_POPNODE();
+								s++;
+							}
 							// end of tag
 						}
 						else if (PUGI_IMPL_IS_CHARTYPE(ch, ct_space))
