@@ -51,7 +51,7 @@ void TrInspectorServer::tryAccept()
     auto client = accept();
     if (client == nullptr)
       break;
-    
+
     int clientFd = client->fd_;
     clients_.push_back(move(client));
   }

@@ -43,13 +43,21 @@ private:
 
 private:
   void onUrl(const char *at, size_t length);
+  void onUrlComplete();
+  void onStatus(const char *at, size_t length);
+  void onStatusComplete();
   void onMethod(const char *at, size_t length);
   void onMethodComplete();
+  void onVersion(const char *at, size_t length);
+  void onVersionComplete();
   void onHeaderField(const char *at, size_t length);
   void onHeaderFieldComplete();
   void onHeaderValue(const char *at, size_t length);
   void onHeaderValueComplete();
+  void onHeadersComplete();
+  void onMessageBegin();
   void onMessageComplete();
+  void onReset();
 
 private:
   int fd_ = -1;

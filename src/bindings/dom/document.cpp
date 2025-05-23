@@ -6,10 +6,6 @@ namespace dombinding
   void Document::Init(Napi::Env env, Napi::Object exports)
   {
     DocumentBase<Document, dom::HTMLDocument>::Init(env, "Document");
-    {
-      auto tid = std::this_thread::get_id();
-      std::cerr << "Document::Init() => " << tid << std::endl;
-    }
   }
 
   Document *Document::GetCurrent(Napi::Env env)

@@ -37,10 +37,20 @@ TrInspectorClient::TrInspectorClient(int fd, shared_ptr<TrInspector> inspector)
 
   parsingSettings_.on_url = [](llhttp_t *parser, const char *at, size_t length) -> int
   { _INSTANCE_CALL(onUrl, at, length); };
+  parsingSettings_.on_url_complete = [](llhttp_t *parser) -> int
+  { _INSTANCE_CALL(onUrlComplete); };
+  parsingSettings_.on_status = [](llhttp_t *parser, const char *at, size_t length) -> int
+  { _INSTANCE_CALL(onStatus, at, length); };
+  parsingSettings_.on_status_complete = [](llhttp_t *parser) -> int
+  { _INSTANCE_CALL(onStatusComplete); };
   parsingSettings_.on_method = [](llhttp_t *parser, const char *at, size_t length) -> int
   { _INSTANCE_CALL(onMethod, at, length); };
   parsingSettings_.on_method_complete = [](llhttp_t *parser) -> int
   { _INSTANCE_CALL(onMethodComplete); };
+  parsingSettings_.on_version = [](llhttp_t *parser, const char *at, size_t length) -> int
+  { _INSTANCE_CALL(onVersion, at, length); };
+  parsingSettings_.on_version_complete = [](llhttp_t *parser) -> int
+  { _INSTANCE_CALL(onVersionComplete); };
   parsingSettings_.on_header_field = [](llhttp_t *parser, const char *at, size_t length) -> int
   { _INSTANCE_CALL(onHeaderField, at, length); };
   parsingSettings_.on_header_field_complete = [](llhttp_t *parser) -> int
@@ -49,9 +59,24 @@ TrInspectorClient::TrInspectorClient(int fd, shared_ptr<TrInspector> inspector)
   { _INSTANCE_CALL(onHeaderValue, at, length); };
   parsingSettings_.on_header_value_complete = [](llhttp_t *parser) -> int
   { _INSTANCE_CALL(onHeaderValueComplete); };
+  parsingSettings_.on_headers_complete = [](llhttp_t *parser) -> int
+  { _INSTANCE_CALL(onHeadersComplete); };
+  parsingSettings_.on_message_begin = [](llhttp_t *parser) -> int
+  { _INSTANCE_CALL(onMessageBegin); };
   parsingSettings_.on_message_complete = [](llhttp_t *parser) -> int
   { _INSTANCE_CALL(onMessageComplete); };
+  parsingSettings_.on_reset = [](llhttp_t *parser) -> int
+  { _INSTANCE_CALL(onReset); };
 #undef _INSTANCE_CALL
+
+  // Reset the callback functions to NULL to avoid dangling pointers
+  parsingSettings_.on_chunk_extension_name = NULL;
+  parsingSettings_.on_chunk_extension_value = NULL;
+  parsingSettings_.on_body = NULL;
+  parsingSettings_.on_chunk_extension_name_complete = NULL;
+  parsingSettings_.on_chunk_extension_value_complete = NULL;
+  parsingSettings_.on_chunk_header = NULL;
+  parsingSettings_.on_chunk_complete = NULL;
 
   llhttp_init(&httpParser_, HTTP_REQUEST, &parsingSettings_);
   httpParser_.data = this;
@@ -198,6 +223,18 @@ void TrInspectorClient::onUrl(const char *at, size_t length)
   url_.append(at, length);
 }
 
+void TrInspectorClient::onUrlComplete()
+{
+}
+
+void TrInspectorClient::onStatus(const char *at, size_t length)
+{
+}
+
+void TrInspectorClient::onStatusComplete()
+{
+}
+
 void TrInspectorClient::onMethod(const char *at, size_t length)
 {
   methodStr_.append(at, length);
@@ -223,6 +260,14 @@ void TrInspectorClient::onMethodComplete()
     method_ = GET; // default to GET
 }
 
+void TrInspectorClient::onVersion(const char *at, size_t length)
+{
+}
+
+void TrInspectorClient::onVersionComplete()
+{
+}
+
 void TrInspectorClient::onHeaderField(const char *at, size_t length)
 {
   currentHeaderField_.append(at, length);
@@ -244,6 +289,14 @@ void TrInspectorClient::onHeaderValueComplete()
   currentHeaderValue_.clear();
 }
 
+void TrInspectorClient::onHeadersComplete()
+{
+}
+
+void TrInspectorClient::onMessageBegin()
+{
+}
+
 void TrInspectorClient::onMessageComplete()
 {
   auto inspector = inspector_.lock();
@@ -251,4 +304,10 @@ void TrInspectorClient::onMessageComplete()
     end();
   else
     inspector->onRequest(*this);
+}
+
+void TrInspectorClient::onReset()
+{
+  DEBUG(LOG_TAG_ERROR, "Request reset");
+  end();
 }
