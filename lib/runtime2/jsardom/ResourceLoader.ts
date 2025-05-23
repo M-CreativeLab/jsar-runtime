@@ -8,7 +8,8 @@ import {
 } from '@yodaos-jsar/dom';
 import { getClientContext, isResourcesCachingDisabled, getResourceCacheExpirationTime } from '@transmute/env';
 import * as undici from 'undici';
-import { parse as parseCacheControl } from 'cache-control-parser';
+import { CacheControl, parse as parseCacheControl } from 'cache-control-parser';
+import { IncomingHttpHeaders } from 'undici/types/header';
 
 type FetchReturnsMap = {
   json: object;
@@ -19,6 +20,7 @@ type FetchOptions = {
   accept?: string;
   cookieJar?: any;
   referrer?: string;
+  headers?: undici.HeadersInit;
 };
 
 function hash(algorithm: 'md5' | 'sha256', content: string | NodeJS.ArrayBufferView) {
@@ -48,7 +50,8 @@ function canParseURL(url: string): boolean {
  * @param fromResp 
  * @returns 
  */
-function makeResponse(arraybuffer: ArrayBuffer, fromResp: Response = new Response(null, { status: 200, statusText: 'OK' })): Response {
+function makeResponse(arraybuffer: ArrayBuffer | Buffer,
+  fromResp: Response = new Response(null, { status: 200, statusText: 'OK' })): Response {
   return new Response(arraybuffer, {
     status: fromResp.status,
     statusText: fromResp.statusText,
@@ -56,24 +59,361 @@ function makeResponse(arraybuffer: ArrayBuffer, fromResp: Response = new Respons
   });
 }
 
-export class ResourceLoaderOnTransmute implements JSARResourceLoader {
-  #clientContext = getClientContext();
+class Cache {
+  #metadata: {
+    [key: string]: string
+  };
+  #cacheControl: CacheControl;
+
+  constructor() {
+    this.#metadata = {};
+  }
+
+  protected initMetadata(metadata: { [key: string]: string }) {
+    this.#metadata = metadata;
+
+    if (this.#metadata['cache-control']) {
+      this.#cacheControl = parseCacheControl(this.#metadata['cache-control']);
+    }
+  }
+
+  is(control: 'no-cache' | 'no-store' | 'must-revalidate' | 'max-age'): boolean {
+    if (!this.#cacheControl) {
+      return false;
+    } else if (control === 'no-cache') {
+      return this.#cacheControl['no-cache'];
+    } else if (control === 'no-store') {
+      return this.#cacheControl['no-store'];
+    } else if (control === 'must-revalidate') {
+      return this.#cacheControl['must-revalidate'];
+    } else if (control === 'max-age') {
+      return this.#cacheControl['max-age'] > 0;
+    } else {
+      throw new TypeError(`Unknown cache control: ${control}`);
+    }
+  }
+
+  expired(): boolean {
+    // TODO(yorkie): support the `max-age` and `s-maxage` cache control.
+    if (this.#metadata['expires']) {
+      const expires = new Date(this.#metadata['expires']).getTime();
+      return expires < Date.now();
+    }
+
+    // By default, we need to use heuristic caching to check if the resource is expired.
+    if (this.has('last-modified') && this.has('date')) {
+      const dateTime = this.date().getTime();
+      const maxAge = (dateTime - this.lastModified().getTime()) * 0.1;
+      return dateTime + maxAge < Date.now();
+    }
+
+    // By default, it's expired.
+    return true;
+  }
+
+  has(key: 'last-modified' | 'date' | 'etag'): boolean {
+    return this.#metadata[key] !== undefined;
+  }
+
+  lastModified(): Date {
+    return new Date(this.#metadata['last-modified']);
+  }
+
+  date(): Date {
+    return new Date(this.#metadata['date']);
+  }
+
+  etag(): string {
+    return this.#metadata['etag'];
+  }
+}
+
+class ReadableCache extends Cache {
+  static async FromFile(filename: string): Promise<ReadableCache | null> {
+    const cache = new ReadableCache(filename);
+    const metadataPath = `${filename}.metadata`;
+    try {
+      const metadataFileStat = await fsPromises.stat(metadataPath);
+      if (!metadataFileStat.isFile()) {
+        throw new Error('The metadata file is not a file.');
+      }
+      const metadata = JSON.parse(await fsPromises.readFile(metadataPath, 'utf8'));
+      cache.initMetadata(metadata);
+    } catch (_) {
+      // Ignore the error
+    }
+    return cache;
+  }
+
+  constructor(public filename: string) {
+    super();
+  }
+
+  async readContentAsText(): Promise<string> {
+    return fsPromises.readFile(this.filename, 'utf8');
+  }
+
+  async readContentAsBuffer(): Promise<Buffer> {
+    return fsPromises.readFile(this.filename);
+  }
+}
+
+type ResponseCacheInfo<D> = {
+  useCache: boolean;
+  storeCache: boolean;
+  responseData: D & {
+    statusCode?: number,
+    headers?: Headers | IncomingHttpHeaders,
+  };
+};
+type ResponseContentCallback<D> = (content: NodeJS.ArrayBufferView | string, info: ResponseCacheInfo<D>) => void;
+
+function buildCacheInfoFrom<D>(response: ResponseCacheInfo<D>['responseData']): ResponseCacheInfo<D> {
+  let useCache = response.statusCode === 304;
+  let storeCache = true;
+  if (!useCache && response.headers['cache-control']) {
+    const cacheControl = parseCacheControl(response.headers['cache-control'].toString());
+    if (cacheControl['no-cache']) {
+      storeCache = false;
+    }
+  }
+
+  return {
+    useCache,
+    storeCache,
+    responseData: response,
+  };
+}
+
+class CacheStorage {
+  #rootDirectory: string;
+  #localExpirationTime: number = getResourceCacheExpirationTime();
+  #disabled: boolean = isResourcesCachingDisabled();
+
+  constructor(rootDirectory: string) {
+    this.#rootDirectory = rootDirectory;
+  }
+
   /**
-   * The flag indicates if the resources caching is enabled.
+   * Make sure the cache directory exists. This case is for the situation that when the user modifies the 
+   * cache directory manually.
    */
-  #isCachingEnabled = !isResourcesCachingDisabled();
-  #cacheExpirationTime = getResourceCacheExpirationTime();
+  async #ensureCacheDir() {
+    const dir = this.#rootDirectory;
+    try {
+      const dirStat = await fsPromises.stat(dir);
+      if (!dirStat.isDirectory()) {
+        fsPromises.unlink(dir);
+        throw new Error('The cache directory must be a directory.');
+      }
+    } catch (_err) {
+      await fsPromises.mkdir(dir, { recursive: true });
+    }
+  }
+
+  async open() {
+    if (this.#disabled) {
+      return;
+    }
+    await this.#ensureCacheDir();
+  }
+
+  async get(url: string): Promise<ReadableCache | null> {
+    if (this.#disabled) {
+      return null;
+    }
+
+    const key = getHashOfUri(url);
+    const filename = path.join(this.#rootDirectory, key);
+    try {
+      const fstats = await fsPromises.stat(filename);
+      if (!fstats.isFile()) {
+        if (fstats.isDirectory()) {
+          await fsPromises.rmdir(filename, { recursive: true });
+        } else {
+          await fsPromises.unlink(filename);
+        }
+        throw new Error('The cached file is not a file.');
+      }
+      if (fstats.mtimeMs < (Date.now() - this.#localExpirationTime)) {
+        await fsPromises.unlink(filename);
+        throw new Error('The cached file is expired.');
+      }
+      return ReadableCache.FromFile(filename);
+    } catch (e) {
+      if (e?.code !== 'ENOENT') {
+        console.warn(`Failed to get Cache object for "${url}"`, e);
+      }
+    }
+    return null;
+  }
+
+  async put(url: string, headers: any, content?: NodeJS.ArrayBufferView | string): Promise<void> {
+    if (this.#disabled) {
+      return;
+    }
+
+    const cacheDir = this.#rootDirectory;
+    const key = getHashOfUri(url);
+    const filenames = {
+      content: path.join(cacheDir, key),
+      metadata: path.join(cacheDir, `${key}.metadata`),
+      md5file: path.join(cacheDir, `${key}.md5`),
+    };
+
+    let fields: Record<string, string>;
+    if (!headers || headers == null) {
+      fields = {};
+    } else if (typeof headers['entries'] === 'function') {
+      fields = Object.fromEntries(headers.entries());
+    } else if (Array.isArray(headers)) {
+      fields = headers.reduce((obj, item, index) => {
+        obj[index] = item;
+        return obj;
+      }, {} as Record<string, string>);
+    } else {
+      fields = headers;
+    }
+
+    let freshMetadata: { [key: string]: string } = {
+      url,
+      ...fields,
+    };
+
+    const writes: Array<Promise<void>> = [];
+    if (content) {
+      const contentMd5 = hash('md5', content);
+
+      // Check the content's md5 hash.
+      if (fields['content-md5']) {
+        // If the content-md5 is provided, we need to check if the content's md5 hash is matched.
+        const expectedMd5 = Buffer.from(fields['content-md5'], 'base64').toString('hex');
+        if (expectedMd5 !== contentMd5) {
+          console.warn(`The content(${url})'s md5 hash is not matched: ${expectedMd5} != ${contentMd5}`);
+          return;
+        }
+      }
+
+      writes.push(fsPromises.writeFile(filenames.content, content));
+      writes.push(fsPromises.writeFile(filenames.md5file, contentMd5));
+
+      freshMetadata['contentHash'] = contentMd5;
+      writes.push(fsPromises.writeFile(filenames.metadata, JSON.stringify(freshMetadata, null, 2), 'utf8'));
+    } else {
+      // If the content is not provided, it means updating the metadata only.
+      let localMetadata: { [key: string]: string };
+      try {
+        const metadataText = await fsPromises.readFile(filenames.metadata, 'utf8');
+        localMetadata = JSON.parse(metadataText);
+      } catch (_err) {
+        localMetadata = {};
+      }
+      freshMetadata = {
+        ...localMetadata,
+        ...fields,
+      };
+      writes.push(fsPromises.writeFile(filenames.metadata, JSON.stringify(freshMetadata, null, 2), 'utf8'));
+    }
+    await Promise.all(writes);
+  }
+
+  async delete(url: string): Promise<void> {
+    if (this.#disabled) {
+      return;
+    }
+    // TODO(yorkie): implement a LRU to delete the cache.
+  }
+
+  async requestWithCache<R, D>(
+    url: string,
+    requestInit: RequestInit,
+    impl: {
+      readFile: (filename: string) => Promise<R>,
+      sendRequest: (url: string, init: RequestInit) => Promise<ResponseCacheInfo<D>['responseData']>,
+      readResponse: (info: ResponseCacheInfo<D>, url: string, onContentLoaded: ResponseContentCallback<D>) => Promise<R>
+    }
+  ): Promise<R> {
+    const requestDirectly = async (url: string, init: RequestInit) => {
+      const sentAt = performance.now();
+      const resp = await impl.sendRequest(url, init);
+      const body = await impl.readResponse(buildCacheInfoFrom(resp), url, (content, info) => {
+        if (info.storeCache) {
+          this.put(url, resp.headers, content);
+        }
+      });
+      const elapsed = performance.now() - sentAt;
+      console.info(`Loaded(forced) "${url}" in ${elapsed}ms`);
+      return body;
+    };
+
+    if (this.#disabled) {
+      return requestDirectly(url, requestInit);
+    }
+
+    const cache = await this.get(url);
+    if (cache == null || !cache) {
+      return requestDirectly(url, requestInit);
+    }
+
+    // Skip the cache if the 
+    if (cache.is('no-store')) {
+      return requestDirectly(url, requestInit);
+    }
+
+    if (cache.expired()) {
+      const newInit: RequestInit = { ...requestInit };
+      const putHeaderOnOptions = (key: string, value: string) => {
+        if (!newInit.headers) {
+          newInit.headers = {};
+        }
+        newInit.headers[key] = value;
+      };
+      if (cache.has('etag')) {
+        putHeaderOnOptions('if-none-match', cache.etag());
+      }
+      if (cache.has('last-modified')) {
+        putHeaderOnOptions('if-modified-since', cache.lastModified().toUTCString());
+      }
+
+      const sentAt = performance.now();
+      const response = await impl.sendRequest(url, newInit);
+      const info = buildCacheInfoFrom(response);
+
+      if (info.useCache) {
+        // The resource is not modified, so use the cached content.
+        const r = impl.readFile(cache.filename);
+        const elapsed = performance.now() - sentAt;
+        console.info(`Loaded(from cache) "${url}" in ${elapsed}ms`);
+        if (info.storeCache) {
+          // Update the cache metadata only.
+          this.put(url, response.headers);
+        }
+        return r;
+      } else {
+        const r = await impl.readResponse(info, url, (content, info) => {
+          if (info.storeCache) {
+            this.put(url, response.headers, content);
+          }
+        });
+        const elapsed = performance.now() - sentAt;
+        console.info(`Loaded "${url}" in ${elapsed}ms`);
+        return r;
+      }
+    } else {
+      return impl.readFile(cache.filename);
+    }
+  }
+}
+
+export class ResourceLoaderOnTransmute implements JSARResourceLoader {
   #cacheDirectory: string;
+  #cacheStorage: CacheStorage;
   #networkProxyAgent: undici.ProxyAgent;
 
   constructor() {
-    if (this.#isCachingEnabled) {
-      this.#cacheDirectory = path.join(this.#clientContext.applicationCacheDirectory, '.res_cache');
-      fsPromises.mkdir(this.#cacheDirectory, { recursive: true })
-        .catch((err) => {
-          console.warn('failed to create cache directory', err);
-        });
-    }
+    this.#cacheDirectory = path.join(getClientContext().applicationCacheDirectory, '.res_cache');
+    this.#cacheStorage = new CacheStorage(this.#cacheDirectory);
+    this.#cacheStorage.open();
 
     let proxyAddr: string = '';
     if (process.env['https_proxy']) {
@@ -98,7 +438,7 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
    */
   async fetch<AsType extends keyof FetchReturnsMap>(
     url: string,
-    options: FetchOptions,
+    options: RequestInit,
     returnsAs?: AsType
   ): Promise<FetchReturnsMap[AsType]> {
     if (typeof url !== 'string') {
@@ -147,15 +487,11 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     if (urlObj.protocol === 'file:') {
       return this.#readFile(urlObj.pathname, returnsAs);
     } else {
-      if (!this.#isCachingEnabled) {
-        return this.#requestFile(url, options, returnsAs);
-      }
-      const [isCached, cachedUrl] = await this.#isResourceCached(url);
-      if (isCached && await this.#shouldUseResourceCache(url, cachedUrl)) {
-        return this.#readFile(cachedUrl, returnsAs);
-      } else {
-        return this.#requestFile(url, options, returnsAs);
-      }
+      return this.#cacheStorage.requestWithCache(url, options, {
+        readFile: (filename: string) => this.#readFile(filename, returnsAs),
+        sendRequest: (url: string, init: RequestInit) => this.#sendRequest(url, init),
+        readResponse: (...args) => this.#readBody(...args, returnsAs),
+      });
     }
   }
 
@@ -167,11 +503,11 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
    */
   createWHATWGFetchImpl(baseURI: string): (input: RequestInfo, init?: RequestInit) => Promise<Response> {
     const self: ResourceLoaderOnTransmute = this;
-    const fetchImpl = fetch;  // Save the Node.js fetch implementation.
+    const forceFetch = fetch;  // Save the Node.js fetch implementation.
 
     return async function fetch(input: RequestInfo, init?: RequestInit): Promise<Response> {
       /**
-       * TODO: Support CORS.
+       * TODO(yorkie): Support CORS.
        */
       let urlObj: URL;
       const url = typeof input === 'string' ? input : input.url;
@@ -183,72 +519,71 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
         throw new TypeError(`Failed to fetch: Invalid URL ${input}`);
       }
 
-      if (!self.#isCachingEnabled) {
-        return fetchImpl(url, init);
-      }
-      const [isCached, cachedUrl] = await self.#isResourceCached(url);
-      if (isCached && await self.#shouldUseResourceCache(url, cachedUrl)) {
-        return makeResponse(await self.#readBinaryFile(cachedUrl));
-      } else {
-        return fetchImpl(url, init).then(async resp => {
-          // Cache the fetched resource.
+      return self.#cacheStorage.requestWithCache(urlObj.href, init, {
+        readFile: async (filename) => makeResponse(await self.#readFile(filename, 'arraybuffer')),
+        sendRequest: forceFetch,
+        readResponse: async (info, _url, onContentReady) => {
+          const resp = info.responseData;
+          console.info('read response', resp);
+
           if (resp.ok) {
             let arraybuffer: ArrayBuffer;
             try {
               arraybuffer = await resp.arrayBuffer();
-              self.#cacheResource(url, new Uint8Array(arraybuffer), resp);
+              onContentReady(new Uint8Array(arraybuffer), info);
               return makeResponse(arraybuffer, resp);
             } catch (err) {
-              console.info('Failed to read arraybuffer from an Ok response', err);
+              console.warn(`Failed to read response body: ${err}`);
             }
           }
           return resp;
-        });
-      }
+        }
+      });
     }
   }
 
-  /**
-   * Make a network request to fetch a given resource file.
-   */
-  async #requestFile<AsType extends keyof FetchReturnsMap>(
-    url: string,
-    options: FetchOptions,
-    returnsAs?: AsType
-  ): Promise<FetchReturnsMap[AsType]> {
-    const now = performance.now();
-    const logElapsed = () => {
-      const elapsed = performance.now() - now;
-      console.info(`Fetching ${url} in ${elapsed}ms`);
-    };
-
+  async #sendRequest(url: string, options: FetchOptions): Promise<undici.Dispatcher.ResponseData> {
     const reqInit: undici.RequestInit = {
       ...(options == null ? {} : options),
     };
-    const resp = await undici.request(url, <any>{
+    const responseData = await undici.request(url, <any>{
       maxRedirections: 5,
       dispatcher: this.#networkProxyAgent || undici.getGlobalDispatcher(),
       ...reqInit
     });
-    if (resp.statusCode >= 400) {
-      throw new Error(`Failed to fetch(${url}), statusCode=${resp.statusCode}`);
-    }
 
-    if (returnsAs === 'string') {
-      const str = await resp.body.text();
-      this.#cacheResource(url, str, resp);
-      logElapsed();
-      return str as FetchReturnsMap[AsType];
-    } else if (returnsAs === 'json') {
-      const obj = await resp.body.json() as any;
-      this.#cacheResource(url, obj, resp);
-      logElapsed();
-      return obj as FetchReturnsMap[AsType];
-    } else if (returnsAs === 'arraybuffer') {
-      const buf = await resp.body.arrayBuffer();
-      this.#cacheResource(url, new Uint8Array(buf), resp);
-      logElapsed();
-      return buf as FetchReturnsMap[AsType];
+    if (responseData.statusCode >= 400) {
+      throw new Error(`Failed to fetch(${url}), statusCode=${responseData.statusCode}`);
+    } else {
+      return responseData;
+    }
+  }
+
+  async #readBody<AsType extends keyof FetchReturnsMap>(
+    info: ResponseCacheInfo<undici.Dispatcher.ResponseData>,
+    requestUrl: string,
+    onContentLoaded: ResponseContentCallback<undici.Dispatcher.ResponseData>,
+    returnsAs: AsType
+  ): Promise<FetchReturnsMap[AsType]> {
+    const { responseData: response } = info;
+    if (returnsAs === 'arraybuffer') {
+      const arraybuffer = await response.body.arrayBuffer();
+      onContentLoaded(new Uint8Array(arraybuffer), info);
+      return arraybuffer as FetchReturnsMap[AsType];
+    } else {
+      const text = await response.body.text();
+      onContentLoaded(text, info);
+      if (returnsAs === 'string') {
+        return text as FetchReturnsMap[AsType];
+      } else if (returnsAs === 'json') {
+        let obj: any;
+        try {
+          obj = JSON.parse(text);
+        } catch (_) { }
+        return obj as FetchReturnsMap[AsType];
+      } else {
+        throw new TypeError(`Unknown return type: "${returnsAs}"`);
+      }
     }
   }
 
@@ -330,160 +665,7 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     return fsPromises.readFile(pathname, 'utf8');
   }
 
-  #readBinaryFile(pathname: string): Promise<ArrayBuffer> {
+  #readBinaryFile(pathname: string): Promise<Buffer> {
     return fsPromises.readFile(pathname);
-  }
-
-  /**
-   * Check if a resource is cached in the cache directory.
-   * @param uri the resource uri
-   * @returns the cached path and whether the resource is cached.
-   */
-  async #isResourceCached(uri: string): Promise<[boolean, string?]> {
-    if (!this.#isCachingEnabled) {
-      throw new TypeError('Disallow to check cache hit when caching is disabled.');
-    }
-    const cachedPath = path.join(this.#cacheDirectory, getHashOfUri(uri));
-    try {
-      const fstats = await fsPromises.stat(cachedPath);
-      if (fstats.isDirectory()) {
-        fsPromises.rmdir(cachedPath, { recursive: true });
-        throw new Error('The cached file is a directory.');
-      }
-      if (fstats.mtimeMs < Date.now() - this.#cacheExpirationTime) {
-        fsPromises.unlink(cachedPath);
-        throw new Error('The cached file is expired.');
-      }
-      if (!fstats.isFile()) {
-        fsPromises.unlink(cachedPath);
-        throw new Error('The cached file is not a file.');
-      }
-      return [true, cachedPath];
-    } catch (_err) {
-      return [false];
-    }
-  }
-
-  /**
-   * Cache a resource to the cache directory.
-   * @param uri the resource uri
-   * @param content the resource content
-   * @param fromResp the response object from the network request to save the metadata.
-   */
-  async #cacheResource(
-    uri: string,
-    content: string | NodeJS.ArrayBufferView,
-    fromResp: Response | undici.Dispatcher.ResponseData
-  ) {
-    if (this.#isCachingEnabled === false) {
-      return; // Don't cache if the caching is disabled.
-    }
-    const cacheDir = this.#cacheDirectory;
-    /**
-     * Make sure the cache directory exists. This case is for the situation that when the user modifies the 
-     * cache directory manually.
-     */
-    try {
-      const dirStat = await fsPromises.stat(cacheDir);
-      if (!dirStat.isDirectory()) {
-        fsPromises.unlink(cacheDir);
-        throw new Error('The cache directory must be a directory.');
-      }
-    } catch (_err) {
-      await fsPromises.mkdir(cacheDir, { recursive: true });
-    }
-
-    const filename = getHashOfUri(uri);
-    const contentPath = path.join(cacheDir, filename);
-    const md5filePath = path.join(cacheDir, `${filename}.md5`);
-    const contentHash = hash('md5', content);
-
-    const cachingWrites = [
-      fsPromises.writeFile(contentPath, content),
-      fsPromises.writeFile(md5filePath, contentHash),
-    ];
-    const metadataPath = path.join(cacheDir, `${filename}.metadata`);
-    cachingWrites.push(fsPromises.writeFile(metadataPath, JSON.stringify({
-      url: uri,
-      contentHash,
-      ...fromResp.headers,
-    }, null, 2), 'utf8'));
-    await Promise.all(cachingWrites);
-  }
-
-  /**
-   * Check if the resource's cache should be used.
-   * 
-   * It first fetches the md5 value from the server-side, https://example.com/resource.md5, and compares it with the
-   * local md5 value. If they are the same, the local cache is used; otherwise, the online resource is used.
-   * 
-   * @param resourceUri the resource uri
-   * @param cachePath the cache path
-   * @returns 
-   */
-  async #shouldUseResourceCache(resourceUri: string, cachePath: string): Promise<boolean> {
-    if (!resourceUri) {
-      throw new TypeError('resourceUri is required');
-    }
-    if (!cachePath) {
-      throw new TypeError('cachePath is required');
-    }
-
-    let useCache = true;
-    try {
-      /**
-       * 1. Read the metadata file.
-       */
-      const metadata = JSON.parse(await fsPromises.readFile(`${cachePath}.metadata`, 'utf8'));
-      const cacheControl = parseCacheControl(metadata['cache-control'] || metadata['Cache-Control'] || '');
-
-      if (cacheControl['no-cache']) {
-        return false;
-      }
-
-      /**
-       * 2. Check if the date and max-age are valid
-       */
-      const cachedDateTime = new Date(metadata['date'] || metadata['Date']).getTime();
-      if (!isNaN(cachedDateTime) && cacheControl['max-age'] >= 0) {
-        const expiredDate = new Date(cachedDateTime + cacheControl['max-age'] * 1000);
-        if (expiredDate > new Date()) {
-          return true;
-        }
-      }
-
-      /**
-       * 3. Fetch the remote md5 file to compare with the local one.
-       */
-      const resp = await (new Promise<undici.Dispatcher.ResponseData>((resolve, reject) => {
-        /**
-         * FIXME: I do this because the undici.request() seems not supporting custom timeout.
-         */
-        const requestTimer = setTimeout(() => reject(new Error('request timeout')), 500);
-        undici.request(`${resourceUri}.md5`, { dispatcher: this.#networkProxyAgent || undici.getGlobalDispatcher() }).then((data) => {
-          clearTimeout(requestTimer);
-          resolve(data);
-        }, (err) => {
-          clearTimeout(requestTimer);
-          reject(err);
-        });
-      }));
-
-      /**
-       * Check if the MD5 values are same.
-       */
-      if (resp.statusCode === 200) {
-        const [remote, local] = await Promise.all([
-          resp.body.text(),
-          this.#readTextFile(`${cachePath}.md5`)
-        ]);
-        if (remote !== Buffer.from(local, 'hex').toString('base64')) {
-          useCache = false;
-        }
-      }
-    } catch (err) {
-      console.warn(`failed to fetch the md5 file for ${resourceUri}, the error is: ${err}`);
-    }
-    return useCache;
   }
 }
