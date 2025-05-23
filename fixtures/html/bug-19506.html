@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <title>固定颜色事件日志</title>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const area = document.getElementById('area');
+      const logContainer = document.getElementById('log-container');
+
+      const eventLogMap = {};
+      const eventColorMap = {
+        click: '#ffb3ba',
+        mousedown: '#bae1ff',
+        mouseup: '#baffc9',
+        mousemove: '#ffffba',
+        mouseover: '#ffdfba',
+        mouseout: '#c9c9ff'
+      };
+
+      function createOrUpdateLog(eventName) {
+        if (eventLogMap[eventName]) {
+          logContainer.removeChild(eventLogMap[eventName]);
+        }
+
+        const logDiv = document.createElement('div');
+        logDiv.innerHTML = `触发事件: ${eventName}`;
+        logDiv.style.backgroundColor = eventColorMap[eventName] || '#eee';
+        logDiv.style.padding = '5px';
+        logDiv.style.margin = '5px 0';
+        logDiv.style.borderRadius = '4px';
+
+        logContainer.appendChild(logDiv);
+        eventLogMap[eventName] = logDiv;
+      }
+
+      area.addEventListener('click', (event) => createOrUpdateLog('click'));
+      area.addEventListener('mousemove', (event) => createOrUpdateLog('mousemove'));
+      area.addEventListener('mouseover', (event) => {
+        area.style.background = 'red';
+        createOrUpdateLog('mouseover');
+      });
+      area.addEventListener('mouseout', (event) => {
+        area.style.background = '#eef';
+        createOrUpdateLog('mouseout');
+      });
+    });
+  </script>
+</head>
+
+<body style="background-color: #fff;">
+
+  <div id="area" style="width:200px;height:200px;background:#eef;">
+    鼠标操作区域
+  </div>
+
+  <h3>事件日志：</h3>
+  <div id="log-container" style="margin-top: 20px;"></div>
+
+</body>
+
+</html>
