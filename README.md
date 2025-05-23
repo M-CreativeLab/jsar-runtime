@@ -16,34 +16,18 @@ mainstream 3D engines like [Unity][], [UnrealEngine][], and RealityKit.
 
 ## Overview
 
-### Rendering Backends
-
-The followings are supported renderer backend:
-
-| Backend       | OS      | Status      | Test Suite |
-| ------------- | ------- | ----------- | ---------- |
-| [OpenGLES3][] | Android | Ok          | -          |
-| [OpenGL][]    | macOS   | Partially   | -          |
-| [Metal][]     | macOS   | Not started | -          |
-| [D3D11][]     | Windows | Not started | -          |
-
-[OpenGL]: https://www.opengl.org/
-[OpenGLES3]: https://www.khronos.org/opengles/
-[Metal]: https://developer.apple.com/metal/
-[D3D11]: https://learn.microsoft.com/en-us/windows/win32/direct3d11/atoc-dx-graphics-direct3d-11
-
 ### Request Formats
 
 Like the classic Web browser, it supports not only the HTML document, but also lots of formats, such as PDF, SVG, etc. The following formats are JSAR is expected to support:
 
 | Format   | Status      | Recommended Use Case         |
 | -------- | ----------- | ---------------------------- |
-| XSML     | Ok          | Using WebXR applications     |
 | HTML     | Partially   | Browsering classic Web pages |
 | PDF      | Not started | Reading PDF documents        |
 | SVG      | Not started | Displaying SVG images        |
 | GLTF     | Ok          | Displaying 3D models         |
 | JPEG/PNG | Ok          | Viewing images               |
+| XSML     | Ok          | Using WebXR applications     |
 
 > XSML: namely eXtensible Spatial Markup Language, is a new format that is designed for spatial applications for HTML developers.
 
@@ -74,6 +58,22 @@ Like the classic Web browser, it supports not only the HTML document, but also l
 [WebGL1]: https://registry.khronos.org/webgl/specs/latest/1.0/
 [WebGL2]: https://registry.khronos.org/webgl/specs/latest/2.0/
 [WebGPU]: https://www.w3.org/TR/webgpu/
+
+### Rendering Backends
+
+The followings are supported renderer backend:
+
+| Backend       | OS      | Status      | Test Suite |
+| ------------- | ------- | ----------- | ---------- |
+| [OpenGLES3][] | Android | Ok          | -          |
+| [OpenGL][]    | macOS   | Partially   | -          |
+| [Metal][]     | macOS   | Not started | -          |
+| [D3D11][]     | Windows | Not started | -          |
+
+[OpenGL]: https://www.opengl.org/
+[OpenGLES3]: https://www.khronos.org/opengles/
+[Metal]: https://developer.apple.com/metal/
+[D3D11]: https://learn.microsoft.com/en-us/windows/win32/direct3d11/atoc-dx-graphics-direct3d-11
 
 ### WebXR Device APIs
 
