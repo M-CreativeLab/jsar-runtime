@@ -1,4 +1,4 @@
-# 🚀 JSAR
+# 🚀 JSAR Runtime
 
 ## ✨ Bringing Web Technologies to Life in 3D Worlds
 
