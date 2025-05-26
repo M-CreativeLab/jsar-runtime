@@ -194,7 +194,7 @@ namespace dom
             // Decoding the original image pixels.
             r = codec->getPixels(original_pixmap);
             if (r != SkCodec::kSuccess)
-              throw runtime_error("Coould not decode the original image data.");
+              throw runtime_error("Could not decode the original image data.");
 
             // Use linear filtering to scale the original pixmap to the scaled bitmap.
             if (original_pixmap.scalePixels(scaled_bitmap.pixmap(),
