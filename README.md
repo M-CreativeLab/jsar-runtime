@@ -18,11 +18,11 @@ mainstream 3D engines like [Unity][], [UnrealEngine][], and RealityKit.
 
 ### Request Formats
 
-Like the classic Web browser, it supports not only the HTML document, but also lots of formats, such as PDF, SVG, etc. The following formats are JSAR is expected to support:
+Like the classic Web browser, it supports not only the HTML document, but also lots of formats, such as PDF, SVG, etc. The following formats JSAR is expected to support:
 
 | Format   | Status      | Recommended Use Case         |
 | -------- | ----------- | ---------------------------- |
-| HTML     | Partially   | Browsering classic Web pages |
+| HTML     | Partially   | Browsing classic Web pages   |
 | PDF      | Not started | Reading PDF documents        |
 | SVG      | Not started | Displaying SVG images        |
 | GLTF     | Ok          | Displaying 3D models         |
@@ -61,7 +61,7 @@ Like the classic Web browser, it supports not only the HTML document, but also l
 
 ### Rendering Backends
 
-The followings are supported renderer backend:
+The following are supported renderer backends:
 
 | Backend       | OS      | Status      | Test Suite |
 | ------------- | ------- | ----------- | ---------- |
