@@ -46,4 +46,14 @@ setTimeout(() => {
     }
   }
   container?.appendChild(node);
+
+  // Test querySelector() when new elements are added or removed
+  console.info(document.body.innerHTML);
+  const h = document.querySelector('.header');
+  console.info(h, 'should not be null');
+
+  // TODO: fix the issue related to the node removal and replacements
+  document.body.innerHTML = '<div>New content</div>';
+  console.info(document.body.innerHTML);
+  console.info(document.querySelector('.header'), 'should be null');
 }, 1000);

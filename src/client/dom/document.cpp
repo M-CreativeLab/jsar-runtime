@@ -111,21 +111,17 @@ namespace dom
       }
     }
 
-    // Update the element list and maps.
-    auto updateElementListAndMaps = [this](shared_ptr<Node> childNode)
-    {
-      if (childNode->nodeType == NodeType::ELEMENT_NODE)
-      {
-        auto element = std::dynamic_pointer_cast<Element>(childNode);
-        allElementsList.push_back(element);
-        if (!element->id.empty())
-          elementMapById[element->id] = element;
-      }
-      return true;
-    };
+    // Clear list and maps.
     allElementsList.clear();
     elementMapById.clear();
-    iterateChildNodes(updateElementListAndMaps);
+
+    // Update the element list and maps.
+    auto initElementsCache = [this](shared_ptr<Node> childNode)
+    {
+      onNodeAdded(childNode, true, false);
+      return true;
+    };
+    iterateChildNodes(initElementsCache);
 
     if (shouldOpen)
       openInternal();
@@ -248,6 +244,72 @@ namespace dom
     styleSheets_.push_back(sheet);
     styleCache_.invalidateCache();
     onStyleSheetsDidChange();
+  }
+
+  void Document::onNodeAdded(const std::shared_ptr<Node> node, bool fast_insert, bool recursive)
+  {
+    if (TR_UNLIKELY(node == nullptr))
+      return;
+
+    if (node->isElement())
+    {
+      shared_ptr<Element> element = Node::As<Element>(node);
+
+      // Fast inserting elements into the list without checking for duplicates.
+      // FIXME(yorkie): At initialization, we can ensure that the elements are unique.
+      if (fast_insert)
+      {
+        allElementsList.push_back(element);
+      }
+      else
+      {
+        // Check if element is already in the list to avoid duplicates
+        auto it = std::find(allElementsList.begin(), allElementsList.end(), element);
+        if (it == allElementsList.end())
+        {
+          // If not, add it to the all elements list
+          allElementsList.push_back(element);
+        }
+      }
+
+      // Add the element to the element map by id
+      if (!element->id.empty())
+        elementMapById[element->id] = element;
+    }
+
+    if (recursive)
+    {
+      // Recursively add child nodes
+      for (auto childNode : node->childNodes)
+        onNodeAdded(childNode, fast_insert, true);
+    }
+  }
+
+  void Document::onNodeRemoved(const shared_ptr<Node> node, bool recursive)
+  {
+    if (TR_UNLIKELY(node == nullptr))
+      return;
+
+    if (node->isElement())
+    {
+      shared_ptr<Element> element = Node::As<Element>(node);
+
+      // Remove the element from the all elements list
+      auto it = std::remove(allElementsList.begin(), allElementsList.end(), element);
+      if (it != allElementsList.end())
+        allElementsList.erase(it, allElementsList.end());
+
+      // Remove the element from the element map by id
+      if (!element->id.empty())
+        elementMapById.erase(element->id);
+    }
+
+    if (recursive)
+    {
+      // Recursively remove child nodes
+      for (auto childNode : node->childNodes)
+        onNodeRemoved(childNode, true);
+    }
   }
 
   void Document::openInternal()
