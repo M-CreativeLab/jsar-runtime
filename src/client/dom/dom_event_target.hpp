@@ -2,6 +2,8 @@
 
 #include <string>
 #include <memory>
+#include <optional>
+
 #include "common/utility.hpp"
 #include "common/events_v2/event_target.hpp"
 
@@ -220,7 +222,7 @@ namespace dom
    * @param fromEventTarget The event target type that the event is from.
    * @returns The `DOMEventType` enum.
    */
-  inline DOMEventType StringToEventType(std::string typeStr, DOMEventTargetType fromEventTarget)
+  inline std::optional<DOMEventType> StringToEventType(std::string typeStr, DOMEventTargetType fromEventTarget)
   {
     std::string eventFullName = ToLowerCase(typeStr);
     if (fromEventTarget != DOMEventTargetType::kEventTarget)
@@ -233,7 +235,7 @@ namespace dom
     DOM_EVENT_TYPES_MAP(XX)
 #undef XX
 
-    throw std::invalid_argument("Invalid event type string: " + typeStr);
+    return std::nullopt;
   }
 
   /**

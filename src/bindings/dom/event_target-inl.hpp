@@ -164,15 +164,10 @@ namespace dombinding
       return env.Undefined();
     }
 
-    dom::DOMEventType eventType;
-    try
+    std::optional<dom::DOMEventType> eventType = dom::StringToEventType(typeString, eventTargetType());
+    if (!eventType.has_value())
     {
-      eventType = dom::StringToEventType(typeString, eventTargetType());
-    }
-    catch (const invalid_argument &e)
-    {
-      auto msg = "Failed to execute 'addEventListener' on 'EventTarget': " + string(e.what());
-      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      cerr << "The event type '" << typeString << "' is not supported by the event target." << endl;
       return env.Undefined();
     }
 
@@ -227,7 +222,7 @@ namespace dombinding
       }
     };
 
-    auto nativeListener = eventTarget->addEventListener(eventType, listenerCallback);
+    auto nativeListener = eventTarget->addEventListener(eventType.value(), listenerCallback);
     listenerRefToNativeIdMap.insert({listenerRef, nativeListener->id});
     return env.Undefined();
   }
@@ -266,15 +261,10 @@ namespace dombinding
       return env.Undefined();
     }
 
-    dom::DOMEventType eventType;
-    try
+    std::optional<dom::DOMEventType> eventType = dom::StringToEventType(typeString, eventTargetType());
+    if (!eventType.has_value())
     {
-      eventType = dom::StringToEventType(typeString, eventTargetType());
-    }
-    catch (const invalid_argument &e)
-    {
-      auto msg = "Failed to execute 'removeEventListener' on 'EventTarget': " + string(e.what());
-      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      cerr << "The event type '" << typeString << "' is not supported by the event target." << endl;
       return env.Undefined();
     }
 
@@ -284,7 +274,7 @@ namespace dombinding
       if (listenerRef->Value() == listenerValue)
       {
         uint32_t listenerId = it->second;
-        eventTarget->removeEventListener(eventType, listenerId);
+        eventTarget->removeEventListener(eventType.value(), listenerId);
         it = listenerRefToNativeIdMap.erase(it);
         break;
       }
@@ -328,19 +318,14 @@ namespace dombinding
     }
 
     auto eventTypeString = eventObject.Get("type").ToString().Utf8Value();
-    dom::DOMEventType eventType;
-    try
+    std::optional<dom::DOMEventType> eventType = dom::StringToEventType(eventTypeString, eventTargetType());
+    if (!eventType.has_value())
     {
-      eventType = dom::StringToEventType(eventTypeString, eventTargetType());
-    }
-    catch (const invalid_argument &e)
-    {
-      auto msg = "Failed to execute 'dispatchEvent' on 'EventTarget': " + string(e.what());
-      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
+      cerr << "The event type '" << eventTypeString << "' is not supported by the event target type." << endl;
       return env.Undefined();
     }
 
-    eventTarget->dispatchEvent(eventType, nullptr);
+    eventTarget->dispatchEvent(eventType.value(), nullptr);
     return Napi::Boolean::New(env, true);
   }
 
