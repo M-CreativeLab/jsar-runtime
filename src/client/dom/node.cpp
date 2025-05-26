@@ -118,7 +118,7 @@ namespace dom
     auto it = find(childNodes.begin(), childNodes.end(), aChild);
     if (it != childNodes.end())
     {
-      childNodes.erase(it);
+      it = childNodes.erase(it);
       childRemovedCallback(aChild);
     }
   }
@@ -441,7 +441,10 @@ namespace dom
     auto self = shared_from_this();
     child->parentNode = self;
     // Update all the child nodes' owner document when a new child is added.
-    child->updateFieldsFromDocument(getOwnerDocumentReference(), true);
+    auto ownerDocument = getOwnerDocumentReference();
+    child->updateFieldsFromDocument(ownerDocument, true);
+    if (TR_LIKELY(ownerDocument != nullptr))
+      ownerDocument->onNodeAdded(child, false, true);
 
     markAsDirty();
     notifyMutationObservers(MutationRecord::OnAddChild(self, child));
@@ -455,6 +458,10 @@ namespace dom
   {
     auto self = shared_from_this();
     child->parentNode.reset();
+
+    auto ownerDocument = getOwnerDocumentReference();
+    if (TR_LIKELY(ownerDocument != nullptr))
+      ownerDocument->onNodeRemoved(child, true);
 
     markAsDirty();
     notifyMutationObservers(MutationRecord::OnRemoveChild(self, child));
@@ -563,6 +570,7 @@ namespace dom
     else
       ownerDocument = nullopt;
 
+    // Update the document for fields of child nodes recursively
     if (updateChildren && !childNodes.empty())
     {
       for (auto child : childNodes)
