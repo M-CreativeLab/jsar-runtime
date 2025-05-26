@@ -2689,6 +2689,36 @@ PUGI_IMPL_NS_BEGIN
 		}
 	}
 
+	PUGI_IMPL_FN char_t* strconv_script_impl(char_t* s)
+	{
+		char_t* begin = s;
+		
+		while (true)
+		{
+			while (*s && *s != '<') ++s;
+			
+			if (*s == 0)
+			{
+				return s;
+			}
+			else if (*s == '<' && s[1] == '/' && 
+					 (s[2] == 's' || s[2] == 'S') &&
+					 (s[3] == 'c' || s[3] == 'C') &&
+					 (s[4] == 'r' || s[4] == 'R') &&
+					 (s[5] == 'i' || s[5] == 'I') &&
+					 (s[6] == 'p' || s[6] == 'P') &&
+					 (s[7] == 't' || s[7] == 'T') &&
+					 (s[8] == '>' || PUGI_IMPL_IS_CHARTYPE(s[8], ct_space)))
+			{
+				return s;
+			}
+			else
+			{
+				++s;
+			}
+		}
+	}
+
 	typedef char_t* (*strconv_pcdata_t)(char_t*);
 
 	template <typename opt_trim, typename opt_eol, typename opt_escape> struct strconv_pcdata_impl
@@ -2968,6 +2998,11 @@ PUGI_IMPL_NS_BEGIN
 		default:
 			return false;
     }
+	}
+
+	inline bool is_script_tag(const char* name) {
+		size_t len = strlen(name);
+		return len == 6 && name[0] == 's' && memcmp(name, "script", 6) == 0;
 	}
 
 	struct xml_parser
@@ -3341,6 +3376,22 @@ PUGI_IMPL_NS_BEGIN
 								PUGI_IMPL_POPNODE();
 								s++;
 							}
+							else if (is_script_tag(cursor->name))
+							{
+								char_t* script_end = strconv_script_impl(s + 1);
+								if (script_end > s + 1)
+								{
+									PUGI_IMPL_PUSHNODE(node_pcdata);
+									cursor->value = s + 1;
+									*script_end = 0;
+									s = script_end;
+									PUGI_IMPL_POPNODE();
+								}
+								else
+								{
+									s++;
+								}
+							}
 							// end of tag
 						}
 						else if (PUGI_IMPL_IS_CHARTYPE(ch, ct_space))
@@ -3423,6 +3474,18 @@ PUGI_IMPL_NS_BEGIN
 									{
 										PUGI_IMPL_POPNODE();
 										s++;
+									}
+									else if (is_script_tag(cursor->name))
+									{
+										char_t* script_end = strconv_script_impl(s);
+										if (script_end > s)
+										{
+											PUGI_IMPL_PUSHNODE(node_pcdata);
+											cursor->value = s;
+											*script_end = 0;
+											s = script_end;
+											PUGI_IMPL_POPNODE();
+										}
 									}
 									break;
 								}
