@@ -163,15 +163,60 @@ namespace dom
           // back-compatibility.
           //
           // TODO(yorkie): support tweaking or disabling for different platforms?
-          float scale = std::min(static_cast<float>(transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE) / info.width(),
-                                 static_cast<float>(transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE) / info.height());
-          int scaled_width = static_cast<int>(info.width() * scale);
-          int scaled_height = static_cast<int>(info.height() * scale);
-          info = info.makeWH(scaled_width, scaled_height);
-        }
+          int original_width = info.width();
+          int original_height = info.height();
+          float scale = std::min(
+              static_cast<float>(transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE) / original_width,
+              static_cast<float>(transmute::ImageProcessor::DEFAULT_MAX_IMAGE_SIZE) / original_height);
+          int scaled_width = static_cast<int>(original_width * scale);
+          int scaled_height = static_cast<int>(original_height * scale);
+          SkImageInfo scaled_info = info.makeWH(scaled_width, scaled_height);
 
-        bitmap.allocPixels(info);
-        codec->getPixels(info, bitmap.getPixels(), bitmap.rowBytes());
+          // Allocate the scaled bitmap with the scaled image info.
+          SkBitmap scaled_bitmap;
+          scaled_bitmap.allocPixels(scaled_info);
+
+          // Call `getPixels()` first to check if the current codec supports scaling.
+          auto r = codec->getPixels(scaled_info, scaled_bitmap.getPixels(), scaled_bitmap.rowBytes());
+          if (r == SkCodec::kSuccess)
+          {
+            // Returns the scaled bitmap if the scaling is successful.
+            bitmap = scaled_bitmap;
+          }
+          else if (r == SkCodec::kInvalidScale)
+          {
+            // `InvalidScale` means the codec does not support scaling, so we need to do the scaling after decoding
+            // the original pixels.
+            SkBitmap original_bitmap;
+            original_bitmap.allocPixels(info);
+            const SkPixmap &original_pixmap = original_bitmap.pixmap();
+
+            // Decoding the original image pixels.
+            r = codec->getPixels(original_pixmap);
+            if (r != SkCodec::kSuccess)
+              throw runtime_error("Could not decode the original image data.");
+
+            // Use linear filtering to scale the original pixmap to the scaled bitmap.
+            if (original_pixmap.scalePixels(scaled_bitmap.pixmap(),
+                                            SkSamplingOptions(SkFilterMode::kLinear)))
+            {
+              bitmap = scaled_bitmap;
+            }
+            else
+            {
+              // FIXME(yorkie): should use `original_bitmap` as the fallback?
+              throw runtime_error("Could not scale a valid bitmap.");
+            }
+          }
+        }
+        else
+        {
+          // No need to scale if the image size is within the maximum allowed size.
+          bitmap.allocPixels(info);
+          auto r = codec->getPixels(info, bitmap.getPixels(), bitmap.rowBytes());
+          if (r != SkCodec::kSuccess)
+            throw runtime_error(SkCodec::ResultToString(r));
+        }
         is_src_image_decoded_ = true;
       }
       catch (const exception &e)
