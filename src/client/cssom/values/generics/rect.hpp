@@ -38,6 +38,11 @@ namespace client_cssom::values::generics
     inline const T &bottom() const { return bottom_; }
     inline const T &left() const { return left_; }
 
+    inline void setTop(const T &value) { top_ = value; }
+    inline void setRight(const T &value) { right_ = value; }
+    inline void setBottom(const T &value) { bottom_ = value; }
+    inline void setLeft(const T &value) { left_ = value; }
+
     const T &operator[](Edge edge) const
     {
       switch (edge)

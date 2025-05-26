@@ -28,6 +28,8 @@ namespace client_cssom
       return T();
     }
 
+    virtual ~Parse() = default;
+
   protected:
     virtual bool parse(const std::string &input) = 0;
   };
@@ -35,6 +37,7 @@ namespace client_cssom
   class ToCss
   {
   public:
+    virtual ~ToCss() = default;
     virtual std::string toCss() const = 0;
   };
 
@@ -42,6 +45,7 @@ namespace client_cssom
   class ToComputedValue
   {
   public:
+    virtual ~ToComputedValue() = default;
     virtual ComputedValue toComputedValue(values::computed::Context &) const = 0;
   };
 
@@ -49,6 +53,7 @@ namespace client_cssom
   class ToLayoutValue
   {
   public:
+    virtual ~ToLayoutValue() = default;
     virtual LayoutValue toLayoutValue() const = 0;
   };
 }

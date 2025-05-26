@@ -4,6 +4,7 @@
 #include "./style_traits.hpp"
 #include "./values/computed/context.hpp"
 #include "./values/specified/border.hpp"
+#include "./values/specified/flex.hpp"
 #include "./values/specified/font.hpp"
 #include "./values/specified/color.hpp"
 
@@ -110,6 +111,9 @@ namespace client_cssom
 
   bool ComputedStyle::update(const CSSStyleDeclaration &from, values::computed::Context &context)
   {
+    if (from.length() == 0)
+      return false;
+
     ComputedStyle resolvedStyle(from);
     for (const auto &[propertyName, value] : resolvedStyle)
     {
@@ -154,6 +158,36 @@ namespace client_cssom
     else if (name == "box-sizing")
       box_sizing_ = Parse::ParseSingleValue<values::computed::BoxSizing>(value);
 
+    // Margin
+    if (name == "margin-top")
+      margin_.setTop(Parse::ParseSingleValue<values::specified::MarginSize>(value).toComputedValue(context));
+    else if (name == "margin-right")
+      margin_.setRight(Parse::ParseSingleValue<values::specified::MarginSize>(value).toComputedValue(context));
+    else if (name == "margin-bottom")
+      margin_.setBottom(Parse::ParseSingleValue<values::specified::MarginSize>(value).toComputedValue(context));
+    else if (name == "margin-left")
+      margin_.setLeft(Parse::ParseSingleValue<values::specified::MarginSize>(value).toComputedValue(context));
+
+    // Padding
+    if (name == "padding-top")
+      padding_.setTop(Parse::ParseSingleValue<values::specified::LengthPercentage>(value).toComputedValue(context));
+    else if (name == "padding-right")
+      padding_.setRight(Parse::ParseSingleValue<values::specified::LengthPercentage>(value).toComputedValue(context));
+    else if (name == "padding-bottom")
+      padding_.setBottom(Parse::ParseSingleValue<values::specified::LengthPercentage>(value).toComputedValue(context));
+    else if (name == "padding-left")
+      padding_.setLeft(Parse::ParseSingleValue<values::specified::LengthPercentage>(value).toComputedValue(context));
+
+    // Sizes
+    else if (name == "width")
+      width_ = Parse::ParseSingleValue<values::specified::Size>(value).toComputedValue(context);
+    else if (name == "height")
+      height_ = Parse::ParseSingleValue<values::specified::Size>(value).toComputedValue(context);
+    else if (name == "min-width")
+      min_width_ = Parse::ParseSingleValue<values::specified::Size>(value).toComputedValue(context);
+    else if (name == "min-height")
+      min_height_ = Parse::ParseSingleValue<values::specified::Size>(value).toComputedValue(context);
+
     // Font properties
     if (name == "font-family")
       fonts_ = parsing::parseFontFamily(value);
@@ -180,6 +214,22 @@ namespace client_cssom
       color_ = Parse::ParseSingleValue<values::specified::Color>(value).toComputedValue(context);
     else if (name == "background-color")
       background_color_ = Parse::ParseSingleValue<values::specified::Color>(value).toComputedValue(context);
+
+    // Flexbox
+    else if (name == "flex-direction")
+      flex_direction_ = Parse::ParseSingleValue<values::specified::FlexDirection>(value).toComputedValue(context);
+    else if (name == "align-items")
+      align_items_ = Parse::ParseSingleValue<values::specified::AlignItems>(value);
+    else if (name == "align-self")
+      align_self_ = Parse::ParseSingleValue<values::specified::AlignSelf>(value);
+    else if (name == "align-content")
+      align_content_ = Parse::ParseSingleValue<values::specified::AlignContent>(value);
+    else if (name == "justify-content")
+      justify_content_ = Parse::ParseSingleValue<values::specified::JustifyContent>(value);
+    else if (name == "justify-self")
+      justify_self_ = Parse::ParseSingleValue<values::specified::JustifySelf>(value);
+    else if (name == "justify-items")
+      justify_items_ = Parse::ParseSingleValue<values::specified::JustifyItems>(value);
   }
 
   void ComputedStyle::computeShorthandProperties(values::computed::Context &context)

@@ -52,6 +52,11 @@ namespace client_cssom::values::generics
     static T LengthPercentage(LengthPercent length_percent) { return T(kLengthPercentage, length_percent); }
 
   public:
+    GenericSize()
+        : tag_(kAuto),
+          length_percent_(std::nullopt)
+    {
+    }
     GenericSize(Tag tag, std::optional<LengthPercent> length_percent = std::nullopt)
         : tag_(tag),
           length_percent_(length_percent)
@@ -69,6 +74,18 @@ namespace client_cssom::values::generics
     {
       assert(tag_ == kLengthPercentage && "The tag is not length percentage.");
       return length_percent_.value();
+    }
+
+  protected:
+    void setAuto()
+    {
+      tag_ = kAuto;
+      length_percent_ = std::nullopt;
+    }
+    void setLengthPercentage(LengthPercent length_percent)
+    {
+      tag_ = kLengthPercentage;
+      length_percent_ = length_percent;
     }
 
   private:
@@ -138,8 +155,8 @@ namespace client_cssom::values::generics
 
   public:
     GenericMargin()
-        : tag_(kAuto),
-          length_percent_(std::nullopt)
+        : tag_(kLengthPercentage),
+          length_percent_(LP(0.0f))
     {
     }
 
@@ -158,6 +175,18 @@ namespace client_cssom::values::generics
     {
       assert(tag_ == kLengthPercentage && "The tag is not length percentage.");
       return length_percent_.value();
+    }
+
+  protected:
+    void setAuto()
+    {
+      tag_ = kAuto;
+      length_percent_ = std::nullopt;
+    }
+    void setLengthPercentage(LP length_percent)
+    {
+      tag_ = kLengthPercentage;
+      length_percent_ = length_percent;
     }
 
   private:

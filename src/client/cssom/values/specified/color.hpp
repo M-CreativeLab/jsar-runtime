@@ -50,6 +50,7 @@ namespace client_cssom::values::specified
 
         // TODO(yorkie): support color functions, mix, light/dark.
         auto color = parsing::parseColor(input);
+        tag_ = Tag::kAbsolute;
         value_ = AbsoluteColorVariant{
             static_cast<uint32_t>(color.r()),
             static_cast<uint32_t>(color.g()),

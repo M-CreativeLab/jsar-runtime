@@ -6,6 +6,7 @@
 #include <client/cssom/style_traits.hpp>
 #include <client/cssom/values/generics/common.hpp>
 #include <client/cssom/values/specified/calc.hpp>
+#include <client/cssom/values/computed/length_percentage.hpp>
 #include <client/cssom/values/computed/percentage.hpp>
 
 namespace client_cssom::values::specified
@@ -484,40 +485,48 @@ namespace client_cssom::values::specified
     {
       assert(unit != nullptr);
 
+      // Absolute lengths
       if (strcmp(unit, AbsoluteLength::UNIT_PX) == 0)
       {
         tag_ = kAbsolute;
         length_ = AbsoluteLength::Px(value);
+        return;
       }
       if (strcmp(unit, AbsoluteLength::UNIT_IN) == 0)
       {
         tag_ = kAbsolute;
         length_ = AbsoluteLength::In(value);
+        return;
       }
       if (strcmp(unit, AbsoluteLength::UNIT_CM) == 0)
       {
         tag_ = kAbsolute;
         length_ = AbsoluteLength::Cm(value);
+        return;
       }
       if (strcmp(unit, AbsoluteLength::UNIT_MM) == 0)
       {
         tag_ = kAbsolute;
         length_ = AbsoluteLength::Mm(value);
+        return;
       }
       if (strcmp(unit, AbsoluteLength::UNIT_Q) == 0)
       {
         tag_ = kAbsolute;
         length_ = AbsoluteLength::Q(value);
+        return;
       }
       if (strcmp(unit, AbsoluteLength::UNIT_PT) == 0)
       {
         tag_ = kAbsolute;
         length_ = AbsoluteLength::Pt(value);
+        return;
       }
       if (strcmp(unit, AbsoluteLength::UNIT_PC) == 0)
       {
         tag_ = kAbsolute;
         length_ = AbsoluteLength::Pc(value);
+        return;
       }
 
       // Font-relative lengths
@@ -525,41 +534,49 @@ namespace client_cssom::values::specified
       {
         tag_ = kFontRelative;
         length_ = FontRelativeLength::Em(value);
+        return;
       }
       if (strcmp(unit, FontRelativeLength::UNIT_EX) == 0)
       {
         tag_ = kFontRelative;
         length_ = FontRelativeLength::Ex(value);
+        return;
       }
       if (strcmp(unit, FontRelativeLength::UNIT_CH) == 0)
       {
         tag_ = kFontRelative;
         length_ = FontRelativeLength::Ch(value);
+        return;
       }
       if (strcmp(unit, FontRelativeLength::UNIT_CAP) == 0)
       {
         tag_ = kFontRelative;
         length_ = FontRelativeLength::Cap(value);
+        return;
       }
       if (strcmp(unit, FontRelativeLength::UNIT_IC) == 0)
       {
         tag_ = kFontRelative;
         length_ = FontRelativeLength::Ic(value);
+        return;
       }
       if (strcmp(unit, FontRelativeLength::UNIT_REM) == 0)
       {
         tag_ = kFontRelative;
         length_ = FontRelativeLength::Rem(value);
+        return;
       }
       if (strcmp(unit, FontRelativeLength::UNIT_LH) == 0)
       {
         tag_ = kFontRelative;
         length_ = FontRelativeLength::Lh(value);
+        return;
       }
       if (strcmp(unit, FontRelativeLength::UNIT_RLH) == 0)
       {
         tag_ = kFontRelative;
         length_ = FontRelativeLength::Rlh(value);
+        return;
       }
 
       // Viewport percentage lengths
@@ -567,31 +584,37 @@ namespace client_cssom::values::specified
       {
         tag_ = kViewportPercentage;
         length_ = ViewportPercentageLength::Vw(value);
+        return;
       }
       if (strcmp(unit, ViewportPercentageLength::UNIT_VH) == 0)
       {
         tag_ = kViewportPercentage;
         length_ = ViewportPercentageLength::Vh(value);
+        return;
       }
       if (strcmp(unit, ViewportPercentageLength::UNIT_VMIN) == 0)
       {
         tag_ = kViewportPercentage;
         length_ = ViewportPercentageLength::Vmin(value);
+        return;
       }
       if (strcmp(unit, ViewportPercentageLength::UNIT_VMAX) == 0)
       {
         tag_ = kViewportPercentage;
         length_ = ViewportPercentageLength::Vmax(value);
+        return;
       }
       if (strcmp(unit, ViewportPercentageLength::UNIT_VB) == 0)
       {
         tag_ = kViewportPercentage;
         length_ = ViewportPercentageLength::Vb(value);
+        return;
       }
       if (strcmp(unit, ViewportPercentageLength::UNIT_VI) == 0)
       {
         tag_ = kViewportPercentage;
         length_ = ViewportPercentageLength::Vi(value);
+        return;
       }
 
       // Container relative lengths
@@ -599,34 +622,41 @@ namespace client_cssom::values::specified
       {
         tag_ = kContainerRelative;
         length_ = ContainerRelativeLength::Cqw(value);
+        return;
       }
       if (strcmp(unit, ContainerRelativeLength::UNIT_CQH) == 0)
       {
         tag_ = kContainerRelative;
         length_ = ContainerRelativeLength::Cqh(value);
+        return;
       }
       if (strcmp(unit, ContainerRelativeLength::UNIT_CQI) == 0)
       {
         tag_ = kContainerRelative;
         length_ = ContainerRelativeLength::Cqi(value);
+        return;
       }
       if (strcmp(unit, ContainerRelativeLength::UNIT_CQB) == 0)
       {
         tag_ = kContainerRelative;
         length_ = ContainerRelativeLength::Cqb(value);
+        return;
       }
       if (strcmp(unit, ContainerRelativeLength::UNIT_CQMIN) == 0)
       {
         tag_ = kContainerRelative;
         length_ = ContainerRelativeLength::Cqmin(value);
+        return;
       }
       if (strcmp(unit, ContainerRelativeLength::UNIT_CQMAX) == 0)
       {
         tag_ = kContainerRelative;
         length_ = ContainerRelativeLength::Cqmax(value);
+        return;
       }
 
       // Unreachable
+      cerr << "Failed to parse length: " << value << unit << endl;
       assert(false && "Invalid unit.");
     }
 
@@ -661,9 +691,37 @@ namespace client_cssom::values::specified
       assert(false && "Invalid tag.");
     }
 
-    float unitlessValue() const;
+    float unitlessValue() const
+    {
+      switch (tag_)
+      {
+      case kAbsolute:
+        return std::get<AbsoluteLength>(length_).unitlessValue();
+      case kFontRelative:
+        return std::get<FontRelativeLength>(length_).unitlessValue();
+      case kViewportPercentage:
+        return std::get<ViewportPercentageLength>(length_).unitlessValue();
+      case kContainerRelative:
+        return std::get<ContainerRelativeLength>(length_).unitlessValue();
+      }
+      assert(false && "Invalid tag.");
+    }
     // Returns the unit as a string.
-    const char *unit() const;
+    const char *unit() const
+    {
+      switch (tag_)
+      {
+      case kAbsolute:
+        return std::get<AbsoluteLength>(length_).unit();
+      case kFontRelative:
+        return std::get<FontRelativeLength>(length_).unit();
+      case kViewportPercentage:
+        return std::get<ViewportPercentageLength>(length_).unit();
+      case kContainerRelative:
+        return std::get<ContainerRelativeLength>(length_).unit();
+      }
+      assert(false && "Invalid tag.");
+    }
 
     inline bool isZero() const { return unitlessValue() == 0.0f; }
     inline bool isInfinite() const { return unitlessValue() == std::numeric_limits<float>::infinity(); }
@@ -677,7 +735,7 @@ namespace client_cssom::values::specified
 
   class LengthPercentage : public Parse,
                            public ToCss,
-                           public ToComputedValue<float>
+                           public ToComputedValue<computed::LengthPercentage>
   {
     friend class Parse;
 
@@ -698,9 +756,9 @@ namespace client_cssom::values::specified
     }
 
   public:
-    LengthPercentage()
+    LengthPercentage(float value = 0.0f)
         : tag_(kLength),
-          value_(NoCalcLength::FromPx(0.0f))
+          value_(NoCalcLength::FromPx(value))
     {
     }
 
@@ -746,17 +804,22 @@ namespace client_cssom::values::specified
         return "calc()";
       }
     }
-    float toComputedValue(computed::Context &context) const override
+    computed::LengthPercentage toComputedValue(computed::Context &context) const override
     {
-      switch (tag_)
+      if (tag_ == kLength)
       {
-      case kLength:
-        return std::get<NoCalcLength>(value_).toComputedValue(context);
-      case kPercentage:
-        return std::get<computed::Percentage>(value_).value();
-      case kCalc:
+        auto length = std::get<NoCalcLength>(value_).toComputedValue(context);
+        return computed::LengthPercentage::Length(length);
+      }
+      else if (tag_ == kPercentage)
+      {
+        auto percent = std::get<computed::Percentage>(value_).value();
+        return computed::LengthPercentage::Percentage(percent);
+      }
+      else
+      {
         // TODO(yorkie): support calc length.
-        return 0;
+        return computed::LengthPercentage::Length(0.0f);
       }
     }
 
@@ -766,4 +829,65 @@ namespace client_cssom::values::specified
   };
 
   using NonNegativeLengthPercentage = generics::NonNegative<LengthPercentage>;
+
+  class Size final : public generics::GenericSize<Size, NonNegativeLengthPercentage>,
+                     public Parse,
+                     public ToComputedValue<computed::Size>
+  {
+    friend class Parse;
+    using generics::GenericSize<Size, NonNegativeLengthPercentage>::GenericSize;
+
+  public:
+    Size() : generics::GenericSize<Size, NonNegativeLengthPercentage>()
+    {
+    }
+
+  private:
+    bool parse(const std::string &input) override
+    {
+      if (input == "auto")
+        setAuto();
+      if (LengthPercentage::IsLengthOrPercentage(input))
+        setLengthPercentage(Parse::ParseSingleValue<NonNegativeLengthPercentage>(input));
+      return true;
+    }
+
+  public:
+    computed::Size toComputedValue(computed::Context &context) const override
+    {
+      if (isAuto())
+        return computed::Size::Auto();
+      else if (isLengthPercentage())
+        return computed::Size::LengthPercentage(lengthPercent().toComputedValue(context));
+      assert(false && "Invalid tag.");
+    }
+  };
+
+  class MarginSize : public generics::GenericMargin<MarginSize, specified::LengthPercentage>,
+                     public Parse,
+                     public ToComputedValue<computed::MarginSize>
+  {
+    friend class Parse;
+    using generics::GenericMargin<MarginSize, specified::LengthPercentage>::GenericMargin;
+
+  private:
+    bool parse(const std::string &input) override
+    {
+      if (input == "auto")
+        setAuto();
+      else if (LengthPercentage::IsLengthOrPercentage(input))
+        setLengthPercentage(Parse::ParseSingleValue<specified::LengthPercentage>(input));
+      return true;
+    }
+
+  public:
+    computed::MarginSize toComputedValue(computed::Context &context) const override
+    {
+      if (isAuto())
+        return computed::MarginSize::Auto();
+      else if (isLengthPercentage())
+        return computed::MarginSize::LengthPercentage(lengthPercent().toComputedValue(context));
+      assert(false && "Invalid tag.");
+    }
+  };
 }

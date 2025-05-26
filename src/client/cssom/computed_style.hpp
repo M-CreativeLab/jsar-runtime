@@ -45,6 +45,21 @@ namespace client_cssom
     ComputedStyle(const CSSStyleDeclaration &);
 
     operator crates::layout2::LayoutStyle() const;
+    friend std::ostream &operator<<(std::ostream &os, const ComputedStyle &style)
+    {
+      if (style.empty())
+      {
+        os << "ComputedStyle {}";
+      }
+      else
+      {
+        os << "ComputedStyle {" << std::endl;
+        for (const auto &[key, value] : style)
+          os << "  " << key << ": " << value << std::endl;
+        os << "}";
+      }
+      return os;
+    }
 
   public:
     inline bool hasProperty(const std::string &name) const { return find(name) != end(); }
@@ -109,7 +124,7 @@ namespace client_cssom
 
   private:
     // Box model
-    values::computed::Display display_ = values::computed::Display::None();
+    values::computed::Display display_ = values::computed::Display::Block();
     values::computed::BoxSizing box_sizing_ = values::computed::BoxSizing::ContentBox();
     values::computed::Overflow overflow_x_ = values::computed::Overflow::Visible();
     values::computed::Overflow overflow_y_ = values::computed::Overflow::Visible();

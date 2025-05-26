@@ -25,6 +25,7 @@ namespace builtin_scene::web_renderer
 {
   using namespace std;
   using namespace skia::textlayout;
+  using namespace client_cssom;
   using BorderEdge = client_cssom::values::generics::BorderEdge;
   using BorderCorner = client_cssom::values::generics::BorderCorner;
 
@@ -303,10 +304,12 @@ namespace builtin_scene::web_renderer
 
   void RenderBackgroundSystem::render(ecs::EntityId entity, WebContent &content)
   {
-    const auto &style = content.style();
+    const ComputedStyle &style = content.style();
     const auto &fragment = content.fragment();
     if (!fragment.has_value()) // No layout, no rendering.
       return;
+
+    cout << "[renderer] () " << content.name() << ": " << style << endl;
 
     auto canvas = content.canvas();
     canvas->clear(SK_ColorTRANSPARENT);

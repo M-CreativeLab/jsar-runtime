@@ -61,8 +61,8 @@ namespace client_cssom::values::computed
     }
 
   public:
-    LengthPercentage()
-        : variant_(LengthVariant::From(CSSPixelLength(0.0f)))
+    LengthPercentage(float value = 0.0f)
+        : variant_(LengthVariant::From(CSSPixelLength(value)))
     {
     }
     LengthPercentage(const LengthVariant length)

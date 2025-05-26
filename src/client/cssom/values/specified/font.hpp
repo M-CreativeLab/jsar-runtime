@@ -193,7 +193,7 @@ namespace client_cssom::values::specified
       if (tag_ == kLength)
       {
         const auto &length = std::get<LengthPercentage>(value_);
-        return computed::FontSize(length.toComputedValue(context));
+        return computed::FontSize(length.toComputedValue(context).getLength().px());
       }
       if (tag_ == kKeyword)
       {
@@ -462,8 +462,8 @@ namespace client_cssom::values::specified
       }
       if (isLength())
       {
-        auto computed_length = getLength().toComputedValue(context);
-        return computed::LineHeight::Length(computed_length);
+        auto computed_length = getLength().toComputedValue(context).getLength();
+        return computed::LineHeight::Length(computed_length.px());
       }
       if (isNumber())
       {
