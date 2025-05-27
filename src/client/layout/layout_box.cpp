@@ -136,13 +136,11 @@ namespace client_layout
   {
     setScrollableOverflowFromLayoutResults();
 
-    bool is_scroll_container = isScrollContainer();
-    cout << "Checking if the box(" << debugName() << ") is a scroll container: "
-         << (is_scroll_container ? "Yes" : "No") << endl;
-
-    if (is_scroll_container)
+    if (isScrollContainer())
+    {
       getScrollableArea()
           ->updateAfterLayout(formattingContext().liveFragment());
+    }
   }
 
   void LayoutBox::setScrollableOverflowFromLayoutResults()
@@ -213,7 +211,11 @@ namespace client_layout
   void LayoutBox::scrollBy(const glm::vec3 &offset)
   {
     if (TR_UNLIKELY(!isScrollContainer()))
+    {
+      cerr << "LayoutBox::scrollBy on " << debugName() << ": "
+           << "The box is not a scroll container, skipping scrollBy." << endl;
       return;
+    }
     getScrollableArea()->scrollBy(offset);
   }
 
