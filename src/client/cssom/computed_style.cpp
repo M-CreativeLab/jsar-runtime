@@ -28,15 +28,15 @@ namespace client_cssom
     return kNonInherited;
   }
 
-  ComputedStyle::ComputedStyle(const CSSStyleDeclaration &style)
+  ComputedStyle ComputedStyle::Make(const CSSStyleDeclaration &style, std::shared_ptr<dom::Node> target_node)
+  {
+    return ComputedStyle(style, values::computed::Context::From(target_node));
+  }
+
+  ComputedStyle::ComputedStyle(const CSSStyleDeclaration &style, std::optional<values::computed::Context> context)
       : std::unordered_map<std::string, std::string>()
   {
-    for (int index = 0; index < style.length(); index++)
-    {
-      auto propertyName = style.item(index);
-      auto value = style.getPropertyValue(propertyName);
-      setPropertyInternal(propertyName, value);
-    }
+    update(style, context);
   }
 
   ComputedStyle::operator crates::layout2::LayoutStyle() const
@@ -162,7 +162,7 @@ namespace client_cssom
     return true;
   }
 
-  bool ComputedStyle::update(const CSSStyleDeclaration &from_style, values::computed::Context &context)
+  bool ComputedStyle::update(const CSSStyleDeclaration &from_style, optional<values::computed::Context> context)
   {
     if (from_style.length() == 0)
       return false;
@@ -184,12 +184,15 @@ namespace client_cssom
         setPropertyInternal(propertyName, value);
       }
 
-      // Compute the property if it is inherited.
-      computeProperty(propertyName, value, context);
+      if (context.has_value())
+        computeProperty(propertyName, value, context.value());
     }
 
-    // Compute shorthand properties such as `margin`, `padding`, `border`, etc.
-    computeShorthandProperties(context);
+    if (context.has_value())
+    {
+      // Compute shorthand properties such as `margin`, `padding`, `border`, etc.
+      computeShorthandProperties(context.value());
+    }
     return true;
   }
 

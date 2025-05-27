@@ -96,7 +96,7 @@ namespace client_cssom::values::computed
       {
         auto element = dynamic_pointer_cast<dom::Element>(element_or_text_node);
         if (element != nullptr)
-          return element->defaultStyleRef();
+          return ComputedStyle(element->defaultStyleRef(), std::nullopt);
       }
       return std::nullopt; // No default style for text nodes.
     }

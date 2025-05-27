@@ -7,6 +7,7 @@
 #include <crates/bindings.hpp>
 #include <client/cssom/values/generics/rect.hpp>
 #include <client/cssom/values/computed/classes.hpp>
+#include <client/dom/node.hpp>
 
 #include "./css_style_declaration.hpp"
 #include "./types/length.hpp"
@@ -59,10 +60,13 @@ namespace client_cssom
       return inherited_properties.find(property) != inherited_properties.end();
     }
 
+    // Create a `ComputedStyle` from a `CSSStyleDeclaration` and a target node to create context.
+    static ComputedStyle Make(const CSSStyleDeclaration &style, std::shared_ptr<dom::Node> target_node);
+
   public:
     ComputedStyle() = default;
     ComputedStyle(const ComputedStyle &) = default;
-    ComputedStyle(const CSSStyleDeclaration &);
+    ComputedStyle(const CSSStyleDeclaration &, std::optional<values::computed::Context> context);
 
     operator crates::layout2::LayoutStyle() const;
     friend std::ostream &operator<<(std::ostream &os, const ComputedStyle &style)
@@ -97,7 +101,7 @@ namespace client_cssom
     // Update the computed style from a context.
     bool update(values::computed::Context &);
     // Update the computed style from the given `CSSStyleDeclaration`, and a context to compute the values.
-    bool update(const CSSStyleDeclaration &, values::computed::Context &);
+    bool update(const CSSStyleDeclaration &, std::optional<values::computed::Context>);
 
     // Properties
     const values::computed::Display &display() const { return display_; }

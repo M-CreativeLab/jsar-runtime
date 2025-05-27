@@ -4,6 +4,7 @@
 #include <client/per_process.hpp>
 #include <client/builtin_scene/web_content.hpp>
 #include <client/builtin_scene/text.hpp>
+#include <client/cssom/values/computed/context.hpp>
 
 #include "./text.hpp"
 #include "./document.hpp"
@@ -105,7 +106,7 @@ namespace dom
     CharacterData::connectedCallback();
 
     initCSSBoxes();
-    adoptStyleDirectly(defaultStyle_);
+    adoptStyleDirectly(ComputedStyle::Make(defaultStyle_, shared_from_this()));
   }
 
   void Text::disconnectedCallback()

@@ -1,4 +1,6 @@
 #include <client/html/html_element.hpp>
+#include <client/cssom/values/computed/context.hpp>
+
 #include "./style_cache.hpp"
 
 namespace client_cssom
@@ -25,7 +27,7 @@ namespace client_cssom
     {
       auto element = dynamic_pointer_cast<dom::HTMLElement>(elementOrTextNode);
       assert(element != nullptr && "The element must be an HTMLElement");
-      newStyle = make_shared<ComputedStyle>(element->style());
+      newStyle = make_shared<ComputedStyle>(element->style(), values::computed::Context::From(element));
     }
     else
     {

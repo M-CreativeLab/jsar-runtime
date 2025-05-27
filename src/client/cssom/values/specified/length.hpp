@@ -191,6 +191,9 @@ namespace client_cssom::values::specified
       {
       case kEm:
         return unitless_value_ * base_size;
+      case kRem:
+        // TODO(yorkie): Implement rem correctly, accepting the root size.
+        return unitless_value_ * base_size;
       case kEx:
         return unitless_value_ * base_size * 0.5f;
       case kCap:

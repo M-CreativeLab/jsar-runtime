@@ -2,6 +2,7 @@
 #include <common/utility.hpp>
 #include <client/browser/window.hpp>
 #include <client/builtin_scene/ecs-inl.hpp>
+#include <client/cssom/values/computed/context.hpp>
 #include <client/html/html_element.hpp>
 #include <client/html/all_html_elements.hpp>
 
@@ -117,7 +118,7 @@ namespace dom
     Node::connectedCallback();
 
     initCSSBoxes();
-    adoptStyleDirectly(defaultStyle_);
+    adoptStyleDirectly(ComputedStyle::Make(defaultStyle_, shared_from_this()));
   }
 
   void Element::disconnectedCallback()
