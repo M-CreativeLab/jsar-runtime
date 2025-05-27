@@ -109,5 +109,17 @@ namespace client_cssom::values::computed
   class LineHeight : public generics::GenericLineHeight<LineHeight, NonNegativeNumber, NonNegativeLength>
   {
     using generics::GenericLineHeight<LineHeight, NonNegativeNumber, NonNegativeLength>::GenericLineHeight;
+
+  public:
+    // Returns the computed size in pixels based on the base font size.
+    float computedSize(float base_font_size) const
+    {
+      if (isLength())
+        return getLength().px();
+      else if (isNumber())
+        return getNumber().value * base_font_size;
+      else
+        return 1.2f * base_font_size; // Default line height
+    }
   };
 }

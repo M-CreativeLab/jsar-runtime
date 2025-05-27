@@ -32,9 +32,55 @@ namespace client_cssom::values::computed
     }
 
   public:
-    inline float fontSize() const { return device_.rootFontSize(); }
-    inline int fontWeight() const { return 400; }
-    inline float lineHeight() const { return device_.rootLineHeight(); }
+    inline float rootFontSize() const { return device_.rootFontSize(); }
+    float baseFontSize() const
+    {
+      std::shared_ptr<dom::Node> node = element_or_text_node_.lock();
+      if (TR_UNLIKELY(node == nullptr) || !node->isElementOrText())
+        return rootFontSize();
+
+      if (node->isElement())
+      {
+        auto element = dynamic_pointer_cast<dom::Element>(node);
+        assert(element != nullptr && "The node should be an Element.");
+        return element->adoptedStyleRef().fontSize().computedSize().px();
+      }
+      else if (node->isText())
+      {
+        // For text nodes, we use the font size of the parent element.
+        auto text = dynamic_pointer_cast<dom::Text>(node);
+        assert(text != nullptr && "The parent element should not be null.");
+        return text->adoptedStyleRef().fontSize().computedSize().px();
+      }
+
+      // Unreachable case
+      assert(false && "Unreachable");
+    }
+    inline int baseFontWeight() const { return 400; }
+    inline float baseLineHeight() const
+    {
+      std::shared_ptr<dom::Node> node = element_or_text_node_.lock();
+      if (TR_UNLIKELY(node == nullptr) || !node->isElementOrText())
+        return rootLineHeight();
+
+      if (node->isElement())
+      {
+        auto element = dynamic_pointer_cast<dom::Element>(node);
+        assert(element != nullptr && "The node should be an Element.");
+        return element->adoptedStyleRef().lineHeight().computedSize(baseFontSize());
+      }
+      else if (node->isText())
+      {
+        // For text nodes, we use the font size of the parent element.
+        auto text = dynamic_pointer_cast<dom::Text>(node);
+        assert(text != nullptr && "The parent element should not be null.");
+        return text->adoptedStyleRef().lineHeight().computedSize(baseFontSize());
+      }
+
+      // Unreachable case
+      assert(false && "Unreachable");
+    }
+    inline float rootLineHeight() const { return device_.rootLineHeight(); }
     inline glm::uvec4 baseViewport() const
     {
       auto device_viewport = device_.viewportSize();

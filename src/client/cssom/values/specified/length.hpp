@@ -185,27 +185,25 @@ namespace client_cssom::values::specified
       assert(false && "Invalid tag.");
     }
 
-    float toComputedValue(float base_size, float line_height_base) const
+    float toComputedValue(computed::Context &context) const
     {
       switch (tag_)
       {
       case kEm:
-        return unitless_value_ * base_size;
-      case kRem:
-        // TODO(yorkie): Implement rem correctly, accepting the root size.
-        return unitless_value_ * base_size;
-      case kEx:
-        return unitless_value_ * base_size * 0.5f;
       case kCap:
-        return unitless_value_ * base_size * 0.7f;
-      case kCh:
-        return unitless_value_ * base_size * 0.5f;
-      case kIc:
-        return unitless_value_ * base_size * 0.5f;
+        return unitless_value_ * context.baseFontSize();
+      case kRem:
+        return unitless_value_ * context.rootFontSize();
+      case kEx:
+        // Assuming 'ex' is half of the font size.
+        return unitless_value_ * context.baseFontSize() * 0.5f;
       case kLh:
-        return unitless_value_ * line_height_base;
+        return unitless_value_ * context.baseLineHeight();
+      case kRlh:
+        return unitless_value_ * context.rootLineHeight();
       default:
-        assert(false && "Invalid relative unit");
+        // Returns the root font-size if not supported
+        return context.rootFontSize();
       }
     }
 
@@ -272,8 +270,9 @@ namespace client_cssom::values::specified
       }
       assert(false && "Invalid tag.");
     }
-    float toComputedValue(glm::uvec4 base_viewport) const
+    float toComputedValue(computed::Context &context) const
     {
+      glm::uvec4 base_viewport = context.baseViewport();
       switch (tag_)
       {
       case kVw:
@@ -678,12 +677,12 @@ namespace client_cssom::values::specified
       else if (tag_ == kFontRelative)
       {
         const auto &font_relative_length = std::get<FontRelativeLength>(length_);
-        return font_relative_length.toComputedValue(context.fontSize(), context.lineHeight());
+        return font_relative_length.toComputedValue(context);
       }
       else if (tag_ == kViewportPercentage)
       {
         const auto &viewport_percentage_length = std::get<ViewportPercentageLength>(length_);
-        return viewport_percentage_length.toComputedValue(context.baseViewport());
+        return viewport_percentage_length.toComputedValue(context);
       }
       else if (tag_ == kContainerRelative)
       {

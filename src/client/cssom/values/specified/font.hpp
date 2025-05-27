@@ -334,9 +334,9 @@ namespace client_cssom::values::specified
       if (tag_ == kAbsolute)
         return computed::FontWeight(std::get<AbsoluteFontWeight>(value_).toComputedValue(context));
       if (tag_ == kBolder)
-        return computed::FontWeight(context.fontWeight() + 100);
+        return computed::FontWeight(context.baseFontWeight() + 100);
       if (tag_ == kLighter)
-        return computed::FontWeight(context.fontWeight() - 100);
+        return computed::FontWeight(context.baseFontWeight() - 100);
       assert(false && "Invalid tag.");
     }
 
