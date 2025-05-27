@@ -288,6 +288,10 @@ namespace client_cssom
       justify_self_ = Parse::ParseSingleValue<values::specified::JustifySelf>(value);
     else if (name == "justify-items")
       justify_items_ = Parse::ParseSingleValue<values::specified::JustifyItems>(value);
+    else if (name == "row-gap")
+      row_gap_ = Parse::ParseSingleValue<values::specified::LengthPercentage>(value).toComputedValue(context);
+    else if (name == "column-gap")
+      column_gap_ = Parse::ParseSingleValue<values::specified::LengthPercentage>(value).toComputedValue(context);
   }
 
   void ComputedStyle::computeShorthandProperties(values::computed::Context &context)
