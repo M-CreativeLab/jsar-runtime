@@ -1,41 +1,48 @@
+#include <client/html/html_element.hpp>
 #include "./style_cache.hpp"
 
 namespace client_cssom
 {
   using namespace std;
 
-  std::shared_ptr<ComputedStyle> StyleCache::findStyle(shared_ptr<dom::HTMLElement> element) const
+  std::shared_ptr<ComputedStyle> StyleCache::findStyle(shared_ptr<dom::Node> elementOrTextNode) const
   {
-    if (TR_UNLIKELY(element == nullptr))
+    if (TR_UNLIKELY(elementOrTextNode == nullptr))
       return nullptr;
 
-    auto it = find(element->uid);
+    auto it = find(elementOrTextNode->uid);
     if (it != end())
       return it->second;
     return nullptr;
   }
 
-  shared_ptr<ComputedStyle> StyleCache::createStyle(shared_ptr<dom::HTMLElement> element, bool useElementStyle)
+  shared_ptr<ComputedStyle> StyleCache::createStyle(shared_ptr<dom::Node> elementOrTextNode, bool useElementStyle)
   {
-    assert(element != nullptr);
+    assert(elementOrTextNode != nullptr);
 
     shared_ptr<ComputedStyle> newStyle = nullptr;
-    if (useElementStyle)
+    if (useElementStyle && elementOrTextNode->isHTMLElement())
+    {
+      auto element = dynamic_pointer_cast<dom::HTMLElement>(elementOrTextNode);
+      assert(element != nullptr && "The element must be an HTMLElement");
       newStyle = make_shared<ComputedStyle>(element->style());
+    }
     else
+    {
       newStyle = make_shared<ComputedStyle>();
+    }
 
     assert(newStyle != nullptr);
-    insert({element->uid, newStyle});
+    insert({elementOrTextNode->uid, newStyle});
     return newStyle;
   }
 
-  bool StyleCache::resetStyle(shared_ptr<dom::HTMLElement> element)
+  bool StyleCache::resetStyle(shared_ptr<dom::Node> elementOrTextNode)
   {
-    if (TR_UNLIKELY(element == nullptr))
+    if (TR_UNLIKELY(elementOrTextNode == nullptr))
       return false;
 
-    auto it = find(element->uid);
+    auto it = find(elementOrTextNode->uid);
     if (it != end())
     {
       erase(it);

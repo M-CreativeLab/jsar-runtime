@@ -109,32 +109,83 @@ namespace client_cssom
     return layoutStyle;
   }
 
-  bool ComputedStyle::update(const CSSStyleDeclaration &from, values::computed::Context &context)
+  void ComputedStyle::resetProperties(optional<ComputedStyle> other, values::computed::Context &context)
   {
-    if (from.length() == 0)
+    clear();
+
+    if (other.has_value())
+    {
+      for (const auto &[propertyName, value] : other.value())
+      {
+        setPropertyInternal(propertyName, value);
+        computeProperty(propertyName, value, context);
+      }
+    }
+  }
+
+  size_t ComputedStyle::inheritProperties(const ComputedStyle &other, values::computed::Context &context)
+  {
+    size_t inherited = 0;
+    for (const auto &[propertyName, value] : other)
+    {
+      if (IsInheritedProperty(propertyName))
+      {
+        auto it = find(propertyName);
+        if (it != end())
+        {
+          if (it->second == value)
+            continue;         // No need to update if the value is the same.
+          it->second = value; // Update the existing property.
+        }
+        else
+        {
+          setPropertyInternal(propertyName, value);
+        }
+
+        // Compute the property if it is inherited.
+        computeProperty(propertyName, value, context);
+        inherited += 1;
+      }
+    }
+    return inherited;
+  }
+
+  bool ComputedStyle::update(values::computed::Context &context)
+  {
+    resetProperties(context.resetStyle(), context);
+    auto inherited_style = context.inheritedStyle();
+    if (inherited_style.has_value())
+      inheritProperties(inherited_style.value(), context);
+
+    // Compute shorthand properties such as `margin`, `padding`, `border`, etc.
+    computeShorthandProperties(context);
+    return true;
+  }
+
+  bool ComputedStyle::update(const CSSStyleDeclaration &from_style, values::computed::Context &context)
+  {
+    if (from_style.length() == 0)
       return false;
 
-    ComputedStyle resolvedStyle(from);
-    for (const auto &[propertyName, value] : resolvedStyle)
+    for (int index = 0; index < from_style.length(); index++)
     {
-      bool shouldComputeNewValue = false;
+      const auto propertyName = from_style.item(index);
+      const auto value = from_style.getPropertyValue(propertyName);
+
       auto it = find(propertyName);
       if (it != end())
       {
-        if (it->second != value)
-        {
-          it->second = value;
-          shouldComputeNewValue = true;
-        }
+        if (it->second == value)
+          continue;         // No need to update if the value is the same.
+        it->second = value; // Update the existing property.
       }
       else
       {
         setPropertyInternal(propertyName, value);
-        shouldComputeNewValue = true;
       }
 
-      if (shouldComputeNewValue)
-        computeProperty(propertyName, value, context);
+      // Compute the property if it is inherited.
+      computeProperty(propertyName, value, context);
     }
 
     // Compute shorthand properties such as `margin`, `padding`, `border`, etc.
@@ -157,6 +208,10 @@ namespace client_cssom
       display_ = Parse::ParseSingleValue<values::computed::Display>(value);
     else if (name == "box-sizing")
       box_sizing_ = Parse::ParseSingleValue<values::computed::BoxSizing>(value);
+    else if (name == "overflow-x")
+      overflow_x_ = Parse::ParseSingleValue<values::computed::Overflow>(value);
+    else if (name == "overflow-y")
+      overflow_y_ = Parse::ParseSingleValue<values::computed::Overflow>(value);
 
     // Margin
     if (name == "margin-top")

@@ -770,10 +770,9 @@ namespace client_cssom::values::specified
 
       if (input.ends_with("%"))
       {
-        float value = std::stof(input.substr(0, input.length() - 1));
-        auto percentage = computed::Percentage(value);
+        float percent = std::stof(input.substr(0, input.length() - 1));
         tag_ = kPercentage;
-        value_ = percentage;
+        value_ = computed::Percentage(percent / 100.0f);
         return true;
       }
       else if (input.starts_with("calc(") && input.ends_with(")"))

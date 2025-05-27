@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 #include <vector>
 #include <crates/bindings.hpp>
@@ -38,6 +39,25 @@ namespace client_cssom
       kDescendantAffecting,
     };
     static Difference ComputeDifference(const ComputedStyle *old_style, const ComputedStyle *new_style);
+    static bool IsInheritedProperty(const std::string property)
+    {
+      static const std::unordered_set<std::string> inherited_properties = {
+          "font-size",
+          "font-weight",
+          "font-style",
+          "line-height",
+          "color",
+          "visibility",
+          "text-align",
+          "direction",
+          "text-decoration",
+          "text-transform",
+          "letter-spacing",
+          "word-spacing",
+          "white-space",
+          "text-indent"};
+      return inherited_properties.find(property) != inherited_properties.end();
+    }
 
   public:
     ComputedStyle() = default;
@@ -70,6 +90,12 @@ namespace client_cssom
         return it->second;
       return "";
     }
+
+    void resetProperties(std::optional<ComputedStyle>, values::computed::Context &);
+    size_t inheritProperties(const ComputedStyle &, values::computed::Context &);
+
+    // Update the computed style from a context.
+    bool update(values::computed::Context &);
     // Update the computed style from the given `CSSStyleDeclaration`, and a context to compute the values.
     bool update(const CSSStyleDeclaration &, values::computed::Context &);
 

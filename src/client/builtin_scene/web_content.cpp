@@ -146,7 +146,7 @@ namespace builtin_scene
       // Line height
       if (style_.hasProperty("line-height"))
       {
-        const auto& lineHeight = style_.lineHeight();
+        const auto &lineHeight = style_.lineHeight();
         if (lineHeight.isLength())
         {
           contentStyle_.useFixedLineHeight = true;
@@ -160,7 +160,7 @@ namespace builtin_scene
         else
         {
           contentStyle_.useFixedLineHeight = false;
-          contentStyle_.lineHeight = 1.0f;
+          contentStyle_.lineHeight = 1.2f;
         }
       }
     }
@@ -252,6 +252,8 @@ namespace builtin_scene
     auto &textStyle = contentStyle_.textStyle;
     newStrutStyle.setFontSize(textStyle.fontSize);
     newStrutStyle.setHalfLeading(contentStyle_.halfLeading);
+
+    // Reconfigure the font size based on the line height settings.
     if (contentStyle_.useFixedLineHeight)
       newStrutStyle.setFontSize(contentStyle_.lineHeight);
     else

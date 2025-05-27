@@ -376,11 +376,23 @@ namespace client_cssom::values::specified
       }
     }
 
-    bool isVisible() const { return tag_ == kVisible; }
-    bool isHidden() const { return tag_ == kHidden; }
-    bool isScroll() const { return tag_ == kScroll; }
-    bool isAuto() const { return tag_ == kAuto; }
-    bool isClip() const { return tag_ == kClip; }
+    inline bool isVisible() const { return tag_ == kVisible; }
+    inline bool isHidden() const { return tag_ == kHidden; }
+    inline bool isScroll() const { return tag_ == kScroll; }
+    inline bool isAuto() const { return tag_ == kAuto; }
+    inline bool isClip() const { return tag_ == kClip; }
+
+    // Compbined checks
+    inline bool isAutoOrScroll() const
+    {
+      return isAuto() || isScroll();
+    }
+    // Returns if the overflow is scrollable, namely `auto`, `scroll`, or `hidden`.
+    // NOTE(yorkie): `hidden` is considered scrollable because it can be scrolled by JavaScript.
+    inline bool isScrollable() const
+    {
+      return !isVisible() && !isClip();
+    }
 
   private:
     Tag tag_;

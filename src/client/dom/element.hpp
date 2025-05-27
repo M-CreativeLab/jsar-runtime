@@ -180,7 +180,7 @@ namespace dom
     }
 
     inline bool hasAdoptedStyle() const { return adoptedStyle_ != nullptr; }
-    const client_cssom::ComputedStyle &adoptedStyleRef() const
+    inline const client_cssom::ComputedStyle &adoptedStyleRef() const
     {
       assert(adoptedStyle_ != nullptr && "The adopted style should not be null.");
       return *adoptedStyle_;

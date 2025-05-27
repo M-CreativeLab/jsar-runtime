@@ -15,9 +15,12 @@ namespace client_cssom::values::computed
     }
 
   public:
+    // Construct a percentage with the value in the range of [0.0f, 1.0f].
     Percentage(float value)
         : value_(value)
     {
+      if (isnan(value_) || isinf(value_))
+        value_ = 0.0f; // Normalize NaN or Inf to 0.0f
     }
     Percentage(const Percentage &) = default;
     Percentage &operator=(const Percentage &) = default;

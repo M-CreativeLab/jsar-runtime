@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <unordered_map>
-#include <client/html/html_element.hpp>
+#include <client/dom/node.hpp>
 #include "./computed_style.hpp"
 
 namespace client_cssom
@@ -13,10 +13,10 @@ namespace client_cssom
     StyleCache() = default;
 
   public:
-    std::shared_ptr<ComputedStyle> findStyle(std::shared_ptr<dom::HTMLElement> element) const;
-    std::shared_ptr<ComputedStyle> createStyle(std::shared_ptr<dom::HTMLElement> element,
+    std::shared_ptr<ComputedStyle> findStyle(std::shared_ptr<dom::Node> elementOrTextNode) const;
+    std::shared_ptr<ComputedStyle> createStyle(std::shared_ptr<dom::Node> elementOrTextNode,
                                                bool useElementStyle = true);
-    bool resetStyle(std::shared_ptr<dom::HTMLElement> element);
+    bool resetStyle(std::shared_ptr<dom::Node> elementOrTextNode);
 
     inline void invalidateCache() { clear(); }
   };

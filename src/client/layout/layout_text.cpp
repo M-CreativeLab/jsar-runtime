@@ -178,12 +178,18 @@ namespace client_layout
 
   void LayoutText::adjustTextContentSize(const ConstraintSpace &space)
   {
-    if (!is_text_content_dirty_)
+    if (last_space_.has_value() &&
+        space == last_space_.value() &&
+        !is_text_content_dirty_)
+    {
+      // No need to adjust if the space is not changed and the text content is not dirty.
       return;
+    }
 
     ConstraintSpace adjustedSpace = adjustSpace(space);
     formattingContext().setContentSize(adjustedSpace.width(),
                                        adjustedSpace.height());
+    last_space_ = adjustedSpace;
     is_text_content_dirty_ = false;
   }
 

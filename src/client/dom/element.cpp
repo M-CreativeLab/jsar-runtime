@@ -709,7 +709,6 @@ namespace dom
 
   bool Element::adoptStyleDirectly(const client_cssom::ComputedStyle &new_style)
   {
-    cout << "Element::adoptStyleDirectly() <" << nodeName << ">: " << new_style << endl;
     adoptedStyle_ = make_unique<client_cssom::ComputedStyle>(new_style);
     styleAdoptedCallback();
 

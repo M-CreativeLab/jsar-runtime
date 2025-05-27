@@ -309,8 +309,6 @@ namespace builtin_scene::web_renderer
     if (!fragment.has_value()) // No layout, no rendering.
       return;
 
-    cout << "[renderer] () " << content.name() << ": " << style << endl;
-
     auto canvas = content.canvas();
     canvas->clear(SK_ColorTRANSPARENT);
 

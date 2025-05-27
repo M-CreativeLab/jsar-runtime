@@ -51,6 +51,26 @@ namespace builtin_scene
     SkScalar fontSize;
     std::optional<SkScalar> letterSpacing;
     std::optional<SkScalar> wordSpacing;
+
+    friend std::ostream &operator<<(std::ostream &os, const WebContentTextStyle &style)
+    {
+      std::string foreground_display = style.foregroundColor.has_value()
+                                           ? std::to_string(style.foregroundColor.value())
+                                           : "null";
+      std::string background_display = style.backgroundColor.has_value()
+                                           ? std::to_string(style.backgroundColor.value())
+                                           : "null";
+
+      os << "WebContentTextStyle { " << std::endl
+         << "       color: " << style.color << std::endl
+         << "  foreground: " << foreground_display << std::endl
+         << "  background: " << background_display << std::endl
+         << "  decoration: " << static_cast<int>(style.decoration) << std::endl
+         << "   font-size: " << style.fontSize << std::endl
+         << "  font-style: " << style.fontStyle.slant << std::endl
+         << "}";
+      return os;
+    }
   };
 
   class WebContentStyle

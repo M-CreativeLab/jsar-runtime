@@ -99,20 +99,8 @@ namespace client_layout
     // An overflow value of `visible` or `clip` means that the element is a scroll container, all other values result
     // in a scrollable container. Also note that if `visible` or `clip` is set on one axis, then the other axis must be
     // set to `visible` or `clip` as well.
-    bool isScrollableInX = false;
-    bool isScrollableInY = false;
-    if (elementStyle.hasProperty("overflow-x"))
-    {
-      auto overflowX = elementStyle.getPropertyValue("overflow-x");
-      if (overflowX != "visible" && overflowX != "clip")
-        isScrollableInX = true;
-    }
-    if (elementStyle.hasProperty("overflow-y"))
-    {
-      auto overflowY = elementStyle.getPropertyValue("overflow-y");
-      if (overflowY != "visible" && overflowY != "clip")
-        isScrollableInY = true;
-    }
+    bool isScrollableInX = elementStyle.overflowX().isScrollable();
+    bool isScrollableInY = elementStyle.overflowY().isScrollable();
     return isScrollableInX || isScrollableInY;
   }
 
@@ -416,7 +404,6 @@ namespace client_layout
 
     // Update the layout style in formatting context.
     crates::layout2::LayoutStyle layoutStyle = style;
-    cout << "Update layout style for (" << debugName() << "): " << layoutStyle << endl;
     bool success = formattingContext_->setLayoutStyle(layoutStyle);
 
     styleDidChange();

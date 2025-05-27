@@ -56,6 +56,7 @@ namespace client_layout
     std::string transformAndSecureText(const std::string &original) const;
 
   private:
+    std::optional<ConstraintSpace> last_space_;
     mutable std::optional<std::string> plain_text_;
     mutable std::optional<std::string> transformed_text_;
     mutable bool is_text_content_dirty_ = true;

@@ -21,24 +21,29 @@ namespace browser
     assert(clientContext_ != nullptr);
   }
 
-  const ComputedStyle &Window::getComputedStyle(shared_ptr<dom::Element> element, optional<string> pseudoElt) const
+  const ComputedStyle &Window::getComputedStyle(shared_ptr<dom::Node> elementOrTextNode,
+                                                optional<string> pseudoElt) const
   {
-    auto htmlElement = dynamic_pointer_cast<dom::HTMLElement>(element);
-    if (TR_UNLIKELY(htmlElement == nullptr))
-      throw invalid_argument("The element must be an HTMLElement");
+    assert(elementOrTextNode != nullptr && elementOrTextNode->isElementOrText() &&
+           "The element or text node must not be null and must be an element or text node.");
 
-    shared_ptr<ComputedStyle> computedStyle = document_->styleCache().findStyle(htmlElement);
+    shared_ptr<ComputedStyle> computedStyle = document_->styleCache().findStyle(elementOrTextNode);
     if (computedStyle != nullptr)
       return *computedStyle;
 
-    computed::Context context = computed::Context::From(*htmlElement);
-    computedStyle = document_->styleCache().createStyle(htmlElement, false);
+    computed::Context context = computed::Context::From(elementOrTextNode);
+    computedStyle = document_->styleCache().createStyle(elementOrTextNode, false);
+    computedStyle->update(context);
 
-    // Initial the style from the element's default style.
-    computedStyle->update(htmlElement->defaultStyleRef(), context);
+    if (elementOrTextNode->isText())
+      return *computedStyle; // If it's a text node, return the computed style directly.
+
+    // Get the HTML element from the node.
+    auto htmlElement = dynamic_pointer_cast<dom::HTMLElement>(elementOrTextNode);
+    assert(htmlElement != nullptr && "The node must be an HTMLElement.");
 
     // Update the style from the stylesheets.
-    const auto &stylesheets = htmlElement->getOwnerDocumentChecked().styleSheets();
+    const auto &stylesheets = elementOrTextNode->getOwnerDocumentChecked().styleSheets();
     for (auto stylesheet : stylesheets)
     {
       for (auto rule : stylesheet->cssRules())
