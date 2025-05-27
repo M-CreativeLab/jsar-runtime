@@ -2,10 +2,12 @@
 
 #include <memory>
 #include <glm/glm.hpp>
+#include <client/browser/window.hpp>
 #include <client/cssom/media_queries.hpp>
 #include <client/cssom/computed_style.hpp>
 #include <client/dom/node.hpp>
 #include <client/dom/text.hpp>
+#include <client/dom/document.hpp>
 #include <client/html/html_element.hpp>
 
 namespace client_cssom::values::computed
@@ -22,6 +24,7 @@ namespace client_cssom::values::computed
   public:
     Context(std::shared_ptr<dom::Node> element_or_text_node)
         : element_or_text_node_(element_or_text_node),
+          device_(GetDevice(element_or_text_node)),
           reset_style_(GetDefaultStyleRef(element_or_text_node)),
           in_media_query_(false),
           in_container_query_(false)
@@ -32,7 +35,11 @@ namespace client_cssom::values::computed
     inline float fontSize() const { return device_.rootFontSize(); }
     inline int fontWeight() const { return 400; }
     inline float lineHeight() const { return device_.rootLineHeight(); }
-    inline glm::uvec4 baseViewport() const { return glm::uvec4(1920, 1080, 0, 0); }
+    inline glm::uvec4 baseViewport() const
+    {
+      auto device_viewport = device_.viewportSize();
+      return glm::uvec4(device_viewport.x, device_viewport.y, 0, 0);
+    }
 
     // Returns this reference as `HTMLElement` object, otherwise throws an exception.
     const dom::HTMLElement &elementRef() const
@@ -90,6 +97,20 @@ namespace client_cssom::values::computed
     }
 
   private:
+    static const Device &GetDevice(std::shared_ptr<dom::Node> element_or_text_node)
+    {
+      std::shared_ptr<browser::Window> window;
+      if (element_or_text_node->isDocument())
+      {
+        window = dynamic_pointer_cast<dom::Document>(element_or_text_node)->defaultView();
+      }
+      else
+      {
+        const dom::Document &owner_document = element_or_text_node->getOwnerDocumentChecked();
+        window = owner_document.defaultView();
+      }
+      return window->device();
+    }
     static const std::optional<ComputedStyle> GetDefaultStyleRef(std::shared_ptr<dom::Node> element_or_text_node)
     {
       if (element_or_text_node->isHTMLElement())

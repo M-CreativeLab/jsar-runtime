@@ -113,7 +113,7 @@ namespace dom
      * The `defaultView` read-only property of the `Document` interface returns the window object associated with a
      * document, or `null` if none is available.
      */
-    inline std::shared_ptr<browser::Window> defaultView()
+    inline std::shared_ptr<browser::Window> defaultView() const
     {
       auto ref = defaultView_.lock();
       assert(ref != nullptr && "The default view is not set.");

@@ -14,11 +14,10 @@ namespace browser
   using namespace client_cssom::rules;
   using namespace client_cssom::values;
 
-  Window::Window(TrClientContextPerProcess *clientContext)
+  Window::Window(TrClientContextPerProcess *client_context)
       : dom::DOMEventTarget(),
-        clientContext_(clientContext)
+        client_context_(client_context)
   {
-    assert(clientContext_ != nullptr);
   }
 
   const ComputedStyle &Window::getComputedStyle(shared_ptr<dom::Node> elementOrTextNode,

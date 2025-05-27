@@ -16,9 +16,10 @@ namespace client_cssom
     Device() = default;
 
   public:
-    const MediaType& mediaType() const { return media_type_; }
-    const glm::vec3& viewportSize() const { return viewport_size_; }
-    const glm::vec3& devicePixelRatio() const { return device_pixel_ratio_; }
+    const MediaType &mediaType() const { return media_type_; }
+    const glm::vec3 &viewportSize() const { return viewport_size_; }
+    const float devicePixelRatio() const { return device_pixel_ratio_; }
+    float &devicePixelRatio() { return device_pixel_ratio_; }
 
     float rootFontSize() const { return root_font_size_; }
     float rootLineHeight() const { return root_line_height_; }
@@ -26,7 +27,7 @@ namespace client_cssom
   private:
     MediaType media_type_ = MediaType::Screen();
     glm::vec3 viewport_size_ = {ScreenWidth, ScreenHeight, VolumeDepth};
-    glm::vec3 device_pixel_ratio_ = {DevicePixelRatio, DevicePixelRatio, DevicePixelRatio};
+    float device_pixel_ratio_ = DevicePixelRatio;
 
     float root_font_size_ = 16.0f;
     float root_line_height_ = 1.0f;
