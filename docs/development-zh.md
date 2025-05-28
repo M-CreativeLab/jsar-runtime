@@ -36,13 +36,7 @@ $ make android CLEAN=yes RELEASE=yes
 
 ### 应用进程
 
-JSAR 会将每个应用进程的日志也打印到 `jsar` 中，比如：
-
-```
-07-12 22:12:23.326  9826  9850 D jsar    : client(9957): Detected a long frame(#135) takes 341ms in session(2)
-```
-
-它的格式表示为 `client(<进程ID>): <日志内容>`。
+JSAR 的应用日志不会在 `jsar` 通道中出现，需要开发者在 `${运行时目录}/logs/${应用进程ID}.(out|err).log` 中查看。
 
 ### 文档事件
 
