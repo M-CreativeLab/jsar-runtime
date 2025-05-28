@@ -43,14 +43,20 @@ namespace client_cssom::values::computed
       {
         auto element = dynamic_pointer_cast<dom::Element>(node);
         assert(element != nullptr && "The node should be an Element.");
-        return element->adoptedStyleRef().fontSize().computedSize().px();
+        if (element->hasAdoptedStyle())
+          return element->adoptedStyleRef().fontSize().computedSize().px();
+        else
+          return rootFontSize();
       }
       else if (node->isText())
       {
         // For text nodes, we use the font size of the parent element.
         auto text = dynamic_pointer_cast<dom::Text>(node);
         assert(text != nullptr && "The parent element should not be null.");
-        return text->adoptedStyleRef().fontSize().computedSize().px();
+        if (text->hasAdoptedStyle())
+          return text->adoptedStyleRef().fontSize().computedSize().px();
+        else
+          return rootFontSize();
       }
 
       // Unreachable case
@@ -67,14 +73,20 @@ namespace client_cssom::values::computed
       {
         auto element = dynamic_pointer_cast<dom::Element>(node);
         assert(element != nullptr && "The node should be an Element.");
-        return element->adoptedStyleRef().lineHeight().computedSize(baseFontSize());
+        if (element->hasAdoptedStyle())
+          return element->adoptedStyleRef().lineHeight().computedSize(baseFontSize());
+        else
+          return rootLineHeight();
       }
       else if (node->isText())
       {
         // For text nodes, we use the font size of the parent element.
         auto text = dynamic_pointer_cast<dom::Text>(node);
         assert(text != nullptr && "The parent element should not be null.");
-        return text->adoptedStyleRef().lineHeight().computedSize(baseFontSize());
+        if (text->hasAdoptedStyle())
+          return text->adoptedStyleRef().lineHeight().computedSize(baseFontSize());
+        else
+          return rootLineHeight();
       }
 
       // Unreachable case
