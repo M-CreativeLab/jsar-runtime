@@ -71,7 +71,7 @@ namespace client_cssom::values::computed
       case specified::JustifyContent::Tag::kStretch:
         return crates::layout2::styles::JustifyContent::Stretch();
       default:
-        return crates::layout2::styles::JustifyContent::Start();
+        return crates::layout2::styles::JustifyContent::Stretch();
       }
     }
   };
@@ -164,10 +164,11 @@ namespace client_cssom::values::computed
         return crates::layout2::styles::JustifySelf::FlexStart();
       case specified::JustifySelf::Tag::kFlexEnd:
         return crates::layout2::styles::JustifySelf::FlexEnd();
+
+      case specified::JustifySelf::Tag::kAuto: // TODO(yorkie): support auto in layout2.
       case specified::JustifySelf::Tag::kStretch:
-        return crates::layout2::styles::JustifySelf::Stretch();
       default:
-        return crates::layout2::styles::JustifySelf::Start();
+        return crates::layout2::styles::JustifySelf::Stretch();
       }
     }
   };
@@ -196,10 +197,10 @@ namespace client_cssom::values::computed
         return crates::layout2::styles::JustifyItems::FlexStart();
       case specified::JustifyItems::Tag::kFlexEnd:
         return crates::layout2::styles::JustifyItems::FlexEnd();
+
       case specified::JustifyItems::Tag::kStretch:
-        return crates::layout2::styles::JustifyItems::Stretch();
       default:
-        return crates::layout2::styles::JustifyItems::Start();
+        return crates::layout2::styles::JustifyItems::Stretch();
       }
     }
   };

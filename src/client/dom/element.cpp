@@ -644,7 +644,6 @@ namespace dom
 
   void Element::simulateMouseOver(const glm::vec3 &hitPointInWorld)
   {
-    setActionState(is_hovered_, true);
     dispatchEventInternal(events::MouseEvent::MouseOver());
     dispatchEventInternal(events::PointerEvent::PointerOver());
   }

@@ -28,8 +28,11 @@ console.info('querySelector() =>', document.querySelector('.first'));
 
 const main = document.querySelector('main');
 console.info('main.lastChild should be comment node', main.lastElementChild);
-main.addEventListener('click', (event) => {
-  console.info('main click', event);
+main.addEventListener('mouseenter', (event) => {
+  console.info('main mouseenter', event);
+});
+main.addEventListener('mouseleave', (event) => {
+  console.info('main mouseleave', event);
 });
 
 async function sleep(ms) {

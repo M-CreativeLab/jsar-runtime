@@ -40,10 +40,11 @@
     .grid-container {
       display: grid;
       border: none;
-      background-color: #c9d4df30;
+      box-sizing: border-box;
+      background-color: #c9d4df5f;
       grid-template-columns: repeat(auto-fit, minmax(30%, 1fr));
       gap: 20px;
-      padding: 20px 0;
+      padding: 20px;
       width: 100%;
     }
 
@@ -52,7 +53,6 @@
       background: rgba(0, 81, 255, 0.85);
       border-radius: 20px;
       padding: 50px;
-      margin: 20px;
       transform: translateZ(10px);
     }
 
