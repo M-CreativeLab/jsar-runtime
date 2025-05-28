@@ -324,7 +324,7 @@ namespace dom
   bool Element::adoptStyle(const ComputedStyle &new_style)
   {
     if (adoptedStyle_ != nullptr && // Pass if `adoptedStyle_` is not set.
-        ComputedStyle::ComputeDifference(&new_style, adoptedStyle_.get()) == ComputedStyle::kEqual)
+        ComputedStyle::ComputeDifference(new_style, *adoptedStyle_) == ComputedStyle::kEqual)
       return false;
     return adoptStyleDirectly(new_style);
   }

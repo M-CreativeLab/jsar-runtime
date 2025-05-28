@@ -1,6 +1,6 @@
 #pragma once
 
-#include <unordered_map>
+#include <map>
 #include <unordered_set>
 #include <string>
 #include <vector>
@@ -27,7 +27,7 @@ namespace client_cssom
     kNone,
   };
 
-  class ComputedStyle : std::unordered_map<std::string, std::string>
+  class ComputedStyle : std::map<std::string, std::string>
   {
   public:
     enum Difference
@@ -39,7 +39,7 @@ namespace client_cssom
       kInherited,
       kDescendantAffecting,
     };
-    static Difference ComputeDifference(const ComputedStyle *old_style, const ComputedStyle *new_style);
+    static Difference ComputeDifference(const ComputedStyle &old_style, const ComputedStyle &new_style);
     static bool IsInheritedProperty(const std::string property)
     {
       static const std::unordered_set<std::string> inherited_properties = {

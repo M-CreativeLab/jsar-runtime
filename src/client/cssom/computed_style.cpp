@@ -12,29 +12,28 @@ namespace client_cssom
 {
   using namespace std;
 
-  ComputedStyle::Difference ComputedStyle::ComputeDifference(const ComputedStyle *old_style,
-                                                             const ComputedStyle *new_style)
+  ComputedStyle::Difference ComputedStyle::ComputeDifference(const ComputedStyle &old_style,
+                                                             const ComputedStyle &new_style)
   {
-    if (old_style == new_style)
+    // Fast check for empty styles.
+    if (old_style.empty() && new_style.empty())
       return kEqual;
 
-    if (!old_style || !new_style)
-      return kInherited;
+    // Fast check for sizes, namely if the sizes of the styles are different.
+    if (old_style.size() != new_style.size())
+      return kNonInherited;
 
-    if (old_style->size() != new_style->size())
-      return kIndependentInherited;
-
-    // TODO(yorkie): implement the complete difference algorithm.
-    return kNonInherited;
+    // Compare each properties in the styles.
+    return old_style == new_style ? kEqual : kNonInherited;
   }
 
-  ComputedStyle ComputedStyle::Make(const CSSStyleDeclaration &style, std::shared_ptr<dom::Node> target_node)
+  ComputedStyle ComputedStyle::Make(const CSSStyleDeclaration &style, shared_ptr<dom::Node> target_node)
   {
     return ComputedStyle(style, values::computed::Context::From(target_node));
   }
 
-  ComputedStyle::ComputedStyle(const CSSStyleDeclaration &style, std::optional<values::computed::Context> context)
-      : std::unordered_map<std::string, std::string>()
+  ComputedStyle::ComputedStyle(const CSSStyleDeclaration &style, optional<values::computed::Context> context)
+      : map<string, string>()
   {
     update(style, context);
   }
@@ -196,13 +195,12 @@ namespace client_cssom
     return true;
   }
 
-  void ComputedStyle::setPropertyInternal(const std::string &name, const std::string &value)
+  void ComputedStyle::setPropertyInternal(const string &name, const string &value)
   {
     insert({name, value});
   }
 
-  void ComputedStyle::computeProperty(const std::string &name, const std::string &value,
-                                      values::computed::Context &context)
+  void ComputedStyle::computeProperty(const string &name, const string &value, values::computed::Context &context)
   {
     using namespace crates::css2;
 
