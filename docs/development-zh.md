@@ -172,10 +172,10 @@ $ adb shell getprop | grep jsar
 [jsar.renderer.target_app_fps]: [45]
 [jsar.renderer.tracing]: [no]
 [jsar.resources.caching]: [no]
-[jsar.setup.theepio.sysprompt]:[your-system-prompt]
-[jsar.setup.theepio.api.provider]:[your-api-provider]
-[jsar.setup.theepio.api.modelid]:[your-api-model-id]
-[jsar.setup.theepio.api.key]:[your-api-key]
+[jsar.setup.theepio.sysprompt]: [your-system-prompt]
+[jsar.setup.theepio.api.provider]: [your-api-provider]
+[jsar.setup.theepio.api.modelid]: [your-api-model-id]
+[jsar.setup.theepio.api.key]: [your-api-key]
 ```
 
 其中 `jsar.init.cache_directory` 即运行时目录。

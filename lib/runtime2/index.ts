@@ -10,7 +10,7 @@ import { ResourceLoaderOnTransmute } from './jsardom/ResourceLoader';
 import createModel3dViewer from './viewers/model3d';  // glb, gltf ...
 import createImage2dViewer from './viewers/image2d';  // png, jpg, etc ...
 import createSplineDesignViewer from './viewers/splinedesign';  // splinedesign
-import { copilot } from './copilot';
+import { threepio } from './threepio';
 
 Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
   get: () => getPerformanceNow(),
@@ -65,6 +65,7 @@ async function evaluateXSML(gl: WebGLRenderingContext | WebGL2RenderingContext, 
 
 export class TransmuteRuntime2 extends EventTarget {
   #browsingContext: Transmute.BrowsingContext;
+  #threepio: threepio;
   constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext, private id: number) {
     super();
     {
@@ -86,6 +87,7 @@ export class TransmuteRuntime2 extends EventTarget {
       const browsingContext = new BrowsingContext();
       browsingContext.setResourceLoader(new ResourceLoaderOnTransmute());
       this.#browsingContext = browsingContext;
+      this.#threepio = new threepio(browsingContext);
     }
     this.dispatchEvent(new Event('rendererReady'));
   }
@@ -106,8 +108,7 @@ export class TransmuteRuntime2 extends EventTarget {
   }
 
   private async ask(input: string) {
-    const control = new copilot(this.#browsingContext);
-    await control.creatTask(input);
+    await this.#threepio.creatTask(input);
   }
 
 

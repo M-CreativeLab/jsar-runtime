@@ -13,7 +13,7 @@ const htmlText = `
     </div>
   </body>
 </html>`;
-class copilot {
+class threepio {
   initialDom: boolean = false;
 
   browsingContext: Transmute.BrowsingContext;
@@ -179,6 +179,6 @@ class copilot {
 }
 export {
   ApiProvider,
-  copilot,
+  threepio,
   ApiStream
 };

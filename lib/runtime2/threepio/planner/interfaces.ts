@@ -88,7 +88,7 @@ export interface LLMTaskResult {
   generatedCode: string;
 }
 
-export const PerformenceType = {
+export const PerformanceType = {
   planner: 'planner',
   moudle: 'moudle',
   parseHeader: 'parseHeader',

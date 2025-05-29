@@ -8,7 +8,7 @@ import {
   FragmentType,
   ParsedHeader,
   ParsedModule,
-  PerformenceType,
+  PerformanceType,
   LLMAPI
 } from './interfaces';
 import { PerformanceTracer } from '../utils/PerformanceTracer';
@@ -55,10 +55,10 @@ export class Controller extends EventEmitter {
 
 
   public async generatePageStream(input: string) {
-    const totalTaskID = this.tracker.start(PerformenceType.total);
-    const plannerTaskID = this.tracker.start(PerformenceType.planner);
-    const parseTaskID = this.tracker.start(PerformenceType.parseHeader);
-    this.tracker.start(PerformenceType.parseMoudle);
+    const totalTaskID = this.tracker.start(PerformanceType.total);
+    const plannerTaskID = this.tracker.start(PerformanceType.planner);
+    const parseTaskID = this.tracker.start(PerformanceType.parseHeader);
+    this.tracker.start(PerformanceType.parseMoudle);
     let taskPromises: Promise<any>[] = [];
     let headerParsed = false;
     let overallDesignTheme = '';
@@ -82,7 +82,7 @@ export class Controller extends EventEmitter {
           rejectPlannerPhase(new Error('Module received before header was fully processed.'));
           return;
         }
-        this.tracker.end(PerformenceType.parseMoudle);
+        this.tracker.end(PerformanceType.parseMoudle);
         const mourdleParentId = 'moudle' + taskPromises.length;
         const { allTasks } = this.decomposer.createModuleNodeAndTask(module, overallDesignTheme, mourdleParentId);
         this.emitData(EmitterEventType.append, { type: FragmentType.Moudle, fragment: { id: module.parentId, content: module.layout } });
