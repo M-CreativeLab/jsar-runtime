@@ -10,7 +10,6 @@
 #include <client/dom/node.hpp>
 
 #include "./css_style_declaration.hpp"
-#include "./types/length.hpp"
 
 namespace client_cssom
 {
@@ -153,29 +152,34 @@ namespace client_cssom
       return false;
     }
 
-    const values::computed::PositionType &positionType() const { return position_type_; }
+    inline const values::computed::PositionType &positionType() const { return position_type_; }
 
-    Visibility visibility() const { return visibility_.value_or(Visibility::kVisible); }
-    PointerEvents pointerEvents() const { return pointer_events_.value_or(PointerEvents::kAuto); }
+    inline Visibility visibility() const { return visibility_.value_or(Visibility::kVisible); }
+    inline PointerEvents pointerEvents() const { return pointer_events_.value_or(PointerEvents::kAuto); }
 
-    const std::vector<std::string> &fonts() const { return fonts_; }
-    const values::computed::FontSize &fontSize() const { return font_size_; }
-    const values::computed::FontWeight &fontWeight() const { return font_weight_; }
-    const values::computed::FontStyle &fontStyle() const { return font_style_; }
-    const values::computed::LineHeight &lineHeight() const { return line_height_; }
+    inline const std::vector<std::string> &fonts() const { return fonts_; }
+    inline const values::computed::FontSize &fontSize() const { return font_size_; }
+    inline const values::computed::FontWeight &fontWeight() const { return font_weight_; }
+    inline const values::computed::FontStyle &fontStyle() const { return font_style_; }
+    inline const values::computed::LineHeight &lineHeight() const { return line_height_; }
 
-    const values::computed::TextAlign &textAlign() const { return text_align_; }
-    const values::computed::Direction &textDirection() const { return text_direction_; }
+    inline const values::computed::TextAlign &textAlign() const { return text_align_; }
+    inline const values::computed::Direction &textDirection() const { return text_direction_; }
 
-    const values::computed::Color &color() const { return color_; }
-    const values::computed::Color &backgroundColor() const { return background_color_; }
+    inline const values::computed::Color &color() const { return color_; }
+    inline const values::computed::Color &backgroundColor() const { return background_color_; }
 
     // Visibility utility functions.
-    bool visibleToHitTesting() const
+    inline bool visibleToHitTesting() const
     {
       return visibility_ == Visibility::kVisible &&
              pointer_events_ != PointerEvents::kNone;
     }
+
+    // 3D Transforms
+    inline const bool hasTransform() const { return has_transform_; }
+    inline const values::computed::Transform &transform() const { return transform_; }
+    inline const size_t applyTransformTo(glm::mat4 &matrix) const { return transform_.applyTo(matrix); }
 
   private:
     void setPropertyInternal(const std::string &name, const std::string &value);
@@ -245,5 +249,9 @@ namespace client_cssom
     // Colors
     values::computed::Color color_ = values::computed::Color::Black();
     values::computed::Color background_color_ = values::computed::Color::Transparent();
+
+    // 3D Transforms
+    bool has_transform_ = false;
+    values::computed::Transform transform_;
   };
 }

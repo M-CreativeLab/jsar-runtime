@@ -12,10 +12,10 @@ const image = document.querySelector('img');
 // }, 16);
 
 const div = document.getElementById('header');
-// setInterval(() => {
-//   const zAxis = Math.floor(15 + Math.sin(Date.now() / 500) * 10);
-//   div.style.transform = `translate3d(0, 0, ${zAxis}px)`;
-// }, 16);
+setInterval(() => {
+  const zAxis = Math.floor(15 + Math.sin(Date.now() / 500) * 10);
+  div.style.transform = `translate3d(0, 0, ${zAxis}px)`;
+}, 16);
 
 console.info('querySelector() =>', document.querySelector('.first'));
 {

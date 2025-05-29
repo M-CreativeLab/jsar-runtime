@@ -3,10 +3,12 @@
 #include "./computed_style.hpp"
 #include "./style_traits.hpp"
 #include "./values/computed/context.hpp"
+#include "./values/specified/length.hpp"
 #include "./values/specified/border.hpp"
 #include "./values/specified/flex.hpp"
 #include "./values/specified/font.hpp"
 #include "./values/specified/color.hpp"
+#include "./values/specified/transform.hpp"
 
 namespace client_cssom
 {
@@ -346,6 +348,15 @@ namespace client_cssom
       row_gap_ = Parse::ParseSingleValue<values::specified::LengthPercentage>(value).toComputedValue(context);
     else if (name == "column-gap")
       column_gap_ = Parse::ParseSingleValue<values::specified::LengthPercentage>(value).toComputedValue(context);
+
+    /**
+     * Transform properties
+     */
+    else if (name == "transform")
+    {
+      transform_ = Parse::ParseSingleValue<values::specified::Transform>(value).toComputedValue(context);
+      has_transform_ = transform_.empty() == false;
+    }
   }
 
   void ComputedStyle::computeShorthandProperties(values::computed::Context &context)

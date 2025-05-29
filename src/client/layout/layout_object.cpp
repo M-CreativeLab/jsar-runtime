@@ -1,5 +1,4 @@
 #include <vector>
-#include <client/cssom/types/transform.hpp>
 #include <client/dom/node.hpp>
 #include <client/dom/document-inl.hpp>
 #include <client/html/all_html_elements.hpp>
@@ -684,20 +683,15 @@ namespace client_layout
   void LayoutObject::styleWillChange(client_cssom::ComputedStyle &new_style)
   {
     // Update the transform's post-transform matrix if the "transform" property is provided.
-    if (new_style.hasProperty("transform"))
+    if (new_style.hasTransform())
     {
       auto transformComponent = getSceneComponent<Transform>();
       if (transformComponent != nullptr)
       {
         auto &postTransform = transformComponent->getOrInitPostTransform();
-        // TODO(yorkie): how to avoid duplicated parsing?
-        auto transformProperty = types::transform::Transform::Parse(new_style.getPropertyValue("transform"));
-        if (transformProperty.size() > 0)
-        {
-          glm::mat4 mat(1.0f);
-          if (transformProperty.applyMatrixTo(mat) > 0)
-            postTransform.setMatrix(mat);
-        }
+        glm::mat4 mat(1.0f);
+        if (new_style.applyTransformTo(mat) > 0)
+          postTransform.setMatrix(mat);
       }
     }
   }

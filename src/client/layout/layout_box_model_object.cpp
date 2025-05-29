@@ -1,6 +1,5 @@
 #include <glm/glm.hpp>
 #include <client/dom/node.hpp>
-#include <client/cssom/types/length.hpp>
 
 #include "./layout_box_model_object.hpp"
 #include "./layout_view.hpp"
@@ -8,7 +7,6 @@
 namespace client_layout
 {
   using namespace std;
-  using namespace client_cssom::types;
 
   LayoutBoxModelObject::LayoutBoxModelObject(shared_ptr<dom::Node> node)
       : LayoutObject(node),

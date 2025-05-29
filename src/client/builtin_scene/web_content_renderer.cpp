@@ -206,8 +206,6 @@ namespace builtin_scene::web_renderer
                    const client_layout::Fragment &fragment,
                    const client_cssom::ComputedStyle &style)
   {
-    using namespace client_cssom::types;
-
     bool hasBorders = false;
     SkPaint paint;
     paint.setStyle(SkPaint::kStroke_Style);

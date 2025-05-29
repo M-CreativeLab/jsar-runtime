@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <variant>
 #include <assert.h>
+#include <crates/bindings.hpp>
 #include <client/cssom/style_traits.hpp>
 #include <client/cssom/values/generics/common.hpp>
 #include <client/cssom/values/specified/calc.hpp>
@@ -751,6 +752,12 @@ namespace client_cssom::values::specified
     using ValueVariant = std::variant<NoCalcLength, computed::Percentage, CalcLengthPercentage>;
 
   public:
+    // Creates a LengthPercentage from a inner length percentage value.
+    static LengthPercentage From(crates::css2::values::specified::LengthPercentage inner_length_percentage)
+    {
+      // TODO(yorkie): support calc and percentage.
+      return LengthPercentage(inner_length_percentage.numberValue());
+    }
     // Returns if the input string is a valid length or percentage.
     static bool IsLengthOrPercentage(const std::string &input)
     {
