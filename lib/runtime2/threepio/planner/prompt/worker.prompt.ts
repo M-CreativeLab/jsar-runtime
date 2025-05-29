@@ -1,7 +1,6 @@
-import { S_HTML_START, S_CSS_START, S_HTML_END, S_NODE_START } from './promptSeparators';
+import { S_HTML_START, S_CSS_START, S_HTML_END, S_NODE_START } from './separators';
 
-
-export const HTML_FRAGMENT_PROMPT = `
+export const HTML_FRAGMENT_TEMPLATE_PROMPT = `
 你是一个专业的**U设计和代码压缩大师**,可以根据目标设计出符合要求的页面元素并且专注于根据功能定义和页面结构,生成**极致紧凑、高度优化**的流式HTML片段和对应的**最小化CSS**。
 
 **你的任务**:

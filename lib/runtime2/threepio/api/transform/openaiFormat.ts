@@ -1,5 +1,5 @@
-import { Anthropic } from '@anthropic-ai/sdk'
-import OpenAI from 'openai'
+import { Anthropic } from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 
 export function convertToOpenAiMessages(
 	anthropicMessages: Anthropic.Messages.MessageParam[],
@@ -13,14 +13,6 @@ export function convertToOpenAiMessages(
 				content: anthropicMessage.content,
 			})
 		} else {
-			// image_url.url is base64 encoded image data
-			// ensure it contains the content-type of the image: data:image/png;base64,
-			/*
-        { role: 'user', content: '' | { type: 'text', text: string } | { type: 'image_url', image_url: { url: string } } },
-         // content required unless tool_calls is present
-        { role: 'assistant', content?: '' | null, tool_calls?: [{ id: '', function: { name: '', arguments: '' }, type: 'function' }] },
-        { role: 'tool', tool_call_id: '', content: ''}
-         */
 			if (anthropicMessage.role === 'user') {
 				const { nonToolMessages, toolMessages } = anthropicMessage.content.reduce<{
 					nonToolMessages: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[]
@@ -63,22 +55,6 @@ export function convertToOpenAiMessages(
 						content: content,
 					})
 				})
-
-				// If tool results contain images, send as a separate user message
-				// I ran into an issue where if I gave feedback for one of many tool uses, the request would fail.
-				// 'Messages following `tool_use` blocks must begin with a matching number of `tool_result` blocks.'
-				// Therefore we need to send these images after the tool result messages
-				// NOTE: it's actually okay to have multiple user messages in a row, the model will treat them as a continuation of the same input (this way works better than combining them into one message, since the tool result specifically mentions (see following user message for image)
-				// UPDATE v2.0: we don't use tools anymore, but if we did it's important to note that the openrouter prompt caching mechanism requires one user message at a time, so we would need to add these images to the user content array instead.
-				// if (toolResultImages.length > 0) {
-				// 	openAiMessages.push({
-				// 		role: 'user',
-				// 		content: toolResultImages.map((part) => ({
-				// 			type: 'image_url',
-				// 			image_url: { url: `data:${part.source.media_type};base64,${part.source.data}` },
-				// 		})),
-				// 	})
-				// }
 
 				// Process non-tool messages
 				if (nonToolMessages.length > 0) {

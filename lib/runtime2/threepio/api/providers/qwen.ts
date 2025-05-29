@@ -1,5 +1,5 @@
-import { Anthropic } from '@anthropic-ai/sdk'
-import OpenAI from 'openai'
+import { Anthropic } from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { ApiHandler } from '..'
 import {
   ApiHandlerOptions,
@@ -10,10 +10,9 @@ import {
   internationalQwenDefaultModelId,
   MainlandQwenModelId,
   InternationalQwenModelId,
-} from '../../shared/api'
-import { convertToOpenAiMessages } from '../transform/openaiFormat'
-import { ApiStream } from '../transform/stream'
-import { convertToR1Format } from '../transform/r1Format'
+} from '../../shared/api';
+import { convertToOpenAiMessages } from '../transform/openaiFormat';
+import { ApiStream } from '../transform/stream';
 
 export class QwenHandler implements ApiHandler {
   private options: ApiHandlerOptions
@@ -50,22 +49,17 @@ export class QwenHandler implements ApiHandler {
 
   async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
     const model = this.getModel()
-    const isDeepseekReasoner = model.id.includes('deepseek-r1')
     let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
       ...convertToOpenAiMessages(messages),
     ]
-    if (isDeepseekReasoner) {
-      openAiMessages = convertToR1Format([{ role: 'user', content: systemPrompt }, ...messages])
-    }
     const stream = await this.client.chat.completions.create({
       model: model.id,
       max_completion_tokens: model.info.maxTokens,
       messages: openAiMessages,
       stream: true,
       stream_options: { include_usage: true },
-
-      ...(model.id === 'deepseek-r1' ? {} : { temperature: 0 }),
+      ...({ temperature: 0 }),
     })
 
     for await (const chunk of stream) {

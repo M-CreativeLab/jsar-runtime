@@ -2,9 +2,10 @@ import fs from 'fs';
 import { ApiProvider } from './shared/api';
 import { PerformanceTracer } from './utils/PerformanceTracer';
 import { ApiStream } from './api/transform/stream';
-import { create } from './planner/Controller';
+import { Controller, createController } from './planner/Controller';
 
-const APP_ROOT_ID = 'jsar-app-root';
+const APP_ROOT_ID = 'app-root';
+
 const htmlText = `
 <html>
   <head></head>
@@ -13,39 +14,71 @@ const htmlText = `
     </div>
   </body>
 </html>`;
-class threepio {
-  initialDom: boolean = false;
 
-  browsingContext: Transmute.BrowsingContext;
-  memoryDocument: Document | null = null; // Store the memory DOM document
-  performanceTracker: PerformanceTracer; // Add performance tracker property
+const appendHtml = (htmlstr: string, element: Element) => {
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = htmlstr;
+  if (element) {
+    Array.from(tempDiv.childNodes).forEach(childNode => {
+      element.appendChild(childNode);
+    });
+  } else {
+    console.error('Agent: Error appending HTML to memory DOM: element is null');
+  }
+}
+
+class Threepio {
+  #initialDom: boolean = false;
+  #browsingContext: Transmute.BrowsingContext;
+  #document: Document | null = null; // Store the memory DOM document
+  #performanceTracker: PerformanceTracer; // Add performance tracker property
+  #controller: Controller = null; // Store the controller instance
 
   constructor(browsingContext: Transmute.BrowsingContext) {
-    this.browsingContext = browsingContext;
-    this.performanceTracker = new PerformanceTracer(); // Initialize tracker
+    this.#browsingContext = browsingContext;
+    this.#performanceTracker = new PerformanceTracer(); // Initialize tracker
+    this.#controller = createController(new PerformanceTracer());
+
   }
 
-  public async creatTask(input: string) {
+  public async request(input: string) {
     // create html dom
-    if (!this.initialDom) {
-      this.memoryDocument = this.browsingContext.start(htmlText, 'text/html', 'text');
-      this.initialDom = true;
+    if (!this.#initialDom) {
+      this.#document = this.#browsingContext.start(htmlText, 'text/html', 'text');
+      this.#initialDom = true;
     }
-    this.performanceTracker.start('totalTask'); // start total task timer
+    this.#performanceTracker.start('totalTask'); // start total task timer
 
-    const controller = create(new PerformanceTracer());
-    controller.on('append', (data) => {
+    try {
+      this.#displayDocument(); // Set up event listeners for document updates
+      await this.#controller.generatePageStream(input);
+    } catch (error) {
+      console.error('Agent: Error creating task:', error);
+    }
+
+    this.#performanceTracker.end('totalTask'); // Stop total task timer
+    this.#performanceTracker.report();
+
+    console.log('Agent: Final HTML:', this.#document.body.innerHTML);
+    console.log('Agent: Final CSS:', this.#document.head.innerHTML);
+    const htmlcontext = `<html><head>${this.#document.head.innerHTML}</head><body>${this.#document.body.innerHTML}</body></html>`
+    this.#saveHtmlToFile(htmlcontext, input);
+  }
+
+  #displayDocument() {
+    this.#controller.on('append', (data) => {
+      // note: testing background color change
       // const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
-      // this.memoryDocument.body.style.backgroundColor = 'rgba(255, 255, 255,0.2)';
+      // this.#document.body.style.backgroundColor = 'rgba(255, 255, 255,0.2)';
       const { type, fragment } = data;
       const { id, content, parentId } = fragment;
       console.log('Agent: Processed append key:', type, 'data:', fragment);
       switch (type) {
         case 'html':
-          this.handleAppendHtml(parentId, content);
+          this.#handleAppendHtml(parentId, content);
           break;
         case 'css':
-          this.handleAppendCss(fragment);
+          this.#handleAppendCss(fragment);
           break;
         case 'header':
           if (!content) {
@@ -54,14 +87,14 @@ class threepio {
           }
           const headerCssfragment = `#${APP_ROOT_ID}{${content}}`;
           console.log('Agent: Processed  Header append CSS:', headerCssfragment);
-          this.handleAppendCss(headerCssfragment);
+          this.#handleAppendCss(headerCssfragment);
           break;
         case 'moudle':
           const moudleHtmlfragment = `<div id=\'${id}\'></div>`;
           const moudleCssfragment = `#${id}{${content}}`;
-          this.handleAppendHtml(APP_ROOT_ID, moudleHtmlfragment);
+          this.#handleAppendHtml(APP_ROOT_ID, moudleHtmlfragment);
           console.log('Agent: Processed moudle append CSS:', moudleCssfragment);
-          this.handleAppendCss(moudleCssfragment);
+          this.#handleAppendCss(moudleCssfragment);
           break;
         default:
           console.warn('Agent: Processed append key:', type, ' data:', fragment);
@@ -69,36 +102,20 @@ class threepio {
       }
       console.log('Agent: Processed append key:', type, '  data:', fragment);
     })
-
-    try {
-      await controller.generatePageStream(input);
-    } catch (error) {
-      console.error('Agent: Error creating task:', error);
-    }
-
-    this.performanceTracker.end('totalTask'); // Stop total task timer
-    this.performanceTracker.report();
-
-    console.log('Agent: Final HTML:', this.memoryDocument.body.innerHTML);
-    console.log('Agent: Final CSS:', this.memoryDocument.head.innerHTML);
-    const htmlcontext = `<html><head>${this.memoryDocument.head.innerHTML}</head><body>${this.memoryDocument.body.innerHTML}</body></html>`
-    this.saveHtmlToFile(htmlcontext, input);
-    return controller;
-
   }
 
-  private handleAppendCss(content: string) {
+  #handleAppendCss(content: string): void {
     console.log('Agent: Processed append CSS:', content);
-    if (this.memoryDocument) {
+    if (this.#document) {
       try {
-        const styleElement = this.memoryDocument.createElement('style');
-        styleElement.appendChild(this.memoryDocument.createTextNode(content));
-        const head = this.memoryDocument.head || this.memoryDocument.getElementsByTagName('head')[0];
+        const styleElement = this.#document.createElement('style');
+        styleElement.appendChild(this.#document.createTextNode(content));
+        const head = this.#document.head || this.#document.getElementsByTagName('head')[0];
         if (head) {
           head.appendChild(styleElement);
           console.log('Agent: Appended CSS to memory DOM.');
         } else {
-          const body = this.memoryDocument.body || this.memoryDocument.getElementsByTagName('body')[0];
+          const body = this.#document.body || this.#document.getElementsByTagName('body')[0];
           if (body) {
             body.appendChild(styleElement);
             console.log('Agent: Appended CSS to body in memory DOM (no head found).');
@@ -112,13 +129,13 @@ class threepio {
     }
   }
 
-  private handleAppendHtml(parentid: string, content: string) {
+  #handleAppendHtml(parentid: string, content: string): void {
     console.log('Agent: Process append HTML:', parentid, content);
-    if (this.memoryDocument) {
+    if (this.#document) {
       try {
-        const document = this.memoryDocument;
+        const document = this.#document;
         if (parentid === null || parentid === 'body') {
-          this.appendHtml(content, document.body);
+          appendHtml(content, document.body);
         }
         else {
           let parentElement = document.getElementById(parentid);
@@ -142,7 +159,7 @@ class threepio {
               console.log('Agent: Set attribute:', tempDiv.getAttribute('style'));
             }
           }
-          this.appendHtml(content, parentElement);
+          appendHtml(content, parentElement);
         }
         console.log('Agent: Appended HTML to memory DOM.');
       } catch (e) {
@@ -151,20 +168,7 @@ class threepio {
     }
   }
 
-
-  private appendHtml(htmlstr: string, element: Element) {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlstr;
-    if (element) {
-      Array.from(tempDiv.childNodes).forEach(childNode => {
-        element.appendChild(childNode);
-      });
-    } else {
-      console.error('Agent: Error appending HTML to memory DOM: element is null');
-    }
-  }
-
-  private saveHtmlToFile(html: string, input: string) {
+  #saveHtmlToFile(html: string, input: string): void {
     const timestamp = new Date().getTime();
     const sanitizedInput = input;//.substring(0, 50);
     const folderName = `./.cache/tmp/`;
@@ -174,11 +178,17 @@ class threepio {
     const name = `${sanitizedInput}_${timestamp}.html`;
     const filename = `${folderName}${name}`;
     console.log(`Agent: HTML saved to ${filename}`);
-    fs.writeFileSync(filename, html);
+    fs.promises.writeFile(filename, html)
+      .then(() => {
+        console.log(`Agent: HTML file written successfully.`);
+      })
+      .catch((err) => {
+        console.error('Agent: Error writing HTML file:', err);
+      });
   }
 }
 export {
   ApiProvider,
-  threepio,
+  Threepio,
   ApiStream
 };
