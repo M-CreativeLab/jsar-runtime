@@ -15,7 +15,10 @@
     "undici": "^6.3.0",
     "windows-1252": "^3.0.4",
     "ws": "^8.16.0",
-    "xhr2": "^0.2.1"
+    "xhr2": "^0.2.1",
+    "openai": "^4.98.0",
+    "@anthropic-ai/sdk": "^0.37.0",
+    "@google/genai": "^1.0.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

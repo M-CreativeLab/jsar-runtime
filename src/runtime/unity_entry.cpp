@@ -230,6 +230,18 @@ static void OnPlatformSetup(UnityEmbedder *embedder)
       char enableResourcesCachingStr[PROP_VALUE_MAX];
       if (__system_property_get("jsar.resources.caching", enableResourcesCachingStr) >= 0)
         setenv("JSAR_RESOURCES_CACHING", enableResourcesCachingStr, 1);
+      char setupSysPromptStr[PROP_VALUE_MAX];
+      if (__system_property_get("jsar.setup.sysprompt", setupSysPromptStr) >= 0)
+        setenv("JSAR_SETUP_SYSPROMPT", setupSysPromptStr, 1);
+      char setupAPIProviderStr[PROP_VALUE_MAX];
+      if (__system_property_get("jsar.setup.api.provider", setupAPIProviderStr) >= 0)
+        setenv("JSAR_SETUP_API_PROVIDER", setupAPIProviderStr, 1);
+      char setupAPIKeyStr[PROP_VALUE_MAX];
+      if (__system_property_get("jsar.setup.api.key", setupAPIKeyStr) >= 0)
+        setenv("JSAR_SETUP_API_KEY", setupAPIKeyStr, 1);
+      char setupModeldStr[PROP_VALUE_MAX];
+      if (__system_property_get("jsar.setup.api.modelid", setupModeldStr) >= 0)
+        setenv("JSAR_SETUP_API_MODELID", setupModeldStr, 1);
 
       char enableRendererTracingStr[PROP_VALUE_MAX];
       if (

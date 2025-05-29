@@ -74,11 +74,13 @@ namespace dom
       browsingContext->fetchTextSourceResource(url, [this](const string &source)
                                                { setSource(source); });
     else
-      setSource("<html><head></head><body></body></html>");
+      setSource(url);
   }
 
   void Document::setSource(const string &source, bool isFragment)
   {
+    std::cout << "setSource: " << source << std::endl;
+
     string inputText(source);
     if (documentType == DocumentType::kHTML)
       fixSource(inputText); // Fix the source string if it's an HTML document.

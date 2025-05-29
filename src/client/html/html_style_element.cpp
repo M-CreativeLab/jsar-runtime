@@ -32,6 +32,8 @@ namespace dom
 
     // Update the sheet
     sheet_ = sheet;
-    getOwnerDocumentChecked().styleSheets_.push_back(sheet);
-  }
+    auto &document = getOwnerDocumentChecked();
+    document.styleSheets_.push_back(sheet);
+    document.styleCache_.invalidateCache();
+    }
 }

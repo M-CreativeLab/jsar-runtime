@@ -1,0 +1,27 @@
+
+import { FragmentType, ParsedModule, LLMMoudleFragmentTask } from './interfaces';
+
+export class TaskDecomposer {
+
+  /**
+   * Converts a single parsed module into a SkeletonNode and an LLMFragmentTask.
+   * This is designed to be called incrementally as modules are parsed.
+   * @param module Parsed module information.
+   * @param overallDesignTheme The overall design theme from the page header.
+   * @param appName The application name from the page header.
+   * @returns An object containing the new SkeletonNode and its corresponding LLMFragmentTask.
+   */
+  public createModuleNodeAndTask(module: ParsedModule, overallDesignTheme: string, parentId: string): { allTasks: LLMMoudleFragmentTask[] } {
+    module.parentId = parentId;
+    // const htmltask = this.createTask(module, FragmentType.HTML, overallDesignTheme);
+    const htmltask: LLMMoudleFragmentTask = {
+      moudle: module,
+      fragmentType: FragmentType.HTML,
+      context: {
+        pageGoal: module.name,
+        designSystemInfo: overallDesignTheme,
+      },
+    };
+    return { allTasks: [htmltask] };
+  }
+}

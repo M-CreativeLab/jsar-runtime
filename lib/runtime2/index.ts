@@ -10,6 +10,7 @@ import { ResourceLoaderOnTransmute } from './jsardom/ResourceLoader';
 import createModel3dViewer from './viewers/model3d';  // glb, gltf ...
 import createImage2dViewer from './viewers/image2d';  // png, jpg, etc ...
 import createSplineDesignViewer from './viewers/splinedesign';  // splinedesign
+import { copilot } from './copilot';
 
 Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
   get: () => getPerformanceNow(),
@@ -64,7 +65,6 @@ async function evaluateXSML(gl: WebGLRenderingContext | WebGL2RenderingContext, 
 
 export class TransmuteRuntime2 extends EventTarget {
   #browsingContext: Transmute.BrowsingContext;
-
   constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext, private id: number) {
     super();
     {
@@ -92,8 +92,24 @@ export class TransmuteRuntime2 extends EventTarget {
 
   async start(url: string) {
     console.info(`Content(#${this.id}): receiving a document request: ${url}`);
-    await this.load(url);
+    await this.handleInput(url);
   }
+
+  private async handleInput(input: string) {
+    // check codeOrUrl is a url or path
+    if (input.startsWith('http') || input.startsWith('https') || input.startsWith('/')) {
+      await this.load(input);
+    }
+    else {
+      await this.ask(input);
+    }
+  }
+
+  private async ask(input: string) {
+    const control = new copilot(this.#browsingContext);
+    await control.creatTask(input);
+  }
+
 
   private async load(codeOrUrl: string, urlBase?: string) {
     if (!this.gl) {
