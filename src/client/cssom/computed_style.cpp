@@ -244,6 +244,44 @@ namespace client_cssom
     else if (name == "min-height")
       min_height_ = Parse::ParseSingleValue<values::specified::Size>(value).toComputedValue(context);
 
+    // Border
+    else if (name == "border-top-width")
+      border_width_.top() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(value)
+                                .toComputedValue(context);
+    else if (name == "border-right-width")
+      border_width_.right() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(value)
+                                  .toComputedValue(context);
+    else if (name == "border-bottom-width")
+      border_width_.bottom() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(value)
+                                   .toComputedValue(context);
+    else if (name == "border-left-width")
+      border_width_.left() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(value)
+                                 .toComputedValue(context);
+    else if (name == "border-top-color")
+      border_color_.top() = Parse::ParseSingleValue<values::specified::Color>(value)
+                                .toComputedValue(context);
+    else if (name == "border-right-color")
+      border_color_.right() = Parse::ParseSingleValue<values::specified::Color>(value)
+                                  .toComputedValue(context);
+    else if (name == "border-bottom-color")
+      border_color_.bottom() = Parse::ParseSingleValue<values::specified::Color>(value)
+                                   .toComputedValue(context);
+    else if (name == "border-left-color")
+      border_color_.left() = Parse::ParseSingleValue<values::specified::Color>(value)
+                                 .toComputedValue(context);
+    else if (name == "border-top-left-radius")
+      border_radius_.topLeft() = Parse::ParseSingleValue<values::specified::BorderCornerRadius>(value)
+                                     .toComputedValue(context);
+    else if (name == "border-top-right-radius")
+      border_radius_.topRight() = Parse::ParseSingleValue<values::specified::BorderCornerRadius>(value)
+                                      .toComputedValue(context);
+    else if (name == "border-bottom-left-radius")
+      border_radius_.bottomLeft() = Parse::ParseSingleValue<values::specified::BorderCornerRadius>(value)
+                                        .toComputedValue(context);
+    else if (name == "border-bottom-right-radius")
+      border_radius_.bottomRight() = Parse::ParseSingleValue<values::specified::BorderCornerRadius>(value)
+                                         .toComputedValue(context);
+
     // Font properties
     if (name == "font-family")
       fonts_ = parsing::parseFontFamily(value);

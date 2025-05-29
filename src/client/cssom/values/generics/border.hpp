@@ -151,9 +151,13 @@ namespace client_cssom::values::generics
 
   public:
     const C &topLeft() const { return top_left_; }
+    C& topLeft() { return top_left_; }
     const C &topRight() const { return top_right_; }
-    const C &bottomRight() const { return bottom_right_; }
+    C& topRight() { return top_right_; }
     const C &bottomLeft() const { return bottom_left_; }
+    C& bottomLeft() { return bottom_left_; }
+    const C &bottomRight() const { return bottom_right_; }
+    C& bottomRight() { return bottom_right_; }
 
     // Support for accessing corners using BorderCorner enum
     const C &operator[](const BorderCorner &corner) const
@@ -164,10 +168,10 @@ namespace client_cssom::values::generics
         return top_left_;
       case BorderCorner::kTopRight:
         return top_right_;
-      case BorderCorner::kBottomRight:
-        return bottom_right_;
       case BorderCorner::kBottomLeft:
         return bottom_left_;
+      case BorderCorner::kBottomRight:
+        return bottom_right_;
       default:
         throw std::out_of_range("Invalid border corner");
       }
@@ -176,7 +180,7 @@ namespace client_cssom::values::generics
   protected:
     C top_left_;
     C top_right_;
-    C bottom_right_;
     C bottom_left_;
+    C bottom_right_;
   };
 }

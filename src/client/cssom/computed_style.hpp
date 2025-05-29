@@ -104,24 +104,54 @@ namespace client_cssom
     bool update(const CSSStyleDeclaration &, std::optional<values::computed::Context>);
 
     // Properties
-    const values::computed::Display &display() const { return display_; }
-    const values::computed::BoxSizing &boxSizing() const { return box_sizing_; }
-    const values::computed::Overflow &overflowX() const { return overflow_x_; }
-    const values::computed::Overflow &overflowY() const { return overflow_y_; }
-    const values::computed::Margin &margin() const { return margin_; }
-    const values::computed::Padding &padding() const { return padding_; }
+    inline const values::computed::Display &display() const { return display_; }
+    inline const values::computed::BoxSizing &boxSizing() const { return box_sizing_; }
+    inline const values::computed::Overflow &overflowX() const { return overflow_x_; }
+    inline const values::computed::Overflow &overflowY() const { return overflow_y_; }
+    inline const values::computed::Margin &margin() const { return margin_; }
+    inline const values::computed::Padding &padding() const { return padding_; }
 
-    const values::computed::Size &width() const { return width_; }
-    const values::computed::Size &height() const { return height_; }
-    const values::computed::Size &minWidth() const { return min_width_; }
-    const values::computed::Size &minHeight() const { return min_height_; }
-    const values::computed::MaxSize &maxWidth() const { return max_width_; }
-    const values::computed::MaxSize &maxHeight() const { return max_height_; }
+    inline const values::computed::Size &width() const { return width_; }
+    inline const values::computed::Size &height() const { return height_; }
+    inline const values::computed::Size &minWidth() const { return min_width_; }
+    inline const values::computed::Size &minHeight() const { return min_height_; }
+    inline const values::computed::MaxSize &maxWidth() const { return max_width_; }
+    inline const values::computed::MaxSize &maxHeight() const { return max_height_; }
 
-    const values::computed::BorderWidth &borderWidth() const { return border_width_; }
-    const values::computed::BorderColor &borderColor() const { return border_color_; }
-    const values::computed::BorderStyle &borderStyle() const { return border_style_; }
-    const values::computed::BorderRadius &borderRadius() const { return border_radius_; }
+    inline const values::computed::BorderWidth &borderWidth() const { return border_width_; }
+    inline const values::computed::BorderColor &borderColor() const { return border_color_; }
+    inline const values::computed::BorderStyle &borderStyle() const { return border_style_; }
+    inline const values::computed::BorderRadius &borderRadius() const { return border_radius_; }
+    inline const values::computed::BorderCornerRadius &borderTopLeftRadius() const
+    {
+      return border_radius_.topLeft();
+    }
+    inline const values::computed::BorderCornerRadius &borderTopRightRadius() const
+    {
+      return border_radius_.topRight();
+    }
+    inline const values::computed::BorderCornerRadius &borderBottomLeftRadius() const
+    {
+      return border_radius_.bottomLeft();
+    }
+    inline const values::computed::BorderCornerRadius &borderBottomRightRadius() const
+    {
+      return border_radius_.bottomRight();
+    }
+
+    // Returns `true` if any of the border radius values are non-zero.
+    inline const bool hasBorderRadius() const
+    {
+      if (!borderTopLeftRadius().isZero())
+        return true;
+      if (!borderTopRightRadius().isZero())
+        return true;
+      if (!borderBottomLeftRadius().isZero())
+        return true;
+      if (!borderBottomRightRadius().isZero())
+        return true;
+      return false;
+    }
 
     const values::computed::PositionType &positionType() const { return position_type_; }
 

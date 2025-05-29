@@ -84,6 +84,7 @@ namespace client_cssom::values::computed
         : GenericBorderCornerRadius(NonNegativeLengthPercentage::Length(px))
     {
     }
+    bool isZero() const { return value_ == 0.0f; }
   };
 
   // A computed value for the `border-radius` property.
