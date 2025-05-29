@@ -26,15 +26,19 @@ namespace dom
      * @returns The created document.
      */
     template <typename DocumentType>
-    shared_ptr<DocumentType> create(const std::string &url, DOMParsingType type)
+    shared_ptr<DocumentType> create(const std::string &url, DOMParsingType type, InputSourceType source)
     {
       shared_ptr<DocumentType> document;
       if (type == DOMParsingType::HTML)
         document = make_shared<DocumentType>(getSharedPtr<BrowsingContext>(), true);
       else
         throw std::runtime_error("Unsupported document type");
-
-      document->setUrl(url);
+      if (source == InputSourceType::Text)
+        document->setSource(url, true);
+      else if (source == InputSourceType::URL)
+        document->setUrl(url);
+      else
+        throw std::runtime_error("Unsupported source text type");
       documents.push_back(document);
       return document;
     }

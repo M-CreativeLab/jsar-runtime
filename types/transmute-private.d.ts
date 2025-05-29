@@ -281,7 +281,7 @@ declare namespace Transmute {
      * @param source the document source.
      * @param mimeType the MIME type: 'text/html', 'text/xsml', 'text/svg+xml', etc.
      */
-    start(source: string, mimeType: 'text/html'): Document;
+    start(source: string, mimeType: 'text/html', sourceType?: 'url' | 'text'): Document;
   }
 
   /**

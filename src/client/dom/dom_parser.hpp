@@ -13,7 +13,11 @@ namespace dom
     XSML,
     SVG,
   };
-
+  enum class InputSourceType
+  {
+    URL,
+    Text,
+  };
   class DOMParser
   {
   public:
@@ -21,7 +25,7 @@ namespace dom
     ~DOMParser() = default;
 
     template <typename DocumentType>
-    shared_ptr<DocumentType> parseFromString(const std::string& source, DOMParsingType _type)
+    shared_ptr<DocumentType> parseFromString(const std::string &source, DOMParsingType _type)
     {
       auto document = make_shared<DocumentType>(nullptr, false);
       document->setSource(source);

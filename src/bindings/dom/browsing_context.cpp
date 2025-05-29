@@ -55,7 +55,12 @@ namespace dombinding
     {
       try
       {
-        auto doc = contextImpl->create<dom::HTMLDocument>(urlString.Utf8Value(), parsingType);
+        auto sourceTextType = dom::InputSourceType::URL;
+        if (info.Length() >= 3 && info[3].IsString())
+        {
+          sourceTextType = dom::InputSourceType::Text;
+        }
+        auto doc = contextImpl->create<dom::HTMLDocument>(urlString.Utf8Value(), parsingType, sourceTextType);
         contextImpl->setBaseURI(doc->baseURI);
 
         auto jsInstance = Document::NewInstance(env, doc);

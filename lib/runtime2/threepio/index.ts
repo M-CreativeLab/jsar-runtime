@@ -28,7 +28,7 @@ class threepio {
   public async creatTask(input: string) {
     // create html dom
     if (!this.initialDom) {
-      this.memoryDocument = this.browsingContext.start(htmlText, 'text/html');
+      this.memoryDocument = this.browsingContext.start(htmlText, 'text/html', 'text');
       this.initialDom = true;
     }
     this.performanceTracker.start('totalTask'); // start total task timer
