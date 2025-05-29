@@ -11,9 +11,9 @@ import {
   MainlandQwenModelId,
   InternationalQwenModelId,
 } from '../../shared/api'
-import { convertToOpenAiMessages } from '../transform/openaiformat'
+import { convertToOpenAiMessages } from '../transform/openaiFormat'
 import { ApiStream } from '../transform/stream'
-import { convertToR1Format } from '../transform/r1format'
+import { convertToR1Format } from '../transform/r1Format'
 
 export class QwenHandler implements ApiHandler {
   private options: ApiHandlerOptions
