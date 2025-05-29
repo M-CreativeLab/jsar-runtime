@@ -8,15 +8,15 @@
     "publish:webapis": "node ./tools/publish-webapis.cjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.37.0",
     "@yodaos-jsar/dom": "file:../jsar-dom",
     "babylonjs": "file:../Babylon.js/packages/public/umd/babylonjs",
     "cache-control-parser": "^2.0.6",
     "minimist": "^1.2.8",
+    "openai": "^4.98.0",
     "undici": "^6.3.0",
     "windows-1252": "^3.0.4",
-    "ws": "^8.16.0",
-    "openai": "^4.98.0",
-    "@anthropic-ai/sdk": "^0.37.0"
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

@@ -31,12 +31,12 @@ class copilot {
       this.memoryDocument = this.browsingContext.start(htmlText, 'text/html');
       this.initialDom = true;
     }
-    this.performanceTracker.start('totalTask'); // Stop total task timer
+    this.performanceTracker.start('totalTask'); // start total task timer
 
     const controller = create(new PerformanceTracer());
     controller.on('append', (data) => {
       // const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
-      // this.memoryDocument.body.style.backgroundColor = "rgba(255, 255, 255,0.2)";
+      // this.memoryDocument.body.style.backgroundColor = 'rgba(255, 255, 255,0.2)';
       const { type, fragment } = data;
       const { id, content, parentId } = fragment;
       console.log('Agent: Processed append key:', type, 'data:', fragment);
@@ -46,6 +46,7 @@ class copilot {
           break;
         case 'css':
           this.handleAppendCss(fragment);
+          break;
         case 'header':
           if (!content) {
             console.warn('Agent: Processed append key:', type, 'data:', fragment);
@@ -56,7 +57,7 @@ class copilot {
           this.handleAppendCss(headerCssfragment);
           break;
         case 'moudle':
-          const moudleHtmlfragment = `<div id=\"${id}\"></div>`;
+          const moudleHtmlfragment = `<div id=\'${id}\'></div>`;
           const moudleCssfragment = `#${id}{${content}}`;
           this.handleAppendHtml(APP_ROOT_ID, moudleHtmlfragment);
           console.log('Agent: Processed moudle append CSS:', moudleCssfragment);

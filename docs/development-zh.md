@@ -172,10 +172,10 @@ $ adb shell getprop | grep jsar
 [jsar.renderer.target_app_fps]: [45]
 [jsar.renderer.tracing]: [no]
 [jsar.resources.caching]: [no]
-[jsar.setup.sysprompt]:['']
-[jsar.setup.api.provider]:[your-api-provider]
-[jsar.setup.api.modelid]:[your-api-model-id]
-[jsar.setup.api.key]:[your-api-key]
+[jsar.setup.theepio.sysprompt]:[your-system-prompt]
+[jsar.setup.theepio.api.provider]:[your-api-provider]
+[jsar.setup.theepio.api.modelid]:[your-api-model-id]
+[jsar.setup.theepio.api.key]:[your-api-key]
 ```
 
 其中 `jsar.init.cache_directory` 即运行时目录。
@@ -201,13 +201,13 @@ $ adb logcat -s jsar.metrics
 
 本节将针对以下几个指标作出说明。
 
-| 指标                 | 说明                                                                                                                 |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `spawnprocess`     | 表示创建应用进程的时间，即 `fork()` 调用成功后                                                                     |
+| 指标               | 说明                                                                                                                 |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `spawnprocess`     | 表示创建应用进程的时间，即 `fork()` 调用成功后                                                                       |
 | `beforescripting`  | 表示 Node.js 开始执行脚本的时间（包括 v8/Node.js 内部启动时间）                                                      |
 | `beforeloading`    | 表示开始加载文档的时间                                                                                               |
 | `dispatchrequest`  | 表示开始接收到请求的时间                                                                                             |
-| `load`/`loaded`  | 表示文档加载完成的时间                                                                                               |
+| `load`/`loaded`    | 表示文档加载完成的时间                                                                                               |
 | `DOMContentLoaded` | 表示文档依赖的内容（如样式表、脚本、图片、模型等）加载完成                                                           |
 | `fcp`              | 即 First Contentful Paint，表示首次内容绘制完成，在 JSAR 运行时，它表示渲染器第一次接收到绘制请求（Draw Call）时标记 |
 | `lcp`              | 即 Largest Contentful Paint，表示最大内容绘制完成，它是页面中最大的绘制元素（如图片、视频等）绘制完成的时间点        |
@@ -257,8 +257,8 @@ $ cat /path/to/your/cache/directory/perf/host_fps
 
 `perf` 的具体列表如下：
 
-| 文件名                             | 说明                                                               |
-| ---------------------------------- | ------------------------------------------------------------------ |
+| 文件名                           | 说明                                                               |
+| -------------------------------- | ------------------------------------------------------------------ |
 | `host_fps`                       | 渲染器帧率，一般来说需要与宿主引擎的渲染帧率一致                   |
 | `host_drawcalls_per_frame`       | 渲染器的平均绘制指令数（所有应用总和）                             |
 | `host_drawcalls_count_per_frame` | 渲染器的绘制指令的绘制顶点数（所有应用总和）                       |
