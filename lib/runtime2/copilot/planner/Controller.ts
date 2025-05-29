@@ -2,7 +2,15 @@ import { EventEmitter } from 'events';
 import { StreamPlannerParser } from './parse/StreamPlannerParser';
 import { TaskDecomposer } from './TaskDecomposer';
 import { LLMFragmentGenerator } from './LLMFragmentGenerator';
-import { EmitData, EmitterEventType, FragmentType, ParsedHeader, ParsedModule, PerformenceType, LLMAPI } from './interfaces';
+import {
+  EmitData,
+  EmitterEventType,
+  FragmentType,
+  ParsedHeader,
+  ParsedModule,
+  PerformenceType,
+  LLMAPI
+} from './interfaces';
 import { PerformanceTracer } from '../utils/PerformanceTracer';
 import { emitDataFun } from '../utils/emitUtils';
 import { PLANNER_PROMPT } from './prompt/plannerPrompt';

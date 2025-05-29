@@ -1,6 +1,6 @@
-import { Anthropic } from "@anthropic-ai/sdk"
-import OpenAI from "openai"
-import { ApiHandler } from "../"
+import { Anthropic } from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
+import { ApiHandler } from '../'
 import {
   ApiHandlerOptions,
   ModelInfo,
@@ -10,10 +10,10 @@ import {
   internationalQwenDefaultModelId,
   MainlandQwenModelId,
   InternationalQwenModelId,
-} from "../../shared/api"
-import { convertToOpenAiMessages } from "../transform/openai-format"
-import { ApiStream } from "../transform/stream"
-import { convertToR1Format } from "../transform/r1-format"
+} from '../../shared/api'
+import { convertToOpenAiMessages } from '../transform/openaiformat'
+import { ApiStream } from '../transform/stream'
+import { convertToR1Format } from '../transform/r1format'
 
 export class QwenHandler implements ApiHandler {
   private options: ApiHandlerOptions
@@ -23,9 +23,9 @@ export class QwenHandler implements ApiHandler {
     this.options = options
     this.client = new OpenAI({
       baseURL:
-        this.options.qwenApiLine === "china"
-          ? "https://dashscope.aliyuncs.com/compatible-mode/v1"
-          : "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+        this.options.qwenApiLine === 'china'
+          ? 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+          : 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
       apiKey: this.options.qwenApiKey,
     })
   }
@@ -33,7 +33,7 @@ export class QwenHandler implements ApiHandler {
   getModel(): { id: MainlandQwenModelId | InternationalQwenModelId; info: ModelInfo } {
     const modelId = this.options.apiModelId
     // Branch based on API line to let poor typescript know what to do
-    if (this.options.qwenApiLine === "china") {
+    if (this.options.qwenApiLine === 'china') {
       return {
         id: (modelId as MainlandQwenModelId) ?? mainlandQwenDefaultModelId,
         info: mainlandQwenModels[modelId as MainlandQwenModelId] ?? mainlandQwenModels[mainlandQwenDefaultModelId],
@@ -50,13 +50,13 @@ export class QwenHandler implements ApiHandler {
 
   async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
     const model = this.getModel()
-    const isDeepseekReasoner = model.id.includes("deepseek-r1")
+    const isDeepseekReasoner = model.id.includes('deepseek-r1')
     let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-      { role: "system", content: systemPrompt },
+      { role: 'system', content: systemPrompt },
       ...convertToOpenAiMessages(messages),
     ]
     if (isDeepseekReasoner) {
-      openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
+      openAiMessages = convertToR1Format([{ role: 'user', content: systemPrompt }, ...messages])
     }
     const stream = await this.client.chat.completions.create({
       model: model.id,
@@ -65,28 +65,28 @@ export class QwenHandler implements ApiHandler {
       stream: true,
       stream_options: { include_usage: true },
 
-      ...(model.id === "deepseek-r1" ? {} : { temperature: 0 }),
+      ...(model.id === 'deepseek-r1' ? {} : { temperature: 0 }),
     })
 
     for await (const chunk of stream) {
       const delta = chunk.choices[0]?.delta
       if (delta?.content) {
         yield {
-          type: "text",
+          type: 'text',
           text: delta.content,
         }
       }
 
-      if (delta && "reasoning_content" in delta && delta.reasoning_content) {
+      if (delta && 'reasoning_content' in delta && delta.reasoning_content) {
         yield {
-          type: "reasoning",
-          reasoning: (delta.reasoning_content as string | undefined) || "",
+          type: 'reasoning',
+          reasoning: (delta.reasoning_content as string | undefined) || '',
         }
       }
 
       if (chunk.usage) {
         yield {
-          type: "usage",
+          type: 'usage',
           inputTokens: chunk.usage.prompt_tokens || 0,
           outputTokens: chunk.usage.completion_tokens || 0,
           // @ts-ignore-next-line

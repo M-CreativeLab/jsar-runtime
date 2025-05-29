@@ -1,4 +1,4 @@
-import { EmitData } from "../planner/interfaces";
+import { EmitData } from '../planner/interfaces';
 import { EventEmitter } from 'events';
 
 export function emitDataFun(emiter: EventEmitter, event: string, data: EmitData) {

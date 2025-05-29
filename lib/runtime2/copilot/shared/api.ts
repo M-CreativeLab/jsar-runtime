@@ -1,8 +1,8 @@
-import type { LanguageModelChatSelector } from "../api/providers/types"
+import type { LanguageModelChatSelector } from '../api/providers/types'
 
 export type ApiProvider =
-	| "qwen"
-	| "doubao"
+	| 'qwen'
+	| 'doubao'
 
 export interface ApiHandlerOptions {
 	apiModelId?: string
@@ -76,9 +76,9 @@ export interface ModelInfo {
 // DeepSeek
 // https://api-docs.deepseek.com/quick_start/pricing
 export type DeepSeekModelId = keyof typeof deepSeekModels
-export const deepSeekDefaultModelId: DeepSeekModelId = "deepseek-chat"
+export const deepSeekDefaultModelId: DeepSeekModelId = 'deepseek-chat'
 export const deepSeekModels = {
-	"deepseek-chat": {
+	'deepseek-chat': {
 		maxTokens: 8_000,
 		contextWindow: 64_000,
 		supportsImages: false,
@@ -88,7 +88,7 @@ export const deepSeekModels = {
 		cacheWritesPrice: 0.27,
 		cacheReadsPrice: 0.07,
 	},
-	"deepseek-reasoner": {
+	'deepseek-reasoner': {
 		maxTokens: 8_000,
 		contextWindow: 64_000,
 		supportsImages: false,
@@ -104,10 +104,10 @@ export const deepSeekModels = {
 // https://bailian.console.aliyun.com/
 export type MainlandQwenModelId = keyof typeof mainlandQwenModels
 export type InternationalQwenModelId = keyof typeof internationalQwenModels
-export const internationalQwenDefaultModelId: InternationalQwenModelId = "qwen-coder-plus-latest"
-export const mainlandQwenDefaultModelId: MainlandQwenModelId = "qwen-coder-plus-latest"
+export const internationalQwenDefaultModelId: InternationalQwenModelId = 'qwen-coder-plus-latest'
+export const mainlandQwenDefaultModelId: MainlandQwenModelId = 'qwen-coder-plus-latest'
 export const internationalQwenModels = {
-	"qwen3-235b-a22b": {
+	'qwen3-235b-a22b': {
 		maxTokens: 129_024,
 		contextWindow: 131_072,
 		supportsImages: false,
@@ -117,7 +117,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 0.002,
 		cacheReadsPrice: 0.006,
 	},
-	"qwen2.5-coder-32b-instruct": {
+	'qwen2.5-coder-32b-instruct': {
 		maxTokens: 8_192,
 		contextWindow: 131_072,
 		supportsImages: false,
@@ -127,7 +127,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 0.002,
 		cacheReadsPrice: 0.006,
 	},
-	"qwen2.5-coder-14b-instruct": {
+	'qwen2.5-coder-14b-instruct': {
 		maxTokens: 8_192,
 		contextWindow: 131_072,
 		supportsImages: false,
@@ -137,7 +137,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 0.002,
 		cacheReadsPrice: 0.006,
 	},
-	"qwen2.5-coder-7b-instruct": {
+	'qwen2.5-coder-7b-instruct': {
 		maxTokens: 8_192,
 		contextWindow: 131_072,
 		supportsImages: false,
@@ -147,7 +147,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 0.001,
 		cacheReadsPrice: 0.002,
 	},
-	"qwen2.5-coder-3b-instruct": {
+	'qwen2.5-coder-3b-instruct': {
 		maxTokens: 8_192,
 		contextWindow: 32_768,
 		supportsImages: false,
@@ -157,7 +157,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 0.0,
 		cacheReadsPrice: 0.0,
 	},
-	"qwen2.5-coder-1.5b-instruct": {
+	'qwen2.5-coder-1.5b-instruct': {
 		maxTokens: 8_192,
 		contextWindow: 32_768,
 		supportsImages: false,
@@ -167,7 +167,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 0.0,
 		cacheReadsPrice: 0.0,
 	},
-	"qwen2.5-coder-0.5b-instruct": {
+	'qwen2.5-coder-0.5b-instruct': {
 		maxTokens: 8_192,
 		contextWindow: 32_768,
 		supportsImages: false,
@@ -177,7 +177,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 0.0,
 		cacheReadsPrice: 0.0,
 	},
-	"qwen-coder-plus-latest": {
+	'qwen-coder-plus-latest': {
 		maxTokens: 129_024,
 		contextWindow: 131_072,
 		supportsImages: false,
@@ -187,7 +187,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 3.5,
 		cacheReadsPrice: 7,
 	},
-	"qwen-plus-latest": {
+	'qwen-plus-latest': {
 		maxTokens: 129_024,
 		contextWindow: 131_072,
 		supportsImages: false,
@@ -197,7 +197,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 0.8,
 		cacheReadsPrice: 0.2,
 	},
-	"qwen-turbo-latest": {
+	'qwen-turbo-latest': {
 		maxTokens: 1_000_000,
 		contextWindow: 1_000_000,
 		supportsImages: false,
@@ -207,7 +207,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 0.8,
 		cacheReadsPrice: 2,
 	},
-	"qwen-max-latest": {
+	'qwen-max-latest': {
 		maxTokens: 30_720,
 		contextWindow: 32_768,
 		supportsImages: false,
@@ -217,7 +217,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 2.4,
 		cacheReadsPrice: 9.6,
 	},
-	"qwen-coder-plus": {
+	'qwen-coder-plus': {
 		maxTokens: 129_024,
 		contextWindow: 131_072,
 		supportsImages: false,
@@ -227,7 +227,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 3.5,
 		cacheReadsPrice: 7,
 	},
-	"qwen-plus": {
+	'qwen-plus': {
 		maxTokens: 129_024,
 		contextWindow: 131_072,
 		supportsImages: false,
@@ -237,7 +237,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 0.8,
 		cacheReadsPrice: 0.2,
 	},
-	"qwen-turbo": {
+	'qwen-turbo': {
 		maxTokens: 1_000_000,
 		contextWindow: 1_000_000,
 		supportsImages: false,
@@ -247,7 +247,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 0.3,
 		cacheReadsPrice: 0.6,
 	},
-	"qwen-max": {
+	'qwen-max': {
 		maxTokens: 30_720,
 		contextWindow: 32_768,
 		supportsImages: false,
@@ -257,7 +257,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 2.4,
 		cacheReadsPrice: 9.6,
 	},
-	"deepseek-v3": {
+	'deepseek-v3': {
 		maxTokens: 8_000,
 		contextWindow: 64_000,
 		supportsImages: false,
@@ -267,7 +267,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 0.14,
 		cacheReadsPrice: 0.014,
 	},
-	"deepseek-r1": {
+	'deepseek-r1': {
 		maxTokens: 8_000,
 		contextWindow: 64_000,
 		supportsImages: false,
@@ -277,7 +277,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 0.55,
 		cacheReadsPrice: 0.14,
 	},
-	"qwen-vl-max": {
+	'qwen-vl-max': {
 		maxTokens: 30_720,
 		contextWindow: 32_768,
 		supportsImages: true,
@@ -287,7 +287,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 3,
 		cacheReadsPrice: 9,
 	},
-	"qwen-vl-max-latest": {
+	'qwen-vl-max-latest': {
 		maxTokens: 129_024,
 		contextWindow: 131_072,
 		supportsImages: true,
@@ -297,7 +297,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 3,
 		cacheReadsPrice: 9,
 	},
-	"qwen-vl-plus": {
+	'qwen-vl-plus': {
 		maxTokens: 6_000,
 		contextWindow: 8_000,
 		supportsImages: true,
@@ -307,7 +307,7 @@ export const internationalQwenModels = {
 		cacheWritesPrice: 1.5,
 		cacheReadsPrice: 4.5,
 	},
-	"qwen-vl-plus-latest": {
+	'qwen-vl-plus-latest': {
 		maxTokens: 129_024,
 		contextWindow: 131_072,
 		supportsImages: true,
@@ -320,7 +320,7 @@ export const internationalQwenModels = {
 } as const satisfies Record<string, ModelInfo>
 
 export const mainlandQwenModels = {
-	"qwen2.5-coder-32b-instruct": {
+	'qwen2.5-coder-32b-instruct': {
 		maxTokens: 8_192,
 		contextWindow: 131_072,
 		supportsImages: false,
@@ -330,7 +330,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 0.002,
 		cacheReadsPrice: 0.006,
 	},
-	"qwen2.5-coder-14b-instruct": {
+	'qwen2.5-coder-14b-instruct': {
 		maxTokens: 8_192,
 		contextWindow: 131_072,
 		supportsImages: false,
@@ -340,7 +340,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 0.002,
 		cacheReadsPrice: 0.006,
 	},
-	"qwen2.5-coder-7b-instruct": {
+	'qwen2.5-coder-7b-instruct': {
 		maxTokens: 8_192,
 		contextWindow: 131_072,
 		supportsImages: false,
@@ -350,7 +350,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 0.001,
 		cacheReadsPrice: 0.002,
 	},
-	"qwen2.5-coder-3b-instruct": {
+	'qwen2.5-coder-3b-instruct': {
 		maxTokens: 8_192,
 		contextWindow: 32_768,
 		supportsImages: false,
@@ -360,7 +360,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 0.0,
 		cacheReadsPrice: 0.0,
 	},
-	"qwen2.5-coder-1.5b-instruct": {
+	'qwen2.5-coder-1.5b-instruct': {
 		maxTokens: 8_192,
 		contextWindow: 32_768,
 		supportsImages: false,
@@ -370,7 +370,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 0.0,
 		cacheReadsPrice: 0.0,
 	},
-	"qwen2.5-coder-0.5b-instruct": {
+	'qwen2.5-coder-0.5b-instruct': {
 		maxTokens: 8_192,
 		contextWindow: 32_768,
 		supportsImages: false,
@@ -380,7 +380,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 0.0,
 		cacheReadsPrice: 0.0,
 	},
-	"qwen-coder-plus-latest": {
+	'qwen-coder-plus-latest': {
 		maxTokens: 129_024,
 		contextWindow: 131_072,
 		supportsImages: false,
@@ -390,7 +390,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 3.5,
 		cacheReadsPrice: 7,
 	},
-	"qwen-plus-latest": {
+	'qwen-plus-latest': {
 		maxTokens: 129_024,
 		contextWindow: 131_072,
 		supportsImages: false,
@@ -400,7 +400,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 0.8,
 		cacheReadsPrice: 0.2,
 	},
-	"qwen-turbo-latest": {
+	'qwen-turbo-latest': {
 		maxTokens: 1_000_000,
 		contextWindow: 1_000_000,
 		supportsImages: false,
@@ -410,7 +410,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 0.8,
 		cacheReadsPrice: 2,
 	},
-	"qwen-max-latest": {
+	'qwen-max-latest': {
 		maxTokens: 30_720,
 		contextWindow: 32_768,
 		supportsImages: false,
@@ -420,7 +420,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 2.4,
 		cacheReadsPrice: 9.6,
 	},
-	"qwq-plus-latest": {
+	'qwq-plus-latest': {
 		maxTokens: 8_192,
 		contextWindow: 131_071,
 		supportsImages: false,
@@ -430,7 +430,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 0.0,
 		cacheReadsPrice: 0.0,
 	},
-	"qwq-plus": {
+	'qwq-plus': {
 		maxTokens: 8_192,
 		contextWindow: 131_071,
 		supportsImages: false,
@@ -440,7 +440,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 0.0,
 		cacheReadsPrice: 0.0,
 	},
-	"qwen-coder-plus": {
+	'qwen-coder-plus': {
 		maxTokens: 129_024,
 		contextWindow: 131_072,
 		supportsImages: false,
@@ -450,7 +450,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 3.5,
 		cacheReadsPrice: 7,
 	},
-	"qwen-plus": {
+	'qwen-plus': {
 		maxTokens: 129_024,
 		contextWindow: 131_072,
 		supportsImages: false,
@@ -460,7 +460,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 0.8,
 		cacheReadsPrice: 0.2,
 	},
-	"qwen-turbo": {
+	'qwen-turbo': {
 		maxTokens: 1_000_000,
 		contextWindow: 1_000_000,
 		supportsImages: false,
@@ -470,7 +470,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 0.3,
 		cacheReadsPrice: 0.6,
 	},
-	"qwen-max": {
+	'qwen-max': {
 		maxTokens: 30_720,
 		contextWindow: 32_768,
 		supportsImages: false,
@@ -480,7 +480,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 2.4,
 		cacheReadsPrice: 9.6,
 	},
-	"deepseek-v3": {
+	'deepseek-v3': {
 		maxTokens: 8_000,
 		contextWindow: 64_000,
 		supportsImages: false,
@@ -490,7 +490,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 0.14,
 		cacheReadsPrice: 0.014,
 	},
-	"deepseek-r1": {
+	'deepseek-r1': {
 		maxTokens: 8_000,
 		contextWindow: 64_000,
 		supportsImages: false,
@@ -500,7 +500,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 0.55,
 		cacheReadsPrice: 0.14,
 	},
-	"qwen-vl-max": {
+	'qwen-vl-max': {
 		maxTokens: 30_720,
 		contextWindow: 32_768,
 		supportsImages: true,
@@ -510,7 +510,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 3,
 		cacheReadsPrice: 9,
 	},
-	"qwen-vl-max-latest": {
+	'qwen-vl-max-latest': {
 		maxTokens: 129_024,
 		contextWindow: 131_072,
 		supportsImages: true,
@@ -520,7 +520,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 3,
 		cacheReadsPrice: 9,
 	},
-	"qwen-vl-plus": {
+	'qwen-vl-plus': {
 		maxTokens: 6_000,
 		contextWindow: 8_000,
 		supportsImages: true,
@@ -530,7 +530,7 @@ export const mainlandQwenModels = {
 		cacheWritesPrice: 1.5,
 		cacheReadsPrice: 4.5,
 	},
-	"qwen-vl-plus-latest": {
+	'qwen-vl-plus-latest': {
 		maxTokens: 129_024,
 		contextWindow: 131_072,
 		supportsImages: true,
@@ -546,9 +546,9 @@ export const mainlandQwenModels = {
 // https://www.volcengine.com/docs/82379/1298459
 // https://console.volcengine.com/ark/region:ark+cn-beijing/openManagement
 export type DoubaoModelId = keyof typeof doubaoModels
-export const doubaoDefaultModelId: DoubaoModelId = "doubao-1-5-pro-256k-250115"
+export const doubaoDefaultModelId: DoubaoModelId = 'doubao-1-5-pro-256k-250115'
 export const doubaoModels = {
-	"doubao-1-5-pro-256k-250115": {
+	'doubao-1-5-pro-256k-250115': {
 		maxTokens: 12_288,
 		contextWindow: 256_000,
 		supportsImages: false,
@@ -558,7 +558,7 @@ export const doubaoModels = {
 		cacheWritesPrice: 0,
 		cacheReadsPrice: 0,
 	},
-	"doubao-1-5-pro-32k-250115": {
+	'doubao-1-5-pro-32k-250115': {
 		maxTokens: 12_288,
 		contextWindow: 32_000,
 		supportsImages: false,
@@ -568,7 +568,7 @@ export const doubaoModels = {
 		cacheWritesPrice: 0,
 		cacheReadsPrice: 0,
 	},
-	"deepseek-v3-250324": {
+	'deepseek-v3-250324': {
 		maxTokens: 12_288,
 		contextWindow: 128_000,
 		supportsImages: false,
@@ -578,7 +578,7 @@ export const doubaoModels = {
 		cacheWritesPrice: 0,
 		cacheReadsPrice: 0,
 	},
-	"deepseek-r1-250120": {
+	'deepseek-r1-250120': {
 		maxTokens: 32_768,
 		contextWindow: 64_000,
 		supportsImages: false,

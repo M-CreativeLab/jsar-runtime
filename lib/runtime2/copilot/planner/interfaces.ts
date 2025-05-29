@@ -1,6 +1,6 @@
 // src/interfaces/index.ts
 
-import EventEmitter from "events";
+import EventEmitter from 'events';
 
 // --- Planner Stage (Phase 1) ---
 

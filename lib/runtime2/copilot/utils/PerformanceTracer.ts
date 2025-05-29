@@ -35,7 +35,7 @@ class PerformanceTracer {
 
     if (this.timings.has(uniqueInstanceId) && !this.timings.get(uniqueInstanceId)?.endTime) {
       // Allow repeated start calls but only first one records start time
-      console.warn(`Task "${uniqueInstanceId}" was already started. Restarting timer.`);
+      console.warn(`Task '${uniqueInstanceId}' was already started. Restarting timer.`);
     }
 
     const now = this.now()
@@ -57,7 +57,7 @@ class PerformanceTracer {
       taskTiming.startTime = now; // Update to most recent start time
     } else {
       if (this.timings.has(uniqueInstanceId)) {
-        console.warn(`Concurrent task instance "${uniqueInstanceId}" was already started. Restarting timer.`);
+        console.warn(`Concurrent task instance '${uniqueInstanceId}' was already started. Restarting timer.`);
       }
       this.timings.set(uniqueInstanceId, {
         startTime: now,
@@ -80,7 +80,7 @@ class PerformanceTracer {
     const taskTimingEntry = this.timings.get(taskInstanceId);
 
     if (!taskTimingEntry || taskTimingEntry.endTime) {
-      console.warn(`Task "${taskInstanceId}" was not started or already ended.`);
+      console.warn(`Task '${taskInstanceId}' was not started or already ended.`);
       return;
     }
 

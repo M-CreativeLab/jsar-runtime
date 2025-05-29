@@ -1,9 +1,9 @@
-import { ApiHandler } from ".."
-import { ApiHandlerOptions, doubaoDefaultModelId, DoubaoModelId, doubaoModels, ModelInfo } from "../../shared/api"
-import { Anthropic } from "@anthropic-ai/sdk"
-import OpenAI from "openai"
-import { convertToOpenAiMessages } from "../transform/openai-format"
-import { ApiStream } from "../transform/stream"
+import { ApiHandler } from '..'
+import { ApiHandlerOptions, doubaoDefaultModelId, DoubaoModelId, doubaoModels, ModelInfo } from '../../shared/api'
+import { Anthropic } from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
+import { convertToOpenAiMessages } from '../transform/openaiformat'
+import { ApiStream } from '../transform/stream'
 
 export class DoubaoHandler implements ApiHandler {
   private options: ApiHandlerOptions
@@ -11,7 +11,7 @@ export class DoubaoHandler implements ApiHandler {
   constructor(options: ApiHandlerOptions) {
     this.options = options
     this.client = new OpenAI({
-      baseURL: "https://ark.cn-beijing.volces.com/api/v3/",
+      baseURL: 'https://ark.cn-beijing.volces.com/api/v3/',
       apiKey: this.options.doubaoApiKey,
     })
   }
@@ -31,7 +31,7 @@ export class DoubaoHandler implements ApiHandler {
   async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
     const model = this.getModel()
     let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-      { role: "system", content: systemPrompt },
+      { role: 'system', content: systemPrompt },
       ...convertToOpenAiMessages(messages),
     ]
     const stream = await this.client.chat.completions.create({
@@ -47,14 +47,14 @@ export class DoubaoHandler implements ApiHandler {
       const delta = chunk.choices[0]?.delta
       if (delta?.content) {
         yield {
-          type: "text",
+          type: 'text',
           text: delta.content,
         }
       }
 
       if (chunk.usage) {
         yield {
-          type: "usage",
+          type: 'usage',
           inputTokens: chunk.usage.prompt_tokens || 0,
           outputTokens: chunk.usage.completion_tokens || 0,
           // @ts-ignore-next-line

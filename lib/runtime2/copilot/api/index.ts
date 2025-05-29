@@ -1,8 +1,8 @@
-import { Anthropic } from "@anthropic-ai/sdk"
-import { ApiConfiguration, ModelInfo } from "../shared/api"
-import { ApiStream, ApiStreamUsageChunk } from "./transform/stream"
-import { DoubaoHandler } from "./providers/doubao"
-import { QwenHandler } from "./providers/qwen"
+import { Anthropic } from '@anthropic-ai/sdk'
+import { ApiConfiguration, ModelInfo } from '../shared/api'
+import { ApiStream, ApiStreamUsageChunk } from './transform/stream'
+import { DoubaoHandler } from './providers/doubao'
+import { QwenHandler } from './providers/qwen'
 
 
 export interface ApiHandler {
@@ -18,7 +18,7 @@ export interface SingleCompletionHandler {
 export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
 	const { apiProvider, ...options } = configuration
 	switch (apiProvider) {
-		case "doubao":
+		case 'doubao':
 			return new DoubaoHandler(options)
 		case 'qwen':
 			return new QwenHandler(options)

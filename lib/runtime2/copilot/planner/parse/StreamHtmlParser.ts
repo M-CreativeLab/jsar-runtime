@@ -103,7 +103,7 @@ export class StreamHtmlParser { // Consider renaming to StreamHtmlParserV3
   }
 
   private parseLine(line: string): void {
-    // this.log(`Parsing line: "${line}" in state: ${ParseStateSimplified[this.state]}`);
+    // this.log(`Parsing line: '${line}' in state: ${ParseStateSimplified[this.state]}`);
     switch (this.state) {
       case ParseStateSimplified.Idle:
         if (line === S_HTML_START) {
