@@ -4,20 +4,21 @@ import { ApiHandler } from '..';
 import { ApiHandlerOptions, doubaoDefaultModelId, DoubaoModelId, doubaoModels, ModelInfo } from '../../shared/api';
 import { convertToOpenAiMessages } from '../transform/openaiFormat';
 import { ApiStream } from '../transform/stream';
-
+import { getEndpoint } from '../../utils/envUtils';
 export class DoubaoHandler implements ApiHandler {
-  private options: ApiHandlerOptions
-  private client: OpenAI
+  #options: ApiHandlerOptions
+  #client: OpenAI
   constructor(options: ApiHandlerOptions) {
-    this.options = options
-    this.client = new OpenAI({
-      baseURL: 'https://ark.cn-beijing.volces.com/api/v3/',
-      apiKey: this.options.doubaoApiKey,
+    this.#options = options
+    const baseUrl = getEndpoint() || 'https://ark.cn-beijing.volces.com/api/v3/';
+    this.#client = new OpenAI({
+      baseURL: baseUrl,
+      apiKey: this.#options.doubaoApiKey,
     })
   }
 
   getModel(): { id: DoubaoModelId; info: ModelInfo } {
-    const modelId = this.options.apiModelId
+    const modelId = this.#options.apiModelId
     if (modelId && modelId in doubaoModels) {
       const id = modelId as DoubaoModelId
       return { id, info: doubaoModels[id] }
@@ -34,7 +35,7 @@ export class DoubaoHandler implements ApiHandler {
       { role: 'system', content: systemPrompt },
       ...convertToOpenAiMessages(messages),
     ]
-    const stream = await this.client.chat.completions.create({
+    const stream = await this.#client.chat.completions.create({
       model: model.id,
       max_completion_tokens: model.info.maxTokens,
       messages: openAiMessages,

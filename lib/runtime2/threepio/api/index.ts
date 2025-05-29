@@ -26,10 +26,10 @@ export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
   const { apiProvider, ...options } = configuration
   switch (apiProvider) {
     case 'doubao':
-      return new DoubaoHandler(options)
+      return new DoubaoHandler(options);
     case 'qwen':
-      return new QwenHandler(options)
+      return new QwenHandler(options);
     default:
-      throw new Error(`Unsupported API provider: ${apiProvider}`)
+      throw new Error(`Unsupported API provider: ${apiProvider}`);
   }
 }

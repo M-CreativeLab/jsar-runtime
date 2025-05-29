@@ -1,11 +1,11 @@
-import { ApiProvider } from '../shared/api';
+import type { ApiProvider } from '../shared/api';
 
 const envVariables = {
   JSAR_SETUP_THREEPIO_API_KEY: 'JSAR_SETUP_THREEPIO_API_KEY',
   JSAR_SETUP_THREEPIO_API_PROVIDER: 'JSAR_SETUP_THREEPIO_API_PROVIDER',
   JSAR_SETUP_THREEPIO_API_MODELID: 'JSAR_SETUP_THREEPIO_API_MODELID',
   JSAR_SETUP_THREEPIO_SYSTEM_PROMPT: 'JSAR_SETUP_THREEPIO_SYSPROMPT',
-  JSAR_SETUP_THREEPIO_BASEURL: 'JSAR_SETUP_THREEPIO_BASEURL',
+  JSAR_SETUP_THREEPIO_ENDPOINT: 'JSAR_SETUP_THREEPIO_ENDPOINT',
 };
 
 export const getApiKey = (): string => {
@@ -20,6 +20,6 @@ export const getApiModelId = (): string => {
   return process.env[envVariables.JSAR_SETUP_THREEPIO_API_MODELID] as string;
 }
 
-export const getBaseUrl = (): string => {
-  return process.env[envVariables.JSAR_SETUP_THREEPIO_BASEURL] as string;
+export const getEndpoint = (): string => {
+  return process.env[envVariables.JSAR_SETUP_THREEPIO_ENDPOINT] as string;
 }

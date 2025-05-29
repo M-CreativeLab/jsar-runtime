@@ -13,26 +13,27 @@ import {
 } from '../../shared/api';
 import { convertToOpenAiMessages } from '../transform/openaiFormat';
 import { ApiStream } from '../transform/stream';
+import { getEndpoint } from '../../utils/envUtils';
 
 export class QwenHandler implements ApiHandler {
-  private options: ApiHandlerOptions
-  private client: OpenAI
+  #options: ApiHandlerOptions
+  #client: OpenAI
 
   constructor(options: ApiHandlerOptions) {
-    this.options = options
-    this.client = new OpenAI({
-      baseURL:
-        this.options.qwenApiLine === 'china'
-          ? 'https://dashscope.aliyuncs.com/compatible-mode/v1'
-          : 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
-      apiKey: this.options.qwenApiKey,
+    this.#options = options
+    const baseUrl = getEndpoint() || 'china'
+      ? 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+      : 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
+    this.#client = new OpenAI({
+      baseURL: baseUrl,
+      apiKey: this.#options.qwenApiKey,
     })
   }
 
   getModel(): { id: MainlandQwenModelId | InternationalQwenModelId; info: ModelInfo } {
-    const modelId = this.options.apiModelId
+    const modelId = this.#options.apiModelId
     // Branch based on API line to let poor typescript know what to do
-    if (this.options.qwenApiLine === 'china') {
+    if (this.#options.qwenApiLine === 'china') {
       return {
         id: (modelId as MainlandQwenModelId) ?? mainlandQwenDefaultModelId,
         info: mainlandQwenModels[modelId as MainlandQwenModelId] ?? mainlandQwenModels[mainlandQwenDefaultModelId],
@@ -53,7 +54,7 @@ export class QwenHandler implements ApiHandler {
       { role: 'system', content: systemPrompt },
       ...convertToOpenAiMessages(messages),
     ]
-    const stream = await this.client.chat.completions.create({
+    const stream = await this.#client.chat.completions.create({
       model: model.id,
       max_completion_tokens: model.info.maxTokens,
       messages: openAiMessages,

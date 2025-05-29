@@ -13,7 +13,7 @@ namespace dom
     XSML,
     SVG,
   };
-  enum class InputSourceType
+  enum class InputType
   {
     URL,
     Text,

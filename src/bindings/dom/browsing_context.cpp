@@ -55,10 +55,10 @@ namespace dombinding
     {
       try
       {
-        auto sourceTextType = dom::InputSourceType::URL;
+        auto sourceTextType = dom::InputType::URL;
         if (info.Length() >= 3 && info[3].IsString())
         {
-          sourceTextType = dom::InputSourceType::Text;
+          sourceTextType = dom::InputType::Text;
         }
         auto doc = contextImpl->create<dom::HTMLDocument>(urlString.Utf8Value(), parsingType, sourceTextType);
         contextImpl->setBaseURI(doc->baseURI);
