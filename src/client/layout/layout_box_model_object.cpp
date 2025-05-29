@@ -1,6 +1,5 @@
 #include <glm/glm.hpp>
 #include <client/dom/node.hpp>
-#include <client/cssom/types/length.hpp>
 
 #include "./layout_box_model_object.hpp"
 #include "./layout_view.hpp"
@@ -8,7 +7,6 @@
 namespace client_layout
 {
   using namespace std;
-  using namespace client_cssom::types;
 
   LayoutBoxModelObject::LayoutBoxModelObject(shared_ptr<dom::Node> node)
       : LayoutObject(node),
@@ -37,23 +35,23 @@ namespace client_layout
     // TODO(yorkie): implement updateFromStyle() in LayoutBoxModelObject.
   }
 
-  float LayoutBoxModelObject::getComputedLengthValue(const std::string &propertyName) const
+  float LayoutBoxModelObject::getPaddingEdgeWidth(Edge index) const
   {
     auto nodeStyle = style();
-    if (!nodeStyle.has_value() || !nodeStyle->hasProperty(propertyName))
+    if (!nodeStyle.has_value())
       return 0.0f;
-    else
-    {
-      auto length = nodeStyle->getPropertyValueAs<Length>(propertyName);
-      if (length.isAbsoluteLength())
-        return length.computeAbsoluteLengthInPixels();
-      else if (length.isViewportBasedRelativeLength())
-        return length.computeViewportBasedLengthInPixels(viewRef().viewport.xyz());
-      else
-      {
-        assert(false && "Unsupported length type.");
-      }
-    }
+    const auto &length = nodeStyle->padding()[index];
+    // TODO(yorkie): support percentage value?
+    return length.getLength().px();
+  }
+
+  float LayoutBoxModelObject::getBorderEdgeWidth(Edge index) const
+  {
+    auto nodeStyle = style();
+    if (!nodeStyle.has_value())
+      return 0.0f;
+    const auto &length = nodeStyle->borderWidth()[index];
+    return length.value;
   }
 
   void LayoutBoxModelObject::styleDidChange()

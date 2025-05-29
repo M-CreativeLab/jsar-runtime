@@ -99,7 +99,7 @@ namespace builtin_scene
     return true;
   }
 
-  void WebContent::setStyle(const client_cssom::CSSStyleDeclaration &style, std::shared_ptr<WebContent> parent)
+  void WebContent::setStyle(const client_cssom::ComputedStyle &style, std::shared_ptr<WebContent> parent)
   {
     style_ = style;
 
@@ -107,7 +107,7 @@ namespace builtin_scene
     {
       if (style_.hasProperty("font-family"))
       {
-        auto fonts = crates::css2::parsing::parseFontFamily(style_.getPropertyValue("font-family"));
+        auto &fonts = style_.fonts();
         if (fonts.size() >= 1)
         {
           vector<SkString> skFonts;
@@ -118,64 +118,49 @@ namespace builtin_scene
       }
       if (style_.hasProperty("font-size"))
       {
-        auto length = style_.getPropertyValueAs<client_cssom::types::Length>("font-size");
-        if (length.isAbsoluteLength())
-        {
-          contentStyle_.textStyle.fontSize = length.computeAbsoluteLengthInPixels();
-        }
-        else if (length.isElementBasedRelativeLength())
-        {
-          WebContentStyle parentContentStyle;
-          if (parent != nullptr)
-            parentContentStyle = parent->contentStyle_;
-
-          client_cssom::types::FontBasedComputationContext context(parentContentStyle.textStyle.fontSize);
-          contentStyle_.textStyle.fontSize = length.computeElementBasedLengthInPixels(context);
-        }
-        else
-        {
-          // TODO: support root-based and viewport-based relative length
-        }
+        const auto &fontSize = style_.fontSize();
+        contentStyle_.textStyle.fontSize = fontSize.computedSize().px();
       }
       if (style_.hasProperty("font-weight"))
       {
-        auto fontWeight = style_.getPropertyValueAs<client_cssom::types::FontWeight>("font-weight");
+        auto fontWeight = style_.fontWeight();
         contentStyle_.textStyle.fontStyle.weight = SkFontStyle::Weight(fontWeight.value());
       }
       if (style_.hasProperty("font-style"))
-      {
-        auto fontSlant = style_.getPropertyValueAs<client_cssom::types::FontStyle>("font-style");
-        contentStyle_.textStyle.fontStyle.slant = fontSlant;
-      }
+        contentStyle_.textStyle.fontStyle.slant = style_.fontStyle();
     }
 
     // Update Paragraph styles
     {
       if (style_.hasProperty("color"))
-        contentStyle_.textStyle.color = style_.getPropertyValueAs<client_cssom::types::Color>("color");
+      {
+        // TODO(yorkie): support current color.
+        auto current_color = SK_ColorBLACK;
+        contentStyle_.textStyle.color = style_.color().resolveToAbsoluteColor(current_color);
+      }
       if (style_.hasProperty("text-align"))
-        contentStyle_.textAlign = style_.getPropertyValueAs<client_cssom::types::TextAlign>("text-align");
+        contentStyle_.textAlign = style_.textAlign();
       if (style_.hasProperty("direction"))
-        contentStyle_.textDirection = style_.getPropertyValueAs<client_cssom::types::Direction>("direction");
+        contentStyle_.textDirection = style_.textDirection();
 
       // Line height
       if (style_.hasProperty("line-height"))
       {
-        auto lineHeight = style_.getPropertyValueAs<client_cssom::types::NumberLengthPercentage>("line-height");
+        const auto &lineHeight = style_.lineHeight();
         if (lineHeight.isLength())
         {
           contentStyle_.useFixedLineHeight = true;
-          contentStyle_.lineHeight = lineHeight.computeAbsoluteLengthInPixels();
+          contentStyle_.lineHeight = lineHeight.getLength().px();
         }
-        else if (lineHeight.isPercentage())
+        else if (lineHeight.isNumber())
         {
           contentStyle_.useFixedLineHeight = false;
-          contentStyle_.lineHeight = lineHeight.percentage() / 100.0f;
+          contentStyle_.lineHeight = lineHeight.getNumber().value;
         }
         else
         {
           contentStyle_.useFixedLineHeight = false;
-          contentStyle_.lineHeight = lineHeight.number();
+          contentStyle_.lineHeight = 1.2f;
         }
       }
     }
@@ -267,6 +252,8 @@ namespace builtin_scene
     auto &textStyle = contentStyle_.textStyle;
     newStrutStyle.setFontSize(textStyle.fontSize);
     newStrutStyle.setHalfLeading(contentStyle_.halfLeading);
+
+    // Reconfigure the font size based on the line height settings.
     if (contentStyle_.useFixedLineHeight)
       newStrutStyle.setFontSize(contentStyle_.lineHeight);
     else

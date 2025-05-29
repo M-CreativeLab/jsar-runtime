@@ -9,6 +9,8 @@
 
 namespace client_layout
 {
+  using Edge = client_cssom::values::generics::Edge;
+
   /**
    * This class is the base class for all CSS objects.
    */
@@ -44,15 +46,15 @@ namespace client_layout
 
     virtual void updateFromStyle();
 
-    virtual float paddingTop() const { return getComputedLengthValue("padding-top"); }
-    virtual float paddingBottom() const { return getComputedLengthValue("padding-bottom"); }
-    virtual float paddingLeft() const { return getComputedLengthValue("padding-left"); }
-    virtual float paddingRight() const { return getComputedLengthValue("padding-right"); }
+    virtual float paddingTop() const { return getPaddingEdgeWidth(Edge::kTop); }
+    virtual float paddingBottom() const { return getPaddingEdgeWidth(Edge::kBottom); }
+    virtual float paddingLeft() const { return getPaddingEdgeWidth(Edge::kLeft); }
+    virtual float paddingRight() const { return getPaddingEdgeWidth(Edge::kRight); }
 
-    virtual float borderTop() const { return getComputedLengthValue("border-top-width"); }
-    virtual float borderBottom() const { return getComputedLengthValue("border-bottom-width"); }
-    virtual float borderLeft() const { return getComputedLengthValue("border-left-width"); }
-    virtual float borderRight() const { return getComputedLengthValue("border-right-width"); }
+    virtual float borderTop() const { return getBorderEdgeWidth(Edge::kTop); }
+    virtual float borderBottom() const { return getBorderEdgeWidth(Edge::kBottom); }
+    virtual float borderLeft() const { return getBorderEdgeWidth(Edge::kLeft); }
+    virtual float borderRight() const { return getBorderEdgeWidth(Edge::kRight); }
 
     float borderWidth() const { return borderLeft() + borderRight(); }
     float borderHeight() const { return borderTop() + borderBottom(); }
@@ -60,9 +62,8 @@ namespace client_layout
   private:
     bool isBoxModelObject() const override final { return true; }
 
-    // Returns the computed length value of the specified property.
-    float getComputedLengthValue(const std::string &propertyName) const;
-
+    float getPaddingEdgeWidth(Edge) const;
+    float getBorderEdgeWidth(Edge) const;
     void styleDidChange() override;
 
   private:

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cctype>
+#include <cstdlib>
 #include <vector>
 #include <thread>
 
@@ -293,6 +294,56 @@ TrClientPerformanceFileSystem::TrClientPerformanceFileSystem(std::string &cacheD
   fps = makeValue<int>("fps", 0);
   frameDuration = makeValue<double>("frame_duration", 0.0);
   longFrames = makeValue<int>("long_frames", 0);
+}
+
+static bool GetBooleanEnv(const char *name, bool default_value = false)
+{
+  char *str = std::getenv(name);
+  size_t len = str ? strlen(str) : 0;
+
+  if (str == nullptr || len == 0)
+    return default_value;
+
+  if (len == 1)
+  {
+    if (*str == '0')
+      return false;
+    else if (isspace(*str))
+      return default_value; // Treat whitespace as default value.
+    else
+      return true;
+  }
+  else if (len == 2)
+  {
+    if (str[0] == 'n' && str[1] == 'o')
+      return false;
+    else
+      return default_value; // Treat other two-character strings as default value.
+  }
+  else if (len == 3)
+  {
+    if (str[0] == 'y' && str[1] == 'e' && str[2] == 's')
+      return true;
+    else
+      return default_value; // Treat other three-character strings as default value.
+  }
+  else
+  {
+    // For longer strings, check for specific values.
+    if (strcmp(str, "true") == 0)
+      return true;
+    if (strcmp(str, "false") == 0)
+      return false;
+  }
+
+  // Default to false if the value is not recognized.
+  return default_value;
+}
+
+TrClientEnvironmentPerProcess::TrClientEnvironmentPerProcess()
+    : debugLayoutTree(GetBooleanEnv("DEBUG_LAYOUT_TREE")),
+      debugLayoutFormattingContext(GetBooleanEnv("DEBUG_LAYOUT_FORMATTING_CONTEXT"))
+{
 }
 
 TrClientContextPerProcess *TrClientContextPerProcess::s_Instance = nullptr;

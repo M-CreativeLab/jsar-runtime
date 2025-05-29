@@ -38,7 +38,10 @@ namespace client_scroll
   void ScrollableArea::scrollTo(const glm::vec3 &offset)
   {
     if (!overflow_rect_.has_value())
+    {
+      cerr << "Skipping scrollTo() because overflow_rect_ is not set." << endl;
       return;
+    }
 
     if (overflow_rect_->x > scroll_origin_.x)
     {

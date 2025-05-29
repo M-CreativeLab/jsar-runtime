@@ -1,6 +1,8 @@
 #include <client/browser/window.hpp>
 #include <client/dom/document-inl.hpp>
+#include <client/cssom/computed_style.hpp>
 #include <client/cssom/css_style_declaration.hpp>
+#include <client/cssom/values/computed/context.hpp>
 #include <client/html/all_html_elements.hpp>
 
 #include "./layout_view.hpp"
@@ -25,10 +27,12 @@ namespace client_layout
     view->setDisplay(DisplayType::Block());
     view->createEntity();
 
+    auto context = client_cssom::values::computed::Context::From(document);
     client_cssom::CSSStyleDeclaration initialStyle;
     initialStyle.setProperty("width", "100%");
     initialStyle.setProperty("height", "100%");
-    view->setStyle(initialStyle);
+
+    view->setStyle(client_cssom::ComputedStyle(initialStyle, context));
     return view;
   }
 
