@@ -7,29 +7,10 @@
 #include <common/utility.hpp>
 #include <crates/bindings.hpp>
 
-#include "./types/color.hpp"
-#include "./types/direction.hpp"
-#include "./types/font_style.hpp"
-#include "./types/length_keywords.hpp"
-#include "./types/length.hpp"
-#include "./types/number_keywords.hpp"
-#include "./types/number.hpp"
-#include "./types/text_align.hpp"
-#include "./types/keyword.hpp"
-
 namespace client_cssom
 {
   template <typename T>
-  concept is_property_value = std::is_same_v<T, types::Color> ||
-                              std::is_same_v<T, types::Direction> ||
-                              std::is_same_v<T, types::FontStyle> ||
-                              std::is_same_v<T, types::FontWeight> ||
-                              std::is_same_v<T, types::Length> ||
-                              std::is_same_v<T, types::LengthPercentage> ||
-                              std::is_same_v<T, types::LineWidth> ||
-                              std::is_same_v<T, types::NumberLengthPercentage> ||
-                              std::is_same_v<T, types::TextAlign> ||
-                              std::is_same_v<T, crates::layout2::styles::BoxSizing> ||
+  concept is_property_value = std::is_same_v<T, crates::layout2::styles::BoxSizing> ||
                               std::is_same_v<T, crates::layout2::styles::Display> ||
                               std::is_same_v<T, crates::layout2::styles::Dimension> ||
                               std::is_same_v<T, crates::layout2::styles::LengthPercentageAuto> ||
@@ -110,7 +91,6 @@ namespace client_cssom
     /**
      * Custom the conversion to `LayoutStyle`.
      */
-    operator crates::layout2::LayoutStyle() const;
     bool operator==(const CSSStyleDeclaration &other) const { return equals(other); }
     bool operator!=(const CSSStyleDeclaration &other) const { return !equals(other); }
     /**
@@ -198,8 +178,7 @@ namespace client_cssom
     template <typename T>
       requires is_property_value<T> ||
                std::is_same_v<T, float> ||
-               std::is_integral_v<T> ||
-               std::is_same_v<T, types::BorderStyleKeyword>
+               std::is_integral_v<T>
     T getPropertyValueAs(const std::string &propertyName) const
     {
       using namespace crates::layout2::styles;
@@ -210,10 +189,6 @@ namespace client_cssom
         return value != "" ? std::stof(value) : 0.0f;
       if constexpr (std::is_integral_v<T>)
         return value != "" ? std::stoi(value) : 0;
-
-      // keywords or other enums
-      if constexpr (std::is_same_v<T, types::BorderStyleKeyword>)
-        return client_cssom::types::parseKeyword<T>(value).value_or(T::kNone);
 
       // CSSOM types
       if constexpr (is_property_value<T>)

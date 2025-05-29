@@ -8,6 +8,8 @@
 #include <skia/include/core/SkPathEffect.h>
 #include <skia/include/effects/SkDashPathEffect.h>
 #include <client/layout/fragment.hpp>
+#include <client/cssom/computed_style.hpp>
+#include <client/cssom/values/generics/border.hpp>
 
 #include "./hierarchy.hpp"
 #include "./transform.hpp"
@@ -23,6 +25,9 @@ namespace builtin_scene::web_renderer
 {
   using namespace std;
   using namespace skia::textlayout;
+  using namespace client_cssom;
+  using BorderEdge = client_cssom::values::generics::BorderEdge;
+  using BorderCorner = client_cssom::values::generics::BorderCorner;
 
   void InitSystem::onExecute()
   {
@@ -55,11 +60,11 @@ namespace builtin_scene::web_renderer
 
   optional<SkPaint> drawBackground(SkCanvas *canvas, SkRRect &originalRRect,
                                    const client_layout::Fragment &fragment,
-                                   const client_cssom::CSSStyleDeclaration &style)
+                                   const client_cssom::ComputedStyle &style)
   {
     if (style.hasProperty("background-color"))
     {
-      auto color = style.getPropertyValueAs<client_cssom::types::Color>("background-color");
+      auto color = style.backgroundColor().resolveToAbsoluteColor();
 
       SkPaint fillPaint;
       fillPaint.setColor(color);
@@ -91,48 +96,24 @@ namespace builtin_scene::web_renderer
     }
   }
 
-  enum class BorderCorner
-  {
-    kTopLeft,
-    kTopRight,
-    kBottomRight,
-    kBottomLeft
-  };
-
-  string to_string(const BorderCorner &corner)
-  {
-    switch (corner)
-    {
-    case BorderCorner::kTopLeft:
-      return "border-top-left-radius";
-    case BorderCorner::kTopRight:
-      return "border-top-right-radius";
-    case BorderCorner::kBottomRight:
-      return "border-bottom-right-radius";
-    case BorderCorner::kBottomLeft:
-      return "border-bottom-left-radius";
-    default:
-      return "";
-    }
-  }
-
   // Compute the radius for a specific corner of the rounded rectangle.
-  optional<SkVector> computeRoundedRectRadius(const SkRect &rect, const client_cssom::CSSStyleDeclaration &style,
+  optional<SkVector> computeRoundedRectRadius(const SkRect &rect, const client_cssom::ComputedStyle &style,
                                               const BorderCorner &corner)
   {
-    string name = to_string(corner);
+    string name = client_cssom::values::generics::to_string(corner);
     if (!style.hasProperty(name))
       return nullopt;
 
-    auto cornerRadius = style.getPropertyValueAs<client_cssom::types::LengthPercentage>(name);
+    const auto &cornerRadius = style.borderRadius()[corner].lengthPercentage();
     if (cornerRadius.isPercentage())
     {
-      return SkVector({cornerRadius.computePercentageToPixels(rect.width()),
-                       cornerRadius.computePercentageToPixels(rect.height())});
+      const auto &percentage = cornerRadius.toPercentage();
+      return SkVector({percentage->computeWithBase(rect.width()),
+                       percentage->computeWithBase(rect.height())});
     }
-    else if (cornerRadius.isAbsoluteLength())
+    else if (cornerRadius.isLength())
     {
-      auto computedPixels = cornerRadius.computeAbsoluteLengthInPixels();
+      auto computedPixels = cornerRadius.getLength().px();
       return SkVector({computedPixels, computedPixels});
     }
     else
@@ -141,8 +122,7 @@ namespace builtin_scene::web_renderer
     }
   }
 
-  bool shouldDrawRoundedRect(SkRRect &roundedRect, SkRect &rect,
-                             const client_cssom::CSSStyleDeclaration &style)
+  bool shouldDrawRoundedRect(SkRRect &roundedRect, SkRect &rect, const client_cssom::ComputedStyle &style)
   {
     // Set the radius for all four corners.
     auto borderTopLeftRadius = computeRoundedRectRadius(rect, style, BorderCorner::kTopLeft);
@@ -179,99 +159,66 @@ namespace builtin_scene::web_renderer
     return false;
   }
 
-  void setBorderPaintEffect(SkPaint &paint, std::optional<client_cssom::types::BorderStyleKeyword> borderStyle,
+  void setBorderPaintEffect(SkPaint &paint, client_cssom::values::computed::BorderSideStyle borderStyle,
                             float strokeWidth)
   {
-    if (!borderStyle.has_value())
-    {
-      paint.setStrokeWidth(strokeWidth);
-      return;
-    }
-    auto keyword = borderStyle.value();
-    if (keyword == client_cssom::types::BorderStyleKeyword::kNone)
+    if (borderStyle.isNoneOrHidden())
     {
       paint.setStrokeWidth(0);
+      paint.setPathEffect(nullptr);
       return;
     }
-    if (keyword == client_cssom::types::BorderStyleKeyword::kSolid)
-    {
-      paint.setStrokeWidth(strokeWidth);
-      return;
-    }
-    if (keyword == client_cssom::types::BorderStyleKeyword::kDashed)
-    {
-      paint.setStrokeWidth(strokeWidth);
 
+    paint.setStrokeWidth(strokeWidth);
+    if (borderStyle.isDashed())
+    {
       const SkScalar intervals[] = {10, 5};
       paint.setPathEffect(SkDashPathEffect::Make(intervals, 2, 0));
-      return;
     }
-    if (keyword == client_cssom::types::BorderStyleKeyword::kDotted)
+    else if (borderStyle.isDotted())
     {
-      paint.setStrokeWidth(strokeWidth);
-
       const SkScalar intervals[] = {2, 5};
       paint.setPathEffect(SkDashPathEffect::Make(intervals, 2, 0));
-      return;
     }
-
+    else if (borderStyle.isSolid())
     {
-      // Default case
-      paint.setStrokeWidth(strokeWidth);
+      paint.setPathEffect(nullptr);
     }
   }
 
   // Should draw the border edge, and return the computed border width.
-  inline bool shouldDrawBorderEdge(const client_cssom::CSSStyleDeclaration &style,
-                                   const string &edgeName,
+  inline bool shouldDrawBorderEdge(const client_cssom::ComputedStyle &style,
+                                   const BorderEdge edge,
                                    float &computedBorderWidth)
   {
-    auto borderWidth = style.getPropertyValue("border-" + edgeName + "-width");
-    auto borderStyle = style.getPropertyValue("border-" + edgeName + "-style");
+    const auto &edgeWidth = style.borderWidth()[edge];
+    const auto &edgeStyle = style.borderStyle()[edge];
 
     // Fast check for border style and width.
-    if (borderStyle == "" ||
-        borderStyle == "none" ||
-        borderWidth == "" ||
-        borderWidth == "0")
+    if (edgeStyle.isNoneOrHidden() || edgeWidth.isZero())
       return false;
 
-    if (borderWidth == "thin")
-      computedBorderWidth = 1.0f;
-    else if (borderWidth == "medium")
-      computedBorderWidth = 3.0f;
-    else if (borderWidth == "thick")
-      computedBorderWidth = 5.0f;
-    else
-    {
-      client_cssom::types::LengthPercentage resolvedWidth(borderWidth);
-      computedBorderWidth = resolvedWidth.computeAbsoluteLengthInPixels();
-      if (computedBorderWidth <= 0.0f)
-        return false;
-    }
-    return true;
+    computedBorderWidth = edgeWidth.value;
+    return computedBorderWidth > 0.0f;
   }
 
   bool drawBorders(SkCanvas *canvas, SkRRect &roundedRect,
                    const client_layout::Fragment &fragment,
-                   const client_cssom::CSSStyleDeclaration &style)
+                   const client_cssom::ComputedStyle &style)
   {
-    using namespace client_cssom::types;
-
     bool hasBorders = false;
     SkPaint paint;
     paint.setStyle(SkPaint::kStroke_Style);
     paint.setAntiAlias(true);
 
     float computedBorderWidth = 0.0f;
-    if (shouldDrawBorderEdge(style, "top", computedBorderWidth))
+    if (shouldDrawBorderEdge(style, BorderEdge::kTop, computedBorderWidth))
     {
-      auto borderColor = style.getPropertyValueAs<Color>("border-top-color");
+      const auto &edgeColor = style.borderColor()[BorderEdge::kTop];
       float halfBorderWidth = computedBorderWidth / 2.0f;
 
-      paint.setColor(borderColor);
-      setBorderPaintEffect(paint, style.getPropertyValueAs<BorderStyleKeyword>("border-top-style"),
-                           halfBorderWidth * 2);
+      paint.setColor(edgeColor.resolveToAbsoluteColor());
+      setBorderPaintEffect(paint, style.borderStyle()[BorderEdge::kTop], halfBorderWidth * 2);
 
       SkPath path;
       const SkRect &rect = roundedRect.rect();
@@ -291,14 +238,13 @@ namespace builtin_scene::web_renderer
       canvas->drawPath(path, paint);
       hasBorders = true;
     }
-    if (shouldDrawBorderEdge(style, "right", computedBorderWidth))
+    if (shouldDrawBorderEdge(style, BorderEdge::kRight, computedBorderWidth))
     {
-      auto borderColor = style.getPropertyValueAs<Color>("border-right-color");
+      const auto &edgeColor = style.borderColor()[BorderEdge::kRight];
       float halfBorderWidth = computedBorderWidth / 2.0f;
 
-      paint.setColor(borderColor);
-      setBorderPaintEffect(paint, style.getPropertyValueAs<BorderStyleKeyword>("border-right-style"),
-                           halfBorderWidth * 2);
+      paint.setColor(edgeColor.resolveToAbsoluteColor());
+      setBorderPaintEffect(paint, style.borderStyle()[BorderEdge::kRight], halfBorderWidth * 2);
 
       SkPath path;
       const SkRect &rect = roundedRect.rect();
@@ -309,14 +255,13 @@ namespace builtin_scene::web_renderer
       canvas->drawPath(path, paint);
       hasBorders = true;
     }
-    if (shouldDrawBorderEdge(style, "bottom", computedBorderWidth))
+    if (shouldDrawBorderEdge(style, BorderEdge::kBottom, computedBorderWidth))
     {
-      auto borderColor = style.getPropertyValueAs<client_cssom::types::Color>("border-bottom-color");
+      const auto &edgeColor = style.borderColor()[BorderEdge::kBottom];
       float halfBorderWidth = computedBorderWidth / 2.0f;
 
-      paint.setColor(borderColor);
-      setBorderPaintEffect(paint, style.getPropertyValueAs<BorderStyleKeyword>("border-bottom-style"),
-                           halfBorderWidth * 2);
+      paint.setColor(edgeColor.resolveToAbsoluteColor());
+      setBorderPaintEffect(paint, style.borderStyle()[BorderEdge::kBottom], halfBorderWidth * 2);
 
       SkPath path;
       const SkRect &rect = roundedRect.rect();
@@ -335,14 +280,13 @@ namespace builtin_scene::web_renderer
       canvas->drawPath(path, paint);
       hasBorders = true;
     }
-    if (shouldDrawBorderEdge(style, "left", computedBorderWidth))
+    if (shouldDrawBorderEdge(style, BorderEdge::kLeft, computedBorderWidth))
     {
-      auto borderColor = style.getPropertyValueAs<client_cssom::types::Color>("border-left-color");
+      const auto &edgeColor = style.borderColor()[BorderEdge::kLeft];
       float halfBorderWidth = computedBorderWidth / 2.0f;
 
-      paint.setColor(borderColor);
-      setBorderPaintEffect(paint, style.getPropertyValueAs<BorderStyleKeyword>("border-left-style"),
-                           halfBorderWidth * 2);
+      paint.setColor(edgeColor.resolveToAbsoluteColor());
+      setBorderPaintEffect(paint, style.borderStyle()[BorderEdge::kLeft], halfBorderWidth * 2);
 
       SkPath path;
       const SkRect &rect = roundedRect.rect();
@@ -358,7 +302,7 @@ namespace builtin_scene::web_renderer
 
   void RenderBackgroundSystem::render(ecs::EntityId entity, WebContent &content)
   {
-    const auto &style = content.style();
+    const ComputedStyle &style = content.style();
     const auto &fragment = content.fragment();
     if (!fragment.has_value()) // No layout, no rendering.
       return;

@@ -75,8 +75,21 @@ public:
    */
   void fixEnvIfNeeded()
   {
-    if (!filesystem::exists(applicationCacheDirectory))
-      filesystem::create_directory(applicationCacheDirectory);
+    filesystem::path root = applicationCacheDirectory;
+
+    if (!filesystem::exists(root))
+      filesystem::create_directory(root);
+    else
+    {
+      /**
+       * Clear some expired files or directories.
+       */
+      auto logs_dir = root / "logs";
+      if (!filesystem::is_directory(logs_dir))
+        filesystem::remove(logs_dir); // Remove the path if it's not a directory.
+      else if (!filesystem::is_empty(logs_dir))
+        filesystem::remove_all(logs_dir); // Clear all the logs if the directory is not empty.
+    }
 
     // TODO: Ensure the runtime and scripts directory?
   }
@@ -222,7 +235,7 @@ public:
   uint32_t open(string url, optional<TrDocumentRequestInit> init = nullopt);
   /**
    * Close the document with the given document id.
-   * 
+   *
    * @param id The document/content id to be closed.
    * @returns If the document is closed successfully.
    */

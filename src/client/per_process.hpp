@@ -126,6 +126,18 @@ enum class TrClientContextEventType
   ScriptingEventLoopReady, // When the event loop is ready.
 };
 
+class TrClientEnvironmentPerProcess final
+{
+public:
+  TrClientEnvironmentPerProcess();
+
+public:
+  // Set via `DEBUG_LAYOUT_TREE=1`
+  const bool debugLayoutTree = false;
+  // Set via `DEBUG_LAYOUT_FORMATTING_CONTEXT=1`
+  const bool debugLayoutFormattingContext = false;
+};
+
 /**
  * The client context is a singleton class in an application process.
  *
@@ -145,10 +157,8 @@ public:
    * @returns The new instance of the client context.
    */
   static TrClientContextPerProcess *Create();
-  /**
-   * @returns The current instance of the client context.
-   */
   static TrClientContextPerProcess *Get();
+  static const TrClientEnvironmentPerProcess &GetEnvironmentRef() { return Get()->env; }
 
 public:
   TrClientContextPerProcess();
@@ -384,6 +394,7 @@ private:
 public:
   uint32_t id;
   string url;
+  const TrClientEnvironmentPerProcess env;
   /**
    * The directory where the application can store files that are persistent.
    */
