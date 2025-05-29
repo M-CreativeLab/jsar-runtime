@@ -146,6 +146,70 @@ namespace client_cssom::values::specified
     NoCalcLength length_;
   };
 
+  class BorderSideStyle : public generics::GenericBorderStyle<BorderSideStyle>,
+                          public Parse,
+                          public ToComputedValue<computed::BorderSideStyle>
+  {
+    friend class Parse;
+    using generics::GenericBorderStyle<BorderSideStyle>::GenericBorderStyle;
+
+  private:
+    bool parse(const std::string &input) override
+    {
+      if (input == "hidden")
+        tag_ = kHidden;
+      else if (input == "none")
+        tag_ = kNone;
+      else if (input == "inset")
+        tag_ = kInset;
+      else if (input == "groove")
+        tag_ = kGroove;
+      else if (input == "outset")
+        tag_ = kOutset;
+      else if (input == "ridge")
+        tag_ = kRidge;
+      else if (input == "dotted")
+        tag_ = kDotted;
+      else if (input == "dashed")
+        tag_ = kDashed;
+      else if (input == "solid")
+        tag_ = kSolid;
+      else if (input == "double")
+        tag_ = kDouble;
+      return true;
+    }
+
+  public:
+    computed::BorderSideStyle toComputedValue(computed::Context &context) const override
+    {
+      switch (tag_)
+      {
+      case kHidden:
+        return computed::BorderSideStyle::Hidden();
+      case kNone:
+        return computed::BorderSideStyle::None();
+      case kInset:
+        return computed::BorderSideStyle::Inset();
+      case kGroove:
+        return computed::BorderSideStyle::Groove();
+      case kOutset:
+        return computed::BorderSideStyle::Outset();
+      case kRidge:
+        return computed::BorderSideStyle::Ridge();
+      case kDotted:
+        return computed::BorderSideStyle::Dotted();
+      case kDashed:
+        return computed::BorderSideStyle::Dashed();
+      case kSolid:
+        return computed::BorderSideStyle::Solid();
+      case kDouble:
+        return computed::BorderSideStyle::Double();
+      default:
+        return computed::BorderSideStyle::None();
+      }
+    }
+  };
+
   class BorderCornerRadius : public generics::GenericBorderCornerRadius<NonNegativeLengthPercentage>,
                              public Parse,
                              public ToCss,

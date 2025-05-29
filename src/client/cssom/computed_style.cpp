@@ -244,7 +244,10 @@ namespace client_cssom
     else if (name == "min-height")
       min_height_ = Parse::ParseSingleValue<values::specified::Size>(value).toComputedValue(context);
 
-    // Border
+    /**
+     * Border properties
+     */
+    // border-width
     else if (name == "border-top-width")
       border_width_.top() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(value)
                                 .toComputedValue(context);
@@ -257,6 +260,20 @@ namespace client_cssom
     else if (name == "border-left-width")
       border_width_.left() = Parse::ParseSingleValue<values::specified::BorderSideWidth>(value)
                                  .toComputedValue(context);
+    // border-style
+    else if (name == "border-top-style")
+      border_style_.top() = Parse::ParseSingleValue<values::specified::BorderSideStyle>(value)
+                                .toComputedValue(context);
+    else if (name == "border-right-style")
+      border_style_.right() = Parse::ParseSingleValue<values::specified::BorderSideStyle>(value)
+                                  .toComputedValue(context);
+    else if (name == "border-bottom-style")
+      border_style_.bottom() = Parse::ParseSingleValue<values::specified::BorderSideStyle>(value)
+                                   .toComputedValue(context);
+    else if (name == "border-left-style")
+      border_style_.left() = Parse::ParseSingleValue<values::specified::BorderSideStyle>(value)
+                                 .toComputedValue(context);
+    // border-color
     else if (name == "border-top-color")
       border_color_.top() = Parse::ParseSingleValue<values::specified::Color>(value)
                                 .toComputedValue(context);
@@ -269,6 +286,7 @@ namespace client_cssom
     else if (name == "border-left-color")
       border_color_.left() = Parse::ParseSingleValue<values::specified::Color>(value)
                                  .toComputedValue(context);
+    // border-radius
     else if (name == "border-top-left-radius")
       border_radius_.topLeft() = Parse::ParseSingleValue<values::specified::BorderCornerRadius>(value)
                                      .toComputedValue(context);
