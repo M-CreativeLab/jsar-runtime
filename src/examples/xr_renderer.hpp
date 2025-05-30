@@ -10,13 +10,14 @@ namespace jsar::example
   class XRStereoscopicRenderer
   {
   public:
-    XRStereoscopicRenderer(WindowContext *windowCtx) : windowCtx(windowCtx)
+    XRStereoscopicRenderer(WindowContext *windowCtx)
+        : windowCtx(windowCtx),
+          viewer_position_(0.0f, 0.0f, 0.35f)
     {
       float eyeOffset = XR_EYE_SPAN / 2;
-      viewer_position_ = glm::vec3(0.0f, 0.0f, 0.7f);
       {
-        glm::vec3 viewerForward(0.0f, 0.0f, -1.0f);
-        viewer_orientation_ = glm::quatLookAt(glm::normalize(viewerForward), glm::vec3(0, 1, 0));
+        glm::vec3 forward(0.0f, 0.0f, -1.0f);
+        viewer_orientation_ = glm::quatLookAt(glm::normalize(forward), glm::vec3(0, 1, 0));
       }
       eye_position_[0] = glm::vec3(viewer_position_.x - eyeOffset, viewer_position_.y, viewer_position_.z);
       eye_position_[1] = glm::vec3(viewer_position_.x + eyeOffset, viewer_position_.y, viewer_position_.z);
