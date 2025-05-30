@@ -79,8 +79,6 @@ namespace dom
 
   void Document::setSource(const string &source, bool isFragment)
   {
-    std::cout << "setSource: " << source << std::endl;
-
     string inputText(source);
     if (documentType == DocumentType::kHTML)
       fixSource(inputText); // Fix the source string if it's an HTML document.
