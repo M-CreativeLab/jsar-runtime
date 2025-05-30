@@ -10,7 +10,8 @@ enum ParseStateSimplified {
   ParsingStream, // Handles all content between S_HTML_START and S_HTML_END
   Finished
 }
-export class StreamHtmlParser { // Consider renaming to StreamHtmlParserV3
+
+export class StreamHtmlParser {
   #taskid = '';
   #buffer: string = '';
   #state: ParseStateSimplified = ParseStateSimplified.Idle;

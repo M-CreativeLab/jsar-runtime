@@ -1,6 +1,8 @@
-export type ApiProvider =
-  | 'qwen'
-  | 'doubao';
+export type ApiProvider = | 'qwen' | 'doubao';
+export type ApiConfiguration = ApiHandlerOptions & {
+  apiProvider?: ApiProvider;
+};
+
 export interface ApiHandlerOptions {
   apiModelId?: string;
   qwenApiKey?: string;
@@ -8,9 +10,6 @@ export interface ApiHandlerOptions {
   qwenApiLine?: string;
 }
 
-export type ApiConfiguration = ApiHandlerOptions & {
-  apiProvider?: ApiProvider;
-};
 export interface ModelInfo {
   maxTokens?: number;
   contextWindow?: number;
@@ -188,16 +187,6 @@ export const internationalQwenModels = {
     outputPrice: 0.28,
     cacheWritesPrice: 0.14,
     cacheReadsPrice: 0.014,
-  },
-  'deepseek-r1': {
-    maxTokens: 8_000,
-    contextWindow: 64_000,
-    supportsImages: false,
-    supportsPromptCache: true,
-    inputPrice: 0,
-    outputPrice: 2.19,
-    cacheWritesPrice: 0.55,
-    cacheReadsPrice: 0.14,
   },
   'qwen-vl-max': {
     maxTokens: 30_720,

@@ -9,7 +9,7 @@ const APP_ROOT_ID = 'app-root';
 const htmlText = `
 <html>
   <head></head>
-  <body style="display:flex; justify-content:center; align-items:center; background-color:#fff;">
+  <body style="display:flex; justify-content:center; align-items:center;">
     <div id=\"${APP_ROOT_ID}\">
     </div>
   </body>

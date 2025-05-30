@@ -10,14 +10,38 @@ enum PlannerParseState {
   Finished
 }
 
-export class StreamPlannerParser extends EventEmitter {
+// Helper to find the end of a JSON object (simple version, assumes no nested {} in strings)
+function findJsonEnd(buffer: string, startIndex: number): number {
+  if (startIndex === -1 || buffer[startIndex] !== '{') return -1;
+  let braceCount = 0;
+  for (let i = startIndex; i < buffer.length; i++) {
+    if (buffer[i] === '{') braceCount++;
+    else if (buffer[i] === '}') braceCount--;
+    if (braceCount === 0) return i;
+  }
+  return -1; // Closing brace not found
+}
+
+function findNextMarker(buffer: string, startIndex: number): number {
+  const nextModuleIdx = buffer.indexOf(PLANNER_MODULE_MARKER, startIndex);
+  const endIdx = buffer.indexOf(PLANNER_END_MARKER, startIndex);
+  if (nextModuleIdx !== -1 && endIdx !== -1) {
+    return Math.min(nextModuleIdx, endIdx);
+  } else if (nextModuleIdx !== -1) {
+    return nextModuleIdx;
+  } else if (endIdx !== -1) {
+    return endIdx;
+  }
+  return -1; // No known marker found
+}
+
+export class StreamPlannerParser {
   #buffer: string = '';
   #currentModule: string = '';
   #state: PlannerParseState = PlannerParseState.WaitingForHeader;
   #emiter: EventEmitter;
 
   constructor(emt: EventEmitter) {
-    super();
     this.#emiter = emt;
   }
 
@@ -44,11 +68,11 @@ export class StreamPlannerParser extends EventEmitter {
         case PlannerParseState.WaitingForHeader:
           expectedMarker = PLANNER_HEADER_MARKER;
           if (this.#buffer.startsWith(expectedMarker)) {
-            nextMarkerIndex = this.#findNextMarker(expectedMarker.length);
+            nextMarkerIndex = findNextMarker(this.#buffer, expectedMarker.length);
             if (nextMarkerIndex !== -1) {
               // Content is between the opening brace after marker and the next marker
               const jsonStart = this.#buffer.indexOf('{', expectedMarker.length);
-              const jsonEnd = this.#findJsonEnd(jsonStart);
+              const jsonEnd = findJsonEnd(this.#buffer, jsonStart);
               if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd < nextMarkerIndex) {
                 contentToParse = this.#buffer.substring(jsonStart, jsonEnd + 1);
                 markerFound = this.#buffer.substring(nextMarkerIndex, nextMarkerIndex + PLANNER_MODULE_MARKER.length); // Assuming next is M: or E:
@@ -67,10 +91,10 @@ export class StreamPlannerParser extends EventEmitter {
         case PlannerParseState.ProcessingModules:
           expectedMarker = PLANNER_MODULE_MARKER;
           if (this.#buffer.startsWith(expectedMarker)) {
-            nextMarkerIndex = this.#findNextMarker(expectedMarker.length);
+            nextMarkerIndex = findNextMarker(this.#buffer, expectedMarker.length);
             if (nextMarkerIndex !== -1) {
               const jsonStart = this.#buffer.indexOf('{', expectedMarker.length);
-              const jsonEnd = this.#findJsonEnd(jsonStart);
+              const jsonEnd = findJsonEnd(this.#buffer, jsonStart);
               if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd < nextMarkerIndex) {
                 contentToParse = this.#buffer.substring(jsonStart, jsonEnd + 1);
                 markerFound = this.#buffer.substring(nextMarkerIndex, nextMarkerIndex + PLANNER_MODULE_MARKER.length); // Could be M: or E:
@@ -95,9 +119,9 @@ export class StreamPlannerParser extends EventEmitter {
           // Successfully parsed, advance buffer past the parsed JSON and its preceding marker
           const consumedLength = this.#buffer.indexOf(contentToParse) + contentToParse.length;
           this.#buffer = this.#buffer.substring(consumedLength).trimStart(); // Trim leading whitespace before next marker
-          // The next marker (M: or E:) is now at the beginning of the buffer if findNextMarker worked correctly
+          // The next marker (M: or E:) is now at the beginning of the buffer if findNextMarker this.#buffer,worked correctly
           // Or we need to re-evaluate based on the new buffer state.
-          // For simplicity, let's assume findNextMarker correctly positions us for the next state update.
+          // For simplicity, let's assume findNextMarker this.#buffer,correctly positions us for the next state update.
           // The updateState logic needs to be robust based on what's now at the start of the buffer.
           this.#updateStateBasedOnBuffer();
           processedSomethingInThisIteration = true;
@@ -116,32 +140,6 @@ export class StreamPlannerParser extends EventEmitter {
         processedSomethingInThisIteration = true;
       }
     }
-  }
-
-  // Helper to find the end of a JSON object (simple version, assumes no nested {} in strings)
-  #findJsonEnd(startIndex: number): number {
-    if (startIndex === -1 || this.#buffer[startIndex] !== '{') return -1;
-    let braceCount = 0;
-    for (let i = startIndex; i < this.#buffer.length; i++) {
-      if (this.#buffer[i] === '{') braceCount++;
-      else if (this.#buffer[i] === '}') braceCount--;
-      if (braceCount === 0) return i;
-    }
-    return -1; // Closing brace not found
-  }
-
-  #findNextMarker(startIndex: number): number {
-    const nextModuleIdx = this.#buffer.indexOf(PLANNER_MODULE_MARKER, startIndex);
-    const endIdx = this.#buffer.indexOf(PLANNER_END_MARKER, startIndex);
-
-    if (nextModuleIdx !== -1 && endIdx !== -1) {
-      return Math.min(nextModuleIdx, endIdx);
-    } else if (nextModuleIdx !== -1) {
-      return nextModuleIdx;
-    } else if (endIdx !== -1) {
-      return endIdx;
-    }
-    return -1; // No known marker found
   }
 
   #tryParseJsonContent(jsonString: string): boolean {
