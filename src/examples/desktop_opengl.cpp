@@ -237,8 +237,73 @@ namespace jsar::example
       }
 
       glfwMakeContextCurrent(windowCtx_->window);
-      glEnable(GL_MULTISAMPLE);
+      {
+        // Get environment variables for OpenGL context
+        const char *str = getenv("JSAR_ENABLE_MULTISAMPLE");
+        if (str != NULL && strcmp(str, "1") == 0)
+          multisampleEnabled = false;
+
+        // Initialize OpenGL context
+        prepareRenderTarget(samples);
+      }
       return true;
+    }
+
+    void prepareRenderTarget(int samples)
+    {
+      if (multisampleEnabled)
+        glEnable(GL_MULTISAMPLE);
+
+      const auto &drawing_viewport = windowCtx_->drawingViewport();
+      int w = drawing_viewport.width();
+      int h = drawing_viewport.height();
+
+      glGenFramebuffers(1, &render_target_);
+      glBindFramebuffer(GL_FRAMEBUFFER, render_target_);
+
+      GLuint color_renderbuffer;
+      GLuint depth_stencil_renderbuffer;
+      glGenRenderbuffers(1, &color_renderbuffer);
+      glGenRenderbuffers(1, &depth_stencil_renderbuffer);
+
+      glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
+      if (!multisampleEnabled)
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, w, h);
+      else
+        glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGBA8, w, h);
+      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, color_renderbuffer);
+
+      glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil_renderbuffer);
+      if (!multisampleEnabled)
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w, h);
+      else
+        glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, w, h);
+      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_renderbuffer);
+      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_renderbuffer);
+
+      if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        assert(false && "Failed to create the render target framebuffer");
+
+      // If multisample is enabled, create a resolved framebuffer
+      if (multisampleEnabled)
+      {
+        glGenFramebuffers(1, &resolved_fbo_);
+        glBindFramebuffer(GL_FRAMEBUFFER, resolved_fbo_);
+
+        // Create a texture to resolve the multisample framebuffer
+        GLuint depth_renderbuffer;
+        glGenRenderbuffers(1, &depth_renderbuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, depth_renderbuffer);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w, h);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_renderbuffer);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_renderbuffer);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+          assert(false && "Failed to create the resolved framebuffer");
+      }
+
+      glGetError();                         // Clear the error state
+      glBindFramebuffer(GL_FRAMEBUFFER, 0); // Unbind the framebuffer
     }
 
     void start()
@@ -269,6 +334,7 @@ namespace jsar::example
           panel->uptime = embedder_->getUptime(); // update uptime to panel
         }
 
+        glBindFramebuffer(GL_FRAMEBUFFER, render_target_);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClearDepth(1.0f);
         glClearStencil(0);
@@ -355,7 +421,24 @@ namespace jsar::example
         // render screen-space panel
         panel->render();
 
+        // Blit the render target to the default framebuffer
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, render_target_);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        glBlitFramebuffer(0, 0, drawingViewport.width(), drawingViewport.height(),
+                          0, 0, drawingViewport.width(), drawingViewport.height(),
+                          GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT,
+                          GL_NEAREST);
+
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, resolved_fbo_);
+        glBlitFramebuffer(0, 0, drawingViewport.width(), drawingViewport.height(),
+                          0, 0, drawingViewport.width(), drawingViewport.height(),
+                          GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT,
+                          GL_NEAREST);
+
+        // Swap the buffers and poll events
         glfwSwapBuffers(windowCtx_->window);
+        if (multisampleEnabled)
+          glBindFramebuffer(GL_FRAMEBUFFER, resolved_fbo_);
         glfwPollEvents();
       }
       glfwTerminate();
@@ -370,12 +453,15 @@ namespace jsar::example
     int height = 600;
     bool xrEnabled = false;
     bool multiPass = false;
+    bool multisampleEnabled = false;
     int nApps = 1;
     string requestUrl = "http://localhost:3000/spatial-element.xsml";
 
   private:
     std::unique_ptr<WindowContext> windowCtx_;
     std::unique_ptr<DesktopEmbedder> embedder_;
+    GLuint render_target_;
+    GLuint resolved_fbo_; // used to resolve the multisample framebuffer.
   };
 }
 

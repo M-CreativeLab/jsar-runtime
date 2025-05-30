@@ -1,6 +1,9 @@
 #pragma once
 
 #include <OpenGL/gl3.h>
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
+
 #include "./window_ctx.hpp"
 #include "./stat_panel.hpp"
 #include "./xr_renderer.hpp"
@@ -109,25 +112,35 @@ namespace jsar::example
     if (xoffset > halfWidth)
     {
       xoffset -= halfWidth;
-      // viewIndex = 1;
+      viewIndex = 1;
     }
 
     glm::vec4 viewport(0, 0, halfWidth, height);
     glm::vec3 screenCoord(xoffset, viewport.w - yoffset, 0.2f);
 
     GLfloat depth;
-    glReadPixels(screenCoord.x, screenCoord.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+    glReadPixels(screenCoord.x * contentScaling[0],
+                 screenCoord.y * contentScaling[1],
+                 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
     screenCoord.z = depth;
-
-    glm::vec3 xyz = glm::unProject(screenCoord,
-                                   xrRenderer->getViewMatrixForEye(viewIndex),
-                                   xrRenderer->getProjectionMatrix(),
-                                   viewport);
 
     // Update the main input source's target ray
     glm::vec3 origin = xrRenderer->viewerPosition();
-    glm::vec3 direction = glm::normalize(xyz - origin);
-    xrRenderer->updateMainInputSourceTargetRay(origin, direction);
+
+    if (depth < 1.0f && depth > 0.0f)
+    {
+      glm::vec3 xyz = glm::unProject(screenCoord,
+                                     xrRenderer->getViewMatrixForEye(viewIndex),
+                                     xrRenderer->getProjectionMatrix(),
+                                     viewport);
+      glm::vec3 direction = glm::normalize(xyz - origin);
+      xrRenderer->updateMainInputSourceTargetRay(origin, direction);
+    }
+    else
+    {
+      glm::vec3 direction = glm::vec3(0, 1, 0); // Default direction if depth is invalid
+      xrRenderer->updateMainInputSourceTargetRay(origin, direction);
+    }
   }
 
   void WindowContext::handleMouseButton(int button, int action, int mods)

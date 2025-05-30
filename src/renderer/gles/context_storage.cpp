@@ -372,6 +372,28 @@ void OpenGLHostContextStorage::Record()
    * Recording the stencil parameters.
    */
   {
+    GLuint host_stencil_texture = 0;
+    GLint host_stencil_type = GL_NONE;
+
+    // glGetFramebufferAttachmentParameteriv(
+    //     GL_FRAMEBUFFER,
+    //     GL_STENCIL_ATTACHMENT,
+    //     GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE,
+    //     &host_stencil_type);
+    // auto err = glGetError();
+    // cout << "Host stencil type: " << host_stencil_type << endl
+    //      << "error: " << err << endl;
+
+    // if (host_stencil_type != GL_NONE)
+    // {
+    //   glGetFramebufferAttachmentParameteriv(
+    //       GL_FRAMEBUFFER,
+    //       GL_STENCIL_ATTACHMENT,
+    //       GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,
+    //       (GLint *)&host_stencil_texture);
+    //   cout << "Host stencil texture: " << host_stencil_texture << endl;
+    // }
+
     // glStencilMask(mask)
     glGetIntegerv(GL_STENCIL_WRITEMASK, (GLint *)&m_StencilMask);
     glGetIntegerv(GL_STENCIL_BACK_WRITEMASK, (GLint *)&m_StencilMaskBack);
