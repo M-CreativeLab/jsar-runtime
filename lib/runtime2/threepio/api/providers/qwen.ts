@@ -21,9 +21,7 @@ export class QwenHandler implements ApiHandler {
 
   constructor(options: ApiHandlerOptions) {
     this.#options = options
-    const baseUrl = getEndpoint() || 'china'
-      ? 'https://dashscope.aliyuncs.com/compatible-mode/v1'
-      : 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
+    const baseUrl = getEndpoint();
     this.#client = new OpenAI({
       baseURL: baseUrl,
       apiKey: this.#options.qwenApiKey,

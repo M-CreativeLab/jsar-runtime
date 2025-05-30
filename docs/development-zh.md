@@ -203,7 +203,7 @@ $ adb shell setprop jsar.setup.theepio.api.key your-api-key
 ```
 **配置Llm End Point**
 ```sh
-$ adb shell setprop jsar.setup.theepio.api.endpoint your-api-endpoint
+$ adb shell setprop jsar.setup.threepio.api.endpoint your-api-endpoint
 ```
 
 ## 性能

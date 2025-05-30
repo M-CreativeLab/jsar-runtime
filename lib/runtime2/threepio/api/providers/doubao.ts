@@ -9,9 +9,10 @@ import { getEndpoint } from '../../utils/env';
 export class DoubaoHandler implements ApiHandler {
   #options: ApiHandlerOptions;
   #client: OpenAI;
+
   constructor(options: ApiHandlerOptions) {
     this.#options = options;
-    const baseUrl = getEndpoint() || 'https://ark.cn-beijing.volces.com/api/v3/';
+    const baseUrl = getEndpoint();
     this.#client = new OpenAI({
       baseURL: baseUrl,
       apiKey: this.#options.doubaoApiKey,
