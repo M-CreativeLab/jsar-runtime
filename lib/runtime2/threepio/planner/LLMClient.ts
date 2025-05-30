@@ -1,7 +1,7 @@
 
-import { ask } from '../utils/llmUtils';
+import { ask } from '../utils/llm';
 import { ApiStream } from '../api/transform/stream';
-import { getApiKey, getApiProvider, getApiModelId } from '../utils/envUtils';
+import { getApiKey, getApiProvider, getApiModelId } from '../utils/env';
 
 export function callLLM(input: string, prompt: string): ApiStream {
   const apiKey = getApiKey();

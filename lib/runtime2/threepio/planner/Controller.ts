@@ -12,7 +12,7 @@ import { StreamPlannerParser } from './parse/StreamPlannerParser';
 import { TaskDecomposer } from './TaskDecomposer';
 import { HtmlFragmentGenerator } from './HTMLFragmentGenerator';
 import { PerformanceTracer } from '../utils/PerformanceTracer';
-import { emitDataFun } from '../utils/emitUtils';
+import { emitDataFun } from '../utils/emit';
 import { PLANNER_PROMPT } from './prompt/planner.prompt';
 import { callLLM } from './llmClient';
 
@@ -20,6 +20,7 @@ export function createController(tracker: PerformanceTracer): Controller {
   const plannerLLMAPI = new PlannerLLMAPI();
   return new Controller(plannerLLMAPI, tracker);
 }
+
 class PlannerLLMAPI implements LLMAPI {
   sendPromptStream(input) {
     const emitter = new EventEmitter();

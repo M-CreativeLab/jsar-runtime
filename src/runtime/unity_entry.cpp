@@ -231,8 +231,8 @@ static void OnPlatformSetup(UnityEmbedder *embedder)
       if (__system_property_get("jsar.resources.caching", enableResourcesCachingStr) >= 0)
         setenv("JSAR_RESOURCES_CACHING", enableResourcesCachingStr, 1);
       char setupEndpointStr[PROP_VALUE_MAX];
-      if (__system_property_get("jsar.setup.threepio.endpoint", setupStr) >= 0)
-        setenv("JSAR_SETUP_THREEPIO_ENDPOINT", setupStr, 1);
+      if (__system_property_get("jsar.setup.threepio.api.endpoint", setupStr) >= 0)
+        setenv("JSAR_SETUP_THREEPIO_API_ENDPOINT", setupStr, 1);
       char setupAPIProviderStr[PROP_VALUE_MAX];
       if (__system_property_get("jsar.setup.threepio.api.provider", setupAPIProviderStr) >= 0)
         setenv("JSAR_SETUP_THREEPIO_API_PROVIDER", setupAPIProviderStr, 1);

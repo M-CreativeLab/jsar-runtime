@@ -12,15 +12,15 @@ import { QwenHandler } from './providers/qwen';
  */
 export interface ApiHandler {
   //`createMessage` is used to send a system prompt and a list of messages to the model, returning a streaming response.
-  createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream
+  createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream;
   // retrieves the model's identifier and related information.
-  getModel(): { id: string; info: ModelInfo }
+  getModel(): { id: string; info: ModelInfo };
   // (optional) provides usage statistics for the API stream, if available.
-  getApiStreamUsage?(): Promise<ApiStreamUsageChunk | undefined>
+  getApiStreamUsage?(): Promise<ApiStreamUsageChunk | undefined>;
 }
 
 export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
-  const { apiProvider, ...options } = configuration
+  const { apiProvider, ...options } = configuration;
   switch (apiProvider) {
     case 'doubao':
       return new DoubaoHandler(options);

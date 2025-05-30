@@ -172,10 +172,6 @@ $ adb shell getprop | grep jsar
 [jsar.renderer.target_app_fps]: [45]
 [jsar.renderer.tracing]: [no]
 [jsar.resources.caching]: [no]
-[jsar.setup.theepio.sysprompt]: [your-system-prompt]
-[jsar.setup.theepio.api.provider]: [your-api-provider]
-[jsar.setup.theepio.api.modelid]: [your-api-model-id]
-[jsar.setup.theepio.api.key]: [your-api-key]
 ```
 
 其中 `jsar.init.cache_directory` 即运行时目录。
@@ -186,6 +182,29 @@ $ adb shell getprop | grep jsar
 - `.zones` 存放共享内存数据块，用于在 Host 进程与应用进程之间同步手势数据，不建议手动删除
 - `.res_cache` 存放资源缓存，比如 glTF 文件、纹理等，清空该文件夹内容等价于清空缓存
 - `.stat` 与 `.zones` 类似，也是基于 mmap 的共享内存，供开发者查看当前状态，不建议删除
+
+
+## 配置信息
+
+配置信息通过 `adb shell setprop` 命令设置，目前支持以下配置：
+
+**配置Llm Api Model Id**
+
+```sh
+$ adb shell setprop jsar.setup.theepio.api.modelid your-llm-modelid
+```
+**配置Llm Api Provier**
+```sh
+$ adb shell setprop jsar.setup.theepio.api.provider your-llm-provider
+```
+**配置Llm Api Key**
+```sh
+$ adb shell setprop jsar.setup.theepio.api.key your-api-key
+```
+**配置Llm End Point**
+```sh
+$ adb shell setprop jsar.setup.theepio.api.endpoint your-api-endpoint
+```
 
 ## 性能
 

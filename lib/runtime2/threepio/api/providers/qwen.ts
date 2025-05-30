@@ -13,7 +13,7 @@ import {
 } from '../../shared/api';
 import { convertToOpenAiMessages } from '../transform/openaiFormat';
 import { ApiStream } from '../transform/stream';
-import { getEndpoint } from '../../utils/envUtils';
+import { getEndpoint } from '../../utils/env';
 
 export class QwenHandler implements ApiHandler {
   #options: ApiHandlerOptions
@@ -49,11 +49,11 @@ export class QwenHandler implements ApiHandler {
   }
 
   async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
-    const model = this.getModel()
+    const model = this.getModel();
     let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
       ...convertToOpenAiMessages(messages),
-    ]
+    ];
     const stream = await this.#client.chat.completions.create({
       model: model.id,
       max_completion_tokens: model.info.maxTokens,
@@ -61,22 +61,22 @@ export class QwenHandler implements ApiHandler {
       stream: true,
       stream_options: { include_usage: true },
       ...({ temperature: 0 }),
-    })
+    });
 
     for await (const chunk of stream) {
-      const delta = chunk.choices[0]?.delta
+      const delta = chunk.choices[0]?.delta;
       if (delta?.content) {
         yield {
           type: 'text',
           text: delta.content,
-        }
+        };
       }
 
       if (delta && 'reasoning_content' in delta && delta.reasoning_content) {
         yield {
           type: 'reasoning',
           reasoning: (delta.reasoning_content as string | undefined) || '',
-        }
+        };
       }
 
       if (chunk.usage) {
@@ -88,7 +88,7 @@ export class QwenHandler implements ApiHandler {
           cacheReadTokens: chunk.usage.prompt_cache_hit_tokens || 0,
           // @ts-ignore-next-line
           cacheWriteTokens: chunk.usage.prompt_cache_miss_tokens || 0,
-        }
+        };
       }
     }
   }
