@@ -39,13 +39,32 @@ async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-(async () => {
+async function run(fn) {
+  try {
+    await fn();
+  } catch (err) {
+    console.warn('Error in main function:', err);
+  }
+}
+
+run(async () => {
   await sleep(1000);
   const some = document.createElement('div');
   some.style.setProperty('width', '100px');
   some.style.setProperty('height', '100px');
   some.style.setProperty('background-color', 'red');
   document.body.appendChild(some);
+
+  // test append style
+  await sleep(1000);
+  const style = document.createElement('style');
+  const cssSource = document.createTextNode(`
+    body {
+      background-color: lightgray;
+    }
+  `);
+  style.appendChild(cssSource);
+  document.head.appendChild(style);
 
   await sleep(1000);
   const bar = document.createElement('div');
@@ -68,4 +87,4 @@ async function sleep(ms) {
   //   '<div style="width:100px;height:100px;background-color:blue;font-size:30px;color:#fff">'
   //   + 'foobar'
   //   + '</div>';
-})();
+});
