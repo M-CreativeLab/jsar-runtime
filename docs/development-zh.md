@@ -160,6 +160,30 @@ adb forward tcp:9229 tcp:9229
 
 将设备的 9229 端口映射到工作电脑，然后通过 `chrome://inspect` 打开 Chrome DevTools，点击 `Configure...`，添加 `localhost:9229`，然后点击 `inspect` 即可进入调试界面。
 
+### 使用 LLM
+
+```sh
+##配置Llm Api Model Id
+## model id（模型 ID）指的是你所使用的大语言模型（LLM，Large Language Model）一标识符。它用于指定 JSAR 运行时与哪个具体的 LLM 模型进行交互。
+$ adb shell setprop jsar.setup.theepio.api.modelid your-llm-modelid
+##配置Llm Api Provier
+##provider（提供者）指的是提供 LLM 服务的组织或平台。它用于指定 JSAR 运行时与哪个具体的 LLM 服务提供者进行交互。
+$ adb shell setprop jsar.setup.theepio.api.provider your-llm-provider
+##配置Llm Api Key
+$ adb shell setprop jsar.setup.theepio.api.key your-api-key
+##配置Llm End Point
+##Endpoint（端点）指的是 LLM 服务的访问地址。
+$ adb shell setprop jsar.setup.threepio.api.endpoint your-api-endpoint
+```
+
+我们以阿里大模型举例  
+```sh
+$ adb shell setprop jsar.setup.theepio.api.modelid qwen-plus-latest
+$ adb shell setprop jsar.setup.theepio.api.provider qwen
+$ adb shell setprop jsar.setup.theepio.api.key your-api-key
+$ adb shell setprop jsar.setup.threepio.api.endpoint https://dashscope.aliyuncs.com/compatible-mode/v1
+```
+
 ## 运行时目录
 
 运行时目录用于存放运行时所需的缓存和临时文件，可通过 `getprop` 命令查看：
@@ -182,29 +206,6 @@ $ adb shell getprop | grep jsar
 - `.zones` 存放共享内存数据块，用于在 Host 进程与应用进程之间同步手势数据，不建议手动删除
 - `.res_cache` 存放资源缓存，比如 glTF 文件、纹理等，清空该文件夹内容等价于清空缓存
 - `.stat` 与 `.zones` 类似，也是基于 mmap 的共享内存，供开发者查看当前状态，不建议删除
-
-
-## 配置信息
-
-配置信息通过 `adb shell setprop` 命令设置，目前支持以下配置：
-
-**配置Llm Api Model Id**
-
-```sh
-$ adb shell setprop jsar.setup.theepio.api.modelid your-llm-modelid
-```
-**配置Llm Api Provier**
-```sh
-$ adb shell setprop jsar.setup.theepio.api.provider your-llm-provider
-```
-**配置Llm Api Key**
-```sh
-$ adb shell setprop jsar.setup.theepio.api.key your-api-key
-```
-**配置Llm End Point**
-```sh
-$ adb shell setprop jsar.setup.threepio.api.endpoint your-api-endpoint
-```
 
 ## 性能
 

@@ -30,7 +30,6 @@ function ask(
     console.error('Unsupported API provider:', apiProvider);
     return null;
   }
-
   const handler = buildApiHandler(config)
   const messages: Anthropic.Messages.MessageParam[] = [{ role: 'user', content: input }];
   return handler.createMessage(systemPrompt, messages)

@@ -3,13 +3,13 @@ import OpenAI from 'openai';
 import { ApiHandler } from '..'
 import {
   ApiHandlerOptions,
-  ModelInfo,
   mainlandQwenModels,
   internationalQwenModels,
   mainlandQwenDefaultModelId,
   internationalQwenDefaultModelId,
   MainlandQwenModelId,
   InternationalQwenModelId,
+  CustomChatCompletionParams,
 } from '../../shared/api';
 import { convertToOpenAiMessages } from '../transform/openaiFormat';
 import { ApiStream } from '../transform/stream';
@@ -28,7 +28,7 @@ export class QwenHandler implements ApiHandler {
     })
   }
 
-  getModel(): { id: MainlandQwenModelId | InternationalQwenModelId; info: ModelInfo } {
+  getModel(): { id: MainlandQwenModelId | InternationalQwenModelId; info: CustomChatCompletionParams } {
     const modelId = this.#options.apiModelId
     // Branch based on API line to let poor typescript know what to do
     if (this.#options.qwenApiLine === 'china') {
@@ -54,7 +54,7 @@ export class QwenHandler implements ApiHandler {
     ];
     const stream = await this.#client.chat.completions.create({
       model: model.id,
-      max_completion_tokens: model.info.maxTokens,
+      max_completion_tokens: model.info.max_completion_tokens,
       messages: openAiMessages,
       stream: true,
       stream_options: { include_usage: true },

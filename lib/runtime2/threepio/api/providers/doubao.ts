@@ -1,7 +1,13 @@
 import OpenAI from 'openai';
 import type { Anthropic } from '@anthropic-ai/sdk';
 import { ApiHandler } from '..';
-import { ApiHandlerOptions, doubaoDefaultModelId, DoubaoModelId, doubaoModels, ModelInfo } from '../../shared/api';
+import {
+  ApiHandlerOptions,
+  CustomChatCompletionParams,
+  doubaoDefaultModelId,
+  DoubaoModelId,
+  doubaoModels
+} from '../../shared/api';
 import { convertToOpenAiMessages } from '../transform/openaiFormat';
 import { ApiStream } from '../transform/stream';
 import { getEndpoint } from '../../utils/env';
@@ -19,7 +25,7 @@ export class DoubaoHandler implements ApiHandler {
     });
   }
 
-  getModel(): { id: DoubaoModelId; info: ModelInfo } {
+  getModel(): { id: DoubaoModelId; info: CustomChatCompletionParams } {
     const modelId = this.#options.apiModelId;
     if (modelId && modelId in doubaoModels) {
       const id = modelId as DoubaoModelId;
@@ -39,7 +45,7 @@ export class DoubaoHandler implements ApiHandler {
     ];
     const stream = await this.#client.chat.completions.create({
       model: model.id,
-      max_completion_tokens: model.info.maxTokens,
+      max_completion_tokens: model.info.max_completion_tokens,
       messages: openAiMessages,
       stream: true,
       stream_options: { include_usage: true },
