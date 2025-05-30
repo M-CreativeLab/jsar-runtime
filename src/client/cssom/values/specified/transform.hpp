@@ -18,8 +18,7 @@ namespace client_cssom::values::specified
     using TransformOperationBase::GenericTransformOperation;
 
   public:
-    computed::TransformOperation
-    toComputedValue(computed::Context &context) const override
+    computed::TransformOperation toComputedValue(computed::Context &context) const override
     {
       if (isMatrix())
       {
