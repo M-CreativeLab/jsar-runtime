@@ -17,6 +17,7 @@ export type NativeCallOptions = Partial<{
   };
 }>;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isTypedArray(data: any): data is TypedArray {
   return data instanceof Uint8Array ||
     data instanceof Uint8ClampedArray ||
@@ -37,15 +38,18 @@ export function unpackTypedArray(array: DataView | ArrayBufferView): Uint8Array 
 
 export function makeNativeCall(
   this: WebGLRenderingContext | WebGL2RenderingContext,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   fn: Function,
   name: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args: any[] = [],
-  options: NativeCallOptions = {}
+  _options: NativeCallOptions = {}
 ) {
   if (typeof fn !== 'function') {
     throw new TypeError(`The method(${name}) in native WebGLRenderingContext is not supported`);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let r: any;
   try {
     r = fn.apply(this, args);

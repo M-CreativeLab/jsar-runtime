@@ -131,9 +131,12 @@ export const removeEventListener = eventTarget.removeEventListener.bind(eventTar
 /**
  * Dispatch an event to the host process.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function dispatchEventToHost(type: 'rpcRequest', detail: { method: string, args: any[] }): number;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function dispatchEventToHost(type: 'rpcResponse', detail: { success: boolean, data?: any, message?: string }): number;
 function dispatchEventToHost(type: 'documentEvent', detail: { documentId: number, eventType: number, timestamp: number });
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function dispatchEventToHost(type: 'rpcRequest' | 'rpcResponse' | 'documentEvent', detail: any): number {
   return nativeEventTarget.dispatchEvent({
     type: eventNameToType(type),
@@ -181,13 +184,17 @@ export function reportDocumentEvent(
  * @param args the arguments to pass to the remote method.
  * @returns a promise that resolves with the response data.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const makeRpcCall = function makeRpcCallToNative(method: string, args: any[]) {
   const reqId = dispatchEventToHost('rpcRequest', { method, args });
   if (typeof reqId !== 'number') {
     throw new Error('Failed to make rpc call to the host process: invalid request id.');
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return new Promise<any>((resolve, reject) => {
     RpcRequestWaitlist.set(reqId, (responseText: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let json: any;
       try {
         json = JSON.parse(responseText) || {};

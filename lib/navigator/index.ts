@@ -11,39 +11,44 @@ class NavigatorImpl implements Navigator {
   serviceWorker: ServiceWorkerContainer;
   userActivation: UserActivation;
   wakeLock: WakeLock;
-  canShare(data?: ShareData): boolean {
+
+  canShare(_data?: ShareData): boolean {
     throw new Error('Method not implemented.');
   }
   getGamepads(): Gamepad[] {
     throw new Error('Method not implemented.');
   }
-  requestMIDIAccess(options?: MIDIOptions): Promise<MIDIAccess> {
+  requestMIDIAccess(_options?: MIDIOptions): Promise<MIDIAccess> {
     throw new Error('Method not implemented.');
   }
   requestMediaKeySystemAccess(keySystem: string, supportedConfigurations: MediaKeySystemConfiguration[]): Promise<MediaKeySystemAccess>;
   requestMediaKeySystemAccess(keySystem: string, supportedConfigurations: Iterable<MediaKeySystemConfiguration>): Promise<MediaKeySystemAccess>;
-  requestMediaKeySystemAccess(keySystem: unknown, supportedConfigurations: unknown): Promise<MediaKeySystemAccess> {
+  requestMediaKeySystemAccess(_keySystem: unknown, _supportedConfigurations: unknown): Promise<MediaKeySystemAccess> {
     throw new Error('Method not implemented.');
   }
-  sendBeacon(url: string | URL, data?: BodyInit): boolean {
+  sendBeacon(_url: string | URL, _data?: BodyInit): boolean {
     throw new Error('Method not implemented.');
   }
-  share(data?: ShareData): Promise<void> {
+  share(_data?: ShareData): Promise<void> {
     throw new Error('Method not implemented.');
   }
   vibrate(pattern: VibratePattern): boolean;
   vibrate(pattern: Iterable<number>): boolean;
-  vibrate(pattern: unknown): boolean {
+  vibrate(_pattern: unknown): boolean {
     throw new Error('Method not implemented.');
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mozGetVRDevices: (any: any) => any;
-  webkitGetUserMedia(constraints: MediaStreamConstraints, successCallback: any, errorCallback: any): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  webkitGetUserMedia(_constraints: MediaStreamConstraints, _successCallback: any, _errorCallback: any): void {
     throw new Error('Method not implemented.');
   }
-  mozGetUserMedia(constraints: MediaStreamConstraints, successCallback: any, errorCallback: any): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mozGetUserMedia(_constraints: MediaStreamConstraints, _successCallback: any, _errorCallback: any): void {
     throw new Error('Method not implemented.');
   }
-  msGetUserMedia(constraints: MediaStreamConstraints, successCallback: any, errorCallback: any): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  msGetUserMedia(_constraints: MediaStreamConstraints, _successCallback: any, _errorCallback: any): void {
     throw new Error('Method not implemented.');
   }
   webkitGetGamepads(): Gamepad[] {
@@ -82,10 +87,10 @@ class NavigatorImpl implements Navigator {
   clearAppBadge(): Promise<void> {
     throw new Error('Method not implemented.');
   }
-  setAppBadge(contents?: number): Promise<void> {
+  setAppBadge(_contents?: number): Promise<void> {
     throw new Error('Method not implemented.');
   }
-  registerProtocolHandler(scheme: string, url: string | URL): void {
+  registerProtocolHandler(_scheme: string, _url: string | URL): void {
     throw new Error('Method not implemented.');
   }
   hardwareConcurrency: number;

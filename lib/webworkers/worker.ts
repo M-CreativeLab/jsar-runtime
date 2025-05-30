@@ -12,13 +12,18 @@ export type WorkerRequest = {
 export class WorkerImpl extends EventTarget implements Worker {
   #handle: WorkerThreads.Worker;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onmessage: (this: Worker, ev: MessageEvent) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onmessageerror: (this: Worker, ev: MessageEvent) => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onerror: (this: AbstractWorker, ev: ErrorEvent) => any;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   postMessage(message: any, transfer: Transferable[]): void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   postMessage(message: any, options?: StructuredSerializeOptions): void;
-  postMessage(message: unknown, options?: unknown): void {
+  postMessage(message: unknown, _options?: unknown): void {
     this.#handle?.postMessage(message);
   }
 
