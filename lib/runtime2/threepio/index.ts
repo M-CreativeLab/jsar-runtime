@@ -15,57 +15,60 @@ const htmlText = `
   </body>
 </html>`;
 
-const appendHtml = (htmlstr: string, element: Element) => {
+function appendHtml(htmlstr: string, element: Element) {
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = htmlstr;
-  if (element) {
-    Array.from(tempDiv.childNodes).forEach(childNode => {
-      element.appendChild(childNode);
-    });
-  } else {
-    console.error('Agent: Error appending HTML to memory DOM: element is null');
-  }
+  Array.from(tempDiv.childNodes).forEach(childNode => {
+    element.appendChild(childNode);
+  });
 }
 
 class Threepio {
-  #initialDom: boolean = false;
   #browsingContext: Transmute.BrowsingContext;
-  #document: Document | null = null; // Store the memory DOM document
-  #performanceTracker: PerformanceTracer; // Add performance tracker property
-  #controller: Controller = null; // Store the controller instance
+  #document: Document | null = null;
+  #performanceTracker: PerformanceTracer;
+  #controller: Controller = null;
 
   constructor(browsingContext: Transmute.BrowsingContext) {
     this.#browsingContext = browsingContext;
-    this.#performanceTracker = new PerformanceTracer(); // Initialize tracker
+    this.#performanceTracker = new PerformanceTracer();
     this.#controller = createController(new PerformanceTracer());
-
   }
 
-  public async request(input: string) {
+  /**
+   * 
+   * @param input input string that will be processed to generate HTML content.
+   * @returns A Promise that resolves when the HTML content has been generated and displayed in the space.
+   * @description This method initializes the HTML document, starts the performance tracker,
+   * and calls the controller to generate the HTML content based on the input string.
+   * It then stops the performance tracker and reports the performance metrics.
+   * Finally, it saves the generated HTML content to a file.
+   */
+  public async request(input: string): Promise<void> {
     // create html dom
-    if (!this.#initialDom) {
-      this.#document = this.#browsingContext.start(htmlText, 'text/html', 'text');
-      this.#initialDom = true;
-    }
-    this.#performanceTracker.start('totalTask'); // start total task timer
-
+    this.#document = this.#browsingContext.start(htmlText, 'text/html', 'text');
+    this.#performanceTracker.start('total'); // start total task timer
     try {
       this.#displayDocument(); // Set up event listeners for document updates
       await this.#controller.generatePageStream(input);
     } catch (error) {
       console.error('Agent: Error creating task:', error);
     }
-
-    this.#performanceTracker.end('totalTask'); // Stop total task timer
+    this.#performanceTracker.end('total'); // Stop total task timer
     this.#performanceTracker.report();
-
     console.log('Agent: Final HTML:', this.#document.body.innerHTML);
     console.log('Agent: Final CSS:', this.#document.head.innerHTML);
     const htmlcontext = `<html><head>${this.#document.head.innerHTML}</head><body>${this.#document.body.innerHTML}</body></html>`
     this.#saveHtmlToFile(htmlcontext, input);
   }
 
-  #displayDocument() {
+  /**
+   * Saves the generated HTML content to a file.
+   * @param htmlContent - The HTML content to be saved.
+   * @param input - The input string used to generate the HTML content.
+   * @description This method saves the generated HTML content to a file named after the input string.
+   */
+  #displayDocument(): void {
     this.#controller.on('append', (data) => {
       // note: testing background color change
       // const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
@@ -100,53 +103,62 @@ class Threepio {
           console.warn('Agent: Processed append key:', type, ' data:', fragment);
           break;
       }
-      console.log('Agent: Processed append key:', type, '  data:', fragment);
-    })
+    });
   }
 
+  /**
+   * 
+   * @param content  css content to be appended.
+   * @description This method appends the provided CSS content to the document's head element.
+   */
   #handleAppendCss(content: string): void {
     console.log('Agent: Processed append CSS:', content);
     if (this.#document) {
       try {
         const styleElement = this.#document.createElement('style');
         styleElement.appendChild(this.#document.createTextNode(content));
-        const head = this.#document.head || this.#document.getElementsByTagName('head')[0];
+        const head = this.#document.head;
         if (head) {
           head.appendChild(styleElement);
-          console.log('Agent: Appended CSS to memory DOM.');
         } else {
           const body = this.#document.body || this.#document.getElementsByTagName('body')[0];
           if (body) {
             body.appendChild(styleElement);
-            console.log('Agent: Appended CSS to body in memory DOM (no head found).');
+            console.log('Agent: Appended CSS to body in DOM (no head found).');
           } else {
-            console.warn('Agent: Cannot find head or body to append CSS in memory DOM.');
+            console.warn('Agent: Cannot find head or body to append CSS in DOM.');
           }
         }
       } catch (e) {
-        console.error('Agent: Error appending CSS to memory DOM:', e);
+        console.error('Agent: Error appending CSS to DOM:', e);
       }
     }
   }
 
-  #handleAppendHtml(parentid: string, content: string): void {
-    console.log('Agent: Process append HTML:', parentid, content);
+  /**
+   * 
+   * @param selectId  The ID of the parent element to which the HTML content will be appended.
+   * @param content  The HTML content to be appended.
+   * @description This method appends the provided HTML content to the document's body element.
+   */
+  #handleAppendHtml(selectId: string, content: string): void {
+    console.log('Agent: Process append HTML:', selectId, content);
     if (this.#document) {
       try {
         const document = this.#document;
-        if (parentid === null || parentid === 'body') {
+        if (selectId === null || selectId === 'body') {
           appendHtml(content, document.body);
         }
         else {
-          let parentElement = document.getElementById(parentid);
+          let parentElement = document.getElementById(selectId);
           if (!parentElement) {
             const newParentElement = parentElement = document.createElement('div');
-            newParentElement.id = parentid;
-            const bodyElement = document.querySelector('body');
+            newParentElement.id = selectId;
+            const bodyElement = document.body;
             if (bodyElement) {
               bodyElement.appendChild(newParentElement);
             }
-            console.log('Agent: Created new parent element:', parentid, content);
+            console.log('Agent: Created new parent element:', selectId, content);
           } else {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = content;
@@ -161,13 +173,20 @@ class Threepio {
           }
           appendHtml(content, parentElement);
         }
-        console.log('Agent: Appended HTML to memory DOM.');
+        console.log('Agent: Appended HTML to DOM.');
       } catch (e) {
-        console.error('Agent: Error appending HTML to memory DOM:', e);
+        console.error('Agent: Error appending HTML to DOM:', e);
       }
     }
   }
 
+  /**
+   * Saves the generated HTML content to a file.
+   * @param html - The HTML content to be saved.
+   * @param input - The input string used to generate the HTML content.
+   * @description This method creates a timestamped filename based on the input string,
+   * and saves the HTML content to a file in the specified directory.
+   */
   #saveHtmlToFile(html: string, input: string): void {
     const timestamp = new Date().getTime();
     const sanitizedInput = input;//.substring(0, 50);

@@ -5,20 +5,17 @@ import { DoubaoHandler } from './providers/doubao';
 import { QwenHandler } from './providers/qwen';
 
 /**
- * The API handler is responsible for creating a message and getting the model.
- * It also provides an optional method to get the API stream usage.
+ * Interface for handling API calls to large language models, returning streaming data.
  *
- * @interface ApiHandler
- * @property {string} systemPrompt - The system prompt to be used for the message.
- * @property {Anthropic.Messages.MessageParam[]} messages - The messages to be used for the message.
- * @property {() => ApiStream} createMessage - The method to create a message.
- * @property {() => { id: string; info: ModelInfo }} getModel - The method to get the model.
- * @property {() => Promise<ApiStreamUsageChunk | undefined>} getApiStreamUsage - The method to get the API stream usage.
- * @returns {ApiHandler} The API handler.
+ * This interface defines the contract for creating messages, retrieving model information,
+ * and optionally obtaining API stream usage statistics.
  */
 export interface ApiHandler {
+  //`createMessage` is used to send a system prompt and a list of messages to the model, returning a streaming response.
   createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream
+  // retrieves the model's identifier and related information.
   getModel(): { id: string; info: ModelInfo }
+  // (optional) provides usage statistics for the API stream, if available.
   getApiStreamUsage?(): Promise<ApiStreamUsageChunk | undefined>
 }
 

@@ -94,7 +94,6 @@ export class TransmuteRuntime2 extends EventTarget {
 
   async start(input: string) {
     console.info(`Content(#${this.id}): receiving a document request: ${input}`);
-    // check codeOrUrl is a url or path
     if (input.startsWith('http:') || input.startsWith('https:') || input.startsWith('/')) {
       await this.load(input);
     } else {
