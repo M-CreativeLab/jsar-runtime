@@ -3,16 +3,13 @@ import { ApiHandler, LlmMessageParam } from '..'
 import {
   ApiHandlerOptions,
   mainlandQwenModels,
-  internationalQwenModels,
   mainlandQwenDefaultModelId,
-  internationalQwenDefaultModelId,
-  MainlandQwenModelId,
-  InternationalQwenModelId,
+  QwenModelId,
   MoudleInfo,
 } from '../../shared/api';
 import { convertToOpenAiMessages } from '../transform/openaiFormat';
 import { ApiStream } from '../transform/stream';
-import { getEndpoint } from '../../utils/env';
+import { getEndpoint } from '@transmute/env';
 
 export class QwenHandler implements ApiHandler {
   #options: ApiHandlerOptions
@@ -20,34 +17,24 @@ export class QwenHandler implements ApiHandler {
 
   constructor(options: ApiHandlerOptions) {
     this.#options = options
-    const baseURL = getEndpoint();
     this.#client = new OpenAI({
-      baseURL,
-      apiKey: this.#options.qwenApiKey,
+      baseURL: getEndpoint(),
+      apiKey: this.#options.apiKey,
     })
   }
 
-  getModel(): { id: MainlandQwenModelId | InternationalQwenModelId; info: MoudleInfo } {
+  getModel(): { id: QwenModelId; info: MoudleInfo } {
     const modelId = this.#options.apiModelId
     // Branch based on API line to let poor typescript know what to do
-    if (this.#options.qwenApiLine === 'china') {
-      return {
-        id: (modelId as MainlandQwenModelId) ?? mainlandQwenDefaultModelId,
-        info: mainlandQwenModels[modelId as MainlandQwenModelId] ?? mainlandQwenModels[mainlandQwenDefaultModelId],
-      }
-    } else {
-      return {
-        id: (modelId as InternationalQwenModelId) ?? internationalQwenDefaultModelId,
-        info:
-          internationalQwenModels[modelId as InternationalQwenModelId] ??
-          internationalQwenModels[internationalQwenDefaultModelId],
-      }
+    return {
+      id: (modelId as QwenModelId) ?? mainlandQwenDefaultModelId,
+      info: mainlandQwenModels[modelId as QwenModelId] ?? mainlandQwenModels[mainlandQwenDefaultModelId],
     }
   }
 
   async *createMessage(systemPrompt: string, messages: LlmMessageParam[]): ApiStream {
     const model = this.getModel();
-    let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+    const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
       ...convertToOpenAiMessages(messages),
     ];
@@ -66,13 +53,6 @@ export class QwenHandler implements ApiHandler {
         yield {
           type: 'text',
           text: delta.content,
-        };
-      }
-
-      if (delta && 'reasoning_content' in delta && delta.reasoning_content) {
-        yield {
-          type: 'reasoning',
-          reasoning: (delta.reasoning_content as string | undefined) || '',
         };
       }
 

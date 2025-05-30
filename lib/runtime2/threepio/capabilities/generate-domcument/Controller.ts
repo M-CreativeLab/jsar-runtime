@@ -5,12 +5,10 @@ import {
   FragmentType,
   ParsedHeader,
   ParsedModule,
-  PerformanceType,
   LLMAPI
 } from './interfaces';
 import { StreamPlannerParser } from './parsers/StreamPlannerParser';
 import { createModuleNodeAndTask } from './TaskDecomposer';
-import { PerformanceTracer } from '../../utils/PerformanceTracer';
 import { PLANNER_PROMPT } from './prompts/planner.prompt';
 import { callLLM } from '../../utils/llm';
 import { generateFragmentStream } from './HTMLFragmentGenerator';
@@ -19,9 +17,9 @@ export interface Controller {
   on(event: 'append', listener: (data: EmitData) => void): this;
 }
 
-export function createController(tracker: PerformanceTracer): Controller {
+export function createController(): Controller {
   const plannerLLMAPI = new PlannerLLMAPI();
-  return new Controller(plannerLLMAPI, tracker);
+  return new Controller(plannerLLMAPI);
 }
 
 class PlannerLLMAPI implements LLMAPI {
@@ -49,19 +47,14 @@ class PlannerLLMAPI implements LLMAPI {
 
 export class Controller extends EventEmitter {
   #plannerLLM: LLMAPI;
-  #tracker: PerformanceTracer;
 
-  constructor(plannerLLM: PlannerLLMAPI, tracker?: PerformanceTracer) {
+  constructor(plannerLLM: PlannerLLMAPI) {
     super();
     this.#plannerLLM = plannerLLM;
-    this.#tracker = tracker || new PerformanceTracer();
+
   }
 
   public async generatePageStream(input: string) {
-    const totalTaskID = this.#tracker.start(PerformanceType.total);
-    const plannerTaskID = this.#tracker.start(PerformanceType.planner);
-    const parseTaskID = this.#tracker.start(PerformanceType.parseHeader);
-    this.#tracker.start(PerformanceType.parseMoudle);
     let taskPromises: Promise<any>[] = [];
     let headerParsed = false;
     let overallDesignTheme = '';
@@ -70,7 +63,6 @@ export class Controller extends EventEmitter {
     const plannerParser = new StreamPlannerParser();
     const plannerStreamPromise = new Promise<void>((resolvePlannerPhase, rejectPlannerPhase) => {
       plannerParser.on('headerParsed', (header: ParsedHeader) => {
-        this.#tracker.end(parseTaskID);
         overallDesignTheme = header.overallTheme;
         appName = header.appName;
         headerParsed = true;
@@ -85,7 +77,6 @@ export class Controller extends EventEmitter {
           rejectPlannerPhase(new Error('Module received before header was fully processed.'));
           return;
         }
-        this.#tracker.end(PerformanceType.parseMoudle);
         const mourdleParentId = 'moudle' + taskPromises.length;
         const { allTasks } = createModuleNodeAndTask(module, overallDesignTheme, mourdleParentId);
         this.#emitData(EmitterEventType.append, { type: FragmentType.Moudle, fragment: { id: module.parentId, content: module.layout } });
@@ -93,9 +84,7 @@ export class Controller extends EventEmitter {
           const p = (async () => {
             try {
               console.log(`Generating fragment for task: ${task.moudle.name}`);
-              const taskID = this.#tracker.start(task.moudle.name);
               await generateFragmentStream(task, this);
-              this.#tracker.end(taskID);
             } catch (error) {
               console.error(`Error generating fragment for task ${task}:`, error);
             }
@@ -105,7 +94,6 @@ export class Controller extends EventEmitter {
       });
 
       plannerParser.on('parseEnd', () => {
-        this.#tracker.end(plannerTaskID);
         Promise.all(taskPromises).then(() => {
           resolvePlannerPhase();
         }).catch(rejectPlannerPhase);
@@ -121,8 +109,6 @@ export class Controller extends EventEmitter {
       plannerLLMStream.on('error', (err: Error) => rejectPlannerPhase(err));
     });
     await plannerStreamPromise;
-    this.#tracker.end(totalTaskID);
-    this.#tracker.report();
   }
 
 

@@ -1,24 +1,17 @@
 import { buildApiHandler, LlmMessageParam } from '../api'
 import { ApiConfiguration } from '../shared/api'
 import { ApiStream } from '../api/transform/stream';
-import { getApiKey, getApiModelId, getApiProvider } from './env';
+import { getApiKey, getApiModelId, getApiProvider } from '@transmute/env';
+import { ApiProvider } from '../shared/api';
 
 export function callLLM(input, systemPrompt): ApiStream {
   const apiKey = getApiKey();
-  const apiProvider = getApiProvider();
+  const apiProvider = getApiProvider() as ApiProvider;
   const apiModelId = getApiModelId();
   const config: ApiConfiguration = {
     apiProvider,
     apiModelId,
-    qwenApiLine: 'china'
-  }
-  if (apiProvider === 'doubao') {
-    config.doubaoApiKey = apiKey
-  } else if (apiProvider === 'qwen') {
-    config.qwenApiKey = apiKey
-  } else {
-    console.error('Unsupported API provider:', apiProvider);
-    return null;
+    apiKey
   }
   const handler = buildApiHandler(config)
   const messages: LlmMessageParam[] = [{ role: 'user', content: input }];

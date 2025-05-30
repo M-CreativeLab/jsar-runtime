@@ -230,18 +230,22 @@ static void OnPlatformSetup(UnityEmbedder *embedder)
       char enableResourcesCachingStr[PROP_VALUE_MAX];
       if (__system_property_get("jsar.resources.caching", enableResourcesCachingStr) >= 0)
         setenv("JSAR_RESOURCES_CACHING", enableResourcesCachingStr, 1);
-      char setupEndpointStr[PROP_VALUE_MAX];
-      if (__system_property_get("jsar.setup.threepio.api.endpoint", setupStr) >= 0)
-        setenv("JSAR_SETUP_THREEPIO_API_ENDPOINT", setupStr, 1);
-      char setupAPIProviderStr[PROP_VALUE_MAX];
-      if (__system_property_get("jsar.setup.threepio.api.provider", setupAPIProviderStr) >= 0)
-        setenv("JSAR_SETUP_THREEPIO_API_PROVIDER", setupAPIProviderStr, 1);
-      char setupAPIKeyStr[PROP_VALUE_MAX];
-      if (__system_property_get("jsar.setup.threepio.api.key", setupAPIKeyStr) >= 0)
-        setenv("JSAR_SETUP_THREEPIO_API_KEY", setupAPIKeyStr, 1);
-      char setupModeldStr[PROP_VALUE_MAX];
-      if (__system_property_get("jsar.setup.threepio.api.modelid", setupModeldStr) >= 0)
-        setenv("JSAR_SETUP_THREEPIO_API_MODELID", setupModeldStr, 1);
+
+      {
+        // Set the environment variables for the Threepio.
+        char endpointStr[PROP_VALUE_MAX];
+        if (__system_property_get("jsar.setup.threepio.api.endpoint", endpointStr) >= 0)
+          setenv("JSAR_SETUP_THREEPIO_API_ENDPOINT", endpointStr, 1);
+        char providerStr[PROP_VALUE_MAX];
+        if (__system_property_get("jsar.setup.threepio.api.provider", providerStr) >= 0)
+          setenv("JSAR_SETUP_THREEPIO_API_PROVIDER", providerStr, 1);
+        char apiKeyStr[PROP_VALUE_MAX];
+        if (__system_property_get("jsar.setup.threepio.api.key", apiKeyStr) >= 0)
+          setenv("JSAR_SETUP_THREEPIO_API_KEY", apiKeyStr, 1);
+        char modeldStr[PROP_VALUE_MAX];
+        if (__system_property_get("jsar.setup.threepio.api.modelid", modeldStr) >= 0)
+          setenv("JSAR_SETUP_THREEPIO_API_MODELID", modeldStr, 1);
+      }
 
       char enableRendererTracingStr[PROP_VALUE_MAX];
       if (

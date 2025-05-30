@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events';
 import { S_HTML_START, S_NODE_START, S_CSS_START, S_HTML_END } from '../separators';
 import { ApiStreamChunk } from '../../../api/transform/stream';
-import { emitDataFun } from '../../../utils/emit';
 import { EmitterEventType, FragmentType } from '../interfaces';
 
 // Simplified ParseState enum
@@ -53,7 +52,7 @@ export class StreamHtmlParser {
   }
 
   #emitHtmlFragment(parentId: string | null, htmlElement: string): void {
-    emitDataFun(this.#emiter, EmitterEventType.append, {
+    this.#emitDataFun(this.#emiter, EmitterEventType.append, {
       type: FragmentType.HTML,
       fragment: { parentId, content: htmlElement }
     });
@@ -61,7 +60,7 @@ export class StreamHtmlParser {
   }
 
   #emitCssFragment(rule: string): void {
-    emitDataFun(this.#emiter, EmitterEventType.append, {
+    this.#emitDataFun(this.#emiter, EmitterEventType.append, {
       type: FragmentType.CSS,
       fragment: rule
     });
@@ -73,11 +72,11 @@ export class StreamHtmlParser {
 
     // End previous stream type
     if (this.#currentStreamType === 'CSS') {
-      emitDataFun(this.#emiter, 'cssStreamEnd', null);
+      this.#emitDataFun(this.#emiter, 'cssStreamEnd', null);
       this.#log('Emitted cssStreamEnd');
     }
     if (this.#currentStreamType === 'HTML') {
-      emitDataFun(this.#emiter, 'htmlStreamEnd', null);
+      this.#emitDataFun(this.#emiter, 'htmlStreamEnd', null);
       this.#log('Emitted htmlStreamEnd');
     }
 
@@ -85,11 +84,11 @@ export class StreamHtmlParser {
 
     // Start new stream type
     if (this.#currentStreamType === 'CSS') {
-      emitDataFun(this.#emiter, 'cssStreamStart', null);
+      this.#emitDataFun(this.#emiter, 'cssStreamStart', null);
       this.#log('Emitted cssStreamStart');
     }
     if (this.#currentStreamType === 'HTML') {
-      emitDataFun(this.#emiter, 'htmlStreamStart', null);
+      this.#emitDataFun(this.#emiter, 'htmlStreamStart', null);
       this.#log('Emitted htmlStreamStart');
     }
   }
@@ -97,7 +96,7 @@ export class StreamHtmlParser {
   #emitStreamEnd(): void {
     // Ensure any active sub-stream is closed before the main stream ends
     this.#changeStreamType(null); // This will close any open CSS or HTML stream
-    emitDataFun(this.#emiter, 'streamEnd', null);
+    this.#emitDataFun(this.#emiter, 'streamEnd', null);
     this.#log('Emitted streamEnd. Full content received:', this.#htmlContent);
   }
 
@@ -178,5 +177,8 @@ export class StreamHtmlParser {
   #log(...msg: any[]): void {
     // For debugging, uncomment the line below
     console.log('StreamParser taskid:', this.#taskid, ...msg);
+  }
+  #emitDataFun(emitter: EventEmitter, eventType: string, data: any): void {
+    emitter.emit(eventType, data);
   }
 }

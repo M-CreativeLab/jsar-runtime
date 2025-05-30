@@ -1,41 +1,29 @@
 import type { ChatCompletionCreateParamsBase } from "openai/resources/chat/completions";
 
 export type MoudleInfo = Omit<ChatCompletionCreateParamsBase, 'messages' | 'model'>;
+
 export type ApiProvider = | 'qwen' | 'doubao';
+
+export interface ApiHandlerOptions {
+  apiModelId?: string;
+  apiKey?: string;
+}
+
 export type ApiConfiguration = ApiHandlerOptions & {
   apiProvider?: ApiProvider;
 };
 
-export interface ApiHandlerOptions {
-  apiModelId?: string;
-  qwenApiKey?: string;
-  doubaoApiKey?: string;
-  qwenApiLine?: string;
-}
-
 // Qwen
 // https://bailian.console.aliyun.com/
-export type MainlandQwenModelId = keyof typeof mainlandQwenModels;
-export type InternationalQwenModelId = keyof typeof internationalQwenModels;
-export const internationalQwenDefaultModelId: InternationalQwenModelId = 'qwen-plus-latest';
-export const mainlandQwenDefaultModelId: MainlandQwenModelId = 'qwen-plus-latest';
+export type QwenModelId = keyof typeof mainlandQwenModels;
+export const mainlandQwenDefaultModelId: QwenModelId = 'qwen-plus-latest';
 
-export const internationalQwenModels = {
+export const mainlandQwenModels = {
   'qwen3-235b-a22b': {
     max_completion_tokens: 129_024,
   },
-
   'qwen-plus-latest': {
     max_completion_tokens: 129_024,
-
-  }
-} as const satisfies Record<string, MoudleInfo>;
-
-export const mainlandQwenModels = {
-  'qwen-plus-latest': {
-    max_completion_tokens: 129_024,
-
-
   }
 } as const satisfies Record<string, MoudleInfo>;
 
@@ -53,4 +41,3 @@ export const doubaoModels = {
 
   }
 } as const satisfies Record<string, MoudleInfo>;
-

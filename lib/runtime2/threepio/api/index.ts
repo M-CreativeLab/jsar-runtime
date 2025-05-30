@@ -8,10 +8,6 @@ export type LlmMessageParam = Anthropic.Messages.MessageParam;
 
 /**
  * Interface for define APIs to a specific large language model on cloud.
- *
- * The `ApiHandler` interface provides methods for sending messages to a model, retrieving model information,
- * and optionally obtaining usage statistics for API streams.
- * 
  * @interface ApiHandler
  * @returns A promise that resolves to an `ApiStreamUsageChunk` object containing usage data, or `undefined` if not available.
  */

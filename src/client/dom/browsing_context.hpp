@@ -34,12 +34,12 @@ namespace dom
         document = make_shared<DocumentType>(getSharedPtr<BrowsingContext>(), true);
       else
         throw std::runtime_error("Unsupported document type");
-      if (input_type == InputType::Text)
+      if (input_type == InputType::Source)
         document->setSource(url, true);
-      else if (input_type == InputType::URL)
+      else if (input_type == InputType::Source)
         document->setUrl(url);
       else
-        throw std::runtime_error("Unsupported source text type");
+        assert(false && "The input type must be url or source");
       documents.push_back(document);
       return document;
     }

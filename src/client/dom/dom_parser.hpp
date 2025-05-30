@@ -16,7 +16,7 @@ namespace dom
   enum class InputType
   {
     URL,
-    Text,
+    Source,
   };
   class DOMParser
   {

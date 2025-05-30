@@ -9,7 +9,7 @@ import {
 } from '../../shared/api';
 import { convertToOpenAiMessages } from '../transform/openaiFormat';
 import { ApiStream } from '../transform/stream';
-import { getEndpoint } from '../../utils/env';
+import { getEndpoint } from '@transmute/env';
 
 export class DoubaoHandler implements ApiHandler {
   #options: ApiHandlerOptions;
@@ -17,10 +17,9 @@ export class DoubaoHandler implements ApiHandler {
 
   constructor(options: ApiHandlerOptions) {
     this.#options = options;
-    const baseURL = getEndpoint();
     this.#client = new OpenAI({
-      baseURL,
-      apiKey: this.#options.doubaoApiKey,
+      baseURL: getEndpoint(),
+      apiKey: this.#options.apiKey,
     });
   }
 
@@ -29,16 +28,17 @@ export class DoubaoHandler implements ApiHandler {
     if (modelId in doubaoModels) {
       const id = modelId as DoubaoModelId;
       return { id, info: doubaoModels[id] };
+    } else {
+      return {
+        id: doubaoDefaultModelId,
+        info: doubaoModels[doubaoDefaultModelId],
+      };
     }
-    return {
-      id: doubaoDefaultModelId,
-      info: doubaoModels[doubaoDefaultModelId],
-    };
   }
 
   async *createMessage(systemPrompt: string, messages: LlmMessageParam[]): ApiStream {
     const model = this.getModel();
-    let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+    const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
       ...convertToOpenAiMessages(messages),
     ];
