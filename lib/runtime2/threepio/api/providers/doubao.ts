@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { Anthropic } from '@anthropic-ai/sdk';
+import type { Anthropic } from '@anthropic-ai/sdk';
 import { ApiHandler } from '..';
 import { ApiHandlerOptions, doubaoDefaultModelId, DoubaoModelId, doubaoModels, ModelInfo } from '../../shared/api';
 import { convertToOpenAiMessages } from '../transform/openaiFormat';
