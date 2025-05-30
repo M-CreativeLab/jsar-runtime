@@ -11,8 +11,8 @@ mainstream 3D engines like [Unity][], [UnrealEngine][], and RealityKit.
 - 🎯 **3D-First Design** - Unlike traditional browsers, JSAR is optimized from the ground up for 3D and spatial computing
 - 🔧 **Easy Integration** - Supports multiple rendering backends and platform integrations
 - 📱 **Cross-Platform Compatible** - Supports both Android and macOS platforms
-- ⚡ **High Performance** - Built with Rust for exceptional performance
-- 🌐 **Web Standards Compliant** - Supports WebXR, WebGL, Web APIs, and other modern web standards
+- ⚡ **High Performance** - A builtin ECS to achieve the GPU-driven renderer for elements
+- 🌐 **Web Standards Compliant** - Supports WebXR, WebGL, Web APIs, and other modern Web standards
 
 ## Overview
 
