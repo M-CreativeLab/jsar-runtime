@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
-import { S_HTML_START, S_NODE_START, S_CSS_START, S_HTML_END } from '../prompt/separators';
-import { ApiStreamChunk } from '../../api/transform/stream';
-import { emitDataFun } from '../../utils/emit';
+import { S_HTML_START, S_NODE_START, S_CSS_START, S_HTML_END } from '../separators';
+import { ApiStreamChunk } from '../../../api/transform/stream';
+import { emitDataFun } from '../../../utils/emit';
 import { EmitterEventType, FragmentType } from '../interfaces';
 
 // Simplified ParseState enum

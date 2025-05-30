@@ -1,21 +1,12 @@
 import { buildApiHandler, LlmMessageParam } from '../api'
-import { ApiConfiguration, ApiProvider } from '../shared/api'
+import { ApiConfiguration } from '../shared/api'
 import { ApiStream } from '../api/transform/stream';
+import { getApiKey, getApiModelId, getApiProvider } from './env';
 
-function ask(
-  { input,
-    systemPrompt,
-    apiProvider,
-    apiKey,
-    apiModelId }:
-    {
-      input: string,
-      systemPrompt: string,
-      apiProvider: ApiProvider,
-      apiKey: string,
-      apiModelId: string
-    }
-): ApiStream {
+export function callLLM(input, systemPrompt): ApiStream {
+  const apiKey = getApiKey();
+  const apiProvider = getApiProvider();
+  const apiModelId = getApiModelId();
   const config: ApiConfiguration = {
     apiProvider,
     apiModelId,
@@ -33,4 +24,3 @@ function ask(
   const messages: LlmMessageParam[] = [{ role: 'user', content: input }];
   return handler.createMessage(systemPrompt, messages)
 }
-export { ask };

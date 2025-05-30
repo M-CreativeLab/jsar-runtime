@@ -26,7 +26,7 @@ export class DoubaoHandler implements ApiHandler {
 
   getModel(): { id: DoubaoModelId; info: MoudleInfo } {
     const modelId = this.#options.apiModelId;
-    if (modelId && modelId in doubaoModels) {
+    if (modelId in doubaoModels) {
       const id = modelId as DoubaoModelId;
       return { id, info: doubaoModels[id] };
     }

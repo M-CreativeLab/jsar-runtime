@@ -1,4 +1,4 @@
-import { PLANNER_HEADER_MARKER, PLANNER_MODULE_MARKER, PLANNER_END_MARKER } from './separators';
+import { PLANNER_HEADER_MARKER, PLANNER_MODULE_MARKER, PLANNER_END_MARKER } from '../separators';
 import { ParsedPlannerFields } from '../interfaces';
 
 export const PLANNER_PROMPT = `

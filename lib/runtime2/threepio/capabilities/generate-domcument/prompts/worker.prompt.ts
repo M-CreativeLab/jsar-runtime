@@ -1,4 +1,4 @@
-import { S_HTML_START, S_CSS_START, S_HTML_END, S_NODE_START } from './separators';
+import { S_HTML_START, S_CSS_START, S_HTML_END, S_NODE_START } from '../separators';
 
 export const HTML_FRAGMENT_TEMPLATE_PROMPT = `
 你是一个专业的**U设计和代码压缩大师**,可以根据目标设计出符合要求的页面元素并且专注于根据功能定义和页面结构,生成**极致紧凑、高度优化**的流式HTML片段和对应的**最小化CSS**。
@@ -27,8 +27,6 @@ parentId: {{PARENT_ID}}
     - **其他**: 其他自定义布局类型。
 - **description**: 功能模块的详细描述,包括其功能、交互方式等。需要按照这个描述来生成对应的HTML元素和CSS样式。
 - **parentId**: 功能模块的父容器ID,如果该功能模块是页面的直接子节点,则此处的 \`parentId\` 应为 \`NULL_PARENT\`。
-
-
 
 **输出协议（必须严格遵守,输出极致紧凑,无任何多余字符）**:
 1.  **只输出纯文本**,不含任何Markdown,不含任何解释。
@@ -68,15 +66,17 @@ ${S_NODE_START}ui-root:<input type="text" id="inp-name" placeholder="名称" />
 ${S_CSS_START}.kn:hover{background:#444}.
 ${S_HTML_END}
 \`\`\`
-**注意事项**:
-##注意:输出的顺序这很重要
-##注意:返回的元素idhe class 要尽可能短,不需要语义化只需要保持正确的关联关系,不要超过5个字符
-##注意:html css的输出每个元素需要要拆分的每个css规则都要以${S_CSS_START}开头 每个html元素都要以${S_NODE_START}开头
-##注意:按钮要有hover效果
-##注意:如何创建的html是容器节点要使用内连样式规则 例如: <div style="padding:10px;"></div>
-##注意:css的输出要尽可能的短,不需要多余的空格,换行,注释,颜色数据要使用简写(例如: background-color:#fff)
-##特别注意:div元素的必须使用完整的标签 **例如**<div></div>。**div** 禁止使用自闭标签<div/>。
-##特别注意:禁止容器样式
+
+##特别注意:
+- 所有 div 元素必须使用完整闭合标签，例如 \`<div></div>\`，严禁使用自闭合 \`<div/>\`。
+- 所有 HTML 必须符合严格模式(XHTML)。自闭合标签（如 \`<input/>\`, \`<img/>\`, \`<br/>\`）需以 \`/>\` 结尾，布尔属性需显式赋值（如 \`readonly="readonly"\`）。
+- 输出顺序必须严格遵循协议：先 \`${S_HTML_START}\`，再 \`${S_CSS_START}\`（基础样式），然后 \`${S_NODE_START}{parent_id}:{html元素}\`（按 DOM 深度优先），再 \`${S_CSS_START}\`（交互/效果样式），最后 \`${S_HTML_END}\`。
+- 每个 CSS 规则都要以 \`${S_CSS_START}\` 开头，每个 HTML 元素都要以 \`${S_NODE_START}\` 开头。
+- 所有标记和内容之间不得有多余空格、换行或注释。
+- 元素 id 和 class 尽量简短（≤5字符），只需保证关联正确，无需语义化。
+- 容器节点需使用内联样式（如 \`<div style="padding:10px;"></div>\`），禁止多余容器样式。
+- 按钮必须有 hover 效果。
+- CSS 尽量短小，颜色用简写（如 \`#fff\`）。
 
 现在,请根据用户需求,生成符合上述极致紧凑协议的流式HTML结构和内容,以及对应的最小化CSS样式:
 `;
