@@ -177,7 +177,7 @@ namespace client_cssom
     }
 
     // 3D Transforms
-    inline const bool hasTransform() const { return has_transform_; }
+    inline const bool hasTransform() const { return bitfields_.HasTransform(); }
     inline const values::computed::Transform &transform() const { return transform_; }
     inline const size_t applyTransformTo(glm::mat4 &matrix) const { return transform_.applyTo(matrix); }
 
@@ -229,7 +229,7 @@ namespace client_cssom
     values::CSSFloat flex_shrink_ = 1.0f;
 
     // Grid
-    // TODO
+    // TODO(yorkie): add grid properties when needed.
 
     // Visibility and UI
     std::optional<Visibility> visibility_ = Visibility::kVisible;
@@ -251,7 +251,33 @@ namespace client_cssom
     values::computed::Color background_color_ = values::computed::Color::Transparent();
 
     // 3D Transforms
-    bool has_transform_ = false;
     values::computed::Transform transform_;
+
+  private: // Bitfields for computed style properties.
+#define ADD_BOOLEAN_BITFIELD(PRIVATE_NAME, PUBLIC_NAME)               \
+public:                                                               \
+  bool PUBLIC_NAME() const { return PRIVATE_NAME; }                   \
+  void Set##PUBLIC_NAME(bool new_value) { PRIVATE_NAME = new_value; } \
+                                                                      \
+private:                                                              \
+  unsigned PRIVATE_NAME : 1
+
+    class ComputedStyleBitfields
+    {
+    public:
+      explicit ComputedStyleBitfields()
+          : has_transform_(false)
+      {
+      }
+
+      ADD_BOOLEAN_BITFIELD(has_display_, HasDisplay);
+      ADD_BOOLEAN_BITFIELD(has_box_sizing_, HasBoxSizing);
+      ADD_BOOLEAN_BITFIELD(has_overflow_x_, HasOverflowX);
+      ADD_BOOLEAN_BITFIELD(has_overflow_y_, HasOverflowY);
+      ADD_BOOLEAN_BITFIELD(has_transform_, HasTransform);
+    };
+#undef ADD_BOOLEAN_BITFIELD
+
+    ComputedStyleBitfields bitfields_;
   };
 }

@@ -208,13 +208,25 @@ namespace client_cssom
 
     // Box model properties
     if (name == "display")
+    {
       display_ = Parse::ParseSingleValue<values::computed::Display>(value);
+      bitfields_.SetHasDisplay(true);
+    }
     else if (name == "box-sizing")
+    {
       box_sizing_ = Parse::ParseSingleValue<values::computed::BoxSizing>(value);
+      bitfields_.SetHasBoxSizing(true);
+    }
     else if (name == "overflow-x")
+    {
       overflow_x_ = Parse::ParseSingleValue<values::computed::Overflow>(value);
+      bitfields_.SetHasOverflowX(true);
+    }
     else if (name == "overflow-y")
+    {
       overflow_y_ = Parse::ParseSingleValue<values::computed::Overflow>(value);
+      bitfields_.SetHasOverflowY(true);
+    }
 
     // Margin
     if (name == "margin-top")
@@ -355,7 +367,7 @@ namespace client_cssom
     else if (name == "transform")
     {
       transform_ = Parse::ParseSingleValue<values::specified::Transform>(value).toComputedValue(context);
-      has_transform_ = transform_.empty() == false;
+      bitfields_.SetHasTransform(transform_.empty() == false);
     }
   }
 
