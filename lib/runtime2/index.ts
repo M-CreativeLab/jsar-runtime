@@ -140,8 +140,10 @@ export class TransmuteRuntime2 extends EventTarget {
       case '.glb':
       case '.gltf':
         codeOrUrl = createModel3dViewer(codeOrUrl, { playAnimation: true });
-        urlBase = urlObj.href;
-        loadAsHTML = false;
+        if (codeOrUrl.indexOf('<xsml>') != -1) {
+          urlBase = urlObj.href;
+          loadAsHTML = false;
+        }
         break;
       case '.png':
       case '.jpg':
