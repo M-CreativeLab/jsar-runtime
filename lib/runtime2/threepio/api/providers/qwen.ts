@@ -21,9 +21,9 @@ export class QwenHandler implements ApiHandler {
 
   constructor(options: ApiHandlerOptions) {
     this.#options = options
-    const baseUrl = getEndpoint();
+    const baseURL = getEndpoint();
     this.#client = new OpenAI({
-      baseURL: baseUrl,
+      baseURL,
       apiKey: this.#options.qwenApiKey,
     })
   }
