@@ -9,7 +9,6 @@ import {
 } from '../../shared/api';
 import { convertToOpenAiMessages } from '../transform/openaiFormat';
 import { ApiStream } from '../transform/stream';
-import { getEndpoint } from '@transmute/env';
 
 export class DoubaoHandler implements ApiHandler {
   #options: ApiHandlerOptions;
@@ -18,8 +17,8 @@ export class DoubaoHandler implements ApiHandler {
   constructor(options: ApiHandlerOptions) {
     this.#options = options;
     this.#client = new OpenAI({
-      baseURL: getEndpoint(),
-      apiKey: this.#options.apiKey,
+      baseURL: options.endpoint,
+      apiKey: options.apiKey,
     });
   }
 

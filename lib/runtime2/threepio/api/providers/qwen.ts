@@ -2,14 +2,13 @@ import OpenAI from 'openai';
 import { ApiHandler, LlmMessageParam } from '..'
 import {
   ApiHandlerOptions,
-  mainlandQwenModels,
-  mainlandQwenDefaultModelId,
+  qwenModels,
+  qwenDefaultModelId,
   QwenModelId,
   MoudleInfo,
 } from '../../shared/api';
 import { convertToOpenAiMessages } from '../transform/openaiFormat';
 import { ApiStream } from '../transform/stream';
-import { getEndpoint } from '@transmute/env';
 
 export class QwenHandler implements ApiHandler {
   #options: ApiHandlerOptions
@@ -18,8 +17,8 @@ export class QwenHandler implements ApiHandler {
   constructor(options: ApiHandlerOptions) {
     this.#options = options
     this.#client = new OpenAI({
-      baseURL: getEndpoint(),
-      apiKey: this.#options.apiKey,
+      baseURL: options.endpoint,
+      apiKey: options.apiKey,
     })
   }
 
@@ -27,8 +26,8 @@ export class QwenHandler implements ApiHandler {
     const modelId = this.#options.apiModelId
     // Branch based on API line to let poor typescript know what to do
     return {
-      id: (modelId as QwenModelId) ?? mainlandQwenDefaultModelId,
-      info: mainlandQwenModels[modelId as QwenModelId] ?? mainlandQwenModels[mainlandQwenDefaultModelId],
+      id: (modelId as QwenModelId) ?? qwenDefaultModelId,
+      info: qwenModels[modelId as QwenModelId] ?? qwenModels[qwenDefaultModelId],
     }
   }
 

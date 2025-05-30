@@ -49,12 +49,12 @@ export class Operator {
   }
 
   /**
- * Saves the generated HTML content to a file.
- * @param html - The HTML content to be saved.
- * @param input - The input string used to generate the HTML content.
- * @description This method creates a timestamped filename based on the input string,
- * and saves the HTML content to a file in the specified directory.
- */
+   * Saves the generated HTML content to a file.
+   * @param html - The HTML content to be saved.
+   * @param input - The input string used to generate the HTML content.
+   * @description This method creates a timestamped filename based on the input string,
+   * and saves the HTML content to a file in the specified directory.
+   */
   public saveHtmlToFile(html: string, input: string): void {
     const timestamp = new Date().getTime();
     const sanitizedInput = input;//.substring(0, 50);
@@ -115,8 +115,7 @@ export class Operator {
       try {
         if (selectId === null || selectId === 'body') {
           appendHtml(content, document.body);
-        }
-        else {
+        } else {
           let parentElement = document.getElementById(selectId);
           if (!parentElement) {
             const newParentElement = parentElement = document.createElement('div');

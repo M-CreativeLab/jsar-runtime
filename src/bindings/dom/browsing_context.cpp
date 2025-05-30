@@ -33,7 +33,11 @@ namespace dombinding
     auto inputType = dom::InputType::URL;
     if (info.Length() >= 3 && info[3].IsString())
     {
-      inputType = dom::InputType::Source;
+      std::string value = info[3].ToString().Utf8Value();
+      if (value == "source")
+      {
+        inputType = dom::InputType::Source;
+      }
     }
     auto urlString = info[0].As<Napi::String>();
     dom::DOMParsingType parsingType = dom::DOMParsingType::HTML;

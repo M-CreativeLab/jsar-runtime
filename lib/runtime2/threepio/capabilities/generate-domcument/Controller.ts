@@ -5,7 +5,8 @@ import {
   FragmentType,
   ParsedHeader,
   ParsedModule,
-  LLMAPI
+  LLMAPI,
+  MoudleFragment
 } from './interfaces';
 import { StreamPlannerParser } from './parsers/StreamPlannerParser';
 import { createModuleNodeAndTask } from './TaskDecomposer';
@@ -15,11 +16,6 @@ import { generateFragmentStream } from './HTMLFragmentGenerator';
 
 export interface Controller {
   on(event: 'append', listener: (data: EmitData) => void): this;
-}
-
-export function createController(): Controller {
-  const plannerLLMAPI = new PlannerLLMAPI();
-  return new Controller(plannerLLMAPI);
 }
 
 class PlannerLLMAPI implements LLMAPI {
@@ -48,10 +44,9 @@ class PlannerLLMAPI implements LLMAPI {
 export class Controller extends EventEmitter {
   #plannerLLM: LLMAPI;
 
-  constructor(plannerLLM: PlannerLLMAPI) {
+  constructor() {
     super();
-    this.#plannerLLM = plannerLLM;
-
+    this.#plannerLLM = new PlannerLLMAPI();
   }
 
   public async generatePageStream(input: string) {
@@ -66,7 +61,7 @@ export class Controller extends EventEmitter {
         overallDesignTheme = header.overallTheme;
         appName = header.appName;
         headerParsed = true;
-        let layout = header.layout.replace(/height/g, 'min-height');
+        const layout = header.layout.replace(/height/g, 'min-height');
         console.log(`Header parsed with layout: ${layout}`);
         this.#emitData(EmitterEventType.append, { type: FragmentType.Header, fragment: { content: layout } });
       });
@@ -79,7 +74,7 @@ export class Controller extends EventEmitter {
         }
         const mourdleParentId = 'moudle' + taskPromises.length;
         const { allTasks } = createModuleNodeAndTask(module, overallDesignTheme, mourdleParentId);
-        this.#emitData(EmitterEventType.append, { type: FragmentType.Moudle, fragment: { id: module.parentId, content: module.layout } });
+        this.#emitData(EmitterEventType.append, { type: FragmentType.Moudle, fragment: { id: module.parentId, content: module.layout } as MoudleFragment });
         allTasks.forEach(task => {
           const p = (async () => {
             try {
@@ -110,7 +105,6 @@ export class Controller extends EventEmitter {
     });
     await plannerStreamPromise;
   }
-
 
   #emitData(event: string, data: EmitData) {
     this.emit(event, data);

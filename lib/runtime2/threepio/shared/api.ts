@@ -5,8 +5,9 @@ export type MoudleInfo = Omit<ChatCompletionCreateParamsBase, 'messages' | 'mode
 export type ApiProvider = | 'qwen' | 'doubao';
 
 export interface ApiHandlerOptions {
-  apiModelId?: string;
-  apiKey?: string;
+  apiModelId: string;
+  apiKey: string;
+  endpoint: string;
 }
 
 export type ApiConfiguration = ApiHandlerOptions & {
@@ -14,11 +15,10 @@ export type ApiConfiguration = ApiHandlerOptions & {
 };
 
 // Qwen
-// https://bailian.console.aliyun.com/
-export type QwenModelId = keyof typeof mainlandQwenModels;
-export const mainlandQwenDefaultModelId: QwenModelId = 'qwen-plus-latest';
+export type QwenModelId = keyof typeof qwenModels;
+export const qwenDefaultModelId: QwenModelId = 'qwen-plus-latest';
 
-export const mainlandQwenModels = {
+export const qwenModels = {
   'qwen3-235b-a22b': {
     max_completion_tokens: 129_024,
   },
@@ -28,8 +28,6 @@ export const mainlandQwenModels = {
 } as const satisfies Record<string, MoudleInfo>;
 
 // Doubao
-// https://www.volcengine.com/docs/82379/1298459
-// https://console.volcengine.com/ark/region:ark+cn-beijing/openManagement
 export type DoubaoModelId = keyof typeof doubaoModels;
 export const doubaoDefaultModelId: DoubaoModelId = 'doubao-1-5-pro-256k-250115';
 export const doubaoModels = {

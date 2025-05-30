@@ -1,7 +1,5 @@
-
-
 import { Capability } from '../interface'; // Adjust the path as needed
-import { Controller, createController } from './Controller';
+import { Controller } from './Controller';
 import { Operator } from './Operator';
 import { EmitterEventType } from './interfaces';
 
@@ -22,7 +20,7 @@ export class GenerateDocumentCapability implements Capability {
   #controller: Controller;
   #operator: Operator;
   constructor(browsingContext: Transmute.BrowsingContext) {
-    this.#controller = createController();
+    this.#controller = new Controller();
     this.#browsingContext = browsingContext;
     this.#operator = new Operator();
   }
@@ -44,12 +42,12 @@ export class GenerateDocumentCapability implements Capability {
         this.#operator.operate(this.#document, data);
       });
       await this.#controller.generatePageStream(input);
-      // const htmlcontext = `
-      // <html>
-      //   <head>${this.#document.head.innerHTML}</head>
-      //   <body>${this.#document.body.innerHTML}</body>
-      // </html>`;
-      this.#operator.saveHtmlToFile(this.#document.documentElement.innerHTML, input);
+      const htmlcontext = `
+      <html>
+        <head>${this.#document.head.innerHTML}</head>
+        <body>${this.#document.body.innerHTML}</body>
+      </html>`;
+      console.log('Agent: Generated HTML content:', htmlcontext);
     } catch (error) {
       console.error('Agent: Error creating task:', error);
     }

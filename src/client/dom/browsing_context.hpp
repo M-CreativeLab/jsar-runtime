@@ -36,7 +36,7 @@ namespace dom
         throw std::runtime_error("Unsupported document type");
       if (input_type == InputType::Source)
         document->setSource(url, true);
-      else if (input_type == InputType::Source)
+      else if (input_type == InputType::URL)
         document->setUrl(url);
       else
         assert(false && "The input type must be url or source");

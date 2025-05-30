@@ -48,20 +48,20 @@ export interface EmitData {
 /**
  * Base interface for all fragment types.
  */
-export interface Fragment { }
+export interface Fragment {
+  content: string;         // HTML content string
+}
 
 /**
  * Fragment representing header content.
  */
 export interface HeaderFragment extends Fragment {
-  content: string;         // Header content string
 }
 
 /**
  * Fragment representing module content.
  */
 export interface MoudleFragment extends Fragment {
-  content: string;         // Module content string
 }
 
 /**
@@ -69,14 +69,12 @@ export interface MoudleFragment extends Fragment {
  */
 export interface HtmlFragment extends Fragment {
   parentId: string;        // The parent element ID for this HTML fragment
-  content: string;         // HTML content string
 }
 
 /**
  * Fragment representing CSS content.
  */
 export interface CssFragment extends Fragment {
-  content: string;         // CSS content string
   id?: string;             // Optional ID for the CSS fragment
 }
 
