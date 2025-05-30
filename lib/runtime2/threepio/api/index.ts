@@ -1,8 +1,10 @@
 import type { Anthropic } from '@anthropic-ai/sdk';
-import { ApiConfiguration, CustomChatCompletionParams } from '../shared/api';
+import { ApiConfiguration, MoudleInfo } from '../shared/api';
 import { ApiStream, ApiStreamUsageChunk } from './transform/stream';
 import { DoubaoHandler } from './providers/doubao';
 import { QwenHandler } from './providers/qwen';
+
+export type LlmMessageParam = Anthropic.Messages.MessageParam;
 
 /**
  * Interface for define APIs to a specific large language model on cloud.
@@ -15,9 +17,9 @@ import { QwenHandler } from './providers/qwen';
  */
 export interface ApiHandler {
   //`createMessage` is used to send a system prompt and a list of messages to the model, returning a streaming response.
-  createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream;
+  createMessage(systemPrompt: string, messages: LlmMessageParam[]): ApiStream;
   // retrieves the model's identifier and related information.
-  getModel(): { id: string; info: CustomChatCompletionParams };
+  getModel(): { id: string; info: MoudleInfo };
   // (optional) provides usage statistics for the API stream, if available.
   getApiStreamUsage?(): Promise<ApiStreamUsageChunk | undefined>;
 }

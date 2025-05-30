@@ -1,6 +1,5 @@
-import type { Anthropic } from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
-import { ApiHandler } from '..'
+import { ApiHandler, LlmMessageParam } from '..'
 import {
   ApiHandlerOptions,
   mainlandQwenModels,
@@ -9,7 +8,7 @@ import {
   internationalQwenDefaultModelId,
   MainlandQwenModelId,
   InternationalQwenModelId,
-  CustomChatCompletionParams,
+  MoudleInfo,
 } from '../../shared/api';
 import { convertToOpenAiMessages } from '../transform/openaiFormat';
 import { ApiStream } from '../transform/stream';
@@ -28,7 +27,7 @@ export class QwenHandler implements ApiHandler {
     })
   }
 
-  getModel(): { id: MainlandQwenModelId | InternationalQwenModelId; info: CustomChatCompletionParams } {
+  getModel(): { id: MainlandQwenModelId | InternationalQwenModelId; info: MoudleInfo } {
     const modelId = this.#options.apiModelId
     // Branch based on API line to let poor typescript know what to do
     if (this.#options.qwenApiLine === 'china') {
@@ -46,7 +45,7 @@ export class QwenHandler implements ApiHandler {
     }
   }
 
-  async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+  async *createMessage(systemPrompt: string, messages: LlmMessageParam[]): ApiStream {
     const model = this.getModel();
     let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },

@@ -1,9 +1,8 @@
 import OpenAI from 'openai';
-import type { Anthropic } from '@anthropic-ai/sdk';
-import { ApiHandler } from '..';
+import { ApiHandler, LlmMessageParam } from '..';
 import {
   ApiHandlerOptions,
-  CustomChatCompletionParams,
+  MoudleInfo,
   doubaoDefaultModelId,
   DoubaoModelId,
   doubaoModels
@@ -25,7 +24,7 @@ export class DoubaoHandler implements ApiHandler {
     });
   }
 
-  getModel(): { id: DoubaoModelId; info: CustomChatCompletionParams } {
+  getModel(): { id: DoubaoModelId; info: MoudleInfo } {
     const modelId = this.#options.apiModelId;
     if (modelId && modelId in doubaoModels) {
       const id = modelId as DoubaoModelId;
@@ -37,7 +36,7 @@ export class DoubaoHandler implements ApiHandler {
     };
   }
 
-  async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+  async *createMessage(systemPrompt: string, messages: LlmMessageParam[]): ApiStream {
     const model = this.getModel();
     let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },

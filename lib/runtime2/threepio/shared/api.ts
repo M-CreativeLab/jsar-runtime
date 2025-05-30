@@ -1,6 +1,6 @@
 import type { ChatCompletionCreateParamsBase } from "openai/resources/chat/completions";
 
-export type CustomChatCompletionParams = Omit<ChatCompletionCreateParamsBase, 'messages' | 'model'>;
+export type MoudleInfo = Omit<ChatCompletionCreateParamsBase, 'messages' | 'model'>;
 export type ApiProvider = | 'qwen' | 'doubao';
 export type ApiConfiguration = ApiHandlerOptions & {
   apiProvider?: ApiProvider;
@@ -29,15 +29,15 @@ export const internationalQwenModels = {
     max_completion_tokens: 129_024,
 
   }
-} as const satisfies Record<string, CustomChatCompletionParams>;
+} as const satisfies Record<string, MoudleInfo>;
 
 export const mainlandQwenModels = {
   'qwen-plus-latest': {
     max_completion_tokens: 129_024,
-    
+
 
   }
-} as const satisfies Record<string, CustomChatCompletionParams>;
+} as const satisfies Record<string, MoudleInfo>;
 
 // Doubao
 // https://www.volcengine.com/docs/82379/1298459
@@ -52,5 +52,5 @@ export const doubaoModels = {
     max_completion_tokens: 12_288,
 
   }
-} as const satisfies Record<string, CustomChatCompletionParams>;
+} as const satisfies Record<string, MoudleInfo>;
 

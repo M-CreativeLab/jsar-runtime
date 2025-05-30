@@ -1,5 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk'
-import { buildApiHandler } from '../api'
+import { buildApiHandler, LlmMessageParam } from '../api'
 import { ApiConfiguration, ApiProvider } from '../shared/api'
 import { ApiStream } from '../api/transform/stream';
 
@@ -31,7 +30,7 @@ function ask(
     return null;
   }
   const handler = buildApiHandler(config)
-  const messages: Anthropic.Messages.MessageParam[] = [{ role: 'user', content: input }];
+  const messages: LlmMessageParam[] = [{ role: 'user', content: input }];
   return handler.createMessage(systemPrompt, messages)
 }
 export { ask };
