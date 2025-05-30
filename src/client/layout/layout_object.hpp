@@ -3,6 +3,7 @@
 #include <memory>
 #include <client/builtin_scene/scene.hpp>
 #include <client/cssom/css_style_declaration.hpp>
+#include <client/cssom/computed_style.hpp>
 #include <client/dom/types.hpp>
 
 #include "./constraint_space.hpp"
@@ -107,8 +108,8 @@ namespace client_layout
     void useEntity(std::shared_ptr<LayoutObject> other);
     void destroy();
 
-    std::optional<client_cssom::CSSStyleDeclaration> style() const;
-    const client_cssom::CSSStyleDeclaration &styleRef() const;
+    std::optional<client_cssom::ComputedStyle> style() const;
+    const client_cssom::ComputedStyle &styleRef() const;
 
     // The struct to represent if two fragments has differences.
     struct FragmentDifference
@@ -200,7 +201,7 @@ namespace client_layout
      * @param style The new style to update.
      * @returns `true` if the style is updated, otherwise `false`.
      */
-    bool setStyle(client_cssom::CSSStyleDeclaration style);
+    bool setStyle(client_cssom::ComputedStyle style);
 
     /**
      * This checks if there is a need to adjust the size of this object, and if so, it will adjust the size.
@@ -248,7 +249,7 @@ namespace client_layout
      * @param style The style to check.
      * @returns Whether the box is a fixed container.
      */
-    bool computeIsFixedContainer(const client_cssom::CSSStyleDeclaration &style) const;
+    bool computeIsFixedContainer(const client_cssom::ComputedStyle &style) const;
 
     /**
      * Returns `true` if style would make this object an absolute container.
@@ -256,7 +257,7 @@ namespace client_layout
      * @param style The style to check.
      * @returns Whether the box is an absolute container.
      */
-    bool computeIsAbsoluteContainer(const client_cssom::CSSStyleDeclaration &style) const;
+    bool computeIsAbsoluteContainer(const client_cssom::ComputedStyle &style) const;
 
     /**
      * It returns an enclosing non-anonymous block box for this element.
@@ -299,7 +300,7 @@ namespace client_layout
     virtual void formattingContextWillSet(DisplayType);
     virtual void formattingContextDidSet(FormattingContext &);
 
-    virtual void styleWillChange(client_cssom::CSSStyleDeclaration &newStyle);
+    virtual void styleWillChange(client_cssom::ComputedStyle &newStyle);
     virtual void styleDidChange();
 
     virtual void sizeWillChange(const Fragment &newSize);

@@ -10,8 +10,10 @@
 #include <common/events_v2/event_target.hpp>
 #include <client/classes.hpp>
 #include <client/per_process.hpp>
+#include <client/cssom/media_queries.hpp>
 #include <client/cssom/units.hpp>
 #include <client/cssom/css_style_declaration.hpp>
+#include <client/cssom/computed_style.hpp>
 #include <client/dom/dom_event_target.hpp>
 
 namespace browser
@@ -103,83 +105,32 @@ namespace browser
     Window(TrClientContextPerProcess *clientContext = TrClientContextPerProcess::Get());
 
   public:
-    /**
-     * @returns the name of the window.
-     */
     inline const std::string &name() const { return name_; }
-
-    /**
-     * @returns the origin of the window.
-     */
     inline const std::string &origin() const { return origin_; }
+    inline const client_cssom::Device &device() const { return device_; }
+    inline client_cssom::Device &device() { return device_; }
 
-    /**
-     * @returns true if the window is in fullscreen mode.
-     */
     inline bool fullscreen() const { return fullscreen_; }
+    inline float innerWidth() const { return inner_width_; }
+    inline float innerHeight() const { return inner_height_; }
+    inline float innerDepth() const { return inner_depth_; }
+    inline float outerWidth() const { return outer_width_; }
+    inline float outerHeight() const { return outer_height_; }
+    inline float outerDepth() const { return outer_depth_; }
 
-    /**
-     * @returns the inner width of the window.
-     */
-    inline float innerWidth() const { return innerWidth_; }
+    inline float scrollX() const { return scroll_x_; }
+    inline float scrollY() const { return scroll_y_; }
 
-    /**
-     * @returns the inner height of the window.
-     */
-    inline float innerHeight() const { return innerHeight_; }
+    inline float devicePixelRatio() const { return device_.devicePixelRatio(); }
+    inline float &devicePixelRatio() { return device_.devicePixelRatio(); }
 
-    /**
-     * @returns the inner depth of the window.
-     */
-    inline float innerDepth() const { return innerDepth_; }
-
-    /**
-     * @returns the outer width of the window.
-     */
-    inline float outerWidth() const { return outerWidth_; }
-
-    /**
-     * @returns the outer height of the window.
-     */
-    inline float outerHeight() const { return outerHeight_; }
-
-    /**
-     * @returns the outer depth of the window.
-     */
-    inline float outerDepth() const { return outerDepth_; }
-
-    /**
-     * @returns the horizontal scroll position of the window.
-     */
-    inline float scrollX() const { return scrollX_; }
-
-    /**
-     * @returns the vertical scroll position of the window.
-     */
-    inline float scrollY() const { return scrollY_; }
-
-    /**
-     * @returns the device pixel ratio of the window.
-     */
-    inline float devicePixelRatio() const { return devicePixelRatio_; }
-    inline float &devicePixelRatio() { return devicePixelRatio_; }
-
-    /**
-     * @returns the viewport of the window.
-     */
     inline TrViewport viewport() const
     {
-      return TrViewport(innerWidth_, innerHeight_, 0, 0);
+      auto viewport = device_.viewportSize();
+      return TrViewport(viewport.x, viewport.y, 0, 0);
     }
 
-    /**
-     * @returns the shared pointer to the window.
-     */
     inline std::shared_ptr<Window> self() { return shared_from_this(); }
-
-    /**
-     * @returns the document of the window.
-     */
     inline std::shared_ptr<dom::Document> document() const { return document_; }
 
   public:
@@ -190,7 +141,7 @@ namespace browser
      */
     inline void alert(const std::string &message)
     {
-      clientContext_->makeRpcCall("window.alert", {message});
+      client_context_->makeRpcCall("window.alert", {message});
     }
 
     /**
@@ -198,7 +149,7 @@ namespace browser
      */
     inline void close()
     {
-      clientContext_->makeRpcCall("window.close", {});
+      client_context_->makeRpcCall("window.close", {});
     }
 
     /**
@@ -211,7 +162,7 @@ namespace browser
     inline void open(const std::string &url, WindowTarget target,
                      const WindowFeatures &features = WindowFeatures())
     {
-      clientContext_->makeRpcCall("window.open", {url, to_string(target)});
+      client_context_->makeRpcCall("window.open", {url, to_string(target)});
     }
 
     /**
@@ -222,45 +173,47 @@ namespace browser
      */
     inline void prompt(const std::string &message, const std::string &defaultValue)
     {
-      clientContext_->makeRpcCall("window.prompt", {message, defaultValue});
+      client_context_->makeRpcCall("window.prompt", {message, defaultValue});
     }
 
     /**
      * Gets an object containing the values of all CSS properties of an element, after applying active stylesheets and resolving any basic
      * computation those values may contain.
      *
-     * @param element The element to get the computed style.
+     * @param elementOrTextNode The element or text node to get the computed style.
      * @param pseudoElt The optional pseudo-element to get the computed style.
+     * 
+     * @todo Implement the pseudo-element support.
      */
-    const client_cssom::CSSStyleDeclaration &getComputedStyle(std::shared_ptr<dom::Element> element,
-                                                              std::optional<std::string> pseudoElt = std::nullopt) const;
+    const client_cssom::ComputedStyle &getComputedStyle(std::shared_ptr<dom::Node> elementOrTextNode,
+                                                        std::optional<std::string> pseudoElt = std::nullopt) const;
 
   private:
     // Configure the document to the window.
     void configureDocument(std::shared_ptr<dom::Document> document)
     {
-      assert(isDocumentConfigured_ == false);
+      assert(is_document_configured_ == false);
       document_ = document;
-      isDocumentConfigured_ = true;
+      is_document_configured_ = true;
     }
 
   private: // Window properties
     std::string name_ = "";
     std::string origin_ = "";
+    client_cssom::Device device_ = client_cssom::Device();
     bool fullscreen_ = false;
-    float innerWidth_ = client_cssom::ScreenWidth;
-    float innerHeight_ = client_cssom::ScreenHeight;
-    float innerDepth_ = client_cssom::VolumeDepth;
-    float outerWidth_ = client_cssom::ScreenWidth;
-    float outerHeight_ = client_cssom::ScreenHeight;
-    float outerDepth_ = client_cssom::VolumeDepth;
-    float scrollX_ = 0.0f;
-    float scrollY_ = 0.0f;
-    float devicePixelRatio_ = 1.5f;
+    float inner_width_ = client_cssom::ScreenWidth;
+    float inner_height_ = client_cssom::ScreenHeight;
+    float inner_depth_ = client_cssom::VolumeDepth;
+    float outer_width_ = client_cssom::ScreenWidth;
+    float outer_height_ = client_cssom::ScreenHeight;
+    float outer_depth_ = client_cssom::VolumeDepth;
+    float scroll_x_ = 0.0f;
+    float scroll_y_ = 0.0f;
     std::shared_ptr<dom::Document> document_;
 
   private:
-    TrClientContextPerProcess *clientContext_; // The client context for making RPC calls
-    bool isDocumentConfigured_ = false;
+    TrClientContextPerProcess *client_context_; // The client context for making RPC calls
+    bool is_document_configured_ = false;
   };
 } // namespace browser

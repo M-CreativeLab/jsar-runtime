@@ -1,5 +1,6 @@
 export class ErrorEventImpl extends Event implements ErrorEvent {
   colno: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   error: any;
   filename: string;
   lineno: number;

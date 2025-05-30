@@ -43,13 +43,19 @@ export default class MouseEventImpl extends Event implements MouseEvent {
     this.movementY = eventInitDict.movementY;
   }
 
-  getModifierState(keyArg: string): boolean {
+  getModifierState(_keyArg: string): boolean {
     throw new Error("Method not implemented.");
   }
-  initMouseEvent(typeArg: string, canBubbleArg: boolean, cancelableArg: boolean, viewArg: Window, detailArg: number, screenXArg: number, screenYArg: number, clientXArg: number, clientYArg: number, ctrlKeyArg: boolean, altKeyArg: boolean, shiftKeyArg: boolean, metaKeyArg: boolean, buttonArg: number, relatedTargetArg: EventTarget): void {
+  initMouseEvent(_typeArg: string,
+    _canBubbleArg: boolean, _cancelableArg: boolean, _viewArg: Window, _detailArg: number,
+    _screenXArg: number, _screenYArg: number, _clientXArg: number, _clientYArg: number,
+    _ctrlKeyArg: boolean, _altKeyArg: boolean, _shiftKeyArg: boolean, _metaKeyArg: boolean,
+    _buttonArg: number,
+    _relatedTargetArg: EventTarget): void {
     throw new Error("Method not implemented.");
   }
-  initUIEvent(typeArg: string, bubblesArg?: boolean, cancelableArg?: boolean, viewArg?: Window, detailArg?: number): void {
+  initUIEvent(_typeArg: string,
+    _bubblesArg?: boolean, _cancelableArg?: boolean, _viewArg?: Window, _detailArg?: number): void {
     throw new Error("Method not implemented.");
   }
 }

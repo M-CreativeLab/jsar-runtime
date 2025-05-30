@@ -32,6 +32,6 @@ namespace dom
 
     // Update the sheet
     sheet_ = sheet;
-    getOwnerDocumentChecked().styleSheets_.push_back(sheet);
+    getOwnerDocumentChecked().appendStyleSheet(sheet);
   }
 }

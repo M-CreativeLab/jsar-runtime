@@ -1,4 +1,5 @@
 #include <functional>
+#include <client/per_process.hpp>
 #include <client/builtin_scene/scene.hpp>
 
 #include "./document-inl.hpp"
@@ -31,19 +32,19 @@ namespace dom
     if (TR_UNLIKELY(scene == nullptr))
       return;
 
+    const auto &clientEnv = TrClientContextPerProcess::GetEnvironmentRef();
     auto layoutView = document_->layoutView();
     if (root != nullptr)
     {
       // Compute each element's styles.
       auto adoptStyleForElement = [this](shared_ptr<HTMLElement> element)
       {
-        const auto &computedStyle = document_->defaultView()->getComputedStyle(element);
-        element->adoptStyle(computedStyle);
+        element->adoptStyle(document_->defaultView()->getComputedStyle(element));
         return true;
       };
-      auto adoptStyleForText = [](shared_ptr<Text> textNode)
+      auto adoptStyleForText = [this](shared_ptr<Text> textNode)
       {
-        textNode->adoptStyle(*textNode->style_);
+        textNode->adoptStyle(document_->defaultView()->getComputedStyle(textNode));
       };
       traverseElementOrTextNode(root, adoptStyleForElement, adoptStyleForText, TreverseOrder::PreOrder);
 
@@ -51,8 +52,8 @@ namespace dom
       // TODO(yorkie): compute the layout from the root?
       layoutView->computeLayout(targetSpace());
       layoutView->debugPrint("After layout", LayoutView::DebugOptions::Default()
-                                                 .withFormattingContext(true)
-                                                 .withDisabled(true));
+                                                 .withFormattingContext(clientEnv.debugLayoutFormattingContext)
+                                                 .withDisabled(clientEnv.debugLayoutTree == false));
     }
 
     // Visit the layout view to render CSS boxes.

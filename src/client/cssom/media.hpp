@@ -5,8 +5,43 @@
 #include <optional>
 #include <vector>
 
+#include "./style_traits.hpp"
+
 namespace client_cssom
 {
+  class MediaType : public Parse
+  {
+  private:
+    enum Tag : uint8_t
+    {
+      kScreen,
+      kPrint,
+    };
+
+  public:
+    static MediaType Screen() { return MediaType(kScreen); }
+    static MediaType Print() { return MediaType(kPrint); }
+
+  public:
+    MediaType() = default;
+  
+  private:
+    MediaType(Tag tag) : tag_(tag) {}
+
+  private:
+    bool parse(const std::string &input) override
+    {
+      if (input == "screen")
+        tag_ = kScreen;
+      else if (input == "print")
+        tag_ = kPrint;
+      return true;
+    }
+
+  private:
+    Tag tag_ = kScreen;
+  };
+
   class MediaList : std::vector<std::string>
   {
   public:

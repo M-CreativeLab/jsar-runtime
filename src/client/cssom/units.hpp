@@ -10,7 +10,7 @@ namespace client_cssom
   constexpr const int PPI = 92;
   
   // The device pixel ratio.
-  constexpr const int DevicePixelRatio = 1.0f;
+  constexpr const float DevicePixelRatio = 1.5f;
 
   // The screen width and height.
   constexpr const int ScreenWidth = 1920;

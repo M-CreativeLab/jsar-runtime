@@ -1,6 +1,10 @@
-#include <rapidjson/document.h>
+#include <iostream>
+#include <fstream>
+#include <filesystem>
 #include <semaphore.h>
-#include "common/debug.hpp"
+#include <rapidjson/document.h>
+#include <common/debug.hpp>
+
 #include "./entry.hpp"
 #include "./hive_server.hpp"
 
@@ -113,6 +117,21 @@ int TrClientEntry::onClientMode(TrDocumentRequestInit &init)
   clientContext->id = init.id;
   clientContext->url = init.url;
   clientContext->print();
+
+  {
+    /**
+     * Redirect the following stdout/stderr to the process log files.
+     */
+
+    string dir = clientContext->applicationCacheDirectory + "/logs/";
+    if (!filesystem::exists(dir))
+      filesystem::create_directory(dir);
+
+    string out_dst = dir + std::to_string(getpid()) + ".out.log";
+    string err_dst = dir + std::to_string(getpid()) + ".err.log";
+    freopen(out_dst.c_str(), "w", stdout);
+    freopen(err_dst.c_str(), "w", stderr);
+  }
   clientContext->start();
 
   TrScriptRuntimePerProcess runtime;

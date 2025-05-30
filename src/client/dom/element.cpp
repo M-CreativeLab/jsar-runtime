@@ -2,6 +2,7 @@
 #include <common/utility.hpp>
 #include <client/browser/window.hpp>
 #include <client/builtin_scene/ecs-inl.hpp>
+#include <client/cssom/values/computed/context.hpp>
 #include <client/html/html_element.hpp>
 #include <client/html/all_html_elements.hpp>
 
@@ -16,6 +17,7 @@ namespace dom
 {
   using namespace std;
   using namespace builtin_scene;
+  using namespace client_cssom;
 
   shared_ptr<Element> Element::CreateElement(pugi::xml_node node, shared_ptr<Document> ownerDocument)
   {
@@ -116,7 +118,7 @@ namespace dom
     Node::connectedCallback();
 
     initCSSBoxes();
-    adoptStyleDirectly(defaultStyle_);
+    adoptStyleDirectly(ComputedStyle::Make(defaultStyle_, shared_from_this()));
   }
 
   void Element::disconnectedCallback()
@@ -319,16 +321,12 @@ namespace dom
     boxes_.clear();
   }
 
-  bool Element::adoptStyle(const client_cssom::CSSStyleDeclaration &style)
+  bool Element::adoptStyle(const ComputedStyle &new_style)
   {
-    client_cssom::CSSStyleDeclaration newStyle = style;
-    newStyle.update(defaultStyle_, true); // Update the default style if these properties are not present.
-
-    if (adoptedStyle_ != nullptr &&      // Pass if `adoptedStyle_` is not set.
-        adoptedStyle_->equals(newStyle)) // Skip if the style is the same.
+    if (adoptedStyle_ != nullptr && // Pass if `adoptedStyle_` is not set.
+        ComputedStyle::ComputeDifference(new_style, *adoptedStyle_) == ComputedStyle::kEqual)
       return false;
-
-    return adoptStyleDirectly(newStyle);
+    return adoptStyleDirectly(new_style);
   }
 
   void Element::useSceneWithCallback(const function<void(builtin_scene::Scene &)> &callback)
@@ -646,7 +644,6 @@ namespace dom
 
   void Element::simulateMouseOver(const glm::vec3 &hitPointInWorld)
   {
-    setActionState(is_hovered_, true);
     dispatchEventInternal(events::MouseEvent::MouseOver());
     dispatchEventInternal(events::PointerEvent::PointerOver());
   }
@@ -710,9 +707,9 @@ namespace dom
     }
   }
 
-  bool Element::adoptStyleDirectly(const client_cssom::CSSStyleDeclaration &newStyle)
+  bool Element::adoptStyleDirectly(const client_cssom::ComputedStyle &new_style)
   {
-    adoptedStyle_ = make_unique<client_cssom::CSSStyleDeclaration>(newStyle);
+    adoptedStyle_ = make_unique<client_cssom::ComputedStyle>(new_style);
     styleAdoptedCallback();
 
     // Update the layout node style.

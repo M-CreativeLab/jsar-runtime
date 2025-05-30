@@ -137,8 +137,10 @@ namespace client_layout
     setScrollableOverflowFromLayoutResults();
 
     if (isScrollContainer())
+    {
       getScrollableArea()
           ->updateAfterLayout(formattingContext().liveFragment());
+    }
   }
 
   void LayoutBox::setScrollableOverflowFromLayoutResults()
@@ -209,7 +211,11 @@ namespace client_layout
   void LayoutBox::scrollBy(const glm::vec3 &offset)
   {
     if (TR_UNLIKELY(!isScrollContainer()))
+    {
+      cerr << "LayoutBox::scrollBy on " << debugName() << ": "
+           << "The box is not a scroll container, skipping scrollBy." << endl;
       return;
+    }
     getScrollableArea()->scrollBy(offset);
   }
 
@@ -218,10 +224,8 @@ namespace client_layout
     if (hasNonVisibleOverflow())
     {
       const auto &elementStyle = dom::Node::As<dom::Element>(node())->adoptedStyleRef();
-      string overflowXY = elementStyle.hasProperty("overflow")
-                              ? elementStyle.getPropertyValue("overflow")
-                              : "visible";
-      return overflowXY == "auto" || overflowXY == "scroll";
+      return elementStyle.overflowX().isAutoOrScroll() ||
+             elementStyle.overflowY().isAutoOrScroll();
     }
     else
     {
@@ -234,10 +238,7 @@ namespace client_layout
     if (hasNonVisibleOverflow())
     {
       const auto &elementStyle = dom::Node::As<dom::Element>(node())->adoptedStyleRef();
-      string overflowX = elementStyle.hasProperty("overflow-x")
-                             ? elementStyle.getPropertyValue("overflow-x")
-                             : "visible";
-      return overflowX == "auto" || overflowX == "scroll";
+      return elementStyle.overflowX().isAutoOrScroll();
     }
     else
     {
@@ -250,10 +251,7 @@ namespace client_layout
     if (hasNonVisibleOverflow())
     {
       const auto &elementStyle = dom::Node::As<dom::Element>(node())->adoptedStyleRef();
-      string overflowY = elementStyle.hasProperty("overflow-y")
-                             ? elementStyle.getPropertyValue("overflow-y")
-                             : "visible";
-      return overflowY == "auto" || overflowY == "scroll";
+      return elementStyle.overflowY().isAutoOrScroll();
     }
     else
     {
@@ -368,8 +366,8 @@ namespace client_layout
     auto m_style = style();
     if (!m_style.has_value())
       return;
-    setHasNonVisibleOverflow(m_style->getPropertyValue("overflow-x") != "visible" ||
-                             m_style->getPropertyValue("overflow-y") != "visible");
+
+    setHasNonVisibleOverflow(!m_style->overflowX().isVisible() || !m_style->overflowY().isVisible());
   }
 
   bool LayoutBox::isHorizontalWritingMode() const

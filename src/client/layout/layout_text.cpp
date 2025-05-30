@@ -82,7 +82,7 @@ namespace client_layout
 
     auto paragraph = paragraphBuilder->Build();
     paragraph->layout(maxWidth > 0
-                          ? maxWidth
+                          ? maxWidth + 1.0f // Add a small margin to avoid rounding issues
                           : numeric_limits<float>::infinity());
 
     // Use longest line width and height as the constraint space.
@@ -151,13 +151,13 @@ namespace client_layout
     context.setContentSizeEnabled(true);
   }
 
-  void LayoutText::styleWillChange(client_cssom::CSSStyleDeclaration &newStyle)
+  void LayoutText::styleWillChange(client_cssom::ComputedStyle &new_style)
   {
-    LayoutObject::styleWillChange(newStyle);
+    LayoutObject::styleWillChange(new_style);
 
     // TODO(yorkie): implement StyleDifference to check the changed properties to avoid the repeated update.
-    if (newStyle.hasProperty("text-transform") ||
-        newStyle.hasProperty("-webkit-text-security"))
+    if (new_style.hasProperty("text-transform") ||
+        new_style.hasProperty("-webkit-text-security"))
     {
       transformed_text_ = transformAndSecureText(plainText());
       is_text_content_dirty_ = true;
@@ -178,12 +178,18 @@ namespace client_layout
 
   void LayoutText::adjustTextContentSize(const ConstraintSpace &space)
   {
-    if (!is_text_content_dirty_)
+    if (last_space_.has_value() &&
+        space == last_space_.value() &&
+        !is_text_content_dirty_)
+    {
+      // No need to adjust if the space is not changed and the text content is not dirty.
       return;
+    }
 
     ConstraintSpace adjustedSpace = adjustSpace(space);
     formattingContext().setContentSize(adjustedSpace.width(),
                                        adjustedSpace.height());
+    last_space_ = adjustedSpace;
     is_text_content_dirty_ = false;
   }
 

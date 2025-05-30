@@ -48,14 +48,15 @@ namespace client_layout
     void entityDidCreate(builtin_scene::ecs::EntityId entity) override;
     void entityWillBeDestroyed(builtin_scene::ecs::EntityId entity) override;
     void formattingContextDidSet(FormattingContext &) override;
-    void styleWillChange(client_cssom::CSSStyleDeclaration &newStyle) override;
-    void didComputeLayoutOnce(const ConstraintSpace &avilableSpace) override final;
+    void styleWillChange(client_cssom::ComputedStyle &new_style) override;
+    void didComputeLayoutOnce(const ConstraintSpace &) override final;
 
     // Adjust the text's internal content size, call this when the text content is changed.
     void adjustTextContentSize(const ConstraintSpace &);
     std::string transformAndSecureText(const std::string &original) const;
 
   private:
+    std::optional<ConstraintSpace> last_space_;
     mutable std::optional<std::string> plain_text_;
     mutable std::optional<std::string> transformed_text_;
     mutable bool is_text_content_dirty_ = true;

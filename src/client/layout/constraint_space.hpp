@@ -32,6 +32,14 @@ namespace client_layout
       os << "ConstraintSpace(" << space.width() << ", " << space.height() << ")";
       return os;
     }
+    bool operator==(const ConstraintSpace &other) const
+    {
+      return size_ == other.size_;
+    }
+    bool operator!=(const ConstraintSpace &other) const
+    {
+      return !(*this == other);
+    }
 
   private:
     glm::vec2 size_;

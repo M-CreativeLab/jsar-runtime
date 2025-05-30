@@ -12,10 +12,10 @@ const image = document.querySelector('img');
 // }, 16);
 
 const div = document.getElementById('header');
-// setInterval(() => {
-//   const zAxis = Math.floor(15 + Math.sin(Date.now() / 500) * 10);
-//   div.style.transform = `translate3d(0, 0, ${zAxis}px)`;
-// }, 16);
+setInterval(() => {
+  const zAxis = Math.floor(15 + Math.sin(Date.now() / 500) * 10);
+  div.style.transform = `translate3d(0, 0, ${zAxis}px)`;
+}, 16);
 
 console.info('querySelector() =>', document.querySelector('.first'));
 {
@@ -28,21 +28,43 @@ console.info('querySelector() =>', document.querySelector('.first'));
 
 const main = document.querySelector('main');
 console.info('main.lastChild should be comment node', main.lastElementChild);
-main.addEventListener('click', (event) => {
-  console.info('main click', event);
+main.addEventListener('mouseenter', (event) => {
+  console.info('main mouseenter', event);
+});
+main.addEventListener('mouseleave', (event) => {
+  console.info('main mouseleave', event);
 });
 
 async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-(async () => {
+async function run(fn) {
+  try {
+    await fn();
+  } catch (err) {
+    console.warn('Error in main function:', err);
+  }
+}
+
+run(async () => {
   await sleep(1000);
   const some = document.createElement('div');
   some.style.setProperty('width', '100px');
   some.style.setProperty('height', '100px');
   some.style.setProperty('background-color', 'red');
   document.body.appendChild(some);
+
+  // test append style
+  await sleep(1000);
+  const style = document.createElement('style');
+  const cssSource = document.createTextNode(`
+    body {
+      background-color: lightgray;
+    }
+  `);
+  style.appendChild(cssSource);
+  document.head.appendChild(style);
 
   await sleep(1000);
   const bar = document.createElement('div');
@@ -65,4 +87,4 @@ async function sleep(ms) {
   //   '<div style="width:100px;height:100px;background-color:blue;font-size:30px;color:#fff">'
   //   + 'foobar'
   //   + '</div>';
-})();
+});

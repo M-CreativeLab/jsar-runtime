@@ -47,7 +47,7 @@ class TextDecoderForWin1252 implements TextDecoder {
   }
 }
 
-globalThis.TextDecoder = function _TextDecoder(label?: string, options?: TextDecoderOptions) {
+function _TextDecoder(label?: string, options?: TextDecoderOptions) {
   if (labelsOfWin1252.includes(label)) {
     return new TextDecoderForWin1252(options);
   } else {
@@ -56,4 +56,7 @@ globalThis.TextDecoder = function _TextDecoder(label?: string, options?: TextDec
       fatal: false,
     });
   }
-} as any;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+globalThis.TextDecoder = _TextDecoder as any;

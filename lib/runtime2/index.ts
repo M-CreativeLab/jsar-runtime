@@ -74,7 +74,7 @@ export class TransmuteRuntime2 extends EventTarget {
        */
       const exts = gl.getSupportedExtensions();
       console.info(`[WebGL] supported extensions(${exts.length}):`);
-      for (let extName of exts) {
+      for (const extName of exts) {
         console.info(`  - ${extName}`);
       }
       console.info(`[JSARDOM] version=${JSARDOM.version}`);
@@ -169,8 +169,10 @@ export class TransmuteRuntime2 extends EventTarget {
         loadAsHTML = false;
         break;
       case '.splinecode':
-        const sourceBlob = new Blob([createSplineDesignViewer(codeOrUrl)], { type: 'text/plain' });
-        codeOrUrl = URL.createObjectURL(sourceBlob);
+        {
+          const sourceBlob = new Blob([createSplineDesignViewer(codeOrUrl)], { type: 'text/plain' });
+          codeOrUrl = URL.createObjectURL(sourceBlob);
+        }
         break;
       default:
         break;

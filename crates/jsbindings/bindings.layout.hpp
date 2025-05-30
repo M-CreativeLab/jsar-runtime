@@ -91,7 +91,7 @@ namespace crates::layout2
 
   protected:
     virtual std::optional<T> parse(const std::string &input) = 0;
-    virtual std::string stringify() { return ""; }
+    virtual std::string stringify() const { return ""; }
 
   protected:
     T handle_;
@@ -438,7 +438,9 @@ namespace crates::layout2
 #undef XX
         return std::nullopt;
       }
-      std::string stringify() override
+
+    public:
+      std::string stringify() const override
       {
         switch (this->handle_)
         {
@@ -451,8 +453,6 @@ namespace crates::layout2
           return "";
         }
       }
-
-    public:
       friend std::ostream &operator<<(std::ostream &os, const T &value)
       {
         return os << value.stringify();
@@ -478,7 +478,9 @@ namespace crates::layout2
           return holocron::layout::AlignSelf::Auto;
         return BoxAlignmentProperty::parse(input);
       }
-      std::string stringify() override
+
+    public:
+      std::string stringify() const override
       {
         if (handle_ == holocron::layout::AlignSelf::Auto)
           return "auto";
@@ -971,18 +973,42 @@ namespace crates::layout2
   public:
     friend std::ostream &operator<<(std::ostream &os, const LayoutStyle &style)
     {
-      os << "LayoutStyle {" << std::endl;
-      os << "    display: " << style.display() << "," << std::endl;
-      os << "  boxSizing: " << style.boxSizing() << "," << std::endl;
-      os << "  overflowX: " << style.overflow().x() << "," << std::endl;
-      os << "  overflowY: " << style.overflow().y() << "," << std::endl;
-      os << "   position: " << style.position() << "," << std::endl;
-      os << "       size: " << "(" << style.width() << ", " << style.height() << ")," << std::endl;
-      os << "  [min]size: " << "(" << style.minWidth() << ", " << style.minHeight() << ")," << std::endl;
-      os << "  [max]size: " << "(" << style.maxWidth() << ", " << style.maxHeight() << ")," << std::endl;
-      os << "     margin: " << style.margin() << "," << std::endl;
-      os << "    padding: " << style.padding() << "," << std::endl;
-      os << "}";
+      std::ostringstream flex_descriptor;
+      flex_descriptor << "direction=" << style.flexDirection()
+                      << ", wrap=" << style.flexWrap()
+                      << ", basis=" << style.flexBasis()
+                      << ", grow=" << style.flexGrow()
+                      << ", shrink=" << style.flexShrink();
+
+      os << "LayoutStyle {" << std::endl
+         << "              display: " << style.display() << std::endl
+         << "           box-sizing: " << style.boxSizing() << std::endl
+         << "           overflow-x: " << style.overflow().x() << std::endl
+         << "           overflow-y: " << style.overflow().y() << std::endl
+         << "             position: " << style.position() << std::endl
+         << "                 size: " << "(" << style.width() << ", " << style.height() << ")" << std::endl
+         << "            [min]size: " << "(" << style.minWidth() << ", " << style.minHeight() << ")" << std::endl
+         << "            [max]size: " << "(" << style.maxWidth() << ", " << style.maxHeight() << ")" << std::endl
+         << "               margin: " << style.margin() << std::endl
+         << "              padding: " << style.padding() << std::endl
+         << "               border: " << style.border() << std::endl
+         << "                 flex: " << flex_descriptor.str() << std::endl
+         << "          align-items: " << style.alignItems() << std::endl
+         << "           align-self: " << style.alignSelf() << std::endl
+         << "        align-content: " << style.alignContent() << std::endl
+         << "        justify-items: " << style.justifyItems() << std::endl
+         << "         justify-self: " << style.justifySelf() << std::endl
+         << "      justify-content: " << style.justifyContent() << std::endl
+         << "   grid-template-rows: " << std::string(style.style_.gridAutoColumns) << std::endl
+         << "grid-template-columns: " << std::string(style.style_.gridTemplateColumns) << std::endl
+         << "       grid-auto-rows: " << std::string(style.style_.gridAutoRows) << std::endl
+         << "    grid-auto-columns: " << std::string(style.style_.gridAutoColumns) << std::endl
+         << "       grid-auto-flow: " << std::string(style.style_.gridAutoFlow) << std::endl
+         << "       grid-row-start: " << std::string(style.style_.gridRowStart) << std::endl
+         << "         grid-row-end: " << std::string(style.style_.gridRowEnd) << std::endl
+         << "    grid-column-start: " << std::string(style.style_.gridColumnStart) << std::endl
+         << "      grid-column-end: " << std::string(style.style_.gridColumnEnd) << std::endl
+         << "}";
       return os;
     }
     operator holocron::layout::Style() const { return style_; }
