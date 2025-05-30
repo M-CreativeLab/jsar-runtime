@@ -30,7 +30,15 @@ namespace dombinding
       Napi::TypeError::New(env, "Expected a string at least").ThrowAsJavaScriptException();
       return env.Undefined();
     }
-
+    auto inputType = dom::InputType::URL;
+    if (info.Length() >= 3 && info[3].IsString())
+    {
+      std::string value = info[3].ToString().Utf8Value();
+      if (value == "source")
+      {
+        inputType = dom::InputType::Source;
+      }
+    }
     auto urlString = info[0].As<Napi::String>();
     dom::DOMParsingType parsingType = dom::DOMParsingType::HTML;
     if (info.Length() >= 2 && info[1].IsString())
@@ -55,7 +63,8 @@ namespace dombinding
     {
       try
       {
-        auto doc = contextImpl->create<dom::HTMLDocument>(urlString.Utf8Value(), parsingType);
+
+        auto doc = contextImpl->create<dom::HTMLDocument>(urlString.Utf8Value(), parsingType, inputType);
         contextImpl->setBaseURI(doc->baseURI);
 
         auto jsInstance = Document::NewInstance(env, doc);

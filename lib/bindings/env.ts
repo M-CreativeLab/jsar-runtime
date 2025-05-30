@@ -97,3 +97,27 @@ export function printSummary() {
  * Create an interval timer with 500ms to send keep alive update. It will be hangup when Script is busy.
  */
 setInterval(() => nativeContext.keepAlive(), 500);
+
+const envVariables = {
+  JSAR_SETUP_THREEPIO_API_KEY: 'JSAR_SETUP_THREEPIO_API_KEY',
+  JSAR_SETUP_THREEPIO_API_PROVIDER: 'JSAR_SETUP_THREEPIO_API_PROVIDER',
+  JSAR_SETUP_THREEPIO_API_MODELID: 'JSAR_SETUP_THREEPIO_API_MODELID',
+  JSAR_SETUP_THREEPIO_SYSTEM_PROMPT: 'JSAR_SETUP_THREEPIO_SYSPROMPT',
+  JSAR_SETUP_THREEPIO_API_ENDPOINT: 'JSAR_SETUP_THREEPIO_API_ENDPOINT',
+};
+
+export const getApiKey = (): string => {
+  return process.env[envVariables.JSAR_SETUP_THREEPIO_API_KEY] as string;
+};
+
+export const getApiProvider = (): string => {
+  return process.env[envVariables.JSAR_SETUP_THREEPIO_API_PROVIDER] as string;
+};
+
+export const getApiModelId = (): string => {
+  return process.env[envVariables.JSAR_SETUP_THREEPIO_API_MODELID] as string;
+};
+
+export const getEndpoint = (): string => {
+  return process.env[envVariables.JSAR_SETUP_THREEPIO_API_ENDPOINT] as string;
+};
