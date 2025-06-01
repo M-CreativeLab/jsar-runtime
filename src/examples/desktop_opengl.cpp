@@ -239,7 +239,7 @@ namespace jsar::example
       glfwMakeContextCurrent(windowCtx_->window);
       {
         // Get environment variables for OpenGL context
-        const char *str = getenv("JSAR_ENABLE_MULTISAMPLE");
+        const char *str = getenv("JSAR_DISABLE_MULTISAMPLE");
         if (str != NULL && strcmp(str, "1") == 0)
           multisampleEnabled = false;
 
@@ -435,6 +435,10 @@ namespace jsar::example
                           GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT,
                           GL_NEAREST);
 
+        // Unbind the framebuffers before swapping buffers
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
         // Swap the buffers and poll events
         glfwSwapBuffers(windowCtx_->window);
         if (multisampleEnabled)
@@ -453,7 +457,7 @@ namespace jsar::example
     int height = 600;
     bool xrEnabled = false;
     bool multiPass = false;
-    bool multisampleEnabled = false;
+    bool multisampleEnabled = true;
     int nApps = 1;
     string requestUrl = "http://localhost:3000/spatial-element.xsml";
 

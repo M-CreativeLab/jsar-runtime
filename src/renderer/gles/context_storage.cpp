@@ -262,10 +262,28 @@ void OpenGLContextStorage::Restore()
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ElementArrayBufferId);
   }
 
-  if (m_FramebufferId >= 0)
-    glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
   if (m_RenderbufferId >= 0)
     glBindRenderbuffer(GL_RENDERBUFFER, m_RenderbufferId);
+  if (m_FramebufferId >= 0)
+    glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
+
+  // Restore the stencil render target after the framebuffer has been restored.
+  if (m_StencilRenderTarget > 0 &&
+      (m_StencilRenderTargetType == GL_RENDERBUFFER || m_StencilRenderTargetType == GL_TEXTURE))
+  {
+    if (m_StencilRenderTargetType == GL_RENDERBUFFER)
+      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
+                                m_StencilRenderTarget);
+    else if (m_StencilRenderTargetType == GL_TEXTURE)
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
+                             m_StencilRenderTarget,
+                             m_StencilTextureLevel);
+
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE)
+      DEBUG(LOG_TAG_ERROR, "Framebuffer is incomplete after restoring stencil attachment: 0x%04X", status);
+  }
+
   bindBuffersError = glGetError();
 
   for (auto it = m_TextureBindingsWithUnit.begin(); it != m_TextureBindingsWithUnit.end(); it++)
@@ -372,27 +390,31 @@ void OpenGLHostContextStorage::Record()
    * Recording the stencil parameters.
    */
   {
-    GLuint host_stencil_texture = 0;
     GLint host_stencil_type = GL_NONE;
+    glGetFramebufferAttachmentParameteriv(
+        GL_FRAMEBUFFER,
+        GL_STENCIL_ATTACHMENT,
+        GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE,
+        &host_stencil_type);
+    if (glGetError() == GL_NO_ERROR && host_stencil_type != GL_NONE)
+    {
+      glGetFramebufferAttachmentParameteriv(
+          GL_FRAMEBUFFER,
+          GL_STENCIL_ATTACHMENT,
+          GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,
+          (GLint *)&m_StencilRenderTarget);
+      m_StencilRenderTargetType = host_stencil_type;
 
-    // glGetFramebufferAttachmentParameteriv(
-    //     GL_FRAMEBUFFER,
-    //     GL_STENCIL_ATTACHMENT,
-    //     GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE,
-    //     &host_stencil_type);
-    // auto err = glGetError();
-    // cout << "Host stencil type: " << host_stencil_type << endl
-    //      << "error: " << err << endl;
-
-    // if (host_stencil_type != GL_NONE)
-    // {
-    //   glGetFramebufferAttachmentParameteriv(
-    //       GL_FRAMEBUFFER,
-    //       GL_STENCIL_ATTACHMENT,
-    //       GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,
-    //       (GLint *)&host_stencil_texture);
-    //   cout << "Host stencil texture: " << host_stencil_texture << endl;
-    // }
+      // Record the stencil texture level if the stencil attachment is a texture.
+      if (host_stencil_type == GL_TEXTURE)
+      {
+        glGetFramebufferAttachmentParameteriv(
+            GL_FRAMEBUFFER,
+            GL_STENCIL_ATTACHMENT,
+            GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL,
+            &m_StencilTextureLevel);
+      }
+    }
 
     // glStencilMask(mask)
     glGetIntegerv(GL_STENCIL_WRITEMASK, (GLint *)&m_StencilMask);
@@ -509,6 +531,7 @@ OpenGLAppContextStorage::OpenGLAppContextStorage(string name)
 
   // Stencil
   {
+    // TODO(yorkie): create a default stencil render target for this app.
     m_StencilTestEnabled = GL_FALSE;
     m_StencilMask = 0x01;
     m_StencilMaskBack = 0x01;

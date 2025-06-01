@@ -282,7 +282,7 @@ namespace renderer
 
     auto idStrBase = GetContentRendererId(getContent(), contextId);
     glContext = std::make_unique<OpenGLAppContextStorage>(idStrBase);
-    glContextForBackup = std::make_unique<OpenGLAppContextStorage>(idStrBase + "~backup");
+    glContextForBackup = std::make_unique<OpenGLAppContextStorage>(idStrBase + "~backup", glContext.get());
     isGraphicsContextsInitialized = true;
   }
 

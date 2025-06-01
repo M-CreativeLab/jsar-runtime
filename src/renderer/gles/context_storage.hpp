@@ -176,13 +176,20 @@ public:
     m_DitherEnabled = from->m_DitherEnabled;
     m_BlendEnabled = from->m_BlendEnabled;
     m_BlendFunc = OpenGLBlendingFunc(&from->m_BlendFunc);
-    m_StencilTestEnabled = from->m_StencilTestEnabled;
-    m_StencilMask = from->m_StencilMask;
-    m_StencilMaskBack = from->m_StencilMaskBack;
-    m_StencilFunc = from->m_StencilFunc;
-    m_StencilFuncBack = from->m_StencilFuncBack;
-    m_StencilOp = from->m_StencilOp;
-    m_StencilOpBack = from->m_StencilOpBack;
+
+    // Sub States: Stencil
+    {
+      m_StencilRenderTarget = from->m_StencilRenderTarget;
+      m_StencilRenderTargetType = from->m_StencilRenderTargetType;
+      m_StencilTextureLevel = from->m_StencilTextureLevel;
+      m_StencilTestEnabled = from->m_StencilTestEnabled;
+      m_StencilMask = from->m_StencilMask;
+      m_StencilMaskBack = from->m_StencilMaskBack;
+      m_StencilFunc = from->m_StencilFunc;
+      m_StencilFuncBack = from->m_StencilFuncBack;
+      m_StencilOp = from->m_StencilOp;
+      m_StencilOpBack = from->m_StencilOpBack;
+    }
     m_ScissorTestEnabled = from->m_ScissorTestEnabled;
     m_ScissorBox = from->m_ScissorBox;
     m_LineWidth = from->m_LineWidth;
@@ -261,6 +268,9 @@ protected: /** Global States */
   GLboolean m_BlendEnabled;
   OpenGLBlendingFunc m_BlendFunc;
   // Stencil
+  GLuint m_StencilRenderTarget;
+  GLenum m_StencilRenderTargetType = GL_NONE;
+  GLint m_StencilTextureLevel = 0;
   GLboolean m_StencilTestEnabled;
   GLuint m_StencilMask;
   GLuint m_StencilMaskBack;
