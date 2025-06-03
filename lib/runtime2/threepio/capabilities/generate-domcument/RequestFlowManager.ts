@@ -98,7 +98,6 @@ export class RequestFlowManager extends EventEmitter {
   }
 
   #emitData(event: string, data: EmitData) {
-    console.log(`Emitting event: ${event} with data:`, data);
     this.emit(event, data);
   }
 }

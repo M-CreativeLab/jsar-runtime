@@ -18,7 +18,6 @@ export class Operator {
     // this.#document.body.style.backgroundColor = 'rgba(255, 255, 255,0.2)';
     const { type, fragment } = data;
     const { id, content, parentId } = fragment;
-    console.log('Agent: Processed append key:', type, 'data:', fragment);
     switch (type) {
       case 'html':
         this.#appendHtml(document, parentId, content);
