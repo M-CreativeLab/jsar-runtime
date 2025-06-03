@@ -181,6 +181,18 @@ namespace client_cssom
     inline const values::computed::Transform &transform() const { return transform_; }
     inline const size_t applyTransformTo(glm::mat4 &matrix) const { return transform_.applyTo(matrix); }
 
+    // Transitions and animations
+    inline const std::vector<values::computed::TransitionProperty> &transitionProperties() const
+    {
+      return transition_properties_;
+    }
+    inline const values::computed::Time &transitionDuration() const { return transition_duration_; }
+    inline const values::computed::Time &transitionDelay() const { return transition_delay_; }
+    inline const values::computed::TimingFunction &transitionTimingFunction() const
+    {
+      return transition_timing_function_;
+    }
+
   private:
     void setPropertyInternal(const std::string &name, const std::string &value);
     void computeProperty(const std::string &name, const std::string &value, values::computed::Context &);
@@ -252,6 +264,12 @@ namespace client_cssom
 
     // 3D Transforms
     values::computed::Transform transform_;
+
+    // Transitions and animations
+    std::vector<values::computed::TransitionProperty> transition_properties_;
+    values::computed::Time transition_duration_ = values::computed::Time(1.0f);
+    values::computed::Time transition_delay_ = values::computed::Time(0.0f);
+    values::computed::TimingFunction transition_timing_function_;
 
   private: // Bitfields for computed style properties.
 #define ADD_BOOLEAN_BITFIELD(PRIVATE_NAME, PUBLIC_NAME)               \

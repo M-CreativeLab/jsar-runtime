@@ -3,11 +3,14 @@
 #include "./computed_style.hpp"
 #include "./style_traits.hpp"
 #include "./values/computed/context.hpp"
+#include "./values/specified/animation.hpp"
 #include "./values/specified/length.hpp"
 #include "./values/specified/border.hpp"
+#include "./values/specified/easing.hpp"
 #include "./values/specified/flex.hpp"
 #include "./values/specified/font.hpp"
 #include "./values/specified/color.hpp"
+#include "./values/specified/time.hpp"
 #include "./values/specified/transform.hpp"
 
 namespace client_cssom
@@ -368,6 +371,28 @@ namespace client_cssom
     {
       transform_ = Parse::ParseSingleValue<values::specified::Transform>(value).toComputedValue(context);
       bitfields_.SetHasTransform(transform_.empty() == false);
+    }
+
+    /**
+     * Transitions and animations
+     */
+    else if (name == "transition-property")
+    {
+      transition_properties_ = Parse::ParseSingleValue<values::specified::TransitionPropertySet>(value)
+                                   .toComputedValue(context);
+    }
+    else if (name == "transition-duration")
+    {
+      transition_duration_ = Parse::ParseSingleValue<values::specified::Time>(value).toComputedValue(context);
+    }
+    else if (name == "transition-delay")
+    {
+      transition_delay_ = Parse::ParseSingleValue<values::specified::Time>(value).toComputedValue(context);
+    }
+    else if (name == "transition-timing-function")
+    {
+      transition_timing_function_ =
+          Parse::ParseSingleValue<values::specified::TimingFunction>(value).toComputedValue(context);
     }
   }
 
