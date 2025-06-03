@@ -1,4 +1,3 @@
-import type EventEmitter from 'events';
 /**
  * This module defines interfaces and types used in the planner stage of the Threepio project.
  * It includes interfaces for parsed headers, modules, emitted data, and fragment types.
@@ -154,11 +153,8 @@ export const PerformanceType = {
   total: 'total',
 } as const;
 
-/**
- * Interface for the LLM API used in the planner stage.
- * Defines the method to send a prompt and receive a stream of responses.
- * @returns {EventEmitter} An EventEmitter that emits events for each chunk of the response.
- */
-export interface LLMAPI {
-  sendPromptStream(input: string): EventEmitter;
+// Callbacks for the StreamHtmlParser to handle parsed data
+export interface StreamHtmlParserCallbacks {
+  onData?: (eventType: string, data: EmitData) => void;
+  onError?: (error: Error) => void;
 }

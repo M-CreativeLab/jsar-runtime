@@ -118,6 +118,6 @@ export const getApiModelId = (): string => {
   return process.env[envVariables.JSAR_SETUP_THREEPIO_API_MODELID] as string;
 };
 
-export const getEndpoint = (): string => {
+export const getApiEndpoint = (): string => {
   return process.env[envVariables.JSAR_SETUP_THREEPIO_API_ENDPOINT] as string;
 };

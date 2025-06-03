@@ -8,7 +8,7 @@ import { FragmentType, ParsedModule, MoudleFragmentTask } from './interfaces';
  * @param appName The application name from the page header.
  * @returns An object containing the new SkeletonNode and its corresponding FragmentTask.
  */
-export function createModuleNodeAndTask(module: ParsedModule, overallDesignTheme: string, parentId: string): { allTasks: MoudleFragmentTask[] } {
+export function createModuleTask(module: ParsedModule, overallDesignTheme: string, parentId: string): { allTasks: MoudleFragmentTask[] } {
   module.parentId = parentId;
   // const htmltask = this.createTask(module, FragmentType.HTML, overallDesignTheme);
   const htmltask: MoudleFragmentTask = {

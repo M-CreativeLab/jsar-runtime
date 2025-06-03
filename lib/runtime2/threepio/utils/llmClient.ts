@@ -1,14 +1,14 @@
 import { buildApiHandler, LlmMessageParam } from '../api'
 import { ApiConfiguration } from '../shared/api'
 import { ApiStream } from '../api/transform/stream';
-import { getApiKey, getApiModelId, getApiProvider, getEndpoint } from '@transmute/env';
+import { getApiKey, getApiModelId, getApiProvider, getApiEndpoint } from '@transmute/env';
 import { ApiProvider } from '../shared/api';
 
 export function callLLM(input, systemPrompt): ApiStream {
   const apiKey = getApiKey();
   const apiProvider = getApiProvider() as ApiProvider;
   const apiModelId = getApiModelId();
-  const endpoint = getEndpoint();
+  const endpoint = getApiEndpoint();
   const config: ApiConfiguration = {
     apiProvider,
     apiModelId,

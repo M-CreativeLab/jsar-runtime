@@ -172,9 +172,9 @@ $ adb shell setprop jsar.setup.threepio.api.endpoint your-api-endpoint
 
 我们以阿里大模型举例  
 ```sh
-$ adb shell setprop jsar.setup.theepio.api.modelid qwen-plus-latest
-$ adb shell setprop jsar.setup.theepio.api.provider qwen
-$ adb shell setprop jsar.setup.theepio.api.key your-api-key
+$ adb shell setprop jsar.setup.threepio.api.modelid qwen-plus-latest
+$ adb shell setprop jsar.setup.threepio.api.provider qwen
+$ adb shell setprop jsar.setup.threepio.api.key your-api-key
 $ adb shell setprop jsar.setup.threepio.api.endpoint https://dashscope.aliyuncs.com/compatible-mode/v1
 ```
 

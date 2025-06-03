@@ -1,21 +1,26 @@
-import { EventEmitter } from 'events';
-import { MoudleFragmentTask } from './interfaces';
+import { MoudleFragmentTask, StreamHtmlParserCallbacks } from './interfaces';
 import { HTML_FRAGMENT_TEMPLATE_PROMPT } from './prompts/worker.prompt';
 import { StreamHtmlParser } from './parsers/StreamHtmlParser';
-import { callLLM } from '../../utils/llm';
+import { callLLM } from '../../utils/llmClient';
 
-export async function generateFragmentStream(task: MoudleFragmentTask, emt: EventEmitter): Promise<void> {
-  const { input, prompt } = createFragmentGeneratorPrompt(task);
-  const htmlParser = new StreamHtmlParser(task.moudle.name, emt);
+/**
+ *  Generates a stream of HTML fragments based on the provided task and callbacks.
+ * @param task 
+ * @param callbacks 
+ */
+export async function generateStructuralStream(task: MoudleFragmentTask, callbacks: StreamHtmlParserCallbacks): Promise<void> {
+  const { input, prompt } = createPrompt(task);
+  const htmlParser = new StreamHtmlParser(task.moudle.name, callbacks);
   try {
-    const stream = callLLM(input, prompt);
+    const stream = await callLLM(input, prompt);
     console.log(`Calling LLM with input: ${input}  prompt: ${prompt}`);
     console.log(`LLM Response:`, task.context.designSystemInfo);
-    for await (const chunk of await stream) {
+    for await (const chunk of stream) {
       htmlParser.parseChunk(chunk);
     }
   } catch (error) {
     console.error(`Error generating ${task.fragmentType}`, error);
+    callbacks.onError?.(error);
   }
 }
 
@@ -26,7 +31,7 @@ export async function generateFragmentStream(task: MoudleFragmentTask, emt: Even
  * @returns An object containing the input JSON string and the formatted prompt string.
  * @throws Will throw an error if the task context is not provided.
  */
-function createFragmentGeneratorPrompt(task: MoudleFragmentTask): { input: string, prompt: string } {
+function createPrompt(task: MoudleFragmentTask): { input: string, prompt: string } {
   const context = task.context;
   let prompt = HTML_FRAGMENT_TEMPLATE_PROMPT;
   prompt = prompt.replace(/{{PAGE_GOAL}}/g, context?.pageGoal || '');

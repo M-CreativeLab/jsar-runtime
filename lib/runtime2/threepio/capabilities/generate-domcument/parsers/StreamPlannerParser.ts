@@ -177,6 +177,7 @@ export class StreamPlannerParser extends EventEmitter {
   }
 
   #emitData(event: string, content?: any) {
+    console.log(`Planner Emitting event: ${event}`, content);
     this.emit(event, content);
   }
 
@@ -191,5 +192,13 @@ export class StreamPlannerParser extends EventEmitter {
       this.#state = PlannerParseState.WaitingForHeader;
     }
     // If no marker is at the start, we wait for more data or it's an error handled in processBuffer
+  }
+
+  public end() {
+    this.#processBuffer(true);
+    if (this.#state === PlannerParseState.Finished) {
+      this.#emitData('parseEnd');
+      console.log('Planner parsing completed successfully.', this.#currentModule);
+    }
   }
 }

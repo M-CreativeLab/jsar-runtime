@@ -1,7 +1,6 @@
-import { EventEmitter } from 'events';
 import { S_HTML_START, S_NODE_START, S_CSS_START, S_HTML_END } from '../separators';
 import { ApiStreamChunk } from '../../../api/transform/stream';
-import { EmitterEventType, FragmentType } from '../interfaces';
+import { EmitterEventType, FragmentType, StreamHtmlParserCallbacks } from '../interfaces';
 
 // Simplified ParseState enum
 enum ParseStateSimplified {
@@ -14,12 +13,12 @@ export class StreamHtmlParser {
   #taskid = '';
   #buffer: string = '';
   #state: ParseStateSimplified = ParseStateSimplified.Idle;
-  #emiter: EventEmitter;
+  #callbacks: StreamHtmlParserCallbacks;
   #htmlContent: string = ''; // For debugging or full content retrieval
   #currentStreamType: 'CSS' | 'HTML' | null = null;
 
-  constructor(taskid: string, emt: EventEmitter) {
-    this.#emiter = emt;
+  constructor(taskid: string, callbacks: StreamHtmlParserCallbacks) {
+    this.#callbacks = callbacks || {};
     this.#taskid = taskid;
   }
 
@@ -52,7 +51,7 @@ export class StreamHtmlParser {
   }
 
   #emitHtmlFragment(parentId: string | null, htmlElement: string): void {
-    this.#emitDataFun(this.#emiter, EmitterEventType.append, {
+    this.#emitDataFun(EmitterEventType.append, {
       type: FragmentType.HTML,
       fragment: { parentId, content: htmlElement }
     });
@@ -60,7 +59,7 @@ export class StreamHtmlParser {
   }
 
   #emitCssFragment(rule: string): void {
-    this.#emitDataFun(this.#emiter, EmitterEventType.append, {
+    this.#emitDataFun(EmitterEventType.append, {
       type: FragmentType.CSS,
       fragment: rule
     });
@@ -69,34 +68,13 @@ export class StreamHtmlParser {
 
   #changeStreamType(newType: 'CSS' | 'HTML' | null): void {
     if (this.#currentStreamType === newType) return;
-
-    // End previous stream type
-    if (this.#currentStreamType === 'CSS') {
-      this.#emitDataFun(this.#emiter, 'cssStreamEnd', null);
-      this.#log('Emitted cssStreamEnd');
-    }
-    if (this.#currentStreamType === 'HTML') {
-      this.#emitDataFun(this.#emiter, 'htmlStreamEnd', null);
-      this.#log('Emitted htmlStreamEnd');
-    }
-
     this.#currentStreamType = newType;
-
-    // Start new stream type
-    if (this.#currentStreamType === 'CSS') {
-      this.#emitDataFun(this.#emiter, 'cssStreamStart', null);
-      this.#log('Emitted cssStreamStart');
-    }
-    if (this.#currentStreamType === 'HTML') {
-      this.#emitDataFun(this.#emiter, 'htmlStreamStart', null);
-      this.#log('Emitted htmlStreamStart');
-    }
   }
 
   #emitStreamEnd(): void {
     // Ensure any active sub-stream is closed before the main stream ends
     this.#changeStreamType(null); // This will close any open CSS or HTML stream
-    this.#emitDataFun(this.#emiter, 'streamEnd', null);
+    this.#emitDataFun('streamEnd', null);
     this.#log('Emitted streamEnd. Full content received:', this.#htmlContent);
   }
 
@@ -178,7 +156,9 @@ export class StreamHtmlParser {
     // For debugging, uncomment the line below
     console.log('StreamParser taskid:', this.#taskid, ...msg);
   }
-  #emitDataFun(emitter: EventEmitter, eventType: string, data: any): void {
-    emitter.emit(eventType, data);
+  #emitDataFun(eventType: string, data: any): void {
+    if (this.#callbacks && typeof this.#callbacks.onData === 'function') {
+      this.#callbacks.onData(eventType, data);
+    }
   }
 }
