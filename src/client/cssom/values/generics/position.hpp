@@ -4,6 +4,7 @@
 #include <concepts>
 #include <optional>
 #include <crates/bindings.hpp>
+#include <common/utility.hpp>
 
 namespace client_cssom::values::generics
 {
@@ -69,8 +70,8 @@ namespace client_cssom::values::generics
   };
 
   template <typename H, typename V>
-    requires std::derived_from<H, PositionComponent> &&
-             std::derived_from<V, PositionComponent>
+    requires transmute::common::derived_from<H, PositionComponent> &&
+             transmute::common::derived_from<V, PositionComponent>
   class GenericPosition
   {
   public:

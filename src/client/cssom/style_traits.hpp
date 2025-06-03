@@ -3,6 +3,7 @@
 #include <concepts>
 #include <string>
 #include <glm/glm.hpp>
+#include <common/utility.hpp>
 
 namespace client_cssom
 {
@@ -19,7 +20,7 @@ namespace client_cssom
   public:
     // Parse a string to a single value of type T which is derived from Parse.
     template <typename T>
-      requires std::derived_from<T, Parse>
+      requires transmute::common::derived_from<T, Parse>
     static T ParseSingleValue(const std::string &input)
     {
       T value;
