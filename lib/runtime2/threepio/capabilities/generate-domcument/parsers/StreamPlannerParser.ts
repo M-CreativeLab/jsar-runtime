@@ -177,7 +177,6 @@ export class StreamPlannerParser extends EventEmitter {
   }
 
   #emitData(event: string, content?: any) {
-    console.log(`Planner Emitting event: ${event}`, content);
     this.emit(event, content);
   }
 

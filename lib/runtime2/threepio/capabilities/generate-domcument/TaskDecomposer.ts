@@ -8,9 +8,8 @@ import { FragmentType, ParsedModule, MoudleFragmentTask } from './interfaces';
  * @param appName The application name from the page header.
  * @returns An object containing the new SkeletonNode and its corresponding FragmentTask.
  */
-export function createModuleTask(module: ParsedModule, overallDesignTheme: string, parentId: string): { allTasks: MoudleFragmentTask[] } {
+export function createModuleTask(module: ParsedModule, overallDesignTheme: string, parentId: string): { task: MoudleFragmentTask } {
   module.parentId = parentId;
-  // const htmltask = this.createTask(module, FragmentType.HTML, overallDesignTheme);
   const htmltask: MoudleFragmentTask = {
     moudle: module,
     fragmentType: FragmentType.HTML,
@@ -19,5 +18,5 @@ export function createModuleTask(module: ParsedModule, overallDesignTheme: strin
       designSystemInfo: overallDesignTheme,
     },
   };
-  return { allTasks: [htmltask] };
+  return { task: htmltask };
 }

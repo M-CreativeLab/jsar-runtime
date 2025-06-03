@@ -55,19 +55,17 @@ export class RequestFlowManager extends EventEmitter {
         return;
       }
       const mourdleParentId = 'moudle' + taskPromises.length;
-      const { allTasks } = createModuleTask(module, '', mourdleParentId);
+      const { task } = createModuleTask(module, '', mourdleParentId);
       this.#emitData(EmitterEventType.append, { type: FragmentType.Moudle, fragment: { id: mourdleParentId, content: module.layout } as MoudleFragment });
-      allTasks.forEach(task => {
-        const p = (async () => {
-          try {
-            console.log(`Generating fragment for task: ${task.moudle.name}`);
-            await generateStructuralStream(task, { onData: this.#onMoudleData.bind(this), onError: this.#onMoudleError.bind(this) });
-          } catch (error) {
-            console.error(`Error generating fragment forƒ task ${task}:`, error);
-          }
-        })();
-        taskPromises.push(p);
-      });
+      const p = (async () => {
+        try {
+          console.log(`Generating fragment for task: ${task.moudle.name}`);
+          await generateStructuralStream(task, { onData: this.#onMoudleData.bind(this), onError: this.#onMoudleError.bind(this) });
+        } catch (error) {
+          console.error(`Error generating fragment forƒ task ${task}:`, error);
+        }
+      })();
+      taskPromises.push(p);
     });
     plannerParser.on('parseEnd', () => {
       console.log('Planner stage completed.');
