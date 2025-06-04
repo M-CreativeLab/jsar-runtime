@@ -29,6 +29,18 @@ function hash(algorithm: 'md5' | 'sha256', content: string | NodeJS.ArrayBufferV
     .digest('hex');
 }
 const getHashOfUri = (uri: string) => hash('md5', uri);
+const getOrigin = (url: string) => {
+  let origin: string = '';
+  try {
+    let urlObject = new URL(url);
+    origin = urlObject.hostname;
+    // TODO(yorkie): support the port?
+  } catch (_) {
+    origin = 'anonymous';
+    console.warn(`Use anonymous domain for the URL: ${url}`);
+  }
+  return origin;
+};
 
 /**
  * Parse the URL string is valid to create a new `URL` object.
@@ -194,17 +206,11 @@ class CacheStorage {
     this.#rootDirectory = rootDirectory;
   }
 
-  /**
-   * Make sure the cache directory exists. This case is for the situation that when the user modifies the 
-   * cache directory manually.
-   */
-  async #ensureCacheDir() {
-    const dir = this.#rootDirectory;
+  async #ensureDir(dir: string) {
     try {
       const dirStat = await fsPromises.stat(dir);
       if (!dirStat.isDirectory()) {
-        fsPromises.unlink(dir);
-        throw new Error('The cache directory must be a directory.');
+        throw new TypeError(`The cache directory "${dir}" must be a directory.`);
       }
     } catch (_err) {
       await fsPromises.mkdir(dir, { recursive: true });
@@ -215,7 +221,7 @@ class CacheStorage {
     if (this.#disabled) {
       return;
     }
-    await this.#ensureCacheDir();
+    await this.#ensureDir(this.#rootDirectory);
   }
 
   async get(url: string): Promise<ReadableCache | null> {
@@ -224,7 +230,7 @@ class CacheStorage {
     }
 
     const key = getHashOfUri(url);
-    const filename = path.join(this.#rootDirectory, key);
+    const filename = path.join(this.#rootDirectory, getOrigin(url), key);
     try {
       const fstats = await fsPromises.stat(filename);
       if (!fstats.isFile()) {
@@ -253,12 +259,14 @@ class CacheStorage {
       return;
     }
 
-    const cacheDir = this.#rootDirectory;
     const key = getHashOfUri(url);
+    const originDir = path.join(this.#rootDirectory, getOrigin(url));
+    await this.#ensureDir(originDir); // Ensure the origin directory exists.
+
     const filenames = {
-      content: path.join(cacheDir, key),
-      metadata: path.join(cacheDir, `${key}.metadata`),
-      md5file: path.join(cacheDir, `${key}.md5`),
+      content: path.join(originDir, key),
+      metadata: path.join(originDir, `${key}.metadata`),
+      md5file: path.join(originDir, `${key}.md5`),
     };
 
     let fields: Record<string, string>;
