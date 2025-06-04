@@ -3,6 +3,7 @@ import { RequestFlowManager } from './RequestFlowManager';
 import { DomOperator } from './DomOperator';
 import { EmitData } from './interfaces';
 import { getApiModelId, getApiProvider, getApiEndpoint } from '@transmute/env';
+import { threepioError, threepioLog } from '../../utils/threepioLog';
 
 export const APP_ROOT_ID = 'app-root';
 
@@ -36,14 +37,14 @@ export class GenerateDocumentCapability implements Capability {
    * Finally, it saves the generated HTML content to a file.
    */
   async request(input: string): Promise<void> {
-    console.log('Agent: Starting request with input:', input,
+    threepioLog('Agent: Starting request with input:', input,
       'provider', getApiProvider(),
       'modelid', getApiModelId(),
       'endpoint', getApiEndpoint());
     this.#document = this.#browsingContext.start(htmlText, 'text/html', 'text');
     try {
       this.#manager.on('append', (data: EmitData) => {
-        console.log('Agent: Received append data:', data);
+        threepioLog('Agent: Received append data:', data);
         this.#operator.operate(this.#document, data);
       });
       await this.#manager.executeFlow(input);
@@ -57,9 +58,9 @@ export class GenerateDocumentCapability implements Capability {
         </body>
       </html>
       `;
-      console.log('Agent: Generated HTML content:', htmlcontext);
+      threepioLog('Agent: Generated HTML content:', htmlcontext);
     } catch (error) {
-      console.error('Agent: Error creating task:', error);
+      threepioError('Agent: Error creating task:', error);
     }
   }
 }

@@ -2,6 +2,7 @@ import { MoudleFragmentTask, StreamHtmlParserCallbacks } from './interfaces';
 import { HTML_FRAGMENT_TEMPLATE_PROMPT } from './prompts/worker.prompt';
 import { StreamHtmlParser } from './parsers/StreamHtmlParser';
 import { callLLM } from '../../utils/llmClient';
+import { threepioError, threepioLog } from '../../utils/threepioLog';
 
 /**
  *  Generates a stream of HTML fragments based on the provided task and callbacks.
@@ -13,14 +14,13 @@ export async function generateStructuralStream(task: MoudleFragmentTask, callbac
   const input = JSON.stringify(task.moudle);
   const htmlParser = new StreamHtmlParser(task.moudle.name, callbacks);
   try {
+    threepioLog(`Calling LLM with input: ${input}  prompt: ${prompt.substring(0, 100)}...`);
     const stream = await callLLM(input, prompt);
-    console.log(`Calling LLM with input: ${input}  prompt: ${prompt}`);
-    console.log(`LLM Response:`, task.context.designSystemInfo);
     for await (const chunk of stream) {
       htmlParser.parseChunk(chunk);
     }
   } catch (error) {
-    console.error(`Error generating ${task.fragmentType}`, error);
+    threepioError(`Error generating ${task.fragmentType}`, error);
     callbacks.onError?.(error);
   }
 }
@@ -40,4 +40,3 @@ function createPrompt(task: MoudleFragmentTask): string {
   prompt = prompt.replace(/{{DESIGN_SYSTEM_INFO}}/g, context?.designSystemInfo || '');
   return prompt;
 }
-

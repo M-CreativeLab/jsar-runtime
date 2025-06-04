@@ -1,6 +1,7 @@
 import { S_HTML_START, S_NODE_START, S_CSS_START, S_HTML_END } from '../separators';
 import { ApiStreamChunk } from '../../../api/transform/stream';
 import { EmitData, MoudleParserEventType, FragmentType, HtmlFragment, StreamHtmlParserCallbacks } from '../interfaces';
+import { threepioLog } from '../../../utils/threepioLog';
 
 // Simplified ParseState enum
 enum ParseStateSimplified {
@@ -113,7 +114,7 @@ export class StreamHtmlParser {
           this.#state = ParseStateSimplified.Finished;
           this.#emitStreamEnd(); // This will also close any open CSS/HTML sub-stream
         } else {
-          console.log('Debug: ParsingStream state, line:', line);
+          threepioLog('Debug: ParsingStream state, line:', line);
           // Handle lines that are part of multi-line CSS rules or unexpected content
           if (this.#currentStreamType === 'CSS') {
             // Assuming multi-line CSS rules don't have S_CSS_START on each line
@@ -156,7 +157,7 @@ export class StreamHtmlParser {
 
   #log(...msg: any[]): void {
     // For debugging, uncomment the line below
-    console.log('StreamParser taskid:', this.#taskid, ...msg);
+    threepioLog('StreamParser taskid:', this.#taskid, ...msg);
   }
   #emitDataFun(eventType: MoudleParserEventType, data: EmitData): void {
     if (this.#callbacks && typeof this.#callbacks.onData === 'function') {

@@ -1,4 +1,5 @@
 import { APP_ROOT_ID } from '.';
+import { threepioError, threepioLog, threepioWarn } from '../../utils/threepioLog';
 import { EmitData } from './interfaces';
 
 function appendHtml(htmlstr: string, element: Element) {
@@ -12,7 +13,7 @@ function appendHtml(htmlstr: string, element: Element) {
 export class DomOperator {
   public operate(document: Document, data: EmitData): void {
     if (document === null) {
-      console.warn('Agent: Document is null, cannot operate on it.');
+      threepioWarn('Document is null, cannot operate on it.');
       return;
     }
     const { type, fragment } = data;
@@ -26,22 +27,22 @@ export class DomOperator {
         break;
       case 'header':
         if (!content) {
-          console.warn('Agent: Processed append key:', type, 'data:', fragment);
+          threepioWarn('Processed append key:', type, 'data:', fragment);
           return;
         }
         const headerCssfragment = `#${APP_ROOT_ID}{${content}}`;
-        console.log('Agent: Processed  Header append CSS:', headerCssfragment);
+        threepioLog('Processed  Header append CSS:', headerCssfragment);
         this.#appendCss(document, headerCssfragment);
         break;
       case 'moudle':
         const moudleHtmlfragment = `<div id=\'${id}\'></div>`;
         const moudleCssfragment = `#${id}{${content}}`;
         this.#appendFragment(document, APP_ROOT_ID, moudleHtmlfragment);
-        console.log('Agent: Processed moudle append CSS:', moudleCssfragment);
+        threepioLog('Processed moudle append CSS:', moudleCssfragment);
         this.#appendCss(document, moudleCssfragment);
         break;
       default:
-        console.warn('Agent: Processed append key:', type, ' data:', fragment);
+        threepioWarn('Processed append key:', type, ' data:', fragment);
         break;
     }
   }
@@ -52,7 +53,7 @@ export class DomOperator {
    * @description This method appends the provided CSS content to the document's head element.
    */
   #appendCss(document: Document, content: string): void {
-    console.log('Agent: Processed append CSS:', content);
+    threepioLog('Processed append CSS:', content);
     try {
       const styleElement = document.createElement('style');
       styleElement.appendChild(document.createTextNode(content));
@@ -63,14 +64,18 @@ export class DomOperator {
         const body = document.body || document.getElementsByTagName('body')[0];
         if (body) {
           body.appendChild(styleElement);
-          console.log('Agent: Appended CSS to body in DOM (no head found).');
+          threepioLog('Appended CSS to body in DOM (no head found).');
         } else {
-          console.warn('Agent: Cannot find head or body to append CSS in DOM.');
+          threepioWarn('Cannot find head or body to append CSS in DOM.');
         }
       }
     } catch (e) {
-      console.error('Agent: Error appending CSS to DOM:', e);
+      threepioError('Error appending CSS to DOM:', e);
     }
+  }
+
+  #appendFragmentById(document: Document, selectId: string, content: string): void {
+    this.#appendFragment(document, `#${selectId}`, content);
   }
 
   /**
@@ -80,7 +85,7 @@ export class DomOperator {
    * @description This method appends the provided HTML content to the document's body element.
    */
   #appendFragment(document: Document, selectId: string, content: string): void {
-    console.log('Agent: Process append HTML:', selectId, content);
+    threepioLog('Process append HTML:', selectId, content);
     try {
       if (selectId === null || selectId === 'body') {
         appendHtml(content, document.body);
@@ -93,24 +98,24 @@ export class DomOperator {
           if (bodyElement) {
             bodyElement.appendChild(newParentElement);
           }
-          console.log('Agent: Created new parent element:', selectId, content);
+          threepioLog('Created new parent element:', selectId, content);
         } else {
           const tempDiv = document.createElement('div');
           tempDiv.innerHTML = content;
           if (tempDiv.getAttribute('class')) {
             parentElement.setAttribute('class', tempDiv.getAttribute('class'));
-            console.log('Agent: Set attribute:', tempDiv.getAttribute('class'));
+            threepioLog('Set attribute:', tempDiv.getAttribute('class'));
           }
           if (tempDiv.getAttribute('style')) {
             parentElement.setAttribute('style', tempDiv.getAttribute('style'));
-            console.log('Agent: Set attribute:', tempDiv.getAttribute('style'));
+            threepioLog('Set attribute:', tempDiv.getAttribute('style'));
           }
         }
         appendHtml(content, parentElement);
       }
-      console.log('Agent: Appended HTML to DOM.');
+      threepioLog('Appended HTML to DOM.');
     } catch (e) {
-      console.error('Agent: Error appending HTML to DOM:', e);
+      threepioError('Error appending HTML to DOM:', e);
     }
   }
 }

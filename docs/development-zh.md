@@ -157,11 +157,11 @@ adb forward tcp:9229 tcp:9229
 ### 使用 LLM
 
 ```sh
-## 配置使用LLM API的模型 例如 `qwen-plus-latest`
+## 配置使用 LLM API 的模型 例如 `qwen-plus-latest`
 $ adb shell setprop jsar.setup.threepio.api.modelid your-llm-modelid
-## 配置LLM API 服务的组织/平台 例如 `qwen`
+## 配置 LLM API 服务的组织/平台 例如 `qwen`
 $ adb shell setprop jsar.setup.threepio.api.provider your-llm-provider
-## 配置LLM API 服务的 Key
+## 配置 LLM API 服务的 Key
 $ adb shell setprop jsar.setup.threepio.api.key your-api-key
 ## 配置 LLM API 服务地址 例如 `https://dashscope.aliyuncs.com/compatible-mode/v1`
 $ adb shell setprop jsar.setup.threepio.api.endpoint your-api-endpoint

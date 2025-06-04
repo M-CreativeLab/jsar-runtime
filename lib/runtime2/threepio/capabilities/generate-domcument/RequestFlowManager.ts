@@ -12,6 +12,7 @@ import { createModuleTask } from './taskDecomposer';
 import { PLANNER_PROMPT } from './prompts/planner.prompt';
 import { callLLM } from '../../utils/llmClient';
 import { generateStructuralStream } from './htmlStructuralGenerator';
+import { threepioError, threepioLog } from '../../utils/threepioLog';
 
 export interface RequestFlowManager {
   on(event: MoudleParserEventType, listener: (data: EmitData) => void): this;
@@ -41,12 +42,12 @@ export class RequestFlowManager extends EventEmitter {
     plannerParser.on('headerParsed', (header: ParsedHeader) => {
       onHeaderParsed();
       const layout = header.layout.replace(/height/g, 'min-height');
-      console.log(`Header parsed with layout: ${layout}`);
+      threepioLog(`Header parsed with layout: ${layout}`);
       this.#emitData('append', { type: FragmentType.Header, fragment: { content: layout } });
     });
     plannerParser.on('moduleParsed', (module: ParsedModule) => {
       if (!onHeaderParsed) {
-        console.error('Planner: Module parsed before root node was created. Aborting.');
+        threepioError('Planner: Module parsed before root node was created. Aborting.');
         return;
       }
       const mourdleParentId = 'moudle' + taskPromises.length;
@@ -54,28 +55,29 @@ export class RequestFlowManager extends EventEmitter {
       this.#emitData('append', { type: FragmentType.Moudle, fragment: { id: mourdleParentId, content: module.layout } as MoudleFragment });
       const p = (async () => {
         try {
-          console.log(`Generating fragment for task: ${task.moudle.name}`);
+          threepioLog(`Generating fragment for task: ${task.moudle.name}`);
           await generateStructuralStream(task, { onData: this.#onMoudleData.bind(this), onError: this.#onMoudleError.bind(this) });
         } catch (error) {
-          console.error(`Error generating fragment forƒ task ${task}:`, error);
+          threepioError(`Error generating fragment forƒ task ${task}:`, error);
         }
       })();
       taskPromises.push(p);
     });
-    plannerParser.on('parseEnd', () => {
-      console.log('Planner stage completed.');
+    plannerParser.on('parseEnd', (data) => {
+      console.log('Planner parsing completed successfully.', data);
       Promise.all(taskPromises).then(() => {
-        console.log('All tasks completed.');
+        threepioLog('All tasks completed.');
         resolvePlannerPhase();
       }).catch(rejectPlannerPhase);
     });
     plannerParser.on('error', () => {
-      console.error('Planner: Parsing error occurred.');
+      threepioError('Planner: Parsing error occurred.');
       rejectPlannerPhase(new Error('Error during planner parsing.'));
     });
   }
 
   async #processPlannerStream(stream: any, plannerParser: StreamPlannerParser) {
+    threepioLog('Processing planner stream...');
     for await (const chunk of await stream) {
       plannerParser.parseChunk(chunk);
     }
@@ -89,9 +91,9 @@ export class RequestFlowManager extends EventEmitter {
   }
 
   #onMoudleError(error: Error) {
-    console.error('Error in Moudle processing:', error);
+    threepioError('Error in Moudle processing:', error);
   }
-
+  ƒ
   #emitData(event: string, data: EmitData) {
     this.emit(event, data);
   }
