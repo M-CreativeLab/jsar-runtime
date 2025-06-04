@@ -36,6 +36,29 @@ export class StreamHtmlParser {
     }
   }
 
+  public endStream(): void {
+    this.#log('endStream called. Current buffer:', this.#buffer, 'Current state:', ParseStateSimplified[this.#state]);
+    if (this.#buffer.length > 0) {
+      this.#log('endStream processing remaining buffer as last chunk.');
+      const finalLines = this.#buffer.split('\n');
+      this.#buffer = '';
+      for (const line of finalLines) {
+        if (line.trim() === '') continue;
+        this.#log('endStream parsing final line:', line);
+        this.#parseLine(line.trim());
+      }
+    }
+
+    if (this.#state !== ParseStateSimplified.Finished) {
+      this.#log('Finalizing stream state due to endStream call. Current state:', ParseStateSimplified[this.#state]);
+      this.#state = ParseStateSimplified.Finished;
+      this.#emitStreamEnd(); // This will also close any open CSS/HTML sub-stream
+      this.#log('Stream forcibly ended and finalized by endStream.');
+    } else {
+      this.#log('Stream already in Finished state during endStream call.');
+    }
+  }
+
   #processBuffer(isLastChunk: boolean = false): void {
     let lines = this.#buffer.split('\n');
     if (!isLastChunk && lines.length <= 1 && !this.#buffer.endsWith(S_HTML_END)) {
@@ -132,33 +155,11 @@ export class StreamHtmlParser {
     }
   }
 
-  public endStream(): void {
-    this.#log('endStream called. Current buffer:', this.#buffer, 'Current state:', ParseStateSimplified[this.#state]);
-    if (this.#buffer.length > 0) {
-      this.#log('endStream processing remaining buffer as last chunk.');
-      const finalLines = this.#buffer.split('\n');
-      this.#buffer = '';
-      for (const line of finalLines) {
-        if (line.trim() === '') continue;
-        this.#log('endStream parsing final line:', line);
-        this.#parseLine(line.trim());
-      }
-    }
-
-    if (this.#state !== ParseStateSimplified.Finished) {
-      this.#log('Finalizing stream state due to endStream call. Current state:', ParseStateSimplified[this.#state]);
-      this.#state = ParseStateSimplified.Finished;
-      this.#emitStreamEnd(); // This will also close any open CSS/HTML sub-stream
-      this.#log('Stream forcibly ended and finalized by endStream.');
-    } else {
-      this.#log('Stream already in Finished state during endStream call.');
-    }
-  }
-
   #log(...msg: any[]): void {
     // For debugging, uncomment the line below
     threepioLog('StreamParser taskid:', this.#taskid, ...msg);
   }
+
   #emitDataFun(eventType: MoudleParserEventType, data: EmitData): void {
     if (this.#callbacks && typeof this.#callbacks.onData === 'function') {
       this.#callbacks.onData(eventType, data);

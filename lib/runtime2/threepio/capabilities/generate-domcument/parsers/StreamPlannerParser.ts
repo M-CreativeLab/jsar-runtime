@@ -54,6 +54,13 @@ export class StreamPlannerParser extends EventEmitter {
     }
   }
 
+  public end() {
+    this.#processBuffer(true);
+    if (this.#state === PlannerParseState.Finished) {
+      this.#emitData('parseEnd', this.#currentModule);
+    }
+  }
+
   #processBuffer(finalPass: boolean = false) {
     let processedSomethingInThisIteration = true;
 
@@ -191,14 +198,6 @@ export class StreamPlannerParser extends EventEmitter {
       // This case should ideally not happen if flow is correct, but as a fallback
       threepioWarn('[updateStateBasedOnBuffer] Encountered Header marker unexpectedly. Resetting to WaitingForHeader.')
       this.#state = PlannerParseState.WaitingForHeader;
-    }
-    // If no marker is at the start, we wait for more data or it's an error handled in processBuffer
-  }
-
-  public end() {
-    this.#processBuffer(true);
-    if (this.#state === PlannerParseState.Finished) {
-      this.#emitData('parseEnd', this.#currentModule);
     }
   }
 }

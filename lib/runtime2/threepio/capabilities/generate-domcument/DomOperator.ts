@@ -48,7 +48,6 @@ export class DomOperator {
   }
 
   /**
-   * 
    * @param content  css content to be appended.
    * @description This method appends the provided CSS content to the document's head element.
    */
@@ -79,7 +78,6 @@ export class DomOperator {
   }
 
   /**
-   * 
    * @param selectId  The ID of the parent element to which the HTML content will be appended.
    * @param content  The HTML content to be appended.
    * @description This method appends the provided HTML content to the document's body element.

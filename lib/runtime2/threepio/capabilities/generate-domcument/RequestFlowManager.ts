@@ -81,6 +81,7 @@ export class RequestFlowManager extends EventEmitter {
     for await (const chunk of await stream) {
       plannerParser.parseChunk(chunk);
     }
+    threepioLog('Processing planner stream ended.');
     plannerParser.end();
   }
 
@@ -93,7 +94,7 @@ export class RequestFlowManager extends EventEmitter {
   #onMoudleError(error: Error) {
     threepioError('Error in Moudle processing:', error);
   }
-  ƒ
+
   #emitData(event: string, data: EmitData) {
     this.emit(event, data);
   }
