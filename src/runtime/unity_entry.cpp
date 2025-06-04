@@ -234,17 +234,17 @@ static void OnPlatformSetup(UnityEmbedder *embedder)
       {
         // Set the environment variables for the Threepio.
         char endpointStr[PROP_VALUE_MAX];
-        if (__system_property_get("jsar.setup.threepio.api.endpoint", endpointStr) >= 0)
-          setenv("JSAR_SETUP_THREEPIO_API_ENDPOINT", endpointStr, 1);
+        if (__system_property_get("jsar.threepio.api.endpoint", endpointStr) >= 0)
+          setenv("JSAR_THREEPIO_API_ENDPOINT", endpointStr, 1);
         char providerStr[PROP_VALUE_MAX];
-        if (__system_property_get("jsar.setup.threepio.api.provider", providerStr) >= 0)
-          setenv("JSAR_SETUP_THREEPIO_API_PROVIDER", providerStr, 1);
+        if (__system_property_get("jsar.threepio.api.provider", providerStr) >= 0)
+          setenv("JSAR_THREEPIO_API_PROVIDER", providerStr, 1);
         char apiKeyStr[PROP_VALUE_MAX];
-        if (__system_property_get("jsar.setup.threepio.api.key", apiKeyStr) >= 0)
-          setenv("JSAR_SETUP_THREEPIO_API_KEY", apiKeyStr, 1);
+        if (__system_property_get("jsar.threepio.api.key", apiKeyStr) >= 0)
+          setenv("JSAR_THREEPIO_API_KEY", apiKeyStr, 1);
         char modelidStr[PROP_VALUE_MAX];
-        if (__system_property_get("jsar.setup.threepio.api.modelid", modelidStr) >= 0)
-          setenv("JSAR_SETUP_THREEPIO_API_MODELID", modelidStr, 1);
+        if (__system_property_get("jsar.threepio.api.modelid", modelidStr) >= 0)
+          setenv("JSAR_THREEPIO_API_MODELID", modelidStr, 1);
       }
 
       char enableRendererTracingStr[PROP_VALUE_MAX];

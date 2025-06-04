@@ -2,7 +2,7 @@ import { EmitData, MoudleFragmentTask, MoudleParserEventType, StreamHtmlParserCa
 import { HTML_FRAGMENT_TEMPLATE_PROMPT } from './prompts/worker.prompt';
 import { StreamHtmlParser } from './parsers/StreamHtmlParser';
 import { callLLM } from '../../utils/llmClient';
-import { threepioLog } from '../../utils/threepioLog';
+import { reportThreepioInfo } from '../../utils/threepioLog';
 
 interface MoudleStructuralStream {
   eventType: MoudleParserEventType,
@@ -32,7 +32,7 @@ export async function* generateStructuralStream(task: MoudleFragmentTask): Async
   };
 
   const htmlParser = new StreamHtmlParser(task.moudle.name, callbacks);
-  threepioLog(`Calling LLM with input: ${input}  prompt: ${prompt.substring(0, 100)}...`);
+  reportThreepioInfo(`Calling LLM with input: ${input}  prompt: ${prompt.substring(0, 100)}...`);
   const stream = await callLLM(input, prompt);
   (async () => {
     for await (const chunk of await stream) {

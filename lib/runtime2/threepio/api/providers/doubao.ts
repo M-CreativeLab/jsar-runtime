@@ -1,11 +1,10 @@
 import OpenAI from 'openai';
 import { ApiHandler, LLMMessageParam } from '..';
 import {
-  ApiHandlerOptions,
   MoudleInfo,
-  doubaoDefaultModelId,
-  DoubaoModelId,
-  LLMMoldes,
+  LLMModelId,
+  ApiHandlerOptions,
+  LLMModelToParameters,
 } from '../../shared/api';
 import { convertToOpenAiMessages } from '../transform/openaiFormat';
 import { ApiStream } from '../transform/stream';
@@ -22,16 +21,13 @@ export class DoubaoHandler implements ApiHandler {
     });
   }
 
-  getModel(): { id: DoubaoModelId; info: MoudleInfo } {
+  getModel(): { id: LLMModelId; info: MoudleInfo } {
     const modelId = this.#options.apiModelId;
-    if (modelId in LLMMoldes) {
-      const id = modelId as DoubaoModelId;
-      return { id, info: LLMMoldes[id] };
+    if (modelId in LLMModelToParameters) {
+      const id = modelId as LLMModelId;
+      return { id, info: LLMModelToParameters[id] };
     } else {
-      return {
-        id: doubaoDefaultModelId,
-        info: LLMMoldes[doubaoDefaultModelId],
-      };
+      throw new Error(`Model ID ${modelId} is not supported.`);
     }
   }
 

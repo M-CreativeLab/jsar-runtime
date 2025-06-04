@@ -1,7 +1,7 @@
 import { S_HTML_START, S_NODE_START, S_CSS_START, S_HTML_END } from '../separators';
 import { ApiStreamTextChunk } from '../../../api/transform/stream';
 import { EmitData, MoudleParserEventType, FragmentType, HtmlFragment, StreamHtmlParserCallbacks } from '../interfaces';
-import { threepioError, threepioLog } from '../../../utils/threepioLog';
+import { reportThreepioError, reportThreepioInfo } from '../../../utils/threepioLog';
 
 // Simplified ParseState enum
 enum ParseStateSimplified {
@@ -35,7 +35,7 @@ export class StreamHtmlParser {
     this.#log('endStream called. Current buffer:', this.#buffer, 'Current state:', ParseStateSimplified[this.#state]);
     // Process any remaining buffer content
     if (this.#buffer.trim().length > 0) {
-      threepioError('Stream ended with remaining buffer content:', this.#buffer);
+      reportThreepioError('Stream ended with remaining buffer content:', this.#buffer);
     }
     if (this.#state !== ParseStateSimplified.Finished) {
       this.#log('Finalizing stream state due to endStream call. Current state:', ParseStateSimplified[this.#state]);
@@ -49,7 +49,9 @@ export class StreamHtmlParser {
 
   #processBuffer(isLastChunk: boolean = false): void {
     this.#log('Processing buffer:', this.#buffer, 'isLastChunk:', isLastChunk);
-    if (!this.#buffer) return;
+    if (!this.#buffer) {
+      return;
+    }
     let lines = this.#buffer.split('\n');
     const isBufferComplete = isLastChunk || this.#buffer.endsWith('\n') || this.#buffer.endsWith(S_HTML_END);
     const linesToProcess = isBufferComplete ? lines : lines.slice(0, -1);
@@ -81,7 +83,9 @@ export class StreamHtmlParser {
   }
 
   #changeStreamType(newType: 'CSS' | 'HTML' | null): void {
-    if (this.#currentStreamType === newType) return;
+    if (this.#currentStreamType === newType) {
+      return;
+    }
     this.#currentStreamType = newType;
   }
 
@@ -141,7 +145,7 @@ export class StreamHtmlParser {
 
   #log(...msg: any[]): void {
     // For debugging, uncomment the line below
-    threepioLog('StreamParser taskid:', this.#taskid, ...msg);
+    reportThreepioInfo('StreamParser taskid:', this.#taskid, ...msg);
   }
 
   #emitDataFun(eventType: MoudleParserEventType, data: EmitData): void {

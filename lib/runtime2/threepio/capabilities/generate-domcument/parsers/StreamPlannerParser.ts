@@ -3,7 +3,7 @@ import { PLANNER_HEADER_MARKER, PLANNER_MODULE_MARKER, PLANNER_END_MARKER } from
 import { ParsedHeader, ParsedModule, PlanParserEventType } from '../interfaces';
 import { ParsedPlannerFields } from '../interfaces'
 import { ApiStreamTextChunk } from '../../../api/transform/stream';
-import { threepioError, threepioLog, threepioWarn } from '../../../utils/threepioLog';
+import { reportThreepioInfo, reportThreepioError, reportThreepioWarning } from '../../../utils/threepioLog';
 
 enum PlannerParseState {
   WaitingForHeader,
@@ -84,11 +84,11 @@ export class StreamPlannerParser extends EventEmitter {
                 markerFound = this.#buffer.substring(nextMarkerIndex, nextMarkerIndex + PLANNER_MODULE_MARKER.length); // Assuming next is M: or E:
               } else if (finalPass && jsonStart !== -1 && jsonEnd === -1) {
                 // Incomplete JSON at the end of stream
-                threepioWarn('[processBuffer] Incomplete JSON for header at end of stream.');
+                reportThreepioWarning('[processBuffer] Incomplete JSON for header at end of stream.');
               }
             }
           } else if (finalPass && this.#buffer.trim().length > 0) {
-            threepioError('Malformed start: Expected H: marker.');
+            reportThreepioError('Malformed start: Expected H: marker.');
             this.#state = PlannerParseState.Finished; // Avoid infinite loop
             return;
           }
@@ -105,7 +105,7 @@ export class StreamPlannerParser extends EventEmitter {
                 contentToParse = this.#buffer.substring(jsonStart, jsonEnd + 1);
                 markerFound = this.#buffer.substring(nextMarkerIndex, nextMarkerIndex + PLANNER_MODULE_MARKER.length); // Could be M: or E:
               } else if (finalPass && jsonStart !== -1 && jsonEnd === -1) {
-                threepioWarn('[processBuffer] Incomplete JSON for module at end of stream.');
+                reportThreepioWarning('[processBuffer] Incomplete JSON for module at end of stream.');
               }
             }
           } else if (this.#buffer.startsWith(PLANNER_END_MARKER)) {
@@ -113,7 +113,7 @@ export class StreamPlannerParser extends EventEmitter {
             nextMarkerIndex = 0; // Process E: marker
             markerFound = PLANNER_END_MARKER;
           } else if (finalPass && this.#buffer.trim().length > 0) {
-            threepioError('Malformed module content or missing M: or E: marker.');
+            reportThreepioError('Malformed module content or missing M: or E: marker.');
             this.#state = PlannerParseState.Finished; // Avoid infinite loop
             return;
           }
@@ -133,7 +133,7 @@ export class StreamPlannerParser extends EventEmitter {
           processedSomethingInThisIteration = true;
         } else {
           // JSON parsing failed, wait for more data unless final pass
-          if (finalPass) threepioError('Malformed JSON content detected:', contentToParse);
+          if (finalPass) reportThreepioError('Malformed JSON content detected:', contentToParse);
         }
       } else if (nextMarkerIndex !== -1 && markerFound === PLANNER_END_MARKER) {
         // Handle E: marker directly if it's the next significant thing
@@ -158,11 +158,11 @@ export class StreamPlannerParser extends EventEmitter {
             overallTheme: data[ParsedPlannerFields.theme],
             layout: data[ParsedPlannerFields.layout] as ParsedHeader['layout'],
           };
-          threepioLog('Parsed header (JSON):', header);
+          reportThreepioInfo('Parsed header (JSON):', header);
           this.#emitData('headerParsed', header);
           return true;
         } else {
-          threepioWarn('[tryParseJsonContent] Invalid header JSON structure:', jsonString, 'data:', data);
+          reportThreepioWarning('[tryParseJsonContent] Invalid header JSON structure:', jsonString, 'data:', data);
         }
       } else if (this.#state === PlannerParseState.ProcessingModules) {
         if (data[ParsedPlannerFields.name] && data[ParsedPlannerFields.layout] && data[ParsedPlannerFields.description]) {
@@ -174,11 +174,11 @@ export class StreamPlannerParser extends EventEmitter {
           this.#emitData('moduleParsed', module);
           return true;
         } else {
-          threepioWarn('[tryParseJsonContent] Invalid module JSON structure:', data);
+          reportThreepioWarning('[tryParseJsonContent] Invalid module JSON structure:', data);
         }
       }
     } catch (e) {
-      threepioError('[tryParseJsonContent] JSON parsing error:', e, 'Content:', jsonString);
+      reportThreepioError('[tryParseJsonContent] JSON parsing error:', e, 'Content:', jsonString);
     }
     return false;
   }
@@ -194,7 +194,7 @@ export class StreamPlannerParser extends EventEmitter {
       this.#state = PlannerParseState.Finished;
     } else if (this.#buffer.startsWith(PLANNER_HEADER_MARKER) && this.#state !== PlannerParseState.WaitingForHeader) {
       // This case should ideally not happen if flow is correct, but as a fallback
-      threepioWarn('[updateStateBasedOnBuffer] Encountered Header marker unexpectedly. Resetting to WaitingForHeader.')
+      reportThreepioWarning('[updateStateBasedOnBuffer] Encountered Header marker unexpectedly. Resetting to WaitingForHeader.')
       this.#state = PlannerParseState.WaitingForHeader;
     }
   }

@@ -2,10 +2,9 @@ import OpenAI from 'openai';
 import { ApiHandler, LLMMessageParam } from '..';
 import {
   ApiHandlerOptions,
-  LLMMoldes,
-  qwenDefaultModelId,
-  QwenModelId,
+  LLMModelToParameters,
   MoudleInfo,
+  LLMModelId
 } from '../../shared/api';
 import { convertToOpenAiMessages } from '../transform/openaiFormat';
 import { ApiStream } from '../transform/stream';
@@ -22,12 +21,14 @@ export class QwenHandler implements ApiHandler {
     });
   }
 
-  getModel(): { id: QwenModelId; info: MoudleInfo } {
-    const modelId = this.#options.apiModelId;
-    // Branch based on API line to let poor typescript know what to do
+  getModel(): { id: LLMModelId; info: MoudleInfo } {
+    const modelId = this.#options.apiModelId as LLMModelId;
+    if (!modelId) {
+      throw new Error('Model ID is not provided in the options.');
+    }
     return {
-      id: (modelId as QwenModelId) ?? qwenDefaultModelId,
-      info: LLMMoldes[modelId as QwenModelId] ?? LLMMoldes[qwenDefaultModelId],
+      id: modelId,
+      info: LLMModelToParameters[modelId],
     }
   }
 

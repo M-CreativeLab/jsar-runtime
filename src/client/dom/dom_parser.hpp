@@ -13,11 +13,6 @@ namespace dom
     XSML,
     SVG,
   };
-  enum class InputType
-  {
-    URL,
-    Source,
-  };
   class DOMParser
   {
   public:

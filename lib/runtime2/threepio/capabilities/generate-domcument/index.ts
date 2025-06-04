@@ -2,8 +2,8 @@ import { Capability } from '../interface'; // Adjust the path as needed
 import { RequestFlowManager } from './RequestFlowManager';
 import { DomOperator } from './DomOperator';
 import { EmitData } from './interfaces';
-import { getApiModelId, getApiProvider, getApiEndpoint } from '@transmute/env';
-import { threepioError, threepioLog } from '../../utils/threepioLog';
+import { getThreepioApiProvider, getThreepioApiModelId, getThreepioApiEndpoint } from '@transmute/env';
+import { reportThreepioError, reportThreepioInfo } from '../../utils/threepioLog';
 
 export const APP_ROOT_ID = 'app-root';
 
@@ -31,20 +31,19 @@ export class GenerateDocumentCapability implements Capability {
   /**
    * @param input input string that will be processed to generate HTML content.
    * @returns A Promise that resolves when the HTML content has been generated and displayed in the space.
-   * @description This method initializes the HTML document, starts the performance tracker,
    * and calls the manager to generate the HTML content based on the input string.
    * It then stops the performance tracker and reports the performance metrics.
    * Finally, it saves the generated HTML content to a file.
    */
   async request(input: string): Promise<void> {
-    threepioLog('Agent: Starting request with input:', input,
-      'provider', getApiProvider(),
-      'modelid', getApiModelId(),
-      'endpoint', getApiEndpoint());
-    this.#document = this.#browsingContext.start(htmlText, 'text/html', 'text');
+    reportThreepioInfo('Agent: Starting request with input:', input,
+      'provider', getThreepioApiProvider(),
+      'modelid', getThreepioApiModelId(),
+      'endpoint', getThreepioApiEndpoint());
+    this.#document = this.#browsingContext.start(htmlText, 'text/html', 'source');
     try {
       this.#manager.on('append', (data: EmitData) => {
-        threepioLog('Agent: Received append data:', data);
+        reportThreepioInfo('Agent: Received append data:', data);
         this.#operator.operate(this.#document, data);
       });
       await this.#manager.executeFlow(input);
@@ -58,9 +57,9 @@ export class GenerateDocumentCapability implements Capability {
         </body>
       </html>
       `;
-      threepioLog('Agent: Generated HTML content:', htmlcontext);
+      reportThreepioInfo('Agent: Generated HTML content:', htmlcontext);
     } catch (error) {
-      threepioError('Agent: Error creating task:', error);
+      reportThreepioError('Agent: Error creating task:', error);
     }
   }
 }

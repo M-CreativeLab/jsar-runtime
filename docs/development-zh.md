@@ -142,21 +142,21 @@ $ adb shell setprop jsar.renderer.target_app_fps 60
 
 ```sh
 ## 配置使用 LLM API 的模型 例如 `qwen-plus-latest`
-$ adb shell setprop jsar.setup.threepio.api.modelid your-llm-modelid
+$ adb shell setprop jsar.threepio.api.modelid your-llm-modelid
 ## 配置 LLM API 服务的组织/平台 例如 `qwen`
-$ adb shell setprop jsar.setup.threepio.api.provider your-llm-provider
+$ adb shell setprop jsar.threepio.api.provider your-llm-provider
 ## 配置 LLM API 服务的 Key
-$ adb shell setprop jsar.setup.threepio.api.key your-api-key
+$ adb shell setprop jsar.threepio.api.key your-api-key
 ## 配置 LLM API 服务地址 例如 `https://dashscope.aliyuncs.com/compatible-mode/v1`
-$ adb shell setprop jsar.setup.threepio.api.endpoint your-api-endpoint
+$ adb shell setprop jsar.threepio.api.endpoint your-api-endpoint
 ```
 
-我们以[千问模型](https://bailian.console.aliyun.com/?spm=5176.21213303.J_v8LsmxMG6alneH-O7TCPa.5.2b492f3dRgbukF&tab=model&scm=20140722.S_card@@%E4%BA%A7%E5%93%81@@3600225._.ID_card@@%E4%BA%A7%E5%93%81@@3600225-RL_%E9%80%9A%E4%B9%89%E5%A4%A7%E6%A8%A1%E5%9E%8B-LOC_2024SPSearchCard-OR_ser-PAR1_2150428f17489628002801648ef800-V_4-RE_new5-P0_0-P1_0#/model-market?name=)举例  
+我们以[千问模型](https://github.com/QwenLM/Qwen)举例  
 ```sh
-$ adb shell setprop jsar.setup.threepio.api.modelid qwen-plus-latest
-$ adb shell setprop jsar.setup.threepio.api.provider qwen
-$ adb shell setprop jsar.setup.threepio.api.key your-api-key
-$ adb shell setprop jsar.setup.threepio.api.endpoint https://dashscope.aliyuncs.com/compatible-mode/v1
+$ adb shell setprop jsar.threepio.api.modelid qwen-plus-latest
+$ adb shell setprop jsar.threepio.api.provider qwen
+$ adb shell setprop jsar.threepio.api.key your-api-key
+$ adb shell setprop jsar.threepio.api.endpoint https://dashscope.aliyuncs.com/compatible-mode/v1
 ```
 
 ### 使用 Chrome DevTools 调试

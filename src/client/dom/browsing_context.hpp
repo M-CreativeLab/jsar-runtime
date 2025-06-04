@@ -12,6 +12,11 @@
 
 namespace dom
 {
+  enum class InputType
+  {
+    URL,
+    Source,
+  };
   class BrowsingContext : public RuntimeContext
   {
   public:
