@@ -73,30 +73,26 @@ export class DomOperator {
     }
   }
 
-  #appendFragmentById(document: Document, selectId: string, content: string): void {
-    this.#appendFragment(document, `#${selectId}`, content);
-  }
-
   /**
    * @param selectId  The ID of the parent element to which the HTML content will be appended.
    * @param content  The HTML content to be appended.
    * @description This method appends the provided HTML content to the document's body element.
    */
-  #appendFragment(document: Document, selectId: string, content: string): void {
-    threepioLog('Process append HTML:', selectId, content);
+  #appendFragment(document: Document, parentId: string, content: string): void {
+    threepioLog('Process append HTML:', parentId, content);
     try {
-      if (selectId === null || selectId === 'body') {
+      if (parentId === null) {
         appendHtml(content, document.body);
       } else {
-        let parentElement = document.getElementById(selectId);
+        let parentElement = document.getElementById(parentId);
         if (!parentElement) {
           const newParentElement = parentElement = document.createElement('div');
-          newParentElement.id = selectId;
+          newParentElement.id = parentId;
           const bodyElement = document.body;
           if (bodyElement) {
             bodyElement.appendChild(newParentElement);
           }
-          threepioLog('Created new parent element:', selectId, content);
+          threepioLog('Created new parent element:', parentId, content);
         } else {
           const tempDiv = document.createElement('div');
           tempDiv.innerHTML = content;
