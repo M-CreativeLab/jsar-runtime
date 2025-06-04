@@ -17,10 +17,10 @@ export class DomOperator {
       return;
     }
     const { type, fragment } = data;
-    const { id, content, parentId } = fragment as any;;
+    const { id, content, parentId } = fragment as any;
     switch (type) {
       case 'html':
-        this.#appendFragment(document, parentId || APP_ROOT_ID, content);
+        this.#appendFragment(document, parentId, content);
         break;
       case 'css':
         this.#appendCss(document, content);
@@ -38,8 +38,8 @@ export class DomOperator {
         const moudleHtmlfragment = `<div id=\'${id}\'></div>`;
         const moudleCssfragment = `#${id}{${content}}`;
         this.#appendFragment(document, APP_ROOT_ID, moudleHtmlfragment);
-        reportThreepioInfo('Processed moudle append CSS:', moudleCssfragment);
         this.#appendCss(document, moudleCssfragment);
+        reportThreepioInfo('Processed moudle append CSS:', moudleCssfragment);
         break;
       default:
         reportThreepioWarning('Processed append key:', type, ' data:', fragment);
@@ -76,32 +76,36 @@ export class DomOperator {
    */
   #appendFragment(document: Document, parentId: string, content: string): void {
     reportThreepioInfo('Process append HTML:', parentId, content);
-    if (!parentId) {
-      reportThreepioError('Parent ID is null or undefined. Cannot append HTML.');
-      return;
+    try {
+      if (parentId === null) {
+        appendHtml(content, document.body);
+      } else {
+        let parentElement = document.getElementById(parentId);
+        if (!parentElement) {
+          const newParentElement = parentElement = document.createElement('div');
+          newParentElement.id = parentId;
+          const bodyElement = document.body;
+          if (bodyElement) {
+            bodyElement.appendChild(newParentElement);
+          }
+          reportThreepioInfo('Created new parent element:', parentId, content);
+        } else {
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = content;
+          if (tempDiv.getAttribute('class')) {
+            parentElement.setAttribute('class', tempDiv.getAttribute('class'));
+            reportThreepioInfo('Set attribute:', tempDiv.getAttribute('class'));
+          }
+          if (tempDiv.getAttribute('style')) {
+            parentElement.setAttribute('style', tempDiv.getAttribute('style'));
+            reportThreepioInfo('Set attribute:', tempDiv.getAttribute('style'));
+          }
+        }
+        appendHtml(content, parentElement);
+      }
+      reportThreepioInfo('Appended HTML to DOM.');
+    } catch (e) {
+      reportThreepioError('Error appending HTML to DOM:', e);
     }
-    let parentElement = document.getElementById(parentId);
-    if (!parentElement) {
-      const newParentElement = parentElement = document.createElement('div');
-      newParentElement.id = parentId;
-      const bodyElement = document.body;
-      if (bodyElement) {
-        bodyElement.appendChild(newParentElement);
-      }
-      reportThreepioInfo('Created new parent element:', parentId, content);
-    } else {
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = content;
-      if (tempDiv.getAttribute('class')) {
-        parentElement.setAttribute('class', tempDiv.getAttribute('class'));
-        reportThreepioInfo('Set attribute:', tempDiv.getAttribute('class'));
-      }
-      if (tempDiv.getAttribute('style')) {
-        parentElement.setAttribute('style', tempDiv.getAttribute('style'));
-        reportThreepioInfo('Set attribute:', tempDiv.getAttribute('style'));
-      }
-      appendHtml(content, parentElement);
-    }
-    reportThreepioInfo('Appended HTML to DOM.');
   }
 }
