@@ -2,7 +2,6 @@ import { Capability } from './capabilities/interface';
 import { GenerateDocumentCapability } from './capabilities/generate-domcument';
 
 export class Threepio {
-
   #capabilities: Capability[] = [];
 
   constructor(browsingContext: Transmute.BrowsingContext) {
