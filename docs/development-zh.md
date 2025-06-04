@@ -138,6 +138,27 @@ $ adb shell setprop jsar.renderer.target_app_fps 60
 
 默认为 45 帧。
 
+**使用 LLM**
+
+```sh
+## 配置使用 LLM API 的模型 例如 `qwen-plus-latest`
+$ adb shell setprop jsar.threepio.api.modelid your-llm-modelid
+## 配置 LLM API 服务的组织/平台 例如 `qwen`
+$ adb shell setprop jsar.threepio.api.provider your-llm-provider
+## 配置 LLM API 服务的 Key
+$ adb shell setprop jsar.threepio.api.key your-api-key
+## 配置 LLM API 服务地址 例如 `https://dashscope.aliyuncs.com/compatible-mode/v1`
+$ adb shell setprop jsar.threepio.api.endpoint your-api-endpoint
+```
+
+我们以[千问模型](https://github.com/QwenLM/Qwen)举例  
+```sh
+$ adb shell setprop jsar.threepio.api.modelid qwen-plus-latest
+$ adb shell setprop jsar.threepio.api.provider qwen
+$ adb shell setprop jsar.threepio.api.key your-api-key
+$ adb shell setprop jsar.threepio.api.endpoint https://dashscope.aliyuncs.com/compatible-mode/v1
+```
+
 ### 使用 Chrome DevTools 调试
 
 在应用进程日志中找到：

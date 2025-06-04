@@ -12,6 +12,11 @@
 
 namespace dom
 {
+  enum class InputType
+  {
+    URL,
+    Source,
+  };
   class BrowsingContext : public RuntimeContext
   {
   public:
@@ -23,18 +28,23 @@ namespace dom
      *
      * @param url The url of the document.
      * @param type The type of the document.
+     * @param input_type The source of the document.
      * @returns The created document.
      */
     template <typename DocumentType>
-    shared_ptr<DocumentType> create(const std::string &url, DOMParsingType type)
+    shared_ptr<DocumentType> create(const std::string &url, DOMParsingType type, InputType input_type)
     {
       shared_ptr<DocumentType> document;
       if (type == DOMParsingType::HTML)
         document = make_shared<DocumentType>(getSharedPtr<BrowsingContext>(), true);
       else
         throw std::runtime_error("Unsupported document type");
-
-      document->setUrl(url);
+      if (input_type == InputType::Source)
+        document->setSource(url, true);
+      else if (input_type == InputType::URL)
+        document->setUrl(url);
+      else
+        assert(false && "The input type must be url or source");
       documents.push_back(document);
       return document;
     }
