@@ -1,7 +1,7 @@
 import { S_HTML_START, S_NODE_START, S_CSS_START, S_HTML_END } from '../separators';
-import { ApiStreamChunk } from '../../../api/transform/stream';
+import { ApiStreamTextChunk } from '../../../api/transform/stream';
 import { EmitData, MoudleParserEventType, FragmentType, HtmlFragment, StreamHtmlParserCallbacks } from '../interfaces';
-import { threepioLog } from '../../../utils/threepioLog';
+import { threepioError, threepioLog } from '../../../utils/threepioLog';
 
 // Simplified ParseState enum
 enum ParseStateSimplified {
@@ -23,36 +23,24 @@ export class StreamHtmlParser {
     this.#taskid = taskid;
   }
 
-  public parseChunk(chunk: ApiStreamChunk): void {
+  public parseTextChunk(chunk: ApiStreamTextChunk): void {
     if (chunk.type === 'text') {
       this.#buffer += chunk.text;
       this.#htmlContent += chunk.text;
       this.#processBuffer();
-    } else if (chunk.type === 'usage') {
-      if (this.#buffer.length > 0) {
-        this.#processBuffer(true);
-      }
-      this.endStream();
     }
   }
 
   public endStream(): void {
     this.#log('endStream called. Current buffer:', this.#buffer, 'Current state:', ParseStateSimplified[this.#state]);
-    if (this.#buffer.length > 0) {
-      this.#log('endStream processing remaining buffer as last chunk.');
-      const finalLines = this.#buffer.split('\n');
-      this.#buffer = '';
-      for (const line of finalLines) {
-        if (line.trim() === '') continue;
-        this.#log('endStream parsing final line:', line);
-        this.#parseLine(line.trim());
-      }
+    // Process any remaining buffer content
+    if (this.#buffer.trim().length > 0) {
+      threepioError('Stream ended with remaining buffer content:', this.#buffer);
     }
-
     if (this.#state !== ParseStateSimplified.Finished) {
       this.#log('Finalizing stream state due to endStream call. Current state:', ParseStateSimplified[this.#state]);
       this.#state = ParseStateSimplified.Finished;
-      this.#emitStreamEnd(); // This will also close any open CSS/HTML sub-stream
+      this.#emitStreamEnd();
       this.#log('Stream forcibly ended and finalized by endStream.');
     } else {
       this.#log('Stream already in Finished state during endStream call.');
@@ -60,46 +48,48 @@ export class StreamHtmlParser {
   }
 
   #processBuffer(isLastChunk: boolean = false): void {
+    this.#log('Processing buffer:', this.#buffer, 'isLastChunk:', isLastChunk);
+    if (!this.#buffer) return;
     let lines = this.#buffer.split('\n');
-    if (!isLastChunk && lines.length <= 1 && !this.#buffer.endsWith(S_HTML_END)) {
-      return;
-    }
-
-    const linesToProcess = (!isLastChunk && lines.length > 1) ? lines.slice(0, -1) : lines;
-    this.#buffer = (!isLastChunk && lines.length > 1) ? lines[lines.length - 1] : '';
-
+    const isBufferComplete = isLastChunk || this.#buffer.endsWith('\n') || this.#buffer.endsWith(S_HTML_END);
+    const linesToProcess = isBufferComplete ? lines : lines.slice(0, -1);
+    this.#buffer = isBufferComplete ? '' : lines[lines.length - 1];
     for (const line of linesToProcess) {
-      if (line.trim() === '') continue;
-      this.#parseLine(line.trim());
+      const trimmed = line.trim();
+      if (trimmed) this.#parseLine(trimmed);
     }
   }
 
   #emitHtmlFragment(parentId: string | null, htmlElement: string): void {
-    this.#emitDataFun('append', {
-      type: FragmentType.HTML,
-      fragment: { parentId, content: htmlElement } as HtmlFragment
-    });
-    this.#log('Emitted HTML fragment:', { parentId, htmlElement });
+    if (htmlElement && htmlElement.trim()) {
+      this.#emitDataFun('append', {
+        type: FragmentType.HTML,
+        fragment: { parentId, content: htmlElement } as HtmlFragment
+      });
+      this.#log('Emitted HTML fragment:', { parentId, htmlElement });
+    }
   }
 
   #emitCssFragment(rule: string): void {
-    this.#emitDataFun('append', {
-      type: FragmentType.CSS,
-      fragment: { content: rule }
-    });
-    this.#log('Emitted CSS fragment:', { rule });
+    if (rule && rule.trim()) {
+      this.#emitDataFun('append', {
+        type: FragmentType.CSS,
+        fragment: { content: rule }
+      });
+      this.#log('Emitted CSS fragment:', { rule });
+    }
   }
 
   #changeStreamType(newType: 'CSS' | 'HTML' | null): void {
-    if (this.#currentStreamType === newType) {
-      return;
-    }
+    if (this.#currentStreamType === newType) return;
     this.#currentStreamType = newType;
   }
 
   #emitStreamEnd(): void {
-    // Ensure any active sub-stream is closed before the main stream ends
-    this.#changeStreamType(null); // This will close any open CSS or HTML stream
+    this.#changeStreamType(null);
+    if (this.#callbacks && typeof this.#callbacks.onStreamEnd === 'function') {
+      this.#callbacks.onStreamEnd();
+    }
     this.#emitDataFun('streamEnd', null);
     this.#log('Emitted streamEnd. Full content received:', this.#htmlContent);
   }
@@ -109,7 +99,6 @@ export class StreamHtmlParser {
       case ParseStateSimplified.Idle:
         if (line === S_HTML_START) {
           this.#state = ParseStateSimplified.ParsingStream;
-          // As per prompt, first block is CSS. #changeStreamType will handle cssStreamStart.
         } else {
           this.#log('Warning: Expected S_HTML_START in Idle state, got:', line);
         }
@@ -118,9 +107,7 @@ export class StreamHtmlParser {
         if (line.startsWith(S_CSS_START)) {
           this.#changeStreamType('CSS');
           const cssRuleContent = line.substring(S_CSS_START.length);
-          if (cssRuleContent.trim().length > 0) {
-            this.#emitCssFragment(cssRuleContent.trim());
-          }
+          this.#emitCssFragment(cssRuleContent);
         } else if (line.startsWith(S_NODE_START)) {
           this.#changeStreamType('HTML');
           const content = line.substring(S_NODE_START.length);
@@ -135,13 +122,10 @@ export class StreamHtmlParser {
           }
         } else if (line === S_HTML_END) {
           this.#state = ParseStateSimplified.Finished;
-          this.#emitStreamEnd(); // This will also close any open CSS/HTML sub-stream
+          this.#emitStreamEnd();
         } else {
-          threepioLog('Debug: ParsingStream state, line:', line);
-          // Handle lines that are part of multi-line CSS rules or unexpected content
           if (this.#currentStreamType === 'CSS') {
-            // Assuming multi-line CSS rules don't have S_CSS_START on each line
-            this.#emitCssFragment(line.trim());
+            this.#emitCssFragment(line);
           } else {
             this.#log('Warning: Unknown line in ParsingStream state:', line);
           }

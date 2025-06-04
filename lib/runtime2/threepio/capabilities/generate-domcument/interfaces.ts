@@ -134,5 +134,5 @@ export const PerformanceType = {
 // Callbacks for the StreamHtmlParser to handle parsed data
 export interface StreamHtmlParserCallbacks {
   onData?: (eventType: MoudleParserEventType, data: EmitData) => void;
-  onError?: (error: Error) => void;
+  onStreamEnd?: () => void;
 }

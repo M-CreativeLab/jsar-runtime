@@ -138,23 +138,7 @@ $ adb shell setprop jsar.renderer.target_app_fps 60
 
 默认为 45 帧。
 
-### 使用 Chrome DevTools 调试
-
-在应用进程日志中找到：
-
-```
-07-12 22:14:34.649 10055 10075 D jsar    : client(10142): Debugger listening on ws://0.0.0.0:9229/6f969656-e8a2-4e93-a904-c9e1fe940c13
-```
-
-它表示当前进程监听了 9229 端口号用于 Node.js 的 Inspector 调试，如果用于设备调试，需要先执行：
-
-```sh
-adb forward tcp:9229 tcp:9229
-```
-
-将设备的 9229 端口映射到工作电脑，然后通过 `chrome://inspect` 打开 Chrome DevTools，点击 `Configure...`，添加 `localhost:9229`，然后点击 `inspect` 即可进入调试界面。
-
-### 使用 LLM
+**使用 LLM**
 
 ```sh
 ## 配置使用 LLM API 的模型 例如 `qwen-plus-latest`
@@ -174,6 +158,22 @@ $ adb shell setprop jsar.setup.threepio.api.provider qwen
 $ adb shell setprop jsar.setup.threepio.api.key your-api-key
 $ adb shell setprop jsar.setup.threepio.api.endpoint https://dashscope.aliyuncs.com/compatible-mode/v1
 ```
+
+### 使用 Chrome DevTools 调试
+
+在应用进程日志中找到：
+
+```
+07-12 22:14:34.649 10055 10075 D jsar    : client(10142): Debugger listening on ws://0.0.0.0:9229/6f969656-e8a2-4e93-a904-c9e1fe940c13
+```
+
+它表示当前进程监听了 9229 端口号用于 Node.js 的 Inspector 调试，如果用于设备调试，需要先执行：
+
+```sh
+adb forward tcp:9229 tcp:9229
+```
+
+将设备的 9229 端口映射到工作电脑，然后通过 `chrome://inspect` 打开 Chrome DevTools，点击 `Configure...`，添加 `localhost:9229`，然后点击 `inspect` 即可进入调试界面。
 
 ## 运行时目录
 

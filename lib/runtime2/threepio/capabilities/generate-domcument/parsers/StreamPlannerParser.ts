@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import { PLANNER_HEADER_MARKER, PLANNER_MODULE_MARKER, PLANNER_END_MARKER } from '../separators';
 import { ParsedHeader, ParsedModule, PlanParserEventType } from '../interfaces';
 import { ParsedPlannerFields } from '../interfaces'
-import { ApiStreamChunk } from '../../../api/transform/stream';
+import { ApiStreamTextChunk } from '../../../api/transform/stream';
 import { threepioError, threepioLog, threepioWarn } from '../../../utils/threepioLog';
 
 enum PlannerParseState {
@@ -46,12 +46,10 @@ export class StreamPlannerParser extends EventEmitter {
   #currentModule: string = '';
   #state: PlannerParseState = PlannerParseState.WaitingForHeader;
 
-  public parseChunk(chunk: ApiStreamChunk) {
-    if (chunk.type === 'text') {
-      this.#buffer += chunk.text;
-      this.#currentModule += chunk.text;
-      this.#processBuffer();
-    }
+  public parseTextChunk(chunk: ApiStreamTextChunk): void {
+    this.#buffer += chunk.text;
+    this.#currentModule += chunk.text;
+    this.#processBuffer();
   }
 
   public end() {

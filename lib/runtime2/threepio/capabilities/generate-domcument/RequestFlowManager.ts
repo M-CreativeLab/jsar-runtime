@@ -39,12 +39,14 @@ export class RequestFlowManager extends EventEmitter {
     resolvePlannerPhase: () => void,
     rejectPlannerPhase: (err: Error) => void
   ) {
+
     plannerParser.on('headerParsed', (header: ParsedHeader) => {
       onHeaderParsed();
       const layout = header.layout.replace(/height/g, 'min-height');
       threepioLog(`Header parsed with layout: ${layout}`);
       this.#emitData('append', { type: FragmentType.Header, fragment: { content: layout } });
     });
+
     plannerParser.on('moduleParsed', (module: ParsedModule) => {
       if (!onHeaderParsed) {
         threepioError('Planner: Module parsed before root node was created. Aborting.');
@@ -56,13 +58,18 @@ export class RequestFlowManager extends EventEmitter {
       const p = (async () => {
         try {
           threepioLog(`Generating fragment for task: ${task.moudle.name}`);
-          await generateStructuralStream(task, { onData: this.#onMoudleData.bind(this), onError: this.#onMoudleError.bind(this) });
+          for await (const fragment of generateStructuralStream(task)) {
+            if (fragment.eventType === 'append') {
+              this.#emitData('append', fragment.data);
+            }
+          }
         } catch (error) {
-          threepioError(`Error generating fragment forƒ task ${task}:`, error);
+          threepioError(`Error generating fragment for task ${task}:`, error);
         }
       })();
       taskPromises.push(p);
     });
+
     plannerParser.on('parseEnd', (data) => {
       console.log('Planner parsing completed successfully.', data);
       Promise.all(taskPromises).then(() => {
@@ -70,6 +77,7 @@ export class RequestFlowManager extends EventEmitter {
         resolvePlannerPhase();
       }).catch(rejectPlannerPhase);
     });
+
     plannerParser.on('error', () => {
       threepioError('Planner: Parsing error occurred.');
       rejectPlannerPhase(new Error('Error during planner parsing.'));
@@ -79,20 +87,13 @@ export class RequestFlowManager extends EventEmitter {
   async #processPlannerStream(stream: any, plannerParser: StreamPlannerParser) {
     threepioLog('Processing planner stream...');
     for await (const chunk of await stream) {
-      plannerParser.parseChunk(chunk);
+      threepioLog('Received chunk from planner stream:', chunk);
+      if (chunk.type === 'text') {
+        plannerParser.parseTextChunk(chunk);
+      }
     }
     threepioLog('Processing planner stream ended.');
     plannerParser.end();
-  }
-
-  #onMoudleData(eventType: string, data: EmitData) {
-    if (eventType === 'append') {
-      this.emit('append', data);
-    }
-  }
-
-  #onMoudleError(error: Error) {
-    threepioError('Error in Moudle processing:', error);
   }
 
   #emitData(event: string, data: EmitData) {
