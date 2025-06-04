@@ -8,7 +8,7 @@ import {
   MoudleParserEventType,
 } from './interfaces';
 import { StreamPlannerParser } from './parsers/StreamPlannerParser';
-import { createModuleTask } from './taskDecomposer';
+import { createModuleTask } from './TaskDecomposer';
 import { PLANNER_PROMPT } from './prompts/planner.prompt';
 import { callLLM } from '../../utils/llmClient';
 import { generateStructuralStream } from './htmlStructuralGenerator';
