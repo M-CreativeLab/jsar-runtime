@@ -13,6 +13,7 @@ namespace dom
   public:
     Animation() = default;
     Animation(std::unique_ptr<AnimationEffect>, std::shared_ptr<AnimationTimeline>);
+    virtual ~Animation() = default;
 
   public:
     virtual bool isCSSAnimation() const { return false; }

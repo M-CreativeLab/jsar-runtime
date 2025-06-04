@@ -200,6 +200,24 @@ namespace client_cssom
     return true;
   }
 
+  std::optional<ComputedStyle::TransitionProperty> ComputedStyle::getTransitionProperty(uint32_t index) const
+  {
+    if (index >= transition_properties_.size())
+      return std::nullopt;
+
+    const auto &property = transition_properties_[index];
+    if (index < transition_durations_.size() && index < transition_delays_.size() &&
+        index < transition_timing_functions_.size())
+    {
+      return TransitionProperty{
+          property,
+          transition_durations_[index],
+          transition_delays_[index],
+          transition_timing_functions_[index]};
+    }
+    return std::nullopt;
+  }
+
   void ComputedStyle::setPropertyInternal(const string &name, const string &value)
   {
     insert({name, value});
@@ -383,16 +401,18 @@ namespace client_cssom
     }
     else if (name == "transition-duration")
     {
-      transition_duration_ = Parse::ParseSingleValue<values::specified::Time>(value).toComputedValue(context);
+      transition_durations_ = Parse::ParseValuesArray<values::specified::Time>(value)
+                                  .toComputedValues<values::computed::Time>(context);
     }
     else if (name == "transition-delay")
     {
-      transition_delay_ = Parse::ParseSingleValue<values::specified::Time>(value).toComputedValue(context);
+      transition_delays_ = Parse::ParseValuesArray<values::specified::Time>(value)
+                               .toComputedValues<values::computed::Time>(context);
     }
     else if (name == "transition-timing-function")
     {
-      transition_timing_function_ =
-          Parse::ParseSingleValue<values::specified::TimingFunction>(value).toComputedValue(context);
+      transition_timing_functions_ = Parse::ParseValuesArray<values::specified::TimingFunction>(value)
+                                         .toComputedValues<values::computed::TimingFunction>(context);
     }
   }
 

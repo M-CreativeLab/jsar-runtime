@@ -173,7 +173,12 @@ namespace dom
     // Scrolls an element by the given amount.
     void scrollBy(const ScrollOptions &);
 
-    std::shared_ptr<ElementAnimations> getElementAnimations() { return element_animations_; }
+    ElementAnimations &getElementAnimationsRef()
+    {
+      if (element_animations_ == nullptr)
+        element_animations_ = std::make_shared<ElementAnimations>();
+      return *element_animations_;
+    }
     bool hasAnimations() const
     {
       return element_animations_ != nullptr && !element_animations_->isEmpty();

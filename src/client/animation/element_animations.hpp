@@ -10,10 +10,10 @@ namespace dom
   class ElementAnimations final
   {
   public:
-    ElementAnimations();
+    ElementAnimations() = default;
     ElementAnimations(const ElementAnimations &) = delete;
     ElementAnimations &operator=(const ElementAnimations &) = delete;
-    ~ElementAnimations();
+    ~ElementAnimations() = default;
 
   public:
     bool isEmpty() const
@@ -21,6 +21,8 @@ namespace dom
       return css_animations_.isEmpty() &&
              animations_.empty();
     }
+    const CSSAnimations &cssAnimations() const { return css_animations_; }
+    CSSAnimations &cssAnimations() { return css_animations_; }
 
   private:
     CSSAnimations css_animations_;

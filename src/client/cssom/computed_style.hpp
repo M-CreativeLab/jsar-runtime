@@ -186,12 +186,24 @@ namespace client_cssom
     {
       return transition_properties_;
     }
-    inline const values::computed::Time &transitionDuration() const { return transition_duration_; }
-    inline const values::computed::Time &transitionDelay() const { return transition_delay_; }
-    inline const values::computed::TimingFunction &transitionTimingFunction() const
+    inline const std::vector<values::computed::Time> &transitionDurations() const { return transition_durations_; }
+    inline const std::vector<values::computed::Time> &transitionDelays() const { return transition_delays_; }
+    inline const std::vector<values::computed::TimingFunction> &transitionTimingFunctions() const
     {
-      return transition_timing_function_;
+      return transition_timing_functions_;
     }
+
+    struct TransitionProperty
+    {
+      values::computed::TransitionProperty property;
+      values::computed::Time duration;
+      values::computed::Time delay;
+      values::computed::TimingFunction timing_function;
+    };
+    // Returns the transition property at the given index, otherwise returns `std::nullopt`.
+    std::optional<TransitionProperty> getTransitionProperty(uint32_t index) const;
+    inline const size_t getTransitionPropertiesCount() const { return transition_properties_.size(); }
+    inline const bool hasTransitionProperties() const { return !transition_properties_.empty(); }
 
   private:
     void setPropertyInternal(const std::string &name, const std::string &value);
@@ -267,9 +279,9 @@ namespace client_cssom
 
     // Transitions and animations
     std::vector<values::computed::TransitionProperty> transition_properties_;
-    values::computed::Time transition_duration_ = values::computed::Time(1.0f);
-    values::computed::Time transition_delay_ = values::computed::Time(0.0f);
-    values::computed::TimingFunction transition_timing_function_;
+    std::vector<values::computed::Time> transition_durations_;
+    std::vector<values::computed::Time> transition_delays_;
+    std::vector<values::computed::TimingFunction> transition_timing_functions_;
 
   private: // Bitfields for computed style properties.
 #define ADD_BOOLEAN_BITFIELD(PRIVATE_NAME, PUBLIC_NAME)               \

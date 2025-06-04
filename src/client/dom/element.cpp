@@ -223,6 +223,9 @@ namespace dom
         reinitCSSBoxes();
       }
     }
+
+    if (adoptedStyle_->hasTransitionProperties())
+      getElementAnimationsRef().cssAnimations().setTransitions(*adoptedStyle_);
   }
 
   void Element::initCSSBoxes()
