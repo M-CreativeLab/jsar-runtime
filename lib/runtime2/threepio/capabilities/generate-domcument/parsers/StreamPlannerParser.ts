@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { PLANNER_HEADER_MARKER, PLANNER_MODULE_MARKER, PLANNER_END_MARKER } from '../separators';
-import { ParsedHeader, ParsedModule } from '../interfaces';
+import { ParsedHeader, ParsedModule, PlanParserEventType } from '../interfaces';
 import { ParsedPlannerFields } from '../interfaces'
 import { ApiStreamChunk } from '../../../api/transform/stream';
 
@@ -35,14 +35,15 @@ function findNextMarker(buffer: string, startIndex: number): number {
   return -1; // No known marker found
 }
 
+export interface StreamPlannerParser {
+  on(event: PlanParserEventType, listener: (data: any) => void): this;
+  emit(event: PlanParserEventType, data?: any): boolean;
+}
+
 export class StreamPlannerParser extends EventEmitter {
   #buffer: string = '';
   #currentModule: string = '';
   #state: PlannerParseState = PlannerParseState.WaitingForHeader;
-
-  constructor() {
-    super();
-  }
 
   public parseChunk(chunk: ApiStreamChunk) {
     if (chunk.type === 'text') {
@@ -176,7 +177,7 @@ export class StreamPlannerParser extends EventEmitter {
     return false;
   }
 
-  #emitData(event: string, content?: any) {
+  #emitData(event: PlanParserEventType, content?: any) {
     this.emit(event, content);
   }
 

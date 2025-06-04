@@ -1,8 +1,8 @@
 import OpenAI from 'openai';
-import { ApiHandler, LlmMessageParam } from '..'
+import { ApiHandler, LLMMessageParam } from '..';
 import {
   ApiHandlerOptions,
-  qwenModels,
+  models,
   qwenDefaultModelId,
   QwenModelId,
   MoudleInfo,
@@ -11,27 +11,27 @@ import { convertToOpenAiMessages } from '../transform/openaiFormat';
 import { ApiStream } from '../transform/stream';
 
 export class QwenHandler implements ApiHandler {
-  #options: ApiHandlerOptions
-  #client: OpenAI
+  #options: ApiHandlerOptions;
+  #client: OpenAI;
 
   constructor(options: ApiHandlerOptions) {
-    this.#options = options
+    this.#options = options;
     this.#client = new OpenAI({
       baseURL: options.endpoint,
       apiKey: options.apiKey,
-    })
+    });
   }
 
   getModel(): { id: QwenModelId; info: MoudleInfo } {
-    const modelId = this.#options.apiModelId
+    const modelId = this.#options.apiModelId;
     // Branch based on API line to let poor typescript know what to do
     return {
       id: (modelId as QwenModelId) ?? qwenDefaultModelId,
-      info: qwenModels[modelId as QwenModelId] ?? qwenModels[qwenDefaultModelId],
+      info: models[modelId as QwenModelId] ?? models[qwenDefaultModelId],
     }
   }
 
-  async *createMessage(systemPrompt: string, messages: LlmMessageParam[]): ApiStream {
+  async *createMessage(systemPrompt: string, messages: LLMMessageParam[]): ApiStream {
     const model = this.getModel();
     const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },

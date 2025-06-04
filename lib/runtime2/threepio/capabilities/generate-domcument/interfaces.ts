@@ -1,9 +1,9 @@
 /**
- * This module defines interfaces and types used in the planner stage of the Threepio project.
- * It includes interfaces for parsed headers, modules, emitted data, and fragment types.
- * It also defines the structure of tasks for LLM fragment generation and performance tracking.
- * The planner stage is responsible for parsing the initial input, generating modules, and preparing data for the fragment generation stage.
+ * Event types for the emitter.
  */
+export type MoudleParserEventType = 'append' | 'streamEnd' | 'error';
+
+export type PlanParserEventType = 'headerParsed' | 'moduleParsed' | 'parseEnd' | 'error';
 
 /**
  * Interface for the parsed header information.
@@ -52,12 +52,6 @@ export interface Fragment {
 }
 
 /**
- * Fragment representing header content.
- */
-export interface HeaderFragment extends Fragment {
-}
-
-/**
  * Fragment representing module content.
  */
 export interface MoudleFragment extends Fragment {
@@ -71,20 +65,6 @@ export interface HtmlFragment extends Fragment {
 }
 
 /**
- * Fragment representing CSS content.
- */
-export interface CssFragment extends Fragment {
-  id?: string;             // Optional ID for the CSS fragment
-}
-
-/**
- * Event types for the emitter.
- */
-export const EmitterEventType = {
-  append: 'append',
-} as const;
-
-/**
  * Field names used in the planner for parsing and mapping.
  */
 export const ParsedPlannerFields = {
@@ -94,8 +74,6 @@ export const ParsedPlannerFields = {
   theme: 'Theme',
   id: 'ID',
 } as const;
-
-// --- Fragment Generation Stage (Phase 2) ---
 
 /**
  * Enum for fragment types used in the generation stage.
@@ -155,6 +133,6 @@ export const PerformanceType = {
 
 // Callbacks for the StreamHtmlParser to handle parsed data
 export interface StreamHtmlParserCallbacks {
-  onData?: (eventType: string, data: EmitData) => void;
+  onData?: (eventType: MoudleParserEventType, data: EmitData) => void;
   onError?: (error: Error) => void;
 }

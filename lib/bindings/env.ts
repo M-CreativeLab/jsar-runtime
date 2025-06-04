@@ -98,26 +98,34 @@ export function printSummary() {
  */
 setInterval(() => nativeContext.keepAlive(), 500);
 
-const envVariables = {
-  JSAR_SETUP_THREEPIO_API_KEY: 'JSAR_SETUP_THREEPIO_API_KEY',
-  JSAR_SETUP_THREEPIO_API_PROVIDER: 'JSAR_SETUP_THREEPIO_API_PROVIDER',
-  JSAR_SETUP_THREEPIO_API_MODELID: 'JSAR_SETUP_THREEPIO_API_MODELID',
-  JSAR_SETUP_THREEPIO_SYSTEM_PROMPT: 'JSAR_SETUP_THREEPIO_SYSPROMPT',
-  JSAR_SETUP_THREEPIO_API_ENDPOINT: 'JSAR_SETUP_THREEPIO_API_ENDPOINT',
-};
-
+/**
+ * 
+ * @returns LLM API key
+ */
 export const getApiKey = (): string => {
-  return process.env[envVariables.JSAR_SETUP_THREEPIO_API_KEY] as string;
+  return process.env['JSAR_SETUP_THREEPIO_API_KEY'] as string;
 };
 
+/**
+ * 
+ * @returns LLM API provider name, such as 'doubao', 'qwen', etc.
+ */
 export const getApiProvider = (): string => {
-  return process.env[envVariables.JSAR_SETUP_THREEPIO_API_PROVIDER] as string;
+  return process.env['JSAR_SETUP_THREEPIO_API_PROVIDER'] as string;
 };
 
+/**
+ * 
+ * @returns LLM API model ID, such as 'gpt-4', 'qwen-7b', etc.
+ */
 export const getApiModelId = (): string => {
-  return process.env[envVariables.JSAR_SETUP_THREEPIO_API_MODELID] as string;
+  return process.env['JSAR_SETUP_THREEPIO_API_MODELID'] as string;
 };
 
+/**
+ * 
+ * @returns LLM API endpoint, such as 'https://api.doubao.com/v1/chat/completions', etc.
+ */
 export const getApiEndpoint = (): string => {
-  return process.env[envVariables.JSAR_SETUP_THREEPIO_API_ENDPOINT] as string;
+  return process.env['JSAR_SETUP_THREEPIO_API_ENDPOINT'] as string;
 };

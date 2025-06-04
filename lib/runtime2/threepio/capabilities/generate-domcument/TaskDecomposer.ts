@@ -8,7 +8,7 @@ import { FragmentType, ParsedModule, MoudleFragmentTask } from './interfaces';
  * @param appName The application name from the page header.
  * @returns An object containing the new SkeletonNode and its corresponding FragmentTask.
  */
-export function createModuleTask(module: ParsedModule, overallDesignTheme: string, parentId: string): { task: MoudleFragmentTask } {
+export function createModuleTask(module: ParsedModule, overallDesignTheme: string, parentId: string): MoudleFragmentTask {
   module.parentId = parentId;
   const htmltask: MoudleFragmentTask = {
     moudle: module,
@@ -18,5 +18,5 @@ export function createModuleTask(module: ParsedModule, overallDesignTheme: strin
       designSystemInfo: overallDesignTheme,
     },
   };
-  return { task: htmltask };
+  return htmltask;
 }

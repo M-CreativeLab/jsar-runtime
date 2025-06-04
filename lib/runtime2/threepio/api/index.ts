@@ -4,7 +4,7 @@ import { ApiStream, ApiStreamUsageChunk } from './transform/stream';
 import { DoubaoHandler } from './providers/doubao';
 import { QwenHandler } from './providers/qwen';
 
-export type LlmMessageParam = Anthropic.Messages.MessageParam;
+export type LLMMessageParam = Anthropic.Messages.MessageParam;
 
 /**
  * Interface for define APIs to a specific large language model on cloud.
@@ -13,7 +13,7 @@ export type LlmMessageParam = Anthropic.Messages.MessageParam;
  */
 export interface ApiHandler {
   //`createMessage` is used to send a system prompt and a list of messages to the model, returning a streaming response.
-  createMessage(systemPrompt: string, messages: LlmMessageParam[]): ApiStream;
+  createMessage(systemPrompt: string, messages: LLMMessageParam[]): ApiStream;
   // retrieves the model's identifier and related information.
   getModel(): { id: string; info: MoudleInfo };
   // (optional) provides usage statistics for the API stream, if available.

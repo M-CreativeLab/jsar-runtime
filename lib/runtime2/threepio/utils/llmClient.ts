@@ -1,4 +1,4 @@
-import { buildApiHandler, LlmMessageParam } from '../api'
+import { buildApiHandler, LLMMessageParam } from '../api'
 import { ApiConfiguration } from '../shared/api'
 import { ApiStream } from '../api/transform/stream';
 import { getApiKey, getApiModelId, getApiProvider, getApiEndpoint } from '@transmute/env';
@@ -16,6 +16,6 @@ export function callLLM(input, systemPrompt): ApiStream {
     endpoint,
   }
   const handler = buildApiHandler(config)
-  const messages: LlmMessageParam[] = [{ role: 'user', content: input }];
+  const messages: LLMMessageParam[] = [{ role: 'user', content: input }];
   return handler.createMessage(systemPrompt, messages)
 }

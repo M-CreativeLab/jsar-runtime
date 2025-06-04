@@ -1,11 +1,11 @@
 import { EventEmitter } from 'events';
 import {
   EmitData,
-  EmitterEventType,
   FragmentType,
+  MoudleFragment,
   ParsedHeader,
   ParsedModule,
-  MoudleFragment
+  MoudleParserEventType,
 } from './interfaces';
 import { StreamPlannerParser } from './parsers/StreamPlannerParser';
 import { createModuleTask } from './taskDecomposer';
@@ -14,15 +14,10 @@ import { callLLM } from '../../utils/llmClient';
 import { generateStructuralStream } from './htmlStructuralGenerator';
 
 export interface RequestFlowManager {
-  on(event: 'append', listener: (data: EmitData) => void): this;
+  on(event: MoudleParserEventType, listener: (data: EmitData) => void): this;
 }
 
 export class RequestFlowManager extends EventEmitter {
-
-  constructor() {
-    super();
-  }
-
   public async executeFlow(input: string): Promise<void> {
     let headerParsed = false;
     let taskPromises: Promise<any>[] = [];
@@ -38,7 +33,7 @@ export class RequestFlowManager extends EventEmitter {
 
   #registerPlannerParserHandlers(
     plannerParser: StreamPlannerParser,
-    taskPromises: Promise<any>[],
+    taskPromises: Promise<void>[],
     onHeaderParsed: () => void,
     resolvePlannerPhase: () => void,
     rejectPlannerPhase: (err: Error) => void
@@ -47,7 +42,7 @@ export class RequestFlowManager extends EventEmitter {
       onHeaderParsed();
       const layout = header.layout.replace(/height/g, 'min-height');
       console.log(`Header parsed with layout: ${layout}`);
-      this.#emitData(EmitterEventType.append, { type: FragmentType.Header, fragment: { content: layout } });
+      this.#emitData('append', { type: FragmentType.Header, fragment: { content: layout } });
     });
     plannerParser.on('moduleParsed', (module: ParsedModule) => {
       if (!onHeaderParsed) {
@@ -55,8 +50,8 @@ export class RequestFlowManager extends EventEmitter {
         return;
       }
       const mourdleParentId = 'moudle' + taskPromises.length;
-      const { task } = createModuleTask(module, '', mourdleParentId);
-      this.#emitData(EmitterEventType.append, { type: FragmentType.Moudle, fragment: { id: mourdleParentId, content: module.layout } as MoudleFragment });
+      const task = createModuleTask(module, '', mourdleParentId);
+      this.#emitData('append', { type: FragmentType.Moudle, fragment: { id: mourdleParentId, content: module.layout } as MoudleFragment });
       const p = (async () => {
         try {
           console.log(`Generating fragment for task: ${task.moudle.name}`);
@@ -87,9 +82,9 @@ export class RequestFlowManager extends EventEmitter {
     plannerParser.end();
   }
 
-  #onMoudleData(eventTye: string, data: EmitData) {
-    if (eventTye === EmitterEventType.append) {
-      this.emit(EmitterEventType.append, data);
+  #onMoudleData(eventType: string, data: EmitData) {
+    if (eventType === 'append') {
+      this.emit('append', data);
     }
   }
 

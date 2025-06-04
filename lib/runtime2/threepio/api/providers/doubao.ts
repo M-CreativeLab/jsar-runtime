@@ -1,11 +1,11 @@
 import OpenAI from 'openai';
-import { ApiHandler, LlmMessageParam } from '..';
+import { ApiHandler, LLMMessageParam } from '..';
 import {
   ApiHandlerOptions,
   MoudleInfo,
   doubaoDefaultModelId,
   DoubaoModelId,
-  doubaoModels
+  models,
 } from '../../shared/api';
 import { convertToOpenAiMessages } from '../transform/openaiFormat';
 import { ApiStream } from '../transform/stream';
@@ -24,18 +24,18 @@ export class DoubaoHandler implements ApiHandler {
 
   getModel(): { id: DoubaoModelId; info: MoudleInfo } {
     const modelId = this.#options.apiModelId;
-    if (modelId in doubaoModels) {
+    if (modelId in models) {
       const id = modelId as DoubaoModelId;
-      return { id, info: doubaoModels[id] };
+      return { id, info: models[id] };
     } else {
       return {
         id: doubaoDefaultModelId,
-        info: doubaoModels[doubaoDefaultModelId],
+        info: models[doubaoDefaultModelId],
       };
     }
   }
 
-  async *createMessage(systemPrompt: string, messages: LlmMessageParam[]): ApiStream {
+  async *createMessage(systemPrompt: string, messages: LLMMessageParam[]): ApiStream {
     const model = this.getModel();
     const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },

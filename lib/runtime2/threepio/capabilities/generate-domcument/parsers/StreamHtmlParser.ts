@@ -1,6 +1,6 @@
 import { S_HTML_START, S_NODE_START, S_CSS_START, S_HTML_END } from '../separators';
 import { ApiStreamChunk } from '../../../api/transform/stream';
-import { EmitterEventType, FragmentType, StreamHtmlParserCallbacks } from '../interfaces';
+import { EmitData, MoudleParserEventType, FragmentType, HtmlFragment, StreamHtmlParserCallbacks } from '../interfaces';
 
 // Simplified ParseState enum
 enum ParseStateSimplified {
@@ -51,17 +51,17 @@ export class StreamHtmlParser {
   }
 
   #emitHtmlFragment(parentId: string | null, htmlElement: string): void {
-    this.#emitDataFun(EmitterEventType.append, {
+    this.#emitDataFun('append', {
       type: FragmentType.HTML,
-      fragment: { parentId, content: htmlElement }
+      fragment: { parentId, content: htmlElement } as HtmlFragment
     });
     this.#log('Emitted HTML fragment:', { parentId, htmlElement });
   }
 
   #emitCssFragment(rule: string): void {
-    this.#emitDataFun(EmitterEventType.append, {
+    this.#emitDataFun('append', {
       type: FragmentType.CSS,
-      fragment: rule
+      fragment: { content: rule }
     });
     this.#log('Emitted CSS fragment:', { rule });
   }
@@ -112,6 +112,7 @@ export class StreamHtmlParser {
           this.#state = ParseStateSimplified.Finished;
           this.#emitStreamEnd(); // This will also close any open CSS/HTML sub-stream
         } else {
+          console.log('Debug: ParsingStream state, line:', line);
           // Handle lines that are part of multi-line CSS rules or unexpected content
           if (this.#currentStreamType === 'CSS') {
             // Assuming multi-line CSS rules don't have S_CSS_START on each line
@@ -156,7 +157,7 @@ export class StreamHtmlParser {
     // For debugging, uncomment the line below
     console.log('StreamParser taskid:', this.#taskid, ...msg);
   }
-  #emitDataFun(eventType: string, data: any): void {
+  #emitDataFun(eventType: MoudleParserEventType, data: EmitData): void {
     if (this.#callbacks && typeof this.#callbacks.onData === 'function') {
       this.#callbacks.onData(eventType, data);
     }

@@ -1,7 +1,7 @@
 import { Capability } from '../interface'; // Adjust the path as needed
 import { RequestFlowManager } from './RequestFlowManager';
-import { Operator } from './Operator';
-import { EmitterEventType } from './interfaces';
+import { DomOperator } from './DomOperator';
+import { EmitData } from './interfaces';
 import { getApiModelId, getApiProvider, getApiEndpoint } from '@transmute/env';
 
 export const APP_ROOT_ID = 'app-root';
@@ -19,11 +19,12 @@ export class GenerateDocumentCapability implements Capability {
   #browsingContext: Transmute.BrowsingContext;
   #document: Document;
   #manager: RequestFlowManager;
-  #operator: Operator;
+  #operator: DomOperator;
+
   constructor(browsingContext: Transmute.BrowsingContext) {
     this.#manager = new RequestFlowManager();
     this.#browsingContext = browsingContext;
-    this.#operator = new Operator();
+    this.#operator = new DomOperator();
   }
 
   /**
@@ -42,7 +43,7 @@ export class GenerateDocumentCapability implements Capability {
       'endpoint', getApiEndpoint());
     this.#document = this.#browsingContext.start(htmlText, 'text/html', 'text');
     try {
-      this.#manager.on(EmitterEventType.append, (data) => {
+      this.#manager.on('append', (data: EmitData) => {
         console.log('Agent: Received append data:', data);
         this.#operator.operate(this.#document, data);
       });

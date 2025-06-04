@@ -242,9 +242,9 @@ static void OnPlatformSetup(UnityEmbedder *embedder)
         char apiKeyStr[PROP_VALUE_MAX];
         if (__system_property_get("jsar.setup.threepio.api.key", apiKeyStr) >= 0)
           setenv("JSAR_SETUP_THREEPIO_API_KEY", apiKeyStr, 1);
-        char modeldStr[PROP_VALUE_MAX];
-        if (__system_property_get("jsar.setup.threepio.api.modelid", modeldStr) >= 0)
-          setenv("JSAR_SETUP_THREEPIO_API_MODELID", modeldStr, 1);
+        char modelidStr[PROP_VALUE_MAX];
+        if (__system_property_get("jsar.setup.threepio.api.modelid", modelidStr) >= 0)
+          setenv("JSAR_SETUP_THREEPIO_API_MODELID", modelidStr, 1);
       }
 
       char enableRendererTracingStr[PROP_VALUE_MAX];

@@ -157,20 +157,17 @@ adb forward tcp:9229 tcp:9229
 ### 使用 LLM
 
 ```sh
-##配置Llm Api Model Id
-## model id（模型 ID）指的是你所使用的大语言模型（LLM，Large Language Model）一标识符。它用于指定 JSAR 运行时与哪个具体的 LLM 模型进行交互。
-$ adb shell setprop jsar.setup.theepio.api.modelid your-llm-modelid
-##配置Llm Api Provier
-##provider（提供者）指的是提供 LLM 服务的组织或平台。它用于指定 JSAR 运行时与哪个具体的 LLM 服务提供者进行交互。
-$ adb shell setprop jsar.setup.theepio.api.provider your-llm-provider
-##配置Llm Api Key
-$ adb shell setprop jsar.setup.theepio.api.key your-api-key
-##配置Llm End Point
-##Endpoint（端点）指的是 LLM 服务的访问地址。
+## 配置使用LLM API的模型 例如 `qwen-plus-latest`
+$ adb shell setprop jsar.setup.threepio.api.modelid your-llm-modelid
+## 配置LLM API 服务的组织/平台 例如 `qwen`
+$ adb shell setprop jsar.setup.threepio.api.provider your-llm-provider
+## 配置LLM API 服务的 Key
+$ adb shell setprop jsar.setup.threepio.api.key your-api-key
+## 配置 LLM API 服务地址 例如 `https://dashscope.aliyuncs.com/compatible-mode/v1`
 $ adb shell setprop jsar.setup.threepio.api.endpoint your-api-endpoint
 ```
 
-我们以阿里大模型举例  
+我们以[千问模型](https://bailian.console.aliyun.com/?spm=5176.21213303.J_v8LsmxMG6alneH-O7TCPa.5.2b492f3dRgbukF&tab=model&scm=20140722.S_card@@%E4%BA%A7%E5%93%81@@3600225._.ID_card@@%E4%BA%A7%E5%93%81@@3600225-RL_%E9%80%9A%E4%B9%89%E5%A4%A7%E6%A8%A1%E5%9E%8B-LOC_2024SPSearchCard-OR_ser-PAR1_2150428f17489628002801648ef800-V_4-RE_new5-P0_0-P1_0#/model-market?name=)举例  
 ```sh
 $ adb shell setprop jsar.setup.threepio.api.modelid qwen-plus-latest
 $ adb shell setprop jsar.setup.threepio.api.provider qwen
