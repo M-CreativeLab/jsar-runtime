@@ -61,4 +61,35 @@ namespace dom
   {
     playbackRate = playback_rate;
   }
+
+  bool Animation::updateFrameToStyle(client_cssom::ComputedStyle &)
+  {
+    // TODO(yorkie): update the animation frame to the style.
+    return false;
+  }
+
+  bool Animation::updatePropertyToStyle(client_cssom::ComputedStyle &style, const std::string &property)
+  {
+    // Skip if the timeline is not active or expired.
+    if (TR_UNLIKELY(timeline_.expired() || !timeline_.lock()->isActive()))
+      return false;
+
+    // Skip if the property is not animatable or not set in the style.
+    if (!style.hasProperty(property))
+      return false;
+
+    // Switches the playing state based on the current.
+    if (play_state_ == kPlayStateIdle ||
+        play_state_ == kPlayStateFinished)
+    {
+      play();
+    }
+    else if (play_state_ == kPlayStatePaused)
+    {
+      play_state_ = kPlayStateRunning;
+    }
+
+    // TODO(yorkie): update the property based on the animation effect.
+    return false;
+  }
 }

@@ -6,16 +6,7 @@ console.info(document.createElement('span'));
 console.info(document.createElement('p'));
 
 const image = document.querySelector('img');
-// setInterval(() => {
-//   const x = ((1 - Math.sin(Date.now() / 500)) / 2) * 1000;
-//   image.style.setProperty('transform', `translateX(${Math.floor(100 + x)}px)`);
-// }, 16);
-
 const div = document.getElementById('header');
-setInterval(() => {
-  const zAxis = Math.floor(15 + Math.sin(Date.now() / 500) * 10);
-  div.style.transform = `translate3d(0, 0, ${zAxis}px)`;
-}, 16);
 
 console.info('querySelector() =>', document.querySelector('.first'));
 {

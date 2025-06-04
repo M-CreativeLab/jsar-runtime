@@ -16,7 +16,7 @@ namespace dom
   // A map of animatable properties.
   class AnimatableProperties : public std::vector<std::string>
   {
-    using Base = std::unordered_map<client_cssom::NonCustomPropertyId, std::string>;
+    using std::vector<std::string>::vector;
 
   public:
     static AnimatableProperties FromTransitionProperty(
@@ -40,6 +40,11 @@ namespace dom
       {
       }
 
+      inline bool updateFrameToStyle(client_cssom::ComputedStyle &style)
+      {
+        return animation->updateFrameToStyle(style);
+      }
+
     public:
       std::shared_ptr<Animation> animation;
       std::string name;
@@ -54,6 +59,17 @@ namespace dom
           : animation(animation),
             properties(properties)
       {
+      }
+
+      inline size_t updateFrameToStyle(client_cssom::ComputedStyle &style)
+      {
+        size_t updated_count = 0;
+        for (const auto &property : properties)
+        {
+          if (animation->updatePropertyToStyle(style, property))
+            updated_count++;
+        }
+        return updated_count;
       }
 
     public:
@@ -81,6 +97,7 @@ namespace dom
       return std::nullopt;
     }
     size_t setTransitions(client_cssom::ComputedStyle &);
+    bool updateFrameToStyle(client_cssom::ComputedStyle &);
 
   private:
     std::vector<std::shared_ptr<RunningAnimation>> running_animations_;

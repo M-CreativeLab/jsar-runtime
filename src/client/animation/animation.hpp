@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <client/cssom/computed_style.hpp>
 
 #include "./animation_effect.hpp"
 #include "./animation_timeline.hpp"
@@ -27,6 +28,9 @@ namespace dom
     void play();
     void reverse();
     void updatePlaybackRate(float);
+
+    bool updateFrameToStyle(client_cssom::ComputedStyle &);
+    bool updatePropertyToStyle(client_cssom::ComputedStyle &, const std::string &property);
 
   public:
     std::optional<float> currentTime() const

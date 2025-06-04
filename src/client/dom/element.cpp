@@ -173,6 +173,11 @@ namespace dom
     auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(false);
     if (ownerDocument != nullptr)
       scene_ = ownerDocument->scene;
+
+    /**
+     * Initialize the element's animations.
+     */
+    element_animations_ = make_shared<ElementAnimations>(getPtr<Element>());
   }
 
   void Element::adoptedCallback()
@@ -225,7 +230,7 @@ namespace dom
     }
 
     if (adoptedStyle_->hasTransitionProperties())
-      getElementAnimationsRef().cssAnimations().setTransitions(*adoptedStyle_);
+      elementAnimationsRef().cssAnimations().setTransitions(*adoptedStyle_);
   }
 
   void Element::initCSSBoxes()
@@ -712,7 +717,20 @@ namespace dom
 
   bool Element::adoptStyleDirectly(const client_cssom::ComputedStyle &new_style)
   {
-    adoptedStyle_ = make_unique<client_cssom::ComputedStyle>(new_style);
+    // Compute the animated style.
+    auto animated_style = make_unique<client_cssom::ComputedStyle>(new_style);
+    if (!elementAnimationsRef().isEmpty())
+    {
+      bool is_animated = elementAnimationsRef().updateFrameToStyle(*animated_style);
+      if (is_animated)
+      {
+        // If the element has animations to apply, mark the element as dirty thus it could be re-calculated in the next
+        // frame.
+        markAsDirty();
+      }
+    }
+
+    adoptedStyle_ = move(animated_style);
     styleAdoptedCallback();
 
     // Update the layout node style.
