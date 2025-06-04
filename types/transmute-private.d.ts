@@ -276,12 +276,13 @@ declare namespace Transmute {
      */
     constructor();
     /**
-     * Start a new document rendering from the source and MIME type.
+     * Start a new document rendering from the input  MIME type and inputType.
      * 
-     * @param source the document source.
-     * @param mimeType the MIME type: 'text/html', 'text/xsml', 'text/svg+xml', etc.
+     * @param intput user input, it can be a URL or a source.
+     * @param sourceMimeType the MIME type: 'text/html', 'text/xsml', 'text/svg+xml', etc.
+     * @param inputType the input type: 'url' or 'source'.
      */
-    start(source: string, mimeType: 'text/html'): Document;
+    start(intput: string, sourceMimeType: 'text/html', inputType?: 'url' | 'source'): Document;
   }
 
   /**

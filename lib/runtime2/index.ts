@@ -10,6 +10,7 @@ import { ResourceLoaderOnTransmute } from './jsardom/ResourceLoader';
 import createModel3dViewer from './viewers/model3d';  // glb, gltf ...
 import createImage2dViewer from './viewers/image2d';  // png, jpg, etc ...
 import createSplineDesignViewer from './viewers/splinedesign';  // splinedesign
+import { Threepio } from './threepio';
 
 Object.defineProperty(BABYLON.PrecisionDate, 'Now', {
   get: () => getPerformanceNow(),
@@ -64,7 +65,7 @@ async function evaluateXSML(gl: WebGLRenderingContext | WebGL2RenderingContext, 
 
 export class TransmuteRuntime2 extends EventTarget {
   #browsingContext: Transmute.BrowsingContext;
-
+  #threepio: Threepio;
   constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext, private id: number) {
     super();
     {
@@ -86,13 +87,18 @@ export class TransmuteRuntime2 extends EventTarget {
       const browsingContext = new BrowsingContext();
       browsingContext.setResourceLoader(new ResourceLoaderOnTransmute());
       this.#browsingContext = browsingContext;
+      this.#threepio = new Threepio(browsingContext);
     }
     this.dispatchEvent(new Event('rendererReady'));
   }
 
-  async start(url: string) {
-    console.info(`Content(#${this.id}): receiving a document request: ${url}`);
-    await this.load(url);
+  async start(input: string) {
+    console.info(`Content(#${this.id}): receiving a document request: ${input}`);
+    if (input.startsWith('http:') || input.startsWith('https:') || input.startsWith('/')) {
+      await this.load(input);
+    } else {
+      await this.#threepio.request(input);
+    }
   }
 
   private async load(codeOrUrl: string, urlBase?: string) {
