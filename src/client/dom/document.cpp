@@ -31,12 +31,12 @@ namespace dom
         documentType(documentType),
         scene(TrClientContextPerProcess::Get()->builtinScene),
         browsingContext(browsingContext),
-        autoConnect(autoConnect),
-        defaultView_(TrClientContextPerProcess::Get()->window)
+        auto_connect_(autoConnect),
+        default_view_(TrClientContextPerProcess::Get()->window)
   {
     assert(browsingContext != nullptr);
-    assert(defaultView_.lock() != nullptr);
-    docInternal = make_shared<pugi::xml_document>();
+    assert(default_view_.lock() != nullptr);
+    doc_internal_ = make_shared<pugi::xml_document>();
   }
 
   Document::Document(Document &other)
@@ -46,8 +46,8 @@ namespace dom
         documentType(other.documentType),
         scene(other.scene),
         browsingContext(other.browsingContext),
-        autoConnect(other.autoConnect),
-        docInternal(other.docInternal)
+        auto_connect_(other.auto_connect_),
+        doc_internal_(other.doc_internal_)
   {
   }
 
@@ -88,12 +88,12 @@ namespace dom
     if (isFragment)
       flag |= pugi::parse_fragment;
 
-    auto r = docInternal->load_string(inputText.c_str(), flag);
+    auto r = doc_internal_->load_string(inputText.c_str(), flag);
     if (r.status != pugi::xml_parse_status::status_ok)
       throw runtime_error("Failed to parse XML document: " + std::string(r.description()));
 
-    resetFrom(docInternal, getPtr<Document>());
-    isSourceLoaded = true;
+    resetFrom(doc_internal_, getPtr<Document>());
+    is_source_loaded_ = true;
 
     //
     // Update fields after the document are parsed.
@@ -105,15 +105,15 @@ namespace dom
       if (childNode->nodeType == NodeType::ELEMENT_NODE)
       {
         if (childNode->nodeName == "head")
-          headElement = dynamic_pointer_cast<HTMLHeadElement>(childNode);
+          head_element_ = dynamic_pointer_cast<HTMLHeadElement>(childNode);
         else if (childNode->nodeName == "body")
-          bodyElement = dynamic_pointer_cast<HTMLBodyElement>(childNode);
+          body_element_ = dynamic_pointer_cast<HTMLBodyElement>(childNode);
       }
     }
 
     // Clear list and maps.
-    allElementsList.clear();
-    elementMapById.clear();
+    all_elements_list_.clear();
+    element_map_by_id_.clear();
 
     // Update the element list and maps.
     auto initElementsCache = [this](shared_ptr<Node> childNode)
@@ -123,14 +123,14 @@ namespace dom
     };
     iterateChildNodes(initElementsCache);
 
-    if (shouldOpen)
+    if (should_open_)
       openInternal();
   }
 
   void Document::open()
   {
-    shouldOpen = true;
-    if (isSourceLoaded)
+    should_open_ = true;
+    if (is_source_loaded_)
       openInternal();
   }
 
@@ -156,8 +156,8 @@ namespace dom
 
   shared_ptr<Element> Document::getElementById(const string &id)
   {
-    auto it = elementMapById.find(id);
-    if (it != elementMapById.end())
+    auto it = element_map_by_id_.find(id);
+    if (it != element_map_by_id_.end())
       return it->second;
     else
       return nullptr;
@@ -166,7 +166,7 @@ namespace dom
   std::vector<shared_ptr<Element>> Document::getElementsByClassName(const string &className)
   {
     std::vector<shared_ptr<Element>> elements;
-    for (auto element : allElementsList)
+    for (auto element : all_elements_list_)
     {
       if (element->hasAttribute("class"))
       {
@@ -181,7 +181,7 @@ namespace dom
   vector<shared_ptr<Element>> Document::getElementsByName(const string &name)
   {
     vector<shared_ptr<Element>> elements;
-    for (auto element : allElementsList)
+    for (auto element : all_elements_list_)
     {
       if (element->hasAttribute("name"))
       {
@@ -196,7 +196,7 @@ namespace dom
   vector<shared_ptr<Element>> Document::getElementsByTagName(const string &tagName)
   {
     vector<shared_ptr<Element>> elements;
-    for (auto element : allElementsList)
+    for (auto element : all_elements_list_)
     {
       if (element->is(tagName))
         elements.push_back(element);
@@ -211,7 +211,7 @@ namespace dom
       throw runtime_error("Failed to parse the CSS selectors: " + selectors);
 
     auto selectorList = s.value();
-    for (const auto &element : allElementsList)
+    for (const auto &element : all_elements_list_)
     {
       if (!Node::Is<HTMLElement>(element))
         continue;
@@ -229,7 +229,7 @@ namespace dom
 
     NodeList<Element> elements(false);
     auto selectorList = s.value();
-    for (auto element : allElementsList)
+    for (auto element : all_elements_list_)
     {
       if (!Node::Is<HTMLElement>(element))
         continue;
@@ -241,8 +241,8 @@ namespace dom
 
   void Document::appendStyleSheet(shared_ptr<client_cssom::CSSStyleSheet> sheet)
   {
-    styleSheets_.push_back(sheet);
-    styleCache_.invalidateCache();
+    stylesheets_.push_back(sheet);
+    style_cache_.invalidateCache();
     onStyleSheetsDidChange();
   }
 
@@ -259,22 +259,22 @@ namespace dom
       // FIXME(yorkie): At initialization, we can ensure that the elements are unique.
       if (fast_insert)
       {
-        allElementsList.push_back(element);
+        all_elements_list_.push_back(element);
       }
       else
       {
         // Check if element is already in the list to avoid duplicates
-        auto it = std::find(allElementsList.begin(), allElementsList.end(), element);
-        if (it == allElementsList.end())
+        auto it = std::find(all_elements_list_.begin(), all_elements_list_.end(), element);
+        if (it == all_elements_list_.end())
         {
           // If not, add it to the all elements list
-          allElementsList.push_back(element);
+          all_elements_list_.push_back(element);
         }
       }
 
       // Add the element to the element map by id
       if (!element->id.empty())
-        elementMapById[element->id] = element;
+        element_map_by_id_[element->id] = element;
     }
 
     if (recursive)
@@ -295,13 +295,13 @@ namespace dom
       shared_ptr<Element> element = Node::As<Element>(node);
 
       // Remove the element from the all elements list
-      auto it = std::remove(allElementsList.begin(), allElementsList.end(), element);
-      if (it != allElementsList.end())
-        allElementsList.erase(it, allElementsList.end());
+      auto it = std::remove(all_elements_list_.begin(), all_elements_list_.end(), element);
+      if (it != all_elements_list_.end())
+        all_elements_list_.erase(it, all_elements_list_.end());
 
       // Remove the element from the element map by id
       if (!element->id.empty())
-        elementMapById.erase(element->id);
+        element_map_by_id_.erase(element->id);
     }
 
     if (recursive)
@@ -319,12 +319,12 @@ namespace dom
       auto window = TrClientContextPerProcess::Get()->window;
       assert(window != nullptr);
       window->configureDocument(getPtr<Document>());
-      defaultView_ = window;
+      default_view_ = window;
       onDocumentOpened();
     }
 
     // Start connecting the document's children automatically if the flag is set.
-    if (autoConnect)
+    if (auto_connect_)
     {
       connect();
       load();
@@ -343,6 +343,24 @@ namespace dom
       pos += defaultComment.length();
     }
     return source;
+  }
+
+  std::string Document::cookie() const
+  {
+    std::string cookies_str;
+    for (const auto &cookie : cookies_)
+    {
+      if (!cookies_str.empty())
+        cookies_str += "; ";
+      cookies_str += cookie.first + "=" + cookie.second;
+    }
+    return cookies_str;
+  }
+
+  void Document::setCookie(const std::string &new_cookies)
+  {
+    // TODO(yorkie): implement the cookie parsing and setting logic.
+    // See https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie
   }
 
   shared_ptr<Element> Document::firstElementChild() const
@@ -542,7 +560,7 @@ namespace dom
   void HTMLDocument::onDocumentOpened()
   {
     auto selfDocument = getPtr<HTMLDocument>();
-    auto window = defaultView_.lock();
+    auto window = default_view_.lock();
 
     // Set the document cache to be invalid once the document is opened.
     invalidateDocumentCache();

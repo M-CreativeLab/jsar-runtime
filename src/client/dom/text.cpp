@@ -69,12 +69,12 @@ namespace dom
   }
 
   Text::Text(shared_ptr<Document> ownerDocument)
-      : Text(createTextNode(ownerDocument->docInternal), ownerDocument)
+      : Text(createTextNode(ownerDocument->doc_internal_), ownerDocument)
   {
   }
 
   Text::Text(const string value, shared_ptr<Document> ownerDocument)
-      : Text(createTextNode(ownerDocument->docInternal, value), ownerDocument)
+      : Text(createTextNode(ownerDocument->doc_internal_, value), ownerDocument)
   {
   }
 

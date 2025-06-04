@@ -117,10 +117,13 @@ namespace dom
      */
     inline std::shared_ptr<browser::Window> defaultView() const
     {
-      auto ref = defaultView_.lock();
+      auto ref = default_view_.lock();
       assert(ref != nullptr && "The default view is not set.");
       return ref;
     }
+
+    std::string cookie() const;
+    void setCookie(const std::string &new_cookies);
 
     const DocumentTimeline &timeline() const { return timeline_; }
     DocumentTimeline &timeline() { return timeline_; }
@@ -132,14 +135,14 @@ namespace dom
      */
     inline const std::vector<std::shared_ptr<client_cssom::CSSStyleSheet>> &styleSheets() const
     {
-      return styleSheets_;
+      return stylesheets_;
     }
     /**
      * Get the style cache for the document.
      *
      * TODO: Will be moved to the `DocumentOrShadowRoot` interface.
      */
-    inline client_cssom::StyleCache &styleCache() { return styleCache_; }
+    inline client_cssom::StyleCache &styleCache() { return style_cache_; }
 
   public:
     /**
@@ -147,8 +150,10 @@ namespace dom
      */
     std::shared_ptr<builtin_scene::Scene> scene;
     std::shared_ptr<BrowsingContext> browsingContext;
-    inline std::shared_ptr<HTMLHeadElement> head() const { return headElement; }
-    inline std::shared_ptr<HTMLBodyElement> body() const { return bodyElement; }
+    inline std::shared_ptr<HTMLHeadElement> head() const { return head_element_; }
+    inline const HTMLHeadElement &headRef() const { return *head_element_; }
+    inline std::shared_ptr<HTMLBodyElement> body() const { return body_element_; }
+    inline const HTMLBodyElement &bodyRef() const { return *body_element_; }
     /**
      * The `documentElement` read-only property of the `Document` interface returns the Element that is the root element
      *  of the document (for example, the <html> element for HTML documents).
@@ -161,21 +166,22 @@ namespace dom
     std::shared_ptr<Element> firstElementChild() const;
 
   protected:
-    bool autoConnect;
-    std::weak_ptr<browser::Window> defaultView_;
-    std::shared_ptr<pugi::xml_document> docInternal;
-    std::shared_ptr<HTMLHeadElement> headElement;
-    std::shared_ptr<HTMLBodyElement> bodyElement;
-    std::vector<std::shared_ptr<Element>> allElementsList;
-    std::map<string, std::shared_ptr<Element>> elementMapById;
+    bool auto_connect_;
+    std::weak_ptr<browser::Window> default_view_;
+    std::shared_ptr<pugi::xml_document> doc_internal_;
+    std::shared_ptr<HTMLHeadElement> head_element_;
+    std::shared_ptr<HTMLBodyElement> body_element_;
+    std::vector<std::shared_ptr<Element>> all_elements_list_;
+    std::map<string, std::shared_ptr<Element>> element_map_by_id_;
 
   private:
-    bool isSourceLoaded = false;
-    bool shouldOpen = false;
+    bool is_source_loaded_ = false;
+    bool should_open_ = false;
 
+    std::map<string, std::string> cookies_;
     DocumentTimeline timeline_;
-    std::vector<std::shared_ptr<client_cssom::CSSStyleSheet>> styleSheets_;
-    client_cssom::StyleCache styleCache_;
+    std::vector<std::shared_ptr<client_cssom::CSSStyleSheet>> stylesheets_;
+    client_cssom::StyleCache style_cache_;
   };
 
   class XMLDocument : public Document

@@ -54,13 +54,13 @@ namespace dom
     auto ownerDocument = getOwnerDocumentReference();
     if (styleSheet_ && ownerDocument != nullptr)
     {
-      auto &styleSheets = ownerDocument->styleSheets_;
+      auto &styleSheets = ownerDocument->stylesheets_;
       styleSheets.erase(std::remove(styleSheets.begin(), styleSheets.end(), styleSheet_), styleSheets.end());
       styleSheet_.reset();
 
       // Invalidate the cache after removing the stylesheet
       // TODO: Just remove the cache for this sheet?
-      ownerDocument->styleCache_.invalidateCache();
+      ownerDocument->style_cache_.invalidateCache();
     }
   }
 
@@ -89,7 +89,7 @@ namespace dom
     // Update the sheet
     styleSheet_ = sheet;
     auto &document = getOwnerDocumentChecked();
-    document.styleSheets_.push_back(sheet);
-    document.styleCache_.invalidateCache();
+    document.stylesheets_.push_back(sheet);
+    document.style_cache_.invalidateCache();
   }
 }
