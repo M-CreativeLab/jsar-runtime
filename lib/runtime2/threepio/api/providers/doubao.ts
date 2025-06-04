@@ -5,7 +5,7 @@ import {
   MoudleInfo,
   doubaoDefaultModelId,
   DoubaoModelId,
-  models,
+  LLMMoldes,
 } from '../../shared/api';
 import { convertToOpenAiMessages } from '../transform/openaiFormat';
 import { ApiStream } from '../transform/stream';
@@ -24,13 +24,13 @@ export class DoubaoHandler implements ApiHandler {
 
   getModel(): { id: DoubaoModelId; info: MoudleInfo } {
     const modelId = this.#options.apiModelId;
-    if (modelId in models) {
+    if (modelId in LLMMoldes) {
       const id = modelId as DoubaoModelId;
-      return { id, info: models[id] };
+      return { id, info: LLMMoldes[id] };
     } else {
       return {
         id: doubaoDefaultModelId,
-        info: models[doubaoDefaultModelId],
+        info: LLMMoldes[doubaoDefaultModelId],
       };
     }
   }

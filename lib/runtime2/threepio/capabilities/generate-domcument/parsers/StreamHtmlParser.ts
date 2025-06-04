@@ -67,7 +67,9 @@ export class StreamHtmlParser {
   }
 
   #changeStreamType(newType: 'CSS' | 'HTML' | null): void {
-    if (this.#currentStreamType === newType) return;
+    if (this.#currentStreamType === newType) {
+      return;
+    }
     this.#currentStreamType = newType;
   }
 
@@ -79,7 +81,6 @@ export class StreamHtmlParser {
   }
 
   #parseLine(line: string): void {
-    // this.#log(`Parsing line: '${line}' in state: ${ParseStateSimplified[this.#state]}`);
     switch (this.#state) {
       case ParseStateSimplified.Idle:
         if (line === S_HTML_START) {

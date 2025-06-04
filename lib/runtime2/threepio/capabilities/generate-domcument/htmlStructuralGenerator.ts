@@ -9,7 +9,8 @@ import { callLLM } from '../../utils/llmClient';
  * @param callbacks 
  */
 export async function generateStructuralStream(task: MoudleFragmentTask, callbacks: StreamHtmlParserCallbacks): Promise<void> {
-  const { input, prompt } = createPrompt(task);
+  const prompt = createPrompt(task);
+  const input = JSON.stringify(task.moudle);
   const htmlParser = new StreamHtmlParser(task.moudle.name, callbacks);
   try {
     const stream = await callLLM(input, prompt);
@@ -31,12 +32,12 @@ export async function generateStructuralStream(task: MoudleFragmentTask, callbac
  * @returns An object containing the input JSON string and the formatted prompt string.
  * @throws Will throw an error if the task context is not provided.
  */
-function createPrompt(task: MoudleFragmentTask): { input: string, prompt: string } {
+function createPrompt(task: MoudleFragmentTask): string {
   const context = task.context;
   let prompt = HTML_FRAGMENT_TEMPLATE_PROMPT;
   prompt = prompt.replace(/{{PAGE_GOAL}}/g, context?.pageGoal || '');
   prompt = prompt.replace(/{{PARENT_ID}}/g, task.moudle?.parentId || '');
   prompt = prompt.replace(/{{DESIGN_SYSTEM_INFO}}/g, context?.designSystemInfo || '');
-  return { input: JSON.stringify(task.moudle), prompt: prompt }
+  return prompt;
 }
 

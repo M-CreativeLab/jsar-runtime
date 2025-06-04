@@ -15,13 +15,13 @@ export type ApiConfiguration = ApiHandlerOptions & {
 };
 
 // Qwen
-export type QwenModelId = keyof typeof models;
+export type QwenModelId = keyof typeof LLMMoldes;
 export const qwenDefaultModelId: QwenModelId = 'qwen-plus-latest';
 // Doubao
-export type DoubaoModelId = keyof typeof models;
+export type DoubaoModelId = keyof typeof LLMMoldes;
 export const doubaoDefaultModelId: DoubaoModelId = 'doubao-1-5-pro-256k-250115';
 
-export const models = {
+export const LLMMoldes = {
   'doubao-1-5-pro-256k-250115': {
     max_completion_tokens: 12_288,
   },

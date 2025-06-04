@@ -28,7 +28,6 @@ export class GenerateDocumentCapability implements Capability {
   }
 
   /**
-   * 
    * @param input input string that will be processed to generate HTML content.
    * @returns A Promise that resolves when the HTML content has been generated and displayed in the space.
    * @description This method initializes the HTML document, starts the performance tracker,

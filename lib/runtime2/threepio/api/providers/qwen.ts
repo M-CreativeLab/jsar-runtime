@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { ApiHandler, LLMMessageParam } from '..';
 import {
   ApiHandlerOptions,
-  models,
+  LLMMoldes,
   qwenDefaultModelId,
   QwenModelId,
   MoudleInfo,
@@ -27,7 +27,7 @@ export class QwenHandler implements ApiHandler {
     // Branch based on API line to let poor typescript know what to do
     return {
       id: (modelId as QwenModelId) ?? qwenDefaultModelId,
-      info: models[modelId as QwenModelId] ?? models[qwenDefaultModelId],
+      info: LLMMoldes[modelId as QwenModelId] ?? LLMMoldes[qwenDefaultModelId],
     }
   }
 
