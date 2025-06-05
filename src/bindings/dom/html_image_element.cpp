@@ -61,11 +61,17 @@ namespace dombinding
 
     auto documentObject = document->Value();
     auto imageValue = documentObject
-        .Get("createElement")
-        .As<Napi::Function>()
-        .Call(documentObject, {Napi::String::New(env, "img")});
+                          .Get("createElement")
+                          .As<Napi::Function>()
+                          .Call(documentObject, {Napi::String::New(env, "img")});
 
     auto imageObject = imageValue.As<Napi::Object>();
+
+    // new Image() must use eager loading and auto decoding by default.
+    // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/loading#javascript_must_be_enabled
+    imageObject.Set("loading", Napi::String::New(env, "eager"));
+    imageObject.Set("decoding", Napi::String::New(env, "auto"));
+
     if (info.Length() >= 1 && info[0].IsNumber())
     {
       auto width = info[0].As<Napi::Number>().Int32Value();

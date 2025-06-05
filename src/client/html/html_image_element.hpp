@@ -27,7 +27,7 @@ namespace dom
       kDecodingAuto,
     };
 
-    enum LoadingType
+    enum LoadingHint
     {
       // Loads the image immediately, regardless of whether or not the image is currently within the visible viewport
       // (this is the default value).
@@ -75,7 +75,8 @@ namespace dom
       is_src_image_decoded_ = false;
 
       setAttribute("src", src, false);
-      loadImage();
+      if (loading_ == LoadingHint::kLoadingEager)
+        loadImage();
     }
 
     /**
@@ -140,7 +141,7 @@ namespace dom
       onSizeDidChange();
     }
 
-    inline LoadingType loading() const { return loading_; }
+    inline LoadingHint loading() const { return loading_; }
     inline DecodingType decoding() const { return decoding_; }
 
     /**
@@ -178,8 +179,8 @@ namespace dom
     bool is_src_image_loaded_ = false;
     bool is_src_image_decoded_ = false;
 
-    LoadingType loading_;
-    DecodingType decoding_;
+    LoadingHint loading_ = LoadingHint::kLoadingLazy;
+    DecodingType decoding_ = DecodingType::kDecodingAsync;
 
     bool is_map_ = false;
     std::string use_map_;

@@ -42,7 +42,8 @@ namespace dom
                   [](uv_async_t *handle)
                   {
                     auto imageElement = static_cast<HTMLImageElement *>(handle->data);
-                    imageElement->loadImage();
+                    auto imageSrc = imageElement->getSrc();
+                    imageElement->fetchImage(imageSrc);
                   });
   }
 
@@ -67,11 +68,11 @@ namespace dom
     else if (name == "loading")
     {
       if (newValue == "lazy")
-        loading_ = LoadingType::kLoadingLazy;
+        loading_ = LoadingHint::kLoadingLazy;
       else if (newValue == "eager")
-        loading_ = LoadingType::kLoadingEager;
+        loading_ = LoadingHint::kLoadingEager;
       else
-        loading_ = LoadingType::kLoadingEager;
+        loading_ = LoadingHint::kLoadingEager;
     }
     else if (name == "decoding")
     {
@@ -306,6 +307,7 @@ namespace dom
       sk_bitmap_ = make_shared<SkBitmap>();
     assert(sk_bitmap_ != nullptr && "The image bitmap is not created yet.");
 
+    // TODO(yorkie): support `decoding` options.
     decodeImageAsync(*sk_bitmap_);
   }
 

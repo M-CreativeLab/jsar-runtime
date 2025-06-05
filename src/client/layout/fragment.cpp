@@ -52,9 +52,9 @@ namespace client_layout
   bool Fragment::visibleInViewport(const geometry::Viewport3d &viewport) const
   {
     bool leftInside = left() < viewport.right();
-    bool rightInside = right() > viewport.left();
+    bool rightInside = right() >= viewport.left();
     bool topInside = top() < viewport.bottom();
-    bool bottomInside = bottom() > viewport.top();
+    bool bottomInside = bottom() >= viewport.top();
 
     // Check if the fragment is within the viewport bounds.
     return leftInside && rightInside && topInside && bottomInside;
