@@ -102,7 +102,7 @@ namespace webgl
     {
       auto clientContext = TrClientContextPerProcess::Get();
       assert(clientContext != nullptr);
-      clientContext->removeHostWebGLContext(glContext_->id);  // Remove the host context from the client context
+      clientContext->removeHostWebGLContext(glContext_->id); // Remove the host context from the client context
     }
   }
 
@@ -1118,15 +1118,17 @@ namespace webgl
       else
       {
         /**
-         * TODO: support HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
+         * TODO(yorkie): support HTMLVideoElement
          */
       }
 
       if (imageSource == nullptr)
       {
         env.Global().Get("console").As<Napi::Object>().Get("log").As<Napi::Function>()({imageSourceObject});
-        Napi::TypeError::New(env, "Unsupported `imageSource` type")
-            .ThrowAsJavaScriptException();
+
+        auto msg = "Failed to execute 'texImage2D' on 'WebGLRenderingContext': parameter 5 is not of type "
+                   "'ImageBitmap', 'ImageData', 'OffscreenCanvas', 'HTMLCanvasElement', or 'HTMLImageElement'";
+        Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
         return env.Undefined();
       }
 

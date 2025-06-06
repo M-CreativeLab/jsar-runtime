@@ -65,8 +65,6 @@ init(() => {
     ];
   };
   const urls = genCubeUrls('https://threejs.org/examples/textures/cube/pisa/', '.png');
-  console.log(urls);
-
   new THREE.CubeTextureLoader().load(urls, function (cubeTexture) {
     console.info('Loaded cube texture:', cubeTexture);
     try {
