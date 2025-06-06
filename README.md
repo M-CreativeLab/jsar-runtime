@@ -1,7 +1,7 @@
 # 🚀 JSAR Runtime
 
-[![GitHub commit activity](https://img.shields.io/github/commit-activity/m/m-creativelab/jsar-runtime)](https://github.com/M-CreativeLab/jsar-runtime/commits/main/)
 [![GitHub Release](https://img.shields.io/github/v/release/m-creativelab/jsar-runtime)](https://github.com/m-creativelab/jsar-runtime/releases)
+[![GitHub commit activity](https://img.shields.io/github/commit-activity/m/m-creativelab/jsar-runtime)](https://github.com/M-CreativeLab/jsar-runtime/commits/main/)
 [![GitHub License](https://img.shields.io/github/license/m-creativelab/jsar-runtime)](https://github.com/m-creativelab/jsar-runtime/blob/main/LICENSE)
 
 # Table of Contents
@@ -16,18 +16,18 @@
      - [Multimedia APIs](#multimedia-apis)
      - [Canvas](#canvas)
      - [Classic Rendering](#classic-rendering)
-2. [Contributing](#contributing)
+1. [Contributing](#contributing)
      - [Prerequisites](#prerequisites)
      - [Build from source](#build-from-source)
-3. [Loaders](#loaders)
+1. [Loaders](#loaders)
 
 ## Introduction
 
 ### ✨ Bringing Web Technologies to Life in 3D Worlds
 
-JSAR Runtime is a revolutionary **browser engine library** designed for the spatial computing era. It enables you to 
-create immersive Web applications using the Web technologies (HTML, CSS, JavaScript) and seamlessly integrate them into 
-mainstream 3D engines like [Unity][], [UnrealEngine][], and RealityKit.
+JSAR Runtime is a revolutionary **browser engine library** designed for the next computing era. It enables you to 
+create immersive Web applications using the modern Web technologies (HTML, CSS, JavaScript) and seamlessly integrate 
+them into mainstream 3D engines like [Unity][], [UnrealEngine][], and RealityKit.
 
 ### 🌟 Why Choose JSAR?
 
