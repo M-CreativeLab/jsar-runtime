@@ -235,6 +235,7 @@ namespace client_cssom
 
     // Positional
     values::computed::PositionType position_type_ = values::computed::PositionType::Static();
+    values::computed::Inset inset_ = values::computed::Inset::Default();
 
     // Alignment
     values::computed::AlignContent align_content_ = values::computed::AlignContent::Normal();

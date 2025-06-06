@@ -446,7 +446,10 @@ mod ffi {
     pub overflow: OverflowXY,
     #[cxx_name = "scrollbarWidth"]
     pub scrollbar_width: f32,
+
     pub position: Position,
+    pub inset: LengthPercentageAutoRect,
+
     pub width: Dimension,
     pub height: Dimension,
     #[cxx_name = "widthRange"]
@@ -986,6 +989,7 @@ impl From<taffy::Style> for ffi::Style {
       overflow: style.overflow.into(),
       scrollbar_width: style.scrollbar_width,
       position: style.position.into(),
+      inset: style.inset.into(),
       width: style.size.width.into(),
       height: style.size.height.into(),
       width_range: ffi::DimensionRange::new(style.min_size.width, style.max_size.width),
@@ -1216,13 +1220,7 @@ impl From<ffi::Style> for taffy::Style {
       overflow: value.overflow.into(),
       scrollbar_width: value.scrollbar_width,
       position: value.position.into(),
-      // TODO(yorkie): support top/bottom/left/right, currently set the default value.
-      inset: taffy::Rect {
-        top: taffy::LengthPercentageAuto::auto(),
-        right: taffy::LengthPercentageAuto::auto(),
-        bottom: taffy::LengthPercentageAuto::auto(),
-        left: taffy::LengthPercentageAuto::auto(),
-      },
+      inset: value.inset.into(),
       size: taffy::Size {
         width: value.width.into(),
         height: value.height.into(),

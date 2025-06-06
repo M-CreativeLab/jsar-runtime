@@ -131,4 +131,59 @@ namespace client_cssom::values::generics
     Tag tag_;
     std::optional<Pos> position_ = std::nullopt;
   };
+
+  template <typename T, typename LP>
+  class GenericInset
+  {
+  private:
+    enum Tag : uint8_t
+    {
+      kLengthPercentage,
+      kAuto,
+    };
+
+  public:
+    static T Auto() { return T(kAuto); }
+    static T LengthPercentage(LP length_percent) { return T(kLengthPercentage, length_percent); }
+
+  public:
+    GenericInset()
+        : tag_(kAuto),
+          length_percent_(std::nullopt)
+    {
+    }
+
+  private:
+    GenericInset(Tag tag, std::optional<LP> length_percent = std::nullopt)
+        : tag_(tag),
+          length_percent_(length_percent)
+    {
+    }
+
+  public:
+    inline bool isAuto() const { return tag_ == kAuto; }
+    inline bool isLengthPercentage() const { return tag_ == kLengthPercentage; }
+
+    inline LP lengthPercent() const
+    {
+      assert(tag_ == kLengthPercentage && "The tag is not length percentage.");
+      return length_percent_.value();
+    }
+
+  protected:
+    void setAuto()
+    {
+      tag_ = kAuto;
+      length_percent_ = std::nullopt;
+    }
+    void setLengthPercentage(LP length_percent)
+    {
+      tag_ = kLengthPercentage;
+      length_percent_ = length_percent;
+    }
+
+  private:
+    Tag tag_;
+    std::optional<LP> length_percent_;
+  };
 }

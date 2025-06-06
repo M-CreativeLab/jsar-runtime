@@ -10,6 +10,7 @@
 #include "./values/specified/flex.hpp"
 #include "./values/specified/font.hpp"
 #include "./values/specified/color.hpp"
+#include "./values/specified/position.hpp"
 #include "./values/specified/time.hpp"
 #include "./values/specified/transform.hpp"
 
@@ -50,9 +51,15 @@ namespace client_cssom
 
     layoutStyle.setDisplay(display_.toLayoutValue());
     layoutStyle.setBoxSizing(box_sizing_.toLayoutValue());
-    layoutStyle.setPosition(position_type_.toLayoutValue());
     layoutStyle.setOverflowX(overflow_x_.toLayoutValue());
     layoutStyle.setOverflowY(overflow_y_.toLayoutValue());
+
+    // Position
+    layoutStyle.setPosition(position_type_.toLayoutValue());
+    layoutStyle.setTop(inset_.top().toLayoutValue());
+    layoutStyle.setRight(inset_.right().toLayoutValue());
+    layoutStyle.setBottom(inset_.bottom().toLayoutValue());
+    layoutStyle.setLeft(inset_.left().toLayoutValue());
 
     // Sizes
     layoutStyle.setWidth(width_.toLayoutValue());
@@ -241,6 +248,22 @@ namespace client_cssom
     else if (name == "position")
     {
       position_type_ = Parse::ParseSingleValue<values::specified::PositionType>(value).toComputedValue(context);
+    }
+    else if (name == "top")
+    {
+      inset_.setTop(Parse::ParseSingleValue<values::specified::InsetSize>(value).toComputedValue(context));
+    }
+    else if (name == "right")
+    {
+      inset_.setRight(Parse::ParseSingleValue<values::specified::InsetSize>(value).toComputedValue(context));
+    }
+    else if (name == "bottom")
+    {
+      inset_.setBottom(Parse::ParseSingleValue<values::specified::InsetSize>(value).toComputedValue(context));
+    }
+    else if (name == "left")
+    {
+      inset_.setLeft(Parse::ParseSingleValue<values::specified::InsetSize>(value).toComputedValue(context));
     }
     else if (name == "overflow-x")
     {

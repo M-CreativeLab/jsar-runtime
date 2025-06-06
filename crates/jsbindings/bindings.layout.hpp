@@ -783,6 +783,13 @@ namespace crates::layout2
               2.0f,
               // position
               styles::Position::Relative(),
+              // inset
+              holocron::layout::LengthPercentageAutoRect{
+                  .top = styles::LengthPercentageAuto::Auto(),
+                  .right = styles::LengthPercentageAuto::Auto(),
+                  .bottom = styles::LengthPercentageAuto::Auto(),
+                  .left = styles::LengthPercentageAuto::Auto(),
+              },
               // width
               styles::Dimension::Auto(),
               // height
@@ -880,6 +887,18 @@ namespace crates::layout2
     // Position property
     const styles::Position position() const { return style_.position; }
     void setPosition(styles::Position value) { style_.position = value; }
+    const Rect<styles::LengthPercentageAuto> inset() const
+    {
+      return Rect<styles::LengthPercentageAuto>(
+          styles::LengthPercentageAuto(style_.inset.top),
+          styles::LengthPercentageAuto(style_.inset.right),
+          styles::LengthPercentageAuto(style_.inset.bottom),
+          styles::LengthPercentageAuto(style_.inset.left));
+    }
+    void setTop(styles::LengthPercentageAuto value) { style_.inset.top = value; }
+    void setRight(styles::LengthPercentageAuto value) { style_.inset.right = value; }
+    void setBottom(styles::LengthPercentageAuto value) { style_.inset.bottom = value; }
+    void setLeft(styles::LengthPercentageAuto value) { style_.inset.left = value; }
 
     // Size properties
     styles::Dimension width() const { return styles::Dimension(style_.width); }
