@@ -23,7 +23,7 @@
 
 ## Introduction
 
-### ✨ Bringing Web Technologies to Life in 3D Worlds
+### ✨ Bringing Web Technologies to Life in Metaverse
 
 JSAR is a revolutionary **browser engine library** designed for the next computing era (Metaverse). It enables you to 
 create immersive Web contents using the modern Web technologies ([HTML5][], [CSS3][], [TypeScript][]) and seamlessly 
