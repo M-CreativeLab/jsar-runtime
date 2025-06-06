@@ -20,10 +20,11 @@ namespace canvas
   class RenderingContextBase
   {
   public:
-    RenderingContextBase(RenderingContextType type, std::weak_ptr<CanvasType> canvasRef)
+    RenderingContextBase(RenderingContextType type, std::shared_ptr<CanvasType> canvasRef)
         : contextType(type), canvasRef(canvasRef), clientContext(TrClientContextPerProcess::Get())
     {
       assert(clientContext != nullptr);
+      assert(canvasRef != nullptr && "Canvas reference cannot be null");
     }
     virtual ~RenderingContextBase() = default;
 

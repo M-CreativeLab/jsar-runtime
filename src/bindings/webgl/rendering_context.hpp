@@ -6,11 +6,12 @@
 #include <assert.h>
 #include <napi.h>
 
-#include "client/per_process.hpp"
-#include "client/graphics/webgl_context.hpp"
-#include "common/utility.hpp"
-#include "common/command_buffers/webgl_constants.hpp"
-#include "common/command_buffers/command_buffers.hpp"
+#include <common/utility.hpp>
+#include <common/command_buffers/webgl_constants.hpp>
+#include <common/command_buffers/command_buffers.hpp>
+#include <client/per_process.hpp>
+#include <client/graphics/webgl_context.hpp>
+#include <client/canvas/image_source.hpp>
 
 namespace webgl
 {
@@ -181,6 +182,12 @@ namespace webgl
     int getDrawingBufferWidth() { return glContext_->drawingBufferWidth(); }
     int getDrawingBufferHeight() { return glContext_->drawingBufferHeight(); }
     bool isWebGL2Context() { return glContext_->isWebGL2(); }
+
+  protected:
+    // Get the `canvas::ImageSource` from the given JavaScript object, such as an `HTMLImageElement`,
+    // `HTMLCanvasElement`, or `ImageBitmap`, returns `nullptr` if the object is not a valid image source, or
+    // unsupported.
+    std::shared_ptr<canvas::ImageSource> getImageSourceFromObject(Napi::Env, Napi::Object);
 
   protected:
     std::shared_ptr<ContextType> glContext_;

@@ -1669,11 +1669,6 @@ private:
 		auto type = req->indicesType;
 		auto indices = reinterpret_cast<GLvoid *>(req->indicesOffset);
 
-		if (TR_UNLIKELY(indices != nullptr))
-		{
-			DEBUG(LOG_TAG_ERROR, "Skip this drawElements(): the indices(%d) are not supported.", req->indicesOffset);
-			return;
-		}
 		assert(count < WEBGL_MAX_COUNT_PER_DRAWCALL);
 
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)

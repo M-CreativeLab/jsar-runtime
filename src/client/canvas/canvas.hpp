@@ -127,9 +127,15 @@ namespace canvas
 
   protected:
     sk_sp<SkSurface> skSurface; // The Skia surface for rendering
-    std::shared_ptr<RenderingContextBase<T>> renderingContext; // The rendering context
-    uint32_t widthToSet; // The width to set for the canvas
-    uint32_t heightToSet; // The height to set for the canvas
+    uint32_t widthToSet;        // The width to set for the canvas
+    uint32_t heightToSet;       // The height to set for the canvas
+
+    // Cached rendering contexts
+    //
+    // A canvas can have only one instance of a type of rendering context, such as there is only a 2d context, but at
+    // the same time, developers can get a `2d` context and a `gl` context, both them could draw on this canvas.
+    std::shared_ptr<CanvasRenderingContext2D<T>> renderingContext2d;
+    // TODO(yorkie): support other types of rendering contexts, such as WebGL, WebGL2, etc.
   };
 
   /**

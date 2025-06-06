@@ -12,14 +12,10 @@
 namespace canvas
 {
   template <typename CanvasType>
-  CanvasRenderingContext2D<CanvasType>::CanvasRenderingContext2D(std::weak_ptr<CanvasType> canvasRef)
+  CanvasRenderingContext2D<CanvasType>::CanvasRenderingContext2D(std::shared_ptr<CanvasType> canvasRef)
       : RenderingContextBase<CanvasType>(RenderingContextType::RenderingContext2D, canvasRef)
   {
-    std::shared_ptr<CanvasType> canvas = canvasRef.lock();
-    sk_sp<SkSurface> skSurface = canvas->skSurface;
-
-    skCanvas = skSurface->getCanvas();
-    skCanvas->drawColor(SK_ColorWHITE);
+    reset(canvasRef->skSurface);
 
     skPaint = std::make_shared<SkPaint>();
     skPaint->setAntiAlias(true);
@@ -567,7 +563,7 @@ namespace canvas
     SkPaint imagePaint = getFillPaint();
     imagePaint.setColor(SK_ColorWHITE);
     sk_sp<SkImage> imageSource = image->makeSkImage();
-    if (imageSource == nullptr)
+    if (TR_UNLIKELY(imageSource == nullptr))
     {
       std::cerr << "Failed to load image to draw" << std::endl;
       return;
@@ -717,6 +713,15 @@ namespace canvas
   void CanvasRenderingContext2D<CanvasType>::restore()
   {
     skCanvas->restore();
+  }
+
+  template <typename CanvasType>
+  void CanvasRenderingContext2D<CanvasType>::reset(sk_sp<SkSurface> skSurface)
+  {
+    skCanvas = skSurface->getCanvas();
+    skCanvas->drawColor(SK_ColorWHITE);
+
+    // TODO(yorkie): should redraw last content?
   }
 
   template <typename CanvasType>

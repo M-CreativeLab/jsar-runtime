@@ -63,9 +63,10 @@ namespace canvas
   template <typename CanvasType>
   class CanvasRenderingContext2D : public RenderingContextBase<CanvasType>
   {
-  public:
     using RenderingContextBase<CanvasType>::RenderingContextBase;
-    CanvasRenderingContext2D(std::weak_ptr<CanvasType> canvasRef);
+
+  public:
+    CanvasRenderingContext2D(std::shared_ptr<CanvasType> canvasRef);
 
   public:
     bool setFillStyle(const std::string &style);
@@ -123,6 +124,9 @@ namespace canvas
                       float dirtyX, float dirtyY, float dirtyWidth, float dirtyHeight);
     void save();
     void restore();
+
+    // This resets the Skia surface and reinitializes the context.
+    void reset(sk_sp<SkSurface>);
 
   private:
     SkPaint getFillPaint();

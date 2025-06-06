@@ -1103,29 +1103,9 @@ namespace webgl
         return env.Undefined();
       }
 
-      shared_ptr<canvas::ImageSource> imageSource = nullptr;
-      auto imageSourceObject = info[5].ToObject();
-      if (imageSourceObject.InstanceOf(canvasbinding::ImageBitmap::constructor->Value()))
-        imageSource = canvasbinding::ImageBitmap::Unwrap(imageSourceObject)->getImageSource();
-      else if (imageSourceObject.InstanceOf(canvasbinding::ImageData::constructor->Value()))
-        imageSource = canvasbinding::ImageData::Unwrap(imageSourceObject)->getImageSource();
-      else if (imageSourceObject.InstanceOf(canvasbinding::OffscreenCanvas::constructor->Value()))
-        imageSource = canvasbinding::OffscreenCanvas::Unwrap(imageSourceObject)->getImageSource();
-      else if (imageSourceObject.InstanceOf(dombinding::HTMLCanvasElement::constructor->Value()))
-        imageSource = dombinding::HTMLCanvasElement::Unwrap(imageSourceObject)->getImageSource();
-      else if (imageSourceObject.InstanceOf(dombinding::HTMLImageElement::constructor->Value()))
-        imageSource = dombinding::HTMLImageElement::Unwrap(imageSourceObject)->getImageSource();
-      else
-      {
-        /**
-         * TODO(yorkie): support HTMLVideoElement
-         */
-      }
-
+      shared_ptr<canvas::ImageSource> imageSource = getImageSourceFromObject(env, info[5].ToObject());
       if (imageSource == nullptr)
       {
-        env.Global().Get("console").As<Napi::Object>().Get("log").As<Napi::Function>()({imageSourceObject});
-
         auto msg = "Failed to execute 'texImage2D' on 'WebGLRenderingContext': parameter 5 is not of type "
                    "'ImageBitmap', 'ImageData', 'OffscreenCanvas', 'HTMLCanvasElement', or 'HTMLImageElement'";
         Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
@@ -1235,34 +1215,19 @@ namespace webgl
       format = info[4].ToNumber().Int32Value();
       pixelType = info[5].ToNumber().Int32Value();
 
-      if (!info[6].IsObject())
+      auto imageSourceValue = info[6];
+      if (!imageSourceValue.IsObject())
       {
         Napi::TypeError::New(env, "the image source should be an object.").ThrowAsJavaScriptException();
         return env.Undefined();
       }
 
-      // env.Global().Get("console").As<Napi::Object>().Get("log").As<Napi::Function>()({info[6]});
-      shared_ptr<canvas::ImageSource> imageSource = nullptr;
-      auto imageSourceObject = info[6].ToObject();
-      if (imageSourceObject.InstanceOf(canvasbinding::ImageBitmap::constructor->Value()))
-        imageSource = canvasbinding::ImageBitmap::Unwrap(imageSourceObject)->getImageSource();
-      else if (imageSourceObject.InstanceOf(canvasbinding::ImageData::constructor->Value()))
-        imageSource = canvasbinding::ImageData::Unwrap(imageSourceObject)->getImageSource();
-      else if (imageSourceObject.InstanceOf(canvasbinding::OffscreenCanvas::constructor->Value()))
-        imageSource = canvasbinding::OffscreenCanvas::Unwrap(imageSourceObject)->getImageSource();
-      else if (imageSourceObject.InstanceOf(dombinding::HTMLImageElement::constructor->Value()))
-        imageSource = dombinding::HTMLImageElement::Unwrap(imageSourceObject)->getImageSource();
-      else
-      {
-        /**
-         * TODO: support HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
-         */
-      }
-
+      shared_ptr<canvas::ImageSource> imageSource = getImageSourceFromObject(env, imageSourceValue.ToObject());
       if (imageSource == nullptr)
       {
-        Napi::TypeError::New(env, "Failed to call `texSubImage2D`: unsupported `imageSource` type")
-            .ThrowAsJavaScriptException();
+        auto msg = "Failed to execute 'texSubImage2D' on 'WebGLRenderingContext': parameter 6 is not of type "
+                   "'ImageBitmap', 'ImageData', 'OffscreenCanvas', 'HTMLCanvasElement', or 'HTMLImageElement'";
+        Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
         return env.Undefined();
       }
 
@@ -2587,6 +2552,35 @@ namespace webgl
     Napi::HandleScope scope(env);
     Napi::TypeError::New(env, "drawingBufferHeight is readonly.")
         .ThrowAsJavaScriptException();
+  }
+
+  template <typename ObjectType, typename ContextType>
+  std::shared_ptr<canvas::ImageSource> WebGLBaseRenderingContext<ObjectType, ContextType>::getImageSourceFromObject(Napi::Env env, Napi::Object imageSourceObject)
+  {
+    if (imageSourceObject.InstanceOf(canvasbinding::ImageBitmap::constructor->Value()))
+      return canvasbinding::ImageBitmap::Unwrap(imageSourceObject)->getImageSource();
+    else if (imageSourceObject.InstanceOf(canvasbinding::ImageData::constructor->Value()))
+      return canvasbinding::ImageData::Unwrap(imageSourceObject)->getImageSource();
+    else if (imageSourceObject.InstanceOf(canvasbinding::OffscreenCanvas::constructor->Value()))
+      return canvasbinding::OffscreenCanvas::Unwrap(imageSourceObject)->getImageSource();
+    else if (imageSourceObject.InstanceOf(dombinding::HTMLCanvasElement::constructor->Value()))
+      return dombinding::HTMLCanvasElement::Unwrap(imageSourceObject)->getImageSource();
+    else if (imageSourceObject.InstanceOf(dombinding::HTMLImageElement::constructor->Value()))
+      return dombinding::HTMLImageElement::Unwrap(imageSourceObject)->getImageSource();
+    else
+    {
+      // Prints the object if not supported.
+      env.Global()
+          .Get("console")
+          .As<Napi::Object>()
+          .Get("log")
+          .As<Napi::Function>()({imageSourceObject});
+
+      /**
+       * TODO(yorkie): support HTMLVideoElement
+       */
+      return nullptr;
+    }
   }
 
 }
