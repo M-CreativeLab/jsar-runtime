@@ -297,6 +297,9 @@ namespace crates::layout2
         handle_ = parse(input).value_or(holocron::layout::Position::Relative);
       }
 
+      inline bool isRelative() const { return handle_ == holocron::layout::Position::Relative; }
+      inline bool isAbsolute() const { return handle_ == holocron::layout::Position::Absolute; }
+
     private:
       std::optional<holocron::layout::Position> parse(const std::string &input) override
       {

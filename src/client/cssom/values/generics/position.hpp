@@ -50,12 +50,13 @@ namespace client_cssom::values::generics
     {
       switch (tag_)
       {
+      case kStatic:
       case kRelative:
         return crates::layout2::styles::Position::Relative();
       case kAbsolute:
         return crates::layout2::styles::Position::Absolute();
       default:
-        // TODO(yorkie): support static, fixed and sticky.
+        // TODO(yorkie): support fixed and sticky.
         return crates::layout2::styles::Position::Relative();
       }
     }

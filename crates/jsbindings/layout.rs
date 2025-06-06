@@ -1216,6 +1216,13 @@ impl From<ffi::Style> for taffy::Style {
       overflow: value.overflow.into(),
       scrollbar_width: value.scrollbar_width,
       position: value.position.into(),
+      // TODO(yorkie): support top/bottom/left/right, currently set the default value.
+      inset: taffy::Rect {
+        top: taffy::LengthPercentageAuto::auto(),
+        right: taffy::LengthPercentageAuto::auto(),
+        bottom: taffy::LengthPercentageAuto::auto(),
+        left: taffy::LengthPercentageAuto::auto(),
+      },
       size: taffy::Size {
         width: value.width.into(),
         height: value.height.into(),

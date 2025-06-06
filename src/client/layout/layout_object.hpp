@@ -77,11 +77,11 @@ namespace client_layout
     virtual bool isFragmentLessBox() const { return false; }
 
     // Absolute or fixed positioning
-    bool isRelativelyPositioned() const { return false; }
-    bool isStickyPositioned() const { return false; }
-    bool isFixedPositioned() const { return false; }
-    bool isAbsolutelyPositioned() const { return false; }
-    bool isPositioned() const { return false; }
+    bool isRelativelyPositioned() const;
+    bool isStickyPositioned() const;
+    bool isFixedPositioned() const;
+    bool isAbsolutelyPositioned() const;
+    bool isPositioned() const;
     bool isInline() const { return false; }
     bool isAtomicInlineLevel() const { return false; }
 

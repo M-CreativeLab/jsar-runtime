@@ -238,6 +238,10 @@ namespace client_cssom
       box_sizing_ = Parse::ParseSingleValue<values::computed::BoxSizing>(value);
       bitfields_.SetHasBoxSizing(true);
     }
+    else if (name == "position")
+    {
+      position_type_ = Parse::ParseSingleValue<values::specified::PositionType>(value).toComputedValue(context);
+    }
     else if (name == "overflow-x")
     {
       overflow_x_ = Parse::ParseSingleValue<values::computed::Overflow>(value);

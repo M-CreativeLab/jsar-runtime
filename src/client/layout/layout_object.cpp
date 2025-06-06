@@ -60,6 +60,66 @@ namespace client_layout
     return node() != nullptr && dom::Node::Is<dom::HTMLBodyElement>(node());
   }
 
+  bool LayoutObject::isRelativelyPositioned() const
+  {
+    if (isText())
+      return false;
+
+    auto element = dom::Node::As<dom::Element>(node());
+    if (TR_UNLIKELY(element == nullptr) || !element->hasAdoptedStyle())
+      return false;
+    const auto &elementStyle = element->adoptedStyleRef();
+    return elementStyle.positionType().isRelative();
+  }
+
+  bool LayoutObject::isStickyPositioned() const
+  {
+    if (isText())
+      return false;
+
+    auto element = dom::Node::As<dom::Element>(node());
+    if (TR_UNLIKELY(element == nullptr) || !element->hasAdoptedStyle())
+      return false;
+    const auto &elementStyle = element->adoptedStyleRef();
+    return elementStyle.positionType().isSticky();
+  }
+
+  bool LayoutObject::isFixedPositioned() const
+  {
+    if (isText())
+      return false;
+
+    auto element = dom::Node::As<dom::Element>(node());
+    if (TR_UNLIKELY(element == nullptr) || !element->hasAdoptedStyle())
+      return false;
+    const auto &elementStyle = element->adoptedStyleRef();
+    return elementStyle.positionType().isFixed();
+  }
+
+  bool LayoutObject::isAbsolutelyPositioned() const
+  {
+    if (isText())
+      return false;
+
+    auto element = dom::Node::As<dom::Element>(node());
+    if (TR_UNLIKELY(element == nullptr) || !element->hasAdoptedStyle())
+      return false;
+    const auto &elementStyle = element->adoptedStyleRef();
+    return elementStyle.positionType().isAbsolute();
+  }
+
+  bool LayoutObject::isPositioned() const
+  {
+    if (isText())
+      return false;
+
+    auto element = dom::Node::As<dom::Element>(node());
+    if (TR_UNLIKELY(element == nullptr) || !element->hasAdoptedStyle())
+      return false;
+    const auto &elementStyle = element->adoptedStyleRef();
+    return elementStyle.positionType().isStatic() == false;
+  }
+
   bool LayoutObject::hasClip() const
   {
     auto element = dom::Node::As<dom::Element>(node());
@@ -262,7 +322,11 @@ namespace client_layout
     }
 
     assert(formattingContext_ != nullptr && "Formatting context must be set.");
-    if (parent() == nullptr)
+    if (parent() == nullptr ||
+        // Check the positioning of the node is absolute or fixed, it returns the node's fragment directly for those
+        // cases.
+        isAbsolutelyPositioned() ||
+        isFixedPositioned())
     {
       if (diff.enabled)
       {
