@@ -17,14 +17,14 @@ namespace dom
     }
 
   public:
-    void createdCallback() override
+    void createdCallback(bool from_scripting) override
     {
       defaultStyle_.setProperty("display", "block");
       defaultStyle_.setProperty("margin", "10px 0");
       defaultStyle_.setProperty("height", "auto");
       defaultStyle_.setProperty("width", "auto");
 
-      HTMLElement::createdCallback();
+      HTMLElement::createdCallback(from_scripting);
     }
   };
 }

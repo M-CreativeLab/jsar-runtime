@@ -83,12 +83,15 @@ namespace dom
      * Create a new `Element` object from a tag name, which is used to create an element from scripts such as:
      * `document.createElement('div')`.
      *
+     * @param namespaceURI The namespace URI of the element, usually it is an empty string for HTML elements.
      * @param tagName The tag name of the element.
      * @param ownerDocument The owner document of the element.
+     * @param fromScripting Whether the element is created from scripting or not.
      * @returns The created `Element` object.
      */
     static std::shared_ptr<Element> CreateElement(std::string namespaceURI, std::string tagName,
-                                                  std::shared_ptr<Document> ownerDocument);
+                                                  std::shared_ptr<Document> ownerDocument,
+                                                  bool fromScripting);
 
     /**
      * Clone the given element and return a new element with the same properties.
@@ -214,7 +217,7 @@ namespace dom
     /**
      * When the element is created each time.
      */
-    virtual void createdCallback();
+    virtual void createdCallback(bool from_scripting);
     /**
      * When the element is moved to a new document each time.
      */

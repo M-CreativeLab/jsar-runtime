@@ -22,9 +22,9 @@ namespace dom
     }
 
   public:
-    void createdCallback() override
+    void createdCallback(bool from_scripting) override
     {
-      HTMLElement::createdCallback();
+      HTMLElement::createdCallback(from_scripting);
       canvasImpl_ = std::make_shared<canvas::Canvas>();
     }
 

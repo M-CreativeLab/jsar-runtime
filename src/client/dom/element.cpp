@@ -28,25 +28,26 @@ namespace dom
   if (nodeName == tagName)                                                     \
   {                                                                            \
     shared_ptr<Element> element = make_shared<className>(node, ownerDocument); \
-    element->createdCallback();                                                \
+    element->createdCallback(false);                                           \
     return element;                                                            \
   }
     TYPED_ELEMENT_MAP(XX)
 #undef XX
 
     shared_ptr<HTMLElement> element = make_shared<HTMLElement>(node, ownerDocument);
-    element->createdCallback();
+    element->createdCallback(false);
     return dynamic_pointer_cast<Element>(element);
   }
 
-  shared_ptr<Element> Element::CreateElement(string namespaceURI, string tagName, shared_ptr<Document> ownerDocument)
+  shared_ptr<Element> Element::CreateElement(string namespaceURI, string tagName, shared_ptr<Document> ownerDocument,
+                                             bool from_scripting)
   {
 #define XX(tagNameStr, className)                                                 \
   if (tagName == tagNameStr)                                                      \
   {                                                                               \
     shared_ptr<Element> element = make_shared<className>(tagName, ownerDocument); \
     element->namespaceURI = namespaceURI;                                         \
-    element->createdCallback();                                                   \
+    element->createdCallback(from_scripting);                                     \
     return element;                                                               \
   }
     TYPED_ELEMENT_MAP(XX)
@@ -54,7 +55,7 @@ namespace dom
 
     shared_ptr<HTMLElement> element = make_shared<HTMLElement>(tagName, ownerDocument);
     element->namespaceURI = namespaceURI;
-    element->createdCallback();
+    element->createdCallback(from_scripting);
     return dynamic_pointer_cast<Element>(element);
   }
 
@@ -69,7 +70,7 @@ namespace dom
     shared_ptr<CLASS_NAME> typedSrcElement = dynamic_pointer_cast<CLASS_NAME>(srcElement); \
     assert(typedSrcElement != nullptr && "The source element is not the specific type.");  \
     shared_ptr<Element> clonedElement = make_shared<CLASS_NAME>(*typedSrcElement);         \
-    clonedElement->createdCallback();                                                      \
+    clonedElement->createdCallback(true);                                                  \
     return clonedElement;                                                                  \
   }
     TYPED_ELEMENT_MAP(XX)
@@ -80,7 +81,7 @@ namespace dom
     {
       auto typedSrcElement = dynamic_pointer_cast<HTMLElement>(srcElement);
       clonedElement = make_shared<HTMLElement>(*typedSrcElement);
-      clonedElement->createdCallback();
+      clonedElement->createdCallback(true);
     }
     return dynamic_pointer_cast<Element>(clonedElement);
   }
@@ -127,7 +128,7 @@ namespace dom
     Node::disconnectedCallback();
   }
 
-  void Element::createdCallback()
+  void Element::createdCallback(bool from_scripting)
   {
     /**
      * Name && namespace.

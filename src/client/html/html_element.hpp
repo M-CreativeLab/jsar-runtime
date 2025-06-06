@@ -41,7 +41,7 @@ namespace dom
     inline float &offsetHeight() override { return offsetHeight_; }
 
   public:
-    void createdCallback() override;
+    void createdCallback(bool from_scripting) override;
     void attributeChangedCallback(const std::string &name,
                                   const std::string &oldValue, const std::string &newValue) override;
 

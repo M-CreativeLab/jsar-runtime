@@ -6,9 +6,9 @@ namespace dom
 {
   using namespace std;
 
-  void HTMLStyleElement::createdCallback()
+  void HTMLStyleElement::createdCallback(bool from_scripting)
   {
-    HTMLElement::createdCallback();
+    HTMLElement::createdCallback(from_scripting);
     renderable = false;
 
     if (hasAttribute("blocking"))

@@ -50,7 +50,8 @@ namespace dombinding
     assert(init.ownerDocument != nullptr && "ownerDocument is required");
     shared_ptr<dom::Element> element = dom::Element::CreateElement(init.namespaceURI,
                                                                    init.tagName,
-                                                                   init.ownerDocument);
+                                                                   init.ownerDocument,
+                                                                   true);
     return MakeFromImpl<ObjectType, ElementType>(env, element);
   }
 

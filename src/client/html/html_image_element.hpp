@@ -47,7 +47,7 @@ namespace dom
     }
 
   public:
-    void createdCallback() override;
+    void createdCallback(bool from_scripting) override;
     void connectedCallback() override;
     void attributeChangedCallback(const std::string &name,
                                   const std::string &oldValue, const std::string &newValue) override;
@@ -179,7 +179,7 @@ namespace dom
     bool is_src_image_loaded_ = false;
     bool is_src_image_decoded_ = false;
 
-    LoadingHint loading_ = LoadingHint::kLoadingLazy;
+    LoadingHint loading_ = LoadingHint::kLoadingEager;
     DecodingType decoding_ = DecodingType::kDecodingAsync;
 
     bool is_map_ = false;

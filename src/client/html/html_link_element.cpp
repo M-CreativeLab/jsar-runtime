@@ -10,9 +10,9 @@ namespace dom
   using namespace std;
   using namespace crates;
 
-  void HTMLLinkElement::createdCallback()
+  void HTMLLinkElement::createdCallback(bool from_scripting)
   {
-    HTMLElement::createdCallback();
+    HTMLElement::createdCallback(from_scripting);
     renderable = false;
 
     if (hasAttribute("as"))

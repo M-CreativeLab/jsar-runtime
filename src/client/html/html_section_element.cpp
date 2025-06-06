@@ -3,9 +3,9 @@
 
 namespace dom
 {
-  void HTMLSectionElement::createdCallback()
+  void HTMLSectionElement::createdCallback(bool from_scripting)
   {
     defaultStyle_.setProperty("display", "block");
-    HTMLElement::createdCallback();
+    HTMLElement::createdCallback(from_scripting);
   }
 }

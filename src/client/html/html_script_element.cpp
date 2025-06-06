@@ -11,9 +11,9 @@ namespace dom
   using namespace std;
   using namespace crates;
 
-  void HTMLScriptElement::createdCallback()
+  void HTMLScriptElement::createdCallback(bool from_scripting)
   {
-    HTMLElement::createdCallback();
+    HTMLElement::createdCallback(from_scripting);
     renderable = false;
 
     if (hasAttribute("src"))

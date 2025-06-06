@@ -27,7 +27,7 @@ namespace dom
     inline DocumentFragment &content() { return *content_; }
 
   private:
-    void createdCallback() override;
+    void createdCallback(bool from_scripting) override;
 
   private:
     std::shared_ptr<DocumentFragment> content_;

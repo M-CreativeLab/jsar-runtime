@@ -3,9 +3,9 @@
 
 namespace dom
 {
-  void HTMLTemplateElement::createdCallback()
+  void HTMLTemplateElement::createdCallback(bool from_scripting)
   {
-    HTMLElement::createdCallback();
+    HTMLElement::createdCallback(from_scripting);
 
     content_ = getOwnerDocumentChecked().createDocumentFragment();
     shadowRootMode_ = ShadowRootMode::Open;

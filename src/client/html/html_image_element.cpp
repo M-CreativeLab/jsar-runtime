@@ -22,14 +22,17 @@ namespace dom
   using namespace builtin_scene;
   using namespace crates::layout2::styles;
 
-  void HTMLImageElement::createdCallback()
+  void HTMLImageElement::createdCallback(bool from_scripting)
   {
-    HTMLElement::createdCallback();
+    HTMLElement::createdCallback(from_scripting);
 
     if (hasAttribute("width"))
       width_ = stoi(getAttribute("width"));
     if (hasAttribute("height"))
       height_ = stoi(getAttribute("height"));
+
+    loading_ = from_scripting ? LoadingHint::kLoadingEager : LoadingHint::kLoadingLazy;
+    decoding_ = DecodingType::kDecodingAuto;
   }
 
   void HTMLImageElement::connectedCallback()

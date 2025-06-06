@@ -16,7 +16,7 @@ namespace dom
     }
 
   public:
-    void createdCallback() override
+    void createdCallback(bool from_scripting) override
     {
       defaultStyle_.setProperty("width", "auto");
       defaultStyle_.setProperty("height", "auto");
@@ -25,7 +25,7 @@ namespace dom
       defaultStyle_.setProperty("background-color", "transparent");
       renderable = true;
 
-      HTMLElement::createdCallback();
+      HTMLElement::createdCallback(from_scripting);
     }
   };
 }

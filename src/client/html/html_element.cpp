@@ -82,9 +82,9 @@ namespace dom
     removeAttribute("data-" + CamelCaseToDashStyle(key));
   }
 
-  void HTMLElement::createdCallback()
+  void HTMLElement::createdCallback(bool from_scripting)
   {
-    Element::createdCallback();
+    Element::createdCallback(from_scripting);
 
     // Update dataset from the attributes.
     for (auto &attr : attributeNodes_)

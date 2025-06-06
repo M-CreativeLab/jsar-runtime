@@ -35,7 +35,7 @@ namespace dom
     }
 
   public:
-    void createdCallback() override;
+    void createdCallback(bool from_scripting) override;
 
   public:
     /**

@@ -9,9 +9,9 @@ namespace dom
 {
   using namespace std;
 
-  void HTMLMediaElement::createdCallback()
+  void HTMLMediaElement::createdCallback(bool from_scripting)
   {
-    HTMLElement::createdCallback();
+    HTMLElement::createdCallback(from_scripting);
 
     assert(clientContext != nullptr && "The client context is not initialized.");
     player_ = clientContext->createMediaPlayer(contentType_);
