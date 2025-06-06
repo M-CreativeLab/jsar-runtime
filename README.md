@@ -26,8 +26,8 @@
 ### ✨ Bringing Web Technologies to Life in 3D Worlds
 
 JSAR is a revolutionary **browser engine library** designed for the next computing era (Metaverse). It enables you to 
-create immersive Web contents using the modern Web technologies (HTML, CSS, JavaScript) and seamlessly integrate 
-them into mainstream 3D engines like [Unity][], [UnrealEngine][], and RealityKit.
+create immersive Web contents using the modern Web technologies ([HTML5][], [CSS3][], [TypeScript][]) and seamlessly 
+integrate them into mainstream 3D engines like [Unity][], [UnrealEngine][], and RealityKit.
 
 ### 🌟 Why Choose JSAR?
 
@@ -249,3 +249,6 @@ The loaders are more convenient way to integrate JSAR into your applications, th
 [WebGL]: https://get.webgl.org/
 [Unity]: https://unity.com/
 [UnrealEngine]: https://www.unrealengine.com/
+[HTML5]: https://www.w3.org/TR/html5/
+[CSS3]: https://www.w3.org/Style/CSS/Overview.en.html
+[TypeScript]: https://www.typescriptlang.org/
