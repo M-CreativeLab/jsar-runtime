@@ -1,4 +1,3 @@
-
 import * as THREE from 'three';
 import { LightProbeHelper } from 'three/addons/helpers/LightProbeHelper.js';
 import { LightProbeGenerator } from 'three/addons/lights/LightProbeGenerator.js';
@@ -71,7 +70,7 @@ init(() => {
   new THREE.CubeTextureLoader().load(urls, function (cubeTexture) {
     console.info('Loaded cube texture:', cubeTexture);
     try {
-      scene.background = cubeTexture;
+      // scene.background = cubeTexture;
 
       lightProbe.copy(LightProbeGenerator.fromCubeTexture(cubeTexture));
       lightProbe.intensity = API.lightProbeIntensity;
@@ -85,9 +84,11 @@ init(() => {
         envMap: cubeTexture,
         envMapIntensity: API.envMapIntensity,
       });
+      console.info(geometry, material);
 
       // mesh
       mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(0, 0, -15);
       scene.add(mesh);
 
       // helper
@@ -102,5 +103,8 @@ init(() => {
     console.error('Error loading cube texture:', err);
   });
 
+  function loop() {
+    renderer.render(scene, camera);
+  }
   renderer.setAnimationLoop(loop);
 });

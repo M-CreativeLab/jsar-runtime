@@ -1,11 +1,13 @@
 #pragma once
 
-#include "common/utility.hpp"
-#include "client/canvas/rendering_context2d.hpp"
+#include <common/utility.hpp>
+#include <client/canvas/rendering_context2d.hpp>
+#include <bindings/dom/html_canvas_element.hpp>
+#include <bindings/dom/html_image_element.hpp>
+
 #include "./rendering_context2d.hpp"
 #include "./image_bitmap.hpp"
 #include "./image_data.hpp"
-#include "../dom/html_canvas_element.hpp"
 
 namespace canvasbinding
 {
@@ -540,19 +542,24 @@ namespace canvasbinding
       imageSource = ImageBitmap::Unwrap(imageObjectToDraw)->getImageSource();
     else if (imageObjectToDraw.InstanceOf(ImageData::constructor->Value()))
       imageSource = ImageData::Unwrap(imageObjectToDraw)->getImageSource();
+    else if (imageObjectToDraw.InstanceOf(canvasbinding::OffscreenCanvas::constructor->Value()))
+      imageSource = canvasbinding::OffscreenCanvas::Unwrap(imageObjectToDraw)->getImageSource();
+    else if (imageObjectToDraw.InstanceOf(dombinding::HTMLCanvasElement::constructor->Value()))
+      imageSource = dombinding::HTMLCanvasElement::Unwrap(imageObjectToDraw)->getImageSource();
+    else if (imageObjectToDraw.InstanceOf(dombinding::HTMLImageElement::constructor->Value()))
+      imageSource = dombinding::HTMLImageElement::Unwrap(imageObjectToDraw)->getImageSource();
 
     if (imageSource == nullptr)
     {
       /**
-       * TODO: support more image source types as follows:
-       * - HTMLImageElement
+       * TODO(yorkie): support more image source types as follows:
        * - SVGImageElement
        * - HTMLVideoElement
-       * - HTMLCanvasElement
-       * - OffscreenCanvas
        * - VideoFrame
        */
-      Napi::TypeError::New(env, "Image should be an ImageBitmap or ImageData").ThrowAsJavaScriptException();
+      auto msg = "Failed to execute 'drawImage' on 'CanvasRenderingContext2D': "
+                  "Image should be an ImageBitmap, ImageData, HTMLCanvasElement or OffscreenCanvas.";
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
