@@ -1,12 +1,35 @@
 # 🚀 JSAR Runtime
 
-## ✨ Bringing Web Technologies to Life in 3D Worlds
+[![GitHub commit activity](https://img.shields.io/github/commit-activity/m/m-creativelab/jsar-runtime)](https://github.com/M-CreativeLab/jsar-runtime/commits/main/)
+[![GitHub Release](https://img.shields.io/github/v/release/m-creativelab/jsar-runtime)](https://github.com/m-creativelab/jsar-runtime/releases)
+[![GitHub License](https://img.shields.io/github/license/m-creativelab/jsar-runtime)](https://github.com/m-creativelab/jsar-runtime/blob/main/LICENSE)
+
+# Table of Contents
+
+1. [Introduction](#introduction)
+1. [Overview](#overview)
+  - [Request Formats](#request-formats)
+  - [Scripting & Modules](#scripting--modules)
+  - [3D Graphics](#3d-graphics)
+  - [Rendering Backends](#rendering-backends)
+  - [WebXR Device APIs](#webxr-device-apis)
+  - [Multimedia APIs](#multimedia-apis)
+  - [Canvas](#canvas)
+  - [Classic Rendering](#classic-rendering)
+1. [Contributing](#contributing)
+  - [Prerequisites](#prerequisites)
+  - [Build from source](#build-from-source)
+1. [Loaders](#loaders)
+
+## Introduction
+
+### ✨ Bringing Web Technologies to Life in 3D Worlds
 
 JSAR Runtime is a revolutionary **browser engine library** designed for the spatial computing era. It enables you to 
 create immersive Web applications using the Web technologies (HTML, CSS, JavaScript) and seamlessly integrate them into 
 mainstream 3D engines like [Unity][], [UnrealEngine][], and RealityKit.
 
-## 🌟 Why Choose JSAR?
+### 🌟 Why Choose JSAR?
 
 - 🎯 **3D-First Design** - Unlike traditional browsers, JSAR is optimized from the ground up for 3D and spatial computing
 - 🔧 **Easy Integration** - Supports multiple rendering backends and platform integrations
@@ -20,14 +43,14 @@ mainstream 3D engines like [Unity][], [UnrealEngine][], and RealityKit.
 
 Like the classic Web browser, it supports not only the HTML document, but also lots of formats, such as PDF, SVG, etc. The following formats JSAR is expected to support:
 
-| Format   | Status      | Recommended Use Case         |
-| -------- | ----------- | ---------------------------- |
-| HTML     | Partially   | Browsing classic Web pages   |
-| PDF      | Not started | Reading PDF documents        |
-| SVG      | Not started | Displaying SVG images        |
-| GLTF     | Ok          | Displaying 3D models         |
-| JPEG/PNG | Ok          | Viewing images               |
-| XSML     | Deprecated  | Using WebXR applications     |
+| Format   | Status      | Recommended Use Case       |
+| -------- | ----------- | -------------------------- |
+| HTML     | Partially   | Browsing classic Web pages |
+| PDF      | Not started | Reading PDF documents      |
+| SVG      | Not started | Displaying SVG images      |
+| GLTF     | Ok          | Displaying 3D models       |
+| JPEG/PNG | Ok          | Viewing images             |
+| XSML     | Deprecated  | Using WebXR applications   |
 
 > XSML: namely eXtensible Spatial Markup Language, is a new format that is designed for spatial applications for HTML developers but deprecated.
 
@@ -221,10 +244,6 @@ The loaders are more convenient way to integrate JSAR into your applications, th
 [jsar-loader-unity]: https://github.com/M-CreativeLab/jsar-loader-unity
 
 > To develop a new loader, you could see the [Embedder API Documentation](docs/api/embedder.md) for more details.
-
-## License
-
-[Apache License 2.0](LICENSE)
 
 [WebXR]: https://immersiveweb.dev/
 [WebGL]: https://get.webgl.org/
