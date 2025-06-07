@@ -1,4 +1,4 @@
-# 🚀 JSAR RUNTIME
+![JSAR Poster](./JSAR_POSTER.png)
 
 [![GitHub Release](https://img.shields.io/github/v/release/m-creativelab/jsar-runtime)](https://github.com/m-creativelab/jsar-runtime/releases)
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/m/m-creativelab/jsar-runtime)](https://github.com/M-CreativeLab/jsar-runtime/commits/main/)
