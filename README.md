@@ -1,8 +1,18 @@
-![JSAR Poster](./JSAR_POSTER.png)
+<div align="center">
+  <img alt="JSAR Poster" src="./JSAR_POSTER.png" height="300">
+  <p align="center">
+    JSAR: a revolutionary <b>Browser Engine Library</b> designed for Metaverse.
+    <br>
+    <br>
+    <a href="https://jsar.rocks/en-us/manual/latest/introduction">Documentation</a>
+    ·
+    <a href="https://deepwiki.com/m-creativelab/jsar-runtime">DeepWiki</a>
+  </p>
 
-[![GitHub Release](https://img.shields.io/github/v/release/m-creativelab/jsar-runtime)](https://github.com/m-creativelab/jsar-runtime/releases)
-[![GitHub commit activity](https://img.shields.io/github/commit-activity/m/m-creativelab/jsar-runtime)](https://github.com/M-CreativeLab/jsar-runtime/commits/main/)
-[![GitHub License](https://img.shields.io/github/license/m-creativelab/jsar-runtime)](https://github.com/m-creativelab/jsar-runtime/blob/main/LICENSE)
+  [![GitHub Release](https://img.shields.io/github/v/release/m-creativelab/jsar-runtime)](https://github.com/m-creativelab/jsar-runtime/releases)
+  [![GitHub commit activity](https://img.shields.io/github/commit-activity/m/m-creativelab/jsar-runtime)](https://github.com/M-CreativeLab/jsar-runtime/commits/main/)
+  [![GitHub License](https://img.shields.io/github/license/m-creativelab/jsar-runtime)](https://github.com/m-creativelab/jsar-runtime/blob/main/LICENSE)
+</div>
 
 # Table of Contents
 
