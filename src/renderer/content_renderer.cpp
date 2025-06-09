@@ -280,8 +280,10 @@ namespace renderer
     if (TR_LIKELY(isGraphicsContextsInitialized))
       return;
 
-    auto idStrBase = GetContentRendererId(getContent(), contextId);
-    glContext = std::make_unique<OpenGLAppContextStorage>(idStrBase);
+    string idStrBase = GetContentRendererId(getContent(), contextId);
+    OpenGLHostContextStorage *hostGLContext = constellation->renderer->getOpenGLContext();
+
+    glContext = hostGLContext->MakeAppContext(idStrBase);
     glContextForBackup = std::make_unique<OpenGLAppContextStorage>(idStrBase + "~backup", glContext.get());
     isGraphicsContextsInitialized = true;
   }

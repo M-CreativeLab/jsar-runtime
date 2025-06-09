@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <optional>
 
 #include "common/viewport.hpp"
 #include "./common.hpp"
@@ -224,21 +225,23 @@ public:
   void RecordProgram(int program);
   void RecordArrayBuffer(int buffer);
   void RecordElementArrayBuffer(int buffer);
-  void RecordFramebuffer(int buffer);
-  void RecordRenderbuffer(int buffer);
+  void RecordFramebuffer(GLuint buffer);
+  void RecordRenderbuffer(GLuint buffer);
   void RecordVertexArrayObject(int vao);
   void RecordActiveTextureUnit(int unit);
   void RecordTextureBindingWithUnit(GLenum target, GLuint texture);
 
-  const char *GetName() { return m_Name.c_str(); }
-  TrViewport GetViewport() { return TrViewport(m_Viewport[2], m_Viewport[3], m_Viewport[0], m_Viewport[1]); }
-  GLint GetProgram() { return m_ProgramId; }
-  GLint GetArrayBuffer() { return m_ArrayBufferId; }
-  GLint GetElementArrayBuffer() { return m_ElementArrayBufferId; }
-  GLint GetFramebuffer() { return m_FramebufferId; }
-  GLint GetRenderbuffer() { return m_RenderbufferId; }
-  GLint GetVertexArrayObject() { return m_VertexArrayObjectId; }
-  GLenum GetActiveTextureUnit() { return m_LastActiveTextureUnit; }
+  inline const char *GetName() const { return m_Name.c_str(); }
+  inline TrViewport GetViewport() const { return TrViewport(m_Viewport[2], m_Viewport[3], m_Viewport[0], m_Viewport[1]); }
+  inline GLint GetProgram() const { return m_ProgramId; }
+  inline GLint GetArrayBuffer() const { return m_ArrayBufferId; }
+  inline GLint GetElementArrayBuffer() const { return m_ElementArrayBufferId; }
+  inline GLint GetFramebuffer() const { return m_FramebufferId.value_or(0); }
+  inline GLint GetRenderbuffer() const { return m_RenderbufferId.value_or(0); }
+  // Returns the samples of the stencil render target.
+  inline GLuint GetStencilRenderBufferSamples() const { return m_StencilRenderTargetSamples; }
+  inline GLint GetVertexArrayObject() const { return m_VertexArrayObjectId; }
+  inline GLenum GetActiveTextureUnit() const { return m_LastActiveTextureUnit; }
 
   void ResetProgram(int programToReset);
   void Restore();
@@ -270,6 +273,7 @@ protected: /** Global States */
   // Stencil
   GLuint m_StencilRenderTarget;
   GLenum m_StencilRenderTargetType = GL_NONE;
+  GLuint m_StencilRenderTargetSamples = 1;
   GLint m_StencilTextureLevel = 0;
   GLboolean m_StencilTestEnabled;
   GLuint m_StencilMask;
@@ -289,12 +293,14 @@ protected: /** OpenGLES objects */
   GLint m_ProgramId = 0;
   GLint m_ArrayBufferId = 0;
   GLint m_ElementArrayBufferId = 0;
-  GLint m_FramebufferId = 0;
-  GLint m_RenderbufferId = 0;
+  std::optional<GLuint> m_FramebufferId = std::nullopt;
+  std::optional<GLuint> m_RenderbufferId = std::nullopt;
   GLint m_VertexArrayObjectId = 0;
   GLenum m_LastActiveTextureUnit = GL_TEXTURE0;
   std::map<GLenum, std::shared_ptr<OpenGLTextureBinding>> m_TextureBindingsWithUnit;
 };
+
+class OpenGLAppContextStorage; // Forward declaration
 
 class OpenGLHostContextStorage : public OpenGLContextStorage
 {
@@ -309,6 +315,13 @@ public:
   void RecordTextureBindingFromHost();
   void ConfigureFramebuffer();
   void RestoreFramebuffer();
+
+  // Create a new `OpenGLAppContextStorage` based on the host context.
+  std::unique_ptr<OpenGLAppContextStorage> MakeAppContext(const std::string &name);
+
+private:
+  std::optional<GLuint> m_SharedDepthTexture = std::nullopt;
+  std::optional<GLuint> m_SharedDepthFramebuffer = std::nullopt;  // Used to copy from the host context only
 };
 
 class OpenGLNamesStorage : public std::map<GLuint, bool>
@@ -338,7 +351,7 @@ public:
 class OpenGLAppContextStorage : public OpenGLContextStorage
 {
 public:
-  OpenGLAppContextStorage(std::string name);
+  OpenGLAppContextStorage(std::string name, const OpenGLHostContextStorage &hostContext);
   OpenGLAppContextStorage(std::string name, OpenGLAppContextStorage *from);
 
 public:
@@ -361,6 +374,7 @@ public:
   void RecordSamplerOnDeleted(GLuint sampler);
 
 public:
+  void Restore();
   void MarkAsDirty();
   bool IsDirty();
   bool IsChanged(OpenGLAppContextStorage *other);
@@ -370,6 +384,9 @@ public:
 
 private:
   bool m_Dirty = false;
+  TrViewport m_HostViewport;
+  GLuint m_HostFramebufferSamples = 1;
+
   std::shared_ptr<gles::GLObjectManager> m_GLObjectManager;
   OpenGLNamesStorage m_Programs;
   OpenGLNamesStorage m_Shaders;

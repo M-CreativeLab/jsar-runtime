@@ -223,6 +223,18 @@ namespace jsar::example
         }
       }
 
+      // Make the context available before starting the embedder
+      glfwMakeContextCurrent(windowCtx_->window);
+      {
+        // Get environment variables for OpenGL context
+        const char *str = getenv("JSAR_DISABLE_MULTISAMPLE");
+        if (str != NULL && strcmp(str, "1") == 0)
+          multisampleEnabled = false;
+
+        // Initialize OpenGL context
+        prepareRenderTarget(samples);
+      }
+
       if (!embedder_->start())
       {
         fprintf(stderr, "Failed to start the embedder\n");
@@ -234,17 +246,6 @@ namespace jsar::example
         auto xrRenderer = windowCtx_->xrRenderer;
         assert(xrRenderer != nullptr);
         xrRenderer->initialize(embedder_->constellation->xrDevice);
-      }
-
-      glfwMakeContextCurrent(windowCtx_->window);
-      {
-        // Get environment variables for OpenGL context
-        const char *str = getenv("JSAR_DISABLE_MULTISAMPLE");
-        if (str != NULL && strcmp(str, "1") == 0)
-          multisampleEnabled = false;
-
-        // Initialize OpenGL context
-        prepareRenderTarget(samples);
       }
       return true;
     }

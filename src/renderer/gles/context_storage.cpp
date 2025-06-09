@@ -125,12 +125,12 @@ void OpenGLContextStorage::RecordElementArrayBuffer(int buffer)
   m_ElementArrayBufferId = buffer;
 }
 
-void OpenGLContextStorage::RecordFramebuffer(int buffer)
+void OpenGLContextStorage::RecordFramebuffer(GLuint buffer)
 {
   m_FramebufferId = buffer;
 }
 
-void OpenGLContextStorage::RecordRenderbuffer(int buffer)
+void OpenGLContextStorage::RecordRenderbuffer(GLuint buffer)
 {
   m_RenderbufferId = buffer;
 }
@@ -262,22 +262,25 @@ void OpenGLContextStorage::Restore()
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ElementArrayBufferId);
   }
 
-  if (m_RenderbufferId >= 0)
-    glBindRenderbuffer(GL_RENDERBUFFER, m_RenderbufferId);
-  if (m_FramebufferId >= 0)
-    glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
+  if (m_RenderbufferId.has_value())
+    glBindRenderbuffer(GL_RENDERBUFFER, m_RenderbufferId.value());
+  if (m_FramebufferId.has_value())
+    glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId.value());
 
   // Restore the stencil render target after the framebuffer has been restored.
   if (m_StencilRenderTarget > 0 &&
       (m_StencilRenderTargetType == GL_RENDERBUFFER || m_StencilRenderTargetType == GL_TEXTURE))
   {
     if (m_StencilRenderTargetType == GL_RENDERBUFFER)
-      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
-                                m_StencilRenderTarget);
+    {
+      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_StencilRenderTarget);
+    }
     else if (m_StencilRenderTargetType == GL_TEXTURE)
+    {
       glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
                              m_StencilRenderTarget,
                              m_StencilTextureLevel);
+    }
 
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE)
@@ -349,8 +352,24 @@ void OpenGLHostContextStorage::Record()
   glGetIntegerv(GL_CURRENT_PROGRAM, &m_ProgramId);
   glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &m_ArrayBufferId);
   glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &m_ElementArrayBufferId);
-  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_FramebufferId);
-  glGetIntegerv(GL_RENDERBUFFER_BINDING, &m_RenderbufferId);
+
+  {
+    // Record the framebuffer and renderbuffer bindings.
+    GLint curr_fbo;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &curr_fbo);
+    if (curr_fbo >= 0)
+      m_FramebufferId = curr_fbo;
+    else
+      m_FramebufferId.reset();
+
+    GLint curr_rbo;
+    glGetIntegerv(GL_RENDERBUFFER_BINDING, &curr_rbo);
+    if (curr_rbo >= 0)
+      m_RenderbufferId = curr_rbo;
+    else
+      m_RenderbufferId.reset();
+  }
+
   glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &m_VertexArrayObjectId);
   glGetIntegerv(GL_ACTIVE_TEXTURE, (GLint *)&m_LastActiveTextureUnit);
 
@@ -378,6 +397,42 @@ void OpenGLHostContextStorage::Record()
   glGetIntegerv(GL_CULL_FACE_MODE, (GLint *)&m_CullFace);
   glGetIntegerv(GL_FRONT_FACE, (GLint *)&m_FrontFace);
   glGetBooleanv(GL_COLOR_WRITEMASK, (GLboolean *)&m_ColorMask);
+
+  // Create the shared depth texture which is used for depth testing between the JSAR apps.
+  if (m_SharedDepthTexture.has_value() == false)
+  {
+    int w = m_Viewport[2];
+    int h = m_Viewport[3];
+    assert(w > 0 && h > 0 && "The viewport size must be greater than zero.");
+
+    GLuint depthTex;
+    glGenTextures(1, &depthTex);
+    glBindTexture(GL_TEXTURE_2D, depthTex);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, w, h);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // Create a framebuffer to copy the depth texture from the host context.
+    GLuint depthFbo;
+    glGenFramebuffers(1, &depthFbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthFbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTex, 0);
+
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE)
+    {
+      DEBUG(LOG_TAG_ERROR, "Failed to create the shared depth framebuffer: 0x%04X", status);
+      assert(false && "Failed to create the shared depth framebuffer, see the above for detailed message.");
+    }
+
+    m_SharedDepthTexture = depthTex;
+    m_SharedDepthFramebuffer = depthFbo;
+    glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId.value_or(0));
+  }
+
   /**
    * Recording the depth parameters.
    */
@@ -385,36 +440,86 @@ void OpenGLHostContextStorage::Record()
     glGetBooleanv(GL_DEPTH_WRITEMASK, &m_DepthMask);
     glGetIntegerv(GL_DEPTH_FUNC, (GLint *)&m_DepthFunc);
     glGetFloatv(GL_DEPTH_RANGE, m_DepthRange);
+
+    // Copy the host framebuffer's depth attachment to the shared depth texture.
+    assert(m_SharedDepthTexture.has_value());
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_FramebufferId.value());
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_SharedDepthFramebuffer.value());
+
+    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE &&
+           "The shared depth framebuffer must be complete before copying the depth texture.");
+    assert(glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE &&
+           "The host framebuffer must be complete before copying the depth texture.");
+
+    glBlitFramebuffer(0, 0, m_Viewport[2], m_Viewport[3],
+                      0, 0, m_Viewport[2], m_Viewport[3],
+                      GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FramebufferId.value_or(0));
+    cout << "Copied the depth texture from the host context to the shared depth texture." << endl
+         << "Viewport: (" << m_Viewport[0] << ", " << m_Viewport[1] << ", "
+         << m_Viewport[2] << ", " << m_Viewport[3] << ")" << endl
+         << "Source Framebuffer: " << m_FramebufferId.value_or(0) << endl
+         << "Dest Framebuffer: " << m_SharedDepthFramebuffer.value() << endl;
+
+    // Reset the depth attachment in the host framebuffer to avoid the following operations on the host's.
+    // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+    //                        m_SharedDepthTexture.value(), 0);
+
+    glGetError() == GL_NO_ERROR
+        ? DEBUG(LOG_TAG_ERROR, "Successfully copied the depth texture from the host context.")
+        : DEBUG(LOG_TAG_ERROR, "Failed to copy the depth texture from the host context.");
   }
+
   /**
    * Recording the stencil parameters.
    */
   {
-    GLint host_stencil_type = GL_NONE;
-    glGetFramebufferAttachmentParameteriv(
-        GL_FRAMEBUFFER,
-        GL_STENCIL_ATTACHMENT,
-        GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE,
-        &host_stencil_type);
-    if (glGetError() == GL_NO_ERROR && host_stencil_type != GL_NONE)
-    {
-      glGetFramebufferAttachmentParameteriv(
-          GL_FRAMEBUFFER,
-          GL_STENCIL_ATTACHMENT,
-          GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,
-          (GLint *)&m_StencilRenderTarget);
-      m_StencilRenderTargetType = host_stencil_type;
+    // GLint host_stencil_type = GL_NONE;
+    // glGetFramebufferAttachmentParameteriv(
+    //     GL_FRAMEBUFFER,
+    //     GL_STENCIL_ATTACHMENT,
+    //     GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE,
+    //     &host_stencil_type);
+    // if (glGetError() == GL_NO_ERROR && host_stencil_type != GL_NONE)
+    // {
+    //   glGetFramebufferAttachmentParameteriv(
+    //       GL_FRAMEBUFFER,
+    //       GL_STENCIL_ATTACHMENT,
+    //       GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,
+    //       (GLint *)&m_StencilRenderTarget);
+    //   m_StencilRenderTargetType = host_stencil_type;
 
-      // Record the stencil texture level if the stencil attachment is a texture.
-      if (host_stencil_type == GL_TEXTURE)
-      {
-        glGetFramebufferAttachmentParameteriv(
-            GL_FRAMEBUFFER,
-            GL_STENCIL_ATTACHMENT,
-            GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL,
-            &m_StencilTextureLevel);
-      }
-    }
+    //   if (host_stencil_type == GL_RENDERBUFFER)
+    //   {
+    //     assert(glIsRenderbuffer(m_StencilRenderTarget) &&
+    //            "The host stencil attachment must be a renderbuffer");
+
+    //     glBindRenderbuffer(GL_RENDERBUFFER, m_StencilRenderTarget);
+    //     glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_SAMPLES, (GLint *)&m_StencilRenderTargetSamples);
+    //     glBindRenderbuffer(GL_RENDERBUFFER, m_RenderbufferId.value_or(0));
+
+    //     // Reset the stencil attachment in the host framebuffer to avoid the following operations on the host's.
+    //     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, 0);
+    //   }
+    //   else if (host_stencil_type == GL_TEXTURE)
+    //   {
+    //     assert(glIsTexture(m_StencilRenderTarget) &&
+    //            "The host stencil attachment must be a texture");
+
+    //     glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
+    //                                           GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL,
+    //                                           &m_StencilTextureLevel);
+    //     glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
+    //                                           GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE,
+    //                                           (GLint *)&m_StencilRenderTargetSamples);
+
+    //     // Reset the stencil attachment in the host framebuffer to avoid the following operations on the host's.
+    //     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+    //   }
+    // }
 
     // glStencilMask(mask)
     glGetIntegerv(GL_STENCIL_WRITEMASK, (GLint *)&m_StencilMask);
@@ -487,15 +592,24 @@ void OpenGLHostContextStorage::RecordTextureBindingFromHost()
 
 void OpenGLHostContextStorage::ConfigureFramebuffer()
 {
-  glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
+  assert(m_FramebufferId.has_value() && "framebuffer in host context must be set before configuring it");
+  glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId.value());
 }
 
 void OpenGLHostContextStorage::RestoreFramebuffer()
 {
 }
 
-OpenGLAppContextStorage::OpenGLAppContextStorage(string name)
+unique_ptr<OpenGLAppContextStorage> OpenGLHostContextStorage::MakeAppContext(const std::string &name)
+{
+  return make_unique<OpenGLAppContextStorage>(name, *this);
+}
+
+OpenGLAppContextStorage::OpenGLAppContextStorage(string name, const OpenGLHostContextStorage &hostContext)
     : OpenGLContextStorage(name),
+      m_HostViewport(hostContext.GetViewport()),
+      // Use the stencil buffer's samples as the framebuffer samples.
+      m_HostFramebufferSamples(hostContext.GetStencilRenderBufferSamples()),
       m_GLObjectManager(make_unique<gles::GLObjectManager>(name))
 {
   /**
@@ -531,10 +645,24 @@ OpenGLAppContextStorage::OpenGLAppContextStorage(string name)
 
   // Stencil
   {
-    // TODO(yorkie): create a default stencil render target for this app.
     m_StencilTestEnabled = GL_FALSE;
     m_StencilMask = 0x01;
     m_StencilMaskBack = 0x01;
+
+    // Create a stencil render object for this app
+    // glGenRenderbuffers(1, &m_StencilRenderTarget);
+    // glBindRenderbuffer(GL_RENDERBUFFER, m_StencilRenderTarget);
+    // {
+    //   if (m_HostFramebufferSamples > 1)
+    //     glRenderbufferStorageMultisample(GL_RENDERBUFFER, m_HostFramebufferSamples, GL_DEPTH24_STENCIL8,
+    //                                      m_HostViewport.width(), m_HostViewport.height());
+    //   else
+    //     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_HostViewport.width(), m_HostViewport.height());
+
+    //   m_StencilRenderTargetType = GL_RENDERBUFFER;
+    //   m_StencilTextureLevel = 0;
+    // }
+    // glBindRenderbuffer(GL_RENDERBUFFER, m_RenderbufferId.value_or(0));
   }
 
   // Scissor
@@ -549,6 +677,7 @@ OpenGLAppContextStorage::OpenGLAppContextStorage(string name)
 
 OpenGLAppContextStorage::OpenGLAppContextStorage(string name, OpenGLAppContextStorage *from)
     : OpenGLContextStorage(name, from),
+      m_HostViewport(from->m_HostViewport),
       m_GLObjectManager(from->m_GLObjectManager)
 {
   m_Programs = OpenGLNamesStorage(&from->m_Programs);
@@ -714,6 +843,14 @@ void OpenGLAppContextStorage::RecordSamplerOnDeleted(GLuint sampler)
   if (m_Samplers.find(sampler) == m_Samplers.end())
     return; // Not recorded
   m_Samplers.erase(sampler);
+}
+
+void OpenGLAppContextStorage::Restore()
+{
+  OpenGLContextStorage::Restore();
+
+  // We should clear the stencil buffer for app context.
+  // glClear(GL_STENCIL_BUFFER_BIT);
 }
 
 void OpenGLAppContextStorage::MarkAsDirty()
