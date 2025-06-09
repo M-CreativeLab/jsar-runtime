@@ -124,14 +124,10 @@ namespace math
     using Vec3::Vec3;
 
   public:
-    /**
-     * @returns The forward direction.
-     */
     static Dir3 Up() { return Dir3(0.0f, 1.0f, 0.0f); }
-    /**
-     * @returns The forward direction.
-     */
     static Dir3 Right() { return Dir3(1.0f, 0.0f, 0.0f); }
+    static Dir3 Forward() { return Dir3(0.0f, 0.0f, -1.0f); }
+    static Dir3 Backward() { return Dir3(0.0f, 0.0f, 1.0f); }
     /**
      * @returns The +Y direction.
      */

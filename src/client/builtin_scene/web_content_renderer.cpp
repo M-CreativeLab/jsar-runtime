@@ -41,7 +41,7 @@ namespace builtin_scene::web_renderer
     auto material = Material::Make<materials::WebContentInstancedMaterial>();
     webContentCtx->instancedMeshEntity_ = spawn(
         hierarchy::Root(true),
-        Mesh3d(meshes->add(MeshBuilder::CreateInstancedMesh<meshes::Box>("HTMLClassicMeshes", 1.0f, 1.0f, 1.0f)),
+        Mesh3d(meshes->add(MeshBuilder::CreateInstancedMesh<meshes::Plane>("HTMLClassicMeshes", math::Dir3::Forward())),
                false),
         MeshMaterial3d(materials->add(material)),
         Transform::FromXYZ(0.0f, 0.0f, 0.0f));
@@ -62,7 +62,7 @@ namespace builtin_scene::web_renderer
                                    const client_layout::Fragment &fragment,
                                    const client_cssom::ComputedStyle &style)
   {
-    if (style.hasProperty("background-color"))
+    if (style.hasBackgroundColor())
     {
       auto color = style.backgroundColor().resolveToAbsoluteColor();
 

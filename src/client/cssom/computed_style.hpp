@@ -167,7 +167,9 @@ namespace client_cssom
     inline const values::computed::Direction &textDirection() const { return text_direction_; }
 
     inline const values::computed::Color &color() const { return color_; }
+    inline bool hasColor() const { return bitfields_.HasColor(); }
     inline const values::computed::Color &backgroundColor() const { return background_color_; }
+    inline bool hasBackgroundColor() const { return bitfields_.HasBackgroundColor(); }
 
     // Visibility utility functions.
     inline bool visibleToHitTesting() const
@@ -302,6 +304,8 @@ private:                                                              \
       }
 
       ADD_BOOLEAN_BITFIELD(has_display_, HasDisplay);
+      ADD_BOOLEAN_BITFIELD(has_color_, HasColor);
+      ADD_BOOLEAN_BITFIELD(has_background_color_, HasBackgroundColor);
       ADD_BOOLEAN_BITFIELD(has_box_sizing_, HasBoxSizing);
       ADD_BOOLEAN_BITFIELD(has_overflow_x_, HasOverflowX);
       ADD_BOOLEAN_BITFIELD(has_overflow_y_, HasOverflowY);
