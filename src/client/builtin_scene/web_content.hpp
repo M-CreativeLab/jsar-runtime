@@ -119,36 +119,33 @@ namespace builtin_scene
 
     // Returns if the surface is valid.
     bool resetSkSurface(float width, float height);
-    inline SkCanvas *canvas() const
-    {
-      if (TR_UNLIKELY(surface_ == nullptr))
-        return nullptr;
-
-      SkCanvas *canvas = surface_->getCanvas();
-      // TODO(yorkie): support scaling the canvas.
-      return canvas;
-    }
+    SkCanvas *canvas() const;
 
     inline const client_cssom::ComputedStyle &style() const { return style_; }
     void setStyle(const client_cssom::ComputedStyle &style, std::shared_ptr<WebContent> parent = nullptr);
 
-    inline const std::optional<client_layout::Fragment> &fragment() const { return lastFragment_; }
-    inline void setFragment(const client_layout::Fragment &fragment) { lastFragment_ = fragment; }
+    inline const std::optional<client_layout::Fragment> &fragment() const { return last_fragment_; }
+    inline void setFragment(const client_layout::Fragment &fragment) { last_fragment_ = fragment; }
 
     inline float physicalWidth() const { return surface_ == nullptr ? 0.0f : surface_->width(); }
     inline float physicalHeight() const { return surface_ == nullptr ? 0.0f : surface_->height(); }
-    inline float logicalWidth() const { return physicalWidth() / devicePixelRatio_; }
-    inline float logicalHeight() const { return physicalHeight() / devicePixelRatio_; }
+    inline float logicalWidth() const { return physicalWidth() / device_pixel_ratio_; }
+    inline float logicalHeight() const { return physicalHeight() / device_pixel_ratio_; }
 
     // Check if the surface needs to be resized.
     bool needsResize(float w, float h) const;
 
-    inline glm::vec4 backgroundColor() const { return backgroundColor_; }
+    inline glm::vec4 backgroundColor() const { return background_color_; }
     inline void setBackgroundColor(float r, float g, float b, float a)
     {
-      backgroundColor_ = glm::vec4(r, g, b, a);
+      background_color_ = glm::vec4(r, g, b, a);
     }
+
     inline std::shared_ptr<Texture> textureRect() const { return texture_; }
+    inline const Texture &textureRectRef() const { return *texture_; }
+    // Returns the pad in pixels for the texture, the pad is used to avoid the texture bleeding issue.
+    inline int texturePad() const { return texture_pad_; }
+
     /**
      * Init or resize the texture.
      *
@@ -168,16 +165,16 @@ namespace builtin_scene
      */
     inline void setTextureUsing(bool value)
     {
-      if (isTextureUsing_ != value)
-        isTextureUsing_ = value;
+      if (is_texture_using_ != value)
+        is_texture_using_ = value;
     }
-    inline bool isOpaque() const { return isOpaque_; }
-    inline bool isTransparent() const { return !isOpaque_; }
-    inline void setOpaque(bool b) { isOpaque_ = b; }
+    inline bool isOpaque() const { return is_opaque_; }
+    inline bool isTransparent() const { return !is_opaque_; }
+    inline void setOpaque(bool b) { is_opaque_ = b; }
     /**
      * @returns Whether the content is dirty, namely needs to be re-rendered.
      */
-    inline bool isDirty() const { return isDirty_; }
+    inline bool isDirty() const { return is_dirty_; }
     /**
      * Mark the content as dirty or not.
      *
@@ -185,7 +182,7 @@ namespace builtin_scene
      */
     inline void setDirty(bool dirty)
     {
-      isDirty_ = dirty;
+      is_dirty_ = dirty;
     }
 
   public:
@@ -197,17 +194,19 @@ namespace builtin_scene
     sk_sp<SkSurface> surface_;
     std::string name_;
     client_cssom::ComputedStyle style_;
-    std::optional<client_layout::Fragment> lastFragment_;
-    WebContentStyle contentStyle_;
-    SkRRect roundedRect_;
-    glm::vec4 backgroundColor_;
+    std::optional<client_layout::Fragment> last_fragment_;
+    WebContentStyle content_style_;
+    SkRRect rounded_rect_;
+    glm::vec4 background_color_;
+
     std::shared_ptr<Texture> texture_;
-    float devicePixelRatio_ = 1.0f;
+    float device_pixel_ratio_ = 1.0f;
+    int texture_pad_ = 2;
     bool enabled_ = true;
-    bool isTextureUsing_ = false;
-    bool isOpaque_ = false;
-    bool isVisible_ = true;
-    bool isDirty_ = true;
+    bool is_texture_using_ = false;
+    bool is_opaque_ = false;
+    bool is_visible_ = true;
+    bool is_dirty_ = true;
   };
 
   class WebContentContext : public ecs::Resource

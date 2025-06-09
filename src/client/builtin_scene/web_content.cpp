@@ -52,24 +52,24 @@ namespace builtin_scene
 
   WebContent::WebContent(std::string name, float initialWidth, float initialHeight)
       : name_(name),
-        lastFragment_(std::nullopt),
-        contentStyle_(),
-        backgroundColor_(1.0f, 1.0f, 1.0f, 0.0f),
-        devicePixelRatio_(1.0f)
+        last_fragment_(std::nullopt),
+        content_style_(),
+        background_color_(1.0f, 1.0f, 1.0f, 0.0f),
+        device_pixel_ratio_(1.0f)
   {
     resetSkSurface(initialWidth, initialHeight);
   }
 
   // Compute the size in pixels by the given size and device pixel ratio. This function also rounds the size to the
   // nearest integer to avoid the floating point precision issue.
-  inline int computeSize(float size, float devicePixelRatio)
+  inline int computeSize(float size, float devicePixelRatio, int pad)
   {
     return static_cast<int>(round(size * devicePixelRatio));
   }
 
   bool WebContent::resetSkSurface(float w, float h)
   {
-    assert(devicePixelRatio_ > 0 && "The device pixel ratio must be valid.");
+    assert(device_pixel_ratio_ > 0 && "The device pixel ratio must be valid.");
 
     if (TR_UNLIKELY(w <= 0 || h <= 0)) // Skip if size is invalid.
       return false;
@@ -77,8 +77,8 @@ namespace builtin_scene
       return false;
 
     // TODO: use Skia Genesh(GPU) to increase the performance.
-    SkImageInfo imageInfo = SkImageInfo::MakeN32Premul(computeSize(w, devicePixelRatio_),
-                                                       computeSize(h, devicePixelRatio_));
+    SkImageInfo imageInfo = SkImageInfo::MakeN32Premul(computeSize(w, device_pixel_ratio_, texture_pad_),
+                                                       computeSize(h, device_pixel_ratio_, texture_pad_));
     if (surface_ != nullptr)
     {
       auto newSurface = surface_->makeSurface(imageInfo);
@@ -99,6 +99,17 @@ namespace builtin_scene
     return true;
   }
 
+  SkCanvas *WebContent::canvas() const
+  {
+    if (TR_UNLIKELY(surface_ == nullptr))
+      return nullptr;
+
+    SkCanvas *canvas = surface_->getCanvas();
+    canvas->setMatrix(SkMatrix::Translate(texture_pad_, texture_pad_));
+    // TODO(yorkie): support scaling the canvas.
+    return canvas;
+  }
+
   void WebContent::setStyle(const client_cssom::ComputedStyle &style, std::shared_ptr<WebContent> parent)
   {
     style_ = style;
@@ -113,21 +124,21 @@ namespace builtin_scene
           vector<SkString> skFonts;
           for (auto &font : fonts)
             skFonts.push_back(SkString(font));
-          contentStyle_.textStyle.fontFamilies = skFonts;
+          content_style_.textStyle.fontFamilies = skFonts;
         }
       }
       if (style_.hasProperty("font-size"))
       {
         const auto &fontSize = style_.fontSize();
-        contentStyle_.textStyle.fontSize = fontSize.computedSize().px();
+        content_style_.textStyle.fontSize = fontSize.computedSize().px();
       }
       if (style_.hasProperty("font-weight"))
       {
         auto fontWeight = style_.fontWeight();
-        contentStyle_.textStyle.fontStyle.weight = SkFontStyle::Weight(fontWeight.value());
+        content_style_.textStyle.fontStyle.weight = SkFontStyle::Weight(fontWeight.value());
       }
       if (style_.hasProperty("font-style"))
-        contentStyle_.textStyle.fontStyle.slant = style_.fontStyle();
+        content_style_.textStyle.fontStyle.slant = style_.fontStyle();
     }
 
     // Update Paragraph styles
@@ -136,12 +147,12 @@ namespace builtin_scene
       {
         // TODO(yorkie): support current color.
         auto current_color = SK_ColorBLACK;
-        contentStyle_.textStyle.color = style_.color().resolveToAbsoluteColor(current_color);
+        content_style_.textStyle.color = style_.color().resolveToAbsoluteColor(current_color);
       }
       if (style_.hasProperty("text-align"))
-        contentStyle_.textAlign = style_.textAlign();
+        content_style_.textAlign = style_.textAlign();
       if (style_.hasProperty("direction"))
-        contentStyle_.textDirection = style_.textDirection();
+        content_style_.textDirection = style_.textDirection();
 
       // Line height
       if (style_.hasProperty("line-height"))
@@ -149,18 +160,18 @@ namespace builtin_scene
         const auto &lineHeight = style_.lineHeight();
         if (lineHeight.isLength())
         {
-          contentStyle_.useFixedLineHeight = true;
-          contentStyle_.lineHeight = lineHeight.getLength().px();
+          content_style_.useFixedLineHeight = true;
+          content_style_.lineHeight = lineHeight.getLength().px();
         }
         else if (lineHeight.isNumber())
         {
-          contentStyle_.useFixedLineHeight = false;
-          contentStyle_.lineHeight = lineHeight.getNumber().value;
+          content_style_.useFixedLineHeight = false;
+          content_style_.lineHeight = lineHeight.getNumber().value;
         }
         else
         {
-          contentStyle_.useFixedLineHeight = false;
-          contentStyle_.lineHeight = 1.2f;
+          content_style_.useFixedLineHeight = false;
+          content_style_.lineHeight = 1.2f;
         }
       }
     }
@@ -176,13 +187,13 @@ namespace builtin_scene
     if (TR_UNLIKELY(surface_ == nullptr))
       return true;
 
-    return surface_->width() != computeSize(w, devicePixelRatio_) ||
-           surface_->height() != computeSize(h, devicePixelRatio_);
+    return surface_->width() != computeSize(w, device_pixel_ratio_, texture_pad_) ||
+           surface_->height() != computeSize(h, device_pixel_ratio_, texture_pad_);
   }
 
   shared_ptr<Texture> WebContent::resizeOrInitTexture(TextureAtlas &textureAtlas)
   {
-    if (!isTextureUsing_)
+    if (!is_texture_using_)
     {
       // Remove the texture from atlas if it's not used.
       if (texture_ != nullptr)
@@ -207,7 +218,7 @@ namespace builtin_scene
 
   skia::textlayout::TextStyle WebContent::textStyle() const
   {
-    const WebContentTextStyle &sourceTextStyle = contentStyle_.textStyle;
+    const WebContentTextStyle &sourceTextStyle = content_style_.textStyle;
     skia::textlayout::TextStyle newTextStyle;
 
     newTextStyle.setColor(sourceTextStyle.color);
@@ -231,7 +242,7 @@ namespace builtin_scene
     if (sourceTextStyle.wordSpacing.has_value())
       newTextStyle.setWordSpacing(sourceTextStyle.wordSpacing.value());
 
-    newTextStyle.setHalfLeading(contentStyle_.halfLeading);
+    newTextStyle.setHalfLeading(content_style_.halfLeading);
     newTextStyle.setFontFamilies(sourceTextStyle.fontFamilies);
     newTextStyle.setFontStyle(SkFontStyle(sourceTextStyle.fontStyle.weight,
                                           sourceTextStyle.fontStyle.width,
@@ -242,22 +253,22 @@ namespace builtin_scene
   skia::textlayout::StrutStyle WebContent::structStyle() const
   {
     skia::textlayout::StrutStyle newStrutStyle;
-    newStrutStyle.setFontFamilies(contentStyle_.textStyle.fontFamilies);
+    newStrutStyle.setFontFamilies(content_style_.textStyle.fontFamilies);
 
-    SkFontStyle fontStyle = SkFontStyle(contentStyle_.textStyle.fontStyle.weight,
-                                        contentStyle_.textStyle.fontStyle.width,
-                                        contentStyle_.textStyle.fontStyle.slant);
+    SkFontStyle fontStyle = SkFontStyle(content_style_.textStyle.fontStyle.weight,
+                                        content_style_.textStyle.fontStyle.width,
+                                        content_style_.textStyle.fontStyle.slant);
     newStrutStyle.setFontStyle(fontStyle);
 
-    auto &textStyle = contentStyle_.textStyle;
+    auto &textStyle = content_style_.textStyle;
     newStrutStyle.setFontSize(textStyle.fontSize);
-    newStrutStyle.setHalfLeading(contentStyle_.halfLeading);
+    newStrutStyle.setHalfLeading(content_style_.halfLeading);
 
     // Reconfigure the font size based on the line height settings.
-    if (contentStyle_.useFixedLineHeight)
-      newStrutStyle.setFontSize(contentStyle_.lineHeight);
+    if (content_style_.useFixedLineHeight)
+      newStrutStyle.setFontSize(content_style_.lineHeight);
     else
-      newStrutStyle.setFontSize(textStyle.fontSize * contentStyle_.lineHeight);
+      newStrutStyle.setFontSize(textStyle.fontSize * content_style_.lineHeight);
 
     newStrutStyle.setStrutEnabled(true);
     newStrutStyle.setForceStrutHeight(true);
@@ -267,19 +278,19 @@ namespace builtin_scene
   skia::textlayout::ParagraphStyle WebContent::paragraphStyle() const
   {
     skia::textlayout::ParagraphStyle newParagraphStyle;
-    if (contentStyle_.disableHinting)
+    if (content_style_.disableHinting)
       newParagraphStyle.turnHintingOff();
 
-    newParagraphStyle.setTextAlign(contentStyle_.textAlign);
-    newParagraphStyle.setTextDirection(contentStyle_.textDirection);
+    newParagraphStyle.setTextAlign(content_style_.textAlign);
+    newParagraphStyle.setTextDirection(content_style_.textDirection);
     newParagraphStyle.setTextStyle(textStyle());
     newParagraphStyle.setStrutStyle(structStyle());
 
-    if (contentStyle_.maxLines > 0)
-      newParagraphStyle.setMaxLines(contentStyle_.maxLines);
+    if (content_style_.maxLines > 0)
+      newParagraphStyle.setMaxLines(content_style_.maxLines);
 
-    newParagraphStyle.setApplyRoundingHack(contentStyle_.applyRoundingHack);
-    newParagraphStyle.setTextHeightBehavior(contentStyle_.textHeightBehavior);
+    newParagraphStyle.setApplyRoundingHack(content_style_.applyRoundingHack);
+    newParagraphStyle.setTextHeightBehavior(content_style_.textHeightBehavior);
     return newParagraphStyle;
   }
 }

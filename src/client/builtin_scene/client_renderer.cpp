@@ -499,11 +499,12 @@ namespace builtin_scene
         }
 
         auto textureRect = webContentComponent->textureRect();
+        int texturePad = webContentComponent->texturePad();
         if (textureRect != nullptr)
         {
           instance.setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f), hasChanged);
-          instance.setTexture(textureRect->getUvOffset(),
-                              textureRect->getUvScale(),
+          instance.setTexture(textureRect->getUvOffset(texturePad),
+                              textureRect->getUvScale(texturePad),
                               textureRect->layer,
                               hasChanged);
         }

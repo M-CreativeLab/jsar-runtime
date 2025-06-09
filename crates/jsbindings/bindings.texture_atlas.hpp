@@ -1,5 +1,6 @@
 #pragma once
 
+#include <assert.h>
 #include <array>
 #include <iostream>
 #include <unordered_map>
@@ -13,15 +14,15 @@ namespace crates::texture_atlas
   class TextureLayout
   {
   public:
-    TextureLayout(const holocron::texture_atlas::TextureLayout &layout, int atlasWidth, int atlasHeight)
+    TextureLayout(const holocron::texture_atlas::TextureLayout &layout, int atlas_width, int atlas_height)
         : id(layout.id),
           width(layout.w),
           height(layout.h),
           x(layout.x),
           y(layout.y),
           layer(layout.layer),
-          atlasWidth_(atlasWidth),
-          atlasHeight_(atlasHeight)
+          atlas_width_(atlas_width),
+          atlas_height_(atlas_height)
     {
     }
 
@@ -38,15 +39,19 @@ namespace crates::texture_atlas
     }
 
   public:
-    inline std::array<float, 2> getUvOffset() const
+    inline std::array<float, 2> getUvOffset(float pad = 0.0f) const
     {
-      return {static_cast<float>(x) / atlasWidth_,
-              (static_cast<float>(y)) / atlasHeight_};
+      float offset_u = static_cast<float>(x + pad) / atlas_width_;
+      float offset_v = static_cast<float>(y + pad) / atlas_height_;
+      return {offset_u, offset_v};
     }
-    inline std::array<float, 2> getUvScale() const
+    inline std::array<float, 2> getUvScale(float pad = 0.0f) const
     {
-      return {static_cast<float>(width) / atlasWidth_,
-              static_cast<float>(height) / atlasHeight_};
+      float scale_u = static_cast<float>(width - 2.0f * pad) / atlas_width_;
+      float scale_v = static_cast<float>(height - 2.0f * pad) / atlas_height_;
+      assert(scale_u >= 0.0f && scale_v >= 0.0f &&
+             "The scale must be non-negative.");
+      return {scale_u, scale_v};
     }
 
   public:
@@ -58,8 +63,8 @@ namespace crates::texture_atlas
     int layer;
 
   private:
-    int atlasWidth_;
-    int atlasHeight_;
+    int atlas_width_;
+    int atlas_height_;
   };
 
   /**

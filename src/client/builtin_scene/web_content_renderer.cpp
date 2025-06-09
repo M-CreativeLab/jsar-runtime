@@ -316,7 +316,7 @@ namespace builtin_scene::web_renderer
     SkRect rect = SkRect::MakeXYWH(left, top,
                                    content.logicalWidth() - 2 * left,
                                    content.logicalHeight() - 2 * top);
-    SkRRect &roundedRect = content.roundedRect_;
+    SkRRect &roundedRect = content.rounded_rect_;
     bool drawRoundedRect = shouldDrawRoundedRect(roundedRect, rect, style);
 
     auto backgroundPaint = drawBackground(canvas, roundedRect, fragment.value(), style);
@@ -358,7 +358,7 @@ namespace builtin_scene::web_renderer
     auto canvas = content.canvas();
     canvas->save();
     {
-      SkRRect &roundedRect = content.roundedRect_;
+      SkRRect &roundedRect = content.rounded_rect_;
       canvas->clipRRect(roundedRect, true);
 
       sk_sp<SkImage> image = imageComponent->image();
