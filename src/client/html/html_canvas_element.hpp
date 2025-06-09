@@ -22,16 +22,12 @@ namespace dom
     }
 
   public:
-    void createdCallback(bool from_scripting) override
-    {
-      HTMLElement::createdCallback(from_scripting);
-      canvasImpl_ = std::make_shared<canvas::Canvas>();
-    }
+    void createdCallback(bool from_scripting) override;
 
   public:
-    size_t width() const override { return canvasImpl_->width(); }
-    size_t height() const override { return canvasImpl_->height(); }
-    bool readPixels(SkPixmap &dst) const override { return canvasImpl_->readPixels(dst); }
+    inline size_t width() const override { return canvasImpl_->width(); }
+    inline size_t height() const override { return canvasImpl_->height(); }
+    inline bool readPixels(SkPixmap &dst) const override { return canvasImpl_->readPixels(dst); }
 
   public:
     /**
@@ -39,14 +35,14 @@ namespace dom
      *
      * @returns The width of the canvas.
      */
-    size_t getWidth() { return canvasImpl_->width(); }
+    inline size_t getWidth() { return canvasImpl_->width(); }
 
     /**
      * Set the width of the canvas, it will resize the canvas.
      *
      * @param width The width of the canvas.
      */
-    void setWidth(size_t width)
+    inline void setWidth(size_t width)
     {
       canvasImpl_->setWidth(width);
     }
@@ -56,14 +52,14 @@ namespace dom
      *
      * @returns The height of the canvas.
      */
-    size_t getHeight() { return canvasImpl_->height(); }
+    inline size_t getHeight() { return canvasImpl_->height(); }
 
     /**
      * Set the height of the canvas, it will resize the canvas.
      *
      * @param height The height of the canvas.
      */
-    void setHeight(size_t height)
+    inline void setHeight(size_t height)
     {
       canvasImpl_->setHeight(height);
     }
@@ -74,22 +70,7 @@ namespace dom
      * @param contextTypeStr The type of the rendering context: 2d, webgl, webgl2.
      * @returns The rendering context.
      */
-    shared_ptr<CanvasRenderingContext> getContext(const std::string &contextTypeStr)
-    {
-      canvas::RenderingContextType contextType = canvas::RenderingContextType::Unset;
-      if (contextTypeStr == "2d")
-        contextType = canvas::RenderingContextType::RenderingContext2D;
-      else if (contextTypeStr == "webgl")
-        contextType = canvas::RenderingContextType::WebGL;
-      else if (contextTypeStr == "webgl2")
-        contextType = canvas::RenderingContextType::WebGL2;
-      else if (contextTypeStr == "bitmaprenderer")
-        contextType = canvas::RenderingContextType::BitmapRenderer;
-      else
-        return nullptr;
-
-      return canvasImpl_->getContext(contextType);
-    }
+    std::shared_ptr<CanvasRenderingContext> getContext(const std::string &contextTypeStr);
 
     /**
      * Get the data URL of the canvas.
@@ -98,7 +79,7 @@ namespace dom
      * @param encoderOptions The quality of the image.
      * @returns The data URL.
      */
-    std::string toDataURL(const std::string &type, double encoderOptions)
+    inline std::string toDataURL(const std::string &type, double encoderOptions)
     {
       return canvasImpl_->toDataURL(type, encoderOptions);
     }

@@ -17,10 +17,6 @@ namespace dom
     }
 
   private:
-    void createdCallback(bool from_scripting) override
-    {
-      defaultStyle_.setProperty("display", "block");
-      HTMLElement::createdCallback(from_scripting);
-    }
+    void createdCallback(bool from_scripting) override;
   };
 }

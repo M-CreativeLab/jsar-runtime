@@ -43,7 +43,6 @@ async function init(cb) {
   renderer.setAnimationLoop(() => renderer.render(scene, camera));
 }
 
-
 init(async () => {
   const url = new URL(window.location.href);
   const modulePath = url.searchParams.get('module');

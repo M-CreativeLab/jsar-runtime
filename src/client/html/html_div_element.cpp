@@ -3,4 +3,9 @@
 
 namespace dom
 {
+  void HTMLDivElement::createdCallback(bool from_scripting)
+  {
+    defaultStyle_.setProperty("display", "block");
+    HTMLElement::createdCallback(from_scripting);
+  }
 }
