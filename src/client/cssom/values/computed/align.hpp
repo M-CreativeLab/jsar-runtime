@@ -68,6 +68,17 @@ namespace client_cssom::values::computed
         return crates::layout2::styles::JustifyContent::FlexStart();
       case specified::JustifyContent::Tag::kFlexEnd:
         return crates::layout2::styles::JustifyContent::FlexEnd();
+      // TODO(yorkie): support left and right in layout2.
+      // case specified::JustifyContent::Tag::kLeft:
+      //   return crates::layout2::styles::JustifyContent::Left();
+      // case specified::JustifyContent::Tag::kRight:
+      //   return crates::layout2::styles::JustifyContent::Right();
+      case specified::JustifyContent::kSpaceBetween:
+        return crates::layout2::styles::JustifyContent::SpaceBetween();
+      case specified::JustifyContent::kSpaceAround:
+        return crates::layout2::styles::JustifyContent::SpaceAround();
+      case specified::JustifyContent::kSpaceEvenly:
+        return crates::layout2::styles::JustifyContent::SpaceEvenly();
       case specified::JustifyContent::Tag::kStretch:
         return crates::layout2::styles::JustifyContent::Stretch();
       default:

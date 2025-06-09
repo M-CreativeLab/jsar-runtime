@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>CSS Flexbox Layout Example</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    h1 {
+      font-size: 58px;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    h2,
+    h3 {
+      font-size: 45px;
+      font-weight: bold;
+      color: #c9d4df;
+    }
+
+    p {
+      font-size: 30px;
+      color: #fff;
+    }
+
+    /* Flexbox Container */
+    .flex-container {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      justify-items: space-between;
+      border: none;
+      box-sizing: border-box;
+      background-color: #c9d4df5f;
+      gap: 20px;
+      padding: 20px;
+      width: 100%;
+    }
+
+    /* Flex Items */
+    .flex-item {
+      background: rgba(0, 81, 255, 0.85);
+      border-radius: 20px;
+      padding: 50px;
+      transform: translateZ(10px);
+    }
+
+    .flex-item:hover {
+      background: rgba(255, 0, 0, 1);
+    }
+
+    /* Header and Footer */
+    header,
+    footer {
+      background: rgba(100, 5, 5, 0.706);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      grid-column: 1 / -1;
+    }
+  </style>
+</head>
+
+<body style="background-color: #fff;">
+  <header>
+    <h1>Flexbox Layout Example</h1>
+  </header>
+
+  <main class="flex-container">
+    <section class="flex-item">
+      <h3>Flex Item 1</h3>
+    </section>
+
+    <section class="flex-item">
+      <h3>Flex Item 2</h3>
+    </section>
+
+    <section class="flex-item">
+      <h3>Flex Item 3</h3>
+    </section>
+  </main>
+</body>
+
+</html>

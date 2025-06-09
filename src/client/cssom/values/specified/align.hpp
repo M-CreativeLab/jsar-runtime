@@ -52,10 +52,10 @@ namespace client_cssom::values::specified
     inline void set(Tag tag, std::optional<uint8_t> extra_flags = std::nullopt)
     {
       flag_bits_ = static_cast<uint8_t>(tag);
-      if (extra_flags)
-        flag_bits_ |= *extra_flags;
+      if (extra_flags.has_value())
+        flag_bits_ |= (*extra_flags & ADDITIONAL_MASK);
     }
-    inline Tag tag() const { return static_cast<Tag>(flag_bits_ & !ADDITIONAL_MASK); }
+    inline Tag tag() const { return static_cast<Tag>(flag_bits_ & ~ADDITIONAL_MASK); }
     inline uint8_t extraFlags() const { return flag_bits_ & ADDITIONAL_MASK; }
     inline bool isLegacy() const { return extraFlags() == LEGACY; }
     inline bool isSafe() const { return extraFlags() == SAFE; }
@@ -76,44 +76,64 @@ namespace client_cssom::values::specified
       {
       case kAuto:
         ss << "auto";
+        break;
       case kNormal:
         ss << "normal";
+        break;
       case kStart:
         ss << "start";
+        break;
       case kEnd:
         ss << "end";
+        break;
       case kFlexStart:
         ss << "flex-start";
+        break;
       case kFlexEnd:
         ss << "flex-end";
+        break;
       case kCenter:
         ss << "center";
+        break;
       case kLeft:
         ss << "left";
+        break;
       case kRight:
         ss << "right";
+        break;
       case kBaseline:
         ss << "baseline";
+        break;
       case kFirstBaseline:
         ss << "first-baseline";
+        break;
       case kLastBaseline:
         ss << "last-baseline";
+        break;
       case kStretch:
         ss << "stretch";
+        break;
       case kSelfStart:
         ss << "self-start";
+        break;
       case kSelfEnd:
         ss << "self-end";
+        break;
       case kSpaceBetween:
         ss << "space-between";
+        break;
       case kSpaceAround:
         ss << "space-around";
+        break;
       case kSpaceEvenly:
         ss << "space-evenly";
+        break;
       case kAnchorCenter:
         ss << "anchor-center";
+        break;
       default:
         ss << "unknown";
+        break;
       }
       return ss.str();
     }
