@@ -322,48 +322,55 @@ namespace client_layout
     }
 
     assert(formattingContext_ != nullptr && "Formatting context must be set.");
-    if (parent() == nullptr ||
+
+    Fragment resulting_fragment;
+    shared_ptr<client_scroll::ScrollableArea> scrollable_area = nullptr;
+    bool is_absolute_positioned = isAbsolutelyPositioned();
+    bool is_fixed_positioned = isFixedPositioned();
+
+    auto parent_box = parent();
+    if (parent_box == nullptr ||
         // Check the positioning of the node is absolute or fixed, it returns the node's fragment directly for those
         // cases.
-        isAbsolutelyPositioned() ||
-        isFixedPositioned())
+        is_absolute_positioned || is_fixed_positioned)
     {
-      if (diff.enabled)
+      resulting_fragment = nodeFragment;
+
+      // Search for the containing block for absolute positioning.
+      if (is_absolute_positioned)
       {
-        diff.changed = mutateAccumulatedFragment(nodeFragment);
-        return accumulated_fragment_.value();
+        auto containing_block = containingScrollContainer();
+        if (containing_block != nullptr)
+          scrollable_area = containing_block->getScrollableArea();
       }
-      else
-        return nodeFragment;
     }
     else
     {
-      auto parentBox = parent();
-      Fragment baseFragment = parentBox->accumulatedFragment();
-
-      // Move the fragment by the scroll offset if the object is a scroll container.
-      if (parentBox->isBox() && parentBox->isScrollContainer())
-      {
-        auto scrollableArea = dynamic_pointer_cast<const LayoutBox>(parentBox)->getScrollableArea();
-        if (scrollableArea != nullptr)
-        {
-          auto offset = scrollableArea->getScrollOffset();
-          baseFragment.moveBy(offset.x, offset.y, offset.z);
-        }
-      }
+      Fragment baseFragment = parent_box->accumulatedFragment();
 
       // Returns the fragment with the parent's offset.
-      auto &finalFragment = baseFragment.position(nodeFragment);
-      if (diff.enabled)
-      {
-        diff.changed = mutateAccumulatedFragment(finalFragment);
-        return accumulated_fragment_.value();
-      }
-      else
-      {
-        return finalFragment;
-      }
+      resulting_fragment = baseFragment.position(nodeFragment);
+
+      // Use the parent as the scrollable area if the parent is a scroll container.
+      if (parent_box->isBox() && parent_box->isScrollContainer())
+        scrollable_area = dynamic_pointer_cast<const LayoutBox>(parent_box)->getScrollableArea();
     }
+
+    // Move the fragment by the scroll offset if the `scrollable_area` is set.
+    if (scrollable_area != nullptr)
+    {
+      auto offset = scrollable_area->getScrollOffset();
+      resulting_fragment.moveBy(offset.x, offset.y, offset.z);
+    }
+
+    // Returns the accumulated fragment if it is set, otherwise returns the resulting fragment.
+    if (diff.enabled)
+    {
+      diff.changed = mutateAccumulatedFragment(resulting_fragment);
+      return accumulated_fragment_.value();
+    }
+    else
+      return resulting_fragment;
   }
 
   const Fragment LayoutObject::fragment() const
