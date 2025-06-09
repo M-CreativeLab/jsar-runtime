@@ -136,7 +136,7 @@ namespace crates::css2
       }
       /**
        * Get the property object.
-       * 
+       *
        * @param propertyName The property name.
        * @returns The property object.
        */
@@ -440,7 +440,11 @@ namespace crates::css2
       public:
         friend std::ostream &operator<<(std::ostream &os, const NoCalcLength &length)
         {
-          return os << length.value << length.unit;
+          return os << length.toCss();
+        }
+        std::string toCss() const
+        {
+          return std::to_string(value) + unit;
         }
 
       public:
@@ -540,6 +544,26 @@ namespace crates::css2
         }
 
       public:
+        inline bool isNoCalcLength() const { return std::holds_alternative<NoCalcLength>(value_); }
+        inline bool isPercentage() const { return std::holds_alternative<Percentage>(value_); }
+        inline bool isCalc() const { return std::holds_alternative<CalcLengthPercentage>(value_); }
+
+        inline const NoCalcLength &getNoCalcLength() const
+        {
+          assert(isNoCalcLength());
+          return std::get<NoCalcLength>(value_);
+        }
+        inline const Percentage &getPercentage() const
+        {
+          assert(isPercentage());
+          return std::get<Percentage>(value_);
+        }
+        inline const CalcLengthPercentage &getCalc() const
+        {
+          assert(isCalc());
+          return std::get<CalcLengthPercentage>(value_);
+        }
+
         /** TODO: Support percentage */
         float numberValue() const
         {

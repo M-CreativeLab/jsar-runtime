@@ -755,8 +755,21 @@ namespace client_cssom::values::specified
     // Creates a LengthPercentage from a inner length percentage value.
     static LengthPercentage From(crates::css2::values::specified::LengthPercentage inner_length_percentage)
     {
-      // TODO(yorkie): support calc and percentage.
-      return LengthPercentage(inner_length_percentage.numberValue());
+      if (inner_length_percentage.isNoCalcLength())
+      {
+        const auto &no_calc_length = inner_length_percentage.getNoCalcLength();
+        return Parse::ParseSingleValue<NoCalcLength>(no_calc_length.toCss());
+      }
+      else if (inner_length_percentage.isPercentage())
+      {
+        const auto &percentage = inner_length_percentage.getPercentage();
+        return LengthPercentage(computed::Percentage(percentage.value));
+      }
+      else
+      {
+        // TODO(yorkie): support calc length.
+        return LengthPercentage(0.0f);
+      }
     }
     // Returns if the input string is a valid length or percentage.
     static bool IsLengthOrPercentage(const std::string &input)
@@ -768,6 +781,18 @@ namespace client_cssom::values::specified
     LengthPercentage(float value = 0.0f)
         : tag_(kLength),
           value_(NoCalcLength::FromPx(value))
+    {
+    }
+
+  private:
+    LengthPercentage(NoCalcLength length)
+        : tag_(kLength),
+          value_(length)
+    {
+    }
+    LengthPercentage(computed::Percentage percentage)
+        : tag_(kPercentage),
+          value_(percentage)
     {
     }
 
