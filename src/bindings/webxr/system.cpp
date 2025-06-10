@@ -68,7 +68,7 @@ namespace bindings::webxr
     }
 
     Promise::Deferred deferred = Promise::Deferred::New(env);
-    deferred.Resolve(Boolean::New(env, supported));
+    deferred.Resolve(Napi::Boolean::New(env, supported));
     return deferred.Promise();
   }
 

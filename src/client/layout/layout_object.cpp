@@ -324,7 +324,7 @@ namespace client_layout
     assert(formattingContext_ != nullptr && "Formatting context must be set.");
 
     Fragment resulting_fragment;
-    shared_ptr<client_scroll::ScrollableArea> scrollable_area = nullptr;
+    shared_ptr<const client_scroll::ScrollableArea> scrollable_area = nullptr;
     bool is_absolute_positioned = isAbsolutelyPositioned();
     bool is_fixed_positioned = isFixedPositioned();
 
