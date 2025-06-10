@@ -174,6 +174,7 @@ type ResponseCacheInfo<D> = {
   useCache: boolean;
   storeCache: boolean;
   responseData: D & {
+    status?: number;
     statusCode?: number,
     headers?: Headers | IncomingHttpHeaders,
   };
@@ -181,7 +182,8 @@ type ResponseCacheInfo<D> = {
 type ResponseContentCallback<D> = (content: NodeJS.ArrayBufferView | string, info: ResponseCacheInfo<D>) => void;
 
 function buildCacheInfoFrom<D>(response: ResponseCacheInfo<D>['responseData']): ResponseCacheInfo<D> {
-  let useCache = response.statusCode === 304;
+  let statusCode = response.status || response.statusCode;
+  let useCache = statusCode === 304;
   let storeCache = true;
   if (!useCache && response.headers['cache-control']) {
     const cacheControl = parseCacheControl(response.headers['cache-control'].toString());
