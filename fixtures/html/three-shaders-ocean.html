@@ -90,10 +90,10 @@
 
       updateSun();
 
-      const geometry = new THREE.BoxGeometry(10, 10, 10);
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
       const material = new THREE.MeshStandardMaterial({ roughness: 0 });
       mesh = new THREE.Mesh(geometry, material);
-      mesh.position.z = -20;
+      mesh.position.z = -5;
       scene.add(mesh);
     }
 
@@ -119,10 +119,10 @@
 
       function animate() {
         const time = performance.now() * 0.001;
-        mesh.position.y = Math.sin(time) * 5 + 1;
+        mesh.position.y = Math.sin(time) * 1;
         mesh.rotation.x = time * 0.5;
         mesh.rotation.z = time * 0.51;
-        water.material.uniforms['time'].value += 1.0 / 60.0;
+        water.material.uniforms['time'].value += 1.0 / 120.0;
         renderer.render(scene, camera);
       }
 
