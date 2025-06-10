@@ -78,7 +78,7 @@ bootwait(async function main() {
     // Start handling the request.
     addDocumentRequestListener(async event => {
       try {
-        await runtime.start(event.url);
+        await runtime.start(event);
       } catch (err) {
         console.error('failed to handle the request event, occurs an error:', err);
         reportDocumentEvent(id, 'error');

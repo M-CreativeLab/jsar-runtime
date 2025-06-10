@@ -212,6 +212,8 @@ namespace jsar::example
         string dirname = fs::current_path().string() + "/.cache";
         string httpsProxy = getenv("https_proxy") == nullptr ? "" : getenv("https_proxy");
         embedder_->configure(dirname, httpsProxy, xrEnabled);
+        embedder_->setRequestAuthorizationHeaders("Authorization: foobar\r\n",
+                                                  {"http://localhost:*"});
 
         if (xrEnabled)
         {

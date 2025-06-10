@@ -53,6 +53,14 @@ public: // API for configuration and operations
    */
   bool configureXrDevice(xr::TrDeviceInit &init);
   /**
+   * The authorization-related headers in HTTP requests will be sent at the client-side. Call this method to configure
+   * the raw headers which contains the authorization information for specific origins.
+   *
+   * @param rawHeaders the raw headers.
+   * @param allowedOrigins the allowed origins for the raw headers, if empty, all origins are allowed.
+   */
+  void setRequestAuthorizationHeaders(std::string rawHeaders, std::vector<std::string> allowedOrigins = {});
+  /**
    * Start the runtime.
    *
    * @returns true if the runtime is started, false otherwise.

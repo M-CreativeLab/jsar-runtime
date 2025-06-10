@@ -1,0 +1,25 @@
+[package]
+name = "jsar_url_parser"
+version = "1.0.0"
+authors = ["The JSAR Project Developers"]
+license = "Apache-2.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "jsar_url_parser"
+crate-type = ["staticlib"]
+path = "lib.rs"
+
+[features]
+experimental = []
+
+[dependencies]
+anyhow = "1.0.89"
+cxx = { workspace = true }
+url = { workspace = true }
+
+[build-dependencies]
+cxx-build = { workspace = true }
+env_logger = "0.10.0"
+log = "0.4.25"

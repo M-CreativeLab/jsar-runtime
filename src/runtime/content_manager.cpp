@@ -36,8 +36,8 @@ bool TrContentManager::initialize()
   installExecutable();
   installScripts();
 
-  eventChanWatcher = std::make_unique<WorkerThread>("TrEventChanWatcher", [this](WorkerThread &)
-                                                    { acceptEventChanClients(); });
+  eventChanWatcher = make_unique<WorkerThread>("TrEventChanWatcher", [this](WorkerThread &)
+                                               { acceptEventChanClients(); });
   return true;
 }
 

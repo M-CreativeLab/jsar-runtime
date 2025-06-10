@@ -23,6 +23,21 @@ public:
   bool shutdown();
   bool tickOnFrame();
   bool hasContents() { return !contents.empty(); }
+
+  /**
+   * Set the request authorization headers for upcoming content(client-side) HTTP requests.
+   * 
+   * @param raw_headers The raw headers string.
+   * @param allowed_origins The allowed origins for the raw headers, if empty, all origins are allowed.
+   */
+  inline void setRequestAuthorizationHeaders(
+      const std::string &raw_headers,
+      const std::vector<std::string> &allowed_origins = std::vector<std::string>())
+  {
+    request_authorization_headers.raw_headers = raw_headers;
+    request_authorization_headers.allowed_origins = allowed_origins;
+  }
+
   /**
    * Make a new content instance, this doesn't start the content process, just created a `TrContentRuntime` instance and added it
    * to the managed list.
@@ -102,4 +117,13 @@ private: // pre-content
 private: // channels & workers
   TrOneShotServer<events_comm::TrNativeEventMessage> *eventChanServer = nullptr;
   unique_ptr<WorkerThread> eventChanWatcher;
+
+private: // Global configs
+  struct RequestAuthorizationHeaders
+  {
+    // The raw headers string specified in the format of "Header-Name: Header-Value\r\nHeader-Name2: Header-Value2\r\n"
+    std::string raw_headers;
+    std::vector<std::string> allowed_origins;
+  };
+  RequestAuthorizationHeaders request_authorization_headers;
 };

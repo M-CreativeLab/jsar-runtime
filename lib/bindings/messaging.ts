@@ -32,6 +32,7 @@ export type DocumentRequestInit = {
   disableCache?: boolean;
   isPreview?: boolean;
   runScripts?: string;
+  defaultHTTPHeaders?: string;
 };
 
 export class DocumentRequestEvent extends Event {
@@ -42,6 +43,7 @@ export class DocumentRequestEvent extends Event {
   disableCache: boolean = false;
   isPreview: boolean = false;
   runScripts: string = 'dangerously';
+  defaultHTTPHeaders: string;
 
   constructor(init: DocumentRequestInit) {
     super(DocumentRequestEvent.Name);
@@ -51,6 +53,7 @@ export class DocumentRequestEvent extends Event {
     this.disableCache = init.disableCache || false;
     this.isPreview = init.isPreview || false;
     this.runScripts = init.runScripts || 'dangerously';
+    this.defaultHTTPHeaders = init.defaultHTTPHeaders || '';
   }
 
   get [Symbol.toStringTag]() {
@@ -67,6 +70,7 @@ export class DocumentRequestEvent extends Event {
 function onNativeEventListener(_eventId: number, eventType: number, peerId: number, message: string) {
   switch (eventType) {
     case EventType.RpcRequest:
+      // Client-side will never receive a RPC request.
       break;
     case EventType.RpcResponse:
       {

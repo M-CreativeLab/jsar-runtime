@@ -112,7 +112,8 @@ if (WIN32)
 endif()
 
 tr_target_set_properties(TransmuteCore)
-tr_target_link_library(TransmuteCore ${CMAKE_SOURCE_DIR}/build/output/crates/${TR_CRATE_TARGET}/${TR_CRATE_BUILD_DIR} jsar_jsbundle STATIC)
+tr_target_link_library(TransmuteCore ${TR_CRATE_BUILD_PATH} jsar_jsbundle STATIC)
+tr_target_link_library(TransmuteCore ${TR_CRATE_BUILD_PATH} jsar_url_parser STATIC)
 tr_target_install(TransmuteCore)
 
 # Add examples

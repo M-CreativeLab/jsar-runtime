@@ -9,6 +9,8 @@
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
+#include <wildcards/wildcards.hpp>
+#include <crates/url_parser.hpp>
 
 #include "./content_manager.hpp"
 #include "./embedder.hpp"
@@ -337,6 +339,34 @@ bool TrContentRuntime::tryDispatchRequest()
     return false;
 
   events_comm::TrDocumentRequest request(requestInit);
+  try
+  {
+    auto url_object = crates::parseURL(requestInit.url);
+    string url_origin = string(url_object.origin);
+    const vector<string> &allowed_origins = contentManager->request_authorization_headers.allowed_origins;
+
+    // Only if the requested URL's origin is in the allowed list, we can set the authorization headers.
+    if (!allowed_origins.empty())
+    {
+      bool isAllowed = false;
+      for (const auto &allowed_origin : allowed_origins)
+      {
+        if (wildcards::match(url_origin, allowed_origin))
+        {
+          isAllowed = true;
+          break;
+        }
+      }
+
+      if (isAllowed)
+        request.defaultHTTPHeaders = contentManager->request_authorization_headers.raw_headers;
+    }
+  }
+  catch (const std::exception &e)
+  {
+    DEBUG(LOG_TAG_ERROR, "Skipped setting custom fetch headers due to an error: %s", e.what());
+  }
+
   auto requestEvent = events_comm::TrNativeEvent::MakeEvent(events_comm::TrNativeEventType::DocumentRequest, &request);
   if (eventChanSender->dispatchEvent(requestEvent))
   {

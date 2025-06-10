@@ -52,27 +52,21 @@ define build_crates
 		echo "Built the crates for $(1), +$${elapsed_time}s"
 endef
 
+define create_universal_apple_library
+	lipo -create -output build/output/crates/universal-apple-darwin/$(1)/$(2).a 					\
+		build/output/crates/aarch64-apple-darwin/$(1)/$(2).a 																\
+		build/output/crates/x86_64-apple-darwin/$(1)/$(2).a
+endef
+
 # This target creates a universal Apple binary by combining the binaries for
 # aarch64-apple-darwin and x86_64-apple-darwin architectures using the `lipo` tool.
-# It performs the following steps:
-# 1. Records the start time.
-# 2. Creates the necessary output directory if it doesn't exist.
-# 3. Uses `lipo` to create a universal binary for `libjsar_jsbindings.a` from the
-#    aarch64 and x86_64 binaries.
-# 4. Uses `lipo` to create a universal binary for `libjsar_jsbundle.a` from the
-#    aarch64 and x86_64 binaries.
-# 5. Records the end time.
-# 6. Calculates and prints the elapsed time taken to create the universal binaries.
 define create_universal_apple_binary
 	@start_time=$$(date +%s); 																																							\
 		RELEASE_DIR=$(if $(filter yes,$(RELEASE)),release,debug); 																						\
 		mkdir -p build/output/crates/universal-apple-darwin/$$RELEASE_DIR; 																		\
-		lipo -create -output build/output/crates/universal-apple-darwin/$$RELEASE_DIR/libjsar_jsbindings.a 		\
-			build/output/crates/aarch64-apple-darwin/$$RELEASE_DIR/libjsar_jsbindings.a 												\
-			build/output/crates/x86_64-apple-darwin/$$RELEASE_DIR/libjsar_jsbindings.a; 												\
-		lipo -create -output build/output/crates/universal-apple-darwin/$$RELEASE_DIR/libjsar_jsbundle.a			\
-			build/output/crates/aarch64-apple-darwin/$$RELEASE_DIR/libjsar_jsbundle.a 													\
-			build/output/crates/x86_64-apple-darwin/$$RELEASE_DIR/libjsar_jsbundle.a; 													\
+		$(call create_universal_apple_library,$$RELEASE_DIR,libjsar_jsbindings); 															\
+		$(call create_universal_apple_library,$$RELEASE_DIR,libjsar_jsbundle); 																\
+		$(call create_universal_apple_library,$$RELEASE_DIR,libjsar_url_parser); 															\
 		end_time=$$(date +%s); 																																								\
 		elapsed_time=$$((end_time - start_time));																															\
 		echo "Created the crates for universal-apple-darwin/$${RELEASE_DIR}, +$${elapsed_time}s"

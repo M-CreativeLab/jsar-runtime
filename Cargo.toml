@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/jsbindings", "crates/jsbundle"]
+members = ["crates/jsbindings", "crates/jsbundle", "crates/url_parser"]
 
 [workspace.dependencies]
 app_units = "0.7"

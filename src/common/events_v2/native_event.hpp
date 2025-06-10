@@ -1,6 +1,8 @@
 #pragma once
 
 #include <chrono>
+#include <string>
+
 #include "common/options.hpp"
 #include "./event.hpp"
 #include "./event_target.hpp"
@@ -160,6 +162,9 @@ namespace events_comm
       destDoc.AddMember("url", rapidjson::Value(url.c_str(), allocator), allocator);
       destDoc.AddMember("disableCache", disableCache, allocator);
       destDoc.AddMember("isPreview", isPreview, allocator);
+      destDoc.AddMember("defaultHTTPHeaders",
+                        rapidjson::Value(defaultHTTPHeaders.c_str(), allocator),
+                        allocator);
     }
     void deserialize(rapidjson::Document &srcDoc) override
     {
@@ -167,14 +172,20 @@ namespace events_comm
       url = srcDoc["url"].GetString();
       disableCache = srcDoc["disableCache"].GetBool();
       isPreview = srcDoc["isPreview"].GetBool();
+
+      if (srcDoc.HasMember("defaultHTTPHeaders") &&
+          srcDoc["defaultHTTPHeaders"].IsString())
+        defaultHTTPHeaders = srcDoc["defaultHTTPHeaders"].GetString();
     }
 
   public:
     uint32_t documentId;
-    string url;
+    std::string url;
     bool disableCache = false;
     bool isPreview = false;
     TrScriptRunMode runScripts = TrScriptRunMode::Dangerously;
+    // The default HTTP headers to be sent with the client-side HTTP requests.
+    std::string defaultHTTPHeaders;
 
     friend class TrEventDetailStorage;
   };

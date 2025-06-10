@@ -68,6 +68,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 else()
     set(TR_CRATE_BUILD_DIR "release")
 endif()
+set(TR_CRATE_BUILD_PATH ${CMAKE_SOURCE_DIR}/build/output/crates/${TR_CRATE_TARGET}/${TR_CRATE_BUILD_DIR})
 
 # Set the thirdparty library path
 if (APPLE)

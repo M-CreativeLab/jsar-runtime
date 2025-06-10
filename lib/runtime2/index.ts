@@ -2,7 +2,7 @@ import { JSARDOM } from '@yodaos-jsar/dom';
 import { extname } from 'node:path';
 
 import { getPerformanceNow, isWebXRSupported } from '@transmute/env';
-import { reportDocumentEvent } from '@transmute/messaging';
+import { type DocumentRequestEvent, reportDocumentEvent } from '@transmute/messaging';
 import { NativeDocumentOnTransmute } from './jsardom/TransmuteImpl';
 import { ResourceLoaderOnTransmute } from './jsardom/ResourceLoader';
 
@@ -64,8 +64,10 @@ async function evaluateXSML(gl: WebGLRenderingContext | WebGL2RenderingContext, 
 }
 
 export class TransmuteRuntime2 extends EventTarget {
+  #resourceLoader: ResourceLoaderOnTransmute = new ResourceLoaderOnTransmute();
   #browsingContext: Transmute.BrowsingContext;
   #threepio: Threepio;
+
   constructor(private gl: WebGLRenderingContext | WebGL2RenderingContext, private id: number) {
     super();
     {
@@ -85,19 +87,29 @@ export class TransmuteRuntime2 extends EventTarget {
        */
       const { BrowsingContext } = process._linkedBinding('transmute:dom');
       const browsingContext = new BrowsingContext();
-      browsingContext.setResourceLoader(new ResourceLoaderOnTransmute());
+      browsingContext.setResourceLoader(this.#resourceLoader);
       this.#browsingContext = browsingContext;
       this.#threepio = new Threepio(browsingContext);
     }
     this.dispatchEvent(new Event('rendererReady'));
   }
 
-  async start(input: string) {
-    console.info(`Content(#${this.id}): receiving a document request: ${input}`);
-    if (input.startsWith('http:') || input.startsWith('https:') || input.startsWith('/')) {
-      await this.load(input);
+  async start(inputEvent: DocumentRequestEvent) {
+    // Report the document event before loading.
+    console.info(`Content(#${this.id}): receiving a document request: ${inputEvent.url}`);
+
+    // Setup the default headers for the resource loader.
+    this.#resourceLoader.setDefaultHeaders(inputEvent.defaultHTTPHeaders);
+
+    // Handle the request URL.
+    const requestUrl = inputEvent.url;
+    if (requestUrl.startsWith('http:') ||
+      requestUrl.startsWith('https:') ||
+      requestUrl.startsWith('/') // for local path such as `/path/to/file.html`
+    ) {
+      await this.load(requestUrl);
     } else {
-      await this.#threepio.request(input);
+      await this.#threepio.request(requestUrl);
     }
   }
 

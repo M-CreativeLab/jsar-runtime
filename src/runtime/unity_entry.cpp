@@ -378,6 +378,31 @@ extern "C"
   }
 
   /**
+   * Set the request authorization headers for the client-side requests.
+   *
+   * @param rawHeaders The raw headers string, it should be in the format of "key1: value1\r\nkey2: value2\r\n".
+   * @param allowed_origin The allowed origin for the raw headers, if empty, all origins are allowed.
+   * @param allowed_origin2 An optional second allowed origin for the raw headers, if empty, it will not be used.
+   */
+  DLL_PUBLIC void TransmuteUnity_SetRequestAuthorizationHeaders(const char *rawHeaders,
+                                                                const char *allowed_origin,
+                                                                const char *allowed_origin2)
+  {
+    auto embedder = UnityEmbedder::EnsureAndGet();
+    if (embedder == nullptr || allowed_origin == nullptr)
+      return;
+
+    vector<string> allowedOrigins;
+    if (strlen(allowed_origin) > 0)
+      allowedOrigins.push_back(string(allowed_origin));
+    if (allowed_origin2 != nullptr && strlen(allowed_origin2) > 0)
+      allowedOrigins.push_back(string(allowed_origin2));
+
+    if (!allowedOrigins.empty())
+      embedder->setRequestAuthorizationHeaders(string(rawHeaders), allowedOrigins);
+  }
+
+  /**
    * Starting the Transmute runtime.
    */
   DLL_PUBLIC bool TransmuteUnity_Start()

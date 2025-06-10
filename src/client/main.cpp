@@ -49,10 +49,6 @@ int main(int argc, char **argv)
   ENABLE_BACKTRACE();
   signal(SIGPIPE, SIG_IGN); // Ignore SIGPIPE signal and leverage EPIPE error for socket handling.
 
-  // Print the restart command
-  printf("Copy the following command to restart the client:\n");
-  printf("  %s '%s' '%s'\n", argv[0], argv[1], argv[2]);
-
   // Determine the mode and run the client
   if (strcmp(argv[1], "--hive") == 0)
   {

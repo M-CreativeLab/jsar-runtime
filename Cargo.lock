@@ -1331,6 +1331,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "jsar_url_parser"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "cxx",
+ "cxx-build",
+ "env_logger",
+ "log",
+ "url",
+]
+
+[[package]]
 name = "khronos_api"
 version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

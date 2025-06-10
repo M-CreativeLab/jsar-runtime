@@ -1,4 +1,6 @@
 #include "embedder.hpp"
+#include "constellation.hpp"
+#include "content_manager.hpp"
 #include "common/analytics/perf_counter.hpp"
 
 using namespace std;
@@ -38,6 +40,11 @@ bool TrEmbedder::configureXrDevice(xr::TrDeviceInit &init)
   }
   constellation->xrDevice->configure(init);
   return true;
+}
+
+void TrEmbedder::setRequestAuthorizationHeaders(std::string rawHeaders, std::vector<std::string> allowedOrigins)
+{
+  constellation->contentManager->setRequestAuthorizationHeaders(rawHeaders, allowedOrigins);
 }
 
 bool TrEmbedder::onFrame()

@@ -416,6 +416,7 @@ class CacheStorage {
 export class ResourceLoaderOnTransmute implements JSARResourceLoader {
   #cacheDirectory: string;
   #cacheStorage: CacheStorage;
+  #defaultHeaders: Record<string, string> = {};
   #networkProxyAgent: undici.ProxyAgent;
 
   constructor() {
@@ -495,7 +496,7 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
     if (urlObj.protocol === 'file:') {
       return this.#readFile(urlObj.pathname, returnsAs);
     } else {
-      return this.#cacheStorage.requestWithCache(url, options, {
+      return this.#cacheStorage.requestWithCache(url, this.#getRequestInit(options), {
         readFile: (filename: string) => this.#readFile(filename, returnsAs),
         sendRequest: (url: string, init: RequestInit) => this.#sendRequest(url, init),
         readResponse: (...args) => this.#readBody(...args, returnsAs),
@@ -527,13 +528,11 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
         throw new TypeError(`Failed to fetch: Invalid URL ${input}`);
       }
 
-      return self.#cacheStorage.requestWithCache(urlObj.href, init, {
+      return self.#cacheStorage.requestWithCache(urlObj.href, self.#getRequestInit(init), {
         readFile: async (filename) => makeResponse(await self.#readFile(filename, 'arraybuffer')),
         sendRequest: forceFetch,
         readResponse: async (info, _url, onContentReady) => {
           const resp = info.responseData;
-          console.info('read response', resp);
-
           if (resp.ok) {
             let arraybuffer: ArrayBuffer;
             try {
@@ -548,6 +547,37 @@ export class ResourceLoaderOnTransmute implements JSARResourceLoader {
         }
       });
     }
+  }
+
+  setDefaultHeaders(rawHeaders: string) {
+    // Parsing the raw headers into an object.
+    if (rawHeaders) {
+      const headers = rawHeaders.split('\r\n');
+      for (const header of headers) {
+        const [key, value] = header.split(':').map(s => s.trim());
+        if (key && value) {
+          this.#defaultHeaders[key] = value;
+        }
+      }
+    }
+  }
+
+  #getRequestInit(init: RequestInit = {}): RequestInit {
+    if (this.#defaultHeaders && Object.keys(this.#defaultHeaders).length > 0) {
+      if (!init.headers) {
+        init.headers = {};
+      } else if (Array.isArray(init.headers)) {
+        init.headers = Object.fromEntries(init.headers);
+      }
+
+      // Merge the custom headers into the request headers.
+      for (const [key, value] of Object.entries(this.#defaultHeaders)) {
+        if (value !== undefined && value !== null) {
+          init.headers[key] = value;
+        }
+      }
+    }
+    return init;
   }
 
   async #sendRequest(url: string, options: FetchOptions): Promise<undici.Dispatcher.ResponseData> {
