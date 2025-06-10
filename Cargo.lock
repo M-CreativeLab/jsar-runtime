@@ -1322,23 +1322,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "jsar_jsbundle"
-version = "1.0.0"
-dependencies = [
- "flate2",
- "lazy_static",
- "md-5",
-]
-
-[[package]]
-name = "jsar_url_parser"
+name = "jsar_runtime_apis"
 version = "1.0.0"
 dependencies = [
  "anyhow",
  "cxx",
  "cxx-build",
  "env_logger",
+ "flate2",
+ "lazy_static",
  "log",
+ "md-5",
  "url",
 ]
 

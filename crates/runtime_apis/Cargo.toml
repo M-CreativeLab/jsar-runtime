@@ -1,5 +1,5 @@
 [package]
-name = "jsar_jsbundle"
+name = "jsar_runtime_apis"
 version = "1.0.0"
 authors = ["The JSAR Project Developers"]
 license = "Apache-2.0"
@@ -8,13 +8,19 @@ build = "build.rs"
 publish = false
 
 [lib]
-name = "jsar_jsbundle"
+name = "jsar_runtime_apis"
 path = "lib.rs"
 crate-type = ["staticlib"]
 
 [dependencies]
+anyhow = "1.0.89"
+cxx = { workspace = true }
 flate2 = "1.0.30"
 lazy_static = "1.4.0"
+url = { workspace = true }
 
 [build-dependencies]
+cxx-build = { workspace = true }
+env_logger = "0.10.0"
+log = "0.4.25"
 md-5 = "0.10.6"

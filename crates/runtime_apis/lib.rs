@@ -6,6 +6,8 @@ use std::slice;
 use flate2::read::GzDecoder;
 use lazy_static::lazy_static;
 
+mod url_parser;
+
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 mod platform {
   pub const LIBNODE_SRC: &[u8] = include_bytes!("res/aarch64-apple-darwin/libnode.lib");

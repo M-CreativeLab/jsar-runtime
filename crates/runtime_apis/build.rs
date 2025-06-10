@@ -5,12 +5,25 @@ use std::io::Error;
 use std::path::Path;
 use std::path::PathBuf;
 
+extern crate env_logger;
+extern crate log;
+
 fn main() {
+  // Tell cargo to re-run this script if the env FORCE_REBUILD is set.
+  // println!("cargo:rerun-if-env-changed=FORCE_REBUILD");
+  // Tell cargo to re-run this script if the Rust files have changed.
+  println!("cargo:rerun-if-changed=lib.rs");
+  println!("cargo:rerun-if-changed=url_parser.rs");
+
+  env_logger::init();
+
   install_nodejs_library();
   install_script("jsar-bootstrap-babylon.js");
   install_script("jsar-client-entry.js");
   install_script("jsar-webworkers-entry.js");
   install_header("jsar_jsbundle.h");
+
+  generate_module("url_parser.rs", "url_parser");
 }
 
 fn install_nodejs_library() {
@@ -126,4 +139,15 @@ fn copy_file(source: &Path, destination: &Path, write_md5: bool) -> Result<(), E
     fs::write(md5_file, format!("{:x}", md5_hash))?;
   }
   Ok(())
+}
+
+fn generate_module(source: &str, name: &str) {
+  cxx_build::bridge(source).std("c++17").compile(name);
+
+  let out_dir = env::var("OUT_DIR").unwrap();
+  let out_path = PathBuf::from(out_dir);
+  let out_name = format!("{}.hpp", name);
+  let header = out_path.join(format!("cxxbridge/include/jsar_runtime_apis/{}.h", source));
+  let _ = std::fs::copy(header, &out_name).unwrap();
+  install_header(&out_name);
 }

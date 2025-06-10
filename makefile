@@ -65,8 +65,7 @@ define create_universal_apple_binary
 		RELEASE_DIR=$(if $(filter yes,$(RELEASE)),release,debug); 																						\
 		mkdir -p build/output/crates/universal-apple-darwin/$$RELEASE_DIR; 																		\
 		$(call create_universal_apple_library,$$RELEASE_DIR,libjsar_jsbindings); 															\
-		$(call create_universal_apple_library,$$RELEASE_DIR,libjsar_jsbundle); 																\
-		$(call create_universal_apple_library,$$RELEASE_DIR,libjsar_url_parser); 															\
+		$(call create_universal_apple_library,$$RELEASE_DIR,libjsar_runtime_apis); 														\
 		end_time=$$(date +%s); 																																								\
 		elapsed_time=$$((end_time - start_time));																															\
 		echo "Created the crates for universal-apple-darwin/$${RELEASE_DIR}, +$${elapsed_time}s"
