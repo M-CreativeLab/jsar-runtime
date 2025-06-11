@@ -225,7 +225,7 @@ namespace dombinding
     {
       auto msg = "Failed to execute 'canPlayType' on 'HTMLMediaElement': "
                  "1 argument required, but only 0 present.";
-      Napi::TypeError::New(env, "Invalid argument").ThrowAsJavaScriptException();
+      Napi::TypeError::New(env, msg).ThrowAsJavaScriptException();
       return env.Undefined();
     }
     auto mimeTypeStr = info[0].ToString().Utf8Value();

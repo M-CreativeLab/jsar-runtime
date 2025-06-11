@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <optional>
 #include <memory>
 #include <string>
 #include <skia/include/core/SkImage.h>
@@ -33,10 +34,11 @@ namespace canvas
     /**
      * Default constructor for `CanvasBase`.
      */
-    CanvasBase()
+    CanvasBase(std::optional<int> width = std::nullopt,
+               std::optional<int> height = std::nullopt)
         : ImageSource(),
-          widthToSet(DEFAULT_CANVAS_WIDTH),
-          heightToSet(DEFAULT_CANVAS_HEIGHT),
+          widthToSet(width.has_value() ? static_cast<uint32_t>(width.value()) : DEFAULT_CANVAS_WIDTH),
+          heightToSet(height.has_value() ? static_cast<uint32_t>(height.value()) : DEFAULT_CANVAS_HEIGHT),
           bitmap_(std::make_shared<SkBitmap>())
     {
       resetSkSurface();

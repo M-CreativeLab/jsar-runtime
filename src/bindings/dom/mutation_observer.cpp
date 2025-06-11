@@ -167,7 +167,24 @@ namespace dombinding
       Napi::Array recordsArray = Napi::Array::New(env, records.size());
       for (size_t i = 0; i < records.size(); i++)
         recordsArray.Set(i, MutationRecord::MakeFromImpl(env, records[i]));
-      callback.Call(Value(), {recordsArray});
+
+      try
+      {
+        callback.Call(Value(), {recordsArray});
+      }
+      catch (Napi::Error &e)
+      {
+        // If the callback throws an error, we just log it and continue.
+        // This is to avoid breaking the microtask queue.
+        std::cerr << "Failed to dispatch callback on 'MutationObserver': "
+                  << e.Message() << std::endl;
+      }
+      catch (std::exception &e)
+      {
+        // Catch any other exceptions and log them.
+        std::cerr << "Failed to dispatch callback on 'MutationObserver': "
+                  << "std::exception(" << e.what() << ")" << std::endl;
+      }
     }
   }
 

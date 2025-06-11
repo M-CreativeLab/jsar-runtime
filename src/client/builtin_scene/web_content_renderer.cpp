@@ -355,16 +355,23 @@ namespace builtin_scene::web_renderer
       return;
     }
 
-    auto canvas = content.canvas();
+    sk_sp<SkImage> skImage = imageComponent->image();
+    if (skImage == nullptr)
+    {
+      // Disable using texture if the image is failed to load.
+      content.setTextureUsing(false);
+      return;
+    }
+
+    SkCanvas* canvas = content.canvas();
     canvas->save();
     {
       SkRRect &roundedRect = content.rounded_rect_;
       canvas->clipRRect(roundedRect, true);
 
-      sk_sp<SkImage> image = imageComponent->image();
-      SkRect srcRect = SkRect::MakeWH(image->width(), image->height());
+      SkRect srcRect = SkRect::MakeWH(skImage->width(), skImage->height());
       SkRect dstRect = SkRect::MakeWH(content.logicalWidth(), content.logicalHeight());
-      canvas->drawImageRect(image, srcRect, dstRect,
+      canvas->drawImageRect(skImage, srcRect, dstRect,
                             SkSamplingOptions(), nullptr,
                             SkCanvas::kStrict_SrcRectConstraint);
     }

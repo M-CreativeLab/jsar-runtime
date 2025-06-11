@@ -1,4 +1,6 @@
 import { Leafer, Rect } from 'https://unpkg.com/leafer-ui@1.0.4/dist/web.module.min.js';
+
+console.info('Leafer.js example is commented out. Uncomment the code to run it.');
 try {
   var leafer = new Leafer({ view: window });
   var rect = new Rect({

@@ -7,16 +7,22 @@
     body {
       background-color: #efefef;
     }
+
     h1 {
       margin: 20px;
       font-size: 30px;
+    }
+
+    canvas {
+      margin: 5vw;
+      border-radius: 20px;
     }
   </style>
 </head>
 
 <body>
   <h1>Canvas Example</h1>
-  <canvas id="canvas" width="100" height="100"></canvas>
+  <canvas id="canvas" width="512" height="400"></canvas>
 </body>
 
 <script>
@@ -24,15 +30,25 @@
   console.info(canvas);
 
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = 'red';
-  ctx.fillRect(0, 0, 100, 100);
-  console.info(ctx.getImageData(0, 0, 100, 100));
+  function renderChatBox(ctx, color = 'black') {
+    ctx.beginPath();
+    ctx.moveTo(75 * 2, 25 * 2);
+    ctx.quadraticCurveTo(25 * 2, 25 * 2, 25 * 2, 62.5 * 2);
+    ctx.quadraticCurveTo(25 * 2, 100 * 2, 50 * 2, 100 * 2);
+    ctx.quadraticCurveTo(50 * 2, 120 * 2, 30 * 2, 125 * 2);
+    ctx.quadraticCurveTo(60 * 2, 120 * 2, 65 * 2, 100 * 2);
+    ctx.quadraticCurveTo(125 * 2, 100 * 2, 125 * 2, 62.5 * 2);
+    ctx.quadraticCurveTo(125 * 2, 25 * 2, 75 * 2, 25 * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    console.info('fill done');
+  }
+  renderChatBox(ctx);
 
   setInterval(() => {
     const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-    ctx.fillStyle = `#${randomColor}`;
-    ctx.fillRect(0, 0, 100, 100);
-  }, 100);
+    renderChatBox(ctx, `#${randomColor}`);
+  }, 500);
 </script>
 
 </html>

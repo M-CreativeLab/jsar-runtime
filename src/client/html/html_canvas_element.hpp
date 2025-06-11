@@ -24,6 +24,8 @@ namespace dom
   public:
     void createdCallback(bool from_scripting) override;
     void connectedCallback() override;
+    void attributeChangedCallback(const std::string &name,
+                                  const std::string &oldValue, const std::string &newValue) override;
 
   public:
     inline size_t width() const override { return canvas_impl_->width(); }
@@ -36,39 +38,8 @@ namespace dom
     }
 
   public:
-    /**
-     * The width of the canvas.
-     *
-     * @returns The width of the canvas.
-     */
-    inline size_t getWidth() { return canvas_impl_->width(); }
-
-    /**
-     * Set the width of the canvas, it will resize the canvas.
-     *
-     * @param width The width of the canvas.
-     */
-    inline void setWidth(size_t width)
-    {
-      canvas_impl_->setWidth(width);
-    }
-
-    /**
-     * The height of the canvas.
-     *
-     * @returns The height of the canvas.
-     */
-    inline size_t getHeight() { return canvas_impl_->height(); }
-
-    /**
-     * Set the height of the canvas, it will resize the canvas.
-     *
-     * @param height The height of the canvas.
-     */
-    inline void setHeight(size_t height)
-    {
-      canvas_impl_->setHeight(height);
-    }
+    inline void setWidth(size_t width) { canvas_impl_->setWidth(width); }
+    inline void setHeight(size_t height) { canvas_impl_->setHeight(height); }
 
     /**
      * Get the rendering context of the canvas.

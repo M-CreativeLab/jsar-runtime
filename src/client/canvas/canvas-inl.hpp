@@ -27,15 +27,24 @@ namespace canvas
   template <typename T>
   void CanvasBase<T>::resetSkSurface()
   {
-    auto imageInfo = SkImageInfo::MakeN32Premul(widthToSet, heightToSet);
-    if (skSurface != nullptr)
+    // If the width or height is zero, we cannot create a valid Skia surface.
+    if (widthToSet == 0 || heightToSet == 0)
+    {
+      bitmap_->reset();
       skSurface.reset();
+    }
+    else
+    {
+      auto imageInfo = SkImageInfo::MakeN32Premul(widthToSet, heightToSet);
+      if (skSurface != nullptr)
+        skSurface.reset();
 
-    bitmap_->allocPixels(imageInfo);
-    skSurface = SkSurfaces::WrapPixels(bitmap_->info(),
-                                       bitmap_->getPixels(),
-                                       bitmap_->rowBytes());
-    assert(skSurface != nullptr && "Failed to create Skia surface for the canvas.");
+      bitmap_->allocPixels(imageInfo);
+      skSurface = SkSurfaces::WrapPixels(bitmap_->info(),
+                                         bitmap_->getPixels(),
+                                         bitmap_->rowBytes());
+      assert(skSurface != nullptr && "Failed to create Skia surface for the canvas.");
+    }
 
     // Reset the rendering context if created.
     if (renderingContext2d != nullptr)

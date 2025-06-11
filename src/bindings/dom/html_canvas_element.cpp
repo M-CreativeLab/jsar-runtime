@@ -41,7 +41,7 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     auto self = info.This().As<Napi::Object>();
-    return Napi::Number::New(env, node->getWidth());
+    return Napi::Number::New(env, node->width());
   }
 
   void HTMLCanvasElement::WidthSetter(const Napi::CallbackInfo &info, const Napi::Value &value)
@@ -58,7 +58,7 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
     auto self = info.This().As<Napi::Object>();
-    return Napi::Number::New(env, node->getHeight());
+    return Napi::Number::New(env, node->height());
   }
 
   void HTMLCanvasElement::HeightSetter(const Napi::CallbackInfo &info, const Napi::Value &value)

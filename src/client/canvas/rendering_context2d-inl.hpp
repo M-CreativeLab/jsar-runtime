@@ -727,10 +727,16 @@ namespace canvas
   template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::reset(sk_sp<SkSurface> skSurface)
   {
-    skCanvas = skSurface->getCanvas();
-    skCanvas->drawColor(SK_ColorWHITE);
-
-    // TODO(yorkie): should redraw last content?
+    if (skSurface == nullptr)
+    {
+      skCanvas = nullptr;
+    }
+    else
+    {
+      skCanvas = skSurface->getCanvas();
+      skCanvas->drawColor(SK_ColorWHITE);
+      // TODO(yorkie): should redraw last content?
+    }
   }
 
   template <typename CanvasType>
