@@ -23,11 +23,17 @@ namespace dom
 
   public:
     void createdCallback(bool from_scripting) override;
+    void connectedCallback() override;
 
   public:
-    inline size_t width() const override { return canvasImpl_->width(); }
-    inline size_t height() const override { return canvasImpl_->height(); }
-    inline bool readPixels(SkPixmap &dst) const override { return canvasImpl_->readPixels(dst); }
+    inline size_t width() const override { return canvas_impl_->width(); }
+    inline size_t height() const override { return canvas_impl_->height(); }
+    inline bool readPixels(SkPixmap &dst) const override { return canvas_impl_->readPixels(dst); }
+
+    inline geometry::DOMRect getDrawingClientRect() const
+    {
+      return geometry::DOMRect(0, 0, width(), height());
+    }
 
   public:
     /**
@@ -35,7 +41,7 @@ namespace dom
      *
      * @returns The width of the canvas.
      */
-    inline size_t getWidth() { return canvasImpl_->width(); }
+    inline size_t getWidth() { return canvas_impl_->width(); }
 
     /**
      * Set the width of the canvas, it will resize the canvas.
@@ -44,7 +50,7 @@ namespace dom
      */
     inline void setWidth(size_t width)
     {
-      canvasImpl_->setWidth(width);
+      canvas_impl_->setWidth(width);
     }
 
     /**
@@ -52,7 +58,7 @@ namespace dom
      *
      * @returns The height of the canvas.
      */
-    inline size_t getHeight() { return canvasImpl_->height(); }
+    inline size_t getHeight() { return canvas_impl_->height(); }
 
     /**
      * Set the height of the canvas, it will resize the canvas.
@@ -61,7 +67,7 @@ namespace dom
      */
     inline void setHeight(size_t height)
     {
-      canvasImpl_->setHeight(height);
+      canvas_impl_->setHeight(height);
     }
 
     /**
@@ -81,7 +87,7 @@ namespace dom
      */
     inline std::string toDataURL(const std::string &type, double encoderOptions)
     {
-      return canvasImpl_->toDataURL(type, encoderOptions);
+      return canvas_impl_->toDataURL(type, encoderOptions);
     }
 
     /**
@@ -89,9 +95,9 @@ namespace dom
      *
      * @returns The canvas implementation object.
      */
-    inline std::shared_ptr<canvas::Canvas> canvasImpl() { return canvasImpl_; }
+    inline std::shared_ptr<canvas::Canvas> canvasImpl() { return canvas_impl_; }
 
   private:
-    std::shared_ptr<canvas::Canvas> canvasImpl_;
+    std::shared_ptr<canvas::Canvas> canvas_impl_;
   };
 }

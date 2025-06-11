@@ -3,20 +3,36 @@
 <head>
   <meta charset="utf-8" />
   <title>Canvas</title>
-
+  <style>
+    body {
+      background-color: #efefef;
+    }
+    h1 {
+      margin: 20px;
+      font-size: 30px;
+    }
+  </style>
 </head>
 
 <body>
+  <h1>Canvas Example</h1>
+  <canvas id="canvas" width="100" height="100"></canvas>
 </body>
 
 <script>
-  const canvas = document.createElement('canvas');
+  const canvas = document.getElementById('canvas');
   console.info(canvas);
 
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = 'red';
-  ctx.fillRect(0, 0, 10, 10);
+  ctx.fillRect(0, 0, 100, 100);
   console.info(ctx.getImageData(0, 0, 100, 100));
+
+  setInterval(() => {
+    const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+    ctx.fillStyle = `#${randomColor}`;
+    ctx.fillRect(0, 0, 100, 100);
+  }, 100);
 </script>
 
 </html>

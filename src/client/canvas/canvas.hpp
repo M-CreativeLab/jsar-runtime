@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <skia/include/core/SkImage.h>
@@ -22,13 +23,24 @@ namespace canvas
                      public std::enable_shared_from_this<T>
   {
   public:
+    friend class canvas::RenderingContextBase<T>;
     friend class canvas::CanvasRenderingContext2D<T>;
+
+    static constexpr const int DEFAULT_CANVAS_WIDTH = 300;
+    static constexpr const int DEFAULT_CANVAS_HEIGHT = 150;
 
   public:
     /**
      * Default constructor for `CanvasBase`.
      */
-    CanvasBase() : ImageSource(), widthToSet(1024), heightToSet(1024) {}
+    CanvasBase()
+        : ImageSource(),
+          widthToSet(DEFAULT_CANVAS_WIDTH),
+          heightToSet(DEFAULT_CANVAS_HEIGHT),
+          bitmap_(std::make_shared<SkBitmap>())
+    {
+      resetSkSurface();
+    }
 
   public:
     /**
@@ -74,6 +86,14 @@ namespace canvas
       return skSurface->peekPixels(&dst);
     }
 
+    /**
+     * This callback is used to listen for pixel updates on the canvas.
+     */
+    void setPixelsUpdatedCallback(std::function<void()> callback)
+    {
+      pixels_updated_callback_ = std::move(callback);
+    }
+
   public:
     /**
      * Sets the width of the canvas.
@@ -100,10 +120,12 @@ namespace canvas
     /**
      * Resizes the canvas to the specified width and height.
      */
-    void resize()
-    {
-      resetSkSurface();
-    }
+    inline void resize() { resetSkSurface(); }
+
+    /**
+     * @returns The constant shared pointer to the SkBitmap that stores the canvas content.
+     */
+    inline std::shared_ptr<const SkBitmap> getSkBitmap() const { return bitmap_; }
 
   protected:
     /**
@@ -118,13 +140,6 @@ namespace canvas
      */
     void resetSkSurface();
 
-    /**
-     * Converts the canvas content to an `SkBitmap`.
-     *
-     * @returns A pointer to the `SkBitmap` containing the canvas content.
-     */
-    SkBitmap *toSkBitmap();
-
   protected:
     sk_sp<SkSurface> skSurface; // The Skia surface for rendering
     uint32_t widthToSet;        // The width to set for the canvas
@@ -136,6 +151,10 @@ namespace canvas
     // the same time, developers can get a `2d` context and a `gl` context, both them could draw on this canvas.
     std::shared_ptr<CanvasRenderingContext2D<T>> renderingContext2d;
     // TODO(yorkie): support other types of rendering contexts, such as WebGL, WebGL2, etc.
+
+  private:
+    std::shared_ptr<SkBitmap> bitmap_; // The bitmap storage for the canvas content
+    std::function<void()> pixels_updated_callback_;
   };
 
   /**

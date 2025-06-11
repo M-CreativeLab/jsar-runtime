@@ -46,6 +46,7 @@ namespace client_layout
     virtual bool isBox() const { return false; }
     virtual bool isText() const { return false; }
     virtual bool isEmptyText() const { return false; }
+    virtual bool isCanvas() const { return false; }
     virtual bool isNone() const { return false; }
     virtual bool isFlexibleBox() const { return false; }
     virtual bool isLayoutGrid() const { return false; }
