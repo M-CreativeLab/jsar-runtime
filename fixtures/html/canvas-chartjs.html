@@ -1,0 +1,56 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Canvas: Chart.js Example</title>
+  <style>
+    body {
+      background-color: #efefef;
+    }
+
+    h1 {
+      margin: 20px;
+      font-size: 30px;
+    }
+
+    canvas {
+      margin: 5vw;
+      border-radius: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Chart.js Example</h1>
+  <canvas id="myChart" width="512" height="512"></canvas>
+</body>
+
+<script type="module">
+  import { Chart, registerables } from 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.esm.js';
+  console.info(Chart);
+
+  setTimeout(() => {
+    console.info('Chart.js loaded');
+    const ctx = document.getElementById('myChart');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+        datasets: [{
+          label: '# of Votes',
+          data: [12, 19, 3, 5, 2, 3],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  }, 1000);
+</script>
+
+</html>
