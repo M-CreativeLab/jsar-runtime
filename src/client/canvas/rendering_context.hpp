@@ -28,6 +28,19 @@ namespace canvas
     }
     virtual ~RenderingContextBase() = default;
 
+  protected:
+    // Notify the context's canvas object that the pixels might be changed.
+    void notifyCanvasUpdated()
+    {
+      if (TR_UNLIKELY(canvasRef.expired()))
+        return;
+
+      auto canvas = canvasRef.lock();
+      assert(canvas != nullptr && "Canvas reference is expired");
+      if (canvas->pixels_updated_callback_ != nullptr)
+        canvas->pixels_updated_callback_();
+    }
+
   public:
     RenderingContextType contextType;
     std::weak_ptr<CanvasType> canvasRef;

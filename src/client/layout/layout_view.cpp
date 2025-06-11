@@ -13,6 +13,7 @@
 #include "./layout_flexible_box.hpp"
 #include "./layout_grid.hpp"
 #include "./layout_image.hpp"
+#include "./layout_html_canvas.hpp"
 
 namespace client_layout
 {
@@ -230,6 +231,8 @@ namespace client_layout
     // TODO(yorkie): support <picture> element and content case.
     if (dom::Node::Is<dom::HTMLImageElement>(element))
       boxObject = make_unique<LayoutImage>(element);
+    else if (dom::Node::Is<dom::HTMLCanvasElement>(element))
+      boxObject = make_unique<LayoutHTMLCanvas>(element);
 
     // Skip the box creation for the display type of "none".
     if (display.isNone())

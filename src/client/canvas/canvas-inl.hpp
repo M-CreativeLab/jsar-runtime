@@ -1,4 +1,5 @@
 #include <memory>
+#include <skia/include/core/SkCanvas.h>
 
 #include "./canvas.hpp"
 #include "./rendering_context2d.hpp"
@@ -29,7 +30,12 @@ namespace canvas
     auto imageInfo = SkImageInfo::MakeN32Premul(widthToSet, heightToSet);
     if (skSurface != nullptr)
       skSurface.reset();
-    skSurface = SkSurfaces::Raster(imageInfo);
+
+    bitmap_->allocPixels(imageInfo);
+    skSurface = SkSurfaces::WrapPixels(bitmap_->info(),
+                                       bitmap_->getPixels(),
+                                       bitmap_->rowBytes());
+    assert(skSurface != nullptr && "Failed to create Skia surface for the canvas.");
 
     // Reset the rendering context if created.
     if (renderingContext2d != nullptr)

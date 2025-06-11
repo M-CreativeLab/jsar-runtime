@@ -320,6 +320,7 @@ namespace canvas
       delete shadowPaint;
     }
     skCanvas->drawPath(*currentPath, fillPaint);
+    this->notifyCanvasUpdated();
   }
 
   template <typename CanvasType>
@@ -328,6 +329,7 @@ namespace canvas
     auto fillPaint = getFillPaint();
     // TODO: shadow painting
     skCanvas->drawRect(SkRect::MakeXYWH(x, y, width, height), fillPaint);
+    this->notifyCanvasUpdated();
   }
 
   template <typename CanvasType>
@@ -373,6 +375,7 @@ namespace canvas
       break;
     }
     skCanvas->drawTextBlob(textBlob, x, y, fillPaint);
+    this->notifyCanvasUpdated();
   }
 
   template <typename CanvasType>
@@ -391,6 +394,7 @@ namespace canvas
       delete shadowPaint;
     }
     skCanvas->drawPath(path, strokePaint);
+    this->notifyCanvasUpdated();
   }
 
   template <typename CanvasType>
@@ -400,6 +404,7 @@ namespace canvas
     skPaint->setBlendMode(SkBlendMode::kClear);
     skCanvas->drawRect(SkRect::MakeXYWH(x, y, width, height), *skPaint);
     skPaint->setBlendMode(globalCompositeOperation);
+    this->notifyCanvasUpdated();
   }
 
   template <typename CanvasType>
@@ -570,6 +575,7 @@ namespace canvas
     }
     skCanvas->drawImageRect(imageSource, srcRect, dstRect,
                             SkSamplingOptions(), &imagePaint, SkCanvas::kFast_SrcRectConstraint);
+    this->notifyCanvasUpdated();
   }
 
   template <typename CanvasType>
@@ -652,7 +658,9 @@ namespace canvas
   bool CanvasRenderingContext2D<CanvasType>::putImageData(std::shared_ptr<ImageSource> image, float dx, float dy)
   {
     auto bitmap = image->makeSkBitmap();
-    return skCanvas->writePixels(*bitmap, dx, dy);
+    auto r = skCanvas->writePixels(*bitmap, dx, dy);
+    this->notifyCanvasUpdated();
+    return r;
   }
 
   template <typename CanvasType>
@@ -695,6 +703,7 @@ namespace canvas
       skCanvas->drawImageRect(image->makeSkImage(), srcRect, dstRect,
                               SkSamplingOptions(), nullptr, SkCanvas::kFast_SrcRectConstraint);
       skCanvas->restore();
+      this->notifyCanvasUpdated();
       return true;
     }
     else
