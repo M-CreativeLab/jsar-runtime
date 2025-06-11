@@ -309,6 +309,9 @@ namespace canvas
   template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::fill()
   {
+    if (TR_UNLIKELY(skCanvas == nullptr))
+      return;
+
     auto fillPaint = getFillPaint();
     auto shadowPaint = getShadowPaint(fillPaint);
     if (shadowPaint != nullptr)
@@ -326,6 +329,9 @@ namespace canvas
   template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::fillRect(float x, float y, float width, float height)
   {
+    if (TR_UNLIKELY(skCanvas == nullptr))
+      return;
+
     auto fillPaint = getFillPaint();
     // TODO: shadow painting
     skCanvas->drawRect(SkRect::MakeXYWH(x, y, width, height), fillPaint);
@@ -335,6 +341,9 @@ namespace canvas
   template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::fillText(const std::string &text, float x, float y)
   {
+    if (TR_UNLIKELY(skCanvas == nullptr))
+      return;
+
     auto fillPaint = getFillPaint();
     auto textBlob = SkTextBlob::MakeFromString(text.c_str(), *skFont);
 
@@ -381,6 +390,9 @@ namespace canvas
   template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::stroke()
   {
+    if (TR_UNLIKELY(skCanvas == nullptr))
+      return;
+
     // TODO: support path
     auto path = *currentPath;
     auto strokePaint = getStrokePaint();
@@ -402,9 +414,12 @@ namespace canvas
   {
     skPaint->setStyle(SkPaint::kFill_Style);
     skPaint->setBlendMode(SkBlendMode::kClear);
-    skCanvas->drawRect(SkRect::MakeXYWH(x, y, width, height), *skPaint);
+    if (skCanvas != nullptr)
+    {
+      skCanvas->drawRect(SkRect::MakeXYWH(x, y, width, height), *skPaint);
+      this->notifyCanvasUpdated();
+    }
     skPaint->setBlendMode(globalCompositeOperation);
-    this->notifyCanvasUpdated();
   }
 
   template <typename CanvasType>
@@ -534,37 +549,47 @@ namespace canvas
   template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::transform(float a, float b, float c, float d, float e, float f)
   {
-    skCanvas->concat(SkMatrix::MakeAll(a, b, e, c, d, f, 0, 0, 1));
+    if (TR_LIKELY(skCanvas != nullptr))
+      skCanvas->concat(SkMatrix::MakeAll(a, b, e, c, d, f, 0, 0, 1));
   }
 
   template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::setTransform(float a, float b, float c, float d, float e, float f)
   {
-    skCanvas->resetMatrix();
-    skCanvas->concat(SkMatrix::MakeAll(a, b, e, c, d, f, 0, 0, 1));
+    if (TR_LIKELY(skCanvas != nullptr))
+    {
+      skCanvas->resetMatrix();
+      skCanvas->concat(SkMatrix::MakeAll(a, b, e, c, d, f, 0, 0, 1));
+    }
   }
 
   template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::scale(float sx, float sy)
   {
-    skCanvas->scale(sx, sy);
+    if (TR_LIKELY(skCanvas != nullptr))
+      skCanvas->scale(sx, sy);
   }
 
   template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::rotate(float angle)
   {
-    skCanvas->rotate(angle);
+    if (TR_LIKELY(skCanvas != nullptr))
+      skCanvas->rotate(angle);
   }
 
   template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::translate(float tx, float ty)
   {
-    skCanvas->translate(tx, ty);
+    if (TR_LIKELY(skCanvas != nullptr))
+      skCanvas->translate(tx, ty);
   }
 
   template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::drawImage(std::shared_ptr<ImageSource> image, SkRect dstRect, SkRect srcRect)
   {
+    if (TR_UNLIKELY(skCanvas == nullptr) || image == nullptr)
+      return;
+
     SkPaint imagePaint = getFillPaint();
     imagePaint.setColor(SK_ColorWHITE);
     sk_sp<SkImage> imageSource = image->makeSkImage();
@@ -644,6 +669,9 @@ namespace canvas
   template <typename CanvasType>
   std::shared_ptr<ImageData> CanvasRenderingContext2D<CanvasType>::getImageData(float x, float y, float width, float height)
   {
+    if (TR_UNLIKELY(skCanvas == nullptr))
+      return nullptr;
+
     SkImageInfo dstImageInfo = SkImageInfo::Make(width, height, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
     uint8_t *dstPixels = new uint8_t[dstImageInfo.computeMinByteSize()];
     if (!skCanvas->readPixels(dstImageInfo, dstPixels, dstImageInfo.minRowBytes(), x, y))
@@ -657,8 +685,14 @@ namespace canvas
   template <typename CanvasType>
   bool CanvasRenderingContext2D<CanvasType>::putImageData(std::shared_ptr<ImageSource> image, float dx, float dy)
   {
+    if (TR_UNLIKELY(skCanvas == nullptr))
+      return false;
+
     auto bitmap = image->makeSkBitmap();
-    auto r = skCanvas->writePixels(*bitmap, dx, dy);
+    if (TR_UNLIKELY(bitmap == nullptr))
+      return false;
+
+    bool r = skCanvas->writePixels(*bitmap, dx, dy);
     this->notifyCanvasUpdated();
     return r;
   }
@@ -668,6 +702,9 @@ namespace canvas
                                                           float dx, float dy,
                                                           float dirtyX, float dirtyY, float dirtyWidth, float dirtyHeight)
   {
+    if (TR_UNLIKELY(skCanvas == nullptr))
+      return false;
+
     if (dirtyWidth < 0)
     {
       dirtyX += dirtyWidth;
@@ -715,12 +752,23 @@ namespace canvas
   template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::save()
   {
+    if (TR_UNLIKELY(skCanvas == nullptr))
+      return;
+
+    // Save the current state of the canvas
+    // This includes the current transformation matrix, clip, and paint state.
+    // NOTE(yorkie): SkCanvas::save() does not save the paint state, so we need to handle it manually.
     skCanvas->save();
   }
 
   template <typename CanvasType>
   void CanvasRenderingContext2D<CanvasType>::restore()
   {
+    if (TR_UNLIKELY(skCanvas == nullptr))
+      return;
+
+    // Restore the last saved state of the canvas
+    // This includes the current transformation matrix, clip, and paint state.
     skCanvas->restore();
   }
 

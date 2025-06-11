@@ -109,6 +109,23 @@ namespace dom
   {
   }
 
+  vector<geometry::DOMRect> Element::getLayoutRects() const
+  {
+    vector<geometry::DOMRect> rects;
+    for (const auto &box : boxes_)
+    {
+      if (box == nullptr)
+        continue; // Skip null boxes.
+
+      // Get the bounding box of the layout box.
+      auto fragment = box->fragment();
+      geometry::DOMRect rect(fragment.left(), fragment.top(),
+                             fragment.width(), fragment.height());
+      rects.push_back(rect);
+    }
+    return rects;
+  }
+
   std::shared_ptr<Element> Element::getAnimationTarget()
   {
     return getPtr<Element>();
@@ -508,7 +525,7 @@ namespace dom
   {
     vector<geometry::DOMRect> clientRects = getLayoutRects();
     if (clientRects.empty())
-      return clientRects;
+      return {};
 
     shared_ptr<browser::Window> window = getOwnerDocumentChecked().defaultView();
     // glm::vec2 accumulatedScrollOffset(window->scrollX(), window->scrollY());

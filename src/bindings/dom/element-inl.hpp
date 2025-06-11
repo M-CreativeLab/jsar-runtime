@@ -274,8 +274,14 @@ namespace dombinding
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    // TODO: Implement this method.
-    return Napi::Object::New(env);
+    auto boundingRect = this->node->getBoundingClientRect();
+    Napi::Object rectObj = Napi::Object::New(env);
+    // TODO(yorkie): implement the DOMRect interface.
+    rectObj.Set("x", Napi::Number::New(env, boundingRect.x()));
+    rectObj.Set("y", Napi::Number::New(env, boundingRect.y()));
+    rectObj.Set("width", Napi::Number::New(env, boundingRect.width()));
+    rectObj.Set("height", Napi::Number::New(env, boundingRect.height()));
+    return rectObj;
   }
 
   template <typename ObjectType, typename ElementType>

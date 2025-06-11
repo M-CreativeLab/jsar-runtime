@@ -108,6 +108,7 @@ namespace dom
     ~Element() = default;
 
   public:
+    std::vector<geometry::DOMRect> getLayoutRects() const override;
     std::shared_ptr<Element> getAnimationTarget() override;
 
     void before(std::vector<std::shared_ptr<Node>> nodes);

@@ -11,8 +11,8 @@ namespace dom
     auto on_pixels_updated = [this]()
     {
       auto canvasBox = dynamic_pointer_cast<client_layout::LayoutHTMLCanvas>(principalBox());
-      assert(canvasBox != nullptr && "The image box is not created yet.");
-      canvasBox->markCanvasAsDirty();
+      if (canvasBox != nullptr)
+        canvasBox->markCanvasAsDirty();
     };
     canvas_impl_ = make_shared<canvas::Canvas>();
     canvas_impl_->setPixelsUpdatedCallback(on_pixels_updated);
