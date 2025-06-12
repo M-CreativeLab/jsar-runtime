@@ -64,6 +64,10 @@ export interface HtmlFragment extends Fragment {
   parentId: string;        // The parent element ID for this HTML fragment
 }
 
+export interface CssFragment extends Fragment {
+
+}
+
 /**
  * Field names used in the planner for parsing and mapping.
  */
