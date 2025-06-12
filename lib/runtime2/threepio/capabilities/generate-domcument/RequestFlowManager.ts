@@ -8,13 +8,13 @@ import {
   MoudleParserEventType,
   MoudleFragmentTask,
 } from './interfaces';
-import { createModuleTask } from './taskDecomposer';
 import { callLLM } from '../../utils/llmClient';
 import { generateStructuralStream } from './htmlStructuralGenerator';
 import { reportThreepioError, reportThreepioInfo } from '../../utils/threepioLog';
 import { getPlanPrompt } from './prompts';
 import { StreamPlannerParser } from './parsers/jsonl/StreamPlannerParser';
 import { ApiStream } from '../../api/transform/stream';
+import { createModuleTask } from './TaskDecomposer';
 
 export interface RequestFlowManager {
   on(event: MoudleParserEventType, listener: (data: EmitData) => void): this;
