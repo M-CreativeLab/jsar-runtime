@@ -6,13 +6,15 @@ import {
   ParsedHeader,
   ParsedModule,
   MoudleParserEventType,
+  MoudleFragmentTask,
 } from './interfaces';
-import { StreamPlannerParser } from './parsers/StreamPlannerParser';
-import { createModuleTask } from './TaskDecomposer';
-import { PLANNER_PROMPT } from './prompts/planner.prompt';
+import { createModuleTask } from './taskDecomposer';
 import { callLLM } from '../../utils/llmClient';
 import { generateStructuralStream } from './htmlStructuralGenerator';
 import { reportThreepioError, reportThreepioInfo } from '../../utils/threepioLog';
+import { getPlanPrompt } from './prompts';
+import { StreamPlannerParser } from './parsers/jsonl/StreamPlannerParser';
+import { ApiStream } from '../../api/transform/stream';
 
 export interface RequestFlowManager {
   on(event: MoudleParserEventType, listener: (data: EmitData) => void): this;
@@ -23,78 +25,92 @@ export class RequestFlowManager extends EventEmitter {
     let headerParsed = false;
     let taskPromises: Promise<void>[] = [];
     const plannerParser = new StreamPlannerParser();
-    const systemPrompt = PLANNER_PROMPT;
-    const stream = callLLM(input, systemPrompt);
-    const plannerStreamPromise = new Promise<void>((resolvePlannerPhase, rejectPlannerPhase) => {
-      this.#registerPlannerParserHandlers(plannerParser, taskPromises, () => { headerParsed = true; }, resolvePlannerPhase, rejectPlannerPhase);
-      this.#processPlannerStream(stream, plannerParser);
-    });
-    await plannerStreamPromise;
+    const systemPrompt = getPlanPrompt();
+    try {
+      const stream = callLLM(input, systemPrompt);
+      await this.#processPlannerStream(stream, plannerParser, taskPromises, () => { headerParsed = true; });
+      await Promise.all(taskPromises);
+      reportThreepioInfo('All tasks completed.');
+    } catch (error) {
+      reportThreepioError('Error during flow execution:', error);
+      throw error;
+    }
   }
 
-  #registerPlannerParserHandlers(
+  async #processPlannerStream(
+    stream: ApiStream,
     plannerParser: StreamPlannerParser,
     taskPromises: Promise<void>[],
-    onHeaderParsed: () => void,
-    resolvePlannerPhase: () => void,
-    rejectPlannerPhase: (err: Error) => void
+    onHeaderParsed: () => void
   ) {
+    const parserStreamPromise = (async () => {
+      for await (const item of plannerParser.stream()) {
+        switch (item.type) {
+          case 'header':
+            const header = item.data as ParsedHeader;
+            onHeaderParsed();
+            const layout = header.layout.replace(/height/g, 'min-height');
+            reportThreepioInfo(`Header parsed layout: ${layout}`);
+            this.#emitData('append', { type: FragmentType.Header, fragment: { content: layout } });
+            break;
 
-    plannerParser.on('headerParsed', (header: ParsedHeader) => {
-      onHeaderParsed();
-      const layout = header.layout.replace(/height/g, 'min-height');
-      reportThreepioInfo(`Header parsed with layout: ${layout}`);
-      this.#emitData('append', { type: FragmentType.Header, fragment: { content: layout } });
-    });
-
-    plannerParser.on('moduleParsed', (module: ParsedModule) => {
-      if (!onHeaderParsed) {
-        reportThreepioError('Planner: Module parsed before root node was created. Aborting.');
-        return;
-      }
-      const mourdleParentId = 'moudle' + taskPromises.length;
-      module.parentId = mourdleParentId;
-      const task = createModuleTask(module, '', mourdleParentId);
-      this.#emitData('append', { type: FragmentType.Moudle, fragment: { id: mourdleParentId, content: module.layout } as MoudleFragment });
-      const p = (async () => {
-        try {
-          reportThreepioInfo(`Generating fragment for task: ${task.moudle.name}`);
-          for await (const fragment of generateStructuralStream(task)) {
-            if (fragment.eventType === 'append') {
-              this.#emitData('append', fragment.data);
+          case 'module':
+            const module = item.data as ParsedModule;
+            if (!onHeaderParsed) {
+              reportThreepioError('Module parsed before root node was created. Aborting.');
+              break;
             }
-          }
-        } catch (error) {
-          reportThreepioError(`Error generating fragment for task ${task}:`, error);
+            const moduleParentId = 'moudle' + taskPromises.length;
+            module.parentId = moduleParentId;
+            const task = createModuleTask(module, '', moduleParentId);
+            this.#emitData('append', {
+              type: FragmentType.Moudle,
+              fragment: { id: moduleParentId, content: module.layout } as MoudleFragment
+            });
+
+            const p = this.#generateModuleFragments(task);
+            taskPromises.push(p);
+            break;
+
+          case 'error':
+            const errorData = item.data as { error: Error; content: string };
+            reportThreepioError('Planner parsing error:', errorData.error.message);
+            break;
+
+          case 'end':
+            const endData = item.data as { processedCount: number };
+            reportThreepioInfo('Planner parsing completed. Processed:', endData.processedCount);
+            break;
         }
-      })();
-      taskPromises.push(p);
-    });
+      }
+    })();
 
-    plannerParser.on('parseEnd', (data) => {
-      console.log('Planner parsing completed successfully.', data);
-      Promise.all(taskPromises).then(() => {
-        reportThreepioInfo('All tasks completed.');
-        resolvePlannerPhase();
-      }).catch(rejectPlannerPhase);
-    });
+    const inputPromise = (async () => {
+      for await (const chunk of stream) {
+        if (chunk.type === 'text') {
+          plannerParser.parseTextChunk(chunk);
+        }
+      }
+      plannerParser.endStream();
+    })();
 
-    plannerParser.on('error', () => {
-      reportThreepioError('Planner: Parsing error occurred.');
-      rejectPlannerPhase(new Error('Error during planner parsing.'));
-    });
+    await Promise.all([parserStreamPromise, inputPromise]);
   }
 
-  async #processPlannerStream(stream: any, plannerParser: StreamPlannerParser) {
-    reportThreepioInfo('Processing planner stream...');
-    for await (const chunk of await stream) {
-      reportThreepioInfo('Received chunk from planner stream:', chunk);
-      if (chunk.type === 'text') {
-        plannerParser.parseTextChunk(chunk);
+  async #generateModuleFragments(task: MoudleFragmentTask): Promise<void> {
+    try {
+      reportThreepioInfo(`Generating fragment for task: ${task.moudle.name}`);
+
+      for await (const fragment of generateStructuralStream(task)) {
+        if (fragment.eventType === 'append') {
+          this.#emitData('append', fragment.data);
+        } else if (fragment.error) {
+          reportThreepioError('Fragment generation error:', fragment.error);
+        }
       }
+    } catch (error) {
+      reportThreepioError(`Error generating fragment for task ${task}:`, error);
     }
-    reportThreepioInfo('Processing planner stream ended.');
-    plannerParser.end();
   }
 
   #emitData(event: string, data: EmitData) {
