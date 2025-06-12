@@ -237,9 +237,9 @@ namespace dom
   void Element::styleAdoptedCallback()
   {
     auto ownerDocument = getOwnerDocumentReferenceAs<HTMLDocument>(true);
-    if (ownerDocument != nullptr && adoptedStyle_->hasProperty("display"))
+    if (ownerDocument != nullptr && adopted_style_->hasProperty("display"))
     {
-      auto newDisplay = adoptedStyle_->getPropertyValue("display");
+      auto newDisplay = adopted_style_->getPropertyValue("display");
       if (newDisplay != currentDisplayStr_)
       {
         currentDisplayStr_ = newDisplay;
@@ -247,8 +247,12 @@ namespace dom
       }
     }
 
-    if (adoptedStyle_->hasTransitionProperties())
-      elementAnimationsRef().cssAnimations().setTransitions(*adoptedStyle_);
+    if (adopted_style_->hasTransitionProperties())
+    {
+      elementAnimationsRef()
+          .cssAnimations()
+          .setTransitions(*adopted_style_, ownerDocument->timeline());
+    }
   }
 
   void Element::initCSSBoxes()
@@ -349,8 +353,8 @@ namespace dom
 
   bool Element::adoptStyle(const ComputedStyle &new_style)
   {
-    if (adoptedStyle_ != nullptr && // Pass if `adoptedStyle_` is not set.
-        ComputedStyle::ComputeDifference(new_style, *adoptedStyle_) == ComputedStyle::kEqual)
+    if (adopted_style_ != nullptr && // Pass if `adopted_style_` is not set.
+        ComputedStyle::ComputeDifference(new_style, *adopted_style_) == ComputedStyle::kEqual)
       return false;
     return adoptStyleDirectly(new_style);
   }
@@ -735,11 +739,14 @@ namespace dom
 
   bool Element::adoptStyleDirectly(const client_cssom::ComputedStyle &new_style)
   {
+    adopted_style_ = make_unique<client_cssom::ComputedStyle>(new_style);
+    styleAdoptedCallback();
+
     // Compute the animated style.
-    auto animated_style = make_unique<client_cssom::ComputedStyle>(new_style);
+    client_cssom::ComputedStyle animated_style = *adopted_style_;
     if (!elementAnimationsRef().isEmpty())
     {
-      bool is_animated = elementAnimationsRef().updateFrameToStyle(*animated_style);
+      bool is_animated = elementAnimationsRef().updateFrameToStyle(animated_style);
       if (is_animated)
       {
         // If the element has animations to apply, mark the element as dirty thus it could be re-calculated in the next
@@ -748,14 +755,11 @@ namespace dom
       }
     }
 
-    adoptedStyle_ = move(animated_style);
-    styleAdoptedCallback();
-
     // Update the layout node style.
     bool updated = false;
     for (auto box : boxes_)
     {
-      if (box->setStyle(*adoptedStyle_))
+      if (box->setStyle(animated_style))
         updated = true;
     }
     return updated;

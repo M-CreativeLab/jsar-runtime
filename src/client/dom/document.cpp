@@ -32,23 +32,12 @@ namespace dom
         scene(TrClientContextPerProcess::Get()->builtinScene),
         browsingContext(browsingContext),
         auto_connect_(autoConnect),
-        default_view_(TrClientContextPerProcess::Get()->window)
+        default_view_(TrClientContextPerProcess::Get()->window),
+        timeline_(make_shared<DocumentTimeline>())
   {
     assert(browsingContext != nullptr);
     assert(default_view_.lock() != nullptr);
     doc_internal_ = make_shared<pugi::xml_document>();
-  }
-
-  Document::Document(Document &other)
-      : Node(other),
-        compatMode(other.compatMode),
-        contentType(other.contentType),
-        documentType(other.documentType),
-        scene(other.scene),
-        browsingContext(other.browsingContext),
-        auto_connect_(other.auto_connect_),
-        doc_internal_(other.doc_internal_)
-  {
   }
 
   void Document::setUrl(const string &url)

@@ -180,11 +180,11 @@ namespace dom
     ElementAnimations &elementAnimationsRef() { return *element_animations_; }
     bool hasAnimations() const { return element_animations_ != nullptr && !element_animations_->isEmpty(); }
 
-    inline bool hasAdoptedStyle() const { return adoptedStyle_ != nullptr; }
+    inline bool hasAdoptedStyle() const { return adopted_style_ != nullptr; }
     inline const client_cssom::ComputedStyle &adoptedStyleRef() const
     {
-      assert(adoptedStyle_ != nullptr && "The adopted style should not be null.");
-      return *adoptedStyle_;
+      assert(adopted_style_ != nullptr && "The adopted style should not be null.");
+      return *adopted_style_;
     }
     const client_cssom::CSSStyleDeclaration &defaultStyleRef() const { return defaultStyle_; }
 
@@ -305,7 +305,7 @@ namespace dom
     client_cssom::CSSStyleDeclaration defaultStyle_;
 
   private:
-    std::unique_ptr<client_cssom::ComputedStyle> adoptedStyle_;
+    std::unique_ptr<client_cssom::ComputedStyle> adopted_style_;
     std::weak_ptr<builtin_scene::Scene> scene_;
     std::shared_ptr<ElementAnimations> element_animations_;
     std::vector<std::shared_ptr<client_layout::LayoutBoxModelObject>> boxes_;

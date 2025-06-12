@@ -2,11 +2,14 @@
 
 namespace dom
 {
+  using namespace std;
+
   CSSAnimations::CSSAnimations()
   {
   }
 
-  size_t CSSAnimations::setTransitions(client_cssom::ComputedStyle &style)
+  size_t CSSAnimations::setTransitions(const client_cssom::ComputedStyle &style,
+                                       shared_ptr<const AnimationTimeline> timeline)
   {
     // Clear existing transitions.
     transitions_.clear();
@@ -15,13 +18,14 @@ namespace dom
     for (size_t index = 0; index < len; ++index)
     {
       auto transition_property = style.getTransitionProperty(index);
-      if (!transition_property.has_value())
+      if (TR_UNLIKELY(!transition_property.has_value()))
         continue;
 
       auto property = transition_property->property;
-      auto transition_animation = std::make_shared<RunningTransition>(
-          std::make_shared<CSSTransition>(),
-          AnimatableProperties::FromTransitionProperty(property));
+      auto effect = make_unique<AnimationEffect>(*transition_property);
+      auto animation = make_shared<CSSTransition>(move(effect), timeline);
+      auto animatables = AnimatableProperties::FromTransitionProperty(property);
+      auto transition_animation = make_shared<RunningTransition>(animation, animatables);
       transitions_.emplace(property.toCss(), transition_animation);
     }
 

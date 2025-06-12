@@ -25,7 +25,7 @@ namespace dom
   void RenderHTMLDocument::onExecute()
   {
     assert(document_ != nullptr);
-    document_->timeline().updateCurrentTime();
+    document_->timelineRef().updateCurrentTime();
 
     auto root = document_->getDirtyRootTextOrElement();
     auto scene = document_->scene;

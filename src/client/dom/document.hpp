@@ -75,7 +75,7 @@ namespace dom
     Document(std::string contentType, DocumentType documentType,
              std::shared_ptr<BrowsingContext> browsingContext,
              bool autoConnect = false);
-    Document(Document &other);
+    Document(Document &other) = default;
     virtual ~Document() = default;
 
   public:
@@ -125,8 +125,9 @@ namespace dom
     std::string cookie() const;
     void setCookie(const std::string &new_cookies);
 
-    const DocumentTimeline &timeline() const { return timeline_; }
-    DocumentTimeline &timeline() { return timeline_; }
+    std::shared_ptr<const DocumentTimeline> timeline() const { return timeline_; }
+    const DocumentTimeline &timelineRef() const { return *timeline_; }
+    DocumentTimeline &timelineRef() { return *timeline_; }
 
     /**
      * Get a list of `CSSStyleSheet` objects, for stylesheets explicitly linked into or embedded in a document.
@@ -179,7 +180,7 @@ namespace dom
     bool should_open_ = false;
 
     std::map<string, std::string> cookies_;
-    DocumentTimeline timeline_;
+    std::shared_ptr<DocumentTimeline> timeline_;
     std::vector<std::shared_ptr<client_cssom::CSSStyleSheet>> stylesheets_;
     client_cssom::StyleCache style_cache_;
   };

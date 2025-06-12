@@ -1,6 +1,8 @@
 #pragma once
 
 #include <optional>
+#include <iostream>
+#include <client/cssom/computed_style.hpp>
 #include "./timing_function.hpp"
 
 namespace dom
@@ -99,6 +101,10 @@ namespace dom
     };
 
   public:
+    AnimationEffect() = default;
+    // Construct an `AnimationEffect` from a transition property.
+    AnimationEffect(const client_cssom::ComputedStyle::TransitionProperty &);
+
     ComputedTiming getComputedTiming() const;
     Timing getTiming() const;
 
@@ -110,6 +116,20 @@ namespace dom
     void updateTimingDirection(Direction direction);
     void updateTimingFill(FillMode fill);
     void updateTimingEasing(std::unique_ptr<TimingFunction> easing);
+
+    friend std::ostream &operator<<(std::ostream &os, const AnimationEffect &effect)
+    {
+      os << "AnimationEffect(" << endl
+         << "  timing=" << effect.timing_.delay << endl
+         << "  duration=" << effect.timing_.duration << endl
+         << "  endDelay=" << effect.timing_.endDelay << endl
+         << "  iterations=" << effect.timing_.iterations << endl
+         << "  iterationStart=" << effect.timing_.iterationStart << endl
+         << "  direction=" << effect.timing_.direction << endl
+         << "  fill=" << effect.timing_.fill << endl
+         << ")";
+      return os;
+    }
 
   private:
     Timing timing_;

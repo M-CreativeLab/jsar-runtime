@@ -22,8 +22,7 @@ namespace dom
   public:
     bool isEmpty() const
     {
-      return css_animations_.isEmpty() &&
-             animations_.empty();
+      return css_animations_.isEmpty() && animations_.empty();
     }
     const CSSAnimations &cssAnimations() const { return css_animations_; }
     CSSAnimations &cssAnimations() { return css_animations_; }

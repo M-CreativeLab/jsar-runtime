@@ -2,6 +2,16 @@
 
 namespace dom
 {
+  using namespace client_cssom;
+
+  AnimationEffect::AnimationEffect(const ComputedStyle::TransitionProperty &transition_property)
+      : timing_function_(nullptr)
+  {
+    timing_.delay = transition_property.delay.seconds().value;
+    timing_.duration = transition_property.duration.seconds().value;
+    timing_function_ = LinearTimingFunction::Create({});
+  }
+
   AnimationEffect::ComputedTiming AnimationEffect::getComputedTiming() const
   {
     ComputedTiming computed_timing(timing_);

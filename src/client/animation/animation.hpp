@@ -12,8 +12,7 @@ namespace dom
   class Animation
   {
   public:
-    Animation() = default;
-    Animation(std::unique_ptr<AnimationEffect>, std::shared_ptr<AnimationTimeline>);
+    Animation(std::unique_ptr<AnimationEffect>, std::shared_ptr<const AnimationTimeline>);
     virtual ~Animation() = default;
 
   public:
@@ -84,7 +83,7 @@ namespace dom
     std::string id_;
     float current_time_ = 0;
     std::unique_ptr<AnimationEffect> effect_;
-    std::weak_ptr<AnimationTimeline> timeline_;
+    std::weak_ptr<const AnimationTimeline> timeline_;
     bool ready_ = false;
     bool pending_ = false;
     PlayState play_state_ = kPlayStateIdle;

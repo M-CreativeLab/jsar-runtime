@@ -5,7 +5,7 @@ namespace dom
   using namespace std;
 
   Animation::Animation(unique_ptr<AnimationEffect> effect,
-                       shared_ptr<AnimationTimeline> timeline)
+                       shared_ptr<const AnimationTimeline> timeline)
       : effect_(move(effect)),
         timeline_(timeline),
         id_(""),
