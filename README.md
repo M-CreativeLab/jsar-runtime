@@ -17,8 +17,8 @@
 # Table of Contents
 
 1. [Introduction](#introduction)
-1. [Overview](#overview)
-     - [Request Formats](#request-formats)
+2. [Overview](#overview)
+     - [Request Formats](#supported-url-formats-to-request)
      - [Scripting & Modules](#scripting--modules)
      - [3D Graphics](#3d-graphics)
      - [Rendering Backends](#rendering-backends)
@@ -26,10 +26,10 @@
      - [Multimedia APIs](#multimedia-apis)
      - [Canvas](#canvas)
      - [Classic Rendering](#classic-rendering)
-1. [Contributing](#contributing)
+3. [Contributing](#contributing)
      - [Prerequisites](#prerequisites)
      - [Build from source](#build-from-source)
-1. [Loaders](#loaders)
+4. [Loaders](#loaders)
 
 ## Introduction
 
