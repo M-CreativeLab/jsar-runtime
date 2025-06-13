@@ -4,7 +4,7 @@ import { Typography } from 'antd'
 
 To get started with JSAR, you need to get the followings ready:
 
-- Install the _Play WebXR_ app(`.apk`) on your supported device: [Rokid AR Studio][] or [Rokid AR Lite][].
+- Install the _Play WebXR_ app on your supported device: [Rokid AR Studio][] or [Rokid AR Lite][].
 - Create a common Web project, in simplest, just create a `index.html` file with some HTML content.
 
 [Rokid AR Studio]: https://arstudio.rokid.com/
@@ -12,16 +12,13 @@ To get started with JSAR, you need to get the followings ready:
 
 ## Install _Play WebXR_
 
-_Play WebXR_ is an [Unity][] application that can run on [Rokid AR Studio][] and [Rokid AR Lite][]. You can download the latest application via the following ways:
-
-- Get the app from the app store on device.
-- Download the latest `.apk` from [here](http://ar.rokidcdn.com/web-assets/yodaos-jsar/PlayWEBXR.apk) and install it manually via adb.
+_Play WebXR_ is an [Unity][] application that can run on [Rokid AR Studio][] and [Rokid AR Lite][]. You can install the latest application via the app store.
 
 When you have an installed _Play WebXR_ in your device and open it, then you will be guided to a standalone space created by _Play WebXR_, and like every Web browser does, there is an input box for you to input the URL you want to run.
 
 ## URL types supported
 
-Just like a Web browser can open an image, a video, a PDF file, etc., JSAR can open kinds of URLs, including.
+Just like a Web browser can open an image, a video, etc., JSAR can open kinds of URLs, including.
 
 ### Images
 
@@ -35,14 +32,9 @@ Currently only `.glb` and `.gltf` files are supported as 3D models, when user ty
 
 When a URL ends with `.html`, it will be treated as a [HTML][] file and run in the space.
 
-### XSML
-
-[XSML][] is introduced by former version of JSAR, it's a HTML-like markup language to represent a 3D object, but it's not recommended to use it anymore because HTML can do the same thing now.
-
 ## Next
 
-In next section, we will start from writing a simple HTML.
+In next section, we will start from [writing a sample HTML file](./write-html.mdx).
 
 [Unity]: https://unity.com/
 [HTML]: https://en.wikipedia.org/wiki/HTML
-[XSML]: https://jsar.netlify.app/en-us/manual/0.2.1/basic-concepts/intro-xsml
