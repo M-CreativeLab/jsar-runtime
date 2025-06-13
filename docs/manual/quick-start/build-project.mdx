@@ -1,9 +1,0 @@
-# Packaging
-
-After successfully running and debugging the space component, you can package it into a standalone file for future publishing and real-device debugging.
-
-> Currently, packaged space widgets must be less than 10MB. If the extension detects that a space widget exceeds this size during packaging, it will prompt for a failed package. Developers can use the [`gltf-transform`](https://gltf-transform.dev/) tool for model compression or other methods to optimize the size of the package content.
-
-![howto-pack-project](./howto-pack-project.png)
-
-As shown in the image above, right-click in the empty space of your project, select "JSAR: Package," and it will package your project. You will then find a `{name}-{version}.zip` file in the current directory, where `name` and `version` are the name and version number configured in `package.json`.
